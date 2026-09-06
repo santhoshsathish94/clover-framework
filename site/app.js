@@ -98,6 +98,29 @@
     scrollToY(Math.max(0, Math.min(limit, targetOffset(el, block))));
   }
 
+  function alignInitialHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
+
+    var el = document.getElementById(hash.slice(1));
+    if (!el) return;
+
+    var align = function () {
+      window.requestAnimationFrame(function () {
+        if (window.location.hash !== hash) return;
+        var limit = document.documentElement.scrollHeight - window.innerHeight;
+        var block = el.classList.contains('stage') && !el.classList.contains('responsibility-band') ? 'center' : 'start';
+        window.scrollTo(0, Math.max(0, Math.min(limit, targetOffset(el, block))));
+      });
+    };
+
+    // Native hash scrolling can run before fonts and images settle, leaving sticky content over the target.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(align);
+    else align();
+  }
+
+  if (window.location.hash) window.addEventListener('load', alignInitialHash, { once: true });
+
   // "/dir/" and "/dir/index.html" are the same page; the nav uses the first and the address bar the second.
   function samePage(link) {
     if (link.protocol !== window.location.protocol || link.host !== window.location.host) return false;
@@ -130,7 +153,8 @@
     e.preventDefault();
     // A stage is centred, not topped: the highlight tracks the middle of the viewport, so landing a
     // stage at the top would light the section below it.
-    scrollToElement(el, el.classList.contains('stage') ? 'center' : 'start');
+    // The closing sections carry .stage only to light their leaf. They are too tall to centre.
+    scrollToElement(el, el.classList.contains('stage') && !el.classList.contains('responsibility-band') ? 'center' : 'start');
     if (history.pushState) history.pushState(null, '', href);
     else window.location.hash = href;
   });
@@ -228,47 +252,108 @@
     window.addEventListener('resize', onTurn);
   }
 
-  /* The mark ripens from the evidence section onward, and its leaves point at the closing sections
-     instead of the stages. Same leaf, later in its life: what the stage is, then what it should come to. */
-  var ripeMark = document.querySelector('.pinned__mark');
-  var firstRipe = document.getElementById('evidence-preview');
-  if (ripeMark && firstRipe) {
-    var leafLinks = Array.prototype.slice.call(ripeMark.querySelectorAll('a.clover__leaf-hit[href]'));
+  /* In the real-world half the same leaves point at the five applied sections, and once the cycle
+     is decaying they point at the stage that failed. Both controllers call the same function, so
+     whichever runs last on a scroll still leaves the links in the state the page is actually in. */
+  var storyMark = document.querySelector('.pinned__mark');
+  var firstRealWorld = document.getElementById('evidence-preview');
+  var decayTargets = { context: 'context-misuse', direction: 'accountability', execution: 'rollout', outcome: 'outcome', growth: 'growth' };
+  var leafLinks = storyMark ? Array.prototype.slice.call(storyMark.querySelectorAll('a.clover__leaf-hit[href]')) : [];
+  leafLinks.forEach(function (a) {
+    a.setAttribute('data-stage-href', a.getAttribute('href'));
+    a.setAttribute('data-stage-label', a.getAttribute('aria-label') || '');
+  });
+
+  var applyLeafTargets = function () {
+    var root = document.documentElement;
+    var decaying = root.classList.contains('is-decayed');
+    var realWorld = root.classList.contains('is-real-world');
     leafLinks.forEach(function (a) {
-      a.setAttribute('data-stage-href', a.getAttribute('href'));
-      a.setAttribute('data-stage-label', a.getAttribute('aria-label') || '');
+      var stageHref = a.getAttribute('data-stage-href') || '';
+      var stage = stageHref.replace('#stage-', '');
+      var target = null;
+      if (decaying) target = document.getElementById(decayTargets[stage] || '');
+      if (!target && realWorld) target = document.getElementById('real-world-' + stage);
+      if (target) {
+        var heading = target.querySelector('h2');
+        a.setAttribute('href', '#' + target.id);
+        // The name has to name where the link now goes, so take it from the heading itself.
+        if (heading) a.setAttribute('aria-label', heading.textContent);
+      } else {
+        a.setAttribute('href', stageHref);
+        a.setAttribute('aria-label', a.getAttribute('data-stage-label'));
+      }
     });
+  };
 
-    var ripe = null;
-    var setRipe = function (on) {
-      if (on === ripe) return;
-      ripe = on;
-      document.documentElement.classList.toggle('is-mature', on);
-      leafLinks.forEach(function (a) {
-        var stageHref = a.getAttribute('data-stage-href') || '';
-        var target = on ? document.getElementById('real-world-' + stageHref.replace('#stage-', '')) : null;
-        if (target) {
-          var heading = target.querySelector('h2');
-          a.setAttribute('href', '#' + target.id);
-          // The name has to name where the link now goes, so take it from the heading itself.
-          if (heading) a.setAttribute('aria-label', heading.textContent);
-        } else {
-          a.setAttribute('href', stageHref);
-          a.setAttribute('aria-label', a.getAttribute('data-stage-label'));
-        }
-      });
+  if (storyMark && firstRealWorld) {
+    var inRealWorld = null;
+    var setRealWorld = function (on) {
+      if (on === inRealWorld) return;
+      inRealWorld = on;
+      document.documentElement.classList.toggle('is-real-world', on);
+      applyLeafTargets();
     };
 
-    var syncRipe = function () {
-      setRipe(firstRipe.getBoundingClientRect().top <= window.innerHeight / 2);
+    var syncRealWorld = function () {
+      setRealWorld(firstRealWorld.getBoundingClientRect().top <= window.innerHeight / 2);
     };
 
-    syncRipe();
-    window.addEventListener('scroll', syncRipe, { passive: true });
-    window.addEventListener('resize', syncRipe);
+    syncRealWorld();
+    window.addEventListener('scroll', syncRealWorld, { passive: true });
+    window.addEventListener('resize', syncRealWorld);
   }
 
-  /* Mobile nav. The button only exists visually below 1000px, the width at which the nav still
+    /* An Outcome without responsibility does not mature into Growth. Once that argument begins, the
+      unchanged cycle takes on a muted decay palette, and each unanswered stage drains it one step
+      further. The shape and motion stay intact. */
+  var decaySections = ['responsibility', 'context-misuse', 'accountability', 'rollout', 'outcome', 'growth']
+    .map(function (id) { return document.getElementById(id); })
+    .filter(Boolean);
+  var decayMark = document.querySelector('.pinned__mark svg');
+  if (decaySections.length && decayMark) {
+    var healthyMarkLabel = decayMark.getAttribute('aria-label') || '';
+    var decayStep = null;
+    var setDecayStep = function (step) {
+      if (step === decayStep) return;
+      decayStep = step;
+      document.documentElement.classList.toggle('is-decayed', step > 0);
+      if (step > 0) document.documentElement.setAttribute('data-decay', String(step));
+      else document.documentElement.removeAttribute('data-decay');
+      decayMark.setAttribute('aria-label', step > 0
+        ? 'The same five-leaf cycle in muted grey-brown, draining further with each stage that was not answered.'
+        : healthyMarkLabel);
+      applyLeafTargets();
+    };
+
+    var syncDecay = function () {
+      var reached = 0;
+      for (var i = 0; i < decaySections.length; i++) {
+        if (decaySections[i].getBoundingClientRect().top <= window.innerHeight / 2) reached = i + 1;
+      }
+      setDecayStep(reached);
+    };
+
+    syncDecay();
+    window.addEventListener('scroll', syncDecay, { passive: true });
+    window.addEventListener('resize', syncDecay);
+  }
+
+  /* The closing block carries its own whole, green mark, so the pinned one steps aside for it. */
+  var closingBlock = document.getElementById('closing');
+  if (closingBlock) {
+    var syncClosing = function () {
+      document.documentElement.classList.toggle(
+        'is-closing',
+        closingBlock.getBoundingClientRect().top <= window.innerHeight * 0.9
+      );
+    };
+    syncClosing();
+    window.addEventListener('scroll', syncClosing, { passive: true });
+    window.addEventListener('resize', syncClosing);
+  }
+
+  /* Mobile nav. The button only exists visually below 1024px, the width at which the nav still
      fits on one row; above that the nav is always shown. */
   var navToggle = document.querySelector('.nav-toggle');
   var siteNav = document.getElementById('site-nav');

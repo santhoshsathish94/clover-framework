@@ -47,6 +47,11 @@ What AI did change is that execution moved to something that cannot be accountab
 
 **Clover puts it back.** AI takes its place as an actor inside the existing system cycle rather than as a replacement for it, and accountability stays where it can actually sit: with a human. AI capability may scale, but accountability cannot. AI cannot carry it, and it can make it visible.
 
+That named human is accountable for the task or work they direct. This does not transfer
+accountability for an AI model's design, training, safeguards, release, or model-level consequences
+away from the company that builds and releases it. At that scale the provider organization is
+accountable, and governments enforce the duties it does not uphold voluntarily.
+
 **System** is the reality in which the outcome must exist: the state, data, behavior, history, constraints, and evidence of the thing being worked on. It is also the primary source of evidence for validating whether an intended outcome actually happened.
 
 **Human** provides Direction. Humans decide what matters, what outcome is desired, what makes that outcome meaningful, what boundaries apply, what must not happen, and who remains accountable for the result.

@@ -53,20 +53,49 @@ The page is one continuous argument rather than one section per stage.
 16. `#real-world-execution` — Execution in the real world? The environment enforces what instructions cannot
 17. `#real-world-outcome` — Outcome in the real world? Improve the fields, do not disrupt them
 18. `#real-world-growth` — Growth in the real world? Learn from the mistakes or never improve
-19. `#enforce` — What the real world should enforce? Clover cannot, and who should is named
+19. `#responsibility` — Great AI capability should mean greater responsibility: why responsibility lost to the pursuit of dominance
+20. `#context-misuse` — Context was misused: why morality was sidelined when the world's work became training data
+21. `#accountability` — Direction was never accountable: who set the Direction, and why nobody had to answer for it
+22. `#rollout` — Execution was not phased: no bounded phases, no external body, released to everyone at once
+23. `#outcome` — Outcome was not the complete truth: sold on capability, adopted without knowing the limits
+24. `#growth` — Growth is the stage we missed: why unaddressed mistakes still delay what AI could give
+25. `#clover-teaches` — Hope for humanity: instruction to the agent, and who holds it when the agent fails
+26. `#closing` — The mark whole again in new green, with the closing line beneath it
 
-The five real-world sections close the page. They are the only place the site says why the boundaries
-exist rather than what they are, and the only place written in the first person outside `author/`.
-They are `.band.stage` sections carrying `data-leaf`, the same as the five stages, so the matching
-leaf goes to ink as each one is read.
+The five real-world sections lead into the seven closing sections, 19 to 25. They state the author's
+conclusions and link to the sourced documents rather than reproducing their detail. No company,
+government or person is named anywhere on the site; the documents in `docs/ai-responsibility/` name
+every source.
 
-**The mark ripens from `#evidence-preview` onward.** Once that section reaches the middle of the
-viewport, `app.js` puts `is-mature` on `<html>`, the leaf gradient turns from green to autumn, and
-each leaf repoints from `#stage-*` to its `#real-world-*` section with an `aria-label` taken from that
-section's heading. Scrolling back turns it green and restores the stage links. The colour is driven
-by `--leaf-1/2/3` on the root rather than by swapping the fill, because a fill cannot animate between
-two `url()` paints but `stop-color` can. The gradient serves the hero mark alone, so the header logo
-stays green either way.
+Of those seven, the five that map to a stage (20 to 24) are `.band.stage` sections carrying
+`data-leaf`, so the matching leaf is the active one. `#responsibility` and `#clover-teaches` carry
+`.responsibility-band` only, and are excluded from centre-scroll alignment.
+
+Section 26 sits **outside** `[data-story]`, so the sticky mark reserves no space for it.
+
+**The mark is green through the framework, then autumn through the real-world sections.** Once
+`#evidence-preview` reaches the middle of the viewport, `app.js` puts `is-real-world` on `<html>`,
+CSS shifts the gradient to autumn, and each leaf repoints from `#stage-*` to its `#real-world-*`
+section with an `aria-label` taken from that section's heading.
+
+**The mark changes color from `#responsibility` onward.** `app.js` puts `is-decayed` on `<html>` and
+changes the accessible name, while CSS shifts autumn to a restrained grey-brown death-and-decay
+palette. It also sets `data-decay` to the number of closing sections reached, 1 through 6, and each
+step drains the palette a little further, so the mark keeps dimming as the argument goes on. Only the
+three gradient stops change: the same five leaves, labels, veins, shape and continuous scroll-driven
+turn remain. Scrolling back restores autumn, then green above the real-world sections.
+
+**In that state the reached leaf falls instead of going to ink.** The five closing sections that map
+to a stage carry `data-leaf`, so the matching leaf is the active one. While decaying, the active leaf
+is drawn as a dotted outline of where it was, its vein hidden, and it keeps `pointer-events` so the
+gap still routes to that stage. The leaves also retarget: `#stage-*` in the framework, `#real-world-*`
+in the reflection, and the failing section in the decay phase.
+
+**The decay does not end the page.** `#closing` carries its own static mark with all five leaves and
+veins intact, filled from a second gradient, `#leaf-revive`, so the drained `--leaf-*` values on
+`:root` cannot reach it. When `#closing` comes within 90% of the viewport `app.js` sets `is-closing`
+on `<html>` and the pinned mark fades out; `visibility` is delayed to the end of the fade so its five
+leaf links leave the tab order rather than staying focusable while invisible.
 
 Each of the five stages is its own `.band.stage` section carrying `data-leaf`. `app.js` reads those
 inside `[data-story]` and inks the matching leaf on the pinned mark as the section reaches the middle
@@ -77,6 +106,10 @@ generic in-page click handler scrolls them; nothing leaf-specific is needed. The
 not `tabindex` groups, so the keyboard reaches them for free.
 
 There is no author section on this page. The nav links to `author/` instead.
+
+The final Responsibility section links to
+`docs/ai-responsibility/why-responsibility-was-sidelined.md`, which holds the detailed argument,
+sources, limits and links to the supporting papers.
 
 ## How it is built
 
@@ -133,11 +166,13 @@ The marks are the site's identity and they carry the argument, so they have rule
   rather than as a replacement for it. `#capability` on the home page and `#policy` on the governance
   page both carry this claim, and `llms.txt` carries it for agents. Do not soften it into "AI needs
   oversight".
-- **Accountability lands on a named human.** Governance is where the site shows that the naming is
-  real: whose access was used, who approved, and who answers when it goes wrong. Capability is never
-  authority, and authority is never accountability. The home page carries this in `#humans`; the
-  named claim **Capability may scale. Direction remains human.** now lives on the governance page and
-  in `llms.txt`, not on the home page.
+- **For a task or piece of work, accountability lands on a named human.** Governance is where the
+  site shows that the naming is real: whose access was used, who approved, and who answers when it
+  goes wrong. This does not transfer model-level accountability away from the organization that
+  builds and releases the model. Capability is never authority, and authority is never
+  accountability. The home page carries the work-level rule in `#humans`; the named claim
+  **Capability may scale. Direction remains human.** now lives on the governance page and in
+  `llms.txt`, not on the home page.
 - **The system cycle has five stages** — Context, Direction, Execution, Outcome, Growth. All five get
   named wherever the cycle is enumerated: the mark, the five stage sections, the agent file
   description on `start/`, and `llms.txt`. `#stage-growth` and `#why-cycle` are where the home page
@@ -180,7 +215,14 @@ The marks are the site's identity and they carry the argument, so they have rule
   inside a section, plus the two unstyled columns in `#scale`; cards, tab panels, `.panel__cols`,
   definition lists and the verse keep their own density. The floor is 1.12rem rather than 1.05rem
   because 1.05rem is 16.8px, below the 17px body size, and would have shrunk narrow screens. Check a
-  new selector against `.lede`, which is 1.12rem and will win on specificity if you are careless.- The mark turns one full revolution between the top and the bottom of the home page, eased toward
+  new selector against `.lede`, which is 1.12rem and will win on specificity if you are careless.
+- **Accent is reserved for the opening line of a section.** `main section.band > .wrap > p:first-of-type
+  strong` is the accent green. Bold in any later paragraph stays ink, and headings stay ink, so a
+  section reads heading, then one coloured claim, then plain emphasis. That selector is deliberately
+  specific: the band prose rule above outranks a bare class.
+- **`.evidence-link` is the quiet row under an argument** — 0.95rem, muted label, link in `--ink-2`
+  with a pale underline, accent only on hover. Six carry an `Evidence:` label; the one pointing at
+  `AGENTS.md` does not, because that is the rules file rather than a source.- The mark turns one full revolution between the top and the bottom of the home page, eased toward
   the scroll position in `app.js` rather than tracking it exactly. `prefers-reduced-motion` stops it.
   The turn is an SVG `rotate(deg 50 44)` on `.clover__spin`, inside the viewBox. Rotating the `<svg>`
   element instead grows its box to the diagonal, which pushed the page sideways at narrow widths.

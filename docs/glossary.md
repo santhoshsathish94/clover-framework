@@ -37,7 +37,7 @@ that is a bug in the writing — [tell us](../CONTRIBUTING.md).
 | **Evidence** | What was actually done to check a claim — an assertion, one manual look, a repeatable test, a before-and-after measurement, or the original signal gone from the real environment. Say which. See [Outcome](07-outcome.md#how-strong-is-your-evidence). |
 | **Experience** | What was learned from one cycle — what was tried, what happened, what the evidence showed. It can become part of the context files beside the work. |
 | **Expertise** | A reusable pattern that emerges from several *validated* experiences. One cycle is not expertise. |
-| **Ownership** | The named human accountable for an outcome. Work can be delegated; ownership cannot. |
+| **Ownership** | Within a task or piece of work, the named human accountable for the outcome they direct. Work can be delegated; ownership cannot. This does not transfer accountability for a model, product or deployment away from the organisation that builds, releases or operates it. |
 | **Agent** | An AI system that can take actions and use tools, rather than only produce text. |
 | **Agentic workflow** | A designed loop of agent steps that repeats a known process. Orchestration differs in that it keeps what the outcome taught it. |
 | **Autonomy** | In Clover, this refers only to how much of the *path* AI is allowed to determine inside human Direction. It never means ownership of purpose, acceptable risk, priorities, boundaries, or accountability. A more capable model does not create authority over the destination. |

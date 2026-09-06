@@ -148,7 +148,7 @@ not justify handing AI the authority to choose what is worth pursuing.
 Stated plainly:
 
 - **Human Direction sets the purpose.** It states which outcome is worth pursuing and what
-  constraints must hold while the work happens. The human answers for that outcome afterwards.
+  constraints must hold while the work happens. The human answers for that task or work afterwards.
 - **AI is a means of reaching it sooner.** Different models can be slower, faster, more capable, or
   more economical. They change how the work gets done, not what is worth doing.
 - **The system is the existing reality that can validate the outcome.** It holds what exists, where
@@ -161,12 +161,13 @@ ownership of the purpose.
 This holds whether the organization uses an older model, a newer frontier model, several models, or
 no AI at all. AI changes how the work is done; it does not redefine what is worth doing.
 
-## Keep humans responsible
+## Keep directed work answerable
 
-AI can do the work. A named human stays accountable for risk, governance, and the decisions that need
-human judgment. Delegation moves the work and leaves the accountability where it was. Automation
-should leave responsibility clearer than it found it, and an arrangement where nobody can say who
-owns an action has moved the wrong way.
+AI can do the work. A named human stays accountable for the task or work they direct and the
+decisions inside it that need human judgment. Delegation moves the work and leaves that accountability
+where it was. The organization remains accountable for the model, product or deployment it controls.
+Automation should leave responsibility clearer than it found it, and an arrangement where nobody can
+say who owns an action has moved the wrong way.
 
 ## In practice
 

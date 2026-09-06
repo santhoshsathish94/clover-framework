@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.3.0 — 2026-09-06
+
+The home page gained a sourced argument about why responsibility for AI was sidelined, and a
+supporting dossier under `docs/ai-responsibility/`. `VERSION` is `2.3.0` and the site's `?v=` cache
+strings match it.
+
+**Seven closing sections** run from `#responsibility` to `#clover-teaches`, one per cycle stage plus
+a resolution, followed by `#closing` — the mark whole again in new green with the closing line
+beneath it. The site names no company, government or person; the documents name every source.
+
+**A new evidence dossier.** `docs/ai-responsibility/` holds the master claim and eight supporting
+papers, plus `docs/responsibility-cannot-be-optional.md`. Every paper ends with an evidence ledger
+whose last column states what the source does **not** establish. Every source was opened and read
+rather than taken from a search summary.
+
+**Claims were tightened against their sources.** Three citations in
+`08-incidents-and-adoption-outcomes.md` were corrected: a claim about congressional testimony that
+neither cited article contained, an unverifiable detail attributed to a court order, and an
+unattributed casualty figure. Two remaining limits are recorded rather than papered over — the Minab
+strike establishes no AI involvement, and the enterprise-adoption figure is a single contested study.
+
+**Visual:** accent green is reserved for the opening line of each section; `.evidence-link` puts the
+source row below the argument in a quieter register; the decayed mark recovers to `#leaf-revive` at
+the end of the page.
+
 ## v2.0.0 — 2026-09-04
 
 The site became one continuous argument rather than a set of panels, Growth became a stage of the

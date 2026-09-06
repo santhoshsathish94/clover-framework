@@ -36,6 +36,14 @@ shifting up, because renumbering would break every link that already points at t
 | [How AI fails](how-ai-fails.md) | The failures specific to working this way, and which stage catches each |
 | [Practices and field lessons](field-practices.md) | What running this on high-stakes work actually taught |
 
+## An ask beyond the framework
+
+| | |
+|---|---|
+| [Responsibility cannot be optional](responsibility-cannot-be-optional.md) | What the evidence shows about who is answerable for what a model does, and what we are asking of the companies building them |
+| [Why responsibility for AI was sidelined](ai-responsibility/why-responsibility-was-sidelined.md) | The master claim behind the site's closing section: the risks were known and flagged, and responsibility lost to the pursuit of dominance |
+| [AI responsibility evidence](ai-responsibility/README.md) | Seven sourced papers, including why known incidents still fail to become binding accountability |
+
 ## Reference
 
 | | |

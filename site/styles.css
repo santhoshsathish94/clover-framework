@@ -10,7 +10,7 @@
   --accent: #0a6a5f;
   --accent-soft: #e6f2f0;
   --accent-line: #7fb8b0;
-  /* The hero leaf gradient, as variables so the mark can ripen. */
+  /* The hero leaf gradient, as variables so the mark can change state. */
   --leaf-1: #17907f;
   --leaf-2: #0a6a5f;
   --leaf-3: #064f47;
@@ -69,6 +69,16 @@ h4 { font-size: 0.95rem; }
 p { margin: 0 0 1rem; max-width: var(--measure); }
 ul, ol { max-width: var(--measure); }
 strong { font-weight: 650; }
+
+/* The opening line of each section carries the hero tagline's accent; later bold stays ink. */
+main section.band > .wrap > p:first-of-type strong { color: var(--accent); }
+
+/* Source links sit below the argument, so they stay quieter than the prose. */
+main section.band > .wrap > p.evidence-link {
+  font-size: 0.95rem; color: var(--muted); margin-top: 1.4rem;
+}
+.evidence-link a { color: var(--ink-2); text-decoration-color: var(--line-2); }
+.evidence-link a:hover { color: var(--accent); text-decoration-color: currentColor; }
 
 a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
 a:hover { text-decoration-thickness: 2px; }
@@ -134,6 +144,24 @@ main.narrow > h3 { font-size: clamp(1.35rem, 2.6vw, 1.6rem); }
   font-size: 0.95rem; color: var(--ink-2); margin: 0 auto;
   max-width: 46ch;
 }
+/* Carries the hero tagline's weight and accent colour, centred as a closing line.
+   Selector is scoped to outrank the band paragraph rule above. */
+main section.band > .wrap > p.verse__line {
+  margin: 2.6rem auto 0; max-width: 44ch;
+  font-size: clamp(1.15rem, 2.6vw, 1.5rem); font-weight: 600;
+  line-height: 1.3; letter-spacing: -0.015em; color: var(--accent);
+}
+
+/* The page ends where it began: the same cycle, whole, in new green, with the line beneath it. */
+.closing .wrap { text-align: center; }
+.closing { padding-block: clamp(3.5rem, 9vw, 7rem); }
+/* Hiding is delayed to the end of the fade so the leaf links leave the tab order once invisible;
+   coming back is immediate, so the mark is visible while it fades in. */
+:root.is-closing .pinned__mark {
+  opacity: 0; pointer-events: none; visibility: hidden;
+  transition: opacity 600ms ease, visibility 0s 600ms;
+}
+.pinned__mark { transition: opacity 600ms ease, visibility 0s; }
 
 /* ---------- the clover mark ---------- */
 /* One <path id="clover-leaf"> lives in a hidden sprite at the top of the page. Every mark is that
@@ -151,6 +179,11 @@ main.narrow > h3 { font-size: clamp(1.35rem, 2.6vw, 1.6rem); }
 
 /* Wider than the other marks because the hero clover carries a label on every leaf. */
 .clover--hero { width: clamp(260px, 36vw, 400px); justify-self: center; margin-inline: auto; }
+
+/* The closing mark keeps its own gradient, so the decayed palette on :root cannot reach it. */
+.clover--close { width: clamp(150px, 24vw, 240px); margin-inline: auto; }
+.clover--close .clover__leaf.is-filled { fill: url(#leaf-revive); stroke: none; }
+.clover--close .clover__vein { stroke: #d9ece8; }
 .clover--brand { width: 26px; }
 
 /* The three narrative marks: three leaves, then four, then five. */
@@ -175,30 +208,35 @@ main.narrow > h3 { font-size: clamp(1.35rem, 2.6vw, 1.6rem); }
 .clover__leaf-hit { cursor: pointer; outline: none; }
 .clover__leaf-hit .clover__leaf,
 .clover__leaf-hit .clover__label { transition: fill 160ms ease, stroke 160ms ease; }
-.clover__leaf-hit:hover .clover__leaf,
-.clover__leaf-hit:focus-visible .clover__leaf { fill: var(--ink); stroke: var(--ink); }
-.clover__leaf-hit:hover .clover__label,
+/* The leaves already change colour with the reading position, so pointer and keyboard states outline
+   the leaf instead of recolouring it. A fill change here would read as the active stage. */
 .clover__leaf-hit:focus-visible .clover__label { fill: var(--ink); font-weight: 800; }
-.clover__leaf-hit:focus-visible .clover__leaf { stroke: var(--ink); stroke-width: 5; }
 
 /* Only the hero mark is shaded and veined. The smaller marks stay flat. */
 .clover--hero .clover__leaf.is-filled { fill: url(#leaf-fade); stroke: none; }
 
-/* The mark ripens once the closing sections arrive: the same leaves, later in their life. The stops
-   are driven by variables because a fill cannot animate between two url() paints, but stop-color
-   can. Set on the root so the gradient in the sprite inherits them; it serves the hero mark alone,
-   so the header logo stays green. */
-:root.is-mature {
+/* The same cycle moves through seasons without changing shape or motion: healthy green, autumn in
+   the real-world reflection, then a restrained grey-brown when responsibility is not carried on. */
+:root.is-real-world {
   --leaf-1: #e8b23a;
   --leaf-2: #d8812c;
   --leaf-3: #a34f1e;
 }
+:root.is-decayed {
+  --leaf-1: #777465;
+  --leaf-2: #625d52;
+  --leaf-3: #4c4741;
+}
+/* Each unanswered stage drains the palette one step further. Colour only — shape and motion never change. */
+:root.is-decayed[data-decay="2"] { --leaf-1: #706e5f; --leaf-2: #5d584d; --leaf-3: #48433d; }
+:root.is-decayed[data-decay="3"] { --leaf-1: #6a675a; --leaf-2: #575349; --leaf-3: #433f39; }
+:root.is-decayed[data-decay="4"] { --leaf-1: #636154; --leaf-2: #524d44; --leaf-3: #3f3b35; }
+:root.is-decayed[data-decay="5"] { --leaf-1: #5c5a4f; --leaf-2: #4c4840; --leaf-3: #3a3632; }
+:root.is-decayed[data-decay="6"] { --leaf-1: #565449; --leaf-2: #47433b; --leaf-3: #36322e; }
 #leaf-fade stop { transition: stop-color 700ms ease; }
 #leaf-fade stop:nth-of-type(1) { stop-color: var(--leaf-1); }
 #leaf-fade stop:nth-of-type(2) { stop-color: var(--leaf-2); }
 #leaf-fade stop:nth-of-type(3) { stop-color: var(--leaf-3); }
-.clover--hero .clover__leaf-hit:hover .clover__leaf,
-.clover--hero .clover__leaf-hit:focus-visible .clover__leaf { fill: var(--ink); stroke: none; }
 .clover__vein { fill: none; stroke: #ffffff; stroke-opacity: 0.5; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .clover__label--now { fill: var(--accent); font-weight: 700; }
 .clover__label--next { fill: var(--muted); }
@@ -307,7 +345,7 @@ main.narrow > h3 { font-size: clamp(1.35rem, 2.6vw, 1.6rem); }
 .nav-toggle[aria-expanded="true"] .nav-toggle__box span { opacity: 0; }
 .nav-toggle[aria-expanded="true"] .nav-toggle__box::after { transform: translateY(-4.5px) rotate(-45deg); }
 
-@media (max-width: 999px) {
+@media (max-width: 1023px) {
   .site-head .wrap { min-height: 3.2rem; gap: 0.6rem; }
   .nav-toggle { display: inline-flex; }
   .site-nav { display: none; flex-basis: 100%; flex-direction: column; gap: 0; margin-top: 0.1rem; padding-bottom: 0.5rem; align-items: stretch; }
@@ -397,6 +435,33 @@ main.narrow > h3 { font-size: clamp(1.35rem, 2.6vw, 1.6rem); }
 .pinned__mark .story__leaf.is-active { fill: var(--ink); }
 .pinned__mark .story__label.is-active { fill: var(--ink); font-weight: 800; }
 
+/* Once the cycle is decaying, the reached leaf does not go to ink. It falls: only the dotted outline
+   of where it was remains. The gap stays clickable, so every stage can still be reached. */
+:root.is-decayed .pinned__mark .story__leaf,
+:root.is-decayed .pinned__mark .clover__vein { transition: fill 0.25s ease, stroke 0.25s ease, opacity 0.25s ease; }
+:root.is-decayed .pinned__mark .story__leaf.is-active {
+  fill: transparent;
+  stroke: #6f6a5d;
+  stroke-width: 1.75;
+  stroke-dasharray: 3 3.5;
+  stroke-linecap: round;
+  pointer-events: all;
+}
+:root.is-decayed .pinned__mark .story__leaf.is-active + .clover__vein { opacity: 0; }
+:root.is-decayed .pinned__mark .story__label.is-active { fill: #5c574c; font-weight: 800; }
+
+/* Pointer and keyboard states, last so they outline whichever leaf is under them in any season. */
+:root .clover--hero .clover__leaf-hit:hover .clover__leaf {
+  stroke: var(--ink-2);
+  stroke-width: 2.25;
+  stroke-dasharray: none;
+}
+:root .clover--hero .clover__leaf-hit:focus-visible .clover__leaf {
+  stroke: var(--ink);
+  stroke-width: 3.25;
+  stroke-dasharray: none;
+}
+
 @media (max-width: 860px) {
   /* Above the text and pinned to the top bar, small enough to leave the page readable behind it.
      The header is 3.2rem here, so the band starts a little under it: at 3.6rem the page scrolled
@@ -410,6 +475,7 @@ main.narrow > h3 { font-size: clamp(1.35rem, 2.6vw, 1.6rem); }
     background: var(--bg); border-bottom: 1px solid var(--line);
   }
   .pinned__mark > svg { transform: none; }
+  section.responsibility-band { scroll-margin-top: 12rem; }
 }
 
 .no-js .pinned__mark { position: static; height: auto; justify-content: center; }
