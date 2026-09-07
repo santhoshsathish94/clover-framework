@@ -39,59 +39,43 @@ The page is one continuous argument rather than one section per stage.
 2. `#capability` — What is Clover: the cycle as it ran before AI, with the human as the actor
 3. `#ai-changes` — What AI changes: every stage easier, better and faster, the cycle unchanged
 4. `#humans` — Why humans matter: accountability, boundaries, and carrying the consequence
-5. `#stage-context` — What is Context?
-6. `#stage-direction` — What is Direction?
-7. `#stage-execution` — What is Execution?
-8. `#stage-outcome` — What is Outcome?
-9. `#stage-growth` — What is Growth?
-10. `#why-cycle` — Why is it a cycle? Growth becomes the next Context
-11. `#try` — A common example: something changed since last time, and each stage explained against it
-12. `#scale` — Complexity can grow: the same cycle for individuals, teams, organizations and AI
-13. `#evidence-preview` — The cycle exists in every system: what Clover is still working out, and where contribution matters
-14. `#real-world-context` — Context in the real world? Credit stays with the original creators
-15. `#real-world-direction` — Direction in the real world? Capability is not permission to choose
-16. `#real-world-execution` — Execution in the real world? The environment enforces what instructions cannot
-17. `#real-world-outcome` — Outcome in the real world? Improve the fields, do not disrupt them
-18. `#real-world-growth` — Growth in the real world? Learn from the mistakes or never improve
-19. `#responsibility` — Great AI capability should mean greater responsibility: why responsibility lost to the pursuit of dominance
-20. `#context-misuse` — Context was misused: why morality was sidelined when the world's work became training data
-21. `#accountability` — Direction was never accountable: who set the Direction, and why nobody had to answer for it
-22. `#rollout` — Execution was not phased: no bounded phases, no external body, released to everyone at once
-23. `#outcome` — Outcome was not the complete truth: sold on capability, adopted without knowing the limits
-24. `#growth` — Growth is the stage we missed: why unaddressed mistakes still delay what AI could give
-25. `#clover-teaches` — Hope for humanity: instruction to the agent, and who holds it when the agent fails
-26. `#closing` — The mark whole again in new green, with the closing line beneath it
+5. `#systems` — What systems should adopt: process built for an actor that is not human
+6. `#stage-context` — What is Context?
+7. `#stage-direction` — What is Direction?
+8. `#stage-execution` — What is Execution?
+9. `#stage-outcome` — What is Outcome?
+10. `#stage-growth` — What is Growth?
+11. `#why-cycle` — Why is it a cycle? Growth becomes the next Context
+12. `#try` — A common example: something changed since last time, and each stage explained against it
+13. `#scale` — Complexity can grow: the same cycle for individuals, teams, organizations and AI
+14. `#evidence-preview` — The cycle exists in every system: what Clover is still working out, and where contribution matters
+15. `#real-world-context` — Context in the real world? What was taken to train the models, and what it cost
+16. `#real-world-direction` — Direction in the real world? Who set the Direction, and why nobody had to answer for it
+17. `#real-world-execution` — Execution in the real world? No bounded phases, no external body, released to everyone at once
+18. `#real-world-outcome` — Outcome in the real world? Sold on capability, adopted without knowing the limits
+19. `#real-world-growth` — Growth in the real world? Why unaddressed mistakes still delay what AI could give
+20. `#responsibility` — Great AI capability should mean greater responsibility: why responsibility lost to the pursuit of dominance
+21. `#clover-teaches` — What needs to change in the real world? Instruction to the agent, and who holds it when the agent fails
+22. `#closing` — The mark whole again in new green, with the closing line beneath it
 
-The five real-world sections lead into the seven closing sections, 19 to 25. They state the author's
+The five real-world sections lead into the two closing sections, 20 and 21. They state the author's
 conclusions and link to the sourced documents rather than reproducing their detail. No company,
 government or person is named anywhere on the site; the documents in `docs/ai-responsibility/` name
 every source.
 
-Of those seven, the five that map to a stage (20 to 24) are `.band.stage` sections carrying
-`data-leaf`, so the matching leaf is the active one. `#responsibility` and `#clover-teaches` carry
-`.responsibility-band` only, and are excluded from centre-scroll alignment.
+Neither closing section maps to a stage: both carry `.responsibility-band` only, and are excluded
+from centre-scroll alignment.
 
-Section 26 sits **outside** `[data-story]`, so the sticky mark reserves no space for it.
+Section 22 sits **outside** `[data-story]`, so the sticky mark reserves no space for it.
 
-**The mark is green through the framework, then autumn through the real-world sections.** Once
-`#evidence-preview` reaches the middle of the viewport, `app.js` puts `is-real-world` on `<html>`,
-CSS shifts the gradient to autumn, and each leaf repoints from `#stage-*` to its `#real-world-*`
-section with an `aria-label` taken from that section's heading.
+**The mark has two states: green, then grey.** Once `#evidence-preview` reaches the middle of the
+viewport, `app.js` puts `is-real-world` on `<html>`, CSS drains the gradient to grey, the mark's
+accessible name changes to describe the grey, and each leaf repoints from `#stage-*` to its
+`#real-world-*` section with an `aria-label` taken from that section's heading. Only the three
+gradient stops change: the same five leaves, labels, veins, shape and continuous scroll-driven turn
+remain. Scrolling back restores green above the real-world sections.
 
-**The mark changes color from `#responsibility` onward.** `app.js` puts `is-decayed` on `<html>` and
-changes the accessible name, while CSS shifts autumn to a restrained grey-brown death-and-decay
-palette. It also sets `data-decay` to the number of closing sections reached, 1 through 6, and each
-step drains the palette a little further, so the mark keeps dimming as the argument goes on. Only the
-three gradient stops change: the same five leaves, labels, veins, shape and continuous scroll-driven
-turn remain. Scrolling back restores autumn, then green above the real-world sections.
-
-**In that state the reached leaf falls instead of going to ink.** The five closing sections that map
-to a stage carry `data-leaf`, so the matching leaf is the active one. While decaying, the active leaf
-is drawn as a dotted outline of where it was, its vein hidden, and it keeps `pointer-events` so the
-gap still routes to that stage. The leaves also retarget: `#stage-*` in the framework, `#real-world-*`
-in the reflection, and the failing section in the decay phase.
-
-**The decay does not end the page.** `#closing` carries its own static mark with all five leaves and
+**The grey does not end the page.** `#closing` carries its own static mark with all five leaves and
 veins intact, filled from a second gradient, `#leaf-revive`, so the drained `--leaf-*` values on
 `:root` cannot reach it. When `#closing` comes within 90% of the viewport `app.js` sets `is-closing`
 on `<html>` and the pinned mark fades out; `visibility` is delayed to the end of the fade so its five
@@ -222,7 +206,8 @@ The marks are the site's identity and they carry the argument, so they have rule
   specific: the band prose rule above outranks a bare class.
 - **`.evidence-link` is the quiet row under an argument** — 0.95rem, muted label, link in `--ink-2`
   with a pale underline, accent only on hover. Six carry an `Evidence:` label; the one pointing at
-  `AGENTS.md` does not, because that is the rules file rather than a source.- The mark turns one full revolution between the top and the bottom of the home page, eased toward
+  `AGENTS.md` does not, because that is the rules file rather than a source.
+- The mark turns one full revolution between the top and the bottom of the home page, eased toward
   the scroll position in `app.js` rather than tracking it exactly. `prefers-reduced-motion` stops it.
   The turn is an SVG `rotate(deg 50 44)` on `.clover__spin`, inside the viewBox. Rotating the `<svg>`
   element instead grows its box to the diagonal, which pushed the page sideways at narrow widths.

@@ -153,8 +153,7 @@
     e.preventDefault();
     // A stage is centred, not topped: the highlight tracks the middle of the viewport, so landing a
     // stage at the top would light the section below it.
-    // The closing sections carry .stage only to light their leaf. They are too tall to centre.
-    scrollToElement(el, el.classList.contains('stage') && !el.classList.contains('responsibility-band') ? 'center' : 'start');
+    scrollToElement(el, el.classList.contains('stage') ? 'center' : 'start');
     if (history.pushState) history.pushState(null, '', href);
     else window.location.hash = href;
   });
@@ -252,12 +251,10 @@
     window.addEventListener('resize', onTurn);
   }
 
-  /* In the real-world half the same leaves point at the five applied sections, and once the cycle
-     is decaying they point at the stage that failed. Both controllers call the same function, so
-     whichever runs last on a scroll still leaves the links in the state the page is actually in. */
+  /* In the real-world half the same leaves point at the five applied sections rather than at the
+     stage explanations, and the mark itself drains to grey. */
   var storyMark = document.querySelector('.pinned__mark');
   var firstRealWorld = document.getElementById('evidence-preview');
-  var decayTargets = { context: 'context-misuse', direction: 'accountability', execution: 'rollout', outcome: 'outcome', growth: 'growth' };
   var leafLinks = storyMark ? Array.prototype.slice.call(storyMark.querySelectorAll('a.clover__leaf-hit[href]')) : [];
   leafLinks.forEach(function (a) {
     a.setAttribute('data-stage-href', a.getAttribute('href'));
@@ -265,15 +262,11 @@
   });
 
   var applyLeafTargets = function () {
-    var root = document.documentElement;
-    var decaying = root.classList.contains('is-decayed');
-    var realWorld = root.classList.contains('is-real-world');
+    var realWorld = document.documentElement.classList.contains('is-real-world');
     leafLinks.forEach(function (a) {
       var stageHref = a.getAttribute('data-stage-href') || '';
       var stage = stageHref.replace('#stage-', '');
-      var target = null;
-      if (decaying) target = document.getElementById(decayTargets[stage] || '');
-      if (!target && realWorld) target = document.getElementById('real-world-' + stage);
+      var target = realWorld ? document.getElementById('real-world-' + stage) : null;
       if (target) {
         var heading = target.querySelector('h2');
         a.setAttribute('href', '#' + target.id);
@@ -287,11 +280,18 @@
   };
 
   if (storyMark && firstRealWorld) {
+    var markSvg = storyMark.querySelector('svg');
+    var healthyMarkLabel = markSvg ? markSvg.getAttribute('aria-label') || '' : '';
     var inRealWorld = null;
     var setRealWorld = function (on) {
       if (on === inRealWorld) return;
       inRealWorld = on;
       document.documentElement.classList.toggle('is-real-world', on);
+      if (markSvg) {
+        markSvg.setAttribute('aria-label', on
+          ? 'The same five-leaf cycle in muted grey, unchanged in shape, drained of its colour.'
+          : healthyMarkLabel);
+      }
       applyLeafTargets();
     };
 
@@ -302,41 +302,6 @@
     syncRealWorld();
     window.addEventListener('scroll', syncRealWorld, { passive: true });
     window.addEventListener('resize', syncRealWorld);
-  }
-
-    /* An Outcome without responsibility does not mature into Growth. Once that argument begins, the
-      unchanged cycle takes on a muted decay palette, and each unanswered stage drains it one step
-      further. The shape and motion stay intact. */
-  var decaySections = ['responsibility', 'context-misuse', 'accountability', 'rollout', 'outcome', 'growth']
-    .map(function (id) { return document.getElementById(id); })
-    .filter(Boolean);
-  var decayMark = document.querySelector('.pinned__mark svg');
-  if (decaySections.length && decayMark) {
-    var healthyMarkLabel = decayMark.getAttribute('aria-label') || '';
-    var decayStep = null;
-    var setDecayStep = function (step) {
-      if (step === decayStep) return;
-      decayStep = step;
-      document.documentElement.classList.toggle('is-decayed', step > 0);
-      if (step > 0) document.documentElement.setAttribute('data-decay', String(step));
-      else document.documentElement.removeAttribute('data-decay');
-      decayMark.setAttribute('aria-label', step > 0
-        ? 'The same five-leaf cycle in muted grey-brown, draining further with each stage that was not answered.'
-        : healthyMarkLabel);
-      applyLeafTargets();
-    };
-
-    var syncDecay = function () {
-      var reached = 0;
-      for (var i = 0; i < decaySections.length; i++) {
-        if (decaySections[i].getBoundingClientRect().top <= window.innerHeight / 2) reached = i + 1;
-      }
-      setDecayStep(reached);
-    };
-
-    syncDecay();
-    window.addEventListener('scroll', syncDecay, { passive: true });
-    window.addEventListener('resize', syncDecay);
   }
 
   /* The closing block carries its own whole, green mark, so the pinned one steps aside for it. */

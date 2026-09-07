@@ -180,7 +180,7 @@ main section.band > .wrap > p.verse__line {
 /* Wider than the other marks because the hero clover carries a label on every leaf. */
 .clover--hero { width: clamp(260px, 36vw, 400px); justify-self: center; margin-inline: auto; }
 
-/* The closing mark keeps its own gradient, so the decayed palette on :root cannot reach it. */
+/* The closing mark keeps its own gradient, so the grey palette on :root cannot reach it. */
 .clover--close { width: clamp(150px, 24vw, 240px); margin-inline: auto; }
 .clover--close .clover__leaf.is-filled { fill: url(#leaf-revive); stroke: none; }
 .clover--close .clover__vein { stroke: #d9ece8; }
@@ -215,24 +215,13 @@ main section.band > .wrap > p.verse__line {
 /* Only the hero mark is shaded and veined. The smaller marks stay flat. */
 .clover--hero .clover__leaf.is-filled { fill: url(#leaf-fade); stroke: none; }
 
-/* The same cycle moves through seasons without changing shape or motion: healthy green, autumn in
-   the real-world reflection, then a restrained grey-brown when responsibility is not carried on. */
+/* The cycle has two states and no shape change between them: healthy green while the framework is
+   being explained, and a restrained grey once the page turns to what the real world did with it. */
 :root.is-real-world {
-  --leaf-1: #e8b23a;
-  --leaf-2: #d8812c;
-  --leaf-3: #a34f1e;
-}
-:root.is-decayed {
   --leaf-1: #777465;
   --leaf-2: #625d52;
   --leaf-3: #4c4741;
 }
-/* Each unanswered stage drains the palette one step further. Colour only — shape and motion never change. */
-:root.is-decayed[data-decay="2"] { --leaf-1: #706e5f; --leaf-2: #5d584d; --leaf-3: #48433d; }
-:root.is-decayed[data-decay="3"] { --leaf-1: #6a675a; --leaf-2: #575349; --leaf-3: #433f39; }
-:root.is-decayed[data-decay="4"] { --leaf-1: #636154; --leaf-2: #524d44; --leaf-3: #3f3b35; }
-:root.is-decayed[data-decay="5"] { --leaf-1: #5c5a4f; --leaf-2: #4c4840; --leaf-3: #3a3632; }
-:root.is-decayed[data-decay="6"] { --leaf-1: #565449; --leaf-2: #47433b; --leaf-3: #36322e; }
 #leaf-fade stop { transition: stop-color 700ms ease; }
 #leaf-fade stop:nth-of-type(1) { stop-color: var(--leaf-1); }
 #leaf-fade stop:nth-of-type(2) { stop-color: var(--leaf-2); }
@@ -434,21 +423,6 @@ main section.band > .wrap > p.verse__line {
 .pinned__mark .story__leaf { transition: fill 0.25s ease; }
 .pinned__mark .story__leaf.is-active { fill: var(--ink); }
 .pinned__mark .story__label.is-active { fill: var(--ink); font-weight: 800; }
-
-/* Once the cycle is decaying, the reached leaf does not go to ink. It falls: only the dotted outline
-   of where it was remains. The gap stays clickable, so every stage can still be reached. */
-:root.is-decayed .pinned__mark .story__leaf,
-:root.is-decayed .pinned__mark .clover__vein { transition: fill 0.25s ease, stroke 0.25s ease, opacity 0.25s ease; }
-:root.is-decayed .pinned__mark .story__leaf.is-active {
-  fill: transparent;
-  stroke: #6f6a5d;
-  stroke-width: 1.75;
-  stroke-dasharray: 3 3.5;
-  stroke-linecap: round;
-  pointer-events: all;
-}
-:root.is-decayed .pinned__mark .story__leaf.is-active + .clover__vein { opacity: 0; }
-:root.is-decayed .pinned__mark .story__label.is-active { fill: #5c574c; font-weight: 800; }
 
 /* Pointer and keyboard states, last so they outline whichever leaf is under them in any season. */
 :root .clover--hero .clover__leaf-hit:hover .clover__leaf {

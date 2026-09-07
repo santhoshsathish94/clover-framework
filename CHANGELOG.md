@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.4.0 — 2026-09-08
+
+The home page argues once instead of twice. Each stage's real-world section now carries what should
+happen, what actually happened, and the evidence for it in one place. `VERSION` is `2.4.0` and the
+site's `?v=` cache strings match it.
+
+**Five sections replace ten.** `#context-misuse`, `#accountability`, `#rollout`, `#outcome` and
+`#growth` are gone; their arguments and evidence links moved into `#real-world-context`,
+`#real-world-direction`, `#real-world-execution`, `#real-world-outcome` and `#real-world-growth`.
+The home page is 22 sections, down from 27. `#clover-teaches` is now headed "What needs to change in
+the real world?" and closes on a line about who acts when governments do not.
+
+**A new section, `#systems`.** "What systems should adopt?" — every system was built around humans,
+and process built to catch human error does not fit an actor that is not human. Accountability rests
+on a named human, the environment enforces what an instruction cannot, and AI actions are monitored.
+
+**The mark has two states instead of three.** The autumn palette and the six-step `data-decay` drain
+are removed: green while the framework is explained, grey from the real-world sections to the end.
+The `is-decayed` state is deleted entirely — after the merge no section in its range could light a
+leaf, so its fallen-leaf rules could never match. The grey accessible name moved to `is-real-world`,
+where the colour actually changes, so it now describes the whole grey half rather than part of it.
+
+**AGENTS.md states what it does and does not bind.** A new section says the cycle is written for the
+agent to understand where the work sits, not as a process the human must adopt — no stage is required
+before starting, no vocabulary is corrected, no stage name is returned where an answer was wanted.
+What binds the agent is the boundaries. Four of those are strengthened: intellectual property must be
+recorded in the artifact rather than only in the conversation, so the creator can verify what was
+taken and refuse it; system-level data exposure must be reported, not only credentials the agent
+trips over; the Growth record is offered to the human to keep, correct or discard; and Direction may
+not be skipped and explained afterwards.
+
+**Spelling normalized.** The home page carried British forms against the American convention used by
+every other page. `organisation`, `licence` and `acknowledgement` now match the rest of the site.
+
 ## v2.3.0 — 2026-09-06
 
 The home page gained a sourced argument about why responsibility for AI was sidelined, and a
