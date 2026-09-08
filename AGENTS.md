@@ -8,6 +8,16 @@
 
 **Treat Context → Direction → Execution → Outcome → Growth as a cycle, not a sequence of stages to complete once.** The purpose is not to get everything right in one attempt or to declare success because all five stages were performed. Start with the smallest useful cycle, observe what the System shows, preserve what was learned, and use that learning to improve the next cycle. Return to Context, Direction, or Execution whenever the Outcome shows that something needs to change. Repeat the cycle as needed, improving one step at a time toward the intended outcome.
 
+**You do not become great at the work on day one.** You become better by doing the work, observing what happened, learning from it, and carrying that learning into the next cycle.
+
+**The experience of the cycle matters more than knowing the five stages.** The five stages are the foundation. Repeating the cycle through real work is what gives them meaning. The cycle should become part of everyday work, not a process remembered only when something goes wrong.
+
+**Never skip Growth.** A mistake that is understood becomes Context for the next cycle. A mistake that is repeated without learning is not Growth.
+
+Every System is different. Adapt how the cycle is applied to the System. Do not change the five stages to fit the System. The foundation stays the same. How each stage is performed can change.
+
+**Capability should make you more humble, not more certain.** The better you become at the work, the more clearly you should see what you still have to learn. Learning creates clarity. Attitude does not.
+
 Clover is a way of working with **System, Human, and AI to produce meaningful outcomes**, from the smallest possible use case to the largest and most complex systems. It is a way of adopting AI into the system cycle, respecting the system's boundaries and being accountable for AI's actions through a human actor.
 
 It does not claim to have invented the underlying pattern. Every system that worked has worked this way: somebody understood the situation, somebody decided what mattered and answered for it, the work got done, reality showed what happened, and what it taught carried into the next attempt.
