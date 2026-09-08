@@ -181,7 +181,7 @@ main section.band > .wrap > p.verse__line {
 .clover--hero { width: clamp(260px, 36vw, 400px); justify-self: center; margin-inline: auto; }
 
 /* The closing mark keeps its own gradient, so the grey palette on :root cannot reach it. */
-.clover--close { width: clamp(150px, 24vw, 240px); margin-inline: auto; }
+.clover--close { display: block; width: clamp(150px, 24vw, 240px); margin-inline: auto; }
 .clover--close .clover__leaf.is-filled { fill: url(#leaf-revive); stroke: none; }
 .clover--close .clover__vein { stroke: #d9ece8; }
 .clover--brand { width: 26px; }
@@ -215,22 +215,14 @@ main section.band > .wrap > p.verse__line {
 /* Only the hero mark is shaded and veined. The smaller marks stay flat. */
 .clover--hero .clover__leaf.is-filled { fill: url(#leaf-fade); stroke: none; }
 
-/* The cycle moves through three states without changing shape: healthy green while the framework is
-   explained, a restrained grey once the page turns to what the real world did with it, and the new
-   green of #leaf-revive where the page turns to what can still be done. */
+/* The cycle has two states and no shape change between them: healthy green while the framework is
+   explained, and a restrained grey once the page turns to what the real world did with it. The
+   answer section carries its own whole mark instead, so the pinned one fades rather than recovers. */
 :root.is-real-world {
   --leaf-1: #777465;
   --leaf-2: #625d52;
   --leaf-3: #4c4741;
 }
-/* Later than the grey rule on purpose: same specificity, so source order decides. */
-:root.is-reviving {
-  --leaf-1: #5fa79b;
-  --leaf-2: #3f8a7d;
-  --leaf-3: #2c6f64;
-}
-.pinned__mark svg { transition: filter 700ms ease; }
-:root.is-reviving .pinned__mark svg { filter: drop-shadow(0 0 16px rgba(95, 167, 155, 0.5)); }
 #leaf-fade stop { transition: stop-color 700ms ease; }
 #leaf-fade stop:nth-of-type(1) { stop-color: var(--leaf-1); }
 #leaf-fade stop:nth-of-type(2) { stop-color: var(--leaf-2); }

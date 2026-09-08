@@ -57,34 +57,31 @@ The page is one continuous argument rather than one section per stage.
 20. `#real-world-growth` — Growth was not fully addressed: why unaddressed mistakes still delay what AI could give
 21. `#responsibility` — Great AI capability should mean greater responsibility: why responsibility lost to the pursuit of dominance
 22. `#clover-teaches` — Who should take responsibility? The source, and everyone who adopts and uses it
-23. `#what-now` — What can we do about it? Enforce in the system, build on what the organization already holds, and keep the data where it is
-24. `#closing` — The mark whole again in new green, with the closing line beneath it
+23. `#what-now` — What should we learn from the mistakes? Stop racing, the law compensates rather than prevents, and own the infrastructure the model runs on
+24. `#real-growth` — How can we see real growth? Build on what the organization already holds, and the whole mark with the closing line beneath it
 
-The five real-world sections lead into the three closing sections, 21 to 23. They state the author's
+The five real-world sections lead into the four closing sections, 21 to 24. They state the author's
 conclusions and link to the sourced documents rather than reproducing their detail. No company,
 government or person is named anywhere on the site; the documents in `docs/ai-responsibility/` name
 every source.
 
-None of the three maps to a stage: all carry `.responsibility-band` only, and are excluded
-from centre-scroll alignment.
+None of the four maps to a stage. `#responsibility` and `#clover-teaches` carry
+`.responsibility-band` and are excluded from centre-scroll alignment.
 
-Section 24 sits **outside** `[data-story]`, so the sticky mark reserves no space for it.
+Sections 23 and 24 sit **outside** `[data-story]`, so the sticky mark reserves no space for them.
+Section 24 carries its own static mark and the closing line, and its prose stays left-aligned — only
+the mark and the verse centre themselves, so the section does not need `.closing`.
 
-**The mark has three states: green, grey, then new green.** Once `#evidence-preview` reaches the
-middle of the viewport, `app.js` puts `is-real-world` on `<html>`, CSS drains the gradient to grey,
-and each leaf repoints from `#stage-*` to its `#real-world-*` section with an `aria-label` taken from
-that section's heading. Once `#what-now` reaches the middle, `is-reviving` is added and the gradient
-becomes the lighter `#leaf-revive` green with a soft drop-shadow. `is-reviving` is declared after the
-grey rule on purpose: both selectors have the same specificity, so source order decides. Only the
-three gradient stops and the filter change — the same five leaves, labels, veins, shape and
-continuous scroll-driven turn remain. Scrolling back restores grey, then green.
+**The mark has two states: green, then grey.** Once `#evidence-preview` reaches the middle of the
+viewport, `app.js` puts `is-real-world` on `<html>`, CSS drains the gradient to grey, the mark's
+accessible name changes to describe the grey, and each leaf repoints from `#stage-*` to its
+`#real-world-*` section with an `aria-label` taken from that section's heading. Only the three
+gradient stops change: the same five leaves, labels, veins, shape and continuous scroll-driven turn
+remain. Scrolling back restores green above the real-world sections.
 
-**One writer owns the mark's accessible name.** `updateMarkLabel` in `app.js` reads the two state
-classes and sets the name from whichever applies, so the scroll handlers cannot overwrite each other.
-
-**The grey does not end the page.** `#closing` carries its own static mark with all five leaves and
+**The grey does not end the page.** `#what-now` carries its own static mark with all five leaves and
 veins intact, filled from a second gradient, `#leaf-revive`, so the drained `--leaf-*` values on
-`:root` cannot reach it. When `#closing` comes within 90% of the viewport `app.js` sets `is-closing`
+`:root` cannot reach it. When `#what-now` comes within 90% of the viewport `app.js` sets `is-closing`
 on `<html>` and the pinned mark fades out; `visibility` is delayed to the end of the fade so its five
 leaf links leave the tab order rather than staying focusable while invisible.
 

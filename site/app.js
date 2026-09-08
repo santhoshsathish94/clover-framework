@@ -282,51 +282,30 @@
   if (storyMark && firstRealWorld) {
     var markSvg = storyMark.querySelector('svg');
     var healthyMarkLabel = markSvg ? markSvg.getAttribute('aria-label') || '' : '';
-    var reviveBlock = document.getElementById('what-now');
-
-    // One writer for the mark's name, so the two scroll states cannot overwrite each other.
-    var updateMarkLabel = function () {
-      if (!markSvg) return;
-      var root = document.documentElement;
-      var label = healthyMarkLabel;
-      if (root.classList.contains('is-reviving')) {
-        label = 'The same five-leaf cycle, whole again and lit in new green.';
-      } else if (root.classList.contains('is-real-world')) {
-        label = 'The same five-leaf cycle in muted grey, unchanged in shape, drained of its colour.';
-      }
-      markSvg.setAttribute('aria-label', label);
-    };
-
     var inRealWorld = null;
     var setRealWorld = function (on) {
       if (on === inRealWorld) return;
       inRealWorld = on;
       document.documentElement.classList.toggle('is-real-world', on);
-      updateMarkLabel();
+      if (markSvg) {
+        markSvg.setAttribute('aria-label', on
+          ? 'The same five-leaf cycle in muted grey, unchanged in shape, drained of its colour.'
+          : healthyMarkLabel);
+      }
       applyLeafTargets();
     };
 
-    var reviving = null;
-    var setReviving = function (on) {
-      if (on === reviving) return;
-      reviving = on;
-      document.documentElement.classList.toggle('is-reviving', on);
-      updateMarkLabel();
+    var syncRealWorld = function () {
+      setRealWorld(firstRealWorld.getBoundingClientRect().top <= window.innerHeight / 2);
     };
 
-    var syncMark = function () {
-      var mid = window.innerHeight / 2;
-      setRealWorld(firstRealWorld.getBoundingClientRect().top <= mid);
-      if (reviveBlock) setReviving(reviveBlock.getBoundingClientRect().top <= mid);
-    };
-
-    syncMark();
-    window.addEventListener('scroll', syncMark, { passive: true });
-    window.addEventListener('resize', syncMark);
+    syncRealWorld();
+    window.addEventListener('scroll', syncRealWorld, { passive: true });
+    window.addEventListener('resize', syncRealWorld);
   }
 
-  /* The closing block carries its own whole, green mark, so the pinned one steps aside for it. */
-  var closingBlock = document.getElementById('closing');
+  /* The answer section carries its own whole, green mark, so the pinned one steps aside for it. */
+  var closingBlock = document.getElementById('what-now');
   if (closingBlock) {
     var syncClosing = function () {
       document.documentElement.classList.toggle(
