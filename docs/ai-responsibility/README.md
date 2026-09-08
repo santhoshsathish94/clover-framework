@@ -15,7 +15,7 @@ a shared, binding change.
 The master argument is
 [Why Responsibility for AI Was Sidelined](why-responsibility-was-sidelined.md). It brings the warning
 record, the pursuit-of-dominance evidence, the causal conclusion and its limits into one document.
-The supporting evidence is split across seven papers:
+The supporting evidence is split across eight papers:
 
 | | Question |
 |---|---|
@@ -27,6 +27,7 @@ The supporting evidence is split across seven papers:
 | [06. Work, livelihoods and accountability](06-work-livelihoods-and-accountability.md) | What does the measured labour evidence show, and what does it not yet establish? |
 | [07. Why incidents do not become accountability](07-why-incidents-do-not-become-accountability.md) | If institutions know the risks and mechanisms, why do repeated incidents still fail to change the next release? |
 | [08. Incidents and adoption outcomes](08-incidents-and-adoption-outcomes.md) | What did adoption actually produce, incident by incident, and what does the record not establish? |
+| [09. Who could say no, and when](09-who-could-say-no-and-when.md) | Which party could refuse, by what mechanism, and at what date? |
 
 The direct request to model providers, governments, enterprises and users remains in
 [Responsibility Cannot Be Optional](../responsibility-cannot-be-optional.md).
@@ -69,6 +70,10 @@ Three labels keep the argument honest:
 7. Labour effects are already measurable in particular occupations and age groups, but the evidence
    does not show economy-wide replacement. That uncertainty calls for monitoring and transition
    duties, not for either panic or dismissal.
+8. Protection was not absent; it was unevenly timed. A provider's terms prohibited scraping it,
+   extracting its weights and building a competing model roughly two years before a website was
+   given a way to signal that its content should not be used for training. Consent at scale was
+   never impractical: the same terms obtain it from millions of users before granting access.
 
 ## The principle
 

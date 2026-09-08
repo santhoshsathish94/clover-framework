@@ -37,43 +37,50 @@ The page is one continuous argument rather than one section per stage.
 
 1. `#overview` — Hero: the name, the tagline, what Clover is in a sentence, the mark, the stages
 2. `#capability` — What is Clover: the cycle as it ran before AI, with the human as the actor
-3. `#ai-changes` — What AI changes: every stage easier, better and faster, the cycle unchanged
-4. `#humans` — Why humans matter: accountability, boundaries, and carrying the consequence
-5. `#systems` — What systems should adopt: process built for an actor that is not human
-6. `#stage-context` — What is Context?
-7. `#stage-direction` — What is Direction?
-8. `#stage-execution` — What is Execution?
-9. `#stage-outcome` — What is Outcome?
-10. `#stage-growth` — What is Growth?
-11. `#why-cycle` — Why is it a cycle? Growth becomes the next Context
-12. `#try` — A common example: something changed since last time, and each stage explained against it
-13. `#scale` — Complexity can grow: the same cycle for individuals, teams, organizations and AI
-14. `#evidence-preview` — The cycle exists in every system: what Clover is still working out, and where contribution matters
-15. `#real-world-context` — Context in the real world? What was taken to train the models, and what it cost
-16. `#real-world-direction` — Direction in the real world? Who set the Direction, and why nobody had to answer for it
-17. `#real-world-execution` — Execution in the real world? No bounded phases, no external body, released to everyone at once
-18. `#real-world-outcome` — Outcome in the real world? Sold on capability, adopted without knowing the limits
-19. `#real-world-growth` — Growth in the real world? Why unaddressed mistakes still delay what AI could give
-20. `#responsibility` — Great AI capability should mean greater responsibility: why responsibility lost to the pursuit of dominance
-21. `#clover-teaches` — What needs to change in the real world? Instruction to the agent, and who holds it when the agent fails
-22. `#closing` — The mark whole again in new green, with the closing line beneath it
+3. `#why-clover` — Why we need Clover: the same model produces different outcomes, and the difference is a structure that can be learned
+4. `#ai-changes` — What AI changes: how each stage is done, and which of those changes are improvements
+5. `#humans` — Why humans matter: accountability, boundaries, and carrying the consequence
+6. `#systems` — What systems should adopt: process built for an actor that is not human
+7. `#stage-context` — What is Context?
+8. `#stage-direction` — What is Direction?
+9. `#stage-execution` — What is Execution?
+10. `#stage-outcome` — What is Outcome?
+11. `#stage-growth` — What is Growth?
+12. `#why-cycle` — Why is it a cycle? Growth becomes the next Context
+13. `#try` — A common example: something changed since last time, and each stage explained against it
+14. `#scale` — Complexity can grow: the same cycle for individuals, teams, organizations and AI
+15. `#evidence-preview` — The cycle exists in every system: what Clover is still working out, and where contribution matters
+16. `#real-world-context` — Context was misused: what was taken to train the models, and what it cost
+17. `#real-world-direction` — Direction had no accountability: who set the Direction, and why nobody had to answer for it
+18. `#real-world-execution` — Execution was not phased: no bounded phases, no external body, released to everyone at once
+19. `#real-world-outcome` — Outcomes did not show incapabilities: sold on capability, adopted without knowing the limits
+20. `#real-world-growth` — Growth was not fully addressed: why unaddressed mistakes still delay what AI could give
+21. `#responsibility` — Great AI capability should mean greater responsibility: why responsibility lost to the pursuit of dominance
+22. `#clover-teaches` — Who should take responsibility? The source, and everyone who adopts and uses it
+23. `#what-now` — What can we do about it? Enforce in the system, build on what the organization already holds, and keep the data where it is
+24. `#closing` — The mark whole again in new green, with the closing line beneath it
 
-The five real-world sections lead into the two closing sections, 20 and 21. They state the author's
+The five real-world sections lead into the three closing sections, 21 to 23. They state the author's
 conclusions and link to the sourced documents rather than reproducing their detail. No company,
 government or person is named anywhere on the site; the documents in `docs/ai-responsibility/` name
 every source.
 
-Neither closing section maps to a stage: both carry `.responsibility-band` only, and are excluded
+None of the three maps to a stage: all carry `.responsibility-band` only, and are excluded
 from centre-scroll alignment.
 
-Section 22 sits **outside** `[data-story]`, so the sticky mark reserves no space for it.
+Section 24 sits **outside** `[data-story]`, so the sticky mark reserves no space for it.
 
-**The mark has two states: green, then grey.** Once `#evidence-preview` reaches the middle of the
-viewport, `app.js` puts `is-real-world` on `<html>`, CSS drains the gradient to grey, the mark's
-accessible name changes to describe the grey, and each leaf repoints from `#stage-*` to its
-`#real-world-*` section with an `aria-label` taken from that section's heading. Only the three
-gradient stops change: the same five leaves, labels, veins, shape and continuous scroll-driven turn
-remain. Scrolling back restores green above the real-world sections.
+**The mark has three states: green, grey, then new green.** Once `#evidence-preview` reaches the
+middle of the viewport, `app.js` puts `is-real-world` on `<html>`, CSS drains the gradient to grey,
+and each leaf repoints from `#stage-*` to its `#real-world-*` section with an `aria-label` taken from
+that section's heading. Once `#what-now` reaches the middle, `is-reviving` is added and the gradient
+becomes the lighter `#leaf-revive` green with a soft drop-shadow. `is-reviving` is declared after the
+grey rule on purpose: both selectors have the same specificity, so source order decides. Only the
+three gradient stops and the filter change — the same five leaves, labels, veins, shape and
+continuous scroll-driven turn remain. Scrolling back restores grey, then green.
+
+**One writer owns the mark's accessible name.** `updateMarkLabel` in `app.js` reads the two state
+classes and sets the name from whichever applies, so the scroll handlers cannot overwrite each other.
 
 **The grey does not end the page.** `#closing` carries its own static mark with all five leaves and
 veins intact, filled from a second gradient, `#leaf-revive`, so the drained `--leaf-*` values on
