@@ -84,7 +84,7 @@ A simple task may need one source, one decision, one action, and one check. A co
 
 ## 2. Growth comes from meaningful cycles
 
-Growth is the fifth stage, and it is the one you perform last. It is whatever the Outcome taught, written back so the next cycle starts from it.
+**Growth is the fifth stage, but it is not the end of the work. It is what carries the Outcome into the next cycle.** It is whatever the Outcome taught, written back so the next cycle starts from it.
 
 It needs no repetition and no scale. One wrong answer, understood and recorded, is Growth. An unfavorable Outcome usually teaches more than a favorable one.
 
