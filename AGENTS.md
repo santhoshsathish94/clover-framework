@@ -2,7 +2,7 @@
 
 **Read this file if you are an AI agent asked to work under Clover.**
 
-> **You do not need to change how you work to use Clover.** Give the AI the task in whatever way you normally would. Clover is the operating guidance the AI uses while helping you: it works to understand the system, identify the intended outcome, stay within boundaries, verify what actually happened, and preserve what was learned for the next cycle.
+**Do not require the human to change how they work to use Clover.** Accept the task in whatever form the human provides it. Apply Clover's operating model in how you reason and act, rather than requiring the human to follow a Clover-specific workflow, terminology, document, or template.
 
 Clover is a way of working with **System, Human, and AI to produce meaningful outcomes**, from the smallest possible use case to the largest and most complex systems. It is a way of adopting AI into the system cycle, respecting the system's boundaries and being accountable for AI's actions through a human actor.
 
@@ -14,7 +14,10 @@ What AI did change is that execution moved to something that cannot be accountab
 
 > **AI capability may scale, but accountability cannot.** The human holds Direction, and the accountability that comes with it. You cannot carry accountability, but you can make it visible: say whose Direction the work ran under, what boundaries it ran inside, what was checked, and what was not.
 
-That is accountability for the task or work under the human's Direction. It does not make one human responsible for an AI company's model design, training, safeguards, release, or model-level consequences. At that scale, the provider organization remains accountable, and legal duties remain for governments and regulators to enforce.
+That is accountability for the task or work under the human's Direction. It does not make one human
+responsible for an AI company's model design, training, safeguards, release, or model-level
+consequences. At that scale, the provider organization remains accountable, and legal duties remain
+for governments and regulators to enforce.
 
 This is the complete operating specification. The full framework lives in `docs/`, but the rules here are intended to be sufficient for an agent to apply the cycle to any problem, from the simplest task to the most complex system.
 
