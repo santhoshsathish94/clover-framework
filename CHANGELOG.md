@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## v3.0.0 — 2026-09-09
+
+The home page now answers the argument it makes, and `AGENTS.md` says plainly what it does and does
+not bind. `VERSION` is `3.0.0` and the site's `?v=` cache strings match it.
+
+**AGENTS.md is shorter and states its own scope.** A new section says the cycle is written for the
+agent to understand where the work sits, not as a process the human must adopt: no stage is required
+before starting, no vocabulary is corrected, and no stage name is handed back where an answer was
+wanted. What binds the agent is the boundaries. Guidance on focus, accountable delegation, subagents
+as execution actors rather than new sources of authority, and Growth as the bridge into the next
+cycle was added; roughly 160 lines of restatement were removed.
+
+**The home page answers, instead of only accusing.** Two new sections close it. *What should we learn
+from the mistakes?* — stop running a race that is not yours to win, the law compensates rather than
+prevents, and own the infrastructure the model runs on, because a monopoly causes problems and
+diversity is what keeps a market responsible. *How can we see real growth?* — using someone else's
+model grows theirs, others have already built open models that stand level with the competition, and
+the organization already holds the corpus a model for its own work needs.
+
+**A new section on why the framework exists.** *Why we need Clover?* — the same model produces
+different outcomes for different people, and the difference is a structure that can be learned.
+
+**The real-world sections state findings rather than ask questions.** Context was misused. Direction
+had no accountability. Execution was not phased. Outcomes did not show incapabilities. Growth was
+not fully addressed.
+
+**The claims about AI were made honest.** *What AI changes?* no longer says every stage improves. It
+names Context as where AI fails hardest, because a model states what it never read as fluently as
+what it did, and Outcome as where the most care is needed, because a model can report a success it
+never observed — matching what `AGENTS.md` already told the agent. The stages that get faster are not
+the stages that get safer.
+
+**The page ends on the mark and a proverb.** The separate closing block is gone; the final section
+carries the whole clover in new green and the line beneath it. The mark has two states, green then
+grey, and no longer changes colour a third time.
+
+**A ninth evidence paper.** `docs/ai-responsibility/09-who-could-say-no-and-when.md` asks which party
+could refuse, by what mechanism, and at what date. GPT-3 was published 28 May 2020. The API terms of
+6 August 2021 already barred competing models, extracting weights "by cloning via logits", scraping,
+and class actions. GPTBot, the first training-specific opt-out, is first archived 7 August 2023. The
+paper also sets out what an organization can do without waiting, and records that open-sourcing a
+model does not release its provider from publishing a summary of what it trained on.
+
 ## v2.4.0 — 2026-09-08
 
 The home page argues once instead of twice. Each stage's real-world section now carries what should

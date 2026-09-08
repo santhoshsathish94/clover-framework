@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
-<link rel="stylesheet" href="../styles.css?v=2.4.0">
+<link rel="stylesheet" href="../styles.css?v=3.0.0">
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body>
@@ -110,7 +110,7 @@
             </div>
           </div>
           <figure class="diagram">
-            <img src="../assets/case-study-01-contentful-migration.svg?v=2.4.0" alt="The migration as one Clover cycle. Context: 89 GraphQL files and 99 mappers. Direction: preserve every route and JSON shape. Execution: one generic mapper and 15 verifiable tasks gated by a live parity differ. Outcome: 36 of 36 endpoint cases and 239 tests, with QA signing off. Growth: the parity harness is what made byte-for-byte compatibility provable, and decoupling the wire contract from Contentful turns the next content-model change into a small edit. Implementation took about a day against an 8 to 10 week estimate, performance was measured locally only, and the production cutover has not run." loading="lazy" width="960" height="380">
+            <img src="../assets/case-study-01-contentful-migration.svg?v=3.0.0" alt="The migration as one Clover cycle. Context: 89 GraphQL files and 99 mappers. Direction: preserve every route and JSON shape. Execution: one generic mapper and 15 verifiable tasks gated by a live parity differ. Outcome: 36 of 36 endpoint cases and 239 tests, with QA signing off. Growth: the parity harness is what made byte-for-byte compatibility provable, and decoupling the wire contract from Contentful turns the next content-model change into a small edit. Implementation took about a day against an 8 to 10 week estimate, performance was measured locally only, and the production cutover has not run." loading="lazy" width="960" height="380">
           </figure>
         </div>
 
@@ -132,7 +132,7 @@
             </div>
           </div>
           <figure class="diagram">
-            <img src="../assets/case-study-02-react-rsc-memory-leak.svg?v=2.4.0" alt="Five stages. Context: server memory grew without bound under sustained load. Direction: stabilize the incident with a Node stack-trace flag, then keep investigating past the workaround. Execution: find the cause in React's react-server renderer, where a cleanup Error retains the completed render's cache scope, and contribute a one-file fix upstream. Outcome: the fleet soak validated the mitigation rather than the patch, and the pull request is CI-green and not merged. Growth: a repeatable retained-heap harness turned it leaks into a provable before and after, and the layer where the symptom appeared was not the layer that owned it." loading="lazy" width="960" height="380">
+            <img src="../assets/case-study-02-react-rsc-memory-leak.svg?v=3.0.0" alt="Five stages. Context: server memory grew without bound under sustained load. Direction: stabilize the incident with a Node stack-trace flag, then keep investigating past the workaround. Execution: find the cause in React's react-server renderer, where a cleanup Error retains the completed render's cache scope, and contribute a one-file fix upstream. Outcome: the fleet soak validated the mitigation rather than the patch, and the pull request is CI-green and not merged. Growth: a repeatable retained-heap harness turned it leaks into a provable before and after, and the layer where the symptom appeared was not the layer that owned it." loading="lazy" width="960" height="380">
           </figure>
         </div>
 
@@ -154,11 +154,11 @@
             </div>
           </div>
           <figure class="diagram">
-            <img src="../assets/reference-cross-team-knowledge-access.svg?v=2.4.0" alt="Cross-team knowledge access. Read-only access to repositories and documentation, logs and telemetry, datasources, and job definitions feeds an orchestration layer that reads across all of it at the asker's own privileges. A human asks what happened and why, and points at where to look first. The answer comes back with the files and logs it was drawn from. Growth: what each question establishes about where the knowledge actually lived goes back into Context, so the next question starts nearer the answer." loading="lazy" width="960" height="372">
+            <img src="../assets/reference-cross-team-knowledge-access.svg?v=3.0.0" alt="Cross-team knowledge access. Read-only access to repositories and documentation, logs and telemetry, datasources, and job definitions feeds an orchestration layer that reads across all of it at the asker's own privileges. A human asks what happened and why, and points at where to look first. The answer comes back with the files and logs it was drawn from. Growth: what each question establishes about where the knowledge actually lived goes back into Context, so the next question starts nearer the answer." loading="lazy" width="960" height="372">
             <figcaption>Cross-team knowledge access</figcaption>
           </figure>
           <figure class="diagram">
-<img src="../assets/reference-production-exception-remediation.svg?v=2.4.0" alt="Production exception remediation. A recurring production exception, then reading the code across every repository plus the logs and the running application, then a proposal carrying the root cause, the exact scope, the tests and the signal to expect. A human approves before anything reaches production, and the ticket closes when the original signal is shown resolved. Growth: what the cycle established outlives the ticket, so a recurring exception is recognized rather than investigated again from nothing." loading="lazy" width="960" height="372">
+<img src="../assets/reference-production-exception-remediation.svg?v=3.0.0" alt="Production exception remediation. A recurring production exception, then reading the code across every repository plus the logs and the running application, then a proposal carrying the root cause, the exact scope, the tests and the signal to expect. A human approves before anything reaches production, and the ticket closes when the original signal is shown resolved. Growth: what the cycle established outlives the ticket, so a recurring exception is recognized rather than investigated again from nothing." loading="lazy" width="960" height="372">
             <figcaption>Production exception remediation</figcaption>
           </figure>
         </div>
@@ -276,6 +276,6 @@
   </div>
 </footer>
 
-<script src="../app.js?v=2.4.0" defer></script>
+<script src="../app.js?v=3.0.0" defer></script>
 </body>
 </html>
