@@ -41,20 +41,6 @@ This repository contains the documentation, practical guidance, case studies, an
 
 **Clover AI** is the next major implementation direction of the project.
 
-### Acknowledgement
-
-A significant part of the thinking that led to the Clover AI direction was sparked by the extraordinary engineering work of **[Fareed Khan](https://github.com/FareedKhan-dev)** and his [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c) project.
-
-That work challenged a fundamental assumption about how large AI systems must be deployed: whether the entire model must always be resident in memory. By demonstrating Kimi K3 inference through a portable C99 implementation with a working set streamed from storage, it opened a practical engineering question that we believe deserves much deeper investigation.
-
-This directly influenced the direction of our Clover AI infrastructure experiments and our interest in small, efficient, self-hosted, and storage-aware AI systems.
-
-We want to acknowledge this clearly because the direction did not emerge in isolation. It was influenced by someone else's remarkable work, and that work deserves to be recognized.
-
-The Clover AI work in this repository is our own implementation direction and experimentation. It should not be confused with or presented as an extension of Fareed Khan's project. His work is the inspiration for this particular line of investigation, and applicable licensing, attribution, and upstream notices should always be respected.
-
-> **Extraordinary engineering can change the questions we think are worth asking.**
-
 The goal is to build an open-source AI system that can produce meaningful engineering outcomes while remaining bounded, observable, verifiable, and accountable.
 
 Its central principle is:
@@ -70,6 +56,24 @@ The implementation follows the Clover cycle:
 ```text
 Context → Direction → Execution → Outcome → Growth
 ```
+
+### Where this direction came from
+
+A significant part of the new Clover AI direction was inspired by the extraordinary engineering work of **Fareed Khan** in [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c).
+
+His work demonstrated a striking practical possibility: a 2.78-trillion-parameter Kimi K3 system could be run through a portable C99 implementation with a very small resident working set by streaming model data from storage.
+
+More importantly, it challenged an assumption about how large AI systems must be deployed. That led us to ask a broader Clover question: **how much of what we assume about AI infrastructure is actually a constraint of the model, and how much is a constraint of the way we build the surrounding system?**
+
+That question became one of the reasons for the new Clover AI implementation direction and our investigation into small models, model routing, CPU/GPU inference, memory residency, local NVMe/cache, and storage-streamed inference.
+
+We want to explicitly acknowledge Fareed Khan's work here. **Extraordinary engineering can change the questions we think are worth asking.**
+
+Clover does not claim his implementation as its own. The upstream project, its ideas, measurements, code, and applicable licensing and attribution remain his work. Our responsibility is to distinguish that foundation clearly from the experiments and implementation developed within Clover.
+
+**Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c)
+
+---
 
 The detailed implementation direction is intentionally kept separate from this README:
 
