@@ -1,42 +1,21 @@
 # Clover AI
 
-> Working in progress â€” direction for the next major Clover release
+> Working in progress — direction for the next major Clover release.
 
-Clover AI is an open-source AI system intended to demonstrate how AI can be capable of producing meaningful outcomes while remaining accountable to the system in which it operates.
+Clover AI is an open-source implementation direction for building AI systems that can produce meaningful engineering outcomes while remaining bounded, observable, verifiable, and accountable.
 
-The objective is not simply to build a more capable model.
+This file is not intended to explain the Clover Framework.
 
-The objective is to explore how AI capability can coexist with enforceable system boundaries, verification, observability, and human accountability.
+For the framework itself, start here:
 
----
-
-## Why Clover AI
-
-The AI industry is moving from models that answer questions toward systems that can understand context, use tools, write and execute code, interact with infrastructure, and produce real-world outcomes.
-
-That changes the engineering problem.
-
-A model can be highly capable and still produce a poor outcome because:
-
-- the context was incomplete
-- the retrieved information was wrong or stale
-- the direction was ambiguous
-- the model misunderstood the intended scope
-- a tool exposed too much authority
-- execution happened without sufficient controls
-- the outcome was never independently verified
-- failures were not observable
-- lessons from previous failures were lost
-
-Clover AI is intended to address the complete system rather than treating the model as the entire solution.
-
-The project asks:
-
-> **How can we build an AI that is capable enough to produce meaningful outcomes while the system around it remains responsible, bounded, observable, and accountable?**
+- https://cloverframework.com/
+- `README.md`
+- `docs/04-framework.md`
+- `docs/03-principles.md`
 
 ---
 
-# The Clover AI Principle
+## Clover AI — Core Direction
 
 > **The model can propose.  
 > The system decides.  
@@ -44,246 +23,77 @@ The project asks:
 > Evidence verifies.  
 > Humans remain accountable.**
 
-This is the central direction for Clover AI.
+Clover AI should demonstrate that increasing model capability does not require giving the model unrestricted authority.
 
-A capable model should not automatically become an authority simply because it can reason, plan, call tools, or operate autonomously.
-
-The surrounding system must determine what the AI is allowed to know, what it is allowed to access, and what it is allowed to do.
-
----
-
-# Clover AI and the Clover Cycle
-
-Clover AI follows the fundamental Clover cycle:
+The implementation should keep the Clover cycle operational:
 
 ```text
-Context
-   â†“
-Direction
-   â†“
-Execution
-   â†“
-Outcome
-   â†“
-Growth
-   â†“
-Context
+Context → Direction → Execution → Outcome → Growth → Context
 ```
 
-The cycle is not merely a workflow.
-
-It defines how an AI-enabled system moves from understanding a situation to producing an outcome and learning from what actually happened.
-
-Each stage has a responsibility.
+The model is one component of the system, not the system itself.
 
 ---
 
-# 1. Context
+## 1. Context
 
-Context is what the system knows and what the AI is permitted to receive.
+Context must be engineered from the real system.
 
-Clover AI should receive the context necessary to perform its task while respecting the boundaries of the system.
+Clover AI should prioritize:
 
-Context should be engineered rather than assumed.
+- relevant system context
+- provenance and freshness
+- permission-aware retrieval
+- exact source material where required
+- context sufficiency checks
+- deterministic context extraction where possible
 
-The system should understand:
-
-- what information is available
-- where the information came from
-- what information is relevant
-- what information is stale
-- what information is missing
-- what information the AI is permitted to access
-- what information should not be exposed
-
-Context should not automatically be treated as truth.
-
-A model can produce a fluent response from incorrect, incomplete, stale, or misleading context.
-
-Therefore:
-
-> **Context enables direction, but context is not automatically evidence.**
-
-## Context Misuse
-
-AI systems can fail not only because a model lacks capability, but because context is misused.
-
-The risk becomes larger when AI systems are trained on, retrieve, summarize, or act upon information without sufficiently understanding:
-
-- provenance
-- permission
-- ownership
-- relevance
-- freshness
-- scope
-- intended use
-
-Clover should treat context as something that has boundaries of its own.
-
-The question is not simply:
-
-> "Can the AI access this information?"
-
-It is also:
-
-> **"Should the AI have access to this information, for this purpose, in this context?"**
-
-This distinction matters when AI is used across organizations, codebases, customer data, internal knowledge, production systems, and public information.
-
----
-
-# 2. Direction
-
-Direction defines what the system is trying to accomplish.
-
-A human or another accountable system establishes the objective.
-
-The AI may help interpret, plan, decompose, and execute that objective, but it should not become the owner of the objective merely because it is capable of pursuing it.
-
-**Direction remains accountable.**
-
-This creates an important distinction:
+For software engineering, investigate:
 
 ```text
-Human / accountable system
-          â†“
-       Direction
-          â†“
-       AI system
+Source
+  ↓
+AST / syntax
+  + lexical information
+  + semantic information
+  + symbol relationships
+  ↓
+Ranking / graph expansion / reranking
+  ↓
+Context assembly
 ```
 
-The model should not silently redefine the objective based on its own interpretation.
+> **Insufficient information is a valid state.**
 
-Where ambiguity materially affects the outcome, it should be surfaced rather than silently resolved through assumptions.
+Retrieval improves available information; it does not make retrieved information true.
 
-The purpose of Clover AI is therefore not to remove humans from responsibility.
+Relevant reference: `docs/05-context-engineering.md`
 
-It is to make meaningful AI assistance possible while preserving responsibility where it belongs.
+---
+
+## 2. Direction
+
+Direction must remain owned by an accountable human or accountable system.
+
+Clover AI may interpret, plan, decompose, and execute a direction, but it must not silently redefine the objective or acquire authority simply because the model is capable of doing something.
 
 > **AI capability may scale, but accountability cannot be delegated to the model.**
 
----
+Relevant references:
 
-# 3. Execution
-
-Execution is where AI capability interacts with the real system.
-
-Clover AI may:
-
-- reason about a task
-- create a plan
-- inspect information
-- request tools
-- modify permitted resources
-- run permitted commands
-- generate code
-- test changes
-- iterate based on results
-
-But the model requesting an action is not the same as the system authorizing that action.
-
-This distinction is fundamental.
-
-```text
-Model
-  â†“
-Requests action
-  â†“
-Tool / policy layer
-  â†“
-Checks permission and boundary
-  â†“
-Executes or rejects
-  â†“
-Produces evidence
-```
-
-The model should not be the final enforcement layer for its own authority.
+- `docs/02-philosophy.md`
+- `docs/03-principles.md`
+- `docs/04-framework.md`
 
 ---
 
-# System Boundaries
+## 3. Execution
 
-A core objective of Clover AI is to make system boundaries **enforceable**, rather than merely describing them in prompts.
+AI execution should happen through explicit tools and system-enforced permissions.
 
-A prompt can tell an AI:
+The model should request an action; the surrounding system should decide whether the action is allowed.
 
-> "Do not access production."
-
-That is an instruction.
-
-It is not an enforcement mechanism.
-
-A stronger architecture makes production inaccessible to the execution environment unless an explicitly authorized path exists.
-
-For example, an AI that has permission to modify a development repository should not automatically have permission to:
-
-- access production databases
-- retrieve credentials
-- modify unrelated repositories
-- access arbitrary files
-- make unrestricted external network requests
-- deploy infrastructure
-- delete persistent data
-- modify security controls
-- change its own permissions
-
-The exact boundaries will depend on the system.
-
-The principle remains:
-
-> **A prompt can describe a boundary.  
-> An architecture can enforce one.**
-
----
-
-# Capability Is Not Authority
-
-Clover AI should explicitly separate capability from authority.
-
-A model may be capable of performing an operation without being authorized to perform it.
-
-For example:
-
-```text
-Capability:
-    Can generate SQL capable of deleting data.
-
-Authority:
-    Not permitted to execute destructive SQL.
-```
-
-Another example:
-
-```text
-Capability:
-    Can generate a deployment command.
-
-Authority:
-    Development environment only.
-```
-
-Another:
-
-```text
-Capability:
-    Can inspect files.
-
-Authority:
-    Only files within the assigned workspace.
-```
-
-This separation should exist at the system level.
-
-The AI should not be expected to reliably enforce the boundary that determines its own authority.
-
----
-
-# Tool Boundaries
-
-Tools should have explicit capabilities.
-
-A useful starting model is:
+Initial tool capability classes:
 
 ```text
 READ
@@ -292,407 +102,156 @@ EXECUTE
 EXTERNAL
 ```
 
-These capabilities can then be constrained by:
-
-- environment
-- resource
-- repository
-- namespace
-- user
-- task
-- network
-- time
-- approval requirements
-- data sensitivity
-- reversibility
-- blast radius
-
-A tool should expose only what is necessary for the task.
+Permissions should be constrained by the task, resource, environment, network, data sensitivity, reversibility, and blast radius.
 
 The objective is not maximum tool access.
 
-The objective is:
+> **Give the minimum authority required to accomplish the intended outcome.**
 
-> **The minimum authority required to accomplish the intended outcome.**
+The model should not be the final enforcement layer for its own authority.
 
 ---
 
-# 4. Outcome
+## 4. System Boundaries
 
-Outcome is what actually happened in the real system.
+Boundaries must be enforceable outside the model.
 
-This is different from what the model believes happened.
+A prompt saying `do not access production` is an instruction, not an enforcement mechanism.
 
-An AI can say:
+Clover AI should investigate architectures where:
 
-> "The issue has been fixed."
+- development and production are separated
+- credentials remain outside the model
+- tools own authorization and secrets
+- destructive operations can require approval
+- network access is restricted
+- workspace and repository access are scoped
+- the agent cannot change its own permissions
 
-That statement is not proof that the issue has been fixed.
+Preferred pattern:
 
-The system should seek evidence.
+```text
+AI
+ ↓
+Tool request
+ ↓
+Policy / authorization
+ ↓
+Tool execution
+ ↓
+Evidence
+```
 
-Depending on the task, evidence may include:
+---
 
-- compiler results
-- unit tests
-- integration tests
-- browser tests
+## 5. Outcome and Verification
+
+Outcome means what actually happened in the real system — not what the model says happened.
+
+Clover AI should prefer deterministic verification wherever possible:
+
+- compiler
+- tests
+- AST / LSP
+- git
+- schema inspection
 - database state
 - API responses
 - logs
 - metrics
-- generated artifacts
-- schema validation
-- security checks
-- deployment status
-- external system state
-
-Therefore:
-
-> **A model's statement about an outcome is not the outcome itself.**
-
-Clover AI should make this distinction explicit.
-
----
-
-# Verification
-
-Verification should happen as independently from model belief as practical.
-
-Where a deterministic mechanism can establish a fact, use it.
-
-Examples include:
-
-```text
-AST
-LSP
-grep
-git
-compiler
-tests
-schema introspection
-log extraction
-browser automation
-system metrics
-database queries
-```
-
-The principle is:
+- browser/system checks
 
 > **If the answer is computable, compute it.**
 
-The model should not spend reasoning capacity deriving facts that a deterministic tool can establish more reliably.
+Where deterministic verification is insufficient, independent model verification may be used, followed by human verification where required.
 
-The objective is not to replace AI reasoning.
+A verification failure is a useful outcome and should be retained for Growth.
 
-The objective is to use AI reasoning where reasoning provides value and deterministic systems where determinism is available.
+Relevant references:
 
----
-
-# Model Verification
-
-Model-based verification may be useful where deterministic verification cannot fully establish correctness.
-
-However, model verification should not become the only verification mechanism.
-
-A useful hierarchy is:
-
-```text
-Deterministic verification
-        â†“
-System evidence
-        â†“
-Independent model verification
-        â†“
-Human verification where required
-```
-
-Where possible, the verifier should not share all of the same blind spots as the model that produced the result.
-
-The system should also record verification failures.
-
-A failed verification is valuable information.
+- `docs/07-outcome.md`
+- `docs/08-governance.md`
 
 ---
 
-# 5. Growth
+## 6. Growth
 
-Growth is what the system learns from outcomes.
+Growth should come from measured outcomes and failures.
 
-Growth should not mean blindly giving the AI more autonomy.
-
-It should mean understanding:
+The system should learn:
 
 - what worked
 - what failed
 - why it failed
-- what context was missing
-- what context was misleading
-- what tools were insufficient
-- what boundary was insufficient
-- what verification caught
-- what verification failed to catch
+- whether context was sufficient
+- whether the model was capable of the task
+- whether tools or permissions were insufficient
+- what verification caught or missed
 - where human intervention was required
-- whether the model was actually capable of the task
 
-This produces the next Context.
-
-```text
-Outcome
-   â†“
-Evidence
-   â†“
-Failure / success analysis
-   â†“
-Growth
-   â†“
-Better Context
-```
-
-The cycle continues.
+Growth should improve the next Context, not simply increase autonomy.
 
 ---
 
-# Context Engineering
+## 7. Agentic Engineering
 
-Clover AI treats context engineering as a first-class engineering problem.
+Clover AI may use agentic workflows for real engineering tasks.
 
-The goal is not to put as much information as possible into the context window.
+Agents should have:
 
-The goal is to provide the right information.
-
-For software engineering workloads, this may include:
-
-```text
-Source code
-    â†“
-AST / syntax
-    +
-Lexical information
-    +
-Semantic information
-    +
-Symbol relationships
-    â†“
-Ranking
-    â†“
-Graph expansion
-    â†“
-Reranking
-    â†“
-Context assembly
-```
-
-Code should generally be preserved verbatim where exactness matters.
-
-Summarization should not silently replace source material when the exact source is required for correct execution.
-
-The system should also be capable of identifying when it does not have sufficient information.
-
-> **Insufficient information is a valid system state.**
-
-Clover AI should not be forced to produce an answer merely because a model can produce one.
-
----
-
-# Retrieval Is Not Truth
-
-Retrieval can improve the information available to the model.
-
-It does not automatically make that information correct.
-
-A retrieval system may return:
-
-- stale information
-- incomplete information
-- irrelevant information
-- contradictory information
-- incorrectly ranked information
-
-Therefore:
-
-```text
-Retrieval
-   â‰ 
-Truth
-```
-
-The system should preserve the distinction between:
-
-**what was retrieved**
-
-and
-
-**what has been verified.**
-
----
-
-# Tools Over Token Consumption
-
-Clover AI follows a simple engineering principle:
-
-> **If the answer is computable, compute it.**
-
-Examples:
-
-Instead of asking the model to infer a symbol relationship:
-
-```text
-Use AST / LSP.
-```
-
-Instead of asking the model to guess whether tests pass:
-
-```text
-Run the tests.
-```
-
-Instead of asking the model to infer the current Git state:
-
-```text
-Use git.
-```
-
-Instead of asking the model to reconstruct a log pattern:
-
-```text
-Extract the log data deterministically.
-```
-
-AI should spend its capability where reasoning provides value.
-
----
-
-# Agentic AI
-
-Clover AI may operate as an agent.
-
-But agentic behaviour should not be defined as unrestricted autonomy.
-
-A useful agent should have:
-
-- a clear objective
+- clear objectives
 - bounded context
 - bounded tools
 - bounded permissions
-- explicit stop conditions
-- verification
+- stop conditions
 - observable actions
+- verification
 - escalation paths
-- human accountability
 
-The question is not:
+The goal is not maximum autonomy.
 
-> "How autonomous can the AI become?"
+> **The useful question is what level of autonomy the system can safely and reliably support for a particular task.**
 
-The more useful question is:
-
-> **"What level of autonomy can the system safely and reliably support for this particular task?"**
+Agent and model execution should remain separable so different models can be evaluated against the same environment.
 
 ---
 
-# Security and Credentials
+## 8. Deterministic Tools Over Token Consumption
 
-The model should not directly receive credentials wherever the architecture can avoid it.
+AI reasoning should be used where reasoning provides value.
 
-A preferred architecture is:
+Use deterministic systems for facts they can establish more reliably.
+
+Examples:
 
 ```text
-AI model
-   â†“
-Tool request
-   â†“
-Tool server
-   â†“
-Credential / authorization layer
-   â†“
-External system
+Symbol relationships → AST / LSP
+Test status           → test runner
+Git state             → git
+Log patterns          → log extraction
+Schema state          → schema inspection
 ```
 
-The tool infrastructure owns credentials.
-
-The model receives the result necessary for the task rather than the secret required to obtain it.
-
-Development execution and production observation should also be separated where practical.
+This is a core Clover AI engineering principle.
 
 ---
 
-# Observability
+## 9. Model Strategy
 
-Clover AI should make its operation observable.
+Clover AI should not assume that the largest model is the best model.
 
-Where appropriate, the system should be able to reconstruct:
+Evaluate models on complete task outcomes, not model reputation alone.
 
-```text
-What did the AI receive?
-        â†“
-What direction was given?
-        â†“
-What did the AI request?
-        â†“
-Which tools executed?
-        â†“
-What permissions were applied?
-        â†“
-What actually happened?
-        â†“
-What evidence was produced?
-        â†“
-Was the outcome verified?
-```
+The model ladder should be experimentally evaluated across:
 
-Production AI needs traces, not merely screenshots.
+- small coding SLMs
+- 7–8B class models
+- North Mini / similar agentic models
+- larger models where required
 
-Observability is not only useful for debugging.
+Selection criteria should include:
 
-It is part of accountability.
-
-If the system cannot reconstruct what happened, investigating a failure becomes significantly harder.
-
----
-
-# Evaluation
-
-Clover AI should be evaluated on real outcomes.
-
-The evaluation should include real engineering tasks with machine-checkable pass conditions wherever possible.
-
-The evaluation set should also include tasks where the correct behaviour is to identify insufficient information rather than fabricate an answer.
-
-Metrics may include:
-
-- task solve rate
-- verified task success rate
-- malformed tool calls
-- unnecessary tool calls
-- retries
-- human interventions
-- tokens per successful task
-- wall-clock completion time
-- verification failures
-- agent trajectory efficiency
-- cost per successful task
-- human minutes per successful task
-
-The most important metric is not simply:
-
-> "How intelligent does the model appear?"
-
-It is:
-
-> **"How reliably can the complete system produce a verified outcome?"**
-
----
-
-# Model Selection
-
-Clover AI should not assume that the largest model is automatically the best model.
-
-The project should evaluate models based on the work they can actually complete within the intended system.
-
-A model may be selected based on:
-
-- engineering task performance
+- verified task success
 - tool-use reliability
 - context handling
 - reasoning capability
@@ -701,481 +260,189 @@ A model may be selected based on:
 - infrastructure cost
 - licensing
 - deployment constraints
-- verification outcomes
 
-The objective is not to win a benchmark.
+> **Use the smallest amount of model capability and infrastructure that can reliably produce the required outcome.**
 
-The objective is to find the smallest amount of model capability and infrastructure that can reliably produce the required outcome.
+Model routing should eventually allow different capability levels for different tasks.
 
 ---
 
-# Model Routing
+## 10. Infrastructure Direction
 
-Clover AI should not assume that every task requires the largest available model.
+Infrastructure should be discovered through measurement rather than assumed in advance.
 
-Different tasks may require different capability levels.
-
-A possible routing architecture:
+Initial progression:
 
 ```text
-                    Task
-                     â†“
-                  Router
-            â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”
-            â†“        â†“        â†“
-          Small    Medium    Large
-          model    model     model
-            â†“        â†“        â†“
-              Verification
-                    â†“
-                  Outcome
+Hosted validation
+    ↓
+Existing Linux Kubernetes pods
+    ↓
+Larger CPU / GPU deployment where evidence requires it
+    ↓
+Owned stable deployment
+    ↓
+Horizontal scaling
 ```
 
-The router may initially use deterministic rules.
-
-As evaluation data grows, routing decisions can potentially become data-driven.
-
-The objective is not to maximize model size.
-
-It is to maximize useful verified outcomes for the available cost and infrastructure.
-
----
-
-# Infrastructure
-
-Clover AI should investigate the relationship between model capability and infrastructure rather than assuming that one serving architecture is universally correct.
-
-Possible deployment approaches include:
+Clover AI should investigate:
 
 - CPU inference
 - GPU inference
 - quantized inference
+- Kubernetes scheduling
 - model routing
-- small models
-- larger models where necessary
-- local storage
-- storage-streamed inference where technically appropriate
-- RAM-resident versus streamed working sets
-- Kubernetes-based deployment
-- horizontal scaling
+- RAM-resident inference
+- storage-streamed inference
 
-These should be treated as engineering hypotheses to measure, not assumptions to defend.
+### Storage-streamed inference
 
-The objective is:
+The Kimi K3 systems work demonstrates an important hypothesis worth testing: parameter count does not by itself determine the required resident memory if the architecture and serving system allow a working set to be streamed from storage.
 
-> **Find the smallest amount of compute, model capability, context, and tooling required to reliably complete a real task.**
+This is an experiment, not an assumption.
 
----
-
-# Storage-Streamed Inference
-
-Clover should investigate whether some model architectures can make useful inference possible without requiring the entire model checkpoint to remain resident in RAM.
-
-Large sparse models may have working-set characteristics that make alternative serving architectures worth investigating.
-
-A storage-streamed approach may involve:
+Compare:
 
 ```text
-Model checkpoint
-       â†“
-Fast local storage
-       â†“
-Selected weights / experts
-       â†“
-RAM working set
-       â†“
-CPU / GPU computation
+RAM-resident
+RAM + local NVMe/cache
+Storage-streamed
 ```
 
-This is an experimental infrastructure direction.
+Measure:
 
-It should not be presented as a universal solution or as proof that any arbitrary large model can run on very small hardware.
-
-The important engineering question is:
-
-> **Can storage streaming reduce resident-memory requirements enough to make a useful workload viable without making latency, throughput, and cost unacceptable?**
-
-Experiments should compare:
-
-1. RAM-resident inference
-2. RAM + local NVMe/SSD caching
-3. storage-streamed weights or experts
-
-The same workload, context policy, precision, and verification process should be used when comparing configurations.
-
-Measurements should include:
-
-- checkpoint size
 - peak RSS
-- load time
-- storage throughput
-- IOPS
-- read amplification
-- first-token latency
-- tokens per second
-- task completion time
+- storage throughput / IOPS
 - cache hit rate
-- working-set residency
-- CPU utilization
+- load time
+- first-token latency
+- tokens/sec
+- task completion time
 - concurrency
-- successful engineering tasks
+- successful verified tasks
+- cost per verified task
+
+The question is not merely whether a model can run.
+
+> **Can it complete useful work at acceptable latency, reliability, and cost?**
+
+---
+
+## 11. Evaluation
+
+Clover AI should be evaluated on real engineering outcomes.
+
+Build a reproducible evaluation set with machine-checkable pass conditions wherever possible, including tasks where the correct result is to identify insufficient information.
+
+Track at minimum:
+
+- verified task success rate
+- task solve rate
+- malformed tool calls
+- unnecessary tool calls
+- retries
+- human interventions
+- verification failures
+- wall-clock time
+- tokens per successful task
+- trajectory efficiency
 - cost per verified successful task
+- human minutes per successful task
 
-The objective is not:
+Do not claim capability before the system is built and measured.
 
-> "Can the model run?"
-
-The objective is:
-
-> **"Can the system complete useful work at acceptable cost and latency?"**
+> **Build it. Measure it. Verify it. Understand the failure. Improve it. Repeat.**
 
 ---
 
-# Infrastructure Scaling
+## 12. Observability
 
-Clover AI should scale only after evidence demonstrates that scaling is necessary.
-
-A practical progression is:
+Every meaningful agent run should be reconstructable where practical:
 
 ```text
-Hosted validation
-       â†“
-Existing Linux Kubernetes pods
-       â†“
-Storage-streamed experiments where applicable
-       â†“
-Larger Linux pod
-       â†“
-GPU-backed Linux pod
-       â†“
-Single stable deployment
-       â†“
-Horizontal scaling
+Context received
+    ↓
+Direction given
+    ↓
+Model decisions / requests
+    ↓
+Tools executed
+    ↓
+Permissions applied
+    ↓
+Actual system changes
+    ↓
+Evidence
+    ↓
+Verification
+    ↓
+Outcome
 ```
 
-The project should avoid purchasing or provisioning large infrastructure before demonstrating that the workload justifies it.
+Production AI needs traces, not merely screenshots.
+
+Observability is part of accountability, not only debugging.
 
 ---
 
-# Kubernetes
+## 13. Open Source and Attribution
 
-Where Kubernetes is used, AI inference and agent/tool execution should remain separate services.
+Clover AI will be open source and should respect the work that makes it possible.
 
-A conceptual architecture is:
-
-```text
-                User / Application
-                        â†“
-                 Clover Agent
-                        â†“
-              Tool / Policy Layer
-                        â†“
-        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-        â†“                               â†“
-   Model Service                    External Tools
-        â†“                               â†“
-   Model Inference                System Resources
-```
-
-The model service should not own credentials or unrestricted system authority.
-
-GPU scheduling should be handled by the infrastructure layer rather than by the model.
-
-Heterogeneous GPU environments should be represented through infrastructure configuration and scheduling policies.
-
----
-
-# Agent and Model Separation
-
-The inference service and the agent/tool harness should be separate components.
-
-The model should produce structured requests.
-
-The agent should:
-
-- validate requests
-- enforce tool permissions
-- execute tools
-- collect results
-- provide results back to the model
-- record the trajectory
-- apply stop conditions
-- initiate verification
-
-This separation allows the model to change without changing the complete security and execution architecture.
-
-It also allows different models to be evaluated against the same agent environment.
-
----
-
-# Permission Model
-
-Clover AI should eventually define a machine-enforceable permission model.
-
-A permission should answer questions such as:
-
-```text
-Who?
-What?
-Where?
-When?
-Why?
-Under which task?
-With what limits?
-With what approval?
-With what reversibility?
-```
-
-For example:
-
-```text
-Agent:
-    Clover development agent
-
-Resource:
-    repository/example-project
-
-Capability:
-    READ + WRITE
-
-Environment:
-    development
-
-Network:
-    restricted
-
-Production:
-    DENIED
-
-Credential access:
-    DENIED
-
-Destructive operations:
-    APPROVAL REQUIRED
-```
-
-The exact implementation may evolve.
-
-The important principle is that the boundary should exist independently of the model's willingness to follow instructions.
-
----
-
-# Failure Handling
-
-Clover AI should treat failure as a first-class outcome.
-
-When a task fails, the system should attempt to determine whether the cause was:
-
-- insufficient context
-- incorrect context
-- incorrect retrieval
-- ambiguous direction
-- model capability
-- tool failure
-- permission failure
-- infrastructure limitation
-- verification failure
-- human decision
-- external system behaviour
-
-This classification is important because different failures require different improvements.
-
-A larger model is not necessarily the correct solution to a context problem.
-
-A better prompt is not necessarily the correct solution to a permission problem.
-
-More compute is not necessarily the correct solution to a verification problem.
-
----
-
-# Human Intervention
-
-Human intervention should not automatically be treated as system failure.
-
-Some operations may appropriately require human approval.
-
-The system should measure where intervention is necessary and whether that requirement can be reduced safely through better engineering.
-
-Possible approval boundaries include:
-
-- destructive operations
-- production deployment
-- sensitive data access
-- external communication
-- security changes
-- irreversible operations
-- high-blast-radius changes
-
-The objective is not to eliminate humans.
-
-The objective is to make human involvement meaningful and accountable.
-
----
-
-# Responsible Capability
-
-The goal is not to make AI incapable in order to make it safe.
-
-The goal is to investigate whether capability and responsibility can be engineered together.
-
-A useful AI system should be capable of meaningful work.
-
-At the same time, the system surrounding it should establish:
-
-```text
-What it knows
-      â†“
-What it is asked to do
-      â†“
-What it is allowed to do
-      â†“
-What it actually did
-      â†“
-What happened
-      â†“
-What can be verified
-```
-
-This creates a distinction between:
-
-**capability**
-
-and
-
-**authority**.
-
-Clover AI seeks to increase the former without blindly expanding the latter.
-
----
-
-# Open Source and Attribution
-
-Clover AI will be developed as an open-source project.
-
-Clover recognizes that modern AI is built upon an enormous body of work created by researchers, engineers, organizations, and open-source communities.
-
-The project should respect that foundation.
-
-Where Clover uses or builds upon existing work, it should:
+For models, datasets, research, inference engines, libraries, infrastructure, and other upstream work:
 
 - respect the applicable license
 - provide required attribution
 - preserve required notices
-- clearly distinguish upstream work from Clover work
+- distinguish upstream work from Clover work
 - document important dependencies
-- avoid claiming community contributions as original Clover work
 - contribute improvements back where appropriate
 
-This principle applies to:
-
-- model architectures
-- model weights
-- datasets
-- evaluation frameworks
-- inference engines
-- agent frameworks
-- libraries
-- developer tools
-- infrastructure
-- research
-- community implementations
-
-> **Clover AI exists because many people made the underlying ecosystem possible. Their work should be respected, acknowledged, and built upon responsibly.**
+> **Build on the work that made this possible without pretending the foundation came from us.**
 
 ---
 
-# What Clover AI Is Not
+## 14. What This Work Should Prove
 
-Clover AI does not claim to have solved AI safety or alignment.
+Clover AI should eventually demonstrate, through reproducible engineering evidence, that an AI system can:
 
-It does not claim that:
+1. receive sufficient context
+2. operate under accountable direction
+3. use bounded tools
+4. operate within system-enforced permissions
+5. produce meaningful engineering work
+6. recognize insufficient information
+7. recover from failures where possible
+8. expose observable execution
+9. verify outcomes with evidence
+10. improve from measured outcomes
 
-- AI systems cannot fail
-- guardrails eliminate risk
-- models can perfectly understand boundaries
-- autonomy is inherently good
-- a particular model is universally superior
-- verification can catch every failure
-- AI can be made perfectly safe
-- more capability automatically produces better outcomes
-- AI model intelligence alone determines system reliability
-
-Clover AI is an engineering effort.
-
-The claims should follow the evidence.
+Successful and unsuccessful experiments should both be documented.
 
 ---
 
-# What Clover AI Should Prove
+## Relevant Clover Documentation
 
-Clover AI should eventually demonstrate, through reproducible experiments, that an AI system can:
+The Clover AI implementation should be developed alongside the existing framework rather than duplicating it.
 
-1. Understand sufficient context for a real task.
-2. Follow accountable direction.
-3. Operate through bounded tools.
-4. Respect system-enforced permissions.
-5. Produce meaningful work.
-6. Detect when information is insufficient.
-7. Recover from failures where possible.
-8. Produce observable execution traces.
-9. Verify outcomes using evidence.
-10. Improve through measured feedback.
+Start with:
 
-The project should publish both successful and unsuccessful experiments.
+- **Website:** https://cloverframework.com/
+- **Framework:** `docs/04-framework.md`
+- **Principles:** `docs/03-principles.md`
+- **Philosophy:** `docs/02-philosophy.md`
+- **Context Engineering:** `docs/05-context-engineering.md`
+- **Outcome:** `docs/07-outcome.md`
+- **Governance:** `docs/08-governance.md`
+- **AI Responsibility:** `docs/ai-responsibility/README.md`
+- **AI Future Hypothesis:** `hypothesis/ai-future.md`
 
-A successful demonstration is useful.
-
-A failure that exposes an architectural weakness may be even more useful.
+These documents contain the framework and supporting reasoning. This file should remain focused on the implementation direction for Clover AI.
 
 ---
 
-# The Core Question
+## Status
 
-The long-term question behind Clover AI is:
+**Work in progress.**
 
-> **Can increasing AI capability coexist with increasing responsibility?**
-
-Clover explores whether responsibility can be engineered into the system surrounding AI capability rather than relying entirely on the model to behave responsibly.
-
-The model may become more capable.
-
-The tools may become more capable.
-
-The infrastructure may become more capable.
-
-The system may eventually support increasingly autonomous work.
-
-But the fundamental principle remains:
-
-> **AI capability may scale, but accountability cannot be delegated to the model.**
-
----
-
-# Current Status
-
-This document describes the direction for Clover AI.
-
-It is a work in progress.
-
-Implementation details, model selection, infrastructure requirements, evaluation methodology, security architecture, tool interfaces, and deployment strategy should be validated through engineering experiments before being treated as final decisions.
-
-Clover AI should not claim that something works before it has been built and measured.
-
-> **Build it.  
-> Measure it.  
-> Verify it.  
-> Understand the failure.  
-> Improve it.  
-> Repeat.**
-
----
-
-# Clover AI
-
-**Capability with boundaries.**
-
-**Meaningful outcomes with verification.**
-
-**Open development with respect for the work that made it possible.**
-
-**AI that operates within a system â€” not above it.**
+Model choice, serving architecture, infrastructure, tool interfaces, evaluation methodology, security boundaries, and deployment strategy remain experimental until validated by implementation and measurement.
