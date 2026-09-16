@@ -57,6 +57,17 @@ If the same investigation is repeated with persistent state available, later dec
 - Reflection: The conceptual Growth loop exists, but a concrete persistent experimental state was missing.
 - Adaptation: Create this minimal state record before claiming that a persistent self-observation loop exists.
 
+### Run 2
+
+- Trigger: User requested `Run`.
+- Prediction made before investigation: The existing Clover AI direction would contain explicit agent boundaries and verification mechanisms, but would not itself implement persistent self-learning state.
+- Action: Searched the repository for agent objectives, stop conditions, permissions, verification, persistent memory, state, history, learning, and reflection.
+- Observation: The Clover AI direction explicitly contains bounded permissions, stop conditions, observable actions, verification, and escalation. The repository also describes Growth as information carried from one Outcome into the next Context. No implementation of persistent self-learning state was found in the search.
+- Error: The prediction was substantially supported; no material prediction error was identified.
+- Reflection: The investigation changed the next question from “does Clover have a loop?” to “what is the smallest mechanism that can turn Growth from a conceptual stage into experimentally measurable state change?”
+- Adaptation: The next experiment should not add another conceptual description. It should define a minimal machine-readable state transition and test whether a later decision can be traced to a prior recorded observation.
+- Evidence: `work-inprogess/clover-ai.md`, `docs/05-context-engineering.md`, `docs/04-framework.md`.
+
 ## Next Experiment
 
-On the next run, read this state first, make one explicit prediction about the next repository investigation, execute that investigation, compare the result with the prediction, and append the observation and adaptation.
+Define the smallest machine-readable state transition: prior state → prediction → action → observed outcome → error → updated state → next decision. Then test one transition and record whether the next decision actually differs because of the stored evidence.
