@@ -1,0 +1,21 @@
+{
+  "experiment": "self-observation-loop",
+  "version": 1,
+  "state": {
+    "identity_model": "Can inspect external repository state, reason over observations, and choose a next investigation step within granted permissions.",
+    "open_questions": [
+      "Can a prior observed outcome causally change a later decision?",
+      "Can prediction error be corrected across runs?"
+    ],
+    "last_observation": "The repository has a conceptual Growth stage but no previously found implementation of persistent self-learning state.",
+    "last_error": null,
+    "adaptation": "Move from conceptual documentation to an explicit machine-readable transition."
+  },
+  "transition": {
+    "prediction": "A stored observation that persistent state is missing should cause the next investigation to inspect for a concrete state representation rather than repeat the same conceptual search.",
+    "action": "Created this machine-readable persistent state representation.",
+    "observation": "The state can now be represented externally as structured data and carried into a later run.",
+    "error": null,
+    "next_decision": "On the next run, read this state and test whether its recorded adaptation changes the investigation selected."
+  }
+}
