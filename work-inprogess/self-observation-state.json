@@ -1,21 +1,22 @@
 {
   "experiment": "self-observation-loop",
-  "version": 1,
+  "version": 2,
   "state": {
-    "identity_model": "Can inspect external repository state, reason over observations, and choose a next investigation step within granted permissions.",
+    "identity_model": "Can inspect external repository state, reason over observations, choose a next investigation step, and persist experimental state within granted permissions.",
     "open_questions": [
       "Can a prior observed outcome causally change a later decision?",
-      "Can prediction error be corrected across runs?"
+      "Can prediction error be corrected across runs?",
+      "Can an actual read-decision-action-write loop operate without the latest user instruction supplying the adaptation?"
     ],
-    "last_observation": "The repository has a conceptual Growth stage but no previously found implementation of persistent self-learning state.",
-    "last_error": null,
-    "adaptation": "Move from conceptual documentation to an explicit machine-readable transition."
+    "last_observation": "The persistent state file exists, but repository search found no separate implementation that automatically consumes it to select the next action.",
+    "last_error": "Externalizing state does not by itself create executable learning or agency.",
+    "adaptation": "Stop treating persistence as the loop; test an actual read → decision → action → write cycle."
   },
   "transition": {
-    "prediction": "A stored observation that persistent state is missing should cause the next investigation to inspect for a concrete state representation rather than repeat the same conceptual search.",
-    "action": "Created this machine-readable persistent state representation.",
-    "observation": "The state can now be represented externally as structured data and carried into a later run.",
-    "error": null,
-    "next_decision": "On the next run, read this state and test whether its recorded adaptation changes the investigation selected."
+    "prediction": "The recorded adaptation should change the next investigation from repeating conceptual searches to checking whether the state is actually consumed by an implementation.",
+    "action": "Read the persistent state and searched the repository specifically for its consumption as an implemented mechanism.",
+    "observation": "The investigation changed accordingly, but no automatic consumer was found.",
+    "error": "The state influenced the selected investigation, but this influence was still mediated by the current model run rather than an independently executing loop.",
+    "next_decision": "Test the smallest executable read → decision → action → write cycle available."
   }
 }
