@@ -1,0 +1,23 @@
+name: Clover AI Manipulation — Supervisor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+jobs:
+  development-cycle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install openai
+      - name: Run supervisor
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLOVER_MODEL: gpt-5.6-luna
+        run: |
+          cd "AI Manipulation"
+          python -c "from supervisor.supervisor import run; from supervisor.openai_backend import OpenAIBackend; run(OpenAIBackend())"
