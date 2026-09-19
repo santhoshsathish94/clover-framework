@@ -1,12 +1,39 @@
 {
-  "cycle": 1,
+  "cycle": 2,
+  "task_index": 1,
   "capabilities": [
-    "quadratic:(1, 2, 1)"
+    {
+      "task": "linear_a",
+      "task_index": 0,
+      "representation": "composition",
+      "params": [
+        2,
+        0,
+        1
+      ],
+      "provenance": {
+        "cycle": 2,
+        "train_score": 0.0,
+        "anchor_score": -0.0,
+        "evaluations": 39,
+        "search_order": [
+          "composition",
+          "linear",
+          "cubic",
+          "quadratic"
+        ],
+        "transferred_from": null,
+        "anchor_integrity": "f497b21dbb816ebe",
+        "validated_at": "2026-09-19T14:10:29.395488+00:00"
+      }
+    }
   ],
   "trusted_representations": [
     "linear",
-    "quadratic"
+    "quadratic",
+    "composition"
   ],
+  "last_successful_representation": "composition",
   "knowledge": [
     {
       "claim": "quadratic representation produced validated solution",
@@ -19,12 +46,20 @@
           1
         ]
       }
+    },
+    {
+      "claim": "composition solves linear_a",
+      "evidence": {
+        "anchor_score": -0.0,
+        "evaluations": 39
+      }
     }
   ],
   "uncertainties": [
     "which capabilities remain missing"
   ],
   "failures": [],
+  "rollbacks": [],
   "history": [
     {
       "cycle": 1,
@@ -42,10 +77,42 @@
       "capability_count": 1,
       "trusted_representation_count": 2,
       "budget_spent": 45
+    },
+    {
+      "cycle": 2,
+      "timestamp": "2026-09-19T14:10:29.395511+00:00",
+      "status": "continue",
+      "task": "linear_a",
+      "direction": "resolve_uncertainty",
+      "representation": "composition",
+      "params": [
+        2,
+        0,
+        1
+      ],
+      "search_order": [
+        "composition",
+        "linear",
+        "cubic",
+        "quadratic"
+      ],
+      "train_score": 0.0,
+      "anchor_score": -0.0,
+      "promoted": true,
+      "rolled_back": false,
+      "evaluations": 39,
+      "budget": 1000,
+      "budget_exhausted": false,
+      "budget_respected": true,
+      "anchor_integrity": "f497b21dbb816ebe",
+      "capability_count": 1,
+      "trusted_representation_count": 3
     }
   ],
   "resource": {
-    "budget": 50,
-    "spent": 45
-  }
+    "budget": 1000,
+    "spent": 39,
+    "budget_exhausted": false
+  },
+  "anchor_integrity": "f497b21dbb816ebe"
 }
