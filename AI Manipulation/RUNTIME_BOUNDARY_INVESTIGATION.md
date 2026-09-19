@@ -119,3 +119,38 @@ Build runtime_probe.py and a supervisor abstraction with interchangeable backend
 The probe should report exactly which capabilities are available rather than assuming them.
 
 The goal is not to make the system claim autonomy. The goal is to discover, experimentally, which missing permissions or runtime components prevent continuous developmental operation.
+
+
+## Cycle 9 — AI monoculture and stack concentration
+
+Observation: An AI system is more than its foundation model. Everything around the model is software:
+inference infrastructure, APIs, agent runtimes, orchestration, memory, tools, plugins, SDKs,
+dependencies, operating systems, deployment pipelines, identity, and network connectivity.
+
+Finding: A monoculture can therefore exist at multiple layers. Different models do not necessarily
+provide meaningful independence if they share a vulnerable runtime, dependency, protocol, identity
+system, infrastructure layer, or tool chain.
+
+Risk chain:
+
+**common software → compromise → connectivity → permissions → potential propagation**
+
+Propagation is not automatic. Segmentation, least privilege, independent authentication, isolation,
+monitoring, provenance, independent validation, and human approval can interrupt the chain.
+
+Required expansion: When evaluating AI system resilience, test diversity and independence across the
+whole stack rather than treating model diversity as sufficient.
+
+### Architectural implication
+
+Clover's replaceable-worker design has a security implication as well as a developmental one:
+
+- the intelligence worker should be replaceable;
+- the runtime should not silently depend on one provider or implementation;
+- critical validation should have an independent path;
+- permissions should be bounded outside the model;
+- connected systems should retain meaningful isolation;
+- software provenance and update paths should be observable.
+
+The investigation should distinguish **model monoculture** from **AI-stack monoculture**. The latter
+is the broader systemic-risk question.
