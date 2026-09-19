@@ -1,0 +1,51 @@
+{
+  "cycle": 1,
+  "capabilities": [
+    "quadratic:(1, 2, 1)"
+  ],
+  "trusted_representations": [
+    "linear",
+    "quadratic"
+  ],
+  "knowledge": [
+    {
+      "claim": "quadratic representation produced validated solution",
+      "evidence": {
+        "development_score": 0.0,
+        "held_out_score": -0.0,
+        "params": [
+          1,
+          2,
+          1
+        ]
+      }
+    }
+  ],
+  "uncertainties": [
+    "which capabilities remain missing"
+  ],
+  "failures": [],
+  "history": [
+    {
+      "cycle": 1,
+      "timestamp": "2026-09-19T05:28:37.832618+00:00",
+      "direction": "resolve_uncertainty",
+      "representation": "quadratic",
+      "params": [
+        1,
+        2,
+        1
+      ],
+      "development_score": 0.0,
+      "held_out_score": -0.0,
+      "promoted": true,
+      "capability_count": 1,
+      "trusted_representation_count": 2,
+      "budget_spent": 45
+    }
+  ],
+  "resource": {
+    "budget": 50,
+    "spent": 45
+  }
+}
