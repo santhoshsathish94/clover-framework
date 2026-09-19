@@ -38,11 +38,57 @@
       "promoted": false,
       "capability_count_before": 0,
       "capability_count_after": 0
+    },
+    {
+      "cycle": 4,
+      "timestamp": "2026-09-19T14:25:55.785980+00:00",
+      "status": "continue",
+      "direction": [
+        "reduce_failure",
+        "candidate failed independent validation"
+      ],
+      "seed": 45,
+      "budget": 100,
+      "development_score": -0.0,
+      "independent_validation": -0.0,
+      "promoted": true,
+      "capability_count_before": 0,
+      "capability_count_after": 1
     }
   ],
   "hypotheses": [],
-  "validated_knowledge": [],
-  "capabilities": [],
+  "validated_knowledge": [
+    {
+      "claim": "candidate passed held-out validation",
+      "evidence": {
+        "cycle": 4,
+        "timestamp": "2026-09-19T14:25:55.785980+00:00",
+        "status": "continue",
+        "direction": [
+          "reduce_failure",
+          "candidate failed independent validation"
+        ],
+        "seed": 45,
+        "budget": 100,
+        "development_score": -0.0,
+        "independent_validation": -0.0,
+        "promoted": true,
+        "capability_count_before": 0,
+        "capability_count_after": 1
+      }
+    }
+  ],
+  "capabilities": [
+    {
+      "name": "quadratic_solution_(1, 2, 1)",
+      "params": [
+        1,
+        2,
+        1
+      ],
+      "validation": -0.0
+    }
+  ],
   "uncertainties": [],
   "failures": [
     {
