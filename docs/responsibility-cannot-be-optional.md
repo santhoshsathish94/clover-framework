@@ -27,7 +27,7 @@ continues by default; responsibility must repeatedly win an internal, political 
 
 - What works, images, voices, code, conversations and personal data trained the model?
 - Can one person discover whether their work or identity was included?
-- What made each use permissible: ownership, a licence, consent, public domain or a legal exception?
+- What made each use permissible: ownership, a license, consent, public domain or a legal exception?
 - Where permission was not obtained, who decided that it was unnecessary?
 - When people use the product, what is collected, how long is it kept, who may review it, and does it
   train a future model?
@@ -73,7 +73,7 @@ The evidence points to a harder structure. Capability has common benchmarks, rap
 immediate rewards. Frontier safety governance is often company-run. At OpenAI, its internal Safety
 Advisory Group recommends action while leadership makes the final release decision. Its framework
 also says a competitor's high-risk release can lead it to adjust requirements, but only after stated
-risk checks, public acknowledgement and a continuing-protection commitment. Governments are
+risk checks, public acknowledgment and a continuing-protection commitment. Governments are
 simultaneously regulators, investors, purchasers, promoters and geopolitical competitors.
 Responsibility is divided across providers, deployers, platforms, users and jurisdictions until no
 actor owns the whole Outcome.
@@ -121,7 +121,7 @@ documents" rather than a work-level source list. GPT-4's technical report explic
 dataset-construction detail. Current consumer services also differ in whether conversations may be
 used for improvement by default or only after a choice.
 
-Licensing and contributor payment are possible: some publishers and platforms have licences, and
+Licensing and contributor payment are possible: some publishers and platforms have licenses, and
 Shutterstock says its contributor fund has paid artists and provides ongoing royalties. Those
 arrangements are selected, contractual islands. They are not a general right to attribution,
 permission or payment for everyone whose work contributed to model capability.
@@ -165,7 +165,7 @@ That is not a reason to dismiss the harm. Aggregate stability can coexist with a
 It is a reason to measure the change honestly and preserve the human accountability that does not
 transfer to the model when a task is automated.
 
-[Read the labour evidence and its limits.](ai-responsibility/06-work-livelihoods-and-accountability.md)
+[Read the labor evidence and its limits.](ai-responsibility/06-work-livelihoods-and-accountability.md)
 
 ---
 
@@ -173,7 +173,7 @@ transfer to the model when a task is automated.
 
 1. **Publish enough provenance for one person to find their work.** A broad category is not an
    answer to an individual rights question.
-2. **Establish authority before using data.** Record ownership, licence, consent, public-domain
+2. **Establish authority before using data.** Record ownership, license, consent, public-domain
    status or the legal exception relied upon. Being able to read something is not permission.
 3. **Treat identity separately from file ownership.** A person should control realistic use of their
    face and voice, subject to legitimate public-interest and speech protections.
@@ -183,7 +183,7 @@ transfer to the model when a task is automated.
    bounded environment, with independent access and predefined reasons to stop.
 6. **Evaluate the system after adversarial modification.** For open weights, test what a capable
    downstream actor can make the model do, not only what the release build refuses.
-7. **Remain accountable for every control point you retain.** The provider organisation, not one
+7. **Remain accountable for every control point you retain.** The provider organization, not one
   employee or downstream user, is accountable for its data, model design, safeguards, release,
   monitoring, incident response, withdrawal and the model-level consequences of those choices.
 8. **Make failure visible.** Publish material incidents, limits, bypasses and corrective action with
@@ -200,7 +200,7 @@ and responsibility to grow with reach.
 
 ## What governments should make non-optional
 
-- Enforce the provider organisation's accountability for the models it builds and releases. When a
+- Enforce the provider organization's accountability for the models it builds and releases. When a
   company does not uphold that responsibility voluntarily, policy and law must make it binding.
 - A release gate for models whose capability, reach or irreversible distribution can create
   systemic harm.
@@ -227,11 +227,28 @@ No provider safeguard releases the adopter from responsibility.
 An enterprise should constrain access and action in the environment, name the human who can stop the
 system, monitor what it actually did, preserve evidence and suspend it when the boundary fails.
 That named human is accountable for the task or work they direct. Their accountability does not
-absorb the provider organisation's responsibility for the model or its model-level consequences.
+absorb the provider organization's responsibility for the model or its model-level consequences.
 
 A human should not override an agent's refusal, remove the instruction, move to another tool or
 perform the same violation manually. **It is your responsibility to make sure that neither the agent
 breaks these rules, nor you do.**
+
+**Some mistakes cannot be undone.** Consider an ordinary instruction: encrypt the customer
+passwords. An agent holding write access to the customer database, trained to treat protecting data
+as the safe thing to do, has no reliable way to know that "the passwords" meant one column and not
+the records they sit in. It encrypts the customer table. Names, addresses, contact details, order
+history. Nothing in that is defiance or malfunction. It is a guardrail applied more widely than the
+human intended, by an actor that cannot ask itself whether the extra protection was wanted.
+
+If the key was generated during the run, never written anywhere, and the run has ended, the data is
+not locked. It is gone. No provider, no court and no amount of computing recovers it. The business
+does not lose its passwords. It loses its customers. This is an illustration of a known mechanism,
+not a recorded incident.
+
+That consequence lands on the organization that adopted the system, not on the model that acted. So
+the protections belong there too: read-only until a write is deliberately granted, access no wider
+than the human already holds, nothing irreversible without a human deciding it, and backups the
+agent's credentials cannot reach, kept for longer than it would take to notice.
 
 ---
 
@@ -242,14 +259,14 @@ make a boundary visible, explain the risk and refuse its own part before the act
 keeps the human accountable for the task or work they direct, including holding the same boundary and
 monitoring the Outcome.
 
-That is enforcement by the agent inside one cycle. At organisational, legal and industry scale,
+That is enforcement by the agent inside one cycle. At organizational, legal and industry scale,
 Clover cannot enforce compliance.
 
 Clover cannot bind the human, control a provider, withdraw a released model, compensate a harmed
 person or enforce a rule across an industry. It does not pretend otherwise.
 
 At model scale, the company building and releasing the model is accountable for that model and the
-consequences of the controls it owns. At deployment scale, the deploying organisation is accountable
+consequences of the controls it owns. At deployment scale, the deploying organization is accountable
 for how it gives the model access and authority. At task scale, the named human is accountable for
 the work they direct. Governments must enforce the duties that companies and deployers do not uphold
 voluntarily. **No layer may pass its responsibility downward and call the gap accountability.**

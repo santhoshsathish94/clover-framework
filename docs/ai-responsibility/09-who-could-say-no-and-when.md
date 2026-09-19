@@ -161,7 +161,7 @@ moment at which anyone could withhold permission before release rather than obje
 
 ## The consent objection answers itself
 
-The standard defence of training without permission is that the scale made it impossible: there were
+The standard defense of training without permission is that the scale made it impossible: there were
 millions of rightsholders, and no practical way to reach them.
 
 **Observed.** Obtaining agreement from millions of people, individually, before granting access, at
@@ -186,20 +186,20 @@ general statutory royalty for model training in the United States, and that the
 develop first.
 
 The same paper checks what those voluntary markets produced. Licensing agreements between large
-organisations exist and prove that permission can be negotiated. The checked announcements "do not
+organizations exist and prove that permission can be negotiated. The checked announcements "do not
 disclose financial terms or promise payment to each journalist, photographer, commenter or other
 underlying contributor."
 
 **Conclusion.** The institution with authority over the question was asked, and chose to wait for a
-market. The market that followed transacts between organisations. It does not reach the individual
+market. The market that followed transacts between organizations. It does not reach the individual
 whose work is inside the corpus.
 
 ---
 
-## What an organisation can do without waiting
+## What an organization can do without waiting
 
 Nothing above obliges anyone to repeat it. The conditions that made the original taking possible —
-no relationship, no notice, no mechanism to refuse — do not apply to an organisation building for
+no relationship, no notice, no mechanism to refuse — do not apply to an organization building for
 its own use.
 
 **Observed.** Provenance is now a documented property of a model rather than a matter of trust.
@@ -210,27 +210,27 @@ by the AI Office." Article 53(1)(c) requires a policy to comply with Union copyr
 identifying and complying with a reservation of rights expressed under Article 4(3) of Directive (EU)
 2019/790.
 
-**Observed.** Article 53(2) exempts models released under a free and open-source licence from points
+**Observed.** Article 53(2) exempts models released under a free and open-source license from points
 (a) and (b) — the two documentation duties — only. The copyright policy and the training-content
 summary survive open-sourcing. No part of the exemption applies to models with systemic risk. These
 obligations entered into force on 2 August 2025.
 
-**Conclusion.** An organisation choosing a base model can ask what it was trained on and expect an
+**Conclusion.** An organization choosing a base model can ask what it was trained on and expect an
 answer, or notice that no answer exists. That turns a claim of care into a document.
 
-**Observed.** An organisation's own systems already hold what a model for its own work needs: its
+**Observed.** An organization's own systems already hold what a model for its own work needs: its
 code, incident history, tickets, runbooks, correspondence and operational records. That material is
 unambiguously its own, and no other party holds it.
 
-**Conclusion.** The corpus the frontier had to take is not the corpus an organisation needs. A model
-that performs one organisation's work does not have to match a general-purpose model on general
+**Conclusion.** The corpus the frontier had to take is not the corpus an organization needs. A model
+that performs one organization's work does not have to match a general-purpose model on general
 tasks. It has to be useful on the work in front of it.
 
 A model built this way inherits whatever its base carries. That cannot be undone by the layer added
 on top, and it should not be described as though it could. The honest claim is not "we took nothing."
 It is **we added nothing taken, and we chose our base knowing what it was.**
 
-**Conclusion.** Where the boundary is the point, running the model on infrastructure the organisation
+**Conclusion.** Where the boundary is the point, running the model on infrastructure the organization
 controls is stronger than a term promising the same thing. A clause is an instruction and can be
 revised on notice; an environment that the data never leaves does not depend on anyone's continued
 intention. [Why Model Rules Are Not Enforcement](05-why-model-rules-are-not-enforcement.md) makes the
@@ -243,15 +243,15 @@ contract.
 
 - It does not show that training on public web content is unlawful. That question is contextual and
   unresolved; see [Data, Consent and Compensation](03-data-consent-and-compensation.md).
-- It does not show that any provider broke a contract, a licence or a law.
+- It does not show that any provider broke a contract, a license or a law.
 - It examines one provider's terms in detail. Whether every provider adopted equivalent clauses on
   equivalent dates has not been checked.
 - It does not establish that robots.txt has legal force anywhere. It is a convention, and honouring
   it is voluntary.
 - It says nothing about whether any particular model was distilled from any other. No such
   allegation is relied on here, and none is needed.
-- It does not establish that a model trained on one organisation's own records performs well enough
-  for that organisation's work. That depends on the task and can only be answered by trying it.
+- It does not establish that a model trained on one organization's own records performs well enough
+  for that organization's work. That depends on the task and can only be answered by trying it.
 - It does not compare the cost of self-hosted inference against paid API access. That comparison
   decides whether the approach is practical and has not been made here.
 
@@ -275,7 +275,7 @@ contract.
 5. **Publish the dates.** Providers should state when each protective clause entered their terms and
    when each opt-out mechanism became available. The sequence is a fact about the record and should
    not require an archive to reconstruct.
-6. **Select a base model on its disclosed provenance.** An organisation building on someone else's
+6. **Select a base model on its disclosed provenance.** An organization building on someone else's
    weights should read the training-content summary before choosing, keep it on file, and treat its
    absence as information. Provenance is now disclosable; choosing not to look is a decision.
 7. **Enforce the data boundary in the environment, not only in the contract.** Where it matters that
@@ -307,5 +307,5 @@ contract.
 different thing from protection that must be bought in a courtroom afterwards. Both are law. Only one
 of them was available to the people who made the model possible, and it arrived second.
 
-**They took because they could. No one else has to, because the work an organisation needs is
+**They took because they could. No one else has to, because the work an organization needs is
 already its own.**

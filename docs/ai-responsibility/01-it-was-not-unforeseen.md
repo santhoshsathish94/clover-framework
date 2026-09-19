@@ -39,7 +39,7 @@ The principles did not speak only about distant catastrophic risk. They said:
 - humans should choose whether and how to delegate decisions to AI.
 
 Those are close to the questions now being asked about model release, data, work and accountability.
-The principles were a public commitment. They were not a regulator, a licence or a power to stop a
+The principles were a public commitment. They were not a regulator, a license or a power to stop a
 release.
 
 ---
@@ -49,7 +49,7 @@ release.
 In May 2019, governments adopted the
 [OECD AI Principles](https://www.oecd.org/en/topics/sub-issues/ai-principles.html), described by the
 OECD as the first intergovernmental AI standard. Their five values include human rights and privacy,
-transparency, safety and accountability. Their policy recommendations include preparing for labour
+transparency, safety and accountability. Their policy recommendations include preparing for labor
 market transformation.
 
 In November 2021, all 193 UNESCO member states adopted the
@@ -84,7 +84,7 @@ In February 2021, Google fired Margaret Mitchell, the founder and other co-head 
 AI team. The [BBC's contemporaneous report](https://www.bbc.com/news/technology-56135817) says Google
 claimed an investigation found that she had moved files outside the company in violation of its code
 of conduct. It also reports that Mitchell had been locked out of Google's systems for five weeks,
-had criticised Gebru's departure, and that both women had raised concerns about censorship inside
+had criticized Gebru's departure, and that both women had raised concerns about censorship inside
 the company.
 
 This proves neither a conspiracy nor that Google rejected every recommendation. It shows that the
@@ -130,12 +130,12 @@ to manage economic disruption.
 It did not create any authority capable of ordering a pause. Development continued. The Future of
 Life Institute's own
 [one-year review](https://futureoflife.org/ai/the-pause-letter-one-year-later/) says companies
-accelerated investment instead. That review is evidence of the signatory organisation's assessment,
+accelerated investment instead. That review is evidence of the signatory organization's assessment,
 not independent proof of any company's motive.
 
 Also in January 2023, NIST released the
 [AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework). NIST states
-that it is intended for **voluntary use**. It gives organisations a serious way to manage risk; it
+that it is intended for **voluntary use**. It gives organizations a serious way to manage risk; it
 is not permission that must be obtained before release.
 
 ---
@@ -161,10 +161,10 @@ The evidence supports a structural explanation, not a claim about one hidden mot
 1. **The early instruments had no stop authority.** Asilomar was an open letter; OECD and UNESCO were
    principles and recommendations; NIST explicitly made its framework voluntary.
 2. **Release authority remained with the developer.** Internal researchers could advise or dissent,
-   but their organisations controlled the product decision.
+   but their organizations controlled the product decision.
 3. **The product could scale faster than law.** A free digital service reached an estimated 100
    million monthly users in two months; legislation took years to negotiate and phase in.
-4. **Responsibility was divided.** The model provider, application provider, deploying organisation,
+4. **Responsibility was divided.** The model provider, application provider, deploying organization,
    distribution platform and end user each control different parts. Without a rule assigning the
    whole chain, each actor can satisfy its own narrow duty while the outcome still harms someone.
 5. **Public deployment was treated as part of development.** "Research preview" and "iterative

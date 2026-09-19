@@ -4,12 +4,12 @@ Status: evidence checked 6 September 2026.
 
 ## The question
 
-Has AI already destroyed livelihoods by being used to replace human work, and did organisations
+Has AI already destroyed livelihoods by being used to replace human work, and did organizations
 account for the accountability they removed when they did it?
 
 ## The honest answer
 
-**Observed:** There is measured displacement in particular online labour markets and an emerging
+**Observed:** There is measured displacement in particular online labor markets and an emerging
 employment gap for young workers in AI-exposed occupations. Other large studies find no aggregate
 loss in hours or earnings, and some markets show new demand alongside the decline.
 
@@ -28,7 +28,7 @@ accountability, not either a claim of universal destruction or a claim that noth
 
 ### 1. Occupational exposure: what could change
 
-The International Labour Organization and Poland's NASK analysed 29,753 occupational tasks with
+The International Labour Organization and Poland's NASK analyzed 29,753 occupational tasks with
 52,558 human assessments, expert validation and AI-assisted scoring. Their
 [2025 index](https://www.ilo.org/publications/generative-ai-and-jobs-refined-global-index-occupational-exposure)
 estimates that 25% of global employment is in occupations with some exposure to generative AI and
@@ -41,7 +41,7 @@ of people displaced.
 ### 2. Platform outcomes: what happened to particular freelancers
 
 A peer-reviewed 2024 study by Xiang Hui, Oren Reshef and Luofeng Zhou examined freelancers on a large
-online labour platform after ChatGPT, DALL-E 2 and Midjourney. The
+online labor platform after ChatGPT, DALL-E 2 and Midjourney. The
 [Organization Science paper](https://doi.org/10.1287/orsc.2023.18441) found reductions in both
 employment and earnings for workers in highly affected occupations. Past high performance did not
 protect them; the authors found suggestive evidence that top freelancers were disproportionately
@@ -62,7 +62,7 @@ part of the market on which their livelihood depended.
 
 ### 3. Administrative records: what did not move at aggregate level
 
-Anders Humlum and Emilie Vestergaard linked adoption surveys with Danish administrative labour
+Anders Humlum and Emilie Vestergaard linked adoption surveys with Danish administrative labor
 records. Their 2025 NBER working paper,
 [Still Waters, Rapid Currents](https://www.nber.org/papers/w33777), found widespread employer
 initiatives, reported productivity gains and new AI-related tasks, but precise null effects on
@@ -100,7 +100,7 @@ The evidence supports these statements:
 - complementary AI work has grown in some markets;
 - aggregate employment, hours and earnings effects can remain small while concentrated groups are
   harmed;
-- the outcome depends partly on organisational choices and public policy, not capability alone.
+- the outcome depends partly on organizational choices and public policy, not capability alone.
 
 The evidence does not yet support these statements:
 
@@ -117,7 +117,7 @@ The evidence does not yet support these statements:
 A job is a bundle of tasks, relationships, judgement and responsibility. Automating tasks does not
 transfer all four to the model.
 
-When an organisation removes a human role, several things can happen:
+When an organization removes a human role, several things can happen:
 
 - the model performs some of the work;
 - remaining workers absorb review and exception handling;
@@ -125,12 +125,12 @@ When an organisation removes a human role, several things can happen:
 - the affected customer or worker may not know who made the decision;
 - responsibility can become less visible even when the work becomes cheaper.
 
-The model cannot employ, dismiss, compensate or bargain with a worker. The deploying organisation
-makes those choices. If the organisation removes the person who understood the work and does not name
+The model cannot employ, dismiss, compensate or bargain with a worker. The deploying organization
+makes those choices. If the organization removes the person who understood the work and does not name
 who now checks and answers for the outcome, it has not automated accountability. It has left it
 vacant.
 
-The EU AI Act recognises part of this distinction. For high-risk workplace systems, Article 26
+The EU AI Act recognizes part of this distinction. For high-risk workplace systems, Article 26
 requires employers to inform affected workers and their representatives before use, assign human
 oversight to people with competence and authority, monitor operation and suspend use when there is
 reason to consider it risky. Those duties apply to defined high-risk uses, not every workplace tool,
@@ -154,7 +154,7 @@ A responsible adoption decision also asks:
 If the only measured Outcome is cost saved, every displaced responsibility appears as efficiency.
 The missing costs move to workers, customers and the public because they are outside the measurement.
 
-That is not a property of AI alone. It is a choice about what the adopting organisation counts.
+That is not a property of AI alone. It is a choice about what the adopting organization counts.
 
 ---
 
@@ -167,7 +167,7 @@ This is Clover's proposal.
 2. **Tell workers before the decision.** Explain what is being tested, what data it uses, which tasks
    may change, how performance will be judged and who can stop the deployment.
 3. **Run a bounded comparison.** Compare AI-assisted work, existing work and any proposed automated
-   path on real outcomes, including correction labour and downstream harm.
+   path on real outcomes, including correction labor and downstream harm.
 4. **Preserve a named accountable human.** Do not remove the role that understands and answers for
    the work while claiming the model replaced it.
 5. **Separate augmentation from replacement.** Record which tasks became easier, which positions were

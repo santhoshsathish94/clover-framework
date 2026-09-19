@@ -27,10 +27,11 @@ jobs:
         run: pip install openai
 
       - name: Run one OpenAI-backed developmental cycle
-        working-directory: AI Manipulation
+        working-directory: work-in-progress/ai-manipulation
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CLOVER_MODEL: ${{ vars.CLOVER_MODEL }}
+          CLOVER_STATE: supervisor/state.json
         run: |
           python -c "from supervisor.supervisor import run; from supervisor.openai_backend import OpenAIBackend; run(OpenAIBackend())"
 
@@ -38,7 +39,7 @@ jobs:
         run: |
           git config user.name "Clover OpenAI Worker"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "AI Manipulation/supervisor/state.json"
+          git add "work-in-progress/ai-manipulation/supervisor/state.json"
           if git diff --cached --quiet; then
             echo "No worker state change."
           else

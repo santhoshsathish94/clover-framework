@@ -6,7 +6,7 @@ This is the master document for the claim made in the closing section of the Clo
 
 **The website makes this argument without naming anyone. This document names the specifics.** The
 public page stays neutral on purpose: the failure is systemic rather than the conduct of one
-organisation, and naming actors there would turn a shared problem into an argument about one of them.
+organization, and naming actors there would turn a shared problem into an argument about one of them.
 Here the record is set out in full, with every source named, so the claim can be checked and
 challenged rather than simply believed.
 
@@ -15,7 +15,7 @@ challenged rather than simply believed.
 **Responsibility for AI was known, flagged and then sidelined whenever it conflicted with
 capability, commercial expansion and the pursuit of dominance.**
 
-That is Clover's conclusion from the record below. It is not a claim that every organisation acted
+That is Clover's conclusion from the record below. It is not a claim that every organization acted
 from one motive, that responsibility work was insincere, or that any single decision had one proven
 cause.
 
@@ -26,7 +26,7 @@ Clover describes one cycle: **Context → Direction → Execution → Outcome �
 - **Context** is the relevant evidence about the real system, established before acting.
 - **Direction** is the human-owned outcome, its boundaries, and who answers for it.
 - **Execution** is the work done inside those boundaries.
-- **Outcome** is what the real system shows, favourable or not.
+- **Outcome** is what the real system shows, favorable or not.
 - **Growth** is what the Outcome taught, carried into the next cycle so it is not repeated.
 
 A skipped stage does not disappear. Its cost lands on somebody who did not choose it. Each case below
@@ -38,7 +38,7 @@ is named for the stage that was skipped, and each is walked through the whole cy
   1,797 AI and robotics researchers, named safety, responsibility, human control, shared benefit and
   the need to avoid cutting corners in a race.
 - The [OECD AI Principles](https://oecd.ai/en/ai-principles), adopted by member governments in 2019,
-  included accountability, transparency, robustness and human-centred values.
+  included accountability, transparency, robustness and human-centered values.
 - UNESCO's 193 member states adopted the
   [Recommendation on the Ethics of Artificial Intelligence](https://unesdoc.unesco.org/ark:/48223/pf0000381137)
   in 2021, setting out responsibility, audit, risk assessment and human oversight.
@@ -58,7 +58,7 @@ remains disputed, and more than 1,400 Google staff signed a protest letter. In F
 fired Margaret Mitchell, the founder and other co-head of the same Ethical AI team, saying an
 investigation found she had moved files outside the company in breach of its code of conduct. The
 [BBC's contemporaneous account](https://www.bbc.com/news/technology-56135817) also records that she
-had been locked out of Google's systems for five weeks, had criticised Gebru's departure, and that
+had been locked out of Google's systems for five weeks, had criticized Gebru's departure, and that
 both researchers had raised concerns about censorship.
 
 That record does not prove competitive dominance was the sole motive for either decision. It does
@@ -91,7 +91,7 @@ fined the same company for unlawful collection. In both cases the images were al
 Copyright Office's 2025 [report on generative-AI training](https://www.copyright.gov/ai/) concludes
 that several stages of training implicate rights holders' exclusive rights, and that fair use turns
 on source, purpose and output. In *Bartz v. Anthropic*, as
-[summarised by the Authors Guild](https://authorsguild.org/advocacy/artificial-intelligence/what-authors-need-to-know-about-the-anthropic-settlement/),
+[summarized by the Authors Guild](https://authorsguild.org/advocacy/artificial-intelligence/what-authors-need-to-know-about-the-anthropic-settlement/),
 lawfully acquired books and books taken from pirate libraries were treated differently.
 
 **Direction.** The people whose work formed the corpus were not asked and had no way to refuse.
@@ -184,7 +184,7 @@ stated clearly enough.
 
 **Execution.** A rule inside a model is guidance, not a boundary. It cannot verify consent it has
 never seen, cannot bind the human who reroutes around it, and cannot survive being modified after an
-open-weight release. Licence terms commonly place responsibility for the output on the downstream
+open-weight release. license terms commonly place responsibility for the output on the downstream
 user.
 
 **Outcome.** When the boundary fails, the consequence lands outside the system that failed — on the
@@ -215,7 +215,7 @@ committing to stronger guardrails and to responding expeditiously to complaints,
 had been in place the entire time. What did not exist was anything that could refuse the generation
 before the depicted person found out about it.
 
-The same shape appears where the stakes are highest. Anthropic holds a defence contract worth up to
+The same shape appears where the stakes are highest. Anthropic holds a defense contract worth up to
 $200 million and, [as NBC News reported](https://www.nbcnews.com/tech/security/anthropic-ai-defense-war-venezuela-maduro-rcna259603)
 on 20 February 2026, was the first AI company allowed to offer services on classified networks,
 through a 2024 partnership with Palantir. Palantir's
@@ -233,12 +233,12 @@ it was crossed; and the counterparty with the power to withdraw the contract is 
 against it. A red line that only one party can see, and that the other party can price, is not a
 boundary.
 
-**Clover's conclusion:** the breach at the source became the default behaviour downstream. Nobody
+**Clover's conclusion:** the breach at the source became the default behavior downstream. Nobody
 using these tools was told that being able to reach something is not permission to take it, because
 the systems they were using had been built on exactly that assumption.
 
 **Growth.** Enforcement that would actually hold has to exist in the product, the environment, the
-organisation and the law, not only in the model. That has not been made general.
+organization and the law, not only in the model. That has not been made general.
 
 **This case does not establish** that safeguards are worthless, that most people using these tools
 intended to take anyone's work, or that every content farm was built with a general-purpose
@@ -257,7 +257,7 @@ by-product of someone else's outcome.
 answerable. Legal protection for a person's likeness remains fragmented, so a real harm can fall
 between copyright, privacy and publicity law.
 
-**Outcome.** The measured labour evidence is uneven, not apocalyptic: reduced work and earnings in
+**Outcome.** The measured labor evidence is uneven, not apocalyptic: reduced work and earnings in
 some exposed freelance occupations, sharp demand declines in selected writing and translation tasks,
 a widening relative employment gap for younger workers in exposed occupations, alongside growing
 demand for complementary work and no large aggregate earnings effect in some national records.
@@ -279,7 +279,7 @@ remains sparse beside capability reporting, and average Foundation Model Transpa
 rose from 37 in 2023 to 58 in 2024 before falling to 40 in 2025.
 
 **Direction.** Frontier-risk frameworks are published and revised, so the intent to learn is real.
-But decisive authority usually stays inside the organisation that benefits from the release: under
+But decisive authority usually stays inside the organization that benefits from the release: under
 OpenAI's [Preparedness Framework](https://openai.com/index/updating-our-preparedness-framework/), an
 internal Safety Advisory Group recommends whether safeguards are sufficient while leadership makes
 the final deployment decision, and requirements may be adjusted if another frontier developer
@@ -295,7 +295,7 @@ evidence that the correction works, and a rule that binds the next release. No m
 makes all six happen. Learning that cannot bind the next cycle is not Growth; it is a record of
 Outcome.
 
-**This case does not establish** that no organisation learns anything. The detail is in
+**This case does not establish** that no organization learns anything. The detail is in
 [Why Incidents Still Do Not Become Accountability](07-why-incidents-do-not-become-accountability.md).
 
 ## Why no one takes responsibility
@@ -306,7 +306,7 @@ Four structural reasons, none of which requires anyone to have acted in bad fait
 the model, whoever deploys it, whoever distributes it, whoever uses it, and several regulators. Each
 can hold one piece honestly while the whole remains unowned.
 
-**The interested party assesses itself.** Where safety review is internal, the organisation that
+**The interested party assesses itself.** Where safety review is internal, the organization that
 gains from releasing is also the one judging whether releasing is acceptable.
 
 **Restraint reads as losing.** When a competitor ships without comparable protection, holding a
@@ -333,7 +333,7 @@ is reliably the one with no owner — and the cost is reliably carried by whoeve
 ## Clover's conclusion
 
 The record does not support saying that nobody knew. It does not support saying that every safety
-commitment was false. It does not establish one shared intention behind every organisation.
+commitment was false. It does not establish one shared intention behind every organization.
 
 It supports something narrower and harder to dismiss:
 
@@ -348,7 +348,7 @@ And it is not finished. Every case above describes a cycle still running today.
 
 ## What this claim does not establish
 
-- It does not establish that any particular organisation or country acted in bad faith.
+- It does not establish that any particular organization or country acted in bad faith.
 - It does not establish that competitive dominance was the sole motive for Timnit Gebru's departure
   or Margaret Mitchell's firing.
 - It does not establish that China's position in EVs, batteries or solar caused the US AI Action Plan.
@@ -373,7 +373,7 @@ Those limits do not weaken the pattern. They keep the conclusion at the scale th
 - [Why Model Rules Are Not Enforcement](05-why-model-rules-are-not-enforcement.md) separates model,
   product, deployment, human and government control.
 - [Work, Livelihoods and Accountability](06-work-livelihoods-and-accountability.md) records the
-  measured labour effects and their limits.
+  measured labor effects and their limits.
 - [Why Incidents Still Do Not Become Accountability](07-why-incidents-do-not-become-accountability.md)
   explains why learning often fails to bind the next release.
 - [Incidents and Adoption Outcomes](08-incidents-and-adoption-outcomes.md) records what adoption
@@ -396,7 +396,7 @@ Those limits do not weaken the pattern. They keep the conclusion at the scale th
 | The same take-what-is-reachable pattern reappeared downstream at scale, with 3,749 AI content-farm news sites identified across 16 languages | [NewsGuard AI Tracking Center](https://www.newsguardtech.com/special-reports/ai-tracking-center/) | That any specific provider's tool produced them, or that most users intended to deceive |
 | Leading chatbots could not identify AI-generated video in 78-95% of prompts, including one made by the video tool's own developer | [NewsGuard, chatbots and AI-generated video](https://www.newsguardtech.com/special-reports/top-ai-chatbots-dont-recognize-ai-generated-videos) | That no detection method works, or that detection would be sufficient protection |
 | A video tool required opt-in for a person's voice and likeness at launch, yet unauthorised generations of named individuals appeared within weeks, and the developer then agreed stronger guardrails with performer unions and agencies | [CNBC, 20 October 2025](https://www.cnbc.com/2025/10/20/open-ai-sora-bryan-cranston-sag-aftra.html) | That the developer intended those generations, or that the strengthened guardrails have prevented recurrence since |
-| A frontier provider's models reached classified defence and intelligence networks under a contract worth up to $200 million, its partner said they would help officials "make more informed decisions in time-sensitive situations", and after reported use in a capture operation it remained unclear how the model had been used | [NBC News, 20 February 2026](https://www.nbcnews.com/tech/security/anthropic-ai-defense-war-venezuela-maduro-rcna259603); [Palantir announcement, 2024](https://investors.palantir.com/news-details/2024/Anthropic-and-Palantir-Partner-to-Bring-Claude-AI-Models-to-AWS-for-U.S.-Government-Intelligence-and-Defense-Operations/) | **That the model selected a target, made any decision, or that any policy was breached.** None of that is established |
+| A frontier provider's models reached classified defense and intelligence networks under a contract worth up to $200 million, its partner said they would help officials "make more informed decisions in time-sensitive situations", and after reported use in a capture operation it remained unclear how the model had been used | [NBC News, 20 February 2026](https://www.nbcnews.com/tech/security/anthropic-ai-defense-war-venezuela-maduro-rcna259603); [Palantir announcement, 2024](https://investors.palantir.com/news-details/2024/Anthropic-and-Palantir-Partner-to-Bring-Claude-AI-Models-to-AWS-for-U.S.-Government-Intelligence-and-Defense-Operations/) | **That the model selected a target, made any decision, or that any policy was breached.** None of that is established |
 | A worldwide research preview reached roughly 100 million monthly users in two months | [OpenAI launch post](https://openai.com/index/chatgpt/); [Reuters, citing UBS/Similarweb](https://www.reuters.com/technology/chatgpt-sets-record-fastest-growing-user-base-analyst-note-2023-02-01/) | An audited count, or the full internal test programme |
 | The developer's own chief executive said publicly that the system was "incredibly limited", created "a misleading impression of greatness", and should not be relied on for anything important | [Sam Altman, 11 December 2022](https://x.com/sama/status/1601731295792414720) | That the release was made in order to create hype; the statement is a warning, not an admission of intent |
 | A flagship capability demonstration was assembled from still frames and text prompts rather than the live interaction it appeared to show, as the provider confirmed | [TechCrunch, 7 December 2023, quoting Google and Bloomberg's first report](https://techcrunch.com/2023/12/07/googles-best-gemini-demo-was-faked/) | That the model lacked the underlying capability, or that every provider demonstration was staged |

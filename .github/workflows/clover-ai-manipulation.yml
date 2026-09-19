@@ -24,14 +24,23 @@ jobs:
           python-version: "3.12"
 
       - name: Run one provider-independent developmental cycle
-        working-directory: AI Manipulation
+        working-directory: work-in-progress/ai-manipulation
         run: python unified_development_engine.py
+
+      - name: Report growth
+        working-directory: work-in-progress/ai-manipulation
+        run: |
+          {
+            echo '```'
+            python growth_report.py
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit developmental state
         run: |
           git config user.name "Clover Development Engine"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "AI Manipulation/unified_development_state.json"
+          git add "work-in-progress/ai-manipulation/unified_development_state.json"
           if git diff --cached --quiet; then
             echo "No developmental state change."
           else

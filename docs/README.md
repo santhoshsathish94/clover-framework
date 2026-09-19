@@ -42,7 +42,7 @@ shifting up, because renumbering would break every link that already points at t
 |---|---|
 | [Responsibility cannot be optional](responsibility-cannot-be-optional.md) | What the evidence shows about who is answerable for what a model does, and what we are asking of the companies building them |
 | [Why responsibility for AI was sidelined](ai-responsibility/why-responsibility-was-sidelined.md) | The master claim behind the site's closing section: the risks were known and flagged, and responsibility lost to the pursuit of dominance |
-| [AI responsibility evidence](ai-responsibility/README.md) | Seven sourced papers, including why known incidents still fail to become binding accountability |
+| [AI responsibility evidence](ai-responsibility/README.md) | Nine sourced papers, including why known incidents still fail to become binding accountability |
 
 ## Reference
 
@@ -50,6 +50,8 @@ shifting up, because renumbering would break every link that already points at t
 |---|---|
 | [Glossary](glossary.md) | Plain-language definitions for every term used here |
 | [The name and the mark](clover-origin.md) | Why a clover, why accountability had to come back, and the canonical rules |
+| [Video context](clover-video-context.md) | The framework retold for a short film, with the canonical five-leaf explanation |
+| [Storyboard](video/clover-30s-master-storyboard.md) and [prompts](video/clover-30s-gemini-prompts.md) | Working material for that film |
 
 Outside this directory: [`AGENTS.md`](../AGENTS.md) is the whole way of working as instructions for
 an agent, [`QUICKSTART.md`](../QUICKSTART.md) runs a first cycle by hand, and

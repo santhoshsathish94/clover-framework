@@ -63,7 +63,7 @@ know any way to implement it.
 
 ## Capability has the stronger scoreboard
 
-The clearest measured asymmetry is not in what organisations say. It is in what they consistently
+The clearest measured asymmetry is not in what organizations say. It is in what they consistently
 measure and disclose.
 
 The [2026 Stanford AI Index](https://hai.stanford.edu/ai-index/2026-ai-index-report/responsible-ai)
@@ -79,7 +79,7 @@ At the same time, the Index reports that:
   in 2025;
 - [frontier capability saturated difficult benchmarks rapidly](https://hai.stanford.edu/ai-index/2026-ai-index-report/technical-performance);
 - [corporate AI investment more than doubled](https://hai.stanford.edu/ai-index/2026-ai-index-report/economy),
-  and organisational adoption reached 88%.
+  and organizational adoption reached 88%.
 
 These measures do not prove a company's motive. They show that capability, capital and adoption have
 shared, comparable and frequently updated measures, while responsibility remains less consistently
@@ -90,12 +90,12 @@ shared evidence for comparing whether safeguards improve.
 
 ---
 
-## The adviser and the final decision-maker are often inside the same organisation
+## The adviser and the final decision-maker are often inside the same organization
 
 Internal safety governance can be serious and still contain a structural conflict.
 
 OpenAI says its cross-functional internal Safety Advisory Group reviews whether safeguards
-sufficiently minimise severe risk and recommends responses ranging from approval to further testing
+sufficiently minimize severe risk and recommends responses ranging from approval to further testing
 or stronger protection. The same document says those recommendations go to **OpenAI Leadership for
 the final decision**.
 
@@ -103,13 +103,13 @@ Anthropic's policy contains board approval, external review mechanisms, internal
 published risk reports. It also remains a policy written and revised by Anthropic. Google DeepMind
 performs safety-case reviews through its own Frontier Safety Framework.
 
-There is nothing inherently wrong with an organisation governing its own work. Every organisation
+There is nothing inherently wrong with an organization governing its own work. Every organization
 must do that. The gap appears when internal governance is the final release gate for a product whose
-failure can affect people outside the organisation.
+failure can affect people outside the organization.
 
 The decisive question is not whether a company has a safety team. It is:
 
-> Can the safety finding stop the release without permission from the same organisation that wants
+> Can the safety finding stop the release without permission from the same organization that wants
 to release it?
 
 Where the answer is no, responsibility advises power rather than constrains it.
@@ -154,7 +154,7 @@ other strategic industries.
 The EU's
 [AI Continent Action Plan](https://digital-strategy.ec.europa.eu/en/library/ai-continent-action-plan)
 combines its binding AI Act with tens of billions of euros for AI factories and gigafactories,
-accelerated adoption, more data-centre capacity, simplified rules and an explicit goal of global AI
+accelerated adoption, more data-center capacity, simplified rules and an explicit goal of global AI
 leadership.
 
 This does not mean safety commitments are false. It means the state is not only a neutral regulator.
@@ -184,7 +184,7 @@ accountability and liability. It also acknowledged that:
 - the initial framework created no new rights or routes to redress.
 
 That is not evidence of secret wrongdoing. It is evidence that policymakers saw the accountability
-gap and initially chose gradual, flexible intervention while explicitly prioritising proportionate
+gap and initially chose gradual, flexible intervention while explicitly prioritizing proportionate
 burdens and preserving innovation.
 
 The EU AI Act proves that binding duties are possible. As of 6 September 2026, its obligations and
@@ -237,8 +237,8 @@ An incident becomes Growth only when all of the following happen:
 
 1. **It is visible.** The event is reported through a common process rather than discovered only by a
    victim, journalist or lawsuit.
-2. **The accountable organisations own it.** The provider organisation owns model-level failures,
-   the deploying organisation owns its deployment, and the public authority enforces the duties that
+2. **The accountable organizations own it.** The provider organization owns model-level failures,
+   the deploying organization owns its deployment, and the public authority enforces the duties that
    apply. Named humans remain answerable for the tasks and decisions they direct inside those layers.
 3. **The cause is established.** Investigation reaches the model, data, product, deployment and human
    decision instead of stopping at "user misuse" or "AI error."
@@ -274,7 +274,7 @@ There is evidence of real learning:
 
 But learning is not the same as accepting accountability.
 
-An organisation can learn how to patch one jailbreak while retaining the same release authority. A
+An organization can learn how to patch one jailbreak while retaining the same release authority. A
 government can learn that liability is unclear while postponing its allocation. A company can improve
 safety while making its minimum depend partly on competitors. A policymaker can record an incident
 without giving it power to interrupt deployment.
@@ -304,11 +304,11 @@ Define thresholds that automatically require independent investigation, temporar
 access limits, and renewed approval. Do not let the provider decide whether the event is important
 enough to reopen release.
 
-### 3. Name the accountable organisation at every layer
+### 3. Name the accountable organization at every layer
 
-For each model and deployment, publicly identify the accountable provider organisation, deploying
-organisation and public authority. Named humans should own concrete tasks and decisions inside each
-organisation, but an organisation must not move model-level accountability onto one employee, a
+For each model and deployment, publicly identify the accountable provider organization, deploying
+organization and public authority. Named humans should own concrete tasks and decisions inside each
+organization, but an organization must not move model-level accountability onto one employee, a
 contractor or the people using the model. Contracts may divide work; they should not erase
 responsibility to the person affected.
 
@@ -384,7 +384,7 @@ If those questions have no public answer, accountability has not yet been built.
 |---|---|---|
 | Leading developers have detailed frontier-risk frameworks | [OpenAI](https://openai.com/index/updating-our-preparedness-framework/); [Anthropic](https://www.anthropic.com/responsible-scaling-policy); [Google DeepMind](https://deepmind.google/discover/blog/strengthening-our-frontier-safety-framework/) | That the frameworks cover every harm or always control release |
 | OpenAI's internal safety group advises while leadership makes the final deployment decision | [OpenAI Preparedness Framework update](https://openai.com/index/updating-our-preparedness-framework/) | How leadership has decided in any confidential individual case |
-| OpenAI may adjust requirements after a competitor releases a high-risk system, subject to stated risk checks, public acknowledgement and continuing protection | [OpenAI Preparedness Framework update](https://openai.com/index/updating-our-preparedness-framework/) | That it has lowered a specific safeguard or acted irresponsibly |
+| OpenAI may adjust requirements after a competitor releases a high-risk system, subject to stated risk checks, public acknowledgment and continuing protection | [OpenAI Preparedness Framework update](https://openai.com/index/updating-our-preparedness-framework/) | That it has lowered a specific safeguard or acted irresponsibly |
 | Responsible-AI reporting lags capability reporting; documented incidents rose; transparency fell | [Stanford AI Index 2026, Responsible AI](https://hai.stanford.edu/ai-index/2026-ai-index-report/responsible-ai) | A complete census of incidents, their causes, or preventability |
 | Industry produced over 90% of notable models while investment and adoption accelerated | [R&D](https://hai.stanford.edu/ai-index/2026-ai-index-report/research-and-development); [Economy](https://hai.stanford.edu/ai-index/2026-ai-index-report/economy) | That investment caused any specific safety failure |
 | The US government frames AI policy as winning a race, cementing US dominance and preserving US economic and military power while removing regulatory barriers | [US AI Action Plan announcement](https://www.whitehouse.gov/articles/2025/07/white-house-unveils-americas-ai-action-plan/) | That US policy contains no safety or worker protections |

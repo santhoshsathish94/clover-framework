@@ -9,7 +9,7 @@ why not put a rule in the model and make the model enforce it?
 
 ## The short answer
 
-**Observed:** Providers already put rules and refusal behaviour into many models. Those measures
+**Observed:** Providers already put rules and refusal behavior into many models. Those measures
 reduce harm, but providers' own evaluations and independent research show that they do not create a
 hard boundary. Open-weight safeguards can be modified after release. Closed services can control
 access more strongly, but still face jailbreaks, false positives and false negatives.
@@ -36,7 +36,7 @@ question is what those rules can actually hold.
 ## A refusal is probabilistic
 
 OpenAI's [GPT-4 technical report](https://arxiv.org/html/2303.08774v6) says its model-level
-interventions increase the difficulty of eliciting bad behaviour, but that jailbreaks still exist.
+interventions increase the difficulty of eliciting bad behavior, but that jailbreaks still exist.
 The original ChatGPT launch post likewise expected false negatives and false positives from its
 external content filter.
 
@@ -116,7 +116,7 @@ coverage and observed failures.
 
 ### Deployment layer
 
-The enterprise or organisation decides what data the model can reach, what action it can take, who
+The enterprise or organization decides what data the model can reach, what action it can take, who
 reviews its work, what evidence is required and whether a refusal can be bypassed. It can make an
 agent's policy binding through permissions, isolation, approval gates and audit logs.
 
@@ -164,7 +164,7 @@ review route for the person affected.
 
 ### AI companies
 
-1. Put the strongest feasible protections into training, model behaviour and product access.
+1. Put the strongest feasible protections into training, model behavior and product access.
 2. Test the safeguards under adversarial modification, not only as shipped.
 3. Match release form to risk. Do not publish high-risk weights merely because an API would be less
    open.
@@ -204,7 +204,7 @@ review route for the person affected.
 | Claim | Evidence | What it does not prove |
 |---|---|---|
 | Major model releases carry safety rules and evaluations | [Llama 3 model card and AUP](https://huggingface.co/meta-llama/Meta-Llama-3-8B); [Gemma model card](https://ai.google.dev/gemma/docs/core/model_card); [GPT-4 report](https://arxiv.org/html/2303.08774v6) | Consistent compliance in deployment |
-| GPT-4's mitigations reduced unsafe behaviour but jailbreaks remained | [GPT-4 report, section 6](https://arxiv.org/html/2303.08774v6) | Current failure rates of later models |
+| GPT-4's mitigations reduced unsafe behavior but jailbreaks remained | [GPT-4 report, section 6](https://arxiv.org/html/2303.08774v6) | Current failure rates of later models |
 | Closed deployments retain access-control tools that open weights do not | [UK AISI](https://www.aisi.gov.uk/blog/managing-risks-from-increasingly-capable-open-weight-ai-systems) | That closed systems are safe or misuse-free |
 | Open-weight safeguards can be removed and releases cannot be recalled | [UK AISI](https://www.aisi.gov.uk/blog/managing-risks-from-increasingly-capable-open-weight-ai-systems) | That openness has no research, competition or transparency benefit |
 | Safeguards were removed from tested models in minutes | [Financial Times report republished by The Irish Times](https://www.irishtimes.com/business/2026/05/25/ai-guardrails-stripped-from-meta-and-google-models-in-minutes/) | Independent reproduction across all model families |

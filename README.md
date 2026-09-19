@@ -36,6 +36,7 @@ This repository contains the documentation, practical guidance, case studies, an
 - [`AGENTS.md`](AGENTS.md) — AI agent operating guidance
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`case-studies/`](case-studies/) — real work and outcomes
+- [`why-clover-is-important.md`](why-clover-is-important.md) — the research behind why this matters
 
 ## Clover AI
 
@@ -77,7 +78,58 @@ Clover does not claim his implementation as its own. The upstream project, its i
 
 The detailed implementation direction is intentionally kept separate from this README:
 
-- [`work-inprogess/clover-ai.md`](work-inprogess/clover-ai.md) — Clover AI implementation direction
+- [`work-in-progress/clover-ai.md`](work-in-progress/clover-ai.md) — Clover AI implementation direction
+- [`work-in-progress/README.md`](work-in-progress/README.md) — everything designed or trialed but not yet established
+
+### What has been built, and what has not
+
+The first experiments live in [`work-in-progress/ai-manipulation/`](work-in-progress/ai-manipulation/).
+They are deliberately small, and every result below comes from a bounded toy
+domain — a search for coefficients of known functions over a five-task ladder.
+
+Demonstrated there, and nowhere else:
+
+- developmental state survives process termination and is reloaded
+- a capability is promoted only after passing anchor tests the engine cannot write
+- memory lowered the cost of later tasks: 2,397 evaluations without it against 1,869 with it
+- a promotion that breaks an earlier capability reverts the whole state
+- a worker cannot certify its own learning; only externally evidenced claims are kept
+- developmental continuity survived replacing the worker, tested with two real
+  local models from different families rather than stand-ins
+
+Not demonstrated, and not claimed:
+
+- that any of it holds outside the designed task space
+- that the process can invent a representation rather than search within one
+- that a language model continues the trajectory *usefully* — the handover
+  carried between two real local models, but neither produced anything that
+  passed the evaluator, and the hosted worker has never completed a cycle
+- open-ended development, general capability, or subjective experience
+
+A separate question — whether a very large model can run from storage rather
+than memory — was examined against Fareed Khan's work. The engine was built and
+its weightless gates passed locally, and the published cache measurements
+reproduced exactly from a recorded trace. No token was generated: that needs
+roughly 1.7 TB of local storage. See
+[`work-in-progress/kimi-k3-local-evidence.json`](work-in-progress/kimi-k3-local-evidence.json).
+
+### What v4.0.0 is waiting for
+
+This release, `v3.1.0`, records the machinery and the corrections to it. It does
+not claim the result. Three things stand between here and `v4.0.0`, and none of
+them is a matter of writing more code:
+
+1. **A task space the experimenter did not design.** Everything above is a
+   search for coefficients of known functions. Until the process meets a problem
+   nobody shaped for it, the domain is doing the work rather than the method.
+2. **A model that completes a cycle and produces something the evaluator
+   accepts.** The handover between workers holds; the content does not yet clear
+   the bar. The hosted worker has never run a cycle at all — it reached the API
+   and stopped at `429 insufficient_quota`.
+3. **The storage-streamed measurement on real work**, which needs roughly 1.7 TB
+   of local disk for the checkpoint and packed trunk.
+
+**`v4.0.0` will be cut when one of those produces evidence, and not before.**
 
 Supporting areas include:
 

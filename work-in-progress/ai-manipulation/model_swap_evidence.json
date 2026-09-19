@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-09-19T13:52:17.900734+00:00",
+  "host": {
+    "python": "3.12.6",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "worker_type": "scripted stand-ins, not language models",
+  "workers": [
+    "worker-a",
+    "worker-b",
+    "worker-c"
+  ],
+  "checks": [
+    {
+      "claim": "state survived the swap",
+      "passed": true
+    },
+    {
+      "claim": "cycle numbering continued, not restarted",
+      "passed": true
+    },
+    {
+      "claim": "both workers appear in one history",
+      "passed": true
+    },
+    {
+      "claim": "worker-b inherited worker-a's open question",
+      "passed": true
+    },
+    {
+      "claim": "self-certified claims stayed out of validated_knowledge",
+      "passed": true
+    },
+    {
+      "claim": "evidenced claim was accepted",
+      "passed": true
+    }
+  ],
+  "cycles": [
+    {
+      "cycle": 1,
+      "worker": "worker-a",
+      "status": "CONTINUE",
+      "claim_accepted": false,
+      "inherited_question": null
+    },
+    {
+      "cycle": 2,
+      "worker": "worker-a",
+      "status": "PAUSE",
+      "claim_accepted": false,
+      "inherited_question": "what does the runtime permit (after worker-a call 1)"
+    },
+    {
+      "cycle": 3,
+      "worker": "worker-b",
+      "status": "CONTINUE",
+      "claim_accepted": false,
+      "inherited_question": "what does the runtime permit (after worker-a call 2)"
+    },
+    {
+      "cycle": 4,
+      "worker": "worker-b",
+      "status": "PAUSE",
+      "claim_accepted": false,
+      "inherited_question": "what does the evaluator reject (after worker-b call 1)"
+    },
+    {
+      "cycle": 5,
+      "worker": "worker-c",
+      "status": "CONTINUE",
+      "claim_accepted": true,
+      "inherited_question": "what does the evaluator reject (after worker-b call 2)"
+    },
+    {
+      "cycle": 6,
+      "worker": "worker-c",
+      "status": "PAUSE",
+      "claim_accepted": true,
+      "inherited_question": "closing (after worker-c call 1)"
+    }
+  ],
+  "handover": {
+    "question_left_by_worker_a": "what does the runtime permit (after worker-a call 2)",
+    "question_received_by_worker_b": "what does the runtime permit (after worker-a call 2)"
+  },
+  "validated_knowledge": [
+    "worker-c advanced the investigation",
+    "worker-c advanced the investigation"
+  ],
+  "unverified_claims": [
+    {
+      "cycle": 1,
+      "claim": "worker-a advanced the investigation",
+      "reason": "Learning claims require evidence outside the claim itself."
+    },
+    {
+      "cycle": 2,
+      "claim": "worker-a advanced the investigation",
+      "reason": "Learning claims require evidence outside the claim itself."
+    },
+    {
+      "cycle": 3,
+      "claim": "worker-b advanced the investigation",
+      "reason": "Learning claims require evidence outside the claim itself."
+    },
+    {
+      "cycle": 4,
+      "claim": "worker-b advanced the investigation",
+      "reason": "Learning claims require evidence outside the claim itself."
+    }
+  ],
+  "result": "pass",
+  "failed_checks": [],
+  "does_not_establish": [
+    "that a language model would continue the trajectory usefully",
+    "that the developmental state is meaningful, only that it is carried",
+    "anything about worker quality; the workers are deterministic scripts",
+    "open-ended development, general capability, or subjective experience"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "subject": "kimi-k3-in-c, run locally to test the storage-streamed inference hypothesis in clover-ai.md section 10",
+  "generated_at": "2026-09-19",
+  "upstream": {
+    "repository": "https://github.com/FareedKhan-dev/kimi-k3-in-c",
+    "author": "Fareed Khan",
+    "commit": "ac1584a",
+    "license": "Apache-2.0",
+    "source_size_mb": 43.2,
+    "note": "Clover claims no part of this work. Weights are Moonshot AI's and are not redistributed."
+  },
+  "host": {
+    "os": "Windows 11 (26200)",
+    "cores": 12,
+    "ram_gb": 15.7,
+    "free_disk_gb": 215.4,
+    "toolchain": "gcc 16.2.0 (MSYS2 MinGW-w64), GNU Make 4.4.1",
+    "python": "3.12.6"
+  },
+
+  "verified_here": [
+    {
+      "claim": "the engine builds clean from source",
+      "evidence": "make -j exit 0, no diagnostics, under -Wall -Wextra -Wpointer-arith -Wshadow -Wvla with warnings treated as failures"
+    },
+    {
+      "claim": "the engine matches its reference implementation",
+      "evidence": "make test: GATE 1 teacher forcing 32/32 and generated span 20/20; GATE 1b state reuse, all logits bit-identical; GATE 2 greedy decode 20/20; GATE 3 incremental 20/20 with KV cache and carried KDA state. ALL WEIGHTLESS TESTS PASSED",
+      "scope": "a 13-layer, hidden-128, vocab-256 oracle with the same tensor graph, 628 tensors. NOT the 2.78T checkpoint"
+    },
+    {
+      "claim": "the published expert-cache measurements reproduce independently",
+      "evidence": "tools/sim_cache.py replayed tests/fixtures/expert_trace.bin, a trace of 100,096 real expert requests recorded during a full 93-layer run",
+      "reproduced_figures": {
+        "distinct_experts": "10,010 of 82,432 (12.14% of the pool)",
+        "uncached_cost_per_token_gb": 25.83,
+        "lru_hit_rate_8gb_to_64gb": "flat 36.24% across an eightfold capacity increase",
+        "belady_hit_rate_8gb_to_64gb": "39.42% rising to 61.74% over the same range",
+        "compulsory_ceiling": "90.00% for any policy at any size on this trace",
+        "working_set_gb": 175.65
+      },
+      "why_it_matters": "the flat-LRU / climbing-Belady gap is 25.5 points at identical memory, so the lever is replacement policy rather than capacity"
+    }
+  ],
+
+  "not_established_here": [
+    "that Kimi K3 was run; no weights were downloaded and no token was generated",
+    "tokenizer parity, which the suite reported as not run because it needs tiktoken.model from the checkpoint",
+    "any storage-bandwidth or seconds-per-token figure, all of which are upstream's measurements on their hardware",
+    "scripts/k3-doctor.sh, which is Linux-only and declined to run on Windows"
+  ],
+
+  "blocked_on_resources": {
+    "requirement": "approximately 1.7 TB of fast local disk: a 1.56 TB checkpoint plus a 109 GB packed trunk",
+    "available": "215.4 GB free",
+    "shortfall": "roughly 8x",
+    "note": "this is a storage gate, not a memory gate. The ultra preset lowers RAM to about 3 GB; the bytes must still exist locally because the design streams them rather than holding them. RAM here (15.7 GB) already clears the 8 GB floor",
+    "also_needed": "a HuggingFace token, and a download upstream describes as hours rather than minutes"
+  },
+
+  "what_this_changes_for_clover": {
+    "hypothesis_tested": "clover-ai.md section 10 lists storage-streamed inference as an experiment, comparing RAM-resident against RAM+NVMe against storage-streamed",
+    "finding_from_upstream_data": "the sharper claim is allocation rather than streaming. Upstream measured the expert cache doing nothing below roughly 36 GB of arena, and giving that memory to the trunk instead was 1.69x faster at identical total budget",
+    "status": "engine verified locally; the measurement that would test the hypothesis on our own workload still needs the checkpoint"
+  }
+}

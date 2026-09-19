@@ -15,7 +15,7 @@ a shared, binding change.
 The master argument is
 [Why Responsibility for AI Was Sidelined](why-responsibility-was-sidelined.md). It brings the warning
 record, the pursuit-of-dominance evidence, the causal conclusion and its limits into one document.
-The supporting evidence is split across eight papers:
+The supporting evidence is split across nine papers:
 
 | | Question |
 |---|---|
@@ -24,7 +24,7 @@ The supporting evidence is split across eight papers:
 | [03. Data, consent and compensation](03-data-consent-and-compensation.md) | What was disclosed about training data, what permission was obtained, and who was paid? |
 | [04. Likeness, privacy and the moral gap](04-likeness-privacy-and-the-moral-gap.md) | What happens when a use harms a person but falls between copyright, privacy and likeness law? |
 | [05. Why model rules are not enforcement](05-why-model-rules-are-not-enforcement.md) | What can providers technically hold, what can be removed, and what remains with deployers and humans? |
-| [06. Work, livelihoods and accountability](06-work-livelihoods-and-accountability.md) | What does the measured labour evidence show, and what does it not yet establish? |
+| [06. Work, livelihoods and accountability](06-work-livelihoods-and-accountability.md) | What does the measured labor evidence show, and what does it not yet establish? |
 | [07. Why incidents do not become accountability](07-why-incidents-do-not-become-accountability.md) | If institutions know the risks and mechanisms, why do repeated incidents still fail to change the next release? |
 | [08. Incidents and adoption outcomes](08-incidents-and-adoption-outcomes.md) | What did adoption actually produce, incident by incident, and what does the record not establish? |
 | [09. Who could say no, and when](09-who-could-say-no-and-when.md) | Which party could refuse, by what mechanism, and at what date? |
@@ -40,7 +40,7 @@ record is unavailable or when the fact being established is what happened in pub
 
 Each paper ends with an evidence ledger. Its final column matters: it says what the source **does
 not** establish. A source can prove that a safeguard failed in one test without proving that all
-safeguards always fail. A labour study can measure a decline in one market without proving an
+safeguards always fail. A labor study can measure a decline in one market without proving an
 aggregate global job loss. A proposed bill is not law.
 
 Three labels keep the argument honest:
@@ -61,13 +61,13 @@ Three labels keep the argument honest:
    externally reviewed market gate. Calling a worldwide release a research preview did not make it
    a controlled trial.
 4. Training at internet scale made individual permission, attribution and compensation hard, but
-   not meaningless. Licences and contributor payments exist where parties chose to build them.
+   not meaningless. licenses and contributor payments exist where parties chose to build them.
 5. Law protects some works, uses, people and jurisdictions. It does not turn every harmful use into
    a legal violation. Legality is a floor, not the whole responsibility.
 6. A model instruction can refuse. It cannot prove consent, bind a human, or prevent an open-weight
-   copy from being modified. Enforcement has to exist in the product, environment, organisation and
+   copy from being modified. Enforcement has to exist in the product, environment, organization and
    law as well as in the model.
-7. Labour effects are already measurable in particular occupations and age groups, but the evidence
+7. labor effects are already measurable in particular occupations and age groups, but the evidence
    does not show economy-wide replacement. That uncertainty calls for monitoring and transition
    duties, not for either panic or dismissal.
 8. Protection was not absent; it was unevenly timed. A provider's terms prohibited scraping it,

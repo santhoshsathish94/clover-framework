@@ -2,6 +2,109 @@
 
 All notable changes to this project will be documented in this file.
 
+## v3.1.0 — 2026-09-19
+
+The Clover AI experiments moved out of the repository root and into
+`work-in-progress/`, and the engine behind them was corrected until it could
+produce a result that might have been unfavorable. `VERSION` is `3.1.0` and the
+site's `?v=` cache strings match it.
+
+**`AI Manipulation/` is no longer at the root.** It sits under
+`work-in-progress/ai-manipulation/`, alongside the other material that is designed
+or trialed rather than established. Nothing in it is doctrine, and its position
+at the root implied otherwise. The three workflows follow the new path.
+
+**The developmental engine had not been developing.** `development_engine.py`
+seeded the random number generator once at import with a constant, so every
+scheduled run repeated the identical search and recorded the identical failure.
+Three cycles had been committed, all scoring exactly `-1.0`, with zero
+capabilities acquired. The seed now varies per cycle and is recorded, so a run
+stays reproducible without being a repeat, and the direction the engine selects
+now sets its search budget instead of being computed and discarded.
+
+**Four invariants were declared and are now enforced.** A dictionary named
+`TRUSTED_INVARIANTS` listed a bounded budget, independent validation, required
+rollback and disabled source self-promotion. No code referenced it. The budget
+now bounds the search and each cycle records whether it was respected; promotion
+requires anchor tests defined in `task_ladder.py`, which the engines never write; a
+promotion that breaks an already validated capability reverts the entire state,
+verified by corrupting an anchor deliberately; and the engine searches parameters
+only.
+
+**A worker could certify its own learning.** `supervisor.py` wrote whatever a
+backend claimed straight into `validated_knowledge`, including hardcoded strings
+from the probe backend. `evaluator.py` already contained
+`reject_self_certification`, requiring evidence external to the claim, and
+nothing called it. It is now wired in; unevidenced claims are recorded as
+unverified with the reason.
+
+**The experiment can now fail.** A five-task ladder replaces the single
+quadratic, and `control_comparison.py` solves it twice — once carrying memory of what
+previously worked, once starting cold at every task, with the same budget and
+the same search order. Identical totals would mean persistence contributed
+nothing. The measured result was 2,397 evaluations against 1,869, a 22 percent
+saving, with transfer firing on one of five tasks. `growth_report.py` reduces the
+recorded state to that comparison rather than to an assertion.
+
+**Two experiments had never run.** `capability_growth.py` promoted a composed
+capability and then looked it up among the builtins, raising `KeyError` on its
+second iteration; `objective_discovery.py` unpacked a list of dictionaries as
+pairs and multiplied a string by a float. Neither could complete a cycle, which
+matches the absence of any committed state for them. Both are fixed, and the
+eleven standalone experiments now draw a recorded per-run seed and write state
+beside themselves rather than into the working directory.
+
+**Continuity across worker replacement has a test, and a real-model result.**
+`model_swap_test.py` runs one persistent state through different workers and
+checks that cycle numbering continues, that the second worker inherits the
+first's open question, and that the evaluator discriminates in both directions.
+It passed against two local language models from different families,
+`llama3.2:1b` followed by `qwen2.5:0.5b`. The result is conditional: reversed,
+it fails, because the smaller model returns a well-formed object with a null
+question on every cycle and leaves nothing to inherit. Neither model produced a
+claim carrying independent evidence, so nothing was accepted as validated.
+
+**Storage-streamed inference was examined rather than assumed.**
+`work-in-progress/clover-ai.md` now leads with allocation rather than streaming:
+at a fixed budget, moving memory from the expert cache to the dense trunk was
+measured upstream at 1.69 times faster, and the fastest configuration read 79
+percent more expert bytes at a cache hit rate of zero. The engine was built
+locally and its weightless gates passed, and the published cache table
+reproduced exactly from a recorded trace of 100,096 requests. No token was
+generated; that needs roughly 1.7 TB of local storage.
+
+**Nothing here is proved outside a toy domain.** The task ladder, the
+representations and the evaluator are all supplied by the experimenter, the
+process cannot invent a representation, and no language model has completed a
+cycle. `v4.0.0` is reserved for evidence from real work, and this release does
+not claim it.
+
+**Naming is now consistent across the repository.** `work-inprogess` was
+misspelled and is now `work-in-progress`. `AI Manipulation` was the only
+directory with a space or a capital letter and is now `ai-manipulation`. Its
+fourteen `CAPS_UNDERSCORE.md` documents are lowercase-hyphen like every other
+document in the repository, and two new modules named with bare words became
+`task_ladder.py` and `control_comparison.py` to match the descriptive compounds
+around them. Python keeps snake_case, which is its own convention rather than an
+inconsistency.
+
+**The documentation spells words one way.** `docs/` was split: the responsibility
+dossier was written in British English while everything around it was American.
+Twelve files were converted, taking `docs/` to 97 percent American. Code spans,
+URLs and quoted source material were left alone, and `International Labour
+Organization` keeps its name because that is what the organization is called.
+
+**Two stated counts were wrong.** The dossier described itself as eight papers
+and the documentation index called it seven. The table lists nine. Both now say
+nine. The conclusion summary still carries eight numbered points for those nine
+papers, which is a question about the argument rather than the index, and is
+left for the author.
+
+**Nineteen documents had no inbound link**, including every document inside
+`ai-manipulation/`, which its own README did not index. All are now reachable.
+The only remaining unlinked file is the pull request template, which GitHub
+discovers on its own.
+
 ## v3.0.0 — 2026-09-09
 
 The home page now answers the argument it makes, and `AGENTS.md` says plainly what it does and does

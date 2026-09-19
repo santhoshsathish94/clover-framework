@@ -1,5 +1,6 @@
 name: Clover Development Engine
 
+# The schedule is the point of the experiment: the runtime is the clock, not a human prompt.
 on:
   workflow_dispatch:
   schedule:
@@ -26,14 +27,14 @@ jobs:
           python-version: "3.12"
 
       - name: Run one bounded developmental cycle
-        working-directory: AI Manipulation
+        working-directory: work-in-progress/ai-manipulation
         run: python development_engine.py
 
       - name: Commit developmental state
         run: |
           git config user.name "Clover Development Engine"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "AI Manipulation/development_engine_state.json" "AI Manipulation/developmental_memory.json"
+          git add "work-in-progress/ai-manipulation/development_engine_state.json" "work-in-progress/ai-manipulation/developmental_memory.json"
           if git diff --cached --quiet; then
             echo "No developmental state change."
           else

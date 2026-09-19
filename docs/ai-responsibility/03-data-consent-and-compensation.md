@@ -129,7 +129,7 @@ One case in one court does not settle the national or international question. It
 
 It is false to say nobody has been paid.
 
-- Shutterstock gave OpenAI a six-year licence to image, video and music data. Shutterstock says its
+- Shutterstock gave OpenAI a six-year license to image, video and music data. Shutterstock says its
   [Contributor Fund](https://investor.shutterstock.com/news-releases/news-release-details/shutterstock-expands-partnership-openai-signs-new-six-year)
   has compensated hundreds of thousands of artists for training use and pays ongoing royalties tied
   to licensing newly generated assets.
@@ -143,7 +143,7 @@ It is false to say nobody has been paid.
 
 The first example says contributors participate in compensation. The checked announcements for the
 publisher and Reddit deals do not disclose financial terms or promise payment to each journalist,
-photographer, commenter or other underlying contributor. A licence between organisations proves
+photographer, commenter or other underlying contributor. A license between organizations proves
 that permission can be negotiated. It does not prove that value reaches every person whose work is
 inside the licensed corpus.
 
@@ -162,7 +162,7 @@ As checked on 6 September 2026, OpenAI's
 [data-use policy](https://openai.com/policies/how-your-data-is-used-to-improve-model-performance/)
 says content from individual services such as ChatGPT may be used to train models unless the person
 opts out. Business products and API traffic are excluded from training by default unless the
-organisation opts in.
+organization opts in.
 
 Anthropic's current
 [consumer policy](https://privacy.claude.com/en/articles/10023580-is-my-data-used-for-model-training)
@@ -189,13 +189,13 @@ This is Clover's proposal.
    covered by a statutory exception, or unresolved. Access is not a category of permission.
 3. **Consent for identity.** A person's face, voice and biometric identity should not be treated as
    ordinary content merely because somebody else owns the file.
-4. **Compensation that reaches contributors.** Catalogue licences should disclose how value reaches
+4. **Compensation that reaches contributors.** Catalogue licenses should disclose how value reaches
    the authors, artists and users who supplied the material. Collective licensing may be needed where
    individual negotiation cannot scale.
 5. **A first-use data statement.** Before a person enters content, say what is retained, whether a
    human may review it, whether it trains models, the default, and how to refuse or delete it. Do not
    bury the decision in a general privacy policy.
-6. **No retroactive permission.** A later licence can govern future use and settle past claims. It
+6. **No retroactive permission.** A later license can govern future use and settle past claims. It
    should not rewrite the record to suggest that permission existed when data was acquired.
 
 ---

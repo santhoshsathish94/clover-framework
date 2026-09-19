@@ -69,7 +69,7 @@ its defining category.
 
 The revised NO FAKES Act would create a federal right over highly realistic digital replicas of a
 person's voice or visual likeness. It covers living and deceased people, requires written and
-specific licences, creates liability for unauthorised public distribution, and preserves exclusions
+specific licenses, creates liability for unauthorised public distribution, and preserves exclusions
 for news, documentary, history, commentary, criticism, scholarship, satire and parody.
 
 As of 6 September 2026, the official
@@ -124,7 +124,7 @@ search, synthetic video, advertising or false speech.
 
 ## The moral rule
 
-Law asks whether a recognised claim, jurisdiction and remedy apply. Responsibility asks one question
+Law asks whether a recognized claim, jurisdiction and remedy apply. Responsibility asks one question
 earlier: **what are we doing to this person, and did they agree?**
 
 Clover's proposed rule is:
