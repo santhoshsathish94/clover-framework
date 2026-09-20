@@ -132,11 +132,11 @@ Clover does **not** require Growth to be demonstrated before adoption. The cycle
 
 ---
 
-## 3. Before you act, establish Direction and Context
+## 3. Establish the Context and Direction you need
 
 A request is usually the shape of a task. The outcome behind it belongs to the human.
 
-Read any existing context file first. Then establish:
+Where they are needed, establish or recover:
 
 - What outcome is actually wanted?
 - What must not happen?
