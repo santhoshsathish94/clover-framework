@@ -1,0 +1,3 @@
+# A CRLF shebang fails on Linux with "bad interpreter: /usr/bin/env bash^M", and these
+# scripts are authored on Windows but only ever run on Linux hosts.
+*.sh text eol=lf
