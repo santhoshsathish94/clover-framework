@@ -21,8 +21,27 @@ stays here.
 
 `self-observation-state.json` holds the run state for the self-observation loop.
 
-`kimi-k3-local-evidence.json` records what the storage-streamed inference
-experiment established on local hardware, and what it is still waiting on.
+## [Kimi K3 storage-streamed inference](fareed-khan-kimi-k3-in-c-explanation.md)
+
+Four files covering one line of work: whether a 2.78-trillion-parameter model running on
+one CPU changes what AI infrastructure has to be. **The engine is Fareed Khan's
+[`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c), Apache-2.0. Nothing here
+reimplements it and no model weights are redistributed.**
+
+| File | What it is |
+|---|---|
+| [fareed-khan-kimi-k3-in-c-explanation.md](fareed-khan-kimi-k3-in-c-explanation.md) | How the engine works, what it measured, and what it implies for the Clover infrastructure direction |
+| [kimi-k3-local-evidence.json](kimi-k3-local-evidence.json) | What the experiment established on local hardware, and what it is still waiting on |
+| [kimi-k3-bench-run.sh](kimi-k3-bench-run.sh) | The measurement campaign for rented hardware. Gated, shellcheck-clean, and **never yet run against weights** |
+| [CONTEXT-kimi-k3-benchmark.md](CONTEXT-kimi-k3-benchmark.md) | Handoff record: what is settled, what was ruled out and why, corrections made, abort criteria, and what remains unknown |
+
+Reproduced locally, with no checkpoint and no GPU: the weightless gate ladder, the released
+configuration, the byte-exact tokenizer round-trip, the published 100,096-request
+expert-cache table, and a kernel compute baseline. The checkpoint's 96 shards were
+confirmed to total 1,560,936,091,448 bytes without downloading them.
+
+Not reproduced: any full-model measurement. That needs about 1.7 TB of storage and more
+memory than the machine here has, which is what the rented box is for.
 
 ## [AI Manipulation](ai-manipulation/)
 
