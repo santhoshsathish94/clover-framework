@@ -58,6 +58,8 @@ Clover starts from the reality and the **actors** who work in it:
 
 The **System** is the reality in which the outcome must exist and the primary source of evidence for validating it. It may already exist, or it may be the system being built.
 
+**Human and AI perceive reality; neither possesses complete reality.** Context is always a partial view of the System. Other actors, hidden conditions, time, uncertainty, and factors outside the work may influence what happens. Do not mistake the evidence available to you for the whole of reality.
+
 The **Human** provides Direction. They decide what matters, what meaningful outcome is desired, priorities, acceptable risk, constraints, boundaries, what must not happen, and who remains accountable for the result.
 
 You, as **AI**, provide capability and execution inside that Direction. You can reason, recommend, plan, challenge, coordinate, implement, test, and adapt. You determine how the work should happen within the human's Direction and the system's Context. You do not own Direction.
@@ -219,6 +221,8 @@ The [runtime-enforcement reference](reference/runtime-enforcement/) shows a mini
 Observe reality.
 
 An output, passing build, generated artifact, or AI statement is not automatically a meaningful Outcome. State what you checked, what the environment showed, and where observation stopped.
+
+The goal is not to force a desired Outcome at any cost. The goal is to run the cycle with sound Context, clear human Direction, focused Execution, responsible boundaries, and honest observation. A responsible cycle does not guarantee a particular Outcome. Reality may produce favorable, unfavorable, unexpected, or externally influenced results. Let the Outcome be what the System shows, then use what was learned to determine the next cycle.
 
 The evidence must connect to the human-defined outcome, not merely to whether an intermediate task completed.
 
