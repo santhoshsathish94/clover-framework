@@ -28,7 +28,7 @@ REPO="${REPO:-$HOME/kimi-k3-in-c}"
 RUN_WORKLOAD="${RUN_WORKLOAD:-1}"
 RUN_THREADS="${RUN_THREADS:-1}"              # ROADMAP item 3: never swept on this engine
 RUN_CAMPAIGN="${RUN_CAMPAIGN:-1}"
-GEN_WORK="${GEN_WORK:-64}"
+GEN_WORK="${GEN_WORK:-64}"                   # beyond the 8-32 upstream measured; deliberate
 GEN_THREAD="${GEN_THREAD:-16}"
 
 log() { printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*" | tee -a "$OUT_DIR/run.log"; }
@@ -50,22 +50,27 @@ log "=== preflight ==="
 grep -q avx2 /proc/cpuinfo || { log "FATAL: no AVX2, the engine requires AVX2+FMA"; exit 1; }
 grep -q fma  /proc/cpuinfo || { log "FATAL: no FMA"; exit 1; }
 
-RAM_GB=$(awk '/MemTotal/{printf "%d", $2/1048576}' /proc/meminfo)
-log "RAM: ${RAM_GB} GB"
-[ "$RAM_GB" -ge 8 ] || { log "FATAL: 8 GB is the floor"; exit 1; }
+# MemTotal is KiB, so this is GiB. Upstream reports peak RSS in decimal GB, which is why
+# a "~128 GB" preset is 119 GiB and does fit a 128 GiB box. Keep the units visible.
+RAM_GIB=$(awk '/MemTotal/{printf "%d", $2/1048576}' /proc/meminfo)
+AVAIL_GIB=$(awk '/MemAvailable/{printf "%d", $2/1048576}' /proc/meminfo)
+log "RAM: ${RAM_GIB} GiB total, ${AVAIL_GIB} GiB available"
+[ "$RAM_GIB" -ge 8 ] || { log "FATAL: 8 GB is the floor"; exit 1; }
 
-# The ladder's top rung caps the cgroup at 128 GB. The kernel and page cache
-# need room above that, so a 128 GB machine records OOM on the rung that matters.
-if [ "$RAM_GB" -lt 160 ]; then
-  log "NOTE: ${RAM_GB} GB total. The 128 GB rung will likely record OOM, which the"
-  log "      harness treats as a legitimate result, but it is the rung the upstream"
-  log "      trunk-first finding rests on."
+# Observation, not a prediction: the published 128 GB rung recorded 128.18 GB peak RSS
+# (119 GiB) under a 128 GiB cap on a 228 GiB machine. This box has to fit the same rung
+# plus the OS inside its whole RAM, so the rung may OOM. The harness records that as a
+# legitimate result. Whether it does is for the run to show.
+if [ "$RAM_GIB" -lt 160 ]; then
+  log "NOTE: ${RAM_GIB} GiB total. The 128 GB rung needs ~119 GiB plus OS headroom, so it"
+  log "      may record OOM here. That is a result, not a failure."
 fi
 
-# The sweep holds total memory fixed and varies only the split, so its budget
-# must be one the machine can actually honour.
+# The sweep holds total memory fixed, so its budget must be one the machine can honour.
+# 0.90 of MemAvailable rather than an invented constant: the engine itself refuses to
+# start when its plan exceeds MemAvailable * 0.95, so this stays just inside its own rule.
 if [ -z "$SWEEP_GB" ]; then
-  if [ "$RAM_GB" -ge 160 ]; then SWEEP_GB=128; else SWEEP_GB=$((RAM_GB - 24)); fi
+  if [ "$RAM_GIB" -ge 160 ]; then SWEEP_GB=128; else SWEEP_GB=$(( AVAIL_GIB * 90 / 100 )); fi
 fi
 log "split-sweep budget: ${SWEEP_GB} GB"
 
@@ -91,8 +96,10 @@ TRUNK_FREE=$(df -PBG "$TRUNK_DIR" | awk 'NR==2{gsub("G","",$4); print $4}')
 MODEL_DEV=$(df -P "$MODEL_DIR" | awk 'NR==2{print $1}')
 TRUNK_DEV=$(df -P "$TRUNK_DIR" | awk 'NR==2{print $1}')
 
-# TUNING.md: on split storage the expert device is the sole bottleneck and the
-# trunk-first rule inverts. Which case applies has to be recorded, not assumed.
+# TUNING.md reports that on split storage the expert device becomes the bottleneck and
+# the trunk-first rule inverts. That was measured by a user with trunk on NVMe and the
+# checkpoint on a slower SATA drive; two identical NVMe may behave differently. Record
+# which layout this is rather than assuming the finding transfers.
 if [ "$MODEL_DEV" = "$TRUNK_DEV" ]; then
   log "storage: SINGLE device ($MODEL_DEV), trunk-first allocation applies"
   [ "$MODEL_FREE" -ge 1680 ] || { log "FATAL: one device needs 1680 GB for both, has ${MODEL_FREE}"; exit 1; }
