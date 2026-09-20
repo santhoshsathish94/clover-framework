@@ -114,7 +114,14 @@ fi
 log "=== quietening the machine ==="
 sudo systemctl stop unattended-upgrades apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
 sudo systemctl disable apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
-pgrep -x k3 >/dev/null && { log "FATAL: a k3 process is already running"; exit 1; } || true
+
+# A second engine competing for the same disk is one of the contaminants
+# BENCHMARKING.md names. An `if` rather than `&& ... || true`, which reads as
+# if-then-else and is not.
+if pgrep -x k3 >/dev/null; then
+  log "FATAL: a k3 process is already running"
+  exit 1
+fi
 
 # ---- 3. build and prove the engine before downloading anything ------------
 log "=== build ==="

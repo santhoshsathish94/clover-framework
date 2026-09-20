@@ -155,9 +155,17 @@ now `f831ab66814297da540d832a5235f8e904f29d06`; the Jetson result recorded
 WSL, where `systemd-run --scope --user` works. WSL reports 126 MB/s on `/mnt/c`, which is
 the 9p filesystem and not a real measurement of anything.
 
-**Not done: shellcheck.** Upstream CI treats it as blocking. Not installable here without
-elevation and absent from the MSYS2 repos. The script has only had `bash -n`. Run
-shellcheck on the server before trusting the script, or accept that gap knowingly.
+**shellcheck: clean.** Upstream CI treats it as blocking. Neither apt (needs elevation)
+nor MSYS2 (no such package) could supply it; the official static binary from the
+shellcheck GitHub release works with no package manager and no elevation, and is kept at
+`c:\personal\oss\.tools\shellcheck.exe` (v0.10.0). It found one real issue, SC2015 on the
+`pgrep -x k3 && { ...; exit 1; } || true` guard, which reads as if-then-else and is not;
+rewritten as an `if`. Now clean, plus `bash -n` passing and `i/lf w/lf`.
+
+**Line endings are a live hazard here.** The working copy silently acquired 323 CRLF
+pairs after `.gitattributes` was added, which would have failed on Linux at the first
+`for` loop. The committed blob stayed LF throughout. Check `git ls-files --eol` shows
+`i/lf w/lf`, not just `i/lf`, before trusting any local validation of this script.
 
 ## What remains unknown
 
