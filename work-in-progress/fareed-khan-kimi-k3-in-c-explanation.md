@@ -497,6 +497,26 @@ The better sequence is:
 7. Compare cost per verified successful task.
 8. Keep successful and failed measurements as Growth inputs for the next architecture decision.
 
+## 19. The first machine, and why the work is not finished when it runs
+
+The machine is an AX102-3-LTD at Hetzner: 128 GiB of RAM, two 1.92 TB NVMe drives, sixteen cores, **no GPU**, about €50 for a day's work. It is deliberately ordinary. A machine nobody would describe as AI infrastructure is the point of the exercise, not a compromise forced on it.
+
+Three things will be measured there, in order of what they are for:
+
+1. **The workload shape.** Long prompts and 64-token generations, speculative decode, and a second turn resumed from saved state. Both upstream harnesses run a five-token prompt at eight tokens, which is the operating point least like real work. Nobody has measured the shape real work has.
+2. **Thread scaling.** `OMP_NUM_THREADS` has never been swept on this engine. Sixteen cores against the reference machine's 124 is the open question, and it costs one loop.
+3. **The published campaign, replicated.** Three repetitions per point against a measured 33 percent noise floor, which is upstream `ROADMAP.md` item 2.
+
+A good deal is already settled without spending anything. The checkpoint is public and its 96 shards total exactly 1,560,936,091,448 bytes, so the download will verify. The weightless gate ladder passes, the released configuration parses and the tokenizer round-trips byte for byte. The kernel benchmark has produced a compute baseline and two bit-exactness hashes that the rented machine must reproduce.
+
+What the machine cannot settle is worth stating as plainly. Kimi K3 through this engine has no chat template, no chunked prefill and no quality benchmark. It completes text; it does not follow instructions. It is the demonstration that model size and machine size are separable. It is not the working assistant, and the claim that one ordinary box is enough for most of the work has to be carried by smaller models doing real tasks, measured separately.
+
+**And the work will not be finished when the numbers come back.** An Outcome is where the next cycle starts, not where this one ends. Whatever the machine shows becomes the Context for the following question, and there is always a following question: a better allocation, a faster device, a smaller model that does the same job, a measurement that turns out to have been asking the wrong thing. Reaching what was intended is not the same as running out of things to improve.
+
+There is a particular reason for confidence in that improvement. **The mistakes of today's AI models are not mysterious.** They are observable, repeatable and, when someone bothers to write them down, correctable. The record beside this work lists eleven of them from a single session: figures quoted from a superseded measurement campaign, a gigabyte-versus-gibibyte confusion that produced a confident wrong answer, a prediction extrapolated from an image caption, advice that was precisely backwards about which preset to use. None of those were subtle once they were named. Each was caught because the cycle validates against the system rather than against the model's confidence, and each is now written down where the next cycle will read it.
+
+A failure that is understood is a failure that can be designed out. That is the whole argument for recording them.
+
 ## Status
 
 This document describes upstream work by Fareed Khan and the current Clover understanding of it.
