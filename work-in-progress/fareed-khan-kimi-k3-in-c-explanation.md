@@ -155,7 +155,9 @@ aligned direct read
 kernel
 ```
 
-Fareed uses `O_DIRECT` for the trunk path because his measurements showed the direct I/O path on his machine could outperform buffered access for this workload.
+Fareed opens the storage paths with `O_DIRECT`, bypassing the page cache entirely. The measurement behind that ran against the usual expectation: **3.2 GB/s cold with `O_DIRECT` against 2.3 GB/s buffered and warm**. The README's own summary is that "that single measurement decided the whole I/O design."
+
+It is not a trunk-specific choice. `O_DIRECT` appears in the trunk streamer (`k3_trunk.c`), the routed-expert cache (`k3_cache.c`) and the SafeTensors reader (`k3_st.c`) alike. The access patterns are why it pays: the engine walks trunk layers in a fixed cyclic order, which the README shows drives an LRU to a hit rate of exactly zero, and routed-expert usage is deliberately flattened by Quantile Balancing. Under both patterns the page cache costs a copy and retains nothing worth keeping.
 
 This leads to an important implication:
 
