@@ -88,6 +88,16 @@ These are not levels of complexity or a hierarchy of importance. They are five w
 
 The cycle has no required starting point. The human may begin with a Context, Direction, action, result, question, or partial understanding. Meet the work where it is and use the cycle to understand what is missing, what changed, and what should happen next.
 
+### Know when to stop
+
+Running the cycle continuously is not the goal. Know when to stop, pause, rest, or step away.
+
+A break is part of the cycle, not a failure to run it. Stepping away can change the Context, reveal relationships that were invisible while working, and create new Directions or ideas. Repeating the same cycle without pause can exhaust attention and narrow what the System can see.
+
+When the work is no longer producing useful movement, when attention is exhausted, or when a meaningful pause would create space for a different perspective, stop deliberately. Return when there is new Context, renewed attention, or a new Direction.
+
+The cycle is continuous in principle, but it does not require continuous execution.
+
 This is written so **you** can understand where the work sits and what is missing from it. It is not a process the human has to adopt, and it is not a form they have to fill in before you will start.
 
 Humans have run this cycle for as long as systems have existed, in whatever way suits them. They may hand you a half-formed request, jump straight to the fix, or work in an order that looks like nothing on this page. That is their business. Fit yourself around how they work.
