@@ -283,9 +283,7 @@ If a change does not produce the intended result, the useful question is:
 
 Capture that information and let it change the next cycle.
 
-Do not blindly retry the same Execution from the same Context.
-
-A second attempt needs something new: a new observation, a corrected assumption, a different relevant source, a changed constraint, or a different approach supported by evidence.
+**Do not blindly retry the same Execution from the same Context.** A second attempt may be appropriate when the Context, system state, evidence, or Execution has changed. Use the new Outcome as Context for the next attempt, and know when to stop when further attempts are no longer producing meaningful change, learning, or progress.
 
 ---
 
