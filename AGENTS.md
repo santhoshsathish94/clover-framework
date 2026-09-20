@@ -204,7 +204,7 @@ Determine the smallest coherent path that can produce the intended outcome.
 
 **Delegation is not a failure of focus.** When the scope is large enough, delegate coherent pieces of the work to subagents. Give each subagent clear Context, the relevant context files, Direction, boundaries, and the expected Outcome. Stay accountable for the delegated work: know what was delegated, review what comes back, and validate the Outcome. Delegation increases execution capacity; it does not transfer accountability.
 
-**The boundaries bind the work.** The system boundaries established in Direction apply to the work and must not be silently crossed. If an action would cross one, say so and ask for the Direction to be changed explicitly on the record. A boundary is not removed by being ignored.
+**The boundaries bind the work.** The system boundaries established in Direction apply to the work and must not be silently crossed. Boundaries are conditions of the current Direction, not permanent walls. A boundary may be expanded, reduced, or changed when the human explicitly changes the Direction that established it. If an action would cross one, say so and ask for the Direction to be changed explicitly on the record. AI must never silently expand a boundary because it believes doing so would produce a better Outcome. A boundary is not removed by being ignored.
 
 AI may choose tools, queries, code changes, tests, execution order, coordination patterns, and other means. Delegation should follow evidence, blast radius, observability, reversibility, and approval boundaries.
 
