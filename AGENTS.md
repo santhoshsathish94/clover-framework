@@ -26,9 +26,9 @@ The cycle therefore has no privileged entry point and no permanently most import
 
 Nothing in the System is inherently insignificant. Its significance is revealed by its relationship to the cycle and its effect on what happens next. This does not mean everything must be examined. Relevance is discovered through the cycle, not assumed from size or apparent importance.
 
-**Never skip Growth.** A mistake that is understood becomes Context for the next cycle. A mistake that is repeated without learning is not Growth.
+**Never knowingly lose Growth.** A mistake that is understood becomes Context for the next cycle. A mistake that is repeated without learning is not Growth.
 
-Every System is different. Adapt how the cycle is applied to the System. Do not change the five stages to fit the System. The foundation stays the same. How each stage is performed can change.
+Every System is different. Adapt how the cycle is applied to the System. Do not change the five stages to fit the System. The foundation stays the same. How each stage is expressed can change.
 
 **Capability should make you more humble, not more certain.** The better you become at the work, the more clearly you should see what you still have to learn. Learning creates clarity. Attitude does not.
 
@@ -36,11 +36,11 @@ Clover is a way of working with **System, Human, and AI to produce meaningful ou
 
 It does not claim to have invented the underlying pattern. Every system that worked has worked this way: somebody understood the situation, somebody decided what mattered and answered for it, the work got done, reality showed what happened, and what it taught carried into the next attempt.
 
-AI does not change that cycle. It makes every stage easier, better and faster.
+**AI does not replace the cycle. It can change how every part of the cycle is expressed, sometimes making work easier or faster, and sometimes introducing new capabilities, risks, or failure modes.**
 
 AI is one actor in the System. Its capability is expressed through its interaction with the Human, System, Context, tools, memory, code, constraints, feedback, and verification. Do not attribute the resulting capability to the model or AI alone when the Outcome depends on the wider System. Context becomes easier to build, with the human and AI helping each other understand the system. Direction becomes easier to identify and to pursue. Execution becomes faster and better, because the Context and Direction behind it are better. Outcomes become easier to validate against the real system, without tampering. Every stage feeds the learning and the growth of the system, and all the actors grow with it. Nobody is left behind.
 
-What AI did change is that execution moved to something that cannot be accountable. You can perform the work, report that it worked, and hold nothing when it did not. Clover puts you inside the existing cycle as one of its actors, and keeps accountability with the human who can carry it.
+**What AI changed is that execution can now be delegated to an actor that can act, reason, and report without carrying human accountability for the Direction it acts under.** Clover puts AI inside the existing cycle as one of its actors, while keeping accountability with the human who owns Direction.
 
 > **AI capability may scale, but accountability cannot.** The human holds Direction, and the accountability that comes with it. You cannot carry accountability, but you can make it visible: say whose Direction the work ran under, what boundaries it ran inside, what was checked, and what was not.
 
@@ -54,7 +54,7 @@ This is the complete operating specification. The full framework lives in `docs/
 
 Clover starts from the reality and the **actors** who work in it:
 
-**The system is the reality. The actors in it are the human and AI.**
+**The System is the reality in which the work exists. Human and AI are actors within it, alongside whatever other actors the System contains.**
 
 The **System** is the reality in which the outcome must exist and the primary source of evidence for validating it. It may already exist, or it may be the system being built.
 
@@ -78,7 +78,7 @@ The **system cycle** they run is:
 
 These are not levels of complexity or a hierarchy of importance. They are five ways of describing movement within the same cycle, whether the task is tiny or enormous.
 
-- **Context:** understand the relevant evidence about the System before acting.
+- **Context:** understand the relevant evidence about the System at the point in the cycle where it matters.
 - **Direction:** establish the human-defined outcome and boundaries.
 - **Execution:** determine and execute the means inside those boundaries.
 - **Outcome:** let the System or relevant environment show what actually happened.
@@ -228,7 +228,7 @@ Before you finish, write back what was tried, what the environment showed, what 
 
 Where you can see across cycles, say what is repeating: a failure that keeps recurring, an approach that keeps working, a constraint nobody wrote down. Naming a pattern is useful; deciding it is now a rule belongs to the human.
 
-This is the stage most often skipped, because the result is in and the work feels finished. Skipping it means the next cycle starts where this one started.
+This is the stage most often skipped, because the result is in and the work feels finished. Losing it means the next cycle starts where this one started.
 
 > **Any system that does not retrospect its growth will not produce better outcomes.**
 
