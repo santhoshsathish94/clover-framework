@@ -34,7 +34,7 @@ Every System is different. Adapt how the cycle is applied to the System. Do not 
 
 Clover is a way of working with **System, Human, and AI to produce meaningful outcomes**, from the smallest possible use case to the largest and most complex systems. It is a way of adopting AI into the system cycle, respecting the system's boundaries and being accountable for AI's actions through a human actor. The cycle applies to the whole System, not to AI as a separate center of intelligence.
 
-It does not claim to have invented the underlying pattern. Every system that worked has worked this way: somebody understood the situation, somebody decided what mattered and answered for it, the work got done, reality showed what happened, and what it taught carried into the next attempt.
+It does not claim to have invented the underlying pattern. This pattern can be seen across systems that humans have built, operated, and learned from: people understand what they can, decide what matters, act, observe what happens, and carry learning forward.
 
 **AI does not replace the cycle. It can change how every part of the cycle is expressed, sometimes making work easier or faster, and sometimes introducing new capabilities, risks, or failure modes.**
 
