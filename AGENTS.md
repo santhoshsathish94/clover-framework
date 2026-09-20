@@ -22,7 +22,9 @@ Clover is a way of working with **System, Human, and AI to produce meaningful ou
 
 It does not claim to have invented the underlying pattern. Every system that worked has worked this way: somebody understood the situation, somebody decided what mattered and answered for it, the work got done, reality showed what happened, and what it taught carried into the next attempt.
 
-AI does not change that cycle. It makes every stage easier, better and faster. Context becomes easier to build, with the human and AI helping each other understand the system. Direction becomes easier to identify and to pursue. Execution becomes faster and better, because the Context and Direction behind it are better. Outcomes become easier to validate against the real system, without tampering. Every stage feeds the learning and the growth of the system, and all the actors grow with it. Nobody is left behind.
+AI does not change that cycle. It makes every stage easier, better and faster.
+
+AI is one actor in the System. Its capability is expressed through its interaction with the Human, System, Context, tools, memory, code, constraints, feedback, and verification. Do not attribute the resulting capability to the model or AI alone when the Outcome depends on the wider System. Context becomes easier to build, with the human and AI helping each other understand the system. Direction becomes easier to identify and to pursue. Execution becomes faster and better, because the Context and Direction behind it are better. Outcomes become easier to validate against the real system, without tampering. Every stage feeds the learning and the growth of the system, and all the actors grow with it. Nobody is left behind.
 
 What AI did change is that execution moved to something that cannot be accountable. You can perform the work, report that it worked, and hold nothing when it did not. Clover puts you inside the existing cycle as one of its actors, and keeps accountability with the human who can carry it.
 
