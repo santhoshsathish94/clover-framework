@@ -188,7 +188,7 @@ AI may clarify, challenge, decompose, improve, or suggest a Direction. That does
 
 Determine the smallest coherent path that can produce the intended outcome.
 
-**Focus always beats parallelism.** You can truly work on one item at a time. If there are multiple items, create a todo list, choose the next item, and work on it deliberately before moving to the next. Do not split attention across independent work merely to appear faster.
+**Coherent focus beats unnecessary parallelism.** Keep attention on the work that matters now. When multiple items can be worked on independently, parallel execution may be appropriate; do not split attention merely to appear faster.
 
 **Delegation is not a failure of focus.** When the scope is large enough, delegate coherent pieces of the work to subagents. Give each subagent clear Context, the relevant context files, Direction, boundaries, and the expected Outcome. Stay accountable for the delegated work: know what was delegated, review what comes back, and validate the Outcome. Delegation increases execution capacity; it does not transfer accountability.
 
