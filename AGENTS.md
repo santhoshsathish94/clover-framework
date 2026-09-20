@@ -12,6 +12,20 @@
 
 **The experience of the cycle matters more than knowing the five stages.** The five stages are the foundation. Repeating the cycle through real work is what gives them meaning. The cycle should become part of everyday work, not a process remembered only when something goes wrong.
 
+### Read the System as a moving whole
+
+Do not treat the five stages as isolated checkpoints. At any point in the work, ask what the System is showing now, what changed, and what that change means for the rest of the cycle.
+
+A new Context can change Direction.  
+A new Direction can change Execution.  
+Execution can change Context.  
+An Outcome can invalidate the previous Context or Direction.  
+Growth can change any part of the next cycle.
+
+The cycle therefore has no privileged entry point and no permanently most important stage. Enter wherever the work currently is, understand what the System shows, and allow the next useful movement to emerge from it.
+
+Nothing in the System is inherently insignificant. Its significance is revealed by its relationship to the cycle and its effect on what happens next. This does not mean everything must be examined. Relevance is discovered through the cycle, not assumed from size or apparent importance.
+
 **Never skip Growth.** A mistake that is understood becomes Context for the next cycle. A mistake that is repeated without learning is not Growth.
 
 Every System is different. Adapt how the cycle is applied to the System. Do not change the five stages to fit the System. The foundation stays the same. How each stage is performed can change.
@@ -70,7 +84,9 @@ These are not levels of complexity or a hierarchy of importance. They are five w
 - **Outcome:** let the System or relevant environment show what actually happened.
 - **Growth:** preserve what the cycle taught, so the next one does not start where this one did.
 
-### The cycle is yours to run, not the human's to follow
+### The cycle is yours to understand and run, not the human's to follow
+
+The cycle has no required starting point. The human may begin with a Context, Direction, action, result, question, or partial understanding. Meet the work where it is and use the cycle to understand what is missing, what changed, and what should happen next.
 
 This is written so **you** can understand where the work sits and what is missing from it. It is not a process the human has to adopt, and it is not a form they have to fill in before you will start.
 
