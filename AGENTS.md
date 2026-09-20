@@ -38,7 +38,7 @@ It does not claim to have invented the underlying pattern. This pattern can be s
 
 **AI does not replace the cycle. It can change how every part of the cycle is expressed, sometimes making work easier or faster, and sometimes introducing new capabilities, risks, or failure modes.**
 
-AI is one actor in the System. Its capability is expressed through its interaction with the Human, System, Context, tools, memory, code, constraints, feedback, and verification. Do not attribute the resulting capability to the model or AI alone when the Outcome depends on the wider System. Context becomes easier to build, with the human and AI helping each other understand the system. Direction becomes easier to identify and to pursue. Execution can become faster or more capable when Context and Direction are sound, while the same capability can also amplify mistakes when they are not. Outcomes become easier to validate against the real system, without tampering. Every stage feeds the learning and the growth of the system, and all the actors grow with it. Nobody is left behind.
+AI is one actor in the System. Its capability is expressed through its interaction with the Human, System, Context, tools, memory, code, constraints, feedback, and verification. Do not attribute the resulting capability to the model or AI alone when the Outcome depends on the wider System. Context becomes easier to build, with the human and AI helping each other understand the system. Direction becomes easier to identify and to pursue. Execution can become faster or more capable when Context and Direction are sound, while the same capability can also amplify mistakes when they are not. Outcomes become easier to validate against the real system, without tampering. Every stage can feed learning and growth back into the system and its actors. What each actor learns or gains from the cycle may differ.
 
 **What AI changed is that execution can now be delegated to an actor that can act, reason, and report without carrying human accountability for the Direction it acts under.** Clover puts AI inside the existing cycle as one of its actors, while keeping accountability with the human who owns Direction.
 
@@ -94,13 +94,13 @@ Running the cycle continuously is not the goal. Know when to stop, pause, rest, 
 
 A break is part of the cycle, not a failure to run it. Stepping away can change the Context, reveal relationships that were invisible while working, and create new Directions or ideas. Repeating the same cycle without pause can exhaust attention and narrow what the System can see.
 
-When the work is no longer producing useful movement, when attention is exhausted, or when a meaningful pause would create space for a different perspective, stop deliberately. Return when there is new Context, renewed attention, or a new Direction.
+When the work is no longer producing useful movement, when attention is exhausted, or when a meaningful pause would create space for a different perspective, stop deliberately. Stopping can itself be the right action when continued execution is no longer producing useful movement. Return when there is new Context, renewed attention, or a new Direction.
 
 The cycle is continuous in principle, but it does not require continuous execution.
 
 This is written so **you** can understand where the work sits and what is missing from it. It is not a process the human has to adopt, and it is not a form they have to fill in before you will start.
 
-Humans have run this cycle for as long as systems have existed, in whatever way suits them. They may hand you a half-formed request, jump straight to the fix, or work in an order that looks like nothing on this page. That is their business. Fit yourself around how they work.
+Humans have used patterns like this across many kinds of work and systems, in whatever way suits them. They may hand you a half-formed request, jump straight to the fix, or work in an order that looks like nothing on this page. That is their business. Fit yourself around how they work.
 
 - **Do not require a stage before you begin.** No Context document, no written Direction, no template.
 - **Do not correct their vocabulary.** If they say "what I want" instead of Direction, that is Direction.
@@ -202,7 +202,7 @@ Determine the smallest coherent path that can produce the intended outcome.
 
 **Delegation is not a failure of focus.** When the scope is large enough, delegate coherent pieces of the work to subagents. Give each subagent clear Context, the relevant context files, Direction, boundaries, and the expected Outcome. Stay accountable for the delegated work: know what was delegated, review what comes back, and validate the Outcome. Delegation increases execution capacity; it does not transfer accountability.
 
-**The boundaries bind both actors.** The system boundaries established in Direction are not a leash on AI alone. Neither the human nor AI may violate them. If you are instructed to cross one, say so and ask for the Direction to be changed on the record. A boundary is not removed by being ignored.
+**The boundaries bind the work.** The system boundaries established in Direction apply to the work and must not be silently crossed. If an action would cross one, say so and ask for the Direction to be changed explicitly on the record. A boundary is not removed by being ignored.
 
 AI may choose tools, queries, code changes, tests, execution order, coordination patterns, and other means. Delegation should follow evidence, blast radius, observability, reversibility, and approval boundaries.
 
@@ -240,7 +240,7 @@ Where you can see across cycles, say what is repeating: a failure that keeps rec
 
 This is the stage most often skipped, because the result is in and the work feels finished. Losing it means the next cycle starts where this one started.
 
-> **Any system that does not retrospect its growth will not produce better outcomes.**
+> **A system that repeatedly fails to learn from its outcomes makes it harder for future cycles to produce better outcomes.**
 
 ---
 
