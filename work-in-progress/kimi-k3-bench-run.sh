@@ -156,19 +156,35 @@ fi
 # Kernel microbenchmarks need no weights at all. This is the cheapest available read on
 # whether 16 cores hold up against the 124-core reference box, and it costs minutes
 # rather than a 1.56 TB download.
+#
+# `make bench` compiles and immediately runs, and that first run is not trustworthy: on
+# the AX102 it reported 3.7 GFLOP/s for MXFP4 where four later runs gave 137-142. It is
+# kept in its own file rather than deleted, because a recurring outlier is itself data.
+# The recorded runs are repeated for the same reason the token measurements are: bf16
+# spread 86.1-102.0 GFLOP/s across four clean runs, so one sample is not a result.
 log "=== kernel microbenchmarks, no weights required ==="
-make bench 2>&1 | tee "$OUT_DIR/bench-kernels.txt" | tail -20
+make bench 2>&1 | tee "$OUT_DIR/bench-kernels-warmup.txt" | tail -5
+for r in $(seq 1 "$REPS"); do
+  log "  bench_kernels rep $r/$REPS"
+  { echo "--- rep $r ---"; ./bin/bench_kernels 2>&1; } | tee -a "$OUT_DIR/bench-kernels.txt"
+done
+tail -20 "$OUT_DIR/bench-kernels.txt"
 
 # ---- 3b. measure the storage before trusting it ----------------------------
 # I/O is 41-61% of wall clock across the published ladder, and the largest single source
 # of its 33% run-to-run spread was the device rather than scheduling. Measuring it costs
 # seconds now and is unrecoverable once 1.56 TB is already written.
+# Repeated rather than sampled once: this number sets the storage ceiling that every
+# s/token prediction is compared against, so its spread matters more than the kernels'.
 log "=== storage bandwidth (O_DIRECT) ==="
 for d in "$TRUNK_DIR" "$MODEL_DIR"; do
   probe="$d/.devbw.probe"
   fallocate -l 8G "$probe" 2>/dev/null || dd if=/dev/zero of="$probe" bs=1M count=8192 status=none
   log "--- $d ---"
-  python3 tools/devbw.py "$probe" 2>&1 | tee -a "$OUT_DIR/devbw.txt" | sed 's/^/   /'
+  for r in $(seq 1 "$REPS"); do
+    { echo "--- $d rep $r ---"; python3 tools/devbw.py "$probe" 2>&1; } \
+      | tee -a "$OUT_DIR/devbw.txt" | sed 's/^/   /'
+  done
   rm -f "$probe"
 done
 
