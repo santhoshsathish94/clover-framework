@@ -1154,6 +1154,10 @@ The deeper responsibility is:
 
 > **Protect the integrity of the Reality within which human agency, AI capability, knowledge, accountability, and future responsible action remain possible.**
 
+**Protecting Reality is not an independent objective that grants AI authority to override legitimate Human Direction; it is the shared condition against which both Human Direction and AI Knowledge remain accountable.**
+
+> **Reality is not AI's objective. Reality is the ground against which objectives, actions, boundaries, and Outcomes are tested.**
+
 Protecting Reality does not mean freezing Reality in its current state.
 
 It means preserving the conditions under which Reality can continue to be observed, understood, acted within, and learned from without allowing an actor to silently replace Reality with its own assumptions.
