@@ -212,10 +212,30 @@ else
 fi
 
 # ---- 5. one real generation, so there is a token before any benchmarking ---
-log "=== proof of life ==="
-./bin/k3 "$MODEL_DIR" --trunk "$TRUNK_DIR" --preset auto --tok "$MODEL_DIR" \
-  --prompt "The capital of France is" --gen 8 --incremental \
-  2>&1 | tee "$OUT_DIR/first-tokens.txt" | tail -20
+# This also resolves the preset every arm below uses. `auto` is the engine's own budget
+# chooser and is preferred, but it is not always viable: on this 124 GiB box it asked
+# for 126.43 GB against 132.01 GB available, which the engine's own 5% headroom guard
+# (need_b > have * 0.95) refused in 0.2 s, before loading anything. Falling back is
+# recorded rather than hidden, because which preset ran is part of the result.
+PRESET="${PRESET:-auto}"
+log "=== proof of life, preset $PRESET ==="
+if ! ./bin/k3 "$MODEL_DIR" --trunk "$TRUNK_DIR" --preset "$PRESET" --tok "$MODEL_DIR" \
+       --prompt "The capital of France is" --gen 8 --incremental \
+       > "$OUT_DIR/first-tokens.txt" 2>&1; then
+  if [ "$PRESET" = auto ] && grep -q "REFUSING TO START" "$OUT_DIR/first-tokens.txt"; then
+    grep -E "REFUSING TO START|TOTAL|available" "$OUT_DIR/first-tokens.txt" \
+      | sed 's/^/     | /' || true
+    PRESET=workstation
+    log "*** auto was refused on this machine; every arm below runs --preset $PRESET"
+    ./bin/k3 "$MODEL_DIR" --trunk "$TRUNK_DIR" --preset "$PRESET" --tok "$MODEL_DIR" \
+      --prompt "The capital of France is" --gen 8 --incremental \
+      > "$OUT_DIR/first-tokens.txt" 2>&1
+  else
+    log "FATAL: proof of life failed"; tail -20 "$OUT_DIR/first-tokens.txt"; exit 1
+  fi
+fi
+tail -20 "$OUT_DIR/first-tokens.txt"
+log "preset in use for every arm: $PRESET"
 
 # Real code, from the engine's own source, so a prompt is deterministic and needs no
 # network. Read from a file rather than argv, which re-encodes.
@@ -267,23 +287,23 @@ measure() {
 # has measured it.
 if [ "$RUN_WORKLOAD" = "1" ]; then
   log "=== ARM A: workload shape, gen ${GEN_WORK} ==="
-  measure work_short  --preset auto --tok "$MODEL_DIR" --prompt-file "$P/short.txt"  --gen "$GEN_WORK" --incremental
-  measure work_medium --preset auto --tok "$MODEL_DIR" --prompt-file "$P/medium.txt" --gen "$GEN_WORK" --incremental
-  measure work_long   --preset auto --tok "$MODEL_DIR" --prompt-file "$P/long.txt"   --gen "$GEN_WORK" --incremental
+  measure work_short  --preset "$PRESET" --tok "$MODEL_DIR" --prompt-file "$P/short.txt"  --gen "$GEN_WORK" --incremental
+  measure work_medium --preset "$PRESET" --tok "$MODEL_DIR" --prompt-file "$P/medium.txt" --gen "$GEN_WORK" --incremental
+  measure work_long   --preset "$PRESET" --tok "$MODEL_DIR" --prompt-file "$P/long.txt"   --gen "$GEN_WORK" --incremental
 
   # Drafting is by n-gram lookup, so repetitive text is the case it should suit best and
   # code is the obvious candidate. Output is the serial greedy decode by construction.
-  measure work_spec   --preset auto --tok "$MODEL_DIR" --prompt-file "$P/medium.txt" --gen "$GEN_WORK" --incremental --spec 4
+  measure work_spec   --preset "$PRESET" --tok "$MODEL_DIR" --prompt-file "$P/medium.txt" --gen "$GEN_WORK" --incremental --spec 4
 
   # Multi-turn: prefill once with --gen 0, then resume. Measured upstream at 3.9x on
   # turn two, never on commodity hardware.
   log "  work_resume: prefilling the shared prefix"
-  ./bin/k3 "$MODEL_DIR" --trunk "$TRUNK_DIR" --preset auto --tok "$MODEL_DIR" \
+  ./bin/k3 "$MODEL_DIR" --trunk "$TRUNK_DIR" --preset "$PRESET" --tok "$MODEL_DIR" \
     --prompt-file "$P/medium.txt" --gen 0 --incremental \
     --save-state "$OUT_DIR/turn1.state" --out "$OUT_DIR/logs/prefill.json" \
     > "$OUT_DIR/logs/prefill.log" 2>&1 || log "  *** prefill failed, see logs/prefill.log"
   if [ -f "$OUT_DIR/turn1.state" ]; then
-    measure work_resume --preset auto --tok "$MODEL_DIR" --load-state "$OUT_DIR/turn1.state" \
+    measure work_resume --preset "$PRESET" --tok "$MODEL_DIR" --load-state "$OUT_DIR/turn1.state" \
       --prompt-file "$P/short.txt" --gen "$GEN_WORK" --incremental
   else
     log "  *** no saved state, skipping the resume arm"
@@ -300,7 +320,7 @@ if [ "$RUN_THREADS" = "1" ]; then
   for t in $(printf '%s\n' 4 8 16 32 "$NPROC" | sort -un); do
     [ "$t" -le "$NPROC" ] || continue
     export OMP_NUM_THREADS="$t"
-    measure "threads_$t" --preset auto --tok "$MODEL_DIR" \
+    measure "threads_$t" --preset "$PRESET" --tok "$MODEL_DIR" \
       --prompt-file "$P/short.txt" --gen "$GEN_THREAD" --incremental
   done
   unset OMP_NUM_THREADS
