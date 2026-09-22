@@ -203,6 +203,77 @@ quoting it as the engine's speed would have been the ladder mistake all over aga
 1.127 across the four budgets). Byte counts reproduce to the decimal across independent
 runs; s/token carries ~1% noise. Trust bytes, replicate time.
 
+### Complete I/O accounting, which corrected the conclusion above
+
+The `gb_read` column reports **trunk only**. The engine reports expert traffic separately,
+and it moves the OPPOSITE way: pinning trunk steals RAM from the expert cache. Full
+picture at gen 64, transcribed from the run logs:
+
+| trunk | cache | trunk GB | expert GB | total GB | wall s | I/O share | retention |
+|-------|-------|----------|-----------|----------|--------|-----------|-----------|
+| 60    | 30    | 3435.97  | 1284.21   | 4720.18  | 840.5  | 119.5%    | 31.35%    |
+| 75    | 25    | 2504.38  | 1827.11   | 4331.49  | 819.0  | 107.6%    |  1.37%    |
+| 90    | 20    | 1625.99  | 1827.11   | 3453.10  | 725.0  |  90.2%    |  1.09%    |
+| 100   | 14    |  960.53  | 1827.11   | 2787.64  | 652.0  |  73.6%    |  0.77%    |
+| 108   | 10    |  508.00  | 1827.11   | 2335.11  | 601.8  |  60.1%    |  0.55%    |
+
+`expert_GB` is IDENTICAL to the decimal at cache 25, 20, 14 and 10. Only cache 30 differs.
+**The expert cache is a cliff, not a gradient**: below it retention is ~0 and it is dead
+weight; at 30 GB it retains 31.35% and removes 543 GB over 64 tokens.
+
+Fitting wall against TOTAL bytes: `wall = 366.5 + GB/9.76`, residuals within ±10 s on
+600-840 s, i.e. at the 1% noise floor. **Effective bandwidth 9.76 GB/s against a measured
+array peak of 10.8 GB/s, so the machine runs at 90% of its storage capability and IS
+storage-bound.** The earlier "storage is not the bottleneck" conclusion came from counting
+only trunk bytes, which produced a nonsensical 14.8 GB/s slope — above hardware, and that
+should itself have been the tell.
+
+### The engine already measures what I built external profilers for
+
+`k3_trunk.c` tracks `k3_trunk_bind_wall`, `k3_trunk_widen_wall` and `k3_trunk_binds`, and
+prints them. From our own logs, already captured:
+
+```
+t60  gen64: bind wall 18.73 s over 5952 binds; read 502.99 + widen 6.39 = 509.38 s of
+            device work, of which 490.66 s (96%) overlapped compute on the reader thread
+t100 gen64: bind wall 20.78 s ... 136.25 s (87%) overlapped
+```
+
+Trunk binding is **2-3% of wall clock**; the prefetch hides 87-96% of device work behind
+compute. Main-thread bind wall stays flat at ~19-21 s while device work falls 509 -> 157 s,
+so cutting trunk bytes cut work that was already invisible. Read the engine's own report
+before building anything external.
+
+### Prefill is compute-bound; decode is I/O-bound
+
+Prompt-length sweep at trunk 90 / cache 10, gen 32, transcribed from `probe.out`:
+
+| prompt | approx tokens | s/token | GB read |
+|--------|---------------|---------|---------|
+| 60 B   | 15            | 12.99   | 855.36  |
+| 600 B  | 150           | 25.38   | 855.36  |
+| 3000 B | 750           | 75.11   | 855.36  |
+
+**Byte-identical I/O, 5.8x the time.** Working the deltas gives roughly **2.8 s of pure
+compute per prompt token**, linear, with the disk measured at 0 MB/s during prefill.
+Prefill batches all prompt tokens through the weights in one pass, so bytes stay constant
+while compute scales. For a coding assistant this dominates: a 2000-token context costs
+about an hour before the first output token, and neither RAM nor faster storage touches it.
+This is the one place a GPU would have a real case.
+
+### Upstream already documented the allocation rule, and contradicts one of our estimates
+
+`docs/TUNING.md`: *"fill the trunk before you feed the expert cache"*, and a gigabyte of
+trunk removes ~1.17 GB/token of guaranteed traffic (we measured 1.15 independently). Its
+preset table reports `server` (110/13, ~128 GB) at ~17 s/token and `max` (110/109, ~224 GB)
+at ~19 s/token, with *"the extra 96 GB buys nothing outside the noise floor."*
+
+**That contradicts the estimate that +30 GB of RAM would buy ~17% here.** Upstream tested
+full-trunk-pin plus a large cache directly; our figure is extrapolated from points where we
+never had both. Treat the RAM case as CONTESTED, not established. Unresolved difference:
+our box shows 31.35% retention at a 30 GB arena where upstream reports the knee at ~36 GB,
+possibly because a code prompt has better expert locality than their trace.
+
 **Time does not follow bytes.** Bytes fell 74%, time fell 26%. Fit: `t = 7.83 + GB/12.6`,
 so a **~7.8 s/token floor that reducing bytes does not touch**. Compute is 1.95 s/token
 (kernels), so ~2.8 s/token is unaccounted for.
