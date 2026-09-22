@@ -20,7 +20,6 @@ TRUNK_DIR="${TRUNK_DIR:-$HOME/k3trunk}"      # 109 GB, put this on the fastest d
 OUT_DIR="${OUT_DIR:-$HOME/k3results}"
 REPS="${REPS:-3}"                            # CONTRIBUTING.md: 3 minimum, and report all
 SWEEP_GB="${SWEEP_GB:-}"                     # split-sweep budget; derived from RAM if unset
-SHUTDOWN_HOURS="${SHUTDOWN_HOURS:-24}"       # runaway-compute guard, NOT a billing guard
 REPO="${REPO:-$HOME/kimi-k3-in-c}"
 
 # The workload arm is the reason for the machine. The campaign arm is the by-product
@@ -34,16 +33,13 @@ GEN_THREAD="${GEN_THREAD:-16}"
 log() { printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*" | tee -a "$OUT_DIR/run.log"; }
 mkdir -p "$OUT_DIR"
 
-# ---- 0. runaway guard ------------------------------------------------------
-# On a rented DEDICATED server this halts the work, not the bill. Hetzner:
-# "Costs are incurred from the time the product is made available until the
-# contract is cancelled." Billing stops only when the server is cancelled in
-# Robot. Powering the OS off leaves an idle machine still accruing hourly.
-if command -v shutdown >/dev/null; then
-  sudo shutdown -h "+$((SHUTDOWN_HOURS * 60))" "k3 benchmark runaway guard" || true
-  log "auto-halt armed for ${SHUTDOWN_HOURS}h (sudo shutdown -c to cancel)"
-  log "REMINDER: this does not stop billing. Cancel the server in Robot when done."
-fi
+# ---- 0. no auto-halt ------------------------------------------------------
+# This script used to arm `shutdown -h` as a runaway guard. That is the wrong trade on a
+# rented dedicated server. Hetzner: "Costs are incurred from the time the product is
+# made available until the contract is cancelled." Halting the OS stops the measuring
+# and keeps the invoice running, so the guard's only effect is to pay for an idle box.
+# Billing stops when the server is cancelled in Robot, and nothing else does it.
+log "no auto-halt armed; cancel the server in Robot when the work is finished"
 
 # ---- 1. machine preflight, refuse early rather than after 1.56 TB ---------
 log "=== preflight ==="
@@ -100,13 +96,22 @@ TRUNK_DEV=$(df -P "$TRUNK_DIR" | awk 'NR==2{print $1}')
 # the trunk-first rule inverts. That was measured by a user with trunk on NVMe and the
 # checkpoint on a slower SATA drive; two identical NVMe may behave differently. Record
 # which layout this is rather than assuming the finding transfers.
+# Space still to be WRITTEN, not the total footprint. A re-run with the checkpoint and
+# trunk already present must not demand room for a second copy of them; the earlier form
+# compared 1680 GB against free space unconditionally and aborted instantly post-download.
+NEED_MODEL=1560; [ -f "$MODEL_DIR/.download-complete" ] && NEED_MODEL=0
+NEED_TRUNK=110;  [ -f "$TRUNK_DIR/trunk.bin" ]         && NEED_TRUNK=0
+
 if [ "$MODEL_DEV" = "$TRUNK_DEV" ]; then
   log "storage: SINGLE device ($MODEL_DEV), trunk-first allocation applies"
-  [ "$MODEL_FREE" -ge 1680 ] || { log "FATAL: one device needs 1680 GB for both, has ${MODEL_FREE}"; exit 1; }
+  NEED=$((NEED_MODEL + NEED_TRUNK))
+  log "storage: ${MODEL_FREE} GB free, ${NEED} GB still to write"
+  [ "$MODEL_FREE" -ge "$NEED" ] || { log "FATAL: need ${NEED} GB on $MODEL_DEV, has ${MODEL_FREE}"; exit 1; }
 else
   log "storage: SPLIT, trunk on $TRUNK_DEV, checkpoint on $MODEL_DEV"
-  [ "$MODEL_FREE" -ge 1560 ] || { log "FATAL: checkpoint device has only ${MODEL_FREE} GB"; exit 1; }
-  [ "$TRUNK_FREE" -ge 110 ]  || { log "FATAL: trunk device has only ${TRUNK_FREE} GB"; exit 1; }
+  log "storage: checkpoint ${MODEL_FREE} GB free needs ${NEED_MODEL}; trunk ${TRUNK_FREE} GB free needs ${NEED_TRUNK}"
+  [ "$MODEL_FREE" -ge "$NEED_MODEL" ] || { log "FATAL: checkpoint device has only ${MODEL_FREE} GB"; exit 1; }
+  [ "$TRUNK_FREE" -ge "$NEED_TRUNK" ]  || { log "FATAL: trunk device has only ${TRUNK_FREE} GB"; exit 1; }
 fi
 
 # ---- 2. quieten the machine ----------------------------------------------
