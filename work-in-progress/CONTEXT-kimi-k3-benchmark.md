@@ -254,12 +254,21 @@ Prompt-length sweep at trunk 90 / cache 10, gen 32, transcribed from `probe.out`
 | 600 B  | 150           | 25.38   | 855.36  |
 | 3000 B | 750           | 75.11   | 855.36  |
 
-**Byte-identical I/O, 5.8x the time.** Working the deltas gives roughly **2.8 s of pure
-compute per prompt token**, linear, with the disk measured at 0 MB/s during prefill.
-Prefill batches all prompt tokens through the weights in one pass, so bytes stay constant
-while compute scales. For a coding assistant this dominates: a 2000-token context costs
-about an hour before the first output token, and neither RAM nor faster storage touches it.
-This is the one place a GPU would have a real case.
+**Byte-identical I/O, 5.8x the time.** Prefill batches all prompt tokens through the weights
+in one pass, so bytes stay constant while compute scales.
+
+**CORRECTED 2026-09-22.** The "2.8 s of pure compute per prompt token" originally recorded
+here was derived by subtracting `gen x 12 s/token` from the total, using a decode rate I had
+ESTIMATED rather than measured. Decode is actually **7.49 s/token** (see the decomposition
+section below), and a 10-second resource trace shows prefill of 140 tokens takes ~100 s,
+so the real figure is **~0.71 s per prompt token** - I was out by 3-4x.
+
+Also corrected: "the disk measured at 0 MB/s during prefill" was wrong twice over. The trace
+shows prefill sustains **~1,500 MB/s** throughout. The original claim came from one 5-second
+sample that happened to land in a quiet moment.
+
+Consequence: a 2000-token context costs roughly **25 minutes** of prefill, not the hour
+recorded here earlier. Still not interactive, but materially less bleak.
 
 ### Upstream already documented the allocation rule, and contradicts one of our estimates
 
@@ -342,9 +351,16 @@ frontier monetises at 10:1.
  0.51%  k3_router           expert routing
 ```
 
-**72.4% of prefill is two matmul functions.** Routing is negligible. A perfect GPU that
-made matmul free caps at 1/(1-0.724) = 3.6x on prefill by Amdahl, and only if the weights
-are already where it can reach them - the disk still moved 639 MB/s during this sample.
+**72.4% of prefill is two matmul functions.** Routing is negligible.
+
+**CAVEAT added 2026-09-22.** This profile was taken during a `--gen 0` run, which is LOAD
+plus prefill, not prefill alone. The resource trace later showed load is a distinct phase
+running at ~90% CPU user for ~147 s, while prefill runs at 56-65% user. So this profile is
+contaminated by the load phase and the 72.4% should not be read as pure prefill.
+
+The Amdahl ceiling of 1/(1-0.724) = 3.6x originally quoted here therefore rests on a
+contaminated share AND on the wrong prefill/decode split. Both biased the argument AGAINST
+a GPU. The corrected split puts prefill at 67.4% of a gen-32 run rather than 45%.
 
 Retracted: an earlier claim that prefill does zero disk I/O. That came from ONE 5-second
 sample; 300 seconds of samples show 1,500-2,500 MB/s. The byte evidence stands (60/600/3000
@@ -376,17 +392,60 @@ so caching is storage-efficient only for long prefixes. 750 tokens would be ~2.4
 tokens ~24 GB. This is the quantity DeepSeek cut to 1/8 of SSD in V4.1-Flash.
 
 **Prediction scored**: I predicted 420 s and 1.67x. Actual 340.4 s and 2.06x, so I was 19%
-pessimistic. More importantly the result EXCEEDS the ~1.8x ceiling I calculated for this
-geometry, which means one of my decomposition inputs is wrong - most likely the 12 s/token
-decode estimate. Do not quote 2.06x as a property of the system until that is pinned down.
+pessimistic.
 
-**Untested**: upstream's 3.9x claim. At 150 prompt tokens against 32 generated, prefill is
-only 45% of the work and the ceiling is ~1.8x. The 750-token prefix puts prefill at ~85% and
-raises the ceiling to ~6x. That is the run that would test the claim; this one could not.
+**RESOLVED 2026-09-22.** I flagged that 2.06x exceeded a ~1.8x ceiling and that one of my
+inputs must be wrong. It was the decode rate: I assumed 12 s/token, measured 7.49. With the
+measured value, prefill is **67.4%** of the control rather than 45%, so the ceiling is
+**3.07x** and 2.06x sits comfortably under it at 67% of theoretical maximum. No anomaly
+remains; the anomaly was my arithmetic.
+
+**Untested**: upstream's 3.9x claim. With prefill at 67.4% here the ceiling is 3.07x, so
+3.9x needs a longer prefix than this geometry provides. The 750-token prompt would raise it.
 
 Script flaw worth remembering: `grab()` reported turn 1 as FAILED because `--gen 0` generates
 no tokens and therefore never prints the `N tokens in X s` line the extractor looks for. The
 run succeeded; the extractor did not.
+
+### The decomposition, finally measured rather than estimated
+
+Three points at trunk 90 / cache 10, same 150-token prompt, only `--gen` varied, so load and
+prefill cancel in the differences. No samplers running; a 10 s `/proc` tracer alongside
+measured its own CPU as `00:00:00` over 65 s wall.
+
+| gen | total s | s/token | trunk GB | expert GB |
+|-----|---------|---------|----------|-----------|
+| 16  | 589.9   | 36.87   | 470.04   | 1116.06   |
+| 32  | 716.1   | 22.38   | 855.36   | 1529.33   |
+| 64  | 950.6   | 14.85   | 1625.99  | 2355.88   |
+
+`total = F + M x gen` gives **M = 7.49 s/token decode** and **F = 472.6 s fixed**. Against
+the independent 701.5 s prefix-test control the fit predicts 712.3 s, a -10.8 s residual
+(1.5%, about the noise floor), so the linear model holds across the range.
+
+**I had been assuming M = 12. It is 7.49, so the estimate was 60% too high**, and it
+propagated into the prompt-length figure, the Amdahl ceiling, and the prefix-cache ceiling.
+All three are corrected above.
+
+### Three phases, visible only in the resource trace
+
+A 10-second trace of one gen-16 run shows sharp boundaries a whole-run total cannot:
+
+```
+el   10-141   us 89-92  wa 3-4    read ~1500  RSS 66.7 -> 96.5   LOAD
+el  151-242   us 56-65  wa 3-4    read ~1500  RSS flat 97.8      PREFILL
+el  252+      us 37-44  wa 20-31  read ~5900  RSS flat           DECODE
+```
+
+**Load is ~147 s of the 472.6 s fixed cost**, roughly a third, and it is pure process
+startup paid once. A persistent server would remove it entirely. It is not prefill, and I
+had been counting it as such.
+
+**Prefill is not CPU-saturated** - 56-65% user with ~32% idle. Only LOAD saturates at ~90%.
+And prefill sustains ~1,500 MB/s of disk, so it is not the compute-only phase I described.
+
+The decode transition is unmistakable: read jumps 1,300 -> 5,900 MB/s and I/O wait goes
+4% -> 25% within one 10 s sample. That is the storage-bound regime arriving.
 
 ## What remains unknown
 
