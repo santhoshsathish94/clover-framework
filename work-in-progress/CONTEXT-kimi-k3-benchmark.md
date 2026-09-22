@@ -167,28 +167,111 @@ pairs after `.gitattributes` was added, which would have failed on Linux at the 
 `for` loop. The committed blob stayed LF throughout. Check `git ls-files --eol` shows
 `i/lf w/lf`, not just `i/lf`, before trusting any local validation of this script.
 
+## Measured on the AX102, 2026-09-22 (the rented machine)
+
+Ryzen 9 7950X3D 16C/32T, 124 GiB (132.0 GB reported available), 2x KIOXIA KCD8XRUG1T92
+in md RAID1. Repo pinned to `ac1584a`, same commit as the laptop.
+
+**Gates all passed.** `make test` reference-exact; tokenizer parity now runs with the real
+vocabulary (163,584 ranks, roundtrip 148,284 B -> 42,364 ids -> 148,284 B PASS); `make bench`
+hashes identical to the laptop. Checkpoint verified byte-exact at 1,560,936,091,448 and
+checksum-verified against Hub metadata.
+
+**Generation-length sweep**, workstation preset, 15-token prompt:
+
+| gen | total s | s/token | GB read |
+|-----|---------|---------|---------|
+| 8   | 189.7   | 23.71   | 478.50  |
+| 16  | 280.7   | 17.54   | 900.99  |
+| 32  | 463.1   | 14.47   | 1745.98 |
+| 64  | 836.9   | 13.08   | 3435.97 |
+| 128 | 1590.2  | 12.42   | 6815.93 |
+
+Fixed startup ~97 s, marginal ~11.6 s/token. The 23.71 at gen 8 is 51% startup overhead;
+quoting it as the engine's speed would have been the ladder mistake all over again.
+
+**Trunk-pinning sweep** (trunk_gb / cache_gb, budget held under the 5% guard):
+
+| trunk | pinned | GB/token | s/token | peak RSS |
+|-------|--------|----------|---------|----------|
+| 60    | 47/93  | 52.81    | 11.73   | 95.3     |
+| 75    | 60/93  | 38.02    | 11.30   | 105.4    |
+| 90    | 72/93  | 24.08    | 9.78    | 114.7    |
+| 100   | 81/93  | 13.52    | 8.70    | 119.5    |
+
+**The byte model is exact**: 1.15 GB per un-pinned trunk layer (1.148 / 1.152 / 1.147 /
+1.127 across the four budgets). Byte counts reproduce to the decimal across independent
+runs; s/token carries ~1% noise. Trust bytes, replicate time.
+
+**Time does not follow bytes.** Bytes fell 74%, time fell 26%. Fit: `t = 7.83 + GB/12.6`,
+so a **~7.8 s/token floor that reducing bytes does not touch**. Compute is 1.95 s/token
+(kernels), so ~2.8 s/token is unaccounted for.
+
+**Storage is not the bottleneck.** `wchan` over 30 s: futex_wait_queue 71.0%,
+blk_io_schedule 21.1%, on-CPU 7.8% — corroborated independently by thread state
+S 70.8% / D 21.5% / R 7.6%. Two mechanisms agreeing within 0.4 points.
+
+Storage facts, for the record: array peaks at 10.8 GB/s with 8-way O_DIRECT but delivers
+~5.5 GB/s under the real workload at 82-83% md2 utilisation; request size is 127 KB, which
+is `max_hw_sectors_kb` and therefore a hardware ceiling, not a tunable; `read_bytes/rchar`
+= 1.000 exactly, confirming O_DIRECT with no page-cache assistance.
+
+**Hardware fault found:** `nvme1n1` negotiated PCIe **x2** with `max_link_width=4` — a
+degraded link, not a slot limit, halving one mirror member's ceiling to ~3.9 GB/s. It shows
+as 70 ms latency at 71% utilisation against nvme0n1's 45 ms at 47% for the same bytes.
+Not currently the binding constraint, but it is a real Hetzner-reportable fault.
+
+RAID1 read balance under real load is **52/48**. An earlier 66/34 reading was an artefact
+of an 8-stream synthetic test and should not be used.
+
 ## What remains unknown
 
-- The v1.0.0 streaming figure at a ~128 GB budget. **Nobody has measured it** — the
-  published table jumps from 64 GB to trunk-resident at 179 GB.
-- Thread scaling. *"`OMP_NUM_THREADS` has never been swept on this engine."*
-- Whether RAID0 striping helps in practice on this workload.
-- Whether `--spec` and `--save-state`/`--load-state` behave as documented; both are read,
-  never executed here.
-- Whether the count-extraction patterns in the run script match real output. The
-  `s/token` and peak-RSS patterns come from the upstream ladder and are proven; the
-  `requests`/`evictions`/`pinned` patterns are derived from README samples and may
-  need adjusting on first contact.
+- **What the ~2.8 s/token floor actually is.** Not storage, not kernel compute. Attention,
+  routing, KV update and expert gather all live in there, unmeasured.
+- **Whether the 71% futex is idle workers or lock contention.** Those need opposite fixes.
+  GNU OpenMP parks idle workers on a futex at barriers, so the observation is equally
+  consistent with both. The queued thread sweep discriminates: flat s/token across
+  4/8/16/32 means idle workers; degradation with more threads means contention.
+- Thread scaling. *"`OMP_NUM_THREADS` has never been swept on this engine."* Still true.
+- Whether `--spec` and `--save-state`/`--load-state` behave as documented; both queued,
+  neither executed yet.
+- Prompt-length cost is not separated from generation-length cost. A 1-token prompt gave
+  15.69 s/token at gen 8 where a 15-token prompt gave 23.71; I let two variables move at
+  once and cannot attribute the difference.
+
+Resolved since the last cycle: the ~128 GB budget figure is now measured; RAID0 is moot
+because the workload is not storage-bound; tokenizer parity runs and passes.
 
 ## What the next cycle should start from
 
-1. `make test`, `make bench`, `devbw.py` — all free, no checkpoint. Decide go/no-go on
-   compute and storage before spending hours on 1.56 TB.
-2. `installimage` with `SWRAIDLEVEL 0`, then `loginctl enable-linger $USER` — both
-   harnesses hard-exit without a user session bus.
-3. Run ARM A first. Stop there if it answers the question.
+1. **Do not sweep pinning further.** 122.8 GB RSS against a 125.4 GB guard is the wall, and
+   returns are flattening (13.5% -> 11.0% -> ~4%). More of this optimises the thing Reality
+   already said is not the constraint.
+2. Run the thread sweep and read it as a discriminator, not a tuning exercise.
+3. Separate prompt length from generation length. I conflated them once already.
 4. Report counts beside seconds, every repetition, never the best of three.
-5. Do not predict a number. Let the box show what it shows.
+5. Do not predict a number and then go looking for it. Record the prediction first so it
+   can be scored either way — that is what caught the bytes-versus-time error.
+
+## Mistakes made on the machine, 2026-09-22
+
+- **Predicted time would follow bytes.** It did not: bytes -74%, time -26%. Hours of
+  storage instrumentation were aimed at a bottleneck that was never there. The column that
+  exposed it, `gb_read`, was added almost as an afterthought.
+- **A 38x kernel regression that did not reproduce.** 3.7 GFLOP/s on the first run after a
+  build; four later runs gave 137-142. Nearly written up as an upstream finding.
+- **Instrumentation not verified before use.** A thread sampler claimed 20 Hz and ran at
+  4.6 Hz while forking ~17,000 processes into the machine it was "not perturbing"; a
+  `/proc` path split took field 6 (`stat`) instead of field 5 (the TID), producing 4,096
+  threads and negative CPU time.
+- **`--preset auto` refuses on this box** — it asks 126.43 GB against a 0.95 x 132.01 =
+  125.41 GB threshold. The refusal message prints `need - have` rather than
+  `need - 0.95*have`, so a legitimate refusal reports a *negative* shortfall and reads like
+  a bug. Our campaign script used `auto` at all eight measurement sites and would have
+  hard-aborted after the 1.56 TB download.
+- **Our own campaign preflight is wrong**: it compares 1,680 GB needed against *free* space
+  without subtracting what is already on disk, so it aborts instantly once the checkpoint
+  and trunk exist. Still unfixed.
 
 ## Abort criteria, decided now rather than at 2am on a metered machine
 
