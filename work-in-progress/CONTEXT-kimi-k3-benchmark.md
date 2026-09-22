@@ -350,6 +350,44 @@ Retracted: an earlier claim that prefill does zero disk I/O. That came from ONE 
 sample; 300 seconds of samples show 1,500-2,500 MB/s. The byte evidence stands (60/600/3000
 byte prompts all read exactly 855.36 GB) but "no disk during prefill" was wrong.
 
+### Prefix caching works, and the saving is not where I expected
+
+`--save-state` / `--load-state`, measured 2026-09-22 at trunk 90 / cache 10, post PCIe repair.
+150-token shared prefix, 15-token follow-up, 32 generated.
+
+| arm | total s | s/token | trunk GB | expert GB | state MB |
+|-----|---------|---------|----------|-----------|----------|
+| control, prefix reprocessed | 701.5 | 21.92 | 855.36 | 1529.33 | - |
+| turn 1, `--gen 0 --save-state` | 471 (wall) | - | 108.81 | 728.62 | 913 |
+| turn 2, `--load-state` | **340.4** | **10.64** | 855.36 | **1033.59** | 913 |
+
+**2.06x on turn two.** The engine confirms the hit explicitly: `resuming from turn1.state:
+140 prior positions, 20 new`.
+
+**The saving is entirely in EXPERT bytes, not trunk.** Trunk reads are IDENTICAL at 855.36 GB;
+expert traffic falls 1529.33 -> 1033.59 GB, a 32% cut of 495.74 GB. Resuming does not avoid
+streaming the trunk, it avoids re-routing 140 positions through the experts. I had modelled
+this as a saving in prefill COMPUTE; on a storage-bound machine the real prize was bytes not
+read, which is worth more here.
+
+**What a cached prefix costs to store**: 914 MB for 140 positions, of which ~626 MB is the
+fixed recurrent state across 93 layers. **69% of the file is independent of prefix length**,
+so caching is storage-efficient only for long prefixes. 750 tokens would be ~2.4 GB, 10,000
+tokens ~24 GB. This is the quantity DeepSeek cut to 1/8 of SSD in V4.1-Flash.
+
+**Prediction scored**: I predicted 420 s and 1.67x. Actual 340.4 s and 2.06x, so I was 19%
+pessimistic. More importantly the result EXCEEDS the ~1.8x ceiling I calculated for this
+geometry, which means one of my decomposition inputs is wrong - most likely the 12 s/token
+decode estimate. Do not quote 2.06x as a property of the system until that is pinned down.
+
+**Untested**: upstream's 3.9x claim. At 150 prompt tokens against 32 generated, prefill is
+only 45% of the work and the ceiling is ~1.8x. The 750-token prefix puts prefill at ~85% and
+raises the ceiling to ~6x. That is the run that would test the claim; this one could not.
+
+Script flaw worth remembering: `grab()` reported turn 1 as FAILED because `--gen 0` generates
+no tokens and therefore never prints the `N tokens in X s` line the extractor looks for. The
+run succeeded; the extractor did not.
+
 ## What remains unknown
 
 - **What the ~2.8 s/token floor actually is.** Not storage, not kernel compute. Attention,
