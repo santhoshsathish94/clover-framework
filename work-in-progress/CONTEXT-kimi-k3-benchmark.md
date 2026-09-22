@@ -295,6 +295,61 @@ Not currently the binding constraint, but it is a real Hetzner-reportable fault.
 RAID1 read balance under real load is **52/48**. An earlier 66/34 reading was an artefact
 of an 8-stream synthetic test and should not be used.
 
+### Frontier bottleneck evolution, and which of it applies here
+
+Read from primary sources 2026-09-22 (DeepSeek V3 arXiv:2412.19437, V3.2 arXiv:2512.02556,
+V4.1-Flash release note, Kimi K3 blog). The pattern is that each generation finds the new
+binding constraint and changes the ARCHITECTURE, not the hardware.
+
+| gen | what became expensive | what changed |
+|-----|----------------------|--------------|
+| DS V2 | KV memory, dense compute | MLA latent KV compression, DeepSeekMoE |
+| DS V3 | load-balancing overhead | auxiliary-loss-free balancing, MTP, FP8 |
+| DS V3.2 | long-context attention compute | DeepSeek Sparse Attention |
+| DS V4.1-Flash | KV cache size, input/output asymmetry | Causal Encoder-Decoder: **8B active for input, 16B for output**; KV cache cut to 1/4 HBM and 1/8 SSD |
+| Kimi K2->K3 | scaling efficiency, routing at 16/896 sparsity | KDA + AttnRes, Stable LatentMoE, Quantile Balancing, MXFP4/MXFP8 QAT, "no host synchronization on the critical path" |
+
+**Two of these land directly on what we measured.**
+
+1. **DeepSeek split prefill and decode into different architectures** (8B input / 16B output).
+   We reached the same structural conclusion by measurement on one CPU: decode is
+   storage-bound at 47.9% I/O, prefill is compute-bound at 72.4% matmul. Independent
+   convergence, so the asymmetry is a property of the workload, not of our machine.
+
+2. **Kimi's pricing says avoid prefill rather than accelerate it**: $0.30/MTok cache-hit
+   input vs $3.00 cache-miss, a 10x gap, with "cache hit rate above 90% in coding
+   workloads" via Mooncake disaggregated inference. They also note KDA broke conventional
+   prefix caching and they contributed a vLLM fix, because "KDA with prefill cache allows
+   us to serve Kimi K3 at a highly competitive token price."
+
+Which frontier bottlenecks exist on this box: KV cache size (yes, 2.37 MB/position),
+prefill/decode asymmetry (yes, measured), host sync on the critical path (yes, ~26%
+libgomp and 71% futex), flat expert routing defeating cache (yes, Quantile Balancing is
+deliberate). Which do not: inter-accelerator communication and expert-parallel balancing,
+because we run one node where Kimi recommends 64+ accelerators.
+
+**This re-ordered the queue.** The thread sweep was next; prefix caching should be, because
+the engine already implements it (`--save-state` / `--load-state`, upstream claims 3.9x on
+turn two) and it attacks the phase we measured as most expensive using the lever the
+frontier monetises at 10:1.
+
+### Prefill profile, measured with perf on a `--gen 0` run
+
+```
+54.87%  k3_matmul_bf16      dense trunk matmul
+17.56%  k3_matmul_mxfp4     expert matmul
+~26%    libgomp             OpenMP barrier / spin
+ 0.51%  k3_router           expert routing
+```
+
+**72.4% of prefill is two matmul functions.** Routing is negligible. A perfect GPU that
+made matmul free caps at 1/(1-0.724) = 3.6x on prefill by Amdahl, and only if the weights
+are already where it can reach them - the disk still moved 639 MB/s during this sample.
+
+Retracted: an earlier claim that prefill does zero disk I/O. That came from ONE 5-second
+sample; 300 seconds of samples show 1,500-2,500 MB/s. The byte evidence stands (60/600/3000
+byte prompts all read exactly 855.36 GB) but "no disk during prefill" was wrong.
+
 ## What remains unknown
 
 - **What the ~2.8 s/token floor actually is.** Not storage, not kernel compute. Attention,
