@@ -15,6 +15,34 @@ not the workload. A separate segment has to carry the software-engineering claim
 Secondary, and a by-product rather than the goal: contribute a commodity-hardware
 data point upstream (`ROADMAP.md` items 2 and 3).
 
+## Plain summary, read this first (2026-09-22)
+
+Started at **9.40 s per generated token** on a 16-core, 124 GiB, no-GPU box streaming a
+1.56 TB checkpoint off NVMe. Four things were found, in this order:
+
+| # | finding | measured effect |
+|---|---------|-----------------|
+| 1 | one NVMe negotiated PCIe **x2 instead of x4**; Hetzner found the cables loose and reseated them | **18%** (601.8 s -> 493.6 s, identical config) |
+| 2 | **16 threads beats 32.** The box has 16 physical cores; the extra SMT threads add barrier participants, not throughput | **8.1%** (592.0 s -> 543.8 s) |
+| 3 | **prefix reuse** via `--save-state` / `--load-state` | **2.06x** on turn two (701.5 s -> 340.4 s) |
+| 4 | **~64% of a short run is process startup**, loading 98 GB of weights before any work begins | ~380 s of a 592 s run |
+
+In human terms, roughly: a short question moves from ~19 to ~15 minutes, a 300-word
+explanation from ~46 to ~38, a 2000-token file review from ~92 to ~76, and prefix reuse
+takes a repeat turn further again. Still not interactive - a hosted model is ~500x faster -
+but it is frontier-scale on hardware you own with nothing leaving the box.
+
+**Caveat that matters: 18% and 8.1% were measured SEPARATELY, at different settings. The
+combination has never been run.** Any "now" figure above is arithmetic, not observation.
+
+### What to look for next, in value order
+
+1. **Stop reloading.** 64% of a short run is startup a persistent process removes outright.
+   Largest single win available, needs no hardware.
+2. **Measure the combination** - PCIe fixed, 16 threads, best memory split, one run.
+3. **Batching** - never tested here, and the only lever that attacks bytes per token directly.
+4. **Context capacity** - 2.37 MB per position decides whether a real codebase fits at all.
+
 ## What the System showed
 
 ### The published speed figures are two campaigns, and they disagree
@@ -446,6 +474,52 @@ And prefill sustains ~1,500 MB/s of disk, so it is not the compute-only phase I 
 
 The decode transition is unmistakable: read jumps 1,300 -> 5,900 MB/s and I/O wait goes
 4% -> 25% within one 10 s sample. That is the storage-bound regime arriving.
+
+### Thread count: 16 beats 32, and decode does not care
+
+Four runs, gen 16, trunk 90 / cache 10, only `OMP_NUM_THREADS` varied.
+
+| threads | total s | s/token | vs 32 |
+|---------|---------|---------|-------|
+| 32 | 592.0 | 37.00 | - |
+| **16** | **543.8** | **33.99** | **-8.1%** |
+| 8 | 668.8 | 41.80 | +13.0% |
+| 4 | 796.2 | 49.76 | +34.5% |
+
+**Non-monotonic, so none of my three hypotheses were right.** 32->16 improving means SMT
+threads are pure overhead; 16->8 degrading means the parallel work is genuine, so it is not
+lock contention. The 26% `libgomp` is **idle workers at barriers, and above 16 the extra
+workers are actively harmful**. The optimum is exactly the physical core count.
+
+**Output invariance PASSED**: `ids_sha 130f419e7a35` identical at every thread count, and
+trunk/expert bytes identical to the decimal (470.04 / 1116.06 GB). The engine is
+deterministic across an 8x thread range. This is the correctness gate the plan was missing.
+
+Per-phase, sliced from the 10 s trace by the recorded start/end of each run:
+
+| phase | 32t | 16t | 8t |
+|-------|-----|-----|-----|
+| load | 380 | 340 | 430 |
+| prefill | 100 | 90 | 130 |
+| **decode** | **110** | **120** | **110** |
+
+**Decode is thread-insensitive** - flat across a 4x thread range, exactly as a storage-bound
+phase should be. The whole-run win comes entirely from load and prefill. This kills the
+disaggregation idea I had proposed (different thread counts per phase): there is nothing to
+split, because decode has no preference. DeepSeek's 8B-in/16B-out asymmetry is about
+parameter activation, not thread scheduling, and the analogy does not carry down to us.
+
+**CORRECTION to the phase numbers recorded earlier.** I previously wrote load ~= 147 s. The
+tracer started at 02:44:15 and that run started at 02:40:11, so I read "elapsed 141" as 141 s
+into the RUN when it was 141 s into the TRACE - 385 s into the run. Load is ~380 s, not 147.
+It reconciles with the independent fit: F = 472.6 s against load + prefill = 480 s.
+
+**Load is therefore ~64% of a gen-16 run** and is pure process startup. That is the largest
+remaining target and it needs no hardware.
+
+Caveat on the 4-thread row: decode shows 10 s, which is a detection artefact - the classifier
+requires read > 3000 MB/s and at 4 threads decode never sustained that, so it was labelled
+prefill. The 4-thread split should not be trusted; 32/16/8 are internally consistent.
 
 ## What remains unknown
 
