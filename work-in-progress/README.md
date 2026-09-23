@@ -54,6 +54,21 @@ predictions that turned out wrong, are in
 Still not established: anything measured on a GPU, any quality claim beyond comparing output
 on a single prompt, and any reproduction of someone else's published speed figures.
 
+**Contributed back upstream.**
+[FareedKhan-dev/kimi-k3-in-c#67](https://github.com/FareedKhan-dev/kimi-k3-in-c/pull/67) —
+concurrent chunked expert reads, a batched bf16 matmul that is bit-identical to the serial
+kernel, and fewer reads in the KDA recurrence. Three runs per arm against that project's
+current `main`, every run reported: decode +5.7%, prefill +9.9%, whole run +7.0%.
+**Open, not merged.** The pull request states its own limits: bundle evidence for three
+changes so one may contribute nothing, a degraded PCIe link on the test machine that may
+flatter the storage change, and one configuration only.
+
+Two things were held back deliberately. The `--trunk-gb auto` fix is verified but unraised,
+because adding it would change the binary the measurements were taken on. The int8 and MXFP4
+trunk work is out of scope upstream — that project's `ROADMAP.md` lists a precision dial for
+the trunk as explicitly not planned, and its author had already measured the same accuracy
+wall independently.
+
 ## [AI Manipulation](ai-manipulation/)
 
 A model-free developmental engine, a persistent supervisor with replaceable

@@ -148,6 +148,25 @@ a GPU. See
 [`work-in-progress/kimi-k3-local-evidence.json`](work-in-progress/kimi-k3-local-evidence.json)
 and [`work-in-progress/heterogeneous-inference.md`](work-in-progress/heterogeneous-inference.md).
 
+Running it that closely surfaced changes worth offering back, so they were
+contributed rather than kept here:
+[FareedKhan-dev/kimi-k3-in-c#67](https://github.com/FareedKhan-dev/kimi-k3-in-c/pull/67)
+issues expert reads concurrently in 1 MiB pieces, reads a weight matrix once per
+prefill pass instead of once per token, and drops repeated reads in the KDA
+recurrence. Measured against that project's current `main`, three runs per arm
+with every run reported: decode 5.7% faster, prefill 9.9%, a whole run 7.0%.
+Output is unchanged and the batched kernel is bit-identical to the one it
+replaces. **The pull request is open, not merged.**
+
+Its risk section is part of the evidence rather than a footnote to it. The three
+changes were measured together, so it states that one of them may contribute
+nothing. One of the test machine's two NVMe drives is negotiating a degraded
+PCIe link, so it states that the storage change may help less on healthy
+hardware. And an earlier version of the same work claimed a larger prefill gain
+against an older base; re-measuring against current `main` showed roughly a
+fifth of it had already been earned upstream, which the pull request says
+plainly.
+
 Supporting areas include:
 
 - [`docs/05-context-engineering.md`](docs/05-context-engineering.md) — context
