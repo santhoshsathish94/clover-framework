@@ -148,34 +148,6 @@ a GPU. See
 [`work-in-progress/kimi-k3-local-evidence.json`](work-in-progress/kimi-k3-local-evidence.json)
 and [`work-in-progress/heterogeneous-inference.md`](work-in-progress/heterogeneous-inference.md).
 
-### What v4.0.0 is waiting for
-
-This release, `v3.1.0`, records the machinery and the corrections to it. It does
-not claim the result. Three things stand between here and `v4.0.0`, and none of
-them is a matter of writing more code:
-
-1. **A task space the experimenter did not design.** Everything above is a
-   search for coefficients of known functions. Until the process meets a problem
-   nobody shaped for it, the domain is doing the work rather than the method.
-2. **A model that completes a cycle and produces something the evaluator
-   accepts.** The handover between workers holds; the content does not yet clear
-   the bar. The hosted worker has never run a cycle at all — it reached the API
-   and stopped at `429 insufficient_quota`.
-3. **The heterogeneous inference experiment on the new GPU server.** The CPU
-   experiment established the first boundary: 8-bit helped substantially, while
-   4-bit barely helped on that processor. The next machine changes the available
-   options. It has enough local storage to hold the checkpoint, two disks that can
-   be used as a sharded backing store, and a 24 GB GPU whose native 4-bit
-   computation can test the hypothesis the CPU could not.
-
-   The experiment is not simply "run the model on the GPU". It will measure
-   different placements of trunk and expert weights, storage sharding and
-   prefetching, and token-level scheduling between GPU, CPU memory and NVMe.
-   Nothing here is assumed to work. The result will be whatever the measurements
-   show.
-
-**`v4.0.0` will be cut when one of those produces evidence, and not before.**
-
 Supporting areas include:
 
 - [`docs/05-context-engineering.md`](docs/05-context-engineering.md) — context
