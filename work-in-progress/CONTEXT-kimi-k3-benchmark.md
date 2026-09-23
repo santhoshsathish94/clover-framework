@@ -2972,6 +2972,152 @@ transfer I diffed every sent file against server HEAD and confirmed only the int
 changed. **Diff before sending, or fetch first.** This is also why the new test is not wired
 into the Makefile: that would mean sending a stale Makefile.
 
+---
+
+# Cycle: preparing the two remaining upstream contributions (2026-09-23)
+
+Direction: work PR 2, and address everything pending that is genuinely useful upstream,
+with real numbers as evidence.
+
+## Roadmap #3 answered properly: the sweep is running
+
+The thread sweep already in this file is **one run per cell**. CONTRIBUTING requires three
+runs per arm with all of them reported, so as it stands it is not submittable — the same
+blocking condition recorded earlier applies to our own thread evidence, not just the perf
+arms. Re-running it is the work, not re-writing it.
+
+**Six arms, not five.** The previous plan had `default`, `t16_bound`, `t8_bound`,
+`t24_bound`, `t32_bound`. That set cannot reproduce its own headline claim. Phase 5
+concluded the collapse is an **interaction** of count and binding, which needs 32-bound
+(fine) *and* 16-unbound (fine) against 32-unbound (collapses). Without `t16_free` the
+replication would silently drop the half of the evidence that rules out "thread count
+alone". Added.
+
+Also capturing `/usr/bin/time -v` per run, because involuntary context switches were the
+mechanism evidence in Phase 5 (4,026 at 32-unbound against ~1,100 healthy) and a
+replication that drops the mechanism is weaker than the single run it replaces.
+
+### Direction change mid-cycle: measure the whole stack (creator, 2026-09-23)
+
+The first launch ran on pristine upstream `a2ad8e5`. Thirty minutes in, the direction was
+corrected:
+
+> "the new run should contain all the changes even the PR 1 changes only when we run
+> everything we will get the real number"
+
+**This is right, and my original design had a hole in it.** A thread curve measured on
+unpatched code recommends a thread count for code we are not proposing to ship. The
+chunked expert reads change I/O concurrency and the batched matmul changes the compute
+shadow — and those are precisely the two terms the 32-unbound pathology was attributed to.
+Sweeping threads on code without them risks a recommendation that does not survive its own
+PR landing.
+
+So the run was restarted on branch **`full-stack`**: upstream `a2ad8e5` + the five perf
+commits (PR #67) + the auto-budget fix, six commits, binary `da387e33e877`. Built clean,
+zero warnings, and the full gate suite passes on the combination — the oracle still reports
+`ENGINE MATCHES THE REFERENCE EXACTLY`, which matters because the perf commits claim
+bit-identical output and that claim has to hold in combination, not just one at a time.
+
+**Stated once and then accepted:** this run no longer answers ROADMAP #3 for *unmodified*
+upstream. If the maintainer wants that curve it is a second run. The combined number is the
+real one, so it goes first.
+
+**Memory config also changed, 110/5 -> `--trunk-gb 114 --cache-gb 2`.** The aborted run used
+110/5 to approximate `--preset server`. 114/2 is what the replicated A/B and every Phase 5
+thread cell used, so this makes the whole body of evidence directly comparable instead of
+leaving the thread curve on its own axis. Both pin the full 108.81 GB trunk. `--preset
+server` remains refused even with the fix applied, because the fix aligns `auto` with the
+ceiling rather than raising the ceiling.
+
+**Predictions recorded in the script header before launch**, so they cannot be edited
+afterwards: t16_bound ~5.31 (highest confidence — already measured three times in the A/B),
+t16_free ~5.59, t24_bound ~5.80, t32_bound ~5.80, t8_bound ~6.00, default ~11.2.
+
+The `default` cell is deliberately the least confident and the most interesting. Phase 5 put
+32-unbound at 11.863 and blamed scheduler migration across two CCDs destroying locality on a
+111 GB working set. Our chunked reads change the I/O pattern underneath that. **I do not know
+whether they make it better or worse, and the script records that ignorance rather than a
+number I can defend.** If `default` returns near 11, the pathology is independent of our
+changes. If it moves a lot, the two interact, and the thread recommendation cannot be stated
+without naming the code version.
+
+### A repeated mistake, and the fix that ends it
+
+Stopping the first sweep, I ran `pkill -f "threads2"`. That pattern matched **the ssh command
+line carrying it**, so it killed the controlling session. This exact failure is already
+written down from an earlier session and I walked into it again.
+
+Worse than the lost session: the sweep shell died but the engine did **not**. An orphaned
+`k3` (PID 294581) kept running at load 18, holding the trunk. Had I relaunched without
+looking, the new run would have been measured against a machine with ~120 GB already spoken
+for — which is how a previous run got starved. Killed it by PID and confirmed 122 GiB
+available and load falling before rebuilding.
+
+The durable fix, now in the harness: the sweep writes `$$` to `/root/sweep.pid`, and the
+stop procedure is `kill $(cat /root/sweep.pid) && pkill -x k3`. `pkill -x` matches the exact
+process name, which an ssh command line cannot collide with. Pattern-matching a process by a
+string that is also sitting in your own command line is not a typo, it is a method that
+fails whenever the controller and the target share vocabulary.
+
+## A claim of ours that did not survive checking
+
+The `auto` budget commit carried this, in a source comment and twice in the drafted PR body:
+
+> auto could not start on any machine with more than about 67 GB available
+
+**Wrong, and it would have been checkable by the maintainer in a minute.** The derivation
+assumed the admission check adds back the full `4.70 + 1.70` that `auto` reserves. It adds
+back `w_model` (4.70) plus `w_state + w_buf + w_kv`, which measured **0.68 GB**, not 1.70.
+
+Redone from the source:
+
+```
+need_b - 0.95*avail  =  0.03*avail - 3.70 + F        F = w_state + w_buf + w_kv
+```
+
+and `auto` only reaches full residency when `usable - cache_min >= 111`, i.e. about
+**122 GB available**. At that entry point the expression is positive for any `F` above
+0.03 GB. So the true statement is stronger and narrower than the one we had: **`auto`
+fails across the whole range where its own full-residency branch is reachable** — the case
+the code itself calls "the configuration auto exists for" — rather than everywhere above
+67 GB.
+
+Checked against captured output rather than left as algebra: at `avail` 131.71, reserve
+11.03, trunk 111.0, cache 9.68, `TOTAL` 126.06, ceiling 125.12, printed shortfall
+−5652049448.96 B. Solving for `F` gives 0.684 GB, which is where the 0.68 above comes from.
+Commit amended to `6eb3298`; the PR body is rewritten at
+`k3-results/scratch/pr-auto-budget-body.md`.
+
+The lesson is the one already in this file under a different heading: an arithmetic claim
+in a contribution is not rhetoric, it is a testable assertion, and the reader has the
+source. Deriving a threshold and not substituting the measured terms back is the same
+class of error as quoting a single sample.
+
+## PR #66 history, checked rather than assumed
+
+Before re-raising, checked who closed it and why. Both comments are ours; **no maintainer
+feedback exists**. We closed it at 04:36 with "submitted before it had been reviewed on our
+side ... I will reopen once it has been through internal review." So re-raising is expected
+rather than persistent, and the stated condition is exactly the review now happening.
+
+Carried forward from that PR's own comment, because it is a real finding and independent of
+the fix: the same ceiling refuses `--preset server` and `--preset max`. `server` is
+documented as *"~128 GB peak RSS ... Fastest"* but computes 128.36 GB against a 125.49 GB
+ceiling, so it needs about **135 GB available** (`128.36 / 0.95`). Kept in the PR as a
+finding with the remedy left to the maintainer — ceiling, preset sizing, or documentation
+is their design call, and the PR should do one thing. This is also why the sweep harness
+uses explicit budgets instead of `--preset server`.
+
+## Still open after this cycle
+
+- Roadmap #2, re-running the published campaign under the replicating harness (12 ladder
+  rungs, 12 splits). Cannot run concurrently with the sweep without contaminating both.
+- `bench_kernels` on `k3_matmul_q8` against `k3_matmul_mxfp4` at trunk shapes — ours, not
+  upstream, since the trunk precision dial is declined by ROADMAP.
+- Verify the GEX131-1 specification on the machine rather than from the product page.
+- Reproduce a llama.cpp placement figure ourselves before quoting one again.
+
+
 
 
 
