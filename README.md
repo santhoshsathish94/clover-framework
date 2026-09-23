@@ -64,13 +64,43 @@ We started with our own question: **how much of what we assume about running AI 
 
 Rather than argue it, we ran something. Using Fareed Khan's [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c), which streams a model off disk instead of holding it in memory, we ran a 2.78-trillion-parameter model on a single rented CPU machine. Then we shrank it twice to see what would happen. The first shrink sped it up exactly as we had predicted. The second barely helped — because by then the processor, not the memory, had become the limit. The engine is his work under Apache-2.0 and stays his; Clover does not claim it.
 
-That second result is what moves us forward instead of keeping us where we are. It showed the wall was the machine rather than the idea, and that a model this size is really two problems: a small part used for every single word, which wants the fastest device available, and a very large expert part that will never fit anywhere and has to stream from disk.
+That second result changed the question again. It showed that the wall was not simply the size of the model; it was where the work was happening. On this CPU, moving the always-used trunk from 8-bit to 4-bit saved almost no time because the processor spent the saving unpacking it. That does not tell us that 4-bit is a dead end. It tells us that the answer may depend on the machine.
 
-**Clover is not against any system.** Each one is a sensible answer to the situation its builders are in. What they all have in common is people improving their own system.
+The new GPU server changes the experiment. It has enough total local storage to hold the model, so we no longer need to treat the checkpoint as one stream coming from one mirrored storage layout. The first storage experiment used mirrored disks. The next experiment can **shard the model across two disks** and measure whether independent storage paths let us overlap reads, prefetching, and computation.
 
-So we learn from others who solved this shape of problem in their own way. Games have been fitting worlds bigger than their consoles for decades — loading scenery as you approach it, budgeting time per frame — rather than waiting for bigger hardware. And [`llama.cpp`](https://github.com/ggml-org/llama.cpp) already does the mixed-device version: what is used every time goes on the fast device, what is used rarely goes on the slow one.
+More importantly, the GPU has **24 GB of memory** and native support for 4-bit computation. Our measured 4-bit trunk is about 29 GB, so it does not fit entirely — but that is no longer a reason to stop. It gives us a new question:
 
-Next is a **GPU-Server GEX45-1**. It is too small to host this model and is not meant to — it is there to answer the one question the CPU could not.
+> **What actually needs to be on the GPU for each token?**
+
+The next experiment should therefore not assume that the trunk and experts must be processed the way they were on the CPU. We can investigate a working-set architecture:
+
+```text
+                 1.56 TB model
+                       ↓
+              sharded across 2 disks
+                       ↓
+             CPU RAM / NVMe working set
+                  ↙          ↘
+          dense trunk       experts
+               ↓               ↓
+          24 GB GPU working set
+                       ↓
+                 token generation
+```
+
+The GPU may hold the most frequently used trunk components and/or frequently selected experts, while RAM and NVMe hold the larger backing store. The system can prefetch what the next token is likely to need while the GPU is computing the current token.
+
+This is not yet an architecture claim. It is the next experiment.
+
+**Clover is not against any system.** Every approach we have encountered is a sensible answer to the situation its builders were in. Games solved a similar problem by loading only the part of a much larger world that was needed at the moment. `llama.cpp` already demonstrates mixed-device model placement. We are now asking whether the same principle, applied at the level of this model's trunk, experts, storage, and token processing, produces a measurable advantage on hardware we can actually rent.
+
+The question is no longer simply whether a 2.78-trillion-parameter model can run on a small machine.
+
+It is:
+
+> **Can we discover a useful division of the model across GPU, CPU memory, and sharded storage that makes each token faster without requiring the whole model to fit on one device?**
+
+The GPU server is there to answer that question.
 
 The experiments, in the order we ran them, and the predictions we got wrong: [`work-in-progress/heterogeneous-inference.md`](work-in-progress/heterogeneous-inference.md).
 
@@ -131,12 +161,18 @@ them is a matter of writing more code:
    accepts.** The handover between workers holds; the content does not yet clear
    the bar. The hosted worker has never run a cycle at all — it reached the API
    and stopped at `429 insufficient_quota`.
-3. **The storage-streamed measurement on real work.** The model has since been
-   downloaded and run — about 5.3 seconds per word on one rented CPU machine,
-   across four prompts — and two smaller versions of it were built and measured.
-   That is a step, not the result. It showed that the approach runs and where it
-   stops paying on a processor, which is a minor change rather than a finished
-   direction. Where it points next is untested.
+3. **The heterogeneous inference experiment on the new GPU server.** The CPU
+   experiment established the first boundary: 8-bit helped substantially, while
+   4-bit barely helped on that processor. The next machine changes the available
+   options. It has enough local storage to hold the checkpoint, two disks that can
+   be used as a sharded backing store, and a 24 GB GPU whose native 4-bit
+   computation can test the hypothesis the CPU could not.
+
+   The experiment is not simply "run the model on the GPU". It will measure
+   different placements of trunk and expert weights, storage sharding and
+   prefetching, and token-level scheduling between GPU, CPU memory and NVMe.
+   Nothing here is assumed to work. The result will be whatever the measurements
+   show.
 
 **`v4.0.0` will be cut when one of those produces evidence, and not before.**
 
