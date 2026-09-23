@@ -3117,6 +3117,99 @@ uses explicit budgets instead of `--preset server`.
 - Verify the GEX131-1 specification on the machine rather than from the product page.
 - Reproduce a llama.cpp placement figure ourselves before quoting one again.
 
+---
+
+# The contribution is a fix, not just a measurement (2026-09-23)
+
+Direction: *"apply all the real fixes that improve the system and run only what is
+required for contribution"*, in one batch rather than a series of runs.
+
+That reframed PR 2. I had been treating ROADMAP #3 as a measurement to hand over. It is
+not: the reason nobody had swept `OMP_NUM_THREADS` is that **the engine gives you no way
+to set it**. Confirmed by reading rather than assuming — `omp.h` is included nowhere,
+`omp_set_num_threads` appears nowhere, and OpenMP is used through eight bare `#pragma`
+sites. Thread count is whatever the runtime picks, and nothing in the CLI can change it.
+
+Their own two documents disagree with each other and with reality:
+
+> `OMP_NUM_THREADS` has never been swept on this engine ... on memory-bound workloads
+> throughput often *declines* past a point. Unknown here.  — docs/ROADMAP.md:23
+
+> `OMP_NUM_THREADS` defaults to your core count.  — docs/TUNING.md:140
+
+**The TUNING line is wrong on any SMT machine.** OpenMP defaults to one thread per
+*logical* cpu, which here is 32, not the 16 cores. So the documented behavior and the
+real behavior differ in the direction that costs the user time, and the roadmap's own
+prediction of a decline past a point is exactly what happens.
+
+So the fix is code: `--threads N`, and a default of the physical core count read from the
+sysfs sibling topology (count cpus that lead their own sibling list). Precedence is
+`--threads`, then `OMP_NUM_THREADS`, then cores; an explicit env var is left alone so
+existing scripts keep working, and off Linux the OpenMP default is untouched. Verified
+against ground truth rather than trusted: topology says 16 cores, and the binary reports
+`threads: 16` by default, `7` with `--threads 7`, `5` under `OMP_NUM_THREADS=5`. Gates
+still pass, `ENGINE MATCHES THE REFERENCE EXACTLY`, portable build 0 warnings.
+
+## The prediction that was wrong, and it was the one I flagged
+
+The aborted sweep completed r1 of five arms before being stopped, on the full stack at
+114/2. Against predictions recorded before launch:
+
+| arm | predicted | r1 observed |
+|---|---|---|
+| t16_bound | 5.31 | **5.3133** |
+| t16_free | 5.59 | 5.6335 |
+| t24_bound | 5.80 | 5.5298 |
+| t8_bound | 6.00 | 5.7211 |
+| **default (32 unbound)** | **~11.2** | **7.4057** |
+
+The four I was confident about landed. **The one I explicitly marked low-confidence is the
+one that moved, and it moved a long way**: 7.41, not the ~11.9 Phase 5 measured. Writing
+"I do not know whether our chunked reads make this better or worse" into the script header
+was worth more than a confident number would have been — the honest cell is the one that
+carried information.
+
+What it means is not yet settled. Phase 5's 11.863 was a different build, so this is not a
+clean before/after; it is consistent with the chunked reads softening the pathology, but
+the comparison needed to say that is upstream's own default at this config, which we do
+not have. Recorded as unresolved rather than claimed.
+
+Also: `t32_bound-r1` parsed at **8 steps, not 63**, because it was mid-run when stopped.
+The strict parser flagged it instead of quietly averaging a partial run. The loose version
+of that parser once matched `pinned 93/93 layers, ring 2 slots` on field count alone.
+
+## One batch, seven arms
+
+Two binaries, both full stack, differing only by the thread commit: `da387e33e877` without
+it (the engine as it ships) and `681354cf91ef` with it. Arms: `default_nofix` (the
+problem), `default_fixed` (the fix, must land on 16), `t8`/`t24`/`t32` (the curve ROADMAP
+#3 asks for, through the new flag), `t16_bound` (best known), `t32_bound` (the interaction
+— without it the headline claim has no support). 21 runs interleaved, ~3.7 h, PID file at
+`/root/sweep.pid`.
+
+`t32` is deliberately the same physical configuration as `default_nofix` reached by a
+different code path. That is a cross-check that the flag does what it says, not a
+duplicate — and its prediction is ~7.4, **not** the 5.56 the r1 table above might suggest,
+because that r1 cell was bound. If `t32` returns near 5.5 my model of the interaction is
+wrong.
+
+**The falsifiable claim this batch has to support:** the shipped default costs about 24%
+against simply counting cores, and about 30% against cores plus binding. If `default_fixed`
+does not beat `default_nofix` by roughly that, the thread commit should not be offered at
+all.
+
+## Contribution set, now three separable PRs
+
+1. **Perf** (PR #67, open): five commits, chunked reads, batched matmul, KDA sweep.
+2. **Auto budget** (`6eb3298`, local): the admission ceiling defect and the negative
+   shortfall message.
+3. **Threads** (`158b6ed`, local): `--threads`, physical-core default, TUNING.md
+   correction, evidenced by this batch.
+
+Each stands alone and each is in scope by the project's own ROADMAP. The int8 and MXFP4
+trunk work stays ours — ROADMAP declines a trunk precision dial by design.
+
+
 
 
 
