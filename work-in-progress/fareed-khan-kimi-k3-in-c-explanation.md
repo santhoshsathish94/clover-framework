@@ -484,22 +484,41 @@ That is exactly the kind of systems question Clover is designed to investigate.
 
 ## 18. What we should test next
 
-For Clover, the next experiment should not begin by renting a generic AI GPU instance.
+The CPU experiment has answered its own question. The next experiment is now the
+heterogeneous system.
 
-The better sequence is:
+The new GPU server gives us three resources to treat as one system:
 
-1. Establish the task and measurable success criteria.
-2. Run the smallest model that can plausibly perform that task.
-3. Compare CPU, GPU and storage-streamed execution where relevant.
-4. Hold total memory fixed while changing memory allocation.
-5. Measure actual storage behavior, not provider marketing bandwidth.
-6. Measure verified task completion, not only tokens per second.
-7. Compare cost per verified successful task.
-8. Keep successful and failed measurements as Growth inputs for the next architecture decision.
+1. **Two local disks** holding the full checkpoint as a split storage backing store.
+2. **CPU memory** for a larger working set and staging/prefetch.
+3. **24 GB of GPU memory** for the part of the model that benefits most from GPU execution.
 
-## 19. The first machine, and why the work is not finished when it runs
+The first question is not "can the whole model fit on the GPU?" It cannot.
 
-The machine is an AX102-3-LTD at Hetzner: 128 GiB of RAM, two 1.92 TB NVMe drives, sixteen cores, **no GPU**, about €50 for a day's work. It is deliberately ordinary. A machine nobody would describe as AI infrastructure is the point of the exercise, not a compromise forced on it.
+The question is:
+
+> **What model state actually needs to be on the GPU for each token, and what can remain in
+> CPU memory or on the two storage devices without becoming the bottleneck?**
+
+The experiment should therefore measure:
+
+- split-disk read bandwidth and whether reads can overlap
+- trunk placement between GPU, CPU memory and storage
+- expert placement and prefetch timing
+- GPU memory pressure and transfer traffic
+- token latency and where each token spends its time
+- output agreement where numerical representations change
+- end-to-end behaviour, not just kernel throughput
+
+The exact scheduling strategy is deliberately unknown. It may be better to keep more trunk
+resident, to stream selected experts differently, to prefetch based on routing, or to use a
+different division entirely.
+
+That is the experiment.
+
+## 19. The first CPU machine, and why the work is not finished when it runs
+
+The first machine was an AX102-3-LTD at Hetzner: 128 GiB of RAM, two 1.92 TB NVMe drives, sixteen cores, and **no GPU**. It gave us the CPU-side measurements that led to the heterogeneous direction.
 
 Three things will be measured there, in order of what they are for:
 
@@ -509,7 +528,7 @@ Three things will be measured there, in order of what they are for:
 
 A good deal is already settled without spending anything. The checkpoint is public and its 96 shards total exactly 1,560,936,091,448 bytes, so the download will verify. The weightless gate ladder passes, the released configuration parses and the tokenizer round-trips byte for byte. The kernel benchmark has produced a compute baseline and two bit-exactness hashes that the rented machine must reproduce.
 
-What the machine cannot settle is worth stating as plainly. Kimi K3 through this engine has no chat template, no chunked prefill and no quality benchmark. It completes text; it does not follow instructions. It is the demonstration that model size and machine size are separable. It is not the working assistant, and the claim that one ordinary box is enough for most of the work has to be carried by smaller models doing real tasks, measured separately.
+What the machine cannot settle is worth stating as plainly. Kimi K3 through this engine has no chat template, no chunked prefill and no quality benchmark. It completes text; it does not follow instructions. It demonstrates that model size and machine size are separable. It is not the working assistant, and it does not establish that one ordinary CPU box is sufficient for real engineering work.
 
 **And the work will not be finished when the numbers come back.** An Outcome is where the next cycle starts, not where this one ends. Whatever the machine shows becomes the Context for the following question, and there is always a following question: a better allocation, a faster device, a smaller model that does the same job, a measurement that turns out to have been asking the wrong thing. Reaching what was intended is not the same as running out of things to improve.
 
