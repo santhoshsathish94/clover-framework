@@ -121,8 +121,9 @@ the line is real.
 
 ## What we are doing next
 
-Adding a **GPU-Server GEX45-1** with a 24 GB GPU, CPU memory, and enough combined local
-storage to hold the checkpoint when the model weights are **split across two disks**.
+Adding a **GPU-Server GEX131-1** with 96 GB of GPU VRAM, 256 GB of CPU memory, and
+two 960 GB NVMe drives. The full 1.56 TB checkpoint fits across the two drives when the
+model weights are **split across them**.
 
 That changes the experiment.
 
@@ -130,10 +131,10 @@ The first storage setup mirrored the disks. The next setup will shard the model 
 two disks so that the storage paths can be measured independently. We do not yet know whether
 the right layout is simple file placement, parallel reads, or another scheduling strategy.
 
-The 24 GB GPU also changes the token-processing question. The measured 4-bit trunk is about
-29 GB, so the whole trunk cannot simply be placed on the GPU. That does not mean the experiment
-fails. It means we need to determine **which weights actually need to be on the GPU at each
-token**, and which can remain in CPU memory or on NVMe.
+The 96 GB GPU also changes the token-processing question. The measured INT8 trunk is about
+54.47 GB and the MXFP4 trunk about 28.94 GB, so either can fit entirely on the GPU. The BF16
+trunk is about 118.93 GB, so it cannot. This gives us three meaningful placement cases rather
+than a simple fit/no-fit boundary.
 
 The working hypothesis is a hierarchy:
 

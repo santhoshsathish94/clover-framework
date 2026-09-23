@@ -24,9 +24,7 @@ and no GPU. Every figure below is measured on that machine; where a number was d
 says so.
 
 **Start of campaign: 9.40 s per generated token. Now: 5.311 s.** A 64-token answer takes
-487.4 s. Output is byte-identical throughout — the same prompt produces the same token ids at
-every configuration ever tested, including the untuned default, which is the only reason any
-of these comparisons mean anything.
+487.4 s. The outputs are not byte-identical across precision configurations. The INT8 and MXFP4 trunk variants diverge from the BF16 baseline; therefore the speed measurements are system measurements, not evidence that the quantized variants are numerically identical models.
 
 ### The findings, in the order they were found
 
@@ -2580,52 +2578,47 @@ Evidence from this campaign, much of it from being wrong:
   experts can never be resident anywhere and must stream. That is heterogeneous by
   construction — and it is the same boundary K3's own trunk/expert split already draws.
 
-## The machine being added: GPU-Server GEX45-1
+## The machine being added: GPU-Server GEX131-1
 
-GEX45-1, HEL1, EUR 214.00/mo + EUR 209.00 setup. RTX PRO 4000 Blackwell SFF with **24 GB
-GDDR7** and 5th-gen **native FP4** tensor cores; i5-13500 (6P+8E, 20 threads); 64 GB DDR4;
-**2 x 512 GB NVMe**.
+GEX131-1, with an Intel Xeon Gold 5412U (24 cores / 48 threads), NVIDIA RTX PRO 6000
+Blackwell Max-Q with **96 GB GDDR7 ECC VRAM**, **256 GB DDR5 ECC registered RAM**, and
+**2 x 960 GB NVMe**.
 
-The configurator offers **one** server type and states that "server types offer fixed
-hardware configurations that cannot be modified after ordering". There is no disk upgrade.
-EUR 212.30 for the server matches the order exactly, so this is the machine.
+Hetzner's current GEX131 configurator lists GEX131-1 with exactly this 256 GB / 2 x 960 GB
+configuration. The GPU has enough VRAM for the measured INT8 trunk (54.47 GB) and MXFP4
+trunk (28.94 GB), but not the BF16 trunk (118.93 GB).
 
-### Capacity: the checkpoint does not fit, and this is arithmetic rather than framing
+### Capacity: the checkpoint fits across the two disks
 
 | | |
 |---|---|
-| 2 x 512 GB split, raw | 1.024 TB = 953.7 GiB |
-| usable after filesystem and OS | **~920 GiB** |
+| 2 x 960 GB split, raw | **1.92 TB = ~1,746 GiB** |
 | checkpoint | 1,560,936,091,448 B = **1,454 GiB** |
-| shortfall | **~534 GiB, about 37%** |
+| raw headroom | **~292 GiB** |
 
-The "920 GB" figure is the **combined usable total across both disks**, not a per-disk size.
-An earlier commit here recorded it as 2 x 920 GB per disk and concluded the checkpoint fitted
-with 140 GB to spare. That was wrong and is corrected.
+The exact usable space after filesystem and OS still has to be verified with `df` on arrival.
+The important correction is that this configuration has enough local storage for the full
+checkpoint, unlike the previously recorded GPU configuration.
 
-1.45 TB of the checkpoint is routed experts already at MXFP4, so there is nothing left to
-compress. Sharding changes which disk a byte lands on; it does not create capacity.
+The checkpoint is still much larger than the 256 GB of CPU RAM, so this remains a genuinely
+heterogeneous experiment: NVMe is the backing store, CPU RAM is the working set, and the GPU
+can hold a substantial resident portion of the model.
 
-**Consequence: K3 cannot run on GEX45-1.** The heterogeneous question is still worth asking
-there, but it has to be asked with a model that fits in ~920 GiB, and what is learned will
-transfer to K3 only as far as the architectures are alike. Options are open and none is
-chosen yet:
+**Consequence: the original K3 experiment is viable on GEX131-1.** We can keep the full model,
+shard it across the two NVMe drives, and measure how GPU residency, CPU memory, storage
+placement, and prefetching interact without substituting a smaller model.
 
-- run a smaller MoE that fits, and measure the GPU/CPU/storage division on it;
-- ship only the MXFP4 trunk (28.94 GB, fits easily) plus a subset of experts, accepting that
-  a subset is a different model and cannot be compared against K3 output;
-- keep K3 on the AX102 and use GEX45-1 purely for the placement and prefetch mechanics.
+### The placement cases we can now measure
 
-Two limits, stated before it arrives:
-
-1. **Capacity, above.** This is the binding one.
-2. **The MXFP4 trunk does not fit the card.** 28.94 GB against 24 GB VRAM, short by ~5 GB.
-   Partial placement is the answer, which is what per-tensor placement exists to do.
+1. **BF16 trunk:** 118.93 GB — larger than 96 GB VRAM, so partial placement is required.
+2. **INT8 trunk:** 54.47 GB — fits entirely in VRAM.
+3. **MXFP4 trunk:** 28.94 GB — fits comfortably in VRAM.
 
 The question the machine exists to answer is unchanged: **what actually needs to be on the
 GPU for each token**, with reads for the next token overlapping computation of the current
 one. **This is not an architecture claim; it is the next thing to measure.** Verify the real
-usable figure with `df` on arrival rather than trusting this arithmetic.
+usable disk space and the actual GPU memory available on arrival rather than trusting only the
+specification.
 
 ## Storage direction, settled and previously mishandled
 
@@ -2651,7 +2644,7 @@ Outstanding work:
 - Prepare the engine changes for upstream contribution: commit them, check them against the
   project's CONTRIBUTING rules, and separate what is genuinely useful to the project from
   what was only scaffolding for our measurements.
-- Verify the GEX45-1 specification on the machine rather than from the product page.
+- Verify the GEX131-1 specification on the machine rather than from the product page.
 - Reproduce a llama.cpp placement figure ourselves before quoting one ever again.
 - Run `bench_kernels` on `k3_matmul_q8` against `k3_matmul_mxfp4` at trunk shapes, to turn
   the derived ~30 GB/s into a measured number.
