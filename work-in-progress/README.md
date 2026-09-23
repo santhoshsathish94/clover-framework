@@ -24,7 +24,7 @@ stays here.
 
 ## [Kimi K3 storage-streamed inference](fareed-khan-kimi-k3-in-c-explanation.md)
 
-Four files covering one line of work: whether a 2.78-trillion-parameter model running on
+Five files covering one line of work: whether a 2.78-trillion-parameter model running on
 one CPU changes what AI infrastructure has to be. **The engine is Fareed Khan's
 [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c), Apache-2.0. Nothing here
 reimplements it and no model weights are redistributed.**
@@ -43,7 +43,7 @@ expert-cache table, and a kernel compute baseline. The checkpoint's 96 shards we
 confirmed to total 1,560,936,091,448 bytes without downloading them.
 
 **Since run on rented hardware, against the real model.** A 2.78-trillion-parameter model
-generated text on one CPU machine at about 5.3 seconds per word. Shrinking the always-used
+generated text on one CPU machine at about 5.3 seconds per token. Shrinking the always-used
 part to 8-bit brought that to 4.1 and nearly halved the memory needed; shrinking it again to
 4-bit gave almost nothing more, because by then the processor rather than the memory was the
 limit. The story in order is in
