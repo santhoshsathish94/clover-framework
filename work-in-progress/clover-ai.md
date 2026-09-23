@@ -1,6 +1,6 @@
 # Clover AI
 
-> Working in progress — direction for the next major Clover release.
+> Working in progress — current implementation direction for Clover AI.
 
 Clover AI is an open-source implementation direction for building AI systems that can produce meaningful engineering outcomes while remaining bounded, observable, verifiable, and accountable.
 
