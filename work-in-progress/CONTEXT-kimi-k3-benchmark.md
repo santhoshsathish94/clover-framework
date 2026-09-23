@@ -2598,7 +2598,7 @@ trunk (28.94 GB), but not the BF16 trunk (118.93 GB).
 
 The exact usable space after filesystem and OS still has to be verified with `df` on arrival.
 The important correction is that this configuration has enough local storage for the full
-checkpoint, unlike the previously recorded GEX45-1 configuration.
+checkpoint, unlike the previously recorded previously recorded GPU configuration configuration.
 
 The checkpoint is still much larger than the 256 GB of CPU RAM, so this remains a genuinely
 heterogeneous experiment: NVMe is the backing store, CPU RAM is the working set, and the GPU
