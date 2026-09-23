@@ -2584,38 +2584,48 @@ Evidence from this campaign, much of it from being wrong:
 
 GEX45-1, HEL1, EUR 214.00/mo + EUR 209.00 setup. RTX PRO 4000 Blackwell SFF with **24 GB
 GDDR7** and 5th-gen **native FP4** tensor cores; i5-13500 (6P+8E, 20 threads); 64 GB DDR4;
-**2 x 920 GB NVMe** (confirmed by the creator; the published base listing shows a smaller
-disk option, so the ordered configuration is the one that counts).
+**2 x 512 GB NVMe**.
+
+The configurator offers **one** server type and states that "server types offer fixed
+hardware configurations that cannot be modified after ordering". There is no disk upgrade.
+EUR 212.30 for the server matches the order exactly, so this is the machine.
+
+### Capacity: the checkpoint does not fit, and this is arithmetic rather than framing
+
+| | |
+|---|---|
+| 2 x 512 GB split, raw | 1.024 TB = 953.7 GiB |
+| usable after filesystem and OS | **~920 GiB** |
+| checkpoint | 1,560,936,091,448 B = **1,454 GiB** |
+| shortfall | **~534 GiB, about 37%** |
+
+The "920 GB" figure is the **combined usable total across both disks**, not a per-disk size.
+An earlier commit here recorded it as 2 x 920 GB per disk and concluded the checkpoint fitted
+with 140 GB to spare. That was wrong and is corrected.
+
+1.45 TB of the checkpoint is routed experts already at MXFP4, so there is nothing left to
+compress. Sharding changes which disk a byte lands on; it does not create capacity.
+
+**Consequence: K3 cannot run on GEX45-1.** The heterogeneous question is still worth asking
+there, but it has to be asked with a model that fits in ~920 GiB, and what is learned will
+transfer to K3 only as far as the architectures are alike. Options are open and none is
+chosen yet:
+
+- run a smaller MoE that fits, and measure the GPU/CPU/storage division on it;
+- ship only the MXFP4 trunk (28.94 GB, fits easily) plus a subset of experts, accepting that
+  a subset is a different model and cannot be compared against K3 output;
+- keep K3 on the AX102 and use GEX45-1 purely for the placement and prefetch mechanics.
 
 Two limits, stated before it arrives:
 
-1. **The next server is intended to hold the full checkpoint across two disks.** Split (not
-   mirrored — settled direction) is the storage experiment. The exact placement and read
-   scheduling still need to be measured on the box. The 1.45 TB routed-expert pool remains
-   storage-backed even though it is already MXFP4.
+1. **Capacity, above.** This is the binding one.
 2. **The MXFP4 trunk does not fit the card.** 28.94 GB against 24 GB VRAM, short by ~5 GB.
    Partial placement is the answer, which is what per-tensor placement exists to do.
 
-So GEX45-1 is not a smaller version of the same experiment. The question it exists to answer
-is **what actually needs to be on the GPU for each token** — which parts of the trunk, which
-experts, held where, with reads for the next token overlapping computation of the current
-one. Sharding across the two disks is part of the experiment rather than a workaround for
-capacity. **This is not an architecture claim; it is the next thing to measure.**
-
-### Capacity, with the confirmed disks
-
-2 x 920 GB split gives **1.84 TB raw**, roughly **1.7 TB after filesystem and OS**. The
-checkpoint is 1,560,936,091,448 bytes, so it fits with about 140 GB to spare. That headroom
-decides which packed trunk can go with it:
-
-| trunk | size | fits alongside the checkpoint? |
-|---|---|---|
-| MXFP4 | 28.94 GB | yes, comfortably — and the card has native FP4 |
-| int8 | 54.47 GB | yes |
-| bf16 | 108.81 GB | only just; not worth the risk |
-
-**Plan to ship the MXFP4 trunk to that box, not the bf16 one.** Verify the real usable figure
-with `df` on arrival rather than trusting this arithmetic.
+The question the machine exists to answer is unchanged: **what actually needs to be on the
+GPU for each token**, with reads for the next token overlapping computation of the current
+one. **This is not an architecture claim; it is the next thing to measure.** Verify the real
+usable figure with `df` on arrival rather than trusting this arithmetic.
 
 ## Storage direction, settled and previously mishandled
 
