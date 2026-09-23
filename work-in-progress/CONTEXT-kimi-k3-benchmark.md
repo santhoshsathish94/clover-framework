@@ -2673,6 +2673,130 @@ have is a single run per arm.** They are not submittable as they stand. The proj
 prefers counts over seconds — bytes read per token, evictions, pinned layers — which our
 trunk sizes already are and which are the stronger claim anyway.
 
+### Replicated A/B, three runs per arm, interleaved (2026-09-23)
+
+`ac1584a` (before the four commits) against `9977044` (all four), **same tuned config on both
+arms** so this isolates the code. Interleaved BASE/HEAD/BASE/HEAD/... so drift cannot land on
+one arm. Two separate binaries, md5s confirmed different. No profiler, no sampler, nothing
+else on the machine; load average tracked `OMP_NUM_THREADS` exactly.
+
+| run | decode s/tok | prefill s | total s | peak RSS GB |
+|---|---|---|---|---|
+| BASE-r1 | 5.631 | 184.25 | 539.0 | 118.92 |
+| BASE-r2 | 5.627 | 168.64 | 523.1 | 118.93 |
+| BASE-r3 | 5.628 | 168.53 | 523.1 | 118.93 |
+| HEAD-r1 | 5.304 | 152.96 | 487.1 | 118.93 |
+| HEAD-r2 | 5.305 | 151.29 | 485.5 | 118.93 |
+| HEAD-r3 | 5.307 | 151.32 | 485.7 | 118.93 |
+
+| metric | BASE mean (sd, spread) | HEAD mean (sd, spread) | gain |
+|---|---|---|---|
+| decode | 5.629 (0.002, 0.07%) | 5.306 (0.001, 0.05%) | **+5.74%** |
+| prefill | 173.81 (9.04, 9.04%) | 151.86 (0.96, 1.10%) | **+12.63%** |
+| total | 528.4 (9.18, 3.01%) | 486.1 (0.87, 0.33%) | **+8.01%** |
+
+Every run is reported, not just the means, and every one parsed at exactly 63 decode steps.
+
+**Three things the replication showed that a single sample could not:**
+
+1. **Steady-state decode is one of the most reproducible measurements on this machine** —
+   sd of 0.002 s, spread 0.05-0.07%. The project's CONTRIBUTING states a 33% run-to-run
+   noise floor and requires three runs because of it. That figure appears to describe
+   prefill and wall clock, not steady-state decode. A 5.74% decode gain against 0.07% noise
+   is roughly an 80x margin.
+2. **The changes reduce variance as well as time.** Prefill spread falls 9.04% -> 1.10%,
+   total 3.01% -> 0.33%. Plausibly the concurrent chunked reads making I/O more predictable,
+   but that is an inference, not a measurement.
+3. **A first-run warm-up effect exists and inflates the BASE prefill spread.** BASE-r1 was
+   the very first run of the whole campaign at 184.25 s; r2 and r3 were 168.64 and 168.53.
+   Excluding each arm's first run, prefill is 168.59 -> 151.31, a **10.25%** gain with
+   spreads of 0.07% and 0.02%. Reported both ways rather than picking the flattering one.
+
+**What this does NOT establish:**
+
+- **One configuration only** (`--trunk-gb 114 --cache-gb 2`, 16 threads bound). A change can
+  help at one memory budget and do nothing at another; `benchmarks/memory-ladder.sh` exists
+  for exactly this and has not been used.
+- **The bundle, not the commits.** Three functional changes were tested together. If one
+  carries the gain and another does nothing, this cannot tell them apart, and the project
+  would be taking on maintenance for whichever does nothing. The batched matmul should by
+  design affect prefill only, since decode is single-token and falls back to the serial
+  path — the large prefill gain is consistent with that but does not prove it.
+- One payload, one prompt length.
+
+### The objection that reshaped the contribution (creator, 2026-09-23)
+
+> "the maintainer can dismiss this because the server setup could have accounted for this
+> and not the code"
+
+Correct, and stronger than stated: **one of this machine's two NVMe drives negotiates PCIe
+x2 instead of x4.** A change that improves read concurrency could be helping precisely
+because our storage is degraded, and do nothing on a healthy machine. A full-model wall-clock
+number from this box is dismissible as a property of the box.
+
+The project's own CONTRIBUTING already says the answer: "Where you can, measure **counts
+instead of seconds** ... They are immune to scheduling noise and make a much stronger claim."
+
+Sorting the three changes by how exposed each is:
+
+| change | evidence available | exposed to the objection? |
+|---|---|---|
+| batched bf16 matmul | microbenchmark, no checkpoint, no storage | **No.** Reproducible anywhere. |
+| KDA sweep reads | a count: q/k/v read once per sweep, not once per position | **No**, but not yet demonstrated by measurement. |
+| expert read chunking | effective device throughput | **Yes.** The mechanism IS queue depth. |
+
+**`bench_batch` on 7168 x 12288 bf16, 16 threads bound, no weights required:**
+
+| T | serial x T | batched | speedup |
+|---|---|---|---|
+| 1 | 0.0061 | 0.0043 | 1.41x |
+| 2 | 0.0076 | 0.0057 | 1.35x |
+| 4 | 0.0149 | 0.0073 | 2.03x |
+| 8 | 0.0279 | 0.0129 | 2.16x |
+| 16 | 0.0562 | 0.0238 | **2.36x** |
+
+Consistent with the 2.39x recorded earlier for the shipping kernel, and with `test_batch`
+proving the output is bit-identical this change stands without trusting anything about our
+hardware.
+
+**Defect found in our own commit while doing this:** `9977044` added
+`tests/unit/bench_batch.c` and **no Makefile rule**, so `make bin/bench_batch` fails. We
+shipped a file the build cannot build. Must be fixed before offering it.
+
+**Consequence for how to contribute.** Lead with what the maintainer can verify himself;
+present the chunking change with the storage disclosure attached rather than buried, and
+state plainly that its benefit is a property of the device queue. Do not lead with a
+full-model timing from a machine with a known degraded link.
+
+### The `auto` defect, root cause found 2026-09-23
+
+`--trunk-gb auto` is the setting the CLI itself labels **"Recommended"** in its preset list.
+It cannot start on this machine, and reading `src/cli/k3_run.c` shows why.
+
+- auto reserves `2 GB + 2%` of available, about 4.6 GB here.
+- With full residency reachable it sets `trunk_gb = 111.0` and gives the entire remainder to
+  the expert cache, so the plan consumes ~100% of what is left after its own reserve.
+- The admission guard then requires the total to be under **95%** of available
+  (`if (need_b > have * 0.95)`).
+
+With 132.10 GB available: reserve 4.64, usable 127.46, trunk 111.0, cache 16.46, need 127.46
+against a ceiling of 125.50. **Refused.** auto's reserve (2% + 2 GB) is smaller than the
+guard's margin (5%), so on any machine with enough RAM for full residency the recommended
+setting refuses to start. The refusal message then prints the shortfall as a negative number.
+
+This is worth more to the project than a few percent of throughput: it blocks the documented
+happy path, it is deterministic, and the fix is to reconcile the two margins rather than to
+tune anything.
+
+### Baseline choice for an end-to-end claim
+
+The engine's literal defaults are `trunk_gb = 16.0, cache_gb = 64.0` (k3_run.c:693). Our
+earlier "base" of t108/c10 was our own choice and was never the shipped default. Comparing
+our tuned setup against the literal defaults would be a strawman, because nobody with 124 GB
+would run 16 GB of trunk. The honest baseline is the project's own best shipped option:
+`--preset server` (110/13, described as "Fastest") with **default threads**, since the CLI
+never calls `omp_set_num_threads` and therefore gets 32 unbound threads on this 2-CCD part.
+
 ## A hazard worth not repeating
 
 The local checkout at `c:\personal\oss\kimi-k3-in-c` is **BEHIND** the machine's repo — the
