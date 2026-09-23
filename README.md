@@ -60,19 +60,21 @@ Context → Direction → Execution → Outcome → Growth
 
 ### Where this direction came from
 
-A significant part of the new Clover AI direction was inspired by the extraordinary engineering work of **Fareed Khan** in [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c).
+We started with our own question: **how much of what we assume about running AI is really about the model, and how much is just about how we build everything around it?**
 
-His work demonstrated a striking practical possibility: a 2.78-trillion-parameter Kimi K3 system could be run through a portable C99 implementation with a very small resident working set by streaming model data from storage.
+Rather than argue it, we ran something. Using Fareed Khan's [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c), which streams a model off disk instead of holding it in memory, we ran a 2.78-trillion-parameter model on a single rented CPU machine. Then we shrank it twice to see what would happen. The first shrink sped it up exactly as we had predicted. The second barely helped — because by then the processor, not the memory, had become the limit. The engine is his work under Apache-2.0 and stays his; Clover does not claim it.
 
-More importantly, it challenged an assumption about how large AI systems must be deployed. That led us to ask a broader Clover question: **how much of what we assume about AI infrastructure is actually a constraint of the model, and how much is a constraint of the way we build the surrounding system?**
+That second result is what moves us forward instead of keeping us where we are. It showed the wall was the machine rather than the idea, and that a model this size is really two problems: a small part used for every single word, which wants the fastest device available, and a very large expert part that will never fit anywhere and has to stream from disk.
 
-That question became one of the reasons for the new Clover AI implementation direction and our investigation into small models, model routing, CPU/GPU inference, memory residency, local NVMe/cache, and storage-streamed inference.
+**Clover is not against any system.** Each one is a sensible answer to the situation its builders are in. What they all have in common is people improving their own system.
 
-We want to explicitly acknowledge Fareed Khan's work here. **Extraordinary engineering can change the questions we think are worth asking.**
+So we learn from others who solved this shape of problem in their own way. Games have been fitting worlds bigger than their consoles for decades — loading scenery as you approach it, budgeting time per frame — rather than waiting for bigger hardware. And [`llama.cpp`](https://github.com/ggml-org/llama.cpp) already does the mixed-device version: what is used every time goes on the fast device, what is used rarely goes on the slow one.
 
-Clover does not claim his implementation as its own. The upstream project, its ideas, measurements, code, and applicable licensing and attribution remain his work. Our responsibility is to distinguish that foundation clearly from the experiments and implementation developed within Clover.
+Next is a **GPU-Server GEX45-1**. It is too small to host this model and is not meant to — it is there to answer the one question the CPU could not.
 
-**Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c)
+The experiments, in the order we ran them, and the predictions we got wrong: [`work-in-progress/heterogeneous-inference.md`](work-in-progress/heterogeneous-inference.md).
+
+**Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c) · [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp)
 
 ---
 
@@ -107,11 +109,14 @@ Not demonstrated, and not claimed:
 - open-ended development, general capability, or subjective experience
 
 A separate question — whether a very large model can run from storage rather
-than memory — was examined against Fareed Khan's work. The engine was built and
-its weightless gates passed locally, and the published cache measurements
-reproduced exactly from a recorded trace. No token was generated: that needs
-roughly 1.7 TB of local storage. See
-[`work-in-progress/kimi-k3-local-evidence.json`](work-in-progress/kimi-k3-local-evidence.json).
+than memory — has now been measured. A 2.78-trillion-parameter model ran on one
+rented CPU machine at about 5.3 seconds per word. Shrinking it to 8-bit brought
+that to 4.1 and nearly halved the memory it needed; shrinking again to 4-bit
+gave almost nothing more, because by then the processor rather than the memory
+was the limit. All of it on one machine, one prompt at a time, and none of it on
+a GPU. See
+[`work-in-progress/kimi-k3-local-evidence.json`](work-in-progress/kimi-k3-local-evidence.json)
+and [`work-in-progress/heterogeneous-inference.md`](work-in-progress/heterogeneous-inference.md).
 
 ### What v4.0.0 is waiting for
 
@@ -126,8 +131,12 @@ them is a matter of writing more code:
    accepts.** The handover between workers holds; the content does not yet clear
    the bar. The hosted worker has never run a cycle at all — it reached the API
    and stopped at `429 insufficient_quota`.
-3. **The storage-streamed measurement on real work**, which needs roughly 1.7 TB
-   of local disk for the checkpoint and packed trunk.
+3. **The storage-streamed measurement on real work.** The model has since been
+   downloaded and run — about 5.3 seconds per word on one rented CPU machine,
+   across four prompts — and two smaller versions of it were built and measured.
+   That is a step, not the result. It showed that the approach runs and where it
+   stops paying on a processor, which is a minor change rather than a finished
+   direction. Where it points next is untested.
 
 **`v4.0.0` will be cut when one of those produces evidence, and not before.**
 

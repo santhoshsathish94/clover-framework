@@ -16,6 +16,7 @@ stays here.
 | Document | Subject | State |
 |---|---|---|
 | [clover-ai.md](clover-ai.md) | Implementation direction for Clover AI — bounded tools, enforced permissions, deterministic verification | Direction, not implemented |
+| [heterogeneous-inference.md](heterogeneous-inference.md) | Three experiments on running a very large model on machines you can actually get, and where they point next | Direction, measured on one CPU, nothing on a GPU |
 | [self-hosting-slms.md](self-hosting-slms.md) | Running small language models on infrastructure an organization controls, wired into VS Code | Designed, not built |
 | [self-observation-loop.md](self-observation-loop.md) | Whether persistent external state produces traceable adaptation across runs | Experimental, running |
 
@@ -32,16 +33,26 @@ reimplements it and no model weights are redistributed.**
 |---|---|
 | [fareed-khan-kimi-k3-in-c-explanation.md](fareed-khan-kimi-k3-in-c-explanation.md) | How the engine works, what it measured, and what it implies for the Clover infrastructure direction |
 | [kimi-k3-local-evidence.json](kimi-k3-local-evidence.json) | What the experiment established on local hardware, and what it is still waiting on |
-| [kimi-k3-bench-run.sh](kimi-k3-bench-run.sh) | The measurement campaign for rented hardware. Gated, shellcheck-clean, and **never yet run against weights** |
+| [kimi-k3-bench-run.sh](kimi-k3-bench-run.sh) | The measurement campaign for rented hardware. Gated and shellcheck-clean |
 | [CONTEXT-kimi-k3-benchmark.md](CONTEXT-kimi-k3-benchmark.md) | Handoff record: what is settled, what was ruled out and why, corrections made, abort criteria, and what remains unknown |
+| [heterogeneous-inference.md](heterogeneous-inference.md) | Where this line of work goes next, and the measurements behind that choice |
 
-Reproduced locally, with no checkpoint and no GPU: the weightless gate ladder, the released
+Reproduced with no checkpoint and no GPU: the weightless gate ladder, the released
 configuration, the byte-exact tokenizer round-trip, the published 100,096-request
 expert-cache table, and a kernel compute baseline. The checkpoint's 96 shards were
 confirmed to total 1,560,936,091,448 bytes without downloading them.
 
-Not reproduced: any full-model measurement. That needs about 1.7 TB of storage and more
-memory than the machine here has, which is what the rented box is for.
+**Since run on rented hardware, against the real model.** A 2.78-trillion-parameter model
+generated text on one CPU machine at about 5.3 seconds per word. Shrinking the always-used
+part to 8-bit brought that to 4.1 and nearly halved the memory needed; shrinking it again to
+4-bit gave almost nothing more, because by then the processor rather than the memory was the
+limit. The story in order is in
+[heterogeneous-inference.md](heterogeneous-inference.md); the full figures, including the
+predictions that turned out wrong, are in
+[CONTEXT-kimi-k3-benchmark.md](CONTEXT-kimi-k3-benchmark.md).
+
+Still not established: anything measured on a GPU, any quality claim beyond comparing output
+on a single prompt, and any reproduction of someone else's published speed figures.
 
 ## [AI Manipulation](ai-manipulation/)
 

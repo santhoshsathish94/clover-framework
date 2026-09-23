@@ -44,7 +44,7 @@
   ],
 
   "not_established_here": [
-    "that Kimi K3 was run; no weights were downloaded and no token was generated",
+    "that Kimi K3 was run on this machine; no weights were downloaded and no token was generated here",
     "tokenizer parity, which the suite reported as not run because it needs tiktoken.model from the checkpoint",
     "any storage-bandwidth or seconds-per-token figure, all of which are upstream's measurements on their hardware",
     "scripts/k3-doctor.sh, which is Linux-only and declined to run on Windows"
@@ -56,6 +56,18 @@
     "shortfall": "roughly 8x",
     "note": "this is a storage gate, not a memory gate. The ultra preset lowers RAM to about 3 GB; the bytes must still exist locally because the design streams them rather than holding them. RAM here (15.7 GB) already clears the 8 GB floor",
     "also_needed": "a HuggingFace token, and a download upstream describes as hours rather than minutes"
+  },
+
+  "subsequently_measured_on_rented_hardware": {
+    "note": "this file records what the LOCAL machine established and remains accurate for it; the campaign was afterwards run on rented hardware",
+    "machine": "Ryzen 9 7950X3D, 124 GiB DDR5 measured at 47.9 GB/s, 2x 1.92 TB NVMe",
+    "full_model_run": "64 tokens generated, 5.311 s/token steady state at bf16, 118.93 GB peak RSS",
+    "trunk_formats_built_and_measured": {
+      "int8": "54.47 GB trunk, 4.133 s/token, 64.57 GB peak RSS, diverges from bf16 at token 21",
+      "mxfp4": "28.94 GB trunk, 3.965 s/token, 39.13 GB peak RSS, diverges from bf16 at token 3"
+    },
+    "still_not_established": "anything measured on a GPU, any quality claim beyond greedy token agreement on a single prompt, and any reproduction of a third party's published throughput",
+    "detail": "CONTEXT-kimi-k3-benchmark.md and heterogeneous-inference.md"
   },
 
   "what_this_changes_for_clover": {

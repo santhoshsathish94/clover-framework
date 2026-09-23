@@ -348,8 +348,14 @@ result to either.
 
 The engine was built and its weightless gate ladder passed on ordinary hardware,
 and the published expert-trace measurements reproduced exactly from a recorded
-trace of 100,096 real requests. No token was generated here: that needs roughly
-1.7 TB of local storage for the checkpoint and packed trunk.
+trace of 100,096 real requests. No token was generated on that machine: that
+needs roughly 1.7 TB of local storage for the checkpoint and packed trunk.
+
+The full-model measurement has since been made on rented hardware — 64 tokens
+generated per run at 5.311 s/token and 118.93 GB peak RSS, on one CPU machine,
+with two smaller trunk formats built and measured after it. Figures and their
+limits are in [`heterogeneous-inference.md`](heterogeneous-inference.md).
+Nothing has been measured on a GPU.
 
 Evidence and its limits: [`kimi-k3-local-evidence.json`](kimi-k3-local-evidence.json).
 The upstream figures above are measurements on the author's hardware, not ours.
