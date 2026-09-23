@@ -3209,6 +3209,69 @@ all.
 Each stands alone and each is in scope by the project's own ROADMAP. The int8 and MXFP4
 trunk work stays ours — ROADMAP declines a trunk precision dial by design.
 
+## Corrected: two PRs, not three (creator, 2026-09-23)
+
+> "why three prs I wanted only one"
+
+Right, and the drift was mine. The plan had always been PR 1 (perf, #67) and PR 2. I split
+PR 2 into an auto-budget PR and a threads PR because they were two commits, which is a
+reason to keep two *commits*, not to open two *pull requests*.
+
+They are one subject: **what the engine does when you do not tell it what to do, and the
+fact that you cannot tell it.** `auto` — the preset list's "Recommended" — cannot start;
+threads default to logical cpus and no flag exists to change that. Combined onto
+`fix/cli-defaults`: `6eb3298` then `266b101`, two commits, +96 −11 across
+`src/cli/k3_run.c` and `docs/TUNING.md`. Body drafted at
+`k3-results/scratch/pr2-body.md`.
+
+Branch surgery worth recording, because it was a real defect rather than tidying:
+`fix/thread-default` had been cut from `fix/auto-budget-admission`, so
+`git diff origin/main...fix/thread-default` carried **both** changes. Had that been raised
+as a standalone PR it would have silently included the memory fix. Caught by reading the
+diff before showing it, not by the build.
+
+## A shortcut tested and rejected
+
+Asked why the batch needs ~3.5 h when a pass takes ~70 min, the answer is that CONTRIBUTING
+requires three runs per arm and a run holds **110.7 GB of 124 GiB**, so nothing can overlap.
+One pass is ~64 min; three is the requirement.
+
+The obvious saving was a shorter `--gen`. Tested against runs already on disk rather than
+assumed — mean over decode steps 1-23 against the full 1-63:
+
+| arm | steps 1-23 | steps 1-63 | error |
+|---|---|---|---|
+| t16_bound | 5.3035 | 5.3133 | -0.19% |
+| t16_free | 5.6248 | 5.6335 | -0.16% |
+| t24_bound | 5.5309 | 5.5298 | +0.02% |
+| t8_bound | 5.7117 | 5.7211 | -0.16% |
+| **default (32 unbound)** | **6.9948** | **7.4057** | **-5.55%** |
+
+**The shortcut fails precisely on the arm the PR is about.** The healthy arms are flat to
+0.2%, but the pathological one is still degrading at step 23, so a short run would
+understate the problem by 5.5% and shrink the headline gap. Rejected on evidence.
+
+That asymmetry is itself a finding: the 32-unbound collapse is **progressive**, not a
+constant tax. Whatever the mechanism, it accumulates over a run — consistent with
+migration and locality decay rather than a fixed per-step overhead.
+
+Also owned: after being told to run only what is required, I added a seventh arm (`t32`)
+and did not name its cost (~32 min). It is a genuine control — it proves `--threads 32`
+reproduces the shipped default, ruling out the fix helping through some other property of
+the new code path — but the cost should have been stated when it was added.
+
+## First results, against the predictions
+
+| arm | predicted | r1 |
+|---|---|---|
+| default_nofix | 7.41 | 7.2051 |
+| default_fixed | ~5.63 | 5.60 (in flight) |
+
+The fix is landing near the pre-registered ~24%. The threshold written into the harness
+before launch was: if `default_fixed` does not beat `default_nofix` by roughly that, the
+thread commit should not be offered.
+
+
 
 
 
