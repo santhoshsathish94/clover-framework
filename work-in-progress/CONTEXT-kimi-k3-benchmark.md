@@ -2588,9 +2588,10 @@ cores; i5-13500 (6P+8E, 20 threads); 64 GB DDR4; **2 x 512 GB NVMe**.
 
 Two limits, stated before it arrives:
 
-1. **K3 does not fit.** Split (not mirrored — settled direction) gives ~0.95 TB usable
-   against the checkpoint's 1.56 TB. 1.45 TB of that is routed experts already at MXFP4 and
-   cannot shrink further without going below 4 bits or dropping experts.
+1. **The next server is intended to hold the full checkpoint across two disks.** Split (not
+   mirrored — settled direction) is the storage experiment. The exact placement and read
+   scheduling still need to be measured on the box. The 1.45 TB routed-expert pool remains
+   storage-backed even though it is already MXFP4.
 2. **The MXFP4 trunk does not fit the card.** 28.94 GB against 24 GB VRAM, short by ~5 GB.
    Partial placement is the answer, which is what per-tensor placement exists to do.
 
