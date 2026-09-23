@@ -491,9 +491,11 @@ The new GPU server gives us three resources to treat as one system:
 
 1. **Two local disks** holding the full checkpoint as a split storage backing store.
 2. **CPU memory** for a larger working set and staging/prefetch.
-3. **24 GB of GPU memory** for the part of the model that benefits most from GPU execution.
+3. **96 GB of GPU memory** for the part of the model that benefits most from GPU execution.
 
-The first question is not "can the whole model fit on the GPU?" It cannot.
+The first question is not "can the whole model fit on the GPU?" It cannot. The BF16 trunk
+is about 118.93 GB, while the INT8 and MXFP4 trunks are about 54.47 GB and 28.94 GB and
+can fit entirely.
 
 The question is:
 
