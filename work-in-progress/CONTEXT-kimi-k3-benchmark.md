@@ -8,9 +8,11 @@ Upstream clone used: `FareedKhan-dev/kimi-k3-in-c` at `ac1584a`, 0 behind origin
 
 ## Intended outcome
 
-Demonstrate to a limited audience that **one CPU box with no GPU is enough for most
-of the work**. Kimi K3 is the showpiece for "model size is not machine size"; it is
-not the workload. A separate segment has to carry the software-engineering claim.
+Measure what can actually be learned from running a very large model on ordinary, controllable
+hardware. The CPU machine established that model size and machine size are separable, but it is
+not the destination. Kimi K3 is the systems experiment, not the workload. The next question is
+how the same model behaves when storage, CPU memory, and a small GPU are treated as one
+heterogeneous system.
 
 Secondary, and a by-product rather than the goal: contribute a commodity-hardware
 data point upstream (`ROADMAP.md` items 2 and 3).
@@ -2608,11 +2610,6 @@ stripe parallelises automatically while independent drives leave placement to us
 
 **Settled by the creator, 2026-09-23:**
 
-- **No release.** This work does not unlock `v4.0.0`. It is a minor change: it showed the
-  approach runs and where it stops paying on a processor. The heterogeneous direction may get
-  closer to what `v4.0.0` is waiting for, and may not. An earlier edit of the README marked
-  condition 3 as met and called the release a live decision; that was an over-read and has
-  been reverted.
 - **The engine changes are intended for upstream.** The four commits, the int8 container work
   and the MXFP4 trunk path are to be offered to
   [`FareedKhan-dev/kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c), not kept
