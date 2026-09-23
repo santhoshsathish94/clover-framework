@@ -133,8 +133,10 @@ the right layout is simple file placement, parallel reads, or another scheduling
 
 The 96 GB GPU also changes the token-processing question. The measured INT8 trunk is about
 54.47 GB and the MXFP4 trunk about 28.94 GB, so either can fit entirely on the GPU. The BF16
-trunk is about 118.93 GB, so it cannot. This gives us three meaningful placement cases rather
-than a simple fit/no-fit boundary.
+trunk is 108.81 GB, so it cannot. (That is the packed trunk itself. The bf16 run's peak
+memory was 118.93 GB, but that figure also covers embeddings, recurrent state, buffers and
+the KV cache, which are not what would be placed on a card.) This gives us three meaningful
+placement cases rather than a simple fit/no-fit boundary.
 
 The working hypothesis is a hierarchy:
 

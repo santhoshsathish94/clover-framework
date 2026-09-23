@@ -44,7 +44,7 @@ a spread of 0.4 percentage points**, output identical in every pair.
 
 **Two corrections to earlier versions of this summary.** Finding 4 was written as "the expert
 cache returns 0.00% at any capacity"; that was measured on a NON-repetitive prompt and does
-not generalise — on a repetitive prompt a 10 GB cache retains 63.35% of requests and cuts
+not generalize — on a repetitive prompt a 10 GB cache retains 63.35% of requests and cuts
 expert I/O 2.3x. And the GEMM was quoted at 5.58x; that is the discarded one-accumulator
 prototype. The bit-exact kernel that shipped is **2.39x** at T=16.
 
@@ -136,7 +136,7 @@ proof.* One line of source — the kernel takes a single activation vector — r
 - `docs/TUNING.md`'s preset table still gives ~17 s/token for `server`. Its column is
   headed "expect" and the file is user guidance rather than a measurement record, but
   the v1.0.0 changelog refreshed `k3-doctor.sh` only, so the two now read differently.
-  A documentation-synchronisation point worth offering upstream, not a defect.
+  A documentation-synchronization point worth offering upstream, not a defect.
 
 ### s/token is not a static value
 
@@ -401,16 +401,16 @@ blk_io_schedule 21.1%, on-CPU 7.8% — corroborated independently by thread stat
 S 70.8% / D 21.5% / R 7.6%. Two mechanisms agreeing within 0.4 points.
 
 Storage facts, for the record: array peaks at 10.8 GB/s with 8-way O_DIRECT but delivers
-~5.5 GB/s under the real workload at 82-83% md2 utilisation; request size is 127 KB, which
+~5.5 GB/s under the real workload at 82-83% md2 utilization; request size is 127 KB, which
 is `max_hw_sectors_kb` and therefore a hardware ceiling, not a tunable; `read_bytes/rchar`
 = 1.000 exactly, confirming O_DIRECT with no page-cache assistance.
 
 **Hardware fault found:** `nvme1n1` negotiated PCIe **x2** with `max_link_width=4` — a
 degraded link, not a slot limit, halving one mirror member's ceiling to ~3.9 GB/s. It shows
-as 70 ms latency at 71% utilisation against nvme0n1's 45 ms at 47% for the same bytes.
+as 70 ms latency at 71% utilization against nvme0n1's 45 ms at 47% for the same bytes.
 Not currently the binding constraint, but it is a real Hetzner-reportable fault.
 
-RAID1 read balance under real load is **52/48**. An earlier 66/34 reading was an artefact
+RAID1 read balance under real load is **52/48**. An earlier 66/34 reading was an artifact
 of an 8-stream synthetic test and should not be used.
 
 ### Frontier bottleneck evolution, and which of it applies here
@@ -491,7 +491,7 @@ byte prompts all read exactly 855.36 GB) but "no disk during prefill" was wrong.
 
 **The saving is entirely in EXPERT bytes, not trunk.** Trunk reads are IDENTICAL at 855.36 GB;
 expert traffic falls 1529.33 -> 1033.59 GB, a 32% cut of 495.74 GB. Resuming does not avoid
-streaming the trunk, it avoids re-routing 140 positions through the experts. I had modelled
+streaming the trunk, it avoids re-routing 140 positions through the experts. I had modeled
 this as a saving in prefill COMPUTE; on a storage-bound machine the real prize was bytes not
 read, which is worth more here.
 
@@ -598,8 +598,8 @@ It reconciles with the independent fit: F = 472.6 s against load + prefill = 480
 **Load is therefore ~64% of a gen-16 run** and is pure process startup. That is the largest
 remaining target and it needs no hardware.
 
-Caveat on the 4-thread row: decode shows 10 s, which is a detection artefact - the classifier
-requires read > 3000 MB/s and at 4 threads decode never sustained that, so it was labelled
+Caveat on the 4-thread row: decode shows 10 s, which is a detection artifact - the classifier
+requires read > 3000 MB/s and at 4 threads decode never sustained that, so it was labeled
 prefill. The 4-thread split should not be trusted; 32/16/8 are internally consistent.
 
 ## What remains unknown
@@ -623,7 +623,7 @@ because the workload is not storage-bound; tokenizer parity runs and passes.
 ## What the next cycle should start from
 
 1. **Do not sweep pinning further.** 122.8 GB RSS against a 125.4 GB guard is the wall, and
-   returns are flattening (13.5% -> 11.0% -> ~4%). More of this optimises the thing Reality
+   returns are flattening (13.5% -> 11.0% -> ~4%). More of this optimizes the thing Reality
    already said is not the constraint.
 2. Run the thread sweep and read it as a discriminator, not a tuning exercise.
 3. Separate prompt length from generation length. I conflated them once already.
@@ -724,7 +724,7 @@ profile.
    regression that did not reproduce. 3.7 GFLOP/s on the first run after a build; four
    later runs gave 137-142."* That was wrong. It reproduces exactly — 3.8 and 3.7 — **when
    thread count is held at 32**, which the four exonerating runs never did. It is a real,
-   repeatable 28x cliff at full SMT, not a cold-start artefact. I dismissed a true finding
+   repeatable 28x cliff at full SMT, not a cold-start artifact. I dismissed a true finding
    by varying the wrong thing while re-testing.
 
 ## The ceiling those kernels are running into
@@ -791,7 +791,7 @@ about which wall-clock interval belonged to which phase.
 
 Confirmed end to end on 2026-09-22: a 64-token run has a prefill of **73–78 s** total, of
 which the trunk's first-touch load is a part, against 407 s of wall clock. Startup is
-roughly **18%** of a short run, not 64%, and it amortises to nothing on a long one.
+roughly **18%** of a short run, not 64%, and it amortizes to nothing on a long one.
 
 ## Per-activity verdict
 
@@ -810,7 +810,7 @@ roughly **18%** of a short run, not 64%, and it amortises to nothing on a long o
 ## What this changes about what to do next
 
 The ranked list earlier in this file is wrong at the top. "Eliminate the 380 s load" was
-first; the load is not 380 s and startup is amortised by any persistent process anyway.
+first; the load is not 380 s and startup is amortized by any persistent process anyway.
 The two real terms are trunk DRAM traffic and expert NVMe traffic, they are within 5% of
 each other, and the cheapest untested lever is a thread count.
 
@@ -835,7 +835,7 @@ not 1–3% faster.** The direction of the prediction was wrong.
 mxfp4 against a working set it re-reads, so part of it lives in the 96 MB V-Cache. The
 engine's expert bytes arrive cold from an O_DIRECT read and are touched exactly once.
 A kernel benchmark's optimal thread count does not transfer to an engine whose working
-set is cold. The bench was measuring cache behaviour; the engine has none to measure.
+set is cold. The bench was measuring cache behavior; the engine has none to measure.
 
 The negative result is itself confirmation of the cost model: if any significant part of
 the step were FMA-bound, 24 threads would have helped. Nothing did. **Every major term in
@@ -856,7 +856,7 @@ Only three things can move a bandwidth-bound system, and none of them is tuning:
    lever, the tooling exists (`int8_trunk.py`, `qdq_trunk.py`) but is draft-only, and
    upstream keeps these tensors in higher precision deliberately. Accuracy cost is real
    and would have to be measured, not assumed — `--tf-check` measures exactly that.
-3. **Amortise both across several tokens.** `--spec` verifies a batch of drafted tokens
+3. **Amortize both across several tokens.** `--spec` verifies a batch of drafted tokens
    in ONE sweep, so the 2.37 s trunk stream is paid once for k tokens instead of k times.
    The engine claims an extra verified position costs ~22% of a serial token. **We have
    never run it.** It is the only lever that attacks both dominant terms at once.
@@ -946,7 +946,7 @@ At ~16% fewer expert bytes: 25.83 -> ~21.7 GB/token, 2.81 s -> 2.36 s at the mea
 9.2 GB/s, plus a smaller DMA write into DRAM. Step 6.28 s -> **~5.8 s, about 7-8%**.
 
 Three properties make this unusually safe, and they are the reason it is worth doing
-before anything involving quantisation:
+before anything involving quantization:
 
 - **It cannot change the output.** The cache decides only whether bytes come from RAM or
   disk, never which experts the router chose. Bit-exactness is structural, so none of the
@@ -989,7 +989,7 @@ blocks on `getmany` and then computes. The trunk has an async reader thread and 
 
 # System measurement data, 2026-09-22
 
-Every row below is measured on this machine, not derived. Raw artefacts, scripts and a
+Every row below is measured on this machine, not derived. Raw artifacts, scripts and a
 manifest with provenance for each number are at `k3-results/evidence-20260922/` (43 files),
 so none of this depends on the server still existing.
 
@@ -1218,7 +1218,7 @@ Two findings, both useful:
 
 - **The 96 MB V-Cache is worth nothing to this workload.** At 114 GB/token streamed there
   is nothing to retain. This independently confirms that the bf16 bench's 64-72 GB/s —
-  above DRAM speed — was an artefact of re-reading its own 176 MB working set, and that the
+  above DRAM speed — was an artifact of re-reading its own 176 MB working set, and that the
   engine never sees that reuse. One less reason to trust the bench as a predictor.
 - **CCD0 is SLOWER than CCD1 despite 3x the cache** (6.204 vs 5.970 at the same 8 cores),
   and has the widest run-to-run spread of any configuration measured on this box. On a
@@ -1307,7 +1307,7 @@ Two consequences, both of which change earlier conclusions in this file:
 
 1. **The docs' ~22% assumes a STREAMING trunk.** Full trunk pinning, adopted this morning
    for a free 6.1%, already removed the per-token trunk read that `--spec` would otherwise
-   amortise. The two optimisations attack overlapping costs and **do not compose** — the
+   amortize. The two optimizations attack overlapping costs and **do not compose** — the
    same non-additivity already recorded for the PCIe repair and thread count. Measuring
    each against a fixed baseline and adding them up would have overstated both.
 2. **This is the precise condition under which an accelerator pays, and it is measurable
@@ -1338,7 +1338,7 @@ step 3 is a plain `for (t = 0; t < T; t++)` calling `k3_mmw` four times per toke
 `sh1`, `sh3`, `sh2`. Attention is the same. So a T-position sweep re-reads all 108.81 GB of
 trunk **T times**.
 
-Re-deriving the 7-position sweep with the trunk NOT amortised:
+Re-deriving the 7-position sweep with the trunk NOT amortized:
 
 | term | seconds |
 |---|---|
@@ -1387,14 +1387,14 @@ experts being deduped; the trunk is untouched by batching.
 
 Two caveats on these absolute numbers, both mine to own:
 
-- 363 GB/token here includes a 79-token prefill amortised over only 24 generated tokens, so
+- 363 GB/token here includes a 79-token prefill amortized over only 24 generated tokens, so
   it is **not** comparable to the clean 114.0 GB/token decode figure from the controlled
   gen16-minus-gen8 difference. This run establishes the RATIO, which is unambiguous; the
   earlier run establishes the LEVEL.
 - 79 prefill positions x 108.81 GB would be 8,596 GB for prefill alone, yet the entire run
   measured 8,721 GB. The per-token loop reuses the same weight matrix across iterations, so
   the 88 MB shared-expert and 51 MB latent matrices fit inside the 96 MB V-Cache and are
-  partially amortised **by accident of cache size, not by design**. The 176 MB KDA
+  partially amortized **by accident of cache size, not by design**. The 176 MB KDA
   projections do not fit and get no such help. That is also why the V-Cache die measured
   worthless for single-token decode but is doing quiet work during prefill.
 
@@ -1415,7 +1415,7 @@ inner loop and the engine's double accumulator, so the ratio is the result.
 | 16 | 0.060 | 0.055 | **0.011** | 1.09x | **5.67x** | **267.0** |
 
 **The packed GEMM's time is flat: 0.009 -> 0.011 s from T=1 to T=16.** That flatness is
-weight amortisation made visible — the matrix is read once and the time barely grows with T.
+weight amortization made visible — the matrix is read once and the time barely grows with T.
 
 **DATA LAYOUT ALONE IS WORTH 5x.** The naive version reads `x[t*IN + i]`, putting the T
 activations for one `i` 28 KB apart, so every inner step touches T scattered cache lines; it
@@ -1533,13 +1533,13 @@ threads, old trunk/cache split), not quoted.
 **66.5 s saved on one answer: 14.0% faster, 1.16x, 8.11 -> 9.43 tokens/min, on 4.1 GB LESS
 memory, with byte-identical output.**
 
-Three checks that make this trustworthy rather than merely favourable:
+Three checks that make this trustworthy rather than merely favorable:
 
 - **The control reproduces.** 473.5 s against the 474.0 s logged this morning, 0.1% apart.
   The comparison is the change, not drift.
 - **The prediction held.** Recorded before running: ~410 s and ~6.4 s/token. Measured 407.0
   and 6.36, within 0.7%. After a day of predictions that missed — MRU, 24 threads, DRAM at
-  139 GB, the GEMM amortisation — the cost model is finally predictive.
+  139 GB, the GEMM amortization — the cost model is finally predictive.
 - **Expert rate reached 13.34 GB/s, 93% of the 14.32 GB/s fio ceiling**, better than the 87%
   seen at gen 14. The same 1827.11 GB moved in 41 fewer seconds.
 
@@ -1775,7 +1775,7 @@ requirement halved the gain.
 
 Committing it would have published a performance claim I already knew was false, inside the
 file that makes the claim hardest to check. Corrected before the commit, with the prototype's
-number kept and labelled as the discarded alternative, because the gap between 5.58x and 2.39x
+number kept and labeled as the discarded alternative, because the gap between 5.58x and 2.39x
 IS the cost of exactness and is worth a reader's time.
 
 An earlier version of the same failure is one commit away: a hash `cfcf4d1` was reported in a
@@ -1835,7 +1835,7 @@ touch the 43%**, which is the single largest term and is memory bandwidth.
 # Pause and understand the options (2026-09-23)
 
 Written before choosing anything, and deliberately describing each approach on its own terms
-first. The failure mode being guarded against is the obvious one: we have been optimising
+first. The failure mode being guarded against is the obvious one: we have been optimizing
 storage for days, so storage arguments will feel more persuasive than they are.
 
 Provenance is marked on every claim: **[M]** measured here, **[D]** derived from measurements
@@ -1866,7 +1866,7 @@ possible, one token at a time.**
 This matters for hardware because it changes WHICH resource binds. [D] If decode batched at
 B=16 the way prefill does, per-token trunk cost would fall from 2.27 s toward 0.14 s, and
 expert I/O at 1.87 s would become the dominant term — **only then does more storage become
-the main lever.** Buying drives first optimises the resource that is second in line.
+the main lever.** Buying drives first optimizes the resource that is second in line.
 
 ## The approaches, each on its own terms
 
@@ -1886,7 +1886,7 @@ as step time, so the read is largely on the critical path rather than hidden beh
 
 **Verdict.** [D] ~17% in single-stream decode, hard ceiling 35%. [M] Separately and
 independently, capacity is a real constraint: 94% full, 106 GB free, which blocks holding a
-second quantised copy of the trunk. **[A] The lane budget is the catch — 16 free PCIe lanes
+second quantized copy of the trunk. **[A] The lane budget is the catch — 16 free PCIe lanes
 is four CPU-attached NVMe OR one x16 accelerator, not both.** Choosing drives forecloses the
 accelerator path on this chassis.
 
@@ -1925,7 +1925,7 @@ though [M] on a repetitive prompt a 10 GB cache retained 63.35% and cut expert I
 **If long prompts matter, this is the only option on the list that addresses them** — neither
 drives nor an accelerator do.
 
-### 4. Quantising the trunk to int8
+### 4. Quantizing the trunk to int8
 
 **What it does.** Halves the bytes moved per token on the largest single term. [D] 108.81 GB
 becomes ~54.4 GB, 2.27 s becomes ~1.14 s — about 21% of the step, the biggest single-change
@@ -1933,7 +1933,7 @@ gain on this list.
 
 **What it costs, and it is not a small thing.** [D] Output is no longer bit-identical.
 Every comparison in this entire document rests on identical token ids; that invariant is what
-made a 5% claim believable. Quantising replaces a correctness question with a quality
+made a 5% claim believable. Quantizing replaces a correctness question with a quality
 question, which needs an evaluation harness that does not exist here yet.
 
 **Evidence.** [M] Blocked today regardless: 106 GB free is not enough to hold a second copy
@@ -1950,7 +1950,7 @@ oracle. Worth doing deliberately and never by accident.
 token at 399 positions. [M] The batched GEMM committed today (`7c5f6d0`, `7919565`) is the
 primitive this needs, and its unimpressive 1% today is precisely because T is 1 in decode and
 at most 8 under `--spec`. [M] Its DRAM reduction in isolation is 10.8x, which is the number
-that matters for amortisation, not the 2.39x compute figure.
+that matters for amortization, not the 2.39x compute figure.
 
 **What it would take.** [A] Real work: a scheduler, per-sequence KV state, and the remaining
 66% of trunk matmuls wired to `k3_mmw_batch`. The engine has no concept of concurrent
@@ -1986,7 +1986,7 @@ hardware, no BIOS access. Noted for completeness, not actionable.
 ### 8. A CPU with more memory channels
 
 **What it does.** Attacks the 43% term directly, which nothing else on this list except
-quantisation does. [A] A 12-channel EPYC at DDR5-4800 is ~460 GB/s theoretical against our
+quantization does. [A] A 12-channel EPYC at DDR5-4800 is ~460 GB/s theoretical against our
 measured 47.9 GB/s; [A] real sustained figures are commonly 300-350 GB/s.
 
 **Evidence.** [M] Our own scaling data says the ceiling is the bus, not the cores: the bf16
@@ -2012,7 +2012,7 @@ being recommended.
 | faster DIMMs | the 43% trunk term | [D] ~8.7% | derived | not available |
 | consumer GPU | nothing here | [D] no win below ~109 GB VRAM | derived | yes |
 
-**The uncomfortable conclusion, stated plainly:** the work of the last two days optimised
+**The uncomfortable conclusion, stated plainly:** the work of the last two days optimized
 storage and threading, and the largest remaining lever is neither. It is that decode does one
 token at a time while the machine is built to move 160 GB per token either way. That is a
 software change, it is already half-demonstrated by prefill, and it changes what any future
@@ -2028,7 +2028,7 @@ A single outlier that large deserved a repeat before it deserved an explanation.
 
 ## Phase 1: it reproduces, and it is unstable
 
-Six runs, interleaved so drift cannot favour either arm, each with a kernel-state monitor
+Six runs, interleaved so drift cannot favor either arm, each with a kernel-state monitor
 attached (`k3-results/monitor.sh`).
 
 | arm | steady s/token | utime | vol ctx switches | expert GB | thp fallback | psi memory |
@@ -2118,7 +2118,7 @@ unbound threads already halve it before the trunk size makes anything worse.
 
 ## Conclusion, and what is still not known
 
-The effect is fully characterised and reproducible, and five hypotheses are dead by
+The effect is fully characterized and reproducible, and five hypotheses are dead by
 measurement: bandwidth saturation (it does LESS I/O), huge-page fallback (zero, cumulative),
 slot contention (4x FEWER voluntary switches), memory reclaim (pgscan, pgsteal, pgmajfault and
 PSI all exactly zero), and TLB reach (4.8x more misses costs 0.3%).
@@ -2258,7 +2258,7 @@ bytes is a worse predictor.
   **17.1%** at 1.63x the expert bytes, with the drives 91% busy.
 - Multi-sequence batching is **2.21x already measured** in prefill, costs no hardware, and is
   the same primitive already committed. Prefetch is the smaller prize by an order of magnitude.
-- **The two interact badly and it is worth saying so.** Batching amortises the trunk, which
+- **The two interact badly and it is worth saying so.** Batching amortizes the trunk, which
   shrinks the compute per layer — and compute is exactly the shadow a prefetcher hides I/O
   behind. Batching makes the workload MORE I/O-bound, leaving prefetch LESS room, not more.
   In a batched world the answer to expert I/O is more drives, not cleverer prediction.
@@ -2281,7 +2281,7 @@ risk was that `k3_matmul_q8` might not sustain the bf16 kernel's bytes/s and eat
 
 Everything needed already existed: `K3_WI8` wired into `k3_mmw`, `k3_matmul_q8`, and
 `tools/int8_trunk.py` (written for the speculative draft, but the trunk reader handles the
-`I8R` dtype unchanged). Pack took ~7 minutes and produced **54.47 GB, 1437 tensors quantised**.
+`I8R` dtype unchanged). Pack took ~7 minutes and produced **54.47 GB, 1437 tensors quantized**.
 
 | | bf16 baseline | **int8 trunk** | change |
 |---|---|---|---|
@@ -2305,7 +2305,7 @@ not quoted here. **A real quality claim needs perplexity or a benchmark, and we 
 
 ## What this changes
 
-1. **The quantisation thesis is confirmed by measurement, not argument.** 22.2% for a format
+1. **The quantization thesis is confirmed by measurement, not argument.** 22.2% for a format
    change, no new hardware, no new code.
 2. **Storage is now the dominant term.** The budget is trunk 1.14 s (28%), expert SSD 1.87 s
    (45%), expert RAM->CPU 0.54 s (13%), other ~0.58 s (14%).
@@ -2327,7 +2327,7 @@ This one does not, and cannot. That is a deliberate, recorded change of footing,
 ## A wrong proposal, caught by reading the file
 
 I proposed "run the Q4 trunk with `tools/qdq_trunk.py`". **That tool cannot do it.** Its own
-docstring: it writes the dequantised result back as ORDINARY bf16 in an identical
+docstring: it writes the dequantized result back as ORDINARY bf16 in an identical
 container, same offsets, same dtypes. It is a *quality* probe; the output is still 108.81 GB
 and runs at exactly bf16 speed. I had gone from the filename in my notes rather than the file.
 Thirty lines of reading caught it before a pack and a run were spent measuring nothing.
@@ -2451,7 +2451,7 @@ but it is plainly a different model, consistent with the 11.5% rel-L2 measured u
 large quality loss.
 
 **SCOPE CORRECTION (creator, 2026-09-23).** An earlier draft of this section said "further
-quantisation of the trunk is a dead end for speed". That is wrong as written. It is a
+quantization of the trunk is a dead end for speed". That is wrong as written. It is a
 property of THIS CPU, not of the format. The reason MXFP4 disappointed is that nibble unpack
 plus an E8M0 exponent per 32 elements is expensive relative to a CPU's memory bandwidth. A
 GPU inverts that ratio: unpack is close to free across thousands of ALUs while VRAM
@@ -2466,7 +2466,7 @@ whole model runs in under a third of what bf16 needed.
 
 **Where the time now sits, and it is not the trunk.** Expert streaming was 157.8 s of the
 357.8 s run and is essentially unchanged across all three formats, because experts were never
-quantised here — they already ship MXFP4. Storage is the term to attack, and the PCIe
+quantized here — they already ship MXFP4. Storage is the term to attack, and the PCIe
 evidence in `k3-results/hetzner-ticket/pcie-evidence.txt` says `nvme1n1` is negotiating
 **x2 instead of x4** (boot log: 31.506 Gb/s available against 63.012 capable; 28.8 ms latency
 against nvme0's 13.9 for comparable volume). Chasing the trunk further while the dominant
@@ -2516,7 +2516,7 @@ Stated plainly because the measured sections above are easy to over-read:
 
 - **No GPU has ever been involved.** Every number in this file is a 7950X3D with 124 GiB of
   DRAM at 47.9 GB/s and two NVMe drives, one of them at x2. The GPU thesis is UNTESTED.
-- **CPU behaviour does not transfer.** The MXFP4 result is the clearest example: the format
+- **CPU behavior does not transfer.** The MXFP4 result is the clearest example: the format
   lost on compute here and would plausibly win where bandwidth dominates. Any extrapolation
   from these numbers to a GPU is a hypothesis, not a finding.
 - **The llama.cpp throughput figures quoted earlier were never reproduced**, on any machine.
@@ -2569,7 +2569,7 @@ solved fitting large things into fixed hardware, and referring to the work in ll
 
 Evidence from this campaign, much of it from being wrong:
 
-- Quantising the trunk paid **exactly as modelled** down to int8 (-22.2%, prediction held to
+- Quantizing the trunk paid **exactly as modeled** down to int8 (-22.2%, prediction held to
   4%) and then **stopped paying** at 4 bits (-4.1%, with a large quality cost), because this
   CPU ran out of compute rather than bandwidth. A device property, not a format property.
 - The same MXFP4 pack meets **native FP4 tensor cores** on a GPU, where the ratio inverts.
@@ -2586,7 +2586,7 @@ Blackwell Max-Q with **96 GB GDDR7 ECC VRAM**, **256 GB DDR5 ECC registered RAM*
 
 Hetzner's current GEX131 configurator lists GEX131-1 with exactly this 256 GB / 2 x 960 GB
 configuration. The GPU has enough VRAM for the measured INT8 trunk (54.47 GB) and MXFP4
-trunk (28.94 GB), but not the BF16 trunk (118.93 GB).
+trunk (28.94 GB), but not the BF16 trunk (108.81 GB).
 
 ### Capacity: the checkpoint fits across the two disks
 
@@ -2610,9 +2610,15 @@ placement, and prefetching interact without substituting a smaller model.
 
 ### The placement cases we can now measure
 
-1. **BF16 trunk:** 118.93 GB — larger than 96 GB VRAM, so partial placement is required.
+1. **BF16 trunk:** 108.81 GB — larger than 96 GB VRAM, so partial placement is required.
 2. **INT8 trunk:** 54.47 GB — fits entirely in VRAM.
 3. **MXFP4 trunk:** 28.94 GB — fits comfortably in VRAM.
+
+**Trunk size is not peak RSS.** These are the packed trunks. The bf16 run's peak RSS was
+118.93 GB, which also covers embeddings and lm_head (4.70 GB), recurrent state, buffers and
+the KV cache — none of which is what would be placed on the card. An earlier version of this
+section, and of the README, quoted 118.93 GB as the bf16 trunk size. Wrong figure, same
+conclusion, now corrected.
 
 The question the machine exists to answer is unchanged: **what actually needs to be on the
 GPU for each token**, with reads for the next token overlapping computation of the current
@@ -2871,7 +2877,7 @@ reproducible than the project's stated 33% noise floor implies.
 - **PR 1 was built from the two defect fixes instead of the performance work** the creator
   had asked for, while the performance claim continued to be made in conversation. Claiming
   a gain and then not offering it is incoherent.
-- **A cancelled tool call had already dispatched its remote command.** The orphaned run held
+- **A canceled tool call had already dispatched its remote command.** The orphaned run held
   117 GB and starved the first attempt at this A/B (`available 11.59 GB` in the log). After
   a cancellation, check the machine state — the cancellation stops the tool, not the process.
 - `pkill -f threads.sh` matched the SSH command line carrying that same string and killed

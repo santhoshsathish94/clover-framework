@@ -494,7 +494,7 @@ The new GPU server gives us three resources to treat as one system:
 3. **96 GB of GPU memory** for the part of the model that benefits most from GPU execution.
 
 The first question is not "can the whole model fit on the GPU?" It cannot. The BF16 trunk
-is about 118.93 GB, while the INT8 and MXFP4 trunks are about 54.47 GB and 28.94 GB and
+is 108.81 GB, while the INT8 and MXFP4 trunks are about 54.47 GB and 28.94 GB and
 can fit entirely.
 
 The question is:
@@ -510,7 +510,7 @@ The experiment should therefore measure:
 - GPU memory pressure and transfer traffic
 - token latency and where each token spends its time
 - output agreement where numerical representations change
-- end-to-end behaviour, not just kernel throughput
+- end-to-end behavior, not just kernel throughput
 
 The exact scheduling strategy is deliberately unknown. It may be better to keep more trunk
 resident, to stream selected experts differently, to prefetch based on routing, or to use a

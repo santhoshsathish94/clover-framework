@@ -68,7 +68,7 @@ That second result changed the question again. It showed that the wall was not s
 
 The new GPU server changes the experiment. The GEX131-1 has enough total local storage to hold the model across its two NVMe drives, so we no longer need to treat the checkpoint as one stream coming from one mirrored storage layout. The first storage experiment used mirrored disks. The next experiment can **shard the model across two disks** and measure whether independent storage paths let us overlap reads, prefetching, and computation.
 
-More importantly, the GEX131-1 GPU has **96 GB of VRAM**. That is enough for the measured INT8 trunk (54.47 GB) and MXFP4 trunk (28.94 GB), but not the BF16 trunk (118.93 GB). That gives us a useful range of placement experiments rather than a simple fit/no-fit question:
+More importantly, the GEX131-1 GPU has **96 GB of VRAM**. That is enough for the measured INT8 trunk (54.47 GB) and MXFP4 trunk (28.94 GB), but not the BF16 trunk (108.81 GB). That gives us a useful range of placement experiments rather than a simple fit/no-fit question:
 
 > **What actually needs to be on the GPU for each token?**
 
