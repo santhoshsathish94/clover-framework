@@ -2595,8 +2595,16 @@ Two limits, stated before it arrives:
 2. **The MXFP4 trunk does not fit the card.** 28.94 GB against 24 GB VRAM, short by ~5 GB.
    Partial placement is the answer, which is what per-tensor placement exists to do.
 
-So GEX45-1 cannot host K3. It can answer what the AX102 cannot: **what the heterogeneous
-split actually does, measured, on a device with native FP4.**
+So GEX45-1 is not a smaller version of the same experiment. The question it exists to answer
+is **what actually needs to be on the GPU for each token** — which parts of the trunk, which
+experts, held where, with reads for the next token overlapping computation of the current
+one. Sharding across the two disks is part of the experiment rather than a workaround for
+capacity. **This is not an architecture claim; it is the next thing to measure.**
+
+**To verify on the box rather than assume:** the published base specification for this model
+is 2 x 512 GB NVMe, which is less than the 1.56 TB checkpoint. The configuration actually
+ordered may differ. Confirm the real disk layout before planning placement, and record it
+here.
 
 ## Storage direction, settled and previously mishandled
 
