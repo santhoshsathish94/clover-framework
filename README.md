@@ -66,9 +66,9 @@ Rather than argue it, we ran something. Using Fareed Khan's [`kimi-k3-in-c`](htt
 
 That second result changed the question again. It showed that the wall was not simply the size of the model; it was where the work was happening. On this CPU, moving the always-used trunk from 8-bit to 4-bit saved almost no time because the processor spent the saving unpacking it. That does not tell us that 4-bit is a dead end. It tells us that the answer may depend on the machine.
 
-The new GPU server changes the experiment. It has enough total local storage to hold the model, so we no longer need to treat the checkpoint as one stream coming from one mirrored storage layout. The first storage experiment used mirrored disks. The next experiment can **shard the model across two disks** and measure whether independent storage paths let us overlap reads, prefetching, and computation.
+The new GPU server changes the experiment. The GEX131-1 has enough total local storage to hold the model across its two NVMe drives, so we no longer need to treat the checkpoint as one stream coming from one mirrored storage layout. The first storage experiment used mirrored disks. The next experiment can **shard the model across two disks** and measure whether independent storage paths let us overlap reads, prefetching, and computation.
 
-More importantly, the GPU has **24 GB of memory** and native support for 4-bit computation. Our measured 4-bit trunk is about 29 GB, so it does not fit entirely — but that is no longer a reason to stop. It gives us a new question:
+More importantly, the GEX131-1 GPU has **96 GB of VRAM**. That is enough for the measured INT8 trunk (54.47 GB) and MXFP4 trunk (28.94 GB), but not the BF16 trunk (118.93 GB). That gives us a useful range of placement experiments rather than a simple fit/no-fit question:
 
 > **What actually needs to be on the GPU for each token?**
 
@@ -83,7 +83,7 @@ The next experiment should therefore not assume that the trunk and experts must 
                   ↙          ↘
           dense trunk       experts
                ↓               ↓
-          24 GB GPU working set
+          96 GB GPU working set
                        ↓
                  token generation
 ```
@@ -100,7 +100,7 @@ It is:
 
 > **Can we discover a useful division of the model across GPU, CPU memory, and sharded storage that makes each token faster without requiring the whole model to fit on one device?**
 
-The GPU server is there to answer that question.
+The GEX131-1 is there to answer that question.
 
 The experiments, in the order we ran them, and the predictions we got wrong: [`work-in-progress/heterogeneous-inference.md`](work-in-progress/heterogeneous-inference.md).
 
@@ -140,7 +140,7 @@ Not demonstrated, and not claimed:
 
 A separate question — whether a very large model can run from storage rather
 than memory — has now been measured. A 2.78-trillion-parameter model ran on one
-rented CPU machine at about 5.3 seconds per word. Shrinking it to 8-bit brought
+rented CPU machine at about 5.3 seconds per token. Shrinking it to 8-bit brought
 that to 4.1 and nearly halved the memory it needed; shrinking again to 4-bit
 gave almost nothing more, because by then the processor rather than the memory
 was the limit. All of it on one machine, one prompt at a time, and none of it on
