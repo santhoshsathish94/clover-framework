@@ -34,7 +34,7 @@ We used Fareed Khan's [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3
 streams the model off disk instead of holding it in memory. We rented a machine with a good
 CPU, 124 GB of memory and fast NVMe drives, downloaded the 1.56 TB model, and generated text.
 
-**It worked.** About **5.3 seconds per word**, steadily, run after run.
+**It worked.** About **5.3 seconds per token**, steadily, run after run.
 
 **What it told us:** this is real. A model this size does not need a datacenter. But almost
 half the time went on reading expert weights off the disk, so **storage was the limit, not
@@ -50,7 +50,7 @@ smaller.
 We converted the always-used part of the model from 16-bit numbers to 8-bit. Before running
 it, we wrote down what we expected: about 1.1 seconds saved per word.
 
-**We measured 1.18 seconds saved.** **5.3 down to 4.1 seconds per word**, and the memory
+**We measured 1.18 seconds saved.** **5.3 down to 4.1 seconds per token**, and the memory
 needed fell from 119 GB to 65 GB.
 
 The answers changed slightly, because 8-bit is genuinely a different model. It produced
@@ -67,10 +67,10 @@ expectation is the entire reason for step 3.
 ## Step 3 — We halved it again, and the speed-up stopped
 
 We converted the same part down to 4-bit. The file shrank exactly as predicted, to under
-29 GB. We expected another half-second saved per word.
+29 GB. We expected another half-second saved per token.
 
-**We got a tenth of a second.** 4.1 down to **4.0 seconds per word**. And the quality cost
-was far worse: it now matched the original for 3 words instead of 21.
+**We got a tenth of a second.** 4.1 down to **4.0 seconds per token**. And the quality cost
+was far worse: it now matched the original for 3 tokens instead of 21.
 
 **What it told us, and this is the one that matters:** 4-bit numbers have to be unpacked
 before they can be used. On this CPU, that unpacking cost about as much as the reading it
@@ -121,18 +121,46 @@ the line is real.
 
 ## What we are doing next
 
-Adding a **GPU-Server GEX45-1**: a graphics card with 24 GB of memory that handles 4-bit
-numbers natively, next to a modest CPU and 64 GB of memory.
+Adding a **GPU-Server GEX45-1** with a 24 GB GPU, CPU memory, and enough combined local
+storage to hold the checkpoint when the model weights are **split across two disks**.
 
-Two honest limits, stated before it arrives:
+That changes the experiment.
 
-- **This model will not fit on it.** Its disks hold about 0.95 TB; the model needs 1.56 TB.
-- **Even our shrunk 29 GB part does not quite fit** in 24 GB of card memory. Some will have to
-  stay on the CPU.
+The first storage setup mirrored the disks. The next setup will shard the model across the
+two disks so that the storage paths can be measured independently. We do not yet know whether
+the right layout is simple file placement, parallel reads, or another scheduling strategy.
 
-That is fine, because the machine is not there to run this model. It is there to answer the
-one question our CPU could not: **does the 4-bit step that failed on a processor succeed on a
-graphics card?**
+The 24 GB GPU also changes the token-processing question. The measured 4-bit trunk is about
+29 GB, so the whole trunk cannot simply be placed on the GPU. That does not mean the experiment
+fails. It means we need to determine **which weights actually need to be on the GPU at each
+token**, and which can remain in CPU memory or on NVMe.
+
+The working hypothesis is a hierarchy:
+
+```text
+                 full model
+                     ↓
+             two-disk backing store
+                     ↓
+              CPU memory working set
+                  ↙       ↘
+              trunk      experts
+                  ↘       ↙
+               GPU working set
+                     ↓
+               token generation
+```
+
+The GPU may hold the most frequently used trunk components and/or selected experts while the
+larger model remains backed by CPU memory and sharded NVMe. Prefetching may allow storage reads
+for the next token to overlap with computation for the current token.
+
+This is not an architecture claim. It is the next experiment.
+
+The question is no longer simply whether a 4-bit trunk is faster on a GPU.
+
+> **Can we discover a useful division of the model across GPU, CPU memory, and sharded storage
+> that makes each token faster without requiring the whole model to fit on one device?**
 
 ---
 
