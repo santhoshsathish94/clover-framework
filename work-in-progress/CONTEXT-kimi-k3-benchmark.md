@@ -3328,6 +3328,35 @@ green, oracle `ENGINE MATCHES THE REFERENCE EXACTLY`, `make portable` 0 warnings
 oversized plan still refuses with a **positive** overage (390.67 GB), and thread precedence
 reads 16 / 7 / 5 as designed.
 
+## Raised: PR #68 (creator approved, 2026-09-23)
+
+<https://github.com/FareedKhan-dev/kimi-k3-in-c/pull/68> — "cli: make the memory and thread
+defaults usable", 2 commits, +93 −11, MERGEABLE. Supersedes #66, and says so in the body,
+because closing your own PR unreviewed and quietly opening another is not something to leave
+for the maintainer to notice.
+
+Two checks run before and after raising that are worth keeping as habit:
+
+1. **Is the branch being raised the branch that was tested?** Compared
+   `git diff origin/main...fix/cli-defaults | git hash-object --stdin` against the same on
+   the machine's `pr2-verify`. Both `e859d9b7...`. A cherry-pick with a hand-resolved
+   conflict sat between the build and the push, so this was not ceremony.
+2. **Did the published body survive the trip?** Fetched it back and compared code points,
+   not appearance. Non-ASCII intact (U+2014 ×6, U+2192 ×1, U+2212 ×4), no mojibake
+   signature, bodies identical after CRLF normalisation — the 192-character difference is
+   exactly the `\r` count. A previous upstream PR carried mojibake publicly for weeks
+   because nobody checked this.
+
+Stale figures caught in the same pass: the preset survey in the body still quoted numbers
+from an older build (128.36 / 125.49 / 2.87 over). Re-measured on the PR binary: **128.47 /
+125.14 / 3.33 over**. `available` differs run to run and `need_b` carries prompt-dependent
+terms, so copied console output goes stale quietly. A maintainer can reproduce those in one
+command.
+
+**Upstream state: PR #67 (perf, 5 commits) and PR #68 (CLI defaults, 2 commits), both open,
+both MERGEABLE, no maintainer response yet on either.** Merge status is a fact about their
+decision, not about whether the measurement was real.
+
 
 
 
