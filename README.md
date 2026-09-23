@@ -156,16 +156,24 @@ prefill pass instead of once per token, and drops repeated reads in the KDA
 recurrence. Measured against that project's current `main`, three runs per arm
 with every run reported: decode 5.7% faster, prefill 9.9%, a whole run 7.0%.
 Output is unchanged and the batched kernel is bit-identical to the one it
-replaces. **The pull request is open, not merged.**
+replaces.
 
-Its risk section is part of the evidence rather than a footnote to it. The three
-changes were measured together, so it states that one of them may contribute
-nothing. One of the test machine's two NVMe drives is negotiating a degraded
-PCIe link, so it states that the storage change may help less on healthy
-hardware. And an earlier version of the same work claimed a larger prefill gain
-against an older base; re-measuring against current `main` showed roughly a
-fifth of it had already been earned upstream, which the pull request says
-plainly.
+**What validates this is the measurement, not its reception.** The runs
+happened, on the released checkpoint, and the numbers repeat within a fraction
+of a percent. The pull request is open and may never be merged; a maintainer
+weighs their own roadmap, their own hardware and the cost of maintaining
+someone else's code, and can decline for reasons that are entirely sound and
+that leave the measurement exactly where it is. Acceptance is a separate
+question from whether reality validated the change, and only the second one is
+evidence.
+
+What would genuinely weaken it is stated in the pull request itself. The three
+changes were measured together, so one of them may contribute nothing. One of
+the test machine's two NVMe drives is negotiating a degraded PCIe link, so the
+storage change may help less on healthy hardware. And an earlier version of this
+work claimed a larger prefill gain against an older base; re-measuring against
+current `main` showed roughly a fifth of it had already been earned upstream.
+Those are limits in the evidence. Merge status is not.
 
 Supporting areas include:
 

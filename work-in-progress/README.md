@@ -59,15 +59,20 @@ on a single prompt, and any reproduction of someone else's published speed figur
 concurrent chunked expert reads, a batched bf16 matmul that is bit-identical to the serial
 kernel, and fewer reads in the KDA recurrence. Three runs per arm against that project's
 current `main`, every run reported: decode +5.7%, prefill +9.9%, whole run +7.0%.
-**Open, not merged.** The pull request states its own limits: bundle evidence for three
-changes so one may contribute nothing, a degraded PCIe link on the test machine that may
-flatter the storage change, and one configuration only.
+
+The measurement is what validates this, not whether it is accepted. The pull request is open
+and may never be merged, and that would say something about another project's roadmap and
+hardware rather than about whether the change works here. What does bound the evidence is in
+the pull request: bundle measurement for three changes so one may contribute nothing, a
+degraded PCIe link on the test machine that may flatter the storage change, and one
+configuration only.
 
 Two things were held back deliberately. The `--trunk-gb auto` fix is verified but unraised,
 because adding it would change the binary the measurements were taken on. The int8 and MXFP4
 trunk work is out of scope upstream — that project's `ROADMAP.md` lists a precision dial for
 the trunk as explicitly not planned, and its author had already measured the same accuracy
-wall independently.
+wall independently. Neither of those is a failure; a change can be right for our reality and
+wrong for someone else's.
 
 ## [AI Manipulation](ai-manipulation/)
 
