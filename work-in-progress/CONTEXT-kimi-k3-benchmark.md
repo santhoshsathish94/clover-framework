@@ -3271,6 +3271,64 @@ The fix is landing near the pre-registered ~24%. The threshold written into the 
 before launch was: if `default_fixed` does not beat `default_nofix` by roughly that, the
 thread commit should not be offered.
 
+## Scope cut twice more, both times correctly
+
+> "the tuning is for the gpu structure our next direction once we buy the gpu server not
+> relevant for the upstream project why are you including that"
+
+Right. `OMP_PROC_BIND=spread OMP_PLACES=cores` being worth a few percent is **our** finding
+on **one 2-CCD part**. Putting it in their `docs/TUNING.md` would push tuning advice onto
+every CPU their users own, on the strength of a single machine — and there is no code
+behind it, so it is advice rather than a fix. Removed from the doc, the commit message and
+the PR body. That deleted the `t16_bound` arm too, which existed only to evidence that one
+sentence.
+
+Scope went 21 runs → 9 → 6, each cut removing something that was not evidence for what the
+PR actually changes. The batch that ran is the one the PR needs and nothing else.
+
+## Final evidence, 2026-09-23
+
+Six runs, 58m32s, two arms interleaved, every run at exactly 63 decode steps, all reported.
+Binaries differ only by the thread commit (`da387e33e877` / `681354cf91ef`);
+`--trunk-gb 114 --cache-gb 2`.
+
+| run | decode s/token | prefill s | total s | invol ctx |
+|---|---|---|---|---|
+| nofix r1 | 7.3230 | 172.74 | 634.1 | 127,172 |
+| nofix r2 | 7.3752 | 177.63 | 642.3 | 136,467 |
+| nofix r3 | 7.2859 | 169.40 | 628.4 | 113,619 |
+| fixed r1 | 5.6262 | 158.94 | 513.4 | 36,836 |
+| fixed r2 | 5.6352 | 159.43 | 514.4 | 37,663 |
+| fixed r3 | 5.6319 | 163.29 | 518.1 | 38,231 |
+
+| metric | shipped (32 logical) | fixed (16 cores) | change |
+|---|---|---|---|
+| decode s/token | 7.3280 (sd 0.0449, spread 1.22%) | **5.6311** (sd 0.0046, spread 0.16%) | **−23.16%** |
+| prefill s | 173.26 (sd 4.14, 4.75%) | 160.55 (sd 2.38, 2.71%) | −7.33% |
+| total s | 634.93 (sd 6.99, 2.19%) | 515.30 (sd 2.48, 0.91%) | −18.84% |
+| invol ctx switches | 125,753 (sd 11,490) | 37,577 (sd 701) | −70.1% |
+
+**The pre-registered claim held: 23.16%, inside the 22-24% band written into the harness
+before the run started.** Decode speedup 1.3014x; context switches 3.35x fewer. Two things
+the replication shows that a single run could not: the fix cuts variance as well as time
+(spread 1.22% → 0.16%), and the mechanism is visible in the context-switch column rather
+than merely asserted.
+
+Statistics computed by script, not by hand — `k3-results/scratch/pr2-stats.ps1` — after a
+multi-line PowerShell one-liner silently executed only its first line. That trap is already
+in my notes and still cost a round trip.
+
+## Verified on the branch that will actually be sent
+
+Earlier gate runs were on the combined `full-stack` build, not on the PR branch, and after
+a cherry-pick with a conflict resolution the difference is not cosmetic. Applied both
+commits to a clean `pr2-verify` from `origin/main` and rebuilt: **0 warnings**, `make test`
+green, oracle `ENGINE MATCHES THE REFERENCE EXACTLY`, `make portable` 0 warnings.
+`--trunk-gb auto` starts (TOTAL 121.92 GB, 1 token in 190.7 s) where upstream refuses, an
+oversized plan still refuses with a **positive** overage (390.67 GB), and thread precedence
+reads 16 / 7 / 5 as designed.
+
+
 
 
 
