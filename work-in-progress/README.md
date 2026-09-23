@@ -24,7 +24,7 @@ stays here.
 
 ## [Kimi K3 storage-streamed inference](fareed-khan-kimi-k3-in-c-explanation.md)
 
-Five files covering one line of work: whether a 2.78-trillion-parameter model running on
+Six files covering one line of work: whether a 2.78-trillion-parameter model running on
 one CPU changes what AI infrastructure has to be. **The engine is Fareed Khan's
 [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c), Apache-2.0. Nothing here
 reimplements it and no model weights are redistributed.**
@@ -32,6 +32,7 @@ reimplements it and no model weights are redistributed.**
 | File | What it is |
 |---|---|
 | [fareed-khan-kimi-k3-in-c-explanation.md](fareed-khan-kimi-k3-in-c-explanation.md) | How the engine works, what it measured, and what it implies for the Clover infrastructure direction |
+| [kimi-k3-measurements.md](kimi-k3-measurements.md) | Every measured figure in one place, each with what it does not establish, re-derived from the raw logs |
 | [kimi-k3-local-evidence.json](kimi-k3-local-evidence.json) | What the experiment established on local hardware, and what it is still waiting on |
 | [kimi-k3-bench-run.sh](kimi-k3-bench-run.sh) | The measurement campaign for rented hardware. Gated and shellcheck-clean |
 | [CONTEXT-kimi-k3-benchmark.md](CONTEXT-kimi-k3-benchmark.md) | Handoff record: what is settled, what was ruled out and why, corrections made, abort criteria, and what remains unknown |
@@ -54,24 +55,30 @@ predictions that turned out wrong, are in
 Still not established: anything measured on a GPU, any quality claim beyond comparing output
 on a single prompt, and any reproduction of someone else's published speed figures.
 
-**Contributed back upstream.**
-[FareedKhan-dev/kimi-k3-in-c#67](https://github.com/FareedKhan-dev/kimi-k3-in-c/pull/67) —
-concurrent chunked expert reads, a batched bf16 matmul that is bit-identical to the serial
-kernel, and fewer reads in the KDA recurrence. Three runs per arm against that project's
-current `main`, every run reported: decode +5.7%, prefill +9.9%, whole run +7.0%.
+**Contributed back upstream, two pull requests.**
+[#67](https://github.com/FareedKhan-dev/kimi-k3-in-c/pull/67) — concurrent chunked expert
+reads, a batched bf16 matmul that is bit-identical to the serial kernel, and fewer reads in
+the KDA recurrence. Three runs per arm against that project's current `main`, every run
+reported: decode +5.7%, prefill +9.9%, whole run +7.0%.
+[#68](https://github.com/FareedKhan-dev/kimi-k3-in-c/pull/68) — the engine never chose a
+thread count, so OpenMP took one thread per *logical* CPU, and no flag existed to change it.
+Counting physical cores instead is worth **23.2% of decode time**, with 3.35x fewer
+involuntary context switches showing why. That PR also fixes `--trunk-gb auto`, which could
+not start on any machine large enough to reach the configuration it exists to produce.
 
-The measurement is what validates this, not whether it is accepted. The pull request is open
-and may never be merged, and that would say something about another project's roadmap and
-hardware rather than about whether the change works here. What does bound the evidence is in
-the pull request: bundle measurement for three changes so one may contribute nothing, a
-degraded PCIe link on the test machine that may flatter the storage change, and one
-configuration only.
+The measurement is what validates this, not whether it is accepted. Both pull requests are
+open and may never be merged, and that would say something about another project's roadmap
+and hardware rather than about whether the changes work here. What does bound the evidence
+is stated in the pull requests: bundle measurement for three changes in #67 so one may
+contribute nothing, a degraded PCIe link on the test machine that may flatter the storage
+change, and one machine, one prompt and one memory budget throughout.
 
-Two things were held back deliberately. The `--trunk-gb auto` fix is verified but unraised,
-because adding it would change the binary the measurements were taken on. The int8 and MXFP4
-trunk work is out of scope upstream — that project's `ROADMAP.md` lists a precision dial for
-the trunk as explicitly not planned, and its author had already measured the same accuracy
-wall independently. Neither of those is a failure; a change can be right for our reality and
+Held back deliberately: the int8 and MXFP4 trunk work is out of scope upstream — that
+project's `ROADMAP.md` lists a precision dial for the trunk as explicitly not planned, and
+its author had already measured the same accuracy wall independently. Thread *binding* was
+dropped from #68 for the same kind of reason: it measured a few percent here, but that is
+one CPU topology, and a recommendation in someone else's documentation lands on every
+machine their users own. Neither is a failure; a change can be right for our reality and
 wrong for someone else's.
 
 ## [AI Manipulation](ai-manipulation/)
