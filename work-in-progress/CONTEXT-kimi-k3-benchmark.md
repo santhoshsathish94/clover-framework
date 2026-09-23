@@ -2582,9 +2582,10 @@ Evidence from this campaign, much of it from being wrong:
 
 ## The machine being added: GPU-Server GEX45-1
 
-GEX45-1, HEL1, EUR 214.00/mo + EUR 209.00 setup. Published spec, **to be verified on the
-box**: RTX PRO 4000 Blackwell SFF with **24 GB GDDR7** and 5th-gen **native FP4** tensor
-cores; i5-13500 (6P+8E, 20 threads); 64 GB DDR4; **2 x 512 GB NVMe**.
+GEX45-1, HEL1, EUR 214.00/mo + EUR 209.00 setup. RTX PRO 4000 Blackwell SFF with **24 GB
+GDDR7** and 5th-gen **native FP4** tensor cores; i5-13500 (6P+8E, 20 threads); 64 GB DDR4;
+**2 x 920 GB NVMe** (confirmed by the creator; the published base listing shows a smaller
+disk option, so the ordered configuration is the one that counts).
 
 Two limits, stated before it arrives:
 
@@ -2601,10 +2602,20 @@ experts, held where, with reads for the next token overlapping computation of th
 one. Sharding across the two disks is part of the experiment rather than a workaround for
 capacity. **This is not an architecture claim; it is the next thing to measure.**
 
-**To verify on the box rather than assume:** the published base specification for this model
-is 2 x 512 GB NVMe, which is less than the 1.56 TB checkpoint. The configuration actually
-ordered may differ. Confirm the real disk layout before planning placement, and record it
-here.
+### Capacity, with the confirmed disks
+
+2 x 920 GB split gives **1.84 TB raw**, roughly **1.7 TB after filesystem and OS**. The
+checkpoint is 1,560,936,091,448 bytes, so it fits with about 140 GB to spare. That headroom
+decides which packed trunk can go with it:
+
+| trunk | size | fits alongside the checkpoint? |
+|---|---|---|
+| MXFP4 | 28.94 GB | yes, comfortably — and the card has native FP4 |
+| int8 | 54.47 GB | yes |
+| bf16 | 108.81 GB | only just; not worth the risk |
+
+**Plan to ship the MXFP4 trunk to that box, not the bf16 one.** Verify the real usable figure
+with `df` on arrival rather than trusting this arithmetic.
 
 ## Storage direction, settled and previously mishandled
 
