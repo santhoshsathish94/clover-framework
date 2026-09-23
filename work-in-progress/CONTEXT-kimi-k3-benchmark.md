@@ -24,9 +24,7 @@ and no GPU. Every figure below is measured on that machine; where a number was d
 says so.
 
 **Start of campaign: 9.40 s per generated token. Now: 5.311 s.** A 64-token answer takes
-487.4 s. Output is byte-identical throughout — the same prompt produces the same token ids at
-every configuration ever tested, including the untuned default, which is the only reason any
-of these comparisons mean anything.
+487.4 s. The outputs are not byte-identical across precision configurations. The INT8 and MXFP4 trunk variants diverge from the BF16 baseline; therefore the speed measurements are system measurements, not evidence that the quantized variants are numerically identical models.
 
 ### The findings, in the order they were found
 
