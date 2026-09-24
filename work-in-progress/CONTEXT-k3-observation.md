@@ -68,6 +68,8 @@ One at a time. Context updated after each before the next starts.
 | v7 | out of distribution | nonsense ids | 4 | **done** — 2-cycle, confidence halves |
 | v8 | clean register control | short EN prose, other topic | 4 | **done** — overturns v6's reading |
 | s | length at fixed content | v6 text cut to 5/12/18/40 | 1 | **done** — threshold falsified, spike localized |
+| c | ceiling and channel | 3 code variants | 1 | **done** — one mechanism, channel 4590 |
+| r | reverse replication | all 19 runs, last to first | — | **done** — every trace identical |
 
 Per-variation findings go in `k3-flow/<id>-<name>.md`.
 
@@ -230,7 +232,6 @@ From v7 — twelve out-of-distribution token ids:
 - Lift over chance vs v1: 3.00×.
 
 ## What holds across all eight variations
-
 Eight runs, 24 forward passes, every input kind tried. These never varied:
 
 - Snapshot layers **0, 12, 24, 36, 48, 60, 72, 84** — spacing exactly 12, in every run
@@ -355,8 +356,33 @@ first 18 between T=18 and T=40, checked as equalities. A position cannot depend 
 after it, and four independent processes agree. This is a stronger check on the engine
 than anything in the variation set, and it was not what the sweep was built for.
 
-## Ruled out
+## Reverse replication — the whole set re-run last to first
 
+Every run was repeated in reverse order and compared to its original field by field,
+exactly.
+
+**135,059 records, 1,082,807 field values, zero differences.** Every hash, norm, minimum,
+maximum, mean, per-position magnitude, channel index, routing choice and routing weight
+identical. Across 44 generation steps the token emitted, the expert bytes read and the
+cache hit rate were identical 44 times out of 44.
+
+Order has no effect. That matters because every cross-variation conclusion here assumes
+the only thing that differed between two runs was the prompt; that is now checked rather
+than relied upon.
+
+**But wall clock is not reproducible.** Mean +1.72%, range −32.4% to +70.7%, and only
+25 of 44 steps land within 10% of their original time. So the timing-based statements in
+the variation files — "prefill is 4× a decode step", "step time settles at 7.1–7.7 s",
+"I/O share 27.8%" — are approximate on this machine and not measurements. The **bytes
+read** figures beside them are exact and are the better basis for any claim about cost.
+
+**Scope limit, stated plainly.** This validates the measurements, not the reasoning built
+on them. The lift figures, the ceiling, channel 4590, the layer-90 onset were all computed
+from these traces, so identical traces give identical numbers by construction.
+Replication confirms the foundation; it cannot confirm the interpretations, two of which
+have already been overturned once.
+
+## Ruled out
 - **"RMSNorm pins the L2 to √n."** True of the random-init fixture, false of the real
   checkpoint. It was measuring the fixture.
 - **"MLA contributes ~12× less than KDA."** Same — a fixture artifact; reversed on real

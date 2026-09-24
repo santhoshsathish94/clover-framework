@@ -57,12 +57,15 @@ version, and the newer tap is a superset. That is stated rather than quietly dro
 | 11 | s5 | 1,871 | 16,440 | **identical** |
 | 12 | v8 control | 4,980 | 46,740 | **identical** |
 | 13 | v7 nonsense | 5,532 | 50,604 | **identical** |
-| 14 | v6 long-context, gen 4 | | | running |
-| 15 | v5 french | | | pending |
-| 16 | v4 code, gen 4 | | | pending |
-| 17 | v3 repetitive | | | pending |
-| 18 | v2 factual-multi, gen 8 | | | pending |
-| 19 | v1 factual-short | | | pending |
+| 14 | v6 long-context, gen 4 | 25,128 | 187,776 | **identical** |
+| 15 | v5 french | 5,072 | 47,384 | **identical** |
+| 16 | v4 code, gen 4 | 6,084 | 54,468 | **identical** |
+| 17 | v3 repetitive | 5,532 | 50,604 | **identical** |
+| 18 | v2 factual-multi, gen 8 | 9,408 | 89,616 | **identical** |
+| 19 | v1 factual-short | 1,498 | 13,456 | **identical** |
+
+**Totals: 135,059 records, 1,082,807 field values, zero differences.** With the method
+check, 1,107,619 field values compared in all.
 
 The v-series originals predate the per-position tap, so those replays are run **without**
 `K3_TRACE_ROWS` to match the original record set exactly rather than relying on the
@@ -77,6 +80,83 @@ parse error at column 295.
 That looks exactly like a corrupt file. It was a file being appended to. The guard in use
 was "the trace is non-empty", which is not sufficient; it has to be "the process has
 exited". Changed to check `pgrep` before comparing.
+
+## Flow is identical. Timing is not.
+
+The trace records no time, so the comparisons above say nothing about it. Checked
+separately from the run logs, over 19 completed steps:
+
+**Identical in every replay:**
+
+| quantity | agreement |
+|---|---|
+| token emitted | exact |
+| expert bytes read | exact, to two decimals — e.g. 831.07 GB, 226.97 GB, 98.30 GB |
+| cache hit rate | exact |
+| every trace field | exact |
+
+**Not identical:**
+
+```
+wall clock delta over 19 steps:  mean +5.21%   min -10.93%   max +46.75%   stdev 12.87
+```
+
+The two largest deviations are both the final decode step of a four-token run — v8 step 3
+at +46.8% and v7 step 3 at +29.9% — on steps taking eight seconds, where a small absolute
+wobble is a large relative one. Not investigated further; recorded as observed.
+
+### What this costs the earlier conclusions
+
+Nothing that was measured from the traces, which is almost all of it. But several claims
+in the variation files are **wall-clock** claims, and wall clock moves by up to a factor
+of 1.5 on a single step:
+
+- "prefill is 4× the cost of a decode step"
+- "step time settles around 7.1–7.7 s"
+- "I/O share of wall clock 27.8%"
+
+Those should be read as approximate on this machine, not as measurements. The **bytes
+read** figures alongside them are exact and reproducible, and are the better basis for any
+statement about cost — reads falling 99.72 → 24.95 → … → 12.28 GB is a reproducible fact;
+the seconds attached to it are not.
+
+This distinction was not in the plan. It came from being asked whether flow and timing
+were the same, having only checked one of them.
+
+### Final timing figures, all 44 generation steps
+
+```
+token emitted identical    44 / 44
+expert bytes identical     44 / 44
+cache hit rate identical   44 / 44
+wall clock                 mean +1.72%   min -32.42%   max +70.73%   stdev 19.66
+steps within +/-10% on time  25 / 44
+```
+
+Only 57% of steps land within 10% of their original time, and the extremes span a factor
+of 2.5 between the slowest and fastest relative outcome. Wall clock on this machine is not
+a stable measurement at single-step resolution.
+
+## Verdict
+
+**Order has no effect.** Running the entire set backwards reproduced every trace exactly:
+135,059 records and 1,082,807 field values with zero differences. Every hash, norm,
+minimum, maximum, mean, per-position magnitude, channel index, routing choice and routing
+weight came back the same.
+
+That matters because every cross-variation conclusion in this investigation assumes the
+only thing that differed between two runs was the prompt. That assumption is now checked
+rather than relied upon.
+
+**What this does not establish.** It validates the measurements, not the reasoning built
+on them. All the derived figures — the 8.85× lift, the ~3400 ceiling, channel 4590, the
+layer-90 onset — were computed from these traces, so identical traces give identical
+numbers by construction. Replication confirms the foundation is solid; it cannot confirm
+that the interpretations drawn from it are correct. Those still rest on the arguments made
+for them, and two of them have already been overturned once.
+
+**One claim weakened.** Timing-based statements are not measurements at this resolution
+and have been qualified in place.
 
 ## What would falsify what
 
