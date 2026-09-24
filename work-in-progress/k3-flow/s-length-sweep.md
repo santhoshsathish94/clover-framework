@@ -26,6 +26,7 @@ still reports ENGINE MATCHES THE REFERENCE EXACTLY on all four gates.
 | 12 | 165.01 | 24.69 | 0.15× | 1.008 |
 | 18 | 195.28 | 32.29 | **0.17×** | 1.296 |
 | 40 | 323.12 | 99.27 | 0.31× | 3.266 |
+| 80 | — | — | 0.27× | 3.266 |
 | 225 (v6) | — | — | **7.30×** | 3319.94 |
 
 ### The length-threshold reading is falsified
@@ -88,6 +89,53 @@ The part worth noticing is the magnitude. Two completely different inputs, 12× 
 length, land within 4% of each other: **3457.84 and 3319.94**. That looks like a
 saturation level rather than a value driven by the input. Two data points, so it is an
 observation and not a finding.
+
+## Where it starts, and what it writes to
+
+Two further readings, the first free from traces already taken.
+
+### It begins at layer 90, identically in both runs
+
+Following the one spiking position through all 93 layers:
+
+| layer | v4 code, position 15 | v6 prose, position 216 |
+|---|---:|---:|
+| 88 | 1.804 (0.9× median) | 2.025 (1.1×) |
+| 89 | 2.289 (1.0×) | 2.182 (1.1×) |
+| **90** | **14.837 (5.3×)** | **13.199 (5.5×)** |
+| **91** | **3457.840 (2474×)** | **3319.940 (3204×)** |
+| 92 | 1809.270 (**707.9×**) | 1426.540 (**704.9×**) |
+
+Nothing at all through layer 89. A precursor at layer 90 — 5.3× and 5.5×, values within
+12% of each other. Then layer 91. The layer-92 ratios agree to **0.4%**: 707.9× against
+704.9×, from two unrelated prompts of very different lengths.
+
+At layer 90 the *residual* at this position is still 0.3× the median in both runs, so the
+attention output is elevated before the residual is. Whatever happens, it happens inside
+attention at 90 and completes at 91.
+
+### It writes to one specific channel
+
+The tap now records which of the 7168 channels holds each position's maximum. For the
+code run, position 15:
+
+| layer | attention out | residual out |
+|---|---|---|
+| 88 | channel 3680 | channel 3680 |
+| 89 | channel 3680 | channel 3680 |
+| **90** | **channel 4590** | channel 6549 |
+| **91** | **channel 4590** | **channel 4590** |
+| **92** | **channel 4590** | **channel 4590** |
+
+The channel switches to **4590** exactly where the precursor appears, and stays there.
+Every other position at layer 91 peaks somewhere else — 6532 for thirteen of them, 5671
+for two, 537 for one. Only the spiking position uses 4590.
+
+So this is not a large number appearing somewhere. It is one channel, entering at one
+layer, on one position.
+
+Whether prose uses the same channel 4590 is the decisive question and is not yet
+answered — v6 was traced before the channel index existed.
 
 ### Causality, confirmed by accident
 

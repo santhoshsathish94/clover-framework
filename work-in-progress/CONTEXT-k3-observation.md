@@ -300,6 +300,42 @@ across inputs 12× apart in length and entirely different in content. That sugge
 saturation level rather than an input-driven value. Two data points, so an observation,
 not a finding.
 
+### It starts at layer 90 and lives in one channel
+
+Following the single spiking position through all 93 layers, in both runs:
+
+| layer | v4 code, pos 15 | v6 prose, pos 216 |
+|---|---:|---:|
+| 88–89 | 0.9–1.0× median | 1.1× median |
+| **90** | 14.837 = **5.3×** | 13.199 = **5.5×** |
+| **91** | 3457.84 = 2474× | 3319.94 = 3204× |
+| 92 (ratio) | **707.9×** | **704.9×** |
+
+Nothing through layer 89. A precursor at layer 90 in both, within 12% of each other. The
+layer-92 ratios agree to **0.4%**. At layer 90 the residual at that position is still
+0.3× the median, so attention is elevated before the residual is.
+
+The tap now also records **which** of the 7168 channels holds each maximum. For the code
+run the spiking position peaks at channel **3680** through layer 89, switches to **4590**
+exactly at the layer-90 precursor, and stays on 4590 through 91 and 92. Every other
+position at layer 91 peaks elsewhere — 6532 for thirteen of eighteen. Only the spiking
+position uses 4590.
+
+So it is one channel, entering at one layer, on one position. Whether prose uses the same
+channel is not yet answered.
+
+### Onset for the prose passage
+
+| T | ratio | positions above 100× median |
+|---:|---:|---:|
+| 5, 12, 18, 40 | 0.13–0.31× | 0 |
+| 80 | 0.27× | 0 |
+| 225 | 7.30× | 1 |
+
+Onset is above 80 for this text. At T = 80 the top position's layer-90 channel is already
+4590, at an ordinary 2.035 — so the channel is in use before the magnitude appears.
+
+
 **Causality confirmed as a by-product.** Per-position values for shared prefixes are
 *exactly* equal across the four sweep runs — first 12 identical between T=12 and T=18,
 first 18 between T=18 and T=40, checked as equalities. A position cannot depend on tokens
