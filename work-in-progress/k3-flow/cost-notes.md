@@ -68,3 +68,53 @@ and the expert pool is 1.45 TB against 124 GiB of memory.
 Worth remembering when this is picked up: **wall clock is not a measurement on this
 machine** (see the reverse replication — compute time varies −18% to +14% run to run while
 bytes read are exact). Any cost claim should rest on bytes, not seconds.
+
+## The sharper version of that question
+
+**Can you know which 16 experts a layer needs before you have computed your way to that
+layer?**
+
+First, what is *not* the problem. The engine already reads only the experts it needs, and
+the arithmetic closes exactly:
+
+```
+v1: 5,683 distinct (layer, expert) pairs × 17,547,264 bytes = 99,721,101,312 = 99.72 GB
+the engine reported reading                                                   99.72 GB
+```
+
+Against 1.45 TB in the pool, that is 0.007%. Selective loading is the existing design, not
+something to add.
+
+The problem is **when** the identity is known, not whether it is used. Layer L's router
+reads layer L's input, which requires layers 0…L−1 to have finished. So the 16 become
+known microseconds before they are needed, and 281 MB has to arrive before the layer can
+proceed. Contrast the trunk, whose layer order is fixed 0…92 for every token — that is
+exactly why the engine can prefetch trunk layer L+1 while computing layer L and hide the
+read entirely. Expert identity is data-dependent, so the same trick does not apply.
+
+What the engine does instead: hand all 16 to the cache in one call so the drive gets queue
+depth (the code notes that one-at-a-time gives *"a queue depth of one against a drive that
+needs depth to reach its rated bandwidth"*), and keep experts across tokens, where
+adjacent-step reuse runs 42–65%.
+
+### This is partly answerable from data already on disk
+
+No new runs needed to start. The traces hold every routing decision — 460 in v1, 20,700 in
+v6 — with layer, position, the 16 ids and their weights. Questions that could be asked of
+what is already saved:
+
+- How well does layer L−1's chosen set predict layer L's, within the same token?
+- Is there a stable popular set per layer that covers most picks, so it could be pinned?
+  Some evidence against: v1 used 62 distinct experts per layer from 5 positions, but v6
+  used **515 of the 896 per layer** across 225 positions, so over a long prompt more than
+  half the pool is touched.
+- Does the routing bias, which steers selection but not weights, make the choice more
+  predictable than the scores alone?
+
+### A caveat on hit rates when this is picked up
+
+A reported 100% cache hit rate can mean the prefetcher had just read it from disk, not
+that a read was avoided. The engine says so itself in v1: *"of those hits: 5599 came from
+the batch prefetch, i.e. read from disk this token; TRUE resident hit rate 0.00%"*. Judge
+by bytes read, not by hit rate.
+
