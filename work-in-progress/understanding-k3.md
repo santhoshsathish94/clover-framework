@@ -70,9 +70,16 @@ The decode loop does the same thing every time: call `forward()` and take the ar
    one more pair of weights that mixes the snapshot stack with the final hidden state.
 5. **Normalize the last position, project through lm_head, take the argmax.**
 
-The trunk is re-read *in full* on every token. That single fact explains the streaming
-design, the fixed layer order, the prefetch hint, and why the tuning advice is to feed
-the trunk before the expert cache.
+The trunk is walked in a fixed layer order, 0…92, on every pass, which is why the
+next-layer prefetch hint is never wrong and why the tuning advice is to feed the trunk
+before the expert cache.
+
+**Corrected later from measurement:** an earlier version of this said the trunk is re-read
+in full on every token. It is not, under the configuration every run used. With
+`--trunk-gb` large enough to pin all 93 layers it is read **once** and held — the engine
+reported `binds 744, hits 651 (87.5%), reads 93` over eight passes, and trunk time was
+5.4–5.7 s whether the run produced one token or eight. Re-reading happens only when the
+budget cannot hold the trunk, a regime none of these runs entered.
 
 ### Inside one layer
 

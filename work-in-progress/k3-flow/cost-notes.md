@@ -25,27 +25,81 @@ not because that read is worth touching.
 
 The engine reads far more than it computes with, at every scale:
 
-| what | bytes per token | measured |
+| what | size | measured |
 |---|---|---|
-| one embedding row | 14 KB | negligible |
-| one trunk layer | 605 MB | 93 of them per token |
-| whole trunk | **54.47 GB** (int8) | read 5.5 s at ~9,856 MB/s |
-| 16 experts, one layer | 281 MB | 17.56 MB each |
+| one embedding row | 14 KB per token | negligible |
+| one trunk layer | 605 MB | 93 of them |
+| whole trunk | **54.47 GB** (int8) | read **once**, 5.5 s at ~9,865 MB/s |
+| 16 experts, one layer | 281 MB per token | 17.56 MB each |
 | experts, one decode step | **12–25 GB** | after the cache warms |
 | experts, prefill | 99.7 GB (5 tok) → 831 GB (225 tok) | |
 
 I/O share of wall clock ran **22% to 45%** across the variation set.
 
-**The trunk is re-read in full on every single token.** That is the single largest fixed
-cost in the system and the one structural fact most worth thinking about later.
+### Corrected: the trunk is NOT re-read per token
+
+This file first said the trunk is re-read in full on every token. **That is wrong for the
+configuration every run used**, and the engine's own statistics say so:
+
+```
+v1, 1 token :  binds  93, hits   0 ( 0.0%), reads 93,  read 54.47 GB in 5.52 s
+v2, 8 tokens:  binds 744, hits 651 (87.5%), reads 93,  read 54.47 GB in 5.50 s
+               "reads 93 against 93 the walk owes (8 passes, 93 pinned)  -- exact"
+```
+
+Eight passes, 744 binds, **93 reads**. Trunk seconds are 5.4–5.7 in every run regardless of
+whether it generated one token or eight. All 93 layers were **pinned** because
+`--trunk-gb 60` exceeds the 54.47 GB int8 trunk.
+
+So the trunk is a **one-time 5.5 s startup cost**, not a recurring one. The re-reading
+described in the engine's streaming comments happens only when the budget cannot hold the
+trunk — a regime **none of these runs entered**, so there is no data on it here.
+
+The consequence: **all recurring per-token I/O is experts.**
+
+### But the trunk IS re-read every token — from RAM, not disk
+
+The correction above is about the *medium*, not the fact. Pinning means the 54.47 GB is
+read from disk once. It does **not** mean the CPU stops touching it: every matmul in every
+layer must stream its weights through the cores, so all 54.47 GB crosses the memory bus on
+every single token.
+
+At this machine's measured **47.9 GB/s** of DRAM bandwidth that is **~1.14 s per token** of
+pure memory traffic before a single useful multiply. Against decode steps of 7–11 s, it is
+10–16% of each one.
+
+So the original instinct was not wrong about the re-reading. It was wrong about where the
+re-reading happens and therefore about what could be done with it.
+
+### Where the wall clock actually goes — 24 runs
+
+Splitting total time into disk I/O and everything else:
+
+| | share of wall clock | range |
+|---|---:|---|
+| **compute and memory traffic** | **64.0%** | 53–78% |
+| expert reads from disk | 29.2% | 20–38% |
+| trunk read from disk | 6.8% | one-time, 5.4–5.7 s in all 24 runs |
+
+**The system is compute-bound, not I/O-bound.** That is the opposite of where this line of
+inquiry started.
+
+Honest limit on that split: "compute" here is *everything that is not disk I/O*. It
+contains the genuine arithmetic, the DRAM traffic for the pinned trunk described above,
+and the dequantization of experts out of the cache. The current instrument cannot separate
+them. What it can say is that 64% of the time is not waiting on the disk.
+
+Consistent with the replication finding: disk seconds are stable to ±1% between identical
+runs while this compute portion varies −18% to +14%.
+
 
 ## What is already known that bears on reducing it
 
 Measured during this investigation, not assumed:
 
 - **Quantization already moves it a lot.** Same model, same output: bf16 108.81 GB,
-  int8 54.47 GB, MXFP4 28.94 GB of trunk per token. MXFP4 does not bind on upstream
-  `a2ad8e5` — that binder lives on the archived `mxfp4-trunk` branch.
+  int8 54.47 GB, MXFP4 28.94 GB of trunk, read once at startup. MXFP4 does not bind on
+  upstream `a2ad8e5` — that binder lives on the archived `mxfp4-trunk` branch.
 - **Routing breadth, not sequence length, drives expert reads.** At an identical 12
   positions, repetition read 115 GB and random tokens read 186 GB.
 - **More positions means more agreement between them**: in-layer expert diversity falls
@@ -61,9 +115,9 @@ Measured during this investigation, not assumed:
 
 ## Open question to come back to
 
-How to reduce the reading cost. Nothing decided, nothing attempted. The obvious tension:
-the trunk is re-read per token because it does not fit in RAM alongside everything else,
-and the expert pool is 1.45 TB against 124 GiB of memory.
+How to reduce the reading cost. Nothing decided, nothing attempted. The tension, as
+corrected above: the trunk is read once and pinned, so the recurring cost is entirely the
+expert pool — 1.45 TB against 124 GiB of memory, with 281 MB arriving per layer per token.
 
 Worth remembering when this is picked up: **wall clock is not a measurement on this
 machine** (see the reverse replication — compute time varies −18% to +14% run to run while
@@ -199,7 +253,10 @@ structure is temporal, it is worth 40–53%, and the existing cache captures it 
 perfectly. A prefetcher built on layer-to-layer or token-identity prediction would be
 building on noise.
 
-This does not close the cost question — the trunk is still re-read in full every token,
-and that is untouched by any of the above. It closes the *routing prediction* route to it.
+This does not close the cost question in general, but it closes the *routing prediction*
+route to it. And with the trunk correction above, what remains is narrower than it looked:
+the trunk is a one-time 5.5 s cost, the expert reads are already at the floor the routing
+allows, so the recurring I/O is at its minimum **for this architecture and this cache
+size**. Anything further has to change one of those two, not the scheduling.
 
 
