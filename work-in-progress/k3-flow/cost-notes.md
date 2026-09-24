@@ -118,3 +118,88 @@ that a read was avoided. The engine says so itself in v1: *"of those hits: 5599 
 the batch prefetch, i.e. read from disk this token; TRUE resident hit rate 0.00%"*. Judge
 by bytes read, not by hit rate.
 
+## Both questions answered — from data already on disk, no new runs
+
+### Q1: the wide reads cost nothing. There is nothing to reduce.
+
+The engine separates its I/O into trunk, experts and model tables. Across **every** run:
+
+```
+model tables  0.0 s          in all 19 runs, without exception
+trunk         5.4 – 5.7 s
+experts      14.7 – 98.7 s
+```
+
+The 7168-wide table reads — one embedding row in, the lm_head projection out — do not
+register at all. The embedding row is 14 KB; the lm_head is ~2.35 GB of resident memory
+traffic per token, and even that disappears against the disk reads.
+
+**The cost is entirely trunk and experts, and it is disk, not memory.** Effort spent on
+the token's own 7168 numbers would be spent on 0.0 s.
+
+### Q2: no, the 16 cannot be known in advance. Three routes tested, two dead.
+
+**Route 1 — the token itself. Dead.** v3 is twelve copies of one token in one sentence. If
+routing were decided by the token, all twelve positions would choose the same 16.
+
+```
+layers where all 12 positions chose identical experts   0 of 92
+layers where all 12 chose DIFFERENT sets               91 of 92
+mean overlap, position 0 against the others            5.0%   (random ≈ 0.9%)
+```
+
+Five percent is above chance but means fifteen of sixteen experts differ. Routing reads
+the context-laden residual, and by the time a token reaches layer 40 its residual has
+absorbed forty layers of attention from everything before it. The same word in the same
+sentence is, to the router, a different thing at every position.
+
+**Route 2 — the previous layer. Dead, and exactly dead.**
+
+```
+                layer L -> L+1 same-index overlap
+v1 factual      1.54%
+v4 code         1.93%
+v6 prose        1.69%
+random baseline 1.79%
+```
+
+Indistinguishable from chance. Expected in hindsight: every layer has its own router and
+its own 896 experts, so index 42 in layer 5 has no relationship to index 42 in layer 6.
+Worth having measured rather than assumed.
+
+**Route 3 — the previous token, same layer. Real, and already fully exploited.**
+
+```
+v2 factual x8   38% 23% 46% 52% 50% 42% 30%   mean 40.1%
+v3 repetitive   48% 55% 56%                   mean 53.2%
+v7 nonsense     31% 43% 41%                   mean 38.5%
+```
+
+Then the decisive comparison. A token needs 1472 experts (92 layers × 16), which is
+25.8 GB if nothing is reused. Against the bytes the engine actually read:
+
+| step | routing overlap | reads avoided |
+|---:|---:|---:|
+| 1 | 38% | 3.4% |
+| 2 | 23% | **23.4%** |
+| 3 | 46% | **45.5%** |
+| 4 | 52% | **52.5%** |
+| 5 | 50% | **50.1%** |
+| 6 | 42% | **41.6%** |
+| 7 | 30% | **29.9%** |
+
+**Six of seven match to within half a percentage point.** The cache is already converting
+essentially all of the available reuse into avoided reads. Step 1 is the exception — 38%
+overlap but only 3.4% avoided — because the cache was still filling after prefill.
+
+### Conclusion, stated plainly
+
+There is **no unexploited predictability** in the routing on this evidence. The only
+structure is temporal, it is worth 40–53%, and the existing cache captures it almost
+perfectly. A prefetcher built on layer-to-layer or token-identity prediction would be
+building on noise.
+
+This does not close the cost question — the trunk is still re-read in full every token,
+and that is untouched by any of the above. It closes the *routing prediction* route to it.
+
+
