@@ -32,6 +32,11 @@ Taps: `forward.T`, `forward.cached`, `embed`; per layer `layer.in`, `stack.depth
 `resid.post_attn`, `attn_res.pre_mlp`, `norm.pre_mlp`, `ffn.out`, `layer.out`; inside the
 router `router.pick`; then `final.aggregate`, `final.norm`, `logits`, `argmax`.
 
+**Added this cycle:** `K3_TRACE_ROWS=1` emits per-position L2 and absolute maximum at
+`embed`, `norm.pre_attn`, `attn.out`, `ffn.out` and `layer.out`, so a magnitude can be
+localized to a token rather than only to a layer. Gated separately so ordinary traces stay
+small.
+
 Verified not to disturb the arithmetic: with tracing compiled in, the 13-layer fixture
 still reports ENGINE MATCHES THE REFERENCE EXACTLY on all four gates.
 
@@ -62,6 +67,7 @@ One at a time. Context updated after each before the next starts.
 | v6 | prefill at scale | long passage | 4 | **done** — 831 GB prefill, diversity 14.3% |
 | v7 | out of distribution | nonsense ids | 4 | **done** — 2-cycle, confidence halves |
 | v8 | clean register control | short EN prose, other topic | 4 | **done** — overturns v6's reading |
+| s | length at fixed content | v6 text cut to 5/12/18/40 | 1 | **done** — threshold falsified, spike localized |
 
 Per-variation findings go in `k3-flow/<id>-<name>.md`.
 
@@ -267,6 +273,26 @@ is suggestive and not established.
 
 Also still open: a per-position tap, to say *which* position carries the extreme
 activations.
+
+### Both of those are now done — results
+
+**The length threshold was wrong.** The same passage at 18 positions gives 0.17× where
+code at 18 positions gave 19.1×. Length alone does not cause the amplification. For this
+passage the ratio climbs slowly — 0.13, 0.15, 0.17, 0.31 at 5/12/18/40 — reaching 7.30×
+only at 225. Length matters; content sets the rate.
+
+**The spike is a single token, and it is a newline.** Re-running the code prompt with the
+per-position tap: at layer 91 one position out of eighteen carries an absolute maximum of
+**3457.8 against a median of 1.397 — 2474×**. Layers 91 and 92 peak at that same position.
+The token is id **198 = `'\n'`**. The v4 file recorded "one token dominates" as an explicit
+non-finding; it is now established and the token identified. Documented attention-sink
+behavior on a delimiter, observed rather than inferred.
+
+**Causality confirmed as a by-product.** Per-position values for shared prefixes are
+*exactly* equal across the four sweep runs — first 12 identical between T=12 and T=18,
+first 18 between T=18 and T=40, checked as equalities. A position cannot depend on tokens
+after it, and four independent processes agree. This is a stronger check on the engine
+than anything in the variation set, and it was not what the sweep was built for.
 
 ## Ruled out
 
