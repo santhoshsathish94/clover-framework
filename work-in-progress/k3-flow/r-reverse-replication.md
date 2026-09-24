@@ -158,6 +158,45 @@ for them, and two of them have already been overturned once.
 **One claim weakened.** Timing-based statements are not measurements at this resolution
 and have been qualified in place.
 
+## Where the timing variance actually comes from
+
+Identical work taking different time has to come from outside the computation. The
+obvious suspect on this machine is the disk: there is a documented hardware fault, nvme1n1
+negotiating a PCIe **x2** link instead of x4, delivering 473 MB/s against its RAID1 twin's
+702 MB/s at double the latency.
+
+The engine reports wall clock split into read time and everything else, so the guess can
+be checked rather than assumed. Over 19 runs:
+
+| | mean | min | max | stdev |
+|---|---:|---:|---:|---:|
+| I/O seconds | +0.20% | −0.97% | +1.00% | **0.41** |
+| disk throughput MB/s | +0.01% | −0.96% | +2.07% | **0.64** |
+| compute seconds | +0.03% | **−18.29%** | **+14.42%** | **7.93** |
+
+**It is not the disk.** Expert bytes read were identical in all 19 runs, and the drives
+delivered them at the same rate to within 1%. I/O time is the most stable quantity in the
+entire measurement — a twentyfold smaller spread than compute.
+
+All of the variance is CPU-side. This machine is a Ryzen 9 7950X3D, which has **two
+asymmetric core complexes** — one with the stacked cache, one without — and the runs do no
+thread pinning. Which complex the OpenMP threads land on can differ between runs. That is
+a hypothesis consistent with the data, **not** a finding; confirming it would need runs
+with threads pinned to one complex and then the other.
+
+### A note for the hardware ticket
+
+The x2 link is a real and constant handicap, but this data says it is **consistent**, not
+erratic: 19 runs moving 98 GB to 831 GB each delivered throughput within a 3-point band.
+Whatever the degraded link costs, it costs it the same way every time. That is worth
+knowing separately from the ticket's bandwidth argument.
+
+### And a correction to the obvious inference
+
+Having a PCIe fault report open on the same machine made "it must be the disk" the natural
+reading, and it is wrong. The measurement that was available all along says the opposite.
+
+
 ## What would falsify what
 
 Stated before the results exist, so it cannot be fitted afterwards:
