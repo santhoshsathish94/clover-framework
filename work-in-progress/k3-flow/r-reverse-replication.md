@@ -42,27 +42,27 @@ Executed last-to-first. `v4rows` and `v6rows` are skipped as exact duplicates of
 and `v6ch` — same prompt, same generation count, same settings, differing only in the tap
 version, and the newer tap is a superset. That is stated rather than quietly dropped.
 
-| # | run | original | result |
-|---:|---|---|---|
-| 1 | v6ch — prose 225, rows+channel | `sweep/v6ch.jsonl` | running |
-| 2 | c3-no-newline | `sweep/c3-no-newline.jsonl` | pending |
-| 3 | c2-javascript | `sweep/c2-javascript.jsonl` | pending |
-| 4 | c1-factorial | `sweep/c1-factorial.jsonl` | pending |
-| 5 | s160 | `sweep/s160.jsonl` | pending |
-| 6 | s80 | `sweep/s80.jsonl` | pending |
-| 7 | v4ch — code 18, rows+channel | `sweep/v4ch.jsonl` | pending |
-| 8 | s40 | `sweep/s40.jsonl` | pending |
-| 9 | s18 | `sweep/s18.jsonl` | pending |
-| 10 | s12 | `sweep/s12.jsonl` | pending |
-| 11 | s5 | `sweep/s5.jsonl` | pending |
-| 12 | v8 control | `v8.jsonl` | pending |
-| 13 | v7 nonsense | `v7.jsonl` | pending |
-| 14 | v6 long-context, gen 4 | `v6.jsonl` | pending |
-| 15 | v5 french | `v5.jsonl` | pending |
-| 16 | v4 code, gen 4 | `v4.jsonl` | pending |
-| 17 | v3 repetitive | `v3.jsonl` | pending |
-| 18 | v2 factual-multi, gen 8 | `v2.jsonl` | pending |
-| 19 | v1 factual-short | `v1.jsonl` | pending |
+| # | run | records | fields compared | result |
+|---:|---|---:|---:|---|
+| 1 | v6ch — prose 225, rows+channel | 22,111 | 158,493 | **identical** |
+| 2 | c3-no-newline | 2,791 | 23,253 | **identical** |
+| 3 | c2-javascript | 3,435 | 27,761 | **identical** |
+| 4 | c1-factorial | 2,975 | 24,541 | **identical** |
+| 5 | s160 | | | pending |
+| 6 | s80 | | | pending |
+| 7 | v4ch — code 18, rows+channel | | | pending |
+| 8 | s40 | | | pending |
+| 9 | s18 | | | pending |
+| 10 | s12 | | | pending |
+| 11 | s5 | | | pending |
+| 12 | v8 control | | | pending |
+| 13 | v7 nonsense | | | pending |
+| 14 | v6 long-context, gen 4 | | | pending |
+| 15 | v5 french | | | pending |
+| 16 | v4 code, gen 4 | | | pending |
+| 17 | v3 repetitive | | | pending |
+| 18 | v2 factual-multi, gen 8 | | | pending |
+| 19 | v1 factual-short | | | pending |
 
 ## What would falsify what
 
