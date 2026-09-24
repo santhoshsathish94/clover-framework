@@ -382,6 +382,21 @@ from these traces, so identical traces give identical numbers by construction.
 Replication confirms the foundation; it cannot confirm the interpretations, two of which
 have already been overturned once.
 
+### Settled: timing is discarded
+
+The variance is entirely CPU-side — I/O seconds varied by ±1% and compute seconds by
+−18% to +14%. It carries no information about the model, the flow, or the work done, and
+the work itself is exactly reproducible.
+
+So **wall clock is not a measurement in this investigation and will not be reported as
+one.** Bytes read, tokens emitted, cache hit rates and every trace field are exact and
+are what cost claims should rest on.
+
+This is recorded as a decision rather than a note, because discarding what turned out to
+be noise is part of what was learned, not a gap in it. Re-deriving it later would be
+repeating work already done.
+
+
 ## Ruled out
 - **"RMSNorm pins the L2 to √n."** True of the random-init fixture, false of the real
   checkpoint. It was measuring the fixture.
