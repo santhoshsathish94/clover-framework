@@ -324,6 +324,19 @@ position uses 4590.
 So it is one channel, entering at one layer, on one position. Whether prose uses the same
 channel is not yet answered.
 
+**Answered: prose uses channel 4590 too.** v6 re-run with the channel index, position 216:
+channel 6825 at layer 88, **3680** at 89, **4590** at 90 (13.199), 91 (3319.94) and 92
+(1426.54) — identical to the code runs. Across all 225 positions at layer 91, channel 4590
+appears exactly once. This is one mechanism, not two.
+
+**Three spiking magnitudes: 3457.84, 3293.84, 3319.94** — a 5% spread across code and
+prose and a 13× range of prompt length. Within code the trigger is exact: a bare newline
+token (id 198) is present in the two that spike and absent from the two that do not
+(JavaScript merges newlines with the following indentation; the third had them removed).
+Not the general rule, since v6 is prose with no newline.
+
+**Still unexplained: which position gets chosen** when there is no bare newline.
+
 ### Onset for the prose passage
 
 | T | ratio | positions above 100× median |

@@ -63,5 +63,38 @@ and it was right to reject it as a general rule. It survives as a code-specific 
 ## Channel
 
 Channel **4590** in both spiking code runs, entered at layer 90 and held through 92, while
-non-spiking positions peak elsewhere — 3680, 537, 6532. Whether the prose spike uses 4590
-as well is the decisive test and is running.
+non-spiking positions peak elsewhere — 3680, 537, 6532.
+
+### Prose uses the same channel
+
+v6 re-run with the channel index, position 216:
+
+| layer | channel | value |
+|---|---:|---:|
+| 88 | 6825 | 2.025 |
+| 89 | **3680** | 2.182 |
+| **90** | **4590** | **13.199** |
+| **91** | **4590** | **3319.940** |
+| **92** | **4590** | 1426.540 |
+
+Identical to the code runs: peaks on 3680 at layer 89, switches to **4590** at layer 90,
+holds it through 92. Across all 225 positions at layer 91, channel 4590 appears **exactly
+once** — only at the spiking position. The rest sit on 6532 (212 of them), 5671 (7), 6549
+(3), 537 (1), 6060 (1).
+
+## The complete picture
+
+One mechanism, not two:
+
+- **One channel.** 4590, in every spiking run, code and prose alike. Nothing else uses it.
+- **One layer.** It enters at layer 90 as a ~13–15 precursor and saturates at layer 91.
+  Nothing through layer 89.
+- **One position per prompt.** 1 of 18, 1 of 17, 1 of 225.
+- **One magnitude.** 3457.84, 3293.84, 3319.94 — a 5% spread across code and prose and a
+  13× range of prompt length. Layer-92 ratios agree to 0.4%.
+- **No effect on the output.** RMSNorm is scale-invariant, so the logits are ordinary and
+  the generated text is correct in every case.
+
+What still varies, and is still unexplained, is **which position** gets chosen. In Python
+it is reliably the bare newline token. In prose with no newline it was an ordinary word in
+the middle of a clause, and the same token elsewhere in the same prompt did not spike.
