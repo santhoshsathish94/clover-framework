@@ -79,3 +79,22 @@ The taps hash the whole `T × hidden` buffer, so this cannot say **which positio
 which channels carry the extreme values. The "one token dominates" reading is the
 obvious hypothesis and is **not** established by this data. Confirming it needs a
 per-position tap.
+
+## Corrected after v6
+
+This file first read the spike as specific to code, on the strength of v5 (7 positions,
+no spike). **v6 — 225 positions of English prose — also spikes, at 7.30× with a maximum
+element of 3319.9.** So it is not code-specific. Across the five prefills:
+
+| run | T | L91 attn / L90 residual | L91 max element |
+|---|---:|---:|---:|
+| v1 factual | 5 | 0.14× | 1.34 |
+| v5 french | 7 | 0.14× | 1.17 |
+| v3 repetitive | 12 | 0.35× | 3.36 |
+| v4 code | 18 | **19.12×** | **3457.84** |
+| v6 long prose | 225 | **7.30×** | **3319.94** |
+
+There is a threshold between 12 and 18 positions, and beyond it the maximum element sits
+around 3300–3500 regardless of length. But **content and length vary together across
+these five runs**, so neither is isolated. Separating them needs the same text truncated
+to several lengths, which is the one experiment this set still owes.
