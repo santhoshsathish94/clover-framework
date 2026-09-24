@@ -137,6 +137,74 @@ layer, on one position.
 Whether prose uses the same channel 4590 is the decisive question and is not yet
 answered — v6 was traced before the channel index existed.
 
+## There is no length threshold at all
+
+Extending the sweep to 80 and 160 positions:
+
+| T | ratio | L91 max | at position | channel | above 100× median |
+|---:|---:|---:|---:|---:|---:|
+| 40 | 0.31× | 3.266 | 30 | 537 | 0 |
+| 80 | 0.27× | **3.266** | **30** | 537 | 0 |
+| 160 | 0.26× | **3.266** | **30** | 537 | 0 |
+| 225 | 7.30× | 3319.94 | 216 | — | **1** |
+
+The maximum is *identical* at 40, 80 and 160 — same value, same position, same channel.
+Causality again: position 30 is fixed once positions 0–30 are.
+
+**So the threshold was an illusion.** The v6 spike sits at position 216, and no
+truncation shorter than 217 tokens can contain that position. By causality its value at
+T = 217 must equal its value at T = 225, so the onset is exactly T = 217 and length is
+doing no work at all. What looked like a threshold between 80 and 225 is simply the point
+at which the spiking position enters the prompt.
+
+## And it is not the token either
+
+Token 2032 `' read'` occurs three times in the passage — positions 20, 92 and 216. The
+layer-91 values there are **1.204, 0.768 and 3319.940**. Same token, same model, same
+run; one occurrence in three carries the spike.
+
+The surrounding text is unremarkable:
+
+```
+pos 213  ' should'    L90  2.380   L91     1.255
+pos 214  ' not'       L90  2.490   L91     1.257
+pos 215  ' be'        L90  4.628   L91     1.462
+pos 216  ' read'      L90 13.199   L91  3319.940   <--
+pos 217  ' as'        L90  2.143   L91     1.372
+pos 218  ' a'         L90  2.075   L91     1.359
+```
+
+## Four explanations, four falsifications
+
+Each was held briefly and killed by one more run:
+
+1. **"Specific to code."** v6, English prose, spikes at 7.30×.
+2. **"A length threshold between 12 and 18 positions."** The same passage at 18 positions
+   gives 0.17× where code at 18 gives 19.1×.
+3. **"It happens on delimiters."** v6's spike is on `' read'`, an ordinary word.
+4. **"It is that particular token."** `' read'` appears three times; one occurrence
+   spikes.
+
+## What survives
+
+- Exactly **one position** carries it, in both spiking runs — 1 of 18, 1 of 225.
+- It enters at **layer 90** as a 5.3×/5.5× precursor and completes at **layer 91**.
+- In the code run it lives in **channel 4590**, switched to exactly at layer 90 and held
+  through 92, while other positions peak elsewhere.
+- Magnitudes are close across unrelated inputs — **3457.84** and **3319.94** — and the
+  layer-92 ratios agree to **0.4%**.
+- It never reaches the output, because RMSNorm is scale-invariant.
+
+**What selects the position is not explained by anything measured here.** Not the token,
+not a delimiter, not the first or last position, not length.
+
+## Still open
+
+- Whether the prose spike uses channel 4590 as well. v6 predates the channel tap and a
+  re-run costs eight minutes; the two non-spiking sweep points cannot answer it.
+- Whether ~3400 is a ceiling. Two data points is not enough to call it one.
+
+
 ### Causality, confirmed by accident
 
 Per-position values for the first 5 positions are identical across the T=5, T=12, T=18
