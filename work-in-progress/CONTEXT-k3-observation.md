@@ -288,6 +288,18 @@ The token is id **198 = `'\n'`**. The v4 file recorded "one token dominates" as 
 non-finding; it is now established and the token identified. Documented attention-sink
 behavior on a delimiter, observed rather than inferred.
 
+**Correction — it is a single token, but not a delimiter.** v6 at 225 positions was then
+re-run with the same tap: **1 position of 225** above 100× the median, at 3319.94 = 3204×,
+and its token is 2032 = **`' read'`**, an ordinary word. So the mechanism generalizes
+exactly — one position absorbs all of it, the next largest in v6 is 3.27 — but the
+delimiter reading above is wrong. Third time a single observation was generalized too
+fast in this investigation.
+
+The magnitudes are the interesting part: **3457.84 and 3319.94**, within 4% of each other
+across inputs 12× apart in length and entirely different in content. That suggests a
+saturation level rather than an input-driven value. Two data points, so an observation,
+not a finding.
+
 **Causality confirmed as a by-product.** Per-position values for shared prefixes are
 *exactly* equal across the four sweep runs — first 12 identical between T=12 and T=18,
 first 18 between T=18 and T=40, checked as equalities. A position cannot depend on tokens

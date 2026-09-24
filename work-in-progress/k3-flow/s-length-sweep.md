@@ -65,6 +65,30 @@ The s40 prose outlier is a different, milder thing: position 30 reaches 3.27 aga
 neighbors near 1.5, and its token is `' current'` — not a delimiter, and 1000× smaller
 than the newline spike.
 
+### Then the long-prose run corrected the delimiter reading
+
+v6 — the same passage at 225 positions — was re-run with the per-position tap:
+
+| | v4 code, T=18 | v6 prose, T=225 |
+|---|---:|---:|
+| positions above 100× median | **1 of 18** | **1 of 225** |
+| position | 15 (3rd from last) | 216 (9th from last) |
+| absolute maximum | 3457.84 | **3319.94** |
+| median | 1.397 | 1.036 |
+| ratio to median | 2474× | 3204× |
+| the token | 198 `'\n'` | 2032 **`' read'`** |
+
+**What generalizes is the mechanism, not the token.** Exactly one position absorbs the
+whole thing, in both runs, and nothing else comes close — the next largest position in
+v6 is 3.27, a thousandth of the spike. But `' read'` is an ordinary word, so "it happens
+on delimiters" is wrong. Recorded here because it was written above before this run
+existed.
+
+The part worth noticing is the magnitude. Two completely different inputs, 12× apart in
+length, land within 4% of each other: **3457.84 and 3319.94**. That looks like a
+saturation level rather than a value driven by the input. Two data points, so it is an
+observation and not a finding.
+
 ### Causality, confirmed by accident
 
 Per-position values for the first 5 positions are identical across the T=5, T=12, T=18
