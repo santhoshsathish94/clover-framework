@@ -48,21 +48,35 @@ version, and the newer tap is a superset. That is stated rather than quietly dro
 | 2 | c3-no-newline | 2,791 | 23,253 | **identical** |
 | 3 | c2-javascript | 3,435 | 27,761 | **identical** |
 | 4 | c1-factorial | 2,975 | 24,541 | **identical** |
-| 5 | s160 | | | pending |
-| 6 | s80 | | | pending |
-| 7 | v4ch — code 18, rows+channel | | | pending |
-| 8 | s40 | | | pending |
-| 9 | s18 | | | pending |
-| 10 | s12 | | | pending |
-| 11 | s5 | | | pending |
-| 12 | v8 control | | | pending |
-| 13 | v7 nonsense | | | pending |
-| 14 | v6 long-context, gen 4 | | | pending |
+| 5 | s160 | 16,131 | 116,633 | **identical** |
+| 6 | s80 | 8,771 | 65,113 | **identical** |
+| 7 | v4ch — code 18, rows+channel | 3,067 | 25,185 | **identical** |
+| 8 | s40 | 5,091 | 38,980 | **identical** |
+| 9 | s18 | 3,067 | 24,812 | **identical** |
+| 10 | s12 | 2,515 | 20,948 | **identical** |
+| 11 | s5 | 1,871 | 16,440 | **identical** |
+| 12 | v8 control | 4,980 | 46,740 | **identical** |
+| 13 | v7 nonsense | 5,532 | 50,604 | **identical** |
+| 14 | v6 long-context, gen 4 | | | running |
 | 15 | v5 french | | | pending |
 | 16 | v4 code, gen 4 | | | pending |
 | 17 | v3 repetitive | | | pending |
 | 18 | v2 factual-multi, gen 8 | | | pending |
 | 19 | v1 factual-short | | | pending |
+
+The v-series originals predate the per-position tap, so those replays are run **without**
+`K3_TRACE_ROWS` to match the original record set exactly rather than relying on the
+comparator's key intersection to paper over a different flow.
+
+## A trap worth recording
+
+Partway through, a comparison was attempted against `s80` while its process was still
+running. The trace's final line was half-written, and the comparator failed with a JSON
+parse error at column 295.
+
+That looks exactly like a corrupt file. It was a file being appended to. The guard in use
+was "the trace is non-empty", which is not sufficient; it has to be "the process has
+exited". Changed to check `pgrep` before comparing.
 
 ## What would falsify what
 
