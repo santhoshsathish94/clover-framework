@@ -12,9 +12,96 @@ understand. If something here is vague, it means I did not understand it well en
 # Part 1 — The C code
 
 **Read so far:** `include/k3/k3.h` in full (572 lines); in `src/core/k3_ops.c` the
-function map plus `k3_kda_step`, `k3_moe`, `k3_decoder_layer`, and the matmul commentary.
-**Not yet read:** the MXFP4 matmul body (~400 lines), `k3_mla_cached`, `k3_kda_layer`,
-`k3_bind.c`, `k3_trunk.c`, `k3_cache.c`, the tokenizer, the chat layer.
+function map, the foundational ops, `k3_matmul`, `k3_mla_cached`, `k3_kda_step`,
+`k3_moe`, `k3_matmul_bf16`; in `src/cli/k3_run.c` the phase order, `forward()` and the
+decode loop.
+**Not yet read:** the MXFP4 matmul body (~400 lines), `k3_kda_layer`, `k3_moe_prefill`,
+`k3_router`, `k3_attn_res`, `k3_bind.c`, `k3_trunk.c`, `k3_cache.c`, the tokenizer, the
+chat layer.
+
+## The flow, end to end
+
+This is the spine. Everything after it is detail hanging off one of these steps.
+
+### Once, at startup
+
+1. Parse the command line. **Refuse to run without a Direction** (our addition; the
+   engine's own first refusal is the memory check at step 6).
+2. Read `config.json` from the model directory into the config struct.
+3. If asked, compute the automatic memory budget from what the machine has free.
+4. Turn the prompt text into token ids.
+5. Work out how much KV cache this request needs — 2.37 MB per position.
+6. Index the checkpoint: 96 safetensors shards become one table of tensors.
+7. Bind the weights. The trunk is either held in RAM or opened for streaming; the
+   embedding table, the final norm and lm_head are always resident.
+8. Print the memory plan and **refuse to start** if it exceeds what a plan may use.
+9. Allocate the working memory: one recurrent state slot per layer, a KV cache per MLA
+   layer, and the expert cache slots.
+10. If resuming, restore the saved state.
+
+### Once per generated token
+
+The decode loop does the same thing every time: call `forward()` and take the argmax.
+
+- **Step 0 is the prefill.** It feeds the entire prompt through `forward()` in one call,
+  so all the KV and recurrent state exist before any token is generated. This runs even
+  with `--gen 0`, which is how a reusable warmed prefix is made.
+- **Every later step feeds one token** — or a small batch when speculating, where drafts
+  are proposed and then verified in a single sweep.
+- `forward()` returns the logits for the last position; argmax picks the next token; the
+  loop prints one row and repeats until the limit or a stop token.
+
+### Inside one `forward()` pass
+
+1. **Embed.** Copy each token's row out of the embedding table into the working buffer.
+2. **Clear the snapshot stack.** Clear the KDA recurrent state too — *but only on the
+   full-recompute path*. Incremental decode must carry it across steps, so it is
+   deliberately left alone.
+3. **Walk the 93 layers in order.** For each layer:
+   - if streaming, bind this layer from disk and **hint the next one**, so its read
+     overlaps this layer's arithmetic. The order is fixed 0…92 every single token, which
+     is exactly why the hint is never wrong.
+   - point this layer's experts at the cache
+   - run the layer
+   - **if any routed expert failed to load, abort the whole run.** A token computed with
+     part of its expert contribution missing still looks like a normal token.
+4. **One model-level aggregation.** Beyond the two inside every layer, there is exactly
+   one more pair of weights that mixes the snapshot stack with the final hidden state.
+5. **Normalize the last position, project through lm_head, take the argmax.**
+
+The trunk is re-read *in full* on every token. That single fact explains the streaming
+design, the fixed layer order, the prefetch hint, and why the tuning advice is to feed
+the trunk before the expert cache.
+
+### Inside one layer
+
+```
+running = h
+if stack not empty:      h = attend over [stack…, running]
+if layer % 12 == 0:      push running onto stack; running = nothing
+h = norm(h);             h = attention(h)          # KDA or MLA
+running = running is nothing ? h : running + h
+h = attend over [stack…, running]                  # always
+h = norm(h);             h = experts(h) or dense(h)
+running = running is nothing ? h : running + h
+```
+
+### Inside KDA (69 of the layers)
+
+project q, k, v → short convolution with SiLU fused → L2-normalize q and k only →
+per-head `β` → per-channel decay → **the recurrence** → head-wise norm → gate → project out.
+
+### Inside MLA (24 of the layers)
+
+project q through a low-rank pair → **one** projection gives the compressed key-value
+latent *and* the shared position slot → normalize the latent only → cache the expanded
+per-head keys and values → score, softmax, mix → gate → project out.
+
+### Inside the experts (92 of the layers)
+
+route on the full width → hand all 16 chosen experts to the cache **at once** so their
+reads overlap → project down to the latent → run the experts there → weighted sum →
+normalize the sum → project back up → add the shared experts, unweighted.
 
 ## The shape of the thing
 
@@ -156,6 +243,38 @@ These are about how the code is built, not what the model is.
   getting them wrong. They were moved out rather than left to look load-bearing.
 
 ---
+
+## What going slow turned up
+
+One finding, verified, not yet reported to anyone.
+
+**Two block comments in `src/core/k3_ops.c` describe an earlier version of the code they
+sit above.** Both describe the matmul reduction, which is the thing the repository's
+bit-identity guarantee rests on.
+
+| Where | The comment says | The code does |
+|---|---|---|
+| line 254 | "FOUR ACCUMULATORS, PARTITIONED BY i%4, REDUCED AS (a0+a1)+(a2+a3)" | sixteen accumulators, partitioned by i%16, reduced as a 16→4→1 tree |
+| line 1101 | "MUL THEN ADD, never `_mm256_fmadd_pd`" | calls `_mm256_fmadd_pd` four lines later, at 1132–1141 |
+
+The comment at 254 also claims the bf16 and AVX2 paths "reproduce this exact partition
+and this exact tree". They do reproduce each other exactly — at sixteen, not four.
+
+**This is not a correctness bug.** Every implementation agrees at sixteen accumulators
+with explicit fused products, so the three paths still match bit for bit, and the
+fixtures still pass. The inline comments right next to the code (lines 272, 1119, 1156)
+are accurate and current. It is the two summarizing block comments that were left behind
+when the reduction widened from four to sixteen and moved from multiply-then-add to
+explicit fused products.
+
+Why it is still worth something: this repository's whole review discipline rests on the
+comments being the authority on *why*. A comment that states the opposite of the code is
+an invitation for the next person to "restore" the reduction to what the comment says —
+which would silently break bit-identity with the fixtures, and the fixtures are the only
+thing that would catch it.
+
+**Not raised.** Small, verifiable, uncontroversial — but nothing goes upstream without
+being asked for.
 
 # Part 2 — The weights
 
