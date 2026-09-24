@@ -48,9 +48,9 @@ h = norm(h);  h = experts(h) or dense(h)
 running = (running is nothing) ? h : running + h
 ```
 
-"Attend over" here means: normalise each source, score each one against a single learned
-vector, softmax the scores, then mix the **unnormalised** sources by those weights. The
-scores come from normalised keys; the output is built from the raw values.
+"Attend over" here means: normalize each source, score each one against a single learned
+vector, softmax the scores, then mix the **unnormalized** sources by those weights. The
+scores come from normalized keys; the output is built from the raw values.
 
 The catch is the clearing. On every twelfth layer the running sum is pushed onto the
 stack and then wiped, so at that layer it does **not** also appear as a separate source.
@@ -78,8 +78,8 @@ So the model is not just retrieving from memory. It is running a tiny online
 error-correcting update, once per head per token, 6,624 times per token at K3's scale.
 
 Around that recurrence sit: a causal depthwise convolution of width 4 with SiLU fused
-in; L2 normalisation on `q` and `k` but never on `v`; a head-wise RMSNorm on the output;
-and finally a sigmoid gate. The order matters — **normalise first, then gate**.
+in; L2 normalization on `q` and `k` but never on `v`; a head-wise RMSNorm on the output;
+and finally a sigmoid gate. The order matters — **normalize first, then gate**.
 
 ## Gated MLA — the 24 layers
 
@@ -92,7 +92,7 @@ Two oddities:
   onto every query and key, and are still cached — they are simply never rotated. The
   softmax scale is over the full 192 width, not the 128 that carry content. Deleting the
   unused 64 changes the model.
-- The output gate multiplies **before** the output projection with no normalisation —
+- The output gate multiplies **before** the output projection with no normalization —
   the opposite order to KDA. The engine says plainly that sharing one code path between
   the two is wrong.
 
@@ -101,7 +101,7 @@ Two oddities:
 The routing is not a softmax. Each expert gets an **independent sigmoid score**, so the
 scores do not compete and do not sum to one. A frozen bias is added only to **choose**
 the top 16; the weights used for mixing come from the scores **without** that bias. Then
-they are renormalised.
+they are renormalized.
 
 The structural surprise is where the experts live:
 

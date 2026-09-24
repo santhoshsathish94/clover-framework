@@ -37,7 +37,7 @@ statistics have been computed. Nothing recorded rests on reading the weights the
   token at K3 scale. `beta` is one scalar per head from a small projection of the input.
 - **The routed experts never see the full hidden width.** `k3_moe` down-projects 7168 to
   a latent 3584, runs the 16 chosen experts entirely in that narrower space, sums them
-  there, normalises the sum, and only then projects back up. Only the router and the two
+  there, normalizes the sum, and only then projects back up. Only the router and the two
   shared experts read the full 7168.
 - Three implementations of the matmul agree **bit for bit** because the four-accumulator
   partition and reduction order are written out by hand and reproduced in each; the AVX2
@@ -69,8 +69,8 @@ prefix_sum = (prefix_sum == NONE) ? h : prefix_sum + h
 **Block Attention Residuals**: every 12 layers the running residual is snapshotted and
 then *cleared*, so on a boundary layer it does not also survive as a separate softmax
 source. On every other layer it does. Aggregation is
-`softmax(dot(RMSNorm(sources), fold)) @ RAW sources` — the scores come from normalised
-keys, the output is a mixture of the *unnormalised* sources. `fold` is one vector,
+`softmax(dot(RMSNorm(sources), fold)) @ RAW sources` — the scores come from normalized
+keys, the output is a mixture of the *unnormalized* sources. `fold` is one vector,
 the norm weight times the projection weight, folded at load time.
 
 This is the most unusual thing in the architecture and the least like a standard
@@ -108,7 +108,7 @@ The header is explicit that sharing one code path between them is wrong.
 
 - `scores = sigmoid(logits)` — **independent, they do not sum to 1**
 - a frozen bias steers **selection only**; combining weights are gathered from the
-  **unbiased** scores, then renormalised
+  **unbiased** scores, then renormalized
 - top-16 of 896 routed experts, plus **2 shared experts at full width added unweighted**
 - routed experts work in a **latent width of 3584**, with down/up projections around
   them; RMSNorm is applied to the **aggregate**, not per expert
@@ -121,7 +121,7 @@ b1=4, b2=25, so **|y| ≤ 100**. The sigmoid sees the *uncapped* gate.
 
 Routed experts ship in **OCP MX FP4** and are multiplied straight out of it: 0.53125
 bytes per parameter (0.5 for the nibble, 1/32 for a shared E8M0 scale per 32 elements).
-One 33,030,144-parameter expert is exactly 17,547,264 bytes. Dequantised it would be
+One 33,030,144-parameter expert is exactly 17,547,264 bytes. Dequantized it would be
 132 MB, and a token touches 1,472 of them — 194 GB per token if anything widened them.
 
 ## Three invariants the header says must hold
