@@ -32,6 +32,7 @@ reimplements it and no model weights are redistributed.**
 | File | What it is |
 |---|---|
 | [fareed-khan-kimi-k3-in-c-explanation.md](fareed-khan-kimi-k3-in-c-explanation.md) | How the engine works, what it measured, and what it implies for the Clover infrastructure direction |
+| [residency-not-speed.md](residency-not-speed.md) | Why one machine cannot run a 1.56 TB model and many small ones can — the constraint is residency, not speed |
 | [kimi-k3-measurements.md](kimi-k3-measurements.md) | Every measured figure in one place, each with what it does not establish, re-derived from the raw logs |
 | [kimi-k3-local-evidence.json](kimi-k3-local-evidence.json) | What the experiment established on local hardware, and what it is still waiting on |
 | [kimi-k3-bench-run.sh](kimi-k3-bench-run.sh) | The measurement campaign for rented hardware. Gated and shellcheck-clean |

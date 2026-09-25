@@ -3357,6 +3357,324 @@ command.
 both MERGEABLE, no maintainer response yet on either.** Merge status is a fact about their
 decision, not about whether the measurement was real.
 
+## PARKED 2026-09-24 — pipeline-of-pods architecture
+
+Explored, modelled, then parked by the creator: *"I think this is what AI companies are
+already doing."* Recorded so it is not re-derived. Nothing here was built or tested.
+
+**The shape.** One pod per layer, 93 pods. Each holds its own trunk slice plus all 896
+experts for that layer, resident, no disk. Nothing but the hidden state crosses the network.
+
+| pod | resident | reads per token |
+|---|---:|---:|
+| dense (layer 0) | 2.34 GB | 2.341 GB |
+| MLA (×24) | 16.57 GB | 1.125 GB |
+| KDA (×68) | 16.99 GB | 1.549 GB |
+
+Cluster 1,555.3 GB. **24 GB per card is the floor; 16 GB misses it.** Experts ship natively
+in MXFP4 (0.53 B/param), so that 15.72 GB is not a quantization choice.
+
+**What moves.** The hidden state only: 7168 × 4 B = **28 KB per hop**, 2.64 MB end to end.
+Against 134.64 GB of local weight traffic per token that is **51,042 : 1**. Even 1 GbE
+carries 4,360 tokens/s — 29× more than the cards can consume. **No NVLink or InfiniBand
+needed**, which is what distinguishes this from tensor parallelism.
+
+**Numbers, 93 cards one layer each, pipeline saturated** (spec-sheet bandwidths, expect
+20–40% worse real):
+
+| card | throughput | per user | concurrent | 500-token reply |
+|---|---:|---:|---:|---:|
+| RTX 4090 | 413 tok/s | 4.44 | 93 | 113 s |
+| RTX 5090 | 711 tok/s | 7.65 | 93 | 65 s |
+| RTX 5090, dense pod split | **1,101 tok/s** | **11.84** | 93 | 42 s |
+| H100 80GB | 1,252 tok/s | 13.46 | 93 | 37 s |
+
+**Three findings worth keeping even though the design is parked:**
+
+1. **Layer 0 gates the pipeline.** Its slice is 2.341 GB against a 1.448 GB mean, so one
+   card sets the rate for all 93. Splitting it is +58% throughput and +58% per-user for the
+   cost of one card. Stage balance matters more than card choice.
+2. **Batching helps on GPU and not on CPU.** CPU pods hit the compute wall at B≈8 and
+   aggregate throughput then flatlines at 136.9 tok/s while per-user collapses — batching
+   past the compute bound is pure loss. GPUs have ~40,000× the compute headroom per layer
+   (1.95 GFLOP against 80+ TFLOP/s), so batching there costs only the extra unique experts.
+3. **The design rule inverts with batch size.** At B=1 the pod is bandwidth-bound: buy
+   memory channels, cores are irrelevant. At B≥16 it is compute-bound: buy cores, channels
+   are irrelevant. Stated the first half as general advice and had to correct it.
+
+**Not verified:** KDA recurrent state size (68 of the 93 pods, so this moves the VRAM
+number); real sustained card bandwidth; pod-to-pod hop latency; and whether the engine can
+be split this way at all — it is currently one process walking all 93 layers.
+
+## UNPARKED 2026-09-25 — and the design does not survive concurrency
+
+> **PARTLY SUPERSEDED the same day — see "REBUILT" below.** The structural finding held, but
+> the hardware I costed it against was the wrong card (RTX 5090, 575 W) and the wrong price
+> basis (invented). The power conclusion in this section is wrong. Read the rebuild.
+
+Creator's Direction: compare the 93-pod pipeline against the large-GPU servers the industry
+actually uses, on setup cost, power and throughput, **for a server carrying many concurrent
+users rather than one request**. That last clause is what breaks it. Everything parked above
+was computed at B=1.
+
+Model in `k3-results/pods-vs-bigiron/` (`model.py`, `run.py`, `run2.py`, `run3.py`). Every
+input is tagged M (measured here), V (vendor spec sheet read 2026-09-25) or A (assumption we
+could not verify). Nothing was built or run on hardware; this is arithmetic over measurements.
+
+### Two measurements recovered first, one of which corrects the parked note
+
+Re-read from the systems rather than from these notes:
+
+- **Expert size is exact.** Safetensors headers: w1/w3 `[3072,1792]` packed + `[3072,112]`
+  scale, w2 `[3584,1536]` + `[3584,96]` = **17,547,264 B per routed expert**. 16 x 92 gives
+  **25.830 GB/token**, matching the measured expert read to the decimal. 896 x 92 x that =
+  **1,446.5 GB, which is 93.0% of the whole model.** The trunk is 7%.
+- **The KV figure used everywhere in this file is an artifact of our CPU engine.**
+  `src/core/k3_ops.c:310` states it outright: the compressed latent is **42x smaller**, and
+  the engine caches the *expanded* per-head keys and values anyway because re-expanding costs
+  an O(T) sweep of 12.6M-MAC matmuls per layer per token. That is the right call on a machine
+  with no compute headroom and the wrong one on a GPU. Latent is `kv_lora_rank 512 + rope 64`
+  = 576 floats per position per layer, **27.6 KB per position in bf16 against 2.37 MB
+  expanded, 86x**. Any GPU comparison must use the latent or it is measuring our workaround.
+
+Per-user memory that both designs must carry, at 8192 context:
+
+| | per stream |
+|---|---|
+| MLA KV, latent bf16 | 226 MB |
+| KDA recurrent state, bf16 | 313 MB |
+| **total** | **540 MB** |
+
+The 313 MB is derived from `turn1.state`, 957,407,888 B for 140 positions: subtracting
+140 x (2,359,296 + 6,144) leaves **626,246,288 B of length-independent state**, matching the
+"~626 MB" recorded earlier to the byte. **This is a serving constraint nobody's headline
+numbers mention** — 1,000 concurrent users is 313-626 GB of state, comparable to a third of
+the weights.
+
+### Where a token's bytes go as the batch grows
+
+| B | trunk | experts | state | KV | GB/token |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 108.81 | 25.83 | 0.31 | 0.23 | **135.18** |
+| 10 | 10.88 | 23.85 | 0.31 | 0.23 | 35.27 |
+| 93 | 1.17 | 12.64 | 0.31 | 0.23 | 14.35 |
+| 2790 | 0.04 | 0.52 | 0.31 | 0.23 | **1.10** |
+
+**state + KV = 0.54 GB/token is a floor batching cannot touch**, and above B~500 it is most
+of the cost. The trunk — the thing this whole campaign optimized — is 0.04 GB there.
+
+### The structural finding: pipelining is not batching
+
+With N users and S stages, each stage sees a batch of N/S. Throughput is
+`aggregate_bandwidth / bytes_per_token(N/S)`. Fewer stages means a bigger batch means fewer
+bytes per token. Swept at 93 RTX 5090 cards, N = 930 users, holding card count constant:
+
+| stages | cards/stage | B per stage | GB/token | tok/s | needs an interconnect? |
+|---:|---:|---:|---:|---:|---|
+| **93** | 1 | 10 | 35.27 | **3,780** | **no** |
+| 31 | 3 | 30 | 24.30 | 5,487 | yes |
+| 12 | 7 | 78 | 15.99 | 8,339 | yes |
+| 4 | 23 | 232 | 7.13 | 18,687 | yes |
+| **1** | 93 | 930 | 2.21 | **60,275** | yes |
+
+**Fewer stages is strictly better, and one stage is the sharded design.** The pipeline is
+never the optimum; it is the thing you are left with when you refuse to buy an interconnect.
+Pipelining multiplies users by 93 at *constant* per-token cost; batching multiplies users and
+drives the cost down. For a model that is 93% routed experts, only the second one pays.
+
+The parked note's numbers looked good because they were all taken at B=1, which is the single
+operating point where the penalty is smallest.
+
+### Head to head at matched concurrency, ctx 8192
+
+Sharded side derated to **70%** for all-to-all, scheduling and continuous batching — a number
+we cannot measure here, so it is shown at 100/70/50% in `run3.py` and the ranking does not
+change at any of them.
+
+| N users | design | cards | tok/s | per user | kW | $M capex | W per tok/s |
+|---:|---|---:|---:|---:|---:|---:|---:|
+| 93 | pods, RTX 5090 x93 | 93 | 986 | 10.6 | 67.4 | 0.33 | 68.4 |
+| 93 | sharded, H200 x12 | 12 | 2,248 | 24.2 | 10.2 | 0.40 | 4.5 |
+| 930 | pods, RTX 5090 x93 | 93 | 3,780 | 4.1 | 67.4 | 0.33 | 17.8 |
+| 930 | sharded, H200 x15 | 15 | 18,228 | 19.6 | 12.8 | 0.50 | 0.7 |
+| 2790 | pods, RTX 5090 x93 | 93 | *5,487* | 2.0 | 67.4 | 0.33 | 12.3 |
+| 2790 | sharded, H200 x22 | 22 | 53,904 | 19.3 | 18.7 | 0.74 | 0.3 |
+| 2790 | sharded, B200 x18 | 18 | 73,506 | 26.3 | 34.9 | 1.15 | 0.5 |
+
+*At N=2790 the RTX 5090 pipeline **does not fit**: an MLA pod needs 0.84 + 15.72 + 26.34 =
+**42.9 GB** and the card has 32. It needs RTX PRO 6000 at 96 GB, which triples capex to
+$0.93M for identical throughput, because throughput follows bandwidth and both cards are
+1,792 GB/s. **Capacity buys users; only bandwidth buys tokens.**
+
+Three-year electricity at $0.10/kWh: pods **$180k**, sharded H200 **$30-50k**. The pods'
+$70-410k capital advantage is gone inside three years. On 3-year total cost per tok/s at
+N=930: pods **$135**, H200 **$29**.
+
+### What the pod design genuinely wins, and it is not nothing
+
+| | GB per $ | GB/s per $ | GB/s per W |
+|---|---:|---:|---:|
+| RTX 5090 (GDDR7) | 0.0160 | 0.90 | 3.12 |
+| H200 SXM (HBM3e) | 0.0044 | 0.15 | 6.86 |
+| B200 in DGX (HBM3e) | 0.0029 | 0.13 | 4.48 |
+
+- GDDR7 is **3.6x cheaper per GB** and **6.0x cheaper per GB/s**.
+- HBM3e is **2.2x more bandwidth per watt**.
+- The interconnect claim holds and is the real result: **28 KB per hop** (7168 x 4 B),
+  2.67 MB end to end, against 35.3 GB of local weight traffic per token at B=10 — a ratio of
+  **1 : 13,227**. Ordinary ethernet carries it. No NVLink, no InfiniBand.
+
+So the trade is exact: **the pipeline avoids the interconnect by paying a batch-efficiency
+penalty of 9-22x at realistic concurrency.** The interconnect is cheaper than the penalty.
+That is why the industry buys NVLink, and it is a better answer than "this is what AI
+companies already do" because it says *why*.
+
+### Predictions recorded before the next cycle, so they can be scored
+
+1. A real sharded deployment will land nearer the 50% derate than the 70%, because K3's
+   Quantile Balancing deliberately flattens routing and that maximizes all-to-all volume.
+2. The 313 MB/stream recurrent state will turn out to be the binding constraint on
+   concurrency for K3 in production, ahead of KV. It is already 58% of per-user memory here.
+3. Per-token cost at B>500 is dominated by per-user state, so the next architectural move in
+   this family will compress recurrent state, not weights.
+
+### Not verified, and it bounds all of the above
+
+- **Every price is an assumption except the RTX 5090's $1,999** (nvidia.com, read
+  2026-09-25). H200, B200, GB200 and RTX PRO 6000 prices could not be reached: NVIDIA
+  Marketplace needs JS, Newegg blocks the fetch, two news sources failed extraction. Two
+  attempts, no new information, so the search was stopped rather than repeated. Treat the
+  capex column as an ordering, not a quotation.
+- Verified from vendor pages: H200 141 GB / 4.8 TB/s / 700 W; DGX B200 1,440 GB / 64 TB/s /
+  ~14.3 kW over 8 GPUs; GB200 NVL72 13.4 TB / 576 TB/s over 72 GPUs; RTX 5090 32 GB /
+  1,792 GB/s; RTX PRO 6000 96 GB / 600 W. RTX 5090's 575 W is **not** verified.
+- `BW_EFF = 0.80` is an assumption. Our CPU reached 0.83 of theoretical DRAM, which is why
+  0.80 was chosen, but no GPU here has been measured.
+- Routing is modeled as independent-uniform across concurrent users. We measured **36.8%
+  token-to-token overlap within one stream** against ~1.8% under uniform, so same-stream
+  locality is 20x higher than modeled. Unrelated users should be closer to uniform, but this
+  is unmeasured and it would make batching *cheaper* than shown — i.e. it favors the sharded
+  side further.
+- Nothing here is a GPU measurement. It is our measured byte counts pushed through vendor
+  bandwidth figures.
+
+## REBUILT 2026-09-25 — real prices, the right card, and the algebra the creator demanded
+
+The creator rejected the section above on three counts, and was right on two. Rebuilt from
+zero in `k3-results/pods-vs-bigiron/final.py`. Every physical constant re-derived from the
+machine in one command at the start rather than carried from these notes.
+
+### Three challenges, and what each was worth
+
+1. **"Why 15 and 22 cards?"** Fair. I sized to the arithmetic minimum instead of to a real
+   SKU. Correct baseline is his: **16x H200 = 2.25 TB**, which is 2x HGX 8-GPU nodes.
+2. **"They use one card, not a pipeline."** Right in substance. **No single server holds this
+   model**: HGX/DGX H200 8-GPU is 1,128 GB, 427 GB short; DGX B200 is 1,440 GB, 115 GB short.
+   K3 forces a node crossing on the largest H200 box that exists. What NVLink buys is making
+   8-72 cards *behave* as one card. The DGX-2 datasheet he then sent says it in NVIDIA's own
+   words, dated Jul 2019: *"model parallelism ... colliding with the limits of inter-GPU
+   bandwidth"* — the same conclusion this model reaches from our byte counts.
+3. **"It consumes very less power."** **I was wrong.** I modelled an RTX 5090 at 575 W. The
+   card he meant is **RTX PRO 4000 Blackwell SFF: 24 GB GDDR7 ECC, 432 GB/s, 70 W** — which is
+   **6.17 GB/s per watt against H200's 6.86**, not the 2.2x gap I claimed. With correct host
+   power the 93-card fleet draws **less** wall power than the H200 node.
+
+He also corrected the metric: energy, not power. Right, and "W per tok/s" already *is* joules
+per token. Sweeping host power 130 -> 0 W moves it 30.0 -> 10.5 J/token, still 9.4x behind, so
+watts were never the deciding term.
+
+### Verified, with sources, read 2026-09-25
+
+| | value | source |
+|---|---|---|
+| Hetzner GEX45 | RTX PRO 4000 SFF, i5-13500, 64 GB, 2x512 GB NVMe, **1 Gbit/s**, **EUR 214.00/mo + EUR 209 setup**, HEL1 | hetzner.com |
+| RTX PRO 4000 SFF | 24 GB GDDR7 ECC, **432 GB/s**, **70 W** | nvidia.com |
+| RTX PRO 4000 | 24 GB GDDR7 ECC, 672 GB/s, 140 W, single slot | nvidia.com |
+| H200 SXM | 141 GB, 4.8 TB/s, 700 W, NVLink 900 GB/s, HGX 4 or 8 GPU | nvidia.com |
+| DGX B200 | 1,440 GB, 64 TB/s, ~14.3 kW, 10 RU | nvidia.com |
+
+EUR 214 x 1.19 VAT = **EUR 254.66**, which is the "250 euros" he quoted. It is a *rental*, and
+that is what makes it the better cost basis: **power, cooling, network, rack and host are all
+inside it**, so none of them has to be assumed.
+
+### The algebra, which is what he actually asked for
+
+N users, b = per-card effective bandwidth, W(B) = bytes all 93 layers read for a batch of B.
+
+```
+PIPELINE  93 cards, card i owns layer i:  B = N/93
+   throughput = N*b / W(N/93)        latency = W(N/93)/b
+SHARDED   K cards, each holds a shard of every layer:  B = N
+   throughput = N*K*b' / W(N)        latency = W(N)/(K*b')
+
+at equal aggregate bandwidth:  sharded/pipeline = 93 * W(N/93) / W(N)
+```
+
+**His claim is true and it does not help.** The 93-way hardware parallelism is real, and it is
+exactly cancelled by 93-way batch fragmentation. Weights are read **per batch, not per token**,
+so dividing the batch by 93 multiplies weight cost per token by up to 93. Concretely at
+N=744: to make the same 744 tokens, **card 1 reads layer 1's weights 93 times; the sharded
+machine reads them once.** It is not pipeline-versus-sharded — it is **batch 8 versus 744**.
+
+| per token, N=744 | pipeline (B=8) | sharded (B=744) |
+|---|---:|---:|
+| trunk | 13.60 GB | 0.15 GB |
+| experts | 24.27 GB | 1.94 GB |
+| state + KV | 0.54 GB | 0.54 GB |
+| **total** | **38.41 GB** | **2.63 GB** |
+
+**Roofline validated before use:** 16x H200 is bandwidth-bound by 8.8x (45.5 ms of bytes vs
+5.2 ms of compute, at 109.9 GFLOP/token over 54.93 G active params); an SFF pod trivially so.
+If either had been compute-bound the whole byte model would have been the wrong instrument.
+
+### Equal money, his framing: $40k + $10k = $50k per H200
+
+$800,000 buys **16x H200** or **exactly 93x GEX45** (EUR 7,913 each over 3 years).
+
+| | 93x GEX45 | 16x H200 | |
+|---|---:|---:|---|
+| VRAM | 2.23 TB | 2.26 TB | equal |
+| aggregate bandwidth | 40.2 TB/s | 76.8 TB/s | H200 1.91x |
+| **facility power** | **17.6 kW** | **20.5 kW** | **pods 14% LESS** |
+| interconnect | 1 Gbit/s | 900 Gbit/s | 900x |
+| throughput @744 users | 837 tok/s | 16,353 tok/s | **19.5x** |
+| latency | 0.889 s/tok | 0.045 s/tok | 19.7x |
+| energy | 21.0 J/tok | 1.25 J/tok | 17x |
+| 3-yr $ per tok/s | $950 | $52 | 18x |
+
+Decomposition of the 19.5x: **1.91x bandwidth x 14.61x batching x 0.70 derate credited to the
+pods**. Bandwidth is a tenth of it. Batching is the rest.
+
+### The ladder, and the real conclusion
+
+Collapse stages to enlarge the batch; each collapse demands a faster link.
+
+| stages | B/stage | GB/token | tok/s | J/token | link needed |
+|---:|---:|---:|---:|---:|---|
+| 93 | 8 | 38.41 | 837 | 21.01 | 1 GbE — GEX45 has it |
+| 24 | 31 | 24.02 | 1,338 | 11.41 | 25 GbE |
+| 12 | 62 | 17.99 | 1,787 | 8.55 | PCIe Gen5 in-chassis |
+| 4 | 186 | 8.63 | 3,725 | 4.10 | PCIe + 100 GbE |
+| **1** | **744** | **2.63** | **12,221** | **1.25** | NVLink-class |
+
+**The same 93 cards go from 837 to 12,221 tok/s and from 21.0 to 1.25 J/token purely by
+changing how they are wired.** At one stage they match the H200 node on energy exactly
+(1.25 vs 1.25 J/token) and reach 75% of its throughput, on cheaper silicon and less power.
+
+> **The creator's hardware instinct is right; the topology is what kills it. You are not
+> buying HBM, you are buying the interconnect that lets one batch be large.**
+
+### Still not verified
+
+- **Every price except GEX45's EUR 214 and the RTX 5090's $1,999.** The $50k/H200 is the
+  creator's figure, used as given. NVIDIA Marketplace needs JS, Newegg blocks fetches,
+  techpowerup bot-checks; stopped after two attempts rather than repeating.
+- `BW_EFF 0.80`, `SHARD_EFF 0.70`, `PUE 1.35`, host 70 W, EUR/USD 1.08 — all assumptions,
+  all in one block at the top of `final.py` so they can be argued with.
+- Whether 8 SFF cards in one chassis can actually be tensor-parallel over PCIe Gen5 for this
+  model. The 12-stage row depends on it and it is unverified.
+- Nothing here is a GPU measurement. Our measured bytes, vendor bandwidths, one rented price.
+
 
 
 

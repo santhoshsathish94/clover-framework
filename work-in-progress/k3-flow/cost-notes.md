@@ -97,9 +97,14 @@ runs while this compute portion varies −18% to +14%.
 
 Measured during this investigation, not assumed:
 
-- **Quantization already moves it a lot.** Same model, same output: bf16 108.81 GB,
-  int8 54.47 GB, MXFP4 28.94 GB of trunk, read once at startup. MXFP4 does not bind on
-  upstream `a2ad8e5` — that binder lives on the archived `mxfp4-trunk` branch.
+- **Quantization already moves it a lot — but it changes the output.** bf16 108.81 GB,
+  int8 54.47 GB, MXFP4 28.94 GB of trunk, read once at startup. **Not the same output:**
+  same prompt, greedy decode, 64 tokens — int8 first diverges from bf16 at generated token
+  **21** (22/64 positionally matching), MXFP4 at token **3** (9/64). All three are fluent and
+  on-topic; the divergence is numerical, not sampling noise (identical configs replay
+  byte-exactly across 19 replications). **No quality evaluation has been run**, so this is
+  measured *difference*, not measured *degradation*. MXFP4 does not bind on upstream
+  `a2ad8e5` — that binder lives on the archived `mxfp4-trunk` branch.
 - **Routing breadth, not sequence length, drives expert reads.** At an identical 12
   positions, repetition read 115 GB and random tokens read 186 GB.
 - **More positions means more agreement between them**: in-layer expert diversity falls
@@ -108,6 +113,60 @@ Measured during this investigation, not assumed:
 - **Adjacent-step expert reuse is 42–65%**, and that is the figure the cache can exploit.
   The all-step intersection is 0.5% and is misleading.
 - **Each token needs ~1472 experts; the cache held 1708 slots** — about one token's worth.
+
+## Which trunk which runs used — read this before comparing any figure here
+
+Two run families, two trunk formats. Conflating them produced a wrong "correction" on
+2026-09-24 that had to itself be corrected.
+
+| family | location | trunk | size | disk load | DRAM per token |
+|---|---|---|---|---:|---:|
+| **v-runs** (observation, traces) | `/root/k3flow` | int8 | 54.47 GB | ~5.5 s | 1.14 s |
+| **benchmark runs** (A–F, CLEAN) | `/root/k3results` | bf16 | 108.81 GB | 12.2 s | 2.27 s |
+
+Every figure in *this* file is from the v-runs and so is int8. Every figure in
+`CONTEXT-kimi-k3-benchmark.md` is bf16. Both are correct; they are not interchangeable.
+
+## The working set principle — one slice, sixteen experts
+
+**At any instant, a layer needs its own trunk slice and its 16 chosen experts. Nothing
+else.** Not the whole trunk, and not the 896-expert pool it chose from.
+
+Per layer, bf16 trunk, measured from `trunk.json`:
+
+| | | |
+|---|---:|---|
+| trunk slice, MLA (24 layers) | 0.844 GB | |
+| trunk slice, KDA (68 layers) | 1.268 GB | |
+| trunk slice, dense (layer 0) | 2.341 GB | |
+| **trunk slice, mean** | **1.170 GB** | 1.1% of the 108.81 GB trunk |
+| 16 routed experts (MXFP4) | 0.281 GB | |
+| **working set** | **1.451 GB** mean, 2.622 GB worst | |
+
+Against what is *available* to that layer — its slice plus all 896 experts, 16.89 GB — the
+working set is **11.6× smaller**. Against the whole 1,554.8 GB model, **1,071× smaller**.
+
+The trunk is already stored to support this: one `trunk.bin`, but `trunk.json` carries
+`file_off` / `nbytes` / `run_start` per layer, and the engine issues exactly **93 ranged
+reads**, one per layer, no matter how many tokens follow.
+
+### The caveat that stops this being misapplied
+
+Needing one slice at a time does **not** reduce per-token traffic. All 93 slices are needed
+*within the same token*, because every layer runs for every token. So:
+
+- **peak residency** = 1.45 GB — this is what the principle buys
+- **per-token traffic** = 108.81 GB trunk + 26.11 GB experts — unchanged by slicing
+
+Splitting `trunk.bin` into 93 files would change neither number. What the small working set
+buys is that a 24 GB GPU can hold ~15 layers resident, and a handful of such cards can hold
+the entire trunk with nothing streaming at all — the configuration in which the 2.27 s DRAM
+term disappears rather than being re-paid over a slower bus.
+
+The same holds on the expert side and matters more there: reading 16 experts rather than
+896 is the difference between 0.281 GB and 15.72 GB per layer per token. The engine already
+does this. The open cost is that the 16 are not known until the router runs mid-layer, which
+is why they cannot be prefetched the way the trunk can.
 - **The two shared experts are in the trunk**, 126 MB per layer, read every token and never
   streamed. They do about as much work as all 16 routed experts combined.
 - **The squeeze and expand are shared by all 896 experts** in a layer (24.5 MB each), which
@@ -258,5 +317,86 @@ route to it. And with the trunk correction above, what remains is narrower than 
 the trunk is a one-time 5.5 s cost, the expert reads are already at the floor the routing
 allows, so the recurring I/O is at its minimum **for this architecture and this cache
 size**. Anything further has to change one of those two, not the scheduling.
+
+## The per-layer profile is two sawtooths, not a flat cost (2026-09-25)
+
+Every earlier cost note in this file used a **mean** layer — 1.170 GB of trunk, 0.281 GB of
+experts. That average hides the shape, and the shape is the point. Rebuilt by joining
+`/root/k3flow/v1.jsonl` (93 layers × every stage, 5 positions) against `trunk.json`.
+
+Arithmetic check first: expert bytes summed from the trace come to **99.721 GB** against the
+**99.72 GB** the engine reported for the same run. Two independent counts agreeing, so the
+join is sound.
+
+### Sawtooth 1 — bytes, period 4
+
+MLA sits at layers 3, 7, 11 … 87, then **91 and 92 back to back**. Its trunk slice is
+smaller than KDA's, so the per-layer cost oscillates every fourth layer:
+
+| | layers | trunk | + experts | total |
+|---|---:|---:|---:|---:|
+| dense (L0) | 1 | 2.341 GB | none | **2.341 GB** |
+| MLA | 24 | 0.844 GB | 0.877–1.12 GB | **1.920 GB** mean |
+| KDA | 68 | 1.268 GB | 0.877–1.30 GB | **2.355 GB** mean |
+
+```
+min   1.722 GB   layer 83 (MLA)
+max   2.566 GB   layer 1  (KDA)
+mean  2.242 GB
+spread max/min = 1.49x      KDA/MLA = 1.23x
+```
+
+The expert half is not flat either: **50 to 74 distinct experts per layer**, mean 61.8 of
+the 80 slots that 5 positions × 16 provides — the 77.2% in-layer diversity, per layer.
+
+### Sawtooth 2 — magnitude, period 12
+
+Snapshots fire at 0, 12, 24, 36, 48, 60, 72, 84. The residual is **replaced**, not added to:
+
+| | before | after | collapse |
+|---|---:|---:|---:|
+| L11 → L12 | 269.55 | 12.34 | 21.8× |
+| L23 → L24 | 356.21 | 1.38 | **257.6×** |
+| L35 → L36 | 152.71 | 1.84 | 82.8× |
+| L47 → L48 | 430.05 | 1.89 | 227.8× |
+| L59 → L60 | 482.16 | 13.35 | 36.1× |
+| L71 → L72 | 107.46 | 7.32 | 14.7× |
+| L83 → L84 | 138.83 | 17.10 | 8.1× |
+
+Mean L2 at snapshot layers **7.14** against **82.56** across all 93; maximum 482.16. Eight
+blocks of twelve, each starting near zero and climbing, with the history parked on a stack
+that both aggregations re-inject. The stack itself grows 0 → 8, so late layers attend over
+nine sources where early ones attend over two.
+
+### What the shape costs
+
+**One pass is 208.533 GB** — 108.812 trunk + 99.721 experts — to move a 28 KB hidden state
+93 times. That is roughly **80,000 bytes read per byte of state advanced**, and none of it
+can be skipped or reordered: layer L needs layer L−1's output, and its 16 experts are not
+known until its own router has run on that output.
+
+Two consequences that the averaged view could not show:
+
+1. **Any design that gives one layer to one device is unbalanced by 1.49× before it
+   starts.** The rate is set by the heaviest stage; the lightest sits idle a third of the
+   time. Layer 0 alone is 2.341 GB against a 1.722 GB minimum.
+2. **The magnitude sawtooth is why the model tolerates aggressive quantization unevenly.**
+   A snapshot layer carries a residual near 1.4 while its neighbour carries 430 — the same
+   absolute error means very different relative error at the two. Not measured; recorded as
+   the obvious next question rather than a finding.
+
+### Why no single machine does this efficiently
+
+Not a property of our box. A property of the workload:
+
+- **1,555 GB resident** against 124 GiB of RAM or 141 GB of HBM. Nothing holds it; something
+  must stream.
+- **~1.5 FLOP per byte** at one token — 2.2 GFLOP of arithmetic against 2.24 GB of reading,
+  per layer. A CPU wants ~5, a large accelerator wants ~200. Every machine is starved, and
+  the faster the machine the more starved it is.
+- **The 99.721 GB of expert reads is data-dependent**, so unlike the trunk it cannot be
+  prefetched — the engine's fixed 0…92 layer order makes the trunk hint never wrong, and
+  nothing equivalent exists for the experts.
+
 
 
