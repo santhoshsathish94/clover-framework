@@ -21,10 +21,10 @@ below says so.
 | SiTU-GLU + dense MLP | 1 | written | **median 2.0e-06** end to end at layer 0 |
 | MoE | 92 | written | **all 6 links verified, 2 bit-exact** |
 | Attention, MLA | 24 | written | **all 6 steps verified, 3 layers** |
-| Attention, KDA | 69 | written | state footprint matches to a header; arithmetic unverified |
+| Attention, KDA | 69 | written | **all 10 steps verified, 3 layers** |
 
-Every stage has a written equation. Everything except KDA has been checked against the
-engine.
+**Every stage of the model is now written in closed form and checked against the running
+engine.** No stage is taken on trust.
 
 ## Constants
 
@@ -265,7 +265,7 @@ Step 4 passing is what settles the two claims flagged above as easy to get wrong
 $1/\sqrt{192}$ scale and the **unrotated** shared rope channel. Either being wrong would have
 broken that step specifically and left its neighbors intact.
 
-## KDA — written, not yet numerically verified
+## KDA — all ten steps verified
 
 69 of the 93 layers, and the only place position enters the model. $H=96$ heads,
 $D=128$, $P=HD=12288$, kernel $K=4$.
@@ -339,6 +339,42 @@ file — a 656-byte difference, the size of a file header.
 **And it exposes waste.** The state is allocated for all 93 layers (`state_layers = NL`)
 though only 69 are KDA, so **161.6 MB per stream — 25.8% of the recurrent state — is
 allocated and never touched.** A KDA-only allocation would be 464.6 MB.
+
+### Checked step by step
+
+Taps at the post-conv $q,k,v$, the post-L2 $q,k$, $\beta$, $\alpha$, the recurrence output
+and the gated result. Layers 1, 50 and 90, positions 0-4, one execution:
+
+```
+                                                  layer 1     layer 50    layer 90
+1  q_conv = SiLU(ShortConv(W_q x))               1.92e-06    1.80e-06    1.92e-06
+2  k_conv = SiLU(ShortConv(W_k x))               1.61e-06    1.63e-06    2.37e-06
+3  v_conv = SiLU(ShortConv(W_v x))               1.04e-06    1.10e-06    1.79e-06
+4  q_norm = L2 per head, sqrt(sum+1e-6)          0.00e+00    0.00e+00    0.00e+00
+5  k_norm = L2 per head                          0.00e+00    0.00e+00    0.00e+00
+6  beta = sigmoid(W_b x)                         6.60e-07    7.76e-07    3.58e-07
+7  alpha = exp(-5 sig(e^A_h (z+dt)))             1.85e-06    4.90e-06    7.48e-06
+8  o = delta-rule recurrence                     1.58e-07    1.37e-07    2.81e-07
+9  gated = N(o per head) * sigmoid(W_g x)        8.91e-07    2.13e-07    6.54e-07
+10 attn.out = W_o . gated                        1.68e-06    1.67e-06    3.24e-06
+```
+
+**Verified first attempt, no residual to fix.** Three traps are settled by which steps
+passed rather than by argument:
+
+- **Steps 4 and 5 are bit-exact**, which confirms the L2 form is $\sqrt{\sum v^2+\epsilon}$
+  and not $\sqrt{\overline{v^2}+\epsilon}$. The mean form would rescale every $q$ and $k$ by
+  $\sqrt{128}$ and quietly change the attention temperature.
+- **Step 7 confirms $A_{\log}$ is per head.** Indexing it per channel would give order-1
+  error, not $10^{-6}$.
+- **Step 8 confirms the delta rule** — the $(v-u)$ error term, and reading the
+  already-updated state.
+
+**Step 7 is the loosest link and it grows with depth**: 1.85e-06, 4.90e-06, 7.48e-06 across
+the three layers, worst 1.23e-05. That is what two chained int8 matmuls ($W_{fa}$ then
+$W_{fb}$) followed by exponential amplification should do, and it is four orders of magnitude
+too small to be a wrong equation — but it is the one step that would want a tighter check
+before being relied on alone.
 
 ---
 
