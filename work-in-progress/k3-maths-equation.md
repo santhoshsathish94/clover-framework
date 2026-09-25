@@ -20,7 +20,9 @@ below says so.
 | Router | 92 | written | **bit-exact, 100%** |
 | MoE | 92 | written | not verified — needs the MXFP4 expert weights |
 | Attention, MLA | 24 | written | cache footprint matches to the byte; arithmetic unverified |
-| Attention, KDA | 69 | not written | — |
+| Attention, KDA | 69 | written | state footprint matches to a header; arithmetic unverified |
+
+Every stage now has a written equation. Three are verified against the engine, three are not.
 
 ## Constants
 
@@ -191,10 +193,80 @@ latent      24 layers x (512 + 64)     x 4 B  =      55,296 B/position   measure
 Both were measured from a saved state file days before this equation was written. Shape
 confirmed; the arithmetic itself is still unverified against captured vectors.
 
-## KDA — not yet written
+## KDA — written, not yet numerically verified
 
-69 of the 93 layers, and the ones carrying positional information. Recorded as absent rather
-than sketched.
+69 of the 93 layers, and the only place position enters the model. $H=96$ heads,
+$D=128$, $P=HD=12288$, kernel $K=4$.
+
+**Projections from $x_t$:**
+
+$$q_t=W_qx_t,\quad k_t=W_kx_t,\quad v_t=W_vx_t\ \in\mathbb{R}^{12288},
+\qquad \beta_t=\sigma\big(W_bx_t\big)\in\mathbb{R}^{96}$$
+
+$$z_t=W_{fb}\big(W_{fa}x_t\big)\qquad\text{one shared low-rank pair, } 7168\to128\to12288$$
+
+**ShortConv, causal depthwise, SiLU fused** — applied to $q,k,v$ with separate weights, and
+the $K-1$ history carries across calls:
+
+$$a_{t,c}=\sum_{j=0}^{3}w_{c,j}\,x_{t-3+j,\,c},\qquad y_{t,c}=a_{t,c}\,\sigma(a_{t,c})$$
+
+Taps run oldest to newest, so $w_{c,3}$ multiplies the current input.
+
+**L2 normalization on $q$ and $k$ only, per head.** $v$ is deliberately left alone:
+
+$$q_{t,h}\leftarrow \frac{q_{t,h}}{\sqrt{\lVert q_{t,h}\rVert^2+10^{-6}}}$$
+
+This is **not** RMSNorm — no division by $D$, no learned weight, and $\epsilon=10^{-6}$
+rather than $10^{-5}$.
+
+**Channel-wise forget gate:**
+
+$$g_{t,i}=\ell\cdot\sigma\Big(e^{A_h}\big(z_{t,i}+\text{dt\_bias}_i\big)\Big),
+\qquad \alpha_{t,i}=e^{g_{t,i}},\qquad \ell=-5$$
+
+so $g\in(-5,0]$ and $\alpha\in(e^{-5},1]$. **$A_{\log}$ is indexed per head, not per
+channel** — the checkpoint stores $D$ floats but only the first $H$ are nonzero, and
+indexing it per channel is silent and fatal.
+
+**The recurrence** — a delta rule over a state $S_h\in\mathbb{R}^{D\times D}$, with
+$\hat q=q/\sqrt{D}$:
+
+$$S\leftarrow\operatorname{diag}(\alpha_t)\,S,
+\qquad u=S^{\top}k_t,
+\qquad S\leftarrow S+\beta_t\,k_t\,(v_t-u)^{\top},
+\qquad o_t=S^{\top}\hat q_t$$
+
+$(v-u)$ is the prediction error: that term is what makes this a **delta rule** rather than
+plain accumulation. The output reads the **already updated** state.
+
+**Output — norm, then gate, then project:**
+
+$$o_{t,h}\leftarrow\mathrm{N}\big(o_{t,h};w_{o\text{-norm}}\big)\ \text{per head},
+\qquad o_t\leftarrow o_t\odot\sigma\big(W_gx_t\big),
+\qquad \mathrm{KDA}(x_t)=W_o\,o_t$$
+
+### Where it differs from MLA, and why that matters
+
+| | MLA | KDA |
+|---|---|---|
+| position | none | carried in $S$ |
+| cost in context length | $O(T)$ cache, grows | $O(1)$ state, fixed |
+| output order | gate, then project | **norm, then gate, then project** |
+| normalization of $q,k$ | none | L2 per head |
+
+The output ordering is the trap: MLA applies no norm before its gate, KDA does. Swapping
+them runs and is wrong.
+
+### A second structural cross-check that passes
+
+$$\texttt{kper}=P\cdot D+3P(K-1)=1{,}572{,}864+110{,}592=1{,}683{,}456\ \text{floats}=6{,}733{,}824\ \text{B}$$
+
+At 93 layers that is **626,245,632 B**, against **626,246,288 B** measured in a saved state
+file — a 656-byte difference, the size of a file header.
+
+**And it exposes waste.** The state is allocated for all 93 layers (`state_layers = NL`)
+though only 69 are KDA, so **161.6 MB per stream — 25.8% of the recurrent state — is
+allocated and never touched.** A KDA-only allocation would be 464.6 MB.
 
 ---
 
