@@ -3376,12 +3376,12 @@ in MXFP4 (0.53 B/param), so that 15.72 GB is not a quantization choice.
 
 **What moves.** *(Corrected 2026-09-25 — this said 28 KB; see the correction section at the
 end of this file.)* Not one hidden state. AttnRes attends over `[stack..., running]` twice
-per layer and the stack grows every 12th, so the whole stack crosses: **148.4 KB mean per
-hop**, 56 KB at layer 1 rising to 252 KB at layer 92, **13.8 MB end to end**. Against
-134.64 GB of local weight traffic per token that is **9,860 : 1**. A 1 GbE port carries
-**822 tokens/s** — above what the cards produce, but not by the margin first claimed.
-**Still no NVLink or InfiniBand needed**, which is what distinguishes this from tensor
-parallelism; the link is now a constraint to size rather than a non-issue.
+per layer and the stack grows every 12th, so the whole stack crosses: **150.3 KB mean per
+hop**, 56 KB at layer 1 rising to 252 KB at layer 92, **14.0 MB end to end**. Against
+134.64 GB of local weight traffic per token that is **9,406 : 1**. A 1 GbE port carries
+**812 tokens/s** — *below* the ~837 the pipeline produces, so the link is the binding
+constraint, not a non-issue. **No NVLink or InfiniBand needed**, which still distinguishes
+this from tensor parallelism, but 1 GbE is not enough; 2.5 GbE is.
 
 **Numbers, 93 cards one layer each, pipeline saturated** (spec-sheet bandwidths, expect
 20–40% worse real):
@@ -3524,10 +3524,10 @@ N=930: pods **$135**, H200 **$29**.
 
 - GDDR7 is **3.6x cheaper per GB** and **6.0x cheaper per GB/s**.
 - HBM3e is **2.2x more bandwidth per watt**.
-- The interconnect claim holds, with a corrected figure: **148.4 KB per hop** (the snapshot
-  stack, not a bare 7168 x 4 B state), 13.8 MB end to end, against 35.3 GB of local weight
-  traffic per token at B=10 — a ratio of **1 : 2,558**, not the 1 : 13,227 first written.
-  Ordinary ethernet still carries it. No NVLink, no InfiniBand.
+- The interconnect claim needs qualifying: **150.3 KB per hop** (the snapshot stack, not a
+  bare 7168 x 4 B state), 14.0 MB end to end, against 35.3 GB of local weight traffic per
+  token at B=10 — a ratio of **1 : 2,520**, not the 1 : 13,227 first written. No NVLink and
+  no InfiniBand, but 1 GbE does not carry it either: 812 tok/s against 837 required.
 
 So the trade is exact: **the pipeline avoids the interconnect by paying a batch-efficiency
 penalty of 9-22x at realistic concurrency.** The interconnect is cheaper than the penalty.
@@ -3682,27 +3682,51 @@ changing how they are wired.** At one stage they match the H200 node on energy e
 
 ---
 
-## 2026-09-25 — CORRECTION: the wire payload is 148.4 KB, not 28 KB
+## 2026-09-25 — CORRECTION: the wire payload is 150.3 KB, not 28 KB
 
 Published wrong in `residency-not-speed.md` and in the LinkedIn draft. The error was assuming
 one hidden state crosses a stage boundary. It does not. **AttnRes attends over
 `[stack..., running]` twice per layer**, and the stack grows every 12th layer, so what a stage
 must receive is the whole stack, not a single vector.
 
+First corrected to 148.4 KB from a five-position estimate; then measured directly with a
+per-source tap inside `k3_attn_res` over 41,624 aggregations:
+
 ```
-AttnRes aggregations   2 per layer x 93 = 186
-SOURCES attended over  986 per token
-stack depth            min 0, max 8, mean 4.30
+AttnRes aggregations   185 per position   (layer 0 has no pre-attention one)
+SOURCES attended over  1,002 per position (the estimate said 986)
+mean sources offered   5.37               stack depth 0 to 8
 payload    layer 1   56.0 KB    layer 48  140.0 KB    layer 92  252.0 KB
-           mean     148.4 KB    <- against the 28.0 KB published
-ratio to local traffic   1 : 9,860    (published 1 : 80,000)
-1 GbE ceiling            822 tok/s    (published 4,360)
+           mean     150.3 KB    <- against the 28.0 KB published
+ratio to local traffic   1 : 9,406    (published 1 : 80,000)
+1 GbE ceiling            812 tok/s    (published 4,360)
 ```
 
-The compute cost of the 986 passes is negligible (~21 MFLOP, 0.01% of the token). It matters
-only because the stack has to cross the wire. **The conclusion survives — 822 tok/s still
-clears the 837 tok/s the pipeline can produce — but it survives with almost no margin, where
-the published number implied five times the headroom.** Owed: fix both places.
+The compute cost of the 1,002 passes is negligible (~22 MFLOP, 0.01% of the token). It
+matters only because the stack has to cross the wire. **The conclusion does NOT survive
+intact: 812 tok/s is below the ~837 tok/s the pipeline produces, so a 1 Gbit/s port is the
+binding constraint, not the cards.** The GEX45 the cost model is built on has exactly that
+port. 2.5 GbE clears it. The published figure implied 5x headroom; the real headroom is
+negative.
+
+### What each of the 1,002 transformations does
+
+```
+mean largest weight                0.832
+mean effective sources 1/sum(p^2)  1.46    out of 5.37 offered
+mean weight on the running state   0.805
+running state IS the largest       93.1% of the time
+sources needed for 99% of weight   3.70
+```
+
+**The aggregation behaves like a pass-through.** Offered five sources it acts like one and a
+half, and 93% of the time the dominant one is the state already in hand. Two layers break it
+systematically: **layer 5** (running largest only 4% of the time, mean weight 0.359) and
+**layer 10** (28%) — both inside the first block, both reaching back to the layer-0 snapshot.
+
+This does not rescue the interconnect. Shipping only enough sources for 99% of the softmax
+mass gives 103.5 KB and 1,180 tok/s — 1.45x — but it is **lossy**, and bit-exactness has been
+this engine's whole claim. For the exact case the requirement stands at 150.3 KB.
 
 ## 2026-09-25 — Can the next layer's experts be predicted?
 

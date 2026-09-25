@@ -111,35 +111,36 @@ A 24 GB card holds that with 7 GB to spare. Ninety-three such cards hold the ent
 1,555 GB model with **nothing streaming from disk at any point**. The 35% of wall clock
 our machine spends waiting on SSD does not get faster — it stops existing.
 
-### What has to move between them: 148 KB
+### What has to move between them: 150 KB
 
-*(Corrected 2026-09-25. This section first said 28 KB. That was wrong — see below.)*
+*(First said 28 KB, then 148.4 KB from a five-position estimate. The figure below is
+measured directly over 41,624 aggregations.)*
 
 The obvious answer is one hidden state: 7168 values at 4 bytes, 28 KB. That is what I
 published, and it is not what this model does.
 
 **AttnRes attends over `[stack..., running]` twice per layer**, and the stack gains an entry
 every 12th layer. A stage therefore has to receive the whole stack, not a single vector.
-Measured over a real token: **186 aggregations, 986 sources attended, stack depth 0 to 8,
-mean 4.30.**
+Measured over a real token: **185 aggregations, 1,002 sources attended, stack depth 0 to 8,
+mean sources per aggregation 5.37.**
 
 ```
 payload    layer 1    56.0 KB
            layer 48  140.0 KB
            layer 92  252.0 KB
-           mean      148.4 KB      end to end 13.8 MB
+           mean      150.3 KB      end to end 14.0 MB
 ```
 
-Against 2.24 GB of local reading per layer that is **1 : 9,860** — not the 1 : 80,000 I
-first claimed. The compute those 986 passes cost is genuinely negligible (~21 MFLOP, 0.01%
+Against 1.45 GB of local reading per layer that is **1 : 9,406** — not the 1 : 80,000 I
+first claimed. The compute those 1,002 passes cost is genuinely negligible (~22 MFLOP, 0.01%
 of the token). It matters only because the stack has to cross the wire.
 
-**A 1 Gbit/s port sustains roughly 822 tokens per second of hop traffic.** The pipeline
-those cards form produces about 837 tok/s. So ordinary ethernet does *not* comfortably
-carry this — it lands within 2% of the ceiling, and the 252 KB peak at the deep layers is
-above it. The shape still works, but the link is a real constraint to size, not a
-rounding error. The original 4,360 tok/s figure implied five times the headroom that
-exists.
+**A 1 Gbit/s port sustains roughly 812 tokens per second of hop traffic.** The pipeline
+those cards form produces about 837 tok/s. **So ordinary ethernet does not carry this.** The
+link, not the cards, becomes the binding constraint — and the GEX45 this design was costed on
+has exactly a 1 Gbit/s port. 2.5 GbE clears it with room; 1 GbE does not. The original
+4,360 tok/s figure implied five times the headroom that exists, and the headroom is in fact
+negative.
 
 That is still the difference between this shape and tensor parallelism. Tensor parallelism
 splits a single layer across devices and must reconcile partial results every layer, which
@@ -151,24 +152,45 @@ boundary — three orders of magnitude less, not five.
 Counted from the trace, one token is not 93 sequential steps:
 
 ```
-AttnRes aggregations (2 per layer)       186
-  sources consumed by them               986   each = 1 RMS norm + 1 dot + 1 accumulate
+AttnRes aggregations                     185   layer 0 has no pre-attention one
+  sources consumed by them             1,002   each = 1 RMS norm + 1 dot + 1 accumulate
 pre-attn / pre-mlp norms                 186
 attention ops                             93   (69 KDA, 24 MLA)
 router evaluations                        92
 routed expert evaluations              1,472   (92 x 16)
 shared expert evaluations                184   (92 x 2)
-vector-producing operations, total     3,013
+vector-producing operations, total     3,029
 ```
 
-**The running state is regenerated 186 times, each time from up to nine sources.** And the
+**The running state is regenerated 185 times, each time from up to nine sources.** And the
 eight snapshots pushed at layers 0, 12, 24 ... 84 are read by every later layer, so the
 dependency graph is **93 nodes in series plus 400 long-range broadcast edges** — not a line.
 
-The 986 source passes cost about 21 MFLOP against 206 GFLOP for the token, 0.01%, so this is
-cheap to compute and awkward to distribute. It is the same fact as the 148.4 KB payload seen
-from the other side: a stage cannot be handed only its predecessor's output, because it also
-needs the eight snapshots that predecessors long past produced.
+The 1,002 source passes cost about 22 MFLOP against 206 GFLOP for the token, 0.01%, so this
+is cheap to compute and awkward to distribute. It is the same fact as the 150.3 KB payload
+seen from the other side: a stage cannot be handed only its predecessor's output, because it
+also needs the eight snapshots that predecessors long past produced.
+
+### What each of those 1,002 transformations actually does
+
+Measured per source across 41,624 aggregations:
+
+```
+mean largest weight                0.832
+mean effective sources 1/sum(p^2)  1.46    out of 5.37 offered
+mean weight on the running state   0.805
+running state is the largest       93.1% of the time
+```
+
+**The aggregation is overwhelmingly a pass-through.** It is offered five sources and behaves
+like one and a half, and the one it usually picks is the state already in hand. Two layers
+break the pattern systematically: at **layer 5** the running state is largest only 4% of the
+time (mean weight 0.359) and at **layer 10** only 28% — both sit inside the first block, so
+both are reaching back to the layer-0 snapshot.
+
+This does **not** shrink the wire payload, because dropping the small weights is lossy. Ship
+enough sources for 99% of the softmax mass and the payload falls to 103.5 KB, 1.45x smaller;
+but the engine's value here has been bit-exactness, and 99% is a different model.
 
 ---
 
@@ -238,7 +260,7 @@ can rent by the month.
 | expert read from SSD | 35% | **gone** — 896 experts resident per card |
 | trunk stream at 47.9 GB/s | 43% | VRAM at 432 GB/s per card, 93 cards in parallel |
 | expert stream at 47.9 GB/s | 10% | same |
-| interconnect | n/a | 148 KB per hop, 1 : 9,860 against local traffic |
+| interconnect | n/a | 150.3 KB per hop, 1 : 9,406 against local traffic |
 
 The two terms that are 78% of our token both come from *not holding the model*. Hold it,
 and they are not optimized — they are removed.
@@ -257,7 +279,7 @@ Stated plainly, because a document that only lists advantages is not evidence.
   first block also needs the snapshots pushed at layers 0, 12, 24 and so on, so a late stage
   cannot start from its predecessor's output alone — 400 broadcast edges sit on top of the
   93 in series. Any staging plan has to carry the stack, which is what makes the payload
-  148.4 KB instead of 28 KB.
+  150.3 KB instead of 28 KB.
 - **Batching is fragmented.** With N concurrent requests spread over 93 stages, each stage
   only ever batches N/93. Weights are read per batch, not per token, so a smaller batch
   means more reading per token produced. This is the real cost of the shape and it does not
