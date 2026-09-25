@@ -3374,10 +3374,14 @@ experts for that layer, resident, no disk. Nothing but the hidden state crosses 
 Cluster 1,555.3 GB. **24 GB per card is the floor; 16 GB misses it.** Experts ship natively
 in MXFP4 (0.53 B/param), so that 15.72 GB is not a quantization choice.
 
-**What moves.** The hidden state only: 7168 × 4 B = **28 KB per hop**, 2.64 MB end to end.
-Against 134.64 GB of local weight traffic per token that is **51,042 : 1**. Even 1 GbE
-carries 4,360 tokens/s — 29× more than the cards can consume. **No NVLink or InfiniBand
-needed**, which is what distinguishes this from tensor parallelism.
+**What moves.** *(Corrected 2026-09-25 — this said 28 KB; see the correction section at the
+end of this file.)* Not one hidden state. AttnRes attends over `[stack..., running]` twice
+per layer and the stack grows every 12th, so the whole stack crosses: **148.4 KB mean per
+hop**, 56 KB at layer 1 rising to 252 KB at layer 92, **13.8 MB end to end**. Against
+134.64 GB of local weight traffic per token that is **9,860 : 1**. A 1 GbE port carries
+**822 tokens/s** — above what the cards produce, but not by the margin first claimed.
+**Still no NVLink or InfiniBand needed**, which is what distinguishes this from tensor
+parallelism; the link is now a constraint to size rather than a non-issue.
 
 **Numbers, 93 cards one layer each, pipeline saturated** (spec-sheet bandwidths, expect
 20–40% worse real):
@@ -3520,9 +3524,10 @@ N=930: pods **$135**, H200 **$29**.
 
 - GDDR7 is **3.6x cheaper per GB** and **6.0x cheaper per GB/s**.
 - HBM3e is **2.2x more bandwidth per watt**.
-- The interconnect claim holds and is the real result: **28 KB per hop** (7168 x 4 B),
-  2.67 MB end to end, against 35.3 GB of local weight traffic per token at B=10 — a ratio of
-  **1 : 13,227**. Ordinary ethernet carries it. No NVLink, no InfiniBand.
+- The interconnect claim holds, with a corrected figure: **148.4 KB per hop** (the snapshot
+  stack, not a bare 7168 x 4 B state), 13.8 MB end to end, against 35.3 GB of local weight
+  traffic per token at B=10 — a ratio of **1 : 2,558**, not the 1 : 13,227 first written.
+  Ordinary ethernet still carries it. No NVLink, no InfiniBand.
 
 So the trade is exact: **the pipeline avoids the interconnect by paying a batch-efficiency
 penalty of 9-22x at realistic concurrency.** The interconnect is cheaper than the penalty.

@@ -502,10 +502,13 @@ nine sources where early ones attend over two.
 
 ### What the shape costs
 
-**One pass is 208.533 GB** — 108.812 trunk + 99.721 experts — to move a 28 KB hidden state
-93 times. That is roughly **80,000 bytes read per byte of state advanced**, and none of it
-can be skipped or reordered: layer L needs layer L−1's output, and its 16 experts are not
-known until its own router has run on that output.
+**One five-position pass is 208.533 GB** — 108.812 trunk + 99.721 experts. **One token is
+134.64 GB** — 108.812 trunk + 25.83 experts; the two are easy to confuse and the larger
+number is not a per-token figure. What that moves is not a 28 KB hidden state: AttnRes
+attends over `[stack..., running]` twice per layer, so **148.4 KB mean** crosses each
+boundary, 13.8 MB end to end. That is roughly **9,900 bytes read per byte of state
+advanced**, and none of it can be skipped or reordered: layer L needs layer L−1's output,
+and its 16 experts are not known until its own router has run on that output.
 
 Two consequences that the averaged view could not show:
 
