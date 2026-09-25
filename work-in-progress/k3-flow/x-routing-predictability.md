@@ -257,6 +257,40 @@ from the residual structure before the run, not fitted after.
 1.3 points apart at top-16 and 0.3 at top-128, on two prompts as far apart as English prose
 and C source. Nothing was fitted, so nothing transferred badly.
 
+### How fast the information decays
+
+The useful question is not whether two or three layers back can predict the next router, but
+how quickly predictive information decays with the age of the state. Driving layer L's gate
+from the state of layer L-1-d, with pairs that cross a snapshot boundary excluded:
+
+| d layers | v6 prose | unseen code | all pairs | n clean |
+|---:|---:|---:|---:|---:|
+| 1 | 59.3% | 58.1% | 55.6% | 18,900 |
+| 2 | 48.6% | 47.0% | 44.3% | 17,100 |
+| 3 | 41.9% | 40.8% | 38.2% | 15,300 |
+| 4 | 36.4% | 35.8% | 34.4% | 13,500 |
+| 5 | 31.3% | 31.4% | 31.4% | 11,700 |
+| 6 | 26.6% | 27.1% | 28.8% | 9,900 |
+| 7 | 22.7% | 23.7% | 26.6% | 8,100 |
+| 9 | 17.7% | 18.8% | 25.0% | 4,500 |
+
+**The ratio is 0.86 per layer and holds across the whole range — exponential decay, halving
+every ~4.7 layers** (4.6 on prose, 4.9 on unseen code). At 32.4 vector operations per layer
+that is a half-life of roughly **150 operations**. The two prompts stay within about one
+point of each other at every distance, so the decay constant is a property of the model and
+not of the text.
+
+For a design this is the number that matters: lead time is buyable, but it costs accuracy at
+a fixed exponential rate, and beyond about 7 layers the prediction is worth less than simply
+prefetching a larger candidate set at short range.
+
+**Unexplained.** From d >= 6 the all-pairs column *overtakes* the snapshot-free one — 25.0%
+against 17.7% at d = 9. Crossing a snapshot should destroy the state. The candidate
+mechanism is that a snapshot copies the residual verbatim onto the stack and AttnRes
+re-injects it at every later layer, so a pre-snapshot state is still literally present
+downstream; but it could equally be a selection effect in which layers survive the clean
+filter at large d. Recorded as an anomaly, not a finding.
+
 ### What it costs
 
 The gates are already in the trunk, so residency does not change. The extra work is one more
@@ -270,8 +304,9 @@ and is not admissible for the layer output.
 
 ### What this does not establish
 
-- **One layer of lookahead only.** A 93-stage pipeline has a whole stage of lead time and
-  would want two or three layers. Accuracy at greater depth is untested and will be lower.
+- **Lead time beyond one layer costs accuracy exponentially** — measured above, halving
+  every ~4.7 layers. A 93-stage pipeline has a whole stage of lead and can spend it; a
+  deeper split cannot.
 - **Snapshot layers get little benefit** — 27.8% at `L mod 12 == 0`, one layer in twelve.
 - **Two prompts, prefill positions, one generated token each.** Measured on traces, not in
   the engine: no implementation exists and no wall-clock improvement has been observed.
