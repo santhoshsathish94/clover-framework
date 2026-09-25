@@ -3675,6 +3675,157 @@ changing how they are wired.** At one stage they match the H200 node on energy e
   model. The 12-stage row depends on it and it is unverified.
 - Nothing here is a GPU measurement. Our measured bytes, vendor bandwidths, one rented price.
 
+---
+
+## 2026-09-25 — CORRECTION: the wire payload is 148.4 KB, not 28 KB
+
+Published wrong in `residency-not-speed.md` and in the LinkedIn draft. The error was assuming
+one hidden state crosses a stage boundary. It does not. **AttnRes attends over
+`[stack..., running]` twice per layer**, and the stack grows every 12th layer, so what a stage
+must receive is the whole stack, not a single vector.
+
+```
+AttnRes aggregations   2 per layer x 93 = 186
+SOURCES attended over  986 per token
+stack depth            min 0, max 8, mean 4.30
+payload    layer 1   56.0 KB    layer 48  140.0 KB    layer 92  252.0 KB
+           mean     148.4 KB    <- against the 28.0 KB published
+ratio to local traffic   1 : 9,860    (published 1 : 80,000)
+1 GbE ceiling            822 tok/s    (published 4,360)
+```
+
+The compute cost of the 986 passes is negligible (~21 MFLOP, 0.01% of the token). It matters
+only because the stack has to cross the wire. **The conclusion survives — 822 tok/s still
+clears the 837 tok/s the pipeline can produce — but it survives with almost no margin, where
+the published number implied five times the headroom.** Owed: fix both places.
+
+## 2026-09-25 — Can the next layer's experts be predicted?
+
+Motivation was the creator's claim: for a given 7168-wide state the top-16 experts are a
+fixed relationship, so they could be fetched without computing the router. If true, the
+disk-resident-expert design needs only ~2-3 GB per layer of memory and prefetch hides the read.
+
+**Determinism confirmed first**, three ways, because the claim is meaningless without it:
+841/841 hashed tensors bit-identical across a replay; 465/465 row taps identical across six
+runs at differing lengths, worst relative difference 0.000e+00; France to Paris every time.
+
+**Four routes tested. Three are dead, and they died on the same failure.**
+
+| route | within v6 | transferred to unseen prompts |
+|---|---:|---|
+| static popular set (top-193) | 80.0% (fitted on itself) | 16.4-25.0%, vs 21.5% random — **dead** |
+| learned cross-layer co-occurrence | 27.6% vs 20.4% frequency | 4.3-13.9% — **collapses, dead** |
+| threshold artifact (rank 1-4 vs 9-16) | 29.1% vs 28.3% | not the mechanism — **dead** |
+| previous position (free, no model) | 31.2% | **24.8-40.4% — the only survivor** |
+
+The pattern is unambiguous: **every route built on expert *indices* fitted the prompt, not the
+model.** Index co-occurrence is a property of one text.
+
+**One real exception. Layer 12.** Top-250 experts pinned at layer 12 transfer to unseen prompts
+at **75.2%** (73.8 / 81.5 / 75.0 / 70.4 across four prompts) against a 27.9% baseline. Next
+best layer is 49.5%; only 3 of 92 layers beat baseline by more than 1.5x. Layer 12 uses a
+narrow expert set for *every* prompt tested (53-128 distinct, vs 387 in the fitted prompt).
+Snapshot layers as a class are not the mechanism — 30.4% vs 28.3% for the rest. n=1 of 92,
+unexplained, and recorded as an observation rather than a finding.
+
+### The instrument was wrong, and the creator said so
+
+He redirected twice: look at the **7168 fractional set**, not the expert indices, because
+experts are selected by weights summing to 1.0 and the selection deviates. And: **look at one
+layer**, not all 92. Both corrections were right and neither had occurred to me.
+
+Built a raw-vector tap (`K3_TRACE_RAW`, binary sink: int32 layer, int32 pos, int32 cols, then
+cols float32) at `norm.pre_mlp` — the exact vector the router reads. `make test` after the
+change: *"ENGINE MATCHES THE REFERENCE EXACTLY"*, all weightless tests pass. Dumped 600,212,700
+bytes for the 225-position prose prompt.
+
+**Pooling the 12 sampled layers gave a non-monotonic table** (the 0.90-0.95 similarity bin at
+3.8% between neighbors at 36.8% and 20.7%) — an artifact of pooling layers whose magnitude
+regimes differ by 100x across the period-12 sawtooth. Per layer, the picture is clean:
+
+```
+layer   cos mean   lowQ ovl  highQ ovl    ratio  pearson
+  1       0.923       2.2%       5.3%     2.40x    0.218
+ 12       0.975      12.9%      28.2%     2.19x    0.392
+ 24       0.304       2.8%      11.1%     4.02x    0.577
+ 36       0.330       3.1%      12.9%     4.12x    0.599
+ 48       0.697       8.8%      20.3%     2.32x    0.455
+ 54       0.556      20.6%      42.6%     2.07x    0.564
+ 90       0.540      23.3%      41.8%     1.79x    0.571
+ 92       0.404       5.1%      17.9%     3.50x    0.454
+```
+
+**Positive in all 12 layers, r = 0.22 to 0.60, and pairs within +-6 positions are excluded** —
+so it is not temporal adjacency wearing a disguise. The routing map is smooth in state space.
+
+Nearest-neighbor on the state then beats the free baseline, still excluding the +-6 window:
+
+```
+vote of 5 nearest states      40.4%
+nearest state                 37.8%
+previous position (free)      32.1%
+random other position         16.0%
+chance                         1.8%
+```
+
+**Status: RESOLVED, and it is a no.** The cross-prompt test was run with the bar set in
+advance. Library = v6 prose (225 positions), query = an unseen 793-byte C-code prompt (268
+positions).
+
+```
+A vote of 5 nearest PROSE states     14.2%
+B nearest PROSE state                12.6%
+C previous position, same prompt     31.1%   <- the free baseline
+D random prose position               7.8%
+   chance                             1.8%
+```
+
+**It loses in all 12 layers**, by 4.9 to 38.5 points. Fifth route, same death as the other
+four.
+
+### But the failure is coverage, not smoothness — and that distinction is the finding
+
+Smoothness **replicates on the unseen code prompt**: r = 0.317 to 0.678, mean 0.470, against
+v6's 0.22–0.60. So the map really is smooth, in both prompts, in every layer. What fails is
+that a different prompt lands somewhere the library has never been:
+
+```
+nearest-neighbor cosine   within prompt 0.807   across prompts 0.661   gap -0.146
+```
+
+The per-layer gap predicts the per-layer failure almost exactly — layer 12 (gap -0.010) scored
+21.8%, layer 92 (gap -0.297) scored 3.2%, layer 24 (gap -0.278) scored 9.8%.
+
+### How much library would close it: about a zettabyte
+
+Subsampling the library from 8 to 224 states moves coverage barely at all (layer 24:
+0.284 -> 0.371 for a 28x larger library). Fitting `(1-cos) ~ N^slope`:
+
+```
+layer 92  -0.073   2.8e+08 states needed
+layer 54  -0.036   3.84e+10
+layer 90  -0.032   4.14e+14
+layer 24  -0.039   3.51e+15
+layer 36  -0.031   1.16e+19
+median             4.14e+14 states per layer
+```
+
+At 28,672 bytes per state that is **~12 EB per layer, ~1 ZB for the model — roughly 700
+million times the size of the model.** Those slopes put the effective dimension of the state
+manifold in the tens (~27–65), which is why nearest-neighbor coverage cannot work.
+
+> **The creator's premise was correct and I could not fault it: the 7168 -> top-16 map is
+> exactly deterministic (proven bit-exact) and it is smooth (proven in two unrelated prompts,
+> all layers). It still cannot be turned into a lookup, because the domain is too large to
+> cover. The table that would let you skip the router is astronomically bigger than the
+> router. Compute beats storage here by eight orders of magnitude — and that is a reason, not
+> a dead end.**
+
+Practical consequence for the disk-resident-expert design: prefetching must be driven by the
+router's own output one layer ahead (the measured budget — one layer of lead at ~7 GB/s is
+0.308 GB, about 17 experts — gives 34.0% at 16 and 47.8% at 32), not by any precomputed map.
+Layer 12 remains the single unexplained exception, at 75.2% transfer from a pinned set.
+
 
 
 
