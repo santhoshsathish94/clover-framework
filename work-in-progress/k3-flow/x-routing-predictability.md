@@ -1,14 +1,17 @@
 # x — can the next experts be known before the router runs?
 
-**The 7168-wide state determines the top-16 experts exactly, and the map from one to the
-other is smooth. Neither fact makes the experts predictable in advance.**
+**The 7168-wide state determines the top-16 experts exactly, and the map is smooth. That is
+not enough to replace the computation with a table — but it is enough to run the computation
+early. Feeding layer L's state to layer L+1's own gate names 56% of its experts before that
+layer is reached, on an unseen prompt, with nothing fitted.**
 
 Question: layer L's router reads layer L's own input, so the 16 experts of 896 become known
 microseconds before they are needed. If they could be known a layer earlier, a machine
 holding experts on disk could prefetch them and the 35% of wall clock spent waiting on SSD
 would disappear. Is there anything to prefetch *from*?
 
-Run 2026-09-25. Closed.
+Run 2026-09-25. The lookup question is closed. A second question it opened is answered at the
+bottom, and that one is positive.
 
 ## Why it would matter
 
@@ -173,16 +176,107 @@ hopeless at that dimensionality.
 
 ## What this means for the design
 
-Prefetch has to be driven by the router's own output one layer ahead, not by any precomputed
-map. Measured on held-out positions of the fitted prompt, against the 17-expert budget one
-layer of lead time buys:
+Prefetch cannot be driven by a stored map. It can be driven by the gate itself, run early.
+
+---
+
+# The router was never the thing to derive
+
+The whole investigation above tried to approximate a function that is already closed form.
+Read from the engine:
 
 ```
-prefetch 16 -> 34.0%    24 -> 42.6%    32 -> 47.8%    64 -> 58.5%    128 -> 69.1%
+score[e]  = sigmoid( W_l[e] . x_l )     W_l = [896, 7168] I8R, 6.43 MB packed
+choice[e] = score[e] + b_l[e]           b_l = 896 f32, 3.584 KB
+experts   = top-16 by choice
 ```
 
-And the structure already exploited by the existing cache — 40–53% temporal reuse between
-adjacent tokens — remains the only reliable one.
+One projection, an elementwise sigmoid, a per-expert bias, top-k. No recurrence and nothing
+hidden. **All 92 gates together are 1.182 GB, 0.076% of the model, and they are already
+resident inside the trunk.** Approximating that can only be less accurate for no saving.
+
+The router was never the cost either: 6.4 MFLOP per layer per token, 590 MFLOP across the
+model, against 206 GFLOP for the token as a whole.
+
+**The obstacle is the dependency, not the form.** `R_l` needs `x_l`, and `x_l` does not exist
+until layer `l-1` has read its experts. So the question is not what the router is, but when it
+can be evaluated.
+
+## One-layer lookahead: run the real gate on a stale state
+
+Keep the exact gate. Feed it the previous layer's state.
+
+```
+predicted experts at L+1  =  top16( W_{L+1} . x_L + b_{L+1} )
+```
+
+Nothing is fitted. There is no theta, no training set, no library, so there is nothing that
+can overfit a prompt.
+
+**Gate passed first:** the same code driven by each layer's *own* state reproduces the traced
+picks at **100.0%**, all 92 layers, all 225 positions. That validates the tensor offsets, the
+I8R dequantization (`w[e][i] = int8[e][i] * scale[e]`, rows of `[f32 scale][int8 x 7168]`),
+and that the `norm.pre_mlp` tap is exactly the vector the router reads.
+
+```
+GATE re-run on its OWN state (must be 100%)      100.0%
+GATE of layer L+1 driven by state of L            56.9%
+baseline: reuse layer L's picks for L+1            1.7%
+chance                                             1.8%
+```
+
+**Consecutive layers share essentially no experts — 1.7%, at chance — while the state carries
+over well enough to place 57% of the next layer's choices.** That single contrast explains
+every failure above: expert indices carry nothing between layers, and the state carries
+almost everything.
+
+### The sawtooth is visible in the accuracy, as predicted
+
+Snapshots every 12 layers **replace** the residual rather than adding to it, so the state
+should jump there and drift smoothly in between. It does:
+
+```
+layer mod 12    0      3      7     11
+lookahead    27.8%  55.1%  69.4%  73.1%
+```
+
+Worst at the snapshot, climbing monotonically to the layer before the next one. Predicted
+from the residual structure before the run, not fitted after.
+
+### It transfers, which nothing else did
+
+| prefetch budget | v6 prose | unseen C code |
+|---|---:|---:|
+| top-16 (0.28 GB) | 56.7% | **55.4%** |
+| top-24 (0.42 GB) | 65.5% | 64.1% |
+| top-32 (0.56 GB) | 70.4% | 69.1% |
+| top-48 (0.84 GB) | 76.0% | 74.9% |
+| top-64 (1.12 GB) | 79.2% | 78.4% |
+| top-128 (2.25 GB) | 85.6% | **85.3%** |
+
+1.3 points apart at top-16 and 0.3 at top-128, on two prompts as far apart as English prose
+and C source. Nothing was fitted, so nothing transferred badly.
+
+### What it costs
+
+The gates are already in the trunk, so residency does not change. The extra work is one more
+gate evaluation per layer: **590 MFLOP per token against 206 GFLOP, +0.29% compute.** At the
+17-expert budget that one layer of lead time buys at ~7 GB/s, that moves **~56% of the
+25.83 GB/token of expert reads off the critical path.**
+
+Correctness is untouched. The exact router still runs and still decides; a wrong prediction
+costs a cache miss, never a wrong token. This is the reason approximation is admissible here
+and is not admissible for the layer output.
+
+### What this does not establish
+
+- **One layer of lookahead only.** A 93-stage pipeline has a whole stage of lead time and
+  would want two or three layers. Accuracy at greater depth is untested and will be lower.
+- **Snapshot layers get little benefit** — 27.8% at `L mod 12 == 0`, one layer in twelve.
+- **Two prompts, prefill positions, one generated token each.** Measured on traces, not in
+  the engine: no implementation exists and no wall-clock improvement has been observed.
+- The 56% figure is expert *identity* accuracy, not a measured speedup. Whether the I/O
+  actually overlaps depends on the prefetch machinery, which does not exist yet.
 
 ## What this does not cover
 
@@ -197,6 +291,9 @@ adjacent tokens — remains the only reliable one.
   secretly fit the prompt. A learned model might do better, and would have to clear the same
   cross-prompt bar to mean anything.
 
-**Evidence** — analysis scripts, both router traces, both run logs and the engine patch are
-in `k3routing.tgz`. The two raw state dumps are 1.32 GB of float32 and are deliberately not
-in this repository; they regenerate from the patch and the two prompt files.
+**Evidence** — analysis scripts (`nn.py`, `cross.py`, `why.py`, `cov.py`, `lookahead.py`,
+`ahead2.py`), both router traces, both run logs and the engine patch are in `k3routing.tgz`.
+The two raw state dumps are 1.32 GB of float32 and are deliberately not in this repository;
+they regenerate from the patch and the two prompt files. The gate reconstruction reads
+`trunk_i8/trunk.bin` directly at `layers[L].file_off + tensor.off` and is verified by the
+100.0% sanity gate.
