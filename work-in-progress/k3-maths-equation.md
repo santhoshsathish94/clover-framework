@@ -18,11 +18,13 @@ below says so.
 | RMSNorm | 186 | written | **bit-exact, 2,976 / 2,976** |
 | AttnRes | 185 (1,002 source passes) | written | **median 4.5e-08, 99% under 1e-6** |
 | Router | 92 | written | **bit-exact, 100%** |
-| MoE | 92 | written | not verified — needs the MXFP4 expert weights |
+| SiTU-GLU + dense MLP | 1 | written | **median 2.0e-06** end to end at layer 0 |
+| MoE | 92 | written | **5 of 6 links verified, 2 bit-exact**; the expert sum is not |
 | Attention, MLA | 24 | written | cache footprint matches to the byte; arithmetic unverified |
 | Attention, KDA | 69 | written | state footprint matches to a header; arithmetic unverified |
 
-Every stage now has a written equation. Three are verified against the engine, three are not.
+Every stage has a written equation. Everything except the expert sum and the two attention
+kernels has been checked against the engine.
 
 ## Constants
 
@@ -120,7 +122,7 @@ output as well as the attention output.** A snapshot is therefore the previous l
 `layer.out`, not its `resid.post_attn`. Assuming otherwise reconstructs the aggregation
 correctly only 12% of the time.
 
-## MoE — written, not verified
+## MoE — five of six links verified
 
 $$\mathrm{MoE}(x)\;=\;W_{\uparrow}\;\mathrm{N}\!\Big(\sum_{j\in\mathcal{T}} p_j\,E_j\big(W_{\downarrow}x\big);\,w_\ell\Big)\;+\;\mathrm{Sh}(x)$$
 
@@ -137,6 +139,43 @@ Three structural facts that a textbook MoE does not have:
   the normalization and outside the routing.
 
 Routing happens on the full width, before the down-projection.
+
+### Checked link by link
+
+Taps were added at the five MoE intermediates and a 5-position prompt run so a single chunk
+fires the tap unambiguously. Layers 1, 12, 24, 48, 72, 92:
+
+```
+1  z = W_down . x                            median 2.99e-06
+2  latent_normed = N(latent_sum; w_lat)      median 0.000e+00   bit-exact
+3  routed_out = W_up . latent_normed         median 1.79e-06
+4  shared = W_sh2 . SiTU(W_sh1 x, W_sh3 x)   median 1.87e-06
+5  ffn.out = routed_out + shared_out         median 0.000e+00   bit-exact
+6  latent_sum = sum_j p_j E_j(z)             NOT VERIFIED - needs the MXFP4 experts
+```
+
+The non-zero residuals are float32 matmul accumulation, which is the floor: the engine's
+int8 kernel computes $\sum w_i x_i$ in float32 with the row scale applied once at the end,
+not per element.
+
+### The dense layer, verified end to end
+
+Layer 0 is a dense MLP rather than an MoE, and both its input and output are captured, so it
+can be checked whole — which also verifies SiTU-GLU and the int8 matmul form:
+
+$$y = W_{\text{down}}\;\mathrm{SiTU}\big(W_{\text{gate}}x,\;W_{\text{up}}x\big),
+\qquad \text{inner width } 33{,}792$$
+
+**Median relative error 2.03e-06, worst 4.22e-06** over 8 positions.
+
+### Prefill takes a different function, same mathematics
+
+A prompt longer than one token with a streamed expert source runs `moe_prefill_chunk`, not
+`k3_moe`: it batches in chunks of 64, fetches each unique expert once and applies it to every
+token that selected it. The tail is line-for-line identical to the per-token path, and
+`K3_NO_BATCH_PREFILL` exists to A/B them for bit-identity. **The equation is the same; only
+the loop order differs.** This is the second time in this investigation that the function
+that looks like the main path was not the one running.
 
 ## MLA — written, not yet numerically verified
 
