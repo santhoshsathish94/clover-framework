@@ -19,12 +19,12 @@ below says so.
 | AttnRes | 185 (1,002 source passes) | written | **median 4.5e-08, 99% under 1e-6** |
 | Router | 92 | written | **bit-exact, 100%** |
 | SiTU-GLU + dense MLP | 1 | written | **median 2.0e-06** end to end at layer 0 |
-| MoE | 92 | written | **5 of 6 links verified, 2 bit-exact**; the expert sum is not |
+| MoE | 92 | written | **all 6 links verified, 2 bit-exact** |
 | Attention, MLA | 24 | written | cache footprint matches to the byte; arithmetic unverified |
 | Attention, KDA | 69 | written | state footprint matches to a header; arithmetic unverified |
 
-Every stage has a written equation. Everything except the expert sum and the two attention
-kernels has been checked against the engine.
+Every stage has a written equation. Everything except the two attention kernels has been
+checked against the engine.
 
 ## Constants
 
@@ -122,7 +122,7 @@ output as well as the attention output.** A snapshot is therefore the previous l
 `layer.out`, not its `resid.post_attn`. Assuming otherwise reconstructs the aggregation
 correctly only 12% of the time.
 
-## MoE — five of six links verified
+## MoE — all six links verified
 
 $$\mathrm{MoE}(x)\;=\;W_{\uparrow}\;\mathrm{N}\!\Big(\sum_{j\in\mathcal{T}} p_j\,E_j\big(W_{\downarrow}x\big);\,w_\ell\Big)\;+\;\mathrm{Sh}(x)$$
 
@@ -140,23 +140,33 @@ Three structural facts that a textbook MoE does not have:
 
 Routing happens on the full width, before the down-projection.
 
-### Checked link by link
+### Checked link by link, on one execution
 
 Taps were added at the five MoE intermediates and a 5-position prompt run so a single chunk
-fires the tap unambiguously. Layers 1, 12, 24, 48, 72, 92:
+fires the tap unambiguously. **All six links are checked against that same dump**, so they
+are mutually consistent rather than six separate measurements. Layers 1, 12, 24, 48, 72, 92:
 
 ```
-1  z = W_down . x                            median 2.99e-06
-2  latent_normed = N(latent_sum; w_lat)      median 0.000e+00   bit-exact
-3  routed_out = W_up . latent_normed         median 1.79e-06
-4  shared = W_sh2 . SiTU(W_sh1 x, W_sh3 x)   median 1.87e-06
-5  ffn.out = routed_out + shared_out         median 0.000e+00   bit-exact
-6  latent_sum = sum_j p_j E_j(z)             NOT VERIFIED - needs the MXFP4 experts
+1  z = W_down . x                            median 2.99e-06   worst 3.99e-06
+2  latent_normed = N(latent_sum; w_lat)      median 0.00e+00   bit-exact
+3  routed_out = W_up . latent_normed         median 1.79e-06   worst 2.86e-06
+4  shared = W_sh2 . SiTU(W_sh1 x, W_sh3 x)   median 1.87e-06   worst 3.16e-06
+5  ffn.out = routed_out + shared_out         median 0.00e+00   bit-exact
+6  latent_sum = sum_j p_j E_j(z)             median 1.37e-07   worst 1.97e-07
 ```
 
-The non-zero residuals are float32 matmul accumulation, which is the floor: the engine's
-int8 kernel computes $\sum w_i x_i$ in float32 with the row scale applied once at the end,
-not per element.
+Link 6 required decoding the experts from the checkpoint: **OCP MX E2M1** nibbles with an
+**E8M0** per-group scale, group 32, where the **low nibble is the even element** and a scale
+byte of 255 means zero rather than NaN. Reversing the nibble order gives right values in
+wrong places, which every statistical check would pass.
+
+### The residuals sort by kernel, which is a check in itself
+
+The expert sum is the **tightest** link at 1.4e-07, an order of magnitude below the int8
+links at about 2e-06. That is what the two kernels predict: `k3_matmul_q8` accumulates in
+**float32** and applies the row scale once at the end, while `k3_matmul_mxfp4` accumulates in
+**double**. The errors partition by which kernel ran, which is independent evidence that both
+were read correctly rather than a tolerance chosen to fit.
 
 ### The dense layer, verified end to end
 
