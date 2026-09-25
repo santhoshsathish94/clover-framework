@@ -318,6 +318,138 @@ the trunk is a one-time 5.5 s cost, the expert reads are already at the floor th
 allows, so the recurring I/O is at its minimum **for this architecture and this cache
 size**. Anything further has to change one of those two, not the scheduling.
 
+## Routing prediction, tested across prompts (2026-09-26)
+
+The section above tested prediction **within one run**. The creator's hypothesis was
+sharper: the router is a deterministic function of the 7168-wide state, so a one-to-one
+relationship exists and might be exploitable. Everything below is offline on traces already
+on disk — no new runs.
+
+The prize if any of it worked: expert reads are **35% of wall clock and cannot be
+prefetched**, because layer L's router reads layer L's own input. The trunk, by contrast,
+has a fixed 0…92 order and its prefetch already hides 87–96% of its device time.
+
+### Route 4 — a static popular set per layer. DEAD across prompts.
+
+Top-193 most-used experts per layer, taken from v6 (prose, 228 positions):
+
+| coverage of | | |
+|---|---:|---|
+| v6 itself | **80.0%** | fitted and tested on the same data — the ceiling |
+| v1 factual | 25.0% | |
+| v4 code | 23.1% | |
+| v5 French | 20.5% | |
+| v7 nonsense | 16.4% | |
+| **random baseline** | **21.5%** | |
+
+Three of four sit at or below chance. The 80% was pure overfitting to one prompt.
+
+### Route 5 — a learned cross-layer mapping. Real signal, but prompt-specific.
+
+Route 2 above tested whether expert *index* 42 at layer L recurs as index 42 at layer L+1,
+which was never going to work. This instead **learns** P(e at L | f at L−1) from
+co-occurrence. Trained on v6 positions 0–149, tested on 150–227:
+
+| predictor | hit rate on held-out positions |
+|---|---:|
+| learned cross-layer co-occurrence | **27.6%** |
+| previous position, same layer | 31.2% |
+| top-16 most frequent | 20.4% |
+| random | 1.8% |
+
+Co-occurrence reduces exactly to the frequency predictor if layers were independent, so
+**beating it by 7.2 points is genuine cross-layer signal** — the first evidence of any.
+
+Then trained on v6 and tested on *other prompts*:
+
+| test prompt | co-occurrence | prev-position | frequency | random |
+|---|---:|---:|---:|---:|
+| v1 factual | 13.9% | **24.8%** | 3.2% | 1.8% |
+| v4 code | 5.2% | **32.9%** | 3.6% | 1.8% |
+| v5 French | 7.6% | **40.4%** | 3.3% | 1.8% |
+| v7 nonsense | 4.3% | **30.7%** | 2.0% | 1.8% |
+
+**27.6% collapses to 4.3–13.9%.** The signal was real and entirely prompt-specific. Only
+previous-position survives, and it needs no training because it is a property of the model
+rather than of a prompt — which is the same 40–53% temporal reuse the cache already
+converts into avoided reads.
+
+### Route 6 — the threshold explanation. Tested and NOT the cause.
+
+Selection is top-16 by the *biased* score while the stored weight is *unbiased*, and the
+bias reorders the top pick in 20–28% of decisions. So set overlap should understate
+similarity: a 0.003-weight expert near the 16/17 boundary counts the same as a 0.645 one.
+Splitting the same transfer test by weight rank:
+
+| weight rank | all layers | layer 12 | layers 53–57 |
+|---|---:|---:|---:|
+| rank 1–4 (top) | 29.1% | 78.4% | 40.7% |
+| rank 5–8 | 28.1% | 74.8% | 36.9% |
+| rank 9–16 (tail) | 28.3% | 73.8% | 37.7% |
+| random baseline | 27.9% | | |
+
+**The most confident picks transfer no better than the threshold-sensitive tail.** The
+instability is not an artifact of where the cut falls; different prompts genuinely route
+differently even at high confidence.
+
+### THE EXCEPTION: layer 12
+
+Averaging 92 layers hid this. Per layer, top-250 from v6 against unseen prompts:
+
+| layer | distinct on v6 | mean transfer | v1 | v4 | v5 | v7 |
+|---:|---:|---:|---:|---:|---:|---:|
+| **12** | 387 | **75.2%** | 73.8% | 81.5% | 75.0% | 70.4% |
+| 54 | 314 | 49.5% | | | | |
+| 56 | 271 | 42.4% | | | | |
+| baseline | | 27.9% | | | | |
+
+Only **3 of 92** layers beat the baseline by more than 1.5×, and layer 12 sits 25 points
+clear of second place. How small the pinned set can be there:
+
+| pin N | GB | transfer |
+|---:|---:|---:|
+| 64 | 1.12 | 46.2% |
+| 128 | 2.25 | 60.1% |
+| **250** | **4.39** | **75.2%** |
+| 400 | 7.02 | 85.5% |
+
+It works because **layer 12 routes narrowly for every prompt**, not just the fitted one:
+53 distinct experts on v1, 77 on v5, 123 on v4, 128 on v7, 387 on v6.
+
+**The obvious mechanism was checked and rejected.** Layer 12 is a snapshot layer, but
+snapshot layers as a class are ordinary: mean transfer 30.4% against 28.3% for all others.
+So this is one layer with no explanation, n=1 of 92. Do not build on it without a fifth
+unrelated prompt as confirmation.
+
+### What is still untested, and it is the actual hypothesis
+
+Every test above uses expert **indices**. The creator's claim is about the **7168-value
+state**, and the traces record only `l2, min, max, mean, fnv` per tensor — no vectors. A
+coarse per-position probe (`row_l2`, `row_argmax`) was tried on s160 and returned 16.7%
+against 15.3% for a random same-prompt pair; with 2 of 7168 dimensions that is
+uninformative either way, not evidence.
+
+The weight-rank result makes the vector test matter more rather than less. If even
+high-confidence picks do not transfer, either the states are genuinely that different
+between prompts — in which case no predictor can ever work — or the states are similar and
+the map is extremely sensitive, in which case every index-based test here measured the
+wrong thing. **Those two are indistinguishable without the vectors.**
+
+The run needed: one tap dumping `attn_res.pre_mlp` beside each `router.pick`. 7168 × 4 B ×
+92 layers = **2.64 MB per position**, so ~132 MB for 50 positions. Pre-register the bar
+before running it: the predictor must beat previous-position (24.8–40.4%) **on an unseen
+prompt**, because that baseline is free.
+
+### A separate lever found while doing this
+
+The weight distribution is skewed: rank-1 mean 0.154 (max 0.852), rank-16 mean 0.029
+(min 0.000), and the **top 4 carry 43.5% of the total weight**. Fetching only the top 4
+would move 0.070 GB per layer instead of 0.281 — a 4× cut in the term that is 35% of wall
+clock. It changes the output, so it is a quality trade measurable the same way int8 and
+MXFP4 divergence were measured. Against what prediction can offer, it may be the larger
+lever.
+
+
 ## The per-layer profile is two sawtooths, not a flat cost (2026-09-25)
 
 Every earlier cost note in this file used a **mean** layer — 1.170 GB of trunk, 0.281 GB of
