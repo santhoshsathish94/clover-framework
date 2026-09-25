@@ -431,6 +431,77 @@ their own input.** The numerical residual was the thing that pointed at it.
 
 ---
 
+## Composing the whole layer
+
+Every check above feeds a stage the engine's own input. That measures each equation but says
+nothing about whether the errors **compound**. So the layer was run end to end through the
+verified equations, each stage fed **my previous output**, carrying my own KDA recurrent
+state and ShortConv history across the five positions.
+
+### One thing had to be measured first: the snapshot is not zero
+
+The layer needs the snapshot stack, and snapshot 0 is `pref` entering layer 0 — a vector
+never captured. The obvious guess is that it is zero. **Tested and false:** assuming zero
+reproduces layer 0's pre-MLP aggregation only to 6.7e-03 - 1.2e-01, orders too large to be
+numerical. It was tapped at the push instead of solved by division, which would have been
+circular since the softmax weights depend on the snapshot's own score.
+
+A loader bug surfaced here too: `mlp_res_proj` and `self_attention_res_proj` are stored
+**I8R**, not BF16 — 7172 bytes is one f32 scale plus 7168 int8, dequantized into the widen
+buffer at bind. Reading them as BF16 silently yields 3586 values. No earlier result was
+affected, because the AttnRes checks used tapped scores and never needed the fold.
+
+### Layer 1 and layer 90, eight stages each
+
+```
+                                        layer 1                 layer 90
+stage                              median      worst       median      worst
+1  h  = AR(snapshot, r ; foldA)   6.23e-08   1.03e-07     7.56e-08   8.74e-08
+2  x  = N(h ; w_in)               8.03e-08   1.26e-07     1.63e-08   1.30e-07
+3  a  = KDA(x)                    1.67e-06   2.38e-06     3.73e-06   5.82e-06
+4  r  = r + a                     7.32e-07   1.35e-06     7.12e-07   2.11e-06
+5  h  = AR(snapshot, r ; foldM)   7.45e-07   1.42e-06     6.13e-07   1.60e-06
+6  x  = N(h ; w_post)             3.48e-07   4.67e-07     2.87e-07   4.21e-07
+7  y  = MoE(x)                    1.47e-06   2.58e-06     2.82e-06   4.42e-06
+8  out = r + y                    1.26e-06   2.43e-06     6.63e-07   2.63e-06
+```
+
+Layer 90 carries **eight snapshots**, so step 1 passing at 7.56e-08 independently confirms
+the snapshot tap, the source-count formula, and the aggregation over a full stack.
+
+### What propagation actually does
+
+**The errors do not compound.** Composed KDA at layer 1 is 1.667e-06 against 1.676e-06
+measured link-by-link from the engine's own input — indistinguishable. Each stage's own
+arithmetic dominates what it inherits by roughly an order of magnitude, so feeding my values
+forward changes nothing measurable.
+
+**The residual additions reduce error.** Adding a small perturbed quantity to a large clean
+residual dilutes the relative error:
+
+```
+step 3 -> 4     layer 1  1.67e-06 -> 7.32e-07   x0.44
+                layer 90 3.73e-06 -> 7.12e-07   x0.19
+step 7 -> 8     layer 1  1.47e-06 -> 1.26e-06   x0.85
+                layer 90 2.82e-06 -> 6.63e-07   x0.24
+```
+
+**And the dilution strengthens with depth.** Per-stage errors are larger at layer 90 — KDA
+more than doubles, 1.67e-06 to 3.73e-06 — yet the **layer output error is lower**, 1.26e-06
+at layer 1 against 6.63e-07 at layer 90. The residual grows faster than the error does. This
+is the same activation growth that drives the alpha residual, acting in the opposite
+direction: it hurts the gate and helps the stream.
+
+**No routing decision flipped.** 0 of 5 positions at both layers selected a different top-16
+than the engine. Accumulated error is nowhere near the margin between the 16th and 17th
+expert.
+
+### What this does not establish
+
+Two layers, five positions, one prompt, and a single layer composed at a time rather than 93
+chained. Whether error accumulates across **layers** — where the residual is carried forward
+rather than re-derived — is a different question and is not answered here.
+
 **Evidence** — vectors from `f6.bin` (9 state sites x 93 layers x 64 positions) and
 per-source scalars from `s6.src` (every AttnRes source, 225 positions), both produced by taps
 that leave the engine bit-identical to its reference. Verification scripts `eq_norm.py`,
