@@ -146,6 +146,30 @@ splits a single layer across devices and must reconcile partial results every la
 is why it needs 900 GB/s between cards. Splitting *by layer* moves the stack once per
 boundary — three orders of magnitude less, not five.
 
+### And it is not a chain of 93
+
+Counted from the trace, one token is not 93 sequential steps:
+
+```
+AttnRes aggregations (2 per layer)       186
+  sources consumed by them               986   each = 1 RMS norm + 1 dot + 1 accumulate
+pre-attn / pre-mlp norms                 186
+attention ops                             93   (69 KDA, 24 MLA)
+router evaluations                        92
+routed expert evaluations              1,472   (92 x 16)
+shared expert evaluations                184   (92 x 2)
+vector-producing operations, total     3,013
+```
+
+**The running state is regenerated 186 times, each time from up to nine sources.** And the
+eight snapshots pushed at layers 0, 12, 24 ... 84 are read by every later layer, so the
+dependency graph is **93 nodes in series plus 400 long-range broadcast edges** — not a line.
+
+The 986 source passes cost about 21 MFLOP against 206 GFLOP for the token, 0.01%, so this is
+cheap to compute and awkward to distribute. It is the same fact as the 148.4 KB payload seen
+from the other side: a stage cannot be handed only its predecessor's output, because it also
+needs the eight snapshots that predecessors long past produced.
+
 ---
 
 ## What the layers actually look like
@@ -229,6 +253,11 @@ Stated plainly, because a document that only lists advantages is not evidence.
   request in flight 92 of the 93 cards are idle. Modeled at roughly **430 ms per token**
   against our CPU's measured 5,895 ms — 13.7× better than what we have, and far worse
   than a tightly coupled machine.
+- **"93 stages" is the coarsest possible cut, and it is not a line.** Every layer past the
+  first block also needs the snapshots pushed at layers 0, 12, 24 and so on, so a late stage
+  cannot start from its predecessor's output alone — 400 broadcast edges sit on top of the
+  93 in series. Any staging plan has to carry the stack, which is what makes the payload
+  148.4 KB instead of 28 KB.
 - **Batching is fragmented.** With N concurrent requests spread over 93 stages, each stage
   only ever batches N/93. Weights are read per batch, not per token, so a smaller batch
   means more reading per token produced. This is the real cost of the shape and it does not
