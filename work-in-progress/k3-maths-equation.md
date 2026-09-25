@@ -20,11 +20,11 @@ below says so.
 | Router | 92 | written | **bit-exact, 100%** |
 | SiTU-GLU + dense MLP | 1 | written | **median 2.0e-06** end to end at layer 0 |
 | MoE | 92 | written | **all 6 links verified, 2 bit-exact** |
-| Attention, MLA | 24 | written | cache footprint matches to the byte; arithmetic unverified |
+| Attention, MLA | 24 | written | **all 6 steps verified, 3 layers** |
 | Attention, KDA | 69 | written | state footprint matches to a header; arithmetic unverified |
 
-Every stage has a written equation. Everything except the two attention kernels has been
-checked against the engine.
+Every stage has a written equation. Everything except KDA has been checked against the
+engine.
 
 ## Constants
 
@@ -187,7 +187,7 @@ token that selected it. The tail is line-for-line identical to the per-token pat
 the loop order differs.** This is the second time in this investigation that the function
 that looks like the main path was not the one running.
 
-## MLA — written, not yet numerically verified
+## MLA — all six steps verified
 
 24 of the 93 layers. One projection produces both the compressed key-value latent and a
 shared positional channel.
@@ -239,8 +239,31 @@ expanded    24 layers x (96 x 256 + 64) x 4 B  =  2,365,440 B/position   measure
 latent      24 layers x (512 + 64)     x 4 B  =      55,296 B/position   measured     55,296
 ```
 
-Both were measured from a saved state file days before this equation was written. Shape
-confirmed; the arithmetic itself is still unverified against captured vectors.
+Both were measured from a saved state file days before this equation was written.
+
+### Checked step by step
+
+Taps at `mla.q`, `mla.ct`, `mla.kv`, `mla.acc` and `mla.gated`, so a residual localizes to a
+stage rather than to "MLA". Layers 3, 47 and 92, positions 0-4, one execution:
+
+```
+                                                  layer 3     layer 47    layer 92
+1  q   = W_qb . N(W_qa x)                        1.30e-06    1.52e-06    1.71e-06
+2  ct  = [N(latent) ; rope], norm on latent only 1.49e-06    1.76e-06    1.47e-06
+3  kv  = W_kvb . ct[:512]                        5.29e-07    7.36e-07    8.81e-07
+4  acc = sum_j softmax(s) v,  s over sqrt(192)   6.40e-08    6.65e-08    7.19e-08
+5  gated = acc * sigmoid(W_g x)                  2.19e-06    7.16e-07    3.42e-07
+6  attn.out = W_o . gated                        1.31e-06    2.24e-06    2.19e-06
+```
+
+**Verified first attempt, no residual to fix.** Step 4 is again an order of magnitude tighter
+than the projections around it, because the attention dot products accumulate in **double**
+while the int8 projections accumulate in float32 — the same signature seen in the MoE, and a
+second independent confirmation of that reading.
+
+Step 4 passing is what settles the two claims flagged above as easy to get wrong: the
+$1/\sqrt{192}$ scale and the **unrotated** shared rope channel. Either being wrong would have
+broken that step specifically and left its neighbors intact.
 
 ## KDA — written, not yet numerically verified
 
