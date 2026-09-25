@@ -371,10 +371,63 @@ passed rather than by argument:
   already-updated state.
 
 **Step 7 is the loosest link and it grows with depth**: 1.85e-06, 4.90e-06, 7.48e-06 across
-the three layers, worst 1.23e-05. That is what two chained int8 matmuls ($W_{fa}$ then
-$W_{fb}$) followed by exponential amplification should do, and it is four orders of magnitude
-too small to be a wrong equation — but it is the one step that would want a tighter check
-before being relied on alone.
+the three layers, worst 1.23e-05. That was worth explaining rather than excusing, so it was
+taken apart.
+
+### Why the alpha residual grows — measured, not assumed
+
+**The first explanation given was wrong.** It was attributed to "exponential amplification",
+implying $a=e^{A_h}$ grows with depth. Read from the checkpoint, it does the opposite:
+
+```
+layer      1     20     50     70     90        correlation with depth
+e^A max  3.41   2.36   2.28   1.96   1.63              -0.431
+```
+
+Largest at layer 1, smallest at layer 90. The stated mechanism predicted the reverse of the
+observation. (`A_log`'s tail is zero at every layer, which independently confirms the
+per-head indexing.)
+
+Splitting the step with taps on $z$ before the decay and $g$ after it gives the real account:
+
+```
+layer  |x|max  |z|max   dz_abs    dz/|z|   alpha from    alpha from   first-order
+                                            TAPPED z       my z        prediction
+  1     0.947   8.529  8.82e-06  1.03e-06    1.79e-07     1.85e-06     1.88e-06
+ 20     1.090   5.929  6.77e-06  1.14e-06    1.79e-07     1.49e-06     1.41e-06
+ 50     2.169   6.546  1.98e-05  3.03e-06    1.79e-07     4.90e-06     4.92e-06
+ 70     4.362  10.192  2.64e-05  2.59e-06    2.38e-07     7.69e-06     7.74e-06
+ 90     7.297  10.767  2.17e-05  2.02e-06    2.38e-07     7.48e-06     7.44e-06
+```
+
+**The decay equation is exact.** Fed the tapped $z$, it reproduces $\alpha$ to 1.79e-07 and
+that figure is flat across all depths — float32 epsilon. None of the residual is in the
+equation.
+
+**All of it is the two chained int8 matmuls that produce $z$**, propagated first order:
+
+$$|\Delta\alpha| \;=\; \alpha\cdot 5\cdot\sigma'(u)\cdot a\cdot|\Delta z|$$
+
+which **predicts the observed error to within 1-6% at every layer**. Nothing else is acting.
+
+Two factors drive the growth, and the one that dominates is not the obvious one:
+
+```
+layer   |x|max   |u| mean   sigma'(u) mean   alpha mean
+  1      0.947      5.048           0.0284       0.8747
+ 50      2.169      4.568           0.0329       0.8575
+ 70      4.362      2.960           0.0900       0.6323
+ 90      7.297      3.403           0.0805       0.6681
+```
+
+- **Activations grow 7.7x** through the stack, so the absolute error in $z$ grows with them.
+- **The gate desaturates.** $|u|$ falls from 5.05 to 2.96, so $\sigma'(u)$ rises **3.2x**.
+  This outweighs $e^{A}$ falling 2.1x and $\alpha$ falling 1.4x, which is why the effective
+  Jacobian rose from about 0.21 to 0.34 while the term originally blamed was shrinking.
+
+**That is a fact about the model, not only about the arithmetic: deeper KDA layers forget
+more** — mean $\alpha$ drops from 0.87 to 0.63 — **and are correspondingly more sensitive to
+their own input.** The numerical residual was the thing that pointed at it.
 
 ---
 
