@@ -152,8 +152,10 @@ boundary — three orders of magnitude less, not five.
 Counted from the trace, one token is not 93 sequential steps:
 
 ```
-AttnRes aggregations                     185   layer 0 has no pre-attention one
-  sources consumed by them             1,002   each = 1 RMS norm + 1 dot + 1 accumulate
+AttnRes aggregations                     186   185 in-layer, 1 model-level; layer 0
+                                               has no pre-attention aggregation
+  sources consumed by them             1,002   993 in the layers, 9 in the final one
+                                               each = 1 RMS norm + 1 dot + 1 accumulate
 pre-attn / pre-mlp norms                 186
 attention ops                             93   (69 KDA, 24 MLA)
 router evaluations                        92

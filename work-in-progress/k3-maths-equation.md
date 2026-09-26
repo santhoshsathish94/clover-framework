@@ -16,7 +16,7 @@ below says so.
 | stage | per token | equation | evidence |
 |---|---:|---|---|
 | RMSNorm | 186 | written | **bit-exact, 2,976 / 2,976** |
-| AttnRes | 185 (1,002 source passes) | written | **median 4.5e-08, 99% under 1e-6** |
+| AttnRes | 186 (1,002 source passes) | written | **every source pass bit-exact, 4,965 checked** |
 | Router | 92 | written | **bit-exact, 100%** |
 | SiTU-GLU + dense MLP | 1 | written | **median 2.0e-06** end to end at layer 0 |
 | MoE | 92 | written | **all 6 links verified, 2 bit-exact** |
@@ -84,11 +84,44 @@ pre-MLP aggregation          nsrc = floor(L/12) + 2
 
 which gives a mean of 3.5 at layer 24 and 9 at layer 92, both as measured.
 
+**The stage count, measured rather than divided out.** Per position:
+
+```
+inside the 93 layers      185 aggregations     993 source passes
+model-level final agg       1 aggregation        9 source passes
+                          186 total          1,002 per position
+```
+
+An earlier figure of "185 aggregations, 1,002 source passes" came from dividing a total by
+the position count and assuming uniformity. It is wrong: the model-level AttnRes in
+`k3_run.c` sits outside the layer stack and nothing calls `k3_trace_agg_ctx` before it, so
+its 45 records inherited stale context and were labeled layer 92 / agg 1 / position 4. The
+per-position totals were 993, 993, 993, 993, 1038 — the unevenness is what exposed it.
+
 *Checked in three parts:* the per-source reciprocal against the captured L2, `1.192e-07`
 (exactly float32 epsilon); the softmax against the captured scores, `2.057e-07`; and the
 output $\sum\pi_v v$ rebuilt from captured source vectors — **median `4.5e-08`, 99% under
-`1e-6`** over 2,960 aggregations. The residual is float32 accumulation in the engine against
-float64 in the check, not a difference of form.
+`1e-6`** over 2,960 aggregations.
+
+**Then re-checked at source-pass granularity**, because collapsing an aggregation into one
+number hides the stages inside it. Every source pass in the token, checked on its own:
+
+```
+aggregations checked : 925        (185 per position x 5)
+source passes checked: 4,965      (993 per position), 0 skipped
+
+stage                            median       worst        n
+a  source: l2                 0.000e+00   0.000e+00     4965
+b  source: rms inv            0.000e+00   0.000e+00     4965
+c  source: score              0.000e+00   0.000e+00     4965
+d  source: softmax weight     2.862e-08   2.177e-07     4965
+e  aggregation output         6.438e-08   4.277e-07      925
+```
+
+**All 4,965 individual transformations are bit-exact through the normalize, the reciprocal
+and the dot.** Error enters only at the softmax division, at 2.9e-08. The single collapsed
+figure reported earlier was not wrong, but it concealed that the arithmetic inside is exact
+and that the whole residual comes from one division.
 
 ### Router — verified bit-exact
 
@@ -438,6 +471,12 @@ nothing about whether the errors **compound**. So the layer was run end to end t
 verified equations, each stage fed **my previous output**, carrying my own KDA recurrent
 state and ShortConv history across the five positions.
 
+**The first attempt was at the wrong granularity.** It treated each AttnRes aggregation as a
+single stage, which is the exact collapse this model does not permit: an aggregation at depth
+is nine separate source transformations. The eight-stage table below is kept because it
+answers the compounding question, but the stage-level result above it is the one that matches
+the machine.
+
 ### One thing had to be measured first: the snapshot is not zero
 
 The layer needs the snapshot stack, and snapshot 0 is `pref` entering layer 0 — a vector
@@ -501,6 +540,26 @@ expert.
 Two layers, five positions, one prompt, and a single layer composed at a time rather than 93
 chained. Whether error accumulates across **layers** — where the residual is carried forward
 rather than re-derived — is a different question and is not answered here.
+
+### Composed at source-pass granularity
+
+The same composition at layer 90, with each of the nine sources per aggregation treated as
+its own stage and its scalars checked individually rather than folded into the output:
+
+```
+source passes checked individually: 90      (9 per aggregation, 2 aggregations, 5 positions)
+
+stage                              median       worst      n
+a  per-source  l2               0.000e+00   0.000e+00     90
+b  per-source  rms inv          0.000e+00   0.000e+00     90
+c  per-source  score            0.000e+00   0.000e+00     90
+d  per-source  softmax weight   3.548e-08   1.580e-07     90
+e  aggregation output           6.745e-08   8.753e-08     10
+```
+
+Same conclusion as the full-token sweep: the per-source arithmetic is exact and the entire
+residual of an aggregation comes from the softmax division. A layer-granularity view reports
+one number where there are nine transformations, and cannot show that.
 
 **Evidence** — vectors from `f6.bin` (9 state sites x 93 layers x 64 positions) and
 per-source scalars from `s6.src` (every AttnRes source, 225 positions), both produced by taps
