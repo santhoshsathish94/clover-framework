@@ -31,6 +31,62 @@ below says so.
 and the composed chain reproduces the emitted token.** What is not established is listed at
 the end: cross-layer accumulation and the decode path.
 
+## What the residuals actually are
+
+**Read this before the numbers below.** Most figures in this document are quoted as relative
+errors around 1e-06. That framing was wrong. The model is deterministic and the equation is
+deterministic, so the difference between them is not noise \u2014 it is the sum of the choices
+that differ between the two implementations, and those can be removed one at a time until
+nothing is left.
+
+There turn out to be exactly two, and only one of them was ever the equation's.
+
+### One: summation order. Mine, and removable.
+
+`k3_matmul_q8` does not sum a dot product in the order numpy does. It keeps **two 8-lane
+float32 accumulators**, uses FMA, and reduces them with a fixed tree:
+
+```c
+v0 = fma(w[i:i+8],    x[i:i+8],    v0);
+v1 = fma(w[i+8:i+16], x[i+8:i+16], v1);
+vs = v0 + v1;  lo = vs[0:4] + vs[4:8];
+lo += movehl(lo);  lo0 += shuffle(lo,1);   // (vs0+vs4+vs2+vs6) + (vs1+vs5+vs3+vs7)
+```
+
+Reproducing that tree exactly, on `z = W_fb(W_fa x)` \u2014 two chained int8 matmuls:
+
+```
+numpy order        rel 9.694e-07    11,779 of 12,288 floats differ
+engine SIMD tree   rel 0.000e+00         0 of 12,288 floats differ
+```
+
+**Zero.** Not small \u2014 bit-identical in every float. The ShortConv has the same property: the
+engine computes `acc = w[3]*current` first and then adds oldest to newest, which is not the
+order a natural loop produces.
+
+### Two: libm. Not reachable from numpy.
+
+With both orders corrected, layer 1 in ULP distance rather than relative error:
+
+```
+stage                 exact    1 ulp   2+ ulp   max ulp
+z (pure matmuls)    100.000%   0.000%   0.000%        0
+beta                 92.708%   5.000%   2.292%        2
+q conv+SiLU          86.546%   7.856%   5.597%        3
+v conv+SiLU          86.592%   7.716%   5.692%        3
+q_norm               78.696%  14.098%   7.205%        5
+alpha                46.776%  47.856%   5.368%        9
+```
+
+Everything still differing contains `expf` or `tanhf`. `alpha` is worst because it chains two
+transcendentals, sigmoid then exp \u2014 the same structure that made it the loosest stage in the
+KDA check, seen properly this time.
+
+**So: the equation is exact. The variance is summation order plus libm rounding, the first
+is zero once matched, and the second is at most 9 ulp.** Every ~1e-06 quoted elsewhere in
+this document is the first kind \u2014 an artifact of how the check was computed, not a property
+of the model or of the equation.
+
 ## Constants
 
 Read from the released configuration, not assumed.
