@@ -519,3 +519,74 @@ assumption; had it been wrong, nothing would have matched.
 
 **This is a composed check.** Stage 5 and stage 6 together, because no tap exists between
 them. It is not an isolated measurement of stage 6, and the available taps do not allow one.
+
+---
+
+## Stage 7 — per-head L2 normalization of q and k
+
+### 1. The equation
+
+For each head block $v \in \mathbb{R}^{128}$ of `q` and of `k`:
+
+$$v_i \;\leftarrow\; v_i \cdot \mathrm{fl}_{32}\!\left(\frac{1}{\sqrt{\displaystyle\sum_{j=0}^{127} v_j^{2} \;+\; \epsilon}}\right),
+\qquad \epsilon = \mathrm{fl}_{32}(10^{-6})$$
+
+The sum is accumulated in double, `inv` is rounded to float32 once, then one float32 multiply
+per element. No division by $n$, and no learned weight.
+
+### 2. What this stage exactly does
+
+It scales each head of `q` and `k` to unit length, independently and in place.
+
+This is the second normalization in the model and it is **not** the same operation as stage 4.
+Conflating the two is easy and would be wrong in four separate ways:
+
+| | stage 4 | stage 7 |
+|---|---|---|
+| divisor | $\sqrt{\tfrac{1}{n}\sum x^2 + \epsilon}$, root mean square | $\sqrt{\sum x^2 + \epsilon}$, true L2 |
+| epsilon | `1e-5` | `1e-6` |
+| learned weight | yes, `input_layernorm.weight` | none |
+| scope | the whole 7168 vector | each 128-wide head, 96 per position |
+| in place | no, writes a separate buffer | yes |
+
+`v` is deliberately left alone. Only `q` and `k` are normalized, and the engine's site table
+confirms it: there are `kda.q_norm` and `kda.k_norm` taps and no `kda.v_norm`.
+
+### 3. The real data
+
+```
+q_norm  site 22  identical per position: [12288, 12288, 12288, 12288, 12288] of 12288
+k_norm  site 23  identical per position: [12288, 12288, 12288, 12288, 12288] of 12288
+total identical: 122880 / 122880
+```
+
+Accumulator order was tested rather than assumed, and at this width it does not matter:
+
+```
+numpy pairwise sum instead of sequential:  122880 / 122880
+```
+
+Same result as stage 4. At $n=128$ the double accumulator has ample headroom, so the
+sequential order is not claimed to be required here.
+
+**The epsilon leaves a signature, and it is a second confirmation.** The output is not exactly
+unit length. If `eps` is added to the raw sum of squares, the resulting norm is
+$\|v\|/\sqrt{\|v\|^2+\epsilon} \approx 1 - \epsilon/(2\|v\|^2)$, so smaller heads should land
+further below 1 by a predictable amount:
+
+```
+head   L2 before      L2 after       predicted
+0      0.447325409    0.999997474    0.9999975
+2      0.336629768    0.999995567    0.99999559
+```
+
+The measurement matches the prediction to eight digits. That independently establishes that
+`eps` is `1e-6` and that it is added to the **sum**, not to the mean — a conclusion reached
+from the data alone, agreeing with the code.
+
+### 4. What the equation gave
+
+**122,880 of 122,880 floats identical. Max ulp 0.**
+
+The chain now runs stages 1 to 7 from the token ids with nothing re-seeded from the engine,
+and every observable output along the way is bit-identical.
