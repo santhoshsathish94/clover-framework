@@ -15,6 +15,7 @@ below says so.
 
 | stage | per token | equation | evidence |
 |---|---:|---|---|
+| embed | 1 per position | written | **bit-exact, 5 of 5 rows** |
 | RMSNorm | 186 | written | **bit-exact, 2,976 / 2,976** |
 | AttnRes | 186 (1,002 source passes) | written | **every source pass bit-exact, 4,965 checked** |
 | Router | 92 | written | **bit-exact, 100%** |
@@ -22,9 +23,13 @@ below says so.
 | MoE | 92 | written | **all 6 links verified, 2 bit-exact** |
 | Attention, MLA | 24 | written | **all 6 steps verified, 3 layers** |
 | Attention, KDA | 69 | written | **all 10 steps verified, 3 layers** |
+| model-level AttnRes | 1 | written | **3.4e-08 to 9.0e-08** |
+| final norm | 1 | written | **7.5e-08** |
+| lm_head + argmax | 1 | written | **3.5e-06; emitted token matches** |
 
-**Every stage of the model is now written in closed form and checked against the running
-engine.** No stage is taken on trust.
+**Every stage of the model is written in closed form and checked against the running engine,
+and the composed chain reproduces the emitted token.** What is not established is listed at
+the end: cross-layer accumulation and the decode path.
 
 ## Constants
 
@@ -570,19 +575,39 @@ luck. Caches built from a failed run are poison.
 ### Still not covered
 
 A token is `embed -> 93 layers -> model-level aggregate -> final norm -> lm_head -> argmax`.
-Everything verified so far is **inside** the layers. Untouched:
+The tail is now verified too (below). What remains:
 
-- **the embedding lookup**
-- **the model-level AttnRes** in `k3_run.c` — found while counting stages, never verified,
-  and its 9 source passes per position are excluded from the 4,965 above
-- **the final norm, the lm_head projection, and the argmax**
 - **cross-layer chaining** — every composition starts from captured state and runs one layer;
   whether error accumulates over 93 chained layers is untested
 - **the decode path** — KV cache reuse and carried KDA state across calls; all of the above
   is prefill
 
-So the equation reproduces every stage *within* a layer, including the snapshot layers, but
-it is **not yet a proof of the whole model flow.**
+## The tail: embed to argmax
+
+The stages outside the layer stack, verified on the same execution. The chain is composed:
+steps 3 to 5 run on **my** aggregate, not the engine's.
+
+```
+1  embed            5 of 5 rows BIT-EXACT
+2  model-level AR   9 sources        3.4e-08 to 9.0e-08 over 5 positions
+3  final norm       N(agg[last] ; norm.weight)         7.535e-08
+4  lm_head          logits = W_lm . nrm, 163840x7168   3.475e-06
+5  argmax           mine 17374   engine 17374          MATCH
+```
+
+**The model-level AttnRes is the one found while counting stages and never verified.** It
+attends over the eight snapshots plus layer 92's output — nine sources, the same form as the
+in-layer aggregations but with `output_attn_res_norm x output_attn_res_proj` as the fold. It
+is now closed.
+
+**The embedding was verified without being told the token ids.** Each captured row was
+matched against the `[163840, 7168]` table; all five matched a row bit-exactly, and the
+recovered ids `[1008, 10484, 318, 15383, 387]` decode to `'The capital of France is'` —
+byte-identical to the prompt file. `17374` decodes to `' Paris'`.
+
+So the composed equations reproduce the engine's **emitted token**, not merely its
+intermediate vectors. The largest single residual anywhere in the model is the lm_head
+matmul at 3.5e-06, and the argmax margin absorbs it.
 
 ### Composed at source-pass granularity
 
