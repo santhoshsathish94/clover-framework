@@ -1763,3 +1763,63 @@ observable at these sites.
 **3,584 of 3,584 floats identical.**
 
 **Chain 1 to 36: 1,699,344 / 1,699,344.**
+
+---
+
+## Stage 37 — the routed experts, MXFP4
+
+### 1. The equation
+
+For each of the 16 selected experts $j$, working in latent space:
+
+$$\mathrm{gate} = W^{(j)}_1 z, \quad \mathrm{up} = W^{(j)}_3 z, \quad
+a = \mathrm{SiTU}(\mathrm{gate}, \mathrm{up}), \quad e_j = W^{(j)}_2 a$$
+
+$$\mathrm{accL} \;=\; \sum_{j=0}^{15} \pi_j\, e_j \quad \text{accumulated in float32, expert-major}$$
+
+The expert matmul is a different kernel from everything before it:
+
+$$y_r \;=\; \mathrm{fl}_{32}\Big[\big(Q_0{+}Q_2\big)+\big(Q_1{+}Q_3\big)\Big], \qquad
+Q_k = \big(V_0[k]+V_2[k]\big)+\big(V_1[k]+V_3[k]\big)$$
+
+with $V_0..V_3$ four **double** accumulator vectors of 4 lanes each, lane $k$ of $V_m$
+holding input elements $\equiv 4m+k \pmod{16}$.
+
+### 2. What this stage exactly does
+
+It runs the 16 chosen experts and mixes their outputs by the router weights.
+
+Three things distinguish this kernel from every earlier one:
+
+- **The accumulator is double, not float32.** Every other matmul in the engine accumulates
+  in float32 lanes. This one uses four 4-lane double chains.
+- **The E8M0 scale is folded into the E2M1 weight before the multiply.** Every scale is a
+  power of two, so folding it is exact in fp32 and the per-group scaling disappears from the
+  accumulation entirely.
+- **A NaN scale byte (255) skips the whole 16-element chunk.** Setting the scale to zero is
+  numerically equivalent and is what the reconstruction does.
+
+**The FMA did not need emulating, and that is worth recording.** Reproducing a fused
+multiply-add normally requires care, because computing `a*b` then adding `c` rounds twice
+where the FMA rounds once. Here both operands originate as float32 — the weight is
+`E2M1 x E8M0` folded in fp32, and the latent is a float32 vector widened to double. Their
+product needs at most 48 mantissa bits and is therefore **exact in double**, so an ordinary
+float64 multiply-add gives bit-identical results. Only the reduction tree had to be matched
+by hand.
+
+### 3. The real data
+
+```
+16 experts x 3 matmuls, latent 3584 -> inter 3072 -> latent 3584
+
+moe.latent_sum : 3584 / 3584
+latent_sum range : -0.068130 .. 0.090156
+```
+
+### 4. What the equation gave
+
+**3,584 of 3,584 floats identical.**
+
+This is the deepest composition checked anywhere in the walk: the router picked the experts,
+those picks selected 48 weight matrices, and all of it had to be right for a single float to
+land. A wrong expert would not be close — it would be unrelated.
