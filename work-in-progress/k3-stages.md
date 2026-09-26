@@ -679,3 +679,80 @@ is now empty:
 
 `f_a` is the one remaining projection whose correctness rests on inference rather than a
 measurement of its own output.
+
+---
+
+## Stage 9 — the decay chain, alpha
+
+### 1. The equation
+
+For head $h$ and channel $i = hD + d$:
+
+$$a_h = \exp\big(A_{\log}[h]\big), \qquad u_i = a_h\big(z_i + \mathrm{dt\_bias}_i\big)$$
+
+$$g_i = \lambda\,\sigma(u_i), \qquad \alpha_i = \exp(g_i), \qquad \lambda = -5$$
+
+All float32, with `exp` and the sigmoid from glibc. Note that $a$ is indexed **per head**
+while `dt_bias` is indexed **per channel**, and that `g` is written **over** `z` in place —
+which is why sites 28 (`z`) and 29 (`g`) are the same buffer at two different times.
+
+### 2. What this stage exactly does
+
+It produces the per-channel **forget factor** for the recurrent state. Each head's state is
+multiplied by $\alpha$ before the new write, so this is the stage that decides what gets
+discarded and how fast.
+
+The $-5$ is a hard clamp by construction, not a tuned range: $g = -5\,\sigma(u)$ lies in
+$(-5, 0]$ whatever $u$ does, so $\alpha$ can never leave $(e^{-5}, 1]$. No value of the input
+can make a head forget faster than $e^{-5}$ per step or retain more than perfectly.
+
+### 3. The real data
+
+| tensor | site | identical |
+|---|---|---|
+| kda.g | 29 | 61440 / 61440 |
+| kda.alpha | 25 | 61440 / 61440 |
+| **full chain, stages 1 to 9** | | **527840 / 527840** |
+
+**The two indexings are forced by the checkpoint, not chosen.** The intent was to run a
+per-channel variant of `A_log` as a control, since the engine source carries a comment
+warning that indexing it per channel is a silent fatal error. The variant could not be
+constructed:
+
+```
+A_log   length 128, nonzero 96   (H = 96 heads)
+dt_bias length 12288             (P = 12288 channels)
+entries 96..127 of A_log are exactly zero
+```
+
+There are 12,288 channels and 128 `A_log` entries, so the tensor is 96 times too short for
+per-channel indexing and the attempt fails on an array bound. Exactly the first 96 entries
+are nonzero, matching the head count. The shapes settle it on their own, which is a firmer
+result than a variant that merely scores badly.
+
+Ranges:
+
+```
+a = exp(A_log[h])  : 0.470926 .. 11.776435
+g                  : -5.000000 .. -0.000000     lower bound lb = -5.0
+alpha              : 0.006738 .. 1.000000       e^lb = 0.006738
+mean alpha         : 0.786708
+fraction of alpha above 0.99 : 11.72%
+fraction of alpha below 0.50 : 12.50%
+```
+
+Both bounds are reached exactly. `g` touches -5.000000 and `alpha` touches 0.006738, which is
+$e^{-5}$ to six digits. The gate is saturating at both ends on a five-token prompt rather
+than sitting in a comfortable middle, and the distribution is genuinely split: 11.7% of
+channels keep essentially everything while 12.5% discard more than half per step.
+
+### 4. What the equation gave
+
+**122,880 of 122,880 floats identical across `g` and `alpha`. Max ulp 0.**
+
+### One behavior worth recording
+
+The run emits `RuntimeWarning: overflow encountered in expf`. It is benign, and reproducing
+it is the point: for strongly negative $u$, $\exp(-u)$ overflows to infinity, the sigmoid
+returns 0, so $g = 0$ and $\alpha = 1$, meaning no decay. The engine takes the same path. The
+bits match, so the overflow is being reproduced rather than avoided.
