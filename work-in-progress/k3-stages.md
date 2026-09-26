@@ -114,3 +114,83 @@ that the weight file is being addressed correctly, and that the comparison metho
 says nothing yet about stages that accumulate.
 
 Reproduce with `stage1.py` on the trace host.
+
+---
+
+## Stage 2 — the pre-attention aggregation, which does not run here
+
+### 1. The equation
+
+$$h \;\leftarrow\; h \qquad \text{when } d = 0$$
+
+Identity. Not because an aggregation computed something that happened to equal its input, but
+because the aggregation is never entered.
+
+### 2. What this stage exactly does
+
+Nothing, at this point in the model.
+
+The engine carries a stack of snapshots of the residual stream and, before attention, blends
+the current residual with every stored snapshot. That blend is the mechanism that stops the
+model being a straight chain. But it is guarded:
+
+```c
+/* aggregation before attention, only when snapshots already exist */
+if (*n_blocks > 0) {
+    ...
+    k3_attn_res(h + t*E, src, foldA, *n_blocks + 1, E, c->rms_eps);
+}
+K3_TRACE_VEC("attn_res.pre_attn", h, T*E);
+```
+
+At this stage `*n_blocks == 0` — no snapshot has been pushed yet, because the first push
+happens *after* this point in the same layer. The guard is false, the kernel is not called,
+and the trace is emitted on an untouched buffer.
+
+So there is no summation, no weight, no `eps` and no `expf` in this stage. None of it
+executes. The residual arrives and leaves unchanged.
+
+### 3. The real data
+
+| evidence | value |
+|---|---|
+| `stack.depth` | 0 |
+| guard `*n_blocks > 0` | false, kernel not entered |
+| `embed == layer.in` | 7168 / 7168 floats, all 5 positions |
+| `embed == attn_res.pre_attn` | 7168 / 7168 floats, all 5 positions |
+| L2 across the three sites | 4.13786926, unchanged |
+| FNV across the three sites | `f45927e03fd96f75`, unchanged |
+
+The hash is byte-identical at `embed`, `layer.in` and `attn_res.pre_attn`. That is what a
+pass-through looks like, and what a computation essentially never produces.
+
+### 4. What the equation gave
+
+Difference from the engine: **exactly zero**, for the same reason as stage 1 — nothing was
+computed. 35,840 of 35,840 floats identical.
+
+### How this was nearly recorded wrong
+
+The first attempt at this stage worked from the captured numbers alone. It proposed candidate
+operations, scored each against the data, and the winner was a softmax over RMS-normalized
+projections — which, with a single source, gives weight exactly 1.0 and returns the input
+untouched. Every number agreed. The conclusion drawn was that stage 2 is that formula
+degenerating to the identity.
+
+That is wrong. The kernel is not invoked at all.
+
+Both accounts predict bit-identical output, so no amount of comparing vectors could separate
+them. Only reading the code that runs could. The lesson is narrow and worth keeping: a
+hypothesis that reproduces the observations to the last bit can still misdescribe the machine,
+and at a control-flow boundary it usually will.
+
+### Noted for later stages, not acted on
+
+Reading `k3_attn_res` to establish the above also settled two things that belong further
+along, recorded here so they are not rediscovered:
+
+- the source stack is ordered **snapshots first, current residual last**, with
+  `nsrc = n_blocks + 1`
+- the weighted sum accumulates in **float32**, source-major — earlier reconstructions of this
+  kernel accumulated in float64, which is the likely cause of the partial bit-agreement seen
+  in those checks
