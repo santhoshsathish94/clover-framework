@@ -830,3 +830,88 @@ The diagnosis worth keeping is the order: a trivial local command first, then
 locates the fault in the command, not the link. Checking `uptime` and `pgrep` on the server
 first showed load 0.00 and nothing running, which ruled out the remote side before anything
 was killed there.
+
+---
+
+## Stage 11 — head-wise RMSNorm on the recurrence output
+
+### 1. The equation
+
+For each head block $v \in \mathbb{R}^{128}$ of $o$, in place:
+
+$$v_i \;\leftarrow\; (w_i\,v_i)\cdot \mathrm{fl}_{32}\!\left(\frac{1}{\sqrt{\tfrac{1}{128}\displaystyle\sum_{j} v_j^{2} + \epsilon}}\right),
+\qquad \epsilon = \mathrm{fl}_{32}(10^{-5})$$
+
+The same kernel as stage 4, at a different width, with a different weight, applied in place.
+
+### 2. What this stage exactly does
+
+It renormalizes each head of the recurrence output and applies the learned `o_norm` gain.
+
+This is the **third distinct normalization** in the model, and no two of them are the same
+operation:
+
+| | stage 4 | stage 7 | stage 11 |
+|---|---|---|---|
+| kind | RMS | true L2 | RMS |
+| scope | whole 7168 vector | 128 per head | 128 per head |
+| divide by $n$ | yes | no | yes |
+| epsilon | 1e-5 | 1e-6 | 1e-5 |
+| weight | `input_layernorm` | none | `o_norm` |
+| in place | no | yes | yes |
+
+### 3. The real data
+
+```
+o_norm: 128 values, min 0.003512 max 0.033375
+
+head   RMS before         RMS after
+0      0.00079877037      0.00238616205
+1      0.00238680607      0.00751662952
+2      0.000409175463     0.0010223587
+3      0.000238712307     0.000686388838
+4      0.000137517843     0.000487568563
+5      0.000138764023     0.000486911634
+
+o  range: -0.020787 .. 0.078446
+on range: -0.055641 .. 0.079059
+```
+
+The stage **amplifies**, by roughly 2.5 to 3.5 times and by a different factor per head. The
+recurrence output is very small, RMS of order 1e-4 to 2e-3, and this lifts it before the gate.
+
+Everything already verified is unchanged: the chain through stage 10 remains 589,280 of
+589,280.
+
+### 4. What the equation gave
+
+**Nothing yet. This stage cannot be measured on its own.**
+
+From the source:
+
+```c
+for (h...) k3_rmsnorm(ot + h*D, ot + h*D, w->o_norm, D, c->rms_eps);   /* stage 11 */
+k3_mmw(gb, xt, w->g, w->wdt, E, P);                                    /* stage 12 */
+for (int i = 0; i < P; i++) ot[i] *= sigmoidf_(gb[i]);
+K3_TRACE_RAW("kda.gated", ot, 1, P);                                   /* site 27 */
+```
+
+Site 26 is before the norm and site 27 is after the norm **and** the gate, with no trace call
+between them. The output is computed and held; its correctness is deferred to stage 12, the
+same situation as stage 5's `q`, `k` and `v`, which stage 6 resolved.
+
+### An error this run caught in its own instrument
+
+The script printed a list of "tap sites captured at this layer" that omitted site 27, and that
+was used to argue the gated output is never traced. **The list was wrong.** It reflected the
+script's own load filter, which had never requested site 27, not what the engine captured.
+Read straight from the binary, layer 0 carries 21 sites and site 27 is among them, 5 records
+of 12,288.
+
+This is the same failure as stage 2 in a different costume: a claim about the machine that was
+really a property of the instrument. The conclusion survives, because the absence of a trace
+call between the norm and the gate is visible in the source. The evidence for it does not
+survive, and has been replaced.
+
+The general form worth keeping: **a filtered view can only show absence of what it was asked
+to load.** Any claim that something is missing has to come from the unfiltered source.
