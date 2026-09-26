@@ -537,9 +537,52 @@ expert.
 
 ### What this does not establish
 
-Two layers, five positions, one prompt, and a single layer composed at a time rather than 93
-chained. Whether error accumulates across **layers** — where the residual is carried forward
-rather than re-derived — is a different question and is not answered here.
+**The composition was wrong at every snapshot layer and layers 1 and 90 could not detect it.**
+At `L % 12 == 0` the residual is **replaced, not added** (`have_prefix = 0`), and the pre-MLP
+aggregation sees one more snapshot than the pre-attention one. The script implemented
+neither. Run at layer 12 it gives:
+
+```
+1  h  = AR(...)        6.250e-08      3  a = KDA(x)     7.231e-07
+4  r  = r + a          7.286e+00  <-- 700% wrong
+7  y  = MoE(x)         1.438e+01      router flips: 5 of 5 positions
+```
+
+Steps 1-3 pass and everything after is meaningless. "Whole layer composed" covered 85 of the
+93 layers and was presented as the layer.
+
+Fixed and re-verified at layers 12 and 84, both snapshot layers: every stage back to
+6e-08 - 6e-06 and **0 of 5 routing flips**.
+
+That contrast is worth keeping: a **real** error flips the top-16 in 5 of 5 positions, where
+numerical error flips 0 of 5. The routing margin is wide against rounding and narrow against
+a wrong equation.
+
+**It also corrects a claim made above.** At snapshot layers step 4 equals step 3 exactly
+(7.231e-07 at layer 12, 9.648e-07 at layer 84) because $r=a$ rather than $r+a$. The residual
+dilution described earlier **does not happen at 8 of the 93 layers.**
+
+A practical hazard, recorded because it cost a run: the cached expert index for layer 12 had
+been built during the broken run, so it held the experts that the *wrong* routing selected.
+Rerunning after the fix failed with a missing key rather than a wrong number, which was
+luck. Caches built from a failed run are poison.
+
+### Still not covered
+
+A token is `embed -> 93 layers -> model-level aggregate -> final norm -> lm_head -> argmax`.
+Everything verified so far is **inside** the layers. Untouched:
+
+- **the embedding lookup**
+- **the model-level AttnRes** in `k3_run.c` — found while counting stages, never verified,
+  and its 9 source passes per position are excluded from the 4,965 above
+- **the final norm, the lm_head projection, and the argmax**
+- **cross-layer chaining** — every composition starts from captured state and runs one layer;
+  whether error accumulates over 93 chained layers is untested
+- **the decode path** — KV cache reuse and carried KDA state across calls; all of the above
+  is prefill
+
+So the equation reproduces every stage *within* a layer, including the snapshot layers, but
+it is **not yet a proof of the whole model flow.**
 
 ### Composed at source-pass granularity
 
