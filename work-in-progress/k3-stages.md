@@ -1064,3 +1064,80 @@ Max ulp 0 at every site.
   has never run
 
 Both are gaps in coverage, not known defects, and neither is closed by anything above.
+
+---
+
+## Stage 14 — the residual update
+
+### 1. The equation
+
+$$r \;\leftarrow\; \begin{cases} r + \mathrm{attn.out} & \text{if } \texttt{have\_prefix} \\[2pt] \mathrm{attn.out} & \text{otherwise} \end{cases}$$
+
+At this stage the second branch applies. There is no arithmetic at all — it is a copy.
+
+### 2. What this stage exactly does
+
+**It replaces the residual. It does not add to it.**
+
+Stage 3 pushed the snapshot and set `have_prefix = 0`. Stage 14 reads that flag and takes the
+`else` branch. The two are a pair: save the residual to the stack, then overwrite it.
+
+So at this layer the embedding is *discarded from the residual stream*. It survives only
+inside the snapshot stack, where stage 2 of later layers will blend it back in. The stream
+restarts from the attention output alone. The residual is deliberately reset at block
+boundaries rather than accumulated through them.
+
+### 3. The real data
+
+```
+replacement        resid = attn.out          : [7168 x5] of 7168
+control, addition  resid = embed + attn.out  : [0, 0, 0, 0, 0] of 7168
+```
+
+The addition gets **zero** floats right. This is not a near miss between two plausible forms,
+it is a different operation.
+
+Confirmed a second way, with my reconstruction out of the loop entirely:
+
+```
+engine site 4 vs engine site 3, independent of me: [7168 x5] of 7168
+```
+
+The engine's own `resid.post_attn` is bit-identical to its own `attn.out`. That is a `memcpy`,
+visible in the engine's data whether or not anything of mine exists.
+
+Magnitudes across the reset:
+
+```
+embedding L2       : [2.0446, 1.9179, 1.5717, 1.862,  1.8237]
+resid.post_attn L2 : [0.3623, 0.4307, 0.75,   0.5855, 0.5717]
+```
+
+A drop to roughly 18 to 48% of the incoming magnitude.
+
+### 4. What the equation gave
+
+**35,840 of 35,840 floats identical.**
+
+### A mislabeled line in my own output
+
+The run printed a row labeled `snapshot S L2` containing 96 numbers. **That label is wrong.**
+The stage 10 code assigns `S = np.zeros((H,D,D))` for the recurrence state, which shadowed the
+`S` holding the stage 3 snapshot list. Those 96 values are per-head KDA state norms, not the
+snapshot.
+
+Nothing depends on it. The snapshot variable is never read again in these scripts, and stage 3
+was verified directly against site 30 at the time. But the line asserts something it does not
+show, so it is not used and not reproduced here.
+
+That makes three instrument errors caught during this walk: stage 2's fitted-but-wrong
+mechanism, stage 11's filter-artifact site list, and now a variable collision. All three were
+mine. None were the engine's.
+
+### Where the chain stands
+
+| stages | identical |
+|---|---|
+| 1 to 13, the attention block | 686,560 / 686,560 |
+| 14, the residual update | 35,840 / 35,840 |
+| **total** | **722,400 / 722,400** |
