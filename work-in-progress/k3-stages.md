@@ -756,3 +756,77 @@ The run emits `RuntimeWarning: overflow encountered in expf`. It is benign, and 
 it is the point: for strongly negative $u$, $\exp(-u)$ overflows to infinity, the sigmoid
 returns 0, so $g = 0$ and $\alpha = 1$, meaning no decay. The engine takes the same path. The
 bits match, so the overflow is being reproduced rather than avoided.
+
+---
+
+## Stage 10 — the recurrence
+
+### 1. The equation
+
+Per head, at each position, with $\alpha \in \mathbb{R}^{128}$ from stage 9 and $\beta$ the
+scalar from stage 8:
+
+$$S \leftarrow \operatorname{diag}(\alpha)\,S, \qquad u = S^\top k$$
+
+$$S \leftarrow S + \beta\,k\,(v-u)^\top, \qquad o = S^\top \frac{q}{\sqrt{128}}$$
+
+All float32, every sum accumulated **sequentially in $i$** ascending, no FMA. The output is
+taken from the **already updated** state.
+
+### 2. What this stage exactly does
+
+It is the recurrence, and it is the first stage that carries **state across positions within
+a head**: a $128 \times 128$ matrix per head, 96 of them, updated once per position.
+
+It is a **delta rule**, not an accumulation. Four steps:
+
+1. **decay** — row $i$ of $S$ is scaled by $\alpha_i$. Per *key channel*, not a scalar. This
+   is what "channel-wise forget gate" means, and it is why stage 9 produced 12,288 alphas
+   rather than 96.
+2. **read** — $u = S^\top k$, what the state currently predicts for this key.
+3. **write** — $S_{ij} \mathrel{+}= k_i\,\beta\,(v_j - u_j)$. The $(v-u)$ term is the
+   prediction error. Plain accumulation would write $v$; writing the error is what makes this
+   a delta rule.
+4. **output** — $o = S^\top q$ from the already updated state, not the pre-update state.
+
+`q` is pre-scaled by $1/\sqrt{128}$ in the caller, before the step sees it.
+
+### 3. The real data
+
+| tensor | site | identical |
+|---|---|---|
+| kda.o | 26 | 61440 / 61440 |
+| **full chain, stages 1 to 10** | | **589280 / 589280** |
+
+```
+per position: [12288, 12288, 12288, 12288, 12288] of 12288
+o range   : -0.020787 .. 0.078446
+final |S| : mean 0.001612  max 1.109369
+```
+
+After five positions the state is sparse in magnitude: mean $|S|$ of 0.0016 against a max of
+1.109, so a small number of entries carry almost all of it.
+
+### 4. What the equation gave
+
+**61,440 of 61,440 floats identical. Max ulp 0.**
+
+### One detail deliberately not reproduced
+
+The kernel carries `if (ki == 0.0f) continue` guards in the read and write steps. Those were
+not reproduced, on the reasoning that skipping a term whose multiplier is zero is numerically
+inert. The output came out bit-identical across all 61,440 floats, which confirms it: the
+guards are a speed optimization and not part of the arithmetic.
+
+### A note on the tooling, recorded because it cost two runs
+
+Commands issued over ssh began hanging with no output and no prompt return, which looks
+exactly like a server or network fault. It was neither. Without `-n`, ssh forwards the local
+terminal's stdin to the remote command, so any remote command that ends up waiting on stdin
+blocks forever.
+
+The diagnosis worth keeping is the order: a trivial local command first, then
+`ssh -n host 'echo OK'`, then the real command. Local fine plus ssh fine plus this one hanging
+locates the fault in the command, not the link. Checking `uptime` and `pgrep` on the server
+first showed load 0.00 and nothing running, which ruled out the remote side before anything
+was killed there.
