@@ -1505,3 +1505,77 @@ This is recorded rather than resolved. Nothing in the verification depends on it
 result above is anchored to a named tap site, not to a stage number. But the stage numbers in
 this document are a local convention until the basis is settled, and they should not be read
 as the model's own.
+
+---
+
+## Stage 21 — layer 1, the pre-attention aggregation
+
+### 1. The equation
+
+The same $\mathrm{AR}(V;f)$ as stage 15, with $f$ built from layer 1's
+`self_attention_res_norm` and `self_attention_res_proj`, and
+$V = \{\text{snapshot}\} \cup \{r\}$ where $r$ is layer 0's output.
+
+### 2. What this stage exactly does
+
+It blends layer 0's output with the snapshot taken at stage 3, before layer 1's attention.
+
+This is **the same kernel that stage 2 skipped**. The code is identical; only the guard
+differs. At stage 2 the stack was empty and `*n_blocks > 0` was false. Stage 3 then pushed a
+snapshot, so here the guard passes and the kernel runs with `nsrc = 2`.
+
+Layer 1 also differs structurally from layer 0:
+
+```
+layer 1 attention kind : KDA
+layer 1 MLP kind       : MoE
+1 % 12 = 1 so no snapshot is pushed at this layer
+```
+
+So layer 0 was the dense layer, and from layer 1 onward the MLP is a mixture of experts.
+
+### 3. The real data
+
+```
+attn_res.pre_attn at layer 1 identical: [7168 x5] of 7168
+total 35840 / 35840
+
+pos   score snap     score resid    w snap       w resid
+0     -0.362603      0.875603       0.224748     0.775252
+1     -0.127733      0.433303       0.363308     0.636692
+2     -0.487663      1.026333       0.180347     0.819653
+3      0.004214      0.669740       0.339499     0.660501
+4     -0.405473      1.008005       0.195686     0.804314
+```
+
+The embedding gets 18 to 36% here, much more than the 1 to 9% it got at stage 15. The two
+aggregations use different learned projections and are weighting the same two sources very
+differently.
+
+### 4. What the equation gave
+
+**35,840 of 35,840 floats identical. Max ulp 0.**
+
+### Three things this confirms beyond the stage itself
+
+**The cross-layer handoff is exact.** Everything before this was inside one layer. Layer 0's
+output feeds layer 1 and reproduces bit for bit.
+
+**It closes the stage 2 argument from the other side.** Stage 2 claimed the kernel was never
+entered, on the evidence of the guard in the source. Here the same kernel *is* entered, and
+the output is nothing like a pass-through. A skipped call and an executed one are now both
+observed, with the guard as the only difference.
+
+**It vindicates the float32 correction against an earlier wrong attempt.** The exploratory
+hypothesis fit recorded at stage 2 produced `w snap` values of 0.224748, 0.363308, 0.180347,
+0.339499 and 0.195686 at this same layer. This run reproduces all six digits of each — but
+where that attempt reached 54.99% bit-agreement using float64 accumulation, this one reaches
+100%. Same mathematics, corrected arithmetic.
+
+### Where the chain stands
+
+| stages | identical |
+|---|---|
+| 1 to 20, layer 0 | 865,760 / 865,760 |
+| 21, layer 1 aggregation | 35,840 / 35,840 |
+| **total** | **901,600 / 901,600** |
