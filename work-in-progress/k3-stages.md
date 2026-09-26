@@ -540,6 +540,10 @@ not credible, so those three projections are now confirmed indirectly.
 **Confirmed by implication:** the carried conv state is zero on a fresh call. That was an
 assumption; had it been wrong, nothing would have matched.
 
+> **Superseded.** The decode walk exercises this directly. On the decode position all three
+> history slots hold real values carried from the previous call, and the ordering recorded
+> above reproduces bit-exactly. See *The decode path*.
+
 **Still not verified:** the `b` projection. Nothing has observed it yet.
 
 **This is a composed check.** Stage 5 and stage 6 together, because no tap exists between
@@ -1933,8 +1937,9 @@ Stated plainly, because a clean total invites over-reading:
 
 - **One prompt.** Five tokens, `The capital of France is`. Different routing, longer
   contexts and different expert sets are untested.
-- **Prefill only.** The decode path — KV cache reuse and carried KDA state across calls — has
-  never been run. This is the largest remaining structural gap.
+- ~~**Prefill only.** The decode path — KV cache reuse and carried KDA state across calls — has
+  never been run. This is the largest remaining structural gap.~~ **Now covered** — see
+  *The decode path*. It was the largest remaining structural gap at the time this was written.
 - **`f_a`'s 128-dim intermediate** is still confirmed by inference through `z`, never measured
   directly.
 - **The int8 kernel's scalar tail loop** never executes at any shape in this model, so that
@@ -2002,7 +2007,8 @@ layers, each checked against its own taps.
 
 - **The tail.** The walk ends at layer 92's output. The model-level aggregation, final norm,
   lm_head and argmax are separate stages and are not included in the figure above.
-- **The decode path.** Untested, as it has been throughout.
+- ~~**The decode path.** Untested, as it has been throughout.~~ **Now covered** — see
+  *The decode path*, the next section.
 - **One prompt.** Five tokens, one trace. Different routing or longer context could exercise
   paths this does not, including the int8 kernel's scalar tail, which no shape here triggers.
 
