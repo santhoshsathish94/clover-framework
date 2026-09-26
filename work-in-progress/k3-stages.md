@@ -276,3 +276,72 @@ Three stages in, there are already three different kinds:
 | 3 | writes machine state | none, but changes what later stages see |
 
 They are not interchangeable, and a stage count that treats them as one kind will not land.
+
+---
+
+## Stage 4 — the pre-attention RMSNorm, the first arithmetic in the model
+
+### 1. The equation
+
+$$y_i \;=\; \big(w_i \, x_i\big)\cdot \mathrm{inv},
+\qquad
+\mathrm{inv} \;=\; \mathrm{fl}_{32}\!\left(\frac{1}{\sqrt{\dfrac{1}{n}\displaystyle\sum_{j=0}^{n-1} x_j^{2} \;+\; \epsilon}}\right)$$
+
+with $n = 7168$ and $\epsilon = \mathrm{fl}_{32}(10^{-5})$. The sum is accumulated in double,
+`inv` is rounded to float32 exactly once, and the outer product is evaluated in float32
+**left to right**: $(w_i x_i)$ first, then $\times\,\mathrm{inv}$.
+
+### 2. What this stage exactly does
+
+It rescales the residual by a single factor derived from the vector's own root-mean-square,
+then applies a learned per-component gain (`input_layernorm.weight`, BF16).
+
+Its input is still the raw embedding. Stage 2 was skipped and stage 3 wrote only machine
+state, so nothing has touched the residual since stage 1.
+
+It writes into a **separate buffer**, not in place. The residual survives untouched, which is
+what lets the residual addition later in the layer still see the pre-norm value. Everything
+downstream in the attention path reads the normalized copy; the residual path does not.
+
+The whole kernel is four lines:
+
+```c
+double ss = 0.0;
+for (int i = 0; i < n; i++) ss += (double)x[i] * (double)x[i];
+const float inv = (float)(1.0 / sqrt(ss / (double)n + (double)eps));
+for (int i = 0; i < n; i++) y[i] = w[i] * x[i] * inv;
+```
+
+### 3. The real data
+
+```
+pos  ss (double, sequential)  inv (float32)   identical   max ulp
+0    4.1802332169374026       41.0588531      7168/7168   0
+1    3.6784657435065022       43.7194748      7168/7168   0
+2    2.4703597339373164       53.1016273      7168/7168   0
+3    3.4671155571629306       45.0060883      7168/7168   0
+4    3.3257877640092          45.9326324      7168/7168   0
+```
+
+`eps` as the engine actually holds it is `float32(1e-5)` widened to double,
+`9.9999997473787516e-06` — not `1e-5`.
+
+Two order-sensitive choices were **tested rather than asserted**:
+
+| choice | effect |
+|---|---|
+| sequential double sum vs numpy pairwise sum | no effect, output bit-identical either way |
+| `(w·x)·inv` vs `w·(x·inv)` | ~74% identical, so roughly a quarter of every vector wrong |
+
+At position 3 the sequential and pairwise sums differ by one ulp in double
+(`...9306` against `...9311`) and the float32 output is still identical, because that
+difference vanishes when `inv` is rounded. The double accumulator has headroom at this width,
+so the sequential order is not claimed to be required here. The **multiply association is**.
+
+### 4. What the equation gave
+
+**35,840 of 35,840 floats identical. Max ulp 0.**
+
+This is the first stage that could have been wrong and was not. Stages 1 to 3 matched because
+they compute nothing — a lookup, a skipped branch, a state write. Stage 4 matches because the
+arithmetic is right, association order included.
