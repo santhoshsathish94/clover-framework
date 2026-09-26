@@ -1660,3 +1660,65 @@ learned projections rather than of the data — the snapshot is the same embeddi
 cases.
 
 **Chain 1 to 34: 1,695,680 / 1,695,680.**
+
+---
+
+## Stage 35 — the router
+
+### 1. The equation
+
+For each of 896 experts:
+
+$$\sigma_e \;=\; \frac{1}{1+\exp\big(-\mathrm{fl}_{32}(a_e)\big)},
+\qquad a_e \;=\; \sum_{i=0}^{7167} W_{e,i}\,x_i \ \ \text{in double}$$
+
+Selection uses $\sigma_e + b_e$; the **weight kept is $\sigma_e$**, unbiased. Then top-16 by
+repeated maximum, renormalize over the chosen 16 in double, and scale by `routed_scale`
+(1.0 here).
+
+### 2. What this stage exactly does
+
+It picks 16 of 896 experts per position and assigns each a mixing weight.
+
+Two details come from the source and neither is guessable from the trace:
+
+- **The router does not use `k3_matmul_q8`.** The int8 gate is widened to float32 per row and
+  the dot product accumulates in **double**, sequentially. Reaching for the q8 kernel and its
+  reduction tree here — the obvious move, since every other projection uses it — would have
+  been wrong.
+- **The bias participates only in selection.** `choice[e] = score[e] + bias[e]` decides who
+  wins, but the stored weight is `score[best]`, without the bias.
+
+Ties are broken by first index, because the scan uses a strict `>`.
+
+### 3. The real data
+
+```
+gate dtype I8R, widened to float32 per row, then a DOUBLE dot product
+router.pick records at layer 1: 5
+
+pos 0  ids match True   weights identical 16/16
+pos 1  ids match True   weights identical 16/16
+pos 2  ids match True   weights identical 16/16
+pos 3  ids match True   weights identical 16/16
+pos 4  ids match True   weights identical 16/16
+
+positions with exact expert set+order : 5 / 5
+router weights identical              : 80 / 80
+```
+
+### 4. What the equation gave
+
+**5 of 5 positions with the identical expert set in identical order. 80 of 80 weights
+identical.**
+
+### Why this check is sharper than the ones before it
+
+This is the first stage whose output is **discrete**. Every earlier stage produced floats,
+where being slightly wrong still looks close. Here a single ulp in the wrong place flips
+which of 896 experts is selected, and everything downstream diverges completely.
+
+Reproducing the exact set *and* the exact order on all five positions is therefore a much
+stronger statement than a float comparison of the same size. It also means the 35 stages
+feeding it are right: the router reads `norm.pre_mlp`, so any error anywhere upstream would
+have to leave that vector accurate enough to preserve a 16-way ranking out of 896.
