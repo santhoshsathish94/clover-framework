@@ -1635,3 +1635,28 @@ of 61,440 at `kda.o` says it is right.
 | 1 to 21 | 901,600 / 901,600 |
 | 22 to 32, layer 1 attention | 722,400 / 722,400 |
 | **total** | **1,624,000 / 1,624,000** |
+
+---
+
+## Stages 33 and 34 — layer 1's pre-MLP aggregation and norm
+
+Same kernels as stages 15 and 16 with layer 1's weights.
+
+```
+stage 33  attn_res.pre_mlp  site 5  35840/35840
+stage 34  norm.pre_mlp      site 6  35840/35840
+
+pos   w snap       w resid
+0     0.337728     0.662272
+1     0.248037     0.751963
+2     0.112130     0.887870
+3     0.211226     0.788774
+4     0.118436     0.881564
+```
+
+The snapshot weight here is 11 to 34%, against 1 to 9% at the same point in layer 0. The two
+layers weight the identical pair of sources very differently, which is a property of the
+learned projections rather than of the data — the snapshot is the same embedding in both
+cases.
+
+**Chain 1 to 34: 1,695,680 / 1,695,680.**
