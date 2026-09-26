@@ -1877,3 +1877,55 @@ alone would suggest.
 
 **Chain 1 to 42: 1,792,528 / 1,792,528.** Two full layers, one dense and one MoE, one KDA
 attention block each, from the token ids with nothing re-seeded.
+
+---
+
+## All 93 layers
+
+Walking stage by stage was the right way to establish the kernels, but it does not scale to
+93 layers — each run re-executed everything before it. The stage-by-stage work above settled
+every kernel; what remained was to apply them to the whole model.
+
+A single resumable walker now carries the residual and the snapshot stack across all layers,
+dispatches KDA or MLA and dense or MoE, checks every tap in order, and halts at the first
+mismatch. It was validated against layers 0 to 3 — reproducing the results recorded above —
+before being run over the model.
+
+```
+MLA layers: 24     KDA layers: 69
+dense:       1     MoE:        92
+OK:         93     MISMATCH:    0
+snapshot layers, 24 taps: 12 24 36 48 60 72 84
+```
+
+**79,535,968 floats identical. Zero mismatches. Max ulp 0 at every tap of every layer.**
+
+From the token ids, with nothing re-seeded from the engine at any point: the residual that
+enters layer 92 is the one my own layer 91 produced, and so on back to the embedding lookup.
+
+### What this reached that the stage walk had not
+
+**MLA, at layer 3, first attempt.** The 24 MLA layers use a completely different attention
+path from the 69 KDA ones, and none of it had been touched. It reproduced bit-exactly with no
+correction, including four details that are each silently wrong if missed:
+
+- the softmax scale is $1/\sqrt{192}$, over the **full** head width, not over `qk_nope`
+- the rope slot is **unrotated but still scored**, and the same 64 values serve all 96 heads
+- the kv norm covers the **latent only**, never the rope slot
+- the gate is applied **before** the output projection and with **no** norm — the opposite
+  order from KDA, which norms first
+
+**The snapshot stack at real depth.** Layer 12 is the first push that takes the stack beyond
+one entry, so from there the aggregation blends three sources, then four at layer 24, reaching
+eight by layer 92. The depth-2 and deeper cases were never exercised in the stage walk.
+
+**Every layer variant.** 24 MLA, 69 KDA, 1 dense, 92 MoE, and the seven interior snapshot
+layers, each checked against its own taps.
+
+### What is still not covered
+
+- **The tail.** The walk ends at layer 92's output. The model-level aggregation, final norm,
+  lm_head and argmax are separate stages and are not included in the figure above.
+- **The decode path.** Untested, as it has been throughout.
+- **One prompt.** Five tokens, one trace. Different routing or longer context could exercise
+  paths this does not, including the int8 kernel's scalar tail, which no shape here triggers.
