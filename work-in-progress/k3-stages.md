@@ -915,3 +915,72 @@ survive, and has been replaced.
 
 The general form worth keeping: **a filtered view can only show absence of what it was asked
 to load.** Any claim that something is missing has to come from the unfiltered source.
+
+---
+
+## Stage 12 — the gate
+
+### 1. The equation
+
+$$\mathrm{gated}_i \;=\; \mathrm{RMSNorm}_{\text{head}}(o)_i \cdot \sigma\big((W_g\,x)_i\big)$$
+
+with $x$ the **stage 4 output**, $W_g \in \mathbb{I}8^{\,12288 \times 7168}$ through the same
+`k3_matmul_q8` kernel as stage 5, and the multiply elementwise in float32.
+
+### 2. What this stage exactly does
+
+It scales the normalized attention output by a sigmoid gate. The gate is a projection of the
+layer input, not of anything attention produced.
+
+**The gate never sees the attention result.** $W_g$ is `[12288, 7168]`, so its input has to be
+7168 wide. The attention output is 12,288 wide, so it cannot be the source, and the only
+7168-wide vector in scope is the stage 4 output. The shape forces it, the same way the shapes
+forced the `A_log` indexing at stage 9 — this is not read off a variable name.
+
+The consequence is worth stating. Stages 5 through 11 — every projection, the convolution,
+both norms, the whole recurrence — produce a value that is then scaled by a factor computed
+entirely **independently of all of it**. The gate depends only on the token's own normalized
+representation, so nothing it does can respond to what attention actually retrieved.
+
+### 3. The real data
+
+```
+kda.gated identical per position: [12288, 12288, 12288, 12288, 12288] of 12288
+total 61440 / 61440
+
+gate value range        : 0.002409 .. 0.997656
+mean gate               : 0.449078
+fraction of gates < 0.1 : 0.99%
+fraction of gates > 0.9 : 0.10%
+gated range             : -0.050093 .. 0.055357
+```
+
+**The gate is graded, not a switch.** Only 1.09% of the 61,440 values lie near either rail. It
+spans nearly the whole open interval but sits mostly in the middle, mean 0.449, so it applies
+continuous attenuation — roughly halving everything — rather than selecting heads on or off.
+
+That is a real contrast with stage 9. `alpha` saturated at both ends on this same prompt,
+touching $e^{-5}$ and 1 exactly. Two sigmoid gates in the same block, behaving quite
+differently.
+
+### 4. What the equation gave
+
+**61,440 of 61,440 floats identical. Max ulp 0.**
+
+### This closes stage 11
+
+Stage 11 has no tap of its own, and its output feeds directly into this multiply. Since the
+product is bit-identical across all 61,440 floats, the head-wise RMSNorm producing it must be
+exact. Confirmed indirectly, the same way stage 6 confirmed stage 5's `q`, `k` and `v`.
+
+### Where the chain stands
+
+| stages | site | identical |
+|---|---|---|
+| 1 to 10 | various | 589,280 / 589,280 |
+| 11 | none | confirmed through stage 12 |
+| 12 | 27 | 61,440 / 61,440 |
+| **total** | | **650,720 / 650,720** |
+
+Every observable output from the token ids through the end of the gate is bit-identical, with
+nothing re-seeded from the engine.
