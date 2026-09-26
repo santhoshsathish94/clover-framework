@@ -1165,3 +1165,74 @@ mine. None were the engine's.
 | 1 to 13, the attention block | 686,560 / 686,560 |
 | 14, the residual update | 35,840 / 35,840 |
 | **total** | **722,400 / 722,400** |
+
+---
+
+## Stage 15 — the pre-MLP aggregation
+
+### 1. The equation
+
+$$\mathrm{AR}(V;f) \;=\; \sum_{v \in V} \pi_v\, v, \qquad
+\pi \;=\; \operatorname*{softmax}_{v \in V} \Big\langle \frac{v}{\sqrt{\overline{v^2}+\epsilon}},\; f \Big\rangle$$
+
+with $V = \{s_1,\dots,s_d\} \cup \{r\}$ in that order, snapshots first and the current
+residual last, $d = 1$ here, and $f = w_{\text{mlp\_res\_norm}} \odot w_{\text{mlp\_res\_proj}}$.
+
+The arithmetic that matters: the sum of squares accumulates in **double, sequentially**; the
+scoring product $v_i \cdot \mathrm{inv}$ is formed in **float32** before widening to double;
+$z$ accumulates in double; each $\pi$ is a double division rounded once to float32; and the
+weighted sum accumulates in **float32, source-major**.
+
+### 2. What this stage exactly does
+
+It blends the current residual with every stored snapshot, immediately before the MLP.
+
+This is the same kernel as stage 2, but here it runs. The source carries the distinction
+explicitly:
+
+```c
+/* aggregation before the MLP. NO emptiness guard in the reference. */
+```
+
+Stage 2 was guarded on `*n_blocks > 0` and skipped. This one has no guard, and after stage 3
+the stack holds one snapshot, so `nsrc = 2`.
+
+### 3. The real data
+
+```
+attn_res.pre_mlp identical per position: [7168 x5] of 7168
+total 35840 / 35840
+
+pos   score snap     score resid    w snap       w resid
+0     -0.127456      2.680218       0.056911     0.943089
+1     -0.460483      3.353032       0.021594     0.978406
+2      0.643056      2.964214       0.089386     0.910614
+3     -0.358930      4.136824       0.011033     0.988967
+4     -0.059747      3.315369       0.033082     0.966918
+```
+
+**The embedding comes back, but barely.** Stage 14 discarded it from the residual stream, and
+this stage reinjects it at between 1.1% and 8.9%. The scores are not close: the residual
+scores 2.7 to 4.1 against the snapshot's -0.46 to 0.64, so the softmax is decisive rather
+than balanced.
+
+### 4. What the equation gave
+
+**35,840 of 35,840 floats identical. Max ulp 0.**
+
+### This closes an item left open at stage 2
+
+Stage 2 recorded, from reading `k3_attn_res`, that the weighted sum accumulates in float32
+source-major, and that earlier reconstructions of this kernel had used float64 — which was
+the suspected cause of the partial bit-agreement seen in those checks.
+
+That is now confirmed by measurement rather than by reading. The float32 source-major order
+gives 35,840 of 35,840. The suspicion was correct and the note can be retired.
+
+### Where the chain stands
+
+| stages | identical |
+|---|---|
+| 1 to 14 | 722,400 / 722,400 |
+| 15, the pre-MLP aggregation | 35,840 / 35,840 |
+| **total** | **758,240 / 758,240** |
