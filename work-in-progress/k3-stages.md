@@ -1823,3 +1823,57 @@ latent_sum range : -0.068130 .. 0.090156
 This is the deepest composition checked anywhere in the walk: the router picked the experts,
 those picks selected 48 weight matrices, and all of it had to be right for a single float to
 land. A wrong expert would not be close — it would be unrelated.
+
+---
+
+## Stages 38 to 42 — completing layer 1
+
+### The equations
+
+$$\mathrm{accL} \leftarrow \mathrm{RMSNorm}(\mathrm{accL}; w_{\text{latent}}), \qquad
+\mathrm{routed} = W_{\text{up}}\,\mathrm{accL}$$
+
+$$\mathrm{shared} = W_{\text{sh2}}\,\mathrm{SiTU}(W_{\text{sh1}}x,\, W_{\text{sh3}}x), \qquad
+\mathrm{ffn.out} = \mathrm{routed} + \mathrm{shared}$$
+
+$$r \leftarrow r + \mathrm{ffn.out}$$
+
+Two structural points. The RMSNorm is applied to the **aggregate**, once, not per expert. And
+the shared expert reads the **original full-width input**, not the latent, and is added
+**unweighted** — it bypasses the router entirely.
+
+### The real data
+
+These were run for all five positions, not only the tapped one, so that `ffn.out` and
+`layer.out` are fully covered rather than sampled.
+
+```
+stage 38  moe.latent_normed  site 11  3584/3584    (last position only)
+stage 39  moe.routed_out     site 12  7168/7168    (last position only)
+stage 40  moe.shared_out     site 13  7168/7168    (last position only)
+stage 41  ffn.out            site 7   35840/35840  (all 5 positions)
+stage 42  layer.out          site 8   35840/35840  (all 5 positions)
+
+routed_out L2 0.9488   shared_out L2 0.2783
+unique experts loaded across 5 positions: 74 of 80 draws
+```
+
+Sites 11, 12 and 13 are tapped on the last position only, so those three are checked there
+and computed but unobserved elsewhere. Sites 7 and 8 cover all five.
+
+**The routed mixture dominates the shared expert** by 3.4x in magnitude, 0.9488 against
+0.2783. And the five positions drew **74 unique experts from 80 draws** — almost no reuse
+across neighboring tokens, which is why prefill batching helps far less than the top-k count
+alone would suggest.
+
+### Layer 1, complete
+
+| stages | identical |
+|---|---|
+| 21 to 34, attention and pre-MLP | 794,080 / 794,080 |
+| 35, router | 5/5 sets, 80/80 weights |
+| 36 to 40, MoE internals | 21,504 / 21,504 |
+| 41 to 42, ffn.out and layer.out | 71,680 / 71,680 |
+
+**Chain 1 to 42: 1,792,528 / 1,792,528.** Two full layers, one dense and one MoE, one KDA
+attention block each, from the token ids with nothing re-seeded.
