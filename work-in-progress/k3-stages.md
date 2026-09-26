@@ -984,3 +984,83 @@ exact. Confirmed indirectly, the same way stage 6 confirmed stage 5's `q`, `k` a
 
 Every observable output from the token ids through the end of the gate is bit-identical, with
 nothing re-seeded from the engine.
+
+---
+
+## Stage 13 — the output projection
+
+### 1. The equation
+
+$$\mathrm{attn.out} \;=\; W_o \cdot \mathrm{gated}, \qquad W_o \in \mathbb{I}8^{\,7168 \times 12288}$$
+
+Through the same int8 kernel and the same fixed reduction tree as every other projection in
+this layer.
+
+### 2. What this stage exactly does
+
+It folds the gated per-head result back to the residual width. The 96 heads of 128 dimensions
+each collapse into a single 7,168-vector that can be added to the residual stream.
+
+It is the same `k3_matmul_q8` as stage 5 at the transposed shape: inner dimension 12,288,
+which is 768 sixteen-wide blocks with **zero scalar tail**. The kernel's tail loop has still
+not been exercised anywhere in this layer.
+
+This is the last stage of the attention block.
+
+### 3. The real data
+
+```
+attn.out identical per position: [7168, 7168, 7168, 7168, 7168] of 7168
+total 35840 / 35840
+
+gated    range : -0.050093 .. 0.055357
+attn.out range : -0.157121 .. 0.228775
+
+attn.out  L2 per position: [0.36232, 0.430709, 0.750011, 0.585526, 0.571729]
+embedding L2 per position: [2.044562, 1.917933, 1.571738, 1.862019, 1.823674]
+```
+
+The projection **expands**, inputs bounded by about 0.055 and outputs reaching 0.229, because
+12,288 gated values sum into each of 7,168 outputs.
+
+Against the residual it is about to join, attention contributes between 18% and 48% of the
+embedding's magnitude. The ordering is worth noting: position 2, `' of'`, has the smallest
+embedding at 1.572 and the largest attention output at 0.750. The least informative token on
+its own draws the most from context.
+
+### 4. What the equation gave
+
+**35,840 of 35,840 floats identical. Max ulp 0.**
+
+---
+
+## The attention block, complete
+
+Thirteen stages, run from the token ids with nothing re-seeded from the engine:
+
+| # | stage | tap | result |
+|---|---|---|---|
+| 1 | embedding lookup | 31 | 35,840 / 35,840 |
+| 2 | aggregation | — | skipped, guard false |
+| 3 | snapshot push | 30 | state write exact |
+| 4 | pre-attention RMSNorm | 2 | 35,840 / 35,840 |
+| 5 | six projections | 28 | 61,440 / 61,440 |
+| 6 | ShortConv + SiLU | 19, 20, 21 | 184,320 / 184,320 |
+| 7 | per-head L2 norm | 22, 23 | 122,880 / 122,880 |
+| 8 | beta | 24 | 480 / 480 |
+| 9 | decay chain | 25, 29 | 122,880 / 122,880 |
+| 10 | recurrence | 26 | 61,440 / 61,440 |
+| 11 | head-wise RMSNorm | none | confirmed via stage 12 |
+| 12 | gate | 27 | 61,440 / 61,440 |
+| 13 | output projection | 3 | 35,840 / 35,840 |
+| | **total** | | **686,560 / 686,560** |
+
+Max ulp 0 at every site.
+
+**What is still not measured**, as opposed to verified:
+
+- `f_a`'s 128-dimensional intermediate, which is confirmed only by inference through `z`
+- the int8 kernel's scalar tail loop, which no shape in this layer triggers, so that branch
+  has never run
+
+Both are gaps in coverage, not known defects, and neither is closed by anything above.
