@@ -1283,3 +1283,47 @@ which is the point of normalizing here rather than carrying scale forward.
 | 1 to 15 | 758,240 / 758,240 |
 | 16, the pre-MLP RMSNorm | 35,840 / 35,840 |
 | **total** | **794,080 / 794,080** |
+
+---
+
+## Stage 17 — the dense gate and up projections
+
+### 1. The equation
+
+$$g \;=\; W_{\text{gate}}\,x, \qquad u \;=\; W_{\text{up}}\,x$$
+
+Both `[33792, 7168]`, both I8R, both through the same `k3_matmul_q8` kernel and the same
+fixed reduction tree as every other projection. 448 sixteen-wide blocks, zero scalar tail.
+
+### 2. What this stage exactly does
+
+It projects the normalized residual up into the MLP's intermediate width, twice, producing
+the two halves the activation will combine. The engine writes both into a single buffer, gate
+first then up, which is how the activation kernel addresses them.
+
+Layer 0 is dense rather than MoE, confirmed from the checkpoint rather than from the config:
+there are no `block_sparse_moe` tensors at this layer.
+
+**A note on the stage boundary.** The engine numbers the attention block's steps in comments
+and this walk followed that numbering. The dense MLP path carries no such comments, so the
+split into projections, activation and output projection is mine, chosen to mirror the
+attention block's shape. The kernel-call boundaries are real; the grouping is a choice.
+
+### 3. The real data
+
+```
+layer 0 is dense: block_sparse_moe tensors present = False
+mlp.gate_proj dtype I8R, mlp.up_proj dtype I8R
+both [33792, 7168] : 16-wide blocks 448, scalar tail 0
+
+gate range : -0.221712 .. 0.326753
+up   range : -0.282944 .. 0.296423
+```
+
+### 4. What the equation gave
+
+**Nothing yet.** The next tap is site 7, `ffn.out`, which is after the activation *and* the
+down projection. Nothing observes these two projections on their own, so verification is
+deferred to stage 19 — the same situation as stage 11, which stage 12 later closed.
+
+The chain is unchanged at 794,080 of 794,080.
