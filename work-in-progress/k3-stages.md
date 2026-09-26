@@ -433,8 +433,9 @@ Three limits, stated rather than glossed:
 - Both shapes divide by 16 exactly, so the kernel's scalar tail loop never executes here and
   remains untested.
 
-*The first of these was later closed by stage 6, which consumes `q`, `k` and `v` and matches
-bit for bit. See that entry.*
+*Both of the first two were later closed. Stage 6 consumes `q`, `k` and `v` and matches bit
+for bit; stage 8 consumes `b` and matches bit for bit. Of the six projections only `f_a`
+remains confirmed by inference rather than measurement. See those entries.*
 
 ---
 
@@ -590,3 +591,91 @@ from the data alone, agreeing with the code.
 
 The chain now runs stages 1 to 7 from the token ids with nothing re-seeded from the engine,
 and every observable output along the way is bit-identical.
+
+---
+
+## Stage 8 — beta, the per-head write gate
+
+### 1. The equation
+
+For each head $h$:
+
+$$\beta_h \;=\; \sigma(b_h) \;=\; \frac{1}{1 + \exp(-b_h)}$$
+
+float32 throughout, `exp` from glibc, applied in place over the `b` projection buffer. One
+scalar per head per position, 96 per position.
+
+### 2. What this stage exactly does
+
+It turns the `b` projection into **beta**, a gate in $(0,1)$.
+
+Beta is the write strength for the recurrent state. It controls how much of the new key and
+value pair is written into each head's state at each step, so it is the quantity that decides
+how fast a head forgets what it already holds.
+
+This is the smallest stage so far by data volume, 480 values across the whole prompt, but it
+is a distinct kernel step with its own effect on the recurrence.
+
+### 3. The real data
+
+The full chain, from the token ids, nothing re-seeded:
+
+| tensor | site | identical |
+|---|---|---|
+| norm.pre_attn | 2 | 35840 / 35840 |
+| kda.q_conv | 19 | 61440 / 61440 |
+| kda.k_conv | 20 | 61440 / 61440 |
+| kda.v_conv | 21 | 61440 / 61440 |
+| kda.q_norm | 22 | 61440 / 61440 |
+| kda.k_norm | 23 | 61440 / 61440 |
+| kda.z | 28 | 61440 / 61440 |
+| **kda.beta** | **24** | **480 / 480** |
+| **TOTAL** | | **404960 / 404960** |
+
+Stage 8 on its own:
+
+```
+glibc expf   identical 480 / 480
+numpy exp    identical 448 / 480
+```
+
+The libm dependence appears again. A small sample, but consistent with stage 6.
+
+```
+raw b projection range : -2.394173 .. 8.490455
+beta range             :  0.083618 .. 0.999795
+```
+
+Position 0, first six heads:
+
+```
+head   b raw            beta mine        beta engine
+0      2.97894406       0.951613784      0.951613784
+1      4.21393061       0.98542738       0.98542738
+2      2.54413652       0.927178621      0.927178621
+3      2.99129462       0.952179253      0.952179253
+4      0.702482402      0.668737888      0.668737888
+5      1.364434         0.796479404      0.796479404
+```
+
+The spread is wide and it matters: beta runs from 0.084 to 0.9998, so some heads overwrite
+their state almost completely at each step while others barely write at all.
+
+### 4. What the equation gave
+
+**480 of 480 identical. Max ulp 0.**
+
+### This closes the last open item from stage 5
+
+Stage 5 recorded that four of the six projections had no tap and were unverified. That list
+is now empty:
+
+| projection | how it was confirmed |
+|---|---|
+| `q`, `k`, `v` | stage 6, ShortConv output bit-identical |
+| `f_b`, giving `z` | stage 5, directly tapped |
+| `b` | stage 8, beta bit-identical |
+| `f_a` | inferred through `z`, still not measured |
+
+`f_a` is the one remaining projection whose correctness rests on inference rather than a
+measurement of its own output.
