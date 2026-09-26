@@ -146,13 +146,44 @@ judged on its own inputs. Same arithmetic, same code, only the seeding differs:
 `x pre-attn` goes from 14.67% to 66.06% at layer 1 and from 11.09% to 68.46% at layer 2. Most
 of the input-path error was inherited, exactly as the structure predicts.
 
+### All 93 layers, seeded
+
+The same run over the whole model — every layer, all five positions, 24 MLA and 69 KDA:
+
+```
+  site               mean rel    max rel   bit-exact
+  x pre-attn         6.20e-08   1.68e-07     56.28%
+  attn.out           1.82e-07   9.84e-07      9.53%
+  x pre-mlp          7.10e-08   3.13e-07     24.85%
+  ffn.out            2.14e-07   1.13e-06      7.42%
+  LAYER.OUT          1.22e-07   4.76e-07     15.27%
+```
+
+Mean layer output error is **1.22e-07**, against a float32 epsilon of 1.19e-07. One last bit,
+averaged over the entire model.
+
+And it does not grow with depth:
+
+```
+  mean LAYER.OUT rel, layers 0-9    1.219e-07
+  mean LAYER.OUT rel, layers 83-92  1.004e-07
+```
+
+This is the cleaner version of a claim made earlier from the chained run. There, "divergence
+does not grow" was measured with inherited error in the signal, so it could not distinguish a
+layer that adds error from one that merely carries it. Seeded, each layer is judged alone, and
+the answer is that no layer at any depth adds more than about one ulp. The deep layers are
+marginally *better* than the shallow ones.
+
 ### What this establishes, and what it retracts
 
-**Establishes.** Every site agrees with the engine to between 3e-09 and 3.2e-07 relative.
-Float32 epsilon is 1.19e-07. So with correct inputs the equation matches the engine to within
-a couple of last bits everywhere — across dense, KDA and MLA layers, on all five positions.
-The equation is right. The chained figures of ~1e-06 elsewhere in this document are those
-last bits accumulating across a layer, which is what feeding my own output forward does.
+**Establishes.** Every site agrees with the engine to between 3e-09 and 3.2e-07 relative on
+the sampled layers, and to a mean of 1.22e-07 at the layer output across all 93. Float32
+epsilon is 1.19e-07. So with correct inputs the equation matches the engine to within about
+one last bit everywhere — across dense, KDA and MLA layers, at every depth, on all five
+positions. The equation is right. The chained figures of ~1e-06 elsewhere in this document
+are those last bits accumulating across a layer, which is what feeding my own output forward
+does.
 
 **Retracts.** "The equation reproduces the model bit-exactly, variance is zero" was an
 overclaim, and this is the second time the same mistake has been made in this document in the
@@ -161,12 +192,12 @@ two-kernel match a property of the whole. Zero was measured on stages built from
 kernels whose order had been matched. The model contains several more, and they are still
 mine, not the engine's:
 
-| still unmatched | exact% with engine inputs |
+| still unmatched | bit-exact with engine inputs, all 93 layers |
 |---|---|
 | RMSNorm on the embedding | 100% — matched |
-| AttnRes softmax and weighted sum | 62–68% |
-| attention inner loops (KDA recurrence, MLA softmax) | 12–14% |
-| MoE expert accumulation (fp4 kernel, 16-expert sum) | 8–9% |
+| AttnRes softmax and weighted sum | 56.28% |
+| attention inner loops (KDA recurrence, MLA softmax) | 9.53% |
+| MoE expert accumulation (fp4 kernel, 16-expert sum) | 7.42% |
 
 The ordering is informative: the more summation a kernel does that is not `k3_matmul_q8`, the
 further from bit-exact it is. The KDA state recurrence is carried in float64 here against the
