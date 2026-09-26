@@ -36,10 +36,11 @@ the end: cross-layer accumulation and the decode path.
 **Read this before the numbers below.** Most figures in this document are quoted as relative
 errors around 1e-06. That framing was wrong. The model is deterministic and the equation is
 deterministic, so the difference between them is not noise — it is the sum of the choices
-that differ between the two implementations, and those can be removed one at a time until
-nothing is left. **Removed, the difference is exactly zero.**
+that differ between the two implementations, and those can be removed one at a time.
 
-There turn out to be exactly two, and neither is the equation.
+Two were found and removed, and neither is the equation. Removing them takes the stages
+built from those two kernels to exactly zero. It does **not** take the model to zero — see
+"Running it through the model" below, which is the correction to this section.
 
 ### One: summation order. Mine, and removable.
 
@@ -95,18 +96,86 @@ alpha libm expf       100.000%     0.000%         0
 
 **Zero.**
 
-### So the variance is exactly zero
+### So the variance is zero for those stages — and only those
 
-The equation reproduces the model **bit-exactly**, given two things that are properties of
-the implementation and not of the mathematics:
+The equation reproduces the model **bit-exactly for the stages measured above**, given two
+things that are properties of the implementation and not of the mathematics:
 
 1. the matmul reduction order, and the ShortConv accumulation order
 2. the same `libm`
 
-Every ~1e-06 quoted elsewhere in this document is an artifact of the check, not a property
-of the model or of the equation. The practical consequence is that the equation is now a
-**measuring instrument that reads zero on a known-good case** — so a non-zero difference on
-some future run is a real discrepancy rather than something to be explained away.
+That is a real result, but it is narrower than it first looks, and the next section is the
+correction. Those stages are pure `k3_matmul_q8` plus a transcendental, **fed engine inputs**.
+They are the two kernels whose order was matched. Nothing licensed extending the word "zero"
+to the model, and when the equation was actually run through the model it did not hold.
+
+## Running it through the model
+
+Two ways to run the whole thing, and the difference between them is the finding.
+
+**Chained** — start from the embedding and feed my own output forward, re-seeding nothing:
+
+```
+  L   kind    x pre-attn     attn.out    x pre-mlp      ffn.out    LAYER.OUT
+  0   DENSE    100.00%/0 13.24%/16126 13.25%/74426 9.46%/446561 10.52%/327680
+  1   KDA   14.67%/191461 9.75%/308329 10.57%/118517 7.08%/155648 9.74%/425984
+  2   KDA    11.09%/27788 11.72%/73276 13.43%/106103 8.64%/101632 11.71%/417792
+```
+
+Only the very first cell is bit-exact. Read alone, that looks like the equation collapsing
+immediately. It is not, and the reason is structural: `x pre-attn` at layer 0 is the one site
+that depends only on the embedding. Every later site consumes **my** layer output rather than
+the engine's, so from layer 0's attention onward the table is measuring inherited error, not
+each layer's own arithmetic. A chained run cannot localize a defect.
+
+**Seeded** — start each layer from the *engine's* previous-layer output, so every layer is
+judged on its own inputs. Same arithmetic, same code, only the seeding differs:
+
+```
+  L   kind    x pre-attn     attn.out    x pre-mlp      ffn.out    LAYER.OUT
+  0   DENSE    100.00%/0 13.24%/16126 13.25%/74426 9.46%/446561 10.52%/327680
+      rel       0.00e+00     8.93e-08     3.13e-07     2.02e-07     1.59e-07
+  1   KDA    66.06%/3243 12.33%/46250 16.85%/23544 8.12%/180224 12.99%/131072
+      rel       8.03e-08     8.62e-08     3.15e-08     2.12e-07     1.41e-07
+  2   KDA    68.46%/1409 13.74%/52119 21.21%/70552 8.95%/112640 15.14%/36864
+      rel       8.44e-08     4.95e-08     3.72e-09     7.75e-08     5.57e-08
+  3   MLA   62.66%/17860 12.18%/54667 26.52%/182466  9.31%/69632 16.38%/98304
+      rel       6.77e-09     1.19e-07     1.51e-07     9.35e-08     1.79e-07
+```
+
+`x pre-attn` goes from 14.67% to 66.06% at layer 1 and from 11.09% to 68.46% at layer 2. Most
+of the input-path error was inherited, exactly as the structure predicts.
+
+### What this establishes, and what it retracts
+
+**Establishes.** Every site agrees with the engine to between 3e-09 and 3.2e-07 relative.
+Float32 epsilon is 1.19e-07. So with correct inputs the equation matches the engine to within
+a couple of last bits everywhere — across dense, KDA and MLA layers, on all five positions.
+The equation is right. The chained figures of ~1e-06 elsewhere in this document are those
+last bits accumulating across a layer, which is what feeding my own output forward does.
+
+**Retracts.** "The equation reproduces the model bit-exactly, variance is zero" was an
+overclaim, and this is the second time the same mistake has been made in this document in the
+opposite direction — first calling rounding a property of the model, then calling a
+two-kernel match a property of the whole. Zero was measured on stages built from the two
+kernels whose order had been matched. The model contains several more, and they are still
+mine, not the engine's:
+
+| still unmatched | exact% with engine inputs |
+|---|---|
+| RMSNorm on the embedding | 100% — matched |
+| AttnRes softmax and weighted sum | 62–68% |
+| attention inner loops (KDA recurrence, MLA softmax) | 12–14% |
+| MoE expert accumulation (fp4 kernel, 16-expert sum) | 8–9% |
+
+The ordering is informative: the more summation a kernel does that is not `k3_matmul_q8`, the
+further from bit-exact it is. The KDA state recurrence is carried in float64 here against the
+engine's float32, and the fp4 expert kernel was never read at all. Neither is a defect in the
+equation; both are places where the *check* still rounds differently from the engine.
+
+So the accurate statement is: **the equation is verified correct to within a few float32 ulp
+at every site, and bit-exact only where the kernel's reduction order has been matched.** The
+instrument does not yet read zero through the model, and should not be described as if it did.
 
 ## Constants
 
