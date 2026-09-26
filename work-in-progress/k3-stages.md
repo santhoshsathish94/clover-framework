@@ -1880,6 +1880,82 @@ attention block each, from the token ids with nothing re-seeded.
 
 ---
 
+# The whole model
+
+Layers 0 and 1 were walked stage by stage above. The remaining 91 layers and the tail were
+run by a single resumable walker carrying the residual, the snapshot stack and every layer's
+recurrent state forward, checking every tap in order and halting at the first mismatch.
+
+It did not halt.
+
+```
+ALL LAYERS 0..92 IDENTICAL, floats checked 79,535,968
+
+THE TAIL
+  final.aggregate  site 32  nsrc=9   35840/35840
+  final.norm       site 33           7168/7168
+  logits           site 34           163840/163840
+  argmax token     17374   engine emitted 17374   MATCH
+
+WHOLE MODEL, embedding to emitted token: 79,742,816 floats identical
+```
+
+**79,742,816 of 79,742,816. Zero mismatches. Max ulp 0 everywhere.**
+
+## What the walk covered
+
+| | |
+|---|---|
+| layers | 93 — 24 MLA, 69 KDA |
+| MLP kind | 1 dense, 92 MoE |
+| taps per MLA layer | 17, giving 649,024 floats |
+| taps per KDA layer | 23, giving 923,104 floats |
+| taps per snapshot layer | 24, giving 958,944 floats |
+| snapshot pushes | 8, at layers 0, 12, 24, 36, 48, 60, 72, 84 |
+| final aggregation sources | 9 — eight snapshots plus the live residual |
+
+Every kernel in the engine is exercised: `k3_matmul_q8`, `k3_matmul_mxfp4`, `k3_matmul_bf16`,
+`k3_rmsnorm`, `l2norm_`, `k3_shortconv`, `k3_situ_glu`, `k3_attn_res`, `k3_router`,
+`k3_kda_step` and the MLA attention path. Three different matmul kernels with three different
+reduction trees, two of them accumulating in double and one in float32 lanes.
+
+## The end condition
+
+The model emitted token **17374**. The equation, run from five token ids with nothing
+re-seeded from the engine at any point, produced **17374**.
+
+That is the whole claim, and it is not a tolerance: 163,840 logits bit-identical, and the
+argmax over them agreeing with what the engine actually emitted.
+
+## What is still not covered
+
+Stated plainly, because a clean total invites over-reading:
+
+- **One prompt.** Five tokens, `The capital of France is`. Different routing, longer
+  contexts and different expert sets are untested.
+- **Prefill only.** The decode path — KV cache reuse and carried KDA state across calls — has
+  never been run. This is the largest remaining structural gap.
+- **`f_a`'s 128-dim intermediate** is still confirmed by inference through `z`, never measured
+  directly.
+- **The int8 kernel's scalar tail loop** never executes at any shape in this model, so that
+  branch remains dead code as far as this verification is concerned.
+- **MoE sites 10 to 13** are tapped on the last position only, by the trace's design. Those
+  four sites are checked at one position per layer, not five.
+
+## The count, revisited
+
+The walk now gives measured numbers where before there was only an estimate. Per layer the
+engine emits 17 tap sites for MLA, 23 for KDA and 24 where a snapshot is pushed.
+
+That still does not settle 986. Tap sites are not stages — several stages share one tap and
+several have none at all — and the stage numbering used in this document remains a local
+convention at kernel-call granularity, which for layer 0 gave 20.
+
+The verification does not depend on it. Every one of the 79,742,816 comparisons is anchored to
+a named tap site and a named kernel, not to a stage number.
+
+---
+
 ## All 93 layers
 
 Walking stage by stage was the right way to establish the kernels, but it does not scale to
