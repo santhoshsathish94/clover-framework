@@ -194,3 +194,85 @@ along, recorded here so they are not rediscovered:
 - the weighted sum accumulates in **float32**, source-major — earlier reconstructions of this
   kernel accumulated in float64, which is the likely cause of the partial bit-agreement seen
   in those checks
+
+---
+
+## Stage 3 — the snapshot push, which does run
+
+### 1. The equation
+
+There is no equation on the residual. Stage 3 leaves it untouched:
+
+$$h \;\leftarrow\; h$$
+
+Its content is a state transition:
+
+$$S \;\leftarrow\; S \cup \{\,r\,\}, \qquad d \;\leftarrow\; d+1, \qquad r = h^{\text{(layer entry)}}$$
+
+Here $d$ goes $0 \to 1$ and $S$ becomes $\{\,\text{the embedding}\,\}$.
+
+### 2. What this stage exactly does
+
+This is the first stage in the model that does anything, and what it does is write machine
+state rather than transform data. Three effects, none of them to the residual:
+
+1. the layer-entry residual is copied into slot `n_blocks` of the snapshot stack
+2. `n_blocks` increments, 0 to 1
+3. `have_prefix` is cleared to 0
+
+The guard here is `layer_idx % attn_res_block == 0`, which is true, where stage 2's guard was
+false. That single snapshot is what stage 2 will have to aggregate over from the next layer
+onward — stage 2 was empty precisely because stage 3 had not happened yet.
+
+### 3. The real data
+
+**It executed.** The engine emits `snapshot.pushed` only from inside the branch:
+
+```
+layers where snapshot.pushed was emitted: [0, 12, 24, 36, 48, 60, 72, 84]
+value at stage 3: 1                       => branch TAKEN
+```
+
+Eight pushes in the whole forward pass, and the raw snapshot record exists at exactly those
+same eight points, five positions each.
+
+**The state change, confirmed from both sides:**
+
+```
+stack.depth observed before the push:      0
+snapshot.pushed (n_blocks after ++):       1
+stack.depth observed by the next reader:   1
+```
+
+**What was copied:**
+
+```
+pos 0..4  snapshot == embed 7168/7168  == layer.in 7168/7168  == attn_res.pre_attn 7168/7168
+```
+
+### 4. What the equation gave
+
+The residual is not written, so the difference there is zero by construction. The state write
+is exact: **35,840 of 35,840 floats identical** between the stored snapshot and its source.
+
+### What the data cannot settle here
+
+All three candidate sources — `embed`, `layer.in`, `attn_res.pre_attn` — are the same vector
+at this point, because stage 2 did not run and nothing has diverged them. So the measurement
+cannot say which one was copied. The source says it is `pref`, the buffer captured at layer
+entry, which is `layer.in`. That is reported from the code, not from the measurement.
+
+It could be discriminated at a later push, where the aggregation has already modified `h`
+before the copy. That is a different stage and has not been looked at.
+
+### A note on counting
+
+Three stages in, there are already three different kinds:
+
+| stage | kind | effect on the residual |
+|---|---|---|
+| 1 | transforms data | writes it |
+| 2 | skipped by a guard | none, not executed |
+| 3 | writes machine state | none, but changes what later stages see |
+
+They are not interchangeable, and a stage count that treats them as one kind will not land.
