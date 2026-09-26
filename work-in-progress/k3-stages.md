@@ -1423,3 +1423,85 @@ a subtly wrong form would have collapsed the output.
 | 18, SiTU-GLU | via stage 19 |
 | 19, the down projection | 35,840 / 35,840 |
 | **total** | **829,920 / 829,920** |
+
+---
+
+## Stage 20 — the final residual add
+
+### 1. The equation
+
+$$r \;\leftarrow\; r + \mathrm{ffn.out}, \qquad h \;\leftarrow\; r$$
+
+### 2. What this stage exactly does
+
+It adds the MLP output to the residual and copies the result out as the layer output.
+
+Unlike stage 14 this add is **unconditional** — there is no `have_prefix` branch. Stage 14
+set the flag back to 1 when it took the copy path, but this stage does not consult it at all.
+
+### 3. The real data
+
+```
+layer.out identical per position: [7168 x5] of 7168
+total 35840 / 35840
+
+resid in  L2 : [0.3623, 0.4307, 0.75,   0.5855, 0.5717]
+ffn.out   L2 : [0.8745, 0.5215, 0.4041, 0.4614, 0.43]
+layer.out L2 : [0.9928, 0.7577, 0.9254, 0.8183, 0.7871]
+embedding L2 : [2.0446, 1.9179, 1.5717, 1.862,  1.8237]
+```
+
+The layer leaves the residual at roughly half the magnitude it arrived with, 0.79 to 0.99
+against an incoming 1.57 to 2.04. The MLP contributes more than attention did at three of the
+five positions.
+
+### 4. What the equation gave
+
+**35,840 of 35,840 floats identical. Max ulp 0.**
+
+---
+
+## Layer 0, complete
+
+Twenty stages, run from the token ids with nothing re-seeded, every observable output
+bit-identical:
+
+| # | stage | tap | result |
+|---|---|---|---|
+| 1 | embedding lookup | 31 | 35,840 / 35,840 |
+| 2 | pre-attention aggregation | — | skipped, guard false |
+| 3 | snapshot push | 30 | state write exact |
+| 4 | pre-attention RMSNorm | 2 | 35,840 / 35,840 |
+| 5 | six projections | 28 | 61,440 / 61,440 |
+| 6 | ShortConv + SiLU | 19, 20, 21 | 184,320 / 184,320 |
+| 7 | per-head L2 norm | 22, 23 | 122,880 / 122,880 |
+| 8 | beta | 24 | 480 / 480 |
+| 9 | decay chain | 25, 29 | 122,880 / 122,880 |
+| 10 | recurrence | 26 | 61,440 / 61,440 |
+| 11 | head-wise RMSNorm | — | via stage 12 |
+| 12 | gate | 27 | 61,440 / 61,440 |
+| 13 | output projection | 3 | 35,840 / 35,840 |
+| 14 | residual replace | 4 | 35,840 / 35,840 |
+| 15 | pre-MLP aggregation | 5 | 35,840 / 35,840 |
+| 16 | pre-MLP RMSNorm | 6 | 35,840 / 35,840 |
+| 17 | gate and up projections | — | via stage 19 |
+| 18 | SiTU-GLU | — | via stage 19 |
+| 19 | down projection | 7 | 35,840 / 35,840 |
+| 20 | residual add | 8 | 35,840 / 35,840 |
+| | **total** | | **865,760 / 865,760** |
+
+Max ulp 0 at every site.
+
+### An open question about the count
+
+Layer 0 came to **20 stages** at this granularity: one embedding lookup plus nineteen layer
+stages. Extrapolated across 93 layers that is roughly 1,770, not 986.
+
+The granularity here is one stage per kernel call, grouped where the engine's own comments
+group them. That is about twice as fine as 986 over 93 layers implies, so either the intended
+counting basis is coarser, or it counts something other than kernel calls.
+
+This is recorded rather than resolved. Nothing in the verification depends on it — every
+result above is anchored to a named tap site, not to a stage number. But the stage numbers in
+this document are a local convention until the basis is settled, and they should not be read
+as the model's own.
