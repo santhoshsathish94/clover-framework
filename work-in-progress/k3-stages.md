@@ -1579,3 +1579,59 @@ where that attempt reached 54.99% bit-agreement using float64 accumulation, this
 | 1 to 20, layer 0 | 865,760 / 865,760 |
 | 21, layer 1 aggregation | 35,840 / 35,840 |
 | **total** | **901,600 / 901,600** |
+
+---
+
+## Stages 22 to 32 — layer 1's attention block
+
+Layer 1 runs the same KDA code as layer 0 with different weights, so these are recorded
+together. Every tap was checked in order, and the run was set to stop at the first mismatch.
+
+### The equations
+
+Unchanged from stages 4 through 14. Same kernels, same reduction orders, same epsilons; only
+the weights differ. Two things are genuinely new at this layer and are noted below.
+
+### The real data
+
+```
+stage 22  norm.pre_attn      site 2   35840/35840
+stage 23  kda.z              site 28  61440/61440
+stage 24  kda.q_conv         site 19  61440/61440
+stage 24  kda.k_conv         site 20  61440/61440
+stage 24  kda.v_conv         site 21  61440/61440
+stage 25  kda.q_norm         site 22  61440/61440
+stage 25  kda.k_norm         site 23  61440/61440
+stage 26  kda.beta           site 24  480/480
+stage 27  kda.g              site 29  61440/61440
+stage 27  kda.alpha          site 25  61440/61440
+stage 28  kda.o              site 26  61440/61440
+stage 30  kda.gated          site 27  61440/61440
+stage 31  attn.out           site 3   35840/35840
+stage 32  resid.post_attn    site 4   35840/35840
+
+layer 1 attention subtotal 722400 / 722400
+```
+
+Stage 29, the head-wise RMSNorm, has no tap here either and is closed by stage 30, exactly as
+stage 11 was closed by stage 12.
+
+### Two things this settles that layer 0 could not
+
+**Both branches of the residual conditional are now observed.** At layer 0 a snapshot was
+pushed, `have_prefix` was cleared, and stage 14 took the copy path. Layer 1 pushes no
+snapshot, so stage 32 takes the add path — and it matches. The conditional recorded at stage
+14 has now been exercised in both directions rather than argued from one.
+
+**The per-layer recurrent state starts at zero.** Layer 1's KDA state and ShortConv history
+were both initialized to zero in the reconstruction, on the reading that each layer owns its
+own state buffer. Had that been wrong the recurrence would have diverged immediately; 61,440
+of 61,440 at `kda.o` says it is right.
+
+### Where the chain stands
+
+| stages | identical |
+|---|---|
+| 1 to 21 | 901,600 / 901,600 |
+| 22 to 32, layer 1 attention | 722,400 / 722,400 |
+| **total** | **1,624,000 / 1,624,000** |
