@@ -2005,3 +2005,199 @@ layers, each checked against its own taps.
 - **The decode path.** Untested, as it has been throughout.
 - **One prompt.** Five tokens, one trace. Different routing or longer context could exercise
   paths this does not, including the int8 kernel's scalar tail, which no shape here triggers.
+
+---
+
+## The decode path
+
+Every figure above this line came from a single forward call over five positions. That is
+prefill. It is not how a model generates. Generation calls `forward` again, once per token,
+with one position, and the second call is only correct if state from the first survives it.
+
+None of that had been run. This section runs it.
+
+### What the decode path actually is
+
+Read from the generation loop rather than inferred from it:
+
+```c
+while (nraw < gen) {
+  if (incremental) {
+    if (!nraw) { forward(w, c, cache, *seq,       T, ...); w->cached  = T; }  /* prefill */
+    else       { forward(w, c, cache, *seq + T-1, 1, ...); w->cached++;    }  /* decode  */
+  } else       { forward(w, c, cache, *seq,       T, ...); }  /* full recompute */
+}
+```
+
+Two calls, not two implementations. The decode call passes one position and a non-zero
+`cached`, and inside the layer everything indexes from `p = cached + t`. The attention loop
+runs `s = 0..p`, reading K and V for `s < cached` out of the cache written by the previous
+call.
+
+`k3_mla` is not a separate function from the cached path. It is literally:
+
+```c
+k3_mla_cached(..., NULL, NULL, 0, 0)
+```
+
+So prefill is the degenerate case of the decode kernel, with an empty cache. There is one
+attention implementation and the stage walk above has already verified it — at `cached = 0`.
+What decode adds is the case where `cached` is not zero.
+
+**What carries across the token boundary**
+
+| | |
+|---|---|
+| KDA recurrent state $S$ | carried, per layer, per head |
+| ShortConv history | carried, the last three positions |
+| MLA `kvc` and `ropec` | carried, plus the `cached` counter |
+| the snapshot stack | **rebuilt** — `int nb = 0;` at the top of `forward` |
+
+The snapshot stack being rebuilt is worth stating, because it would be easy to assume
+otherwise. Each call re-pushes its own snapshots at layers 0, 12, 24, 36, 48, 60, 72 and 84,
+so the decode pass aggregates over its own eight entries, not the prefill pass's.
+
+### The run
+
+A second trace, with `--gen 2 --incremental`, giving two forward calls: `T=5 cached=0`, then
+`T=1 cached=5`.
+
+```
+dec.bin              404,671,680 bytes
+raw records               11,004    (9,092 prefill, 1,912 decode-only)
+
+STEP   TOKEN      SECONDS      CACHE HIT  READ GB    TOK/S
+0      17374      56.14        98.5       99.72      0.018
+1      20829      12.30        100.0      24.95      0.081
+```
+
+The engine emitted **17374** from prefill, fed it back, and emitted **20829** from decode.
+The decode step ran at 100.0% expert cache hit, which is a different I/O regime from the
+prefill step's 98.5% — the two steps read 99.72 GB and 24.95 GB, summing to the 124.67 GB the
+run reports overall.
+
+### Run to run determinism, measured rather than assumed
+
+This is a second invocation of the engine, on a different day, with different cache behavior.
+Before trusting anything about the decode pass, the prefill pass in the new trace was compared
+against the original `e1` trace record by record — headers aligned in order, then bytes.
+
+```
+e1 records aligned in order : 9092   unmatched e1 remaining: 0
+dec records total           : 11004   dec-only (skipped)    : 1912
+byte-identical              : 9092   differing             : 0
+float32 values compared     : 83441504
+```
+
+**83,441,504 of 83,441,504 identical, zero differing.** Every prefill record of the original
+trace appears in the new trace, in the same order, with the same bytes. The engine is
+deterministic across invocations, and the I/O regime does not perturb the arithmetic.
+
+That matters beyond convenience: it means the prefill half of this trace is the same object
+the entire document above was verified against, so the decode half can be compared to it
+without re-establishing anything.
+
+### The walker
+
+The prefill walker needed one structural change, and it is smaller than expected. Engine
+records for a given layer and site arrive ordered `[5 prefill][1 decode]`, and both passes
+push snapshots at the same layers. So the decode position is simply **position index 5**,
+with its own residual stream and its own snapshot stack, while the per-layer attention state
+— KDA $S$, the ShortConv ring, the MLA key and value lists — continues naturally across all
+six positions in order.
+
+No equation changed. Six positions instead of five, and the sixth one reads state the first
+five wrote.
+
+### What the taps do and do not show
+
+One asymmetry had to be found before the walk could be believed, because it looks like a
+mismatch if it is not:
+
+| site | name | records per layer |
+|---|---|---|
+| 9 | `moe.latent_in` | 1 |
+| 10 | `moe.latent_sum` | 1 |
+| 11 | `moe.latent_normed` | 1 |
+| 12 | `moe.routed_out` | 2 |
+| 13 | `moe.shared_out` | 2 |
+
+Sites 9, 10 and 11 are raw-traced only from `moe_prefill_chunk`, so the decode pass emits
+nothing for them. Sites 12 and 13 carry an explicit raw-trace call inside `k3_moe` itself and
+so appear on both paths.
+
+The consequence is stated plainly: **the decode pass's MoE latent internals are not
+observable.** They are closed indirectly — if the latent path were wrong on the decode
+position, `moe.routed_out` at that position would not be bit-identical. That is a weaker
+claim than a direct tap, and it is the only place in this section where the evidence is
+indirect.
+
+### The result
+
+All 93 layers, both passes, every tap in order, halting at the first mismatch.
+
+```
+0     KDA   dense 20         1124928/1124928 OK         17s
+1     KDA   MoE   23         1117760/1117760 OK         25s
+...
+84    KDA   MoE   24         1160768/1160768 OK         25s
+...
+92    MLA   MoE   17         788864/788864  OK         22s
+
+ALL LAYERS 0..92 IDENTICAL, floats checked 96366400
+
+THE TAIL
+  final.aggregate  site 32  nsrc=9  43008/43008
+  final.norm       site 33  14336/14336  (both passes)
+  logits decode    site 34  163840/163840
+  argmax token             20829   engine emitted 20829   MATCH
+
+  TAIL IDENTICAL
+  WHOLE MODEL, embedding to emitted token: 96587584 floats identical
+```
+
+**96,587,584 of 96,587,584. Zero mismatches. Zero length errors.**
+
+The second token is the real end condition. The equation was given five token ids, produced
+17374, took 17374 as the sixth input with nothing re-seeded from the engine at any point, and
+produced **20829** — the token the engine emitted.
+
+### What this reached that prefill could not
+
+Three things were previously true only in their trivial case, and are now exercised:
+
+- **The KDA recurrence starts from a non-zero $S$.** Across the whole prefill walk, every
+  layer's recurrence began at $S = 0$ and built up within the call. On the decode position it
+  begins at the state the fifth prefill position left behind. The update
+  $S \leftarrow \operatorname{diag}(\alpha) S$ therefore decays a real matrix for the first
+  time; before, the first step decayed zeros, which is true for any $\alpha$.
+- **The ShortConv history is non-zero at the first position of the call.** In prefill,
+  position 0 convolves against a zero-initialized ring, so the three history taps contributed
+  nothing and the ordering of the accumulation — current input first, then oldest to newest —
+  was confirmed only by implication from later positions. On the decode position all three
+  history slots hold real values, and the recorded ordering reproduces bit-exactly.
+- **MLA reads K and V it did not write.** At `cached = 5` the attention loop reads five
+  cached positions plus the one it just computed. The cache round-trip, the layout, and the
+  `p = cached + t` indexing are all now covered.
+
+### An instrument error, the fifth
+
+`pgrep -f 'walkdec'` never stopped reporting a running process, because the watcher's own
+command line contains the string it is searching for. It matched itself. I then used that to
+conclude the walk was still running, twice, and would have kept concluding it forever.
+
+The failure mode is the same one as stage 11 and stage 14: **the instrument reported a
+property of itself and I read it as a property of the system.** The fix is not a better
+pattern, it is a different class of evidence — judge completion by the artifact, not the
+process table. The walk was ultimately waited on by polling the output file for the walker's
+own terminal marker, with a guard that reports a stall if the file stops growing without one.
+
+### What is still not covered
+
+- **One decode step.** Two forward calls, not twenty. Nothing here says the state stays
+  correct at `cached = 50`.
+- **The decode MoE latent internals**, as described above — closed indirectly through
+  `moe.routed_out`, not observed.
+- **One prompt**, still. The same five tokens.
+- **The full-recompute branch** of the generation loop, `incremental == false`, is not
+  exercised by this trace.
