@@ -16,6 +16,30 @@ Evidence throughout comes from one traced execution of the released checkpoint o
 engine: prompt `The capital of France is`, 5 tokens, raw per-stage vectors captured to
 `e1.bin`. Weights are read from the checkpoint, never from the engine's own buffers.
 
+## Working protocol
+
+Every stage follows the same rule, and it is written here so it does not drift:
+
+> **Stage n — run stages 1 to n. Do not assume; do the actual run. It is not 93 stages, it is
+> 93 layers and roughly 986 stages. After identical results, record it to this document.**
+>
+> **If any result does not match — if the numbers are not identical — do not proceed. Stop
+> there and report.**
+
+Three things that rule implies, and that have already mattered:
+
+- The run is always **from the token ids**, the whole chain, with nothing re-seeded from the
+  engine. A stage is not verified by feeding it engine inputs; it is verified as part of the
+  chain that produced it.
+- Stage boundaries are read from the engine source at the time, not planned in advance. The
+  count is whatever the code turns out to contain.
+- A stage with no tap of its own is carried forward and closed later by the first stage that
+  does have one, and is marked as inferred until then.
+
+On the count itself: 986 is the working figure. An earlier census of this same engine measured
+993 in-layer and 1,002 total operations per position, and that discrepancy has not been
+reconciled. It is recorded here rather than smoothed over.
+
 ---
 
 ## Stage 1 — the embedding lookup
