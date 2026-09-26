@@ -345,3 +345,90 @@ so the sequential order is not claimed to be required here. The **multiply assoc
 This is the first stage that could have been wrong and was not. Stages 1 to 3 matched because
 they compute nothing — a lookup, a skipped branch, a state write. Stage 4 matches because the
 arithmetic is right, association order included.
+
+---
+
+## Stage 5 — the KDA projections
+
+### 1. The equation
+
+Every projection goes through one int8 kernel. For output row $o$, with int8 weights
+$w_{o,i}$ and a per-row float32 scale $s_o$:
+
+$$y_o \;=\; s_o \cdot \Big[\big((A_0{+}A_4)+(A_2{+}A_6)\big) + \big((A_1{+}A_5)+(A_3{+}A_7)\big)\Big]$$
+
+where $A_j$ is a float32 lane accumulated with single-rounded fused multiply-add over the
+inputs at $i \equiv j \pmod 8$, taken in blocks of 16. The eight lanes are reduced by that
+fixed tree, not by a running total.
+
+Stage 5 applies this six times. The observable one chains it twice:
+
+$$z \;=\; \mathrm{mm}\big(W_{f_b},\; \mathrm{mm}(W_{f_a},\, x)\big)$$
+
+### 2. What this stage exactly does
+
+It is step 1 of the KDA attention block: six int8 matmuls per position, all reading the
+stage 4 output.
+
+| projection | shape | becomes |
+|---|---|---|
+| `q` | `[12288, 7168]` | query |
+| `k` | `[12288, 7168]` | key |
+| `v` | `[12288, 7168]` | value |
+| `b` | `[96, 7168]` | one scalar per head, later beta |
+| `f_a` then `f_b` | `[128, 7168]` then `[12288, 128]` | `z`, the decay-gate input |
+
+The `f_a`/`f_b` pair is the one to notice. It is computed **once per position and feeds every
+head**, `E -> 128 -> 12288`. It is a shared low-rank path, not a per-head projection.
+
+### 3. The real data
+
+Only one of the six is directly observable:
+
+```
+site 19 kda.q_conv   dim 12288    after ShortConv, not the raw projection
+site 20 kda.k_conv   dim 12288    after ShortConv
+site 21 kda.v_conv   dim 12288    after ShortConv
+site 24 kda.beta     dim 96       after the sigmoid
+site 28 kda.z        dim 12288    the raw f_b(f_a(x)) output
+```
+
+There is no tap on raw `q`, `k`, `v` or `b`. Their first appearance is already fused with the
+next stage.
+
+Reproducing the engine's AVX2 path exactly:
+
+```
+pos  max |z|       identical      max ulp
+0    5.61936617    12288/12288    0
+1    8.0720396     12288/12288    0
+2    13.0760984    12288/12288    0
+3    7.28017998    12288/12288    0
+4    8.24403381    12288/12288    0
+
+total identical: 61440 / 61440
+```
+
+The reduction tree is not cosmetic. Same weights, same inputs, plain dot product instead:
+
+```
+pos 0..4  identical 438, 501, 543, 478, 630 of 12288   (~4%)
+```
+
+Roughly 96% of every vector wrong, purely from summing in a different order.
+
+### 4. What the equation gave
+
+**61,440 of 61,440 floats identical. Max ulp 0.**
+
+### What this does not cover
+
+Three limits, stated rather than glossed:
+
+- **Four of the six projections are not individually verified**, because nothing observes
+  them. What is verified is the kernel all six call, and `z` exercises it at two different
+  shapes, `in=7168` and `in=128`.
+- **`f_a`'s 128-dim intermediate is also unobserved.** `z` matching in all 61,440 floats is
+  very strong evidence that it is exact, but that is inference, not measurement.
+- Both shapes divide by 16 exactly, so the kernel's scalar tail loop never executes here and
+  remains untested.
