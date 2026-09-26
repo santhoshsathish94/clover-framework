@@ -381,9 +381,17 @@ $w_{o,i}$ and a per-row float32 scale $s_o$:
 
 $$y_o \;=\; s_o \cdot \Big[\big((A_0{+}A_4)+(A_2{+}A_6)\big) + \big((A_1{+}A_5)+(A_3{+}A_7)\big)\Big]$$
 
-where $A_j$ is a float32 lane accumulated with single-rounded fused multiply-add over the
-inputs at $i \equiv j \pmod 8$, taken in blocks of 16. The eight lanes are reduced by that
-fixed tree, not by a running total.
+where $A_j = B_j + B_{j+8}$ and $B_0 \dots B_{15}$ are sixteen independent float32 lanes, lane
+$c$ accumulating the inputs at $i \equiv c \pmod{16}$ with single-rounded fused multiply-add,
+taken in blocks of 16. The pairing $B_j + B_{j+8}$ happens once, after the loop, and the eight
+results are reduced by that fixed tree, not by a running total.
+
+> **Corrected 2026-09-27.** This paragraph previously said $A_j$ was a single lane
+> accumulating $i \equiv j \pmod 8$. That reads as eight lanes; the kernel keeps two
+> 8-wide accumulators, so there are sixteen. Executing the equation as originally written
+> reproduced 2,012 of 12,288 values at `kda.z`; the form above reproduces 12,288 of 12,288.
+> The verified results were never affected, because the code always did the right thing —
+> only this description of it was wrong.
 
 Stage 5 applies this six times. The observable one chains it twice:
 

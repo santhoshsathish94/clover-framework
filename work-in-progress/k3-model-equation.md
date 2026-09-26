@@ -80,8 +80,7 @@ projection operator applies.
 | $C^{q}_L, C^{k}_L, C^{v}_L$ | `{q,k,v}_conv1d` | F32 | $\mathcal{C}$ |
 | $A^{\log}_L$ | `A_log` | F32 | KDA |
 | $\tau_L$ | `dt_bias` | F32 | KDA |
-| $w^{o}_L$ | `o_norm` | F32 | KDA |
-| $W^{qa}_L, w^{qan}_L, W^{qb}_L$ | `q_a_proj`, `q_a_layernorm`, `q_b_proj` | I8R / BF16 / I8R | MLA |
+| $w^{o}_L$ | `o_norm` | F32 | KDA || $W^{qa}_L, w^{qan}_L, W^{qb}_L$ | `q_a_proj`, `q_a_layernorm`, `q_b_proj` | I8R / BF16 / I8R | MLA |
 | $W^{ka}_L, w^{kan}_L, W^{kb}_L$ | `kv_a_proj_with_mqa`, `kv_a_layernorm`, `kv_b_proj` | I8R / BF16 / I8R | MLA |
 | $W^{g}_L$ | `g_proj` | I8R | both |
 | $W^{o}_L$ | `o_proj` | I8R | both |
@@ -117,11 +116,17 @@ For an I8R weight of $m$ rows, int8 entries $w_{o,i}$ and per-row float32 scale 
 
 $$\big(\mathbb{Q}[W,s]\,x\big)_o \;=\; s_o \cdot \Big[\big((A_0{+}A_4)+(A_2{+}A_6)\big) + \big((A_1{+}A_5)+(A_3{+}A_7)\big)\Big]$$
 
-$$A_j \;=\; \sum_{\substack{i < 16\lfloor n/16\rfloor \\ i \equiv j \ (\mathrm{mod}\ 8)}} w_{o,i}\,x_i \quad \text{single-rounded FMA, float32 lane, blocks of 16}$$
+$$B_c \;=\; \sum_{\substack{i \,<\, 16\lfloor n/16\rfloor \\ i \,\equiv\, c \ (\mathrm{mod}\ 16)}} w_{o,i}\,x_i, \qquad A_j \;=\; B_j + B_{j+8}$$
 
-plus a scalar tail over $i \geq 16\lfloor n/16\rfloor$, which no shape in this model reaches.
-This is `k3_matmul_q8`, and it carries every projection in the model except the experts, the
-router and the lm_head.
+with $B_0 \dots B_{15}$ **sixteen** independent float32 lanes, each accumulated by
+single-rounded FMA over inputs taken in blocks of 16, and the pairing $B_j + B_{j+8}$
+performed **once, after the loop**. There is no running total, and there are not eight lanes:
+collapsing the sixteen into eight during the loop is arithmetically different and reproduces
+16.4% of values rather than 100%.
+
+There is also a scalar tail over $i \geq 16\lfloor n/16\rfloor$, which no shape in this model
+reaches. This is `k3_matmul_q8`, and it carries every projection in the model except the
+experts, the router and the lm_head.
 
 ### $\mathbb{X}$ — MXFP4 projection with double accumulators
 
@@ -387,6 +392,31 @@ call aggregates over its own eight snapshots, not the previous call's.
 ---
 
 ## 6. What this reproduces, and what is not covered
+
+### This document was executed
+
+The equation above is not a description of code that exists elsewhere. It was transcribed
+into a program and run, and the program reproduces the model:
+
+```
+ALL LAYERS 0..92 IDENTICAL, floats checked 79,535,968
+  final.aggregate  site 32  nsrc=9   35840/35840
+  final.norm       site 33            7168/7168
+  logits           site 34          163840/163840
+  argmax token     17374   engine emitted 17374   MATCH
+  WHOLE MODEL, embedding to emitted token: 79,742,816 floats identical
+```
+
+Two defects in this document were found by doing that, and both are now fixed above:
+
+- **$\mathbb{Q}$ had eight lanes where the kernel has sixteen.** As originally written the
+  operator reproduced 2,012 of 12,288 values. This was the first operator tested and it
+  failed immediately.
+- **$A^{\log}$ is stored at width 128 while only the first 96 entries are used**, one per
+  head. $a_h = \exp(A^{\log}[h])$ was correct; the storage width was simply not stated, and
+  implementing from the document alone gives a shape error.
+
+The other eight operators were transcribed as written and needed no correction.
 
 ### Verified
 
