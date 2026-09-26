@@ -432,3 +432,90 @@ Three limits, stated rather than glossed:
   very strong evidence that it is exact, but that is inference, not measurement.
 - Both shapes divide by 16 exactly, so the kernel's scalar tail loop never executes here and
   remains untested.
+
+*The first of these was later closed by stage 6, which consumes `q`, `k` and `v` and matches
+bit for bit. See that entry.*
+
+---
+
+## Stage 6 — ShortConv with fused SiLU
+
+### 1. The equation
+
+For channel $c$ at position $t$, with taps $w_{c,0..3}$ and history $b_{0..2}$ ordered
+oldest first:
+
+$$a \;=\; \Big(\big((w_{c,3}\,x_t) \,+\, w_{c,0} b_0\big) \,+\, w_{c,1} b_1\Big) \,+\, w_{c,2} b_2$$
+
+$$y \;=\; a \cdot \sigma(a), \qquad \sigma(a)=\frac{1}{1+\exp(-a)}$$
+
+Every operation is float32, evaluated strictly left to right, with `exp` from glibc. Note
+that the **current input is the first term**, followed by the history from oldest to newest.
+The parenthesization is not decoration; it is the difference between 100% and 80%.
+
+### 2. What this stage exactly does
+
+A depthwise causal convolution of width 4 along the position axis, with SiLU fused into the
+same kernel, applied independently to `q`, `k` and `v`.
+
+Each of the 12,288 channels has its own four taps and its own history buffer. Nothing is
+mixed across channels.
+
+This is the first stage that **mixes across positions**. Stages 1 to 5 treated every position
+independently; here position $t$ sees positions $t-1$, $t-2$ and $t-3$. The history at the
+start of a fresh call comes from the carried recurrent state.
+
+The conv weights are **F32**, the only F32 weights encountered so far.
+
+### 3. The real data
+
+Reproducing the kernel exactly — newest tap first, plain float32 adds, glibc `expf`:
+
+```
+q  [12288, 12288, 12288, 12288, 12288]
+k  [12288, 12288, 12288, 12288, 12288]
+v  [12288, 12288, 12288, 12288, 12288]
+total identical: 184320 / 184320
+```
+
+Three variants were run against the same data to find which choices are load-bearing:
+
+| variant | identical of 184320 | reading |
+|---|---|---|
+| **A** exact | **184320** | — |
+| B FMA-contracted adds | 140283 | the compiler did not contract; plain multiply then add |
+| C numpy `exp` instead of libm | 159267 | glibc `expf` is required |
+| D oldest tap first, current last | 147438 | the accumulation order is load-bearing |
+
+Variant D fails in a pattern that confirms the mechanism rather than merely scoring badly:
+
+```
+q  [12288, 12288, 8755, 7822, 7645]
+```
+
+Positions 0 and 1 stay exact, then it collapses. At $t=0$ there is one nonzero term; at
+$t=1$ there are two, and the addition of two terms commutes. From $t=2$ there are three or
+more and the order starts to matter. The failure appears exactly where the arithmetic says it
+must, and nowhere earlier.
+
+Variant B fails the same way — position 0 exact, because a single multiply has no add to
+contract, and everything after it degraded.
+
+### 4. What the equation gave
+
+**184,320 of 184,320 floats identical. Max ulp 0.**
+
+### What this settles, and what it does not
+
+**It closes a stage 5 gap.** The raw `q`, `k` and `v` projections have no tap and were
+recorded there as unverified. Stage 6 consumes them and 184,320 floats come out bit-identical.
+An error in the raw projections surviving the convolution unchanged across that many values is
+not credible, so those three projections are now confirmed indirectly.
+
+**Confirmed by implication:** the carried conv state is zero on a fresh call. That was an
+assumption; had it been wrong, nothing would have matched.
+
+**Still not verified:** the `b` projection. Nothing has observed it yet.
+
+**This is a composed check.** Stage 5 and stage 6 together, because no tap exists between
+them. It is not an isolated measurement of stage 6, and the available taps do not allow one.
