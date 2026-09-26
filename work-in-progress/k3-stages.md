@@ -1722,3 +1722,44 @@ Reproducing the exact set *and* the exact order on all five positions is therefo
 stronger statement than a float comparison of the same size. It also means the 35 stages
 feeding it are right: the router reads `norm.pre_mlp`, so any error anywhere upstream would
 have to leave that vector accurate enough to preserve a 16-way ranking out of 896.
+
+---
+
+## Stage 36 — the down-projection into latent space
+
+### 1. The equation
+
+$$z \;=\; W_{\text{down}}\,x, \qquad W_{\text{down}} \in \mathbb{I}8^{\,3584 \times 7168}$$
+
+Ordinary `k3_matmul_q8`, 448 blocks, no tail.
+
+### 2. What this stage exactly does
+
+It compresses the 7,168-wide normalized residual into a 3,584-wide latent vector. **The
+experts work in this latent space, not the full width** — which is why an expert's weights
+are `3072 x 3584` rather than anything 7,168-wide.
+
+Note the ordering: the router at stage 35 ran on the **full width, before** this projection.
+Routing and expert computation read different vectors.
+
+### 3. The real data
+
+```
+the MoE taps fire only on the last position: tap = (t == T-1)
+moe.latent_in records at layer 1: 1, dim 3584
+W_down [3584,7168] dtype I8R, blocks 448, tail 0
+
+moe.latent_in at position 4: 3584 / 3584
+latent range : -0.291411 .. 0.352485
+```
+
+**The MoE traces are last-position only.** `tap = (t == T - 1)` in the source, so from here
+until the MoE output the checks cover position 4 alone. That is a real reduction in coverage
+and it is the trace's choice, not mine — the other four positions are computed but not
+observable at these sites.
+
+### 4. What the equation gave
+
+**3,584 of 3,584 floats identical.**
+
+**Chain 1 to 36: 1,699,344 / 1,699,344.**
