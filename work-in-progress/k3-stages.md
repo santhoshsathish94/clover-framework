@@ -1236,3 +1236,50 @@ gives 35,840 of 35,840. The suspicion was correct and the note can be retired.
 | 1 to 14 | 722,400 / 722,400 |
 | 15, the pre-MLP aggregation | 35,840 / 35,840 |
 | **total** | **758,240 / 758,240** |
+
+---
+
+## Stage 16 — the pre-MLP RMSNorm
+
+### 1. The equation
+
+$$y_i \;=\; (w_i\,x_i)\cdot \mathrm{fl}_{32}\!\left(\frac{1}{\sqrt{\tfrac{1}{n}\displaystyle\sum_j x_j^2 + \epsilon}}\right),
+\qquad n = 7168,\; \epsilon = \mathrm{fl}_{32}(10^{-5})$$
+
+Identical in form to stage 4. The weight is `post_attention_layernorm`, BF16, and the write
+is out of place.
+
+### 2. What this stage exactly does
+
+It normalizes the aggregated residual before the MLP reads it. The engine's own comment marks
+this output as `the exact vector the router reads`, so in MoE layers this is the input that
+decides expert selection. Layer 0 is dense, so here it simply feeds the dense MLP.
+
+This is the fourth normalization so far and the second of the stage 4 kind — same kernel, same
+width, same epsilon, different weight.
+
+### 3. The real data
+
+```
+norm.pre_mlp identical per position: [7168 x5] of 7168
+total 35840 / 35840
+
+in  L2 : [0.3567, 0.4255, 0.6837, 0.581,  0.5518]
+out L2 : [0.7462, 0.7881, 0.7849, 0.7986, 0.7226]
+```
+
+The input magnitudes span a factor of 1.9 across positions, 0.357 to 0.684. The outputs span
+a factor of 1.1, 0.723 to 0.799. The stage equalizes the positions before the MLP sees them,
+which is the point of normalizing here rather than carrying scale forward.
+
+### 4. What the equation gave
+
+**35,840 of 35,840 floats identical. Max ulp 0.**
+
+### Where the chain stands
+
+| stages | identical |
+|---|---|
+| 1 to 15 | 758,240 / 758,240 |
+| 16, the pre-MLP RMSNorm | 35,840 / 35,840 |
+| **total** | **794,080 / 794,080** |
