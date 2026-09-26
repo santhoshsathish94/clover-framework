@@ -35,11 +35,11 @@ the end: cross-layer accumulation and the decode path.
 
 **Read this before the numbers below.** Most figures in this document are quoted as relative
 errors around 1e-06. That framing was wrong. The model is deterministic and the equation is
-deterministic, so the difference between them is not noise \u2014 it is the sum of the choices
+deterministic, so the difference between them is not noise — it is the sum of the choices
 that differ between the two implementations, and those can be removed one at a time until
-nothing is left.
+nothing is left. **Removed, the difference is exactly zero.**
 
-There turn out to be exactly two, and only one of them was ever the equation's.
+There turn out to be exactly two, and neither is the equation.
 
 ### One: summation order. Mine, and removable.
 
@@ -53,20 +53,22 @@ vs = v0 + v1;  lo = vs[0:4] + vs[4:8];
 lo += movehl(lo);  lo0 += shuffle(lo,1);   // (vs0+vs4+vs2+vs6) + (vs1+vs5+vs3+vs7)
 ```
 
-Reproducing that tree exactly, on `z = W_fb(W_fa x)` \u2014 two chained int8 matmuls:
+Reproducing that tree exactly, on `z = W_fb(W_fa x)` — two chained int8 matmuls:
 
 ```
 numpy order        rel 9.694e-07    11,779 of 12,288 floats differ
 engine SIMD tree   rel 0.000e+00         0 of 12,288 floats differ
 ```
 
-**Zero.** Not small \u2014 bit-identical in every float. The ShortConv has the same property: the
+**Zero.** Not small — bit-identical in every float. The ShortConv has the same property: the
 engine computes `acc = w[3]*current` first and then adds oldest to newest, which is not the
 order a natural loop produces.
 
-### Two: libm. Not reachable from numpy.
+### Two: libm. Also removable — call the same one.
 
-With both orders corrected, layer 1 in ULP distance rather than relative error:
+With the orders corrected, what remained was `expf` and `tanhf`. numpy has its own
+implementations and they need not round identically. Measured in ULP distance rather than
+relative error, layer 1:
 
 ```
 stage                 exact    1 ulp   2+ ulp   max ulp
@@ -78,14 +80,33 @@ q_norm               78.696%  14.098%   7.205%        5
 alpha                46.776%  47.856%   5.368%        9
 ```
 
-Everything still differing contains `expf` or `tanhf`. `alpha` is worst because it chains two
-transcendentals, sigmoid then exp \u2014 the same structure that made it the loosest stage in the
-KDA check, seen properly this time.
+Everything still differing contained a transcendental, and `alpha` was worst because it
+chains two of them. **This was first written up as "not reachable from numpy". That was
+wrong.** The engine and the check run on the same machine, so the same `libm` can be called
+directly through `ctypes`:
 
-**So: the equation is exact. The variance is summation order plus libm rounding, the first
-is zero once matched, and the second is at most 9 ulp.** Every ~1e-06 quoted elsewhere in
-this document is the first kind \u2014 an artifact of how the check was computed, not a property
-of the model or of the equation.
+```
+stage                    exact      1 ulp   max ulp
+beta  numpy exp        92.708%     5.000%         2
+beta  libm expf       100.000%     0.000%         0
+alpha numpy exp        46.776%    47.856%         9
+alpha libm expf       100.000%     0.000%         0
+```
+
+**Zero.**
+
+### So the variance is exactly zero
+
+The equation reproduces the model **bit-exactly**, given two things that are properties of
+the implementation and not of the mathematics:
+
+1. the matmul reduction order, and the ShortConv accumulation order
+2. the same `libm`
+
+Every ~1e-06 quoted elsewhere in this document is an artifact of the check, not a property
+of the model or of the equation. The practical consequence is that the equation is now a
+**measuring instrument that reads zero on a known-good case** — so a non-zero difference on
+some future run is a real discrepancy rather than something to be explained away.
 
 ## Constants
 
