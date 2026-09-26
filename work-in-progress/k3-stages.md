@@ -1327,3 +1327,99 @@ down projection. Nothing observes these two projections on their own, so verific
 deferred to stage 19 — the same situation as stage 11, which stage 12 later closed.
 
 The chain is unchanged at 794,080 of 794,080.
+
+---
+
+## Stage 18 — SiTU-GLU
+
+### 1. The equation
+
+$$a \;=\; \big(b_1 \tanh(g/b_1)\big)\cdot \sigma(g), \qquad
+u' \;=\; b_2 \tanh(u/b_2), \qquad y \;=\; a\,u'$$
+
+with $b_1 = 4$, $b_2 = 25$, all float32 left to right, `tanh` and `exp` from glibc.
+
+**The sigmoid takes the uncapped gate $g$**, not the capped value $b_1\tanh(g/b_1)$. The
+kernel carries an explicit warning about this, because the wrong form is still bounded and
+still plausible.
+
+### 2. What this stage exactly does
+
+It combines the two projected halves into one: a SiLU-like gate on the first, a soft cap on
+the second, multiplied together. Both caps are $\tanh$ scaled by a constant, which bounds
+each factor without a hard clip.
+
+### 3. The real data
+
+```
+act range : -0.041928 .. 0.056144
+max |gate| / b1 = 0.0817
+max |up|   / b2 = 0.0119
+```
+
+Both caps are far from binding — the arguments to $\tanh$ never exceed about 0.08, deep in
+its near-linear region.
+
+**That observation nearly produced a false claim.** The obvious inference is that if the caps
+never bind, the uncapped-gate distinction cannot be detected by this data. So it was tested
+rather than asserted:
+
+```
+CONTROL: sigmoid fed the CAPPED gate instead of the uncapped one
+   activation identical to correct form : ~65% of 33792
+   resulting ffn.out vs engine          : [1, 4, 9, 19, 8] of 7168
+```
+
+The wrong form loses 35% of the activation outright, and after the down projection almost
+nothing survives. **This run does discriminate the detail.** The inference from "the caps do
+not bind" to "the detail is untested" was wrong, and only running it showed that.
+
+### 4. What the equation gave
+
+Deferred at the time, and closed by stage 19 below.
+
+---
+
+## Stage 19 — the dense down projection
+
+### 1. The equation
+
+$$\mathrm{ffn.out} \;=\; W_{\text{down}}\,y, \qquad W_{\text{down}} \in \mathbb{I}8^{\,7168 \times 33792}$$
+
+Same kernel and reduction tree as every other projection. 2,112 sixteen-wide blocks, zero
+scalar tail.
+
+### 2. What this stage exactly does
+
+It projects the activation back down to the residual width, completing the dense MLP.
+
+### 3. The real data
+
+```
+ffn.out identical per position: [7168 x5] of 7168
+total 35840 / 35840
+
+ffn.out range : -0.073830 .. 0.058657
+ffn.out L2    : [0.8745, 0.5215, 0.4041, 0.4614, 0.43]
+```
+
+### 4. What the equation gave
+
+**35,840 of 35,840 floats identical. Max ulp 0.**
+
+### This closes stages 17 and 18
+
+Neither the projections nor the activation has a tap. Both feed this projection, and the
+result is bit-identical across all 35,840 floats, so both are confirmed indirectly. The
+control above independently shows the activation is not merely close but exactly right, since
+a subtly wrong form would have collapsed the output.
+
+### Where the chain stands
+
+| stages | identical |
+|---|---|
+| 1 to 16 | 794,080 / 794,080 |
+| 17, gate and up projections | via stage 19 |
+| 18, SiTU-GLU | via stage 19 |
+| 19, the down projection | 35,840 / 35,840 |
+| **total** | **829,920 / 829,920** |
