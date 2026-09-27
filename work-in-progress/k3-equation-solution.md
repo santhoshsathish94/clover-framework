@@ -2859,6 +2859,68 @@ twenty-four. Repetition reduces the distinct count sharply - the 24-token `a a a
 b b` touches 9386 where 23-token code touches 13686 - so repeated text does share
 experts in aggregate even though it never repeats a full selection.
 
+## Step 35 - the cross-check step 34 was missing
+
+Step 34 said plainly that the engine had not been run on those 34 prompts, so "it answers
+correctly" was my reading of decoded output rather than a comparison. That is the gap
+this closes.
+
+The engine has a directly comparable channel: `--ids` takes the same token ids, `--gen 1`
+stops after one token, and that path calls `argmax_` on the logits with no sampling, so
+it is greedy by construction. `--greedy` is a `--chat`-only flag and is deliberately not
+passed - passing it aborts the run.
+
+### All thirty-four agree
+
+```
+AGREE 34 / 34  (100.0%)   DISAGREE 0
+```
+
+Every prompt, identical token id:
+
+| | engine == equation | | engine == equation |
+|---|---|---|---|
+| The capital of France is | 17374 ' Paris' | yes yes yes ... | 15024 ' yes' |
+| The chemical symbol for gold is | 70135 ' Au' | the the the ... | 276 ' the' |
+| The largest planet ... | 75591 ' Jupiter' | one two three ... | 3499 ' three' |
+| The author of Pride and Prejudice | 33197 ' Jane' | a a a a b b b b ... | 261 ' a' |
+| In 1969 the first humans landed | 28396 ' moon' | ... and Berlin is the capital of | 16458 ' Germany' |
+| The mitochondria ... powerhouse of | 5362 ' cell' | ... and Rome is the capital of | 19509 ' Italy' |
+| Seven multiplied by eight equals fifty | 101055 '-six' | La capitale de la France est | 17374 ' Paris' |
+| def fibonacci(n): ... | 326 ' n' | Die Hauptstadt von Frankreich ist | 17374 ' Paris' |
+| SELECT name, COUNT(*) ... | 1530 ' name' | El idioma oficial de Mexico es | 1236 ' el' |
+
+This is the claim step 34 could not make. The equation reproduces the released engine's
+output on fact, code, arithmetic, prose, deliberate repetition, shared prefixes and three
+languages - none of which it was built against. Only the first of the 34 was ever used
+during development.
+
+It also closes the loop on the older validation: previously the equation had been checked
+against the engine on exactly two prompts.
+
+### On the times, stated carefully
+
+```
+engine   total 1344.2 s   mean 39.54 s
+equation total  455.9 s   mean 13.41 s   ratio of means 2.95x
+```
+
+**That 2.95x is not a controlled comparison and should not be quoted as one.** Three
+things differ:
+
+- the equation holds the whole trunk resident in `/dev/shm`, while the engine re-reads
+  54.47 GB from disk on every one of the 34 runs, roughly 10.6 s each. A long-lived
+  server would pay that once, not 34 times
+- the equation runs had `K3_PROV` capture on. That was measured as negligible at five
+  tokens (8.72 against 8.75 s) but it is not zero and was not controlled at every length
+- the engine is a general program holding a KV cache and a 30 GB expert cache so it can
+  keep generating; `eqp.c` prefills once and exits
+
+The figure is consistent with the 3.10x "trunk already resident" row recorded earlier,
+and it is **not** the like-for-like 1.73x from the controlled single-prompt comparison,
+where both programs held comparable memory. Both numbers are real; they answer different
+questions.
+
 ## Progress
 
 | step | | status |
@@ -2887,6 +2949,7 @@ experts in aggregate even though it never repeats a full selection.
 | 32 | prefix reuse, re-verified and actually used | done |
 | 33 | "bit-exact" was never checked against a fixed build | corrected |
 | 34 | 34 prompts, capturing identity instead of values | done |
+| 35 | the engine agrees on all 34, not just the one | done |
 
 ## The comparison that matters: the equation against the engine
 
