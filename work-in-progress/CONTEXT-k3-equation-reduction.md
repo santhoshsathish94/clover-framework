@@ -45,6 +45,7 @@ computation only by relocating it is not a reduction either.
 | The final norm scalar cannot change the argmax | confirmed; top-1000 ordering preserved, full ordering not |
 | 11.5% of expert weights are exactly zero | stable across experts, std 0.026%; 5.19% of the whole pass |
 | The depth trajectory has a period-12 cycle | autocorr 0.656 at lag 12; push-layer turns 2.40x the rest |
+| The cycle is architectural, not input-dependent | holds on all 5 prefill positions and the decode position |
 
 ---
 
@@ -70,6 +71,7 @@ computation only by relocating it is not a reduction either.
 | A shared low-dimensional subspace across experts | two experts already span all of $\mathbb{R}^{3584}$ | experts below |
 | Duplicate or reused experts | 896 distinct of 896; differ across layers too | experts below |
 | Skipping the 11.5% exactly-zero expert weights | perfectly scattered; 0 all-zero blocks of any size | experts below |
+| A conserved quantity around the 12-layer cycle | every candidate at or above the random control's CV | cycle E below |
 
 ---
 
@@ -687,6 +689,68 @@ It does not by itself say any computation can be skipped.
 measurement. Four prior cycles of reasoning about where structure ought to live produced
 nothing; one change of observable produced this. The direction was not derivable from the
 evidence already collected.
+
+### Cycle E — the cycle is architectural, and carries no invariant
+
+Two steps, run in order, with the second not conditional on the first.
+
+**Step 1: is the cycle a property of the model or of position 4?**
+
+All five prefill positions, plus the decode position, which comes from a separate forward
+call with carried state.
+
+```
+source              mean    push   other   ratio   ac@12
+prefill position 0  33.30   83.88  29.14   2.88x   0.6267
+prefill position 1  37.36   86.39  33.32   2.59x   0.6214
+prefill position 2  35.90   79.46  32.31   2.46x   0.6721
+prefill position 3  37.78   84.41  33.94   2.49x   0.6762
+prefill position 4  38.05   82.66  34.38   2.40x   0.6562
+decode position     37.30   83.33  33.51   2.49x   0.6382
+random control      90.03   90.24  90.01   1.00x   0.1612
+
+push ratio : 2.40 to 2.88, std 0.157     ac@12 : 0.621 to 0.676, std 0.021
+```
+
+**The cycle belongs to the architecture.** Phase 11 lands between 79.5 and 86.4 degrees in
+all six trajectories. Position 0 is the only one with a different phase shape, which is
+explicable: with causal attention it has no context to attend to.
+
+**Step 2: is anything conserved around the cycle?**
+
+```
+                                  mean      std       CV
+total turn per cycle            437.59    79.86   0.1825
+net turn per cycle               79.44     4.19   0.0527
+norm ratio per cycle              4.22     4.67   1.1072
+log norm ratio                    0.58     1.50   2.5986
+consecutive snapshot angle       80.35     3.66   0.0456
+
+[control] random consecutive      90.06     0.29   0.0032
+[control] random total turn     1035.3    118.2   0.1142
+```
+
+**Nothing is conserved.** Every candidate is either more variable than the random control
+or indistinguishable from it. Total turn is *more* variable than random, 0.183 against
+0.114. Norm ratios run from 0.119 to 12.96 across the eight cycles.
+
+**The control is what makes this readable, and it prevented a false positive.** In 7168
+dimensions random unit vectors sit at 90 degrees with very small spread, so the random
+consecutive angle has CV 0.0032, lower than anything measured in the model. Low variation
+is the null hypothesis here, not the signal. Without that baseline the consecutive
+snapshot angle at CV 0.0456 would have been reported as nearly conserved. It is six times
+*less* constant than chance.
+
+Secondary facts. The eight snapshots sit 74.6 to 87.1 degrees apart, slightly closer than
+the 90 of random. Their first two principal components explain 36.63%, against about 29%
+for eight random directions, so there is mild structure. A circle through eight points
+would be rank 2 at 100%. Snapshot norms are 0.79, 3.89, 0.46, 0.58, 0.52, 6.75, 3.20,
+7.36, with no visible pattern.
+
+**Outcome.** The period-12 cycle is real, robust across positions and across a separate
+forward call, and mechanistically explained. It carries no conserved quantity. A
+repeating pattern without an invariant is not a closed form, and the invariant is exactly
+the part that would have made one possible.
 
 ---
 
