@@ -1356,6 +1356,96 @@ DMA bandwidth tax being paid harder; it is still a net win of 0.9 s.
 
 ---
 
+## Step 16 - huge pages, and a gain that was mostly outside the timer
+
+$\mathbb{X}$ ran at 18 GB/s in the model against 36 GB/s in step 14's isolated benchmark.
+Before chasing that, the benchmark itself had to be checked: its working set was 140 MB
+and this CPU has **128 MB of L3**, so it could have been measuring cache.
+
+```
+working set   23MB   70MB  140MB  351MB  877MB  2340MB
+V0           14.74  14.59  15.36  15.55  15.71  15.53
+V3           35.84  33.17  35.88  36.56  42.66  42.16
+VD          129.51 121.31 125.65 128.21 149.08 150.68
+```
+
+Flat across a hundredfold range, with no cliff at L3. The benchmark was sound and the gap
+is real.
+
+### Nothing was asking for huge pages
+
+```
+/sys/kernel/mm/transparent_hugepage/enabled:  always [madvise] never
+AnonHugePages in the running process:         0 kB
+```
+
+THP on this box is **madvise-only**, so a mapping gets huge pages only if it asks. Neither
+the 1.34 GB expert arena nor the 54.47 GB trunk did. That is 13.6 million 4 KB pages
+against a TLB of a few thousand entries.
+
+Two `madvise(MADV_HUGEPAGE)` calls, one on each mapping. Verified rather than assumed:
+**AnonHugePages 53,182 MB** in the running process afterwards.
+
+### Measured, and absorbed again
+
+```
+              wall     X (s)    stall
+huge=0        9.63     5.55     1.05
+huge=1        9.36     4.56     1.92
+```
+
+$\mathbb{X}$ fell 18%, and **1.0 s of the 1.0 s saving went into stall**, exactly the
+pattern of step 14. Re-sweeping readers this time found nothing to recover - 14 through 32
+all land between 9.34 and 9.39 - because step 15's range granularity already flattened
+that parameter. The timed region gained only 0.27 s.
+
+### The gain was somewhere the timer could not see
+
+```
+                      inner wall     process total
+before step 16           9.65            15.98
+after                    9.35            13.36
+```
+
+**The timed region moved 0.30 s and the process total moved 2.62 s.** `eq.c` starts its
+own clock after the trunk is loaded, so everything before and after is invisible to it:
+faulting 54.47 GB into existence and tearing it down again costs 13.3 million page
+operations with 4 KB pages and about 26 thousand with 2 MB ones.
+
+Had I judged this change by the number the program prints about itself, it would have
+looked like a 3% curiosity. It is a 16% end-to-end win. The instrument that had been
+adequate for fifteen steps was measuring the wrong span for this one.
+
+### End to end
+
+```
+                                    process total
+eq.c, untouched  17 runs, 54.59 - 59.83      mean 56.23
+final            13.37  13.35                mean 13.36
+```
+
+**4.21x end to end, 5.67x on the timed region, bit-identical.**
+
+### What is still unexplained
+
+$\mathbb{X}$ now runs at 21.9 GB/s in the model against 42 GB/s isolated. Step 13's DMA
+tax accounts for 0.71x, predicting about 30 GB/s. **The remaining 1.37x is not
+accounted for.** Candidates not tested: the arena is written by DMA and read once with no
+reuse, whereas the benchmark re-reads buffers the CPU itself wrote; and the benchmark uses
+one input vector where the model uses a different $\zeta$ per layer. Neither was measured,
+and the gap is recorded as open rather than explained.
+
+### What Step 16 does not establish
+
+- **Huge pages were granted, not proven beneficial in isolation.** The 53,182 MB figure
+  confirms the mapping changed; the 18% on $\mathbb{X}$ is the whole evidence of effect.
+- **The 2.62 s outside the timer was not broken down** between load-time faulting and
+  exit-time teardown.
+- **1.37x of $\mathbb{X}$'s gap is open**, as above.
+- **One prompt, prefill only.**
+
+---
+
 ## Progress
 
 | step | | status |
@@ -1365,25 +1455,27 @@ DMA bandwidth tax being paid harder; it is still a net win of 0.9 s.
 | 12 - 13 | pipelining, and why the remainder is bandwidth | done |
 | 14 | the decode was the kernel | done |
 | 15 | the stall was a work-granularity bug | done |
+| 16 | huge pages, and a gain outside the timer | done |
 
 ## The arc, end to end
 
 | change | wall | end to end | bit-exact |
 |---|---|---|---|
-| `eq.c` as it was | 53.0 s | 56.30 s | - |
+| `eq.c` as it was | 53.0 s | 56.23 s | - |
 | batched positions | 27.9 | - | yes |
 | + DQ table | 24.70 | 32.43 | yes |
 | + SIMD $\mathbb{X}$ | 22.68 | 30.76 | yes |
 | + O_DIRECT arena | 16.51 | 22.88 | yes |
 | + pipelined reads | 11.98 | 18.38 | yes |
 | + decode without the stack trip | 10.56 | 16.89 | yes |
-| + range-granular reads | **9.65** | **15.98** | yes |
+| + range-granular reads | 9.65 | 15.98 | yes |
+| + huge pages | **9.35** | **13.36** | yes |
 
-**3.52x end to end, 171,008/171,008 identical at every step.**
+**4.21x end to end, 171,008/171,008 identical at every step.**
 
 ## What this leaves to do
 
-- $\mathbb{X}$ is 5.52 s of the 8.19 s of operators and runs at 18 GB/s against a 45 GB/s
-  ceiling, while the diagnostic in step 14 showed the arithmetic alone reaching 121 GB/s
-- the run is compute-limited, so unlike steps 11 to 13 the remaining work is on the
-  arithmetic side, not the I/O side
+- the 1.37x of $\mathbb{X}$'s gap to its isolated rate is unexplained and is the largest
+  open question in this document
+- 1.80 s of stall remains against 7.14 s of operators and 7.04 s of pure I/O, and the
+  reader count no longer moves it
