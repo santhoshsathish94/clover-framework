@@ -3448,6 +3448,55 @@ every row contributes to an output that is used, the values are 88.5% dense and 
 incompressible, and a dense matrix-vector product has no way to produce its outputs
 without touching its inputs.
 
+## Step 43 - does the equation need the trunk the model needs?
+
+The trunk as stored is the K3 checkpoint repacked. The equation reduces each projection
+to $\mathbb{Q}[W]x$. So: could the trunk be re-stored in a form the *equation* needs,
+smaller than the form the *model* needs?
+
+### The instrument was wrong first
+
+`K3_COVER` counts touches per 4 KB page of the trunk, and step 19 used it to report
+98.82% touched. But `cover()` was called only from $\mathbb{Q}$, $\mathbb{Q}_m$,
+$\mathbb{X}$ and $\mathbb{B}$ - **not from `slot_vec`, and not from the router's direct
+read of the gate**. Every norm weight and all 591 MB of gate were being counted as
+untouched while being read every run. The 98.82% was an artifact of the instrument.
+
+Adding `cover()` to both, so the count includes every trunk read:
+
+```
+5 tokens and 64 tokens, identical:
+  trunk coverage        54.47 GB of 54.47 GB touched   (100.00%)
+  never read             0.00 GB   (0 pages)
+  read exactly once     54.46 GB   (13,295,985 pages)
+  read more than once    0.01 GB   (1,921 pages, max 3)
+  total page reads      54.48 GB of traffic
+```
+
+### So, no
+
+**Every byte of the stored trunk is read, and read once.** There is no slot the equation
+skips, no region it does not need, and not one untouched page in 13.3 million. The 1,921
+pages read more than once are slot-boundary pages, counted for both neighbors: 0.01 GB.
+
+A repack could therefore only reorder, not remove. And reordering has nowhere to go
+either - $\mathbb{Q}$ reaches 40.8 GB/s at five tokens, which is near this machine's
+measured RAM read bandwidth, and at sixty-four it is arithmetic-bound at 1073 GFLOP/s.
+Neither regime is waiting on layout.
+
+### A cleaner confirmation of steps 37 and 40
+
+The page counter reports **54.48 GB at five tokens and the same 54.48 GB at sixty-four**.
+The operator byte counter said 54.68 and 57.8. The page counter is the more honest of the
+two: it counts distinct pages touched rather than summing per-call byte totals, so it
+does not double-count a re-read that the cache served. The 3.3 GB difference at 64 tokens
+is `shortconv` re-reading its 196 KB weights per position - the same cache-resident
+pattern step 40 found in the router, and equally free.
+
+So the achievement of steps 37 and 40, stated in the strongest form available: **the
+trunk is read exactly once per run, whatever the prompt length**, and that is now
+measured at page granularity rather than inferred from byte accounting.
+
 ## Progress
 
 | step | | status |
@@ -3484,6 +3533,7 @@ without touching its inputs.
 | 40 | the router re-read the gate per position; free, because it fits in L3 | done, no gain |
 | 41 | the gate is a trained weight; the router's cost is the specification | answered |
 | 42 | the three stores, and why a selected matrix is read whole | answered |
+| 43 | the equation needs 100% of the trunk, read once | measured, rejected |
 
 ## The comparison that matters: the equation against the engine
 
