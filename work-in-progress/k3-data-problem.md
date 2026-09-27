@@ -914,10 +914,118 @@ the 16 slots summed afterwards in $j$ order. That is 5 x 16 x 3584 floats, 1.1 M
 
 ---
 
+## Step 8 - removing the redundancy Step 7 measured
+
+Step 7 found the defect: section 5 composes the model with positions outermost, so every
+trunk weight is streamed from RAM once per position, 5.16x. The fix is to invert the loop
+nest so the **weight** is outermost and all positions are applied to it while it is there.
+
+### Why this is bit-exact by construction
+
+Each output element $y_{t,o}$ is an independent reduction over $i$. Moving the position
+loop inside the weight loop changes which loop is outermost and **no reduction order at
+all** - the same 16 lanes, the same block order, the same final tree. `Qm` and `Xm` are
+therefore bit-identical to calling `Q` or `X` once per position, not approximately so.
+
+Three things could not be moved, and the equation says why:
+
+- **The conv history and the delta-rule state carry across positions.** $\mathcal{C}$
+  reads `convbuf` and $\Delta$ carries $S$, so that part stays strictly in position order.
+  Only the projections feeding them moved.
+- **Section 4.2 fixes the routed sum as float32, expert-major, in rank order.** Iterating
+  distinct experts outermost would accumulate each position's sum in the wrong order. Each
+  expert's output is therefore written into that position's rank slot $j$ and the 16 slots
+  summed afterwards in $j$ order. 5 x 16 x 3584 floats, 1.15 MB.
+- **A position selects an expert at most once**, so the rank slot is unambiguous.
+
+### What it did, block by block
+
+All measured cold-cache with trunk in RAM and experts prefetched:
+
+```
+                          Q GB    Q s    Q calls     X GB     X s   inner wall
+baseline                269.13  5.237      5,795   129.15  14.625      33.83
++ MoE batched           201.55  3.870      3,955    99.72  12.713      30.78
++ KDA batched            79.05  1.752      1,747    99.72       -      30.1
++ MLA batched            56.73  1.516      1,171    99.72       -      30.2
++ threads pinned         56.73  1.341      1,171    99.72  11.90       27.51
+```
+
+The redundancy is gone. $\mathbb{Q}$ dereferences **56.73 GB against 53.83 distinct, 1.05x**,
+down from 5.00x. $\mathbb{X}$ dereferences **99.72 GB, exactly the distinct bytes, 1.00x**,
+down from 1.30x. Every intermediate build emitted 17374 with 171,008/171,008 identical.
+
+### A detour that was noise, and the real cause
+
+After the KDA change $\mathbb{X}$ appeared to regress, 12.713 to 15.550 s, on identical
+bytes and identical call count, from a change in a different block. Repeating it gave
+16.575, 13.300, 12.960 - so the regression was variance, not the edit.
+
+The variance was anti-correlated with prefetch time, which looked like I/O but is not. This
+is a 7950X3D: two CCDs, one with 3D V-cache and one without, and nothing was pinned.
+
+```
+unpinned   wall 28.21  28.70      X 12.724  13.117
+pinned     wall 27.52  27.50      X 11.963  11.832
+```
+
+`OMP_PROC_BIND=close OMP_PLACES=cores` removes the spread and is faster. **Every timing in
+this document before Step 8 was taken unpinned** and therefore carries roughly a second of
+placement noise. None of the conclusions turn on a second, but the figures should be read
+with that in mind.
+
+### End to end, against the untouched original
+
+```
+                                        inner wall        process total
+eq.c, as it was                       53.30  52.82 s      55.90  55.41 s
+eqp.c batched + prefetch + trunk RAM  28.01  27.85 s      35.78  35.58 s
+```
+
+**1.56x end to end, 1.90x on the timed region, with 171,008/171,008 bits identical and
+token 17374.** The process total includes the 3.74 s O_DIRECT trunk load.
+
+### On O(n) time and O(1) space
+
+- **Time.** It was already $O(T)$; Step 7 showed that. What Step 8 removed is the constant:
+  a forward pass now touches each trunk weight once rather than $T$ times. The per-position
+  marginal cost drops from a full pass over the model to arithmetic plus the experts that
+  position uniquely needs.
+- **Space is still $O(W)$, not $O(1)$, and this was not achieved.** 54.47 GB of trunk is
+  held resident, plus a layer's experts. The batching added about 2 MB of per-position
+  buffers and nothing else.
+- **$O(1)$ space and one-pass streaming are in tension on this machine.** Holding nothing
+  means re-reading 154 GB every forward pass, 10.6 s at the Step 6 O_DIRECT rate, against
+  a 3.74 s one-off load that then serves every token. $O(1)$ space is the right design when
+  the model does not fit; here it does fit, and paying 10.6 s per pass to avoid holding
+  54 GB would be a straight loss. That is a measured trade, not a principle.
+
+### What is left, and what it is worth
+
+$\mathbb{X}$ is now 43% of wall and the prefetch 46%; everything else is 11%.
+
+- **$\mathbb{X}$ is compute-bound**, 99.72 GB at 8.43 GB/s against a 47.80 GB/s RAM ceiling.
+  Its four 4-lane double accumulators map exactly onto four AVX2 256-bit double registers,
+  one lane per register lane, so an SIMD kernel would be **bit-exact by the same argument as
+  `Qm`** - each lane keeps its own order. Not attempted.
+- **The prefetch is still on the buffered path** at ~8 GB/s against 14.5 available with
+  O_DIRECT, the 5.6 s costed in Step 6 and still not built.
+
+### What Step 8 does not establish
+
+- **One prompt, prefill only.** $T = 5$. The decode path is untouched and unmeasured, and
+  at $T = 1$ batching has nothing to batch, so none of this helps decode.
+- **The gain shrinks with smaller $T$ and grows with larger $T$.** It was measured at
+  $T = 5$ only.
+- **Layer 0's dense MLP was not batched**, which is where the residual 1.05x on
+  $\mathbb{Q}$ lives.
+- **Nothing about the model changed.** Same weights, same equation, same bits.
+
+---
+
 ## Not yet examined
 
-- batching positions so each weight is streamed once per layer rather than once per position
-- an SIMD $\mathbb{X}$ kernel, since it is compute-bound at 0.26 MAC/cycle/thread
+- an SIMD $\mathbb{X}$ kernel, the largest remaining cost at 43% of wall
 - reading experts with O_DIRECT into an arena, the measured 5.6 s still behind the cache
 - why dead neurons stop at layer 51
 - whether reuse across many tokens changes the picture, since all of the routing work is
