@@ -3163,6 +3163,70 @@ is not "is the weight constant" but "is the input domain small enough that the a
 can be enumerated".** $\mathbb{Q}$'s input domain is every activation the model can
 produce.
 
+## Step 39 - write the function out instead of storing the data?
+
+The natural follow-up to step 38. If layer 0 is a pure function of the token, express the
+*function* rather than tabulate its outputs.
+
+### For a linear map over a finite domain, the function is the data
+
+$\mathrm{rms}(\mathrm{embed}[id])$ is a scalar constant for a given token, so layer 0's
+projection collapses to something genuinely linear:
+
+$$Q_{out}[id] \;=\; \frac{1}{c_{id}}\,\underbrace{W_Q \cdot \mathrm{diag}(w) \cdot E^{\top}}_{M}\,e_{id}
+            \;=\; \frac{M[:,\,id]}{c_{id}}$$
+
+The closed form **is** a matrix. Written out for all seven qualifying stages it is
+$61{,}664 \times 163{,}840$ entries - **40.4 GB**, the identical figure step 38 gave for
+the table, because for a linear operator over a finite domain the symbolic form and the
+lookup table are the same object.
+
+$M$ can be kept smaller only by keeping it **factored**, and its minimal factorization is
+$W_Q$ (88 MB int8) times the embedding table (2.35 GB bf16) - which is precisely what the
+program already stores, and evaluating that factorization on demand is precisely what it
+already does. The compressed form of the function was the original program.
+
+### So how much information is in the weights at all?
+
+That is the question the framing actually opens, and it had never been measured. Scanning
+the whole int8 trunk and a sample of the MXFP4 expert blocks:
+
+```
+int8 trunk payload, 54.38 GB across 1437 slots
+  exactly zero          1.5932%          distinct values used   255 of 256
+  first-order entropy   7.0070 bits of 8
+  entropy-optimal code  47.63 GB vs 54.38 GB  = 87.6%
+  most common values    0:1.59%  1:1.40%  -1:1.40%  2:1.38%  -2:1.38%  -3:1.36%
+
+MXFP4 expert payload, 2011 blocks sampled
+  exactly zero nibble   5.7535%          distinct nibbles       16 of 16
+  first-order entropy   3.7544 bits of 4  = 93.9%
+  nibbles  5.75 10.97 9.55 7.66 7.73 5.29 2.52 0.51 | 5.75 10.97 9.55 7.66 7.73 5.29 2.52 0.51
+```
+
+**The weights are already at their information-theoretic floor.** int8 carries 7.01 of its
+8 bits and MXFP4 3.75 of its 4. The distribution is close to uniform - the single most
+common int8 value occurs 1.59% of the time where uniform would be 0.39%, and 255 of 256
+values are in use.
+
+The nibble histogram is exactly mirror-symmetric between its halves. That is the sign bit:
+a perfectly balanced and wholly incompressible bit, leaving 2.75 of 3 bits in the
+magnitude. The format is well matched to what it stores.
+
+### What that rules out
+
+A lossless re-encoding could take at best **12.4% off the trunk** and **6.1% off the
+experts**, and only by paying entropy decoding on every weight read - on a program where
+$\mathbb{Q}$ is already arithmetic-bound at 64 tokens (1067 GFLOP/s, 8.34 GB/s) and where
+five-token runs sit within 1.25x of a memory-bandwidth floor. Spending CPU to save a
+tenth of the bytes is the wrong direction on both.
+
+Together with step 38 this closes the "do less work by knowing the weights are fixed"
+family: the weights are read exactly once, their outputs depend on the input, their
+closed form is the same size as their table, and the bytes themselves are nearly
+incompressible. What remains is not representation, it is the 79.7% of wall clock that is
+expert bytes crossing a disk.
+
 ## Progress
 
 | step | | status |
@@ -3195,6 +3259,7 @@ produce.
 | 36 | time by byte source, and the variables themselves | done |
 | 37 | per-invocation capture; layer 0's MLP was never batched | done |
 | 38 | why $\mathbb{Q}$ cannot be precomputed | measured, rejected |
+| 39 | the function is the data, and the data is incompressible | measured, rejected |
 
 ## The comparison that matters: the equation against the engine
 
