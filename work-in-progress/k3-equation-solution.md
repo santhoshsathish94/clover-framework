@@ -234,6 +234,95 @@ introduced so far is fixed before the run starts.
 
 ---
 
+## Step 4 - the ten operators
+
+### Every reduction schedule is E
+
+Section 2 opens by saying association order is part of each definition. Each of those
+orders is a fixed assignment of indices to lanes and a fixed tree, mentioning no weight and
+no input:
+
+| operator | the **E** structure |
+|---|---|
+| $\mathbb{Q}$ | 16 lanes $B_c$ on $i \equiv c \pmod{16}$; $A_j = B_j + B_{j+8}$; $((A_0{+}A_4)+(A_2{+}A_6)) + ((A_1{+}A_5)+(A_3{+}A_7))$ |
+| $\mathbb{X}$ | 4 double vectors of 4 lanes, $V_m$ lane $c$ on $i \equiv 4m+c \pmod{16}$; $Q_c$ tree; $(Q_0{+}Q_2)+(Q_1{+}Q_3)$ |
+| $\mathbb{B}$ | 16 double lanes on $i \equiv c \pmod{16}$; $U_c = (C_c{+}C_{c+4})+(C_{c+8}{+}C_{c+12})$ |
+| $\mathcal{N}$ | double sum, one float32 rounding of the reciprocal square root, $(w_i x_i)$ then $\times\,\mathrm{inv}$ |
+| $\mathcal{L}$ | double sum over 128, $\epsilon_6$, no division by $n$ |
+| $\mathrm{SiTU}$ | $b_1, b_2$; sigmoid takes the uncapped $g$ |
+| $\mathcal{C}$ | current input first, then history oldest to newest; $K_c = 4$ |
+| $\mathrm{AR}$ | double sum of squares, float32 scored product, double $z$, float32 source-major weighted sum |
+| $\Delta$ | sequential in $i$ ascending, no FMA, output read from the updated state |
+| $\mathrm{SA}$ | causal $s \le t$, double sequential dot over the full 192, $m_{\text{sc}}$ over 192 |
+
+None of this can vary. The hard part of this model - the part `k3-stages.md` records three
+separate association-order failures for - is entirely **E**.
+
+Two operators, $\mathcal{L}$ and $\sigma/\mathrm{SiTU}$, take **no W input at all**. They
+are pure **E** structure applied to **R** data.
+
+### $\mathbb{Q}$'s scalar tail is provably dead, from section 1.2 alone
+
+$\mathbb{Q}$ carries a tail over $i \ge 16\lfloor n/16 \rfloor$. Section 6 reports that it
+never executes. That is stated there as an observation; it is actually derivable, because
+the predicate depends only on **E** shape constants. Every input width $\mathbb{Q}$ is
+applied to in sections 3 and 4:
+
+$$7168,\ 128,\ 12288,\ 1536,\ 512,\ 33792,\ 3584,\ 6144$$
+
+and $16 \mid n$ for all eight. The tail is unreachable for this architecture, **decidable
+without a model and without a run**. The same check on $\mathbb{X}$'s widths, 3584 and
+3072, shows both divisible by $\mathrm{GRP} = 32$, so its group loop is exact too.
+
+### The dequantization map is a 4096-entry E table
+
+This is the one that matters. $\mathbb{X}$ decodes
+
+$$\tilde{w}_{r,i} = \mathrm{fl}_{32}\big(\mathrm{E2M1}[c_{r,i}] \cdot 2^{\,s_{r,g(i)}-127}\big)$$
+
+Step 3 labeled $\tilde{w}$ as **W** and noted that materializing it expands the model
+7.5x. But look at the *domain* rather than the array:
+
+- $c$ is a 4-bit code, so it takes **16** values
+- $s$ is an E8M0 byte, so it takes **256** values
+- $\mathrm{E2M1}[\cdot]$ is a fixed 16-entry table, **E**
+- $2^{\,s-127}$ is a fixed function of a byte, **E**
+
+The map $(c, s) \mapsto \tilde{w}$ therefore has a domain of exactly $16 \times 256 = 4096$
+pairs, and both of its factors are **E**. **The dequantization map is not W at all - it is
+E.** It can be tabulated before any checkpoint exists:
+
+$$\mathrm{DQ}[s][c] = \mathrm{fl}_{32}\big(\mathrm{E2M1}[c] \cdot 2^{\,s-127}\big),
+\qquad 4096 \text{ float32} = 16 \text{ KB}$$
+
+and since $g(i) = \lfloor i/32 \rfloor$ is also **E**, the scale index is constant across
+each group of 32, so a group reduces to selecting the row $\mathrm{DQ}[s]$ once and then
+one indexed load per element - no exponential, no multiply.
+
+This is bit-exact by construction: the tabulated entry is the value of the same expression,
+so it is the same float32.
+
+What step 3's array view missed is that a **W** array can be the image of an **E** function
+over a small domain. $\tilde{w}$ has $2.72 \times 10^{12}$ elements and **4096 distinct
+possible values**. The array is enormous and **W**; the map is 16 KB and **E**.
+
+### Step 4 result
+
+| | count | label |
+|---|---|---|
+| reduction schedules, lane maps, trees | 10 | **E** |
+| $\mathbb{Q}$ tail predicate | 1 | **E**, and false for every shape here |
+| $g(i) = \lfloor i/32 \rfloor$ | 1 | **E** |
+| $\mathrm{E2M1}$ table | 1 | **E** |
+| $\mathrm{DQ}[s][c]$ dequantization map | 1 | **E**, 16 KB |
+| $\mathcal{L}$, $\sigma$, $\mathrm{SiTU}$ | 3 | **E**, no **W** input |
+| row scale $s_o$, taps, norm weights, $f$ | - | **W**, already counted in step 3 |
+
+Still nothing **R** beyond the two input symbols. Four steps in, the equation has
+introduced ten operators and not one of them has a structure that depends on the run.
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
@@ -241,7 +330,7 @@ introduced so far is fixed before the run starts.
 | 1 | scheme | done |
 | 2 | 1.1 input, 1.2 shapes, 1.3 scalars, 1.4 layer sets | done |
 | 3 | 1.5 weights and the three folds | done |
-| 4 | section 2, the ten operators | |
+| 4 | section 2, the ten operators | done |
 | 5 | section 3, the attention blocks | |
 | 6 | section 4, the MLP and MoE blocks | |
 | 7 | section 5, composition, initial conditions, carried state | |
