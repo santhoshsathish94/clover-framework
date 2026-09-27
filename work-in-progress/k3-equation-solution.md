@@ -2508,6 +2508,61 @@ The same mistake is still sitting in four more operators. At 64 tokens `AR` is 0
 work still on one core.** Whether it pays is now in doubt for the same reason the reader
 sweep found nothing, but it is cheap to test.
 
+## Step 30 - the other four, and a claim I made from one run
+
+Step 29 left `AR`, `C shortconv`, `N rmsnorm` and `L l2` still serial, about 2 s at 64
+tokens.
+
+### These are not the same case as SiTU
+
+SiTU was safe to split because it is purely elementwise. Three of these four contain
+**reductions**, and a reordered sum is not bit-exact. Read individually:
+
+- **`rmsnorm`** - `ss += x[i]*x[i]` is a running sum. Left serial. Only its second loop,
+  `y[i] = (w[i]*x[i]) * inv`, is parallelized.
+- **`rmsnorm_blocks`, `l2_blocks`** - the reduction lives *inside* each block and blocks
+  are independent, so splitting by block reorders nothing.
+- **`AR`** - same per source; the final accumulation was restructured to sum per output
+  so each `out[i]` still adds its sources in `s` order.
+- **`C shortconv`** - index `i` touches only its own conv history, so it splits cleanly.
+
+### The result, after I got it wrong
+
+My first measurement said this made the run **7.5 s slower** at 64 tokens, with
+$\mathbb{X}$ collapsing from 30.8 to 41.9 s. I reported that. It was a single run and it
+was an outlier - $\mathbb{X}$ has measured 30.84 to 31.08 s in every one of the nine runs
+since. Something else was on the box.
+
+Per operator, one run each, and then the two endpoints at n=3:
+
+```
+                 wall     X      process total
+none (mask 0)   51.37  30.861      52.69
+conv only (16)  50.75  31.084      52.06
+AR only (8)     50.86  30.987      52.18
+norms only (7)  51.13  30.944      52.44
+all (31)        49.84  30.945      51.17
+
+n=3   mask 0    52.72 / 52.69 / 52.73
+      mask 31   51.28 / 51.15 / 51.13
+```
+
+**1.53 s at 64 tokens, 2.9%, and the spread is 0.03 s.** Every mask is byte-identical to
+mask 0, and the default now verifies byte-identical to the preserved baseline.
+
+Per operator: `C` 0.836 -> 0.080, `AR` 0.767 -> 0.210, `N` 0.207 -> 0.156,
+`L` 0.104 -> 0.028. The operators give up 1.44 s and the wall keeps 1.53 - consistent
+within noise, and unlike step 29 nothing leaks into the stall.
+
+At five tokens it is worth 0.055 s, which is the bandwidth equilibrium again.
+
+### What it cost to learn
+
+Nothing about the code - the change was right the first time. What was wrong was
+reporting a 7.5 s regression from n=1 when the run-to-run spread on a good day is 0.03 s
+and this document has already recorded two cases of a single measurement misleading it.
+The repeat took four minutes.
+
 ## Progress
 
 | step | | status |
@@ -2531,6 +2586,7 @@ sweep found nothing, but it is cheap to test.
 | 27 | the unattributed quarter, decomposed | done |
 | 28 | the router reads its own weights | done |
 | 29 | SiTU was running on one core | done |
+| 30 | the other four small operators | done |
 
 ## The comparison that matters: the equation against the engine
 
