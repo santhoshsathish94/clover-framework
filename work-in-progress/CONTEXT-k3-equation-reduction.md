@@ -46,6 +46,8 @@ computation only by relocating it is not a reduction either.
 | 11.5% of expert weights are exactly zero | stable across experts, std 0.026%; 5.19% of the whole pass |
 | The depth trajectory has a period-12 cycle | autocorr 0.656 at lag 12; push-layer turns 2.40x the rest |
 | The cycle is architectural, not input-dependent | holds on all 5 prefill positions and the decode position |
+| Eleven functionals are phase-locked beyond chance | permutation null, 2000 shuffles, strongest z = -15.35 |
+| Residual components are roughly Gaussian at most layers | L1/L2 peaks at sqrt(2n/pi) in every trajectory |
 
 ---
 
@@ -72,6 +74,7 @@ computation only by relocating it is not a reduction either.
 | Duplicate or reused experts | 896 distinct of 896; differ across layers too | experts below |
 | Skipping the 11.5% exactly-zero expert weights | perfectly scattered; 0 all-zero blocks of any size | experts below |
 | A conserved quantity around the 12-layer cycle | every candidate at or above the random control's CV | cycle E below |
+| Replacing any invariant with a numeric constant | best candidate ranges 16.19 to 67.87 against a fixed 67.55 | cycle F below |
 
 ---
 
@@ -751,6 +754,84 @@ would be rank 2 at 100%. Snapshot norms are 0.79, 3.89, 0.46, 0.58, 0.52, 6.75, 
 forward call, and mechanistically explained. It carries no conserved quantity. A
 repeating pattern without an invariant is not a closed form, and the invariant is exactly
 the part that would have made one possible.
+
+### Cycle F — a systematic invariant sweep, and the closest thing to a constant
+
+Cycle E tested four quantities chosen by me, which is guessing. This sweeps a family and
+lets a permutation test decide.
+
+**Null, chosen so it cannot be gamed.** Shuffle the *layer order*. That preserves every
+value the model produced and destroys only the cyclic arrangement. Statistic: mean
+within-phase coefficient of variation, over 2,000 permutations.
+
+```
+functional              dim    observed  null mean       z   p(lower)
+norm growth             yes      0.1955     0.3325  -15.35     0.0000
+turn cosine             yes      0.1608     0.2379   -9.96     0.0000
+cos to cycle snapshot   yes      0.4391     0.6388   -9.49     0.0000
+std of components        no      0.5954     0.8904   -8.28     0.0000
+norm                     no      0.5954     0.8898   -8.11     0.0000
+||r|| / cycle snapshot  yes      0.6120     1.2685   -6.95     0.0000
+participation ratio     yes      0.6172     0.6464   -2.83     0.0140
+spectral entropy        yes      0.0511     0.0581   -2.64     0.0105
+L1 / L2                 yes      0.0497     0.0553   -2.43     0.0190
+max|r| / ||r||          yes      0.4814     0.5506   -2.23     0.0210
+kurtosis                yes      1.2885     1.4498   -1.25     0.1050
+frac |r| > mean|r|      yes      0.0194     0.0203   -0.95     0.1115
+cos to layer 0          yes      3.9378     4.4972   -0.03     0.8200
+```
+
+**Eleven functionals are phase-locked beyond chance**, far more than Cycle E's four
+candidates suggested. But phase-locked is not constant: norm growth still varies by 20%
+at fixed phase.
+
+**The candidate for a numeric constant.** Three functionals have small variation and only
+weak phase-locking, meaning near-constancy across all layers rather than within a phase.
+The strongest is $\|r\|_1/\|r\|_2$, whose Gaussian closed form contains pi:
+
+$$\frac{\|x\|_1}{\|x\|_2} \to \sqrt{\frac{2n}{\pi}} = 67.5521 \quad \text{for } n = 7168$$
+
+```
+                       K3, 93 layers        Gaussian sample, same shape
+L1 / L2                64.9487 +- 5.8277    67.5665 +- 0.2244
+frac |x| > E|x|         0.4195 +- 0.0140     0.4252 +- 0.0031
+participation ratio     1173.0 +- 771.5      2389.4 +- 47.5
+kurtosis                  46.79 +- 156.84      3.0011 +- 0.0600
+
+maximum L1/L2 per trajectory : 67.64 67.48 67.59 67.65 67.87 67.82
+```
+
+Every trajectory's maximum lands on $\sqrt{2n/\pi}$ to within 0.5%.
+
+**But it is not a constant.** The per-layer profile:
+
+```
+within 0.5% of sqrt(2n/pi) : 14 of 93
+within 2%                  : 53 of 93
+within 5%                  : 76 of 93
+median 66.5619, which is 1.47% below
+range 16.19 to 67.87
+```
+
+Forty of 93 layers depart by more than 2%, the final cycle drifts monotonically down to
+49.34, and L12 collapses to 16.19. Substituting a constant would introduce errors up to
+76%. The excursions are not explained by the norm, correlation -0.077, and push layers
+are not specially implicated: only 3 of the 8 appear among the 17 largest departures.
+
+**What the near-match actually means.** $\|x\|_1/\|x\|_2 \approx \sqrt{2n/\pi}$ holds for
+any vector whose components look Gaussian. Finding it here says the residual's component
+distribution is roughly Gaussian at most layers. That is a real measured property, and it
+is a property of high-dimensional activations generally, not something specific to K3 and
+not an invariant of the computation. The pi is Gaussian bookkeeping, not structure.
+
+**A circular statistic I produced and then had to retract.** The same run reported "the 53
+layers within 2% have CV 0.00533". That conditions on closeness and then measures
+closeness. It is a tautology and would have read as a strong invariant. Selecting a subset
+by the property you then measure is a way of guaranteeing the answer.
+
+**Outcome.** No constant. The sweep found real phase structure, the strongest candidate
+for a numeric invariant sits near a pi-containing Gaussian value, and it varies far too
+much to be replaced by one.
 
 ---
 
