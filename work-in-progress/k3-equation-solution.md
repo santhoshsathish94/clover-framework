@@ -3366,6 +3366,88 @@ conclusion was already on the page.
 The rule that failed here is the first one: read the source document before measuring
 against it. A bisect is not a substitute for the specification.
 
+## Step 42 - can a projection be computed from only what is needed?
+
+Put simply: rather than storing a full matrix and reading all of it, compute only what
+the equation actually uses. The question is fair and it has a precise answer.
+
+### The three stores are different objects
+
+First, because the premise usually hides here. The embedding, the trunk and the experts
+are not versions of one another:
+
+```
+embedding    [163840, 7168] bf16     2.35 GB    token id -> vector, a true lookup table
+lm_head      [163840, 7168] bf16     2.35 GB    same shape, DIFFERENT tensor
+trunk        2455 slots, 93 layers  54.47 GB    int8 + per-row scales
+   [12288,7168] 26.44   [7168,12288] 8.19   [6144,7168] 8.11   [7168,6144] 4.05
+   [ 7168,3584]  2.37   [3584, 7168] 2.36   [ 896,7168] 0.59   [18432,1536] 0.68
+experts      82,432 pairs = 92 x 896  1446.46 GB   MXFP4
+   gate/up  payload [3072,1792] + scales [3072,112]
+   down     payload [3584,1536] + scales [3584, 96]
+```
+
+They are independent trained tensors. What makes them look related is that 7168 keeps
+appearing - that is the residual width, the model's bus, so anything reading or writing
+the residual stream has it on one side. **A shared interface dimension, not shared
+content.** Inside the MoE block the widths differ: the residual is projected down to a
+3584 latent, the experts work at 3072, and the result is projected back up.
+
+Nothing here is precomputed by this program. All three are trained parameters; the only
+work done ahead of time is quantization, done once by the packer, and the 4096-entry
+$\mathrm{DQ}$ table of step 9.
+
+### The selection already happens, and it is the whole design
+
+```
+trunk     54.47 GB     100% read, every run, whatever the prompt
+experts   1446 GB      a five-token run reads 99.72 GB = 6.9% of it
+```
+
+Only 16 of 896 experts are consulted per layer per position, which is exactly why the
+run touches 6.9% of the expert weights. **Computing only what is needed is already what
+the program does** - at the level where selection exists.
+
+The trunk has no such level. Every projection applies to every position, so all of it is
+needed. That is why it is read entirely and why steps 37 and 40 could only make it
+read-once, never read-less.
+
+### Within a matrix that is selected, all of it is needed
+
+For a dense $y = Wx$, each $y_i$ is a dot product against row $i$, so producing all
+outputs requires all weights. There are four escapes, and all four are now closed by
+measurement rather than argument:
+
+| escape | measured | verdict |
+|---|---|---|
+| some outputs unused | **0 fully-zero rows of 801,898,496** | no |
+| some inputs unused | 162,022 fully-zero columns of 844,103,680 = **0.019%** | no |
+| sparse | **11.58%** of 2.72 trillion weights are zero | 88.5% dense, no |
+| structured / low-entropy | 3.75 of 4 bits, near-uniform (step 39) | no |
+
+That scan covered all 247,296 expert tensors, 1361 GB read. **Not one output row of one
+expert matrix is dead.** Every row has something in it.
+
+Sparse formats need indices, which cost more than the 4-bit values they would replace,
+and win below roughly 20% density. At 88.5% they lose badly.
+
+### A correction to step 39
+
+Step 39 reported 5.75% of expert weights exactly zero, read off the nibble histogram.
+That is wrong: **E2M1 codes 0 and 8 are both zero**, plus and minus zero, which is why
+that histogram was exactly mirror-symmetric. The true zero fraction is **11.5%**, and
+the independent full scan above says 11.58%. The entropy figure of 3.7544 bits is
+unaffected - it is the entropy of the 4-bit symbol, which is the right quantity for a
+re-encoding question - but the sparsity statement was understated by half.
+
+### So the answer
+
+Yes for the experts, and it is already done: 6.9% of 1.45 TB is read because the router
+selects 16 of 896. No for everything else. Within any matrix the program does read,
+every row contributes to an output that is used, the values are 88.5% dense and nearly
+incompressible, and a dense matrix-vector product has no way to produce its outputs
+without touching its inputs.
+
 ## Progress
 
 | step | | status |
@@ -3401,6 +3483,7 @@ against it. A bisect is not a substitute for the specification.
 | 39 | the function is the data, and the data is incompressible | measured, rejected |
 | 40 | the router re-read the gate per position; free, because it fits in L3 | done, no gain |
 | 41 | the gate is a trained weight; the router's cost is the specification | answered |
+| 42 | the three stores, and why a selected matrix is read whole | answered |
 
 ## The comparison that matters: the equation against the engine
 
