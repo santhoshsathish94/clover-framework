@@ -970,31 +970,127 @@ is not bit-exact.
 
 ---
 
+## Step 12 - overlapping the read with the arithmetic
+
+After step 11 the two remaining costs were prefetch 7.04 s and $\mathbb{X}$ 6.82 s, and the
+accounting showed them running strictly one after the other:
+
+$$7.046 + 9.122 + 0.301 = 16.47\ \text{s}$$
+
+Neither can be made faster on its own - the prefetch is at the device ceiling and
+$\mathbb{X}$ is compute-bound. But they use different hardware, and nothing was overlapping
+them.
+
+### The equation licenses it
+
+Section 4.2 sums the routed experts expert-major, and each expert's term
+$\pi_j \mathbb{X}[W_2^{(j)}]\mathrm{SiTU}(\mathbb{X}[W_1^{(j)}]\zeta, \mathbb{X}[W_3^{(j)}]\zeta)$
+reads **only that expert's weights**. No expert's computation depends on another's bytes,
+so the order in which bytes arrive is free as long as each expert's have arrived before it
+runs.
+
+### The change
+
+The arena work split in two. Planning - dedupe, sort, assign arena offsets, publish the
+lookup table - stays where it was and does no I/O. The reads moved into `nreader` pthreads
+that pull expert indices off an atomic counter and run ahead, setting a per-expert done
+flag. The compute loop waits on the flag for expert $k$ and then computes it.
+
+Bit-exactness is not at risk: the same bytes land at the same addresses, the experts are
+computed in the same order, and each writes into its own rank slot. Only *when* a byte
+arrives changed.
+
+### Measured
+
+Cold cache, pinned, three runs each:
+
+```
+                       wall (s)              mean    X (s)    stall (s)
+mode 3, blocking     16.60 16.54 16.54      16.56     6.83      -
+mode 4, 8 readers    12.32 12.31 12.32      12.32     8.40     1.08
+mode 4, 4 readers    11.96 12.01 11.97      11.98     8.23     0.95
+```
+
+All nine runs 171,008/171,008 identical, token 17374.
+
+### The reader count is not monotone, which is the interesting part
+
+```
+readers     2      4      6      8     12     16
+wall     13.88  11.96  12.02  12.30  12.73  13.34
+stall     3.05   0.92   0.82   1.08   1.49   1.98
+```
+
+Two readers cannot keep up and the compute waits 3.05 s. But past six readers **the stall
+goes back up** - 1.08, 1.49, 1.98 - even though there is more read capacity. The readers
+are competing with the compute threads for cores and memory bandwidth, so adding readers
+slows the consumer they are feeding and themselves. Four is the optimum on this machine.
+
+### Where the 7.04 s went
+
+```
+mode 3   wall 16.56 = ops  9.22 + prefetch 7.04 + 0.30
+mode 4   wall 11.98 = ops 10.72 + stall    0.95 + 0.31
+```
+
+Of the 7.04 s of prefetch: **1.50 s reappeared as compute inflation** ($\mathbb{X}$ 6.83 to
+8.23, contention with the readers), **0.95 s remained as stall**, and **4.58 s was
+genuinely absorbed**. A perfect overlap would have reached
+$\max(7.04, 9.22) + 0.3 \approx 9.5$ s, so 2.5 s of the ideal is still being lost to
+contention and stall.
+
+### End to end
+
+```
+                                    process total
+eq.c, untouched   11 runs, 54.76 - 59.83      mean 56.40
+final             18.43  18.32                mean 18.38
+```
+
+**3.07x end to end, 4.42x on the timed region, bit-identical.**
+
+### What step 12 does not establish
+
+- **The contention was not attacked.** 1.50 s of $\mathbb{X}$'s growth is reader
+  interference; pinning the readers to specific cores, or using `io_uring` to issue reads
+  without threads at all, would likely recover some of it. Neither was tried.
+- **Four readers is this machine's optimum**, measured on one prompt with one thread
+  count. It is not a portable constant.
+- **Thread create and join happen per layer** - 93 layers times 4 threads - and the 0.31 s
+  of unattributed time was not broken down.
+- **One prompt, prefill only.** At $T=1$ there are fewer distinct experts per layer, so the
+  pipeline has less to run ahead into.
+
+---
+
 ## Progress
 
-| step | section of the equation | status |
+| step | | status |
 |---|---|---|
 | 1 - 8 | the classification, from scheme to boundary | done |
 | 9 | building DQ and measuring it | done |
 | 10 | vectorizing $\mathbb{X}$, and the fusion gap | done |
 | 11 | O_DIRECT expert reads | done |
+| 12 | overlapping the read with the arithmetic | done |
 
 ## The arc, end to end
 
 | change | wall | end to end | bit-exact |
 |---|---|---|---|
-| `eq.c` as it was | 53.0 s | 56.53 s | - |
+| `eq.c` as it was | 53.0 s | 56.40 s | - |
 | batched positions | 27.9 | - | yes |
 | + DQ table | 24.70 | 32.43 | yes |
 | + SIMD $\mathbb{X}$ | 22.68 | 30.76 | yes |
-| + O_DIRECT arena | **16.51** | **22.88** | yes |
+| + O_DIRECT arena | 16.51 | 22.88 | yes |
+| + pipelined reads | **11.98** | **18.38** | yes |
 
-**2.47x end to end and 171,008/171,008 identical at every step.**
+**3.07x end to end, and 171,008/171,008 identical at every step.**
 
 ## What this leaves to do
 
-- the prefetch is at the device ceiling; the only remaining lever on it is reading fewer
-  experts, which is not bit-exact
-- $\mathbb{X}$ is compute-bound by ~3.3x; register pressure and AVX-512 are both untried
+- reader/compute contention costs 1.50 s; `io_uring` would remove the reader threads
+  entirely and was not tried
+- $\mathbb{X}$'s true compute is ~6.83 s and still ~3x off the memory ceiling; register
+  pressure and AVX-512 are both untried
 - the equation permits hoisting the gate, $\zeta$ and the shared-expert branch out of the
   router's dependency; steps 5 and 6 established the license and nothing used it yet
