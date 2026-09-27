@@ -261,9 +261,132 @@ exact without a bound of the kind Step 27 already ruled out.
 
 ---
 
+## Step 3 — are the weights generated, or do they have to be stored?
+
+The previous section ended on the method point that choosing what to measure was the
+binding constraint. The human applied it directly: plot each **row** of a weight matrix as
+a point, and see whether the rows lie on something an equation could produce. If they did,
+the row would not need to be read at all. That attacks the I/O problem at its root rather
+than trimming it.
+
+Each row is projected onto two fixed random unit directions and drawn as one point.
+Rendered at `/root/k3raw/rows.png`, four panels:
+
+```
+expert 1/0 w1 rows, random projection   n=  3,072   x -0.0887..0.0839  y -0.1016..0.0812
+W_gate rows, layer 0                    n= 33,792   x -0.1464..0.1222  y -0.1219..0.1416
+lm_head rows, random projection         n=163,840   x -0.1362..0.1285  y -0.1361..0.1254
+lm_head rows, norm against row mean     n=163,840   x  0.7103..3.5805  y -0.0015..0.0014
+```
+
+**No curve, no lattice, no manifold, in any of the four.** Three panels are isotropic
+clouds centered on the origin. The answer to the question as asked is no.
+
+### The one panel that is not a cloud, and what it turned out to be
+
+The fourth panel is a **cone**: row norm on x, row mean on y, with the spread of the mean
+widening as the norm grows. That is a relation, and it is exactly testable. If a row's
+components behave as independent draws, then $\operatorname{std}(\text{mean}) =
+\text{norm}/n$ with $n = 7168$. Measured in ten equal-count norm buckets:
+
+```
+norm bucket        n        std(mean)      norm/n     ratio
+0.71-1.98       16384       2.299e-04    2.467e-04    0.932
+1.98-2.12       16384       2.743e-04    2.879e-04    0.953
+2.12-2.20       16384       2.942e-04    3.017e-04    0.975
+2.20-2.25       16384       3.037e-04    3.107e-04    0.977
+2.25-2.31       16384       3.088e-04    3.181e-04    0.971
+2.31-2.35       16384       3.143e-04    3.250e-04    0.967
+2.35-2.40       16384       3.253e-04    3.319e-04    0.980
+2.40-2.46       16384       3.376e-04    3.394e-04    0.994
+2.46-2.54       16384       3.408e-04    3.488e-04    0.977
+2.54-3.58       16384       3.607e-04    3.670e-04    0.983
+
+per-row kurtosis : mean 3.6311  median 3.1288  min 2.2093  max 186.8092   (3.0 = Gaussian)
+rows within 2.8..3.2 : 63.18%
+```
+
+The cone is the independence relation, to within 2 to 7 percent in every bucket, and most
+rows are close to Gaussian. So the visible structure is a statement that the rows have
+**no** structure beyond their scale.
+
+One quantity in the same run must **not** be read as a finding: $\text{norm} /
+(\text{std}\sqrt{n}) = 1.000069 \pm 0.000098$. That is algebra, not evidence. For any
+vector, $\text{norm}^2 = n(\text{std}^2 + \text{mean}^2)$, and the means here are $O(10^{-4})$,
+so the identity holds by construction and would hold for arbitrary data.
+
+### A trap, recorded because the script walked into it
+
+The measurement script ended by printing its own conclusion:
+
+> if rows were iid Gaussian given the norm, the only row-level parameter is the norm
+> itself: 163,840 numbers instead of 163,840 x 7,168 — 0.66 MB instead of 2.35 GB
+
+**This is wrong**, and it is the same error `k3-redundancy.md` named in Cycle F. A row's
+*distribution* being Gaussian does not make the row interchangeable with another sample
+from that distribution. Substituting one would destroy the model. What is compressible is
+the *description of the ensemble*; what has to be stored is *which member*. A 3,500x
+compression figure appeared in output that had been produced honestly, and it was an
+artifact of confusing those two things.
+
+### The prediction, and the test that settles it
+
+Stated correctly, the finding makes a hard prediction rather than offering a saving.
+Values that are statistically featureless carry **maximum entropy for their variance**, so
+the stored bytes should be close to incompressible. That is decidable, and it is the first
+item on the "not yet examined" list below.
+
+Expert 1/0 `w1`, 11,010,048 four-bit E2M1 codes:
+
+```
+code   0      1      2      3      4      5      6      7
+p    .05768 .10991 .09553 .07629 .07658 .05270 .02591 .00550
+code   8      9     10     11     12     13     14     15
+p    .05765 .10989 .09552 .07620 .07652 .05265 .02593 .00554
+
+entropy                      3.7595 bits per code   (4.0 = incompressible)
+entropy floor for the tensor 5.17 MB of 5.51 MB     ratio 0.9399
+zlib level 9                 5,505,024 -> 5,219,359   ratio 0.9481   0.1 s
+lzma preset 6                5,505,024 -> 5,239,072   ratio 0.9517   0.7 s
+scale bytes                    344,064 ->    40,005   ratio 0.1163
+distinct scale byte values   11 of 256
+```
+
+**The prediction held.** 3.7595 bits of 4. Both general-purpose compressors land *above*
+the entropy floor, so neither finds structure the histogram did not already account for.
+
+The code histogram is symmetric between each code $c$ and $c+8$ to four decimal places, and
+$p(\text{sign}) = 0.4999$, so the sign bit is a full incompressible bit by construction and
+the three magnitude bits carry 2.76 of 3. The scales do compress, 8.6x, but they are only
+5.9% of the bytes. Combined best case for the tensor pair is
+$5{,}259{,}364 / 5{,}849{,}088 = 0.899$, a **10.1% saving**, and only if decompression can
+outrun 2.69 GB/s.
+
+### What Step 3 settles
+
+The weights cannot be generated, and they cannot meaningfully be compressed. Those are the
+two ways to avoid reading bytes without reading fewer of them, and both are now closed by
+measurement rather than by argument. Applied to the 144.72 GB of Cycle G, the entire
+compression avenue is worth about 5 s of 53.8 s, against the 2.5x already obtained in
+Step 2 by reading fewer experts.
+
+**The remaining lever on the data problem is selection, not representation.**
+
+### What Step 3 does not establish
+
+- **One expert, one tensor.** Expert 1/0 `w1`. Whether all 92 x 896 experts share the
+  histogram is untested, though the architecture gives no reason for them to differ.
+- **Two compressors.** zlib and lzma. A codec built for this data could beat the order-0
+  entropy figure if higher-order structure exists; nothing here rules that out, it only
+  shows the two standard tools find none.
+- **Row projection is two directions.** Structure orthogonal to both random directions
+  would be invisible in the plot. The kurtosis and bucket statistics are computed on the
+  full 7,168 dimensions and do not share that limitation.
+
+---
+
 ## Not yet examined
 
-- whether the 4-bit codes are compressible, i.e. their entropy
 - whether the 17.55 MB per expert can be reduced without changing the result
 - whether expert choice is predictable early enough to prefetch
 - whether reuse across many tokens changes the picture, since all of this is 5 tokens
