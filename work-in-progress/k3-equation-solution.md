@@ -1701,6 +1701,106 @@ The specialization is kept. It is bit-exact, it makes the operator measurably fa
 it will pay if the I/O side ever gets cheaper. Today it is worth 0.00 s end to end, and
 recording that honestly matters more than the change did.
 
+## Step 19 - the trunk is the same every run, so what can be done once?
+
+The experts are chosen by the input. The trunk is not: the same 54.47 GB is used by every
+run of every prompt. That asymmetry has been sitting in plain sight since step 2's
+classification, and it raises a question the classification never asked - if it never
+changes, why is it being done again?
+
+Three different things could be meant by "do it once", and they have different answers.
+
+### Does a run even need all of it?
+
+`K3_COVER=1` counts reads per 4 KB page of the trunk, marked at every operator that
+takes a trunk pointer.
+
+```
+touched               53.83 GB of 54.47 GB      98.82%
+never read             0.64 GB
+read exactly once     53.10 GB
+read more than once    0.73 GB     most-read page: 10 times
+total page reads      13,851,843 = 56.74 GB of traffic
+```
+
+56.74 GB of traffic against $\mathbb{Q}$'s independently counted 56.73 GB, which is the
+check that the instrument works. **There is no unused trunk and essentially no reuse.**
+Nothing to prune, and nothing to cache between operators - 97.6% of the bytes are touched
+once and never looked at again.
+
+### Can anything be precomputed from it?
+
+Every tensor in the census is a $W$ appearing as $W \cdot x$, and $x$ depends on the
+input. No product survives the run, so nothing of that shape can be hoisted.
+
+The one transform that is genuinely input-independent is the dequantization: the stored
+form is a 4-byte scale plus `in` int8 values per row, and turning that into floats needs
+no input at all. It could be done once and stored.
+
+It would lose, and the reason is measurable rather than arguable. $\mathbb{Q}$ moves
+56.73 GB in 1.302 s = **43.58 GB/s**, against a RAM read ceiling measured on the same
+machine in the same state of **45.01 to 45.57 GB/s**. $\mathbb{Q}$ is at 96% of what the
+memory system can deliver, so its time is set by how many bytes it reads and by nothing
+else. The stored form is about 1.001 bytes per weight. Precomputed bf16 would be 2.0 and
+fp32 4.0, so the same operator would take at least twice as long.
+
+**The quantized form is not a compression of the weights that costs time to undo. It is
+the reason the operator is fast.** Precomputing the dequantization would be paying to
+make the bottleneck bigger.
+
+### What can be done once is the reading
+
+That leaves the part that really is repeated work: 54.47 GB comes off the disk on every
+single run, into memory, to be arranged exactly as it was the run before. Put the file in
+tmpfs and map it, and the load stops existing.
+
+```
+                        start->T0    timed    process total   minor faults
+disk -> anon RAM           3.80      9.40        13.40             93,718
+tmpfs, mapped              0.02      9.26        10.54            893,539
+                           0.02      9.33        10.63            893,516
+                           0.02      9.34        10.61            893,535
+```
+
+Logits byte-identical. **13.40 -> 10.6 s**, and the timed region does not move, which is
+the control that matters: reading the trunk through a tmpfs mapping during the arithmetic
+costs nothing over having it in anonymous RAM.
+
+### The fault-around trap
+
+Shmem THP on this box is `[never]`, so the mapping is 4 KB pages - 13.3 million of them.
+Yet the run takes 893 thousand faults, not 13.3 million, because the kernel maps 16 pages
+per fault. Then:
+
+```
+                          minor faults   timed   process total    sys
+tmpfs, steady state           893,539     9.26      10.54        11.9
+after drop_caches          13,359,543    10.74      12.03        28.5
+next run, no drop          13,359,582    10.57      11.85        25.5
+```
+
+`drop_caches` costs 1.3 s of wall and 13 s of system time by turning every fault back
+into a single page, **and it stays that way for later runs**. The cold-cache discipline
+that made every other measurement in this document trustworthy is the one thing that
+breaks this one. A benchmark that drops caches before each run would have measured 11.9
+here and concluded residency was worth 1.5 s instead of 2.8.
+
+### What was not tested
+
+hugetlbfs would give 2 MB pages and remove the faults entirely, but the arm failed and is
+**untested, not rejected**: the pool granted 11,740 of the 27,800 pages asked for because
+the tmpfs copy still held the memory, and `dd` wrote 0 bytes because hugetlbfs has no
+`write()` - it has to be filled through a mapping. Given that tmpfs already matches
+anonymous RAM in the timed region, there is little left for it to win.
+
+### What it costs, stated plainly
+
+54.47 GB of RAM held permanently, out of 124 GB, and a one-time 26.7 s copy. And the
+comparison is not like for like: 13.40 s is a cold start that reads the model from disk,
+10.6 s is a warm start that does not. **It is not a faster program. It is the same
+program not repeating work between runs** - which is the right architecture for anything
+that serves more than one request, and is exactly what the asymmetry implies.
+
 ## Progress
 
 | step | | status |
@@ -1713,6 +1813,7 @@ recording that honestly matters more than the change did.
 | 16 | huge pages, and a gain outside the timer | done |
 | 17 | the unmap, measured directly | done |
 | 18 | the 1.37x was a bad baseline | done |
+| 19 | the trunk is read once, and need not be read at all | done |
 
 ## The arc, end to end
 
@@ -1730,17 +1831,19 @@ recording that honestly matters more than the change did.
 | + hugetlb trunk | **9.33** | **13.16** | yes |
 | + T==1 accumulators | 9.33 | 13.16 | yes, and worth nothing |
 
-**4.27x end to end, 171,008/171,008 identical at every step.**
+**4.27x end to end, cold start, 171,008/171,008 identical at every step.**
 
-The end-to-end column is `/usr/bin/time` process total. Step 16's 13.36 is now shown as
-13.35, the mean of the controlled pair rather than the single confounded run.
+Resident trunk is listed separately because it is a different measurement: **10.6 s**, or
+5.3x, warm, with the model already in memory.
 
 ## What this leaves to do
 
 - nothing in the arithmetic is worth optimizing while the run is at its bandwidth
   equilibrium: every second taken out of an operator reappears as stall, and every second
   taken out of stall reappears in the operators
+- $\mathbb{Q}$ is at 96% of the memory ceiling and $\mathbb{X}$ is bracketed by its own
+  loaded and unloaded rates, so both operators are where the hardware puts them
 - the only levers left change how many bytes cross the memory controller, and the two
-  candidates are both outside bit-exactness: fewer experts (k=8) or a narrower weight
-  format
-- 1 GB pages are untested, not rejected: they need a boot-time pool
+  candidates are both outside bit-exactness: fewer experts (k=8) or a narrower format
+- untested, not rejected: 1 GB pages (need a boot-time pool), hugetlbfs for a resident
+  trunk (needs filling through a mapping)
