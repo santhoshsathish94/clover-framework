@@ -2382,6 +2382,61 @@ It should be bit-exact, because the value fed to the accumulator would be the sa
 `(float)w[i] * sc` that is written to the array today, promoted to double at the same
 point. That is a claim to test, not to assume - it is the next step.
 
+## Step 28 - the router reads its own weights
+
+Step 27 ended with a claim to test: the gate is int8 rows with a per-row scale, so the
+router could apply the scale inside the dot product instead of having `slot_vec` build a
+25.7 MB float copy of it every layer.
+
+### Checking the assumption first
+
+The claim rests entirely on the gate being I8R, and I had not looked. The index says:
+
+```
+S_GATE = 29    dtype 2 (I8R)    nbytes 6,426,112 = 896 x (4 + 7168)
+               rows 896 = NEXP, cols 7168 = E
+```
+
+Exactly the layout $\mathbb{Q}$ reads. (My first probe used slot 8 and returned a
+(12288, 7168) tensor - the enum has 37 slots and the gate is the thirtieth. Reading the
+enum beat guessing at it.)
+
+### The change
+
+```c
+const float gv = (float)w[i] * sc;        /* must round to float here */
+a += (double)gv * (double)x2b[t][i];
+```
+
+The float temporary is deliberate: it forces the same rounding the stored array had, so
+the accumulator sees the identical value. `K3_GFUSE=0` keeps the old path for comparison.
+
+### It is exact, and it pays
+
+```
+                      materialized      fused
+slot_vec                0.2715 s        0.008 s     606.4M floats -> 15.5M
+router dot product      0.1425 s        0.1265 s    11.82 GB -> 2.96 GB of weights
+wall                    9.245 s         9.045 s
+process total          10.51 s         10.315 s
+```
+
+Both paths give `md5 23d162dcefb18211a7540ef12948f1eb`, identical to the preserved
+baseline, and on the second prompt the two paths agree byte for byte.
+
+**0.20 s, about 1.9% end to end.** Step 27 predicted "up to ~0.27 s plus part of the
+router's 0.153 s"; the operators gave up 0.28 s and the wall kept 0.20 of it, the rest
+lost in run-to-run variance at n=2.
+
+`slot_vec` is now 0.008 s and 15.5 million floats - it still dequantizes the norms, the
+conv weights and the biases, which is what it was for.
+
+### The rate metric lies again
+
+The router's GB/s falls from 83 to 23 while getting **faster**, because it now reads a
+quarter of the bytes for the same arithmetic. Third time in this document that a ratio
+moved the wrong way while the thing underneath improved: always read the seconds.
+
 ## Progress
 
 | step | | status |
@@ -2403,6 +2458,7 @@ point. That is a claim to test, not to assume - it is the next step.
 | 25 | the state of the program, read off the source | done |
 | 26 | the trunk is now resident | done |
 | 27 | the unattributed quarter, decomposed | done |
+| 28 | the router reads its own weights | done |
 
 ## The comparison that matters: the equation against the engine
 
