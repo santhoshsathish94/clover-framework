@@ -1801,6 +1801,92 @@ comparison is not like for like: 13.40 s is a cold start that reads the model fr
 program not repeating work between runs** - which is the right architecture for anything
 that serves more than one request, and is exactly what the asymmetry implies.
 
+## Step 20 - everything above was measured on five tokens
+
+Nineteen steps rest on one prompt of five tokens, prefill only. The m-distribution that
+gives mean 1.295, the bandwidth equilibrium of step 18, the 99.72 GB of expert traffic,
+the reader optimum - all of it. `NPOS` was already a compile-time constant used
+everywhere, so only the token list was hardcoded; `K3_IDS` makes it settable.
+
+**Control first**: rebuilt at `NPOS=5` with the ids passed through the new path, logits
+still byte-identical to the preserved baseline. The parameterization did not change the
+program.
+
+Longer prompts come from a 124-token passage tokenized with a greedy longest-match
+encoder, whose first five ids reproduce `1008,10484,318,15383,387` exactly - which is the
+check that it is not producing nonsense.
+
+### The regime changes completely
+
+```
+NPOS   wall    read GB   mean m   m=1 share   stall      operators
+  5    9.35     156.70    1.295     77.6%     23.25%      73.16%
+ 16   20.17     258.97    2.047     60.6%      9.00%      88.85%
+ 32   36.82     358.49    2.744     51.6%      2.98%      95.58%
+ 64   65.77     521.15    3.565     43.0%      1.00%      97.81%
+```
+
+**At five tokens the run is I/O bound with 23% stall. At sixty-four it is compute bound
+with 1%.** Step 18's "bandwidth equilibrium", where every second taken out of an operator
+reappeared as stall, is a property of the five-token prompt and not of the program. At
+64 tokens there is no stall left to absorb anything, so arithmetic improvements would
+convert directly into wall time.
+
+Per token the run gets cheaper - 1.87 s/token at five, 1.03 s/token at sixty-four -
+because the expert bytes are amortized over more positions.
+
+### A metric that nearly fooled me
+
+Measured in weight bytes, $\mathbb{Q}$ appears to collapse:
+
+```
+NPOS       5      16      32      64
+Q GB/s  42.81   16.99    7.09    4.53
+```
+
+That is a 9.5x fall and I was ready to call it a defect. It is mostly an artifact.
+$\mathbb{Q}$ uses each weight byte $T$ times, so arithmetic intensity rises with the
+prompt and GB/s of weights measures less and less of the work. Counting
+multiply-accumulates instead:
+
+```
+NPOS          5      16      32      64
+Q GFLOP/s   405.9   451.7   319.6   313.1
+X GFLOP/s   113.3   146.0   173.4   206.6
+```
+
+$\mathbb{X}$ **improves** with prompt length, from 113 to 207 GFLOP/s, for the same
+reason its GB/s falls - it is reading each weight once and using it more.
+$\mathbb{Q}$ peaks at T=16 and then loses 31%, which is a real degradation but 1.44x,
+not 9.5x.
+
+The lesson is the same one as step 18 in a different costume: **a rate is a ratio, and
+when the denominator's meaning changes with the parameter being swept, the rate stops
+being a measurement.**
+
+### Where $\mathbb{Q}$'s 31% goes, as a prediction to test
+
+`Qm` holds `__m256 v0[NPOS], v1[NPOS]` and indexes them by a runtime `t`, the same shape
+that cost $\mathbb{X}$ 1.20x in step 18. At T=64 that is 4 KB of accumulators per row,
+and the inner loop also walks 64 separate `Xs[t]` input streams against a 32 KB 8-way L1.
+
+The prediction, recorded before testing: tiling the position loop into blocks of about
+eight should recover most of the 31%, because the weight row is only 7 KB and stays in
+L1 across the blocks, so re-reading it per block is nearly free. If instead the loss is
+the accumulator array alone, tiling will recover little. Step 21 will say which.
+
+### What these runs do and do not establish
+
+The `NPOS=5` control is byte-identical, which is what licenses the parameterization. The
+longer runs have **no reference output to check against** - the "engine emitted 17374"
+line is hardcoded to the five-token prompt, so its "DIFFERENT" verdict at other lengths
+means only that a different prompt gave a different answer. These runs establish cost
+structure, not correctness.
+
+Softmax attention is $O(T^2)$ and still only 0.09% of wall at 64 tokens, so it is not
+yet a concern - but it is the one term that will eventually dominate, and 64 tokens is
+still a short prompt.
+
 ## Progress
 
 | step | | status |
@@ -1814,6 +1900,8 @@ that serves more than one request, and is exactly what the asymmetry implies.
 | 17 | the unmap, measured directly | done |
 | 18 | the 1.37x was a bad baseline | done |
 | 19 | the trunk is read once, and need not be read at all | done |
+| 20 | the five-token picture does not generalize | done |
+| 21 | tiling $\mathbb{Q}$'s position loop | predicted, not yet run |
 
 ## The arc, end to end
 
@@ -1831,19 +1919,20 @@ that serves more than one request, and is exactly what the asymmetry implies.
 | + hugetlb trunk | **9.33** | **13.16** | yes |
 | + T==1 accumulators | 9.33 | 13.16 | yes, and worth nothing |
 
-**4.27x end to end, cold start, 171,008/171,008 identical at every step.**
+**4.27x end to end, cold start, five tokens, 171,008/171,008 identical at every step.**
 
 Resident trunk is listed separately because it is a different measurement: **10.6 s**, or
 5.3x, warm, with the model already in memory.
 
 ## What this leaves to do
 
-- nothing in the arithmetic is worth optimizing while the run is at its bandwidth
-  equilibrium: every second taken out of an operator reappears as stall, and every second
-  taken out of stall reappears in the operators
-- $\mathbb{Q}$ is at 96% of the memory ceiling and $\mathbb{X}$ is bracketed by its own
-  loaded and unloaded rates, so both operators are where the hardware puts them
-- the only levers left change how many bytes cross the memory controller, and the two
-  candidates are both outside bit-exactness: fewer experts (k=8) or a narrower format
+- **step 21**: tile $\mathbb{Q}$'s position loop and find out whether the 31% comes back.
+  At long prompts there is no stall to absorb the gain, so unlike step 18 it would show
+- at five tokens the run is at its bandwidth equilibrium and no arithmetic change can
+  pay; at sixty-four tokens that is no longer true, and the two regimes need separate
+  conclusions everywhere in this document
+- the only bit-exact lever on bytes is gone; fewer experts (k=8) or a narrower format
+  both change the answer
 - untested, not rejected: 1 GB pages (need a boot-time pool), hugetlbfs for a resident
-  trunk (needs filling through a mapping)
+  trunk (needs filling through a mapping), and any prompt long enough to make $O(T^2)$
+  attention matter
