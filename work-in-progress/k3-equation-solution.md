@@ -782,6 +782,104 @@ facts is in the measurement and the other is only in the equation.
 
 ---
 
+## Step 10 - vectorizing $\mathbb{X}$, and a gap in the equation it exposed
+
+Step 8 of `k3-data-problem.md` argued that $\mathbb{X}$'s four 4-lane double accumulators
+map exactly onto four AVX2 256-bit double registers, one lane per lane, and would therefore
+be bit-exact. This step builds it.
+
+### The thing that had to be checked first
+
+The equation fixes which inputs land in which lane and in what order they combine. It does
+**not** say whether the multiply and the add are fused. That distinction is invisible in
+the mathematics and decisive in the result: a fused multiply-add rounds once, a separate
+multiply and add round twice.
+
+Compiling the exact accumulate expression both ways:
+
+```
+gcc -O2 -march=native -ffp-contract=off   ->   vmulsd + vaddsd     two roundings
+gcc -O2 -march=native                     ->   vfmadd213sd         one rounding
+```
+
+The verified build carries `-ffp-contract=off`, so **the reference is multiply then add**,
+and `_mm256_fmadd_pd` would have silently changed every value in the model. The SIMD kernel
+uses `_mm256_mul_pd` followed by `_mm256_add_pd`, and the build was checked to contain zero
+`vfmadd` instructions inside `Xm`.
+
+### This is a genuine omission in the equation document
+
+Reading section 2 again with this in hand, the other operators are specific and
+$\mathbb{X}$ is not:
+
+| operator | what it says about fusion |
+|---|---|
+| $\mathbb{Q}$ | "each accumulated by **single-rounded FMA** over inputs taken in blocks of 16" |
+| $\Delta$ | "all float32, every sum accumulated sequentially in $i$ ascending, **no FMA**" |
+| $\mathrm{AR}$ | specifies every rounding and widening explicitly |
+| $\mathbb{X}$ | **silent** |
+
+$\mathbb{X}$ is the one operator where fusion is unstated, and it is the one operator where
+getting it wrong is easiest, because the natural SIMD translation of "accumulate into a
+double vector" is `fmadd`. An implementer following the document alone would have a
+plausible, wrong kernel. `k3-model-equation.md` has been corrected.
+
+That is a third defect in that document, found the same way as the two its section 6
+already records - by implementing from it and having to decide something it did not say.
+
+### Measured
+
+Cold cache, pinned, three runs:
+
+```
+                   X (s)                   mean     wall (s)                mean
+scalar + DQ     8.843  9.092  9.087       9.007   24.48  24.96  24.67     24.70
+SIMD + DQ       6.995  7.007  7.015       7.006   22.71  22.64  22.69     22.68
+                                         -22.2%
+```
+
+All three runs 171,008/171,008 identical, token 17374.
+
+### End to end
+
+```
+                                        process total
+eq.c, untouched          54.76 - 59.83 over 7 runs      mean 56.33
+final                    30.84  30.67                   mean 30.76
+```
+
+**1.83x end to end**, 2.34x on the timed region, bit-identical.
+
+### Where the cost sits now
+
+$\mathbb{X}$ has gone 12.190 -> 9.007 -> 7.006 s across the last two changes, and moves
+99.72 GB at 14.24 GB/s against the 47.80 GB/s RAM ceiling - **still compute-bound, by about
+3.4x**. But it is no longer the largest item:
+
+```
+prefetch (pure I/O)   12.83 s    56.6% of wall
+X                      7.01 s    30.9%
+Q                      1.35 s     5.9%
+everything else        1.19 s     5.2%
+```
+
+The prefetch is now the dominant cost, and Step 6 of `k3-data-problem.md` already measured
+that it runs at ~8 GB/s on the buffered path against 14.5 GB/s available with O_DIRECT.
+
+### What step 10 does not establish
+
+- **Register pressure was not investigated.** `__m256d acc[NPOS][4]` is 20 vectors against
+  16 architectural YMM registers, so the compiler is spilling. Tiling over positions might
+  do better and was not tried.
+- **AVX-512 is available on this CPU and unused.** The lane structure is 4 doubles, which
+  is 256 bits, so using 512-bit registers would require packing two positions per register
+  and was not attempted.
+- **The gain is measured at $T=5$ only**, and the kernel's arithmetic intensity depends on
+  $T$.
+- **One prompt, prefill only.**
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
@@ -795,10 +893,11 @@ facts is in the measurement and the other is only in the equation.
 | 7 | section 5, composition, initial conditions, carried state | done |
 | 8 | the boundary, and what it costs | done |
 | 9 | building DQ and measuring it | done |
+| 10 | vectorizing $\mathbb{X}$, and the fusion gap | done |
 
 ## What this leaves to do
 
+- the prefetch is now 56.6% of wall and still on the buffered path; O_DIRECT expert reads
+  into an arena is the measured 5.6 s from step 6 of `k3-data-problem.md`
 - the equation permits hoisting the gate, $\zeta$ and the shared-expert branch out of the
   router's dependency; steps 5 and 6 established the license and nothing used it yet
-- $\mathbb{X}$'s four 4-lane double accumulators map onto four AVX2 registers, which step 8
-  of `k3-data-problem.md` argued is bit-exact and nobody has built

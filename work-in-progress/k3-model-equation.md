@@ -139,6 +139,11 @@ group's E8M0 scale **in float32 before** entering the double accumulation:
 
 $$\tilde{w}_{r,i} = \mathrm{fl}_{32}\big(\mathrm{E2M1}[c_{r,i}] \cdot 2^{\,s_{r,g(i)}-127}\big), \qquad g(i) = \lfloor i/32 \rfloor$$
 
+The accumulation is a **separate multiply and add, not a fused multiply-add**: each product
+is rounded to double before it is added to its lane, so every term is rounded twice. This
+is the opposite of $\mathbb{Q}$, which fuses. The natural SIMD reading of "accumulate into
+a double vector" is `fmadd`, and that is a different function.
+
 ### $\mathbb{B}$ — BF16 projection with a 16-lane double tree
 
 $$\big(\mathbb{B}[W]\,x\big)_r = \mathrm{fl}_{32}\Big[\big(U_0{+}U_1\big)+\big(U_2{+}U_3\big)\Big],
@@ -416,7 +421,16 @@ Two defects in this document were found by doing that, and both are now fixed ab
   head. $a_h = \exp(A^{\log}[h])$ was correct; the storage width was simply not stated, and
   implementing from the document alone gives a shape error.
 
-The other eight operators were transcribed as written and needed no correction.
+A third was found later, by `k3-equation-solution.md` step 10, and is also fixed above:
+
+- **$\mathbb{X}$ did not say whether its multiply and add are fused.** Every other operator
+  is explicit - $\mathbb{Q}$ says "single-rounded FMA", $\Delta$ says "no FMA" - and
+  $\mathbb{X}$ said nothing, while being the one operator whose obvious SIMD translation is
+  `fmadd`. The reference is separate multiply and add; the verified build carries
+  `-ffp-contract=off`, which compiles the accumulate to `vmulsd` + `vaddsd` rather than
+  `vfmadd213sd`.
+
+The other seven operators were transcribed as written and needed no correction.
 
 ### Verified
 
