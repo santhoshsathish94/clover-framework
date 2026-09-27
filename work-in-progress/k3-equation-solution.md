@@ -3497,6 +3497,62 @@ So the achievement of steps 37 and 40, stated in the strongest form available: *
 trunk is read exactly once per run, whatever the prompt length**, and that is now
 measured at page granularity rather than inferred from byte accounting.
 
+## Step 44 - store the values the trunk produces, not the trunk
+
+The question restated properly: the trunk is a matrix, but after the computation it
+produces *values*. Why not find those values and store them?
+
+Storing a computed value only pays if the same computation recurs. So the real question
+is measurable: **across 34 prompts and every position, how often does the input to a
+trunk projection repeat?**
+
+### It repeats in exactly two circumstances
+
+```
+                              observations   distinct   repeats
+layer 0,  x1 (pre-attn norm)         416         230       186
+layer >=1, x1 and x2                 416         385        31     at EVERY layer
+```
+
+Both numbers are exactly predicted by structure, which is what makes them trustworthy:
+
+| cause | measured | predicted | |
+|---|---|---|---|
+| layer 0: the input is a pure function of the **token id** | 186 | 186 duplicate token placements | exact |
+| any layer: the input is a pure function of the **leading token sequence** | 31 | 31 duplicate prefixes | exact |
+
+The second is causality: position $p$ depends only on tokens $0 \dots p$, so two
+(prompt, position) pairs with the same prefix have identical state at **every** layer.
+Counting distinct leading sequences over the 34 prompts gives 385 of 416 - a difference
+of 31, matching the measured repeats at all 92 deeper layers to the unit.
+
+**Outside those two cases, nothing recurs.** 385 of 416 inputs are unique at every one of
+93 layers. There is no value to store that would ever be looked up again.
+
+### Both cases are already settled
+
+**Layer 0** was step 38: those outputs really are tabulable per vocabulary entry -
+186 of 186 confirmed identical - and tabulating them costs 40.4 GB to save 11 ms.
+
+**The prefix case is prefix reuse**, steps 24 and 32. And that reframing is worth stating
+plainly, because the document has never said it this way:
+
+> **Prefix reuse *is* the answer to this question.** It is not a caching trick bolted on
+> the side; it is precisely "compute the values once and store them so they are not
+> recomputed". What it stores - the MLA KV per position and the KDA recurrent state per
+> layer, 488 MB for a ten-token prefix - is the compressed form of *every value all 93
+> layers produce for those positions*.
+
+It is already built, already bit-exact, 2.57x at 64/48, and step 32 proved one cache
+serves a different continuation exactly.
+
+### So the answer
+
+The idea is right, and it is implemented. What the measurement adds is the **boundary**:
+it can never extend further, because beyond a shared prefix the equation never computes
+the same thing twice. Not rarely - 385 of 416, at every depth. The trunk cannot be
+replaced by its outputs because its outputs are different every time it is used.
+
 ## Progress
 
 | step | | status |
@@ -3534,6 +3590,7 @@ measured at page granularity rather than inferred from byte accounting.
 | 41 | the gate is a trained weight; the router's cost is the specification | answered |
 | 42 | the three stores, and why a selected matrix is read whole | answered |
 | 43 | the equation needs 100% of the trunk, read once | measured, rejected |
+| 44 | inputs recur only by token or by prefix; prefix reuse already is the answer | measured, bounded |
 
 ## The comparison that matters: the equation against the engine
 
