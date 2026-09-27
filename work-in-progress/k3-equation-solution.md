@@ -710,4 +710,4 @@ either - a profiler shows you what ran, not what needn't have.
 
 - build $\mathrm{DQ}$ and measure it against $\mathbb{X}$, the one verdict worth testing
 - the equation permits hoisting the gate, $\zeta$ and the shared-expert branch out of the
-  router's dependency; steps 5 and 6 established the licence and nothing used it yet
+  router's dependency; steps 5 and 6 established the license and nothing used it yet
