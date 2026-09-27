@@ -2057,6 +2057,82 @@ floats because it is compared against the model's buffer before the model has be
 The k=0 comparison is meaningless; step 18 checked that pairing in the correct order. All
 the row-blocked variants report 0.
 
+## Step 23 - what prefix reuse could be worth, before building it
+
+Step 22 left prefix reuse as the largest unexploited lever. It is also the most
+expensive thing to build in this document - it needs a persistent cache and a two-phase
+entry point, not a tuning change. So the question to answer first is what it could
+possibly be worth, because a lever that removes 10% is not worth that.
+
+### The cost of one more position
+
+```
+T        1     2     4     8    16    24    32    48    64
+wall  3.80  5.46  8.21 12.46 19.57 25.33 31.79 43.87 55.22
+```
+
+From T=16 upward this is almost exactly linear:
+
+$$\text{wall}(T) = 7.69 + 0.743\,T$$
+
+which reproduces T=24, 32 and 48 to within 1.2%. Below T=16 it is concave, because the
+expert set is still filling up - X's weight bytes go 25.83 GB at one position to 201.85
+at sixteen, but only 463.65 at sixty-four.
+
+A fit is worth no more than its next prediction, so before using it: **predicted
+wall(40) = 7.69 + 0.743 x 40 = 37.4 s. Measured 37.62 s**, an error of 0.6%.
+
+### The ceiling, and the floor
+
+Prefix reuse removes position-dependent work. It cannot remove the 7.69 s, which is the
+per-layer work that happens whatever the prompt length - above all reading the trunk,
+which $\mathbb{Q}$ does in full even for a single position (53.83 GB at T=1).
+
+So **a cached prefix is worth at most 0.743 s per position, against a floor of 7.69 s**:
+
+```
+prompt   prefix cached   projected   against   speedup
+  64          16           43.3 s     55.22     1.27x
+  64          32           31.4       55.22     1.76x
+  64          48           19.5       55.22     2.83x
+```
+
+Those are projections from the fitted model, not measurements of a built system, and
+they should not be quoted as anything else. What they establish is that the lever is
+large enough to be worth the work when the shared prefix is most of the prompt - which
+is exactly the shape of a system prompt followed by a short query.
+
+### The precondition, which had not been checked
+
+Step 22 showed the *final* state of the prefix positions was byte-identical across two
+prompts. That is not sufficient. A cache has to restore the prefix at **every layer**,
+so the prefix state must be identical at every layer, or reuse would silently diverge
+partway down the stack.
+
+Dumping each layer's input for both runs and comparing all prefix positions:
+
+```
+layers dumped: 93 and 93
+compared 465 (layer, prefix position) states of 7168 floats each
+identical: 465    differing: 0
+```
+
+3.3 million floats, zero differences. **The prefix state is reusable at every one of the
+93 layers**, not merely at the output.
+
+### Why it stops here
+
+The measurement and the precondition are done; the build is not, and it is a larger
+piece of work than it looks. The 24 MLA layers would need `klat`, `v` and `rp` kept per
+prefix position - 24,640 floats per position per layer, so 113.5 MB for a 48-token
+prefix, computed from the tensor shapes. The 69 KDA layers carry a recurrent state whose
+size I have not established. The snapshot machinery at `L % 12 == 0` has to be restored
+too.
+
+That is a change to what the program is rather than to how fast it runs, and it deserves
+to be a deliberate decision rather than something appended to the end of a long session.
+What is settled is that it is sound, that it is exact, and roughly what it is worth.
+
 ## Progress
 
 | step | | status |
@@ -2073,6 +2149,7 @@ the row-blocked variants report 0.
 | 20 | the five-token picture does not generalize | done |
 | 21 | $\mathbb{Q}$'s input streams, not its accumulators | done |
 | 22 | what the reading buys, and why $\mathbb{X}$ refuses the same fix | done |
+| 23 | the cost of a position, and what prefix reuse could be worth | measured, not built |
 
 ## The arc, end to end
 
@@ -2105,9 +2182,11 @@ At longer prompts the last change is the one that matters:
 
 ## What this leaves to do
 
-- **prefix reuse is now demonstrated to be exact**, and is the largest unexploited lever
-  in the document: it needs no approximation and no new kernel, only somewhere to keep
-  the state. It changes what the program *is*, though, rather than how fast it runs
+- **build prefix reuse.** It is exact (step 22), sound at every layer (step 23), and
+  worth up to 0.743 s per cached position against a 7.69 s floor - 2.83x when three
+  quarters of the prompt is shared. What it needs: MLA `klat`/`v`/`rp` per prefix
+  position (113.5 MB for 48 tokens), the KDA recurrent state per layer (size not yet
+  established), and the `L % 12 == 0` snapshots
 - $\mathbb{X}$ is 54% of wall at 64 tokens and has now resisted the one fix that worked
   for $\mathbb{Q}$. Its weights are read once, so the levers left on it are byte count,
   and those are not bit-exact
