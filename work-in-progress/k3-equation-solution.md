@@ -3101,6 +3101,68 @@ five tokens. At 64 tokens, from the table above: **42.59 against 42.21, and 41.9
 against 41.42 - about 0.4 to 0.5 s, roughly 1.2%.** Real but small, and worth it for a
 reference that reproduces exactly.
 
+## Step 38 - if the weights never change, why not precompute $\mathbb{Q}$?
+
+Asked directly, and it is the right question to ask of a document whose whole premise is
+finding work that does not depend on the input. The answer needs evidence, not the
+classification restated at it.
+
+### $\mathbb{Q}$'s weights are W. $\mathbb{Q}$'s output is R.
+
+$\mathbb{Q}$ computes $W \cdot x$. $W$ is fixed by the checkpoint - which is why, since
+step 37, it is read exactly once per run. $x$ is the run's activations. Comparing mean
+output rms per stage between two prompts:
+
+```
+slot     prompt A     prompt B        slot     prompt A     prompt B
+Q         2.36128      2.24256        K         2.81212      2.57641
+V         2.05119      1.74323        G         1.31632      1.28676
+...  identical stages: 0 of 20
+```
+
+Precomputing $W \cdot x$ is precomputing the answer.
+
+### Except in one place, and that one is real
+
+At layer 0 there is no cross-position mixing before the attention projections:
+$nsnap = 0$, so $hb = resid = \mathrm{embed}[id]$ and $x1 = \mathrm{rmsnorm}(hb)$ depends
+on the **token id alone**. So layer 0's pre-attention projections are a pure function of
+the token, and would be precomputable per vocabulary entry.
+
+That is testable rather than arguable. Every token id appearing at two or more
+(prompt, position) places across the 34 prompts, comparing layer 0's values exactly:
+
+```
+comparisons: 186   IDENTICAL: 186   differ: 0
+```
+
+43 distinct repeated tokens, no exceptions. The structural claim holds.
+
+### And it is worth nothing
+
+The qualifying stages are layer 0's Q, K, V, G, B, FA and FB:
+
+```
+weight read per run     355.6 MB    = 0.65% of the trunk's 54.47 GB
+the time that is worth  ~0.011 s
+cache for the vocabulary  61,664 floats x 163,840 tokens x 4 B = 40.4 GB
+```
+
+**40 GB of RAM to save 11 milliseconds**, on a box that already gives 54 GB to the
+trunk. Nothing past layer 0's attention qualifies at all, because from there positions
+mix.
+
+There is a second, independent reason. At 64 tokens $\mathbb{Q}$ runs at **1067
+GFLOP/s** and only 8.34 GB/s - it is arithmetic-bound, not byte-bound. Making its
+weights cheaper to fetch would not move it.
+
+This is step 8's precompute test applied again with better instruments. The one thing
+that ever passed was $\mathrm{DQ}$, and it passed because its input domain is finite -
+4096 entries. A token-keyed layer 0 cache has 163,840 entries at 240 KB each. **The test
+is not "is the weight constant" but "is the input domain small enough that the answer
+can be enumerated".** $\mathbb{Q}$'s input domain is every activation the model can
+produce.
+
 ## Progress
 
 | step | | status |
@@ -3132,6 +3194,7 @@ reference that reproduces exactly.
 | 35 | the engine agrees on all 34, not just the one | done |
 | 36 | time by byte source, and the variables themselves | done |
 | 37 | per-invocation capture; layer 0's MLP was never batched | done |
+| 38 | why $\mathbb{Q}$ cannot be precomputed | measured, rejected |
 
 ## The comparison that matters: the equation against the engine
 
