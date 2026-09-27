@@ -693,10 +693,113 @@ resource. Both halves need revising:
 
 ---
 
+## Step 6 - what the hardware actually gives, measured rather than inferred
+
+Two claims were put to this work: the array is a mirror and should do about 20 GB/s, and
+RAM at about 47 GB/s could hold the trunk, which the code is not doing. Both are
+measurements. Neither was argued.
+
+The machine: RAID1 mirror of two KIOXIA KCD8XRUG1T92 NVMe drives, Ryzen 9 7950X3D,
+4 x 32 GB DDR5 running at 3600 MT/s. Both array members carry `max_sectors_kb=128`.
+
+### The disk
+
+Raw `/dev/md2`, O_DIRECT, so the page cache is not involved at all:
+
+```
+threads (1 MB blocks)          block size (16 threads)
+ 1    3.94 GB/s                 128 KB   10.37 GB/s
+ 4   11.98                      256 KB   11.23
+ 8   13.45                      512 KB   12.48
+16   13.36                        1 MB   13.35
+32   13.32                        4 MB   14.08
+64   13.34                       16 MB   14.04
+```
+
+Per member, run concurrently and confirmed overlapping by timestamps, `nvme0n1` gives
+6.87 GB/s and `nvme1n1` 6.86 GB/s, for 13.73 GB/s together. That is two drives at the
+KIOXIA CD8's rated ~7 GB/s. **The ceiling is about 14 GB/s, and md does read both
+mirrors. It is not 20 GB/s**, and no thread count or block size reaches it.
+
+The number that matters more, same file and same bytes, 16 threads:
+
+```
+            4 MB      1 MB
+O_DIRECT   14.44     13.69  GB/s
+buffered    8.79      9.35  GB/s
+```
+
+**The page cache costs 1.6x.** Step 4's sweep reached 8.56 GB/s and was read as evidence
+of headroom in the model. It was not: 8.56 is the buffered ceiling. Every byte the sweep
+and the prefetch move goes through the page cache, and that path tops out near 9 GB/s no
+matter how it is driven. The remaining 1.6x is reachable only by bypassing the cache.
+
+### The RAM, and the trunk
+
+```
+threads    read        copy (both directions)
+ 1      39.59 GB/s     26.02 GB/s
+ 4      47.80          31.28
+ 8      46.47          30.03
+16      45.45          29.57
+32      45.33          28.91
+```
+
+47.80 GB/s. The 47 GB/s figure is right.
+
+Is the trunk in it? `mincore` immediately after a run says the 54.47 GB trunk is **91.07%
+resident**, 49.61 GB. So it does end up in RAM - but nothing puts it there. It is mmapped
+and arrives one demand fault at a time while the arithmetic waits, which is why
+`read_bytes` is 158.20 GB: 99.72 GB of experts plus the 54.47 GB trunk, fetched once,
+scattered, on the buffered path.
+
+Loading it instead - one O_DIRECT pass into anonymous memory, 4 MB chunks, 16 threads,
+behind `K3_TRUNKRAM`:
+
+```
+                     inner wall (s)        process total (s)
+trunk via mmap    42.77 41.99  -> 42.38   45.33 44.55  -> 44.94
+trunk into RAM    36.06 34.21  -> 35.14   43.64 41.78  -> 42.71
+
+the load itself   54.47 GB in 3.73 s = 14.59 GB/s, O_DIRECT
+```
+
+Bit-identical, 171,008/171,008, token 17374.
+
+The load runs at **14.59 GB/s, the full device rate, inside the real program** - which is
+the disk answer demonstrated rather than benchmarked. It removes 7.2 s from the run for
+3.7 s of up-front cost, so the honest figure is the process total: **44.94 s to 42.71 s**,
+1.05x. Modest, because the trunk was only ever read once anyway; what changed is that it
+now arrives at 14.59 GB/s in one pass instead of trickling in under the compute.
+
+A side effect worth recording: the expert prefetch got faster too, 7.43-7.71 GB/s before
+and 7.99-8.41 GB/s after, because the trunk is no longer competing for page cache.
+
+### What this says about Step 5
+
+Step 5's prefetch reached 8.12 GB/s and that looked close to the 8.56 GB/s sweep, so it
+read as nearly done. Against the buffered ceiling of ~8.8 GB/s it is nearly done. Against
+the device it is not: the experts are 99.72 GB, which is 12.5 s at 8 GB/s and 6.9 s at
+14.5 GB/s. **About 5.6 s is still sitting behind the page cache**, and reaching it means
+reading experts with O_DIRECT into an arena rather than faulting them through mmap.
+
+### What Step 6 does not establish
+
+- **The 20 GB/s figure is not reproduced here.** Six thread counts and six block sizes on
+  the raw array, plus both members individually, all cap near 14 GB/s. If 20 GB/s was seen
+  on this box it was under conditions this test did not reproduce, and I cannot say which.
+- **O_DIRECT for the experts is costed, not built.** The 5.6 s is arithmetic from measured
+  rates, not a measured run.
+- **One prompt, prefill only**, as everywhere above.
+- **The trunk gain is small and partly bookkeeping.** 7.2 s comes out of the timed region
+  and 3.7 s goes back in before it; only the 2.2 s difference is real.
+
+---
+
 ## Not yet examined
 
+- reading experts with O_DIRECT into an arena, the measured 5.6 s still behind the cache
 - why dead neurons stop at layer 51
 - whether the prefetch barrier can be overlapped with arithmetic inside a layer
-- whether expert choice is predictable early enough to prefetch across layers
 - whether reuse across many tokens changes the picture, since all of the routing work is
   5 tokens
