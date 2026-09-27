@@ -1165,9 +1165,111 @@ implementation. This one is not, in that part.
 
 ---
 
+## Step 10 - could a different disk layout make the sparsity fetchable?
+
+Step 9 closed the fetch route on layout: 1792-byte rows against 4096-byte blocks, and
+`w2` columns unfetchable. The obvious follow-up is to change the layout, and the obvious
+resource is the second disk.
+
+### There is no second disk
+
+```
+nvme0n1p4 ──┐
+            ├── md2 (RAID1) ── ext4 ── /     1.8T, 1.7T used, 24G free
+nvme1n1p4 ──┘
+```
+
+Both drives are fully partitioned and **every partition is a RAID1 member**: p1 is the EFI
+pair, p2 is swap, p3 is `/boot`, p4 is the root filesystem holding the 1.5 TB model. Using
+"one disk" means failing a member out of the array that carries the only copy of that data.
+That is destructive, not quickly reversible, and it was not done.
+
+It is also unnecessary, because there is a cheaper question that decides the whole idea.
+
+### The question that decides it
+
+A static file layout can only help if the set of neurons to skip is **the same across
+inputs**. If it changes per token, no ordering of bytes on disk can make the skipped set
+contiguous, because the skipped set is not a property of the file.
+
+Measured on the experts that more than one position routes to:
+
+```
+experts used by >1 position : 1,274
+position pairs compared     : 2,174
+bottom-half gate sets share :  56.90%
+two independent halves would: 50.00%
+```
+
+Two independent random half-sets of 3072 overlap 50% by construction, so **56.90% is 6.9
+points above chance**. Which neurons an expert switches off is very nearly a property of
+the input, not of the expert.
+
+### What the best possible layout would buy
+
+Rather than argue from that number, it was measured. Neurons were ordered by their **mean**
+gate factor across the very positions being tested - in-sample, so an upper bound on any
+real static ordering - and the 4096-byte blocks each position's own skip set frees were
+counted:
+
+```
+arbitrary order (Step 9)  : 11.60% of w3 blocks freed at keep-50%
+best static order         : 27.02%          (in-sample upper bound)
+```
+
+Reordering roughly doubles it. The payoff:
+
+$$0.2702 \times 0.314 = 8.5\%\ \text{of expert bytes} = 8.46\ \text{GB} = \mathbf{0.60\ s}
+\ \text{of the 7.043 s prefetch}$$
+
+for a 17.5% loss of realized activation magnitude, out of sample worse than that, and
+requiring the whole 1.45 TB model to be rewritten - against 24 GB of free space.
+
+### Padding rows to the block size costs more than it saves
+
+The other way to fix the granularity is to pad each `w3` row from 1792 bytes to 4096 so
+that one skipped row frees exactly one block. The arithmetic closes it without an
+experiment:
+
+```
+expert now                  3 x (5,505,024 + 344,064)          = 17,547,264 B
+w3 padded to 4096 B/row     3072 x 4096 = 12,582,912  (was 5,505,024)
+expert padded                                          = 24,625,152 B  = 1.403x
+skip 50% of padded w3 rows  frees 6,291,456 B
+bytes actually fetched      24,625,152 - 6,291,456     = 18,333,696 B  = 1.045x
+```
+
+**4.5% worse than changing nothing**, before counting the accuracy cost. Padding buys
+block-alignment by inflating the very thing being skipped.
+
+### What Step 10 settles
+
+| route | result |
+|---|---|
+| use the second disk | there isn't one; both are RAID1 members of the root array |
+| reorder neurons statically | skip sets are 56.90% shared against a 50% null, so 27.02% of blocks at best, 0.60 s |
+| pad rows to the block size | 1.045x the bytes, worse than doing nothing |
+
+The activation sparsity measured in Step 9 is real and large. **Across three independent
+attempts it stays unreachable through the fetch**, and the reason is the same each time:
+the sparsity is per-input and the disk is not.
+
+### What Step 10 does not establish
+
+- **The static ordering is in-sample.** It used the mean gate of the same positions it was
+  scored on, with at most 5 positions per expert. A held-out ordering would do worse, and
+  how much worse is unmeasured.
+- **Only one grouping was tested.** Padding to 2048 rather than 4096 bytes, or grouping
+  neurons in pairs, would land between the two rows of the table above and was not tried.
+- **The 56.90% figure is within one prompt.** Stability across genuinely different prompts
+  is a different and unmeasured question, and could plausibly be lower still.
+- **Nothing was written to disk and no layout was built.** The verdicts are from
+  measurement of the selection behavior plus arithmetic on sizes, not from a re-laid-out
+  checkpoint.
+
+---
+
 ## Not yet examined
 
-- whether a checkpoint stored with $w_2$ transposed would make the activation sparsity
-  fetchable
 - whether reuse across many tokens changes the picture, since all of the routing work is
   5 tokens
