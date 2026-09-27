@@ -48,6 +48,8 @@ computation only by relocating it is not a reduction either.
 | The cycle is architectural, not input-dependent | holds on all 5 prefill positions and the decode position |
 | Eleven functionals are phase-locked beyond chance | permutation null, 2000 shuffles, strongest z = -15.35 |
 | Residual components are roughly Gaussian at most layers | L1/L2 peaks at sqrt(2n/pi) in every trajectory |
+| The model is I/O bound, not compute bound | 16 to 8 threads costs 10%; 144.72 GB at 2.69 GB/s is the whole runtime |
+| Every run fetches ~100 to 157 GB from the device | 1.45 TB of experts against 124 GB of RAM; there is no warm cache |
 
 ---
 
@@ -75,6 +77,7 @@ computation only by relocating it is not a reduction either.
 | Skipping the 11.5% exactly-zero expert weights | perfectly scattered; 0 all-zero blocks of any size | experts below |
 | A conserved quantity around the 12-layer cycle | every candidate at or above the random control's CV | cycle E below |
 | Replacing any invariant with a numeric constant | best candidate ranges 16.19 to 67.87 against a fixed 67.55 | cycle F below |
+| Arithmetic reduction as a way to make K3 faster | operations are not the binding resource; bytes are | cycle G below |
 
 ---
 
@@ -832,6 +835,71 @@ by the property you then measure is a way of guaranteeing the answer.
 **Outcome.** No constant. The sweep found real phase structure, the strongest candidate
 for a numeric invariant sits near a pi-containing Gaussian value, and it varies far too
 much to be replaced by one.
+
+### Cycle G — the binding constraint is not arithmetic
+
+**Why this was asked.** Six cycles of candidates all failed, and six of the seven failed
+on something that is not mathematics: float32 reassociation, denominator size, memory
+layout. That pattern raises a prior question. If the time is not spent on arithmetic,
+then removing arithmetic cannot help, and the whole program was aimed at the wrong
+quantity.
+
+**First measurement, and it corrects an earlier caveat.** Disk reads were instrumented
+with `read_bytes` from `/proc/self/io`, which counts mmap page faults reaching the device
+where `rchar` counts only `read()` syscalls.
+
+```
+rchar        0.00 GB
+read_bytes 101.72 GB      on a run I had been calling "warm page cache"
+```
+
+There is no warm cache. The expert pool is 1.45 TB against 124 GB of RAM, so every run
+fetches roughly 100 GB from the device. The "warm page cache" qualifier attached to the
+earlier 50.70 s comparison against the engine was wrong.
+
+**Thread scaling, the decisive test.**
+
+```
+threads   total     experts   read_bytes   effective rate
+   16     53.74 s   40.28 s   144.72 GB    2.69 GB/s
+    8     56.84 s   44.41 s   157.34 GB    2.77 GB/s
+    4     75.08 s   62.16 s   118.97 GB    1.58 GB/s
+```
+
+Halving the threads from 16 to 8 costs **10%**. Compute-bound work would take twice as
+long. The threads are waiting on the device, not computing. Only below 8 threads does
+compute begin to bind, 1.40x from 8 to 4.
+
+The arithmetic closes it: 144.72 GB at 2.69 GB/s is 53.8 s, which is the entire runtime.
+Device transfer alone accounts for all of it.
+
+`read_bytes` varies between 119 and 157 GB across runs of an identical computation. That
+is page-cache retention varying run to run, and it is measurement noise, not a difference
+in work done.
+
+**Outcome. The model as implemented is I/O bound, not compute bound.**
+
+**What this does to the preceding six cycles.** It does not invalidate any measurement,
+but it re-prices all of them. Every candidate was scored as a fraction of *operations*.
+Operations are not the binding resource. A reduction that removed 100% of the expert
+multiply-accumulates would still have to fetch the same 145 GB and would save close to
+nothing.
+
+**It also finishes the expert-zeros result.** Cycle "experts" recorded 8.6% of the pass as
+multiplication by exact zero, unexploitable because the zeros are scattered across SIMD
+blocks. The I/O measurement makes that stronger and simpler: the zeros are 4-bit codes
+inside packed bytes that must be fetched regardless. They are unavoidable at the device,
+not merely awkward in the register file. No arrangement of the kernel could recover them.
+
+**The question this leaves.** The reduction program asked how to make computation
+disappear. On this machine the computation is largely free and the bytes are expensive.
+The corresponding question for bytes would be a different investigation with a different
+success criterion, and it has not been started here.
+
+**Caveat, stated because it bounds the claim.** This is measured on one machine, with one
+implementation that has no expert cache. The production engine holds a 30 GB expert cache
+and reported a 98.5% hit rate, yet still read 99.72 GB for the same prompt, so it appears
+to sit in the same regime. That is an inference from its log, not a measurement I made.
 
 ---
 
