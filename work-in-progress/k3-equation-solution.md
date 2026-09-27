@@ -3227,6 +3227,64 @@ closed form is the same size as their table, and the bytes themselves are nearly
 incompressible. What remains is not representation, it is the 79.7% of wall clock that is
 expert bytes crossing a disk.
 
+## Step 40 - a second un-batched read, and why it was free
+
+Step 37 found layer 0's MLP re-reading its weights once per position. The obvious
+question is whether anything else does the same. The router does:
+
+```
+ 5 tokens   router  460 calls = 92 layers x  5 positions    2.96 GB
+64 tokens   router 5888 calls = 92 layers x 64 positions   37.84 GB
+            37.84 / 5888 = 6.43 MB = exactly one gate matrix
+```
+
+`for (t) { parallel for (e) { read gate row e; dot with x2b[t] } }` - the whole gate is
+re-read for every position. Inverting the nesting so each row is read once and applied
+to all positions makes the call count **92**, one per MoE layer, at five tokens and at
+sixty-four alike. Bit-exact: the five-token runs still equal the preserved baseline, and
+old and new are byte-identical at 64 tokens.
+
+### And it is worth nothing
+
+Interleaved A/B, n=4 each so drift hits both equally:
+
+```
+old mean   wall 41.89   SUMops 38.20   router 1.605 s   router 37.84 GB
+new mean   wall 41.86   SUMops 38.30   router 1.559 s   router  0.59 GB
+```
+
+**37.25 GB of counted traffic removed, 64x less, for 0.03 s** - individual runs span
+41.84 to 41.95, so the difference is inside the noise.
+
+The reason matters more than the change. **The gate is 6.43 MB per layer and this box has
+128 MB of L3.** Re-reading it sixty-four times was re-reading it from cache. The byte
+counter faithfully counted 37.84 GB that never crossed the memory bus.
+
+That is exactly why step 37's fix did pay and this one does not: layer 0's MLP is
+**727 MB**, far beyond any cache, so those re-reads were real DRAM traffic.
+
+### What this corrects
+
+Step 36 attributed 2375.7 GB of trunk reading across the campaign and derived a trunk
+rate of 31.93 GB/s from it. **Both figures are inflated**: they count the router's
+per-position re-reads, which were cache hits. The 31.93 GB/s was never a DRAM rate - it
+was bytes-requested over time, and requests served by L3 made the apparent rate look
+better than the memory system actually is. The *shape* of step 36's conclusion survives
+untouched - experts are still the overwhelming majority of the time - but the trunk
+column should be read as bytes requested, not bytes fetched.
+
+The change is kept. It is strictly less work, it makes the accounting mean what it says,
+and on a machine with less L3 than this one it would matter. It is simply not a speedup
+here, and recording it as one would have been wrong.
+
+### A discipline note
+
+The first A/B on this said 43.86 against 42.20 - a 1.7 s win. That was n=1, and the same
+binary measures 41.84 to 41.95 across four runs. This is the third time in this document
+that a single run produced an exciting number that evaporated (steps 30 and 37 were the
+others). **At 64 tokens on this box the run-to-run spread is about 0.1 s within a session
+and up to 2 s across sessions. Nothing below that is a result.**
+
 ## Progress
 
 | step | | status |
@@ -3260,6 +3318,7 @@ expert bytes crossing a disk.
 | 37 | per-invocation capture; layer 0's MLP was never batched | done |
 | 38 | why $\mathbb{Q}$ cannot be precomputed | measured, rejected |
 | 39 | the function is the data, and the data is incompressible | measured, rejected |
+| 40 | the router re-read the gate per position; free, because it fits in L3 | done, no gain |
 
 ## The comparison that matters: the equation against the engine
 
