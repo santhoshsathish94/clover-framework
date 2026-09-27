@@ -2328,6 +2328,60 @@ makes every other measurement in this document honest is the one thing that spoi
 one, so the resident runs above are measured the way a serving machine would actually
 run: without dropping caches.
 
+## Step 27 - the unattributed quarter, decomposed
+
+Step 26's table ends with `wall - ops - prefetch  2.366  25.27%  unattributed`, and I
+flagged it as a quarter of the run nobody had accounted for. That was misleading, and
+reading the line that computes it says why:
+
+```c
+wall - tot - pf_secs        /* tot = SUM of operators; the stall is NOT subtracted */
+```
+
+The pipeline stall sits **inside** that figure. It is printed on its own line two rows
+above, so it was accounted for all along - just not deducted. Timing the two remaining
+pieces that nothing measured:
+
+```
+unattributed              2.387 s   25.57% of wall
+  stall                   2.013     84.3%    already reported separately
+  slot_vec                0.272     11.4%    1296 calls, 606.4M floats
+  progress print          0.001      0.0%
+  residual                0.102      4.3%    = 1.1% of wall
+```
+
+**Only 0.102 s, 1.1% of wall, is genuinely unaccounted.** The claim of a missing quarter
+was wrong.
+
+### What the decomposition did find
+
+`slot_vec` dequantizes trunk tensors to float32 and no operator counts it: **0.272 s
+across 606.4 million floats.** Of those, 92 MoE layers x 896 x 7168 = **590.9 million,
+97.4%, are the router's gate matrix**, materialized as 25.7 MB of float per layer and
+freed again at the end of the layer.
+
+Set against the operator table, that is the striking part:
+
+```
+router dot product     0.153 s      the arithmetic
+slot_vec for the gate  ~0.265 s     just turning its weights into float
+```
+
+**Dequantizing the router's weights costs more than routing with them.** It was invisible
+because it happens in a helper called before the timer starts, and because every
+optimization pass went to the two big matrix operators.
+
+### Why this one may be recoverable
+
+The gate matrix is stored as int8 rows with a per-row scale, exactly like the matrices
+$\mathbb{Q}$ reads. $\mathbb{Q}$ never materializes a float copy - it applies the scale
+inside the dot product. The router could do the same: read 6.4 MB per layer instead of
+writing and then reading 25.7 MB, and skip the allocation entirely.
+
+It should be bit-exact, because the value fed to the accumulator would be the same
+`(float)w[i] * sc` that is written to the array today, promoted to double at the same
+point. That is a claim to test, not to assume - it is the next step.
+
 ## Progress
 
 | step | | status |
@@ -2348,6 +2402,7 @@ run: without dropping caches.
 | 24 | prefix reuse, built and byte-identical | done |
 | 25 | the state of the program, read off the source | done |
 | 26 | the trunk is now resident | done |
+| 27 | the unattributed quarter, decomposed | done |
 
 ## The comparison that matters: the equation against the engine
 
