@@ -880,24 +880,121 @@ that it runs at ~8 GB/s on the buffered path against 14.5 GB/s available with O_
 
 ---
 
+## Step 11 - O_DIRECT expert reads
+
+After step 10 the prefetch was 56.6% of wall, the largest single item, and step 6 of
+`k3-data-problem.md` had already measured why: it runs on the buffered path at ~8 GB/s
+while the same disk gives 14.4 GB/s with O_DIRECT.
+
+### Why this needed more than a flag
+
+**O_DIRECT cannot warm an mmap.** It bypasses the page cache, which is the only thing an
+mmap reads from, so the two are mutually exclusive by construction. The bytes have to land
+somewhere the kernels can address directly, which means an arena and a change to how every
+expert pointer is resolved.
+
+Three things the code had to handle that the idea does not mention:
+
+- **Safetensors offsets are not 4096-aligned**, and O_DIRECT requires alignment on offset,
+  length and buffer. Each range reads the aligned superset
+  $[\lfloor \text{off}/4096 \rfloor \cdot 4096,\ \lceil (\text{off}+n)/4096 \rceil \cdot 4096)$
+  and the usable pointer is that base plus the remainder.
+- **The final aligned block can run past EOF**, giving a short read that is still complete
+  for the bytes actually wanted. The code checks against the needed length rather than the
+  aligned length, and falls back to a buffered `pread` if it comes up short.
+- **Six call sites address expert bytes**, all previously `file_ptr(fid) + off`. They now
+  go through a resolver that binary-searches the layer's range table and **falls back to
+  the mmap** if a range is missing, so a bug in the arena cannot silently produce wrong
+  bytes - it produces slow correct ones.
+
+### Measured
+
+Same binary, both modes, cold cache, pinned, three runs each:
+
+```
+                     wall (s)              mean    prefetch (s)          mean   major faults
+mode 1, buffered   23.30 23.27 23.37      23.31   12.94 12.93 13.03    12.968        37,342
+mode 3, O_DIRECT   16.51 16.52 16.50      16.51    7.05  7.04  7.04     7.043            27
+```
+
+**Prefetch down 45.7%.** 99.72 GB in 7.043 s is **14.16 GB/s** - the device rate from
+step 6, now reached by the model on the data the model actually needs. Wall **1.41x**.
+
+Major faults fall from 37,342 to **27**: the mmap is essentially untouched, which is the
+direct confirmation that the arena is carrying the bytes and not the page cache.
+
+All six runs 171,008/171,008 identical, token 17374.
+
+### One thing I could not explain
+
+Mode 1 on this binary measures 23.31 s, against 22.68 s for the same mode on the step 10
+binary - a consistent 0.6 s that appeared with this change. The likely cause is the
+resolver indirection replacing a direct pointer add, but **I did not establish it**. The
+A/B above is unaffected, because both modes ran on one binary; the comparison against
+step 10 carries that 0.6 s of unexplained difference.
+
+### End to end
+
+```
+                                          process total
+eq.c, untouched     9 runs, 54.76 - 59.83          mean 56.53
+final                      22.92  22.83            mean 22.88
+```
+
+**2.47x end to end, 3.21x on the timed region, bit-identical.**
+
+### Where the cost sits now
+
+```
+prefetch (pure I/O)    7.04 s   42.7%
+X                      6.82 s   41.3%
+Q                      1.35 s    8.2%
+everything else        1.01 s    6.1%
+unattributed           0.29 s    1.7%
+```
+
+The two remaining costs are now within 3% of each other. $\mathbb{X}$ moves 99.72 GB at
+14.62 GB/s against a 47.80 GB/s memory ceiling, so it is still compute-bound by ~3.3x. The
+prefetch is now **at** the device ceiling, so it cannot be improved by reading faster -
+only by reading less, which is step 2 of `k3-data-problem.md`, the $k=8$ ablation, and that
+is not bit-exact.
+
+### What step 11 does not establish
+
+- **The 0.6 s mode-1 regression is unexplained**, as above.
+- **The arena is ~1.34 GB per layer and never shrinks.** Peak memory is now trunk 54.47 GB
+  plus arena, and no memory-pressure testing was done.
+- **The buffered fallback path was never exercised** in these runs, so it is untested code.
+- **One prompt, prefill only**, and at $T=1$ there is far less expert overlap, so the
+  arena's benefit at decode is unmeasured.
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
 |---|---|---|
-| 1 | scheme | done |
-| 2 | 1.1 input, 1.2 shapes, 1.3 scalars, 1.4 layer sets | done |
-| 3 | 1.5 weights and the three folds | done |
-| 4 | section 2, the ten operators | done |
-| 5 | section 3, the attention blocks | done |
-| 6 | section 4, the MLP and MoE blocks | done |
-| 7 | section 5, composition, initial conditions, carried state | done |
-| 8 | the boundary, and what it costs | done |
+| 1 - 8 | the classification, from scheme to boundary | done |
 | 9 | building DQ and measuring it | done |
 | 10 | vectorizing $\mathbb{X}$, and the fusion gap | done |
+| 11 | O_DIRECT expert reads | done |
+
+## The arc, end to end
+
+| change | wall | end to end | bit-exact |
+|---|---|---|---|
+| `eq.c` as it was | 53.0 s | 56.53 s | - |
+| batched positions | 27.9 | - | yes |
+| + DQ table | 24.70 | 32.43 | yes |
+| + SIMD $\mathbb{X}$ | 22.68 | 30.76 | yes |
+| + O_DIRECT arena | **16.51** | **22.88** | yes |
+
+**2.47x end to end and 171,008/171,008 identical at every step.**
 
 ## What this leaves to do
 
-- the prefetch is now 56.6% of wall and still on the buffered path; O_DIRECT expert reads
-  into an arena is the measured 5.6 s from step 6 of `k3-data-problem.md`
+- the prefetch is at the device ceiling; the only remaining lever on it is reading fewer
+  experts, which is not bit-exact
+- $\mathbb{X}$ is compute-bound by ~3.3x; register pressure and AVX-512 are both untried
 - the equation permits hoisting the gate, $\zeta$ and the shared-expert branch out of the
   router's dependency; steps 5 and 6 established the license and nothing used it yet
