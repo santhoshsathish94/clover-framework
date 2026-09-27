@@ -2621,7 +2621,7 @@ well-timed computation with an inexact one.
 
 ### A defect in my own instrument
 
-The first run labelled every prompt with the *default* token ids and printed `0` for
+The first run labeled every prompt with the *default* token ids and printed `0` for
 position 6, because `g_ids = ids` was placed before `K3_IDS` reassigns `ids` - so it
 pointed at the hardcoded five-element array and read past its end. The expert sets come
 from `idsel_all` and were never affected, so the comparisons held, but the labels were
