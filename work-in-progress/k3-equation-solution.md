@@ -1153,6 +1153,120 @@ that produced it is the point.
 
 ---
 
+## Step 14 - the decode was the kernel, and two optima that move together
+
+$\mathbb{X}$'s uncontended compute was 6.83 s at 14.6 GB/s against a 45 GB/s memory
+ceiling. Step 10 recorded the likely cause as register pressure: 20 `__m256d`
+accumulators against 16 architectural YMM registers.
+
+### That note was wrong, and the assembly says so
+
+```
+Xm._omp_fn.0 : 222 instructions
+   vmulpd 4   vaddpd 7   vcvtps2pd 4   vmovapd 15
+   vector regs used: 12, max index 11, zmm: no
+```
+
+Four `vmulpd`, not twenty: **the compiler never unrolled the position loop**, so
+`acc[t][m]` stayed an array in memory, loaded and stored each iteration. The kernel was
+not short of registers; it never asked for any. There was no pressure to relieve.
+
+### Unrolling works, and is worth almost nothing
+
+Writing the position loop out per $T$ so the accumulators are named variables:
+
+```
+            T=1     T=2     T=3     T=5    (GB/s, isolated, bit-identical)
+V0        15.68   14.30   12.58    9.01
+V1        15.45   15.08   14.88   12.04
+```
+
+1.34x at $T=5$, and the unrolled $T=5$ path does use 32 registers with max index 31, so
+AVX-512's extended register file is reachable once the code needs it. But the real
+distribution of positions per expert is not 5:
+
+```
+m=1: 4409 (77.6%)   m=2: 957 (16.8%)   m=3: 239 (4.2%)   m=4: 70 (1.2%)   m=5: 8 (0.1%)
+mean m = 1.295
+```
+
+**Step 8's batching mostly does not batch** - 78% of experts are used by exactly one
+position. At $T=1$ the unrolled version is slightly *slower*. Weighted by the real
+distribution the whole change is worth about **1%**, and it was not adopted.
+
+### Where the m=1 kernel actually goes
+
+A diagnostic variant that skips the table lookup entirely - wrong results, purely to
+price the decode:
+
+```
+V0 wd[] array          15.55 GB/s
+V2 set_pd              33.47 GB/s     2.15x, bit-identical
+V3 byte table          35.50 GB/s     2.28x, bit-identical
+VD no decode (WRONG)  120.91 GB/s     diagnostic only
+```
+
+**The decode is 87% of the kernel**, and the cost is not the table - it is the `wd[16]`
+array. Sixteen doubles written to the stack and read straight back as four vectors, 128
+bytes of store-to-load round trip per 16 codes. Building the vectors directly with
+`set_pd`, or reading two doubles at a time from a byte-indexed table, removes the trip.
+
+### In the real model, the saving went straight into stall
+
+```
+                    X (s)   stall (s)   wall (s)
+xdec=0 wd[] array    8.16      1.00      12.01
+xdec=1 set_pd        5.58      3.40      11.88
+xdec=2 byte table    4.33      4.84      12.03
+```
+
+$\mathbb{X}$ nearly halved and **the wall clock did not move**. The compute had become
+faster than 4 reader threads could feed it, and every second saved turned into a second of
+waiting.
+
+Taken alone this reads as "no improvement". It is not - it is a mistuned second parameter.
+The reader count was optimized in Step 12 against a kernel that no longer exists.
+
+### Re-tuning the readers finds the gain
+
+```
+readers    4      6      8     12     16     20
+wall   11.98  11.13  10.84  10.54  10.56  10.71
+stall   4.80   3.74   3.29   2.83   2.74   2.92
+```
+
+The optimum moves from 4 to **12**. Confirmed over three runs: 10.57, 10.54, 10.56, all
+171,008/171,008 identical, token 17374.
+
+**This is the finding worth keeping from this step.** Two optima that depend on each other:
+tuning the reader count, then improving the kernel, then measuring, shows nothing. The
+speedup only exists after re-tuning. A change that appears worthless can be a change whose
+benefit is being absorbed somewhere else.
+
+### End to end
+
+```
+                                    process total
+eq.c, untouched  13 runs, 54.59 - 59.83      mean 56.20
+final            16.87  16.90                mean 16.89
+```
+
+**3.33x end to end, 5.02x on the timed region, bit-identical.**
+
+### What Step 14 does not establish
+
+- **The byte table is 1 MB** (256 scale rows x 256 byte values x 16 B), of which 64 KB is
+  hot for this checkpoint's 16 scale bytes. It exceeds L1 and lives in L2. `set_pd` reaches
+  94% of its speed with a 32 KB table and no such concern; the byte table was chosen on
+  measurement alone.
+- **The unrolled variant was measured and discarded, not deleted.** At a longer prompt,
+  where m would be larger, it would start to pay.
+- **The reader optimum is this kernel's, on this machine.** It has now moved once and will
+  move again if either side changes.
+- **One prompt, prefill only.**
+
+---
+
 ## Progress
 
 | step | | status |
@@ -1163,24 +1277,26 @@ that produced it is the point.
 | 11 | O_DIRECT expert reads | done |
 | 12 | overlapping the read with the arithmetic | done |
 | 13 | why the remainder is not recoverable | done |
+| 14 | the decode was the kernel | done |
 
 ## The arc, end to end
 
 | change | wall | end to end | bit-exact |
 |---|---|---|---|
-| `eq.c` as it was | 53.0 s | 56.40 s | - |
+| `eq.c` as it was | 53.0 s | 56.20 s | - |
 | batched positions | 27.9 | - | yes |
 | + DQ table | 24.70 | 32.43 | yes |
 | + SIMD $\mathbb{X}$ | 22.68 | 30.76 | yes |
 | + O_DIRECT arena | 16.51 | 22.88 | yes |
-| + pipelined reads | **11.98** | **18.38** | yes |
-| hardware floor for this design | ~11.1 | - | - |
+| + pipelined reads | 11.98 | 18.38 | yes |
+| + decode without the stack trip | **10.56** | **16.89** | yes |
 
-**3.07x end to end, 171,008/171,008 identical at every step, and about 0.9 s from the
-floor.**
+**3.33x end to end, 171,008/171,008 identical at every step.**
 
 ## What this leaves to do
 
-- $\mathbb{X}$'s uncontended compute is 6.83 s and still ~3x off the memory ceiling;
-  register pressure (20 `__m256d` against 16 YMM) and AVX-512 are both untried, and unlike
-  the I/O side this one is not near a hardware limit
+- the run is now I/O bound again: 2.83 s of stall against 7.32 s of operators, and the
+  reads are at the device ceiling, so the only lever left on the I/O side is reading fewer
+  bytes - which is not bit-exact
+- $\mathbb{X}$ is now 21 GB/s against a 45 GB/s memory ceiling, and `VD` says the
+  arithmetic alone would run at 121 GB/s
