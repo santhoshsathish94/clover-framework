@@ -2921,6 +2921,116 @@ and it is **not** the like-for-like 1.73x from the controlled single-prompt comp
 where both programs held comparable memory. Both numbers are real; they answer different
 questions.
 
+## Step 36 - where the time goes by source, and what the values show
+
+Two questions. Where does the program actually spend itself - trunk, experts, or
+elsewhere? And did the capture record enough to see the equation's *variables*, not just
+which weights produced them?
+
+### Time, attributed to where the bytes came from
+
+Read off the call sites: every `Q`/`Qm` takes a `slot_ptr` weight and the router reads
+`S_GATE`, so those are **trunk**; every `Xm` takes `res_ptr`, so that is an **expert
+block**, and the pipeline stall is time waiting for exactly those reads; `B` and the
+embedding read the **model file**. Everything else reads no weights at all.
+
+Summed over all 34 prompts, 455.9 s of wall clock, from the per-operator tables the runs
+already produced:
+
+| source | time | share | bytes | rate |
+|---|---|---|---|---|
+| **experts** - X plus the stall, from NVMe | 363.3 s | **79.7%** | 5196.8 GB | 14.30 GB/s |
+| **trunk** - Q, router, norms, conv, AR, resident in `/dev/shm` | 74.4 s | **16.3%** | 2375.7 GB | 31.93 GB/s |
+| tables - lm_head | 1.8 s | 0.4% | 79.9 GB | 43.73 GB/s |
+| **neither - pure arithmetic** | 8.7 s | **1.9%** | - | - |
+| residual and copies | 7.4 s | 1.6% | - | - |
+| unaccounted | 0.3 s | **0.1%** | | |
+
+Two things worth stating. The experts are only **2.2x the bytes** of the trunk but
+**4.9x the time**, entirely because trunk bytes come from RAM at 31.9 GB/s while every
+expert byte crosses the NVMe at 14.3 GB/s. And arithmetic that reads no weights is
+**1.9% of the whole campaign**. This is a data-movement program with some arithmetic
+attached, not the other way round.
+
+### The capture recorded identity, not values - so this adds values
+
+`K3_PROV` deliberately recorded *which* weights each value came from. `K3_VALUE` already
+existed but gives only a six-bucket magnitude histogram for Q and X, summed over all 93
+layers, which cannot show a variable's behavior through the network.
+
+`K3_LSTAT` adds per-layer, per-position statistics - min, max, mean, rms, count of
+zeros, negatives and non-finites - for the seven named variables of a layer and the KDA
+recurrent state. 245 KB a run, 22 MB for all 34.
+
+Cost and correctness, measured rather than assumed - my first reading said 60.72 s and
+was an artifact of a mangled command running two things at once:
+
+```
+off        8.99 s   == baseline      lstat_on   9.40 s   == baseline
+off_after  8.83 s   == baseline
+```
+
+About 0.4 s, roughly 5%, and **all four runs reproduce the preserved baseline exactly**.
+
+### What the values say
+
+**Nothing is near a numerical edge.** Across 34 prompts and every layer: **zero**
+non-finite values, and the largest magnitude anywhere is **7712** against float32's
+3.4e38 - a headroom of 4.4e34. Whatever else is true, this computation is nowhere near
+overflow.
+
+**Nothing is sparse.** Of 277,315,584 values recorded per variable, the number exactly
+zero is **6** in the attention output, **4** in the MoE output, **1** in the residual.
+Step 22 found no output sparsity in $\mathbb{X}$; it holds for every variable.
+
+**The MoE does more of the work than attention.** The MoE output is the larger of the
+two in 2219 layer-prompts against 943, median rms ratio 0.791 - consistent with
+$\mathbb{X}$ dominating the cost.
+
+**The residual grows about 1.43x per layer, 100x end to end** - and then there are eight
+layers where it does not.
+
+```
+layers with L % 12 == 0  (8) : mean resid_out/resid_in 0.1081   median 0.0637
+all other layers        (85) : mean                    1.4285   median 1.3787
+```
+
+Seven of the eight lowest ratios in all 93 layers are exactly those layers, and the one
+intruder, L13, sits immediately after snapshot layer L12.
+
+`L % 12 == 0` is the snapshot cadence - an **E** fact from section 1.4. Reading the
+source rather than guessing at the mechanism:
+
+```c
+/* (4) residual: replace at a snapshot layer, add otherwise */
+if (have_prefix) resid[t][i] = resid[t][i] + aout[t][i];
+else             memcpy(resid[t], aout[t], ...);
+```
+
+At a snapshot layer the residual is saved into `snap` and then **restarted from the
+attention output** instead of accumulating. **Stated honestly: this is already specified,
+with that comment, in `eq.c` from the first version.** The value capture recovered a
+documented rule from the numbers alone. That is a validation of the instrument, not a
+discovery about the model, and it should not be dressed up as one.
+
+**The value profile is structural; the routing is not.** Across all 34 prompts the
+residual rms at a given layer varies by only **1.3x to 2.0x**, at every depth sampled.
+Set that against step 34: the *routing* never repeats a selection even for the same
+token, yet the *magnitudes* are nearly a fixed property of the layer. The model varies
+enormously in which experts it consults and hardly at all in how large the result is.
+
+### The honest verdict on "does this show something we are missing"
+
+**On performance, no.** The value data closed doors rather than opening them. The
+enormous float32 headroom is not exploitable, because the cost is reading MXFP4 and int8
+*weights*, and activations are already a negligible share of the traffic. The absence of
+sparsity removes the skip-work idea for every variable, not just $\mathbb{X}$. Nothing
+in the values points at work that could be avoided.
+
+What it did establish is that the program is numerically healthy everywhere, that the
+equation's structural rules are being executed as written, and - with the attribution
+above - that 79.7% of the time is one thing: expert bytes crossing a disk.
+
 ## Progress
 
 | step | | status |
@@ -2950,6 +3060,7 @@ questions.
 | 33 | "bit-exact" was never checked against a fixed build | corrected |
 | 34 | 34 prompts, capturing identity instead of values | done |
 | 35 | the engine agrees on all 34, not just the one | done |
+| 36 | time by byte source, and the variables themselves | done |
 
 ## The comparison that matters: the equation against the engine
 
