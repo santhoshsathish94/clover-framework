@@ -506,6 +506,95 @@ cannot be stated as a constant.
 
 ---
 
+## Step 7 - the composition, the state, and the one branch that is not E
+
+### Initial conditions
+
+$$r^{(0)}_p = W_E[t_p], \qquad \mathcal{S}^{(0)} = \varnothing, \qquad S_L = 0,
+\qquad \texttt{cached} = 0$$
+
+Three of the four are **E**. The fourth is the only place in the entire equation where the
+input enters: $W_E$ is **W**, $t_p$ is **R**, and $r^{(0)}_p$ is a **gather**, not a
+computation. **Everything downstream is a deterministic function of $r^{(0)}$.** The model
+has exactly one input port and it is a table lookup.
+
+### Every control-flow decision in the composition is E
+
+Taking the six steps of $\mathrm{Layer}_L$ in turn, and separating the decision from the
+value:
+
+| step | the decision | label | the value |
+|---|---|---|---|
+| (1) | $\mathcal{S} \neq \varnothing$ | **E** - true iff $L \ge 1$, since $0 \in \mathbb{P}$ | $h$ is **R** |
+| (2) | $L \in \mathbb{P}$ | **E** | pushes an **R** vector |
+| (3) | - | - | $x_1$ is **R** |
+| (4) | $L \in \mathbb{P}$, replace or add | **E** | $r$ is **R** |
+| (5) | unguarded | **E** | $x_2$ is **R** |
+| (6) | unconditional | **E** | $r$ is **R** |
+| 3 | $L \in \mathbb{M}$ or $\mathbb{K}$ | **E** | attention out is **R** |
+| 4 | $L = 0$ or $L \in \mathbb{E}$ | **E** | ffn out is **R** |
+
+Step (4) is the one the equation flags as not looking like a residual stream, and even that
+is decided by an **E** predicate on $L$.
+
+### The single data-dependent branch
+
+Searching the whole equation for a decision whose outcome depends on a value rather than on
+an index, there is exactly one:
+
+$$\mathcal{J} = \operatorname*{top-}k_{\ e}\ \big(s_e + \gamma_{L,e}\big)$$
+
+Nothing else qualifies. The causal mask $s \le t$ is an index comparison. The maxima inside
+$\mathrm{AR}$ and $\mathrm{SA}$ are value comparisons but they only shift a softmax; they do
+not change what is computed. The layer type, the push schedule, the residual branch, the
+dense-versus-MoE choice, the operator selected by dtype - all **E** predicates on $L$.
+
+**$\mathcal{J}$ is the sole data-dependent branch in the model.** Which gives the answer
+this document was written to find:
+
+> Two runs with the same $T$ execute the *same operators, on the same shapes, in the same
+> order*, and differ in exactly two ways: every numeric value, and the identity of
+> $T \times 92 \times 16$ expert indices.
+
+That is what changes per run. Not derived from any measurement - it is what the dependency
+structure of the equation permits to change.
+
+### A second provably dead computation
+
+The boxed tail says the aggregation is evaluated at every position, while the norm, the
+lm_head and the argmax are evaluated at $p = T-1$ only. Nothing consumes the other
+positions' aggregates: section 5's composition has ended, and decode re-enters with a fresh
+$\mathcal{S}$ and a new embedding rather than with these vectors.
+
+So $\mathrm{AR}$ at the tail runs $T-1$ times for nothing. At $T=5$, with 9 sources of
+width 7168, that is 4 unused aggregations, about $7.7 \times 10^5$ operations. Trivial in
+size, and provably unnecessary **from the equation**, which is the same standing as step 4's
+finding that $\mathbb{Q}$'s scalar tail is unreachable. Two pieces of dead work, both found
+by reading rather than profiling.
+
+### The carried state
+
+| symbol | label | note |
+|---|---|---|
+| $S_L$, conv history, KV cache | **S** | carry across calls; initial values **E** |
+| $\mathcal{S}$ | **R** | **not** carried - section 5 says it is rebuilt from scratch every call |
+| $\texttt{cached}$ | **R** | $0$ on prefill, $T$ on the next call; an index, not a value |
+
+$\mathcal{S}$ being rebuilt is the one place where a symbol that looks like state is not.
+Each call aggregates over its own eight snapshots.
+
+### Step 7 result
+
+| group | E | W | R | S |
+|---|---|---|---|---|
+| initial conditions | 3 | 0 | 1 | 0 |
+| layer control decisions | 8 | 0 | 0 | 0 |
+| layer values | 0 | 0 | 6 | 0 |
+| carried state | 0 | 0 | 2 | 3 |
+| data-dependent branches | - | - | **1** | - |
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
@@ -516,5 +605,5 @@ cannot be stated as a constant.
 | 4 | section 2, the ten operators | done |
 | 5 | section 3, the attention blocks | done |
 | 6 | section 4, the MLP and MoE blocks | done |
-| 7 | section 5, composition, initial conditions, carried state | |
+| 7 | section 5, composition, initial conditions, carried state | done |
 | 8 | the boundary, and what it costs | |
