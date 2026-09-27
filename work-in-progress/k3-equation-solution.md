@@ -1416,6 +1416,41 @@ Had I judged this change by the number the program prints about itself, it would
 looked like a 3% curiosity. It is a 16% end-to-end win. The instrument that had been
 adequate for fifteen steps was measuring the wrong span for this one.
 
+> **Corrected below.** Three faults in the paragraph above: it names the wrong file, the
+> comparison it rests on is confounded, and the mechanism it gives is half wrong. The
+> conclusion survives; the reasoning did not.
+
+### Correction - the controlled measurement
+
+**First, the naming.** The timed region described is `eqp.c`'s. `eq.c` is only the
+untouched baseline built as `eq_orig`. Both place `T0` after the trunk load, but the
+measurement under discussion was never `eq.c`'s.
+
+**Second, the comparison was confounded.** 15.98 came from step 15's end-to-end run at
+`K3_NREADER=14` with no huge pages; 13.36 from step 16's at `K3_NREADER=22` with them.
+Two variables moved. Re-run with the reader count held fixed and only `K3_HUGE` changing:
+
+```
+nreader = 14        start->T0    timed    teardown   process total    sys
+huge = 0               3.77       9.615      2.50        15.885      29.30
+huge = 1               3.80       9.375      0.195       13.370      16.25
+                      +0.03      -0.240     -2.305       -2.515     -13.05
+```
+
+The reader count turns out not to matter at all here: 14 against 22 differs by 0.05 s in
+both configurations. So the effect is real and the figure is **2.52 s**, not 2.62.
+
+**Third, the mechanism was half wrong.** The paragraph above says "faulting into existence
+and tearing it down again". The trunk load is **unchanged** - 3.77 against 3.80 s, very
+slightly *worse* with huge pages - so faulting costs nothing measurable, presumably
+because it overlaps the 14.5 GB/s of I/O that provokes it. **The entire 2.31 s is
+teardown**: the kernel unmapping 54.47 GB at process exit, 13.3 million page-table entries
+against about 26 thousand. `sys` time falling 13.05 s is the direct evidence, and it is
+evidence the original paragraph did not have.
+
+This is work the program never asks for and cannot see. It happens after the last line of
+`main`, and no timer inside the process can reach it.
+
 ### End to end
 
 ```
