@@ -1968,6 +1968,95 @@ building an experiment that could **separate** the candidates rather than one th
 have improved things under either. A tiling benchmark alone would have shown 1.18x, I
 would have shipped it, and the 1.83x would still be sitting there.
 
+## Step 22 - what the reading buys, and why the same fix fails on $\mathbb{X}$
+
+Twenty-one steps measured bytes and seconds. None measured the values. The question
+worth asking of a run that moves 156 GB is what it gets for them.
+
+### 1240 bytes per number
+
+```
+operator     output floats   weight bytes/out   flops/out
+Q             45,765,600           1,239.6       11,753.0
+X             71,598,080           1,392.8        6,790.7
+```
+
+The whole five-token run reads 156.45 GB and produces 117.4 million floats - 470 MB.
+**About 1,240 bytes read for every number produced, a ratio of 341 to 1.** That is not
+an inefficiency to be fixed; it is what a trillion-parameter mixture is, at a prompt this
+short. It is also the cleanest statement of why longer prompts are cheaper per token:
+the same reading produces more numbers.
+
+### And none of those numbers are throwaway
+
+```
+magnitude     exact 0     <1e-6     <1e-3        <1      <1e3    >=1e3
+Q             0.0000%   0.0043%   1.7139%   75.8771%  22.4046%  0.0000%
+X             0.0000%   0.0016%   1.3587%   97.1139%   1.5257%  0.0000%
+```
+
+Not one output of either operator is exactly zero, and under 2% are below 1e-3. This
+closes a line of attack the dead-neuron census had left open: there is no output
+sparsity here, nothing that could be skipped or approximated away without changing the
+answer. The 341:1 ratio buys dense, uniformly-scaled values.
+
+### What is the same in every run
+
+The trunk is constant across runs, but its outputs are not, because they depend on the
+input. The part that *is* constant is decided by causality: a position can only depend on
+tokens at or before it, so any two runs sharing a prefix must agree on that prefix.
+
+That is a claim about the implementation, not just the equation, and it had never been
+checked. Dumping the final per-position state for the five-token prompt and for a
+sixteen-token prompt whose first five ids are the same:
+
+```
+pos 0: BYTE-IDENTICAL (7168 floats)
+pos 1: BYTE-IDENTICAL
+pos 2: BYTE-IDENTICAL
+pos 3: BYTE-IDENTICAL
+pos 4: BYTE-IDENTICAL
+```
+
+**Exactly identical, not approximately.** So the answer to "what is $\mathbb{Q}$ in every
+run" is: for a shared prefix, the very same numbers, every time, to the bit. Reusing them
+across runs is not an approximation with an error budget - it is free and exact. Every
+serving system that caches a prefix relies on this, and here it is demonstrated rather
+than assumed.
+
+### The same fix does not work on $\mathbb{X}$
+
+Step 21's row blocking gave $\mathbb{Q}$ 1.83x. $\mathbb{X}$ is the larger operator -
+54% of wall at 64 tokens against $\mathbb{Q}$'s 21% - so it was the obvious next target.
+It fails:
+
+```
+              T=1      T=2      T=4
+model        35.81    26.94    12.21
+rows 2 x 1   29.17    16.84     7.67
+rows 4 x 1   34.81    21.38     9.58
+rows 1 x 2   30.86    24.90     8.96
+```
+
+Slower at every T and every blocking, while remaining bit-exact. Two reasons, both
+visible in numbers already collected:
+
+**$\mathbb{X}$ has no x traffic problem to fix.** Row blocking helps by reusing an x load
+across output rows. $\mathbb{Q}$ needed that because it applies one weight matrix to
+every row and position, so x dominates. $\mathbb{X}$ reads each expert's weights **once
+and never again** - 1,392.8 weight bytes per output against $\mathbb{Q}$'s 1,239.6, but
+with no reuse at all. There is nothing for the blocking to amortize.
+
+**And it cannot afford the registers.** $\mathbb{X}$ accumulates in four double lanes per
+(row, position) against $\mathbb{Q}$'s two float lanes, so `rows 2 x pos 1` already needs
+8 accumulator registers plus 4 weight and 4 input, exactly filling the file. Blocking
+buys nothing and pays in spills.
+
+A harness note, since the output looks alarming: the `A flat` row reports 3072 differing
+floats because it is compared against the model's buffer before the model has been run.
+The k=0 comparison is meaningless; step 18 checked that pairing in the correct order. All
+the row-blocked variants report 0.
+
 ## Progress
 
 | step | | status |
@@ -1983,6 +2072,7 @@ would have shipped it, and the 1.83x would still be sitting there.
 | 19 | the trunk is read once, and need not be read at all | done |
 | 20 | the five-token picture does not generalize | done |
 | 21 | $\mathbb{Q}$'s input streams, not its accumulators | done |
+| 22 | what the reading buys, and why $\mathbb{X}$ refuses the same fix | done |
 
 ## The arc, end to end
 
@@ -2015,12 +2105,14 @@ At longer prompts the last change is the one that matters:
 
 ## What this leaves to do
 
-- $\mathbb{X}$ has the same shape of problem and has not been given the same treatment:
-  it is 54% of wall at 64 tokens against $\mathbb{Q}$'s 21%, and its rate still climbs
-  only to 207 GFLOP/s. Whether row blocking helps a kernel whose weights are read once
-  and never reused is an open question, not a foregone one
+- **prefix reuse is now demonstrated to be exact**, and is the largest unexploited lever
+  in the document: it needs no approximation and no new kernel, only somewhere to keep
+  the state. It changes what the program *is*, though, rather than how fast it runs
+- $\mathbb{X}$ is 54% of wall at 64 tokens and has now resisted the one fix that worked
+  for $\mathbb{Q}$. Its weights are read once, so the levers left on it are byte count,
+  and those are not bit-exact
 - the five-token configuration is at its bandwidth equilibrium and nothing arithmetic
-  will move it; the long-prompt configuration is compute bound and now has a proven lever
+  will move it; the long-prompt configuration is compute bound and has a proven lever
 - untested, not rejected: 1 GB pages (need a boot-time pool), hugetlbfs for a resident
   trunk (needs filling through a mapping), and any prompt long enough to make $O(T^2)$
   attention matter
