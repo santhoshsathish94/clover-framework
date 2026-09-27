@@ -2133,6 +2133,72 @@ That is a change to what the program is rather than to how fast it runs, and it 
 to be a deliberate decision rather than something appended to the end of a long session.
 What is settled is that it is sound, that it is exact, and roughly what it is worth.
 
+## Step 24 - prefix reuse, built
+
+Step 23 measured the ceiling and stopped. This builds it.
+
+### The design the measurements dictated
+
+A position below the cache boundary is never recomputed. Its influence on the rest
+reaches through two channels, and only those two have to be stored:
+
+- **MLA layers (24)** keep per-position key/value state, so the cache holds `klat`, `v`
+  and `rp` for each cached position - 24,640 floats per position per layer.
+- **KDA layers (69)** carry a *recurrent* state, so what matters is its value after the
+  last cached position: `St[96][128][128]` at 6.29 MB and `convbuf` at 0.44 MB per
+  layer. **This part is a fixed 464 MB whatever the prefix length.**
+
+Nothing else is needed. The cached positions' residual stream, snapshots and MoE outputs
+feed only into those two channels, so they can simply not exist in a reuse run.
+
+The code change is a window: a global `TLO` below which positions are skipped. Because
+every batched call already takes *pointer arrays*, the arrays can be offset by `TLO` and
+the count reduced, leaving all indexing absolute - so the layer body did not have to be
+reindexed. `TLO` is 0 in a normal run, which makes the existing path structurally
+untouched rather than merely tested.
+
+### It is exact
+
+```
+NPOS=8, prefix 4        wall     process total
+full run               12.44         16.44
+save run               12.76         16.76     cache 474 MB
+reuse run               7.19         11.18
+
+save  == full: IDENTICAL
+reuse == full: IDENTICAL
+md5 92f140ea3bcba8694f4075863a6f2ade for all three
+```
+
+Saving the cache costs 0.32 s. Reuse is checked against the full run's logits, not
+against a tolerance.
+
+### What it is worth
+
+```
+prompt  cached    full      reuse    speedup   cache   logits
+   16        8   19.36 s   11.11 s    1.74x    461 MB  IDENTICAL
+   32       16   32.02     17.91      1.79x    479 MB  IDENTICAL
+   32       24   32.04     11.23      2.85x    497 MB  IDENTICAL
+   64       48   55.58     19.65      2.83x    551 MB  IDENTICAL
+```
+
+Step 23 projected 19.5 s for the last row from a fit that had never seen a reuse run.
+**Measured 19.65 s** - 0.8% out, and 2.83x against a projected 2.83x. The smaller cases
+beat their projections, because the fitted fixed term overstates the cost when few
+positions remain.
+
+### What it costs, and what it does not do
+
+The cache is about 500 MB almost regardless of prefix length, because the KDA recurrent
+state dominates and is fixed. For a 4-token prefix that is a poor trade; for 48 tokens
+it is 551 MB to remove 36 seconds.
+
+It does not make the model faster. It removes work that a previous run already did, and
+the floor from step 23 still stands: the 7.69 s of per-layer reading is paid by every
+run however much is cached. Combined with step 19's resident trunk, those are the two
+things a serving system would do, and neither changes a single arithmetic result.
+
 ## Progress
 
 | step | | status |
@@ -2150,6 +2216,7 @@ What is settled is that it is sound, that it is exact, and roughly what it is wo
 | 21 | $\mathbb{Q}$'s input streams, not its accumulators | done |
 | 22 | what the reading buys, and why $\mathbb{X}$ refuses the same fix | done |
 | 23 | the cost of a position, and what prefix reuse could be worth | measured, not built |
+| 24 | prefix reuse, built and byte-identical | done |
 
 ## The arc, end to end
 
@@ -2182,14 +2249,11 @@ At longer prompts the last change is the one that matters:
 
 ## What this leaves to do
 
-- **build prefix reuse.** It is exact (step 22), sound at every layer (step 23), and
-  worth up to 0.743 s per cached position against a 7.69 s floor - 2.83x when three
-  quarters of the prompt is shared. What it needs: MLA `klat`/`v`/`rp` per prefix
-  position (113.5 MB for 48 tokens), the KDA recurrent state per layer (size not yet
-  established), and the `L % 12 == 0` snapshots
 - $\mathbb{X}$ is 54% of wall at 64 tokens and has now resisted the one fix that worked
   for $\mathbb{Q}$. Its weights are read once, so the levers left on it are byte count,
   and those are not bit-exact
+- the KDA recurrent state makes the cache a flat 464 MB whatever the prefix. For short
+  prefixes that dominates; whether it compresses is untested
 - the five-token configuration is at its bandwidth equilibrium and nothing arithmetic
   will move it; the long-prompt configuration is compute bound and has a proven lever
 - untested, not rejected: 1 GB pages (need a boot-time pool), hugetlbfs for a resident
