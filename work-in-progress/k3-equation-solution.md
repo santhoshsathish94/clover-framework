@@ -3031,6 +3031,76 @@ What it did establish is that the program is numerically healthy everywhere, tha
 equation's structural rules are being executed as written, and - with the attribution
 above - that 79.7% of the time is one thing: expert bytes crossing a disk.
 
+## Step 37 - per-invocation capture, and the one weight that was never batched
+
+Step 36 answered with per-layer aggregates. That was the wrong granularity: it averages
+away the thing worth seeing. $\mathbb{Q}$ is called about 1171 times in a five-token run
+and $\mathbb{X}$ about 17049 - **per layer** hides 1078 and 16956 of them.
+
+`K3_STAGE` records one row per *invocation*: which trunk slot or which expert part, the
+shapes, and min/max/mean/rms/zeros of what that call produced. `Q` takes a bare weight
+pointer, so the slot name is recovered by matching the address back against the layer's
+slot table rather than by labeling call sites. Two prompts, 1.4 MB and 2.1 MB.
+
+### What 1171 invocations look like
+
+```
+slot    calls    in     out     rms min    rms mean   rms max   |max|
+G          93   7168   12288    0.39356     1.3163     3.4855   49.557
+O          93  12288    7168   0.0023959   0.087488    0.4849   19.802
+EDOWN EUP SH1 SH3 SH2   92 each     every MoE layer
+Q K V B FA FB           69 each     every KDA layer
+QA QB KA KB             24 each     every MLA layer
+MGATE MUP MDOWN          5 each     <-- five tokens.  THIRTEEN on a 13-token prompt
+```
+
+Every count is fixed by the architecture except the last row, which scales with the
+prompt. The stage sequence says why:
+
+```
+layer 0:  Q K V B FA FB G O  MGATE MUP MDOWN  MGATE MUP MDOWN  ...  x NPOS
+layer 1:  Q K V B FA FB G O  EDOWN EUP SH1 SH3 SH2                  once
+layer 3:  QA QB KA KB G O    EDOWN EUP SH1 SH3 SH2                  once
+```
+
+**Layer 0's dense MLP was the only weight in the network re-read once per position.**
+Every other weight goes through the batched `Qm` and is read once whatever $T$ is; this
+one called the single-position `Q` inside a `for (t)` loop. Those three weights are
+727 MB.
+
+It also explains a number measured seventeen steps earlier and never questioned:
+$\mathbb{Q}$'s weight bytes were 56.73 GB at five tokens and 99.62 GB at sixty-four. The
+difference is 42.9 GB over 59 extra positions - **0.727 GB per position, exactly this
+loop**. The entire growth of trunk reading with prompt length was one un-batched MLP.
+
+### Batching it
+
+```
+              wall    Q sec  Q calls  Q weight GB  Q B/out   logits
+old, off     42.59    7.199   1348       99.62      170.1    49d914...
+new, off     41.94    6.452   1159       53.83       91.9    49d914...  == old
+old, on      42.21    7.277   1348       99.62      170.1    dc63bb...
+new, on      41.42    6.437   1159       53.83       91.9    dc63bb...  == old
+```
+
+**$\mathbb{Q}$'s weight traffic falls 99.62 to 53.83 GB, a 46% cut**, and its call count
+stops depending on the prompt at all: 1159 at five tokens and at sixty-four. Bit-exact
+under both contraction settings, and the five-token runs still reproduce the baseline.
+
+**The time is small: 0.65 to 0.79 s, about 1.7%.** My first measurement said 4.31 s and
+9.2%. That was n=1 and an outlier - it recorded the old binary at 46.80 s where the
+controlled runs put it at 42.59 and 42.21. Exactly the error of step 30, caught the same
+way, by measuring again before writing it down. The bytes are the real result; the
+seconds are modest because at 64 tokens the run is expert-bound and the trunk has
+headroom.
+
+### A loose end from step 33, now closed
+
+Step 33 pinned the build to `-ffp-contract=off` and said the cost was measured only at
+five tokens. At 64 tokens, from the table above: **42.59 against 42.21, and 41.94
+against 41.42 - about 0.4 to 0.5 s, roughly 1.2%.** Real but small, and worth it for a
+reference that reproduces exactly.
+
 ## Progress
 
 | step | | status |
@@ -3061,6 +3131,7 @@ above - that 79.7% of the time is one thing: expert bytes crossing a disk.
 | 34 | 34 prompts, capturing identity instead of values | done |
 | 35 | the engine agrees on all 34, not just the one | done |
 | 36 | time by byte source, and the variables themselves | done |
+| 37 | per-invocation capture; layer 0's MLP was never batched | done |
 
 ## The comparison that matters: the equation against the engine
 
