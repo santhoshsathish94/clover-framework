@@ -41,6 +41,8 @@ computation only by relocating it is not a reduction either.
 | Snapshot normalization is cacheable bit-exactly | 4,048 of 4,974 removed, output byte-identical |
 | The SiTU caps never bind anywhere measured | max $|g|/b_1 = 0.56$, max $|u|/b_2 = 0.04$ |
 | Gate and up rows are strongly aligned per channel | mean $\|\cos\|$ 0.622 matched against 0.011 shuffled, 55x, with control |
+| Backward query propagation is sound, once corrected | float32 epsilon; the document's own form errs by 28% |
+| The final norm scalar cannot change the argmax | confirmed; top-1000 ordering preserved, full ordering not |
 
 ---
 
@@ -61,6 +63,8 @@ computation only by relocating it is not a reduction either.
 | Block recurrence in the channel dimension | at or below chance at 128, 512 and 2048 | step 4 below |
 | Cauchy-Schwarz bounds on the argmax | prunes 0 of 163,840 rows; overshoots 6x at the winner | step 27 below |
 | Rank deficiency in the MLP projections | full rank by LU and by Gram spectrum | step 5 below |
+| Dropping the final norm scalar as a speedup | exact for the argmax, but 0.0000040% of the pass | step 28 below |
+| The transition matrix used in Steps 13 to 26 | $D_\alpha - \beta kk^\top$ gives 28% error; the truth is $(I-\beta kk^\top)D_\alpha$ | step 14/18 below |
 
 ---
 
@@ -464,6 +468,63 @@ that case the nonlinear channels "should not be artificially reduced".
 
 The one structural regularity found along the way, the gate-up row alignment, is
 approximate and therefore outside the criterion fixed at the top of this file.
+
+### Step 14/18 — backward query propagation
+
+The document proposes computing $o = S^\top q$ without ever forming $S$, by propagating
+the query backward: $y_t = q_t$, $y_{i-1} = A_i^\top y_i$, $o = \sum_i b_i^\top y_i$.
+
+Tested in two versions, because the transition matrix in the document is not the one the
+code implements.
+
+```
+                            pos 0       pos 1       pos 2       pos 3       pos 4
+document as written      3.7e-09     4.9e-03     1.2e-02     2.0e-02     1.9e-02
+corrected                3.7e-09     1.1e-08     1.1e-08     1.5e-08     1.5e-08
+```
+
+**The document's form reaches 28% relative error.** That is a wrong formula, not a
+rounding difference. Position 0 agrees for both versions because $S_0 = 0$ makes the
+decay term unreachable there, which doubles as a check that the harness is right.
+
+The corrected form, $A_i^\top = D_\alpha - \beta (D_\alpha k) k^\top$, sits at float32
+epsilon throughout. The dual-space identity itself is sound; only the matrix was wrong.
+
+**Scope of the error in `k3-equation-reduction.md`.** Step 13 defines
+$A = D_\alpha - \beta kk^\top$ and Steps 14, 16, 18, 19, 20, 24, 25 and 26 build on it.
+All of them inherit it. What survives unaffected is the structural claim: the true
+transition $(I - \beta kk^\top)D_\alpha = D_\alpha - \beta k(D_\alpha k)^\top$ is still
+diagonal plus rank one, so the composition algebra of Step 24 and the closure argument of
+Step 25 stand. Only the specific formula changes.
+
+**Cost.** Per head, per query, the backward form is 96x cheaper at position 0 and 19x at
+position 4. But it answers exactly one query, where the forward state answers every
+future one too, so they are not interchangeable unless the full history is retained at
+$3 \times 128 \times t$ per head.
+
+### Step 28 — the final norm scalar is irrelevant to the argmax
+
+$x'_i = (w_i x_i)\rho$ with $\rho > 0$, and the lm_head is linear, so the scalar cannot
+change the selected token. Tested by dropping it from the C implementation.
+
+```
+with scalar     top1 17374 (18.112919)  top2 384 (14.434750)  margin 3.678169
+without scalar  top1 17374 (14.180687)  top2 384 (11.301032)  margin 2.879655
+
+implied scalar  1.276985 .. 1.278524        (constant in exact arithmetic)
+full ranking identical : 163475 / 163840    first difference at rank 4323
+top 1 / 10 / 100 / 1000 ordering identical : yes
+top 10000 ordering identical               : no
+bit-identical logits                       : 0 / 163840
+```
+
+**Confirmed, with a boundary.** The emitted token is unchanged and the top 1,000 ordering
+is preserved exactly. The *complete* ordering is not: 365 positions reorder from rank
+4323 down, where logits are small and tightly spaced, and the implied scalar varies in
+the fourth decimal for the same reason. So the invariance is exact over the reals and
+holds for greedy decoding, but it is not safe for sampling or for top-k with large k.
+
+**Value.** 21,504 operations, which is 0.0000040% of the forward pass.
 
 ---
 
