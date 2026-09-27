@@ -1573,6 +1573,134 @@ a property of the binary, and it should be read that way.
 **The trunk unmap has gone 2.387 -> 0.136 -> 0.006 s.** As a share of the run, 15.1% ->
 1.0% -> 0.05%. This one is finished.
 
+## Step 18 - the 1.37x gap was a bad baseline, and the fix for it pays nothing
+
+Since step 13 this document has carried an unexplained 1.37x: $\mathbb{X}$ runs at
+21.9 GB/s inside the model and 42 GB/s in `xdec`, and the DMA tax was supposed to account
+for 0.71 of that, predicting 30. The residue was the largest open question here.
+
+It was not a residue. It was three differences between the two measurements, none of
+which I had checked before naming the leftover a mystery.
+
+### The two kernels are not the same code
+
+`xdec`'s kernel keeps four accumulators in named locals. `Xm` keeps them in
+`acc[NPOS][4]`, indexed by a **runtime** `t`. A runtime-indexed array cannot be promoted
+to registers, and the assembly says so plainly:
+
+```asm
+vcvtps2pd (%rcx), %ymm0
+vmulpd    %ymm9, %ymm0, %ymm0
+vaddpd    -128(%rax), %ymm0, %ymm0    ; accumulator loaded from memory
+vmovapd   %ymm0, -128(%rax)           ; and stored back
+```
+
+Every accumulation is a load-modify-store, **including when T is 1**, which is 77.6% of
+calls. This is step 14's `wd[]` stack round trip again, in a different place, introduced
+by step 8's batching and invisible for ten steps because nothing had compared the two
+kernels as code.
+
+### Measuring all three under identical conditions
+
+`xgap.c` runs the benchmark kernel, `Xm` copied verbatim, and a T==1 specialization on the
+same buffers, same threads, 2.34 GB working set:
+
+```
+                        no I/O, best of 5
+flat (xdec style)             42.02
+Xm verbatim                   35.90
+T==1 specialized              43.06      identical output, 0 of 3072 floats differ
+```
+
+So the round trip is worth **1.20x** - and the model's kernel still runs at 35.9, not 21.9.
+
+### The rate collapses with the position count
+
+The other thing `xdec` never measured is T > 1. Per-m rates, no I/O, best of 5:
+
+```
+T = 1      2      3      4      5
+35.90  25.98  21.70  18.35  15.91
+```
+
+Weighting by the model's own measured distribution (m=1 77.6%, m=2 16.8%, m=3 4.2%,
+m=4 1.2%, m=5 0.1%) gives
+
+$$\left(\sum_m \frac{p_m}{r_m}\right)^{-1} = 32.5\ \text{GB/s}$$
+
+for the model's kernel at the model's mix, with no I/O at all.
+
+### The DMA tax, measured on this kernel rather than borrowed
+
+Step 13's 0.71 came from a separate memory benchmark. Running `xgap` with 14 background
+O_DIRECT readers, which achieve 14.35 to 14.45 GB/s:
+
+```
+          no I/O   with I/O   factor
+T = 1     35.90     20.09      0.56
+T = 2     25.98     16.97      0.65
+T = 4     18.35     11.67      0.64
+T = 5     15.91     10.52      0.66
+```
+
+The real tax is 0.56 to 0.66, harsher than 0.71. Weighted the same way, the loaded rate is
+about 18.4 to 19.0 GB/s. T=3 came back at 9.18, out of line with its neighbors, so that
+run is noise and the bracket is approximate.
+
+### The gap closes
+
+```
+model kernel, model mix, no I/O         32.5 GB/s
+observed in the model                   22.5
+model kernel, model mix, continuous I/O ~18.7
+```
+
+The observed rate sits inside the bracket, nearer the loaded end. The run is only doing
+I/O for about 75% of its wall time (7.04 s of pure I/O in 9.33 s), and interpolating on
+that fraction predicts 20.9 against 22.5 observed. **There is no unexplained residue.**
+The 1.37x was an artifact of comparing against a different kernel, at one position, warm,
+best of five, with no concurrent I/O - a baseline that shared nothing with the thing being
+measured except its name.
+
+### Fixing the real defect, and being paid nothing for it
+
+The stack round trip is a genuine defect, so it is fixed: a T==1 path in `Xm` with named
+accumulators. The assembly confirms it - the new path has **0 accumulator-in-memory adds**
+against 13 in the general path - and the logits are byte-identical.
+
+```
+          X seconds   X GB/s   stall   wall   process total
+before      4.425      22.54   2.025   9.33      13.33
+after       4.303      23.17   2.154   9.33      13.32
+```
+
+$\mathbb{X}$ got 0.125 s faster and the stall got 0.125 s longer. Sweeping the reader
+count, which is what rescued the same situation in step 14, does not rescue it here:
+
+```
+nreader     10     14     18     22     26     30
+stall     2.275  2.171  2.111  2.004  1.966  1.914
+wall      9.40   9.32   9.35   9.34   9.36   9.36
+```
+
+Stall falls monotonically across the whole range and wall does not move. The reason is
+visible in the operator table:
+
+```
+             operators   stall     X
+nreader=14     6.843     2.154   4.303
+nreader=30     6.986     1.895   4.429
+```
+
+More readers buy less stall and pay for it in the arithmetic, at close to one for one.
+**The run is at a bandwidth equilibrium**: 99.72 GB of experts and 54.47 GB of trunk have
+to cross the same memory controller as every operator's operands, and which side of the
+boundary the time is charged to is a bookkeeping choice, not a saving.
+
+The specialization is kept. It is bit-exact, it makes the operator measurably faster, and
+it will pay if the I/O side ever gets cheaper. Today it is worth 0.00 s end to end, and
+recording that honestly matters more than the change did.
+
 ## Progress
 
 | step | | status |
@@ -1584,6 +1712,7 @@ a property of the binary, and it should be read that way.
 | 15 | the stall was a work-granularity bug | done |
 | 16 | huge pages, and a gain outside the timer | done |
 | 17 | the unmap, measured directly | done |
+| 18 | the 1.37x was a bad baseline | done |
 
 ## The arc, end to end
 
@@ -1599,6 +1728,7 @@ a property of the binary, and it should be read that way.
 | + range-granular reads | 9.65 | 15.98 | yes |
 | + THP | 9.35 | 13.35 | yes |
 | + hugetlb trunk | **9.33** | **13.16** | yes |
+| + T==1 accumulators | 9.33 | 13.16 | yes, and worth nothing |
 
 **4.27x end to end, 171,008/171,008 identical at every step.**
 
@@ -1607,8 +1737,10 @@ The end-to-end column is `/usr/bin/time` process total. Step 16's 13.36 is now s
 
 ## What this leaves to do
 
-- the 1.37x of $\mathbb{X}$'s gap to its isolated rate is unexplained and is the largest
-  open question in this document
-- 1.80 s of stall remains against 7.14 s of operators and 7.04 s of pure I/O, and the
-  reader count no longer moves it
+- nothing in the arithmetic is worth optimizing while the run is at its bandwidth
+  equilibrium: every second taken out of an operator reappears as stall, and every second
+  taken out of stall reappears in the operators
+- the only levers left change how many bytes cross the memory controller, and the two
+  candidates are both outside bit-exactness: fewer experts (k=8) or a narrower weight
+  format
 - 1 GB pages are untested, not rejected: they need a boot-time pool
