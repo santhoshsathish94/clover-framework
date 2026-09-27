@@ -17,6 +17,10 @@ Halving threads from 16 to 8 costs 10%, where compute-bound work would double. A
 144.72 GB at 2.69 GB/s is 53.8 s, the entire runtime. **The arithmetic is nearly free and
 the bytes are expensive.**
 
+> **Corrected in Step 4 below.** The conclusion holds, the rate does not. 2.69 GB/s is
+> what this access pattern gets from the device, not what the device gives: a sequential
+> pass over the whole 1,446 GB model runs at 8.56 GB/s on the same disk.
+
 One piece is therefore settled and one is not.
 
 | | status |
@@ -374,8 +378,12 @@ Step 2 by reading fewer experts.
 
 ### What Step 3 does not establish
 
-- **One expert, one tensor.** Expert 1/0 `w1`. Whether all 92 x 896 experts share the
-  histogram is untested, though the architecture gives no reason for them to differ.
+- **One expert, one tensor.** Expert 1/0 `w1`. ~~Whether all 92 x 896 experts share the
+  histogram is untested, though the architecture gives no reason for them to differ.~~
+  **Struck 2026-09-27.** "The architecture gives no reason for them to differ" is an
+  assumption, written to excuse an n=1 result in a document whose subject is that
+  assumptions get measured. Step 4 measures all 247,296 of them. The conclusion survives;
+  the reasoning offered for it here was not evidence.
 - **Two compressors.** zlib and lzma. A codec built for this data could beat the order-0
   entropy figure if higher-order structure exists; nothing here rules that out, it only
   shows the two standard tools find none.
@@ -385,8 +393,215 @@ Step 2 by reading fewer experts.
 
 ---
 
+## Step 4 - reading the whole model instead of a sample of it
+
+Every number in this document up to here came from one prompt of five tokens, and Step 3
+came from a single tensor. The objection is that this describes one run, not the system,
+and that a model whose experts and layers are all adjustable during training may well be
+**uneven** - so a divergence between its parts is not noise to be averaged away, it is the
+only place where something correctable could show itself.
+
+That is an argument for reading all of it. The model is 1.56 TB in 96 files, 93 layers,
+896 experts, 494,592 expert tensors. So all of it was read, twice.
+
+### The first result arrived before any analysis
+
+```
+pass 1  494,592 tensors  1,446.46 GB  169.0 s   8.56 GB/s   (code histograms)
+pass 2  247,296 tensors  1,361.37 GB  182.9 s   7.44 GB/s   (zero row/column census)
+```
+
+The machine has 124 GB of RAM, so at least 1,322 GB of pass 1 came off the disk, giving a
+floor of 7.8 GB/s however the page cache behaved.
+
+**Cycle G recorded that the model was I/O bound at 2.69 GB/s, and that 144.72 GB at that
+rate is 53.8 s, which is the whole runtime.** The arithmetic was right and the conclusion
+was wrong. 2.69 GB/s is not the disk. It is what *this access pattern* gets from the disk:
+scattered per-expert reads in routing order, against the sweep's sequential pass in offset
+order. The device has roughly 3x more to give, and the gap is in how the reads are issued,
+not in the hardware.
+
+This was sitting in plain view the whole time and was never checked, because "I/O bound"
+felt like an endpoint. It is not an endpoint until the device rate is measured separately
+from the program's rate.
+
+### The Step 3 entropy result generalizes
+
+All 247,296 packed tensors, 2.72 x 10^12 codes:
+
+```
+entropy   mean 3.75383   std 0.004535
+          min  3.39684  (layer 12, expert 821, w2)
+          max  3.81131  (layer 83, expert 263, w3)
+          q0.001 3.74793   q0.5 3.75331   q0.999 3.78253
+
+the Step 3 sample, layer 1 expert 0 w1 : 3.75946
+tensors within 0.01 bits of it         : 208,785 of 247,296  (84.43%)
+
+role      n        entropy            zero frac   sign+
+w1    82,432   3.75433 +- 0.00517      0.11506   0.499995
+w2    82,432   3.75374 +- 0.00418      0.11738   0.500000
+w3    82,432   3.75341 +- 0.00412      0.11499   0.499999
+```
+
+The weights are incompressible everywhere, not just in the sample. The sign bit is a full
+bit to six decimal places in all three roles. Across layers the mean entropy varies by
+0.015 bits, between 3.74954 at layer 71 and 3.76476 at layer 83.
+
+### The divergence
+
+The distribution is a tight bulk with something else attached. The 0.1st percentile is
+3.74793 and the minimum is 3.39684, which is 79 standard deviations below the mean.
+
+```
+beyond   3 sigma :   65 low    3,385 high
+beyond   5 sigma :   38 low      680 high
+beyond  10 sigma :   13 low        8 high
+beyond  20 sigma :    5 low        0 high
+beyond  50 sigma :    1 low        0 high
+```
+
+**All 38 of the low outliers are `w2`.** None is `w1`, none is `w3`, out of 82,432 of each.
+They sit in layers 1 (14), 24 (11), 12 (6), 4 (4), and one each in 3, 5, 6.
+
+The mechanism is excess zeros. E2M1 encodes zero twice, as code 0 and code 8, and in the
+extreme tensor both sit at 4.01x the model mean, 46.4% zeros against a typical 11.5%.
+The other codes are depressed but not uniformly: the ratio to the model mean runs 0.562,
+0.549, 0.563, 0.600, 0.696, 0.878, **1.065**, so the largest magnitude is enriched. The
+tensor is not scaled down, it is hollowed out.
+
+### What the zeros are
+
+`w2` is `down_proj`, shape (3584 out, 3072 in), so its columns are the intermediate
+neurons. Counting fully-zero rows and columns in every packed tensor - which needs no
+decoding, since codes 0 and 8 are zero at any scale:
+
+```
+role       n      tensors w/ dead cols   dead cols   dead rows
+w1    82,432                        0           0           0
+w3    82,432                        0           0           0
+w2    82,432                    6,524     162,022           0
+```
+
+Zero, not few. A column is either normal or entirely zero, with nothing in between: in the
+worst tensor the surviving columns have median zero fraction 0.1104 against a control's
+0.1141.
+
+This is not quantization luck. A dead column is zero in all 3,584 rows, and each row has
+its own block scale set by 31 other columns; at the observed 11.5% zero rate the
+probability is 10^-3366.
+
+### Why only w2 - and the correction it forces
+
+The clean w1/w3 census reads as an asymmetry, and it is an artifact of how the census
+asks the question. Comparing the decoded magnitudes of the same neurons in the same expert:
+
+```
+                 dead   w1 row mean|w|  dead / live      w3 dead / live
+L12 E821        1,071   1.32e-04 vs 2.00e-02    0.007            0.007
+L4  E478          921   3.65e-05 vs 2.07e-02    0.002            0.002
+L24 E17            54   3.34e-04 vs 1.96e-02    0.017            0.017
+```
+
+The neuron is dead in **all three** matrices, 140x to 500x below its live neighbors in
+`w1` and `w3` too. MXFP4 shares one scale per 32 consecutive elements along the last axis.
+In `w2` the last axis is the neuron index, so a dead column sits among 31 live neighbors
+whose magnitudes set the scale, and it rounds to exact zero. In `w1` and `w3` the neuron
+index is the row, so a dead row's blocks contain only its own tiny values, the scale
+adapts down, and the noise survives at full 4-bit resolution.
+
+So the model spends four bits per element storing the numerical noise of neurons that
+cannot affect its output, and the zero-census could not see it.
+
+### Where the dead neurons are
+
+```
+experts with at least one dead neuron : 6,524 of 82,432   (7.91%)
+total dead neurons                    : 162,022 of 253,231,104   (0.064%)
+among affected experts                : median 6, q90 70, q99 232, max 1,071
+
+layer      dead   experts   % of layer        worst single experts
+24       53,877       871       1.957%        L12 E821  1,071 of 3,072  34.86%
+ 4       30,378       802       1.104%        L4  E478    921           29.98%
+ 1       21,521       659       0.782%        L1  E275    624           20.31%
+ 3       14,160       678       0.514%        L1  E655    544           17.71%
+21        8,209       221       0.298%        L12 E846    529           17.22%
+ 2        7,217       371       0.262%        L4  E517    463           15.07%
+12        5,387        99       0.196%        L24 E628    437           14.23%
+
+layers 52-92 : 0 dead neurons across 36,736 experts
+```
+
+The hard edge at layer 51 is the most striking thing in the census and this document
+offers no explanation for it. It is recorded as an observation.
+
+### A second correction, caught by its own control
+
+The first pass at "are the same neurons dead across experts" compared the observed maximum
+sharing count against the Poisson **mean**, and layer 1's 18 against 7.0 looked like 2x
+clustering. The right comparison is the expected **maximum** of 3,072 draws. Against a
+permutation null of 2,000 size-preserving shuffles:
+
+```
+layer  experts  obs max  null max  null sd      z
+ 1         659       18     17.57     1.19   0.36
+ 4         802       22     22.48     1.37  -0.35
+12          99        8      7.36     0.67   0.95
+21         221        9      9.85     0.86  -0.99
+24         871       36     33.79     1.70   1.30
+```
+
+**Indistinguishable from random**, every layer, and the same for contiguity at layer 24,
+0.0212 adjacent pairs against 0.0201 expected. Which neurons die is random; how many die,
+and in which layer, is not. This is instrument error #5's shape a third time - the
+instrument reporting a property of itself - and it was caught only by asking what the
+control was actually a control for.
+
+### What Step 4 settles, and what it is worth
+
+The dead neurons are the first thing in this entire body of work that is **exact by
+construction rather than by measurement**. The `w2` column is exactly zero, so the
+neuron's contribution to the sum is exactly zero, so removing it cannot change any bit.
+Every earlier candidate had to be checked against output and most of them failed.
+
+It is also the smallest. 162,022 neurons at 5,376 wasted bytes each - a `w1` row, a `w3`
+row and a `w2` column - is **871 MB of 1,361 GB, or 0.064%**. As an answer to the data
+problem it is nothing.
+
+As a statement about the model it is not nothing. Layer 24 has 1.96% of its expert
+capacity in neurons that cannot affect the output, spread across 871 of its 896 experts,
+and layers 52 to 92 have none at all. Whether correcting that would produce a better model
+is exactly the kind of question that cannot be answered by looking at a trained artifact,
+and nothing here answers it.
+
+### What Step 4 does not establish
+
+- **No cause for the layer-51 edge.** The profile is measured; the reason is not.
+- **Nothing about training.** These are properties of a finished, quantized artifact.
+  That a neuron is collapsed in the deployed model does not establish when or why it
+  collapsed, and this work has no access to the original weights or to the run that
+  produced them.
+- **Whether it can be fixed is untested and untestable here.** Retraining is not available,
+  so "a divergence we could correct" remains a possibility the census supports and does not
+  demonstrate.
+- **The 2.69 vs 8.56 GB/s gap is measured, not exploited.** Two different access patterns
+  were measured on the same device. That the model could be made to read at the higher rate
+  is a hypothesis, not a result.
+
+### One thing it does change about everything above it
+
+Every previous finding in this document is conditional on one prompt of five tokens. Step 4
+is the first that is not: it is a complete census of the artifact, with no sampling, so
+there is no prompt it could fail to generalize to. The objection that produced it - measure
+how the system works, not how it works for five tokens - was the correct objection, and the
+two corrections it forced were both to claims already committed.
+
+---
+
 ## Not yet examined
 
-- whether the 17.55 MB per expert can be reduced without changing the result
+- why dead neurons stop at layer 51
+- whether the model can be made to read at the device rate rather than 2.69 GB/s
 - whether expert choice is predictable early enough to prefetch
-- whether reuse across many tokens changes the picture, since all of this is 5 tokens
+- whether reuse across many tokens changes the picture, since all of the routing work is
+  5 tokens

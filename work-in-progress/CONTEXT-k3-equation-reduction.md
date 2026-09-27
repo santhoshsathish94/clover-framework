@@ -48,7 +48,7 @@ computation only by relocating it is not a reduction either.
 | The cycle is architectural, not input-dependent | holds on all 5 prefill positions and the decode position |
 | Eleven functionals are phase-locked beyond chance | permutation null, 2000 shuffles, strongest z = -15.35 |
 | Residual components are roughly Gaussian at most layers | L1/L2 peaks at sqrt(2n/pi) in every trajectory |
-| The model is I/O bound, not compute bound | 16 to 8 threads costs 10%; 144.72 GB at 2.69 GB/s is the whole runtime |
+| The model is I/O bound, not compute bound | 16 to 8 threads costs 10%; 144.72 GB at 2.69 GB/s is the whole runtime. **2.69 GB/s corrected 2026-09-27: that is the access pattern's rate, not the device's, which measures 8.56 GB/s sequentially** |
 | Every run fetches ~100 to 157 GB from the device | 1.45 TB of experts against 124 GB of RAM; there is no warm cache |
 
 ---
@@ -878,6 +878,15 @@ is page-cache retention varying run to run, and it is measurement noise, not a d
 in work done.
 
 **Outcome. The model as implemented is I/O bound, not compute bound.**
+
+> **Corrected 2026-09-27, Step 4 of `k3-data-problem.md`.** The outcome above stands; the
+> number underneath it does not. 2.69 GB/s was taken as the device rate, and it is not.
+> Reading the entire 1,446 GB model sequentially, 11x the machine's RAM so at least
+> 1,322 GB of it off the platters, ran at **8.56 GB/s**, and a second 1,361 GB pass at
+> 7.44 GB/s. The device has roughly 3x more to give. 2.69 GB/s is what *scattered
+> per-expert reads in routing order* obtain from it, not a hardware floor. "I/O bound"
+> was treated as an endpoint, and it is not an endpoint until the device rate is measured
+> separately from the program's rate. That separate measurement was never taken here.
 
 **What this does to the preceding six cycles.** It does not invalidate any measurement,
 but it re-prices all of them. Every candidate was scored as a fraction of *operations*.
