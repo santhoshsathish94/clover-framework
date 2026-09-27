@@ -59,6 +59,7 @@ computation only by relocating it is not a reduction either.
 | Periodicity in the channel sequence | max autocorrelation 0.019 to 0.056, no peak | step 4 below |
 | Generating structure in weight row order | adjacent rows 0.01154 against shuffled 0.01184 | step 4 below |
 | Block recurrence in the channel dimension | at or below chance at 128, 512 and 2048 | step 4 below |
+| Cauchy-Schwarz bounds on the argmax | prunes 0 of 163,840 rows; overshoots 6x at the winner | step 27 below |
 
 ---
 
@@ -346,6 +347,63 @@ Every value sits at or below the chance level for vectors of that dimension.
 cycle hypothesis of Step 8 finds no support in the channel dimension. This is a clean
 negative, and combined with Step 3 it means the only structure found so far in the
 $(g,u)$ data is the gate-up row alignment, which is approximate.
+
+### Step 27 viability — can bounds decide the argmax early
+
+Run out of order, because it is independent of the Step-41 program and the data was
+already on disk.
+
+The proposal is exact branch and bound: settle the argmax without evaluating all
+163,840 logits. The natural cheap bound is Cauchy-Schwarz, since row norms can be
+precomputed once and reused for every token ever generated.
+
+```
+||x||             47.735310
+||W_j||           0.710300 .. 3.580537,  mean 2.277318
+bound ||W_j|| ||x||   33.906 .. 170.918
+true |logit|           0.000 ..  18.113
+
+bound / |logit| at the winner : 5.960
+bound / |logit| at the median : 37.285
+
+rows pruned : 0 of 163840   (0.00%)
+```
+
+**Ruled out.** The bound assumes $\cos = 1$. The winner sits at $\cos \approx 0.168$ and
+the median row at $\approx 0.027$, so in 7168 dimensions the norm product overshoots by
+6x even in the best case and nothing is eliminated.
+
+Two things worth keeping separate from that negative. It is a negative for *this bound*,
+not for the principle — the document itself warns at Step 38 that a valid bound need not
+be a reduction, and this is that case, now measured. And the target geometry is extremely
+favorable: exactly **one** row lies within 1.0 of the winner and the top-1 is isolated by
+3.678, so a tight enough bound would prune essentially the whole vocabulary. What fails
+is the looseness, not the idea.
+
+### Environment finding — no optimized BLAS
+
+Discovered while Step 5 was running far slower than estimated.
+
+```
+numpy 1.26.4, linked against numpy/linalg/lapack_lite       (no external BLAS)
+3000^3 float64 GEMM : 12.43 s = 4.3 GFLOPS
+2000^3 with OPENBLAS_NUM_THREADS=1  : 5.1 GFLOPS
+2000^3 with OPENBLAS_NUM_THREADS=32 : 4.7 GFLOPS
+no openblas, atlas or mkl in ldconfig
+```
+
+Threading environment variables do nothing because there is no threaded library to
+configure. Every numpy linear-algebra number in this project is single-core reference
+BLAS.
+
+**Deliberately not fixed.** Reinstalling numpy to get a bundled OpenBLAS would change the
+interpreter that produced the bit-exact verified results. The speed of the analysis
+scripts is not worth risking the reference.
+
+**Correction this forces to an earlier claim.** The bit-exactness tax for the Q operator
+was measured at 12x, lane-emulated against "plain BLAS matmul". That comparison was
+against this unoptimized reference BLAS at roughly 4 GFLOPS. Against a threaded BLAS the
+ratio would be far larger. The 12x is a lower bound on the tax, not an estimate of it.
 
 ---
 
