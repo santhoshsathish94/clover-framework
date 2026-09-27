@@ -1481,6 +1481,98 @@ and the gap is recorded as open rather than explained.
 
 ---
 
+## Step 17 - the unmap, measured directly instead of by subtraction
+
+Step 16's correction left the teardown named but not isolated: 2.31 s had been arrived at
+by subtracting two measured spans from a third. That is an inference, not an observation,
+and it could not say *which* mapping cost the time.
+
+### Measuring it instead of deducing it
+
+Exit unmaps everything anyway, so calling `munmap` explicitly before returning moves the
+same work to where a clock can see it. The trunk and the arena are timed separately:
+
+```
+            arena (1.63 GB)   trunk (54.47 GB)   total    start->T0   timed   proctotal
+4 KB            0.056              2.387         2.444      3.77      9.58     15.85
+THP 2 MB        0.003              0.136         0.140      3.80      9.37     13.37
+```
+
+The three spans now sum to 15.79 and 13.31 against process totals of 15.85 and 13.37, so
+0.06 s is unaccounted in both - process startup and libc teardown. The subtraction in
+step 16 was right, and it was the **trunk**: 2.387 s of it, 179 ns per 4 KB page.
+
+### Separating the four phases
+
+Getting 54.47 GB into RAM is four distinct things - reserving the address range, faulting
+it (which is the kernel zeroing each page before handing it over), filling it over
+O_DIRECT, and releasing it. The full run cannot separate them, so `tbench.c` does, at
+16 threads, cold cache before each:
+
+```
+                 mmap      fault/zero    fill            unmap
+4 KB            0.0000       2.576       3.731 (14.60)   2.323
+THP 2 MB        0.0000       2.511       3.740 (14.56)   0.128
+hugetlb 2 MB    0.0000       2.395       3.742 (14.56)   0.006
+```
+
+Three findings, none of which the full run could have shown:
+
+**The fill does not care about page size at all.** 14.55 to 14.62 GB/s across every
+policy, which is the device ceiling measured back in step 6. Nothing about this problem
+is addressable by changing how memory is mapped.
+
+**The kernel zeroes 54.47 GB and it is free.** Faulting the range costs 2.4 to 2.6 s when
+timed on its own, but doing it first does not make the fill any faster (3.731 without,
+3.735 with). It hides completely under the I/O that provokes it. Prefaulting is a pure
+loss of 2.5 s - worth recording because it is exactly the kind of "optimization" that
+looks obviously right.
+
+**hugetlb unmaps 20x faster than THP.** 6 ms against 128 ms, and 350x faster than 4 KB.
+
+### What 1 GB pages would have given, and why they are not available
+
+55 pages instead of 27,235. The CPU advertises `pdpe1gb`, the pool exists in sysfs, and
+124 GB was free. The kernel still granted **0 of 55**, before and after an explicit
+`compact_memory`. Runtime allocation of 1 GB pages needs contiguity this kernel would not
+assemble; it would have to come from `hugepagesz=1G hugepages=55` on the boot command
+line, which is a reboot of someone else's machine and was not done. **Untested, not
+rejected.**
+
+One defect of my own here: the first attempt carried `MAP_NORESERVE` into the hugetlb
+mapping, which turns an empty pool into a SIGBUS at first touch rather than a failed
+`mmap`. Two core dumps before I read the flag I had copied.
+
+### In the real program
+
+`K3_HUGE=2` maps the trunk from the hugetlb pool and falls back to THP, loudly, if the
+pool is not reserved.
+
+```
+                            load          unmap    process total
+THP, pool empty         3.77 / 3.78       0.136    13.33 / 13.36
+hugetlb, no pool          3.78 (fell back)  0.137    13.33
+hugetlb, pool reserved  3.74 / 3.74       0.006    13.17 / 13.16
+THP, pool reserved        3.78            0.132    13.34
+```
+
+The last row is the control. If simply reserving 55 GB had changed the machine's memory
+behavior, THP would have moved too; it did not. So the 0.18 s is the page size.
+
+It is 0.13 s of unmap plus 0.04 s of load - the fill also edges from 14.43 to 14.56 GB/s,
+which is the one place page size did show up in I/O. Logits byte-identical to the
+preserved baseline, `md5 23d162dcefb18211a7540ef12948f1eb`, token 17374.
+
+### What it costs
+
+Reserving the pool takes 2.541 s and releasing it 0.121 s, one time, system-wide, outside
+the process. 55 GB then belongs to hugetlb and to nothing else. For this program that is
+memory it was going to occupy anyway, but it is a system configuration change rather than
+a property of the binary, and it should be read that way.
+
+**The trunk unmap has gone 2.387 -> 0.136 -> 0.006 s.** As a share of the run, 15.1% ->
+1.0% -> 0.05%. This one is finished.
+
 ## Progress
 
 | step | | status |
@@ -1491,6 +1583,7 @@ and the gap is recorded as open rather than explained.
 | 14 | the decode was the kernel | done |
 | 15 | the stall was a work-granularity bug | done |
 | 16 | huge pages, and a gain outside the timer | done |
+| 17 | the unmap, measured directly | done |
 
 ## The arc, end to end
 
@@ -1504,9 +1597,13 @@ and the gap is recorded as open rather than explained.
 | + pipelined reads | 11.98 | 18.38 | yes |
 | + decode without the stack trip | 10.56 | 16.89 | yes |
 | + range-granular reads | 9.65 | 15.98 | yes |
-| + huge pages | **9.35** | **13.36** | yes |
+| + THP | 9.35 | 13.35 | yes |
+| + hugetlb trunk | **9.33** | **13.16** | yes |
 
-**4.21x end to end, 171,008/171,008 identical at every step.**
+**4.27x end to end, 171,008/171,008 identical at every step.**
+
+The end-to-end column is `/usr/bin/time` process total. Step 16's 13.36 is now shown as
+13.35, the mean of the controlled pair rather than the single confounded run.
 
 ## What this leaves to do
 
@@ -1514,3 +1611,4 @@ and the gap is recorded as open rather than explained.
   open question in this document
 - 1.80 s of stall remains against 7.14 s of operators and 7.04 s of pure I/O, and the
   reader count no longer moves it
+- 1 GB pages are untested, not rejected: they need a boot-time pool
