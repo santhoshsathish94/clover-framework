@@ -693,6 +693,95 @@ either - a profiler shows you what ran, not what needn't have.
 
 ---
 
+## Step 9 - building DQ, and measuring the one verdict worth testing
+
+Step 8 said $\mathrm{DQ}$ was the only precompute that clearly passes, and that the claim
+was a prediction. This step builds it.
+
+### Verifying the table before it goes near the model
+
+All 4096 pairs, comparing the tabulated entry against the same expression recomputed at
+use time, by **bit pattern** rather than by value:
+
+```
+pairs bit-identical : 4096 / 4096
+entries +-inf       : 12
+entries subnormal   : 8
+entries negative 0  : 263
+table size          : 16384 bytes
+```
+
+**The 263 negative zeros are the reason to compare bits and not values.** $\mathrm{E2M1}[8]$
+is $-0.0$, and at $s = 255$ the expression is $\mathrm{E2M1}[c] \times 0.0$, which is
+$-0.0$ for every negative code. A table written as "zero when $s=255$" would compare equal
+under `==` and be wrong. Writing the table as the literal expression preserves it.
+
+The 12 infinities and 8 subnormals are unreachable: the sweep of step 4 in
+`k3-data-problem.md` shows the model's scale bytes span **109 to 124**, so the largest
+representable magnitude is $6 \times 2^{-3} = 0.75$ and no product can overflow.
+
+### A correction to step 8's estimate, found by reading the code
+
+Step 8 predicted the change removes about $6.2\times10^9$ `exp2f` calls, computed as one
+per group of 32. The implementation recomputed `e8` every **16** elements, twice per group,
+so the real count was about $1.17\times10^{10}$.
+
+Per run the kernel decodes
+
+$$5{,}683 \text{ expert loads} \times 3 \times 11{,}010{,}048 = 1.877\times10^{11}\ \text{codes}$$
+
+so the change removes $1.877\times10^{11}$ multiplies and $1.17\times10^{10}$ `exp2f`
+calls. **Part of the saving is therefore not tabulation at all** - it is removing a
+redundant recomputation the equation never asked for. The two are not separated below.
+
+### Measured
+
+Cold cache, threads pinned, three runs each, identical binary except the kernel:
+
+```
+                 X (s)                    mean      wall (s)                mean
+baseline     12.256  12.100  12.215      12.190   28.17  27.69  27.80      27.89
+with DQ       8.843   9.092   9.087       9.007   24.48  24.96  24.67      24.70
+                                         -26.1%                            1.13x
+```
+
+All three runs 171,008/171,008 identical to the pre-change baseline, token 17374. The only
+`exp2f` left anywhere in the program is the one inside `dq_init`.
+
+### End to end
+
+```
+                                              inner wall      process total
+eq.c, untouched                             53.30  52.82      56.97  55.56  -> 56.27
+batched + prefetch + trunk RAM + pinned + DQ 24.81  24.54      32.56  32.29  -> 32.43
+```
+
+**1.74x end to end, 2.15x on the timed region, bit-identical throughout.**
+
+$\mathbb{X}$ has gone from 43% of wall to 36%, and the prefetch is now the largest single
+cost at 52%.
+
+### What step 9 does not establish
+
+- **The saving is not cleanly attributable.** Removing the redundant `exp2f` and
+  tabulating the decode landed in one change and were not measured separately.
+- **$\mathbb{X}$ is still scalar.** The 4x4 double accumulators are untouched, so the SIMD
+  question is open and independent of this.
+- **The table is 16 KB but only 256 entries are reachable** on this checkpoint, since 16
+  scale bytes occur. That is a fact about the data, not the equation, and the equation
+  correctly says 4096 - a different checkpoint could use any byte.
+- **One prompt, prefill only**, as everywhere in this series.
+
+### What step 9 says about the method
+
+Step 8 reached this by reading the equation and asking what the domain of a function was,
+not by profiling. The profiler in `k3-data-problem.md` step 7 had already reported
+$\mathbb{X}$ as 43% of wall and compute-bound - it could say *that* the decode was
+expensive, and it could not say *that the decode has 4096 possible answers*. One of those
+facts is in the measurement and the other is only in the equation.
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
@@ -705,9 +794,11 @@ either - a profiler shows you what ran, not what needn't have.
 | 6 | section 4, the MLP and MoE blocks | done |
 | 7 | section 5, composition, initial conditions, carried state | done |
 | 8 | the boundary, and what it costs | done |
+| 9 | building DQ and measuring it | done |
 
 ## What this leaves to do
 
-- build $\mathrm{DQ}$ and measure it against $\mathbb{X}$, the one verdict worth testing
 - the equation permits hoisting the gate, $\zeta$ and the shared-expert branch out of the
   router's dependency; steps 5 and 6 established the license and nothing used it yet
+- $\mathbb{X}$'s four 4-lane double accumulators map onto four AVX2 registers, which step 8
+  of `k3-data-problem.md` argued is bit-exact and nobody has built
