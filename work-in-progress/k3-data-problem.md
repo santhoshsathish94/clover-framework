@@ -1023,10 +1023,151 @@ $\mathbb{X}$ is now 43% of wall and the prefetch 46%; everything else is 11%.
 
 ---
 
+## Step 9 - can dead neurons reduce the fetch?
+
+Step 4 found 162,022 dead neurons. The question put to this step was whether they, or
+neurons like them, can be used to fetch fewer bytes. Three things had to be measured, and
+each closed a different door.
+
+### First, what the census actually says
+
+The recollection driving the question was that most experts have more dead neurons than
+useful ones. Re-reading `dead.tsv`:
+
+```
+experts with ZERO dead neurons : 75,908 of 82,432   92.09%
+median expert                  : 0 dead
+90th percentile                : 0 dead
+worst single expert            : 1,071 of 3,072 = 34.86%
+experts more than half dead    : 0
+total dead                     : 162,022 of 253,231,104 = 0.064%
+```
+
+No expert is half dead, and 92% have none. The premise does not hold, and it is recorded
+here because everything downstream would have inherited it.
+
+### The bit-exact saving, and an error in measuring it
+
+An analysis script printed the saving as 0.87% by dividing 871 MB, which is the whole
+model, by 99.72 GB, which is what **one run** fetches. Those are not comparable: the run
+touches 5,683 expert-loads of 82,432. Dumping the actual routing and joining it to the
+census:
+
+```
+distinct expert loads this run : 5,683        (matches Step 1 exactly)
+neuron slots fetched           : 17,458,176
+of those, dead                 : 10,776 = 0.0617%
+fetched experts with any dead  : 433    = 7.62%
+
+bit-exact saving : 10,776 x 5,376 B = 57.9 MB of 99.72 GB = 0.058%
+                 = 0.004 s of the 7.043 s prefetch
+```
+
+**Four milliseconds.** The dead fraction among fetched experts, 0.0617%, matches the global
+0.0640%, so routing is neither drawn to nor repelled by damaged experts.
+
+### Second, is there a population of nearly-dead neurons?
+
+Exactly-zero is the wrong test - it only catches what quantized all the way down. The
+equation gives a bound that uses weights alone. Since
+$|b_1\tanh(g/b_1)\sigma(g)| \le \min(|g|, b_1)$ and $|g_j| \le \|w_1[j]\|\,\|\zeta\|$,
+neuron $j$'s largest possible contribution is
+
+$$s_j \cdot \|\zeta\|^2, \qquad s_j = \|w_1[j]\|\ \|w_3[j]\|\ \|w_2[:,j]\|$$
+
+All three norms were computed for every routed expert, 99.72 GB decoded in 12.8 s -
+exactly the run's own fetch, which checks the index. Sanity: **exactly 10,776 neurons have
+$s_j = 0$**, matching the census to the unit, all through a zero $w_2$ column.
+
+```
+top  1% of neurons carry   1.49% of the total bound   (uniform would be  1%)
+top 10%                   11.95%                      (10%)
+top 25%                   28.12%                      (25%)
+top 50%                   54.05%                      (50%)
+top 90%                   92.02%                      (90%)
+
+q0.01 = 2.49    median = 3.48    q0.99 = 4.61
+```
+
+**The bound is essentially uniform.** 98% of all 17.5 million neurons sit within 1.85x of
+each other. There is no nearly-dead population. Static pruning is closed: dropping 6.6% of
+neurons would forfeit 5% of the bound.
+
+### Third, the realized activation is concentrated - and it still does not help
+
+The bound is a worst case over all $\zeta$. The activation actually realized during the run
+is a different matter, and it is strongly concentrated:
+
+```
+top 10% of neurons carry 46.64% of sum|h|      53.31% of neurons below 1e-2 x max
+top 25%                  70.90%                93.87% below 1e-1 x max
+top 50%                  90.51%
+```
+
+So most neurons contribute almost nothing **for a given input**. To exploit that in the
+*fetch*, the selection must be made before the bytes are read, and the equation supplies a
+way: $\mathrm{SiTU}$ factorizes, the second factor is bounded by $b_2 = 25$, so a small
+first factor bounds $h_j$ regardless of $u$ - and the first factor needs only $w_1$.
+
+Ranking by that $w_1$-only gate factor:
+
+```
+keep top  10% by gate ->  36.67% of sum|h| ; frees 71.85% of w3 blocks
+keep top  25%         ->  58.84%           ; frees 40.66%
+keep top  50%         ->  82.54%           ; frees 11.60%
+keep top  75%         ->  95.72%           ; frees  1.39%
+keep top  90%         ->  99.32%           ; frees  0.09%
+```
+
+The predictor works reasonably - 82.54% of the realized magnitude from half the neurons,
+against 90.51% for an oracle ranking by $|h|$ itself. **The layout is what kills it.**
+
+### Why the layout closes it
+
+- A $w_3$ row is $3584/2 = 1792$ bytes and O_DIRECT reads 4096-byte blocks, so one block
+  spans 2.29 rows. A skipped row only saves anything if every row sharing its block is
+  also skipped, and a gate-ranked selection is scattered. At keep-50% that frees **11.60%**
+  of $w_3$'s blocks, not 50%.
+- $w_3$ packed is 5,505,024 of the expert's 17,547,264 bytes, **31.4%**. So keep-50% frees
+  $0.116 \times 0.314 = 3.64\%$ of expert bytes: 3.63 GB, **0.26 s of the 7.043 s
+  prefetch**, in exchange for losing 17.5% of the activation magnitude.
+- **$w_2$ columns cannot be selectively fetched at all.** The tensor is row-major and a
+  column is maximally strided, so neuron $j$'s column is 3584 nibbles scattered across the
+  whole 5.5 MB. There is no block to skip.
+
+### What Step 9 settles
+
+Three doors, all closed by measurement:
+
+| route | result |
+|---|---|
+| skip exactly-dead neurons | bit-exact, 0.058% of the fetch, 0.004 s |
+| static pruning by weight norms | bound is uniform; no population to prune |
+| dynamic pruning by the $w_1$ gate | activation is concentrated, but blocks do not free and $w_2$ columns are unfetchable |
+
+The activation sparsity is real and large - half the neurons carry 9.5% of the magnitude -
+and **none of it is reachable through the fetch**, because the unit of I/O is a 4096-byte
+block and the unit of sparsity is a scattered row. It would pay in a compute-bound
+implementation. This one is not, in that part.
+
+### What Step 9 does not establish
+
+- **Nothing was implemented.** No pruned run was executed, so no token or margin was
+  measured; the trade is costed from the retention and block figures, not observed.
+- **One prompt, prefill only.** Activation sparsity is input-dependent by definition, and
+  5 positions of one prompt is the weakest possible basis for it.
+- **A layout change was not considered.** Storing $w_2$ transposed, or $w_3$ padded to
+  4096-byte rows, would change the block arithmetic completely. That is a different
+  artifact, not this one.
+- **The gate factor is one predictor.** A better one exists in principle; the oracle at
+  keep-50% is 90.51% against the gate's 82.54%, so the headroom from a perfect predictor
+  is 8 points and does not change the block result at all.
+
+---
+
 ## Not yet examined
 
-- an SIMD $\mathbb{X}$ kernel, the largest remaining cost at 43% of wall
-- reading experts with O_DIRECT into an arena, the measured 5.6 s still behind the cache
-- why dead neurons stop at layer 51
+- whether a checkpoint stored with $w_2$ transposed would make the activation sparsity
+  fetchable
 - whether reuse across many tokens changes the picture, since all of the routing work is
   5 tokens
