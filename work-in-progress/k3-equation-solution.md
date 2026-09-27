@@ -323,6 +323,101 @@ introduced ten operators and not one of them has a structure that depends on the
 
 ---
 
+## Step 5 - the attention blocks
+
+### Every value is R; every detail is E
+
+Both blocks take $x_1$, which section 5 derives from the residual, which derives from the
+embedding gather, which derives from $t_p$. So by rule 3 every quantity in section 3 is
+**R**: $q, k, v, \beta, z, \alpha, o, \mathrm{attn.out}$ in KDA, and
+$q, c, \mathrm{kv}, k^{\text{lat}}, k^{\text{rope}}, v, \mathrm{acc}, \mathrm{attn.out}$
+in MLA. The conv history and the KDA state $S$ and the KV cache are **S**.
+
+Every one of the details the equation warns about is **E**: the norm on $c$ covering the
+latent 512 only, the rope slot being unrotated yet scored, $m_{\text{sc}}$ being over the
+full 192, the gate applying before the output projection in MLA and after the norm in KDA,
+$A^{\log}$ per head against $\tau$ per channel. These are structural facts and no input
+touches them.
+
+### One E fact that licenses a reordering
+
+The equation notes of KDA: **the gate reads $x_1$, not anything attention produced**. The
+same holds in MLA. So $\sigma(\mathbb{Q}[W^g_L]\,x_1)$ depends on nothing the recurrence
+computes, and can be evaluated at any point after $x_1$ exists.
+
+That is a dependency fact, visible in the equation, and it is exactly what licenses
+hoisting the gate projection out of the position loop. It does not change a label - the
+gate is still **R** - but it shows the equation carries scheduling information that a
+naive left-to-right reading discards.
+
+### A derived E bound
+
+$\alpha_{hD+d} = \exp\big(\lambda\,\sigma(\cdot)\big)$ with $\lambda = -5$ and
+$\sigma \in (0,1)$, so for every input and every position
+
+$$\alpha \in \big(e^{-5},\ 1\big) \approx (0.00674,\ 1)$$
+
+The decay is bounded away from zero by an **E** constant. Nothing here needs it, but it is
+a property of the model derived from the equation rather than sampled from a run.
+
+### Why $\sigma$ is not tabulatable and $\mathrm{DQ}$ was
+
+Step 4 turned $\mathbb{X}$'s decode into a 16 KB table because both its factors were **E**
+over a domain of 4096. The same reasoning applied to $\sigma$, or to the composite
+$u \mapsto \exp(\lambda\sigma(u))$, fails - not because they are less **E**, but because
+their argument is an arbitrary float32:
+
+| **E** function | domain | table |
+|---|---|---|
+| $(c,s) \mapsto \mathrm{E2M1}[c]\cdot 2^{s-127}$ | $16 \times 256 = 4096$ | 16 KB |
+| $u \mapsto \sigma(u)$ | $2^{32}$ | 16 GB |
+| $u \mapsto \exp(\lambda\sigma(u))$ | $2^{32}$ | 16 GB |
+
+**The criterion is not whether a function is E, but whether its domain is small.** Every
+pointwise nonlinearity in this equation is **E** and none of them is tabulatable bit-exactly,
+because they consume float32 rather than a quantization code. $\mathrm{DQ}$ was reachable
+only because a 4-bit code and an 8-bit exponent are between them a 12-bit index.
+
+### The one linear-linear composition, and why folding it is wrong twice over
+
+Most adjacent projections in the equation have something nonlinear between them. Exactly
+one pair does not:
+
+$$z = \mathbb{Q}[W^{fb}_L]\ \big(\mathbb{Q}[W^{fa}_L]\,x_1\big), \qquad E \to 128 \to 12288$$
+
+Algebraically $W^{fb}W^{fa}$ is a single $12288 \times 7168$ map, and it would be **W**.
+It fails on both counts that matter:
+
+- **Not bit-exact.** $\mathbb{Q}$ is not exact linear algebra. It is a 16-lane float32
+  reduction with the row scale applied after the tree, and it rounds the 128-wide
+  intermediate to float32 before the second projection. A folded matrix removes that
+  rounding and changes the association order, which section 2 says is part of the
+  definition.
+- **Larger, not smaller.** $128 \times 7168 + 12288 \times 128 = 2{,}490{,}368$ parameters
+  become $12288 \times 7168 = 88{,}080{,}384$, a **35.4x expansion**.
+
+The same shape appears at $W^{qa} \to W^{qb}$ through 1536, $W^{ka} \to W^{kb}$ through
+512, and $W^{\downarrow} \to W^{\uparrow}$ through 3584, but all three have an
+$\mathcal{N}$ or an entire expert network in between, so they are not even algebraically
+foldable.
+
+**The low-rank factorizations in this equation are already the compressed form.** Step 3
+found dequantization expands; this finds that undoing the rank structure expands too. The
+model as written is at a local minimum of storage, and the two obvious ways to trade
+compute for space both run the wrong way.
+
+### Step 5 result
+
+| group | E | W | R | S |
+|---|---|---|---|---|
+| 3.1 KDA values | 0 | 0 | 7 | 2 (conv history, $S$) |
+| 3.2 MLA values | 0 | 0 | 8 | 1 (KV cache) |
+| structural details of both | all | 0 | 0 | 0 |
+
+No new **W** symbols. Section 3 introduces no quantity that a run could skip.
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
@@ -331,7 +426,7 @@ introduced ten operators and not one of them has a structure that depends on the
 | 2 | 1.1 input, 1.2 shapes, 1.3 scalars, 1.4 layer sets | done |
 | 3 | 1.5 weights and the three folds | done |
 | 4 | section 2, the ten operators | done |
-| 5 | section 3, the attention blocks | |
+| 5 | section 3, the attention blocks | done |
 | 6 | section 4, the MLP and MoE blocks | |
 | 7 | section 5, composition, initial conditions, carried state | |
 | 8 | the boundary, and what it costs | |
