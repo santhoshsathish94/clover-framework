@@ -1063,6 +1063,96 @@ final             18.43  18.32                mean 18.38
 
 ---
 
+## Step 13 - the 2.5 s is mostly not recoverable, and io_uring was the wrong tool
+
+Step 12 recorded 1.50 s of compute inflation plus 0.95 s of stall as "still lost to
+contention", and named `io_uring` as the fix. Before building it, the contention was
+measured.
+
+### The syscalls are not the cost
+
+`io_uring` exists to cut syscall overhead. Comparing process CPU accounting:
+
+```
+                   wall    user    sys     cpu
+mode3 blocking    22.78   151.4   25.4    775%
+mode4 pipelined   18.35   184.2   28.0   1156%
+```
+
+**System time moves 25.4 to 28.0 s.** Two and a half seconds of kernel time, spread over
+16 threads. There is nothing there for `io_uring` to take. The reason to suspect otherwise
+was that *user* time jumped 32.8 s - which turned out to be something else.
+
+### The spinning is real and free
+
+That user-time jump is OpenMP workers spinning at the barrier while the main thread waits
+on the pipeline. Turning it off:
+
+```
+                            wall     X (s)   stall   user
+mode4 default              12.08     8.233   1.03   184.2
+mode4 OMP_WAIT_POLICY=passive 12.53   8.844   0.74   133.2
+mode4 GOMP_SPINCOUNT=0     12.49     8.857   0.72   133.1
+```
+
+Passive waiting removes **51 s of user CPU** and makes the wall clock **worse**, 12.08 to
+12.53, because the many small parallel regions then pay wakeup latency. The spinning was
+burning cores that had nothing else to do. It is waste, and it is not a cost.
+
+### It is not core starvation either
+
+If the readers were stealing cores from the compute, the penalty would grow with the number
+of compute threads competing for them. It does not:
+
+```
+                  X mode3   X mode4   penalty
+16 compute thr     6.828     8.233     1.206x
+12 compute thr     8.935    10.498     1.175x
+```
+
+Near-constant, and slightly *smaller* at 16 threads. Whatever the readers cost, it is not
+contention for cores.
+
+### It is the memory controller, measured directly
+
+```
+RAM read bandwidth, idle disk              45.29 GB/s
+RAM read bandwidth, O_DIRECT running       32.29 GB/s
+      the concurrent disk rate             14.00 GB/s
+```
+
+**DMA writing at 14.00 GB/s removes 13.00 GB/s of read bandwidth from the CPU** - very
+nearly one for one. The device controller and the cores share one memory controller, and
+bytes landing in RAM are not free just because no instruction issued them.
+
+`io_uring` would move the same 99.72 GB into the same arena at the same rate. It cannot
+help, and building it would have been wasted work discovered after the fact.
+
+### What this does to Step 12's floor
+
+Step 12 computed a perfect-overlap floor of $\max(7.04, 9.22) + 0.3 \approx 9.5$ s and
+concluded 2.5 s was being lost. **That floor was wrong**, because it assumed overlapping is
+free. Overlapping costs the compute about 17% of its throughput. The real floor is
+
+$$\max\big(7.04,\ 9.22 \times 1.17\big) + 0.3 \approx 11.1\ \text{s}$$
+
+against 11.98 measured. **The pipeline is within about 0.9 s of what this hardware allows,
+not 2.5 s.** Step 12's figure is corrected here rather than in place, since the reasoning
+that produced it is the point.
+
+### What Step 13 does not establish
+
+- **`io_uring` was not built**, so "it cannot help" rests on the bandwidth measurement and
+  the sys-time figure, not on a comparison against a working implementation.
+- **The 1:1 bandwidth trade was measured with one synthetic reader** (`diskbench` at 4 MB,
+  8 threads) against one synthetic consumer (`membench`), not inside the model.
+- **The 17% factor is taken from $\mathbb{X}$'s own slowdown** and applied to all operators
+  when computing the floor, which is approximate.
+- **Nothing was changed.** This step produced no code and no speedup - it closed an avenue
+  and corrected a number.
+
+---
+
 ## Progress
 
 | step | | status |
@@ -1072,6 +1162,7 @@ final             18.43  18.32                mean 18.38
 | 10 | vectorizing $\mathbb{X}$, and the fusion gap | done |
 | 11 | O_DIRECT expert reads | done |
 | 12 | overlapping the read with the arithmetic | done |
+| 13 | why the remainder is not recoverable | done |
 
 ## The arc, end to end
 
@@ -1083,14 +1174,13 @@ final             18.43  18.32                mean 18.38
 | + SIMD $\mathbb{X}$ | 22.68 | 30.76 | yes |
 | + O_DIRECT arena | 16.51 | 22.88 | yes |
 | + pipelined reads | **11.98** | **18.38** | yes |
+| hardware floor for this design | ~11.1 | - | - |
 
-**3.07x end to end, and 171,008/171,008 identical at every step.**
+**3.07x end to end, 171,008/171,008 identical at every step, and about 0.9 s from the
+floor.**
 
 ## What this leaves to do
 
-- reader/compute contention costs 1.50 s; `io_uring` would remove the reader threads
-  entirely and was not tried
-- $\mathbb{X}$'s true compute is ~6.83 s and still ~3x off the memory ceiling; register
-  pressure and AVX-512 are both untried
-- the equation permits hoisting the gate, $\zeta$ and the shared-expert branch out of the
-  router's dependency; steps 5 and 6 established the license and nothing used it yet
+- $\mathbb{X}$'s uncontended compute is 6.83 s and still ~3x off the memory ceiling;
+  register pressure (20 `__m256d` against 16 YMM) and AVX-512 are both untried, and unlike
+  the I/O side this one is not near a hardware limit
