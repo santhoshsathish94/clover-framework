@@ -1461,6 +1461,10 @@ final            13.37  13.35                mean 13.36
 
 **4.21x end to end, 5.67x on the timed region, bit-identical.**
 
+> **Superseded.** Those 17 `eq.c` runs were taken unpinned, while `final` is pinned. The
+> like-for-like baseline is 48.57 s, so this is **3.64x**, not 4.21x. See the correction
+> above the arc table.
+
 ### What is still unexplained
 
 $\mathbb{X}$ now runs at 21.9 GB/s in the model against 42 GB/s isolated. Step 13's DMA
@@ -2218,13 +2222,85 @@ things a serving system would do, and neither changes a single arithmetic result
 | 23 | the cost of a position, and what prefix reuse could be worth | measured, not built |
 | 24 | prefix reuse, built and byte-identical | done |
 
+## The comparison that matters: the equation against the engine
+
+Everything below the arc compares `eqp.c` against `eq.c`. **Both of those are the
+equation.** `eq.c` is the first implementation of it and `eqp.c` is the optimized one, so
+that arc measures how much better the implementation got - it never compared the equation
+against the model at all.
+
+The model is the released Kimi K3 engine, `kimi-k3-in-c`, the thing that emitted 17374 in
+the first place. Its runs were on the box the whole time, in `/root/k3flow`.
+
+Two of them use exactly this prompt:
+
+```
+             ids   step 0  token   cache hit   expert GB
+v1.log         5   32.10 s  17374     98.5%       99.72
+v2.log         5   30.39 s  17374     98.5%       99.72
+```
+
+Same `/root/k3trunk_i8`, `forward.T = 5`, embed `n = 35840 = 5 x 7168`, and **99.72 GB of
+expert reads - the same figure `eqp.c` reports to two decimal places.** The two programs
+move the same bytes for the same prompt and produce the same token, which is what makes
+the times comparable at all.
+
+```
+                                        engine        equation
+prefill step                        32.10 / 30.39 s     13.16 s
+  plus its pre-step loading            +1.64 s          included
+end to end, both loads included        ~32.9 s          13.16 s      2.50x
+with the trunk already resident        ~32.9 s          10.6 s       3.10x
+expert bytes read                      99.72 GB        99.72 GB
+emitted token                           17374           17374        logits identical
+```
+
+**So the equation runs this prompt about 2.5x faster than the engine, and 3.1x with the
+trunk resident** - not the 3.69x the arc suggests, because the arc's baseline was never
+the model.
+
+### What the engine is doing that the equation is not
+
+This is not a like-for-like race, and the difference favors the engine's design rather
+than its clock:
+
+- The engine maintains a **30 GB expert cache and a KV cache** so it can keep generating.
+  v2 goes on to produce eight tokens at 11.2, 10.4, 7.4 s each. `eqp.c` prefills once and
+  exits; it cannot continue at all.
+- The engine streams the trunk through a pinned set at 9,951 MB/s. `eqp.c` reads it
+  O_DIRECT into RAM at 14,400 MB/s and keeps it.
+- The engine is a released, general program. `eqp.c` is one prompt length, prefill only,
+  with the token ids compiled in until step 20.
+- n=2 for the engine, on an earlier machine state, not a controlled repeat set.
+
+What the comparison does establish is that the engine's prefill is **45.4% I/O by its own
+accounting** (trunk 5.5 s + experts 9.1 s of 32.1 s), and that most of the 2.5x came from
+attacking exactly that.
+
 ## The arc, end to end
 
-At five tokens, cold start:
+> **Baseline corrected.** The `eq.c` row below was long recorded as 53.0 s wall and
+> 56.23 s end to end. Rebuilding the untouched `eq.c` and running it today shows that
+> figure is an **unpinned** measurement, while every optimized row is pinned. Same
+> binary, cold cache each run:
+>
+> ```
+> eq.c pinned    (n=3)   wall 46.50 / 45.81 / 45.24   end to end 49.22 / 48.53 / 47.95
+> eq.c unpinned  (n=2)   wall 53.41 / 52.69           end to end 56.01 / 55.32
+> ```
+>
+> The recorded 53.0 / 56.23 sits inside the unpinned pair. Its logits are byte-identical
+> to the preserved baseline, so the program was right; the *comparison* was not.
+> **The correct like-for-like baseline is 45.85 s wall and 48.57 s end to end**, and the
+> headline falls from 4.27x to **3.69x**. Memory recorded "always pin threads, every
+> measurement before step 8 was unpinned" - and then the baseline that predates step 8
+> was never re-measured.
+
+At five tokens, cold start, all rows pinned:
 
 | change | wall | end to end | bit-exact |
 |---|---|---|---|
-| `eq.c` as it was | 53.0 s | 56.23 s | - |
+| `eq.c` as it was | 45.85 s | 48.57 s | - |
 | batched positions | 27.9 | - | yes |
 | + DQ table | 24.70 | 32.43 | yes |
 | + SIMD $\mathbb{X}$ | 22.68 | 30.76 | yes |
@@ -2237,7 +2313,11 @@ At five tokens, cold start:
 | + T==1 accumulators | 9.33 | 13.16 | yes, and worth nothing |
 | + row-blocked $\mathbb{Q}$ | 9.31 | 13.32 | yes, and worth nothing here |
 
-**4.27x end to end, cold start, five tokens.** Resident trunk, warm, is 10.6 s or 5.3x.
+**3.69x end to end, cold start, five tokens.** Resident trunk, warm, is 10.6 s or 4.58x.
+
+The intermediate rows between `eq.c` and step 8 were also taken unpinned and are not
+re-measured; they are kept as a record of the order things happened, not as a like-for-
+like series. Only the first and last rows are directly comparable.
 
 At longer prompts the last change is the one that matters:
 
