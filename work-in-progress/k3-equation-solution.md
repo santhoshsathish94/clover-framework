@@ -2628,6 +2628,63 @@ from `idsel_all` and were never affected, so the comparisons held, but the label
 wrong until it was moved and re-run. The corrected run reports token 387 against 387
 throughout and identical numbers.
 
+## Step 32 - prefix reuse, re-verified and then actually used
+
+Step 24 built prefix reuse and left it there. Steps 28, 29 and 30 then changed code
+**inside the TLO window** it depends on - the router loop, `AR`, and `shortconv` inside
+the KDA position loop where the recurrent state is saved. A feature built seven steps
+ago, with the ground moved under it, and never re-tested.
+
+### It survived
+
+```
+NPOS=8,  prefix 4    save == full: IDENTICAL    REUSE == full: IDENTICAL
+                     md5 92f140ea3bcba8694f4075863a6f2ade
+second prompt        REUSE == full: IDENTICAL
+NPOS=64, prefix 48   full 51.44   save 51.76   reuse 19.98    IDENTICAL
+```
+
+That md5 is **the same value step 24 recorded**, through gate fusion, a parallelized
+SiTU and four more parallelized operators.
+
+**2.57x at 64/48**, down from step 24's 2.83x only because the full run has got faster
+since; the reuse run barely moved, 19.65 to 19.98 s, because what it does is mostly the
+fixed per-layer work the other steps did not touch.
+
+### The case that had never been tested
+
+Every check so far reused a cache for the **same prompt**, which is not what a cache is
+for. The real use is one prefix serving different continuations. Two 18-token prompts
+sharing their first ten tokens and diverging after:
+
+```
+A  ...Paris, a city on | the river Seine that has served as the
+B  ...Paris, a city on | a wide plain far from any sea coast
+```
+
+```
+1. A full                                  20.97 s   token 10583
+2. A full, saving the 10-token prefix       21.36
+3. A reusing A's cache                      11.70    IDENTICAL to A full
+4. B full, no cache                         21.58    token 13
+5. B reusing A's cache                      11.41    IDENTICAL to B full
+control: A and B differ, so the test is meaningful
+```
+
+**A cache built from one prompt serves a different one exactly.** B gets its own answer,
+token 13, byte for byte with its own full run, at 1.89x. This is the serving case, and
+until now it was assumed rather than shown.
+
+The cache is 488 MB for a 10-token prefix and 578 MB for a 48-token one - the difference
+is only the MLA per-position state, since the KDA recurrent part is a fixed 464 MB.
+
+### What it is and is not
+
+It is not a faster program and cannot be a default: a one-shot binary has no earlier run
+to reuse. It is a two-phase shape - pay once for a prefix, then answer many
+continuations against it - and what these numbers establish is that the shape is sound
+and exact, not approximate.
+
 ## Progress
 
 | step | | status |
@@ -2653,6 +2710,7 @@ throughout and identical numbers.
 | 29 | SiTU was running on one core | done |
 | 30 | the other four small operators | done |
 | 31 | can a token look up its own experts? | no, measured |
+| 32 | prefix reuse, re-verified and actually used | done |
 
 ## The comparison that matters: the equation against the engine
 
