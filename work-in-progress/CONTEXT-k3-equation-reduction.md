@@ -44,6 +44,7 @@ computation only by relocating it is not a reduction either.
 | Backward query propagation is sound, once corrected | float32 epsilon; the document's own form errs by 28% |
 | The final norm scalar cannot change the argmax | confirmed; top-1000 ordering preserved, full ordering not |
 | 11.5% of expert weights are exactly zero | stable across experts, std 0.026%; 5.19% of the whole pass |
+| The depth trajectory has a period-12 cycle | autocorr 0.656 at lag 12; push-layer turns 2.40x the rest |
 
 ---
 
@@ -623,6 +624,69 @@ positions the layer draws 80 experts of which 74 are distinct.
 of the forward pass derived from the same FLOP estimate. They are directionally right
 and quantitatively unreliable. A FLOP model of a kernel that decodes its own weights
 measures the wrong thing.
+
+### Cycle D — trajectory geometry, and a real period-12 structure
+
+**Direction, from the human:** the model normalizes repeatedly, so its states live on
+spheres and the natural coordinates are angles. If there is circular structure, observation
+should show it.
+
+**Instrument.** No new run needed. `layer.out`, site 8, is tapped at all 93 layers, so the
+trajectory is already on disk. Position 4, normalized directions.
+
+**Not a circle.**
+
+```
+PCA rank of the 93 normalized directions : 92 of 93
+first 2 components explain               : 22.25%
+angle from the layer-0 direction         : rises to ~87 deg and stays, no return
+residual norm                            : 0.46 to 133.41, ratio 289
+```
+
+A circle would be rank 2 with a constant turn angle. It is neither.
+
+**But emphatically not random.** Against a matched random-direction control:
+
+```
+                          measured     random control
+turn angle, mean          38.05 deg    90.03 deg
+turn angle, std           15.88 deg     0.68 deg
+first 2 components        22.25%        2.64%
+first 10 components       61.97%       12.89%
+```
+
+**And genuinely periodic, at exactly the snapshot period.**
+
+```
+autocorrelation of the turn-angle sequence
+   lag 12  +0.6562      lag 24  +0.5188      lag 36  +0.4042
+   troughs between, around -0.20
+
+turn entering a push layer, L mod 12 == 11 : n=7,  mean 82.66 deg
+all other steps                            : n=85, mean 34.38 deg   ratio 2.40x
+
+phase profile, mean turn by position in the cycle
+   0: 49.3   1: 43.4   2: 37.3   3: 32.2   4: 31.6   5: 33.9
+   6: 28.6   7: 29.7   8: 27.8   9: 30.4  10: 32.4  11: 82.7
+```
+
+**Mechanism, identified rather than inferred.** Stage 14 of `k3-stages.md`: at a push
+layer `have_prefix` is cleared and the residual is *replaced* by the attention output
+instead of added. That discontinuity is the 82.66 degree turn. The period is the
+residual-replacement schedule made visible in the geometry, not a hidden invariant.
+
+**Outcome.** A genuine cyclic structure in the depth trajectory, measured, controlled and
+mechanistically explained. It is the first positive structural result in this exploration
+that is neither approximate nor forced by the tensor shapes.
+
+Whether it enables any reduction is a **separate and untested question**. A sawtooth in
+turn angle says the trajectory reorients hard every twelve layers and settles in between.
+It does not by itself say any computation can be skipped.
+
+**Method note.** This came from a direction supplied by the human and from running the
+measurement. Four prior cycles of reasoning about where structure ought to live produced
+nothing; one change of observable produced this. The direction was not derivable from the
+evidence already collected.
 
 ---
 
