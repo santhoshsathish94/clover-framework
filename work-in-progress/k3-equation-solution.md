@@ -1267,36 +1267,123 @@ final            16.87  16.90                mean 16.89
 
 ---
 
+## Step 15 - the stall was a work-granularity bug, and the measurement found it
+
+After step 14 the run was 10.56 s: 7.32 s of operators, 2.83 s of stall, reads at the
+device ceiling. The stall was the only addressable item left, and rather than guess at it
+the wait was split by position in the layer:
+
+```
+pipeline stall   2.784 s total
+   first expert of each layer   1.563 s   56%
+   next 11 experts              0.105 s
+   rest                         1.116 s
+```
+
+**1.563 s over 92 layers is 17 ms per layer, spent waiting for one expert.**
+
+### The work unit was wrong
+
+Each reader thread took a whole expert and read its six ranges **in sequence**. So the
+first expert of a layer was finished by one thread walking 17.5 MB at one thread's
+bandwidth, while the other eleven readers worked on experts nobody needed yet. The
+compute could not start until that one thread finished.
+
+The fix is to make the work unit a range rather than an expert, with a per-expert counter
+of ranges outstanding. Six readers then converge on the first expert at once and it
+completes in roughly one range time instead of six.
+
+### Measured
+
+```
+                    wall     stall    first expert
+gran=0, 12 readers  10.54    2.833      1.560
+gran=1, 12 readers   9.74    1.129      0.293      5.3x less
+gran=1, 16 readers   9.65    1.124      0.296
+```
+
+The first-expert stall falls 5.3x, which is what six-ranges-in-parallel predicts, and the
+total stall falls from 2.833 to 1.129 s.
+
+### And the reader optimum moved a third time
+
+```
+readers   12     14     16     20     24     32
+wall    9.74   9.65   9.67   9.69   9.71   9.81
+stall   1.13   0.98   0.99   0.96   0.92   0.79
+```
+
+12 in step 12, 12 again after step 14's kernel, now **14 and flat out to 24**. Finer work
+units make the reader count less critical, which is worth more than the 0.09 s: the
+parameter stopped being sharp.
+
+Three confirming runs at 14 readers: 9.66, 9.64, 9.64, all 171,008/171,008 identical,
+token 17374.
+
+### End to end
+
+```
+                                    process total
+eq.c, untouched  15 runs, 54.59 - 59.83      mean 56.30
+final            15.96  15.99                mean 15.98
+```
+
+**3.52x end to end, 5.49x on the timed region, bit-identical.**
+
+### Where it stands now
+
+```
+operators        8.19 s   (X 5.52, Q 1.32, rest 1.35)
+pipeline stall   1.07 s
+overhead         0.39 s
+                 9.65 s
+```
+
+The pure I/O is 7.04 s and the operators are 8.19 s, so **the run is compute-limited
+again** - the reads now finish before the arithmetic needs them, except for 1.07 s. Note
+$\mathbb{X}$ rose from 4.73 to 5.52 s as more readers run concurrently, which is step 13's
+DMA bandwidth tax being paid harder; it is still a net win of 0.9 s.
+
+### What Step 15 does not establish
+
+- **The remaining 1.07 s of stall was not decomposed further.** 0.30 s is still the first
+  expert, 0.28 s the next thirteen, 0.48 s the rest.
+- **Range granularity assumes six ranges per expert.** The `r / 6` mapping is hardcoded to
+  this architecture's three tensors times two kinds.
+- **The optimum is flat, not proven optimal.** 14 through 24 readers differ by 0.06 s,
+  which is within what this machine varies by.
+- **One prompt, prefill only.**
+
+---
+
 ## Progress
 
 | step | | status |
 |---|---|---|
 | 1 - 8 | the classification, from scheme to boundary | done |
-| 9 | building DQ and measuring it | done |
-| 10 | vectorizing $\mathbb{X}$, and the fusion gap | done |
-| 11 | O_DIRECT expert reads | done |
-| 12 | overlapping the read with the arithmetic | done |
-| 13 | why the remainder is not recoverable | done |
+| 9 - 11 | DQ, SIMD $\mathbb{X}$, O_DIRECT | done |
+| 12 - 13 | pipelining, and why the remainder is bandwidth | done |
 | 14 | the decode was the kernel | done |
+| 15 | the stall was a work-granularity bug | done |
 
 ## The arc, end to end
 
 | change | wall | end to end | bit-exact |
 |---|---|---|---|
-| `eq.c` as it was | 53.0 s | 56.20 s | - |
+| `eq.c` as it was | 53.0 s | 56.30 s | - |
 | batched positions | 27.9 | - | yes |
 | + DQ table | 24.70 | 32.43 | yes |
 | + SIMD $\mathbb{X}$ | 22.68 | 30.76 | yes |
 | + O_DIRECT arena | 16.51 | 22.88 | yes |
 | + pipelined reads | 11.98 | 18.38 | yes |
-| + decode without the stack trip | **10.56** | **16.89** | yes |
+| + decode without the stack trip | 10.56 | 16.89 | yes |
+| + range-granular reads | **9.65** | **15.98** | yes |
 
-**3.33x end to end, 171,008/171,008 identical at every step.**
+**3.52x end to end, 171,008/171,008 identical at every step.**
 
 ## What this leaves to do
 
-- the run is now I/O bound again: 2.83 s of stall against 7.32 s of operators, and the
-  reads are at the device ceiling, so the only lever left on the I/O side is reading fewer
-  bytes - which is not bit-exact
-- $\mathbb{X}$ is now 21 GB/s against a 45 GB/s memory ceiling, and `VD` says the
-  arithmetic alone would run at 121 GB/s
+- $\mathbb{X}$ is 5.52 s of the 8.19 s of operators and runs at 18 GB/s against a 45 GB/s
+  ceiling, while the diagnostic in step 14 showed the arithmetic alone reaching 121 GB/s
+- the run is compute-limited, so unlike steps 11 to 13 the remaining work is on the
+  arithmetic side, not the I/O side
