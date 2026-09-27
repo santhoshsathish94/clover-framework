@@ -167,6 +167,39 @@ materially faster without changing the answer.
 Both statements are true, and which one governs depends on the observable, exactly as
 `k3-redundancy.md` argued from a different direction.
 
+### What "margin" means, and a correction to how it was used above
+
+`margin` is the raw logit gap, `logits[top1] - logits[top2]`. It is **not scale-invariant**:
+Step 28 of the equation work showed that multiplying every logit by 0.783 moved the margin
+from 3.678 to 2.880 while changing nothing about the decision.
+
+So the margin column above could have been reporting a shrinking logit vector rather than
+a weakening decision. That was tested rather than assumed.
+
+```
+k    raw margin   logit std   scale-free   p(top1)   p(top2)/p(top1)
+16     3.678        2.568      1.432 sd     0.792        0.025
+ 8     3.361        2.527      1.330 sd     0.790        0.035
+ 4     1.811        2.547      0.711 sd     0.539        0.163
+ 2     0.319        2.668      0.119 sd     0.152        0.727
+```
+
+**The concern was unfounded**: the logit spread is constant at 2.53 to 2.67 across all
+$k$, so the vector is not contracting and the raw margin was a fair measure.
+
+**But the softmax probability changes the reading of the table**, and the earlier summary
+was too generous:
+
+- **$k = 8$ costs no confidence at all.** 0.790 against 0.792. Identical certainty, for
+  2.5x less I/O and 2.3x less time.
+- **$k = 4$ keeps the token but nearly halves the confidence**, 0.539, with the runner-up
+  rising from 2.5% to 16.3% of the winner's probability.
+
+The defensible statement is therefore **$k = 8$ is nearly free, and $k = 4$ preserves the
+answer while making the model substantially less sure of it.** For greedy decoding the
+distinction does not matter. For sampling, or for any use of the probabilities, it matters
+a great deal, and the raw margin hid it.
+
 ### What this does not establish
 
 - **One prompt, one token.** Five tokens of `The capital of France is`. The margin at
