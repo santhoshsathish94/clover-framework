@@ -2437,6 +2437,77 @@ The router's GB/s falls from 83 to 23 while getting **faster**, because it now r
 quarter of the bytes for the same arithmetic. Third time in this document that a ratio
 moved the wrong way while the thing underneath improved: always read the seconds.
 
+## Step 29 - SiTU was running on one core
+
+At 64 tokens `SiTU + sigma` is 7.809 s, 14.12% of wall, third behind $\mathbb{X}$ and
+$\mathbb{Q}$ and never examined in 28 steps.
+
+### The obvious idea, killed by one measurement
+
+Each element costs three scalar libm calls:
+
+```c
+float a  = (B1C * tanhf(g[i] / B1C)) * sigf(g[i]);   /* sigf = 1/(1+expf(-x)) */
+float uu = B2C * tanhf(u[i] / B2C);
+```
+
+Both `tanhf` and the sigmoid reach exactly representable values well inside float
+range - `tanhf(x)` is exactly `1.0f` for `x > 8.66`, so `g > 34.7` would short-circuit.
+A bit-exact fast path, if the data goes there. It does not:
+
+```
+SiTU inputs: 25,605,120 elements   g [-56.012, 79.077]   u [-16.590, 27.712]
+|g| > 34.7   0.0001%      g > 17   0.0009%      |u| > 216.6   0.0000%
+```
+
+Essentially nothing saturates. One run, idea dead.
+
+### What was actually wrong
+
+`situ` has no `#pragma omp`. Neither do `rmsnorm`, `rmsnorm_blocks`, `l2_blocks` or
+`AR`; of the small operators only `Bf` is parallel. **It was running 25.6 million
+elements and 77 million libm calls on a single core of a sixteen-core machine.**
+
+It is elementwise - `y[i]` depends only on `g[i]` and `u[i]` - so splitting it changes
+no arithmetic at all. Nested parallelism is off by default, so the pragma is inert at
+the call sites that sit inside other parallel work.
+
+```
+                  SiTU        wall        process total
+NPOS=5   serial    0.688 s     9.065        10.335
+         parallel  0.0655     8.97          10.245      10.5x on the operator
+NPOS=64  serial    7.809      55.30         56.61
+         parallel  0.799      51.20         52.51        9.8x on the operator
+```
+
+Bit-identical to the preserved baseline at five tokens, and at sixty-four the two paths
+agree byte for byte. **4.10 s end to end at 64 tokens, 7.2%.**
+
+### Where the other 2.9 s went
+
+$\mathbb{X}$'s operator gave up 7.01 s but the wall only kept 4.10. The stall grew
+0.681 -> 2.485 s and $\mathbb{X}$ itself slowed 29.715 -> 30.806 s. Step 14's lesson
+says re-sweep the reader count when a kernel changes, so:
+
+```
+nreader     8       14      20      26
+wall      51.24   51.22   51.24   51.43
+stall      2.821   2.479   2.363   2.310
+X         30.536  30.820  30.895  31.105
+```
+
+Stall falls monotonically, $\mathbb{X}$ rises by the same amount, wall does not move.
+**Nothing to reclaim - the bandwidth equilibrium has come back.** Taking 7 s of pure
+compute out of a 55 s run re-exposed the I/O that the compute had been hiding, and at
+64 tokens the run is no longer purely compute bound.
+
+### What this leaves
+
+The same mistake is still sitting in four more operators. At 64 tokens `AR` is 0.849 s,
+`C shortconv` 0.812, `N rmsnorm` 0.208 and `L l2` 0.120 - **about 2 s of elementwise
+work still on one core.** Whether it pays is now in doubt for the same reason the reader
+sweep found nothing, but it is cheap to test.
+
 ## Progress
 
 | step | | status |
@@ -2459,6 +2530,7 @@ moved the wrong way while the thing underneath improved: always read the seconds
 | 26 | the trunk is now resident | done |
 | 27 | the unattributed quarter, decomposed | done |
 | 28 | the router reads its own weights | done |
+| 29 | SiTU was running on one core | done |
 
 ## The comparison that matters: the equation against the engine
 
