@@ -96,6 +96,91 @@ once you know compute is not the constraint.
 
 ---
 
+## Step 2 — what the equation needs, as distinct from what the model fetches
+
+**The correction that produced this step came from the human.** Step 1 measured what the
+*model* loads. The model loads 16 experts per layer because its router selects 16. But the
+equation's output is a single token, and whether that token requires all 16 contributions
+is a different question, which Step 1 never asked.
+
+The routed output is a weighted mixture:
+
+$$\mathrm{accL} \;=\; \sum_{j=0}^{15} \pi_j\, e_j$$
+
+### The weights first
+
+```
+router weights, 460 draws of 16 experts
+
+rank  1  mean 0.16460      rank  9  mean 0.05005
+rank  2  mean 0.10786      rank 12  mean 0.04114
+rank  4  mean 0.07686      rank 16  mean 0.03036
+
+cumulative mass : top 1 = 16.5%,  top 4 = 43.7%,  top 8 = 67.9%
+experts needed to reach 90% of the mass : median 13 of 16
+the smallest of the 16 exceeds 0.02 in 83.9% of draws
+```
+
+Uniform would be 0.0625 each. The distribution is only mildly skewed around uniform, with
+a rank-1 to rank-16 ratio of 5.4. Read as weights, every expert appears to matter.
+
+**That reading would have been wrong**, and it is exactly the kind of inference the
+previous document records failing repeatedly. What matters is not the mass removed but
+whether the answer changes.
+
+### The measurement
+
+Load only the top $k$ of the 16 selected experts, renormalizing over those kept.
+
+```
+k    expert loads   requested   read_bytes   total     token   margin
+16       7,360      129.15 GB    98.60 GB   48.70 s   17374   3.678
+12       5,520       96.86 GB          -    33.78 s   17374   3.150
+ 8       3,680       64.57 GB    39.16 GB   21.49 s   17374   3.361
+ 4       1,840       32.29 GB    13.47 GB   12.17 s   17374   1.811
+ 2         920       16.14 GB          -     7.91 s     261   0.319
+ 1         460        8.07 GB          -     7.02 s     276   0.411
+```
+
+**The model needs 16 experts. The emitted token needs 4.**
+
+At $k = 4$: **7.3x less device I/O**, 98.60 GB down to 13.47 GB, and **4.0x faster**,
+48.70 s down to 12.17 s, with the same token.
+
+The reads fall faster than the requests, 2.5x and 2.9x for successive halvings, because
+the smaller working set also begins to fit in page cache. Part of the gain is therefore
+fewer bytes requested and part is a better hit rate, and the second part depends on
+having 124 GB of RAM.
+
+Below $k = 4$ it breaks. At $k = 2$ the token changes to 261 and at $k = 1$ to 276.
+
+### What this is, stated precisely
+
+This is **not** a reduction in the sense the previous document required. It is an
+approximation. The logits move, 18.113 to 16.598, and the margin halves, 3.678 to 1.811.
+Under the criterion fixed for the equation work, bit-exactness, it fails immediately.
+
+Under the observable that actually matters to a user of the model, *the emitted token*, it
+holds, and it is the first change in this entire body of work that makes the model
+materially faster without changing the answer.
+
+Both statements are true, and which one governs depends on the observable, exactly as
+`k3-redundancy.md` argued from a different direction.
+
+### What this does not establish
+
+- **One prompt, one token.** Five tokens of `The capital of France is`. The margin at
+  $k = 4$ is 1.811 against 3.678, so the headroom is halved and a different prompt could
+  cross it.
+- **Prefill only.** The 17374 above is the prefill token. Whether $k = 4$ also preserves
+  the decode token 20829 is untested.
+- **The threshold is not established.** $k=4$ works and $k=2$ does not, on this prompt.
+  Where the boundary sits in general is unknown.
+- **Part of the speedup is machine-specific**, since it depends on the working set
+  fitting in RAM.
+
+---
+
 ## Not yet examined
 
 - whether the 4-bit codes are compressible, i.e. their entropy
