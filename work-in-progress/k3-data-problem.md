@@ -598,10 +598,105 @@ two corrections it forced were both to claims already committed.
 
 ---
 
+## Step 5 - acting on the gap
+
+Step 4 measured a device that gives 8.56 GB/s and a model that gets 2.69 GB/s from it. That
+is a hypothesis about the access pattern, not a result, so it was implemented.
+
+### What the pattern actually was
+
+`eq.c` reads every expert weight through mmap demand paging, from inside the arithmetic:
+
+```c
+for (int j = 0; j < TOPK; j++) {                        /* 16 experts, serial */
+    X(eg, zl, file_ptr(p1->file_id) + p1->off, ...);    /* faults 5.5 MB */
+    X(eu, zl, file_ptr(p3->file_id) + p3->off, ...);    /* then 5.5 MB more */
+    situ(eg, eg, eu, I_);
+    X(ed, eg, file_ptr(p2->file_id) + p2->off, ...);    /* then 5.5 MB more */
+}
+```
+
+Every byte arrives as a 4 KB fault with the kernel's default readahead, the faults happen
+between multiplies, and the sixteen experts are a serial dependent chain. There is
+essentially one read stream in flight. The sweep reached 8.56 GB/s by having sixteen
+threads issue 5.5 MB reads with no arithmetic in between.
+
+### The change
+
+The router needs only `x2b[t]`, which step (5) of the layer already computes for every
+position before any expert runs. So every byte a layer will read is knowable before its
+first multiply. The MoE block was split into three phases: route all positions, prefetch
+the union of their experts sorted by (file, offset) with all threads faulting at once,
+then run the original arithmetic untouched. Behind `K3_PREFETCH` so the control runs on
+the same binary. Source: `/root/k3raw/eqp.c`; `eq.c` was left alone.
+
+### Result
+
+Cold page cache before every run, `drop_caches` between each:
+
+```
+configuration                      runs   wall time (s)          mean     vs off
+prefetch off                          4   55.24 52.92 53.10 52.80 53.52         -
+madvise WILLNEED only, async          2   49.51 50.02             49.77     1.08x
+sorted + parallel touch, experts      5   42.47 41.31 42.27 42.11 42.87  42.21  1.27x
+  the same, plus trunk slots          2   44.83 42.37             43.60     1.23x
+```
+
+**1.27x, and every one of the fifteen runs is bit-identical**: 163,840/163,840 logits and
+7,168/7,168 final-norm floats matching the pre-change baseline, maximum absolute
+difference exactly 0, token 17374 throughout. `read_bytes` is unchanged at 158.2 GB, so
+the same bytes move; only the manner changed.
+
+### Three things the experiment settled that argument would not have
+
+**The device claim is confirmed from inside the running model.** The prefetch phase pulls
+99.72 GB at 7.46 to 7.93 GB/s, and 154.19 GB at 8.42 GB/s in the trunk variant. That is
+the sweep's rate, reached by the model itself, on the data the model actually needs.
+
+**Asynchronous readahead alone is not enough, and is worse than doing the work.**
+`MADV_WILLNEED` returns in 0.96 s because it only queues the request; the kernel's
+readahead then fails to keep ahead of the compute and 49.77 s is all it buys. Explicitly
+driving sixteen fault streams and waiting costs 12.8 s of visible barrier and wins 7.5 s
+more. The version that blocks is faster than the version that does not.
+
+**Prefetching the trunk is worth nothing**, 43.60 s against 42.21 s. Its 58 GB was already
+overlapping with compute, and hoisting it into the barrier only relocated the cost. Added,
+measured, removed.
+
+### What this does to Cycle G
+
+Cycle G's outcome was "the model as implemented is I/O bound, not compute bound", and it
+re-priced the preceding six cycles on the grounds that operations are not the binding
+resource. Both halves need revising:
+
+- **The qualifier "as implemented" was carrying the whole claim** and was not noticed.
+  A different implementation of the same equation, producing the same bits, is 1.27x
+  faster without reading fewer bytes.
+- **The run is no longer I/O dominated.** 12.8 s of 42.87 s is the I/O barrier, 30%. The
+  other 70% is arithmetic plus trunk transfer that already overlaps it. Operations are
+  back to being the majority cost, so the re-pricing Cycle G applied to cycles A through F
+  is itself withdrawn. Those cycles still failed, on exactness, but not for the reason
+  Cycle G retrospectively gave.
+
+### What Step 5 does not establish
+
+- **One prompt, prefill only.** Five tokens, the decode path untouched and unmeasured.
+- **42.21 s is not a floor.** The barrier is pure serialized waiting. Overlapping it with
+  arithmetic would need the next layer's routing, which depends on this layer's output, so
+  cross-layer lookahead is not available; within-layer overlap was not attempted.
+- **The 70% is not cleanly attributed.** It is compute plus whatever trunk I/O overlaps
+  it, and this run carries no section timers to separate them.
+- **Machine-specific in part.** One disk, 16 threads, 124 GB of RAM.
+- **Nothing here is a change to the model.** The equation, the weights and every emitted
+  bit are identical. This is a change to how bytes are fetched, and it is the only result
+  in this document that made the model materially faster while changing nothing at all.
+
+---
+
 ## Not yet examined
 
 - why dead neurons stop at layer 51
-- whether the model can be made to read at the device rate rather than 2.69 GB/s
-- whether expert choice is predictable early enough to prefetch
+- whether the prefetch barrier can be overlapped with arithmetic inside a layer
+- whether expert choice is predictable early enough to prefetch across layers
 - whether reuse across many tokens changes the picture, since all of the routing work is
   5 tokens

@@ -888,6 +888,15 @@ in work done.
 > was treated as an endpoint, and it is not an endpoint until the device rate is measured
 > separately from the program's rate. That separate measurement was never taken here.
 
+> **Withdrawn 2026-09-27, Step 5 of `k3-data-problem.md`.** The outcome above does not
+> stand either. Hoisting the router so a layer's whole expert set is prefetched before its
+> arithmetic runs takes the same 158.2 GB and the same bits, 163,840/163,840 logits
+> identical, from 53.52 s to 42.21 s. The I/O barrier is then 12.8 s of 42.87 s, 30%, and
+> the run is majority compute. The qualifier "as implemented" was carrying the entire
+> claim. **The re-pricing of cycles A through F below is therefore withdrawn**: operations
+> are the majority cost again. Those cycles still failed, on exactness, but not for the
+> reason given here.
+
 **What this does to the preceding six cycles.** It does not invalidate any measurement,
 but it re-prices all of them. Every candidate was scored as a fraction of *operations*.
 Operations are not the binding resource. A reduction that removed 100% of the expert
