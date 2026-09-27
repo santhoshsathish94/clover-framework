@@ -60,6 +60,7 @@ computation only by relocating it is not a reduction either.
 | Generating structure in weight row order | adjacent rows 0.01154 against shuffled 0.01184 | step 4 below |
 | Block recurrence in the channel dimension | at or below chance at 128, 512 and 2048 | step 4 below |
 | Cauchy-Schwarz bounds on the argmax | prunes 0 of 163,840 rows; overshoots 6x at the winner | step 27 below |
+| Rank deficiency in the MLP projections | full rank by LU and by Gram spectrum | step 5 below |
 
 ---
 
@@ -404,6 +405,65 @@ scripts is not worth risking the reference.
 was measured at 12x, lane-emulated against "plain BLAS matmul". That comparison was
 against this unoptimized reference BLAS at roughly 4 GFLOPS. Against a threaded BLAS the
 ratio would be far larger. The 12x is a lower bound on the tax, not an estimate of it.
+
+### Step 5 — shared generating relation across channels
+
+$W_{\text{gate}}$ is 33792 x 7168, so at least 26,624 rows are combinations of the others.
+That is forced by the shape and is not a finding. The question is whether the rank is
+*below* 7168, which would mean the projection could be computed in a smaller basis.
+
+**Two independent instruments, because the first was slow enough to invite a shortcut.**
+
+LU on square submatrices. If any 7168 x 7168 submatrix is nonsingular, the rank is full
+and no spectrum is needed.
+
+```
+first 7168 rows    slogdet sign +1   log|det| 52378.8   solve residual 3.545e-11
+last  7168 rows    slogdet sign +1   log|det| 52363.9   solve residual 1.611e-11
+random 7168 rows   slogdet sign -1   log|det| 52369.7   solve residual 7.195e-11
+```
+
+Gram spectrum, the slower route, with a random int8 matrix of the same shape as control.
+
+```
+W_gate   rank 7168 of 7168    sv 2.773e+04 .. 1.867e+03    sv[-1]/sv[0] 6.731e-02
+W_up     rank 7168 of 7168    sv 2.737e+04 .. 1.866e+03    sv[-1]/sv[0] 6.819e-02
+W_sh1    rank 6144 of 6144    (Gram is 7168 wide, so 1024 zero eigenvalues are the shape)
+random   rank 7168 of 7168    sv 1.975e+04 .. 7.307e+03    sv[-1]/sv[0] 3.699e-01
+```
+
+**Outcome: ruled out.** Full rank by both instruments. No group of channels shares an
+exact generating relation beyond what the shape already forces.
+
+One secondary fact worth keeping: $W_{\text{gate}}$ is markedly more anisotropic than
+random, 0.067 against 0.370, so the learned matrix is far from isotropic. It is still
+nowhere near singular, and anisotropy is not rank deficiency.
+
+**A self-check that caught a repeat of the earlier tolerance error.** The W_sh1 line
+reported "rank 6658 at float64 tolerance" for a matrix with 6144 rows. A rank above the
+row count is impossible, so that number is the float64 tolerance counting Gram noise. The
+float32 tolerance gives the correct 6144. The error was caught by an arithmetic
+impossibility rather than by judgment, which is the only reason it did not survive.
+
+### Where the Step-41 program stands
+
+Steps 1 to 5 are complete. Step 6 is conditional, "derive a candidate reduced equation if
+supported", and nothing supports one:
+
+| step | question | result |
+|---|---|---|
+| 1 | capture the real pairs | done, verified against the engine |
+| 2 | exact repetition | none, 0 duplicates in 248,832 pairs |
+| 3 | rank structure | full; exact per-channel collapse ruled out |
+| 4 | recurrence | none of four kinds, each with a control |
+| 5 | shared generating relation | none; full rank by two instruments |
+
+**This line closes out negative.** The SiTU information boundary of Step 35 stands: the
+$(g,u)$ pairs carry independent information, and the document's own Step 39 says that in
+that case the nonlinear channels "should not be artificially reduced".
+
+The one structural regularity found along the way, the gate-up row alignment, is
+approximate and therefore outside the criterion fixed at the top of this file.
 
 ---
 
