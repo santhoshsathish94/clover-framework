@@ -214,6 +214,53 @@ a great deal, and the raw margin hid it.
 
 ---
 
+## An aside that turned out not to be an aside — looking at the numbers
+
+The human asked to plot the model's numbers as points in a circle, with no expectation,
+just to see. A C program maps each value to a point: angle from its index, radius from
+its magnitude, positives warm and negatives cool. Rendered at `/root/k3raw/circle.png`.
+
+Three of the four panels show only geometry. The 7,168 residual components form a tight
+isotropic blob; sorting collapses it to a smooth curve; the sorted logits trace a clean
+closed cardioid. Those are properties of plotting a distribution in polar coordinates.
+
+**The fourth panel is not geometry.** The logits, plotted by vocabulary index, are visibly
+asymmetric: the negative cloud sits offset and the positive points form a wedge pointing
+at low token IDs. Measured rather than eyeballed:
+
+```
+index bucket           mean    frac>0     max    n>10
+     0- 10240       -0.2744    0.3699  15.0213     74
+ 20480- 30720       -1.2306    0.2901  13.7461     10
+ 40960- 51200       -1.7756    0.2242  10.9803      1
+ 81920- 92160       -2.3549    0.1687  10.6642      1
+122880-133120       -2.6423    0.1313   8.5168      0
+153600-163840       -2.8006    0.1116   9.3550      0
+
+positive logits          : 32,539 of 163,840, median index 56,581 against 81,920 if uniform
+top 100 logits by index  : 78 in the first 10% of the vocabulary, 36 in the first 1%
+first half vs second half: mean -1.4853 against -2.6042, frac>0 0.2587 against 0.1385
+```
+
+Monotone across all sixteen buckets. **Control:** the residual has no index structure at
+all, `frac>0` of 0.4947 against 0.5033 for its two halves, so this belongs to the
+vocabulary axis and is not an artifact of the plotting.
+
+Low token IDs in a tiktoken vocabulary are the most frequent tokens, so this is a
+frequency prior, measured on this model rather than assumed.
+
+**Why it is recorded here.** Seven cycles of hypothesis-driven measurement never examined
+the vocabulary dimension, because no hypothesis pointed at it. One picture drawn with no
+expectation showed it immediately, and the measurement then confirmed it. That is a fact
+about the method, not about the model: **choosing what to measure was the binding
+constraint on this work far more often than any difficulty in measuring it.**
+
+Whether it is useful is a separate and untested question. The tail is 1.68% of runtime, so
+a vocabulary shortlist would save little here even if it were exact, and it would not be
+exact without a bound of the kind Step 27 already ruled out.
+
+---
+
 ## Not yet examined
 
 - whether the 4-bit codes are compressible, i.e. their entropy
