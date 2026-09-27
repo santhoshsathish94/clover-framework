@@ -134,13 +134,113 @@ Nothing in section 1.2 to 1.4 depends on the checkpoint, let alone on the run. T
 
 ---
 
+## Step 3 - the weights, and the first real W list
+
+### The weights themselves
+
+All 45 symbols in the table of section 1.5 are **W** by definition: $W_E$, $w^{\text{in}}_L$,
+$w^{\text{post}}_L$, $n^A_L$, $p^A_L$, $n^M_L$, $p^M_L$, $W^q_L$, $W^k_L$, $W^v_L$, $W^b_L$,
+$W^{fa}_L$, $W^{fb}_L$, $C^q_L$, $C^k_L$, $C^v_L$, $A^{\log}_L$, $\tau_L$, $w^o_L$,
+$W^{qa}_L$, $w^{qan}_L$, $W^{qb}_L$, $W^{ka}_L$, $w^{kan}_L$, $W^{kb}_L$, $W^g_L$, $W^o_L$,
+$W^{\text{gate}}_0$, $W^{\text{up}}_0$, $W^{\text{down}}_0$, $G_L$, $\gamma_L$,
+$W^{\downarrow}_L$, $W^{\uparrow}_L$, $w^{\ell}_L$, $W^{(e)}_1$, $W^{(e)}_3$, $W^{(e)}_2$,
+$W^s_1$, $W^s_3$, $W^s_2$, $n^O$, $p^O$, $w^F$, $W_{\text{lm}}$.
+
+That is not interesting. What is interesting is everything section 1.5 and section 2
+*derive* from them.
+
+### The three folds
+
+Section 1.5 states them outright:
+
+$$f^A_L = n^A_L \odot p^A_L, \qquad f^M_L = n^M_L \odot p^M_L, \qquad f^O = n^O \odot p^O$$
+
+Every symbol on the right is **W**, so by rule 2 all three are **W**. They are elementwise
+products of weight vectors, and their values cannot be affected by any input.
+
+$$93 + 93 + 1 = 187 \text{ vectors of width } E = 7168 = 1{,}340{,}416 \text{ floats}$$
+
+### The exponentiated decay coefficient
+
+Section 3.1 defines, inside the KDA block:
+
+$$a_h = \exp\big(A^{\log}_L[h]\big), \qquad h = 0 \dots 95$$
+
+$A^{\log}_L$ is **W**, so $a_h$ is **W**. It sits inside the per-position attention
+expression and depends on nothing that varies. $|\mathbb{K}| = 69$ layers carry it, at 96
+values each:
+
+$$69 \times 96 = 6{,}624 \text{ exponentials}$$
+
+Section 6 of the equation document records that $A^{\log}$ is stored at width 128 with 96
+read, so 32 of every 128 stored values are **W** and also never referenced at all.
+
+### The derived-W total, exactly
+
+| quantity | count | floats |
+|---|---|---|
+| $f^A_L$ | 93 vectors of 7168 | 666,624 |
+| $f^M_L$ | 93 vectors of 7168 | 666,624 |
+| $f^O$ | 1 vector of 7168 | 7,168 |
+| $a_h$ | 69 sets of 96 | 6,624 |
+| **total** | | **1,347,040** |
+
+**5.39 MB.** That is the entire closed-form derived-**W** set of the equation, and it
+contains 1,340,416 multiplications and 6,624 exponentials that no run can influence.
+
+### The dtype conversions, which are also W but do not close so neatly
+
+Section 1.5 says dtype selects the operator, and section 2 specifies each conversion:
+
+- $\mathbb{B}$ widens BF16 to float32 "exactly (a shift, not a rounding)"
+- $\mathbb{Q}$ converts each int8 to float inside the FMA, and applies the row scale $s_o$
+  **after** the reduction
+- $\mathbb{X}$ decodes each 4-bit code and multiplies by its group's scale
+  **in float32 before** the accumulation:
+  $\tilde{w}_{r,i} = \mathrm{fl}_{32}\big(\mathrm{E2M1}[c_{r,i}] \cdot 2^{\,s_{r,g(i)}-127}\big)$
+
+Each of these is a function of weights alone, so each is **W**. $\tilde{w}$ in particular is
+a fully-defined **W** array with the same shape as the expert weights.
+
+But they do not behave like the folds, and the difference is the point:
+
+| | source form | **W** form | ratio |
+|---|---|---|---|
+| the three folds and $a_h$ | 2 x BF16 per element | float32 | 1.0x |
+| $\mathbb{Q}$'s int8 to float | int8 + row scale | float32 | ~4x |
+| $\mathbb{X}$'s $\tilde{w}$ | 4-bit code + shared E8M0 scale | float32 | ~7.5x |
+
+**Being W is necessary for precomputing something and is not sufficient.** The folds
+collapse two stored vectors into one of the same width, so the **W** form is strictly
+smaller than the source. The dequantizations expand, and a quantization format exists
+precisely to make the stored form smaller than the computed one. Materializing $\tilde{w}$
+turns 1.45 TB of experts into roughly 10.9 TB.
+
+The test that decides it is not "is this **W**" but **"is fetching the W form cheaper than
+fetching the source and recomputing it"**. That question needs a cost model, which is step
+8. The classification here only establishes which quantities are eligible.
+
+### Step 3 result
+
+| group | symbols | E | W | R | S |
+|---|---|---|---|---|---|
+| 1.5 stored weights | 45 | 0 | 45 | 0 | 0 |
+| derived: folds | 3 | 0 | 3 | 0 | 0 |
+| derived: $a_h$ | 1 | 0 | 1 | 0 | 0 |
+| derived: dtype conversions | 3 | 0 | 3 | 0 | 0 |
+
+Still no **R** symbol anywhere except the two in 1.1. Every quantity the equation has
+introduced so far is fixed before the run starts.
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
 |---|---|---|
 | 1 | scheme | done |
 | 2 | 1.1 input, 1.2 shapes, 1.3 scalars, 1.4 layer sets | done |
-| 3 | 1.5 weights and the three folds | |
+| 3 | 1.5 weights and the three folds | done |
 | 4 | section 2, the ten operators | |
 | 5 | section 3, the attention blocks | |
 | 6 | section 4, the MLP and MoE blocks | |
