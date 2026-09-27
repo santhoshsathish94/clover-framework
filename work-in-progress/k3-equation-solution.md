@@ -2685,6 +2685,180 @@ to reuse. It is a two-phase shape - pay once for a prefix, then answer many
 continuations against it - and what these numbers establish is that the shape is sound
 and exact, not approximate.
 
+## Step 33 - "bit-exact" was never checked against a fixed build
+
+Setting up a capture run, I compared its logits to the preserved baseline out of habit
+and they did not match. The baseline is `eq_c_logits.baseline.bin`, md5
+`23d162dcefb18211a7540ef12948f1eb`. Today's program gives
+`4a6365b5fabc65f9fb461adf8e11f1ee`.
+
+Every row of the arc table above says **bit-exact: yes**.
+
+### What the difference actually was
+
+91.1% of the floats differ - 155837 of 171008, including 6801 of the 7168 in the final
+normalized state, so it starts in the body and not at the lm_head. But the **largest
+absolute difference is 5.722e-06** on logits of magnitude 18, which is two to three
+units in the last place. Both pick 17374.
+
+My first guess was that steps 29 and 30 changed a summation order. **Wrong, and cheaply
+disproved**: `K3_PAR2=0`, `K3_SITUPAR=0`, `K3_GFUSE=0`, all three at once, every `K3_XDEC`
+setting, and `OMP_NUM_THREADS=1` all give the same `4a6365`. The parallel work is not
+the cause.
+
+### The real cause
+
+The intermediate sources were still on the box, so the question was answerable rather
+than arguable:
+
+```
+                      -O3 -march=native      -O3 -march=native -ffp-contract=off
+eq.c                  81349a44...            23d162...  == BASELINE
+eqp_prebase.c         81349a44...            23d162...  == BASELINE
+eqp.c                 4a6365b5...            23d162...  == BASELINE
+eq.c  -O3 (no native) 23d162...  == BASELINE
+eq.c  -O2 (no native) 23d162...  == BASELINE
+```
+
+**Every version of the source is bit-identical to the baseline once FMA contraction is
+off.** The arithmetic never changed. What changed is the compiler's *opportunity* to
+fuse a multiply and an add into one instruction that rounds once instead of twice.
+
+The baseline was produced by a binary built without `-march=native`, so no FMA
+instruction existed to fuse into. That is why `-O3` and `-O2` without it still reproduce
+it exactly.
+
+The site is step 30's restructuring of `AR`:
+
+```c
+/* before */                            /* after */
+for (i) out[i] = 0.0f;                  for (i) {
+for (s) for (i)                             float o = 0.0f;
+    out[i] = out[i] + pi * v[i];            for (s) o = o + pis[s]*srcs[s][i];
+                                            out[i] = o;
+                                        }
+```
+
+The order of summation over `s` is identical. What moved is the accumulator - from a
+float array element that has to be written to memory each step, to a local the compiler
+can keep in a register and contract. Reverting **only** that block and rebuilding with
+contraction still on gives `81349a44...`, exactly the pre-step-30 value, which settles
+the attribution rather than inferring it.
+
+### The defect is mine, and it is methodological
+
+The program was right the whole time. The *check* was wrong: it compared against a
+binary built with different flags and never recorded them. It passed for thirty steps
+because nothing had yet given the compiler a new place to fuse, and the first
+restructuring that did was read as a regression.
+
+A bit-exactness claim is meaningless without the build that produced the reference.
+Everything from here is built `-O3 -march=native -ffp-contract=off`, which reproduces
+the baseline exactly and, at five tokens, **costs nothing measurable** - 8.81 / 8.80 s
+against 8.93 / 8.81 s, inside the noise, because this configuration is bandwidth-bound
+and fusing arithmetic buys nothing. That is not yet checked at 64 tokens, where the
+program is genuinely FLOP-bound.
+
+## Step 34 - thirty-four prompts, capturing identity instead of values
+
+Everything so far rested on one prompt. The question was what more prompts would show,
+and the honest way to capture a run is every value it computes - but $\mathbb{X}$ alone
+emits 916M floats, 3.7 GB a run, and the box has 23 GB free.
+
+So the capture records **what each value was computed from, not what it was**: for every
+trunk weight the layer and slot, for every expert block the layer, expert, part and byte
+range. Identity is also the thing that varies between prompts; the weights do not change.
+34 runs came to **129 MB**.
+
+`K3_PROV` hooks `slot_ptr` and `slot_vec` themselves, so it records the pointers actually
+taken rather than a guess at which a layer needs. Capture is verified not to disturb
+anything: prov on and prov off give the same logits, and run 1 reproduces the baseline.
+
+Prompts were tokenized with the model's own tokenizer, 5 to 24 tokens, across fact,
+code, arithmetic, prose, deliberate repetition, shared prefixes and three languages.
+
+### It answers, and not just for the prompt it was built on
+
+```
+The capital of France is          -> 17374 ' Paris'
+La capitale de la France est      -> 17374 ' Paris'
+Die Hauptstadt von Frankreich ist -> 17374 ' Paris'
+The chemical symbol for gold is   -> 70135 ' Au'
+The largest planet ...            -> 75591 ' Jupiter'
+The author of Pride and Prejudice -> 33197 ' Jane'
+In 1969 the first humans landed   -> 28396 ' moon'
+Seven multiplied by eight equals fifty -> 101055 '-six'
+... and Berlin is the capital of  -> 16458 ' Germany'
+... and Rome is the capital of    -> 19509 ' Italy'
+```
+
+**Stated carefully: these are the equation's own outputs, decoded with the model's
+tokenizer and judged by me. The engine was not run on these 34 prompts**, so this is
+evidence the implementation is semantically sound, not a cross-check against the model.
+
+### The trunk side is provably input-independent, now measured
+
+**All 34 runs have the identical trunk signature** - the same 2455 (layer, slot, use)
+resolutions, 1251 used in place and 1204 dequantized. One signature, 34 prompts.
+
+The slot counts confirm section 1.4's layer sets exactly: the MLA slots appear 24 times,
+the KDA slots 69, the MoE slots 92, the dense MLP slots once at layer 0, and the
+per-layer norms 93. That classification was argued from the text in steps 2 to 8. It is
+now observed.
+
+### Routing is not reusable, in three independent ways
+
+| what was asked | answer |
+|---|---|
+| (layer, expert) pairs any prompt touched | 65072 of 82432, **78.9%**, from 34 short prompts |
+| pairs used by *every* prompt | **994**, 1.2% |
+| pairs used by exactly one prompt | 16685 |
+| mean pairwise Jaccard between prompts | **0.194** |
+
+The most similar pair is 0.818 - the two prompts sharing a seven-token prefix. The least
+similar are around 0.13, code against prose.
+
+**The same token never picks the same experts twice.** In the deliberately repetitive
+prompts, comparing each position's 16-expert set against the first occurrence of the
+same token in the same layer:
+
+```
+yes yes yes ... (12)   identical expert set: 0 of 1012
+the the the ... (12)   identical expert set: 0 of 1012
+one two three   (11)   identical expert set: 0 of  920
+a a a a b b b b (24)   identical expert set: 0 of 2116
+```
+
+Not 5%, not 1% - zero, in 5060 comparisons. This is a far stronger form of step 31's
+negative: routing depends on the position's whole context, never on the token alone.
+
+**A shared prefix routes identically, everywhere.** For the two prompt pairs built to
+diverge after a common prefix, every shared (layer, position) selects the same 16
+experts with the same weights: **644 of 644**, and **828 of 828**. That is the
+routing-level confirmation of what prefix reuse depends on.
+
+### Two ideas killed by the data
+
+**Dropping low-weighted experts.** The top-16 is flat, not peaked - rank 0 carries a mean
+of 16.4% of the routed mass and the top four together only 43.4%. The tail is not
+negligible: rank 15 averages 0.0368, and only 1.89% of sites have it below 0.01.
+Dropping the bottom one of sixteen to save 6.2% of reads loses 3.7% of the routed mass
+on average and 29% at the worst site. There is no free tail here.
+
+**A cross-prompt expert cache.** Over 34 runs, 296158 expert reads totalling 5196.8 GB,
+covering 1141.8 GB of distinct blocks - a 4.55x ceiling. But LRU gets **0.0% up to 96 GB
+and 9.5% at 124 GB**, because a single run's working set is ~150 GB and evicts
+everything before it can be reused. The whole 1142 GB is needed to reach the 78%. On a
+124 GB box, a cross-prompt expert cache is worth nothing.
+
+### What did scale
+
+Distinct experts per run grows about **195 per additional token** while draws grow by
+1472, so the distinct-to-draw ratio falls from 0.77 at five tokens to 0.27 at
+twenty-four. Repetition reduces the distinct count sharply - the 24-token `a a a a b b
+b b` touches 9386 where 23-token code touches 13686 - so repeated text does share
+experts in aggregate even though it never repeats a full selection.
+
 ## Progress
 
 | step | | status |
@@ -2711,6 +2885,8 @@ and exact, not approximate.
 | 30 | the other four small operators | done |
 | 31 | can a token look up its own experts? | no, measured |
 | 32 | prefix reuse, re-verified and actually used | done |
+| 33 | "bit-exact" was never checked against a fixed build | corrected |
+| 34 | 34 prompts, capturing identity instead of values | done |
 
 ## The comparison that matters: the equation against the engine
 
