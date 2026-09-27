@@ -40,6 +40,7 @@ computation only by relocating it is not a reduction either.
 | The factored KDA state is a valid sufficient statistic | in real arithmetic; reproduces `kda.o` to 1.9e-08 |
 | Snapshot normalization is cacheable bit-exactly | 4,048 of 4,974 removed, output byte-identical |
 | The SiTU caps never bind anywhere measured | max $|g|/b_1 = 0.56$, max $|u|/b_2 = 0.04$ |
+| Gate and up rows are strongly aligned per channel | mean $\|\cos\|$ 0.622 matched against 0.011 shuffled, 55x, with control |
 
 ---
 
@@ -53,6 +54,7 @@ computation only by relocating it is not a reduction either.
 | Snapshot caching as a speedup | exact, but 0.0108% of the pass, 1 part in 9,219 | timings below |
 | Single-snapshot ablation as a redundancy test | individual removability does not compose | step below |
 | Exact repetition among $(g,u)$ pairs | zero duplicates at all three SiTU sites | step below |
+| Exact per-channel collapse of the $(g,u)$ pair | no row pair is parallel; closest $\vert\cos\vert = 0.9982$ | step 3 below |
 
 ---
 
@@ -214,6 +216,69 @@ from Step 39 is ruled out at all three SiTU sites.
 
 The caps do not bind: max $|g|/b_1$ is 0.082, 0.560, 0.297 and max $|u|/b_2$ is
 0.012, 0.015, 0.040 at the three sites.
+
+### Step 3 — rank structure
+
+**(a) Spectra of the captured activations.** Nothing is rank-deficient.
+
+```
+dense  g  (5, 33792)   rank 5 of 5    6.017e+00 4.273e+00 3.818e+00 3.628e+00 3.378e+00
+dense  u  (5, 33792)   rank 5 of 5    5.896e+00 4.245e+00 3.737e+00 3.638e+00 3.384e+00
+shared g  (5,  6144)   rank 5 of 5    7.538e+00 4.352e+00 3.854e+00 3.567e+00 3.320e+00
+routed g  (16, 3072)   rank 16 of 16  9.266e+00 9.211e+00 9.096e+00 8.991e+00 8.921e+00
+```
+
+**(b) Per channel, is $u_i$ proportional to $g_i$?** The 2-by-$n$ matrix $[g_i; u_i]$ has
+rank 1 exactly when $|\cos| = 1$.
+
+```
+dense   33792 channels   |cos| min 0.000009  median 0.817263  max 0.999981577
+shared   6144 channels   |cos| min 0.000061  median 0.390219  max 0.991706059
+routed   3072 channels   |cos| min 0.000000  median 0.229412  max 0.870805692
+
+channels with 1-|cos| < 1e-3 : dense 185, shared 0, routed 0
+channels with 1-|cos| < 1e-5 : dense   0, shared 0, routed 0
+```
+
+**No channel is exactly proportional at any site.** Exact per-channel collapse of the
+pair is ruled out.
+
+**(c) The weight rows behind it.** Proportionality of the activations for *every* input,
+rather than just this prompt, would require $W_{\text{gate}}[i] \parallel W_{\text{up}}[i]$.
+
+```
+cos(W_gate[i], W_up[i]) : min -0.995756  median -0.006592  max 0.998230
+rows with |cos| > 0.99  : 24 of 33792
+rows with |cos| > 0.50  : 22790 of 33792
+rows exactly parallel   : 0
+distinct rows, exact bytes : 33792 of 33792 in both matrices
+```
+
+**Control, because the number above is surprising enough to be an artifact.**
+
+```
+gate[i] vs up[i]   MATCHED   mean|cos| 0.62226  frac>0.5 0.6747  max 0.9963
+gate[i] vs up[j]   shuffled  mean|cos| 0.01130  frac>0.5 0.0000  max 0.1994
+gate[i] vs gate[j] shuffled  mean|cos| 0.01136  frac>0.5 0.0000  max 0.1903
+random 7168-dim expectation  0.00942
+```
+
+Both shuffled controls sit on the random expectation. The matched pairing is 55 times
+higher. The alignment is real and is a property of the *pairing*, not of the matrices.
+
+**Outcome.** Two findings that must not be merged.
+
+1. **Exact proportionality is ruled out.** No row pair is parallel, the closest is
+   $|\cos| = 0.9982$, and the orthogonal remainder there is still 6% of the norm. Under
+   the success criterion fixed above, this is not a reduction.
+2. **A strong approximate structure exists and is measured.** For two thirds of dense
+   channels the gate and up projections point along nearly the same axis, up to sign.
+   That is a real fact about the learned weights, established with a control, and it is
+   the first structural regularity this exploration has found that is not an artifact of
+   the architecture's declared shapes.
+
+It is recorded as a fact, not as a reduction. Turning it into one would require accepting
+approximation, which the criterion for this work excludes.
 
 ---
 
