@@ -1174,9 +1174,9 @@ resource is the second disk.
 ### There is no second disk
 
 ```
-nvme0n1p4 ──┐
-            ├── md2 (RAID1) ── ext4 ── /     1.8T, 1.7T used, 24G free
-nvme1n1p4 ──┘
+nvme0n1p4 --+
+            +-- md2 (RAID1) -- ext4 -- /     1.8T, 1.7T used, 24G free
+nvme1n1p4 --+
 ```
 
 Both drives are fully partitioned and **every partition is a RAID1 member**: p1 is the EFI
