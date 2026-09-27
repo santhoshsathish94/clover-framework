@@ -2563,6 +2563,71 @@ reporting a 7.5 s regression from n=1 when the run-to-run spread on a good day i
 and this document has already recorded two cases of a single measurement misleading it.
 The repeat took four minutes.
 
+## Step 31 - can a token look up its own experts?
+
+The proposal: if a token id maps to a vector, and the vector picks the experts, then a
+link table from token to its 16 experts per layer would remove the routing entirely.
+
+The reason to doubt it is in the equation - the router reads `x2b[t]`, the hidden state
+at layer L, which has accumulated the whole prefix through L layers. The token is only
+its seed. But how much the choice is driven by the token rather than the context is an
+empirical question, so `K3_DUMPSEL` was added to dump `(layer, position, token id, its
+16 experts)` and three prompts were run:
+
+```
+A  The capital of France is                    1008,10484,318,15383,387
+B  France is a country and France is in Europe 93705,387,261,5141,316,15383,387,306,6715
+C  The capital of Japan is                     1008,10484,318,10417,387
+```
+
+B carries token 387 at positions 1 **and** 6 - the same token, in one run, under the
+same weights, with different context. A and C put 387 at the same position with a single
+word of context differing.
+
+### The answer is no, and not marginally
+
+```
+                                        shared of 16     layers all-16
+control: identical prefix               16.00  (100.0%)    92 of 92
+same token, same position,
+  one word of context differs           10.38  ( 64.9%)     0 of 92
+same token, same run, different context  3.42  ( 21.4%)     0 of 92
+same token, different run and position   3.70  ( 23.1%)     0 of 92
+null: two random (layer, position) picks 0.29  (  1.8%)
+```
+
+The control is the instrument check: an identical prefix gives 16 of 16 on every layer.
+
+**The intuition is half right.** There is real token signal - 21 to 23% against a 1.8%
+null is twelve times chance - and it is strongest at the start, where layer 1 shares 11
+to 14 of 16, decaying to 3 to 6 by layer 6. The token does shape the choice.
+
+But a table has to be right, and **not one layer of 92 reaches 16 of 16 in any
+non-trivial case** - not even for the same token at the same position with one word
+changed between "France is" and "Japan is".
+
+### It cannot pay as a hint either
+
+The program already knows the exact expert list **before it reads a single expert byte**:
+step 5 established that routing needs only `x2b`, so phase 2 plans the layer's whole byte
+list in advance. Within a layer there is nothing for a prediction to be early for.
+
+Speculating across layers - predicting L+1 while computing L - would need roughly four
+times the bytes at 23% accuracy, on a run that is bandwidth bound. Clearly negative.
+
+The underlying reason is that **the router is already cheap and already early**: 0.127 s
+of a 9-second run, for the exact answer. A table would replace an exact, cheap,
+well-timed computation with an inexact one.
+
+### A defect in my own instrument
+
+The first run labelled every prompt with the *default* token ids and printed `0` for
+position 6, because `g_ids = ids` was placed before `K3_IDS` reassigns `ids` - so it
+pointed at the hardcoded five-element array and read past its end. The expert sets come
+from `idsel_all` and were never affected, so the comparisons held, but the labels were
+wrong until it was moved and re-run. The corrected run reports token 387 against 387
+throughout and identical numbers.
+
 ## Progress
 
 | step | | status |
@@ -2587,6 +2652,7 @@ The repeat took four minutes.
 | 28 | the router reads its own weights | done |
 | 29 | SiTU was running on one core | done |
 | 30 | the other four small operators | done |
+| 31 | can a token look up its own experts? | no, measured |
 
 ## The comparison that matters: the equation against the engine
 
