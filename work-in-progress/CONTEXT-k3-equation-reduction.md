@@ -43,6 +43,7 @@ computation only by relocating it is not a reduction either.
 | Gate and up rows are strongly aligned per channel | mean $\|\cos\|$ 0.622 matched against 0.011 shuffled, 55x, with control |
 | Backward query propagation is sound, once corrected | float32 epsilon; the document's own form errs by 28% |
 | The final norm scalar cannot change the argmax | confirmed; top-1000 ordering preserved, full ordering not |
+| 11.5% of expert weights are exactly zero | stable across experts, std 0.026%; 5.19% of the whole pass |
 
 ---
 
@@ -65,6 +66,9 @@ computation only by relocating it is not a reduction either.
 | Rank deficiency in the MLP projections | full rank by LU and by Gram spectrum | step 5 below |
 | Dropping the final norm scalar as a speedup | exact for the argmax, but 0.0000040% of the pass | step 28 below |
 | The transition matrix used in Steps 13 to 26 | $D_\alpha - \beta kk^\top$ gives 28% error; the truth is $(I-\beta kk^\top)D_\alpha$ | step 14/18 below |
+| A shared low-dimensional subspace across experts | two experts already span all of $\mathbb{R}^{3584}$ | experts below |
+| Duplicate or reused experts | 896 distinct of 896; differ across layers too | experts below |
+| Skipping the 11.5% exactly-zero expert weights | perfectly scattered; 0 all-zero blocks of any size | experts below |
 
 ---
 
@@ -525,6 +529,57 @@ the fourth decimal for the same reason. So the invariance is exact over the real
 holds for greedy decoding, but it is not safe for sampling or for top-k with large k.
 
 **Value.** 21,504 operations, which is 0.0000040% of the forward pass.
+
+### The routed experts — 45% of the pass
+
+The tail and the aggregation are small denominators. The expert matmuls are not, so this
+is where a reduction would have to land.
+
+**Four structural questions, all negative.**
+
+```
+1. byte-identical experts, layer 1   : 896 distinct of 896, 0 duplicates
+2. one expert's W1, 3072 x 3584      : slogdet nonzero, rank = 3072, full
+3. two experts stacked, 6144 x 3584  : slogdet nonzero, they already span all of R^3584
+4. expert 0 at layer 1 vs layer 2    : different
+```
+
+Question 3 was the one that mattered. If the 896 experts shared a low-dimensional row
+space, the latent could be projected once and every expert would become cheap. Two
+experts already span the whole space, so no such subspace exists.
+
+**But the decode revealed something with a real denominator.**
+
+```
+zeros in decoded expert weights : 11.5327% (w1), 11.5373% (w3), 11.9909% (w2)
+source                          : E2M1 code 0 or 8. dead scale bytes: 0 of 344,064
+stability across 64 experts     : 11.4338% .. 11.5609%, std 0.0259%
+```
+
+Multiplying by zero and adding zero to a finite accumulator are exact no-ops, so this is
+**5.19% of the whole forward pass in provably redundant arithmetic** — three orders of
+magnitude larger than any previous exact candidate.
+
+**It fails on structure.**
+
+```
+fully zero 16-element blocks : 0 of 688,128
+fully zero 32-element groups : 0 of 344,064
+fully zero rows              : 0 of 3,072
+fully zero columns           : 0 of 3,584
+zeros per row                : min 346, median 412, max 497, of width 3584
+
+control: random placement at the same rate predicts 9.8e-16 zero 16-blocks,
+i.e. 0.0 expected. observed 0.
+```
+
+Every row carries its share, no unit the kernel actually loads is all zero, and the
+placement is statistically indistinguishable from random. At 88.5% density a sparse
+format costs more in indexing than the 11.5% it saves.
+
+**Outcome.** The largest exact redundancy found in this work, and still not a reduction.
+It is worth recording that this is a *third* failure mode, distinct from the previous
+two: not inexact, not too small, but structurally unexploitable.
 
 ---
 
