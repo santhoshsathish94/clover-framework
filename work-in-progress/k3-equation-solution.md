@@ -2255,6 +2255,48 @@ expert bytes read                      99.72 GB        99.72 GB
 emitted token                           17374           17374        logits identical
 ```
 
+> **Corrected, twice over.** The `v1`/`v2` figures above were recorded on 24 September
+> under machine conditions that no longer hold, and the comparison also gave the
+> equation pinned threads while leaving the engine unpinned - the same confound
+> corrected for `eq.c` on the same day.
+>
+> Re-run back to back, cold cache, **both pinned**, engine at `--cache-gb 30` so the two
+> hold comparable memory:
+>
+> ```
+>                       engine        equation
+> time                  23.20 s        13.39 s     1.73x
+> CPU (user+sys)       190.0 s        161.0 s      1.18x less
+> peak RAM              51.09 GB       58.20 GB    1.14x MORE
+> disk read            154.2 GB       156.7 GB     the same
+> token                 17374          17374
+> ```
+>
+> **The equation is 1.73x faster and uses MORE memory, not less.** It holds the whole
+> trunk in RAM; the engine streams it through a two-slot ring. The earlier "1.5x less
+> RAM" compared against the engine's auto-sized 64 GB expert cache, which it had only
+> taken because RAM happened to be free.
+>
+> The engine today is genuinely faster than its own 24 September logs (19.07 s step 0
+> pinned, against 32.10 s then) and its code has not been optimized since: the diff is
+> **126 insertions, 0 deletions, all trace taps**. The I/O time is identical then and
+> now (~14 s); the entire difference is compute, which points at what else the box was
+> doing on 24 September. **Those older figures are not comparable and are not used.**
+
+### Validated on a prompt the equation had never seen
+
+Every correctness check until now used the one prompt `eqp.c` was built against. Running
+a genuinely new one - "The chemical symbol for gold is", 6 ids - through both:
+
+```
+engine   token 70135  ' Au'
+equation token 70135  ' Au'
+```
+
+Engine 29.12 s / 268 s CPU / 85.1 GB against equation 13.94 s / 171 s CPU / 58.4 GB.
+The equation's own "DIFFERENT" line there is only its hardcoded 17374 label, which is
+meaningless off the original prompt.
+
 **So the equation runs this prompt about 2.5x faster than the engine, and 3.1x with the
 trunk resident** - not the 3.69x the arc suggests, because the arc's baseline was never
 the model.
