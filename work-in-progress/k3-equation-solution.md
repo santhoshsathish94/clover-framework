@@ -1887,6 +1887,87 @@ Softmax attention is $O(T^2)$ and still only 0.09% of wall at 64 tokens, so it i
 yet a concern - but it is the one term that will eventually dominate, and 64 tokens is
 still a short prompt.
 
+## Step 21 - the prediction was wrong, and the discriminator said why
+
+Step 20 predicted that $\mathbb{Q}$'s 31% loss came from `v0[NPOS]/v1[NPOS]` being
+indexed by a runtime `t`, and that tiling the position loop would recover it. The first
+half of that was wrong.
+
+### One experiment that could tell the two causes apart
+
+There were two candidates - the accumulator array, and the T separate input streams - and
+tiling fixes both at once, so a tiling result could not have distinguished them. The
+discriminator is to run the model's own kernel with all T pointers aimed at **one**
+buffer: identical arithmetic, identical accumulator pressure, one stream instead of 64.
+
+```
+T=64, model kernel      GFLOP/s
+64 distinct streams      424.7
+1 shared stream          761.8
+```
+
+**1.79x from the streams alone.** It is not the accumulators. The reason is a number I
+had not looked at: $x$ is float32, so one position vector is $4 \times 7168 = 28.7$ KB,
+and a 32 KB L1 cannot hold even two of them, let alone sixty-four.
+
+That also explains why tiling disappoints. Blocking positions into groups of 8 still
+walks 8 x 28.7 KB of input per pass; it reduces the problem without removing it.
+
+### The fix the diagnosis implies
+
+If the constraint is x traffic, the answer is to use each x load more - block the
+**output rows**, so one loaded `x0/x1` pair feeds OB rows instead of one. That raises
+arithmetic intensity by OB and leaves the per-output summation order untouched, so it
+stays bit-exact. Measured on `qgap.c`, all variants verified against the model kernel at
+0 differing floats:
+
+```
+                 T=5     T=16    T=32    T=64
+model           463.1   446.4   373.9   458.7
+tile 1          611.6   539.3   618.5   535.8
+tile 8          365.6   530.8   604.2   507.0
+tile 16         417.7   602.7   668.3   514.0
+rows 4 x pos 4  384.5   693.7   644.3   649.9
+rows 8 x pos 1  436.9   685.5   667.5   652.4
+```
+
+No variant wins everywhere. `rows 8 x pos 1` is best or near-best from T=16 up but is
+**worse than the model at T=5**, so it is applied only for $T \ge 8$ and the short-prompt
+path is left physically untouched - which makes the five-token bit-exactness structural
+rather than something to hope for.
+
+One oddity recorded and not explained: `tile 2` is consistently worse than both `tile 1`
+and `tile 4`, at every T.
+
+### In the model
+
+```
+NPOS    Q seconds        Q GFLOP/s      wall           process total
+  5   1.325 -> 1.301   405.9 ->  413.3   9.35 ->  9.31   13.35 -> 13.32
+ 16   3.811 -> 3.147   451.7 ->  547.0  20.17 -> 19.45   24.18 -> 23.46
+ 32  10.771 ->  5.963  319.6 ->  577.3  36.82 -> 31.93   40.83 -> 35.94
+ 64  21.991 -> 11.993  313.1 ->  574.1  65.77 -> 55.88   69.79 -> 59.89
+```
+
+`NPOS=5` logits byte-identical to the preserved baseline.
+
+**$\mathbb{Q}$ is 1.83x faster at 64 tokens and the degradation is not merely recovered
+but reversed**: its rate now climbs with prompt length and plateaus near 575 GFLOP/s
+instead of falling to 313. End to end that is 1.17x at 64 tokens and 1.14x at 32.
+
+And unlike step 18, **it shows**. Step 20 established why in advance: at five tokens
+there is 23% stall waiting to absorb any arithmetic saving, and at sixty-four there is
+1%. The same change would have been worth nothing a step earlier and worth 9.9 seconds
+here. Per token, 1.03 s -> 0.87 s.
+
+### What this cost me to learn
+
+The wrong prediction was cheap because it was written down before the test - there was
+no way to quietly re-interpret the result afterwards. What made it recoverable was
+building an experiment that could **separate** the candidates rather than one that would
+have improved things under either. A tiling benchmark alone would have shown 1.18x, I
+would have shipped it, and the 1.83x would still be sitting there.
+
 ## Progress
 
 | step | | status |
@@ -1901,9 +1982,11 @@ still a short prompt.
 | 18 | the 1.37x was a bad baseline | done |
 | 19 | the trunk is read once, and need not be read at all | done |
 | 20 | the five-token picture does not generalize | done |
-| 21 | tiling $\mathbb{Q}$'s position loop | predicted, not yet run |
+| 21 | $\mathbb{Q}$'s input streams, not its accumulators | done |
 
 ## The arc, end to end
+
+At five tokens, cold start:
 
 | change | wall | end to end | bit-exact |
 |---|---|---|---|
@@ -1918,21 +2001,26 @@ still a short prompt.
 | + THP | 9.35 | 13.35 | yes |
 | + hugetlb trunk | **9.33** | **13.16** | yes |
 | + T==1 accumulators | 9.33 | 13.16 | yes, and worth nothing |
+| + row-blocked $\mathbb{Q}$ | 9.31 | 13.32 | yes, and worth nothing here |
 
-**4.27x end to end, cold start, five tokens, 171,008/171,008 identical at every step.**
+**4.27x end to end, cold start, five tokens.** Resident trunk, warm, is 10.6 s or 5.3x.
 
-Resident trunk is listed separately because it is a different measurement: **10.6 s**, or
-5.3x, warm, with the model already in memory.
+At longer prompts the last change is the one that matters:
+
+| NPOS | before step 21 | after | gain |
+|---|---|---|---|
+| 16 | 24.18 s | 23.46 | 1.03x |
+| 32 | 40.83 | 35.94 | 1.14x |
+| 64 | 69.79 | 59.89 | 1.17x |
 
 ## What this leaves to do
 
-- **step 21**: tile $\mathbb{Q}$'s position loop and find out whether the 31% comes back.
-  At long prompts there is no stall to absorb the gain, so unlike step 18 it would show
-- at five tokens the run is at its bandwidth equilibrium and no arithmetic change can
-  pay; at sixty-four tokens that is no longer true, and the two regimes need separate
-  conclusions everywhere in this document
-- the only bit-exact lever on bytes is gone; fewer experts (k=8) or a narrower format
-  both change the answer
+- $\mathbb{X}$ has the same shape of problem and has not been given the same treatment:
+  it is 54% of wall at 64 tokens against $\mathbb{Q}$'s 21%, and its rate still climbs
+  only to 207 GFLOP/s. Whether row blocking helps a kernel whose weights are read once
+  and never reused is an open question, not a foregone one
+- the five-token configuration is at its bandwidth equilibrium and nothing arithmetic
+  will move it; the long-prompt configuration is compute bound and now has a proven lever
 - untested, not rejected: 1 GB pages (need a boot-time pool), hugetlbfs for a resident
   trunk (needs filling through a mapping), and any prompt long enough to make $O(T^2)$
   attention matter
