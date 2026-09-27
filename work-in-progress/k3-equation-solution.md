@@ -2203,6 +2203,131 @@ the floor from step 23 still stands: the 7.69 s of per-layer reading is paid by 
 run however much is cached. Combined with step 19's resident trunk, those are the two
 things a serving system would do, and neither changes a single arithmetic result.
 
+## Step 25 - the state of the program, read off the source
+
+A synthesis rather than an experiment: what `eqp.c` now treats as constant, how it
+handles the trunk and the experts, what it must still derive, and what is left. All of
+it read from the current 1,892-line source and one instrumented run, not from memory.
+
+### What is constant, and never recomputed
+
+**Shapes**, compile-time: `H 96, D 128, P 12288, KC 4, VOCAB 163840, NLAY 93, LAT 3584,
+I_ 3072, SI 6144, DI 33792, NEXP 896, TOPK 16, GRP 32, QN 128, QR 64, QH 192, VH 128,
+KVL 512, KVW 576, KVD 256, QLORA 1536`. **Scalars**: `EPS5 1e-5, EPS6 1e-6, LAM -5.0,
+B1C 4.0, B2C 25.0`.
+
+**The dequant map.** `E2M1[16]` is fixed by the MXFP4 format and the scale is one of 256
+bytes, so $E2M1[c]\cdot 2^{s-127}$ has a closed domain of 16 x 256. `dq_init()` builds
+three views - `DQ` 16 KB, `DQd` 32 KB, `DQ2` 1 MB byte-indexed. **About 1.1 MB of tables
+stands in for roughly $1.9\times10^{11}$ multiplies and $1.2\times10^{10}$ `exp2f`
+calls.**
+
+**The address index** (`K3EQ`): the slot table for 93 layers, the model records, and
+`erec` covering all 494,592 expert tensors. `expert_rec()` is arithmetic on it -
+`idx = (L-1)*896*6 + e*6 + which*2 + kind` - with no runtime search.
+
+### The trunk
+
+One 54.47 GB file of int8 rows, each `4-byte scale + in values`. `load_ram()` takes an
+anonymous mapping, asks for huge pages, and fills it with parallel O_DIRECT `pread` in
+4 MB chunks - **3.80 s at about 14.4 GB/s**. Addressing is `slot_ptr(L,s) = trunk +
+slots[..].off`, pure offset arithmetic. Only the small vectors - norms, biases - are
+dequantized, by `slot_vec()`, on demand and freed.
+
+Coverage, measured: **53.83 of 54.47 GB touched (98.82%), 53.10 GB read exactly once**,
+0.73 GB more than once, 56.74 GB of traffic.
+
+### The experts
+
+Three phases per layer. **Route** - top-16 of 896 per position, needing only `x2b`, which
+exists before any expert weight is touched. **Plan** - the union of
+`NPOS x 16 x 3 tensors x 2 kinds` ranges, sorted by (file, offset) and deduplicated, so
+the layer's entire byte list is known before a byte is read. **Stream** - ranges are
+4096-aligned into a contiguous arena, 14 reader threads `pread` O_DIRECT into it while
+compute works on earlier experts, and `res_ptr()` maps a tensor to its arena address.
+
+Each expert's weights are read **once and never reused**: 99.72 GB at five tokens,
+463.65 GB at sixty-four.
+
+### What must still be derived, every run
+
+```
+Q  int8 projection      1.312 s  13.9%   409.8 GFLOP/s
+X  mxfp4 expert proj    4.237 s  44.9%   114.8 GFLOP/s
+SiTU + sigma            0.636 s   6.8%
+B  bf16 lm_head         0.251 s   2.7%
+router dot product      0.133 s   1.4%
+AR snapshot aggregate   0.063 s   0.7%
+C  shortconv            0.060 s   0.6%
+D  kda delta-rule       0.046 s   0.5%
+alpha / beta / gate     0.021 s   0.2%
+N  rmsnorm              0.015 s   0.2%
+L  l2 per-head          0.008 s   0.1%
+top-k selection         0.004 s   0.1%
+SA softmax attention    0.001 s   0.0%
+SUM                     6.787 s  72.0%   of 9.43 s wall
+```
+
+Every line depends on $x$, so none of it hoists.
+
+### What the table shows that had been missed
+
+**`SiTU + sigma` is 0.636 s, 6.8% of wall - the third largest operator**, ahead of the
+lm_head and five times the router, across 7,825 calls of elementwise work. Twenty-four
+steps went past it because attention was always on the two big matrix operators. It is
+the obvious next candidate, with the caveat that at five tokens stall would absorb any
+gain and it would only show from about 32 tokens up.
+
+$\mathbb{X}$ remains 45% of wall, reads each weight once, and has refused row blocking;
+the only lever left on it changes byte count and is not bit-exact.
+
+## Step 26 - the trunk is now resident
+
+Step 19 measured this and left it as a finding. This does it.
+
+```
+cp /root/k3trunk_i8/trunk.bin /dev/shm/trunk.bin      # 26.76 s, once
+K3_TRUNKRAM=0 K3_TRUNKPATH=/dev/shm/trunk.bin         # every run after
+```
+
+```
+                  start->T0    timed    process total   logits
+disk, cold          3.81       9.38        13.39        IDENTICAL
+                    3.80       9.38        13.37
+tmpfs, resident     0.02       9.26        10.46        IDENTICAL
+                    0.02       9.51        10.74
+                    0.02       9.43        10.63
+```
+
+**13.38 -> 10.61 s, a 2.77 s saving, bit-identical.** The load does not get faster; it
+stops happening. The timed region is unchanged, which is the control that matters - a
+tmpfs mapping is as good as anonymous RAM once the arithmetic starts.
+
+### What it costs
+
+50 GB of the machine's 124 GB, held until `rm /dev/shm/trunk.bin` or a reboot; 71 GB
+remains free. The process's own RSS is unchanged at 56.8 GB because it maps those pages,
+but they are **shared** - a second process would map the same copy rather than reading
+another 54.47 GB.
+
+### The trap that comes with it
+
+The mapping is 13.3 million 4 KB pages and shmem THP is `[never]` here, yet a run takes
+only **893 thousand faults**, because the kernel maps 16 pages per fault. `drop_caches`
+destroys that:
+
+```
+                  faults        timed    process total
+steady state       893,537       9.26       10.46
+after drop_caches  13,359,542    10.79      12.03
+next run           13,359,577    10.59      11.82
+```
+
+It costs 1.4 s and **does not recover on the next run**. The cold-cache discipline that
+makes every other measurement in this document honest is the one thing that spoils this
+one, so the resident runs above are measured the way a serving machine would actually
+run: without dropping caches.
+
 ## Progress
 
 | step | | status |
@@ -2221,6 +2346,8 @@ things a serving system would do, and neither changes a single arithmetic result
 | 22 | what the reading buys, and why $\mathbb{X}$ refuses the same fix | done |
 | 23 | the cost of a position, and what prefix reuse could be worth | measured, not built |
 | 24 | prefix reuse, built and byte-identical | done |
+| 25 | the state of the program, read off the source | done |
+| 26 | the trunk is now resident | done |
 
 ## The comparison that matters: the equation against the engine
 
