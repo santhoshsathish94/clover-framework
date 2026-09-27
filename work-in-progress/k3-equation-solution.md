@@ -418,6 +418,94 @@ No new **W** symbols. Section 3 introduces no quantity that a run could skip.
 
 ---
 
+## Step 6 - the MLP and MoE blocks
+
+### The values
+
+Everything in section 4 descends from $x_2$, so $s_e$, $\mathcal{J}$, $\pi$, $\zeta$,
+$\mathrm{accL}$ and $\mathrm{ffn.out}$ are all **R**. The structural rules are all **E**:
+the bias participating only in selection, top-$k$ by repeated maximum with a strict `>` so
+ties go to the lowest index, float32 expert-major accumulation, the norm applied to the
+aggregate once rather than per expert, the shared expert added unweighted.
+
+One **W** item the routing hides: section 4.2 says the router is **not** $\mathbb{Q}$ - the
+int8 gate is widened per row and the dot accumulates in double, sequentially. That widening
+of $G_L$ is a function of weights alone, so **W**, and it cannot borrow $\mathbb{Q}$'s
+kernel because the reduction differs.
+
+### Two more scheduling facts the equation gives away
+
+$$\zeta = \mathbb{Q}[W^{\downarrow}_L]\,x_2 \qquad\text{and}\qquad
+\mathbb{Q}[W^s_2]\ \mathrm{SiTU}\big(\mathbb{Q}[W^s_1]x_2,\ \mathbb{Q}[W^s_3]x_2\big)$$
+
+Neither mentions $\mathcal{J}$ or $\pi$. **The expert latent and the entire shared-expert
+branch are independent of the router**, so both can be evaluated before routing finishes.
+Section 4.2 makes the second explicit - the shared expert "bypasses the router" - and the
+first follows from reading the dependency.
+
+### The operator application counts are E, and they check out exactly
+
+The count of times each operator is applied is a function of the layer sets, $k$, and $T$.
+None of it depends on the input's content. From sections 3 and 4:
+
+$$
+\begin{aligned}
+\mathbb{Q}\ \text{per position} &= \underbrace{69 \times 8}_{\text{KDA}} + \underbrace{24 \times 6}_{\text{MLA}}
++ \underbrace{3}_{\text{dense } L=0} + \underbrace{92 \times 5}_{\text{MoE}} = 1159 \\
+\mathbb{X}\ \text{per position} &= 3 \times k \times |\mathbb{E}| = 3 \times 16 \times 92 = 4416 \\
+\text{router, top-}k\ \text{per position} &= |\mathbb{E}| = 92 \\
+\mathbb{B} &= 1 \quad \text{(last position only)}
+\end{aligned}
+$$
+
+At $T = 5$ that predicts 5795, 22080, 460, 460 and 1. The instrumented run in
+`k3-data-problem.md` step 7 measured:
+
+| operator | predicted from the equation | measured |
+|---|---|---|
+| $\mathbb{Q}$ | 5,795 | 5,795 |
+| $\mathbb{X}$ | 22,080 | 22,080 |
+| router | 460 | 460 |
+| top-$k$ | 460 | 460 |
+| $\mathbb{B}$ | 1 | 1 |
+
+Exact, on all five. The counts were derived here from the layer sets and never needed
+measuring; that they agree is a check on the instrumentation rather than a discovery about
+the model.
+
+The batched form checks too. Batching removes the position factor from every $\mathbb{Q}$
+except layer 0's dense MLP, which step 8 of the other document did not convert:
+
+$$1159 + (3 \times 5 - 3) = 1159 + 12 = 1171$$
+
+against 1,171 measured.
+
+### Where E stops and R begins, in one example
+
+$\mathbb{X}$'s **unbatched** count is $3kT|\mathbb{E}|$ - pure **E** given $T$, because
+every position evaluates exactly $k$ experts whatever it routes to. Its **batched** count
+is $3|\mathbb{E}|\sum_L |\{\text{distinct experts at } L\}|$, which depends on how much the
+positions' choices overlap, and that is **R**. Measured 17,049, and the equation cannot
+predict it.
+
+So the same operator has an **E** application count in one schedule and an **R** count in
+another. **Batching converted an input-independent amount of work into an
+input-dependent one** - which is why it saved anything at all, and also why its saving
+cannot be stated as a constant.
+
+### Step 6 result
+
+| group | E | W | R | S |
+|---|---|---|---|---|
+| 4.1 dense values | 0 | 0 | 1 | 0 |
+| 4.2 routing values | 0 | 0 | 3 | 0 |
+| 4.2 compute and combine | 0 | 0 | 3 | 0 |
+| $G_L$ widening | 0 | 1 | 0 | 0 |
+| structural rules | all | 0 | 0 | 0 |
+| operator application counts | all | 0 | 0 | 0 |
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
@@ -427,6 +515,6 @@ No new **W** symbols. Section 3 introduces no quantity that a run could skip.
 | 3 | 1.5 weights and the three folds | done |
 | 4 | section 2, the ten operators | done |
 | 5 | section 3, the attention blocks | done |
-| 6 | section 4, the MLP and MoE blocks | |
+| 6 | section 4, the MLP and MoE blocks | done |
 | 7 | section 5, composition, initial conditions, carried state | |
 | 8 | the boundary, and what it costs | |
