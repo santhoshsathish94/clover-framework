@@ -796,10 +796,129 @@ reading experts with O_DIRECT into an arena rather than faulting them through mm
 
 ---
 
+## Step 7 - accounting by the equation instead of by the layer loop
+
+Everything above attributes cost to the 93-layer loop, which is the implementation's shape.
+The equation has a different shape: ten primitive operators in
+`k3-model-equation.md` section 2, composed by section 5. Instrumenting those instead - plus
+the router dot product, which section 4.2 is explicit is *not* one of the ten - gives a
+different and much sharper picture.
+
+Two runs, cold cache, identical binary. **A** has the trunk in RAM and experts prefetched,
+so nothing stalls. **B** has neither, so operator time includes the fault. The difference
+is the stall, per operator.
+
+```
+operator                  A compute   B total     stall     calls
+X   mxfp4 expert proj       14.625     39.067    24.442    22,080
+Q   int8 projection          5.236     11.793     6.557     5,795
+SiTU + sigma                  0.496      0.467         -     7,825
+B   bf16 lm_head              0.409      0.438         -         1
+router dot product            0.159      0.169         -       460
+D, AR, C, N, L, SA, top-k     0.221      0.232         -     5,596
+
+A:  compute 21.14 + transfer 12.40 + 0.29 = 33.83 s      37,552 major faults
+B:  compute 21.14 + stall    31.00 + 0.69 = 52.86 s     520,553 major faults
+```
+
+**Two operators are the whole model.** $\mathbb{X}$ is 43% of wall and $\mathbb{Q}$ is 15%.
+The other eight together are 1.3%. $\Delta$, the KDA delta-rule that took three cycles of
+earlier work to get right, is 0.18%. SA is 0.00%.
+
+Prefetching is what converts 31.0 s of scattered stall into 12.4 s of streamed transfer -
+the same bytes, one seventh the major faults.
+
+### The two dominant operators are limited by different things
+
+This is not visible from the layer view and would have been guessed wrong:
+
+- $\mathbb{Q}$ moves 269.13 GB at **51.40 GB/s**, against a measured RAM ceiling of 47.80
+  (Step 6). It is at the memory wall. No kernel change helps; only touching fewer bytes.
+- $\mathbb{X}$ moves 129.15 GB at **8.83 GB/s** from data already resident. It is nowhere
+  near the memory wall - it is compute-bound. 243 GMAC in 14.6 s on 16 threads is
+  0.26 MAC/cycle/thread, because the kernel decodes an E2M1 code and an E8M0 scale per
+  element into scalar double lanes.
+
+### Does the equation use the full data loaded?
+
+Yes. Every byte loaded is dereferenced. And then dereferenced again.
+
+```
+                                    distinct    dereferenced    ratio
+trunk   (Q, router, C, N, AR)       54.47 GB       281.21 GB     5.16x
+experts (X)                         99.72 GB       129.15 GB     1.30x
+lm_head (B)                          2.35 GB         2.35 GB     1.00x
+total                              156.54 GB       412.70 GB     2.64x
+```
+
+$269.13 / 54.47 = 4.94$, and $T = 5$. Section 5 composes the model with **positions
+outermost**, so every weight in the trunk is streamed from RAM once per position. Nothing
+is wasted in the sense of being loaded and ignored; it is wasted by being re-read. The
+arithmetic intensity is one MAC per weight byte, the worst case for a mat-vec, which is
+exactly why $\mathbb{Q}$ sits pinned at the RAM ceiling.
+
+The only genuinely unused bytes found anywhere are $A^{\log}$, stored at width 128 with 96
+read (section 6 of the equation document records this), and the 162,022 dead neurons of
+Step 4 at 0.064%. Both are rounding errors against a 2.64x re-read factor.
+
+### The complexity, measured rather than asserted
+
+`NPOS` was made a compile-time parameter and the model rebuilt for $T = 1 \dots 5$:
+
+```
+T    wall(s)    Q GB      Q s     X GB      X s    distinct prefetched
+1      8.38     53.83    1.205    25.83    3.480        25.83 GB
+2     14.45    107.65    2.284    51.66    5.865        48.36
+3     20.98    161.48    3.306    77.49    9.087        67.98
+4     27.71    215.30    4.307   103.32   11.670        85.67
+5     33.94    269.13    5.237   129.15   14.662        99.72
+```
+
+$\mathbb{Q}$ bytes are $T \times 53.826$ to five significant figures. $\mathbb{X}$ bytes
+are $T \times 25.83$ exactly. Wall increments are 6.07, 6.53, 6.73, 6.23, fitting
+$2.0 + 6.4T$.
+
+**The implementation is already $O(T)$ in time.** It is not quadratic, and a claim that it
+is would not survive this table. What is true, and is the real defect, is that **the
+constant is the entire model**: one position costs a full pass over the trunk. Distinct
+expert bytes do saturate as positions share experts - 99.72 GB against the 129.15 GB that
+independent selection would need, 77% - but the trunk factor is exactly $T$ with no
+saturation whatsoever.
+
+Space is $O(W)$, not $O(1)$: 54.47 GB of trunk held resident plus a layer's experts
+prefetched.
+
+### What is removable, and what is not
+
+The $T\times$ trunk factor is pure redundancy and removing it is bit-exact by construction,
+because each output element $y_{t,o}$ is an independent reduction over $i$ - batching
+positions changes which loop is outermost and no reduction order at all.
+
+The expert factor is subtler. Section 4.2 fixes the accumulation as "float32,
+expert-major - one expert fully summed in before the next starts", and $\pi_j$ is indexed
+by the position's own rank $j$. Iterating distinct experts outermost would therefore
+accumulate each position's sum in the wrong order. It stays bit-exact only if each
+expert's contribution is written to a per-position slot indexed by that position's $j$, and
+the 16 slots summed afterwards in $j$ order. That is 5 x 16 x 3584 floats, 1.1 MB.
+
+### What Step 7 does not establish
+
+- **The predicted gains are arithmetic, not runs.** $\mathbb{Q}$ at 53.83 GB instead of
+  269.13 GB is ~1.05 s instead of 5.24 s; $\mathbb{X}$ decoding 99.72 GB instead of 129.15
+  is ~11.3 s instead of 14.66. Neither has been built.
+- **$O(1)$ space and one-pass streaming are in tension.** Holding nothing means re-reading
+  154 GB per forward pass, which is 10.6 s at the Step 6 O_DIRECT rate. Whether that beats
+  holding the trunk depends on how many tokens amortize it, and that is untested.
+- **Still one prompt.** $T \le 5$, and only $T = 5$ emits the verified token; the shorter
+  runs emit 220, 318, 276, 387 and were never expected to match.
+
+---
+
 ## Not yet examined
 
+- batching positions so each weight is streamed once per layer rather than once per position
+- an SIMD $\mathbb{X}$ kernel, since it is compute-bound at 0.26 MAC/cycle/thread
 - reading experts with O_DIRECT into an arena, the measured 5.6 s still behind the cache
 - why dead neurons stop at layer 51
-- whether the prefetch barrier can be overlapped with arithmetic inside a layer
 - whether reuse across many tokens changes the picture, since all of the routing work is
   5 tokens
