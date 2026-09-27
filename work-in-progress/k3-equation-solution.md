@@ -595,6 +595,104 @@ Each call aggregates over its own eight snapshots.
 
 ---
 
+## Step 8 - the boundary, and what it costs
+
+### The answer, stated plainly
+
+**What must be computed during a run:** the **R** set, and nothing else. That is every
+numeric value downstream of the embedding gather - each $x_1$, $x_2$, $q$, $k$, $v$,
+$\alpha$, $\beta$, $o$, $s_e$, $\pi$, $\zeta$, $\mathrm{accL}$, $r$, and the logits.
+
+**What is already determined before the run:** everything else. Every shape, every scalar,
+every layer-set membership, every reduction order and association tree, every control-flow
+decision, every operator application count, all 45 weights, and every quantity derivable
+from weights alone.
+
+**What differs between two runs with the same $T$:** the values, and one set of indices.
+$T \times 92 \times 16$ expert choices. Nothing else about the execution differs - not
+which operators run, not their shapes, not their order, not how many times.
+
+### The tally
+
+| category | contents |
+|---|---|
+| **E** | 22 shapes, 8 scalars, 4 layer sets, 10 reduction schedules, $\mathrm{E2M1}$, $\mathrm{DQ}$, $g(i)$, the $\mathbb{Q}$-tail predicate, 3 initial conditions, 8 control decisions |
+| **W** | 45 stored weights, 3 folds, $a_h$, 3 dtype conversions, the $G_L$ widening |
+| **R** | 2 input symbols, and every value in sections 3, 4 and 5 |
+| **S** | $S_L$, conv history, KV cache |
+
+### The test that decides a precompute
+
+Being **E** or **W** makes a quantity *eligible* to be computed once. It does not make it
+*worth* computing once. The condition is
+
+$$\mathrm{cost}\big(\text{fetch the stored form}\big) \;<\;
+\mathrm{cost}\big(\text{fetch the source}\big) + \mathrm{cost}\big(\text{recompute}\big)$$
+
+and on a machine where fetch dominates - which
+`k3-data-problem.md` step 7 measured, with $\mathbb{Q}$ pinned at the RAM ceiling - the
+left side is usually the whole story. Applying it to every candidate this document found:
+
+| candidate | source | **W**/**E** form | verdict |
+|---|---|---|---|
+| $\mathrm{DQ}[s][c]$ | - | 16 KB, **E** | **yes.** costs nothing, removes ~$2\times10^{11}$ multiplies and ~$6.2\times10^9$ `exp2f` per run |
+| $a_h$ | 512 B/layer (F32, width 128) | 384 B/layer | **yes.** smaller *and* removes 6,624 exponentials |
+| $f^A_L,\ f^O$ | 2 x BF16 = 28,672 B | F32 = 28,672 B | **byte-neutral.** removes 673,792 multiplies, no I/O change |
+| $f^M_L$ | 2 x I8R $\approx$ 14,344 B | F32 = 28,672 B | **no.** doubles the fetch to save 666,624 multiplies |
+| $G_L$ widened | int8, 6.4 MB/layer | F32, 25.7 MB/layer | **no.** 4x the fetch, and the router is 0.5% of wall |
+| $\tilde{w}$ materialized | 1.45 TB | ~10.9 TB | **no.** 7.5x |
+| $W^{fb}W^{fa}$ folded | 2.49 M params | 88.1 M params | **no**, and not bit-exact either |
+
+Only two pass, and the interesting one passes for a reason none of the others share.
+
+### Why almost nothing passes, and what the exception tells you
+
+The pattern is not a coincidence. **A quantized checkpoint is already stored in the form
+that minimizes fetch cost** - that is what quantization is for. So any derived quantity
+that is numerically *wider* than its source loses the test automatically, and every
+per-element derived quantity here is wider: int8 to float is 4x, MXFP4 to float is 7.5x,
+an I8R pair folded to float32 is 2x. Step 5 found the same thing from the other side: the
+low-rank factorizations are already compressed, and undoing them expands 35x.
+
+$\mathrm{DQ}$ escapes because it is not keyed on the weights at all. Its domain is the
+*quantization alphabet* - 16 codes by 256 exponents - not the $2.72\times10^{12}$ elements
+that draw from it. The array is **W** and enormous; the map is **E** and 16 KB.
+
+> **"Compute it once" pays when the thing computed once is small. In a quantized model
+> every per-element derived quantity is larger than its source, so the only precomputes
+> that win are the ones keyed on the alphabet rather than on the weights.**
+
+That is the result of this document, and it was reached without running anything.
+
+### Two pieces of dead work, both found by reading
+
+- $\mathbb{Q}$'s scalar tail is unreachable: all eight input widths are divisible by 16
+  (step 4). Removing it saves no time, only a branch.
+- The tail $\mathrm{AR}$ is evaluated at all $T$ positions and consumed at one (step 7).
+  At $T=5$, four aggregations of nine sources, about $7.7\times10^5$ operations.
+
+Neither is worth anything numerically. Both are recorded because they were found by
+inspecting the equation, and neither profiling pass in `k3-data-problem.md` surfaced
+either - a profiler shows you what ran, not what needn't have.
+
+### What step 8 does not establish
+
+- **Nothing here was measured, by design.** Every verdict above is analytic. The
+  $\mathrm{DQ}$ saving in particular is a prediction: it says $\mathbb{X}$'s inner loop
+  becomes one indexed load per element, and the effect on wall time is untested.
+- **The cost model is one machine's.** "Fetch dominates" was measured on the Hetzner box
+  in the other document. On hardware with a different bandwidth-to-FLOP ratio the verdicts
+  for $f^M_L$ and $G_L$ could invert. The classification is machine-independent; the
+  verdicts are not.
+- **$\mathrm{DQ}$ is bit-exact by construction but has not been built**, so that claim
+  rests on the entries being the value of the same expression and nothing more.
+- **"$T \times 92 \times 16$ indices" counts slots, not distinct experts.** How much those
+  overlap is an **R** quantity and the equation says nothing about it.
+- **Sections 3.2 and the tail were transcribed from the walker**, not from `k3-stages.md`.
+  Any classification of those symbols inherits that provenance.
+
+---
+
 ## Progress
 
 | step | section of the equation | status |
@@ -606,4 +704,10 @@ Each call aggregates over its own eight snapshots.
 | 5 | section 3, the attention blocks | done |
 | 6 | section 4, the MLP and MoE blocks | done |
 | 7 | section 5, composition, initial conditions, carried state | done |
-| 8 | the boundary, and what it costs | |
+| 8 | the boundary, and what it costs | done |
+
+## What this leaves to do
+
+- build $\mathrm{DQ}$ and measure it against $\mathbb{X}$, the one verdict worth testing
+- the equation permits hoisting the gate, $\zeta$ and the shared-expert branch out of the
+  router's dependency; steps 5 and 6 established the licence and nothing used it yet
