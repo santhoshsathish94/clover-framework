@@ -581,6 +581,49 @@ format costs more in indexing than the 11.5% it saves.
 It is worth recording that this is a *third* failure mode, distinct from the previous
 two: not inexact, not too small, but structurally unexploitable.
 
+### The denominator, measured instead of estimated
+
+Every "worth X%" figure above had been computed from my own FLOP arithmetic. The C
+implementation was instrumented to measure it instead.
+
+```
+where the time actually goes, 56.15 s total, 16 threads
+
+   MoE routed experts                       42.14 s   75.05%
+   attention, KDA and MLA                    8.35 s   14.87%
+   MoE shared expert                         3.00 s    5.34%
+   tail: aggregate, norm, lm_head            0.94 s    1.68%
+   MoE latent down-projection                0.64 s    1.14%
+   unaccounted: weight load, glue            0.58 s    1.02%
+   MoE router                                0.31 s    0.56%
+   dense MLP, layer 0 only                   0.16 s    0.29%
+   snapshot aggregation + pre-MLP norm       0.02 s    0.04%
+   pre-attention norm                        0.00 s    0.01%
+```
+
+**The estimate was wrong by a large factor.** I had put the experts at 45% and attention
+at 38%. Measured, they are 75.05% and 14.87%.
+
+The gap is the MXFP4 decode. A FLOP count sees one multiply-accumulate per weight, but
+every expert weight must first be nibble-extracted, looked up in the E2M1 table and
+multiplied by its group scale. That is roughly four operations before the one the FLOP
+count counts, and it happens on every use with no reuse to amortize it: across five
+positions the layer draws 80 experts of which 74 are distinct.
+
+**Consequences for figures recorded above.**
+
+- The expert zeros are worth **8.6%** of the pass, not the 5.19% recorded earlier.
+  The finding is unchanged; only the denominator was wrong.
+- The snapshot caching figure stands. Aggregation is 0.04% of measured time and the
+  caching removes 81% of part of it, so it remains far below the noise.
+- Attention being 14.87% rather than 38% makes the KDA reductions of Cycle A and
+  Step 14/18 less valuable than they looked, not more.
+
+**What this changes about method.** Six earlier entries in this file quote a percentage
+of the forward pass derived from the same FLOP estimate. They are directionally right
+and quantitatively unreliable. A FLOP model of a kernel that decodes its own weights
+measures the wrong thing.
+
 ---
 
 ## What none of this covers
