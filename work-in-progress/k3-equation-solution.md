@@ -3285,6 +3285,87 @@ that a single run produced an exciting number that evaporated (steps 30 and 37 w
 others). **At 64 tokens on this box the run-to-run spread is about 0.1 s within a session
 and up to 2 s across sessions. Nothing below that is a result.**
 
+## Step 41 - what the 6.43 MB actually is, and a correction to step 33
+
+Step 40 established how often the gate is read without ever saying what it is. Asked
+directly: is it a matrix computation already run on numbers and stored, so the run does
+not have to recompute it?
+
+### It is a trained parameter
+
+From the checkpoint's own tensor list for a MoE layer:
+
+```
+block_sparse_moe.gate.weight                 12,845,056 B   [896, 7168]   bf16
+block_sparse_moe.gate.e_score_correction_bias     3,584 B   [896]
+```
+
+and from section 1 of the equation, $G_L,\ \gamma_L$ = `block_sparse_moe.gate`,
+`e_score_correction_bias`, dtype I8R / F32, role "router".
+
+So the 6.43 MB is $G_L$: **896 rows, one per expert, of 7168 model dimensions** - each
+row that expert's signature vector, whose dot product with the position's activation is
+that expert's affinity score. It is bf16 in the checkpoint at 12.85 MB and stored in the
+trunk as int8 with a per-row scale, $896 \times (4 + 7168) = 6{,}426{,}112$ bytes.
+
+**Nothing on this side computed it.** The only things this program computes once and
+stores are $\mathrm{DQ}$, the 4096-entry dequantization table from step 9, and the int8
+trunk itself - the bf16 checkpoint quantized offline when the trunk was packed, which is
+exactly what halves 12.85 MB to 6.43 MB and 1267.74 MB of layer-1 bf16 tensors to about
+half that.
+
+### The router's slowness is the specification, not a defect
+
+Having established the gate cannot be avoided, the fair question is how well it is
+consumed. Badly, on the face of it:
+
+```
+router   92 x 896 x 7168 x 64 x 2 = 75.6 GFLOP in 1.558 s = 48.5 GFLOP/s   (0.38 GB/s)
+Q                                                         = 1067 GFLOP/s
+```
+
+A factor of 22, and nowhere near bandwidth-bound. The assembly says why - the router's
+inner loop is pure scalar double with a dependent accumulation chain:
+
+```asm
+vcvtss2sd  (%rbx,%rdx), %xmm3, %xmm0    ; float -> double
+vcvtss2sd  (%rcx,%rdx), %xmm3, %xmm1    ; float -> double
+vmulsd     %xmm1, %xmm0, %xmm0
+vaddsd     %xmm0, %xmm2, %xmm2          ; on the critical path
+```
+
+Zero packed-double instructions, where $\mathbb{Q}$ uses AVX2 with sixteen accumulators.
+Worth about 1.5 s of a 42 s run if it could be vectorized.
+
+**It cannot.** Section 4.2 of the equation is explicit:
+
+> Route. **Not through $\mathbb{Q}$** - the int8 gate is widened per row and the dot
+> product accumulates in **double, sequentially**.
+
+The scalar loop is correct *by specification*. Splitting that reduction into lanes
+computes a different function, exactly as section 6 records for $\mathbb{Q}$, where
+collapsing sixteen lanes into eight "is arithmetically different and reproduces 2,012 of
+12,288 values". The 22x gap is the price of the definition, not an oversight, and the
+1.5 s is not available bit-exactly.
+
+### A correction to step 33
+
+Step 33 spent a bisect across every surviving intermediate source to conclude that the
+build must be pinned to `-ffp-contract=off`. Section 6 of the equation document already
+said so:
+
+> the verified build carries `-ffp-contract=off`, which compiles the accumulate to
+> `vmulsd` + `vaddsd` rather than `vfmadd213sd`
+
+That sentence was added after step 10 of this document, long before step 33. **The
+requirement was written down and I had not read it.** What step 33 genuinely added was
+the attribution - that step 30's `AR` restructure created a *new* contraction site, which
+is why a build that had been passing suddenly diverged. The diagnosis was new; the
+conclusion was already on the page.
+
+The rule that failed here is the first one: read the source document before measuring
+against it. A bisect is not a substitute for the specification.
+
 ## Progress
 
 | step | | status |
@@ -3319,6 +3400,7 @@ and up to 2 s across sessions. Nothing below that is a result.**
 | 38 | why $\mathbb{Q}$ cannot be precomputed | measured, rejected |
 | 39 | the function is the data, and the data is incompressible | measured, rejected |
 | 40 | the router re-read the gate per position; free, because it fits in L3 | done, no gain |
+| 41 | the gate is a trained weight; the router's cost is the specification | answered |
 
 ## The comparison that matters: the equation against the engine
 
