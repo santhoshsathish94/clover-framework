@@ -137,11 +137,35 @@ and no tolerance to argue about.
 
 ## Status
 
-**Nothing in this folder is built yet.** The 93 trunk slices exist and are
-verified; the expert stores and the programs do not. The measurement record is
-in
+**Step 1 of version 1 is built and gated.** `clover-server-k3.c` reads the
+trunk as 93 per-layer slices and reproduces the reference exactly:
+
+```
+  md5 23d162dcefb18211a7540ef12948f1eb   token 17374   nine runs of nine
+  reference, trunk from tmpfs   8.78 s
+  slices from disk              8.74 s   (10.76 s on the first, cold, run)
+  slices from tmpfs             8.73 s
+```
+
+A 0.05 s spread is noise, so **splitting the trunk 93 ways is free.** Peak RSS
+56.8 GB.
+
+Still to do: experts from SQLite, then the decomposition. The measurement
+record is in
 [`work-in-progress/clover-scaling-architecture.md`](../work-in-progress/clover-scaling-architecture.md),
-where the negatives are kept with the same care as the positives.
+where the negatives are kept with the same care as the positives - including
+the harness bug in this step that reported three passes for runs that never
+happened.
+
+### Running it
+
+```sh
+K3_SLICES=/srv/k3/slices K3_INDEX=build/eqidx.bin K3_IDS=1008,10484,318,15383,387 \
+  ./build/clover-server-k3
+```
+
+`K3_SLICES` replaces `K3_TRUNKPATH` and names a directory holding `L00.bin`
+through `L92.bin`. `v1.sh` is the harness that produced the numbers above.
 
 ### One thing that is unresolved
 

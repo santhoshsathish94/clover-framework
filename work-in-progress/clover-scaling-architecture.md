@@ -601,11 +601,75 @@ would leave no expert bytes for `clover-k3.c` to read. Either the checkpoint
 survives the migration, or the reference stops running - and it is the
 reference that proves the decomposition correct. Unresolved.
 
+## Step 15 - the trunk split costs nothing, and is bit-exact
+
+`clover-server-k3.c` built: the reference with one change, the trunk arriving
+as **93 independent per-layer mappings** instead of one 54.47 GB file.
+Experts still come from the checkpoint. Every kernel, operator and buffer is
+untouched.
+
+Four sites changed, which is all the reference has: `slot_ptr`, `slot_vec`,
+the `K3_STAGE` slot-name-by-address lookup, and teardown. `cover()` translates
+a slice address back to the page it had in the whole trunk so `K3_COVER` stays
+comparable.
+
+**`layer_off[]` is derived, not read.** It is the running sum of the slice
+file sizes, which is only right if the layers tile the trunk with no gap, so
+every present slot is bounds-checked against its own slice at startup before a
+single weight is addressed. All 93 layers passed silently.
+
+### The measurement
+
+Same session, three runs each. The reference and the slice build cannot both
+be tmpfs-resident at once - 54.47 GB each against 124 GB of RAM - so they ran
+**in sequence, not interleaved**, which is a real weakness of this comparison.
+
+| | run 1 | run 2 | run 3 |
+|---|---|---|---|
+| A reference, trunk from tmpfs | 9.52 | 8.97 | **8.78** |
+| B slices from disk | 10.76 | 8.76 | **8.74** |
+| C slices from tmpfs | 8.73 | 8.73 | **8.73** |
+
+**All nine runs produced md5 `23d162dcefb18211a7540ef12948f1eb` and token
+17374.** Peak RSS 56.8 GB.
+
+**The result is that there is no result: 8.78 against 8.74 against 8.73 is a
+0.05 s spread, which is noise.** Splitting the trunk 93 ways is free. That is
+the outcome this step wanted - a plumbing change that is bit-exact and costs
+nothing is what makes the next change safe to attribute.
+
+Two things worth reading off it beyond the headline:
+
+- **Cold start is the only cost, and it is one run.** B's first run is 10.76 s
+  against 8.74 warm. Once the page cache holds the 54.47 GB, slices on disk
+  are indistinguishable from slices in tmpfs - the box has roughly 70 GB free
+  with the trunk copy resident, so they simply stay cached.
+- **A was still warming** (9.52, 8.97, 8.78) while C was flat from its first
+  run. A ran first and C last, so run order is a confound. All three converge
+  on the same 8.7 s, which is the figure already on record.
+
+### The error in this step, and how it was caught
+
+The first version of the harness reported **three PASSes for runs that never
+happened.** It set the environment inside a shell function and passed the
+per-run variables through `"$@"`; assignments are recognized when the command
+is parsed, before expansion, so the shell treated `K3_SLICES=...` as the name
+of a program to run. Nothing executed. The md5 check then read
+`build/srv.bin` **left behind by an earlier manual run** and matched the
+baseline.
+
+The tell was not the md5. It was the **empty wall-time column** - a passing
+run with no timing is not a run. The fix is in the harness and is the general
+one: **delete the output file before every run**, so a stale artifact cannot
+pass a check. Same shape as the earlier control-clobber, where a script was
+allowed to overwrite the control before the comparison.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
 O_DIRECT number, single-pod cold start and steady state, the contention
-curve up to four pods, the 93-way trunk split, and ext4 hole punching.
+curve up to four pods, the 93-way trunk split, ext4 hole punching, and the
+slice build running bit-exact at the same speed as the reference.
 
 **Not measured, and not to be read as measured:** 93-deep pipeline behavior,
 cross-node transfer, Kubernetes scheduling and cgroup accounting, and aggregate
