@@ -557,6 +557,35 @@ which is the load-bearing part: every offset recorded in the index stays valid
 for the records that have not been migrated yet, so migration can proceed one
 expert at a time with the index still usable throughout.
 
+## Step 14 - two programs, not one program being replaced
+
+`clover-k3.c` is the **single-machine version**: one process, one box, the
+whole model in one address space. The work recorded here is a **client-server
+version**. They exist for different reasons and both are kept.
+
+The new code lives in **`clover-server/`**, a separate folder, so that nothing
+built here can reach into the reference by accident. `clover-k3.c` is not
+modified.
+
+| | `clover-k3` | `clover-server` |
+|---|---|---|
+| shape | one process, one machine | client, server, 93 layer processes |
+| experts | read from the checkpoint | read from SQLite, per layer |
+| answers | is the equation right? | does the equation survive being cut up? |
+| status | working, gated, bit-exact | nothing built yet |
+
+The separation is not tidiness. The single-machine version is the **only
+oracle** available: `K3_DUMPLAY` gives each layer's input, so `clover-N` can
+be checked against the reference's dump for layer `N+1`, and the end of the
+chain against the preserved baseline and the gate md5. A decomposed layer that
+disagrees with it is wrong, with no tolerance to argue about.
+
+**Which produces a conflict worth naming now rather than discovering later.**
+Migrating the experts into SQLite and reclaiming the checkpoint as it goes
+would leave no expert bytes for `clover-k3.c` to read. Either the checkpoint
+survives the migration, or the reference stops running - and it is the
+reference that proves the decomposition correct. Unresolved.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and

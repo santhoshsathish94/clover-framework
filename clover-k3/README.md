@@ -10,6 +10,14 @@ be read end to end and why every operator can be timed and attributed
 separately. The measurement record lives in
 [`work-in-progress/k3-equation-solution.md`](../work-in-progress/k3-equation-solution.md).
 
+**This is the single-machine version.** One process, one box, the whole model
+in one address space. [`clover-server`](../clover-server/) is the same
+equation cut across a client, a server and 93 layer processes; it exists for a
+different reason and neither replaces the other. This one answers *is the
+equation right*, and because it does, it is also the **reference** - the only
+thing that can say whether the decomposed version is correct. It is therefore
+kept unchanged.
+
 ## What is here, and what is deliberately not
 
 This folder holds only what is ours. The model and the trunk belong to K3 and
