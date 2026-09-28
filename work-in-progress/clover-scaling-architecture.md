@@ -313,6 +313,131 @@ The index was rebuilt from scratch into the new paths and gated:
 The OS was not reinstalled. Nothing was wrong with it, and a remote reinstall
 would have risked the checkpoint for no measured benefit.
 
+## Step 10 - the components, and how the code is split
+
+`clover-k3.c` stays untouched as the reference. Everything below is new code
+beside it, so the working single-process build is never at risk.
+
+```
+  clover-client.c   head and tail, on the caller's machine
+  clover-server.c   the control plane: topology, sessions, sequencing
+  clover-0.c        layer 0
+  clover-1.c        layer 1
+  ...
+  clover-92.c       layer 92
+```
+
+### The rule for what may leave the cluster
+
+**Anything that needs the trunk or the experts stays in a pod.** Only work
+that needs neither can sit with the caller.
+
+By that test:
+
+| | needs trunk | needs experts | where |
+|---|---|---|---|
+| head, embedding | no | no | **client** |
+| layer 0 | **yes, 1.17 GB** | no | pod |
+| layers 1-92 | yes | yes | pods |
+| tail, norms + lm_head | no | no | **client** |
+
+The head and tail read only the checkpoint's five non-layer tensors through
+`file_ptr`, never the trunk and never an expert block - so the client holds
+**4.70 GB** and nothing else.
+
+**A correction I had to make here.** Layer 0 was briefly moved to the client on
+the strength of having zero expert records, which is true and was checked
+against the index - all 494,592 records belong to layers 1-92, exactly 5,376
+each. But needing no experts is not the test. Layer 0 needs the **largest
+trunk slice in the model**, nearly double a KDA layer's 635 MB because the
+only dense MLP in the model is 727 MB of it. It stays a pod, and the fleet
+stays at 93.
+
+### Control through the server, data pod to pod
+
+The payload between layers is **9.81 MB per hop at 64 positions and 903 MB
+across all 92 hops** (step 7). Routing that through a central process would
+make it move 903 MB per prompt while trying to keep up with 47 ms stages, so
+the server would become the bottleneck the pods were split up to avoid.
+
+So the server holds the layer-to-endpoint map, accepts a session, and starts
+the chain; the residual and snapshots pass **directly from pod L to pod L+1**
+over the dedicated socket, and pod 92 returns the final state to the client.
+The server sees kilobytes of control traffic per prompt, not megabytes of
+activations.
+
+### What each binary links
+
+A responsible split is not only about tidiness here - it changes what is in
+each image. Layer 0 has no experts at all, and the client has no projection
+kernel.
+
+| module | contents | linked by |
+|---|---|---|
+| `k3util` | `now_s`, `die`, `map_file`, `load_ram`, `file_ptr` | everyone |
+| `k3index` | `load_index`, `expert_rec`, `slot_ptr`, `slot_vec` | everyone |
+| `k3state` | the resid + snapshot wire format | everyone |
+| `k3core` | `Q`, `Qm`, `rmsnorm`, `rmsnorm_blocks`, `l2_blocks`, `situ`, `AR` | every layer |
+| `k3slice` | trunk slice mmap and slot addressing | layers |
+| `k3expert` | `X`, `Xm`, `dq_init`, arena, prefetch pipeline | **MoE layers only** |
+| `k3attn_kda` | the KDA attention block | 69 layers |
+| `k3attn_mla` | the MLA attention block | 24 layers |
+| `k3mlp` | the dense MLP | **layer 0 only** |
+| `k3moe` | the MoE block | layers 1-92 |
+| `k3tail` | `Bf`, final norms, lm_head | **client only** |
+
+```
+  clover-client   util index core(AR, rmsnorm) tail
+  clover-0        util index state core slice kda mlp
+  clover-1..92    util index state core slice expert kda|mla moe
+  clover-server   util state only
+```
+
+Layer 0's binary carries no expert kernel and no MoE block, and the client's
+carries no projection kernel at all - which is what the split buys beyond
+tidiness.
+
+### The oracle that makes this testable one layer at a time
+
+The reference already writes a per-layer checkpoint: `K3_DUMPLAY` dumps every
+layer's input `hb[t]` (clover-k3.c line 1486). So **each `clover-N` can be
+checked against the reference's own dump for layer N+1**, with no change to
+`clover-k3.c` and without waiting for the other 92 to exist.
+
+That sets the order of work: layer 0 first, verified against the reference's
+layer-1 dump, before anything else is written.
+
+## Step 11 - OPEN: how the experts sit across two devices
+
+A pod has two NVMe devices available. Three structures are candidates and
+**none of them is settled**; this is to be decided by measurement, not by
+argument:
+
+1. **Two SQLite databases, sharded** - half the layer's experts on each device.
+2. **Two SQLite databases, mirrored** - the same data twice, reads balanced.
+3. **One database on a mirror** - what the current box already does.
+
+What is already measured and bears on it:
+
+- Sharding *within one filesystem* helps **cold only**: 1/2/4/8 shards give
+  8.09 / 9.58 / 10.03 / 10.47 GB/s, saturating by four. **Warm it is worth
+  almost nothing**: 45.4 ms at one shard against 43.2 at eight.
+- A RAID1 mirror **already reads both members concurrently** - 6.87 + 6.86
+  GB/s, timestamp-proven, against a per-device rating near 7 GB/s. So option 3
+  is not obviously leaving bandwidth unused.
+- In the pod design the store is **RAM-resident in steady state**, so the
+  device layout governs **cold start (1.96 s)** and little else.
+
+What cannot be measured on the current box: it has **no independent disk0 and
+disk1**. Both NVMes are wholly consumed by RAID1 mirrors and `md2` is the root
+filesystem, so testing true two-device independence needs either a machine
+with separate filesystems or breaking the mirror, which is destructive.
+
+**So this stays open with a named blocker rather than a guess.** The decisive
+experiment is the three structures, same bytes, same routing order, cold and
+warm, on hardware where the two devices are genuinely separate - which is the
+Kubernetes node, not this box.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
