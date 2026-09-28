@@ -1848,6 +1848,10 @@ static void slot_drop(int s);
 /* dequantize any slot to float32. dtype 0=F32 1=BF16 2=I8R */
 static double sv_secs; static int64_t sv_n, sv_elem;   /* no operator counts this */
 static int gfuse = 1;   /* K3_GFUSE: fold the gate's scale into the router dot product */
+/* K3_XTOPK: use only the top k of the router's 16, renormalised over those kept.
+   Not bit-exact by construction - the point is to measure what the answer does,
+   because mixture mass lost is a proxy and the emitted token is the observable. */
+static int xtopk = TOPK;
 static float *slot_vec(int L, int s, int want)
 {
     const double _t = now_s();
@@ -2543,6 +2547,8 @@ int main(int argc, char **argv)
       if (v && atoi(v)) covc = calloc(trunk_sz >> 12, sizeof(uint16_t)); }
     { const char *v = getenv("K3_VALUE"); if (v) val_on = atoi(v); }
     { const char *v = getenv("K3_GFUSE"); if (v) gfuse = atoi(v); }
+    { const char *v = getenv("K3_XTOPK"); if (v) { xtopk = atoi(v);
+        if (xtopk < 1 || xtopk > TOPK) die("K3_XTOPK must be 1..16"); } }
     { const char *v = getenv("K3_SITUSTAT"); if (v) situstat = atoi(v); }
     { const char *v = getenv("K3_SITUPAR"); if (v) situ_par = atoi(v); }
     { const char *v = getenv("K3_PAR2"); if (v) par2 = atoi(v); }
@@ -2989,9 +2995,10 @@ int main(int argc, char **argv)
                     idsel_all[t][j] = ti[j]; wts_all[t][j] = score[ti[j]];
                 }
                 double ssum = 0.0;
-                for (int j = 0; j < TOPK; j++) ssum += (double)wts_all[t][j];
+                for (int j = 0; j < xtopk; j++) ssum += (double)wts_all[t][j];
                 const float iv = (float)(1.0 / (ssum + 1e-20));
-                for (int j = 0; j < TOPK; j++) wts_all[t][j] = wts_all[t][j] * iv;
+                for (int j = 0; j < xtopk; j++) wts_all[t][j] = wts_all[t][j] * iv;
+                for (int j = xtopk; j < TOPK; j++) wts_all[t][j] = 0.0f;
                 op_add(OP_TOPK, _tk, 0);
                 if (sel_fp) {
                     fprintf(sel_fp, "%d\t%d\t%d", L, t, g_ids ? g_ids[t] : -1);
@@ -3010,7 +3017,7 @@ int main(int argc, char **argv)
             {
                 PRange rg[NPOS * TOPK * 6]; int nr = 0;
                 for (int t = TLO; t < NPOS; t++)
-                    for (int j = 0; j < TOPK; j++)
+                    for (int j = 0; j < xtopk; j++)
                         for (int w = 0; w < 3; w++)
                             for (int k = 0; k < 2; k++) {
                                 const ERec *rr = expert_rec(L, idsel_all[t][j], w, k);
@@ -3051,7 +3058,7 @@ int main(int argc, char **argv)
                 {
                     int d = 0;
                     for (int t0 = TLO; t0 < NPOS; t0++)
-                        for (int j0 = 0; j0 < TOPK; j0++, d++) {
+                        for (int j0 = 0; j0 < xtopk; j0++, d++) {
                             const int e = idsel_all[t0][j0];
                             int s;
                             if (sx_epoch[e] == sx_ep) {
@@ -3139,7 +3146,7 @@ int main(int argc, char **argv)
 
                 for (int t = TLO; t < NPOS; t++) {
                     for (int i = 0; i < LAT; i++) aL[i] = 0.0f;
-                    for (int j = 0; j < TOPK; j++) {
+                    for (int j = 0; j < xtopk; j++) {
                         const float pi = wts_all[t][j];
                         const float *ed = slot[t][j];
                         for (int i = 0; i < LAT; i++) aL[i] = aL[i] + pi * ed[i];

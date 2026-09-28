@@ -1651,6 +1651,102 @@ buys nothing.
 
 `K3_RA` defaults to 0, so the committed default is unchanged.
 
+## Step 29 - routing is a function of the prefix, and that is measurable
+
+Step 28 could read the trunk ahead because every trunk stage is known at
+startup. The experts are not: which 16 a position wants comes from a router
+that needs that position's hidden state, so the dependency runs
+
+```
+experts(L-1) -> h(L) -> attention(L) -> x(L) -> J(L) -> experts(L)
+```
+
+and there is no point in it where layer L+1's expert ids exist before layer L
+finishes. That is why the expert path could not be prefetched the way the
+trunk was.
+
+Unless the routing is knowable some other way.
+
+### The equation
+
+For layer `l`, position `t`, with `h` the residual after that layer's attention:
+
+```
+x_t     = RMSNorm(h_t) * w_post_ln
+s_t,e   = sigmoid( <g_e, x_t> )         g_e = row e of S_GATE, int8 x fp32 scale
+J_t     = top-16 over e of ( s_t,e + b_e )      b = S_GBIAS, selection only
+p_t,j   = s_t,J[j] / sum_k s_t,J[k]
+```
+
+`x_t` depends on every token at or before `t`, through attention. So the
+routing *should* be a pure function of the prefix. That is a claim, and it is
+falsifiable.
+
+### Three claims, one control
+
+`K3_PROV` writes one S record per (layer, position, rank): the chosen expert
+and its weight. Five runs, comparing identities only.
+
+Prompts 22 and 23 share their first seven tokens and differ at index 7:
+
+```
+22  113476,387,276,10484,318,15383,316,28202,...   "...France and Berlin is..."
+23  113476,387,276,10484,318,15383,316,31082,...   "...France and Rome is..."
+```
+
+```
+claim R  - determinism: same prompt, two runs
+  p1a vs p1b, every (layer,position)           identical  460 /  460   ALL MATCH
+
+claim P0 - position 0 depends only on token 0   (p1 and p2 both start 1008)
+  p1 vs p2, position 0, all layers             identical   92 /   92   ALL MATCH
+
+claim PX - causal prefix: p22/p23 share 0..6
+  position  0 .. position  6                   identical   92 /   92   ALL MATCH  (x7)
+  position  7 .. position 11                   identical    0 /   92   first differs at (1,7)
+
+control: p1 vs p2 at position 1 (token 1 differs)
+  p1 vs p2, position 1, all layers             identical    0 /   92   first differs at (1,1)
+```
+
+644 of 644 (layer, position) pairs match across the shared prefix - same 16
+experts, same rank order, same weights. Position 7 diverges at layer 1 and
+never recovers. The control rules out trivial matching.
+
+**Routing at position t is a pure function of tokens 0..t.** Measured.
+
+### What a known prefix unlocks
+
+One expert is 17,547,264 B = 3 x (5,505,024 + 344,064).
+
+| case | selections known before layer 0 | share of expert bytes |
+|---|---|---|
+| p1, 5 tokens, first token only | 1,472 / 5,683 | **25.9%** - 25.83 of 99.72 GB |
+| p22, 12 tokens, first token only | 1,472 / 8,688 | 16.9% - 25.83 of 152.45 GB |
+| p22, **7-token prefix known** | 6,395 / 8,688 | **73.6%** - 112.21 of 152.45 GB |
+| p22, whole prompt seen before | 8,688 / 8,688 | 100% |
+
+1,472 is exactly 92 layers x 16 experts: position 0 draws 16 distinct experts
+per layer, in every layer.
+
+### The table cannot be precomputed, only cached
+
+To know position 0's routing at layer L you need x_0 at layer L, which means
+running layers 0..L-1 for that token, including their expert arithmetic -
+about 25.8 GB of reads per first token. Across 163,840 tokens that is ~4.2 PB.
+
+So this is **a cache populated by use, not a table built in advance.** For a
+server with repeated system prompts or shared openings, that is the right
+shape regardless.
+
+### What is not yet established
+
+Knowing the ids early removes the *dependency*, not the *bytes*. All 99.72 GB
+still has to be read. Whether that converts to wall time depends on whether
+expert I/O is the binding constraint, and right now I/O and compute sit at
+near parity - roughly 7.3 s against 7.0 s. Spreading the reads earlier helps
+only if the device is not already saturated. **Not measured. Not claimed.**
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
