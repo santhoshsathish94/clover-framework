@@ -1,3 +1,14 @@
 # A CRLF shebang fails on Linux with "bad interpreter: /usr/bin/env bash^M", and these
 # scripts are authored on Windows but only ever run on Linux hosts.
 *.sh text eol=lf
+*.py text eol=lf
+
+# The equation is authored on Windows and built on Linux. It was CRLF for weeks,
+# which is harmless to the compiler but makes every diff show the whole file
+# unless the endings are matched first - that cost a wrong reading once.
+*.c text eol=lf
+*.h text eol=lf
+
+# Preserved reference outputs: any conversion would destroy the md5 they exist for.
+*.bin binary
+*.tsv text eol=lf
