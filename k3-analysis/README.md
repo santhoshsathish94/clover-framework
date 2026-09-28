@@ -23,6 +23,7 @@ The working implementation this analysis produced lives in
 | [clover-ai.md](clover-ai.md) | Implementation direction for Clover AI — bounded tools, enforced permissions, deterministic verification | Direction, not implemented |
 | [heterogeneous-inference.md](heterogeneous-inference.md) | Three experiments on running a very large model on machines you can actually get, and where they point next | Direction, measured on one CPU, nothing on a GPU |
 | [clover-scaling-architecture.md](clover-scaling-architecture.md) | The measurement record, step by step, including every wrong turn | Measured, one box |
+| [k3-client-server-architecture.md](k3-client-server-architecture.md) | The client-server shape: what a client holds, what a pod holds, what crosses between them | Sizes measured, topology not built |
 | [k3-model-equation.md](k3-model-equation.md) | The model stated as one composed expression | Executed and verified |
 
 ## [Kimi K3 storage-streamed inference](fareed-khan-kimi-k3-in-c-explanation.md)
