@@ -347,7 +347,7 @@ beside it, so the working single-process build is never at risk.
 
 ```
   clover-client.c   head, layer 0, and tail, on the caller's machine
-  clover-server.c   the control plane: topology, sessions, sequencing
+  clover-router.c   the control plane: topology, sessions, sequencing
   clover-1.c        layer 1
   ...
   clover-92.c       layer 92
@@ -447,7 +447,7 @@ kernel.
 ```
   clover-client   util index core slice kda mlp tail
   clover-1..92    util index state core slice expert kda|mla moe
-  clover-server   util state only
+  clover-router   util state only
 ```
 
 The client carries no expert kernel and no MoE block; the pods carry no
@@ -557,22 +557,37 @@ which is the load-bearing part: every offset recorded in the index stays valid
 for the records that have not been migrated yet, so migration can proceed one
 expert at a time with the index still usable throughout.
 
-## Step 14 - two programs, not one program being replaced
+## Step 14 - two programs, and two changes taken one at a time
 
 `clover-k3.c` is the **single-machine version**: one process, one box, the
 whole model in one address space. The work recorded here is a **client-server
 version**. They exist for different reasons and both are kept.
 
-The new code lives in **`clover-server/`**, a separate folder, so that nothing
-built here can reach into the reference by accident. `clover-k3.c` is not
-modified.
+The new code lives in **`clover-server-k3/`**, a separate folder, so that
+nothing built here can reach into the reference by accident. `clover-k3.c` is
+not modified.
 
-| | `clover-k3` | `clover-server` |
-|---|---|---|
-| shape | one process, one machine | client, server, 93 layer processes |
-| experts | read from the checkpoint | read from SQLite, per layer |
-| answers | is the equation right? | does the equation survive being cut up? |
-| status | working, gated, bit-exact | nothing built yet |
+**Two things are changing, and they are not being changed together.** Where
+the bytes come from, and how many processes there are. Both at once means a
+broken gate says nothing about which one broke it.
+
+- **Version 1, `clover-server-k3.c`** - one process, the same structure as the
+  reference, reading 93 independent trunk slices and SQLite experts instead of
+  one trunk file and the checkpoint. Must reproduce the gate md5 bit for bit.
+- **Version 2** - `clover-client.c`, `clover-0.c` .. `clover-92.c`, and
+  `clover-router.c`, on the data layer version 1 has already proven.
+
+The control plane is named **`clover-router.c`**, not `clover-server.c`,
+because two different things are called routing: the router sequences
+**between layers**, while the MoE gate selects **experts** inside one layer.
+
+**What version 1 has to touch, read off the reference rather than estimated.**
+Every trunk read is `trunk + sl->off` and there are **three** of them -
+`slot_ptr` (758), `slot_vec` (770), and the `K3_STAGE` slot-name-by-address
+lookup (168). Every expert byte comes off disk in **one function**,
+`read_range`, two `pread` calls, reached from three call sites, with
+`res_ptr` falling back to `file_ptr(fid) + off`. The five non-layer tensors
+keep reading from the checkpoint; they are 4.70 GB and they are not experts.
 
 The separation is not tidiness. The single-machine version is the **only
 oracle** available: `K3_DUMPLAY` gives each layer's input, so `clover-N` can
