@@ -319,39 +319,70 @@ would have risked the checkpoint for no measured benefit.
 beside it, so the working single-process build is never at risk.
 
 ```
-  clover-client.c   head and tail, on the caller's machine
+  clover-client.c   head, layer 0, and tail, on the caller's machine
   clover-server.c   the control plane: topology, sessions, sequencing
-  clover-0.c        layer 0
   clover-1.c        layer 1
   ...
   clover-92.c       layer 92
 ```
 
-### The rule for what may leave the cluster
+### The rule, and its one deliberate exception
 
 **Anything that needs the trunk or the experts stays in a pod.** Only work
 that needs neither can sit with the caller.
 
-By that test:
-
 | | needs trunk | needs experts | where |
 |---|---|---|---|
-| head, embedding | no | no | **client** |
-| layer 0 | **yes, 1.17 GB** | no | pod |
+| head, embedding | no | no | client |
+| layer 0 | yes, 1.17 GB | **no** | **client, by exception** |
 | layers 1-92 | yes | yes | pods |
-| tail, norms + lm_head | no | no | **client** |
+| tail, norms + lm_head | no | no | client |
 
-The head and tail read only the checkpoint's five non-layer tensors through
-`file_ptr`, never the trunk and never an expert block - so the client holds
-**4.70 GB** and nothing else.
+Layer 0 breaks the rule and is placed with the client anyway, on measurement:
 
-**A correction I had to make here.** Layer 0 was briefly moved to the client on
-the strength of having zero expert records, which is true and was checked
-against the index - all 494,592 records belong to layers 1-92, exactly 5,376
-each. But needing no experts is not the test. Layer 0 needs the **largest
-trunk slice in the model**, nearly double a KDA layer's 635 MB because the
-only dense MLP in the model is 727 MB of it. It stays a pod, and the fleet
-stays at 93.
+```
+  layer 0            0.050 s      the cheapest layer in the model
+  layers 1-92 mean   0.103 s      min 0.080, max 0.150
+  sum of all layers  9.51 s
+  layer 0 share      0.5%
+```
+
+It holds the **largest trunk slice of any layer**, 1.17 GB, and is
+nevertheless the **fastest**, because it has no experts and the trunk is
+resident. Taking it costs the caller ~50 ms and 1.17 GB, and it removes the
+only non-uniform pod in the fleet:
+
+```
+  before   client + pod 0 (1.48 GiB, no experts) + 92 MoE pods
+  after    client (head, layer 0, tail) + 92 identical MoE pods
+```
+
+**The cost accepted, stated rather than glossed:** the client's code roughly
+triples. It goes from `AR` + `rmsnorm` + `Bf` to also carrying `Q`, `Qm`, the
+whole KDA block - shortconv, the delta rule, l2, SiTU - and the dense MLP. That
+is most of a layer's implementation living on the caller's machine, and future
+fixes to those kernels ship to clients as well as pods. The judgment was that a
+uniform fleet is worth it; the codebase cost is real and is the reason it was
+not obvious.
+
+What the client still never needs: `X`, `Xm`, the MoE block, MLA, or any
+expert store.
+
+### What the client holds
+
+```
+  embed_tokens          2.35 GB    disk only, 14,336 B per token
+  layer 0 trunk slice   1.17 GB    read whole, every run
+  lm_head + 3 norms     2.35 GB    read whole, every prompt
+                        --------
+  on disk               5.87 GB
+  resident              3.52 GB    lm_head + slice; embed can stay on disk
+  with working buffers  ~4 GB
+```
+
+Measured alongside: the lm_head projection is **0.053 s**, 2.35 GB at
+44.24 GB/s. Client compute is therefore about **0.103 s** total - layer 0 plus
+the tail.
 
 ### Control through the server, data pod to pod
 
@@ -387,15 +418,13 @@ kernel.
 | `k3tail` | `Bf`, final norms, lm_head | **client only** |
 
 ```
-  clover-client   util index core(AR, rmsnorm) tail
-  clover-0        util index state core slice kda mlp
+  clover-client   util index core slice kda mlp tail
   clover-1..92    util index state core slice expert kda|mla moe
   clover-server   util state only
 ```
 
-Layer 0's binary carries no expert kernel and no MoE block, and the client's
-carries no projection kernel at all - which is what the split buys beyond
-tidiness.
+The client carries no expert kernel and no MoE block; the pods carry no
+lm_head. That is what the split buys beyond tidiness.
 
 ### The oracle that makes this testable one layer at a time
 
@@ -404,8 +433,11 @@ layer's input `hb[t]` (clover-k3.c line 1486). So **each `clover-N` can be
 checked against the reference's own dump for layer N+1**, with no change to
 `clover-k3.c` and without waiting for the other 92 to exist.
 
-That sets the order of work: layer 0 first, verified against the reference's
-layer-1 dump, before anything else is written.
+That sets the order of work: the client first, because two of its three parts
+can be gated today - the embedding against the reference's layer-0 dump, and
+the lm_head against the preserved baseline, which is `nrm[7168]` followed by
+`logits[163840]` and so contains both the input and the output of that matmul.
+Then layer 1, verified against the reference's layer-2 dump.
 
 ## Step 11 - OPEN: how the experts sit across two devices
 
