@@ -158,16 +158,16 @@ checkpoint:
 
 | | slices + checkpoint | all SQLite |
 |---|---|---|
-| process total | ~14.9 s | **50.8 - 59.7 s** |
-| peak RSS | 56.8 GB | **5.5 GB** |
-| peak trunk resident | 54.47 GB | **1,172 MB** |
+| process total | ~14.9 s | **38.0 - 45.8 s** |
+| peak RSS | 56.8 GB | **5.8 GB** |
+| peak trunk resident | 54.47 GB | **242 MB** |
 
-**Slower, and far smaller.** The trunk is streamed a layer at a time because
+**Slower, and far smaller.** The trunk is streamed **per stage**, because
 every one of the 1,159 (layer, slot) pairs a run resolves is resolved
 **exactly once** - measured, min 1, mean 1.00, max 1. It is a stream, not a
-resident table, so holding all 54.47 GB was the wrong shape. Per-layer
-residency is 1,172 MB, which is exactly the largest layer; the floor for
-per-stage is **242.36 MB**, the largest single tensor.
+resident table. Each weight is fetched at the operator that uses it and
+released when that operator returns, so peak trunk residency is **242 MB**,
+the single largest tensor, against 54.47 GB held eagerly.
 
 Along the way: the trunk split is free and bit-exact; the SQLite expert path
 cost a linear 0.148 s per layer at small scale; and **a row is one tensor, not

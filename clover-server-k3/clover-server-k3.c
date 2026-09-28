@@ -101,11 +101,20 @@ static int   n_files;
 static ERec *erec;
 static int   n_erec;
 
-static unsigned char *slice[NLAY];   /* one mmap per layer, L00.bin .. L92.bin */
+static unsigned char *slice[NLAY];   /* unused once slots are per-stage */
 static size_t slice_sz[NLAY];
-static size_t slice_map_n[NLAY];     /* hugetlb rounds up, so munmap needs its own length */
+static size_t slice_map_n[NLAY];
 static int64_t layer_off[NLAY];      /* where this layer began in the whole trunk */
-static size_t trunk_sz;              /* the 93 slices added up */
+static size_t trunk_sz;              /* the 93 layers added up */
+
+/* One buffer per trunk slot of the layer being run, fetched when the operator
+   that needs it is about to run and released when it returns. Measured: every
+   (layer, slot) is resolved exactly once, so nothing is ever re-fetched. */
+#define MAXSLOT 64
+static unsigned char *sbuf[MAXSLOT];
+static size_t         sbuf_n[MAXSLOT];
+static sqlite3       *tdb;
+static int            tdb_L = -1;
 static uint16_t *covc;          /* K3_COVER: touches per 4 KB page of the trunk */
 static FILE *dumplay;           /* K3_DUMPLAY: each layer input, for the prefix check */
 
@@ -119,19 +128,22 @@ static FILE *pfx_f;
 
 /* Counts how often each trunk page is read, to answer whether a run needs all
    54.47 GB and whether it reads any of it more than once.
-   The address now lands in one of 93 slices, so it is translated back to the
-   page it would have had in the whole trunk and the counts stay comparable. */
+   The address is in one of the current layer's slot buffers, so it is
+   translated back to the page it had in the whole trunk. */
+static int cur_L = -1;
 static inline void cover(const void *p, size_t n)
 {
-    if (!covc) return;
-    uintptr_t a = (uintptr_t)p;
-    for (int L = 0; L < NLAY; L++) {
-        uintptr_t b = (uintptr_t)slice[L];
-        if (!b || a < b || a >= b + slice_sz[L]) continue;
-        size_t d = (size_t)(a - b) + (size_t)layer_off[L];
-        size_t s = d >> 12, e = (d + n + 4095) >> 12, np = trunk_sz >> 12;
+    if (!covc || cur_L < 0) return;
+    const uintptr_t a = (uintptr_t)p;
+    for (int s = 0; s < MAXSLOT; s++) {
+        const uintptr_t b = (uintptr_t)sbuf[s];
+        if (!b || a < b || a >= b + sbuf_n[s]) continue;
+        const size_t d = (size_t)slots[(size_t)cur_L * n_slots + s].off
+                       + (size_t)(a - b);
+        size_t i = d >> 12, e = (d + n + 4095) >> 12;
+        const size_t np = trunk_sz >> 12;
         if (e > np) e = np;
-        for (size_t i = s; i < e; i++) if (covc[i] < 65535) covc[i]++;
+        for (; i < e; i++) if (covc[i] < 65535) covc[i]++;
         return;
     }
 }
@@ -186,17 +198,16 @@ static void lstat_vec(int L, int t, const char *name, const float *v, int n)
    1171 times in a five-token run and X about 17049 (5683 distinct experts x 3
    parts); this records what each individual call produced. */
 static FILE  *stg_fp = NULL;
-static int    cur_L = -1, cur_e = -1;
+static int    cur_e = -1;
 static const char *cur_part = "";
 static long   stg_q = 0, stg_x = 0;
 
 /* Q takes a raw weight pointer, so recover which trunk slot it is by address. */
 static const char *slot_of_ptr(int L, const unsigned char *W)
 {
-    if (L < 0 || !slice[L]) return "?";
+    if (L < 0 || L != tdb_L) return "?";
     for (int s = 0; s < n_slots && s < N_SLOTN; s++) {
-        const Slot *sl = &slots[(size_t)L * n_slots + s];
-        if (sl->present && slice[L] + (sl->off - layer_off[L]) == W) return SLOTN[s];
+        if (sbuf[s] && sbuf[s] == W) return SLOTN[s];
     }
     return "?";
 }
@@ -704,6 +715,7 @@ static void read_range_db(PRange *g, int L)
 }
 
 static const ERec *expert_rec(int L, int e, int which, int kind);
+static void slot_drop(int s);
 
 /* The trunk is a stream, not a resident table: measured, every one of the
    1159 (layer, slot) pairs a run resolves is resolved exactly once. So a
@@ -711,34 +723,19 @@ static const ERec *expert_rec(int L, int e, int which, int kind);
    reads happen under the arithmetic instead of before it. */
 static void trunk_layer_in(int L)
 {
-    if (slice[L]) return;
-    const double t0 = now_s();
-    slice[L] = malloc(slice_sz[L]);
-    if (!slice[L]) die("trunk layer buffer");
     char rel[64];
     snprintf(rel, sizeof rel, "trunk/L%02d.db", L);
-    sqlite3 *db = db_open_ro(rel);
-    int got = 0;
-    for (int s = 0; s < n_slots; s++) {
-        const Slot *sl = &slots[(size_t)L * n_slots + s];
-        if (!sl->present) continue;
-        db_row(db, "slot_data", s, slice[L] + (sl->off - layer_off[L]), (int)sl->nbytes);
-        got++;
-    }
-    sqlite3_close(db);
-    if (!got) die("trunk store is empty");
-    tk_bytes += slice_sz[L];
-    tk_secs += now_s() - t0;
-    tk_live += slice_sz[L];
-    if (tk_live > tk_peak) tk_peak = tk_live;
+    tdb = db_open_ro(rel);
+    tdb_L = L;
 }
 
 static void trunk_layer_out(int L)
 {
-    if (!slice[L]) return;
-    free(slice[L]);
-    slice[L] = NULL;
-    tk_live -= slice_sz[L];
+    (void)L;
+    for (int s = 0; s < MAXSLOT; s++) slot_drop(s);
+    if (tdb) sqlite3_close(tdb);
+    tdb = NULL;
+    tdb_L = -1;
 }
 
 /* Opens every store present in dir. Absent layers simply stay on the
@@ -1052,8 +1049,33 @@ static const unsigned char *slot_ptr(int L, int s)
     Slot *sl = &slots[(size_t)L * n_slots + s];
     if (!sl->present) die("absent slot");
     if (prov_fp) prov_slot(L, s, "ptr");
-    return slice[L] + (sl->off - layer_off[L]);
+    if (!sbuf[s]) {
+        if (L != tdb_L) die("slot from a layer that is not open");
+        sbuf[s] = malloc((size_t)sl->nbytes);
+        if (!sbuf[s]) die("slot buffer");
+        sbuf_n[s] = (size_t)sl->nbytes;
+        const double t0 = now_s();
+        db_row(tdb, "slot_data", s, sbuf[s], (int)sl->nbytes);
+        tk_secs += now_s() - t0;
+        tk_bytes += sl->nbytes;
+        tk_live += sbuf_n[s];
+        if (tk_live > tk_peak) tk_peak = tk_live;
+    }
+    return sbuf[s];
 }
+
+/* The operator that asked for it has returned, so it is dead. Measured: no
+   (layer, slot) is ever resolved twice, so this can never cause a re-fetch. */
+static void slot_drop(int s)
+{
+    if (!sbuf[s]) return;
+    tk_live -= sbuf_n[s];
+    free(sbuf[s]);
+    sbuf[s] = NULL;
+    sbuf_n[s] = 0;
+}
+
+static void slot_drop(int s);
 
 /* dequantize any slot to float32. dtype 0=F32 1=BF16 2=I8R */
 static double sv_secs; static int64_t sv_n, sv_elem;   /* no operator counts this */
@@ -1064,7 +1086,7 @@ static float *slot_vec(int L, int s, int want)
     Slot *sl = &slots[(size_t)L * n_slots + s];
     if (!sl->present) die("absent slot vec");
     if (prov_fp) prov_slot(L, s, "vec");
-    const unsigned char *p = slice[L] + (sl->off - layer_off[L]);
+    const unsigned char *p = slot_ptr(L, s);
     /* cover() is called from the kernels, but slot_vec reads the trunk directly,
        so without this the norm weights look untouched. */
     if (sl->dtype == 0)      cover(p, sizeof(float) * (size_t)want);
@@ -1089,6 +1111,7 @@ static float *slot_vec(int L, int s, int want)
             for (int i = 0; i < cols; i++) out[r * cols + i] = (float)w[i] * sc;
         }
     }
+    slot_drop(s);           /* the float copy is the caller's; the source is dead */
     sv_secs += now_s() - _t; sv_n++; sv_elem += want;
     return out;
 }
@@ -1907,13 +1930,13 @@ int main(int argc, char **argv)
                 for (int i = 0; i < H * VH; i++) gbf[t][i] = acc[i] * sigf(gbm[t][i]);
             }
             Qm(aoutp + TLO, (const float *const *)gbf + TLO, NACT, WO, H * VH, E);
+            /* 232.45 MB hoisted here, under the 242 MB floor the dense MLP
+               sets, but it must not still be held when the MoE block runs. */
+            slot_drop(S_QA); slot_drop(S_QB); slot_drop(S_KA);
+            slot_drop(S_KB); slot_drop(S_G);  slot_drop(S_O);
 
             free(wqan); free(wkan);
         } else {
-            const unsigned char *WQ = slot_ptr(L, S_Q), *WK = slot_ptr(L, S_K);
-            const unsigned char *WV = slot_ptr(L, S_V), *WB = slot_ptr(L, S_B);
-            const unsigned char *WFA = slot_ptr(L, S_FA), *WFB = slot_ptr(L, S_FB);
-            const unsigned char *WG = slot_ptr(L, S_G), *WO = slot_ptr(L, S_O);
             float *cw[3] = { slot_vec(L, S_CQ, P * KC), slot_vec(L, S_CK, P * KC),
                              slot_vec(L, S_CV, P * KC) };
             float *alog = slot_vec(L, S_ALOG, D);
@@ -1953,13 +1976,22 @@ int main(int argc, char **argv)
             }
             const int NACT = NPOS - TLO;
 
-            /* every projection that depends only on x1 is taken one weight at a time */
-            const unsigned char *WW[3] = {WQ, WK, WV};
-            for (int j = 0; j < 3; j++) Qm(rawm[j] + TLO, x1p + TLO, NACT, WW[j], E, P);
-            Qm(betam + TLO, x1p + TLO, NACT, WB, E, H);
-            Qm(fam + TLO,   x1p + TLO, NACT, WFA, E, D);
-            Qm(zzm + TLO, (const float *const *)fam + TLO, NACT, WFB, D, P);
-            Qm(gtm + TLO, x1p + TLO, NACT, WG, E, P);
+            /* every projection that depends only on x1 is taken one weight at a
+               time, and each is dead when its Qm returns. Hoisting all eight
+               held 443.86 MB; this holds one. */
+            static const int SW[3] = { S_Q, S_K, S_V };
+            for (int j = 0; j < 3; j++) {
+                Qm(rawm[j] + TLO, x1p + TLO, NACT, slot_ptr(L, SW[j]), E, P);
+                slot_drop(SW[j]);
+            }
+            Qm(betam + TLO, x1p + TLO, NACT, slot_ptr(L, S_B), E, H);
+            slot_drop(S_B);
+            Qm(fam + TLO,   x1p + TLO, NACT, slot_ptr(L, S_FA), E, D);
+            slot_drop(S_FA);
+            Qm(zzm + TLO, (const float *const *)fam + TLO, NACT, slot_ptr(L, S_FB), D, P);
+            slot_drop(S_FB);
+            Qm(gtm + TLO, x1p + TLO, NACT, slot_ptr(L, S_G), E, P);
+            slot_drop(S_G);
 
             /* conv history and delta-rule state carry, so this stays in order */
             for (int t = TLO; t < NPOS; t++) {
@@ -2033,7 +2065,8 @@ int main(int argc, char **argv)
                     fwrite(convbuf, 1, sizeof convbuf, pfx_f);
                 }
             }
-            Qm(aoutp + TLO, (const float *const *)gtf + TLO, NACT, WO, P, E);
+            Qm(aoutp + TLO, (const float *const *)gtf + TLO, NACT, slot_ptr(L, S_O), P, E);
+            slot_drop(S_O);
 
             for (int j = 0; j < 3; j++) { free(cw[j]); free(cv[j]); }
             free(alog); free(dtb); free(won); free(raw); free(zz); free(fatmp);
@@ -2059,10 +2092,8 @@ int main(int argc, char **argv)
 
         /* the MLP */
         if (!isMoE) {
-            const unsigned char *WG2 = slot_ptr(L, S_MGATE), *WU = slot_ptr(L, S_MUP);
-            const unsigned char *WD = slot_ptr(L, S_MDOWN);
-            /* Batched like every other weight: these three are 727 MB, and the
-               per-position loop re-read all of it for each position. */
+            /* Hoisting these three held 726.96 MB at once. Each is dead when
+               its Qm returns, so the block now peaks at one of them. */
             const int NACT0 = NPOS - TLO;
             float *gm[NPOS], *um[NPOS], *fp[NPOS];
             const float *x2p0[NPOS];
@@ -2072,10 +2103,13 @@ int main(int argc, char **argv)
                 fp[t] = ffn[t];
                 x2p0[t] = x2b[t];
             }
-            Qm(gm + TLO, x2p0 + TLO, NACT0, WG2, E, DI);
-            Qm(um + TLO, x2p0 + TLO, NACT0, WU, E, DI);
+            Qm(gm + TLO, x2p0 + TLO, NACT0, slot_ptr(L, S_MGATE), E, DI);
+            slot_drop(S_MGATE);
+            Qm(um + TLO, x2p0 + TLO, NACT0, slot_ptr(L, S_MUP), E, DI);
+            slot_drop(S_MUP);
             for (int t = TLO; t < NPOS; t++) situ(gm[t], gm[t], um[t], DI);
-            Qm(fp + TLO, (const float *const *)gm + TLO, NACT0, WD, DI, E);
+            Qm(fp + TLO, (const float *const *)gm + TLO, NACT0, slot_ptr(L, S_MDOWN), DI, E);
+            slot_drop(S_MDOWN);
             for (int t = TLO; t < NPOS; t++) { free(gm[t]); free(um[t]); }
         } else {
             /* The gate is int8 rows with a per-row scale, the same form Q reads

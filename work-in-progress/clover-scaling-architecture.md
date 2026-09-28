@@ -1159,6 +1159,72 @@ and it is not done either.
 And this is still slower than the file-backed path: process total 51 to 60 s
 against roughly 15 s. Bit-exact, far smaller, still slower.
 
+## Step 23 - the per-stage floor, reached, and a correction to step 22
+
+### First, the correction
+
+Step 22 said the per-stage floor was **242.36 MB, another 4.8x**, as though
+only the freeing was missing. That was not checked. The call sites **hoist
+every weight pointer at block start**, so the real figure for scope-based
+freeing was:
+
+| block | hoisted | largest single |
+|---|---|---|
+| MLA attn | 232.45 MB | - |
+| KDA attn | **443.86 MB** | 88.13 MB |
+| dense MLP | **726.96 MB** | 242.36 MB |
+| MoE | 190.05 MB | - |
+
+Freeing at block boundaries would have given **726.96 MB**, a 1.6x
+improvement, not 4.8x. Reaching 242.36 MB needed the two oversized blocks
+restructured so each weight is fetched at the operator that uses it and
+released when that operator returns.
+
+Two blocks, not four: MLA at 232.45 MB and MoE at 190.05 MB are already under
+the 242.36 MB that layer 0's `MUP` sets, so they were left alone - except for
+releasing MLA's six at the end of its block, since otherwise they would still
+be held when the MoE block runs and 232 + 190 would exceed the floor.
+
+### The result
+
+```
+  peak trunk resident   242 MB       predicted 242.36 MB
+  md5 23d162dcefb18211a7540ef12948f1eb   token 17374
+```
+
+| | eager | per layer | per stage |
+|---|---|---|---|
+| peak trunk resident | 54.47 GB | 1,172 MB | **242 MB** |
+| process total | 68.94 / 71.10 / 71.45 | 56.50 / 50.84 / 59.65 | **37.95 / 44.65 / 45.76** |
+| trunk stream rate | - | 1.61 - 2.63 GB/s | **2.90 - 3.66 GB/s** |
+| peak RSS | 59.0 GB | 5.5 GB | 5.74 - 5.86 GB |
+
+**225x less trunk resident than step 21**, and the measured peak matching the
+predicted 242.36 MB is the check that nothing is silently retained.
+
+Streaming also got *faster*, 1.61-2.63 to 2.90-3.66 GB/s. Smaller allocations
+and a shorter path between fetch and use; not investigated further.
+
+**Peak RSS barely moved**, 5.5 to 5.85 GB, and slightly the wrong way. The
+trunk was never the bulk of it at this point - what remains is `lm_head` at
+2.35 GB, the expert arena at 1.63 GB, and SQLite's per-connection page cache
+across 1,288 connections. Reported rather than tidied.
+
+### The connection count is the same mistake again
+
+The descriptor question, measured rather than assumed:
+
+```
+  soft limit raised at startup   1024 -> 4096
+  peak open descriptors          1,384   = 1,288 SQLite connections + ~96
+```
+
+So the raise is doing real work - 1,384 would have failed at 1,024. But
+**1,288 connections is the same error as holding the trunk**: a layer is
+visited exactly once, so its store is dead the moment the layer ends, and the
+connections are simply never closed. Closing them per layer would take the
+peak to roughly 14. Named, not fixed.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
@@ -1167,8 +1233,8 @@ curve up to four pods, the 93-way trunk split, ext4 hole punching, the
 slice build running bit-exact at the same speed as the reference, the
 SQLite expert path bit-exact at a linear 0.148 s per converted layer, and the
 whole model - trunk, experts, embedding, lm_head, vocabulary - running from
-SQLite bit-exact at 3.8x the wall time, and the trunk streamed per layer at
-1,172 MB peak residency instead of 54.47 GB.
+SQLite bit-exact, with the trunk streamed per stage at 242 MB peak residency
+instead of 54.47 GB.
 
 **Not measured, and not to be read as measured:** 93-deep pipeline behavior,
 cross-node transfer, Kubernetes scheduling and cgroup accounting, and aggregate
