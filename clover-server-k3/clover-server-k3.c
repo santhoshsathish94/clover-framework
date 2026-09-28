@@ -714,6 +714,19 @@ static void read_range_db(PRange *g, int L)
     release_conn(c);
 }
 
+/* K3_NEED: for every slot fetched, what the operator that asked for it
+   actually read. The question is not how much a layer needs, it is whether a
+   stage is handed more bytes than it touches. */
+static FILE   *need_fp;
+static size_t  sbuf_used[MAXSLOT];
+static int64_t need_fetch, need_used;
+
+static void slot_note_use(const unsigned char *W, int64_t used)
+{
+    for (int s = 0; s < MAXSLOT; s++)
+        if (sbuf[s] == W) { sbuf_used[s] += (size_t)used; return; }
+}
+
 static const ERec *expert_rec(int L, int e, int which, int kind);
 static void slot_drop(int s);
 
@@ -1054,6 +1067,7 @@ static const unsigned char *slot_ptr(int L, int s)
         sbuf[s] = malloc((size_t)sl->nbytes);
         if (!sbuf[s]) die("slot buffer");
         sbuf_n[s] = (size_t)sl->nbytes;
+        sbuf_used[s] = 0;
         const double t0 = now_s();
         db_row(tdb, "slot_data", s, sbuf[s], (int)sl->nbytes);
         tk_secs += now_s() - t0;
@@ -1069,10 +1083,16 @@ static const unsigned char *slot_ptr(int L, int s)
 static void slot_drop(int s)
 {
     if (!sbuf[s]) return;
+    if (need_fp)
+        fprintf(need_fp, "slot\t%d\t%s\t%zu\t%zu\n", cur_L,
+                (s < N_SLOTN) ? SLOTN[s] : "?", sbuf_n[s], sbuf_used[s]);
+    need_fetch += (int64_t)sbuf_n[s];
+    need_used  += (int64_t)sbuf_used[s];
     tk_live -= sbuf_n[s];
     free(sbuf[s]);
     sbuf[s] = NULL;
     sbuf_n[s] = 0;
+    sbuf_used[s] = 0;
 }
 
 static void slot_drop(int s);
@@ -1087,6 +1107,10 @@ static float *slot_vec(int L, int s, int want)
     if (!sl->present) die("absent slot vec");
     if (prov_fp) prov_slot(L, s, "vec");
     const unsigned char *p = slot_ptr(L, s);
+    const size_t vneed = (sl->dtype == 0) ? sizeof(float) * (size_t)want
+                       : (sl->dtype == 1) ? 2 * (size_t)want
+                                          : (size_t)sl->nbytes;
+    slot_note_use(p, (int64_t)vneed);
     /* cover() is called from the kernels, but slot_vec reads the trunk directly,
        so without this the norm weights look untouched. */
     if (sl->dtype == 0)      cover(p, sizeof(float) * (size_t)want);
@@ -1160,6 +1184,7 @@ static void Q(float *y, const float *x, const unsigned char *W, int in, int out)
     op_fl[OP_Q] += 2 * (int64_t)out * (int64_t)in;
     vstat(OP_Q, &y, 1, out);
     if (stg_fp) { float *yy = y; stg_emit("Q", slot_of_ptr(cur_L, W), -1, 1, in, out, &yy); }
+    slot_note_use(W, (int64_t)out * (4 + in));
     cover(W, (size_t)out * rowb);
 }
 
@@ -1330,6 +1355,7 @@ static void Qm(float *const *Y, const float *const *Xs, int T,
     op_fl[OP_Q] += 2 * (int64_t)out * (int64_t)in * (int64_t)T;
     vstat(OP_Q, Y, T, out);
     if (stg_fp) stg_emit("Q", slot_of_ptr(cur_L, W), -1, T, in, out, Y);
+    slot_note_use(W, (int64_t)out * (4 + in));
     cover(W, (size_t)out * rowb);
 }
 
@@ -1750,6 +1776,9 @@ int main(int argc, char **argv)
     { const char *v = getenv("K3_SITUPAR"); if (v) situ_par = atoi(v); }
     { const char *v = getenv("K3_PAR2"); if (v) par2 = atoi(v); }
     { const char *v = getenv("K3_DUMPLAY"); if (v) dumplay = fopen(v, "wb"); }
+    { const char *v = getenv("K3_NEED");
+      if (v) { need_fp = fopen(v, "w");
+               if (need_fp) fprintf(need_fp, "kind\tlayer\tlabel\tfetched\tused\n"); } }
     { const char *p = getenv("K3_PFXSAVE"), *q = getenv("K3_PFXLOAD");
       const char *n = getenv("K3_PFXN");
       pfx_n = n ? atoi(n) : 0;
@@ -2162,6 +2191,9 @@ int main(int argc, char **argv)
                 op_add(OP_ROUT, _tr, gfuse ? (int64_t)NEXP * (4 + E)
                                            : (int64_t)NEXP * E * 4);
                 if (gfuse) cover(gp, (size_t)NEXP * (4 + E));   /* read directly, not via Q */
+                /* and for the same reason the use counter has to be told here:
+                   step 43 lost the same 591 MB by hooking only Q, Qm, X and B. */
+                if (gfuse) slot_note_use(gp, (int64_t)NEXP * (4 + E));
             }
             for (int t = TLO; t < NPOS; t++) {
                 const float *score = sc_all[t];
@@ -2502,6 +2534,9 @@ int main(int argc, char **argv)
     printf("trunk, streamed       : %.2f GB in %.2f s (%.2f GB/s)  peak resident %.0f MB\n",
            tk_bytes / 1e9, tk_secs, tk_secs > 0 ? tk_bytes / 1e9 / tk_secs : 0.0,
            tk_peak / 1e6);
+    printf("  fetched vs used     : %.2f GB fetched, %.2f GB used, %.2f GB never read (%.2f%%)\n",
+           need_fetch / 1e9, need_used / 1e9, (need_fetch - need_used) / 1e9,
+           need_fetch ? 100.0 * (need_fetch - need_used) / need_fetch : 0.0);
 
     {
         double tot = 0.0; int64_t wb = 0;

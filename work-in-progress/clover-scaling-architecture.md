@@ -1225,6 +1225,71 @@ visited exactly once, so its store is dead the moment the layer ends, and the
 connections are simply never closed. Closing them per layer would take the
 peak to roughly 14. Named, not fixed.
 
+## Step 24 - profiled per stage: nothing is over-read, and my instrument was wrong first
+
+The goal was to stop reading more than a stage needs. Measured, at stage
+granularity, **nothing is over-read at all.**
+
+`K3_NEED` records, for every slot fetched, how many of its bytes the operator
+that asked for it actually touched. One row per fetch, emitted at release.
+
+```
+  trunk   54.47 GB fetched   54.47 GB used   0.00 GB never read   0.00%
+          0 of 37 slot types show fetched != used
+  expert  99.72 GB fetched   99.72 GB read by X
+  stages  2,455, every one fetched exactly once
+```
+
+### The instrument was wrong before the program was
+
+The first run said **0.59 GB never read, 1.09%**, all of it `GATE`, 92 fetches
+of 6,426,112 B each, 100% unread. That is not waste. The router reads the gate
+**directly** rather than through `Q` or `Qm`, so the hook never fired.
+
+This is the same defect, on the same tensor, with the same number, that step
+43 of the earlier arc already recorded: *"cover() was called only from Q, Qm,
+X and B - not from slot_vec and not from the router's direct gate read, so all
+norm weights and the 591 MB gate counted as untouched while being read every
+run."* **591 MB, again.** It was in the notes and I rebuilt it anyway.
+
+The lesson is narrow and worth keeping: **a counter hooked into the operators
+misses every consumer that reads a weight in place.** In this program that is
+the router, and `slot_vec`. Both are now hooked, and the figure goes to
+0.00%.
+
+### What each stage fetches
+
+| slot | stages | bytes each | total MB | % trunk |
+|---|---|---|---|---|
+| G | 93 | 88,129,536 | 8,196.05 | 15.05% |
+| O | 93 | 88,109,056 | 8,194.14 | 15.04% |
+| Q | 69 | 88,129,536 | 6,080.94 | 11.16% |
+| K | 69 | 88,129,536 | 6,080.94 | 11.16% |
+| V | 69 | 88,129,536 | 6,080.94 | 11.16% |
+| SH2 / SH1 / SH3 | 92 each | ~44,065,000 | 12,162.26 | 22.32% |
+| EUP / EDOWN | 92 each | ~25,711,000 | 4,730.94 | 8.68% |
+| QB | 24 | 28,385,280 | 681.25 | 1.25% |
+| GATE | 92 | 6,426,112 | 591.20 | 1.09% |
+| MGATE / MUP / MDOWN | 1 each | ~242,320,000 | 726.97 | 1.34% |
+| 26 smaller slots | 1,614 | 512 - 12,681,216 | 941.54 | 1.73% |
+| **total** | **2,455** | | **54,468.17** | **100%** |
+
+Five slot types - `G`, `O`, `Q`, `K`, `V` - are **63.6% of the whole trunk**.
+
+**Stage size spans 0.51 KB to 242.36 MB, a factor of 475,000.** That range is
+the argument for the per-tensor schema on its own: a layer-granular store
+would make the 512-byte stages pay the same price as the 242 MB ones.
+
+### So what is actually left
+
+Not over-reading. The remaining costs are all about **holding, not fetching**:
+
+- peak residency is **242 MB**, already the largest single stage, so the floor
+- **1,288 SQLite connections** are never closed, though a layer is visited once
+- trunk streaming is **single-threaded per stage** at 3.62 GB/s
+
+The first is done. The second and third are not.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
