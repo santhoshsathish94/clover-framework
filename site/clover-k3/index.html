@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clover K3 — Clover</title>
+<meta name="description" content="A 2.78-trillion-parameter model reduced to its equation and run from one C file on a single CPU machine. What we did, how the equation was derived, what it measured, what it costs to run, and why it is not yet interactive.">
+<link rel="canonical" href="https://cloverframework.com/clover-k3/">
+<meta property="og:title" content="Clover K3 — Clover">
+<meta property="og:description" content="The Kimi K3 forward pass written from its equation. Same answer as an independent implementation on all 34 prompts, in a third of the time — and honest about the 12 seconds per token that makes it not yet interactive.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://cloverframework.com/clover-k3/">
+<meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a6a5f">
+<link rel="stylesheet" href="../styles.css?v=3.1.0">
+<script>document.documentElement.className = 'js';</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg class="clover-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="clover-leaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z"/>
+  </defs>
+</svg>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="../">
+      <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
+      </svg>
+      Clover <span>Framework</span></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span class="nav-toggle__box" aria-hidden="true"><span></span></span>Menu
+    </button>
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <a href="../">Clover</a>
+      <a href="../start/">Getting Started</a>
+      <a href="../governance/">Governance</a>
+      <a href="../evidence/">Evidence</a>
+      <a href="./" aria-current="page">Clover K3</a>
+      <a href="../glossary/">Glossary</a>
+      <a href="../author/">Author</a>
+      <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+
+  <section class="hero" id="overview">
+    <div class="wrap">
+      <h1>A 2.78-trillion-parameter model, written as its equation</h1>
+      <p class="lede">We took Kimi K3, wrote down what it computes as one mathematical
+        expression, and ran that directly as a single C file. It produces the same answer as an
+        independent implementation of the same model on every prompt tested, in a third of the
+        time, on one rented CPU machine with no GPU.</p>
+      <p>It is also not fast enough to talk to. That part is on this page too, with the numbers,
+        because a page that only showed the good result would not be worth reading.</p>
+      <p class="actions">
+        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-k3">The code</a>
+        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-proof.md">The 34-prompt comparison</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="band" id="what">
+    <div class="wrap">
+      <h2>What we actually did</h2>
+      <p>A large language model is usually met as a program you run. We wanted to know what it
+        <em>is</em>, separately from how anyone happens to have implemented it. So we wrote the
+        model out as mathematics first, and only then turned that into code.</p>
+
+      <dl class="kv kv--wide">
+        <div>
+          <dt>1. Take the model apart, one kernel at a time</dt>
+          <dd>Forty-two numbered stages across two layers, then a walk over all ninety-three.
+            Each stage establishes one operation and what it does to real values, checked against
+            the running model rather than reasoned about.</dd>
+        </div>
+        <div>
+          <dt>2. State the whole thing once, as one expression</dt>
+          <dd>Ten primitive operators, two kinds of attention block, two kinds of MLP block, and
+            one composed expression for the whole model. Nothing left as prose. Supply the token
+            ids, evaluate the expression, and you get the token the model emits.</dd>
+        </div>
+        <div>
+          <dt>3. Execute the document and see whether it is true</dt>
+          <dd>The equation was transcribed into a program and run against the original engine's
+            own internal values. <strong>79,742,816 float32 values identical, zero
+            mismatches.</strong> That is what turned it from a description into a specification.</dd>
+        </div>
+        <div>
+          <dt>4. Build the real implementation from the equation, not from anyone's code</dt>
+          <dd>One C file, about 2,500 lines, no dependency beyond libc, libm and OpenMP. Every
+            change from that point had to reproduce one checksum, or it did not count.</dd>
+        </div>
+      </dl>
+
+      <h3>Writing it down is what found the mistakes</h3>
+      <p>Executing the document rather than admiring it exposed four defects in our own
+        mathematics. Each one is recorded where it was found:</p>
+      <dl class="kv kv--wide">
+        <div>
+          <dt>The int8 projection had eight accumulators where the model has sixteen</dt>
+          <dd>Mathematically the same sum; numerically a different one. As first written it
+            reproduced 2,012 of 12,288 values.</dd>
+        </div>
+        <div>
+          <dt>A weight was stored at width 128 with only 96 entries used</dt>
+          <dd>Correct arithmetic, unstated shape. Implementing from the document alone gave a
+            shape error.</dd>
+        </div>
+        <div>
+          <dt>One operator never said whether its multiply and add were fused</dt>
+          <dd>The obvious translation is a fused multiply-add, which rounds once. The model
+            rounds twice. The build carries <code>-ffp-contract=off</code> for that reason.</dd>
+        </div>
+        <div>
+          <dt>The expert weighting said divide where the model multiplies by a reciprocal</dt>
+          <dd>Found by reading the finished code back against the document. Both forms were
+            built into one binary and compared: <strong>92% of the output values differ</strong>,
+            though the emitted word does not change — which is exactly why it survived unnoticed.</dd>
+        </div>
+      </dl>
+      <p class="note">The order of operations is not a formatting detail in this work. Three
+        separate times, a regrouping that is correct in ordinary algebra dropped the match to
+        between 74% and 80%.</p>
+    </div>
+  </section>
+
+  <section class="band" id="results">
+    <div class="wrap">
+      <h2>What the results showed</h2>
+      <p>The test is deliberately blunt. Give two independently written programs the same 34
+        prompts, the same 1.5 TB of weights, the same machine, on the same day, and see whether
+        they agree and how long they take. The other program is
+        <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a>, a separate C
+        implementation that shares no code with ours.</p>
+
+      <dl class="kv kv--wide">
+        <div>
+          <dt>34 of 34 answers identical</dt>
+          <dd>Not similar — the same token id every time. The capital of France is
+            <code>Paris</code>; the chemical symbol for gold is <code>Au</code>; the largest
+            planet is <code>Jupiter</code>. Asked in English, French and German, the Paris
+            question returns the identical token id in all three.</dd>
+        </div>
+        <div>
+          <dt>455.94 seconds against 1344.23 seconds</dt>
+          <dd>Across all 34 prompts. A ratio of 2.95, and between 2.68 and 3.27 on any individual
+            prompt.</dd>
+        </div>
+        <div>
+          <dt>One checksum held through every optimisation</dt>
+          <dd><code>23d162dcefb18211a7540ef12948f1eb</code>. A faster result that does not
+            reproduce those bytes is not a result. This caught a change that looked like a 38%
+            win and was silently wrong.</dd>
+        </div>
+        <div>
+          <dt>Routing turned out to be predictable</dt>
+          <dd>Which experts a position needs is a pure function of the words before it —
+            measured 644 agreements out of 644, with a control that fails as it should. So for a
+            prompt seen before, the weights the next layer needs can be fetched while the current
+            layer is still computing. That took a five-token prompt from 8.75 to
+            <strong>7.25 seconds</strong> and the disks from 80% to 99% busy.</dd>
+        </div>
+      </dl>
+
+      <h3>Where the gap actually comes from</h3>
+      <p>Both programs read exactly the same 99.72 GB of expert weights, so neither is doing less
+        arithmetic. Of the 14.79-second gap on the first prompt, <strong>5.73 seconds is simply
+        the other program re-reading the 54 GB trunk from disk on every run</strong> while ours
+        keeps it in memory. That is a configuration choice, not a clever one. The rest is
+        overlap: ours keeps the disks busy while it computes.</p>
+      <p class="note">We also measured the disks directly, using our own access pattern: they top
+        out at 14.6 GB/s, and the run is already reading at 13.8. There is about 6% left in the
+        hardware, not 60%.</p>
+    </div>
+  </section>
+
+  <section class="band" id="setup">
+    <div class="wrap">
+      <h2>Setting it up and running it</h2>
+      <p>Nothing here ships the model. The checkpoint is Kimi's and stays theirs, and the packed
+        trunk is built by the upstream engine's own tools. What this repository holds is the
+        program, the index builders, the prompts and the correctness gate.</p>
+
+      <dl class="kv kv--wide">
+        <div>
+          <dt>What you need first</dt>
+          <dd>The released Kimi K3 checkpoint (the <code>.safetensors</code> shards, about
+            1.5 TB) and the packed trunk built by the upstream engine's
+            <code>tools/pack_trunk.py</code> and <code>tools/int8_trunk.py</code>. Nothing in
+            clover-k3 reproduces either.</dd>
+        </div>
+        <div>
+          <dt>Point it at them</dt>
+          <dd>Every path lives in one file, <code>config.env</code>, and nothing else in the
+            folder names a location. The program refuses to start if the index and trunk paths
+            are unset rather than guessing a default, because a silently wrong index produces a
+            confident wrong number.</dd>
+        </div>
+        <div>
+          <dt>Build</dt>
+          <dd><code>./build.sh</code> — this also generates the tensor index. The prompt length
+            is a compile-time constant, so a build is for one length:
+            <code>NPOS=64 ./build.sh</code>. Everything generated lands in <code>build/</code>.</dd>
+        </div>
+        <div>
+          <dt>Check it before believing it</dt>
+          <dd><code>./gate.sh</code> must print
+            <code>23d162dcefb18211a7540ef12948f1eb</code>. A timing from a build that has not
+            passed the gate means nothing.</dd>
+        </div>
+        <div>
+          <dt>Run a prompt</dt>
+          <dd>Set the token ids with <code>K3_IDS</code> and run <code>build/clover-k3</code>.
+            Thread pinning is not optional on a two-chiplet processor — unpinned runs vary by
+            seconds, and every measurement taken before we adopted it had to be redone.</dd>
+        </div>
+      </dl>
+      <p>There are 33 switches. The ones worth knowing are the reader-thread count, the
+        prefetch mode, and the routing cache that enables reading a layer ahead. The rest are
+        instrumentation and are off by default; turning all of it off was measured and changes
+        nothing.</p>
+    </div>
+  </section>
+
+  <section class="band" id="machine">
+    <div class="wrap">
+      <h2>The machine, and what it really costs</h2>
+      <p>One rented machine. No GPU, no cluster, nothing exotic.</p>
+
+      <div class="grid grid--3">
+        <div class="card">
+          <h3>Processor</h3>
+          <p>AMD Ryzen 9 7950X3D. 16 cores, 32 threads. We measured that 16 compute threads is
+            the right number — using all 32 for arithmetic makes it <em>slower</em>, because the
+            paired threads share the cache the kernel depends on.</p>
+        </div>
+        <div class="card">
+          <h3>Memory</h3>
+          <p>124 GB installed. Our run peaks at <strong>58.05 GB</strong> resident; the other
+            implementation peaks at 51.09 GB for one token and 95.5 GB while generating. None of
+            these is a small-memory configuration.</p>
+        </div>
+        <div class="card">
+          <h3>Storage</h3>
+          <p>Two NVMe drives in RAID1. <strong>1.5 TB for the checkpoint plus 51 GB for the
+            trunk</strong>, and the array is 91% full holding them. Every run reads 99.86 GB back
+            off the disks.</p>
+        </div>
+      </div>
+
+      <p>The honest summary of the requirement is that <strong>storage is the entry fee and
+        memory is the working cost</strong>. You cannot start without roughly 1.6 TB of fast
+        local disk. Once started, the thing that decides your speed is how much of the model you
+        can keep resident and how well you overlap reading the rest with computing.</p>
+      <p class="note">The upstream engine is designed to run in far less memory than this, and
+        can. We did not ask it to here; both programs were given the machine as it is.</p>
+    </div>
+  </section>
+
+  <section class="band" id="interactive">
+    <div class="wrap">
+      <h2>Is this interactive enough for real work?</h2>
+      <p class="lede">No. Not yet, and not close.</p>
+
+      <p>It is worth being exact about why, because the headline numbers on this page are about
+        <em>reading a prompt</em>, not about <em>writing an answer</em>. Those are different
+        costs, and only the first one is fast.</p>
+
+      <dl class="kv kv--wide">
+        <div>
+          <dt>clover-k3 emits one token per run</dt>
+          <dd>It reads the prompt and produces the single next word. There is no generation loop
+            in it at all. The 7.25 seconds on this page is a whole prompt read from cold, which
+            is the part we set out to understand — not a sentence produced.</dd>
+        </div>
+        <div>
+          <dt>Generating text costs about 12 seconds per token, at best</dt>
+          <dd>Measured on the upstream engine, which does have a generation loop, on this same
+            machine: 23.71 s per token for a short answer, improving to <strong>12.42 s per
+            token</strong> over 128 tokens as fixed costs amortise. A 128-token reply took
+            <strong>26 minutes</strong>.</dd>
+        </div>
+        <div>
+          <dt>And it reads several terabytes to do it</dt>
+          <dd>That 128-token reply moved 6,816 GB off the disks and held 95.5 GB resident. Each
+            new word requires its own pass over a fresh set of experts; nothing about having
+            answered once makes the next word cheap.</dd>
+        </div>
+      </dl>
+
+      <p>So for day-to-day work — a chat window, a coding assistant, anything with a person
+        waiting — this is not usable, and no amount of tuning at the margin changes that. Twelve
+        seconds a word is not a slow version of interactive. It is a different activity.</p>
+
+      <h3>What it is genuinely good for right now</h3>
+      <p>Work where the answer matters more than the wait, and where the alternative is not
+        having the model at all: running a frontier-scale model on hardware you control rather
+        than someone's API, checking that an implementation is exactly correct, or batch work
+        left to run. It also establishes the thing the speed rests on — that the model is
+        understood well enough to be written down and checked value by value.</p>
+      <p class="note">The direction that could change the answer is placement rather than
+        tuning: keeping the most-used part of the model on a GPU while the rest stays on disk.
+        That has not been measured, and until it is, it is an idea and not a result.</p>
+    </div>
+  </section>
+
+  <section class="band" id="limits">
+    <div class="wrap">
+      <h2>What this does not show</h2>
+      <p>Stated plainly, because a result that hides its edges is not evidence.</p>
+      <ul class="stack">
+        <li><strong>One token, not a conversation.</strong> The 34-prompt comparison asked both
+          programs for the next token only.</li>
+        <li><strong>Not a comparison against the official runtime, or a GPU.</strong> It is one
+          CPU implementation against another CPU implementation of the same checkpoint.</li>
+        <li><strong>Thirty-four prompts, mostly short and mostly English.</strong> The longest is
+          24 tokens. Nothing here speaks to long context.</li>
+        <li><strong>The trunk-caching difference is quantified but not controlled for.</strong>
+          A version of the test with both programs cold, or both warm, has not been run.</li>
+        <li><strong>Single runs, not repeated trials.</strong> Run-to-run spread on this machine
+          is around 0.1 s within a session and up to 2 s across sessions — small against a
+          threefold gap, but not zero.</li>
+        <li><strong>One machine.</strong> Every number on this page comes from the same box.</li>
+      </ul>
+      <p class="actions">
+        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-proof.md">The full comparison</a>
+        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/k3-analysis/k3-model-equation.md">The equation</a>
+        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/k3-analysis/clover-scaling-architecture.md">The measurement record</a>
+      </p>
+      <p class="note">The measurement record includes everything that did not work, which is most
+        of it: a distributed version that lost to the original, io_uring that measured slower
+        than plain threads at every depth tried, and a cache preload that cost time rather than
+        saving it. Upstream engine by
+        <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">Fareed Khan</a>, Apache-2.0,
+        which Clover does not claim.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap site-foot__grid">
+    <div>
+      <h4>Read</h4>
+      <ul>
+        <li><a href="../">The framework</a></li>
+        <li><a href="../start/">Getting started</a></li>
+        <li><a href="../governance/">Governance</a></li>
+        <li><a href="../evidence/">Evidence</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Clover K3</h4>
+      <ul>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-k3">The program</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-proof.md">34-prompt comparison</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-equation.md">Equation as executed</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/k3-analysis">The analysis</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Practical</h4>
+      <ul>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md">Quickstart</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/templates/orchestration-brief.md">Orchestration brief</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/how-ai-fails.md">How AI fails</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/field-practices.md">Field lessons</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Project</h4>
+      <ul>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework">GitHub repository</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/CONTRIBUTING.md">Contributing</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/CHANGELOG.md">Changelog</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/LICENSE">License</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap site-foot__end">
+    <p style="max-width:none">The website explains; the repository documents. Built from real
+      delivery work and still changing as the evidence does. An open, feedback-driven project by
+      <a href="../author/">Santhosh Narayanan</a>.</p>
+  </div>
+</footer>
+
+<script src="../app.js?v=3.1.0" defer></script>
+</body>
+</html>
