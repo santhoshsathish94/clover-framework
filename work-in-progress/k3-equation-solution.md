@@ -3647,6 +3647,100 @@ against a normal 42 s, which would have been nonsense had I not noticed the cont
 **Check what a guard actually matched, and check the machine is idle, before believing a
 number.**
 
+## Step 46 - the allocator that cost nothing, and one source instead of eight
+
+Two items were left open at the end of step 45: **B6**, the per-call allocation inside
+`slot_vec`, and **C9**, the seven near-duplicate sources.
+
+### B6: 1204 malloc/free pairs a run, worth nothing
+
+`slot_vec` dequantizes a trunk slot into a fresh `malloc` on every call and the caller
+frees it at the end of the layer. That is 1204 pairs a run, and three of them per KDA
+layer are 196 KB - above glibc's 128 KB mmap threshold, so on the face of it 207
+`mmap`/`munmap` pairs and their page faults.
+
+Every result is dead by the end of the layer that asked for it, so the fix is a bump
+arena reset once per layer. Two variants, so the attribution would be separable:
+
+- **a** - `slot_vec` results only.
+- **b** - the same, plus the KDA layer's own scratch (`raw`, `cv[3]`, `zz`, `fatmp`,
+  `beta`, `alpha`, `o`, `on`, `gt`).
+
+The MoE per-position buffers were deliberately left on `malloc`. Step 45 measured those
+as a net loss when made resident, and there was no reason to think an arena would behave
+differently from a pool.
+
+Both are bit-exact: 5-token md5 is the preserved baseline, 64-token output byte-identical
+to `clover-k3.c`. Interleaved n=4:
+
+| | wall 5 tok | wall 64 tok | SUMops 64 | resid 64 | minor faults 5 |
+|---|---|---|---|---|---|
+| `clover-k3.c` | 8.738 | 41.542 | 38.084 | 0.449 | 881,478 |
+| a, `slot_vec` arena | 8.735 | 41.540 | 38.123 | 0.441 | 881,682 |
+| b, + KDA scratch | 8.728 | 41.523 | 38.058 | 0.460 | 881,746 |
+
+**Nothing.** 0.002 s and 0.019 s against a within-group spread of 0.09 s. The arena did
+exactly what it was built to do - peak occupancy 0.79 MB and 1.21 MB, 1204 calls served
+without one allocator call - and the clock did not move. Minor faults went slightly *up*.
+
+The mechanism is glibc's **dynamic mmap threshold**. The first KDA layer frees a 196 KB
+mmap'd block, glibc raises its threshold past that size, and every later one comes from
+the heap free list. The expensive case I set out to remove happens 3 times, not 207, and
+the rest were already cheap.
+
+So B6 is **measured and rejected**. Keeping it would mean a hand-written allocator and a
+new failure mode - a fixed arena that can be exhausted - for no measurable gain. **B7**,
+the snapshot buffers never freed, is the same shape of defect but smaller and entirely at
+exit; after this, it is not worth a run either. Both variants are archived so the negative
+stays reproducible.
+
+### C9: seven copies of the same program
+
+`eqp.c`, `eqp_prov.c`, `eqp_val.c`, `eqp_stage.c`, `eqp_b0.c`, `eqp_router.c` and
+`eqp_cover.c` all sat in `/root/k3raw`, each a snapshot taken when a step needed
+instrumentation the previous file did not have. The hazard is not disk: it is that with
+seven near-identical files it is easy to edit one, build another, and attribute the
+result to a third.
+
+Adoption was gated on `clover-k3.c` actually being a superset, not on it looking like one:
+
+- **all 26 `K3_*` switches** across the seven are present in it - 0 missing - and it adds
+  none that change default behavior
+- **every static function** defined in any of the seven is present - 0 missing
+- it is already bit-identical to `eqp.c` and `eqp_cover.c` at 5 and 64 tokens
+
+Then the capabilities were exercised rather than assumed, and each one reproduced a
+number recorded when it was first built:
+
+| switch | snapshot it came from | observed now | recorded when built |
+|---|---|---|---|
+| `K3_PROV` | `eqp_prov.c` | 2455 trunk slot resolutions | 2455 (step 34) |
+| `K3_LSTAT` | `eqp_val.c` | 245,860 bytes | ~245 KB (step 36) |
+| `K3_STAGE` | `eqp_stage.c` | Q 1159, X 17,049 | Q 1159, X ~17,049 (step 37) |
+| `K3_COVER` | `eqp_cover.c` | 100.00%, 0 pages never read | 100.00%, 0 (step 43) |
+| layer-0 batching | `eqp_b0.c` | MGATE invoked 1 time | 1, not NPOS (step 37) |
+| router batching | `eqp_router.c` | GATE resolved 92 times | 92, one per MoE layer (step 40) |
+
+The seven were **moved**, not deleted, to `attic/`, with every md5 compared before and
+after. `three.sh`, `clover-k3b.c` and the two rejected B6 variants went with them. A
+`README` in each directory records what the single source is, the exact build and run
+lines, the correctness gate, and what each archived file was.
+
+**One consequence, stated rather than hidden: 37 one-shot experiment scripts in
+`/root/k3raw` still name the old paths and will now fail with "no such file".** They are
+the scripts of steps 1-45 and their results are already here; re-running one needs
+`attic/` prepended. `ab.sh`, the only live harness, was repointed at `clover-k3.c` and
+now takes the candidate source as an argument.
+
+### Two wrong greps, said plainly
+
+The first pass of the capability check printed `K3_STAGE: Q=0 X=0` and `S_GATE
+resolutions: 0`. Both zeros were mine, not the program's: I guessed the column index in
+the stage file, and I guessed the slot was named `S_GATE` when the provenance file writes
+`GATE`. Reading the actual header gave Q 1159 and X 17,049, and the gate count 92. **A
+zero from a grep you have not verified against the real field layout is not evidence of
+absence** - it is the same failure as the `cover()` bug in step 43, at a smaller scale.
+
 ## Progress
 
 | step | | status |
@@ -3686,6 +3780,8 @@ number.**
 | 43 | the equation needs 100% of the trunk, read once | measured, rejected |
 | 44 | inputs recur only by token or by prefix; prefix reuse already is the answer | measured, bounded |
 | 45 | the code as an architect reads it; clover-k3.c, 0.81% faster, bit-exact | done |
+| 46 | the per-call allocator in `slot_vec` | measured, rejected |
+| 46 | one source: clover-k3.c adopted, the other seven archived | done |
 
 ## The comparison that matters: the equation against the engine
 
