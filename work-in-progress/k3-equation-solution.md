@@ -3553,6 +3553,100 @@ it can never extend further, because beyond a shared prefix the equation never c
 the same thing twice. Not rarely - 385 of 416, at every depth. The trunk cannot be
 replaced by its outputs because its outputs are different every time it is used.
 
+## Step 45 - the code, read as an architect would, and what that was worth
+
+Everything from step 36 on has been about bytes and specification. This step asks a
+different question: read the program as software, not as an equation. Where are the
+nested loops, the data structures, the allocations that a serious review would flag?
+
+The work went into a **new file, `clover-k3.c`**, so the reference stayed untouched and
+every change could be compared against it rather than trusted.
+
+### What the review found, and what was built
+
+| | finding | built | measured |
+|---|---|---|---|
+| A1 | expert dedup rescanned a growing list per draw, ~13.1M comparisons a run | epoch-stamped table, O(1) | part of the residual win |
+| A2 | expert to positions rescanned the whole selection table per expert, ~26.2M | single-pass inverted index | part of the residual win |
+| A3 | top-k was sixteen linear maxima, 84.4M comparisons a run | one pass, tie semantics preserved | **0.054 to 0.012 s, 4.5x** |
+| A4 | the KDA delta rule made four passes over a 64 KB `St[h]` | fused to two, same i and j order | 0.108 to 0.100 s |
+| B5 | ~176,000 malloc/free pairs a run | static pools, **attention only** | see below |
+| — | the final residual add was serial | `collapse(2)` parallel | small |
+
+A3's tie semantics matter: section 4.2 specifies "repeated maximum with a strict `>`, so
+ties go to the lowest index". Scanning ascending and inserting only on a strict `>`
+reproduces exactly that, which is why the output stayed identical.
+
+### Two things the measurements corrected
+
+**The pool layout was wrong, and cost more than the pools saved.** Laid out
+position-major, each buffer's positions sat 389 KB apart - while $\mathbb{Q}_m$ walks
+precisely that axis. That cost **1.03 s** of operator time. Buffer-major fixed it.
+
+**Even fixed, the MoE pool was a net loss.** The per-operator diagnostic:
+
+```
+operator                     ref       new     delta
+top-k selection            0.054     0.012    -0.042
+Q   int8 projection        6.414     6.362    -0.052
+D   kda delta-rule         0.108     0.100    -0.008
+== pipeline stall          3.003     2.679    -0.324
+X   mxfp4 expert proj     28.453    29.065    +0.612   <-- everything else, undone
+```
+
+$\mathbb{X}$ was the only operator that got slower, and the only change touching it was
+the pool - it writes `egm`, `eum` and `slot`. Reverting **just those** to `malloc`, and
+keeping the attention pools, put $\mathbb{X}$ back to 28.432 against the reference's
+28.453. The likely mechanism is L3 pressure: $\mathbb{X}$ streams 448 GB through a
+128 MB cache, and a larger resident scratch footprint costs it more than the allocator
+ever cost.
+
+**So B5 was half right.** Attention pools help; the MoE pool hurts. That is not a
+conclusion available from reading the code.
+
+### The result
+
+Three-way, interleaved, n=4, all bit-exact - every build reproduces the preserved
+baseline at five tokens and all three are byte-identical at sixty-four:
+
+```
+        wall5    wall64   SUMops64  resid64  faults5
+eqp.c            8.800    42.672    38.992    0.616    897,042
+eqp_cover.c      8.762    41.883    38.311    0.634    904,529
+clover-k3.c      8.733    41.545    38.056    0.455    881,491
+```
+
+**clover-k3.c wins every column with no overlap** - its worst 64-token run, 41.56, beats
+the reference's best, 41.86, by 0.30 s.
+
+| | vs the reference | vs the original `eqp.c` |
+|---|---|---|
+| 5 tokens | -0.029 s | -0.067 s |
+| 64 tokens | **-0.338 s, 0.81%** | **-1.127 s, 2.64%** |
+| residual | -0.179 s | -0.161 s |
+| minor faults | -23,038 | -15,551 |
+
+### What it is worth, plainly
+
+**Under one percent.** The review was right about the defects - the O(n^2) scans were
+real, top-k really was 4.5x slower than it needed to be - and fixing all of them moves
+0.81%. That is the honest scale of algorithmic cleanup in a program where 75% of the
+time is expert bytes crossing a disk.
+
+It was still worth doing: the residual is down 28%, the fault count is the lowest of the
+three, and the code no longer contains two quadratic scans. But anyone hoping for a
+structural win in the operator layer now has a measurement saying there is not one.
+
+### A method note
+
+Two runs in this step were lost to my own tooling. A guard of the form
+`while pgrep -f "three.sh|ab.sh|diag.sh"` **matches its own wrapper's command line**, so
+it waits on itself forever - nine minutes passed with the box idle at load 0.02 while I
+believed a job was running. And an earlier overlap of two jobs produced an 84.90 s run
+against a normal 42 s, which would have been nonsense had I not noticed the contention.
+**Check what a guard actually matched, and check the machine is idle, before believing a
+number.**
+
 ## Progress
 
 | step | | status |
@@ -3591,6 +3685,7 @@ replaced by its outputs because its outputs are different every time it is used.
 | 42 | the three stores, and why a selected matrix is read whole | answered |
 | 43 | the equation needs 100% of the trunk, read once | measured, rejected |
 | 44 | inputs recur only by token or by prefix; prefix reuse already is the answer | measured, bounded |
+| 45 | the code as an architect reads it; clover-k3.c, 0.81% faster, bit-exact | done |
 
 ## The comparison that matters: the equation against the engine
 
