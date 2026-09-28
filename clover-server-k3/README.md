@@ -154,19 +154,24 @@ Every run below produced `md5 23d162dcefb18211a7540ef12948f1eb` and token
     2 stores   9.17 s   +0.28
     3 stores   9.25 s   +0.36
     4 stores   9.50 s   +0.61   -> linear, 0.148 s per layer
+
+  store schema, one layer, interleaved, same binary
+    no store       8.753 s
+    row = expert   8.983 s   +0.230   0.28 GB/s per thread
+    row = tensor   8.850 s   +0.097   0.55 GB/s per thread
 ```
 
-The trunk split costs nothing. The SQLite path is bit-exact and costs a
-**linear 0.148 s per converted layer**, which is exactly the bandwidth
-difference: 4.9 GB/s aggregate against O_DIRECT's 14 GB/s accounts for
-0.153 s against 0.148 s measured.
+The trunk split costs nothing. The SQLite path is bit-exact either way.
 
-A straight line gives about **22.5 s at 92 layers**, but that is arithmetic
-on four points, not an observation - at 92 there is no O_DIRECT traffic left
-to overlap with, and 92 stores are 1448 GB against 43 GB free.
+**A row is one tensor, not one expert.** An expert stored as a single 17.5 MB
+blob is a chain of ~268 linked overflow pages, so reading its fifth tensor
+walks ~179 of them. One row per tensor gives every read offset 0 of its own
+chain and removes **58%** of the overhead. Six blob columns would not have
+worked - SQLite serializes a row into one record with one chain.
 
-The next candidate is **one row per range instead of one row per expert**, so
-no read has to walk an overflow page chain. Not built.
+Roughly half the gap to O_DIRECT remains, 7.7 GB/s against 14, and is not yet
+attributed. The per-layer curve was measured for the older schema; the new one
+has been measured at one layer only.
 [`work-in-progress/clover-scaling-architecture.md`](../work-in-progress/clover-scaling-architecture.md),
 where the negatives are kept with the same care as the positives - including
 the harness bug that reported three passes for runs that never happened.

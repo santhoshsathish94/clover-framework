@@ -571,10 +571,16 @@ typedef struct {
     int           on, fid, nexp;
     int64_t       base, esz;      /* first byte of the layer, bytes per expert */
     int           pos2id[NEXP];
+    int           per_part;       /* 1 = a row is one tensor, 0 = a row is an expert */
+    int           npart;
+    int64_t       poff[8];        /* tensor offset inside an expert, file order */
+    int64_t       pnb[8];
+    int           prow[8];        /* which*2 + kind, the rowid within the expert */
     sqlite3      *db[MAXCONN];
     sqlite3_blob *bh[MAXCONN];
     int           row[MAXCONN];   /* which rowid bh is currently open on */
     char          path[512];
+    char          tab[8];
 } Store;
 static Store  store[NLAY];
 static int    n_store;
@@ -625,7 +631,21 @@ static void read_range_db(PRange *g, int L)
     const int pos = (int)(d / s->esz);
     const int64_t delta = d % s->esz;
     if (delta + g->nb > s->esz) die("expert range crosses an expert boundary");
-    const int id = s->pos2id[pos];
+    const int e = s->pos2id[pos];
+
+    int id, rdoff;
+    if (s->per_part) {
+        int p = -1;
+        for (int i = 0; i < s->npart; i++)
+            if (s->poff[i] == delta) { p = i; break; }
+        if (p < 0) die("range is not a whole tensor");
+        if (g->nb != s->pnb[p]) die("range is not the tensor's length");
+        id = e * 6 + s->prow[p];
+        rdoff = 0;                 /* its own blob, so no overflow chain to walk */
+    } else {
+        id = e;
+        rdoff = (int)delta;
+    }
     const int c = claim_conn();
 
     if (!s->db[c]) {
@@ -637,7 +657,7 @@ static void read_range_db(PRange *g, int L)
         sq_open++;
     }
     if (!s->bh[c]) {
-        if (sqlite3_blob_open(s->db[c], "main", "expert", "data", id, 0, &s->bh[c]))
+        if (sqlite3_blob_open(s->db[c], "main", s->tab, "data", id, 0, &s->bh[c]))
             sqdie(s->db[c], "blob open");
         s->row[c] = id;
     } else if (s->row[c] != id) {
@@ -646,7 +666,7 @@ static void read_range_db(PRange *g, int L)
 #pragma omp atomic
         sq_reopen++;
     }
-    if (sqlite3_blob_read(s->bh[c], g->mem, (int)g->nb, (int)delta))
+    if (sqlite3_blob_read(s->bh[c], g->mem, (int)g->nb, rdoff))
         sqdie(s->db[c], "blob read");
 #pragma omp atomic
     sq_reads++;
@@ -677,11 +697,21 @@ static void open_stores(const char *dir)
         if (access(s->path, R_OK)) continue;
         sqlite3 *db;
         if (sqlite3_open_v2(s->path, &db, SQLITE_OPEN_READONLY, NULL))
-            die("store open");
+            sqdie(db, "store open");
         s->base = meta_int(db, "source_off");
         s->esz  = meta_int(db, "expert_bytes");
         s->nexp = (int)meta_int(db, "nexpert");
         const int64_t sb = meta_int(db, "source_bytes");
+
+        /* one row per tensor, or the older one row per expert */
+        sqlite3_stmt *st;
+        if (sqlite3_prepare_v2(db, "SELECT name FROM sqlite_master"
+                               " WHERE type='table' AND name IN ('part','expert')",
+                               -1, &st, NULL)) sqdie(db, "schema query");
+        if (sqlite3_step(st) != SQLITE_ROW) die("store has neither table");
+        snprintf(s->tab, sizeof s->tab, "%s", (const char *)sqlite3_column_text(st, 0));
+        sqlite3_finalize(st);
+        s->per_part = !strcmp(s->tab, "part");
         sqlite3_close(db);
         if (s->nexp != NEXP || s->esz * s->nexp != sb) die("store meta disagrees");
 
@@ -698,11 +728,27 @@ static void open_stores(const char *dir)
             if (d < 0 || d % s->esz || d / s->esz >= NEXP) die("expert off grid");
             s->pos2id[d / s->esz] = e;
         }
+
+        /* where each tensor sits inside an expert, from the index not the store */
+        s->npart = 0;
+        for (int w = 0; w < 3; w++)
+            for (int k = 0; k < 2; k++) {
+                const ERec *r = expert_rec(L, 0, w, k);
+                const int i = s->npart++;
+                s->poff[i] = r->off - o[0];
+                s->pnb[i]  = r->nbytes;
+                s->prow[i] = w * 2 + k;
+            }
+        int64_t tot = 0;
+        for (int i = 0; i < s->npart; i++) tot += s->pnb[i];
+        if (tot != s->esz) die("tensors do not tile an expert");
+
         s->on = 1;
         n_store++;
     }
     if (n_store)
-        fprintf(stderr, "expert stores: %d of %d layers from SQLite\n", n_store, NLAY - 1);
+        fprintf(stderr, "expert stores: %d of %d layers from SQLite, a row is %s\n",
+                n_store, NLAY - 1, store[1].per_part ? "one tensor" : "one expert");
 }
 
 /* One range, O_DIRECT where the alignment allows and buffered for the tail. */

@@ -927,6 +927,77 @@ rows a layer, every read starting at offset 0 of its own blob and no chain to
 walk. It is still not built and still not claimed to work, but it is now
 pointed at a measured 2.9x gap rather than at a hunch.
 
+## Step 20 - a row is a tensor, not an expert: 58% of the overhead gone
+
+The store now holds **one row per expert tensor** - `part(id INTEGER PRIMARY
+KEY, expert, which, kind, data)`, 5,376 rows a layer, `id = expert * 6 +
+which * 2 + kind` so a reader computes the rowid with the same arithmetic
+`expert_rec` already uses. Every read is offset 0 of its own blob.
+
+**Six columns would not have worked** and were rejected before building:
+SQLite serializes a row into one record with one overflow chain, so reading
+the sixth column still walks to its offset. Separate rows are what gives each
+tensor its own chain.
+
+Built for layer 1, verified the same way as before, and the result carries a
+useful cross-check: **sha256 `8663636d1e24f7c2`, identical to the
+expert-per-row store.** The tensors concatenated in file order are the same
+bytes as the experts concatenated in file order, which they must be.
+
+```
+  L1   896 experts x 6 = 5376 rows, 15.72 GB  ->  15.77 GB (+0.28%)
+```
+
+Overhead rises from +0.10% to +0.28%, which is 5,376 rows of per-row cost
+instead of 896.
+
+### The A/B, interleaved, one binary
+
+The binary detects which table a store has, so both schemas run through the
+same build. Cycles are interleaved rather than blocked, so drift in machine
+state cannot be read as a difference between the schemas.
+
+| | cycle 1 | 2 | 3 | mean | vs control |
+|---|---|---|---|---|---|
+| no store | 8.78 | 8.77 | 8.71 | 8.753 | - |
+| row = expert | 8.98 | 8.99 | 8.98 | 8.983 | **+0.230** |
+| row = tensor | 8.83 | 8.85 | 8.87 | 8.850 | **+0.097** |
+
+**All 12 runs PASS.** The overhead falls 0.230 s to 0.097 s, **58% of it
+gone**, and the per-thread measurement agrees:
+
+```
+  row = expert   1.30 GB   4.61 thread-s   0.28 GB/s    65% reopens
+  row = tensor   1.30 GB   2.35 thread-s   0.55 GB/s    97% reopens
+```
+
+Thread-seconds halve. Aggregate across 14 readers goes 3.9 -> 7.7 GB/s
+against O_DIRECT's 14.
+
+### This corrects step 18
+
+Step 18 named the mechanism as **reopens discarding the cursor's cached
+overflow page list**. That was not right. **Reopens went up, 65% to 97%, and
+the cost halved.** With one row per tensor every read is a different rowid,
+so a reopen happens almost every time and costs almost nothing.
+
+The mechanism is specifically **walking to a non-zero offset**. A reopen only
+mattered because it forced that walk to start again. Reading from offset 0
+traverses pages as it copies them, which is work that has to happen anyway.
+
+Step 18's rejection of `K3_PLGRAN=0` still stands, and for the same reason it
+gave: grouping an expert's ranges onto one thread reduced re-walking, which
+is why it helped at all.
+
+### What is still open
+
+7.7 GB/s against O_DIRECT's 14 GB/s, so **roughly half the gap remains** and
+is not attributed. The linear curve in step 19 was measured for the
+expert-per-row schema; **this schema has been measured at one layer only**, so
+the 0.097 s should not yet be treated as a per-layer constant. Rebuilding
+layers 2 to 4 in the new schema would settle it, and needs the old stores
+deleted first - 29 GB free against 47 GB needed.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
