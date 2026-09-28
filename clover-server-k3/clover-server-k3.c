@@ -580,6 +580,7 @@ static Store  store[NLAY];
 static int    n_store;
 static int64_t sq_bytes;
 static double  sq_secs;
+static int64_t sq_reads, sq_reopen, sq_open;   /* is the blob handle thrashing? */
 static volatile int conn_busy[MAXCONN];
 
 static int claim_conn(void)
@@ -632,6 +633,8 @@ static void read_range_db(PRange *g, int L)
                             SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, NULL))
             sqdie(s->db[c], "store open");
         s->row[c] = -1;
+#pragma omp atomic
+        sq_open++;
     }
     if (!s->bh[c]) {
         if (sqlite3_blob_open(s->db[c], "main", "expert", "data", id, 0, &s->bh[c]))
@@ -640,9 +643,13 @@ static void read_range_db(PRange *g, int L)
     } else if (s->row[c] != id) {
         if (sqlite3_blob_reopen(s->bh[c], id)) sqdie(s->db[c], "blob reopen");
         s->row[c] = id;
+#pragma omp atomic
+        sq_reopen++;
     }
     if (sqlite3_blob_read(s->bh[c], g->mem, (int)g->nb, (int)delta))
         sqdie(s->db[c], "blob read");
+#pragma omp atomic
+    sq_reads++;
     release_conn(c);
 }
 
@@ -2333,9 +2340,12 @@ int main(int argc, char **argv)
            pf_on ? "on" : "off", pf_secs, pf_bytes / 1e9,
            pf_secs > 0 ? pf_bytes / 1e9 / pf_secs : 0.0);
     if (n_store)
-        printf("  of which SQLite     : %d layers  %.2f GB  %.2f thread-s  %.2f GB/s\n",
+        printf("  of which SQLite     : %d layers  %.2f GB  %.2f thread-s  %.2f GB/s\n"
+               "                        %lld reads  %lld reopens (%.0f%%)  %lld conns\n",
                n_store, sq_bytes / 1e9, sq_secs,
-               sq_secs > 0 ? sq_bytes / 1e9 / sq_secs : 0.0);
+               sq_secs > 0 ? sq_bytes / 1e9 / sq_secs : 0.0,
+               (long long)sq_reads, (long long)sq_reopen,
+               sq_reads ? 100.0 * sq_reopen / sq_reads : 0.0, (long long)sq_open);
 
     {
         double tot = 0.0; int64_t wb = 0;

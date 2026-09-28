@@ -797,6 +797,74 @@ threading model the caller uses or how often threads churn.
 **The error message said nothing.** `die("blob open")` gave no reason. Adding
 `sqlite3_errmsg` was worth more than the guess it replaced.
 
+## Step 18 - where the SQLite time goes, and a fix that costs more than it saves
+
+### First, how many experts a layer actually reads
+
+Worth stating plainly because it is neither of the two obvious answers. From
+the run's own counters:
+
+```
+  draws 7360      92 layers x 5 positions x top-16
+  distinct 5683   after dedup within each layer  ->  61.8 per layer
+  m=1 4409 (77.6%)  m=2 957  m=3 239  m=4 70  m=5 8   mean m 1.295
+```
+
+**Top-16 is per position, not per layer.** A layer reads the *union* of its
+positions' selections - 61.8 experts on average, 74 in layer 1 - each read
+once and used `m` times. That is why layer 1's SQLite traffic is 1.30 GB and
+not 0.28 GB (16 experts) or 15.72 GB (all 896), and it is the mechanism
+behind the batching curve in step 2: more positions, more uses per byte.
+
+Layer 1: **444 reads = 74 experts x 6 ranges**, exactly.
+
+### The candidate
+
+4.19 thread-seconds for 1.30 GB is 9.4 ms for an average 2.93 MB read, about
+a hundred times slower than copying cached bytes. A 17,547,264 B blob at a 64
+KB page size is a chain of roughly 268 overflow pages, and reading at an
+offset walks that chain; a blob handle caches the page list per row, so
+reopening to another row throws it away. Measured reopen rate: **60 to 64% of
+reads**.
+
+`K3_PLGRAN=0` hands one thread all six ranges of an expert instead of
+spreading ranges across threads, so it tests this for free.
+
+### The 2x2
+
+| | wall | md5 | reopens |
+|---|---|---|---|
+| PLGRAN=1, store | 8.99 | PASS | 266 of 444 (60%) |
+| PLGRAN=1, no store | 8.76 | PASS | - |
+| PLGRAN=0, store | 9.66 | PASS | 72 of 444 (16%) |
+| PLGRAN=0, no store | 9.56 | PASS | - |
+
+Reopens fall 3.7x and **the SQLite cost does fall with them, 0.23 s to
+0.10 s**. So the mechanism is real and accounts for roughly half the overhead.
+
+**And the fix is rejected anyway.** `PLGRAN=0` costs **0.80 s on the baseline
+path** - 9.56 against 8.76 with no store at all - which is step 17 of the
+earlier arc reappearing: range granularity was worth 1.56 s to 0.29 s of
+first-expert stall for O_DIRECT. Paying 0.80 s to save 0.13 s is a bad trade.
+The best combination is the one already in use: **range granularity, store,
+8.99 s**.
+
+The honest conclusion is narrow: reopening explains about half the SQLite
+overhead, and the only lever currently wired to it is worth less than it
+costs. A fix that keeps range granularity would have to remove the offset
+walk itself - **one row per range instead of one row per expert**, so every
+read starts at offset 0 of its own blob. That is a schema change, it is not
+built, and it is not claimed to work.
+
+### A rejected explanation, checked rather than assumed
+
+Before blaming SQLite I checked whether the store was even cached. It is
+**39.16% resident**, 6.16 GB of 15.74 GB, with 72 GB available and the trunk
+copy holding 50 GB of shared memory. That sounds like the answer but is not:
+the run touches 1.30 GB, and 6.16 GB of resident pages is nearly five times
+that. Residency is not what is slow here. Recorded because a plausible cause
+that turns out not to be the cause is worth as much as the one that is.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
