@@ -148,19 +148,25 @@ Every run below produced `md5 23d162dcefb18211a7540ef12948f1eb` and token
     slices from disk              8.74 s   (10.76 s cold)
     slices from tmpfs             8.73 s      -> the split is free
 
-  layer 1 experts from SQLite, 91 layers still on the checkpoint
-    cold                         12.30 s
-    warm                          9.04 s
-    same binary, no store         8.75 s      -> one layer costs ~0.3 s
+  experts from SQLite, by how many layers are converted
+    0 stores   8.89 s        the same binary, no store
+    1 store    9.02 s   +0.13
+    2 stores   9.17 s   +0.28
+    3 stores   9.25 s   +0.36
+    4 stores   9.50 s   +0.61   -> linear, 0.148 s per layer
 ```
 
-So the trunk split costs nothing and is bit-exact; a layer out of SQLite is
-bit-exact and costs about 0.3 s warm. **That 0.3 s should not be multiplied by
-92** - with one layer converted the other 91 still run the O_DIRECT pipeline,
-and a fully converted run is a different system.
+The trunk split costs nothing. The SQLite path is bit-exact and costs a
+**linear 0.148 s per converted layer**, which is exactly the bandwidth
+difference: 4.9 GB/s aggregate against O_DIRECT's 14 GB/s accounts for
+0.153 s against 0.148 s measured.
 
-Still to do: why the SQLite path runs well under its standalone rate, the
-remaining layers, then the decomposition. The measurement record is in
+A straight line gives about **22.5 s at 92 layers**, but that is arithmetic
+on four points, not an observation - at 92 there is no O_DIRECT traffic left
+to overlap with, and 92 stores are 1448 GB against 43 GB free.
+
+The next candidate is **one row per range instead of one row per expert**, so
+no read has to walk an overflow page chain. Not built.
 [`work-in-progress/clover-scaling-architecture.md`](../work-in-progress/clover-scaling-architecture.md),
 where the negatives are kept with the same care as the positives - including
 the harness bug that reported three passes for runs that never happened.

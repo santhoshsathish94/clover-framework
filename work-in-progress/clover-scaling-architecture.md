@@ -865,12 +865,75 @@ the run touches 1.30 GB, and 6.16 GB of resident pages is nearly five times
 that. Residency is not what is slow here. Recorded because a plausible cause
 that turns out not to be the cause is worth as much as the one that is.
 
+## Step 19 - the cost is linear, and it is exactly the bandwidth difference
+
+Stores built for layers 2, 3 and 4, each verified against a second read of
+its source range, each **+0.10%** and each with **894 of 896 ids out of file
+order** - the permutation is consistent across layers, not an accident of
+layer 1. Disk 87 GB -> 43 GB.
+
+The only variable is how many stores are visible, controlled by symlinking a
+subset into a selection directory. `n=0` is the same binary with no store,
+so nothing but the store count differs. Three runs each, **all 15 PASS**.
+
+| stores | warm wall | delta | per layer | SQLite GB | thread-s |
+|---|---|---|---|---|---|
+| 0 | 8.89 | - | - | - | - |
+| 1 | 9.02 | 0.13 | 0.13 | 1.30 | 4.41 |
+| 2 | 9.17 | 0.28 | 0.14 | 2.53 | 7.81 |
+| 3 | 9.25 | 0.36 | 0.12 | 3.54 | 10.15 |
+| 4 | 9.50 | 0.61 | 0.15 | 4.58 | 13.42 |
+
+**Linear, at 0.148 s per converted layer.** Bytes and thread-seconds are
+linear too, about 1.15 GB and 3.3 thread-seconds each, and the per-thread
+rate is **flat at 0.29 to 0.35 GB/s** across all four settings - so this is a
+fixed per-byte cost, not contention that would worsen with more layers.
+
+### The cross-check that makes it an explanation rather than a curve
+
+1.15 GB per layer at 3.3 thread-seconds is 0.35 GB/s per thread, and with 14
+readers that is **4.9 GB/s aggregate against O_DIRECT's 14 GB/s**. So moving
+one layer's bytes across should cost
+
+```
+  1.15 GB / 4.9 GB/s  -  1.15 GB / 14 GB/s  =  0.235 - 0.082  =  0.153 s
+```
+
+against **0.148 s measured**. The wall-clock delta is entirely accounted for
+by the delivered bandwidth. Nothing else needs to be invoked.
+
+### What it would mean at 92 layers, and why that is arithmetic
+
+A straight line through these four points gives `8.89 + 0.148n`, so 92 layers
+would be about **22.5 s, roughly 2.5x the current run**. Equivalently, the
+whole 99.72 GB of expert traffic at 4.9 GB/s instead of 14 GB/s.
+
+**This is arithmetic on a four-point measurement, not an observation**, and
+there is a specific reason to distrust it: at n=92 there is no O_DIRECT
+expert traffic left at all, so the two paths no longer overlap and the system
+is not this one scaled up. It cannot be settled on this box - 92 stores are
+1448 GB against 43 GB free.
+
+### Where this leaves the store design
+
+SQLite delivered **8 to 10 GB/s cold and 24 to 26 GB/s warm** in the
+standalone benchmark of step 3. Here it delivers 4.9. The difference is how
+it is being asked: 444 offset reads into 17.5 MB blobs, 60% of them after a
+reopen that discards the cursor's overflow page list.
+
+So the schema named at the end of step 18 is now the obvious candidate rather
+than a guess - **one row per range instead of one row per expert**, 5,376
+rows a layer, every read starting at offset 0 of its own blob and no chain to
+walk. It is still not built and still not claimed to work, but it is now
+pointed at a measured 2.9x gap rather than at a hunch.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
 O_DIRECT number, single-pod cold start and steady state, the contention
-curve up to four pods, the 93-way trunk split, ext4 hole punching, and the
-slice build running bit-exact at the same speed as the reference.
+curve up to four pods, the 93-way trunk split, ext4 hole punching, the
+slice build running bit-exact at the same speed as the reference, and the
+SQLite expert path bit-exact at a linear 0.148 s per converted layer.
 
 **Not measured, and not to be read as measured:** 93-deep pipeline behavior,
 cross-node transfer, Kubernetes scheduling and cgroup accounting, and aggregate
