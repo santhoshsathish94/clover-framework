@@ -48,6 +48,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <time.h>
+#include <sqlite3.h>
 #if defined(__AVX2__)
 #include <immintrin.h>
 #endif
@@ -550,9 +551,167 @@ static const unsigned char *res_ptr(int fid, int64_t off)
     return g ? g->mem : file_ptr(fid) + off;
 }
 
+/* ------------------------------------------------- experts out of SQLite */
+/* A layer reads from its store if one exists and from the checkpoint if not,
+   so the gate can be run with some layers converted and the rest not. 92
+   stores would be 1448 GB and the box has 87 GB.
+
+   Addressing is arithmetic, not a search: a layer is one contiguous run and
+   every expert in it is the same size, so a file offset gives the position
+   directly. Expert ids are NOT in file order - 894 of 896 are permuted - so
+   position is mapped through pos2id, built from the index at startup.
+
+   Connections are a claimed pool, not one per thread. The reader threads are
+   pthreads created and joined per layer, so a run makes about 1288 of them;
+   indexing by thread identity would either collide (omp_get_thread_num is 0
+   for a pthread) or exhaust. A slot keeps its connection and its blob handle
+   across claims, so both are opened once. */
+#define MAXCONN 32
+typedef struct {
+    int           on, fid, nexp;
+    int64_t       base, esz;      /* first byte of the layer, bytes per expert */
+    int           pos2id[NEXP];
+    sqlite3      *db[MAXCONN];
+    sqlite3_blob *bh[MAXCONN];
+    int           row[MAXCONN];   /* which rowid bh is currently open on */
+    char          path[512];
+} Store;
+static Store  store[NLAY];
+static int    n_store;
+static int64_t sq_bytes;
+static double  sq_secs;
+static volatile int conn_busy[MAXCONN];
+
+static int claim_conn(void)
+{
+    for (;;)
+        for (int i = 0; i < MAXCONN; i++) {
+            int e = 0;
+            if (__atomic_compare_exchange_n(&conn_busy[i], &e, 1, 0,
+                                            __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+                return i;
+        }
+}
+
+static void release_conn(int i)
+{
+    __atomic_store_n(&conn_busy[i], 0, __ATOMIC_RELEASE);
+}
+
+static void sqdie(sqlite3 *db, const char *what)
+{
+    fprintf(stderr, "eq: %s: %s\n", what, db ? sqlite3_errmsg(db) : "?");
+    exit(1);
+}
+
+static int store_for(int fid, int64_t off)
+{
+    if (!n_store) return -1;
+    for (int L = 1; L < NLAY; L++) {
+        const Store *s = &store[L];
+        if (s->on && s->fid == fid && off >= s->base &&
+            off < s->base + s->esz * s->nexp) return L;
+    }
+    return -1;
+}
+
+/* One range out of a store. Exactly the bytes the range names, at g->mem,
+   so no alignment padding is read and res_ptr keeps working unchanged. */
+static void read_range_db(PRange *g, int L)
+{
+    Store *s = &store[L];
+    const int64_t d = g->off - s->base;
+    const int pos = (int)(d / s->esz);
+    const int64_t delta = d % s->esz;
+    if (delta + g->nb > s->esz) die("expert range crosses an expert boundary");
+    const int id = s->pos2id[pos];
+    const int c = claim_conn();
+
+    if (!s->db[c]) {
+        if (sqlite3_open_v2(s->path, &s->db[c],
+                            SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, NULL))
+            sqdie(s->db[c], "store open");
+        s->row[c] = -1;
+    }
+    if (!s->bh[c]) {
+        if (sqlite3_blob_open(s->db[c], "main", "expert", "data", id, 0, &s->bh[c]))
+            sqdie(s->db[c], "blob open");
+        s->row[c] = id;
+    } else if (s->row[c] != id) {
+        if (sqlite3_blob_reopen(s->bh[c], id)) sqdie(s->db[c], "blob reopen");
+        s->row[c] = id;
+    }
+    if (sqlite3_blob_read(s->bh[c], g->mem, (int)g->nb, (int)delta))
+        sqdie(s->db[c], "blob read");
+    release_conn(c);
+}
+
+static int64_t meta_int(sqlite3 *db, const char *k)
+{
+    sqlite3_stmt *st;
+    if (sqlite3_prepare_v2(db, "SELECT v FROM meta WHERE k = ?", -1, &st, NULL))
+        die("meta prepare");
+    sqlite3_bind_text(st, 1, k, -1, SQLITE_STATIC);
+    if (sqlite3_step(st) != SQLITE_ROW) die("meta row missing");
+    const int64_t v = (int64_t)strtoll((const char *)sqlite3_column_text(st, 0), NULL, 10);
+    sqlite3_finalize(st);
+    return v;
+}
+
+static const ERec *expert_rec(int L, int e, int which, int kind);
+
+/* Opens every store present in dir. Absent layers simply stay on the
+   checkpoint, which is what makes a partial migration testable. */
+static void open_stores(const char *dir)
+{
+    for (int L = 1; L < NLAY; L++) {
+        Store *s = &store[L];
+        snprintf(s->path, sizeof s->path, "%s/L%02d.db", dir, L);
+        if (access(s->path, R_OK)) continue;
+        sqlite3 *db;
+        if (sqlite3_open_v2(s->path, &db, SQLITE_OPEN_READONLY, NULL))
+            die("store open");
+        s->base = meta_int(db, "source_off");
+        s->esz  = meta_int(db, "expert_bytes");
+        s->nexp = (int)meta_int(db, "nexpert");
+        const int64_t sb = meta_int(db, "source_bytes");
+        sqlite3_close(db);
+        if (s->nexp != NEXP || s->esz * s->nexp != sb) die("store meta disagrees");
+
+        /* position in the file -> expert id, and prove the layer tiles */
+        int64_t o[NEXP];
+        for (int e = 0; e < NEXP; e++) {
+            const ERec *r = expert_rec(L, e, 0, 0);
+            if (e == 0) s->fid = r->file_id;
+            else if (r->file_id != s->fid) die("layer spans files");
+            o[e] = r->off;
+        }
+        for (int e = 0; e < NEXP; e++) {
+            const int64_t d = o[e] - s->base;
+            if (d < 0 || d % s->esz || d / s->esz >= NEXP) die("expert off grid");
+            s->pos2id[d / s->esz] = e;
+        }
+        s->on = 1;
+        n_store++;
+    }
+    if (n_store)
+        fprintf(stderr, "expert stores: %d of %d layers from SQLite\n", n_store, NLAY - 1);
+}
+
 /* One range, O_DIRECT where the alignment allows and buffered for the tail. */
 static void read_range(PRange *g)
 {
+    const int L = store_for(g->fid, g->off);
+    if (L >= 0) {
+        const double t0 = now_s();
+        read_range_db(g, L);
+#pragma omp atomic
+        sq_bytes += g->nb;
+        const double dt = now_s() - t0;
+#pragma omp atomic
+        sq_secs += dt;
+        return;
+    }
     size_t needed = (size_t)(g->off + g->nb - g->aoff);
     ssize_t rd = pread(dfd[g->fid], arena + g->apos, g->alen, g->aoff);
     if (rd >= 0 && (size_t)rd >= needed) return;
@@ -1379,6 +1538,7 @@ int main(int argc, char **argv)
     const char *idxp = getenv("K3_INDEX");
     if (!idxp) die("K3_INDEX is not set - source config.env, or run ./build.sh");
     load_index(idxp);
+    { const char *v = getenv("K3_STORES"); if (v) open_stores(v); }
     dq_init();
     for (int i = 0; i < 128; i++) dfd[i] = -1;
     { const char *v = getenv("K3_STAGE"); if (v) {
@@ -2172,6 +2332,10 @@ int main(int argc, char **argv)
     printf("prefetch              : %s  %.2f s  %.2f GB  %.2f GB/s\n",
            pf_on ? "on" : "off", pf_secs, pf_bytes / 1e9,
            pf_secs > 0 ? pf_bytes / 1e9 / pf_secs : 0.0);
+    if (n_store)
+        printf("  of which SQLite     : %d layers  %.2f GB  %.2f thread-s  %.2f GB/s\n",
+               n_store, sq_bytes / 1e9, sq_secs,
+               sq_secs > 0 ? sq_bytes / 1e9 / sq_secs : 0.0);
 
     {
         double tot = 0.0; int64_t wb = 0;

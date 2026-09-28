@@ -730,6 +730,73 @@ and from the checkpoint if not. Then the gate can be run with one layer on
 SQLite and 91 on the checkpoint, and coverage grows as far as the disk allows.
 It also happens to be what the migration needs anyway.
 
+## Step 17 - a layer served from SQLite, bit-exact, and what it costs
+
+`read_range` is the only place expert bytes come off disk, so that is the only
+place that changed. A layer reads from its store if one exists and from the
+checkpoint if not, which is what lets the gate run with one layer converted
+and 91 not.
+
+Addressing is arithmetic rather than a search, because step 16 established the
+shape: a layer is one contiguous run and every expert in it is the same size,
+so a file offset gives the position directly. Position is mapped through
+`pos2id` because the ids are permuted. Reads use `sqlite3_blob_read` at an
+offset inside the blob, so a 5.5 MB range does not materialize a 17.5 MB
+expert.
+
+### The result
+
+```
+  layer 1 from SQLite, cold    12.30 s   PASS
+  layer 1 from SQLite, warm     9.44 / 9.04 / 9.08 s   PASS
+  same binary, no store         8.77 / 8.75 s          PASS
+```
+
+Every run produced md5 `23d162dcefb18211a7540ef12948f1eb` and token 17374.
+**One layer served entirely out of SQLite is bit-exact.** That was the
+question this step asked, and the answer is yes.
+
+**It costs about 0.3 s for one layer warm**, against a 0.02 s run-to-run
+spread in the control, so the cost is real and not noise. SQLite moved 1.30 GB
+in 4.81 to 6.49 thread-seconds, a per-thread 0.20 to 0.27 GB/s.
+
+The 1.30 GB is worth reading twice: it is **74 of 896 experts**, not the whole
+store. That is the prompt's working set for layer 1, and it matches the
+per-layer maximum measured earlier from the provenance.
+
+### What this does not establish
+
+**Do not multiply 0.3 s by 92.** With one layer converted, the other 91 still
+run the O_DIRECT pipeline and the two paths overlap; a run with every layer on
+SQLite is a different system, not this one scaled up. The honest statement is
+narrow: one layer, warm, costs 0.3 s more than the same layer on O_DIRECT, and
+the output is identical.
+
+The rate is also well under what SQLite did standalone - 8 to 10 GB/s cold and
+24 to 26 GB/s warm in step 3. So there is something in the integration, not
+in SQLite, holding it back. The most likely candidate is that with range
+granularity consecutive ranges belong to different experts, so the blob handle
+is reopened on nearly every read. **That is a hypothesis and it has not been
+measured**, which is the next thing to do rather than the next thing to
+assume.
+
+### Two defects found while wiring it
+
+**Thread identity was the wrong key.** The first version indexed a connection
+per thread with `omp_get_thread_num()`. The reader threads are **pthreads**,
+where that returns 0 for every one of them, so all 14 shared one connection
+and one blob handle and the run died at the first expert with `blob open`.
+Indexing by thread would not have worked even if the number were right:
+`pl_start` creates readers and `pl_finish` joins them **once per layer**, so a
+run makes roughly 1288 distinct threads.
+
+The fix is a **claimed pool**: 32 slots, each keeping its connection and blob
+handle across claims, taken and released around a read. It does not care which
+threading model the caller uses or how often threads churn.
+
+**The error message said nothing.** `die("blob open")` gave no reason. Adding
+`sqlite3_errmsg` was worth more than the guess it replaced.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and

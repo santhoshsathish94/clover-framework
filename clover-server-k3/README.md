@@ -137,35 +137,50 @@ and no tolerance to argue about.
 
 ## Status
 
-**Step 1 of version 1 is built and gated.** `clover-server-k3.c` reads the
-trunk as 93 per-layer slices and reproduces the reference exactly:
+**Version 1 is built and gated, both steps.** `clover-server-k3.c` reads the
+trunk as 93 per-layer slices and can read any layer's experts from SQLite.
+Every run below produced `md5 23d162dcefb18211a7540ef12948f1eb` and token
+17374.
 
 ```
-  md5 23d162dcefb18211a7540ef12948f1eb   token 17374   nine runs of nine
-  reference, trunk from tmpfs   8.78 s
-  slices from disk              8.74 s   (10.76 s on the first, cold, run)
-  slices from tmpfs             8.73 s
+  trunk as 93 slices, experts from the checkpoint
+    reference, trunk from tmpfs   8.78 s
+    slices from disk              8.74 s   (10.76 s cold)
+    slices from tmpfs             8.73 s      -> the split is free
+
+  layer 1 experts from SQLite, 91 layers still on the checkpoint
+    cold                         12.30 s
+    warm                          9.04 s
+    same binary, no store         8.75 s      -> one layer costs ~0.3 s
 ```
 
-A 0.05 s spread is noise, so **splitting the trunk 93 ways is free.** Peak RSS
-56.8 GB.
+So the trunk split costs nothing and is bit-exact; a layer out of SQLite is
+bit-exact and costs about 0.3 s warm. **That 0.3 s should not be multiplied by
+92** - with one layer converted the other 91 still run the O_DIRECT pipeline,
+and a fully converted run is a different system.
 
-Still to do: experts from SQLite, then the decomposition. The measurement
-record is in
+Still to do: why the SQLite path runs well under its standalone rate, the
+remaining layers, then the decomposition. The measurement record is in
 [`work-in-progress/clover-scaling-architecture.md`](../work-in-progress/clover-scaling-architecture.md),
 where the negatives are kept with the same care as the positives - including
-the harness bug in this step that reported three passes for runs that never
-happened.
+the harness bug that reported three passes for runs that never happened.
 
 ### Running it
 
 ```sh
-K3_SLICES=/srv/k3/slices K3_INDEX=build/eqidx.bin K3_IDS=1008,10484,318,15383,387 \
+K3_SLICES=/srv/k3/slices K3_STORES=/srv/k3/stores \
+K3_INDEX=build/eqidx.bin K3_IDS=1008,10484,318,15383,387 \
   ./build/clover-server-k3
 ```
 
-`K3_SLICES` replaces `K3_TRUNKPATH` and names a directory holding `L00.bin`
-through `L92.bin`. `v1.sh` is the harness that produced the numbers above.
+| | |
+|---|---|
+| `K3_SLICES` | directory of `L00.bin` .. `L92.bin`, replaces `K3_TRUNKPATH` |
+| `K3_STORES` | directory of `L01.db` .. `L92.db`; a layer without one reads the checkpoint |
+
+`make_store.py <layer>` builds a store, `probe_experts.py` reports the on-disk
+layout it is built from, and `v1.sh` is the harness that produced the trunk
+numbers. Build with `-lsqlite3`.
 
 ### One thing that is unresolved
 
