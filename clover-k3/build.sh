@@ -19,12 +19,6 @@ mkdir -p "$B"
 
 echo "== 1/3  locating the five non-layer tensors"
 python3 "$HERE/dump_st_model.py" "$K3_MODEL" "$B/st_model.json"
-if cmp -s "$HERE/st_model.json" "$B/st_model.json"; then
-    echo "        matches the committed st_model.json"
-else
-    echo "        NOTE: differs from the committed st_model.json;"
-    echo "        this is a different checkpoint or a different layout."
-fi
 
 echo "== 2/3  flattening the index"
 K3_MODEL="$K3_MODEL" \

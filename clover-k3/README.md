@@ -18,10 +18,8 @@ are left where they are.
 | file | what it is |
 |---|---|
 | `clover-k3.c` | the program, ~2,270 lines, no dependencies beyond libc, libm and OpenMP |
-| `eq.c` | the first implementation, untouched, kept as the honest start of the arc |
 | `dump_st_model.py` | locates the five non-layer tensors in the checkpoint |
 | `dump_eqidx.py` | flattens trunk.json, st_model.json and the shard headers into one binary index |
-| `st_model.json` | the committed reference output of `dump_st_model.py` |
 | `prompts.tsv` | the 34 prompts used for the correctness campaign |
 | `eq_c_logits.baseline.bin` | the preserved 5-token logits, md5 `23d162dcefb18211a7540ef12948f1eb` |
 | `build.sh` `gate.sh` `ab.sh` | build, correctness gate, and the A/B harness |
@@ -32,9 +30,9 @@ are left where they are.
 - **The trunk** (`trunk.bin` 54.47 GB, `trunk.json`). Also K3's own - it is built
   by the engine's `tools/pack_trunk.py` and `tools/int8_trunk.py`, and the
   engine runs from it too. Nothing here reproduces it.
-- **`eqidx.bin`** (21.9 MB). Generated, and it embeds absolute paths to the
-  checkpoint, so it is specific to the machine that built it. `build.sh` makes
-  it in `build/`.
+- **`eqidx.bin`** (21.9 MB) and **`st_model.json`**. Both are generated, and both
+  embed absolute paths to the checkpoint, so they are specific to the machine
+  that built them. `build.sh` makes them in `build/`.
 
 ## Building
 

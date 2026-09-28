@@ -1,4 +1,4 @@
-/* eq.c - k3-model-equation.md, sections 2 to 5, in C.
+/* clover-k3.c - k3-model-equation.md, sections 2 to 5, in C.
  *
  * Standalone. No cache manager, no prefetcher, no scheduler. It reads the
  * weights, evaluates the equation for one prompt, and prints the token.
@@ -6,7 +6,9 @@
  * Metadata comes from eqidx.bin, produced by dump_eqidx.py, because parsing
  * two JSON indexes and 93 safetensors headers is not part of the equation.
  *
- * build: gcc -O2 -march=native -ffp-contract=off -fopenmp eq.c -o eq -lm
+ * build: ./build.sh, or
+ *   gcc -O3 -march=native -ffp-contract=off -fopenmp -DNPOS=<n> \
+ *       -o clover-k3 clover-k3.c -lm
  *
  * -ffp-contract=off is required. Without it the compiler fuses a*b+c into a
  * single-rounded FMA in places the engine rounds twice.
