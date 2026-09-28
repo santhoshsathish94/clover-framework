@@ -1,0 +1,34 @@
+1	5	1008,10484,318,15383,387	The capital of France is
+2	6	1008,15548,9821,395,9148,387	The chemical symbol for gold is
+3	8	1008,10604,19645,306,1088,17860,2403,387	The largest planet in our solar system is
+4	6	29349,147043,623,261,10284,318	Water boils at a temperature of
+5	9	1008,5473,318,77763,316,7432,41367,694,743	The author of Pride and Prejudice was
+6	10	767,220,5784,24,276,1701,23167,45553,418,276	In 1969 the first humans landed on the
+7	9	1008,7612,318,3660,306,261,34889,387,14868	The speed of light in a vacuum is approximately
+8	10	1008,98993,10535,387,4611,4387,276,115254,318,276	The mitochondria is often called the powerhouse of the
+9	23	1166,21490,96445,2145,3118,745,326,581,326,5266,220,16,1563,21490,96445,2145,12,16,8,715,21490,96445,7	def fibonacci(n): return n if n <= 1 else fibonacci(n-1) + fibonacci(
+10	14	12319,1530,11,55793,69841,10861,5945,14294,7078,327,220,16,31709,13387	SELECT name, COUNT(*) FROM users WHERE active = 1 GROUP BY
+11	13	4563,2300,1521,2777,5986,2950,5924,8,384,2973,9241,10274,7	public static void main(String[] args) { System.out.println(
+12	22	2444,347,590,1032,327,220,15,26,1032,555,326,26,1032,5898,384,5131,3484,7384,2578,11340,457,745	for (int i = 0; i < n; i++) { total += arr[i]; } return
+13	12	14284,7411,635,76,414,9613,25,6030,1704,10768,306,276	git commit -m "fix: handle null pointer in the
+14	10	1008,45674,318,1288,94297,472,7459,308,1288,387	The derivative of x squared with respect to x is
+15	13	3111,220,18,87,9620,220,22,28542,220,2270,1780,1288,28542	If 3x plus 7 equals 22 then x equals
+16	10	1008,5547,318,276,14630,40516,318,261,33593,387	The sum of the interior angles of a triangle is
+17	6	99153,91644,673,12845,28542,52831	Seven multiplied by eight equals fifty
+18	12	16404,15024,15024,15024,15024,15024,15024,15024,15024,15024,15024,15024	yes yes yes yes yes yes yes yes yes yes yes yes
+19	12	2108,276,276,276,276,276,276,276,276,276,276,276	the the the the the the the the the the the the
+20	11	787,2069,3499,1101,2069,3499,1101,2069,3499,1101,2069	one two three one two three one two three one two
+21	24	64,261,261,261,291,291,291,291,261,261,261,261,291,291,291,291,261,261,261,261,291,291,291,291	a a a a b b b b a a a a b b b b a a a a b b b b
+22	12	113476,387,276,10484,318,15383,316,28202,387,276,10484,318	Paris is the capital of France and Berlin is the capital of
+23	12	113476,387,276,10484,318,15383,316,31082,387,276,10484,318	Paris is the capital of France and Rome is the capital of
+24	16	113476,387,276,10484,318,15383,11,261,5243,418,276,18002,163561,473,924,2021	Paris is the capital of France, a city on the river Seine that has long
+25	16	113476,387,276,10484,318,15383,11,261,5243,473,32818,4972,94509,4558,658,1178	Paris is the capital of France, a city that sits far inland away from any
+26	17	8641,12539,276,8078,21684,11,19044,395,1178,7405,306,276,81570,10579,11,996,10716	She opened the door slowly, listening for any sound in the hallway beyond, but heard
+27	14	1008,20592,29532,276,20659,395,3499,5469,2418,37457,473,6150,1133,743	The committee reviewed the proposal for three hours before deciding that further work was
+28	16	33923,276,12457,12981,473,1688,36034,7236,276,5407,11,276,18002,25596,4741,1682	Despite the heavy rain that had fallen throughout the night, the river remained below its
+29	15	24817,6857,8669,17440,418,4393,31495,64,318,2913,11720,308,34454,24232,473	Machine learning models trained on large corpora of text tend to exhibit behaviour that
+30	15	1008,5072,16331,69275,60062,1312,276,29292,7751,2396,276,10975,46907,658,276	The quick brown fox jumps over the lazy dog while the cat watches from the
+31	17	13426,7625,261,1169,306,261,17316,623,276,6925,318,261,2314,18888,1459,16959,261	Once upon a time in a village at the foot of a great mountain there lived a
+32	7	13724,118404,1861,511,2917,15383,3140	La capitale de la France est
+33	7	35327,122808,79052,14532,14245,74942,16795	Die Hauptstadt von Frankreich ist
+34	7	9903,80041,11377,111992,511,19649,4072	El idioma oficial de Mexico es
