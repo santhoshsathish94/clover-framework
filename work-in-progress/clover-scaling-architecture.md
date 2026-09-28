@@ -201,33 +201,47 @@ were - and my script had sent stderr to `/dev/null`, so it failed silently. Two
 faults, both mine: the wrong assumption, and discarding the evidence that would
 have shown it.
 
-## Step 6 - the pod specification
+## Step 6 - the pod specification, PROVISIONAL
 
-Every number here comes from a measurement above.
+**These numbers are not yet earned, and were briefly written here as though
+they were.** Every measurement behind them came from `sqstage`, which reads
+expert blobs and checksums them. It does no attention, no routing, no MoE
+arithmetic, and holds no layer state. A pod does all of that. What follows is
+a starting hypothesis to be tested by running one.
 
-| | value | why |
+| | provisional | what it actually rests on |
 |---|---|---|
-| CPU | `requests: 4`, `limits: 4` | peak at 4 threads |
-| Memory | `requests: 20Gi`, `limits: 20Gi` | worst layer needs 15.63 GiB |
+| CPU | 4 | thread sweep on a read-only benchmark: 44.9 ms at 4, worse at 8, 14, 24 |
+| Memory | 20Gi | footprint arithmetic plus 402 MB RSS from that same read-only run |
 | QoS | Guaranteed | the design assumes residency |
-| Layer 0 | 2 CPU, 4Gi | no experts, 1.484 GiB total |
-| Pods per node | 1-2, anti-affinity | aggregate is flat at 26-30 GB/s |
+| Pods per node | 1-2 | the contention curve, which **is** a real measurement |
 
-Footprint by layer kind:
+What the memory figure does not include, because nothing has run a layer yet:
+`resid` and `snap`, the MoE intermediates at `SI=6144` and `DI=33792` per
+position, the KDA recurrent state `St[96][128][128]` at 6.29 MB, and whatever
+the expert decode path holds live.
+
+And an assumption never tested: **whether a pod needs all 896 experts resident
+at all.** A 5-token prompt touches about 62 per layer; across 34 prompts 78.9%
+get touched. So over time a pod probably wants most of them - but that is
+inference from the provenance capture, not an observation of a running pod.
+
+**What settles it:** `clover-1` existing and being run on real inputs, with
+RSS, thread scaling and stage time measured on the real work. Until then the
+only line in this table with a measurement behind it is pods-per-node.
+
+Footprint by layer kind - this part is arithmetic on the index and does hold:
 
 ```
-  layer   kind        trunk MB   total GiB
-  L0      KDA          1172        1.484     no experts
-  L1      KDA+MoE       635       15.626     68 of these
-  L3      MLA+MoE       423       15.429     24 of these
+  layer   kind        trunk MB   experts + slice GiB
+  L0      KDA          1172        1.09      no experts
+  L1      KDA+MoE       635       15.23      68 of these
+  L3      MLA+MoE       423       15.04      24 of these
 ```
-
-One layer's experts are 14.643 GiB. **A 16Gi pod leaves 0.374 GiB** - too thin
-once anything else is added, which is why the spec says 20Gi.
 
 **Verify early:** the box runs cgroup v2, where **page cache counts against the
 pod's memory limit**. That is what keeps the store resident, and it is also what
-will OOM-kill a pod that crosses the line. Confirm on pod 1, not pod 93.
+will OOM-kill a pod that crosses the line. Confirm on pod 1, not pod 92.
 
 ## Step 7 - what crosses a pod boundary
 
