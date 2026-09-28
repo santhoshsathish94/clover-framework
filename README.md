@@ -45,8 +45,8 @@ This repository contains the documentation, practical guidance, case studies, an
 The first thing built under it is [`clover-k3/`](clover-k3/) — the Kimi K3
 forward pass reduced to its mathematics and executed directly. It emits the
 same token as an independent implementation of the same model on all 34 prompts
-tested, in a third of the time. What it cost and what it does not show are in
-[`clover-k3/clover-k3-proof.md`](clover-k3/clover-k3-proof.md).
+tested, in under a third of the time. What it cost and what it does not show are
+in [`clover-k3/clover-k3-proof.md`](clover-k3/clover-k3-proof.md).
 
 Its central principle is:
 
@@ -86,7 +86,7 @@ Supporting areas include:
 - [`docs/08-governance.md`](docs/08-governance.md) — accountability and governance
 - [`docs/ai-responsibility/`](docs/ai-responsibility/) — AI responsibility
 
-Clover AI has a result, not a plan. A 2.78-trillion-parameter model runs from its equation on one ordinary machine, bit-exact against a preserved gate, and emits the same token as an independent implementation of the same model on every one of the 34 prompts tested — in a third of the wall time. That is measured, repeatable, and open to inspection.
+Clover AI has a result, not a plan. A 2.78-trillion-parameter model runs from its equation on one ordinary machine, bit-exact against a preserved gate, and emits the same token as an independent implementation of the same model on every one of the 34 prompts tested — in **394.94 seconds against 1344.23**, a factor of 3.40. Driven in a loop it writes whole sentences at about six seconds a word. That is measured, repeatable, and open to inspection.
 
 It will keep improving, and the parts of the principle above that it does not yet reach — the tools that enforce, the serving layer, the evaluation that closes the loop — are the next things to build. They will be held to the same standard: built, gated and measured before they are claimed.
 

@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Clover K3 — Clover</title>
-<meta name="description" content="A 2.78-trillion-parameter model reduced to its equation and run from one C file on a single CPU machine. What we did, how the equation was derived, what it measured, what it costs to run, and why it is not yet interactive.">
+<meta name="description" content="A 2.78-trillion-parameter model reduced to its equation and run from one C file on a single CPU machine. What we did, how the equation was derived, what it measured, what it costs to run, and why six seconds per word is not yet interactive.">
 <link rel="canonical" href="https://cloverframework.com/clover-k3/">
 <meta property="og:title" content="Clover K3 — Clover">
-<meta property="og:description" content="The Kimi K3 forward pass written from its equation. Same answer as an independent implementation on all 34 prompts, in a third of the time — and honest about the 12 seconds per token that makes it not yet interactive.">
+<meta property="og:description" content="The Kimi K3 forward pass written from its equation. Same answer as an independent implementation on all 34 prompts, in under a third of the time — and honest about the six seconds per word that makes it not yet interactive.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/clover-k3/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/social-preview.png">
@@ -60,10 +60,11 @@
       <h1>A 2.78-trillion-parameter model, written as its equation</h1>
       <p class="lede">We took Kimi K3, wrote down what it computes as one mathematical
         expression, and ran that directly as a single C file. It produces the same answer as an
-        independent implementation of the same model on every prompt tested, in a third of the
-        time, on one rented CPU machine with no GPU.</p>
-      <p>It is also not fast enough to talk to. That part is on this page too, with the numbers,
-        because a page that only showed the good result would not be worth reading.</p>
+        independent implementation of the same model on every prompt tested, in under a third of
+        the time, on one rented CPU machine with no GPU.</p>
+      <p>It is also not fast enough to talk to — about six seconds per word once it starts
+        writing. That part is on this page too, with the numbers, because a page that only showed
+        the good result would not be worth reading.</p>
       <p class="actions">
         <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-k3">The code</a>
         <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-proof.md">The 34-prompt comparison</a>
@@ -154,11 +155,10 @@
             question returns the identical token id in all three.</dd>
         </div>
         <div>
-          <dt>455.94 seconds against 1344.23 seconds</dt>
-          <dd>Across all 34 prompts. A ratio of 2.95, and between 2.68 and 3.27 on any individual
-            prompt.</dd>
-        </div>
-        <div>
+          <dt>394.94 seconds against 1344.23 seconds</dt>
+          <dd>Across all 34 prompts. A ratio of <strong>3.40</strong>, and between 3.17 and 3.57
+            on any individual prompt.</dd>
+        </div>        <div>
           <dt>One checksum held through every optimisation</dt>
           <dd><code>23d162dcefb18211a7540ef12948f1eb</code>. A faster result that does not
             reproduce those bytes is not a result. This caught a change that looked like a 38%
@@ -280,28 +280,30 @@
 
       <dl class="kv kv--wide">
         <div>
-          <dt>clover-k3 emits one token per run</dt>
-          <dd>It reads the prompt and produces the single next word. There is no generation loop
-            in it at all. The 7.25 seconds on this page is a whole prompt read from cold, which
-            is the part we set out to understand — not a sentence produced.</dd>
+          <dt>The 34-prompt comparison is one token per prompt</dt>
+          <dd>Both programs were asked to read a prompt and produce the single next word. The
+            7.23 seconds in the table is a whole prompt read from cold, which is the part we set
+            out to understand — not a sentence produced.</dd>
         </div>
         <div>
-          <dt>Generating text costs about 12 seconds per token, at best</dt>
-          <dd>Measured on the upstream engine, which does have a generation loop, on this same
-            machine: 23.71 s per token for a short answer, improving to <strong>12.42 s per
-            token</strong> over 128 tokens as fixed costs amortise. A 128-token reply took
-            <strong>26 minutes</strong>.</dd>
+          <dt>It does write sentences, at about six seconds a word</dt>
+          <dd>Each new word reuses the state the previous one left, so only the new position is
+            computed. Measured steady state: <strong>5.1 s per word</strong> after a five-word
+            prompt, <strong>6.6 s</strong> after a ten-word one. The reuse is checked against
+            recomputing everything from scratch and produces the identical words, 2.34x faster.
+            For reference the upstream engine measured 23.71 s per token over 8 tokens and
+            12.42 s over 128 on this same machine.</dd>
         </div>
         <div>
-          <dt>And it reads several terabytes to do it</dt>
-          <dd>That 128-token reply moved 6,816 GB off the disks and held 95.5 GB resident. Each
-            new word requires its own pass over a fresh set of experts; nothing about having
-            answered once makes the next word cheap.</dd>
+          <dt>Fourteen words took a hundred seconds</dt>
+          <dd><em>“In 1969 the first humans landed on the”</em> continued to <em>“moon. The
+            Apollo 11 mission was a monumental achievement in human history”</em> — 14 tokens in
+            101.3 seconds. A 128-word answer would be around thirteen minutes.</dd>
         </div>
       </dl>
 
       <p>So for day-to-day work — a chat window, a coding assistant, anything with a person
-        waiting — this is not usable, and no amount of tuning at the margin changes that. Twelve
+        waiting — this is not usable, and no amount of tuning at the margin changes that. Six
         seconds a word is not a slow version of interactive. It is a different activity.</p>
 
       <h3>What it is genuinely good for right now</h3>
@@ -321,8 +323,10 @@
       <h2>What this does not show</h2>
       <p>Stated plainly, because a result that hides its edges is not evidence.</p>
       <ul class="stack">
-        <li><strong>One token, not a conversation.</strong> The 34-prompt comparison asked both
-          programs for the next token only.</li>
+        <li><strong>One token per prompt in the comparison.</strong> The 34-prompt table asked
+          both programs for the next token only. Generation was measured on clover-k3 alone, at
+          different prompts and lengths from the engine's figures, so the two are separate
+          observations rather than a ratio.</li>
         <li><strong>Not a comparison against the official runtime, or a GPU.</strong> It is one
           CPU implementation against another CPU implementation of the same checkpoint.</li>
         <li><strong>Thirty-four prompts, mostly short and mostly English.</strong> The longest is

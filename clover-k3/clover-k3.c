@@ -92,6 +92,10 @@ static int TLO;
 static int pfx_n;               /* how many positions the cache covers */
 static int pfx_mode;            /* 0 off, 1 save, 2 load */
 static FILE *pfx_f;
+/* K3_PFXOUT: write a cache covering every position this run computed, which
+   may include ones it loaded. Saving and loading are otherwise exclusive, so
+   without this a decode step cannot produce the cache the next step needs. */
+static FILE *pfx_of;
 
 /* Counts how often each trunk page is read, to answer whether a run needs all
    54.47 GB and whether it reads any of it more than once. */
@@ -1577,14 +1581,16 @@ int main(int argc, char **argv)
     { const char *v = getenv("K3_PAR2"); if (v) par2 = atoi(v); }
     { const char *v = getenv("K3_DUMPLAY"); if (v) dumplay = fopen(v, "wb"); }
     { const char *p = getenv("K3_PFXSAVE"), *q = getenv("K3_PFXLOAD");
-      const char *n = getenv("K3_PFXN");
+      const char *n = getenv("K3_PFXN"), *o = getenv("K3_PFXOUT");
       pfx_n = n ? atoi(n) : 0;
       if (p && pfx_n > 0) { pfx_mode = 1; pfx_f = fopen(p, "wb"); }
       else if (q && pfx_n > 0) { pfx_mode = 2; pfx_f = fopen(q, "rb"); TLO = pfx_n; }
       if ((p || q) && !pfx_f) die("prefix cache open");
       if (pfx_n >= NPOS) die("K3_PFXN must be less than NPOS");
+      if (o) { pfx_of = fopen(o, "wb"); if (!pfx_of) die("prefix cache out open"); }
       if (pfx_mode) fprintf(stderr, "prefix cache: %s %d of %d positions\n",
-                            pfx_mode == 1 ? "saving" : "loading", pfx_n, NPOS); }
+                            pfx_mode == 1 ? "saving" : "loading", pfx_n, NPOS);
+      if (pfx_of) fprintf(stderr, "prefix cache: writing %d positions forward\n", NPOS); }
 
     static const int ids_all[5] = {1008, 10484, 318, 15383, 387};
     static int ids_env[NPOS];
@@ -1750,6 +1756,14 @@ int main(int argc, char **argv)
                         fread(mla_rp[t],   4, QR, pfx_f) != QR) die("prefix cache short read");
                 }
             }
+            /* loaded positions and freshly computed ones are both in place here */
+            if (pfx_of) {
+                for (int t = 0; t < NPOS; t++) {
+                    fwrite(mla_klat[t], 4, (size_t)H * QN, pfx_of);
+                    fwrite(mla_v[t],    4, (size_t)H * VH, pfx_of);
+                    fwrite(mla_rp[t],   4, QR, pfx_of);
+                }
+            }
             const float msc = 1.0f / sqrtf(192.0f);
             Qm(gbm + TLO, x1p + TLO, NACT, WG, E, H * VH);
             for (int t = TLO; t < NPOS; t++) {
@@ -1908,6 +1922,11 @@ int main(int argc, char **argv)
                     fwrite(St, 1, sizeof St, pfx_f);
                     fwrite(convbuf, 1, sizeof convbuf, pfx_f);
                 }
+            }
+            /* after the last position, so the next run resumes from NPOS */
+            if (pfx_of) {
+                fwrite(St, 1, sizeof St, pfx_of);
+                fwrite(convbuf, 1, sizeof convbuf, pfx_of);
             }
             Qm(aoutp + TLO, (const float *const *)gtf + TLO, NACT, WO, P, E);
 
@@ -2262,6 +2281,8 @@ int main(int argc, char **argv)
             memcpy(&dst[i], &u, 4);
         }
     }
+    if (pfx_of) { fclose(pfx_of); pfx_of = NULL; }   /* the next step reads it immediately */
+
     float *foldO = malloc(sizeof(float) * E);
     for (int i = 0; i < E; i++) foldO[i] = orn[i] * orp[i];
 

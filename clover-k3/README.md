@@ -28,6 +28,8 @@ are left where they are.
 |---|---|
 | `config.env` | the only file here that names a location |
 | `clover-k3.c` | the program, ~2,500 lines, no dependencies beyond libc, libm and OpenMP |
+| `gen.py` | drives the program in a loop to generate text, reusing state between tokens |
+| `proof-campaign.sh` | runs all 34 prompts both ways and gates each on the logits md5 |
 | `clover-k3-equation.md` | the equation as this program evaluates it, and where it differs from `k3-analysis/k3-model-equation.md` |
 | `clover-k3-proof.md` | the same 34 prompts through this and an independent engine: 34/34 identical answers |
 | `dump_st_model.py` | locates the five non-layer tensors in the checkpoint |
@@ -111,7 +113,7 @@ seconds, and every measurement taken before it was adopted had to be redone.
 
 ### Switches
 
-There are 33. The ones that change what the program does:
+There are 34. The ones that change what the program does:
 
 | | |
 |---|---|
@@ -122,7 +124,8 @@ There are 33. The ones that change what the program does:
 | `K3_PREFETCH` | 0 off, 4 the pipelined O_DIRECT arena (best) |
 | `K3_NREADER` | reader threads, 14 |
 | `K3_HUGE` | 1 THP, 2 hugetlb |
-| `K3_PFXSAVE` `K3_PFXLOAD` `K3_PFXN` | prefix reuse: save or reuse the state for a leading prompt, bit-exact, 2.57x at 64/48 |
+| `K3_PFXSAVE` `K3_PFXLOAD` `K3_PFXN` | prefix reuse: save or reuse the state for a leading prompt, bit-exact |
+| `K3_PFXOUT` | write a cache covering every position this run computed, including loaded ones. Saving and loading are otherwise exclusive, so without it a decode step cannot produce the cache the next step needs |
 | `K3_LOGITS` | where to write the logits |
 
 The cross-layer lookahead, added in step 32. Routing at position *t* is a pure
@@ -167,7 +170,7 @@ is bytes rather than scheduling. io_uring was tested at every depth and is
 7-11% *slower* than the `pread` threads already in use (step 35).
 
 Against an independent implementation of the same model on the same box, over
-the same 34 prompts: **34/34 identical answers, 2.95x less wall time**. The
+the same 34 prompts: **34/34 identical answers, 3.40x less wall time**. The
 full comparison, including what it does not show, is in
 [`clover-k3-proof.md`](clover-k3-proof.md).
 
