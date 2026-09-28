@@ -664,6 +664,72 @@ one: **delete the output file before every run**, so a stale artifact cannot
 pass a check. Same shape as the earlier control-clobber, where a script was
 allowed to overwrite the control before the comparison.
 
+## Step 16 - what the expert bytes already are, and one layer in SQLite
+
+### Context, read before designing anything
+
+`probe_experts.py` against the index, layer 1:
+
+```
+  expert records                494,592   92 layers x 896 x 6
+  bytes per layer               15.72 GB, identical for every layer
+  an expert's six ranges        one contiguous run, 17,547,264 B
+  experts whose six are one run 896 of 896
+  distinct per-expert sizes     exactly one
+  files a layer touches         1
+  maximal contiguous runs       1, of 5,376 records
+```
+
+**A whole layer is a single contiguous run in a single file**, and an expert
+is a single contiguous run inside that. So the schema is not a choice:
+
+```sql
+  expert(id INTEGER PRIMARY KEY, data BLOB)   -- 896 rows, one per expert
+  meta(k, v)                                  -- sizes, source, sha256, parts
+```
+
+The six sub-range offsets inside a blob are recorded in `meta`, so a reader
+that wants only `gate.w` need not fetch the whole expert. Building a store is
+a sequential read.
+
+### The finding the builder tripped over
+
+The first build **failed on its own assertion**: `expert ids are not in file
+order`. That was not a bug in the data, it was an assumption in my builder.
+Measured: **894 of 896 expert ids are out of file order**. The layer still
+tiles perfectly - the contiguity and total-bytes checks both passed - but the
+id sequence is permuted within it.
+
+It matters twice. The builder must walk **file order** to keep the read
+sequential while inserting each blob under its **own id**; and the read-back
+hash must use the same order, or it compares a permutation against a straight
+read and fails for no real reason. Both are now explicit.
+
+### The store
+
+```
+  L1   896 experts x 17,547,264 B = 15.72 GB  ->  store 15.74 GB (+0.10%)
+       write 22.9 s   verify 22.0 s   sha256 8663636d1e24f7c2   MATCH
+```
+
+**+0.10% overhead**, better than the 0.3% seen earlier, which is the 64 KB
+page size. MATCH means three hashes agree: the blobs as written, the blobs
+read back out of SQLite, and **a second independent read of the source
+range**. A store that matches only itself proves nothing.
+
+Disk 102 GB -> 87 GB.
+
+### What this forces about the gate
+
+One layer's store is 15.74 GB, so all 92 would be **1448 GB** and the box has
+87 GB. The gate runs all 92 MoE layers, so a SQLite build cannot be gated by
+converting everything.
+
+The way through is a **hybrid**: a layer reads from its store if one exists,
+and from the checkpoint if not. Then the gate can be run with one layer on
+SQLite and 91 on the checkpoint, and coverage grows as far as the disk allows.
+It also happens to be what the migration needs anyway.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
