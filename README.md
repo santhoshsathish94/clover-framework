@@ -46,7 +46,7 @@ The first thing built under it is [`clover-k3/`](clover-k3/) — the Kimi K3
 forward pass reduced to its mathematics and executed directly. It emits the
 same token as an independent implementation of the same model on all 34 prompts
 tested, in under a third of the time. What it cost and what it does not show are
-in [`clover-k3/clover-k3-proof.md`](clover-k3/clover-k3-proof.md).
+in [`clover-k3/clover-k3-comparison.md`](clover-k3/clover-k3-comparison.md).
 
 Its central principle is:
 
@@ -71,7 +71,8 @@ Supporting areas include:
 **What was built**
 
 - [`clover-k3/`](clover-k3/) — the program, how to build it, and the correctness gate it has to reproduce
-- [`clover-k3/clover-k3-proof.md`](clover-k3/clover-k3-proof.md) — 34 prompts through both implementations side by side, answers decoded and times shown
+- [`clover-k3/clover-k3-comparison.md`](clover-k3/clover-k3-comparison.md) — 34 prompts through both implementations side by side, answers decoded and times shown
+- [`clover-k3/clover-k3-proof.md`](clover-k3/clover-k3-proof.md) — what the model actually writes: all 34 prompts and the text generated for each
 - [`clover-k3/clover-k3-equation.md`](clover-k3/clover-k3-equation.md) — the equation as the program actually evaluates it, and where that differs from the written one
 
 **How it was worked out**
