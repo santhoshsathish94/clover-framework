@@ -1541,6 +1541,116 @@ The bottleneck has moved off memory:
 Over half the machine is idle, with trunk fetch and compute still strictly
 serialised - 5.12 s of fetch that no arithmetic runs underneath.
 
+## Step 28 - reading the next stage early, and why it took io_uring
+
+Step 27 left the trunk fetch at 5.17 s, fully serialised: the arithmetic
+stopped, a stage was read, the arithmetic resumed. Two measurements said that
+was avoidable.
+
+```
+  read_bytes : 53.93 GB   effective 2.88 GB/s      over the whole run
+  trunk      : 54.47 GB in 5.17 s = 10.53 GB/s     during a fetch
+```
+
+O_DIRECT bypasses the page cache, so every byte really comes off the device
+every run - and the device is idle about three quarters of the time. Reading
+harder will not help: `load_ram` tops out at 13.33 GB/s on the same files.
+The fetch has to happen *earlier*, not faster.
+
+### The schedule is knowable
+
+`K3_PROV` records every slot resolution. Across 93 layers there are exactly
+**3 distinct fetch orders**, one per layer kind, and the order is not
+ascending by slot id - it is the equation's order.
+
+| kind | stages | order |
+|---|---|---|
+| L0, KDA dense | 23 | ARN ARP MRN MRP IN_LN CQ CK CV ALOG DTB ONORM Q K V B FA FB G O POST_LN MGATE MUP MDOWN |
+| KDA MoE | 28 | ...same head... POST_LN GATE GBIAS EDOWN EUP SH1 SH3 SH2 ENORM |
+| MLA MoE | 22 | ARN ARP MRN MRP IN_LN QA QB KA KB G O QAN KAN POST_LN GATE GBIAS EDOWN EUP SH1 SH3 SH2 ENORM |
+
+So stage n+1 is known before stage n is needed. `layer_order()` derives it
+from the same `isMLA` expression the layer body uses, rather than a second
+source of truth.
+
+### A reader thread cannot work on this box
+
+`K3_RA=1`: a pthread walks the order, reads each stage into its buffer, and
+`slot_ptr` waits only for the stage it wants. It hid 3.31 s of a 5.93 s
+fetch - and the run got slower.
+
+| reader threads | wall | trunk rate |
+|---|---|---|
+| 1 | 33.02 | 2.68 GB/s |
+| 2 | 24.49 | 4.77 GB/s |
+| 4 | 20.68 | 7.25 GB/s |
+| 8 | 19.14 | 9.00 GB/s |
+| none | **18.59** | **10.67 GB/s** |
+
+The reason is CPU, not I/O:
+
+```
+  no read-ahead   116.45 user  19.21 sys
+  RA, 8 threads   167.14 user  34.26 sys      +65.7 CPU-seconds, -0.55 s wall
+```
+
+One thread cannot reach the device, eight can, and there are none to spare -
+16 compute threads and 14 expert readers already share 16 cores. Every
+variant that moved threads from compute to the reader was worse still
+(omp12/nt4 21.23 s, omp14/nt4 20.94 s).
+
+A side finding worth keeping: `OMP_WAIT_POLICY=passive` drops user from
+116.62 to 64.34 with byte-identical output. **Nearly half of all "used" CPU
+in this arc is libgomp spinning at barriers.** It costs 0.35 s of wall to
+remove, so the spin is buying latency - but any utilisation figure quoted
+from `user` time in earlier steps was overstated by roughly 2x.
+
+### io_uring: the same depth with no threads
+
+Raw syscalls against `linux/io_uring.h`, so the build stays one file against
+`-lm -lsqlite3`. The layer body is serial, so the whole thing needs no locks:
+submit whole stages at layer start and after each `slot_drop` frees budget,
+reap completions only when a stage is actually wanted.
+
+**It passed the gate only on the second attempt, and the first attempt looked
+like a triumph.** 11.51 s, a 38% win - and md5 `3542ac0e`, then `397b1ad3` on
+the next run. Two different wrong answers. Three bugs:
+
+1. **278 stages are smaller than 4096 bytes** (512x138, 1024x24, 3072x24,
+   3584x92). For those the O_DIRECT-aligned length is zero, so no read was
+   ever issued - but `sbuf[s]` had already been assigned, and `slot_ptr`
+   handed the operator raw `malloc` memory. The run's own output said
+   `278 never submitted` and I had read past it.
+2. **Short reads were not handled.** `IORING_OP_READ` may return less than
+   asked; only `res < 0` was checked.
+3. **A ring-full abandon left its SQEs queued**, because `ur.pending` was not
+   rolled back.
+
+A faster wrong answer is the most dangerous result there is. The only reason
+it was caught is that every run is gated on the logits md5, not eyeballed.
+
+### What it buys
+
+Three runs each, all PASS md5 `23d162dcefb18211a7540ef12948f1eb`.
+
+| mode | wall, 3 reps | mean | user | sys | waited on fetch |
+|---|---|---|---|---|---|
+| none | 18.59 / 18.60 / 18.63 | 18.607 | 114.97 | 19.73 | 5.15 s serial |
+| **io_uring 512 MB** | 17.72 / 17.65 / 17.65 | **17.673** | 115.51 | 20.51 | **0.01** |
+| io_uring 2048 MB | 17.54 / 17.88 / 17.60 | **17.673** | 113.59 | 20.51 | 0.02 |
+| reader thread | 18.94 / 18.99 / 19.14 | 19.023 | 166.48 | 35.32 | 2.53 |
+
+**-0.934 s, -5.0%, reproducible to 0.12 s, at no CPU cost.** 1,983 of 2,455
+stages are ready before the operator asks; the fetch is off the critical path
+entirely, 5.15 s of waiting down to 0.01 s.
+
+The honest part: **removing 5.15 s of fetch bought 0.93 s of wall.** The rest
+was already being overlapped with expert I/O stalls, and the trunk read-ahead
+now competes with the expert readers for the same device. Budget past 512 MB
+buys nothing.
+
+`K3_RA` defaults to 0, so the committed default is unchanged.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and

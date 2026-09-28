@@ -46,6 +46,8 @@
 #include <sys/stat.h>
 #include <sys/resource.h>
 #include <pthread.h>
+#include <linux/io_uring.h>
+#include <sys/syscall.h>
 #include <sched.h>
 #include <time.h>
 #include <sqlite3.h>
@@ -999,12 +1001,347 @@ static void raw_load_map(void)
             raw_bytes / 1e9, nst, raw_secs);
 }
 
+/* ------------------------------------------- reading the next stage early */
+/* Measured with K3_PROV: 93 layers resolve their stages in exactly 3 orders,
+   one per layer kind, and every (layer, slot) is resolved once. So stage n+1
+   is known before stage n is needed. Measured with /proc/self/io: the device
+   moves 10.53 GB/s during a fetch but averages 2.88 GB/s over the run - it is
+   idle, waiting for arithmetic that is waiting for it.
+
+   The thread version of this (K3_RA=1) is a measured loss: a reader needs
+   eight threads to reach the device, and on 16 cores already running 16
+   compute threads and 14 expert readers there are none to take. io_uring
+   (K3_RA=2) buys the same depth with no threads at all - raw syscalls, so
+   the build stays one file against -lm -lsqlite3. */
+static const int ORD_DENSE[] = {
+    S_ARN, S_ARP, S_MRN, S_MRP, S_IN_LN, S_CQ, S_CK, S_CV, S_ALOG, S_DTB, S_ONORM,
+    S_Q, S_K, S_V, S_B, S_FA, S_FB, S_G, S_O, S_POST_LN, S_MGATE, S_MUP, S_MDOWN };
+static const int ORD_KDA[] = {
+    S_ARN, S_ARP, S_MRN, S_MRP, S_IN_LN, S_CQ, S_CK, S_CV, S_ALOG, S_DTB, S_ONORM,
+    S_Q, S_K, S_V, S_B, S_FA, S_FB, S_G, S_O, S_POST_LN,
+    S_GATE, S_GBIAS, S_EDOWN, S_EUP, S_SH1, S_SH3, S_SH2, S_ENORM };
+static const int ORD_MLA[] = {
+    S_ARN, S_ARP, S_MRN, S_MRP, S_IN_LN, S_QA, S_QB, S_KA, S_KB, S_G, S_O,
+    S_QAN, S_KAN, S_POST_LN,
+    S_GATE, S_GBIAS, S_EDOWN, S_EUP, S_SH1, S_SH3, S_SH2, S_ENORM };
+
+static void layer_order(int L, const int **o, int *n)
+{
+    const int isMLA = ((L % 4) == 3 && L <= 91) || (L == 92);
+    if (L == 0)   { *o = ORD_DENSE; *n = (int)(sizeof ORD_DENSE / sizeof *ORD_DENSE); }
+    else if (isMLA) { *o = ORD_MLA; *n = (int)(sizeof ORD_MLA / sizeof *ORD_MLA); }
+    else          { *o = ORD_KDA;   *n = (int)(sizeof ORD_KDA / sizeof *ORD_KDA); }
+}
+
+static int             ra_on;
+static pthread_t       ra_th;
+static pthread_mutex_t ra_mx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t  ra_cv = PTHREAD_COND_INITIALIZER;
+static const int      *ra_ord;
+static int   ra_n, ra_L = -1, ra_i, ra_go, ra_quit;
+static int   ra_busy = -1;            /* the slot the reader is inside, or -1 */
+static int   sbuf_ready[MAXSLOT];
+static int   ra_claim[MAXSLOT];       /* the consumer is filling this one itself */
+static int   ra_nt = TPARN;
+static int64_t ra_budget = 512ll << 20;
+static int64_t ra_ahead;              /* read but not yet consumed */
+static double  ra_wait, ra_secs;
+static int64_t ra_hit, ra_late, ra_cold, ra_bytes;
+
+/* The consumer never waits on a stage the reader has not started, so a reader
+   paused at the budget can never deadlock it - worst case is today's inline
+   read. */
+static void *ra_main(void *unused)
+{
+    (void)unused;
+    pthread_mutex_lock(&ra_mx);
+    for (;;) {
+        while (!ra_quit && (!ra_go || ra_i >= ra_n || ra_ahead >= ra_budget))
+            pthread_cond_wait(&ra_cv, &ra_mx);
+        if (ra_quit) break;
+
+        const int s = ra_ord[ra_i];
+        const int L = ra_L;
+        const Slot *sl = &slots[(size_t)L * n_slots + s];
+        if (!sl->present || sbuf[s] || ra_claim[s]) { ra_i++; continue; }
+        ra_busy = s;
+        pthread_mutex_unlock(&ra_mx);
+
+        unsigned char *b = NULL;
+        if (posix_memalign((void **)&b, 4096, (size_t)sl->nbytes)) die("read-ahead buffer");
+        const double t0 = now_s();
+        raw_read(L, s, b, sl->nbytes, ra_nt);
+        const double dt = now_s() - t0;
+        if (trc) trace(TR_FETCH, L, s, -1, t0, sl->nbytes);
+
+        pthread_mutex_lock(&ra_mx);
+        sbuf[s] = b; sbuf_n[s] = (size_t)sl->nbytes; sbuf_used[s] = 0;
+        sbuf_ready[s] = 1;
+        ra_ahead += sl->nbytes;
+        ra_bytes += sl->nbytes;
+        ra_secs += dt;
+        tk_secs += dt; tk_bytes += sl->nbytes;
+        tk_live += sl->nbytes;
+        if (tk_live > tk_peak) tk_peak = tk_live;
+        ra_busy = -1;
+        ra_i++;
+        pthread_cond_broadcast(&ra_cv);
+    }
+    pthread_mutex_unlock(&ra_mx);
+    return NULL;
+}
+
+static void ra_layer_begin(int L)
+{
+    if (!ra_on) return;
+    pthread_mutex_lock(&ra_mx);
+    layer_order(L, &ra_ord, &ra_n);
+    ra_L = L; ra_i = 0; ra_go = 1;
+    for (int s = 0; s < MAXSLOT; s++) { sbuf_ready[s] = 0; ra_claim[s] = 0; }
+    pthread_cond_broadcast(&ra_cv);
+    pthread_mutex_unlock(&ra_mx);
+}
+
+static void ra_layer_end(void)
+{
+    if (!ra_on) return;
+    pthread_mutex_lock(&ra_mx);
+    ra_go = 0;
+    while (ra_busy >= 0) pthread_cond_wait(&ra_cv, &ra_mx);
+    pthread_mutex_unlock(&ra_mx);
+}
+
+/* ------------------------------------------------- the same thing, no threads */
+typedef struct {
+    int fd;
+    unsigned *sq_head, *sq_tail, *sq_mask, *sq_array;
+    struct io_uring_sqe *sqes;
+    unsigned *cq_head, *cq_tail, *cq_mask;
+    struct io_uring_cqe *cqes;
+    void *sqr, *cqr;
+    size_t sqr_n, cqr_n, sqe_n;
+    unsigned depth, pending;
+} Ring;
+
+static Ring   ur;
+static int    ur_left[MAXSLOT];      /* chunks still in flight for this slot */
+static int    ur_fd[2 * MAXSLOT];    /* [s] O_DIRECT, [s+MAXSLOT] buffered tail */
+static int    ur_tail_len[MAXSLOT];  /* the sub-4096 remainder O_DIRECT cannot take */
+static int64_t ur_aligned[MAXSLOT];  /* the part O_DIRECT does carry */
+static int    ur_cdone[MAXSLOT][64]; /* bytes landed per chunk: a read may be short */
+static double ur_t0[MAXSLOT];
+static int    ur_i;                  /* how far down the layer order we have submitted */
+static int64_t ur_inflight;          /* bytes submitted or ready but not consumed */
+static int64_t ur_bytes;
+static double  ur_wait, ur_secs;
+static int64_t ur_hit, ur_late, ur_cold;
+
+static int uring_init(unsigned entries)
+{
+    struct io_uring_params p;
+    memset(&p, 0, sizeof p);
+    ur.fd = (int)syscall(__NR_io_uring_setup, entries, &p);
+    if (ur.fd < 0) return -1;
+    ur.sqr_n = p.sq_off.array + p.sq_entries * sizeof(unsigned);
+    ur.cqr_n = p.cq_off.cqes + p.cq_entries * sizeof(struct io_uring_cqe);
+    if (p.features & IORING_FEAT_SINGLE_MMAP) {
+        if (ur.cqr_n > ur.sqr_n) ur.sqr_n = ur.cqr_n;
+        ur.cqr_n = ur.sqr_n;
+    }
+    ur.sqr = mmap(NULL, ur.sqr_n, PROT_READ | PROT_WRITE,
+                  MAP_SHARED | MAP_POPULATE, ur.fd, IORING_OFF_SQ_RING);
+    if (ur.sqr == MAP_FAILED) return -1;
+    ur.cqr = (p.features & IORING_FEAT_SINGLE_MMAP) ? ur.sqr
+           : mmap(NULL, ur.cqr_n, PROT_READ | PROT_WRITE,
+                  MAP_SHARED | MAP_POPULATE, ur.fd, IORING_OFF_CQ_RING);
+    if (ur.cqr == MAP_FAILED) return -1;
+    ur.sqe_n = p.sq_entries * sizeof(struct io_uring_sqe);
+    ur.sqes = mmap(NULL, ur.sqe_n, PROT_READ | PROT_WRITE,
+                   MAP_SHARED | MAP_POPULATE, ur.fd, IORING_OFF_SQES);
+    if (ur.sqes == MAP_FAILED) return -1;
+    ur.sq_head  = (unsigned *)((char *)ur.sqr + p.sq_off.head);
+    ur.sq_tail  = (unsigned *)((char *)ur.sqr + p.sq_off.tail);
+    ur.sq_mask  = (unsigned *)((char *)ur.sqr + p.sq_off.ring_mask);
+    ur.sq_array = (unsigned *)((char *)ur.sqr + p.sq_off.array);
+    ur.cq_head  = (unsigned *)((char *)ur.cqr + p.cq_off.head);
+    ur.cq_tail  = (unsigned *)((char *)ur.cqr + p.cq_off.tail);
+    ur.cq_mask  = (unsigned *)((char *)ur.cqr + p.cq_off.ring_mask);
+    ur.cqes     = (struct io_uring_cqe *)((char *)ur.cqr + p.cq_off.cqes);
+    ur.depth    = p.sq_entries;
+    return 0;
+}
+
+static struct io_uring_sqe *ur_sqe(void)
+{
+    const unsigned tail = __atomic_load_n(ur.sq_tail, __ATOMIC_RELAXED) + ur.pending;
+    const unsigned head = __atomic_load_n(ur.sq_head, __ATOMIC_ACQUIRE);
+    if (tail - head >= ur.depth) return NULL;
+    const unsigned idx = tail & *ur.sq_mask;
+    ur.sq_array[idx] = idx;
+    ur.pending++;
+    struct io_uring_sqe *s = &ur.sqes[idx];
+    memset(s, 0, sizeof *s);
+    return s;
+}
+
+static void ur_submit(void)
+{
+    if (!ur.pending) return;
+    __atomic_store_n(ur.sq_tail,
+                     __atomic_load_n(ur.sq_tail, __ATOMIC_RELAXED) + ur.pending,
+                     __ATOMIC_RELEASE);
+    const unsigned n = ur.pending;
+    ur.pending = 0;
+    if (syscall(__NR_io_uring_enter, ur.fd, n, 0u, 0u, NULL, 0) < 0) die("io_uring_enter");
+}
+
+/* A stage whose bytes have all landed: take the sub-block tail, which O_DIRECT
+   will not carry, and hand the buffer over. */
+static void ur_finish(int s)
+{
+    const int n = ur_tail_len[s];
+    if (n > 0) {
+        const size_t off = sbuf_n[s] - (size_t)n;
+        int fb = ur_fd[s + MAXSLOT];
+        for (int got = 0; got < n; ) {
+            const ssize_t r = pread(fb, sbuf[s] + off + got, (size_t)(n - got), (off_t)(off + got));
+            if (r <= 0) die("stage tail read");
+            got += (int)r;
+        }
+    }
+    close(ur_fd[s]);
+    if (ur_fd[s + MAXSLOT] >= 0) close(ur_fd[s + MAXSLOT]);
+    ur_fd[s] = ur_fd[s + MAXSLOT] = -1;
+    sbuf_ready[s] = 1;
+    /* in flight, not in the way: this span overlaps the arithmetic, so adding
+       it to tk_secs would report a cost nobody paid */
+    ur_secs += now_s() - ur_t0[s];
+    tk_bytes += (int64_t)sbuf_n[s];
+    tk_live += sbuf_n[s];
+    if (tk_live > tk_peak) tk_peak = tk_live;
+    if (trc) trace(TR_FETCH, cur_L, s, -1, ur_t0[s], (int64_t)sbuf_n[s]);
+}
+
+static int ur_reap(int wait)
+{
+    if (wait && syscall(__NR_io_uring_enter, ur.fd, 0u, 1u,
+                        (unsigned)IORING_ENTER_GETEVENTS, NULL, 0) < 0) die("io_uring wait");
+    unsigned head = __atomic_load_n(ur.cq_head, __ATOMIC_RELAXED);
+    int got = 0, again = 0;
+    for (;;) {
+        const unsigned tail = __atomic_load_n(ur.cq_tail, __ATOMIC_ACQUIRE);
+        if (head == tail) break;
+        const struct io_uring_cqe *c = &ur.cqes[head & *ur.cq_mask];
+        const int s = (int)(c->user_data & 0xff);
+        const int ch = (int)((c->user_data >> 8) & 0xffff);
+        if (c->res < 0) die("io_uring read");
+        const int64_t off = (int64_t)ch * RAWCH;
+        const int64_t len = (off + (int64_t)RAWCH <= ur_aligned[s]) ? (int64_t)RAWCH
+                                                                    : ur_aligned[s] - off;
+        ur_cdone[s][ch] += c->res;
+        if (ur_cdone[s][ch] < len) {
+            /* a short read is legal; finish this chunk before counting it */
+            struct io_uring_sqe *e = ur_sqe();
+            if (!e) die("io_uring ring full on resubmit");
+            e->opcode = IORING_OP_READ;
+            e->fd = ur_fd[s];
+            e->off = (unsigned long long)(off + ur_cdone[s][ch]);
+            e->addr = (unsigned long long)(uintptr_t)(sbuf[s] + off + ur_cdone[s][ch]);
+            e->len = (unsigned)(len - ur_cdone[s][ch]);
+            e->user_data = (unsigned long long)s | ((unsigned long long)ch << 8);
+            again = 1;
+        } else if (--ur_left[s] == 0) {
+            ur_finish(s);
+        }
+        head++; got++;
+    }
+    __atomic_store_n(ur.cq_head, head, __ATOMIC_RELEASE);
+    if (again) ur_submit();
+    return got;
+}
+
+/* Submit whole stages, in the order the layer will ask for them, until the
+   budget is spent or the ring is full. */
+static void ur_pump(void)
+{
+    while (ur_i < ra_n && ur_inflight < ra_budget) {
+        const int s = ra_ord[ur_i];
+        const Slot *sl = &slots[(size_t)ra_L * n_slots + s];
+        if (!sl->present || sbuf[s] || ur_left[s] > 0) { ur_i++; continue; }
+
+        const int64_t nb = sl->nbytes;
+        const int64_t aligned = nb & ~(int64_t)4095;
+        const int64_t nch = (aligned + RAWCH - 1) / RAWCH;
+        /* under one block there is nothing O_DIRECT can carry; the inline path
+           takes these, and forgetting that handed the operator raw malloc */
+        if (nch == 0) { ur_i++; continue; }
+        if (nch > 64 || nch + 1 > (int64_t)ur.depth) break;
+
+        char p[1024];
+        raw_path(p, sizeof p, ra_L, s);
+        const int fd = open(p, O_RDONLY | O_DIRECT);
+        if (fd < 0) break;
+        unsigned char *b = NULL;
+        if (posix_memalign((void **)&b, 4096, (size_t)nb)) die("stage buffer");
+
+        const unsigned save = ur.pending;
+        int issued = 0;
+        for (int64_t c = 0; c < nch; c++) {
+            const int64_t off = c * RAWCH;
+            const int64_t len = (off + (int64_t)RAWCH <= aligned) ? (int64_t)RAWCH : aligned - off;
+            struct io_uring_sqe *e = ur_sqe();
+            if (!e) break;
+            e->opcode = IORING_OP_READ;
+            e->fd = fd;
+            e->off = (unsigned long long)off;
+            e->addr = (unsigned long long)(uintptr_t)(b + off);
+            e->len = (unsigned)len;
+            e->user_data = (unsigned long long)s | ((unsigned long long)c << 8);
+            ur_cdone[s][c] = 0;
+            issued++;
+        }
+        if (issued < nch) { ur.pending = save; close(fd); free(b); break; }
+
+        sbuf[s] = b; sbuf_n[s] = (size_t)nb; sbuf_used[s] = 0;
+        ur_fd[s] = fd;
+        ur_fd[s + MAXSLOT] = (nb > aligned) ? open(p, O_RDONLY) : -1;
+        ur_tail_len[s] = (int)(nb - aligned);
+        ur_aligned[s] = aligned;
+        ur_left[s] = issued;
+        ur_t0[s] = now_s();
+        ur_inflight += nb;
+        ur_bytes += nb;
+        ur_i++;
+    }
+    ur_submit();
+}
+
+static void ur_layer_begin(int L)
+{
+    layer_order(L, &ra_ord, &ra_n);
+    ra_L = L; ur_i = 0;
+    for (int s = 0; s < MAXSLOT; s++) sbuf_ready[s] = 0;
+    ur_pump();
+}
+
+static void ur_layer_end(void)
+{
+    for (;;) {
+        int busy = 0;
+        for (int s = 0; s < MAXSLOT; s++) if (ur_left[s] > 0) busy = 1;
+        if (!busy) break;
+        ur_reap(1);
+    }
+}
+
 /* The trunk is a stream, not a resident table: measured, every one of the
    1159 (layer, slot) pairs a run resolves is resolved exactly once. So a
    layer's slots arrive when the layer runs and leave when it ends, and the
    reads happen under the arithmetic instead of before it. */
 static void trunk_layer_in(int L)
 {
+    if (traw == 1 && ra_on == 1) ra_layer_begin(L);
+    if (traw == 1 && ra_on == 2) ur_layer_begin(L);
     if (pin_on || traw) return;
     char rel[64];
     snprintf(rel, sizeof rel, "trunk/L%02d.db", L);
@@ -1014,6 +1351,8 @@ static void trunk_layer_in(int L)
 
 static void trunk_layer_out(int L)
 {
+    if (traw == 1 && ra_on == 1) ra_layer_end();
+    if (traw == 1 && ra_on == 2) ur_layer_end();
     if (!pin_on && traw < 2) {
         for (int s = 0; s < MAXSLOT; s++) slot_drop(s);
         if (!traw) {
@@ -1407,6 +1746,32 @@ static const unsigned char *slot_ptr(int L, int s)
     if (prov_fp) prov_slot(L, s, "ptr");
     if (pin_on) return pinbuf[(size_t)L * MAXSLOT + s];
     if (traw >= 2) return rawp[(size_t)L * MAXSLOT + s];
+    if (ra_on == 2 && traw == 1) {
+        if (sbuf_ready[s]) { ur_hit++; return sbuf[s]; }
+        if (ur_left[s] > 0) {
+            const double t0 = now_s();
+            while (!sbuf_ready[s]) ur_reap(1);
+            ur_wait += now_s() - t0; ur_late++;
+            return sbuf[s];
+        }
+        ur_cold++;
+    }
+    if (ra_on == 1 && traw == 1) {
+        pthread_mutex_lock(&ra_mx);
+        if (sbuf_ready[s]) { ra_hit++; unsigned char *p = sbuf[s];
+                             pthread_mutex_unlock(&ra_mx); return p; }
+        if (ra_busy == s) {
+            const double t0 = now_s();
+            while (!sbuf_ready[s]) pthread_cond_wait(&ra_cv, &ra_mx);
+            ra_wait += now_s() - t0; ra_late++;
+            unsigned char *p = sbuf[s];
+            pthread_mutex_unlock(&ra_mx);
+            return p;
+        }
+        ra_cold++;
+        ra_claim[s] = 1;      /* tell the reader to skip it, or both will fill it */
+        pthread_mutex_unlock(&ra_mx);
+    }
     if (!sbuf[s]) {
         if (!traw && L != tdb_L) die("slot from a layer that is not open");
         /* O_DIRECT refuses a destination that is not block aligned, and a
@@ -1423,6 +1788,8 @@ static const unsigned char *slot_ptr(int L, int s)
         const double t0 = now_s();
         if (traw) raw_read(L, s, sbuf[s], sl->nbytes, TPARN);
         else      trunk_read(s, sbuf[s], sl->nbytes);
+        /* tk_* are shared with the read-ahead thread from here on */
+        if (ra_on == 1 && traw == 1) pthread_mutex_lock(&ra_mx);
         tk_secs += now_s() - t0;
         if (trc) {
             const int64_t d = io_read_bytes() - io0;
@@ -1433,12 +1800,14 @@ static const unsigned char *slot_ptr(int L, int s)
         tk_live += sbuf_n[s];
         if (tk_live > tk_peak) tk_peak = tk_live;
         cache_warm(sbuf[s], (size_t)sl->nbytes);
+        if (ra_on == 1 && traw == 1) pthread_mutex_unlock(&ra_mx);
     }
     return sbuf[s];
 }
 
 /* The operator that asked for it has returned, so it is dead. Measured: no
-   (layer, slot) is ever resolved twice, so this can never cause a re-fetch. */
+   (layer, slot) is ever resolved twice, so this can never cause a re-fetch.
+   Freeing is also what lets the reader move past its budget. */
 static void slot_drop(int s)
 {
     if (pin_on || !sbuf[s]) return;
@@ -1447,6 +1816,26 @@ static void slot_drop(int s)
                 (s < N_SLOTN) ? SLOTN[s] : "?", sbuf_n[s], sbuf_used[s]);
     need_fetch += (int64_t)sbuf_n[s];
     need_used  += (int64_t)sbuf_used[s];
+    if (ra_on == 2 && traw == 1) {
+        tk_live -= sbuf_n[s];
+        if (sbuf_ready[s]) { ur_inflight -= (int64_t)sbuf_n[s]; sbuf_ready[s] = 0; }
+        ur_left[s] = 0;
+        free(sbuf[s]);
+        sbuf[s] = NULL; sbuf_n[s] = 0; sbuf_used[s] = 0;
+        ur_pump();          /* the budget just freed up, so use it */
+        return;
+    }
+    if (ra_on == 1 && traw == 1) {
+        pthread_mutex_lock(&ra_mx);
+        tk_live -= sbuf_n[s];
+        if (sbuf_ready[s]) { ra_ahead -= (int64_t)sbuf_n[s]; sbuf_ready[s] = 0; }
+        ra_claim[s] = 0;
+        free(sbuf[s]);
+        sbuf[s] = NULL; sbuf_n[s] = 0; sbuf_used[s] = 0;
+        pthread_cond_broadcast(&ra_cv);
+        pthread_mutex_unlock(&ra_mx);
+        return;
+    }
     tk_live -= sbuf_n[s];
     free(sbuf[s]);
     sbuf[s] = NULL;
@@ -2134,6 +2523,15 @@ int main(int argc, char **argv)
     if (traw && !RAWDIR) die("K3_RAWMODE needs K3_RAW");
     if (pin_on && traw) die("K3_PIN and K3_RAWMODE are two answers to one question");
     { const char *v = getenv("K3_CPF"); cpf = v ? atoi(v) : 0; }
+    { const char *v = getenv("K3_RA"); ra_on = (traw == 1) ? (v ? atoi(v) : 0) : 0; }
+    { const char *v = getenv("K3_RABUDGET"); if (v) ra_budget = (int64_t)atoll(v) << 20; }
+    { const char *v = getenv("K3_RANT"); if (v) ra_nt = atoi(v); }
+    if (ra_on == 1 && pthread_create(&ra_th, NULL, ra_main, NULL)) die("read-ahead thread");
+    if (ra_on == 2) {
+        for (int s = 0; s < 2 * MAXSLOT; s++) ur_fd[s] = -1;
+        const char *v = getenv("K3_RADEPTH");
+        if (uring_init((unsigned)(v ? atoi(v) : 512))) die("io_uring unavailable");
+    }
     if (traw == 2) raw_load_ram();
     else if (traw == 3) raw_load_map();
     {
@@ -2954,6 +3352,18 @@ int main(int argc, char **argv)
         printf("cache warm            : mode %d  %.2f GB walked in %.2f s (%.2f GB/s)\n",
                cpf, cpf_bytes / 1e9, cpf_secs,
                cpf_secs > 0 ? cpf_bytes / 1e9 / cpf_secs : 0.0);
+    if (ra_on == 1)
+        printf("read-ahead            : %.2f GB early in %.2f thread-s   budget %lld MB\n"
+               "                        %lld ready on arrival, %lld arrived late, %lld never started\n"
+               "                        %.2f s spent waiting = the part it did not hide\n",
+               ra_bytes / 1e9, ra_secs, (long long)(ra_budget >> 20),
+               (long long)ra_hit, (long long)ra_late, (long long)ra_cold, ra_wait);
+    if (ra_on == 2)
+        printf("read-ahead, io_uring  : %.2f GB submitted early   budget %lld MB  depth %u\n"
+               "                        %lld ready on arrival, %lld arrived late, %lld never submitted\n"
+               "                        %.2f s in flight under the arithmetic, %.2f s of it waited on\n",
+               ur_bytes / 1e9, (long long)(ra_budget >> 20), ur.depth,
+               (long long)ur_hit, (long long)ur_late, (long long)ur_cold, ur_secs, ur_wait);
     printf("  fetched vs used     : %.2f GB fetched, %.2f GB used, %.2f GB never read (%.2f%%)\n",
            need_fetch / 1e9, need_used / 1e9, (need_fetch - need_used) / 1e9,
            need_fetch ? 100.0 * (need_fetch - need_used) / need_fetch : 0.0);
