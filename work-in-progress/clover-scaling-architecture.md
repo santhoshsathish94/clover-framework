@@ -2163,6 +2163,101 @@ stays in, defaulted off, as the evidence.
 
 The constraint remains disk bytes.
 
+## Step 35 - the 32 threads are real, io_uring is slower, and the ceiling is 14.6 GB/s
+
+Two claims to test: the CPU has 32 threads and not 16, and the reader side
+should use io_uring read-ahead. The first is correct. The second is refuted by
+measurement on this device, before any code was written.
+
+### The spare capacity is real
+
+```
+User time    105.85 s
+System time   11.47 s
+Percent CPU       1363%      = 13.63 of 32 logical CPUs busy
+```
+
+`mpstat` per CPU during a run: cpu18, 21, 22, 23 and 30 are **100% idle**, and
+cpu10, 24, 27, 28 are above 96% idle. The busy ones sit near 73%. Only cpu0 and
+cpu16 carry real system time, 38% and 44% - that is the block layer and
+completion work, concentrated on one SMT pair. **More than half the machine is
+doing nothing.** The observation was right.
+
+### Every way of spending it measured worse
+
+```
+baseline: OMP_PLACES=cores, 16 threads, 14 readers    7.26 / 7.26   X 4.35  Q 1.91
+24 readers                                            7.32          X 4.48
+28 readers                                            7.39          X 4.63
+compute pinned cpu0-15, readers pushed to 16-31       8.96 / 8.92   X 7.03  Q 1.38
+16 compute threads inside CCD0 (0-7,16-23), SMT      10.06          X 7.93
+SMT for compute, 20 / 24 / 32 threads (step 33)       9.72 / 9.36 / 9.24
+```
+
+All PASS `23d162dc`. The separation experiment is the interesting one and it is
+reproducible: pinning compute to the first sibling and letting the readers have
+the second makes **Q 0.53 s faster and X 2.7 s slower**, net 1.7 s worse. SMT
+siblings share L1 and L2, and X holds 0.35 MiB per thread in a 1 MiB L2. Put
+anything on the sibling and that working set halves. The idle logical CPUs are
+idle because using them costs more than it returns, not because nothing thought
+to use them.
+
+### io_uring, measured on the real device before writing any of it
+
+`fio` against `trunk.bin`, read-only, O_DIRECT, 5.25 MB random reads - the same
+shape as an expert tensor:
+
+```
+psync x8                  13.6 GiB/s   sys 11.02%
+psync x14                 13.6 GiB/s   sys  6.23%     <- what the program does
+psync x20                 13.6 GiB/s   sys  4.55%
+psync x24                 13.6 GiB/s   sys  3.81%
+psync x28                 13.6 GiB/s   sys  3.23%
+psync x32                 13.6 GiB/s   sys  2.85%
+
+io_uring x4  qd32         12.6 GiB/s   sys 22.77%
+io_uring x14 qd8          12.2 GiB/s   sys  6.45%
+io_uring x4  qd32 sqpoll  12.6 GiB/s   sys  0.00%
+io_uring x8  qd16 sqpoll  12.1 GiB/s   sys  0.00%
+```
+
+**io_uring is 7-11% slower at every depth tried, and without SQPOLL it costs
+3.6x the system CPU.** The `sys 0.00%` under SQPOLL is not free - a kernel
+polling thread is burning a core whose time is not charged to the process, so
+that row understates its cost rather than showing an absence of it.
+
+psync is already flat at the ceiling from 8 threads upward. There is no
+submission-side problem to solve.
+
+### The number that matters
+
+**The device ceiling is 13.6 GiB/s = 14.6 GB/s**, measured with the program's
+own access pattern. The run achieves 13.79 GB/s effective, which is **94% of
+it**. The remaining headroom is 99.86 GB at 14.6 GB/s = 6.84 s against a
+7.25 s wall - **0.41 s, and only if compute never blocks**, which it would,
+because compute is 6.54 s.
+
+`max_hw_sectors_kb` is 128 on both drives, so each 5.25 MB read is split into
+42 requests and cannot be made larger. The drives are KIOXIA KCD8XRUG1T92 in
+RAID1, each delivering 6.8 GB/s at 82-86% util while `md2` reports 98-99%; the
+array figure was hiding the per-drive headroom, and the per-drive headroom is
+what the fio ceiling already accounts for.
+
+### A measurement hazard that nearly cost a false result
+
+The first affinity table was run straight after the fio sweep. Row A read
+**13.97 s with Q at 8.96 s** instead of 1.91. fio had read `trunk.bin` with
+O_DIRECT and the resulting memory pressure evicted the 51 GB trunk from page
+cache, so Q was faulting it back in. Warmed and re-run, the baseline is 7.26 s
+in both reps. **Any heavy I/O on the box invalidates the next run**; the tell
+is Q, which should be 1.90-1.93 s and is otherwise reading from disk.
+
+Also corrected: the first fio pass was parsed with `--minimal` and reported
+psync at 1.44 GB/s, which would have made io_uring look like a large win. The
+field indices were wrong. The full output says 14.6 GB/s. The contradiction
+with the program's own 13.5 GB/s is what prompted the re-check - a number that
+disagrees with a known measurement is a reason to re-measure, not to report.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
