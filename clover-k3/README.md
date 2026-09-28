@@ -32,6 +32,7 @@ are left where they are.
 | `proof-campaign.sh` | runs all 34 prompts both ways and gates each on the logits md5 |
 | `clover-k3-equation.md` | the equation as this program evaluates it, and where it differs from `k3-analysis/k3-model-equation.md` |
 | `clover-k3-proof.md` | all 34 prompts, the text the model wrote for each, and the comparison against an independent engine |
+| `clover-k3-scale.md` | what the arithmetic actually costs, why more GPU is the wrong lever, and the shape the structure suggests |
 | `dump_st_model.py` | locates the five non-layer tensors in the checkpoint |
 | `dump_eqidx.py` | flattens trunk.json, st_model.json and the shard headers into one binary index |
 | `make_slice.py` | builds a single-layer slice for the decomposition work |
