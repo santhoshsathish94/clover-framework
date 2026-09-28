@@ -3571,7 +3571,7 @@ every change could be compared against it rather than trusted.
 | A3 | top-k was sixteen linear maxima, 84.4M comparisons a run | one pass, tie semantics preserved | **0.054 to 0.012 s, 4.5x** |
 | A4 | the KDA delta rule made four passes over a 64 KB `St[h]` | fused to two, same i and j order | 0.108 to 0.100 s |
 | B5 | ~176,000 malloc/free pairs a run | static pools, **attention only** | see below |
-| — | the final residual add was serial | `collapse(2)` parallel | small |
+| -- | the final residual add was serial | `collapse(2)` parallel | small |
 
 A3's tie semantics matter: section 4.2 specifies "repeated maximum with a strict `>`, so
 ties go to the lowest index". Scanning ascending and inserting only on a strict `>`
