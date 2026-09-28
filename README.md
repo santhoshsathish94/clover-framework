@@ -62,53 +62,7 @@ The implementation follows the Clover cycle:
 Context → Direction → Execution → Outcome → Growth
 ```
 
-### Where this direction came from
-
-We started with our own question: **how much of what we assume about running AI is really about the model, and how much is just about how we build everything around it?**
-
-Rather than argue it, we ran something. Using Fareed Khan's [`kimi-k3-in-c`](https://github.com/FareedKhan-dev/kimi-k3-in-c), which streams a model off disk instead of holding it in memory, we ran a 2.78-trillion-parameter model on a single rented CPU machine. Then we shrank it twice to see what would happen. The first shrink sped it up exactly as we had predicted. The second barely helped — because by then the processor, not the memory, had become the limit. The engine is his work under Apache-2.0 and stays his; Clover does not claim it.
-
-That second result changed the question again. It showed that the wall was not simply the size of the model; it was where the work was happening. On this CPU, moving the always-used trunk from 8-bit to 4-bit saved almost no time because the processor spent the saving unpacking it. That does not tell us that 4-bit is a dead end. It tells us that the answer may depend on the machine.
-
-The new GPU server changes the experiment. The GEX131-1 has enough total local storage to hold the model across its two NVMe drives, so we no longer need to treat the checkpoint as one stream coming from one mirrored storage layout. The first storage experiment used mirrored disks. The next experiment can **shard the model across two disks** and measure whether independent storage paths let us overlap reads, prefetching, and computation.
-
-More importantly, the GEX131-1 GPU has **96 GB of VRAM**. That is enough for the measured INT8 trunk (54.47 GB) and MXFP4 trunk (28.94 GB), but not the BF16 trunk (108.81 GB). That gives us a useful range of placement experiments rather than a simple fit/no-fit question:
-
-> **What actually needs to be on the GPU for each token?**
-
-The next experiment should therefore not assume that the trunk and experts must be processed the way they were on the CPU. We can investigate a working-set architecture:
-
-```text
-                 1.56 TB model
-                       ↓
-              sharded across 2 disks
-                       ↓
-             CPU RAM / NVMe working set
-                  ↙          ↘
-          dense trunk       experts
-               ↓               ↓
-          96 GB GPU working set
-                       ↓
-                 token generation
-```
-
-The GPU may hold the most frequently used trunk components and/or frequently selected experts, while RAM and NVMe hold the larger backing store. The system can prefetch what the next token is likely to need while the GPU is computing the current token.
-
-This is not yet an architecture claim. It is the next experiment.
-
-**Clover is not against any system.** Every approach we have encountered is a sensible answer to the situation its builders were in. Games solved a similar problem by loading only the part of a much larger world that was needed at the moment. `llama.cpp` already demonstrates mixed-device model placement. We are now asking whether the same principle, applied at the level of this model's trunk, experts, storage, and token processing, produces a measurable advantage on hardware we can actually rent.
-
-The question is no longer simply whether a 2.78-trillion-parameter model can run on a small machine.
-
-It is:
-
-> **Can we discover a useful division of the model across GPU, CPU memory, and sharded storage that makes each token faster without requiring the whole model to fit on one device?**
-
-The GEX131-1 is there to answer that question.
-
-The experiments, in the order we ran them, and the predictions we got wrong: [`k3-analysis/heterogeneous-inference.md`](k3-analysis/heterogeneous-inference.md).
-
-**Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c) · [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp)
+**Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c) · [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp). The engine that opened this line of work is Fareed Khan's, Apache-2.0, and stays his; Clover does not claim it.
 
 ---
 
