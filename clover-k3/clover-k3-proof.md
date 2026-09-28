@@ -1,12 +1,34 @@
 # What the model actually says
 
-All 34 prompts from [`prompts.tsv`](prompts.tsv), run through `clover-k3`,
-showing the 12 tokens it generated for each.
+A 2.78-trillion-parameter model, run from its equation as a single C file on
+one rented CPU machine with no GPU. Below is every one of the 34 prompts in
+[`prompts.tsv`](prompts.tsv) and the 12 tokens it wrote for each.
 
-Inside each block the prompt comes first, then `->`, then the model's own
-output exactly as it came out, line breaks and all.
+It gives the same answer as an independent implementation of the same model
+on all 34, in under a third of the time. Six of them:
+
+| prompt | answer | clover-k3 | other implementation |
+|---|---|---|---|
+| The capital of France is | ` Paris` | **7.23 s** | 23.60 s |
+| The chemical symbol for gold is | ` Au` | **7.72 s** | 25.55 s |
+| The largest planet in our solar system is | ` Jupiter` | **9.35 s** | 30.13 s |
+| In 1969 the first humans landed on the | ` moon` | **11.80 s** | 38.01 s |
+| Paris is the capital of France and Berlin is the capital of | ` Germany` | **11.37 s** | 39.36 s |
+| La capitale de la France est | ` Paris` | **7.94 s** | 26.69 s |
+
+```
+all 34 prompts    same answer 34 / 34
+total wall        clover-k3 394.94 s     other 1344.23 s     3.40x
+```
+
+The same question in English, French and German returns the identical token
+id, not merely the same idea. Swapping Berlin for Rome in that fifth prompt
+gives ` Italy` from an otherwise identical sentence.
 
 ---
+
+Inside each block below the prompt comes first, then `->`, then the model's
+own output exactly as it came out, line breaks and all.
 
 ### 1
 
@@ -266,13 +288,12 @@ El idioma oficial de Mexico es
 
 ## How this was produced
 
-One rented CPU machine, no GPU: Ryzen 9 7950X3D, 16 cores, 124 GB RAM,
-NVMe RAID1, holding the released Kimi K3 checkpoint at 1.5 TB.
+Ryzen 9 7950X3D, 16 cores, 124 GB RAM, NVMe RAID1, holding the released
+Kimi K3 checkpoint at 1.5 TB. No GPU.
 
-`clover-k3` is one C file that runs the model from its equation. It computes
-one token per pass, so [`gen.py`](gen.py) calls it in a loop, carrying the
-attention cache and recurrent state forward so each new word costs one
-position rather than the whole prompt again.
+`clover-k3` computes one token per pass, so [`gen.py`](gen.py) calls it in a
+loop, carrying the attention cache and recurrent state forward so each new
+word costs one position rather than the whole prompt again.
 
 ```
 34 prompts, 12 tokens each
@@ -285,14 +306,14 @@ position rather than the whole prompt again.
 python3 gen.py --ids 1008,10484,318,15383,387 12 prefix
 ```
 
-**Two things worth knowing when reading the output.** These prompts are bare
-completions with no chat template, so the model continues them as if they
-were lines in a file rather than questions to answer; that is why several
-run on into quotes, diff markers, fenced code or a second language. And six
-seconds a word is not interactive - a paragraph takes minutes.
+**Three things worth knowing.** These prompts are bare completions with no
+chat template, so the model continues them as lines in a file rather than as
+questions; that is why several run on into quotes, diff markers, fenced code
+or a second language. Six seconds a word is not interactive. And the timing
+comparison above is one token per prompt against the other implementation -
+generation was measured on clover-k3 alone, so the two are separate
+observations rather than a ratio.
 
-The side-by-side correctness comparison against an independent implementation
-of the same model - 34 of 34 identical answers, 3.40x less wall time - is in
-[`clover-k3-comparison.md`](clover-k3-comparison.md), and the measurement
-record in
+The full 34-row comparison, what it does not show, and the measurement
+record are in
 [`../k3-analysis/clover-scaling-architecture.md`](../k3-analysis/clover-scaling-architecture.md).

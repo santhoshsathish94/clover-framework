@@ -95,6 +95,5 @@ bit-exact against a preserved baseline through every optimisation.
 | | |
 |---|---|
 | [`../clover-k3/clover-k3-equation.md`](../clover-k3/clover-k3-equation.md) | the equation as that program actually evaluates it, and where it differs from [k3-model-equation.md](k3-model-equation.md) |
-| [`../clover-k3/clover-k3-proof.md`](../clover-k3/clover-k3-proof.md) | all 34 prompts and the text the model generated for each |
-| [`../clover-k3/clover-k3-comparison.md`](../clover-k3/clover-k3-comparison.md) | the same 34 prompts through both implementations: 34/34 identical answers, 3.40x |
+| [`../clover-k3/clover-k3-proof.md`](../clover-k3/clover-k3-proof.md) | all 34 prompts, the text the model wrote for each, and the comparison: 34/34 identical answers, 3.40x |
 | [clover-scaling-architecture.md](clover-scaling-architecture.md) | the step-by-step measurement record behind it |

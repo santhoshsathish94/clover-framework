@@ -31,8 +31,7 @@ are left where they are.
 | `gen.py` | drives the program in a loop to generate text, reusing state between tokens |
 | `proof-campaign.sh` | runs all 34 prompts both ways and gates each on the logits md5 |
 | `clover-k3-equation.md` | the equation as this program evaluates it, and where it differs from `k3-analysis/k3-model-equation.md` |
-| `clover-k3-proof.md` | all 34 prompts and the text the model generated for each |
-| `clover-k3-comparison.md` | the same 34 prompts through this and an independent engine: 34/34 identical answers |
+| `clover-k3-proof.md` | all 34 prompts, the text the model wrote for each, and the comparison against an independent engine |
 | `dump_st_model.py` | locates the five non-layer tensors in the checkpoint |
 | `dump_eqidx.py` | flattens trunk.json, st_model.json and the shard headers into one binary index |
 | `make_slice.py` | builds a single-layer slice for the decomposition work |
@@ -173,7 +172,7 @@ is bytes rather than scheduling. io_uring was tested at every depth and is
 Against an independent implementation of the same model on the same box, over
 the same 34 prompts: **34/34 identical answers, 3.40x less wall time**. The
 full comparison, including what it does not show, is in
-[`clover-k3-comparison.md`](clover-k3-comparison.md).
+[`clover-k3-proof.md`](clover-k3-proof.md).
 
 ## A caution about measuring it
 
