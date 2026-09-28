@@ -111,25 +111,56 @@ so the payload grows with depth:
 
 ---
 
-## 5. Why this shape could win, and what would sink it
+## 5. Why this shape could be more efficient than a larger machine
 
-**The argument for it.** A single machine spends its time moving expert bytes
-from its own disk into its own memory: 99.86 GB per prompt at a measured
-ceiling of 14.6 GB/s. If every pod already holds its own layer's 16.2 GB, that
-movement does not happen at request time at all. What travels instead is a
-vector of tens to hundreds of kilobytes. The expensive thing stops moving and
-the cheap thing moves.
+The claim worth making is about **efficiency, not speed**. A large GPU is
+faster at arithmetic. Arithmetic was never what this workload was waiting for.
 
-**The argument against it, and it is not small.** At 64 positions the hops
-total 902.82 MB against a 47 ms stage. On one node, over shared memory, that is
-free. Across nodes at 10 Gb/s it is **~0.7 s per prompt in network alone**. So
-co-scheduling is a real constraint rather than a preference, and the deepest
-layers are the expensive hops because the snapshot stack has grown.
+**This workload is bound by data movement, and that is measured.** A single
+prompt reads 99.86 GB of expert weights. The device ceiling was measured
+directly, with the program's own access pattern, at **14.6 GB/s**, and the run
+already achieves 13.8 — **94% of it**, with the array 98-99% busy.
 
-**The claim that is not established.** That this beats a large GPU server on
-tokens per second is a hypothesis, not a result. Nothing here has been
-measured on a GPU, across nodes, or under concurrent load. What has been
-measured is the single-machine ceiling and the sizes above.
+**Three separate attempts to make the compute side faster bought nothing**,
+which is the strongest evidence that compute is not the constraint:
+
+| attempt | result |
+|---|---|
+| io_uring instead of reader threads | 7-11% *slower* at every queue depth tried |
+| preloading the next expert into CPU cache | a wash at best, 0.65 s worse at L1 |
+| using all 32 hardware threads for arithmetic | 2 s slower than 16 |
+
+A processor with more FLOPs does not help a program that is waiting for bytes.
+Attaching a faster one to the same storage changes nothing.
+
+**So the real question is how much compute you need per GB of resident
+weights.** Either shape — 92 commodity pods or a rack of large accelerators —
+has to put roughly 1.5 TB of weights next to compute, because a model that
+does not fit must otherwise stream, and streaming is the cost we just
+measured. The difference is what you attach to that memory.
+
+What we measured is that **16 CPU cores were enough to saturate a 14.6 GB/s
+device** while running the real kernel at 113.7 GFLOP/s. A pod holding one
+layer needs to do about 0.103 s of work per prompt. That is a small amount of
+compute per gigabyte held — which is the argument for commodity hardware
+rather than accelerators, and it is an argument about cost per resident
+gigabyte rather than about tokens per second.
+
+### What would sink it
+
+At 64 positions the hops total 902.82 MB against a 47 ms stage. On one node,
+over shared memory, that is free. Across nodes at 10 Gb/s it is **~0.7 s per
+prompt in network alone**, which would dwarf the compute it was meant to
+distribute. Co-scheduling is a constraint rather than a preference, and the
+deepest layers are the expensive hops because the snapshot stack has grown.
+
+### What is not established
+
+Nothing here has been measured on a GPU, across nodes, or under concurrent
+load. There is no tokens-per-second comparison, no cost figure and no energy
+figure, and none should be quoted from this document. What is measured is the
+single-machine ceiling, the three failed compute-side optimisations, and the
+sizes in sections 2 to 4.
 
 ---
 
