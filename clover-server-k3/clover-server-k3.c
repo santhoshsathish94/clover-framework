@@ -115,6 +115,14 @@ static unsigned char *sbuf[MAXSLOT];
 static size_t         sbuf_n[MAXSLOT];
 static sqlite3       *tdb;
 static int            tdb_L = -1;
+/* K3_PIN: the trunk is read whole on every request, so a server pays the copy
+   again each time. Pinned, it is copied out of SQLite once and then addressed
+   in place. Experts are deliberately NOT pinned - which 16 a position wants is
+   not predictable, so the page cache is left to keep whatever recurs. */
+static int             pin_on;
+static unsigned char **pinbuf;       /* [NLAY * MAXSLOT] */
+static double          pin_secs;
+static int64_t         pin_bytes;
 static uint16_t *covc;          /* K3_COVER: touches per 4 KB page of the trunk */
 static FILE *dumplay;           /* K3_DUMPLAY: each layer input, for the prefix check */
 
@@ -577,7 +585,7 @@ static const unsigned char *res_ptr(int fid, int64_t off)
    indexing by thread identity would either collide (omp_get_thread_num is 0
    for a pthread) or exhaust. A slot keeps its connection and its blob handle
    across claims, so both are opened once. */
-#define MAXCONN 16
+#define MAXCONN 64
 typedef struct {
     int           on, fid, nexp;
     int64_t       base, esz;      /* first byte of the layer, bytes per expert */
@@ -598,6 +606,7 @@ static int    n_store;
 static int64_t sq_bytes;
 static double  sq_secs;
 static int64_t sq_reads, sq_reopen, sq_open;   /* is the blob handle thrashing? */
+static double  sq_opensecs, sq_readsecs, sq_claimsecs;
 static int64_t tk_bytes;
 static double  tk_secs;
 static size_t  tk_live, tk_peak;               /* trunk bytes resident right now */
@@ -687,7 +696,7 @@ static void read_range_db(PRange *g, int L)
     }
     const int c = claim_conn();
 
-    if (!s->db[c]) {
+    const double t_c0 = now_s();    if (!s->db[c]) {
         char uri[1024];
         snprintf(uri, sizeof uri, "file:%s?immutable=1", s->path);
         if (sqlite3_open_v2(uri, &s->db[c], SQLITE_OPEN_READONLY |
@@ -707,10 +716,16 @@ static void read_range_db(PRange *g, int L)
 #pragma omp atomic
         sq_reopen++;
     }
+    const double t_c1 = now_s();
     if (sqlite3_blob_read(s->bh[c], g->mem, (int)g->nb, rdoff))
         sqdie(s->db[c], "blob read");
+    const double t_c2 = now_s();
 #pragma omp atomic
     sq_reads++;
+#pragma omp atomic
+    sq_opensecs += t_c1 - t_c0;
+#pragma omp atomic
+    sq_readsecs += t_c2 - t_c1;
     release_conn(c);
 }
 
@@ -786,6 +801,7 @@ static void trunk_read(int s, unsigned char *dst, int64_t nb)
    reads happen under the arithmetic instead of before it. */
 static void trunk_layer_in(int L)
 {
+    if (pin_on) return;
     char rel[64];
     snprintf(rel, sizeof rel, "trunk/L%02d.db", L);
     tdb = db_open_ro(rel);
@@ -794,13 +810,51 @@ static void trunk_layer_in(int L)
 
 static void trunk_layer_out(int L)
 {
-    for (int s = 0; s < MAXSLOT; s++) slot_drop(s);
-    for (int i = 0; i < TPARN; i++)
-        if (tcon[i]) { sqlite3_close(tcon[i]); tcon[i] = NULL; }
-    if (tdb) sqlite3_close(tdb);
-    tdb = NULL;
-    tdb_L = -1;
+    if (!pin_on) {
+        for (int s = 0; s < MAXSLOT; s++) slot_drop(s);
+        for (int i = 0; i < TPARN; i++)
+            if (tcon[i]) { sqlite3_close(tcon[i]); tcon[i] = NULL; }
+        if (tdb) sqlite3_close(tdb);
+        tdb = NULL;
+        tdb_L = -1;
+    }
     store_close(L);
+}
+
+/* Copy every trunk slot out of SQLite once. Layers in parallel: 93 separate
+   databases, so they contend for nothing but the device. */
+static void trunk_pin(void)
+{
+    const double t0 = now_s();
+    pinbuf = calloc((size_t)NLAY * MAXSLOT, sizeof(unsigned char *));
+    if (!pinbuf) die("pin table");
+    volatile int bad = 0;
+#pragma omp parallel for schedule(dynamic, 1)
+    for (int L = 0; L < NLAY; L++) {
+        char uri[1024];
+        snprintf(uri, sizeof uri, "file:%s/trunk/L%02d.db?immutable=1", DBDIR, L);
+        sqlite3 *d;
+        if (sqlite3_open_v2(uri, &d, SQLITE_OPEN_READONLY |
+                            SQLITE_OPEN_NOMUTEX | SQLITE_OPEN_URI, NULL)) { bad = 1; continue; }
+        for (int s = 0; s < n_slots; s++) {
+            const Slot *sl = &slots[(size_t)L * n_slots + s];
+            if (!sl->present) continue;
+            unsigned char *b = malloc((size_t)sl->nbytes);
+            if (!b) { bad = 1; break; }
+            sqlite3_blob *bh;
+            if (sqlite3_blob_open(d, "main", "slot_data", "data", s, 0, &bh)) { bad = 1; break; }
+            if (sqlite3_blob_read(bh, b, (int)sl->nbytes, 0)) bad = 1;
+            sqlite3_blob_close(bh);
+            pinbuf[(size_t)L * MAXSLOT + s] = b;
+#pragma omp atomic
+            pin_bytes += sl->nbytes;
+        }
+        sqlite3_close(d);
+    }
+    if (bad) die("trunk pin");
+    pin_secs = now_s() - t0;
+    fprintf(stderr, "trunk pinned: %.2f GB in %.2f s (%.2f GB/s)\n",
+            pin_bytes / 1e9, pin_secs, pin_bytes / 1e9 / pin_secs);
 }
 
 /* Opens every store present in dir. Absent layers simply stay on the
@@ -1114,6 +1168,7 @@ static const unsigned char *slot_ptr(int L, int s)
     Slot *sl = &slots[(size_t)L * n_slots + s];
     if (!sl->present) die("absent slot");
     if (prov_fp) prov_slot(L, s, "ptr");
+    if (pin_on) return pinbuf[(size_t)L * MAXSLOT + s];
     if (!sbuf[s]) {
         if (L != tdb_L) die("slot from a layer that is not open");
         sbuf[s] = malloc((size_t)sl->nbytes);
@@ -1134,7 +1189,7 @@ static const unsigned char *slot_ptr(int L, int s)
    (layer, slot) is ever resolved twice, so this can never cause a re-fetch. */
 static void slot_drop(int s)
 {
-    if (!sbuf[s]) return;
+    if (pin_on || !sbuf[s]) return;
     if (need_fp)
         fprintf(need_fp, "slot\t%d\t%s\t%zu\t%zu\n", cur_L,
                 (s < N_SLOTN) ? SLOTN[s] : "?", sbuf_n[s], sbuf_used[s]);
@@ -1815,6 +1870,8 @@ int main(int argc, char **argv)
         trunk_sz += slice_sz[L];
     }
     tsz = trunk_sz;
+    { const char *v = getenv("K3_PIN"); pin_on = v ? atoi(v) : 0; }
+    if (pin_on) trunk_pin();
     {
         char ed[1024];
         snprintf(ed, sizeof ed, "%s/expert", DBDIR);
@@ -2578,15 +2635,21 @@ int main(int argc, char **argv)
            pf_secs > 0 ? pf_bytes / 1e9 / pf_secs : 0.0);
     if (n_store)
         printf("  of which SQLite     : %d layers  %.2f GB  %.2f thread-s  %.2f GB/s\n"
-               "                        %lld reads  %lld reopens (%.0f%%)  %lld conns\n",
+               "                        %lld reads  %lld reopens (%.0f%%)  %lld conns\n"
+               "                        claim %.2f  open/reopen %.2f  read %.2f thread-s\n",
                n_store, sq_bytes / 1e9, sq_secs,
                sq_secs > 0 ? sq_bytes / 1e9 / sq_secs : 0.0,
                (long long)sq_reads, (long long)sq_reopen,
-               sq_reads ? 100.0 * sq_reopen / sq_reads : 0.0, (long long)sq_open);
+               sq_reads ? 100.0 * sq_reopen / sq_reads : 0.0, (long long)sq_open,
+               sq_claimsecs, sq_opensecs, sq_readsecs);
     printf("trunk, streamed       : %.2f GB in %.2f s (%.2f GB/s)  peak resident %.0f MB\n"
            "                        %.2f GB of it read by %d threads\n",
            tk_bytes / 1e9, tk_secs, tk_secs > 0 ? tk_bytes / 1e9 / tk_secs : 0.0,
            tk_peak / 1e6, tk_par_bytes / 1e9, TPARN);
+    if (pin_on)
+        printf("trunk, pinned         : %.2f GB held, loaded once in %.2f s (%.2f GB/s)\n"
+               "                        every request after the first pays nothing for it\n",
+               pin_bytes / 1e9, pin_secs, pin_bytes / 1e9 / pin_secs);
     printf("  fetched vs used     : %.2f GB fetched, %.2f GB used, %.2f GB never read (%.2f%%)\n",
            need_fetch / 1e9, need_used / 1e9, (need_fetch - need_used) / 1e9,
            need_fetch ? 100.0 * (need_fetch - need_used) / need_fetch : 0.0);

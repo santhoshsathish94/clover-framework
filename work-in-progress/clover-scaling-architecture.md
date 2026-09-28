@@ -1343,6 +1343,63 @@ Against the file-backed path at roughly 14.9 s, the gap is now **2.35x**, down
 from 4.6x. Bit-exact throughout, and 15x smaller in memory than the version
 that started this section.
 
+## Step 26 - the trunk pinned in RAM, per layer and per stage
+
+`K3_PIN=1`. At startup, C code copies every trunk slot out of SQLite into its
+own buffer - `pinbuf[L * MAXSLOT + s]`, one per layer per stage, 2,455 of
+them - and `slot_ptr` then returns the buffer instead of fetching. Layers are
+pinned in parallel: 93 separate databases contend for nothing but the device.
+
+**Experts are deliberately not pinned.** Which 16 experts a position wants is
+not predictable, so they keep streaming from SQLite and the page cache keeps
+whatever recurs. That is what one row per expert tensor is for.
+
+```
+  trunk pinned   54.47 GB in 9.84 / 9.95 / 9.90 s   (5.48 - 5.54 GB/s)
+  md5 23d162dcefb18211a7540ef12948f1eb, token 17374, every run
+```
+
+### It is a wash on this box, and the reason is worth more than the result
+
+| | pin off | pin on |
+|---|---|---|
+| request wall | 34.30 / 34.84 | 32.62 / 33.60 / 34.23 |
+| trunk read, per request | 8.48 s | **0** |
+| expert rate per thread | 0.34 - 0.35 GB/s | **0.24 - 0.25 GB/s** |
+| expert thread-seconds | ~288 | **392 / 408 / 417** |
+| peak RSS | 3.91 GB | **56.87 GB** |
+
+The 8.5 s of trunk reading is gone completely. The request time barely moves.
+
+**The memory comes out of the expert page cache.** Expert thread-seconds rise
+by 104 to 128, which across 14 readers is 7.4 to 9.1 s of wall - almost
+exactly the 8.5 s the trunk stopped costing. On a 124 GB box, 54.47 GB held
+by the process is 54.47 GB the 1.45 TB expert store no longer gets.
+
+Context measured before this step, which predicted it:
+
+```
+  trunk DBs     54.77 GB total   51.76 GB resident   94.5%
+  expert DBs  1450.84 GB total   73.64 GB resident    5.08%
+```
+
+**The trunk was already 94.5% in the page cache**, so pinning was never going
+to save disk reads - there were barely any. What it removes is SQLite's copy
+path, and what it costs is cache the experts were using.
+
+### What this does and does not establish
+
+**It does not show pinning is wrong.** This is a single request, so the 9.9 s
+startup is paid and never amortized. A server pays it once and every later
+request keeps the 8.5 s. What the measurement does show is that **the saving
+is not free**: it is 8.5 s of trunk time traded for 7.4 to 9.1 s of expert
+time, on this box, at this RAM.
+
+The trade would be a clear win on a machine where the expert working set
+still fits after the trunk is pinned - which is to say, it is a **memory
+capacity question, not a design question.** Not tested, because there is no
+second machine.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
