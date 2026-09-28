@@ -1739,6 +1739,71 @@ static void cache_warm(const unsigned char *p, size_t n)
     cpf_bytes += (int64_t)n;
 }
 
+/* K3_ROUTESAVE / K3_ROUTELOAD: the 16 expert ids per (layer, position).
+   Step 29 measured that routing at position t is a pure function of tokens
+   0..t, so this is a cache keyed by the prompt, not a prediction. It is used
+   to start reads earlier and for nothing else: the router still runs every
+   time, and every cached row is compared against what the router produced. A
+   cache that is wrong is a crash, never a wrong answer. */
+static uint16_t *route_tab;
+static int       route_load_on, route_save_on;
+static int64_t   route_checked, route_bad;
+
+static void route_alloc(void)
+{
+    if (!route_tab) route_tab = calloc((size_t)NLAY * NPOS * TOPK, sizeof(uint16_t));
+    if (!route_tab) die("route table");
+}
+
+/* the prompt is the key, so a file built for other tokens must not be used */
+static int route_file_rw(const char *path, int write, const int *ids)
+{
+    FILE *f = fopen(path, write ? "wb" : "rb");
+    if (!f) return -1;
+    uint32_t hdr[4] = { 0x5452334BU, (uint32_t)NLAY, (uint32_t)NPOS, (uint32_t)TOPK };
+    uint32_t kid[NPOS];
+    const size_t n = (size_t)NLAY * NPOS * TOPK;
+    int rc = 0;
+    if (write) {
+        for (int i = 0; i < NPOS; i++) kid[i] = (uint32_t)ids[i];
+        if (fwrite(hdr, sizeof hdr, 1, f) != 1) rc = -1;
+        if (fwrite(kid, sizeof kid, 1, f) != 1) rc = -1;
+        if (fwrite(route_tab, sizeof(uint16_t), n, f) != n) rc = -1;
+    } else {
+        uint32_t got[4];
+        if (fread(got, sizeof got, 1, f) != 1) rc = -1;
+        else if (memcmp(got, hdr, sizeof hdr)) { fprintf(stderr,
+                 "route cache: header is for a different model or prompt shape\n"); rc = -1; }
+        else if (fread(kid, sizeof kid, 1, f) != 1) rc = -1;
+        else {
+            for (int i = 0; i < NPOS && !rc; i++)
+                if (kid[i] != (uint32_t)ids[i]) { fprintf(stderr,
+                    "route cache: built for different tokens, ignoring\n"); rc = -1; }
+            if (!rc && fread(route_tab, sizeof(uint16_t), n, f) != n) rc = -1;
+        }
+    }
+    fclose(f);
+    return rc;
+}
+
+/* Called with what the router actually chose. Records it, or checks it. */
+static void route_note(int L, int t, const int *sel)
+{
+    uint16_t *row = route_tab + ((size_t)L * NPOS + t) * TOPK;
+    if (route_save_on)
+        for (int j = 0; j < TOPK; j++) row[j] = (uint16_t)sel[j];
+    if (route_load_on) {
+        route_checked++;
+        for (int j = 0; j < TOPK; j++)
+            if (row[j] != (uint16_t)sel[j]) {
+                route_bad++;
+                fprintf(stderr, "route cache MISMATCH layer %d pos %d rank %d: "
+                        "cached %u, router chose %d\n", L, t, j, row[j], sel[j]);
+                die("route cache does not match the router");
+            }
+    }
+}
+
 static const unsigned char *slot_ptr(int L, int s)
 {
     Slot *sl = &slots[(size_t)L * n_slots + s];
@@ -2586,6 +2651,19 @@ int main(int argc, char **argv)
           fprintf(stderr, "NPOS is %d but no K3_IDS given\n", NPOS); return 2;
       } }
     g_ids = ids;   /* after K3_IDS, or the dump labels the default prompt */
+    { const char *sv = getenv("K3_ROUTESAVE"), *ld = getenv("K3_ROUTELOAD");
+      if (sv) { route_alloc(); route_save_on = 1; }
+      if (ld) {
+          route_alloc();
+          if (route_file_rw(ld, 0, ids) == 0) {
+              route_load_on = 1;
+              fprintf(stderr, "route cache: loaded %d layers x %d positions x %d\n",
+                      NLAY, NPOS, TOPK);
+          } else if (!route_save_on) {
+              free(route_tab); route_tab = NULL;
+              fprintf(stderr, "route cache: not usable, running without it\n");
+          }
+      } }
     int last = (argc > 1) ? atoi(argv[1]) : NLAY - 1;
     fprintf(stderr, "prefetch %s  trunk %s\n", pf_on ? "ON" : "OFF",
             traw == 3 ? "raw mmap" : traw == 2 ? "raw RAM" : traw == 1 ? "raw stream"
@@ -3000,6 +3078,7 @@ int main(int argc, char **argv)
                 for (int j = 0; j < xtopk; j++) wts_all[t][j] = wts_all[t][j] * iv;
                 for (int j = xtopk; j < TOPK; j++) wts_all[t][j] = 0.0f;
                 op_add(OP_TOPK, _tk, 0);
+                if (route_tab) route_note(L, t, idsel_all[t]);
                 if (sel_fp) {
                     fprintf(sel_fp, "%d\t%d\t%d", L, t, g_ids ? g_ids[t] : -1);
                     for (int j = 0; j < TOPK; j++) fprintf(sel_fp, "\t%d", idsel_all[t][j]);
@@ -3371,6 +3450,17 @@ int main(int argc, char **argv)
                "                        %.2f s in flight under the arithmetic, %.2f s of it waited on\n",
                ur_bytes / 1e9, (long long)(ra_budget >> 20), ur.depth,
                (long long)ur_hit, (long long)ur_late, (long long)ur_cold, ur_secs, ur_wait);
+    if (route_load_on)
+        printf("route cache           : %lld rows checked against the router, %lld wrong\n",
+               (long long)route_checked, (long long)route_bad);
+    if (route_save_on) {
+        const char *sv = getenv("K3_ROUTESAVE");
+        if (route_file_rw(sv, 1, g_ids))
+            fprintf(stderr, "route cache: write failed\n");
+        else
+            printf("route cache           : wrote %d x %d x %d ids to %s (%zu B)\n",
+                   NLAY, NPOS, TOPK, sv, (size_t)NLAY * NPOS * TOPK * sizeof(uint16_t));
+    }
     printf("  fetched vs used     : %.2f GB fetched, %.2f GB used, %.2f GB never read (%.2f%%)\n",
            need_fetch / 1e9, need_used / 1e9, (need_fetch - need_used) / 1e9,
            need_fetch ? 100.0 * (need_fetch - need_used) / need_fetch : 0.0);
