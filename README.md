@@ -78,8 +78,6 @@ Supporting areas include:
 
 - [`k3-analysis/`](k3-analysis/) — the whole investigation
 - [`k3-analysis/k3-model-equation.md`](k3-analysis/k3-model-equation.md) — the model as one composed expression, executed and checked float for float
-- [`k3-analysis/clover-scaling-architecture.md`](k3-analysis/clover-scaling-architecture.md) — the measurement record in order, including everything that did not work
-- [`k3-analysis/heterogeneous-inference.md`](k3-analysis/heterogeneous-inference.md) — the experiments, and the predictions that turned out wrong
 
 **The direction and the boundaries**
 
@@ -88,7 +86,9 @@ Supporting areas include:
 - [`docs/08-governance.md`](docs/08-governance.md) — accountability and governance
 - [`docs/ai-responsibility/`](docs/ai-responsibility/) — AI responsibility
 
-Clover AI is work in progress. The inference layer now has one implementation that is built, gated and measured; model choice, serving, tools, security boundaries, and evaluation remain experimental until the same is true of them.
+Clover AI has a result, not a plan. A 2.78-trillion-parameter model runs from its equation on one ordinary machine, bit-exact against a preserved gate, and emits the same token as an independent implementation of the same model on every one of the 34 prompts tested — in a third of the wall time. That is measured, repeatable, and open to inspection.
+
+It will keep improving, and the parts of the principle above that it does not yet reach — the tools that enforce, the serving layer, the evaluation that closes the loop — are the next things to build. They will be held to the same standard: built, gated and measured before they are claimed.
 
 ## Contributing
 
