@@ -1973,6 +1973,125 @@ s. The lookahead needs a routing cache, and a routing cache needs the prompt to
 have been seen before, which is the serving case and not the first-request
 case.
 
+## Step 33 - preloading a stage into cache, and why there is nothing to preload
+
+The proposal: a stage needs only a few MB, so stage n+1 could be pulled into
+CPU cache during stage n, the same trick as step 32 one level down. I measured
+before building, and the answer is no - the hardware is already doing it.
+
+### First, what a stage actually is
+
+In `clover-k3.c` the X loop runs `for (sx = 0; sx < nseen; sx++)`, where
+`nseen` is the count of **distinct experts** this layer draws. A stage is one
+expert. It is three `Xm` calls - gate, up, down:
+
+```
+gate.w 5,505,024 B   gate.s 344,064 B     inn=LAT=3584  rows=I_=3072
+up.w   5,505,024 B   up.s   344,064 B     same
+down.w 5,505,024 B   down.s 344,064 B     inn=I_=3072   rows=LAT=3584
+
+one Xm call   5,849,088 B =  5.85 MB =  5.58 MiB
+one stage    17,547,264 B = 17.55 MB = 16.73 MiB
+```
+
+**17.55 MB per stage, not 6.75 MB.** The nearest real figure is 5.85 MB, which
+is one of the three `Xm` calls, not the stage.
+
+### The per-thread working set already fits L2
+
+`Xm` splits `rows` across 16 OpenMP threads. Each thread touches
+`rows/16 * (inn/2 + inn/32)` = **365,568 B, 0.35 MiB, of a 1 MiB L2**. It
+already fits, with room over. Cache geometry on this box:
+
+```
+L1d  32K per core   512K total
+L2    1M per core    16M total
+L3   96M            128M total   (96M CCD0, 32M CCD1)
+```
+
+### The hardware prefetcher is already the preload
+
+`perf stat` over a full run:
+
+```
+28,093,906,611   ls_any_fills_from_sys.all
+27,410,896,820   ls_any_fills_from_sys.local_l2      97.57%
+   522,672,464   ls_any_fills_from_sys.dram_io_all    1.86%
+   151,007,709   ls_any_fills_from_sys.local_ccx      0.54%
+```
+
+**97.57% of fills are already served from local L2.** The weight stream is
+perfectly sequential and the L2 hardware prefetcher pulls it in ahead of the
+demand loads - which is precisely what a software preload of stage n+1 would
+try to do. There is no gap to close. A software prefetch would at best
+duplicate it and at worst evict the 0.35 MiB that currently fits.
+
+Note on the earlier figure: step 32 recorded "1.96% of fills reach DRAM". That
+run used `ls_dmnd_fills_from_sys.dram_io_all` and `.mem_io_local`, **neither of
+which exists on this CPU**. The valid event gives 1.86%, so the number held,
+but it held by luck. The conclusion was right for a reason I had not checked.
+
+### The hypothesis I formed and then refuted
+
+Seeing 28 billion fills against only 156.75 GB of weights, I guessed the
+traffic was the `DQ2` dequant table - 256 sub-tables of 4096 B, 1 MB in all,
+indexed randomly by the scale byte. `K3_XDEC=1` uses `DQd` instead, 256 x 128 B
+= 32 KB, so it tests the guess directly:
+
+| | fills | from DRAM | X | wall |
+|---|---|---|---|---|
+| `K3_XDEC=2`, 1 MB table | 28.09 B | 522.7 M | 4.362 | 7.27 |
+| `K3_XDEC=1`, 32 KB table | 24.07 B | 585.8 M | 5.209 | 7.60 |
+
+The small table cuts **4.0 billion fills** and is **0.85 s slower**. Fewer
+cache fills, worse time. The fills are cheap L2 hits; `xdec=1` trades them for
+`_mm256_set_pd` scalar extraction, which is not. **Cache traffic is not the
+cost of this kernel.** My guess was wrong and is withdrawn.
+
+### There is no reuse for a cache to exploit
+
+Each weight byte is used once per stage. `m=1` for 77.6% of stages, mean m
+1.295. Within a layer `seen[]` already dedups - 7,360 draws collapse to 5,683
+distinct, 22.8% of fetches saved. Across layers experts do not repeat, because
+an expert belongs to a layer.
+
+### Where the run actually sits
+
+Holding I/O fixed and varying compute threads:
+
+```
+threads    wall      X       Q    nxwait
+16        7.25    4.302   1.903     0.52
+12        7.51    4.911   1.933     0.10
+ 8        8.48    5.761   2.085     0.01
+ 6       10.26    7.116   2.415     0.01
+ 4       13.95    9.507   3.497     0.01
+```
+
+Not flat, so the run is **not purely disk-bound** - it sits on the crossover.
+At 16 cores the disk still makes the compute wait 0.48-0.52 s; below 12 threads
+`nxwait` collapses to 0.01 and the disk has slack it cannot use. Compute
+6.54 s against roughly 7.2 s of disk.
+
+SMT does not help - it costs 2 s:
+
+```
+16 cores     7.24    X 4.310
+20 threads   9.72    X 7.699
+24 threads   9.36    X 7.494
+32 threads   9.24    X 7.363
+```
+
+### Conclusion
+
+Nothing was built. Preloading a stage into cache cannot pay, for three
+independent reasons: the L2 hit rate is already 97.57%, the per-thread working
+set already fits L2 at a third of its size, and the binding constraint is disk
+bytes, which a cache preload does not reduce. The remaining lever is reading
+fewer bytes, and step 30 already showed the 16 experts have no tail to cut -
+rank 0 to rank 15 is 4.2x, and dropping the bottom 8 loses 34.8% of the mean
+weight.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
