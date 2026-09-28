@@ -4,14 +4,22 @@
 Parsing trunk.json, st_model.json and 96 safetensors headers is not part of
 the equation, so it is done once here and handed to C as fixed-width records.
 
-output: $K3_INDEX (default /root/k3raw/eqidx.bin)
+output: $K3_INDEX
 """
 import json, struct, glob, sys, os
 
-MODEL = os.environ.get("K3_MODEL", "/root/k3model")
-TRUNKJSON = os.environ.get("K3_TRUNKJSON", "/root/k3trunk_i8/trunk.json")
-STMODEL = os.environ.get("K3_STMODEL", "/root/k3raw/st_model.json")
-OUT = os.environ.get("K3_INDEX", "/root/k3raw/eqidx.bin")
+
+def need(name):
+    v = os.environ.get(name)
+    if not v:
+        sys.exit("%s is not set - source config.env, or run ./build.sh" % name)
+    return v
+
+
+MODEL = need("K3_MODEL")
+TRUNKJSON = need("K3_TRUNKJSON")
+STMODEL = need("K3_STMODEL")
+OUT = need("K3_INDEX")
 PREF = "language_model.model.layers."
 NL = 93
 

@@ -8,12 +8,15 @@ by hand, which meant eqidx.bin could not be rebuilt from the model alone.
 Offsets are ABSOLUTE file offsets (8 + header_len + data_offsets[i]), which is
 the form dump_eqidx.py writes into the index without further adjustment.
 
-usage: dump_st_model.py [model_dir] [out]
+usage: dump_st_model.py <model_dir> <out>
 """
-import json, glob, struct, sys
+import json, glob, struct, sys, os
 
-MODEL = sys.argv[1] if len(sys.argv) > 1 else "/root/k3model"
-OUT = sys.argv[2] if len(sys.argv) > 2 else "st_model.json"
+MODEL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("K3_MODEL")
+OUT = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("K3_STMODEL")
+if not MODEL or not OUT:
+    sys.exit("usage: dump_st_model.py <model_dir> <out>"
+             "  (or set K3_MODEL and K3_STMODEL; see config.env)")
 
 # Insertion order matters only so the output can be compared byte for byte
 # against the hand-made original.

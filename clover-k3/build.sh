@@ -1,15 +1,13 @@
 #!/bin/bash
 # Rebuild the equation from a checkpoint and a packed trunk.
 #
-#   K3_MODEL   directory of the Kimi K3 safetensors shards
-#   K3_TRUNK   directory holding trunk.bin and trunk.json
-#   NPOS       prompt length to compile for (it is a compile-time constant)
+# Paths come from config.env. NPOS is the prompt length to compile for; it is
+# a compile-time constant, so a build is for one length.
 #
 # Everything this writes goes in build/. Nothing in the repo is modified.
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
-: "${K3_MODEL:=/root/k3model}"
-: "${K3_TRUNK:=/root/k3trunk_i8}"
+. "$HERE/config.env"
 : "${NPOS:=5}"
 B="$HERE/build"
 mkdir -p "$B"

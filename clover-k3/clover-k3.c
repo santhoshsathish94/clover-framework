@@ -1342,10 +1342,10 @@ int main(int argc, char **argv)
        layer, faulting their pages in again each time. */
     mallopt(M_MMAP_THRESHOLD, 256 * 1024 * 1024);
     mallopt(M_TRIM_THRESHOLD, 256 * 1024 * 1024);
-    /* Every other path has a switch; without this one the program is pinned to
-       the directory it was developed in. */
+    /* Paths come from config.env via the scripts. Defaulting them would let a
+       run silently pick up another machine's index. */
     const char *idxp = getenv("K3_INDEX");
-    if (!idxp) idxp = "/root/k3raw/eqidx.bin";
+    if (!idxp) die("K3_INDEX is not set - source config.env, or run ./build.sh");
     load_index(idxp);
     dq_init();
     for (int i = 0; i < 128; i++) dfd[i] = -1;
@@ -1393,7 +1393,7 @@ int main(int argc, char **argv)
     { const char *v = getenv("K3_TRUNKRAM"); trunk_ram = v ? atoi(v) : 0; }
     size_t tsz;
     const char *tpath = getenv("K3_TRUNKPATH");
-    if (!tpath) tpath = "/root/k3trunk_i8/trunk.bin";
+    if (!tpath) die("K3_TRUNKPATH is not set - source config.env, or run ./gate.sh");
     trunk = trunk_ram ? load_ram(tpath, &tsz) : map_file(tpath, &tsz);
     trunk_sz = tsz;
     { const char *v = getenv("K3_COVER");
@@ -2070,7 +2070,7 @@ int main(int argc, char **argv)
     }
 
     { const char *lp = getenv("K3_LOGITS");
-      FILE *f = fopen(lp ? lp : "/root/k3raw/eq_c_logits.bin", "wb");
+      FILE *f = fopen(lp ? lp : "clover-k3-logits.bin", "wb");
       fwrite(nrm, 4, E, f); fwrite(logits, 4, VOCAB, f); fclose(f); }
 
     int am = 0;

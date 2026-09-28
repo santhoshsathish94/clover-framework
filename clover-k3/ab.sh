@@ -10,6 +10,7 @@
 #   ./ab.sh <tag> <candidate.c>
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/config.env"
 B="$HERE/build"
 TAG=${1:-run}
 CAND=${2:-}
@@ -18,8 +19,6 @@ CAND=${2:-}
 
 L="$B/ab_$TAG.log"
 : > "$L"
-: "${K3_TRUNK:=/root/k3trunk_i8}"
-: "${K3_TRUNKPATH:=$K3_TRUNK/trunk.bin}"
 
 BASE5=23d162dcefb18211a7540ef12948f1eb
 EV="OMP_PROC_BIND=close OMP_PLACES=cores OMP_NUM_THREADS=${OMP_NUM_THREADS:-16} \

@@ -6,9 +6,8 @@
 # build that has not passed it means nothing.
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/config.env"
 B="$HERE/build"
-: "${K3_TRUNK:=/root/k3trunk_i8}"
-: "${K3_TRUNKPATH:=$K3_TRUNK/trunk.bin}"
 
 BASE5=23d162dcefb18211a7540ef12948f1eb
 P5="1008,10484,318,15383,387"
