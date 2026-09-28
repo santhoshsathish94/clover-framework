@@ -137,41 +137,59 @@ and no tolerance to argue about.
 
 ## Status
 
-**Version 1 is built and gated, both steps.** `clover-server-k3.c` reads the
-trunk as 93 per-layer slices and can read any layer's experts from SQLite.
-Every run below produced `md5 23d162dcefb18211a7540ef12948f1eb` and token
-17374.
+**The whole model is in SQLite and the gate passes.** `clover-server-k3.c`
+reads the trunk, the experts, the embedding, `lm_head`, the output norms and
+the tokenizer from databases. Nothing reads a safetensors file.
 
 ```
-  trunk as 93 slices, experts from the checkpoint
-    reference, trunk from tmpfs   8.78 s
-    slices from disk              8.74 s   (10.76 s cold)
-    slices from tmpfs             8.73 s      -> the split is free
+  catalog.db     164 KB   every relationship, foreign keys on, 0 violations
+  trunk/        93 files     54.47 GB
+  expert/       92 files   1446.46 GB   5,376 rows each
+  client/        4 files      4.70 GB
+  --------------------------------------------------
+  189 files, 1,505.62 GB, each verified against a second read of its source
 
-  experts from SQLite, by how many layers are converted
-    0 stores   8.89 s        the same binary, no store
-    1 store    9.02 s   +0.13
-    2 stores   9.17 s   +0.28
-    3 stores   9.25 s   +0.36
-    4 stores   9.50 s   +0.61   -> linear, 0.148 s per layer
-
-  store schema, one layer, interleaved, same binary
-    no store       8.753 s
-    row = expert   8.983 s   +0.230   0.28 GB/s per thread
-    row = tensor   8.850 s   +0.097   0.55 GB/s per thread
+  md5 23d162dcefb18211a7540ef12948f1eb   token 17374
+  34,098 expert reads = 5,683 distinct experts x 6 tensors, exact
 ```
 
-The trunk split costs nothing. The SQLite path is bit-exact either way.
+What it costs, against the previous path of trunk slices plus O_DIRECT on the
+checkpoint:
 
-**A row is one tensor, not one expert.** An expert stored as a single 17.5 MB
-blob is a chain of ~268 linked overflow pages, so reading its fifth tensor
-walks ~179 of them. One row per tensor gives every read offset 0 of its own
-chain and removes **58%** of the overhead. Six blob columns would not have
-worked - SQLite serializes a row into one record with one chain.
+| | slices + checkpoint | all SQLite |
+|---|---|---|
+| trunk load | 0.00 s, mmap | 32.1 s |
+| timed wall | **8.89 s** | **33.6 s** |
+| process total | ~14.9 s | 68.9 s |
+| peak RSS | 56.8 GB | 59.0 GB |
 
-Roughly half the gap to O_DIRECT remains, 7.7 GB/s against 14, and is not yet
-attributed. The per-layer curve was measured for the older schema; the new one
-has been measured at one layer only.
+**3.8x slower, and two separable causes.** The 32 s trunk load is this
+program's fault, not SQLite's - the old path mmapped slices and let the kernel
+fault pages in underneath the arithmetic, while this one reads 54.47 GB
+eagerly and single-threaded before starting. The expert rate falling from 0.55
+to 0.23 GB/s per thread is real: at full scale the page cache cannot hold the
+working set.
+
+Along the way: the trunk split is free and bit-exact; the SQLite expert path
+cost a linear 0.148 s per layer at small scale; and **a row is one tensor, not
+one expert** - an expert as a single 17.5 MB blob is a chain of ~268 overflow
+pages, so reading its fifth tensor walked ~179 of them. One row per tensor
+removed 58% of that overhead. Six blob columns would not have worked, because
+SQLite serializes a row into one record with one chain.
+
+Step 19 projected 22.5 s from a four-layer fit and flagged it as arithmetic
+rather than observation. Measured 33.6 s, so the projection was optimistic by
+half - which is what the flag was for.
+
+### The checkpoint is gone
+
+Each layer's expert range was punched out of the safetensors **after** its
+store matched a second independent read. The checkpoint is now 1.5 TB
+apparent, **107 GB actual**. `clover-k3.c` can no longer run; the
+single-machine reference is retired, and what proves this correct from here is
+the preserved gate md5 and the recorded baseline.
+
+The measurement record, including the negatives and the corrections, is in
 [`work-in-progress/clover-scaling-architecture.md`](../work-in-progress/clover-scaling-architecture.md),
 where the negatives are kept with the same care as the positives - including
 the harness bug that reported three passes for runs that never happened.
@@ -179,19 +197,18 @@ the harness bug that reported three passes for runs that never happened.
 ### Running it
 
 ```sh
-K3_SLICES=/srv/k3/slices K3_STORES=/srv/k3/stores \
-K3_INDEX=build/eqidx.bin K3_IDS=1008,10484,318,15383,387 \
+K3_DB=/srv/k3/db K3_INDEX=build/eqidx.bin K3_IDS=1008,10484,318,15383,387 \
   ./build/clover-server-k3
 ```
 
 | | |
 |---|---|
-| `K3_SLICES` | directory of `L00.bin` .. `L92.bin`, replaces `K3_TRUNKPATH` |
-| `K3_STORES` | directory of `L01.db` .. `L92.db`; a layer without one reads the checkpoint |
+| `K3_DB` | the directory holding `catalog.db`, `trunk/`, `expert/`, `client/` |
 
-`make_store.py <layer>` builds a store, `probe_experts.py` reports the on-disk
-layout it is built from, and `v1.sh` is the harness that produced the trunk
-numbers. Build with `-lsqlite3`.
+`make_db.py catalog \| trunk \| expert \| client \| status` builds and verifies
+it, and `K3_PUNCH=1` reclaims each source range once its store is proven.
+`probe_experts.py` reports the on-disk layout the schema was derived from.
+Build with `-lsqlite3`.
 
 ### One thing that is unresolved
 

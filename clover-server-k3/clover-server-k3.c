@@ -566,7 +566,7 @@ static const unsigned char *res_ptr(int fid, int64_t off)
    indexing by thread identity would either collide (omp_get_thread_num is 0
    for a pthread) or exhaust. A slot keeps its connection and its blob handle
    across claims, so both are opened once. */
-#define MAXCONN 32
+#define MAXCONN 16
 typedef struct {
     int           on, fid, nexp;
     int64_t       base, esz;      /* first byte of the layer, bytes per expert */
@@ -580,7 +580,7 @@ typedef struct {
     sqlite3_blob *bh[MAXCONN];
     int           row[MAXCONN];   /* which rowid bh is currently open on */
     char          path[512];
-    char          tab[8];
+    char          tab[32];
 } Store;
 static Store  store[NLAY];
 static int    n_store;
@@ -609,6 +609,31 @@ static void sqdie(sqlite3 *db, const char *what)
 {
     fprintf(stderr, "eq: %s: %s\n", what, db ? sqlite3_errmsg(db) : "?");
     exit(1);
+}
+
+static const char *DBDIR;
+
+/* immutable=1 tells SQLite the file can never change, so it skips locking and
+   the change-counter check on every read. These are weight files. */
+static sqlite3 *db_open_ro(const char *rel)
+{
+    char uri[1024];
+    snprintf(uri, sizeof uri, "file:%s/%s?immutable=1", DBDIR, rel);
+    sqlite3 *db = NULL;
+    if (sqlite3_open_v2(uri, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, NULL))
+        sqdie(db, rel);
+    return db;
+}
+
+static int db_row(sqlite3 *db, const char *tab, int64_t id, void *dst, int want)
+{
+    sqlite3_blob *bh;
+    if (sqlite3_blob_open(db, "main", tab, "data", id, 0, &bh)) sqdie(db, tab);
+    const int n = sqlite3_blob_bytes(bh);
+    if (want && n != want) die("row is not the expected length");
+    if (sqlite3_blob_read(bh, dst, n, 0)) sqdie(db, "blob read");
+    sqlite3_blob_close(bh);
+    return n;
 }
 
 static int store_for(int fid, int64_t off)
@@ -649,8 +674,10 @@ static void read_range_db(PRange *g, int L)
     const int c = claim_conn();
 
     if (!s->db[c]) {
-        if (sqlite3_open_v2(s->path, &s->db[c],
-                            SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, NULL))
+        char uri[1024];
+        snprintf(uri, sizeof uri, "file:%s?immutable=1", s->path);
+        if (sqlite3_open_v2(uri, &s->db[c], SQLITE_OPEN_READONLY |
+                            SQLITE_OPEN_NOMUTEX | SQLITE_OPEN_URI, NULL))
             sqdie(s->db[c], "store open");
         s->row[c] = -1;
 #pragma omp atomic
@@ -673,18 +700,6 @@ static void read_range_db(PRange *g, int L)
     release_conn(c);
 }
 
-static int64_t meta_int(sqlite3 *db, const char *k)
-{
-    sqlite3_stmt *st;
-    if (sqlite3_prepare_v2(db, "SELECT v FROM meta WHERE k = ?", -1, &st, NULL))
-        die("meta prepare");
-    sqlite3_bind_text(st, 1, k, -1, SQLITE_STATIC);
-    if (sqlite3_step(st) != SQLITE_ROW) die("meta row missing");
-    const int64_t v = (int64_t)strtoll((const char *)sqlite3_column_text(st, 0), NULL, 10);
-    sqlite3_finalize(st);
-    return v;
-}
-
 static const ERec *expert_rec(int L, int e, int which, int kind);
 
 /* Opens every store present in dir. Absent layers simply stay on the
@@ -696,41 +711,37 @@ static void open_stores(const char *dir)
         snprintf(s->path, sizeof s->path, "%s/L%02d.db", dir, L);
         if (access(s->path, R_OK)) continue;
         sqlite3 *db;
-        if (sqlite3_open_v2(s->path, &db, SQLITE_OPEN_READONLY, NULL))
+        char uri[1024];
+        snprintf(uri, sizeof uri, "file:%s?immutable=1", s->path);
+        if (sqlite3_open_v2(uri, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, NULL))
             sqdie(db, "store open");
-        s->base = meta_int(db, "source_off");
-        s->esz  = meta_int(db, "expert_bytes");
-        s->nexp = (int)meta_int(db, "nexpert");
-        const int64_t sb = meta_int(db, "source_bytes");
 
         /* one row per tensor, or the older one row per expert */
         sqlite3_stmt *st;
         if (sqlite3_prepare_v2(db, "SELECT name FROM sqlite_master"
-                               " WHERE type='table' AND name IN ('part','expert')",
+                               " WHERE type='table' AND name IN ('part_data','part','expert')",
                                -1, &st, NULL)) sqdie(db, "schema query");
-        if (sqlite3_step(st) != SQLITE_ROW) die("store has neither table");
+        if (sqlite3_step(st) != SQLITE_ROW) die("store has no known table");
         snprintf(s->tab, sizeof s->tab, "%s", (const char *)sqlite3_column_text(st, 0));
         sqlite3_finalize(st);
-        s->per_part = !strcmp(s->tab, "part");
+        s->per_part = strcmp(s->tab, "expert") != 0;
         sqlite3_close(db);
-        if (s->nexp != NEXP || s->esz * s->nexp != sb) die("store meta disagrees");
 
-        /* position in the file -> expert id, and prove the layer tiles */
+        /* Addressing comes from the index, not from the store. The store holds
+           bytes; where those bytes used to sit in a checkpoint is not its
+           business, and the new files carry no meta table at all. */
+        s->nexp = NEXP;
         int64_t o[NEXP];
+        s->base = INT64_MAX;
         for (int e = 0; e < NEXP; e++) {
             const ERec *r = expert_rec(L, e, 0, 0);
             if (e == 0) s->fid = r->file_id;
             else if (r->file_id != s->fid) die("layer spans files");
             o[e] = r->off;
+            if (r->off < s->base) s->base = r->off;
         }
-        for (int e = 0; e < NEXP; e++) {
-            const int64_t d = o[e] - s->base;
-            if (d < 0 || d % s->esz || d / s->esz >= NEXP) die("expert off grid");
-            s->pos2id[d / s->esz] = e;
-        }
-
-        /* where each tensor sits inside an expert, from the index not the store */
         s->npart = 0;
+        s->esz = 0;
         for (int w = 0; w < 3; w++)
             for (int k = 0; k < 2; k++) {
                 const ERec *r = expert_rec(L, 0, w, k);
@@ -738,10 +749,13 @@ static void open_stores(const char *dir)
                 s->poff[i] = r->off - o[0];
                 s->pnb[i]  = r->nbytes;
                 s->prow[i] = w * 2 + k;
+                s->esz += r->nbytes;
             }
-        int64_t tot = 0;
-        for (int i = 0; i < s->npart; i++) tot += s->pnb[i];
-        if (tot != s->esz) die("tensors do not tile an expert");
+        for (int e = 0; e < NEXP; e++) {
+            const int64_t d = o[e] - s->base;
+            if (d < 0 || d % s->esz || d / s->esz >= NEXP) die("expert off grid");
+            s->pos2id[d / s->esz] = e;
+        }
 
         s->on = 1;
         n_store++;
@@ -1590,8 +1604,13 @@ int main(int argc, char **argv)
        run silently pick up another machine's index. */
     const char *idxp = getenv("K3_INDEX");
     if (!idxp) die("K3_INDEX is not set - source config.env, or run ./build.sh");
+    /* 92 stores x one connection per reader is past the usual 1024 */
+    { struct rlimit rl;
+      if (!getrlimit(RLIMIT_NOFILE, &rl) && rl.rlim_cur < 4096) {
+          rl.rlim_cur = (rl.rlim_max < 4096) ? rl.rlim_max : 4096;
+          setrlimit(RLIMIT_NOFILE, &rl);
+      } }
     load_index(idxp);
-    { const char *v = getenv("K3_STORES"); if (v) open_stores(v); }
     dq_init();
     for (int i = 0; i < 128; i++) dfd[i] = -1;
     { const char *v = getenv("K3_STAGE"); if (v) {
@@ -1637,44 +1656,45 @@ int main(int argc, char **argv)
     { const char *v = getenv("K3_PREFETCH"); if (v) pf_on = atoi(v); }
     { const char *v = getenv("K3_TRUNKRAM"); trunk_ram = v ? atoi(v) : 0; }
     size_t tsz;
-    const char *sdir = getenv("K3_SLICES");
-    if (!sdir) die("K3_SLICES is not set - the directory holding L00.bin .. L92.bin");
+    DBDIR = getenv("K3_DB");
+    if (!DBDIR) die("K3_DB is not set - the directory holding catalog.db, trunk/, expert/, client/");
     {
         const double t0 = now_s();
-        char sp[1024];
-        int64_t off = 0;
-        quiet_load = 1;
         for (int L = 0; L < NLAY; L++) {
-            snprintf(sp, sizeof sp, "%s/L%02d.bin", sdir, L);
-            size_t n;
-            slice[L] = trunk_ram ? load_ram(sp, &n) : map_file(sp, &n);
-            slice_sz[L] = n;
-            slice_map_n[L] = trunk_ram ? last_map_n : n;
-            layer_off[L] = off;
-            off += (int64_t)n;
-        }
-        quiet_load = 0;
-        trunk_sz = tsz = (size_t)off;
-
-        /* layer_off is the running sum of the slice sizes, not something read
-           from a file, so it is only right if the layers tile the trunk with
-           no gap. Prove that against the index before addressing one weight. */
-        int bad = 0;
-        for (int L = 0; L < NLAY; L++)
+            int64_t lo = INT64_MAX, hi = 0;
             for (int s = 0; s < n_slots; s++) {
                 const Slot *sl = &slots[(size_t)L * n_slots + s];
                 if (!sl->present) continue;
-                if (sl->off >= layer_off[L] &&
-                    sl->off + sl->nbytes <= layer_off[L] + (int64_t)slice_sz[L]) continue;
-                if (++bad <= 5)
-                    fprintf(stderr, "L%d slot %d [%lld,%lld) outside slice [%lld,%lld)\n",
-                            L, s, (long long)sl->off, (long long)(sl->off + sl->nbytes),
-                            (long long)layer_off[L],
-                            (long long)(layer_off[L] + (int64_t)slice_sz[L]));
+                if (sl->off < lo) lo = sl->off;
+                if (sl->off + sl->nbytes > hi) hi = sl->off + sl->nbytes;
             }
-        if (bad) die("slices do not tile the trunk the index describes");
-        fprintf(stderr, "trunk: %d slices, %.2f GB, %s, %.2f s\n",
-                NLAY, trunk_sz / 1e9, trunk_ram ? "RAM" : "mmap", now_s() - t0);
+            if (lo == INT64_MAX) die("layer has no slots");
+            layer_off[L] = lo;
+            slice_sz[L] = slice_map_n[L] = (size_t)(hi - lo);
+            slice[L] = malloc(slice_sz[L]);
+            if (!slice[L]) die("trunk buffer");
+            char rel[64];
+            snprintf(rel, sizeof rel, "trunk/L%02d.db", L);
+            sqlite3 *db = db_open_ro(rel);
+            int got = 0;
+            for (int s = 0; s < n_slots; s++) {
+                const Slot *sl = &slots[(size_t)L * n_slots + s];
+                if (!sl->present) continue;
+                db_row(db, "slot_data", s, slice[L] + (sl->off - lo), (int)sl->nbytes);
+                got++;
+            }
+            sqlite3_close(db);
+            if (!got) die("trunk store is empty");
+            trunk_sz += slice_sz[L];
+        }
+        tsz = trunk_sz;
+        fprintf(stderr, "trunk: %d layers from SQLite, %.2f GB, %.2f s\n",
+                NLAY, trunk_sz / 1e9, now_s() - t0);
+    }
+    {
+        char ed[1024];
+        snprintf(ed, sizeof ed, "%s/expert", DBDIR);
+        open_stores(ed);
     }
     { const char *v = getenv("K3_COVER");
       if (v && atoi(v)) covc = calloc(trunk_sz >> 12, sizeof(uint16_t)); }
@@ -1715,15 +1735,19 @@ int main(int argc, char **argv)
     fprintf(stderr, "prefetch %s  trunk %s\n", pf_on ? "ON" : "OFF",
             trunk_ram ? "RAM" : "mmap");
 
-    /* section 5, initial conditions: the embedding */
+    /* section 5, initial conditions: the embedding.
+       One row per token, so only the prompt's rows are read, not 2.35 GB. */
     {
-        const MRec *m = &mrec[0];
-        const uint16_t *tab = (const uint16_t *)(file_ptr(m->file_id) + m->off);
-        for (int t = 0; t < NPOS; t++)
+        sqlite3 *db = db_open_ro("client/embed.db");
+        uint16_t row[E];
+        for (int t = 0; t < NPOS; t++) {
+            db_row(db, "embed", ids[t], row, E * 2);
             for (int i = 0; i < E; i++) {
-                uint32_t u = ((uint32_t)tab[(size_t)ids[t] * E + i]) << 16;
+                uint32_t u = ((uint32_t)row[i]) << 16;
                 memcpy(&resid[t][i], &u, 4);
             }
+        }
+        sqlite3_close(db);
     }
 
     double T0 = now_s();
@@ -2306,14 +2330,18 @@ int main(int argc, char **argv)
     /* ---------------------------------------------------------------- tail */
     float *orn = malloc(sizeof(float) * E), *orp = malloc(sizeof(float) * E);
     float *mn  = malloc(sizeof(float) * E);
-    for (int k = 1; k <= 3; k++) {
-        const MRec *m = &mrec[k];
-        const uint16_t *h = (const uint16_t *)(file_ptr(m->file_id) + m->off);
-        float *dst = (k == 1) ? orn : (k == 2) ? orp : mn;
-        for (int i = 0; i < E; i++) {
-            uint32_t u = ((uint32_t)h[i]) << 16;
-            memcpy(&dst[i], &u, 4);
+    {
+        sqlite3 *db = db_open_ro("client/head.db");
+        uint16_t h[E];
+        for (int k = 1; k <= 3; k++) {
+            db_row(db, "head_data", k, h, E * 2);
+            float *dst = (k == 1) ? orn : (k == 2) ? orp : mn;
+            for (int i = 0; i < E; i++) {
+                uint32_t u = ((uint32_t)h[i]) << 16;
+                memcpy(&dst[i], &u, 4);
+            }
         }
+        sqlite3_close(db);
     }
     float *foldO = malloc(sizeof(float) * E);
     for (int i = 0; i < E; i++) foldO[i] = orn[i] * orp[i];
@@ -2331,8 +2359,28 @@ int main(int argc, char **argv)
     AR(hf, srcbuf, nsnap + 1, foldO);
     rmsnorm(nrm, hf, mn, E, EPS5);
 
-    const MRec *lm = &mrec[4];
-    const uint16_t *LMW = (const uint16_t *)(file_ptr(lm->file_id) + lm->off);
+    /* lm_head is 2.35 GB, past SQLite's 2 GB blob ceiling, so it is one row
+       per vocab entry. A sequential scan beats 163,840 blob opens. */
+    uint16_t *LMW = malloc((size_t)VOCAB * E * 2);
+    if (!LMW) die("lm_head buffer");
+    {
+        const double t0 = now_s();
+        sqlite3 *db = db_open_ro("client/lmhead.db");
+        sqlite3_stmt *st;
+        if (sqlite3_prepare_v2(db, "SELECT id, data FROM lmhead ORDER BY id",
+                               -1, &st, NULL)) sqdie(db, "lmhead prepare");
+        int n = 0;
+        while (sqlite3_step(st) == SQLITE_ROW) {
+            const int id = sqlite3_column_int(st, 0);
+            if (sqlite3_column_bytes(st, 1) != E * 2) die("lmhead row length");
+            memcpy(LMW + (size_t)id * E, sqlite3_column_blob(st, 1), E * 2);
+            n++;
+        }
+        sqlite3_finalize(st);
+        sqlite3_close(db);
+        if (n != VOCAB) die("lmhead row count");
+        fprintf(stderr, "lm_head: %d rows from SQLite, %.2f s\n", n, now_s() - t0);
+    }
     float *logits = malloc(sizeof(float) * VOCAB);
     Bf(logits, nrm, LMW, VOCAB, E);
 
@@ -2552,9 +2600,7 @@ int main(int argc, char **argv)
         double u0 = now_s();
         if (arena) munmap(arena, arena_cap);
         double u1 = now_s();
-        if (trunk_ram)
-            for (int L = 0; L < NLAY; L++)
-                if (slice[L]) munmap(slice[L], slice_map_n[L]);
+        for (int L = 0; L < NLAY; L++) free(slice[L]);
         double u2 = now_s();
         printf("unmap: arena %.3f s (%.2f GB)   trunk %.3f s (%.2f GB)   total %.3f s\n",
                u1 - u0, arena_cap / 1e9, u2 - u1, trunk_ram ? tsz / 1e9 : 0.0, u2 - u0);

@@ -998,13 +998,106 @@ the 0.097 s should not yet be treated as a per-layer constant. Rebuilding
 layers 2 to 4 in the new schema would settle it, and needs the old stores
 deleted first - 29 GB free against 47 GB needed.
 
+## Step 21 - the whole model in SQLite, bit-exact, and 3.8x slower
+
+Everything is now in SQLite: the trunk, the experts, the embedding lookup
+table, `lm_head`, the output norms and the tokenizer. Nothing reads a
+safetensors file or a slice.
+
+```
+  catalog.db    164 KB   every relationship, foreign keys on
+  trunk/        93 files    54.47 GB   one row per trunk slot
+  expert/       92 files  1446.46 GB   one row per expert tensor, 5,376 a layer
+  client/        4 files     4.70 GB   embed, lmhead, head, vocab
+  -------------------------------------------------------------
+  189 payload files, 1,505.62 GB, every one verified against a second
+  independent read of its source before being marked complete
+```
+
+`PRAGMA foreign_key_check` reports **0 violations**, 0 files incomplete, and
+**189 distinct sha256 for 189 files** - no two payload files are the same
+bytes.
+
+### The gate
+
+```
+  md5 23d162dcefb18211a7540ef12948f1eb   token 17374   every run
+  trunk    93 layers from SQLite, 54.47 GB
+  experts  92 of 92 layers, 99.72 GB, 34,098 reads
+```
+
+**34,098 is exactly 5,683 x 6** - the distinct experts a 5-token prompt
+touches, times their six tensors. The whole model answers from a database and
+the logits are bit-identical.
+
+### What it costs
+
+| | slices + checkpoint | all SQLite |
+|---|---|---|
+| trunk load | 0.00 s, mmap | **32.06 / 32.74 / 33.01 s** |
+| lm_head | in `Bf`, mmap | 1.82 / 1.93 / 1.97 s |
+| timed wall | **8.89 s** | **33.63 / 35.08 / 35.12 s** |
+| process total | ~14.9 s | 68.94 / 71.10 / 71.45 s |
+| peak RSS | 56.8 GB | 59.0 GB |
+
+**3.8x slower on the timed region.** Two causes, and they are separable.
+
+**The 32 s trunk load is my implementation, not SQLite.** The old path mmapped
+93 slice files and let the kernel fault pages in *underneath the arithmetic*,
+so the I/O overlapped the compute and cost 0.00 s of measured startup. This
+version reads all 54.47 GB eagerly, single-threaded, before anything begins -
+1.70 GB/s. Nothing forces that; it is the obvious first implementation and it
+is the wrong one. Naming it as mine rather than as a property of SQLite.
+
+**The expert rate fell from 0.55 to 0.23 GB/s per thread**, and that one is
+real. With a single layer converted, its 15.77 GB store was largely in page
+cache. With all 92 converted, 99.72 GB is read against a page cache that also
+has to hold the 54.47 GB trunk buffer, so most reads genuinely come off the
+disk.
+
+### This falsifies step 19's extrapolation, in the direction it warned about
+
+Step 19 fitted `8.89 + 0.148n` and projected **22.5 s at 92 layers**, marked
+explicitly as "arithmetic on a four-point measurement, not an observation".
+
+**Measured: 33.63 s** - and with a *faster* schema than the one that was
+fitted. The extrapolation was optimistic by about 50% because at four layers
+the stores were cached and at ninety-two they are not. The caution was worth
+writing down, and the habit of writing it down is what makes the number
+correctable instead of embarrassing.
+
+### Three defects the build found
+
+- **`lm_head` cannot be one blob.** 2,348,810,240 B against SQLite's 2^31-1
+  ceiling. The first build died with `OverflowError: BLOB longer than INT_MAX
+  bytes`. It is now one row per vocab entry, like `embed`. The proposed schema
+  had said "lm_head stays one row"; that was wrong.
+- **`char tab[8]`** truncated the table name `part_data` to `part_da`.
+- **The descriptor limit.** 92 stores x 14 reader connections is 1,288 open
+  files against a default of 1,024, which surfaced as `unable to open database
+  file`. Raised at startup and the pool bounded to 16.
+
+### The checkpoint is gone
+
+Each layer's expert range was punched out of the safetensors **after** its
+store matched a second read of the source. The checkpoint now reads **1.5 TB
+apparent, 107 GB actual** - 1.39 TB reclaimed, offsets intact, expert bytes
+gone.
+
+**So `clover-k3.c` can no longer run.** This was named as unresolved in step
+14 and it is now resolved by being accepted: the single-machine reference is
+retired, and what proves this system correct from here is the preserved gate
+md5 and the recorded baseline, not a program that can be re-run.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
 O_DIRECT number, single-pod cold start and steady state, the contention
 curve up to four pods, the 93-way trunk split, ext4 hole punching, the
-slice build running bit-exact at the same speed as the reference, and the
-SQLite expert path bit-exact at a linear 0.148 s per converted layer.
+slice build running bit-exact at the same speed as the reference, the
+SQLite expert path bit-exact at a linear 0.148 s per converted layer, and the
+whole model - trunk, experts, embedding, lm_head, vocabulary - running from
+SQLite bit-exact at 3.8x the wall time.
 
 **Not measured, and not to be read as measured:** 93-deep pipeline behavior,
 cross-node transfer, Kubernetes scheduling and cgroup accounting, and aggregate
