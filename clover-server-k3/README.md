@@ -158,17 +158,16 @@ checkpoint:
 
 | | slices + checkpoint | all SQLite |
 |---|---|---|
-| trunk load | 0.00 s, mmap | 32.1 s |
-| timed wall | **8.89 s** | **33.6 s** |
-| process total | ~14.9 s | 68.9 s |
-| peak RSS | 56.8 GB | 59.0 GB |
+| process total | ~14.9 s | **50.8 - 59.7 s** |
+| peak RSS | 56.8 GB | **5.5 GB** |
+| peak trunk resident | 54.47 GB | **1,172 MB** |
 
-**3.8x slower, and two separable causes.** The 32 s trunk load is this
-program's fault, not SQLite's - the old path mmapped slices and let the kernel
-fault pages in underneath the arithmetic, while this one reads 54.47 GB
-eagerly and single-threaded before starting. The expert rate falling from 0.55
-to 0.23 GB/s per thread is real: at full scale the page cache cannot hold the
-working set.
+**Slower, and far smaller.** The trunk is streamed a layer at a time because
+every one of the 1,159 (layer, slot) pairs a run resolves is resolved
+**exactly once** - measured, min 1, mean 1.00, max 1. It is a stream, not a
+resident table, so holding all 54.47 GB was the wrong shape. Per-layer
+residency is 1,172 MB, which is exactly the largest layer; the floor for
+per-stage is **242.36 MB**, the largest single tensor.
 
 Along the way: the trunk split is free and bit-exact; the SQLite expert path
 cost a linear 0.148 s per layer at small scale; and **a row is one tensor, not

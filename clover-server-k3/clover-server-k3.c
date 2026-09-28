@@ -587,6 +587,9 @@ static int    n_store;
 static int64_t sq_bytes;
 static double  sq_secs;
 static int64_t sq_reads, sq_reopen, sq_open;   /* is the blob handle thrashing? */
+static int64_t tk_bytes;
+static double  tk_secs;
+static size_t  tk_live, tk_peak;               /* trunk bytes resident right now */
 static volatile int conn_busy[MAXCONN];
 
 static int claim_conn(void)
@@ -701,6 +704,42 @@ static void read_range_db(PRange *g, int L)
 }
 
 static const ERec *expert_rec(int L, int e, int which, int kind);
+
+/* The trunk is a stream, not a resident table: measured, every one of the
+   1159 (layer, slot) pairs a run resolves is resolved exactly once. So a
+   layer's slots arrive when the layer runs and leave when it ends, and the
+   reads happen under the arithmetic instead of before it. */
+static void trunk_layer_in(int L)
+{
+    if (slice[L]) return;
+    const double t0 = now_s();
+    slice[L] = malloc(slice_sz[L]);
+    if (!slice[L]) die("trunk layer buffer");
+    char rel[64];
+    snprintf(rel, sizeof rel, "trunk/L%02d.db", L);
+    sqlite3 *db = db_open_ro(rel);
+    int got = 0;
+    for (int s = 0; s < n_slots; s++) {
+        const Slot *sl = &slots[(size_t)L * n_slots + s];
+        if (!sl->present) continue;
+        db_row(db, "slot_data", s, slice[L] + (sl->off - layer_off[L]), (int)sl->nbytes);
+        got++;
+    }
+    sqlite3_close(db);
+    if (!got) die("trunk store is empty");
+    tk_bytes += slice_sz[L];
+    tk_secs += now_s() - t0;
+    tk_live += slice_sz[L];
+    if (tk_live > tk_peak) tk_peak = tk_live;
+}
+
+static void trunk_layer_out(int L)
+{
+    if (!slice[L]) return;
+    free(slice[L]);
+    slice[L] = NULL;
+    tk_live -= slice_sz[L];
+}
 
 /* Opens every store present in dir. Absent layers simply stay on the
    checkpoint, which is what makes a partial migration testable. */
@@ -1658,39 +1697,23 @@ int main(int argc, char **argv)
     size_t tsz;
     DBDIR = getenv("K3_DB");
     if (!DBDIR) die("K3_DB is not set - the directory holding catalog.db, trunk/, expert/, client/");
-    {
-        const double t0 = now_s();
-        for (int L = 0; L < NLAY; L++) {
-            int64_t lo = INT64_MAX, hi = 0;
-            for (int s = 0; s < n_slots; s++) {
-                const Slot *sl = &slots[(size_t)L * n_slots + s];
-                if (!sl->present) continue;
-                if (sl->off < lo) lo = sl->off;
-                if (sl->off + sl->nbytes > hi) hi = sl->off + sl->nbytes;
-            }
-            if (lo == INT64_MAX) die("layer has no slots");
-            layer_off[L] = lo;
-            slice_sz[L] = slice_map_n[L] = (size_t)(hi - lo);
-            slice[L] = malloc(slice_sz[L]);
-            if (!slice[L]) die("trunk buffer");
-            char rel[64];
-            snprintf(rel, sizeof rel, "trunk/L%02d.db", L);
-            sqlite3 *db = db_open_ro(rel);
-            int got = 0;
-            for (int s = 0; s < n_slots; s++) {
-                const Slot *sl = &slots[(size_t)L * n_slots + s];
-                if (!sl->present) continue;
-                db_row(db, "slot_data", s, slice[L] + (sl->off - lo), (int)sl->nbytes);
-                got++;
-            }
-            sqlite3_close(db);
-            if (!got) die("trunk store is empty");
-            trunk_sz += slice_sz[L];
+    /* Sizes and offsets now; bytes when the layer runs. Every (layer, slot) is
+       resolved exactly once in a run - 1159 of 1159, measured - so the trunk
+       is a stream, and holding all 54.47 GB of it was the wrong shape. */
+    for (int L = 0; L < NLAY; L++) {
+        int64_t lo = INT64_MAX, hi = 0;
+        for (int s = 0; s < n_slots; s++) {
+            const Slot *sl = &slots[(size_t)L * n_slots + s];
+            if (!sl->present) continue;
+            if (sl->off < lo) lo = sl->off;
+            if (sl->off + sl->nbytes > hi) hi = sl->off + sl->nbytes;
         }
-        tsz = trunk_sz;
-        fprintf(stderr, "trunk: %d layers from SQLite, %.2f GB, %.2f s\n",
-                NLAY, trunk_sz / 1e9, now_s() - t0);
+        if (lo == INT64_MAX) die("layer has no slots");
+        layer_off[L] = lo;
+        slice_sz[L] = (size_t)(hi - lo);
+        trunk_sz += slice_sz[L];
     }
+    tsz = trunk_sz;
     {
         char ed[1024];
         snprintf(ed, sizeof ed, "%s/expert", DBDIR);
@@ -1760,6 +1783,7 @@ int main(int argc, char **argv)
     for (int L = 0; L <= last; L++) {
         double t0 = now_s();
         cur_L = L;
+        trunk_layer_in(L);
         const int isMLA = ((L % 4) == 3 && L <= 91) || (L == 92);
         const int isMoE = (L >= 1);
 
@@ -2325,6 +2349,7 @@ int main(int argc, char **argv)
                  isMoE ? "MoE" : "dense", now_s() - t0);
           fflush(stdout);
           pr_secs += now_s() - _tp; }
+        trunk_layer_out(L);
     }
 
     /* ---------------------------------------------------------------- tail */
@@ -2440,6 +2465,9 @@ int main(int argc, char **argv)
                sq_secs > 0 ? sq_bytes / 1e9 / sq_secs : 0.0,
                (long long)sq_reads, (long long)sq_reopen,
                sq_reads ? 100.0 * sq_reopen / sq_reads : 0.0, (long long)sq_open);
+    printf("trunk, streamed       : %.2f GB in %.2f s (%.2f GB/s)  peak resident %.0f MB\n",
+           tk_bytes / 1e9, tk_secs, tk_secs > 0 ? tk_bytes / 1e9 / tk_secs : 0.0,
+           tk_peak / 1e6);
 
     {
         double tot = 0.0; int64_t wb = 0;
@@ -2600,7 +2628,7 @@ int main(int argc, char **argv)
         double u0 = now_s();
         if (arena) munmap(arena, arena_cap);
         double u1 = now_s();
-        for (int L = 0; L < NLAY; L++) free(slice[L]);
+        for (int L = 0; L < NLAY; L++) if (slice[L]) free(slice[L]);
         double u2 = now_s();
         printf("unmap: arena %.3f s (%.2f GB)   trunk %.3f s (%.2f GB)   total %.3f s\n",
                u1 - u0, arena_cap / 1e9, u2 - u1, trunk_ram ? tsz / 1e9 : 0.0, u2 - u0);

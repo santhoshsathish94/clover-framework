@@ -1089,6 +1089,76 @@ gone.
 retired, and what proves this system correct from here is the preserved gate
 md5 and the recorded baseline, not a program that can be re-run.
 
+## Step 22 - the trunk is a stream, and holding it was the wrong shape
+
+Step 21 loaded all 54.47 GB of trunk before starting and reported 59 GB peak
+RSS. That throws away the property the per-tensor schema was built for. The
+unit of consumption is not a layer, it is a **stage** - one operator
+invocation against one tensor - and a stage needs one tensor.
+
+### Measured first, from the program's own instrument
+
+`K3_STAGE` writes a row per invocation. 18,209 rows for the gate prompt:
+
+```
+  Q stages, trunk               1,159
+  X stages, experts            17,049
+
+  distinct (layer, slot) pairs  1,159
+  resolutions per pair          min 1   mean 1.00   max 1
+  resolved more than once       0 of 1,159
+```
+
+**Every trunk tensor is resolved exactly once.** Fetch, use, never needed
+again - the trunk is a stream. Which sets the residency floor:
+
+```
+  largest single trunk tensor    242.36 MB   (MUP, layer 0)
+  largest single layer           1,171.53 MB
+  whole trunk                    54.47 GB    <- what step 21 held
+```
+
+### The change
+
+Sizes and offsets are computed up front; **bytes arrive when the layer runs
+and are freed when it ends**, so the reads happen under the arithmetic rather
+than before it.
+
+| | eager | streamed per layer |
+|---|---|---|
+| peak trunk resident | 54.47 GB | **1,172 MB** |
+| peak RSS | 59.0 GB | **5.5 GB** |
+| process total | 68.94 / 71.10 / 71.45 | **56.50 / 50.84 / 59.65** |
+| expert rate per thread | 0.23 GB/s | **0.33 - 0.43 GB/s** |
+
+All runs `md5 23d162dcefb18211a7540ef12948f1eb`, token 17374.
+
+**Peak trunk residency 1,172 MB is exactly the largest layer the catalog
+predicted**, 1,171.53 MB, which is the check that the streaming is doing what
+it claims and not quietly retaining something.
+
+**Peak RSS falls 10.7x and trunk residency 46x.** The bytes read are
+identical - step 43 established the trunk is read exactly once per run at
+page granularity - so this is purely residency, not traffic.
+
+A second-order effect worth naming: **the expert rate improved as well**,
+0.23 to 0.33-0.43 GB/s per thread, because giving back 54 GB of buffer left
+the page cache room to hold expert pages.
+
+### What is still on the table
+
+Per-layer is not the floor. **Per-stage is 242.36 MB**, another 4.8x, and it
+is measurable from the same instrument: a slot is dead the moment the operator
+that resolved it returns. Freeing it there needs the call sites to say so, and
+that is not built.
+
+Trunk streaming runs at 1.61 to 2.63 GB/s, single-threaded per layer, so 21 to
+34 s of the run is still one thread reading. That is the next obvious thing
+and it is not done either.
+
+And this is still slower than the file-backed path: process total 51 to 60 s
+against roughly 15 s. Bit-exact, far smaller, still slower.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
@@ -1097,7 +1167,8 @@ curve up to four pods, the 93-way trunk split, ext4 hole punching, the
 slice build running bit-exact at the same speed as the reference, the
 SQLite expert path bit-exact at a linear 0.148 s per converted layer, and the
 whole model - trunk, experts, embedding, lm_head, vocabulary - running from
-SQLite bit-exact at 3.8x the wall time.
+SQLite bit-exact at 3.8x the wall time, and the trunk streamed per layer at
+1,172 MB peak residency instead of 54.47 GB.
 
 **Not measured, and not to be read as measured:** 93-deep pipeline behavior,
 cross-node transfer, Kubernetes scheduling and cgroup accounting, and aggregate
