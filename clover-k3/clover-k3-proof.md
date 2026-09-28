@@ -3,8 +3,8 @@
 All 34 prompts from [`prompts.tsv`](prompts.tsv), run through `clover-k3`,
 showing the 12 tokens it generated for each.
 
-The prompt is on the first line. Everything after `->` is the model's own
-output, shown exactly as it came out, including line breaks.
+Inside each block the prompt comes first, then `->`, then the model's own
+output exactly as it came out, line breaks and all.
 
 ---
 
@@ -75,13 +75,13 @@ print(fibonacci(10)) #
 
 ### 10
 
-```
+````
 SELECT name, COUNT(*) FROM users WHERE active = 1 GROUP BY
 -> name HAVING COUNT(*) > 1;
 +```
 +
 
-```
+````
 
 ### 11
 
@@ -99,7 +99,7 @@ for (int i = 0; i < n; i++) { total += arr[i]; } return
 
 ### 13
 
-```
+````
 git commit -m "fix: handle null pointer in the
 -> user service"
 ```
@@ -107,7 +107,7 @@ git commit -m "fix: handle null pointer in the
 ### 3. Push to Remote
 
 
-```
+````
 
 ### 14
 
@@ -287,12 +287,12 @@ python3 gen.py --ids 1008,10484,318,15383,387 12 prefix
 
 **Two things worth knowing when reading the output.** These prompts are bare
 completions with no chat template, so the model continues them as if they
-were lines in a file rather than questions to answer; that is why a few run
-on into quotes, diff markers or a second language. And six seconds a word is
-not interactive — a paragraph takes minutes.
+were lines in a file rather than questions to answer; that is why several
+run on into quotes, diff markers, fenced code or a second language. And six
+seconds a word is not interactive - a paragraph takes minutes.
 
 The side-by-side correctness comparison against an independent implementation
-of the same model — 34 of 34 identical answers, 3.40x less wall time — is in
+of the same model - 34 of 34 identical answers, 3.40x less wall time - is in
 [`clover-k3-comparison.md`](clover-k3-comparison.md), and the measurement
 record in
 [`../k3-analysis/clover-scaling-architecture.md`](../k3-analysis/clover-scaling-architecture.md).
