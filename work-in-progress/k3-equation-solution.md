@@ -3741,6 +3741,86 @@ the stage file, and I guessed the slot was named `S_GATE` when the provenance fi
 zero from a grep you have not verified against the real field layout is not evidence of
 absence** - it is the same failure as the `cover()` bug in step 43, at a smaller scale.
 
+## Step 47 - the instrumentation costs nothing, and neither would the globals
+
+C10 (the file-scope globals) and C11 (instrumentation in the hot loops) were the last two
+items from the step 45 review.
+
+### C11: the whole ceiling, measured
+
+I flagged this as "instrumentation in the hot loops". Reading the code first, that premise
+was already wrong: every piece of it sits **after** the closing brace of the operator's
+`#pragma omp parallel for`, on the master thread, once per invocation. Nothing is per
+element. Per invocation the cost is two `clock_gettime` calls, four global accumulations,
+one `vstat` call that returns immediately, one predictable `if (stg_fp)`, and an inlined
+`cover` that early-returns.
+
+Rather than estimate it, I removed **all** of it - the eleven operator entry timers,
+`op_add`, `vstat` and `cover` - and measured the result. That is the ceiling, not a
+partial fix:
+
+| | wall 5 tok | wall 64 tok |
+|---|---|---|
+| `clover-k3.c` | 8.733 | 41.525 |
+| all instrumentation removed | 8.735 | **41.585** |
+
+Bit-exact: 5-token md5 the preserved baseline, 64-token byte-identical. And **slower**,
+by less than the 0.07 s spread. There is nothing here. At roughly 110,000 timed
+invocations in a 64-token run and about 70 ns each, the arithmetic says ~8 ms of 41.5 s,
+and the measurement agrees with the arithmetic.
+
+**A by-product worth more than the result.** Checking where the instrumentation runs also
+established that `op_add`, `vstat`, `cover` and `stg_emit` are all outside every parallel
+region, and that the MoE expert loop is serial with the parallelism inside `Xm`. So none
+of them can race - which means **step 43's coverage instrument cannot race either**, a
+thing that result had been resting on without ever being checked.
+
+### C10: bounded by C11, not by argument
+
+The file has **99 file-scope statics, 46 of them written at run time**. That is a real
+structural fact: the program cannot be run twice in one process.
+
+But the performance question is already answered. The globals that hot code touches are
+exactly the instrumentation accumulators C11 removed - and removing them entirely,
+*along with* the two clock calls per invocation, measured at zero. **Restructuring them
+into a struct does strictly less than deleting them, so it cannot be worth more.** The
+rest of the globals are read-only after initialization and compile to RIP-relative
+addresses. I did not build C10, and the reason is a measurement rather than a preference.
+
+The audit did run, and found no defects of the kind that matter:
+
+- **No races.** The prefetch pipeline uses `__atomic` with a genuine release/acquire pair
+  (`pl_done[k]` stored RELEASE after the reads, loaded ACQUIRE before use), so the arena
+  bytes are guaranteed visible.
+- **No initialization-order hazard.** `covc` is allocated after `trunk_sz` is set;
+  `g_ids` is assigned after `K3_IDS` is parsed, which is the step 31 bug, fixed and
+  commented at the site.
+- **One real defect: `K3_PREFETCH` was parsed twice**, at two points in `main`, the second
+  silently redoing the first. Removed. Exactly one line differs from the pre-edit copy,
+  the 5-token md5 is still the preserved baseline, the 64-token output is byte-identical
+  to the pre-edit build, and a control confirms the surviving parse is the live one
+  (`K3_PREFETCH=0` prints OFF, `=4` prints ON).
+- **Noticed in passing: the single source has CRLF line endings**, and has since it was
+  first written on Windows and copied over. Harmless to the compiler, and left alone
+  deliberately - normalizing it would rewrite every line and destroy the one-line
+  provenance of edits like this one.
+
+### What this closes
+
+Every item from the step 45 architecture review is now resolved: A1-A4 and the attention
+pools kept (step 45, 0.81%), B5's MoE half rejected, B6 and B7 rejected, C8 dropped, C9
+done, C10 and C11 rejected. **The operator layer has been read as carefully as I know how
+and measured at every step, and what it had left to give was 0.81%.** The remaining cost
+is where step 36 said it was: expert bytes crossing a disk.
+
+### A method note
+
+The command that was meant to upload and verify this change was rewritten by my tooling -
+an `&` became `;&` - and left the shell sitting at a continuation prompt. **Nothing
+landed**, which I confirmed by checking the file's md5 and the parse count on the box
+before retrying rather than assuming either outcome. Same lesson as step 45's `pgrep`
+guard: verify what a command actually did, especially when it did not report.
+
 ## Progress
 
 | step | | status |
@@ -3782,6 +3862,7 @@ absence** - it is the same failure as the `cover()` bug in step 43, at a smaller
 | 45 | the code as an architect reads it; clover-k3.c, 0.81% faster, bit-exact | done |
 | 46 | the per-call allocator in `slot_vec` | measured, rejected |
 | 46 | one source: clover-k3.c adopted, the other seven archived | done |
+| 47 | instrumentation in the hot loops; the globals | measured, rejected |
 
 ## The comparison that matters: the equation against the engine
 
