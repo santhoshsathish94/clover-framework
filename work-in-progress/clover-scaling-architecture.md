@@ -201,47 +201,60 @@ were - and my script had sent stderr to `/dev/null`, so it failed silently. Two
 faults, both mine: the wrong assumption, and discarding the evidence that would
 have shown it.
 
-## Step 6 - the pod specification, PROVISIONAL
+## Step 6 - the pod, with experts on disk
 
-**These numbers are not yet earned, and were briefly written here as though
-they were.** Every measurement behind them came from `sqstage`, which reads
-expert blobs and checksums them. It does no attention, no routing, no MoE
-arithmetic, and holds no layer state. A pod does all of that. What follows is
-a starting hypothesis to be tested by running one.
+**The equation already solved the computation problem.** Over 34 prompts,
+pure arithmetic is **1.9% of wall time** and expert bytes are **79.7%**. What
+is left is a data problem and a concurrent-request problem, and the pod exists
+to solve those - not to hold a model in memory.
 
-| | provisional | what it actually rests on |
-|---|---|---|
-| CPU | 4 | thread sweep on a read-only benchmark: 44.9 ms at 4, worse at 8, 14, 24 |
-| Memory | 20Gi | footprint arithmetic plus 402 MB RSS from that same read-only run |
-| QoS | Guaranteed | the design assumes residency |
-| Pods per node | 1-2 | the contention curve, which **is** a real measurement |
+So the experts **stay on disk**, in a SQLite database sliced per layer, read by
+that layer's `clover-N`. The pod holds in memory only its trunk slice and its
+working buffers.
 
-What the memory figure does not include, because nothing has run a layer yet:
-`resid` and `snap`, the MoE intermediates at `SI=6144` and `DI=33792` per
-position, the KDA recurrent state `St[96][128][128]` at 6.29 MB, and whatever
-the expert decode path holds live.
-
-And an assumption never tested: **whether a pod needs all 896 experts resident
-at all.** A 5-token prompt touches about 62 per layer; across 34 prompts 78.9%
-get touched. So over time a pod probably wants most of them - but that is
-inference from the provenance capture, not an observation of a running pod.
-
-**What settles it:** `clover-1` existing and being run on real inputs, with
-RSS, thread scaling and stage time measured on the real work. Until then the
-only line in this table with a measurement behind it is pods-per-node.
-
-Footprint by layer kind - this part is arithmetic on the index and does hold:
+**A correction to the earlier version of this section.** It specified 20Gi per
+pod on the assumption that a layer's 896 experts would be resident, which made
+the warm measurements the steady state. That was my inference, not the design.
+With experts on disk the applicable numbers are the **cold** ones:
 
 ```
-  layer   kind        trunk MB   experts + slice GiB
-  L0      KDA          1172        1.09      no experts
-  L1      KDA+MoE       635       15.23      68 of these
-  L3      MLA+MoE       423       15.04      24 of these
+  per 64-expert stage, cold, 14 threads
+    O_DIRECT            79.8 ms   14.07 GB/s
+    SQLite  8 shards   107.2 ms   10.47 GB/s
+    SQLite  1 shard    138.8 ms    8.09 GB/s
 ```
+
+The 43-45 ms warm figures apply only to whatever fraction the page cache
+happens to hold, which is a consequence of how much memory the pod is given -
+not something the design guarantees.
+
+### What a pod actually needs, under this design
+
+| | |
+|---|---|
+| on disk | the layer's SQLite store, **15.77 GB** |
+| resident | the trunk slice, **423 MB (MLA) to 635 MB (KDA)** |
+| plus | `resid`, `snap`, MoE intermediates at `SI=6144` and `DI=33792` per position, KDA state `St[96][128][128]` at 6.29 MB |
+| read per stage | about **1.1 GB** of expert blobs, from disk |
+
+**Memory is therefore in the low single-digit GB, not 20Gi** - and the more
+that is granted above the working set, the more page cache holds and the closer
+the pod moves toward the warm numbers. That is a dial, not a requirement.
+
+Across the fleet: 92 layers x 15.77 GB = **1451 GB of expert store**, one
+slice per node rather than a copy of the model anywhere.
+
+**Still not measured, and the reason the spec stays provisional:** every
+figure above for CPU and memory comes from `sqstage`, which reads blobs and
+checksums them - no attention, no routing, no MoE arithmetic, no layer state.
+`clover-1` running on real inputs is what will replace them. The only line
+with a real measurement behind it remains pods-per-node, from the contention
+curve.
 
 **Verify early:** the box runs cgroup v2, where **page cache counts against the
-pod's memory limit**. That is what keeps the store resident, and it is also what
-will OOM-kill a pod that crosses the line. Confirm on pod 1, not pod 92.
+pod's memory limit**. With experts on disk that cuts the other way from before -
+the limit now decides how much of the store can stay cached. Confirm on pod 1,
+not pod 92.
 
 ## Step 7 - what crosses a pod boundary
 
