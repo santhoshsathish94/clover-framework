@@ -211,6 +211,16 @@ static const char *cur_part = "";
 static long   stg_q = 0, stg_x = 0;
 
 /* Q takes a raw weight pointer, so recover which trunk slot it is by address. */
+static int slot_idx_of_ptr(const unsigned char *W)
+{
+    for (int s = 0; s < MAXSLOT; s++) {
+        if (sbuf[s] && sbuf[s] == W) return s;
+        if (pin_on && pinbuf && cur_L >= 0 &&
+            pinbuf[(size_t)cur_L * MAXSLOT + s] == W) return s;
+    }
+    return -1;
+}
+
 static const char *slot_of_ptr(int L, const unsigned char *W)
 {
     if (L < 0 || L != tdb_L) return "?";
@@ -279,9 +289,69 @@ static void vstat(int o, float *const *Y, int T, int n)
         }
 }
 
+/* K3_TRACE: one row per invocation, not one row per operator. Buffered in
+   memory because an fprintf inside the layer body would be the measurement. */
+typedef struct { double t0, dt; int64_t bytes, disk; int L, kind, a, b; } Trace;
+enum { TR_OP = 0, TR_FETCH, TR_WAIT, TR_LAYER };
+static Trace  *trc;
+static int64_t trc_n, trc_cap;
+static double  trc_base;
+static int     trc_slot = -1;   /* which trunk slot the next op consumes */
+static int     trc_exp  = -1;   /* which expert, and which of its six tensors */
+static int     trc_part = -1;
+
+/* read_bytes in /proc/self/io counts what actually came off the block device,
+   so the difference across a fetch says how much of it was not already in the
+   page cache. */
+static int io_fd = -1;
+static int64_t io_read_bytes(void)
+{
+    if (io_fd < 0) io_fd = open("/proc/self/io", O_RDONLY);
+    if (io_fd < 0) return -1;
+    char b[512];
+    const ssize_t n = pread(io_fd, b, sizeof b - 1, 0);
+    if (n <= 0) return -1;
+    b[n] = 0;
+    const char *p = strstr(b, "read_bytes:");
+    return p ? strtoll(p + 11, NULL, 10) : -1;
+}
+
+static inline void trace(int kind, int L, int a, int b, double t0, int64_t bytes)
+{
+    if (!trc) return;
+    int64_t i;
+#pragma omp atomic capture
+    i = trc_n++;
+    if (i >= trc_cap) return;
+    trc[i].t0 = t0 - trc_base; trc[i].dt = now_s() - t0;
+    trc[i].bytes = bytes; trc[i].L = L; trc[i].kind = kind;
+    trc[i].a = a; trc[i].b = b;
+}
+
+/* An op row without the weight it read is not a stage, it is a category. */
+static Trace trc_last_op;
+static inline void op_ident(int slot, int expert, int part)
+{
+    trc_slot = slot; trc_exp = expert; trc_part = part;
+}
+
 static inline void op_add(int o, double t0, int64_t wbytes)
 {
     op_t[o] += now_s() - t0; op_n[o]++; op_wb[o] += wbytes;
+    if (trc) {
+        int64_t i;
+#pragma omp atomic capture
+        i = trc_n++;
+        if (i < trc_cap) {
+            trc[i].t0 = t0 - trc_base; trc[i].dt = now_s() - t0;
+            trc[i].bytes = wbytes; trc[i].L = cur_L; trc[i].kind = TR_OP;
+            trc[i].a = o;
+            /* slot for a trunk op, expert*8+part for an expert op, else -1 */
+            trc[i].b = (trc_slot >= 0) ? trc_slot
+                     : (trc_exp >= 0) ? -(trc_exp * 8 + trc_part + 1) : -1;
+        }
+        trc_slot = -1; trc_exp = -1; trc_part = -1;
+    }
 }
 
 static unsigned char *map_file(const char *path, size_t *sz)
@@ -795,13 +865,147 @@ static void trunk_read(int s, unsigned char *dst, int64_t nb)
     tk_par_bytes += nb;
 }
 
+/* ----------------------------------------------------------- raw trunk */
+/* A stage is a file. Its bytes start at offset 0, so there is no page list to
+   walk to reach them and O_DIRECT alignment is free. Measured against SQLite:
+   the blob path copies page cache -> sqlite -> caller at 0.77 GB/s per thread,
+   and pays that copy in full even when every byte is already cached.
+   K3_RAW     = root written by make_raw_trunk.py
+   K3_RAWMODE = 1 stream per layer, 2 whole trunk in anonymous RAM, 3 mmap. */
+static const char     *RAWDIR;
+static int             traw;              /* 0 keeps the SQLite trunk */
+static unsigned char **rawp;              /* [NLAY*MAXSLOT] address of a stage */
+static unsigned char  *rawarena;          /* mode 2: one mapping for all of it */
+static size_t          rawarena_n;
+static size_t         *rawmap_n;          /* mode 3: munmap length per stage */
+static int64_t         raw_bytes;
+static double          raw_secs;
+
+static void raw_path(char *o, size_t n, int L, int s)
+{
+    snprintf(o, n, "%s/trunk/L%02d/s%02d.bin", RAWDIR, L, s);
+}
+
+/* pread with an explicit offset carries no shared file position, so one fd is
+   safe for every thread. O_DIRECT only where offset, length and destination
+   all align; the buffered fd carries the tail. */
+#define RAWCH (4u << 20)
+static void raw_read(int L, int s, unsigned char *dst, int64_t nb, int nt)
+{
+    char p[1024];
+    raw_path(p, sizeof p, L, s);
+    const int fd = open(p, O_RDONLY | O_DIRECT);
+    const int fb = open(p, O_RDONLY);
+    if (fd < 0 && fb < 0) die(p);
+    const int64_t nch = (nb + RAWCH - 1) / RAWCH;
+    if (nt > nch) nt = (int)nch;
+    if (nt < 1) nt = 1;
+    volatile int bad = 0;
+#pragma omp parallel for schedule(static) num_threads(nt) if (nt > 1)
+    for (int64_t c = 0; c < nch; c++) {
+        const int64_t off = c * RAWCH;
+        const int64_t len = (off + (int64_t)RAWCH <= nb) ? (int64_t)RAWCH : nb - off;
+        const int aligned = fd >= 0 && (off % 4096) == 0 && (len % 4096) == 0 &&
+                            ((uintptr_t)(dst + off) % 4096) == 0;
+        const int use = aligned ? fd : fb;
+        if (use < 0) { bad = 1; continue; }
+        int64_t got = 0;
+        while (got < len) {
+            const ssize_t r = pread(use, dst + off + got, (size_t)(len - got),
+                                    (off_t)(off + got));
+            if (r <= 0) { bad = 1; break; }
+            got += r;
+        }
+    }
+    if (fd >= 0) close(fd);
+    if (fb >= 0) close(fb);
+    if (bad) die("raw stage read");
+}
+
+/* Every stage into one anonymous mapping. Stage starts are rounded to 4 KB,
+   which is the only reason the reads can be direct at all. */
+static void raw_load_ram(void)
+{
+    const double t0 = now_s();
+    rawp = calloc((size_t)NLAY * MAXSLOT, sizeof(unsigned char *));
+    if (!rawp) die("raw table");
+
+    size_t need = 0;
+    for (int L = 0; L < NLAY; L++)
+        for (int s = 0; s < n_slots; s++) {
+            const Slot *sl = &slots[(size_t)L * n_slots + s];
+            if (!sl->present) continue;
+            need += ((size_t)sl->nbytes + 4095) & ~(size_t)4095;
+            raw_bytes += sl->nbytes;
+        }
+
+    rawarena_n = need;
+    rawarena = (unsigned char *)mmap(NULL, need, PROT_READ | PROT_WRITE,
+                                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
+    if (rawarena == MAP_FAILED) die("trunk arena");
+    if (use_huge) madvise(rawarena, need, MADV_HUGEPAGE);
+
+    size_t at = 0;
+    for (int L = 0; L < NLAY; L++)
+        for (int s = 0; s < n_slots; s++) {
+            const Slot *sl = &slots[(size_t)L * n_slots + s];
+            if (!sl->present) continue;
+            rawp[(size_t)L * MAXSLOT + s] = rawarena + at;
+            at += ((size_t)sl->nbytes + 4095) & ~(size_t)4095;
+        }
+
+#pragma omp parallel for schedule(dynamic, 1) collapse(2)
+    for (int L = 0; L < NLAY; L++)
+        for (int s = 0; s < MAXSLOT; s++) {
+            if (s >= n_slots) continue;
+            const Slot *sl = &slots[(size_t)L * n_slots + s];
+            if (!sl->present) continue;
+            raw_read(L, s, rawp[(size_t)L * MAXSLOT + s], sl->nbytes, 1);
+        }
+
+    raw_secs = now_s() - t0;
+    fprintf(stderr, "trunk -> RAM: %.2f GB in %.2f s (%.2f GB/s, O_DIRECT, %s)\n",
+            raw_bytes / 1e9, raw_secs, raw_bytes / 1e9 / raw_secs,
+            use_huge ? "THP" : "4K");
+}
+
+/* The page cache holds the one copy and the operator reads it in place, so
+   nothing is copied and no RAM is private - but the experts can evict it. */
+static void raw_load_map(void)
+{
+    const double t0 = now_s();
+    rawp     = calloc((size_t)NLAY * MAXSLOT, sizeof(unsigned char *));
+    rawmap_n = calloc((size_t)NLAY * MAXSLOT, sizeof(size_t));
+    if (!rawp || !rawmap_n) die("raw table");
+    int nst = 0;
+    for (int L = 0; L < NLAY; L++)
+        for (int s = 0; s < n_slots; s++) {
+            const Slot *sl = &slots[(size_t)L * n_slots + s];
+            if (!sl->present) continue;
+            char p[1024];
+            raw_path(p, sizeof p, L, s);
+            const int fd = open(p, O_RDONLY);
+            if (fd < 0) die(p);
+            void *m = mmap(NULL, (size_t)sl->nbytes, PROT_READ, MAP_PRIVATE, fd, 0);
+            close(fd);
+            if (m == MAP_FAILED) die("stage mmap");
+            rawp[(size_t)L * MAXSLOT + s] = (unsigned char *)m;
+            rawmap_n[(size_t)L * MAXSLOT + s] = (size_t)sl->nbytes;
+            raw_bytes += sl->nbytes;
+            nst++;
+        }
+    raw_secs = now_s() - t0;
+    fprintf(stderr, "trunk -> mmap: %.2f GB in %d stages, %.2f s\n",
+            raw_bytes / 1e9, nst, raw_secs);
+}
+
 /* The trunk is a stream, not a resident table: measured, every one of the
    1159 (layer, slot) pairs a run resolves is resolved exactly once. So a
    layer's slots arrive when the layer runs and leave when it ends, and the
    reads happen under the arithmetic instead of before it. */
 static void trunk_layer_in(int L)
 {
-    if (pin_on) return;
+    if (pin_on || traw) return;
     char rel[64];
     snprintf(rel, sizeof rel, "trunk/L%02d.db", L);
     tdb = db_open_ro(rel);
@@ -810,13 +1014,15 @@ static void trunk_layer_in(int L)
 
 static void trunk_layer_out(int L)
 {
-    if (!pin_on) {
+    if (!pin_on && traw < 2) {
         for (int s = 0; s < MAXSLOT; s++) slot_drop(s);
-        for (int i = 0; i < TPARN; i++)
-            if (tcon[i]) { sqlite3_close(tcon[i]); tcon[i] = NULL; }
-        if (tdb) sqlite3_close(tdb);
-        tdb = NULL;
-        tdb_L = -1;
+        if (!traw) {
+            for (int i = 0; i < TPARN; i++)
+                if (tcon[i]) { sqlite3_close(tcon[i]); tcon[i] = NULL; }
+            if (tdb) sqlite3_close(tdb);
+            tdb = NULL;
+            tdb_L = -1;
+        }
     }
     store_close(L);
 }
@@ -1023,6 +1229,7 @@ static void pl_wait_for(int k)
     double t0 = now_s();
     while (!__atomic_load_n((int *)&pl_done[k], __ATOMIC_ACQUIRE)) sched_yield();
     double d = now_s() - t0;
+    trace(TR_WAIT, pl_L, k, pl_e[k], t0, 0);
     pl_wait += d;
     if (k == 0) pl_wait0 += d; else if (k < nreader) pl_waitE += d; else pl_waitL += d;
 }
@@ -1163,24 +1370,69 @@ static void prov_slot(int L, int s, const char *how)
             sl->dtype, (long long)sl->off, (long long)sl->nbytes, sl->d0, sl->d1);
 }
 
+/* O_DIRECT DMAs into RAM without going through any cache, so the stage the
+   operator is about to read is cold in L1, L2 and L3. 99.9% of stages fit in
+   the 96 MB L3, so walking one in first is at least possible.
+   K3_CPF: 0 off, 1 prefetch to L2/L3, 2 prefetch to L1, 3 touch and sum. */
+static int      cpf;
+static double   cpf_secs;
+static int64_t  cpf_bytes;
+static void cache_warm(const unsigned char *p, size_t n)
+{
+    if (!cpf) return;
+    const double t0 = now_s();
+    volatile uint64_t sink = 0;
+    if (cpf == 3) {
+        uint64_t acc = 0;
+#pragma omp parallel for schedule(static) reduction(+:acc) if (n > (1u << 20))
+        for (size_t o = 0; o < n; o += 64) acc += p[o];
+        sink = acc;
+    } else {
+        const int hint = (cpf == 2);
+#pragma omp parallel for schedule(static) if (n > (1u << 20))
+        for (size_t o = 0; o < n; o += 64) {
+            if (hint) _mm_prefetch((const char *)p + o, _MM_HINT_T0);
+            else      _mm_prefetch((const char *)p + o, _MM_HINT_T2);
+        }
+    }
+    (void)sink;
+    cpf_secs += now_s() - t0;
+    cpf_bytes += (int64_t)n;
+}
+
 static const unsigned char *slot_ptr(int L, int s)
 {
     Slot *sl = &slots[(size_t)L * n_slots + s];
     if (!sl->present) die("absent slot");
     if (prov_fp) prov_slot(L, s, "ptr");
     if (pin_on) return pinbuf[(size_t)L * MAXSLOT + s];
+    if (traw >= 2) return rawp[(size_t)L * MAXSLOT + s];
     if (!sbuf[s]) {
-        if (L != tdb_L) die("slot from a layer that is not open");
-        sbuf[s] = malloc((size_t)sl->nbytes);
+        if (!traw && L != tdb_L) die("slot from a layer that is not open");
+        /* O_DIRECT refuses a destination that is not block aligned, and a
+           malloc'd buffer only is by luck. */
+        if (traw) {
+            if (posix_memalign((void **)&sbuf[s], 4096, (size_t)sl->nbytes)) sbuf[s] = NULL;
+        } else {
+            sbuf[s] = malloc((size_t)sl->nbytes);
+        }
         if (!sbuf[s]) die("slot buffer");
         sbuf_n[s] = (size_t)sl->nbytes;
         sbuf_used[s] = 0;
+        const int64_t io0 = trc ? io_read_bytes() : 0;
         const double t0 = now_s();
-        trunk_read(s, sbuf[s], sl->nbytes);
+        if (traw) raw_read(L, s, sbuf[s], sl->nbytes, TPARN);
+        else      trunk_read(s, sbuf[s], sl->nbytes);
         tk_secs += now_s() - t0;
+        if (trc) {
+            const int64_t d = io_read_bytes() - io0;
+            trace(TR_FETCH, L, s, -1, t0, sl->nbytes);
+            if (trc_n > 0 && trc_n <= trc_cap) trc[trc_n - 1].disk = (d > 0) ? d : 0;
+        }
         tk_bytes += sl->nbytes;
         tk_live += sbuf_n[s];
         if (tk_live > tk_peak) tk_peak = tk_live;
+        cache_warm(sbuf[s], (size_t)sl->nbytes);
     }
     return sbuf[s];
 }
@@ -1287,6 +1539,7 @@ static void Q(float *y, const float *x, const unsigned char *W, int in, int out)
         for (; i < in; i++) acc = acc + (float)w[i] * x[i];
         y[o] = acc * scale;
     }
+    if (trc) op_ident(slot_idx_of_ptr(W), -1, -1);
     op_add(OP_Q, _t, (int64_t)out * (int64_t)rowb);
     op_fl[OP_Q] += 2 * (int64_t)out * (int64_t)in;
     vstat(OP_Q, &y, 1, out);
@@ -1352,6 +1605,7 @@ static void X(float *y, const float *x, const unsigned char *pk,
         double t0 = q[0] + q[2], t1 = q[1] + q[3];
         y[r] = (float)(t0 + t1);
     }
+    if (trc) op_ident(-1, cur_e, cur_part[0] == 'g' ? 0 : cur_part[0] == 'u' ? 1 : 2);
     op_add(OP_X, _t, (int64_t)rows * ((int64_t)inn / 2 + (int64_t)ngrp));
 }
 
@@ -1458,6 +1712,7 @@ static void Qm(float *const *Y, const float *const *Xs, int T,
             Y[t][o] = a * scale;
         }
     }
+    if (trc) op_ident(slot_idx_of_ptr(W), -1, -1);
     op_add(OP_Q, _t, (int64_t)out * (int64_t)rowb);
     op_fl[OP_Q] += 2 * (int64_t)out * (int64_t)in * (int64_t)T;
     vstat(OP_Q, Y, T, out);
@@ -1503,6 +1758,7 @@ static void Xm(float *const *Y, const float *const *Xs, int T,
             double b0 = q[0] + q[2], b1 = q[1] + q[3];
             Y[0][r] = (float)(b0 + b1);
         }
+        if (trc) op_ident(-1, cur_e, cur_part[0] == 'g' ? 0 : cur_part[0] == 'u' ? 1 : 2);
         op_add(OP_X, _t, (int64_t)rows * ((int64_t)inn / 2 + (int64_t)ngrp));
         op_fl[OP_X] += 2 * (int64_t)rows * (int64_t)inn;
         vstat(OP_X, Y, 1, rows);
@@ -1612,6 +1868,7 @@ static void Xm(float *const *Y, const float *const *Xs, int T,
         }
 #endif
     }
+    if (trc) op_ident(-1, cur_e, cur_part[0] == 'g' ? 0 : cur_part[0] == 'u' ? 1 : 2);
     op_add(OP_X, _t, (int64_t)rows * ((int64_t)inn / 2 + (int64_t)ngrp));
     op_fl[OP_X] += 2 * (int64_t)rows * (int64_t)inn * (int64_t)T;
     vstat(OP_X, Y, T, rows);
@@ -1872,6 +2129,13 @@ int main(int argc, char **argv)
     tsz = trunk_sz;
     { const char *v = getenv("K3_PIN"); pin_on = v ? atoi(v) : 0; }
     if (pin_on) trunk_pin();
+    RAWDIR = getenv("K3_RAW");
+    { const char *v = getenv("K3_RAWMODE"); traw = v ? atoi(v) : 0; }
+    if (traw && !RAWDIR) die("K3_RAWMODE needs K3_RAW");
+    if (pin_on && traw) die("K3_PIN and K3_RAWMODE are two answers to one question");
+    { const char *v = getenv("K3_CPF"); cpf = v ? atoi(v) : 0; }
+    if (traw == 2) raw_load_ram();
+    else if (traw == 3) raw_load_map();
     {
         char ed[1024];
         snprintf(ed, sizeof ed, "%s/expert", DBDIR);
@@ -1885,6 +2149,9 @@ int main(int argc, char **argv)
     { const char *v = getenv("K3_SITUPAR"); if (v) situ_par = atoi(v); }
     { const char *v = getenv("K3_PAR2"); if (v) par2 = atoi(v); }
     { const char *v = getenv("K3_DUMPLAY"); if (v) dumplay = fopen(v, "wb"); }
+    { const char *v = getenv("K3_TRACE");
+      if (v) { trc_cap = 4000000; trc = malloc(sizeof(Trace) * (size_t)trc_cap);
+               if (!trc) die("trace buffer"); trc_base = now_s(); } }
     { const char *v = getenv("K3_NEED");
       if (v) { need_fp = fopen(v, "w");
                if (need_fp) fprintf(need_fp, "kind\tlayer\tlabel\tfetched\tused\n"); } }
@@ -1917,7 +2184,8 @@ int main(int argc, char **argv)
     g_ids = ids;   /* after K3_IDS, or the dump labels the default prompt */
     int last = (argc > 1) ? atoi(argv[1]) : NLAY - 1;
     fprintf(stderr, "prefetch %s  trunk %s\n", pf_on ? "ON" : "OFF",
-            trunk_ram ? "RAM" : "mmap");
+            traw == 3 ? "raw mmap" : traw == 2 ? "raw RAM" : traw == 1 ? "raw stream"
+            : pin_on ? "sqlite pinned" : "sqlite stream");
 
     /* section 5, initial conditions: the embedding.
        One row per token, so only the prompt's rows are read, not 2.35 GB. */
@@ -2524,6 +2792,7 @@ int main(int argc, char **argv)
                  isMoE ? "MoE" : "dense", now_s() - t0);
           fflush(stdout);
           pr_secs += now_s() - _tp; }
+        trace(TR_LAYER, L, isMLA, isMoE, t0, 0);
         trunk_layer_out(L);
     }
 
@@ -2590,8 +2859,7 @@ int main(int argc, char **argv)
         lstat_vec(93, NPOS - 1, "9_logits",         logits, VOCAB);
         fclose(lstat_fp); lstat_fp = NULL;
     }
-    if (stg_fp) {
-        cur_L = 93;
+    if (stg_fp) {        cur_L = 93;
         { float *ll = logits; stg_emit("B", "lm_head", -1, 1, E, VOCAB, &ll); }
         fprintf(stg_fp, "#totals\tQ calls %ld\tX calls %ld\n", stg_q, stg_x);
         fclose(stg_fp); stg_fp = NULL;
@@ -2600,6 +2868,38 @@ int main(int argc, char **argv)
     { const char *lp = getenv("K3_LOGITS");
       FILE *f = fopen(lp ? lp : "clover-k3-logits.bin", "wb");
       fwrite(nrm, 4, E, f); fwrite(logits, 4, VOCAB, f); fclose(f); }
+
+    if (trc) {
+        const char *tp = getenv("K3_TRACE");
+        FILE *f = fopen(tp, "w");
+        if (f) {
+            fprintf(f, "layer\tstage\tcpu_s\tmem_s\tdisk_s\n");
+            const int64_t n = (trc_n < trc_cap) ? trc_n : trc_cap;
+            int stage[NLAY + 1];
+            for (int i = 0; i <= NLAY; i++) stage[i] = 0;
+            for (int64_t i = 0; i < n; i++) {
+                const Trace *r = &trc[i];
+                if (r->kind == TR_LAYER) continue;
+                double cpu = 0, mem = 0, dsk = 0;
+                if (r->kind == TR_OP) {
+                    cpu = r->dt;
+                } else if (r->kind == TR_FETCH) {
+                    /* split by how much of the fetch missed the page cache */
+                    const double frac = (r->bytes > 0 && r->disk > 0)
+                        ? (r->disk < r->bytes ? (double)r->disk / (double)r->bytes : 1.0) : 0.0;
+                    dsk = r->dt * frac;
+                    mem = r->dt - dsk;
+                } else {
+                    dsk = r->dt;      /* waiting on reader threads reading experts */
+                }
+                const int L = (r->L >= 0 && r->L <= NLAY) ? r->L : NLAY;
+                fprintf(f, "%d\t%d\t%.6f\t%.6f\t%.6f\n", L, stage[L]++, cpu, mem, dsk);
+            }
+            fclose(f);
+            printf("trace                 : %lld rows -> %s%s\n", (long long)n, tp,
+                   (trc_n > trc_cap) ? "  (TRUNCATED)" : "");
+        }
+    }
 
     int am = 0;
     for (int i = 1; i < VOCAB; i++) if (logits[i] > logits[am]) am = i;
@@ -2650,6 +2950,10 @@ int main(int argc, char **argv)
         printf("trunk, pinned         : %.2f GB held, loaded once in %.2f s (%.2f GB/s)\n"
                "                        every request after the first pays nothing for it\n",
                pin_bytes / 1e9, pin_secs, pin_bytes / 1e9 / pin_secs);
+    if (cpf)
+        printf("cache warm            : mode %d  %.2f GB walked in %.2f s (%.2f GB/s)\n",
+               cpf, cpf_bytes / 1e9, cpf_secs,
+               cpf_secs > 0 ? cpf_bytes / 1e9 / cpf_secs : 0.0);
     printf("  fetched vs used     : %.2f GB fetched, %.2f GB used, %.2f GB never read (%.2f%%)\n",
            need_fetch / 1e9, need_used / 1e9, (need_fetch - need_used) / 1e9,
            need_fetch ? 100.0 * (need_fetch - need_used) / need_fetch : 0.0);

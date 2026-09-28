@@ -1400,6 +1400,147 @@ still fits after the trunk is pinned - which is to say, it is a **memory
 capacity question, not a design question.** Not tested, because there is no
 second machine.
 
+## Step 27 - the trunk without SQLite: a stage is a file
+
+Step 24 profiled the run per stage and found the trunk fetch costing 8.813 s
+of a 41.30 s request. Splitting that cost by whether the bytes came off the
+block device - `read_bytes` in `/proc/self/io`, differenced across each
+fetch - gave a number that made no sense:
+
+```
+  layer 62 onward:   disk_s 0.0000     mem_s unchanged
+```
+
+From layer 62 the trunk is entirely in the page cache and the fetch still
+costs the same. A read that touches no disk is not a read, so what was the
+time?
+
+### It was never a read. It was a copy.
+
+```c
+sqlite3_blob_open(tcon[i], "main", "slot_data", "data", s, 0, &b);  /* walk */
+sqlite3_blob_read(b, dst + off, len, off);       /* cache -> sqlite -> dst */
+sqlite3_blob_close(b);
+```
+
+54.47 GB is copied into `sbuf[s]` every run whether or not the bytes came
+off the device, at **6.18 GB/s across eight threads - 0.77 GB/s per thread**,
+against a `memcpy` that runs about 10 GB/s on one core of this box. The
+missing order of magnitude is SQLite: a `blob_open` per thread per slot
+walking the overflow page list, then `blob_read` reassembling 65,536-byte
+pages.
+
+It is not page-fault cost. `mallopt(M_MMAP_THRESHOLD, 256 MB)` means slot
+buffers come from a reused heap arena and are not re-faulted per layer. That
+was checked before the claim was made, because the obvious guess was wrong.
+
+### The shape that removes it
+
+One file per (layer, stage). `make_raw_trunk.py` writes
+`trunk/L<LL>/s<SS>.bin`, hashes each stage out of SQLite, hashes it again off
+the disk, and refuses to continue on a mismatch.
+
+```
+stages   : 2455
+bytes    : 54468171880  (54.47 GB)
+all stages bit-exact against SQLite
+```
+
+2,455 files - exactly the 2,455 fetch stages step 24 counted, exactly the
+54.47 GB it measured. A stage now starts at offset 0 of its own file, so
+there is no page list to walk to reach it and O_DIRECT alignment is free.
+That last part is the whole reason the split is per stage and not per layer.
+
+Three read modes on the same layout, `K3_RAWMODE`: `1` streams the layer's
+stages with parallel chunked `pread`, O_DIRECT where offset, length and
+destination all align and a buffered fd for the tail; `2` loads all of it
+into one anonymous THP arena at startup; `3` mmaps each stage and reads in
+place.
+
+### Streaming wins, and residency loses
+
+Three consecutive gated runs per mode. Every run re-derives the logits and
+is checked against md5 `23d162dcefb18211a7540ef12948f1eb`, token 17374.
+
+| mode | rep 1 | rep 2 | rep 3 | peak RSS |
+|---|---|---|---|---|
+| **raw stream** | 33.92 | **18.60** | **18.63** | **3.91 GB** |
+| raw, all in RAM | 28.51 | 30.99 | 31.08 | 56.85 GB |
+| raw, mmap | 34.05 | 31.13 | 31.18 | 56.85 GB |
+| SQLite (what it replaces) | 56.47 | 45.66 | 39.39 | 3.91 GB |
+
+Twelve runs, twelve PASS. Steady state is reproducible to 0.03 s.
+
+```
+trunk, streamed  : 54.47 GB in 5.12 s (10.65 GB/s)  peak resident 242 MB
+   was           : 54.47 GB in 8.81 s ( 6.18 GB/s)  peak resident 242 MB
+```
+
+**The trunk held in RAM is 1.67x slower than streaming it, at 14.5x the
+memory.** This is step 26's finding again, now isolated: once the copy is
+gone a stage read is cheap enough that residency buys nothing and still
+costs the experts their page cache. Step 26 could not separate the two
+because it pinned *through* SQLite.
+
+### The cache warm: a clean negative
+
+O_DIRECT DMAs into RAM without passing through any cache, so the stage the
+operator is about to read really is cold in L1, L2 and L3 - and 99.9% of
+stages (2,452 of 2,455) fit in this box's 96 MB L3. Only three exceed it,
+all in layer 0. The idea that the cache should be pre-loaded per stage was
+therefore worth testing rather than arguing about.
+
+`K3_CPF`: 1 = `prefetcht2`, 2 = `prefetcht0`, 3 = touch every line.
+
+| K3_CPF | mean of 3 | warm cost | delta vs off |
+|---|---|---|---|
+| 0 - off | **18.593** | - | - |
+| 1 - to L2/L3 | 18.910 | 0.41 s | **+0.317** |
+| 2 - to L1 | 18.933 | 0.41 s | **+0.340** |
+| 3 - touch | 19.683 | 1.45 s | **+1.090** |
+
+**The delta equals the cost. Not a fraction of it is recovered.** All twelve
+PASS, so these are timings of a correct program.
+
+The counters say why. On a gated stream run:
+
+```
+  L1-dcache-loads          405,294,609,023
+  L1-dcache-load-misses     30,974,047,140    7.64%
+  L1-dcache-prefetches      18,364,864,439    hardware, already running
+  L2 accesses               29,735,438,841
+  L2 hits                   29,262,567,196    98.41%
+  fills from anywhere       30,795,098,904
+  fills from DRAM            1,636,943,336    5.31%
+```
+
+Operators read each weight as one sequential stream, which is the case the
+hardware prefetcher owns completely. Software prefetch re-issues work already
+done; `_MM_HINT_T0` on an 88 MB stage is worse still, because lines land in a
+1 MiB L1 and are evicted before the arithmetic reaches them. Mode 3 is the
+honest floor: 1.45 s is what moving 54.47 GB through the hierarchy once
+costs, and it buys nothing because the operator was going to move it anyway.
+
+**Cold-in-cache was not costing anything.** There is no second read to save,
+and the prefetcher already hides the first.
+
+### What this establishes
+
+Dropping SQLite for the trunk is worth **2.1x** at unchanged memory, and the
+two intuitions that came with it - hold it in RAM, pre-load the cache - are
+both measured losses. The gain is entirely in removing a copy, not in
+placing the bytes anywhere.
+
+The bottleneck has moved off memory:
+
+```
+  18.914 s elapsed    117.120 s user    19.685 s sys
+  136.8 CPU-seconds / (16 threads x 18.91 s) = 45% utilisation
+```
+
+Over half the machine is idle, with trunk fetch and compute still strictly
+serialised - 5.12 s of fetch that no arithmetic runs underneath.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
