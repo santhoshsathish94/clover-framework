@@ -730,6 +730,56 @@ static void slot_note_use(const unsigned char *W, int64_t used)
 static const ERec *expert_rec(int L, int e, int which, int kind);
 static void slot_drop(int s);
 
+/* A layer is visited once, so once it is done its store will never be asked
+   again. Leaving 92 x 14 connections open was the same error as holding the
+   trunk: not a leak, just never letting go. Safe here because pl_finish has
+   joined every reader before the layer ends. */
+static void store_close(int L)
+{
+    Store *s = &store[L];
+    if (!s->on) return;
+    for (int c = 0; c < MAXCONN; c++) {
+        if (s->bh[c]) { sqlite3_blob_close(s->bh[c]); s->bh[c] = NULL; }
+        if (s->db[c]) { sqlite3_close(s->db[c]); s->db[c] = NULL; }
+        s->row[c] = -1;
+    }
+}
+
+/* One slot, read by several threads into disjoint parts of the same buffer.
+   A stage is up to 242 MB and one thread was moving it at 3.62 GB/s. */
+#define TPARN 8
+#define TPARMIN (4 << 20)
+static sqlite3 *tcon[TPARN];
+static int64_t  tk_par_bytes;
+
+static void trunk_read(int s, unsigned char *dst, int64_t nb)
+{
+    const int nt = (nb >= TPARMIN) ? TPARN : 1;
+    if (nt == 1) { db_row(tdb, "slot_data", s, dst, (int)nb); return; }
+    const int64_t chunk = (nb + nt - 1) / nt;
+    volatile int bad = 0;
+    /* index i owns tcon[i], so no two threads touch the same connection */
+#pragma omp parallel for schedule(static) num_threads(nt)
+    for (int i = 0; i < nt; i++) {
+        const int64_t off = (int64_t)i * chunk;
+        int64_t len = nb - off;
+        if (len > chunk) len = chunk;
+        if (len <= 0) continue;
+        if (!tcon[i]) {
+            char uri[1024];
+            snprintf(uri, sizeof uri, "file:%s/trunk/L%02d.db?immutable=1", DBDIR, tdb_L);
+            if (sqlite3_open_v2(uri, &tcon[i], SQLITE_OPEN_READONLY |
+                                SQLITE_OPEN_NOMUTEX | SQLITE_OPEN_URI, NULL)) { bad = 1; continue; }
+        }
+        sqlite3_blob *b;
+        if (sqlite3_blob_open(tcon[i], "main", "slot_data", "data", s, 0, &b)) { bad = 1; continue; }
+        if (sqlite3_blob_read(b, dst + off, (int)len, (int)off)) bad = 1;
+        sqlite3_blob_close(b);
+    }
+    if (bad) die("parallel slot read");
+    tk_par_bytes += nb;
+}
+
 /* The trunk is a stream, not a resident table: measured, every one of the
    1159 (layer, slot) pairs a run resolves is resolved exactly once. So a
    layer's slots arrive when the layer runs and leave when it ends, and the
@@ -744,11 +794,13 @@ static void trunk_layer_in(int L)
 
 static void trunk_layer_out(int L)
 {
-    (void)L;
     for (int s = 0; s < MAXSLOT; s++) slot_drop(s);
+    for (int i = 0; i < TPARN; i++)
+        if (tcon[i]) { sqlite3_close(tcon[i]); tcon[i] = NULL; }
     if (tdb) sqlite3_close(tdb);
     tdb = NULL;
     tdb_L = -1;
+    store_close(L);
 }
 
 /* Opens every store present in dir. Absent layers simply stay on the
@@ -1069,7 +1121,7 @@ static const unsigned char *slot_ptr(int L, int s)
         sbuf_n[s] = (size_t)sl->nbytes;
         sbuf_used[s] = 0;
         const double t0 = now_s();
-        db_row(tdb, "slot_data", s, sbuf[s], (int)sl->nbytes);
+        trunk_read(s, sbuf[s], sl->nbytes);
         tk_secs += now_s() - t0;
         tk_bytes += sl->nbytes;
         tk_live += sbuf_n[s];
@@ -2531,9 +2583,10 @@ int main(int argc, char **argv)
                sq_secs > 0 ? sq_bytes / 1e9 / sq_secs : 0.0,
                (long long)sq_reads, (long long)sq_reopen,
                sq_reads ? 100.0 * sq_reopen / sq_reads : 0.0, (long long)sq_open);
-    printf("trunk, streamed       : %.2f GB in %.2f s (%.2f GB/s)  peak resident %.0f MB\n",
+    printf("trunk, streamed       : %.2f GB in %.2f s (%.2f GB/s)  peak resident %.0f MB\n"
+           "                        %.2f GB of it read by %d threads\n",
            tk_bytes / 1e9, tk_secs, tk_secs > 0 ? tk_bytes / 1e9 / tk_secs : 0.0,
-           tk_peak / 1e6);
+           tk_peak / 1e6, tk_par_bytes / 1e9, TPARN);
     printf("  fetched vs used     : %.2f GB fetched, %.2f GB used, %.2f GB never read (%.2f%%)\n",
            need_fetch / 1e9, need_used / 1e9, (need_fetch - need_used) / 1e9,
            need_fetch ? 100.0 * (need_fetch - need_used) / need_fetch : 0.0);

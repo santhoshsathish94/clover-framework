@@ -1290,6 +1290,59 @@ Not over-reading. The remaining costs are all about **holding, not fetching**:
 
 The first is done. The second and third are not.
 
+## Step 25 - letting go of connections, and reading a stage with eight threads
+
+Two changes, both the same idea as step 22: stop holding what is finished
+with, and stop doing serially what the hardware will do in parallel.
+
+**Connections.** A layer is visited once, so its store will never be asked
+again. `store_close(L)` runs at layer end, which is safe because `pl_finish`
+has joined every reader by then.
+
+**Parallel stage read.** A stage is up to 242 MB and one thread was moving it.
+Slots at or above 4 MB are now read by **eight threads into disjoint parts of
+one buffer**, each owning its own connection, indexed by loop iteration so no
+two threads share one. 54.09 GB of the 54.47 GB goes this way; the rest is
+small slots below the threshold.
+
+### Measured
+
+| | per stage | + close + parallel |
+|---|---|---|
+| peak open descriptors | 1,384 | **118** |
+| trunk stream rate | 2.90 - 3.66 GB/s | **5.77 - 6.34 GB/s** |
+| peak RSS | 5.85 GB | **3.91 GB** |
+| process total | 37.95 / 44.65 / 45.76 | **35.01 / 35.32 / 35.80** |
+
+All runs `md5 23d162dcefb18211a7540ef12948f1eb`, token 17374. Trunk residency
+stays at its 242 MB floor and fetched-versus-used stays at 0.00%.
+
+**118 descriptors is below the 1,024 default**, so the `setrlimit` from step
+21 is no longer load-bearing. It is kept because the peak is a property of the
+reader count and could move.
+
+**I predicted "roughly 14" and measured 118.** The difference is the trunk
+read's eight connections, the layer database, and the file descriptors the
+prefetch path still opens against the checkpoint. The prediction was the part
+I had in mind, not the whole process; worth recording because a tidy estimate
+that ignores everything it did not think of is how the 1,024 limit was
+breached in the first place.
+
+**The RSS drop of 1.94 GB is SQLite page cache** - 1,288 live connections each
+carrying their own, now at most a few dozen.
+
+### Where this leaves the whole arc
+
+| | eager | per layer | per stage | + close + parallel |
+|---|---|---|---|---|
+| peak trunk resident | 54.47 GB | 1,172 MB | 242 MB | 242 MB |
+| peak RSS | 59.0 GB | 5.5 GB | 5.85 GB | **3.91 GB** |
+| process total | 68.9 - 71.5 s | 50.8 - 59.7 s | 38.0 - 45.8 s | **35.0 - 35.8 s** |
+
+Against the file-backed path at roughly 14.9 s, the gap is now **2.35x**, down
+from 4.6x. Bit-exact throughout, and 15x smaller in memory than the version
+that started this section.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
