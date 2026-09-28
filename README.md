@@ -40,15 +40,13 @@ This repository contains the documentation, practical guidance, case studies, an
 
 ## Clover AI
 
-**Clover AI** is the next major implementation direction of the project.
+**Clover AI** is the implementation arm of the project: an open-source AI system that can produce meaningful engineering outcomes while remaining bounded, observable, verifiable, and accountable.
 
 The first thing built under it is [`clover-k3/`](clover-k3/) — the Kimi K3
 forward pass reduced to its mathematics and executed directly. It emits the
 same token as an independent implementation of the same model on all 34 prompts
 tested, in a third of the time. What it cost and what it does not show are in
 [What has been built](#what-has-been-built-and-what-has-not) below.
-
-The goal is to build an open-source AI system that can produce meaningful engineering outcomes while remaining bounded, observable, verifiable, and accountable.
 
 Its central principle is:
 
