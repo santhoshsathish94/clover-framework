@@ -1,15 +1,20 @@
-# Work in progress
+# K3 analysis
 
-Exploratory material that is not part of the framework doctrine.
+The investigation into running Kimi K3 — a 2.78-trillion-parameter model — on
+ordinary hardware, and what it took to establish that the model's equation was
+understood rather than merely reproduced.
 
-Documents here describe work that is being designed or trialed. They are not
-guidance, they have not been validated in practice, and they may be wrong,
-abandoned, or rewritten. Nothing in this folder should be cited as a Clover
-practice.
+This is exploratory material, not framework doctrine. Documents here describe
+work that was measured, and they record what was ruled out and what was got
+wrong as carefully as what worked. Nothing in this folder should be cited as a
+Clover practice.
 
 When something here is built and evidenced, it moves into `docs/`,
 `case-studies/`, or `examples/` with its evidence stated plainly. Until then it
 stays here.
+
+The working implementation this analysis produced lives in
+[`../clover-k3/`](../clover-k3/).
 
 ## Documents
 
@@ -17,10 +22,8 @@ stays here.
 |---|---|---|
 | [clover-ai.md](clover-ai.md) | Implementation direction for Clover AI — bounded tools, enforced permissions, deterministic verification | Direction, not implemented |
 | [heterogeneous-inference.md](heterogeneous-inference.md) | Three experiments on running a very large model on machines you can actually get, and where they point next | Direction, measured on one CPU, nothing on a GPU |
-| [self-hosting-slms.md](self-hosting-slms.md) | Running small language models on infrastructure an organization controls, wired into VS Code | Designed, not built |
-| [self-observation-loop.md](self-observation-loop.md) | Whether persistent external state produces traceable adaptation across runs | Experimental, running |
-
-`self-observation-state.json` holds the run state for the self-observation loop.
+| [clover-scaling-architecture.md](clover-scaling-architecture.md) | The measurement record, step by step, including every wrong turn | Measured, one box |
+| [k3-model-equation.md](k3-model-equation.md) | The model stated as one composed expression | Executed and verified |
 
 ## [Kimi K3 storage-streamed inference](fareed-khan-kimi-k3-in-c-explanation.md)
 
@@ -82,42 +85,14 @@ one CPU topology, and a recommendation in someone else's documentation lands on 
 machine their users own. Neither is a failure; a change can be right for our reality and
 wrong for someone else's.
 
-## [AI Manipulation](ai-manipulation/)
+## What this became
 
-A model-free developmental engine, a persistent supervisor with replaceable
-workers, and the documents describing both. It moved here from the repository
-root because it is an experiment rather than doctrine, and sitting at the root
-implied otherwise.
+The analysis above produced a working implementation: [`../clover-k3/`](../clover-k3/),
+a single C file written from the equation rather than from any engine, and kept
+bit-exact against a preserved baseline through every optimisation.
 
-### What has been demonstrated
-
-Each of these was observed in a bounded toy domain and nowhere else.
-
-| | Evidence |
+| | |
 |---|---|
-| Persistent state survives process termination | The engines reload and continue from committed JSON |
-| A capability can be acquired and kept | Five tasks on the ladder in `task_ladder.py`, each promoted only after passing anchor tests the engine cannot write |
-| Memory reduces the cost of later work | `control_comparison.py` solved the same ladder with and without memory: 2,397 evaluations against 1,869, a 22% saving, though transfer fired on only one of five tasks |
-| A promotion that breaks earlier work is reverted | Verified by corrupting an anchor deliberately and watching the rollback fire |
-| Self-certified claims are refused | `supervisor.py` routes every claim through the evaluator; only claims carrying independent evidence reach `validated_knowledge` |
-| Continuity survives replacing the worker | `model_swap_test.py` against two local language models from different families, `llama3.2:1b` then `qwen2.5:0.5b`; recorded in `model_swap_evidence.json` |
-
-### What has not been demonstrated
-
-| | Why not |
-|---|---|
-| That any of this holds outside a toy domain | The task ladder, the representations and the evaluator are all supplied by the experimenter |
-| That the process can leave the space designed for it | It searches parameters. It cannot invent a representation, and says so by pausing when a task is inexpressible |
-| That a language model continues the trajectory *usefully* | The handover carried, but neither model produced anything that passed the evaluator. `qwen2.5:0.5b` declines every cycle, so the swap only succeeds with the abler model first. The hosted worker has never completed a cycle: it reached the API and stopped at `429 insufficient_quota` |
-| Open-ended development, general capability, subjective experience | Untested, and the first two are not reachable from here |
-
-### Running it
-
-```bash
-python control_comparison.py           # control vs developmental, same ladder and budget
-python growth_report.py                # what the recorded state actually shows
-python model_swap_test.py              # does continuity survive replacing the worker
-python unified_development_engine.py   # one cycle
-```
-
-The anchor tests live in `task_ladder.py`. The engines read them and never write them.
+| [`../clover-k3/clover-k3-equation.md`](../clover-k3/clover-k3-equation.md) | the equation as that program actually evaluates it, and where it differs from [k3-model-equation.md](k3-model-equation.md) |
+| [`../clover-k3/clover-k3-proof.md`](../clover-k3/clover-k3-proof.md) | the same 34 prompts through both implementations: 34/34 identical answers, 2.95x |
+| [clover-scaling-architecture.md](clover-scaling-architecture.md) | the step-by-step measurement record behind it |

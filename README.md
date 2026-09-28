@@ -115,29 +115,6 @@ The detailed implementation direction is intentionally kept separate from this R
 
 ### What has been built, and what has not
 
-The first experiments live in [`k3-analysis/ai-manipulation/`](k3-analysis/ai-manipulation/).
-They are deliberately small, and every result below comes from a bounded toy
-domain — a search for coefficients of known functions over a five-task ladder.
-
-Demonstrated there, and nowhere else:
-
-- developmental state survives process termination and is reloaded
-- a capability is promoted only after passing anchor tests the engine cannot write
-- memory lowered the cost of later tasks: 2,397 evaluations without it against 1,869 with it
-- a promotion that breaks an earlier capability reverts the whole state
-- a worker cannot certify its own learning; only externally evidenced claims are kept
-- developmental continuity survived replacing the worker, tested with two real
-  local models from different families rather than stand-ins
-
-Not demonstrated, and not claimed:
-
-- that any of it holds outside the designed task space
-- that the process can invent a representation rather than search within one
-- that a language model continues the trajectory *usefully* — the handover
-  carried between two real local models, but neither produced anything that
-  passed the evaluator, and the hosted worker has never completed a cycle
-- open-ended development, general capability, or subjective experience
-
 A separate question — whether a very large model can run from storage rather
 than memory — has now been measured. A 2.78-trillion-parameter model ran on one
 rented CPU machine at about 5.3 seconds per token. Shrinking it to 8-bit brought
