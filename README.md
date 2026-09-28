@@ -102,7 +102,7 @@ It is:
 
 The GEX131-1 is there to answer that question.
 
-The experiments, in the order we ran them, and the predictions we got wrong: [`work-in-progress/heterogeneous-inference.md`](work-in-progress/heterogeneous-inference.md).
+The experiments, in the order we ran them, and the predictions we got wrong: [`k3-analysis/heterogeneous-inference.md`](k3-analysis/heterogeneous-inference.md).
 
 **Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c) · [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp)
 
@@ -110,12 +110,12 @@ The experiments, in the order we ran them, and the predictions we got wrong: [`w
 
 The detailed implementation direction is intentionally kept separate from this README:
 
-- [`work-in-progress/clover-ai.md`](work-in-progress/clover-ai.md) — Clover AI implementation direction
-- [`work-in-progress/README.md`](work-in-progress/README.md) — everything designed or trialed but not yet established
+- [`k3-analysis/clover-ai.md`](k3-analysis/clover-ai.md) — Clover AI implementation direction
+- [`k3-analysis/README.md`](k3-analysis/README.md) — everything designed or trialed but not yet established
 
 ### What has been built, and what has not
 
-The first experiments live in [`work-in-progress/ai-manipulation/`](work-in-progress/ai-manipulation/).
+The first experiments live in [`k3-analysis/ai-manipulation/`](k3-analysis/ai-manipulation/).
 They are deliberately small, and every result below comes from a bounded toy
 domain — a search for coefficients of known functions over a five-task ladder.
 
@@ -145,8 +145,8 @@ that to 4.1 and nearly halved the memory it needed; shrinking again to 4-bit
 gave almost nothing more, because by then the processor rather than the memory
 was the limit. All of it on one machine, one prompt at a time, and none of it on
 a GPU. See
-[`work-in-progress/kimi-k3-local-evidence.json`](work-in-progress/kimi-k3-local-evidence.json)
-and [`work-in-progress/heterogeneous-inference.md`](work-in-progress/heterogeneous-inference.md).
+[`k3-analysis/kimi-k3-local-evidence.json`](k3-analysis/kimi-k3-local-evidence.json)
+and [`k3-analysis/heterogeneous-inference.md`](k3-analysis/heterogeneous-inference.md).
 
 Running it that closely surfaced changes worth offering back, so they were
 contributed rather than kept here:

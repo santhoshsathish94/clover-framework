@@ -552,5 +552,5 @@ The current Clover evidence record remains explicit about what has and has not b
 
 - Fareed Khan, `kimi-k3-in-c`: https://github.com/FareedKhan-dev/kimi-k3-in-c
 - Clover Framework: https://github.com/santhoshsathish94/clover-framework
-- Clover AI implementation direction: `work-in-progress/clover-ai.md`
-- Clover local Kimi evidence: `work-in-progress/kimi-k3-local-evidence.json`
+- Clover AI implementation direction: `k3-analysis/clover-ai.md`
+- Clover local Kimi evidence: `k3-analysis/kimi-k3-local-evidence.json`

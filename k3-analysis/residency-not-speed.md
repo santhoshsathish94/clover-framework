@@ -326,7 +326,7 @@ Everything else in this document is arithmetic on top of those two numbers.
 
 ---
 
-**Evidence** — `work-in-progress/CONTEXT-kimi-k3-benchmark.md` (the measurement campaign,
-including the predictions that turned out wrong), `work-in-progress/k3-flow/cost-notes.md`
-(per-layer costs and the routing-prediction dead ends), `work-in-progress/CONTEXT-k3-observation.md`
+**Evidence** — `k3-analysis/CONTEXT-kimi-k3-benchmark.md` (the measurement campaign,
+including the predictions that turned out wrong), `k3-analysis/k3-flow/cost-notes.md`
+(per-layer costs and the routing-prediction dead ends), `k3-analysis/CONTEXT-k3-observation.md`
 (what was observed in 24 traced forward passes).

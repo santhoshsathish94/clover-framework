@@ -5,10 +5,10 @@ equation rather than from the engine, and kept bit-exact against a preserved
 baseline through every optimization.
 
 It is not a re-implementation of `kimi-k3-in-c`. It is the equation in
-`work-in-progress/k3-model-equation.md` executed directly, which is why it can
+`k3-analysis/k3-model-equation.md` executed directly, which is why it can
 be read end to end and why every operator can be timed and attributed
 separately. The measurement record lives in
-[`work-in-progress/k3-equation-solution.md`](../work-in-progress/k3-equation-solution.md).
+[`k3-analysis/k3-equation-solution.md`](../k3-analysis/k3-equation-solution.md).
 
 **This is the single-machine version.** One process, one box, the whole model
 in one address space. [`clover-server-k3`](../clover-server-k3/) is the same

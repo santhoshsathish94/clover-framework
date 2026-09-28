@@ -24,11 +24,11 @@ jobs:
           python-version: "3.12"
 
       - name: Run one provider-independent developmental cycle
-        working-directory: work-in-progress/ai-manipulation
+        working-directory: k3-analysis/ai-manipulation
         run: python unified_development_engine.py
 
       - name: Report growth
-        working-directory: work-in-progress/ai-manipulation
+        working-directory: k3-analysis/ai-manipulation
         run: |
           {
             echo '```'
@@ -40,7 +40,7 @@ jobs:
         run: |
           git config user.name "Clover Development Engine"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "work-in-progress/ai-manipulation/unified_development_state.json"
+          git add "k3-analysis/ai-manipulation/unified_development_state.json"
           if git diff --cached --quiet; then
             echo "No developmental state change."
           else

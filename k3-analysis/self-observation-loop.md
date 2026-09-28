@@ -66,7 +66,7 @@ If the same investigation is repeated with persistent state available, later dec
 - Error: The prediction was substantially supported; no material prediction error was identified.
 - Reflection: The investigation changed the next question from “does Clover have a loop?” to “what is the smallest mechanism that can turn Growth from a conceptual stage into experimentally measurable state change?”
 - Adaptation: The next experiment should not add another conceptual description. It should define a minimal machine-readable state transition and test whether a later decision can be traced to a prior recorded observation.
-- Evidence: `work-in-progress/clover-ai.md`, `docs/05-context-engineering.md`, `docs/04-framework.md`.
+- Evidence: `k3-analysis/clover-ai.md`, `docs/05-context-engineering.md`, `docs/04-framework.md`.
 
 ## Next Experiment
 
