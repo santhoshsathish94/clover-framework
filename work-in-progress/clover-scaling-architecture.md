@@ -2092,6 +2092,77 @@ fewer bytes, and step 30 already showed the 16 experts have no tail to cut -
 rank 0 to rank 15 is 4.2x, and dropping the bottom 8 loses 34.8% of the mean
 weight.
 
+## Step 34 - building the stage preload anyway, and what it measured
+
+Step 33 argued from counters that a stage preload could not pay. An argument
+from counters is not a result, so it was built and measured.
+
+### What was built
+
+`Xm` takes two more arguments, `pk2` and `sc2`, addressing the same tensor of
+the **next** stage. Each row issues the prefetches for its own row of that
+tensor before multiplying its own, so the pull is spread across the multiply
+instead of being a separate pass:
+
+```c
+#define PFROW(R) do {                                        \
+        const unsigned char *_p = pk2 + (size_t)(R)*(inn/2); \
+        const unsigned char *_s = sc2 + (size_t)(R)*ngrp;    \
+        if      (pfc_on == 1) PFLOOP(_MM_HINT_T0);           \
+        else if (pfc_on == 2) PFLOOP(_MM_HINT_T1);           \
+        else                  PFLOOP(_MM_HINT_T2);           \
+    } while (0)
+```
+
+The gate call prefetches the next stage's gate, up prefetches its up, down its
+down - so the whole 17.55 MB of stage n+1 is pulled during stage n.
+`K3_PFCACHE` selects the level: 1 = L1, 2 = L2, 3 = L3. Default 0.
+
+### It is genuinely live
+
+`ls_pref_instr_disp.all`, software prefetch instructions dispatched:
+
+```
+K3_PFCACHE=0        24,466,710
+K3_PFCACHE=3     1,606,612,504
+K3_PFCACHE=1     1,599,285,070
+```
+
+99.72 GB of expert weights is 1.558 billion cache lines, and 1.58 billion
+prefetches are dispatched - **one per line, as intended**. This is not a
+no-op being reported as neutral.
+
+### Result: no gain, and harm at L1
+
+| `K3_PFCACHE` | wall (reps) | X | fills | from DRAM |
+|---|---|---|---|---|
+| 0, off | 7.25 / 7.25 / 7.27 | 4.33 | 27.78 B | 537.7 M |
+| 3, L3 (T2) | 7.27 / 7.26 / 7.29 | 4.39 | 27.66 B | 503.6 M |
+| 2, L2 (T1) | 7.35 / 7.27 | 4.44 | | |
+| 1, L1 (T0) | 7.48 / 7.49 / 7.56 | 4.98 | 30.39 B | 718.1 M |
+
+All PASS `23d162dc`.
+
+**The best case is a wash.** The L3 hint does what it was asked to do - DRAM
+fills fall 537.7 M to 503.6 M, 6.3% - and the wall moves by 0.016 s, which is
+noise. Removing 6.3% of an effect that was only 1.9% of fills to begin with
+cannot show up in a wall clock.
+
+**The L1 hint actively harms.** 17.55 MB pushed toward a 32 KB L1 evicts the
+0.35 MiB per-thread working set that was fitting comfortably. Fills rise by
+2.6 billion and DRAM fills rise **33%**, 537.7 M to 718.1 M. X costs 0.65 s
+more. Prefetching made the cache behaviour worse, not better, and it made it
+worse in exactly the way the geometry predicted.
+
+### What this settles
+
+The prediction in step 33 was right and is now measured rather than argued:
+when 97.3% of fills already hit L2, there is no room for a software preload to
+help, and pushing harder up the hierarchy costs more than it returns. The code
+stays in, defaulted off, as the evidence.
+
+The constraint remains disk bytes.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and

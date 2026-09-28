@@ -1003,6 +1003,7 @@ static float DQ[256][16];
 static double DQd[256][16];
 static double DQ2[256][256][2];   /* scale byte, packed byte -> that byte's two doubles */
 static int xdec = 2;
+static int pfc_on;   /* K3_PFCACHE: 1 = L1, 2 = L2, 3 = L3, for stage n+1 */
 
 static void dq_init(void)
 {
@@ -1162,12 +1163,32 @@ static void Qm(float *const *Y, const float *const *Xs, int T,
     cover(W, (size_t)out * rowb);
 }
 
+/* pk2/sc2 address the same tensor of the next stage. Each row issues the
+   prefetches for its own row of that tensor, so the pull is spread over the
+   multiply rather than done as a separate pass. */
 static void Xm(float *const *Y, const float *const *Xs, int T,
-               const unsigned char *pk, const unsigned char *sc, int inn, int rows)
+               const unsigned char *pk, const unsigned char *sc, int inn, int rows,
+               const unsigned char *pk2, const unsigned char *sc2)
 {
     const double _t = now_s();
     const int ngrp = inn / GRP;
     const int cpg  = GRP >> 4;
+    const int nl   = inn / 128;   /* 64 B lines in one packed row */
+#if defined(__AVX2__)
+#define PFLOOP(HINT) do {                                                            \
+        for (int _l = 0; _l < nl; _l++)                                              \
+            _mm_prefetch((const char *)(_p + _l * 64), HINT);                        \
+        for (int _o = 0; _o < ngrp; _o += 64)                                        \
+            _mm_prefetch((const char *)(_s + _o), HINT);                             \
+    } while (0)
+#define PFROW(R) do {                                                                \
+        const unsigned char *_p = pk2 + (size_t)(R) * (inn / 2);                     \
+        const unsigned char *_s = sc2 + (size_t)(R) * ngrp;                          \
+        if      (pfc_on == 1) PFLOOP(_MM_HINT_T0);                                   \
+        else if (pfc_on == 2) PFLOOP(_MM_HINT_T1);                                   \
+        else                  PFLOOP(_MM_HINT_T2);                                   \
+    } while (0)
+#endif
 #if defined(__AVX2__)
     /* acc[t][m] below is indexed by a runtime t, so it cannot live in registers
        and every accumulation becomes a load-modify-store. T==1 is 77.6% of calls. */
@@ -1176,6 +1197,7 @@ static void Xm(float *const *Y, const float *const *Xs, int T,
         for (int r = 0; r < rows; r++) {
             const unsigned char *pr = pk + (size_t)r * (inn / 2);
             const unsigned char *sr = sc + (size_t)r * ngrp;
+            if (pk2) PFROW(r);
             __m256d a0 = _mm256_setzero_pd(), a1 = _mm256_setzero_pd();
             __m256d a2 = _mm256_setzero_pd(), a3 = _mm256_setzero_pd();
             const float *X0 = Xs[0];
@@ -1211,6 +1233,7 @@ static void Xm(float *const *Y, const float *const *Xs, int T,
         const unsigned char *pr = pk + (size_t)r * (inn / 2);
         const unsigned char *sr = sc + (size_t)r * ngrp;
 #if defined(__AVX2__)
+        if (pk2) PFROW(r);
         __m256d acc[NPOS][4];
         for (int t = 0; t < T; t++)
             for (int m = 0; m < 4; m++) acc[t][m] = _mm256_setzero_pd();
@@ -1609,6 +1632,7 @@ int main(int argc, char **argv)
                   pf_half / 1e9, esz, NPOS * TOPK);
       } }
     { const char *v = getenv("K3_NX"); nx_on = v ? atoi(v) : 0; }
+    { const char *v = getenv("K3_PFCACHE"); pfc_on = v ? atoi(v) : 0; }
     { const char *v = getenv("K3_NXREAD"); if (v) nx_nread = atoi(v);
       if (nx_nread < 1) nx_nread = 1; if (nx_nread > NREADER) nx_nread = NREADER; }
     int last = (argc > 1) ? atoi(argv[1]) : NLAY - 1;
@@ -2124,12 +2148,23 @@ int main(int argc, char **argv)
                                         ee[z]->d0, ee[z]->d1);
                         }
                         cur_e = e;
+                        const unsigned char *q1 = NULL, *r1 = NULL, *q3 = NULL,
+                                            *r3 = NULL, *q2 = NULL, *r2 = NULL;
+                        if (pfc_on && sx + 1 < nseen) {
+                            const int e2 = seen[sx + 1];
+                            const ERec *a = expert_rec(L, e2, 0, 0), *b = expert_rec(L, e2, 0, 1);
+                            const ERec *c = expert_rec(L, e2, 1, 0), *d = expert_rec(L, e2, 1, 1);
+                            const ERec *f = expert_rec(L, e2, 2, 0), *g = expert_rec(L, e2, 2, 1);
+                            q1 = res_ptr(a->file_id, a->off); r1 = res_ptr(b->file_id, b->off);
+                            q3 = res_ptr(c->file_id, c->off); r3 = res_ptr(d->file_id, d->off);
+                            q2 = res_ptr(f->file_id, f->off); r2 = res_ptr(g->file_id, g->off);
+                        }
                         cur_part = "gate";
                         Xm(go, zin, m, res_ptr(p1->file_id, p1->off),
-                           res_ptr(s1->file_id, s1->off), LAT, I_);
+                           res_ptr(s1->file_id, s1->off), LAT, I_, q1, r1);
                         cur_part = "up";
                         Xm(uo, zin, m, res_ptr(p3->file_id, p3->off),
-                           res_ptr(s3->file_id, s3->off), LAT, I_);
+                           res_ptr(s3->file_id, s3->off), LAT, I_, q3, r3);
                         if (hstat_on == 3 && m > 1) {
                             float *gs[NPOS];          /* situ is in place, so copy g first */
                             for (int q = 0; q < m; q++) {
@@ -2156,7 +2191,7 @@ int main(int argc, char **argv)
                         cur_part = "down";
                         Xm(dgo, (const float *const *)go, m,
                            res_ptr(p2->file_id, p2->off),
-                           res_ptr(s2->file_id, s2->off), I_, LAT);
+                           res_ptr(s2->file_id, s2->off), I_, LAT, q2, r2);
                     }
                 if (pf_on == 4 && !nx_used) pl_finish();
 
