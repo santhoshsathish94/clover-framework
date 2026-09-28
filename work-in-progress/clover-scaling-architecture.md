@@ -1844,6 +1844,135 @@ free:    157 GB
 
 Re-gated after the deletion: 14.51 s, PASS.
 
+## Step 32 - fetching the next layer's experts during this one
+
+`clover-k3.c` warm sat at 8.75 s. I claimed twice that there was nothing left
+to take, and I was wrong twice.
+
+**First wrong claim.** I put the I/O floor at 7.48 s, then "corrected" it up to
+8.68 s - so close to 8.75 that the run looked finished. The correction divided
+bytes read by *average* throughput over the whole run. Average throughput
+includes the time the device spends doing nothing. Using it as the device's
+capability builds the idle into the floor and then reports that there is no
+idle. The arithmetic was self-confirming.
+
+**Second wrong claim.** Asked where the remaining time went, I said DRAM
+bandwidth contention between the reader threads and the expert kernel. I had
+not measured it. When I did: of 27,483,594,867 cache fills, **538,842,230 reach
+DRAM - 1.96%**. The mechanism is withdrawn. Thread oversubscription (14 readers
+plus 16 OpenMP threads on 16 cores) is the likelier story, and is also
+unmeasured, so it stays a hypothesis.
+
+### Measuring the device instead of arguing about it
+
+`iostat -x 1` on `md2` during a warm run:
+
+```
+   82754 r/s   10037.9 MB/s   aqu 143.18   util 74.4%
+   92139 r/s   11174.5 MB/s   aqu 167.88   util 81.8%
+   90546 r/s   10981.0 MB/s   aqu 165.14   util 80.5%
+   90064 r/s   10924.3 MB/s   aqu 155.72   util 80.1%
+   91319 r/s   11077.7 MB/s   aqu 167.59   util 80.9%
+   92821 r/s   11259.8 MB/s   aqu 167.35   util 82.6%
+```
+
+**Around 80%, not saturated.** 11.0 GB/s average over a device that is idle a
+fifth of the time is 13.75 GB/s while it is working - which is what `load_ram`
+measured independently at 13.33 GB/s. The real floor is 99.86 GB / 13.3 GB/s =
+**7.49 s**, not 8.68.
+
+Where the idle sits, from the run's own profile:
+
+```
+wall                  8.75 s
+X, expert compute     4.57 s
+stall, waiting        2.42 s
+everything else       1.76 s   attention, Q, router, trunk
+per layer, else      18.9 ms
+x 93 layers           1.76 s   predicted device idle
+measured device idle  1.75 s   20% of 8.75 s
+```
+
+1.76 s predicted against 1.75 s measured. `pl_start` cannot fire until the
+router has produced the ids for this layer, so the expert queue drains at the
+end of each layer and stays empty right through the next layer's attention
+block. The device is waiting on the router, every layer, 93 times.
+
+### One thing that turned out to already be true
+
+Before changing anything I checked whether experts were being fetched
+layer-major when they should be stage-major. `K3_DUMPROUTE` showed layer 1's
+first sixteen queued experts are exactly position 0's sixteen, in rank order
+(`498 764 545 60 30 613 880 873 389 162 779 650 231 537 688 232`), with entries
+17-20 the first experts position 1 adds. The `seen[]` list is built
+position-outer, rank-inner: **the order is already stage-major**. `K3_PLGRAN`
+only picks whether a reader takes one expert or one range. Nothing to fix. A
+negative worth the ten minutes, because the alternative was rewriting a
+scheduler that was already correct.
+
+### The change
+
+Step 29 established that routing at position t is a pure function of tokens
+0..t. So for a prompt already seen, the ids for layer L+1 are known while layer
+L is still running. Three pieces:
+
+- **`K3_ROUTELOAD`** - the cached ids, checked against the live router on every
+  row. Any disagreement is fatal, not a warning.
+- **`K3_ARENA2`** - the arena as two fixed halves instead of one growing
+  buffer, so layer L+1 can be read into one while layer L is multiplied out of
+  the other. Every expert is 17,547,264 B and a layer draws at most NPOS*TOPK
+  of them, so each half sizes to 1.41 GB without knowing the routing.
+- **`K3_NX`** - `nx_begin(L+1)` fires at the *start* of layer L's MoE block.
+  The reads go out while attention, Q and the router are still running.
+
+### Result
+
+Three reps each, every run gated on md5 `23d162dcefb18211a7540ef12948f1eb`:
+
+| | wall (3 reps) |
+|---|---|
+| lookahead off | 8.76 / 8.74 / 8.75 |
+| `K3_NXREAD=14` | 7.25 / 7.25 / 7.28 |
+| `K3_NXREAD=18` | 7.26 / 7.26 / 7.25 |
+| `K3_NXREAD=22` | 7.27 / 7.29 / 7.28 |
+
+**8.75 -> 7.25 s, 1.49 s, 17.0%.** The reader sweep below that:
+
+```
+nxread= 4   wall 8.53   nxwait 2.58
+nxread= 7   wall 7.65   nxwait 1.35
+nxread=10   wall 7.36   nxwait 0.76
+nxread=14   wall 7.27   nxwait 0.47
+```
+
+The device during a lookahead run:
+
+```
+    99123 r/s   12023.5 MB/s   aqu 177.85   util 87.7%
+   111638 r/s   13538.9 MB/s   aqu 216.48   util 98.6%
+   111440 r/s   13516.8 MB/s   aqu 208.45   util 99.0%
+   110843 r/s   13444.0 MB/s   aqu 216.01   util 98.2%
+   112444 r/s   13640.5 MB/s   aqu 225.10   util 99.7%
+```
+
+**80% -> 98-99%**, 11.0 -> 13.5 GB/s. 98.42 GB at 13.5 GB/s is 7.29 s against a
+7.24 s wall: the expert compute is now entirely hidden behind the device, and
+`pipeline stall` falls from 2.42 s to 0.027 s. The remaining 0.47 s of waiting
+is the device itself, not scheduling.
+
+### One more thing I got wrong on the way
+
+The first lookahead run read 8.98 s and I nearly recorded it as a regression.
+The box had a load average of 5.19 from the run before it. On an idle box the
+same configuration is 7.65 s. This is the second time this arc that I have
+reported my own background job as a result; the check is one `uptime` and it
+takes a second.
+
+Defaults are unchanged - `K3_NX` off - so a plain `clover-k3.c` is still 8.75
+s. The lookahead needs a routing cache, and a routing cache needs the prompt to
+have been seen before, which is the serving case and not the first-request
+case.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
