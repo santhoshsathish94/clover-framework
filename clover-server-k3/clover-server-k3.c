@@ -622,6 +622,12 @@ static void arena_reserve(size_t need)
     arena_cap = cap;
 }
 
+/* K3_ARENA2: two fixed halves instead of one growing buffer, so layer L+1 can
+   be read into one while layer L is still being multiplied out of the other.
+   Fixed because a realloc would move bytes a reader thread is writing into. */
+static size_t pf_half;      /* 0 = one buffer, as before */
+static size_t pf_base;      /* where the current layer's ranges start */
+
 /* Expert bytes live here in mode 3, so the kernels must not read the mmap. */
 static PRange *find_rg(int fid, int64_t off)
 {
@@ -1585,6 +1591,83 @@ static int pr_cmp(const void *a, const void *b)
     return (x->off < y->off) ? -1 : (x->off > y->off);
 }
 
+/* ------------------------------------------- one layer of expert lookahead */
+/* Until step 29 this was impossible: which experts layer L+1 wants comes from
+   a router that needs layer L+1's hidden state. With the routing cached, the
+   ids are known before layer 0 runs, so L+1's bytes can be read into the other
+   arena half while layer L is still being multiplied out of this one. */
+static PRange       nx_rg[NPOS * TOPK * 6];
+static int          nx_n, nx_L = -1, nx_on, nx_nread = 7;
+static pthread_t    nx_th[NREADER];
+static volatile int nx_next;
+static double       nx_wait;
+static int64_t      nx_bytes, nx_hit, nx_miss;
+
+static void *nx_reader(void *u)
+{
+    (void)u;
+    for (;;) {
+        const int i = __atomic_fetch_add(&nx_next, 1, __ATOMIC_RELAXED);
+        if (i >= nx_n) break;
+        read_range(&nx_rg[i]);
+    }
+    return NULL;
+}
+
+static int nx_build(int L)
+{
+    if (L < 1 || L >= NLAY || !route_tab) return 0;
+    static PRange tmp[NPOS * TOPK * 6];
+    int n = 0;
+    for (int t = 0; t < NPOS; t++) {
+        const uint16_t *row = route_tab + ((size_t)L * NPOS + t) * TOPK;
+        for (int j = 0; j < TOPK; j++)
+            for (int w = 0; w < 3; w++)
+                for (int k = 0; k < 2; k++) {
+                    const ERec *rr = expert_rec(L, (int)row[j], w, k);
+                    tmp[n].fid = rr->file_id; tmp[n].off = rr->off;
+                    tmp[n].nb = rr->nbytes; n++;
+                }
+    }
+    qsort(tmp, n, sizeof(PRange), pr_cmp);
+    int m = 0;
+    for (int i = 0; i < n; i++)
+        if (m == 0 || tmp[i].fid != tmp[m - 1].fid || tmp[i].off != tmp[m - 1].off)
+            tmp[m++] = tmp[i];
+
+    size_t need = 0;
+    const size_t base = (size_t)(L & 1) * pf_half;
+    for (int i = 0; i < m; i++) {
+        tmp[i].aoff = tmp[i].off & ~(int64_t)4095;
+        tmp[i].alen = (size_t)((tmp[i].off + tmp[i].nb - tmp[i].aoff + 4095) & ~(int64_t)4095);
+        tmp[i].apos = base + need;
+        need += tmp[i].alen;
+        tmp[i].mem = arena + tmp[i].apos + (size_t)(tmp[i].off - tmp[i].aoff);
+        nx_bytes += tmp[i].nb;
+    }
+    if (need > pf_half) die("lookahead layer exceeds arena half");
+    /* opening a file is not thread safe, so it happens here and not in a reader */
+    for (int i = 0; i < m; i++)
+        if (tmp[i].fid >= 0 && dfd[tmp[i].fid] < 0)
+            dfd[tmp[i].fid] = open(fpath[tmp[i].fid], O_RDONLY | O_DIRECT);
+    memcpy(nx_rg, tmp, (size_t)m * sizeof(PRange));
+    return m;
+}
+
+static void nx_begin(int L)
+{
+    if (!nx_on || !route_load_on || !pf_half) return;
+    nx_n = nx_build(L);
+    if (nx_n <= 0) { nx_L = -1; return; }
+    nx_L = L; nx_next = 0;
+    for (int i = 0; i < nx_nread; i++) pthread_create(&nx_th[i], NULL, nx_reader, NULL);
+}
+
+static void nx_join(void)
+{
+    for (int i = 0; i < nx_nread; i++) pthread_join(nx_th[i], NULL);
+}
+
 static void prefetch_ranges(PRange *r, int n)
 {
     if (!pf_on || n <= 0) return;
@@ -1602,13 +1685,15 @@ static void prefetch_ranges(PRange *r, int n)
            disk while the device gives 14.4, and O_DIRECT cannot warm an mmap, so the
            bytes have to be read somewhere the kernels can address directly. */
         size_t need = 0;
+        pf_base = pf_half ? (size_t)(cur_L & 1) * pf_half : 0;
         for (int i = 0; i < m; i++) {
             r[i].aoff = r[i].off & ~(int64_t)4095;
             r[i].alen = (size_t)((r[i].off + r[i].nb - r[i].aoff + 4095) & ~(int64_t)4095);
-            r[i].apos = need;
+            r[i].apos = pf_base + need;
             need += r[i].alen;
         }
-        arena_reserve(need);
+        if (pf_half) { if (need > pf_half) die("arena half too small for a layer"); }
+        else arena_reserve(need);
         for (int i = 0; i < m; i++) {
             r[i].mem = arena + r[i].apos + (size_t)(r[i].off - r[i].aoff);
             if (dfd[r[i].fid] < 0)
@@ -2608,6 +2693,20 @@ int main(int argc, char **argv)
         snprintf(ed, sizeof ed, "%s/expert", DBDIR);
         open_stores(ed);
     }
+    /* Every expert is the same size, and a layer can draw at most NPOS*TOPK of
+       them, so the worst case is known without knowing the routing. */
+    { const char *v = getenv("K3_ARENA2");
+      if (v && atoi(v) && n_store) {
+          const size_t esz = (size_t)store[1].esz;
+          pf_half = (size_t)(NPOS * TOPK) * esz + (size_t)(NPOS * TOPK * 6) * 4096;
+          pf_half = (pf_half + 4095) & ~(size_t)4095;
+          arena_reserve(2 * pf_half);
+          fprintf(stderr, "arena: two halves of %.2f GB (expert %zu B, at most %d per layer)\n",
+                  pf_half / 1e9, esz, NPOS * TOPK);
+      } }
+    { const char *v = getenv("K3_NX"); nx_on = v ? atoi(v) : 0; }
+    { const char *v = getenv("K3_NXREAD"); if (v) nx_nread = atoi(v);
+      if (nx_nread < 1) nx_nread = 1; if (nx_nread > NREADER) nx_nread = NREADER; }
     { const char *v = getenv("K3_COVER");
       if (v && atoi(v)) covc = calloc(trunk_sz >> 12, sizeof(uint16_t)); }
     { const char *v = getenv("K3_VALUE"); if (v) val_on = atoi(v); }
@@ -3093,7 +3192,15 @@ int main(int argc, char **argv)
             free(sc_all);
 
             /* phase 2: every byte this layer will read is now known */
-            {
+            int nx_used = 0;
+            if (nx_L == L) {
+                const double _t = now_s();
+                nx_join();
+                nx_wait += now_s() - _t;
+                memcpy(g_rg, nx_rg, (size_t)nx_n * sizeof(PRange));
+                g_nrg = nx_n; nx_L = -1; nx_used = 1; nx_hit++;
+            } else {
+                if (nx_on) nx_miss++;
                 PRange rg[NPOS * TOPK * 6]; int nr = 0;
                 for (int t = TLO; t < NPOS; t++)
                     for (int j = 0; j < xtopk; j++)
@@ -3105,6 +3212,8 @@ int main(int argc, char **argv)
                             }
                 prefetch_ranges(rg, nr);
             }
+            /* the half this layer is not using is free, so fill it now */
+            nx_begin(L + 1);
 
             /* phase 3: batched. Each trunk weight is streamed once for all
                positions, and each distinct expert is decoded once for every
@@ -3155,10 +3264,10 @@ int main(int argc, char **argv)
                         }
                 }
 
-                if (pf_on == 4) pl_start(L, seen, nseen);
+                if (pf_on == 4 && !nx_used) pl_start(L, seen, nseen);
 
                 for (int sx = 0; sx < nseen; sx++) {
-                        if (pf_on == 4) pl_wait_for(sx);
+                        if (pf_on == 4 && !nx_used) pl_wait_for(sx);
                         const int e = seen[sx];
 
                         int mt[NPOS], mj[NPOS], m = 0;
@@ -3221,7 +3330,7 @@ int main(int argc, char **argv)
                            res_ptr(p2->file_id, p2->off),
                            res_ptr(s2->file_id, s2->off), I_, LAT);
                     }
-                if (pf_on == 4) pl_finish();
+                if (pf_on == 4 && !nx_used) pl_finish();
 
                 for (int t = TLO; t < NPOS; t++) {
                     for (int i = 0; i < LAT; i++) aL[i] = 0.0f;
@@ -3453,6 +3562,10 @@ int main(int argc, char **argv)
     if (route_load_on)
         printf("route cache           : %lld rows checked against the router, %lld wrong\n",
                (long long)route_checked, (long long)route_bad);
+    if (nx_on)
+        printf("expert lookahead      : %lld layers read a layer early, %lld not   %.2f GB\n"
+               "                        %.2f s spent waiting for the early read to finish\n",
+               (long long)nx_hit, (long long)nx_miss, nx_bytes / 1e9, nx_wait);
     if (route_save_on) {
         const char *sv = getenv("K3_ROUTESAVE");
         if (route_file_rw(sv, 1, g_ids))

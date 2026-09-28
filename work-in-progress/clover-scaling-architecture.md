@@ -1747,6 +1747,103 @@ expert I/O is the binding constraint, and right now I/O and compute sit at
 near parity - roughly 7.3 s against 7.0 s. Spreading the reads earlier helps
 only if the device is not already saturated. **Not measured. Not claimed.**
 
+## Step 31 - putting the weights back, and what the arc actually cost
+
+Asked to clear the box down to the open weights and run `clover-k3.c`, the
+first thing to check was whether that was safe. It was not.
+
+```
+/root/k3model     apparent 1.5T   actual 107G     92 of 112 files holed
+/srv/k3/db        apparent 1.4T   actual 1.4T
+```
+
+Step 13 punched holes in the checkpoint to reclaim space. The shards kept
+their lengths but lost 1,446.45 GB of blocks - 92.7%. **The SQLite store was
+the only intact copy of the expert weights**, and deleting it would have
+destroyed the model. Worse, `clover-k3.c` reads experts from those shards, and
+a hole reads as zeros with no error: it would have run and produced a wrong
+answer rather than failing.
+
+### The holes are exactly the ranges the index names
+
+Before writing a byte, a read-only probe compared `SEEK_HOLE` against the
+expert ranges in `eqidx.bin`:
+
+```
+layer 92   expert ranges in index : 15.72 GB     holes in the shard : 15.72 GB
+           holes NOT named by the index : 0
+```
+
+Zero unnamed holes on every layer checked, so everything missing was
+recoverable. Each shard is one layer: 16.99 GB apparent, 15.72 GB of experts
+punched, and the 1.27 GB that survived is the trunk - which was never
+punched.
+
+### Restore in place, verified, then reclaim
+
+Order, per layer, and not negotiable:
+
+```
+restore -> verify every tensor sha256 -> move store aside -> gate -> delete
+```
+
+Peak extra disk is one layer, ~15.7 GB, because the store goes as soon as the
+shard has the bytes. Layer 92 was done alone first: 5,376 tensors written, all
+verified, store moved aside, and `csk3` run with **91 of 92 layers from SQLite
+and layer 92 from the restored checkpoint** - md5 `23d162dc`, which proves the
+restored bytes are right end to end and not merely equal to the store.
+
+```
+restore exit 0
+final gate, every layer from the checkpoint:  PASS 23d162dcefb18211a7540ef12948f1eb
+stores left: 0
+checkpoint: apparent 1561.00 GB   actual 1561.00 GB   still holed: 0 files
+```
+
+1,446 GB written back, 494,592 tensors verified byte-for-byte, 11 gates along
+the way.
+
+### clover-k3.c on the restored weights
+
+```
+prefetch ON  trunk mmap
+total wall time       : 14.44 s
+emitted token         : 17374   engine emitted 17374   MATCH
+PASS  logits md5 23d162dcefb18211a7540ef12948f1eb
+```
+
+Cold, caches dropped. Which forces an honest comparison:
+
+| | cold | warm |
+|---|---|---|
+| **clover-k3.c, checkpoint + mmap** | **14.44** | - |
+| clover-server-k3.c, raw trunk + SQLite experts | 32.81 | 17.67 |
+| clover-server-k3.c, all SQLite | 56.51 | 39.39 |
+
+**The original was faster than anything the SQLite path reached, cold or
+warm.** The 41.30 -> 17.67 s improvement recorded in steps 27 and 28 is real,
+but it was recovering ground the move to SQLite had lost, not beating the
+starting point. The benchmark should have been `clover-k3.c` from the
+beginning; it was the previous SQLite step instead, and that flattered every
+result in the arc.
+
+What survives as durable is not a speedup. It is step 29: **routing at
+position t is a pure function of tokens 0..t**, measured 644/644 with a
+control, which holds for any implementation of this model.
+
+### Final state of the box
+
+```
+kept:    /root/k3model      1.5 TB    the weights, whole
+         /root/k3trunk_i8    51 GB    trunk.bin, which clover-k3.c reads
+         /srv/k3/model               symlink the index resolves through
+         /opt/clover-k3      43 MB    clover-k3.c, build.sh, gate.sh, eqidx.bin
+removed: /srv/k3/db, /srv/k3/raw, /srv/k3/trunk, /root/k3raw, scratch binaries
+free:    157 GB
+```
+
+Re-gated after the deletion: 14.51 s, PASS.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
