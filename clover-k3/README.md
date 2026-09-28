@@ -11,12 +11,13 @@ separately. The measurement record lives in
 [`k3-analysis/k3-equation-solution.md`](../k3-analysis/k3-equation-solution.md).
 
 **This is the single-machine version.** One process, one box, the whole model
-in one address space. [`clover-server-k3`](../clover-server-k3/) is the same
-equation on a different data layer, and then cut across a client, a router
-and 93 layer processes; it exists for a different reason and neither replaces
-the other. This one answers *is the equation right*, and because it does, it
-is also the **reference** - the only thing that can say whether the other
-version is correct. It is therefore kept unchanged.
+in one address space. A distributed variant of the same equation existed on a
+different data layer, cut across a client, a router and 93 layer processes; it
+was removed at v4.0 because it stopped being runnable when the SQLite store it
+read from was deleted to put the 1.5 TB checkpoint back. It remains in git
+history. This one answers *is the equation right*, and because it does, it is
+also the **reference** - the only thing that can say whether any other version
+is correct. It is therefore kept unchanged.
 
 ## What is here, and what is deliberately not
 
@@ -26,9 +27,12 @@ are left where they are.
 | file | what it is |
 |---|---|
 | `config.env` | the only file here that names a location |
-| `clover-k3.c` | the program, ~2,270 lines, no dependencies beyond libc, libm and OpenMP |
+| `clover-k3.c` | the program, ~2,500 lines, no dependencies beyond libc, libm and OpenMP |
+| `clover-k3-equation.md` | the equation as this program evaluates it, and where it differs from `k3-analysis/k3-model-equation.md` |
+| `clover-k3-proof.md` | the same 34 prompts through this and an independent engine: 34/34 identical answers |
 | `dump_st_model.py` | locates the five non-layer tensors in the checkpoint |
 | `dump_eqidx.py` | flattens trunk.json, st_model.json and the shard headers into one binary index |
+| `make_slice.py` | builds a single-layer slice for the decomposition work |
 | `prompts.tsv` | the 34 prompts used for the correctness campaign |
 | `build.sh` `gate.sh` `ab.sh` | build, correctness gate, and the A/B harness |
 
@@ -107,7 +111,7 @@ seconds, and every measurement taken before it was adopted had to be redone.
 
 ### Switches
 
-There are 27. The ones that change what the program does:
+There are 33. The ones that change what the program does:
 
 | | |
 |---|---|
@@ -121,11 +125,25 @@ There are 27. The ones that change what the program does:
 | `K3_PFXSAVE` `K3_PFXLOAD` `K3_PFXN` | prefix reuse: save or reuse the state for a leading prompt, bit-exact, 2.57x at 64/48 |
 | `K3_LOGITS` | where to write the logits |
 
-The rest are instrumentation and are off by default: `K3_PROV` (which trunk
-slot and expert block each operator took), `K3_LSTAT` (per-layer value
-statistics), `K3_STAGE` (one row per operator invocation), `K3_COVER` (reads
-per trunk page), `K3_VALUE`, `K3_DUMPROUTE`, `K3_DUMPSEL`, `K3_DUMPLAY`,
-`K3_DUMPRES`, `K3_HSTAT`, `K3_SITUSTAT`. Turning all of it off was measured and
+The cross-layer lookahead, added in step 32. Routing at position *t* is a pure
+function of tokens 0..*t* (step 29), so for a prompt already seen the experts
+for layer L+1 are known while layer L is still running:
+
+| | |
+|---|---|
+| `K3_ROUTESAVE` `K3_ROUTELOAD` | write or reuse the routing cache. Every loaded row is re-checked against the live router and a disagreement is fatal |
+| `K3_ARENA2` | the arena as two fixed halves, so L+1 reads into one while L multiplies out of the other |
+| `K3_NX` `K3_NXREAD` | queue layer L+1 at the start of layer L, and how many threads do it. Default off |
+
+Measured together: **8.75 s to 7.25 s**, device utilisation 80% to 98-99%.
+
+The rest are instrumentation or kernel variants and are off or at their best
+value by default: `K3_XDEC` and `K3_GFUSE` (dequantisation and gate-read
+variants, same arithmetic), `K3_PLGRAN`, `K3_PAR2`, `K3_SITUPAR` (parallel
+splits that reorder nothing), `K3_PFCACHE` (software cache preload; measured in
+step 34 and it does not pay), `K3_PROV`, `K3_LSTAT`, `K3_STAGE`, `K3_COVER`,
+`K3_VALUE`, `K3_DUMPROUTE`, `K3_DUMPSEL`, `K3_DUMPLAY`, `K3_DUMPRES`,
+`K3_HSTAT`, `K3_SITUSTAT`. Turning all the instrumentation off was measured and
 makes no difference to wall time (step 47).
 
 ## What it costs
@@ -135,11 +153,23 @@ On a Ryzen 9 7950X3D, 124 GB, NVMe RAID1, trunk resident in `/dev/shm`:
 | | 5 tokens | 64 tokens |
 |---|---|---|
 | wall | 8.73 s | 41.54 s |
+| wall, with the lookahead (`K3_NX=1`) | 7.25 s | not measured |
 
 Where the time goes, over 34 prompts: **experts 79.7%, trunk 16.3%, tables
 0.4%, arithmetic 1.9%**. The program is not compute-bound; it is bound by
 reading 99.72 GB of expert weights per run, which is 6.9% of the 1446 GB of
 routed experts and 100% of the trunk.
+
+The device ceiling was measured directly with `fio`, using this program's own
+access pattern: **14.6 GB/s**, flat from 8 reader threads to 32. At 7.25 s the
+run is reading at 13.79 GB/s, which is **94% of that ceiling**, so what is left
+is bytes rather than scheduling. io_uring was tested at every depth and is
+7-11% *slower* than the `pread` threads already in use (step 35).
+
+Against an independent implementation of the same model on the same box, over
+the same 34 prompts: **34/34 identical answers, 2.95x less wall time**. The
+full comparison, including what it does not show, is in
+[`clover-k3-proof.md`](clover-k3-proof.md).
 
 ## A caution about measuring it
 

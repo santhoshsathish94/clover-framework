@@ -345,9 +345,9 @@ uncapped sigmoid, the conv tap order, AR's float32 source-major sum, the delta r
 inversion between KDA and MLA, `A_log` at width 128 with 96 used, the layer type sets, the
 add-or-replace residual, and the nine-source tail.
 
-### 8.1 $\pi_j$ is a reciprocal-multiply, not a division — **defect**
+### 8.1 $\pi_j$ is a reciprocal-multiply, not a division — **defect, now fixed**
 
-`k3-model-equation.md` §4.2 writes
+`k3-model-equation.md` §4.2 wrote
 
 $$\pi_j = \mathrm{fl}_{32}\!\left(\frac{s_{\mathcal{J}_j}}{\sum_{j'} s_{\mathcal{J}_{j'}} + 10^{-20}}\right)\cdot\rho$$
 
@@ -370,10 +370,13 @@ By that document's own standard — *"Association order is part of each definiti
 formatting choice"* — this is a defect of the same kind as the three already recorded in its
 §6.
 
-**It also sits against its verification claim.** Its §6 states the document was transcribed
+**It also sat against its verification claim.** Its §6 states the document was transcribed
 into a program that reproduced 79,742,816 floats exactly. With the division form that cannot
-hold, so the program that was executed must have used the reciprocal form the document does
-not describe. One of the two statements needs correcting.
+hold, so the program that was executed must have used the reciprocal form the document did
+not describe.
+
+**Resolved.** `k3-model-equation.md` §4.2 now states the reciprocal form, and §6 records this
+as the fourth defect found by executing the document, alongside the three it already listed.
 
 ### 8.2 `routed_scale` is listed but never read — **scope, not a defect**
 

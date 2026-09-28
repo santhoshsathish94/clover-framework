@@ -298,10 +298,15 @@ accumulates in **double, sequentially**:
 $$s_e = \sigma\Big(\mathrm{fl}_{32}\big(\langle G_{L,e},\, x_2 \rangle_{64}\big)\Big), \qquad e = 0 \dots 895$$
 
 $$\mathcal{J} = \operatorname*{top-}k_{\ e}\ \big(s_e + \gamma_{L,e}\big), \qquad
-\pi_j = \mathrm{fl}_{32}\!\left(\frac{s_{\mathcal{J}_j}}{\sum_{j'} s_{\mathcal{J}_{j'}} + 10^{-20}}\right)\cdot \rho$$
+\pi_j = s_{\mathcal{J}_j} \cdot \mathrm{fl}_{32}\!\left(\frac{1}{\sum_{j'} s_{\mathcal{J}_{j'}} + 10^{-20}}\right)\cdot \rho$$
 
 The bias participates **only in selection**; the weight kept is the unbiased $s_e$. Top-$k$ is
-by repeated maximum with a strict `>`, so ties go to the lowest index.
+by repeated maximum with a strict `>`, so ties go to the lowest index. The normalization is a
+**reciprocal formed once in float32 and then multiplied**, not a division per term: the sum
+accumulates in double, `1/(sum + 1e-20)` is evaluated in double and rounded to float32 once,
+and each $s_{\mathcal{J}_j}$ is multiplied by that single float. Writing it as
+$\mathrm{fl}_{32}(s_j / \sum s)$ rounds once where this rounds twice, and moves 92% of the
+logits.
 
 **Compute.** The router read the full width; the experts read a compressed latent:
 
@@ -429,6 +434,22 @@ A third was found later, by `k3-equation-solution.md` step 10, and is also fixed
   `fmadd`. The reference is separate multiply and add; the verified build carries
   `-ffp-contract=off`, which compiles the accumulate to `vmulsd` + `vaddsd` rather than
   `vfmadd213sd`.
+
+A fourth was found by reading `clover-k3.c` back against this document, and is also fixed
+above:
+
+- **The MoE weight normalization said divide where the reference multiplies by a
+  reciprocal.** $\pi_j$ was written $\mathrm{fl}_{32}(s_j / \sum s)$, which rounds once. The
+  reference forms `1/(sum + 1e-20)` in double, rounds that to float32, and multiplies each
+  $s_j$ by it, which rounds twice. Both forms were built into one binary and selected at
+  runtime: the reciprocal gives the gate md5 `23d162dcefb18211a7540ef12948f1eb`, the division
+  gives `a82dfcd542c37d2c7c6aa4ab0df787b9`, and **157,370 of 171,008 values differ, 92.02%**,
+  with a maximum absolute delta of 6.199e-06. The emitted token survives, so this is
+  invisible to any check that only compares the answer.
+
+  This one is a correction to the document rather than a discovery about the model. The
+  program whose totals are quoted below must already have used the reciprocal form, because
+  the division form does not reproduce those bytes; the document simply described it wrongly.
 
 The other seven operators were transcribed as written and needed no correction.
 
