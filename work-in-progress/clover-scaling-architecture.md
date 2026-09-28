@@ -497,11 +497,71 @@ experiment is the three structures, same bytes, same routing order, cold and
 warm, on hardware where the two devices are genuinely separate - which is the
 Kubernetes node, not this box.
 
+## Step 12 - the trunk, split 93 ways
+
+The first artifact the decomposition actually needs. `make_slice.py` run over
+every layer, each slice written and then **sha256-compared against a second
+read of the source range**, so a slice is proven to be the range it claims and
+not merely the right length.
+
+```
+  slices                93
+  sum of all slices     54,468,222,976 B   54.47 GB
+  trunk full.bin        54,468,222,976 B   54.47 GB
+  contiguous, no gaps   yes
+  covers whole trunk    yes
+  distinct sha256       93 of 93
+  MLA / KDA / layer 0   24 / 68 / 1
+  disk free after       102 GB   (was 150 GB)
+```
+
+Sizes are as established earlier and unchanged: **L0 1172 MB**, KDA **635 MB**
+x68, MLA **423 MB** x24. Padding is 120 B on layer 0 and every KDA layer, 1784
+B on every MLA layer.
+
+Two things this settles rather than assumes:
+
+- The sum of the 93 slices is **byte-for-byte the whole trunk**, and each
+  slice's recorded `source_off` equals the running total of its predecessors.
+  So the layers tile the trunk exactly - no gap, no overlap, nothing dropped.
+- **24 MLA + 68 KDA + layer 0**. Layer 0 is itself KDA, which gives 69 KDA in
+  total, matching the structure taken from the checkpoint.
+
+The 93 distinct hashes are worth stating plainly: the KDA slices are all the
+same size, so identical hashes would have meant a copy bug. They are all
+different.
+
+**A note on what this is for.** On this box the slices are redundant - the
+layer processes can map their range straight out of the shared
+`/dev/shm/trunk.bin` and the 54.47 GB on disk buys nothing. The slices matter
+when a layer becomes a separately shipped image, which is the later item. They
+were built now because the split had to be proven correct before anything is
+built on top of it, and proving it costs disk rather than reasoning.
+
+## Step 13 - the filesystem can reclaim space from inside a file
+
+The incremental migration depends on a property that had to be checked, not
+assumed: whether freeing a byte range inside a file returns the blocks to the
+filesystem **without moving anything after it**.
+
+```
+  filesystem       ext4
+  punch-hole rc    0
+  du before        64M
+  du after         32M
+  file size        67108864   unchanged
+```
+
+`fallocate --punch-hole --keep-size` works. **The file size does not change**,
+which is the load-bearing part: every offset recorded in the index stays valid
+for the records that have not been migrated yet, so migration can proceed one
+expert at a time with the index still usable throughout.
+
 ## What is measured, and what is not
 
 Measured on one box: the dedup negative, the batching curve, every SQLite and
-O_DIRECT number, single-pod cold start and steady state, and the contention
-curve up to four pods.
+O_DIRECT number, single-pod cold start and steady state, the contention
+curve up to four pods, the 93-way trunk split, and ext4 hole punching.
 
 **Not measured, and not to be read as measured:** 93-deep pipeline behavior,
 cross-node transfer, Kubernetes scheduling and cgroup accounting, and aggregate
