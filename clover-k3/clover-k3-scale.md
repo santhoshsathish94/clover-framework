@@ -624,3 +624,237 @@ The important rule is:
 The next section can therefore move into the distributed portion itself:
 
 > **What does one of Pods 1–92 actually execute when it owns one complete K3 layer?**
+
+## 6. Pods 1–92: one layer, trunk + experts
+
+Section 5 established why the model entry is different and how the equation exposes deterministic routing dependencies. This section defines the actual distributed unit: **one complete K3 MoE layer**.
+
+The reason for writing it is simple:
+
+> **If scaling follows the model's computational boundary, what exactly must one Layer 1–92 unit own so that it can execute its layer independently?**
+
+The answer is the complete layer computation and the data required to perform it.
+
+### One pod owns one layer
+
+For every (L in {1,dots,92}), the distributed unit is:
+
+```text
+Pod L
+├── Layer L trunk
+├── Layer L attention path
+├── Layer L router
+├── Layer L: 896 experts
+├── Layer L local execution state
+└── working memory
+```
+
+The important point is **ownership**.
+
+The pod does not own a fraction of the whole model.
+
+It owns one complete layer:
+
+```text
+Layer L
+   ↓
+trunk + router + 896 experts + execution state
+```
+
+That means a request reaching Pod 37 does not require Pod 37 to know or hold the weights of Layers 0–36 or 38–92.
+
+The only model information it needs from outside its boundary is the runtime state produced by the preceding stage and the control information required to execute its own layer.
+
+### The trunk stays with the layer
+
+The trunk contains the layer-specific attention and projection weights that are required regardless of which experts are selected.
+
+The measured trunk slices are approximately:
+
+```text
+MLA layer: ~423 MB
+KDA layer: ~635 MB
+```
+
+The exact footprint varies because K3 does not use one identical attention path in every layer. The model equation defines the layer-specific KDA and MLA branches, while the scaling measurements establish the corresponding physical trunk sizes.
+
+Therefore the trunk is not a shared global resource.
+
+It belongs to the layer that uses it and remains local to that pod.
+
+### The router stays with the layer
+
+The router is also part of the layer's computation.
+
+For a MoE layer, the equation defines routing from the layer representation:
+
+```text
+x2
+ ↓
+router scores
+ ↓
+top-16 selection
+ ↓
+expert weights
+ ↓
+selected experts
+```
+
+The router therefore belongs to the same computational unit as the experts it selects.
+
+This does not mean the router has to delay all data movement until the last possible moment. Section 5 established the opposite: once the deterministic routing dependency is known for a previously seen prompt, the system can prepare the next layer's expert reads ahead of execution while retaining the live router as the correctness check.
+
+The distinction is:
+
+```text
+router = correctness authority
+routing information = data-preparation input
+```
+
+This allows the storage system to begin moving expert data before the arithmetic reaches that layer, without changing which experts the model actually selects.
+
+### The 896 experts remain layer-local
+
+Each MoE layer has exactly 896 experts.
+
+The measured packed expert size is approximately **17.55 MB per expert**, giving:
+
+```text
+896 × 17.55 MB ≈ 15.72 GB
+```
+
+The measured on-disk layer store is approximately **15.77 GB** including its storage structure and associated data.
+
+The architecture therefore changes the physical organization from:
+
+```text
+82,432 experts
+      │
+      ▼
+one global expert pool
+```
+
+to:
+
+```text
+Layer 1  → 896 experts
+Layer 2  → 896 experts
+...
+Layer 92 → 896 experts
+```
+
+No expert is required to be duplicated across all layer units merely because the model contains many layers.
+
+The expert weights stay where their computation lives.
+
+### Experts are stored, not necessarily resident
+
+The 15.77 GB figure is a **persistent layer-store size**, not a requirement that 15.77 GB of private RAM be allocated to every pod.
+
+The current scaling measurements use a per-layer SQLite store and read expert blobs as required.
+
+The measured design boundary is therefore:
+
+| Resource | Per layer |
+|---|---:|
+| Expert store on local storage | ~15.77 GB |
+| Trunk resident footprint | ~423–635 MB |
+| KDA state where applicable | ~6.29 MB |
+| Additional execution buffers | workload-dependent |
+| Full expert store required in private RAM | **No** |
+
+The scaling experiment measured approximately **1.1 GB of expert blobs per 64-expert stage**. Cold access was measured separately from warm page-cache behavior. This distinction matters because page cache depends on the memory limit and workload; warm-cache bandwidth is not a guaranteed pod specification.
+
+The evidence and caveats are recorded in [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md).
+
+### What crosses into a pod
+
+A pod does not receive the whole prompt as its layer input.
+
+It receives the runtime representation and state required by its layer.
+
+The payload includes the residual and accumulated snapshots. As depth increases, the number of snapshot vectors can increase:
+
+```text
+L1  → 2 vectors      57,344 B / position
+L25 → 4 vectors     114,688 B / position
+L48 → 5 vectors     143,360 B / position
+L85 → 9 vectors     258,048 B / position
+```
+
+For a five-position prefill, the measured total traffic across all 92 layer boundaries is approximately **70.53 MB**.
+
+This is important because the inter-layer interface is a **runtime-state interface**, not a model-weight interface.
+
+The large persistent expert stores stay with their layer. The relatively small runtime state moves between layers.
+
+### What a pod actually executes
+
+A pod is not merely a storage server.
+
+For its layer (L), it performs the layer function defined by the equation:
+
+```text
+input state
+    ↓
+attention / recurrent state update
+    ↓
+snapshot aggregation where applicable
+    ↓
+input normalization
+    ↓
+router
+    ↓
+selected expert computation
+    ↓
+residual update
+    ↓
+output normalization / projection
+    ↓
+next-layer state
+```
+
+The exact attention branch depends on the layer:
+
+- KDA layers execute the recurrent delta-rule path and carry KDA state.
+- MLA layers execute the latent/rope attention path and carry the corresponding cache state.
+- MoE layers execute the router, selected expert computation and residual update.
+- Snapshot-push layers additionally update the accumulated snapshot state.
+
+The equation is what makes this decomposition precise: it defines the operators, ordering, state transitions and layer-specific parameters instead of treating a pod as an arbitrary collection of kernels.
+
+### Why this unit is useful for scaling
+
+Once one pod owns one complete layer, scaling no longer means replicating the full model.
+
+It becomes possible to reason independently about:
+
+```text
+Layer 37
+├── storage
+├── memory
+├── CPU/GPU resources
+└── replicas
+```
+
+without automatically replicating Layers 0–36 and 38–92.
+
+That is the physical consequence of following the model equation.
+
+It does **not** yet prove that every layer should receive identical hardware, nor that a particular number of pods gives a particular throughput. Those are deployment measurements that come later.
+
+### Evidence behind this section
+
+This section is written to define the concrete ownership boundary of Pods 1–92.
+
+The evidence comes from:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which defines the layer-specific attention paths, routing, MoE computation, state and weights.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures the 15.77 GB layer store, 423–635 MB trunk range, runtime-memory behavior, expert-read behavior and inter-layer payload.
+- The verified Clover-K3 implementation, which keeps the live router as the correctness authority while allowing deterministic routing information to be used for earlier expert reads.
+
+These establish the **resource and data boundary** of a layer unit. They do not yet establish the final production hardware specification.
+
+The next section can therefore address the next architectural question:
+
+> **Once each pod owns one layer, what exactly moves from one layer to the next, and how can that movement be overlapped with computation?**
