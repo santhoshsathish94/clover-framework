@@ -396,9 +396,11 @@ The next section can therefore address the special case at the beginning of the 
 
 ## 5. Server-side model entry: why Layer 0 is different
 
-The previous section defined the contents of a distributed layer unit. This section handles the one deliberate exception at the beginning of the model: **Layer 0**.
+Section 4 defined the resource boundary of a distributed layer unit. This section establishes the beginning of that pipeline and, more importantly, what the model equation makes possible from that beginning.
 
-The reason for writing this section is to make the pipeline boundary precise. Layer 0 is part of the model computation, but it is not equivalent to Layers 1–92 because its computation and data shape are different.
+Layer 0 is different from Layers 1–92 because it is dense. But its importance is not only that it has no expert store.
+
+**Layer 0 is the model-entry transformation from which the composed equation establishes the deterministic computation and routing flow for the remaining layers.**
 
 ### Layer 0 is dense, not MoE
 
@@ -411,20 +413,55 @@ Layer 0
 └── no 896-expert store
 ```
 
-Layers 1–92 belong to the MoE set:
+Layers 1–92 are the MoE layers:
 
 ```text
 MoE layers = {1, 2, ..., 92}
 experts per MoE layer = 896
 ```
 
-Layer 0 therefore does not have the approximately 15.77 GB layer-local expert store that defines the persistent footprint of the distributed MoE units.
+Layer 0 therefore does not have the approximately 15.77 GB expert store that defines the persistent footprint of the distributed MoE units.
 
-This is not an arbitrary placement decision. It follows directly from the model definition in [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), where the dense MLP is explicitly defined for layer 0 and the MoE computation is defined only for layers 1 through 92.
+This structural distinction comes directly from [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which defines the complete layer composition, including the dense Layer 0 path and the routing/expert computation used by Layers 1–92.
+
+### The equation changes what "expert selection" means
+
+The important result from expressing the model as an equation is that expert selection is no longer an opaque runtime event.
+
+For each MoE layer, the equation explicitly defines the router:
+
+```text
+x2 at layer L
+      ↓
+routing scores
+      ↓
+top-16 expert selection
+      ↓
+selected expert computation
+```
+
+The route is therefore part of the deterministic model function.
+
+For a position (t), the relevant representation is determined by the prompt prefix up to (t). The repository's routing-predictability experiment verified this relationship and then used it to build a routing cache: for a prompt that has already been seen, the expert IDs required by a later layer can be known while the preceding layer is still executing.
+
+This is the key distinction:
+
+```text
+NOT: predict which expert might be useful
+
+BUT: derive the exact routing result from the known model inputs,
+     cache it, and verify it against the live router
+```
+
+The live router remains the correctness authority. The cached route is used to start the next layer's expert reads earlier; a disagreement is treated as a failure rather than silently changing the model result.
+
+The evidence for this is recorded in [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md) and the Clover-K3 implementation. The measured cross-layer lookahead changed the tested warm execution from approximately **8.75 s to 7.25 s**, a **17.0% reduction**, while retaining the exact router check.
+
+This is important to the scaling architecture because the equation does not merely tell us **where** computation occurs. It exposes enough of the dependency structure to determine **when the data required by a later layer can be prepared**.
 
 ### Layer 0 belongs to the server-side model entry
 
-The external architecture is:
+The external architecture is therefore:
 
 ```text
 client
@@ -452,47 +489,21 @@ server-side model exit
 client
 ```
 
-The client therefore does **not** connect directly to a Layer 0 machine or to the distributed layer units.
+The client does **not** connect directly to Layer 0 or to the distributed layer units.
 
-The server is the inference boundary. It accepts the client request, performs the model-entry work including embedding and Layer 0, and then passes the resulting runtime representation into the internal layer pipeline.
+The server is the inference boundary. It accepts the client request, performs the model-entry work including embedding and Layer 0, and then coordinates the internal layer pipeline.
 
-The distributed layer units are an internal implementation detail of the server-side inference system.
-
-This distinction matters because the architecture is not:
-
-```text
-client → Pod 0 → Pod 1 → ... → Pod 92
-```
-
-where every pod is an externally addressable inference endpoint.
-
-It is:
-
-```text
-client → server
-             │
-             ├── model entry / Layer 0
-             │
-             └── internal layer pipeline
-                    Layer 1 → ... → Layer 92
-             │
-             └── model exit
-             │
-             ▼
-           client
-```
-
-The server therefore owns the external request lifecycle while the internal layer units own the model transformations.
+The distributed layer units are therefore an internal AI-fabric implementation detail of the server-side inference system.
 
 ### Why Layer 0 does not need its own distributed expert pod
 
-There are two independent reasons.
+There are two direct reasons.
 
-First, Layer 0 has no MoE expert pool. There is therefore no large layer-local expert store whose physical placement motivates a dedicated distributed storage boundary.
+First, Layer 0 has no MoE expert pool. There is no 896-expert store whose physical placement motivates a dedicated distributed expert-storage boundary.
 
-Second, the model equation makes Layer 0 the first complete transformation after embedding. Its output is simply the runtime representation consumed by Layer 1.
+Second, Layer 0 is the first complete transformation after embedding. Its output establishes the runtime state from which the composed model computation proceeds into the MoE layers.
 
-That makes Layer 0 a natural part of the model-entry stage:
+Conceptually:
 
 ```text
 token IDs
@@ -501,30 +512,28 @@ embedding
    ↓
 Layer 0
    ↓
-runtime representation
+runtime representation + state
    ↓
-Layer 1
+Layer 1 → ... → Layer 92
 ```
 
-Keeping this stage at the server boundary also avoids introducing an unnecessary network or process boundary before the distributed portion of the model has any reason to begin.
+Keeping this stage at the server boundary avoids introducing an unnecessary distributed boundary before the MoE portion of the model begins.
 
 ### What the server sends into Layer 1
 
-The server does not send the original token IDs or the entire model state to Layer 1.
+The server does not send the entire model or simply forward raw token IDs to Layer 1.
 
-It sends the runtime representation and state required by the next layer.
+It sends the runtime representation and state required by the next stage.
 
-The exact state is determined by the model equation. The model carries:
+The equation defines the carried state, including:
 
 - the residual representation;
 - snapshot state where applicable;
 - recurrent KDA state;
 - convolution history;
-- and the attention cache state where applicable.
+- and attention cache state where applicable.
 
 The first distributed boundary therefore occurs after the server has completed the model-entry computation and has a valid state for Layer 1 to consume.
-
-Conceptually:
 
 ```text
 server-side model entry
@@ -534,23 +543,51 @@ server-side model entry
      Layer 1
 ```
 
-The layer units then repeat this pattern: consume the state produced by the previous stage, apply their own computation using their locally owned weights, and produce the state required by the next stage.
+The layer units then repeat the same mathematical pattern: consume the state produced by the previous stage, apply the layer's locally owned computation, and produce the state required by the next stage.
+
+### Why this matters for scaling
+
+This gives the architecture two different kinds of boundaries.
+
+The first is the **computational boundary**:
+
+```text
+Layer 0 → Layer 1 → ... → Layer 92
+```
+
+The second is the **data-preparation opportunity exposed by the equation**:
+
+```text
+known prompt/context
+       ↓
+deterministic routing information
+       ↓
+prepare later-layer expert data
+       ↓
+layer computation continues
+```
+
+The first boundary tells us where computation should live.
+
+The second tells us when the data for that computation can begin moving.
+
+Together they are what allow the infrastructure to follow the actual dependency graph of the model instead of treating the entire model as one indivisible machine image.
 
 ### What the measurements support
 
-The purpose of this section is not to claim that Layer 0 is intrinsically faster or that a particular server specification has already been proven.
+The purpose of this section is not to claim a final hardware specification or a universal throughput improvement.
 
-The evidence establishes the structural distinction.
+The evidence establishes three concrete facts:
 
-[k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md) defines Layer 0 as dense and defines the MoE set as layers 1–92. [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md) separately measures the Layer 0/trunk arrangement and the layer-level storage and access behavior used for the distributed portion.
+1. [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md) defines Layer 0 separately from the 92 MoE layers and makes routing an explicit part of the mathematical computation.
+2. The routing-predictability work establishes that, for a known prompt prefix, later-layer routing can be derived ahead of the layer that consumes it and checked against the live router.
+3. The measured lookahead experiment reduced the tested warm execution from 8.75 s to 7.25 s while preserving the exact routing check.
 
-The scaling measurements also show why the distinction should remain explicit: the large persistent storage footprint is created by the 92 MoE layer stores, while Layer 0 does not carry an equivalent 896-expert store.
-
-What has been established here is therefore the **pipeline ownership boundary**, not a final hardware specification.
+Those results establish the **dependency and data-preparation structure**. They do not by themselves establish cluster-wide throughput or the final production hardware configuration.
 
 ### The resulting boundary
 
-The architecture now has a clear beginning:
+The architecture now has a precise beginning:
 
 ```text
 CLIENT
@@ -561,6 +598,8 @@ SERVER
   │
   ├── embedding
   ├── Layer 0
+  │
+  ├── derive/prepare deterministic routing information
   │
   ▼
 INTERNAL AI FABRIC
@@ -580,11 +619,8 @@ CLIENT
 
 The important rule is:
 
-> **The client communicates with the server. The server owns the model entry and exit. The distributed layer units are internal stages that own Layers 1–92.**
-
-This gives the scaling architecture a clean boundary without pretending that every stage of the model has the same resource requirements.
+> **The client communicates with the server. The server owns model entry and exit. The composed equation determines the model's layer and routing dependencies, allowing later-layer data to be prepared when those dependencies are already known. The distributed layer units own Layers 1–92.**
 
 The next section can therefore move into the distributed portion itself:
 
 > **What does one of Pods 1–92 actually execute when it owns one complete K3 layer?**
-
