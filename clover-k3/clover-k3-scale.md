@@ -1531,224 +1531,309 @@ The next section can therefore separate three different scaling dimensions:
 
 ## 10. Client, server, and layer scaling are separate dimensions
 
-Section 9 established that Layers 1–92 can be scaled independently. That does not mean every capacity problem should be solved by adding another layer replica.
+Section 9 established that Layers 1–92 can be scaled independently. This section makes the complete production boundary explicit: the client, the server-side inference pipeline, and the individual layer pods are separate execution responsibilities.
 
-The system has three different scaling boundaries:
+The important point is that the diagram below describes the dependency path for one token. It does not describe the system's global execution schedule.
 
-```text
-CLIENTS
-   │
-   ▼
-SERVER / INFERENCE CONTROL
-   │
-   ▼
-LAYERS 1–92
+### The production flow
+
+```
+CLIENT
+  │
+  ├── token → vector
+  │   embed_tokens lookup (~2.35 GB table)
+  │
+  ▼
+SERVER-SIDE INFERENCE PIPELINE
+  │
+  ├── Layer 0
+  │
+  ├── Layer 1 → Pod 1
+  ├── Layer 2 → Pod 2
+  ├── Layer 3 → Pod 3
+  │       ...
+  └── Layer 92 → Pod 92
+  │
+  ▼
+CLIENT
+  │
+  └── final vector → token
+      lm_head (~2.35 GB vocabulary projection)
 ```
 
-Each boundary has a different job and therefore a different reason to scale.
+The client therefore performs the two natural token/vector boundary operations and does not need to host Layer 0 or the 1.45 TB expert pool.
 
-### 1. Client scaling
+```
+token ID
+   ↓
+embedding lookup
+   ↓
+vector
+   ↓
+[server-side model transformation]
+   ↓
+final vector
+   ↓
+lm_head
+   ↓
+token ID
+```
 
-Clients generate inference requests.
+### Layer 0 is part of the server pipeline
 
-If the number of users, applications or concurrent sessions increases, the first scaling problem is request ingress and client-side workload—not replication of the K3 model.
+Layer 0 is deliberately kept at the server-side model entry. It is dense and does not require the 896-expert store used by Layers 1–92. More importantly, its position at the beginning of the model flow gives the server the model state from which downstream work can be prepared.
+
+The equation-derived routing behavior allows exact expert identities for a previously seen prompt to be available early enough to begin later-layer reads while earlier computation is still running. The live router remains the correctness authority.
+
+Therefore the server-side entry is not simply an API gateway:
+
+```
+Client
+   │
+   │ embedding vector
+   ▼
+Server / Layer 0
+   │
+   │ prepared runtime state
+   ▼
+Layer 1 pod
+```
+
+Layer 0 is the first model transformation in the production pipeline.
+
+### Layers 1–92 are separate work units
+
+Each layer pod owns its layer's computation and data:
+
+```
+Pod 1   → Layer 1  → next state
+Pod 2   → Layer 2  → next state
+Pod 3   → Layer 3  → next state
+...
+Pod 92  → Layer 92 → final state
+```
+
+A pod does not need the complete model. It needs its own trunk, router, 896 experts where applicable, layer-local state and execution memory.
+
+The runtime representation produced by one layer becomes the input to the next layer.
+
+This gives the infrastructure a clean ownership rule:
+
+> **Layer weights stay with their layer pod; runtime state moves along the pipeline.**
+
+### The diagram is sequential for one token — the system is concurrent
+
+For one token, the mathematical dependency is necessarily ordered:
+
+```
+L0 → L1 → L2 → L3 → ... → L92
+```
+
+Layer 2 cannot transform a token before Layer 1 has produced the state it needs.
+
+But that does not mean Layer 2 must sit idle while the entire request completes.
+
+Once Layer 1 has passed one unit of work downstream, it can work on another unit while Layer 2 works on the first.
+
+For example:
+
+```
+Time →
+
+Layer 0:  AAAAAA  BBBBBB  CCCCCC  DDDDDD
+Layer 1:        AAAAAA  BBBBBB  CCCCCC  DDDDDD
+Layer 2:              AAAAAA  BBBBBB  CCCCCC  DDDDDD
+Layer 3:                    AAAAAA  BBBBBB  CCCCCC
+...
+Layer 92:                         AAAAAA  BBBBBB
+```
+
+Here Token A may be at Layer 5 while Token B is at Layer 4, Token C is at Layer 3, and Token D is at Layer 2. Each token still follows L0 → L1 → ... → L92. They are simply occupying different stages at the same time.
+
+This is the central concurrency principle:
+
+> **Sequential dependency does not imply global sequential utilization.**
+
+### Work is separated so idle time is not propagated through the whole model
+
+A monolithic execution model can make it appear that one request owns the entire model until completion.
+
+The layer pipeline changes that scheduling unit.
+
+Each pod is responsible for a bounded piece of work. When it finishes that piece for one token, it can accept other ready work instead of waiting for that token to finish Layers 1–92.
 
 Conceptually:
 
-```text
-Client A ─┐
-Client B ─┼──→ Server
-Client C ─┤
-Client D ─┘
+```
+Token A:  L0 → L1 → L2 → L3 → L4 → ...
+Token B:       L0 → L1 → L2 → L3 → ...
+Token C:            L0 → L1 → L2 → ...
+Token D:                 L0 → L1 → ...
 ```
 
-Adding clients does not require adding another copy of the 1.45 TB expert pool for every client.
+The dependency chain remains intact for every token, while the infrastructure remains occupied by different tokens and requests.
 
-The clients remain outside the model's distributed layer pipeline.
+This is why the architecture should be described as a pipeline, not as 93 machines executing sequentially.
 
-### 2. Server scaling
+### Concurrency exists at multiple levels
 
-The server is the external inference boundary.
+There are several different kinds of work separation:
 
-It accepts client requests, maintains the request/session context, performs the model-entry and model-exit responsibilities defined by the architecture, and coordinates the internal layer pipeline.
+**Across requests**
 
-If request volume increases beyond what one server can coordinate, the server layer can be scaled separately:
-
-```text
-              ┌── Server A ── Layer pipeline
-Clients ──────┼── Server B ── Layer pipeline
-              └── Server C ── Layer pipeline
+```
+Request A ─┐
+Request B ─┼─→ shared pipeline stages
+Request C ─┘
 ```
 
-The exact degree of server replication depends on how the implementation partitions sessions, routing information, state and layer resources.
+**Across tokens / positions**
 
-The important architectural point is that **server capacity and layer capacity are different resources**.
+Different positions from a prefill can occupy different stages or be processed in batches according to the runtime scheduler.
 
-A server bottleneck does not automatically imply that every layer is a bottleneck.
+**Across layers**
 
-### 3. Layer scaling
+Different pods can be doing useful work simultaneously because they are processing different ready states.
 
-The third boundary is the model computation itself:
+**Inside a layer**
 
-```text
-Layer 1 → Layer 2 → ... → Layer 92
+Expert reads, attention work and other layer-local operations can overlap where the implementation and hardware allow it.
+
+The exact scheduling policy is a deployment concern. The architectural property is that the work does not have to be serialized into one global request-at-a-time execution path.
+
+### Routing creates another opportunity to remove idle time
+
+The equation and routing experiments provide an additional scheduling opportunity.
+
+For a previously seen prompt, the exact expert IDs required by later layers can be known while earlier layers are still running. Clover-K3 uses that information to start later-layer expert reads early.
+
+The sequence becomes:
+
+```
+current layer computation
+        │
+        ├──────────────→ next-layer expert reads
+        │
+        ▼
+current layer result
+        │
+        ▼
+next layer computation
 ```
 
-If a particular layer becomes constrained, the scaling unit can be that layer.
+The read is prepared before the next layer needs the data.
 
-For example:
+The live router still executes and validates the cached route, so this is not speculative model execution. It is dependency-aware prefetching.
 
-```text
-Layer 37
-   ├── replica A
-   ├── replica B
-   └── replica C
-```
+The measured Clover-K3 implementation reduced the tested warm path from approximately 8.75 s to 7.25 s, with device utilization increasing from roughly 80% to 98–99%. These measurements demonstrate the value of overlapping independent work in that implementation; they are not a universal throughput claim.
 
-while Layers 1–36 and 38–92 retain their own placement.
+### The three scaling dimensions remain separate
 
-This is possible because each layer owns its own trunk, router, experts and execution resources, while only runtime state crosses the layer boundary.
+The production system therefore has three different scaling boundaries:
 
-### The three scaling dimensions are independent
-
-The architecture can therefore be represented as:
-
-| Scaling dimension | What is being scaled | What does not automatically scale |
+| Boundary | Responsibility | Scaling response |
 |---|---|---|
-| Client | request sources / sessions | model weights |
-| Server | request handling / control / model entry-exit | every layer replica |
-| Layer | one layer's computation and data capacity | entire 1.45 TB model |
+| Client | token→vector and final vector→token boundary work, requests | add/scale clients or request-serving capacity |
+| Server pipeline | request handling, Layer 0 and pipeline coordination | scale server-side inference capacity |
+| Layer pod | one layer's trunk, experts, state and computation | replicate the constrained layer |
 
-This separation prevents a common scaling mistake:
+A client bottleneck does not require another copy of the expert pool.
 
-> **Do not use model replication to solve a client or server problem, and do not use server replication to solve a single-layer resource problem.**
+A server coordination bottleneck does not automatically require replication of every layer.
 
-The resource boundary should match the measured bottleneck.
+A Layer 37 bottleneck does not require another complete K3 model.
 
-### Why the server should not become the data relay
+The architecture allows the scaling response to match the actual constrained resource.
 
-There is also an important distinction between **control** and **runtime data**.
+### The server should not become a central runtime relay
 
-The server needs to know the topology and coordinate the inference session.
+The server coordinates the production pipeline, but it should not unnecessarily become a central relay for every layer-to-layer state transition.
 
-It does not need to become a central relay for every residual and snapshot between all 92 layers.
+The runtime path is conceptually:
 
-The runtime state should follow the model pipeline:
-
-```text
-Server
-  │
-  ▼
-Layer 1
-  │ runtime state
-  ▼
-Layer 2
-  │
-  ▼
+```
+Client
+  ↓
+Server / Layer 0
+  ↓
+Pod 1
+  ↓
+Pod 2
+  ↓
 ...
-  │
-  ▼
-Layer 92
-  │
-  ▼
-Server
+  ↓
+Pod 92
+  ↓
+Server / exit
+  ↓
+Client
 ```
 
-For larger sequence sizes, the measured inter-layer payload becomes substantial. Centralizing all of that traffic would create a new bottleneck at the very component intended to coordinate the system.
+The runtime state follows the layer dependency graph.
 
-The server therefore has a control-plane responsibility, while the layer pipeline carries the model's runtime state.
+This preserves the separation between:
 
-The exact transport and topology remain deployment decisions.
-
-### Model entry and exit remain server responsibilities
-
-The current architecture intentionally keeps the client outside the layer transformation pipeline.
-
-The boundary is:
-
-```text
-client
-   │
-   │ request
-   ▼
-server
-   │
-   ├── model entry
-   ├── Layer 0
-   │
-   └── Layers 1–92
-          │
-          └── model exit
-   │
-   ▼
-client
+```
+control / coordination
+        and
+model runtime data movement
 ```
 
-This is different from treating Layer 0 as an externally exposed client-side pod.
+For a distributed deployment, the internal layer-to-layer path should therefore be treated as the production inference fabric rather than as public client traffic.
 
-Layer 0 is part of the server-side model entry established in Section 5.
+### Why this architecture matters
 
-That keeps the external API boundary separate from the internal model decomposition.
+The goal is not to make the diagram look distributed.
 
-### Why this separation matters for efficiency
+The goal is to ensure that no component is required to perform work that belongs to another component simply because the model was originally packaged as one large model.
 
-The purpose of this architecture is not to maximize the number of machines.
+The client handles the natural token/vector boundaries.
 
-It is to avoid allocating the wrong resource to the wrong bottleneck.
+The server handles the model entry and production pipeline.
 
-For example:
+Each layer pod handles its own layer.
 
-```text
-more clients
-    → scale request handling
+Different tokens and requests can occupy different stages concurrently.
 
-more server-side coordination load
-    → scale servers
+And data preparation can begin as soon as the equation makes the dependency known.
 
-one overloaded Layer 37
-    → scale Layer 37
-
-larger runtime state
-    → improve layer-to-layer fabric / placement
-
-larger expert working set
-    → scale layer-local storage / memory
-```
-
-Each response follows the actual constraint.
-
-This is the efficiency argument behind the separation.
+That is the efficiency property this architecture is designed to provide.
 
 ### What is established and what is not
 
-The repository measurements establish the physical layer footprint, inter-layer payload and resource contention behavior.
+The repository establishes:
 
-They do not yet prove the final production ratio between:
+- the layer-local model structure;
+- the client head/tail footprints;
+- Layer 0's distinct dense role;
+- layer-local expert stores;
+- the runtime state passed between layers;
+- routing predictability and exact validation;
+- and measured lookahead behavior.
 
-```text
-clients : servers : layer replicas
+It does not yet establish the final production ratio of:
+
+```
+clients : server capacity : layer-pod replicas
 ```
 
-That ratio depends on the workload.
+That depends on workload, sequence length, batching, concurrency, cache reuse, network placement and actual deployment measurements.
 
-It depends on request concurrency, sequence length, batching, cache reuse, routing-cache availability, layer utilization and the physical placement of the layer units.
-
-Those variables belong to the deployment experiment rather than being assumptions in the architecture document.
+The architecture establishes the boundaries and opportunities for concurrency. The deployment experiment must determine the final capacity.
 
 ### Evidence behind this section
 
-This section is written to separate the system's scaling boundaries before sizing them.
+This section is written to make the production execution model explicit and to distinguish per-token dependency from system-wide scheduling.
 
 The evidence comes from:
 
-- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which establishes the model-entry, layer and model-exit computation boundaries.
-- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures layer resource footprints, inter-layer state traffic and shared-node contention.
-- Sections 3–9 of this document, which establish the server boundary, layer ownership, runtime-state interface and independent layer replication model.
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which defines the ordered layer transformations and carried state.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures layer footprints, inter-layer payloads, node contention and routing lookahead.
+- [k3-analysis/k3-client-server-architecture.md](../k3-analysis/k3-client-server-architecture.md), which records the approximately 2.35 GB embedding lookup and approximately 2.35 GB final vocabulary projection at the client boundary.
+- The verified Clover-K3 implementation, which validates cached expert IDs against the live router.
 
-These sources establish **where scaling boundaries exist**.
+These sources support the architectural separation and the concurrency model. They do not by themselves establish the final production throughput or optimal deployment size.
 
-They do not yet establish the final deployment ratio between clients, servers and layer replicas.
+The next section can therefore examine the efficiency consequence:
 
-The next section can therefore examine the central efficiency question:
-
-> **Why can organizing infrastructure around layer-local requirements require different resources from sizing one monolithic machine around the total model?**
+> **Why does organizing infrastructure around the model's layer-local work change the resource-sizing problem compared with one monolithic large-GPU deployment?**
