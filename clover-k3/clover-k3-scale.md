@@ -1528,3 +1528,227 @@ They do not yet establish which layers will actually require replication in prod
 The next section can therefore separate three different scaling dimensions:
 
 > **client scaling, server scaling, and layer scaling are not the same problem and should not be solved by replicating the same resource.**
+
+## 10. Client, server, and layer scaling are separate dimensions
+
+Section 9 established that Layers 1–92 can be scaled independently. That does not mean every capacity problem should be solved by adding another layer replica.
+
+The system has three different scaling boundaries:
+
+```text
+CLIENTS
+   │
+   ▼
+SERVER / INFERENCE CONTROL
+   │
+   ▼
+LAYERS 1–92
+```
+
+Each boundary has a different job and therefore a different reason to scale.
+
+### 1. Client scaling
+
+Clients generate inference requests.
+
+If the number of users, applications or concurrent sessions increases, the first scaling problem is request ingress and client-side workload—not replication of the K3 model.
+
+Conceptually:
+
+```text
+Client A ─┐
+Client B ─┼──→ Server
+Client C ─┤
+Client D ─┘
+```
+
+Adding clients does not require adding another copy of the 1.45 TB expert pool for every client.
+
+The clients remain outside the model's distributed layer pipeline.
+
+### 2. Server scaling
+
+The server is the external inference boundary.
+
+It accepts client requests, maintains the request/session context, performs the model-entry and model-exit responsibilities defined by the architecture, and coordinates the internal layer pipeline.
+
+If request volume increases beyond what one server can coordinate, the server layer can be scaled separately:
+
+```text
+              ┌── Server A ── Layer pipeline
+Clients ──────┼── Server B ── Layer pipeline
+              └── Server C ── Layer pipeline
+```
+
+The exact degree of server replication depends on how the implementation partitions sessions, routing information, state and layer resources.
+
+The important architectural point is that **server capacity and layer capacity are different resources**.
+
+A server bottleneck does not automatically imply that every layer is a bottleneck.
+
+### 3. Layer scaling
+
+The third boundary is the model computation itself:
+
+```text
+Layer 1 → Layer 2 → ... → Layer 92
+```
+
+If a particular layer becomes constrained, the scaling unit can be that layer.
+
+For example:
+
+```text
+Layer 37
+   ├── replica A
+   ├── replica B
+   └── replica C
+```
+
+while Layers 1–36 and 38–92 retain their own placement.
+
+This is possible because each layer owns its own trunk, router, experts and execution resources, while only runtime state crosses the layer boundary.
+
+### The three scaling dimensions are independent
+
+The architecture can therefore be represented as:
+
+| Scaling dimension | What is being scaled | What does not automatically scale |
+|---|---|---|
+| Client | request sources / sessions | model weights |
+| Server | request handling / control / model entry-exit | every layer replica |
+| Layer | one layer's computation and data capacity | entire 1.45 TB model |
+
+This separation prevents a common scaling mistake:
+
+> **Do not use model replication to solve a client or server problem, and do not use server replication to solve a single-layer resource problem.**
+
+The resource boundary should match the measured bottleneck.
+
+### Why the server should not become the data relay
+
+There is also an important distinction between **control** and **runtime data**.
+
+The server needs to know the topology and coordinate the inference session.
+
+It does not need to become a central relay for every residual and snapshot between all 92 layers.
+
+The runtime state should follow the model pipeline:
+
+```text
+Server
+  │
+  ▼
+Layer 1
+  │ runtime state
+  ▼
+Layer 2
+  │
+  ▼
+...
+  │
+  ▼
+Layer 92
+  │
+  ▼
+Server
+```
+
+For larger sequence sizes, the measured inter-layer payload becomes substantial. Centralizing all of that traffic would create a new bottleneck at the very component intended to coordinate the system.
+
+The server therefore has a control-plane responsibility, while the layer pipeline carries the model's runtime state.
+
+The exact transport and topology remain deployment decisions.
+
+### Model entry and exit remain server responsibilities
+
+The current architecture intentionally keeps the client outside the layer transformation pipeline.
+
+The boundary is:
+
+```text
+client
+   │
+   │ request
+   ▼
+server
+   │
+   ├── model entry
+   ├── Layer 0
+   │
+   └── Layers 1–92
+          │
+          └── model exit
+   │
+   ▼
+client
+```
+
+This is different from treating Layer 0 as an externally exposed client-side pod.
+
+Layer 0 is part of the server-side model entry established in Section 5.
+
+That keeps the external API boundary separate from the internal model decomposition.
+
+### Why this separation matters for efficiency
+
+The purpose of this architecture is not to maximize the number of machines.
+
+It is to avoid allocating the wrong resource to the wrong bottleneck.
+
+For example:
+
+```text
+more clients
+    → scale request handling
+
+more server-side coordination load
+    → scale servers
+
+one overloaded Layer 37
+    → scale Layer 37
+
+larger runtime state
+    → improve layer-to-layer fabric / placement
+
+larger expert working set
+    → scale layer-local storage / memory
+```
+
+Each response follows the actual constraint.
+
+This is the efficiency argument behind the separation.
+
+### What is established and what is not
+
+The repository measurements establish the physical layer footprint, inter-layer payload and resource contention behavior.
+
+They do not yet prove the final production ratio between:
+
+```text
+clients : servers : layer replicas
+```
+
+That ratio depends on the workload.
+
+It depends on request concurrency, sequence length, batching, cache reuse, routing-cache availability, layer utilization and the physical placement of the layer units.
+
+Those variables belong to the deployment experiment rather than being assumptions in the architecture document.
+
+### Evidence behind this section
+
+This section is written to separate the system's scaling boundaries before sizing them.
+
+The evidence comes from:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which establishes the model-entry, layer and model-exit computation boundaries.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures layer resource footprints, inter-layer state traffic and shared-node contention.
+- Sections 3–9 of this document, which establish the server boundary, layer ownership, runtime-state interface and independent layer replication model.
+
+These sources establish **where scaling boundaries exist**.
+
+They do not yet establish the final deployment ratio between clients, servers and layer replicas.
+
+The next section can therefore examine the central efficiency question:
+
+> **Why can organizing infrastructure around layer-local requirements require different resources from sizing one monolithic machine around the total model?**
