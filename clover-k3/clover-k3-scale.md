@@ -1051,3 +1051,247 @@ They do not yet establish the final inter-node fabric, compression scheme, seria
 The next section can therefore address the key concurrency question:
 
 > **If a token must pass through Layers 1–92 in order, how can multiple layers remain active without forcing the entire pipeline to wait on one token at a time?**
+
+## 8. Pipeline concurrency: dependency without global idling
+
+Section 7 established that the boundary between layers carries runtime state rather than model weights. The next question is the natural one:
+
+> **If the mathematical model is sequential, does the infrastructure also have to execute as one globally idle-at-every-step sequence?**
+
+No.
+
+The model imposes a dependency order for each token, but that does not require every layer unit to be idle whenever another layer is working.
+
+### The dependency is per token
+
+For one token position, the mathematical dependency remains strict:
+
+```text
+Layer 1
+   ↓
+Layer 2
+   ↓
+Layer 3
+   ↓
+...
+   ↓
+Layer 92
+```
+
+Layer 3 cannot consume the output of Layer 2 before Layer 2 produces it.
+
+That dependency cannot be removed merely by distributing the layers.
+
+But the infrastructure does not have to process only one token at one layer at a time.
+
+Once Token A has moved from Layer 3 to Layer 4, Layer 3 can work on another available token or position.
+
+Conceptually:
+
+```text
+             Layer 1   Layer 2   Layer 3   Layer 4   Layer 5
+
+Token A         ●         ●         ●         ●         ●
+Token B                   ●         ●         ●         ●
+Token C                             ●         ●         ●
+Token D                                       ●         ●
+```
+
+The diagonal dependency for each token remains intact while the pipeline as a whole becomes concurrently occupied.
+
+This is the basic pipeline principle:
+
+> **Sequential dependency does not imply global sequential utilization.**
+
+### The layers become pipeline stages
+
+With one layer per unit, the infrastructure naturally becomes a pipeline:
+
+```text
+server entry
+    ↓
+Layer 1
+    ↓
+Layer 2
+    ↓
+Layer 3
+    ↓
+...
+    ↓
+Layer 92
+    ↓
+server exit
+```
+
+The output of one stage becomes the input of the next.
+
+While Layer 20 is processing one piece of work, Layer 19 does not need to remain idle if another piece of work is ready.
+
+The same applies throughout the pipeline.
+
+This is different from attempting to parallelize the mathematical layers themselves.
+
+The layers remain ordered for each dependency chain.
+
+What becomes parallel is the **work occupying different stages of the pipeline**.
+
+### Routing creates a second scheduling opportunity
+
+The routing work adds another important dimension.
+
+The model equation makes the router part of the exact computation. The routing-predictability experiment then established that, for a previously seen prompt, the exact expert IDs required by a later layer can be known before that layer begins its expert computation.
+
+That allows the system to separate two events:
+
+```text
+know which data is required
+        ↓
+start moving that data
+        ↓
+perform the computation that consumes it
+```
+
+The data movement does not have to wait until the last arithmetic operation before it can begin.
+
+In the measured Clover-K3 implementation, the next layer's expert reads are started while the current layer is still performing attention, projection and routing work.
+
+The live router still executes and validates the cached IDs.
+
+So the optimization is not speculative model execution.
+
+It is **earlier preparation of data whose exact identity is already known**.
+
+### The measured lookahead result
+
+This behavior was measured on the Clover-K3 implementation.
+
+The baseline warm run was approximately:
+
+```text
+8.75 s
+```
+
+With cross-layer expert-read lookahead:
+
+```text
+7.25 s
+```
+
+The measured reduction was approximately:
+
+```text
+1.49 s
+17.0%
+```
+
+The device utilization moved from approximately 80% to 98–99%, while the measured expert-read rate increased from roughly 11.0 GB/s to 13.5 GB/s.
+
+The profile also showed pipeline stall falling from approximately 2.42 s to 0.027 s.
+
+These are measurements of the tested Clover-K3 serving path on the measured hardware. They are evidence that dependency-aware data preparation can reduce idle time in that implementation; they are not a general claim about all hardware or all workloads.
+
+### Why this matters to the distributed architecture
+
+The result changes how the layer pods should be thought about.
+
+A pod should not be treated as:
+
+```text
+receive state
+→ wait
+→ read experts
+→ compute
+→ send state
+→ wait
+```
+
+if some of the required expert data can already be prepared.
+
+Instead, the intended flow is closer to:
+
+```text
+receive / identify required work
+        ↓
+prepare next-layer data
+        │
+        ├──────────────┐
+        ↓              ↓
+current-layer       storage reads
+computation         for next layer
+        │              │
+        └──────┬───────┘
+               ↓
+          next-layer ready
+```
+
+The computation dependency remains exact.
+
+The storage dependency is moved earlier where the equation permits it.
+
+This is the important distinction between **parallelizing the model** and **pipelining the infrastructure around the model**.
+
+### Pipeline occupancy
+
+The architecture can therefore be understood as a sequence of independently owned stages with overlapping work:
+
+```text
+Time →
+
+Layer 1:  AAAAAA  BBBBBB  CCCCCC
+Layer 2:        AAAAAA  BBBBBB  CCCCCC
+Layer 3:              AAAAAA  BBBBBB  CCCCCC
+Layer 4:                    AAAAAA  BBBBBB
+...
+```
+
+The exact scheduling policy, batching strategy and number of concurrent requests are deployment questions.
+
+The architectural principle is simpler:
+
+> **A layer waits only for the state it actually depends on, not for unrelated work elsewhere in the model.**
+
+This is what allows the physical system to remain active while preserving the model's mathematical ordering.
+
+### What this does not claim
+
+This section is intentionally limited.
+
+It does not claim:
+
+- that all 92 layers can always be fully utilized;
+- that one fixed batch size is optimal;
+- that pipeline latency is eliminated;
+- that cross-layer communication is free;
+- or that the measured 17.0% improvement applies to every deployment.
+
+Those questions require the real distributed implementation and workload measurements.
+
+The result established here is narrower and more useful:
+
+```text
+model dependency
+      ↓
+defines what must wait
+
+equation-derived routing knowledge
+      ↓
+defines what can begin earlier
+
+pipeline placement
+      ↓
+allows independent stages to work concurrently
+```
+
+### Evidence behind this section
+
+The evidence comes from:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which defines the sequential layer composition and state transitions.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures the routing lookahead, device utilization and pipeline-stall reduction.
+- The verified Clover-K3 implementation, which uses cached routing IDs only for earlier data reads and checks them against the live router.
+
+Together these establish the distinction between **mathematical dependency** and **physical scheduling opportunity**.
+
+The next section can therefore address the scaling consequence:
+
+> **If each layer is an independent unit and work can be pipelined, can each layer be scaled independently when one part of the model becomes the resource constraint?**
