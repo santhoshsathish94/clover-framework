@@ -2461,3 +2461,296 @@ This section is supported by:
 - The verified Clover-K3 implementation and its lookahead measurements.
 
 These establish the distinction between measured resource behavior and unmeasured distributed throughput.
+
+## 13. What is known and can be sized now
+
+The previous section separated efficiency from throughput. This section turns the measured architecture into concrete quantities that can already be used for planning.
+
+The important distinction is:
+
+> **We can size the structural resources now. We cannot yet claim the final production hardware configuration.**
+
+The model equation and the scaling measurements already establish the size and ownership of the major data components.
+
+### The complete model footprint is known
+
+The expert pool contains:
+
+```
+82,432 experts
+≈ 1.45 TB total expert weights
+```
+
+Those experts are distributed across:
+
+```
+92 MoE layers
+× 896 experts per layer
+= 82,432 experts
+```
+
+So the expert storage requirement is not an unknown quantity.
+
+It is a measured model property.
+
+### Each MoE layer has a known persistent footprint
+
+A single MoE layer contains:
+
+```
+896 experts
+≈ 17.55 MB per expert
+≈ 15.72 GB packed expert data
+≈ 15.77 GB measured layer store
+```
+
+The layer also has its non-expert trunk.
+
+The measured trunk sizes are:
+
+```
+KDA layer: ≈ 635 MB
+MLA layer: ≈ 423 MB
+```
+
+There are 69 KDA layers and 24 MLA layers among Layers 1–92.
+
+Layer 0 is separate:
+
+```
+Layer 0 trunk: ≈ 1.172 GB
+Layer 0: dense, no expert store
+```
+
+Therefore the persistent storage boundary is already well defined:
+
+```
+Client
+  ├── embedding lookup      ≈ 2.35 GB
+  └── lm_head               ≈ 2.35 GB
+
+Server
+  └── Layer 0               ≈ 1.172 GB
+
+Layer pods
+  └── Layers 1–92
+       ├── trunk             ≈ 423–635 MB
+       └── expert store      ≈ 15.77 GB
+```
+
+These numbers are sufficient to estimate storage requirements before selecting the final server hardware.
+
+### The aggregate expert storage can be reconstructed
+
+The layer decomposition provides a useful consistency check.
+
+```
+92 × 896 = 82,432 experts
+```
+
+and:
+
+```
+92 × approximately 15.77 GB
+≈ 1.45 TB
+```
+
+The aggregate is therefore consistent with the original model footprint.
+
+The architecture has not changed the model's total expert data.
+
+It has made the ownership boundary explicit.
+
+### Runtime memory is a separate quantity
+
+The persistent store size does not directly determine the resident memory requirement.
+
+A layer process needs memory for:
+
+- its trunk;
+- active expert buffers;
+- residual and snapshot state;
+- KDA recurrent state where applicable;
+- ShortConv history;
+- MLA cache state where applicable;
+- temporary execution buffers.
+
+The current measurements establish the storage footprint and observed working-set behavior, but the final production resident-memory requirement depends on the actual layer implementation and concurrency.
+
+Therefore:
+
+```
+15.77 GB layer store
+        ≠
+15.77 GB mandatory private RAM
+```
+
+This distinction is important when selecting hardware.
+
+### The inter-layer communication budget is also measurable
+
+The runtime state crossing layer boundaries has already been measured.
+
+For the K3 implementation:
+
+| Positions | Total payload across the 92-hop path |
+|---:|---:|
+| 1 | 14.11 MB |
+| 5 | 70.53 MB |
+| 16 | 225.71 MB |
+| 64 | 902.82 MB |
+
+These are useful planning numbers because they establish the scale of the internal inference fabric.
+
+They do not by themselves determine the required network speed.
+
+The network requirement depends on:
+
+- how many requests are concurrently in flight;
+- how many positions are transferred together;
+- whether multiple layer hops share the same physical links;
+- placement of replicas;
+- and the desired latency budget.
+
+But the payload itself is no longer an unknown.
+
+### Client-side model data is also known
+
+The client has two model-side data structures:
+
+```
+embed_tokens ≈ 2.35 GB
+lm_head      ≈ 2.35 GB
+total        ≈ 4.70 GB
+```
+
+The two operations are different.
+
+The embedding table is a lookup:
+
+```
+token ID
+   ↓
+one row of embed_tokens
+   ↓
+7,168-element vector
+```
+
+The final vocabulary projection is a full projection:
+
+```
+final vector
+   ↓
+lm_head
+   ↓
+163,840 logits
+   ↓
+selected token
+```
+
+This means the client is not carrying a second copy of the expert model.
+
+It carries only the two model boundaries that naturally convert:
+
+```
+token → vector
+vector → token
+```
+
+That makes the client-side footprint approximately 4.70 GB of model data, separate from the server-side Layer 0 and the layer-pod expert stores.
+
+### The storage topology can therefore be estimated
+
+Before deployment, the persistent model data can already be represented as:
+
+```
+Client
+≈ 4.70 GB
+  ├── embedding
+  └── lm_head
+
+Server-side Layer 0
+≈ 1.172 GB
+
+92 layer pods
+≈ 92 × 15.77 GB expert stores
++ 92 layer trunks
+```
+
+The expert stores dominate the distributed persistent footprint.
+
+The trunks add a smaller amount relative to the expert stores, with the exact total determined by the KDA/MLA composition.
+
+This gives enough information to plan storage capacity and identify which component dominates it.
+
+### What can be sized now
+
+Based on the current evidence, the following can already be sized or bounded:
+
+| Resource | What is known now |
+|---|---|
+| Expert storage | ~1.45 TB aggregate |
+| Per-MoE-layer expert store | ~15.77 GB |
+| Per-layer trunk | ~423–635 MB |
+| Layer 0 trunk | ~1.172 GB |
+| Client head/tail model data | ~4.70 GB |
+| Inter-layer payload | ~14.11 MB per position across 92 hops |
+| Five-position payload | ~70.53 MB |
+| Layer ownership | one layer per pod |
+| Expert count | 896 per MoE layer |
+| Total MoE layers | 92 |
+
+These are model and architecture quantities rather than assumptions about a particular hardware vendor.
+
+### What cannot be sized with confidence yet
+
+Several production quantities remain workload-dependent:
+
+- resident memory required by a fully implemented layer;
+- compute capacity required per layer;
+- network bandwidth required under target concurrency;
+- number of replicas required for each layer;
+- server capacity for Layer 0 and request coordination;
+- scheduling overhead;
+- failure/recovery capacity;
+- and end-to-end throughput.
+
+Those require the actual production pipeline.
+
+This is an important boundary in the document.
+
+We should not turn measured model dimensions into invented hardware specifications.
+
+### Why this matters
+
+The architecture now has a useful property:
+
+> **The unknowns are no longer the model's structure. The remaining unknowns are deployment behavior.**
+
+The model data can be partitioned, measured and assigned before hardware is chosen.
+
+The deployment experiment then answers the next layer of questions:
+
+```
+known model structure
+        ↓
+known resource footprint
+        ↓
+deploy
+        ↓
+measure real behavior
+        ↓
+size hardware and replicas
+```
+
+This is the correct order because hardware should be selected from observed resource requirements rather than from the model's total parameter count alone.
+
+### Evidence behind this section
+
+This section is supported by:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which defines the model's tensors, layer structure and state.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures the layer stores, trunk sizes, runtime payloads, memory behavior and contention.
+- [k3-analysis/k3-client-server-architecture.md](../k3-analysis/k3-client-server-architecture.md), which records the approximately 4.70 GB client head/tail model footprint.
+
+These sources establish the quantities that can be sized now. They do not establish final production hardware or replica counts.
