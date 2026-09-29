@@ -272,3 +272,125 @@ Once the model is divided according to its own computational flow, the next ques
 
 That is the purpose of the next section.
 
+## 4. What belongs inside one layer unit
+
+Section 3 established that the scaling boundary should follow the model's layer boundary. This section answers the practical question that follows: **what must actually be placed inside that boundary?**
+
+The answer is not simply "the layer's weights."
+
+A layer unit must contain everything required to transform the representation it receives into the representation required by the next layer, without requiring the entire model to be present locally.
+
+For K3, that means the unit contains:
+
+```text
+Layer N
+├── layer trunk
+├── attention computation
+├── router
+├── 896 experts          (MoE layers 1–92)
+├── layer-local state
+└── working memory
+        │
+        ↓
+   transformed state
+```
+
+Layer 0 is different. It is dense rather than MoE, so it does not need the 896-expert store. It is kept on the server-side model entry rather than treated as one of the distributed MoE layer units.
+
+### The expert store is layer-local
+
+Each MoE layer has exactly 896 experts. The measured packed expert size is approximately **17.55 MB per expert**, giving a layer-level expert store of approximately:
+
+```text
+896 × 17.55 MB ≈ 15.72 GB
+```
+
+The measured on-disk layer store is approximately **15.77 GB** once the store structure and associated data are included.
+
+This is the key physical transformation from the original model-wide arrangement:
+
+```text
+one global expert pool
+        ↓
+92 independent layer stores
+```
+
+The total amount of expert data has not been made to disappear. It has been **partitioned according to ownership**.
+
+Each layer unit owns the data that only that layer can use.
+
+### The trunk is small relative to the expert store
+
+The expert store is not the whole layer.
+
+The layer also needs its non-expert trunk and working state. The measured trunk slices range from approximately **423 MB to 635 MB**, depending on the layer.
+
+That means the persistent layer footprint is dominated by its experts, while the computation itself requires only a relatively small local trunk plus runtime buffers.
+
+This distinction matters because it means the layer unit does not require a machine sized for the entire 1.5 TB model.
+
+Its storage requirement is approximately the size of **one layer**, not the size of K3.
+
+### Runtime memory is different from persistent storage
+
+The next distinction is between what must be stored and what must be resident.
+
+The layer's expert store can remain on local storage and be read as required. The layer process needs resident memory for:
+
+- its trunk slice;
+- residual and snapshot working buffers;
+- MoE intermediates;
+- KDA recurrent state where applicable;
+- convolution history;
+- MLA cache state where applicable;
+- and other execution buffers.
+
+The measured architecture work therefore does not treat the full 15.77 GB expert store as mandatory private process memory.
+
+The relevant measurements are recorded in [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), including the single-layer store measurements, cold versus warm access behavior and the runtime working-set observations.
+
+This distinction is important for efficiency.
+
+A machine does not need 15.77 GB of private RAM merely because the layer owns 15.77 GB of expert weights. Storage capacity and resident execution memory are different resources and should be sized separately.
+
+### Why the layer is independently scalable
+
+Once the layer owns its own persistent data and computation, it becomes an independently addressable scaling unit.
+
+For example:
+
+```text
+Layer 37
+   ├── its trunk
+   ├── its 896 experts
+   └── its runtime state
+```
+
+can be replicated without replicating the other 91 layers.
+
+That is a fundamentally different scaling primitive from adding another complete copy of the 1.5 TB model.
+
+The architecture therefore makes the following resources independently placeable:
+
+- layer storage;
+- layer CPU/GPU resources;
+- layer memory;
+- layer replicas.
+
+The exact resource allocation still has to be validated with the real layer implementation. The current measurements establish the storage and access shape; they are not a claim that the final production pod specification has already been proven.
+
+### Evidence behind this decomposition
+
+The reason for writing this section is to turn the abstract "one layer is one unit" rule into a concrete resource boundary.
+
+The evidence comes from two independent parts of the repository:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md) defines which operations, weights and state belong to each layer.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md) measures the resulting layer stores, trunk sizes, working memory behavior and access characteristics.
+
+Together they establish what can be owned by a layer unit today.
+
+They do not yet establish the final hardware configuration for every deployment. That remains an implementation and deployment measurement.
+
+The next section can therefore address the special case at the beginning of the pipeline: **why Layer 0 belongs on the server-side model entry rather than being treated as another distributed MoE pod.**
+
