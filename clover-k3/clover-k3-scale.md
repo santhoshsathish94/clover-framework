@@ -147,3 +147,128 @@ Those measurements lead to the architectural question for the next section:
 
 That is the point where scaling stops being a question of buying a machine large enough to hold K3 and becomes a question of **placing each part of the model where the model actually uses it**.
 
+## 3. Why the model flow determines the architecture
+
+The previous section established the mismatch: the model is computed layer by layer, while its weights are physically organized as one large model-wide data set.
+
+The next step is therefore not to invent a distributed architecture first and then fit K3 into it.
+
+It is to follow the model itself.
+
+The reason for this section is to establish the architectural rule:
+
+> **The physical scaling boundary should follow the model's computational boundary.**
+
+The final model equation makes that boundary explicit. K3 is a composition of Layer 0 through Layer 92, with state carried from one layer to the next:
+
+```text
+input
+  ↓
+Layer 0
+  ↓
+Layer 1
+  ↓
+Layer 2
+  ↓
+...
+  ↓
+Layer 92
+  ↓
+tail
+  ↓
+output
+```
+
+Each layer consumes the representation produced by the preceding computation and applies its own layer-specific parameters and state transitions. The model does not require the weights of all 93 layers to participate in the same operation at the same time.
+
+That observation determines the first architectural boundary.
+
+### One layer is one computational unit
+
+For scaling purposes, a layer is the natural unit because it has a complete local computation:
+
+- its own trunk weights;
+- its own attention path;
+- its own layer-specific state;
+- its router;
+- its 896 experts where applicable;
+- its expert computation;
+- and its output representation for the next layer.
+
+The layer therefore has a clear input and a clear output.
+
+That makes it possible to place the layer's data and computation together rather than distributing one layer's weights across unrelated infrastructure.
+
+The architecture consequently follows this shape:
+
+```text
+server-side model entry
+        ↓
+Layer 1
+        ↓
+Layer 2
+        ↓
+...
+        ↓
+Layer 92
+        ↓
+server-side model exit
+```
+
+The end user does **not** communicate directly with the layer machines. The client communicates with the server. The server is the inference boundary and coordinates the internal layer pipeline; the layer units perform the token transformation.
+
+This distinction is important because the architecture is not simply "93 servers exposed to clients." It is a server-coordinated model pipeline whose internal stages correspond to the model's actual computational stages.
+
+### Why this follows from the equation
+
+The equation gives us more than the ordering of the layers. It shows that the model carries representations and state between them.
+
+The residual stream changes from layer to layer. Snapshot state is accumulated at defined points. KDA carries recurrent state. ShortConv carries history. MLA carries its KV cache. The MoE router selects experts from the representation available at that layer.
+
+Therefore the useful boundary between two layers is not the model weights themselves.
+
+It is the **runtime representation and state produced by one layer and consumed by the next**.
+
+That leads to a simple physical rule:
+
+```text
+weights stay with the layer
+runtime state moves between layers
+```
+
+The weights are relatively stationary because they belong to a specific layer. The runtime representation is the part that must travel because the next layer needs the result of the previous layer.
+
+This is the fundamental reason the architecture can scale by layers instead of by total model size.
+
+### What the measurements support
+
+This is not only a conceptual decomposition.
+
+The scaling experiments separately measured individual layer stores, their expert access behavior, the memory required by a layer process, contention when multiple layer processes share a machine, and the payload that crosses a layer boundary.
+
+Those measurements are recorded in [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md).
+
+They show that a layer can be represented as an independently measurable unit: its expert store is approximately 15.77 GB, its trunk slice is approximately 423–635 MB depending on layer type, and the runtime boundary consists of residual and snapshot data rather than token IDs or the entire model.
+
+The measurements therefore support the architectural decomposition that the equation already implies.
+
+They do **not** yet establish cluster-wide throughput. That is deliberately a later experiment. At this stage the evidence establishes the shape of the units and the data boundary between them.
+
+### The resulting scaling principle
+
+Traditional model serving often starts with the question:
+
+> **How large must the machine be to hold and execute the whole model?**
+
+Clover-K3 starts with a different question:
+
+> **What resources does each part of the model actually require while it is executing?**
+
+That change is the basis of the scaling architecture.
+
+Once the model is divided according to its own computational flow, the next question becomes concrete:
+
+> **What exactly belongs inside one layer unit, and how large is it?**
+
+That is the purpose of the next section.
+
