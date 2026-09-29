@@ -1,0 +1,37 @@
+{
+  "date": "2026-09-29",
+  "scope": "Local loopback viewer of the verified layer1 source-backed tree; no model execution or checkpoint access.",
+  "navigation_unit_tests": {
+    "passed": 4,
+    "stored_nodes": 5375,
+    "experts": 896,
+    "matrices": 2688,
+    "every_matrix_last_weight_checked": true,
+    "verified_python_sample_paths_match": true
+  },
+  "browser_checks": {
+    "initial_data_load": "PASS",
+    "full_tree_nodes_rendered": 5375,
+    "canvas_nonblank_desktop_and_mobile": "PASS",
+    "canvas_selection": "Experts 0-447 selected by node click",
+    "zoom": "24% to 36% after zoom-in command",
+    "branch_child_navigation": "PASS",
+    "expert_row_coordinate_lookup": "Expert0/w1/row0/weight224 = -0.015625, actual scale120",
+    "unmeasured_leaf_state": "Value not loaded; exact source offsets shown",
+    "negative_zero": "-0.0 and float32 bits80000000 preserved",
+    "deep_link": "Expert0/w1/row0/weight9 resolved after page navigation",
+    "failed_data_request_and_retry": "PASS",
+    "export_json_contents": "Selected-node JSON blob generated and checked",
+    "download_completion": "Not confirmed: integrated browser did not emit the Playwright download event",
+    "viewports_checked": [
+      {"width":1440,"height":960},
+      {"width":390,"height":844},
+      {"width":320,"height":900}
+    ],
+    "horizontal_page_and_inspector_overflow": "None after tooltip fix",
+    "rendered_label_overlap_and_clipping": "None at1440/390/320px after adaptive-label fix",
+    "screenshots_reviewed": ["Desktop full tree", "Desktop focused branch", "Mobile focused branch"],
+    "runtime_page_errors_observed": 0
+  },
+  "limits": "Overview includes every stored node, not billions of simultaneously materialized weight leaves. Generated descendants are navigable by exact binary addressing. Only six locally verified leaf values are displayed. Export payload was checked but OS/browser file download completion was not verified."
+}

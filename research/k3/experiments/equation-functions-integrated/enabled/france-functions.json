@@ -1,0 +1,1 @@
+{"gate":"PASS","seed_calls":5,"fruit_calls":2,"root_calls":74,"root_positions":80,"root_stage_values":[245760,245760,245760,286720],"root_activation_scratch_bytes":122880,"root_weight_array_bytes":0,"root_output_replaces_oracle":true,"root_layer":1}

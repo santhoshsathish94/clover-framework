@@ -1,0 +1,2186 @@
+{
+  "gate": "PASS",
+  "stored_nodes_verified": 5375,
+  "matrix_records_verified": 2688,
+  "tensor_records_verified": 5376,
+  "all_inherited_histograms_match": true,
+  "all_internal_nodes_have_exactly_two_children": true,
+  "all_branch_partitions_exact": true,
+  "no_equal_sibling_fact_left_unhoisted": true,
+  "differing_sibling_fields_retained": 1564,
+  "nodes_per_depth": {
+    "0": 1,
+    "1": 2,
+    "2": 4,
+    "3": 8,
+    "4": 16,
+    "5": 32,
+    "6": 64,
+    "7": 128,
+    "8": 256,
+    "9": 512,
+    "10": 1024,
+    "11": 1792,
+    "12": 1536
+  },
+  "actual_leaves_checked": [
+    {
+      "kind": "weight",
+      "layer": 1,
+      "expert": 0,
+      "matrix": "w1",
+      "row": 0,
+      "coordinate": 0,
+      "group": 0,
+      "path": [
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            896
+          ],
+          "direction": "left",
+          "fields_stored_here": [
+            "code_bits",
+            "code_domain",
+            "code_payload_bytes",
+            "group_width",
+            "layer",
+            "most_frequent_scale",
+            "scale_bits",
+            "scale_payload_bytes",
+            "source_file",
+            "stored_dtype",
+            "weights_per_matrix"
+          ]
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            448
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            224
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            112
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            56
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            28
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            14
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            7
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            2
+          ],
+          "direction": "left",
+          "fields_stored_here": [
+            "scale_domain"
+          ]
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3072
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            1536
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            768
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            384
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            192
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            96
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            48
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            24
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            12
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            6
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            112
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            56
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            28
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            14
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            7
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            32
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            16
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            8
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            4
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            2
+          ],
+          "direction": "left"
+        }
+      ],
+      "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+      "inherited": {
+        "layer": 1,
+        "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+        "stored_dtype": "U8",
+        "group_width": 32,
+        "code_bits": 4,
+        "scale_bits": 8,
+        "weights_per_matrix": 11010048,
+        "code_payload_bytes": 5505024,
+        "scale_payload_bytes": 344064,
+        "code_domain": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "most_frequent_scale": 121,
+        "scale_domain": [
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122
+        ],
+        "most_frequent_code": 1
+      },
+      "code_byte_offset": 1268562960,
+      "nibble_shift": 0,
+      "scale_byte_offset": 1274067984,
+      "code": 6,
+      "scale": 121,
+      "weight": 0.0625,
+      "float32_bits_hex": "3d800000",
+      "scale_matches_root_default": true,
+      "source_bytes_read": 2
+    },
+    {
+      "kind": "weight",
+      "layer": 1,
+      "expert": 0,
+      "matrix": "w1",
+      "row": 0,
+      "coordinate": 224,
+      "group": 7,
+      "path": [
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            896
+          ],
+          "direction": "left",
+          "fields_stored_here": [
+            "code_bits",
+            "code_domain",
+            "code_payload_bytes",
+            "group_width",
+            "layer",
+            "most_frequent_scale",
+            "scale_bits",
+            "scale_payload_bytes",
+            "source_file",
+            "stored_dtype",
+            "weights_per_matrix"
+          ]
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            448
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            224
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            112
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            56
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            28
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            14
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            7
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            2
+          ],
+          "direction": "left",
+          "fields_stored_here": [
+            "scale_domain"
+          ]
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3072
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            1536
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            768
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            384
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            192
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            96
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            48
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            24
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            12
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            6
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            112
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            56
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            28
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            14
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            7,
+            14
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            7,
+            10
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            32
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            16
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            8
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            4
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            2
+          ],
+          "direction": "left"
+        }
+      ],
+      "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+      "inherited": {
+        "layer": 1,
+        "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+        "stored_dtype": "U8",
+        "group_width": 32,
+        "code_bits": 4,
+        "scale_bits": 8,
+        "weights_per_matrix": 11010048,
+        "code_payload_bytes": 5505024,
+        "scale_payload_bytes": 344064,
+        "code_domain": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "most_frequent_scale": 121,
+        "scale_domain": [
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122
+        ],
+        "most_frequent_code": 1
+      },
+      "code_byte_offset": 1268563072,
+      "nibble_shift": 0,
+      "scale_byte_offset": 1274067991,
+      "code": 12,
+      "scale": 120,
+      "weight": -0.015625,
+      "float32_bits_hex": "bc800000",
+      "scale_matches_root_default": false,
+      "source_bytes_read": 2
+    },
+    {
+      "kind": "weight",
+      "layer": 1,
+      "expert": 0,
+      "matrix": "w1",
+      "row": 0,
+      "coordinate": 9,
+      "group": 0,
+      "path": [
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            896
+          ],
+          "direction": "left",
+          "fields_stored_here": [
+            "code_bits",
+            "code_domain",
+            "code_payload_bytes",
+            "group_width",
+            "layer",
+            "most_frequent_scale",
+            "scale_bits",
+            "scale_payload_bytes",
+            "source_file",
+            "stored_dtype",
+            "weights_per_matrix"
+          ]
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            448
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            224
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            112
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            56
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            28
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            14
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            7
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            2
+          ],
+          "direction": "left",
+          "fields_stored_here": [
+            "scale_domain"
+          ]
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3072
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            1536
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            768
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            384
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            192
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            96
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            48
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            24
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            12
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            6
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            112
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            56
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            28
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            14
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            7
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            32
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            16
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            8,
+            16
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            8,
+            12
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            8,
+            10
+          ],
+          "direction": "right"
+        }
+      ],
+      "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+      "inherited": {
+        "layer": 1,
+        "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+        "stored_dtype": "U8",
+        "group_width": 32,
+        "code_bits": 4,
+        "scale_bits": 8,
+        "weights_per_matrix": 11010048,
+        "code_payload_bytes": 5505024,
+        "scale_payload_bytes": 344064,
+        "code_domain": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "most_frequent_scale": 121,
+        "scale_domain": [
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122
+        ],
+        "most_frequent_code": 1
+      },
+      "code_byte_offset": 1268562964,
+      "nibble_shift": 4,
+      "scale_byte_offset": 1274067984,
+      "code": 8,
+      "scale": 121,
+      "weight": -0.0,
+      "float32_bits_hex": "80000000",
+      "scale_matches_root_default": true,
+      "source_bytes_read": 2
+    },
+    {
+      "kind": "weight",
+      "layer": 1,
+      "expert": 447,
+      "matrix": "w3",
+      "row": 1536,
+      "coordinate": 1792,
+      "group": 56,
+      "path": [
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            896
+          ],
+          "direction": "left",
+          "fields_stored_here": [
+            "code_bits",
+            "code_domain",
+            "code_payload_bytes",
+            "group_width",
+            "layer",
+            "most_frequent_scale",
+            "scale_bits",
+            "scale_payload_bytes",
+            "source_file",
+            "stored_dtype",
+            "weights_per_matrix"
+          ]
+        },
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            224,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            336,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            392,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            420,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            434,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            441,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            444,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            446,
+            448
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            2
+          ],
+          "direction": "right",
+          "fields_stored_here": [
+            "scale_domain"
+          ]
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            3072
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            2304
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            1920
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            1728
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            1632
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            1584
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            1560
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            1548
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            1542
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            1539
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            112
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            56,
+            112
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            56,
+            84
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            56,
+            70
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            56,
+            63
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "group",
+          "range": [
+            56,
+            59
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            32
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            16
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            8
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            4
+          ],
+          "direction": "left"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            2
+          ],
+          "direction": "left"
+        }
+      ],
+      "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+      "inherited": {
+        "layer": 1,
+        "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+        "stored_dtype": "U8",
+        "group_width": 32,
+        "code_bits": 4,
+        "scale_bits": 8,
+        "weights_per_matrix": 11010048,
+        "code_payload_bytes": 5505024,
+        "scale_payload_bytes": 344064,
+        "code_domain": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "most_frequent_scale": 121,
+        "scale_domain": [
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122
+        ],
+        "most_frequent_code": 9
+      },
+      "code_byte_offset": 8073805712,
+      "nibble_shift": 0,
+      "scale_byte_offset": 8076729416,
+      "code": 3,
+      "scale": 121,
+      "weight": 0.0234375,
+      "float32_bits_hex": "3cc00000",
+      "scale_matches_root_default": true,
+      "source_bytes_read": 2
+    },
+    {
+      "kind": "weight",
+      "layer": 1,
+      "expert": 448,
+      "matrix": "w2",
+      "row": 3583,
+      "coordinate": 3071,
+      "group": 95,
+      "path": [
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": [
+            "code_bits",
+            "code_domain",
+            "code_payload_bytes",
+            "group_width",
+            "layer",
+            "most_frequent_scale",
+            "scale_bits",
+            "scale_payload_bytes",
+            "source_file",
+            "stored_dtype",
+            "weights_per_matrix"
+          ]
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            896
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            672
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            560
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            504
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            476
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            462
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            455
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            451
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "right",
+          "fields_stored_here": [
+            "most_frequent_code"
+          ]
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1792,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            2688,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3136,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3360,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3472,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3528,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3556,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3570,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3577,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3580,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3582,
+            3584
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            96
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            48,
+            96
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            72,
+            96
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            84,
+            96
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            90,
+            96
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            93,
+            96
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            94,
+            96
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            32
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            16,
+            32
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            24,
+            32
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            28,
+            32
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            30,
+            32
+          ],
+          "direction": "right"
+        }
+      ],
+      "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+      "inherited": {
+        "layer": 1,
+        "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+        "stored_dtype": "U8",
+        "group_width": 32,
+        "code_bits": 4,
+        "scale_bits": 8,
+        "weights_per_matrix": 11010048,
+        "code_payload_bytes": 5505024,
+        "scale_payload_bytes": 344064,
+        "code_domain": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "most_frequent_scale": 121,
+        "most_frequent_code": 9,
+        "scale_domain": [
+          119,
+          120,
+          121,
+          122
+        ]
+      },
+      "code_byte_offset": 8088255503,
+      "nibble_shift": 4,
+      "scale_byte_offset": 8088599567,
+      "code": 13,
+      "scale": 121,
+      "weight": -0.046875,
+      "float32_bits_hex": "bd400000",
+      "scale_matches_root_default": true,
+      "source_bytes_read": 2
+    },
+    {
+      "kind": "weight",
+      "layer": 1,
+      "expert": 895,
+      "matrix": "w1",
+      "row": 3071,
+      "coordinate": 3583,
+      "group": 111,
+      "path": [
+        {
+          "axis": "expert",
+          "range": [
+            0,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": [
+            "code_bits",
+            "code_domain",
+            "code_payload_bytes",
+            "group_width",
+            "layer",
+            "most_frequent_scale",
+            "scale_bits",
+            "scale_payload_bytes",
+            "source_file",
+            "stored_dtype",
+            "weights_per_matrix"
+          ]
+        },
+        {
+          "axis": "expert",
+          "range": [
+            448,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            672,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            784,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            840,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            868,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            882,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            889,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            892,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "expert",
+          "range": [
+            894,
+            896
+          ],
+          "direction": "right",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            3
+          ],
+          "direction": "left",
+          "fields_stored_here": []
+        },
+        {
+          "axis": "matrix",
+          "range": [
+            0,
+            2
+          ],
+          "direction": "left",
+          "fields_stored_here": [
+            "most_frequent_code"
+          ]
+        },
+        {
+          "axis": "row",
+          "range": [
+            0,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            1536,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            2304,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            2688,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            2880,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            2976,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3024,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3048,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3060,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3066,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3069,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "row",
+          "range": [
+            3070,
+            3072
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            0,
+            112
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            56,
+            112
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            84,
+            112
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            98,
+            112
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            105,
+            112
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            108,
+            112
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "group",
+          "range": [
+            110,
+            112
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            0,
+            32
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            16,
+            32
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            24,
+            32
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            28,
+            32
+          ],
+          "direction": "right"
+        },
+        {
+          "axis": "coordinate_in_group",
+          "range": [
+            30,
+            32
+          ],
+          "direction": "right"
+        }
+      ],
+      "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+      "inherited": {
+        "layer": 1,
+        "source_file": "/root/k3model/model-00002-of-000096.safetensors",
+        "stored_dtype": "U8",
+        "group_width": 32,
+        "code_bits": 4,
+        "scale_bits": 8,
+        "weights_per_matrix": 11010048,
+        "code_payload_bytes": 5505024,
+        "scale_payload_bytes": 344064,
+        "code_domain": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "most_frequent_scale": 121,
+        "most_frequent_code": 9,
+        "scale_domain": [
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122
+        ]
+      },
+      "code_byte_offset": 16785849359,
+      "nibble_shift": 4,
+      "scale_byte_offset": 16786193423,
+      "code": 11,
+      "scale": 120,
+      "weight": -0.01171875,
+      "float32_bits_hex": "bc400000",
+      "scale_matches_root_default": false,
+      "source_bytes_read": 2
+    }
+  ],
+  "nondefault_scale_preserved": true,
+  "negative_zero_preserved": true,
+  "source_unchanged": true,
+  "tree_sha256": "6d45907c3ed9b9778b7f2657ac3b9581f7ee86305cc3b9772c7880c6452d3275",
+  "script_sha256": "186a3ed77c45ff2695e33eb17fd39e72ed7660d6f45928d4eeb06f49fa49ce89",
+  "limits": "All structural metadata checked against the prior full expert-only census; six actual weight leaves compared independently. Not a fresh full payload scan, standalone weight store, or model execution."
+}

@@ -1,0 +1,24 @@
+{
+  "gate": "PASS",
+  "native_row_checks": 27,
+  "rejected": [
+    "address:-1/w1/0",
+    "address:896/w1/0",
+    "address:0/bad/0",
+    "address:0/w1/-1",
+    "address:0/w1/3072",
+    "address:0/w2/3584",
+    "address:0x/w1/0",
+    "magic",
+    "palette identity",
+    "index checksum",
+    "index record",
+    "group reference",
+    "group selector",
+    "decoded checksum",
+    "truncated file"
+  ],
+  "compiled_palette_sha256": "cf03a0b1b5aee14d9ac716d3baf598eb48408ea5502347284302bcd8d16dab1e",
+  "reader_sha256": "cc9c521661027bec280f73ec42ee70b64312721cdf85ced9d015599c2920d9de",
+  "checker_sha256": "af7098d4bddcd6c13b55104a6a91bf70882cb909d42ef8932530ce9592608e1d"
+}

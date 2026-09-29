@@ -1,0 +1,10 @@
+--- candidate.c
++++ candidate.c
+@@ -1526 +1526,2 @@
+-int main(int argc, char **argv)
++#include "layer1-compact-model.h"
++int main(int argc, char **argv)
+@@ -2366 +2367,2 @@
+-    fruit_report();
++    fruit_report();
++    l1_model_finish();

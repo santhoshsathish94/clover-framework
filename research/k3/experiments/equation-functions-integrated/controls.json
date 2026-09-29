@@ -1,0 +1,46 @@
+{
+  "gate": "PASS",
+  "valid_seed_tokens": [
+    0,
+    163839
+  ],
+  "root_with_and_without_observer": true,
+  "invalid_cases": [
+    {
+      "case": "seed-token",
+      "exit_code": 1,
+      "error": "seed lookup dimensions or token invalid"
+    },
+    {
+      "case": "seed-shape",
+      "exit_code": 1,
+      "error": "seed lookup dimensions or token invalid"
+    },
+    {
+      "case": "seed-null",
+      "exit_code": 1,
+      "error": "seed lookup dimensions or token invalid"
+    },
+    {
+      "case": "root-layer",
+      "exit_code": 1,
+      "error": "root: unsupported layer or invalid expert/input dimensions"
+    },
+    {
+      "case": "root-expert",
+      "exit_code": 1,
+      "error": "root: unsupported layer or invalid expert/input dimensions"
+    },
+    {
+      "case": "root-positions",
+      "exit_code": 1,
+      "error": "root: unsupported layer or invalid expert/input dimensions"
+    },
+    {
+      "case": "root-null",
+      "exit_code": 1,
+      "error": "root: unsupported layer or invalid expert/input dimensions"
+    }
+  ],
+  "scope": "API contract controls with deterministic stub readers; actual arithmetic/data validated separately in full model runs."
+}

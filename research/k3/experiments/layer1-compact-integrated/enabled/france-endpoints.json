@@ -1,0 +1,12 @@
+{
+  "mode": 3,
+  "positions": 5,
+  "tail_sources": 9,
+  "embedding": {"checked": 35840, "changed": 0},
+  "entry_norm": {"checked": 35840, "changed": 0},
+  "tail_aggregate": {"checked": 7168, "changed": 0},
+  "tail_norm": {"checked": 7168, "changed": 0},
+  "head_logits": {"checked": 163840, "changed": 0},
+  "counts_valid": true,
+  "gate": "PASS"
+}

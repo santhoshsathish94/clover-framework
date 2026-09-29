@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#214b3a">
+  <title>Layer 1 | Expert Tree</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="d3.min.js" defer></script>
+  <script src="lucide.min.js" defer></script>
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-mark" aria-hidden="true"><i data-lucide="git-fork"></i></div>
+    <div class="title-block"><p class="eyebrow">CLOVER / K3 RESEARCH</p><h1>Layer 1 <span>/ Expert tree</span></h1></div>
+    <div class="header-status"><span class="status-dot"></span>Verified source map</div>
+    <a class="icon-button" href="records.html" aria-label="Open stored root and expert records" data-tooltip="Stored records"><i data-lucide="table-2"></i></a>
+    <button id="export" class="icon-button" aria-label="Export selected node" data-tooltip="Export selected node" disabled><i data-lucide="download"></i></button>
+    <a class="icon-button" href="../layer1-binary-tree.json" target="_blank" rel="noopener" aria-label="Open source tree JSON" data-tooltip="Source tree JSON"><i data-lucide="file-json-2"></i></a>
+  </header>
+
+  <section class="metrics" aria-label="Dataset totals">
+    <div><span class="metric-label">EXPERT BRANCHES</span><strong>896</strong><span class="metric-note">IDs 0 - 895</span></div>
+    <div><span class="metric-label">STORED NODES</span><strong>5,375</strong><span class="metric-note">2,688 matrix endpoints</span></div>
+    <div><span class="metric-label">LOGICAL WEIGHTS</span><strong>29.595<span>B</span></strong><span class="metric-note">Generated leaf addresses</span></div>
+    <div><span class="metric-label">SOURCE PAYLOAD</span><strong>15.722<span> GB</span></strong><span class="metric-note">Routed experts only</span></div>
+  </section>
+
+  <form id="locator" class="locator" aria-label="Locate an expert weight">
+    <label>Expert <input id="expert" name="expert" type="number" min="0" max="895" value="0" required></label>
+    <label>Matrix <select id="matrix" name="matrix"><option value="w1">w1 / Gate</option><option value="w3">w3 / Up</option><option value="w2">w2 / Down</option></select></label>
+    <label>Row <input id="row" name="row" type="number" min="0" max="3071" value="0" required></label>
+    <label>Weight <input id="coordinate" name="coordinate" type="number" min="0" max="3583" value="0" required></label>
+    <button type="submit" class="command-button" id="locate-button" disabled><i data-lucide="scan-search"></i>Locate</button>
+    <p id="form-error" class="form-error" role="alert" hidden></p>
+  </form>
+
+  <main class="workspace">
+    <section class="graph-panel" aria-label="Interactive expert hierarchy">
+      <div class="graph-toolbar">
+        <div class="view-tabs" role="tablist" aria-label="Graph view">
+          <button id="branch-view" role="tab" aria-selected="true" class="active"><i data-lucide="git-fork"></i>Branch</button>
+          <button id="full-view" role="tab" aria-selected="false"><i data-lucide="network"></i>Full tree</button>
+        </div>
+        <label class="depth-control" id="depth-control">Depth <input id="depth" type="range" min="1" max="6" value="3"><output id="depth-value">3</output></label>
+        <div class="toolbar-actions">
+          <button id="back" class="icon-button" aria-label="Previous selection" data-tooltip="Previous selection" disabled><i data-lucide="arrow-left"></i></button>
+          <button id="up" class="icon-button" aria-label="Parent branch" data-tooltip="Parent branch" disabled><i data-lucide="corner-left-up"></i></button>
+          <button id="home" class="icon-button" aria-label="Return to root" data-tooltip="Return to root" disabled><i data-lucide="house"></i></button>
+        </div>
+      </div>
+      <nav id="breadcrumbs" class="breadcrumbs" aria-label="Focused branch path"><span>Layer 1</span></nav>
+      <div class="viewport" id="viewport">
+        <canvas id="graph" tabindex="0" aria-label="Expert binary tree graph"></canvas>
+        <div class="graph-context"><p id="graph-type">EXPERT HIERARCHY</p><h2 id="graph-heading">Layer 1</h2><span id="graph-count">Loading source data</span></div>
+        <div id="load-state" class="load-state" role="status"><span class="loading-mark"></span><strong id="load-message">Loading verified tree</strong><button id="retry" class="command-button" hidden><i data-lucide="rotate-cw"></i>Retry</button></div>
+        <div id="node-tooltip" class="node-tooltip" hidden></div>
+        <div class="graph-legend"><span><b class="dot expert-dot"></b>Experts</span><span><b class="dot matrix-dot"></b>Matrices</span><span><b class="dot generated-dot"></b>Generated</span></div>
+        <div class="zoom-controls">
+          <button id="zoom-out" class="icon-button" aria-label="Zoom out" data-tooltip="Zoom out"><i data-lucide="minus"></i></button>
+          <output id="zoom-level">100%</output>
+          <button id="zoom-in" class="icon-button" aria-label="Zoom in" data-tooltip="Zoom in"><i data-lucide="plus"></i></button>
+          <span class="separator"></span>
+          <button id="fit" class="icon-button" aria-label="Fit graph" data-tooltip="Fit graph"><i data-lucide="maximize"></i></button>
+        </div>
+      </div>
+      <footer class="graph-footer"><span id="render-status" role="status">Preparing hierarchy</span><span>Source-backed / read-only</span></footer>
+    </section>
+
+    <aside class="inspector" aria-label="Selected node details">
+      <div class="inspector-top"><span class="eyebrow">NODE INSPECTOR</span><button id="focus" class="icon-button" aria-label="Focus selected branch" data-tooltip="Focus selected branch" disabled><i data-lucide="focus"></i></button></div>
+      <div id="selection-heading"><span class="node-tag">Layer root</span><h2>Layer 1</h2></div>
+      <div id="node-details"></div>
+      <section class="sample-section"><h3>Verified leaves <span>6 samples</span></h3>
+        <select id="sample-select" aria-label="Select a verified weight sample" disabled><option value="">Select recorded sample</option></select>
+      </section>
+      <section class="provenance"><h3>Provenance</h3><dl><dt>Layer</dt><dd>1</dd><dt>Expert payload scan</dt><dd>Complete / 896 experts</dd><dt>Matrix records checked</dt><dd>2,688</dd><dt>Weight paths checked</dt><dd>8,064</dd></dl>
+        <a href="../layer1-binary-tree-checks.json" target="_blank" rel="noopener">Verification record <i data-lucide="arrow-up-right"></i></a>
+      </section>
+    </aside>
+  </main>
+</body>
+</html>

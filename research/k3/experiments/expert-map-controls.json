@@ -1,0 +1,65 @@
+{
+  "gate": "PASS",
+  "exact_native_row_checks": 27,
+  "invalid_cases": [
+    {
+      "name": "-1/w1/0",
+      "error": "map store: invalid numeric argument"
+    },
+    {
+      "name": "896/w1/0",
+      "error": "map store: invalid numeric argument"
+    },
+    {
+      "name": "0/bad/0",
+      "error": "map store: invalid matrix"
+    },
+    {
+      "name": "0/w1/-1",
+      "error": "map store: invalid numeric argument"
+    },
+    {
+      "name": "0/w1/3072",
+      "error": "map store: invalid numeric argument"
+    },
+    {
+      "name": "0/w2/3584",
+      "error": "map store: invalid numeric argument"
+    },
+    {
+      "name": "magic",
+      "error": "map store: wrong format or constant identity"
+    },
+    {
+      "name": "constants identity",
+      "error": "map store: wrong format or constant identity"
+    },
+    {
+      "name": "index checksum",
+      "error": "map store: index checksum differs"
+    },
+    {
+      "name": "compressed frame",
+      "error": "map store: invalid compressed frame"
+    },
+    {
+      "name": "template range with valid CRC",
+      "error": "map store: matrix template out of range"
+    },
+    {
+      "name": "zero block length with valid CRC",
+      "error": "map store: invalid compressed block length"
+    },
+    {
+      "name": "decoded checksum with valid CRC",
+      "error": "map store: decoded block checksum differs"
+    },
+    {
+      "name": "truncated file",
+      "error": "map store: file length differs"
+    }
+  ],
+  "reader_sha256": "c3d79b54fa9ed29f02e122430f9c41f1627868eac4475f4bb13b17e5254c7342",
+  "compiled_constants_sha256": "35da8ed0bab854b0c81126871e191086d3a23c758caf12d4b5f1719b36925b86",
+  "checker_sha256": "0e2c3377c0fb470b67104f4f4aef730ef78ae8d2f7b8fde1e76c9e3acb26dc5c"
+}

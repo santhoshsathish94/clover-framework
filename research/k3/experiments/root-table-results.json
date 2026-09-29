@@ -1,0 +1,260 @@
+{
+  "gate": "PASS",
+  "layer": 1,
+  "experts": 896,
+  "matrix_records": 2688,
+  "blocks": 136192,
+  "block_rows": 64,
+  "shared_value_counts": {
+    "root": 22,
+    "root-up": 0,
+    "root-down": 0
+  },
+  "local_values_total": 45716,
+  "selected_codecs": {
+    "grouped_zlib": 136192
+  },
+  "candidate_payload_totals": {
+    "grouped_raw": 15722348544,
+    "grouped_zlib": 14194656836,
+    "direct_zlib": 16325364663
+  },
+  "expert_file_bytes": 14201668495,
+  "shared_tables_bytes": 50,
+  "total_storage_bytes": 14201668545,
+  "original_bytes": 15722348544,
+  "saved_bytes": 1520679999,
+  "header_bytes": 64,
+  "compressed_index_bytes": 6607763,
+  "uncompressed_index_bytes": 12799785,
+  "local_value_bytes": 91432,
+  "group_palette_bytes": 312400,
+  "source_sha256": "cfeb895c80fa5b34fb219c3e3a364d5ae9cbbeee414cb35e0651d38d9ec42516",
+  "ordered_bf16_weights_sha256": "59b4c4f022802f2b3e4e212ccb438625ff3536e8395408b272c98e2d0780a5a8",
+  "file_sha256": {
+    "root.bin": "40e1ad94abb7d11ebfe2d3482867404399cc7596e86f83c4abfb5bf129650f2e",
+    "root-up.bin": "47dc540c94ceb704a23875c11273e16bb0b8a87aed84de911f2133568115f254",
+    "root-down.bin": "47dc540c94ceb704a23875c11273e16bb0b8a87aed84de911f2133568115f254",
+    "expert.bin": "89acf04deebd5ebe2efc74b9bb6c0bfbe8f4708759ecfa1c05fb3ca13bf335a4"
+  },
+  "census_sha256": "6c415917e521efd1888137ce02fcf603230796382f978a8014f752297aeb4f06",
+  "layout_comparison_sha256": "b3b862af0b88658edef5f662b970ea34c9f5a000ec6eefadc10e2002cb5f7a80",
+  "block_audit_sha256": "66ff6b6bbeef71dd10d0a427a49c08c8c35c2126207f4b43c591939c285bcdfa",
+  "implementation_sha256": {
+    "root-table-store.py": "5ac3b2bf74dbd7779239159616ce0d1168cafe431dbc0b4f324d295d199131a6",
+    "root-tables.py": "8bf9e671dc9d814d258e253ccc0e9b9007f9f2ba47390dc3678c94d52e072a92"
+  },
+  "all_decoded_float32_bits_equal_source": true,
+  "values_verified": 29595009024,
+  "all_joint_frequencies_match_census": true,
+  "source_unchanged": true,
+  "original_code_scale_bytes_reconstructed": 15722348544,
+  "row_read_examples": [
+    {
+      "expert": 0,
+      "matrix": "w1",
+      "row": 0,
+      "values": 3584,
+      "sha256": "f1dd7070bdb80ec1399519ec0a4f2701dfb9048c8890dec627964e84bbb494a6",
+      "first_eight_float32": [
+        0.0625,
+        0.0078125,
+        -0.0078125,
+        -0.0234375,
+        -0.0625,
+        -0.03125,
+        0.0234375,
+        0.015625
+      ]
+    },
+    {
+      "expert": 0,
+      "matrix": "w3",
+      "row": 0,
+      "values": 3584,
+      "sha256": "1a0ac6a25bd46b9802728aa496c1920a020ae7ab9d95b8f14a87981f8e7279b1",
+      "first_eight_float32": [
+        0.0078125,
+        -0.0078125,
+        0.03125,
+        -0.046875,
+        -0.0234375,
+        0.0078125,
+        0.046875,
+        -0.0234375
+      ]
+    },
+    {
+      "expert": 0,
+      "matrix": "w2",
+      "row": 0,
+      "values": 3072,
+      "sha256": "dc732042fefb3e48b698a978a5940a72e1c187ec1545812f6b3cb20624c03b1e",
+      "first_eight_float32": [
+        0.0078125,
+        -0.046875,
+        0.0234375,
+        0.046875,
+        -0.03125,
+        -0.046875,
+        0.046875,
+        0.015625
+      ]
+    },
+    {
+      "expert": 447,
+      "matrix": "w1",
+      "row": 3071,
+      "values": 3584,
+      "sha256": "846592a2997983fa40767306a8eaf3bc8e80b24a124aff56e4b4d4b0f31606d7",
+      "first_eight_float32": [
+        -0.03125,
+        -0.015625,
+        -0.0234375,
+        -0.015625,
+        0.03125,
+        -0.015625,
+        0.03125,
+        -0.0625
+      ]
+    },
+    {
+      "expert": 447,
+      "matrix": "w3",
+      "row": 3071,
+      "values": 3584,
+      "sha256": "05cff59c88fe0e666e0721c6bb271439a1093239ec4cb8637ee4a863d49bdc8a",
+      "first_eight_float32": [
+        -0.015625,
+        -0.03125,
+        -0.0078125,
+        -0.0234375,
+        0.03125,
+        -0.0078125,
+        -0.015625,
+        0.03125
+      ]
+    },
+    {
+      "expert": 447,
+      "matrix": "w2",
+      "row": 3583,
+      "values": 3072,
+      "sha256": "046a3b5e4f0d5ef64f90d54f87e93b9b2a2d87b481390e2c66a802f76b0b32c0",
+      "first_eight_float32": [
+        0.0,
+        0.03125,
+        0.015625,
+        0.046875,
+        -0.015625,
+        0.00390625,
+        -0.0078125,
+        0.046875
+      ]
+    },
+    {
+      "expert": 448,
+      "matrix": "w1",
+      "row": 3071,
+      "values": 3584,
+      "sha256": "90f60aa3545107eb5e85dd094f1e5609df7d643394f00749e86521e47c248172",
+      "first_eight_float32": [
+        0.03125,
+        0.00390625,
+        0.0078125,
+        0.015625,
+        0.00390625,
+        -0.0234375,
+        0.03125,
+        0.03125
+      ]
+    },
+    {
+      "expert": 448,
+      "matrix": "w3",
+      "row": 3071,
+      "values": 3584,
+      "sha256": "2ef44df0ddb55f312abe8c3f949914eb17022a842fa47b38c24c2c3fe506fed9",
+      "first_eight_float32": [
+        -0.03125,
+        0.00390625,
+        -0.0078125,
+        -0.0234375,
+        -0.0234375,
+        0.0234375,
+        -0.00390625,
+        -0.015625
+      ]
+    },
+    {
+      "expert": 448,
+      "matrix": "w2",
+      "row": 3583,
+      "values": 3072,
+      "sha256": "a773c01b538c8d266eb2e08ab94cd32203ac8c971d149809de77b8f22dc70455",
+      "first_eight_float32": [
+        0.0078125,
+        -0.0234375,
+        -0.015625,
+        0.046875,
+        0.015625,
+        0.0078125,
+        0.0,
+        0.0234375
+      ]
+    },
+    {
+      "expert": 895,
+      "matrix": "w1",
+      "row": 3071,
+      "values": 3584,
+      "sha256": "fe1ddbfe0edf391ff8618ac500bc26a60f4de210624680ea77bc79bf591f1a22",
+      "first_eight_float32": [
+        -0.0078125,
+        0.015625,
+        0.015625,
+        0.0078125,
+        0.0234375,
+        0.0625,
+        0.0,
+        0.015625
+      ]
+    },
+    {
+      "expert": 895,
+      "matrix": "w3",
+      "row": 3071,
+      "values": 3584,
+      "sha256": "ca30be3301dadaadd2f2de06e0897e007a4c5808ac85e45c03dd70f7b12858c8",
+      "first_eight_float32": [
+        0.03125,
+        0.0078125,
+        -0.0078125,
+        -0.0078125,
+        -0.0,
+        0.0078125,
+        0.015625,
+        0.0078125
+      ]
+    },
+    {
+      "expert": 895,
+      "matrix": "w2",
+      "row": 3583,
+      "values": 3072,
+      "sha256": "7d8d858919ee02d53e896e8756a32ff5b64976760eb16be5c5ddaf2f4d6e88d9",
+      "first_eight_float32": [
+        0.0078125,
+        0.0078125,
+        -0.015625,
+        -0.03125,
+        0.03125,
+        -0.046875,
+        0.0,
+        0.0234375
+      ]
+    }
+  ],
+  "table_semantics": "root/root-up/root-down contain only uint16LE layer/root FK plus BF16 value cells; schemas and lengths live in authenticated expert metadata. Expert palettes concatenate root then branch then local values; references index this combined list.",
+  "limits": "Verified standalone layer1 expert-weight storage, no trunk/other layers/model execution. Grouped layouts recover original code/scale bytes; direct layouts guarantee identical decoded weights, not original quantized factorization. Compression is smallest among tested shortlist per64rowblock, not a global optimum. No speed/RAM benefit claim."
+}

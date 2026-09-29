@@ -16,3 +16,4 @@
 # Experimental evidence records SHA256 of exact source and fixture bytes.
 # Do not normalize these files on add or checkout.
 research/k3/experiments/** -text
+research/k3/expert-constant-palette.h -text

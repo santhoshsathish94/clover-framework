@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layer 1 | Stored Records</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="records.css">
+  <script src="lucide.min.js" defer></script>
+  <script type="module" src="records.mjs"></script>
+</head>
+<body class="records-page">
+  <header class="app-header">
+    <div class="brand-mark" aria-hidden="true"><i data-lucide="database"></i></div>
+    <div class="title-block"><p class="eyebrow">CLOVER / K3 RESEARCH</p><h1>Layer 1 <span>/ Stored records</span></h1></div>
+    <nav class="page-nav" aria-label="Dataset views"><a href="index.html"><i data-lucide="git-fork"></i>Tree</a><a href="records.html" aria-current="page"><i data-lucide="table-2"></i>Records</a></nav>
+    <a class="icon-button" href="records-data.json" target="_blank" rel="noopener" aria-label="Open actual record snapshot JSON" data-tooltip="Record snapshot JSON"><i data-lucide="file-json-2"></i></a>
+  </header>
+  <div class="snapshot-bar"><span id="snapshot-status" role="status">Loading stored records</span><span id="snapshot-count"></span></div>
+  <label class="format-selector">Format <select id="record-format"><option value="maps">C maps + values / verified / 896 experts</option><option value="constants">C values / verified / 896 experts</option><option value="original">Root tables / earlier 469-expert snapshot</option></select></label>
+  <div id="records-error" class="records-error" role="alert" hidden><span></span><button id="records-retry" class="command-button">Retry</button></div>
+  <main id="records-main" hidden>
+    <section class="record-section shared-section" aria-labelledby="shared-heading">
+      <div class="section-heading"><h2 id="shared-heading">Shared value tables</h2><span id="shared-total"></span></div>
+      <div id="root-tables"></div>
+      <div id="cell-detail" class="cell-detail" aria-live="polite"></div>
+    </section>
+    <section class="record-section expert-section" aria-labelledby="expert-heading">
+      <div class="section-heading"><h2 id="expert-heading">Expert records</h2><span id="record-identity"></span></div>
+      <p id="record-origin" class="record-origin"></p>
+      <form id="record-locator" class="record-locator">
+        <label>Expert ID<input id="record-expert" type="number" min="0" max="895" required value="0"></label>
+        <button class="command-button" type="submit"><i data-lucide="search"></i>Open</button>
+        <div class="record-stepper"><button id="record-prev" class="icon-button" type="button" aria-label="Previous expert" data-tooltip="Previous expert"><i data-lucide="chevron-left"></i></button><button id="record-next" class="icon-button" type="button" aria-label="Next expert" data-tooltip="Next expert"><i data-lucide="chevron-right"></i></button></div>
+        <div class="matrix-tabs" aria-label="Matrix"><button type="button" data-matrix="w1" aria-pressed="true">w1 / Gate</button><button type="button" data-matrix="w3" aria-pressed="false">w3 / Up</button><button type="button" data-matrix="w2" aria-pressed="false">w2 / Down</button></div>
+        <p id="record-error" class="form-error" role="alert" hidden></p>
+      </form>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Expert record fields"><table id="expert-fields" class="data-table"></table></div>
+      <div id="binary-record" class="byte-record" hidden><h3>Stored matrix record <span id="binary-record-location"></span></h3><code id="binary-record-hex"></code></div>
+      <div id="equation-record" class="byte-record" hidden><h3>Compiled map list <span id="equation-template"></span></h3><code id="equation-map-list"></code><h3>Exact weight lookup</h3><code>BF16_bits = V[G[L[T][selector]][code]]</code><p id="equation-actual"></p></div>
+      <div class="local-heading"><h3>Local value cells</h3><span id="local-count"></span></div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Local expert values"><table id="local-values" class="data-table value-table"></table></div>
+      <details class="block-details"><summary id="block-summary">Stored blocks</summary><div class="table-scroll block-scroll" tabindex="0" role="region" aria-label="Stored block index"><table id="block-index" class="data-table"></table></div></details>
+    </section>
+    <section class="record-section sample-section" aria-labelledby="sample-heading">
+      <div class="section-heading"><h2 id="sample-heading">Row 0 / Group 0</h2><span>32 actual weights</span></div>
+      <div class="sample-layout">
+        <div class="weights-column"><div class="table-scroll weights-scroll" tabindex="0" role="region" aria-label="First 32 actual weights"><table id="weight-records" class="data-table"></table></div></div>
+        <div class="trace-column">
+          <h3 id="trace-heading">Weight 0</h3><div id="weight-trace" class="weight-trace" aria-live="polite"></div>
+          <div class="byte-record"><h3>Stored block bytes <span>First 32</span></h3><code id="stored-hex"></code><p id="stored-range"></p></div>
+          <div class="byte-record"><h3>Decoded group bytes <span>16 packed-code bytes</span></h3><code id="group-hex"></code></div>
+          <details class="palette-details"><summary>Stored group palette / 16 references</summary><p id="palette-address"></p><code id="palette-hex"></code><div class="table-scroll" tabindex="0" role="region" aria-label="Selected group palette"><table id="group-palette" class="data-table"></table></div></details>
+        </div>
+      </div>
+    </section>
+    <footer class="record-section evidence-section"><details><summary>Snapshot provenance</summary><dl id="record-provenance"></dl><p id="sample-scope"></p></details></footer>
+  </main>
+</body>
+</html>
