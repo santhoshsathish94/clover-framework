@@ -858,3 +858,196 @@ These establish the **resource and data boundary** of a layer unit. They do not 
 The next section can therefore address the next architectural question:
 
 > **Once each pod owns one layer, what exactly moves from one layer to the next, and how can that movement be overlapped with computation?**
+
+## 7. What moves between layers
+
+Section 6 established that each distributed unit owns one complete layer. The next question is therefore the interface between those units:
+
+> **If the weights stay with each layer, what data actually has to move from Layer (L) to Layer (L+1)?**
+
+This section is written to make that boundary measurable.
+
+The answer is not the model weights, and it is not simply the original token IDs. The next layer needs the **runtime representation and carried state produced by the previous computation**.
+
+### The layer boundary is a state boundary
+
+At the end of a layer, the result is not a new copy of the model.
+
+It is a relatively small runtime state:
+
+```text
+Layer L
+   │
+   ├── residual representation
+   ├── accumulated snapshots
+   ├── recurrent state where applicable
+   ├── convolution history where applicable
+   └── attention cache state where applicable
+   │
+   ▼
+Layer L+1
+```
+
+The exact contents depend on the model path and on the position being processed.
+
+The important architectural distinction is:
+
+```text
+persistent model data      → stays with its layer
+runtime computation state  → crosses the layer boundary
+```
+
+This is the boundary that makes layer-level distribution possible.
+
+### The residual is only part of the payload
+
+It would be tempting to describe the interface as one 7168-element residual vector.
+
+That is incomplete for K3.
+
+The implementation shows that each layer consumes the current residual **plus the accumulated snapshot vectors**. Snapshots are pushed at defined layers, so the amount of state carried forward grows with depth.
+
+The measured payload therefore changes across the pipeline:
+
+| Layer boundary | Vectors / position | Payload / position |
+|---|---:|---:|
+| Layer 1 | 2 | 57,344 B |
+| Layer 25 | 4 | 114,688 B |
+| Layer 48 | 5 | 143,360 B |
+| Layer 85 | 9 | 258,048 B |
+
+The growth is caused by the model's state structure, not by replication of model weights.
+
+### Why snapshots matter
+
+The equation defines snapshot aggregation as part of the layer computation.
+
+When a snapshot-push layer is reached, the current representation is added to the carried snapshot set. Later layers can consume those snapshots together with the live residual.
+
+Conceptually:
+
+```text
+residual
+   │
+   ├── continues forward
+   │
+   └── snapshot push
+          │
+          ▼
+     accumulated state
+          │
+          └──────────────→ later layers
+```
+
+That means the infrastructure cannot treat the inter-layer message as a fixed-size tensor independent of depth.
+
+The interface is determined by the model equation itself.
+
+### What does not cross the boundary
+
+The following do **not** need to be sent from one layer pod to the next merely to execute the next layer:
+
+- the previous layer's expert weights;
+- the next layer's expert weights;
+- the entire 1.45 TB expert pool;
+- the entire model checkpoint;
+- or the original token IDs as the primary layer representation.
+
+Each pod already owns the persistent data required for its own computation.
+
+The next pod receives the state required to continue the mathematical composition.
+
+This is the central data-locality property of the architecture.
+
+### Measured traffic across the full pipeline
+
+For the measured K3 state representation, the cumulative payload across all 92 layer boundaries is:
+
+| Positions processed | Total across all 92 hops | Mean per hop |
+|---|---:|---:|
+| 1 | 14.11 MB | 0.15 MB |
+| 5 | 70.53 MB | 0.77 MB |
+| 16 | 225.71 MB | 2.45 MB |
+| 64 | 902.82 MB | 9.81 MB |
+
+These numbers describe **runtime-state movement**, not model-weight movement.
+
+That distinction is critical.
+
+The model may contain roughly 1.45 TB of expert weights, but a five-position prefill moves about 70.53 MB of runtime state across the complete 92-hop pipeline under this measured representation.
+
+The architecture therefore separates two very different quantities:
+
+```text
+model capacity:
+≈ 1.45 TB expert store
+
+runtime communication:
+≈ 70.53 MB for the measured 5-position pipeline
+```
+
+The large number stays distributed.
+
+The smaller number moves.
+
+### Why placement matters
+
+The measured numbers also expose an important deployment constraint.
+
+For a single position, the cumulative state crossing all layer boundaries is only about 14.11 MB. For 64 positions it grows to about 902.82 MB.
+
+At small batches, this makes the runtime-state interface relatively small compared with the persistent expert data.
+
+At larger batches, however, the communication becomes significant enough that placement and fabric bandwidth matter.
+
+The scaling architecture therefore should not blindly distribute every layer across arbitrary distant machines.
+
+The physical placement should preserve the model's pipeline while keeping the runtime-state path efficient.
+
+The existing measurements found that at 64 positions, approximately 10 MB crosses an average hop. Across nodes connected at 10 Gb/s, that can represent roughly **0.7 seconds of communication for the complete prompt**, making co-scheduling and network topology a real deployment consideration.
+
+This is not a claim that 10 Gb/s is the final required fabric. It is a measured example showing where communication can become a constraint as the workload grows.
+
+### The equation determines the interface
+
+This is the deeper reason for writing the section.
+
+Without the equation, it is easy to think about distributed inference in terms of arbitrary tensor messages.
+
+With the equation, the interface can be derived from the actual state transition:
+
+```text
+(r_next, state_next)
+       =
+Layer_L(r, state)
+```
+
+Therefore:
+
+```text
+input to Layer L+1
+      =
+output state of Layer L
+```
+
+The interface is not an infrastructure convention invented independently of the model.
+
+It is the mathematical boundary between two composed functions.
+
+That makes it possible to measure the payload, reason about its scaling with sequence length and snapshot depth, and choose physical placement based on actual communication requirements.
+
+### Evidence behind this section
+
+The evidence comes from:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which defines the carried residual, snapshots, KDA state, convolution history and attention cache state.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures the layer-boundary payload at multiple depths and sequence sizes.
+- The verified Clover-K3 implementation, which shows that the layer input contains the residual and accumulated snapshots rather than simply a token-ID stream.
+
+These sources establish the current runtime-state boundary and its measured size.
+
+They do not yet establish the final inter-node fabric, compression scheme, serialization format or production network topology. Those remain deployment questions.
+
+The next section can therefore address the key concurrency question:
+
+> **If a token must pass through Layers 1–92 in order, how can multiple layers remain active without forcing the entire pipeline to wait on one token at a time?**
