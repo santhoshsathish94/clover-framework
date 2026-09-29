@@ -1837,3 +1837,379 @@ These sources support the architectural separation and the concurrency model. Th
 The next section can therefore examine the efficiency consequence:
 
 > **Why does organizing infrastructure around the model's layer-local work change the resource-sizing problem compared with one monolithic large-GPU deployment?**
+
+## 11. Why this changes the resource-sizing problem
+
+The previous sections established the architecture:
+
+```
+Client
+   ↓
+Layer 0
+   ↓
+Layer 1 → Layer 2 → ... → Layer 92
+   ↓
+Client
+```
+
+with Layer 0 at the server-side entry and Layers 1–92 owned by their respective pods.
+
+This section explains why that decomposition changes the **resource-sizing problem**.
+
+The argument is not that a distributed layer architecture is automatically faster than a large GPU.
+
+The argument is that the model's actual resource requirements are **not uniform across the whole model**, so sizing one machine around the total model can allocate resources at a much coarser granularity than the computation requires.
+
+### A monolithic model starts with the total footprint
+
+K3 has approximately:
+
+```
+82,432 experts
+≈ 1.45 TB of expert weights
+```
+
+The conventional sizing question therefore becomes:
+
+> How much hardware is required to hold and execute the complete model?
+
+But the equation and measurements show that the model does not use that entire expert pool at one point in the computation.
+
+A five-token prefill touched:
+
+```
+5,683 distinct (layer, expert) pairs
+≈ 99.72 GB
+```
+
+against the approximately 1.45 TB total expert pool.
+
+The model therefore has a large **aggregate footprint** but a much smaller **layer-local working requirement** at any one point.
+
+### The layer architecture changes the sizing unit
+
+Instead of sizing around:
+
+```
+whole model
+≈ 1.45 TB expert pool
+```
+
+the layer architecture sizes around:
+
+```
+one layer
+≈ 15.77 GB expert store
++ 423–635 MB trunk
++ runtime memory
++ layer-to-layer communication
+```
+
+The 92 layer stores together still contain approximately the same total expert data.
+
+Nothing has been magically compressed away.
+
+The difference is **where the resource is required**.
+
+The infrastructure can therefore provide storage and compute resources near the layer that uses them instead of requiring one execution boundary to own the entire model.
+
+### Storage capacity and compute capacity become separate decisions
+
+A large model footprint does not imply that all model data must be resident in the same fast memory tier at the same time.
+
+The measured layer experiments showed that a 15.77 GB expert store can remain on local storage while the layer process keeps a much smaller resident working set.
+
+That creates separate resource decisions:
+
+```
+persistent storage
+        ↓
+holds layer experts
+
+resident memory
+        ↓
+holds active computation and state
+
+compute
+        ↓
+executes the layer
+
+network fabric
+        ↓
+moves runtime state to the next layer
+```
+
+A monolithic design tends to couple these requirements around one large execution boundary.
+
+The layer design allows them to be considered independently.
+
+This is an efficiency property, not yet a throughput claim.
+
+### The runtime state is much smaller than the model weights
+
+The model does not pass its weights between layers.
+
+It passes runtime state.
+
+For the measured K3 implementation, the hop payload for five positions was approximately:
+
+```
+70.53 MB
+```
+
+across all 92 layer transitions.
+
+For one position it was approximately:
+
+```
+14.11 MB
+```
+
+This is fundamentally different from moving the model itself.
+
+The architecture therefore keeps the large, relatively stationary data local to its owner and moves the smaller representation required to continue the computation.
+
+Conceptually:
+
+```
+large, stationary:
+Layer N weights
+       │
+       │ local
+       ▼
+Layer N computation
+       │
+       │ small runtime state
+       ▼
+Layer N+1
+```
+
+That is the physical basis for separating the model into layer-local resources.
+
+### More GPU is not automatically the same as more useful capacity
+
+The measurements also show why simply adding more compute hardware is not a sufficient architectural argument.
+
+On the test machine, the one-pod experiment reached approximately 24.5 GB/s steady expert-read bandwidth. When multiple layer processes shared the same physical node, aggregate memory bandwidth remained around 26–30 GB/s while the individual pods increasingly competed for that bandwidth.
+
+The measured behavior was approximately:
+
+```
+1 pod  → ~37.5 ms
+2 pods → ~74–77 ms
+3 pods → ~91–106 ms
+4 pods → ~134–138 ms
+```
+
+The important observation is that adding more logical work units did not create proportional physical memory bandwidth.
+
+The binding resource was the shared memory subsystem.
+
+This is why the architecture must size **the resource that constrains the actual workload**, rather than simply increasing one class of compute hardware.
+
+The same principle applies to a GPU-based deployment: if the dominant cost is moving expert data or feeding the execution units, additional arithmetic capacity alone does not necessarily remove the limiting resource.
+
+### The model's arithmetic intensity does not remove the data problem
+
+The scaling analysis records an overall K3 arithmetic intensity of approximately **10.3 FLOP per byte** for the relevant workload.
+
+That number is useful because it puts the model on a concrete compute-versus-data scale.
+
+But it should not be interpreted as:
+
+> therefore the answer is simply a larger GPU.
+
+The model contains a large collection of independently owned expert weights and a layer-by-layer dependency graph.
+
+The question is not only how many floating-point operations can be executed.
+
+It is also:
+
+```
+Where are the required bytes?
+When are they needed?
+Who owns them?
+Can they be prepared before computation reaches them?
+What physical resource moves them?
+```
+
+The equation makes those dependencies explicit.
+
+The scaling architecture then places the resources around those dependencies.
+
+### The architecture does not eliminate the total model cost
+
+This distinction is important.
+
+The layer architecture does **not** claim:
+
+```
+1.45 TB → 15.77 GB
+```
+
+as though the remaining 91 layers disappeared.
+
+The actual transformation is:
+
+```
+1.45 TB global expert pool
+          ↓
+92 × approximately 15.77 GB layer stores
+```
+
+The aggregate storage remains roughly the same.
+
+What changes is the **ownership and scaling boundary**.
+
+Likewise, the architecture does not claim that every deployment can use inexpensive hardware. Each layer still requires sufficient storage bandwidth, resident memory, compute and network capacity for its workload.
+
+The benefit comes from being able to allocate those resources according to the actual layer requirements.
+
+### Replication becomes localized
+
+This becomes particularly important when capacity must increase.
+
+With whole-model replication:
+
+```
+additional capacity
+        ↓
+another complete model footprint
+```
+
+With layer-local replication:
+
+```
+Layer 37 constrained
+        ↓
+replicate Layer 37
+        ↓
+another Layer 37 resource footprint
+```
+
+A MoE layer replica adds approximately one layer expert store, rather than another 1.45 TB expert pool.
+
+The other layers do not need to be duplicated merely because Layer 37 needs additional capacity.
+
+This is the central resource-efficiency difference between the two scaling granularities.
+
+### Concurrency makes the separation useful
+
+The architecture would not provide much value if every request still required one machine to perform the complete model sequentially.
+
+Section 10 established the opposite.
+
+For one token:
+
+```
+L0 → L1 → L2 → ... → L92
+```
+
+But across multiple tokens or requests:
+
+```
+Layer 5  → Token A
+Layer 4  → Token B
+Layer 3  → Token C
+Layer 2  → Token D
+```
+
+can all be active simultaneously.
+
+That means the layer resources are not merely storage containers. They become **pipeline stages** that can remain occupied with independent ready work.
+
+The infrastructure therefore separates both:
+
+1. **where the model data lives**, and
+2. **when each piece of work executes**.
+
+### Prefetch adds another efficiency mechanism
+
+The routing-cache experiment provides a second example of why following the model's dependency graph matters.
+
+For a previously seen prompt, exact later-layer expert IDs can be known early enough to begin their reads while earlier-layer computation is still running.
+
+The tested Clover-K3 path changed from approximately:
+
+```
+8.75 s → 7.25 s
+```
+
+with measured device utilization increasing from roughly 80% to 98–99%.
+
+Again, this is not evidence that every distributed deployment will achieve the same improvement.
+
+It demonstrates a more general principle:
+
+> **Once the computation is represented precisely, work that is known to be required can be moved earlier in the execution schedule.**
+
+The scaling architecture can then place that work close to the resource that will consume it.
+
+### What this section establishes
+
+The evidence supports a narrower conclusion than "distributed is faster."
+
+It establishes that K3 has several different resource scales:
+
+```
+whole-model storage
+        ↓
+~1.45 TB expert pool
+
+layer-local storage
+        ↓
+~15.77 GB per MoE layer
+
+layer trunk
+        ↓
+~423–635 MB
+
+runtime inter-layer state
+        ↓
+measured in MB, not TB
+
+client head/tail
+        ↓
+~2.35 GB each
+```
+
+These are different resources serving different parts of the model.
+
+A production architecture can therefore size them separately.
+
+That is the efficiency argument.
+
+### What remains unproven
+
+This section deliberately does not claim that the architecture is already cheaper, faster, or more scalable in every deployment.
+
+Those conclusions require:
+
+- actual distributed deployment;
+- real network measurements;
+- real layer execution measurements;
+- concurrent workload testing;
+- failure and recovery behavior;
+- scheduling measurements;
+- and cost comparison against a monolithic deployment.
+
+Those experiments belong in the later validation sections.
+
+What is established now is the structural reason the comparison should be made:
+
+> **A monolithic deployment sizes around the aggregate model. Clover-K3 sizes around the resources actually required by each stage of the model's execution.**
+
+### Evidence behind this section
+
+This section is supported by:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which establishes the layer-by-layer computation and state dependency.
+- [k3-analysis/k3-data-problem.md](../k3-analysis/k3-data-problem.md), which measures the 1.45 TB expert pool and the much smaller per-prompt distinct expert requirement.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures layer storage, trunk sizes, resident memory behavior, node contention, runtime hop payloads and routing lookahead.
+- The verified Clover-K3 implementation, which provides the exact layer execution and routing validation.
+
+These measurements establish the resource boundaries and the reason for separating them. They do not yet establish final production cost or throughput.
+
+The next section can therefore make the distinction explicit:
+
+> **The architecture is being proposed first as an efficiency model. Throughput is a separate experimental question.**
