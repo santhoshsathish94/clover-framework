@@ -2213,3 +2213,251 @@ These measurements establish the resource boundaries and the reason for separati
 The next section can therefore make the distinction explicit:
 
 > **The architecture is being proposed first as an efficiency model. Throughput is a separate experimental question.**
+
+## 12. Efficiency versus throughput
+
+The previous section established why the architecture changes the resource-sizing problem. This section makes an important distinction before any production result is claimed:
+
+> **Clover-K3 is currently an efficiency architecture. Throughput is a separate experimental result.**
+
+These two questions are related, but they are not the same.
+
+### Efficiency asks how resources are used
+
+Efficiency asks questions such as:
+
+```text
+How much model data must be stored?
+Where is that data stored?
+How much data is resident at one time?
+How much runtime state must move?
+Which layer owns each resource?
+Can work be overlapped?
+Can a constrained layer be scaled independently?
+```
+
+The measurements already provide evidence for these questions.
+
+For example:
+
+- the full expert pool is approximately 1.45 TB;
+- one MoE layer's expert store is approximately 15.77 GB;
+- the layer trunk is approximately 423–635 MB;
+- the five-position inter-layer payload is approximately 70.53 MB across the complete 92-layer path;
+- client-side embedding and final vocabulary projection are approximately 2.35 GB each;
+- multiple layer processes sharing one node compete for the same physical memory bandwidth.
+
+These measurements describe **resource organization and utilization**.
+
+They do not require a claim about final tokens per second.
+
+### Throughput asks how much work the system completes
+
+Throughput is a workload-level measurement.
+
+Examples include:
+
+```text
+tokens / second
+requests / second
+prompts / second
+time per generated token
+time per batch
+```
+
+Throughput depends on much more than the size of an individual layer.
+
+It depends on:
+
+- request concurrency;
+- prompt length;
+- generated sequence length;
+- batch composition;
+- cache reuse;
+- routing-cache availability;
+- layer scheduling;
+- inter-layer network latency;
+- storage/cache behavior;
+- compute utilization;
+- and contention between concurrent workloads.
+
+Therefore a layer footprint alone cannot establish production throughput.
+
+### Why the distinction matters
+
+It would be incorrect to take:
+
+```text
+1.45 TB model
+        ↓
+92 layer stores
+```
+
+and conclude directly:
+
+```text
+therefore faster
+```
+
+The decomposition proves a different thing:
+
+```text
+model structure
+        ↓
+resource ownership
+        ↓
+independent placement
+        ↓
+independent scaling opportunities
+```
+
+Whether those opportunities produce higher throughput must be measured after the production pipeline exists.
+
+This is especially important because the architecture introduces new resources as well as removing old coupling.
+
+A distributed pipeline introduces:
+
+- layer-to-layer communication;
+- scheduling;
+- synchronization at dependency boundaries;
+- network placement;
+- replica coordination;
+- and failure handling.
+
+Those costs must be measured rather than assumed away.
+
+### The existing lookahead result is a different kind of evidence
+
+Clover-K3 already has one measured optimization that demonstrates the value of exploiting the equation's dependency structure.
+
+For a previously seen prompt, exact later-layer expert IDs can be available early enough to start expert reads while the current layer is still computing.
+
+The measured path changed approximately:
+
+```text
+baseline       8.75 s
+lookahead      7.25 s
+reduction      1.49 s
+```
+
+with device utilization moving from approximately 80% to 98–99%.
+
+That is useful evidence for **overlap efficiency**.
+
+It is not a measurement of the final distributed architecture's throughput.
+
+The distinction is:
+
+```text
+lookahead experiment
+        ↓
+measures one optimization on the current implementation
+
+distributed deployment
+        ↓
+must measure end-to-end throughput
+```
+
+The first informs the second, but they are not interchangeable.
+
+### Efficiency can improve without increasing throughput
+
+This is possible because throughput may be limited by a different resource.
+
+For example:
+
+```text
+less resident memory
+```
+
+is an efficiency improvement even if tokens/second stays unchanged.
+
+Likewise:
+
+```text
+less duplicated storage
+```
+
+can reduce infrastructure requirements without changing single-request latency.
+
+And:
+
+```text
+better pipeline occupancy
+```
+
+may reduce idle resources without immediately increasing end-to-end throughput if another stage remains the bottleneck.
+
+Therefore the architecture should be evaluated using both classes of measurements.
+
+### Throughput can also improve without proving the architecture is efficient
+
+The reverse is also possible.
+
+A larger machine might produce more tokens per second simply because it provides more raw compute or memory bandwidth.
+
+That does not by itself prove that the resources are being used efficiently.
+
+The comparison therefore needs two separate dimensions:
+
+| Dimension | Question |
+|---|---|
+| Efficiency | How much resource is required and how effectively is it utilized? |
+| Throughput | How much inference work is completed per unit time? |
+
+A valid production comparison should report both.
+
+### The eventual experiment
+
+The distributed deployment should therefore measure at least:
+
+```text
+single-request latency
+prefill latency
+decode latency
+tokens / second
+requests / second
+layer utilization
+storage bandwidth
+memory bandwidth
+network bandwidth
+resident memory
+CPU/GPU utilization
+pipeline idle time
+```
+
+Those measurements should be collected across increasing concurrency rather than from one isolated request.
+
+The resulting curves will show whether the pipeline:
+
+```text
+scales linearly
+        or
+hits a layer bottleneck
+        or
+hits a network bottleneck
+        or
+hits a storage/memory bottleneck
+```
+
+That is the point at which a throughput claim becomes evidence-based.
+
+### What this section establishes
+
+At the current stage, the strongest defensible statement is:
+
+> **Clover-K3 defines an efficiency-oriented architecture by aligning resource ownership with the model's computation. Whether that architecture produces a throughput advantage is an empirical question for the distributed deployment.**
+
+This keeps the architectural claim and the performance claim separate.
+
+The next section can therefore quantify what is already known well enough to size today, without pretending that unknown deployment behavior has already been measured.
+
+### Evidence behind this section
+
+This section is supported by:
+
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which contains the measured storage, memory, contention, payload and lookahead experiments.
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which establishes the computation and dependency structure.
+- The verified Clover-K3 implementation and its lookahead measurements.
+
+These establish the distinction between measured resource behavior and unmeasured distributed throughput.
