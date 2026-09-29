@@ -94,3 +94,56 @@ The goal is to understand the model well enough to determine **what must remain 
 
 ## 2. The original problem
 
+Once the computation was expressed as an equation, the next question was not how to make the model choose fewer weights. The measurements showed that the model was already doing that.
+
+The original problem was more fundamental:
+
+> **Why does a model that processes one layer at a time need to keep and move a model-sized data set as though the whole model were one computational unit?**
+
+K3 contains a very large expert pool. Across its 92 MoE layers there are **82,432 experts**, occupying roughly **1.45 TB** of expert weights.
+
+But a single five-token prefill does not need that entire pool.
+
+The router selects 16 experts at each MoE layer. Across the 92 layers and five positions, that produces 7,360 expert draws. After the model's existing per-layer reuse is accounted for, those draws correspond to **5,683 distinct (layer, expert) pairs**, or **99.72 GB of distinct expert data**.
+
+So the relationship is approximately:
+
+```text
+entire expert pool        82,432 experts    ≈ 1.45 TB
+one 5-token prefill        5,683 experts    ≈ 99.72 GB
+                                             ≈ 6.89% of the pool
+```
+
+This is important because it rules out the simplest explanation.
+
+The problem is **not** that the existing implementation blindly reads the entire 1.45 TB model for every request. It already follows the router and fetches the experts that the computation actually selects. Within a layer it also avoids refetching the same expert when multiple positions request it.
+
+The measured data problem is therefore different:
+
+> **The model's useful computation is local to a layer, but the model's storage is organized as one enormous global pool.**
+
+That creates a mismatch between the **logical flow of the model** and the **physical location of its data**.
+
+The equation makes the logical flow explicit:
+
+```text
+Layer 0 → Layer 1 → Layer 2 → ... → Layer 92
+```
+
+At each layer, the computation needs that layer's trunk and the experts selected for that layer. It does not simultaneously need the expert weights belonging to the other 91 MoE layers.
+
+Yet the conventional single-machine arrangement places those weights together and makes the inference system repeatedly retrieve the required expert data from that large shared storage system.
+
+That is the problem this scaling work addresses.
+
+The evidence for this conclusion is recorded separately in:
+
+- [k3-analysis/k3-data-problem.md](../k3-analysis/k3-data-problem.md), which establishes the amount of distinct data actually required and separates genuine model requirements from implementation waste.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures the layer-level storage footprint, single-layer access behavior, multi-pod contention and the physical consequences of separating the layers.
+
+Those measurements lead to the architectural question for the next section:
+
+> **If the model itself is organized as a sequence of layers, should the infrastructure be organized around those same layers rather than around the total size of the model?**
+
+That is the point where scaling stops being a question of buying a machine large enough to hold K3 and becomes a question of **placing each part of the model where the model actually uses it**.
+
