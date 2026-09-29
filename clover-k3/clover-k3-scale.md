@@ -1295,3 +1295,236 @@ Together these establish the distinction between **mathematical dependency** and
 The next section can therefore address the scaling consequence:
 
 > **If each layer is an independent unit and work can be pipelined, can each layer be scaled independently when one part of the model becomes the resource constraint?**
+
+## 9. Independent layer scaling
+
+Section 8 established that the model can remain mathematically sequential while the infrastructure pipelines different work across layers. The next scaling question is:
+
+> **If one layer becomes the resource constraint, must the entire model be replicated to add capacity?**
+
+With the layer boundary defined by the equation, the answer is structurally no.
+
+A layer is an independently owned computation and data unit, so its storage, compute resources and replicas can be considered separately from the other layers.
+
+### Scaling follows the layer, not the whole model
+
+Consider Layer 37.
+
+Its unit is:
+
+```text
+Layer 37
+├── trunk
+├── router
+├── 896 experts
+├── local state
+└── execution resources
+```
+
+If Layer 37 requires additional capacity, the scaling unit can be Layer 37 itself:
+
+```text
+Layer 37
+   ├── replica A
+   ├── replica B
+   └── replica C
+```
+
+while the other layers retain their existing placement.
+
+This is fundamentally different from adding another complete copy of:
+
+```text
+Layer 0 + Layer 1 + ... + Layer 92
+```
+
+The architecture therefore creates a finer scaling granularity.
+
+### Why independent scaling is possible
+
+The reason is data ownership.
+
+Each layer owns its own:
+
+- trunk;
+- router;
+- expert store;
+- layer-specific attention parameters;
+- layer-local state;
+- and execution resources.
+
+The next layer does not need to know where the previous layer's weights are stored.
+
+It only needs the runtime state produced by the previous stage.
+
+That means a replicated Layer 37 unit can serve the same Layer 37 computation for different work while the rest of the model remains unchanged.
+
+Conceptually:
+
+```text
+             ┌── Layer 37 replica A ──┐
+Layer 36 ────┼── Layer 37 replica B ──┼── Layer 38
+             └── Layer 37 replica C ──┘
+```
+
+A scheduler can distribute independent work among those replicas.
+
+The exact scheduling policy is a deployment decision. The architectural property is that the replicas contain only the layer that is being scaled.
+
+### Storage scales with layer ownership
+
+Each MoE layer has approximately:
+
+```text
+896 experts × 17.55 MB ≈ 15.72 GB
+measured layer store       ≈ 15.77 GB
+```
+
+Therefore a replica of Layer 37 needs another Layer 37 store, not another 1.45 TB model.
+
+This is the physical meaning of layer-local ownership.
+
+If a layer is replicated (R) times, its persistent expert storage scales approximately as:
+
+```text
+R × 15.77 GB
+```
+
+for that layer, rather than:
+
+```text
+R × 1.45 TB
+```
+
+for the entire expert pool.
+
+This does not mean replication is always desirable. It means the cost of replication is localized to the computational unit being replicated.
+
+### The measurements show why placement matters
+
+The node-level contention experiment provides an important constraint.
+
+When multiple layer processes share the same physical node, their storage/read resources are not independent.
+
+The measured experiment showed approximately:
+
+| Layer units sharing one node | Observed behavior |
+|---|---|
+| 1 | ~37.5 ms per stage |
+| 2 | ~74–77 ms per stage |
+| 3 | ~91–106 ms per stage |
+| 4 | ~134–138 ms per stage |
+
+The aggregate memory bandwidth remained in roughly the same **26–30 GB/s** range as more pods were added.
+
+The important conclusion is not a universal throughput number.
+
+It is that **placing more layer units on the same resource boundary does not create independent memory bandwidth**.
+
+The pods begin competing for the same physical resource.
+
+The experiment identified memory bandwidth as the binding constraint on that test machine rather than simply counting CPU cores or RAM capacity.
+
+Therefore the architecture has two distinct scaling dimensions:
+
+```text
+logical scaling:
+replicate the layer that needs capacity
+
+physical scaling:
+provide enough independent hardware resources
+to keep those replicas from contending
+```
+
+### Replication does not mean duplicating the model
+
+This distinction is central to the scaling argument.
+
+A monolithic deployment might respond to a capacity requirement by adding another complete model instance.
+
+The layer architecture can instead respond at the layer boundary:
+
+```text
+whole-model replication
+        ↓
+~1.45 TB expert data per copy
+
+versus
+
+layer replication
+        ↓
+~15.77 GB expert data per replicated MoE layer
+```
+
+The second number is not automatically the final infrastructure cost because every layer also has trunk, runtime memory and communication requirements.
+
+But it demonstrates the difference in **scaling granularity**.
+
+The unit being replicated is the unit that is actually constrained.
+
+### Independent scaling must preserve the pipeline
+
+There is one important limitation.
+
+A layer cannot be replicated in isolation from the model dependency graph.
+
+Layer 37 still depends on Layer 36 and must produce the state required by Layer 38.
+
+So independent scaling means:
+
+```text
+independent resource ownership
+        ≠
+independent mathematical execution
+```
+
+The dependency chain remains:
+
+```text
+Layer 36 → Layer 37 → Layer 38
+```
+
+Replication simply provides multiple physical workers capable of executing the Layer 37 function.
+
+The scheduler must therefore preserve the ordering and state affinity required by each request while distributing independent work across replicas.
+
+### What this enables
+
+Once layers are independently scalable, the infrastructure can be sized around actual resource requirements rather than total model size.
+
+For example, different layers can have different resource profiles because K3 itself has different layer types:
+
+```text
+KDA layer
+   ≠
+MLA layer
+   ≠
+Layer 0 dense stage
+```
+
+A deployment can therefore reason separately about:
+
+- storage capacity;
+- memory;
+- CPU/GPU allocation;
+- replicas;
+- network placement;
+- and cache capacity.
+
+The final allocation should come from measurements of the real distributed implementation, not from assuming every layer has identical requirements.
+
+### Evidence behind this section
+
+The evidence comes from:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which establishes layer-local parameters, operations and state.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which measures layer-store size and the contention behavior when multiple layer units share hardware.
+- The architecture defined in Sections 3–8, which establishes that runtime state crosses the boundary while persistent layer weights remain local.
+
+Together these establish the scaling **granularity**: a layer can be treated as an independently placeable and replicable unit, while the mathematical dependency graph remains intact.
+
+They do not yet establish which layers will actually require replication in production. That is a workload-dependent deployment measurement.
+
+The next section can therefore separate three different scaling dimensions:
+
+> **client scaling, server scaling, and layer scaling are not the same problem and should not be solved by replicating the same resource.**
