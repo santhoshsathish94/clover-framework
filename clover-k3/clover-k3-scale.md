@@ -394,3 +394,197 @@ They do not yet establish the final hardware configuration for every deployment.
 
 The next section can therefore address the special case at the beginning of the pipeline: **why Layer 0 belongs on the server-side model entry rather than being treated as another distributed MoE pod.**
 
+## 5. Server-side model entry: why Layer 0 is different
+
+The previous section defined the contents of a distributed layer unit. This section handles the one deliberate exception at the beginning of the model: **Layer 0**.
+
+The reason for writing this section is to make the pipeline boundary precise. Layer 0 is part of the model computation, but it is not equivalent to Layers 1–92 because its computation and data shape are different.
+
+### Layer 0 is dense, not MoE
+
+The model equation defines Layer 0 as the only dense MLP layer:
+
+```text
+Layer 0
+├── attention path
+├── dense MLP
+└── no 896-expert store
+```
+
+Layers 1–92 belong to the MoE set:
+
+```text
+MoE layers = {1, 2, ..., 92}
+experts per MoE layer = 896
+```
+
+Layer 0 therefore does not have the approximately 15.77 GB layer-local expert store that defines the persistent footprint of the distributed MoE units.
+
+This is not an arbitrary placement decision. It follows directly from the model definition in [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), where the dense MLP is explicitly defined for layer 0 and the MoE computation is defined only for layers 1 through 92.
+
+### Layer 0 belongs to the server-side model entry
+
+The external architecture is:
+
+```text
+client
+   │
+   │ inference request
+   ▼
+server-side model entry
+   │
+   ├── embedding
+   ├── Layer 0
+   │
+   ▼
+Layer 1
+   ▼
+Layer 2
+   ▼
+...
+   ▼
+Layer 92
+   │
+   ▼
+server-side model exit
+   │
+   ▼
+client
+```
+
+The client therefore does **not** connect directly to a Layer 0 machine or to the distributed layer units.
+
+The server is the inference boundary. It accepts the client request, performs the model-entry work including embedding and Layer 0, and then passes the resulting runtime representation into the internal layer pipeline.
+
+The distributed layer units are an internal implementation detail of the server-side inference system.
+
+This distinction matters because the architecture is not:
+
+```text
+client → Pod 0 → Pod 1 → ... → Pod 92
+```
+
+where every pod is an externally addressable inference endpoint.
+
+It is:
+
+```text
+client → server
+             │
+             ├── model entry / Layer 0
+             │
+             └── internal layer pipeline
+                    Layer 1 → ... → Layer 92
+             │
+             └── model exit
+             │
+             ▼
+           client
+```
+
+The server therefore owns the external request lifecycle while the internal layer units own the model transformations.
+
+### Why Layer 0 does not need its own distributed expert pod
+
+There are two independent reasons.
+
+First, Layer 0 has no MoE expert pool. There is therefore no large layer-local expert store whose physical placement motivates a dedicated distributed storage boundary.
+
+Second, the model equation makes Layer 0 the first complete transformation after embedding. Its output is simply the runtime representation consumed by Layer 1.
+
+That makes Layer 0 a natural part of the model-entry stage:
+
+```text
+token IDs
+   ↓
+embedding
+   ↓
+Layer 0
+   ↓
+runtime representation
+   ↓
+Layer 1
+```
+
+Keeping this stage at the server boundary also avoids introducing an unnecessary network or process boundary before the distributed portion of the model has any reason to begin.
+
+### What the server sends into Layer 1
+
+The server does not send the original token IDs or the entire model state to Layer 1.
+
+It sends the runtime representation and state required by the next layer.
+
+The exact state is determined by the model equation. The model carries:
+
+- the residual representation;
+- snapshot state where applicable;
+- recurrent KDA state;
+- convolution history;
+- and the attention cache state where applicable.
+
+The first distributed boundary therefore occurs after the server has completed the model-entry computation and has a valid state for Layer 1 to consume.
+
+Conceptually:
+
+```text
+server-side model entry
+        │
+        │ runtime representation + required state
+        ▼
+     Layer 1
+```
+
+The layer units then repeat this pattern: consume the state produced by the previous stage, apply their own computation using their locally owned weights, and produce the state required by the next stage.
+
+### What the measurements support
+
+The purpose of this section is not to claim that Layer 0 is intrinsically faster or that a particular server specification has already been proven.
+
+The evidence establishes the structural distinction.
+
+[k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md) defines Layer 0 as dense and defines the MoE set as layers 1–92. [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md) separately measures the Layer 0/trunk arrangement and the layer-level storage and access behavior used for the distributed portion.
+
+The scaling measurements also show why the distinction should remain explicit: the large persistent storage footprint is created by the 92 MoE layer stores, while Layer 0 does not carry an equivalent 896-expert store.
+
+What has been established here is therefore the **pipeline ownership boundary**, not a final hardware specification.
+
+### The resulting boundary
+
+The architecture now has a clear beginning:
+
+```text
+CLIENT
+  │
+  │ request
+  ▼
+SERVER
+  │
+  ├── embedding
+  ├── Layer 0
+  │
+  ▼
+INTERNAL AI FABRIC
+  │
+  ├── Layer 1
+  ├── Layer 2
+  ├── ...
+  └── Layer 92
+  │
+  ▼
+SERVER
+  │
+  │ response
+  ▼
+CLIENT
+```
+
+The important rule is:
+
+> **The client communicates with the server. The server owns the model entry and exit. The distributed layer units are internal stages that own Layers 1–92.**
+
+This gives the scaling architecture a clean boundary without pretending that every stage of the model has the same resource requirements.
+
+The next section can therefore move into the distributed portion itself:
+
+> **What does one of Pods 1–92 actually execute when it owns one complete K3 layer?**
+
