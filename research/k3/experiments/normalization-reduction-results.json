@@ -1,0 +1,149 @@
+{
+  "host": "AX102",
+  "prompt_ids": [
+    1008,
+    10484,
+    318,
+    15383,
+    387
+  ],
+  "build_flags": "-O3 -march=native -ffp-contract=off -fopenmp -DNPOS=5 -lm",
+  "baseline_source_sha256": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+  "candidate_source_sha256": "46c3a42287fac3e042422e2159e2b7afb0b68fb085d94995bc85c152ea6cf3d9",
+  "results": [
+    {
+      "variant": "baseline-initial",
+      "md5": "23d162dcefb18211a7540ef12948f1eb",
+      "bit_exact": true,
+      "argmax": 17374,
+      "timing": "elapsed=10.08 peak_kib=56816312",
+      "norm": {
+        "changed": 0,
+        "count": 7168,
+        "max_abs": 0.0,
+        "rms": 0.0
+      },
+      "logits": {
+        "changed": 0,
+        "count": 163840,
+        "max_abs": 0.0,
+        "rms": 0.0
+      }
+    },
+    {
+      "variant": "disabled",
+      "md5": "23d162dcefb18211a7540ef12948f1eb",
+      "bit_exact": true,
+      "argmax": 17374,
+      "timing": "elapsed=10.06 peak_kib=56816284",
+      "norm": {
+        "changed": 0,
+        "count": 7168,
+        "max_abs": 0.0,
+        "rms": 0.0
+      },
+      "logits": {
+        "changed": 0,
+        "count": 163840,
+        "max_abs": 0.0,
+        "rms": 0.0
+      }
+    },
+    {
+      "variant": "mode-1",
+      "md5": "0247d30d5815b84014c79df2aa2d05bd",
+      "bit_exact": false,
+      "argmax": 17374,
+      "timing": "elapsed=10.07 peak_kib=56814472",
+      "norm": {
+        "changed": 6960,
+        "count": 7168,
+        "max_abs": 1.9073486328125e-06,
+        "rms": 4.5265125534883577e-07
+      },
+      "logits": {
+        "changed": 150630,
+        "count": 163840,
+        "max_abs": 6.079673767089844e-06,
+        "rms": 1.2929308486363937e-06
+      }
+    },
+    {
+      "variant": "mode-2",
+      "md5": "85e92dc22c4d8648e98dd0fa1827b458",
+      "bit_exact": false,
+      "argmax": 17374,
+      "timing": "elapsed=10.08 peak_kib=56816280",
+      "norm": {
+        "changed": 6937,
+        "count": 7168,
+        "max_abs": 2.384185791015625e-06,
+        "rms": 4.5586198521356385e-07
+      },
+      "logits": {
+        "changed": 149881,
+        "count": 163840,
+        "max_abs": 6.67572021484375e-06,
+        "rms": 1.2287434137185184e-06
+      }
+    },
+    {
+      "variant": "mode-4",
+      "md5": "97fbcc0cc405aefd38d5dfae86792b2e",
+      "bit_exact": false,
+      "argmax": 17374,
+      "timing": "elapsed=10.07 peak_kib=56816544",
+      "norm": {
+        "changed": 4869,
+        "count": 7168,
+        "max_abs": 1.9073486328125e-06,
+        "rms": 5.542675576776329e-08
+      },
+      "logits": {
+        "changed": 140540,
+        "count": 163840,
+        "max_abs": 1.9073486328125e-06,
+        "rms": 3.2096729741639873e-07
+      }
+    },
+    {
+      "variant": "mode-7",
+      "md5": "ad4056d04c3cb9fb2aa9928ba5ec1dbd",
+      "bit_exact": false,
+      "argmax": 17374,
+      "timing": "elapsed=10.07 peak_kib=56815268",
+      "norm": {
+        "changed": 6944,
+        "count": 7168,
+        "max_abs": 1.8477439880371094e-06,
+        "rms": 4.543642279082209e-07
+      },
+      "logits": {
+        "changed": 149532,
+        "count": 163840,
+        "max_abs": 6.198883056640625e-06,
+        "rms": 1.1820485736723387e-06
+      }
+    },
+    {
+      "variant": "baseline-final",
+      "md5": "23d162dcefb18211a7540ef12948f1eb",
+      "bit_exact": true,
+      "argmax": 17374,
+      "timing": "elapsed=10.07 peak_kib=56815028",
+      "norm": {
+        "changed": 0,
+        "count": 7168,
+        "max_abs": 0.0,
+        "rms": 0.0
+      },
+      "logits": {
+        "changed": 0,
+        "count": 163840,
+        "max_abs": 0.0,
+        "rms": 0.0
+      }
+    }
+  ],
+  "scope": "One prompt, one measured execution per enabled variant. Timings descriptive, not a replicated speed comparison."
+}

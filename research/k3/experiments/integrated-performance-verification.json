@@ -1,0 +1,12 @@
+{
+  "gate": "PASS",
+  "measured_runs": 12,
+  "warmups": 4,
+  "integrated_gate_passes": 8,
+  "all_output_routes_and_source_hashes_match": true,
+  "all_summary_arithmetic_matches": true,
+  "rss_unit": "KiB per Linux wait4; GiB = KiB / 1048576",
+  "result_sha256": "b8d77a2baaca3be6eb3a0185b70ef57f7c9fbfa6b41638fd76c27275a99d6792",
+  "measurement_script_sha256": "b4d33aca29d16065d0249e71add6fc6dbd7eee4e43460fe12eb5767130439f13",
+  "verifier_sha256": "4409bbdd27014d102e3b975254bf09b7525a6a1e488de0ad33ea2e634a9c93c3"
+}

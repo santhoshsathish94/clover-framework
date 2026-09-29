@@ -1,0 +1,70 @@
+{
+  "dataset": "seed",
+  "gate": "PASS",
+  "path": "/opt/clover-k3/seed/seed.bin",
+  "format_version": 1,
+  "shape": [
+    163840,
+    7168
+  ],
+  "source_dtype": "BF16",
+  "dictionary_values": 6658,
+  "identifier_bits": 13,
+  "block_rows": 16,
+  "codecs": [
+    "packed_ids",
+    "zlib_packed_ids",
+    "zlib_id_planes",
+    "zlib_bf16",
+    "zlib_bf16_byte_planes",
+    "zlib_bf16_bit_planes"
+  ],
+  "source_sha256": "4a79cdabdab6826b994aff69d90a72aa35dae32e90f8acaf1ce312c7bdc4a487",
+  "blocks": 10240,
+  "selected_codecs": {
+    "zlib_bf16_byte_planes": 10240
+  },
+  "fixed_codec_payload_totals": {
+    "packed_ids": 1908408320,
+    "zlib_packed_ids": 1896564627,
+    "zlib_id_planes": 1875479582,
+    "zlib_bf16": 1863390368,
+    "zlib_bf16_byte_planes": 1654480549,
+    "zlib_bf16_bit_planes": 1754005412
+  },
+  "header_bytes": 128,
+  "dictionary_bytes": 13316,
+  "index_bytes": 573440,
+  "seed_bytes": 1655067433,
+  "original_bytes": 2348810240,
+  "saved_bytes": 693742807,
+  "fraction_of_original": 0.7046407601663045,
+  "payload_bytes": 1654480549,
+  "seed_sha256": "9f064e022771c82fb8d218a03d6e5ebdfab5e3f22d4a59ec5cd25b8498a552d3",
+  "decoded_payload_sha256": "4a79cdabdab6826b994aff69d90a72aa35dae32e90f8acaf1ce312c7bdc4a487",
+  "verified_values": 1174405120,
+  "verified_rows": 163840,
+  "full_reopened_roundtrip_bit_exact": true,
+  "random_access_rows_verified": [
+    0,
+    15,
+    16,
+    1008,
+    10484,
+    81920,
+    163839
+  ],
+  "all_frequencies_match_census": true,
+  "source_file_unchanged": true,
+  "source_file": "/root/k3model/model-00094-of-000096.safetensors",
+  "source_tensor": "language_model.model.embed_tokens.weight",
+  "source_offset": 2348810824,
+  "source_header_sha256": "f28a4f196abb0804a3f8a5b2c125f646f598359c5b92266442761216e47dd2bf",
+  "build_seconds": 393.78398372407537,
+  "build_and_verification_seconds": 402.3563935760176,
+  "numpy_version": "1.26.4",
+  "zlib_version": "1.3",
+  "script_sha256": "ed7ad22a434abe5518b0f27f9585942716d19652cd134a6f7c15004dda0aea42",
+  "blocks_log_sha256": "57891f9b99fcdd7a162c9cc8300d498bf75a851343e301b31939baed5cc05661",
+  "limits": "Smallest tested payload among six exact layouts per fixed 16-row block, not a proof of global optimality. File size includes header, dictionary, index, checksums and payload. No model integration or runtime/RAM improvement claim; source retained. Reader needs only seed.bin plus codec software, not the checkpoint."
+}

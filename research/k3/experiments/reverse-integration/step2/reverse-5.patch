@@ -1,0 +1,12 @@
+--- candidate.c
++++ candidate.c
+@@ -1651 +1651,2 @@
+-        const uint16_t *tab = (const uint16_t *)(file_ptr(m->file_id) + m->off);
++        const uint16_t *tab = (const uint16_t *)(file_ptr(m->file_id) + m->off);
++        endpoint_bind_embedding(tab, ids);
+@@ -1700 +1701,4 @@
+-        for (int t = TLO; t < NPOS; t++) rmsnorm(x1b[t], hb[t], win, E, EPS5);
++        for (int t = TLO; t < NPOS; t++) rmsnorm(x1b[t], hb[t], win, E, EPS5);
++        if (L == 0 && (endpoint_mode() & 1))
++            for (int position = TLO; position < NPOS; position++)
++                endpoint_entry(x1b[position], win, hb[position], position);

@@ -1,0 +1,16 @@
+--- expert-group-coverage.h
++++ expert-group-coverage.h
+@@ -17 +17,2 @@
+-#include "reverse-codec.h"
++#include "reverse-codec.h"
++#include "reverse-histogram.h"
+@@ -74 +75,3 @@
+-    const GroupOrderInteger restored_rank = joint_load(payload, &offset, restored_counts);
++    const GroupOrderInteger restored_rank = joint_load(payload, &offset, restored_counts);
++    unsigned char histogram_payload[5];
++    reverse_histogram(restored_counts, histogram_payload);
+@@ -100 +103,3 @@
+-    fprintf(coverage_log, "],\"payload\":[");
++    fprintf(coverage_log, "],\"histogram_payload\":[");
++    for (unsigned byte = 0; byte < 5; byte++) fprintf(coverage_log, "%s%u", byte ? "," : "", histogram_payload[byte]);
++    fprintf(coverage_log, "],\"payload\":[");

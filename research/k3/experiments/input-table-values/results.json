@@ -1,0 +1,224 @@
+{
+  "gate": "PASS",
+  "source": "/root/k3model/model-00094-of-000096.safetensors",
+  "tensor": "language_model.model.embed_tokens.weight",
+  "dtype": "BF16",
+  "shape": [
+    163840,
+    7168
+  ],
+  "meaning_of_n": "An actual signed scalar stored in the input embedding table, not a fitted coefficient or extracted odd factor.",
+  "absolute_offset": 2348810824,
+  "tensor_bytes": 2348810240,
+  "values_scanned": 1174405120,
+  "rows_scanned": 163840,
+  "distinct_n_bit_patterns": 6658,
+  "fixed_width_identifier_bits": 13,
+  "counts_by_category": {
+    "normal": 1174405120
+  },
+  "distinct_by_category": {
+    "normal": 6658
+  },
+  "minimum_finite": {
+    "id": 6657,
+    "bf16_hex": "beb4",
+    "float32_hex": "beb40000",
+    "n_decimal": "-0.3515625",
+    "n_hex_float": "-0x1.6800000000000p-2",
+    "exact_numerator": "-45",
+    "exact_denominator": "128",
+    "category": "normal",
+    "count": 1
+  },
+  "maximum_finite": {
+    "id": 3320,
+    "bf16_hex": "3e1d",
+    "float32_hex": "3e1d0000",
+    "n_decimal": "0.1533203125",
+    "n_hex_float": "0x1.3a00000000000p-3",
+    "exact_numerator": "157",
+    "exact_denominator": "1024",
+    "category": "normal",
+    "count": 1
+  },
+  "most_frequent_values": [
+    {
+      "id": 6258,
+      "bf16_hex": "bc82",
+      "float32_hex": "bc820000",
+      "n_decimal": "-0.015869140625",
+      "n_hex_float": "-0x1.0400000000000p-6",
+      "exact_numerator": "-65",
+      "exact_denominator": "4096",
+      "category": "normal",
+      "count": 2087523
+    },
+    {
+      "id": 2926,
+      "bf16_hex": "3c82",
+      "float32_hex": "3c820000",
+      "n_decimal": "0.015869140625",
+      "n_hex_float": "0x1.0400000000000p-6",
+      "exact_numerator": "65",
+      "exact_denominator": "4096",
+      "category": "normal",
+      "count": 2080314
+    },
+    {
+      "id": 6259,
+      "bf16_hex": "bc83",
+      "float32_hex": "bc830000",
+      "n_decimal": "-0.0159912109375",
+      "n_hex_float": "-0x1.0600000000000p-6",
+      "exact_numerator": "-131",
+      "exact_denominator": "8192",
+      "category": "normal",
+      "count": 2076954
+    },
+    {
+      "id": 2927,
+      "bf16_hex": "3c83",
+      "float32_hex": "3c830000",
+      "n_decimal": "0.0159912109375",
+      "n_hex_float": "0x1.0600000000000p-6",
+      "exact_numerator": "131",
+      "exact_denominator": "8192",
+      "category": "normal",
+      "count": 2073203
+    },
+    {
+      "id": 6260,
+      "bf16_hex": "bc84",
+      "float32_hex": "bc840000",
+      "n_decimal": "-0.01611328125",
+      "n_hex_float": "-0x1.0800000000000p-6",
+      "exact_numerator": "-33",
+      "exact_denominator": "2048",
+      "category": "normal",
+      "count": 2066198
+    },
+    {
+      "id": 6257,
+      "bf16_hex": "bc81",
+      "float32_hex": "bc810000",
+      "n_decimal": "-0.0157470703125",
+      "n_hex_float": "-0x1.0200000000000p-6",
+      "exact_numerator": "-129",
+      "exact_denominator": "8192",
+      "category": "normal",
+      "count": 2060778
+    },
+    {
+      "id": 2928,
+      "bf16_hex": "3c84",
+      "float32_hex": "3c840000",
+      "n_decimal": "0.01611328125",
+      "n_hex_float": "0x1.0800000000000p-6",
+      "exact_numerator": "33",
+      "exact_denominator": "2048",
+      "category": "normal",
+      "count": 2058306
+    },
+    {
+      "id": 2925,
+      "bf16_hex": "3c81",
+      "float32_hex": "3c810000",
+      "n_decimal": "0.0157470703125",
+      "n_hex_float": "0x1.0200000000000p-6",
+      "exact_numerator": "129",
+      "exact_denominator": "8192",
+      "category": "normal",
+      "count": 2054618
+    },
+    {
+      "id": 6261,
+      "bf16_hex": "bc85",
+      "float32_hex": "bc850000",
+      "n_decimal": "-0.0162353515625",
+      "n_hex_float": "-0x1.0a00000000000p-6",
+      "exact_numerator": "-133",
+      "exact_denominator": "8192",
+      "category": "normal",
+      "count": 2050952
+    },
+    {
+      "id": 2929,
+      "bf16_hex": "3c85",
+      "float32_hex": "3c850000",
+      "n_decimal": "0.0162353515625",
+      "n_hex_float": "0x1.0a00000000000p-6",
+      "exact_numerator": "133",
+      "exact_denominator": "8192",
+      "category": "normal",
+      "count": 2046263
+    },
+    {
+      "id": 6262,
+      "bf16_hex": "bc86",
+      "float32_hex": "bc860000",
+      "n_decimal": "-0.016357421875",
+      "n_hex_float": "-0x1.0c00000000000p-6",
+      "exact_numerator": "-67",
+      "exact_denominator": "4096",
+      "category": "normal",
+      "count": 2039075
+    },
+    {
+      "id": 2930,
+      "bf16_hex": "3c86",
+      "float32_hex": "3c860000",
+      "n_decimal": "0.016357421875",
+      "n_hex_float": "0x1.0c00000000000p-6",
+      "exact_numerator": "67",
+      "exact_denominator": "4096",
+      "category": "normal",
+      "count": 2032337
+    }
+  ],
+  "input_payload_sha256": "4a79cdabdab6826b994aff69d90a72aa35dae32e90f8acaf1ce312c7bdc4a487",
+  "second_pass_payload_sha256": "4a79cdabdab6826b994aff69d90a72aa35dae32e90f8acaf1ce312c7bdc4a487",
+  "header_with_length_sha256": "e208b3b9558658a6cd1d917d28e95aee4afbde08928a02533894d4de9e981560",
+  "source_size_mtime_inode_unchanged": true,
+  "dictionary_order": "Ascending unsigned BF16 bit pattern; both signs of zero and distinct NaN payloads remain separate.",
+  "verification": {
+    "all_entries_dictionary_roundtrip_bit_exact": true,
+    "all_counts_match_second_pass": true,
+    "verified_values": 1174405120,
+    "verified_bytes": 2348810240
+  },
+  "fixed_width_storage_accounting": {
+    "original_bytes": 2348810240,
+    "dictionary_bytes": 13316,
+    "ideal_bitpacked_identifiers_bytes": 1908408320,
+    "dictionary_plus_identifiers_bytes": 1908421636,
+    "difference_from_original_bytes": -440388604,
+    "limits": "Identifier width is calculated; no bitpacked full-table file or model consumer was built. Headers/alignment excluded. Counts and scan logs are audit artifacts, not required dictionary payload."
+  },
+  "count_pass_seconds": 3.822216826956719,
+  "total_scan_verification_seconds": 8.63260493602138,
+  "numpy_version": "1.26.4",
+  "chunk_rows": 256,
+  "maximum_raw_chunk_bytes": 3670016,
+  "artifacts": {
+    "all-n.tsv": {
+      "bytes": 580215,
+      "sha256": "d96acf60ca9f4f8f2c58ff3dd636b911ae5fa4b6c8261c56cd0c617ef736db74"
+    },
+    "dictionary.bf16": {
+      "bytes": 13316,
+      "sha256": "e60aef8fe1df0c5e8bdb02c157c40bb9ce6f219a0451203284ae9e68eccfe99b"
+    },
+    "counts.u64le": {
+      "bytes": 524288,
+      "sha256": "8c8b339e148ee5fc7dccdf114df9aea863c7c333533dc859eeeea0d8ad3c6f81"
+    },
+    "scan-chunks.tsv": {
+      "bytes": 59131,
+      "sha256": "09ff0190d7c785ec3b89685a751a5dc8de1a9fc1d74931a44d17a1bfbb374d02"
+    }
+  },
+  "script_sha256": "75759168029ebf54633aa690bf12d30991962060eae31a3802c474457c76d35c",
+  "scope": "Complete input embedding table only. Does not scan output head, trunk, experts or runtime activation vectors.",
+  "limits": "Counts actual stored bit patterns. Fixed-width identifier size is not a universal minimum for other encodings and does not account for positional-mask representations. No model or checkpoint mutation."
+}

@@ -1,0 +1,33 @@
+--- candidate.c
++++ candidate.c
+@@ -320 +320,3 @@
+-static unsigned char *file_ptr(int id)
++#include "seed-model.h"
++
++static unsigned char *file_ptr(int id)
+@@ -322 +324,2 @@
+-    if (!fmap[id]) fmap[id] = map_file(fpath[id], &fsize[id]);
++    if (!fmap[id]) fmap[id] = map_file(fpath[id], &fsize[id]);
++    seed_guard_mapping(id);
+@@ -1655,3 +1658,4 @@
+-        const MRec *m = &mrec[0];
+-        const uint16_t *tab = (const uint16_t *)(file_ptr(m->file_id) + m->off);
+-        endpoint_bind_embedding(tab, ids);
++        const MRec *m = &mrec[0];
++        if (seed_model_enabled()) seed_model_prepare(ids);
++        const uint16_t *tab = seed_model_enabled() ? NULL : (const uint16_t *)(file_ptr(m->file_id) + m->off);
++        endpoint_bind_embedding(tab, ids);
+@@ -1660 +1664,2 @@
+-                uint32_t u = ((uint32_t)tab[(size_t)ids[t] * E + i]) << 16;
++                uint32_t u = (uint32_t)(seed_model_enabled() ? seed_model_rows[t][i] :
++                                       tab[(size_t)ids[t] * E + i]) << 16;
+@@ -2356 +2361,2 @@
+-    endpoint_report();
++    endpoint_report();
++    seed_model_report();
+--- vector-endpoints.h
++++ vector-endpoints.h
+@@ -44 +44,2 @@
+-    const uint16_t *row = endpoint_embedding_table + (size_t)endpoint_ids[position] * E;
++    const uint16_t *row = seed_model_enabled() ? seed_model_rows[position] :
++        endpoint_embedding_table + (size_t)endpoint_ids[position] * E;

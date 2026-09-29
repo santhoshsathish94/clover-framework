@@ -1,0 +1,23 @@
+--- candidate.c
++++ candidate.c
+@@ -1447 +1447,3 @@
+-static void AR(float *out, float *const *srcs, int nsrc, const float *fold)
++#include "vector-endpoints.h"
++
++static void AR(float *out, float *const *srcs, int nsrc, const float *fold)
+@@ -1478 +1480,2 @@
+-    op_add(OP_AR, _t, (int64_t)E * 4);
++    endpoint_capture_coefficients(pis, nsrc);
++    op_add(OP_AR, _t, (int64_t)E * 4);
+@@ -2299 +2302,2 @@
+-    AR(hf, srcbuf, nsnap + 1, foldO);
++    endpoint_begin_tail(srcbuf, nsnap + 1);
++    AR(hf, srcbuf, nsnap + 1, foldO);
+@@ -2305 +2309,2 @@
+-    Bf(logits, nrm, LMW, VOCAB, E);
++    Bf(logits, nrm, LMW, VOCAB, E);
++    if (endpoint_mode() & 2) endpoint_tail(logits, nrm, hf, mn, LMW);
+@@ -2340 +2345,2 @@
+-    coverage_finish();
++    coverage_finish();
++    endpoint_report();

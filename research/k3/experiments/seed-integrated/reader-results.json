@@ -1,0 +1,25 @@
+{
+  "gate": "PASS",
+  "valid_fixture_checks": 30,
+  "invalid_inputs_rejected": 10,
+  "all_65536_bf16_patterns_per_codec": true,
+  "real_seed_rows_checked": [
+    0,
+    15,
+    16,
+    1008,
+    10484,
+    81920,
+    163839
+  ],
+  "full_native_decoded_bytes": 2348810240,
+  "full_native_decoded_values": 1174405120,
+  "decoded_sha256": "4a79cdabdab6826b994aff69d90a72aa35dae32e90f8acaf1ce312c7bdc4a487",
+  "source_checkpoint_opened": false,
+  "sha256": {
+    "seed-reader.h": "e720cb7029d902ba8fc34c699f12d27184e43c9be97bfe79de04dc1f672bdda8",
+    "seed-reader-test.c": "58839ebdcd5e212407b776c09de48e28e8802207036861ec53e17c3c6b3f4550",
+    "seed-reader-test": "3f8bb6a97a4b365154f32232d4b0b81c3fffe39c711b9f38409f213dc840b834",
+    "seed-reader-check.py": "4d61ec7c75428e09ffe6b89d3cf4f4782be9a9dfa50316507c4708ddc27591be"
+  }
+}

@@ -1,0 +1,31 @@
+--- baseline.c
++++ candidate.c
+@@ -1447 +1447,3 @@
++#include "vector-endpoints.h"
++
+ static void AR(float *out, float *const *srcs, int nsrc, const float *fold)
+@@ -1478 +1480,2 @@
++    endpoint_capture_coefficients(pis, nsrc);
+     op_add(OP_AR, _t, (int64_t)E * 4);
+@@ -1651 +1654,2 @@
+-        const uint16_t *tab = (const uint16_t *)(file_ptr(m->file_id) + m->off);
++        const uint16_t *tab = (const uint16_t *)(file_ptr(m->file_id) + m->off);
++        endpoint_bind_embedding(tab, ids);
+@@ -1700 +1704,4 @@
+-        for (int t = TLO; t < NPOS; t++) rmsnorm(x1b[t], hb[t], win, E, EPS5);
++        for (int t = TLO; t < NPOS; t++) rmsnorm(x1b[t], hb[t], win, E, EPS5);
++        if (L == 0 && (endpoint_mode() & 1))
++            for (int position = TLO; position < NPOS; position++)
++                endpoint_entry(x1b[position], win, hb[position], position);
+@@ -2299 +2306,2 @@
+-    AR(hf, srcbuf, nsnap + 1, foldO);
++    endpoint_begin_tail(srcbuf, nsnap + 1);
++    AR(hf, srcbuf, nsnap + 1, foldO);
+@@ -2305 +2313,2 @@
+-    Bf(logits, nrm, LMW, VOCAB, E);
++    Bf(logits, nrm, LMW, VOCAB, E);
++    if (endpoint_mode() & 2) endpoint_tail(logits, nrm, hf, mn, LMW);
+@@ -2330 +2339,2 @@
+-    int am = 0;
++    endpoint_report();
++    int am = 0;

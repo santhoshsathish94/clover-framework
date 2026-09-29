@@ -1,0 +1,12 @@
+--- reverse-vector.h
++++ reverse-vector.h
+@@ -18 +18,3 @@
+-static void reverse_vector(float values[E])
++#include "reverse-dyadic.h"
++
++static void reverse_vector(float values[E])
+@@ -53 +55,3 @@
+-    free(payload);
++    free(payload);
++    reverse_dyadic(values, 32, trace, 3);
++    reverse_dyadic(values, 128, trace, 4);

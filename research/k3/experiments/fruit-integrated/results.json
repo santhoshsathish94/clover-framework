@@ -1,0 +1,379 @@
+{
+  "gate": "PASS",
+  "host": "AX102 AMD Ryzen 9 7950X3D",
+  "fruit_dataset": {
+    "gate": "PASS",
+    "dataset": "fruit",
+    "path": "/opt/clover-k3/fruit/fruit.bin",
+    "format": "K3SEED1 container, output-head source identity",
+    "shape": [
+      163840,
+      7168
+    ],
+    "dtype": "BF16",
+    "block_rows": 16,
+    "dictionary_values": 6590,
+    "identifier_bits": 13,
+    "source_sha256": "11c1f1c09a8e0db55547b5e68ebfd1d8e3b503bee56c4e1312ef55ecd3e5580f",
+    "blocks": 10240,
+    "selected_codecs": {
+      "zlib_bf16_byte_planes": 10239,
+      "zlib_bf16_bit_planes": 1
+    },
+    "fixed_codec_payload_totals": {
+      "packed_ids": 1908408320,
+      "zlib_packed_ids": 1889126363,
+      "zlib_id_planes": 1893006660,
+      "zlib_bf16": 1868675384,
+      "zlib_bf16_byte_planes": 1662369970,
+      "zlib_bf16_bit_planes": 1733421388
+    },
+    "header_bytes": 128,
+    "dictionary_bytes": 13180,
+    "index_bytes": 573440,
+    "fruit_bytes": 1662954740,
+    "original_bytes": 2348810240,
+    "saved_bytes": 685855500,
+    "fraction_of_original": 0.7079987611089434,
+    "payload_bytes": 1662367992,
+    "fruit_sha256": "b6a1ead4fda2928127841ffa2ec63d4f56d3de5709bfd24b4da2cc0d07b58c16",
+    "decoded_payload_sha256": "11c1f1c09a8e0db55547b5e68ebfd1d8e3b503bee56c4e1312ef55ecd3e5580f",
+    "verified_values": 1174405120,
+    "verified_rows": 163840,
+    "all_reopened_bytes_match_source": true,
+    "all_frequencies_match_census": true,
+    "source_unchanged": true,
+    "source": "/root/k3model/model-00094-of-000096.safetensors",
+    "tensor": "language_model.lm_head.weight",
+    "offset": 584,
+    "source_header_sha256": "f28a4f196abb0804a3f8a5b2c125f646f598359c5b92266442761216e47dd2bf",
+    "build_seconds": 399.5329237480182,
+    "build_and_verification_seconds": 408.11594086897094,
+    "census_sha256": "990d7fadf15f07c69cb208c51141dae4eb758d082f569e72f47c4880f93d966f",
+    "blocks_log_sha256": "8cc45e8c2cef010549c236cb491c76edce17491a28cf340f04f47fc37b9db994",
+    "implementation_sha256": {
+      "fruit.py": "bf7da8d32d2824435a03aaa9b351bd73fe843f5d19213b1ec5a819fb5c6b4282",
+      "seed.py": "ed7ad22a434abe5518b0f27f9585942716d19652cd134a6f7c15004dda0aea42",
+      "input-table-values.py": "75759168029ebf54633aa690bf12d30991962060eae31a3802c474457c76d35c"
+    },
+    "limits": "Full output head only. Smallest of six tested lossless layouts per16rowblock, not global optimum. Includes container header/dictionary/index/payload. No model integration or performance claim at this stage."
+  },
+  "independent_fruit_contents": {
+    "gate": "PASS",
+    "blocks": 10240,
+    "values": 1174405120,
+    "source_checkpoint_opened": false,
+    "independent_standard_library_decoder": true,
+    "ordered_block_hashes_sha256": "7fdd40103a13f408ecaa4678f64a13eac6e38cd91032f8d165c495f2eda13b4f",
+    "fruit_sha256": "b6a1ead4fda2928127841ffa2ec63d4f56d3de5709bfd24b4da2cc0d07b58c16",
+    "decoded_payload_sha256": "11c1f1c09a8e0db55547b5e68ebfd1d8e3b503bee56c4e1312ef55ecd3e5580f"
+  },
+  "native_reader": {
+    "gate": "PASS",
+    "native_reader_unchanged": {
+      "seed-reader.h": "e720cb7029d902ba8fc34c699f12d27184e43c9be97bfe79de04dc1f672bdda8",
+      "seed-reader-test.c": "58839ebdcd5e212407b776c09de48e28e8802207036861ec53e17c3c6b3f4550",
+      "seed-reader-test": "3f8bb6a97a4b365154f32232d4b0b81c3fffe39c711b9f38409f213dc840b834",
+      "seed-reader-check.py": "4d61ec7c75428e09ffe6b89d3cf4f4782be9a9dfa50316507c4708ddc27591be"
+    },
+    "real_rows_checked": [
+      0,
+      15,
+      16,
+      176,
+      17374,
+      40484,
+      81920,
+      163839
+    ],
+    "bit_plane_block_first_rows": [
+      176
+    ],
+    "decoded_bytes": 2348810240,
+    "decoded_values": 1174405120,
+    "decoded_sha256": "11c1f1c09a8e0db55547b5e68ebfd1d8e3b503bee56c4e1312ef55ecd3e5580f",
+    "source_checkpoint_opened": false,
+    "prior_codec_controls": {
+      "valid": 30,
+      "invalid_rejected": 10,
+      "six_codecs_all_bf16_patterns": true
+    },
+    "script_sha256": "f635de5ed74fc6f799535b2cf2cf7013c0ace8ba8508f0e8a928092b2cea0e2d"
+  },
+  "runs": [
+    {
+      "prompt": "france",
+      "ids": [
+        1008,
+        10484,
+        318,
+        15383,
+        387
+      ],
+      "full_output": {
+        "bit_exact": true,
+        "md5": "23d162dcefb18211a7540ef12948f1eb",
+        "norm": {
+          "count": 7168,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "logits": {
+          "count": 163840,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "token": 17374
+      },
+      "routes_bit_exact": true,
+      "seed_rows_match_source": true,
+      "fruit": {
+        "gate": "PASS",
+        "original_head_protected_bytes": 2348806144,
+        "unprotected_boundary_bytes": 4096,
+        "guard_probe_sigsegv": true,
+        "passes": [
+          {
+            "consumer": "head_projection",
+            "rows": 163840,
+            "values": 1174405120,
+            "blocks": 10240,
+            "workers": 16,
+            "payload_bytes_read": 1662367992,
+            "ordered_block_hashes_sha256": "7fdd40103a13f408ecaa4678f64a13eac6e38cd91032f8d165c495f2eda13b4f"
+          },
+          {
+            "consumer": "tail_expression",
+            "rows": 163840,
+            "values": 1174405120,
+            "blocks": 10240,
+            "workers": 16,
+            "payload_bytes_read": 1662367992,
+            "ordered_block_hashes_sha256": "7fdd40103a13f408ecaa4678f64a13eac6e38cd91032f8d165c495f2eda13b4f"
+          }
+        ]
+      },
+      "seed": {
+        "gate": "PASS",
+        "source": "seed",
+        "rows_loaded": 5,
+        "values_loaded": 35840,
+        "blocks_decoded": 5,
+        "payload_bytes_read": 811509,
+        "retained_row_bytes": 71680,
+        "original_embedding_protected_bytes": 2348806144,
+        "unprotected_boundary_bytes": 4096,
+        "guard_probe_sigsegv": true,
+        "entry_uses_seed_rows": true
+      },
+      "all_prior_stage_gates_pass": true
+    },
+    {
+      "prompt": "japan",
+      "ids": [
+        1008,
+        10484,
+        318,
+        10417,
+        387
+      ],
+      "full_output": {
+        "bit_exact": true,
+        "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+        "norm": {
+          "count": 7168,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "logits": {
+          "count": 163840,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "token": 40484
+      },
+      "routes_bit_exact": true,
+      "seed_rows_match_source": true,
+      "fruit": {
+        "gate": "PASS",
+        "original_head_protected_bytes": 2348806144,
+        "unprotected_boundary_bytes": 4096,
+        "guard_probe_sigsegv": true,
+        "passes": [
+          {
+            "consumer": "head_projection",
+            "rows": 163840,
+            "values": 1174405120,
+            "blocks": 10240,
+            "workers": 16,
+            "payload_bytes_read": 1662367992,
+            "ordered_block_hashes_sha256": "7fdd40103a13f408ecaa4678f64a13eac6e38cd91032f8d165c495f2eda13b4f"
+          },
+          {
+            "consumer": "tail_expression",
+            "rows": 163840,
+            "values": 1174405120,
+            "blocks": 10240,
+            "workers": 16,
+            "payload_bytes_read": 1662367992,
+            "ordered_block_hashes_sha256": "7fdd40103a13f408ecaa4678f64a13eac6e38cd91032f8d165c495f2eda13b4f"
+          }
+        ]
+      },
+      "seed": {
+        "gate": "PASS",
+        "source": "seed",
+        "rows_loaded": 5,
+        "values_loaded": 35840,
+        "blocks_decoded": 5,
+        "payload_bytes_read": 811642,
+        "retained_row_bytes": 71680,
+        "original_embedding_protected_bytes": 2348806144,
+        "unprotected_boundary_bytes": 4096,
+        "guard_probe_sigsegv": true,
+        "entry_uses_seed_rows": true
+      },
+      "all_prior_stage_gates_pass": true
+    }
+  ],
+  "prior_seed_control_pass": true,
+  "fruit_disabled_control_pass": true,
+  "reference_repeated_matches": true,
+  "rejections": {
+    "gate": "PASS",
+    "checks": [
+      {
+        "case": "missing",
+        "exit_code": 1,
+        "expected_error": "seed open failed",
+        "no_logits_written": true
+      },
+      {
+        "case": "wrong_source",
+        "exit_code": 1,
+        "expected_error": "fruit output tensor identity differs",
+        "no_logits_written": true
+      }
+    ]
+  },
+  "seed_sha256_unchanged": "9f064e022771c82fb8d218a03d6e5ebdfab5e3f22d4a59ec5cd25b8498a552d3",
+  "protected_sha256": {
+    "/opt/clover-k3/clover-k3.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "/opt/clover-k3/build/clover-k3": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+    "/opt/clover-k3/gate.sh": "752291aa5cda8194bbaf1f68d6a843e9ca02d3e221e8e19a5b714c075b01f5dc",
+    "/opt/clover-k3/build/eqidx.bin": "c2b7962c88fe7d984260a9c5d8f1b23ba0866e9cb9a39bf35a689f6a6a906981"
+  },
+  "dependencies_unchanged": {
+    "gmp_static": {
+      "path": "/opt/clover-k3/reverse-integration-20260929-a/deps/gmp/usr/lib/x86_64-linux-gnu/libgmp.a",
+      "sha256": "8dfcc4ced65bb95d1f48f1756b172c8c3f712ec4e98c8de4485de7843c40b5ea"
+    },
+    "zlib_static": {
+      "path": "/opt/clover-k3/reverse-integration-20260929-a/deps/zlib/usr/lib/x86_64-linux-gnu/libz.a",
+      "sha256": "d9f5f6208214a493583f305c40c9879bfad2cada1ef2753a45e3b0bf8a4c7be2"
+    },
+    "openssl_static": {
+      "path": "/opt/clover-k3/seed-integrated-20260929-a/deps/openssl/usr/lib/x86_64-linux-gnu/libcrypto.a",
+      "sha256": "b80b24f71e4b4f0e084e4dc2f92b28f30dc9e576be3c970d2deac24120322da2"
+    },
+    "openssl_sha_header": {
+      "path": "/opt/clover-k3/seed-integrated-20260929-a/deps/openssl/usr/include/openssl/sha.h",
+      "sha256": "06500535b9b3d9742e745558dc02e52d0df6d75b038457d4f6c374ed68d39eaf"
+    },
+    "openssl_package": {
+      "path": "/opt/clover-k3/seed-integrated-20260929-a/deps/libssl-dev_3.0.13-0ubuntu3.15_amd64.deb",
+      "sha256": "cefc6371d90d953a4cbb35d72d871f057e4b961a3107186f67fe96a88040cdb8"
+    }
+  },
+  "sha256": {
+    "attempt2-coverage.h": "c808da5d4e8277c34308f2d1e69975a3e45703215c77aceca49c4a5cdbf97b47",
+    "baseline.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "candidate": "11dd412d4dfbb4a7f4e1eef3aeaf14dd02207a6f450516e608f6b39134ac18b0",
+    "candidate.c": "220f196a5a64c921aeaf48d4d8f85b862275a3cbd8f53eb35e4a6b0da78240b6",
+    "expert-group-check.py": "2680d00f8c73798d2e74d7216e5c8846868d30e6cdf36fd664f7f82de58c227c",
+    "expert-group-coverage-check.py": "4ab32de21e97d497d981d5734d5642ee9b606d6888b0972421d1d539c7c4b012",
+    "expert-group-coverage.h": "20c3389afe2f756d4b249a728729991415df87b5e1317119b6307ec4d7f5ccdb",
+    "expert-group-coverage.patch": "33798f07f81222cdd025f98520a5a52ecd6360220b491bc19208b8ae81002bf1",
+    "expert-group-equation.h": "3f92836eeaf66539f4380e1944df60a547aee405cdd7de2c4ceda29e58fc9d0d",
+    "expert-group-order-check.py": "a414ebaea3b99856c05ff4a40c32d4ea5e815707d8c4b53eb9fad9f68e0a49e4",
+    "expert-group-order.h": "8905e514addd27180cdb2e1399c3f22213691a6b2826b343b36965bc4c8382ca",
+    "expert-histogram-codec.h": "731072e671e65354509283f21ad61e7dac3f3aaa3ca50225ff62c3b151cd8779",
+    "expert-joint-codec.h": "76d18cd5f2c1c7a6c8f1e194528ba636f0e12ad03d7a0cdd969552b556ea96a9",
+    "expert-joint-integrated-check.py": "f9c4426c90bff50b9251e5f70273cbee7d2e0b1047ecf42718c254bef3cd630a",
+    "expert-joint-rank.py": "228262a198498993e3c4283bed0af426813186df0f87c5ef0067103312b27566",
+    "expert-mask-consumer.h": "5aeba4382cf611387af0cac9a38106640da9372452e82e6e60272232fda707f7",
+    "expert-scale-codec.h": "372cf12b3d4503fe00921685415d12bf9b395a9c56a3d4b15c47cb38b6145858",
+    "expert-scale-exception-codec.h": "23525a82f4f801be5b69748c0c5ca34d6226a28cdc5c2d29913312559d64daec",
+    "expert-scale-exception-integrated-check.py": "a04b7ac44eb226a424692935f4baf979f92581b27f66499291b50200721562b4",
+    "expert-scale-exception-integrated.patch": "6eb1c6c4f27160f63d6e5761faeaf00a4ac4bc79aac93dd219095c7bbbfcdde2",
+    "expert-scale-exceptions.py": "cf290075af8d9b2cc1630535cfd6b1b641b245f7d9ae95f91fe721276fbc211a",
+    "expert-scale-integrated-check.py": "48bc1b75f54838fb56741b74b89500e0b8841c769ac38e46f645266ff9e9cba6",
+    "expert-scale-row.py": "625b4de1503819e2cb6fd306ee75ae5b66b2b1cfce1196b898874299c30f6be4",
+    "fruit-access.h": "082ff3809792164e519dd3e3bbfa5fda22bac8835058be87c269172bdb923579",
+    "fruit-head.h": "db1f5433288367c65428594df0fefdd9732861dce559af517561e5b4a3a6dcd5",
+    "fruit-model-check.py": "9130552f443bfd721fbe6f4ff1de6d75c26de26c80e0634c6b29f9fac7ec32f0",
+    "fruit-model.patch": "dd26ea1a3ba3c75b2a43497d76197d78287a41615d3cafed0948f8184781afb8",
+    "fruit-native-check.py": "f635de5ed74fc6f799535b2cf2cf7013c0ace8ba8508f0e8a928092b2cea0e2d",
+    "reference": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+    "reverse-1.patch": "c5aff5d5e234bca4eb82ebe67895df79cf86fa079b7b20ac365a132a4cb16ccf",
+    "reverse-10.patch": "160e6804f75a41c3553b0515e45fe315b4b8e35a3070dea5dcb4de1897775520",
+    "reverse-11.patch": "e9e22e22a648b8f6fb2cc97069d60d3a1ac347f2fa8d439c1e7226b91772bc9f",
+    "reverse-12.patch": "d578d8c50e1ade595df3b54d44c1aa780e27a972f312b7713ff6326a518ce65c",
+    "reverse-13-corrected.patch": "c44727635919d708dca0ef9c6516dff236f8693a60f936bd7923bf45dfeaae49",
+    "reverse-13.patch": "101d62d82f2be4ad5ee0e33a998b07c716d279408bd1d3d8e4633ff75e181ce3",
+    "reverse-2.patch": "224ccf520e6f5adb7db592501ae8add6990fdf97437f296cbc0e9486e84a41e9",
+    "reverse-3.patch": "ed3a3ed5af6500fa9f8c17e360d994967c4384155c8a13d909a38111cd117397",
+    "reverse-4.patch": "d259624ffb94ee399ec248b3db1f1a030cb2b09fcee68e527c48ceab6cbb0df8",
+    "reverse-5.patch": "fc0a514f550b8ead6e910fe93ae85c6ff2f79b20272c7971dc4708fc7c7d14f1",
+    "reverse-6.patch": "d601f3bb48a62d1525c390fc48ce8f9995f612eaa9dee2e3747b82bfa1838e59",
+    "reverse-7.patch": "8ad910de7549bf9ab9daa4736846d091dd5ec12b803643465cfe34d385ed5959",
+    "reverse-8.patch": "d4b2753b86ff624b81843967dd1a438e3f187d8e42bb2c17b3f8f6af181b5a1a",
+    "reverse-9.patch": "1e24c780aec054f13ead64d807c832191b5e6c5dc34f306fbe8b86ae3a5c126c",
+    "reverse-check.py": "11103a47ba6b30c3809cafa798cc63bc0cab16f65b73e310b6ab7d024ac6f4b8",
+    "reverse-codec.h": "df9da17b31360c77c33afbc9f9a26e2713ca350a3b272d4aff5b100bdb4c5db7",
+    "reverse-component.h": "68f462884309f22e1e3cce898b546cbecdd6dab3e3194ceea3f56596dd3850f5",
+    "reverse-dyadic.h": "fe684f5830eb5330f0cfd9eed378b0b2dc9699de4885e7d1c1377c867d8f81a2",
+    "reverse-four-mask.h": "405a36852e2adda335d12d13a726cc5b2d4f0d433f58415418f07bcfe61b52cf",
+    "reverse-histogram.h": "706ba18b4bc5f40e35ac7f03098ee25279eea62ba2ec634755a91edcd726633d",
+    "reverse-mask.h": "98b0149fa40bbf4dbffa1c5f6905f305fd6e7d4be6c89a860dc75c8fa8c53f52",
+    "reverse-order.h": "77e0ab9f2dbba6dc9d5691d9c4a62929637964c2b4b6c8054ec67b5ac05cc783",
+    "reverse-vector.h": "ae2617a579e6aad7ac1ae16b2273b8b589eabff4bf5b7b6cd4337dc941aa0f07",
+    "scale-base-lf.h": "ed11c4fc95dd0f6e539cc5982563a523e8cc21458ab18c01e228f596a7e02982",
+    "scale-base.h": "ed11c4fc95dd0f6e539cc5982563a523e8cc21458ab18c01e228f596a7e02982",
+    "seed-model-check.py": "d6d27ab529a0b329b8ee6eb111f64cd70a72d5819dd85ad96e5796ce8a7e9e56",
+    "seed-model.h": "37592f361a5e74c76a4b7d52a564d4532598535e2524b6f08a4ba660f1c908c5",
+    "seed-model.patch": "38cbfe50a0d5642ba427e4b51a9f06533bbc4543dd596ac16f74851b52798a0e",
+    "seed-prior-candidate": "90b7ea1d86cb91913d55db1a1cd24e788d8313cb9713632162e13fa4b36f24ca",
+    "seed-reader-check.py": "4d61ec7c75428e09ffe6b89d3cf4f4782be9a9dfa50316507c4708ddc27591be",
+    "seed-reader-test.c": "58839ebdcd5e212407b776c09de48e28e8802207036861ec53e17c3c6b3f4550",
+    "seed-reader.h": "e720cb7029d902ba8fc34c699f12d27184e43c9be97bfe79de04dc1f672bdda8",
+    "vector-basis-router.h": "268874187e04ec3302caa5de33679dd372b97d2fc91172dd862aaea7d3cc9458",
+    "vector-endpoints-check.py": "f1da5d828003192e9071ddda4d1cc9be6441526356aceb17b2256c051b20071f",
+    "vector-endpoints.h": "5524ce98404d6f51037635bd88bb4521dbcc614281b32e46c1a59b1ec8012541",
+    "vector-representation.py": "0f213f76c1a14a77a2b2a5f3168ea41bfd322052a8aeb2008afac848feb2cf1f",
+    "vector-table-equation.py": "c39b3caad3b4effc505e994a1efb75a592f47edc91aa30bf536667424d50f1c9"
+  },
+  "prior_model_result_sha256": "cbc0d7cc4a72f7d019235cc1357062c7360960f7e0b431e33a8d762d9d7d4792",
+  "prior_stage_gate_result_sha256": "9d3eda7508177eec9697afe82c0bd61077d32a9e2f950050280e038a6b7c9e3b",
+  "build_flags": "-O3 -march=native -ffp-contract=off -fopenmp -DNPOS=5 -DREVERSE_STAGE=1; private GMP/zlib/OpenSSL static archives; -ldl -pthread -lm",
+  "settings": {
+    "OMP_NUM_THREADS": "16",
+    "OMP_PROC_BIND": "close",
+    "OMP_PLACES": "cores",
+    "K3_PREFETCH": "4",
+    "K3_TRUNKRAM": "0",
+    "K3_NREADER": "14",
+    "K3_XDEC": "2",
+    "K3_PLGRAN": "1",
+    "K3_HUGE": "1",
+    "K3_GROUP_COVERAGE": "2",
+    "K3_VECTOR_ENDPOINTS": "3",
+    "K3_BASIS_ROUTER": "2",
+    "K3_SEED_INPUT": "/opt/clover-k3/seed/seed.bin",
+    "K3_SEED_GUARD_PROBE": "1",
+    "K3_FRUIT_HEAD": "/opt/clover-k3/fruit/fruit.bin",
+    "K3_FRUIT_GUARD_PROBE": "1"
+  },
+  "scope": "Complete output head streamed through both ordinary and rounded-source consumers for two five-token prefills, with seed input and all13 prior sampled stages enabled.",
+  "limits": "No new throughput/peak-RAM measurement, longer contexts or generation. Reference computations retained. Guards cover page-aligned interiors of the two original table mappings, not4096boundarybytes per table or arbitrary alternate access. No source data/seed/installed model changes."
+}

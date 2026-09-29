@@ -1,0 +1,13 @@
+--- baseline.c
++++ candidate.c
+@@ -1027 +1027,3 @@
++#include "expert-group-equation.h"
++
+ static void X(float *y, const float *x, const unsigned char *pk,
+@@ -2182 +2184,5 @@
+-                        cur_part = "up";
++                        if (L == 1 && sx == 0)
++                            expert_group_replace(go, zin, m,
++                                res_ptr(p1->file_id, p1->off), res_ptr(s1->file_id, s1->off),
++                                LAT, I_, e, mt, mj);
++                        cur_part = "up";

@@ -1,0 +1,17 @@
+--- vector-basis-router.h
++++ vector-basis-router.h
+@@ -1 +1,3 @@
+-static int basis_enabled(void)
++#include "reverse-vector.h"
++
++static int basis_enabled(void)
+@@ -32 +34,2 @@
+-    float total = 0.0f;
++    if (reverse_vector_ready) return reverse_vector_values[coordinate];
++    float total = 0.0f;
+@@ -44 +47,4 @@
+-    if (basis_enabled() == 2) {
++    if (basis_enabled() == 2) {
++        for (int coordinate = 0; coordinate < E; coordinate++) reverse_vector_values[coordinate] = basis_component(coordinate);
++        reverse_vector(reverse_vector_values);
++        reverse_vector_ready = 1;

@@ -1,0 +1,18 @@
+--- expert-group-coverage.h
++++ expert-group-coverage.h
+@@ -19 +19,2 @@
+-#include "reverse-order.h"
++#include "reverse-order.h"
++#include "reverse-mask.h"
+@@ -81 +82,4 @@
+-    char rank_text[40];
++    unsigned char mask_payload[5];
++    unsigned mask_bits;
++    reverse_mask(decoded.codes, mask_payload, &mask_bits);
++    char rank_text[40];
+@@ -99 +103,4 @@
+-    fprintf(coverage_log, "],\"payload\":[");
++    fprintf(coverage_log, "],\"mask_bits\":%u,\"mask_payload\":[", mask_bits);
++    for (unsigned byte = 0; byte < (mask_bits + 7) / 8; byte++)
++        fprintf(coverage_log, "%s%u", byte ? "," : "", mask_payload[byte]);
++    fprintf(coverage_log, "],\"payload\":[");

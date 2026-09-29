@@ -1,0 +1,1 @@
+{"gate":"PASS","source":"seed","rows_loaded":5,"values_loaded":35840,"blocks_decoded":5,"payload_bytes_read":811509,"retained_row_bytes":71680,"original_embedding_protected_bytes":2348806144,"unprotected_boundary_bytes":4096,"guard_probe_sigsegv":true,"entry_uses_seed_rows":true}

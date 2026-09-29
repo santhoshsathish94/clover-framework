@@ -1,0 +1,10 @@
+{
+  "gate": "PASS",
+  "independent_standard_library_decoder": true,
+  "blocks_verified": 10240,
+  "values_verified": 1174405120,
+  "source_checkpoint_opened": false,
+  "seed_sha256": "9f064e022771c82fb8d218a03d6e5ebdfab5e3f22d4a59ec5cd25b8498a552d3",
+  "decoded_payload_sha256": "4a79cdabdab6826b994aff69d90a72aa35dae32e90f8acaf1ce312c7bdc4a487",
+  "all_selected_blocks_smallest_tested": true
+}

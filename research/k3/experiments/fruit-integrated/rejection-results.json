@@ -1,0 +1,17 @@
+{
+  "gate": "PASS",
+  "checks": [
+    {
+      "case": "missing",
+      "exit_code": 1,
+      "expected_error": "seed open failed",
+      "no_logits_written": true
+    },
+    {
+      "case": "wrong_source",
+      "exit_code": 1,
+      "expected_error": "fruit output tensor identity differs",
+      "no_logits_written": true
+    }
+  ]
+}

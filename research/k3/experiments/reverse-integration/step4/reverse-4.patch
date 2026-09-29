@@ -1,0 +1,31 @@
+--- candidate.c
++++ candidate.c
+@@ -1449 +1449,2 @@
+-#include "vector-endpoints.h"
++#include "vector-endpoints.h"
++#include "vector-basis-router.h"
+@@ -1481 +1482,2 @@
+-    endpoint_capture_coefficients(pis, nsrc);
++    endpoint_capture_coefficients(pis, nsrc);
++    basis_capture(srcs, pis, nsrc);
+@@ -1951 +1953,2 @@
+-            rmsnorm(x2b[t], h2b[t], wpost, E, EPS5);
++            rmsnorm(x2b[t], h2b[t], wpost, E, EPS5);
++            if (basis_enabled() == 2 && L == 84 && t == 0) basis_prepare(wpost);
+@@ -2016 +2019,11 @@
+-                        sc_all[t][e] = sigf((float)a);
++                        const float reference_score = sigf((float)a);
++                        if (basis_enabled() == 2 && L == 84 && t == 0) {
++                            const float projected = basis_project(grow);
++                            const float candidate_score = sigf(projected);
++                            basis_rows[e][0] = (float)a;
++                            basis_rows[e][1] = projected;
++                            basis_rows[e][2] = reference_score;
++                            basis_rows[e][3] = candidate_score;
++                            basis_row_seen[e] = 1;
++                            sc_all[t][e] = candidate_score;
++                        } else sc_all[t][e] = reference_score;
+@@ -2345 +2358,2 @@
+-    endpoint_report();
++    endpoint_report();
++    if (basis_enabled() == 2) basis_report();

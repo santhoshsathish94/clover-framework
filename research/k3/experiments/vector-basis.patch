@@ -1,0 +1,22 @@
+--- baseline.c
++++ captured.c
+@@ -1478,2 +1478,19 @@
++    static int captured;
++    const char *capture_path = getenv("K3_VECTOR_BASIS");
++    if (capture_path && !captured && cur_L == 84 && nsrc == 9) {
++        FILE *capture = fopen(capture_path, "wb");
++        if (!capture) die("vector basis capture open");
++        const uint32_t header[4] = {0x31534256, E, (uint32_t)nsrc, (uint32_t)cur_L};
++        if (fwrite(header, sizeof(uint32_t), 4, capture) != 4 ||
++            fwrite(pis, sizeof(float), nsrc, capture) != (size_t)nsrc)
++            die("vector basis capture header");
++        for (int source = 0; source < nsrc; source++)
++            if (fwrite(srcs[source], sizeof(float), E, capture) != E)
++                die("vector basis capture source");
++        if (fwrite(fold, sizeof(float), E, capture) != E ||
++            fwrite(out, sizeof(float), E, capture) != E || fclose(capture) != 0)
++            die("vector basis capture output");
++        captured = 1;
++    }
+     op_add(OP_AR, _t, (int64_t)E * 4);
+ }

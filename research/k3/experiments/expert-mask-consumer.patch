@@ -1,0 +1,10 @@
+--- expert-group-equation.h
++++ expert-group-equation.h
+@@ -1 +1,3 @@
++#include "expert-mask-consumer.h"
++
+ static void expert_group_masks(const unsigned char *packed, uint32_t masks[4])
+@@ -104 +106,2 @@
+-    expert_group_masks(packed, masks);
++    expert_group_masks(packed, masks);
++    expert_mask_replace_plane(masks);

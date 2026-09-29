@@ -1,0 +1,4 @@
+prefetch ON  trunk mmap
+eq: seed open failed
+eq: seed open failed
+eq: seed open failed

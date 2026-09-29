@@ -1,0 +1,19 @@
+--- coverage-base.h
++++ expert-group-coverage.h
+@@ -3 +3,2 @@
+-#include "expert-group-equation.h"
++#include "expert-group-equation.h"
++#include "expert-scale-codec.h"
+@@ -160 +161,7 @@
+-        CoverageGroup decoded[3];
++        unsigned char restored_scales[112];
++        if (scale_row_enabled()) {
++            scale_prepare(row_scales, row_codes, group_count, restored_scales,
++                coverage_log, layer, expert, part, row, rows, positions);
++            row_scales = restored_scales;
++        }
++        CoverageGroup decoded[3];
+@@ -192 +199,2 @@
+-    if ((mode == 1 && (coverage_pairs != 1 || pairs_by_layer[1] != 1)) ||
++    scale_finish(coverage_log, coverage_pairs);
++    if ((mode == 1 && (coverage_pairs != 1 || pairs_by_layer[1] != 1)) ||

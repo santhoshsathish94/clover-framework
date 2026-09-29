@@ -1,0 +1,140 @@
+{
+  "site": {
+    "layer": 1,
+    "expert_id": 498,
+    "tensor": "w1/gate",
+    "row": 0,
+    "group": 0
+  },
+  "scale_byte": 121,
+  "masks": [
+    {
+      "plane": 0,
+      "mask": 2964563821,
+      "set_bits": 18,
+      "rank": 289269275,
+      "possible_masks": 471435600,
+      "rank_bits": 29,
+      "count_bits": 6,
+      "count_plus_rank_bits": 35,
+      "set_positions": [
+        0,
+        2,
+        3,
+        5,
+        6,
+        8,
+        9,
+        10,
+        13,
+        15,
+        16,
+        17,
+        20,
+        21,
+        23,
+        28,
+        29,
+        31
+      ]
+    },
+    {
+      "plane": 1,
+      "mask": 2011846492,
+      "set_bits": 20,
+      "rank": 71379515,
+      "possible_masks": 225792840,
+      "rank_bits": 28,
+      "count_bits": 6,
+      "count_plus_rank_bits": 34,
+      "set_positions": [
+        2,
+        3,
+        4,
+        6,
+        8,
+        9,
+        10,
+        12,
+        14,
+        17,
+        19,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        28,
+        29,
+        30
+      ]
+    },
+    {
+      "plane": 2,
+      "mask": 3356231810,
+      "set_bits": 8,
+      "rank": 10235410,
+      "possible_masks": 10518300,
+      "rank_bits": 24,
+      "count_bits": 6,
+      "count_plus_rank_bits": 30,
+      "set_positions": [
+        1,
+        7,
+        11,
+        18,
+        19,
+        27,
+        30,
+        31
+      ]
+    },
+    {
+      "plane": 3,
+      "mask": 3458434101,
+      "set_bits": 14,
+      "rank": 413656102,
+      "possible_masks": 471435600,
+      "rank_bits": 29,
+      "count_bits": 6,
+      "count_plus_rank_bits": 35,
+      "set_positions": [
+        0,
+        2,
+        4,
+        5,
+        10,
+        15,
+        16,
+        17,
+        21,
+        25,
+        26,
+        27,
+        30,
+        31
+      ]
+    }
+  ],
+  "rank_equation": "For ascending set positions p_1 < ... < p_k: rank = sum(binomial(p_j, j), j=1..k).",
+  "known_count_domain": "Exactly binomial(32,k) masks. Count stored in six bits for k=0..32.",
+  "decoder_checks": 5249,
+  "actual_mask_roundtrips": 4,
+  "representations": {
+    "original": {
+      "bits": 136,
+      "bytes": 17
+    },
+    "all_ranked": {
+      "bits": 142,
+      "rounded_bytes": 18
+    },
+    "per_plane_choice": {
+      "bits": 138,
+      "rounded_bytes": 18,
+      "accounting": "One raw/ranked tag per plane, six count bits for ranked planes, 8-bit scale."
+    }
+  },
+  "scope": "Exact mask reconstruction on the real recorded group plus finite decoder controls. No new model execution or changed projection. Bit counts are candidate format accounting, not whole-expert compression."
+}

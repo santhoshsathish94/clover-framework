@@ -1,0 +1,540 @@
+{
+  "host": "AX102, AMD Ryzen 9 7950X3D",
+  "prompt_ids": [
+    1008,
+    10484,
+    318,
+    15383,
+    387
+  ],
+  "build_flags": "-O3 -march=native -ffp-contract=off -fopenmp -DNPOS=5 -lm",
+  "settings": {
+    "OMP_NUM_THREADS": "16",
+    "OMP_PROC_BIND": "close",
+    "OMP_PLACES": "cores",
+    "K3_PREFETCH": "4",
+    "K3_TRUNKRAM": "0",
+    "K3_NREADER": "14",
+    "K3_XDEC": "2",
+    "K3_PLGRAN": "1",
+    "K3_HUGE": "1"
+  },
+  "order": {
+    "width": 32,
+    "alphabet": 16,
+    "scale_byte": 121,
+    "rank": "8236746155644726251423865",
+    "arrangements": "13113390608825899392000000",
+    "rank_bits": 84,
+    "count_bits": 96,
+    "payload_bits": 188,
+    "decoder_checks": 4373,
+    "invalid_inputs_rejected": 5,
+    "codes_checked": 32,
+    "codes_changed": 0,
+    "counts": [
+      0,
+      2,
+      4,
+      7,
+      4,
+      0,
+      1,
+      0,
+      0,
+      4,
+      3,
+      4,
+      1,
+      1,
+      1,
+      0
+    ],
+    "decoded_codes": [
+      9,
+      4,
+      11,
+      3,
+      10,
+      9,
+      3,
+      4,
+      3,
+      3,
+      11,
+      4,
+      2,
+      1,
+      2,
+      9,
+      9,
+      11,
+      4,
+      6,
+      1,
+      11,
+      2,
+      3,
+      2,
+      10,
+      10,
+      12,
+      3,
+      3,
+      14,
+      13
+    ],
+    "payload_bytes": [
+      121,
+      128,
+      64,
+      28,
+      4,
+      16,
+      0,
+      0,
+      49,
+      16,
+      65,
+      16,
+      0,
+      121,
+      8,
+      73,
+      216,
+      105,
+      247,
+      95,
+      231,
+      50,
+      208,
+      6
+    ],
+    "gate": "PASS"
+  },
+  "group": {
+    "layer": 1,
+    "expert_id": 498,
+    "tensor": "w1/gate",
+    "row": 0,
+    "group": 0,
+    "input_width": 3584,
+    "rows": 3072,
+    "positions": 1,
+    "decode_pairs_checked": 4096,
+    "mask_coordinates_checked": 512,
+    "group_weights_checked": 32,
+    "group_weights_changed": 0,
+    "packed_roundtrip_exact": true,
+    "projection_outputs_changed": 0,
+    "scale_byte": 121,
+    "masks": [
+      2964563821,
+      2011846492,
+      3356231810,
+      3458434101
+    ],
+    "packed_bytes": [
+      73,
+      59,
+      154,
+      67,
+      51,
+      75,
+      18,
+      146,
+      185,
+      100,
+      177,
+      50,
+      162,
+      202,
+      51,
+      222
+    ],
+    "codes": [
+      9,
+      4,
+      11,
+      3,
+      10,
+      9,
+      3,
+      4,
+      3,
+      3,
+      11,
+      4,
+      2,
+      1,
+      2,
+      9,
+      9,
+      11,
+      4,
+      6,
+      1,
+      11,
+      2,
+      3,
+      2,
+      10,
+      10,
+      12,
+      3,
+      3,
+      14,
+      13
+    ],
+    "decoded_weights": [
+      -0.0078125,
+      0.03125,
+      -0.0234375,
+      0.0234375,
+      -0.015625,
+      -0.0078125,
+      0.0234375,
+      0.03125,
+      0.0234375,
+      0.0234375,
+      -0.0234375,
+      0.03125,
+      0.015625,
+      0.0078125,
+      0.015625,
+      -0.0078125,
+      -0.0078125,
+      -0.0234375,
+      0.03125,
+      0.0625,
+      0.0078125,
+      -0.0234375,
+      0.015625,
+      0.0234375,
+      0.015625,
+      -0.015625,
+      -0.015625,
+      -0.03125,
+      0.0234375,
+      0.0234375,
+      -0.0625,
+      -0.046875
+    ],
+    "projection_outputs": [
+      {
+        "position": 0,
+        "rank": 0,
+        "reference": 0.201177299,
+        "candidate": 0.201177299
+      }
+    ],
+    "gate": "PASS"
+  },
+  "decode_steps": [
+    {
+      "position": 0,
+      "code": 9,
+      "rank_before": "8236746155644726251423865",
+      "rank_after": "860463938180157843423865",
+      "selected_prefix_arrangements": "1639173826103237424000000"
+    },
+    {
+      "position": 1,
+      "code": 4,
+      "rank_before": "860463938180157843423865",
+      "rank_after": "173068462717509891423865",
+      "selected_prefix_arrangements": "211506300142353216000000"
+    },
+    {
+      "position": 2,
+      "code": 11,
+      "rank_before": "173068462717509891423865",
+      "rank_after": "10913632608372425823865",
+      "selected_prefix_arrangements": "28200840018980428800000"
+    },
+    {
+      "position": 3,
+      "code": 3,
+      "rank_before": "10913632608372425823865",
+      "rank_after": "5078976052721302623865",
+      "selected_prefix_arrangements": "6807099314926310400000"
+    },
+    {
+      "position": 4,
+      "code": 10,
+      "rank_before": "5078976052721302623865",
+      "rank_after": "459872946164163423865",
+      "selected_prefix_arrangements": "729332069456390400000"
+    },
+    {
+      "position": 5,
+      "code": 9,
+      "rank_before": "459872946164163423865",
+      "rank_after": "27676164264080223865",
+      "selected_prefix_arrangements": "81036896606265600000"
+    },
+    {
+      "position": 6,
+      "code": 3,
+      "rank_before": "27676164264080223865",
+      "rank_after": "8975341970326623865",
+      "selected_prefix_arrangements": "18700822293753600000"
+    },
+    {
+      "position": 7,
+      "code": 4,
+      "rank_before": "8975341970326623865",
+      "rank_after": "746980161075039865",
+      "selected_prefix_arrangements": "2244098675250432000"
+    },
+    {
+      "position": 8,
+      "code": 3,
+      "rank_before": "746980161075039865",
+      "rank_after": "185955492262431865",
+      "selected_prefix_arrangements": "467520557343840000"
+    },
+    {
+      "position": 9,
+      "code": 3,
+      "rank_before": "185955492262431865",
+      "rank_after": "63993607737951865",
+      "selected_prefix_arrangements": "81307923016320000"
+    },
+    {
+      "position": 10,
+      "code": 11,
+      "rank_before": "63993607737951865",
+      "rank_after": "4860572816991865",
+      "selected_prefix_arrangements": "11087444047680000"
+    },
+    {
+      "position": 11,
+      "code": 4,
+      "rank_before": "4860572816991865",
+      "rank_after": "108811082271865",
+      "selected_prefix_arrangements": "1055947052160000"
+    },
+    {
+      "position": 12,
+      "code": 2,
+      "rank_before": "108811082271865",
+      "rank_after": "3216377055865",
+      "selected_prefix_arrangements": "211189410432000"
+    },
+    {
+      "position": 13,
+      "code": 1,
+      "rank_before": "3216377055865",
+      "rank_after": "3216377055865",
+      "selected_prefix_arrangements": "22230464256000"
+    },
+    {
+      "position": 14,
+      "code": 2,
+      "rank_before": "3216377055865",
+      "rank_after": "1981351263865",
+      "selected_prefix_arrangements": "3705077376000"
+    },
+    {
+      "position": 15,
+      "code": 9,
+      "rank_before": "1981351263865",
+      "rank_after": "237785439865",
+      "selected_prefix_arrangements": "435891456000"
+    },
+    {
+      "position": 16,
+      "code": 9,
+      "rank_before": "237785439865",
+      "rank_after": "19839711865",
+      "selected_prefix_arrangements": "27243216000"
+    },
+    {
+      "position": 17,
+      "code": 11,
+      "rank_before": "19839711865",
+      "rank_after": "1677567865",
+      "selected_prefix_arrangements": "3632428800"
+    },
+    {
+      "position": 18,
+      "code": 4,
+      "rank_before": "1677567865",
+      "rank_after": "120812665",
+      "selected_prefix_arrangements": "259459200"
+    },
+    {
+      "position": 19,
+      "code": 6,
+      "rank_before": "120812665",
+      "rank_after": "1062265",
+      "selected_prefix_arrangements": "19958400"
+    },
+    {
+      "position": 20,
+      "code": 1,
+      "rank_before": "1062265",
+      "rank_after": "1062265",
+      "selected_prefix_arrangements": "1663200"
+    },
+    {
+      "position": 21,
+      "code": 11,
+      "rank_before": "1062265",
+      "rank_after": "3865",
+      "selected_prefix_arrangements": "151200"
+    },
+    {
+      "position": 22,
+      "code": 2,
+      "rank_before": "3865",
+      "rank_after": "3865",
+      "selected_prefix_arrangements": "30240"
+    },
+    {
+      "position": 23,
+      "code": 3,
+      "rank_before": "3865",
+      "rank_after": "505",
+      "selected_prefix_arrangements": "10080"
+    },
+    {
+      "position": 24,
+      "code": 2,
+      "rank_before": "505",
+      "rank_after": "505",
+      "selected_prefix_arrangements": "1260"
+    },
+    {
+      "position": 25,
+      "code": 10,
+      "rank_before": "505",
+      "rank_after": "145",
+      "selected_prefix_arrangements": "360"
+    },
+    {
+      "position": 26,
+      "code": 10,
+      "rank_before": "145",
+      "rank_after": "25",
+      "selected_prefix_arrangements": "60"
+    },
+    {
+      "position": 27,
+      "code": 12,
+      "rank_before": "25",
+      "rank_after": "1",
+      "selected_prefix_arrangements": "12"
+    },
+    {
+      "position": 28,
+      "code": 3,
+      "rank_before": "1",
+      "rank_after": "1",
+      "selected_prefix_arrangements": "6"
+    },
+    {
+      "position": 29,
+      "code": 3,
+      "rank_before": "1",
+      "rank_after": "1",
+      "selected_prefix_arrangements": "2"
+    },
+    {
+      "position": 30,
+      "code": 14,
+      "rank_before": "1",
+      "rank_after": "0",
+      "selected_prefix_arrangements": "1"
+    },
+    {
+      "position": 31,
+      "code": 13,
+      "rank_before": "0",
+      "rank_after": "0",
+      "selected_prefix_arrangements": "1"
+    }
+  ],
+  "variants": {
+    "disabled": {
+      "bit_exact": true,
+      "md5": "23d162dcefb18211a7540ef12948f1eb",
+      "norm": {
+        "count": 7168,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "logits": {
+        "count": 163840,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "token": 17374
+    },
+    "order-disabled": {
+      "bit_exact": true,
+      "md5": "23d162dcefb18211a7540ef12948f1eb",
+      "norm": {
+        "count": 7168,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "logits": {
+        "count": 163840,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "token": 17374
+    },
+    "enabled": {
+      "bit_exact": true,
+      "md5": "23d162dcefb18211a7540ef12948f1eb",
+      "norm": {
+        "count": 7168,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "logits": {
+        "count": 163840,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "token": 17374
+    }
+  },
+  "reference_repeated_matches": true,
+  "independent_integer_rank_and_serialization_match": true,
+  "reference_md5": "23d162dcefb18211a7540ef12948f1eb",
+  "gate": "PASS",
+  "representation": {
+    "original_bits": 136,
+    "original_bytes": 17,
+    "scale_bits": 8,
+    "count_bits": 96,
+    "rank_bits": 84,
+    "payload_bits": 188,
+    "serialized_bytes": 24,
+    "serialization": "Scale in first byte, then sixteen 6-bit counts (code order 0..15), then lexicographic rank. All fields least-significant bit first; rank width derived from counts. Fixed group size/alphabet and caller-supplied location."
+  },
+  "sha256": {
+    "baseline.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "candidate.c": "58191c12b61de946ef9c53e4283071491d8f01b0eac386d64b000a427c5e5b3f",
+    "group-base.h": "886f43fd96e64a3dd50c5a77b356f576b83ee633d2c1d3cf04d28160640a9c87",
+    "group-base-lf.h": "3f92836eeaf66539f4380e1944df60a547aee405cdd7de2c4ceda29e58fc9d0d",
+    "expert-group-equation.h": "20eb9ca6b349ddaba62e79138ae8f531a9bd3ee092620f0297cf514c119cf162",
+    "expert-group-equation.patch": "035122d2e2e95798b8ba5baaff3aee9a58d439a62733ff1c98578cd39c2615de",
+    "expert-group-order.h": "a2ddc64e66b46607f83461aa593515fa7e6340426c36f3ac848f6af40f7f6971",
+    "expert-group-order.patch": "8e28b59ec8704f97a45260cb88fba9674f8514178d38ea1ac07ffd46903f0fae",
+    "expert-group-order-check.py": "a414ebaea3b99856c05ff4a40c32d4ea5e815707d8c4b53eb9fad9f68e0a49e4",
+    "expert-group-check.py": "2680d00f8c73798d2e74d7216e5c8846868d30e6cdf36fd664f7f82de58c227c",
+    "reference": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+    "candidate": "dd8fb17231e86cff5b91861f1ac252e5f3c222ed5a092f184210cb62146653f3",
+    "order.json": "6e9c846d67fa2a60840cbbfde02553fbf0eaf2e0728c7f03e0f6e25c522870c0",
+    "group.json": "4cb6bd09516dd3ac93e8c52172369ab24d722a5627bbdeffc1c3e527aaf4cfd6",
+    "reference-group.json": "4cb6bd09516dd3ac93e8c52172369ab24d722a5627bbdeffc1c3e527aaf4cfd6",
+    "group-order.bin": "d9627aa6d54289b0f523f2f63c11b86ffa3d73181404c2722ed47e6e383c57d2"
+  },
+  "scope": "One complete 32-code group, layer1 expert498 w1/gate row0 group0, pos0 rank0, one five-token prefill. Constructs descriptor from loaded original weights, serializes/decodes it, and uses regenerated masks/scale in the expert projection. No alternative store or other groups substituted.",
+  "performance": "Deferred. This representation is larger for the recorded group; no checkpoint, RAM or runtime reduction claimed."
+}

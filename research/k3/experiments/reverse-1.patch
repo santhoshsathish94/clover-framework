@@ -1,0 +1,10 @@
+--- reverse-vector.h
++++ reverse-vector.h
+@@ -19 +19,2 @@
+-#include "reverse-dyadic.h"
++#include "reverse-dyadic.h"
++#include "reverse-component.h"
+@@ -54 +55,2 @@
+-    reverse_dyadic(values, 128, trace, 4);
++    reverse_dyadic(values, 128, trace, 4);
++    reverse_component(values, trace);

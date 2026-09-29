@@ -10,3 +10,14 @@ CLOVER-CONTEXT.md
 
 # Written by reference/runtime-enforcement/verify.sh when the example runs.
 reference/runtime-enforcement/workspace/src/agent-change.js
+
+# Keep reproducibility sources/reports/fixtures in Git, but not compiled artifacts.
+research/k3/experiments/*.tar.gz
+research/k3/experiments/reverse-integration/deps/
+research/k3/experiments/**/candidate
+research/k3/experiments/**/reference
+research/k3/experiments/**/prior-candidate
+research/k3/experiments/**/seed-prior-candidate
+research/k3/experiments/**/seed-reader-test
+research/k3/experiments/**/seed.bin
+research/k3/experiments/**/fruit.bin

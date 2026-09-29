@@ -1,0 +1,53 @@
+{
+  "host": "AX102, AMD Ryzen 9 7950X3D",
+  "prompt_ids": [
+    1008,
+    10484,
+    318,
+    15383,
+    387
+  ],
+  "mode": 2,
+  "replacement_scope": "Layer 84 position 0, all 896 router projections. Generate coordinates from nine source references and coefficients with reference rounding order; do not use x2b as candidate input.",
+  "not_the_gram_shortcut": true,
+  "build_flags": "-O3 -march=native -ffp-contract=off -fopenmp -DNPOS=5 -lm",
+  "reference_md5": "23d162dcefb18211a7540ef12948f1eb",
+  "candidate_md5": "23d162dcefb18211a7540ef12948f1eb",
+  "disabled_matches_reference": true,
+  "full_output_bit_exact": true,
+  "reference_token": 17374,
+  "candidate_token": 17374,
+  "router": {
+    "projected": {
+      "count": 896,
+      "changed": 0,
+      "max_abs": 0.0
+    },
+    "sigmoid": {
+      "count": 896,
+      "changed": 0,
+      "max_abs": 0.0
+    }
+  },
+  "norm": {
+    "count": 7168,
+    "changed": 0,
+    "max_abs": 0.0
+  },
+  "logits": {
+    "count": 163840,
+    "changed": 0,
+    "max_abs": 0.0
+  },
+  "gate": "PASS",
+  "hashes": {
+    "baseline.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "candidate.c": "5a7c0d13578dcaa60b83946d8fa2fb334d39b33b3ce81d6a1c14327180571553",
+    "vector-basis-router.h": "db9be238ca1aa977a5362fecd793ab0e7e7d47b070f03868475992c9c122814f",
+    "vector-basis-router.patch": "963785eff184ac91e14a351e989365bf8ba63563b7441725abe70327d5164956",
+    "candidate": "ebbdaaa7095eec0322d32089bfdd2f5573b3d21ce201faf7237fdc10562c35e6",
+    "router.bin": "1263d6acbcf57663371d4a8e1916fffb78c7f39d3d34f171fc85c052a329d6a0"
+  },
+  "performance": "Deferred; no speed or compression claim. Reference calculations are retained for diagnostics and other consumers.",
+  "limits": "One prompt, one position and one layer consumer. Other consumers still use original arrays. No whole-model representation replacement, no decode or other-prompt claim."
+}

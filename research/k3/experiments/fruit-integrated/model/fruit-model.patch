@@ -1,0 +1,38 @@
+--- candidate.c
++++ candidate.c
+@@ -320 +320,2 @@
+-#include "seed-model.h"
++#include "seed-model.h"
++#include "fruit-access.h"
+@@ -325 +326,2 @@
+-    seed_guard_mapping(id);
++    seed_guard_mapping(id);
++    fruit_guard_mapping(id);
+@@ -2338 +2340 @@
+-    const uint16_t *LMW = (const uint16_t *)(file_ptr(lm->file_id) + lm->off);
++    const uint16_t *LMW = fruit_enabled() ? NULL : (const uint16_t *)(file_ptr(lm->file_id) + lm->off);
+@@ -2340 +2342,2 @@
+-    Bf(logits, nrm, LMW, VOCAB, E);
++    if (fruit_enabled()) fruit_project(logits, nrm, 0);
++    else Bf(logits, nrm, LMW, VOCAB, E);
+@@ -2362 +2365,2 @@
+-    seed_model_report();
++    seed_model_report();
++    fruit_report();
+--- vector-endpoints.h
++++ vector-endpoints.h
+@@ -103 +103,3 @@
+-static void endpoint_tail(float *logits, float *normalized, const float *aggregate,
++#include "fruit-head.h"
++
++static void endpoint_tail(float *logits, float *normalized, const float *aggregate,
+@@ -127 +129,4 @@
+-    if (!generated) die("endpoint logits allocation");
++    if (!generated) die("endpoint logits allocation");
++    if (fruit_enabled()) {
++        fruit_project(generated, NULL, 1);
++    } else {
+@@ -148 +153,2 @@
+-    for (int row = 0; row < VOCAB; row++) {
++    }
++    for (int row = 0; row < VOCAB; row++) {

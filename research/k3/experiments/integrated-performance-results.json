@@ -1,0 +1,1291 @@
+{
+  "gate": "PASS",
+  "metadata": {
+    "host": "AX102",
+    "cpu": "AMD Ryzen 9 7950X3D 16-Core Processor",
+    "kernel": "6.8.0-139-generic",
+    "settings": {
+      "OMP_NUM_THREADS": "16",
+      "OMP_PROC_BIND": "close",
+      "OMP_PLACES": "cores",
+      "K3_PREFETCH": "4",
+      "K3_TRUNKRAM": "0",
+      "K3_NREADER": "14",
+      "K3_XDEC": "2",
+      "K3_PLGRAN": "1",
+      "K3_HUGE": "1",
+      "K3_INDEX": "/opt/clover-k3/build/eqidx.bin"
+    },
+    "seed_result_sha256": "fdd9f2c3078ff6d0fcf6596c8639daafaa8ca1b772fffecd9d7731365a70ae92",
+    "script_sha256": "b4d33aca29d16065d0249e71add6fc6dbd7eee4e43460fe12eb5767130439f13",
+    "config_sha256": "d038abe5e7f423ced8c1fea0828c26293c6dddfc54d2e8824735f6db9235ae23",
+    "protected_sha256": {
+      "/opt/clover-k3/clover-k3.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+      "/opt/clover-k3/build/clover-k3": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "/opt/clover-k3/gate.sh": "752291aa5cda8194bbaf1f68d6a843e9ca02d3e221e8e19a5b714c075b01f5dc",
+      "/opt/clover-k3/build/eqidx.bin": "c2b7962c88fe7d984260a9c5d8f1b23ba0866e9cb9a39bf35a689f6a6a906981"
+    },
+    "method": "Linux wait4 per-process peak RSS (KiB); monotonic parent elapsed time around spawn/wait, including startup, model, diagnostics and teardown. Correctness checking subprocess is outside the timed interval.",
+    "cache_policy": "One warm-up per prompt/binary. No cache flush, no cold-start claim; page-cache behavior observed through faults/I/O and host snapshots.",
+    "comparison": "Frozen as-is integrated correctness harness versus unchanged reference. All integrated reference computations, codecs, self-checks and trace writes remain enabled.",
+    "scope": "Two five-token prefills, final integrated sampled sites; not autoregressive decode throughput or a production codec."
+  },
+  "warmups": [
+    {
+      "name": "warmup-france-0-reference",
+      "phase": "warmup",
+      "prompt": "france",
+      "repetition": 0,
+      "variant": "reference",
+      "binary_sha256": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.050980727,
+        "peak_rss_kib": 56814996,
+        "peak_rss_gib": 54.18300247192383,
+        "user_cpu_seconds": 133.799691,
+        "system_cpu_seconds": 12.955008,
+        "major_faults": 0,
+        "minor_faults": 881400,
+        "filesystem_input_blocks": 195040560,
+        "filesystem_output_blocks": 1440,
+        "voluntary_context_switches": 34685,
+        "involuntary_context_switches": 11518
+      },
+      "model_reported_timed_seconds": 8.74,
+      "model_reported_read_gb": 99.86,
+      "output_md5": "23d162dcefb18211a7540ef12948f1eb",
+      "output_sha256": "d5630ccb104fe2e583674f693aaa1895d1d203ff11edf7b0325d56c9912143da",
+      "routes_sha256": "f4b05d9f1e80e28b637eab3f846c78ffebd407f6c3c4eb5bacafe44b65799f6d",
+      "validation_sha256": null,
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129173276,
+          "Cached_kib": 124561916,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "0.00",
+          "0.69",
+          "2.26"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129197716,
+          "Cached_kib": 124562640,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "2.29",
+          "1.17",
+          "2.40"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "warmup-france-0-integrated",
+      "phase": "warmup",
+      "prompt": "france",
+      "repetition": 0,
+      "variant": "integrated",
+      "binary_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.434757328,
+        "peak_rss_kib": 56816200,
+        "peak_rss_gib": 54.18415069580078,
+        "user_cpu_seconds": 139.941417,
+        "system_cpu_seconds": 12.884718,
+        "major_faults": 0,
+        "minor_faults": 881630,
+        "filesystem_input_blocks": 195040560,
+        "filesystem_output_blocks": 12104,
+        "voluntary_context_switches": 34668,
+        "involuntary_context_switches": 11190
+      },
+      "model_reported_timed_seconds": 9.12,
+      "model_reported_read_gb": 99.86,
+      "output_md5": "23d162dcefb18211a7540ef12948f1eb",
+      "output_sha256": "d5630ccb104fe2e583674f693aaa1895d1d203ff11edf7b0325d56c9912143da",
+      "routes_sha256": "f4b05d9f1e80e28b637eab3f846c78ffebd407f6c3c4eb5bacafe44b65799f6d",
+      "validation_sha256": "dd1ce601e0acfa4bcb46a626a19d8608408ea835dc6bd32eb7434aef946c8323",
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129198724,
+          "Cached_kib": 124562636,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "2.29",
+          "1.17",
+          "2.40"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129165020,
+          "Cached_kib": 124568696,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "4.23",
+          "1.64",
+          "2.54"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "warmup-japan-0-integrated",
+      "phase": "warmup",
+      "prompt": "japan",
+      "repetition": 0,
+      "variant": "integrated",
+      "binary_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.337369785,
+        "peak_rss_kib": 56816560,
+        "peak_rss_gib": 54.18449401855469,
+        "user_cpu_seconds": 138.251122,
+        "system_cpu_seconds": 12.916869,
+        "major_faults": 0,
+        "minor_faults": 881654,
+        "filesystem_input_blocks": 192260640,
+        "filesystem_output_blocks": 12152,
+        "voluntary_context_switches": 33978,
+        "involuntary_context_switches": 11146
+      },
+      "model_reported_timed_seconds": 9.01,
+      "model_reported_read_gb": 98.44,
+      "output_md5": "4b2a7b96fb6323e5639feced66f54a8e",
+      "output_sha256": "48f9eef1ed6902ddb247dd82d469d465514f7ff80b6763ce8229da8ba2bdcfbc",
+      "routes_sha256": "46e4910f35760708eca949f74763a52c5a1162fbe0c996836aed2b6227b29138",
+      "validation_sha256": "d4de5567f506e7b98e00def34dabb4f901f6dee0649bf85acbf24bd90ea55b8b",
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129132176,
+          "Cached_kib": 124581520,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "3.97",
+          "1.63",
+          "2.53"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129179364,
+          "Cached_kib": 124587668,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "5.65",
+          "2.08",
+          "2.67"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "warmup-japan-0-reference",
+      "phase": "warmup",
+      "prompt": "japan",
+      "repetition": 0,
+      "variant": "reference",
+      "binary_sha256": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 9.979736917,
+        "peak_rss_kib": 56815760,
+        "peak_rss_gib": 54.18373107910156,
+        "user_cpu_seconds": 132.241607,
+        "system_cpu_seconds": 12.867464,
+        "major_faults": 0,
+        "minor_faults": 881420,
+        "filesystem_input_blocks": 192260640,
+        "filesystem_output_blocks": 1440,
+        "voluntary_context_switches": 34047,
+        "involuntary_context_switches": 11077
+      },
+      "model_reported_timed_seconds": 8.66,
+      "model_reported_read_gb": 98.44,
+      "output_md5": "4b2a7b96fb6323e5639feced66f54a8e",
+      "output_sha256": "48f9eef1ed6902ddb247dd82d469d465514f7ff80b6763ce8229da8ba2bdcfbc",
+      "routes_sha256": "46e4910f35760708eca949f74763a52c5a1162fbe0c996836aed2b6227b29138",
+      "validation_sha256": null,
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129155244,
+          "Cached_kib": 124600552,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "5.65",
+          "2.08",
+          "2.67"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129183712,
+          "Cached_kib": 124601364,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "7.24",
+          "2.54",
+          "2.81"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    }
+  ],
+  "runs": [
+    {
+      "name": "measure-france-1-reference",
+      "phase": "measure",
+      "prompt": "france",
+      "repetition": 1,
+      "variant": "reference",
+      "binary_sha256": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.075766119,
+        "peak_rss_kib": 56814256,
+        "peak_rss_gib": 54.18229675292969,
+        "user_cpu_seconds": 134.002773,
+        "system_cpu_seconds": 13.10951,
+        "major_faults": 0,
+        "minor_faults": 881410,
+        "filesystem_input_blocks": 195040560,
+        "filesystem_output_blocks": 1440,
+        "voluntary_context_switches": 34573,
+        "involuntary_context_switches": 10947
+      },
+      "model_reported_timed_seconds": 8.76,
+      "model_reported_read_gb": 99.86,
+      "output_md5": "23d162dcefb18211a7540ef12948f1eb",
+      "output_sha256": "d5630ccb104fe2e583674f693aaa1895d1d203ff11edf7b0325d56c9912143da",
+      "routes_sha256": "f4b05d9f1e80e28b637eab3f846c78ffebd407f6c3c4eb5bacafe44b65799f6d",
+      "validation_sha256": null,
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129180368,
+          "Cached_kib": 124601376,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "4.04",
+          "2.26",
+          "2.71"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129198644,
+          "Cached_kib": 124602096,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "7.87",
+          "3.14",
+          "2.99"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-france-1-integrated",
+      "phase": "measure",
+      "prompt": "france",
+      "repetition": 1,
+      "variant": "integrated",
+      "binary_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.399374496,
+        "peak_rss_kib": 56816080,
+        "peak_rss_gib": 54.18403625488281,
+        "user_cpu_seconds": 139.030863,
+        "system_cpu_seconds": 12.630069,
+        "major_faults": 0,
+        "minor_faults": 881658,
+        "filesystem_input_blocks": 195040560,
+        "filesystem_output_blocks": 12104,
+        "voluntary_context_switches": 34435,
+        "involuntary_context_switches": 9367
+      },
+      "model_reported_timed_seconds": 9.07,
+      "model_reported_read_gb": 99.86,
+      "output_md5": "23d162dcefb18211a7540ef12948f1eb",
+      "output_sha256": "d5630ccb104fe2e583674f693aaa1895d1d203ff11edf7b0325d56c9912143da",
+      "routes_sha256": "f4b05d9f1e80e28b637eab3f846c78ffebd407f6c3c4eb5bacafe44b65799f6d",
+      "validation_sha256": "dd1ce601e0acfa4bcb46a626a19d8608408ea835dc6bd32eb7434aef946c8323",
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129198648,
+          "Cached_kib": 124602096,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "7.87",
+          "3.14",
+          "2.99"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129202352,
+          "Cached_kib": 124608152,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "9.04",
+          "3.54",
+          "3.12"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-france-2-integrated",
+      "phase": "measure",
+      "prompt": "france",
+      "repetition": 2,
+      "variant": "integrated",
+      "binary_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.459980831,
+        "peak_rss_kib": 56816056,
+        "peak_rss_gib": 54.18401336669922,
+        "user_cpu_seconds": 139.961138,
+        "system_cpu_seconds": 12.741256,
+        "major_faults": 0,
+        "minor_faults": 881627,
+        "filesystem_input_blocks": 195040560,
+        "filesystem_output_blocks": 12104,
+        "voluntary_context_switches": 34398,
+        "involuntary_context_switches": 11163
+      },
+      "model_reported_timed_seconds": 9.14,
+      "model_reported_read_gb": 99.86,
+      "output_md5": "23d162dcefb18211a7540ef12948f1eb",
+      "output_sha256": "d5630ccb104fe2e583674f693aaa1895d1d203ff11edf7b0325d56c9912143da",
+      "routes_sha256": "f4b05d9f1e80e28b637eab3f846c78ffebd407f6c3c4eb5bacafe44b65799f6d",
+      "validation_sha256": "dd1ce601e0acfa4bcb46a626a19d8608408ea835dc6bd32eb7434aef946c8323",
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129153648,
+          "Cached_kib": 124620968,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "8.39",
+          "3.50",
+          "3.11"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129158160,
+          "Cached_kib": 124627112,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "10.60",
+          "4.14",
+          "3.32"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-france-2-reference",
+      "phase": "measure",
+      "prompt": "france",
+      "repetition": 2,
+      "variant": "reference",
+      "binary_sha256": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.069673653,
+        "peak_rss_kib": 56815784,
+        "peak_rss_gib": 54.183753967285156,
+        "user_cpu_seconds": 134.228993,
+        "system_cpu_seconds": 13.093437,
+        "major_faults": 0,
+        "minor_faults": 881410,
+        "filesystem_input_blocks": 195040560,
+        "filesystem_output_blocks": 1432,
+        "voluntary_context_switches": 34481,
+        "involuntary_context_switches": 11459
+      },
+      "model_reported_timed_seconds": 8.75,
+      "model_reported_read_gb": 99.86,
+      "output_md5": "23d162dcefb18211a7540ef12948f1eb",
+      "output_sha256": "d5630ccb104fe2e583674f693aaa1895d1d203ff11edf7b0325d56c9912143da",
+      "routes_sha256": "f4b05d9f1e80e28b637eab3f846c78ffebd407f6c3c4eb5bacafe44b65799f6d",
+      "validation_sha256": null,
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129128860,
+          "Cached_kib": 124639928,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "9.83",
+          "4.09",
+          "3.31"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129190676,
+          "Cached_kib": 124640716,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "12.29",
+          "4.81",
+          "3.55"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-france-3-reference",
+      "phase": "measure",
+      "prompt": "france",
+      "repetition": 3,
+      "variant": "reference",
+      "binary_sha256": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.08459338,
+        "peak_rss_kib": 56815396,
+        "peak_rss_gib": 54.18338394165039,
+        "user_cpu_seconds": 133.974809,
+        "system_cpu_seconds": 13.091626,
+        "major_faults": 0,
+        "minor_faults": 881440,
+        "filesystem_input_blocks": 195040560,
+        "filesystem_output_blocks": 1440,
+        "voluntary_context_switches": 34547,
+        "involuntary_context_switches": 11459
+      },
+      "model_reported_timed_seconds": 8.77,
+      "model_reported_read_gb": 99.86,
+      "output_md5": "23d162dcefb18211a7540ef12948f1eb",
+      "output_sha256": "d5630ccb104fe2e583674f693aaa1895d1d203ff11edf7b0325d56c9912143da",
+      "routes_sha256": "f4b05d9f1e80e28b637eab3f846c78ffebd407f6c3c4eb5bacafe44b65799f6d",
+      "validation_sha256": null,
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129192188,
+          "Cached_kib": 124640716,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "12.29",
+          "4.81",
+          "3.55"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129181040,
+          "Cached_kib": 124641464,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "13.89",
+          "5.41",
+          "3.76"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-france-3-integrated",
+      "phase": "measure",
+      "prompt": "france",
+      "repetition": 3,
+      "variant": "integrated",
+      "binary_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.437513466,
+        "peak_rss_kib": 56815920,
+        "peak_rss_gib": 54.18388366699219,
+        "user_cpu_seconds": 139.430308,
+        "system_cpu_seconds": 13.10428,
+        "major_faults": 0,
+        "minor_faults": 881642,
+        "filesystem_input_blocks": 195040560,
+        "filesystem_output_blocks": 12096,
+        "voluntary_context_switches": 34577,
+        "involuntary_context_switches": 10991
+      },
+      "model_reported_timed_seconds": 9.11,
+      "model_reported_read_gb": 99.86,
+      "output_md5": "23d162dcefb18211a7540ef12948f1eb",
+      "output_sha256": "d5630ccb104fe2e583674f693aaa1895d1d203ff11edf7b0325d56c9912143da",
+      "routes_sha256": "f4b05d9f1e80e28b637eab3f846c78ffebd407f6c3c4eb5bacafe44b65799f6d",
+      "validation_sha256": "dd1ce601e0acfa4bcb46a626a19d8608408ea835dc6bd32eb7434aef946c8323",
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129181040,
+          "Cached_kib": 124641460,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "13.89",
+          "5.41",
+          "3.76"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129206116,
+          "Cached_kib": 124647524,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "15.17",
+          "5.97",
+          "3.96"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-japan-1-integrated",
+      "phase": "measure",
+      "prompt": "japan",
+      "repetition": 1,
+      "variant": "integrated",
+      "binary_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.338383308,
+        "peak_rss_kib": 56816180,
+        "peak_rss_gib": 54.18413162231445,
+        "user_cpu_seconds": 138.165516,
+        "system_cpu_seconds": 12.920298,
+        "major_faults": 0,
+        "minor_faults": 881612,
+        "filesystem_input_blocks": 192260640,
+        "filesystem_output_blocks": 12160,
+        "voluntary_context_switches": 34054,
+        "involuntary_context_switches": 11041
+      },
+      "model_reported_timed_seconds": 9.01,
+      "model_reported_read_gb": 98.44,
+      "output_md5": "4b2a7b96fb6323e5639feced66f54a8e",
+      "output_sha256": "48f9eef1ed6902ddb247dd82d469d465514f7ff80b6763ce8229da8ba2bdcfbc",
+      "routes_sha256": "46e4910f35760708eca949f74763a52c5a1162fbe0c996836aed2b6227b29138",
+      "validation_sha256": "d4de5567f506e7b98e00def34dabb4f901f6dee0649bf85acbf24bd90ea55b8b",
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129163956,
+          "Cached_kib": 124660340,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "14.03",
+          "5.89",
+          "3.95"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129182544,
+          "Cached_kib": 124666512,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "15.37",
+          "6.45",
+          "4.15"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-japan-1-reference",
+      "phase": "measure",
+      "prompt": "japan",
+      "repetition": 1,
+      "variant": "reference",
+      "binary_sha256": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 9.974984775,
+        "peak_rss_kib": 56814996,
+        "peak_rss_gib": 54.18300247192383,
+        "user_cpu_seconds": 132.311467,
+        "system_cpu_seconds": 12.896537,
+        "major_faults": 0,
+        "minor_faults": 881461,
+        "filesystem_input_blocks": 192260640,
+        "filesystem_output_blocks": 1432,
+        "voluntary_context_switches": 34047,
+        "involuntary_context_switches": 11191
+      },
+      "model_reported_timed_seconds": 8.65,
+      "model_reported_read_gb": 98.44,
+      "output_md5": "4b2a7b96fb6323e5639feced66f54a8e",
+      "output_sha256": "48f9eef1ed6902ddb247dd82d469d465514f7ff80b6763ce8229da8ba2bdcfbc",
+      "routes_sha256": "46e4910f35760708eca949f74763a52c5a1162fbe0c996836aed2b6227b29138",
+      "validation_sha256": null,
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129152524,
+          "Cached_kib": 124679388,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "14.30",
+          "6.37",
+          "4.14"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129183256,
+          "Cached_kib": 124680176,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "14.39",
+          "6.67",
+          "4.26"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-japan-2-reference",
+      "phase": "measure",
+      "prompt": "japan",
+      "repetition": 2,
+      "variant": "reference",
+      "binary_sha256": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 9.997511813,
+        "peak_rss_kib": 56815160,
+        "peak_rss_gib": 54.18315887451172,
+        "user_cpu_seconds": 132.310771,
+        "system_cpu_seconds": 12.995885,
+        "major_faults": 0,
+        "minor_faults": 881437,
+        "filesystem_input_blocks": 192260640,
+        "filesystem_output_blocks": 1440,
+        "voluntary_context_switches": 34204,
+        "involuntary_context_switches": 10992
+      },
+      "model_reported_timed_seconds": 8.67,
+      "model_reported_read_gb": 98.44,
+      "output_md5": "4b2a7b96fb6323e5639feced66f54a8e",
+      "output_sha256": "48f9eef1ed6902ddb247dd82d469d465514f7ff80b6763ce8229da8ba2bdcfbc",
+      "routes_sha256": "46e4910f35760708eca949f74763a52c5a1162fbe0c996836aed2b6227b29138",
+      "validation_sha256": null,
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129184768,
+          "Cached_kib": 124680176,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "14.39",
+          "6.67",
+          "4.26"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129191868,
+          "Cached_kib": 124680924,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "14.47",
+          "6.96",
+          "4.38"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-japan-2-integrated",
+      "phase": "measure",
+      "prompt": "japan",
+      "repetition": 2,
+      "variant": "integrated",
+      "binary_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.347985472,
+        "peak_rss_kib": 56815796,
+        "peak_rss_gib": 54.18376541137695,
+        "user_cpu_seconds": 138.338762,
+        "system_cpu_seconds": 12.928379,
+        "major_faults": 0,
+        "minor_faults": 881654,
+        "filesystem_input_blocks": 192260640,
+        "filesystem_output_blocks": 12152,
+        "voluntary_context_switches": 34123,
+        "involuntary_context_switches": 11065
+      },
+      "model_reported_timed_seconds": 9.01,
+      "model_reported_read_gb": 98.44,
+      "output_md5": "4b2a7b96fb6323e5639feced66f54a8e",
+      "output_sha256": "48f9eef1ed6902ddb247dd82d469d465514f7ff80b6763ce8229da8ba2bdcfbc",
+      "routes_sha256": "46e4910f35760708eca949f74763a52c5a1162fbe0c996836aed2b6227b29138",
+      "validation_sha256": "d4de5567f506e7b98e00def34dabb4f901f6dee0649bf85acbf24bd90ea55b8b",
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129191868,
+          "Cached_kib": 124680920,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "14.47",
+          "6.96",
+          "4.38"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129191896,
+          "Cached_kib": 124687008,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "14.53",
+          "7.24",
+          "4.50"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-japan-3-integrated",
+      "phase": "measure",
+      "prompt": "japan",
+      "repetition": 3,
+      "variant": "integrated",
+      "binary_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.330739935,
+        "peak_rss_kib": 56817072,
+        "peak_rss_gib": 54.18498229980469,
+        "user_cpu_seconds": 137.905885,
+        "system_cpu_seconds": 12.757107,
+        "major_faults": 0,
+        "minor_faults": 881673,
+        "filesystem_input_blocks": 192260640,
+        "filesystem_output_blocks": 12160,
+        "voluntary_context_switches": 34057,
+        "involuntary_context_switches": 11349
+      },
+      "model_reported_timed_seconds": 9.01,
+      "model_reported_read_gb": 98.44,
+      "output_md5": "4b2a7b96fb6323e5639feced66f54a8e",
+      "output_sha256": "48f9eef1ed6902ddb247dd82d469d465514f7ff80b6763ce8229da8ba2bdcfbc",
+      "routes_sha256": "46e4910f35760708eca949f74763a52c5a1162fbe0c996836aed2b6227b29138",
+      "validation_sha256": "d4de5567f506e7b98e00def34dabb4f901f6dee0649bf85acbf24bd90ea55b8b",
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129145760,
+          "Cached_kib": 124699884,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "14.53",
+          "7.24",
+          "4.50"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129183572,
+          "Cached_kib": 124706048,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "16.91",
+          "7.99",
+          "4.77"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    },
+    {
+      "name": "measure-japan-3-reference",
+      "phase": "measure",
+      "prompt": "japan",
+      "repetition": 3,
+      "variant": "reference",
+      "binary_sha256": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+      "metrics": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.003712969,
+        "peak_rss_kib": 56814492,
+        "peak_rss_gib": 54.18252182006836,
+        "user_cpu_seconds": 132.643084,
+        "system_cpu_seconds": 12.88817,
+        "major_faults": 0,
+        "minor_faults": 881443,
+        "filesystem_input_blocks": 192260640,
+        "filesystem_output_blocks": 1440,
+        "voluntary_context_switches": 34114,
+        "involuntary_context_switches": 11014
+      },
+      "model_reported_timed_seconds": 8.68,
+      "model_reported_read_gb": 98.44,
+      "output_md5": "4b2a7b96fb6323e5639feced66f54a8e",
+      "output_sha256": "48f9eef1ed6902ddb247dd82d469d465514f7ff80b6763ce8229da8ba2bdcfbc",
+      "routes_sha256": "46e4910f35760708eca949f74763a52c5a1162fbe0c996836aed2b6227b29138",
+      "validation_sha256": null,
+      "before": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129158460,
+          "Cached_kib": 124718924,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "15.64",
+          "7.87",
+          "4.75"
+        ]
+      },
+      "after": {
+        "memory": {
+          "MemTotal_kib": 130982176,
+          "MemAvailable_kib": 129181716,
+          "Cached_kib": 124719736,
+          "SwapCached_kib": 2108,
+          "SwapTotal_kib": 4189180,
+          "SwapFree_kib": 4153216
+        },
+        "load_average": [
+          "17.84",
+          "8.60",
+          "5.02"
+        ]
+      },
+      "gate": "PASS",
+      "full_output_bit_exact": true,
+      "routes_bit_exact": true
+    }
+  ],
+  "summary": {
+    "france": {
+      "variants": {
+        "reference": {
+          "elapsed_seconds": {
+            "median": 10.075766119,
+            "minimum": 10.069673653,
+            "maximum": 10.08459338,
+            "values": [
+              10.075766119,
+              10.069673653,
+              10.08459338
+            ]
+          },
+          "peak_rss_gib": {
+            "median": 54.18338394165039,
+            "minimum": 54.18229675292969,
+            "maximum": 54.183753967285156,
+            "values": [
+              54.18229675292969,
+              54.183753967285156,
+              54.18338394165039
+            ]
+          },
+          "user_cpu_seconds": {
+            "median": 134.002773,
+            "minimum": 133.974809,
+            "maximum": 134.228993,
+            "values": [
+              134.002773,
+              134.228993,
+              133.974809
+            ]
+          },
+          "system_cpu_seconds": {
+            "median": 13.093437,
+            "minimum": 13.091626,
+            "maximum": 13.10951,
+            "values": [
+              13.10951,
+              13.093437,
+              13.091626
+            ]
+          },
+          "major_faults": {
+            "median": 0,
+            "minimum": 0,
+            "maximum": 0,
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          "filesystem_input_blocks": {
+            "median": 195040560,
+            "minimum": 195040560,
+            "maximum": 195040560,
+            "values": [
+              195040560,
+              195040560,
+              195040560
+            ]
+          }
+        },
+        "integrated": {
+          "elapsed_seconds": {
+            "median": 10.437513466,
+            "minimum": 10.399374496,
+            "maximum": 10.459980831,
+            "values": [
+              10.399374496,
+              10.459980831,
+              10.437513466
+            ]
+          },
+          "peak_rss_gib": {
+            "median": 54.18401336669922,
+            "minimum": 54.18388366699219,
+            "maximum": 54.18403625488281,
+            "values": [
+              54.18403625488281,
+              54.18401336669922,
+              54.18388366699219
+            ]
+          },
+          "user_cpu_seconds": {
+            "median": 139.430308,
+            "minimum": 139.030863,
+            "maximum": 139.961138,
+            "values": [
+              139.030863,
+              139.961138,
+              139.430308
+            ]
+          },
+          "system_cpu_seconds": {
+            "median": 12.741256,
+            "minimum": 12.630069,
+            "maximum": 13.10428,
+            "values": [
+              12.630069,
+              12.741256,
+              13.10428
+            ]
+          },
+          "major_faults": {
+            "median": 0,
+            "minimum": 0,
+            "maximum": 0,
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          "filesystem_input_blocks": {
+            "median": 195040560,
+            "minimum": 195040560,
+            "maximum": 195040560,
+            "values": [
+              195040560,
+              195040560,
+              195040560
+            ]
+          }
+        }
+      },
+      "integrated_time_over_reference": 1.0359027137715957,
+      "elapsed_change_percent": 3.5902713771595707,
+      "paired_time_ratios": [
+        1.032117495898378,
+        1.0387606581355013,
+        1.0349959658958505
+      ],
+      "peak_rss_delta_gib": 0.000629425048828125
+    },
+    "japan": {
+      "variants": {
+        "reference": {
+          "elapsed_seconds": {
+            "median": 9.997511813,
+            "minimum": 9.974984775,
+            "maximum": 10.003712969,
+            "values": [
+              9.974984775,
+              9.997511813,
+              10.003712969
+            ]
+          },
+          "peak_rss_gib": {
+            "median": 54.18300247192383,
+            "minimum": 54.18252182006836,
+            "maximum": 54.18315887451172,
+            "values": [
+              54.18300247192383,
+              54.18315887451172,
+              54.18252182006836
+            ]
+          },
+          "user_cpu_seconds": {
+            "median": 132.311467,
+            "minimum": 132.310771,
+            "maximum": 132.643084,
+            "values": [
+              132.311467,
+              132.310771,
+              132.643084
+            ]
+          },
+          "system_cpu_seconds": {
+            "median": 12.896537,
+            "minimum": 12.88817,
+            "maximum": 12.995885,
+            "values": [
+              12.896537,
+              12.995885,
+              12.88817
+            ]
+          },
+          "major_faults": {
+            "median": 0,
+            "minimum": 0,
+            "maximum": 0,
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          "filesystem_input_blocks": {
+            "median": 192260640,
+            "minimum": 192260640,
+            "maximum": 192260640,
+            "values": [
+              192260640,
+              192260640,
+              192260640
+            ]
+          }
+        },
+        "integrated": {
+          "elapsed_seconds": {
+            "median": 10.338383308,
+            "minimum": 10.330739935,
+            "maximum": 10.347985472,
+            "values": [
+              10.338383308,
+              10.347985472,
+              10.330739935
+            ]
+          },
+          "peak_rss_gib": {
+            "median": 54.18413162231445,
+            "minimum": 54.18376541137695,
+            "maximum": 54.18498229980469,
+            "values": [
+              54.18413162231445,
+              54.18376541137695,
+              54.18498229980469
+            ]
+          },
+          "user_cpu_seconds": {
+            "median": 138.165516,
+            "minimum": 137.905885,
+            "maximum": 138.338762,
+            "values": [
+              138.165516,
+              138.338762,
+              137.905885
+            ]
+          },
+          "system_cpu_seconds": {
+            "median": 12.920298,
+            "minimum": 12.757107,
+            "maximum": 12.928379,
+            "values": [
+              12.920298,
+              12.928379,
+              12.757107
+            ]
+          },
+          "major_faults": {
+            "median": 0,
+            "minimum": 0,
+            "maximum": 0,
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          "filesystem_input_blocks": {
+            "median": 192260640,
+            "minimum": 192260640,
+            "maximum": 192260640,
+            "values": [
+              192260640,
+              192260640,
+              192260640
+            ]
+          }
+        }
+      },
+      "integrated_time_over_reference": 1.0340956331311113,
+      "elapsed_change_percent": 3.4095633131111303,
+      "paired_time_ratios": [
+        1.036430986231756,
+        1.0350560885103703,
+        1.0326905586968966
+      ],
+      "peak_rss_delta_gib": 0.001129150390625
+    }
+  },
+  "all_full_outputs_and_routes_bit_exact": true,
+  "all_integrated_representation_gates_passed": true,
+  "protected_hashes_unchanged": true,
+  "limitations": "Three measured trials per cell, no significance claim. Peak RSS includes resident mappings and is not system RAM or filesystem cache. This benchmark retains extra checks, duplicate reference work and intermediate buffers; it does not measure an optimized deployed representation."
+}

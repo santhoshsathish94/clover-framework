@@ -1,0 +1,39 @@
+--- coverage-base.h
++++ expert-group-coverage.h
+@@ -1 +1,2 @@
+-#include "expert-group-order.h"
++#include "expert-group-order.h"
++#include "expert-joint-codec.h"
+@@ -32 +33,2 @@
+-    expert_group_selfcheck();
++    expert_group_selfcheck();
++    if (joint_enabled()) joint_selfcheck();
+@@ -51,2 +53 @@
+-    for (unsigned code = 0; code < 16; code++) group_order_put(payload, &offset, counts[code], 6);
+-    group_order_put(payload, &offset, rank, rank_bits);
++    joint_store(payload, &offset, counts, rank, rank_bits);
+@@ -63,7 +64 @@
+-    for (unsigned code = 0; code < 16; code++)
+-        restored_counts[code] = (unsigned)group_order_get(payload, &offset, 6);
+-    GroupOrderInteger restored_ways;
+-    if (!group_order_ways(restored_counts, 32, &restored_ways)) die("coverage stored counts invalid");
+-    unsigned stored_bits = 0;
+-    for (GroupOrderInteger remaining = restored_ways - 1; remaining; remaining >>= 1) stored_bits++;
+-    const GroupOrderInteger restored_rank = group_order_get(payload, &offset, stored_bits);
++    const GroupOrderInteger restored_rank = joint_load(payload, &offset, restored_counts);
+@@ -86 +80,2 @@
+-        "\"scale\":%u,\"rank\":\"%s\",\"payload_bits\":%u,"
++        "\"scale\":%u,\"rank\":\"%s\",\"payload_bits\":%u,"
++        "\"joint_mode\":%d,"
+@@ -88 +83,2 @@
+-        layer, expert, part, row, index, width, rows, positions, scale, rank_text, payload_bits);
++        layer, expert, part, row, index, width, rows, positions, scale, rank_text, payload_bits,
++        joint_enabled());
+@@ -207 +203,2 @@
+-        "\"invalid_inputs_rejected\":%llu,\"decode_pairs_checked\":4096,\"mask_coordinates_checked\":512,"
++        "\"invalid_inputs_rejected\":%llu,\"decode_pairs_checked\":4096,\"mask_coordinates_checked\":512,"
++        "\"joint_mode\":%d,\"joint_decoder_checks\":%llu,\"joint_invalid_inputs_rejected\":%llu,"
+@@ -211 +208,2 @@
+-        group_order_roundtrips, group_order_invalid, pairs_by_layer[1], pairs_by_layer[48], pairs_by_layer[92]);
++        group_order_roundtrips, group_order_invalid, joint_enabled(), joint_decoder_checks,
++        joint_invalid_checks, pairs_by_layer[1], pairs_by_layer[48], pairs_by_layer[92]);

@@ -1,0 +1,57 @@
+{
+  "gate": "PASS",
+  "dataset": "fruit",
+  "path": "/opt/clover-k3/fruit/fruit.bin",
+  "format": "K3SEED1 container, output-head source identity",
+  "shape": [
+    163840,
+    7168
+  ],
+  "dtype": "BF16",
+  "block_rows": 16,
+  "dictionary_values": 6590,
+  "identifier_bits": 13,
+  "source_sha256": "11c1f1c09a8e0db55547b5e68ebfd1d8e3b503bee56c4e1312ef55ecd3e5580f",
+  "blocks": 10240,
+  "selected_codecs": {
+    "zlib_bf16_byte_planes": 10239,
+    "zlib_bf16_bit_planes": 1
+  },
+  "fixed_codec_payload_totals": {
+    "packed_ids": 1908408320,
+    "zlib_packed_ids": 1889126363,
+    "zlib_id_planes": 1893006660,
+    "zlib_bf16": 1868675384,
+    "zlib_bf16_byte_planes": 1662369970,
+    "zlib_bf16_bit_planes": 1733421388
+  },
+  "header_bytes": 128,
+  "dictionary_bytes": 13180,
+  "index_bytes": 573440,
+  "fruit_bytes": 1662954740,
+  "original_bytes": 2348810240,
+  "saved_bytes": 685855500,
+  "fraction_of_original": 0.7079987611089434,
+  "payload_bytes": 1662367992,
+  "fruit_sha256": "b6a1ead4fda2928127841ffa2ec63d4f56d3de5709bfd24b4da2cc0d07b58c16",
+  "decoded_payload_sha256": "11c1f1c09a8e0db55547b5e68ebfd1d8e3b503bee56c4e1312ef55ecd3e5580f",
+  "verified_values": 1174405120,
+  "verified_rows": 163840,
+  "all_reopened_bytes_match_source": true,
+  "all_frequencies_match_census": true,
+  "source_unchanged": true,
+  "source": "/root/k3model/model-00094-of-000096.safetensors",
+  "tensor": "language_model.lm_head.weight",
+  "offset": 584,
+  "source_header_sha256": "f28a4f196abb0804a3f8a5b2c125f646f598359c5b92266442761216e47dd2bf",
+  "build_seconds": 399.5329237480182,
+  "build_and_verification_seconds": 408.11594086897094,
+  "census_sha256": "990d7fadf15f07c69cb208c51141dae4eb758d082f569e72f47c4880f93d966f",
+  "blocks_log_sha256": "8cc45e8c2cef010549c236cb491c76edce17491a28cf340f04f47fc37b9db994",
+  "implementation_sha256": {
+    "fruit.py": "bf7da8d32d2824435a03aaa9b351bd73fe843f5d19213b1ec5a819fb5c6b4282",
+    "seed.py": "ed7ad22a434abe5518b0f27f9585942716d19652cd134a6f7c15004dda0aea42",
+    "input-table-values.py": "75759168029ebf54633aa690bf12d30991962060eae31a3802c474457c76d35c"
+  },
+  "limits": "Full output head only. Smallest of six tested lossless layouts per16rowblock, not global optimum. Includes container header/dictionary/index/payload. No model integration or performance claim at this stage."
+}

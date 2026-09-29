@@ -1,0 +1,193 @@
+{
+  "host": "AX102, AMD Ryzen 9 7950X3D",
+  "prompt_ids": [
+    1008,
+    10484,
+    318,
+    15383,
+    387
+  ],
+  "build_flags": "-O3 -march=native -ffp-contract=off -fopenmp -DNPOS=5 -lm",
+  "settings": {
+    "OMP_NUM_THREADS": "16",
+    "OMP_PROC_BIND": "close",
+    "OMP_PLACES": "cores",
+    "K3_PREFETCH": "4",
+    "K3_TRUNKRAM": "0",
+    "K3_NREADER": "14",
+    "K3_XDEC": "2",
+    "K3_PLGRAN": "1",
+    "K3_HUGE": "1"
+  },
+  "reference_md5": "23d162dcefb18211a7540ef12948f1eb",
+  "group": {
+    "layer": 1,
+    "expert_id": 498,
+    "tensor": "w1/gate",
+    "row": 0,
+    "group": 0,
+    "input_width": 3584,
+    "rows": 3072,
+    "positions": 1,
+    "decode_pairs_checked": 4096,
+    "mask_coordinates_checked": 512,
+    "group_weights_checked": 32,
+    "group_weights_changed": 0,
+    "packed_roundtrip_exact": true,
+    "projection_outputs_changed": 0,
+    "scale_byte": 121,
+    "masks": [
+      2964563821,
+      2011846492,
+      3356231810,
+      3458434101
+    ],
+    "packed_bytes": [
+      73,
+      59,
+      154,
+      67,
+      51,
+      75,
+      18,
+      146,
+      185,
+      100,
+      177,
+      50,
+      162,
+      202,
+      51,
+      222
+    ],
+    "codes": [
+      9,
+      4,
+      11,
+      3,
+      10,
+      9,
+      3,
+      4,
+      3,
+      3,
+      11,
+      4,
+      2,
+      1,
+      2,
+      9,
+      9,
+      11,
+      4,
+      6,
+      1,
+      11,
+      2,
+      3,
+      2,
+      10,
+      10,
+      12,
+      3,
+      3,
+      14,
+      13
+    ],
+    "decoded_weights": [
+      -0.0078125,
+      0.03125,
+      -0.0234375,
+      0.0234375,
+      -0.015625,
+      -0.0078125,
+      0.0234375,
+      0.03125,
+      0.0234375,
+      0.0234375,
+      -0.0234375,
+      0.03125,
+      0.015625,
+      0.0078125,
+      0.015625,
+      -0.0078125,
+      -0.0078125,
+      -0.0234375,
+      0.03125,
+      0.0625,
+      0.0078125,
+      -0.0234375,
+      0.015625,
+      0.0234375,
+      0.015625,
+      -0.015625,
+      -0.015625,
+      -0.03125,
+      0.0234375,
+      0.0234375,
+      -0.0625,
+      -0.046875
+    ],
+    "projection_outputs": [
+      {
+        "position": 0,
+        "rank": 0,
+        "reference": 0.201177299,
+        "candidate": 0.201177299
+      }
+    ],
+    "gate": "PASS"
+  },
+  "variants": {
+    "disabled": {
+      "bit_exact": true,
+      "md5": "23d162dcefb18211a7540ef12948f1eb",
+      "norm": {
+        "count": 7168,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "logits": {
+        "count": 163840,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "token": 17374
+    },
+    "enabled": {
+      "bit_exact": true,
+      "md5": "23d162dcefb18211a7540ef12948f1eb",
+      "norm": {
+        "count": 7168,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "logits": {
+        "count": 163840,
+        "changed": 0,
+        "max_abs": 0.0
+      },
+      "token": 17374
+    }
+  },
+  "reference_repeated_matches": true,
+  "representation": {
+    "old_payload_bytes": 17,
+    "new_payload_bytes": 17,
+    "serialization": "Four little-endian uint32 masks in bit order 0..3, then one uint8 scale. Coordinate identity supplied by the caller."
+  },
+  "sha256": {
+    "baseline.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "candidate.c": "58191c12b61de946ef9c53e4283071491d8f01b0eac386d64b000a427c5e5b3f",
+    "expert-group-equation.h": "886f43fd96e64a3dd50c5a77b356f576b83ee633d2c1d3cf04d28160640a9c87",
+    "expert-group-equation.patch": "035122d2e2e95798b8ba5baaff3aee9a58d439a62733ff1c98578cd39c2615de",
+    "reference": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+    "candidate": "a8193eed3cf2158ce27fc7367fe584e1ccd3d28d8c0fc5a90a9e8496cdcc5d98",
+    "group.json": "4cb6bd09516dd3ac93e8c52172369ab24d722a5627bbdeffc1c3e527aaf4cfd6",
+    "group-mask.bin": "c1bacec10eb8598222f97bcddf90f2d411f83735697f7f7b2c8c2cb4fa873c2e",
+    "expert-group-check.py": "2680d00f8c73798d2e74d7216e5c8846868d30e6cdf36fd664f7f82de58c227c"
+  },
+  "gate": "PASS",
+  "scope": "One real selected expert gate-matrix row, first group of 32. Formula decode domain checked exhaustively; no other expert groups or prompts replaced. The candidate recomputes the complete affected row, uses original decoding for its remaining weights, and supplies its result to the original SiTU/downstream model.",
+  "performance": "Deferred. No smaller checkpoint, cache or faster evaluation claim. Original learned codes and scale remain necessary; masks encode the same information."
+}

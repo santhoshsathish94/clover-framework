@@ -1,0 +1,26 @@
+--- baseline.c
++++ candidate.c
+@@ -1027 +1027,3 @@
++#include "expert-group-coverage.h"
++
+ static void X(float *y, const float *x, const unsigned char *pk,
+@@ -2182 +2184,3 @@
+-                        cur_part = "up";
++                        coverage_replace(go, zin, m, res_ptr(p1->file_id, p1->off),
++                            res_ptr(s1->file_id, s1->off), LAT, I_, L, e, 0, mt, mj);
++                        cur_part = "up";
+@@ -2185 +2190,3 @@
+-                        if (hstat_on == 3 && m > 1) {
++                        coverage_replace(uo, zin, m, res_ptr(p3->file_id, p3->off),
++                            res_ptr(s3->file_id, s3->off), LAT, I_, L, e, 1, mt, mj);
++                        if (hstat_on == 3 && m > 1) {
+@@ -2212 +2219,4 @@
+-                           res_ptr(s2->file_id, s2->off), I_, LAT, q2, r2);
++                           res_ptr(s2->file_id, s2->off), I_, LAT, q2, r2);
++                        coverage_replace(dgo, (const float *const *)go, m,
++                            res_ptr(p2->file_id, p2->off), res_ptr(s2->file_id, s2->off),
++                            I_, LAT, L, e, 2, mt, mj);
+@@ -2330 +2340,2 @@
+-    int am = 0;
++    coverage_finish();
++    int am = 0;

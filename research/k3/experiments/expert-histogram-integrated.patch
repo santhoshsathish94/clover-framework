@@ -1,0 +1,44 @@
+--- coverage-base.h
++++ expert-group-coverage.h
+@@ -1 +1,2 @@
++#include "expert-histogram-codec.h"
+ #include "expert-group-order.h"
+@@ -31 +32,2 @@
+-    group_order_selfcheck();
++    group_order_selfcheck();
++    if (histogram_enabled()) histogram_selfcheck();
+@@ -51 +53,7 @@
+-    for (unsigned code = 0; code < 16; code++) group_order_put(payload, &offset, counts[code], 6);
++    if (histogram_enabled()) {
++        uint64_t histogram_rank;
++        if (!histogram_encode(counts, 32, 16, &histogram_rank)) die("coverage histogram encode failed");
++        group_order_put(payload, &offset, histogram_rank, 40);
++    } else {
++        for (unsigned code = 0; code < 16; code++) group_order_put(payload, &offset, counts[code], 6);
++    }
+@@ -63,2 +71,7 @@
+-    for (unsigned code = 0; code < 16; code++)
+-        restored_counts[code] = (unsigned)group_order_get(payload, &offset, 6);
++    if (histogram_enabled()) {
++        const uint64_t stored_histogram = (uint64_t)group_order_get(payload, &offset, 40);
++        if (!histogram_decode(stored_histogram, 32, 16, restored_counts)) die("coverage histogram decode failed");
++    } else {
++        for (unsigned code = 0; code < 16; code++)
++            restored_counts[code] = (unsigned)group_order_get(payload, &offset, 6);
++    }
+@@ -86 +99,2 @@
+-        "\"scale\":%u,\"rank\":\"%s\",\"payload_bits\":%u,"
++        "\"scale\":%u,\"rank\":\"%s\",\"payload_bits\":%u,"
++        "\"histogram_bits\":%u,"
+@@ -88 +102,2 @@
+-        layer, expert, part, row, index, width, rows, positions, scale, rank_text, payload_bits);
++        layer, expert, part, row, index, width, rows, positions, scale, rank_text, payload_bits,
++        histogram_enabled() ? 40U : 96U);
+@@ -207 +222,2 @@
+-        "\"invalid_inputs_rejected\":%llu,\"decode_pairs_checked\":4096,\"mask_coordinates_checked\":512,"
++        "\"invalid_inputs_rejected\":%llu,\"decode_pairs_checked\":4096,\"mask_coordinates_checked\":512,"
++        "\"histogram_bits\":%u,\"histogram_decoder_checks\":%llu,\"histogram_invalid_inputs_rejected\":%llu,"
+@@ -211 +227,2 @@
+-        group_order_roundtrips, group_order_invalid, pairs_by_layer[1], pairs_by_layer[48], pairs_by_layer[92]);
++        group_order_roundtrips, group_order_invalid, histogram_enabled() ? 40U : 96U,
++        histogram_decoder_checks, histogram_invalid_checks, pairs_by_layer[1], pairs_by_layer[48], pairs_by_layer[92]);

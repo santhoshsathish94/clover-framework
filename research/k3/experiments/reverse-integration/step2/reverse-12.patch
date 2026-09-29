@@ -1,0 +1,18 @@
+--- expert-scale-exception-codec.h
++++ expert-scale-exception-codec.h
+@@ -244 +244,6 @@
+-    if (!scale_rows_checked) exception_selfcheck();
++    if (!scale_rows_checked) exception_selfcheck();
++    unsigned char base_payload[114], base_restored[112];
++    unsigned base_size;
++    if (!scale_encode(original, groups, base_payload, &base_size) ||
++        !scale_decode(base_payload, base_size, groups, base_restored) || memcmp(original, base_restored, groups))
++        die("reverse base-offset scale stage differs");
+@@ -247 +252 @@
+-    if (!exception_encode(original, groups, 2, payload, &size, &bits, &chosen) ||
++    if (!exception_encode(base_restored, groups, 2, payload, &size, &bits, &chosen) ||
+@@ -273 +278,3 @@
+-    fprintf(trace, "]}\n");
++    fprintf(trace, "],\"base_offset_payload\":[");
++    for (unsigned byte = 0; byte < base_size; byte++) fprintf(trace, "%s%u", byte ? "," : "", base_payload[byte]);
++    fprintf(trace, "]}\n");

@@ -1,0 +1,30 @@
+--- baseline.c
++++ candidate.c
+@@ -1447 +1447,3 @@
++#include "vector-basis-router.h"
++
+ static void AR(float *out, float *const *srcs, int nsrc, const float *fold)
+@@ -1478 +1480,2 @@
++    basis_capture(srcs, pis, nsrc);
+     op_add(OP_AR, _t, (int64_t)E * 4);
+@@ -1951 +1954,2 @@
+-            rmsnorm(x2b[t], h2b[t], wpost, E, EPS5);
++            rmsnorm(x2b[t], h2b[t], wpost, E, EPS5);
++            if (basis_enabled() && L == 84 && t == 0) basis_prepare(wpost);
+@@ -2016 +2020,11 @@
+-                        sc_all[t][e] = sigf((float)a);
++                        const float reference_score = sigf((float)a);
++                        if (basis_enabled() && L == 84 && t == 0) {
++                            const float projected = basis_project(grow);
++                            const float candidate_score = sigf(projected);
++                            basis_rows[e][0] = (float)a;
++                            basis_rows[e][1] = projected;
++                            basis_rows[e][2] = reference_score;
++                            basis_rows[e][3] = candidate_score;
++                            basis_row_seen[e] = 1;
++                            sc_all[t][e] = candidate_score;
++                        } else sc_all[t][e] = reference_score;
+@@ -2021 +2035,2 @@
+-                if (gfuse) cover(gp, (size_t)NEXP * (4 + E));   /* read directly, not via Q */
++                if (gfuse) cover(gp, (size_t)NEXP * (4 + E));   /* read directly, not via Q */
++                if (basis_enabled() && L == 84) basis_report();

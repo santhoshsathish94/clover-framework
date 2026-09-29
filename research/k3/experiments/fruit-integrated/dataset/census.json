@@ -1,0 +1,55 @@
+{
+  "gate": "PASS",
+  "dataset": "fruit",
+  "source": "/root/k3model/model-00094-of-000096.safetensors",
+  "tensor": "language_model.lm_head.weight",
+  "shape": [
+    163840,
+    7168
+  ],
+  "dtype": "BF16",
+  "offset": 584,
+  "values_scanned": 1174405120,
+  "bytes_scanned": 2348810240,
+  "distinct_n": 6590,
+  "identifier_bits": 13,
+  "categories": {
+    "normal": 1174405120
+  },
+  "minimum": {
+    "id": 6589,
+    "bf16_hex": "bf14",
+    "float32_hex": "bf140000",
+    "n_decimal": "-0.578125",
+    "n_hex_float": "-0x1.2800000000000p-1",
+    "exact_numerator": "-37",
+    "exact_denominator": "64",
+    "category": "normal",
+    "count": 1
+  },
+  "maximum": {
+    "id": 3290,
+    "bf16_hex": "3eee",
+    "float32_hex": "3eee0000",
+    "n_decimal": "0.46484375",
+    "n_hex_float": "0x1.dc00000000000p-2",
+    "exact_numerator": "119",
+    "exact_denominator": "256",
+    "category": "normal",
+    "count": 1
+  },
+  "source_sha256": "11c1f1c09a8e0db55547b5e68ebfd1d8e3b503bee56c4e1312ef55ecd3e5580f",
+  "source_header_sha256": "f28a4f196abb0804a3f8a5b2c125f646f598359c5b92266442761216e47dd2bf",
+  "source_unchanged": true,
+  "artifacts": {
+    "all-n.tsv": "ae9194b8a90873581b8f5e6139b067831791aabe4b6dc3053fa1e5d5769e4cc6",
+    "dictionary.bf16": "676b5260281969184750448d9a007d233937c713b819330006df6972f7857212",
+    "counts.u64le": "b65972e05831eee0e46acdee3ad1be20b305e86060dab6f69dbc7683be94c33e",
+    "scan-chunks.jsonl": "10bedafa9e6585259c790e5d560e431b212c80acd22a91784023e1df8c360a6e"
+  },
+  "implementation_sha256": {
+    "fruit.py": "bf7da8d32d2824435a03aaa9b351bd73fe843f5d19213b1ec5a819fb5c6b4282",
+    "seed.py": "ed7ad22a434abe5518b0f27f9585942716d19652cd134a6f7c15004dda0aea42",
+    "input-table-values.py": "75759168029ebf54633aa690bf12d30991962060eae31a3802c474457c76d35c"
+  }
+}

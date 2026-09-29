@@ -1,0 +1,131 @@
+k3-model-equation.md in C, layers 0..92
+  layer  0  KDA dense  0.03s
+  layer  1  KDA MoE    0.15s
+  layer  2  KDA MoE    0.10s
+  layer  3  MLA MoE    0.09s
+  layer  4  KDA MoE    0.10s
+  layer  5  KDA MoE    0.10s
+  layer  6  KDA MoE    0.11s
+  layer  7  MLA MoE    0.10s
+  layer  8  KDA MoE    0.09s
+  layer  9  KDA MoE    0.09s
+  layer 10  KDA MoE    0.09s
+  layer 11  MLA MoE    0.08s
+  layer 12  KDA MoE    0.08s
+  layer 13  KDA MoE    0.09s
+  layer 14  KDA MoE    0.10s
+  layer 15  MLA MoE    0.09s
+  layer 16  KDA MoE    0.09s
+  layer 17  KDA MoE    0.10s
+  layer 18  KDA MoE    0.10s
+  layer 19  MLA MoE    0.08s
+  layer 20  KDA MoE    0.10s
+  layer 21  KDA MoE    0.10s
+  layer 22  KDA MoE    0.10s
+  layer 23  MLA MoE    0.09s
+  layer 24  KDA MoE    0.09s
+  layer 25  KDA MoE    0.10s
+  layer 26  KDA MoE    0.09s
+  layer 27  MLA MoE    0.09s
+  layer 28  KDA MoE    0.10s
+  layer 29  KDA MoE    0.10s
+  layer 30  KDA MoE    0.10s
+  layer 31  MLA MoE    0.09s
+  layer 32  KDA MoE    0.10s
+  layer 33  KDA MoE    0.10s
+  layer 34  KDA MoE    0.10s
+  layer 35  MLA MoE    0.09s
+  layer 36  KDA MoE    0.09s
+  layer 37  KDA MoE    0.09s
+  layer 38  KDA MoE    0.09s
+  layer 39  MLA MoE    0.09s
+  layer 40  KDA MoE    0.09s
+  layer 41  KDA MoE    0.09s
+  layer 42  KDA MoE    0.08s
+  layer 43  MLA MoE    0.08s
+  layer 44  KDA MoE    0.09s
+  layer 45  KDA MoE    0.09s
+  layer 46  KDA MoE    0.08s
+  layer 47  MLA MoE    0.09s
+  layer 48  KDA MoE    0.10s
+  layer 49  KDA MoE    0.09s
+  layer 50  KDA MoE    0.10s
+  layer 51  MLA MoE    0.09s
+  layer 52  KDA MoE    0.09s
+  layer 53  KDA MoE    0.10s
+  layer 54  KDA MoE    0.09s
+  layer 55  MLA MoE    0.08s
+  layer 56  KDA MoE    0.09s
+  layer 57  KDA MoE    0.10s
+  layer 58  KDA MoE    0.10s
+  layer 59  MLA MoE    0.09s
+  layer 60  KDA MoE    0.10s
+  layer 61  KDA MoE    0.10s
+  layer 62  KDA MoE    0.10s
+  layer 63  MLA MoE    0.09s
+  layer 64  KDA MoE    0.10s
+  layer 65  KDA MoE    0.09s
+  layer 66  KDA MoE    0.10s
+  layer 67  MLA MoE    0.09s
+  layer 68  KDA MoE    0.10s
+  layer 69  KDA MoE    0.10s
+  layer 70  KDA MoE    0.10s
+  layer 71  MLA MoE    0.09s
+  layer 72  KDA MoE    0.10s
+  layer 73  KDA MoE    0.10s
+  layer 74  KDA MoE    0.10s
+  layer 75  MLA MoE    0.09s
+  layer 76  KDA MoE    0.09s
+  layer 77  KDA MoE    0.10s
+  layer 78  KDA MoE    0.10s
+  layer 79  MLA MoE    0.09s
+  layer 80  KDA MoE    0.10s
+  layer 81  KDA MoE    0.10s
+  layer 82  KDA MoE    0.09s
+  layer 83  MLA MoE    0.08s
+  layer 84  KDA MoE    0.09s
+  layer 85  KDA MoE    0.09s
+  layer 86  KDA MoE    0.08s
+  layer 87  MLA MoE    0.08s
+  layer 88  KDA MoE    0.09s
+  layer 89  KDA MoE    0.08s
+  layer 90  KDA MoE    0.09s
+  layer 91  MLA MoE    0.08s
+  layer 92  MLA MoE    0.09s
+
+snapshots at the tail : 9 sources
+total wall time       : 8.69 s
+read_bytes            : 98.44 GB   effective 11.33 GB/s
+prefetch              : on  0.00 s  98.30 GB  0.00 GB/s
+
+--- where the time goes, by operator of k3-model-equation.md section 2 ---
+operator                    seconds   % wall          calls    weight GB       GB/s    GFLOP/s
+Q   int8 projection           1.339   15.41%           1159        53.83      40.20      401.7
+X   mxfp4 expert proj         4.507   51.88%          16806        98.30      21.81      107.9
+B   bf16 lm_head              0.054    0.62%              1         2.35      43.74        0.0
+N   rmsnorm                   0.011    0.13%           1976         0.03       3.01        0.0
+L   l2 per-head               0.002    0.02%            690         0.00       0.00        0.0
+SiTU + sigma                  0.067    0.77%           7825         0.00       0.00        0.0
+C   shortconv                 0.007    0.08%           1035         0.20      27.60        0.0
+AR  snapshot aggregate        0.015    0.17%            926         0.03       1.81        0.0
+D   kda delta-rule            0.016    0.18%            345         0.00       0.00        0.0
+SA  softmax attention         0.001    0.01%            120         0.00       0.00        0.0
+router dot product            0.124    1.42%             92         0.59       4.78        0.0
+top-k selection               0.001    0.01%            460         0.00       0.00        0.0
+alpha / beta / gate           0.021    0.24%            345         0.00       0.00        0.0
+SUM of operators              6.165   70.96%                      155.33
+
+--- what the reading buys: values produced ---
+operator                  output floats   weight B/out    flops/out
+Q   int8 projection            45765600         1176.1      11753.0
+X   mxfp4 expert proj          71598080         1372.9       6790.7
+prefetch (pure I/O)           0.000    0.00%
+pipeline stall                2.400   27.63%   waiting on reader threads
+  stall split            first expert 0.141   next 13 experts 0.609   rest 1.651
+Xm calls by position count:  m=1:4295(76.7%)  m=2:946(16.9%)  m=3:282(5.0%)  m=4:68(1.2%)  m=5:11(0.2%)   distinct 5602  draws 7360  mean m 1.314
+wall - ops - prefetch         2.523   29.04%   unattributed
+  of which: stall 2.400   slot_vec 0.008 (1204 calls, 15.5M floats)   progress print 0.002   residual 0.113
+faults: 1 major, 885606 minor
+emitted token         : 40484   engine emitted 17374   DIFFERENT
+span: start->T0 0.02 s   timed 8.69 s
+unmap: arena 0.005 s (1.63 GB)   trunk 0.000 s (0.00 GB)   total 0.005 s

@@ -12,3 +12,7 @@
 # Preserved reference outputs: any conversion would destroy the md5 they exist for.
 *.bin binary
 *.tsv text eol=lf
+
+# Experimental evidence records SHA256 of exact source and fixture bytes.
+# Do not normalize these files on add or checkout.
+research/k3/experiments/** -text

@@ -1,0 +1,701 @@
+{
+  "gate": "PASS",
+  "order": [
+    13,
+    12,
+    11,
+    10,
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1
+  ],
+  "steps": [
+    {
+      "stage": 13,
+      "items_integrated": [
+        13
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "d9d26b135231cd6d29036325bda5d332d8befe4d69aaefc02f7d072ae82c80a5",
+      "candidate_sha256": "89a721b1856b028cc63558f7d9aef931323f6c6b7b3c11bb1134b7150342b636",
+      "runner_sha256": null,
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 12,
+      "items_integrated": [
+        13,
+        12
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "6b065914c9a1da66f8b80cd12575bad7d408350929de5f04e9ec33da69daacaf",
+      "candidate_sha256": "c87536124cc7ca21f08b09d9389d531b9d6cad8572d810299be7dc7d45ae4ad9",
+      "runner_sha256": "d84c3288e5752d463833b902bab6be85ea041332dc36d114159b3a9ff014f65e",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 11,
+      "items_integrated": [
+        13,
+        12,
+        11
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "dfd86c5a26320477476de247ae4db4a89ea09a1001892a2bd13f870b35e459f2",
+      "candidate_sha256": "06537c8b0119b2397d62517a9e6225948a714ae287ad75d3a60b7fc75c41afa4",
+      "runner_sha256": "d84c3288e5752d463833b902bab6be85ea041332dc36d114159b3a9ff014f65e",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 10,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "21a96a1ce328739f090f969969e3b72a1b61f691391aba5d37c6979e60e693f6",
+      "candidate_sha256": "caced06601565cff65abbf078ed20eaddda7ab38dc824f77627c443194a67a95",
+      "runner_sha256": "d84c3288e5752d463833b902bab6be85ea041332dc36d114159b3a9ff014f65e",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 9,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "375626ffa565030583755aade5b36f6b0adf2e913d10d7363bdddf8eca465c4c",
+      "candidate_sha256": "01509a651756c8cceea48a7566bd0031f53bfb66d315336c24c9f0aab2a4bbe9",
+      "runner_sha256": "d84c3288e5752d463833b902bab6be85ea041332dc36d114159b3a9ff014f65e",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 8,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "98d13063cda4cd022f402723e85dc51b15e2255920b0e985ea96a4729e3c54f3",
+      "candidate_sha256": "bcb045cc8280b00865172e01c41d28308a1c1c8ff790bf147e896799732be990",
+      "runner_sha256": "d84c3288e5752d463833b902bab6be85ea041332dc36d114159b3a9ff014f65e",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 7,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "40ac6f5d1f8fe69edd3bb13df41ab44e76af4287be3fbd7bef75ce0c4b186486",
+      "candidate_sha256": "c507363dfb0864a28c04272641ffb7669912a38065a6fb69984890bec8a9e2d9",
+      "runner_sha256": "d84c3288e5752d463833b902bab6be85ea041332dc36d114159b3a9ff014f65e",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 6,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "33f3319264ec8b556e5043e4b82b9a022d23d20d52361e9bbaa545b96b76d664",
+      "candidate_sha256": "d72b5140aab2f46cca2b806888178f96045d529a26c73a31981991f18f4f0e65",
+      "runner_sha256": "c15930f4b9b35a6c9d3100904cfe5850be1a7ca441862464008d689b4f8fb290",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 5,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "d898a51b998affa972e6becc76539c8f086438957dd3ce7b4c88fb93d2cbb2e3",
+      "candidate_sha256": "2bdab3f87982d6e30d18dceece49476fdda90050dab3fc1c8c49dbf33382e7ec",
+      "runner_sha256": "77b8e5c804fd2d1a9ac16ba89f68c841f265546a3f053ae45fbf41d62004c29f",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 4,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7,
+        6,
+        5,
+        4
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "692331d0ce8f9c64eabe09ba90f90a4481734d02931758903fbb59349139b9ca",
+      "candidate_sha256": "ef4b1aaa7c701dba45ed04a23d1420f501fdd6aa8d39bb0ef7f217a58c8fbf9c",
+      "runner_sha256": "7e654947dd6fe8d24539a9d7bfe600f6bf8a1144561256934ddd72754a2a0d78",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 3,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "446fa2c79f81afb0b0c2f58ecba306548cda58168f49073bb98d0f710aece258",
+      "candidate_sha256": "54a3eb39cb0ff558cb2209fb02c70f6a372723fa40be36b5d7bc513c37f3a32a",
+      "runner_sha256": "74b876063753ffd9ed8c1c26cf5f4baf5ca395ca70fa159452b76b01539f20d8",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 2,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "3382dbe15107aedb78d868fc6f00760273be2af75a95201fa1336cf7f4548962",
+      "candidate_sha256": "00c8196efb69f35980ee0776bbd6f46b66ed70873879a50cc210a37a3c8bfe2a",
+      "runner_sha256": "74b876063753ffd9ed8c1c26cf5f4baf5ca395ca70fa159452b76b01539f20d8",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    },
+    {
+      "stage": 1,
+      "items_integrated": [
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "gate": "PASS",
+      "broad_projections": 4320,
+      "result_sha256": "fdd9f2c3078ff6d0fcf6596c8639daafaa8ca1b772fffecd9d7731365a70ae92",
+      "candidate_sha256": "c7362331a14ffab78da3016a8c47096eeccde4cb4b910763a4ec6756e61f9653",
+      "runner_sha256": "74b876063753ffd9ed8c1c26cf5f4baf5ca395ca70fa159452b76b01539f20d8",
+      "outputs": {
+        "france": {
+          "bit_exact": true,
+          "md5": "23d162dcefb18211a7540ef12948f1eb",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 17374
+        },
+        "japan": {
+          "bit_exact": true,
+          "md5": "4b2a7b96fb6323e5639feced66f54a8e",
+          "norm": {
+            "count": 7168,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "logits": {
+            "count": 163840,
+            "changed": 0,
+            "max_abs": 0.0
+          },
+          "token": 40484
+        }
+      }
+    }
+  ],
+  "broad_model_runs": 26,
+  "broad_projection_comparisons": 56160,
+  "unique_final_scope": {
+    "rows": 1926,
+    "layer_expert_pairs": 214,
+    "groups": 5778,
+    "scales": 205440,
+    "weights_using_decoded_scales": 6574080,
+    "vector_components_per_prompt": 7168,
+    "prompts": 2
+  },
+  "protected_sha256": {
+    "/opt/clover-k3/clover-k3.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "/opt/clover-k3/build/clover-k3": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+    "/opt/clover-k3/gate.sh": "752291aa5cda8194bbaf1f68d6a843e9ca02d3e221e8e19a5b714c075b01f5dc",
+    "/opt/clover-k3/build/eqidx.bin": "c2b7962c88fe7d984260a9c5d8f1b23ba0866e9cb9a39bf35a689f6a6a906981"
+  },
+  "dependency_sha256": {
+    "deps/zlib1g-dev_1%3a1.3.dfsg-3.1ubuntu2.2_amd64.deb": "e9152a08af21ab22bc99e8bfa98f1eb83955b2cc3653bcefecab394ecf9d1b63",
+    "deps/libgmp-dev_2%3a6.3.0+dfsg-2ubuntu6.1_amd64.deb": "a9847b5ecfff791a46cb198f29a06d9d23a20afdfdd434812f2b44ccfb61d46a",
+    "deps/gmp/usr/include/x86_64-linux-gnu/gmp.h": "1a5bb6702226627c7322821b06084a4ee4ac69b71f987a36a6a46df0de4364b0",
+    "deps/gmp/usr/lib/x86_64-linux-gnu/libgmp.a": "8dfcc4ced65bb95d1f48f1756b172c8c3f712ec4e98c8de4485de7843c40b5ea",
+    "deps/zlib/usr/include/zlib.h": "6f1c7ebe0ac0f0794852b770c20efae041a451f833c91f60f837b599ea81679e",
+    "deps/zlib/usr/include/zconf.h": "1800d30368be262886ccaa0b4e0a82240f4b7cd65704f480c988f1ccbf74e14e",
+    "deps/zlib/usr/lib/x86_64-linux-gnu/libz.a": "d9f5f6208214a493583f305c40c9879bfad2cada1ef2753a45e3b0bf8a4c7be2"
+  },
+  "reference_repeated_matches": true,
+  "build": "-O3 -march=native -ffp-contract=off -fopenmp -DNPOS=5 -DREVERSE_STAGE=N; private GMP; private zlib from step3; -lm",
+  "environment": {
+    "OMP_NUM_THREADS": "16",
+    "OMP_PROC_BIND": "close",
+    "OMP_PLACES": "cores",
+    "K3_PREFETCH": "4",
+    "K3_TRUNKRAM": "0",
+    "K3_NREADER": "14",
+    "K3_XDEC": "2",
+    "K3_PLGRAN": "1",
+    "K3_HUGE": "1",
+    "K3_GROUP_COVERAGE": "2"
+  },
+  "scope": "Sampled expert sites at layers1/48/92; router/vector codecs at L84/pos0; five-token entry and final tail; France/Japan prefills.",
+  "limits": "Intermediate representations composed for correctness. Original data, reference computations and diagnostics retained. Not a persistent weight store, checkpoint-wide codec, decode/generation test, or measured RAM/storage/speed improvement.",
+  "raw_evidence": "/opt/clover-k3/reverse-integration-20260929-a",
+  "preserved_warning_build": "/opt/clover-k3/reverse-integration-20260929-a/step8-before-bound"
+}

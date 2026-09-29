@@ -1,0 +1,6 @@
+--- expert-group-coverage.h
++++ expert-group-coverage.h
+@@ -47,2 +47 @@
+-    if (REVERSE_STAGE >= 12)
+-        return reverse_packed_group(packed, scale, layer, expert, part, row, index, width, rows, positions);
++    if (!joint_enabled()) die("reverse step11 requires joint code consumer");

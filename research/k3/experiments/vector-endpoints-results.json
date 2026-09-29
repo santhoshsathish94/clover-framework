@@ -1,0 +1,225 @@
+{
+  "host": "AX102, AMD Ryzen 9 7950X3D",
+  "prompt_ids": [
+    1008,
+    10484,
+    318,
+    15383,
+    387
+  ],
+  "build_flags": "-O3 -march=native -ffp-contract=off -fopenmp -DNPOS=5 -lm",
+  "settings": {
+    "OMP_NUM_THREADS": "16",
+    "OMP_PROC_BIND": "close",
+    "OMP_PLACES": "cores",
+    "K3_PREFETCH": "4",
+    "K3_TRUNKRAM": "0",
+    "K3_NREADER": "14",
+    "K3_XDEC": "2",
+    "K3_PLGRAN": "1",
+    "K3_HUGE": "1"
+  },
+  "reference_md5": "23d162dcefb18211a7540ef12948f1eb",
+  "reference_repeated_matches": true,
+  "variants": [
+    {
+      "variant": "disabled",
+      "mode": 0,
+      "stages": {
+        "mode": 0,
+        "positions": 5,
+        "tail_sources": 0,
+        "embedding": {
+          "checked": 0,
+          "changed": 0
+        },
+        "entry_norm": {
+          "checked": 0,
+          "changed": 0
+        },
+        "tail_aggregate": {
+          "checked": 0,
+          "changed": 0
+        },
+        "tail_norm": {
+          "checked": 0,
+          "changed": 0
+        },
+        "head_logits": {
+          "checked": 0,
+          "changed": 0
+        },
+        "counts_valid": true,
+        "gate": "PASS"
+      },
+      "full_output": {
+        "bit_exact": true,
+        "md5": "23d162dcefb18211a7540ef12948f1eb",
+        "norm": {
+          "count": 7168,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "logits": {
+          "count": 163840,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "token": 17374
+      },
+      "gate": "PASS"
+    },
+    {
+      "variant": "entry",
+      "mode": 1,
+      "stages": {
+        "mode": 1,
+        "positions": 5,
+        "tail_sources": 0,
+        "embedding": {
+          "checked": 35840,
+          "changed": 0
+        },
+        "entry_norm": {
+          "checked": 35840,
+          "changed": 0
+        },
+        "tail_aggregate": {
+          "checked": 0,
+          "changed": 0
+        },
+        "tail_norm": {
+          "checked": 0,
+          "changed": 0
+        },
+        "head_logits": {
+          "checked": 0,
+          "changed": 0
+        },
+        "counts_valid": true,
+        "gate": "PASS"
+      },
+      "full_output": {
+        "bit_exact": true,
+        "md5": "23d162dcefb18211a7540ef12948f1eb",
+        "norm": {
+          "count": 7168,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "logits": {
+          "count": 163840,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "token": 17374
+      },
+      "gate": "PASS"
+    },
+    {
+      "variant": "tail",
+      "mode": 2,
+      "stages": {
+        "mode": 2,
+        "positions": 5,
+        "tail_sources": 9,
+        "embedding": {
+          "checked": 0,
+          "changed": 0
+        },
+        "entry_norm": {
+          "checked": 0,
+          "changed": 0
+        },
+        "tail_aggregate": {
+          "checked": 7168,
+          "changed": 0
+        },
+        "tail_norm": {
+          "checked": 7168,
+          "changed": 0
+        },
+        "head_logits": {
+          "checked": 163840,
+          "changed": 0
+        },
+        "counts_valid": true,
+        "gate": "PASS"
+      },
+      "full_output": {
+        "bit_exact": true,
+        "md5": "23d162dcefb18211a7540ef12948f1eb",
+        "norm": {
+          "count": 7168,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "logits": {
+          "count": 163840,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "token": 17374
+      },
+      "gate": "PASS"
+    },
+    {
+      "variant": "combined",
+      "mode": 3,
+      "stages": {
+        "mode": 3,
+        "positions": 5,
+        "tail_sources": 9,
+        "embedding": {
+          "checked": 35840,
+          "changed": 0
+        },
+        "entry_norm": {
+          "checked": 35840,
+          "changed": 0
+        },
+        "tail_aggregate": {
+          "checked": 7168,
+          "changed": 0
+        },
+        "tail_norm": {
+          "checked": 7168,
+          "changed": 0
+        },
+        "head_logits": {
+          "checked": 163840,
+          "changed": 0
+        },
+        "counts_valid": true,
+        "gate": "PASS"
+      },
+      "full_output": {
+        "bit_exact": true,
+        "md5": "23d162dcefb18211a7540ef12948f1eb",
+        "norm": {
+          "count": 7168,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "logits": {
+          "count": 163840,
+          "changed": 0,
+          "max_abs": 0.0
+        },
+        "token": 17374
+      },
+      "gate": "PASS"
+    }
+  ],
+  "gate": "PASS",
+  "sha256": {
+    "baseline.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "candidate.c": "5c18d3c94725bd14660d1eed220bcf0190d3038eab136979c0594b425224386e",
+    "vector-endpoints.h": "c51af1bf1727c2d0191600e91eb6eea1d40cad01a2ab2941a35eed4edb8cc2c3",
+    "vector-endpoints.patch": "2189dc33f18a9ce44084a63bd7a2bf4b1232828aba496b46a0ca30cb9be3f230",
+    "reference": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+    "candidate": "4c5a75490607c7ca0f70abfb10c0b586b75095a18be0391eff85e73d1c66bd72"
+  },
+  "performance": "Deferred; no speed, memory or compression claim.",
+  "scope": "One five-token prompt, fresh prefill. Entry generates BF16 row values into the first RMSNorm. Tail generates rounded normalized source-expression values into every BF16 head row. Reference computations remain for diagnostics and other consumers; no global removal of vector arrays."
+}

@@ -1,0 +1,56 @@
+{
+  "host": "AX102, AMD Ryzen 9 7950X3D",
+  "prompt_ids": [
+    1008,
+    10484,
+    318,
+    15383,
+    387
+  ],
+  "replacement_scope": "Layer 84 position 0: all 896 router linear projections of the normalized nine-source vector. Existing sigmoid, selection, mixing and remaining model use candidate values.",
+  "arithmetic": "long double Gram matrix, source projections, coefficient accumulation and normalization; float32 cast before existing sigmoid. This is a candidate numerical realization, not exact rational evaluation.",
+  "build_flags": "-O3 -march=native -ffp-contract=off -fopenmp -DNPOS=5 -lm",
+  "reference_md5": "23d162dcefb18211a7540ef12948f1eb",
+  "candidate_md5": "59afac21c3ae080d3707b126ab62d13c",
+  "disabled_matches_reference": true,
+  "reference_after_matches_before": true,
+  "full_output_bit_exact": false,
+  "reference_token": 17374,
+  "candidate_token": 17374,
+  "norm": {
+    "changed": 6547,
+    "count": 7168,
+    "max_abs": 1.2703239917755127e-06,
+    "rms": 2.9857364240937815e-07
+  },
+  "logits": {
+    "changed": 143038,
+    "count": 163840,
+    "max_abs": 3.814697265625e-06,
+    "rms": 7.930691303882526e-07
+  },
+  "router": {
+    "projected": {
+      "changed": 224,
+      "count": 896,
+      "max_abs": 4.76837158203125e-07
+    },
+    "sigmoid": {
+      "changed": 224,
+      "count": 896,
+      "max_abs": 2.2351741790771484e-08
+    }
+  },
+  "gate": "FAIL",
+  "performance": "Deferred; no performance acceptance criterion or speed claim.",
+  "hashes": {
+    "baseline.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "candidate.c": "5a7c0d13578dcaa60b83946d8fa2fb334d39b33b3ce81d6a1c14327180571553",
+    "vector-basis-router.h": "700c39aa616027b299323eec794212f3bb616d1becdfb28ffce6ac4f35d251f6",
+    "vector-basis-router.patch": "963785eff184ac91e14a351e989365bf8ba63563b7441725abe70327d5164956",
+    "reference": "4cebb69e5379c4f0c9c03d4071c49840d3d7596ecfd2c5c0d8b83f6679717d35",
+    "candidate": "410d5469dcf56b84bf4d0517d4003b49203e59e3898c9b4b0656fa5a4947c9d3",
+    "router.bin": "0e4894bb90c2ea73554875f2afd8eb43426a6f95249be9e6a387059c1ecc947c"
+  },
+  "limits": "One prompt and one changed site; not a full basis evaluator. Unchanged reference and disabled build are controls. Do not advance on token agreement alone."
+}

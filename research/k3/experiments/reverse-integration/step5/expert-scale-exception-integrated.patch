@@ -1,0 +1,17 @@
+--- scale-base.h
++++ expert-scale-codec.h
+@@ -112 +112,3 @@
++#include "expert-scale-exception-codec.h"
++
+ static void scale_prepare(const unsigned char *original, const unsigned char *codes, unsigned groups,
+@@ -116 +118,5 @@
+-    if (!scale_rows_checked) scale_selfcheck();
++    if (!scale_rows_checked) scale_selfcheck();
++    if (exception_enabled()) {
++        exception_prepare(original, codes, groups, restored, trace, layer, expert, part, row, rows, positions);
++        return;
++    }
+@@ -149 +155,2 @@
+-    if (!scale_row_enabled()) return;
++    if (!scale_row_enabled()) return;
++    exception_finish(trace);

@@ -1,0 +1,25 @@
+--- expert-group-coverage.h
++++ expert-group-coverage.h
+@@ -9 +9,2 @@
+-    unsigned char codes[32];
++    unsigned char codes[32];
++    uint32_t masks[4];
+@@ -20 +21,2 @@
+-#include "reverse-mask.h"
++#include "reverse-mask.h"
++#include "reverse-four-mask.h"
+@@ -89 +91,3 @@
+-    reverse_mask(decoded.codes, mask_payload, &mask_bits);
++    reverse_mask(decoded.codes, mask_payload, &mask_bits);
++    unsigned char four_mask_payload[17];
++    reverse_four_mask(&decoded, four_mask_payload);
+@@ -110 +114,4 @@
+-    fprintf(coverage_log, "],\"payload\":[");
++    fprintf(coverage_log, "],\"four_mask_payload\":[");
++    for (unsigned byte = 0; byte < 17; byte++)
++        fprintf(coverage_log, "%s%u", byte ? "," : "", four_mask_payload[byte]);
++    fprintf(coverage_log, "],\"payload\":[");
+@@ -134 +141,2 @@
+-                    weight = DQd[groups[selected].scale][groups[selected].codes[coordinate % 32]];
++                    weight = (double)expert_group_weight(expert_group_code(groups[selected].masks, coordinate % 32),
++                                                         groups[selected].scale);

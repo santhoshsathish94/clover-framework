@@ -1,0 +1,14 @@
+--- expert-group-coverage.h
++++ expert-group-coverage.h
+@@ -15 +15,3 @@
+ static unsigned long long coverage_groups, coverage_weights, coverage_outputs, coverage_pairs;
++
++#include "reverse-codec.h"
+@@ -45 +47,3 @@
+     unsigned char original[32];
++    if (REVERSE_STAGE >= 12)
++        return reverse_packed_group(packed, scale, layer, expert, part, row, index, width, rows, positions);
+@@ -128,2 +132 @@
+-                    weight = (double)expert_group_weight(groups[selected].codes[coordinate % 32],
+-                                                         groups[selected].scale);
++                    weight = DQd[groups[selected].scale][groups[selected].codes[coordinate % 32]];

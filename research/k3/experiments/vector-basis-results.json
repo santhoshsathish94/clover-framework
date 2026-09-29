@@ -1,0 +1,40 @@
+{
+  "capture_sha256": "006abc5dfd8891a2cd16961c1577290ef8e98d341293ae4180a43a964a591371",
+  "layer": 84,
+  "site": "First nine-source AR at layer 84: pre-MLP, position 0",
+  "width": 7168,
+  "source_count": 9,
+  "coefficients": [
+    0.004975033458322287,
+    0.018128681927919388,
+    0.000512637838255614,
+    0.00029077011276967824,
+    0.0018231947906315327,
+    0.002290245844051242,
+    0.03026803955435753,
+    0.039532385766506195,
+    0.9021790027618408
+  ],
+  "coefficients_sum": "34359738095/34359738368",
+  "current_float32_aggregation_reconstructed_bit_exact": true,
+  "real_arithmetic_gram_identity_exact": true,
+  "real_arithmetic_projection_identity_exact": true,
+  "real_arithmetic_rms_denominator_squared_identity_exact": true,
+  "projection_row": "Captured learned AR fold; used as an actual linear functional, not a test of Q or router kernels",
+  "direct_norm_squared": "5379684541755600540226661100492206376723/85070591730234615865843651857942052864",
+  "direct_projection": "1763596822734605830214705059431/5070602400912917605986812821504",
+  "exact_sum_vs_current_float32": {
+    "different_components": 7168,
+    "components": 7168,
+    "max_abs_difference": 1.0621776305730357e-07,
+    "scope": "Exact rational mixture versus current staged float32 sum. Not model logit differences."
+  },
+  "representation_counts": {
+    "explicit_output_floats": 7168,
+    "coefficient_floats": 9,
+    "source_references": 9,
+    "retained_source_floats": 64512,
+    "gram_unique_entries": 45
+  },
+  "scope": "One real aggregation. Algebraic identities also follow for arbitrary compatible matrices; no end-to-end alternative evaluator or speed comparison."
+}
