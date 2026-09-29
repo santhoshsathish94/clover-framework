@@ -22,9 +22,47 @@ as its mathematical equivalent.
 
 K3 is vastly more complicated, but the principle is the same.
 
-Its stages can be represented as a composed mathematical expression rather than being understood only as thousands of individual computational operations.
+Its computation is a composition of well-defined transformations: embedding, normalization, attention, recurrent state updates, routing, expert computation, residual updates, and the final projection to logits. Each stage has a mathematical definition, and the stages can therefore be composed into one model equation.
 
-The resulting model equation was executed against the reference implementation and reproduced the verified computation bit-for-bit for the tested paths. The final prefill and decode comparison produced identical checked values with zero mismatches.
+The full derivation is documented in [`k3-analysis/k3-model-equation.md`](../k3-analysis/k3-model-equation.md). That document does not describe the model only conceptually. It defines the inputs, constants, weights, primitive operators, KDA and MLA attention paths, dense and MoE paths, carried state, the layer composition, and the final token-selection equation.
+
+At the highest level, the computation becomes:
+
+```text
+input tokens
+    ↓
+embedding
+    ↓
+Layer₀ → Layer₁ → ... → Layer₉₂
+    ↓
+final aggregation → normalization → lm_head → argmax
+    ↓
+output token
+```
+
+with the important difference that each layer is itself a precise mathematical function with state:
+
+```text
+(r_next, state_next) = Layer_L(r, state)
+```
+
+and the whole model is the composition of those functions:
+
+```text
+Model = Tail ∘ Layer₉₂ ∘ ... ∘ Layer₁ ∘ Layer₀ ∘ Embedding
+```
+
+This is what solves the **computation description problem**. Instead of needing to reason about the model as an opaque program made from thousands of individual operations, the complete forward pass can be expressed as one mathematical object whose inputs, transformations, state and output are explicit.
+
+The equation was then executed against the reference implementation. It reproduced the verified computation bit-for-bit for the tested paths: 79,742,816 checked float values were identical for the prefill path, and the prefill-plus-decode comparison reached 96,587,584 identical values, with zero mismatches and maximum ULP difference of zero.
+
+So the important result is not that the equation magically removes arithmetic.
+
+It is that the computation has been **made explicit, reproducible and mathematically tractable**. That makes it possible to ask a deeper question: which computation is actually required, which representations are sufficient, and which work can be reduced or eliminated without changing the result?
+
+That distinction matters for the rest of Clover-K3.
+
+The equation is the foundation from which the computation can be analyzed and reduced; the scaling architecture described in this document addresses the separate problem that remains after the computation has been understood: **where the required model data should live and how it should move**.
 
 This changed the question.
 
