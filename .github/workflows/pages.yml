@@ -25,6 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test documentation validators
+        run: python -m unittest discover -s scripts/tests
+      - name: Check Markdown links and anchors
+        run: python scripts/check-links.py
+      - name: Check site before packaging
+        run: python scripts/check-site.py
       # Pages must be enabled on the repository (Settings -> Pages -> Source: GitHub Actions).
       # configure-pages cannot enable it: GITHUB_TOKEN has no administration permission.
       - uses: actions/configure-pages@v5

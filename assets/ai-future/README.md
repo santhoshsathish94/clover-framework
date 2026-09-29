@@ -1,6 +1,6 @@
 # AI Future illustrations
 
-These three SVGs illustrate [the hypothesis](../../hypothesis/ai-future.md), which carries Clover's open question about Growth. That document is not part of the framework, and neither are these images. They are conceptual drawings rather than architecture diagrams, and none of them claims that the situation described has arrived. Every one is hand-authored SVG in the website palette, with no external fonts or assets.
+These three SVGs illustrate [the hypothesis](../../research/ai-future/README.md), which carries Clover's open question about Growth. That document is not part of the framework, and neither are these images. They are conceptual drawings rather than architecture diagrams, and none of them claims that the situation described has arrived. Every one is hand-authored SVG in the website palette, with no external fonts or assets.
 
 - `ai-future-hero.svg` — the solid black five-leaf clover beside the question the document leaves with: with everything AI can already do, how much more growth do we seek, and in the progress of growth do we still stay in control?
 - `many-systems.svg` — five separate systems with dense traffic between them, and a dashed outline around the level at which behavior appears that nobody chose

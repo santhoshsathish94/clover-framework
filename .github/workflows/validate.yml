@@ -1,0 +1,25 @@
+name: Validate repository
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test documentation validators
+        run: python -m unittest discover -s scripts/tests
+      - name: Check Markdown links and anchors
+        run: python scripts/check-links.py
+      - name: Check all site pages and shared assets
+        run: python scripts/check-site.py

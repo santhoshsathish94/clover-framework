@@ -25,7 +25,7 @@ The result is a personal open-source contribution, filed as a **CI-green pull re
 open and not merged**. The goal is broader than fixing one application: if the upstream fix is accepted, other applications using the affected React path can benefit without carrying the same workaround. It addresses the React instance of the anti-pattern; the same pattern exists
 at a second site in Next.js, independently reported by another engineer, and is tracked separately.
 
-![Stabilize the incident, keep looking, find the cause in React's react-server renderer, and give the fix back upstream](../assets/case-study-02-react-rsc-memory-leak.svg)
+![Stabilize the incident, keep looking, find the cause in React's react-server renderer, and give the fix back upstream](../assets/evidence/case-study-02-react-rsc-memory-leak.svg)
 
 *The visual is intentionally simple: stabilize the incident, continue the investigation, fix the underlying problem, and give the fix back to the ecosystem.*
 

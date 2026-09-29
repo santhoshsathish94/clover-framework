@@ -6,6 +6,21 @@ The public site for Clover:
 > The website explains. The repository documents. The repository is the source of truth — if the two
 > disagree, the repository is right and the site is a bug.
 
+## Current maintenance contract
+
+All eight HTML files are in scope: seven primary pages, including Clover K3, and
+the security redirect. Use the [repository checks](../docs/repository-organization.md#validation)
+for every content or navigation change. Keep public copy consistent with maintained
+references rather than treating historical journals as current specifications.
+
+Shared evidence SVGs are owned by `assets/evidence/`; their `site/assets/` copies must
+match for deployment. Local validation is not a deployment, and does not reproduce
+K3 measurements or validate external claims.
+
+The detailed design notes below record how the site evolved. Where a historic
+page count or implementation note differs from current source, inspect that source;
+do not restore an obsolete design solely to match a note.
+
 ## Running it locally
 
 There is no build step and no dependencies. Open `index.html` in a browser, or serve the folder:
@@ -23,6 +38,7 @@ site/
   governance/       governance: access, attribution, approvals, delegated execution
   security/         a redirect stub, kept so the old URL still resolves
   evidence/         case studies and reference implementations
+  clover-k3/        single-machine result, evidence scope and setup
   glossary/         searchable terms
   author/           who wrote this, in the first person
   assets/           the peacock feather, and the four evidence diagrams (SVG)
@@ -288,18 +304,19 @@ The marks are the site's identity and they carry the argument, so they have rule
   `check.ps1` follows every one. Each leaf, its label and its section share a `data-leaf` value, so
   the five values must stay paired.
 - American spelling. No employer, product, cluster or infrastructure names.
-- **Bump the `?v=` on `styles.css` and `app.js` whenever either changes.** All six pages carry it.
+- **Bump the `?v=` on `styles.css` and `app.js` whenever either changes.** Check every page that references them.
   GitHub Pages sends `Cache-Control: max-age=600` on every file and they expire independently, so
   without it a returning visitor gets new HTML with a ten-minute-old stylesheet and the page renders
   broken. Match it to the version in `VERSION`.
-- New terminology goes in [`docs/glossary.md`](../docs/glossary.md) first, then the site. The site
+- New terminology goes in [`docs/glossary.md`](../docs/reference/glossary.md) first, then the site. The site
   glossary must define **System**, **actors**, **system cycle**, **Growth** and **accountability** the way
   the docs define them, and its `<div><dt>…</dt><dd>…</dd></div>` rows are what the filter in `app.js`
   reads, so keep that markup.
 
 ## Social preview
 
-`assets/social-preview.svg` is the design source; `assets/social-preview.png` is the exported
+[The social preview SVG](../assets/branding/social-preview.svg) is the design source;
+[the PNG](../assets/branding/social-preview.png) is the exported
 **1280×640** card used for both the site's `og:image` and the repository social preview
 (Settings → General → Social preview, which has no API).
 
@@ -309,13 +326,13 @@ GitHub crops the edges at some sizes.
 The mark is five leaves at 72 degrees, the same as everywhere else. It was four at 90 degrees once,
 which no amount of correct wording beside it would have fixed.
 
-To re-export after editing the SVG, rasterize with headless Chrome. Set the scale factor explicitly:
+From the repository root, re-export the SVG with headless Chrome. Set the scale factor explicitly:
 without it a display running above 100% produces a scaled, soft card that still reports 1280×640.
 
 ```powershell
 & 'C:\Program Files\Google\Chrome\Application\chrome.exe' --headless=new --disable-gpu `
   --hide-scrollbars --force-device-scale-factor=1 --window-size=1280,640 `
-  --screenshot=assets\social-preview.png file:///$PWD/assets/social-preview.svg
+  --screenshot=assets\branding\social-preview.png file:///$PWD/assets/branding/social-preview.svg
 ```
 
 The `og:image` tags on every page point at the PNG and pick up a new file with no markup change.

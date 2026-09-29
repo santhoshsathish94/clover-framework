@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
@@ -19,12 +20,31 @@ def slug(text):
 
 def anchors(path):
     try:
-        t = open(path, encoding="utf-8").read()
+        t = Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return set()
     out = set()
-    for _, title in HEAD.findall(t):
-        out.add(slug(title))
+    fence = None
+    for line in t.splitlines():
+        marker = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if marker:
+            value = marker.group(1)
+            if fence is None:
+                fence = value
+            elif value[0] == fence[0] and len(value) >= len(fence):
+                fence = None
+            continue
+        if fence is not None:
+            continue
+        heading = HEAD.match(line)
+        if heading:
+            base = slug(heading.group(2))
+            anchor = base
+            suffix = 0
+            while anchor in out:
+                suffix += 1
+                anchor = "%s-%d" % (base, suffix)
+            out.add(anchor)
     for m in re.finditer(r'<a\s+[^>]*(?:name|id)="([^"]+)"', t):
         out.add(m.group(1))
     return out
@@ -43,7 +63,7 @@ bad_link, bad_anchor, checked = [], [], 0
 for path in sorted(md):
     base = os.path.dirname(path)
     try:
-        text = open(path, encoding="utf-8").read()
+        text = Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         continue
     rel = os.path.relpath(path, ROOT).replace("\\", "/")
@@ -75,4 +95,5 @@ for b in bad_link:
 print("dead anchors           : %d" % len(bad_anchor))
 for b in bad_anchor:
     print("   " + b)
-sys.exit(1 if (bad_link or bad_anchor) else 0)
+if __name__ == "__main__":
+    sys.exit(1 if (bad_link or bad_anchor) else 0)

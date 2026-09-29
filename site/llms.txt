@@ -4,7 +4,7 @@
 
 Clover is a framework for reasoning about and governing AI-enabled work. It is not a mandatory process. The system is the reality, and the **actors** in it are the human and AI. The human establishes purpose, Direction, and accountability; AI provides capability and determines how work happens within human Direction. The **system cycle** those actors run is **Context → Direction → Execution → Outcome → Growth**.
 
-Clover is not a new way of working. Every system that worked in the past has worked this way: somebody understood the situation, somebody decided what mattered and answered for it, the work got done, reality showed what happened, and what it taught carried into the next attempt. AI does not change that cycle. It makes every stage easier, better and faster: Context is easier to build with the human and AI helping each other understand the system, Direction is easier to identify and to pursue, Execution is faster and better because the Context and Direction behind it are better, and Outcomes are easier to validate against the real system without tampering. Every stage feeds the learning and the growth of the system, and all the actors grow with it. What AI did change is that execution moved to something that cannot be accountable, and accountability went out of scope with it. A model can perform the work, report that it worked, and hold nothing when it did not. Clover establishes accountability back into the system, through the human actor who can truly take up the role. AI takes its place as an actor inside the existing cycle rather than as a replacement for it. AI capability may scale, but accountability cannot; AI cannot carry it, and it can make it visible.
+AI does not replace the cycle. It can change capability and risk in every part; improvement must be observed, not assumed. The stages are related activities, not a mandatory sequence or hierarchy. Humans retain Direction and accountability; AI provides knowledge, capability and execution integrity. Neither actor possesses complete reality or is sovereign over it.
 
 The five stages of the system cycle. Context is the relevant evidence about system reality needed for the current work. Direction is the human-defined outcome, priorities, constraints, boundaries, and accountability. Execution is AI determining and executing the path within that Context and Direction. Outcome is what the real system or environment shows actually happened, favorable or not. Growth is whatever that Outcome taught, carried back into Context.
 
@@ -30,6 +30,7 @@ Accountability follows the same scale boundary. Within a task or piece of work, 
 - [Getting started](https://cloverframework.com/start/): read-only system access, AGENTS.md, and a first cycle.
 - [Governance](https://cloverframework.com/governance/): access, attribution, approvals, agent behavior, delegated execution, and the named human who is accountable.
 - [Evidence](https://cloverframework.com/evidence/): case studies and reference implementations, each stating where it stopped.
+- [Clover K3](https://cloverframework.com/clover-k3/): single-machine implementation, measured results, configuration limits and setup.
 - [Glossary](https://cloverframework.com/glossary/): plain-language definitions.
 - [The author](https://cloverframework.com/author/): who wrote it.
 
@@ -37,31 +38,34 @@ Accountability follows the same scale boundary. Within a task or piece of work, 
 
 - [AGENTS.md](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/AGENTS.md): Instructions for agents — stages, evidence rules, authority boundaries, failure checks, and context handoff.
 - [README](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/README.md): What Clover is, what makes it distinct, the five stages, adoption, and limits.
-- [The five stages](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/04-framework.md): The framework, distinction, delegated execution, and evaluation model.
-- [Principles](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/03-principles.md): One principle per stage, including the human Direction boundary.
+- [The five stages](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/framework/04-framework.md): The framework, distinction, delegated execution, and evaluation model.
+- [Principles](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/framework/03-principles.md): One principle per stage, including the human Direction boundary.
 
 ## Putting it into practice
 
-- [The orchestration environment](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/orchestration-environment.md): The access layer that feeds Context — what to connect, how to grant access safely, and a build sequence ordered by increasing risk.
-- [Context engineering](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/05-context-engineering.md): Why context matters and where persistent context files should live.
-- [Adoption](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/09-adoption.md): How to test whether Clover changes observable work.
-- [Governance](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/08-governance.md): Ownership, approval, attribution, access, and delegated execution.
-- [Outcome in practice](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/07-outcome.md): What counts as evidence of the intended outcome.
+- [The orchestration environment](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/guides/orchestration-environment.md): The access layer that feeds Context — what to connect, how to grant access safely, and a build sequence ordered by increasing risk.
+- [Context engineering](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/framework/05-context-engineering.md): Why context matters and where persistent context files should live.
+- [Adoption](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/guides/09-adoption.md): How to test whether Clover changes observable work.
+- [Governance](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/governance/08-governance.md): Ownership, approval, attribution, access, and delegated execution.
+- [Outcome in practice](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/framework/07-outcome.md): What counts as evidence of the intended outcome.
 - [Quickstart](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/QUICKSTART.md): First cycle in about 15 minutes.
 - [Orchestration brief template](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/templates/orchestration-brief.md): One-page working artifact covering every stage.
 
 ## Evidence
 
-- [Why Responsibility for AI Was Sidelined](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/ai-responsibility/why-responsibility-was-sidelined.md): the master claim, direct sources, evidence limits, and links to the supporting papers.
-- [Reference implementations](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/reference-implementations.md): Patterns for system access, AI-enabled work, and runtime enforcement boundaries.
-- [Runtime enforcement reference](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/reference/runtime-enforcement/): Executable examples showing how verification boundaries can be enforced outside the model.
+- [Why Responsibility for AI Was Sidelined](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/governance/evidence/why-responsibility-was-sidelined.md): the master claim, direct sources, evidence limits, and links to the supporting papers.
+- [Reference implementations](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/guides/reference-implementations.md): Patterns for system access, AI-enabled work, and runtime enforcement boundaries.
+- [Runtime enforcement reference](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/reference/runtime-enforcement): Executable examples showing how verification boundaries can be enforced outside the model.
 - [Case studies](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/case-studies/README.md): Delivered outcomes, each stating what it has not shown.
-- [How AI fails](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/how-ai-fails.md): Failure modes and the stage that catches each.
-- [Practices and field lessons](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/field-practices.md): Lessons from real work, including failures.
+- [How AI fails](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/guides/how-ai-fails.md): Failure modes and the stage that catches each.
+- [Practices and field lessons](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/guides/field-practices.md): Lessons from real work, including failures.
 
 ## Optional
 
-- [Philosophy](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/02-philosophy.md): What Clover believes and why.
-- [Glossary](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/glossary.md): Terms used throughout.
-- [The hypothesis](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/hypothesis/ai-future.md): An open question about future capability and Growth, explicitly separate from the engineering framework.
+- [Research index](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/research/README.md): topic-based investigations, proposals and hypotheses; not framework doctrine.
+- [K3 document index](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/clover-k3/docs/README.md): implementation equation, evidence methods and proposed scaling design.
+- [Repository map](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/repository-organization.md): document roles and compatibility locations.
+- [Philosophy](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/framework/02-philosophy.md): What Clover believes and why.
+- [Glossary](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/reference/glossary.md): Terms used throughout.
+- [The hypothesis](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/research/ai-future/README.md): An open question about future capability and Growth, explicitly separate from the engineering framework.
 - [Contributing](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/CONTRIBUTING.md): How to raise a change.

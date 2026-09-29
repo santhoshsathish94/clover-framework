@@ -50,6 +50,22 @@ included. Corrections, questions, ideas, and case studies are all welcome.
 
 ## Writing style
 
+Use the [repository map](docs/repository-organization.md) to choose the document's
+home and role. Keep documents in their purpose-based folders, without forwarding copies. Keep historical
+measurements distinct from current guidance and label proposals as proposals.
+
+Before a documentation or site PR, run these from the repository root (Python 3.12
+is used in CI):
+
+```sh
+python -m unittest discover -s scripts/tests
+python scripts/check-links.py
+python scripts/check-site.py
+```
+
+These checks do not rerun model benchmarks or establish external claims. State any
+additional checks the change requires and any evidence that remains unavailable.
+
 Three rules: **simple, direct, human.**
 
 **Simple.** Short words. One idea per sentence. If a sentence needs a comma to hold itself together,

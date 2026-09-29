@@ -86,12 +86,12 @@ What did the environment show actually happened? Record it whether it was favora
 partial, inconclusive, or simply not what was expected.
 
 - **Evidence (a measurement, a before-and-after, a trial outside the live system, a person confirming; for software: tests, telemetry, a run outside production):** …
-- **What was checked, what was observed, and where this stopped:** … *(see [Outcome](../docs/07-outcome.md#how-strong-is-your-evidence))*
+- **What was checked, what was observed, and where this stopped:** … *(see [Outcome](../docs/framework/07-outcome.md#how-strong-is-your-evidence))*
 - **Does the outcome from Direction now hold?** …
 - **Human verification:** …
 - **Still unverified:** …
 
-> **Prompt:** "Show concrete evidence that the outcome we stated in Direction was achieved. Map each
+> **Prompt:** "Evaluate whether the outcome we stated in Direction was achieved, using concrete evidence. Map each
 > piece of evidence back to it. Say what you checked, what you observed, and where you stopped. List
 > anything you could not verify."
 

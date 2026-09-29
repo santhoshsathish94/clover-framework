@@ -5,10 +5,10 @@ equation rather than from the engine, and kept bit-exact against a preserved
 baseline through every optimization.
 
 It is not a re-implementation of `kimi-k3-in-c`. It is the equation in
-`k3-analysis/k3-model-equation.md` executed directly, which is why it can
+[the model equation](../research/k3/model/k3-model-equation.md) executed directly, which is why it can
 be read end to end and why every operator can be timed and attributed
 separately. The measurement record lives in
-[`k3-analysis/k3-equation-solution.md`](../k3-analysis/k3-equation-solution.md).
+[the optimization journal](../research/k3/experiments/k3-equation-solution.md).
 
 **This is the single-machine version.** One process, one box, the whole model
 in one address space. A distributed variant of the same equation existed on a
@@ -21,18 +21,22 @@ is correct. It is therefore kept unchanged.
 
 ## What is here, and what is deliberately not
 
+The [document index](docs/README.md) separates implementation arithmetic, results,
+evidence methods, proposed scaling architecture, and the research history.
+
 This folder holds only what is ours. The model and the trunk belong to K3 and
 are left where they are.
 
 | file | what it is |
 |---|---|
-| `config.env` | the only file here that names a location |
+| `config.env` | checkpoint and trunk configuration for the supported build/run path |
 | `clover-k3.c` | the program, ~2,500 lines, no dependencies beyond libc, libm and OpenMP |
 | `gen.py` | drives the program in a loop to generate text, reusing state between tokens |
-| `proof-campaign.sh` | runs all 34 prompts both ways and gates each on the logits md5 |
-| `clover-k3-equation.md` | the equation as this program evaluates it, and where it differs from `k3-analysis/k3-model-equation.md` |
-| `clover-k3-proof.md` | all 34 prompts, the text the model wrote for each, and the comparison against an independent engine |
-| `clover-k3-scale.md` | what the arithmetic actually costs, why more GPU is the wrong lever, and the shape the structure suggests |
+| `proof-campaign.sh` | historical machine-specific campaign comparing Clover baseline and cached-route lookahead, not the independent engine |
+| [Implementation equation](docs/reference/implementation-equation.md) | the equation as this program evaluates it, and where it differs from the model specification |
+| [Results](docs/evidence/results.md) | first-token comparison and separate generation outputs |
+| [Evidence methods](docs/evidence/evidence-methods.md) | campaign scope, reproduction instructions and artifact gaps |
+| [Scaling design](docs/scaling/README.md) | proposed distributed architecture, resource sizing, evidence limits, and validation plan |
 | `dump_st_model.py` | locates the five non-layer tensors in the checkpoint |
 | `dump_eqidx.py` | flattens trunk.json, st_model.json and the shard headers into one binary index |
 | `make_slice.py` | builds a single-layer slice for the decomposition work |
@@ -55,9 +59,10 @@ are left where they are.
 
 ## Configuration
 
-Every path lives in `config.env`, and nothing else in the folder names a
-location. Each entry yields to an already-set environment variable, so a
-one-off run can override any of them without editing the file.
+Checkpoint and trunk paths for the supported build/run path live in `config.env`.
+Each entry yields to an already-set environment variable, so a one-off run can
+override them without editing the file. Historical campaign tooling also contains
+machine-specific paths; it is not a portable reproduction of every reported result.
 
 | | |
 |---|---|
@@ -173,7 +178,7 @@ is bytes rather than scheduling. io_uring was tested at every depth and is
 Against an independent implementation of the same model on the same box, over
 the same 34 prompts: **34/34 identical answers, 3.40x less wall time**. The
 full comparison, including what it does not show, is in
-[`clover-k3-proof.md`](clover-k3-proof.md).
+[results](docs/evidence/results.md).
 
 ## A caution about measuring it
 

@@ -31,7 +31,7 @@ size.
 
 ## How the cycle ran
 
-![The migration as one Clover cycle: the system as it was, what the work was for, how the rewrite ran, and what reality showed](../assets/case-study-01-contentful-migration.svg)
+![The migration as one Clover cycle: the system as it was, what the work was for, how the rewrite ran, and what reality showed](../assets/evidence/case-study-01-contentful-migration.svg)
 
 ---
 

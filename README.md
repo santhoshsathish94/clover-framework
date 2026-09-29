@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://cloverframework.com/">
-    <img src="assets/social-preview.png" width="820"
+    <img src="assets/branding/social-preview.png" width="820"
          alt="Clover Framework — System, Human and AI working together for meaningful outcomes">
   </a>
 </p>
@@ -36,7 +36,9 @@ This repository contains the documentation, practical guidance, case studies, an
 - [`AGENTS.md`](AGENTS.md) — AI agent operating guidance
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`case-studies/`](case-studies/) — real work and outcomes
-- [`why-clover-is-important.md`](why-clover-is-important.md) — the research behind why this matters
+- [Research](research/README.md) — investigations, proposals and hypotheses, with their limits
+- [Run Clover-K3](clover-k3/README.md) — executable single-machine reference
+- [Repository map](docs/repository-organization.md) — where each kind of material belongs
 
 ## Clover AI
 
@@ -46,7 +48,7 @@ The first thing built under it is [`clover-k3/`](clover-k3/) — the Kimi K3
 forward pass reduced to its mathematics and executed directly. It emits the
 same token as an independent implementation of the same model on all 34 prompts
 tested, in under a third of the time. What it cost and what it does not show are
-in [`clover-k3/clover-k3-proof.md`](clover-k3/clover-k3-proof.md).
+in [results and scope](clover-k3/docs/evidence/results.md).
 
 Its central principle is:
 
@@ -71,22 +73,24 @@ Supporting areas include:
 **What was built**
 
 - [`clover-k3/`](clover-k3/) — the program, how to build it, and the correctness gate it has to reproduce
-- [`clover-k3/clover-k3-proof.md`](clover-k3/clover-k3-proof.md) — all 34 prompts, the text the model wrote for each, and how it compares against an independent implementation
-- [`clover-k3/clover-k3-equation.md`](clover-k3/clover-k3-equation.md) — the equation as the program actually evaluates it, and where that differs from the written one
+- [Results](clover-k3/docs/evidence/results.md) — first-token comparison and separate generation outputs
+- [Implementation equation](clover-k3/docs/reference/implementation-equation.md) — the equation as the program actually evaluates it, and where that differs from the written one
+- [Evidence methods](clover-k3/docs/evidence/evidence-methods.md) — campaigns, configurations, harnesses and reproduction limits
 
 **How it was worked out**
 
-- [`k3-analysis/`](k3-analysis/) — the whole investigation
-- [`k3-analysis/k3-model-equation.md`](k3-analysis/k3-model-equation.md) — the model as one composed expression, executed and checked float for float
+- [K3 investigation](research/k3/README.md) — grouped derivations, measurements, experiments and handoffs
+- [Model equation](research/k3/model/k3-model-equation.md) — the model as one composed expression, executed and checked float for float
 
 **The direction and the boundaries**
 
-- [`k3-analysis/clover-ai.md`](k3-analysis/clover-ai.md) — Clover AI implementation direction
-- [`docs/07-outcome.md`](docs/07-outcome.md) — what counts as evidence, and what does not
-- [`docs/08-governance.md`](docs/08-governance.md) — accountability and governance
-- [`docs/ai-responsibility/`](docs/ai-responsibility/) — AI responsibility
+- [Clover AI direction](research/clover-ai/README.md) — broader proposed implementation
+- [AI-Fire research](research/ai-fire/README.md) — dependency and concentration argument; source-ledger work remains open
+- [`docs/07-outcome.md`](docs/framework/07-outcome.md) — what counts as evidence, and what does not
+- [`docs/08-governance.md`](docs/governance/08-governance.md) — accountability and governance
+- [`docs/ai-responsibility/`](docs/governance/evidence/) — AI responsibility
 
-Clover AI has a result, not a plan. A 2.78-trillion-parameter model runs from its equation on one ordinary machine, bit-exact against a preserved gate, and emits the same token as an independent implementation of the same model on every one of the 34 prompts tested — in **394.94 seconds against 1344.23**, a factor of 3.40. Driven in a loop it writes whole sentences at about six seconds a word. That is measured, repeatable, and open to inspection.
+Clover-K3 has a measured single-machine result; the broader Clover AI direction remains a proposal. A 2.78-trillion-parameter model runs from its equation on a Ryzen 9 7950X3D, bit-exact against a preserved gate, and emits the same first token as an independent implementation on every one of the 34 prompts tested — in **394.94 seconds against 1344.23**, a factor of 3.40 under the recorded configurations. A separate generation run averaged about six seconds per token. These are distinct measurements, not a distributed-system or general quality result.
 
 It will keep improving, and the parts of the principle above that it does not yet reach — the tools that enforce, the serving layer, the evaluation that closes the loop — are the next things to build. They will be held to the same standard: built, gated and measured before they are claimed.
 

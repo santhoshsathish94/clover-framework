@@ -19,13 +19,13 @@ vocabulary around them changes.
 
 ## A note on evidence
 
-The three [reference implementations](../docs/reference-implementations.md) are described separately.
+The three [reference implementations](../docs/guides/reference-implementations.md) are described separately.
 Cross-team knowledge access has resolved real production and support incidents, and the two
 remediation patterns have run on real work through existing review and deployment approvals. None is
 always-on or adopted organization-wide.
 
 Each case study says what was checked, what was observed, and where the work stopped. See
-[Outcome](../docs/07-outcome.md#how-strong-is-your-evidence) for how evidence is described here.
+[Outcome](../docs/framework/07-outcome.md#how-strong-is-your-evidence) for how evidence is described here.
 
 Each one then ends at Growth, in a section named *Growth — what went back into Context*, which
 records what the cycle taught. That section keeps within the evidence above it and adds no result of

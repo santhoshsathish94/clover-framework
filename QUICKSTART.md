@@ -36,7 +36,7 @@ repository, the failing test, the log lines, the ticket, the query results, the 
 development environment, and a read-only MCP server in front of that one system is enough. Whatever
 the system, the access is scoped to what the human driving the work already has, at the privileges
 they already hold. One source is enough to start.
-[What to connect, and in what order →](docs/orchestration-environment.md#building-one)
+[What to connect, and in what order →](docs/guides/orchestration-environment.md#building-one)
 
 ## 3. Say what you are trying to get done (2 min)
 
@@ -58,7 +58,7 @@ work rather than in a chat window.
 
 ## 5. Walk the five stages (6 min)
 
-Fill each section in order. Every stage in the brief carries a **copy-and-paste prompt** for an AI
+For this optional guided exercise, fill each section in order. Clover does not require this template or a fixed stage order in ordinary work. Every stage in the brief carries a **copy-and-paste prompt** for an AI
 assistant and a note on **who owns what**.
 
 | Stage | Leave the stage with… |
@@ -71,7 +71,7 @@ assistant and a note on **who owns what**.
 
 > **At Outcome, say what you checked, what you observed, and where you stopped.** Reaching the
 > strongest available evidence every time is not the goal. Being accurate about what you have is.
-> See [Outcome](docs/07-outcome.md#how-strong-is-your-evidence).
+> See [Outcome](docs/framework/07-outcome.md#how-strong-is-your-evidence).
 >
 > If the evidence does not hold, go back to **Context**, rather than to Execution.
 
@@ -100,5 +100,5 @@ Get the context from the real systems before acting, and be accurate about what 
 The environment decides whether the outcome happened, and the file left behind decides how much the
 next cycle costs.
 
-New here? Start with [the problem this solves](docs/01-problem.md) and
-[the Clover framework](docs/04-framework.md). Want to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md).
+New here? Start with [the problem this solves](docs/framework/01-problem.md) and
+[the Clover framework](docs/framework/04-framework.md). Want to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md).

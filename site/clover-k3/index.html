@@ -10,7 +10,7 @@
 <meta property="og:description" content="The Kimi K3 forward pass written from its equation. Same answer as an independent implementation on all 34 prompts, in under a third of the time — and honest about the six seconds per word that makes it not yet interactive.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/clover-k3/">
-<meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/social-preview.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
 <link rel="stylesheet" href="../styles.css?v=3.1.0">
@@ -67,7 +67,7 @@
         the good result would not be worth reading.</p>
       <p class="actions">
         <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-k3">The code</a>
-        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-proof.md">The 34 prompts, and what it writes</a>
+        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a>
       </p>
     </div>
   </section>
@@ -203,8 +203,9 @@
         </div>
         <div>
           <dt>Point it at them</dt>
-          <dd>Every path lives in one file, <code>config.env</code>, and nothing else in the
-            folder names a location. The program refuses to start if the index and trunk paths
+          <dd>Checkpoint and trunk paths for the supported build/run path live in
+            <code>config.env</code>. Historical campaign scripts retain machine-specific paths.
+            The program refuses to start if the index and trunk paths
             are unset rather than guessing a default, because a silently wrong index produces a
             confident wrong number.</dd>
         </div>
@@ -227,7 +228,7 @@
             seconds, and every measurement taken before we adopted it had to be redone.</dd>
         </div>
       </dl>
-      <p>There are 33 switches. The ones worth knowing are the reader-thread count, the
+      <p>The main switches control the reader-thread count, the
         prefetch mode, and the routing cache that enables reading a layer ahead. The rest are
         instrumentation and are off by default; turning all of it off was measured and changes
         nothing.</p>
@@ -339,9 +340,9 @@
         <li><strong>One machine.</strong> Every number on this page comes from the same box.</li>
       </ul>
       <p class="actions">
-        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-proof.md">The 34 prompts, and what it writes</a>
-        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/k3-analysis/k3-model-equation.md">The equation</a>
-        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/k3-analysis/clover-scaling-architecture.md">The measurement record</a>
+        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a>
+        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/k3/model/k3-model-equation.md">The equation</a>
+        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/k3/architecture/clover-scaling-architecture.md">The measurement record</a>
       </p>
       <p class="note">The measurement record includes everything that did not work, which is most
         of it: a distributed version that lost to the original, io_uring that measured slower
@@ -370,9 +371,9 @@
       <h4>Clover K3</h4>
       <ul>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-k3">The program</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-proof.md">The 34 prompts, and what it writes</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/clover-k3-equation.md">Equation as executed</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/k3-analysis">The analysis</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/docs/reference/implementation-equation.md">Equation as executed</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/research/k3">The analysis</a></li>
       </ul>
     </div>
     <div>
@@ -380,8 +381,8 @@
       <ul>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md">Quickstart</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/templates/orchestration-brief.md">Orchestration brief</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/how-ai-fails.md">How AI fails</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/field-practices.md">Field lessons</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/how-ai-fails.md">How AI fails</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/field-practices.md">Field lessons</a></li>
       </ul>
     </div>
     <div>

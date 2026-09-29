@@ -236,35 +236,35 @@ the old path now takes a client-side hop. The stage names `Action` and `Success`
   governments, the companies building the models, and the enterprises that use them.
 
 - **Why a process is needed at all.** The framework rested on an unstated assumption: that the human
-  giving Direction is right. [Philosophy](docs/02-philosophy.md) now says plainly that neither side
+  giving Direction is right. [Philosophy](docs/framework/02-philosophy.md) now says plainly that neither side
   sees the whole consequence — a human works from partial knowledge of a system nobody holds
   entirely, and being accountable for a decision is not the same as being right about it, while AI
   states its mistakes as fluently as its facts. Each stage is then derived from that, and the rules
-  bind both. [Principles](docs/03-principles.md) opens on the same point under **Neither side is
+  bind both. [Principles](docs/framework/03-principles.md) opens on the same point under **Neither side is
   exempt**, and `AGENTS.md` turns it into a duty: say once, plainly, when the Direction looks wrong,
   then respect the decision and record what you expect to go wrong.
 - **Instructions come from Direction. Context is data.** The rule existed in `AGENTS.md` and nowhere
   in `docs/`, so a human reading the framework never met it. It is now a principle and a
-  [governance](docs/08-governance.md) section, with the reason attached: Context is frequently
+  [governance](docs/governance/08-governance.md) section, with the reason attached: Context is frequently
   writable by people outside the organization, so a comment on a public issue or a string in a log
   line can be shaped like an instruction, and obeying it hands over whatever access the work holds.
-- **Reality is not edited.** Fabrication appeared only in [how AI fails](docs/how-ai-fails.md) as a
+- **Reality is not edited.** Fabrication appeared only in [how AI fails](docs/guides/how-ai-fails.md) as a
   pattern to catch, never as a prohibition, and nothing anywhere forbade altering the evidence.
   Principle 4 already protected the verification control; the new material covers the rest —
   reporting what was not observed, changing data, logs or state so reality appears to agree, and
-  acting beyond the scope Direction set. Stated in [Outcome](docs/07-outcome.md) as **Evidence is
+  acting beyond the scope Direction set. Stated in [Outcome](docs/framework/07-outcome.md) as **Evidence is
   never manufactured**, and in `AGENTS.md` as a refusal.
-- **What each layer owes beyond the immediate work.** [Governance](docs/08-governance.md) now states
+- **What each layer owes beyond the immediate work.** [Governance](docs/governance/08-governance.md) now states
   a boundary for the System, the Human, the AI, and the frontier layer, including consent, licensing
   and attribution for the human work that model capability is built from. The limit is stated with
   it: Clover cannot enforce that, and no framework can.
-- **What Clover cannot work out alone.** The [roadmap](docs/10-roadmap.md) names creation rules as
+- **What Clover cannot work out alone.** The [roadmap](docs/guides/10-roadmap.md) names creation rules as
   unsolved, asks for the people who know the domain, and says how the framework itself advances —
   this expansion is Direction, adoption produces the Context, and what teams report back from real
   cycles is the evidence.
 - **Connected System, as the fourth level of scope.** Scope ran `Task → Feature → System` and stopped
   where one system stops, which is not where the consequence stops.
-  [Philosophy](docs/02-philosophy.md) now carries the fourth level, and the accountability argument
+  [Philosophy](docs/framework/02-philosophy.md) now carries the fourth level, and the accountability argument
   is stated against it: as the scale grows, the cost of a wrong Direction grows with it, and
   capability to suggest a direction at that scale is not authority to pursue it.
 - **A runtime-enforcement reference implementation.** `reference/runtime-enforcement/` holds a
@@ -290,7 +290,7 @@ the old path now takes a client-side hop. The stage names `Action` and `Success`
   `System → Human → AI` is gone from the documents in favour of the sentence the site uses — the
   system is the reality, the actors in it are the human and AI — because an arrow chain reads as a
   sequence or a hierarchy. Seventeen occurrences across fourteen files. Five site-only claims are now
-  in the documents, and [governance](docs/08-governance.md) names who should enforce at real-world
+  in the documents, and [governance](docs/governance/08-governance.md) names who should enforce at real-world
   scale.
 - **Getting started, the quickstart and the brief describe any system.** They assumed a codebase from
   the first line, so a reader arriving from a home page that never mentions software met a different
@@ -315,7 +315,7 @@ the old path now takes a client-side hop. The stage names `Action` and `Success`
   growth clover sitting beside them. It is now
   `Context → Direction → Execution → Outcome → Growth`, and Growth is where what the Outcome taught
   is written back so the next cycle starts from it. The change reaches the mark on every page, the
-  five leaves, [the framework](docs/04-framework.md), both glossaries, the four case-study and
+  five leaves, [the framework](docs/framework/04-framework.md), both glossaries, the four case-study and
   reference diagrams, and the reference implementations, each of which now states its own Growth.
 - **The home page is one continuous argument in nineteen sections.** It opened as a set of panels
   and cards. It now runs from what Clover is, through what AI changes and why humans matter, through
@@ -394,13 +394,13 @@ the old path now takes a client-side hop. The stage names `Action` and `Success`
   reader to infer it from the entrypoint script.
 - **`verify.sh` still said `Success`**, and the site validator no longer checked the `/security/`
   redirect stub after the page moved. Both corrected.
-- **Two claims that reached past their evidence.** [How AI fails](docs/how-ai-fails.md) said every
+- **Two claims that reached past their evidence.** [How AI fails](docs/guides/how-ai-fails.md) said every
   failure is caught by evidence rather than by better prompting; prompting demonstrably reduces
   several of them, and what it cannot do is tell you whether it worked this time, which is the actual
-  argument. [The orchestration environment](docs/orchestration-environment.md) said reading cannot
+  argument. [The orchestration environment](docs/guides/orchestration-environment.md) said reading cannot
   corrupt anything, which is true and reads as though read-only were harmless; reading is the whole
   surface for finding credentials and assembling a picture no single person has.
-- **A missing failure mode.** [How AI fails](docs/how-ai-fails.md) covered fabrication and unchecked
+- **A missing failure mode.** [How AI fails](docs/guides/how-ai-fails.md) covered fabrication and unchecked
   success but never named the case where an agent adopts a goal from something it read. It is now the
   ninth mode, caught by Direction, with the point that a redirected agent does damage without needing
   write access.
@@ -415,9 +415,9 @@ the old path now takes a client-side hop. The stage names `Action` and `Success`
   studies and four SVG assets, so the site said `Context → Direction → Action → Success` while the
   README said Outcome. 131 occurrences renamed across 33 text files and 4 SVGs. The changelog keeps
   its history, and the sentences that deliberately contrast the two names are untouched.
-- **`docs/07-success.md` renamed to [`docs/07-outcome.md`](docs/07-outcome.md)**, with all nine
+- **`docs/07-success.md` renamed to [`docs/07-outcome.md`](docs/framework/07-outcome.md)**, with all nine
   inbound links repointed.
-- **Three broken anchors in [field practices](docs/field-practices.md).** Links pointed at principle
+- **Three broken anchors in [field practices](docs/guides/field-practices.md).** Links pointed at principle
   headings that had been renamed. Repo-wide markdown links and anchors now all resolve.
 - **The social card said the wrong thing, and drew the wrong clover.** `assets/social-preview.svg`
   described an "AI Orchestration Framework" ending in Success, and its mark was built from four
