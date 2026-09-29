@@ -489,3 +489,61 @@ source and is marked as such wherever it is used.
 - **The scalar tail** of $\mathbb{Q}$ never executes at any shape in this model.
 - **The full-recompute branch** of the generation loop, $\texttt{incremental} = \text{false}$,
   is not exercised.
+
+
+## 7. How the final equation was established
+
+This section explains the relationship between the equation above and the later Clover-K3 implementation. It is important because the equation shown in sections 1-5 is the **final corrected model equation**, not the first draft of the document.
+
+### 7.1 The equation came from the model flow first
+
+The starting point was `k3-stages.md`: the K3 computation was traced through its stages and expressed as a single mathematical composition. The purpose of this document was to state the model independently of an implementation:
+
+$$
+\text{K3 model flow} \;\longrightarrow\; \text{composed mathematical equation}
+$$
+
+The equation was then executed. That execution exposed defects in the written mathematics itself, including the reduction-tree width and the exact floating-point behavior of several operators. Those defects were corrected before treating the equation as final.
+
+### 7.2 Clover-K3 provided an independent implementation path
+
+Clover-K3 was then derived from the C implementation and documented separately in `clover-k3/clover-k3-equation.md`. That was deliberately kept separate from this file so the two paths could be compared rather than silently merged:
+
+$$
+\begin{aligned}
+\text{K3 flow} &\rightarrow \texttt{k3-model-equation.md} \\
+\texttt{clover-k3.c} &\rightarrow \texttt{clover-k3-equation.md}
+\end{aligned}
+$$
+
+The comparison found concrete differences. Most importantly for the MoE block, Clover-K3 established the exact router-weight normalization used by the implementation: the reference forms one float32 reciprocal of the double-precision sum and then multiplies each selected score by that reciprocal. That is why the final equation uses
+
+$$
+\pi_j = s_{\mathcal{J}_j}\cdot
+\mathrm{fl}_{32}\!\left(\frac{1}{\sum_{j'}s_{\mathcal{J}_{j'}}+10^{-20}}\right)\cdot\rho.
+$$
+
+This was not an arbitrary addition to the model equation. The MoE computation was part of the model flow, and the Clover-K3 work supplied an independent implementation-level check of **how that MoE computation is actually evaluated**. The implementation comparison found that writing the normalization as a direct division changes the floating-point result: 157,370 of 171,008 gate values differed, even though the emitted token remained unchanged. The reciprocal form is therefore the form retained in this final equation.
+
+### 7.3 Why both equations are kept
+
+The two documents answer different questions:
+
+- **This document:** What is the K3 model as a mathematical composition?
+- **`clover-k3/clover-k3-equation.md`:** What mathematical operations does the Clover-K3 implementation actually perform, including implementation-level floating-point details?
+
+Their convergence is the important part. The final equation is supported by two directions of evidence rather than being reverse-engineered from the same implementation it is later used to validate.
+
+$$
+\boxed{
+\text{Model flow}
+\;\rightarrow\;
+\text{mathematical equation}
+\;\leftrightarrow\;
+\text{Clover-K3 implementation}
+\;\rightarrow\;
+\text{bit-exact verification}
+}
+$$
+
+The equation above is therefore the **final corrected form used for the verified result in this repository**. Later implementation findings are recorded here so a reader can see not only the final mathematics, but also why specific details—especially the MoE routing computation—appear in that final form.
