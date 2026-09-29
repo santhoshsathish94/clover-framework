@@ -2754,3 +2754,159 @@ This section is supported by:
 - [k3-analysis/k3-client-server-architecture.md](../k3-analysis/k3-client-server-architecture.md), which records the approximately 4.70 GB client head/tail model footprint.
 
 These sources establish the quantities that can be sized now. They do not establish final production hardware or replica counts.
+
+## 14. What remains unknown until deployment
+
+Section 13 established the quantities that can already be sized from the model and measured experiments. This section defines the boundary between those known quantities and the behavior that can only be established by running the actual distributed system.
+
+The purpose is to prevent a resource estimate from being mistaken for a deployment result.
+
+### The layer footprint does not determine the final hardware
+
+A layer has a known persistent footprint:
+
+- approximately 15.77 GB expert store;
+- approximately 423–635 MB trunk;
+- runtime state and working memory.
+
+But that does not tell us whether one particular CPU, GPU, or accelerator configuration is sufficient for the complete layer implementation.
+
+The actual layer pod must execute attention, normalization, router computation, expert selection, selected expert computation, recurrent state updates where applicable, snapshot aggregation, and the remaining layer operations.
+
+The current storage experiments isolate important data-movement behavior. They do not constitute a full production layer benchmark.
+
+Therefore the required compute device remains an experimental quantity.
+
+### Resident memory must be measured with the real layer
+
+The measured expert store is persistent data.
+
+A production pod may keep some of that data cached or resident depending on storage backend, cache policy, active expert set, request concurrency, batching, prefetch depth, and execution strategy.
+
+The runtime state also grows with workload shape.
+
+Therefore the correct measurement is not simply:
+
+    RAM = 15.77 GB
+
+but:
+
+    resident memory
+    = trunk
+    + active expert data
+    + runtime state
+    + execution buffers
+    + cache
+    + concurrency overhead
+
+The actual value must be measured with the complete layer implementation under representative workloads.
+
+### Network requirements depend on concurrency and placement
+
+The inter-layer payload is known.
+
+The required network capacity is not.
+
+A five-position workload carries approximately 70.53 MB across the complete 92-hop path. But concurrent requests can place multiple layer transitions on the network simultaneously.
+
+The required capacity therefore depends on payload size, transitions per second, concurrency, and topology.
+
+If adjacent layers share a physical link, their traffic can contend. If replicas are placed on the same host, they can contend for local memory bandwidth instead.
+
+The architecture therefore gives us a measurable communication budget, but deployment determines the required network fabric.
+
+### Replica count is an observed scheduling result
+
+The architecture allows a constrained layer to be replicated independently.
+
+It does not tell us in advance how many replicas are necessary.
+
+The operational sequence is:
+
+    layer demand
+        ↓
+    measured service capacity
+        ↓
+    queueing / idle time
+        ↓
+    required replicas
+
+If Layer 37 becomes a limiting stage under a target workload, deployment can measure its queue depth and service time and determine whether another Layer 37 replica is useful.
+
+The same process applies independently to other layers.
+
+### Pipeline behavior must be measured end to end
+
+The mathematical dependency is already known:
+
+    L0 → L1 → L2 → ... → L92
+
+The deployment question is how efficiently independent work can occupy those stages.
+
+The system must therefore measure stage utilization, queue depth, time waiting for the next layer, network transfer time, expert-read time, compute time, synchronization time, and end-to-end latency.
+
+A pipeline can have individually fast stages and still perform poorly if work frequently waits between stages.
+
+That behavior cannot be inferred from layer sizes alone.
+
+### Prefetch and routing lookahead must remain correctness-gated
+
+The current Clover-K3 implementation provides measured evidence that exact routing information for a previously seen prompt can be used to start later expert reads early.
+
+This is not treated as an approximation. The cached route is checked against the live router, and disagreement is a correctness failure.
+
+Deployment must therefore measure both the benefit and the cost of prefetching.
+
+The cost can include cache memory, unnecessary storage reads, synchronization, route validation, and additional scheduling complexity.
+
+The existing 17.0% lookahead reduction is evidence for the current implementation and workload. It is not a universal deployment coefficient.
+
+### Failure and recovery are also unknown
+
+A 92-stage pipeline introduces more operational boundaries than a monolithic process.
+
+Deployment must therefore test pod failure, replica failover, lost in-flight state, storage failure, network interruption, restart time, state reconstruction, and recovery without corrupting model output.
+
+The mathematical model defines what the computation should produce. It does not define the operational behavior of a failed distributed system.
+
+### Cost cannot be inferred yet
+
+The architecture changes the unit of resource ownership. It does not yet establish the cost of the final system.
+
+A meaningful cost comparison requires measured values for hardware, storage, networking, power, replication, utilization, and operational overhead.
+
+A lower per-pod footprint does not automatically mean a lower total infrastructure bill.
+
+### What deployment must answer
+
+| Unknown | Deployment evidence required |
+|---|---|
+| Compute capacity | Complete layer benchmark |
+| Resident memory | Full layer workload under representative concurrency |
+| Network capacity | Measured inter-layer traffic and contention |
+| Replica count | Queueing and service-time measurements |
+| Pipeline efficiency | Stage utilization and end-to-end latency |
+| Prefetch value | Read/compute overlap and correctness validation |
+| Failure behavior | Fault-injection and recovery tests |
+| Cost | Measured infrastructure and utilization |
+| Throughput | End-to-end workload benchmark |
+
+### What this section establishes
+
+> **The architecture is sufficiently defined to build the experiment, but the production performance characteristics remain empirical.**
+
+The current evidence establishes what the model contains, how resources can be partitioned, and what data crosses the boundaries.
+
+Deployment must establish how fast it runs, how much memory and network it requires, how many replicas are useful, where contention appears, what it costs, and how it behaves under failure.
+
+Only after those measurements can the architecture be described with production performance claims.
+
+### Evidence behind this section
+
+This section is supported by:
+
+- [k3-analysis/k3-model-equation.md](../k3-analysis/k3-model-equation.md), which defines the computation and state dependencies.
+- [k3-analysis/clover-scaling-architecture.md](../k3-analysis/clover-scaling-architecture.md), which provides measured layer storage, memory-bandwidth contention, inter-layer payloads and the lookahead experiment.
+- The verified Clover-K3 implementation, which provides the correctness-gated routing lookahead behavior.
+
+These sources establish what is already known and where deployment evidence is still required.
