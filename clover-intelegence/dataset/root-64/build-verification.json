@@ -1,0 +1,20 @@
+{
+  "gate": "PASS",
+  "layer": 64,
+  "experts": 896,
+  "matrices": 2688,
+  "blocks": 136192,
+  "values_verified": 29595009024,
+  "dataset_bytes": 14139666571,
+  "dataset_sha256": "0f9cfdd868044cae56c5ff341773c4d56d5ba0264310ea0bbe10dc1ae0c92f78",
+  "original_code_scale_sha256": "3cd81c10a33f40f1d72f7456e4527aa2bcd094d9bcde1640e3e63f419c85c1cd",
+  "ordered_bf16_weights_sha256": "c86be27ba49c2df9f6e07fd9ce566791d5399b3fcb9e841fae6d2da27a3cd424",
+  "source_identity": [
+    2306,
+    12323982,
+    16990916912,
+    1790610083919662438
+  ],
+  "source_header_sha256": "1ad1561eab34892e937df62c3226691ce12b38b2804ddd71746c8628faa4bba8",
+  "build_seconds": 135.04644053603988
+}

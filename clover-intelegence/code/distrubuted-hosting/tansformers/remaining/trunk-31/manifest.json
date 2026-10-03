@@ -1,0 +1,305 @@
+{
+  "gate": "FULL_DATASET_VALUE_COMPARISON_PASS",
+  "layer": 31,
+  "attention": "MLA",
+  "records": [
+    {
+      "id": 0,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672,
+      "sha256": "b5efd588ffeeb408fa6e261d81bc095c85576536d44e621ab58679fc84c75acd",
+      "gate": "PASS"
+    },
+    {
+      "id": 1,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672,
+      "sha256": "f283bc0585a9b77afd03a17cb424d0144a364a97d7908871dc77828870b0ce1e",
+      "gate": "PASS"
+    },
+    {
+      "id": 2,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672,
+      "sha256": "d33447bd832c6afc0618b477d00f32ff4cfcd8fdaec52966fc808f2ad51e8344",
+      "gate": "PASS"
+    },
+    {
+      "id": 3,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672,
+      "sha256": "db9bb5e1d7bed535fe2e11f9649431edbaf79b0ab8212b65bba5b709aba93d09",
+      "gate": "PASS"
+    },
+    {
+      "id": 4,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672,
+      "sha256": "7866fb02177859c1bc539be8841f07318a636c13e48efa872b2b20a6e00ef985",
+      "gate": "PASS"
+    },
+    {
+      "id": 5,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672,
+      "sha256": "42cd377bf56738c81535363a48efaddcde639e4d8c9b4e65f75096476d97ea1a",
+      "gate": "PASS"
+    },
+    {
+      "id": 6,
+      "group": "common.bin",
+      "kind": 1,
+      "rows": 12288,
+      "columns": 7168,
+      "values": 88080384,
+      "bytes": 88129536,
+      "sha256": "26a8134ce18f0ee1cd30743e371d224a075b6961cc12131731d9436845e74d0b",
+      "gate": "PASS"
+    },
+    {
+      "id": 7,
+      "group": "common.bin",
+      "kind": 1,
+      "rows": 7168,
+      "columns": 12288,
+      "values": 88080384,
+      "bytes": 88109056,
+      "sha256": "7e4b7d1b1c5f62e987c3b3bc29c455efa110c793dc0451a80d196576c9f5620b",
+      "gate": "PASS"
+    },
+    {
+      "id": 20,
+      "group": "attention.bin",
+      "kind": 1,
+      "rows": 1536,
+      "columns": 7168,
+      "values": 11010048,
+      "bytes": 11016192,
+      "sha256": "cf7d2ebb272d1dc33d4e217eaa0c10df4ef2cf24fde98307b97a5113058c23e6",
+      "gate": "PASS"
+    },
+    {
+      "id": 21,
+      "group": "attention.bin",
+      "kind": 2,
+      "rows": 1536,
+      "columns": 1,
+      "values": 1536,
+      "bytes": 6144,
+      "sha256": "5b175217fc636983b6ed71487171779a11f15512323c6b2b030c5a9083513650",
+      "gate": "PASS"
+    },
+    {
+      "id": 22,
+      "group": "attention.bin",
+      "kind": 1,
+      "rows": 18432,
+      "columns": 1536,
+      "values": 28311552,
+      "bytes": 28385280,
+      "sha256": "9dced9607fb9559d430ff2522002f4814ff4ce845fe7f620ce700f7455c09315",
+      "gate": "PASS"
+    },
+    {
+      "id": 23,
+      "group": "attention.bin",
+      "kind": 1,
+      "rows": 576,
+      "columns": 7168,
+      "values": 4128768,
+      "bytes": 4131072,
+      "sha256": "496eab458d0542d9fa3220d015630daebe4a1f31e91e063fcf26a62d70bae902",
+      "gate": "PASS"
+    },
+    {
+      "id": 24,
+      "group": "attention.bin",
+      "kind": 2,
+      "rows": 512,
+      "columns": 1,
+      "values": 512,
+      "bytes": 2048,
+      "sha256": "8cbed72351ec4c962883cddd33f9c24d9d5c7a6f48ffc2b02b225aa232c63681",
+      "gate": "PASS"
+    },
+    {
+      "id": 25,
+      "group": "attention.bin",
+      "kind": 1,
+      "rows": 24576,
+      "columns": 512,
+      "values": 12582912,
+      "bytes": 12681216,
+      "sha256": "6cf6300a82e84ccb07e10444c71d257f9c3456245eb4764f24e888f93ef7cbb1",
+      "gate": "PASS"
+    },
+    {
+      "id": 29,
+      "group": "routed-shared.bin",
+      "kind": 3,
+      "rows": 896,
+      "columns": 7168,
+      "values": 6422528,
+      "bytes": 25690112,
+      "sha256": "17b24013fd6f31418c4f0c2153156886287822db6ca30543a05e8ba60ef9a071",
+      "gate": "PASS"
+    },
+    {
+      "id": 30,
+      "group": "routed-shared.bin",
+      "kind": 2,
+      "rows": 896,
+      "columns": 1,
+      "values": 896,
+      "bytes": 3584,
+      "sha256": "1802c9ee469b0400aec64ba3c6ac71a3a2a05c35c5216dfcb783fe441da810b9",
+      "gate": "PASS"
+    },
+    {
+      "id": 31,
+      "group": "routed-shared.bin",
+      "kind": 1,
+      "rows": 3584,
+      "columns": 7168,
+      "values": 25690112,
+      "bytes": 25704448,
+      "sha256": "9e34492aa1dbd641cb1feec7e4113e2e998131eef02aec4a4eb030891cc784f8",
+      "gate": "PASS"
+    },
+    {
+      "id": 32,
+      "group": "routed-shared.bin",
+      "kind": 1,
+      "rows": 7168,
+      "columns": 3584,
+      "values": 25690112,
+      "bytes": 25718784,
+      "sha256": "2fc8d567c8f02bda8a1684781084e36518d14f2f095bf706b5eccd0be4b1bcea",
+      "gate": "PASS"
+    },
+    {
+      "id": 33,
+      "group": "routed-shared.bin",
+      "kind": 2,
+      "rows": 3584,
+      "columns": 1,
+      "values": 3584,
+      "bytes": 14336,
+      "sha256": "1c296fe2c23f622c9436c82436c724bfae2f7f10fa16f2a21d6886903f5d0b92",
+      "gate": "PASS"
+    },
+    {
+      "id": 34,
+      "group": "routed-shared.bin",
+      "kind": 1,
+      "rows": 6144,
+      "columns": 7168,
+      "values": 44040192,
+      "bytes": 44064768,
+      "sha256": "f0895c3a884e3bcdff24c5917b2dadc19b61d181bd28a82e587a9f8081eb37b4",
+      "gate": "PASS"
+    },
+    {
+      "id": 35,
+      "group": "routed-shared.bin",
+      "kind": 1,
+      "rows": 6144,
+      "columns": 7168,
+      "values": 44040192,
+      "bytes": 44064768,
+      "sha256": "88b509091feaa7853f8d53419724a64a788999d8699f0fe678e5c65fd1fef27c",
+      "gate": "PASS"
+    },
+    {
+      "id": 36,
+      "group": "routed-shared.bin",
+      "kind": 1,
+      "rows": 7168,
+      "columns": 6144,
+      "values": 44040192,
+      "bytes": 44068864,
+      "sha256": "0eb575b534dbaa8f4d69d02a1d811bf0bb29736a694f38aa5330d5c628408780",
+      "gate": "PASS"
+    },
+    {
+      "id": 37,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672,
+      "sha256": "b73a4a4f38c7c28cbdaf52f7e324db1c1c412b0c6e0f55989f7aa8af1e544aa6",
+      "gate": "PASS"
+    },
+    {
+      "id": 38,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672,
+      "sha256": "33adf0b334d1d65762618d0165ec73ea96eb44346b082752a356b2a6069d38f6",
+      "gate": "PASS"
+    }
+  ],
+  "matrix_values_checked": 415694848,
+  "row_scales_checked": 94784,
+  "router_values_checked": 6422528,
+  "vector_values_checked": 63872,
+  "source_identity": [
+    2306,
+    12324628,
+    54468222976,
+    1790123406679191142
+  ],
+  "source_index_sha256": "c2b7962c88fe7d984260a9c5d8f1b23ba0866e9cb9a39bf35a689f6a6a906981",
+  "verifier_sha256": "689de1435c27a516ed0b71e26e6ce703f399160e56d7989d7e73d42f7b0eba3d",
+  "files": {
+    "common.bin": {
+      "bytes": 176467968,
+      "sha256": "0628934df3352c17f65a8baafad4c1519ce7991f0bc2dd7f22ad90b8793b5e10"
+    },
+    "attention.bin": {
+      "bytes": 56221952,
+      "sha256": "59321003439b519beea6599dcda9ca8c599674f989f704fdfc95404fe7443461"
+    },
+    "routed-shared.bin": {
+      "bytes": 209329664,
+      "sha256": "a7fca11dcc839692907b702ea45a4a7891ebc306dd1ee7f48a87cc29295db6b6"
+    },
+    "index.bin": {
+      "bytes": 2896,
+      "sha256": "e968695a08b9eea44b927b13d92686078e12f59dca0d3f4b0abb4fb7ec626c93"
+    },
+    "build-values.json": {
+      "bytes": 5916,
+      "sha256": "2253fca93641ad1de737f6e40769daabb0d1485f4581a4fd9d0abe44d181f62d"
+    }
+  }
+}

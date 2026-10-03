@@ -1,0 +1,370 @@
+k3-model-equation.md in C, layers 0..92
+  layer  0  KDA dense  0.12s
+  layer  1  KDA MoE    0.07s
+VERIFIED	2	france	5	1
+  layer  2  KDA MoE    40.56s
+VERIFIED	3	france	5	1
+  layer  3  MLA MoE    40.21s
+VERIFIED	4	france	5	1
+  layer  4  KDA MoE    34.18s
+VERIFIED	5	france	5	1
+  layer  5  KDA MoE    33.68s
+VERIFIED	6	france	5	1
+  layer  6  KDA MoE    33.82s
+VERIFIED	7	france	5	1
+  layer  7  MLA MoE    33.65s
+VERIFIED	8	france	5	1
+  layer  8  KDA MoE    33.79s
+VERIFIED	9	france	5	1
+  layer  9  KDA MoE    33.65s
+VERIFIED	10	france	5	1
+  layer 10  KDA MoE    33.87s
+VERIFIED	11	france	5	1
+  layer 11  MLA MoE    33.42s
+VERIFIED	12	france	5	2
+  layer 12  KDA MoE    40.10s
+VERIFIED	13	france	5	2
+  layer 13  KDA MoE    33.72s
+VERIFIED	14	france	5	2
+  layer 14  KDA MoE    33.92s
+VERIFIED	15	france	5	2
+  layer 15  MLA MoE    33.42s
+VERIFIED	16	france	5	2
+  layer 16  KDA MoE    33.72s
+VERIFIED	17	france	5	2
+  layer 17  KDA MoE    33.78s
+VERIFIED	18	france	5	2
+  layer 18  KDA MoE    33.68s
+VERIFIED	19	france	5	2
+  layer 19  MLA MoE    33.42s
+VERIFIED	20	france	5	2
+  layer 20  KDA MoE    33.66s
+VERIFIED	21	france	5	2
+  layer 21  KDA MoE    33.72s
+VERIFIED	22	france	5	2
+  layer 22  KDA MoE    33.70s
+VERIFIED	23	france	5	2
+  layer 23  MLA MoE    33.35s
+VERIFIED	24	france	5	3
+  layer 24  KDA MoE    34.05s
+VERIFIED	25	france	5	3
+  layer 25  KDA MoE    33.84s
+VERIFIED	26	france	5	3
+  layer 26  KDA MoE    33.87s
+VERIFIED	27	france	5	3
+  layer 27  MLA MoE    33.47s
+VERIFIED	28	france	5	3
+  layer 28  KDA MoE    34.33s
+VERIFIED	29	france	5	3
+  layer 29  KDA MoE    34.13s
+VERIFIED	30	france	5	3
+  layer 30  KDA MoE    34.33s
+VERIFIED	31	france	5	3
+  layer 31  MLA MoE    33.62s
+VERIFIED	32	france	5	3
+  layer 32  KDA MoE    34.34s
+VERIFIED	33	france	5	3
+  layer 33  KDA MoE    33.87s
+VERIFIED	34	france	5	3
+  layer 34  KDA MoE    34.09s
+VERIFIED	35	france	5	3
+  layer 35  MLA MoE    33.48s
+VERIFIED	36	france	5	4
+  layer 36  KDA MoE    34.11s
+VERIFIED	37	france	5	4
+  layer 37  KDA MoE    33.86s
+VERIFIED	38	france	5	4
+  layer 38  KDA MoE    33.94s
+VERIFIED	39	france	5	4
+  layer 39  MLA MoE    33.58s
+VERIFIED	40	france	5	4
+  layer 40  KDA MoE    34.21s
+VERIFIED	41	france	5	4
+  layer 41  KDA MoE    34.24s
+VERIFIED	42	france	5	4
+  layer 42  KDA MoE    34.14s
+VERIFIED	43	france	5	4
+  layer 43  MLA MoE    33.51s
+VERIFIED	44	france	5	4
+  layer 44  KDA MoE    34.23s
+VERIFIED	45	france	5	4
+  layer 45  KDA MoE    34.12s
+VERIFIED	46	france	5	4
+  layer 46  KDA MoE    33.65s
+VERIFIED	47	france	5	4
+  layer 47  MLA MoE    33.56s
+VERIFIED	48	france	5	5
+  layer 48  KDA MoE    34.01s
+VERIFIED	49	france	5	5
+  layer 49  KDA MoE    34.06s
+VERIFIED	50	france	5	5
+  layer 50  KDA MoE    34.03s
+VERIFIED	51	france	5	5
+  layer 51  MLA MoE    33.52s
+VERIFIED	52	france	5	5
+  layer 52  KDA MoE    34.01s
+VERIFIED	53	france	5	5
+  layer 53  KDA MoE    34.23s
+VERIFIED	54	france	5	5
+  layer 54  KDA MoE    34.04s
+VERIFIED	55	france	5	5
+  layer 55  MLA MoE    33.60s
+VERIFIED	56	france	5	5
+  layer 56  KDA MoE    33.97s
+VERIFIED	57	france	5	5
+  layer 57  KDA MoE    34.21s
+VERIFIED	58	france	5	5
+  layer 58  KDA MoE    33.99s
+VERIFIED	59	france	5	5
+  layer 59  MLA MoE    33.65s
+VERIFIED	60	france	5	6
+  layer 60  KDA MoE    34.03s
+VERIFIED	61	france	5	6
+  layer 61  KDA MoE    34.28s
+VERIFIED	62	france	5	6
+  layer 62  KDA MoE    33.95s
+VERIFIED	63	france	5	6
+  layer 63  MLA MoE    33.51s
+VERIFIED	64	france	5	6
+  layer 64  KDA MoE    33.99s
+VERIFIED	65	france	5	6
+  layer 65  KDA MoE    34.27s
+VERIFIED	66	france	5	6
+  layer 66  KDA MoE    33.75s
+VERIFIED	67	france	5	6
+  layer 67  MLA MoE    33.49s
+VERIFIED	68	france	5	6
+  layer 68  KDA MoE    33.97s
+VERIFIED	69	france	5	6
+  layer 69  KDA MoE    33.96s
+VERIFIED	70	france	5	6
+  layer 70  KDA MoE    33.87s
+VERIFIED	71	france	5	6
+  layer 71  MLA MoE    33.51s
+VERIFIED	72	france	5	7
+  layer 72  KDA MoE    34.16s
+VERIFIED	73	france	5	7
+  layer 73  KDA MoE    34.02s
+VERIFIED	74	france	5	7
+  layer 74  KDA MoE    33.88s
+VERIFIED	75	france	5	7
+  layer 75  MLA MoE    33.54s
+VERIFIED	76	france	5	7
+  layer 76  KDA MoE    34.04s
+VERIFIED	77	france	5	7
+  layer 77  KDA MoE    33.99s
+VERIFIED	78	france	5	7
+  layer 78  KDA MoE    34.07s
+VERIFIED	79	france	5	7
+  layer 79  MLA MoE    33.58s
+VERIFIED	80	france	5	7
+  layer 80  KDA MoE    34.24s
+VERIFIED	81	france	5	7
+  layer 81  KDA MoE    34.01s
+VERIFIED	82	france	5	7
+  layer 82  KDA MoE    33.99s
+VERIFIED	83	france	5	7
+  layer 83  MLA MoE    33.62s
+VERIFIED	84	france	5	8
+  layer 84  KDA MoE    34.47s
+VERIFIED	85	france	5	8
+  layer 85  KDA MoE    34.13s
+VERIFIED	86	france	5	8
+  layer 86  KDA MoE    34.05s
+VERIFIED	87	france	5	8
+  layer 87  MLA MoE    33.66s
+VERIFIED	88	france	5	8
+  layer 88  KDA MoE    34.17s
+VERIFIED	89	france	5	8
+  layer 89  KDA MoE    34.50s
+VERIFIED	90	france	5	8
+  layer 90  KDA MoE    34.21s
+VERIFIED	91	france	5	8
+  layer 91  MLA MoE    33.72s
+VERIFIED	92	france	5	8
+  layer 92  MLA MoE    40.34s
+k3-model-equation.md in C, layers 0..92
+  layer  0  KDA dense  0.13s
+  layer  1  KDA MoE    0.09s
+VERIFIED	2	japan	5	1
+  layer  2  KDA MoE    41.35s
+VERIFIED	3	japan	5	1
+  layer  3  MLA MoE    40.40s
+VERIFIED	4	japan	5	1
+  layer  4  KDA MoE    34.43s
+VERIFIED	5	japan	5	1
+  layer  5  KDA MoE    34.49s
+VERIFIED	6	japan	5	1
+  layer  6  KDA MoE    34.18s
+VERIFIED	7	japan	5	1
+  layer  7  MLA MoE    34.09s
+VERIFIED	8	japan	5	1
+  layer  8  KDA MoE    34.49s
+VERIFIED	9	japan	5	1
+  layer  9  KDA MoE    34.38s
+VERIFIED	10	japan	5	1
+  layer 10  KDA MoE    34.36s
+VERIFIED	11	japan	5	1
+  layer 11  MLA MoE    33.60s
+VERIFIED	12	japan	5	2
+  layer 12  KDA MoE    40.72s
+VERIFIED	13	japan	5	2
+  layer 13  KDA MoE    34.41s
+VERIFIED	14	japan	5	2
+  layer 14  KDA MoE    33.69s
+VERIFIED	15	japan	5	2
+  layer 15  MLA MoE    33.83s
+VERIFIED	16	japan	5	2
+  layer 16  KDA MoE    34.50s
+VERIFIED	17	japan	5	2
+  layer 17  KDA MoE    34.11s
+VERIFIED	18	japan	5	2
+  layer 18  KDA MoE    34.00s
+VERIFIED	19	japan	5	2
+  layer 19  MLA MoE    33.59s
+VERIFIED	20	japan	5	2
+  layer 20  KDA MoE    33.98s
+VERIFIED	21	japan	5	2
+  layer 21  KDA MoE    34.38s
+VERIFIED	22	japan	5	2
+  layer 22  KDA MoE    34.27s
+VERIFIED	23	japan	5	2
+  layer 23  MLA MoE    33.57s
+VERIFIED	24	japan	5	3
+  layer 24  KDA MoE    34.35s
+VERIFIED	25	japan	5	3
+  layer 25  KDA MoE    34.51s
+VERIFIED	26	japan	5	3
+  layer 26  KDA MoE    34.51s
+VERIFIED	27	japan	5	3
+  layer 27  MLA MoE    33.98s
+VERIFIED	28	japan	5	3
+  layer 28  KDA MoE    34.41s
+VERIFIED	29	japan	5	3
+  layer 29  KDA MoE    34.33s
+VERIFIED	30	japan	5	3
+  layer 30  KDA MoE    34.59s
+VERIFIED	31	japan	5	3
+  layer 31  MLA MoE    33.65s
+VERIFIED	32	japan	5	3
+  layer 32  KDA MoE    34.55s
+VERIFIED	33	japan	5	3
+  layer 33  KDA MoE    33.84s
+VERIFIED	34	japan	5	3
+  layer 34  KDA MoE    34.33s
+VERIFIED	35	japan	5	3
+  layer 35  MLA MoE    33.82s
+VERIFIED	36	japan	5	4
+  layer 36  KDA MoE    34.65s
+VERIFIED	37	japan	5	4
+  layer 37  KDA MoE    34.32s
+VERIFIED	38	japan	5	4
+  layer 38  KDA MoE    34.53s
+VERIFIED	39	japan	5	4
+  layer 39  MLA MoE    33.73s
+VERIFIED	40	japan	5	4
+  layer 40  KDA MoE    34.63s
+VERIFIED	41	japan	5	4
+  layer 41  KDA MoE    34.11s
+VERIFIED	42	japan	5	4
+  layer 42  KDA MoE    34.38s
+VERIFIED	43	japan	5	4
+  layer 43  MLA MoE    33.84s
+VERIFIED	44	japan	5	4
+  layer 44  KDA MoE    34.35s
+VERIFIED	45	japan	5	4
+  layer 45  KDA MoE    33.73s
+VERIFIED	46	japan	5	4
+  layer 46  KDA MoE    33.97s
+VERIFIED	47	japan	5	4
+  layer 47  MLA MoE    33.65s
+VERIFIED	48	japan	5	5
+  layer 48  KDA MoE    34.20s
+VERIFIED	49	japan	5	5
+  layer 49  KDA MoE    34.02s
+VERIFIED	50	japan	5	5
+  layer 50  KDA MoE    34.28s
+VERIFIED	51	japan	5	5
+  layer 51  MLA MoE    33.66s
+VERIFIED	52	japan	5	5
+  layer 52  KDA MoE    34.13s
+VERIFIED	53	japan	5	5
+  layer 53  KDA MoE    34.30s
+VERIFIED	54	japan	5	5
+  layer 54  KDA MoE    34.43s
+VERIFIED	55	japan	5	5
+  layer 55  MLA MoE    33.75s
+VERIFIED	56	japan	5	5
+  layer 56  KDA MoE    34.55s
+VERIFIED	57	japan	5	5
+  layer 57  KDA MoE    34.28s
+VERIFIED	58	japan	5	5
+  layer 58  KDA MoE    34.24s
+VERIFIED	59	japan	5	5
+  layer 59  MLA MoE    33.73s
+VERIFIED	60	japan	5	6
+  layer 60  KDA MoE    34.07s
+VERIFIED	61	japan	5	6
+  layer 61  KDA MoE    34.43s
+VERIFIED	62	japan	5	6
+  layer 62  KDA MoE    34.36s
+VERIFIED	63	japan	5	6
+  layer 63  MLA MoE    33.59s
+VERIFIED	64	japan	5	6
+  layer 64  KDA MoE    34.56s
+VERIFIED	65	japan	5	6
+  layer 65  KDA MoE    34.21s
+VERIFIED	66	japan	5	6
+  layer 66  KDA MoE    34.11s
+VERIFIED	67	japan	5	6
+  layer 67  MLA MoE    33.82s
+VERIFIED	68	japan	5	6
+  layer 68  KDA MoE    34.15s
+VERIFIED	69	japan	5	6
+  layer 69  KDA MoE    34.43s
+VERIFIED	70	japan	5	6
+  layer 70  KDA MoE    33.98s
+VERIFIED	71	japan	5	6
+  layer 71  MLA MoE    33.89s
+VERIFIED	72	japan	5	7
+  layer 72  KDA MoE    34.12s
+VERIFIED	73	japan	5	7
+  layer 73  KDA MoE    34.21s
+VERIFIED	74	japan	5	7
+  layer 74  KDA MoE    34.30s
+VERIFIED	75	japan	5	7
+  layer 75  MLA MoE    33.61s
+VERIFIED	76	japan	5	7
+  layer 76  KDA MoE    34.49s
+VERIFIED	77	japan	5	7
+  layer 77  KDA MoE    33.72s
+VERIFIED	78	japan	5	7
+  layer 78  KDA MoE    34.35s
+VERIFIED	79	japan	5	7
+  layer 79  MLA MoE    33.58s
+VERIFIED	80	japan	5	7
+  layer 80  KDA MoE    34.04s
+VERIFIED	81	japan	5	7
+  layer 81  KDA MoE    34.58s
+VERIFIED	82	japan	5	7
+  layer 82  KDA MoE    34.44s
+VERIFIED	83	japan	5	7
+  layer 83  MLA MoE    33.76s
+VERIFIED	84	japan	5	8
+  layer 84  KDA MoE    34.19s
+VERIFIED	85	japan	5	8
+  layer 85  KDA MoE    33.96s
+VERIFIED	86	japan	5	8
+  layer 86  KDA MoE    34.00s
+VERIFIED	87	japan	5	8
+  layer 87  MLA MoE    33.80s
+VERIFIED	88	japan	5	8
+  layer 88  KDA MoE    34.10s
+VERIFIED	89	japan	5	8
+  layer 89  KDA MoE    34.44s
+VERIFIED	90	japan	5	8
+  layer 90  KDA MoE    34.43s
+VERIFIED	91	japan	5	8
+  layer 91  MLA MoE    33.44s
+VERIFIED	92	japan	5	8
+  layer 92  MLA MoE    40.23s

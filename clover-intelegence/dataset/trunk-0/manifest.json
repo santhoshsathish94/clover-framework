@@ -1,0 +1,392 @@
+{
+  "gate": "PREPARED_DATASET_VERIFIED",
+  "layer": 0,
+  "data_directory": "/opt/clover-k3/clover-data/trunk-0",
+  "records": [
+    {
+      "id": 0,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672
+    },
+    {
+      "id": 1,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672
+    },
+    {
+      "id": 2,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672
+    },
+    {
+      "id": 3,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672
+    },
+    {
+      "id": 4,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672
+    },
+    {
+      "id": 5,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672
+    },
+    {
+      "id": 6,
+      "group": "common.bin",
+      "kind": 1,
+      "rows": 12288,
+      "columns": 7168,
+      "values": 88080384,
+      "bytes": 88129536
+    },
+    {
+      "id": 7,
+      "group": "common.bin",
+      "kind": 1,
+      "rows": 7168,
+      "columns": 12288,
+      "values": 88080384,
+      "bytes": 88109056
+    },
+    {
+      "id": 8,
+      "group": "kda.bin",
+      "kind": 1,
+      "rows": 12288,
+      "columns": 7168,
+      "values": 88080384,
+      "bytes": 88129536
+    },
+    {
+      "id": 9,
+      "group": "kda.bin",
+      "kind": 1,
+      "rows": 12288,
+      "columns": 7168,
+      "values": 88080384,
+      "bytes": 88129536
+    },
+    {
+      "id": 10,
+      "group": "kda.bin",
+      "kind": 1,
+      "rows": 12288,
+      "columns": 7168,
+      "values": 88080384,
+      "bytes": 88129536
+    },
+    {
+      "id": 11,
+      "group": "kda.bin",
+      "kind": 1,
+      "rows": 96,
+      "columns": 7168,
+      "values": 688128,
+      "bytes": 688512
+    },
+    {
+      "id": 12,
+      "group": "kda.bin",
+      "kind": 1,
+      "rows": 128,
+      "columns": 7168,
+      "values": 917504,
+      "bytes": 918016
+    },
+    {
+      "id": 13,
+      "group": "kda.bin",
+      "kind": 1,
+      "rows": 12288,
+      "columns": 128,
+      "values": 1572864,
+      "bytes": 1622016
+    },
+    {
+      "id": 14,
+      "group": "kda.bin",
+      "kind": 2,
+      "rows": 49152,
+      "columns": 1,
+      "values": 49152,
+      "bytes": 196608
+    },
+    {
+      "id": 15,
+      "group": "kda.bin",
+      "kind": 2,
+      "rows": 49152,
+      "columns": 1,
+      "values": 49152,
+      "bytes": 196608
+    },
+    {
+      "id": 16,
+      "group": "kda.bin",
+      "kind": 2,
+      "rows": 49152,
+      "columns": 1,
+      "values": 49152,
+      "bytes": 196608
+    },
+    {
+      "id": 17,
+      "group": "kda.bin",
+      "kind": 2,
+      "rows": 128,
+      "columns": 1,
+      "values": 128,
+      "bytes": 512
+    },
+    {
+      "id": 18,
+      "group": "kda.bin",
+      "kind": 2,
+      "rows": 12288,
+      "columns": 1,
+      "values": 12288,
+      "bytes": 49152
+    },
+    {
+      "id": 19,
+      "group": "kda.bin",
+      "kind": 2,
+      "rows": 128,
+      "columns": 1,
+      "values": 128,
+      "bytes": 512
+    },
+    {
+      "id": 26,
+      "group": "dense.bin",
+      "kind": 1,
+      "rows": 33792,
+      "columns": 7168,
+      "values": 242221056,
+      "bytes": 242356224
+    },
+    {
+      "id": 27,
+      "group": "dense.bin",
+      "kind": 1,
+      "rows": 33792,
+      "columns": 7168,
+      "values": 242221056,
+      "bytes": 242356224
+    },
+    {
+      "id": 28,
+      "group": "dense.bin",
+      "kind": 1,
+      "rows": 7168,
+      "columns": 33792,
+      "values": 242221056,
+      "bytes": 242249728
+    },
+    {
+      "id": 37,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672
+    },
+    {
+      "id": 38,
+      "group": "common.bin",
+      "kind": 2,
+      "rows": 7168,
+      "columns": 1,
+      "values": 7168,
+      "bytes": 28672
+    },
+    {
+      "id": 39,
+      "group": "kda.bin",
+      "kind": 2,
+      "rows": 96,
+      "columns": 1,
+      "values": 96,
+      "bytes": 384
+    }
+  ],
+  "files": {
+    "common.bin": {
+      "bytes": 176467968,
+      "sha256": "475cd08da99c4f422f2c284906eb8a7ff0b16a5852bd77204cd210275cbcff66"
+    },
+    "kda.bin": {
+      "bytes": 268257536,
+      "sha256": "79887e36c2e9d736e5446901d8059142b7b0f9f2d4aa8e1035446bda20390634"
+    },
+    "dense.bin": {
+      "bytes": 726962176,
+      "sha256": "70d210e1400dff4a59a583e0bfac3937a55beea93175e2931eacf2a7559ba2dd"
+    },
+    "index.bin": {
+      "bytes": 3040,
+      "sha256": "dd58a012a1e795a959f14f2c8bf114921018e7cecd668bf505e966cdd4868722"
+    },
+    "build-values.json": {
+      "bytes": 6327,
+      "sha256": "614409f91098620f27a471a04bc78a58d0f0e25503850a7b03dd04f95c906ded"
+    }
+  },
+  "source_identity_before_and_after": {
+    "/root/k3trunk_i8/trunk.bin": [
+      2306,
+      12324628,
+      54468222976,
+      1790123406679191142
+    ],
+    "/opt/clover-k3/build/eqidx.bin": [
+      2306,
+      57409680,
+      21877087,
+      1790572878044101655
+    ]
+  },
+  "source_index_sha256": "c2b7962c88fe7d984260a9c5d8f1b23ba0866e9cb9a39bf35a689f6a6a906981",
+  "source_model_sha256": "7ca838023673d0a5d16ab0d85cd35c373041accb7d3ac09f1623a6b9000dc72a",
+  "source_model_files": {
+    "reverse-mask.h": "98b0149fa40bbf4dbffa1c5f6905f305fd6e7d4be6c89a860dc75c8fa8c53f52",
+    "expert-group-order.h": "8905e514addd27180cdb2e1399c3f22213691a6b2826b343b36965bc4c8382ca",
+    "reverse-dyadic.h": "fe684f5830eb5330f0cfd9eed378b0b2dc9699de4885e7d1c1377c867d8f81a2",
+    "seed-reader-test.c": "58839ebdcd5e212407b776c09de48e28e8802207036861ec53e17c3c6b3f4550",
+    "expert-map-constants.h": "074e2aa666088083ea5dc40d92f93d280e8b904ba4938d3b88f0d4310d6e76cc",
+    "input-store.h": "9d956421f1c725360896120fd28333655f4fc81c298763251a434fc8d4881758",
+    "reverse-codec.h": "df9da17b31360c77c33afbc9f9a26e2713ca350a3b272d4aff5b100bdb4c5db7",
+    "root-result.c": "29c0b4621e72c0e339058f2cf2b1003dac9305f7593bc192a1d63c47d9c44062",
+    "expert-scale-codec.h": "372cf12b3d4503fe00921685415d12bf9b395a9c56a3d4b15c47cb38b6145858",
+    "test-inverse.c": "e5c2424ca15e53bcabf58fdd72945baf51bb2d2cf7408b65536514952cd120cd",
+    "fusion-model.h": "965f8dc8b32ed8fbb59c439adaa1f24c0105c221ac15edde1f90173c2d95aec3",
+    "root-direct.h": "5199c6cd8ed5b7f8d78c26df3cdeeb8fcda9cefeab01d51dcb8bec57b8381205",
+    "graph-runtime.h": "96b59644314757a66a91464d277c1b42e2aeaedaaaf38f38c49d09c712fdba08",
+    "input-hash.h": "154ff9ed32df8fc6ff52de055ed23c0371cf5c0fa029ad8b76ced767a0b2a850",
+    "reverse-order.h": "77e0ab9f2dbba6dc9d5691d9c4a62929637964c2b4b6c8054ec67b5ac05cc783",
+    "candidate.c": "5060c23a6cd212fc7a09c77049f6e901df34e0ba423c3583f789d1ca8d2170d1",
+    "root-function.h": "4b78f0e328e7d7b2b424199bf83579a0ce9a4902218fbd7d76c3ec1832514562",
+    "addition-report.h": "514b3190dd808f1c31b1791884db8bbef6bca9dfa10348fc5cc58339bcfcc757",
+    "expert-constant-palette.h": "7e30a1954e121af8f303f6435949f4b71d7330a7289347478a3d79f5daaa97a0",
+    "expert-joint-codec.h": "76d18cd5f2c1c7a6c8f1e194528ba636f0e12ad03d7a0cdd969552b556ea96a9",
+    "vector-basis-router.h": "268874187e04ec3302caa5de33679dd372b97d2fc91172dd862aaea7d3cc9458",
+    "root-result-model.h": "08130c54061633875aa93697d26a870875beed77be592d4d653fb8546dfefea5",
+    "snapshot-products.h": "906a8ffb396e2144f50eb2440fde7567dc510714b6a8af126f8c7770e4961993",
+    "snapshot-scoring.h": "1fb2f08b766f04b9d440367ff037b2ea8e7ead3cc61c69f723b94fe5608dc12a",
+    "input-integration.h": "621557cb91190762d4588c06a52fe584cdb17d749b034d63c2cdaefb2bf657af",
+    "baseline.c": "5628f7c3d2b7932b2b8776dcb498d54bbc730b1785ba7819989bdb51b6604e65",
+    "attempt2-coverage.h": "c808da5d4e8277c34308f2d1e69975a3e45703215c77aceca49c4a5cdbf97b47",
+    "snapshot-inverse.h": "c6c20ae004222d94df9b287d0e2b7e6afa3a6756db65ac9571370876465b84e7",
+    "test-runtime.c": "e3bf7abb5babc7a0d5ebaa7b2e662801c2d0334fd248b3e0db9d5015f040d033",
+    "root-function.c": "6cdf436ac531d4d96fe9472dff2e762737e9cbf4d231d0ba84239df48efb9473",
+    "input-integration.c": "ad15dca76aea58340f6720645f9c7107c99561cf67faf4ba7de4499a4bc81448",
+    "snapshot-products.c": "33e4dcba5e02c6d3e15627f461f861c19e4a85a598d8f438805c5ee4afdd80c0",
+    "graph-backend.h": "6fe6bc0af7f5b61d9098a5e852bb96f550a382dfeded80e470fca731d614af7b",
+    "roots-capture.h": "1ead11cd743fb8fb036cd1f4c58f1c55333158aefdebd94e305e563eacbc73ad",
+    "equation-functions-model.h": "48be3571d0251e3b7951e4930887440b7bc6837a229bbd653f614fc50c67a27d",
+    "seed-model.h": "dbaa747077e9df2d3757364fb4c9e73e0be316a89115057e8d8b7b3d9b8afdcc",
+    "fruit-head.h": "c79f32a43eb2d5c58a926e17e206a206495a63152007b4e1828bd59b8cc92545",
+    "zero-add.h": "7b32ac1bdaaa96f1997dde33c4f4ed8ac7edbc28eea8fe624be229063ef09af0",
+    "expert-group-coverage.h": "20c3389afe2f756d4b249a728729991415df87b5e1317119b6307ec4d7f5ccdb",
+    "root-direct-test.c": "0237416236f604b0a021d400bd07a0f4ea3e1eb0638a1eab265618a66aacaa5a",
+    "test-additions.c": "656eb1240dd56a9329377ad84c442654e5dbe64284da45787cc28a808461bf5c",
+    "expert-group-equation.h": "3f92836eeaf66539f4380e1944df60a547aee405cdd7de2c4ceda29e58fc9d0d",
+    "layer1-compact-model.h": "ad2dcd46c91f580f2262612726716e43bf9acb592ee1fa59271ed719755c7ec3",
+    "root-result.h": "01e52edef9901809d4cb71a5f275b32718ab3dc30623d9498b052768b537230b",
+    "snapshot-inverse.c": "d5830bc23e19087cb36da4c286bb2ad650428e889c065ec5a46ad4db3a1aae9a",
+    "fusion-blocks.inc": "a2116edf0d5bc1ce2f295d6a56bcd0c5fe0263a9d590cc0309cb4845dc18bbdd",
+    "input-model.h": "03027e686b9fae3a7d14f4032c6270a286d24289cd4ed7039889915e2e078764",
+    "scale-base.h": "ed11c4fc95dd0f6e539cc5982563a523e8cc21458ab18c01e228f596a7e02982",
+    "vector-endpoints.h": "13c15befdfad8951ff38d4d7a845b1ba241608743602e872cd853801f2b39740",
+    "reverse-four-mask.h": "405a36852e2adda335d12d13a726cc5b2d4f0d433f58415418f07bcfe61b52cf",
+    "root-one-model.h": "2e1f26a165926d182717c73b2955078ffe402bfbe7c8c474b9eba593bc1492e7",
+    "reverse-histogram.h": "706ba18b4bc5f40e35ac7f03098ee25279eea62ba2ec634755a91edcd726633d",
+    "fruit-access.h": "082ff3809792164e519dd3e3bbfa5fda22bac8835058be87c269172bdb923579",
+    "graph-audit.h": "ee2f429ddb0d3a0ea9b493e926fd1c10b85df1e1655cced0c694585876fa0669",
+    "seed-reader.h": "e720cb7029d902ba8fc34c699f12d27184e43c9be97bfe79de04dc1f672bdda8",
+    "snapshot-scoring.c": "8f3154bbd73bb281dc150db695d5f74130f5d7f970e63e86e51fb6aabb673819",
+    "root-direct.c": "cdec6fb699f2cfcb17809561ad290b3f288a70f1958d98808e05a8d40a78dc6b",
+    "reverse-component.h": "68f462884309f22e1e3cce898b546cbecdd6dab3e3194ceea3f56596dd3850f5",
+    "expert-mask-consumer.h": "5aeba4382cf611387af0cac9a38106640da9372452e82e6e60272232fda707f7",
+    "input-store.c": "0d2a909b6425e03aec028c53fc56129b02130177e326af4898f516c2fbf0d8da",
+    "fusion-integration.h": "e1fef6407455344c0197009c51ce7197081c48202138dbde7f00685f0ecb4f61",
+    "test-scoring.c": "4d2cfaa2fb99da21afa66939284ed3c9fbc5c017f96dfd0ba0dd5e3977d9a38a",
+    "expert-histogram-codec.h": "731072e671e65354509283f21ad61e7dac3f3aaa3ca50225ff62c3b151cd8779",
+    "seed-function.h": "facf29bcea58d63a9e82ee2017d0b5fab19555facd039d4d2fa79f72a06727f3",
+    "input-view.h": "aea3aef3228a2a2f5fcd59daeed8b9f4b993233bc499b1fcc3e9cc71f90d8c5b",
+    "layer1-compact.c": "3e86be66232734edef6c2ec54f3147496247267dfa1a2aac9a1f0da0d681002e",
+    "root-replay.c": "6660d18516261409fdc8425a2ea695b5960680a2521691166ea571d23e4d77c5",
+    "expert-scale-exception-codec.h": "23525a82f4f801be5b69748c0c5ca34d6226a28cdc5c2d29913312559d64daec",
+    "scale-base-lf.h": "ed11c4fc95dd0f6e539cc5982563a523e8cc21458ab18c01e228f596a7e02982",
+    "reverse-vector.h": "ae2617a579e6aad7ac1ae16b2273b8b589eabff4bf5b7b6cd4337dc941aa0f07",
+    "candidate-before-patch-repair.c": "220f196a5a64c921aeaf48d4d8f85b862275a3cbd8f53eb35e4a6b0da78240b6",
+    "expert-map-store.c": "f2ceb75f5007dbb3c504e93020bf241c7c570e9c313905b9633295aa5cf3d826"
+  },
+  "command": [
+    "gcc",
+    "-frounding-math",
+    "-fno-fast-math",
+    "-O3",
+    "-march=native",
+    "-ffp-contract=off",
+    "-fopenmp",
+    "-DNPOS=5",
+    "-DREVERSE_STAGE=1",
+    "-I/opt/clover-k3/trunk-zero-20261001-a/builder/include",
+    "-I/opt/clover-k3/reverse-integration-20260929-a/deps/gmp/usr/include/x86_64-linux-gnu",
+    "-I/opt/clover-k3/reverse-integration-20260929-a/deps/zlib/usr/include",
+    "-I/opt/clover-k3/seed-integrated-20260929-a/deps/openssl/usr/include",
+    "-I/opt/clover-k3/seed-integrated-20260929-a/deps/openssl/usr/include/x86_64-linux-gnu",
+    "build-dataset.c",
+    "root-replay.c",
+    "root-direct.c",
+    "input-store.c",
+    "input-integration.c",
+    "snapshot-inverse.c",
+    "snapshot-scoring.c",
+    "snapshot-products.c",
+    "/opt/clover-k3/reverse-integration-20260929-a/deps/gmp/usr/lib/x86_64-linux-gnu/libgmp.a",
+    "/opt/clover-k3/reverse-integration-20260929-a/deps/zlib/usr/lib/x86_64-linux-gnu/libz.a",
+    "/opt/clover-k3/seed-integrated-20260929-a/deps/openssl/usr/lib/x86_64-linux-gnu/libcrypto.a",
+    "-ldl",
+    "-pthread",
+    "-lm",
+    "-o",
+    "build-dataset"
+  ],
+  "builder_sha256": "be462aab5411d4164c2a9406aceb10188782a0cb150aafbdd5250e9a487718a6",
+  "builder_source_sha256": {
+    "trunk-zero.h": "bf8115af7c5b11f5444ef89448e673286ec5dcba1b80368051d5666d22baf9ce",
+    "build-dataset.c": "84dac6fc9b19cca83ee9a452f69bfcb58abc8d720cd9927c040dece7ea306e72",
+    "build.py": "81eae517a10b038211347bdf2b3cc1871faaa0c8bdb9efbe7f1e928f8caa797a"
+  },
+  "scope": "Exact current quantized trunk0 values; common/KDA/dense only; original source untouched; no model consumer run yet"
+}

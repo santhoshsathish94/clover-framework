@@ -1,0 +1,552 @@
+{
+  "gate": "PASS",
+  "scope": "Windows compilation only; numeric datasets and numerical tests on AX102",
+  "builds": [
+    {
+      "layer": 2,
+      "path": "transformer-2/bin/transformer-2.exe",
+      "sha256": "3d0ca9acdffcf793ed086764b07b56f3fc36f8d88b7e549174d60cb91b36d15e",
+      "bytes": 151581
+    },
+    {
+      "layer": 3,
+      "path": "transformer-3/bin/transformer-3.exe",
+      "sha256": "d2bc95cb88d597805916ef1ef46c9f327327a89d38b91faaa78e8842c9006473",
+      "bytes": 151911
+    },
+    {
+      "layer": 4,
+      "path": "transformer-4/bin/transformer-4.exe",
+      "sha256": "d4186757cad1d1d4d3fe189ef89d3e573df36dd16ca3f7522c872e6bf8cdb153",
+      "bytes": 151581
+    },
+    {
+      "layer": 5,
+      "path": "transformer-5/bin/transformer-5.exe",
+      "sha256": "434360a5df58a3a39445a84225a46fcda85a8fad9b81b017b61aa1304a501e97",
+      "bytes": 151581
+    },
+    {
+      "layer": 6,
+      "path": "transformer-6/bin/transformer-6.exe",
+      "sha256": "dcc86947e0b0497882eacb0728a79c95ac59dd654f822f921f36c906677abe26",
+      "bytes": 151069
+    },
+    {
+      "layer": 7,
+      "path": "transformer-7/bin/transformer-7.exe",
+      "sha256": "fe2c560e39140300b0f92226800421b4545bd3265785b3c8f27d161b354196ee",
+      "bytes": 151911
+    },
+    {
+      "layer": 8,
+      "path": "transformer-8/bin/transformer-8.exe",
+      "sha256": "55226cdebd750477a9a0b0e009f94d117db9357e6427daabbaffba4beae54055",
+      "bytes": 151581
+    },
+    {
+      "layer": 9,
+      "path": "transformer-9/bin/transformer-9.exe",
+      "sha256": "c2bbad82e1dba6f5b4c4d928bcd27c9fdefd979c4731ede694f3642066affe8f",
+      "bytes": 151069
+    },
+    {
+      "layer": 10,
+      "path": "transformer-10/bin/transformer-10.exe",
+      "sha256": "d3e84e6620e543d3e66c0ba87e0e3f6d03fe274e43c6a988f0040a23a4e71d3f",
+      "bytes": 151581
+    },
+    {
+      "layer": 11,
+      "path": "transformer-11/bin/transformer-11.exe",
+      "sha256": "ee549622999b678270a4e7ff34f578516a9cfc1c18e1b0a0ddd3b989c03ee2a3",
+      "bytes": 151911
+    },
+    {
+      "layer": 12,
+      "path": "transformer-12/bin/transformer-12.exe",
+      "sha256": "50b1ca83e3e4f9bf3dad1bb8cc126800dbf12628568947484bef11c370f4c1c6",
+      "bytes": 151581
+    },
+    {
+      "layer": 13,
+      "path": "transformer-13/bin/transformer-13.exe",
+      "sha256": "7c53ded23d4c5017bb2bff27ad6df71cec6bd91a733d22ea89f129320746240c",
+      "bytes": 151069
+    },
+    {
+      "layer": 14,
+      "path": "transformer-14/bin/transformer-14.exe",
+      "sha256": "b1dffb4d6998493cdae1b5c6dead0451cef38feda9bb15cc4cc7f33eda9eeb58",
+      "bytes": 151581
+    },
+    {
+      "layer": 15,
+      "path": "transformer-15/bin/transformer-15.exe",
+      "sha256": "71b11a33570c5c295eac6fe530077e779644b85101881d040bf5d570dcb12215",
+      "bytes": 151911
+    },
+    {
+      "layer": 16,
+      "path": "transformer-16/bin/transformer-16.exe",
+      "sha256": "34c5ed72df03ac61f50e036a86e54b7cd2e2b56e04e86d5d7f533bac97405009",
+      "bytes": 151581
+    },
+    {
+      "layer": 17,
+      "path": "transformer-17/bin/transformer-17.exe",
+      "sha256": "82604229daaa71b32ac44dcd88b7b84d1be984456dfa56617c1fb8d2372f0db5",
+      "bytes": 151581
+    },
+    {
+      "layer": 18,
+      "path": "transformer-18/bin/transformer-18.exe",
+      "sha256": "c07d34b18664bab7e813c209094cae1dacab2348627607ea4dac3ff28b2bd938",
+      "bytes": 151581
+    },
+    {
+      "layer": 19,
+      "path": "transformer-19/bin/transformer-19.exe",
+      "sha256": "238c16465fcfb31f841b704586957e2fcd36e7b3940df081eb56aeecb3010026",
+      "bytes": 151911
+    },
+    {
+      "layer": 20,
+      "path": "transformer-20/bin/transformer-20.exe",
+      "sha256": "522a01d987bf5ba0c96afb6457cf80440d6a219fb16433bf614b2f655276fddd",
+      "bytes": 151581
+    },
+    {
+      "layer": 21,
+      "path": "transformer-21/bin/transformer-21.exe",
+      "sha256": "0eed05233eaba91477a9bee9f61b7163d8d1eca64533c3b868216e620c4165a4",
+      "bytes": 151581
+    },
+    {
+      "layer": 22,
+      "path": "transformer-22/bin/transformer-22.exe",
+      "sha256": "ccc6e82256fe82096776fa1b1c6e46152779b839f2fd2c866079a0a308bdb2ca",
+      "bytes": 151581
+    },
+    {
+      "layer": 23,
+      "path": "transformer-23/bin/transformer-23.exe",
+      "sha256": "5a88a4abcf519df722d04e19f8c5447bc5da4c306886d4814ac43ca092f59cdd",
+      "bytes": 151911
+    },
+    {
+      "layer": 24,
+      "path": "transformer-24/bin/transformer-24.exe",
+      "sha256": "0ff1a8fa6495210e3bf46536fff75724eb554a69a0516b1b70336d1f712a6453",
+      "bytes": 151069
+    },
+    {
+      "layer": 25,
+      "path": "transformer-25/bin/transformer-25.exe",
+      "sha256": "29d0385f70e0ec21fdaba8bceff9e10003e97f31b83674665c3bc146c616c9b1",
+      "bytes": 151581
+    },
+    {
+      "layer": 26,
+      "path": "transformer-26/bin/transformer-26.exe",
+      "sha256": "871c129d82cd0ae6ca17972ababa9f80308fcfe2482123710b06d37f6b766e04",
+      "bytes": 151581
+    },
+    {
+      "layer": 27,
+      "path": "transformer-27/bin/transformer-27.exe",
+      "sha256": "70f841aad78159ed6263e8c5df3e33e619dfce858ec34132d36102d762cdc6b2",
+      "bytes": 151911
+    },
+    {
+      "layer": 28,
+      "path": "transformer-28/bin/transformer-28.exe",
+      "sha256": "e90704c6c517609921136821b29f323be34c20312f7d35f6c8697464b86e0fb5",
+      "bytes": 151581
+    },
+    {
+      "layer": 29,
+      "path": "transformer-29/bin/transformer-29.exe",
+      "sha256": "c000e93b43765299b4e37e8ef2753158510e76f7ea237d2e1844f07146e93d77",
+      "bytes": 151069
+    },
+    {
+      "layer": 30,
+      "path": "transformer-30/bin/transformer-30.exe",
+      "sha256": "708eba855868836d2abff3dbf15f85d13dbfaba72080b0a3743c196ff2d542bf",
+      "bytes": 151581
+    },
+    {
+      "layer": 31,
+      "path": "transformer-31/bin/transformer-31.exe",
+      "sha256": "dac6eca6758781c7d94f8f95db61d015310735bb3acf54a7a0cabebfb80c10b3",
+      "bytes": 151911
+    },
+    {
+      "layer": 32,
+      "path": "transformer-32/bin/transformer-32.exe",
+      "sha256": "58ca86241bb20182c74368bf4a6a90830309df60e383dc0f0c26222bb25e8466",
+      "bytes": 151581
+    },
+    {
+      "layer": 33,
+      "path": "transformer-33/bin/transformer-33.exe",
+      "sha256": "e7a96691f4ac603a8533c8b07c66fd22f8b57360fe9991293011304d1bc66d4a",
+      "bytes": 151581
+    },
+    {
+      "layer": 34,
+      "path": "transformer-34/bin/transformer-34.exe",
+      "sha256": "011bee22a14e9a0933f91ec57839bd47074740098d16b9cbc3824746492ae24b",
+      "bytes": 151581
+    },
+    {
+      "layer": 35,
+      "path": "transformer-35/bin/transformer-35.exe",
+      "sha256": "fdd0b688f83a277e9b637cb5dc44730f1ff1773b5842735cd9ea08f4b8f55790",
+      "bytes": 151911
+    },
+    {
+      "layer": 36,
+      "path": "transformer-36/bin/transformer-36.exe",
+      "sha256": "ff925cafb56b3c1edab125d8d417de0f31fbe3f613e18b4c7fe119836ffc82d0",
+      "bytes": 151581
+    },
+    {
+      "layer": 37,
+      "path": "transformer-37/bin/transformer-37.exe",
+      "sha256": "0063c8ef558caed8ed2d7c27cd08044f065cc94f5ba757a59ab046dc6454e78b",
+      "bytes": 151069
+    },
+    {
+      "layer": 38,
+      "path": "transformer-38/bin/transformer-38.exe",
+      "sha256": "89a4cdadce781f208055a771396561a3ac15d1b4818121cd1d1342d291626fde",
+      "bytes": 151069
+    },
+    {
+      "layer": 39,
+      "path": "transformer-39/bin/transformer-39.exe",
+      "sha256": "c52010086544f3fa0c8cde705ed5f382556bda8818a223af656713edce58684d",
+      "bytes": 151399
+    },
+    {
+      "layer": 40,
+      "path": "transformer-40/bin/transformer-40.exe",
+      "sha256": "a60b008c1284189f013381dcc8ba2a029d069c507bbb089c4390ccc12f4fd9c1",
+      "bytes": 151069
+    },
+    {
+      "layer": 41,
+      "path": "transformer-41/bin/transformer-41.exe",
+      "sha256": "22d8fdae7e2291eca79fd35ee81efd051566f9a835cf2710d16c79559883f402",
+      "bytes": 151069
+    },
+    {
+      "layer": 42,
+      "path": "transformer-42/bin/transformer-42.exe",
+      "sha256": "ef4aac63ee40144ebc767049af28e5d4301b870e5c191886df18ca268fb5265e",
+      "bytes": 151069
+    },
+    {
+      "layer": 43,
+      "path": "transformer-43/bin/transformer-43.exe",
+      "sha256": "2cbcc35f04d3056d2a81c481bfc30f73e69fbbb3b6b2e2db6c66fdcc2654bb47",
+      "bytes": 151399
+    },
+    {
+      "layer": 44,
+      "path": "transformer-44/bin/transformer-44.exe",
+      "sha256": "bc18f8654ea6d68427f5b0d2716396679e78d756ad7bf5e1dfdb5eb684ae8d40",
+      "bytes": 151069
+    },
+    {
+      "layer": 45,
+      "path": "transformer-45/bin/transformer-45.exe",
+      "sha256": "e3796b3b7e94030907e74c51392e9fb64ec90d7b5ffab1a41d973703785058ad",
+      "bytes": 151069
+    },
+    {
+      "layer": 46,
+      "path": "transformer-46/bin/transformer-46.exe",
+      "sha256": "657a6c2726f7bcaa509ab054b3f7c96f6b121dc15a06afdf8ea461dedb4085ad",
+      "bytes": 151581
+    },
+    {
+      "layer": 47,
+      "path": "transformer-47/bin/transformer-47.exe",
+      "sha256": "aeea9511720935983fcac7175a537413b713b03450e86083bf3a6d590af13556",
+      "bytes": 151911
+    },
+    {
+      "layer": 48,
+      "path": "transformer-48/bin/transformer-48.exe",
+      "sha256": "d90d6d2e338ed1528287059eabd7fcc61d4139b3804f4b711ef9b69dd8bf1453",
+      "bytes": 151069
+    },
+    {
+      "layer": 49,
+      "path": "transformer-49/bin/transformer-49.exe",
+      "sha256": "8a54e6a59cb11ad3d563c12265f6f9c6568f283b204a1e84bb0d87bbab131ead",
+      "bytes": 151069
+    },
+    {
+      "layer": 50,
+      "path": "transformer-50/bin/transformer-50.exe",
+      "sha256": "aad09d3ec5742e0a5471262e9687acc82263a4e87ea5ddf3d8ea0f41312048ce",
+      "bytes": 151069
+    },
+    {
+      "layer": 51,
+      "path": "transformer-51/bin/transformer-51.exe",
+      "sha256": "75a70bf6c1653102c1b59411fd820aff4d70b72eb88eaa95b00ac401910bd806",
+      "bytes": 151911
+    },
+    {
+      "layer": 52,
+      "path": "transformer-52/bin/transformer-52.exe",
+      "sha256": "751a8f26a94d6d7f59909cfcc950cd3acb6aed040c1426231805986646076228",
+      "bytes": 151069
+    },
+    {
+      "layer": 53,
+      "path": "transformer-53/bin/transformer-53.exe",
+      "sha256": "7ae1536ee73abaf343298d07e2ef7536a0acf81b585c981da5fd2123cf871065",
+      "bytes": 151069
+    },
+    {
+      "layer": 54,
+      "path": "transformer-54/bin/transformer-54.exe",
+      "sha256": "689f81da8ad1cac9481549658edb83aa5e0aaf5efee1f1c62b92255a2947a519",
+      "bytes": 151069
+    },
+    {
+      "layer": 55,
+      "path": "transformer-55/bin/transformer-55.exe",
+      "sha256": "5bad5219e1d20f00736c1712cfe2e8e6327f176a63c86dd5e8bdf542cc21fbb9",
+      "bytes": 151399
+    },
+    {
+      "layer": 56,
+      "path": "transformer-56/bin/transformer-56.exe",
+      "sha256": "5a1fd5802b8c8b6ba6e534628ca56d5688a333c1ca0f9fda5c7747205b7ca4c5",
+      "bytes": 151069
+    },
+    {
+      "layer": 57,
+      "path": "transformer-57/bin/transformer-57.exe",
+      "sha256": "96108b6efcb3e928ede4ec4c656c002ec1d83b2dd3361a99d0d47c196a00949f",
+      "bytes": 151069
+    },
+    {
+      "layer": 58,
+      "path": "transformer-58/bin/transformer-58.exe",
+      "sha256": "97a2a933456fd94a446d4bfff1740ad2c4147cba40246ca1e01af4d531053db3",
+      "bytes": 151069
+    },
+    {
+      "layer": 59,
+      "path": "transformer-59/bin/transformer-59.exe",
+      "sha256": "1de182cbd86e353b1f1d10725d904a7e2b25a811acd60f5b533eae69968cdc67",
+      "bytes": 151399
+    },
+    {
+      "layer": 60,
+      "path": "transformer-60/bin/transformer-60.exe",
+      "sha256": "f91f6d0c24cfab4a746a43b8913f8ffbf0b2d13b481a04d281768a99206a03b8",
+      "bytes": 151069
+    },
+    {
+      "layer": 61,
+      "path": "transformer-61/bin/transformer-61.exe",
+      "sha256": "d455d1b5aac8598f14bcb94d69a03db43da258f8827bf4cf2ea8b0ba1fe80f92",
+      "bytes": 151069
+    },
+    {
+      "layer": 62,
+      "path": "transformer-62/bin/transformer-62.exe",
+      "sha256": "22530122c4ef9f28b1cf34e5af81ad6d9c887da7b500c284fe56cfe65891703c",
+      "bytes": 151581
+    },
+    {
+      "layer": 63,
+      "path": "transformer-63/bin/transformer-63.exe",
+      "sha256": "e31f2833ac9558c80aa89622bfbbcc2fe84dc537b89d006a43c3439862ec6bdf",
+      "bytes": 151399
+    },
+    {
+      "layer": 64,
+      "path": "transformer-64/bin/transformer-64.exe",
+      "sha256": "a7cbc4d4f98a2fe63f8d795a1d1b5378afbf58540c8d5a850905396290bd2c9d",
+      "bytes": 151069
+    },
+    {
+      "layer": 65,
+      "path": "transformer-65/bin/transformer-65.exe",
+      "sha256": "8e81bbce72b43141685a6a3dcd352e3023e04b9faa80e8f7d366ee3d094060fa",
+      "bytes": 151069
+    },
+    {
+      "layer": 66,
+      "path": "transformer-66/bin/transformer-66.exe",
+      "sha256": "3d6fc40410c6889daf252220a23c464035976145a66c724521c8fe7c8dd5e08c",
+      "bytes": 151069
+    },
+    {
+      "layer": 67,
+      "path": "transformer-67/bin/transformer-67.exe",
+      "sha256": "82434dbe67a14869b6e9cd22e5d147468e382ddbecec6fea81f7b2a5ace6673b",
+      "bytes": 151399
+    },
+    {
+      "layer": 68,
+      "path": "transformer-68/bin/transformer-68.exe",
+      "sha256": "98ee06e96f7fbb5ff7d4b5bb8f1a77f55a7fb8fc92d4854642354329bd0bc100",
+      "bytes": 151069
+    },
+    {
+      "layer": 69,
+      "path": "transformer-69/bin/transformer-69.exe",
+      "sha256": "714845d57dec39cff1bcd7cc37a185c8e48420ef6f1dd5badaeb0faf8808b975",
+      "bytes": 151069
+    },
+    {
+      "layer": 70,
+      "path": "transformer-70/bin/transformer-70.exe",
+      "sha256": "f6e5daafc2e6535141497de0b61c8092f9b4b2f1270f0dedebd7c7612c88683d",
+      "bytes": 151069
+    },
+    {
+      "layer": 71,
+      "path": "transformer-71/bin/transformer-71.exe",
+      "sha256": "f32b3242cc09a0e029936455e3f317450519a39d3f2e8a2962da3df2b2bb27fb",
+      "bytes": 151399
+    },
+    {
+      "layer": 72,
+      "path": "transformer-72/bin/transformer-72.exe",
+      "sha256": "9b3004a21d53716a95731a77bf28d6dc729e1d2daa7e1977718b2a2409a3a6bc",
+      "bytes": 151069
+    },
+    {
+      "layer": 73,
+      "path": "transformer-73/bin/transformer-73.exe",
+      "sha256": "699d3a55b4361edbd6e56f703aec3a8a8357faef3ff75c2844623a221a258f9f",
+      "bytes": 151069
+    },
+    {
+      "layer": 74,
+      "path": "transformer-74/bin/transformer-74.exe",
+      "sha256": "d6da5d34456dc134fa10256875d88416fd57a4731a0aa2f8462d8fe68c6d5b5e",
+      "bytes": 151069
+    },
+    {
+      "layer": 75,
+      "path": "transformer-75/bin/transformer-75.exe",
+      "sha256": "66b023fad00b0471c59a2a952650f3f4584b50e853919636995297b8c6c415f6",
+      "bytes": 151399
+    },
+    {
+      "layer": 76,
+      "path": "transformer-76/bin/transformer-76.exe",
+      "sha256": "c76f94c0cbab72ea9ca0218ef2753bc30b26b3f9f164146eb2e2c9eab32e79e2",
+      "bytes": 151069
+    },
+    {
+      "layer": 77,
+      "path": "transformer-77/bin/transformer-77.exe",
+      "sha256": "7dbdcfd60d8501d42c65309c5ed4d03cd7f8370970e6bacbebc097c3d6421553",
+      "bytes": 151069
+    },
+    {
+      "layer": 78,
+      "path": "transformer-78/bin/transformer-78.exe",
+      "sha256": "1e70ecb207ec03e7b574caf826a072f5ce4b0044ad3507bbdc3ef5b4b61a7d9d",
+      "bytes": 151069
+    },
+    {
+      "layer": 79,
+      "path": "transformer-79/bin/transformer-79.exe",
+      "sha256": "d23d500d020bea271a91658de39d547abe21b192c65d752f0d23affd908ae25c",
+      "bytes": 151399
+    },
+    {
+      "layer": 80,
+      "path": "transformer-80/bin/transformer-80.exe",
+      "sha256": "5c5ace8a6fd90272b4bebc2aec2698de21d98e7b3bbd2dc88d560938eaf8d81d",
+      "bytes": 151069
+    },
+    {
+      "layer": 81,
+      "path": "transformer-81/bin/transformer-81.exe",
+      "sha256": "64d82899fed6e43f5ddc6a25899cd27f611e52ac05a34fd0b6bf3ebaf2ef3ebf",
+      "bytes": 151069
+    },
+    {
+      "layer": 82,
+      "path": "transformer-82/bin/transformer-82.exe",
+      "sha256": "053fb9e4b632a3448ab71b6033550f0e65991c2f0504bd5bc72a6002722c8651",
+      "bytes": 151069
+    },
+    {
+      "layer": 83,
+      "path": "transformer-83/bin/transformer-83.exe",
+      "sha256": "61c62bd47762fc973cd41ea24175eacdc5d376b0c4e138b82d27d00c11e70e9c",
+      "bytes": 151399
+    },
+    {
+      "layer": 84,
+      "path": "transformer-84/bin/transformer-84.exe",
+      "sha256": "60c5599c9de775242104dce5baf3145ccf6795896a19783ff57d2ba0efe7db13",
+      "bytes": 151069
+    },
+    {
+      "layer": 85,
+      "path": "transformer-85/bin/transformer-85.exe",
+      "sha256": "cb2b55c9f0529a03d0e714991d7513ab260c7252992cc7d42f46889eb5da8aa7",
+      "bytes": 151069
+    },
+    {
+      "layer": 86,
+      "path": "transformer-86/bin/transformer-86.exe",
+      "sha256": "f8f3a34082c7bcaace459fa49c92db30d6a15d31ec378d97d89f6f51f6df2c65",
+      "bytes": 151069
+    },
+    {
+      "layer": 87,
+      "path": "transformer-87/bin/transformer-87.exe",
+      "sha256": "317432b6bf91497aecaa55d6d162384fea2f2c7ef8edeb600c1c74ef7be7ccb0",
+      "bytes": 151399
+    },
+    {
+      "layer": 88,
+      "path": "transformer-88/bin/transformer-88.exe",
+      "sha256": "44e534b3232f476ec29f6c78825bd4535c7d52e5ee6b470971ff9643732a5f65",
+      "bytes": 151069
+    },
+    {
+      "layer": 89,
+      "path": "transformer-89/bin/transformer-89.exe",
+      "sha256": "f3ed02806bbf29fe27f0f4a3e00b6a4f92df2b6e12af8a3efee514a2be5cd2d8",
+      "bytes": 151069
+    },
+    {
+      "layer": 90,
+      "path": "transformer-90/bin/transformer-90.exe",
+      "sha256": "a579c4a9cd28f4068a5192417dc9414a355440aae05a62a1158c8557a7ea51bf",
+      "bytes": 151069
+    },
+    {
+      "layer": 91,
+      "path": "transformer-91/bin/transformer-91.exe",
+      "sha256": "4314e6219ed128566b2d870ac39a60ea613863841ace6ea3289395b09af6d1d0",
+      "bytes": 151911
+    },
+    {
+      "layer": 92,
+      "path": "transformer-92/bin/transformer-92.exe",
+      "sha256": "5e163a6950dc6dde2d12e6f054d00e4abe9ec239bb9a77af9548fe7ec6a7d17d",
+      "bytes": 151399
+    }
+  ]
+}

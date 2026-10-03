@@ -1,0 +1,4 @@
+/bin/transformer-1
+/bin/test-*
+/bin/*.exe
+/reference-one.inc

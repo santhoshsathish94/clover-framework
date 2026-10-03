@@ -1,0 +1,190 @@
+{"unit": 1, "gate": "STARTED", "target": "root-1", "unix": 1790911463.363203}
+{"unit": 1, "gate": "MOVED_AND_VERIFIED", "target": "root-1", "new_files": 15, "preserved_files": 16, "additional_bytes": 14198549646, "unix": 1790911463.3669727}
+{"unit": 2, "gate": "STARTED", "target": "root-2", "unix": 1790911508.9683065}
+{"unit": 2, "gate": "MOVED_AND_VERIFIED", "target": "root-2", "new_files": 11, "preserved_files": 14, "additional_bytes": 14177580373, "unix": 1790911508.9708655}
+{"unit": 3, "gate": "STARTED", "target": "root-3", "unix": 1790911508.9721816}
+{"unit": 3, "gate": "MOVED_AND_VERIFIED", "target": "root-3", "new_files": 11, "preserved_files": 14, "additional_bytes": 14195070415, "unix": 1790911508.9745152}
+{"unit": 4, "gate": "STARTED", "target": "root-4", "unix": 1790911508.9757428}
+{"unit": 4, "gate": "MOVED_AND_VERIFIED", "target": "root-4", "new_files": 11, "preserved_files": 14, "additional_bytes": 14200894789, "unix": 1790911508.9778237}
+{"unit": 5, "gate": "STARTED", "target": "root-5", "unix": 1790911508.9790664}
+{"unit": 5, "gate": "MOVED_AND_VERIFIED", "target": "root-5", "new_files": 11, "preserved_files": 14, "additional_bytes": 14178677534, "unix": 1790911508.9811428}
+{"unit": 6, "gate": "STARTED", "target": "root-6", "unix": 1790911508.9823897}
+{"unit": 6, "gate": "MOVED_AND_VERIFIED", "target": "root-6", "new_files": 11, "preserved_files": 14, "additional_bytes": 14186526151, "unix": 1790911508.9844682}
+{"unit": 7, "gate": "STARTED", "target": "root-7", "unix": 1790911508.9856555}
+{"unit": 7, "gate": "MOVED_AND_VERIFIED", "target": "root-7", "new_files": 11, "preserved_files": 14, "additional_bytes": 14170078101, "unix": 1790911508.9877326}
+{"unit": 8, "gate": "STARTED", "target": "root-8", "unix": 1790911508.9889784}
+{"unit": 8, "gate": "MOVED_AND_VERIFIED", "target": "root-8", "new_files": 11, "preserved_files": 14, "additional_bytes": 14159940409, "unix": 1790911508.9911032}
+{"unit": 9, "gate": "STARTED", "target": "root-9", "unix": 1790911508.9923463}
+{"unit": 9, "gate": "MOVED_AND_VERIFIED", "target": "root-9", "new_files": 11, "preserved_files": 14, "additional_bytes": 14160989567, "unix": 1790911508.9944293}
+{"unit": 10, "gate": "STARTED", "target": "root-10", "unix": 1790911508.9956393}
+{"unit": 10, "gate": "MOVED_AND_VERIFIED", "target": "root-10", "new_files": 11, "preserved_files": 14, "additional_bytes": 14153347047, "unix": 1790911508.9978032}
+{"unit": 11, "gate": "STARTED", "target": "root-11", "unix": 1790911508.9991074}
+{"unit": 11, "gate": "MOVED_AND_VERIFIED", "target": "root-11", "new_files": 11, "preserved_files": 14, "additional_bytes": 14154243458, "unix": 1790911509.001329}
+{"unit": 12, "gate": "STARTED", "target": "root-12", "unix": 1790911509.0026376}
+{"unit": 12, "gate": "MOVED_AND_VERIFIED", "target": "root-12", "new_files": 11, "preserved_files": 14, "additional_bytes": 14133586560, "unix": 1790911509.0048838}
+{"unit": 13, "gate": "STARTED", "target": "root-13", "unix": 1790911509.006234}
+{"unit": 13, "gate": "MOVED_AND_VERIFIED", "target": "root-13", "new_files": 11, "preserved_files": 14, "additional_bytes": 14149147205, "unix": 1790911509.008478}
+{"unit": 14, "gate": "STARTED", "target": "root-14", "unix": 1790911509.0097492}
+{"unit": 14, "gate": "MOVED_AND_VERIFIED", "target": "root-14", "new_files": 11, "preserved_files": 14, "additional_bytes": 14150934005, "unix": 1790911509.0120032}
+{"unit": 15, "gate": "STARTED", "target": "root-15", "unix": 1790911509.0133238}
+{"unit": 15, "gate": "MOVED_AND_VERIFIED", "target": "root-15", "new_files": 11, "preserved_files": 14, "additional_bytes": 14149919791, "unix": 1790911509.0155716}
+{"unit": 16, "gate": "STARTED", "target": "root-16", "unix": 1790911509.0168586}
+{"unit": 16, "gate": "MOVED_AND_VERIFIED", "target": "root-16", "new_files": 11, "preserved_files": 14, "additional_bytes": 14148620366, "unix": 1790911509.0191002}
+{"unit": 17, "gate": "STARTED", "target": "root-17", "unix": 1790911509.020364}
+{"unit": 17, "gate": "MOVED_AND_VERIFIED", "target": "root-17", "new_files": 11, "preserved_files": 14, "additional_bytes": 14149714289, "unix": 1790911509.0226026}
+{"unit": 18, "gate": "STARTED", "target": "root-18", "unix": 1790911509.0239372}
+{"unit": 18, "gate": "MOVED_AND_VERIFIED", "target": "root-18", "new_files": 11, "preserved_files": 14, "additional_bytes": 14150820310, "unix": 1790911509.0262039}
+{"unit": 19, "gate": "STARTED", "target": "root-19", "unix": 1790911509.0274763}
+{"unit": 19, "gate": "MOVED_AND_VERIFIED", "target": "root-19", "new_files": 11, "preserved_files": 14, "additional_bytes": 14150674474, "unix": 1790911509.0297003}
+{"unit": 20, "gate": "STARTED", "target": "root-20", "unix": 1790911509.0309784}
+{"unit": 20, "gate": "MOVED_AND_VERIFIED", "target": "root-20", "new_files": 11, "preserved_files": 14, "additional_bytes": 14145922552, "unix": 1790911509.033195}
+{"unit": 21, "gate": "STARTED", "target": "root-21", "unix": 1790911509.0344698}
+{"unit": 21, "gate": "MOVED_AND_VERIFIED", "target": "root-21", "new_files": 11, "preserved_files": 14, "additional_bytes": 14143274024, "unix": 1790911509.0367212}
+{"unit": 22, "gate": "STARTED", "target": "root-22", "unix": 1790911509.0380049}
+{"unit": 22, "gate": "MOVED_AND_VERIFIED", "target": "root-22", "new_files": 11, "preserved_files": 14, "additional_bytes": 14143558907, "unix": 1790911509.040228}
+{"unit": 23, "gate": "STARTED", "target": "root-23", "unix": 1790911509.041529}
+{"unit": 23, "gate": "MOVED_AND_VERIFIED", "target": "root-23", "new_files": 11, "preserved_files": 14, "additional_bytes": 14144705545, "unix": 1790911509.043756}
+{"unit": 24, "gate": "STARTED", "target": "root-24", "unix": 1790911509.0450497}
+{"unit": 24, "gate": "MOVED_AND_VERIFIED", "target": "root-24", "new_files": 11, "preserved_files": 14, "additional_bytes": 14199013856, "unix": 1790911509.0473}
+{"unit": 25, "gate": "STARTED", "target": "root-25", "unix": 1790911509.0485585}
+{"unit": 25, "gate": "MOVED_AND_VERIFIED", "target": "root-25", "new_files": 11, "preserved_files": 14, "additional_bytes": 14178881026, "unix": 1790911509.0507789}
+{"unit": 26, "gate": "STARTED", "target": "root-26", "unix": 1790911509.0520778}
+{"unit": 26, "gate": "MOVED_AND_VERIFIED", "target": "root-26", "new_files": 11, "preserved_files": 14, "additional_bytes": 14174121793, "unix": 1790911509.054292}
+{"unit": 27, "gate": "STARTED", "target": "root-27", "unix": 1790911509.0555513}
+{"unit": 27, "gate": "MOVED_AND_VERIFIED", "target": "root-27", "new_files": 11, "preserved_files": 14, "additional_bytes": 14174710144, "unix": 1790911509.057774}
+{"unit": 28, "gate": "STARTED", "target": "root-28", "unix": 1790911509.059057}
+{"unit": 28, "gate": "MOVED_AND_VERIFIED", "target": "root-28", "new_files": 11, "preserved_files": 14, "additional_bytes": 14179067883, "unix": 1790911509.061277}
+{"unit": 29, "gate": "STARTED", "target": "root-29", "unix": 1790911509.062572}
+{"unit": 29, "gate": "MOVED_AND_VERIFIED", "target": "root-29", "new_files": 11, "preserved_files": 14, "additional_bytes": 14178574518, "unix": 1790911509.0647833}
+{"unit": 30, "gate": "STARTED", "target": "root-30", "unix": 1790911509.0660818}
+{"unit": 30, "gate": "MOVED_AND_VERIFIED", "target": "root-30", "new_files": 11, "preserved_files": 14, "additional_bytes": 14177928790, "unix": 1790911509.0682826}
+{"unit": 31, "gate": "STARTED", "target": "root-31", "unix": 1790911509.0695329}
+{"unit": 31, "gate": "MOVED_AND_VERIFIED", "target": "root-31", "new_files": 11, "preserved_files": 14, "additional_bytes": 14177067662, "unix": 1790911509.071781}
+{"unit": 32, "gate": "STARTED", "target": "root-32", "unix": 1790911509.0730548}
+{"unit": 32, "gate": "MOVED_AND_VERIFIED", "target": "root-32", "new_files": 11, "preserved_files": 14, "additional_bytes": 14180014167, "unix": 1790911509.0752637}
+{"unit": 33, "gate": "STARTED", "target": "root-33", "unix": 1790911509.076548}
+{"unit": 33, "gate": "MOVED_AND_VERIFIED", "target": "root-33", "new_files": 11, "preserved_files": 14, "additional_bytes": 14176515796, "unix": 1790911509.078746}
+{"unit": 34, "gate": "STARTED", "target": "root-34", "unix": 1790911509.0800023}
+{"unit": 34, "gate": "MOVED_AND_VERIFIED", "target": "root-34", "new_files": 11, "preserved_files": 14, "additional_bytes": 14174119481, "unix": 1790911509.0822206}
+{"unit": 35, "gate": "STARTED", "target": "root-35", "unix": 1790911509.0835254}
+{"unit": 35, "gate": "MOVED_AND_VERIFIED", "target": "root-35", "new_files": 11, "preserved_files": 14, "additional_bytes": 14167724291, "unix": 1790911509.0857275}
+{"unit": 36, "gate": "STARTED", "target": "root-36", "unix": 1790911509.0869894}
+{"unit": 36, "gate": "MOVED_AND_VERIFIED", "target": "root-36", "new_files": 11, "preserved_files": 14, "additional_bytes": 14176943662, "unix": 1790911509.0891838}
+{"unit": 37, "gate": "STARTED", "target": "root-37", "unix": 1790911509.0904315}
+{"unit": 37, "gate": "MOVED_AND_VERIFIED", "target": "root-37", "new_files": 11, "preserved_files": 14, "additional_bytes": 14173889862, "unix": 1790911509.092616}
+{"unit": 38, "gate": "STARTED", "target": "root-38", "unix": 1790911509.0939107}
+{"unit": 38, "gate": "MOVED_AND_VERIFIED", "target": "root-38", "new_files": 11, "preserved_files": 14, "additional_bytes": 14168033069, "unix": 1790911509.0961182}
+{"unit": 39, "gate": "STARTED", "target": "root-39", "unix": 1790911509.0974026}
+{"unit": 39, "gate": "MOVED_AND_VERIFIED", "target": "root-39", "new_files": 11, "preserved_files": 14, "additional_bytes": 14164904932, "unix": 1790911509.0995853}
+{"unit": 40, "gate": "STARTED", "target": "root-40", "unix": 1790911509.1008182}
+{"unit": 40, "gate": "MOVED_AND_VERIFIED", "target": "root-40", "new_files": 11, "preserved_files": 14, "additional_bytes": 14163024288, "unix": 1790911509.1030326}
+{"unit": 41, "gate": "STARTED", "target": "root-41", "unix": 1790911509.104359}
+{"unit": 41, "gate": "MOVED_AND_VERIFIED", "target": "root-41", "new_files": 11, "preserved_files": 14, "additional_bytes": 14160269563, "unix": 1790911509.1065645}
+{"unit": 42, "gate": "STARTED", "target": "root-42", "unix": 1790911509.107804}
+{"unit": 42, "gate": "MOVED_AND_VERIFIED", "target": "root-42", "new_files": 11, "preserved_files": 14, "additional_bytes": 14166406254, "unix": 1790911509.1100178}
+{"unit": 43, "gate": "STARTED", "target": "root-43", "unix": 1790911509.1112666}
+{"unit": 43, "gate": "MOVED_AND_VERIFIED", "target": "root-43", "new_files": 11, "preserved_files": 14, "additional_bytes": 14165614815, "unix": 1790911509.1134675}
+{"unit": 44, "gate": "STARTED", "target": "root-44", "unix": 1790911509.114778}
+{"unit": 44, "gate": "MOVED_AND_VERIFIED", "target": "root-44", "new_files": 11, "preserved_files": 14, "additional_bytes": 14164808652, "unix": 1790911509.1170187}
+{"unit": 45, "gate": "STARTED", "target": "root-45", "unix": 1790911509.1183395}
+{"unit": 45, "gate": "MOVED_AND_VERIFIED", "target": "root-45", "new_files": 11, "preserved_files": 14, "additional_bytes": 14164717690, "unix": 1790911509.120523}
+{"unit": 46, "gate": "STARTED", "target": "root-46", "unix": 1790911509.121765}
+{"unit": 46, "gate": "MOVED_AND_VERIFIED", "target": "root-46", "new_files": 11, "preserved_files": 14, "additional_bytes": 14162411706, "unix": 1790911509.123976}
+{"unit": 47, "gate": "STARTED", "target": "root-47", "unix": 1790911509.1252782}
+{"unit": 47, "gate": "MOVED_AND_VERIFIED", "target": "root-47", "new_files": 11, "preserved_files": 14, "additional_bytes": 14164259771, "unix": 1790911509.1274529}
+{"unit": 48, "gate": "STARTED", "target": "root-48", "unix": 1790911509.1287677}
+{"unit": 48, "gate": "MOVED_AND_VERIFIED", "target": "root-48", "new_files": 11, "preserved_files": 14, "additional_bytes": 14166010638, "unix": 1790911509.1309853}
+{"unit": 49, "gate": "STARTED", "target": "root-49", "unix": 1790911509.1322842}
+{"unit": 49, "gate": "MOVED_AND_VERIFIED", "target": "root-49", "new_files": 11, "preserved_files": 14, "additional_bytes": 14160690949, "unix": 1790911509.1344666}
+{"unit": 50, "gate": "STARTED", "target": "root-50", "unix": 1790911509.1357083}
+{"unit": 50, "gate": "MOVED_AND_VERIFIED", "target": "root-50", "new_files": 11, "preserved_files": 14, "additional_bytes": 14166747769, "unix": 1790911509.1378813}
+{"unit": 51, "gate": "STARTED", "target": "root-51", "unix": 1790911509.139163}
+{"unit": 51, "gate": "MOVED_AND_VERIFIED", "target": "root-51", "new_files": 11, "preserved_files": 14, "additional_bytes": 14168574322, "unix": 1790911509.1413786}
+{"unit": 52, "gate": "STARTED", "target": "root-52", "unix": 1790911509.142634}
+{"unit": 52, "gate": "MOVED_AND_VERIFIED", "target": "root-52", "new_files": 11, "preserved_files": 14, "additional_bytes": 14155970220, "unix": 1790911509.144796}
+{"unit": 53, "gate": "STARTED", "target": "root-53", "unix": 1790911509.1460292}
+{"unit": 53, "gate": "MOVED_AND_VERIFIED", "target": "root-53", "new_files": 11, "preserved_files": 14, "additional_bytes": 14163517231, "unix": 1790911509.148202}
+{"unit": 54, "gate": "STARTED", "target": "root-54", "unix": 1790911509.1494348}
+{"unit": 54, "gate": "MOVED_AND_VERIFIED", "target": "root-54", "new_files": 11, "preserved_files": 14, "additional_bytes": 14169429027, "unix": 1790911509.1516318}
+{"unit": 55, "gate": "STARTED", "target": "root-55", "unix": 1790911509.1528685}
+{"unit": 55, "gate": "MOVED_AND_VERIFIED", "target": "root-55", "new_files": 11, "preserved_files": 14, "additional_bytes": 14179233707, "unix": 1790911509.155086}
+{"unit": 56, "gate": "STARTED", "target": "root-56", "unix": 1790911509.1563804}
+{"unit": 56, "gate": "MOVED_AND_VERIFIED", "target": "root-56", "new_files": 11, "preserved_files": 14, "additional_bytes": 14164920985, "unix": 1790911509.1585555}
+{"unit": 57, "gate": "STARTED", "target": "root-57", "unix": 1790911509.1597898}
+{"unit": 57, "gate": "MOVED_AND_VERIFIED", "target": "root-57", "new_files": 11, "preserved_files": 14, "additional_bytes": 14172455525, "unix": 1790911509.1619453}
+{"unit": 58, "gate": "STARTED", "target": "root-58", "unix": 1790911509.163275}
+{"unit": 58, "gate": "MOVED_AND_VERIFIED", "target": "root-58", "new_files": 11, "preserved_files": 14, "additional_bytes": 14173450187, "unix": 1790911509.1654408}
+{"unit": 59, "gate": "STARTED", "target": "root-59", "unix": 1790911509.1667392}
+{"unit": 59, "gate": "MOVED_AND_VERIFIED", "target": "root-59", "new_files": 11, "preserved_files": 14, "additional_bytes": 14171053077, "unix": 1790911509.168978}
+{"unit": 60, "gate": "STARTED", "target": "root-60", "unix": 1790911509.1704438}
+{"unit": 60, "gate": "MOVED_AND_VERIFIED", "target": "root-60", "new_files": 12, "preserved_files": 20, "additional_bytes": 14152973794, "unix": 1790911509.173101}
+{"unit": 61, "gate": "STARTED", "target": "root-61", "unix": 1790911509.174574}
+{"unit": 61, "gate": "MOVED_AND_VERIFIED", "target": "root-61", "new_files": 12, "preserved_files": 20, "additional_bytes": 14145849017, "unix": 1790911509.1772094}
+{"unit": 62, "gate": "STARTED", "target": "root-62", "unix": 1790911509.1786933}
+{"unit": 62, "gate": "MOVED_AND_VERIFIED", "target": "root-62", "new_files": 12, "preserved_files": 20, "additional_bytes": 14145827040, "unix": 1790911509.1813047}
+{"unit": 63, "gate": "STARTED", "target": "root-63", "unix": 1790911509.1827872}
+{"unit": 63, "gate": "MOVED_AND_VERIFIED", "target": "root-63", "new_files": 12, "preserved_files": 20, "additional_bytes": 14145115503, "unix": 1790911509.185423}
+{"unit": 64, "gate": "STARTED", "target": "root-64", "unix": 1790911509.186883}
+{"unit": 64, "gate": "MOVED_AND_VERIFIED", "target": "root-64", "new_files": 12, "preserved_files": 20, "additional_bytes": 14142567622, "unix": 1790911509.1894903}
+{"unit": 65, "gate": "STARTED", "target": "root-65", "unix": 1790911509.1909456}
+{"unit": 65, "gate": "MOVED_AND_VERIFIED", "target": "root-65", "new_files": 12, "preserved_files": 20, "additional_bytes": 14141780595, "unix": 1790911509.1935415}
+{"unit": 66, "gate": "STARTED", "target": "root-66", "unix": 1790911509.194932}
+{"unit": 66, "gate": "MOVED_AND_VERIFIED", "target": "root-66", "new_files": 12, "preserved_files": 20, "additional_bytes": 14140160977, "unix": 1790911509.197539}
+{"unit": 67, "gate": "STARTED", "target": "root-67", "unix": 1790911509.198996}
+{"unit": 67, "gate": "MOVED_AND_VERIFIED", "target": "root-67", "new_files": 12, "preserved_files": 20, "additional_bytes": 14145796691, "unix": 1790911509.2015538}
+{"unit": 68, "gate": "STARTED", "target": "root-68", "unix": 1790911509.2030492}
+{"unit": 68, "gate": "MOVED_AND_VERIFIED", "target": "root-68", "new_files": 12, "preserved_files": 20, "additional_bytes": 14147472229, "unix": 1790911509.2056115}
+{"unit": 69, "gate": "STARTED", "target": "root-69", "unix": 1790911509.207066}
+{"unit": 69, "gate": "MOVED_AND_VERIFIED", "target": "root-69", "new_files": 12, "preserved_files": 20, "additional_bytes": 14139753643, "unix": 1790911509.209663}
+{"unit": 70, "gate": "STARTED", "target": "root-70", "unix": 1790911509.211106}
+{"unit": 70, "gate": "MOVED_AND_VERIFIED", "target": "root-70", "new_files": 12, "preserved_files": 20, "additional_bytes": 14139921181, "unix": 1790911509.2136652}
+{"unit": 71, "gate": "STARTED", "target": "root-71", "unix": 1790911509.215049}
+{"unit": 71, "gate": "MOVED_AND_VERIFIED", "target": "root-71", "new_files": 12, "preserved_files": 20, "additional_bytes": 14138323862, "unix": 1790911509.2175906}
+{"unit": 72, "gate": "STARTED", "target": "root-72", "unix": 1790911509.2190208}
+{"unit": 72, "gate": "MOVED_AND_VERIFIED", "target": "root-72", "new_files": 12, "preserved_files": 20, "additional_bytes": 14143907495, "unix": 1790911509.2216015}
+{"unit": 73, "gate": "STARTED", "target": "root-73", "unix": 1790911509.2230344}
+{"unit": 73, "gate": "MOVED_AND_VERIFIED", "target": "root-73", "new_files": 12, "preserved_files": 20, "additional_bytes": 14145547610, "unix": 1790911509.2255797}
+{"unit": 74, "gate": "STARTED", "target": "root-74", "unix": 1790911509.2269745}
+{"unit": 74, "gate": "MOVED_AND_VERIFIED", "target": "root-74", "new_files": 12, "preserved_files": 20, "additional_bytes": 14142765903, "unix": 1790911509.2295156}
+{"unit": 75, "gate": "STARTED", "target": "root-75", "unix": 1790911509.2309456}
+{"unit": 75, "gate": "MOVED_AND_VERIFIED", "target": "root-75", "new_files": 12, "preserved_files": 20, "additional_bytes": 14139437831, "unix": 1790911509.23353}
+{"unit": 76, "gate": "STARTED", "target": "root-76", "unix": 1790911509.234953}
+{"unit": 76, "gate": "MOVED_AND_VERIFIED", "target": "root-76", "new_files": 12, "preserved_files": 20, "additional_bytes": 14145052101, "unix": 1790911509.2375078}
+{"unit": 77, "gate": "STARTED", "target": "root-77", "unix": 1790911509.2388825}
+{"unit": 77, "gate": "MOVED_AND_VERIFIED", "target": "root-77", "new_files": 12, "preserved_files": 20, "additional_bytes": 14146792636, "unix": 1790911509.2414238}
+{"unit": 78, "gate": "STARTED", "target": "root-78", "unix": 1790911509.2428436}
+{"unit": 78, "gate": "MOVED_AND_VERIFIED", "target": "root-78", "new_files": 12, "preserved_files": 20, "additional_bytes": 14143675236, "unix": 1790911509.2453997}
+{"unit": 79, "gate": "STARTED", "target": "root-79", "unix": 1790911509.246821}
+{"unit": 79, "gate": "MOVED_AND_VERIFIED", "target": "root-79", "new_files": 12, "preserved_files": 20, "additional_bytes": 14141987110, "unix": 1790911509.2493606}
+{"unit": 80, "gate": "STARTED", "target": "root-80", "unix": 1790911509.2507727}
+{"unit": 80, "gate": "MOVED_AND_VERIFIED", "target": "root-80", "new_files": 12, "preserved_files": 20, "additional_bytes": 14150275461, "unix": 1790911509.2533078}
+{"unit": 81, "gate": "STARTED", "target": "root-81", "unix": 1790911509.2547255}
+{"unit": 81, "gate": "MOVED_AND_VERIFIED", "target": "root-81", "new_files": 12, "preserved_files": 20, "additional_bytes": 14174368915, "unix": 1790911509.2572765}
+{"unit": 82, "gate": "STARTED", "target": "root-82", "unix": 1790911509.25866}
+{"unit": 82, "gate": "MOVED_AND_VERIFIED", "target": "root-82", "new_files": 12, "preserved_files": 20, "additional_bytes": 14174840613, "unix": 1790911509.261202}
+{"unit": 83, "gate": "STARTED", "target": "root-83", "unix": 1790911509.2626343}
+{"unit": 83, "gate": "MOVED_AND_VERIFIED", "target": "root-83", "new_files": 12, "preserved_files": 20, "additional_bytes": 14214345435, "unix": 1790911509.2651627}
+{"unit": 84, "gate": "STARTED", "target": "root-84", "unix": 1790911509.2665968}
+{"unit": 84, "gate": "MOVED_AND_VERIFIED", "target": "root-84", "new_files": 12, "preserved_files": 20, "additional_bytes": 14140597866, "unix": 1790911509.2691739}
+{"unit": 85, "gate": "STARTED", "target": "root-85", "unix": 1790911509.2706447}
+{"unit": 85, "gate": "MOVED_AND_VERIFIED", "target": "root-85", "new_files": 12, "preserved_files": 20, "additional_bytes": 14140361817, "unix": 1790911509.2731807}
+{"unit": 86, "gate": "STARTED", "target": "root-86", "unix": 1790911509.2745967}
+{"unit": 86, "gate": "MOVED_AND_VERIFIED", "target": "root-86", "new_files": 12, "preserved_files": 20, "additional_bytes": 14145523393, "unix": 1790911509.2771332}
+{"unit": 87, "gate": "STARTED", "target": "root-87", "unix": 1790911509.2785609}
+{"unit": 87, "gate": "MOVED_AND_VERIFIED", "target": "root-87", "new_files": 12, "preserved_files": 20, "additional_bytes": 14159203456, "unix": 1790911509.2811236}
+{"unit": 88, "gate": "STARTED", "target": "root-88", "unix": 1790911509.2825246}
+{"unit": 88, "gate": "MOVED_AND_VERIFIED", "target": "root-88", "new_files": 12, "preserved_files": 20, "additional_bytes": 14161602945, "unix": 1790911509.285071}
+{"unit": 89, "gate": "STARTED", "target": "root-89", "unix": 1790911509.2864993}
+{"unit": 89, "gate": "MOVED_AND_VERIFIED", "target": "root-89", "new_files": 12, "preserved_files": 20, "additional_bytes": 14175773061, "unix": 1790911509.2890353}
+{"unit": 90, "gate": "STARTED", "target": "root-90", "unix": 1790911509.2904594}
+{"unit": 90, "gate": "MOVED_AND_VERIFIED", "target": "root-90", "new_files": 12, "preserved_files": 20, "additional_bytes": 14177249539, "unix": 1790911509.2930417}
+{"unit": 91, "gate": "STARTED", "target": "root-91", "unix": 1790911509.2944283}
+{"unit": 91, "gate": "MOVED_AND_VERIFIED", "target": "root-91", "new_files": 12, "preserved_files": 20, "additional_bytes": 14185937594, "unix": 1790911509.2969816}
+{"unit": 92, "gate": "STARTED", "target": "root-92", "unix": 1790911509.2984118}
+{"unit": 92, "gate": "MOVED_AND_VERIFIED", "target": "root-92", "new_files": 12, "preserved_files": 20, "additional_bytes": 14174798265, "unix": 1790911509.3009398}
+{"unit": 93, "gate": "STARTED", "target": "inputs", "unix": 1790911529.7085068}
+{"unit": 93, "gate": "MOVED_AND_VERIFIED", "target": "inputs", "new_files": 7, "preserved_files": 0, "additional_bytes": 1658872001, "unix": 1790911529.7100985}
+{"unit": 94, "gate": "STARTED", "target": "outputs", "unix": 1790911540.3654096}
+{"unit": 94, "gate": "MOVED_AND_VERIFIED", "target": "outputs", "new_files": 13, "preserved_files": 0, "additional_bytes": 1667986556, "unix": 1790911540.369012}
+{"unit": 95, "gate": "STARTED", "target": "leaves.json", "unix": 1790911551.5700517}
+{"unit": 95, "gate": "MOVED_AND_VERIFIED", "target": "leaves.json", "new_files": 1, "preserved_files": 0, "additional_bytes": 58615, "unix": 1790911551.5721076}

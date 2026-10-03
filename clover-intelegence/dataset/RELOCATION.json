@@ -1,0 +1,16 @@
+{
+  "gate": "ALL_DATASETS_MOVED",
+  "units": 373,
+  "files": 2328,
+  "bytes": 81850713865,
+  "groups": {
+    "index": 1,
+    "prepared_trunks": 93,
+    "derived_operators": 94,
+    "expert_observations": 184,
+    "global_tensors": 1
+  },
+  "payload_identities_preserved": true,
+  "all_old_paths_resolve": true,
+  "global_index_targets_resolve_inside_dataset": true
+}

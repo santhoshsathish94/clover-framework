@@ -1,0 +1,9 @@
+{
+  "max_input_tokens": 128,
+  "max_output_tokens": 128,
+  "eos_token_id": 163585,
+  "head_cache_mib": 2240,
+  "expert_pipeline_mib": 72,
+  "expert_result_cache_mib": 0,
+  "memory_reserve_mib": 8192
+}

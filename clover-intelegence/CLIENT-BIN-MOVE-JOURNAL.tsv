@@ -1,0 +1,17 @@
+client	MOVED
+test-client	MOVED
+test-client-sanitized	MOVED
+dataset	MOVED
+configs	MOVED
+/opt/clover-k3/clover-intelegence/dataset/inputs	ALIAS_REMOVED
+/opt/clover-k3/clover-intelegence/dataset/outputs	ALIAS_REMOVED
+/opt/clover-k3/clover-intelegence/dataset/tiktoken.model	ALIAS_REMOVED
+/opt/clover-k3/clover-intelegence/dataset/vocabulary.bin	ALIAS_REMOVED
+/opt/clover-k3/clover-intelegence/configs/tokenizer_config.json	ALIAS_REMOVED
+/opt/clover-k3/clover-data/inputs	ALIAS_REMOVED
+/opt/clover-k3/clover-data/outputs	ALIAS_REMOVED
+/opt/clover-k3/direct-equation-20261001-a/tiktoken.model	ALIAS_REMOVED
+/opt/clover-k3/direct-equation-20261001-a/data/vocabulary.bin	ALIAS_REMOVED
+/root/k3model/tokenizer_config.json	ALIAS_REMOVED
+/opt/clover-k3/seed	ALIAS_REMOVED
+/opt/clover-k3/fruit	ALIAS_REMOVED

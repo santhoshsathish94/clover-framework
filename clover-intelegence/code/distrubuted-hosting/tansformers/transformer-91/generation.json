@@ -1,0 +1,17 @@
+{
+  "layer": 91,
+  "attention": "MLA",
+  "input_snapshots": 8,
+  "output_snapshots": 8,
+  "root_counts": [
+    36,
+    6,
+    5,
+    21
+  ],
+  "files": {
+    "transformer-91.c": "3c73e4f930991e797be02722359cf723ec31d9bcbc6c6ff10b52de93ea1270e1",
+    "root.h": "024a2ab090a2a8235a0a7980d7e9595801de87391197de27b15a5eb38f8212e4",
+    "decode.h": "8c585b02da5bf2a1375860f8b62c24abff5e68532229a31af7d23717f91c717d"
+  }
+}

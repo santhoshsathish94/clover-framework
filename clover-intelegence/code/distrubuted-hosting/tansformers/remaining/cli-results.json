@@ -1,0 +1,46 @@
+{
+  "gate": "PASS",
+  "results": [
+    {
+      "layer": 2,
+      "input_snapshots": 1,
+      "output_snapshots": 1,
+      "inspect": true,
+      "zero_bundle": true,
+      "incomplete_and_malformed": true,
+      "nonfinite": true,
+      "empty_eof": true
+    },
+    {
+      "layer": 3,
+      "input_snapshots": 1,
+      "output_snapshots": 1,
+      "inspect": true,
+      "zero_bundle": true,
+      "incomplete_and_malformed": true,
+      "nonfinite": true,
+      "empty_eof": true
+    },
+    {
+      "layer": 12,
+      "input_snapshots": 1,
+      "output_snapshots": 2,
+      "inspect": true,
+      "zero_bundle": true,
+      "incomplete_and_malformed": true,
+      "nonfinite": true,
+      "empty_eof": true
+    },
+    {
+      "layer": 92,
+      "input_snapshots": 8,
+      "output_snapshots": 8,
+      "inspect": true,
+      "zero_bundle": true,
+      "incomplete_and_malformed": true,
+      "nonfinite": true,
+      "empty_eof": true
+    }
+  ],
+  "scope": "Four representative packaged CLI variants; no vector payloads persisted"
+}

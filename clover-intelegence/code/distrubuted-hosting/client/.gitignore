@@ -1,0 +1,4 @@
+*.exe
+/bin/client
+/bin/test-client
+/bin/test-client-sanitized

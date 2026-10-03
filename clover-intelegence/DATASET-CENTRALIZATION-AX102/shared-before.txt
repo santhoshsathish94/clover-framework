@@ -1,0 +1,9 @@
+/opt/clover-k3/clover-intelegence/dataset/eqidx.bin|2306:57409680:21877087:2026-09-28 07:21:18.044101655 +0200
+/opt/clover-k3/clover-intelegence/dataset/model/model-00094-of-000096.safetensors|2306:12324069:4697664072:2026-09-24 16:12:36.721974839 +0200
+/opt/clover-k3/clover-intelegence/dataset/MOVE-JOURNAL.jsonl|2306:57938667:62896:2026-10-02 05:16:45.930461702 +0200
+/opt/clover-k3/clover-intelegence/dataset/MOVE-PLAN.json|2306:57938666:415004:2026-10-02 05:15:15.070692148 +0200
+/opt/clover-k3/clover-intelegence/dataset/README.md|2306:57938859:5377:2026-10-02 11:31:59.858604007 +0200
+/opt/clover-k3/clover-intelegence/dataset/RELOCATION.json|2306:57938855:367:2026-10-02 05:24:57.877845553 +0200
+/opt/clover-k3/clover-intelegence/dataset/ROOTS-MOVE-JOURNAL.jsonl|2306:57938863:23273:2026-10-02 05:25:51.571126535 +0200
+/opt/clover-k3/clover-intelegence/dataset/ROOTS-MOVE-PLAN.json|2306:57938861:771306:2026-10-02 05:24:10.605478953 +0200
+/opt/clover-k3/clover-intelegence/dataset/ROOTS-RELOCATION.json|2306:57938670:553:2026-10-02 05:26:07.737910126 +0200

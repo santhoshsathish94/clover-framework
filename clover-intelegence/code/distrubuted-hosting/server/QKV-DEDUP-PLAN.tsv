@@ -1,0 +1,5 @@
+canonical	/opt/clover-k3/clover-intelegence/code/server/bin/dataset/trunk-0-qkv/qkv.bin	2306:57805240:265008216:1:517600:2026-10-01 08:44:27.170468473 +0200	4925ea619a4fd268b441e8008e4c1cd714f681b328b03cccd52c69b6a9b6f654
+canonical-manifest	/opt/clover-k3/clover-intelegence/code/server/bin/dataset/trunk-0-qkv/manifest.json	2306:57805242:1687:1:8:2026-10-01 08:44:28.582451335 +0200	b0ab37bc99bf78e003675188a9d7fe04c57e44102b4d3a9557df08330a6e7331
+duplicate	/opt/clover-k3/clover-intelegence/dataset/operators/qkv-all/layer-0/operator.bin	2306:57807061:265008216:1:517600:2026-10-01 09:22:25.627902453 +0200	4925ea619a4fd268b441e8008e4c1cd714f681b328b03cccd52c69b6a9b6f654
+provenance	/opt/clover-k3/clover-intelegence/dataset/operators/qkv-all/layer-0/manifest.json	2306:57807063:1863:1:8:2026-10-01 09:22:26.749888624 +0200	c9970e6194e2e5e33ada3c59ff5e6c5b6175bad21e57c46fada3f75332ac457e
+legacy	/opt/clover-k3/clover-data/operators/qkv-all/layer-0	2306:57832429:67:1:8:2026-10-02 05:16:08.642966221 +0200	/opt/clover-k3/clover-intelegence/dataset/operators/qkv-all/layer-0

@@ -1,0 +1,5 @@
+/bin/server
+/bin/test-server-reference
+/bin/test-server-sanitized
+/bin/*.exe
+/reference-zero.inc

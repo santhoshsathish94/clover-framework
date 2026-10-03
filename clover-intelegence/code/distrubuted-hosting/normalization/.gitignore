@@ -1,0 +1,4 @@
+/bin/normalization
+/bin/*.exe
+/bin/test-*
+/reference-tail.inc

@@ -21,3 +21,26 @@ research/k3/experiments/**/seed-prior-candidate
 research/k3/experiments/**/seed-reader-test
 research/k3/experiments/**/seed.bin
 research/k3/experiments/**/fruit.bin
+
+# Generated from clover-one by scripts/build-ai-site.mjs before Pages validation.
+site/ai/
+
+# clover-intelegence: the mappings describe where every dataset piece lives, so they
+# stay in Git. The bytes themselves live on the hosts and are not reproducible from here.
+clover-intelegence/**/*.bin
+clover-intelegence/**/*.model
+clover-intelegence/**/*.safetensors
+clover-intelegence/**/*.direct
+clover-intelegence/**/*.npy
+clover-intelegence/**/*.pt
+
+# Each distributed node carried its own full copy of the dataset tree. One copy of the
+# structure is kept under clover-intelegence/dataset/; the per-node duplicates are not.
+clover-intelegence/code/**/bin/dataset/**
+!clover-intelegence/code/**/bin/dataset/.gitkeep
+
+# Build output and run scratch.
+clover-intelegence/**/__pycache__/
+clover-intelegence/**/*.known-good
+clover-intelegence/code/**/bin/*.err
+clover-intelegence/code/**/bin/*.log

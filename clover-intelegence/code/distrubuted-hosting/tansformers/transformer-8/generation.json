@@ -1,0 +1,17 @@
+{
+  "layer": 8,
+  "attention": "KDA",
+  "input_snapshots": 1,
+  "output_snapshots": 1,
+  "root_counts": [
+    68,
+    14,
+    21,
+    148
+  ],
+  "files": {
+    "transformer-8.c": "9e66a971e4816fabb53093ad41989c5ba649ad46f6e938feccde35657a0aa911",
+    "root.h": "c87344c5a9f120e4ae3fb540df2009cd15bcfd4a84396a815694aeb83a675747",
+    "decode.h": "8c585b02da5bf2a1375860f8b62c24abff5e68532229a31af7d23717f91c717d"
+  }
+}

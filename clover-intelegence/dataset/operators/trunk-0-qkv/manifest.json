@@ -1,0 +1,45 @@
+{
+  "gate": "QKV_STATIC_DATASET_PASS",
+  "layer": 0,
+  "bytes": 265008216,
+  "sha256": "4925ea619a4fd268b441e8008e4c1cd714f681b328b03cccd52c69b6a9b6f654",
+  "source_index_sha256": "dd58a012a1e795a959f14f2c8bf114921018e7cecd668bf505e966cdd4868722",
+  "source_records": [
+    {
+      "slot": 8,
+      "taps_slot": 14,
+      "matrix_sha256": "2174f022ea1eccf3eec1a70e2f2fe40bef45bab82de38ce3b4af247de5b2a2f5",
+      "taps_sha256": "c15dfda8d6eb5431af3fd464f2006bc4e37bf8e767308c4e98a2a8b5e519c12b"
+    },
+    {
+      "slot": 9,
+      "taps_slot": 15,
+      "matrix_sha256": "2c8eafa1e9cfa66ddc030f97028b0bce99e5e92c6406676ea9eb2db5c82a4a54",
+      "taps_sha256": "cb5b4c7ce531f0f4b32f97790a9399d270d40dcff0d50372311e2f19eca0faeb"
+    },
+    {
+      "slot": 10,
+      "taps_slot": 16,
+      "matrix_sha256": "7ffe17660e1104b876643710195e7cf2bc6e2fa65617eea6fe59685181922b26",
+      "taps_sha256": "13310a62f4294a5beda75c5db504b0688c5d7b9d7273764f3df03ea207c8a4cd"
+    }
+  ],
+  "gain_sha256": "4d7606178bab934e5bf7aaa0cead1fe580d5ac82c61a251cf09153495cac156e",
+  "palette_sha256": "d4b395f3f1dd71c698c5b272ddd914d793a23b01c8160d0b946ef67c6850333c",
+  "program": [
+    "RMS_GAIN_THEN_INVERSE32",
+    "Q16_FMA32_POSTSCALE",
+    "CONV_CURRENT_OLDEST_MIDDLE_NEWEST32",
+    "SHIFT_RAW_HISTORY",
+    "SILU32",
+    "QK_L2_128_ONLY"
+  ],
+  "coefficient_ids": 264241152,
+  "row_scales": 36864,
+  "tap_values": 147456,
+  "gain_values": 7168,
+  "live_inputs_stored": false,
+  "source_restoration_verified": true,
+  "additional_constant_arithmetic_eliminated": 0,
+  "scope": "Self-contained fixed operator binding and row-interleaved values; no token-conditioned Q/K/V or pre-scaled matrix composition"
+}

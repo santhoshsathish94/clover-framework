@@ -1,0 +1,24 @@
+{
+  "layer": 80,
+  "gate": "PASS",
+  "attention": "KDA",
+  "input_snapshots": 7,
+  "output_snapshots": 7,
+  "cases": [
+    "france",
+    "japan"
+  ],
+  "positions_per_case": 5,
+  "residual_values_checked": 71680,
+  "route_ids_checked": 160,
+  "moved_directories": 3,
+  "moved_files": 41,
+  "moved_bytes": "15079954404",
+  "source_sha256": {
+    "transformer-80.c": "7516cfd98a8ee003cb44dda53410a127285a63ce5381ed14735076d64d8e9796",
+    "root.h": "e7a4da7b28dd72c85cf7c0fade9af0d1410edd0d05f80cd5a717ca300e3dd17d",
+    "decode.h": "8c585b02da5bf2a1375860f8b62c24abff5e68532229a31af7d23717f91c717d"
+  },
+  "move_plan_sha256": "416f57f466aa1932cf3dfd31851da96f39ff98b8a13056d9e8569707d81dad54",
+  "move_journal_sha256": "884b3ec922fc0ac1dd5e4017e64fef063855eff6bddcbc1502a82381503c9bdd"
+}

@@ -1,0 +1,17 @@
+{
+  "layer": 36,
+  "attention": "KDA",
+  "input_snapshots": 3,
+  "output_snapshots": 4,
+  "root_counts": [
+    56,
+    11,
+    24,
+    145
+  ],
+  "files": {
+    "transformer-36.c": "ba954a616fc8dbc39b70b73327740856d1d1163087ed61a7e0cfd516b714cf0b",
+    "root.h": "c4bd10d3c19f84e6bb0711a0f5224480e8c73693a7034996cca76ab1d235b1ad",
+    "decode.h": "8c585b02da5bf2a1375860f8b62c24abff5e68532229a31af7d23717f91c717d"
+  }
+}

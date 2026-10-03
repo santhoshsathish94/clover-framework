@@ -1,0 +1,19 @@
+{
+  "gate": "COMPLETE_ROOTS_INPUTS_OUTPUTS_LEAVES_MOVED",
+  "units": 95,
+  "groups": {
+    "roots": 92,
+    "inputs": 1,
+    "outputs": 1,
+    "leaves.json": 1
+  },
+  "additional_files": 1070,
+  "additional_bytes": 1306218356434,
+  "already_moved_observation_files": 1488,
+  "combined_dataset_files": 3398,
+  "combined_dataset_bytes": 1388069070299,
+  "all_payload_identities_preserved": true,
+  "old_paths_resolve": true,
+  "previous_observation_files_preserved": true,
+  "verification": "same-filesystem inode/size/mtime, not a full payload rehash"
+}
