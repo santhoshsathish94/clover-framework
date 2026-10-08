@@ -2966,12 +2966,14 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
         "\"expert_projection_calls\":%lld,\"expert_result_hits\":%llu,\"vector_copy_seconds\":%.9f,"
         "\"expert_read_bytes\":%llu,\"expert_read_seconds\":%.9f,"
         "\"expert_cache_hits\":%llu,\"expert_cache_misses\":%llu,"
+        "\"expert_launch_seconds\":%.9f,\"expert_tail_seconds\":%.9f,"
         "\"expert_stall_seconds\":%.9f,\"expert_drain_seconds\":%.9f,\"operators\":{",
         resident_position, am, now_s() - request_started, now_s() - T0,
         resident_maps - maps_before, resident_unmaps - unmaps_before, resident_tap_layers - taps_before,
         operator_layers, operator_matrices_used, operator_vectors_used, recorded_expert_hits,
         (long long)resident_expert_calls, resident_result_hits, sv_secs,
         root_pull_bytes, root_pull_seconds, root_cache_hits, root_cache_misses,
+        root_launch_seconds, root_tail_seconds,
         root_wait_seconds, root_drain_seconds);
     for (int operation = 0; operation < OP_COUNT; operation++)
         fprintf(stderr,"%s\"%s\":%.9f", operation ? "," : "", OPN[operation], op_t[operation]);

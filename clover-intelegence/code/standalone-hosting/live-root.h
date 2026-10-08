@@ -447,6 +447,10 @@ static unsigned long long root_pull_batch;
 static double root_pull_started;
 static double root_wait_seconds;   /* compute blocked on bytes that have not landed */
 static double root_drain_seconds;  /* reads still outstanding when the layer is done */
+/* Splitting the stall: how long before any byte lands, against how far apart the
+   first and last readers finish. The first is wake-up, the second is tail. */
+static double root_launch_seconds, root_tail_seconds;
+static double root_entry_done[ROOT_ARENA_MAX];
 static pthread_mutex_t root_pull_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t root_pull_wake = PTHREAD_COND_INITIALIZER;
 
@@ -479,6 +483,7 @@ static void *root_reader_main(void *unused)
                 }
                 __atomic_fetch_add(&root_pull_bytes, got, __ATOMIC_RELAXED);
             }
+            root_entry_done[entry] = root_now_s();
             __atomic_store_n(&root_arena_ready[entry], 1, __ATOMIC_RELEASE);
         }
     }
@@ -489,6 +494,7 @@ static void root_pull_begin(const Root *root, const unsigned *experts, unsigned 
 {
     root_arena_count = 0;
     if (!root || root->direct_fd < 0 || !experts || !count || count > ROOT_ARENA_MAX) return;
+    root_pull_started = root_now_s();   /* before the hit pass, which stamps against it */
     /* The cache can only serve a batch narrower than one layer's set, otherwise a
        miss would have to evict an expert this same batch still needs. */
     unsigned held = (root_cache_store && root->layer < root_cache_layers &&
@@ -511,6 +517,7 @@ static void root_pull_begin(const Root *root, const unsigned *experts, unsigned 
         root_pull_list[entry] = experts[entry];
         root_arena_expert[entry] = 0xffffffffu;
         root_cache_slot[entry] = 0xffffffffu;
+        root_entry_done[entry] = 0;
         root_pull_fetch[entry] = experts[entry] < 896 && !root_resident(root, experts[entry]);
         root_pull_data[entry] = held ? NULL : root_arena + (size_t)entry * ROOT_EXPERT_RAW;
         __atomic_store_n(&root_arena_ready[entry], 0, __ATOMIC_RELEASE);
@@ -528,6 +535,7 @@ static void root_pull_begin(const Root *root, const unsigned *experts, unsigned 
                     root_arena_expert[entry] = experts[entry];
                     root_pull_fetch[entry] = 0;
                     root_cache_hits++;
+                    root_entry_done[entry] = root_pull_started;
                     __atomic_store_n(&root_arena_ready[entry], 1, __ATOMIC_RELEASE);
                     break;
                 }
@@ -552,7 +560,6 @@ static void root_pull_begin(const Root *root, const unsigned *experts, unsigned 
     root_pull_root = root;
     root_pull_count = count;
     root_arena_count = count;
-    root_pull_started = root_now_s();
     __atomic_store_n(&root_pull_cursor, 0, __ATOMIC_RELEASE);
     if (!root_readers_started) {
         for (unsigned reader = 0; reader < ROOT_READERS; reader++)
@@ -582,6 +589,18 @@ static void root_pull_end(void)
     root_wait_seconds = before;
     for (unsigned slot = 0; slot < root_arena_count; slot++)
         if (root_cache_slot[slot] != 0xffffffffu) root_cache_busy[root_cache_slot[slot]] = 0;
+    { double first = 0, last = 0; int seen = 0;
+      for (unsigned slot = 0; slot < root_arena_count; slot++) {
+          double done = root_entry_done[slot];
+          if (done <= 0) continue;
+          if (!seen || done < first) first = done;
+          if (!seen || done > last) last = done;
+          seen = 1;
+      }
+      if (seen) {
+          root_launch_seconds += first - root_pull_started;
+          root_tail_seconds += last - first;
+      } }
     root_drain_seconds += root_now_s() - drain;
     root_pull_seconds += root_now_s() - root_pull_started;
 }

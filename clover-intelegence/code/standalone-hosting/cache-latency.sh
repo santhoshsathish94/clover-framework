@@ -44,51 +44,63 @@ done
 python3 - <<'PY'
 import json,re,os
 caps=[0,16,24]
+def steps(cap):
+    out=[]
+    for line in open("/tmp/cache-%d.err"%cap,errors="ignore"):
+        if line.startswith("STEP_JSON"):
+            out.append(float(re.search(r'"seconds":([0-9.eE+-]+)',line).group(1)))
+    return out
+def requests(cap):
+    out=[]
+    for line in open("/tmp/cache-%d.out"%cap,errors="ignore"):
+        if line.startswith("DONE_JSON"):
+            out.append(float(re.search(r'"seconds":([0-9.eE+-]+)',line).group(1)))
+    return out
 print()
 print("per-prompt mean decode-step latency, seconds")
-print("  %-10s %7s %7s %7s %7s %7s %7s %7s %7s   %8s" % tuple(
-      ["capacity"]+["p%d"%i for i in range(1,9)]+["mean"]))
-base=None
+hdr=["capacity"]+["p%d"%i for i in range(1,9)]+["mean"]
+print("  %-9s"%hdr[0]+"".join("%8s"%h for h in hdr[1:]))
+base=None; bm=0
 for cap in caps:
-    secs=[]; 
-    for line in open("/tmp/cache-%d.err"%cap,errors="ignore"):
-        if line.startswith("STEP_JSON"):
-            secs.append(float(re.search(r'"seconds":([0-9.eE+-]+)',line).group(1)))
-    # 8 prompts x (1 prefill + 7 decode)
-    per=[]
-    for p in range(8):
-        g=secs[p*8:(p+1)*8]
-        per.append(sum(g[1:])/len(g[1:]) if len(g)==8 else float("nan"))
-    m=sum(per)/len(per)
-    if base is None: base=per[:]; bm=m
-    print("  %-10d %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f   %8.3f"%tuple([cap]+per+[m]))
+    s=steps(cap)
+    per=[sum(s[p*8+1:(p+1)*8])/7 for p in range(8)]
+    m=sum(per)/8
+    if base is None: base,bm=per[:],m
+    print("  %-9d"%cap+"".join("%8.3f"%v for v in per)+"%8.3f"%m)
 print()
-print("  %-10s %7s %7s %7s %7s %7s %7s %7s %7s   %8s" % tuple(
-      ["speedup"]+["p%d"%i for i in range(1,9)]+["mean"]))
+print("end-to-end seconds for one prompt: 5-6 input tokens, 8 output tokens")
+print("  %-9s"%"capacity"+"".join("%8s"%("p%d"%i) for i in range(1,9))+"%8s"%"mean")
+rbase=None
+for cap in caps:
+    r=requests(cap)
+    if len(r)!=8: print("  %-9d  (expected 8 requests, saw %d)"%(cap,len(r))); continue
+    m=sum(r)/8
+    if rbase is None: rbase=m
+    print("  %-9d"%cap+"".join("%8.2f"%v for v in r)+"%8.2f"%m)
+print()
+print("speedup against no cache")
+print("  %-9s"%"capacity"+"".join("%8s"%("p%d"%i) for i in range(1,9))+"%8s"%"mean")
 for cap in caps[1:]:
-    secs=[]
-    for line in open("/tmp/cache-%d.err"%cap,errors="ignore"):
-        if line.startswith("STEP_JSON"):
-            secs.append(float(re.search(r'"seconds":([0-9.eE+-]+)',line).group(1)))
-    per=[sum(secs[p*8+1:(p+1)*8])/7 for p in range(8)]
+    s=steps(cap)
+    per=[sum(s[p*8+1:(p+1)*8])/7 for p in range(8)]
     sp=[base[i]/per[i] for i in range(8)]
-    print("  %-10d %7.2f %7.2f %7.2f %7.2f %7.2f %7.2f %7.2f %7.2f   %8.2f"%tuple(
-        [cap]+sp+[bm/(sum(per)/8)]))
+    print("  %-9d"%cap+"".join("%8.2f"%v for v in sp)+"%8.2f"%(bm/(sum(per)/8)))
 print()
 for cap in caps:
-    hits=miss=0; rb=0
+    hits=miss=rb=0
     for line in open("/tmp/cache-%d.err"%cap,errors="ignore"):
         if line.startswith("STEP_JSON"):
-            h=re.search(r'"expert_cache_hits":([0-9]+)',line)
-            m=re.search(r'"expert_cache_misses":([0-9]+)',line)
-            b=re.search(r'"expert_read_bytes":([0-9]+)',line)
-            if h: hits=int(h.group(1))
-            if m: miss=int(m.group(1))
-            if b: rb=int(b.group(1))
+            for k,setter in (("expert_cache_hits",0),("expert_cache_misses",1),("expert_read_bytes",2)):
+                m=re.search(r'"%s":([0-9]+)'%k,line)
+                if m:
+                    if setter==0: hits=int(m.group(1))
+                    elif setter==1: miss=int(m.group(1))
+                    else: rb=int(m.group(1))
     tot=hits+miss
     print("  capacity %-3d  cache %d/%d = %.1f%%   total expert read %.1f GB"%(
         cap,hits,tot,100.0*hits/tot if tot else 0.0,rb/1e9))
 print()
-ok=all(open("/tmp/cache-%d.ids"%c).read()==open("/tmp/cache-0.ids").read() for c in caps)
+ref=open("/tmp/cache-0.ids").read()
+ok=all(open("/tmp/cache-%d.ids"%c).read()==ref for c in caps)
 print("tokens identical at every capacity: %s"%("YES" if ok else "NO"))
 PY
