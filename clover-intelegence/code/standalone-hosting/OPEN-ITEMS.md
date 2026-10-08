@@ -131,6 +131,38 @@ Stages 1-120 reserved, never implemented.
 
 # Closed by measurement — do not retry
 
+- **Collapsing the experts into one matrix per layer.** Not available exactly.
+  A layer computes `sum over j in TopK(x) of w_j(x) * down_j(silu(gate_j(x)) *
+  up_j(x))`, which depends on the input three separate ways: which `j` (a
+  discrete choice), the mixing weights, and SiLU. A fixed matrix cannot select a
+  different subspace per input. Note also that top-16 is not an approximation of
+  a dense 896-expert computation — the model was trained with top-16 routing, so
+  running all 896 would be a different and wrong answer, not a more exact one.
+  As an approximation across many inputs this is distillation: a different
+  model, which the "tokens identical" gate rules out.
+- **Low-rank factorisation of the expert matrices.** Measured on real weights,
+  extracted exactly by projecting unit basis vectors through the engine's own
+  kernel, then SVD:
+
+  | layer | expert | condition | stable rank | r@90% | r@99% | rank-413 energy | fp16 at 99% |
+  |---|---|---|---|---|---|---|---|
+  | 1 | 498 | 29.1 | 743 | 1629 | 2498 | 39.7% | 33.3 MB |
+  | 45 | 107 | 27.9 | 742 | 1665 | 2522 | 38.6% | 33.6 MB |
+  | 90 | 128 | 56.9 | 181 | 1644 | 2511 | 40.7% | 33.4 MB |
+
+  Storing gate as rank-r fp16 factors beats the 5.5 MB 4-bit form only below
+  r = 413, 13% of 3072. Rank 413 captures 39-41% of the energy. Reaching 99%
+  needs rank ~2500 and costs 33 MB, six times *more* than the current form. A
+  condition number near 29 means the smallest singular value is only 29x below
+  the largest: there is no tail to truncate and the matrix is close to
+  isotropic. Consistent at layers 1, 45 and 90.
+- **Faster multiplication algorithms.** Strassen and relatives reduce the
+  multiplication count for matrix-by-matrix, which pays only when a matrix is
+  reused across many vectors. The expert projection is matrix-by-vector at
+  count ~1.29, where every element must be read at least once regardless of
+  algorithm. The kernel sits at 21% of FLOP peak and 80-90% of memory
+  bandwidth, so removing arithmetic changes nothing. The only currency is bytes
+  read.
 - **One-layer-ahead expert prefetch.** Layer L predicts layer L+1 at **1.6%**.
   Adjacent layers share essentially nothing, so no implementation of this works.
 - **Reduced expert computation.** The activation is concentrated — top-512 of
