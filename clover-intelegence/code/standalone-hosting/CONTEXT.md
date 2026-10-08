@@ -1,5 +1,441 @@
 # Standalone Hosting Source
 
+## Reduced Expert Computation: Measured, And It Does Not Exist
+
+### Intended outcome
+
+If an expert's transformation needed less than its whole matrix, the 17.5 MB
+read per expert could shrink and the data movement would go away rather than
+being hidden. Trace input -> computation -> output for gate, up, activation and
+down, then look for a reduced form giving the same output.
+
+### What the trace is
+
+`root-N/observations/{france,japan}/` already holds it, 80 records a layer, and
+`record-format.json` states the layout rather than leaving it to inference:
+`id int32, gate float32[3072], up float32[3072], activation float32[3072],
+down float32[3584]`, with `inputs.f32` holding the 3584-float input per record.
+No engine run was needed.
+
+### What the system showed
+
+`y = sum_j h_j D[:,j]`, so a zero entry of h never touches its column of down.
+L2 mass of the activation in its top-k of 3072:
+
+| | top-128 | top-512 | top-1024 |
+|---|---|---|---|
+| L1 e498 | 98.3% | 99.5% | 99.9% |
+| L1 e545 | 68.7% | 92.6% | 98.6% |
+| L45 e460 | 99.8% | 99.9% | 100% |
+| L90 e128 | 79.7% | 94.6% | 98.6% |
+
+One sixth of the coordinates carry 93-99.9% of the answer, so five sixths of
+`down` is dead weight for any given input.
+
+But not the same sixth twice. Same expert, two different inputs, top-512 overlap
+27.7% and 28.7% against a 16.7% random baseline, and the union over two inputs
+is already 882 and 877 of 3072.
+
+And gate alone does not identify the carriers: its top-K against the true top-K
+is 52-66% at K=512 against 17% random. Three to four times better than chance,
+missing about 40%.
+
+### Why this closes the direction
+
+The output is low-information relative to its weight bytes, but which bytes
+matter is decided by the input, and the computation that identifies them is the
+one being avoided. The stored matrix cannot be pruned once, because the union
+over inputs grows toward the whole matrix. Dynamic partial reads would need a
+dependent second round trip after gate and up, which adds latency rather than
+removing it, and is lossy on top.
+
+### What could not be established
+
+At layer 90 the recorded `activation` differs from `silu(gate)*up` by up to 0.45
+absolute against a 3.9 peak, 12%, while layers 1 and 45 agree to under 0.1%. The
+reason is unknown. The concentration and stability results do not depend on the
+formula, being measured on the recorded activation itself, but no claim is made
+that `silu(gate)*up` holds at every depth.
+
+### Sample size
+
+Three layers, 1, 45 and 90. Twelve (layer, expert, input) samples for the gate
+prediction and two inputs per expert for stability. Thin for a positive claim;
+the three measurements agree with each other and all point the same way.
+
+## Current: Where A Single Token Goes, And Why The Expert Cache Was Rejected Wrongly
+
+### Intended outcome
+
+Batching bought throughput and nothing else. This cycle went after latency: take
+one prompt apart stage by stage on the current engine and let the numbers say
+what is addressable.
+
+### What was known going in
+
+A decode token was 3.4-3.7 s and an output token was a full forward pass, not a
+lookup. `profile-stages.c` existed but predated every recent change and no
+longer compiled: it called `resident_sequence_clear`, which the lane work
+removed, and it profiled single positions through `evaluate_token` rather than
+the batched shapes the engine now runs.
+
+### What the system showed
+
+One decode token, 3474 ms, spread almost evenly over 92 MoE layers at 36.5 ms
+mean, range 33-44. No hot layer, so nothing local to attack. Per layer:
+
+| per layer | ms |
+|---|---|
+| attention, which runs **before** the router | 9.8 |
+| shared expert | 3.7 |
+| expert projection | 10.4 |
+| **expert read stall** | **11.4** |
+| rest | 1.2 |
+
+Expert read is 280.8 MB a layer, exactly 16 x 17,547,264 B, no reuse within the
+layer. At the measured 13.5 GB/s that needs 20.8 ms, and only 9.4 ms of it is
+hidden. Totalled, 1060 ms of stall, **30.5% of the token**.
+
+The arithmetic: a layer can only hide reads behind work that comes after its own
+router, which is the shared expert plus the projections, 14.1 ms of cover for
+20.8 ms of read. A 6.7 ms structural deficit every layer. The attention block is
+9.8 ms and sits before the router, so it cannot help this layer.
+
+Disk is at 7.3 GB/s of the 13.5 GB/s ceiling, so 54% used. There is room to read
+speculatively.
+
+### What was ruled out
+
+`cross_layer_submit` and `cross_layer_match` are never called. The predictor is
+scaffolding: struct, counters and functions, not wired in. `sel_fp` and
+`route_fp` are declared and never assigned, so the route dumps never fired.
+
+Dumping the router's choices through the `sel_fp` hook, over one prompt and 32
+output tokens:
+
+| predictor | coverage of the next 16 |
+|---|---|
+| layer L predicts layer L+1 | **1.6%** |
+| token N predicts token N+1, same layer | **42.6%** |
+| union of tokens 0..3 predicts token 4 | 66.0% |
+
+Adjacent layers share essentially nothing, so one-layer-ahead prediction is dead
+however it is implemented.
+
+### What this corrects
+
+An expert cache was measured earlier and rejected: LRU flat at 23.3% for every
+capacity, diagnosed as cyclic-sweep pathology. The diagnosis was right and the
+conclusion was wrong. The cache was **global**, so one token pushes 92x16 fresh
+keys through it and layer L's entries are always evicted before the next token
+returns to layer L, 92 layers later. Partition per layer and the competition
+disappears: layer L holds its own small set and sees only its own traffic, one
+visit per token.
+
+Simulated against the 32-token trace:
+
+| cap/layer | RAM | steady hit | read/token | per-layer read |
+|---|---|---|---|---|
+| 0, today | 0 | 0% | 25.8 GB | 20.8 ms |
+| 16 | 25.8 GB | 26.6% | 18.9 GB | 15.2 ms |
+| 24 | 38.7 GB | 41.2% | 15.1 GB | 12.2 ms |
+| 32 | 51.7 GB | 48.0% | 13.3 GB | 10.7 ms |
+
+At the same 51.7 GB where the global LRU measured 23.3%, per-layer measures
+48.0%. The curve is no longer flat; the flatness was the structure, not the data.
+Warm 41.5% against steady 41.2% at cap 24, so it is a real steady state and not
+a warm-up artefact.
+
+Free RAM is about 48 GB, 124 total less the 75.9 GB payload, so cap 24 at
+38.7 GB fits and cap 32 does not.
+
+### What it was worth, built and measured
+
+Eight different prompts, eight output tokens each, one request at a time, each
+prompt reported separately because an average would hide a cache that helps only
+a few. Mean decode-step latency in seconds:
+
+| cap/layer | p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8 | mean |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 | 3.604 | 3.608 | 3.605 | 3.627 | 3.603 | 3.592 | 3.604 | 3.612 | 3.607 |
+| 16 | 3.067 | 3.076 | 3.060 | 3.072 | 3.046 | 3.001 | 3.053 | 3.006 | 3.048 |
+| 24 | 3.046 | 2.969 | 2.954 | 2.981 | 3.002 | 2.916 | 2.972 | 2.938 | 2.972 |
+
+Speedup at cap 24: 1.18, 1.22, 1.22, 1.22, 1.20, 1.23, 1.21, 1.23. Mean 1.21x
+and no prompt left behind. Tokens identical at every capacity. Measured hit rate
+42.1% against 41.2% simulated, expert read 2163 -> 1554 GB over the run, wall
+282.9 -> 250.4 s.
+
+The prediction made before building was 3474 -> ~2800 ms, about 1.25x, on the
+grounds that 616 ms of the 1060 ms stall was structural and the rest scheduling.
+Measured 3607 -> 2972 ms, 1.21x, inside that range.
+
+cap 16 returns 1.18x for 25.8 GB against cap 24's 1.21x for 38.7 GB, so most of
+the benefit arrives at two thirds of the memory.
+
+### The first attempt made prompt one slower, and why
+
+Before pre-faulting, cap 24 measured 0.87x on the first prompt and 1.17-1.21x on
+every later one. A fresh 38.7 GB mapping charges a fault and a 2 MB zero-fill on
+first touch and that landed inside the first request. `root_cache_open` now
+walks the mapping one byte per huge page at startup, paid once per process.
+This is why the requirement was "every prompt" and not "on average": the average
+over eight prompts was already 1.14x while one of them was a 15% regression.
+
+### The limit to carry forward
+
+This is a low-concurrency lever and it does not compose with batching. At B
+lanes a layer needs up to 16B distinct experts, and a shared cap-24 cache
+behaves like 24/B per lane, so the hit rate collapses as lanes are added.
+Holding 41% at eight lanes would need 192/layer, about 310 GB, which does not
+fit. The cache is bypassed outright when a batch asks for more distinct experts
+than a layer holds, which keeps it correct at any lane count. Batching is the
+throughput lever at high concurrency; this is the latency lever at low
+concurrency. They are alternatives, not a stack.
+
+### Harnesses
+
+`profile-stages.c` rewritten for the lane API and the batched shapes, now also
+recording per-layer expert stall, drain and read volume. `stage-report.py`,
+`route-probe.c` (read only, drives the existing `sel_fp` hook),
+`route-predict.py`, `layer-cache-sim.py`.
+
+## Current: Cross-Request Batching, One Weight Sweep For Many Lanes
+
+### Intended outcome
+
+An output token moved 53.83 GB of weights to serve one position, at 2.00
+FLOP/byte; a five-position prompt pass moved the same bytes at 9.99. The weight
+traffic is identical and only the useful work differs, so the question was
+whether several in-flight requests could share one sweep.
+
+### What was known going in
+
+`Qm(Y, Xs, T, W, in, out)` already reads each weight byte once and applies it to
+all `T` positions, and `NPOS_SLOTS=8` already allows `T <= 8`. What was missing
+was a scheduler, and lanes: every slot array was already per-position, but the
+attention cache and the KDA recurrent state were a single set shared by whatever
+request was running.
+
+### What was built
+
+A lane is one in-flight request. `resident_sequences` gained a lane dimension,
+and `pos_lane[]` / `pos_abs[]` say which lane owns each slot and at what absolute
+position. `St` and `convbuf` became pointers into the owning lane's storage
+rather than scratch copied in and out per layer, which also removed 12 MB of
+memcpy per layer. Prefill runs a lane at a time because it already fills every
+slot; decode then runs all lanes in one pass.
+
+Requests are split out of a buffer the engine owns rather than via `fgets`,
+because stdio would absorb a whole pipe write into its own buffer and leave
+`poll` with nothing to report. The engine blocks for the first request and then
+takes whatever has already arrived, up to `K3_LANES`.
+
+### What the system showed
+
+Six prompts, six output tokens, submitted together. Tokens identical to running
+them one at a time. 161.5 s -> 111.6 s wall.
+
+Per-evaluation telemetry, 36 evaluations at one lane against 11 at eight
+(six prefills either way, then 30 single steps against 5 six-wide steps):
+
+| | evaluations | wall | expert read | `op:Q` | `op:X` |
+|---|---|---|---|---|---|
+| one lane | 36 | 151.6 s | 1326.8 GB | 50.4 s | 52.1 s |
+| eight lanes | 11 | 100.8 s | 1135.9 GB | 17.0 s | 51.7 s |
+
+`Q` is the whole of the win and it behaved exactly as the FLOP/byte argument
+said: a batched decode step spends 1.58-1.64 s on `Q` for six positions against
+1.38 s for one, so six times the work for 1.16 times the time.
+
+`X` did not amortise at all: 52.1 s against 51.7 s. Expert selection is
+per-position, so six lanes mostly pull six different experts and the read volume
+falls only 14%. Divergence grows as the lanes generate: 100.7 GB on the first
+batched step, 127.8 GB by the fifth, because the prompts start alike and the
+continuations separate.
+
+### What this changes
+
+Decode went from 3.39 s to 1.77 s per token at six lanes, about 1.9x. The wall
+figure of 1.45x is diluted because prefill is still sequential and accounted for
+50 s of the 100.8 s of engine time in that run.
+
+### The eight-lane regression, and what caused it
+
+Sweeping lane counts over eight prompts at sixteen output tokens showed the
+curve improving to four lanes and then going backwards:
+
+| lanes | wall | `op:Q` | expert read |
+|---|---|---|---|
+| 1 | 481.4 s | 177.6 s | 3792.0 GB |
+| 2 | 380.8 s | 95.2 s | 3598.1 GB |
+| 4 | 314.9 s | 55.2 s | 3355.0 GB |
+| 8 | 341.6 s | **133.6 s** | 3102.5 GB |
+
+`Q` fell cleanly to four lanes and then more than doubled. Per step it went from
+1.45 s at four positions to 8.12 s at eight, 5.6x the time for twice the work.
+
+`Qm` had an output-blocked variant that engaged at `T>=8`. It hoisted the x load
+across eight output rows, but it carried the `t` loop outside the weight load, so
+it re-read every weight row `T` times, and it never took the direct int8 decode
+that the fallback uses when the palette is the identity. Weights are what binds
+this kernel, so at `T=8` it asked for eight times the traffic on a path already
+at 89% of RAM bandwidth. Its comment claimed the blocked path won above `T=8`;
+whenever that was measured, it was before the direct decode landed.
+
+Removed. Both paths were already known to agree, because lanes 1, 2 and 4 used
+the fallback and lanes 8 used the blocked path and all four produced identical
+tokens. After removal:
+
+| lanes | wall | tok/s | before |
+|---|---|---|---|
+| 1 | 479.6 s | 0.2669 | 481.4 |
+| 2 | 381.9 s | 0.3352 | 380.8 |
+| 4 | 318.6 s | 0.4018 | 314.9 |
+| 8 | **276.4 s** | **0.4631** | 341.6 |
+
+Tokens identical at every lane count. The one-, two- and four-lane arms landing
+within 1% of the previous run is what makes the eight-lane change attributable
+to that path rather than to drift. End to end 479.6 -> 276.4 s, 1.74x.
+
+This is not only a batching fix. Prompts are chunked to `NPOS_SLOTS=8`, so every
+full chunk of a long prompt was taking the blocked path too.
+
+### What is still unknown
+
+Prefill is sequential and now the larger half of a short request. The expert
+read path is untouched by batching: `X` is flat at 141-146 s across every lane
+count, so expert projection does not amortise at all.
+
+### What the next cycle should do differently
+
+The scheduler was static: a batch formed, drained, and only then was the next
+one admitted. A retired lane sat idle while the sweep it was part of cost the
+same, and a request arriving mid-batch waited for the whole batch. Continuous
+admission is being built and measured against it.
+
+## Current: Three Simplifications Built And Measured
+
+All three were implemented one at a time and measured against the engine as
+committed at 31344a4, built from the same source and run interleaved
+(pm, new, new, pm) to cancel drift. Eight-position prefill, `fresh-request.json`
+so the result cache is off, two passes per process.
+
+| | `op:Q` dense | `op:X` expert | wall clock |
+|---|---|---|---|
+| as committed | 14.39 / 17.55 s | 37.33 / 38.82 s | 53.44 / 58.56 s |
+| all three | 13.74 / 16.44 s | 36.27 / 38.15 s | 51.59 / 56.64 s |
+| difference | \u22124.6% / \u22126.3% | \u22122.8% / \u22121.7% | **\u22123.5% / \u22123.3%** |
+
+Both new runs fell below both old runs in every pass, so the wall-clock figure is
+separated rather than inside the noise. Output is unchanged throughout: the France
+reference keeps all 8 PASS lines, `test-live-root` and `test-datasets` pass, and
+the service still returns 418/276, 198/1008/12981 and a correct recursive
+Fibonacci for the Python prompt.
+
+**Expert-major grouping did far less than its own counters suggested.** A new
+`root_project_rows` in `derive-root.mjs` projects every position that chose an
+expert in one pass, and the expert loop groups by expert. Measured on an
+eight-position batch it cut weight passes from 11,776 to 8,266, **29.8% fewer** \u2014
+and bought about **2.9%** of expert time. The duplicates it removed were already
+page-cache warm from a sibling position microseconds earlier, so what was saved was
+a cached read plus the nibble unpack. The cost is the first disk read of each
+distinct expert, and the union of distinct experts is unchanged by batching.
+Two predictions were wrong and the work corrected them: the routing data suggested
+35\u201356% fewer passes (measured 29.8%, this prompt shares less context), and the
+estimate treated the saved passes as if they cost what a cold read costs.
+
+**The shared expert was the clean win.** `resident_shared` called `Qm(...,1,...)`
+three times per position; `resident_shared_rows` calls it once for all positions.
+`op:Q` fell 14.39 to 13.74 s and 17.55 to 16.44 s, both runs separated from both
+baselines. This is the same change the dense MLP already had, and it was the last
+dense weight still read once per position.
+
+**Removing the dead read path changed nothing measurable, as predicted.** The
+staged-read branch, the `primed`/`staged` conditionals and `resident_prefetch_next`
+are gone; the per-layer stage count drops and a duplicated 45-line loop with it.
+`expert-pipeline.h` and `cross-layer-prefetch.h` are still included and still
+reported in `CACHE_JSON`, because removing them would invalidate
+`test-expert-pipeline`, `test-pipeline-integrity`, `test-cross-layer-prefetch`,
+`test-cross-layer-model` and the `clover-one-without-cross-layer` build variant for
+no measured gain. Their counters now read zero permanently, which they already did.
+
+A claim from the previous cycle was wrong and is withdrawn. The expert result cache
+does **not** "never fire". It hit immediately when a harness re-evaluated the same
+prefix inside one process, and that silently contaminated the first grouping
+measurement until the run was repeated with the cache off. It does not fire during
+ordinary generation, because every position presents a different input vector. It
+was left in place.
+
+What is still unknown: whether any of this changes with a warm expert store. Every
+measurement here sits on a machine where an eight-position prefill takes 51\u201359 s and
+repeats are not faster, so the page cache is not retaining the working set between
+runs. On a machine that held the experts in RAM the balance between read, unpack
+and multiply would differ, and the expert-major result in particular could look
+quite different.
+
+## Current: What The Cycle Observation Says Can Be Simplified
+
+Asked whether the cycles can be simplified given the caches already present. The
+answer came from the profile and the routing observations, not from the stage names.
+
+A correction first, made to `cycle.md`: the expert cost was reported as 36.9% of a
+position. That divided by the sum of every boundary stage, which double-counts the
+`detail:` stages nested inside them. Against the sum of `total:layer` (6,696.8 ms)
+or the position total (7,018.5 ms), `experts-mix-normalize-up` is 4,983.5 ms \u2014
+**about 71% of a position**. `op:X` alone is 4,883.1 ms. Nothing else is close:
+attention 16.7%, shared expert 5.0%, head 4.5%.
+
+Four candidates, with what was measured for each.
+
+The dead read-ahead machinery costs almost nothing to keep. Measured at position 1:
+`detail:cross-layer-predict-and-submit` 0.0 ms, `detail:read-ahead-wait` 0.0 ms,
+`result-lookup-and-first-expert-submit` 1.6 ms, against 6,696.8 ms. Removing it
+would take the per-layer stage count from 15 to about 12 and delete two headers,
+but it is a code simplification and not a speedup. `shared-expert-during-read` is
+not overhead at all: its 351.1 ms is `SH1`+`SH2`+`SH3` = 349.8 ms, work that has to
+happen. Only its placement was chosen to hide a read that no longer occurs.
+
+The expert result cache never fired. Zero hits across 61 positions and 9 runs. It
+keys on an exact match of the 3,584-float input, and that input differs at every
+position, so it cannot hit during ordinary generation. It holds 256 MiB.
+
+The shared expert is the last dense weight still read once per position.
+`resident_shared` calls `Qm(...,1,...)` three times. Every other dense weight,
+including the layer-0 MLP, was already converted to a batched `Qm` over `NACT`
+rows. At 349.8 ms per position this is a bounded, well-precedented change.
+
+The one change that touches the dominant cost is making the expert loop
+expert-major instead of position-major. Measured from the routing observations,
+the distinct experts a batch of positions needs per layer:
+
+| batch | distinct experts needed | worst case | reduction |
+|---|---|---|---|
+| 2 positions | 25.6 \u2013 27.6 | 32 | 14 \u2013 20% |
+| 4 positions | 38.3 \u2013 48.8 | 64 | 24 \u2013 40% |
+| 8 positions | 55.9 \u2013 83.0 | 128 | 35 \u2013 56% |
+
+The loop currently runs `for position { for rank { resident_expert(...) } }`, so an
+expert chosen by three positions is read and unpacked three times. The router was
+already restructured this way \u2014 there is a comment at the top of the routing block
+saying each gate row is read once and applied to every position \u2014 so the precedent
+is in this file.
+
+What is not established: how much of the expert projection is the read and the
+mxfp4 unpack, which batching would share, versus the multiply-accumulate, which it
+would not. The only evidence is that `op:X` was 4.883 s cold and 0.856 s warm for
+the same arithmetic, a 5.71x spread, which says the read dominates when cold. The
+unpack in `root_project` is per input row, so batching would save it in both
+states, but by an unmeasured amount. This should be measured before the work, not
+after.
+
+Two constraints on that change. `live-root.h` is generated by `derive-root.mjs`, so
+`root_project` must be changed in the generator. And the arithmetic contract must
+hold: each row keeps its own 16 lanes and the same reduction tree, so bit-exactness
+is preservable and checkable against `test-expert-independence` and the France
+reference. Batching helps prefill only; decode positions depend on the previous
+output and cannot be batched.
+
 ## Current: End-To-End Text, Not Just Token Ids
 
 Everything measured so far was token ids. To read the output as language the ids

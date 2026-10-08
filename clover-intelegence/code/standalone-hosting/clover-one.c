@@ -27,6 +27,7 @@
 #include <sys/resource.h>
 #include <pthread.h>
 #include <sched.h>
+#include <poll.h>
 #include <time.h>
 #include "numeric-table.h"
 #define NORMALIZATION_NO_MAIN
@@ -1415,54 +1416,12 @@ static void Qm(float *const *Y, const float *const *Xs, int T,
     const float *palette = matrix.palette;
     const int direct_codes = palette_identity(palette);
     const size_t rowb = (size_t)4 + (size_t)in;
-    int omain = 0;
-#if defined(__AVX2__)
-    /* One x vector is 4*in bytes, so T of them overflow L1 and it is the input
-       streams, not the accumulators, that set the rate. Blocking output rows
-       reuses each x load across OB rows. Summation order per output is
-       unchanged, so results are bit-identical; below T=8 the old path wins. */
-    enum { OB = 8 };
-    if (T >= 8) omain = (out / OB) * OB;
+    /* An output-blocked variant used to run at T>=8. It hoisted the x load across
+       eight output rows but carried the t loop outside, so it re-read every weight
+       row T times, and it never took the direct int8 decode below. Weights are what
+       binds here, so at eight lanes it cost 8.12 s a step against 1.45 s at four. */
 #pragma omp parallel for schedule(static) if (out > 64)
-    for (int o0 = 0; o0 < omain; o0 += OB) {
-        const unsigned char *wp[OB]; float sc[OB];
-        for (int b = 0; b < OB; b++) {
-            const unsigned char *row = matrix.scales + (size_t)(o0 + b) * matrix.scale_stride;
-            memcpy(&sc[b], row, 4);
-            wp[b] = matrix.codes + (size_t)(o0 + b) * matrix.row_stride;
-        }
-        for (int t = 0; t < T; t++) {
-            const float *xt = Xs[t];
-            __m256 a0[OB], a1[OB];
-            for (int b = 0; b < OB; b++) {
-                a0[b] = _mm256_setzero_ps(); a1[b] = _mm256_setzero_ps();
-            }
-            int i = 0;
-            for (; i + 15 < in; i += 16) {
-                const __m256 x0 = _mm256_loadu_ps(xt + i);
-                const __m256 x1 = _mm256_loadu_ps(xt + i + 8);
-                for (int b = 0; b < OB; b++) {
-                    const __m256 w0 = _mm256_i32gather_ps(palette, _mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(wp[b] + i))), 4);
-                    const __m256 w1 = _mm256_i32gather_ps(palette, _mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(wp[b] + i + 8))), 4);
-                    a0[b] = _mm256_fmadd_ps(w0, x0, a0[b]);
-                    a1[b] = _mm256_fmadd_ps(w1, x1, a1[b]);
-                }
-            }
-            for (int b = 0; b < OB; b++) {
-                __m256 vs = _mm256_add_ps(a0[b], a1[b]);
-                __m128 lo = _mm_add_ps(_mm256_castps256_ps128(vs),
-                                       _mm256_extractf128_ps(vs, 1));
-                lo = _mm_add_ps(lo, _mm_movehl_ps(lo, lo));
-                lo = _mm_add_ss(lo, _mm_shuffle_ps(lo, lo, 1));
-                float a = _mm_cvtss_f32(lo);
-                for (int k = i; k < in; k++) a = a + palette[wp[b][k]] * xt[k];
-                Y[t][o0 + b] = a * sc[b];
-            }
-        }
-    }
-#endif
-#pragma omp parallel for schedule(static) if (out > 64)
-    for (int o = omain; o < out; o++) {
+    for (int o = 0; o < out; o++) {
         const unsigned char *row = matrix.scales + (size_t)o * matrix.scale_stride;
         float scale; memcpy(&scale, row, 4);
         const unsigned char *w = matrix.codes + (size_t)o * matrix.row_stride;
@@ -1713,8 +1672,13 @@ static float *snap[NPOS_SLOTS][16];
 static int    nsnap = 0;
 static int    have_prefix = 1;
 
-static float  St[H][D][D];            /* KDA recurrent state */
-static float  convbuf[3][P][KC - 1];  /* q,k,v history */
+/* KDA recurrent state and conv history. These point straight at the owning
+   lane's storage, so a batch of lanes carries independent state with no copy. */
+enum { ST_FLOATS = H * D * D, CONV_FLOATS = 3 * P * (KC - 1) };
+#define ST_BYTES   (sizeof(float) * ST_FLOATS)
+#define CONV_BYTES (sizeof(float) * CONV_FLOATS)
+static float (*St)[D][D];
+static float (*convbuf)[P][KC - 1];
 
 static float  x1b[NPOS_SLOTS][E], x2b[NPOS_SLOTS][E], hb[NPOS_SLOTS][E], h2b[NPOS_SLOTS][E];
 static float  aout[NPOS_SLOTS][E], ffn[NPOS_SLOTS][E];
@@ -1944,7 +1908,22 @@ typedef struct {
     float *state, *convolution, *keys, *values, *positions;
     unsigned length;
 } ResidentSequence;
-static ResidentSequence resident_sequences[NLAY];
+
+/* A lane is one in-flight request: its own attention cache and recurrent state.
+   Slots stay the batch dimension; a lane owns one slot while decoding and all of
+   them while prefilling. */
+#ifndef K3_LANES
+#define K3_LANES 1
+#endif
+_Static_assert(K3_LANES >= 1 && K3_LANES <= NPOS_SLOTS, "lane count must fit the slot array");
+static ResidentSequence resident_sequences[K3_LANES][NLAY];
+static unsigned lane_position[K3_LANES];   /* absolute position reached, per lane */
+static unsigned pos_lane[NPOS_SLOTS];      /* lane owning each active slot */
+static unsigned pos_abs[NPOS_SLOTS];       /* absolute position of each active slot */
+static unsigned active_lane;               /* lane being prefilled, when not batching */
+static int      batch_decode;              /* set while slot t means lane t, one new position each */
+static unsigned batch_next[NPOS_SLOTS];    /* argmax per slot, filled by every evaluation */
+#define SEQ(slot, layer) (&resident_sequences[pos_lane[(slot)]][(layer)])
 static Root *resident_roots[NLAY];
 static RootScratch *resident_root_scratch;
 static unsigned resident_position;
@@ -1955,35 +1934,29 @@ static float resident_gate[I_], resident_up[I_], resident_down[LAT];
 static void check_live_expert(unsigned layer, unsigned expert, const float *input, const float *output);
 #endif
 
-static void resident_sequence_clear(void)
-{
-    for (unsigned layer=0; layer<NLAY; layer++) {
-        ResidentSequence *sequence=&resident_sequences[layer];
-        sequence->length=0;
-        if (sequence->state) {
-            memset(sequence->state,0,sizeof St);
-            memset(sequence->convolution,0,sizeof convbuf);
-        }
-    }
-}
-
 static void resident_sequence_open(void)
 {
     unsigned capacity=resident_config.max_input_tokens+resident_config.max_output_tokens;
     if (!capacity) capacity=GENERATION_CAPACITY;
     resident_root_scratch=calloc((size_t)omp_get_max_threads(),sizeof *resident_root_scratch);
     if (!resident_root_scratch) die("root scratch allocation failed");
+    { const char *setting=getenv("K3_EXPERT_CACHE");
+      long experts=setting?strtol(setting,NULL,10):0;
+      if (experts>0 && !root_cache_open(NLAY,(unsigned)experts))
+          die("per-layer expert cache allocation failed"); }
     for (unsigned layer=0; layer<NLAY; layer++) {
-        ResidentSequence *sequence=&resident_sequences[layer];
+        for (unsigned lane=0; lane<K3_LANES; lane++) {
+        ResidentSequence *sequence=&resident_sequences[lane][layer];
         if (layer==92 || layer%4==3) {
             sequence->keys=calloc((size_t)capacity*H*QN,sizeof(float));
             sequence->values=calloc((size_t)capacity*H*VH,sizeof(float));
             sequence->positions=calloc((size_t)capacity*QR,sizeof(float));
             if (!sequence->keys || !sequence->values || !sequence->positions) die("MLA sequence allocation failed");
         } else {
-            sequence->state=calloc(1,sizeof St);
-            sequence->convolution=calloc(1,sizeof convbuf);
+            sequence->state=calloc(1,ST_BYTES);
+            sequence->convolution=calloc(1,CONV_BYTES);
             if (!sequence->state || !sequence->convolution) die("KDA sequence allocation failed");
+        }
         }
         if (layer) {
             char suffix[128],path[4096];
@@ -2268,13 +2241,16 @@ static void resident_shutdown(void)
     free(slots);
     free(erec);
     for (unsigned layer=0; layer<NLAY; layer++) {
-        ResidentSequence *sequence=&resident_sequences[layer];
-        free(sequence->state); free(sequence->convolution); free(sequence->keys);
-        free(sequence->values); free(sequence->positions);
-        memset(sequence,0,sizeof *sequence);
+        for (unsigned lane=0; lane<K3_LANES; lane++) {
+            ResidentSequence *sequence=&resident_sequences[lane][layer];
+            free(sequence->state); free(sequence->convolution); free(sequence->keys);
+            free(sequence->values); free(sequence->positions);
+            memset(sequence,0,sizeof *sequence);
+        }
         root_close(resident_roots[layer]); resident_roots[layer]=NULL;
     }
     free(resident_root_scratch); resident_root_scratch=NULL;
+    root_cache_close();
     head_cache_close(&resident_head);
     resident_values_close();
     resident_ready = 0;
@@ -2290,8 +2266,7 @@ static void request_reset(void)
     memset(snap, 0, sizeof(snap));
     memset(snap_pool, 0, sizeof(snap_pool));
     memset(resid, 0, sizeof(resid));
-    memset(St, 0, sizeof(St));
-    memset(convbuf, 0, sizeof(convbuf));
+    /* St and convbuf alias the owning lane's carried state; only a new sequence clears them. */
     memset(op_t, 0, sizeof(op_t));
     memset(op_n, 0, sizeof(op_n));
     memset(op_wb, 0, sizeof(op_wb));
@@ -2313,6 +2288,19 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     if (!count || count > NPOS_SLOTS) die("active position count out of range");
     NPOS = (int)count;
     for (unsigned entry = 0; entry < count; entry++) ids[entry] = (int)tokens[entry];
+    /* One lane holding every slot while it prefills, or one slot per lane while a
+       batch decodes. Either way a slot knows its lane and its absolute position. */
+    if (batch_decode) {
+        /* the scheduler has already mapped each slot to the lane it is decoding for */
+        if (count > K3_LANES) die("decode batch wider than the lane count");
+        for (unsigned entry = 0; entry < count; entry++)
+            pos_abs[entry] = lane_position[pos_lane[entry]];
+    } else {
+        for (unsigned entry = 0; entry < count; entry++) {
+            pos_lane[entry] = active_lane;
+            pos_abs[entry]  = position + entry;
+        }
+    }
     resident_position=position;
     resident_expert_calls=0;
     resident_result_hits=0;
@@ -2344,8 +2332,9 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
         operator_open(L);
         const int isMLA = ((L % 4) == 3 && L <= 91) || (L == 92);
         const int isMoE = (L >= 1);
-        ResidentSequence *sequence=&resident_sequences[L];
-        if (sequence->length!=resident_position) die("attention cache position mismatch");
+        for (int t = 0; t < NPOS; t++)
+            if (SEQ(t,L)->length != pos_abs[t] - (batch_decode ? 0 : (unsigned)t))
+                die("attention cache position mismatch");
 
         memcpy(fa, prepared_vector(L, 37, E), sizeof(float) * E);
         memcpy(fm, prepared_vector(L, 38, E), sizeof(float) * E);
@@ -2430,7 +2419,8 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
             /* Attention at an active position reads every earlier position, so
                the cached ones must be in place before the scores are formed. */
                 for (int t = TLO; t < NPOS; t++) {
-                    size_t slot = resident_position + (size_t)t;
+                    ResidentSequence *sequence = SEQ(t,L);
+                    size_t slot = pos_abs[t];
                     memcpy(sequence->keys+slot*H*QN,mla_klat[t],sizeof mla_klat[t]);
                     memcpy(sequence->values+slot*H*VH,mla_v[t],sizeof mla_v[t]);
                     memcpy(sequence->positions+slot*QR,mla_rp[t],sizeof mla_rp[t]);
@@ -2460,7 +2450,8 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
             Qm(gbm + TLO, x1p + TLO, NACT, WG, E, H * VH);
             for (int t = TLO; t < NPOS; t++) {
                 float *acc = accm[t];
-                const unsigned last = resident_position + (unsigned)t;
+                const ResidentSequence *sequence = SEQ(t,L);
+                const unsigned last = pos_abs[t];
                 const double _tsa = now_s();
 #pragma omp parallel for schedule(static)
                 for (int h = 0; h < H; h++) {
@@ -2510,13 +2501,13 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
             float *o = malloc(sizeof(float) * P), *on = malloc(sizeof(float) * P);
             float *gt = malloc(sizeof(float) * P);
 
-            memcpy(St, sequence->state, sizeof St);
-            memcpy(convbuf, sequence->convolution, sizeof convbuf);
+            St      = (float (*)[D][D])     SEQ(TLO,L)->state;
+            convbuf = (float (*)[P][KC - 1]) SEQ(TLO,L)->convolution;
             /* KDA carries a recurrent state rather than per-position KV, and it
                is a fixed size whatever the prefix length. */
             if (pfx_mode == 2) {
-                if (fread(St, 1, sizeof St, pfx_f) != sizeof St ||
-                    fread(convbuf, 1, sizeof convbuf, pfx_f) != sizeof convbuf)
+                if (fread(St, 1, ST_BYTES, pfx_f) != ST_BYTES ||
+                    fread(convbuf, 1, CONV_BYTES, pfx_f) != CONV_BYTES)
                     die("prefix cache short read");
             }
             float ah[H];
@@ -2546,6 +2537,8 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
 
             /* conv history and delta-rule state carry, so this stays in order */
             for (int t = TLO; t < NPOS; t++) {
+                St      = (float (*)[D][D])     SEQ(t,L)->state;
+                convbuf = (float (*)[P][KC - 1]) SEQ(t,L)->convolution;
                 for (int j = 0; j < 3; j++) {
                     const float *rw = rawm[j][t];
                     const double _tc = now_s();
@@ -2612,14 +2605,14 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                 rmsnorm_blocks(on, o, won, H, D);
                 for (int i = 0; i < P; i++) gtf[t][i] = on[i] * sigf(gtm[t][i]);
                 if (pfx_mode == 1 && t == pfx_n - 1) {
-                    fwrite(St, 1, sizeof St, pfx_f);
-                    fwrite(convbuf, 1, sizeof convbuf, pfx_f);
+                    fwrite(St, 1, ST_BYTES, pfx_f);
+                    fwrite(convbuf, 1, CONV_BYTES, pfx_f);
                 }
             }
             /* after the last position, so the next run resumes from NPOS */
             if (pfx_of) {
-                fwrite(St, 1, sizeof St, pfx_of);
-                fwrite(convbuf, 1, sizeof convbuf, pfx_of);
+                fwrite(St, 1, ST_BYTES, pfx_of);
+                fwrite(convbuf, 1, CONV_BYTES, pfx_of);
             }
             Qm(aoutp + TLO, (const float *const *)gtf + TLO, NACT, WO, P, E);
 
@@ -2857,11 +2850,8 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
 
         operator_close();
         prepared_close();
-        if (!isMLA) {
-            memcpy(sequence->state,St,sizeof St);
-            memcpy(sequence->convolution,convbuf,sizeof convbuf);
-        }
-        sequence->length += (unsigned)NPOS;
+        /* St and convbuf alias the lane's own storage, so the carry needs no writeback. */
+        for (int t = 0; t < NPOS; t++) SEQ(t,L)->length++;
         { const double _tp = now_s();
           (void)t0;
           pr_secs += now_s() - _tp; }
@@ -2890,6 +2880,27 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
           FILE *f = fopen(p, "wb");
           if (f) { for (int t = 0; t < NPOS; t++) fwrite(resid[t], 4, E, f); fclose(f); }
       } }
+    float *logits = malloc(sizeof(float) * VOCAB);
+    if (!logits) die("logits allocation failed");
+    uint32_t selected;
+
+    /* A batch carries one lane per slot, so every slot needs its own head. The
+       last one falls through to the existing path and keeps the diagnostics. */
+    if (batch_decode)
+        for (int t = 0; t < NPOS - 1; t++) {
+            for (int s = 0; s < nsnap; s++) srcbuf[s] = snap[t][s];
+            srcbuf[nsnap] = resid[t];
+            AR(hf, srcbuf, nsnap + 1, foldO, NULL);
+            rmsnorm(nrm, hf, mn, E, EPS5);
+            double slot_started = now_s();
+            if (!head_cache_project(&resident_head, nrm, logits, &selected)) die("fruit projection failed");
+            op_add(OP_B, slot_started, (int64_t)VOCAB * E * 2);
+            op_fl[OP_B] += 2 * (int64_t)VOCAB * E;
+            int best = 0;
+            for (int i = 1; i < VOCAB; i++) if (logits[i] > logits[best]) best = i;
+            batch_next[t] = (unsigned)best;
+        }
+
     for (int s = 0; s < nsnap; s++) srcbuf[s] = snap[NPOS - 1][s];
     srcbuf[nsnap] = resid[NPOS - 1];
     /* The distributed layer 93 blends this one with a plain softmax, so it stays a
@@ -2898,9 +2909,6 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     rmsnorm(nrm, hf, mn, E, EPS5);
     PROFILE_BOUNDARY(93,"final-aggregation-and-normalization");
 
-    float *logits = malloc(sizeof(float) * VOCAB);
-    if (!logits) die("logits allocation failed");
-    uint32_t selected;
     double head_started = now_s();
     if (!head_cache_project(&resident_head, nrm, logits, &selected)) die("fruit projection failed");
     op_add(OP_B, head_started, (int64_t)VOCAB * E * 2);
@@ -2924,6 +2932,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
 
     int am = 0;
     for (int i = 1; i < VOCAB; i++) if (logits[i] > logits[am]) am = i;
+    batch_next[NPOS - 1] = (unsigned)am;
 
     if (prov_fp) {
         /* the top eight, so a prompt's answer can be judged for confidence and
@@ -2956,12 +2965,14 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
         "\"layers\":%u,\"matrix_records\":%u,\"vector_records\":%u,\"expert_matches\":%u,"
         "\"expert_projection_calls\":%lld,\"expert_result_hits\":%llu,\"vector_copy_seconds\":%.9f,"
         "\"expert_read_bytes\":%llu,\"expert_read_seconds\":%.9f,"
+        "\"expert_cache_hits\":%llu,\"expert_cache_misses\":%llu,"
         "\"expert_stall_seconds\":%.9f,\"expert_drain_seconds\":%.9f,\"operators\":{",
         resident_position, am, now_s() - request_started, now_s() - T0,
         resident_maps - maps_before, resident_unmaps - unmaps_before, resident_tap_layers - taps_before,
         operator_layers, operator_matrices_used, operator_vectors_used, recorded_expert_hits,
         (long long)resident_expert_calls, resident_result_hits, sv_secs,
-        root_pull_bytes, root_pull_seconds, root_wait_seconds, root_drain_seconds);
+        root_pull_bytes, root_pull_seconds, root_cache_hits, root_cache_misses,
+        root_wait_seconds, root_drain_seconds);
     for (int operation = 0; operation < OP_COUNT; operation++)
         fprintf(stderr,"%s\"%s\":%.9f", operation ? "," : "", OPN[operation], op_t[operation]);
     fprintf(stderr,"}}\n");
@@ -2975,7 +2986,6 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     return (unsigned)am;
 }
 
-typedef struct { unsigned request_id; } ResidentRequest;
 static unsigned evaluate_token(unsigned token,unsigned position,int project)
 {
     return evaluate_tokens(&token,1,position,project);
@@ -3009,11 +3019,152 @@ static int resident_step(void *state,unsigned token,unsigned position,int projec
     *next = evaluate_token(token,position,1);
     return 1;
 }
-static void resident_emit(void *state,unsigned token,unsigned index)
+
+/* ---------------------------------------------------------------- batching
+   A lane is one in-flight request. Prefill runs a lane at a time because it
+   already fills every slot, then the whole batch decodes together: one weight
+   sweep carries a new position for every lane instead of one. */
+typedef struct {
+    GenerationRequest request;
+    unsigned id, produced, next;
+    int active, eos;
+    double started;
+} Lane;
+static Lane batch_lanes[K3_LANES];
+
+static void lane_sequence_clear(unsigned lane)
 {
-    ResidentRequest *request=state;
-    printf("TOKEN_JSON {\"request\":%u,\"index\":%u,\"token\":%u}\n",request->request_id,index,token);
-    fflush(stdout);
+    lane_position[lane]=0;
+    for (unsigned layer=0; layer<NLAY; layer++) {
+        ResidentSequence *sequence=&resident_sequences[lane][layer];
+        sequence->length=0;
+        if (sequence->state) {
+            memset(sequence->state,0,ST_BYTES);
+            memset(sequence->convolution,0,CONV_BYTES);
+        }
+    }
+}
+
+static unsigned lane_prefill(unsigned lane, const GenerationRequest *request)
+{
+    unsigned next=0;
+    active_lane=lane; batch_decode=0; prefill_count=0;
+    for (unsigned position=0; position<request->count; position++)
+        if (!resident_step(NULL,request->tokens[position],position,
+                           position+1==request->count,&next)) die("prefill failed");
+    lane_position[lane]=request->count;
+    return next;
+}
+
+static void lane_finish(Lane *lane)
+{
+    lane->active=0;
+    printf("DONE_JSON {\"request\":%u,\"input_tokens\":%u,\"output_tokens\":%u,\"stop_reason\":\"%s\",\"seconds\":%.9f}\n",
+        lane->id,lane->request.count,lane->produced,lane->eos?"eos":"length",now_s()-lane->started);
+}
+
+/* stdio would swallow a whole pipe write into its own buffer and leave poll
+   with nothing to report, so requests are split out of a buffer we own. */
+static char request_buffer[1<<16];
+static size_t request_filled, request_taken;
+static int request_eof;
+static unsigned request_count;
+
+static int request_next(char *line, size_t size, int wait)
+{
+    for (;;) {
+        for (size_t at=request_taken; at<request_filled; at++)
+            if (request_buffer[at]=='\n') {
+                size_t length=at-request_taken;
+                if (length>=size) length=size-1;
+                memcpy(line,request_buffer+request_taken,length);
+                line[length]=0;
+                request_taken=at+1;
+                return 1;
+            }
+        if (request_taken) {
+            memmove(request_buffer,request_buffer+request_taken,request_filled-request_taken);
+            request_filled-=request_taken; request_taken=0;
+        }
+        if (request_filled==sizeof request_buffer) die("request line too long");
+        if (!wait) {
+            struct pollfd watch={ .fd=0, .events=POLLIN };
+            if (poll(&watch,1,0)<=0) return 0;
+        }
+        ssize_t got=read(0,request_buffer+request_filled,sizeof request_buffer-request_filled);
+        if (got<=0) { request_eof=1; return 0; }
+        request_filled+=(size_t)got;
+    }
+}
+
+/* Take one waiting request into a free lane and prefill it. Prefill needs every
+   slot for its own tokens, so it runs between decode steps rather than inside one. */
+static int lane_admit(unsigned lane, int wait)
+{
+    char line[8192];
+    GenerationRequest parsed;
+    for (;;) {
+        if (!request_next(line,sizeof line,wait)) return 0;
+        if (generation_request_parse((const unsigned char *)line,strlen(line),&resident_config,&parsed) &&
+            parsed.count && parsed.count<=resident_config.max_input_tokens &&
+            parsed.max_new_tokens && parsed.max_new_tokens<=resident_config.max_output_tokens) break;
+        puts("REQUEST_ERROR {\"reason\":\"invalid input_ids or token budget\"}");
+        fflush(stdout);
+    }
+    Lane *entry=&batch_lanes[lane];
+    entry->request=parsed;
+    entry->id=++request_count;
+    entry->produced=0; entry->eos=0; entry->active=1;
+    entry->started=now_s();
+    lane_sequence_clear(lane);
+    entry->next=lane_prefill(lane,&entry->request);
+    return 1;
+}
+
+/* Emit the token a lane is holding and queue it for the next sweep, or retire
+   the lane when that token was its last. */
+static int lane_emit(unsigned lane, unsigned *tokens, unsigned *slots)
+{
+    Lane *entry=&batch_lanes[lane];
+    printf("TOKEN_JSON {\"request\":%u,\"index\":%u,\"token\":%u}\n",
+        entry->id,entry->produced,entry->next);
+    entry->produced++;
+    if (entry->next==resident_config.eos_token_id) entry->eos=1;
+    if (entry->eos || entry->produced>=entry->request.max_new_tokens) { lane_finish(entry); return 0; }
+    pos_lane[*slots]=lane;
+    tokens[(*slots)++]=entry->next;
+    return 1;
+}
+
+static void serve(void)
+{
+    unsigned tokens[NPOS_SLOTS];
+    for (;;) {
+        unsigned slots=0;
+        for (unsigned lane=0; lane<K3_LANES; lane++)
+            if (batch_lanes[lane].active) lane_emit(lane,tokens,&slots);
+        /* a lane that just retired is capacity for this sweep, not the next one:
+           the sweep costs the same whether it carries one position or eight */
+        for (unsigned lane=0; lane<K3_LANES; lane++) {
+            if (batch_lanes[lane].active || request_eof) continue;
+            if (lane_admit(lane,0)) lane_emit(lane,tokens,&slots);
+        }
+        fflush(stdout);
+        if (!slots) {
+            if (request_eof) break;
+            if (!lane_admit(0,1)) break;
+            continue;
+        }
+        fprintf(stderr,"STEP_WIDTH %u\n",slots);
+        batch_decode=1;
+        evaluate_tokens(tokens,slots,0,1);
+        batch_decode=0;
+        for (unsigned slot=0; slot<slots; slot++) {
+            unsigned lane=pos_lane[slot];
+            batch_lanes[lane].next=batch_next[slot];
+            lane_position[lane]++;
+        }
+    }
 }
 
 static int resident_read_config(void)
@@ -3073,32 +3224,11 @@ int main(int argc, char **argv)
         puts("INSPECT_PASS: current prepared datasets loaded; 372 mappings released; zero requests executed");
         return 0;
     }
-    char line[8192];
-    unsigned requests = 0;
-    while (fgets(line, sizeof(line), stdin)) {
-        if (!strchr(line, '\n') && !feof(stdin)) {
-            int character;
-            while ((character = getchar()) != '\n' && character != EOF) {}
-            puts("REQUEST_ERROR {\"reason\":\"request line too long\"}"); fflush(stdout); continue;
-        }
-        GenerationRequest parsed;
-        if (!generation_request_parse((const unsigned char *)line,strlen(line),&resident_config,&parsed)) {
-            puts("REQUEST_ERROR {\"reason\":\"invalid input_ids or token budget\"}");
-            fflush(stdout); continue;
-        }
-        resident_sequence_clear();
-        prefill_count = 0;
-        ResidentRequest request={++requests};
-        unsigned produced; int eos;
-        ResidentCacheStats before=resident_cache_stats();
-        double tick=now_s();
-        if (!generation_run(&resident_config,&parsed,resident_step,resident_emit,&request,&produced,&eos)) die("generation failed");
-        printf("DONE_JSON {\"request\":%u,\"input_tokens\":%u,\"output_tokens\":%u,\"stop_reason\":\"%s\",\"seconds\":%.9f}\n",
-            requests,parsed.count,produced,eos?"eos":"length",now_s()-tick);
-        fflush(stdout);
-        resident_cache_report(requests,before);
-    }
-    int failed = ferror(stdin);
+    ResidentCacheStats before = resident_cache_stats();
+    serve();
+    resident_cache_report(request_count, before);
+    unsigned requests = request_count;
+    int failed = 0;
     started = now_s();
     resident_shutdown();
     printf("STOP_JSON {\"requests\":%u,\"shutdown_seconds\":%.9f,\"fixed_mapping_releases\":%u}\n",

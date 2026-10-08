@@ -39,6 +39,7 @@ typedef struct {
     const unsigned char *prefetched;
     size_t prefetched_bytes;
     unsigned prefetched_expert;
+    unsigned layer;
 } Root;
 
 typedef struct {
@@ -108,6 +109,7 @@ static Root *root_open(const char *directory, unsigned layer)
     char path[4096];
     Root *root = calloc(1, sizeof *root);
     if (!root) return NULL;
+    root->layer = layer;
     unsigned counts[4] = {0};
     struct stat constants_info;
     int constants_length = snprintf(path, sizeof path, "%s/constants.bin", directory);
@@ -349,12 +351,65 @@ static unsigned char *root_arena;
 static size_t root_arena_bytes;
 static unsigned root_arena_expert[ROOT_ARENA_MAX];
 static unsigned root_arena_count;
+static unsigned char *root_pull_data[ROOT_ARENA_MAX];   /* where each entry's bytes live */
+
+/* ----------------------------------------------- resident per-layer experts
+   A token visits a layer once, takes 16 experts, and does not come back until
+   the next token, 92 layers and ~1500 other keys later. One shared pool is
+   therefore swept clean before the reuse arrives, which is why a global cache
+   measured the same hit rate at every capacity. Giving each layer its own set
+   removes the competition: the only traffic through layer L's set is layer L's.
+   Held bytes are projected in place, never copied, because the weight sweep
+   already runs near RAM bandwidth. */
+static unsigned root_cache_capacity, root_cache_layers;
+static unsigned char *root_cache_store;
+static unsigned *root_cache_expert;
+static unsigned long long *root_cache_stamp;
+static unsigned char *root_cache_busy;
+static unsigned root_cache_slot[ROOT_ARENA_MAX];
+static unsigned long long root_cache_clock, root_cache_hits, root_cache_misses;
+
+static int root_cache_open(unsigned layers, unsigned capacity)
+{
+    if (!layers || !capacity) return 0;
+    size_t slots = (size_t)layers * capacity;
+    size_t bytes = slots * ROOT_EXPERT_RAW;
+    size_t rounded = (bytes + (2u << 20) - 1) & ~(size_t)((2u << 20) - 1);
+    root_cache_store = aligned_alloc(2u << 20, rounded);
+    root_cache_expert = malloc(slots * sizeof *root_cache_expert);
+    root_cache_stamp = calloc(slots, sizeof *root_cache_stamp);
+    root_cache_busy = calloc(slots, 1);
+    if (!root_cache_store || !root_cache_expert || !root_cache_stamp || !root_cache_busy) {
+        free(root_cache_store); free(root_cache_expert);
+        free(root_cache_stamp); free(root_cache_busy);
+        root_cache_store = NULL; return 0;
+    }
+#ifdef MADV_HUGEPAGE
+    (void)madvise(root_cache_store, rounded, MADV_HUGEPAGE);
+#endif
+    /* First touch of a fresh mapping costs a fault and a zero-fill of the whole
+       huge page. Left alone that lands inside the first request and makes it
+       slower than no cache at all, so it is paid here instead, once. */
+    for (size_t at = 0; at < rounded; at += (size_t)(2u << 20)) root_cache_store[at] = 0;
+    for (size_t slot = 0; slot < slots; slot++) root_cache_expert[slot] = 0xffffffffu;
+    root_cache_layers = layers; root_cache_capacity = capacity;
+    return 1;
+}
+
+static void root_cache_close(void)
+{
+    free(root_cache_store); free(root_cache_expert);
+    free(root_cache_stamp); free(root_cache_busy);
+    root_cache_store = NULL; root_cache_expert = NULL;
+    root_cache_stamp = NULL; root_cache_busy = NULL;
+    root_cache_capacity = root_cache_layers = 0;
+}
 
 static const unsigned char *root_arena_find(unsigned expert)
 {
     for (unsigned slot = 0; slot < root_arena_count; slot++)
         if (root_arena_expert[slot] == expert)
-            return root_arena + (size_t)slot * ROOT_EXPERT_RAW;
+            return root_pull_data[slot];
     return NULL;
 }
 
@@ -409,7 +464,7 @@ static void *root_reader_main(void *unused)
             if (entry >= root_pull_count) break;
             size_t got = 0;
             if (root_pull_fetch[entry]) {
-                unsigned char *into = root_arena + (size_t)entry * ROOT_EXPERT_RAW;
+                unsigned char *into = root_pull_data[entry];
                 off_t at = (off_t)root_pull_list[entry] * ROOT_EXPERT_RAW;
                 while (got < ROOT_EXPERT_RAW) {
                     ssize_t n = pread(root_pull_root->direct_fd, into + got,
@@ -417,7 +472,11 @@ static void *root_reader_main(void *unused)
                     if (n <= 0) break;
                     got += (size_t)n;
                 }
-                if (got == ROOT_EXPERT_RAW) root_arena_expert[entry] = root_pull_list[entry];
+                if (got == ROOT_EXPERT_RAW) {
+                    root_arena_expert[entry] = root_pull_list[entry];
+                    if (root_cache_slot[entry] != 0xffffffffu)
+                        root_cache_expert[root_cache_slot[entry]] = root_pull_list[entry];
+                }
                 __atomic_fetch_add(&root_pull_bytes, got, __ATOMIC_RELAXED);
             }
             __atomic_store_n(&root_arena_ready[entry], 1, __ATOMIC_RELEASE);
@@ -430,22 +489,65 @@ static void root_pull_begin(const Root *root, const unsigned *experts, unsigned 
 {
     root_arena_count = 0;
     if (!root || root->direct_fd < 0 || !experts || !count || count > ROOT_ARENA_MAX) return;
-    size_t need = (size_t)count * ROOT_EXPERT_RAW;
-    if (need > root_arena_bytes) {
-        size_t rounded = (need + (2u << 20) - 1) & ~(size_t)((2u << 20) - 1);
-        free(root_arena);
-        root_arena = aligned_alloc(2u << 20, rounded);
-        root_arena_bytes = root_arena ? rounded : 0;
+    /* The cache can only serve a batch narrower than one layer's set, otherwise a
+       miss would have to evict an expert this same batch still needs. */
+    unsigned held = (root_cache_store && root->layer < root_cache_layers &&
+                     count <= root_cache_capacity) ? root_cache_capacity : 0;
+    unsigned base = held ? root->layer * held : 0;
+    if (!held) {
+        size_t need = (size_t)count * ROOT_EXPERT_RAW;
+        if (need > root_arena_bytes) {
+            size_t rounded = (need + (2u << 20) - 1) & ~(size_t)((2u << 20) - 1);
+            free(root_arena);
+            root_arena = aligned_alloc(2u << 20, rounded);
+            root_arena_bytes = root_arena ? rounded : 0;
 #ifdef MADV_HUGEPAGE
-        if (root_arena) (void)madvise(root_arena, rounded, MADV_HUGEPAGE);
+            if (root_arena) (void)madvise(root_arena, rounded, MADV_HUGEPAGE);
 #endif
+        }
+        if (!root_arena) return;
     }
-    if (!root_arena) return;
     for (unsigned entry = 0; entry < count; entry++) {
         root_pull_list[entry] = experts[entry];
         root_arena_expert[entry] = 0xffffffffu;
+        root_cache_slot[entry] = 0xffffffffu;
         root_pull_fetch[entry] = experts[entry] < 896 && !root_resident(root, experts[entry]);
+        root_pull_data[entry] = held ? NULL : root_arena + (size_t)entry * ROOT_EXPERT_RAW;
         __atomic_store_n(&root_arena_ready[entry], 0, __ATOMIC_RELEASE);
+    }
+    if (held) {
+        /* hits first, so a miss never evicts something this batch will ask for */
+        for (unsigned entry = 0; entry < count; entry++) {
+            if (!root_pull_fetch[entry]) continue;
+            for (unsigned slot = 0; slot < held; slot++)
+                if (root_cache_expert[base + slot] == experts[entry]) {
+                    root_cache_busy[base + slot] = 1;
+                    root_cache_stamp[base + slot] = ++root_cache_clock;
+                    root_cache_slot[entry] = base + slot;
+                    root_pull_data[entry] = root_cache_store + (size_t)(base + slot) * ROOT_EXPERT_RAW;
+                    root_arena_expert[entry] = experts[entry];
+                    root_pull_fetch[entry] = 0;
+                    root_cache_hits++;
+                    __atomic_store_n(&root_arena_ready[entry], 1, __ATOMIC_RELEASE);
+                    break;
+                }
+        }
+        for (unsigned entry = 0; entry < count; entry++) {
+            if (!root_pull_fetch[entry]) continue;
+            unsigned victim = held;
+            for (unsigned slot = 0; slot < held; slot++) {
+                if (root_cache_busy[base + slot]) continue;
+                if (victim == held || root_cache_stamp[base + slot] < root_cache_stamp[base + victim])
+                    victim = slot;
+            }
+            if (victim == held) { root_pull_fetch[entry] = 0; continue; }
+            root_cache_busy[base + victim] = 1;
+            root_cache_stamp[base + victim] = ++root_cache_clock;
+            root_cache_expert[base + victim] = 0xffffffffu;
+            root_cache_slot[entry] = base + victim;
+            root_pull_data[entry] = root_cache_store + (size_t)(base + victim) * ROOT_EXPERT_RAW;
+            root_cache_misses++;
+        }
     }
     root_pull_root = root;
     root_pull_count = count;
@@ -478,6 +580,8 @@ static void root_pull_end(void)
     double before = root_wait_seconds;
     for (unsigned slot = 0; slot < root_arena_count; slot++) root_arena_wait(slot);
     root_wait_seconds = before;
+    for (unsigned slot = 0; slot < root_arena_count; slot++)
+        if (root_cache_slot[slot] != 0xffffffffu) root_cache_busy[root_cache_slot[slot]] = 0;
     root_drain_seconds += root_now_s() - drain;
     root_pull_seconds += root_now_s() - root_pull_started;
 }
