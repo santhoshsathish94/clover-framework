@@ -6,7 +6,7 @@ TEXT="$1"
 WANT="${2:-32}"
 IDS=$(python3 /tmp/ask.py encode "$TEXT" 2>/dev/null)
 printf '{"input_ids":[%s],"max_new_tokens":%s}\n' "$IDS" "$WANT" \
-  | CLOVER_SNAPFOLD=score CLOVER_SNAPSHOT=layer "$S/run.sh" >/tmp/ask.out 2>/tmp/ask.err
+  | "$S/run.sh" >/tmp/ask.out 2>/tmp/ask.err
 OUT=$(grep -oE '"index":[0-9]+,"token":[0-9]+' /tmp/ask.out | grep -oE 'token":[0-9]+' | cut -d: -f2 | tr '\n' ' ')
 echo "prompt : $TEXT"
 echo "ids    : $IDS"

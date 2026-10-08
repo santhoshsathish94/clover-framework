@@ -1622,83 +1622,31 @@ static void situ(float *y, const float *g, const float *u, int n)
     }
 }
 
-/* The distributed model gives the winning source the whole weight rather than its
-   softmax share, and that is the output the human judged best, so the standalone
-   has to match or the two cannot be compared. CLOVER_SOFTMAX=1 restores the blend. */
-static int clover_hardmax(void)
-{
-    static int decided, value;
-    if (!decided) {
-        const char *setting = getenv("CLOVER_SOFTMAX");
-        value = !(setting && *setting && *setting != '0');
-        decided = 1;
-    }
-    return value;
-}
-
-/* The distributed run that produced the output the human judged best took the winner
-   whole in layer 46 only, and at both of that layer's folds. A layer folds twice:
-   step (1) before attention is the distributed stage 3, step (5) before the MLP is
-   stage 21. Addressing a layer moves both, so the two were never told apart.
-
-   Same two switches and same defaults as the distributed model, deliberately, because
-   a day was lost to the two drifting apart. CLOVER_HARDMAX_LAYERS picks the owners,
-   CLOVER_HARDMAX_STAGES picks 3, 21 or both, CLOVER_SOFTMAX=1 disables it. */
-static int clover_listed(const char *list, int value)
-{
-    if (!strcmp(list, "all")) return 1;
-    while (*list) {
-        char *after;
-        long low = strtol(list, &after, 10), high = low;
-        if (after == list) return 0;
-        if (*after == '-') { list = after + 1; high = strtol(list, &after, 10); }
-        if (value >= low && value <= high) return 1;
-        list = *after == ',' ? after + 1 : after;
-    }
-    return 0;
-}
-
-static int clover_hardmax_at(int layer, int stage)
-{
-    static int decided, on, stage3, stage21;
-    static const char *layers;
-    if (!decided) {
-        const char *off = getenv("CLOVER_SOFTMAX");
-        const char *stages = getenv("CLOVER_HARDMAX_STAGES");
-        layers = getenv("CLOVER_HARDMAX_LAYERS");
-        if (!layers || !*layers) layers = "46";
-        on = !(off && *off && *off != '0');
-        stages = stages && *stages ? stages : "3,21";
-        stage3 = clover_listed(stages, 3);
-        stage21 = clover_listed(stages, 21);
-        decided = 1;
-    }
-    return on && (stage == 3 ? stage3 : stage21) && clover_listed(layers, layer);
-}
-
 /* Only the first snapshot, pushed at layer 0, is meant to follow the prompt. At the
-   later snapshot layers the fold takes the residual at weight 1 instead of scoring
-   the sources. CLOVER_SNAPFOLD=score puts the scoring back. */
+   later snapshot layers the fold can take the residual at weight 1 instead of scoring
+   the sources. Off unless CLOVER_SNAPFOLD=residual: the distributed model defaults it
+   off too, and the two drifting apart cost a day once already. */
 static int clover_snapfold_residual(int layer)
 {
     static int decided, value;
     if (!decided) {
         const char *setting = getenv("CLOVER_SNAPFOLD");
-        value = !(setting && !strcmp(setting, "score"));
+        value = setting && !strcmp(setting, "residual");
         decided = 1;
     }
     return value && layer > 0 && layer % 12 == 0;
 }
 
-/* Each snapshot after the first becomes the previous one plus the residual, so the
+/* Each snapshot after the first can become the previous one plus the residual, so the
    series is built by adding rather than by what the intervening layers produced.
-   CLOVER_SNAPSHOT=layer keeps the original copy. */
+   Off unless CLOVER_SNAPSHOT=add; measurement showed the additive scheme false
+   (cos 0.0298 median against the residual, ratio 5.94). */
 static int clover_snapshot_add(void)
 {
     static int decided, value;
     if (!decided) {
         const char *setting = getenv("CLOVER_SNAPSHOT");
-        value = !(setting && !strcmp(setting, "layer"));
+        value = setting && !strcmp(setting, "add");
         decided = 1;
     }
     return value;
@@ -1725,7 +1673,7 @@ static void fold_record(int owner, int stage, int position, const float *weights
 }
 
 /* AR: snapshot aggregation, float32 source-major weighted sum */
-static void AR(float *out, float *const *srcs, int nsrc, const float *fold, int winner_takes_all, float *weights_out)
+static void AR(float *out, float *const *srcs, int nsrc, const float *fold, float *weights_out)
 {
     const double _t = now_s();
     float sc[16];
@@ -1749,11 +1697,6 @@ static void AR(float *out, float *const *srcs, int nsrc, const float *fold, int 
     /* Summing per output instead of per source keeps each out[i] in s order. */
     float pis[16];
     for (int s = 0; s < nsrc; s++) pis[s] = (float)((double)ex[s] / z);
-    if (winner_takes_all) {
-        int best = 0;
-        for (int s = 1; s < nsrc; s++) if (pis[s] > pis[best]) best = s;
-        for (int s = 0; s < nsrc; s++) pis[s] = s == best ? 1.0f : 0.0f;
-    }
     if (weights_out) memcpy(weights_out, pis, (size_t)nsrc * sizeof *pis);
 #pragma omp parallel for schedule(static) if (par2 & 8)
     for (int i = 0; i < E; i++) {
@@ -2414,7 +2357,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                 for (int s = 0; s < nsnap; s++) srcbuf[s] = snap[t][s];
                 srcbuf[nsnap] = resid[t];
                 float used[16];
-                AR(hb[t], srcbuf, nsnap + 1, fa, clover_hardmax_at(L, 3), used);
+                AR(hb[t], srcbuf, nsnap + 1, fa, used);
                 fold_record(L, 3, t, used, nsnap + 1);
             } else {
                 memcpy(hb[t], resid[t], sizeof(float) * E);
@@ -2703,7 +2646,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                 for (int s = 0; s < nsnap; s++) srcbuf[s] = snap[t][s];
                 srcbuf[nsnap] = resid[t];
                 float used[16];
-                AR(h2b[t], srcbuf, nsnap + 1, fm, clover_hardmax_at(L, 21), used);
+                AR(h2b[t], srcbuf, nsnap + 1, fm, used);
                 fold_record(L, 21, t, used, nsnap + 1);
             }
             rmsnorm(x2b[t], h2b[t], wpost, E, EPS5);
@@ -2951,7 +2894,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     srcbuf[nsnap] = resid[NPOS - 1];
     /* The distributed layer 93 blends this one with a plain softmax, so it stays a
        blend here too or the two stop being the same model. */
-    AR(hf, srcbuf, nsnap + 1, foldO, 0, NULL);
+    AR(hf, srcbuf, nsnap + 1, foldO, NULL);
     rmsnorm(nrm, hf, mn, E, EPS5);
     PROFILE_BOUNDARY(93,"final-aggregation-and-normalization");
 

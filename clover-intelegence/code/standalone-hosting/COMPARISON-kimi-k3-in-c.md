@@ -77,23 +77,23 @@ His France demo generates:
 +            "The Eiffel
 ```
 
-That is what **our hardmax-off configuration** produces, token for token
-(`17374 20829 10 427 414` = ` Paris.",\n+            "`). Three independent sources now agree
-that hardmax-off is the faithful setting:
+That is what **our fold with the winner-takes-all override disabled** produces, token for
+token (`17374 20829 10 427 414` = ` Paris.",\n+            "`). Three independent sources
+agreed, so the override has been **removed from the code entirely**:
 
 1. the stored observations match bit-exactly on all 92 layers (7,360 / 7,360 steps)
-2. the per-layer divergence cliff sits at exactly layer 46, where hardmax fires
+2. the per-layer divergence cliff sits at exactly layer 46, where it fired
 3. his reference implementation produces the same continuation
 
-`CLOVER_HARDMAX_LAYERS` defaults to `46`. With it on, output becomes ` Paris. The Eiffel` --
-more readable, and **not what the reference produces**. It is a modification, not a fix.
-Earlier notes in `MEASURED-2026-10-08.md` called it the correct setting on the strength of
-the text reading better; that was wrong, and this file supersedes it.
+It used to be on by default at layer 46 and produced ` Paris. The Eiffel` -- more readable,
+and not what the reference produces. Earlier notes called it the correct setting on the
+strength of the text reading better; that was wrong. Removal was verified output-neutral
+over six prompts x six output tokens, all 36 ids identical.
 
 | | stored-observation match | matches kimi-k3-in-c output |
 |---|---|---|
-| hardmax off | 100%, all 92 layers | yes |
-| hardmax 46 (default) | 49%, diverges at L46 | no |
+| override off (now the only behaviour) | 100%, all 92 layers | yes |
+| override on at 46 (removed) | 49%, diverged at L46 | no |
 
 The "noise" after ` Paris.` is therefore the model, not a defect. Three causes, none a bug:
 the prompt is an unfinished sentence rather than a question; `stop_reason` was `"length"` on
