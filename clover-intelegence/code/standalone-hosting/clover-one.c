@@ -327,6 +327,63 @@ static unsigned char *map_file(const char *path, size_t *sz)
     return (unsigned char *)p;
 }
 
+/* Trunk and operator weights are the same bytes for every prompt, so they are read
+   once into anonymous huge pages. Left as file mappings they are page-cache backed,
+   so expert streaming evicts them and the next request faults them again 4 KB at a
+   time; anonymous pages cannot be evicted while RAM holds. Falls back to the mapping
+   when the allocation will not fit, which keeps a small machine working. */
+static unsigned char *payload_file(const char *path, size_t *sz)
+{
+    static int enabled = -1;
+    if (enabled < 0) {
+        const char *setting = getenv("K3_PAYLOAD_RAM");
+        if (setting && strcmp(setting, "0") && strcmp(setting, "1"))
+            die("K3_PAYLOAD_RAM must be 0 or 1");
+        enabled = !setting || strcmp(setting, "0");
+    }
+    if (!enabled) return map_file(path, sz);
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) die(path);
+    struct stat st;
+    if (fstat(fd, &st)) die("fstat");
+    size_t bytes = (size_t)st.st_size;
+    size_t rounded = (bytes + 4095) & ~(size_t)4095;
+    void *p = mmap(NULL, rounded, PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
+    if (p == MAP_FAILED) { close(fd); return map_file(path, sz); }
+#ifdef MADV_HUGEPAGE
+    (void)madvise(p, rounded, MADV_HUGEPAGE);
+#endif
+    /* O_DIRECT lands the bytes in the arena without the page-cache copy, which is the
+       difference between 6 GB/s and 11 GB/s here. It needs 4 KB granularity, so the
+       sub-block tail is read buffered. */
+    int direct = open(path, O_RDONLY | O_DIRECT);
+    size_t bulk = direct >= 0 ? (bytes & ~(size_t)4095) : 0;
+    const size_t chunk = 32u << 20;
+    const long units = (long)((bulk + chunk - 1) / chunk);
+    int ok = 1;
+#pragma omp parallel for schedule(dynamic, 1) num_threads(8) reduction(&:ok)
+    for (long unit = 0; unit < units; unit++) {
+        size_t base = (size_t)unit * chunk, want = bulk - base < chunk ? bulk - base : chunk, got = 0;
+        while (got < want) {
+            ssize_t n = pread(direct, (unsigned char *)p + base + got, want - got, (off_t)(base + got));
+            if (n <= 0) break;
+            got += (size_t)n;
+        }
+        if (got != want) ok = 0;
+    }
+    if (direct >= 0) close(direct);
+    for (size_t offset = bulk; ok && offset < bytes; ) {
+        ssize_t n = pread(fd, (unsigned char *)p + offset, bytes - offset, (off_t)offset);
+        if (n <= 0) { ok = 0; break; }
+        offset += (size_t)n;
+    }
+    close(fd);
+    if (!ok) { munmap(p, rounded); return map_file(path, sz); }
+    *sz = bytes;
+    return (unsigned char *)p;
+}
+
 static int use_huge = 1;   /* 0 = 4 KB, 1 = THP (madvise-only here), 2 = hugetlb pool */
 static size_t trunk_map_n; /* hugetlb rounds the mapping up, so munmap needs its own length */
 
@@ -1033,7 +1090,7 @@ static void prepared_load(int layer)
     for (unsigned group = 0; group < 3; group++) {
         length = snprintf(path, sizeof(path), "%s/trunk-%d/%s", prepared_directory, layer, names[group]);
         if (length < 0 || (size_t)length >= sizeof(path)) die("prepared group path");
-        prepared_groups[group] = map_file(path, &bytes);
+        prepared_groups[group] = payload_file(path, &bytes);
         if (bytes != prepared_header.lengths[group]) die("prepared group size");
     }
     uint64_t ends[3] = {0};
@@ -1101,7 +1158,7 @@ static void operator_load(int layer)
     int length = layer ? snprintf(path, sizeof(path), "%s/layer-%d/operator.bin", root, layer)
                        : snprintf(path, sizeof(path), "%s", first);
     if (length < 0 || (size_t)length >= sizeof(path)) die("operator path length");
-    operator_data = map_file(path, &operator_bytes);
+    operator_data = payload_file(path, &operator_bytes);
     if (operator_bytes < sizeof(operator_header)) die("short operator header");
     memcpy(&operator_header, operator_data, sizeof(operator_header));
     int mla = layer == 92 || layer % 4 == 3;
@@ -1329,6 +1386,22 @@ static void Q(float *y, const float *x, const unsigned char *W, int in, int out)
 
 static int xdec = 2, pfc_on;
 
+/* The qkv palette is palette[c] == (float)(int8_t)c on every KDA layer, so the
+   gather reproduces a sign-extend. Verified at run time rather than assumed,
+   because the MLA layers carry a different table. */
+static int palette_identity(const float *palette)
+{
+    static const float *seen;
+    static int verdict;
+    if (palette == seen) return verdict;
+    int identity = 1;
+    for (int code = 0; code < 256; code++)
+        if (palette[code] != (float)(int8_t)(unsigned char)code) { identity = 0; break; }
+    seen = palette;
+    verdict = identity;
+    return identity;
+}
+
 /* ---- batched forms: the weight is read once and applied to every position ----
    Each output element is still an independent reduction over i in the original
    order, so these are bit-identical to calling Q or X once per position. */
@@ -1340,6 +1413,7 @@ static void Qm(float *const *Y, const float *const *Xs, int T,
     prepared_matrix_check(W, in, out);
     OperatorMatrix matrix = operator_matrix_view(W, in, out);
     const float *palette = matrix.palette;
+    const int direct_codes = palette_identity(palette);
     const size_t rowb = (size_t)4 + (size_t)in;
     int omain = 0;
 #if defined(__AVX2__)
@@ -1396,6 +1470,16 @@ static void Qm(float *const *Y, const float *const *Xs, int T,
 #if defined(__AVX2__)
         __m256 v0[NPOS_SLOTS], v1[NPOS_SLOTS];
         for (int t = 0; t < T; t++) { v0[t] = _mm256_setzero_ps(); v1[t] = _mm256_setzero_ps(); }
+        if (direct_codes) {
+            for (; i + 15 < in; i += 16) {
+                const __m256 w0 = _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64((const __m128i *)(w + i))));
+                const __m256 w1 = _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64((const __m128i *)(w + i + 8))));
+                for (int t = 0; t < T; t++) {
+                    v0[t] = _mm256_fmadd_ps(w0, _mm256_loadu_ps(Xs[t] + i), v0[t]);
+                    v1[t] = _mm256_fmadd_ps(w1, _mm256_loadu_ps(Xs[t] + i + 8), v1[t]);
+                }
+            }
+        } else
         for (; i + 15 < in; i += 16) {
             const __m256 w0 = _mm256_i32gather_ps(palette, _mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(w + i))), 4);
             const __m256 w1 = _mm256_i32gather_ps(palette, _mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(w + i + 8))), 4);
@@ -1538,8 +1622,110 @@ static void situ(float *y, const float *g, const float *u, int n)
     }
 }
 
+/* The distributed model gives the winning source the whole weight rather than its
+   softmax share, and that is the output the human judged best, so the standalone
+   has to match or the two cannot be compared. CLOVER_SOFTMAX=1 restores the blend. */
+static int clover_hardmax(void)
+{
+    static int decided, value;
+    if (!decided) {
+        const char *setting = getenv("CLOVER_SOFTMAX");
+        value = !(setting && *setting && *setting != '0');
+        decided = 1;
+    }
+    return value;
+}
+
+/* The distributed run that produced the output the human judged best took the winner
+   whole in layer 46 only, and at both of that layer's folds. A layer folds twice:
+   step (1) before attention is the distributed stage 3, step (5) before the MLP is
+   stage 21. Addressing a layer moves both, so the two were never told apart.
+
+   Same two switches and same defaults as the distributed model, deliberately, because
+   a day was lost to the two drifting apart. CLOVER_HARDMAX_LAYERS picks the owners,
+   CLOVER_HARDMAX_STAGES picks 3, 21 or both, CLOVER_SOFTMAX=1 disables it. */
+static int clover_listed(const char *list, int value)
+{
+    if (!strcmp(list, "all")) return 1;
+    while (*list) {
+        char *after;
+        long low = strtol(list, &after, 10), high = low;
+        if (after == list) return 0;
+        if (*after == '-') { list = after + 1; high = strtol(list, &after, 10); }
+        if (value >= low && value <= high) return 1;
+        list = *after == ',' ? after + 1 : after;
+    }
+    return 0;
+}
+
+static int clover_hardmax_at(int layer, int stage)
+{
+    static int decided, on, stage3, stage21;
+    static const char *layers;
+    if (!decided) {
+        const char *off = getenv("CLOVER_SOFTMAX");
+        const char *stages = getenv("CLOVER_HARDMAX_STAGES");
+        layers = getenv("CLOVER_HARDMAX_LAYERS");
+        if (!layers || !*layers) layers = "46";
+        on = !(off && *off && *off != '0');
+        stages = stages && *stages ? stages : "3,21";
+        stage3 = clover_listed(stages, 3);
+        stage21 = clover_listed(stages, 21);
+        decided = 1;
+    }
+    return on && (stage == 3 ? stage3 : stage21) && clover_listed(layers, layer);
+}
+
+/* Only the first snapshot, pushed at layer 0, is meant to follow the prompt. At the
+   later snapshot layers the fold takes the residual at weight 1 instead of scoring
+   the sources. CLOVER_SNAPFOLD=score puts the scoring back. */
+static int clover_snapfold_residual(int layer)
+{
+    static int decided, value;
+    if (!decided) {
+        const char *setting = getenv("CLOVER_SNAPFOLD");
+        value = !(setting && !strcmp(setting, "score"));
+        decided = 1;
+    }
+    return value && layer > 0 && layer % 12 == 0;
+}
+
+/* Each snapshot after the first becomes the previous one plus the residual, so the
+   series is built by adding rather than by what the intervening layers produced.
+   CLOVER_SNAPSHOT=layer keeps the original copy. */
+static int clover_snapshot_add(void)
+{
+    static int decided, value;
+    if (!decided) {
+        const char *setting = getenv("CLOVER_SNAPSHOT");
+        value = !(setting && !strcmp(setting, "layer"));
+        decided = 1;
+    }
+    return value;
+}
+
+/* Same record layout as the distributed capture in common/trace.h: owner, local,
+   position, count as int32, then count floats. local is 2000 + stage so the two
+   sides can be diffed without a translation step. */
+static FILE *fold_sink;
+static int fold_sink_tried;
+
+static void fold_record(int owner, int stage, int position, const float *weights, int count)
+{
+    if (!fold_sink_tried) {
+        const char *path = getenv("CLOVER_FOLD_DUMP");
+        fold_sink_tried = 1;
+        if (path && *path) fold_sink = fopen(path, "wb");
+    }
+    if (!fold_sink) return;
+    int32_t header[4] = {owner, 2000 + stage, position, count};
+    if (fwrite(header, sizeof header, 1, fold_sink) == 1)
+        (void)fwrite(weights, sizeof *weights, (size_t)count, fold_sink);
+    (void)fflush(fold_sink);
+}
+
 /* AR: snapshot aggregation, float32 source-major weighted sum */
-static void AR(float *out, float *const *srcs, int nsrc, const float *fold)
+static void AR(float *out, float *const *srcs, int nsrc, const float *fold, int winner_takes_all, float *weights_out)
 {
     const double _t = now_s();
     float sc[16];
@@ -1563,6 +1749,12 @@ static void AR(float *out, float *const *srcs, int nsrc, const float *fold)
     /* Summing per output instead of per source keeps each out[i] in s order. */
     float pis[16];
     for (int s = 0; s < nsrc; s++) pis[s] = (float)((double)ex[s] / z);
+    if (winner_takes_all) {
+        int best = 0;
+        for (int s = 1; s < nsrc; s++) if (pis[s] > pis[best]) best = s;
+        for (int s = 0; s < nsrc; s++) pis[s] = s == best ? 1.0f : 0.0f;
+    }
+    if (weights_out) memcpy(weights_out, pis, (size_t)nsrc * sizeof *pis);
 #pragma omp parallel for schedule(static) if (par2 & 8)
     for (int i = 0; i < E; i++) {
         float o = 0.0f;
@@ -1605,6 +1797,16 @@ static float ap_kvm[NPOS_SLOTS][H * KVD];
 static float ap_gbm[NPOS_SLOTS][H * VH], ap_gbf[NPOS_SLOTS][H * VH], ap_accm[NPOS_SLOTS][H * VH];
 static float qs_pool[(size_t)NPOS_SLOTS * H * QH] __attribute__((aligned(64)));
 static float snap_pool[16][NPOS_SLOTS][E] __attribute__((aligned(64)));
+
+/* Expert-major grouping: the distinct experts a batch needs, and who asked for each. */
+_Static_assert(NPOS_SLOTS <= ROOT_MAX_ROWS, "batched expert projection bounds the slot count");
+static float expert_down[NPOS_SLOTS][TOPK][LAT] __attribute__((aligned(64)));
+static uint64_t expert_hash[NPOS_SLOTS];
+static unsigned expert_hit[NPOS_SLOTS][TOPK];
+static unsigned group_expert[NPOS_SLOTS * TOPK], group_members[NPOS_SLOTS * TOPK];
+static unsigned group_position[NPOS_SLOTS * TOPK][NPOS_SLOTS];
+static unsigned group_rank[NPOS_SLOTS * TOPK][NPOS_SLOTS];
+static uint64_t resident_group_passes, resident_group_pairs;
 
 static const unsigned char *recorded_roots, *recorded_inputs;
 static size_t recorded_root_bytes, recorded_input_bytes;
@@ -1657,6 +1859,50 @@ static const float *recorded_down(int layer, int expert, const float *input)
     fprintf(stderr, "result binding: layer=%d expert=%d\n", layer, expert);
     result_miss("no stored result matches the live expert input");
     return NULL;
+}
+
+/* The observation sets hold gate/up/activation/down for the experts a prompt selects.
+   A record is usable only when its stored input is the same vector the live step is
+   about to project: over 7,360 measured steps every exact input match reproduced the
+   stored down bit for bit, while matching on expert id alone differed by up to 2.2. */
+static const unsigned char *stored_results[NLAY];
+static const float *stored_inputs[NLAY];
+static int stored_state;
+static unsigned long long stored_expert_hits;
+
+static void stored_open(void)
+{
+    const char *name = getenv("K3_RESULT_SET");
+    const char *root = getenv("K3_PREPARED_DATA");
+    if (!name || !root || (strcmp(name, "france") && strcmp(name, "japan"))) { stored_state = -1; return; }
+    char path[4096];
+    size_t bytes;
+    for (unsigned layer = 1; layer < NLAY; layer++) {
+        snprintf(path, sizeof path, "%s/root-%u/observations/%s/results.bin", root, layer, name);
+        stored_results[layer] = map_file(path, &bytes);
+        if (bytes != 80ULL * 51204) die("observation results layout");
+        snprintf(path, sizeof path, "%s/root-%u/observations/%s/inputs.f32", root, layer, name);
+        stored_inputs[layer] = (const float *)map_file(path, &bytes);
+        if (bytes != 80ULL * LAT * 4) die("observation inputs layout");
+    }
+    stored_state = 1;
+}
+
+static int stored_expert_down(unsigned layer, unsigned expert, const float *input, float *out)
+{
+    if (!stored_state) stored_open();
+    if (stored_state < 0 || layer < 1 || layer >= NLAY) return 0;
+    for (unsigned record = 0; record < 80; record++) {
+        const unsigned char *values = stored_results[layer] + (size_t)record * 51204;
+        int32_t identity;
+        memcpy(&identity, values, sizeof identity);
+        if ((unsigned)identity != expert) continue;
+        if (memcmp(stored_inputs[layer] + (size_t)record * LAT, input, LAT * 4)) continue;
+        memcpy(out, values + 4 + 3 * I_ * 4, LAT * 4);
+        stored_expert_hits++;
+        return 1;
+    }
+    return 0;
 }
 
 static void result_options(void)
@@ -1815,34 +2061,15 @@ static void resident_shared(float *gate,float *up,float *output,const float *inp
     Qm(&output,(const float *const *)&gate,1,down_weights,SI,E);
 }
 
-static void resident_prefetch_next(unsigned layer,const float *residual)
+/* The last dense weights still read once per position; batched like every other one. */
+static void resident_shared_rows(float *const *gate,float *const *up,float *const *output,
+    const float *const *input,int count,
+    const unsigned char *gate_weights,const unsigned char *up_weights,const unsigned char *down_weights)
 {
-    if (!resident_pipeline.initialized || layer<1 || layer>=NLAY || resident_roots[layer]->direct) return;
-    double started=now_s();
-    const ResidentLayer *saved=&resident_layers[layer];
-    const float *router=NULL,*bias=NULL,*gain=NULL;
-    for (unsigned index=0;index<saved->prepared.count;index++) {
-        const PreparedRecord *record=&saved->records[index];
-        const float *values=(const float *)(saved->groups[record->group]+record->offset);
-        if (record->id==S_GATE && record->kind==3 && record->rows==NEXP && record->columns==E) router=values;
-        if (record->id==S_GBIAS && record->kind==2 && record->count==NEXP) bias=values;
-        if (record->id==S_POST_LN && record->kind==2 && record->count==E) gain=values;
-    }
-    if (!router || !bias || !gain) die("next-layer prediction parameter shape differs");
-    float input[E],scores[NEXP];
-    rmsnorm(input,residual,gain,E,EPS5);
-#pragma omp parallel for schedule(static)
-    for (unsigned expert=0;expert<NEXP;expert++) {
-        const float *row=router+(size_t)expert*E;
-        double sum=0.0;
-        for (unsigned coordinate=0;coordinate<E;coordinate++) sum+=(double)row[coordinate]*(double)input[coordinate];
-        scores[expert]=sigf((float)sum)+bias[expert];
-    }
-    unsigned candidate=0;
-    for (unsigned expert=1;expert<NEXP;expert++) if (scores[expert]>scores[candidate]) candidate=expert;
-    resident_cross_layer.prediction_seconds+=now_s()-started;
-    if (!cross_layer_submit(&resident_cross_layer,&resident_pipeline,resident_roots[layer],candidate))
-        die("cross-layer prefetch submission failed");
+    Qm(gate,input,count,gate_weights,E,SI);
+    Qm(up,input,count,up_weights,E,SI);
+    for (int entry=0;entry<count;entry++) situ(gate[entry],gate[entry],up[entry],SI);
+    Qm(output,(const float *const *)gate,count,down_weights,SI,E);
 }
 
 static const float *resident_expert(unsigned layer,unsigned expert,const float *input)
@@ -1866,6 +2093,39 @@ static const float *resident_expert(unsigned layer,unsigned expert,const float *
     resident_expert_calls+=3;
     op_add(OP_X,started,0);
     return resident_down;
+}
+
+/* Same three projections, but every position that chose this expert rides the one
+   weight pass. Each row keeps its own accumulators, so the values are unchanged. */
+static float batch_gate[ROOT_MAX_ROWS][I_], batch_up[ROOT_MAX_ROWS][I_];
+static void resident_expert_rows(unsigned layer,unsigned expert,
+    const float *const *inputs,float *const *outputs,unsigned count)
+{
+    double started=now_s();
+    Root *root=resident_roots[layer];
+    float *gate_rows[ROOT_MAX_ROWS],*up_rows[ROOT_MAX_ROWS];
+    const float *activated[ROOT_MAX_ROWS];
+    for (unsigned entry=0;entry<count;entry++) {
+        gate_rows[entry]=batch_gate[entry];
+        up_rows[entry]=batch_up[entry];
+        activated[entry]=batch_gate[entry];
+    }
+    if (!root_project_rows(root,resident_root_scratch,expert,0,inputs,gate_rows,count)) die("live expert gate failed");
+    PROFILE_DURATION(layer,"detail:expert-gate",now_s()-started);
+    PROFILE_CLOCK(phase);
+    if (!root_project_rows(root,resident_root_scratch,expert,1,inputs,up_rows,count)) die("live expert up failed");
+    PROFILE_DURATION(layer,"detail:expert-up",now_s()-phase);
+    PROFILE_RESTART(phase);
+    for (unsigned entry=0;entry<count;entry++) situ(batch_gate[entry],batch_gate[entry],batch_up[entry],I_);
+    PROFILE_DURATION(layer,"detail:expert-activation",now_s()-phase);
+    PROFILE_RESTART(phase);
+    if (!root_project_rows(root,resident_root_scratch,expert,2,activated,outputs,count)) die("live expert down failed");
+    PROFILE_DURATION(layer,"detail:expert-down",now_s()-phase);
+#ifdef CLOVER_CHECK_EXPERT
+    for (unsigned entry=0;entry<count;entry++) check_live_expert(layer,expert,inputs[entry],outputs[entry]);
+#endif
+    resident_expert_calls+=3*count;
+    op_add(OP_X,started,0);
 }
 
 static void resident_caches_open(void)
@@ -2150,10 +2410,12 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
 
         /* (1) pre-attention aggregation, guarded */
         for (int t = TLO; t < NPOS; t++) {
-            if (nsnap > 0) {
+            if (nsnap > 0 && !clover_snapfold_residual(L)) {
                 for (int s = 0; s < nsnap; s++) srcbuf[s] = snap[t][s];
                 srcbuf[nsnap] = resid[t];
-                AR(hb[t], srcbuf, nsnap + 1, fa);
+                float used[16];
+                AR(hb[t], srcbuf, nsnap + 1, fa, clover_hardmax_at(L, 3), used);
+                fold_record(L, 3, t, used, nsnap + 1);
             } else {
                 memcpy(hb[t], resid[t], sizeof(float) * E);
             }
@@ -2163,7 +2425,11 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
         if (L % 12 == 0) {
             for (int t = TLO; t < NPOS; t++) {
                 snap[t][nsnap] = snap_pool[nsnap][t];
-                memcpy(snap[t][nsnap], resid[t], sizeof(float) * E);
+                if (nsnap > 0 && clover_snapshot_add())
+                    for (int i = 0; i < E; i++)
+                        snap[t][nsnap][i] = snap[t][nsnap - 1][i] + resid[t][i];
+                else
+                    memcpy(snap[t][nsnap], resid[t], sizeof(float) * E);
             }
             nsnap++; have_prefix = 0;
         }
@@ -2431,9 +2697,15 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
         /* (5) pre-MLP aggregation, unguarded, then norm */
         float *wpost = slot_vec(L, S_POST_LN, E);
         for (int t = TLO; t < NPOS; t++) {
-            for (int s = 0; s < nsnap; s++) srcbuf[s] = snap[t][s];
-            srcbuf[nsnap] = resid[t];
-            AR(h2b[t], srcbuf, nsnap + 1, fm);
+            if (clover_snapfold_residual(L)) {
+                memcpy(h2b[t], resid[t], sizeof(float) * E);
+            } else {
+                for (int s = 0; s < nsnap; s++) srcbuf[s] = snap[t][s];
+                srcbuf[nsnap] = resid[t];
+                float used[16];
+                AR(h2b[t], srcbuf, nsnap + 1, fm, clover_hardmax_at(L, 21), used);
+                fold_record(L, 21, t, used, nsnap + 1);
+            }
             rmsnorm(x2b[t], h2b[t], wpost, E, EPS5);
         }
         free(wpost);
@@ -2544,59 +2816,71 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
             }
             Qm(latent_rows, input_rows, NPOS, WDN, E, LAT);
             PROFILE_BOUNDARY(L,"prefetch-submit-and-latent-projection");
-            for (int position = 0; position < NPOS; position++) {
-                memset(mixed[position], 0, sizeof(mixed[position]));
-                float cached_down[TOPK][LAT];
-                unsigned hits[TOPK], missing[TOPK], missing_count=0;
-                uint64_t input_hash=resident_results.sets?expert_results_hash(latent[position]):0;
-                for (unsigned rank=0;rank<TOPK;rank++) {
-                    unsigned expert=(unsigned)idsel_all[position][rank];
-                    hits[rank]=(unsigned)expert_results_find(&resident_results,(unsigned)L,expert,input_hash,latent[position],cached_down[rank]);
-                    if (!hits[rank]) missing[missing_count++]=rank;
+            {
+                /* Group by expert so one weight pass serves every position that picked it. */
+                unsigned groups=0;
+                for (int position=0;position<NPOS;position++) {
+                    expert_hash[position]=resident_results.sets?expert_results_hash(latent[position]):0;
+                    for (unsigned rank=0;rank<TOPK;rank++) {
+                        unsigned expert=(unsigned)idsel_all[position][rank];
+                        expert_hit[position][rank]=(unsigned)expert_results_find(&resident_results,(unsigned)L,
+                            expert,expert_hash[position],latent[position],expert_down[position][rank]);
+                        if (!expert_hit[position][rank])
+                            expert_hit[position][rank]=(unsigned)stored_expert_down((unsigned)L,expert,
+                                latent[position],expert_down[position][rank]);
+                        if (expert_hit[position][rank]) continue;
+                        unsigned group=0;
+                        while (group<groups && group_expert[group]!=expert) group++;
+                        if (group==groups) { group_expert[groups]=expert; group_members[groups]=0; groups++; }
+                        group_position[group][group_members[group]]=(unsigned)position;
+                        group_rank[group][group_members[group]]=rank;
+                        group_members[group]++;
+                    }
                 }
-                int primed=cross_layer_match(&resident_cross_layer,&resident_pipeline,resident_roots[L],idsel_all[position],missing,missing_count);
-                int staged=resident_pipeline.initialized && !resident_roots[L]->direct;
-                if (!primed && missing_count && staged &&
-                    !expert_pipeline_submit(&resident_pipeline,resident_roots[L],(unsigned)idsel_all[position][missing[0]],0))
-                    die("first expert prefetch submission failed");
-#ifndef CLOVER_DEFER_SHARED
                 PROFILE_BOUNDARY(L,"result-lookup-and-first-expert-submit");
-                resident_shared(gate_rows[position],up_rows[position],shared_rows[position],input_rows[position],S1,S3,S2);
+                for (unsigned group=0;group<groups;group++) resident_group_pairs+=group_members[group];
+                resident_group_passes+=groups;
+                /* Expert n's maths needs only expert n's bytes, so the reads run on
+                   dedicated threads and each group waits for just its own slot. */
+                root_pull_begin(resident_roots[L],group_expert,groups);
+                resident_shared_rows(gate_rows,up_rows,shared_rows,input_rows,NPOS,S1,S3,S2);
                 PROFILE_BOUNDARY(L,"shared-expert-during-read");
-#endif
-                for (unsigned work=0;work<missing_count;work++) {
-                    unsigned rank=missing[work];
-                    if (staged) {
-                        if (!expert_pipeline_acquire(&resident_pipeline,resident_roots[L],(unsigned)idsel_all[position][rank],work%2))
-                            die("expert prefetched read failed");
-                        if (work+1<missing_count && !expert_pipeline_submit(&resident_pipeline,resident_roots[L],
-                            (unsigned)idsel_all[position][missing[work+1]],(work+1)%2))
-                            die("next expert prefetch submission failed");
+                for (unsigned group=0;group<groups;group++) {
+                    const float *ins[ROOT_MAX_ROWS]; float *outs[ROOT_MAX_ROWS];
+                    for (unsigned member=0;member<group_members[group];member++) {
+                        ins[member]=latent[group_position[group][member]];
+                        outs[member]=expert_down[group_position[group][member]][group_rank[group][member]];
                     }
-                    const float *down=resident_expert((unsigned)L,(unsigned)idsel_all[position][rank],latent[position]);
-                    expert_pipeline_release(resident_roots[L]);
-                    memcpy(cached_down[rank],down,sizeof cached_down[rank]);
-                    expert_results_store(&resident_results,(unsigned)L,(unsigned)idsel_all[position][rank],input_hash,latent[position],down);
+                    root_arena_wait(group);
+                    resident_expert_rows((unsigned)L,group_expert[group],ins,outs,group_members[group]);
+                    for (unsigned member=0;member<group_members[group];member++) {
+                        unsigned position=group_position[group][member];
+                        expert_results_store(&resident_results,(unsigned)L,group_expert[group],
+                            expert_hash[position],latent[position],expert_down[position][group_rank[group][member]]);
+                    }
                 }
-                for (int rank=0;rank<TOPK;rank++) {
-                    const float *down=cached_down[rank];
-                    if (hits[rank]) {
-                        resident_result_hits++;
+                root_pull_end();
+                for (int position=0;position<NPOS;position++) {
+                    memset(mixed[position], 0, sizeof(mixed[position]));
+                    for (int rank=0;rank<TOPK;rank++) {
+                        const float *down=expert_down[position][rank];
+                        if (expert_hit[position][rank]) {
+                            resident_result_hits++;
 #ifdef CLOVER_CHECK_EXPERT
-                        check_live_expert((unsigned)L,(unsigned)idsel_all[position][rank],latent[position],down);
+                            check_live_expert((unsigned)L,(unsigned)idsel_all[position][rank],latent[position],down);
 #endif
+                        }
+                        const float weight = wts_all[position][rank];
+                        for (int coordinate = 0; coordinate < LAT; coordinate++)
+                            mixed[position][coordinate] = mixed[position][coordinate] + weight * down[coordinate];
                     }
-                    const float weight = wts_all[position][rank];
-                    for (int coordinate = 0; coordinate < LAT; coordinate++)
-                        mixed[position][coordinate] = mixed[position][coordinate] + weight * down[coordinate];
+                    rmsnorm(mixed[position], mixed[position], lnw, LAT, EPS5);
                 }
-                rmsnorm(mixed[position], mixed[position], lnw, LAT, EPS5);
             }
             Qm(routed_rows, (const float *const *)mixed_rows, NPOS, WUP, LAT, E);
             PROFILE_BOUNDARY(L,"experts-mix-normalize-up");
 #ifdef CLOVER_DEFER_SHARED
-            for (int position=0;position<NPOS;position++)
-                resident_shared(gate_rows[position],up_rows[position],shared_rows[position],input_rows[position],S1,S3,S2);
+            resident_shared_rows(gate_rows,up_rows,shared_rows,input_rows,NPOS,S1,S3,S2);
 #endif
             for (int position = 0; position < NPOS; position++)
                 for (int coordinate = 0; coordinate < E; coordinate++)
@@ -2613,12 +2897,6 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
 #pragma omp parallel for collapse(2) schedule(static)
         for (int t = TLO; t < NPOS; t++)
             for (int i = 0; i < E; i++) resid[t][i] = resid[t][i] + ffn[t][i];
-
-    #ifndef CLOVER_NO_CROSS_LAYER_PREFETCH
-        PROFILE_CLOCK(cross_started);
-        if (L<last) resident_prefetch_next((unsigned)L+1,resid[0]);
-        PROFILE_DURATION(L,"detail:cross-layer-predict-and-submit",now_s()-cross_started);
-    #endif
 
         if (lstat_fp) {
             for (int t = TLO; t < NPOS; t++) {
@@ -2671,7 +2949,9 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
       } }
     for (int s = 0; s < nsnap; s++) srcbuf[s] = snap[NPOS - 1][s];
     srcbuf[nsnap] = resid[NPOS - 1];
-    AR(hf, srcbuf, nsnap + 1, foldO);
+    /* The distributed layer 93 blends this one with a plain softmax, so it stays a
+       blend here too or the two stop being the same model. */
+    AR(hf, srcbuf, nsnap + 1, foldO, 0, NULL);
     rmsnorm(nrm, hf, mn, E, EPS5);
     PROFILE_BOUNDARY(93,"final-aggregation-and-normalization");
 
@@ -2731,14 +3011,24 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     fprintf(stderr,"STEP_JSON {\"position\":%u,\"token\":%d,\"seconds\":%.9f,\"timed_seconds\":%.9f,"
         "\"fixed_mapping_opens\":%u,\"fixed_mapping_releases\":%u,\"tap_layout_builds\":%u,"
         "\"layers\":%u,\"matrix_records\":%u,\"vector_records\":%u,\"expert_matches\":%u,"
-        "\"expert_projection_calls\":%lld,\"expert_result_hits\":%llu,\"vector_copy_seconds\":%.9f,\"operators\":{",
+        "\"expert_projection_calls\":%lld,\"expert_result_hits\":%llu,\"vector_copy_seconds\":%.9f,"
+        "\"expert_read_bytes\":%llu,\"expert_read_seconds\":%.9f,"
+        "\"expert_stall_seconds\":%.9f,\"expert_drain_seconds\":%.9f,\"operators\":{",
         resident_position, am, now_s() - request_started, now_s() - T0,
         resident_maps - maps_before, resident_unmaps - unmaps_before, resident_tap_layers - taps_before,
         operator_layers, operator_matrices_used, operator_vectors_used, recorded_expert_hits,
-        (long long)resident_expert_calls, resident_result_hits, sv_secs);
+        (long long)resident_expert_calls, resident_result_hits, sv_secs,
+        root_pull_bytes, root_pull_seconds, root_wait_seconds, root_drain_seconds);
     for (int operation = 0; operation < OP_COUNT; operation++)
         fprintf(stderr,"%s\"%s\":%.9f", operation ? "," : "", OPN[operation], op_t[operation]);
     fprintf(stderr,"}}\n");
+    fprintf(stderr,"OPSTAT_JSON {");
+    for (int operation = 0; operation < OP_COUNT; operation++)
+        fprintf(stderr,"%s\"%s\":{\"s\":%.6f,\"gflop\":%.4f,\"wgb\":%.4f,\"calls\":%lld}",
+            operation ? "," : "", OPN[operation], op_t[operation],
+            (double)op_fl[operation] / 1e9, (double)op_wb[operation] / 1e9,
+            (long long)op_n[operation]);
+    fprintf(stderr,"}\n");
     return (unsigned)am;
 }
 

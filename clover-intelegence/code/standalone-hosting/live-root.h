@@ -35,6 +35,7 @@ typedef struct {
     float (*pairs)[256][2];
     const unsigned char *direct;
     size_t direct_bytes;
+    int direct_fd;
     const unsigned char *prefetched;
     size_t prefetched_bytes;
     unsigned prefetched_expert;
@@ -93,6 +94,7 @@ static void root_close(Root *root)
     if (!root) return;
     if (root->file) fclose(root->file);
     if (root->direct) munmap((void *)root->direct, root->direct_bytes);
+    if (root->direct_fd > 0) close(root->direct_fd);
     free(root->pairs);
     free(root->constants);
     free(root->values);
@@ -196,7 +198,19 @@ static Root *root_open(const char *directory, unsigned layer)
                 void *mapped = mmap(NULL, bytes, PROT_READ, MAP_SHARED, handle, 0);
                 if (mapped != MAP_FAILED) { root->direct = mapped; root->direct_bytes = bytes; }
             }
-            close(handle);
+            /* Held open rather than closed: root_pull reads the experts through it.
+               O_DIRECT lands an expert straight in the arena; the page-cache copy is
+               what holds the pread path near 6 GB/s on an array that fio runs at 13.5.
+               It also means these pages never become resident, so the mincore path
+               stops short-cutting warm requests -- hence opt-in rather than default. */
+            if (root->direct) {
+                const char *direct_io = getenv("K3_EXPERT_DIRECT");
+                if (direct_io && !strcmp(direct_io, "1")) {
+                    int flags = fcntl(handle, F_GETFL);
+                    if (flags >= 0) (void)fcntl(handle, F_SETFL, flags | O_DIRECT);
+                }
+                root->direct_fd = handle;
+            } else close(handle);
         }
     }
     if (!valid || root->offsets[ROOT_BLOCKS] - root->offsets[0] != root_u64(header + 24) ||
@@ -205,6 +219,8 @@ static Root *root_open(const char *directory, unsigned layer)
 }
 
 #include "root-validation.h"
+
+static const unsigned char *root_arena_find(unsigned expert);
 
 static int root_block(Root *root, RootScratch *scratch, unsigned expert, unsigned matrix, unsigned block)
 {
@@ -259,7 +275,11 @@ static int root_project(Root *root, RootScratch *scratch, unsigned expert, unsig
     for (unsigned block = 0; block < rows / 64; block++) {
         RootScratch *scratch = pool + omp_get_thread_num();
         const unsigned char *data;
-        if (root->direct) data = root->direct + (size_t)expert * ROOT_EXPERT_RAW +
+        const unsigned char *held = root_arena_find(expert);
+        if (held) data = held +
+            (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW
+                        : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW);
+        else if (root->direct) data = root->direct + (size_t)expert * ROOT_EXPERT_RAW +
             (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW
                         : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW);
         else if (root_block(root, scratch, expert, matrix, block)) data = scratch->raw;
@@ -299,6 +319,248 @@ static int root_project(Root *root, RootScratch *scratch, unsigned expert, unsig
                 sums[lane] = (lanes[lane] + lanes[lane + 8]) + (lanes[lane + 4] + lanes[lane + 12]);
 #endif
             output[block * 64 + row] = (float)((sums[0] + sums[2]) + (sums[1] + sums[3]));
+        }
+        ROOT_PHASE_END(math_started,3);
+    }
+    return valid;
+}
+
+enum { ROOT_MAX_ROWS = 8 };
+
+static unsigned long long root_pull_bytes;
+static double root_pull_seconds;
+
+/* live-root.h is included before now_s() is defined, so it keeps its own clock. */
+static double root_now_s(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (double)ts.tv_sec + 1e-9 * (double)ts.tv_nsec;
+}
+
+/* The arithmetic reads from here, not from the file mapping. Faulting 25 GB in
+   through a file-backed mmap costs about six million minor faults, which no
+   amount of readahead removes: measured cold the expert projection takes 22.4 s
+   against 1.3 s once resident. An anonymous arena is huge-page eligible, so the
+   same bytes cost a few thousand faults, and the reads that fill it are large and
+   concurrent, which is the pattern fio measures at 13.5 GB/s. */
+enum { ROOT_ARENA_MAX = 160 };
+static unsigned char *root_arena;
+static size_t root_arena_bytes;
+static unsigned root_arena_expert[ROOT_ARENA_MAX];
+static unsigned root_arena_count;
+
+static const unsigned char *root_arena_find(unsigned expert)
+{
+    for (unsigned slot = 0; slot < root_arena_count; slot++)
+        if (root_arena_expert[slot] == expert)
+            return root_arena + (size_t)slot * ROOT_EXPERT_RAW;
+    return NULL;
+}
+
+/* A pread copies 17.5 MB whether or not the kernel already holds the pages, while
+   the mapping costs nothing once resident. That is the whole difference between a
+   cold run and a warm one, so each expert is asked before it is fetched. */
+static int root_resident(const Root *root, unsigned expert)
+{
+    if (!root->direct || expert >= 896) return 0;
+    unsigned char vec[(ROOT_EXPERT_RAW + 4095) / 4096];
+    if (mincore((void *)(root->direct + (size_t)expert * ROOT_EXPERT_RAW),
+                ROOT_EXPERT_RAW, vec)) return 0;
+    size_t seen = 0, have = 0;
+    for (size_t page = 0; page < sizeof vec; page += 64) { seen++; have += vec[page] & 1; }
+    return seen && have * 10 >= seen * 9;
+}
+
+/* Reading and multiplying are otherwise strictly serialised: the pull is about
+   8.9 s of a 15.5 s run while the arithmetic is 6.7 s, yet expert n's maths needs
+   only expert n's bytes. Readers publish each slot as it lands so the arithmetic
+   starts on the first expert while the rest are still arriving.
+   These are dedicated threads, never OMP: an earlier attempt used an OMP region
+   here and its team competed with the compute team, taking the expert bucket from
+   4.3 s to 9.6 s. Readers sit blocked in pread and cost no CPU. */
+enum { ROOT_READERS = 16 };
+static pthread_t root_reader[ROOT_READERS];
+static int root_readers_started;
+static const Root *root_pull_root;
+static unsigned root_pull_list[ROOT_ARENA_MAX];
+static unsigned root_pull_count;
+static volatile int root_arena_ready[ROOT_ARENA_MAX];
+static int root_pull_fetch[ROOT_ARENA_MAX];
+static unsigned root_pull_cursor;
+static unsigned long long root_pull_batch;
+static double root_pull_started;
+static double root_wait_seconds;   /* compute blocked on bytes that have not landed */
+static double root_drain_seconds;  /* reads still outstanding when the layer is done */
+static pthread_mutex_t root_pull_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t root_pull_wake = PTHREAD_COND_INITIALIZER;
+
+static void *root_reader_main(void *unused)
+{
+    (void)unused;
+    unsigned long long seen = 0;
+    for (;;) {
+        pthread_mutex_lock(&root_pull_lock);
+        while (root_pull_batch == seen) pthread_cond_wait(&root_pull_wake, &root_pull_lock);
+        seen = root_pull_batch;
+        pthread_mutex_unlock(&root_pull_lock);
+        for (;;) {
+            unsigned entry = __atomic_fetch_add(&root_pull_cursor, 1, __ATOMIC_ACQ_REL);
+            if (entry >= root_pull_count) break;
+            size_t got = 0;
+            if (root_pull_fetch[entry]) {
+                unsigned char *into = root_arena + (size_t)entry * ROOT_EXPERT_RAW;
+                off_t at = (off_t)root_pull_list[entry] * ROOT_EXPERT_RAW;
+                while (got < ROOT_EXPERT_RAW) {
+                    ssize_t n = pread(root_pull_root->direct_fd, into + got,
+                                      ROOT_EXPERT_RAW - got, at + (off_t)got);
+                    if (n <= 0) break;
+                    got += (size_t)n;
+                }
+                if (got == ROOT_EXPERT_RAW) root_arena_expert[entry] = root_pull_list[entry];
+                __atomic_fetch_add(&root_pull_bytes, got, __ATOMIC_RELAXED);
+            }
+            __atomic_store_n(&root_arena_ready[entry], 1, __ATOMIC_RELEASE);
+        }
+    }
+    return NULL;
+}
+
+static void root_pull_begin(const Root *root, const unsigned *experts, unsigned count)
+{
+    root_arena_count = 0;
+    if (!root || root->direct_fd < 0 || !experts || !count || count > ROOT_ARENA_MAX) return;
+    size_t need = (size_t)count * ROOT_EXPERT_RAW;
+    if (need > root_arena_bytes) {
+        size_t rounded = (need + (2u << 20) - 1) & ~(size_t)((2u << 20) - 1);
+        free(root_arena);
+        root_arena = aligned_alloc(2u << 20, rounded);
+        root_arena_bytes = root_arena ? rounded : 0;
+#ifdef MADV_HUGEPAGE
+        if (root_arena) (void)madvise(root_arena, rounded, MADV_HUGEPAGE);
+#endif
+    }
+    if (!root_arena) return;
+    for (unsigned entry = 0; entry < count; entry++) {
+        root_pull_list[entry] = experts[entry];
+        root_arena_expert[entry] = 0xffffffffu;
+        root_pull_fetch[entry] = experts[entry] < 896 && !root_resident(root, experts[entry]);
+        __atomic_store_n(&root_arena_ready[entry], 0, __ATOMIC_RELEASE);
+    }
+    root_pull_root = root;
+    root_pull_count = count;
+    root_arena_count = count;
+    root_pull_started = root_now_s();
+    __atomic_store_n(&root_pull_cursor, 0, __ATOMIC_RELEASE);
+    if (!root_readers_started) {
+        for (unsigned reader = 0; reader < ROOT_READERS; reader++)
+            if (pthread_create(&root_reader[reader], NULL, root_reader_main, NULL)) break;
+        root_readers_started = 1;
+    }
+    pthread_mutex_lock(&root_pull_lock);
+    root_pull_batch++;
+    pthread_cond_broadcast(&root_pull_wake);
+    pthread_mutex_unlock(&root_pull_lock);
+}
+
+static void root_arena_wait(unsigned slot)
+{
+    if (slot >= root_arena_count) return;
+    if (__atomic_load_n(&root_arena_ready[slot], __ATOMIC_ACQUIRE)) return;
+    double stall = root_now_s();
+    while (!__atomic_load_n(&root_arena_ready[slot], __ATOMIC_ACQUIRE)) sched_yield();
+    root_wait_seconds += root_now_s() - stall;
+}
+
+static void root_pull_end(void)
+{
+    double drain = root_now_s();
+    double before = root_wait_seconds;
+    for (unsigned slot = 0; slot < root_arena_count; slot++) root_arena_wait(slot);
+    root_wait_seconds = before;
+    root_drain_seconds += root_now_s() - drain;
+    root_pull_seconds += root_now_s() - root_pull_started;
+}
+
+
+static int root_project_rows(Root *root, RootScratch *scratch, unsigned expert, unsigned matrix,
+    const float *const *inputs, float *const *outputs, unsigned count)
+{
+    if (!root || !scratch || !inputs || !outputs || !count || count > ROOT_MAX_ROWS ||
+        expert >= 896 || matrix >= 3) return 0;
+    unsigned width = matrix == 2 ? 3072 : 3584, rows = matrix == 2 ? 3584 : 3072;
+    const unsigned char *maps = root->constants + root->palette_count * 2;
+    const unsigned char *offsets = maps + root->map_count * 16;
+    const unsigned char *refs = offsets + (root->template_count + 1) * 2;
+    unsigned template_id = root_u16(root->index + (expert * 3 + matrix) * 2);
+    unsigned begin = root_u16(offsets + template_id * 2);
+    int valid = 1;
+    RootScratch *pool = scratch;
+    static double converted[ROOT_MAX_ROWS][3584];
+    for (unsigned entry = 0; entry < count; entry++) {
+        if (!inputs[entry] || !outputs[entry]) return 0;
+        for (unsigned coordinate = 0; coordinate < width; coordinate++)
+            converted[entry][coordinate] = (double)inputs[entry][coordinate];
+    }
+#pragma omp parallel for schedule(static) reduction(&:valid)
+    for (unsigned block = 0; block < rows / 64; block++) {
+        RootScratch *scratch = pool + omp_get_thread_num();
+        const unsigned char *data;
+        const unsigned char *held = root_arena_find(expert);
+        if (held) data = held +
+            (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW
+                        : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW);
+        else if (root->direct) data = root->direct + (size_t)expert * ROOT_EXPERT_RAW +
+            (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW
+                        : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW);
+        else if (root_block(root, scratch, expert, matrix, block)) data = scratch->raw;
+        else { valid = 0; continue; }
+        ROOT_PHASE_BEGIN(math_started);
+        for (unsigned row = 0; row < 64; row++) {
+            const unsigned char *codes = data + row * width / 2;
+            const unsigned char *selectors = data + 64 * width / 2 + row * width / 32;
+            double sums[ROOT_MAX_ROWS][4];
+#if defined(__AVX2__)
+            __m256d lane0[ROOT_MAX_ROWS], lane4[ROOT_MAX_ROWS];
+            __m256d lane8[ROOT_MAX_ROWS], lane12[ROOT_MAX_ROWS];
+            for (unsigned entry = 0; entry < count; entry++) {
+                lane0[entry] = _mm256_setzero_pd(); lane4[entry] = _mm256_setzero_pd();
+                lane8[entry] = _mm256_setzero_pd(); lane12[entry] = _mm256_setzero_pd();
+            }
+            for (unsigned coordinate = 0; coordinate < width; coordinate += 16) {
+                const float (*pair)[2] = root->pairs[root_u16(refs + (begin + selectors[coordinate / 32]) * 2)];
+                const unsigned char *packed = codes + coordinate / 2;
+                __m256d w0 = _mm256_cvtps_pd(_mm_castpd_ps(_mm_unpacklo_pd(_mm_load_sd((const double *)pair[packed[0]]), _mm_load_sd((const double *)pair[packed[1]]))));
+                __m256d w1 = _mm256_cvtps_pd(_mm_castpd_ps(_mm_unpacklo_pd(_mm_load_sd((const double *)pair[packed[2]]), _mm_load_sd((const double *)pair[packed[3]]))));
+                __m256d w2 = _mm256_cvtps_pd(_mm_castpd_ps(_mm_unpacklo_pd(_mm_load_sd((const double *)pair[packed[4]]), _mm_load_sd((const double *)pair[packed[5]]))));
+                __m256d w3 = _mm256_cvtps_pd(_mm_castpd_ps(_mm_unpacklo_pd(_mm_load_sd((const double *)pair[packed[6]]), _mm_load_sd((const double *)pair[packed[7]]))));
+                for (unsigned entry = 0; entry < count; entry++) {
+                    const double *source = converted[entry] + coordinate;
+                    lane0[entry] = _mm256_add_pd(lane0[entry], _mm256_mul_pd(w0, _mm256_loadu_pd(source)));
+                    lane4[entry] = _mm256_add_pd(lane4[entry], _mm256_mul_pd(w1, _mm256_loadu_pd(source + 4)));
+                    lane8[entry] = _mm256_add_pd(lane8[entry], _mm256_mul_pd(w2, _mm256_loadu_pd(source + 8)));
+                    lane12[entry] = _mm256_add_pd(lane12[entry], _mm256_mul_pd(w3, _mm256_loadu_pd(source + 12)));
+                }
+            }
+            for (unsigned entry = 0; entry < count; entry++)
+                _mm256_storeu_pd(sums[entry], _mm256_add_pd(_mm256_add_pd(lane0[entry], lane8[entry]),
+                                                            _mm256_add_pd(lane4[entry], lane12[entry])));
+#else
+            double lanes[ROOT_MAX_ROWS][16] = {{0}};
+            for (unsigned coordinate = 0; coordinate < width; coordinate += 16) {
+                const float (*pair)[2] = root->pairs[root_u16(refs + (begin + selectors[coordinate / 32]) * 2)];
+                for (unsigned entry = 0; entry < count; entry++)
+                    for (unsigned lane = 0; lane < 16; lane++) {
+                        unsigned column = coordinate + lane;
+                        lanes[entry][lane] = lanes[entry][lane] + (double)pair[codes[column / 2]][column & 1] * converted[entry][column];
+                    }
+            }
+            for (unsigned entry = 0; entry < count; entry++)
+                for (unsigned lane = 0; lane < 4; lane++)
+                    sums[entry][lane] = (lanes[entry][lane] + lanes[entry][lane + 8]) + (lanes[entry][lane + 4] + lanes[entry][lane + 12]);
+#endif
+            for (unsigned entry = 0; entry < count; entry++)
+                outputs[entry][block * 64 + row] = (float)((sums[entry][0] + sums[entry][2]) + (sums[entry][1] + sums[entry][3]));
         }
         ROOT_PHASE_END(math_started,3);
     }
