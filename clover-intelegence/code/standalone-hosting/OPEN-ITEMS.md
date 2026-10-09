@@ -107,6 +107,43 @@ under 0.1%. Reason unknown. Does not affect the concentration results, which are
 measured on the recorded activation itself, but it means no claim can be made
 that the formula holds at every depth.
 
+## 3. The lane dimension in the expert kernel is only a fifth used
+
+`root_project_rows` takes `count` position vectors against one expert's weights,
+so positions picking the same expert stream its 17.5 MB once instead of once
+each. That is the 80% fixed cost. The grouping exists and works: positions are
+merged into groups by expert before the call. `resident_group_passes` and
+`resident_group_pairs` counted it all along and were never reported; they are
+in STEP_JSON now.
+
+Eight different prompts, four output tokens each:
+
+| | passes | pairs | avg count | `op:X` |
+|---|---|---|---|---|
+| 1 lane | 76,175 | 89,792 | 1.18 | 54.8 s |
+| 8 lanes | 63,352 | 89,792 | 1.42 | 51.7 s |
+
+Per decode step: one lane is 1472 passes for 1472 pairs, count 1.00. Eight lanes
+is 7023-7759 passes for 11776 pairs, count 1.52-1.68. `pairs` identical either
+way confirms the same total work is counted.
+
+So eight lanes fill 1.6 of 8 slots, about 20%. A layer's 128 position-expert
+pairs land on roughly 80 distinct experts because eight different prompts route
+differently. Predicted 1.84 from consecutive tokens of a single prompt, which
+overlap more than separate prompts do, so the direction was right and the
+magnitude slightly optimistic.
+
+**This is why `X` looked flat across lane counts.** 54.8 -> 51.7 s is 5.7%,
+inside the +-3.5% spread of the earlier 141-146 s figures. Not a contradiction,
+just too small to see at that resolution.
+
+If `count` reached 8 the fixed cost would amortise eight ways, worth roughly 3x
+on X. It cannot be forced: the route-sensitivity branch showed that making
+positions share experts they did not choose changes the answer. Genuine sharing
+is bounded by how different the concurrent prompts are, and `count` only grows
+with batch width once the batch is far wider than 56, since 16 x lanes pairs
+must spread over at most 896 experts.
+
 ## 4. Pods would not give N times the speed, and the trunk is the reason
 
 Measured on the real 32-token route trace, modelling expert parallelism: each
