@@ -107,6 +107,62 @@ under 0.1%. Reason unknown. Does not affect the concentration results, which are
 measured on the recorded activation itself, but it means no claim can be made
 that the formula holds at every depth.
 
+## 4. Pods would not give N times the speed, and the trunk is the reason
+
+Measured on the real 32-token route trace, modelling expert parallelism: each
+pod holds a slice of every layer's 896 experts, a token selects 16, they land
+where they land, and the layer is not done until the slowest pod is. So the
+cost is `max over pods of count`, not `16/N`.
+
+| pods | mean deepest pod | speedup | ideal | efficiency |
+|---|---|---|---|---|
+| 2 | 9.52 | 1.68 | 2 | 84% |
+| 4 | 6.07 | 2.64 | 4 | 66% |
+| 8 | 4.12 | 3.88 | 8 | 49% |
+| 14 | 3.17 | 5.05 | 14 | 36% |
+| 16 | 3.02 | 5.30 | 16 | 33% |
+| 56 | 2.00 | 8.01 | 16 | 50% |
+
+Balls into bins. Sixteen experts over fourteen pods leaves the deepest pod
+holding about three, so the critical path is three deep rather than 1.14.
+Frequency-balanced placement (LPT on observed usage) helps a little, 5.05 ->
+5.80 at fourteen pods. Contiguous blocks are the same as round robin.
+
+Sixteen experts cannot occupy more than sixteen pods, so past N=16 the critical
+path cannot shrink further for a single request however many pods are added.
+
+**Batching and pods compose**, which the per-layer cache and batching do not:
+
+| pods | batch | distinct experts | deepest pod | speedup | efficiency |
+|---|---|---|---|---|---|
+| 14 | 1 | 16.0 | 3.17 | 5.05 | 36% |
+| 14 | 2 | 26.2 | 4.40 | 5.94 | 42% |
+| 14 | 4 | 43.0 | 6.23 | 6.90 | 49% |
+| 14 | 8 | 69.7 | 8.85 | 7.88 | 56% |
+| 28 | 8 | 69.7 | 5.84 | 11.94 | 43% |
+
+Eight concurrent tokens need 69.7 distinct experts rather than 128, which is
+the 42.6% cross-request overlap appearing again, this time as a benefit.
+
+### The part that decides the architecture
+
+A token moves 79.6 GB: **53.8 GB of trunk for Q and only 25.8 GB of experts.**
+Expert parallelism addresses the smaller half.
+
+If each pod simply holds a copy of the trunk, every pod does the full Q and
+nothing about Q improves. The token floor becomes roughly `1290 ms of Q +
+913/5 ms of experts = 1473 ms`, about 2x better than the 2972 ms measured
+today. Two, not fourteen.
+
+To get more, the trunk has to be sharded as well, by attention head, with an
+all-reduce of the residual per layer. That is a second parallelism axis and a
+different piece of work. The vector traffic stays small either way: the
+residual is 7168 floats, 28.7 KB a layer, against 79.6 GB of weights.
+
+**So the honest projection for pods is: about 2x if only the experts are
+distributed, and much more only if the trunk is distributed too.** Not
+measured on real hardware; this is arithmetic on measured inputs.
+
 ## 5. Distributed model still defaults hardmax to 46
 
 The standalone engine had hardmax removed entirely, so the two have now drifted
