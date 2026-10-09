@@ -1,5 +1,83 @@
 # Standalone Hosting Source
 
+## Current: The Machine This Model Wants — Memory Is The Constraint, Not FLOPs
+
+### Intended outcome
+
+Every software lever is closed or nearly closed, so the question moved to
+hardware: what shape of machine does this workload actually want, given that
+neither a CPU nor a GPU appears to be it. Recorded in
+[AI-PROCESSING-UNIT.md](AI-PROCESSING-UNIT.md).
+
+### What the system showed
+
+The workload's arithmetic intensity is **2.11 FLOP per byte** — 208 GFLOP
+against 98.6 GB of bus traffic per token. That is not an implementation choice:
+a matrix-by-vector product reads each weight once and does one multiply-add with
+it, giving 2 FLOP/byte for int8 and 4 for 4-bit. Both confirmed against the
+engine's counters (`Q` 107.58 GFLOP / 53.8251 GB = 2.00; `X` 161.1 GFLOP/s at
+42.8 GB/s = 3.76).
+
+Against the chip's demonstrated ceiling for this exact arithmetic, 377.9
+GFLOP/s, the token needs 0.55 s of arithmetic and takes 3.07 s. **The arithmetic
+unit is idle 82% of the time.** Independently confirmed by the balance point:
+this part is built for 12.6 FLOP/byte and is being offered 2.11, so five of
+every six slots have nothing to do — which is also why 32 threads measured 18%
+slower than 16.
+
+A GPU does not fix the ratio, it widens it. Published H100 balance is 20
+FLOP/byte at FP64 tensor and 295 at BF16, against the workload's 2.11. Even
+granting the model fitted in 80 GB — it is ~1.5 TB — a token would be 29.4 ms of
+memory against 3.1 ms of compute, still memory-bound by 9.5x. The only way to
+occupy a GPU is batching, and batching costs single-request latency: measured
+here, 8 lanes took the per-step time from 3.40 s to 10.2 s.
+
+### What follows, and it is structural
+
+The 1.5 TB is **not one memory system**. It is 93 disjoint working sets of
+~16.3 GB (896 experts x 17.5 MB plus a 423-1172 MB trunk slice), and no layer
+has ever been measured reading another layer's weights. Each reads **867 MB per
+token, 5.3% of what it holds**, and emits at most **258,048 B** — the residual
+plus its snapshot stack.
+
+```
+867 MB read per layer  /  252 KB emitted  =  3,360x
+```
+
+So the proposal: 93 units chained, each holding its layer forever, passing only
+the token. 16 GB at ~800 GB/s matched to ~2 TFLOP/s of FP64 multiply-add is a
+buildable part; 1.5 TB at 800 GB/s is not. At 1.08 ms a layer that is 100 ms a
+token **and** 926 tok/s, from the same hardware, with no batching — the pipeline
+fills itself. Inter-unit traffic is 14.2 MB a token against 98.6 GB today.
+
+Two thirds of each unit's read is the trunk, which is deterministic and can
+stream before the token arrives; only the 281 MB of experts is data-dependent,
+and that cannot be predicted earlier (layer L predicts L+1 at 1.6%) but can be
+covered by the attention that precedes the router.
+
+### What could not be established
+
+Nothing here is built; everything past the measured inputs is arithmetic. It
+does not break the sequential chain — latency is still 93 steps in order, and
+the only identified lever on that is head-wise splitting inside a layer, also
+unbuilt. It does not reduce bytes read, only where they are read from. 94.7% of
+each unit's memory is idle per token. The 2.6 FLOP/byte design point is a
+property of this engine's path (int8 trunk, 4-bit experts, FP64 accumulate), not
+of the input-to-output map.
+
+The pipeline half **is** testable without new silicon: `distrubuted-hosting`
+already shards layer-wise, so running it fully RAM-resident per node would
+settle the payload size, the hop cost, and whether per-layer residency removes
+the read stall. The bandwidth half cannot be tested on anything rentable.
+
+### Incidental finding on this box
+
+`dmidecode` reports the four DIMMs rated **4800 MT/s** and configured at **3600
+MT/s** — four dual-rank modules on two channels, which on AM5 routinely forces
+the controller down. The measured 42.8 GB/s ceiling is therefore ~25% below what
+these parts are rated for. Two larger modules instead of four is worth more than
+any remaining software lever and has not been tried.
+
 ## Reduced Expert Computation: Measured, And It Does Not Exist
 
 ### Intended outcome
