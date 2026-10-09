@@ -127,22 +127,83 @@ Data exists, uninterpreted.
 
 Stages 1-120 reserved, never implemented.
 
+## 9. Understanding the problem is not finished
+
+Everything measured so far characterises the path this engine takes: read the
+weights the model specifies, in the order the architecture specifies, and the
+cost is 79.6 GB a token. What has *not* been established is a lower bound on
+any path producing the same input-to-output map.
+
+Only the input and the output are fixed. Every intermediate transformation is
+one implementation of the map, and a cheaper one may exist. The measurements
+rule out a particular family — per-matrix low-rank, shared bases across
+experts, activation truncation, adjacent-layer route prediction, faster
+multiplication — all of which keep the existing computational structure and try
+to shrink a piece of it. They say nothing about a different structure.
+
+Specific things never tested:
+
+- structure *across layers* rather than within one
+- nonlinear relationships between experts, as opposed to the linear ones ruled
+  out by the orthogonality result
+- whether the realised map, for a given input, is reachable by a materially
+  shorter computation
+- **route sensitivity**: how exactly must the 16 of 896 be right? Forcing token
+  N's route onto token N+1 and sweeping how many of the sixteen must be exact
+  would say whether the routing carries as much information as it costs. This
+  one is cheap, the machinery half exists in `K3_ROUTESAVE`/`K3_ROUTELOAD`, and
+  it is the obvious next experiment.
+
+The negative results above are worth having because they are specific and
+repeatable, not because they settle the general question.
+
 ---
 
 # Closed by measurement — do not retry
+
+**Scope note.** Everything below is a measurement of *the path this engine
+currently takes*, not a lower bound on every path that computes the same
+input-to-output map. "Closed" here means this specific approach was tried and
+does not pay. It does not mean no cheaper computation exists. An earlier version
+of this file claimed the 4-bit matrix was "near the minimum representation for
+this model" — that was a far larger claim than the evidence supports and it has
+been removed.
+
+- **A shared base across the experts of a layer.** If the 896 experts of a layer
+  were a common matrix plus small per-expert deltas, a layer could read the base
+  once and only sixteen deltas, which would attack the bandwidth problem
+  directly. Measured on eight experts of layer 1, gate matrix:
+
+  pairwise cosine between flattened experts is 0.000 to 0.001, so they are
+  mutually orthogonal. `|B|/mean|W_j| = 0.3537` against `1/sqrt(8) = 0.3536`
+  predicted for independent matrices, and `|W_j - B|/|W_j| = 0.931-0.943`
+  against `sqrt(7/8) = 0.9354` predicted. The match to the independence
+  prediction is exact, so the mean carries no shared signal. The residual's
+  effective rank is the same or *higher* than the original (1629 -> 1629,
+  1451 -> 1498, 2210 -> 2344), so subtracting a base does not simplify anything.
+
+  MoE training appears to have made the experts maximally decorrelated, which is
+  what a mixture should do: no redundancy to exploit. This closes linear shared
+  structure *across experts within a layer*. It does not address nonlinear
+  relationships, structure across layers, or a different functional form.
 
 - **Collapsing the experts into one matrix per layer.** Not available exactly.
   A layer computes `sum over j in TopK(x) of w_j(x) * down_j(silu(gate_j(x)) *
   up_j(x))`, which depends on the input three separate ways: which `j` (a
   discrete choice), the mixing weights, and SiLU. A fixed matrix cannot select a
-  different subspace per input. Note also that top-16 is not an approximation of
-  a dense 896-expert computation — the model was trained with top-16 routing, so
-  running all 896 would be a different and wrong answer, not a more exact one.
-  As an approximation across many inputs this is distillation: a different
-  model, which the "tokens identical" gate rules out.
-- **Low-rank factorisation of the expert matrices.** Measured on real weights,
-  extracted exactly by projecting unit basis vectors through the engine's own
-  kernel, then SVD:
+  different subspace per input. As an approximation across many inputs this is
+  distillation: a different model, which the "tokens identical" gate rules out.
+
+  On why top-16 exists: sparse MoE is a tractability compromise, chosen because
+  a dense model at the same capacity is infeasible to train and run. That is a
+  fair reading. The narrower fact is that *these* weights were trained under
+  top-16 routing, so running all 896 at inference would be out of distribution
+  for this checkpoint. That is a statement about the checkpoint, not a defence
+  of the architecture as optimal.
+
+- **Low-rank factorisation of individual expert matrices.** Measured on real
+  weights, extracted exactly by projecting unit basis vectors through the
+  engine's own kernel, then SVD:
 
   | layer | expert | condition | stable rank | r@90% | r@99% | rank-413 energy | fp16 at 99% |
   |---|---|---|---|---|---|---|---|
