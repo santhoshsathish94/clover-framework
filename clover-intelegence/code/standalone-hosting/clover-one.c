@@ -148,6 +148,10 @@ enum {
    slot, which expert block, at what offset - instead of the float values, which
    are ~3.7 GB a run. What varies between prompts is the identity, not the bytes. */
 static FILE *prov_fp = NULL;
+/* K3_LOGITDUMP: the whole logit vector per evaluation. Observation only, so a
+   run with it on must produce the same tokens as a run without. Needed because
+   token identity alone cannot tell a changed answer from a tipped near-tie. */
+static FILE *logit_fp = NULL;
 static const char *SLOTN[N_SLOTN] = {
     "ARN", "ARP", "MRN", "MRP", "IN_LN", "POST_LN", "G", "O",
     "Q", "K", "V", "B", "FA", "FB", "CQ", "CK", "CV", "ALOG", "DTB", "ONORM",
@@ -1944,6 +1948,11 @@ static void resident_sequence_open(void)
       long experts=setting?strtol(setting,NULL,10):0;
       if (experts>0 && !root_cache_open(NLAY,(unsigned)experts))
           die("per-layer expert cache allocation failed"); }
+    { const char *setting=getenv("K3_LOGITDUMP");
+      if (setting && *setting) {
+          logit_fp=fopen(setting,"wb");
+          if (!logit_fp) die("logit dump could not be opened");
+      } }
     for (unsigned layer=0; layer<NLAY; layer++) {
         for (unsigned lane=0; lane<K3_LANES; lane++) {
         ResidentSequence *sequence=&resident_sequences[lane][layer];
@@ -2250,6 +2259,7 @@ static void resident_shutdown(void)
         root_close(resident_roots[layer]); resident_roots[layer]=NULL;
     }
     free(resident_root_scratch); resident_root_scratch=NULL;
+    if (logit_fp) { fclose(logit_fp); logit_fp=NULL; }
     root_cache_close();
     head_cache_close(&resident_head);
     resident_values_close();
@@ -2933,6 +2943,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     int am = 0;
     for (int i = 1; i < VOCAB; i++) if (logits[i] > logits[am]) am = i;
     batch_next[NPOS - 1] = (unsigned)am;
+    if (logit_fp && fwrite(logits, 4, VOCAB, logit_fp) != VOCAB) die("logit dump short write");
 
     if (prov_fp) {
         /* the top eight, so a prompt's answer can be judged for confidence and
