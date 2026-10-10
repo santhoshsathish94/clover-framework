@@ -1,6 +1,119 @@
 # Standalone Hosting Source
 
-## Current: We Measured `kimi-k3-in-c`, Then Called It "The Model" — Corrected
+## Current: The MLA KV Layout Costs 44% Of The Bus, And The Expanded Form
+## Decides Whether Long Context Is Reachable
+
+### Intended outcome
+
+Answer one question: for a single layer, what does it need resident, and what
+does it cost at a context long enough to matter. The creator had to redirect to
+this three times — each time I reached for a whole-model total (1.45 TB of
+experts, 2.37 TB of KV) when the executing unit is one layer.
+
+### What was known going in
+
+`clover-one.c` defines `isMLA = (L%4==3 && L<=91) || L==92`, so 24 of 93 layers
+are MLA and 69 are KDA. A KDA layer's state is `H*D*D` plus conv history,
+6.73 MB, and it does not grow with context. An MLA layer stores K and V
+expanded:
+
+```c
+sequence->keys      = calloc(capacity * H * QN, sizeof(float));   // 49,152 B/pos
+sequence->values    = calloc(capacity * H * VH, sizeof(float));   // 49,152 B/pos
+sequence->positions = calloc(capacity * QR,     sizeof(float));   //    256 B/pos
+```
+
+98,560 B a position a layer, against a 2,304 B compressed latent (`KVW = 576`).
+A 42.8x expansion.
+
+### What was tried
+
+`mla-context.c`, a standalone instrument holding one MLA layer's K/V for N
+positions and timing one attention step. The kernel is copied from
+`clover-one.c` rather than idealised: head-parallel, double accumulation, each
+head walking the sequence at an `H*QN*4` = 48 KB stride. `scv`/`ex` moved to the
+heap, because in the engine they are stack arrays sized `GENERATION_CAPACITY`
+and that is the actual reason the context cap is 256.
+
+Four context lengths, then the same again with K/V relaid head-major so each
+head owns a contiguous slice. Same bytes, same arithmetic, different stride.
+
+### What the system showed
+
+16 threads, best of three steps:
+
+| positions | layout | expanded | step | eff. GB/s | x24 layers |
+|---|---|---|---|---|---|
+| 4,096 | position-major | 0.40 GB | 12.4 ms | 32.63 | 0.30 s |
+| 32,768 | position-major | 3.23 GB | 127 ms | 25.44 | 3.05 s |
+| 262,144 | position-major | 25.8 GB | 1.082 s | 23.87 | 25.98 s |
+| 262,144 | **head-major** | 25.8 GB | **0.613 s** | **42.18** | 14.70 s |
+| 1,048,576 | position-major | 103.3 GB | 4.333 s | 23.85 | 103.98 s |
+| 1,048,576 | **head-major** | 103.3 GB | **2.577 s** | **40.11** | 61.84 s |
+
+Checksums identical across layouts at both lengths (6176.253250 at 256K,
+6175.585813 at 1M), so this is the same computation under a different stride.
+
+**1.68x at 1M, lossless.** Head-major reaches 42.18 GB/s against the machine's
+measured 42.8 GB/s ceiling, so the position-major layout was leaving 44% of the
+bus unused and there is nothing further to win once it is fixed.
+
+### Built into the engine, and it changes nothing yet
+
+`clover-one.c` now stores K and V head-major: `resident_capacity` is the stride
+between heads, the write scatters 96 slices instead of one memcpy, and the
+attention read walks each head contiguously. Four sites, allocation size
+unchanged.
+
+| build | France | 32-token prompt | wall |
+|---|---|---|---|
+| `clover-one-s8` | token 17374 | token 15548 | 53.79 s |
+| `clover-one-headmajor` | token 17374 | token 15548 | 53.80 s |
+
+Identical tokens, identical time. **No gain at the current cap, and none was
+expected**: at 32 positions the K/V cache is about 12 MB a layer, so neither the
+48 KB stride nor the scattered write is reachable. The 1.68x exists only in the
+instrument, at context lengths the engine cannot yet run. Keeping the change
+because it is correct, free, and on the path -- not because it was measured to
+help here.
+
+### What was ruled out
+
+- **Capacity as the constraint on long context.** One MLA layer at 1M positions
+  is 103.3 GB and fits in 122 GB available. Holding one layer at a time works,
+  exactly as the creator said. The 2.37 TB whole-model figure was never the
+  binding number and I quoted it twice as though it were.
+- **L3 residency as a lever.** Looked for non-temporal loads in the expert path
+  and found none, then realised temporal loads are correct there:
+  `root_project_rows` streams each weight block once across all sweep positions,
+  so the weights do have reuse while hot. The activation block is 115 KB against
+  128 MiB of L3. No finding; closed rather than left open.
+- **Loading all 896 experts a layer.** 15.72 GB a layer is right, and the
+  creator's arithmetic was right, but prefetching it inside one layer's 36.5 ms
+  compute window needs 1,164 ms from disk. 32x short.
+
+### What is still unknown
+
+- The latent path needs the absorb matrices. Not yet read.
+- Two hard blockers before the engine can run 1M at all: `scv`/`ex` are stack
+  arrays sized `GENERATION_CAPACITY`, and `max_input_tokens` is 128.
+- This is an instrument, not the engine. It measures the access pattern, not a
+  real generation.
+
+### What the next cycle should do differently
+
+**Verify a background job is alive before reporting it as running.** A nine-point
+thread-by-width grid was launched, polled four times across the session, and
+produced no rows. `uptime` showed load average 0.02 — it had died immediately and
+the machine sat idle the whole time. Polling the terminal looked like diligence
+and was not; one `pgrep` at the start would have caught it. An idle rented box is
+the waste case, and I caused it while believing I was waiting correctly.
+
+**Do not restate a width optimum from a single pair of runs.** S=8 against S=16
+measured 52.76/55.68 one way and 55.23/50.84 the other. The sign flips. "Optimum
+at 16" was reported as settled and is inside run-to-run variance.
+
+## Previously: We Measured `kimi-k3-in-c`, Then Called It "The Model" — Corrected
 
 ### What went wrong
 

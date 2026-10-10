@@ -1913,6 +1913,11 @@ typedef struct {
     unsigned length;
 } ResidentSequence;
 
+/* K and V are stored head-major: all of one head's positions are contiguous, so
+   this is the stride between heads. Position-major cost 44% of the bus at long
+   context -- each head walked the sequence 48 KB at a time. */
+static size_t resident_capacity;
+
 /* A lane is one in-flight request: its own attention cache and recurrent state.
    Slots stay the batch dimension; a lane owns one slot while decoding and all of
    them while prefilling. */
@@ -1942,6 +1947,7 @@ static void resident_sequence_open(void)
 {
     unsigned capacity=resident_config.max_input_tokens+resident_config.max_output_tokens;
     if (!capacity) capacity=GENERATION_CAPACITY;
+    resident_capacity=capacity;
     resident_root_scratch=calloc((size_t)omp_get_max_threads(),sizeof *resident_root_scratch);
     if (!resident_root_scratch) die("root scratch allocation failed");
     { const char *setting=getenv("K3_EXPERT_CACHE");
@@ -2431,8 +2437,12 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                 for (int t = TLO; t < NPOS; t++) {
                     ResidentSequence *sequence = SEQ(t,L);
                     size_t slot = pos_abs[t];
-                    memcpy(sequence->keys+slot*H*QN,mla_klat[t],sizeof mla_klat[t]);
-                    memcpy(sequence->values+slot*H*VH,mla_v[t],sizeof mla_v[t]);
+                    for (int h = 0; h < H; h++) {
+                        memcpy(sequence->keys + ((size_t)h * resident_capacity + slot) * QN,
+                               mla_klat[t] + (size_t)h * QN, sizeof(float) * QN);
+                        memcpy(sequence->values + ((size_t)h * resident_capacity + slot) * VH,
+                               mla_v[t] + (size_t)h * VH, sizeof(float) * VH);
+                    }
                     memcpy(sequence->positions+slot*QR,mla_rp[t],sizeof mla_rp[t]);
                 }
             if (pfx_mode == 1) {
@@ -2466,9 +2476,11 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
 #pragma omp parallel for schedule(static)
                 for (int h = 0; h < H; h++) {
                     const float *qh = qs + (size_t)t * H * QH + (size_t)h * QH;
+                    const float *kh = sequence->keys + (size_t)h * resident_capacity * QN;
+                    const float *vh = sequence->values + (size_t)h * resident_capacity * VH;
                     float scv[GENERATION_CAPACITY];
                     for (unsigned s = 0; s <= last; s++) {
-                        const float *kl = sequence->keys + ((size_t)s * H + h) * QN;
+                        const float *kl = kh + (size_t)s * QN;
                         const float *kr = sequence->positions + (size_t)s * QR;
                         double d = 0.0;
                         for (int i = 0; i < QN; i++) d += (double)qh[i] * (double)kl[i];
@@ -2483,7 +2495,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                     for (int i = 0; i < VH; i++) o[i] = 0.0f;
                     for (unsigned s = 0; s <= last; s++) {
                         const float pr = (float)((double)ex[s] / z);
-                        const float *vs = sequence->values + ((size_t)s * H + h) * VH;
+                        const float *vs = vh + (size_t)s * VH;
                         for (int i = 0; i < VH; i++) o[i] = o[i] + pr * vs[i];
                     }
                 }

@@ -327,7 +327,12 @@ static int root_project(Root *root, RootScratch *scratch, unsigned expert, unsig
     return valid;
 }
 
-enum { ROOT_MAX_ROWS = 8 };
+/* Bounds the batched expert projection: the kernel holds 4 x this many AVX
+   accumulators against 16 YMM registers, so raising it spills. Settable to
+   measure that cost; 8 is the shipped value. */
+#ifndef ROOT_MAX_ROWS
+#define ROOT_MAX_ROWS 8
+#endif
 
 static unsigned long long root_pull_bytes;
 static double root_pull_seconds;
