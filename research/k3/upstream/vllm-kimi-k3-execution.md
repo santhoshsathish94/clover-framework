@@ -197,13 +197,71 @@ optimisation list is about fusing kernels and beating NCCL rather than about
 streaming weights faster. **Our bandwidth-bound analysis describes the
 single-box regime, not theirs.**
 
+## From the preview post (2026-07-22) — the cache design
+
+The hard problem was prefix caching, and the fix was conceptual before it was
+technical. vLLM **separated three things that used to move together**:
+
+| | |
+|---|---|
+| physical block size | how KDA state and full-attention KV are allocated on the GPU |
+| scheduler alignment | where execution must stop so all cache groups stay consistent |
+| prefix-match unit | the finer interval at which a shared prefix is hashed and matched |
+
+Before that, the physical block size also constrained where a hit could land, so
+"two requests sharing almost the entire prompt could still miss the reusable
+prefix because their common boundary did not fill the same physical block".
+Partial hits now use **copy-on-write** and **chained fine-grained hashes** so a
+boundary certifies the whole prefix, not just its tail.
+
+Also noted there: Kimi K3's MLA has "a gate projection that can execute in
+parallel with the main attention path" — multi-stream in decode, fused into the
+gate-projection epilogue in prefill. And on depth: "a small per-layer launch or
+memory penalty quickly becomes a large TPOT penalty" across 93 layers.
+
+## From the optimisation post (2026-09-13) — 2.8x, and where it came from
+
+**Published, not reproduced.** 8K/1K, TP8, 8-token DSpark, B300, v0.27.1 to
+commit `82a85dc1`:
+
+| concurrency | latency s | throughput tok/s | TTFT ms |
+|---|---|---|---|
+| 1 | 12.37 -> **5.30** (-57.2%) | 83.3 -> **183.3** (+120%) | 2262.9 -> **376.3** (-83.4%) |
+| 4 | 23.67 -> 10.50 (-55.6%) | 166.7 -> 416.7 (+150%) | 2314.9 -> 640.5 (-72.3%) |
+| 16 | 55.90 -> 22.17 (-60.3%) | 258.3 -> 725.0 (+180.6%) | 7601.1 -> 1121.0 (-85.3%) |
+
+**None of the 2.8x came from more parallelism or faster matmuls.** Their own
+framing: "scheduler limits and small tensor copies could matter as much as a
+large GEMM."
+
+| change | effect |
+|---|---|
+| adaptive scheduling budget (stop splitting one request across forwards) | TTFT -55-65%, throughput +41.5% |
+| internal KDA prefix checkpoints — export the checkpoint *inside* one prefill pass instead of splitting into two model forwards | TTFT -9-25%; "avoids a second full-model pass through attention, MoE, routing, and TP collectives" |
+| zero-copy mixed KDA batches — removed 6 `index_select` + 2 `index_copy_` per layer | +5.2-7.7% at concurrency 4/16, **flat at batch 1** |
+| deferred MXFP4 finalization fused into the latent tail | ~5% end-to-end |
+| **ReplaySSM** — buffer SSM inputs, reconstruct accepted state at commit; rollback moves a pointer | +10.97% effective cache capacity at the same 46.48 GiB |
+| **decode context parallelism** — shard MLA latent KV along the sequence | on 120k tokens: KV capacity 1.93M -> 19.75M; TPOT p50 13.8 -> 10.5 ms |
+
+That list is almost entirely **scheduling, memory layout, kernel fusion and
+avoiding redundant passes.** It is worth holding next to our own history, where
+the wins were the same kind of thing: removing a blocked `Qm` path that re-read
+weights, pre-faulting an allocation, partitioning a cache per layer rather than
+globally.
+
+### Updated calibration
+
+At concurrency 1 they now reach 183.3 tok/s on 8 B300 — **~5.5 ms per token,
+~0.059 ms per layer**. Our engine is 3.07 s per token. The gap is ~560x, on
+eight datacentre GPUs against one desktop part, so it is a statement about
+hardware and engineering investment rather than about either design.
+
 ## What I did not read
 
 - `kda.py`, `mla.py`, `dspark_mla.py` internals; the `cute_dsl` CUTLASS kernels;
   the `.cu` sources; the entire `amd/` backend beyond its file list.
 - `chunk.py` / `chunk_intra_token_parallel.py` bodies. I have read the *call
   sites* and the dispatch rule, not the kernels.
-- The preview post (2026-07-22), which the launch post says is the actual
-  architecture and kernel deep dive, and a later optimisation post (2026-09-13).
+- The linked PRs behind each optimisation, and the tracking issue #50587.
 - **No vLLM run, no profile, no number of our own.** Source reading plus
   published figures; nothing here is measured by us.
