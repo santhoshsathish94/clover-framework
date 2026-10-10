@@ -91,6 +91,13 @@ each further output token          ->  3.05 s
 t = 9.9 + 3.05 * (N - 1)
 ```
 
+> **The 9.9 s prompt pass is our engine's number, not the model's.** Kimi K3's
+> KDA is "recurrent across chunks and parallel within each chunk" (tech report
+> §2.1.1); upstream runs multi-position passes through a chunkwise kernel
+> (`chunk_kda` / FlashKDA) and we run a strict per-position scan. The decode
+> term, 3.05 s, is in the regime upstream also handles sequentially and is
+> comparable. The prefill term is not.
+
 | output tokens | time |
 |---|---|
 | 1 | 9.9 s |
@@ -197,8 +204,14 @@ trunk, nothing about the 53.8 GB improves, leaving roughly `1290 ms of Q +
 
 Token N+1 needs token N — not just the state, the token itself, as the input
 embedding for position N+1. And token N only exists after the full 93-layer pass
-at position N produces logits. That is autoregression, and it is the model's
-definition rather than an implementation choice.
+at position N produces logits.
+
+**That is autoregression as the released checkpoint defines it**, not merely an
+implementation choice: `num_nextn_predict_layers: 0` in the official config, and
+the weight index contains no `nextn`, `mtp`, `draft` or `eagle` tensors —
+checked. Production Kimi K3 does use MTP-based speculative decoding (tech report
+§5.4.2), and vLLM ships `mtp.py` and Eagle3 support, but **those weights are not
+in the open release.**
 
 The standard escape is to guess k tokens cheaply and verify all k in one
 multi-position pass, which the engine already supports because that is what a
@@ -220,8 +233,19 @@ k=4 : need 2.0 of 4 accepted
 k=8 : need 3.1 of 8 accepted
 ```
 
-**3.1 of 8 is a low bar.** The obstacle is not the budget, it is that there is
-no draft model here to produce the guesses.
+**3.1 of 8 is a low bar.** No draft head ships in Moonshot's release — confirmed
+from the weight index — but one exists: Inferact's open-source
+`Inferact/Kimi-K3-DSpark`, run at 7 speculative tokens, with published
+acceptance of **4.73 per step on coding** and 2.61 on creative writing. So the
+obstacle is integration, not availability, and not the budget.
+
+> **Scope on the table above.** Those k-position sweeps run through our strict
+> per-position scan. Upstream would run the same shape through a chunkwise
+> kernel, so the *budget* a real deployment has is not this budget. The
+> break-even acceptance rates are ours. Upstream also solves a problem we have
+> not had to: an in-place recurrent state cannot be rolled back when a draft is
+> rejected, which §5.4.2 handles by caching only the projected inputs and
+> replaying accepted tokens on-chip (ReplaySSM).
 
 ---
 
@@ -246,12 +270,58 @@ them is a lower bound on all paths computing the same input-to-output map. Only
 the input and the output are fixed; the intermediate transformations are one
 implementation.
 
+**That caveat has now cashed out once, and it was expensive.** We treated the
+per-position KDA recurrence as a property of the model. It is not: the official
+formulation is chunkwise, parallel within a chunk, and the cross-chunk
+recurrence composes associatively, so upstream recovers it with a **parallel
+prefix scan** (KCP) rather than a serial loop. We had measured our own loop and
+called it the model's shape. Read the upstream analysis before extending any
+conclusion here to "Kimi K3" rather than to `kimi-k3-in-c`.
+
+### But closing that gap would buy 0.27% here, and the reason matters
+
+`OPSTAT_JSON`, five-token prompt pass, measured:
+
+| operator | s | share |
+|---|---|---|
+| `X` mxfp4 expert projection | 4.536 | **72.6%** |
+| `Q` int8 projection | 1.497 | **24.0%** |
+| router dot product | 0.118 | 1.9% |
+| SiTU + sigma | 0.064 | 1.0% |
+| `B` bf16 lm_head | 0.054 | 0.9% |
+| alpha / beta / gate | 0.0217 | 0.35% |
+| AR snapshot aggregate | 0.0202 | 0.32% |
+| **`D` kda delta-rule** | **0.0167** | **0.27%** |
+| `N` rmsnorm | 0.0108 | 0.17% |
+| `C` shortconv | 0.0076 | 0.12% |
+| `L` l2 per-head | 0.0019 | 0.03% |
+| `SA` softmax attention | 0.0009 | 0.01% |
+
+**`X` + `Q` = 96.6% of the prompt pass, and both are weight streaming.** The
+chunkwise form reads exactly the same weights; what it removes is idle time in a
+serial recurrence. On a GPU that recurrence starves thousands of SMs, which is
+why upstream built FlashKDA. Here the arithmetic units are already starved by
+the memory bus, so there is no idle parallelism for it to recover.
+
+Everything chunking touches — `D` + `C` + alpha/beta/gate + `L` — totals
+**0.77%**. A correct chunkwise port would be a large change that breaks our
+bit-exactness gate, for under one percent.
+
+**The gap is real and the docs were right to be corrected. It is just not a
+gap worth closing on this hardware.**
+
 Still open:
 
 - whether consecutive tokens' per-layer residuals are similar enough to exploit
 - structure across layers rather than within one
 - nonlinear relationships between experts
-- a draft model, which would make speculative decoding reachable at 3.1 of 8
+- **integrate a draft model.** Our break-even is 3.1 of 8. Moonshot ship no
+  draft head, but Inferact have open-sourced `Inferact/Kimi-K3-DSpark`, whose
+  published acceptance is 4.73 tokens/step on coding and 2.61 on creative
+  writing — the first clears our bar, the second does not
+- **a chunkwise KDA scan for prefill** — upstream has it, we do not. Structurally
+  the largest gap between this engine and Kimi K3, but **measured at 0.27% of a
+  prompt pass on this machine**, so not worth porting here. See below.
 - head-wise trunk sharding, the only identified lever on single-request latency
 - the hardware shape the workload wants, worked out in
   [AI-PROCESSING-UNIT.md](AI-PROCESSING-UNIT.md): 2.11 FLOP per byte against

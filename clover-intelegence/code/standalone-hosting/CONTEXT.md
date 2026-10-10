@@ -1,5 +1,141 @@
 # Standalone Hosting Source
 
+## Current: We Measured `kimi-k3-in-c`, Then Called It "The Model" — Corrected
+
+### What went wrong
+
+Every measurement in this folder is of Fareed Khan's `kimi-k3-in-c`, a C
+reimplementation. The documents had been writing "the model" and "autoregression
+is the model's definition". The creator caught it: the real Kimi K3 does not
+process a layer's positions one at a time.
+
+This is the same Context failure already on record from the llama.cpp episode —
+reasoning about a codebase without reading it. The rule exists; I did not apply
+it to the model itself.
+
+### What the primary sources say
+
+Read directly, not from summaries: the official `config.json`,
+`modeling_kimi_linear.py` from the HF release, and all 47 pages of
+`k3_tech_report.pdf`. Analysis in
+[research/k3/upstream/moonshot-kimi-k3-official.md](../../../research/k3/upstream/moonshot-kimi-k3-official.md).
+
+**KDA is not inherently serial over positions.** Tech report §2.1.1: "recurrent
+across chunks and **parallel within each chunk**". §5.1.1 names our exact
+framing as the problem to solve — "the serial dependence of the KDA state is at
+odds with the GPU's preference for wide, uniform parallelism" — and attacks it
+at four levels: token-parallel within a chunk, FlashKDA overlapping chunk
+boundaries, an SM-level context-parallel planner inside a rank, and KCP across
+ranks. **KCP decomposes each segment into parts that compose associatively, so
+the recurrence becomes a parallel prefix scan with a fixed-size all-gather.**
+The HF code shows the same split: `chunk_kda` unless `use_cache and q_len == 1`,
+otherwise `fused_recurrent_kda`.
+
+**Our engine implements only the recurrent form, always.** `clover-one.c` even
+says so: "conv history and delta-rule state carry, so this stays in order".
+
+### What survives, and is now independently corroborated
+
+Decode is a different regime and it is ours. §5.4.2: "the primary bottleneck
+shifts from exploiting parallelism to efficiently managing the evolving
+recurrent state", and "**at small batch sizes, the group GEMMs reduce to
+memory-bound streaming of weight matrices**". Their fix is WarpDecode — one
+output neuron per warp, weights streamed straight from memory — plus an offline
+weight-layout permutation.
+
+That is our 2.11 FLOP/byte, 82%-idle-arithmetic result and our `experts.direct`
+repack, reached independently by the model's authors for the same regime.
+
+### Settled by checking rather than assuming
+
+The released checkpoint has **no MTP**. `num_nextn_predict_layers: 0`, and the
+weight index contains no `nextn`/`mtp`/`draft`/`eagle` tensors. Production K3
+uses MTP speculative decoding and vLLM ships `mtp.py` and Eagle3, but those
+weights are not in the open release — so "no draft model here" stands, as a
+property of the release rather than of our setup.
+
+Parameter counts reconcile against our byte measurements: 2.8T total / 104B
+activated, where `Q`'s 53.8 GB/token is the always-active ~55B and `X`'s 25.8 GB
+is 16 × 92 × 33,030,144 = 48.6B routed.
+
+### What was changed
+
+Scoped `AI-PROCESSING-UNIT.md` to decode explicitly and added the upstream
+corroboration; corrected the autoregression and speculative-decoding claims in
+`LATENCY-AND-SCALING.md`; flagged the 9.9 s prompt pass as ours rather than the
+model's; made the scope note concrete.
+
+### What could not be established
+
+FlashKDA, WarpDecode and ReplaySSM are cited works, unread. The report gives no
+absolute latency figures and no hardware for its serving claims. Whether vLLM
+implements all of this or a subset is the next context file, not yet written.
+
+## Current: One Layer Held Entirely In RAM — Measured, And Dense Is Closed
+
+### Intended outcome
+
+Two claims from the previous cycle were derived rather than measured: that a
+unit holding its whole layer pays no read stall, and that computing all 896
+experts instead of the routed 16 would be worse rather than better. Both are
+testable on this box. `layer-resident.c` tests them.
+
+### How, without a new data path
+
+`root->direct` is already an mmap of the layer's complete
+896 x 17,547,264 = 15,722,348,544 B, so residency is a page-cache question.
+Fault every page, confirm with `mincore`, then time the engine's own
+`root_project_rows` against it. 120 GB free, one layer is 15.72 GB.
+
+### What the system showed
+
+Three runs, two layers, one of each attention type:
+
+| | L46 KDA | L3 MLA | L46 again |
+|---|---|---|---|
+| 16 routed experts, cold from disk | 63.1 ms | 61.0 ms | *(already resident)* |
+| mincore residency after fault-in | 100.0% | 100.0% | 100.0% |
+| 16 routed experts, **resident** | 7.5 ms | **7.7 ms** | 7.7 ms |
+| penalty for not being resident | 8.4x | 7.9x | — |
+| all 896 experts, resident | 383.6 ms | 381.7 ms | 380.2 ms |
+
+**Residency is worth 8x and removes the whole read stall.** The monolith spends
+10.4 ms projecting plus 11.4 ms stalled; resident, projection alone is 7.7 ms.
+
+**A resident layer is bandwidth-bound at the measured ceiling.** Experts 280.8
+MB at 36.5 GB/s and trunk 586 MB at 41.7 GB/s give ~22 ms against the monolith's
+36.5, so 1.63x cheaper and ~2.06 s a token. Better than the ~25 ms predicted.
+The significance is not the 1.63x: it is that per-layer time is now set by
+bandwidth alone, so 867 MB at 800 GB/s = 1.08 ms is the same measurement
+divided by a different number rather than an assumption about behaviour.
+
+**Dense is closed by measurement.** All 896 experts instead of 16 costs **49.5x**
+(380.2 ms a layer, 34.98 s a token) and raises arithmetic throughput only from
+137.5 to **155.7 GFLOP/s, 13%**, because both arms are already at the memory
+ceiling (36.5 and 41.4 GB/s). Fifty-six times the parallel work bought an eighth
+more compute utilisation. The ratio is bandwidth-independent, since both arms
+are bandwidth-bound, so it is 56x on a GPU too. Top-16 of 896 is not a
+limitation to engineer around; it is the 56x saving that makes the model
+affordable.
+
+### An instrument error caught and fixed mid-cycle
+
+The first version repeated the **same** 16 experts 20 times. That is 280.8 MB
+against a 128 MB L3, so part of it was measuring cache rather than memory.
+Corrected to a fresh disjoint window of 16 per repetition, 5.62 GB touched.
+Result moved 7.5 -> 7.7 ms, so the artefact was real but only 3%. **Worth the
+check: a repeated-access benchmark on this box must exceed 128 MB per iteration
+or it is measuring L3.**
+
+### What could not be established
+
+Nothing about a part delivering 800 GB/s; that remains underived from any
+measurement. The pipeline claim — 93 units in flight without interference — is
+still untested, and `distrubuted-hosting` could test it on rented nodes.
+The 22 ms composed layer adds a measured expert figure to a trunk figure taken
+from the monolith profile, where the trunk was not competing with a concurrent
+expert stream; a real unit runs both, so 22 ms is a floor.
+
 ## Current: The Machine This Model Wants — Memory Is The Constraint, Not FLOPs
 
 ### Intended outcome

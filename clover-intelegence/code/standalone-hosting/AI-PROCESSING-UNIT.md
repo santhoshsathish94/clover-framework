@@ -11,6 +11,34 @@ architecture section has been built.
 Read [LATENCY-AND-SCALING.md](LATENCY-AND-SCALING.md) first — this document
 starts where that one stops.
 
+## Scope: this is the DECODE regime, and that is deliberate
+
+Everything below measures **single-token decode** — one position, `q_len == 1`.
+That matters, because Kimi K3's own tech report (§5.4.2) treats decode as a
+regime distinct from prefill and describes it the same way we measured it:
+
+> "KDA decoding presents a distinct set of challenges: the primary bottleneck
+> shifts from exploiting parallelism to efficiently managing the evolving
+> recurrent state."
+
+> "For routed experts, **at small batch sizes, the group GEMMs reduce to
+> memory-bound streaming of weight matrices** — a regime for which conventional
+> tile-centric kernels are poorly suited due to their compute-oriented design."
+
+Moonshot's answer is **WarpDecode**: a token-centric kernel where each warp owns
+one output neuron and streams its weights straight from memory, plus an offline
+weight-layout permutation to cut dequantization cost. That is the same
+conclusion this document reaches from measurement, and the same move as our
+offline `experts.direct` repack. The thesis here is independently corroborated
+by the model's authors — **for decode**.
+
+**It does not carry to prefill.** There the official formulation is chunkwise:
+parallel within a chunk, serial across chunks, with the cross-chunk recurrence
+turned into a parallel prefix scan by associativity (KCP, §5.1.2). Our engine
+implements none of that — it runs a strict per-position scan in every regime. Any
+prefill number we quote is a property of `kimi-k3-in-c`, not of Kimi K3. See
+[the upstream analysis](../../../research/k3/upstream/moonshot-kimi-k3-official.md).
+
 ---
 
 ## 1. The two numbers that decide everything
@@ -313,13 +341,103 @@ a 6.7 ms deficit every layer. Per-unit residency is what closes it.
 
 ---
 
-## 6. What this does not solve
+## 6. Measured: one layer held entirely in RAM
+
+Everything above this point about per-unit cost was derived. This section is
+not. `layer-resident.c` makes one layer's complete 896-expert set resident —
+`root->direct` is already an mmap of all 15,722,348,544 B, so residency is a
+page-cache question rather than a new data path — confirms it with `mincore`,
+then times the engine's own `root_project_rows` against it.
+
+Three runs, two layers, one of each attention type:
+
+| | L46 KDA | L3 MLA | L46 again |
+|---|---|---|---|
+| 16 routed experts, **cold from disk** | 63.1 ms | 61.0 ms | *(already resident)* |
+| `mincore` residency after fault-in | 100.0% | 100.0% | 100.0% |
+| 16 routed experts, **resident** | 7.5 ms | **7.7 ms** | 7.7 ms |
+| penalty for not being resident | **8.4x** | **7.9x** | — |
+| all 896 experts, resident | 383.6 ms | 381.7 ms | 380.2 ms |
+
+Arm C takes a fresh disjoint window of 16 experts on every repetition — 5.62 GB
+touched over 20 reps — so the bytes are in RAM and never in the 128 MB L3.
+Reusing one set instead measured 7.5 ms, so the cache effect was real but worth
+3%.
+
+### Residency is worth 8x, and it is the entire read stall
+
+The monolith spends 10.4 ms projecting and 11.4 ms stalled on reads per layer.
+Resident, the projection alone is 7.7 ms and the stall is gone by construction.
+
+### A resident layer is bandwidth-bound at the measured ceiling
+
+This is the premise the whole architecture rests on, and it now has numbers:
+
+| per layer | bytes | rate | time |
+|---|---|---|---|
+| 16 routed experts | 280.8 MB | 36.5 GB/s (**measured here**) | 7.7 ms |
+| trunk slice | 586 MB | 41.7 GB/s (measured, `Q`) | 14.1 ms |
+| | **867 MB** | | **~22 ms** |
+
+Against 36.5 ms in the monolith, so a fully resident layer is **1.63x cheaper**
+and a token would be ~2.06 s rather than 3.47 s. The derived estimate in
+[LATENCY-AND-SCALING.md](LATENCY-AND-SCALING.md) said ~25 ms; measured is
+better than predicted.
+
+**22 ms is a floor, not a prediction.** It pairs a measured expert figure with
+a trunk figure taken from the monolith profile, where the trunk was not
+competing with a concurrent expert stream. A real unit runs both against one
+memory system.
+
+More importantly, both halves run at the bus ceiling, so per-layer time is set
+by bandwidth alone. 867 MB at 800 GB/s is **1.08 ms** — which is where section
+5's sizing came from. That figure is no longer an assumption about how a layer
+behaves; it is this measurement divided by a different bandwidth.
+
+### Computing all 896 experts instead of the routed 16
+
+The opposite proposal: abandon sparsity, compute every expert, and hand a wide
+parallel machine the fully parallel work it is built for. Measured on the same
+resident mapping, so no disk is involved in either arm:
+
+| | sparse, 16 | dense, 896 |
+|---|---|---|
+| per layer | 7.7 ms | **380.2 ms** |
+| per token, 92 layers | 0.71 s | **34.98 s** |
+| memory rate | 36.5 GB/s | 41.4 GB/s |
+| **arithmetic rate** | **137.5 GFLOP/s** | **155.7 GFLOP/s** |
+
+**Dense costs 49.5x and buys 13% more arithmetic throughput.** Fifty-six times
+the parallel work raised compute utilisation by an eighth, because both arms
+were already at the memory ceiling. The parallelism was never the constraint.
+
+The penalty also does not depend on how fast the memory is. Both arms are
+bandwidth-bound, so the ratio is just the byte ratio, 896/16 = 56, on any
+machine including one with HBM. A GPU running dense would move 1.45 TB per
+token instead of 25.8 GB.
+
+**So the conditional resolves the other way.** If all 896 could be computed at
+once *for free*, a wide machine would be the right answer. They can be computed
+at once; it is not free; it costs 56x the bytes on a workload where bytes are
+the entire cost. Top-16 of 896 is not a limitation to engineer around — it is
+the 56x saving that makes the model affordable at all.
+
+The 93 layers cannot be done at once under any arrangement: layer *N+1*'s input
+is layer *N*'s output, and the nonlinearities — RMSNorm, the sigmoid gate,
+SiTU, top-k selection — mean the composition cannot be collapsed into one
+operator. The routing is data-dependent on top, measured at 1.6% predictability
+from one layer to the next, so the function itself changes per token.
+
+---
+
+## 7. What this does not solve
 
 Stated plainly, because a named gap is a limitation and a filled-in guess is a
 defect.
 
-1. **Nothing here is built.** Every figure past the measured column is
-   arithmetic on measured inputs. The architecture is a proposal.
+1. **The unit itself is not built.** Section 6 measures a resident layer on
+   *this* memory system, which validates the residency and bandwidth-bound
+   claims. It says nothing about a part delivering 800 GB/s.
 2. **It does not break the sequential chain.** Latency is still 93 steps in
    order. This makes each step cheap; it does not make them concurrent. The only
    identified lever on *that* is head-wise splitting inside a layer — 96 heads
@@ -342,9 +460,9 @@ defect.
 
 ---
 
-## 7. What to test first, on hardware that exists
+## 8. What to test next, on hardware that exists
 
-The architecture makes two separable claims. One is testable now; one is not.
+The residency half is now measured (section 6). Two claims remain.
 
 **Testable now — the pipeline claim.** `distrubuted-hosting` already shards
 layer-wise: 92 stages, each with its own `trunk-N`, `root-N` and
@@ -353,21 +471,23 @@ working set fully RAM-resident on its own node tests:
 
 - that the inter-unit payload really is ~252 KB and the hops really are free
 - that per-layer residency removes the expert read stall (predicted ~33 ms to
-  ~25 ms per layer, ~1.28x latency, ~40 tok/s aggregate)
+  ~25 ms per layer, ~1.28x latency, ~40 tok/s aggregate; section 6 now measures
+  the per-layer part at ~22 ms, so this should come out slightly better)
 - that the pipeline fills and gives throughput without batching
 
 That is the part that is *architecture*, and it needs no new silicon — only
 rented nodes.
 
-**Not testable here — the bandwidth claim.** Nothing on this box, or on any
-rentable box, provides 16 GB at 800 GB/s to a 2 TFLOP/s FP64 unit. The 0.1 s
-projection stands or falls on a part that does not exist yet. What the test above
-*can* establish is whether the rest of the design holds up, so that the
-bandwidth question is the only one left open.
+**Not testable anywhere rentable — the bandwidth claim.** Nothing on this box
+or in any cloud provides 16 GB at 800 GB/s paired with a 2 TFLOP/s FP64 unit.
+What section 6 did establish is that a resident layer is **bandwidth-bound at
+whatever ceiling it is given**, so the 1.08 ms figure is the measured 867 MB
+divided by a bandwidth rather than a guess about behaviour. The open question
+is the part, not the model of how it would run.
 
 ---
 
-## 8. The finding, in three sentences
+## 9. The finding, in three sentences
 
 This workload performs **2.11 operations per byte it fetches**. Every machine
 available to run it is built for 12 to 295, so between 82% and 90% of their
@@ -375,10 +495,16 @@ arithmetic sits idle while the memory system does all the work — measured on a
 CPU, and structural on a GPU.
 
 The 1.5 TB of weights is not one memory system; it is **93 disjoint 16 GB
-working sets**, and the token that must visit all of them is **252 KB**.
+working sets**, and the token that must visit all of them is **252 KB**. Held
+resident, a layer costs 8x less and runs at the bus ceiling — measured — so its
+time is set by bandwidth and nothing else.
 
 Therefore: stop moving 98.6 GB of weights to the token, and move the 252 KB
 token to the weights — **93 small, cheap, balanced memory-plus-arithmetic units
 in a chain, holding their layer forever and passing only the token.** 3,360x less
 data in motion per layer, latency and throughput from the same hardware, and
 every unit a part that can actually be built.
+
+And the escape of making the work wide enough for a parallel machine is closed
+by measurement: computing all 896 experts rather than the routed 16 costs
+**49.5x** and raises arithmetic utilisation by **13%**.

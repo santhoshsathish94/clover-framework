@@ -1,6 +1,19 @@
 # Upstream engine investigation
 
-Work involving the independent kimi-k3-in-c engine, distinct from Clover's implementation.
+Work involving engines other than Clover's own implementation.
+
+## Kimi K3 itself, as its authors and its serving engines define it
+
+Added after the discovery that every measurement in `clover-intelegence` was of
+`kimi-k3-in-c`, a reimplementation, while the documents said "the model".
+
+- [Official repository and tech report](moonshot-kimi-k3-official.md) — architecture,
+  the chunkwise KDA form, KCP, and the decode regime the authors describe the way
+  we measured it
+- [vLLM execution](vllm-kimi-k3-execution.md) — how it is actually served:
+  pipeline, tensor, sequence, expert and context parallelism
+
+## kimi-k3-in-c
 
 - [Engine explanation](fareed-khan-kimi-k3-in-c-explanation.md)
 - [Measured results and limits](kimi-k3-measurements.md)
