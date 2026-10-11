@@ -523,12 +523,26 @@ static int transformer_mla(Transformer *transformer, TransformerSequence *sequen
         if (capacity > SIZE_MAX / stride / sizeof(float)) return 0;
         float *cache = realloc(sequence->mla_cache, capacity * stride * sizeof(float));
         if (!cache) return 0;
+        /* Head-major, so capacity is the per-head stride and growing relocates every block.
+           Highest offset first: each block only moves up, so nothing unread is overwritten. */
+        if (sequence->mla_capacity && sequence->positions) {
+            const size_t old = sequence->mla_capacity, used = sequence->positions;
+            memmove(cache + 2 * (size_t)TRANSFORMER_ROWS * capacity,
+                cache + 2 * (size_t)TRANSFORMER_ROWS * old, used * 64 * sizeof(float));
+            for (unsigned head = TRANSFORMER_HEADS; head-- > 0; )
+                memmove(cache + ((size_t)TRANSFORMER_ROWS + head * 128) * capacity,
+                    cache + ((size_t)TRANSFORMER_ROWS + head * 128) * old, used * 128 * sizeof(float));
+            for (unsigned head = TRANSFORMER_HEADS; head-- > 0; )
+                memmove(cache + (size_t)head * 128 * capacity,
+                    cache + (size_t)head * 128 * old, used * 128 * sizeof(float));
+        }
         sequence->mla_cache = cache;
         sequence->mla_capacity = capacity;
     }
-    float *scores = malloc(count * 2 * sizeof(float));
-    if (!scores) return 0;
-    float *exponentials = scores + count;
+    const int threads = omp_get_max_threads();
+    if ((size_t)threads > SIZE_MAX / count / (2 * sizeof(float))) return 0;
+    float *scratch = malloc((size_t)threads * count * 2 * sizeof(float));
+    if (!scratch) return 0;
     transformer_project(transformer, 20, sequence->normalized, sequence->mla_query_latent);
     transformer_normalize(sequence->mla_query_latent, sequence->mla_query_latent,
         transformer->operator_records[21].data, 1536);
@@ -537,22 +551,34 @@ static int transformer_mla(Transformer *transformer, TransformerSequence *sequen
     transformer_normalize(sequence->mla_kv_latent, sequence->mla_kv_latent,
         transformer->operator_records[24].data, 512);
     transformer_project(transformer, 25, sequence->mla_kv_latent, sequence->mla_expanded);
-    float *current = sequence->mla_cache + sequence->positions * stride;
+    float *const cache = sequence->mla_cache;
+    const size_t capacity = sequence->mla_capacity, slot = sequence->positions;
     for (unsigned head = 0; head < TRANSFORMER_HEADS; head++) {
-        memcpy(current + head * 128, sequence->mla_expanded + head * 256, 128 * sizeof(float));
-        memcpy(current + TRANSFORMER_ROWS + head * 128, sequence->mla_expanded + head * 256 + 128, 128 * sizeof(float));
+        memcpy(cache + (size_t)head * 128 * capacity + slot * 128,
+            sequence->mla_expanded + head * 256, 128 * sizeof(float));
+        memcpy(cache + ((size_t)TRANSFORMER_ROWS + head * 128) * capacity + slot * 128,
+            sequence->mla_expanded + head * 256 + 128, 128 * sizeof(float));
     }
-    memcpy(current + 2 * TRANSFORMER_ROWS, sequence->mla_kv_latent + 512, 64 * sizeof(float));
+    memcpy(cache + 2 * (size_t)TRANSFORMER_ROWS * capacity + slot * 64,
+        sequence->mla_kv_latent + 512, 64 * sizeof(float));
     const float scale = 1.0f / sqrtf(192.0f);
-    for (unsigned head = 0; head < TRANSFORMER_HEADS; head++) {
+    const float *const rope = cache + 2 * (size_t)TRANSFORMER_ROWS * capacity;
+    /* Heads share only the query and the cache, both read-only, so the walk spreads
+       across cores instead of leaving fifteen of sixteen idle for its whole length. */
+#pragma omp parallel for schedule(static)
+    for (int head = 0; head < TRANSFORMER_HEADS; head++) {
+        float *scores = scratch + (size_t)omp_get_thread_num() * count * 2;
+        float *exponentials = scores + count;
         const float *query = sequence->mla_query + head * 192;
+        const float *const keys = cache + (size_t)head * 128 * capacity;
         for (size_t position = 0; position < count; position++) {
-            const float *cached = sequence->mla_cache + position * stride;
+            const float *cached = keys + position * 128;
+            const float *positional = rope + position * 64;
             double score = 0.0;
             for (unsigned coordinate = 0; coordinate < 128; coordinate++)
-                score += (double)query[coordinate] * (double)cached[head * 128 + coordinate];
+                score += (double)query[coordinate] * (double)cached[coordinate];
             for (unsigned coordinate = 0; coordinate < 64; coordinate++)
-                score += (double)query[128 + coordinate] * (double)cached[2 * TRANSFORMER_ROWS + coordinate];
+                score += (double)query[128 + coordinate] * (double)positional[coordinate];
             scores[position] = (float)score * scale;
         }
         float maximum = scores[0];
@@ -563,14 +589,15 @@ static int transformer_mla(Transformer *transformer, TransformerSequence *sequen
             total += (double)exponentials[position];
         }
         float *output = sequence->attention + head * 128;
+        const float *const values = cache + ((size_t)TRANSFORMER_ROWS + head * 128) * capacity;
         memset(output, 0, 128 * sizeof(float));
         for (size_t position = 0; position < count; position++) {
             float weight = (float)((double)exponentials[position] / total);
-            const float *value = sequence->mla_cache + position * stride + TRANSFORMER_ROWS + head * 128;
+            const float *value = values + position * 128;
             for (unsigned coordinate = 0; coordinate < 128; coordinate++) output[coordinate] = output[coordinate] + weight * value[coordinate];
         }
     }
-    free(scores);
+    free(scratch);
     transformer_project(transformer, 6, sequence->normalized, sequence->gate);
     for (unsigned coordinate = 0; coordinate < TRANSFORMER_ROWS; coordinate++)
         sequence->gate[coordinate] = sequence->attention[coordinate] * transformer_sigmoid(sequence->gate[coordinate]);
