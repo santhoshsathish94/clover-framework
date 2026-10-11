@@ -6,6 +6,70 @@ it does and does not establish.
 
 ---
 
+## Cycle: can the trunk be four bits (2026-10-11)
+
+### Intended outcome
+
+The gather left the trunk at about 50 GMAC/s against the expert path's 80, and I had
+said the rest was the format. Direction was to try the data change on a small scope and
+measure before doing it everywhere. The first question is not how to pack it but
+whether packing it is lossless at all, because a lossy version is a model change and
+not an optimisation.
+
+### What the weights actually look like
+
+`trunk-probe.c` reads the real trunk and counts distinct palette indices, writing
+nothing. The expert path carries a selector per 32 coordinates, so 32 coordinates is
+the span that would have to fit in sixteen values:
+
+| record | shape | distinct in record | 32-coord groups needing more than 16 | worst row |
+|---|---|---|---|---|
+| 6 | 12288x7168 | 256 | 2,752,365 of 2,752,512 | 244 |
+| 7 | 7168x12288 | 256 | 2,752,365 of 2,752,512 | 254 |
+| 8, 9, 10 qkv | 12288x7168 | 255 | 2,752,473 of 2,752,512 | 236 |
+| 31, 32 | 3584x7168 | 256 | 802,814 of 802,816 | 245 |
+| 34, 35, 36 shared | 6144x7168 | 256 | 1,375,803 of 1,376,256 | 245 |
+
+The worst group uses all 32 of its coordinates on distinct values, and 99.99% of groups
+exceed sixteen. The weights are spread across the whole 256-entry palette with no
+sub-palette structure to exploit.
+
+**So the trunk cannot be packed to four bits losslessly.** Doing it means folding more
+than sixteen distinct values into sixteen slots, which changes every affected output and
+would fail the reference. The experts are four-bit because they were quantised that way
+upstream and the trunk was quantised to an eight-bit palette; that is a model decision
+already made, not an implementation oversight I can correct. Re-quantising the trunk is
+a question about model fidelity and belongs to whoever owns that, with an evaluation
+behind it, not to a performance cycle.
+
+### The lossless alternative, also measured and also rejected
+
+This is znver4 with full AVX-512, so sixteen indices can be gathered at once instead of
+eight, and a single 512-bit accumulator maps lane j to element c+j exactly as the
+scalar `lanes[j]` did. Bit-identical, mismatch 0 at every size.
+
+| rows | scalar | gather 256 | gather 512 | expert 4-bit |
+|---|---|---|---|---|
+| 4,096 | 25.98 | 50.60 | 55.49 | 83.34 |
+| 16,384 | 26.84 | 52.40 | 56.50 | 83.71 |
+| 65,536 | 28.09 | 50.03 | 52.37 | 80.73 |
+
+About 5 to 8% in the harness. In the layer, two runs each: AVX-512 17.163 and 17.242
+ms/position against AVX2's 17.228 and 17.513. **About 1%, inside the noise.** Not
+ported. Zen 4's AVX-512 is double-pumped and a gather does not widen.
+
+That is isolation mispredicting for the third time today, and over-predicting after
+under-predicting in the previous cycle. The rule that survives is only that the layer
+decides.
+
+### Outcome
+
+The trunk projection path is finished at about 50 GMAC/s on this hardware unless the
+model is re-quantised. Both remaining routes were measured and both are closed: the
+format change is not lossless, and the wider gather is not worth anything in the layer.
+
+---
+
 ## Cycle: can the trunk palette path be optimised (2026-10-11)
 
 ### Intended outcome

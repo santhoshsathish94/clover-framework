@@ -71,6 +71,26 @@ static float trunk_row_gather(const float *input, const unsigned char *ids, unsi
     return ((s0 + s2) + (s1 + s3)) * scale;
 }
 
+/* A3: sixteen indices a time. One 512-bit accumulator maps lane j to element c+j,
+   which is exactly what lanes[j] held in the scalar form. */
+#if defined(__AVX512F__)
+static float trunk_row_gather512(const float *input, const unsigned char *ids, unsigned width, float scale)
+{
+    __m512 acc = _mm512_setzero_ps();
+    for (unsigned coordinate = 0; coordinate < width; coordinate += 16) {
+        __m512i index = _mm512_cvtepu8_epi32(_mm_loadu_si128((const __m128i *)(ids + coordinate)));
+        acc = _mm512_fmadd_ps(_mm512_i32gather_ps(index, palette, 4),
+            _mm512_loadu_ps(input + coordinate), acc);
+    }
+    float lanes[16], combined[8];
+    _mm512_storeu_ps(lanes, acc);
+    for (unsigned lane = 0; lane < 8; lane++) combined[lane] = lanes[lane] + lanes[lane + 8];
+    float s0 = combined[0] + combined[4], s1 = combined[1] + combined[5];
+    float s2 = combined[2] + combined[6], s3 = combined[3] + combined[7];
+    return ((s0 + s2) + (s1 + s3)) * scale;
+}
+#endif
+
 /* B: four bits per weight, one byte carries two. */
 static double expert_row(const double *converted, const unsigned char *codes,
     const unsigned char *selectors, unsigned width)
@@ -118,8 +138,8 @@ int main(int argc, char **argv)
     }
 
     printf("width %u, %d threads, L3 is 128 MiB\n", width, omp_get_max_threads());
-    printf("%8s %9s | %8s %9s | %8s %9s | %8s %9s\n",
-        "rows", "MMAC", "A ms", "A GMAC/s", "A2 ms", "A2 GMAC/s", "B ms", "B GMAC/s");
+    printf("%8s %9s | %9s | %9s | %9s | %9s\n",
+        "rows", "MMAC", "A scalar", "A2 g256", "A3 g512", "B 4-bit");
 
     for (unsigned k = 0; k < sizeof sizes / sizeof *sizes; k++) {
         const unsigned rows = sizes[k];
@@ -129,8 +149,9 @@ int main(int argc, char **argv)
         unsigned char *selectors = malloc((size_t)rows * width / 32);
         float *out_a = malloc(rows * sizeof(float));
         float *out_a2 = malloc(rows * sizeof(float));
+        float *out_a3 = calloc(rows, sizeof(float));
         double *out_b = malloc(rows * sizeof(double));
-        if (!ids || !codes || !selectors || !out_a || !out_a2 || !out_b) { fputs("alloc failed\n", stderr); return 1; }
+        if (!ids || !codes || !selectors || !out_a || !out_a2 || !out_a3 || !out_b) { fputs("alloc failed\n", stderr); return 1; }
 #pragma omp parallel for schedule(static)
         for (long long r = 0; r < (long long)rows; r++) {
             uint64_t l = 88172645463325252ULL + (uint64_t)r * 2654435761ULL;
@@ -139,7 +160,8 @@ int main(int argc, char **argv)
             for (unsigned c = 0; c < width / 32; c++) selectors[(size_t)r * (width / 32) + c] = (unsigned char)(c & (TABLES - 1));
         }
 
-        double best_a = 1e18, best_a2 = 1e18, best_b = 1e18, sum_a = 0, sum_a2 = 0, sum_b = 0;
+        double best_a = 1e18, best_a2 = 1e18, best_a3 = 1e18, best_b = 1e18;
+        double sum_a = 0, sum_a2 = 0, sum_a3 = 0, sum_b = 0;
         for (int rep = 0; rep < repeats; rep++) {
             double t0 = now();
 #pragma omp parallel for schedule(static)
@@ -155,6 +177,14 @@ int main(int argc, char **argv)
             t1 = now() - t0;
             if (t1 < best_a2) best_a2 = t1;
 
+#if defined(__AVX512F__)
+            t0 = now();
+#pragma omp parallel for schedule(static)
+            for (long long r = 0; r < (long long)rows; r++)
+                out_a3[r] = trunk_row_gather512(input, ids + (size_t)r * width, width, 0.01f);
+            t1 = now() - t0;
+            if (t1 < best_a3) best_a3 = t1;
+#endif
             t0 = now();
 #pragma omp parallel for schedule(static)
             for (long long r = 0; r < (long long)rows; r++)
@@ -163,19 +193,19 @@ int main(int argc, char **argv)
             t1 = now() - t0;
             if (t1 < best_b) best_b = t1;
         }
-        unsigned mismatch = 0;
+        unsigned mismatch2 = 0, mismatch3 = 0;
         for (unsigned r = 0; r < rows; r++) {
-            if (memcmp(&out_a[r], &out_a2[r], sizeof(float))) mismatch++;
-            sum_a += out_a[r]; sum_a2 += out_a2[r]; sum_b += out_b[r];
+            if (memcmp(&out_a[r], &out_a2[r], sizeof(float))) mismatch2++;
+            if (memcmp(&out_a[r], &out_a3[r], sizeof(float))) mismatch3++;
+            sum_a += out_a[r]; sum_a2 += out_a2[r]; sum_a3 += out_a3[r]; sum_b += out_b[r];
         }
         double macs = (double)rows * width;
-        printf("%8u %9.1f | %8.3f %9.2f | %8.3f %9.2f | %8.3f %9.2f   A/A2 mismatch %u  (%.3f %.3f %.3f)\n",
+        printf("%8u %9.1f | %9.2f | %9.2f | %9.2f | %9.2f   mismatch A2 %u A3 %u  (%.3f %.3f %.3f %.3f)\n",
             rows, macs / 1e6,
-            best_a * 1e3, macs / best_a / 1e9,
-            best_a2 * 1e3, macs / best_a2 / 1e9,
-            best_b * 1e3, macs / best_b / 1e9,
-            mismatch, sum_a, sum_a2, sum_b);
-        free(ids); free(codes); free(selectors); free(out_a); free(out_a2); free(out_b);
+            macs / best_a / 1e9, macs / best_a2 / 1e9,
+            best_a3 < 1e17 ? macs / best_a3 / 1e9 : 0.0, macs / best_b / 1e9,
+            mismatch2, mismatch3, sum_a, sum_a2, sum_a3, sum_b);
+        free(ids); free(codes); free(selectors); free(out_a); free(out_a2); free(out_a3); free(out_b);
     }
     free(input); free(converted);
     return 0;

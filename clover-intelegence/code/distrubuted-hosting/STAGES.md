@@ -261,8 +261,14 @@ the MAC count held equal, the scalar form ran 25 to 30 GMAC/s, a gather form 45 
 and the expert 4-bit AVX2 path 71 to 89 — and the ratio held even when the data fitted
 in L2, so it was instruction mix and not bandwidth. The gather form is bit-identical and
 is now in every pod, worth 2.2x on contiguous projections and 1.43x on qkv, whose rows
-carry a 20-byte prefix. The remaining gap to the expert kernel is the format: one byte
-per weight against four bits, which would mean re-quantising the trunk.
+carry a 20-byte prefix.
+
+The remaining gap to the expert kernel is the format, and it is closed. Packing the
+trunk to four bits is **not lossless**: `trunk-probe.c` counts 255 to 256 distinct
+palette indices per record, with the worst 32-coordinate group using all 32 on distinct
+values and 99.99% of groups exceeding sixteen. Four bits would mean re-quantising, which
+changes model output. A 16-wide AVX-512 gather is lossless and gives 5 to 8% in a
+harness but about 1% in the layer, inside the noise, so it is not used.
 
 Expert arrival is not the bottleneck at this size. Reading the 16 chosen experts of one
 layer is 281 MB, and it lands in 33 ms:
