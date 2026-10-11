@@ -6,6 +6,96 @@ it does and does not establish.
 
 ---
 
+## Cycle: six prompts through the real engine (2026-10-11)
+
+### Why this run differs from the last one
+
+The previous observation went through the reference harness, which is pinned to two
+prompts: `Xm` in `reference-all.inc` is stubbed out and the expert outputs are read from
+oracle files that exist only for france and japan. So the reference cannot answer "what
+does a different prompt do".
+
+The production fleet can. `pipeline-serve` takes `<wanted> <ids...>` on stdin, and
+`clover_vectors_open` opens one file per owner and only filters when
+`CLOVER_VECTORS_OWNER` is set \u2014 so leaving it unset traces **all ninety-two layers in one
+run**, about 1.5 GB. Everything below is the real engine, server plus 92 layers resident,
+not the reference.
+
+Six prompts, each five tokens, each tokenised by the native tokenizer. Every answer is
+the obvious one: `The capital of France is` \u2192 ` Paris`, `Japan` \u2192 ` Tokyo`, `Germany` \u2192
+` Berlin`, `Once upon a time there` \u2192 ` was`, `Water freezes at zero degrees` \u2192
+` Celsius`, and the degenerate `The the the the the` \u2192 ` the`.
+
+### The model is eight segments, not ninety-two layers
+
+Reading the residual norm entering every layer, at the position the answer comes from:
+
+```
+ 1:0.79   2:1.74   3:3.40 ...  11:96.76  12:112.89   <- segment end
+13:3.89  14:7.51  15:10.40 ... 23:52.57  24:63.13    <- segment end
+25:0.46  26:0.96  27:1.75  ... 35:22.94  36:34.17    <- segment end
+37:0.58 ... 48:59.84 | 49:0.52 ... 60:133.41 | 61:6.75 ... 72:50.91
+73:3.20 ... 84:63.56 | 85:7.36 ... 92:51.64
+```
+
+At every twelfth layer the residual **resets to near zero** and climbs again. Layer 11
+hands 112.889 to layer 12; layer 13 starts from 3.889. The seven values at the segment
+ends \u2014 112.889, 63.133, 34.174, 59.842, 133.408, 50.907, 63.563 \u2014 are **exactly** the
+tail's snapshots 1 to 7 measured in the previous cycle, which was a different binary on a
+different code path. Eight segments of twelve, the last one eight layers long, and the
+tail re-weights all eight plus the final residual.
+
+### Magnitude is architectural, direction is the content
+
+| prompt | L12 | L24 | L36 | L48 | L60 | L72 | L84 | L92 |
+|---|---|---|---|---|---|---|---|---|
+| france | 112.9 | 63.1 | 34.2 | 59.8 | 133.4 | 50.9 | 63.6 | 51.6 |
+| japan | 116.0 | 60.8 | 35.3 | 61.4 | 130.0 | 47.7 | 67.0 | 54.7 |
+| germany | 116.0 | 60.3 | 35.0 | 60.5 | 135.2 | 48.8 | 68.8 | 52.0 |
+| once | 112.9 | 64.1 | 27.8 | 57.8 | 129.1 | 45.9 | 68.0 | 47.2 |
+| thethe | 106.8 | 46.3 | 31.1 | 52.1 | 124.3 | 58.5 | 67.2 | 50.0 |
+| water | 122.8 | 65.0 | 34.4 | 58.3 | 130.9 | 49.2 | 71.1 | 55.3 |
+
+Seven percent spread at layer 12, four percent at layer 60, across prompts that have
+nothing in common \u2014 including a degenerate repetition. The norm trajectory is close to a
+property of the architecture. Whatever distinguishes these prompts is not in how big the
+vector is, so `vector-compare.c` was written to look at the angle instead.
+
+### Similar prompts separate; unrelated prompts converge
+
+Cosine between prompts at each layer's input, same position:
+
+| layer | france vs japan | france vs water |
+|---|---|---|
+| 1 | 0.936 | 0.300 |
+| 8 | **0.983** | 0.272 |
+| 12 | 0.922 | 0.194 |
+| **13** | **0.998** | **0.990** |
+| 24 | 0.913 | 0.360 |
+| 48 | 0.956 | 0.658 |
+| 60 | 0.765 | 0.319 |
+| 78 | **0.700** | 0.333 |
+| 92 | 0.851 | 0.629 |
+
+The two move in opposite directions. France and japan differ by one token and start at
+0.936, rise to 0.983 by layer 8, then fall to 0.700 by layer 78 before recovering to
+0.851. France and water share nothing, start at 0.300, and end at 0.629.
+
+Every segment reset raises the similarity, and the first one is extreme: at layer 13
+france and water are at **0.990**, having been at 0.194 one layer earlier. The effect
+decays with depth and has gone by layer 73. What the residual holds immediately after a
+reset is close to prompt independent.
+
+### What this does not establish
+
+One position per prompt, the one the answer is read from. Six prompts, all five tokens
+long, all in English, all with an obvious completion. The directional comparison covers
+three of the six. Nothing here says why the curves move as they do \u2014 the shapes are
+measured, the cause is not. The request times the fleet prints include 1.5 GB of trace
+writes and are not a measurement of anything.
+
+---
+
 ## Cycle: what each stage does to the vector (2026-10-11)
 
 ### Intended outcome
