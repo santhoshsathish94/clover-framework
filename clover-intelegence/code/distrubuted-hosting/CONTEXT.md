@@ -6,6 +6,79 @@ it does and does not establish.
 
 ---
 
+## Cycle: can the trunk palette path be optimised (2026-10-11)
+
+### Intended outcome
+
+I had written that the trunk path runs about 37 GMAC/s where the expert path runs about
+70, and implied the gap was the format. Instructed not to jump to a conclusion but to
+do the runs. Both numbers were derived by dividing stage times by my own MAC counts,
+and a separate run of the trunk kernel alone had given 23.8. Three numbers from three
+methods is not a comparison.
+
+### Both kernels on one harness
+
+`kernel-cost.c` runs them side by side, same rows and width so the MAC count is
+identical, swept from 0.9 MB to 235 MB:
+
+| rows | A scalar palette | A2 gather | B 4-bit AVX2 |
+|---|---|---|---|
+| 256 | 25.26 GMAC/s | 45.05 | 71.30 |
+| 4,096 | 28.83 | 50.43 | 82.89 |
+| 16,384 | 29.06 | 50.62 | 81.93 |
+| 65,536 | 30.26 | 50.69 | 79.21 |
+
+**The ratio holds when everything fits in L2**, so it is not bandwidth and the "half
+the bytes" explanation I was heading towards is wrong. It is one scalar multiply-add
+and one table lookup per element against four in a vector. A2 gathers eight palette
+indices at a time; mismatch against A was 0 at every size, so it is bit-identical.
+
+### In the layer, which is the measurement that counts
+
+MLA layer 3, same binary type, same conditions, only the kernel differing:
+
+| stage | scalar | gather | ratio |
+|---|---|---|---|
+| layer | 27.336 ms/position | **17.273** | 1.58x |
+| 6, the whole MLA attention | 0.6670 s | 0.3070 | 2.17x |
+| 25, 111 | 0.0724, 0.0730 | 0.0327, 0.0327 | 2.2x |
+| 112, 113, 115 shared expert | 0.1241, 0.1244, 0.1238 | 0.0557, 0.0560, 0.0555 | 2.2x |
+| experts 30-109 | 0.5164 | 0.5182 | 1.00 |
+| 24 routing | 0.0309 | 0.0304 | 1.00 |
+
+Experts and routing are untouched, which is the check that the attribution is right.
+
+**The layer shows 2.2x where the harness showed 1.68x.** Last cycle isolation
+over-predicted; this cycle it under-predicted. The lesson is not "isolation
+over-predicts", it is that isolation predicts neither direction reliably and only the
+layer settles it. My harness fed uniformly random palette indices; real weights are not
+uniform.
+
+KDA's qkv gained only 1.43x against the 2.2x everything else got. The difference is
+layout: `transformer_project` walks contiguous rows, while `transformer_qkv` reads
+`transformer->qkv` interleaved with a 20-byte per-row prefix.
+
+### Result
+
+KDA layer 2 about 27.9 to 22.013 ms/position; MLA layer 3 about 27.7 to 17.296.
+VERIFIED 91 of 91 for france and japan, checksums unchanged, zero build failures. Only
+the tail lacks the kernel, having no trunk projection.
+
+Across the session: a KDA layer 139.585 to 22.013, **6.3x**; an MLA layer 31.457 to
+17.296, **1.8x**. Over 68 KDA and 24 MLA pods, roughly 10,247 ms/position to 1,912,
+about **5.4x**, every step bit-identical and verified.
+
+### What is still unknown
+
+- The remaining gap to the expert kernel, 50 against 79 GMAC/s, is the format: one byte
+  of palette index per weight against four bits. That is a data change, re-quantising
+  the trunk, not a code change, and it has not been attempted.
+- `server.c` carries the same `server_project_row` pattern for layer 0 and the
+  vocabulary head. Not looked at.
+- Still nothing measured under concurrency.
+
+---
+
 ## Cycle: the last serial loop (2026-10-11)
 
 ### Intended outcome

@@ -393,9 +393,24 @@ static float transformer_project_row(const float *input, const unsigned char *id
     unsigned width, const float *palette, float scale)
 {
     float lanes[16] = {0}, combined[8];
+#if defined(__AVX2__)
+    /* Lane j carries the same terms in the same order as the scalar form below. */
+    __m256 acc0 = _mm256_setzero_ps(), acc1 = _mm256_setzero_ps();
+    for (unsigned coordinate = 0; coordinate < width; coordinate += 16) {
+        __m256i index0 = _mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(ids + coordinate)));
+        __m256i index1 = _mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(ids + coordinate + 8)));
+        acc0 = _mm256_fmadd_ps(_mm256_i32gather_ps(palette, index0, 4),
+            _mm256_loadu_ps(input + coordinate), acc0);
+        acc1 = _mm256_fmadd_ps(_mm256_i32gather_ps(palette, index1, 4),
+            _mm256_loadu_ps(input + coordinate + 8), acc1);
+    }
+    _mm256_storeu_ps(lanes, acc0);
+    _mm256_storeu_ps(lanes + 8, acc1);
+#else
     for (unsigned coordinate = 0; coordinate < width; coordinate += 16)
         for (unsigned lane = 0; lane < 16; lane++)
             lanes[lane] = fmaf(palette[ids[coordinate + lane]], input[coordinate + lane], lanes[lane]);
+#endif
     for (unsigned lane = 0; lane < 8; lane++) combined[lane] = lanes[lane] + lanes[lane + 8];
     float sum0 = combined[0] + combined[4], sum1 = combined[1] + combined[5];
     float sum2 = combined[2] + combined[6], sum3 = combined[3] + combined[7];

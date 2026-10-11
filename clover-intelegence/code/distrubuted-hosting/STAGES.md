@@ -249,18 +249,20 @@ would race on them. Worth about 3.0 to 3.6 ms on every layer.
 
 | layer | session start | now |
 |---|---|---|
-| KDA layer 2 | 139.585 ms/position | **~27.9** |
-| MLA layer 3 | 31.457 | **~27.7** |
+| KDA layer 2 | 139.585 ms/position | **22.013** |
+| MLA layer 3 | 31.457 | **17.296** |
 
-Across 68 KDA and 24 MLA pods that is roughly 10,247 ms/position to 2,562, close to 4x,
-every step bit-identical and verified against the reference. KDA and MLA are now
-indistinguishable at 64 positions.
+Across 68 KDA and 24 MLA pods that is roughly 10,247 ms/position to 1,912, about 5.4x,
+every step bit-identical and verified against the reference.
 
-A KDA layer breaks down as: sixteen routed experts 28.7%, qkv 26.0%, attention output
-17.7%, shared expert 13.0%, state update 0.7%, routing 1.9%. No serial hot spots remain.
-The one thing left unexplained is that the trunk palette-gather path runs about 37
-GMAC/s where the expert 4-bit AVX2 path runs about 70 on the same machine, and qkv, the
-shared expert and attention output are all on the slow path.
+The trunk projection kernel, `transformer_project_row`, was one scalar multiply-add and
+one palette lookup per element. Measured against the expert kernel on one harness with
+the MAC count held equal, the scalar form ran 25 to 30 GMAC/s, a gather form 45 to 51,
+and the expert 4-bit AVX2 path 71 to 89 — and the ratio held even when the data fitted
+in L2, so it was instruction mix and not bandwidth. The gather form is bit-identical and
+is now in every pod, worth 2.2x on contiguous projections and 1.43x on qkv, whose rows
+carry a 20-byte prefix. The remaining gap to the expert kernel is the format: one byte
+per weight against four bits, which would mean re-quantising the trunk.
 
 Expert arrival is not the bottleneck at this size. Reading the 16 chosen experts of one
 layer is 281 MB, and it lands in 33 ms:
