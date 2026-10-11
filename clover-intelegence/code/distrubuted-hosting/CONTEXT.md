@@ -6,6 +6,90 @@ it does and does not establish.
 
 ---
 
+## Cycle: what each stage does to the vector (2026-10-11)
+
+### Intended outcome
+
+Everything so far has been about time. This is about what the numbers become. The
+machinery already existed: `clover_vectors_*` records the layer input as stage 0, the
+residual after every one of the 120 stages, the snapshots at 1000+slot, the fold
+weights at 2000+stage, the router weights at 3000 and the fold's output at 4000+stage.
+`vector-walk.c` reads that and reports norm, cosine against the layer input, and the
+largest coordinate change since the previous residual.
+
+### The first run was worthless and I nearly reported it
+
+I drove it with `pod-context`, which feeds **random vectors**. On random input the
+router weights came out almost flat, 0.0708 down to 0.0585, and the attention
+contributed 0.6% of the residual's norm. Both are properties of random input, not of
+the model. Re-run through the reference harness on the real france prompt, with the
+layer VERIFIED so it is the genuine computation, every one of those numbers changes.
+
+### A KDA layer, real activations
+
+| pos | input | after attention | output | cos(in,out) | attention cos | fold [snapshot, residual] |
+|---|---|---|---|---|---|---|
+| 0 | 2.3468 | 4.4235 | 8.5678 | 0.7148 | 0.586 | [0.272, 0.728] |
+| 1 | 1.4939 | 2.2226 | 2.9037 | 0.7006 | 0.280 | [0.415, 0.585] |
+| 2 | 1.7410 | 2.6705 | 3.5449 | 0.7058 | 0.283 | [0.229, 0.771] |
+| 3 | 1.6440 | 2.4819 | 3.2713 | 0.6973 | 0.286 | [0.391, 0.609] |
+| 4 | 1.7352 | 2.6456 | 3.3964 | 0.7066 | 0.288 | [0.233, 0.767] |
+
+The layer turns its input through a near-constant angle, cosine 0.697 to 0.715, about
+45 degrees, and roughly doubles the norm. **Position 0 is the outlier in every column**
+— 3.65x norm growth, attention cosine 0.586 instead of 0.28, and the flattest routing —
+which is what an empty recurrent state should look like.
+
+The router genuinely discriminates on real activations, 3.3x to 8.7x between its
+strongest and weakest of sixteen, against 1.2x on random input. The fold gives the
+snapshot 23 to 42%, so the second channel is carrying real weight, not decoration.
+
+**103 of the 120 stages never touch the residual.** The eighty expert stages accumulate
+into `mixture` and only reach the residual at stage 116, so the residual trace has
+about twelve transformation points in it, not 120.
+
+### An MLA layer, same prompt
+
+| | KDA layer 2 | MLA layer 3 |
+|---|---|---|
+| attention output cos(input) | +0.28 | **-0.10 to -0.16** |
+| after attention | 0.82 to 0.88 | 0.91 to 0.93 |
+| fold weight on the snapshot | 23 to 42% | **6 to 14%** |
+| output cos(input) | 0.70 | 0.69 to 0.77 |
+| norm growth | about 2.0x | about 1.2x |
+
+MLA's attention output points slightly *against* its input where KDA's points with it,
+and MLA's fold leans much harder on the residual. The two are doing different jobs, not
+the same job at different speeds.
+
+### A cross-check I did not plan
+
+Layer 3's input norms at positions 1, 2 and 4 are 2.9037, 3.5449 and 3.3964. Layer 2's
+*output* norms at the same positions are 2.9037, 3.5449 and 3.3964. Two dumps taken in
+separate runs agree exactly, which is the chain verifying itself.
+
+### Two artefacts, explained rather than reported
+
+Position 0 appears twice in a layer-2 dump. `test-reference` re-runs position 0 after a
+`reset_sequence` for layers 2, 3, 12 and 92 to check reset works, so the duplicate is
+the test, not the model.
+
+The snapshot records are written after the while loop, and stage 120 has already done
+`sequence->positions++`, so **a snapshot produced while processing position p is
+labelled p+1**. Anyone reading a dump by position would misattribute it.
+
+Also worth noting while in there: `CLOVER_VECTORS_KEEP=weights` keeps 2000..2999 and
+4000..4999 but the router weights are written at exactly 3000, so that filter drops
+them. The comment above it describes having been caught by this once already.
+
+### What this does not establish
+
+One prompt, five positions, two layers of ninety-three. The regularities are striking
+but they are from a single short prompt, and nothing here says they hold at depth or on
+other text.
+
+---
+
 ## Cycle: the pieces I had skipped (2026-10-11)
 
 ### What prompted it
