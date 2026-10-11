@@ -6,6 +6,89 @@ it does and does not establish.
 
 ---
 
+## Cycle: why layer 46 fails the reference (2026-10-11)
+
+### Intended outcome
+
+Understand the layer 46 route mismatch before working around it. It was suggested the
+failure might be informative rather than merely broken. It was.
+
+### What the System showed
+
+The harness checks each layer independently against the reference's own input for that
+layer, so nothing accumulates: layer 46's pod simply disagrees with the reference about
+which sixteen experts to route to, from identical input.
+
+The cause is in the pod, in plain sight:
+
+```c
+/* Defaults stay at layer 46 with both folds, the configuration measured good. */
+if (!layers || !*layers) layers = "46";
+stages = stages && *stages ? stages : "3,21";
+on = !(off && *off && *off != '0');
+```
+
+`transformer_hardmax` defaults its owner list to the literal string `"46"`, both folds,
+on unless `CLOVER_SOFTMAX` is set. Layer 46 alone replaces the fold's softmax blend with
+winner-takes-all at stages 3 and 21. The aggregate changes, so `postnorm` changes, so
+the router selects different experts. The harness runs `env -i`, so the experiment is
+always on. That is why exactly one layer fails, and why it is that one.
+
+Tested rather than assumed:
+
+| run | result |
+|---|---|
+| layer 46, default | VERIFIED 0, aborts on the route assertion |
+| layer 46, `CLOVER_SOFTMAX=1` | **VERIFIED 1** |
+| all layers, `CLOVER_SOFTMAX=1` | **VERIFIED 91, last 92** |
+
+So there is no regression anywhere. The whole campaign passes once the experiment is
+off, which also means the head-major port is verified across all 91 layers, not the 24
+MLA layers alone.
+
+**What the default buys.** Layer 46 through `pod-context.c`, 256 positions, experts
+pinned, four runs each:
+
+| arm | runs, ms/position | mean |
+|---|---|---|
+| hardmax | 131.788, 132.162, 132.429, 132.478 | 132.21 |
+| softmax | 133.140, 135.513, 132.145, 136.094 | 134.22 |
+
+Checksums are exactly reproducible within each arm and differ between them
+(-2523.027578 against -4549.359472), so the output difference is real and
+deterministic. The time difference is not solidly real: softmax's best run, 132.145, is
+below hardmax's mean. Hardmax is tight and softmax is noisy. At most about 1.5%, on one
+layer of 93, so on the order of 0.02% of model time.
+
+### What this is really about
+
+The cost is not the 1.5%. It is that the full campaign has been unrunnable, so no other
+regression across 91 layers could have been detected either. The gate was off and
+nothing said so. That it now passes cleanly is good news bought cheaply.
+
+The prior work behind the default is sound on its own terms: `scripts/fold-cosine.sh`
+derived owner lists from cos(aggregate, residual), and `run-hardmax-cos.sh` compared
+generated text. "Measured good" meant the text did not change on the prompts tried. It
+did not mean the numerical reference still matched, and those are different claims.
+
+### Recommendation, not a change made
+
+Make hardmax opt-in: default the owner list to empty so `CLOVER_HARDMAX_LAYERS=46`
+enables it explicitly. A default should be the configuration that can be verified; an
+experiment should have to be asked for. I have not changed it, because it alters shipped
+model output and that is a Direction decision.
+
+### What is still unknown
+
+- Whether hardmax at layer 46 changes generated text on prompts beyond those already
+  tried. The checksum says the residual differs materially; only text comparison over a
+  real prompt set answers quality, and that needs the fleet running.
+- Why layer 46 costs 132 ms/position where layer 3 costs 31. Four times, and layer 46 is
+  KDA carrying four input snapshots against layer 3's one. Not investigated, and it
+  bears on where optimisation effort belongs, since 68 of 92 pods are KDA.
+
+---
+
 ## Cycle: join the kernel number to a real layer, then port it (2026-10-11)
 
 ### Intended outcome
