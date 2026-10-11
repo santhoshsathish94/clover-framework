@@ -214,6 +214,28 @@ through `transformer_project` — KDA's Q, K and V weights are interleaved per r
 pragma it is 4.19x faster, bit-identical, and KDA sits level with MLA. 68 of 92 pods are
 KDA, so across the layer stack that is roughly 3.4x.
 
+### Why three layers in four are KDA
+
+A KDA layer's whole per-sequence state is fixed: 6.29 MB of `recurrent` plus 442 KB of
+convolution `history`, whatever the context. An MLA layer keeps 98,560 bytes *per
+position*. They cross at about 68 positions, and after that only MLA grows.
+
+| positions | KDA layer 2 | MLA layer 3 |
+|---|---|---|
+| 64 | 32.612 ms/position | 31.048 |
+| 256 | 32.246 | 31.275 |
+| 1,024 | 32.302 | 32.250 |
+| 4,096 | **32.313** | **35.262** |
+
+KDA varies 1.1% across a 64-fold change in context and shows no trend; MLA rises and the
+rise accelerates. **KDA is O(1) per token in time and memory, MLA is O(N) in both**, and
+they cross near a thousand positions.
+
+That is the point of the 3:1 split. At 1M positions the 24 MLA layers would hold 2.48 TB
+of cache and the 68 KDA layers 458 MB — the KDA layers are 0.02% of it. The entire
+long-context problem lives in the MLA layers, which is also why the head-major relayout
+matters there and only there.
+
 Expert arrival is not the bottleneck at this size. Reading the 16 chosen experts of one
 layer is 281 MB, and it lands in 33 ms:
 

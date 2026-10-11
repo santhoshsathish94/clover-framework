@@ -6,6 +6,86 @@ it does and does not establish.
 
 ---
 
+## Cycle: what KDA is for (2026-10-11)
+
+### Intended outcome
+
+Observe KDA rather than time it. I had been treating it as "the slow kind of layer",
+which is backwards.
+
+### What the System showed
+
+A KDA layer's entire per-sequence state, read from the struct:
+
+```c
+float history[3][TRANSFORMER_ROWS][3];                                  /*   442 KB */
+float recurrent[TRANSFORMER_HEADS][TRANSFORMER_HEAD][TRANSFORMER_HEAD]; /*  6.29 MB */
+```
+
+**6.73 MB, and it does not depend on the position count.** An MLA layer instead keeps
+98,560 bytes *per position*. The two cross at about 68 positions, and after that MLA
+only grows.
+
+The time behaves the same way. Both layers, experts pinned, same instrument:
+
+| positions | KDA layer 2 | MLA layer 3 |
+|---|---|---|
+| 64 | 32.612 ms/position | 31.048 |
+| 256 | 32.246 | 31.275 |
+| 1,024 | 32.302 | 32.250 |
+| 4,096 | **32.313** | **35.262** |
+
+KDA varies 1.1% across a 64-fold change in context and shows no trend. MLA rises and
+the rise accelerates, because each position attends over every earlier one. They cross
+near 1,024.
+
+### Why the model is built this way
+
+KDA is O(1) per token in both time and memory; MLA is O(N) in both. Every fourth layer
+is MLA and the other three are KDA, so three quarters of the depth costs the same at a
+million tokens as at sixty-four. At 1M positions that is the difference between
+
+- 24 MLA layers x 103.3 GB = **2.48 TB** of cache, and
+- 68 KDA layers x 6.73 MB = **458 MB**.
+
+The KDA layers contribute 0.02% of the long-context memory. The whole long-context
+problem lives in the 24 MLA layers.
+
+### What this says about today's work
+
+Both changes were right, for different regimes, and I did not understand that when I
+made them.
+
+- Head-major K/V, 23.8x on MLA attention at 1M, touches only the 24 layers whose cost
+  grows with context. At long context those layers are nearly all of the time, so it is
+  the right target there and nowhere else.
+- The qkv pragma, 4.19x on KDA, touches 68 layers whose cost is flat. It is the right
+  target at every context length, and it was worth more overall.
+
+I spent most of the day on the MLA layers believing they were the expensive ones. They
+are only expensive once the context is long, which is exactly the case the KDA layers
+exist to avoid.
+
+### Where a layer's time goes now
+
+Per-stage, layer 46, 64 positions, after the fix: qkv 7.2 ms, the sixteen routed experts
+7.5, attention output 4.9, routing 4.4, shared expert 4.4, state update 1.8. No single
+dominator left; the layer is roughly balanced.
+
+One thing stands out for later. The routed experts run their 528M MACs at about 70
+GMAC/s on the 4-bit AVX2 path, while the trunk projections run at about 37 GMAC/s on the
+palette-gather path. Same machine, half the rate. Not investigated.
+
+### What is still unknown
+
+- Whether the KDA/MLA crossover near 1,024 holds for the whole model rather than these
+  two layers.
+- Why the palette-gather trunk path is half the rate of the expert path.
+- `transformer_update_attention` is still serial, worth about 1.7 ms/position in
+  isolation, now 5.6% of a KDA layer rather than a rounding error.
+
+---
+
 ## Cycle: why a KDA layer cost four times an MLA layer (2026-10-11)
 
 ### Intended outcome
