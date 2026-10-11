@@ -229,6 +229,36 @@ int server_output_project(ServerOutput *output,const float vector[SERVER_TABLE_W
     if(!output||!vector||!token||!server_numeric_environment())return 0;
     for(unsigned coordinate=0;coordinate<SERVER_TABLE_WIDTH;coordinate++)if(!isfinite(vector[coordinate]))return 0;
     float maximum=0.0f;uint32_t selected=0;
+    /* Rows are independent and the tie rule, highest score then lowest id among equals,
+       is associative, so the winner cannot depend on how the rows are split. Only the
+       direct mapping may be shared: table_load caches one block at a time. Without
+       -fopenmp the pragmas vanish and this still runs correctly, just on one core. */
+    if(output->table->direct){
+        int bad=0,have=0;
+#pragma omp parallel
+        {
+            int found=0,broke=0;float best=0.0f;uint32_t chosen=0;
+#pragma omp for schedule(static) nowait
+            for(unsigned block=0;block<SERVER_TABLE_BLOCKS;block++){
+                const unsigned char *rows=output->table->direct+(size_t)block*CLIENT_RAW_BYTES;
+                for(unsigned local=0;local<16;local++){
+                    unsigned id=block*16+local;
+                    float score=server_head_row(rows+(size_t)local*SERVER_TABLE_WIDTH*2,vector);
+                    if(!isfinite(score)){broke=1;continue;}
+                    if(logits)logits[id]=score;
+                    if(!found||score>best||(score==best&&id<chosen)){best=score;chosen=id;found=1;}
+                }
+            }
+#pragma omp critical
+            {
+                if(broke)bad=1;
+                if(found&&(!have||best>maximum||(best==maximum&&chosen<selected))){
+                    maximum=best;selected=chosen;have=1;}
+            }
+        }
+        if(bad||!have)return 0;
+        *token=selected;return 1;
+    }
     for(unsigned block=0;block<SERVER_TABLE_BLOCKS;block++){
         const unsigned char *rows=table_block(output->table,block);
         if(!rows)return 0;
