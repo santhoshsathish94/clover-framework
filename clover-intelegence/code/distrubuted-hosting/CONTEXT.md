@@ -6,6 +6,75 @@ it does and does not establish.
 
 ---
 
+## Cycle: the pieces I had skipped (2026-10-11)
+
+### What prompted it
+
+I had been reporting the chain as though it were finished. The human counted it out:
+input to tokens, embedding, layer 0, 92 layers, normalisation, token to output. I had
+fixed layer 0, the 92 layers and the head, and had **not looked at** the input side, the
+final normalisation, or the detokenise. That was a fair catch; "nothing conspicuously
+out of line any more" was a claim about the parts I happened to have measured.
+
+### The three missing pieces, measured
+
+**Input embedding.** `server_input` reads one 14 KB row through `table_block`, which
+without a direct mapping would decompress and SHA-256 verify a 229 KB block per token.
+The direct mapping is present. 148.976 us scattered, 4.080 us warm, per prompt token.
+Against a 1,988 ms token that is nothing.
+
+**Final normalisation.** `tail-cost.c` reads transformer-93's own accumulated counters
+rather than subtracting one harness from another:
+
+| | ms/token | share |
+|---|---|---|
+| whole tail | 50.440 | |
+| normalisation and fold | **0.149** | 0.3% |
+| head and detokenise | 50.290 | 99.7% |
+| deliver | 0.000 | 0.0% |
+
+The fold over nine sources of 7,168 floats is about 64k multiply-accumulates. It was
+never going to be large, and it is not.
+
+**Detokenise.** Inside the head counter, and since the head alone measures 50.0 ms it is
+about 0.3 ms. `id_to_word` is a direct array index.
+
+**Text to token ids.** `word_to_id` is one open-addressed probe into a 524,288-bucket
+table plus a memcmp. There is no merge loop, and the pipeline is driven by token ids
+rather than raw text, so it runs at most once per prompt word. **This one is read, not
+timed**, and I am marking it as such rather than quoting a number I did not measure.
+
+### The chain, end to end
+
+Per generated token, everything on this box with experts pinned:
+
+| piece | cost | state |
+|---|---|---|
+| text to token ids | one hash probe per word | read, not timed |
+| token id to embedding | 0.149 ms scattered, 0.004 warm | measured, negligible |
+| layer 0 | 26.1 ms | fixed, was 427 |
+| layers 1 to 92 | 1,912 ms | fixed |
+| final normalisation and fold | 0.149 ms | measured, negligible |
+| vocabulary head | 50.0 ms | fixed, was 231 |
+| detokenise | ~0.3 ms | measured, negligible |
+| deliver | 0.000 ms | measured |
+| **total** | **~1,988 ms** | was ~10,905 |
+
+The edge instrument confirms the two edges independently through the production shared
+objects: server 26.17 ms/position, tail 52.36 ms/token.
+
+So every piece is now accounted for. Three were worth fixing; the other four are small
+enough that the measurement is the whole result.
+
+### Worth keeping
+
+I reported a chain as finished while three of its pieces had never been looked at. The
+parts I had measured were genuinely done, which is exactly what made the claim easy to
+make. Count the pieces from the architecture, not from the list of things already
+touched.
+
+---
+
 ## Cycle: the server, both ends of it (2026-10-11)
 
 ### Layer 0, fixed

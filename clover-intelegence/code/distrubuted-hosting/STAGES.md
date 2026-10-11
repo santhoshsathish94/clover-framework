@@ -196,7 +196,23 @@ the gather code paths:
 | layer 0 | **26.1** |
 
 Per generated token the whole chain is about 1,988 ms, against 10,905 at the start of
-this work: 68 KDA pods 1,497, 24 MLA pods 415, layer 0 26, vocabulary head 50.
+this work:
+
+| piece | cost | state |
+|---|---|---|
+| text to token ids | one hash probe per word | read, not timed |
+| token id to embedding | 0.149 ms scattered, 0.004 warm | measured, negligible |
+| layer 0 | 26.1 ms | fixed, was 427 |
+| layers 1 to 92 | 1,912 ms | fixed |
+| final normalisation and fold | 0.149 ms | measured, negligible |
+| vocabulary head | 50.0 ms | fixed, was 231 |
+| detokenise | ~0.3 ms | measured, negligible |
+| deliver | 0.000 ms | measured |
+
+Measured independently through the production shared objects by
+[tansformers/edge-cost.c](tansformers/edge-cost.c): server 26.17 ms/position, tail 52.36
+ms/token. The tail's internal split comes from its own counters via
+[tansformers/tail-cost.c](tansformers/tail-cost.c).
 
 Measured on k3 (Ryzen 9 7950X3D, 16 cores / 32 threads, 124 GB, RAID1 of two KIOXIA
 CD8), layer 3, the 5-position `france` prompt, through the reference harness. All runs
