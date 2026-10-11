@@ -6,6 +6,79 @@ it does and does not establish.
 
 ---
 
+## Cycle: the server, both ends of it (2026-10-11)
+
+### What the server turned out to be
+
+Every optimisation this session landed on the 92 layer pods. The server owns layer 0
+and the edges, and the tail owns final normalisation and the vocabulary head, and
+**none of them were ever touched**. `server.c` has zero OpenMP regions against a pod's
+five, and `pipeline/build.sh` compiles the coordinator, the server stage and layer 93
+**without -fopenmp** while layers 1..92 get it. The pragmas would have been dropped
+silently even if they had been written.
+
+### The head, fixed
+
+`server_output_project` scored 163,840 rows one after another over 2.35 GB of table,
+scalar and double, once per generated token. Rows are independent and the tie rule,
+highest score then lowest id among equals, is associative, so the winner cannot depend
+on the split. Only the direct mapping is safe to share, because `table_load` caches one
+block at a time.
+
+| | seconds | GB/s |
+|---|---|---|
+| warm sequential | 0.231 | 10.15 |
+| warm parallel | **0.050** | 47.16 |
+
+4.6x, same token 70480, at the memory ceiling. An `OMP_NUM_THREADS=1` control on the
+same binary gives 0.219 s, so the gain is the parallelism and nothing else.
+
+`head-cost.c` reports 18.9x for this. That compares its first sequential call, which
+also faults in the 2.35 GB mapping, against a parallel arm running afterwards on warm
+pages. `head-steady.c` measures both warm. The instrument was not wrong about the
+mechanism, only about the size, and I would have repeated its number.
+
+Verified: NORMALIZATION_PASS on the tail reference, VERIFIED 91 of 91 on the layer
+campaign for both prompts. The server's own reference script needs a QKV path argument
+and was not run, so it is not part of this evidence.
+
+### Layer 0, observed
+
+`server-context.c` drives `server_process` the way `pod-context` drives a layer, so the
+two are comparable. Stable across sizes: 422.1, 427.2, 428.5 ms/position at 8, 16 and
+32 positions, no first-touch artefact.
+
+**A pod layer is 22.0 ms. Layer 0 is 427. Nineteen times.**
+
+Phases, from my own clocks in a diagnostic copy:
+
+| phase | ms/position | share | MACs | rate |
+|---|---|---|---|---|
+| dense | 282.9 | 62.0% | 727M | 2.57 GMAC/s |
+| qkv | 102.0 | 22.3% | 264M | 2.59 |
+| attention output | 68.1 | 14.9% | 176M | 2.58 |
+| update_attention | 1.5 | 0.3% | | |
+| decay | 1.3 | 0.3% | | |
+| normalize, aggregate, checks | ~0.6 | 0.1% | | |
+
+97.2% is three trunk projections, and **all three run at 2.58 GMAC/s**, which is the
+single-threaded scalar palette rate measured independently in `kernel-cost.c`. The pods
+run the identical kernel at about 48. Layer 0 has no experts at all; it is dense, so its
+1.17 GMACs are entirely trunk-style projection.
+
+The gap is not an algorithm. It is the four things already proven on the pods and never
+applied here: `-fopenmp` in the build, a pragma on `server_project`, a pragma on
+`server_qkv`, and the gather in `server_project_row`. On the pods those took the same
+kernel from 2.58 to about 48 GMAC/s, which would put layer 0 near 25 ms/position.
+
+### Not done
+
+Layer 0 itself is unchanged. The measurement says what it would be worth; applying it
+is the next cycle, and it needs the server's own reference gate working first, which
+currently needs an argument I have not supplied.
+
+---
+
 ## Cycle: can the trunk be four bits (2026-10-11)
 
 ### Intended outcome

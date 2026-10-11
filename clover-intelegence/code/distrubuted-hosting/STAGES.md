@@ -176,6 +176,28 @@ Stages 118 and 119 run only on the final token, which is exactly where
 
 ## Where the time actually goes
 
+The server and the tail were never part of the layer work. `pipeline/build.sh` compiled
+the coordinator, the server stage and layer 93 **without -fopenmp** while layers 1..92
+received it, and `server.c` still has no parallel regions at all.
+
+The vocabulary head is now parallel: `server_output_project` scores 163,840 rows over
+2.35 GB of table once per generated token, and goes from 0.231 to 0.050 s warm, 4.6x,
+at 47 GB/s with the same token. The build lines for the coordinator and the tail now
+carry `-fopenmp`.
+
+Layer 0 has not been changed, and it is the largest single cost left:
+
+| | ms/position |
+|---|---|
+| MLA pod layer | 17.3 |
+| KDA pod layer | 22.0 |
+| **layer 0, in the server** | **427** |
+
+Its phases are dense 62.0%, qkv 22.3%, attention output 14.9%, everything else under
+1%. All three run at 2.58 GMAC/s, the single-threaded scalar palette rate; the pods run
+the same kernel at about 48. Layer 0 is dense, with no experts, so all 1.17 GMACs are
+trunk projection.
+
 Measured on k3 (Ryzen 9 7950X3D, 16 cores / 32 threads, 124 GB, RAID1 of two KIOXIA
 CD8), layer 3, the 5-position `france` prompt, through the reference harness. All runs
 verified against the independent reference.
