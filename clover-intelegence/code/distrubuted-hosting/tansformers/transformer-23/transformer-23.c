@@ -606,18 +606,7 @@ static int transformer_mla(Transformer *transformer, TransformerSequence *sequen
 }
 #endif
 
-/* The winning source takes the whole weight instead of its softmax share.
-
-   A layer runs 108 stages and only two of them fold: stage 3 before attention
-   (record 37) and stage 21 before the MLP (record 38). CLOVER_HARDMAX_STAGES picks
-   one or both and CLOVER_HARDMAX_LAYERS picks the owners, but the safe set is not
-   the same at the two folds. Measured as cos(aggregate, residual), stage 3 clears
-   0.9 at sixteen owners and stage 21 at twenty-five, and they overlap only in part.
-   CLOVER_HARDMAX_LAYERS_3 and CLOVER_HARDMAX_LAYERS_21 override the owner list for
-   one fold, each falling back to CLOVER_HARDMAX_LAYERS. CLOVER_SOFTMAX=1 disables
-   all of it.
-
-   Defaults stay at layer 46 with both folds, the configuration measured good. */
+/* A comma list of numbers and low-high ranges, or "all". */
 static int transformer_listed(const char *list, int value)
 {
     if (!strcmp(list, "all")) return 1;
@@ -630,27 +619,6 @@ static int transformer_listed(const char *list, int value)
         list = *after == ',' ? after + 1 : after;
     }
     return 0;
-}
-
-static int transformer_hardmax(unsigned fold)
-{
-    static int decided, on, stage3, stage21, layer3, layer21;
-    if (!decided) {
-        const char *off = getenv("CLOVER_SOFTMAX");
-        const char *layers = getenv("CLOVER_HARDMAX_LAYERS");
-        const char *stages = getenv("CLOVER_HARDMAX_STAGES");
-        const char *at3 = getenv("CLOVER_HARDMAX_LAYERS_3");
-        const char *at21 = getenv("CLOVER_HARDMAX_LAYERS_21");
-        on = !(off && *off && *off != '0');
-        if (!layers || !*layers) layers = "46";
-        stages = stages && *stages ? stages : "3,21";
-        stage3 = transformer_listed(stages, 3);
-        stage21 = transformer_listed(stages, 21);
-        layer3 = transformer_listed(at3 && *at3 ? at3 : layers, TRANSFORMER_LAYER);
-        layer21 = transformer_listed(at21 && *at21 ? at21 : layers, TRANSFORMER_LAYER);
-        decided = 1;
-    }
-    return on && (fold == 37 ? (stage3 && layer3) : (stage21 && layer21));
 }
 
 /* Across five prompts the fold picked the residual in 146 of the 172 calls whose
@@ -727,11 +695,6 @@ static void transformer_aggregate(const Transformer *transformer, TransformerSeq
         total += (double)exponentials[source];
     }
     for (unsigned source = 0; source < count; source++) weights[source] = (float)((double)exponentials[source] / total);
-    if (transformer_hardmax(fold)) {
-        unsigned best = 0;
-        for (unsigned source = 1; source < count; source++) if (weights[source] > weights[best]) best = source;
-        for (unsigned source = 0; source < count; source++) weights[source] = source == best ? 1.0f : 0.0f;
-    }
     /* Kept only so the blend can be observed; nothing downstream reads these. */
     memcpy(sequence->fold_weights, weights, sizeof weights);
     sequence->fold_count = count;

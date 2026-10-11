@@ -81,6 +81,12 @@ Of the 92 pods, **24 are MLA** and 68 are KDA. Verified by counting
 plus layer 92. The two kinds differ only in stages 6..9; everything from stage 20 on is
 identical.
 
+Every pod folds with a softmax blend. The `transformer_hardmax` experiment, which made
+layer 46 alone hand the whole weight to its winning source, has been removed: it bought
+at most 1.5% on one layer of 93 and cost the ability to run the campaign at all. The
+full reference campaign now passes on defaults, **91 of 91 layers for both france and
+japan**.
+
 ### The 120 stages of a layer
 
 Local numbering 1..120 within the pod, from `transformer_step`.
@@ -248,19 +254,13 @@ question, and it needs the absorb matrices, which have not been read.
 
 - The server's 120 stages are reserved but not implemented as a stage machine; the entry
   path is ordinary function calls.
-- **The full campaign passes only with `CLOVER_SOFTMAX=1`.** `transformer_hardmax`
-  defaults its owner list to the string `"46"` with both folds enabled, so layer 46 alone
-  runs winner-takes-all instead of a softmax blend at stages 3 and 21. That changes its
-  aggregate, so `postnorm` changes, so the router picks different experts, so
-  `all` aborts at layer 46 on the route assertion. With `CLOVER_SOFTMAX=1`, layer 46
-  verifies and all 91 layers pass. Measured cost of the default on layer 46, 256
-  positions, four runs each: hardmax 132.21 ms/position mean against softmax 134.22, but
-  softmax's best run is 132.145, so the saving is at most about 1.5% and possibly none.
-  One layer of 93, so on the order of 0.02% of model time.
 - Timings above are layer 3 at 5 positions and at up to 4,096 positions through a real
   pod, plus the isolated attention kernel at up to 1M. No layer has run end to end at
   1M, because the expert cost per position makes that impractical on one box.
 - The 1M attention figures are a kernel in isolation, not a layer in the pipeline.
 - The pod measurements pin the experts and give the layer the whole machine. A pod under
   real traffic shares it.
+- Layer 46 costs about 132 ms/position where layer 3 costs 31. Layer 46 is KDA carrying
+  four input snapshots against layer 3's one, and cost appears to rise with depth as
+  snapshots accumulate. 68 of 92 pods are KDA. Not investigated.
 - The 3600 MT/s DIMM configuration against a 4800 rating has never been investigated.

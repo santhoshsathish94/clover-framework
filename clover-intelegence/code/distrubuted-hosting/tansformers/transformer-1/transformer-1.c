@@ -460,10 +460,7 @@ static void transformer_attention_output(const Transformer *transformer, Transfo
     transformer_project(transformer, 7, sequence->gate, sequence->residual);
 }
 
-/* Layer 1 folds two sources, not nine, but it answers to the same switches as
-   layers 2-92 or "the model" means two different things in one run. Record 37 is
-   the stage 3 fold, record 38 the stage 21 fold. The default list excludes layer 1,
-   which is what the measured-good distributed run actually did. */
+/* A comma list of numbers and low-high ranges, or "all". */
 static int transformer_listed(const char *list, int value)
 {
     if (!strcmp(list, "all")) return 1;
@@ -476,27 +473,6 @@ static int transformer_listed(const char *list, int value)
         list = *after == ',' ? after + 1 : after;
     }
     return 0;
-}
-
-static int transformer_hardmax(unsigned fold)
-{
-    static int decided, on, stage3, stage21, layer3, layer21;
-    if (!decided) {
-        const char *off = getenv("CLOVER_SOFTMAX");
-        const char *layers = getenv("CLOVER_HARDMAX_LAYERS");
-        const char *stages = getenv("CLOVER_HARDMAX_STAGES");
-        const char *at3 = getenv("CLOVER_HARDMAX_LAYERS_3");
-        const char *at21 = getenv("CLOVER_HARDMAX_LAYERS_21");
-        on = !(off && *off && *off != '0');
-        if (!layers || !*layers) layers = "46";
-        stages = stages && *stages ? stages : "3,21";
-        stage3 = transformer_listed(stages, 3);
-        stage21 = transformer_listed(stages, 21);
-        layer3 = transformer_listed(at3 && *at3 ? at3 : layers, TRANSFORMER_LAYER);
-        layer21 = transformer_listed(at21 && *at21 ? at21 : layers, TRANSFORMER_LAYER);
-        decided = 1;
-    }
-    return on && (fold == 37 ? (stage3 && layer3) : (stage21 && layer21));
 }
 
 static int transformer_fold_residual(unsigned fold)
@@ -556,11 +532,6 @@ static void transformer_aggregate(const Transformer *transformer, TransformerSeq
         total += (double)exponentials[source];
     }
     for (unsigned source = 0; source < 2; source++) weights[source] = (float)((double)exponentials[source] / total);
-    if (transformer_hardmax(fold)) {
-        unsigned best = weights[1] > weights[0] ? 1 : 0;
-        weights[0] = best == 0 ? 1.0f : 0.0f;
-        weights[1] = best == 1 ? 1.0f : 0.0f;
-    }
     for (unsigned coordinate = 0; coordinate < TRANSFORMER_WIDTH; coordinate++) {
         float value = 0.0f;
         for (unsigned source = 0; source < 2; source++) value = value + weights[source] * sources[source][coordinate];

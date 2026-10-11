@@ -6,6 +6,49 @@ it does and does not establish.
 
 ---
 
+## Cycle: remove hardmax (2026-10-11)
+
+### Direction
+
+From the human, after the investigation below: remove the hardmax machinery and make
+layer 46 behave like every other layer. Not needed for now.
+
+### What was done
+
+`port-drop-hardmax.mjs` removes the comment, the `transformer_hardmax` function and its
+call site in `transformer_aggregate`. `transformer_listed` stays, because
+`transformer_fold_residual` and `transformer_dropped` still use it.
+
+Scope was counted before acting rather than sampled: 93 pod sources, **92 contain
+`transformer_hardmax`, exactly 2 occurrences each**; nothing in `server.c` or
+`transformer-93`. Layer 1 needed its own pair of anchors — it is derived separately,
+folds two sources instead of nine, and carries different wording and a different call
+site. The script asserts each anchor is unique, that no reference survives, and that the
+helper is still present.
+
+92 files, 3,488 deletions. All 92 pods rebuilt with no failures.
+
+### What the System showed
+
+**The full campaign now passes on defaults: VERIFIED 91 of 91 for france and 91 of 91
+for japan, with no `CLOVER_SOFTMAX` set.** Before this change it aborted at layer 46.
+
+That gate had been unusable, which mattered more than the arithmetic: no regression
+anywhere in 91 layers could have been detected while it was off. It is now a gate again,
+and the head-major attention work is verified through it.
+
+Stale scratch copies on the host (`transformer-3.orig.c`, `transformer-3.hm.c`) were
+removed; git holds both.
+
+### What this gave up
+
+At most about 1.5% on layer 46, and possibly nothing — hardmax measured 132.21
+ms/position mean against softmax's 134.22, but softmax's best run was 132.145, below
+hardmax's mean. One layer of 93. The configuration and its measurements are preserved in
+the cycle below and in the commit, so it can be reconstructed if it is ever wanted.
+
+---
+
 ## Cycle: why layer 46 fails the reference (2026-10-11)
 
 ### Intended outcome
