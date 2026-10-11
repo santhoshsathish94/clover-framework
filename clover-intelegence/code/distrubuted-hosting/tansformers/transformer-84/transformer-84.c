@@ -443,6 +443,8 @@ static void transformer_l2_heads(float *values)
 
 static void transformer_qkv(const Transformer *transformer, TransformerSequence *sequence)
 {
+    /* Each row owns its output and its own convolution history, so rows are independent. */
+#pragma omp parallel for schedule(static)
     for (unsigned row = 0; row < TRANSFORMER_ROWS; row++)
         for (unsigned component = 0; component < 3; component++) {
             const unsigned char *record = transformer->qkv + TRANSFORMER_QKV_PREFIX +

@@ -195,6 +195,25 @@ serving 1 to 32 concurrent requests*, where four threads per request times sixte
 requests already saturates the machine. One layer alone and ninety-two layers sharing a
 box are different regimes, and the thread count belongs to the deployment shape.
 
+### KDA and MLA layers, 64 positions, experts pinned
+
+A KDA layer used to cost four times an MLA layer. Snapshot count, which is the obvious
+suspect, turns out to cost nothing measurable:
+
+| layer | kind | snapshots | before | after |
+|---|---|---|---|---|
+| 3 | MLA | 1 | 31.457 ms/position | 31.395 |
+| 43 | MLA | 4 | 31.472 | 31.667 |
+| 2 | KDA | 1 | 139.585 | **33.253** |
+| 46 | KDA | 4 | 139.518 | **33.348** |
+
+The whole difference was `transformer_qkv`, the one trunk projection that does not go
+through `transformer_project` — KDA's Q, K and V weights are interleaved per row with a
+20-byte prefix, so the loop was written out longhand and never got the pragma that
+`transformer_project` has. Per-stage timing put it at 81.4% of the layer. With the
+pragma it is 4.19x faster, bit-identical, and KDA sits level with MLA. 68 of 92 pods are
+KDA, so across the layer stack that is roughly 3.4x.
+
 Expert arrival is not the bottleneck at this size. Reading the 16 chosen experts of one
 layer is 281 MB, and it lands in 33 ms:
 
@@ -260,7 +279,7 @@ question, and it needs the absorb matrices, which have not been read.
 - The 1M attention figures are a kernel in isolation, not a layer in the pipeline.
 - The pod measurements pin the experts and give the layer the whole machine. A pod under
   real traffic shares it.
-- Layer 46 costs about 132 ms/position where layer 3 costs 31. Layer 46 is KDA carrying
-  four input snapshots against layer 3's one, and cost appears to rise with depth as
-  snapshots accumulate. 68 of 92 pods are KDA. Not investigated.
+- Layer 46 is now 33.3 ms/position against layer 3's 31.4. The remaining 5.7% is the KDA
+  path's genuine extra work; `transformer_update_attention` is still serial and worth
+  about 1.7 ms/position by isolated measurement, not yet applied in the layer.
 - The 3600 MT/s DIMM configuration against a 4800 rating has never been investigated.

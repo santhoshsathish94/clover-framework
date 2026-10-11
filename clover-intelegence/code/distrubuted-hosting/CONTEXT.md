@@ -6,6 +6,110 @@ it does and does not establish.
 
 ---
 
+## Cycle: why a KDA layer cost four times an MLA layer (2026-10-11)
+
+### Intended outcome
+
+Understand the gap rather than optimise around it. Instructed not to trust the existing
+instrumentation but to see it myself, which was the right call: the shipped tracer would
+have given the answer, but I would have been trusting its placement and its clock.
+
+### Three of my explanations were wrong
+
+I had written that layer 46 cost 132 ms/position against layer 3's 31 because it is
+"KDA carrying four input snapshots". That compares two layers differing in two things at
+once and attributes the result to one of them. A 2x2 across pods separates them:
+
+| | 1 snapshot | 4 snapshots |
+|---|---|---|
+| MLA | layer 3: 31.457 | layer 43: 31.472 |
+| KDA | layer 2: 139.585 | layer 46: 139.518 |
+
+**Snapshot count costs nothing measurable.** The whole 4.4x is KDA against MLA.
+
+Then, in order, measured with my own code:
+
+- **The recurrent state walk is not it.** `kda-state.c` replicates
+  `transformer_update_attention` exactly: 1.852 ms/position serial, 0.122 parallel,
+  checksums equal. Under 2% of the 108 ms gap. The missing pragma on its 96 heads is
+  real but small. (First attempt produced `-nan`, because the layer L2-normalises key
+  and query per head and my replica did not; a checksum of NaN compares equal to
+  nothing, so the instrument was fixed before its timing was believed.)
+- **The projection shapes are not it.** `proj-cost.c` measures the real record shapes:
+  KDA's three 12288x7168 at 3.701 ms each parallel, MLA's four at 2.35 ms total. An 8.8
+  ms difference.
+
+That left about 90% of the gap unexplained by anything I had reasoned about.
+
+### What it actually is
+
+A diagnostic copy of the layer with my own per-stage clocks, 64 positions, experts
+pinned:
+
+```
+STAGE_TOTAL 8.4382 s
+STAGE   6     6.869 s   81.4%
+```
+
+Stage 6 is 107.3 ms/position, which is the entire gap. Stage 6 for KDA is
+`transformer_qkv`, and it is the one trunk projection that does **not** go through
+`transformer_project`:
+
+```c
+static void transformer_qkv(...)
+{
+    for (unsigned row = 0; row < TRANSFORMER_ROWS; row++)
+        for (unsigned component = 0; component < 3; component++) {
+```
+
+No pragma. KDA's Q, K and V weights are interleaved per row with a 20-byte prefix
+holding the row scale and its convolution taps, so the loop could not call
+`transformer_project` and was written out longhand. `port-parallel-project.mjs` added
+the pragma to `transformer_project` and this loop was missed. 3 x 12288 row
+dot-products of width 7168, on one core, per position.
+
+MLA escapes it because `transformer_mla` uses `transformer_project`, which is parallel.
+
+### The fix and what it gave
+
+One pragma, `port-parallel-qkv.mjs`, 92 pods. Rows are independent: each writes its own
+`qkv[component][row]` and advances its own `history[component][row]`. Per-row arithmetic
+and order untouched.
+
+| layer | kind | before | after |
+|---|---|---|---|
+| 3 | MLA | 31.457 | 31.395 |
+| 43 | MLA | 31.472 | 31.667 |
+| 2 | KDA | 139.585 | **33.253** |
+| 46 | KDA | 139.518 | **33.348** |
+
+**4.19x on a KDA layer**, every checksum unchanged, and KDA now sits level with MLA.
+68 of the 92 pods are KDA, so across the layer stack that is roughly 10,242 ms/position
+to 3,020, about **3.4x**. Verified: VERIFIED 91 of 91 for france and 91 of 91 for japan,
+zero build failures.
+
+### Worth keeping
+
+Anchoring on the loop alone would have been wrong. `transformer-1` contains the same two
+loop lines a second time inside its qkv validation, which returns early and cannot be a
+parallel region. The port anchors on the function signature, which is unique in exactly
+92 pods and absent only from the tail. Counting before acting caught it.
+
+Everything I did earlier today was on the 24 MLA pods, which were never the expensive
+ones. The instruction to understand before optimising found more than the optimisation
+did.
+
+### What is still unknown
+
+- KDA remains 5.7% above MLA (33.3 against 31.5). The state update accounts for about
+  1.85 ms of that; the rest is unexamined.
+- `transformer_update_attention` is still serial, worth about 1.73 ms/position by its own
+  measurement. Not applied, because it was measured in isolation rather than in the layer.
+- Whether any other loop in the tree was missed the same way. Only `transformer_project`
+  and now `transformer_qkv` have been checked.
+
+---
+
 ## Cycle: remove hardmax (2026-10-11)
 
 ### Direction
