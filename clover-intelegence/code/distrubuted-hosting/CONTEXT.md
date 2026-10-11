@@ -6,6 +6,86 @@ it does and does not establish.
 
 ---
 
+## Cycle: the last serial loop (2026-10-11)
+
+### Intended outcome
+
+Observe `transformer_update_attention` before touching it, and before going anywhere
+near concurrency.
+
+### What the layer looked like first
+
+Clocked copy of the current source, KDA layer 46, 64 positions, experts pinned, 28.281
+ms/position:
+
+| stage | what | ms/position | share |
+|---|---|---|---|
+| 30-109 | sixteen routed experts | 8.11 | 28.7% |
+| 6 | qkv | 7.33 | 26.0% |
+| 9 | attention output | 4.99 | 17.7% |
+| 112/113/115 | shared expert | 3.67 | 13.0% |
+| **8** | **state update** | **1.66** | **5.9%** |
+| 24 | routing | 0.53 | 1.9% |
+
+Routing confirmed at 4.36 to 0.53 ms, 8.2x, from the previous cycle. Stage 8 was the
+only serial hot spot left: everything above it already runs parallel.
+
+### Observing it
+
+Every reference in the head loop is per-head and disjoint: `recurrent[head]`, an output
+block at `attention + head * 128`, and a `prediction` array local to the iteration.
+6.29 MB of state over 96 heads is 65.5 KB each, so six heads per thread sit in L2.
+Per-head arithmetic and order are untouched, so it must stay bit-identical.
+
+One thing worth noticing and not acting on: the two passes over the state could be
+fused, since pass one's write of the decayed value could be recomputed in pass two from
+the same operands, halving the 25.2 MB of traffic. But parallel the stage is already
+about 0.12 ms, so halving its traffic would save around 0.2% of the layer. Not worth the
+risk of touching the arithmetic.
+
+### Result, and a correction to my own instrument
+
+In the layer: stage 8 goes 0.1064 s to 0.0124 s over 64 positions, **8.6x**, 1.47
+ms/position, and the stage falls from 5.9% to 0.7%. Checksum unchanged.
+
+The standalone replica had measured 15.2x and implied about 5.5% of the layer. The real
+figures are 8.6x and nearer 4%. The replica ran the update repeatedly with the state hot
+and nothing else competing for cache; the layer streams 281 MB of experts between
+positions. **Isolation over-predicts, and the layer number is the one that counts.**
+
+Three runs each after the change: KDA 28.167, 27.392, 28.068; MLA 28.032, 27.629,
+27.425. MLA is unchanged, which it must be since the state update is KDA-only, and that
+is a useful check that nothing leaked. KDA and MLA are now indistinguishable at 64
+positions.
+
+VERIFIED 91 of 91 for france and japan, zero build failures.
+
+### Worth keeping
+
+The port skipped transformer-1 twice. First because that file carries CRLF and my
+anchor used LF. Then, after I "fixed" it by converting the anchor when the file contains
+CRLF, it skipped again: **transformer-1 has mixed endings**, CRLF in the file but LF
+around this particular function. The fix that works is to try both forms rather than
+decide from the file as a whole. I had diagnosed the first failure correctly and then
+generalised it wrongly.
+
+### Where the session ended
+
+At 64 positions, experts pinned: a KDA layer 139.585 to about 27.9 ms/position, roughly
+**5x**; an MLA layer 31.457 to about 27.7. Over 68 KDA and 24 MLA pods that is about
+10,247 ms/position to 2,562, close to **4x** on the layer stack, every step
+bit-identical and verified against the reference.
+
+### What is still unknown
+
+- The trunk palette-gather path runs about 37 GMAC/s where the expert 4-bit AVX2 path
+  runs about 70. Same machine, half the rate. That is now the largest unexplained thing
+  left, and qkv plus the shared expert plus stage 9 are all on the slow path.
+- Nothing has been measured under concurrency. Every number in this file is one layer
+  with the whole machine to itself and its experts pinned.
+
+---
+
 ## Cycle: survey the remaining serial loops, then the router (2026-10-11)
 
 ### Intended outcome

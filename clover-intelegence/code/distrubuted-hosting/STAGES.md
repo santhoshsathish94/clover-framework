@@ -249,11 +249,18 @@ would race on them. Worth about 3.0 to 3.6 ms on every layer.
 
 | layer | session start | now |
 |---|---|---|
-| KDA layer 2 | 139.585 ms/position | **29.020** |
-| MLA layer 3 | 31.457 | **28.020** |
+| KDA layer 2 | 139.585 ms/position | **~27.9** |
+| MLA layer 3 | 31.457 | **~27.7** |
 
-Across 68 KDA and 24 MLA pods that is roughly 10,247 ms/position to 2,646, about 3.9x,
-every step bit-identical and verified against the reference.
+Across 68 KDA and 24 MLA pods that is roughly 10,247 ms/position to 2,562, close to 4x,
+every step bit-identical and verified against the reference. KDA and MLA are now
+indistinguishable at 64 positions.
+
+A KDA layer breaks down as: sixteen routed experts 28.7%, qkv 26.0%, attention output
+17.7%, shared expert 13.0%, state update 0.7%, routing 1.9%. No serial hot spots remain.
+The one thing left unexplained is that the trunk palette-gather path runs about 37
+GMAC/s where the expert 4-bit AVX2 path runs about 70 on the same machine, and qkv, the
+shared expert and attention output are all on the slow path.
 
 Expert arrival is not the bottleneck at this size. Reading the 16 chosen experts of one
 layer is 281 MB, and it lands in 33 ms:

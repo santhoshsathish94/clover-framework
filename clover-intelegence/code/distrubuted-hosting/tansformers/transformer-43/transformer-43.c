@@ -470,6 +470,8 @@ static void transformer_decay(const Transformer *transformer, TransformerSequenc
 static void transformer_update_attention(TransformerSequence *sequence)
 {
     const float query_scale = 1.0f / sqrtf(128.0f);
+    /* Each head owns its slice of the recurrent state and its own output block. */
+#pragma omp parallel for schedule(static)
     for (unsigned head = 0; head < TRANSFORMER_HEADS; head++) {
         float prediction[TRANSFORMER_HEAD] = {0};
         float *output = sequence->attention + head * TRANSFORMER_HEAD;
