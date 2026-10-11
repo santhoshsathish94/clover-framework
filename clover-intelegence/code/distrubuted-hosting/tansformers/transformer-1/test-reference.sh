@@ -11,7 +11,7 @@ for binding in \
     'ff107fa98be44137d11745fdb2f18ee981f00dc38760bfc36967393d1ba9c740:japan/results.bin'; do
     printf '%s  %s\n' "${binding%%:*}" "$DATASET/root-1/observations/${binding#*:}" | sha256sum --check --status
 done
-gcc -std=c11 -O2 -ffp-contract=off -fno-fast-math -fopenmp test-reference.c -lm -o bin/test-reference
+gcc -std=c11 -O2 -ffp-contract=off -fno-fast-math -fopenmp -I../../common test-reference.c -lm -o bin/test-reference
 for prompt in france japan; do
     ids=1008,10484,318,15383,387
     if [[ "$prompt" == japan ]]; then ids=1008,10484,318,10417,387; fi

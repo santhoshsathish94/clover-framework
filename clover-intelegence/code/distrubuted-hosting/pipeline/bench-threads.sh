@@ -15,21 +15,21 @@ run_at() {
     (
         exec 9<>/tmp/n.in
         ulimit -l unlimited
-        export OMP_NUM_THREADS="$threads" CLOVER_LOCK_TRUNK=1 CLOVER_MEMORY_BUDGET_MB=1
+        export OMP_NUM_THREADS="$threads" CLOVER_LOCK_TRUNK=1 CLOVER_SLOTS=1
         if [ "$bind" = close ]; then export OMP_PROC_BIND=close OMP_PLACES=cores; else export OMP_PROC_BIND=false; fi
         cd "$CODE/pipeline" && exec ./bin/pipeline-serve "$CODE" serve </tmp/n.in >/tmp/n.out 2>/tmp/n.err
     ) &
     for _ in $(seq 1 300); do grep -q READY /tmp/n.out 2>/dev/null && break; sleep 1; done
     # First request warms the cache for this configuration and is discarded.
     printf '2 91019 25528\n' > /tmp/n.in
-    for _ in $(seq 1 900); do [ "$(grep -c '^REQUEST' /tmp/n.out)" -ge 1 ] && break; sleep 2; done
+    for _ in $(seq 1 900); do [ "$(grep -c '^SLOT' /tmp/n.out)" -ge 1 ] && break; sleep 2; done
     printf '2 91019 25528\n' > /tmp/n.in
-    for _ in $(seq 1 900); do [ "$(grep -c '^REQUEST' /tmp/n.out)" -ge 2 ] && break; sleep 2; done
+    for _ in $(seq 1 900); do [ "$(grep -c '^SLOT' /tmp/n.out)" -ge 2 ] && break; sleep 2; done
     local pid; pid=$(pgrep -f "bin/pipeline-serve" | head -1)
     {
         printf '%-18s warm=%s  cold=%s  peak_cpu=%s%%\n' "threads=$threads bind=$bind" \
-            "$(grep '^REQUEST' /tmp/n.out | sed -n 2p | awk '{print $4}')" \
-            "$(grep '^REQUEST' /tmp/n.out | sed -n 1p | awk '{print $4}')" \
+            "$(grep '^SLOT' /tmp/n.out | sed -n 2p | awk '{print $4}')" \
+            "$(grep '^SLOT' /tmp/n.out | sed -n 1p | awk '{print $4}')" \
             "$(ps -o %cpu= -p "$pid" 2>/dev/null | tr -d ' ')"
     } >> "$RESULT"
 }

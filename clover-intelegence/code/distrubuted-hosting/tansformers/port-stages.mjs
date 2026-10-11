@@ -47,15 +47,13 @@ for (let layer = 2; layer <= 92; layer++) {
     const HARDMAX = `/* The winning source takes the whole weight instead of its softmax share.
 
    A layer runs 108 stages and only two of them fold: stage 3 before attention
-   (record 37) and stage 21 before the MLP (record 38). CLOVER_HARDMAX_STAGES picks
-   one or both and CLOVER_HARDMAX_LAYERS picks the owners, but the safe set is not
-   the same at the two folds. Measured as cos(aggregate, residual), stage 3 clears
-   0.9 at sixteen owners and stage 21 at twenty-five, and they overlap only in part.
-   CLOVER_HARDMAX_LAYERS_3 and CLOVER_HARDMAX_LAYERS_21 override the owner list for
-   one fold, each falling back to CLOVER_HARDMAX_LAYERS. CLOVER_SOFTMAX=1 disables
-   all of it.
+   (record 37) and stage 21 before the MLP (record 38). Addressing a layer moves
+   both, which is why they were never told apart. CLOVER_HARDMAX_STAGES picks one
+   or both; CLOVER_HARDMAX_LAYERS picks the owners; CLOVER_SOFTMAX=1 disables it.
 
-   Defaults stay at layer 46 with both folds, the configuration measured good. */
+   Both default to the configuration that was actually measured good, layer 46 with
+   both folds. That default is an accident of a guard bug being preserved on purpose
+   until a sweep replaces it, not a design choice. */
 static int transformer_listed(const char *list, int value)
 {
     if (!strcmp(list, "all")) return 1;
@@ -72,51 +70,13 @@ static int transformer_listed(const char *list, int value)
 
 static int transformer_hardmax(unsigned fold)
 {
-    static int decided, on, stage3, stage21, layer3, layer21;
+    static int decided, layer_ok, stage3, stage21;
     if (!decided) {
         const char *off = getenv("CLOVER_SOFTMAX");
         const char *layers = getenv("CLOVER_HARDMAX_LAYERS");
         const char *stages = getenv("CLOVER_HARDMAX_STAGES");
-        const char *at3 = getenv("CLOVER_HARDMAX_LAYERS_3");
-        const char *at21 = getenv("CLOVER_HARDMAX_LAYERS_21");
-        on = !(off && *off && *off != '0');
-        if (!layers || !*layers) layers = "46";
-        stages = stages && *stages ? stages : "3,21";
-        stage3 = transformer_listed(stages, 3);
-        stage21 = transformer_listed(stages, 21);
-        layer3 = transformer_listed(at3 && *at3 ? at3 : layers, TRANSFORMER_LAYER);
-        layer21 = transformer_listed(at21 && *at21 ? at21 : layers, TRANSFORMER_LAYER);
-        decided = 1;
-    }
-    return on && (fold == 37 ? (stage3 && layer3) : (stage21 && layer21));
-}
-
-static void transformer_aggregate(`;
-    /* Both blocks are stripped and reinserted every run, never guarded on "is it
-       already there". A guard keyed on the function signature skips every layer
-       when only the body changes, and reinserting one block without the other puts
-       transformer_listed after the function that calls it. */
-    const STRIP_HARDMAX = /\/\* The winning source takes the whole weight[\s\S]*?static int transformer_hardmax\([^)]*\)\n\{[\s\S]*?\n\}\n\n/;
-    const STRIP_FOLD = /\/\* Across five prompts the fold picked the residual[\s\S]*?static int transformer_fold_residual\([^)]*\)\n\{[\s\S]*?\n\}\n\n/;
-    const FOLD = `/* Across five prompts the fold picked the residual in 146 of the 172 calls whose
-   winner never moved, and when the residual wins at weight 1 the whole aggregate
-   step is a copy. Forcing that copy is free only where the fold was already
-   producing the residual. Measured as cos(aggregate, residual) per owner, that is
-   above 0.99 at stage 3 for owners 3 and 6-12, but at stage 21 only for 9, 10 and
-   12, so the two folds have to be addressed separately. Owner 13 stage 3 comes out
-   at 0.0001, near perpendicular, which is where this would do the most damage.
-   CLOVER_FOLD=residual still means everywhere, and destroyed the output when it
-   was tried. */
-static int transformer_fold_residual(unsigned fold)
-{
-    static int decided, layer_ok, stage3, stage21;
-    if (!decided) {
-        const char *setting = getenv("CLOVER_FOLD");
-        const char *layers = getenv("CLOVER_FOLD_LAYERS");
-        const char *stages = getenv("CLOVER_FOLD_STAGES");
-        if (!layers || !*layers)
-            layers = setting && !strcmp(setting, "residual") ? "all" : "";
-        layer_ok = *layers && transformer_listed(layers, TRANSFORMER_LAYER);
+        int on = !(off && *off && *off != '0');
+        layer_ok = on && transformer_listed(layers && *layers ? layers : "46", TRANSFORMER_LAYER);
         stages = stages && *stages ? stages : "3,21";
         stage3 = transformer_listed(stages, 3);
         stage21 = transformer_listed(stages, 21);
@@ -125,45 +85,44 @@ static int transformer_fold_residual(unsigned fold)
     return layer_ok && (fold == 37 ? stage3 : stage21);
 }
 
-/* A slot costs 22.0 MB of memcpy per token to carry and cannot be rebuilt from
-   anything the layer holds: fitting it from the other snapshots and the residual
-   leaves 0.745 relative error at best. So it is kept only if some fold reads it.
-   CLOVER_DROP_SLOTS removes slots from the fold's sources to find out which. */
-static int transformer_dropped(unsigned slot)
+static void transformer_aggregate(`;
+    if (!source.includes('transformer_hardmax(unsigned fold)'))
+        source = source.replace(
+            /\/\* The winning source takes the whole weight[\s\S]*?static int transformer_hardmax\([^)]*\)\n\{[\s\S]*?\n\}\n\n/, '');
+    if (!source.includes('static int transformer_hardmax(unsigned fold)'))
+        source = source.replace('static void transformer_aggregate(', HARDMAX);
+    /* Each switch gets its own guard, keyed on its own name. Sharing a guard means a
+       newly added switch is silently skipped in every layer that already carried the
+       older one, and the layer then fails to compile. */
+    const FOLD = `/* Across five prompts the fold picked the residual in 146 of the 172 calls whose
+   winner never moved, and when the residual wins at weight 1 the whole aggregate
+   step is a copy. CLOVER_FOLD=residual asserts that everywhere and skips the
+   scoring. That is a claim about the model, not an optimisation, so it has to be
+   judged by reading what comes out. */
+static int transformer_fold_residual(void)
 {
-    static int decided;
-    static const char *list;
+    static int decided, value;
     if (!decided) {
-        list = getenv("CLOVER_DROP_SLOTS");
-        if (!list) list = "";
+        const char *setting = getenv("CLOVER_FOLD");
+        value = setting && !strcmp(setting, "residual");
         decided = 1;
     }
-    return *list && transformer_listed(list, (int)slot);
+    return value;
 }
 
 static void transformer_aggregate(`;
-    source = source.replace(STRIP_HARDMAX, '');
-    source = source.replace(STRIP_FOLD, '');
-    source = source.replace('static void transformer_aggregate(', HARDMAX);
-    source = source.replace('static void transformer_aggregate(', FOLD);
-    /* The source list is rebuilt rather than patched, so count reflects the slots that
-       survived the drop instead of snapshot_count. */
-    source = source.replace(
-        /    const float \*sources\[9\];\n    unsigned count = [^\n]*\n    for \(unsigned source = 0; source < sequence->snapshot_count; source\+\+\)[\s\S]*?sources\[[^\]]*\] = sequence->residual;/,
-        '    const float *sources[9];' +
-        '\n    unsigned count = 0;' +
-        '\n    for (unsigned source = 0; source < sequence->snapshot_count; source++)' +
-        '\n        if (!transformer_dropped(source)) sources[count++] = sequence->snapshots[source];' +
-        '\n    sources[count++] = sequence->residual;');
-    const SOURCES = '    sources[count++] = sequence->residual;';
-    source = source.replace(/\n    if \(transformer_fold_residual\((?:fold)?\)\) \{\n[\s\S]*?\n    \}/g, '');
-    source = source.replace(SOURCES, SOURCES +
-        '\n    if (transformer_fold_residual(fold)) {' +
-        '\n        memcpy(sequence->aggregate, sequence->residual, TRANSFORMER_WIDTH * sizeof(float));' +
-        '\n        sequence->fold_weights[0] = 1.0f;' +
-        '\n        sequence->fold_count = 1;' +
-        '\n        return;' +
-        '\n    }');
+    if (!source.includes('transformer_fold_residual(void)'))
+        source = source.replace('static void transformer_aggregate(', FOLD);
+    const SOURCES = '    sources[sequence->snapshot_count] = sequence->residual;';
+    if (!source.includes('transformer_fold_residual()) {'))
+        source = source.replace(SOURCES, SOURCES +
+            '\n    if (transformer_fold_residual()) {' +
+            '\n        memcpy(sequence->aggregate, sequence->residual, TRANSFORMER_WIDTH * sizeof(float));' +
+            '\n        sequence->fold_weights[0] = 1.0f;' +
+            '\n        sequence->fold_count = 1;' +
+            '\n        (void)fold;' +
+            '\n        return;' +
+            '\n    }');
     const LOAD = '    sequence->snapshot_count = snapshot_count;';
     if (!source.includes('clover_freeze_apply'))
         source = source.replace(LOAD, LOAD + '\n    clover_freeze_apply(TRANSFORMER_LAYER, &sequence->snapshots[0][0], snapshot_count);');

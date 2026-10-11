@@ -39,15 +39,16 @@ static int transformer_route(const Transformer *transformer, TransformerSequence
 
 static int transformer_expert(Transformer *transformer, TransformerSequence *sequence, unsigned expert)
 {
-    if (!root_project(transformer->root, &sequence->root_scratch, expert, 0, sequence->latent, sequence->expert_gate) ||
-        !root_project(transformer->root, &sequence->root_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
+    if (!root_project(transformer->root, sequence->root_scratch, expert, 0, sequence->latent, sequence->expert_gate) ||
+        !root_project(transformer->root, sequence->root_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
     transformer_activation(sequence->expert_gate, sequence->expert_up, TRANSFORMER_EXPERT);
-    return root_project(transformer->root, &sequence->root_scratch, expert, 2, sequence->expert_gate, sequence->expert_down);
+    return root_project(transformer->root, sequence->root_scratch, expert, 2, sequence->expert_gate, sequence->expert_down);
 }
 
 static int transformer_mix_experts(Transformer *transformer, TransformerSequence *sequence)
 {
     memset(sequence->mixture, 0, sizeof sequence->mixture);
+    for (unsigned rank = 0; rank < 16; rank++) root_prefetch(transformer->root, sequence->selected[rank]);
     for (unsigned rank = 0; rank < 16; rank++) {
         if (!transformer_expert(transformer, sequence, sequence->selected[rank])) return 0;
         for (unsigned coordinate = 0; coordinate < TRANSFORMER_LATENT; coordinate++)

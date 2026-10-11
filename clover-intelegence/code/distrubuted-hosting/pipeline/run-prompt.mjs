@@ -5,7 +5,7 @@ const [ssh,host,prompt,mode='run']=process.argv.slice(2);
 assert(ssh&&host&&prompt);
 assert(/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(prompt),'This launcher validates ASCII letter/space prompts only, not a general tokenizer');
 assert(mode==='run'||mode==='check');
-const model=readFileSync(new URL('../client/bin/dataset/tiktoken.model',import.meta.url),'utf8');
+const model=readFileSync(new URL('../server/bin/dataset/tiktoken.model',import.meta.url),'utf8');
 const ranks=new Map(),tokens=new Map();
 for(const line of model.trim().split(/\r?\n/)){
   const [encoded,rank]=line.split(' ');const bytes=Buffer.from(encoded,'base64');
@@ -37,8 +37,8 @@ const oracle=`set -eu
 ulimit -c 0
 temporary=$(mktemp -d /tmp/clover-tokenizer-check.XXXXXXXX)
 trap 'rm -f "$temporary/tiktoken.model" "$temporary/tokenizer_config.json"; rmdir "$temporary"' EXIT
-ln -s ${root}/client/bin/dataset/tiktoken.model "$temporary/tiktoken.model"
-ln -s ${root}/client/bin/configs/tokenizer_config.json "$temporary/tokenizer_config.json"
+ln -s ${root}/server/bin/dataset/tiktoken.model "$temporary/tiktoken.model"
+ln -s ${root}/server/bin/configs/tokenizer_config.json "$temporary/tokenizer_config.json"
 ${root}/pipeline/bin/test-tokenizer "$temporary" ${quote(prompt)}`;
 const args=['-T','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=15'];
 const reference=spawnSync(ssh,[...args,host,oracle],{encoding:'utf8',maxBuffer:1024*1024});

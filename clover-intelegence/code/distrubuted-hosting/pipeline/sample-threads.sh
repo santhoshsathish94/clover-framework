@@ -10,7 +10,7 @@ mkfifo /tmp/p.in
 (
     exec 9<>/tmp/p.in
     ulimit -l unlimited
-    export OMP_NUM_THREADS="$THREADS" CLOVER_LOCK_TRUNK=1 CLOVER_MEMORY_BUDGET_MB=1
+    export OMP_NUM_THREADS="$THREADS" CLOVER_LOCK_TRUNK=1 CLOVER_SLOTS=1
     if [ "$BIND" = close ]; then export OMP_PROC_BIND=close OMP_PLACES=cores; else export OMP_PROC_BIND=false; fi
     cd "$CODE/pipeline" && exec ./bin/pipeline-serve "$CODE" serve </tmp/p.in >/tmp/p.out 2>/tmp/p.err
 ) &
@@ -26,8 +26,8 @@ snap > /tmp/p1; sleep 10; snap > /tmp/p2
     join /tmp/p1 /tmp/p2 | awk '{printf "  tid=%s %5.1f%%\n", $1, ($3-$2)/10}' | sort -k2 -rn
     join /tmp/p1 /tmp/p2 | awk '{s+=$3-$2} END {printf "  total %.0f%% of 3200%%\n", s/10}'
 } > /tmp/p.sample
-for _ in $(seq 1 900); do grep -q '^REQUEST' /tmp/p.out 2>/dev/null && break; sleep 2; done
+for _ in $(seq 1 900); do grep -q '^SLOT' /tmp/p.out 2>/dev/null && break; sleep 2; done
 cat /tmp/p.sample
-grep '^REQUEST' /tmp/p.out
+grep '^SLOT' /tmp/p.out
 pkill -f "bin/pipeline-serve" 2>/dev/null
 echo DONE > /tmp/p.flag

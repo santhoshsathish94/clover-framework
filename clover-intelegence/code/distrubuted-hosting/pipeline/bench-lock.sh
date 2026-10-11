@@ -42,7 +42,7 @@ run_config() {
     {
         echo "===== $label (CLOVER_LOCK_TRUNK=$lock) ====="
         echo "$open_line"
-        grep "^REQUEST" /tmp/clover.out
+        grep "^SLOT" /tmp/clover.out
         echo "batch wall: $(echo "$finished - $started" | bc) s"
         free -m | awk -v b="$swap_before" '/^Mem:/{printf "mem used=%sM cache=%sM avail=%sM\n",$3,$6,$7}
                                            /^Swap:/{printf "swap before=%sM after=%sM\n",b,$3}'

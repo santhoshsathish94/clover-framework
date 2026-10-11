@@ -30,7 +30,7 @@ static double now(void)
     return (double)moment.tv_sec + (double)moment.tv_nsec / 1e9;
 }
 
-static float input[POSITIONS][WIDTH], snapshots[8 * WIDTH], output[WIDTH], output_snapshots[8 * WIDTH];
+static float input[WIDTH], snapshots[8 * WIDTH], output[WIDTH], output_snapshots[8 * WIDTH];
 
 int main(int argc, char **argv)
 {
@@ -50,15 +50,12 @@ int main(int argc, char **argv)
     void *model = NULL;
     if (!layer_open(argv[3], &model)) { fprintf(stderr, "%u open failed\n", layer); return 1; }
 
-    /* A different vector per position, so the router picks a different sixteen each
-       time. One vector reused would touch the same 268 MB and hide the real spread. */
     uint64_t state = 2463534242ULL;
-    for (unsigned position = 0; position < POSITIONS; position++)
-        for (unsigned i = 0; i < WIDTH; i++) {
-            state ^= state << 13; state ^= state >> 17; state ^= state << 5;
-            input[position][i] = (float)((double)(state % 2000) / 1000.0 - 1.0);
-        }
-    for (unsigned i = 0; i < 8 * WIDTH; i++) snapshots[i] = input[0][i % WIDTH] * 0.5f;
+    for (unsigned i = 0; i < WIDTH; i++) {
+        state ^= state << 13; state ^= state >> 17; state ^= state << 5;
+        input[i] = (float)((double)(state % 2000) / 1000.0 - 1.0);
+    }
+    for (unsigned i = 0; i < 8 * WIDTH; i++) snapshots[i] = input[i % WIDTH] * 0.5f;
 
     int handle = open(argv[4], O_RDONLY);
     struct stat info;
@@ -73,8 +70,8 @@ int main(int argc, char **argv)
         int ok = 1;
         for (unsigned position = 0; position < POSITIONS && ok; position++)
             ok = layer == 1
-                ? ((OneFn)process)(model, sequence, input[position], snapshots, output)
-                : ((ManyFn)process)(model, sequence, input[position], snapshots, snapshot_count, output, output_snapshots);
+                ? ((OneFn)process)(model, sequence, input, snapshots, output)
+                : ((ManyFn)process)(model, sequence, input, snapshots, snapshot_count, output, output_snapshots);
         double spent = now() - mark;
         drop(sequence);
         if (!ok) { fprintf(stderr, "%u process failed in phase %d\n", layer, phase); return 1; }

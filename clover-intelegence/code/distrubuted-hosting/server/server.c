@@ -6,6 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 enum {
     SERVER_WIDTH = 7168, SERVER_ROWS = 12288, SERVER_HEAD = 128,
@@ -24,6 +29,9 @@ typedef struct {
     unsigned char *qkv;
     ServerRecord records[SERVER_RECORDS];
     float palette[256];
+    size_t qkv_bytes;
+    unsigned char *group_map[3];
+    size_t group_bytes[3];
 } Server;
 
 typedef struct {
@@ -105,6 +113,29 @@ static int server_read(FILE *file, uint64_t offset, size_t length, unsigned char
     return 1;
 }
 
+/* Weights are mapped, not copied, so the bytes live once in the page cache and stay
+   reclaimable. Copying them made 93 resident stages hold 54 GB of unreclaimable heap.
+   The trunk is read at every layer of every token, so it is also locked resident unless
+   CLOVER_LOCK_TRUNK=0; the experts stay unlocked and let the page cache keep the hot ones. */
+static const unsigned char *server_map(const char *path, size_t expected)
+{
+    int handle = open(path, O_RDONLY);
+    if (handle < 0) return NULL;
+    struct stat info;
+    const unsigned char *mapped = NULL;
+    if (!fstat(handle, &info) && (size_t)info.st_size == expected) {
+        void *address = mmap(NULL, expected, PROT_READ, MAP_SHARED, handle, 0);
+        if (address != MAP_FAILED) {
+            const char *lock = getenv("CLOVER_LOCK_TRUNK");
+            if ((!lock || strcmp(lock, "0")) && mlock(address, expected))
+                fprintf(stderr, "trunk not locked (%s): %s\n", path, strerror(errno));
+            mapped = address;
+        }
+    }
+    close(handle);
+    return mapped;
+}
+
 static int server_needs(unsigned id)
 {
     switch (id) {
@@ -119,9 +150,10 @@ static int server_load_qkv(Server *server, const char *path)
     const size_t bytes = SERVER_QKV_PREFIX + (size_t)SERVER_ROWS * 3 * SERVER_QKV_COMPONENT;
     FILE *file = server_open_sized(path, bytes);
     if (!file) return 0;
-    int loaded = server_read(file, 0, bytes, &server->qkv);
-    if (fclose(file)) loaded = 0;
-    if (!loaded) return 0;
+    if (fclose(file)) return 0;
+    server->qkv = (unsigned char *)server_map(path, bytes);
+    if (!server->qkv) return 0;
+    server->qkv_bytes = bytes;
     const unsigned char *data = server->qkv;
     const uint32_t fields[] = {1, 0, SERVER_WIDTH, SERVER_ROWS, SERVER_HEAD, 3, 4, 6, SERVER_QKV_COMPONENT, 0};
     if (memcmp(data, "K3QKV001", 8)) return 0;
@@ -189,15 +221,19 @@ static int server_load_trunk(Server *server, const char *directory)
         if (!server_path(path, sizeof path, directory, names[group])) return 0;
         file = server_open_sized(path, lengths[group]);
         if (!file) return 0;
+        if (fclose(file)) return 0;
+        file = NULL;
+        server->group_map[group] = (unsigned char *)server_map(path, (size_t)lengths[group]);
+        if (!server->group_map[group]) return 0;
+        server->group_bytes[group] = (size_t)lengths[group];
         for (unsigned id = 0; valid && id < SERVER_RECORDS; id++) {
             ServerRecord *record = &server->records[id];
             if (!server_needs(id) || record->group != group) continue;
-            if (!server_read(file, record->offset, (size_t)record->length, &record->data)) { valid = 0; break; }
+            record->data = server->group_map[group] + record->offset;
             unsigned floats = record->kind == 1 ? record->rows : record->count;
             for (unsigned coordinate = 0; coordinate < floats; coordinate++)
                 if (!isfinite(server_f32(record->data + (size_t)coordinate * 4))) { valid = 0; break; }
         }
-        if (fclose(file)) valid = 0;
         if (!valid) return 0;
     }
     return 1;
@@ -206,8 +242,9 @@ static int server_load_trunk(Server *server, const char *directory)
 void server_close(Server *server)
 {
     if (!server) return;
-    for (unsigned id = 0; id < SERVER_RECORDS; id++) free(server->records[id].data);
-    free(server->qkv);
+    for (unsigned group = 0; group < 3; group++)
+        if (server->group_map[group]) munmap(server->group_map[group], server->group_bytes[group]);
+    if (server->qkv) munmap(server->qkv, server->qkv_bytes);
     free(server);
 }
 
@@ -464,6 +501,10 @@ int server_process(const Server *server, ServerSequence *sequence,
     sequence->positions++;
     return 1;
 }
+
+/* The server owns the way in: the token, its embedding and trunk 0. The way out
+   belongs to layer 93, which holds final normalisation, the head and the address the
+   answer goes to, so neither end has to wait on the other. */
 
 #ifndef SERVER_NO_MAIN
 static int server_stream(Server *server)
