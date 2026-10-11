@@ -82,11 +82,65 @@ Also worth noting while in there: `CLOVER_VECTORS_KEEP=weights` keeps 2000..2999
 4000..4999 but the router weights are written at exactly 3000, so that filter drops
 them. The comment above it describes having been caught by this once already.
 
+### The tail, and the last transformation of all
+
+Neither the tail nor the server emits vector traces, so the pods' machinery could not be
+reused. The tail gate already builds the nine real sources at layer 92 and checks the
+engine against the reference, so `derive-tail-walk.py` adds observation to a copy of it
+and changes no assertion. `diff --strip-trailing-cr` confirms zero gate lines are missing
+from the walker, and it still prints `NORMALIZATION_PASS france 5 35840 21504`.
+
+| pos | residual | aggregate | after RMS | cos(agg,rms) | residual weight | newest snapshot |
+|---|---|---|---|---|---|---|
+| 0 | 88.48 | 72.37 | 62.48 | 0.952 | 0.824 | 0.113 |
+| 1 | 58.74 | 42.86 | 55.17 | 0.867 | 0.708 | 0.122 |
+| 2 | 75.96 | 67.29 | 49.52 | 0.819 | 0.861 | 0.081 |
+| 3 | 76.72 | 64.25 | 46.16 | 0.737 | 0.809 | 0.122 |
+| 4 | 79.35 | 66.28 | 47.74 | 0.761 | 0.810 | 0.141 |
+
+Two things I would have got wrong by reasoning. **The scorer down-weights the largest
+sources**: at position 0 snapshot 5 has norm 399.8 and receives weight 0.016, while the
+residual at norm 88.5 receives 0.824. Magnitude is not what it selects on. And **the RMS
+step rotates rather than rescales** \u2014 cosine between the aggregate and the result is 0.737
+to 0.952, never 1.0, because the learned per-coordinate gains turn the vector as well as
+shrinking it.
+
+Then the head, on the vectors the verified run actually produced:
+
+| pos | context so far | predicts | correct | top | second | margin | probability |
+|---|---|---|---|---|---|---|---|
+| 0 | `The` | `' '` | \u2014 | 8.62 | 8.28 | 0.34 | 1.4% |
+| 1 | `The capital` | `' of'` | yes | 15.99 | 15.03 | 0.96 | 19.7% |
+| 2 | `The capital of` | `' the'` | plausible | 16.34 | 13.76 | 2.58 | 29.1% |
+| 3 | `The capital of France` | `' is'` | yes | 17.13 | 15.05 | 2.08 | 68.2% |
+| 4 | `The capital of France is` | `' Paris'` | yes | 18.11 | 14.44 | 3.68 | 79.2% |
+
+Confidence climbs monotonically with context, 1.4% to 79.2%, and the margin with it. At
+position 2 the model's second choice is `' France'`, the genuine next token. At position 4
+the runner-up is `' Berlin'`: the alternatives it considers are other capitals.
+
+### Cross-checks nobody asked for, which is what makes them worth having
+
+Layer 3's input norms at positions 1, 2 and 4 are 2.9037, 3.5449 and 3.3964. Layer 2's
+*output* norms at the same positions are 2.9037, 3.5449 and 3.3964. Separate runs, exact
+agreement.
+
+The tail's snapshot 0 at positions 0 to 3 is 2.0446, 1.9179, 1.5717 and 1.8620. Layer 2's
+*incoming* snapshot at positions 1 to 4 is 2.0446, 1.9179, 1.5717 and 1.8620 \u2014 the same
+four values under the p+1 labelling described above. **Snapshot 0 is created before layer 2
+and arrives at the tail unchanged after ninety-one more layers.** The snapshot channel is a
+real skip connection spanning the whole model, not a local convenience.
+
+The residual stream itself grows roughly twenty-two fold through depth, from about 3.5
+leaving layer 2 to 59-88 arriving at the tail.
+
 ### What this does not establish
 
-One prompt, five positions, two layers of ninety-three. The regularities are striking
-but they are from a single short prompt, and nothing here says they hold at depth or on
-other text.
+One prompt, five positions, two layers of ninety-three traced in detail. The regularities
+are striking but they come from a single short prompt, and nothing here says they hold at
+depth or on other text. Layer 0 is still unobserved this way: the server has no vector
+tracing and adding it would be a change to production code rather than a derivation from
+an existing gate.
 
 ---
 
