@@ -8,7 +8,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "root.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include "live-root.h"
+#include "stage.h"
+#include "trace.h"
 #define TRANSFORMER_LAYER 25
 #define TRANSFORMER_MLA 0
 #define TRANSFORMER_INPUT_SNAPSHOTS 3
@@ -35,6 +42,9 @@ typedef struct {
     TransformerRecord operator_records[40];
     const unsigned char *input_gains;
     Root *root;
+    size_t qkv_bytes;
+    unsigned char *group_map[3];
+    size_t group_bytes[3];
 } Transformer;
 
 typedef struct {
@@ -51,12 +61,15 @@ typedef struct {
     float shared_gate[TRANSFORMER_SHARED], shared_up[TRANSFORMER_SHARED], shared_output[TRANSFORMER_WIDTH];
     unsigned selected[16];
     float weights[16];
-    RootScratch root_scratch;
+    RootScratch *root_scratch;
     float *mla_cache;
     size_t mla_capacity;
     float mla_query_latent[1536], mla_query[18432], mla_kv_latent[576], mla_expanded[24576];
     const Transformer *owner;
     size_t positions;
+    int stage;
+    float fold_weights[9];
+    unsigned fold_count;
     int failed;
 } TransformerSequence;
 
@@ -146,6 +159,25 @@ static int transformer_read(FILE *file, uint64_t offset, size_t length, unsigned
     return 1;
 }
 
+static const unsigned char *transformer_map(const char *path, size_t expected)
+{
+    int handle = open(path, O_RDONLY);
+    if (handle < 0) return NULL;
+    struct stat info;
+    const unsigned char *mapped = NULL;
+    if (!fstat(handle, &info) && (size_t)info.st_size == expected) {
+        void *address = mmap(NULL, expected, PROT_READ, MAP_SHARED, handle, 0);
+        if (address != MAP_FAILED) {
+            const char *lock = getenv("CLOVER_LOCK_TRUNK");
+            if ((!lock || strcmp(lock, "0")) && mlock(address, expected))
+                fprintf(stderr, "trunk not locked (%s): %s\n", path, strerror(errno));
+            mapped = address;
+        }
+    }
+    close(handle);
+    return mapped;
+}
+
 static int transformer_needs(unsigned id)
 {
     if (TRANSFORMER_MLA && id >= 8 && id < 29) return 0;
@@ -163,9 +195,10 @@ static int transformer_load_qkv(Transformer *transformer, const char *path)
         TRANSFORMER_QKV_PREFIX + (size_t)TRANSFORMER_ROWS * 3 * TRANSFORMER_QKV_COMPONENT;
     FILE *file = transformer_open_sized(path, bytes);
     if (!file) return 0;
-    int loaded = transformer_read(file, 0, bytes, &transformer->qkv);
-    if (fclose(file)) loaded = 0;
-    if (!loaded) return 0;
+    if (fclose(file)) return 0;
+    transformer->qkv = (unsigned char *)transformer_map(path, bytes);
+    if (!transformer->qkv) return 0;
+    transformer->qkv_bytes = bytes;
     const unsigned char *data = transformer->qkv;
     const uint32_t fields[] = {1, TRANSFORMER_LAYER, TRANSFORMER_WIDTH,
         TRANSFORMER_MLA ? 18432 : TRANSFORMER_ROWS, TRANSFORMER_MLA ? 192 : 128,
@@ -256,15 +289,19 @@ static int transformer_load_trunk(Transformer *transformer, const char *director
         if (!transformer_path(path, sizeof path, directory, names[group])) return 0;
         file = transformer_open_sized(path, lengths[group]);
         if (!file) return 0;
+        if (fclose(file)) return 0;
+        file = NULL;
+        transformer->group_map[group] = (unsigned char *)transformer_map(path, (size_t)lengths[group]);
+        if (!transformer->group_map[group]) return 0;
+        transformer->group_bytes[group] = (size_t)lengths[group];
         for (unsigned id = 0; valid && id < TRANSFORMER_RECORDS; id++) {
             TransformerRecord *record = &transformer->records[id];
             if (!transformer_needs(id) || record->group != group) continue;
-            if (!transformer_read(file, record->offset, (size_t)record->length, &record->data)) { valid = 0; break; }
+            record->data = transformer->group_map[group] + record->offset;
             unsigned floats = record->kind == 1 ? record->rows : record->count;
             for (unsigned coordinate = 0; coordinate < floats; coordinate++)
                 if (!isfinite(transformer_f32(record->data + (size_t)coordinate * 4))) { valid = 0; break; }
         }
-        if (fclose(file)) valid = 0;
         if (!valid) return 0;
     }
     return 1;
@@ -273,9 +310,10 @@ static int transformer_load_trunk(Transformer *transformer, const char *director
 void transformer_close(Transformer *transformer)
 {
     if (!transformer) return;
-    for (unsigned id = 0; id < TRANSFORMER_RECORDS; id++) free(transformer->records[id].data);
+    for (unsigned group = 0; group < 3; group++)
+        if (transformer->group_map[group]) munmap((void *)transformer->group_map[group], transformer->group_bytes[group]);
     root_close(transformer->root);
-    free(transformer->qkv);
+    if (transformer->qkv) munmap(transformer->qkv, transformer->qkv_bytes);
     free(transformer);
 }
 
@@ -291,7 +329,7 @@ int transformer_open(const char *dataset, Transformer **result)
         FLT_RADIX != 2 || FLT_MANT_DIG != 24 || DBL_MANT_DIG != 53) return 0;
     Transformer *transformer = calloc(1, sizeof *transformer);
     if (!transformer) return 0;
-    if (!transformer_load_qkv(transformer, qkv_path) || !transformer_load_trunk(transformer, trunk_directory) || !(transformer->root = root_open(root_directory))) {
+    if (!transformer_load_qkv(transformer, qkv_path) || !transformer_load_trunk(transformer, trunk_directory) || !(transformer->root = root_open(root_directory, 25))) {
         transformer_close(transformer);
         return 0;
     }
@@ -303,7 +341,11 @@ TransformerSequence *transformer_sequence_create(const Transformer *transformer)
 {
     if (!transformer) return NULL;
     TransformerSequence *sequence = calloc(1, sizeof *sequence);
-    if (sequence) sequence->owner = transformer;
+    if (!sequence) return NULL;
+    /* One scratch per thread: the reader indexes this pool by OpenMP thread number. */
+    sequence->root_scratch = calloc((size_t)omp_get_max_threads(), sizeof *sequence->root_scratch);
+    if (!sequence->root_scratch) { free(sequence); return NULL; }
+    sequence->owner = transformer;
     return sequence;
 }
 
@@ -311,13 +353,16 @@ void transformer_sequence_reset(TransformerSequence *sequence)
 {
     if (!sequence) return;
     const Transformer *owner = sequence->owner;
+    RootScratch *scratch = sequence->root_scratch;
     free(sequence->mla_cache);
     memset(sequence, 0, sizeof *sequence);
     sequence->owner = owner;
+    sequence->root_scratch = scratch;
 }
 
 void transformer_sequence_close(TransformerSequence *sequence)
 {
+    if (sequence) free(sequence->root_scratch);
     if (sequence) free(sequence->mla_cache);
     free(sequence);
 }
@@ -361,6 +406,7 @@ static void transformer_project(const Transformer *transformer, unsigned id, con
 {
     const TransformerRecord *record = transformer->operator_records[id].data ? &transformer->operator_records[id] : &transformer->records[id];
     const unsigned char *ids = record->data + (size_t)record->rows * 4;
+#pragma omp parallel for schedule(static)
     for (unsigned row = 0; row < record->rows; row++)
         output[row] = transformer_project_row(input, ids + (size_t)row * record->columns,
             record->columns, transformer->palette, transformer_f32(record->data + row * 4));
@@ -540,12 +586,109 @@ static int transformer_mla(Transformer *transformer, TransformerSequence *sequen
 }
 #endif
 
+/* The winning source takes the whole weight instead of its softmax share.
+
+   A layer runs 108 stages and only two of them fold: stage 3 before attention
+   (record 37) and stage 21 before the MLP (record 38). CLOVER_HARDMAX_STAGES picks
+   one or both and CLOVER_HARDMAX_LAYERS picks the owners, but the safe set is not
+   the same at the two folds. Measured as cos(aggregate, residual), stage 3 clears
+   0.9 at sixteen owners and stage 21 at twenty-five, and they overlap only in part.
+   CLOVER_HARDMAX_LAYERS_3 and CLOVER_HARDMAX_LAYERS_21 override the owner list for
+   one fold, each falling back to CLOVER_HARDMAX_LAYERS. CLOVER_SOFTMAX=1 disables
+   all of it.
+
+   Defaults stay at layer 46 with both folds, the configuration measured good. */
+static int transformer_listed(const char *list, int value)
+{
+    if (!strcmp(list, "all")) return 1;
+    while (*list) {
+        char *after;
+        long low = strtol(list, &after, 10), high = low;
+        if (after == list) return 0;
+        if (*after == '-') { list = after + 1; high = strtol(list, &after, 10); }
+        if (value >= low && value <= high) return 1;
+        list = *after == ',' ? after + 1 : after;
+    }
+    return 0;
+}
+
+static int transformer_hardmax(unsigned fold)
+{
+    static int decided, on, stage3, stage21, layer3, layer21;
+    if (!decided) {
+        const char *off = getenv("CLOVER_SOFTMAX");
+        const char *layers = getenv("CLOVER_HARDMAX_LAYERS");
+        const char *stages = getenv("CLOVER_HARDMAX_STAGES");
+        const char *at3 = getenv("CLOVER_HARDMAX_LAYERS_3");
+        const char *at21 = getenv("CLOVER_HARDMAX_LAYERS_21");
+        on = !(off && *off && *off != '0');
+        if (!layers || !*layers) layers = "46";
+        stages = stages && *stages ? stages : "3,21";
+        stage3 = transformer_listed(stages, 3);
+        stage21 = transformer_listed(stages, 21);
+        layer3 = transformer_listed(at3 && *at3 ? at3 : layers, TRANSFORMER_LAYER);
+        layer21 = transformer_listed(at21 && *at21 ? at21 : layers, TRANSFORMER_LAYER);
+        decided = 1;
+    }
+    return on && (fold == 37 ? (stage3 && layer3) : (stage21 && layer21));
+}
+
+/* Across five prompts the fold picked the residual in 146 of the 172 calls whose
+   winner never moved, and when the residual wins at weight 1 the whole aggregate
+   step is a copy. Forcing that copy is free only where the fold was already
+   producing the residual. Measured as cos(aggregate, residual) per owner, that is
+   above 0.99 at stage 3 for owners 3 and 6-12, but at stage 21 only for 9, 10 and
+   12, so the two folds have to be addressed separately. Owner 13 stage 3 comes out
+   at 0.0001, near perpendicular, which is where this would do the most damage.
+   CLOVER_FOLD=residual still means everywhere, and destroyed the output when it
+   was tried. */
+static int transformer_fold_residual(unsigned fold)
+{
+    static int decided, layer_ok, stage3, stage21;
+    if (!decided) {
+        const char *setting = getenv("CLOVER_FOLD");
+        const char *layers = getenv("CLOVER_FOLD_LAYERS");
+        const char *stages = getenv("CLOVER_FOLD_STAGES");
+        if (!layers || !*layers)
+            layers = setting && !strcmp(setting, "residual") ? "all" : "";
+        layer_ok = *layers && transformer_listed(layers, TRANSFORMER_LAYER);
+        stages = stages && *stages ? stages : "3,21";
+        stage3 = transformer_listed(stages, 3);
+        stage21 = transformer_listed(stages, 21);
+        decided = 1;
+    }
+    return layer_ok && (fold == 37 ? stage3 : stage21);
+}
+
+/* A slot costs 22.0 MB of memcpy per token to carry and cannot be rebuilt from
+   anything the layer holds: fitting it from the other snapshots and the residual
+   leaves 0.745 relative error at best. So it is kept only if some fold reads it.
+   CLOVER_DROP_SLOTS removes slots from the fold's sources to find out which. */
+static int transformer_dropped(unsigned slot)
+{
+    static int decided;
+    static const char *list;
+    if (!decided) {
+        list = getenv("CLOVER_DROP_SLOTS");
+        if (!list) list = "";
+        decided = 1;
+    }
+    return *list && transformer_listed(list, (int)slot);
+}
+
 static void transformer_aggregate(const Transformer *transformer, TransformerSequence *sequence, unsigned fold)
 {
     const float *sources[9];
-    unsigned count = sequence->snapshot_count + 1;
-    for (unsigned source = 0; source < sequence->snapshot_count; source++) sources[source] = sequence->snapshots[source];
-    sources[sequence->snapshot_count] = sequence->residual;
+    unsigned count = 0;
+    for (unsigned source = 0; source < sequence->snapshot_count; source++)
+        if (!transformer_dropped(source)) sources[count++] = sequence->snapshots[source];
+    sources[count++] = sequence->residual;
+    if (transformer_fold_residual(fold)) {
+        memcpy(sequence->aggregate, sequence->residual, TRANSFORMER_WIDTH * sizeof(float));
+        sequence->fold_weights[0] = 1.0f;
+        sequence->fold_count = 1;
+        return;
+    }
     float scores[9], exponentials[9], weights[9];
     for (unsigned source = 0; source < count; source++) {
         float inverse = transformer_inverse_rms(sources[source], TRANSFORMER_WIDTH);
@@ -564,6 +707,14 @@ static void transformer_aggregate(const Transformer *transformer, TransformerSeq
         total += (double)exponentials[source];
     }
     for (unsigned source = 0; source < count; source++) weights[source] = (float)((double)exponentials[source] / total);
+    if (transformer_hardmax(fold)) {
+        unsigned best = 0;
+        for (unsigned source = 1; source < count; source++) if (weights[source] > weights[best]) best = source;
+        for (unsigned source = 0; source < count; source++) weights[source] = source == best ? 1.0f : 0.0f;
+    }
+    /* Kept only so the blend can be observed; nothing downstream reads these. */
+    memcpy(sequence->fold_weights, weights, sizeof weights);
+    sequence->fold_count = count;
     for (unsigned coordinate = 0; coordinate < TRANSFORMER_WIDTH; coordinate++) {
         float value = 0.0f;
         for (unsigned source = 0; source < count; source++) value = value + weights[source] * sources[source][coordinate];
@@ -612,15 +763,16 @@ static int transformer_route(const Transformer *transformer, TransformerSequence
 
 static int transformer_expert(Transformer *transformer, TransformerSequence *sequence, unsigned expert)
 {
-    if (!root_project(transformer->root, &sequence->root_scratch, expert, 0, sequence->latent, sequence->expert_gate) ||
-        !root_project(transformer->root, &sequence->root_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
+    if (!root_project(transformer->root, sequence->root_scratch, expert, 0, sequence->latent, sequence->expert_gate) ||
+        !root_project(transformer->root, sequence->root_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
     transformer_activation(sequence->expert_gate, sequence->expert_up, TRANSFORMER_EXPERT);
-    return root_project(transformer->root, &sequence->root_scratch, expert, 2, sequence->expert_gate, sequence->expert_down);
+    return root_project(transformer->root, sequence->root_scratch, expert, 2, sequence->expert_gate, sequence->expert_down);
 }
 
 static int transformer_mix_experts(Transformer *transformer, TransformerSequence *sequence)
 {
     memset(sequence->mixture, 0, sizeof sequence->mixture);
+    for (unsigned rank = 0; rank < 16; rank++) root_prefetch(transformer->root, sequence->selected[rank]);
     for (unsigned rank = 0; rank < 16; rank++) {
         if (!transformer_expert(transformer, sequence, sequence->selected[rank])) return 0;
         for (unsigned coordinate = 0; coordinate < TRANSFORMER_LATENT; coordinate++)
@@ -652,6 +804,127 @@ static int transformer_moe(Transformer *transformer, TransformerSequence *sequen
     }
     return 1;
 }
+/* Every step of a position is numbered. The same stage number recurs on later
+   positions, so it identifies where in the layer the object is, not when. Each stage
+   stands alone: one condition, one unit of work, one return. */
+enum {
+    TRANSFORMER_STAGE_BASE = CLOVER_STAGE_LAYER_BASE + (TRANSFORMER_LAYER - 1) * CLOVER_STAGE_STRIDE,
+    TRANSFORMER_STAGE_COUNT = CLOVER_STAGE_STRIDE,
+    TRANSFORMER_STAGE_EXPERT_FIRST = 30,
+    TRANSFORMER_STAGE_EXPERT_LAST = 109
+};
+
+int transformer_stage(const TransformerSequence *sequence)
+{
+    return sequence ? TRANSFORMER_STAGE_BASE + sequence->stage : 0;
+}
+
+/* Advances exactly one stage and returns. The caller drives it until stage 120 retires
+   the position, so a stage can be inspected, skipped or replaced without touching the
+   others. */
+static int transformer_step(Transformer *transformer, TransformerSequence *sequence,
+    const float *input, float output[TRANSFORMER_WIDTH], float *output_snapshots)
+{
+    const int stage = sequence->stage;
+
+    if (stage == 1) { memcpy(sequence->incoming, input, sizeof sequence->incoming); sequence->stage++; return 1; }
+    if (stage == 2) { memcpy(sequence->residual, input, sizeof sequence->residual); sequence->stage++; return 1; }
+    if (stage == 3) { transformer_aggregate(transformer, sequence, 37); sequence->stage++; return 1; }
+    if (stage == 4) {
+        if (TRANSFORMER_LAYER % 12 == 0) {
+            memcpy(sequence->snapshots[sequence->snapshot_count], input, TRANSFORMER_WIDTH * sizeof(float));
+            sequence->snapshot_count++;
+        }
+        sequence->stage++; return 1;
+    }
+    if (stage == 5) {
+        transformer_normalize(sequence->normalized, sequence->aggregate, transformer->input_gains, TRANSFORMER_WIDTH);
+        sequence->stage++; return 1;
+    }
+#if TRANSFORMER_MLA
+    if (stage == 6) { if (!transformer_mla(transformer, sequence)) return 0; sequence->stage = 20; return 1; }
+#else
+    if (stage == 6)  { transformer_qkv(transformer, sequence);              sequence->stage++; return 1; }
+    if (stage == 7)  { transformer_decay(transformer, sequence);            sequence->stage++; return 1; }
+    if (stage == 8)  { transformer_update_attention(sequence);              sequence->stage++; return 1; }
+    if (stage == 9)  { transformer_attention_output(transformer, sequence); sequence->stage = 20; return 1; }
+#endif
+    if (stage == 20) {
+        if (TRANSFORMER_LAYER % 12 != 0)
+            for (unsigned coordinate = 0; coordinate < TRANSFORMER_WIDTH; coordinate++)
+                sequence->residual[coordinate] = sequence->incoming[coordinate] + sequence->residual[coordinate];
+        sequence->stage++; return 1;
+    }
+    if (stage == 21) { transformer_aggregate(transformer, sequence, 38); sequence->stage++; return 1; }
+    if (stage == 22) {
+        transformer_normalize(sequence->postnorm, sequence->aggregate, transformer->records[5].data, TRANSFORMER_WIDTH);
+        sequence->stage++; return 1;
+    }
+    if (stage == 23) { if (!transformer_finite(sequence->postnorm, TRANSFORMER_WIDTH)) return 0; sequence->stage++; return 1; }
+    if (stage == 24) { if (!transformer_route(transformer, sequence)) return 0; sequence->stage++; return 1; }
+    if (stage == 25) { transformer_project(transformer, 31, sequence->postnorm, sequence->latent); sequence->stage++; return 1; }
+    if (stage == 26) { memset(sequence->mixture, 0, sizeof sequence->mixture); sequence->stage++; return 1; }
+    if (stage == 27) {
+        for (unsigned rank = 0; rank < 16; rank++) root_prefetch(transformer->root, sequence->selected[rank]);
+        sequence->stage = TRANSFORMER_STAGE_EXPERT_FIRST; return 1;
+    }
+
+    /* Stages 30..109: sixteen experts, five steps each. The rank is data; the five
+       steps stay five conditions. */
+    if (stage >= TRANSFORMER_STAGE_EXPERT_FIRST && stage <= TRANSFORMER_STAGE_EXPERT_LAST) {
+        const unsigned rank = (unsigned)(stage - TRANSFORMER_STAGE_EXPERT_FIRST) / 5;
+        const int step = (stage - TRANSFORMER_STAGE_EXPERT_FIRST) % 5;
+        const unsigned expert = sequence->selected[rank];
+        if (step == 0) {
+            if (!root_project(transformer->root, sequence->root_scratch, expert, 0, sequence->latent, sequence->expert_gate)) return 0;
+            sequence->stage++; return 1;
+        }
+        if (step == 1) {
+            if (!root_project(transformer->root, sequence->root_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
+            sequence->stage++; return 1;
+        }
+        if (step == 2) {
+            transformer_activation(sequence->expert_gate, sequence->expert_up, TRANSFORMER_EXPERT);
+            sequence->stage++; return 1;
+        }
+        if (step == 3) {
+            if (!root_project(transformer->root, sequence->root_scratch, expert, 2, sequence->expert_gate, sequence->expert_down)) return 0;
+            sequence->stage++; return 1;
+        }
+        if (step == 4) {
+            for (unsigned coordinate = 0; coordinate < TRANSFORMER_LATENT; coordinate++)
+                sequence->mixture[coordinate] = sequence->mixture[coordinate] + sequence->weights[rank] * sequence->expert_down[coordinate];
+            sequence->stage++; return 1;
+        }
+    }
+
+    if (stage == 110) {
+        transformer_normalize(sequence->latent_norm, sequence->mixture, transformer->records[33].data, TRANSFORMER_LATENT);
+        sequence->stage++; return 1;
+    }
+    if (stage == 111) { transformer_project(transformer, 32, sequence->latent_norm, sequence->routed); sequence->stage++; return 1; }
+    if (stage == 112) { transformer_project(transformer, 34, sequence->postnorm, sequence->shared_gate); sequence->stage++; return 1; }
+    if (stage == 113) { transformer_project(transformer, 35, sequence->postnorm, sequence->shared_up); sequence->stage++; return 1; }
+    if (stage == 114) { transformer_activation(sequence->shared_gate, sequence->shared_up, TRANSFORMER_SHARED); sequence->stage++; return 1; }
+    if (stage == 115) { transformer_project(transformer, 36, sequence->shared_gate, sequence->shared_output); sequence->stage++; return 1; }
+    if (stage == 116) {
+        for (unsigned coordinate = 0; coordinate < TRANSFORMER_WIDTH; coordinate++)
+            sequence->residual[coordinate] = sequence->residual[coordinate] +
+                (sequence->routed[coordinate] + sequence->shared_output[coordinate]);
+        sequence->stage++; return 1;
+    }
+    if (stage == 117) { if (!transformer_finite(sequence->residual, TRANSFORMER_WIDTH)) return 0; sequence->stage++; return 1; }
+    if (stage == 118) { memcpy(output, sequence->residual, sizeof sequence->residual); sequence->stage++; return 1; }
+    if (stage == 119) {
+        memcpy(output_snapshots, sequence->snapshots, (size_t)sequence->snapshot_count * TRANSFORMER_WIDTH * sizeof(float));
+        sequence->stage++; return 1;
+    }
+    if (stage == 120) { sequence->positions++; sequence->stage = 0; return 1; }
+
+    sequence->stage++;
+    return 1;
+}
+
 int transformer_process(Transformer *transformer, TransformerSequence *sequence,
     const float input[TRANSFORMER_WIDTH], const float *snapshots, unsigned snapshot_count,
     float output[TRANSFORMER_WIDTH], float *output_snapshots)
@@ -662,30 +935,48 @@ int transformer_process(Transformer *transformer, TransformerSequence *sequence,
         !transformer_finite(snapshots, (size_t)snapshot_count * TRANSFORMER_WIDTH)) return 0;
     memcpy(sequence->snapshots, snapshots, (size_t)snapshot_count * TRANSFORMER_WIDTH * sizeof(float));
     sequence->snapshot_count = snapshot_count;
-    memcpy(sequence->incoming, input, sizeof sequence->incoming);
-    memcpy(sequence->residual, input, sizeof sequence->residual);
-    transformer_aggregate(transformer, sequence, 37);
-    if (TRANSFORMER_LAYER % 12 == 0) {
-        memcpy(sequence->snapshots[sequence->snapshot_count], input, TRANSFORMER_WIDTH * sizeof(float));
-        sequence->snapshot_count++;
+    clover_freeze_apply(TRANSFORMER_LAYER, &sequence->snapshots[0][0], snapshot_count);
+    sequence->stage = 1;
+    clover_trace_open();
+    clover_vectors_open(TRANSFORMER_LAYER);
+    clover_vectors_write(TRANSFORMER_LAYER, 0, (unsigned long)sequence->positions,
+        input, TRANSFORMER_WIDTH);
+    while (sequence->stage) {
+        const int executed = sequence->stage;
+        const double began = clover_trace_active() ? clover_trace_clock() : 0.0;
+        if (!transformer_step(transformer, sequence, input, output, output_snapshots)) {
+            sequence->failed = 1;
+            return 0;
+        }
+        if (clover_trace_active())
+            clover_trace_stage(TRANSFORMER_LAYER, executed, (unsigned long)sequence->positions,
+                clover_trace_clock() - began,
+                clover_trace_hash(sequence->residual, sizeof sequence->residual),
+                executed >= TRANSFORMER_STAGE_EXPERT_FIRST && executed <= TRANSFORMER_STAGE_EXPERT_LAST
+                    ? (long)sequence->selected[(executed - TRANSFORMER_STAGE_EXPERT_FIRST) / 5] : -1);
+        clover_vectors_write(TRANSFORMER_LAYER, executed, (unsigned long)sequence->positions,
+            sequence->residual, TRANSFORMER_WIDTH);
+        /* The confidences. 2000 is the softmax over snapshots plus residual that the
+           aggregate blends with; 3000 is the router's weight on each chosen expert. */
+        if (clover_vectors_active(TRANSFORMER_LAYER) && (executed == 3 || executed == 21))
+            clover_vectors_write(TRANSFORMER_LAYER, 2000 + executed, (unsigned long)sequence->positions,
+                sequence->fold_weights, sequence->fold_count);
+        /* The fold writes aggregate, not the residual, so a residual-only capture
+           cannot see what it did. 4000 is what the fold actually produced. */
+        if (clover_vectors_active(TRANSFORMER_LAYER) && (executed == 3 || executed == 21))
+            clover_vectors_write(TRANSFORMER_LAYER, 4000 + executed, (unsigned long)sequence->positions,
+                sequence->aggregate, TRANSFORMER_WIDTH);
+        if (clover_vectors_active(TRANSFORMER_LAYER) && executed == 24)
+            clover_vectors_write(TRANSFORMER_LAYER, 3000, (unsigned long)sequence->positions,
+                sequence->weights, 16);
     }
-    transformer_normalize(sequence->normalized, sequence->aggregate, transformer->input_gains, TRANSFORMER_WIDTH);
-#if TRANSFORMER_MLA
-    if (!transformer_mla(transformer, sequence)) { sequence->failed = 1; return 0; }
-#else
-    transformer_qkv(transformer, sequence);
-    transformer_decay(transformer, sequence);
-    transformer_update_attention(sequence);
-    transformer_attention_output(transformer, sequence);
-#endif
-    if (TRANSFORMER_LAYER % 12 != 0) for (unsigned coordinate = 0; coordinate < TRANSFORMER_WIDTH; coordinate++)
-        sequence->residual[coordinate] = sequence->incoming[coordinate] + sequence->residual[coordinate];
-    transformer_aggregate(transformer, sequence, 38);
-    if (!transformer_moe(transformer, sequence)) { sequence->failed = 1; return 0; }
-    if (!transformer_finite(sequence->residual, TRANSFORMER_WIDTH)) { sequence->failed = 1; return 0; }
-    memcpy(output, sequence->residual, sizeof sequence->residual);
-    memcpy(output_snapshots, sequence->snapshots, (size_t)sequence->snapshot_count * TRANSFORMER_WIDTH * sizeof(float));
-    sequence->positions++;
+    /* The snapshots are a second channel: stage 4 appends this layer's input at every
+       twelfth layer, and the aggregate reads them alongside the residual. Recorded
+       above 1000 so they cannot be confused with a stage. */
+    if (clover_vectors_active(TRANSFORMER_LAYER))
+        for (unsigned slot = 0; slot < sequence->snapshot_count; slot++)
+            clover_vectors_write(TRANSFORMER_LAYER, 1000 + (int)slot,
+                (unsigned long)sequence->positions, sequence->snapshots[slot], TRANSFORMER_WIDTH);
     return 1;
 }
 
