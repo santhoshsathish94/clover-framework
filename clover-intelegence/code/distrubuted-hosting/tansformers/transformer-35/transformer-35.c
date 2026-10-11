@@ -718,15 +718,21 @@ static void transformer_activation(float *gate, const float *up, unsigned width)
 
 static int transformer_route(const Transformer *transformer, TransformerSequence *sequence)
 {
-    float scores[896], best[16];
+    float scores[896], choices[896], best[16];
     unsigned count = 0;
+    /* Scoring an expert is independent; picking the top sixteen is not. */
+#pragma omp parallel for schedule(static)
     for (unsigned expert = 0; expert < 896; expert++) {
         const unsigned char *row = transformer->records[29].data + (size_t)expert * TRANSFORMER_WIDTH * 4;
         double score = 0.0;
         for (unsigned coordinate = 0; coordinate < TRANSFORMER_WIDTH; coordinate++)
             score += (double)transformer_f32(row + coordinate * 4) * (double)sequence->postnorm[coordinate];
         scores[expert] = transformer_sigmoid((float)score);
-        float choice = scores[expert] + transformer_f32(transformer->records[30].data + expert * 4);
+        choices[expert] = scores[expert] + transformer_f32(transformer->records[30].data + expert * 4);
+    }
+    /* Index order, so a tie still goes to the lower expert id. */
+    for (unsigned expert = 0; expert < 896; expert++) {
+        float choice = choices[expert];
         if (!isfinite(choice)) return 0;
         if (count == 16 && !(choice > best[15])) continue;
         unsigned position = count < 16 ? count : 15;

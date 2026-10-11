@@ -236,6 +236,25 @@ of cache and the 68 KDA layers 458 MB — the KDA layers are 0.02% of it. The en
 long-context problem lives in the MLA layers, which is also why the head-major relayout
 matters there and only there.
 
+### Routing
+
+`transformer_route` scores all 896 experts, each a 7168-long dependent double
+accumulation over full float32 router weights, and it runs on every layer. It was
+serial: 4.36 ms/position, latency-bound on the accumulation chain. Scoring is now
+parallel while the top-sixteen selection stays serial and in index order, because that
+selection carries `best`, `selected` and `count` across experts and a plain parallel for
+would race on them. Worth about 3.0 to 3.6 ms on every layer.
+
+### Where a layer stands now
+
+| layer | session start | now |
+|---|---|---|
+| KDA layer 2 | 139.585 ms/position | **29.020** |
+| MLA layer 3 | 31.457 | **28.020** |
+
+Across 68 KDA and 24 MLA pods that is roughly 10,247 ms/position to 2,646, about 3.9x,
+every step bit-identical and verified against the reference.
+
 Expert arrival is not the bottleneck at this size. Reading the 16 chosen experts of one
 layer is 281 MB, and it lands in 33 ms:
 

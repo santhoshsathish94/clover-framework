@@ -6,6 +6,76 @@ it does and does not establish.
 
 ---
 
+## Cycle: survey the remaining serial loops, then the router (2026-10-11)
+
+### Intended outcome
+
+I had left "whether any other loop was missed the same way" as an open question after
+the qkv finding. A sample is not a survey, so: list every OpenMP region in a pod against
+every heavy loop, and see what is uncovered.
+
+### What the survey showed
+
+The whole pod had **three** parallel regions: `transformer_project`, and the two added
+earlier today. Mapping those against every loop over `TRANSFORMER_ROWS`,
+`TRANSFORMER_WIDTH`, `TRANSFORMER_HEADS` or `record->rows` left one obvious candidate by
+measured cost: `transformer_route`, stage 24, 4.36 ms/position, and it runs on **every**
+layer rather than only the KDA ones.
+
+It scores 896 experts, each a 7168-long dependent double accumulation over full float32
+router weights. That is roughly 28.7k cycles of latency per expert and 896 of them,
+about 6 ms at 4.2 GHz, which is where the measured 4.36 comes from. Latency-bound, not
+bandwidth-bound, so splitting across experts should scale nearly linearly.
+
+### Why a pragma alone would have been wrong
+
+Scoring an expert is independent, but choosing the top sixteen is not: the loop carries
+`best[]`, `selected[]` and `count` across iterations as an insertion sort. A parallel
+for would have raced on all three and quietly corrupted the choice, and the reference
+campaign would have caught it only as a route mismatch with no obvious cause.
+
+So the port splits the function: scoring parallel, selection serial and still walked in
+index order so a tie resolves to the lower expert id exactly as before. Per-expert
+arithmetic and its order are untouched. The one behavioural difference is on the failure
+path, where a non-finite choice now aborts after all scores are computed rather than at
+the offending expert; the return value is the same.
+
+### Result
+
+| layer | before | after |
+|---|---|---|
+| KDA layer 2 | 32.612 ms/position | **29.020** |
+| MLA layer 3 | 31.048 | **28.020** |
+
+About 3.0 to 3.6 ms off every layer, roughly 11%. Checksums unchanged, VERIFIED 91 of
+91 for france and japan, zero build failures.
+
+### Across the whole session
+
+A KDA layer went 139.585 to 29.020 ms/position, **4.81x**; an MLA layer 31.457 to
+28.020. Over 68 KDA and 24 MLA pods that is about 10,247 ms/position to 2,646, roughly
+**3.9x** on the layer stack, all of it bit-identical and verified against the reference.
+
+### Worth keeping
+
+`transformer-1` was skipped on the first run, reported honestly by the script as "1
+without it", and that contradicted my own survey which had found the block in all 92.
+The cause was line endings: that file carries CRLF in this working tree, my PowerShell
+survey normalised before matching and node did not. The port now matches whatever the
+file actually contains. Two instruments disagreeing is a fact to chase, not a rounding
+error to pick a side on.
+
+### What is still unknown
+
+- `transformer_update_attention` is still serial, 1.8 ms/position, now about 6% of a KDA
+  layer. Measured in isolation at 15.2x available; not applied.
+- The trunk palette-gather path runs about 37 GMAC/s where the expert 4-bit AVX2 path
+  runs about 70. Same machine, half the rate, unexplained.
+- Nothing has been measured under concurrency. Every number here is one layer with the
+  whole machine and its experts pinned.
+
+---
+
 ## Cycle: what KDA is for (2026-10-11)
 
 ### Intended outcome
