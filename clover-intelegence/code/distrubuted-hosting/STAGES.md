@@ -219,8 +219,26 @@ At 1,048,576 positions — 103.35 GB for one layer:
 | head-major, parallel | **2.62 s** | 39.45 |
 
 Head-major parallel reaches 39.45 GB/s against a measured RAM ceiling of 42.8 GB/s on
-this box, so it is bus-bound and close to the floor for this data shape. Both changes
-are now in layer 3.
+this box, so it is bus-bound and close to the floor for this data shape.
+
+That is a kernel in isolation. Driven through a real pod by
+[tansformers/pod-context.c](tansformers/pod-context.c), with the layer's 15.72 GB of
+experts pinned so only the attention walk moves, output bit-identical in every pair:
+
+| positions | original | head-major | whole layer |
+|---|---|---|---|
+| 64 | 31.265 ms/position | 30.864 | 1.01x |
+| 1,024 | 40.035 | 32.106 | 1.25x |
+| 4,096 | 71.546 | 35.245 | **2.03x** |
+
+Experts cost about 30.9 ms per position whatever the length, so subtracting that floor
+puts the attention component at 40.6 ms against 4.3 ms at 4,096 — **9.4x**. Below about
+a thousand positions the change is noise, because the cache still fits in L3. At 4,096
+the old layout spends 57% of the layer in attention; the new one spends 12%.
+
+Both changes are now in every pod, applied by
+[tansformers/port-head-major-mla.mjs](tansformers/port-head-major-mla.mjs). All 24 MLA
+layers verify against the reference for france and japan.
 
 The remaining factor is not bandwidth but volume: the latent form is 2,304 bytes per
 position per layer against 98,560 expanded, **42.8x fewer bytes**. That is the next
@@ -230,10 +248,17 @@ question, and it needs the absorb matrices, which have not been read.
 
 - The server's 120 stages are reserved but not implemented as a stage machine; the entry
   path is ordinary function calls.
-- Timings above are layer 3 at 5 positions, plus the isolated attention kernel at up to
-  1M positions. No layer has been run end to end at long context, because the expert
-  cost per position makes that impractical on one box.
+- **The full reference campaign does not currently pass.** Running all layers 2..92
+  aborts at layer 46 on `!memcmp(routes, captured_routes[position])` — its sixteen route
+  ids no longer match the stored reference. A controlled run differing only in
+  transformer-3's stage object fails identically, so this predates the attention work.
+  `remaining/validation.log` holds 182 VERIFIED lines from the original campaign, a full
+  pass, so the routing changed at some point after it. Uninvestigated. Selecting a
+  subset steps past it, because the harness checks only selected layers.
+- Timings above are layer 3 at 5 positions and at up to 4,096 positions through a real
+  pod, plus the isolated attention kernel at up to 1M. No layer has run end to end at
+  1M, because the expert cost per position makes that impractical on one box.
 - The 1M attention figures are a kernel in isolation, not a layer in the pipeline.
-- Only layer 3 carries the head-major layout and the parallel head loop. The other 23
-  MLA pods still have the original position-major, serial attention.
+- The pod measurements pin the experts and give the layer the whole machine. A pod under
+  real traffic shares it.
 - The 3600 MT/s DIMM configuration against a 4800 rating has never been investigated.

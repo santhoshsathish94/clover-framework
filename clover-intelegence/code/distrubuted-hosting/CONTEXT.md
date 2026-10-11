@@ -6,6 +6,79 @@ it does and does not establish.
 
 ---
 
+## Cycle: join the kernel number to a real layer, then port it (2026-10-11)
+
+### Intended outcome
+
+The previous cycle left its central claim unjoined: 23.8x was an isolated kernel, and
+the layer had only ever run at five positions. Close that, then decide from the result
+whether the other MLA pods should have the change.
+
+### What the System showed
+
+`pod-context.c` drives a real pod through `transformer_process` with its 15.72 GB of
+experts pinned by `mlock`, so expert arrival is identical in every arm and only the
+attention walk moves. Output bit-identical in every pair:
+
+| positions | original | head-major | layer | attention component |
+|---|---|---|---|---|
+| 64 | 31.265 ms/pos | 30.864 | 1.01x | negligible |
+| 1,024 | 40.035 | 32.106 | 1.25x | 9.1 -> 1.2 ms |
+| 4,096 | **71.546** | **35.245** | **2.03x** | 40.6 -> 4.3 ms, 9.4x |
+
+Experts cost about 30.9 ms per position whatever the length, so below roughly 1k
+positions the change is noise — the cache still fits in L3. At 4,096 the old layout
+spends 57% of the layer in attention and the new one 12%. That justified the port.
+
+**Ported to all pods and verified.** `port-head-major-mla.mjs` follows the house pattern:
+unique-anchor assert, idempotent, layers 2..92. The block exists in every pod but is
+only compiled where `TRANSFORMER_MLA` is 1, so 24 layers change behaviour and 66 keep a
+dead copy consistent rather than leaving a latent defect. All 24 MLA layers verify
+against the reference for france and japan, 24 of 24, matching the pre-port baseline.
+
+### The mistake, which was the same one twice
+
+I shipped 90 stale sources to the host and overwrote the deployed tree.
+
+Last cycle I found the repository was behind what runs, pulled `transformer-3.c` from
+the host, and wrote in this file: *"Read the deployed artefact first, not the repository
+copy."* Then I ran the port against the other 91 pods **without pulling them**, because I
+had quietly assumed that fixing one file had fixed the problem. It had not: those pods
+still included `root.h` instead of `common/live-root.h`, a gap of **30,159 insertions**,
+not the 332 I had measured on a single file.
+
+The build caught it — 23 pods failed with `omp_get_max_threads` implicitly declared,
+which is exactly the set of MLA pods, because only they compile the block. The host was
+restored from a backup taken before the extraction, rebuilt, and re-verified. Nothing
+was lost, because the script took that backup before writing. That was luck of habit
+rather than design, and the habit is worth keeping.
+
+The correction: a sample is not a survey. When one artefact is found to be stale, the
+question is how many others are, and that is a cheap thing to check.
+
+### What was ruled out
+
+**The layer 46 route mismatch is not mine.** The full campaign (`all`, layers 2..92)
+aborts at layer 46 on `!memcmp(routes, captured_routes[position])`. Controlled test:
+identical runs differing only in transformer-3's stage object, original and head-major
+both reach VERIFIED 44, last layer 45, same assertion. So it predates this work. The
+historical `remaining/validation.log` holds 182 VERIFIED lines, a full pass over 91
+layers times two prompts, so layer 46's routing changed at some point between that
+campaign and now — most likely in one of the ports, none of which re-ran the campaign.
+Selecting only MLA layers steps past it, because the harness checks only selected layers.
+
+### What is still unknown
+
+- Why layer 46's routes no longer match the stored reference. Not investigated. Until it
+  is, the full campaign cannot pass and only subsets can be verified.
+- Everything in the previous cycle's unknowns still stands: no end-to-end long context,
+  the latent K/V form unread, expert compute unprofiled at stage granularity, the DIMMs
+  at 3600 against a 4800 rating.
+- The 4,096-position result is one layer on one machine with experts pinned. A pod under
+  real traffic shares the box.
+
+---
+
 ## Cycle: make layer 3 use the machine (2026-10-10)
 
 ### Intended outcome
