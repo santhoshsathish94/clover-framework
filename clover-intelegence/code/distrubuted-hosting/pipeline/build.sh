@@ -9,7 +9,7 @@ gcc -std=c11 -O2 -Wall -Wextra -Werror -pedantic -ffp-contract=off -fno-fast-mat
 # names cannot drift into different builds again.
 cp -f bin/pipeline-serve bin/pipeline
 # The server carries final normalisation now, so normalization/ builds no pipeline stage.
-gcc -std=c11 -O2 -march=native -Wall -Wextra -Werror -pedantic -ffp-contract=off -fno-fast-math -fPIC -shared \
+gcc -std=c11 -O2 -march=native -Wall -Wextra -Werror -pedantic -ffp-contract=off -fno-fast-math -fopenmp -fPIC -shared \
     -DSERVER_NO_MAIN "$CODE/server/server.c" -lm -o "$CODE/server/bin/pipeline-stage.so"
 # Layer 93 owns final normalisation, the head and the post back to the caller.
 mkdir -p "$CODE/tansformers/transformer-93/bin"

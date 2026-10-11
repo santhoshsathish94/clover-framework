@@ -185,18 +185,18 @@ The vocabulary head is now parallel: `server_output_project` scores 163,840 rows
 at 47 GB/s with the same token. The build lines for the coordinator and the tail now
 carry `-fopenmp`.
 
-Layer 0 has not been changed, and it is the largest single cost left:
+Layer 0 now carries the same four changes as the pods and costs 26.1 ms/position,
+down from 427, bit-identical, with the server reference passing on both the scalar and
+the gather code paths:
 
 | | ms/position |
 |---|---|
 | MLA pod layer | 17.3 |
 | KDA pod layer | 22.0 |
-| **layer 0, in the server** | **427** |
+| layer 0 | **26.1** |
 
-Its phases are dense 62.0%, qkv 22.3%, attention output 14.9%, everything else under
-1%. All three run at 2.58 GMAC/s, the single-threaded scalar palette rate; the pods run
-the same kernel at about 48. Layer 0 is dense, with no experts, so all 1.17 GMACs are
-trunk projection.
+Per generated token the whole chain is about 1,988 ms, against 10,905 at the start of
+this work: 68 KDA pods 1,497, 24 MLA pods 415, layer 0 26, vocabulary head 50.
 
 Measured on k3 (Ryzen 9 7950X3D, 16 cores / 32 threads, 124 GB, RAID1 of two KIOXIA
 CD8), layer 3, the 5-position `france` prompt, through the reference harness. All runs

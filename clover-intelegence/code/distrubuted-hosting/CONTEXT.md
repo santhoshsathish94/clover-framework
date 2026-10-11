@@ -8,6 +8,50 @@ it does and does not establish.
 
 ## Cycle: the server, both ends of it (2026-10-11)
 
+### Layer 0, fixed
+
+The four changes already proven on the pods, applied to `server.c`: `-fopenmp` on its
+build line, a pragma on `server_project`, a pragma on `server_qkv`, a pragma on
+`server_update_attention`, and the AVX2 gather in `server_project_row`. `server.c` does
+not include `live-root.h`, so it needed its own guarded `immintrin.h`.
+
+| | ms/position |
+|---|---|
+| before | 427 |
+| after | **26.1** |
+| single thread, same binary | 319.8 |
+
+**16.3x**, and every checksum identical to before the change: 1.404196 at 16 positions,
+0.315960 at 32, 0.272570 at 8. The single-thread control separates the two effects: the
+gather alone is 422 to 320, and the threads take 320 to 26.
+
+Validated on a gate I had to get working first, since I would not change layer 0 without
+one. `server/test-reference.sh` needs four arguments: the QKV path, the prepared
+trunk-0, the original index and the raw trunk, all with pinned hashes. It passed before
+the change and after.
+
+**It was run twice on purpose.** The gate compiles `test-server-reference.c` without
+`-march=native`, so `__AVX2__` is undefined and it exercises the scalar fallback rather
+than the gather that production runs. Rebuilt with `-march=native` it passes too, so
+both code paths are covered rather than only the one the gate happens to compile.
+
+Also green afterwards: VERIFIED 91 of 91 on both prompts and two NORMALIZATION_PASS,
+because the full build rebuilt every layer as well.
+
+### Where a token stands
+
+Per generated token, everything measured on this box with experts pinned:
+
+| | session start | now |
+|---|---|---|
+| 68 KDA pods | 9,492 ms | 1,497 |
+| 24 MLA pods | 755 | 415 |
+| layer 0 | 427 | 26 |
+| vocabulary head | 231 | 50 |
+| **total** | **10,905 ms** | **1,988 ms** |
+
+About **5.5x**, every step bit-identical and verified against a reference.
+
 ### What the server turned out to be
 
 Every optimisation this session landed on the 92 layer pods. The server owns layer 0

@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(__AVX2__)
+#include <immintrin.h>
+#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -311,9 +314,24 @@ static float server_project_row(const float *input, const unsigned char *ids,
     unsigned width, const float *palette, float scale)
 {
     float lanes[16] = {0}, combined[8];
+#if defined(__AVX2__)
+    /* Lane j carries the same terms in the same order as the scalar form below. */
+    __m256 acc0 = _mm256_setzero_ps(), acc1 = _mm256_setzero_ps();
+    for (unsigned coordinate = 0; coordinate < width; coordinate += 16) {
+        __m256i index0 = _mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(ids + coordinate)));
+        __m256i index1 = _mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(ids + coordinate + 8)));
+        acc0 = _mm256_fmadd_ps(_mm256_i32gather_ps(palette, index0, 4),
+            _mm256_loadu_ps(input + coordinate), acc0);
+        acc1 = _mm256_fmadd_ps(_mm256_i32gather_ps(palette, index1, 4),
+            _mm256_loadu_ps(input + coordinate + 8), acc1);
+    }
+    _mm256_storeu_ps(lanes, acc0);
+    _mm256_storeu_ps(lanes + 8, acc1);
+#else
     for (unsigned coordinate = 0; coordinate < width; coordinate += 16)
         for (unsigned lane = 0; lane < 16; lane++)
             lanes[lane] = fmaf(palette[ids[coordinate + lane]], input[coordinate + lane], lanes[lane]);
+#endif
     for (unsigned lane = 0; lane < 8; lane++) combined[lane] = lanes[lane] + lanes[lane + 8];
     float sum0 = combined[0] + combined[4], sum1 = combined[1] + combined[5];
     float sum2 = combined[2] + combined[6], sum3 = combined[3] + combined[7];
@@ -324,6 +342,7 @@ static void server_project(const Server *server, unsigned id, const float *input
 {
     const ServerRecord *record = &server->records[id];
     const unsigned char *ids = record->data + (size_t)record->rows * 4;
+#pragma omp parallel for schedule(static)
     for (unsigned row = 0; row < record->rows; row++)
         output[row] = server_project_row(input, ids + (size_t)row * record->columns,
             record->columns, server->palette, server_f32(record->data + row * 4));
@@ -359,6 +378,8 @@ static void server_l2_heads(float *values)
 
 static void server_qkv(const Server *server, ServerSequence *sequence)
 {
+    /* Each row owns its output and its own convolution history, so rows are independent. */
+#pragma omp parallel for schedule(static)
     for (unsigned row = 0; row < SERVER_ROWS; row++)
         for (unsigned component = 0; component < 3; component++) {
             const unsigned char *record = server->qkv + SERVER_QKV_PREFIX +
@@ -391,6 +412,8 @@ static void server_decay(const Server *server, ServerSequence *sequence)
 static void server_update_attention(ServerSequence *sequence)
 {
     const float query_scale = 1.0f / sqrtf(128.0f);
+    /* Each head owns its slice of the recurrent state and its own output block. */
+#pragma omp parallel for schedule(static)
     for (unsigned head = 0; head < SERVER_HEADS; head++) {
         float prediction[SERVER_HEAD] = {0};
         float *output = sequence->attention + head * SERVER_HEAD;
