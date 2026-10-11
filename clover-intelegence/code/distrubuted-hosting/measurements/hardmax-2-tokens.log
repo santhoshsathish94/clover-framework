@@ -1,0 +1,13 @@
+started 2026-10-05T05:58:06Z
+prompt: the capital of france is
+france  softmax            REQUEST 0 OK 94.377s [ Paris.",
+france  hardmax            REQUEST 0 OK 93.012s [ Paris.]
+
+prompt: the capital of japan is
+japan   softmax            REQUEST 0 OK 92.615s [ Tokyo.]
+japan   hardmax            REQUEST 0 OK 92.350s [ Tokyo.]
+
+prompt: two tokens
+onthe   softmax            REQUEST 0 OK 49.120s [ on the]
+onthe   hardmax            REQUEST 0 OK 48.951s [ on the]
+finished 2026-10-05T06:07:18Z

@@ -1,0 +1,32 @@
+started 2026-10-05T06:11:08Z, 16 tokens per run
+
+########## the capital of france is ##########
+--- france  softmax ---
+time 296.492s [ Paris.",
+REQUEST 0 OK 296.492s [ Paris.",
++            "The Eiffel Tower is located in Paris.",
++           ]
+
+--- france  hardmax ---
+time 300.881s [ Paris. The Eiffel Tower is located in Paris. The Louvre Museum is]
+REQUEST 0 OK 300.881s [ Paris. The Eiffel Tower is located in Paris. The Louvre Museum is]
+
+########## the capital of japan is ##########
+--- japan   softmax ---
+time 293.766s [ Tokyo. Tokyo is the capital of Japan. Tokyo is the capital of Japan.]
+REQUEST 0 OK 293.766s [ Tokyo. Tokyo is the capital of Japan. Tokyo is the capital of Japan.]
+
+--- japan   hardmax ---
+time 294.063s [ Tokyo. Tokyo is the largest city in Japan and serves as the political, economic]
+REQUEST 0 OK 294.063s [ Tokyo. Tokyo is the largest city in Japan and serves as the political, economic]
+
+########## two tokens ##########
+--- onthe   softmax ---
+time 248.844s [ on the roof of a house and collects in a rain gutter that drains into a]
+REQUEST 0 OK 248.844s [ on the roof of a house and collects in a rain gutter that drains into a]
+
+--- onthe   hardmax ---
+time 249.615s [ on the roof of the house. The rain is falling at a rate of ]
+REQUEST 0 OK 249.615s [ on the roof of the house. The rain is falling at a rate of ]
+
+finished 2026-10-05T06:40:36Z
