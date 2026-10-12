@@ -6,6 +6,97 @@ it does and does not establish.
 
 ---
 
+## Cycle: the traces against the official report (2026-10-12)
+
+Everything so far was measured without reading what Kimi says the model is. The report
+is at `k3-official/k3_tech_report.txt` (an extraction of the PDF) and the authoritative
+numbers are in `k3tok/config.json`. Reading both turns a pile of observations into a
+mapping, and the mapping is testable.
+
+### The indexing, resolved and then verified
+
+`num_hidden_layers` is **93**, not 92, and `first_k_dense_replace` is **1**, so model
+layer 1 is the dense layer. That is the server. Therefore **pod N is model layer N+1**.
+
+That is an inference, so it was checked. `full_attn_layers` lists
+`4 8 12 ... 88 92 93`, which under the mapping predicts MLA pods
+`3 7 11 ... 91 92`. Asking the traces which pods emit a KDA attention record returns
+exactly 24 MLA pods, `3 7 11 15 19 23 27 31 35 39 43 47 51 55 59 63 67 71 75 79 83 87
+91 92`, and 68 KDA pods. The config lists 69 KDA layers, one of which is layer 1, the
+server. 68 and 68.
+
+### Names for things I had only measured
+
+| what I observed | what the report calls it |
+|---|---|
+| 12 layer segments, residual resetting at each | **Block Attention Residuals**, `attn_res_block_size: 12` |
+| 8 segments, last one short | "8 blocks with 12-layer size, giving a partial final block" |
+| tail folds **nine** sources | "9 total blocks when counting the embedding layer" |
+| snapshot 0 created before layer 2, unchanged for 91 layers | `b0 = h1`, "the token embedding is always included as a source" |
+| 3 KDA then 1 MLA, repeating | "Each block contains 3 KDA layers followed by 1 Gated MLA layer, giving a 3:1 mixing ratio" |
+| top 16 of 896, 2 shared | `num_experts: 896`, `num_experts_per_token: 16`, `num_shared_experts: 2` |
+| router weights summing to 1 | `moe_renormalize: true` |
+| scorer ignores source magnitude | `ϕ(q,k) = exp(q⊤ RMSNorm(k))`, "the RMSNorm prevents layers with large-magnitude outputs from dominating the weights" |
+| fold weights barely move across prompts | "layer-specific **learnable** pseudo-query `ql = wl`" |
+
+The RMSNorm line is the explanation for something recorded two cycles ago as surprising.
+At the tail, position 0, the two largest sources, 399.78 and 332.98, receive weights
+0.0164 and 0.0023, while `b0` at 2.04, the smallest, receives 0.0047. Magnitude does not
+drive the weight because the key is normalised before the dot product.
+
+### Equation 10, tested
+
+The report gives, for the i-th layer of block n, a value set of `[b0..b(n-1)]` when
+i = 1 and `[b0..b(n-1), b(i-1,n)]` when i >= 2. The traces record the fold weight vector,
+so the **count** of sources is directly observable, and the two folds per layer, one
+before attention and one before the MoE, should differ by exactly one at a block's first
+layer.
+
+Twenty-one pods were checked across every block boundary. **Twenty match exactly**,
+including each first-layer case: pod 12 has 2 attention sources and 3 MoE sources, pod
+24 has 3 and 4, pod 84 has 8 and 9.
+
+The twenty-first, pod 1, records no fold weights at all. That is not an architectural
+difference: `transformer-1` contains **4** `clover_vectors_write` calls where every other
+pod has **6**, missing the fold-weight and router writes. The fold outputs are present,
+so the folds happen. It is an instrumentation gap in a file already known to be odd.
+
+### The chain, confirmed across two implementations
+
+The report says the output layer aggregates the block representations. The tail walk,
+run through the reference, gave nine source norms. The production fleet, a different
+binary on a different path, gives the pod outputs. For france at position 0:
+
+| source | predicted origin | tail (reference) | pod (engine) |
+|---|---|---|---|
+| b1 | pod 11 = model layer 12 | 137.7729 | 137.7729 |
+| b2 | pod 23 = model layer 24 | 332.9793 | 332.9793 |
+| b3 | pod 35 = model layer 36 | 136.5090 | 136.5090 |
+| b4 | pod 47 = model layer 48 | 272.0080 | 272.0080 |
+| b5 | pod 59 = model layer 60 | 399.7753 | 399.7753 |
+| b6 | pod 71 = model layer 72 | 57.0181 | 57.0181 |
+| b7 | pod 83 = model layer 84 | 64.5007 | 64.5007 |
+| b8 | pod 92 = model layer 93 | 88.4760 | 88.4760 |
+
+Every one of `b1` to `b7` is the output of the **last** layer of a complete block, and
+`b0` is 2.0446, the token embedding.
+
+### What the report explains, and what it does not
+
+It explains the reset, which is not a reset at all: the first layer of a block simply has
+no current-block partial sum to attend to, so what I called "stage 20 does not add the
+carried residual back" is Eq. 10's i = 1 case. It explains the 12-layer period, the nine
+tail sources, the embedding as a permanent source, the 3:1 attention ratio, and why the
+tail scorer ignores magnitude.
+
+It does not explain either anomaly. Pod 12 is model layer 13, the first layer of block 2,
+and pod 48 is model layer 49, the first layer of block 5 — structurally the same kind of
+layer, yet only pod 12 produces a near-constant attention output, and only position 1 at
+pod 48 takes a near-fixed value across unrelated prompts. Nothing in §2.1 or §2.2
+distinguishes them. Those remain measured and unexplained.
+
+---
+
 ## Cycle: different prompts, and one claim that did not survive (2026-10-12)
 
 Everything up to here came from five prompts that were all English, all exactly five
