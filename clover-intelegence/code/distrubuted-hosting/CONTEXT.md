@@ -6,6 +6,69 @@ it does and does not establish.
 
 ---
 
+## Cycle: different prompts, and one claim that did not survive (2026-10-12)
+
+Everything up to here came from five prompts that were all English, all exactly five
+tokens, and all with an obvious completion. Five more were added that vary length,
+language and whether the text means anything: `Hello` at one token,
+`What is the square root of sixteen` at seven, `aaaa bbbb cccc dddd eeee` at nine, a
+French sentence at fifteen, and the opening of Genesis at sixteen. They answer `,`, `?`,
+` f`, `."` and ` and`.
+
+### What held
+
+**Layer 12's attention output is near constant far beyond where it had been checked.**
+Genesis has sixteen positions; every previous prompt stopped at four. From position 2
+onward the cosine against position 8 runs 0.9989 to 0.9998 and the norm sits between
+3.81 and 3.90. Position 0's norm is 2.6386 against france's 2.6367 and water's 2.6384,
+for entirely unrelated first tokens.
+
+Across prompts at the same layer, position 0 agrees at 0.9991 to 0.9998 and position 4
+at 0.9949 to 0.9994, for pairs as unlike as biblical English against French against
+`aaaa bbbb cccc`.
+
+**The segment structure is not an artefact of short English prompts.** Genesis at
+position 15 reproduces it exactly: resets at every twelfth layer, 128.8 at layer 12
+against france's 112.9, 141.5 at layer 60 against 133.4.
+
+**The layer 48 spike at position 1 reproduces precisely.** france 314.56, thethe 316.58,
+genesis 318.39, against 62 to 66 at the neighbouring positions. Three unrelated prompts
+within 1.2 percent of each other. Layer 47 agrees too: france 158.65, genesis 162.35.
+Still unexplained, but now firmly a real and prompt independent feature.
+
+### What did not hold
+
+Last cycle I wrote that at the boundary "the MoE slightly reduces the agreement". That
+was generalised from a single pair. Layer 12, position 4:
+
+| pair | input cos | attention | after MoE |
+|---|---|---|---|
+| france/water | 0.194 | 0.99936 | 0.9899 |
+| france/japan | 0.922 | 0.99997 | 0.9977 |
+| genesis/french | 0.174 | 0.99939 | 0.9907 |
+| **genesis/nonsense** | 0.202 | 0.99502 | **0.7234** |
+| **french/nonsense** | 0.142 | 0.99493 | **0.7187** |
+| **nonsense/question** | 0.156 | 0.99498 | **0.7158** |
+
+Every pair involving the nonsense prompt falls to about 0.72; every pair without it
+stays above 0.99. The attention contracts universally and that part stands, including
+for nonsense. What does not stand is the implication that the experts are incidental:
+they usually preserve the contraction and sometimes undo most of it.
+
+So the layer 13 collapse is not a uniform near identity. It is attention contracting,
+then the MoE either preserving or breaking that, then the boundary declining to add the
+carried residual back. The collapse is strongest when the MoE output happens to agree.
+
+### Still open
+
+Why layer 12's attention collapses to one direction, which these traces cannot show.
+Why position 1 spikes at layer 48 to within 1.2 percent across unrelated prompts. And
+now a third: why the MoE at layer 12 treats the nonsense prompt differently when the
+attention does not. The router weights are recorded at local 3000, so that last one is
+reachable without touching production code.
+
+---
+
 ## Cycle: chasing the thing I could not explain (2026-10-12)
 
 The open question was why what continues past a segment boundary is so nearly the same
