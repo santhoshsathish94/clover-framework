@@ -5,7 +5,10 @@
  * dumps and reports the angle between them, which is.
  *
  * build: gcc -O2 -o vector-compare vector-compare.c -lm
- * run:   ./vector-compare <a.bin> <b.bin> <local> <position>
+ * run:   ./vector-compare <a.bin> <b.bin> <local> <position> [position-in-b]
+ *
+ * Passing the same file twice with two positions compares one token against
+ * another inside a single prompt.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,13 +40,17 @@ static int find_record(const char *path, int local, int position, float *values,
 
 int main(int argc, char **argv)
 {
-    if (argc != 5) { fprintf(stderr, "usage: %s <a.bin> <b.bin> <local> <position>\n", argv[0]); return 2; }
+    if (argc != 5 && argc != 6) {
+        fprintf(stderr, "usage: %s <a.bin> <b.bin> <local> <position> [position-in-b]\n", argv[0]);
+        return 2;
+    }
     int local = atoi(argv[3]), position = atoi(argv[4]);
+    int other = argc == 6 ? atoi(argv[5]) : position;
 
     static float a[WIDTH], b[WIDTH];
     unsigned na = 0, nb = 0;
     if (!find_record(argv[1], local, position, a, &na)) { printf("NA\tmissing\t%s\n", argv[1]); return 1; }
-    if (!find_record(argv[2], local, position, b, &nb)) { printf("NA\tmissing\t%s\n", argv[2]); return 1; }
+    if (!find_record(argv[2], local, other, b, &nb)) { printf("NA\tmissing\t%s\n", argv[2]); return 1; }
     if (na != nb) { printf("NA\tlength %u vs %u\n", na, nb); return 1; }
 
     double dot = 0.0, sa = 0.0, sb = 0.0, far = 0.0;

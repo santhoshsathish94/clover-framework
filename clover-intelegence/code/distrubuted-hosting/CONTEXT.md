@@ -6,6 +6,100 @@ it does and does not establish.
 
 ---
 
+## Cycle: one token at a time (2026-10-11)
+
+### What the previous cycle got wrong
+
+The last cycle summarised position 4 only \u2014 the position the answer is read from \u2014 and
+treated the other four as setup. That hides the thing worth watching: each token has its
+own trajectory through the ninety-two layers, and they are not alike. The creator said
+so plainly; the traces had already been deleted, so this is a fresh capture of five
+prompts through the same production fleet.
+
+### The first token is not like the others
+
+Residual norm entering each layer, france, all five positions:
+
+| layer | p0 `The` | p1 ` capital` | p2 ` of` | p3 ` France` | p4 ` is` |
+|---|---|---|---|---|---|
+| 12 | 137.77 | 119.23 | 109.79 | 121.09 | 112.89 |
+| 24 | **332.98** | 61.33 | 71.13 | 56.63 | 63.13 |
+| 36 | **136.51** | 32.87 | 34.30 | 35.51 | 34.17 |
+| 48 | **272.01** | **314.56** | 64.98 | 64.83 | 59.84 |
+| 60 | **399.78** | 157.54 | 112.46 | 131.88 | 133.41 |
+| 72 | 57.02 | 25.70 | 48.02 | 52.34 | 50.91 |
+| 84 | 64.50 | 48.00 | 63.40 | 68.92 | 63.56 |
+| 92 | 78.20 | 36.15 | 46.48 | 49.42 | 51.64 |
+
+The twelve-layer segment reset holds for every position. But position 0 runs three to
+five times hotter through segments two to five and only comes back to parity by segment
+six. Position 1 spikes once, in segment four, reaching 314.56 against 59.84.
+
+### Recency survives the whole depth
+
+Cosine against the last token, same layer, within france:
+
+| layer | p0 | p1 | p2 | p3 |
+|---|---|---|---|---|
+| 13 | 0.337 | **0.981** | **0.992** | **0.994** |
+| 48 | 0.049 | 0.120 | 0.580 | 0.708 |
+| 92 | **0.085** | 0.459 | 0.611 | **0.768** |
+
+The ordering p3 > p2 > p1 > p0 holds almost everywhere: the nearer a token is, the
+closer its direction. By layer 92 the first token is nearly orthogonal to the last.
+
+Layer 13 is the exception and the interesting one. One layer after the first segment
+reset, positions 1 to 4 are almost the same vector, 0.981 to 0.994. Position 0 does not
+join them, staying at 0.337.
+
+### Causal masking, verified rather than assumed
+
+france and japan share `The capital of`. Positions 0, 1 and 2 are **cos 1.000000 with a
+maximum coordinate gap of 0.0000** at every layer checked. france and thethe share only
+the first token, and position 0 is likewise exactly identical at layers 12, 48 and 92.
+A token depends on itself and what came before it, and nothing else, measured rather
+than assumed.
+
+### Early positions converge to a token independent state in mid depth
+
+This was one surprising pair, so it was replicated before being believed. Position 0,
+two prompts with **different** first tokens:
+
+| layer | `The` vs `Water` | `The` vs `Once` |
+|---|---|---|
+| 1 | 0.793 | 0.874 |
+| 13 | 0.9994 | 0.9993 |
+| 48 | 0.999986 | 0.999990 |
+| 60 | **0.999999** | **0.999999** |
+| 84 | 0.904 | 0.835 |
+| 92 | 0.931 | 0.935 |
+
+Two independent pairs, near identical curves, with norms agreeing too at layer 60:
+399.7753 against 399.9065. Then the representations separate again in the last segment.
+
+It is strongest where there is least context. Using thethe, which shares position 0 with
+france and differs from position 1 onward:
+
+| layer | p0 | p1 | p2 | p3 | p4 |
+|---|---|---|---|---|---|
+| 13 | 1.000000 | 0.977 | 0.937 | 0.862 | 0.720 |
+| 48 | 1.000000 | **0.999909** | 0.488 | 0.207 | 0.307 |
+| 92 | 1.000000 | 0.642 | 0.714 | 0.623 | 0.613 |
+
+Position 1 reaches 0.999909 at layer 48 with tokens ` capital` and ` the`. Position 2
+reaches 0.488 at the same layer, position 3 reaches 0.207. The fewer preceding tokens a
+position has, the more its mid depth representation stops depending on which token it is.
+
+### What this does not establish
+
+Five prompts, five tokens each, English, all with an obvious completion. The position 0
+convergence is replicated on two pairs; the positional gradient rests on one pair. The
+shapes are measured and the cause is not \u2014 in particular nothing here explains why
+layer 13 collapses token identity, why position 0 runs hot through the middle segments,
+or why the last segment re-separates what the middle ones merged.
+
+---
+
 ## Cycle: six prompts through the real engine (2026-10-11)
 
 ### Why this run differs from the last one
