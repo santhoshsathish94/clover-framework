@@ -284,6 +284,78 @@ Why the gate's alignment flips sign with depth, and why pod 12 in particular is 
 beyond the rest of the shallow group, are facts about learned weights. Measured and
 replicated on two prompts; not explained.
 
+### The alignment decomposes into two factors
+
+Two candidate explanations for pod 12's stability were distinguishable, so they were
+distinguished. **The gate vector itself is not unusually constant there**: cosine
+between positions 2 and 8 is 0.990 at pod 12 against 0.982 at pods 13, 24 and 48. It is
+stable almost everywhere, 0.84 to 0.99, and pod 12 is barely the top of a flat field.
+
+Per head, the picture is the opposite of the obvious one. Pod 12's *best* heads are
+modest — maximum 1.689, where pod 72 reaches 3.150 and pod 10 reaches 2.322. What is
+unusual is its *worst*: minimum 0.637, where pod 24 falls to 0.063, pod 48 to 0.102 and
+pod 72 to 0.267. **Pod 12 has no strongly anti-aligned head.**
+
+A median of 1.037 cannot produce a whole-layer alignment of 1.7 by itself, so the
+attention energy must sit in the aligned heads. Comparing the plain mean of per-head
+alignments against the same mean weighted by each head's share of attention energy:
+
+| pod | heads>1 | mean | energy-weighted | ratio |
+|---|---|---|---|---|
+| 1 | 26/96 | 0.856 | 0.608 | 0.710 |
+| 6 | 56/96 | 1.115 | 1.150 | 1.031 |
+| 10 | 55/96 | 1.027 | 1.066 | 1.037 |
+| **12** (block write) | 52/96 | **1.141** | **1.362** | **1.193** |
+| 24 (block write) | 10/96 | 0.751 | 0.146 | **0.194** |
+| 36 (block write) | 21/96 | 0.886 | 0.289 | 0.326 |
+| 48 (block write) | 20/96 | 0.855 | 0.234 | 0.273 |
+| 72 (block write) | 22/96 | 0.820 | 0.695 | 0.848 |
+| 90 | 18/96 | 0.775 | 0.835 | 1.078 |
+
+Two independent factors, and pod 12 is the only layer high on both: the most aligned
+gate on average, and the strongest concentration of attention energy into the heads the
+gate opens on. Pods 24, 36 and 48 are the mirror image — their energy sits precisely in
+the heads the gate shuts, which is why their whole-layer alignment is 0.19 to 0.33.
+
+### The part that actually separates pod 12: it does not move
+
+Replicating on a second prompt is where the shallow group falls away.
+
+| pod | mean, genesis → french | heads>1, genesis → french | min, genesis → french |
+|---|---|---|---|
+| 6 | 1.115 → 0.973 | 56 → **39** | 0.531 → 0.364 |
+| 10 | 1.027 → 0.986 | 55 → **40** | 0.503 → 0.372 |
+| **12** | **1.141 → 1.148** | **52 → 53** | **0.637 → 0.665** |
+| 72 | 0.820 → 0.758 | 22 → 10 | 0.267 → 0.259 |
+
+Pods 6 and 10 look comparable on one prompt and lose fifteen to seventeen aligned heads
+on another. Pod 12 does not move: across five positions and two prompts its mean stays
+between 1.086 and 1.148 and its concentration ratio between 1.185 and 1.213.
+
+So the full chain, each link measured:
+
+1. A **block-write layer** passes its attention output on undiluted, because the first
+   layer of a block has no current-block partial sum to fold back in. In the sources.
+2. Pod 12's **output gate is aligned** with its own attention, whole-layer 1.700 against
+   a next best of 1.149, so it preserves the attention's direction instead of reshaping it.
+3. That alignment is the product of **two factors** — the highest mean per-head alignment
+   measured, and the strongest concentration of attention energy into aligned heads — and
+   pod 12 is the only layer where both point the same way.
+4. Uniquely, all of it is **prompt-invariant**, because no head is strongly anti-aligned:
+   minimum per-head alignment 0.42 to 0.67 across every position and both prompts, where
+   every other pod measured falls to between 0.06 and 0.37.
+
+Hence a layer output at cosine 0.9989 between positions when every other pod sits
+between 0.08 and 0.97.
+
+### What remains
+
+Why the weights are like that. The alignment flip with depth and pod 12's position
+within it are properties of training, and no amount of reading activations will say why
+a weight matrix ended up where it did. Observation has been taken as far as it goes
+here; the rest would need the training setup, which is not public.
+
+
 
 
 ## Caveats

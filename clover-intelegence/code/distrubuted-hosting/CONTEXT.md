@@ -6,6 +6,81 @@ it does and does not establish.
 
 ---
 
+## Cycle: decomposing the alignment (2026-10-12)
+
+Two things were open: why the gate's alignment flips sign with depth, and why pod 12 is
+so far beyond the shallow group it sits in. The first observation came free. Pod 12's
+alignment is 1.685, 1.700, 1.685 and 1.696 across positions and 1.693 on a different
+prompt — under one percent of variation in a quantity the engine computes from the
+input. Pod 68 swings 0.535 to 0.882 over the same positions. Something there is not
+responding to the input at all.
+
+### Two candidate explanations, distinguished rather than chosen between
+
+Either the gate vector itself is near-fixed at pod 12, or the alignment is carried by
+heads that happen to be stable. These are separable, so they were separated.
+
+**The gate vector is not unusually constant.** Cosine between positions 2 and 8: 0.990
+at pod 12, 0.982 at pods 13, 24 and 48, 0.839 at pod 68. Stable nearly everywhere and
+pod 12 is barely the top of a flat field. That explanation is out.
+
+Per head it is the reverse of what I expected. Pod 12's **best** heads are modest, a
+maximum of 1.689 where pod 72 reaches 3.150 and pod 10 reaches 2.322. Its **worst** head
+is the outlier: 0.637, where pod 24 falls to 0.063, pod 48 to 0.102, pod 72 to 0.267.
+Pod 12 has no strongly anti-aligned head at all.
+
+### A median of 1.04 cannot make a layer alignment of 1.70
+
+So the energy has to be sitting somewhere particular. Comparing the plain mean of
+per-head alignments against the same mean weighted by each head's share of attention
+energy:
+
+| pod | heads>1 | mean | energy-weighted | ratio |
+|---|---|---|---|---|
+| 6 | 56/96 | 1.115 | 1.150 | 1.031 |
+| 10 | 55/96 | 1.027 | 1.066 | 1.037 |
+| **12** | 52/96 | **1.141** | **1.362** | **1.193** |
+| 24 | 10/96 | 0.751 | 0.146 | **0.194** |
+| 36 | 21/96 | 0.886 | 0.289 | 0.326 |
+| 48 | 20/96 | 0.855 | 0.234 | 0.273 |
+
+Two independent factors. Pod 12 is the only layer high on both: the most aligned gate on
+average and the strongest concentration of attention energy into the heads the gate
+opens on. Pods 24, 36 and 48 are the mirror image, their energy sitting exactly in the
+heads the gate shuts.
+
+### The thing that actually separates pod 12 only shows on a second prompt
+
+| pod | mean, gen → fre | heads>1, gen → fre | min, gen → fre |
+|---|---|---|---|
+| 6 | 1.115 → 0.973 | 56 → **39** | 0.531 → 0.364 |
+| 10 | 1.027 → 0.986 | 55 → **40** | 0.503 → 0.372 |
+| **12** | **1.141 → 1.148** | **52 → 53** | **0.637 → 0.665** |
+| 72 | 0.820 → 0.758 | 22 → 10 | 0.267 → 0.259 |
+
+On genesis alone, pods 6 and 10 look like pod 12's neighbours in kind. On french they
+lose fifteen to seventeen aligned heads. Pod 12 does not move: across five positions and
+two prompts, mean 1.086 to 1.148, ratio 1.185 to 1.213.
+
+Had I stopped at one prompt I would have written "pod 12 is the strongest of a
+co-aligning shallow group", which is true and misses the point. The group is not stable;
+pod 12 is. That is the fourth time this session a second prompt has changed a conclusion
+rather than confirming it.
+
+### Where this stops, and why it is a different kind of stopping
+
+The chain is now complete and every link is measured: a block-write layer passes its
+attention output on undiluted; pod 12's gate is aligned with that attention rather than
+reshaping it; the alignment is the product of two factors it is uniquely high on; and
+all of it is prompt-invariant because no head is strongly anti-aligned.
+
+What is left is why the weights are that way. That is a training question. No amount of
+reading activations will answer it, and the training setup is not public. This is a
+limit of the method rather than a gap in the work, which is a different thing from the
+three previous stopping points.
+
+---
+
 ## Cycle: looking around the question instead of at it (2026-10-12)
 
 Direction was to stop attacking the question head on and look for the thing several
