@@ -160,17 +160,66 @@ unremarkable: 0.537, 0.719, 0.593, 0.728, 0.835, 0.710.
   the vllm implementation special-cases `is_block_write_layer` alone, with no per-layer
   distinction.
 
-### What would be needed
+### Localised to the output gate
 
-The anomaly is therefore a property of that layer's learned weights rather than of the
-design. Deciding it would need either the KDA internals — the recurrent state `S`, the
-channel-wise decay `α`, the write strength `β` of Eq. 1 — which the trace does not
-record, or the layer's weights read directly from
-`operators/qkv-all/layer-12/operator.bin`. The first means adding tracing inside the
-attention, a change to production code rather than a read. The second means parsing a
-raw weight layout, where a mis-parse would produce a confident wrong answer.
+With permission to change non-production code, the KDA internals were traced directly:
+query, key, value, the write strength `β`, the channel-wise decay `α`, the attention
+output before and after its per-head norm, the gated value, and a per-head Frobenius
+norm of the recurrent state `S`. All of it sits behind `clover_vectors_active`, so with
+`CLOVER_VECTORS` unset nothing is computed. Nine KDA pods carry it; all nine still pass
+their reference gate with tracing off, so the arithmetic is unchanged.
 
-Neither has been done. The behaviour is recorded as measured and unexplained.
+Against a control layer, everything upstream of the gate is comparable. Constancy across
+positions, cos(p2, p8), genesis:
+
+| quantity | pod 12 | pod 24 (control) |
+|---|---|---|
+| query | 0.877 | 0.829 |
+| key | 0.724 | 0.710 |
+| value | 0.977 | 0.922 |
+| decay `α` | 0.998 | 0.996 |
+| attention, raw | 0.908 | 0.963 |
+| attention, per-head normed | 0.989 | 0.955 |
+| **after the output gate** | **0.996** | **0.513** |
+| state norm | 0.980 | 0.986 |
+
+The recurrent state, the decay and the projections do not distinguish the two layers.
+**The output gate does.** `gate = attention · sigmoid(Wx)`: pod 24's gate destroys the
+constancy its own attention had, pod 12's preserves it.
+
+Extended to nine KDA pods, with the gate's transmission measured as the norm ratio
+across it:
+
+| pod | kind | attention normed | after gate | gate passes | layer output |
+|---|---|---|---|---|---|
+| 10 | ordinary | 0.255 | 0.261 | 0.655 | 0.285 |
+| **12** | **block write** | **0.989** | **0.996** | **0.901** | **0.999** |
+| 13 | ordinary | 0.705 | 0.479 | 0.384 | 0.491 |
+| 24 | block write | 0.955 | 0.513 | 0.100 | 0.537 |
+| 36 | block write | 0.928 | 0.589 | 0.152 | 0.719 |
+| 48 | block write | 0.893 | 0.425 | 0.129 | 0.593 |
+| 60 | block write | 0.711 | 0.651 | 0.298 | 0.728 |
+| 72 | block write | 0.769 | 0.735 | 0.284 | 0.835 |
+| 84 | block write | 0.710 | 0.631 | 0.288 | 0.710 |
+
+Pod 12 is extreme at **both** stages. Its attention output is the most position-constant
+of the nine before the gate, 0.989 against a next-best 0.955, and its gate is by far the
+most transparent, passing 0.901 of the norm where every other pod passes 0.100 to 0.655.
+
+### What this does and does not settle
+
+Settled: the anomaly is not in the recurrent state, the decay, or the projections, and
+the stage at which other layers lose their attention's constancy is the output gate.
+
+Not settled: gate transmission does not predict the loss monotonically. Pod 13 passes
+0.384 and loses 0.226; pod 60 passes 0.298 and loses only 0.059. So transparency is
+part of the story and not the whole of it. Two ordinary layers is also too thin a
+control group to say that block-write layers generally have more constant attention,
+even though the four earliest block-write pods are the four highest in that column.
+
+Why pod 12's gate is open when every other measured gate is mostly closed is a fact
+about that layer's learned weights, and is not answered here.
+
 
 ## Caveats
 

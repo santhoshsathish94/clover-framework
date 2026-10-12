@@ -6,6 +6,88 @@ it does and does not establish.
 
 ---
 
+## Cycle: tracing inside the attention (2026-10-12)
+
+Previous cycle stopped at a boundary: explaining pod 12 needed the KDA internals, the
+trace records only the residual, and adding tracing inside the attention is a change to
+running code. The creator lifted it — "we are not running anything in production" — so
+the work was done.
+
+### How it was kept safe anyway
+
+Backed up before touching anything, `tar` in the same script. Every record sits behind
+`clover_vectors_active`, so with `CLOVER_VECTORS` unset not one float is computed.
+Patched by an anchored idempotent script, built with the same `-Werror` flags as
+`build.sh`, and **every patched pod re-ran its reference gate with tracing off**: nine
+pods, nine `VERIFIED`. The arithmetic is unchanged, which is the only basis for trusting
+what the new records say.
+
+Two mistakes on the way in. `Path.read_text(newline=)` needs Python 3.13 and the host is
+older, which failed before writing anything. Then the `output` anchor matched twice: the
+MLA path is compiled out but still present in every pod source and ends with the same
+three lines. The anchor was moved onto the per-head normalise above them, which only the
+KDA path has. Same trap as the earlier `transformer_qkv` port, and the backup meant the
+first failure cost nothing.
+
+### It is the output gate
+
+Nine quantities recorded per position: query, key, value, write strength, decay, the
+attention output raw and after its per-head norm, the gated value, and a per-head
+Frobenius norm of the recurrent state. Against pod 24 as control, cos(p2, p8):
+
+| quantity | pod 12 | pod 24 |
+|---|---|---|
+| query | 0.877 | 0.829 |
+| key | 0.724 | 0.710 |
+| value | 0.977 | 0.922 |
+| decay | 0.998 | 0.996 |
+| attention raw | 0.908 | 0.963 |
+| attention normed | 0.989 | 0.955 |
+| **gated** | **0.996** | **0.513** |
+| state norm | 0.980 | 0.986 |
+
+Nothing upstream separates them. The recurrent state is not the answer, the decay is not
+the answer. The **output gate** is: pod 24's gate destroys the constancy its own
+attention had, pod 12's preserves it.
+
+Which also kills the guess I would have made from the equation alone. The interesting
+quantity in Eq. 1 looked like the decay — and the decay is 0.998 against 0.996, no
+difference at all.
+
+### Tested on nine pods, and only partly holding
+
+Measuring the gate's transmission as the norm ratio across it:
+
+| pod | attention normed | after gate | gate passes | output |
+|---|---|---|---|---|
+| 10 | 0.255 | 0.261 | 0.655 | 0.285 |
+| **12** | **0.989** | **0.996** | **0.901** | **0.999** |
+| 13 | 0.705 | 0.479 | 0.384 | 0.491 |
+| 24 | 0.955 | 0.513 | 0.100 | 0.537 |
+| 36 | 0.928 | 0.589 | 0.152 | 0.719 |
+| 48 | 0.893 | 0.425 | 0.129 | 0.593 |
+| 60 | 0.711 | 0.651 | 0.298 | 0.728 |
+| 72 | 0.769 | 0.735 | 0.284 | 0.835 |
+| 84 | 0.710 | 0.631 | 0.288 | 0.710 |
+
+Pod 12 is extreme at both stages: the most constant attention before the gate, and a
+gate that passes 0.901 where every other pod passes 0.100 to 0.655.
+
+But the simple version does not survive. Transmission does not predict the loss
+monotonically: pod 13 passes 0.384 and loses 0.226, pod 60 passes 0.298 and loses 0.059.
+Gate openness is part of it, not all of it. And two ordinary layers is too thin to claim
+block-write layers generally have more constant attention, however suggestive it is that
+the four earliest block-write pods are the four highest in that column.
+
+### Where it stops now
+
+The question has moved from "why does pod 12 behave unlike its structural peers" to
+"why is pod 12's output gate open when every other measured gate is mostly closed".
+That is a fact about one layer's learned weights. It is a better question than the one
+before it and it is still not answered.
+
+---
+
 ## Cycle: the traces against the official report (2026-10-12)
 
 Everything so far was measured without reading what Kimi says the model is. The report

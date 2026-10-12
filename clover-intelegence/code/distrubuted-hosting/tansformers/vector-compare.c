@@ -15,7 +15,9 @@
 #include <string.h>
 #include <math.h>
 
-#define WIDTH 7168
+/* Wide enough for the KDA internal records, which are 96 heads x 128 rather than the
+   model width. */
+#define WIDTH 16384
 
 /* Returns 1 and fills values when the record is found. */
 static int find_record(const char *path, int local, int position, float *values, unsigned *count)
