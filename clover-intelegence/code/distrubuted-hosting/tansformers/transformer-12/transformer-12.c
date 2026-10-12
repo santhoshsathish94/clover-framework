@@ -558,14 +558,19 @@ static void transformer_attention_output(const Transformer *transformer, Transfo
         transformer_normalize(block, block, transformer->records[19].data, TRANSFORMER_HEAD);
     }
     /* CLOVER_CONST_ATTN, experiment only: substitute a cached vector for the attention
-       this layer just computed. Loaded once; absent or unreadable means no change. */
+       this layer just computed. Per layer, so any subset can be enabled by choosing
+       which files exist. Loaded once; absent or short means this layer is untouched. */
     {
         static float constant[TRANSFORMER_ROWS];
         static int constant_state;
         if (!constant_state) {
-            const char *path = getenv("CLOVER_CONST_ATTN");
-            FILE *file = path && *path ? fopen(path, "rb") : NULL;
+            const char *prefix = getenv("CLOVER_CONST_ATTN");
+            char named[4096];
+            FILE *file = NULL;
             constant_state = -1;
+            if (prefix && *prefix &&
+                snprintf(named, sizeof named, "%s.%d.f32", prefix, TRANSFORMER_LAYER) < (int)sizeof named)
+                file = fopen(named, "rb");
             if (file) {
                 if (fread(constant, sizeof(float), TRANSFORMER_ROWS, file) == TRANSFORMER_ROWS)
                     constant_state = 1;

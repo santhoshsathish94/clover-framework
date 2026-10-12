@@ -12,6 +12,7 @@ points at something that was measured first.
 |---|---|---|---|
 | A, drop block snapshots | the tail gives seven of its nine sources about 5% of the weight between them | **inconclusive** — the ablation hook collapses positions rather than swapping prompts, and the no-op control caught it | [METHOD-A-SNAPSHOTS.md](METHOD-A-SNAPSHOTS.md) |
 | B, cache pod 12's attention | it is the only layer of 92 whose attention output is near a fixed direction | **held** — 12 of 12 tokens identical, worst pod-92 cosine 0.996102 | [METHOD-B-CONST-ATTENTION.md](METHOD-B-CONST-ATTENTION.md) |
+| C, the same at every layer | the single-token result in B did not fit the reason B was tried | **held per layer, 68 of 68**, and up to **32 of 68 together** when chosen by measured tolerance; all 68 at once collapses. Also shows B's success was not caused by what motivated it | [METHOD-C-ALL-LAYERS.md](METHOD-C-ALL-LAYERS.md) |
 
 ## The harness
 

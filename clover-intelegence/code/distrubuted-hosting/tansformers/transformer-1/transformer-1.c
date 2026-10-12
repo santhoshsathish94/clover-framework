@@ -504,6 +504,28 @@ static void transformer_attention_output(const Transformer *transformer, Transfo
         float *block = sequence->attention + head * TRANSFORMER_HEAD;
         transformer_normalize(block, block, transformer->records[19].data, TRANSFORMER_HEAD);
     }
+    /* CLOVER_CONST_ATTN, experiment only: substitute a cached vector for the attention
+       this layer just computed. Per layer, so any subset can be enabled by choosing
+       which files exist. Loaded once; absent or short means this layer is untouched. */
+    {
+        static float constant[TRANSFORMER_ROWS];
+        static int constant_state;
+        if (!constant_state) {
+            const char *prefix = getenv("CLOVER_CONST_ATTN");
+            char named[4096];
+            FILE *file = NULL;
+            constant_state = -1;
+            if (prefix && *prefix &&
+                snprintf(named, sizeof named, "%s.%d.f32", prefix, TRANSFORMER_LAYER) < (int)sizeof named)
+                file = fopen(named, "rb");
+            if (file) {
+                if (fread(constant, sizeof(float), TRANSFORMER_ROWS, file) == TRANSFORMER_ROWS)
+                    constant_state = 1;
+                fclose(file);
+            }
+        }
+        if (constant_state > 0) memcpy(sequence->attention, constant, sizeof constant);
+    }
     /* CLOVER_KDA_INTERNALS: the per-head normalised attention, before gating. */
     if (clover_vectors_active(TRANSFORMER_LAYER))
         clover_vectors_write(TRANSFORMER_LAYER, 5007, (unsigned long)sequence->positions,
