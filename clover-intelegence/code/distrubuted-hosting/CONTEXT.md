@@ -6,6 +6,87 @@ it does and does not establish.
 
 ---
 
+## Cycle: chasing the thing I could not explain (2026-10-12)
+
+The open question was why what continues past a segment boundary is so nearly the same
+across different tokens. Layer 12's input is cos 0.9377 between france and water and its
+output is 0.9995, so whatever happens, happens inside that layer. The trace records the
+residual after every stage, so the stage can be named rather than guessed.
+
+### It is the attention, not the experts
+
+Layer 12, position 0, france against water, at every traced local:
+
+| local | cos | norm A | norm B |
+|---|---|---|---|
+| 0 input | 0.937746 | 137.77 | 132.34 |
+| 6 | 0.937746 | 137.77 | 132.34 |
+| **9 attention out** | **0.999560** | **2.6367** | **2.6384** |
+| 116 after MoE | 0.999459 | 9.6944 | 9.6793 |
+
+The MoE slightly reduces the agreement. The attention produces it.
+
+### Not a position 0 effect, which is how I had been framing it
+
+| position | input cos | attention out cos |
+|---|---|---|
+| 0 | 0.937746 | 0.999560 |
+| 1 | 0.341983 | 0.999291 |
+| 2 | **0.217315** | 0.999384 |
+| 3 | **0.187627** | 0.999418 |
+| 4 | 0.194068 | 0.999360 |
+
+Inputs that disagree at cos 0.19 produce attention outputs that agree at 0.9994. Every
+position does it, not just the first.
+
+### Attention contracts prompt differences everywhere
+
+Across twenty-two layers at position 4, the attention output is more prompt-similar than
+its own input in **twenty-one of them**, typically about twice, and 4.94 and 5.15 times
+at layers 11 and 12. The one exception is layer 27 at 0.58.
+
+That gives the mechanism for the layer 13 collapse, and it needs both halves:
+
+- A normal layer adds the carried residual back at stage 20, and that residual is large
+  and prompt specific, so the contraction is swamped. Layer 11 position 4 takes an input
+  at cos 0.1916 and hands on 0.194. Nothing happens.
+- A boundary layer does not add it back. Layer 12 position 4 takes 0.194 and hands on
+  **0.990**, because all that survives is the contracted part.
+
+### Layer 12 is singular, and that part is not explained
+
+The obvious next thought was that boundary layers have near constant attention. They do
+not. Cosine between positions 1 and 4 of the attention output, within one prompt:
+
+| layer | boundary | p1~p4 | p2~p4 |
+|---|---|---|---|
+| 10 | no | 0.217 | 0.482 |
+| **12** | **yes** | **0.998** | **0.9996** |
+| 24 | yes | 0.545 | 0.744 |
+| 48 | yes | 0.552 | 0.596 |
+| 84 | yes | 0.475 | 0.693 |
+
+Every other boundary sits in the same range as ordinary layers. Layer 12 alone produces
+what is close to a fixed direction, and it does so in all five prompts to three decimal
+places: p1~p4 runs 0.9964 to 0.9981, p2~p4 runs 0.9982 to 0.9996. Its output is also
+unusually small, 3.88 at position 4 against 31.45 at layer 10.
+
+So the sharpness of the layer 13 collapse is a property of layer 12 specifically, which
+is consistent with later segment starts collapsing far less: 0.98 to 0.99 at layer 13,
+but only 0.40 to 0.64 at layer 25.
+
+### Where this stops
+
+Why layer 12's attention collapses to one direction cannot be answered from these
+traces. The KDA recurrent state, the decay and the per head scores are not recorded;
+only the residual after each stage is. Answering it would mean adding tracing inside the
+attention, which is a change to production code rather than a read, and that is a
+decision to take deliberately rather than slide into.
+
+The layer 48 spike at position 1 is untouched by this cycle and remains unexplained.
+
+---
+
 ## Cycle: start at one token and climb (2026-10-12)
 
 ### A ladder that makes a prediction instead of an assumption
