@@ -418,6 +418,13 @@ static void transformer_qkv(const Transformer *transformer, TransformerSequence 
         }
     transformer_l2_heads(sequence->qkv[0]);
     transformer_l2_heads(sequence->qkv[1]);
+    /* CLOVER_KDA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER)) {
+        unsigned long at = (unsigned long)sequence->positions;
+        clover_vectors_write(TRANSFORMER_LAYER, 5001, at, sequence->qkv[0], TRANSFORMER_ROWS);
+        clover_vectors_write(TRANSFORMER_LAYER, 5002, at, sequence->qkv[1], TRANSFORMER_ROWS);
+        clover_vectors_write(TRANSFORMER_LAYER, 5003, at, sequence->qkv[2], TRANSFORMER_ROWS);
+    }
 }
 
 static void transformer_decay(const Transformer *transformer, TransformerSequence *sequence)
@@ -433,6 +440,12 @@ static void transformer_decay(const Transformer *transformer, TransformerSequenc
             float value = exponent * (sequence->decay[index] + transformer_f32(transformer->records[18].data + index * 4));
             sequence->decay[index] = expf(-5.0f * transformer_sigmoid(value));
         }
+    }
+    /* CLOVER_KDA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER)) {
+        unsigned long at = (unsigned long)sequence->positions;
+        clover_vectors_write(TRANSFORMER_LAYER, 5004, at, sequence->beta, TRANSFORMER_HEADS);
+        clover_vectors_write(TRANSFORMER_LAYER, 5005, at, sequence->decay, TRANSFORMER_ROWS);
     }
 }
 
@@ -465,6 +478,23 @@ static void transformer_update_attention(TransformerSequence *sequence)
             }
         }
     }
+    /* CLOVER_KDA_INTERNALS: one Frobenius norm per head, so the recurrent state can be
+       watched without dumping 96 x 128 x 128 floats per position. Stack local, because
+       several requests share this library at once. */
+    if (clover_vectors_active(TRANSFORMER_LAYER)) {
+        float magnitude[TRANSFORMER_HEADS];
+        unsigned long at = (unsigned long)sequence->positions;
+        for (unsigned head = 0; head < TRANSFORMER_HEADS; head++) {
+            double total = 0.0;
+            for (unsigned row = 0; row < TRANSFORMER_HEAD; row++)
+                for (unsigned column = 0; column < TRANSFORMER_HEAD; column++)
+                    total += (double)sequence->recurrent[head][row][column] *
+                        sequence->recurrent[head][row][column];
+            magnitude[head] = (float)sqrt(total);
+        }
+        clover_vectors_write(TRANSFORMER_LAYER, 5009, at, magnitude, TRANSFORMER_HEADS);
+        clover_vectors_write(TRANSFORMER_LAYER, 5006, at, sequence->attention, TRANSFORMER_ROWS);
+    }
 }
 
 static void transformer_attention_output(const Transformer *transformer, TransformerSequence *sequence)
@@ -474,8 +504,16 @@ static void transformer_attention_output(const Transformer *transformer, Transfo
         float *block = sequence->attention + head * TRANSFORMER_HEAD;
         transformer_normalize(block, block, transformer->records[19].data, TRANSFORMER_HEAD);
     }
+    /* CLOVER_KDA_INTERNALS: the per-head normalised attention, before gating. */
+    if (clover_vectors_active(TRANSFORMER_LAYER))
+        clover_vectors_write(TRANSFORMER_LAYER, 5007, (unsigned long)sequence->positions,
+            sequence->attention, TRANSFORMER_ROWS);
     for (unsigned coordinate = 0; coordinate < TRANSFORMER_ROWS; coordinate++)
         sequence->gate[coordinate] = sequence->attention[coordinate] * transformer_sigmoid(sequence->gate[coordinate]);
+    /* CLOVER_KDA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER))
+        clover_vectors_write(TRANSFORMER_LAYER, 5008, (unsigned long)sequence->positions,
+            sequence->gate, TRANSFORMER_ROWS);
     transformer_project(transformer, 7, sequence->gate, sequence->residual);
 }
 

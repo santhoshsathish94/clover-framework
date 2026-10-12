@@ -6,6 +6,82 @@ it does and does not establish.
 
 ---
 
+## Cycle: looking around the question instead of at it (2026-10-12)
+
+Direction was to stop attacking the question head on and look for the thing several
+stories might share. Two moves came out of that, and the first one cost nothing: the
+engine computes `gate = attention · sigmoid(Wx)` and the trace already held both the
+attention and the result, so dividing one by the other recovers the gate itself without
+recording anything new. The second was to stop sampling where I had happened to look —
+nine pods, seven of them deep — and patch all 68 KDA pods so the gate could be seen
+across the whole depth.
+
+All 68 patched and rebuilt; eight of the nine sampled layers re-verified with tracing
+off. The ninth, pod 1, cannot be gate-tested at all: the harness asserts `layer>=2`.
+That is a limit of the test, not a failure of the patch, and worth not mistaking for one.
+
+### The previous answer was wrong
+
+"Pod 12's gate is open" did not survive the wider profile. Its **mean** gate is 0.5031,
+and pods 10, 22, 56 and 90 are all higher. But pod 12 passes 0.901 of the norm while pod
+24, whose mean gate is 0.4570, passes 0.100. Both cannot be true unless the gate is
+correlated with where the attention has magnitude.
+
+So compare the RMS gate weighted by attention energy, which is exactly the surviving
+norm fraction, against the unweighted RMS. Above one, the gate opens on the coordinates
+the attention is using; below one, it closes on them.
+
+| pods | mean alignment |
+|---|---|
+| 1 to 23 | **1.016** |
+| 24 to 46 | 0.710 |
+| 47 to 69 | 0.735 |
+| 70 to 92 | 0.717 |
+
+The gate's alignment flips sign with depth. Pod 12 is the extreme of the network at
+**1.700** against a next best of 1.149, and it replicates at 1.693 on a second prompt.
+Every block-write pod replicates within 0.05.
+
+And the other block-write pods do the opposite of pod 12, sitting below their own
+neighbours rather than above: 24 at 0.214 between 0.952 and 0.817, 36 at 0.362 between
+0.818 and 0.746, 48 at 0.293 between 0.785 and 0.843.
+
+### The common thing underneath
+
+Nothing exotic is happening at pod 12. Two ordinary properties meet there and only there:
+
+1. A **block-write layer** is the only place the attention output survives as the layer
+   output instead of being swamped by the carried residual. That is Eq. 10's i = 1 case,
+   and it is in the sources.
+2. The **gate co-aligns with the attention in the shallow layers** and anti-aligns
+   deeper. That is not in any source; it is measured here.
+
+Pod 12 is the only block-write pod inside the co-aligning region and simultaneously the
+strongest co-aligner in the network. Its attention is already the most position-constant
+measured, its gate preserves that instead of reshaping it, and the block write hands it
+on undiluted.
+
+Part of that is arithmetic: block writes are twelve apart and the co-aligning region is
+about twenty-three pods wide, so it was always going to contain exactly one. What is not
+arithmetic is that the one it contains is the strongest co-aligner of all 68 while its
+six structural peers sit at or below their neighbours.
+
+### What I had to withdraw, again
+
+This is the second rider in two cycles that replicated poorly. Last cycle the claim was
+"the experts only slightly reduce the agreement", from one pair. This cycle it was "pod
+12's gate is open", from nine pods chosen badly. Both headline findings survived; both
+attached explanations did not. **Sampling where the phenomenon is does not test the
+explanation of why it is there** — that needs the layers where it is absent, which here
+meant all 68.
+
+### Still open
+
+Why the alignment flips sign with depth, and why pod 12 sits so far beyond the rest of
+the shallow group. Facts about learned weights, measured and replicated, not explained.
+
+---
+
 ## Cycle: tracing inside the attention (2026-10-12)
 
 Previous cycle stopped at a boundary: explaining pod 12 needed the KDA internals, the

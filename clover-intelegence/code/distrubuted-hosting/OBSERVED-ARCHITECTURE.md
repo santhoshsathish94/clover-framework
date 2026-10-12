@@ -217,8 +217,73 @@ part of the story and not the whole of it. Two ordinary layers is also too thin 
 control group to say that block-write layers generally have more constant attention,
 even though the four earliest block-write pods are the four highest in that column.
 
-Why pod 12's gate is open when every other measured gate is mostly closed is a fact
-about that layer's learned weights, and is not answered here.
+### It is not how open the gate is, it is what it opens on
+
+"Pod 12's gate is open" turned out to be wrong. Profiled across all 68 KDA pods, pod
+12's **mean** gate is 0.5031, which is unremarkable — pods 10, 22, 56 and 90 are all
+higher. That cannot be reconciled with pod 12 passing 0.901 of the norm while pod 24,
+whose mean gate is 0.4570, passes 0.100. The only way both are true is if the gate is
+correlated with where the attention actually has magnitude.
+
+`gate-profile.c` measures that without new tracing, since `5008 / 5007` recovers
+`sigmoid(Wx)` coordinate by coordinate. Comparing the RMS gate weighted by attention
+energy, which is exactly the surviving norm fraction, against the unweighted RMS gives
+an **alignment**: above one when the gate opens on the coordinates the attention is
+using, below one when it closes on them.
+
+| pods | mean alignment |
+|---|---|
+| 1 to 23 | **1.016** |
+| 24 to 46 | 0.710 |
+| 47 to 69 | 0.735 |
+| 70 to 92 | 0.717 |
+
+Shallow gates open on what the attention is doing; deeper gates close on it. Pod 12 is
+the extreme of the whole network at **1.700**, half as much again as the next highest
+(1.149 at pod 6), and it replicates on a second prompt at 1.693.
+
+The other block-write pods do the opposite of pod 12, sitting below their own
+neighbours:
+
+| block-write pod | alignment | neighbours |
+|---|---|---|
+| **12** | **1.700** | 1.114, 0.789 |
+| 24 | 0.214 | 0.952, 0.817 |
+| 36 | 0.362 | 0.818, 0.746 |
+| 48 | 0.293 | 0.785, 0.843 |
+| 60 | 0.647 | 0.772, 0.819 |
+| 72 | 0.744 | 0.782, 0.710 |
+| 84 | 0.736 | 0.812, 1.071 |
+
+### The answer: two ordinary properties intersecting
+
+Nothing exotic is happening at pod 12. Two independent and otherwise unremarkable facts
+meet there, and only there:
+
+1. **A block-write layer is the only place the attention output survives as the layer
+   output.** Everywhere else stage 20 folds the large, prompt-specific carried residual
+   back in and swamps it. This is Eq. 10's i = 1 case, stated in the sources.
+2. **The output gate co-aligns with the attention in the shallow layers and anti-aligns
+   deeper**, mean 1.016 over pods 1 to 23 against about 0.72 beyond. This is not stated
+   anywhere; it is measured here.
+
+Pod 12 is the one layer that is both: the only block-write pod inside the co-aligning
+region, and the strongest co-aligner in the network. Its attention output is already the
+most position-constant of the nine measured, its gate preserves that rather than
+reshaping it, and the block write then hands it on undiluted. Hence cos 0.9989 between
+positions where every other pod is between 0.08 and 0.97.
+
+That the co-aligning region happens to contain exactly one block-write pod is partly
+arithmetic — block writes are twelve apart and the region is about twenty-three pods
+wide. What is not arithmetic is that pod 12 is the strongest co-aligner of all 68 while
+its six structural peers are at or below their neighbours.
+
+### Still not answered
+
+Why the gate's alignment flips sign with depth, and why pod 12 in particular is so far
+beyond the rest of the shallow group, are facts about learned weights. Measured and
+replicated on two prompts; not explained.
+
 
 
 ## Caveats
