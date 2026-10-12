@@ -6,6 +6,84 @@ it does and does not establish.
 
 ---
 
+## Cycle: start at one token and climb (2026-10-12)
+
+### A ladder that makes a prediction instead of an assumption
+
+Five nested prompts, `The`, `The capital`, and so on to the full five tokens. Each is a
+strict prefix of the next, so if the model is causal then every position must be
+identical in every run that contains it. That is testable, so it was tested first.
+
+**Position 0 is cos 1.000000 against the five token run at every layer checked, for
+every prefix length.** The record counts line up too: the one token run holds 110
+records at position 0 and only the two record p+1 snapshot artefact above it.
+
+The answers also chain. `The` alone produces ` `, `The capital` produces ` of`,
+`The capital of` produces ` the`, `The capital of France` produces ` is`. Each is
+exactly what the five token run predicted at that position.
+
+### The spike at position 1 is positional, not lexical
+
+`The the the the the` puts the same token, ` the`, at positions 1 to 4. Same token,
+different amounts of context:
+
+| layer | p1 | p2 | p3 | p4 |
+|---|---|---|---|---|
+| 48 | **316.58** | 51.59 | 45.22 | 52.08 |
+| 60 | **154.65** | 119.87 | 112.98 | 124.30 |
+
+Position 1 runs six times hotter than positions 2 to 4 at layer 48 while being the same
+token, so the spike belongs to the position. France's position 1 is ` capital` and
+spikes to 314.56 at the same layer; this one is ` the` and spikes to 316.58. Different
+words, nearly the same magnitude, and the cosine between them there was already measured
+at 0.999909.
+
+### Where the first token stops being itself
+
+Scanning layer by layer, position 0, two prompts with different first tokens:
+
+| layer | 11 | 12 | **13** | 14 | 15 |
+|---|---|---|---|---|---|
+| cos | 0.9887 | 0.9377 | **0.9995** | 0.9973 | 0.9998 |
+| norm | 204.96 | 137.77 | **9.69** | 11.59 | 48.78 |
+
+Layers 1 to 12 oscillate between 0.79 and 0.99 and never settle. From layer 13 onward
+the cosine never drops below 0.997. The transition is the first segment boundary.
+
+### The mechanism, after getting it wrong twice
+
+Stage 20 is `residual += incoming`. At a normal layer it restores the carried residual
+after attention has overwritten the slot; at a boundary layer it does not.
+
+| | layer 11 normal | layer 12 boundary | layer 23 normal | layer 24 boundary |
+|---|---|---|---|---|
+| input | 204.96 | 137.77 | 242.65 | 332.98 |
+| attention out | 26.04 | 2.64 | 12.64 | 0.42 |
+| **after stage 20** | **196.96** | **2.64** | **240.10** | **0.42** |
+| after MoE | 137.77 | 9.69 | 332.98 | 0.97 |
+
+So the accumulated residual is not destroyed by some extra operation. It is simply not
+added back, having already gone into the snapshot, and what continues past the boundary
+is only that layer's own attention and MoE output. That output is small and nearly
+orthogonal to the input, and for an early position it is nearly the same whatever the
+token was.
+
+**Two filtering mistakes, the same mistake twice.** I first reported stage 20 as "absent
+entirely" at layer 12. It was present; my filter kept only records with a nonzero max
+change and a no-op stage 20 has none. I then re-ran with a filter that dropped records
+whose norm equalled the previous one, which hid it again. A filter designed to find
+change cannot be used to prove something did not happen.
+
+### What this does not establish
+
+Why the continuation is token independent is still not explained. The segment structure
+says the accumulated content leaves at the boundary, which accounts for the reset and
+for identity being dropped, but not for why what remains is so nearly the same across
+different tokens. Five prompts, English, five tokens or fewer. The positional spike at
+layer 48 is observed on two prompts and has no explanation here at all.
+
+---
+
 ## Cycle: one token at a time (2026-10-11)
 
 ### What the previous cycle got wrong
