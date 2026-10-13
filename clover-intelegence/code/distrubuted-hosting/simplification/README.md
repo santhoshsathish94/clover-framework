@@ -15,11 +15,12 @@ points at something that was measured first.
 | C, the same at every layer | the single-token result in B did not fit the reason B was tried | **held per layer, 68 of 68**, and up to **32 of 68 together** when chosen by measured tolerance; all 68 at once collapses. Also shows B's success was not caused by what motivated it | [METHOD-C-ALL-LAYERS.md](METHOD-C-ALL-LAYERS.md) |
 | D, route to fewer than 16 experts | the routed path is where per-token work happens, so how much of it is needed? | **K=12 holds**, 12 of 12 and worst cosine 0.9867. K=8 keeps every token while one prompt's representation falls to 0.217. K=4 breaks | [METHOD-D-FEWER-EXPERTS.md](METHOD-D-FEWER-EXPERTS.md) |
 
-And a correction to how all three were reasoned about:
+And corrections to how all of them were reasoned about:
 
 | | |
 |---|---|
-| [ROUTING-AND-TRUNK.md](ROUTING-AND-TRUNK.md) | The constant part of a layer is the trunk and the varying part is the selected routed experts. Decomposing output by position measures their sum and cannot separate them. No expert is chosen by every token; two tokens share about one pick in eight. |
+| [ROUTING-AND-TRUNK.md](ROUTING-AND-TRUNK.md) | The constant part of a layer is the trunk and the varying part is the selected routed experts. Decomposing output by position measures their sum and cannot separate them. No expert is chosen by every token; two tokens share about one pick in eight. Routing drift is what tracks whether a simplification survives. |
+| [BLOCK-STRUCTURE.md](BLOCK-STRUCTURE.md) | The residual restarts every twelfth layer, so grouping by absolute depth averages across a reset. Regrouped, the block effect is 3.5x the within-block effect, and a block's tolerance tracks the weight the tail gives its output. |
 
 ## Cuts validated on all twelve prompts
 
