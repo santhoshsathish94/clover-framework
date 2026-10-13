@@ -833,6 +833,23 @@ static int transformer_route(const Transformer *transformer, TransformerSequence
     for (unsigned rank = 0; rank < 16; rank++) total += (double)scores[sequence->selected[rank]];
     float inverse = (float)(1.0 / (total + 1e-20));
     for (unsigned rank = 0; rank < 16; rank++) sequence->weights[rank] = scores[sequence->selected[rank]] * inverse;
+    /* CLOVER_TOPK, experiment only: keep the first K ranks and renormalise the rest to
+       zero, so the layer behaves as if it had routed to fewer experts. */
+    {
+        static int keep;
+        if (!keep) {
+            const char *value = getenv("CLOVER_TOPK");
+            keep = value && *value ? atoi(value) : 16;
+            if (keep < 1 || keep > 16) keep = 16;
+        }
+        if (keep < 16) {
+            double kept = 0.0;
+            for (int rank = 0; rank < keep; rank++) kept += sequence->weights[rank];
+            float rescale = (float)(1.0 / (kept + 1e-20));
+            for (int rank = 0; rank < 16; rank++)
+                sequence->weights[rank] = rank < keep ? sequence->weights[rank] * rescale : 0.0f;
+        }
+    }
     return 1;
 }
 
