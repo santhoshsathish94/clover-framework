@@ -14,6 +14,26 @@ points at something that was measured first.
 | B, cache pod 12's attention | it is the only layer of 92 whose attention output is near a fixed direction | **held** — 12 of 12 tokens identical, worst pod-92 cosine 0.996102 | [METHOD-B-CONST-ATTENTION.md](METHOD-B-CONST-ATTENTION.md) |
 | C, the same at every layer | the single-token result in B did not fit the reason B was tried | **held per layer, 68 of 68**, and up to **32 of 68 together** when chosen by measured tolerance; all 68 at once collapses. Also shows B's success was not caused by what motivated it | [METHOD-C-ALL-LAYERS.md](METHOD-C-ALL-LAYERS.md) |
 
+And a correction to how all three were reasoned about:
+
+| | |
+|---|---|
+| [ROUTING-AND-TRUNK.md](ROUTING-AND-TRUNK.md) | The constant part of a layer is the trunk and the varying part is the selected routed experts. Decomposing output by position measures their sum and cannot separate them. No expert is chosen by every token; two tokens share about one pick in eight. |
+
+## Cuts validated on all twelve prompts
+
+The cumulative sweep in Method C used one prompt, france, and both promising cuts fail
+when tried on the rest:
+
+| cut | tokens identical | worst cosine | fails on |
+|---|---|---|---|
+| 16 layers | 10 of 12 | 0.8712 | french, question |
+| 32 layers | 9 of 12 | **0.1350** | french, question, hello |
+
+Selecting the layers by their tolerance on france overfits to france. `hello`, a single
+token, collapses to cosine 0.135 at 32 layers while still being counted as a token match
+at 16. Neither cut is usable.
+
 ## The harness
 
 `fidelity.sh` runs a prompt set through the production fleet twice, once as a baseline

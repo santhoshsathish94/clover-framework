@@ -936,7 +936,16 @@ static int transformer_step(Transformer *transformer, TransformerSequence *seque
         sequence->stage++; return 1;
     }
     if (stage == 23) { if (!transformer_finite(sequence->postnorm, TRANSFORMER_WIDTH)) return 0; sequence->stage++; return 1; }
-    if (stage == 24) { if (!transformer_route(transformer, sequence)) return 0; sequence->stage++; return 1; }
+    if (stage == 24) {
+        if (!transformer_route(transformer, sequence)) return 0;
+        /* CLOVER_ROUTE_IDS: which experts this token chose, not what they produced. */
+        if (clover_vectors_active(TRANSFORMER_LAYER)) {
+            float chosen[16];
+            for (unsigned rank = 0; rank < 16; rank++) chosen[rank] = (float)sequence->selected[rank];
+            clover_vectors_write(TRANSFORMER_LAYER, 5103, (unsigned long)sequence->positions, chosen, 16);
+        }
+        sequence->stage++; return 1;
+    }
     if (stage == 25) { transformer_project(transformer, 31, sequence->postnorm, sequence->latent); sequence->stage++; return 1; }
     if (stage == 26) { memset(sequence->mixture, 0, sizeof sequence->mixture); sequence->stage++; return 1; }
     if (stage == 27) {
@@ -983,6 +992,13 @@ static int transformer_step(Transformer *transformer, TransformerSequence *seque
     if (stage == 114) { transformer_activation(sequence->shared_gate, sequence->shared_up, TRANSFORMER_SHARED); sequence->stage++; return 1; }
     if (stage == 115) { transformer_project(transformer, 36, sequence->shared_gate, sequence->shared_output); sequence->stage++; return 1; }
     if (stage == 116) {
+        /* CLOVER_MOE_SPLIT: the two paths, before they are summed and become
+           indistinguishable in the residual. */
+        if (clover_vectors_active(TRANSFORMER_LAYER)) {
+            unsigned long at = (unsigned long)sequence->positions;
+            clover_vectors_write(TRANSFORMER_LAYER, 5101, at, sequence->routed, TRANSFORMER_WIDTH);
+            clover_vectors_write(TRANSFORMER_LAYER, 5102, at, sequence->shared_output, TRANSFORMER_WIDTH);
+        }
         for (unsigned coordinate = 0; coordinate < TRANSFORMER_WIDTH; coordinate++)
             sequence->residual[coordinate] = sequence->residual[coordinate] +
                 (sequence->routed[coordinate] + sequence->shared_output[coordinate]);
