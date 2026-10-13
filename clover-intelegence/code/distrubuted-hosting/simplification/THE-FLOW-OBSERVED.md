@@ -371,13 +371,150 @@ spanning 1.11 to 11.60. Snapshot 5 is by itself the most concentrated of all ele
 
 ---
 
+## The unit was wrong, twice
+
+The creator asked why I looked at 92 layers when there are 96 from input to output and
+many of them repeat. Both halves land.
+
+The chain was instrumented end to end — the five sections above are embedding, layer 0,
+pods, normalisation, head. But every **aggregate** used the pod as its unit: "361 across
+all 92 pods", a 92-number norm trajectory, a 92-row routing table. The two ends got a
+handful of rows against that. And the middle is not 92 independent layers.
+
+### Observed: the repeating unit, from the config
+
+`/root/k3model/config.json`, under `text_config`:
+
+| key | value |
+|---|---|
+| `num_hidden_layers` | 93 |
+| `first_k_dense_replace` | 1 |
+| `attn_res_block_size` | **12** |
+| `linear_attn_config.full_attn_layers` | 4, 8, 12, … 88, 92, 93 |
+
+Pod N is model layer N+1, so MLA pods are 3, 7, … 91, and 92. With blocks of 12 starting
+at pod 1:
+
+| block | pods | length | MLA at block offsets |
+|---|---|---|---|
+| 1–7 | 1–12 … 73–84 | 12 | **3, 7, 11** in all seven |
+| 8 | 85–92 | 8 | 3, 7, **8** — pod 92 is MLA out of turn |
+
+Three things repeat and none of them is the pod: the 12-pod block, the attention type at
+period 4, and the 120-stage machine. 12 = 3 × 4, so a full block is exactly three
+KDA-KDA-KDA-MLA groups.
+
+### Observed: residual norm leaving the pod, eight repeats side by side
+
+```
+offset      block1   block2   block3   block4   block5   block6   block7   block8
+ 1    K       1.74     7.51     0.96     1.22     1.21    12.14     7.74    10.32
+ 2    K       3.40    10.40     1.75     2.36     3.25    19.19    13.23    17.21
+ 3    M       4.17    11.48     2.27     3.03     3.78    19.70    13.44    17.84
+ 4    K       7.53    14.10     2.91     4.26     7.00    22.80    16.51    23.71
+ 5    K      12.87    17.64     4.19     6.24    12.12    26.71    21.51    34.56
+ 6    K      23.61    21.54     6.63     9.40    21.21    32.80    29.94    45.72
+ 7    M      30.47    27.08     7.98    11.03    29.86    34.68    29.36    51.64
+ 8    KM     49.57    35.30    10.91    15.94    46.92    38.78    32.00    79.35
+ 9    K      71.82    40.32    15.25    23.39    67.41    43.69    43.98        -
+10    K      96.76    52.57    22.94    41.02   103.93    50.85    58.63        -
+11    M     112.89    63.13    34.17    59.84   133.41    50.91    63.56        -
+12    K       3.89     0.46     0.58     0.52     6.75     3.20     7.36        -
+```
+
+Monotone growth from offset 1 to 11 in every block, then the collapse at 12. The
+magnitude of the growth is not shared — offset 1 to 11 is ×64.9, ×8.4, ×35.6, ×49.0,
+×110.3, ×4.2, ×8.2 across the blocks — but the shape is.
+
+### Observed: relative movement at each carrying stage, median over the blocks
+
+| offset | | 2 input | 6 MLA | 9 KDA | 20 fold | 116 moe |
+|---|---|---|---|---|---|---|
+| 1 | K | 0.000 | — | 1.257 | 1.045 | 0.750 |
+| 2 | K | 0.000 | — | 1.053 | 1.515 | 0.594 |
+| **3** | **M** | 0.000 | 1.126 | — | **4.330** | 0.607 |
+| 4 | K | 0.000 | — | 1.016 | 2.638 | 0.459 |
+| 5 | K | 0.000 | — | 1.007 | 2.290 | 0.512 |
+| 6 | K | 0.000 | — | 0.999 | 2.047 | 0.427 |
+| **7** | **M** | 0.000 | 1.039 | — | **4.964** | 0.525 |
+| 8 | mixed | 0.000 | — | 1.018 | 3.571 | 0.495 |
+| 9 | K | 0.000 | — | 0.999 | 2.737 | 0.472 |
+| 10 | K | 0.000 | — | 1.001 | 2.284 | 0.458 |
+| **11** | **M** | 0.000 | 1.048 | — | **3.670** | 0.598 |
+| 12 | K | 0.000 | — | 0.999 | **0.000** | 0.870 |
+
+### Observed: what a block does end to end
+
+| block | pods | in | out | out/in |
+|---|---|---|---|---|
+| 1 | 1–12 | 0.79 | 3.89 | 4.941 |
+| 2 | 13–24 | 3.89 | 0.46 | 0.119 |
+| 3 | 25–36 | 0.46 | 0.58 | 1.247 |
+| 4 | 37–48 | 0.58 | 0.52 | 0.904 |
+| 5 | 49–60 | 0.52 | 6.75 | 12.964 |
+| 6 | 61–72 | 6.75 | 3.20 | 0.473 |
+| 7 | 73–84 | 3.20 | 7.36 | 2.304 |
+| 8 | 85–92 | 7.36 | 79.35 | 10.779 |
+
+Geometric mean of the seven full blocks: **×1.377**.
+
+### A second correction to my own count
+
+`local 2` moves **0.000 at every offset in every block**. Stage 2 is
+`memcpy(sequence->residual, input, …)`, so the record is bit-identical to `local 0`. My
+361 measured it against `local 1`, the previous position's leftover, which is why it
+appeared to move a median of 22.25.
+
+The reconciliation against the trace is then exact:
+
+```
+452 trace hash changes = 92  local 2, measured against the leftover
+                       + 269 arithmetic: 92 attention + 85 fold + 92 MoE add
+                       + 91  local 120, bookkeeping
+```
+
+**269 stages per position change the carried residual by doing arithmetic**, of 9,956
+recorded. Three per pod, two at the seven block-write pods.
+
+### Reading
+
+The 12-period is not an event inside a 92-long sequence. It is the unit, and reading by
+pod hid three things:
+
+**The fold is governed by block offset, not depth.** Its three largest movements are
+exactly the three MLA offsets — 4.330, 4.964, 3.670 against 1.0–3.6 everywhere else.
+Nothing in a 92-row table shows that, because the MLA pods are scattered through it.
+
+**Offset 12 folds nothing, in all seven full blocks.** The residual is replaced rather
+than added at a block write, so stage 20 leaves it bit-identical. Shown per-offset here;
+previously only inferred from the count 85 = 92 − 7.
+
+**A block is close to a no-op in magnitude.** The state swings by 4× to 110× inside a
+block and the block hands on roughly 1.38× what it received. The growth is internal and
+the block write discards it.
+
+**Routing is not block-structured.** Effective spread runs 6.3 to 16.0 scattered across
+the grid with no offset pattern, and the routed/shared ratio likewise. Whatever the block
+organises, it is not which experts get chosen — which is worth stating precisely because
+everything else on this page is organised by it.
+
+### What this does not establish
+
+Still one prompt, one position. Seven full repeats of a 12-pod block is seven samples,
+not a population, and the eighth block is a different length. The ×1.377 geometric mean
+is over those seven. Nothing here says a block could be removed, shortened or shared.
+
+---
+
 ## Tools
 
 | file | what |
 |---|---|
 | `inventory.py` | which owners, which locals, how many records, what width — before reading any value |
 | `walk-chain.py` | the chain at one position, step by step, with bookkeeping separated from carried state |
+| `fold-blocks.py` | the same walk with the 12-pod block as the unit, eight repeats side by side |
 | `observe-routing.py` | expert ids, router weights, the two MoE paths, the folds |
 | `cross-compare.py` | one record against another, in the same dump or across dumps |
 | `pull-f32.py` | records out of a dump into the flat f32 the head tools read |
 | `server/head-shape.c` | the vocabulary projection described as a distribution, with no expected token in the file |
+

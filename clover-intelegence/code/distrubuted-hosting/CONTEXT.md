@@ -6,6 +6,72 @@ it does and does not establish.
 
 ---
 
+## Cycle: the unit was wrong, twice (2026-10-13)
+
+### Context
+
+> why did you look at 92 layers where there 96 from input to output and many layers repeat
+
+Both halves land. The chain *was* instrumented end to end in the cycle below — embedding,
+layer 0, pods, normalisation, head. But every aggregate used the pod as its unit, so the
+two ends got a handful of rows against a 92-row table. And the middle is not 92
+independent layers: I had the 12-period in my own norm trajectory and wrote it as "the
+residual collapses at every twelfth pod", an event inside a sequence, rather than as the
+boundary of a unit that runs eight times.
+
+### The repeating unit, from the config rather than memory
+
+`text_config`: `attn_res_block_size` 12, `first_k_dense_replace` 1, `num_hidden_layers`
+93, `linear_attn_config.full_attn_layers` = 4, 8, … 88, 92, 93. Pod N is model layer N+1,
+so MLA pods are 3, 7, … 91, and 92 — **block offsets 3, 7, 11 in all seven full blocks**,
+and 3, 7, 8 in the short block of eight where pod 92 is MLA out of turn. Three things
+repeat and none is the pod: the 12-pod block, the attention type at period 4, the
+120-stage machine. 12 = 3 × 4, so a full block is three KDA-KDA-KDA-MLA groups.
+
+### Outcome
+
+**The fold is governed by block offset, not depth.** Its three largest relative movements
+are exactly the three MLA offsets — 4.330, 4.964, 3.670 against 1.0–3.6 at every KDA
+offset. Invisible in a 92-row table because the MLA pods are scattered through it.
+
+**Offset 12 folds nothing, in all seven full blocks** (relative movement 0.000). The
+residual is replaced rather than added at a block write. Previously only inferred from
+the count 85 = 92 − 7; now shown per offset.
+
+**A block is close to a no-op in magnitude.** The residual swings ×4 to ×110 inside a
+block and the block hands on ×1.377 geometric mean over the seven full ones. The growth
+is internal and the write discards it. Every block grows monotonically offset 1 → 11.
+
+**Routing is NOT block-structured.** Effective spread 6.3–16.0 scattered with no offset
+pattern; routed/shared ratio likewise. Worth stating because everything else is.
+
+### A second correction to my own count
+
+`local 2` moves **0.000 at every offset** — stage 2 is `memcpy(residual, input)`, so it is
+bit-identical to `local 0`. My 361 measured it against `local 1`, the leftover. Exact
+reconciliation against the trace:
+
+    452 trace hash changes = 92 (local 2 vs the leftover)
+                           + 269 (arithmetic: 92 attention + 85 fold + 92 MoE)
+                           + 91 (local 120 bookkeeping)
+
+**269 stages per position change the carried residual by arithmetic**, of 9,956 recorded.
+Three per pod, two at the seven block-write pods. That is the third revision of this
+count in three cycles; the reconciliation is what makes this one checkable.
+
+### What is still unknown
+
+Why the growth magnitude inside a block varies ×4 to ×110 while the shape does not. Why
+routing alone ignores a structure everything else follows. Seven full repeats is seven
+samples, not a population.
+
+### Next
+
+Unchanged from below: instrument `routed` and `shared_output` per expert stage. 80 of a
+pod's 120 stages are still invisible to every instrument in the tree.
+
+---
+
 ## Cycle: observing the flow without the answer (2026-10-13)
 
 ### Context
