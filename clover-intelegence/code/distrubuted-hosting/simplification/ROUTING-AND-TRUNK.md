@@ -94,6 +94,53 @@ directly observable, since the selection is recorded, and it has not been run. I
 tolerated substitution leaves the routing unchanged and an intolerable one scrambles it,
 that would connect the two halves of this.
 
-The creator also said "even that's not the complete reality". Nothing here has looked at
-the router weights against the selection, at the shared path's two experts separately,
-or at the attention as a third path alongside these two.
+## It does, and that connects them
+
+Three runs of the same prompt: no substitution, pod 12 alone which held 12 of 12, and
+all 68 which collapsed every prompt. Comparing the sixteen chosen experts per position
+against the baseline.
+
+| pod | one layer, overlap of 16 | top kept | identical | all 68, overlap | top kept |
+|---|---|---|---|---|---|
+| 1 | **16.00** | 16/16 | **16/16** | 9.75 | 15 |
+| 6 | **16.00** | 16/16 | **16/16** | 6.75 | 12 |
+| 11 | **16.00** | 16/16 | **16/16** | 4.56 | 3 |
+| **12** | **8.75** | 10 | 1 | 3.88 | 4 |
+| 13 | 14.88 | 16 | 1 | 4.25 | 6 |
+| 24 | 15.56 | 16 | 2 | 5.00 | 9 |
+| 48 | 15.56 | 16 | 0 | 5.88 | 8 |
+| 72 | 15.56 | 16 | 2 | 7.38 | 4 |
+| 92 | 15.94 | 16 | 7 | 5.44 | 5 |
+
+Three things fall out.
+
+**The experiment checks itself.** Pods 1, 6 and 11 sit before pod 12 and their selection
+is bit-for-bit identical, 16 of 16 at every position. A substitution at layer 12 cannot
+reach layer 11, and it does not.
+
+**The tolerated substitution does disturb routing, locally.** At pod 12 itself the
+overlap is 8.75 of 16: about half the chosen experts change. Attention is stage 9 and
+routing is stage 24, so replacing the attention output changes that layer's own
+selection. The network absorbs it — every layer downstream keeps a mean 15.53 of 16,
+about 97 percent, and the top choice is unchanged at 16 of 16 positions nearly
+everywhere.
+
+**The intolerable one does not recover.** All 68 substituted drops the mean overlap to
+about 5.66 of 16, 35 percent, with the top choice kept at only 3 to 15 positions and no
+position retaining its full ordered list.
+
+Put against the earlier figure that two genuinely different tokens share 0.72 to 3.11
+experts of 16, the collapsed run's routing is nearer to *a different token's* than to
+its own.
+
+So the measure that tracks whether a simplification survives is not how constant the
+substituted quantity was, nor where the layer sits, nor the size of the injected error —
+all three of which failed to predict it. It is whether the routing downstream still
+selects the same experts.
+
+## Still not measured
+
+The router weights against the selection, the two shared experts separately, and the
+attention as a third path beside these two. The creator's "even that's not the complete
+reality" has not been exhausted.
+
