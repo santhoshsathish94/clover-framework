@@ -70,6 +70,31 @@ other way: the small set was enough to break the claim, not to support it.
 Ids decoded with `server/decode-ids.c`, which calls the engine's own `id_to_word`.
 tiktoken is not installed on this host and a guessed id→word mapping is not evidence.
 
+### The whole chain, walked
+
+With both ends instrumented the walk finally covers the chain the creator described.
+At genesis position 15: the embedding lookup, six steps in the server, 9,864 recorded
+pod stages of which **544 move the residual**, sixteen tail stages of which **two** do —
+the fold and the RMS gain, the same two the twelve-prompt comparison picked out — and
+then the projection.
+
+This corrects an earlier figure of *636 of 9,956* with a `local 0` among the movers.
+There is no local 0 in the trace; the lowest local any pod records is 1. The earlier
+count compared within each pod rather than along one continuous sequence. Both came off
+real runs; the grouping differed, not the engine.
+
+**Where the time is.** Pods 92.381 s, tail 0.392 s, request 93.891 s wall. The head —
+163,840 dot products of width 7168 — is 0.390 s of that, 0.4% of the request and 99.5%
+of the tail. The seven locals that move the residual are 20.6% of pod time; locals
+21–115, the expert band, are 78%, and local 116, which folds the expert output into the
+residual, is 0.038 s.
+
+That is **not** evidence that 78% is removable. Stage 116 is `residual += routed +
+shared_output`; the expert stages write to other buffers, so the trace's residual hash
+cannot see them by construction. Same trap as the earlier reading of pod 92's eighty
+expert stages showing no movement. What it establishes is where the time sits, and that
+the instrument is watching a buffer those stages do not touch.
+
 ### What is still unknown
 
 Why slot 0's weight jumps an order of magnitude on the two shortest and two least
@@ -80,8 +105,10 @@ any of this.
 
 ### Next
 
-Walk all 11,280 stages end to end with owners 0 and 93 included, rather than the 9,956
-the pod walk covered.
+The head is 0.4% of the request, so vector-to-token is not where a saving lives. The
+expert band is 78% and the residual hash cannot see it. Instrument `routed` and
+`shared_output` per expert stage rather than the residual, so the question "did this
+expert change anything" can be asked of the buffer it actually writes.
 
 ---
 

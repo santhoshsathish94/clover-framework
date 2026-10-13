@@ -280,10 +280,130 @@ raises the weight on the untouched input vector by an order of magnitude.
 | `ends-table.py` | a dump laid out as positions × locals, with short records expanded through softmax |
 | `cross-compare.py` | one record in one dump against a different local in another |
 | `pull-f32.py` | records out of a dump into the flat f32 `head-walk` reads |
+| `whole-chain.py` | a `CLOVER_TRACE` plus the server's vectors, walked end to end at one position |
 
 `server/decode-ids.c` turns a token id back into text through the engine's own
 `id_to_word`. It lives in `server/` rather than here for the same reason `head-walk.c`
 does: it includes `ends.h`.
+
+---
+
+## The whole chain, one step at a time
+
+`whole-chain.py` on a full `CLOVER_TRACE` of genesis, position 15 — the position that
+produces the answer. 157,840 trace lines, owners 1 to 93.
+
+```
+== step 1, token id to vector ==
+   embedding lookup, one row of a 163840 x 7168 table, norm 2.0429
+
+== step 2, layer 0 (owner 0, 6 steps) ==
+   5201  token embedding arrives      norm    2.0429  start
+   5202  normalized                   norm   13.9097  moved
+   5203  residual after attention     norm    0.6362  moved
+   5204  aggregate, 2-source fold     norm    0.6285  moved
+   5205  dense output                 norm    0.5697  moved
+   5206  residual out                 norm    0.9523  moved
+
+== step 3, layers 1 to 92 ==
+   9864 stages recorded, 544 move the residual (5.5%)
+     local 1     91 pods      local 2     92 pods      local 6     24 pods
+     local 9     68 pods      local 20    85 pods      local 116   92 pods
+     local 120   92 pods
+
+== step 4, normalisation (owner 93) ==
+   1    finite check                        206075 ns  start
+   2    sources 0..7 = snapshots             23584 ns  same
+   3    source 8 = residual                  24186 ns  same
+   4    score the nine sources              571918 ns  same
+   5    softmax the scores                   24355 ns  same
+   6    fold                                105267 ns  moved
+   7    finite check                         25728 ns  same
+   8    apply RMS gain                      179465 ns  moved
+   9    finite check                         25728 ns  same
+
+== step 5, vector to token ==
+   110  project to vocabulary, argmax    389929948 ns  same  token 316
+   111  id to word                          178383 ns  same
+   112  append text                         160641 ns  same
+   113  timing, position++                   33783 ns  same
+   118  build the body                       35717 ns  same
+   119  deliver                              36599 ns  same
+   120  end                                  34605 ns  same
+```
+
+The server contributes **zero trace lines**: it is a flat sequence, not a stage machine,
+so `clover_trace_stage` is never called there. Its six vector records are the only
+instrument it has, which is why the server patch was needed before this walk could be
+written at all.
+
+Of the tail's sixteen stages, **two move the result**: the fold and the RMS gain. The
+same two that the twelve-prompt comparison picked out, arrived at independently.
+
+### A number this corrects
+
+An earlier walk reported *636 of 9,956 stages* and listed a `local 0` among the movers.
+There is **no local 0 in the trace** — `awk -F, '$2==0'` returns zero lines, and the
+lowest local recorded by any pod is 1. The earlier count also compared within each pod
+rather than along one continuous sequence, which is where the extra entry came from.
+This walk compares one sequence in global stage order, which is what "one step at a
+time" means here, and gets **544 of 9,864 at position 15**. Both numbers came off real
+runs; the grouping, not the engine, is what differed.
+
+Position 0 records 9,772 stages — 92 fewer, one per pod — and position 16 records only
+92, all of them local 120. That is the generated token's frame being closed without ever
+being processed.
+
+---
+
+## Where the time actually goes
+
+Same trace. The request took 93.891 s wall.
+
+| | time |
+|---|---|
+| pods 1–92, all stages | 92.381 s |
+| tail, owner 93, all 16 stages | 0.392 s |
+| of which stage 110, the vocabulary projection | 0.390 s |
+
+The whole of normalisation and delivery is about 2 ms. The head — 163,840 dot products
+of width 7168 — is 390 ms, **0.4% of the request**, and 99.5% of the tail.
+
+| local | time | stages | each |
+|---|---|---|---|
+| 6 | 12.578 s | 1472 | 8545 µs |
+| 9 | 6.287 s | 1088 | 5779 µs |
+| 50 | 2.476 s | 1472 | 1682 µs |
+| 112 | 2.351 s | 1472 | 1597 µs |
+| 113 | 2.298 s | 1472 | 1561 µs |
+| 115 | 2.255 s | 1472 | 1532 µs |
+
+Local 6 runs on all 92 pods (1472 = 16 × 92) but only *moves* the residual on 24 — the
+MLA pods. Local 9 runs 1088 times (16 × 68) and moves it on all 68 — the KDA pods.
+
+**The seven locals that move the residual are 19.064 s of 92.381 s, 20.6%.**
+Locals 21–115, the band that holds the expert stages, are **72.179 s, 78%**. Local 116
+is **0.038 s**.
+
+### What that is not
+
+It is **not** evidence that 78% of the work is removable. Stage 116 reads:
+
+```c
+for (unsigned coordinate = 0; coordinate < TRANSFORMER_WIDTH; coordinate++)
+    sequence->residual[coordinate] = sequence->residual[coordinate] +
+        (sequence->routed[coordinate] + sequence->shared_output[coordinate]);
+```
+
+The expert stages write into `routed` and `shared_output`. The residual does not change
+until 116 folds them in. The trace hashes the residual, so by construction it cannot see
+those stages do anything — the same trap as the earlier observation that pod 92's eighty
+expert stages all showed `moved 0.0000 cos 1.000000`. What the numbers establish is
+**where the time is**, and that the instrument watching for change is pointed at a
+buffer those stages do not touch.
+
+The single most expensive stage anywhere in the run is owner 16 local 50 at 1,462 ms,
+against 1,682 µs for the average local 50. That is a first-touch cost, not arithmetic.
 
 Backups on the host: `/tmp/servertrace-before.tar`, `/tmp/tailtrace-before.tar`,
 `/tmp/build.sh.bak`.
