@@ -674,7 +674,7 @@ request
 |
 +- embed(token) ---------------------------------------- fold source 0
 |
-+- block 0   pods  0-11   write at pod  0  -+- (s K K M)  0  1  2  3
++- block 0   pods  0-11   write at pod  0  -+- (K K K M)  0  1  2  3   <- pod 0 is the server
 |                                           +- (K K K M)  4  5  6  7
 |                                           +- (K K K M)  8  9 10 11 -- source 1
 +- block 1   pods 12-23   write at pod 12   -- 3 groups -------------- source 2
@@ -690,6 +690,27 @@ request
 one pod  = 120 stages, 3 of which do arithmetic on the carried state
 one moe  = 16 of 896 experts, 80 expert stages writing a separate buffer
 ```
+
+### Observed: the whole stack is 23 × KKKM, plus one M
+
+Derived from the config over all 93 pods:
+
+```
+KKKM   x23   groups 0-22    pods 0-91
+M      x1    group  23      pod 92
+```
+
+**24 MLA, 69 KDA.** There is no irregular group in the attention pattern at all. The two
+irregularities are both at the ends and neither is an attention one:
+
+- **pod 0, the first K of group 0, is the server.** Its attention is ordinary KDA. What
+  differs is the MLP — `first_k_dense_replace = 1`, so it runs a dense MLP instead of
+  16-of-896 routed experts.
+- **pod 92 is a 24th M with no group**, three KDA short of a complete one.
+
+An earlier version of this tree wrote group 0 as `(s K K M)`. That was wrong: the server
+shows as different only because it is owner 0 and writes a different set of locals, not
+because its attention differs.
 
 ### Observed: every level checked against the census
 
@@ -772,6 +793,80 @@ falls. None of that was visible against twelve offsets.
 MLA. `hello` is one position, which is why its slot-1 median of 5.544 is out of line with
 every other prompt. The group ordering is a property of this engine's layer layout, which
 comes from the released config; nothing here says why the layout is that way.
+
+---
+
+## The shape repeats 23 times. The behaviour does not.
+
+If 23 groups are structurally identical, the obvious question is whether they do the same
+thing. Median over all twelve prompts and 80 positions, for the 21 interior groups
+(excluding group 0, whose first pod writes no census row, and group 23, the lone M):
+
+| | min | median | max | spread |
+|---|---|---|---|---|
+| **attention movement** | 0.964 | 1.012 | 1.176 | **1.22×** |
+| fold | 0.821 | 2.375 | 4.032 | **4.91×** |
+| MoE movement | 0.324 | 0.491 | 0.833 | 2.57× |
+| router spread | 10.32 | 11.91 | 15.27 | 1.48× |
+| routed/shared | 0.833 | 1.267 | 1.777 | 2.13× |
+
+**Attention movement is the one quantity that is the same in every repeat.** Everything
+else varies by a factor of 1.5 to 5 between groups that are structurally identical.
+
+**Group 23, the lone trailing M, is an outlier on routed/shared at 3.522** — double the
+maximum of any other group. The extra M differs in behaviour, not only in shape.
+
+### Observed: the block shows through as a period-3 signal
+
+Three groups make a block, so group index mod 3 says where in the block a group sits.
+Group `mod 3 == 0` starts a block and contains the write.
+
+| group mod 3 | attention | fold | MoE | router spread | routed/shared |
+|---|---|---|---|---|---|
+| **0** — starts the block | 1.041 | **1.246** | **0.641** | **13.67** | 1.237 |
+| 1 | 1.007 | 2.619 | 0.440 | 12.52 | 1.202 |
+| 2 | 1.008 | **2.951** | 0.434 | **11.65** | 1.250 |
+
+Fold medians laid out three to a row, so one row is one block:
+
+```
+block    mod3=0 (write)        mod3=1              mod3=2
+  0       0   1.312            1   1.242           2   2.878
+  1       3   1.724            4   4.032           5   3.805
+  2       6   1.073            7   2.375           8   2.385
+  3       9   1.274           10   2.390          11   2.483
+  4      12   0.821           13   2.104          14   2.275
+  5      15   1.211           16   3.951          17   3.860
+  6      18   1.230           19   2.600          20   2.981
+  7      21   1.428           22   2.337               -
+```
+
+**Seven of the eight lowest fold medians across all 23 groups are `mod 3 == 0`.** The
+eighth write-group (group 3, 1.724) ranks ninth, so all eight are among the nine lowest.
+The one intruder is group 1, in block 0, the shallowest block.
+
+### Reading
+
+Three levels nest and each shows a different thing:
+
+- **group (KKKM)** — attention movement is flat across all four slots and across all 23
+  repeats; the MLA folds about twice as hard as any KDA in its group.
+- **block (3 groups)** — fold rises 1.25 → 2.62 → 2.95 across the three, while MoE
+  movement and router spread both fall. The write group is the low point of the fold
+  because its first pod folds nothing at all.
+- **stack (8 blocks)** — each is ×1.35 end to end and each output becomes one of the nine
+  fold sources.
+
+The attention is the invariant. Everything downstream of it — fold, experts, routing —
+varies with where the group sits.
+
+### What this does not establish
+
+Group 0's median covers pods 1, 2, 3 only; the server writes a different set of locals,
+so the dense MLP is not measured here and group 0 is not a like-for-like comparison. The
+period-3 fold signal is partly mechanical — the write pod's fold is exactly 0.000, which
+must pull its group's median down; what is not mechanical is that MoE movement and router
+spread also move monotonically across the three. No mechanism is offered for either.
 
 ---
 

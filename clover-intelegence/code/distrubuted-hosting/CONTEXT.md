@@ -6,6 +6,75 @@ it does and does not establish.
 
 ---
 
+## Cycle: 23 × KKKM + 1 M, and what repeats with it (2026-10-13)
+
+### Context
+
+> so there is a repetition that's common across all layers only the first part has s and
+> last part have M all other are K K K M
+
+Right, and the config makes it exact over all 93 pods: **`KKKM` × 23 (groups 0–22, pods
+0–91) + `M` × 1 (pod 92).** 24 MLA, 69 KDA. **There is no irregular group in the
+attention pattern at all.**
+
+Both irregularities are at the ends and neither is an attention one:
+
+- **pod 0, the first K of group 0, is the server.** Its attention is ordinary KDA. What
+  differs is the MLP — `first_k_dense_replace = 1`, so a dense MLP rather than 16-of-896
+  routed experts.
+- **pod 92 is a 24th M with no group**, three KDA short of one.
+
+The previous cycle's tree wrote group 0 as `(s K K M)`. **That was wrong** — the server
+shows as different only because it is owner 0 writing a different set of locals.
+
+### Outcome: the shape repeats 23 times, the behaviour does not
+
+Median over 12 prompts and 80 positions, 21 interior groups:
+
+| | min | median | max | spread |
+|---|---|---|---|---|
+| **attention movement** | 0.964 | 1.012 | 1.176 | **1.22×** |
+| fold | 0.821 | 2.375 | 4.032 | **4.91×** |
+| MoE movement | 0.324 | 0.491 | 0.833 | 2.57× |
+| router spread | 10.32 | 11.91 | 15.27 | 1.48× |
+| routed/shared | 0.833 | 1.267 | 1.777 | 2.13× |
+
+**Attention movement is the only quantity the same in every repeat.** Everything else
+varies 1.5× to 5× between structurally identical groups. **Group 23, the lone trailing M,
+is an outlier on routed/shared at 3.522** — double any other group.
+
+### The block shows through as a period-3 signal
+
+Three groups make a block, so group index mod 3 says where in the block it sits; mod 3 =
+0 starts the block and holds the write.
+
+| group mod 3 | attention | fold | MoE | spread | r/s |
+|---|---|---|---|---|---|
+| **0** starts block | 1.041 | **1.246** | **0.641** | **13.67** | 1.237 |
+| 1 | 1.007 | 2.619 | 0.440 | 12.52 | 1.202 |
+| 2 | 1.008 | **2.951** | 0.434 | **11.65** | 1.250 |
+
+**Seven of the eight lowest fold medians across all 23 groups are mod 3 = 0**; the eighth
+ranks ninth, so all eight write-groups are the nine lowest.
+
+### Reading
+
+Three levels nest and each shows something different. **Group**: attention flat across
+all four slots and all 23 repeats, MLA folds ~2× any KDA in its group. **Block**: fold
+rises 1.25 → 2.62 → 2.95 across the three groups while MoE movement and router spread
+both fall. **Stack**: each block ×1.35, each output one of the nine fold sources.
+Attention is the invariant; everything downstream of it varies with position.
+
+### What is still unknown
+
+Group 0's median covers pods 1–3 only, so the dense MLP is not measured and group 0 is
+not like-for-like. The period-3 fold signal is partly mechanical — the write pod folds
+exactly 0.000, which must pull its group's median down — but MoE movement and router
+spread also move monotonically across the three and that is not mechanical. No mechanism
+for either.
+
+---
+
 ## Cycle: the flow as a tree (2026-10-13)
 
 ### Context
