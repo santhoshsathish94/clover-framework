@@ -6,6 +6,58 @@ it does and does not establish.
 
 ---
 
+## Cycle: the flow as a tree (2026-10-13)
+
+### Context
+
+> don't go to older understanding understand based on the current data and arrage it in a
+> tree, KDA KDA KDA MLA is one block and you find the data and see how the tree looks
+
+For MLA to be last in KKKM, groups align to pod ≡ 3 (mod 4) — (0,1,2,3), (4,5,6,7), … —
+which puts the **server at pod 0 as the first leaf**, not a prefix outside the structure.
+That re-aligns the block too: the write condition is `pod % 12 == 0`, so a block is
+12B…12B+11 with the **write at its FIRST pod**. Every earlier cycle here used pods 1–12
+as block 1, which put the write at the end and cut each group in half. 12 = 3 × 4, so the
+aligned block is exactly three groups.
+
+### Outcome: every level checked against the 7,360-row census
+
+**23 complete groups, 0 are not KKKM.** Incomplete: `(server,K,K,M)` at pods 0–3, and pod
+92 alone.
+
+**Every block is exactly three groups.** Blocks 0–6 are (KKKM)(KKKM)(KKKM); block 7 is
+(KKKM)(KKKM)(M).
+
+**Snapshot slot k+1 is the output of block k — exact on all seven.** 112.8885/112.8886,
+63.1325/63.1326, 34.1738, 59.8421/59.8422, 133.4077/133.4080, 50.9069/50.9070,
+63.5632/63.5633. With slot 0 the embedding and block 7's output the residual, **the nine
+fold sources are the input plus the output of each of the eight blocks.** 1 + 7 + 1 = 9.
+That is the whole tail fold explained by the tree.
+
+**The MLA pod has the largest fold movement in its own group of four in 1,375 of 1,760
+groups (78.1%)**, median roughly 2× every KDA slot in every prompt (france 2.19/2.22/1.97
+vs **4.85**).
+
+**The group has internal direction**, n=7,360: attention movement 0.999 → 1.007 → 1.014 →
+**1.048**, MoE movement 0.459 → 0.490 → 0.515 → **0.515**, router spread 12.817 → 12.620 →
+12.379 → **12.295**. Rising, rising, falling.
+
+### Reading
+
+The group is the attention period, the block is the residual period, and they nest. The
+claim that broke last cycle returns in a form that survives: "the three largest folds are
+offsets 3, 7, 11" was false because offset 9 outranks offset 3 globally — but that was
+the wrong comparison. **Within its own group** the MLA is the peak. Choosing the unit the
+creator named turned a failed claim into a measured one.
+
+### What is still unknown
+
+78.1% is not a rule — one group in five has a KDA folding harder than its MLA. Why the
+router spread falls across a group while both movements rise. Nothing here says why the
+layer layout is K,K,K,M.
+
+---
+
 ## Cycle: the block claims against twelve prompts (2026-10-13)
 
 ### Context

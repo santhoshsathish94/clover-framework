@@ -658,13 +658,131 @@ does. No mechanism is offered for the offset-12 routing spike. No timing was mea
 
 ---
 
+## The tree
+
+The creator named the unit as **KDA-KDA-KDA-MLA**. For MLA to be last, groups align to
+pod ≡ 3 (mod 4) — (0,1,2,3), (4,5,6,7), … — which puts the server at pod 0 as the first
+leaf of the first group rather than a prefix outside the structure.
+
+That re-aligns the block as well. The write condition in the pod source is
+`pod % 12 == 0`, so a block runs 12B…12B+11 with the **write at its first pod**. Every
+section above this line used pods 1–12 as block 1, which puts the write at the end and
+cuts each group in half. 12 = 3 × 4, so the aligned block is exactly three groups.
+
+```
+request
+|
++- embed(token) ---------------------------------------- fold source 0
+|
++- block 0   pods  0-11   write at pod  0  -+- (s K K M)  0  1  2  3
+|                                           +- (K K K M)  4  5  6  7
+|                                           +- (K K K M)  8  9 10 11 -- source 1
++- block 1   pods 12-23   write at pod 12   -- 3 groups -------------- source 2
++- block 2   pods 24-35   write at pod 24   -- 3 groups -------------- source 3
++- block 3   pods 36-47   write at pod 36   -- 3 groups -------------- source 4
++- block 4   pods 48-59   write at pod 48   -- 3 groups -------------- source 5
++- block 5   pods 60-71   write at pod 60   -- 3 groups -------------- source 6
++- block 6   pods 72-83   write at pod 72   -- 3 groups -------------- source 7
++- block 7   pods 84-92   write at pod 84   -- (K K K M)(K K K M)(M) -- source 8
+|
++- fold the nine sources -> RMS gain -> project to 163840 -> token
+
+one pod  = 120 stages, 3 of which do arithmetic on the carried state
+one moe  = 16 of 896 experts, 80 expert stages writing a separate buffer
+```
+
+### Observed: every level checked against the census
+
+**23 complete groups, 0 are not KKKM.** The incomplete ones are the first,
+`(server, K, K, M)` at pods 0–3, and pod 92 alone.
+
+**Every block is exactly three groups.**
+
+```
+block 0  pods  0-11  write at pod  0   (sKKM) (KKKM) (KKKM)
+block 1  pods 12-23  write at pod 12   (KKKM) (KKKM) (KKKM)
+block 2  pods 24-35  write at pod 24   (KKKM) (KKKM) (KKKM)
+block 3  pods 36-47  write at pod 36   (KKKM) (KKKM) (KKKM)
+block 4  pods 48-59  write at pod 48   (KKKM) (KKKM) (KKKM)
+block 5  pods 60-71  write at pod 60   (KKKM) (KKKM) (KKKM)
+block 6  pods 72-83  write at pod 72   (KKKM) (KKKM) (KKKM)
+block 7  pods 84-92  write at pod 84   (KKKM) (KKKM) (M)
+```
+
+**Snapshot slot k+1 is the output of block k, exact on all seven.**
+
+| block | ends at pod | out | tail slot | slot norm |
+|---|---|---|---|---|
+| 0 | 11 | 112.8885 | 1 | 112.8886 |
+| 1 | 23 | 63.1325 | 2 | 63.1326 |
+| 2 | 35 | 34.1738 | 3 | 34.1738 |
+| 3 | 47 | 59.8421 | 4 | 59.8422 |
+| 4 | 59 | 133.4077 | 5 | 133.4080 |
+| 5 | 71 | 50.9069 | 6 | 50.9070 |
+| 6 | 83 | 63.5632 | 7 | 63.5633 |
+| 7 | 92 | 79.3475 | — | the residual source |
+
+Slot 0 is the raw embedding, already shown bit-identical to the server's input. So the
+nine sources of the tail fold are **the input plus the output of each of the eight
+blocks**: 1 + 7 + 1 = 9.
+
+**The MLA pod has the largest fold movement in its own group of four** in **1,375 of
+1,760 groups, 78.1%**, across all twelve prompts. Median by group slot:
+
+| prompt | K | K | K | M | M is max |
+|---|---|---|---|---|---|
+| france | 2.191 | 2.215 | 1.969 | **4.845** | 85/110 |
+| french | 1.994 | 2.024 | 1.868 | **3.962** | 277/330 |
+| genesis | 1.892 | 2.008 | 1.859 | **4.614** | 288/352 |
+| germany | 2.087 | 2.225 | 1.974 | **4.888** | 86/110 |
+| hello | 2.817 | 5.544 | 2.226 | **6.931** | 16/22 |
+| japan | 2.148 | 2.190 | 1.979 | **4.898** | 86/110 |
+| n2 | 2.439 | 2.858 | 1.972 | **5.550** | 32/44 |
+| nonsense | 2.201 | 2.113 | 1.923 | **3.846** | 141/198 |
+| once | 2.146 | 2.288 | 2.011 | **4.880** | 85/110 |
+| question | 2.207 | 2.349 | 2.031 | **4.996** | 114/154 |
+| thethe | 2.335 | 2.207 | 1.968 | **3.962** | 76/110 |
+| water | 2.064 | 2.239 | 1.913 | **4.719** | 89/110 |
+
+**The group has internal direction**, across all 7,360 rows:
+
+| | K | K | K | M |
+|---|---|---|---|---|
+| attention movement | 0.999 | 1.007 | 1.014 | **1.048** |
+| MoE movement | 0.459 | 0.490 | 0.515 | **0.515** |
+| router spread | 12.817 | 12.620 | 12.379 | **12.295** |
+| routed/shared | 1.369 | 1.284 | 0.977 | 1.254 |
+
+### Reading
+
+The group is the attention period and the block is the residual period, and they nest:
+three groups to a block, eight blocks, one fold source per block plus the input. Stated
+in the right unit, the claim that broke earlier comes back in a form that survives —
+"the three largest fold movements are offsets 3, 7, 11" was false because offset 9
+outranks offset 3 **globally**, but that was the wrong comparison. Within its own group
+the MLA is the peak, in 78% of 1,760 groups, with its median roughly double every KDA
+slot in every prompt.
+
+Attention movement and MoE movement both rise across the four slots while router spread
+falls. None of that was visible against twelve offsets.
+
+### What this does not establish
+
+78.1% is not a rule — roughly one group in five has a KDA pod folding harder than its
+MLA. `hello` is one position, which is why its slot-1 median of 5.544 is out of line with
+every other prompt. The group ordering is a property of this engine's layer layout, which
+comes from the released config; nothing here says why the layout is that way.
+
+---
+
 ## Tools
 
 | file | what |
 |---|---|
 | `inventory.py` | which owners, which locals, how many records, what width — before reading any value |
 | `walk-chain.py` | the chain at one position, step by step, with bookkeeping separated from carried state |
-| `fold-blocks.py` | the same walk with the 12-pod block as the unit, eight repeats side by side |
+| `tree.py` | the flow as a tree — group, block, fold source — with every level checked against the census |
+| `fold-blocks.py` | the walk with the 12-pod block as the unit, eight repeats side by side |
 | `block-census.py` | one row per pod-position as TSV, NumPy, so a prompt costs under a second to reduce |
 | `census-all.sh` | capture, census, delete — one prompt at a time, peak disk one dump |
 | `block-compare.py` | the block claims tested against every prompt, reporting where they fail |
