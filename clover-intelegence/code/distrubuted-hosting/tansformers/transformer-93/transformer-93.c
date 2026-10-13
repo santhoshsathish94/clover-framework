@@ -180,26 +180,57 @@ static int transformer_93_step(const Transformer93 *model, Transformer93Sequence
     if (stage == 2) {
         for (unsigned source = 0; source < NORMALIZATION_SNAPSHOTS; source++)
             sequence->sources[source] = snapshots + source * NORMALIZATION_WIDTH;
+        /* CLOVER_TAIL_TRACE */
+        if (clover_vectors_active(93))
+            for (unsigned source = 0; source < NORMALIZATION_SNAPSHOTS; source++)
+                clover_vectors_write(93, 5310 + (int)source, (unsigned long)sequence->positions,
+                    sequence->sources[source], NORMALIZATION_WIDTH);
         sequence->stage++; return 1;
     }
-    if (stage == 3) { sequence->sources[NORMALIZATION_SNAPSHOTS] = residual; sequence->stage++; return 1; }
+    if (stage == 3) {
+        sequence->sources[NORMALIZATION_SNAPSHOTS] = residual;
+        /* CLOVER_TAIL_TRACE */
+        if (clover_vectors_active(93))
+            clover_vectors_write(93, 5301, (unsigned long)sequence->positions,
+                residual, NORMALIZATION_WIDTH);
+        sequence->stage++; return 1;
+    }
     if (stage == 4) {
         if (!normalization_score_sources(model->normalization, sequence->sources, sequence->scores)) return 0;
+        /* CLOVER_TAIL_TRACE */
+        if (clover_vectors_active(93))
+            clover_vectors_write(93, 5302, (unsigned long)sequence->positions,
+                sequence->scores, NORMALIZATION_SOURCES);
         sequence->stage++; return 1;
     }
     if (stage == 5) {
         if (!normalization_softmax(sequence->scores, sequence->weights)) return 0;
+        /* CLOVER_TAIL_TRACE */
+        if (clover_vectors_active(93))
+            clover_vectors_write(93, 5303, (unsigned long)sequence->positions,
+                sequence->weights, NORMALIZATION_SOURCES);
         sequence->stage++; return 1;
     }
     if (stage == 6) {
         normalization_aggregate(sequence->sources, sequence->weights, sequence->result);
+        /* CLOVER_TAIL_TRACE */
+        if (clover_vectors_active(93))
+            clover_vectors_write(93, 5304, (unsigned long)sequence->positions,
+                sequence->result, NORMALIZATION_WIDTH);
         sequence->stage++; return 1;
     }
     if (stage == 7) {
         if (!normalization_finite(sequence->result, NORMALIZATION_WIDTH)) return 0;
         sequence->stage++; return 1;
     }
-    if (stage == 8) { normalization_apply_rms(model->normalization, sequence->result); sequence->stage++; return 1; }
+    if (stage == 8) {
+        normalization_apply_rms(model->normalization, sequence->result);
+        /* CLOVER_TAIL_TRACE: the vector the head reads. */
+        if (clover_vectors_active(93))
+            clover_vectors_write(93, 5305, (unsigned long)sequence->positions,
+                sequence->result, NORMALIZATION_WIDTH);
+        sequence->stage++; return 1;
+    }
     if (stage == 9) {
         if (!normalization_finite(sequence->result, NORMALIZATION_WIDTH)) return 0;
         sequence->normalize_seconds += transformer_93_clock() - sequence->mark;
@@ -266,6 +297,7 @@ int transformer_93_process(const Transformer93 *model, Transformer93Sequence *se
     sequence->mark = transformer_93_clock();
     sequence->stage = 1;
     clover_trace_open();
+    clover_vectors_open(93); /* CLOVER_TAIL_TRACE */
     while (sequence->stage) {
         const int executed = sequence->stage;
         const double began = clover_trace_active() ? clover_trace_clock() : 0.0;

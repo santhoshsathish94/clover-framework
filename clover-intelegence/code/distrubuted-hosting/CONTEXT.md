@@ -6,7 +6,84 @@ it does and does not establish.
 
 ---
 
-## Cycle: decomposing the alignment (2026-10-12)
+## Cycle: the two ends of the chain (2026-10-13)
+
+### Context
+
+The stage walk covered pods 1 to 92. The creator pointed out that this is not the chain:
+
+> because there are stages before 92 layers total 96 layers from input to token vectors
+> then vectors in layer 0 then layer 1 to 92 then normalization then vector token to
+> output so look at them fully observer don't assume look at one step at a time
+
+Neither end had ever been instrumented. Layer 0 is the server, a flat sequence rather
+than a stage machine, and the only layer with no routed experts. The tail is owner 93:
+a nine-source fold, an RMS, and the head that turns a vector into a token. Both were
+read from source first, then traced.
+
+### Execution
+
+`port-server-trace.py` (locals 5201–5207) and `port-tail-trace.py` (5301–5305,
+5310–5317), both behind `clover_vectors_active`, both idempotent. `build.sh` needed
+`-Wno-unused-function` on the server line. **Gate with tracing off: 12/12 prompts
+unchanged**, plus the server's own reference gate, *layer-0 residual and S0 exact at 5
+positions*, on both its prompts.
+
+### Outcome
+
+**Layer 0 almost discards the raw embedding.** Its two-source fold puts 0.94%–8.2% on
+the incoming embedding across sixteen positions, median about 3%. The aggregate norm is
+below the attention-residual norm at every position, so part of what the embedding
+contributes is cancellation.
+
+**The fold's first score is a function of the token alone.** Genesis repeats token 276
+at positions 1, 5, 8, 11 — identical embedding norm, identical normalized norm,
+identical score[0] of 0.1594 at all four. Score[1] moves with history. Same for 316 and
+13618.
+
+**Snapshot slot 0 at the tail is the raw token embedding, bit identical.** cos
+1.000000000, max abs difference 0, against the server's *input* at the last position.
+Against the server's *output*: cos 0.012. The raw table row travels the whole depth
+untouched and is given 0.22% of the final fold.
+
+**The last two blocks carry the snapshot side.** Slots 6 and 7 take 13.6 of the 15.5
+points the snapshots get between them on genesis; the same shape holds on all twelve.
+
+### The mistake in this cycle, and what fixed it
+
+On genesis the residual, the folded vector and the post-RMS vector all pick " and", so I
+wrote *the answer is already decided before the tail runs*. Eleven more prompts, one
+fleet pass each, say otherwise:
+
+- **The nine-source fold never changed the token, 12 of 12.** It moves confidence — n2
+  goes 0.554 to 0.158 — and not the choice.
+- **`normalization_apply_rms` changed the token in 5 of 12.** Without it germany answers
+  " the" instead of " Berlin", water answers "," instead of " Celsius", nonsense "\n"
+  instead of " f", french "." instead of ".\",\n", question "?" instead of "?\n\n". In
+  every one of the five the pre-RMS vector picks something generic and the
+  per-coordinate gain moves it to the specific continuation.
+
+Genesis is one of the seven where the false sentence happens to hold. The standing
+caveat on this work — twelve prompts on greedy top-1 is weak — caught this one going the
+other way: the small set was enough to break the claim, not to support it.
+
+Ids decoded with `server/decode-ids.c`, which calls the engine's own `id_to_word`.
+tiktoken is not installed on this host and a guessed id→word mapping is not evidence.
+
+### What is still unknown
+
+Why slot 0's weight jumps an order of magnitude on the two shortest and two least
+ordinary prompts (0.068 nonsense, 0.043 question, 0.021 hello, 0.014 n2, against
+0.002–0.008 elsewhere). Whether the fold is removable — an unchanged token can sit on a
+margin that moved, and n2 lost two thirds of its probability. No timing was measured for
+any of this.
+
+### Next
+
+Walk all 11,280 stages end to end with owners 0 and 93 included, rather than the 9,956
+the pod walk covered.
+
+---
 
 Two things were open: why the gate's alignment flips sign with depth, and why pod 12 is
 so far beyond the shallow group it sits in. The first observation came free. Pod 12's
