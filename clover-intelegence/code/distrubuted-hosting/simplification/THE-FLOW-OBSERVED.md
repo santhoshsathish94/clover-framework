@@ -506,6 +506,158 @@ is over those seven. Nothing here says a block could be removed, shortened or sh
 
 ---
 
+## The same four claims, against twelve prompts
+
+Everything above the line came from one prompt at one position. Seven repeats of a block
+is seven samples. Twelve prompts, 80 positions, 7,360 pod-positions, 560 full blocks —
+captured one at a time and deleted after census so peak disk stayed at one dump rather
+than the ~24 GB all twelve need at once.
+
+Each claim is written here as something that can fail.
+
+### Claim 2 — offset 12 folds nothing. **Holds, exactly.**
+
+**0 of 560** block-write rows have non-zero fold movement. Twelve prompts, 80 positions.
+
+### Claim 6 — 269 arithmetic stages per position. **Holds, exactly, and is prompt-independent.**
+
+| prompt | positions | local 6 | local 9 | local 20 | local 116 | per position |
+|---|---|---|---|---|---|---|
+| hello | 1 | 24 | 68 | 85 | 92 | **269** |
+| n2 | 2 | 48 | 136 | 170 | 184 | **269** |
+| france, japan, germany, once, thethe, water | 5 each | 120 | 340 | 425 | 460 | **269** |
+| question | 7 | 168 | 476 | 595 | 644 | **269** |
+| nonsense | 9 | 216 | 612 | 765 | 828 | **269** |
+| french | 15 | 360 | 1020 | 1275 | 1380 | **269** |
+| genesis | 16 | 384 | 1088 | 1360 | 1472 | **269** |
+
+Exact on all 80 positions. 24 + 68 + 85 + 92 = 269 every time.
+
+### Claim 3 — a full block multiplies the state by about 1.38. **Holds, and tightens.**
+
+| | geometric mean |
+|---|---|
+| single prompt, 7 blocks | 1.377 |
+| **560 blocks, 12 prompts** | **1.347** |
+| per-prompt range | **1.288 (thethe) to 1.372 (water)** |
+| individual blocks | **0.0715 to 22.05** |
+
+Every prompt lands within 1.29–1.37 while individual blocks span a factor of 300. The
+×1.35 is a property of the aggregate, not of any block.
+
+### Claim 4 — the residual grows monotonically from offset 1 to 11. **Fails as a rule.**
+
+**484 of 640** block-positions rise without a single drop — 75.6%, all of them strictly.
+The failures cluster rather than scatter: `water` holds five of the eight worst cases.
+Common, not universal.
+
+### Claim 1 — the three largest fold movements are the MLA offsets. **Fails, 10 of 12.**
+
+The top three by median:
+
+| prompt | top three | | prompt | top three |
+|---|---|---|---|---|
+| france | 7, 11, **9** | | n2 | 11, 7, **9** |
+| french | 7, **3**, 11 ✓ | | nonsense | 7, **8**, 11 |
+| genesis | 7, 11, **3** ✓ | | once | 7, 11, **9** |
+| germany | 7, 11, **9** | | question | 7, 11, **9** |
+| hello | **9**, 11, **5** | | thethe | 7, **9**, **8** |
+| japan | 7, 11, **9** | | water | 7, 11, **9** |
+
+Offset 7 is in the top three 11 times and is the single largest 10 times. Offset 11 is
+in the top three 11 times. **Offset 3 makes it twice.** Offset 9 — a KDA offset — makes
+it nine times.
+
+The single-prompt reading was taken at one position. Over all five positions of the same
+prompt, france's top three is 7, 11, 9.
+
+#### What the pattern actually is
+
+Median fold movement by offset:
+
+```
+off        france   french  genesis  germany    hello    japan       n2 nonsense     once question   thethe    water
+ 1          1.038    1.030    1.026    1.043    0.961    1.016    1.099    1.062    1.041    1.093    1.112    1.046
+ 2          1.393    1.343    1.396    1.340    1.229    1.351    1.251    1.358    1.421    1.449    1.421    1.338
+ 3   M      3.696    3.486    3.217    3.696    3.904    3.696    3.696    3.021    3.163    3.111    3.266    3.342
+ 4          2.477    2.387    2.373    2.477    4.567    2.467    3.234    2.405    2.499    2.516    2.476    2.448
+ 5          2.292    2.276    2.309    2.277    6.603    2.267    2.858    2.242    2.334    2.488    2.389    2.389
+ 6          2.025    1.954    1.955    2.049    2.487    2.053    1.981    1.973    2.019    2.123    1.961    1.920
+ 7   M      5.458    4.476    5.017    5.437    6.304    5.632    6.143    4.581    5.673    5.329    4.512    5.099
+ 8          3.479    3.218    3.088    3.374    6.512    3.374    4.348    3.371    3.354    3.237    3.673    3.194
+ 9          3.856    2.951    2.961    3.762    7.548    3.823    5.825    3.077    3.793    3.768    3.712    3.556
+10          2.596    2.157    2.142    2.437    4.103    2.465    2.623    2.283    2.493    2.316    2.260    2.269
+11   M      4.242    3.420    3.622    4.357    7.333    4.314    6.302    3.228    4.555    3.825    3.325    3.867
+12          0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000
+```
+
+**The fold movement is a local maximum at each of the three MLA offsets — higher than
+both its neighbours at 3, 7 and 11 — in 11 of 12 prompts.** The exception is `hello`, a
+single position whose medians are one sample per offset.
+
+So the MLA offsets are peaks; the error was calling them the three *largest*. Offset 3's
+peak (3.0–3.9) is a genuine local maximum but smaller than offset 9's ordinary value
+(3.0–3.9 as well, and rising to 7.5 on hello). The shape is the finding; the ranking was
+an artifact of one position.
+
+The rank correlation of the offset ordering between prompt pairs is **median 0.955,
+min 0.609** over 66 pairs — the shape is close to prompt-invariant even though the
+top-three membership is not.
+
+### Claim 5 — routing is not organised by block offset. **Wrong, and in the opposite direction.**
+
+Median router effective spread, of 16:
+
+```
+off        france   french  genesis  germany    hello    japan       n2 nonsense     once question   thethe    water
+ 1          13.53    13.73    13.36    13.87    14.73    13.97    14.53    13.72    14.09    13.41    13.97    13.73
+ 4          12.71    12.78    12.18    12.59    14.10    12.48    13.82    13.28    12.23    10.68    13.78    12.01
+ 8          11.99    11.75    11.22    11.86    13.41    11.95    12.41    12.76    11.76    10.24    12.39    12.28
+10          10.92    11.78    11.16    10.61    14.59    10.74    10.95    11.65    11.97     9.88    10.74    10.37
+11          11.36    11.86    11.66    11.00    12.69    11.35    10.14    11.50    12.07     9.87     9.73    11.44
+12          14.85    15.13    14.56    14.85    15.20    14.91    15.10    14.86    14.77    14.66    15.06    14.70
+```
+
+**Offset 12 has the highest median spread in all twelve prompts, without exception.** The
+spread declines through the block to a minimum at offset 10 or 11, then jumps at the
+block write. Rank correlation of the offset ordering between prompt pairs: **median
+0.787, min 0.406** over 66 pairs.
+
+I called routing unstructured from one prompt's scatter. Across twelve the pattern is
+plain. A single prompt had enough noise to hide it, and I read the noise as the answer.
+
+### Attention movement, MLA against KDA, n = 7,360
+
+| | n | min | p25 | median | p75 | max |
+|---|---|---|---|---|---|---|
+| MLA | 1,920 | 0.914 | 1.003 | **1.044** | 1.128 | 1.576 |
+| KDA | 5,440 | 0.782 | 0.980 | **1.002** | 1.057 | 2.502 |
+
+Both centre on 1.0 — attention moves the residual by about its own length whatever the
+type. MLA sits slightly higher and is tighter; KDA has the longer tail.
+
+### Reading
+
+Two of the four block claims survive twelve prompts, one of them exactly. One was
+directionally right but wrong in its ranking. One was simply backwards.
+
+The two that survived are the ones that are structural — a block write replaces rather
+than adds, and the stage machine executes a fixed set regardless of input. The two that
+broke are the ones I read off magnitudes at a single position, where a quarter of the
+blocks drop somewhere and the top-three ordering turns over.
+
+The thing worth keeping from claim 5's failure: **the router spreads most widely exactly
+where the residual has just been replaced.** Why is not established here.
+
+### What this does not establish
+
+Twelve prompts is twelve, and six of them share the shape `1008 10484 318 X 387`. All are
+short and all are greedy top-1. `hello` is one position and its medians are single
+samples — it is the lone exception to two separate patterns, which is what one sample
+does. No mechanism is offered for the offset-12 routing spike. No timing was measured.
+
+---
+
 ## Tools
 
 | file | what |
@@ -513,8 +665,12 @@ is over those seven. Nothing here says a block could be removed, shortened or sh
 | `inventory.py` | which owners, which locals, how many records, what width — before reading any value |
 | `walk-chain.py` | the chain at one position, step by step, with bookkeeping separated from carried state |
 | `fold-blocks.py` | the same walk with the 12-pod block as the unit, eight repeats side by side |
+| `block-census.py` | one row per pod-position as TSV, NumPy, so a prompt costs under a second to reduce |
+| `census-all.sh` | capture, census, delete — one prompt at a time, peak disk one dump |
+| `block-compare.py` | the block claims tested against every prompt, reporting where they fail |
 | `observe-routing.py` | expert ids, router weights, the two MoE paths, the folds |
 | `cross-compare.py` | one record against another, in the same dump or across dumps |
 | `pull-f32.py` | records out of a dump into the flat f32 the head tools read |
 | `server/head-shape.c` | the vocabulary projection described as a distribution, with no expected token in the file |
+
 

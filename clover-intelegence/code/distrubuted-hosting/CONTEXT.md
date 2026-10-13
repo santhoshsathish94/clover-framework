@@ -6,6 +6,70 @@ it does and does not establish.
 
 ---
 
+## Cycle: the block claims against twelve prompts (2026-10-13)
+
+### Context
+
+> do the same for multiple prompts
+
+The block fold came from one prompt at one position, and the standing caveat said so.
+Twelve prompts, 80 positions, 7,360 pod-positions, 560 full blocks — captured one at a
+time and deleted after census, so peak disk stayed at one dump instead of the ~24 GB all
+twelve need together. Each claim written as something that can fail.
+
+### Outcome: two survived, two broke, one of those backwards
+
+**Offset 12 folds nothing — exact.** 0 of 560 block-write rows have non-zero fold
+movement.
+
+**269 arithmetic stages per position — exact and prompt-independent.** 24 + 68 + 85 + 92
+on all 80 positions, from 1-position `hello` to 16-position `genesis`.
+
+**A block is ×1.35 end to end — holds and tightens.** Geometric mean 1.347 over 560
+blocks; every prompt lands in **1.288–1.372** while individual blocks span **0.0715 to
+22.05**. A property of the aggregate, not of any block.
+
+**Monotone growth offset 1→11 — fails as a rule.** 484 of 640 block-positions, 75.6%.
+Failures cluster: `water` holds five of the eight worst.
+
+**The three largest fold movements are the MLA offsets — fails, 10 of 12.** Offset 7 is
+largest 10 times and top-three 11 times; offset 11 top-three 11 times; **offset 3 only
+twice**, beaten by offset 9, a KDA offset, nine times. What is true: **the fold is a
+local maximum at each MLA offset — above both neighbours at 3, 7 and 11 — in 11 of 12
+prompts**, and the offset ordering has rank correlation median 0.955 between prompt
+pairs. The shape is near prompt-invariant; the ranking was an artifact of one position.
+Over all five positions of france the top three is 7, 11, 9, not the 3, 7, 11 I read at
+position 4 alone.
+
+**Routing is not block-structured — wrong, and backwards.** Median router spread declines
+through the block to a minimum at offset 10 or 11 and then **jumps at offset 12, the
+highest in all twelve prompts without exception**. Rank correlation between prompt pairs
+median 0.787. I called it unstructured from one prompt's scatter and read noise as the
+answer. **The router spreads most widely exactly where the residual has just been
+replaced** — no mechanism established.
+
+**Attention moves the residual by about its own length whatever the type**, n = 7,360:
+MLA median 1.044 (p25–p75 1.003–1.128), KDA median 1.002 (0.980–1.057), KDA the longer
+tail at max 2.502.
+
+### Reading
+
+The two claims that survived are structural — a block write replaces rather than adds, and
+the stage machine runs a fixed set regardless of input. The two that broke are the ones I
+read off magnitudes at a single position.
+
+### What is still unknown
+
+Why the router spreads widest at the block write. Why a quarter of blocks drop somewhere
+in their rise. Twelve prompts is twelve, and six share the shape `1008 10484 318 X 387`.
+
+### Next
+
+Unchanged: instrument `routed` and `shared_output` per expert stage. 80 of a pod's 120
+stages are still invisible to every instrument in the tree.
+
+---
+
 ## Cycle: the unit was wrong, twice (2026-10-13)
 
 ### Context
