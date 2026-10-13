@@ -566,10 +566,22 @@ static int transformer_mla(Transformer *transformer, TransformerSequence *sequen
     transformer_normalize(sequence->mla_query_latent, sequence->mla_query_latent,
         transformer->operator_records[21].data, 1536);
     transformer_project(transformer, 22, sequence->mla_query_latent, sequence->mla_query);
+    /* CLOVER_MLA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER)) {
+        unsigned long at = (unsigned long)sequence->positions;
+        clover_vectors_write(TRANSFORMER_LAYER, 5011, at, sequence->mla_query_latent, 1536);
+        clover_vectors_write(TRANSFORMER_LAYER, 5012, at, sequence->mla_query, 18432);
+    }
     transformer_project(transformer, 23, sequence->normalized, sequence->mla_kv_latent);
     transformer_normalize(sequence->mla_kv_latent, sequence->mla_kv_latent,
         transformer->operator_records[24].data, 512);
     transformer_project(transformer, 25, sequence->mla_kv_latent, sequence->mla_expanded);
+    /* CLOVER_MLA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER)) {
+        unsigned long at = (unsigned long)sequence->positions;
+        clover_vectors_write(TRANSFORMER_LAYER, 5013, at, sequence->mla_kv_latent, 576);
+        clover_vectors_write(TRANSFORMER_LAYER, 5014, at, sequence->mla_expanded, 24576);
+    }
     float *const cache = sequence->mla_cache;
     const size_t capacity = sequence->mla_capacity, slot = sequence->positions;
     for (unsigned head = 0; head < TRANSFORMER_HEADS; head++) {
@@ -617,9 +629,18 @@ static int transformer_mla(Transformer *transformer, TransformerSequence *sequen
         }
     }
     free(scratch);
+    /* CLOVER_MLA_INTERNALS: there is no per-head normalize here. The KDA path runs one
+       between the raw attention and the gate; this path goes straight to the gate. */
+    if (clover_vectors_active(TRANSFORMER_LAYER))
+        clover_vectors_write(TRANSFORMER_LAYER, 5015, (unsigned long)sequence->positions,
+            sequence->attention, TRANSFORMER_ROWS);
     transformer_project(transformer, 6, sequence->normalized, sequence->gate);
     for (unsigned coordinate = 0; coordinate < TRANSFORMER_ROWS; coordinate++)
         sequence->gate[coordinate] = sequence->attention[coordinate] * transformer_sigmoid(sequence->gate[coordinate]);
+    /* CLOVER_MLA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER))
+        clover_vectors_write(TRANSFORMER_LAYER, 5016, (unsigned long)sequence->positions,
+            sequence->gate, TRANSFORMER_ROWS);
     transformer_project(transformer, 7, sequence->gate, sequence->residual);
     return 1;
 }

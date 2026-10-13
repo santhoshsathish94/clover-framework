@@ -6,6 +6,104 @@ it does and does not establish.
 
 ---
 
+## Cycle: opening the M, and what the capture said about my own notes (2026-10-14)
+
+### Context
+
+> if we want to look at difference we will find difference if we want to look at
+> similarities we will find similarities see we found K K K M so just observer what
+> happens don't assume if you don't have data capture them follow clover do one step
+> at a time
+
+Two holes were named in the previous cycle and never filled: the MLA pods recorded
+nothing between the normalize and the residual add, and the 80 expert stages record
+nothing at all. This cycle takes the first one.
+
+### What was done
+
+`simplification/port-mla-internals.py` adds six records to the MLA attention path:
+5011 query latent, 5012 query, 5013 kv latent, 5014 expanded, 5015 attention,
+5016 gate. Applied to 91 generated sources; the 24 MLA pods carry four marks each.
+Twelve-prompt fidelity gate with tracing off: all twelve match baseline. Then one
+fresh capture of the france prompt.
+
+### What the capture showed
+
+The M is no longer opaque. Pod 47 at position 4: the attention arrives at norm
+19.3666 and goes straight to the gate. **There is no per-head normalize on the MLA
+path** — no counterpart to KDA's local 5007. The three K pods of the same group
+arrive at 0.0794, 0.0621 and 0.0906 and are rescaled ×70.5, ×102.3 and ×130.3.
+
+Across all 92 attention pods the KDA rescale factor spans **1.6 to 190.1, median
+67.3**. From one group it looked like a fixed rescale. It is not.
+
+### Then the capture contradicted three things I had written down
+
+**The pod-to-file mapping.** I wrote `pod = owner - 1` into a new reader from memory.
+It dropped 45 of 92 pods and reported no error — 230 K rows and 5 M rows out of an
+expected 340 and 120. The files carrying MLA internals are exactly `{3,7,…,91} ∪ {92}`,
+which is the MLA set, so **the file index is the pod number, no shift**. The two older
+scripts had it right; only the new one was wrong.
+
+**69 KDA.** The capture has **68** files with KDA internals. Files 0 and 93 carry
+neither kind — 35 and 13 records, no local 0, no local 6. So the note "pod 0 is a plain
+K with a dense MLP" is contradicted by this capture. What files 0 and 93 are is not
+established here, and I have not refilled that gap with the old claim.
+
+**`rel_attn` in the twelve-prompt census.** It is `|attention − incoming| / |incoming|`,
+but the attention local holds the attention output *alone* and **replaces** the residual
+rather than updating it. Subtracting two different things gives ≈1.0 whenever the
+attention is small. Measured side by side at position 4: `|attention| / |input|` spans
+0.0050 to 1.6131 while `rel_attn` spans 0.8632 to 1.6302. The group table
+"attention movement 0.999 → 1.007 → 1.014 → M 1.048" keeps its ordering but its
+magnitudes do not mean what the column name says, and "attention spread only 1.22×
+across groups" is compressed by the same transform.
+
+I tested the obvious correction rather than assuming it: the attention output is **not**
+orthogonal to the residual (cos −0.4640 to 0.5099, median 0.1857), so `sqrt(1+r²)` is
+off by up to 0.27 too.
+
+### What the stack looks like with no lens on it
+
+Laying out `|input|` for all 92 pods at one position shows the residual climbing for
+eleven pods and collapsing at the twelfth, seven times. Walking the boundary pod stage
+by stage gives the mechanism, and it is not what my stage map said.
+
+**Stage 20 replaces the residual at exactly `{12,24,36,48,60,72,84}` and adds at the
+other 85 pods.** Tested as `|s20 − attention|` being either 0.0 or exactly `|input|`:
+seven replace, 85 add, zero ambiguous, at all five positions. That is the "85 fold" term
+in the 269-stage reconciliation, now observed rather than inferred.
+
+**The dropped residual is not discarded — it becomes a new fold source.** Fold widths
+run 2,2 through pods 2–11; at pod 12 fold 38 sees **3** while fold 37 still sees 2;
+3,3 until pod 24; 3,4 at pod 24; and so on to 9,9 from pod 85. Seven boundaries, nine
+sources. The boundary pod closes one run and opens the next inside the same pod.
+
+**Boundary router spread falls monotonically with depth**: 15.98, 15.56, 15.28, 14.82,
+12.83, 11.13, 9.72, against 16 for a perfectly uniform choice over the 16 selected.
+
+### What broke when tested
+
+Two things I read off pod 12 alone did not survive the other six.
+
+- "The KDA normalize gain is ~1.6 at the boundary" — it is 1.62, 4.23, 6.49, 4.44,
+  38.19, 47.37, 69.03. It rises with depth and overlaps the other pods (boundary max
+  69.03 against other min 5.85).
+- "The boundary pods are the lowest in the stack" — pods 15 and 19, both M, sit with
+  them at four of five positions. Boundary median out/input is 0.0156–0.0350 against
+  0.2248–0.4312 elsewhere, which is a separation of medians with overlapping tails, not
+  a clean split.
+
+### What this does not establish
+
+One prompt, five positions, unless a number says otherwise. The twelve-prompt gate was
+a fidelity check with tracing off, not twelve captures. No timing measured. The 80
+expert stages are still invisible — that hole is now the only one named and unfilled.
+Why the router spreads widest at the boundary, and why the fold-source count is the
+thing that grows, are both unexplained.
+
+---
+
 ## Cycle: 23 × KKKM + 1 M, and what repeats with it (2026-10-13)
 
 ### Context

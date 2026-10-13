@@ -628,6 +628,13 @@ plain. A single prompt had enough noise to hide it, and I read the noise as the 
 
 ### Attention movement, MLA against KDA, n = 7,360
 
+> **Read the magnitudes with care, 2026-10-14.** This column is
+> `|attention − incoming| / |incoming|`, and the attention local *replaces* the residual
+> rather than updating it, so the expression subtracts two different things and sits near
+> 1.0 whenever the attention is small. The ordering survives; the spread is compressed.
+> `|attention| / |input|` spans 0.0050–1.6131 where this column spans 0.86–1.63. See
+> "Three things in these notes that the capture contradicted".
+
 | | n | min | p25 | median | p75 | max |
 |---|---|---|---|---|---|---|
 | MLA | 1,920 | 0.914 | 1.003 | **1.044** | 1.128 | 1.576 |
@@ -707,6 +714,12 @@ irregularities are both at the ends and neither is an attention one:
   differs is the MLP — `first_k_dense_replace = 1`, so it runs a dense MLP instead of
   16-of-896 routed experts.
 - **pod 92 is a 24th M with no group**, three KDA short of a complete one.
+
+> **Superseded on 2026-10-14 — see "Three things in these notes that the capture
+> contradicted".** A later capture that records attention internals finds **68** files
+> with KDA internals, not 69, and file 0 carries no attention records at all (35 records,
+> no local 0, no local 6). The claim that pod 0 runs ordinary KDA attention is not
+> supported by that capture and has not been re-established.
 
 An earlier version of this tree wrote group 0 as `(s K K M)`. That was wrong: the server
 shows as different only because it is owner 0 and writes a different set of locals, not
@@ -813,6 +826,12 @@ thing. Median over all twelve prompts and 80 positions, for the 21 interior grou
 **Attention movement is the one quantity that is the same in every repeat.** Everything
 else varies by a factor of 1.5 to 5 between groups that are structurally identical.
 
+> **Qualified on 2026-10-14.** The attention column here is the compressed `rel_attn`
+> measure, so its 1.22× is partly the transform and not only the attention. On the
+> uncompressed `|attention| / |input|` the same pods span 0.0050 to 1.6131. Whether
+> attention is flatter across groups than the other quantities has not been re-measured
+> with the corrected column; treat the 1.22× as not established.
+
 **Group 23, the lone trailing M, is an outlier on routed/shared at 3.522** — double the
 maximum of any other group. The extra M differs in behaviour, not only in shape.
 
@@ -870,20 +889,137 @@ spread also move monotonically across the three. No mechanism is offered for eit
 
 ---
 
+## Opening the M
+
+Until this cycle an MLA pod recorded nothing between the normalize and the residual add.
+Stage 6 did the whole attention and wrote one number. Every comparison between the two
+kinds of pod was therefore a comparison between an instrumented one and an opaque one.
+
+`port-mla-internals.py` adds six records: 5011 query latent (1536), 5012 query (18432),
+5013 kv latent (576), 5014 expanded (24576), 5015 attention (12288), 5016 gate (12288).
+The twelve-prompt fidelity gate passes with tracing off.
+
+The first thing it shows is an absence. **The MLA path has no per-head normalize.** There
+is no counterpart to KDA's local 5007; the softmax-weighted sum goes straight to the gate.
+
+Group 11 at position 4, the two kinds side by side:
+
+| pod | kind | before the gate | gate | into the residual | input |
+|---|---|---|---|---|---|
+| 44 | K | 0.0794 → **5.5990** (×70.5) | 1.4536 | 3.9033 | 11.0347 |
+| 45 | K | 0.0621 → **6.3560** (×102.3) | 2.6529 | 7.0317 | 15.9406 |
+| 46 | K | 0.0906 → **11.8081** (×130.3) | 4.3101 | 11.8229 | 23.3852 |
+| 47 | M | **19.3666** (no normalize) | 5.9243 | 14.1080 | 41.0152 |
+
+From one group the rescale looks like a constant. Over all 340 KDA rows in the capture it
+spans **1.6 to 190.1, median 67.3**. The raw KDA attention is tight (0.0165 to 0.878); the
+MLA pre-gate value spans 0.12 to 62.3.
+
+## Three things in these notes that the capture contradicted
+
+**The pod-to-file mapping.** A new reader written with `pod = owner - 1` dropped 45 of 92
+pods and reported no error. The files carrying MLA internals are exactly `{3,7,…,91} ∪
+{92}` — the MLA set — so the file index *is* the pod number. `block-census.py` and
+`group-walk.py` were already correct; only the new reader was wrong. Any new reader should
+assert `rows == 92 × positions` and print the skipped list rather than continue quietly.
+
+**69 KDA.** There are **68** files carrying KDA internals. Files 0 and 93 carry neither
+kind — 35 and 13 records, no local 0, no local 6. The earlier note that pod 0 is an
+ordinary K with a dense MLP is contradicted by this capture. What those two files are is
+not re-established here.
+
+**`rel_attn`.** The twelve-prompt census computes `|attention − incoming| / |incoming|`.
+The attention local holds the attention output *alone* and **replaces** the residual, so
+that expression subtracts two different things and reads ≈1.0 whenever the attention is
+small. At position 4, `|attention| / |input|` spans 0.0050 to 1.6131 while `rel_attn`
+spans 0.8632 to 1.6302. The group ordering (K, K, K, M) survives; the magnitudes do not
+mean what the column name says, and the "attention spread is only 1.22× across groups"
+reading is compressed by the same transform. The obvious correction was tested rather than
+assumed: the attention output is **not** orthogonal to the residual (cos −0.4640 to
+0.5099, median 0.1857), so `sqrt(1+r²)` is off by up to 0.27 as well.
+
+## The boundary pod, with no lens
+
+Printing `|input|` for all 92 pods at one position shows the residual climbing for eleven
+pods and collapsing at the twelfth, seven times:
+
+| boundary pod | input | out/input | next pod starts at |
+|---|---|---|---|
+| 12 | 112.89 | 0.0344 | 3.89 |
+| 24 | 63.13 | 0.0050 | 0.46 |
+| 36 | 34.17 | 0.0097 | 0.58 |
+| 48 | 59.84 | 0.0065 | 0.52 |
+| 60 | 133.41 | 0.0353 | 6.75 |
+| 72 | 50.91 | 0.0664 | 3.20 |
+| 84 | 63.56 | 0.1107 | 7.36 |
+
+Walking pod 12 stage by stage gives the mechanism, and it is not what the stage map said.
+
+**Stage 20 replaces the residual at exactly `{12,24,36,48,60,72,84}` and adds at the other
+85 pods.** Tested as `|s20 − attention|` being either 0.0 (replace) or exactly `|input|`
+(add): seven replace, 85 add, zero ambiguous, at all five positions. That is the 85-fold
+term of the 269-stage reconciliation, now observed rather than inferred.
+
+**The dropped residual is not discarded — it becomes a new fold source.** The fold widths
+say so:
+
+| pods | fold 37 | fold 38 |
+|---|---|---|
+| 2–11 | 2 | 2 |
+| **12** | **2** | **3** |
+| 13–23 | 3 | 3 |
+| **24** | **3** | **4** |
+| 25–35 | 4 | 4 |
+| … | … | … |
+| **84** | **8** | **9** |
+| 85–92 | 9 | 9 |
+
+The new source appears between fold 37 and fold 38 of the boundary pod itself. Seven
+boundaries, nine sources — the same nine the tail folds. The boundary pod closes one run
+and opens the next inside the same pod, which is why calling it "the last pod of a block"
+and "the first pod of a block" both describe part of it.
+
+**Boundary router spread falls monotonically with depth**: 15.98, 15.56, 15.28, 14.82,
+12.83, 11.13, 9.72, against 16 for a uniform choice over the 16 selected experts.
+
+### What broke when tested against the other six
+
+Two readings taken from pod 12 alone did not survive.
+
+- *"The KDA normalize gain is ~1.6 at the boundary."* It is 1.62, 4.23, 6.49, 4.44, 38.19,
+  47.37, 69.03 — rising with depth, and overlapping the other pods (boundary max 69.03
+  against other min 5.85).
+- *"The boundary pods are the lowest in the stack."* Pods 15 and 19, both M, sit with them
+  at four of five positions. Boundary median out/input is 0.0156–0.0350 against
+  0.2248–0.4312 elsewhere: a separation of medians with overlapping tails, not a split.
+
+### What this section does not establish
+
+One prompt, five positions. The twelve-prompt run was a fidelity gate with tracing off,
+not twelve captures. No timing. The 80 expert stages still record nothing, so what the
+experts do inside the boundary pod — or any pod — is still unobserved. No mechanism is
+offered for the monotone boundary spread, nor for why the fold-source count is the thing
+that grows at each boundary.
+
+---
+
 ## Tools
 
 | file | what |
 |---|---|
 | `inventory.py` | which owners, which locals, how many records, what width — before reading any value |
 | `walk-chain.py` | the chain at one position, step by step, with bookkeeping separated from carried state |
+| `group-walk.py` | one KKKM group laid out record by record, in file order, both kinds of attention |
 | `tree.py` | the flow as a tree — group, block, fold source — with every level checked against the census |
 | `fold-blocks.py` | the walk with the 12-pod block as the unit, eight repeats side by side |
 | `block-census.py` | one row per pod-position as TSV, NumPy, so a prompt costs under a second to reduce |
+| `attention-census.py` | one row per pod-position for the attention alone, both kinds in the same columns |
 | `census-all.sh` | capture, census, delete — one prompt at a time, peak disk one dump |
 | `block-compare.py` | the block claims tested against every prompt, reporting where they fail |
 | `observe-routing.py` | expert ids, router weights, the two MoE paths, the folds |
 | `cross-compare.py` | one record against another, in the same dump or across dumps |
 | `pull-f32.py` | records out of a dump into the flat f32 the head tools read |
+| `port-mla-internals.py` | adds locals 5011–5016 so the MLA attention is no longer one opaque stage |
 | `server/head-shape.c` | the vocabulary projection described as a distribution, with no expected token in the file |
 
 
