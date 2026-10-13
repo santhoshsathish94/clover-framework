@@ -6,6 +6,98 @@ it does and does not establish.
 
 ---
 
+## Cycle: watching one drop, and then watching what it left behind (2026-10-14)
+
+### Context
+
+> I asked you to observer until you understand something don't look at different not
+> similarites just the way things are happening do you know how when a water drops falls
+> on a surface of still water it creates a ripple effect just like that observer it don't
+> assume it do one prompt don't conclude or judge stuff follow clover
+
+> if you want to observer the long vector do it, same way you did it now like the ripple
+> effect don't conclude don't assume just observe
+
+What I had been doing wrong, named rather than defended: I turned every observation into
+an adjudication. Claims, then SURVIVES / BROKE / FALSIFIED. That needs a hypothesis
+first, which is the assumption I was told not to make, and to score it I aggregated 7,360
+rows into medians. A median cannot show a ripple. I was also reaching for contrasts —
+K against M, boundary against not-boundary — two messages after being told to stop.
+
+### One prompt, one position, no aggregation
+
+`ripple.py` prints the carried vector at every point it changes, in order, and nothing
+else. `ripple-long.py` does the same for a vector after it has left the stream.
+
+**Every pod does the same thing.** The attention replaces the buffer with something
+smaller than what arrived, pointing sideways — turn 59° to 118°, nearly always 70–95°.
+The fold adds the arrival back, so the direction snaps near to where it was and the
+vector is now longer than it arrived. The MoE turns it another 10–47° and lengthens it
+again. `out` equals `moe` exactly and the next pod's `in` equals that exactly, turn 0.00.
+Pushed sideways, pulled back, grown — in all 92 pods.
+
+Over eleven pods that takes the vector from 0.7871 to 112.8886. At pod 12 the "add it
+back" does not happen: fold has turn 0.00 and the same size as attention, the buffer
+keeps the small sideways piece, and the accumulation leaves the stream. Then it grows
+again. Seven times.
+
+Measured from what entered the chain, the vector reaches about a right angle within
+eleven pods and stays between 86° and 93° for the remaining eighty, while still turning
+20–40° at every step.
+
+### Where the long vector goes
+
+Found by looking, not assumed: **file position 5 holds position 4's snapshots**. Pod 92's
+row at file position 5 reads 112.8885, 63.1325, 34.1738, 59.8421, 133.4077, 50.9069,
+63.5632 — exactly the seven vectors that left the stream, in order. Slot k+1 is the one
+dropped at pod 12k.
+
+**It is frozen.** 112.8885 at every one of the 81 pods from 12 to 92.
+
+**It is read at every pod after it, never skipped**, by both folds.
+
+| pod | its weight in fold 37 | what it contributes | the fold's whole output | the live residual |
+|---|---|---|---|---|
+| 12 | — (fold 37 runs before the push) | — | 37.9054 | 112.8885 |
+| 13 | 0.4679 | **52.816** | **52.7590** | **3.8892** |
+| 19 | 0.2184 | 24.658 | 28.6788 | 21.5388 |
+| 24 | 0.3024 | 34.142 | 44.9467 | 63.1325 |
+| 25 | 0.0031 | 0.354 | 0.5997 | 0.4619 |
+| 56 | 0.0887 | 10.012 | — | 29.8605 |
+| 92 | 0.0500 | 5.648 | — | 51.6420 |
+
+At pod 13 the fold's entire output is 52.7590 and this one stored vector contributes
+52.816 of it, while the live stream is 3.8892. At pod 24 the next one is made, and from
+pod 25 this vector's contribution is 0.354. For the remaining 68 pods it keeps
+contributing between 0.02 and 10, and returns to around 9–10 at pods 47, 56, 59 and 83.
+
+Two more things in the trace, described not explained. The first pod after every boundary
+gives it almost nothing in fold 37 — 0.0031, 0.0016, 0.0008, 0.0068, 0.0002, 0.0004 — and
+the boundary pod itself gives it more. And from pod 61 onward fold 37 often reads it at
+0.0001–0.0005 while fold 38 holds steady at 0.01–0.08.
+
+### A defect in my own reading, caught before reporting it
+
+The first run printed 0.3358 for slot 1's fold-37 weight at pod 12. Fold 37 at pod 12 has
+two sources, and the last entry is the live residual, so index 1 was the residual, not
+slot 1. The slot does not exist in that fold yet — the push happens at stage 4, after
+stage 3. `ripple-long.py` now blanks the column when `slot >= len(scores) - 1`.
+
+### What I do not understand
+
+- Why the attention output is near-perpendicular to what arrived, in every pod.
+- Why the direction parks at 90° from the chain's input rather than continuing to turn
+  away, given it moves 20–40° per step for eighty steps.
+- Why some pods produce almost no attention at all — pod 15 gives 0.2021 from an input of
+  10.4021, pod 39 gives 0.2343 from 2.3551.
+- Why the pod right after a drop reads it at 0.4679 and the pod right after the *next*
+  drop reads it at 0.0031.
+- Why fold 37 and fold 38 diverge so far late in the chain.
+
+One prompt, one position, nothing aggregated, nothing graded.
+
+---
+
 ## Cycle: opening the M, and what the capture said about my own notes (2026-10-14)
 
 ### Context
