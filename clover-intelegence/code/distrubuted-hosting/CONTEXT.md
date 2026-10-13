@@ -18,7 +18,72 @@ it does and does not establish.
 
 Every optimisation in this repo so far moved bytes — expert cache 1.21x, batching 1.74x,
 arena 1.63x, residency 8x on the expert read. None looked at what the computation does.
-This starts there. Steps 1 to 5 of the list are done; the list continues.
+This starts there. Steps 1 to 8 of the list are done. **The outcome is that the
+compress-the-computation avenue is closed on this evidence, and step 8 proposes no
+change.** Everything below is the evidence for that.
+
+### Step 6 — what the weights actually consume, and why I was measuring the wrong thing
+
+Step 5 showed the attention reads `normalize(fold 37 output)` and the MoE reads
+`postnorm(fold 38 output)`. **The weights never see the residual.** Steps 1 to 4 measured
+the residual, which is the carried object, not the consumed one. Re-run on the right
+object, eight prompts:
+
+| | residual | fold 37 out | ratio |
+|---|---|---|---|
+| france alone | 110 | 57 | 0.52 |
+| adds: water | +56 | +33 | 0.59 |
+| adds: once | +44 | +23 | 0.52 |
+| adds: thethe | +42 | +23 | 0.55 |
+| adds: question, per 460 | +48 | +27 | 0.56 |
+| adds: nonsense, per 460 | +54 | +31 | 0.57 |
+| **running after 8** | **438** | **242** | 0.55 |
+
+What the weights consume is a steady **1.8x more compact** than what the chain carries,
+at every single step. **And it does not saturate either** — 33, 23, 23, 27, 31 is as flat
+as the residual's 56, 44, 42, 48, 54. Same positive control (japan +9, germany +3).
+
+**Instrument limit, stated rather than papered over.** Source line 887 is
+`transformer_normalize(sequence->normalized, sequence->aggregate, transformer->input_gains,
+WIDTH)`. The `4000+stage` record is the aggregate only; `sequence->normalized` and
+`sequence->postnorm` are never written out. So this measures one fixed diagonal gain away
+from the truth. A diagonal invertible map preserves rank exactly, so the dimension
+reading transfers; it reshapes the spectrum, so the 90%-energy thresholds do not. Closing
+that would need a new record at stage 5 and another twelve-prompt gate.
+
+### Steps 7 and 8 — no change is warranted, and what would change that
+
+Step 7 needed no separate experiment: the counter-evidence came out of the data twice,
+from two unrelated directions. Slot 0 lies 0.1931 inside the span of everything the
+residual visits while carrying 1.6% of the fold's magnitude, and the seven pods whose
+attention moves the stream least are the seven boundary pods whose output becomes the
+entire next run. **Twice the smallest number in a column was the one that could not be
+removed.**
+
+Step 8, honestly: **nothing here justifies a change.** The specific thing this cycle was
+chasing — restrict the 7168-wide projections to a learned basis, cutting weight bytes by
+7168/k — requires a k that exists. It does not. Both the carried and the consumed objects
+gain roughly a constant number of new directions per unrelated prompt with no sign of a
+ceiling across five of them.
+
+What would have to be true for the lever to come back, so this can be reopened on
+evidence rather than on hope:
+
+- the adds column falls towards zero as prompts accumulate, rather than staying flat
+- measured on `sequence->normalized` rather than on the aggregate, since the diagonal
+  gain reshapes the spectrum and only the rank carries over
+- and then an end-to-end token check, never an energy threshold, because a 99%-energy
+  subspace is not a 99%-correct subspace
+
+### Where this leaves the Direction
+
+Set beside what the repo already measured — expert weights at the entropy floor
+(3.7544 of 4 bits), the trunk read exactly once and 100% of it, 2.11 FLOP/byte with the
+arithmetic unit 82% idle — the picture is consistent: for a single stream this engine is
+near its floor, and the cost is moving bytes rather than doing arithmetic. The levers
+that have actually paid here all change how many streams share a weight read (batching,
+1.74x) or where the weights sit (residency, 8x on the expert read). Saying that plainly
+is the point; manufacturing a plausible optimisation that does not hold would be the harm.
 
 ### Step 4 — the shared subspace does NOT saturate. The step-3 lead is dead.
 
