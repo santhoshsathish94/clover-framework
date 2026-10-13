@@ -6,6 +6,109 @@ it does and does not establish.
 
 ---
 
+## Cycle: how many directions the chain actually moves in (2026-10-14, in progress)
+
+### Direction
+
+> you have to understand what is at stake if AI runs like this inefficient that will
+> cause more damage than good we need to make it efficient understand clover we need to
+> protect reality ... let's see the K K K M, let's see the 90 degree stays constant now
+> the it's frozen 112.8885 let's find relationships and how to make things run better
+> take one step at a time ... create a todo list
+
+Every optimisation in this repo so far moved bytes — expert cache 1.21x, batching 1.74x,
+arena 1.63x, residency 8x on the expert read. None looked at what the computation does.
+This starts there. Steps 1 to 3 of the list are done; the list continues.
+
+### Step 1 — the trajectory is confined, not low-rank
+
+93 residual states at one position, each scaled to length 1, against a random control of
+the same shape:
+
+| | 50% of energy | 90% | 99% |
+|---|---|---|---|
+| residual states | 6 | 33 | 76 |
+| random (control) | 43 | 82 | 92 |
+
+Leading singular values 4.008, 3.152, 2.631, 2.375 against the control's flat 1.104,
+1.099, 1.096. Real structure, 3.6x the no-structure value, but the spectrum decays with
+no cutoff. Confined, not low-rank. The raw (unscaled) reading of "90% in 12" is the ~12
+large end-of-run states carrying the energy and is not used.
+
+**The one relationship: slot 0 lies only 0.1931 inside the span of the residual states.**
+Slots 1 to 7 read 1.0000, which is a tautology — they are copies of residual states — and
+serves only as a check the tool works. 81% of slot 0 points where the residual stream
+never goes. That is the first mechanical account of a failure already recorded here: a
+slot-drop test predicted slot 0 was the removable one (median weight 0.009) and dropping
+it collapsed the output, while dropping the heavily weighted slot 4 was harmless. Weight
+said negligible; direction says it is the only new information in the fold.
+
+### Step 2 — the five positions of one prompt share part of their directions
+
+| | 50% | 90% | 99% |
+|---|---|---|---|
+| each position alone | 5-6 | 25-33 | 58-76 |
+| all five stacked | 15 | 110 | 303 |
+| random stacked (control) | 184 | 394 | 457 |
+
+Full sharing would read ~33 at 90%, none would read ~152. It reads 110.
+
+Overlap decays monotonically with distance between positions: neighbours 0.34-0.53, two
+apart 0.12-0.38, four apart 0.09-0.13, against a random 0.013. Consistent with prefix
+reuse, which is already built and measured here at 2.57-2.83x, so it agrees with a known
+result rather than opening a new one. No efficiency lever: the cost is weight traffic and
+shared directions do not reduce it.
+
+### Step 3 — two prompts sharing no tokens share about half their energy
+
+france `1008 10484 318 15383 387`, water `29349 154199 623 10113 16525`.
+
+| | 50% | 90% | 99% |
+|---|---|---|---|
+| france, 465 states | 15 | 110 | 303 |
+| water, 465 states | 16 | 114 | 306 |
+| both stacked | 21 | 175 | 528 |
+| random stacked (control) | 330 | 757 | 909 |
+
+No sharing would put the stack at ~224; it is 175.
+
+Fraction of one prompt's energy inside the other's leading directions, with the random
+control beside it:
+
+| keep | water in france | france in water | random |
+|---|---|---|---|
+| 10 | 0.2601 | 0.2659 | 0.0014 |
+| 33 | 0.3929 | 0.4072 | 0.0045 |
+| 110 | 0.5026 | 0.5172 | 0.0153 |
+| 465 | 0.5719 | 0.5904 | 0.0649 |
+
+**Checked before reporting: it is not a common offset.** france's leading direction is
+12.32 degrees from the mean of its states and that mean holds 6.3% of water's energy, so
+the top direction is an offset — but removing it and renormalising moves the overlap only
+from 0.5026 to 0.4713 at keep 110. Per-direction energy decays smoothly (6.5, 4.6, 3.2,
+2.6, 2.2 percent) rather than sitting in one or two rogue dimensions.
+
+### Two things that must not be skipped past
+
+**The dimension-counting trap.** 930 states span at most 930 directions, so "99% in 528"
+is 528 of a possible 930, not of 7168. Two prompts cannot separate "the model works in a
+fixed subspace" from "any two trajectories of this length overlap this much". The
+decisive test is whether the cumulative dimension saturates as prompts are added. Not yet
+run. Affordable: the 465 states are 13 MB per prompt, so capture 1.6 GB, keep 13 MB,
+delete — the pattern `census-all.sh` already uses.
+
+**Energy is not importance.** Slot 0 carries 1.6% of the fold's magnitude and removing it
+destroys the output. A 99%-energy subspace is not a 99%-correct subspace. Nothing built on
+this may be accepted on an energy argument; it needs an end-to-end token check.
+
+### What this does not establish
+
+Two prompts, both five tokens, both greedy. No timing. Nothing says the projections are
+doing wasted work: the subspace is measured on the residual, not on the weights, and
+saturation is unmeasured. No change proposed or built.
+
+---
+
 ## Cycle: watching one drop, and then watching what it left behind (2026-10-14)
 
 ### Context
