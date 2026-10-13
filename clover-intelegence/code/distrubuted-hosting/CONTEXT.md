@@ -6,6 +6,92 @@ it does and does not establish.
 
 ---
 
+## Cycle: observing the flow without the answer (2026-10-13)
+
+### Context
+
+The creator named the method, not the target:
+
+> Observe the complete input-to-output flow without using the expected output token to
+> judge or interpret internal computations. Capture what actually happens at every stage,
+> including state changes, routing, and intermediate values. Separate observation from
+> interpretation and judgment. Let evidence reveal patterns; do not force observations to
+> confirm expectations.
+
+The previous cycle used the answer token as its instrument throughout — *does this source
+pick 316, does RMS change the answer, is the answer already decided before the tail*.
+Every reading was a test of my expectation rather than a description of the system. The
+correction is methodological and it applies to the whole arc, not to one claim.
+
+### Execution
+
+One unrestricted capture: every owner, every local, five positions, 94 files, 1.6 GB, plus
+a full trace. Then an inventory **before** reading any value, because what the engine
+records and what my patch scripts put there have disagreed before.
+
+### Outcome
+
+**Every pod records the carried state at every stage it executes.** 7168 floats per stage,
+not a hash. The stage walk had been reading hashes of this for weeks.
+
+**Three records per pod are bookkeeping, not work**, read off `transformer_process` rather
+than inferred: `local 0` is the pod's input written outside the loop; `local 1` is the
+previous position's leftover because stage 1 writes `incoming`, not `residual`; `local 120`
+is labelled one position ahead because stage 120 increments the counter first. The honest
+split at position 4 is **361 changed, 9,319 bit-identical, 276 bookkeeping** — not the
+"636 move the residual" I have now reported three times. I had already catalogued the
+stage-120 off-by-one in memory and reintroduced it anyway.
+
+**Four stages per pod change the carried state**: the input copy, one attention stage
+(MLA 24, KDA 68), the attention fold (85 = 92 − 7 block writes), the MoE add (92).
+
+**The two instruments agree exactly once bookkeeping is removed.** On the same run and
+position the trace counts 452 residual-hash changes, of which 91 are `local 120`;
+452 − 91 = **361**, which is what the vectors give. A 64-bit hash and 7168 floats, built
+at different times for different questions, land on the same set of stages.
+
+**The chain joins are exact.** Pod 1's input is bit-identical to the server's output; pod
+92's output is bit-identical to what the tail receives; the tail's snapshot slot 0 is
+bit-identical to the server's input. Every one of the eight snapshot slots equals, to four
+decimals, the residual at the last pod before a block write.
+
+**The residual norm collapses at every twelfth pod.** The six largest contractions in 91
+transitions are exactly pods 24, 48, 36, 12, 60, 72. The mechanism is in the source from
+the first implementation, so this validates the walk rather than discovering anything.
+
+**Routing is not concentrated.** Effective spread 4.79–15.92 of 16; largest single weight
+usually ~0.11; five positions share a mean 2.30 of their 16 choices; at 91 of 92 pods **no
+expert is chosen by all five positions**; 50–74 distinct experts per layer.
+
+**The two MoE paths are near-orthogonal** (median cos 0.0898) and comparable in size
+(median ratio 1.415; routed is the smaller one at 22 of 92 pods).
+
+**The attention fold is close to depth-invariant.** Non-final sources sit near 1/n; the
+current residual takes 2.1–2.4 times a non-final share, at every depth from 2 sources to 9.
+
+**The raw embedding carries no preference the head can read**: entropy 12.00551 against a
+maximum of 12.00672, and all 163,840 logits within 1.0 of the top.
+
+**The two tail steps differ in kind.** The nine-source fold rotates barely (cos 0.9888)
+and shrinks 16%. The RMS gain rotates substantially (cos 0.7610), shrinks 28%, and the
+top-two margin rises 1.55 → 3.68 while the vector gets *shorter* — which a scaling cannot
+do.
+
+### What is still unknown
+
+Whether owner 1's missing fold-score and router records are an instrument asymmetry or a
+model one. What the expert stages do, which no instrument here watches — the residual is
+the wrong buffer for that question. Why snapshot 5 is by itself the most concentrated of
+the eleven head rows.
+
+### Next
+
+Instrument `routed` and `shared_output` per expert stage. That is the one place in the
+chain where 80 of a pod's 120 stages are invisible to every instrument now in the tree.
+
+---
+
+
 ## Cycle: the two ends of the chain (2026-10-13)
 
 ### Context
@@ -82,6 +168,10 @@ This corrects an earlier figure of *636 of 9,956* with a `local 0` among the mov
 There is no local 0 in the trace; the lowest local any pod records is 1. The earlier
 count compared within each pod rather than along one continuous sequence. Both came off
 real runs; the grouping differed, not the engine.
+
+> **Superseded by the cycle above (2026-10-13).** Both 636 and 544 count bookkeeping
+> records as movement. `local 120` is the position counter already incremented and
+> `local 1` is the previous position's leftover. The cross-validated figure is 361.
 
 **Where the time is.** Pods 92.381 s, tail 0.392 s, request 93.891 s wall. The head —
 163,840 dot products of width 7168 — is 0.390 s of that, 0.4% of the request and 99.5%
