@@ -18,7 +18,64 @@ it does and does not establish.
 
 Every optimisation in this repo so far moved bytes — expert cache 1.21x, batching 1.74x,
 arena 1.63x, residency 8x on the expert read. None looked at what the computation does.
-This starts there. Steps 1 to 3 of the list are done; the list continues.
+This starts there. Steps 1 to 5 of the list are done; the list continues.
+
+### Step 4 — the shared subspace does NOT saturate. The step-3 lead is dead.
+
+Eight prompts, capture-extract-delete so peak disk stayed one dump and the disk never
+moved off 69 GB free.
+
+| prompt | inside everything before | adds | running | random adds | random running |
+|---|---|---|---|---|---|
+| france | - | - | 110 | - | 394 |
+| japan, one token differs | 0.9029 | +15 | 125 | +363 | 757 |
+| germany, one token differs | 0.9371 | +7 | 132 | +338 | 1095 |
+| water | 0.6034 | +56 | 188 | +314 | 1409 |
+| once | 0.6906 | +44 | 232 | +291 | 1700 |
+| thethe | 0.7032 | +42 | 274 | +269 | 1969 |
+| question, 651 states | 0.7167 | +67 | 341 | +341 | 2310 |
+| nonsense, 837 states | 0.6753 | +97 | 438 | - | - |
+
+Positive control works: a prompt differing in one token of five is 90 to 94% already
+inside and adds 7 to 15 directions.
+
+**Per 465 states, unrelated prompts add 56, 44, 42, 48, 54. Flat. No deceleration across
+five of them.** Random's adds do decay (363 to 269) because random is filling 7168 and
+running out of room; the measured curve does not decay because it is nowhere near a
+ceiling. There is no fixed subspace. Step 3's overlap was two samples overlapping, not a
+region the model lives in. **Restricting the projections to a learned basis is dead on
+this evidence.**
+
+Survives, neither being a lever: the trajectory is about 6x more compact than random at
+every point (438 against 2310), and near-duplicate prompts really do share almost
+everything.
+
+### Step 5 — what makes an attention output near zero, and why it is not waste
+
+Candidate going in: if the gate kills the output, everything computed before it is
+wasted. **Refuted.** Across the 92 pods at one position, gate over pre-gate has median
+0.3283 overall, 0.2800 for the twelve weakest outputs, 0.3557 for the twelve strongest;
+out over gate is 2.70, 2.78, 2.78. Neither stage discriminates. Both are near-constant
+everywhere.
+
+What actually sets it: the raw KDA readout is 0.02 to 0.88 at every pod whether the
+residual arriving is 0.46 or 133. Through a run the residual grows 123x while the
+attention output grows about 15x. **RMSNorm divides the scale out before the attention
+reads it, so the increment is set by direction and not by magnitude.** That is the
+mechanical account of the decay watched in the ripple trace.
+
+**Then the thing that matters.** The twelve pods whose attention changed the stream
+least are 24, 48, 36, 15, 12, 60, 19, 72, 39, 84, 31, 11 — **every one of the seven
+boundary pods, plus five MLA pods.** At a boundary the attention output is not added to
+the stream, it becomes the stream: pod 12's 3.8809 is the entire starting point of the
+next eleven pods. The pods contributing least are exactly the pods whose output matters
+most.
+
+That is the same shape as the slot-0 failure already recorded here, reached independently
+from the other direction. **Twice now the smallest number in a column has been the one
+that could not be removed.** Any future proposal of the form "this contributes little, so
+skip it" should be treated as probably inverted until an end-to-end token check says
+otherwise.
 
 ### Step 1 — the trajectory is confined, not low-rank
 
