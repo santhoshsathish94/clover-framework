@@ -210,6 +210,47 @@ fixed harness at both one and four lanes, which also serves as the harness's **p
 control**: a null shows it reports no false positive, a known effect shows it reports no
 false negative.
 
+### Settled. The original conclusion was right and my correction to it was wrong.
+
+| | touch | plain | ratio | position effect | ranges overlap |
+|---|---|---|---|---|---|
+| one lane, n=4 | 30.578 | 33.691 | **1.1018** | +0.283 s | False |
+| four lanes, n=4 | 59.299 | 56.798 | **0.9578** | +0.085 s | False |
+
+one lane: touch 30.256 30.554 30.602 30.782, plain 33.467 33.577 33.806 33.930
+four lanes: touch 59.181 59.284 59.315 59.552, plain 56.586 56.769 56.827 56.894
+
+Both gaps are 10x to 30x the position effect and 5x to 10x each arm's own spread. The
+harness reports no false positive on a null and no false negative on a known effect, so
+it can be trusted on the arena.
+
+**The honest arc, because the middle of it was me being wrong.** The first verdict
+(1.10x / 0.97x, revert) was correct but under-evidenced. The n=3 null then failed and I
+concluded the batched half was unsupported — that was an over-correction, and the cause
+of that null failing was small-sample luck, not the ordering bias I diagnosed. The
+instrument work was still worth doing: the number is now trustworthy and there is a
+validated harness for what comes next. But a weak instrument talked me out of a sound
+result, which is the opposite of the failure mode I usually watch for.
+
+Host reverted: `live-root.h` marks 0, build PASS.
+
+### What this predicts about the arena, recorded before building it
+
+Eager synchronous fetching **helps at one lane and hurts at four**, now measured twice
+with the second measurement properly controlled. The reason is that at four lanes the
+demand faults already overlap other lanes' compute, and making the fetch synchronous
+removes that overlap.
+
+**A synchronous arena does the same thing**: explicit preads, then wait. So this predicts
+a synchronous arena will also lose at four lanes, however much it gains at one. The
+standalone's `root_pull` is synchronous by design — its async reader variant was tried
+there and reverted because the reader threads contended with the compute threads.
+
+So the arena is not a straight port. To win in the regime this pipeline runs in, the
+reads would have to be issued without blocking the lanes that are still computing, which
+is the one shape the standalone side tried and abandoned. That is worth knowing before
+spending the effort rather than after.
+
 **This weakens an earlier conclusion of mine and the correction belongs here.** The
 prefetch-touch batched arm was n=2 with `touch=1` running first in both rounds — the
 slot the null shows is slower. The 0.97x I used to justify reverting is in exactly the

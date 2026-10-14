@@ -62,12 +62,24 @@ done
 
 python3 - "$OUT" "$NAME_A" "$NAME_B" <<'EOF'
 import statistics, sys
-rows, byslot = {}, {}
+rows, byslot, bad = {}, {}, 0
 for line in open(sys.argv[1]):
-    name, _, slot, value = line.split("\t")
-    rows.setdefault(name, []).append(float(value))
-    byslot.setdefault(int(slot), []).append(float(value))
+    parts = line.rstrip("\n").split("\t")
+    if len(parts) != 4:
+        bad += 1
+        continue
+    name, _, slot, value = parts
+    try:
+        value = float(value)
+    except ValueError:
+        # a run that emitted no REQUEST line; say so rather than crash the summary
+        bad += 1
+        continue
+    rows.setdefault(name, []).append(value)
+    byslot.setdefault(int(slot), []).append(value)
 print()
+if bad:
+    print("%d run(s) produced no timing and were dropped -- treat the rest with care\n" % bad)
 for name in sys.argv[2:4]:
     v = sorted(rows.get(name, []))
     if not v:
