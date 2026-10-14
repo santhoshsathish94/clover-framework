@@ -159,6 +159,41 @@ Caveats: single prompt, same prompt in every lane, so the lanes share expert sel
 more than independent requests would. The model is linear in lanes over 1 to 7 and says
 nothing beyond that. Nothing about the cliff is explained.
 
+### Build the instrument before the thing it measures — and the null caught it lying
+
+The prefetch-touch verdict rested on n=2 with the same arm first in every round. Before
+judging anything the size of the arena, `simplification/ab-pipeline.sh`: alternating
+order, a discarded warm-up round, per-request time rather than wall, and a report of
+whether the two arms' ranges overlap.
+
+**Then a null A/B, both arms identical, to establish the noise floor. It failed.**
+
+```
+nullA  56.490  56.838  56.859   median 56.838
+nullB  56.280  56.298  56.463   median 56.298
+ratio of medians 0.9905      ranges overlap: False
+```
+
+A 0.95% difference between two identical arms, with the guard reporting no overlap. The
+fault is in the harness: **with alternation and an odd number of rounds the balancing
+does not balance.** At three rounds A runs first in rounds 1 and 3 and B only in round 2,
+and position in the round matters here, so A took the penalised slot twice.
+
+Fixed: even rounds are now required and an odd count is refused; the median of every
+first-in-round run against every second-in-round run is printed so the ordering effect
+is visible; and a result smaller than that effect is called out as not a result.
+
+**This weakens an earlier conclusion of mine and the correction belongs here.** The
+prefetch-touch batched arm was n=2 with `touch=1` running first in both rounds — the
+slot the null shows is slower. The 0.97x I used to justify reverting is in exactly the
+direction that ordering bias would produce. **That verdict is no longer supported.** The
+change may be neutral or positive at four lanes; it has to be re-run on the fixed
+harness. The revert itself stands for now, because the evidence for enabling it is also
+gone, but it should not be recorded as "measured worse".
+
+What survives untouched: the single-lane 1.10x was n=3 interleaved with non-overlapping
+ranges and a much larger gap (3.1 s) than the 0.5 s null effect, so that one is real.
+
 ---
 
 ## Cycle: how many directions the chain actually moves in (2026-10-14)
