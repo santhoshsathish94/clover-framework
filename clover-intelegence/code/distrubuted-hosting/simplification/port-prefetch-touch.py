@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
 """Make the expert prefetch actually fetch, instead of only asking.
 
+MEASURED AND REVERTED, 2026-10-14. Keep the script; do not re-apply without reading this.
+
+  one request      touch=1  31.097 30.360 30.744   touch=0  33.579 33.868 33.844   1.10x
+  four concurrent  touch=1  75.022 75.084          touch=0  72.505 72.919          0.97x
+
+The twelve-prompt gate passed, so it is correctness-neutral. It helps the unbatched case
+by 10% and costs the batched case 3%, and the pipeline runs batched, so it was reverted
+and common/live-root.h is back to its backup. Under batching the demand faults were
+already overlapping other lanes' compute, and forcing a synchronous touch removes that
+overlap. Caveat on the batched arm: n=2, and touch=1 ran first within each round. The
+unbatched arm is the stronger measurement, n=3 interleaved with no overlap between arms.
+
 Stage 27 calls root_prefetch for each of the sixteen selected experts, and
 root_prefetch calls posix_madvise(WILLNEED) and returns. The comment above it says the
 point is that "the device never sees more than one request in flight", which is the

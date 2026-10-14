@@ -72,11 +72,54 @@ What is established is that the work is absent, not what porting it would buy.
 No timing was taken with tracing on, and no comparison run of the standalone engine was
 made this cycle — the comparison above is between source files, not between runs.
 
-### Next, one step
+### Next, one step, and it was wrong
 
-Port `MADV_HUGEPAGE` on the expert mapping first: it is the smallest change of the seven,
-it addresses the 6M minor faults directly, it is reversible, and it is measurable on its
-own. Gate on the twelve-prompt fidelity check before reading any timing.
+The plan was `MADV_HUGEPAGE` on the expert mapping, as the smallest of the seven. It
+would have been a **literal no-op**: `CONFIG_READ_ONLY_THP_FOR_FS is not set` on this
+kernel (6.8.0-139) and both the expert and trunk mappings are file-backed `MAP_SHARED`,
+so transparent huge pages are not available to them at all. Checking before writing is
+what stopped it. Huge pages or O_DIRECT require moving the bytes into anonymous memory,
+which is the arena, which needs a per-layer arena across 93 dlopened libraries.
+
+### Done instead: make the prefetch actually fetch. Measured, then reverted.
+
+Stage 27 calls `posix_madvise(WILLNEED)` on sixteen experts and returns. The comment
+above it diagnoses it correctly — the device never sees more than one request in flight
+— but madvise only queues a hint, and this repo had already measured that on this box:
+WILLNEED alone 49.77 s, driving the faults and waiting 42.21 s, no prefetch at all
+53.52 s. **The advisory call was the worst of the three.** So: keep the madvise, add a
+touch of one byte per page across the OpenMP team, and wait. `CLOVER_PREFETCH_TOUCH=0`
+keeps the old path in the same build.
+
+**Twelve-prompt gate passed**, every answer matching baseline. Correctness-neutral.
+
+| | runs | median |
+|---|---|---|
+| one request, touch=1 | 31.097, 30.360, 30.744 | **30.744** |
+| one request, touch=0 | 33.579, 33.868, 33.844 | 33.844 |
+| four concurrent, touch=1 | 75.022, 75.084 | 75.05 |
+| four concurrent, touch=0 | 72.505, 72.919 | 72.71 |
+
+**Unbatched 1.10x. Batched 0.97x.** The gain at one lane is a cost at four, because
+under batching the demand faults were already overlapping other lanes' compute and a
+synchronous touch removes that overlap. Same shape as the two-optima-that-move-together
+result recorded here, except the sign flips rather than the gain merely vanishing.
+
+**Reverted.** `common/live-root.h` restored from backup, byte-identical, rebuilt, check
+run gives 33.753 s [ Paris] against the 33.769 s baseline. The script stays at
+`simplification/port-prefetch-touch.py` with the numbers in its header so it is not
+re-tried blindly.
+
+Caveat on the batched arm: n=2, and touch=1 ran first within each round, so ordering is
+not fully controlled there. The unbatched arm is the stronger measurement — n=3,
+interleaved, arms not overlapping.
+
+### What this leaves
+
+The pipeline runs batched, so a change has to win batched. The arena is the only untried
+route to huge pages or O_DIRECT here, and it is substantially larger than this one: a
+per-layer arena across 93 dlopened libraries, sized for the union of the lanes' selected
+experts rather than for sixteen.
 
 ---
 
