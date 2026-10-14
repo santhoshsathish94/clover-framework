@@ -6,7 +6,81 @@ it does and does not establish.
 
 ---
 
-## Cycle: how many directions the chain actually moves in (2026-10-14, in progress)
+## Cycle: what the distributed pipeline actually costs (2026-10-14)
+
+### Direction
+
+The previous cycle closed the compress-the-computation avenue and the handback said the
+remaining levers change how many streams share a weight read, or where the weights sit.
+Going there. First a number nobody in this repo has: **every timing recorded here is for
+the standalone engine. The distributed pipeline has never been measured warm.**
+
+### Measured, tracing off, one resident process, 16 threads pinned
+
+| requests | wall | disk read |
+|---|---|---|
+| 1 | 49.6 s | 104.3 GB |
+| 4 | 72.8 s | 104.4 GB |
+| 8 | 130.2 s | 209.1 GB |
+
+Startup is about 15.5 s, consistent across all three. One request alone takes 33.8 s.
+With eight submitted, seven are admitted together and finish at 77.6 s while the eighth
+runs alone at 37.4 s — a read() boundary split them, so the lane width is at least seven.
+
+**Batching works: 33.8 s solo to 11.1 s per request at seven lanes, 3.05x, and four
+concurrent requests read the same bytes as one.**
+
+**Nothing else works.** The second batch of the *identical prompt* reads 104 GB again.
+`buff/cache` is full at 123 GB and it does not help, because the per-batch working set is
+about 104 GB of experts plus the 54 GB trunk against 124 GB of RAM, so the sweep evicts
+its own early layers before it comes back to them. That is the cyclic-sweep pathology
+already recorded here for the global LRU, showing up in a different place.
+
+Rate: 104 GB in 33.8 s solo is **3.1 GB/s against a device that does 13.5**. The
+4-request run took **5,980,990 minor faults**.
+
+### Why, checked in the source rather than inferred
+
+| | distributed `common/live-root.h` | standalone `live-root.h` |
+|---|---|---|
+| size | 21,079 B | 35,232 B |
+| `root_pull`, the O_DIRECT arena | **0** | 49 |
+| `root_arena_find` | **0** | 4 |
+| `root_resident` / `mincore` | **0** | 2 |
+| `MADV_HUGEPAGE` | **0** | 4 |
+| `direct_fd` | **0** | 5 |
+| `root_cache_open`, per-layer expert cache | **0** | 1 |
+
+**The distributed pipeline is running the pre-optimisation I/O path.** It reads experts
+through `mmap` plus `posix_madvise(WILLNEED)`, which this repo already measured as making
+no difference on this box. Every byte-movement improvement built here — the O_DIRECT
+arena, the mincore hybrid, huge pages, the per-layer expert cache — exists only on the
+standalone side and never reached the side being developed toward the 93-unit design.
+
+That accounts for all three symptoms: 3.1 GB/s instead of the device rate, ~6M minor
+faults from a file-backed mapping that cannot use transparent huge pages, and no warm
+benefit because there is no cache to warm.
+
+### What this does not establish
+
+The standalone's measured gains (arena cold 30 s to 22.6 s, mincore hybrid warm
+3.17-3.21 s, huge pages 2.52 s, per-layer expert cache 1.21x) are **the standalone's
+numbers on the standalone's structure**. The distributed side dlopens 93 layer libraries
+each holding its own `Root`, so none of those numbers may be quoted as predictions here.
+What is established is that the work is absent, not what porting it would buy.
+
+No timing was taken with tracing on, and no comparison run of the standalone engine was
+made this cycle — the comparison above is between source files, not between runs.
+
+### Next, one step
+
+Port `MADV_HUGEPAGE` on the expert mapping first: it is the smallest change of the seven,
+it addresses the 6M minor faults directly, it is reversible, and it is measurable on its
+own. Gate on the twelve-prompt fidelity check before reading any timing.
+
+---
+
+## Cycle: how many directions the chain actually moves in (2026-10-14)
 
 ### Direction
 
