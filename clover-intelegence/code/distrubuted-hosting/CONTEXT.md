@@ -6,6 +6,122 @@ it does and does not establish.
 
 ---
 
+## Cycle: the arena was justified by a division by the wrong number (2026-10-15)
+
+### Direction
+
+Build the per-layer arena, the last item on the efficiency list. Before building it,
+check the one number the whole case rests on.
+
+### The number the case rested on, and why it was wrong
+
+Every version of the arena argument in this file traces back to one line: *104 GB in
+33.8 s is 3.1 GB/s against a device that does 13.5*, therefore roughly 1.5x of headroom
+is sitting there. That divides bytes by **wall time**. It silently assumes the device
+spends the whole run moving bytes. Nobody checked.
+
+`simplification/where-does-io-time-go.sh` samples `/proc/diskstats`, `/proc/PID/io` and
+`/proc/PID/stat` every 200 ms for a whole run. `io_ticks` says how many milliseconds the
+device actually had work outstanding, and it is the kernel's own count, independent of
+anything the pipeline reports.
+
+| | one lane | four lanes |
+|---|---|---|
+| wall | 49.77 s | 72.78 s |
+| bytes through the block layer | 97.10 GB | 97.26 GB |
+| **device busy** | **12.62 s** | **12.82 s** |
+| device busy as share of run | 25.4 % | 17.6 % |
+| **rate while busy** | **7.69 GB/s** | **7.59 GB/s** |
+| bytes over wall, the old figure | 1.95 GB/s | 1.34 GB/s |
+
+**The device is idle for three quarters of the run, and when it works it moves 7.6 GB/s,
+not 3.1.** The 3.1 GB/s was bytes divided by wall; the device's actual rate is bytes
+divided by the time it was busy. Two different quantities, and the wrong one became the
+premise for a build.
+
+### A prediction I recorded and reality refused
+
+The previous cycle predicted a synchronous arena would lose at four lanes because *at
+four lanes the demand faults already overlap other lanes' compute, so the I/O queue is
+already deep*. That mechanism implies device busy time should **rise** with lane count.
+
+It does not move: 12.62 s at one lane, 12.82 s at four, a 1.6 % difference on a 1.4x
+longer run. **Concurrency does not deepen the I/O queue at all.** The verdict I drew
+from the mechanism happens to survive, but the mechanism itself is dead, and a right
+answer resting on a wrong reason is worth no more than the next thing it predicts.
+
+What the data does say is cleaner: **the I/O work is identical at one and four lanes.
+Every extra second at four lanes is something other than reading.**
+
+### How much of those 12.7 s is even recoverable
+
+`simplification/device-ceiling.sh`, O_DIRECT against the real `experts.direct` files so
+no cache is in the path:
+
+| parallelism | 1 | 2 | 4 | 8 | 16 | 32 |
+|---|---|---|---|---|---|---|
+| GB/s | 3.57 | 6.83 | 11.54 | 11.95 | 12.27 | 12.39 |
+
+Spreading workers across distant files instead of consecutive ones changes nothing
+(12.54 GB/s at 32). **The device tops out near 12.5 GB/s and gets there by parallelism
+four.** The pipeline achieves 7.6, so there is 1.64x of throughput left — worth about
+5.0 s off the 12.7 s of busy time, if an arena captured all of it.
+
+Five seconds against a 57 s four-lane request is **1.09x**, and the synchronisation cost
+of eager fetching at four lanes has already been measured at 2.5 s, leaving roughly
+1.04x. The noise floor on this box is 0.405 s. **The arena is closed, on measurement,
+the same way compress-the-computation was closed.** Not because it would do nothing, but
+because what it can do is bounded by a quantity far smaller than the one that justified
+it.
+
+### So what is the run doing, if not reading
+
+Sampling `utime`/`stime` as well, four lanes, all four requests answered:
+
+```
+cpu time used           1180.66 s  (user 809.18 + sys 371.48) across 32 cores
+cores busy on average     17.10  of 32        device busy  10.08 s of 69.06 s (14.6 %)
+```
+
+Through the request phase it holds about 22 cores busy. **The pipeline is compute-bound.
+It is not I/O-throughput-bound and it is not latency-bound — it is not sitting idle
+waiting for anything.** Which retires the entire byte-movement direction, and says the
+7.45 s per lane in `T = 26.6 + 7.45 x lanes` is where any remaining factor lives.
+
+**The open lead: 371 s of the 1180 s is system time, 31 % of all CPU.** Faults do not
+explain it — 5.9 M faults would need 63 µs each, roughly thirty times what a fault
+costs. Something else is spending five cores' worth of kernel time for the whole run,
+and I do not know what it is. Recorded as unknown, not guessed at.
+
+### Three instrument failures in one sitting, which is the real lesson
+
+1. `iflag=skip_bytes` with offsets that were not 4096-aligned, so every O_DIRECT read
+   failed with `EINVAL` — and I had sent stderr to `/dev/null`, so it surfaced as
+   *2.00 GB in 0.00 s = 1004 GB/s* rather than as an error.
+2. `root-0` does not exist (the dataset is `root-1`..`root-92`), and offsets past worker
+   seven ran off the end of a 14994 MiB file. Byte totals silently plateaued at 11.64 GB
+   while the reported rate still looked entirely plausible.
+3. A four-lane run that produced **no REQUEST line at all** still printed a complete,
+   well-formatted summary that I nearly read as a measurement.
+
+Each one produced a believable number. **An instrument that cannot fail loudly is not an
+instrument**, and the giveaway in all three cases was arithmetic that was too good rather
+than output that looked broken. All three scripts now count failures, print what the
+failing worker said, and refuse to present a summary from a run that answered nothing.
+This is the same hardening the A/B harness needed last cycle, arrived at independently,
+which suggests it should be the default shape for anything measuring this pipeline.
+
+### What this does not cover
+
+One prompt, the same prompt in every lane, so lanes share expert selections more than
+independent requests would. `io_ticks` counts time with any I/O outstanding and says
+nothing about queue depth, so "device busy" is a duration, not a utilisation. The
+compute-bound finding is from this box, 16 threads pinned, 32 cores — the balance
+between compute and I/O will differ anywhere else, and the earlier thread-count cliff
+already showed this pipeline is sensitive to exactly that.
+
+---
+
 ## Cycle: what the distributed pipeline actually costs (2026-10-14)
 
 ### Direction
@@ -38,6 +154,11 @@ already recorded here for the global LRU, showing up in a different place.
 
 Rate: 104 GB in 33.8 s solo is **3.1 GB/s against a device that does 13.5**. The
 4-request run took **5,980,990 minor faults**.
+
+> **Superseded 2026-10-15.** That rate divides bytes by wall time. Measured against
+> `io_ticks`, the device is busy only ~12.7 s of the run and moves **7.6 GB/s while
+> busy**, and the device's real ceiling is 12.5 GB/s, not 13.5. The "1.5x of headroom"
+> this line was used to justify does not exist. See the newest cycle.
 
 ### Why, checked in the source rather than inferred
 
