@@ -121,6 +121,44 @@ route to huge pages or O_DIRECT here, and it is substantially larger than this o
 per-layer arena across 93 dlopened libraries, sized for the union of the lanes' selected
 experts rather than for sixteen.
 
+### Before building that: which regime is it actually in?
+
+An arena is an I/O optimisation, and a batch reads 104 GB whether it is one lane or
+seven while taking 33.8 s or 77.6 s. That could mean compute dominates at the operating
+point, in which case the arena is aimed at the wrong thing. Thread sweep, request time:
+
+| lanes | 4 | 8 | 12 | 16 | 20 | 24 | 32 |
+|---|---|---|---|---|---|---|---|
+| 1 | 53.5 | 35.1 | - | 34.1 | - | - | - |
+| 4 | 212.8 | 220.6 | 62.4 | **56.2** | 69.0 | 64.6 | 63.5 |
+
+**16 threads is already optimal, so there is no free configuration win.** Two things in
+the shape are worth keeping:
+
+- **A 3.5x cliff below 12 threads at four lanes.** 8 threads is 220.6 s against 16's
+  56.2, and is slightly worse than 4 threads. Anyone running this on fewer cores falls
+  off it. Cause not established.
+- Above 16 it does not improve, so it is not cleanly compute-bound there either.
+
+### A cost model for the distributed pipeline, fitted and then checked
+
+Taking `T(lanes) = io + lanes x compute` and fitting on the 1-lane (34.06 s) and 4-lane
+(56.4 s) points gives **io = 26.6 s, compute = 7.45 s per lane**. Two points fit two
+parameters with zero residual, so that is not evidence on its own.
+
+**The check: seven lanes was measured separately at 77.60 s and was not used in the fit.
+The model predicts 78.8 s. 1.5% error.**
+
+So at the operating point a batch is about **26.6 s of I/O and 7.45 s of compute per
+lane**, and the I/O portion moves 104 GB in 26.6 s = **3.9 GB/s against a device that
+does 13.5**. That is the arena's ceiling, quantified: if it reached device rate the I/O
+would fall to 7.7 s, giving about **1.5x at four lanes and 1.33x at seven**. Worth
+building, and now with a number to be measured against rather than a hope.
+
+Caveats: single prompt, same prompt in every lane, so the lanes share expert selections
+more than independent requests would. The model is linear in lanes over 1 to 7 and says
+nothing beyond that. Nothing about the cliff is explained.
+
 ---
 
 ## Cycle: how many directions the chain actually moves in (2026-10-14)
