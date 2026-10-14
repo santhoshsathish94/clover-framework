@@ -183,6 +183,33 @@ Fixed: even rounds are now required and an odd count is refused; the median of e
 first-in-round run against every second-in-round run is printed so the ordering effect
 is visible; and a result smaller than that effect is called out as not a result.
 
+### The balanced null passes, and corrects my diagnosis of why the first one failed
+
+```
+nullA  n=4  median 56.608     nullB  n=4  median 56.586
+position in round: first 56.532  second 56.649  effect -0.117 s
+ratio 0.9996, difference 0.023 s     ranges overlap: True
+```
+
+**The position effect is only 0.117 s and runs the other way — first is faster.** So
+"A took the penalised slot twice" was wrong in direction and cannot account for a 0.54 s
+gap. The real cause of the first null's failure was simpler: **n=3 was too few, and two
+sets of three draws separated by luck.** Keeping the even-rounds rule anyway, because
+balanced is still better than not, but the honest lesson is about sample size.
+
+**Noise floor at four lanes, n=4 balanced:** full spread 56.497 to 56.902 = 0.405 s
+(0.72%), arm medians 0.023 s apart. So an effect under roughly 0.5 s cannot be claimed
+here.
+
+### Which means I over-corrected on the prefetch-touch verdict
+
+The batched penalty measured there was **2.3 s** — well above both the 0.405 s noise
+floor and the 0.117 s position effect. Saying it was "no longer supported" went too far
+in the other direction. Rather than keep reasoning about it, it is being re-run on the
+fixed harness at both one and four lanes, which also serves as the harness's **positive
+control**: a null shows it reports no false positive, a known effect shows it reports no
+false negative.
+
 **This weakens an earlier conclusion of mine and the correction belongs here.** The
 prefetch-touch batched arm was n=2 with `touch=1` running first in both rounds — the
 slot the null shows is slower. The 0.97x I used to justify reverting is in exactly the
