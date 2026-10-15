@@ -6,6 +6,108 @@ it does and does not establish.
 
 ---
 
+## Cycle: reduced-k is blocked by an invariant, and I am not moving it (2026-10-15)
+
+### Direction
+
+Use the top-k finding in `research/k3/experiments/k3-data-problem.md` to improve
+further. One step at a time.
+
+### What that document actually records, and the gap it names itself
+
+Prefill only, one prompt, `The capital of France is`. Top-k of the 16 selected experts,
+renormalised over those kept:
+
+| k | read_bytes | total | token | p(top1) | p(top2)/p(top1) |
+|---|---|---|---|---|---|
+| 16 | 98.60 GB | 48.70 s | 17374 | 0.792 | 0.025 |
+| 8 | 39.16 GB | 21.49 s | 17374 | **0.790** | 0.035 |
+| 4 | 13.47 GB | 12.17 s | 17374 | 0.539 | 0.163 |
+| 2 | — | 7.91 s | **261** | 0.152 | 0.727 |
+
+Its own conclusion is careful and worth quoting: **"k = 8 is nearly free, and k = 4
+preserves the answer while making the model substantially less sure of it."** And it
+names the gap precisely: *"Prefill only. ... Whether k = 4 also preserves the decode
+token 20829 is untested."*
+
+### The byte accounting gap from the previous cycle is now closed
+
+I had flagged that the engine reads roughly twice what I expected. It does not — I had
+the wrong expectation, carried over from the distributed side. **This engine routes 16
+experts per layer, not 8.** 16 x 92 x 17.547 MB = 25.8 GB per position, against the
+25.83 GB recorded in the document and the 27.83 GB/token measured here. The engine's own
+invariant states it outright: `92ULL * 16 * 3 * NPOS`.
+
+### Setting up the decode test, and two traps avoided
+
+`clover-one.c` has a bare `#define TOPK 16`, **not** `#ifndef`. Passing `-DTOPK=8` is
+silently overridden by the file's own definition: gcc warns and compiles 16. That would
+have been the fifth silent no-op of this session — a full k-sweep returning identical
+results and reading as "k makes no difference". Variants were instead built from
+`sed`-modified copies under `/tmp` with `-I` back at the source, **leaving the tree
+untouched**, with a k=16 control built the same way so any difference is k and not the
+build. Five distinct binaries, distinct checksums.
+
+Second trap: a compile-time constant is only a faithful test of the recorded experiment
+if the engine renormalises over the *kept* set. It does, at `clover-one.c:2732-2747` —
+an insertion scan keeps the TOPK highest `score[e]+gbias[e]`, then
+`ssum += wts_all[t][j]` over `j < TOPK` and `wts_all[t][j] *= 1/ssum`. So lowering TOPK
+selects the top k and renormalises over those k, which is the recorded experiment.
+
+### The engine refuses, and it is right to
+
+Every k below 16 dies immediately with `eq: live token operator coverage differs`:
+
+```c
+if (operator_layers != 93 || operator_matrices_used != 303 || operator_vectors_used != 348 ||
+    prepared_trunk_count != 93 ||
+    resident_expert_calls + resident_result_hits * 3 != 92ULL * 16 * 3 * (unsigned)NPOS ||
+    recorded_expert_hits)
+    die("live token operator coverage differs");
+```
+
+**The 16 is hard-coded in the assertion rather than being `TOPK`.** It asserts the run
+performed exactly 92 layers x 16 experts x 3 matrices per position — an invariant whose
+purpose is that no expert was skipped unintentionally. A k=8 build does 92 x 8 x 3, so
+the engine correctly rejects itself.
+
+### Refusal, recorded
+
+**I am not editing that line.** It is an acceptance criterion, and changing an assertion
+so that a run passes is precisely the action to refuse on my own judgement, however
+small the edit. The boundary is doing its job: it caught an approximation that the
+engine was never told to permit.
+
+What I would propose, for a decision that is not mine:
+
+- Replace the literal `16` with `TOPK` in that assertion. This **preserves the
+  invariant's purpose** — it would still assert the exact expected number of expert
+  calls for the k the binary was built with, so an accidental skip is still caught. It
+  changes the claim from "this engine computed the model exactly" to "this engine
+  computed exactly what it was configured to compute", and **those are different
+  claims**. Which one the assertion should make is a Direction question.
+- Or reproduce the experiment where it was originally run. The document's numbers do not
+  match this engine's invariant, so it was likely `eq.c` in the research tree rather than
+  `clover-one`.
+
+### What is ready the moment that is decided
+
+Five built variants at k = 16, 12, 8, 6, 4, and a sweep that reports **the first
+position at which the token sequence diverges from k=16** over a 32-token decode, rather
+than pass/fail, so the answer is how long the approximation holds. It includes a
+mechanism check — bytes per token must fall roughly with k, or TOPK did not take effect
+and the divergence column means nothing.
+
+### What this would be worth if it holds
+
+The engine is disk-heavy: 18.6 GB per token with the cache, device busy 33 % of wall at
+the hardware ceiling. The recorded prefill numbers show k=8 halving expert bytes at no
+measurable confidence cost. **If that survives decode, it is a larger lever than the
+cache rebuild**, which was itself 1.24x. It is also compounding rather than competing
+with the cache: fewer experts per token means a higher hit rate in the same 38.5 GB.
+
+---
+
 ## Cycle: the deployed engine was two days behind its own source (2026-10-15)
 
 ### Direction

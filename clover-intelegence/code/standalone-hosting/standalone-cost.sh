@@ -31,6 +31,7 @@ set -u
 S=/opt/clover-k3/clover-intelegence/code/standalone-hosting
 BIN=${BIN:-$S/bin/clover-one}
 TOKENS=${TOKENS:-8}
+PROMPT_IDS=${PROMPT_IDS:-"1008 10484 318 15383 387"}
 CACHE=${CACHE:-24}
 THREADS=${THREADS:-16}
 BIND=${BIND:-close}
@@ -39,7 +40,7 @@ OUT=/tmp/standalone-$TAG
 
 cd "$S" || exit 1
 
-echo "{\"input_ids\": [1008, 10484, 318, 15383, 387], \"max_new_tokens\": $TOKENS}" > "$OUT.in"
+echo "{\"input_ids\": [$(echo "$PROMPT_IDS" | tr ' ' ',')], \"max_new_tokens\": $TOKENS}" > "$OUT.in"
 
 sectors() { grep -E ' (nvme0n1|nvme1n1) ' /proc/diskstats | awk '{s+=$6} END{print s+0}'; }
 ticks()   { grep -E ' (nvme0n1|nvme1n1) ' /proc/diskstats | awk '{if($13>m)m=$13} END{print m+0}'; }
