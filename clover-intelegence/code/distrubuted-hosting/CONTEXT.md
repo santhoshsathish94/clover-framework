@@ -6,6 +6,102 @@ it does and does not establish.
 
 ---
 
+## Cycle: where a token's time actually goes, and why the observed structures cannot help (2026-10-15)
+
+### Direction
+
+Keep k=16. Lowering k is an approximation whose divergence horizon moves with k, and the
+salvaged evidence settles it: **k=12 matched k=16 for all 64 tokens on the France prompt
+but diverged at token 19 on "the chemical symbol for gold" and token 16 on "water boils
+at a temperature of".** France was the lucky prompt. So the remaining lever is lossless
+reuse, and the question is how much exists between *generated* tokens.
+
+### The instrument already existed, and had bit-rotted
+
+`observe-route64.c` was in the tree, unbuilt: 64 positions, the prompt seeded and each
+output token fed back, recording every expert actually computed through the
+`CLOVER_CHECK_EXPERT` hook. It would not link — `resident_sequence_clear` no longer
+exists, having been folded into `resident_startup` at line 2154. One line removed.
+
+Three traps on the way, all previously recorded and all nearly repeated:
+
+- `/tmp/observe-route64` already existed **dated 4 October**. My build had failed, so
+  that stale binary would have run and been believed. Removed.
+- I first built with `-DNPOS_SLOTS=64`, tripping
+  `_Static_assert(NPOS_SLOTS <= ROOT_MAX_ROWS)`. `NPOS_SLOTS` is the expert-projection
+  **batch width**, maximum 8 — not the sequence length, which is 128+128 from
+  `generation.json`.
+- `K3_DUMPSEL` and `K3_ROUTESAVE` both appear in `strings` on the binary but their file
+  handles are **never opened**; the strings are present only because the names sit in a
+  `forbidden[]` list for a different check. **A string in a binary is not a wired
+  feature.**
+
+### Both validation checks pass exactly
+
+| check | mine | independently recorded |
+|---|---|---|
+| prefill overlap, all pairs, per pod | **0.70 / 2.30 / 4.50** | 0.70 / 2.30 / 4.50 (THE-FLOW-OBSERVED.md) |
+| per-layer LRU hit rate at capacity 24 | **41.7 %** | 39,280 / 94,208 = 41.7 % (engine's own STEP_JSON) |
+
+My first attempt at check 1 gave 3.93 and I did **not** claim validation — the recorded
+figure is mean over all ten pairs of the five positions, mine was consecutive pairs only,
+which are the most similar. Comparing like with like reproduced all three statistics.
+
+### Reuse between generated tokens is real
+
+**Consecutive decode positions share 6.04 of 16 experts**, against 3.93 in the prefill.
+Per-layer LRU, decode only:
+
+| capacity | hit rate | GB/token | cache RAM |
+|---|---|---|---|
+| 24, current | 42.5 % | 13.84 | 36.1 GB |
+| 32 | 47.5 % | 12.62 | 48.1 GB |
+| 64 | 58.9 % | 9.90 | 96.2 GB |
+| 128 | 73.3 % | 6.43 | 192.4 GB |
+
+A layer touches 154–411 distinct experts of 896 over 64 positions; holding everything
+ever touched would need 367 GB.
+
+### And it does not matter, which is the finding
+
+Separating per-position from cumulative fields in `STEP_JSON` (positions 62 → 63):
+
+| component | seconds | share of 3.140 s |
+|---|---|---|
+| **Q int8 projection — the trunk, 53.83 GB of weights** | **1.372** | **43.7 %** |
+| X mxfp4 expert projection | 0.882 | 28.1 % |
+| **expert I/O stall, the part not overlapped** | **0.393** | **12.5 %** |
+| router dot product | 0.056 | 1.8 % |
+| bf16 lm_head | 0.050 | 1.6 % |
+| ten other operators combined | 0.037 | 1.2 % |
+
+Expert reads total 1.966 s per position but only **0.393 s is exposed** — 80 % is already
+hidden behind compute. So raising capacity 24 → 32, which is all the RAM allows at a
+peak RSS of 111 GB of 124, cuts bytes 9 % and therefore cuts the exposed stall by about
+9 % of 0.393 s ≈ **0.035 s, around 1 % of a token.** **More cache is not worth building.**
+
+### The three observed structures are not where the computation is
+
+`AR snapshot aggregate` — the nine-source fold that carries the 112.8885 vector across 81
+pods — costs **0.0031 s of 3.140 s. Three milliseconds in three thousand.** `top-k
+selection` is 0.0002 s. The KDA and MLA attention operators together (`D` 0.0099, `SA`
+0.0036, `L` 0.0004, `C` 0.0027) are **0.017 s, 0.5 %**.
+
+**So the KKKM pattern, the 90° stabilisation and the persisting snapshot together live
+in under 1 % of a token.** They are real structure and they are correctly described, but
+no amount of reuse, combination or elimination applied to them can move the number,
+because the number is not there. This answers the question asked, in the negative, with
+the engine's own accounting.
+
+### What the evidence now points at
+
+The trunk: 53.83 GB of weights streamed per token at **39.2 GB/s**, against roughly
+80–100 GB/s of DDR5 bandwidth on this part, delivering 107.6 GFLOP in 1.372 s. Whether
+that is bandwidth-bound, dequantisation-bound or something else is **not established**.
+It is 43.7 % of a token and nothing in this session has examined it.
+
+---
+
 ## Cycle: reduced-k through decode — the prefill result did not generalise (2026-10-15)
 
 ### Direction
