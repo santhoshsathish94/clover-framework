@@ -29,6 +29,18 @@
 # The time series matters as much as the totals: it shows whether I/O is one burst at
 # startup or spread across the whole run, which decides whether prefetching can overlap
 # with anything at all.
+#   /proc/vmstat      pgscan/pgsteal split by direct vs kswapd, plus allocstall.
+#                     DIRECT reclaim runs in the faulting process's own context and is
+#                     billed to its system time; kswapd reclaim is not. With a 97 GB
+#                     working set cycling through 124 GB of RAM, this is the first
+#                     candidate for the 371 s of system time that fault counts cannot
+#                     explain.
+#   /proc/interrupts  TLB shootdown IPIs, the other classic source of in-context
+#                     kernel time when large mappings are being torn down.
+#   /proc/stat and    kswapd reclaimed 94 GB of the 97 GB this run reads, and kswapd is
+#   kswapd's stat     a separate kernel thread, so NONE of that work appears in the
+#                     pipeline's own utime/stime. Per-process CPU therefore understates
+#                     what the machine is doing. Both are sampled so the gap is visible.
 #
 # usage: where-does-io-time-go.sh LANES [TAG]
 set -u
@@ -49,7 +61,26 @@ free -m | tee -a "$OUT.log"
 echo "--- diskstats before ---" | tee -a "$OUT.log"
 grep -E ' (nvme0n1|nvme1n1|md2) ' /proc/diskstats | tee -a "$OUT.log"
 echo "--- vmstat before ---" | tee -a "$OUT.log"
-grep -E '^(pgfault|pgmajfault|pgpgin) ' /proc/vmstat | tee -a "$OUT.log"
+grep -E '^(pgfault|pgmajfault|pgpgin|pgscan_direct|pgsteal_direct|pgscan_kswapd|pgsteal_kswapd|allocstall_normal|allocstall_movable|compact_stall|nr_free_pages) ' /proc/vmstat | tee -a "$OUT.log"
+echo "--- TLB shootdowns before ---" | tee -a "$OUT.log"
+awk '/^[ \t]*TLB:/ {s=0; for (i=2; i<=NF; i++) if ($i ~ /^[0-9]+$/) s+=$i; print "TLB_total "s}' /proc/interrupts | tee -a "$OUT.log"
+
+KSWAPD=$(pgrep '^kswapd' | tr '\n' ' ')
+kswapd_cpu() {
+    local total=0 p t
+    for p in $KSWAPD; do
+        t=$(awk '{print $14 + $15}' "/proc/$p/stat" 2>/dev/null)
+        total=$((total + ${t:-0}))
+    done
+    echo "$total"
+}
+sys_cpu() {
+    awk '/^cpu / {print ($2+$3+$4+$6+$7+$8) " " $5 " " $4 " " $8}' /proc/stat
+}
+echo "--- kswapd pids: $KSWAPD ---" | tee -a "$OUT.log"
+KSW0=$(kswapd_cpu); SYS0=$(sys_cpu)
+echo "kswapd_ticks_before $KSW0" | tee -a "$OUT.log"
+echo "sys_busy_idle_system_softirq_before $SYS0" | tee -a "$OUT.log"
 
 : > "$OUT.series"
 printf "t\tsec_nvme0\tsec_nvme1\tsec_md2\ttick_nvme0\ttick_nvme1\trchar\tread_bytes\tminflt\tmajflt\tutime\tstime\tthreads\n" >> "$OUT.series"
@@ -85,7 +116,40 @@ T1=$(date +%s.%N)
 echo "--- diskstats after ---" | tee -a "$OUT.log"
 grep -E ' (nvme0n1|nvme1n1|md2) ' /proc/diskstats | tee -a "$OUT.log"
 echo "--- vmstat after ---" | tee -a "$OUT.log"
-grep -E '^(pgfault|pgmajfault|pgpgin) ' /proc/vmstat | tee -a "$OUT.log"
+grep -E '^(pgfault|pgmajfault|pgpgin|pgscan_direct|pgsteal_direct|pgscan_kswapd|pgsteal_kswapd|allocstall_normal|allocstall_movable|compact_stall|nr_free_pages) ' /proc/vmstat | tee -a "$OUT.log"
+echo "--- TLB shootdowns after ---" | tee -a "$OUT.log"
+awk '/^[ \t]*TLB:/ {s=0; for (i=2; i<=NF; i++) if ($i ~ /^[0-9]+$/) s+=$i; print "TLB_total "s}' /proc/interrupts | tee -a "$OUT.log"
+
+KSW1=$(kswapd_cpu); SYS1=$(sys_cpu)
+echo "kswapd_ticks_after $KSW1" | tee -a "$OUT.log"
+echo "sys_busy_idle_system_softirq_after $SYS1" | tee -a "$OUT.log"
+WALL=$(echo "$T1 - $T0" | bc)
+NCPU=$(nproc)
+python3 - "$KSW0" "$KSW1" "$SYS0" "$SYS1" "$WALL" "$NCPU" "$OUT.log" <<'PYEOF'
+import sys
+ksw = (int(sys.argv[2]) - int(sys.argv[1])) / 100.0
+b0 = [int(x) for x in sys.argv[3].split()]
+b1 = [int(x) for x in sys.argv[4].split()]
+wall = float(sys.argv[5])
+ncpu = int(sys.argv[6])
+busy = (b1[0] - b0[0]) / 100.0
+idle = (b1[1] - b0[1]) / 100.0
+syst = (b1[2] - b0[2]) / 100.0
+sirq = (b1[3] - b0[3]) / 100.0
+out = ["",
+       "WHOLE-MACHINE CPU, which per-process stats do not show",
+       "  machine busy          %10.2f s  = %.2f of %d cores over %.2f s wall"
+       % (busy, busy / wall, ncpu, wall),
+       "  of which system       %10.2f s" % syst,
+       "  of which softirq      %10.2f s" % sirq,
+       "  machine idle          %10.2f s" % idle,
+       "  kswapd (all nodes)    %10.2f s  <- reclaim; invisible to the pipeline's own"
+       % ksw,
+       "                                    utime/stime, so it is pure extra cost"]
+text = "\n".join(out)
+print(text)
+open(sys.argv[7], "a").write(text + "\n")
+PYEOF
 echo "--- memory after ---" | tee -a "$OUT.log"
 free -m | tee -a "$OUT.log"
 echo "--- wall $(echo "$T1 - $T0" | bc) ---" | tee -a "$OUT.log"
@@ -193,3 +257,61 @@ open(sys.argv[2], "a").write(text + "\n")
 PYEOF
 
 echo "done -> $OUT.log  $OUT.series"
+
+# Deltas for the counters that are only sampled at the ends. These are system-wide, so
+# they include anything else running; the box was otherwise idle (load 0.03) but that is
+# a condition of the reading, not a guarantee.
+python3 - "$OUT.log" <<'PYEOF'
+import re
+import sys
+text = open(sys.argv[1]).read()
+
+
+def block(name):
+    m = re.search(r"--- %s ---\n((?:[A-Za-z_]+ \d+\n)+)" % re.escape(name), text)
+    if not m:
+        return {}
+    return dict((p[0], int(p[1])) for p in
+                (ln.split() for ln in m.group(1).strip().split("\n")) if len(p) == 2)
+
+
+before = {}
+before.update(block("vmstat before"))
+before.update(block("TLB shootdowns before"))
+after = {}
+after.update(block("vmstat after"))
+after.update(block("TLB shootdowns after"))
+if not before or not after:
+    sys.exit()
+
+out = ["", "WHAT THE KERNEL WAS DOING (system-wide deltas)"]
+for key, note in [
+    ("pgsteal_direct", "pages reclaimed IN THE FAULTING PROCESS -> bills to its sys time"),
+    ("pgscan_direct", "pages scanned in direct reclaim"),
+    ("pgsteal_kswapd", "pages reclaimed by kswapd -> does NOT bill to the process"),
+    ("pgscan_kswapd", "pages scanned by kswapd"),
+    ("allocstall_normal", "times an allocation stalled waiting for reclaim"),
+    ("allocstall_movable", "times an allocation stalled waiting for reclaim"),
+    ("compact_stall", "times a process stalled for compaction"),
+    ("pgfault", "all faults, system-wide"),
+    ("pgmajfault", "major faults, system-wide"),
+    ("TLB_total", "TLB shootdown IPIs"),
+]:
+    if key in before and key in after:
+        d = after[key] - before[key]
+        extra = ""
+        if key.startswith(("pgsteal", "pgscan")):
+            extra = "  = %.1f GB" % (d * 4096 / float(1 << 30))
+        out.append("  %-20s %14d%s   %s" % (key, d, extra, note))
+
+ds = after.get("pgsteal_direct", 0) - before.get("pgsteal_direct", 0)
+ks = after.get("pgsteal_kswapd", 0) - before.get("pgsteal_kswapd", 0)
+if ds + ks:
+    out.append("")
+    out.append("  direct share of reclaim %.1f %% -- only this share can explain the"
+               % (100.0 * ds / (ds + ks)))
+    out.append("  process's own system time; kswapd's share shows up as a separate task.")
+text2 = "\n".join(out)
+print(text2)
+open(sys.argv[1], "a").write(text2 + "\n")
+PYEOF

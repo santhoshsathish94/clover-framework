@@ -6,6 +6,99 @@ it does and does not establish.
 
 ---
 
+## Cycle: two mechanisms proposed, two refused by the machine (2026-10-15)
+
+### Direction
+
+The previous cycle left 371 s of system time, 31 % of all CPU, unexplained and recorded
+as unknown. Find out what spends it. Propose a mechanism, state it before measuring,
+and let the box answer.
+
+### First mechanism: page-cache thrash via direct reclaim. Refused.
+
+The working set is 97 GB cycling through 124 GB of RAM, so the kernel must be reclaiming
+constantly. **Direct** reclaim runs in the faulting process's own context and bills to
+its system time, so the prediction was that `pgsteal_direct` would be on the order of
+the ~25 M pages read.
+
+| | measured |
+|---|---|
+| `pgsteal_kswapd` | 25,067,500 pages = **95.6 GB** |
+| `pgsteal_direct` | 820,287 pages = 3.1 GB |
+| direct share of reclaim | **3.2 %** |
+
+**Wrong.** Reclaim is overwhelmingly kswapd's, and kswapd is a separate thread whose CPU
+never appears in the pipeline's `utime`/`stime`. It cannot be the 437 s.
+
+It did establish a number worth keeping on its own: **a run that reads 97.3 GB has 95.6
+GB reclaimed out from under it in the same 72 s.** Nothing read survives to be reused.
+The cyclic-sweep pathology recorded here twice before, now counted in pages.
+
+It also exposed a gap in how I had been measuring. Per-process CPU misses kswapd
+entirely, so every "cores busy" figure in the previous cycle understated the machine.
+Sampling `/proc/stat` as well: **machine busy 1345.64 s = 18.48 of 32 cores, against the
+pipeline's own 1240.35 s. kswapd costs 32.24 s** — real, and small enough that it is not
+the lever either. The "tens of seconds" I predicted for kswapd was right; it just did
+not matter.
+
+### Second mechanism: TLB shootdowns caused by reclaim. Also refused.
+
+Fixing the `/proc/interrupts` matcher (the `TLB:` row is indented, so an anchored
+pattern had been silently matching nothing) gave **21,216,944 shootdown IPIs** in one
+72 s four-lane run, against 25,067,500 pages reclaimed. Close to one per page.
+Unmapping a reclaimed file page does force a shootdown, and the sender spins waiting for
+every core running those threads to acknowledge — billed to the pipeline, not to kswapd.
+Mechanism: reclaim drives shootdowns, shootdowns drive system time.
+
+That predicts shootdown **count** should track reclaim, which barely changes with lanes.
+Running one lane:
+
+| | one lane | four lanes | ratio |
+|---|---|---|---|
+| bytes read | 97.10 GB | 97.28 GB | 1.00x |
+| device busy | 12.61 s | 12.89 s | 1.02x |
+| **pages reclaimed, kswapd** | **23,232,236** | **25,067,500** | **1.08x** |
+| **TLB shootdowns** | **6,392,857** | **21,216,944** | **3.32x** |
+| process system time | 200.95 s | 437.10 s | 2.18x |
+| process user time | 245.24 s | 803.25 s | **3.27x** |
+| kswapd CPU | 26.60 s | 32.24 s | 1.21x |
+
+**Wrong again.** Reclaim is flat across lane count while shootdowns more than triple.
+The near one-per-page ratio at four lanes was a coincidence of that run: at one lane it
+is 0.28 per page. Reclaim does not drive shootdowns.
+
+What the shootdowns do track is **user CPU time, 3.32x against 3.27x**. Whatever issues
+them is in the compute path and scales with work done, not with memory pressure.
+
+### What is now known, inferred, and unknown
+
+**Known.** Reclaim volume is independent of lane count, so it cannot explain a 2.18x
+difference in system time. Shootdown count is not driven by reclaim. System time is a
+*larger* share of CPU at one lane (45 %) than at four (35 %), so batching improves the
+overhead ratio rather than worsening it.
+
+**Inferred, not verified.** System time per shootdown works out at 31 µs at one lane and
+21 µs at four, which is in the right range for an IPI that waits on sixteen-odd cores
+and is cheaper per event when batched. That is consistent with shootdowns dominating
+system time, but it is one equation fitted with two unknowns and I am not claiming it.
+
+**Unknown.** What in the compute path issues roughly 6.4 M shootdowns per lane's worth
+of work. `posix_madvise(WILLNEED)` is called once per expert, order 10^4 calls, and
+advice does not shoot down anyway. The next step is to read the hot path for mapping
+operations rather than guess a third mechanism.
+
+### On being wrong twice in one cycle
+
+Both mechanisms were stated before measuring and both were refused, which is the cycle
+working rather than the cycle failing. The pattern in both: I found a ratio that looked
+like a mechanism (3.1 GB/s versus 13.5 last cycle, one shootdown per reclaimed page this
+one) and reached for the explanation it suggested. Both times a second regime — four
+lanes versus one — broke the ratio. **A ratio measured in a single regime is a
+coincidence until a second regime fails to break it.** That is the same lesson the
+prefetch-touch inversion taught, arrived at from the opposite direction.
+
+---
+
 ## Cycle: the arena was justified by a division by the wrong number (2026-10-15)
 
 ### Direction
