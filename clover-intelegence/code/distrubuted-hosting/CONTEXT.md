@@ -6,6 +6,82 @@ it does and does not establish.
 
 ---
 
+## Cycle: what a long answer costs, which nothing here had measured (2026-10-15)
+
+### Direction
+
+Every number in this file is for a five-token prompt producing **one** output token. The
+question that matters in use is how long a long answer takes, and that had never been
+run. Asked directly, the only honest first answer was "I do not know".
+
+### Shape from the source, cost from the machine
+
+`pipeline.c` loops `for (produced = 0; produced < request.wanted; produced++)`, calling
+`pipeline_advance(..., filled, count, ...)` then setting `filled = count; count++`. So
+the first pass processes all five prompt positions and **every later pass processes
+exactly one new position**, while still walking all 93 layers and selecting experts
+afresh. Whether token two re-reads what token one pulled in is a property of the running
+system, not of the source.
+
+One lane, 16 threads, five-token prompt:
+
+| output tokens | wall | marginal | tokens added | **per token** | GB read | **GB per token** |
+|---|---|---|---|---|---|---|
+| 1 | 34.295 s | — | — | — | 97.11 | — |
+| 2 | 41.850 s | 7.555 | 1 | 7.56 s | 116.37 | 19.3 |
+| 4 | 53.459 s | 11.609 | 2 | 5.80 s | 143.17 | 13.4 |
+| 8 | 76.511 s | 23.052 | 4 | 5.76 s | 198.99 | 14.0 |
+| 16 | 121.308 s | 44.797 | 8 | **5.60 s** | 303.11 | **13.0** |
+
+**T = 30.5 + 5.68 x tokens**, fitted on 2 and 16, predicting 75.9 s at 8 against 76.511
+measured (0.8 %) and 53.2 at 4 against 53.459 (0.5 %). That is **0.176 tokens/s, about
+10.6 tokens per minute**, single stream. A hundred tokens is ten minutes; five hundred is
+about forty-eight.
+
+### The number that explains it
+
+13 GB per token / 93 layers / 16.7 MB per expert = **8.4 experts per layer**, against the
+8 routed experts a token selects. **Each token fetches its own experts from disk and
+essentially nothing carries over to the next one.** The first token costs 97 GB because
+it covers five prompt positions plus the trunk; steady-state generation costs 13 GB
+*every token, forever*. The weights are 1.4 TB on disk against 124 GB of RAM, so this is
+structural rather than a tuning failure.
+
+### Does today's thread finding survive into this regime
+
+It had to be checked rather than assumed: the one-token benchmark is dominated by a 34 s
+prefill, and steady-state generation is a different mix. Four lanes, 16 tokens:
+
+| | wall | GB read |
+|---|---|---|
+| 16 threads per lane, bound | **212.397 s** | 304.79 |
+| 4 threads per lane, unbound | 229.232 s | 302.89 |
+
+**7.9 % slower, against 9 % measured in the one-token regime.** The trade holds. CPU
+totals were **not** captured for these two runs, so whether the ~31 % CPU saving carries
+over is **unverified** — the latency half of the trade is confirmed, the efficiency half
+is not.
+
+Combining with the four-lane single-token figure of 56.6 s gives **T ≈ 46.2 + 10.39 x
+tokens** per request at four lanes, so four lanes delivers about **0.385 tokens/s in
+total against 0.176 at one lane — roughly 2.2x the throughput for roughly 2x the
+per-request latency.** That is one fitted point and a slope taken from two regimes, so it
+is weaker than the one-lane model above.
+
+### What this does to the rest of the session
+
+It does not overturn the arena conclusion: 13 GB at the measured 7.6 GB/s busy rate is
+1.7 s of device time inside a 5.7 s token, a 30 % duty cycle, close to the 22 % measured
+in the one-token regime. But **device busy was never measured directly in steady-state
+generation**, so that is an argument by similarity, not a measurement.
+
+It does change what "efficient" should mean here. The one-token benchmark everything was
+tuned against spends 60 % of its time on a prefill that a real answer pays once. **The
+regime that matters is 5.7 s and 13 GB per token, repeated hundreds of times, and almost
+nothing in this file was measured there.**
+
+---
+
 ## Cycle: the thread configuration, and a harness that compared the baseline to itself (2026-10-15)
 
 ### Direction
