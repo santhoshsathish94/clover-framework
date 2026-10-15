@@ -38,7 +38,16 @@ cd "$C/pipeline" || exit 1
 i=0; while [ $i -lt "$LANES" ]; do echo "1 1008 10484 318 15383 387" >> /tmp/ab-in.txt; i=$((i+1)); done
 
 run_one() {
-    env $1 OMP_NUM_THREADS=${AB_THREADS:-16} OMP_PROC_BIND=close OMP_PLACES=cores \
+    # Defaults FIRST, arm settings LAST, so an arm can override any of them. The
+    # original order put $1 first and the defaults after, which meant `env` saw the
+    # default later and the default won: an arm setting OMP_NUM_THREADS or
+    # OMP_PROC_BIND was silently discarded and the harness compared the baseline
+    # against itself. It produced a perfect null -- ratio 1.0010, overlapping ranges,
+    # difference below the position effect -- which is indistinguishable from an
+    # honest "no difference" and was believed for an hour. A no-op and a null look
+    # identical; only the ordering makes them different.
+    # shellcheck disable=SC2086
+    env OMP_NUM_THREADS=${AB_THREADS:-16} OMP_PROC_BIND=close OMP_PLACES=cores $1 \
         ./bin/pipeline-serve "$C" serve < /tmp/ab-in.txt 2>&1 \
         | awk '/^REQUEST 0 OK/ { sub(/s$/, "", $4); print $4; exit }'
 }

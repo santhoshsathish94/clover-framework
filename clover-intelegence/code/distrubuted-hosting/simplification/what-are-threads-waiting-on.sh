@@ -22,12 +22,13 @@ set -u
 C=/opt/clover-k3/clover-intelegence/code/distrubuted-hosting
 LANES=${1:-4}
 SAMPLES=${2:-400}
+THREADS=${3:-16}
 
 cd "$C/pipeline" || exit 1
 : > /tmp/wchan-in.txt
 i=0; while [ $i -lt "$LANES" ]; do echo "1 1008 10484 318 15383 387" >> /tmp/wchan-in.txt; i=$((i+1)); done
 
-env OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores \
+env OMP_NUM_THREADS="$THREADS" OMP_PROC_BIND=close OMP_PLACES=cores \
     ./bin/pipeline-serve "$C" serve < /tmp/wchan-in.txt > /tmp/wchan.out 2>&1 &
 PID=$!
 
@@ -54,7 +55,7 @@ grep -E '^REQUEST' /tmp/wchan.out
 
 total=$(wc -l < /tmp/wchan.raw)
 echo
-echo "thread-samples: $total over $n sweeps at ~0.1 s, $LANES lanes"
+echo "thread-samples: $total over $n sweeps at ~0.1 s, $LANES lanes, $THREADS threads per team"
 echo
 printf "%8s %7s  %s\n" "count" "share" "blocked in"
 sort /tmp/wchan.raw | uniq -c | sort -rn | head -20 | \

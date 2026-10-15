@@ -6,6 +6,120 @@ it does and does not establish.
 
 ---
 
+## Cycle: the thread configuration, and a harness that compared the baseline to itself (2026-10-15)
+
+### Direction
+
+The previous cycle found 55 % of thread-time parked on a futex and blamed fine-grained
+barriers. Check that before building on it.
+
+### The box is 16 cores, not 32, and that changes the reading
+
+`lscpu`: **AMD Ryzen 9 7950X3D, 16 physical cores, 2 threads per core, 32 logical CPUs.**
+`nproc` reports 32 and I had been treating that as the core count.
+
+**`OMP_PLACES=cores` therefore creates 16 places, not 32.** The pipeline runs one
+sixteen-thread OpenMP team *per lane*, so four lanes is **64 threads on 16 physical
+cores** — 4x oversubscription of cores, 2x of logical CPUs. A large part of the 55 %
+futex figure is simply having more threads than CPUs. The previous cycle's paragraph
+blaming barrier granularity is marked corrected in place.
+
+### The thread-count cliff in this repo was a placement artifact
+
+`OMP_PROC_BIND=close` binds every team starting at place 0. Reading field 39 of
+`/proc/PID/task/*/stat` to see which logical CPUs threads actually ran on:
+
+| | request | user CPU | total CPU | logical CPUs touched |
+|---|---|---|---|---|
+| 16 threads/team, close | 57.05 s | 806.01 s | 1253.02 s | **0–31, all of them** |
+| 8 threads/team, close | **220.05 s** | **3463.75 s** | 3516.40 s | **0–7 and 16–23 only** |
+| 8 threads/team, unbound | 61.98 s | 1351.96 s | 1756.81 s | 0–31 |
+
+**At eight threads per team all four teams land on cores 0–7 and cores 8–15 sit
+completely idle** — both SMT siblings of the first eight cores, nothing else. One
+environment variable, `OMP_PROC_BIND=false`, takes that from 220.05 s to 61.98 s.
+
+So the sweep recorded earlier in this file — 4 → 212.8, 8 → 220.6, 12 → 62.4, 16 → 56.2
+— was measuring placement collapse, not an algorithmic property. **Sixteen is not
+optimal; it is the only value that happens to tile sixteen places.**
+
+### The harness compared the baseline against itself, and I believed it
+
+An A/B of the current configuration against one thread per physical core came back
+ratio 1.0010, overlapping ranges, difference below the position effect. A textbook null,
+and I reported it as "identical latency".
+
+It was not a null. `ab-pipeline.sh` ran
+`env $1 OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores ./bin/...` — **the arm's
+settings first, the defaults after, so the defaults won.** Any arm overriding thread
+count or binding was silently discarded and both arms ran the baseline.
+
+I had fixed this exact bug in `compare-settings.sh` an hour earlier and did not carry it
+across. **Third silent no-op this session**, after the PowerShell `$C` expansion and the
+unanchored TLB pattern. The standing rule now: **a no-op and a null are indistinguishable
+from the clock.** What caught this one was two instruments disagreeing — they agreed on
+the baseline to 0.12 s and disagreed on the other arm by 5 s.
+
+Worth keeping alongside it: `OMP_WAIT_POLICY=active` *looked* like a null on time
+(0.9936) but the CPU split proved it applied — user 797→833, system 454→417, total flat.
+**Verify by mechanism, not by the clock.**
+
+### What one thread per physical core actually costs and saves
+
+With the harness fixed and low-overhead sampling, n=3 per arm:
+
+| | t16close (current) | t4free (1 thread/core) |
+|---|---|---|
+| request | 56.68 / 56.82 / 56.56 | 61.90 / 62.30 / 61.23 |
+| **total CPU** | 1256 / 1271 / 1263 s | **874 / 879 / 868 s** |
+| **system time** | 454 / 467 / 460 s | **147 / 154 / 159 s** |
+| TLB shootdowns | ~22.8 M | ~13.0 M |
+| threads | 65 | 17 |
+
+**Roughly 9 % more latency for about 31 % less CPU and 67 % less system time per
+request.** A real trade, not a free win, and which side of it is right is a Direction
+question rather than a measurement one.
+
+The re-run A/B is **inconclusive** and says so: one run failed outright and was dropped,
+and t4free produced a 50.346 s outlier against 60.407 and 62.100. Across all seven
+t4free measurements taken today, six fall in 60.4–62.3 and one at 50.3, so ~61 s is well
+supported — but the A/B did not establish it and is not being presented as though it did.
+
+### The crash, with the forensics it deserves
+
+`pipeline-serve` has segfaulted three times during this session's runs, roughly 6–8 % of
+invocations. The kernel log:
+
+```
+Oct 14 14:39:08  pipeline-serve[119939]: segfault at 0 ip ...57b2229 in pipeline-stage.so[...57b0000+8000]
+Oct 15 04:43:01  pipeline-serve[336990]: segfault at 0 ip ...147f229 in pipeline-stage.so[...147d000+8000]
+Oct 15 06:57:35  pipeline-serve[604236]: segfault at 0 ip ...4bb2229 in pipeline-stage.so[...4bb0000+8000]
+```
+
+**Established.** All three are `segfault at 0` with error code 4 — a user-mode read of a
+non-present page at address zero, i.e. a NULL pointer read. All three are at the
+**identical offset `+0x2229`**, so this is one deterministic code site with an
+intermittent trigger, not random corruption. `0x2229` lies in `.plt` (0x2020–0x2310),
+in the lazy-binding stub that pushes relocation index `0x1f` = 31, and **relocation
+index 31 is `strcmp@GLIBC_2.2.5`**. The library has no `BIND_NOW`, so lazy binding is
+active. The first of the three is the run I filed hours ago as "an anomaly that produced
+no REQUEST line" — it was this.
+
+**Not established.** Why a NULL reaches there. The instruction at `0x2229` is a relative
+`jmp`, which performs no data read, so the reported instruction pointer and the reported
+fault address are not trivially consistent. I am not going to reconcile them with a
+plausible story; that is the failure already committed twice today.
+
+**Cheap next step, needs no approval and no code change:** run with `LD_BIND_NOW=1`. If
+the fault is bound up with lazy resolution it disappears; if it is a NULL argument
+reaching `strcmp`, the next crash reports inside libc instead and names the caller. Either
+outcome is more informative than this one. Proving *absence* is expensive at a 6–8 % rate.
+
+This is a defect, recorded on its own terms. It was found because the harness was made to
+report runs that answer nothing, rather than because anyone went looking.
+
+---
+
 ## Cycle: batching does not remove the wait, it changes what is waited on (2026-10-15)
 
 ### Direction
@@ -86,6 +200,13 @@ The structural cause is visible in the source. `root_project` and `root_project_
 open a parallel region **per expert per matrix**, and the region splits only `rows / 64`
 = 48 or 56 blocks across 16 threads — three or four blocks each, then a barrier. Four
 teams doing that simultaneously on 32 cores spend their time at barriers.
+
+> **Corrected the same day, by the next cycle.** Two things in this paragraph are wrong.
+> The box has **16 physical cores**, not 32 — 32 is the logical-CPU count with SMT. So
+> four teams of sixteen is **64 threads on 16 cores**, 4x oversubscription of cores and
+> 2x of logical CPUs, and a large part of the 55 % is simply having twice as many
+> threads as CPUs rather than barrier cost. The barrier structure is still real and
+> still fine-grained, but it is not established as the cause. See the next cycle.
 
 **This is a far larger lever than anything on the byte-movement side.** The arena, fully
 realised, was bounded at about 1.04x at four lanes. Fifty-five per cent of thread-time is
