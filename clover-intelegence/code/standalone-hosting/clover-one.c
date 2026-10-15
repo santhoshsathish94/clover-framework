@@ -2882,7 +2882,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     }
 
     if (operator_layers != 93 || operator_matrices_used != 303 || operator_vectors_used != 348 ||
-        prepared_trunk_count != 93 || resident_expert_calls + resident_result_hits * 3 != 92ULL * 16 * 3 * (unsigned)NPOS || recorded_expert_hits)
+        prepared_trunk_count != 93 || resident_expert_calls + resident_result_hits * 3 != 92ULL * TOPK * 3 * (unsigned)NPOS || recorded_expert_hits)
         die("live token operator coverage differs");
     if (resident_maps != maps_before || resident_unmaps != unmaps_before || resident_tap_layers != taps_before)
         die("fixed parameters changed lifetime during token evaluation");
@@ -2977,7 +2977,9 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
 
     if (operator_layers != 93 || operator_matrices_used != 303 || operator_vectors_used != 348)
         die("all-layer operator field coverage differs");
-    if (prepared_trunk_count != 93 || recorded_expert_hits || resident_expert_calls + resident_result_hits * 3 != 92ULL * 16 * 3 * (unsigned)NPOS)
+    /* TOPK, not 16: this asserts the configured expert count was met exactly, so an
+       unintended skip is still caught at any k. Identical at the default TOPK=16. */
+    if (prepared_trunk_count != 93 || recorded_expert_hits || resident_expert_calls + resident_result_hits * 3 != 92ULL * TOPK * 3 * (unsigned)NPOS)
         die("resident request expert or trunk coverage differs");
     if (resident_maps != maps_before || resident_unmaps != unmaps_before || resident_tap_layers != taps_before)
         die("fixed parameters changed lifetime during a request");

@@ -31,6 +31,10 @@ PROMPT_IDS=${PROMPT_IDS:-"1008 10484 318 15383 387"}
 LABEL=${LABEL:-france}
 
 echo "######## prompt=$LABEL ids=[$PROMPT_IDS] tokens=$TOKENS cache=$CACHE ########"
+# The k=16 sequence measured BEFORE the invariant was parameterised. The control below
+# must reproduce it, or the edit to the assertion changed behaviour rather than only
+# permitting a configuration.
+PREEDIT=${PREEDIT:-"17374 20829 10 427 414 1008 606 142957 37092 387 7081 306 17374 20829 10 427 414 113476 387 5624 395 16"}
 printf "%4s %11s %13s %12s %s\n" "k" "s/token" "GB/token" "32 tokens" "first divergence from k=16"
 
 ref=""
@@ -39,16 +43,20 @@ for k in 16 12 8 6 4; do
         PROMPT_IDS="$PROMPT_IDS" bash /tmp/standalone-cost.sh > "$OUT/run-k$k-$LABEL.log" 2>&1
 
     if ! grep -q "generated tokens" "$OUT/run-k$k-$LABEL.log"; then
-        printf "%4s  *** FAILED: %s\n" "$k" "$(tail -1 "$OUT/run-k$k-$LABEL.log")"
+        printf "%4s  *** FAILED: %s\n" "$k" "$(tail -n 1 "$OUT/run-k$k-$LABEL.log")"
         continue
     fi
     spt=$(awk '/generated tokens/ {print $5}' "$OUT/run-k$k-$LABEL.log")
     gpt=$(awk '/bytes read/ {print $6}' "$OUT/run-k$k-$LABEL.log")
-    tot=$(awk '/^answer:/ {print $4}' "$OUT/run-k$k-$LABEL.log")
+    tot=$(awk '/^answer:/ {print $5}' "$OUT/run-k$k-$LABEL.log")
     seq=$(grep -h "^TOKENS_PRODUCED:" "$OUT/run-k$k-$LABEL.log" | cut -d' ' -f2-)
 
     if [ "$k" = 16 ]; then
-        ref="$seq"; note="control"
+        ref="$seq"
+        case "$seq" in
+            "$PREEDIT"*) note="control  [regression vs pre-edit build: PASS]" ;;
+            *)           note="control  *** REGRESSION: differs from the pre-edit k=16 run ***" ;;
+        esac
     elif [ "$seq" = "$ref" ]; then
         note="IDENTICAL for all $TOKENS tokens"
     else

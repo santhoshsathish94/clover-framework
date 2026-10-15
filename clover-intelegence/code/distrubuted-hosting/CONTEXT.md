@@ -6,6 +6,78 @@ it does and does not establish.
 
 ---
 
+## Cycle: reduced-k through decode — the prefill result did not generalise (2026-10-15)
+
+### Direction
+
+The invariant change was authorised. Run the decode test it was blocking.
+
+### The edit, and why it is provably safe
+
+Two occurrences, not one: `clover-one.c:2885` and `:2982` both hard-coded the literal
+`16`. Fixing only the first would have moved the failure rather than removed it. Both
+now read `92ULL * TOPK * 3 * (unsigned)NPOS`.
+
+The workspace and host sources were verified byte-identical first
+(`edd2789ddafb3af4d60d035af709c763`) so the thing edited is the thing tested. The host
+is not a git repository, so the workspace stays source of truth and the change was
+synced to the host.
+
+**The rebuilt k=16 binary has md5 `6be9b4243cdacb28fd6c4fe24578f9f2`, byte-identical to
+the pre-edit build.** `92ULL * TOPK * 3` constant-folds to the same code at TOPK=16, so
+the compiler proves the edit is a no-op at the default. That is stronger evidence than
+any regression run.
+
+The assertion now claims *"this engine performed exactly the configured number of expert
+calls"* rather than *"exactly 16"*. An unintended skip is still caught at every k, which
+was the property worth keeping.
+
+### The measurement
+
+One prompt, `The capital of France is`, 32 generated tokens, cache=24:
+
+| k | s/token | GB/token | 32 tokens | first divergence from k=16 |
+|---|---|---|---|---|
+| 16 | 3.062 | 18.54 | 105.074 s | control, reproduces the pre-edit sequence |
+| **12** | **2.577** | **13.77** | **89.580 s** | **IDENTICAL for all 32 tokens** |
+| 8 | 2.180 | 9.39 | 74.379 s | diverges at token **23** (2718 vs 36870) |
+| 6 | 1.984 | 7.28 | 66.722 s | diverges at token **4** (427 vs 274) |
+| 4 | 1.765 | 5.04 | 58.925 s | diverges at token **2** (20829 vs 5046) |
+
+Mechanism check passes: bytes per token falls 18.54 → 5.04 roughly with k, so TOPK took
+effect and the divergence column means something.
+
+### Two findings, and the second is the important one
+
+**`k3-data-problem.md` asked whether k=4 also preserves the decode token 20829. It does
+not.** k=4 emits 5046 at the very first decode step. The prefill token 17374 is
+preserved exactly as recorded, and that turns out to say nothing about the next token.
+The document was right to flag its own limit.
+
+**k=8 was the setting that document called "nearly free" — 0.790 confidence against
+0.792 — and it diverges at token 23.** Equal confidence on one token does not survive a
+long answer. Whatever small perturbation k=8 introduces is invisible in the first
+token's softmax and compounds until it flips a decision twenty-two tokens later. **A
+per-token confidence metric cannot see this; only a long decode can.**
+
+That is the same shape as every other correction in this file: a measurement taken in
+one regime, read as a property of the thing.
+
+### What survives
+
+**k=12 is identical for all 32 tokens at 1.19x and 26 % fewer bytes.** Stacked on the
+cache rebuild, 3.76 s → 2.577 s per token, **1.46x in total, same tokens out**.
+
+### Not adopted yet
+
+One prompt and 32 tokens is not enough, and the divergence points above show how
+abruptly this turns: 23, then 4, then 2. A validation across five prompts from the
+repository's own `prompts.tsv` at 64 tokens is running. **The adoption gate is
+IDENTICAL, not close.** A diverged sequence may still be perfectly good text, but that
+is a judgement about quality this harness cannot make and should not pretend to.
+
+---
+
 ## Cycle: reduced-k is blocked by an invariant, and I am not moving it (2026-10-15)
 
 ### Direction
