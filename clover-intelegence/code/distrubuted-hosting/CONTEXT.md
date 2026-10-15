@@ -6,6 +6,110 @@ it does and does not establish.
 
 ---
 
+## Cycle: batching does not remove the wait, it changes what is waited on (2026-10-15)
+
+### Direction
+
+Find what spends the ~437 s of system time. Four mechanisms were proposed and measured
+in turn. Three were refused outright, the fourth was quantified and found small, and the
+process of refusing them produced the actual answer.
+
+### The four mechanisms, and what the box said
+
+| proposed | prediction | measured | verdict |
+|---|---|---|---|
+| direct reclaim | `pgsteal_direct` ~ 25 M pages | 820,287, **3.2 %** of reclaim | refused |
+| reclaim drives TLB shootdowns | shootdown count tracks reclaim | reclaim 1.08x, shootdowns **3.32x** | refused |
+| OpenMP thread parking | `active` policy is faster | **0.9936**, 0.362 s inside a 0.405 s floor | no speed effect |
+| teams pinned onto overlapping cores | `OMP_PROC_BIND=false` frees cores | **32 of 32 CPUs used either way**, 56.588 vs 56.623 s | refused |
+
+The third needed a second look rather than a filing. A null result and a setting that did
+nothing look identical, and a patch had already silently failed to apply once this
+session. Checking the CPU split instead of the clock: `passive` user 797.48 / sys 454.14,
+`active` user 833.02 / sys **416.68**, total flat at ~1250 s. **The setting applied — it
+moved 37 s out of system time into user time and changed nothing else.** So OpenMP
+parking is about 8 % of system time, real and small. That is a different and more useful
+statement than "no difference".
+
+### What 64 threads are actually doing
+
+Two measurement errors had been hiding the picture. `/proc/PID/status` reports context
+switches for the **main thread only**, which is why a sixteen-thread run appeared to make
+1,500 of them; summed across `/proc/PID/task/*/status` it is **4.6 million**. And thread
+count was being read at exit rather than at peak.
+
+Sampled over the run, thread count is not transient:
+
+| | threads | cores of work | per-thread efficiency |
+|---|---|---|---|
+| one lane | 17 | ~12 | 75 % |
+| four lanes | **65** | ~22 | **36 %** |
+
+Four lanes run four separate sixteen-thread OpenMP teams, held for the whole run, spread
+across all 32 CPUs. **64 threads on 32 cores producing 22 cores of work.** Startup is
+worse and was never looked at: the first ~9 s run single-threaded at 1.0 core.
+
+### Where the missing work went
+
+`/proc/PID/task/TID/wchan` names the kernel function a sleeping thread is parked in, and
+is empty for a thread on CPU. No profiler, no package install, nothing touched. 16,151
+thread-samples at four lanes and 4,673 at one:
+
+| | one lane | four lanes |
+|---|---|---|
+| running on CPU | **73.59 %** | 39.60 % |
+| `futex_wait_queue` | **6.38 %** | **55.06 %** |
+| `folio_wait_bit_common`, waiting on a page from disk | **19.90 %** | 5.13 % |
+| everything else | 0.13 % | 0.2 % |
+
+**At four lanes, more than half of all thread-time is parked on a futex, and only 5 % is
+waiting for disk.**
+
+Two independent checks that this is not an artefact. The CPU counters say one lane gets
+12 cores of work from 16 threads, which predicts 75 % running; sampling says 73.59 %
+without being told. And 39.60 % of 64 threads is 25.3, against 22 cores measured from
+`utime`/`stime`. The instrument agrees with arithmetic it had no access to.
+
+### What this actually means
+
+**Batching does not remove the wait. It changes what is waited on.** Going from one lane
+to four, disk waiting falls 19.90 % to 5.13 % — that is the 3.05x batching win doing
+exactly what it was supposed to — and futex waiting rises 6.38 % to 55.06 % to replace
+it. The gain was real and so is its ceiling, and the ceiling is synchronisation.
+
+That is consistent with everything else now known. It is why `OMP_WAIT_POLICY=active`
+moved time between columns without changing the total: spinning instead of sleeping does
+not give a waiting thread anything to do. It is why 4.6 M voluntary context switches
+exist. It is why the earlier thread sweep found a cliff.
+
+The structural cause is visible in the source. `root_project` and `root_project_rows`
+open a parallel region **per expert per matrix**, and the region splits only `rows / 64`
+= 48 or 56 blocks across 16 threads — three or four blocks each, then a barrier. Four
+teams doing that simultaneously on 32 cores spend their time at barriers.
+
+**This is a far larger lever than anything on the byte-movement side.** The arena, fully
+realised, was bounded at about 1.04x at four lanes. Fifty-five per cent of thread-time is
+not a 1.04x.
+
+### Not claimed
+
+That coarsening the parallel region would recover the wait. The 55 % is measured; what
+would replace it is not. Threads at a barrier are waiting for the slowest member, and
+whether that member is late because of barrier overhead or because of genuinely uneven
+work per block is **not established**. Those call for different fixes and I have not
+separated them.
+
+### A crash, which is not a performance finding
+
+One four-lane run died with `Segmentation fault (core dumped)` immediately after printing
+`READY`. An earlier run in this session produced no `REQUEST` line and I recorded it as
+an anomaly — almost certainly the same fault, invisible because nothing was reporting the
+exit status. **`pipeline-serve` has an intermittent crash after startup.** It is not
+reproducible on demand and I have not characterised it. Recorded as a defect to be
+looked at on its own terms, not worked around to keep a benchmark running.
+
+---
+
 ## Cycle: two mechanisms proposed, two refused by the machine (2026-10-15)
 
 ### Direction
