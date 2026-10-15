@@ -6,6 +6,214 @@ it does and does not establish.
 
 ---
 
+## Cycle: the deployed engine was two days behind its own source (2026-10-15)
+
+### Direction
+
+"We didn't improve the 3s." Correct, and after two days of measurement that is the only
+thing that counts. Make the gathered work produce a change.
+
+### The expert cache is not merely unhelpful, it is absent
+
+Sweeping `K3_EXPERT_CACHE` at 0, 24 and 48 over 64 tokens gave **byte-for-byte identical
+disk traffic**: 1647.83, 1647.83, 1647.73 GB. A working cache cannot read exactly the
+same bytes as no cache. So it was not failing to hit — it was not in the path.
+
+Peak RSS settled it without touching the code. `root_cache_open` allocates anonymous
+memory and pre-touches every huge page deliberately, so it must appear in RSS:
+
+| `K3_EXPERT_CACHE` | expected extra | peak RSS |
+|---|---|---|
+| 0 | — | 76.46 GB |
+| 24 | +38.5 GB | **76.46 GB** |
+| 48 | +77.1 GB | **76.46 GB** |
+
+Identical to two decimals. Then:
+
+```
+bin/clover-one   2026-10-08 05:40
+clover-one.c     2026-10-10 16:41    <- two days newer
+live-root.h      2026-10-10 15:35
+strings bin/clover-one | grep K3_EXPERT_CACHE  ->  nothing
+```
+
+**The deployed binary predates the per-layer expert cache entirely.** The environment
+variable was being read by nobody. The recorded 3.05 s/token is attributed to that
+cache, which is exactly why it had not been reproducible: the engine on the box cannot
+do it. `root_cache_hits` is counted in the source and printed nowhere, so nothing would
+ever have said so.
+
+### Rebuilt from current source, correctness gated, measured
+
+Built with the repo's own recipe to `/tmp/clover-one.new`. **The deployed binary was not
+replaced**; it is backed up at `/tmp/clover-one.BACKUP-2026-10-15`. 32 tokens each:
+
+| | per token | bytes/token | peak RSS | prompt pass | 32 tokens | CPU |
+|---|---|---|---|---|---|---|
+| deployed, cache=0 | 3.755 s | 27.83 GB | 79.52 GB | 10.103 s | 126.521 s | 1892.60 s |
+| rebuilt, cache=0 | 3.697 s | 27.83 GB | 79.54 GB | 10.086 s | 124.894 s | 1849.94 s |
+| **rebuilt, cache=24** | **3.015 s** | **18.59 GB** | **111.38 GB** | 13.773 s | **107.863 s** | **1713.98 s** |
+
+**`PASS: all three runs produced identical token ids over 32 tokens.`** Speed was not
+believed until the answers matched.
+
+**3.015 s against the documented 3.05 s.** The figure was never wrong; the box has been
+unable to produce it since 8 October.
+
+- RSS +31.8 GB confirms the cache now allocates.
+- **Bytes per token fall 27.83 to 18.59 GB, −33 %.** That is the mechanism, and it is a
+  structural count rather than a timing.
+- Rebuilt-with-cache-off is within noise of the deployed binary, so **the gain is the
+  cache and not the recompile.**
+- CPU also falls 9.4 %.
+
+### What it costs
+
+The prompt pass goes **10.103 to 13.773 s** because the cache pre-touches 31.8 GB up
+front. That is +3.67 s paid once against 0.74 s saved per token, so it breaks even
+around the fifth token and **loses on short requests**. Peak RSS is 111.38 GB of 124 GB,
+which is tight; `cache=48` would want ~143 GB and cannot fit.
+
+### Confirmed with the order reversed
+
+The three runs above went in sequence with the cache arm last, so it had the warmest
+page cache. Repeated with the cache arm **first**:
+
+| | per token | bytes/token | 32 tokens | peak RSS |
+|---|---|---|---|---|
+| rebuilt + cache, ran last | 3.015 s | 18.59 GB | 107.863 s | 111.38 GB |
+| rebuilt + cache, **ran first** | 3.061 s | 18.54 GB | 107.454 s | 111.38 GB |
+| deployed, ran first | 3.755 s | 27.83 GB | 126.521 s | 79.52 GB |
+| deployed, ran last | 3.760 s | 28.41 GB | 126.579 s | 74.89 GB |
+
+Independent repeats of each arm agree to **0.4 %**, and the gap survives both orders.
+Token ids identical throughout. **3.76 s to 3.04 s per token, 1.24x; 32 tokens 126.5 s
+to 107.7 s, 1.18x; bytes per token 28.1 to 18.6 GB, −34 %.** Ordering confound cleared.
+
+### Still not established
+
+Whether the recorded 3.05 s was itself measured with `K3_RESULT_SET` memoisation, and
+why this engine reads roughly twice the 12.3 GB that 8 routed experts across 92 layers
+would account for. The win is real and reproduced; the byte accounting is still not
+fully understood, and the second number is where the next one may be hiding.
+
+### Growth
+
+Four silent no-ops this session, and this was the largest: **a stale deployment is
+indistinguishable from a feature that does not work.** The sweep said "the cache does not
+help", which was true and useless; the right question was "is the cache running", and
+peak RSS answered it in one run. The same shape as `OMP_WAIT_POLICY` earlier — the clock
+said null, the mechanism said otherwise.
+
+The owner's correction also stands as the thing that unlocked this: I measured eight
+tokens and compared them to a figure that only exists over long answers. **Check the
+binary is the source before measuring the source's behaviour.**
+
+---
+
+## Cycle: the standalone engine, finally measured, and a mistake repeated one regime up (2026-10-15)
+
+### Direction, given plainly
+
+"After all the work you did for last 2 days we didn't improve the 3s." Correct. Two days
+of measurement, nothing faster. Point the instruments at the engine that owns the 3 s.
+
+### The gap that had gone unnoticed for two days
+
+Every instrument built here — device-busy sampling, the `wchan` histogram, the CPU-split
+comparator, the device-ceiling probe — had only ever been pointed at the **distributed**
+pipeline. The 3.05 s/token figure belongs to the **standalone** engine, in
+`standalone-hosting/LATENCY-AND-SCALING.md` as `t = 9.9 + 3.05 x (N - 1)`. So there was
+two days of tooling and zero evidence about the system being improved.
+
+### They are not the same machine in behaviour
+
+| per generated token | standalone | distributed |
+|---|---|---|
+| time | **4.20 s** | 5.68 s |
+| bytes read | **24.75 GB** | 13 GB |
+| **disk rate while busy** | **15.02 GB/s** | 7.6 GB/s |
+| CPU | 12.48 of 16 cores, **93.5 % user** | 22 "cores", 35 % system |
+
+**The standalone runs the SSD at or above the 12.5 GB/s ceiling measured with O_DIRECT
+this morning; the distributed side never exceeds 7.6.** So the whole byte-movement
+analysis — the arena, the throughput headroom, the 1.04x bound — describes the
+distributed pipeline and says nothing about this one. On standalone, making bytes faster
+is not low-value, it is *impossible*: the device is already flat out.
+
+### The mistake, which I had just finished writing up about something else
+
+I ran eight tokens, saw 4.46–4.60 s across seven of them, and reported 4.512 s as the
+steady state — an hour after recording that the one-token benchmark was a transient that
+had misled everything tuned against it. **Same error, one regime up, immediately after
+naming it.**
+
+The owner's correction: the recorded figure comes from a long run, because most of the
+work is in the first cycle. The mechanism is the cache — 24 experts per layer against
+roughly 8 routed per token, so after seven tokens it has not filled, let alone started
+hitting. **Flat-and-warming is indistinguishable from flat-and-settled over a window
+that short**, the same shape as a no-op being indistinguishable from a null.
+
+The arithmetic alone should have stopped me: `t = 9.9 + 3.05 x (N - 1)` averages 3.9 s
+at N=8 and 3.10 s at N=128. I compared an eight-token run against a number that only
+exists at long lengths.
+
+### 128 tokens, which settles it
+
+```
+prompt pass            12.147 s
+generated   1-  8   mean  4.454 s
+generated   9- 16   mean  4.497 s
+generated  17- 24   mean  4.372 s
+generated  25- 32   mean  4.198 s   <- settled
+   ... flat through ...
+generated 121-127   mean  4.211 s
+FIRST 8  4.454 s   LAST 8  4.206 s   change -5.6 %
+```
+
+**The decline is real and completes by about token 25, and it is worth 5.6 %, not 32 %.**
+128 tokens in 551.681 s; average 4.31 s, settled 4.20 s.
+
+**3.05 s does not reproduce on this box today at any answer length.** Two candidate
+explanations, neither established: `MEASURED-2026-10-08.md` records ~3.66 s/token *with*
+`K3_RESULT_SET=france`, i.e. stored expert result observations — memoised results for a
+known prompt, and my runs have it unset with `result_hits: 0`. And 3.05 is written as a
+fitted formula, so it may be a projection rather than an observed steady state. **Which
+of those it is decides whether 3.05 is a target or an artefact, and it should be
+established before anything is tuned against it.**
+
+### Where the 4.20 s goes
+
+Disk 1.65 s (39 %), at the hardware ceiling. The rest is compute: 93.5 % of CPU is user
+time, 12.48 of 16 cores. Two levers follow, and they attack different halves:
+
+- **Fewer bytes.** 24.75 GB per token against 8 routed experts x 92 layers x 16.7 MB =
+  12.3 GB, so roughly twice the minimum is being read. `K3_EXPERT_CACHE` is a pure
+  environment knob. Sweep running.
+- **The missing 3.5 cores.** 12.48 of 16 busy, and the `wchan` instrument built
+  yesterday answers *why* in one run without a profiler. Not yet done.
+
+Recorded as a lead, not a plan: the inner product in `root_project` accumulates in
+`double` (`_mm256_mul_pd`, four lanes) over data that is already `float` — 4-bit codes
+through a float pair table. Eight-wide float would double the SIMD width. **But the loop
+does eight scalar `_mm_load_sd` gathers per sixteen coordinates, so it may be
+gather-latency bound rather than FLOP bound, in which case float buys nothing.** Changing
+it also changes numerics and would need an end-to-end token check. Not to be attempted on
+the strength of a plausible story.
+
+### Process failures in this cycle, both previously recorded and both repeated
+
+A detached sweep reported as "running" had died instantly on `bash: -c: line 2: syntax
+error` from nested quoting inside an `ssh` command, and because it died before its
+`touch`, a job chained behind it waited forever on a marker that never appeared. The note
+*ship scripts as files, never inline nested quoting through ssh* was already in my own
+memory. Then, cleaning up, `pkill -f` matched my own ssh command line and killed the
+remote shell — also already recorded. **Two self-inflicted stalls from lessons already
+written down.** Both now structural: the logic is a file, and kill patterns use `[c]`
+bracketing.
+
+---
+
 ## Cycle: what a long answer costs, which nothing here had measured (2026-10-15)
 
 ### Direction
