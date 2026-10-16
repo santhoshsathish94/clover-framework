@@ -1,6 +1,63 @@
 # Standalone Hosting Source
 
-## Current: A Layer Is Not A Pure Function Of Its Input, And Its Input Never
+## Current: The Prefix Cache Was Capped By A Per-Pass Index, Not An Array, And
+## 192 Positions Now Load Bit-Identical
+
+### Intended outcome
+
+Lift the eight-position cap so an 8192-token prompt can be prefilled once and
+replayed, and measure 100 output tokens against it.
+
+### What the system showed
+
+The cap was never the array width. `TLO` is an index into the per-pass arrays,
+not an absolute position, so `for (t = TLO; t < NPOS)` with `TLO` at 8192 and
+`NPOS` at 8 executes zero times. The design only worked while the whole prefix
+fitted inside one eight-slot pass. Above that it broke twice over, differently:
+
+- MLA, 24 layers, indexed `mla_klat[t]` for `t < pfx_n` past `[NPOS_SLOTS]`.
+- KDA, 69 layers, fired its save on `t == pfx_n - 1` with `t` the per-pass
+  index, so above 8 the state was never written at all.
+
+Save and load now move through `sequence->keys`, `values` and `positions` at
+absolute slots, once per request in `lane_prefill`, and `TLO` is retired to 0
+so every pass computes normally.
+
+### What was measured
+
+    prompt 5, caching 4
+      save tokens 17374 20829 10 427 414 1008
+      load tokens 17374 20829 10 427 414 1008      matches known-good
+      cache 474,095,616 B
+
+    prompt 256, caching 192        (the size that used to segfault)
+      save wall 390 s  tokens 43923 658 28858 382 3251 26523
+      load wall 124 s  tokens 43923 658 28858 382 3251 26523
+      cache 918,798,336 B                          3.15x
+
+Cache size is exact: `464,633,856 + 2,365,440 x N` bytes, fixed KDA state plus
+24 MLA layers at 98,560 B a position. 8191 positions is 19.84 GB.
+
+### Mistakes this cycle
+
+The first rework loaded cleanly and still diverged after token one. The KDA
+state is cumulative and the save ran after the whole prompt, so it already held
+position 4, which the load then recomputed on top of it. Fixed by splitting the
+prefill at `pfx_n`, flushing the pending batch, saving, then continuing.
+
+The earlier 8192 run that produced no tokens was not an engine fault. The
+harness wrote its request with `json.dump`, which emits no trailing newline,
+and `request_next` splits on one, so the engine waited forever and reported
+`STOP_JSON {"requests":0}`. An instrument that cannot deliver its input cannot
+measure anything.
+
+### What is still unknown
+
+The 8192 save is running. Predicted from the 256 case at about 1.45 s a
+position: roughly 3.5 h to build the cache, then about 6 minutes for one
+computed position plus 100 decode steps.
+
+## Previously: A Layer Is Not A Pure Function Of Its Input, And Its Input Never
 ## Arrives Twice
 
 ### Intended outcome

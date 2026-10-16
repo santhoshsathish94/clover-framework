@@ -1819,7 +1819,7 @@ static int stored_expert_down(unsigned layer, unsigned expert, const float *inpu
 
 static void result_options(void)
 {
-    const char *forbidden[] = {"K3_STAGE", "K3_LSTAT", "K3_DUMPROUTE", "K3_DUMPSEL", "K3_PROV",
+    const char *forbidden[] = {"K3_STAGE", "K3_DUMPROUTE", "K3_DUMPSEL", "K3_PROV",
         "K3_DUMPLAY", "K3_ROUTESAVE", "K3_ROUTELOAD",
         "K3_ARENA2", "K3_LOGITS", "K3_DUMPRES", "K3_COVER", "K3_TRUNKRAM", "K3_NX", "K3_PREFETCH"};
     for (unsigned setting = 0; setting < sizeof(forbidden) / sizeof(forbidden[0]); setting++)
@@ -2313,15 +2313,9 @@ static void request_reset(void)
     if (resident_cross_layer.armed) die("cross-layer candidate escaped token boundary");
     nsnap = 0;
     have_prefix = 1;
-    /* A loaded prefix is consumed by the prefill it resumes. Every later decode
-       step starts a fresh evaluation with nothing cached, so the boundary and
-       the reader must be retired after their one use. */
-    if (pfx_mode == 2 && pfx_used) {
-        pfx_mode = 0;
-        if (pfx_f) { fclose(pfx_f); pfx_f = NULL; }
-    }
-    TLO = (pfx_mode == 2) ? pfx_n : 0;
-    if (pfx_mode == 2) pfx_used = 1;
+    /* The cache is moved through the sequence arrays at request level, so a pass
+       computes every position it is given and TLO no longer shifts anything. */
+    TLO = 0;
     cur_L = -1;
     memset(snap, 0, sizeof(snap));
     memset(snap_pool, 0, sizeof(snap_pool));
@@ -2477,16 +2471,8 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                            sizeof(float) * VH);
                 }
             /* Attention at an active position reads every earlier position, so
-               the cached ones must be in place before the scores are formed.
-               That means reading the cache first, then filling the sequence from
-               0 rather than from TLO: a loaded position still owns a KV slot. */
-            if (pfx_mode == 2) {
-                for (int t = 0; t < pfx_n; t++) {
-                    if (fread(mla_klat[t], 4, (size_t)H * QN, pfx_f) != (size_t)H * QN ||
-                        fread(mla_v[t],    4, (size_t)H * VH, pfx_f) != (size_t)H * VH ||
-                        fread(mla_rp[t],   4, QR, pfx_f) != QR) die("prefix cache short read");
-                }
-            }
+               a loaded position still owns a KV slot and the sequence is filled
+               from 0 rather than from TLO. */
                 for (int t = 0; t < NPOS; t++) {
                     ResidentSequence *sequence = SEQ(t,L);
                     size_t slot = pos_abs[t];
@@ -2498,13 +2484,6 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                     }
                     memcpy(sequence->positions+slot*QR,mla_rp[t],sizeof mla_rp[t]);
                 }
-            if (pfx_mode == 1) {
-                for (int t = 0; t < pfx_n; t++) {
-                    fwrite(mla_klat[t], 4, (size_t)H * QN, pfx_f);
-                    fwrite(mla_v[t],    4, (size_t)H * VH, pfx_f);
-                    fwrite(mla_rp[t],   4, QR, pfx_f);
-                }
-            }
             /* loaded positions and freshly computed ones are both in place here */
             if (pfx_of) {
                 for (int t = 0; t < NPOS; t++) {
@@ -2572,13 +2551,6 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
 
             St      = (float (*)[D][D])     SEQ(TLO,L)->state;
             convbuf = (float (*)[P][KC - 1]) SEQ(TLO,L)->convolution;
-            /* KDA carries a recurrent state rather than per-position KV, and it
-               is a fixed size whatever the prefix length. */
-            if (pfx_mode == 2) {
-                if (fread(St, 1, ST_BYTES, pfx_f) != ST_BYTES ||
-                    fread(convbuf, 1, CONV_BYTES, pfx_f) != CONV_BYTES)
-                    die("prefix cache short read");
-            }
             float ah[H];
             memcpy(ah, prepared_vector(L, 39, H), sizeof ah);
 
@@ -2673,10 +2645,6 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                 op_add(OP_DELTA, _td, 0);
                 rmsnorm_blocks(on, o, won, H, D);
                 for (int i = 0; i < P; i++) gtf[t][i] = on[i] * sigf(gtm[t][i]);
-                if (pfx_mode == 1 && t == pfx_n - 1) {
-                    fwrite(St, 1, ST_BYTES, pfx_f);
-                    fwrite(convbuf, 1, CONV_BYTES, pfx_f);
-                }
             }
             /* after the last position, so the next run resumes from NPOS */
             if (pfx_of) {
@@ -2992,7 +2960,8 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
         lstat_vec(93, NPOS - 1, "9_tail_aggregate", hf,     E);
         lstat_vec(93, NPOS - 1, "9_tail_norm",      nrm,    E);
         lstat_vec(93, NPOS - 1, "9_logits",         logits, VOCAB);
-        fclose(lstat_fp); lstat_fp = NULL;
+        /* Closing here would record only the first step and never decode. */
+        fflush(lstat_fp);
     }
     if (stg_fp) {
         cur_L = 93;
@@ -3126,11 +3095,61 @@ static void lane_sequence_clear(unsigned lane)
     }
 }
 
+/* mla_klat and friends stage only NPOS_SLOTS positions, so anything longer than
+   one pass has to be moved through the sequence arrays, which hold them all. */
+static void prefix_transfer(unsigned lane, int save)
+{
+    for (unsigned layer=0; layer<NLAY; layer++) {
+        ResidentSequence *sequence=&resident_sequences[lane][layer];
+        if (sequence->keys) {
+            for (int p=0; p<pfx_n; p++) {
+                for (int h=0; h<H; h++) {
+                    float *k=sequence->keys+((size_t)h*resident_capacity+(size_t)p)*QN;
+                    float *v=sequence->values+((size_t)h*resident_capacity+(size_t)p)*VH;
+                    if (save) { fwrite(k,4,QN,pfx_f); fwrite(v,4,VH,pfx_f); }
+                    else if (fread(k,4,QN,pfx_f)!=(size_t)QN ||
+                             fread(v,4,VH,pfx_f)!=(size_t)VH) die("prefix cache short read");
+                }
+                float *r=sequence->positions+(size_t)p*QR;
+                if (save) fwrite(r,4,QR,pfx_f);
+                else if (fread(r,4,QR,pfx_f)!=(size_t)QR) die("prefix cache short read");
+            }
+        } else {
+            if (save) {
+                fwrite(sequence->state,1,ST_BYTES,pfx_f);
+                fwrite(sequence->convolution,1,CONV_BYTES,pfx_f);
+            } else if (fread(sequence->state,1,ST_BYTES,pfx_f)!=ST_BYTES ||
+                       fread(sequence->convolution,1,CONV_BYTES,pfx_f)!=CONV_BYTES)
+                die("prefix cache short read");
+        }
+        if (!save) sequence->length=(unsigned)pfx_n;
+    }
+}
+
 static unsigned lane_prefill(unsigned lane, const GenerationRequest *request)
 {
-    unsigned next=0;
+    unsigned next=0, position=0;
     active_lane=lane; batch_decode=0; prefill_count=0;
-    for (unsigned position=0; position<request->count; position++)
+    if ((pfx_mode==1 || pfx_mode==2) && !pfx_used && pfx_n>=(int)request->count)
+        die("prefix cache must cover fewer positions than the prompt");
+    if (pfx_mode==2 && !pfx_used) {
+        /* The last prompt position must still be computed so that it projects. */
+        prefix_transfer(lane,0);
+        lane_position[lane]=(unsigned)pfx_n;
+        position=(unsigned)pfx_n;
+        pfx_used=1;
+    }
+    if (pfx_mode==1 && !pfx_used) {
+        for (; position<(unsigned)pfx_n; position++)
+            if (!resident_step(NULL,request->tokens[position],position,0,&next)) die("prefill failed");
+        /* The KDA state is cumulative, so it has to be written once exactly pfx_n
+           positions have been folded into it, not after the whole prompt. */
+        if (prefill_count) { evaluate_tokens(prefill_tokens,prefill_count,prefill_base,0); prefill_count=0; }
+        prefix_transfer(lane,1);
+        fflush(pfx_f);
+        pfx_used=1;
+    }
+    for (; position<request->count; position++)
         if (!resident_step(NULL,request->tokens[position],position,
                            position+1==request->count,&next)) die("prefill failed");
     lane_position[lane]=request->count;
@@ -3279,6 +3298,7 @@ int main(int argc, char **argv)
     double started = now_s();
     result_options();
     prefix_options();
+    { const char *path = getenv("K3_LSTAT"); if (path && *path) lstat_fp = fopen(path, "w"); }
     const char *index = getenv("K3_INDEX");
     if (!index) die("K3_INDEX required");
     mallopt(M_MMAP_THRESHOLD, 256 * 1024 * 1024);
