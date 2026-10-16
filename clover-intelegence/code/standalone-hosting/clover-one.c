@@ -3130,7 +3130,10 @@ static int request_next(char *line, size_t size, int wait)
    slot for its own tokens, so it runs between decode steps rather than inside one. */
 static int lane_admit(unsigned lane, int wait)
 {
-    char line[8192];
+    /* request_next truncates to fit, so anything smaller than request_buffer
+       silently mangles a long request into invalid JSON. 8192 bytes capped
+       input at about 1350 tokens. */
+    static char line[sizeof request_buffer];
     GenerationRequest parsed;
     for (;;) {
         if (!request_next(line,sizeof line,wait)) return 0;
