@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""Build a 1000-token input from real token ids already on this box.
+
+No tokenizer is installed and there is no pip, so text cannot be encoded here.
+The 34 prompts in prompts.tsv total only 416 tokens, and repeating them to
+reach 1000 would make the input periodic - which would inflate expert cache
+hits and flatter the very timing the run is meant to measure.
+
+The routing sweep already captured ten prompts with 64 generated tokens each:
+real ids the model itself produced, varied, and free of that bias. Seeds plus
+generations give well over 1000 distinct-in-sequence tokens.
+
+Writes a request with exactly `want` input tokens and the requested output
+budget. Reports the repeat rate so the periodicity concern is visible rather
+than assumed away.
+
+usage: build-long-prompt.py OUT.json [input-tokens] [output-tokens]
+"""
+import collections
+import glob
+import json
+import os
+import sys
+
+
+def main():
+    out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/req1000.json"
+    want = int(sys.argv[2]) if len(sys.argv) > 2 else 1000
+    newtok = int(sys.argv[3]) if len(sys.argv) > 3 else 1000
+
+    ids = []
+    files = sorted(glob.glob("/tmp/sweep/route-*.jsonl"))
+    for path in files:
+        seeded, seq = None, {}
+        for line in open(path):
+            if line.startswith("RUN "):
+                seeded = json.loads(line[4:]).get("seeded")
+            elif line.startswith("TOKEN "):
+                try:
+                    r = json.loads(line[6:])
+                    # the observer writes {"position":N,"emitted":ID}
+                    seq[r["position"]] = r["emitted"]
+                except Exception:
+                    pass
+        for p in sorted(seq):
+            ids.append(seq[p])
+    print("%d tokens recovered from %d sweep files" % (len(ids), len(files)))
+
+    # top up from prompts.tsv if the sweep did not carry enough
+    if len(ids) < want and os.path.exists("/opt/clover-k3/prompts.tsv"):
+        for line in open("/opt/clover-k3/prompts.tsv"):
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) >= 3:
+                ids.extend(int(x) for x in parts[2].split(",") if x.strip())
+        print("topped up to %d with prompts.tsv" % len(ids))
+
+    if len(ids) < want:
+        reps = -(-want // max(1, len(ids)))
+        print("WARNING: only %d unique-sequence tokens, repeating %dx to reach %d"
+              % (len(ids), reps, want))
+        ids = (ids * reps)
+    ids = ids[:want]
+
+    counts = collections.Counter(ids)
+    distinct = len(counts)
+    print("input: %d tokens, %d distinct (%.1f%%), most common appears %dx"
+          % (len(ids), distinct, 100.0 * distinct / len(ids), counts.most_common(1)[0][1]))
+
+    # request_next scans for '\n' and discards a partial line at EOF, so a file
+    # written without a trailing newline is read as no request at all
+    with open(out, "w") as f:
+        json.dump({"input_ids": ids, "max_new_tokens": newtok}, f)
+        f.write("\n")
+    print("wrote %s (%d input, %d output, capacity needed %d)"
+          % (out, len(ids), newtok, len(ids) + newtok))
+
+
+if __name__ == "__main__":
+    main()

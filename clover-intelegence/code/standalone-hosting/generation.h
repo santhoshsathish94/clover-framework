@@ -7,7 +7,13 @@
 #include <string.h>
 #include "json.h"
 
-enum { GENERATION_CAPACITY = 256, GENERATION_VOCAB = 163840 };
+/* Bounds the request buffer, the K/V allocation, and the per-head score arrays,
+   which the attention kernel holds on the stack. Settable to measure context
+   beyond the shipped 256. */
+#ifndef GENERATION_CAPACITY
+#define GENERATION_CAPACITY 256
+#endif
+enum { GENERATION_VOCAB = 163840 };
 typedef struct {
     unsigned max_input_tokens, max_output_tokens, eos_token_id;
     unsigned head_cache_mib, memory_reserve_mib;

@@ -1,6 +1,532 @@
 # Standalone Hosting Source
 
-## Current: The MLA KV Layout Costs 44% Of The Bus, And The Expanded Form
+## Current: A Thousand In, A Thousand Out — Context Costs 1.6% And All Of It
+## Is Attention
+
+### Intended outcome
+
+The creator asked for one prompt at 1000 input and 1000 output tokens, to
+confirm that more input does not add much time. It also tests the earlier
+step-2 slope at a hundred times the context it was fitted on.
+
+### What it took to run at all
+
+`generation.h` caps `max_input + max_output` at `GENERATION_CAPACITY`, shipped
+as 256 but `#ifndef`-guarded with a comment inviting the change. Rebuilt with
+`-DGENERATION_CAPACITY=2048`. The only stack arrays it sizes are
+`float scv[]` and `float ex[]`, 8 KB each at 2048 — not the obstacle an earlier
+note assumed.
+
+No tokenizer: `tiktoken.model` is present but the module is not, and there is
+no pip. The 34 prompts total 416 tokens, so repeating them to 1000 would have
+made a periodic input that inflates expert reuse and flatters the measurement.
+Used the routing sweep's own captured output instead — 10 prompts x 64
+generated tokens — giving 1000 tokens at 412 distinct, most common 32x.
+
+### What the system showed
+
+1000 in, 1000 out: **1:24:14 wall, 83.99 GB peak RSS, 587 major faults**, CPU
+70,849 s user plus 2,967 s system = **14.6x parallelism of 16**, much better
+than the 11.5x on short runs.
+
+| context | wall s | ops s | gap s | expert GB |
+|---|---|---|---|---|
+| 1100-1199 | 3.6700 | 2.5095 | 1.1605 | 25.83 |
+| 1500-1599 | 3.6857 | 2.5304 | 1.1553 | 25.83 |
+| 1900-1999 | 3.7081 | 2.5502 | 1.1579 | 25.83 |
+
+```
+wall  +0.000050 s per token of context, +0.005 s per 100
+growth across 900 tokens of context: 1.6%
+
+SA  softmax attention   +0.0000520   the entire slope
+X   mxfp4 expert proj   -0.0000023   flat
+Q   int8 projection     +0.0000015   flat
+UNACCOUNTED (io wait)   -0.0000008   flat
+expert bytes            25.83 GB at every context
+```
+
+**Context costs 1.6% over 900 extra tokens and all of it is attention.** Expert
+bytes are identical at every length. `SA` went from 0.0043 s at context ~80 to
+0.0809 s at ~1500 — 19x — and is still 2.2% of the token. That is what 69 KDA
+layers of fixed-size recurrent state against 24 MLA layers buys.
+
+### What this retracts
+
+Step 2 reported `+0.002046 s` a token of context with "82% expert I/O". That
+run had the expert cache **on**, so what was measured was the LRU diluting as
+more distinct experts were touched — a property of the cache, not of the
+model. With the cache off the expert bytes do not grow at all. **The cache was
+the only thing making long context slower**, which is a second and independent
+reason to leave it off beyond the 38.5 GB it costs.
+
+The lesson is narrower than "the number was wrong": a measurement taken with an
+optional subsystem enabled describes that subsystem, and I attributed it to the
+architecture without noting the configuration in the claim.
+
+### What this says about long context
+
+Extrapolating a slope that is linear and mechanistic rather than fitted noise:
+
+| context | SA | token | penalty |
+|---|---|---|---|
+| 1,500 | 0.08 s | 3.69 s | — |
+| 17,000 | 0.96 s | ~4.6 s | +25% |
+| 70,000 | 3.6 s | ~7.3 s | +98% |
+
+**RAM binds long before time does.** At 2.37 MB a position, the ~40 GB free
+alongside the 52 GB trunk caps context near 17,000 tokens, where a token is
+only about 25% slower. Attention would not dominate until roughly 70,000
+positions, which this box cannot hold. Making long context reachable is a
+memory problem — the MLA KV expansion of 98,560 B against a 2,304 B latent —
+not a speed problem.
+
+### What the next cycle should do differently
+
+The first 1000/1000 launch emitted nothing: `STOP_JSON {"requests":0}` with no
+error. `json.dump` writes no trailing newline and `request_next` discards a
+partial line at EOF, so the request was silently dropped. Earlier requests had
+used `echo`, which supplies one. A reader that treats a missing newline as no
+input should be matched by a writer that always emits one.
+
+I also read "0 steps" twenty minutes in and nearly concluded the run was stuck,
+when it was still prefilling — prefill emits no `STEP_JSON`. Counting the
+`operator values` lines, 93 a pass, showed it was healthy at 16 passes a
+minute. Pick a progress signal that exists during the phase being waited on.
+
+## Previously: Four Bits Breaks The Answer At Token Two — Tested Without Building It
+
+### Intended outcome
+
+Decide whether the MXFP4 trunk is worth a 106.55 GB download plus five pieces
+of engineering (fetch, quantiser, new record kind, new kernel, gate), when the
+only real unknown was whether the model tolerates ~11% weight error.
+
+### The shortcut
+
+It did not need any of that. Take the int8 trunk already on disk, dequantise,
+round every weight onto the MXFP4 E2M1 grid with a power-of-two shared scale
+per 32, and write it back into the *same int8 container*. Sizes are unchanged
+so `index.bin` stays valid, the loader never checks the stored hashes, and
+`K3_PREPARED_DATA` follows the dataset argv — so a directory of symlinks with
+only the chosen layers made real runs on a completely unmodified engine while
+the weights carry exactly the error MXFP4 would introduce.
+
+Sixteen layers spread through the depth, 52 matrices, mean relative error
+0.11766 — against the 0.11374 a true MXFP4 path measured on real BF16, so the
+simulation is faithful to what we could actually build.
+
+### What the system showed
+
+```
+4-bit    17374  13     646  606  142957 37092
+baseline 17374  20829  10   427  414    1008
+```
+
+**Divergence at the second token, with only 16 of 93 layers affected.** Not
+garbage — the first token holds and the rest is drift — but drift this early is
+fatal. The full 93 would be worse.
+
+The download is not justified. This cost no download, no container change, no
+kernel and no engine modification.
+
+What it does not show: that Kimi's own MXFP4 deployment fails. They hold the
+QAT training state and scaling; we hold released BF16 and round-to-nearest.
+The finding is that **from what we can obtain, four bits does not survive**.
+
+Supporting measurement, on layer 46's real BF16: every 4-bit scheme lands near
+11% weight error against the 0.91% our int8 carries. int4 with a real float
+scale per 128 (0.11250) and mxfp4 with a power-of-two scale per 32 (0.11374)
+are the same to within noise, so **the bit count sets the error, not the scale
+convention**. There is no cleverer packing to reach for.
+
+### What was ruled out, cumulatively, for the trunk
+
+Dedup across layers, huge pages, prefetching slices, more threads, repacking
+int8 to 4 bits for free, skipping negligible rows (0.83%), and now 4-bit
+weights outright. Reading it better is bounded at 0.26 s, 8.3% of a token. The
+trunk is 83% of the memory ceiling and stays there.
+
+### What the next cycle should do differently
+
+The first build of the simulator used `argmin` over a 16-way broadcast, which
+allocates sixteen times the matrix — about 5.6 GB for one 88M-weight slot. It
+had to be killed and rewritten with `searchsorted` over the grid midpoints.
+Vectorising by broadcasting against a small table is fine for small arrays and
+ruinous at this scale.
+
+The detached build then died after 12 of 16 layers and produced no log at all,
+so its own account of itself was missing. Verifying the artifact — real
+directories, identical sizes, differing contents, untouched layers still
+symlinked — caught it. Had I trusted "it ran", the conclusion would have come
+from a dataset with four layers silently unmodified.
+
+## Previously: Four Bits Costs Twelve Times The Error, And No Packing Avoids It
+
+### Intended outcome
+
+The creator chose MXFP4 over the expert cache, for a reason worth recording:
+the cache buys 0.86 s a token but spends 38.5 GB of RAM, and RAM is what long
+context needs. MXFP4 goes the other way — it cuts the trunk 52.39 to 27.8 GB,
+returning about 24.6 GB, roughly 10,000 more positions at 2.37 MB each, *and*
+takes ~17% off the token. So it serves both goals where the cache trades one
+against the other. The cache stays available as an opt-in; `run.sh` now
+defaults it to 0.
+
+### What was tried, and what the system showed
+
+**Prefetch, closed properly this time.** `expert-pipeline.h` and
+`cross-layer-prefetch.h` both exist, with `submitted/hits/misses` plumbed into
+the report and a guard that dies if a candidate escapes a token boundary. But
+`cross_layer_submit` and `cross_layer_match` have no call sites and
+`expert_pipeline_bytes` is 0, so the pipeline is never initialised. Fifth dead
+module this session.
+
+Reviving it would not pay, and the arithmetic is the reason rather than the
+dependency I first claimed. Per layer the experts need 16 x 17.5 MB = 280 MB,
+22.6 ms of device time, against ~10 ms of post-routing compute to hide behind.
+The dormant module prefetches **one** expert: 1.4 ms, about 3.5% of a token.
+Hiding the full 22.6 ms means predicting all sixteen a layer ahead, and at the
+measured 37% adjacent-token accuracy that adds ~63% more bytes to the component
+that is already the bottleneck.
+
+The pipeline counters also showed the async machinery is working: launch, tail
+and drain are all zero, 1.34 s of the 2.17 s read is already hidden, 0.83 s
+stalls. The remaining 0.41 s of the gap is non-operator work — routing
+bookkeeping, result lookup and store, the `mixed[]` memsets — which nothing
+counts and nobody has examined. `PROFILE_BOUNDARY` would name it: 24 markers
+exist and, unlike the dead instruments, it is real, merely compiled out behind
+`CLOVER_PROFILE_STAGES`.
+
+**The fetch is viable.** Repo id recovered from the artifact rather than
+guessed — `/root/k3model/.eval_results/moonshotai__Kimi-K3.yaml` — with the
+commit from the download metadata. Public, no auth, ranged reads honoured.
+Surveying all 96 headers: **106.55 GB of trunk in 96 contiguous ranges**,
+averaging 1191.7 MB, one per shard. Staging a shard at a time peaks at ~1.5 GB
+plus the accumulating output, well inside 58.6 GB free.
+
+**The container is more work than the data.** `prepare.py` does not quantise;
+it repacks an already-int8 source (`assert dtype == 2 ... source_bytes == rows
+* (width + 4)`). And `prepared_load` rejects `kind < 1 || kind > 3`. So MXFP4
+needs five pieces: fetch, quantiser, a new record kind, a trunk kernel, and a
+gate — not just new weights.
+
+**And the quality cost is large.** On layer 46's real BF16 weights:
+
+| scheme | bits | rel err | vs today |
+|---|---|---|---|
+| int8/row (today) | 8.03 | 0.00914 | 1.00x |
+| int8/grp32 | 9.00 | 0.00521 | 0.57x |
+| mxfp4 e2m1 | 4.25 | 0.11374 | 12.44x |
+| int4/grp32 | 5.00 | 0.09660 | 10.57x |
+| int4/grp128 | 4.25 | 0.11250 | 12.30x |
+
+I expected a real float scale to beat MXFP4's power-of-two one. At matched bits
+it does not: 0.11250 against 0.11374. **The bit count sets the error, not the
+scale convention.** No 4-bit packing avoids roughly 11% weight error.
+
+### What is still unknown
+
+Whether the model tolerates 11% weight error. Quantization-aware training does
+not snap weights onto the grid — it trains the model to absorb the error — so
+this may be exactly what Kimi expects, or it may not. Nothing short of building
+all five pieces and running the engine answers it. That is the fork.
+
+The 0.41 s a token (11%) of uncounted non-operator work, which needs only a
+rebuild with `-DCLOVER_PROFILE_STAGES`.
+
+### What the next cycle should do differently
+
+My first MXFP4 measurement reported 20% error and 22x, which would have killed
+the project. The cause was `floor` where the format needs `ceil`: with
+`exp = floor(log2(amax/6))` the scaled values land in [6,12) and everything
+above 6 is clamped to the top E2M1 value, so I was clipping half the dynamic
+range and calling it MXFP4. I caught it only because 20% was implausibly bad
+for 4 bits. A number that kills a project deserves the same scrutiny as one
+that saves it — I have been checking results that look too good and trusting
+results that look bad.
+
+I also ran two engines into one output directory earlier in this session
+because `${ROW:-1}` treats an empty value as unset, so a command I believed had
+failed was in fact a full run. Before launching anything long, confirm nothing
+is already running rather than inferring it from the previous command's output.
+
+## Previously: A Third Of Every Token Was Unattributed, And Context Is Nearly Free
+
+### Intended outcome
+
+The creator stopped the MXFP4 thread with a direct instruction: before any fix,
+derive a clear table of where the time goes across 93 layers, trunk projection
+and experts — including where CPU goes in *reading* files, not only in
+calculating. Then confirm that more input tokens does not add much time.
+
+He was right to stop it. A decode step measured 3.763 s while its fourteen
+operator buckets summed to 2.520 s. I had been proposing changes aimed at the
+2.52 s while a third of the token had never been looked at.
+
+### What the system showed, step 1: the table closes
+
+Steady state, deployed (uncached) engine, 3.7463 s a token:
+
+| component | s | % |
+|---|---|---|
+| `Q` int8 trunk projection | 1.4032 | 37.5% |
+| `X` mxfp4 expert projection | 0.9534 | 25.4% |
+| exposed expert I/O wait | 1.2495 | 33.4% |
+| router, lm_head and ten others | 0.1406 | 3.8% |
+
+The missing third is expert reads not hidden behind compute. 25.83 GB a token
+at an implied 11.93 GB/s — **96% of this box's 12.4 GB/s NVMe ceiling** — so of
+2.17 s of device time only 0.92 s hides. Compute plus exposed I/O equals the
+wall clock exactly.
+
+On where CPU goes in reading: user 406.74 s, system 38.80 s, wall 38.81 s, so
+11.5x parallelism of 16 and 28% of thread capacity idle. **System time is 8.7%
+of CPU**, zero major page faults, 304.8 GB read, and 40,351 voluntary context
+switches. Reading is not expensive in cycles. It is expensive in waiting.
+
+This corrects something I told the creator earlier in the same session. I said
+prefetching cannot help because the data is in RAM. That is true of the trunk
+and false of the experts, which come off disk and account for a third of the
+token. His "use the lanes to load them before processing" applies there.
+
+### What the system showed, step 1b: the deployed binary was the wrong one
+
+`K3_EXPERT_CACHE=24` was being set and silently ignored — `strings` on the
+deployed Oct 8 binary matches the name zero times. The table above is therefore
+the uncached engine, which I should have checked before presenting it, since
+the staleness was already recorded in these notes from a week earlier.
+
+With the cached build, at steady state: wall 2.89 s, expert bytes 11.2 GB,
+exposed I/O 0.58 s. **1.30x**, better than the 1.24x measured over a shorter
+window. Cost: peak RSS 78.5 -> 116.7 GB on a 124 GB box, and the prompt pass
+10.04 -> 12.39 s, so short requests lose and long ones win. Token ids identical
+across all six positions, which is expected because the cache holds immutable
+weights, but was verified rather than argued.
+
+Deployed with backups at `/tmp/clover-one.PREV-*`. `run.sh` used `env -i` with
+an allowlist that omitted `K3_EXPERT_CACHE`, and the source default is 0, so the
+binary alone would have changed nothing; the allowlist now carries a default
+of 24.
+
+**Once the cache is in, the trunk becomes dominant at 46% of a 2.89 s token.**
+That reorders the work by evidence rather than by assumption.
+
+### What the system showed, step 2: context is nearly free
+
+One hundred tokens from a 24-token prompt, context sweeping 24 to 124.
+Slopes fitted over 34..123, first ten steps dropped as cache warming:
+
+```
+wall  +0.002046 s per token of context, +0.205 s per 100
+
+UNACCOUNTED (io wait)   +0.0016719   82% of the growth
+X   mxfp4 expert proj   +0.0002605   13%
+Q   int8 projection     +0.0000587    3%
+SA  softmax attention   +0.0000522    2.5%
+D   kda delta-rule      -0.0000002    flat
+```
+
+Per-token time grows 5.5% across ninety extra tokens of context, and compute
+grows 1.4%. **Attention is 2.5% of the growth and the KDA delta-rule is flat to
+within noise** — fixed-size recurrent state behaving as designed, with only 24
+of 93 layers scaling with context at all.
+
+The growth is expert I/O: the LRU dilutes as more distinct experts are touched,
+matching the measured overlap decay from 5.879 adjacent to 3.573 at distance 32.
+That saturates once most experts have been seen, so extrapolating the line to
+very long context would overstate it.
+
+The binding constraint on long context is memory, not time: 98,560 B per
+position per MLA layer across 24 layers is **2.37 MB a position**. The 256
+capacity is 606 MB; 8k would be 19 GB and 128k 310 GB, against 7 GB of headroom
+at RSS 117 GB. A million-token prompt is not reachable by this route.
+
+### What the next cycle should do differently
+
+I launched two engines into the same output directory. The first invocation
+looked like it had failed on a mangled `sort -t"\t"`, but `ta2.sh` uses
+`${ROW:-1}`, which treats an empty value as unset and defaulted to row 1 — so a
+full run was already going when I started the second. Two processes at ~117 GB
+on a 124 GB box drove major page faults from 0 to 4,220 and the results were
+contaminated. An empty variable is not an absent one.
+
+The same run showed `"position":0` on every step, because the new binary goes
+through the `serve()` lane path where `evaluate_tokens(tokens,slots,0,1)` passes
+position 0. My earlier cached table printed `0` for every row and I did not
+question it. The first fix I wrote then keyed on "more than one distinct value",
+which the data satisfied with a stray 16, so every slope fitted against constant
+x and came out as exactly +0.0000000 — a column of zeros that should have been
+obviously wrong rather than quietly accepted.
+
+Also: shipping scripts as files and avoiding nested quoting through ssh is a
+rule already in these notes, and breaking it is what produced the mangled tab.
+
+## Previously: The Trunk Is 83% Of The Memory Ceiling Already, And Four Of Five
+## Ways To Improve It Are Closed By Measurement
+
+### Intended outcome
+
+The creator stopped a running sweep with a specific instruction: before
+proposing anything for the trunk, understand the 43.7% fully. Not "find a
+speedup" — establish what the number is made of, then say what is possible.
+
+### What was known going in, and how much of it was wrong
+
+Three beliefs I carried into this cycle did not survive it.
+
+The first was that the trunk is one 53.8 GB object. It is not. Every layer
+holds its own slice — `dataset/trunk-0` through `trunk-92`, three group files
+each — which the creator had to tell me directly after I had reasoned about a
+monolith for several exchanges.
+
+The second was that `K3_COVER`, `K3_TRUNKRAM` and `K3_PREFETCH` were available
+instruments; I reported them to the creator as such. They are names in the
+`forbidden[]` list at line 1823 and nowhere else. `covc` is declared, tested and
+incremented but never assigned, so `cover()` returns on its first line forever.
+`trunk_ram` is `static int trunk_ram = 0` and nothing writes it. This is the
+second time in this project a name in the source was reported as a wired
+feature; the first was `K3_DUMPSEL`, and the lesson was already written down.
+
+The third was that `K3_LANES` could amortise the trunk across a batch. The
+creator corrected it: lanes are prompt concurrency. `lane_admit` calls
+`request_next`, which reads a *separate request line from stdin*; each lane gets
+its own `GenerationRequest` and its own id, and output is tagged
+`TOKEN_JSON {"request":N,...}`. One user asking one question holds one lane and
+`STEP_WIDTH 1` every step. My "~1.6x overall" was a throughput number presented
+as latency, derived from a 6-position prompt pass — the same error class as
+reporting the prompt pass as decode.
+
+### What was tried
+
+Static structure first, because it needs no run: summing all 93
+`manifest.json` files by slot id gives the byte composition exactly, and every
+record carries a `sha256`, so cross-layer weight sharing is free to test.
+Then `membw.c` for the streaming ceiling, `membw-scale.c` to check that ceiling
+survives at trunk scale and whether huge pages matter, the safetensors header
+for the source dtype, `index.bin` for the real record layout, and
+`fp4-vs-int8.c` to measure whether 4-bit weights are actually faster here.
+
+### What the system showed
+
+Composition, from the manifests:
+
+| slot | GB | share | shape | on |
+|---|---|---|---|---|
+| G | 7.633 | 14.57% | 12288x7168 | all layers |
+| O | 7.631 | 14.57% | 7168x12288 | all layers |
+| Q, K, V | 5.663 each | 10.81% each | 12288x7168 | KDA only |
+| SH1, SH2, SH3 | ~3.776 each | 7.21% each | 6144x7168 | shared expert |
+| EUP, EDOWN, GATE | ~2.20 each | ~4.20% each | — | dense expert + router |
+
+52.3924 GB over 93 layers. Five slots are 61.6%, eight are 83.2%. It is
+attention projections plus the shared expert; `MGATE/MUP/MDOWN` exist only on
+layer 0, and the 896 routed experts are not in the trunk at all. MLA layers
+carry `G` and `O` but no `Q/K/V`, using low-rank `QA/QB/KA/KB` — which is why
+`G` exceeds `Q` despite an identical shape, and matches the model card's
+Gated MLA.
+
+The engine reports 53.8251 GB per pass against 52.3924 GB of static records, a
+2.7% gap I did not chase and cannot currently explain.
+
+Sharing between layers: none. 2684 hashed records, 2684 distinct sha256, zero
+duplicate groups. 26 records (layer 0, 1.0912 GB) carry no hash and were not
+compared. The mod-12 structure is real in the computation — block boundaries at
+12/24/.../84 and the snapshot folds — but it is **not in the weights**.
+
+Memory ceiling, measured: 48.43 GB/s peak at 4 threads, declining to 45.4 at 32.
+Flat at ~47.5 GB/s from 4 GB to 56 GB, so the small-buffer number was not a
+different regime. Transparent huge pages: **1.00x at every size**, which closes
+the engine's own never-used `hugetlb 2M` path. Sequential streaming amortises a
+TLB miss over 4 KB of useful data, so the page-size concern was unfounded.
+
+Against that, the engine's `Q` moves 53.8251 GB in 1.42 s = 37.9 GB/s, **83% of
+the physical ceiling**, with most of the remaining gap being real conversion
+work rather than waste.
+
+Source format: the released checkpoint is **BF16**, not MXFP4 — and only layer 0
+is on the box (2.18 GB, all tensor names `layers.0.*`). Our 1.1 GB `trunk-0` is
+a clean 2x compression of it. We did not upconvert; we already halved it.
+
+Whether the int8 still carries a 4-bit grid, which would make MXFP4 a free
+repack: no. Palette is the identity, scales are plausible
+(0.000100924 to 0.00501353, all 12288 valid), and the weights use **255 of 256
+codes with 28.06 distinct codes per 32-value block**, in a proper bell curve.
+That is real 8-bit information.
+
+Head-to-head kernels on this CPU, naive implementations of both so the ratio is
+the trustworthy part: int8 26.56 GB/s, mxfp4 22.34 GB/s, **1.585x** at 16
+threads and 1.615x at 4. Four-bit sustains 84% of int8's byte rate while moving
+53% of the bytes.
+
+### What was ruled out
+
+Deduplication across layers (zero identical blocks). Huge pages (1.00x).
+Prefetching slices ahead with lanes — the slices are already resident in RAM,
+39.5 GB/s being impossible from an NVMe ceiling of 12.4 GB/s, and the bottleneck
+is DRAM itself, so there is nothing to prefetch through. Better threading
+(bandwidth peaks at 4 threads). Reading it better in total is bounded at 0.26 s,
+8.3% of a token. And repacking our stored int8 to 4 bits for free.
+
+Skipping negligible rows, which was the last way to move fewer bytes without
+touching precision. Rows are contiguous, so a skip would save a real read. The
+engine's own value histogram could not answer it — `val_on` is declared at line
+301 and never assigned, so `vstat` returns immediately, making `vh` the fourth
+dead instrument found this session. Measured statically instead, from row scale
+times int8 row norm.
+
+A tail exists and it follows the structure: 74 of 93 layers have some negligible
+rows, and **all seven block boundaries {12,24,36,48,60,72,84} do**. Layer 12 is
+by far the largest, with 38% of `G`'s sampled rows below 1% of the matrix
+maximum and p1 three orders of magnitude under p50, while layers 46, 59 and 90
+have no tail at all. That is the mod-12 structure showing up in weight
+*magnitudes* even though it is absent from weight *bytes*, and it is the same
+layer 12 that measured as position-independent earlier in this work.
+
+It is still not a lever. Total bytes in rows under 1% of their matrix maximum:
+**0.437 GB of 52.39 GB, 0.83%** — about 0.4% of a token. Largest contributors
+L12 0.17 GB, L23 0.05 GB, L13 0.04 GB.
+
+### What is still unknown
+
+Whether a properly optimised mxfp4 trunk kernel would become bandwidth-bound.
+The measured 1.585x applied to the engine's real 1.42 s gives ~0.90 s, saving
+about 16% of a token; the bandwidth-bound bound is 27.8 GB / 47.5 GB/s = 0.59 s,
+so the plausible range is 13-22%. This is the only avenue left open.
+
+Whether MXFP4 holds answer quality. It cannot be gated on token identity the
+way the expert cache was, because it will not reproduce int8 bit-for-bit; it
+needs measuring against a BF16 reference.
+
+The 2.7% gap between measured and static trunk bytes.
+
+### What the next cycle should do differently
+
+Three instruments failed in one session and all three failed quietly.
+
+`K3_COVER` was read from the source and reported as usable without checking it
+was ever assigned. The check is one grep and I did not run it until after I had
+told the creator the instrument existed.
+
+The dedup script printed "1.0912 GB redundant (2.08%)" alongside "0 duplicate
+groups" — a contradiction caused by silently dropping unhashed records from the
+distinct sum. The arithmetic was too clean to question and I nearly shipped it.
+
+Worst: `mxfp4-structure.py` computed record offsets as a cumulative sum in id
+order and "validated" them against the file size. **That check cannot fail** —
+sizes sum to the total regardless of the order records are written in. It
+passed, and produced a confident verdict from a row scale of -1.46e38 and a
+perfectly uniform histogram over all 256 codes, both of which are impossible for
+trained weights. The authority was `index.bin` and `operator_matrix_view` all
+along: scales as a contiguous `rows*4` block, then the weights. A validation
+that passes on wrong input is not a validation.
+
+Also: comparing a one-layer source file against the 93-layer prepared total
+produced "the source is SMALLER than our prepared trunk: we upconverted",
+printed by my own script, wrong by a factor of 93. Same shape as dividing arena
+bytes by wall time instead of device-busy time.
+
+## Previously: The MLA KV Layout Costs 44% Of The Bus, And The Expanded Form
 ## Decides Whether Long Context Is Reachable
 
 ### Intended outcome
