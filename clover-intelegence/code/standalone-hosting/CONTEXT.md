@@ -1,6 +1,97 @@
 # Standalone Hosting Source
 
-## Current: Where The 1.38 s Of Q Goes, Call By Call — And Why The Five Big
+## Current: Every Cache Was Starved By A Double-Counted Payload, And An Exact
+## Repeat Is 3.27x Once They Are Not
+
+### Intended outcome
+
+A 1000-token run reported `result_hits 0, result_misses 2,942,528`. The creator
+asked whether a repeated token, or any repeated vector, would let the expert
+result cache help. Before that can be answered the cache has to exist, and it
+did not: `result_cache_bytes 0` against a config asking for 256 MiB.
+
+### What the system showed
+
+`cache_budget` computes `reserved = fixed_bytes + memory_reserve_mib + 2 GiB`
+and `usable = available > reserved ? available - reserved : 0`. `fixed_bytes` is
+`resident_payload_bytes`, 75.89 GB. But `available` was read from
+`/proc/meminfo` inside `resident_caches_open()`, which runs after all 93 layers
+are loaded. Under `K3_PAYLOAD_RAM=1` the payload is anonymous memory, so
+`MemAvailable` has already dropped by those bytes and the formula subtracts them
+a second time. `usable` is then zero no matter what the config asks for. Lowering
+`memory_reserve_mib` to its 1024 minimum and raising the request to 4096 MiB
+still produced zero, which is what identified the double-count rather than a
+tight budget.
+
+This also makes the earlier mmap-era measurement consistent: those runs saw
+235,077,632 B allocated because a file-backed payload sits in page cache, which
+`MemAvailable` counts as available. The bug only bites in RAM-payload mode,
+which is the mode every benchmark in this cycle has used.
+
+Fix is three lines: a `memory_available()` helper, a
+`resident_available_start` sampled in `main()` immediately before
+`resident_startup()`, and `resident_caches_open()` using it. Regression after
+the change is unchanged, 17374 20829 10 427 414 1008.
+
+### What was measured
+
+Three arms, 12 output tokens, identical token streams in all three, so the
+caches are exact and not approximations.
+
+    arm                     pipeline   results      steady s/token
+    pre-fix behaviour         0 B        0 B            3.6641
+    pipeline awake           72 MiB      0 B            3.6734
+    pipeline + results       72 MiB    3.76 GB          3.6965
+
+`pipeline_reads 0, pipeline_bytes 0` in all three. The expert pipeline is not
+merely starved, it has no live call sites under `K3_EXPERT_DIRECT=1`; giving it
+memory changes nothing. The result cache costs 0.88 percent on a workload that
+never repeats.
+
+Then the case that does repeat. Same prompt, a different prompt, then the same
+prompt again, all in one process so the cache survives between them.
+
+    request            prefill    decode steps              wall      ratio
+    A first            10.142     3.661 3.715 3.693 ...    28.574      -
+    A repeat            1.600     1.428 1.434 1.432 ...     8.759     3.26x
+    B different         8.812     3.740 3.693 3.699 ...    27.329     1.05x
+    A again, after B    1.592     1.428 1.427 1.434 ...     8.737     3.27x
+
+    result_hits 30,912   misses 29,440   evictions 0
+
+Output is bit-identical on every repeat and B correctly computes its own
+70135 11 1155 5123 658 276. Decode falls from 3.68 s to 1.43 s, which prefix
+caching cannot do since that only skips prefill. The cache survives an
+intervening different request.
+
+### What was ruled out
+
+A repeated token inside one sequence does not help. With 131,072 entries and
+8.9 percent eviction, a prompt of token 17374 repeated 64 times, which generated
+a repetition loop, produced `result_hits 0, misses 113,344`. The key is the full
+3584-float input vector and the KDA recurrent state drifts at every position, so
+the same token never presents the same expert input. This agrees with the
+earlier dump comparison: the same token under a different prefix gave cos 0.759.
+
+An earlier conclusion in this cycle said exact-match result caching could never
+hit in this model. That was wrong, and wrong because the test could only show
+one half of the question: it repeated a token, never a request.
+
+### What is still unknown
+
+Whether exact repeats are worth serving this way at all. A byte-identical
+request returns byte-identical output, so a response cache answers it for
+almost nothing, while this cache taxes every novel request 0.88 percent and
+holds gigabytes. The gain is real and measured; its usefulness depends on a
+request mix that has not been characterised.
+
+### What the next cycle should do differently
+
+Before declaring a mechanism dead, enumerate the cases it is supposed to serve
+and check that the test exercises one of them. Zero hits from a test that
+structurally cannot produce a hit is not evidence about the mechanism.
+
+## Previously: Where The 1.38 s Of Q Goes, Call By Call — And Why The Five Big
 ## Matrices Cannot Be Folded Or Factored
 
 ### Intended outcome

@@ -2086,7 +2086,7 @@ static void resident_expert_rows(unsigned layer,unsigned expert,
     op_add(OP_X,started,0);
 }
 
-static void resident_caches_open(void)
+static uint64_t memory_available(void)
 {
     FILE *file=fopen("/proc/meminfo","r");
     uint64_t available=0;
@@ -2096,7 +2096,16 @@ static void resident_caches_open(void)
             if (sscanf(line,"MemAvailable: %llu kB",&kib)==1) { available=(uint64_t)kib*1024; break; }
         fclose(file);
     }
-    resident_cache_budget=cache_budget(&resident_config,available,resident_payload_bytes);
+    return available;
+}
+
+/* Sampled before the payload loads: cache_budget already subtracts the payload as fixed_bytes,
+   so reading MemAvailable afterwards charges those bytes twice and leaves every cache at zero. */
+static uint64_t resident_available_start;
+
+static void resident_caches_open(void)
+{
+    resident_cache_budget=cache_budget(&resident_config,resident_available_start,resident_payload_bytes);
     if (!head_cache_open(&resident_head,resident_output,resident_cache_budget.head)) die("head cache initialization failed");
     if (!expert_pipeline_open(&resident_pipeline,resident_cache_budget.pipeline)) die("expert pipeline initialization failed");
     memset(&resident_cross_layer,0,sizeof resident_cross_layer);
@@ -3280,6 +3289,7 @@ int main(int argc, char **argv)
     const char *setting = getenv("K3_RESIDENT_WARMUP");
     if (setting && strcmp(setting, "0") && strcmp(setting, "1")) die("K3_RESIDENT_WARMUP must be 0 or 1");
     int warmup = !inspect && setting && !strcmp(setting, "1");
+    resident_available_start = memory_available();
     resident_startup(warmup);
     printf("READY_JSON {\"startup_seconds\":%.9f,\"mapping_and_tap_seconds\":%.9f,"
         "\"page_warmup_seconds\":%.9f,\"payload_bytes\":%zu,\"fixed_mappings\":%u,"
