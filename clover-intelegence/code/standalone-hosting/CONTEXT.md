@@ -1,6 +1,109 @@
 # Standalone Hosting Source
 
-## Current: A Thousand In, A Thousand Out — Context Costs 1.6% And All Of It
+## Current: Where The 1.38 s Of Q Goes, Call By Call — And Why The Five Big
+## Matrices Cannot Be Folded Or Factored
+
+### Intended outcome
+
+The creator asked for the opposite of a summary: if Q projection takes time,
+what is that projection, where does it happen, between what vectors. Then
+followed with a specific proposal — if G maps 7168 to 12288 and O maps back,
+precompute the pair.
+
+### Every Q call, enumerated
+
+`Qm(Y, Xs, T, W, in, out)`, from the layer body. Enumerating all call sites and
+their byte cost gives 53.381 GB in 1151 calls against the 53.8251 GB in 1159
+that OPSTAT reports — 0.82% apart, the remainder being layer 0's attention and
+the lm_head. So the table reconciles rather than merely looking plausible.
+
+| group | GB | share | seconds |
+|---|---|---|---|
+| KDA attention (Q,K,V,G,O) | 29.963 | 56.1% | 0.775 |
+| MoE shared expert | 12.162 | 22.8% | 0.315 |
+| MoE latent | 4.731 | 8.9% | 0.122 |
+| MLA attention (G,O) | 4.230 | 7.9% | 0.109 |
+| MLA low-rank (QA,QB,KA,KB) | 1.349 | 2.5% | 0.035 |
+| layer 0 dense | 0.727 | 1.4% | 0.019 |
+| KDA small (B,FA,FB) | 0.220 | 0.4% | 0.006 |
+
+Over half the trunk is five matrices repeated on each of 68 KDA layers, each
+88.13 MB. `x1p` is the layer input after pre-attention RMS norm, 7168 floats.
+Q, K, V and G each expand it to 12288 = 96 heads x 128; O contracts back to
+7168. Per output row: a float32 scale then 7168 int8 weights, 7172 bytes, one
+dot product. At decode each call reads 88.13 MB to produce 49 KB — a 1800:1
+read amplification. A KDA layer streams 443.9 MB, an MLA layer 232.5 MB.
+
+Two things that had not been visible before: the gate `G` costs exactly as much
+as `V`, 5.993 GB and 0.155 s a token; and the shared expert is 22.8% / 0.315 s,
+three 44 MB matrices computed on all 92 layers for every token, never routed
+and never skipped.
+
+### Why G and O cannot be folded
+
+They are not composed. The code between them:
+
+```c
+rmsnorm_blocks(on, o, won, H, D);
+for (int i = 0; i < P; i++) gtf[t][i] = on[i] * sigf(gtm[t][i]);
+Qm(aoutp + TLO, gtf + TLO, NACT, WO, P, E);
+```
+
+`O` receives `on * sigmoid(gtm)`, where `on` is the normalised KDA delta-rule
+output built from the recurrent state `St[h][i][j]` accumulated over the whole
+sequence. A sigmoid and the entire history sit between them.
+
+The general principle holds though, and would pay: 7168->12288->7168 collapsed
+to one 7168x7168 matrix is 51 MB against 176 MB for the pair, 124.8 MB a layer,
+8.5 GB, 16% of the trunk. The `sigf()` is what costs that.
+
+On whether the 7168 vector comes from a lookup table: only once. `resid` starts
+as an embedding row, one of 163,840, but every layer then does
+`resid[t][i] += aout[t][i]`, so from layer 1 it is a continuous function of all
+prior layers and all prior tokens through attention. Precomputation per table
+entry could only ever apply to layer 0, which is 0.5% of the trunk.
+
+### Why they cannot be factored either
+
+Randomised SVD on layer 46, normalised by true Frobenius energy:
+
+| slot | top-1024 energy | r@95% |
+|---|---|---|
+| G | 24.4% | >1024 |
+| O | 23.4% | >1024 |
+| Q | 35.5% | >1024 |
+| K | 37.3% | >1024 |
+| V | 32.6% | >1024 |
+
+The top 1024 of 7168 directions hold 23-37%, against 14.3% for a perfectly flat
+spectrum — mild concentration, nowhere near low rank. Break-even is rank 4527,
+where these would still discard 20-40% of their energy. Four-bit discarded 11%
+and broke the answer at token two, so factorisation is strictly worse.
+
+**The model already factors wherever the function allows it**: FA through a
+128-dim bottleneck (2.54 MB against 88 MB), QA at 1536, KA at 576. Five dense
+matrices were left dense, and the spectrum says why. G and O — the pair
+proposed for folding — are the least compressible of the five.
+
+### What the next cycle should do differently
+
+The first spectrum run reported r@95% near 947 and an implied 4.8x compression.
+It normalised cumulative energy by `sum(s**2)` over the 1024 *sampled* singular
+values, so the fractions summed to 1 over the sample by construction and any
+matrix would look low-rank. Every value landing just under k=1024 was the tell.
+The true denominator is the matrix's Frobenius norm, which costs one `sum(w**2)`.
+
+That is the third instrument this session whose normalisation or validation
+could not fail: the dedup script's redundancy line, the layout check that
+summed sizes regardless of order, and now this. The common shape is a
+denominator or a comparison chosen from the sample rather than from the thing
+being measured.
+
+I also stated the expected outcome before the evidence returned. It matched,
+which is luck rather than method, and a prediction announced in advance makes
+it harder to read an unexpected result honestly.
+
+## Previously: A Thousand In, A Thousand Out — Context Costs 1.6% And All Of It
 ## Is Attention
 
 ### Intended outcome
