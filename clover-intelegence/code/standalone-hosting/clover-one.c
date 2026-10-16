@@ -115,6 +115,7 @@ static FILE *dumplay;           /* K3_DUMPLAY: each layer input, for the prefix 
 static int TLO;
 static int pfx_n;               /* how many positions the cache covers */
 static int pfx_mode;            /* 0 off, 1 save, 2 load */
+static int pfx_used;            /* a loaded prefix serves one prefill, then retires */
 static FILE *pfx_f;
 /* K3_PFXOUT: write a cache covering every position this run computed, which
    may include ones it loaded. Saving and loading are otherwise exclusive, so
@@ -1819,12 +1820,38 @@ static int stored_expert_down(unsigned layer, unsigned expert, const float *inpu
 static void result_options(void)
 {
     const char *forbidden[] = {"K3_STAGE", "K3_LSTAT", "K3_DUMPROUTE", "K3_DUMPSEL", "K3_PROV",
-        "K3_DUMPLAY", "K3_PFXSAVE", "K3_PFXLOAD", "K3_PFXOUT", "K3_ROUTESAVE", "K3_ROUTELOAD",
+        "K3_DUMPLAY", "K3_ROUTESAVE", "K3_ROUTELOAD",
         "K3_ARENA2", "K3_LOGITS", "K3_DUMPRES", "K3_COVER", "K3_TRUNKRAM", "K3_NX", "K3_PREFETCH"};
     for (unsigned setting = 0; setting < sizeof(forbidden) / sizeof(forbidden[0]); setting++)
         if (getenv(forbidden[setting])) result_miss("unsupported persistence or raw-reader option");
     if (NPOS < 1) result_miss("at least one active token per step");
     pf_on = 0;
+}
+
+/* The layer body already skips positions below TLO and reads or writes the MLA
+   K/V and the KDA state around them; only the file and the boundary were
+   missing. K3_PFXN is how many leading positions the cache covers. */
+static void prefix_options(void)
+{
+    const char *count = getenv("K3_PFXN");
+    const char *save = getenv("K3_PFXSAVE"), *load = getenv("K3_PFXLOAD");
+    const char *out = getenv("K3_PFXOUT");
+    pfx_n = count ? (int)strtol(count, NULL, 10) : 0;
+    if (save && load) die("prefix cache save and load are exclusive");
+    if ((save || load) && pfx_n < 1) die("K3_PFXN must say how many positions the cache covers");
+    if (save) {
+        pfx_f = fopen(save, "wb");
+        if (!pfx_f) die("prefix cache could not be opened for writing");
+        pfx_mode = 1;
+    } else if (load) {
+        pfx_f = fopen(load, "rb");
+        if (!pfx_f) die("prefix cache could not be opened for reading");
+        pfx_mode = 2;
+    }
+    if (out) {
+        pfx_of = fopen(out, "wb");
+        if (!pfx_of) die("prefix cache output could not be opened");
+    }
 }
 
 static void recorded_contract(const int *tokens)
@@ -2277,7 +2304,15 @@ static void request_reset(void)
     if (resident_cross_layer.armed) die("cross-layer candidate escaped token boundary");
     nsnap = 0;
     have_prefix = 1;
-    TLO = 0;
+    /* A loaded prefix is consumed by the prefill it resumes. Every later decode
+       step starts a fresh evaluation with nothing cached, so the boundary and
+       the reader must be retired after their one use. */
+    if (pfx_mode == 2 && pfx_used) {
+        pfx_mode = 0;
+        if (pfx_f) { fclose(pfx_f); pfx_f = NULL; }
+    }
+    TLO = (pfx_mode == 2) ? pfx_n : 0;
+    if (pfx_mode == 2) pfx_used = 1;
     cur_L = -1;
     memset(snap, 0, sizeof(snap));
     memset(snap_pool, 0, sizeof(snap_pool));
@@ -2433,8 +2468,17 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                            sizeof(float) * VH);
                 }
             /* Attention at an active position reads every earlier position, so
-               the cached ones must be in place before the scores are formed. */
-                for (int t = TLO; t < NPOS; t++) {
+               the cached ones must be in place before the scores are formed.
+               That means reading the cache first, then filling the sequence from
+               0 rather than from TLO: a loaded position still owns a KV slot. */
+            if (pfx_mode == 2) {
+                for (int t = 0; t < pfx_n; t++) {
+                    if (fread(mla_klat[t], 4, (size_t)H * QN, pfx_f) != (size_t)H * QN ||
+                        fread(mla_v[t],    4, (size_t)H * VH, pfx_f) != (size_t)H * VH ||
+                        fread(mla_rp[t],   4, QR, pfx_f) != QR) die("prefix cache short read");
+                }
+            }
+                for (int t = 0; t < NPOS; t++) {
                     ResidentSequence *sequence = SEQ(t,L);
                     size_t slot = pos_abs[t];
                     for (int h = 0; h < H; h++) {
@@ -2450,12 +2494,6 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                     fwrite(mla_klat[t], 4, (size_t)H * QN, pfx_f);
                     fwrite(mla_v[t],    4, (size_t)H * VH, pfx_f);
                     fwrite(mla_rp[t],   4, QR, pfx_f);
-                }
-            } else if (pfx_mode == 2) {
-                for (int t = 0; t < pfx_n; t++) {
-                    if (fread(mla_klat[t], 4, (size_t)H * QN, pfx_f) != (size_t)H * QN ||
-                        fread(mla_v[t],    4, (size_t)H * VH, pfx_f) != (size_t)H * VH ||
-                        fread(mla_rp[t],   4, QR, pfx_f) != QR) die("prefix cache short read");
                 }
             }
             /* loaded positions and freshly computed ones are both in place here */
@@ -2766,18 +2804,22 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
             float *latent_rows[NPOS_SLOTS], *mixed_rows[NPOS_SLOTS], *routed_rows[NPOS_SLOTS];
             float *gate_rows[NPOS_SLOTS], *up_rows[NPOS_SLOTS], *shared_rows[NPOS_SLOTS];
             const float *input_rows[NPOS_SLOTS];
-            for (int position = 0; position < NPOS; position++) {
+            /* Cached positions are skipped here too. Their contribution already
+               reached this layer through the loaded KV and recurrent state, and
+               their own MoE output feeds nothing: only the last position emits. */
+            const int nact = NPOS - TLO;
+            for (int position = TLO; position < NPOS; position++) {
                 latent_rows[position] = latent[position]; mixed_rows[position] = mixed[position];
                 routed_rows[position] = routed[position]; input_rows[position] = x2b[position];
                 gate_rows[position] = shared_gate[position]; up_rows[position] = shared_up[position];
                 shared_rows[position] = shared_down[position];
             }
-            Qm(latent_rows, input_rows, NPOS, WDN, E, LAT);
+            Qm(latent_rows + TLO, input_rows + TLO, nact, WDN, E, LAT);
             PROFILE_BOUNDARY(L,"prefetch-submit-and-latent-projection");
             {
                 /* Group by expert so one weight pass serves every position that picked it. */
                 unsigned groups=0;
-                for (int position=0;position<NPOS;position++) {
+                for (int position=TLO;position<NPOS;position++) {
                     expert_hash[position]=resident_results.sets?expert_results_hash(latent[position]):0;
                     for (unsigned rank=0;rank<TOPK;rank++) {
                         unsigned expert=(unsigned)idsel_all[position][rank];
@@ -2801,7 +2843,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                 /* Expert n's maths needs only expert n's bytes, so the reads run on
                    dedicated threads and each group waits for just its own slot. */
                 root_pull_begin(resident_roots[L],group_expert,groups);
-                resident_shared_rows(gate_rows,up_rows,shared_rows,input_rows,NPOS,S1,S3,S2);
+                resident_shared_rows(gate_rows+TLO,up_rows+TLO,shared_rows+TLO,input_rows+TLO,nact,S1,S3,S2);
                 PROFILE_BOUNDARY(L,"shared-expert-during-read");
                 for (unsigned group=0;group<groups;group++) {
                     const float *ins[ROOT_MAX_ROWS]; float *outs[ROOT_MAX_ROWS];
@@ -2818,7 +2860,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                     }
                 }
                 root_pull_end();
-                for (int position=0;position<NPOS;position++) {
+                for (int position=TLO;position<NPOS;position++) {
                     memset(mixed[position], 0, sizeof(mixed[position]));
                     for (int rank=0;rank<TOPK;rank++) {
                         const float *down=expert_down[position][rank];
@@ -2835,12 +2877,12 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
                     rmsnorm(mixed[position], mixed[position], lnw, LAT, EPS5);
                 }
             }
-            Qm(routed_rows, (const float *const *)mixed_rows, NPOS, WUP, LAT, E);
+            Qm(routed_rows + TLO, (const float *const *)mixed_rows + TLO, nact, WUP, LAT, E);
             PROFILE_BOUNDARY(L,"experts-mix-normalize-up");
 #ifdef CLOVER_DEFER_SHARED
-            resident_shared_rows(gate_rows,up_rows,shared_rows,input_rows,NPOS,S1,S3,S2);
+            resident_shared_rows(gate_rows+TLO,up_rows+TLO,shared_rows+TLO,input_rows+TLO,nact,S1,S3,S2);
 #endif
-            for (int position = 0; position < NPOS; position++)
+            for (int position = TLO; position < NPOS; position++)
                 for (int coordinate = 0; coordinate < E; coordinate++)
                     ffn[position][coordinate] = routed[position][coordinate] + shared_down[position][coordinate];
             free(gw); free(gbias); free(lnw);
@@ -2882,7 +2924,7 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     }
 
     if (operator_layers != 93 || operator_matrices_used != 303 || operator_vectors_used != 348 ||
-        prepared_trunk_count != 93 || resident_expert_calls + resident_result_hits * 3 != 92ULL * TOPK * 3 * (unsigned)NPOS || recorded_expert_hits)
+        prepared_trunk_count != 93 || resident_expert_calls + resident_result_hits * 3 != 92ULL * TOPK * 3 * (unsigned)(NPOS - TLO) || recorded_expert_hits)
         die("live token operator coverage differs");
     if (resident_maps != maps_before || resident_unmaps != unmaps_before || resident_tap_layers != taps_before)
         die("fixed parameters changed lifetime during token evaluation");
@@ -2978,8 +3020,9 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
     if (operator_layers != 93 || operator_matrices_used != 303 || operator_vectors_used != 348)
         die("all-layer operator field coverage differs");
     /* TOPK, not 16: this asserts the configured expert count was met exactly, so an
-       unintended skip is still caught at any k. Identical at the default TOPK=16. */
-    if (prepared_trunk_count != 93 || recorded_expert_hits || resident_expert_calls + resident_result_hits * 3 != 92ULL * TOPK * 3 * (unsigned)NPOS)
+       unintended skip is still caught at any k. Identical at the default TOPK=16.
+       Positions below TLO were loaded from a prefix cache and compute no experts. */
+    if (prepared_trunk_count != 93 || recorded_expert_hits || resident_expert_calls + resident_result_hits * 3 != 92ULL * TOPK * 3 * (unsigned)(NPOS - TLO))
         die("resident request expert or trunk coverage differs");
     if (resident_maps != maps_before || resident_unmaps != unmaps_before || resident_tap_layers != taps_before)
         die("fixed parameters changed lifetime during a request");
@@ -3226,6 +3269,7 @@ int main(int argc, char **argv)
     if (!resident_read_config()) die("invalid generation config: input+output budget must be at most256");
     double started = now_s();
     result_options();
+    prefix_options();
     const char *index = getenv("K3_INDEX");
     if (!index) die("K3_INDEX required");
     mallopt(M_MMAP_THRESHOLD, 256 * 1024 * 1024);
