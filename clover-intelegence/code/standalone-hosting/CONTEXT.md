@@ -1,6 +1,62 @@
 # Standalone Hosting Source
 
-## Current: Every Cache Was Starved By A Double-Counted Payload, And An Exact
+## Current: A Layer Is Not A Pure Function Of Its Input, And Its Input Never
+## Arrives Twice
+
+### Intended outcome
+
+The creator proposed caching one level up from experts: a layer takes a 7168
+vector, applies trunk and experts, and emits a 7168 vector, so store input to
+output and skip the layer. The same input would select the same experts, which
+is true. He asked for data rather than agreement.
+
+### What the system showed
+
+`K3_LSTAT` already records seven named vectors per layer per position, but
+`lstat_fp` has no `fopen` anywhere in the engine, so `if (lstat_fp)` was always
+false and the instrument was dead code. A throwaway build wired it and lifted
+the `forbidden[]` entry; the shipped source was not changed. It also closed
+itself after the first step, so decode was invisible until that was removed.
+
+Twelve output tokens on a five-token prompt, 93 layers, 1488 records per vector.
+
+    1_resid_in_aggregated   records 1488   distinct 1486   colliding keys 2
+    7_resid_out             records 1488   distinct 1488   colliding keys 0
+    5_x2_postnorm           records 1488   distinct 1488   colliding keys 0
+
+The two collisions are both at layer 0, the raw embedding lookup, which is
+context-free by construction. Layers 1 to 92 collide zero times. The comparison
+is on recorded statistics, which identity requires but does not follow from, so
+the screen can only over-count: the true repeat count is at most 2 of 1488.
+
+Residual rms climbs monotonically with position and never returns.
+
+    layer  0  0.0163 0.0202 0.0206 0.0215 0.0218 0.0226
+    layer 46  0.2168 0.2248 0.2366 0.2407 0.2429 0.2493
+    layer 92  0.4272 0.4401 0.4423 0.4445 0.4470 0.4711
+
+### What was ruled out
+
+Layer-keyed memoisation, on two independent grounds. The input never repeats,
+and the output is not a function of the input. 69 of 93 layers carry KDA
+recurrent state and all 69 produced 12 distinct states across 12 steps; the
+other 24 are MLA and depend on every previous K/V. Two identical inputs at
+different times correctly produce different outputs, so a cache keyed on the
+input vector would not merely miss, it would return a wrong vector on a hit.
+Keying it correctly needs the input plus 6.29 MB of state per layer, which
+costs more than recomputing.
+
+This is the same fact that forced the prefix cache to save 434 MB of KDA state
+rather than K/V alone. The idea is sound for a stateless feed-forward stack;
+recurrence in 69 layers is the specific property that defeats it.
+
+### What is still unknown
+
+Whether the layer-0 embedding collisions are worth anything. Layer 0 is 0.727
+of 53.8 GB per pass, so the ceiling is about 1.4 percent and almost certainly
+less than the lookup cost.
+
+## Previously: Every Cache Was Starved By A Double-Counted Payload, And An Exact
 ## Repeat Is 3.27x Once They Are Not
 
 ### Intended outcome
