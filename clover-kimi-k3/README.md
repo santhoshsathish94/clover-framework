@@ -14,6 +14,7 @@ The prompt is processed in batches, decode keeps recently used experts in RAM, a
 | Decode, exact, 16 cached experts per layer | 3.1 - 3.5 s per token |
 | Decode, `USE_4BIT_TRUNK=1` | 2.5 - 2.8 s per token (not bit-identical; 8 of 34 recorded prompts give the same 12 tokens as exact, the rest are fluent but differ) |
 | Speculative decoding | same tokens as plain decoding; 2.5x faster on a repeating prompt, 21% slower on ordinary code (10% of draft tokens kept) |
+| Prompt pass with 8-bit activations (experimental, not bit-identical) | experts only 222.0 s; experts and trunk 203.0 s; the 4-bit trunk is not used here (it makes the prompt pass slower). Quality of the trunk part not yet checked |
 
 ## Folder map
 
@@ -47,7 +48,7 @@ PF_DECODE=48 PF_CACHE=16 USE_4BIT_TRUNK=1 scripts/run-model.sh text prompts/code
 PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFT_TOKENS=7 scripts/run-model.sh text prompts/repeating-numbers.txt
 ```
 
-Settings (environment): `USE_4BIT_TRUNK` (0/1), `PF_DECODE` (new tokens), `PF_CACHE` (experts kept per layer), `SPECULATIVE_DRAFT_TOKENS` (0-15), `PF_CHAT` (1, low, high, max) with `PF_SYSTEM`,
+Settings (environment): `USE_4BIT_TRUNK` (0/1), `USE_8BIT_EXPERT_ACTIVATIONS` and `USE_8BIT_TRUNK_ACTIVATIONS` (0/1, experimental, prompt pass), `PF_DECODE` (new tokens), `PF_CACHE` (experts kept per layer), `SPECULATIVE_DRAFT_TOKENS` (0-15), `PF_CHAT` (1, low, high, max) with `PF_SYSTEM`,
 `PF_SAVE_IDS` (write generated ids), `PF_VERBOSE`, `BUILD=0` (skip build), `CLOVER_LOCK_TRUNK` (0 = do not lock the trunk files in RAM; needed with the 4-bit trunk).
 Long runs on the host are started detached (`setsid nohup ... &`) and their log read afterwards.
 

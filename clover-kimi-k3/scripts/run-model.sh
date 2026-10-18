@@ -8,6 +8,8 @@
 #   USE_4BIT_TRUNK=1        the trunk (layers 0-92: attention, gates, dense and shared-expert matrices) is packed to 4 bits in RAM and used in DECODE steps only.
 #                           Not bit-identical to the pod, about 29 GB more RAM (so the trunk files are not locked in memory). Decode is memory-bound, so half
 #                           the bytes is faster; the prompt pass is compute-bound, where the 4-bit kernel is slower (1,000 tokens: 355 s against 301 s), so it stays exact.
+#   USE_8BIT_EXPERT_ACTIVATIONS=1   prompt pass: the experts take their input rounded to 8 bits (experimental, not bit-identical)
+#   USE_8BIT_TRUNK_ACTIVATIONS=1    prompt pass of layers 1-92: the trunk matrices take their input rounded to 8 bits (experimental, not bit-identical)
 #   PF_DECODE=N             generate up to N more tokens after the prompt
 #   PF_CACHE=C              keep C experts per layer in RAM between decode steps (16 is the usual choice)
 #   SPECULATIVE_DRAFT_TOKENS=D   speculative decoding with up to D draft tokens per pass (D at most 15); the tokens are the same as plain decoding
@@ -18,6 +20,8 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/settings.sh"
 USE_4BIT_TRUNK="${USE_4BIT_TRUNK:-0}"
 [ "$USE_4BIT_TRUNK" != "0" ] && CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-0}"
+[ "${USE_8BIT_EXPERT_ACTIVATIONS:-0}" != "0" ] && LB_EXPK=3
+[ "${USE_8BIT_TRUNK_ACTIVATIONS:-0}" != "0" ] && LB_A8T=1
 SRC="$ENGINE_DIR/src"
 F="-std=gnu11 -march=native -ffp-contract=off -fno-fast-math -fopenmp -Wall -Wno-unused-function"
 TOK="-I$TOKENIZER_DIR/src/tokenizer -I$TOKENIZER_DIR/third_party"
@@ -62,7 +66,7 @@ fi
 ulimit -l unlimited; ulimit -c 0
 [ -n "${PF_EXTRA:-}" ] && REFS="-"
 echo "PROMPT ($(wc -w < $WORDS) words, $(wc -c < $WORDS) bytes):"; echo "-----"; cat $WORDS; echo; echo "-----"
-env -i PATH="$PATH" LB_IO="${LB_IO:-4}" LB_SPEC="${LB_SPEC:-0}" LB_GUESS="${LB_GUESS:-0}" LB_THP="${LB_THP:-1}" LB_EXPK="${LB_EXPK:-1}" USE_4BIT_TRUNK="$USE_4BIT_TRUNK" SPECULATIVE_DRAFT_TOKENS="${SPECULATIVE_DRAFT_TOKENS:-}" CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-}" PF_VERBOSE="${PF_VERBOSE:-}" \
+env -i PATH="$PATH" LB_IO="${LB_IO:-4}" LB_SPEC="${LB_SPEC:-0}" LB_GUESS="${LB_GUESS:-0}" LB_THP="${LB_THP:-1}" LB_EXPK="${LB_EXPK:-1}" LB_A8T="${LB_A8T:-}" USE_4BIT_TRUNK="$USE_4BIT_TRUNK" SPECULATIVE_DRAFT_TOKENS="${SPECULATIVE_DRAFT_TOKENS:-}" CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-}" PF_VERBOSE="${PF_VERBOSE:-}" \
     PF_DECODE="${PF_DECODE:-}" PF_EXTRA="${PF_EXTRA:-}" PF_SAVE_ROWS="${PF_SAVE_ROWS:-}" PF_CMP_ROWS="${PF_CMP_ROWS:-}" PF_SAVE_IDS="${PF_SAVE_IDS:-}" PF_ROUTES="${PF_ROUTES:-}" PF_CHAT="${PF_CHAT:-}" PF_SYSTEM="${PF_SYSTEM:-}" PF_CACHE="${PF_CACHE:-}" \
     PF_SWEEP="${PF_SWEEP:-}" PF_SWEEP_IDS="${PF_SWEEP_IDS:-}" PF_SWEEP_N="${PF_SWEEP_N:-}" LB_SWEEP_EXPK="${LB_SWEEP_EXPK:-0}" \
     OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores \

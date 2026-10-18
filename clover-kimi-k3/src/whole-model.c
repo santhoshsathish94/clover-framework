@@ -419,10 +419,13 @@ int main(int argc, char **argv)
     }
     const double setup = clk() - setup0;
     {   /* which arithmetic this process runs */
-        const char *experts_8bit = getenv("LB_EXPK"), *trunk_4bit = getenv("USE_4BIT_TRUNK");
+        const char *experts_8bit = getenv("LB_EXPK"), *trunk_4bit = getenv("USE_4BIT_TRUNK"), *trunk_8bit_activations = getenv("LB_A8T");
         const int use_8bit_experts = experts_8bit && atoi(experts_8bit) == 3, use_4bit_trunk = trunk_4bit && atoi(trunk_4bit) != 0;
-        printf("ARITHMETIC: %s%s\n", use_4bit_trunk ? "trunk 4-bit in decode steps (all 93 layers), prompt pass exact (decode not bit-identical)" : "trunk exact",
-            use_8bit_experts ? "; prompt-pass experts with 8-bit activations (not bit-identical)" : use_4bit_trunk ? "; experts exact" : "; experts exact  -> bit-identical to the pod");
+        const int use_8bit_trunk_activations = trunk_8bit_activations && atoi(trunk_8bit_activations) != 0;
+        printf("ARITHMETIC: %s%s%s\n", use_4bit_trunk ? "trunk 4-bit in decode steps (all 93 layers), prompt pass exact (decode not bit-identical)" : "trunk exact",
+            use_8bit_experts ? "; prompt-pass experts with 8-bit activations (not bit-identical)" : "; experts exact",
+            use_8bit_trunk_activations ? "; prompt-pass trunk matrices of layers 1-92 with 8-bit activations (not bit-identical)"
+                : (use_4bit_trunk || use_8bit_experts) ? "" : "  -> bit-identical to the pod");
     }
 
     /* ---- the request: words in memory -> next token and text in memory ---- */
