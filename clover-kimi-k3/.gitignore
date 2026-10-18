@@ -1,0 +1,5 @@
+# Host-only folders: run outputs, the DSpark checkpoint and the 1.4 TB model are never committed.
+/work/
+/models/
+/dataset/
+/set-up.log

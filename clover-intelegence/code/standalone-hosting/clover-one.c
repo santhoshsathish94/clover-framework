@@ -1819,8 +1819,8 @@ static int stored_expert_down(unsigned layer, unsigned expert, const float *inpu
 
 static void result_options(void)
 {
-    const char *forbidden[] = {"K3_STAGE", "K3_DUMPROUTE", "K3_DUMPSEL", "K3_PROV",
-        "K3_DUMPLAY", "K3_ROUTESAVE", "K3_ROUTELOAD",
+    const char *forbidden[] = {"K3_DUMPROUTE", "K3_DUMPSEL", "K3_PROV",
+        "K3_ROUTESAVE", "K3_ROUTELOAD",
         "K3_ARENA2", "K3_LOGITS", "K3_DUMPRES", "K3_COVER", "K3_TRUNKRAM", "K3_NX", "K3_PREFETCH"};
     for (unsigned setting = 0; setting < sizeof(forbidden) / sizeof(forbidden[0]); setting++)
         if (getenv(forbidden[setting])) result_miss("unsupported persistence or raw-reader option");
@@ -2967,7 +2967,8 @@ static unsigned evaluate_tokens(const unsigned *tokens, unsigned count, unsigned
         cur_L = 93;
         { float *ll = logits; stg_emit("B", "lm_head", -1, 1, E, VOCAB, &ll); }
         fprintf(stg_fp, "#totals\tQ calls %ld\tX calls %ld\n", stg_q, stg_x);
-        fclose(stg_fp); stg_fp = NULL;
+        /* Closing here would record only the first evaluation and never decode. */
+        fflush(stg_fp);
     }
 
 
@@ -3299,6 +3300,8 @@ int main(int argc, char **argv)
     result_options();
     prefix_options();
     { const char *path = getenv("K3_LSTAT"); if (path && *path) lstat_fp = fopen(path, "w"); }
+    { const char *path = getenv("K3_STAGE"); if (path && *path) stg_fp = fopen(path, "w"); }
+    { const char *path = getenv("K3_DUMPLAY"); if (path && *path) dumplay = fopen(path, "wb"); }
     const char *index = getenv("K3_INDEX");
     if (!index) die("K3_INDEX required");
     mallopt(M_MMAP_THRESHOLD, 256 * 1024 * 1024);

@@ -1,0 +1,4 @@
+Write a Python function that checks whether a number is prime, then explain how it works.
+
+```python
+def is_prime(n):
