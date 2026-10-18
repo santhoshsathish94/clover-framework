@@ -568,10 +568,6 @@ static PackedTrunk *pack_layer_trunk_to_4bit(const Transformer *layer)
 {
     PackedTrunk *packed = calloc(1, sizeof *packed);
     if (!packed) bail("allocation failed");
-    for (unsigned component = 0; component < 3; component++) {
-        const Mat m = mat_qkv(layer, component);
-        pack_matrix_to_4bit(m.ids, m.id_stride, m.rows, m.cols, &packed->nibbles[40 + component], &packed->steps[40 + component]);
-    }
 #if LB_MLA
     static const unsigned record_ids[] = { 6, 7, 31, 32, 34, 35, 36 };
     static const unsigned operator_ids[] = { 20, 22, 23, 25 };
@@ -581,6 +577,10 @@ static PackedTrunk *pack_layer_trunk_to_4bit(const Transformer *layer)
     }
 #else
     static const unsigned record_ids[] = { 6, 7, 11, 12, 13, 31, 32, 34, 35, 36 };
+    for (unsigned component = 0; component < 3; component++) {
+        const Mat m = mat_qkv(layer, component);
+        pack_matrix_to_4bit(m.ids, m.id_stride, m.rows, m.cols, &packed->nibbles[40 + component], &packed->steps[40 + component]);
+    }
 #endif
     for (unsigned i = 0; i < sizeof record_ids / sizeof *record_ids; i++) {
         const Mat m = mat_record(layer, record_ids[i], "");
