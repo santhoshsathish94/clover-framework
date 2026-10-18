@@ -234,3 +234,17 @@ Harness `input-to-layer0/layer0-observe.c` + `layer0-run.sh`: includes the serve
 - Confirm whether the 8192-position prefix run has completed and record outcome.
 - Track request-mix impact so repeated-request gains are not overstated for novel traffic.
 - Keep each mechanism's metrics separate in future reports.
+
+## DSpark draft model ported to C (2026-10-18)
+
+- Built src/dspark-draft.c from the vLLM sources (dspark_mla.py, mla.py, YaRN rope code, Markov head class) and the checkpoint config; hooked into whole-model.c (SPECULATIVE_DRAFTER=dspark, SPECULATIVE_DRAFT_TOKENS=8, DSPARK_CHECKPOINT). The target's hidden states are kept after layers 2, 23, 47, 71, 89 (our layer output, taken as vLLM's aux state; not independently checked beyond the acceptance below).
+- Measured on the host (exact trunk, exact experts, PF_CACHE=16), scripts/check-dspark-drafter.sh 48, one run per prompt, plain and DSpark run one after the other:
+
+  | prompt | plain s/token | DSpark s/token | passes for 48 tokens | draft tokens kept | ids |
+  |---|---|---|---|---|---|
+  | code-is-prime (26-token prompt) | 3.463 | 1.793 (1.93x) | 8 | 40 of 55 (72.7%) | identical |
+  | repeating-numbers (11) | 3.132 | 0.902 (3.5x) | 6 | 42 of 42 (100%) | identical |
+  | prose (14) | 3.212 | 4.766 (1.5x slower) | 24 | 24 of 175 (13.7%) | identical |
+
+- A pass over 8 positions costs about 9.5 s here (prose: 228.8 s / 24 passes), so a pass that keeps one token is three times as expensive as a plain step. The draft has a high acceptance on code and repeats, a low one on this free prose prompt. Not measured: why prose is low (a harder text, or an error in the port that code does not show); only one prose prompt, one run each.
+- Not done: a draft width that follows the recent acceptance; DSpark with USE_4BIT_TRUNK=1; more prompts; checking the hidden-state layer mapping directly.

@@ -13,7 +13,8 @@ The prompt is processed in batches, decode keeps recently used experts in RAM, a
 | Against the pod's own chain | embeddings 1000 of 1000 rows, layer 92 output 1000 of 1000 rows, 8 snapshots 8000 of 8000 rows bit-identical |
 | Decode, exact, 16 cached experts per layer | 3.1 - 3.5 s per token |
 | Decode, `USE_4BIT_TRUNK=1` | 2.5 - 2.8 s per token (not bit-identical; 8 of 34 recorded prompts give the same 12 tokens as exact, the rest are fluent but differ) |
-| Speculative decoding | same tokens as plain decoding; 2.5x faster on a repeating prompt, 21% slower on ordinary code (10% of draft tokens kept) |
+| Speculative decoding, prompt lookup (`SPECULATIVE_DRAFTER=` empty) | same tokens as plain decoding; 2.5x faster on a repeating prompt, 21% slower on ordinary code (10% of draft tokens kept) |
+| Speculative decoding, DSpark draft model, 8 tokens per round (`SPECULATIVE_DRAFTER=dspark`), 48 new tokens, exact trunk | same ids as plain decoding on all 3 prompts. code: 3.463 -> 1.793 s per token (1.93x, 72.7% of draft tokens kept); repeating numbers: 3.132 -> 0.902 (3.5x, 100%); prose (14-token prompt): 3.212 -> 4.766 (1.5x SLOWER, 13.7% kept). A pass of 8 positions costs about 9.5 s whatever is kept |
 | Prompt pass with 8-bit activations (experimental, not bit-identical) | experts only 222.0 s; experts and trunk 203.0 s; the 4-bit trunk is not used here (it makes the prompt pass slower). Quality of the trunk part not yet checked |
 
 ## Folder map
@@ -26,12 +27,13 @@ The prompt is processed in batches, decode keeps recently used experts in RAM, a
 | | `layers-1-to-92.c` layer 1 and, built twice (KDA / MLA), layers 2-92: batched trunk, router, experts, expert cache, state checkpoints (stage 3, `lbk_*`, `lbm_*`) |
 | | `trunk-4bit.h` the 4-bit trunk: packing and kernels, shared by `layer0.c` and `layers-1-to-92.c` |
 | | `whole-model.c` the driver: setup, prompt pass, decode, speculative decoding, chat mode, final head through the deployed pod library |
+| | `dspark-draft.c` the DSpark draft model (5 dense MLA layers, Markov head), drafts 8 tokens from the target's hidden states after layers 2, 23, 47, 71, 89 |
 | | `ids-to-text.c` small tool: token ids to text |
 | `scripts/` | `settings.sh` (all paths, one place) and `run-model.sh` (build and run), then the checks: `check-one-prompt.sh`, `check-1000-token-prompt.sh`, `check-speculative-decoding.sh`, `compare-exact-and-4bit-trunk.sh`, `compare-chat-answers.sh`, `run-34-recorded-prompts.sh`, `measure-multi-token-pass.sh`, `verify-engine-folder.sh`; setup: `set-up-host-folder.sh`, `download-dspark-checkpoint.sh` |
 | `tools/` | `compare-outputs.py`, `compare-34-prompts-with-recorded.py`, `expert-route-analysis.py` |
 | `prompts/` | the 34 recorded prompts and their recorded results, and three small prompts used by the checks |
 | `docs/` | `current-status.md` (the dated log of everything measured, including every negative result) and `layer0-verdict.md` |
-| `models/dspark/` | (host only) the Kimi K3 DSpark draft checkpoint, 7.1 GB, not yet used by the engine |
+| `models/dspark/` | (host only) the Kimi K3 DSpark draft checkpoint, 7.1 GB, used by `src/dspark-draft.c` |
 | `work/` | (host only) `build/` the compiled program, `inputs/` tokenizer files, recorded prompt and the pod's chain values, `results/` every log and output |
 | `dataset/` | (host only) the model: experts `root-N` (15.7 GB per layer), `trunk-N`, operators, tokenizer files. 1.4 TB. |
 
@@ -46,6 +48,8 @@ scripts/run-model.sh text prompts/code-is-prime.txt    # any text file
 PF_DECODE=48 PF_CACHE=16 scripts/run-model.sh text prompts/code-is-prime.txt                      # 48 more tokens, plain
 PF_DECODE=48 PF_CACHE=16 USE_4BIT_TRUNK=1 scripts/run-model.sh text prompts/code-is-prime.txt     # 4-bit trunk in decode
 PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFT_TOKENS=7 scripts/run-model.sh text prompts/repeating-numbers.txt
+PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 scripts/run-model.sh text prompts/code-is-prime.txt   # DSpark draft model
+scripts/check-dspark-drafter.sh 48                     # plain against DSpark on three prompts, ids must be identical
 ```
 
 Settings (environment): `USE_4BIT_TRUNK` (0/1), `ACTIVATION_8BIT_EXPERT` and `ACTIVATION_8BIT_TRUNK` (0/1, experimental, off by default, prompt pass), `PF_DECODE` (new tokens), `PF_CACHE` (experts kept per layer), `SPECULATIVE_DRAFT_TOKENS` (0-15), `PF_CHAT` (1, low, high, max) with `PF_SYSTEM`,
