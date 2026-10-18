@@ -177,6 +177,17 @@ typedef struct {
 typedef struct { unsigned passes, with_draft, rollbacks, drafted, accepted; } SpeculativeStats;
 static float pass_buffer[3][PASS_MAX * W], pass_snapshot[MAX_SNAPSHOTS][PASS_MAX * W], pass_embedding[PASS_MAX * W], tail_snapshots[MAX_SNAPSHOTS * W];
 
+/* DSpark draft model (dspark-draft.c): it reads the target's hidden states after layers 2, 23, 47, 71 and 89, one row of 7168 floats per position. */
+int dspark_open(const char *checkpoint, const char *head_table, unsigned max_positions);
+void dspark_draft(const float *const aux[5], uint32_t anchor, unsigned anchor_position, uint32_t *drafts);
+static const unsigned dspark_layers[5] = { 2, 23, 47, 71, 89 };
+static float *dspark_hidden[5];   /* NULL unless DSpark is used; allocated in main */
+static void keep_for_dspark(unsigned layer, const float *rows, size_t first_position, unsigned count)
+{
+    for (unsigned a = 0; a < 5; a++)
+        if (dspark_hidden[a] && layer == dspark_layers[a]) memcpy(dspark_hidden[a] + first_position * W, rows, (size_t)count * W * sizeof(float));
+}
+
 /* k tokens at positions pos0.. through all layers; one token takes the single-token path, which is exactly what plain decoding runs. */
 static void forward_tokens(Model *m, const uint32_t *ids, unsigned k, size_t pos0)
 {
@@ -189,6 +200,7 @@ static void forward_tokens(Model *m, const uint32_t *ids, unsigned k, size_t pos
         float *out = pass_buffer[(current + 1) % 3];
         if (k == 1) (is_mla(l) ? lbm_step : lbk_step)(m->layer[l], pass_buffer[current], m->snapshot, pos0, out);
         else (is_mla(l) ? lbm_stepk : lbk_stepk)(m->layer[l], pass_buffer[current], m->snapshot, k, pos0, out);
+        keep_for_dspark(l, out, pos0, k);
         if (l % 12 == 0) { memcpy(pass_snapshot[snapshots], pass_buffer[current], (size_t)k * W * sizeof(float)); m->snapshot[snapshots] = pass_snapshot[snapshots]; snapshots++; }
         current = (current + 1) % 3;
     }
@@ -243,7 +255,14 @@ static unsigned speculative_decode(Model *m, const uint32_t *prompt, unsigned N,
         const unsigned fed = produced - 1, remaining = decode + 1 - produced;
         uint32_t pass_ids[PASS_MAX];
         pass_ids[0] = gen[fed];
-        const unsigned drafted = remaining > 1 ? draft_from_text(seen, N + produced, remaining - 1 < max_draft ? remaining - 1 : max_draft, pass_ids + 1) : 0;
+        const unsigned wanted = remaining > 1 ? (remaining - 1 < max_draft ? remaining - 1 : max_draft) : 0;
+        unsigned drafted = 0;
+        if (wanted && dspark_hidden[0]) {   /* the draft model guesses 8 tokens from the target's hidden states; its first `wanted` are used */
+            uint32_t guess[8];
+            dspark_draft((const float *const *)dspark_hidden, gen[fed], (unsigned)(N + fed), guess);
+            drafted = wanted < 8 ? wanted : 8;
+            memcpy(pass_ids + 1, guess, drafted * sizeof *guess);
+        } else if (wanted) drafted = draft_from_text(seen, N + produced, wanted, pass_ids + 1);
         forward_tokens(m, pass_ids, drafted + 1, N + fed);
         unsigned j = 0;
         for (;; j++) {   /* the head is asked only for tokens that are kept, in order, so its own text state never sees a rejected one */
@@ -390,6 +409,14 @@ int main(int argc, char **argv)
         layer[l] = is_mla(l) ? lbm_open(dataset, l, snapshots_in(l), N + decode + sweep_n + 16) : lbk_open(dataset, l, snapshots_in(l), N + decode + sweep_n + 16);
         if (cache_cap) { FILL_SLOTS(l - 1) (is_mla(l) ? lbm_set_slots : lbk_set_slots)(layer[l], slot_ptrs, cache_cap); }
     }
+    if (getenv("SPECULATIVE_DRAFTER") && !strcmp(getenv("SPECULATIVE_DRAFTER"), "dspark")) {   /* the DSpark draft model instead of the prompt-lookup draft */
+        const char *checkpoint = getenv("DSPARK_CHECKPOINT");
+        if (!max_draft) bail("SPECULATIVE_DRAFTER=dspark needs SPECULATIVE_DRAFT_TOKENS (up to 8)");
+        if (!checkpoint || !*checkpoint) bail("DSPARK_CHECKPOINT is not set");
+        snprintf(path, sizeof path, "%s/server/bin/dataset/outputs/fruit.bin", code);
+        for (unsigned a = 0; a < 5; a++) dspark_hidden[a] = calloc((size_t)(N + decode + 16) * W, sizeof(float));
+        if (!dspark_open(checkpoint, path, N + decode + 16)) bail("cannot open the DSpark draft model");
+    }
     const double t_layers = clk() - setup0;
 
     char leaves[4096], head[4096], tik[4096], vocab[4096], config[4096];
@@ -451,6 +478,7 @@ int main(int argc, char **argv)
         float *out = pool[--free_n];
         const double began = clk();
         if (is_mla(l)) lbm_run(layer[l], cur, snaps, N, N, out); else lbk_run(layer[l], cur, snaps, N, N, out);
+        keep_for_dspark(l, out, 0, N);
         layer_time[l] = clk() - began;
         if (routes_on) (is_mla(l) ? lbm_hits : lbk_hits)(hits + (size_t)(l - 1) * 896);
         if (l % 12 == 0) snaps[k++] = cur;      /* the layer's input becomes the next snapshot: a pointer, no copy */

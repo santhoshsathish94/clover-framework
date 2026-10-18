@@ -48,7 +48,7 @@ PF_DECODE=48 PF_CACHE=16 USE_4BIT_TRUNK=1 scripts/run-model.sh text prompts/code
 PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFT_TOKENS=7 scripts/run-model.sh text prompts/repeating-numbers.txt
 ```
 
-Settings (environment): `USE_4BIT_TRUNK` (0/1), `USE_8BIT_EXPERT_ACTIVATIONS` and `USE_8BIT_TRUNK_ACTIVATIONS` (0/1, experimental, prompt pass), `PF_DECODE` (new tokens), `PF_CACHE` (experts kept per layer), `SPECULATIVE_DRAFT_TOKENS` (0-15), `PF_CHAT` (1, low, high, max) with `PF_SYSTEM`,
+Settings (environment): `USE_4BIT_TRUNK` (0/1), `ACTIVATION_8BIT_EXPERT` and `ACTIVATION_8BIT_TRUNK` (0/1, experimental, off by default, prompt pass), `PF_DECODE` (new tokens), `PF_CACHE` (experts kept per layer), `SPECULATIVE_DRAFT_TOKENS` (0-15), `PF_CHAT` (1, low, high, max) with `PF_SYSTEM`,
 `PF_SAVE_IDS` (write generated ids), `PF_VERBOSE`, `BUILD=0` (skip build), `CLOVER_LOCK_TRUNK` (0 = do not lock the trunk files in RAM; needed with the 4-bit trunk).
 Long runs on the host are started detached (`setsid nohup ... &`) and their log read afterwards.
 
