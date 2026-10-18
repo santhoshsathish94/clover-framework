@@ -17,7 +17,7 @@ USE_4BIT_TRUNK=$Q SPECULATIVE_DRAFT_TOKENS=$DRAFT BUILD=0 PF_DECODE=$DEC PF_CACH
   if cmp -s $BASE-plain.ids $BASE-$DRAFTER-draft$DRAFT.ids; then echo "generated ids plain vs speculative: IDENTICAL"; else echo "generated ids plain vs speculative: DIFFERENT"; fi
   grep -h "build failed" $BASE-plain.log
   echo "--- plain";       grep -hE "ARITHMETIC|DECODE," $BASE-plain.log | cut -c1-220
-  echo "--- speculative"; grep -hE "ARITHMETIC|DECODE,|SPECULATIVE" $BASE-$DRAFTER-draft$DRAFT.log | cut -c1-330
+  echo "--- speculative"; grep -hE "ARITHMETIC|DECODE,|SPECULATIVE|DSpark draft" $BASE-$DRAFTER-draft$DRAFT.log | cut -c1-330
   echo "--- plain output:";       tr '\n' '~' < $BASE-plain.out; echo
   echo "--- speculative output:"; tr '\n' '~' < $BASE-$DRAFTER-draft$DRAFT.out; echo
   echo "done $(date)"

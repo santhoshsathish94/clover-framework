@@ -248,3 +248,21 @@ Harness `input-to-layer0/layer0-observe.c` + `layer0-run.sh`: includes the serve
 
 - A pass over 8 positions costs about 9.5 s here (prose: 228.8 s / 24 passes), so a pass that keeps one token is three times as expensive as a plain step. The draft has a high acceptance on code and repeats, a low one on this free prose prompt. Not measured: why prose is low (a harder text, or an error in the port that code does not show); only one prose prompt, one run each.
 - Not done: a draft width that follows the recent acceptance; DSpark with USE_4BIT_TRUNK=1; more prompts; checking the hidden-state layer mapping directly.
+
+## DSpark width chosen per pass, and DSpark with the 4-bit trunk (2026-10-18)
+
+- Why: a fixed 8-wide pass made prose 1.5x slower than plain (see above). `best_draft_width` in `whole-model.c` picks, per pass, the width (0 to 8 draft tokens) with the most expected tokens per plain-step time. Cost model: one more position costs 0.31 of a plain step (measured 1, 2, 4, 8 positions: 3.33, 4.57, 6.69, 10.65 s, exact trunk). Chance a draft token is right: draft tokens right / tried, decayed by 0.9 per pass, starting at 0.7; with no draft verified, the first guess is still compared with the token the model made. The draft model costs 0.165-0.26 s per pass (2.3-5.0 s for 48 tokens).
+- `scripts/check-dspark-drafter.sh 48 "0 1"`, one run per prompt and trunk, ids identical to plain decoding in all 6 comparisons (the 4-bit comparison is against 4-bit plain decoding, not against exact):
+
+  | prompt | trunk | plain s/token | DSpark, fixed 8 | DSpark, width per pass | passes | kept |
+  |---|---|---|---|---|---|---|
+  | code | exact | 3.463 | 1.793 | 2.028 | 14 | 34 of 40 |
+  | prose | exact | 3.212 | 4.766 | 2.972 | 29 | 19 of 42 |
+  | repeating | exact | 3.132 | 0.902 | 0.902 | 6 | 42 of 42 |
+  | code | 4-bit | 2.823 | not run | 1.924 | 14 | 34 of 41 |
+  | prose | 4-bit | 2.609 | not run | 2.314 | 24 | 24 of 40 |
+  | repeating | 4-bit | 2.510 | not run | 1.214 | 10 | 38 of 42 |
+
+- Read: the width choice removes the prose loss (4.766 -> 2.972, now 1.08x faster than plain) but costs code 13% against fixed 8 (14 passes instead of 8: the estimate falls after a rejection and the width stays narrow although later tokens are accepted again; acceptance comes in runs, not at one constant rate). The 4-bit trunk adds little on top of DSpark: code 2.028 -> 1.924 (5%), prose 2.972 -> 2.314, and repeating got slower, 0.902 -> 1.214, with 2 rejections where the exact trunk had none (a guess, not tested: the draft reads hidden states the 4-bit trunk changes slightly; pass count 10 against 6). A wide pass is already compute-heavy, which is where the 4-bit kernel gave no gain in the prompt pass. Not measured: why exactly the repeating case slowed (pass time or pass count: 5.8 s over about 4 positions against 7.2 s over 7 positions); one prose prompt; one run each.
+- The earlier exact-trunk-only runs used the exact trunk because the check compares with plain decoding and I wanted a bit-identical baseline; the 4-bit combination was simply not run until now.
+- Not done: a width rule that reacts to runs (for example fall back to 8 after a full accept), the DSpark confidence head (in the checkpoint, not used), more prompts.
