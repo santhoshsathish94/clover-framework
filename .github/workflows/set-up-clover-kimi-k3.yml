@@ -1,0 +1,82 @@
+name: Set up clover-kimi-k3 on a machine
+
+# Runs on the NEW machine, which is registered once as a self-hosted runner with the label clover-k3 (Settings > Actions > Runners).
+# It runs clover-kimi-k3/scripts/set-up-new-machine.sh: checks the machine, installs the tools, clones clover-kimi-k3 from this repository at the commit
+# this workflow runs from, downloads the dataset from Hugging Face, checks it, wires and builds the engine, fetches the DSpark draft model and
+# verifies everything by running it (recorded prompts, speculative decoding, a chat). The job fails if any step fails; every step can be re-run.
+#
+# Only workflow_dispatch triggers it: never add pull_request or push triggers to a workflow that runs on a self-hosted runner of a public repository.
+# The runner service needs LimitMEMLOCK=infinity (the engine locks the trunk in RAM), and the dataset needs about 1.5 TB on a local NVMe filesystem.
+# A private Hugging Face repo needs the repository secret HF_TOKEN (a read token).
+
+on:
+  workflow_dispatch:
+    inputs:
+      hf_repo:
+        description: Hugging Face repo that holds the dataset
+        default: santhoshsathish94/clover-kimi-k3
+      hf_repo_type:
+        description: Hugging Face repo type (dataset or model)
+        default: dataset
+      hf_revision:
+        description: Hugging Face branch, tag or commit
+        default: main
+      install_dir:
+        description: Where the code, the Python environment and the default dataset folder go
+        default: /opt/clover-k3
+      dataset_dir:
+        description: Dataset folder (empty = <install_dir>/dataset); about 1.4 TB
+        default: ''
+      steps:
+        description: 'Steps to run, space separated (empty = all): preflight packages clone download check-dataset wire build dspark verify'
+        default: ''
+      verify_prompts:
+        description: Which of the 34 recorded prompts verify-setup.sh runs
+        default: '1 4 10'
+      check_hashes:
+        description: Also check the sha256 of every dataset file (reads the whole dataset once)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: clover-k3-set-up
+  cancel-in-progress: false
+
+jobs:
+  set-up:
+    runs-on: [self-hosted, linux, x64, clover-k3]
+    timeout-minutes: 2880
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: clover-kimi-k3/scripts
+          sparse-checkout-cone-mode: true
+      - name: Set up the machine, download the dataset, build, verify
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+          REPO_REF: ${{ github.sha }}
+          HF_REPO: ${{ inputs.hf_repo }}
+          HF_REPO_TYPE: ${{ inputs.hf_repo_type }}
+          HF_REVISION: ${{ inputs.hf_revision }}
+          INSTALL_DIR: ${{ inputs.install_dir }}
+          DATASET_DIR_INPUT: ${{ inputs.dataset_dir }}
+          STEPS_INPUT: ${{ inputs.steps }}
+          VERIFY_PROMPTS: ${{ inputs.verify_prompts }}
+          CHECK_HASHES: ${{ inputs.check_hashes && '1' || '0' }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          [ -n "$DATASET_DIR_INPUT" ] && export DATASET_DIR="$DATASET_DIR_INPUT"
+          bash clover-kimi-k3/scripts/set-up-new-machine.sh $STEPS_INPUT
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: set-up-logs
+          if-no-files-found: ignore
+          path: |
+            ${{ inputs.install_dir }}/set-up-new-machine.report
+            ${{ inputs.install_dir }}/clover-kimi-k3/work/results/verify-setup.result
+            ${{ inputs.install_dir }}/clover-kimi-k3/work/results/verify-*.log

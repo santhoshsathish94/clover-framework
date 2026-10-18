@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <stdint.h>
 #include <time.h>
 #include <dlfcn.h>
@@ -323,6 +324,7 @@ static unsigned speculative_decode(Model *m, const uint32_t *prompt, unsigned N,
 typedef struct { int assistant; char *text; } ChatTurn;
 static struct {
     unsigned context, chunk, reply_reserve, input_max, summary_tokens, max_reply, max_draft;
+    int verify;                   /* PF_SESSION_VERIFY=1: after a continued prompt pass, also run one pass over the whole conversation and compare */
     unsigned pos;                 /* positions the layers hold: fed[0..pos) */
     int valid;                    /* 0: the layers hold something else (a summary was just made), the state must be rebuilt */
     uint32_t *fed;
@@ -332,6 +334,7 @@ static struct {
     ChatTurn *turn; unsigned turns, turns_cap;
 } session;
 static float *prefill_buffer[POOL];
+static float prefill_last_row[W], prefill_last_snapshots[MAX_SNAPSHOTS * W];   /* what the head read after the last prompt pass */
 
 /* ids[0..count) at positions pos0.. through all 93 layers, at most `chunk` at a time; the head then names the next token after the last one.
    pos0 == 0 starts the layers' state over, anything else continues from the state the earlier tokens left. */
@@ -362,6 +365,8 @@ static uint32_t prefill(Model *m, const uint32_t *ids, unsigned count, unsigned 
         if (k != MAX_SNAPSHOTS) bail("the last layer should hand on eight snapshots");
         if (done + n == count) {
             for (unsigned s = 0; s < MAX_SNAPSHOTS; s++) memcpy(tail_snapshots + (size_t)s * W, snaps[s] + (size_t)(n - 1) * W, W * sizeof(float));
+            memcpy(prefill_last_row, cur + (size_t)(n - 1) * W, W * sizeof(float));
+            memcpy(prefill_last_snapshots, tail_snapshots, sizeof prefill_last_snapshots);
             if (!m->tail_run(m->tail_model, m->tail_sequence, cur + (size_t)(n - 1) * W, tail_snapshots, MAX_SNAPSHOTS, 0, "", &token, piece)) bail("tail failed");
         }
     }
@@ -599,6 +604,21 @@ static void session_turn(Model *m, const char *dir, unsigned number, char *user)
     memcpy(session.fed + continued_from, ids, (size_t)n * sizeof *ids);
     session.pos = continued_from + (unsigned)n; session.valid = 1;
     free(ids);
+    char verified[300] = "";
+    if (session.verify && continued_from) {   /* the state a continued pass left, against the state one pass over everything leaves */
+        static float row_before[W], snapshots_before[MAX_SNAPSHOTS * W];
+        memcpy(row_before, prefill_last_row, sizeof row_before); memcpy(snapshots_before, prefill_last_snapshots, sizeof snapshots_before);
+        Text again = {0, 0};
+        dspark_reset();
+        const double t_check = clk();
+        const uint32_t token_again = prefill(m, session.fed, session.pos, 0, &again);
+        unsigned different = 0; double largest = 0;
+        for (unsigned i = 0; i < W; i++) { const double d = fabs((double)row_before[i] - prefill_last_row[i]); different += row_before[i] != prefill_last_row[i]; if (d > largest) largest = d; }
+        for (unsigned i = 0; i < MAX_SNAPSHOTS * W; i++) { const double d = fabs((double)snapshots_before[i] - prefill_last_snapshots[i]); different += snapshots_before[i] != prefill_last_snapshots[i]; if (d > largest) largest = d; }
+        snprintf(verified, sizeof verified, "; continued pass against one pass over all %u positions (%.1f s): %s, next token %s", session.pos, clk() - t_check,
+            different ? "DIFFERENT" : "bit-identical", token_again == first ? "same" : "DIFFERENT");
+        if (different) { const size_t used = strlen(verified); snprintf(verified + used, sizeof verified - used, " (%u of %u values differ, largest difference %g)", different, (unsigned)(W + MAX_SNAPSHOTS * W), largest); }
+    }
 
     chat.done = 0; chat.closes = 0; chat.in_tag = 0; chat.to_response = 1; chat.think_len = 0; chat.response_len = 0;
     chat_feed(first, &piece);
@@ -622,11 +642,11 @@ static void session_turn(Model *m, const char *dir, unsigned number, char *user)
     write_file(path, reply, strlen(reply));
     snprintf(status, sizeof status,
         "turn %u: message %u tokens%s; %s from position %u, prefill %u tokens in %.1f s; reply %u tokens in %.1f s (%.2f s per token, %u passes, %u of %u draft tokens kept)%s%s; "
-        "positions now %u of %u; %u turns kept%s; wall %.1f s\n",
+        "positions now %u of %u; %u turns kept%s; wall %.1f s%s\n",
         number, user_tokens, summarised_input ? " (summarised first)" : "", continued_from ? "continued" : "rebuilt", continued_from, (unsigned)n, prefill_seconds,
         steps + 1, reply_seconds, steps ? reply_seconds / steps : 0.0, stats.passes, stats.accepted, stats.drafted,
         chat.done ? "" : " [cut at the token limit]", dropped_turns ? " [oldest turns summarised]" : "",
-        session.pos, session.context, session.turns, session.summary ? " plus a summary" : "", clk() - began);
+        session.pos, session.context, session.turns, session.summary ? " plus a summary" : "", clk() - began, verified);
     snprintf(path, sizeof path, "%s/status.txt", dir);
     FILE *log = fopen(path, "ab");
     if (log) { fputs(status, log); fclose(log); }
@@ -711,6 +731,7 @@ int main(int argc, char **argv)
         session.input_max = (v = getenv("PF_INPUT_MAX")) && *v ? (unsigned)atoi(v) : session.context / 2;
         session.summary_tokens = (v = getenv("PF_SUMMARY_TOKENS")) && *v ? (unsigned)atoi(v) : 320;
         session.max_reply = decode; session.max_draft = max_draft;
+        session.verify = getenv("PF_SESSION_VERIFY") && *getenv("PF_SESSION_VERIFY") && atoi(getenv("PF_SESSION_VERIFY"));
         if (!max_draft) bail("a chat session needs SPECULATIVE_DRAFT_TOKENS (its replies are made by the speculative decoder)");
         if (!getenv("PF_CHAT") || (strcmp(getenv("PF_CHAT"), "1") && strcmp(getenv("PF_CHAT"), "nothink"))) bail("a chat session needs PF_CHAT=1 (answers at once)");
         if (session.chunk < 64 || session.context < 2 * session.chunk || session.reply_reserve + 256 > session.context) bail("PF_CHUNK, PF_CONTEXT and PF_REPLY_RESERVE do not fit each other");

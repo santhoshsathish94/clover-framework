@@ -40,6 +40,9 @@ if [ "${BUILD:-1}" != "0" ] && [ -z "${PF_NOBUILD:-}" ]; then
   gcc $F -DLB_GENERIC -DLB_ENTRY -DLB_PFX=lbm -DLB_TEMPLATE='"template-mla.c"' -O3 -I$POD_DIR/common -I. -Dmain=mla_main_unused -c $SRC/layers-1-to-92.c -o layers-mla.o 2> build-layers-mla.log || fail layers-mla build-layers-mla.log
   gcc $F -O2 -c $SRC/whole-model.c -o whole-model.o 2> build-whole-model.log || fail whole-model build-whole-model.log
   gcc $F -O3 -I$POD_DIR/server -c $SRC/dspark-draft.c -o dspark-draft.o 2> build-dspark-draft.log || fail dspark-draft build-dspark-draft.log
+  # the tail (final normalisation, vocabulary head, detokenise) is a shared library the program opens at run time
+  mkdir -p $POD_DIR/tansformers/transformer-93/bin
+  gcc -std=c11 -O2 -march=native -Wall -Wextra -Werror -Wno-unused-function -ffp-contract=off -fno-fast-math -fopenmp -fPIC -shared -I$POD_DIR/common $POD_DIR/tansformers/transformer-93/transformer-93.c -lm -o $POD_DIR/tansformers/transformer-93/bin/pipeline-stage.so 2> build-tail-library.log || fail tail-library build-tail-library.log
   # every object keeps only its entry points global, so the several programs built from the same sources cannot collide
   objcopy --keep-global-symbol=stage1_setup --keep-global-symbol=stage1_ids --keep-global-symbol=stage1_ids_plain --keep-global-symbol=stage1_id_of --keep-global-symbol=stage1_lookup words-to-embeddings.o
   objcopy --keep-global-symbol=dspark_open --keep-global-symbol=dspark_draft --keep-global-symbol=dspark_reset dspark-draft.o
@@ -69,7 +72,7 @@ fi
 ulimit -l unlimited; ulimit -c 0
 [ -n "${PF_EXTRA:-}" ] && REFS="-"
 echo "PROMPT ($(wc -w < $WORDS) words, $(wc -c < $WORDS) bytes):"; echo "-----"; cat $WORDS; echo; echo "-----"
-env -i PATH="$PATH" LB_IO="${LB_IO:-4}" LB_SPEC="${LB_SPEC:-0}" LB_GUESS="${LB_GUESS:-0}" LB_THP="${LB_THP:-1}" LB_EXPK="${LB_EXPK:-1}" LB_A8T="${LB_A8T:-}" USE_4BIT_TRUNK="$USE_4BIT_TRUNK" SPECULATIVE_DRAFT_TOKENS="${SPECULATIVE_DRAFT_TOKENS:-}" SPECULATIVE_DRAFTER="${SPECULATIVE_DRAFTER:-}" SPECULATIVE_FIXED_WIDTH="${SPECULATIVE_FIXED_WIDTH:-}" PF_SESSION_DIR="${PF_SESSION_DIR:-}" PF_CONTEXT="${PF_CONTEXT:-}" PF_CHUNK="${PF_CHUNK:-}" PF_REPLY_RESERVE="${PF_REPLY_RESERVE:-}" PF_INPUT_MAX="${PF_INPUT_MAX:-}" PF_SUMMARY_TOKENS="${PF_SUMMARY_TOKENS:-}" DSPARK_CHECKPOINT="$DSPARK_DIR/model.safetensors" CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-}" PF_VERBOSE="${PF_VERBOSE:-}" \
+env -i PATH="$PATH" LB_IO="${LB_IO:-4}" LB_SPEC="${LB_SPEC:-0}" LB_GUESS="${LB_GUESS:-0}" LB_THP="${LB_THP:-1}" LB_EXPK="${LB_EXPK:-1}" LB_A8T="${LB_A8T:-}" USE_4BIT_TRUNK="$USE_4BIT_TRUNK" SPECULATIVE_DRAFT_TOKENS="${SPECULATIVE_DRAFT_TOKENS:-}" SPECULATIVE_DRAFTER="${SPECULATIVE_DRAFTER:-}" SPECULATIVE_FIXED_WIDTH="${SPECULATIVE_FIXED_WIDTH:-}" PF_SESSION_DIR="${PF_SESSION_DIR:-}" PF_CONTEXT="${PF_CONTEXT:-}" PF_CHUNK="${PF_CHUNK:-}" PF_REPLY_RESERVE="${PF_REPLY_RESERVE:-}" PF_INPUT_MAX="${PF_INPUT_MAX:-}" PF_SUMMARY_TOKENS="${PF_SUMMARY_TOKENS:-}" PF_SESSION_VERIFY="${PF_SESSION_VERIFY:-}" DSPARK_CHECKPOINT="$DSPARK_DIR/model.safetensors" CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-}" PF_VERBOSE="${PF_VERBOSE:-}" \
     PF_DECODE="${PF_DECODE:-}" PF_EXTRA="${PF_EXTRA:-}" PF_SAVE_ROWS="${PF_SAVE_ROWS:-}" PF_CMP_ROWS="${PF_CMP_ROWS:-}" PF_SAVE_IDS="${PF_SAVE_IDS:-}" PF_ROUTES="${PF_ROUTES:-}" PF_CHAT="${PF_CHAT:-}" PF_SYSTEM="${PF_SYSTEM:-}" PF_CACHE="${PF_CACHE:-}" \
     PF_SWEEP="${PF_SWEEP:-}" PF_SWEEP_IDS="${PF_SWEEP_IDS:-}" PF_SWEEP_N="${PF_SWEEP_N:-}" LB_SWEEP_EXPK="${LB_SWEEP_EXPK:-0}" \
     OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores \

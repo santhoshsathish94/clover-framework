@@ -1,13 +1,14 @@
 #!/bin/bash
 # Checks the chat session with a small context window so that the paths run: a fact recalled from an earlier turn, a long message summarised first
-# (LONG_INPUT=1 adds that turn, about 20 minutes), and the oldest turns summarised when the window fills. One model run; run it detached,
-# the result is in work/results/check-chat-session.result.
+# (LONG_INPUT=1 adds that turn, about 20 minutes), and the oldest turns summarised when the window fills. PF_SESSION_VERIFY=1 makes every
+# continued turn also run one pass over the whole conversation and compare the two (the line in status.txt says bit-identical or DIFFERENT).
+# One model run; run it detached, the result is in work/results/check-chat-session.result.
 # usage: [LONG_INPUT=1] check-chat-session.sh
 set -u
 . "$(dirname "${BASH_SOURCE[0]}")/settings.sh"
 cd "$RESULTS_DIR"
 NAME=check; DIR=$RESULTS_DIR/session-$NAME; OUT=$RESULTS_DIR/check-chat-session.result
-export PF_CONTEXT=1024 PF_CHUNK=256 PF_REPLY_RESERVE=256 PF_INPUT_MAX=400 PF_SUMMARY_TOKENS=120 PF_DECODE=40
+export PF_CONTEXT=1024 PF_CHUNK=256 PF_REPLY_RESERVE=256 PF_INPUT_MAX=400 PF_SUMMARY_TOKENS=120 PF_DECODE=40 PF_SESSION_VERIFY=1
 "$SCRIPTS_DIR/chat-start.sh" $NAME "Answer briefly." > /dev/null
 for _ in $(seq 1 240); do [ -f "$DIR/ready" ] && break; sleep 5; done
 [ -f "$DIR/ready" ] || { echo "the model was not ready after 20 minutes"; tail -5 "$DIR/engine.log"; } > "$OUT"

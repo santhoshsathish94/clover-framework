@@ -8,10 +8,10 @@ ENGINE_DIR="${ENGINE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 WORK_DIR="${WORK_DIR:-$ENGINE_DIR/work}"
 # The model: root-N (experts, 15.7 GB per layer), trunk-N (the other weights), operators, tokenizer files. 1.4 TB.
 DATASET_DIR="${DATASET_DIR:-$ENGINE_DIR/dataset}"
-# The deployed per-layer pod sources and configs the engine reuses at build time and for the final head (server, common, tansformers/transformer-N). Read only.
-POD_DIR="${POD_DIR:-/opt/clover-k3/clover-intelegence/code/distrubuted-hosting}"
-# The C tokenizer the words-to-embeddings stage is built from. Read only.
-TOKENIZER_DIR="${TOKENIZER_DIR:-/root/kimi-k3-in-c}"
+# The 20 source files of the earlier pod tree the engine builds from (pod/, in this repo) plus, created by wire-dataset.sh and run-model.sh, the links into the dataset and the tail library the engine opens at run time.
+POD_DIR="${POD_DIR:-$ENGINE_DIR/pod}"
+# The five tokenizer headers (Apache-2.0, from kimi-k3-in-c at commit a2ad8e5, with licence) the words-to-embeddings stage is built from (third_party/, in this repo).
+TOKENIZER_DIR="${TOKENIZER_DIR:-$ENGINE_DIR/third_party/kimi-k3-in-c}"
 # The Kimi K3 DSpark draft checkpoint (7.1 GB).
 DSPARK_DIR="${DSPARK_DIR:-$ENGINE_DIR/models/dspark}"
 

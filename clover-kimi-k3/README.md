@@ -29,16 +29,31 @@ The prompt is processed in batches, decode keeps recently used experts in RAM, a
 | | `whole-model.c` the driver: setup, prompt pass, decode, speculative decoding, chat mode, final head through the deployed pod library |
 | | `dspark-draft.c` the DSpark draft model (5 dense MLA layers, Markov head), drafts 8 tokens from the target's hidden states after layers 2, 23, 47, 71, 89 |
 | | `ids-to-text.c` small tool: token ids to text |
-| `scripts/` | `settings.sh` (all paths, one place) and `run-model.sh` (build and run), then the checks: `check-one-prompt.sh`, `check-1000-token-prompt.sh`, `check-speculative-decoding.sh`, `compare-exact-and-4bit-trunk.sh`, `compare-chat-answers.sh`, `run-34-recorded-prompts.sh`, `measure-multi-token-pass.sh`, `check-chat-session.sh`, `verify-engine-folder.sh`; chat: `chat-start.sh`, `chat-say.sh`, `chat-stop.sh`; setup: `set-up-host-folder.sh`, `download-dspark-checkpoint.sh` |
+| `scripts/` | `settings.sh` (all paths, one place) and `run-model.sh` (build and run), then the checks: `check-one-prompt.sh`, `check-1000-token-prompt.sh`, `check-speculative-decoding.sh`, `compare-exact-and-4bit-trunk.sh`, `compare-chat-answers.sh`, `run-34-recorded-prompts.sh`, `measure-multi-token-pass.sh`, `check-chat-session.sh`, `verify-engine-folder.sh`; chat: `chat-start.sh`, `chat-say.sh`, `chat-stop.sh`; new machine: `set-up-new-machine.sh`, `verify-setup.sh`, `check-dataset-files.sh`, `wire-dataset.sh`, `download-dspark-checkpoint.sh`; the one-time move of the host's old folders: `set-up-host-folder.sh` |
 | `tools/` | `compare-outputs.py`, `compare-34-prompts-with-recorded.py`, `expert-route-analysis.py` |
-| `prompts/` | the 34 recorded prompts and their recorded results, and three small prompts used by the checks |
+| `pod/` | the 20 source files of the earlier pod tree that the engine builds from (layers 1, 2, 3 and the tail, the shared headers), copied unchanged; `wire-dataset.sh` and `run-model.sh` add the links into the dataset and the tail library under `pod/*/bin/` (not committed) |
+| `third_party/kimi-k3-in-c/` | the five tokenizer headers the engine builds from, with their Apache-2.0 licence and notice, from github.com/FareedKhan-dev/kimi-k3-in-c at commit a2ad8e5, unmodified |
+| `assets/` | `tokenizer_config.json` (Kimi K3's, 3,478 bytes) |
+| `prompts/` | the 34 recorded prompts and their recorded results, `expected-exact-ids.tsv` (the 12 token ids each one must give), the recorded 1000-token prompt, and three small prompts used by the checks |
 | `docs/` | `current-status.md` (the dated log of everything measured, including every negative result) and `layer0-verdict.md` |
 | `models/dspark/` | (host only) the Kimi K3 DSpark draft checkpoint, 7.1 GB, used by `src/dspark-draft.c` |
 | `work/` | (host only) `build/` the compiled program, `inputs/` tokenizer files, recorded prompt and the pod's chain values, `results/` every log and output |
 | `dataset/` | (host only) the model: experts `root-N` (15.7 GB per layer), `trunk-N`, operators, tokenizer files. 1.4 TB. |
 
-On the host the engine lives in `/opt/clover-k3/clover-kimi-k3`. The old path `/opt/clover-k3/clover-intelegence/dataset` is a link to the dataset there.
-The deployed pod sources the build reuses (`POD_DIR`, read only) and the C tokenizer (`TOKENIZER_DIR`) stay where they are.
+On the host the engine lives in `/opt/clover-k3/clover-kimi-k3`. Nothing outside this folder is needed to build or run it except the dataset (`DATASET_DIR`) and, for the DSpark drafter and chats, the DSpark checkpoint.
+
+## Setting up a new machine
+
+```
+curl -fsSL https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/clover-kimi-k3/scripts/set-up-new-machine.sh -o set-up-new-machine.sh
+sudo bash set-up-new-machine.sh                  # every step; or name steps: preflight packages clone download check-dataset wire build dspark verify
+```
+
+It checks the machine (Linux x86_64, AVX-512 advised, 124 GB RAM was what it was measured on, about 1.4 TB of local NVMe with O_DIRECT, memory-lock limit), installs the tools, clones only this folder from GitHub into `/opt/clover-k3/clover-framework`, downloads the dataset from Hugging Face (`HF_REPO`, default `santhoshsathish94/clover-kimi-k3`, type `dataset`, resumable, `HF_TOKEN` for a private repo), checks every file against `scripts/dataset-files.tsv`, wires the links, builds, fetches the DSpark checkpoint and runs `scripts/verify-setup.sh`: recorded prompts must give the recorded 12 token ids, DSpark speculative decoding must equal plain decoding, the recorded 1000-token prompt must match the pod's chain bit for bit (when `engine-inputs/refs` is in the dataset repo), and a chat must remember a name from the turn before. Every step can be re-run; the report is `/opt/clover-k3/set-up-new-machine.report`.
+
+The same steps run as a GitHub Actions workflow, `.github/workflows/set-up-clover-kimi-k3.yml` (start it from the Actions tab), on the new machine registered as a self-hosted runner with the label `clover-k3` (its service needs `LimitMEMLOCK=infinity`).
+
+What the Hugging Face repo must contain (its root is the dataset folder): `root-1` to `root-92`, `trunk-0` to `trunk-92`, `operators/`, `inputs/`, `outputs/`, `leaves.json`, `tiktoken.model`, `vocabulary.bin`, and optionally `engine-inputs/refs/` with `embed.f32`, `final.resid.f32`, `final.snaps.f32` (286 MB, the pod's chain for the recorded prompt).
 
 ## Running
 
