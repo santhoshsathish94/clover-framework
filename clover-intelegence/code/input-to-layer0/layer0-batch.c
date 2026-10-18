@@ -609,4 +609,18 @@ void stage2_stepk(const uint32_t *ids, const float *emb, unsigned n, float *out)
     run_layer0(p_server, ids, emb, n, n, 1, &p_buf, out, p_hist, p_rec);
     g_keep_state = 0;
 }
+
+/* Copies of the recurrent state and convolution history, so a rejected draft can be undone (speculative decoding). */
+static float (*p_saved_hist)[R][3], (*p_saved_rec)[D][D];
+void stage2_save_state(void)
+{
+    if (!p_saved_hist) { p_saved_hist = grab(3 * sizeof(float[R][3])); p_saved_rec = grab((size_t)H * D * D * sizeof(float)); }
+    memcpy(p_saved_hist, p_hist, 3 * sizeof(float[R][3]));
+    memcpy(p_saved_rec, p_rec, (size_t)H * D * D * sizeof(float));
+}
+void stage2_restore_state(void)
+{
+    memcpy(p_hist, p_saved_hist, 3 * sizeof(float[R][3]));
+    memcpy(p_rec, p_saved_rec, (size_t)H * D * D * sizeof(float));
+}
 #endif

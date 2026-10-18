@@ -2208,6 +2208,20 @@ void stage3_set_scratch(unsigned char *const *slots, unsigned n)
     for (unsigned i = 0; i < n; i++) g_scratch[i] = slots[i];
     g_scratch_n = n;
 }
+/* Copies of layer 1's recurrent state and convolution history, so a rejected draft can be undone (speculative decoding). */
+static float (*p_saved_hist)[ROWS][3];
+static float (*p_saved_rec)[HDIM][HDIM];
+void stage3_save_state(void)
+{
+    if (!p_saved_hist) { p_saved_hist = grab(3 * (size_t)ROWS * 3 * sizeof(float)); p_saved_rec = grab((size_t)NHEAD * HDIM * HDIM * sizeof(float)); }
+    memcpy(p_saved_hist, p_hist, 3 * (size_t)ROWS * 3 * sizeof(float));
+    memcpy(p_saved_rec, p_rec, (size_t)NHEAD * HDIM * HDIM * sizeof(float));
+}
+void stage3_restore_state(void)
+{
+    memcpy(p_hist, p_saved_hist, 3 * (size_t)ROWS * 3 * sizeof(float));
+    memcpy(p_rec, p_saved_rec, (size_t)NHEAD * HDIM * HDIM * sizeof(float));
+}
 #endif
 
 #ifdef LB_ENTRY
@@ -2227,6 +2241,8 @@ typedef struct {
     MlaCache mla;
     ExpertCache *cache;
     PackedTrunk *packed_trunk;   /* NULL unless USE_4BIT_TRUNK=1 */
+    float (*saved_hist)[ROWS][3];   /* KDA only: copies made by _save_state */
+    float (*saved_rec)[HDIM][HDIM];
 } LbLayer;
 static Buf e_b;
 
@@ -2374,4 +2390,22 @@ void LB_CAT(LB_PFX, _set_scratch)(unsigned char *const *slots, unsigned n)
     g_scratch_n = n;
 }
 unsigned long LB_CAT(LB_PFX, _distinct)(void) { return g_window_count ? g_distinct_sum / g_window_count : 0; }
+
+/* Speculative decoding: remember the recurrent state before a pass over a draft and put it back if the draft is rejected. An MLA layer has no
+   such state: the key/value entries of rejected positions are overwritten by the next pass. */
+void LB_CAT(LB_PFX, _save_state)(void *handle)
+{
+    LbLayer *h = handle;
+    if (!h->hist) return;
+    if (!h->saved_hist) { h->saved_hist = grab(3 * (size_t)ROWS * 3 * sizeof(float)); h->saved_rec = grab((size_t)NHEAD * HDIM * HDIM * sizeof(float)); }
+    memcpy(h->saved_hist, h->hist, 3 * (size_t)ROWS * 3 * sizeof(float));
+    memcpy(h->saved_rec, h->rec, (size_t)NHEAD * HDIM * HDIM * sizeof(float));
+}
+void LB_CAT(LB_PFX, _restore_state)(void *handle)
+{
+    LbLayer *h = handle;
+    if (!h->hist) return;
+    memcpy(h->hist, h->saved_hist, 3 * (size_t)ROWS * 3 * sizeof(float));
+    memcpy(h->rec, h->saved_rec, (size_t)NHEAD * HDIM * HDIM * sizeof(float));
+}
 #endif

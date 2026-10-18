@@ -29,11 +29,11 @@ gcc $F -DLB_GENERIC -DLB_ENTRY -DLB_PFX=lbm -DLB_TEMPLATE='"tpl-mla.c"' -O3 -I$D
 gcc $F -O2 -c pipeline-full.c -o f-main.o 2> build-f6.log || fail main build-f6.log
 # every object keeps only its entry points global, so the several programs built from the same sources cannot collide
 objcopy --keep-global-symbol=stage1_setup --keep-global-symbol=stage1_ids --keep-global-symbol=stage1_ids_plain --keep-global-symbol=stage1_id_of --keep-global-symbol=stage1_lookup f-input.o
-objcopy --keep-global-symbol=stage2_setup --keep-global-symbol=stage2_run --keep-global-symbol=stage2_step --keep-global-symbol=stage2_stepk f-layer0.o
-objcopy --keep-global-symbol=stage3_setup --keep-global-symbol=stage3_run --keep-global-symbol=stage3_step --keep-global-symbol=stage3_stepk --keep-global-symbol=stage3_set_scratch --keep-global-symbol=stage3_use_buffer --keep-global-symbol=stage3_route_log --keep-global-symbol=stage3_routes --keep-global-symbol=stage3_hits --keep-global-symbol=stage3_set_slots --keep-global-symbol=stage3_cache_stats --keep-global-symbol=stage3_guess_stats --keep-global-symbol=stage3_laps f-layer1.o
+objcopy --keep-global-symbol=stage2_setup --keep-global-symbol=stage2_run --keep-global-symbol=stage2_step --keep-global-symbol=stage2_stepk --keep-global-symbol=stage2_save_state --keep-global-symbol=stage2_restore_state f-layer0.o
+objcopy --keep-global-symbol=stage3_setup --keep-global-symbol=stage3_run --keep-global-symbol=stage3_step --keep-global-symbol=stage3_stepk --keep-global-symbol=stage3_save_state --keep-global-symbol=stage3_restore_state --keep-global-symbol=stage3_set_scratch --keep-global-symbol=stage3_use_buffer --keep-global-symbol=stage3_route_log --keep-global-symbol=stage3_routes --keep-global-symbol=stage3_hits --keep-global-symbol=stage3_set_slots --keep-global-symbol=stage3_cache_stats --keep-global-symbol=stage3_guess_stats --keep-global-symbol=stage3_laps f-layer1.o
 for p in lbk:f-kda.o lbm:f-mla.o; do
   pre=${p%%:*}; obj=${p##*:}
-  objcopy --keep-global-symbol=${pre}_set_buffer --keep-global-symbol=${pre}_init --keep-global-symbol=${pre}_open --keep-global-symbol=${pre}_run --keep-global-symbol=${pre}_step --keep-global-symbol=${pre}_stepk --keep-global-symbol=${pre}_set_scratch --keep-global-symbol=${pre}_distinct --keep-global-symbol=${pre}_route_log --keep-global-symbol=${pre}_routes --keep-global-symbol=${pre}_hits --keep-global-symbol=${pre}_set_slots --keep-global-symbol=${pre}_cache_stats --keep-global-symbol=${pre}_guess_stats --keep-global-symbol=${pre}_laps $obj
+  objcopy --keep-global-symbol=${pre}_set_buffer --keep-global-symbol=${pre}_init --keep-global-symbol=${pre}_open --keep-global-symbol=${pre}_run --keep-global-symbol=${pre}_step --keep-global-symbol=${pre}_stepk --keep-global-symbol=${pre}_save_state --keep-global-symbol=${pre}_restore_state --keep-global-symbol=${pre}_set_scratch --keep-global-symbol=${pre}_distinct --keep-global-symbol=${pre}_route_log --keep-global-symbol=${pre}_routes --keep-global-symbol=${pre}_hits --keep-global-symbol=${pre}_set_slots --keep-global-symbol=${pre}_cache_stats --keep-global-symbol=${pre}_guess_stats --keep-global-symbol=${pre}_laps $obj
 done
 gcc -fopenmp f-main.o f-input.o f-layer0.o f-layer1.o f-kda.o f-mla.o -lm -lpthread -ldl -o pipeline-full 2> build-f7.log || { head -30 build-f7.log; exit 1; }
 echo "built; warnings: $(cat build-f?.log | grep -c warning)"
@@ -53,7 +53,7 @@ fi
 ulimit -l unlimited; ulimit -c 0
 [ -n "${PF_EXTRA:-}" ] && REFS="-"
 echo "PROMPT ($(wc -w < $WORDS) words, $(wc -c < $WORDS) bytes):"; echo "-----"; cat $WORDS; echo; echo "-----"
-env -i PATH="$PATH" LB_IO="${LB_IO:-4}" LB_SPEC="${LB_SPEC:-0}" LB_GUESS="${LB_GUESS:-0}" LB_THP="${LB_THP:-1}" LB_EXPK="${LB_EXPK:-1}" USE_4BIT_TRUNK="$USE_4BIT_TRUNK" CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-}" PF_VERBOSE="${PF_VERBOSE:-}" \
+env -i PATH="$PATH" LB_IO="${LB_IO:-4}" LB_SPEC="${LB_SPEC:-0}" LB_GUESS="${LB_GUESS:-0}" LB_THP="${LB_THP:-1}" LB_EXPK="${LB_EXPK:-1}" USE_4BIT_TRUNK="$USE_4BIT_TRUNK" SPECULATIVE_DRAFT_TOKENS="${SPECULATIVE_DRAFT_TOKENS:-}" CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-}" PF_VERBOSE="${PF_VERBOSE:-}" \
     PF_DECODE="${PF_DECODE:-}" PF_EXTRA="${PF_EXTRA:-}" PF_SAVE_ROWS="${PF_SAVE_ROWS:-}" PF_CMP_ROWS="${PF_CMP_ROWS:-}" PF_SAVE_IDS="${PF_SAVE_IDS:-}" PF_ROUTES="${PF_ROUTES:-}" PF_CHAT="${PF_CHAT:-}" PF_SYSTEM="${PF_SYSTEM:-}" PF_CACHE="${PF_CACHE:-}" \
     PF_SWEEP="${PF_SWEEP:-}" PF_SWEEP_IDS="${PF_SWEEP_IDS:-}" PF_SWEEP_N="${PF_SWEEP_N:-}" LB_SWEEP_EXPK="${LB_SWEEP_EXPK:-0}" \
     OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores \

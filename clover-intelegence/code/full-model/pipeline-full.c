@@ -41,6 +41,7 @@ void stage3_use_buffer(unsigned char *buffer);
 double stage3_setup(const char *dataset, unsigned max_n);
 void stage3_run(const float *resid, const float *s0, unsigned n, unsigned window, float *out);
 void stage3_step(const float *resid, const float *s0, float *out);
+void stage2_save_state(void); void stage2_restore_state(void); void stage3_save_state(void); void stage3_restore_state(void);
 void stage3_route_log(int on);
 void stage3_routes(unsigned short *out);
 void stage3_hits(unsigned long *out);
@@ -58,7 +59,8 @@ void stage3_laps(double *out);
     double P##_run(void *handle, const float *resid, const float *const *snaps, unsigned n, unsigned window, float *out); \
     double P##_step(void *handle, const float *resid, const float *const *snaps, size_t pos0, float *out); \
     double P##_stepk(void *handle, const float *resid, const float *const *snaps, unsigned n, size_t pos0, float *out); \
-    void P##_set_scratch(unsigned char *const *slots, unsigned n); unsigned long P##_distinct(void);
+    void P##_set_scratch(unsigned char *const *slots, unsigned n); unsigned long P##_distinct(void); \
+    void P##_save_state(void *handle); void P##_restore_state(void *handle);
 LAYER_KIND(lbk)
 LAYER_KIND(lbm)
 
@@ -159,6 +161,108 @@ static void chat_feed(uint32_t id, const Text *piece)
     if (*len + piece->length < sizeof chat.response) { memcpy(dst + *len, piece->bytes, piece->length); *len += piece->length; }
 }
 
+/* ---- speculative decoding (SPECULATIVE_DRAFT_TOKENS=D) ----
+   The text so far is searched for the latest earlier place where its last 3 (else 2) tokens occurred; the tokens that followed there are the
+   draft. The last real token and the draft go through the layers as ONE pass; the head then names the model's own next token after each
+   of them, and the draft is kept as far as it agrees. The result is the same tokens plain decoding gives, in fewer passes when the draft is
+   right. A rejected draft leaves the recurrent state of the KDA layers ahead of where it should be, so it is put back from a copy made before
+   the pass and the accepted tokens are fed again. */
+enum { PASS_MAX = 16 };
+typedef int (*TailRun)(const void *, void *, const float *, const float *, unsigned, int, const char *, uint32_t *, Text *);
+typedef struct {
+    void *layer[LAYERS + 1];
+    const void *tail_model; void *tail_sequence; TailRun tail_run;
+    const float *hidden, *snapshot[MAX_SNAPSHOTS];   /* the rows the last forward_tokens call produced */
+} Model;
+typedef struct { unsigned passes, with_draft, replays, drafted, accepted; } SpeculativeStats;
+static float pass_buffer[3][PASS_MAX * W], pass_snapshot[MAX_SNAPSHOTS][PASS_MAX * W], pass_embedding[PASS_MAX * W], tail_snapshots[MAX_SNAPSHOTS * W];
+
+/* k tokens at positions pos0.. through all layers; one token takes the single-token path, which is exactly what plain decoding runs. */
+static void forward_tokens(Model *m, const uint32_t *ids, unsigned k, size_t pos0)
+{
+    stage1_lookup((const unsigned *)ids, k, pass_embedding);
+    if (k == 1) { stage2_step(ids, pass_embedding, pass_buffer[0]); stage3_step(pass_buffer[0], pass_embedding, pass_buffer[1]); }
+    else { stage2_stepk(ids, pass_embedding, k, pass_buffer[0]); stage3_stepk(pass_buffer[0], pass_embedding, k, pass_buffer[1]); }
+    unsigned current = 1, snapshots = 1;
+    m->snapshot[0] = pass_embedding;
+    for (unsigned l = 2; l <= LAYERS; l++) {
+        float *out = pass_buffer[(current + 1) % 3];
+        if (k == 1) (is_mla(l) ? lbm_step : lbk_step)(m->layer[l], pass_buffer[current], m->snapshot, pos0, out);
+        else (is_mla(l) ? lbm_stepk : lbk_stepk)(m->layer[l], pass_buffer[current], m->snapshot, k, pos0, out);
+        if (l % 12 == 0) { memcpy(pass_snapshot[snapshots], pass_buffer[current], (size_t)k * W * sizeof(float)); m->snapshot[snapshots] = pass_snapshot[snapshots]; snapshots++; }
+        current = (current + 1) % 3;
+    }
+    if (snapshots != MAX_SNAPSHOTS) bail("the last layer should hand on eight snapshots");
+    m->hidden = pass_buffer[current];
+}
+
+/* The model's next token after row `row` of the last pass. */
+static void next_token_after(Model *m, unsigned row, uint32_t *token, Text *piece)
+{
+    for (unsigned s = 0; s < MAX_SNAPSHOTS; s++) memcpy(tail_snapshots + (size_t)s * W, m->snapshot[s] + (size_t)row * W, W * sizeof(float));
+    if (!m->tail_run(m->tail_model, m->tail_sequence, m->hidden + (size_t)row * W, tail_snapshots, MAX_SNAPSHOTS, 0, "", token, piece)) bail("decode step failed");
+}
+
+static void states_do(Model *m, int restore)
+{
+    if (restore) stage2_restore_state(); else stage2_save_state();
+    if (restore) stage3_restore_state(); else stage3_save_state();
+    for (unsigned l = 2; l <= LAYERS; l++) {
+        if (restore) (is_mla(l) ? lbm_restore_state : lbk_restore_state)(m->layer[l]);
+        else (is_mla(l) ? lbm_save_state : lbk_save_state)(m->layer[l]);
+    }
+}
+
+static unsigned draft_from_text(const uint32_t *text, unsigned length, unsigned wanted, uint32_t *draft)
+{
+    for (unsigned n = 3; n >= 2; n--)
+        for (long end = (long)length - 2; end >= (long)n - 1; end--) {
+            unsigned match = 1;
+            for (unsigned i = 0; i < n && match; i++) match = text[end - i] == text[length - 1 - i];
+            if (!match) continue;
+            const unsigned count = (unsigned)(length - 1 - end) < wanted ? (unsigned)(length - 1 - end) : wanted;
+            memcpy(draft, text + end + 1, count * sizeof *draft);
+            return count;
+        }
+    return 0;
+}
+
+/* gen[0] is the prompt's next token, not yet fed; fills gen[1..] up to `decode` new tokens; returns how many were made after gen[0]. */
+static unsigned speculative_decode(Model *m, const uint32_t *prompt, unsigned N, uint32_t *gen, unsigned decode, unsigned max_draft,
+                                   char *text, size_t *text_len, size_t text_capacity, SpeculativeStats *stats)
+{
+    uint32_t *seen = malloc((N + decode + 2) * sizeof *seen);   /* prompt, then every token made so far */
+    memcpy(seen, prompt, N * sizeof *seen);
+    seen[N] = gen[0];
+    unsigned produced = 1;
+    while (produced < decode + 1 && !chat.done) {
+        const unsigned fed = produced - 1, remaining = decode + 1 - produced;
+        uint32_t pass_ids[PASS_MAX];
+        pass_ids[0] = gen[fed];
+        const unsigned drafted = remaining > 1 ? draft_from_text(seen, N + produced, remaining - 1 < max_draft ? remaining - 1 : max_draft, pass_ids + 1) : 0;
+        if (drafted) states_do(m, 0);
+        forward_tokens(m, pass_ids, drafted + 1, N + fed);
+        unsigned j = 0;
+        for (;; j++) {   /* the head is asked only for tokens that are kept, in order, so its own text state never sees a rejected one */
+            uint32_t next; Text piece = {0, 0};
+            next_token_after(m, j, &next, &piece);
+            gen[produced] = next; seen[N + produced] = next; produced++;
+            if (chat.on) chat_feed(next, &piece);
+            if (*text_len + piece.length < text_capacity) { memcpy(text + *text_len, piece.bytes, piece.length); *text_len += piece.length; }
+            if (chat.done || j == drafted || pass_ids[j + 1] != next) break;
+        }
+        stats->passes++; stats->drafted += drafted; stats->with_draft += drafted > 0;
+        stats->accepted += j == drafted ? drafted : j;
+        if (j < drafted && !chat.done) {   /* positions after j were fed on a wrong guess: undo, then feed only the accepted ones */
+            states_do(m, 1);
+            forward_tokens(m, pass_ids, j + 1, N + fed);
+            stats->replays++;
+        }
+    }
+    free(seen);
+    return produced - 1;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 6) { fputs("usage: pipeline-full CODE_DIR DATASET TOKFILES WORDS REFDIR\n", stderr); return 2; }
@@ -193,6 +297,10 @@ int main(int argc, char **argv)
     const unsigned sweep_k = getenv("PF_SWEEP") && *getenv("PF_SWEEP") ? (unsigned)atoi(getenv("PF_SWEEP")) : 0;
     const unsigned sweep_n = getenv("PF_SWEEP_N") && *getenv("PF_SWEEP_N") ? (unsigned)atoi(getenv("PF_SWEEP_N")) : 0;
     if (sweep_k > 16) bail("PF_SWEEP is at most 16");
+    const unsigned max_draft = getenv("SPECULATIVE_DRAFT_TOKENS") && *getenv("SPECULATIVE_DRAFT_TOKENS") ? (unsigned)atoi(getenv("SPECULATIVE_DRAFT_TOKENS")) : 0;
+    if (max_draft >= PASS_MAX) bail("SPECULATIVE_DRAFT_TOKENS is at most 15");
+    if (max_draft && sweep_k) bail("SPECULATIVE_DRAFT_TOKENS and PF_SWEEP are separate experiments");
+    const unsigned pass_k = sweep_k > max_draft + 1 ? sweep_k : max_draft + 1;
     const int routes_on = getenv("PF_ROUTES") && *getenv("PF_ROUTES");
     unsigned long *hits = calloc((size_t)LAYERS * 896, sizeof *hits);          /* prompt pass: how often each expert was chosen, layers 1..92 */
     unsigned short *route_rec = calloc((size_t)(decode + 1) * LAYERS * 48, sizeof *route_rec);   /* decode steps: 16 chosen + 32 guessed per layer */
@@ -264,8 +372,8 @@ int main(int argc, char **argv)
     if (cache_cap) { FILL_SLOTS(0) stage3_set_slots(slot_ptrs, cache_cap); }
     lbk_set_buffer(experts); lbm_set_buffer(experts);
     lbk_init(N + 16); lbm_init(N + 16);
-    if (sweep_k > 1) {   /* experts a window needs beyond the layer's cache slots: one pool shared by all layers */
-        const unsigned n_scratch = 16 * sweep_k < 128 ? 16 * sweep_k : 128;
+    if (pass_k > 1) {   /* experts a window needs beyond the layer's cache slots: one pool shared by all layers */
+        const unsigned n_scratch = 16 * pass_k < 128 ? 16 * pass_k : 128;
         unsigned char *scratch_mem = mmap(NULL, (size_t)n_scratch * EXPERT_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         if (scratch_mem == MAP_FAILED) bail("cannot allocate the scratch pool");
         madvise(scratch_mem, (size_t)n_scratch * EXPERT_BYTES, MADV_HUGEPAGE);
@@ -460,6 +568,11 @@ int main(int argc, char **argv)
         double laps0[3][24], laps1[3][24];
         stage3_laps(laps0[0]); lbk_laps(laps0[1]); lbm_laps(laps0[2]);
         const double d0 = clk();
+        SpeculativeStats speculation = {0};
+        Model model = { .tail_model = tail_model, .tail_sequence = dseq, .tail_run = tail_run };
+        memcpy(model.layer, layer, sizeof model.layer);
+        if (max_draft) steps = speculative_decode(&model, (const uint32_t *)ids, N, gen, decode, max_draft, text, &text_len, sizeof text, &speculation);
+        else
         for (unsigned i = 0; i < decode && !chat.done; i++) {
             const double s_begin = clk();
             const uint32_t id = gen[i];
@@ -494,7 +607,12 @@ int main(int argc, char **argv)
         printf("DECODE, %u more tokens after the %u-token prompt: %.3f s in total (first step %.3f s, mean %.3f s per token; layers %.3f s, tail %.3f s)\n",
             steps, N, dec, first_step, steps ? dec / steps : 0.0, layers_s, tail_s);
         printf("   major page faults during the decode steps: %lu\n", vmstat_major_faults() - faults0);
-        {   /* seconds per decode token, summed over layers: stages before the router (0-10), latent projection (11), experts (12), the rest (13-18), early guess (19) */
+        if (max_draft)
+            printf("   SPECULATIVE DECODING, up to %u draft tokens: %u new tokens in %u passes (%u with a draft, %u of them rejected and fed again); "
+                   "%u draft tokens proposed, %u kept (%.1f%%); %.3f s per new token\n", max_draft, steps, speculation.passes, speculation.with_draft,
+                   speculation.replays, speculation.drafted, speculation.accepted,
+                   speculation.drafted ? 100.0 * speculation.accepted / speculation.drafted : 0.0, steps ? dec / steps : 0.0);
+        if (!max_draft) {   /* seconds per decode token, summed over layers: stages before the router (0-10), latent projection (11), experts (12), the rest (13-18), early guess (19) */
             stage3_laps(laps1[0]); lbk_laps(laps1[1]); lbm_laps(laps1[2]);
             double part[5] = {0};
             for (int o = 0; o < 3; o++) for (int id = 0; id < 20; id++) {
