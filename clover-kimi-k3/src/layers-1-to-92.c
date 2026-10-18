@@ -2189,6 +2189,18 @@ void stage3_run(const float *resid, const float *s0, unsigned n, unsigned window
     run_layer(p_tr, p_root, resid, snapshots, n, window, &p_b, out, p_hist, p_rec, NULL);
 }
 
+/* n more tokens after earlier ones as one prompt-style pass (a chat turn): the state stays as the earlier tokens left it. */
+void stage3_run_from(const float *resid, const float *s0, unsigned n, unsigned window, float *out)
+{
+    g_evict_s = 0; g_distinct_sum = 0; g_window_count = 0; memset(g_hits, 0, sizeof g_hits);
+    g_read_experts = 0; g_wasted_experts = 0; memset(g_wait_t, 0, sizeof g_wait_t);
+    const float *snapshots[1] = { s0 };
+    g_cache = NULL;
+    if (p_cache) cache_clear(p_cache);
+    g_active_packed_trunk = NULL;
+    run_layer(p_tr, p_root, resid, snapshots, n, window, &p_b, out, p_hist, p_rec, NULL);
+}
+
 /* One more token after the prompt: the state stays as the prompt left it. */
 void stage3_step(const float *resid, const float *s0, float *out)
 {
@@ -2349,6 +2361,27 @@ double LB_CAT(LB_PFX, _run)(void *handle, const float *resid, const float *const
     g_active_packed_trunk = NULL;   /* the prompt pass is compute-bound, where the 4-bit kernel is slower than the 8-bit one */
     const double t0 = clk();
     run_layer(h->tr, h->tr->root, resid, snaps, n, window, &e_b, out, h->hist, h->rec, NULL);
+    return clk() - t0;
+}
+
+/* n more tokens at positions pos0.. after earlier ones, as one prompt-style pass (a chat turn): the state and the attention cache stay as
+   the earlier tokens left them; the experts are read the way a prompt pass reads them. */
+double LB_CAT(LB_PFX, _run_from)(void *handle, const float *resid, const float *const *snaps, unsigned n, unsigned window, size_t pos0, float *out)
+{
+    LbLayer *h = handle;
+    lb_layer_no = h->layer; lb_k_in = h->k;
+    g_palette = h->tr->palette; g_ident = h->ident;
+    g_direct_fd = h->direct_fd; g_expert_fd = h->plain_fd;
+    g_mla = h->mla;
+    g_evict_s = 0; g_distinct_sum = 0; g_window_count = 0; memset(g_hits, 0, sizeof g_hits);
+    g_read_experts = 0; g_wasted_experts = 0; memset(g_wait_t, 0, sizeof g_wait_t);
+    g_pos0 = pos0;
+    g_cache = NULL;
+    if (h->cache) cache_clear(h->cache);
+    g_active_packed_trunk = NULL;
+    const double t0 = clk();
+    run_layer(h->tr, h->tr->root, resid, snaps, n, window, &e_b, out, h->hist, h->rec, NULL);
+    g_pos0 = 0;
     return clk() - t0;
 }
 

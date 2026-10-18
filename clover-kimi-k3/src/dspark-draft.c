@@ -168,6 +168,9 @@ int dspark_open(const char *checkpoint, const char *head_table, unsigned max_pos
     return 1;
 }
 
+/* The target's sequence starts over (a chat that was rebuilt from a summary): the draft forgets the context it has read. */
+void dspark_reset(void) { D.context_length = 0; }
+
 /* Context: the target's hidden states of positions [D.context_length, end) after the 5 chosen layers; aux[a] + position * 7168 is the row of layer a. */
 static void extend_context(const float *const aux[TARGETS], unsigned end)
 {

@@ -606,6 +606,16 @@ void stage2_run(const uint32_t *ids, const float *emb, unsigned n, unsigned wind
     run_layer0(p_server, ids, emb, n, window, 1, &p_buf, out, p_hist, p_rec);
 }
 
+/* n more tokens after earlier ones as one prompt-style pass (a chat turn): the state stays as the earlier tokens left it. */
+void stage2_run_from(const uint32_t *ids, const float *emb, unsigned n, unsigned window, float *out)
+{
+    g_chunk = 32;
+    g_keep_state = 1;
+    g_packed_active = 0;
+    run_layer0(p_server, ids, emb, n, window, 1, &p_buf, out, p_hist, p_rec);
+    g_keep_state = 0;
+}
+
 /* One more token after the prompt: the state stays as the prompt left it. */
 void stage2_step(const uint32_t *id, const float *emb, float *out)
 {

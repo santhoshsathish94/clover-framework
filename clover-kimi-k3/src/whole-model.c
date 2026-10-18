@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <dlfcn.h>
+#include <unistd.h>
 #include <sys/mman.h>
 
 double stage1_setup(const char *tokfiles, const char *seed);
@@ -33,6 +34,7 @@ int stage1_id_of(const char *name);
 void stage1_lookup(const unsigned *ids, unsigned n, float *out);
 double stage2_setup(const char *code_dir, unsigned max_n);
 void stage2_run(const uint32_t *ids, const float *emb, unsigned n, unsigned window, float *out);
+void stage2_run_from(const uint32_t *ids, const float *emb, unsigned n, unsigned window, float *out);
 void stage2_step(const uint32_t *id, const float *emb, float *out);
 void stage2_stepk(const uint32_t *ids, const float *emb, unsigned n, float *out);
 void stage3_stepk(const float *resid, const float *s0, unsigned n, float *out);
@@ -40,6 +42,7 @@ void stage3_set_scratch(unsigned char *const *slots, unsigned n);
 void stage3_use_buffer(unsigned char *buffer);
 double stage3_setup(const char *dataset, unsigned max_n);
 void stage3_run(const float *resid, const float *s0, unsigned n, unsigned window, float *out);
+void stage3_run_from(const float *resid, const float *s0, unsigned n, unsigned window, float *out);
 void stage3_step(const float *resid, const float *s0, float *out);
 void stage2_keep_positions(unsigned count); void stage2_use_position(unsigned position); void stage3_keep_positions(unsigned count); void stage3_use_position(unsigned position);
 void stage3_route_log(int on);
@@ -57,6 +60,7 @@ void stage3_laps(double *out);
     void P##_set_buffer(unsigned char *buffer); double P##_init(unsigned max_n); \
     void *P##_open(const char *dataset, unsigned layer, unsigned k, unsigned max_n); \
     double P##_run(void *handle, const float *resid, const float *const *snaps, unsigned n, unsigned window, float *out); \
+    double P##_run_from(void *handle, const float *resid, const float *const *snaps, unsigned n, unsigned window, size_t pos0, float *out); \
     double P##_step(void *handle, const float *resid, const float *const *snaps, size_t pos0, float *out); \
     double P##_stepk(void *handle, const float *resid, const float *const *snaps, unsigned n, size_t pos0, float *out); \
     void P##_set_scratch(unsigned char *const *slots, unsigned n); unsigned long P##_distinct(void); \
@@ -180,6 +184,7 @@ static float pass_buffer[3][PASS_MAX * W], pass_snapshot[MAX_SNAPSHOTS][PASS_MAX
 /* DSpark draft model (dspark-draft.c): it reads the target's hidden states after layers 2, 23, 47, 71 and 89, one row of 7168 floats per position. */
 int dspark_open(const char *checkpoint, const char *head_table, unsigned max_positions);
 void dspark_draft(const float *const aux[5], uint32_t anchor, unsigned anchor_position, uint32_t *drafts);
+void dspark_reset(void);
 static const unsigned dspark_layers[5] = { 2, 23, 47, 71, 89 };
 static float *dspark_hidden[5];   /* NULL unless DSpark is used; allocated in main */
 static int fixed_draft_width;     /* SPECULATIVE_FIXED_WIDTH=1: every DSpark pass verifies the most draft tokens allowed */
@@ -264,7 +269,8 @@ static unsigned speculative_decode(Model *m, const uint32_t *prompt, unsigned N,
     uint32_t *seen = malloc((N + decode + 2) * sizeof *seen);   /* prompt, then every token made so far */
     memcpy(seen, prompt, N * sizeof *seen);
     seen[N] = gen[0];
-    keep_positions(m, max_draft);
+    static int positions_kept;   /* a chat session calls this once per turn; the checkpoint buffers are made once */
+    if (!positions_kept) { keep_positions(m, max_draft); positions_kept = 1; }
     unsigned produced = 1;
     double hit = 7, tried = 10;   /* DSpark draft tokens right / tried, decayed by 0.9 per pass; starts at 0.7 */
     while (produced < decode + 1 && !chat.done) {
@@ -298,13 +304,364 @@ static unsigned speculative_decode(Model *m, const uint32_t *prompt, unsigned N,
             hit = hit * 0.9 + (drafted ? j : guess[0] == gen[produced - 1]);
             tried = tried * 0.9 + (drafted ? j + (j < drafted) : 1);
         }
-        if (j < drafted && !chat.done) {   /* positions after j were fed on a wrong guess: go back to the state after token j */
+        if (j < drafted) {   /* positions after j were fed on a wrong guess (or after the reply ended): go back to the state after token j */
             use_position(m, j);
             stats->rollbacks++;
         }
     }
     free(seen);
     return produced - 1;
+}
+
+/* ---- chat session (PF_SESSION_DIR=dir): several turns in one process ----
+   A turn is the file dir/turn-NNNN.txt (the user's message, written under another name and renamed into place); the reply is written to
+   dir/reply-NNNN.txt, one line about the turn is appended to dir/status.txt, dir/ready appears when the model is loaded, dir/quit ends the session.
+   The layers keep their state between turns, so a new turn only runs its own tokens through the prompt pass. When the conversation would not
+   leave room for a reply in the context window, the oldest turns are replaced by a summary the model writes and the state is rebuilt from the
+   summary and the newest exchange. A message longer than PF_INPUT_MAX tokens is summarised first and the reply is made from the summary.
+   Answers at once (PF_CHAT=1) only. */
+typedef struct { int assistant; char *text; } ChatTurn;
+static struct {
+    unsigned context, chunk, reply_reserve, input_max, summary_tokens, max_reply, max_draft;
+    unsigned pos;                 /* positions the layers hold: fed[0..pos) */
+    int valid;                    /* 0: the layers hold something else (a summary was just made), the state must be rebuilt */
+    uint32_t *fed;
+    uint32_t pending;             /* the last token of the previous reply: its closing tag, not fed yet */
+    int has_pending;
+    char *summary;
+    ChatTurn *turn; unsigned turns, turns_cap;
+} session;
+static float *prefill_buffer[POOL];
+
+/* ids[0..count) at positions pos0.. through all 93 layers, at most `chunk` at a time; the head then names the next token after the last one.
+   pos0 == 0 starts the layers' state over, anything else continues from the state the earlier tokens left. */
+static uint32_t prefill(Model *m, const uint32_t *ids, unsigned count, unsigned pos0, Text *piece)
+{
+    uint32_t token = 0;
+    for (unsigned done = 0; done < count; done += session.chunk) {
+        const unsigned n = count - done < session.chunk ? count - done : session.chunk, pos = pos0 + done;
+        const int fresh = pos == 0;
+        float *pool[POOL]; unsigned free_n = POOL;
+        memcpy(pool, prefill_buffer, sizeof pool);
+        float *s0 = pool[--free_n], *cur = pool[--free_n], *next = pool[--free_n];
+        stage1_lookup((const unsigned *)(ids + done), n, s0);
+        if (fresh) stage2_run(ids + done, s0, n, n, cur); else stage2_run_from(ids + done, s0, n, n, cur);
+        if (fresh) stage3_run(cur, s0, n, n, next); else stage3_run_from(cur, s0, n, n, next);
+        { float *t = cur; cur = next; next = t; }
+        pool[free_n++] = next;
+        const float *snaps[MAX_SNAPSHOTS] = { s0 };
+        unsigned k = 1;
+        for (unsigned l = 2; l <= LAYERS; l++) {
+            float *out = pool[--free_n];
+            if (is_mla(l)) { if (fresh) lbm_run(m->layer[l], cur, snaps, n, n, out); else lbm_run_from(m->layer[l], cur, snaps, n, n, pos, out); }
+            else { if (fresh) lbk_run(m->layer[l], cur, snaps, n, n, out); else lbk_run_from(m->layer[l], cur, snaps, n, n, pos, out); }
+            keep_for_dspark(l, out, pos, n);
+            if (l % 12 == 0) snaps[k++] = cur; else pool[free_n++] = cur;
+            cur = out;
+        }
+        if (k != MAX_SNAPSHOTS) bail("the last layer should hand on eight snapshots");
+        if (done + n == count) {
+            for (unsigned s = 0; s < MAX_SNAPSHOTS; s++) memcpy(tail_snapshots + (size_t)s * W, snaps[s] + (size_t)(n - 1) * W, W * sizeof(float));
+            if (!m->tail_run(m->tail_model, m->tail_sequence, cur + (size_t)(n - 1) * W, tail_snapshots, MAX_SNAPSHOTS, 0, "", &token, piece)) bail("tail failed");
+        }
+    }
+    return token;
+}
+
+static unsigned count_tokens(const char *text, size_t length)
+{
+    if (!length) return 0;
+    int *ids = malloc((length + 16) * sizeof *ids);
+    if (!ids) bail("allocation failed");
+    const unsigned n = (unsigned)stage1_ids_plain(text, (long)length, ids, (int)(length + 16));
+    free(ids);
+    return n;
+}
+
+static void turn_push(int assistant, const char *text)
+{
+    if (session.turns == session.turns_cap) {
+        session.turns_cap = session.turns_cap ? 2 * session.turns_cap : 16;
+        session.turn = realloc(session.turn, session.turns_cap * sizeof *session.turn);
+        if (!session.turn) bail("allocation failed");
+    }
+    session.turn[session.turns++] = (ChatTurn){ assistant, strdup(text) };
+}
+
+static int user_message_ids(int *ids, int cap, int n, const char *text)
+{
+    return chat_message(ids, cap, n, " role=\"user\"", text, (long)strlen(text));
+}
+
+static int assistant_message_ids(int *ids, int cap, int n, const char *text)
+{
+    ids[n++] = chat.open; n = plain(ids, cap, n, "message"); n = plain(ids, cap, n, " role=\"assistant\""); ids[n++] = chat.sep;
+    ids[n++] = chat.open; n = plain(ids, cap, n, "response"); ids[n++] = chat.sep;
+    if (*text) n += stage1_ids_plain(text, (long)strlen(text), ids + n, cap - n);
+    ids[n++] = chat.close; n = plain(ids, cap, n, "response"); ids[n++] = chat.sep;
+    ids[n++] = chat.close; n = plain(ids, cap, n, "message"); ids[n++] = chat.sep; ids[n++] = chat.eom;
+    return n;
+}
+
+static int reply_open_ids(int *ids, int cap, int n)
+{
+    ids[n++] = chat.open; n = plain(ids, cap, n, "message"); n = plain(ids, cap, n, " role=\"assistant\""); ids[n++] = chat.sep;
+    ids[n++] = chat.open; n = plain(ids, cap, n, "response"); ids[n++] = chat.sep;
+    return n;
+}
+
+/* What follows the last reply's closing tag in the transcript: the rest of the assistant message. A reply that was cut short is closed here. */
+static int reply_end_ids(int *ids, int cap, int n)
+{
+    const int pending = (int)session.pending;
+    if (pending != chat.eos && pending != chat.eom) ids[n++] = pending;
+    if (pending != chat.close) ids[n++] = chat.close;
+    n = plain(ids, cap, n, "response"); ids[n++] = chat.sep;
+    ids[n++] = chat.close; n = plain(ids, cap, n, "message"); ids[n++] = chat.sep; ids[n++] = chat.eom;
+    return n;
+}
+
+static int system_ids(int *ids, int cap, int n)
+{
+    if (chat.system && *chat.system) n = chat_message(ids, cap, n, " role=\"system\"", chat.system, (long)strlen(chat.system));
+    if (session.summary) {
+        const size_t size = strlen(session.summary) + 64;
+        char *text = malloc(size);
+        if (!text) bail("allocation failed");
+        snprintf(text, size, "Summary of the earlier conversation:\n%s", session.summary);
+        n = chat_message(ids, cap, n, " role=\"system\"", text, (long)strlen(text));
+        free(text);
+    }
+    return n;
+}
+
+/* The whole conversation as the model reads it, ending where its next reply starts. */
+static int history_ids(int *ids, int cap, const char *new_user)
+{
+    int n = system_ids(ids, cap, 0);
+    for (unsigned i = 0; i < session.turns; i++)
+        n = session.turn[i].assistant ? assistant_message_ids(ids, cap, n, session.turn[i].text) : user_message_ids(ids, cap, n, session.turn[i].text);
+    return reply_open_ids(ids, cap, user_message_ids(ids, cap, n, new_user));
+}
+
+static int ids_capacity(const char *new_user)
+{
+    size_t bytes = strlen(new_user) + 4096 + (session.summary ? strlen(session.summary) : 0) + (chat.system ? strlen(chat.system) : 0);
+    for (unsigned i = 0; i < session.turns; i++) bytes += strlen(session.turn[i].text) + 64;
+    return (int)bytes;   /* a token is at least one byte */
+}
+
+/* A prompt pass over `ids`, then the reply, up to max_new tokens: gen[0..steps] (the last one is not fed), the text in chat.response. */
+static unsigned reply_to(Model *m, uint32_t *ids, unsigned n, unsigned max_new, uint32_t *gen, SpeculativeStats *stats, double *prefill_seconds)
+{
+    Text piece = {0, 0};
+    const double t0 = clk();
+    gen[0] = prefill(m, ids, n, 0, &piece);
+    *prefill_seconds = clk() - t0;
+    chat.done = 0; chat.closes = 0; chat.in_tag = 0; chat.to_response = 1; chat.think_len = 0; chat.response_len = 0;
+    chat_feed(gen[0], &piece);
+    static char text[1 << 16]; size_t text_len = 0;
+    return speculative_decode(m, ids, n, gen, max_new, session.max_draft, text, &text_len, sizeof text, stats);
+}
+
+/* The model's own summary of one piece of text that fits the context window; it destroys the layers' state. */
+static char *summarize_piece(Model *m, const char *text)
+{
+    char instruction[512];
+    snprintf(instruction, sizeof instruction, "Summarize the following text in at most %u words. Start with every fact the user stated about themselves, their goals or their requirements (names, preferences, constraints), word for word, then give the main points, decisions, numbers and open questions. Write plain prose.\n\n", session.summary_tokens * 3 / 4);
+    const size_t size = strlen(instruction) + strlen(text) + 1;
+    char *request = malloc(size);
+    if (!request) bail("allocation failed");
+    snprintf(request, size, "%s%s", instruction, text);
+    const int cap = (int)size + 4096;
+    int *ids = malloc((size_t)cap * sizeof *ids);
+    uint32_t *gen = malloc((session.summary_tokens + 1) * sizeof *gen);
+    if (!ids || !gen) bail("allocation failed");
+    const char *role = "You write faithful, compact summaries.";
+    int n = chat_message(ids, cap, 0, " role=\"system\"", role, (long)strlen(role));
+    n = reply_open_ids(ids, cap, user_message_ids(ids, cap, n, request));
+    session.valid = 0; session.pos = 0; session.has_pending = 0; dspark_reset();
+    SpeculativeStats stats = {0}; double prefill_seconds;
+    reply_to(m, (uint32_t *)ids, (unsigned)n, session.summary_tokens, gen, &stats, &prefill_seconds);
+    char *summary = strndup(chat.response, chat.response_len);
+    free(request); free(ids); free(gen);
+    return summary ? summary : strdup("");
+}
+
+/* A summary of any length of text: pieces that fit the window are summarised one by one, and the joined summaries again if they are still too long. */
+static char *summarize(Model *m, const char *text)
+{
+    const size_t length = strlen(text);
+    const unsigned piece_tokens = session.context / 2, total = count_tokens(text, length);
+    if (total <= piece_tokens) return summarize_piece(m, text);
+    const size_t piece_bytes = (size_t)((double)length / total * piece_tokens * 0.9);
+    char *joined = strdup(""); size_t joined_size = 1;
+    for (size_t at = 0; at < length; ) {
+        size_t end = at + piece_bytes < length ? at + piece_bytes : length;
+        if (end < length) {   /* end the piece at the last line (else space) break in its final fifth */
+            size_t cut = end;
+            while (cut > at + piece_bytes * 4 / 5 && text[cut - 1] != '\n') cut--;
+            if (text[cut - 1] != '\n') { cut = end; while (cut > at + piece_bytes * 4 / 5 && text[cut - 1] != ' ') cut--; }
+            if (cut > at + piece_bytes * 4 / 5) end = cut;
+        }
+        char *piece = strndup(text + at, end - at);
+        char *part = summarize_piece(m, piece);
+        joined_size += strlen(part) + 2;
+        joined = realloc(joined, joined_size);
+        strcat(joined, part); strcat(joined, "\n\n");
+        free(piece); free(part);
+        at = end;
+    }
+    char *result = count_tokens(joined, strlen(joined)) > piece_tokens ? summarize(m, joined) : joined;
+    if (result != joined) free(joined);
+    return result;
+}
+
+/* The first `count` turns, after the summary so far, as text to be summarised. */
+static char *transcript(unsigned count)
+{
+    size_t size = 64 + (session.summary ? strlen(session.summary) : 0);
+    for (unsigned i = 0; i < count; i++) size += strlen(session.turn[i].text) + 16;
+    char *text = malloc(size);
+    if (!text) bail("allocation failed");
+    text[0] = 0;
+    if (session.summary) { strcat(text, "Earlier summary: "); strcat(text, session.summary); strcat(text, "\n\n"); }
+    for (unsigned i = 0; i < count; i++) { strcat(text, session.turn[i].assistant ? "Assistant: " : "User: "); strcat(text, session.turn[i].text); strcat(text, "\n\n"); }
+    return text;
+}
+
+static void write_file(const char *path, const char *text, size_t length)
+{
+    char temporary[4200];
+    snprintf(temporary, sizeof temporary, "%s.tmp", path);
+    FILE *f = fopen(temporary, "wb");
+    if (!f) bail("cannot write a session file");
+    fwrite(text, 1, length, f);
+    fclose(f);
+    rename(temporary, path);
+}
+
+/* Every summary the model writes is kept in dir/<kind>-NNNN.txt, so what the conversation forgot can be read. */
+static void keep_summary(const char *dir, const char *kind, unsigned number, const char *text)
+{
+    char path[4200];
+    snprintf(path, sizeof path, "%s/%s-%04u.txt", dir, kind, number);
+    write_file(path, text, strlen(text));
+}
+
+static void session_turn(Model *m, const char *dir, unsigned number, char *user)
+{
+    const double began = clk();
+    char path[4200], status[1500];
+    int summarised_input = 0;
+    unsigned user_tokens = count_tokens(user, strlen(user));
+    if (user_tokens > session.input_max) {
+        char *summary = summarize(m, user);
+        keep_summary(dir, "input-summary", number, summary);
+        free(user); user = summary; summarised_input = 1;
+        user_tokens = count_tokens(user, strlen(user));
+    }
+    int cap = ids_capacity(user);
+    int *ids = malloc((size_t)cap * sizeof *ids);
+    if (!ids) bail("allocation failed");
+    int n = 0;
+    const int can_continue = session.valid && session.pos > 0;
+    if (can_continue) {
+        if (session.has_pending) n = reply_end_ids(ids, cap, n);
+        n = reply_open_ids(ids, cap, user_message_ids(ids, cap, n, user));
+    }
+    unsigned continued_from = can_continue ? session.pos : 0;
+    unsigned dropped_turns = 0;
+    if (!can_continue || session.pos + (unsigned)n + session.reply_reserve > session.context) {
+        /* start the state over from the text: with the oldest turns replaced by a summary when the conversation does not fit */
+        continued_from = 0;
+        for (int attempt = 0;; attempt++) {
+            cap = ids_capacity(user);
+            ids = realloc(ids, (size_t)cap * sizeof *ids);
+            n = history_ids(ids, cap, user);
+            if ((unsigned)n + session.reply_reserve <= session.context || session.turns == 0) break;
+            unsigned keep = attempt == 0 && session.turns > 2 ? 2 : 0, old = session.turns - keep;
+            char *text = transcript(old);
+            char *summary = summarize(m, text);
+            keep_summary(dir, "conversation-summary", number, summary);
+            free(text); free(session.summary); session.summary = summary;
+            for (unsigned i = 0; i < old; i++) free(session.turn[i].text);
+            memmove(session.turn, session.turn + old, keep * sizeof *session.turn);
+            session.turns = keep; dropped_turns += old;
+        }
+        if ((unsigned)n + 24 > session.context) bail("the message does not fit the context window even after summarising");
+        session.pos = 0; session.has_pending = 0; dspark_reset();
+    }
+    Text piece = {0, 0};
+    const double t_prefill = clk();
+    uint32_t first = prefill(m, (const uint32_t *)ids, (unsigned)n, continued_from, &piece);
+    const double prefill_seconds = clk() - t_prefill;
+    memcpy(session.fed + continued_from, ids, (size_t)n * sizeof *ids);
+    session.pos = continued_from + (unsigned)n; session.valid = 1;
+    free(ids);
+
+    chat.done = 0; chat.closes = 0; chat.in_tag = 0; chat.to_response = 1; chat.think_len = 0; chat.response_len = 0;
+    chat_feed(first, &piece);
+    const unsigned room = session.context - session.pos - 24;
+    const unsigned max_new = session.max_reply < room ? session.max_reply : room;
+    uint32_t *gen = malloc((max_new + 1) * sizeof *gen);
+    if (!gen) bail("allocation failed");
+    gen[0] = first;
+    static char text[1 << 16]; size_t text_len = 0;
+    SpeculativeStats stats = {0};
+    const double t_reply = clk();
+    const unsigned steps = speculative_decode(m, session.fed, session.pos, gen, max_new, session.max_draft, text, &text_len, sizeof text, &stats);
+    const double reply_seconds = clk() - t_reply;
+    memcpy(session.fed + session.pos, gen, steps * sizeof *gen);
+    session.pos += steps; session.pending = gen[steps]; session.has_pending = 1;
+    free(gen);
+
+    char *reply = strndup(chat.response, chat.response_len);
+    turn_push(0, user); turn_push(1, reply);
+    snprintf(path, sizeof path, "%s/reply-%04u.txt", dir, number);
+    write_file(path, reply, strlen(reply));
+    snprintf(status, sizeof status,
+        "turn %u: message %u tokens%s; %s from position %u, prefill %u tokens in %.1f s; reply %u tokens in %.1f s (%.2f s per token, %u passes, %u of %u draft tokens kept)%s%s; "
+        "positions now %u of %u; %u turns kept%s; wall %.1f s\n",
+        number, user_tokens, summarised_input ? " (summarised first)" : "", continued_from ? "continued" : "rebuilt", continued_from, (unsigned)n, prefill_seconds,
+        steps + 1, reply_seconds, steps ? reply_seconds / steps : 0.0, stats.passes, stats.accepted, stats.drafted,
+        chat.done ? "" : " [cut at the token limit]", dropped_turns ? " [oldest turns summarised]" : "",
+        session.pos, session.context, session.turns, session.summary ? " plus a summary" : "", clk() - began);
+    snprintf(path, sizeof path, "%s/status.txt", dir);
+    FILE *log = fopen(path, "ab");
+    if (log) { fputs(status, log); fclose(log); }
+    fputs(status, stdout); fflush(stdout);
+    free(reply); free(user);
+}
+
+static void run_session(Model *m, const char *dir)
+{
+    char path[4200];
+    session.fed = malloc((session.context + 64) * sizeof *session.fed);
+    for (unsigned i = 0; i < POOL; i++) {
+        prefill_buffer[i] = aligned_alloc(64, ((size_t)session.chunk * W * sizeof(float) + 63) / 64 * 64);
+        if (!prefill_buffer[i]) bail("allocation failed");
+        memset(prefill_buffer[i], 0, (size_t)session.chunk * W * sizeof(float));
+    }
+    snprintf(path, sizeof path, "%s/ready", dir);
+    write_file(path, "ready\n", 6);
+    printf("SESSION ready in %s: context %u positions, chunk %u, reply reserve %u, input limit %u tokens\n", dir, session.context, session.chunk, session.reply_reserve, session.input_max);
+    fflush(stdout);
+    for (unsigned number = 1;;) {
+        char quit[4200], turn_file[4200];
+        snprintf(quit, sizeof quit, "%s/quit", dir);
+        snprintf(turn_file, sizeof turn_file, "%s/turn-%04u.txt", dir, number);
+        while (access(turn_file, F_OK) != 0) {
+            if (access(quit, F_OK) == 0) { printf("SESSION ended\n"); return; }
+            const struct timespec pause = { 0, 300 * 1000 * 1000 };
+            nanosleep(&pause, NULL);
+        }
+        long size; char *user = slurp(turn_file, &size);
+        while (size > 0 && (user[size - 1] == '\n' || user[size - 1] == '\r' || user[size - 1] == ' ' || user[size - 1] == '\t')) size--;
+        user[size] = 0;
+        session_turn(m, dir, number, user);
+        number++;
+    }
 }
 
 int main(int argc, char **argv)
@@ -344,6 +701,20 @@ int main(int argc, char **argv)
     const unsigned max_draft = getenv("SPECULATIVE_DRAFT_TOKENS") && *getenv("SPECULATIVE_DRAFT_TOKENS") ? (unsigned)atoi(getenv("SPECULATIVE_DRAFT_TOKENS")) : 0;
     if (max_draft >= PASS_MAX) bail("SPECULATIVE_DRAFT_TOKENS is at most 15");
     fixed_draft_width = getenv("SPECULATIVE_FIXED_WIDTH") && *getenv("SPECULATIVE_FIXED_WIDTH");
+    /* PF_SESSION_DIR=dir: a chat with several turns in one process (see run_session); PF_CONTEXT = positions the layers can hold, PF_CHUNK = tokens per prompt pass */
+    const char *session_dir = getenv("PF_SESSION_DIR") && *getenv("PF_SESSION_DIR") ? getenv("PF_SESSION_DIR") : NULL;
+    if (session_dir) {
+        const char *v;
+        session.context = (v = getenv("PF_CONTEXT")) && *v ? (unsigned)atoi(v) : 8192;
+        session.chunk = (v = getenv("PF_CHUNK")) && *v ? (unsigned)atoi(v) : 1024;
+        session.reply_reserve = (v = getenv("PF_REPLY_RESERVE")) && *v ? (unsigned)atoi(v) : 1024;
+        session.input_max = (v = getenv("PF_INPUT_MAX")) && *v ? (unsigned)atoi(v) : session.context / 2;
+        session.summary_tokens = (v = getenv("PF_SUMMARY_TOKENS")) && *v ? (unsigned)atoi(v) : 320;
+        session.max_reply = decode; session.max_draft = max_draft;
+        if (!max_draft) bail("a chat session needs SPECULATIVE_DRAFT_TOKENS (its replies are made by the speculative decoder)");
+        if (!getenv("PF_CHAT") || (strcmp(getenv("PF_CHAT"), "1") && strcmp(getenv("PF_CHAT"), "nothink"))) bail("a chat session needs PF_CHAT=1 (answers at once)");
+        if (session.chunk < 64 || session.context < 2 * session.chunk || session.reply_reserve + 256 > session.context) bail("PF_CHUNK, PF_CONTEXT and PF_REPLY_RESERVE do not fit each other");
+    }
     if (max_draft && sweep_k) bail("SPECULATIVE_DRAFT_TOKENS and PF_SWEEP are separate experiments");
     const unsigned pass_k = sweep_k > max_draft + 1 ? sweep_k : max_draft + 1;
     const int routes_on = getenv("PF_ROUTES") && *getenv("PF_ROUTES");
@@ -376,7 +747,8 @@ int main(int argc, char **argv)
     if (found <= 0) bail("the words gave no tokens");
     for (unsigned i = 0; i < extra_n; i++) ids[found + i] = (int)extra[i];
     if (found <= 128) { printf("prompt ids:"); for (int i = 0; i < found; i++) printf(" %d", ids[i]); printf("\n"); }
-    const unsigned N0 = (unsigned)found, N = N0 + extra_n;
+    const unsigned N0 = (unsigned)found, N = session_dir ? session.chunk : N0 + extra_n;   /* a session sizes its buffers for one prompt chunk */
+    const unsigned layer_positions = session_dir ? session.context + 16 : N + decode + sweep_n + 16;   /* what the attention caches and the draft hold */
     float *pool[POOL]; unsigned free_n = 0;
     for (unsigned i = 0; i < POOL; i++) {
         pool[i] = aligned_alloc(64, ((size_t)N * W * sizeof(float) + 63) / 64 * 64);
@@ -430,7 +802,7 @@ int main(int argc, char **argv)
     const double t_edges = clk() - setup0;
     void *layer[LAYERS + 1] = { NULL };
     for (unsigned l = 2; l <= LAYERS; l++) {
-        layer[l] = is_mla(l) ? lbm_open(dataset, l, snapshots_in(l), N + decode + sweep_n + 16) : lbk_open(dataset, l, snapshots_in(l), N + decode + sweep_n + 16);
+        layer[l] = is_mla(l) ? lbm_open(dataset, l, snapshots_in(l), layer_positions) : lbk_open(dataset, l, snapshots_in(l), layer_positions);
         if (cache_cap) { FILL_SLOTS(l - 1) (is_mla(l) ? lbm_set_slots : lbk_set_slots)(layer[l], slot_ptrs, cache_cap); }
     }
     if (getenv("SPECULATIVE_DRAFTER") && !strcmp(getenv("SPECULATIVE_DRAFTER"), "dspark")) {   /* the DSpark draft model instead of the prompt-lookup draft */
@@ -438,8 +810,8 @@ int main(int argc, char **argv)
         if (!max_draft) bail("SPECULATIVE_DRAFTER=dspark needs SPECULATIVE_DRAFT_TOKENS (up to 8)");
         if (!checkpoint || !*checkpoint) bail("DSPARK_CHECKPOINT is not set");
         snprintf(path, sizeof path, "%s/server/bin/dataset/outputs/fruit.bin", code);
-        for (unsigned a = 0; a < 5; a++) dspark_hidden[a] = calloc((size_t)(N + decode + 16) * W, sizeof(float));
-        if (!dspark_open(checkpoint, path, N + decode + 16)) bail("cannot open the DSpark draft model");
+        for (unsigned a = 0; a < 5; a++) dspark_hidden[a] = calloc((size_t)(session_dir ? layer_positions : N + decode + 16) * W, sizeof(float));
+        if (!dspark_open(checkpoint, path, session_dir ? layer_positions : N + decode + 16)) bail("cannot open the DSpark draft model");
     }
     const double t_layers = clk() - setup0;
 
@@ -480,6 +852,14 @@ int main(int argc, char **argv)
     }
 
     /* ---- the request: words in memory -> next token and text in memory ---- */
+    if (session_dir) {
+        void *session_sequence = tail_make(tail_model);
+        if (!session_sequence) bail("tail sequence failed");
+        Model session_model = { .tail_model = tail_model, .tail_sequence = session_sequence, .tail_run = tail_run };
+        memcpy(session_model.layer, layer, sizeof session_model.layer);
+        run_session(&session_model, session_dir);
+        return 0;
+    }
     double layer_time[LAYERS + 1] = {0};
     const double a = clk();
     const int got = prompt_ids(words, words_size, ids, cap);
