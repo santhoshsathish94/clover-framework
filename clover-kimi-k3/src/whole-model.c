@@ -182,6 +182,7 @@ int dspark_open(const char *checkpoint, const char *head_table, unsigned max_pos
 void dspark_draft(const float *const aux[5], uint32_t anchor, unsigned anchor_position, uint32_t *drafts);
 static const unsigned dspark_layers[5] = { 2, 23, 47, 71, 89 };
 static float *dspark_hidden[5];   /* NULL unless DSpark is used; allocated in main */
+static int fixed_draft_width;     /* SPECULATIVE_FIXED_WIDTH=1: every DSpark pass verifies the most draft tokens allowed */
 static void keep_for_dspark(unsigned layer, const float *rows, size_t first_position, unsigned count)
 {
     for (unsigned a = 0; a < 5; a++)
@@ -278,7 +279,7 @@ static unsigned speculative_decode(Model *m, const uint32_t *prompt, unsigned N,
             const double t0 = clk();
             dspark_draft((const float *const *)dspark_hidden, gen[fed], (unsigned)(N + fed), guess);
             stats->draft_seconds += clk() - t0;
-            drafted = best_draft_width(hit / tried, wanted < 8 ? wanted : 8);
+            drafted = fixed_draft_width ? (wanted < 8 ? wanted : 8) : best_draft_width(hit / tried, wanted < 8 ? wanted : 8);
             memcpy(pass_ids + 1, guess, drafted * sizeof *guess);
         } else if (wanted) drafted = draft_from_text(seen, N + produced, wanted, pass_ids + 1);
         forward_tokens(m, pass_ids, drafted + 1, N + fed);
@@ -342,6 +343,7 @@ int main(int argc, char **argv)
     if (sweep_k > 16) bail("PF_SWEEP is at most 16");
     const unsigned max_draft = getenv("SPECULATIVE_DRAFT_TOKENS") && *getenv("SPECULATIVE_DRAFT_TOKENS") ? (unsigned)atoi(getenv("SPECULATIVE_DRAFT_TOKENS")) : 0;
     if (max_draft >= PASS_MAX) bail("SPECULATIVE_DRAFT_TOKENS is at most 15");
+    fixed_draft_width = getenv("SPECULATIVE_FIXED_WIDTH") && *getenv("SPECULATIVE_FIXED_WIDTH");
     if (max_draft && sweep_k) bail("SPECULATIVE_DRAFT_TOKENS and PF_SWEEP are separate experiments");
     const unsigned pass_k = sweep_k > max_draft + 1 ? sweep_k : max_draft + 1;
     const int routes_on = getenv("PF_ROUTES") && *getenv("PF_ROUTES");
@@ -667,8 +669,8 @@ int main(int argc, char **argv)
                    "%u draft tokens proposed, %u kept (%.1f%%); %.3f s per new token\n", max_draft, steps, speculation.passes, speculation.with_draft,
                    speculation.rollbacks, speculation.drafted, speculation.accepted,
                    speculation.drafted ? 100.0 * speculation.accepted / speculation.drafted : 0.0, steps ? dec / steps : 0.0);
-        if (max_draft && speculation.draft_seconds > 0) printf("   DSpark draft model: %.3f s in total (%.3f s per pass), draft width chosen per pass from the share of draft tokens that were right\n",
-            speculation.draft_seconds, speculation.draft_seconds / speculation.passes);
+        if (max_draft && speculation.draft_seconds > 0) printf("   DSpark draft model: %.3f s in total (%.3f s per pass), %s\n",
+            speculation.draft_seconds, speculation.draft_seconds / speculation.passes, fixed_draft_width ? "fixed width" : "draft width chosen per pass from the share of draft tokens that were right");
         if (!max_draft) {   /* seconds per decode token, summed over layers: stages before the router (0-10), latent projection (11), experts (12), the rest (13-18), early guess (19) */
             stage3_laps(laps1[0]); lbk_laps(laps1[1]); lbm_laps(laps1[2]);
             double part[5] = {0};

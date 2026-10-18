@@ -259,10 +259,12 @@ Harness `input-to-layer0/layer0-observe.c` + `layer0-run.sh`: includes the serve
   | code | exact | 3.463 | 1.793 | 2.028 | 14 | 34 of 40 |
   | prose | exact | 3.212 | 4.766 | 2.972 | 29 | 19 of 42 |
   | repeating | exact | 3.132 | 0.902 | 0.902 | 6 | 42 of 42 |
-  | code | 4-bit | 2.823 | not run | 1.924 | 14 | 34 of 41 |
-  | prose | 4-bit | 2.609 | not run | 2.314 | 24 | 24 of 40 |
-  | repeating | 4-bit | 2.510 | not run | 1.214 | 10 | 38 of 42 |
+  | code | 4-bit | 2.823 | 1.810 | 1.924 | 14 | 34 of 41 |
+  | prose | 4-bit | 2.609 | 4.542 | 2.314 | 24 | 24 of 40 |
+  | repeating | 4-bit | 2.510 | 1.338 | 1.214 | 10 | 38 of 42 |
 
 - Read: the width choice removes the prose loss (4.766 -> 2.972, now 1.08x faster than plain) but costs code 13% against fixed 8 (14 passes instead of 8: the estimate falls after a rejection and the width stays narrow although later tokens are accepted again; acceptance comes in runs, not at one constant rate). The 4-bit trunk adds little on top of DSpark: code 2.028 -> 1.924 (5%), prose 2.972 -> 2.314, and repeating got slower, 0.902 -> 1.214, with 2 rejections where the exact trunk had none (a guess, not tested: the draft reads hidden states the 4-bit trunk changes slightly; pass count 10 against 6). A wide pass is already compute-heavy, which is where the 4-bit kernel gave no gain in the prompt pass. Not measured: why exactly the repeating case slowed (pass time or pass count: 5.8 s over about 4 positions against 7.2 s over 7 positions); one prose prompt; one run each.
 - The earlier exact-trunk-only runs used the exact trunk because the check compares with plain decoding and I wanted a bit-identical baseline; the 4-bit combination was simply not run until now.
 - Not done: a width rule that reacts to runs (for example fall back to 8 after a full accept), the DSpark confidence head (in the checkpoint, not used), more prompts.
+- Fixed 8 with the 4-bit trunk, run later the same day (`SPECULATIVE_FIXED_WIDTH=1`: every pass verifies 8 draft tokens, 9 positions; result files carry `-fixed`): code 1.810, prose 4.542, repeating 1.338 s per token, ids identical to 4-bit plain (code and repeating 8 passes, 40 of 55 and 40 of 54 kept; prose 23 passes, 25 of 168 kept). So on the 4-bit trunk too, fixed 8 is the best on code (1.810 against 1.924) and the worst on prose (4.542 against 2.314); on repeating numbers the width rule won (1.214 against 1.338) because fixed 8 had 5 rejections.
+- Limit found by that run: the first fixed-8 prose run stopped with `a decode window needs more than 128 experts`. A pass of 9 positions can need 9 x 16 = 144 distinct experts in one layer and the check allowed 128. The earlier exact-trunk fixed-8 runs had not hit it, only because their routing happened to overlap enough. Raised to 144 (`cache_assign` in `layers-1-to-92.c`, the miss list now 144; the scratch pool of 128 already covers 144 minus the 16 cache slots). Any run with 8 draft tokens could have stopped on this before; the width rule can also choose 8.

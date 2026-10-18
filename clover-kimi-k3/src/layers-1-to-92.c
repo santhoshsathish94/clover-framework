@@ -146,10 +146,10 @@ static void cache_clear(ExpertCache *c)
 static void cache_assign(const unsigned *order, unsigned n)
 {
     ExpertCache *c = g_cache;
-    if (n > 16 * 8) bail("a decode window needs more than 128 experts");
+    if (n > 16 * 9) bail("a decode window needs more than 144 experts");
     if (n > c->cap && !g_scratch_n) bail("a decode window needs more experts than the cache holds and there is no scratch pool");
     const unsigned long now = ++g_cache_clock;
-    unsigned miss[128], nm = 0;
+    unsigned miss[144], nm = 0;
     g_scratch_used = 0;
     for (unsigned g = 0; g < n; g++) {
         const unsigned e = order[g]; const short w = c->where[e];
