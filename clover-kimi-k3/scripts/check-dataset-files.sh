@@ -3,7 +3,7 @@
 #   scripts/dataset-files.tsv       the precomputed dataset (root-N, trunk-N, operators), in DATASET_DIR
 #   scripts/open-weights-files.tsv  the original open weights files (moonshotai/Kimi-K3), in OPEN_WEIGHTS_DIR
 # Each list: path, bytes, sha256.
-# usage: [DATASET_DIR=...] [OPEN_WEIGHTS_DIR=...] [CHECK_HASHES=1] check-dataset-files.sh        exit status 0 = everything present and equal
+# usage: [DATASET_DIR=...] [DATASET_LIST=file.tsv instead of scripts/dataset-files.tsv] [OPEN_WEIGHTS_DIR=...] [CHECK_HASHES=1] check-dataset-files.sh        exit status 0 = everything present and equal
 set -u
 . "$(dirname "${BASH_SOURCE[0]}")/settings.sh"
 rc=0
@@ -34,6 +34,6 @@ check() {
   fi
 }
 
-check "$SCRIPTS_DIR/dataset-files.tsv" "$DATASET_DIR" "dataset"
+check "${DATASET_LIST:-$SCRIPTS_DIR/dataset-files.tsv}" "$DATASET_DIR" "dataset"
 check "$SCRIPTS_DIR/open-weights-files.tsv" "$OPEN_WEIGHTS_DIR" "open weights"
 exit $rc

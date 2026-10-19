@@ -266,9 +266,10 @@ static int transformer_load_trunk(Transformer *transformer, const char *director
             transformer_u64(encoded + 24), transformer_u64(encoded + 32), NULL};
         uint64_t elements = (uint64_t)layout->rows * layout->columns;
         uint64_t wanted = layout->kind == 1 ? layout->rows * 4ULL + elements : elements * 4;
+        /* a record this layer never reads (transformer_needs) may be stored with length 0: the pruned trunk */
         if (record.id != layout->id || record.group != layout->group || record.kind != layout->kind ||
             record.rows != layout->rows || record.columns != layout->columns || record.count != elements ||
-            record.length != wanted || record.offset != ends[layout->group] ||
+            (record.length != wanted && (record.length || transformer_needs(layout->id))) || record.offset != ends[layout->group] ||
             record.offset > lengths[layout->group] || record.length > lengths[layout->group] - record.offset ||
             record.length > SIZE_MAX) { valid = 0; break; }
         ends[record.group] += record.length;
@@ -279,6 +280,7 @@ static int transformer_load_trunk(Transformer *transformer, const char *director
     if (!valid) return 0;
     const char *names[] = {"common.bin", "attention.bin", "routed-shared.bin"};
     for (unsigned group = 0; group < 3; group++) {
+        if (!lengths[group]) continue;   /* nothing of this group is stored (pruned trunk) */
         if (!transformer_path(path, sizeof path, directory, names[group])) return 0;
         file = transformer_open_sized(path, lengths[group]);
         if (!file) return 0;
