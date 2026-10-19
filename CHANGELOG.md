@@ -2,7 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v3.5.0 — unreleased
+
+This release is tagged once the precomputed dataset has finished uploading to Hugging
+Face (156 of 809 files were on the remote when this entry was written). `VERSION` is
+`3.5.0` and the site's `?v=` cache strings match it; the heading gets its date when the tag
+is made.
+
+**One engine runs the whole Kimi K3 model on one workstation.** `clover-kimi-k3/` runs all
+93 layers on the CPU of a Ryzen 9 7950X3D with 124 GB of RAM. Measured on that host only: the
+recorded 1,000-token prompt is read in about 300 s (0.3 s per input token) and its output
+matches the reference chain bit for bit; decoding costs 3.1 to 3.5 s per output token, 2.5 to
+2.8 s with the optional 4-bit trunk (not bit-identical, and it needs about 29 GB more RAM), and
+2.7 s with the DSpark draft model on one real 1,078-token reply. Repeating text and code decode
+faster, at 0.9 to 2.0 s. These are single-host results, not a distributed or general quality
+result. What came with it: batched layers and an expert cache, speculative decoding with exact
+verification and rollback of the recurrent state, 8-bit activation switches, a chat mode that
+keeps history between turns, a pruned trunk (51.30 to 33.25 GiB), and reading the embedding,
+output head, normalization tensors and tokenizer from the original open weights.
+
+**It can be set up on a new machine.** The folder is self-contained, with a set-up script, a
+verify script, file lists with sizes and hashes, and a dated log of everything measured. The
+set-up and verify scripts were run on the host from a fresh copy of the folder; the
+`download` step cannot be tested against the repository until the dataset upload finishes.
+
+**The research notes record what held and what broke.** From 11 to 16 October the engine was
+observed stage by stage: the 12-layer block as the repeating unit, the four-layer KKKM group,
+what resets the residual, and the routing, caching and reduced-expert experiments. Several
+claims made from one prompt were withdrawn when more prompts were run, and the notes say so.
+
+**The pipeline works again.** Validate repository had failed on every push for days because of
+19 broken links in the committed first-version and distributed-experiment folders. Those
+folders were removed and the links fixed, and Validate repository and the Pages deploy now
+pass.
 
 **The repository now holds the framework, the K3 research and one engine.** `clover-k3/`
 (the first version) and `clover-intelegence/` (the distributed experiment) were removed from
@@ -18,7 +50,12 @@ the requirements and steps for a workstation like ours, the settings that depend
 machine, credit to the engines and models it builds on, and references. The first-version
 sections are marked as such.
 
+**The site menu changed.** The Clover menu item is gone (the logo goes to the home page),
+Getting Started is now AGENTS.md, and Clover Kimi K3 sits under Evidence with the other
+evidence as sub-items. The Evidence tabs open from the URL, so a sub-item lands on its tab.
+
 The precomputed dataset is being uploaded to Hugging Face; the page says so with the date.
+
 ## v3.1.0 — 2026-09-19
 
 The Clover AI experiments moved out of the repository root and into
