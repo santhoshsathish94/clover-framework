@@ -93,9 +93,9 @@ step_clone() {
     git clone -q --filter=blob:none --no-checkout "$REPO_URL" "$CLONE" || { fail "git clone failed"; return; }
   fi
   ( cd "$CLONE" || exit 1
-    [ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "local changes in $CLONE, not touching them"; exit 2; }
+    if [ -f .git/clover-checked-out ] && [ -n "$(git status --porcelain --untracked-files=no)" ]; then say "local changes in $CLONE, not touching them"; exit 2; fi
     git sparse-checkout init --cone > /dev/null 2>&1; git sparse-checkout set clover-kimi-k3 > /dev/null 2>&1
-    git fetch -q --filter=blob:none origin "$REPO_REF" && git checkout -q FETCH_HEAD ) \
+    git fetch -q --filter=blob:none origin "$REPO_REF" && git checkout -q -f FETCH_HEAD && touch .git/clover-checked-out ) \
     && pass "checked out $(git -C "$CLONE" rev-parse --short HEAD) ($REPO_REF)" || { fail "could not check out $REPO_REF in $CLONE"; return; }
   if [ -L "$ENGINE_DIR" ] || [ ! -e "$ENGINE_DIR" ]; then ln -sfn "$CLONE/clover-kimi-k3" "$ENGINE_DIR"; fi
   [ -e "$CLONE/clover-kimi-k3/dataset" ] || ln -sfn "$DATASET_DIR" "$CLONE/clover-kimi-k3/dataset"
