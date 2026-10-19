@@ -30,7 +30,7 @@ Accountability follows the same scale boundary. Within a task or piece of work, 
 - [AGENTS.md](https://cloverframework.com/start/): read-only system access, AGENTS.md, and a first cycle.
 - [Governance](https://cloverframework.com/governance/): access, attribution, approvals, agent behavior, delegated execution, and the named human who is accountable.
 - [Evidence](https://cloverframework.com/evidence/): case studies and reference implementations, each stating where it stopped.
-- [Clover K3](https://cloverframework.com/clover-k3/): the K3 engine clover-kimi-k3: where we started, measured speeds, set-up and tuning to your machine, credit and references.
+- [Clover Kimi K3, under Evidence](https://cloverframework.com/clover-k3/): the K3 engine clover-kimi-k3: where we started, measured speeds, set-up and tuning to your machine, credit and references.
 - [Glossary](https://cloverframework.com/glossary/): plain-language definitions.
 - [The author](https://cloverframework.com/author/): who wrote it.
 

@@ -606,6 +606,35 @@ ol.steps { padding-left: 1.3rem; margin: 1.2rem 0 1.6rem; }
 ol.steps > li { margin: 0 0 1.1rem; padding-left: 0.3rem; }
 ol.steps > li > pre.code { margin: 0.6rem 0; }
 
+/* ---------- evidence submenu ---------- */
+
+.nav-item { position: relative; display: inline-flex; align-items: center; }
+.nav-item.has-sub > a::after {
+  content: ''; display: inline-block; width: 0.36em; height: 0.36em; margin-left: 0.42em;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: translateY(-0.14em) rotate(45deg);
+}
+.subnav {
+  display: none; position: absolute; top: calc(100% + 0.25rem); left: -0.8rem; z-index: 30;
+  min-width: 16rem; margin: 0; padding: 0.4rem; list-style: none;
+  background: var(--bg); border: 1px solid var(--line-2); border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(20, 24, 29, 0.12);
+}
+.subnav::before { content: ''; position: absolute; left: 0; right: 0; top: -0.45rem; height: 0.45rem; }
+.nav-item:hover > .subnav, .nav-item:focus-within > .subnav { display: block; }
+.subnav a { display: block; padding: 0.5rem 0.75rem; border-bottom: 0; border-radius: 6px; font-size: 0.98rem; }
+.subnav a:hover { background: var(--accent-soft); color: var(--accent); }
+.subnav a[aria-current="page"] { color: var(--accent); }
+
+@media (max-width: 1023px) {
+  .nav-item { display: block; }
+  .nav-item > a { display: block; font-size: 1rem; padding: 0.78rem 0.15rem; border-bottom: 1px solid var(--line); border-top: 0; }
+  .nav-item.has-sub > a::after { display: none; }
+  .subnav { display: block; position: static; min-width: 0; padding: 0 0 0.3rem 1rem; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none; background: none; }
+  .subnav::before { display: none; }
+  .subnav a { padding: 0.55rem 0.15rem; font-size: 0.95rem; font-weight: 560; }
+  .subnav a:hover { background: none; }
+}
 /* ---------- touch targets ---------- */
 /* Last in the file so these win over the base control padding. */
 @media (max-width: 800px) {

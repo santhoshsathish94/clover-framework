@@ -46,6 +46,15 @@
     // The markup decides which tab opens. Forcing the first one here would silently override it.
     var initial = tabs.findIndex(function (tab) { return tab.getAttribute('aria-selected') === 'true'; });
     activate(initial === -1 ? 0 : initial, false);
+
+    // A link such as evidence/#ev-t2 opens that tab, on load and when the address changes on the same page.
+    function openTabFromHash() {
+      var id = window.location.hash.slice(1);
+      var i = tabs.findIndex(function (tab) { return tab.id === id; });
+      if (i !== -1) activate(i, false);
+    }
+    openTabFromHash();
+    window.addEventListener('hashchange', openTabFromHash);
   }
 
   document.querySelectorAll('[data-tabs]').forEach(initTabs);
