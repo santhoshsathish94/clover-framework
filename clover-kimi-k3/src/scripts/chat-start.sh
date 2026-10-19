@@ -1,5 +1,5 @@
 #!/bin/bash
-# Starts a chat session, detached: the model stays loaded and keeps the conversation in memory between turns (see run_session in src/whole-model.c).
+# Starts a chat session, detached: the model stays loaded and keeps the conversation in memory between turns (see run_session in src/code/common/whole-model.c).
 # usage: chat-start.sh [NAME] ["system message"]       then chat-say.sh NAME "message", and chat-stop.sh NAME
 # Settings (environment): PF_CONTEXT positions the layers hold (8192), PF_DECODE the longest reply (2500), PF_CHUNK tokens per prompt pass (1024),
 #   PF_REPLY_RESERVE room kept for the reply before old turns are summarised (1024), PF_INPUT_MAX longest message before it is summarised first (PF_CONTEXT/2),

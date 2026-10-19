@@ -24,7 +24,7 @@ clover-kimi-k3/
 ├── README.md
 ├── docs/                              current-status.md (the dated log of everything measured, every negative result), layer0-verdict.md
 └── src/
-    ├── code/                          all the code (see below)
+    ├── code/                          all the code: common/ (shared by every machine), cpu/ (the workstation engine), third-party/ (see below)
     │   └── third-party/kimi-k3-in-c/  the tokenizer headers (Apache-2.0, with licence and notice, github.com/FareedKhan-dev/kimi-k3-in-c at commit a2ad8e5, unmodified)
     ├── scripts/                       run-model.sh (build and run), settings.sh (every path, one place), checks, chat, new-machine setup, the two file lists
     ├── tools/                         compare-outputs.py, compare-34-prompts-with-recorded.py, expert-route-analysis.py, prune-trunk.py, check-open-weights.c
@@ -39,22 +39,22 @@ clover-kimi-k3/
     └── work/                          host only: build/ (compiled program), inputs/ (recorded prompt, the pod's chain values), results/ (every log and output)
 ```
 
-The code in `src/code/`, by what it does:
+The code in `src/code/`, by what it does. It is in two folders: `common/` has no vector instructions and no OpenMP kernels and includes nothing from `cpu/`; `cpu/` is the workstation engine (AVX-512, OpenMP, huge pages). A different kind of machine gets its own folder beside `cpu/` and shares `common/`.
 
 | file | what it is |
 |---|---|
-| `whole-model.c` | the driver: setup, prompt pass, decode, speculative decoding, chat mode, the final stage loaded as a library |
-| `words-to-embeddings.c` | stage 1: text to token ids to embedding vectors |
-| `layer0-batch.c` | stage 2: layer 0 for a batch of tokens, built on `layer0.c` |
-| `layers-1-to-92-batch.c` | stage 3: layers 1-92 for a batch of tokens, built twice (KDA layers 1-92 except the MLA ones, from `layer-kda.c`; MLA layers, from `layer-mla.c`): batched trunk, router, experts, expert cache, state checkpoints (`lbk_*`, `lbm_*`) |
-| `layer0.c`, `layer-kda.c`, `layer-mla.c` | one token through one layer: layer 0, the source of the KDA layers 1-92 (written for layer 2; the layer number is a run-time value), the source of the MLA layers (written for layer 3); the batch files are built on these |
-| `dspark-draft.c` | the DSpark draft model (5 dense MLA layers, Markov head), drafts 8 tokens from the target's hidden states after layers 2, 23, 47, 71, 89 |
-| `ids-to-text.c` | small tool: token ids to text |
-| `trunk-4bit.h` | the 4-bit trunk: packing and kernels, shared by `layer0-batch.c` and `layers-1-to-92-batch.c` |
-| `final-stage.c` (with `final-normalization.c`, `token-ends.h`) | the last stage, built as `pipeline-stage.so`: final normalisation, vocabulary head, detokenise |
-| `embedding-and-head-tables.h`, `safetensors.h`, `sha256.h`, `inflate-simple.h` | the embedding table and output head read from the open weights, the safetensors reader, hashing, the decoder for the table containers |
-| `expert-reader.h`, `expert-metadata.h`, `expert-validation.h`, `inflate-fast.h` | reading and checking the experts (`expert-N`) |
-| `stage-routing.h`, `stage-trace.h`, `generation-request.h`, `deliver-answer.h`, `json-reader.h` | small shared pieces of the earlier pod design |
+| `common/whole-model.c` | the driver: setup, prompt pass, decode, speculative decoding, chat mode, the final stage loaded as a library |
+| `common/words-to-embeddings.c` | stage 1: text to token ids to embedding vectors |
+| `cpu/layer0-batch.c` | stage 2: layer 0 for a batch of tokens, built on `layer0.c` |
+| `cpu/layers-1-to-92-batch.c` | stage 3: layers 1-92 for a batch of tokens, built twice (KDA layers 1-92 except the MLA ones, from `layer-kda.c`; MLA layers, from `layer-mla.c`): batched trunk, router, experts, expert cache, state checkpoints (`lbk_*`, `lbm_*`) |
+| `cpu/layer0.c`, `cpu/layer-kda.c`, `cpu/layer-mla.c` | one token through one layer: layer 0, the source of the KDA layers 1-92 (written for layer 2; the layer number is a run-time value), the source of the MLA layers (written for layer 3); the batch files are built on these |
+| `cpu/dspark-draft.c` | the DSpark draft model (5 dense MLA layers, Markov head), drafts 8 tokens from the target's hidden states after layers 2, 23, 47, 71, 89 |
+| `common/ids-to-text.c` | small tool: token ids to text |
+| `cpu/trunk-4bit.h` | the 4-bit trunk: packing and kernels, shared by `layer0-batch.c` and `layers-1-to-92-batch.c` |
+| `common/final-stage.c` (with `final-normalization.c`, `token-ends.h`) | the last stage, built as `pipeline-stage.so`: final normalisation, vocabulary head, detokenise |
+| `common/`: `embedding-and-head-tables.h`, `safetensors.h`, `sha256.h`, `inflate-simple.h` | the embedding table and output head read from the open weights, the safetensors reader, hashing, the decoder for the table containers |
+| `cpu/expert-reader.h`; `common/`: `expert-metadata.h`, `expert-validation.h`, `inflate-fast.h` | reading and checking the experts (`expert-N`) |
+| `common/`: `stage-routing.h`, `stage-trace.h`, `generation-request.h`, `deliver-answer.h`, `json-reader.h` | small shared pieces of the earlier pod design |
 
 Most of these files were written for an earlier design with one pod per layer; they are the same code except for reading the open weights directly, for trunk records that may be pruned, and for the names (`root` is now `expert`). Their old names and places are in `git log --follow`.
 

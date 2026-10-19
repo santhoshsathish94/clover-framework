@@ -116,7 +116,7 @@ step_clone() {
   link_data "$DATASET_DIR" "$CLONE/clover-kimi-k3/src/datasets/computed"
   link_data "$OPEN_WEIGHTS_DIR" "$CLONE/clover-kimi-k3/src/datasets/third-party/kimi-k3-open-weights"
   link_data "$DSPARK_DIR" "$CLONE/clover-kimi-k3/src/datasets/third-party/kimi-k3-dspark"
-  [ -f "$SRC/code/whole-model.c" ] && pass "engine folder $ENGINE_DIR" || fail "$ENGINE_DIR has no src/code/whole-model.c"
+  [ -f "$SRC/code/common/whole-model.c" ] && pass "engine folder $ENGINE_DIR" || fail "$ENGINE_DIR has no src/code/common/whole-model.c"
   chmod +x "$SRC"/scripts/*.sh 2>/dev/null
 }
 

@@ -4,7 +4,7 @@
 usage: prune-trunk.py SOURCE_DATASET OUTPUT_DIR [LAYER ...]      (no layer: 1 to 92)
 
 For every trunk-N it writes index.bin, common.bin, attention.bin and routed-shared.bin to OUTPUT_DIR/trunk-N. A record the layer reads
-(the transformer_needs list of src/code/layer-kda.c and src/code/layer-mla.c) is copied byte for byte; every other record stays in the index
+(the transformer_needs list of src/code/cpu/layer-kda.c and src/code/cpu/layer-mla.c) is copied byte for byte; every other record stays in the index
 with length 0. The Q, K and V weights are among the dropped ones: trunk-N/operator.bin holds them (it is hard-linked into the output). A group file with nothing dropped is
 hard-linked instead of copied. The source is only read. trunk-0 (layer 0) is not touched here.
 """
