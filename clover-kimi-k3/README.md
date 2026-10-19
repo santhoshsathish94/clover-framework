@@ -44,6 +44,8 @@ The code in `src/code/`, by what it does. It is in two folders: `common/` has no
 | file | what it is |
 |---|---|
 | `common/whole-model.c` | the driver: setup, prompt pass, decode, speculative decoding, chat mode, the final stage loaded as a library |
+| `common/backend.h` | the boundary: everything the driver calls from a backend (layer 0, the two layer kinds, DSpark, expert memory), written down once; a backend defines these |
+| `cpu/cpu-memory.c` | the CPU backend's expert memory: anonymous memory on huge pages, touched at once |
 | `common/words-to-embeddings.c` | stage 1: text to token ids to embedding vectors |
 | `cpu/layer0-batch.c` | stage 2: layer 0 for a batch of tokens, built on `layer0.c` |
 | `cpu/layers-1-to-92-batch.c` | stage 3: layers 1-92 for a batch of tokens, built twice (KDA layers 1-92 except the MLA ones, from `layer-kda.c`; MLA layers, from `layer-mla.c`): batched trunk, router, experts, expert cache, state checkpoints (`lbk_*`, `lbm_*`) |

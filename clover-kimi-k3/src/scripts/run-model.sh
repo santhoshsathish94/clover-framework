@@ -40,6 +40,7 @@ if [ "${BUILD:-1}" != "0" ] && [ -z "${PF_NOBUILD:-}" ]; then
   gcc $F -DLB_ENTRY -DLB_PFX=lbm -DLB_TEMPLATE='"template-mla.c"' -O3 $INC -I. -Dmain=mla_main_unused -c $CPU/layers-1-to-92-batch.c -o layers-mla.o 2> build-layers-mla.log || fail layers-mla build-layers-mla.log
   gcc $F -O2 -c $CMN/whole-model.c -o whole-model.o 2> build-whole-model.log || fail whole-model build-whole-model.log
   gcc $F -O3 $INC -c $CPU/dspark-draft.c -o dspark-draft.o 2> build-dspark-draft.log || fail dspark-draft build-dspark-draft.log
+  gcc $F -O2 $INC -c $CPU/cpu-memory.c -o cpu-memory.o 2> build-cpu-memory.log || fail cpu-memory build-cpu-memory.log
   # the tail (final normalisation, vocabulary head, detokenise) is a shared library the program opens at run time
   gcc -std=c11 -O2 -march=native -Wall -Wextra -Werror -Wno-unused-function -ffp-contract=off -fno-fast-math -fopenmp -fPIC -shared $INC $CMN/final-stage.c -lm -o $BUILD_DIR/pipeline-stage.so 2> build-tail-library.log || fail tail-library build-tail-library.log
   # every object keeps only its entry points global, so the several programs built from the same sources cannot collide
@@ -50,7 +51,7 @@ if [ "${BUILD:-1}" != "0" ] && [ -z "${PF_NOBUILD:-}" ]; then
     pre=${p%%:*}; obj=${p##*:}
     objcopy --keep-global-symbol=${pre}_set_buffer --keep-global-symbol=${pre}_init --keep-global-symbol=${pre}_open --keep-global-symbol=${pre}_run --keep-global-symbol=${pre}_run_from --keep-global-symbol=${pre}_step --keep-global-symbol=${pre}_stepk --keep-global-symbol=${pre}_keep_positions --keep-global-symbol=${pre}_use_position --keep-global-symbol=${pre}_set_scratch --keep-global-symbol=${pre}_distinct --keep-global-symbol=${pre}_route_log --keep-global-symbol=${pre}_routes --keep-global-symbol=${pre}_hits --keep-global-symbol=${pre}_set_slots --keep-global-symbol=${pre}_cache_stats --keep-global-symbol=${pre}_guess_stats --keep-global-symbol=${pre}_laps $obj
   done
-  gcc -fopenmp whole-model.o words-to-embeddings.o dspark-draft.o layer0.o layers-kda.o layers-mla.o -lm -lpthread -ldl -o whole-model 2> build-link.log || { head -30 build-link.log; exit 1; }
+  gcc -fopenmp whole-model.o words-to-embeddings.o dspark-draft.o cpu-memory.o layer0.o layers-kda.o layers-mla.o -lm -lpthread -ldl -o whole-model 2> build-link.log || { head -30 build-link.log; exit 1; }
   echo "built; warnings: $(cat build-*.log | grep -c warning)"
 fi
 [ "${BUILD_ONLY:-0}" = "1" ] && exit 0

@@ -25,7 +25,7 @@
 #include <time.h>
 #include <dlfcn.h>
 #include <unistd.h>
-#include <sys/mman.h>
+#include "backend.h"
 
 /* The original open weights (moonshotai/Kimi-K3): the embedding table, the output head and the three final normalisation tensors are read from
    this shard by their own names, and tiktoken.model and tokenizer_config.json from the same folder. */
@@ -36,27 +36,6 @@ int stage1_ids(const char *text, long size, int *ids, int cap);
 int stage1_ids_plain(const char *text, long size, int *ids, int cap);
 int stage1_id_of(const char *name);
 void stage1_lookup(const unsigned *ids, unsigned n, float *out);
-double stage2_setup(const char *dataset, unsigned max_n);
-void stage2_run(const uint32_t *ids, const float *emb, unsigned n, unsigned window, float *out);
-void stage2_run_from(const uint32_t *ids, const float *emb, unsigned n, unsigned window, float *out);
-void stage2_step(const uint32_t *id, const float *emb, float *out);
-void stage2_stepk(const uint32_t *ids, const float *emb, unsigned n, float *out);
-void stage2_keep_positions(unsigned count); void stage2_use_position(unsigned position);
-#define LAYER_KIND(P) \
-    void P##_laps(double *out); \
-    void P##_guess_stats(unsigned long *issued, unsigned long *used); \
-    void P##_set_slots(void *handle, unsigned char *const *slots, unsigned cap); void P##_cache_stats(unsigned long *hit, unsigned long *miss); \
-    void P##_route_log(int on); void P##_routes(unsigned short *out); void P##_hits(unsigned long *out); \
-    void P##_set_buffer(unsigned char *buffer); double P##_init(unsigned max_n); \
-    void *P##_open(const char *dataset, unsigned layer, unsigned k, unsigned max_n); \
-    double P##_run(void *handle, const float *resid, const float *const *snaps, unsigned n, unsigned window, float *out); \
-    double P##_run_from(void *handle, const float *resid, const float *const *snaps, unsigned n, unsigned window, size_t pos0, float *out); \
-    double P##_step(void *handle, const float *resid, const float *const *snaps, size_t pos0, float *out); \
-    double P##_stepk(void *handle, const float *resid, const float *const *snaps, unsigned n, size_t pos0, float *out); \
-    void P##_set_scratch(unsigned char *const *slots, unsigned n); unsigned long P##_distinct(void); \
-    void P##_keep_positions(void *handle, unsigned count); void P##_use_position(void *handle, unsigned position);
-LAYER_KIND(lbk)
-LAYER_KIND(lbm)
 
 enum { W = 7168, LAYERS = 92, MAX_SNAPSHOTS = 8, POOL = MAX_SNAPSHOTS + 3 };
 #define EXPERT_LAYER_BYTES 15722348544ULL
@@ -172,9 +151,6 @@ typedef struct { unsigned passes, with_draft, rollbacks, drafted, accepted; doub
 static float pass_buffer[3][PASS_MAX * W], pass_snapshot[MAX_SNAPSHOTS][PASS_MAX * W], pass_embedding[PASS_MAX * W], tail_snapshots[MAX_SNAPSHOTS * W];
 
 /* DSpark draft model (dspark-draft.c): it reads the target's hidden states after layers 2, 23, 47, 71 and 89, one row of 7168 floats per position. */
-int dspark_open(const char *checkpoint, const char *head_table, unsigned max_positions);
-void dspark_draft(const float *const aux[5], uint32_t anchor, unsigned anchor_position, uint32_t *drafts);
-void dspark_reset(void);
 static const unsigned dspark_layers[5] = { 2, 23, 47, 71, 89 };
 static float *dspark_hidden[5];   /* NULL unless DSpark is used; allocated in main */
 static int fixed_draft_width;     /* SPECULATIVE_FIXED_WIDTH=1: every DSpark pass verifies the most draft tokens allowed */
@@ -771,20 +747,16 @@ int main(int argc, char **argv)
         snprintf(path, sizeof path, "%s/final.snaps.f32", argv[5]);  ref_snaps = (float *)slurp(path, &l); if ((size_t)l < (size_t)N * W * 4 * MAX_SNAPSHOTS) bail("final.snaps.f32 too short");
     }
     /* the experts of the running layer: one buffer for all layers, on huge pages */
-    unsigned char *experts = mmap(NULL, EXPERT_LAYER_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (experts == MAP_FAILED) bail("cannot allocate the expert buffer");
-    madvise(experts, EXPERT_LAYER_BYTES, MADV_HUGEPAGE);
-    memset(experts, 0, EXPERT_LAYER_BYTES);
+    unsigned char *experts = backend_expert_memory(EXPERT_LAYER_BYTES);
+    if (!experts) bail("cannot allocate the expert buffer");
     const double t_buffer = clk() - setup0;
     /* PF_CACHE=C: every layer gets C expert slots for decode steps (the 896 slots of the prompt buffer are reused, the rest is allocated here). */
     const unsigned cache_cap = getenv("PF_CACHE") && *getenv("PF_CACHE") ? (unsigned)atoi(getenv("PF_CACHE")) : 0;
     unsigned char *cache_extra = NULL, *slot_ptrs[64];
     if (cache_cap && (size_t)LAYERS * cache_cap > 896) {
         const size_t extra_bytes = ((size_t)LAYERS * cache_cap - 896) * EXPERT_BYTES;
-        cache_extra = mmap(NULL, extra_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if (cache_extra == MAP_FAILED) bail("cannot allocate the expert cache");
-        madvise(cache_extra, extra_bytes, MADV_HUGEPAGE);
-        memset(cache_extra, 0, extra_bytes);
+        cache_extra = backend_expert_memory(extra_bytes);
+        if (!cache_extra) bail("cannot allocate the expert cache");
     }
 #define FILL_SLOTS(layer_index) for (unsigned j_ = 0; j_ < cache_cap; j_++) { \
         const size_t idx_ = (size_t)(layer_index) * cache_cap + j_; \
@@ -794,10 +766,8 @@ int main(int argc, char **argv)
     lbk_init(N + 16); lbm_init(N + 16);
     if (pass_k > 1) {   /* experts a window needs beyond the layer's cache slots: one pool shared by all layers */
         const unsigned n_scratch = 16 * pass_k < 128 ? 16 * pass_k : 128;
-        unsigned char *scratch_mem = mmap(NULL, (size_t)n_scratch * EXPERT_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if (scratch_mem == MAP_FAILED) bail("cannot allocate the scratch pool");
-        madvise(scratch_mem, (size_t)n_scratch * EXPERT_BYTES, MADV_HUGEPAGE);
-        memset(scratch_mem, 0, (size_t)n_scratch * EXPERT_BYTES);
+        unsigned char *scratch_mem = backend_expert_memory((size_t)n_scratch * EXPERT_BYTES);
+        if (!scratch_mem) bail("cannot allocate the scratch pool");
         unsigned char *scratch_ptrs[128];
         for (unsigned j = 0; j < n_scratch; j++) scratch_ptrs[j] = scratch_mem + (size_t)j * EXPERT_BYTES;
         lbk_set_scratch(scratch_ptrs, n_scratch); lbm_set_scratch(scratch_ptrs, n_scratch);
