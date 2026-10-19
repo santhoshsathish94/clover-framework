@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## v3.5.0 — 2026-10-19
+## v3.5.0 — 2026-10-20
 
 The precomputed dataset is on Hugging Face (`Santhoshsathish94/clover-kimi-k3`): all 809
 files, 1,399.8 GiB. Their sizes and SHA-256 sums were compared with `dataset-files.tsv` from
@@ -31,6 +31,16 @@ reachability check failed on a redirect (the repo name was lowercase), which is 
 observed stage by stage: the 12-layer block as the repeating unit, the four-layer KKKM group,
 what resets the residual, and the routing, caching and reduced-expert experiments. Several
 claims made from one prompt were withdrawn when more prompts were run, and the notes say so.
+
+**The next experiment is written down before it is run.** The Clover K3 page has a new section,
+"The next experiment", and `clover-kimi-k3/docs/current-status.md` a dated record. The next run
+is on a smaller rented GPU server (8 × RTX 3090, 384 GB of RAM, as the provider lists it, not yet
+read from the machine). The model does not fit in its video memory and RAM together, so the
+question becomes where the bytes sit and what moves them. The direction is the creator's: neither
+a CPU nor a GPU is the right shape for this work, and a new kind of tensor chip that computes next
+to its own memory is. It is recorded as a hypothesis, supported by one CPU measurement from the
+earlier engine (2.11 FLOP per byte, arithmetic idle about 82%) and not yet by any GPU measurement.
+The expectations are stated before the run, with what would change them.
 
 **The pipeline works again.** Validate repository had failed on every push for days because of
 19 broken links in the committed first-version and distributed-experiment folders. Those

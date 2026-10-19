@@ -410,6 +410,76 @@ src/scripts/chat-stop.sh mychat</code></pre>
     </div>
   </section>
 
+  <section class="band" id="next">
+    <div class="wrap">
+      <h2>The next experiment</h2>
+      <p>Everything above is one workstation: a CPU, 124 GB of RAM and fast NVMe. The next run is on a
+        smaller GPU server, rented by the week. It has not been run. This section is written before the
+        run, so that what we expected and what we measure can be compared.</p>
+
+      <dl class="kv kv--wide">
+        <div>
+          <dt>The machine, as listed</dt>
+          <dd>Ubuntu 24.04 Server; 8 &times; RTX 3090; 2 &times; Intel CPU, 24 cores at 4.0 GHz; 384 GB of RAM;
+            &ldquo;2000 NVMe&rdquo;; a 10 Gbps port; 279 EUR per week excluding VAT. These are the provider&rsquo;s
+            words, not readings from the machine. The listing says &ldquo;VRAM per card: 192 GB&rdquo;, but NVIDIA
+            gives 24 GB for an RTX 3090, so 192 GB is the total for eight cards. &ldquo;2000 NVMe&rdquo; has no
+            unit, and the dataset alone is 1,399.8 GiB. The first step is to read the real figures from the
+            machine.</dd>
+        </div>
+        <div>
+          <dt>Why it changes the experiment</dt>
+          <dd>The model does not fit. The routed experts are about 1,347 GiB (92 layers of 14.64 GiB each).
+            The pruned trunk, 33.25 GiB, fits in the cards with room to spare. Video memory and RAM together,
+            less the trunk and working space, would hold the experts of about 34 to 37 of the 92 layers
+            (derived from the listing, depending on whether its GB are GB or GiB). The rest has to be read
+            from NVMe for every token. So the question is less &ldquo;how fast is the arithmetic&rdquo; than
+            &ldquo;where do the bytes sit, and what moves them&rdquo;. The engine is CPU code and nothing in it
+            uses a GPU, so the first step is measuring, not porting.</dd>
+        </div>
+        <div>
+          <dt>Our direction</dt>
+          <dd>We think neither a CPU nor a GPU is the right shape for this work. What it needs is a new kind of
+            tensor chip that computes next to its own memory: something like the tensor unit in a phone chip,
+            which shares memory with the processor, but different, built for streaming a model&rsquo;s weights
+            rather than for graphics or for training. This is a direction, not a result. Nothing has been
+            designed in hardware, simulated or built. Processing in memory, near-memory computing and
+            unified-memory accelerators are existing lines of work; we have not surveyed them.</dd>
+        </div>
+        <div>
+          <dt>What supports it so far</dt>
+          <dd>One measurement on a CPU, with the earlier engine (kept in git history at commit 013cbc8): a
+            decoded token took 3.07 s and moved 98.6 GB for 208 GFLOP of arithmetic, which is 2.11 FLOP per
+            byte, and the arithmetic unit was idle about 82% of the time. The Kimi K3 technical report says the
+            same of small-batch decoding: the expert matrix products reduce to memory-bound streaming of
+            weights. The earlier design sketch is
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/013cbc8/clover-intelegence/code/standalone-hosting/AI-PROCESSING-UNIT.md">AI-PROCESSING-UNIT.md</a>.</dd>
+        </div>
+        <div>
+          <dt>What it does not show</dt>
+          <dd>We have not measured a GPU. The claim is about decoding one stream of a model far larger than the
+            fast memory. GPUs are effective for training and for serving many requests at once, where weights
+            are reused, and we tested neither.</dd>
+        </div>
+        <div>
+          <dt>What we expect, written before the run</dt>
+          <dd>First, for layers whose weights are in video memory, the time per token will follow the memory
+            bandwidth, not the arithmetic, and the arithmetic units will be mostly idle. Second, for layers
+            that are not resident, the time will follow the transfer from NVMe, so adding cards adds little
+            until the weights fit. We would change our mind if decoding turns out to be limited by arithmetic
+            on the resident layers. Either expectation can be wrong, and the run will say which.</dd>
+        </div>
+        <div>
+          <dt>What we will measure first (proposed)</dt>
+          <dd>The machine&rsquo;s real figures (cards, memory, NVMe size and speed, the links between them);
+            the transfer rates NVMe to RAM to card; one layer&rsquo;s expert read and projection on one card,
+            in bytes per second and in operations per second; then the time per token with 0, 1, 2 and more
+            layers resident.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
   <section class="band" id="credit">
     <div class="wrap">
       <h2>Credit</h2>
