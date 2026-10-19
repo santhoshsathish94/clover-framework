@@ -10,8 +10,8 @@
 | Inspect real outcomes | [Case studies](../case-studies/README.md) |
 | Read an illustrative scenario | [Examples](../examples/) |
 | Inspect executable controls | [Runtime enforcement reference](../reference/runtime-enforcement/README.md) |
-| Run Clover-K3 | [Build, configuration and gate](../clover-k3/README.md) |
-| Inspect K3 design and evidence | [Implementation documents](../clover-k3/docs/README.md) |
+| Run the K3 engine | [Set up, tune and run](../clover-kimi-k3/README.md) |
+| Inspect K3 measurements | [Status log](../clover-kimi-k3/docs/current-status.md) |
 | Follow investigations | [Research](../research/README.md) |
 | Maintain public presentation | [Website](../site/README.md) |
 
@@ -56,10 +56,9 @@ research/
 		measurements/
 			flow/               instrumented flow observations
 			prompts/            individual prompt cases
-clover-k3/docs/
-	reference/              implementation equation
-	evidence/               results and methods
-	scaling/                overview, architecture, resources, validation
+clover-kimi-k3/
+	docs/                   dated status log and layer 0 verdict
+	src/                    code, scripts, tools, prompts; datasets and work are host only
 assets/
 	branding/               project identity and previews
 	evidence/               canonical evidence diagrams
@@ -73,16 +72,16 @@ assets/
 | `hypothesis/ai-future.md` | [AI future hypothesis](../research/ai-future/README.md) |
 | `k3-analysis/clover-ai.md` | [Clover AI direction](../research/clover-ai/README.md) |
 | Other `k3-analysis/**/*.md` | Purpose-based folders under [research/k3](../research/k3/README.md) |
-| `clover-k3/clover-k3-equation.md` | [Implementation equation](../clover-k3/docs/reference/implementation-equation.md) |
-| `clover-k3/clover-k3-proof.md` | [Results](../clover-k3/docs/evidence/results.md) |
-| `clover-k3/clover-k3-scaling.md` | [Scaling entry point](../clover-k3/docs/scaling/README.md), with the image at the end and no forwarding-heading list |
+| `clover-k3/clover-k3-equation.md` | [Implementation equation](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/reference/implementation-equation.md) |
+| `clover-k3/clover-k3-proof.md` | [Results](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md) |
+| `clover-k3/clover-k3-scaling.md` | [Scaling entry point](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/scaling/README.md), with the image at the end and no forwarding-heading list |
 
 The legacy benchmark script and JSON evidence live with the [upstream investigation](../research/k3/upstream/README.md).
 The script was moved without content changes and was not executed. The historical
-`clover-k3/proof-campaign.sh` remains at its original path; its scope is described in
-[evidence methods](../clover-k3/docs/evidence/evidence-methods.md).
+`clover-k3/proof-campaign.sh` is in git history; its scope is described in
+[evidence methods](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/evidence-methods.md).
 
-Runnable Clover-K3 entry points remain beside their configuration and single-file source.
+The runnable K3 engine is `clover-kimi-k3/`. The first version `clover-k3/` and the distributed experiment `clover-intelegence/` were removed from the working tree on 2026-10-19; both are in git history at commit 013cbc8, and links to them point there.
 Case studies, examples and templates already have small, coherent scopes; they do not
 need one extra folder per file. Website route directories and executable reference
 projects retain their working structure.

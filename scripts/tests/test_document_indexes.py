@@ -22,13 +22,9 @@ class DocumentIndexes(unittest.TestCase):
     def test_k3_research_index_is_complete(self):
         self.assert_index_covers("research/k3")
 
-    def test_k3_implementation_index_is_complete(self):
-        self.assert_index_covers("clover-k3/docs")
-
     def test_legacy_forwarding_locations_are_removed(self):
         for relative in ("why-clover-is-important.md", "k3-analysis", "hypothesis",
-                         "clover-k3/clover-k3-equation.md", "clover-k3/clover-k3-proof.md",
-                         "clover-k3/clover-k3-scaling.md"):
+                         "clover-k3", "clover-intelegence"):
             with self.subTest(path=relative):
                 self.assertFalse((ROOT / relative).exists())
 
@@ -38,8 +34,7 @@ class DocumentIndexes(unittest.TestCase):
 
     def test_core_documents_have_purpose_folders(self):
         for relative in ("docs/framework", "docs/guides", "docs/governance",
-                         "docs/reference", "clover-k3/docs/scaling",
-                         "clover-k3/docs/evidence", "clover-k3/docs/reference"):
+                         "docs/reference"):
             with self.subTest(path=relative):
                 self.assertTrue((ROOT / relative / "README.md").is_file())
 

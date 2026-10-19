@@ -4,11 +4,11 @@
 and elapsed time on one Ryzen 9 7950X3D under the recorded configurations. The
 twelve-token outputs are a separate Clover-only generation campaign, not twelve-token
 agreement or a matched generation-speed comparison. See [methods and reproduction
-limits](evidence-methods.md) before interpreting the ratio.
+limits](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/evidence-methods.md) before interpreting the ratio.
 
 A 2.78-trillion-parameter model, run from its equation as a single C file on
 one rented CPU machine with no GPU. Below is every one of the 34 prompts in
-[`prompts.tsv`](../../prompts.tsv) and the 12 tokens it wrote for each.
+[`recorded-34-prompts.tsv`](recorded-34-prompts.tsv) and the 12 tokens it wrote for each.
 
 It gives the same answer as an independent implementation of the same model
 on all 34, in under a third of the time. Six of them:
@@ -297,7 +297,7 @@ El idioma oficial de Mexico es
 Ryzen 9 7950X3D, 16 cores, 124 GB RAM, NVMe RAID1, holding the released
 Kimi K3 checkpoint at 1.5 TB. No GPU.
 
-`clover-k3` computes one token per pass, so [`gen.py`](../../gen.py) calls it in a
+`clover-k3` computes one token per pass, so [`gen.py`](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/gen.py) calls it in a
 loop, carrying the attention cache and recurrent state forward so each new
 word costs one position rather than the whole prompt again.
 

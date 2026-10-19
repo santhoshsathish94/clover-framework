@@ -115,7 +115,7 @@ draft weights do not.
 
 vLLM runs Kimi K3 as **pipeline-parallel slices of layers, each rank holding its
 own layers' weights, passing only activations between ranks.** That is the chain
-in [AI-PROCESSING-UNIT.md](../../../clover-intelegence/code/standalone-hosting/AI-PROCESSING-UNIT.md),
+in [AI-PROCESSING-UNIT.md](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-intelegence/code/standalone-hosting/AI-PROCESSING-UNIT.md),
 at coarser granularity — several layers per device instead of one.
 
 So the architecture is not speculative; it is how the model is served today. Our

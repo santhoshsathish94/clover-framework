@@ -6,11 +6,11 @@ statements apply to their campaign, not automatically to the current implementat
 
 ## Current reading path
 
-1. [Run the single-machine reference](../../clover-k3/README.md).
+1. [Run the single-machine engine](../../clover-kimi-k3/README.md).
 2. [Read the model specification](model/k3-model-equation.md) and the separate
-	[implementation equation](../../clover-k3/docs/reference/implementation-equation.md).
-3. [Inspect evidence methods and limits](../../clover-k3/docs/evidence/evidence-methods.md).
-4. [Read the proposed scaling design](../../clover-k3/docs/scaling/README.md).
+	[implementation equation](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/reference/implementation-equation.md).
+3. [Inspect evidence methods and limits](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/evidence-methods.md).
+4. [Read the proposed scaling design](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/scaling/README.md).
 
 ## Complete investigation map
 
@@ -53,7 +53,7 @@ research record stays here. Evidence does not automatically make a model-specifi
 technique a framework principle.
 
 The working implementation this analysis produced lives in
-[`../clover-k3/`](../../clover-k3/).
+[`../clover-k3/`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/).
 
 ## Documents
 
@@ -129,13 +129,13 @@ wrong for someone else's.
 
 ## What this became
 
-The analysis above produced a working implementation: [`../clover-k3/`](../../clover-k3/),
+The analysis above produced a working implementation: [`../clover-k3/`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/),
 a single C file written from the equation rather than from any engine, and kept
 bit-exact against a preserved baseline through every optimisation.
 
 | | |
 |---|---|
-| [`../clover-k3/clover-k3-equation.md`](../../clover-k3/docs/reference/implementation-equation.md) | the equation as that program actually evaluates it, and where it differs from [k3-model-equation.md](model/k3-model-equation.md) |
-| [`../clover-k3/clover-k3-proof.md`](../../clover-k3/docs/evidence/results.md) | all 34 prompts, the text the model wrote for each, and the comparison: 34/34 identical answers, 3.40x |
-| [Scaling design](../../clover-k3/docs/scaling/README.md) | Proposed distributed architecture, resource sizing, evidence limits, and validation plan |
+| [`../clover-k3/clover-k3-equation.md`](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/reference/implementation-equation.md) | the equation as that program actually evaluates it, and where it differs from [k3-model-equation.md](model/k3-model-equation.md) |
+| [`../clover-k3/clover-k3-proof.md`](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md) | all 34 prompts, the text the model wrote for each, and the comparison: 34/34 identical answers, 3.40x |
+| [Scaling design](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/scaling/README.md) | Proposed distributed architecture, resource sizing, evidence limits, and validation plan |
 | [clover-scaling-architecture.md](architecture/clover-scaling-architecture.md) | the step-by-step measurement record behind it |

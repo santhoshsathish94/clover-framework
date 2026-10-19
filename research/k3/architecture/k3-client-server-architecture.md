@@ -191,7 +191,7 @@ a per-layer data layer did run and did reproduce the gate, but it was removed
 at v4.0 once the SQLite store it read from was deleted to put the checkpoint
 back; it survives in git history at `abdcde7^:clover-server-k3/`.
 
-What exists today is [`clover-k3`](../../../clover-k3/), the single-machine
+What exists today is [`clover-k3`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/), the single-machine
 reference, and the measurements above. The sizes are measured. The topology is
 not built.
 

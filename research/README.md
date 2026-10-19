@@ -12,7 +12,7 @@ later conclusions. A document's status describes its role, not whether its outco
 | Kimi K3 | [Investigation index](k3/README.md) | Model derivation, hardware measurements, experiments, and handoff records |
 
 For maintained framework guidance, use [docs](../docs/README.md). For the executable
-single-machine reference, use [Clover-K3](../clover-k3/README.md). For reported real work,
+single-machine reference, use [Clover-K3](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/README.md). For reported real work,
 use [case studies](../case-studies/README.md).
 
 New research should state its question, evidence environment and date, what was observed,
