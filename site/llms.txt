@@ -27,7 +27,7 @@ Accountability follows the same scale boundary. Within a task or piece of work, 
 ## Pages
 
 - [The framework](https://cloverframework.com/): the full argument, the actors, the system cycle, and the closing claim that responsibility for AI was sidelined.
-- [Getting started](https://cloverframework.com/start/): read-only system access, AGENTS.md, and a first cycle.
+- [AGENTS.md](https://cloverframework.com/start/): read-only system access, AGENTS.md, and a first cycle.
 - [Governance](https://cloverframework.com/governance/): access, attribution, approvals, agent behavior, delegated execution, and the named human who is accountable.
 - [Evidence](https://cloverframework.com/evidence/): case studies and reference implementations, each stating where it stopped.
 - [Clover K3](https://cloverframework.com/clover-k3/): the K3 engine clover-kimi-k3: where we started, measured speeds, set-up and tuning to your machine, credit and references.
@@ -63,7 +63,7 @@ Accountability follows the same scale boundary. Within a task or piece of work, 
 ## Optional
 
 - [Research index](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/research/README.md): topic-based investigations, proposals and hypotheses; not framework doctrine.
-- [K3 document index](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/clover-k3/docs/README.md): implementation equation, evidence methods and proposed scaling design.
+- [clover-kimi-k3 README](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/clover-kimi-k3/README.md): folder map, set-up, every setting, chat mode and the dataset file lists.
 - [Repository map](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/repository-organization.md): document roles and compatibility locations.
 - [Philosophy](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/framework/02-philosophy.md): What Clover believes and why.
 - [Glossary](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/reference/glossary.md): Terms used throughout.

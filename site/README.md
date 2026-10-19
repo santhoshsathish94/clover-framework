@@ -34,11 +34,11 @@ python -m http.server 8000 --directory site
 ```
 site/
   index.html        the framework: one cycle, at any scale
-  start/            getting started: read-only access, the agent file, a first cycle
+  start/            the AGENTS.md menu page: read-only access, the agent file, a first cycle
   governance/       governance: access, attribution, approvals, delegated execution
   security/         a redirect stub, kept so the old URL still resolves
   evidence/         case studies and reference implementations
-  clover-k3/        single-machine result, evidence scope and setup
+  clover-k3/        run Kimi K3 on a workstation: requirements, set-up, running, tuning, measured speeds, credit
   glossary/         searchable terms
   author/           who wrote this, in the first person
   assets/           the peacock feather, and the four evidence diagrams (SVG)

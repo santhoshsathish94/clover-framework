@@ -602,6 +602,10 @@ table.data tbody tr:last-child th, table.data tbody tr:last-child td { backgroun
 
 pre.code { background: var(--soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.9rem 1.1rem; overflow-x: auto; font-size: 0.86rem; line-height: 1.5; max-width: none; }
 pre.code code { font-size: inherit; }
+ol.steps { padding-left: 1.3rem; margin: 1.2rem 0 1.6rem; }
+ol.steps > li { margin: 0 0 1.1rem; padding-left: 0.3rem; }
+ol.steps > li > pre.code { margin: 0.6rem 0; }
+
 /* ---------- touch targets ---------- */
 /* Last in the file so these win over the base control padding. */
 @media (max-width: 800px) {

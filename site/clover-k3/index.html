@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clover K3 — Clover</title>
-<meta name="description" content="A 2.78-trillion-parameter model reduced to its equation and run from one C file on a single CPU machine. What we did, how the equation was derived, what it measured, what it costs to run, how to set it up and tune it to your machine, and why a token every few seconds is not yet interactive.">
+<title>Run Kimi K3 on your own workstation — Clover</title>
+<meta name="description" content="Set up and run Kimi K3 (2.78 trillion parameters) on one CPU workstation: what the machine needs, the set-up script, how to verify it, how to run it and tune it to your hardware, with measured speeds and credit.">
 <link rel="canonical" href="https://cloverframework.com/clover-k3/">
-<meta property="og:title" content="Clover K3 — Clover">
-<meta property="og:description" content="The Kimi K3 forward pass written from its equation. Same answer as an independent implementation on all 34 prompts, in under a third of the time — and honest about the six seconds per word that makes it not yet interactive.">
+<meta property="og:title" content="Run Kimi K3 on your own workstation — Clover">
+<meta property="og:description" content="Requirements, set-up script, verification, running and tuning for Kimi K3 on one CPU workstation, with the measured speeds and what they do not show.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/clover-k3/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
@@ -41,8 +41,7 @@
       <span class="nav-toggle__box" aria-hidden="true"><span></span></span>Menu
     </button>
     <nav class="site-nav" id="site-nav" aria-label="Primary">
-      <a href="../">Clover</a>
-      <a href="../start/">Getting Started</a>
+      <a href="../start/">AGENTS.md</a>
       <a href="../governance/">Governance</a>
       <a href="../evidence/">Evidence</a>
       <a href="./" aria-current="page">Clover K3</a>
@@ -57,23 +56,274 @@
 
   <section class="hero" id="overview">
     <div class="wrap">
-      <h1>A 2.78-trillion-parameter model, written as its equation</h1>
-      <p class="lede">We took Kimi K3, wrote down what it computes as one mathematical
-        expression, and ran that directly as a single C file. It produces the same answer as an
-        independent implementation of the same model on every prompt tested, in under a third of
-        the time, on one rented CPU machine with no GPU.</p>
-      <p>It is also not fast enough to talk to — about six seconds per word once it starts
-        writing. That part is on this page too, with the numbers, because a page that only showed
-        the good result would not be worth reading.</p>
-      <p>Since that first version the work has moved into one folder, <code>clover-kimi-k3</code>. It
-        now reads a 1,000-token prompt in about five minutes and writes roughly one token every
-        three seconds. How to set it up, how to tune it to a different machine, the table of
-        where we started, and the credit to the engine we started from are below.</p>
+      <h1>Run Kimi K3 on your own workstation</h1>
+      <p class="lede">Kimi K3 has 2.78 trillion parameters. <code>clover-kimi-k3</code> is a C engine
+        that runs all 93 of its layers on one CPU machine with no GPU, reading the experts from fast
+        local disk. This page is for setting it up: what the machine needs, the commands, how to
+        check that it works, how to run it, and which settings to change for your hardware.</p>
+      <p>It is not fast. A 1,000-token prompt takes about five minutes to read and each token of the
+        answer takes about three seconds, so it suits work where the answer matters more than the
+        wait. The numbers, and what they do and do not show, are <a href="#progress">further down</a>.</p>
+      <p class="note"><strong>Dataset status, 19 October 2026:</strong> the precomputed dataset is still
+        being uploaded to Hugging Face (104 of its 809 files at 16:04 local time). Until the upload
+        finishes, the <code>check-dataset</code> step will report missing files. The download resumes
+        and the steps can be run again, so you can start now and re-run later.</p>
       <p class="actions">
-        <a class="btn btn--primary" href="#setup">Set it up</a>
-        <a class="btn btn--plain" href="#progress">Where we started</a>
-        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-kimi-k3">The code</a>
+        <a class="btn btn--primary" href="#requirements">Check your machine</a>
+        <a class="btn btn--plain" href="#steps">Set it up</a>
+        <a class="btn btn--plain" href="#run">Run it</a>
+        <a class="btn btn--plain" href="#tune">Tune it</a>
       </p>
+    </div>
+  </section>
+
+  <section class="band" id="requirements">
+    <div class="wrap">
+      <h2>Is your machine like ours?</h2>
+      <p>We have run it on one machine. The set-up script checks the machine first and tells you what
+        it finds, so you can run <code>preflight</code> on its own before downloading anything.</p>
+
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th scope="col">What</th>
+              <th scope="col">Our workstation</th>
+              <th scope="col">What the check requires</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Operating system</th>
+              <td>Ubuntu Linux, x86-64</td>
+              <td>Linux on x86-64.</td>
+            </tr>
+            <tr>
+              <th scope="row">Processor</th>
+              <td>AMD Ryzen 9 7950X3D: 16 cores, 32 threads, AVX-512</td>
+              <td>AVX2 at least. Without AVX-512 it only warns, because we measured the speed with AVX-512 only.</td>
+            </tr>
+            <tr>
+              <th scope="row">Memory</th>
+              <td>124 GB</td>
+              <td>A warning below 120 GB, a stop below 64 GB.</td>
+            </tr>
+            <tr>
+              <th scope="row">Disk</th>
+              <td>Two NVMe drives in RAID1</td>
+              <td>About 1.4 TB (1,400 GiB) free for the dataset, on a local filesystem where direct reads work
+                (<code>O_DIRECT</code>): not tmpfs, not a network share. Allow about 12 GB more for the open weights and the draft model.</td>
+            </tr>
+            <tr>
+              <th scope="row">Permissions</th>
+              <td>root</td>
+              <td>root, or a memory-lock limit set to unlimited (in a service: <code>LimitMEMLOCK=infinity</code>).
+                The engine locks its always-used weights in RAM.</td>
+            </tr>
+            <tr>
+              <th scope="row">Kernel settings</th>
+              <td>Transparent huge pages on <code>madvise</code></td>
+              <td>Huge pages on <code>madvise</code> or <code>always</code>; <code>vm.max_map_count</code> of at least
+                262144 (1048576 advised). Both only warn.</td>
+            </tr>
+            <tr>
+              <th scope="row">Software</th>
+              <td>gcc with OpenMP, binutils, git, curl, Python 3 with venv</td>
+              <td>The <code>packages</code> step installs them on Debian or Ubuntu when run as root. Elsewhere, install them yourself.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What the memory is used for</h3>
+      <p>Plan on using all of 124 GB. About 53 GB holds the always-used weights, locked in RAM. Up to
+        about 26 GB holds the recently used experts (16 per layer). The attention cache grows with the
+        conversation: the default chat window of 8192 positions is roughly 19 GB. In our default-window
+        chat check the machine showed 121 GB in use after the first turn.</p>
+      <p class="note">On less memory, or without AVX-512, expect the defaults to need changing and the
+        speeds on this page not to apply. We have not measured either.</p>
+    </div>
+  </section>
+
+  <section class="band" id="steps">
+    <div class="wrap">
+      <h2>Setting it up</h2>
+      <p>The engine lives in one folder, <code>clover-kimi-k3</code>, in this repository. The model itself
+        is not in the repository: the precomputed layers are a separate dataset on Hugging Face, and the
+        rest comes from the original open weights. One script does the whole set-up and stops at the
+        first step that fails.</p>
+
+      <ol class="steps">
+        <li><strong>Pick where the dataset goes.</strong> It needs about 1.4 TB on a local NVMe filesystem.
+          The default is under <code>/opt/clover-k3</code>; to use another drive, set <code>DATASET_DIR</code>.</li>
+        <li><strong>Run the script.</strong>
+<pre class="code"><code>curl -fsSL https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/clover-kimi-k3/src/scripts/set-up-new-machine.sh -o set-up-new-machine.sh
+sudo env DATASET_DIR=/mnt/nvme/computed bash set-up-new-machine.sh</code></pre>
+          With no step names it runs every step in order. To run only some, name them:
+          <code>bash set-up-new-machine.sh preflight</code>. Without root, add <code>SKIP_PACKAGES=1</code>
+          and install the software yourself.</li>
+        <li><strong>If a step fails,</strong> fix what it reports and run the same command again. Steps that are
+          finished are skipped, and the downloads resume.</li>
+        <li><strong>Read the report.</strong> It is written to <code>/opt/clover-k3/set-up-new-machine.report</code>,
+          and the script exits with status 0 only if no step failed.</li>
+      </ol>
+
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">The steps, in order.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Step</th>
+              <th scope="col">What it does</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row"><code>preflight</code></th><td>Checks everything in the table above, plus that gcc can build an OpenMP program with <code>-march=native</code>.</td></tr>
+            <tr><th scope="row"><code>packages</code></th><td>Installs the tools with apt (Debian or Ubuntu, as root) and a Python virtual environment holding the Hugging Face command line.</td></tr>
+            <tr><th scope="row"><code>clone</code></th><td>Fetches only the <code>clover-kimi-k3</code> folder of this repository into <code>/opt/clover-k3/clover-framework</code>, linked as <code>/opt/clover-k3/clover-kimi-k3</code>.</td></tr>
+            <tr><th scope="row"><code>download</code></th><td>Fetches the precomputed dataset from Hugging Face: <code>expert-1</code> to <code>expert-92</code>, <code>trunk-0</code> to <code>trunk-92</code>, and the reference values for the 1,000-token check. Resumable. Set <code>HF_TOKEN</code> only if the repository is private.</td></tr>
+            <tr><th scope="row"><code>open-weights</code></th><td>Fetches three files of the original <code>moonshotai/Kimi-K3</code> at a pinned commit (4.4 GiB): the shard holding the embedding table and output head, <code>tiktoken.model</code> and <code>tokenizer_config.json</code>.</td></tr>
+            <tr><th scope="row"><code>check-dataset</code></th><td>Confirms that every file the engine opens is present at its recorded size. With <code>CHECK_HASHES=1</code> it also compares each SHA-256 (a few minutes on our host).</td></tr>
+            <tr><th scope="row"><code>inputs</code></th><td>Copies the recorded prompt and the reference values into the work folder.</td></tr>
+            <tr><th scope="row"><code>build</code></th><td>Compiles the engine with gcc, OpenMP and <code>-march=native</code>.</td></tr>
+            <tr><th scope="row"><code>dspark</code></th><td>Fetches the 7.1 GB draft model used for speculative decoding.</td></tr>
+            <tr><th scope="row"><code>verify</code></th><td>Runs the checks below. About 15 minutes on our host.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What <code>verify</code> checks</h3>
+      <p>This is the step that matters. Do not trust a speed from an installation that has not passed it.</p>
+      <ul class="stack">
+        <li><strong>Recorded prompts.</strong> Prompts 1, 4 and 10 of 34 recorded ones must give the recorded token ids.</li>
+        <li><strong>Draft model.</strong> Speculative decoding with the draft model must give the same tokens as plain decoding.</li>
+        <li><strong>The 1,000-token prompt.</strong> Its embeddings, layer 92 output and eight snapshots must match the reference chain bit for bit. This needs the reference values from the dataset; without them the check is skipped with a warning.</li>
+        <li><strong>Chat.</strong> The second turn of a chat must remember a name from the first.</li>
+      </ul>
+      <p>The result is written to <code>src/work/results/verify-setup.result</code> as lines starting
+        <code>PASS</code>, <code>WARN</code> or <code>FAIL</code>. To run it again alone:
+        <code>src/scripts/verify-setup.sh</code> from the engine folder.</p>
+    </div>
+  </section>
+
+  <section class="band" id="run">
+    <div class="wrap">
+      <h2>Running the model</h2>
+      <p>Run everything from the engine folder. One model run at a time: each uses nearly all of the memory.</p>
+<pre class="code"><code>cd /opt/clover-k3/clover-kimi-k3
+
+# the recorded 1,000-token prompt, compared with the reference chain
+src/scripts/run-model.sh recorded
+
+# any text file as the prompt
+src/scripts/run-model.sh text my-prompt.txt
+
+# write 48 more tokens, keeping 16 experts per layer in RAM, and save their ids
+PF_DECODE=48 PF_CACHE=16 PF_SAVE_IDS=reply.ids src/scripts/run-model.sh text my-prompt.txt
+src/work/build/ids-to-text src/datasets/third-party/kimi-k3-open-weights src/work/results/reply.ids src/work/results/reply.txt</code></pre>
+      <p>The first run builds the engine if the set-up has not. The logs and saved ids land in
+        <code>src/work/results</code>. A short prompt took about a minute in our verify runs, because
+        reading even a short prompt pulls in every expert it needs.</p>
+
+      <h3>As a chat</h3>
+      <p>One process keeps the model loaded and the conversation in memory, so a follow-up costs only its own tokens.</p>
+<pre class="code"><code>src/scripts/chat-start.sh mychat "Answer briefly."     # starts detached; wait for session-mychat/ready
+src/scripts/chat-say.sh mychat "What is a KDA layer?"  # sends one message and prints the reply
+src/scripts/chat-stop.sh mychat</code></pre>
+      <p><code>chat-say.sh</code> waits 60 seconds by default (<code>WAIT=seconds</code> changes it). A longer
+        reply stays in <code>session-NAME/reply-NNNN.txt</code> and the script tells you where. In our checks a
+        short follow-up took about 70 to 75 seconds in all. When the conversation outgrows the window, the
+        oldest turns are replaced by a summary the model writes, which costs a prompt pass over the kept text
+        and can lose facts.</p>
+
+      <h3>With the draft model</h3>
+<pre class="code"><code>PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 src/scripts/run-model.sh text my-prompt.txt</code></pre>
+      <p>The draft model proposes up to 8 tokens and the full model checks them in one pass, so the text
+        is the same as plain decoding. It pays on code and repeating text and gains little on prose.</p>
+    </div>
+  </section>
+
+  <section class="band" id="tune">
+    <div class="wrap">
+      <h2>Tuning it to your machine</h2>
+      <p>These are the settings that depend on the hardware, in the order we would look at them, with what
+        we know about each. All of it was measured on our workstation only.</p>
+      <dl class="kv kv--wide">
+        <div>
+          <dt>Threads</dt>
+          <dd>The line in <code>src/scripts/run-model.sh</code> that starts the program sets <code>OMP_NUM_THREADS=16</code> with
+            <code>OMP_PROC_BIND=close</code> and <code>OMP_PLACES=cores</code>. Change the 16 to your number of
+            <em>physical</em> cores. On our processor 32 threads was slower than 16, and runs without pinning
+            varied by seconds. We have not tested another CPU.</dd>
+        </div>
+        <div>
+          <dt>Expert cache</dt>
+          <dd><code>PF_CACHE</code> is how many experts per layer stay in RAM between decode steps. We use 16
+            (about 26 GB). Lower it to fit a smaller machine; 0 turns it off.</dd>
+        </div>
+        <div>
+          <dt>Exact or faster</dt>
+          <dd><code>USE_4BIT_TRUNK=1</code> packs the always-used weights to 4 bits in RAM for decoding. Decoding
+            goes from 3.1 to 3.5 s to 2.5 to 2.8 s per token, it needs about 29 GB more RAM (the trunk files are
+            then not locked in memory), and the output is no longer bit-identical. The prompt pass stays exact.
+            Leave it off to stay exact.</dd>
+        </div>
+        <div>
+          <dt>Draft model</dt>
+          <dd><code>SPECULATIVE_DRAFTER=dspark</code> needs the 7.1 GB draft checkpoint. The draft width, 0 to 8
+            tokens, is chosen per pass from how many were right recently. A fixed width of 8 was 1.5 times
+            <em>slower</em> than plain decoding on prose, so leave it to be chosen.</dd>
+        </div>
+        <div>
+          <dt>Chat window</dt>
+          <dd><code>PF_CONTEXT</code> is the number of positions kept (8192, roughly 19 GB of attention cache) and
+            <code>PF_CHUNK</code> the tokens per prompt pass (1024). A chunk of 2048 ran out of memory on 124 GB.
+            Lower <code>PF_CONTEXT</code> on a smaller machine.</dd>
+        </div>
+        <div>
+          <dt>Where the data lives</dt>
+          <dd><code>DATASET_DIR</code>, <code>OPEN_WEIGHTS_DIR</code> and <code>DSPARK_DIR</code> point the engine
+            at data kept on a bigger drive.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="band" id="trouble">
+    <div class="wrap">
+      <h2>When something fails</h2>
+      <dl class="kv kv--wide">
+        <div>
+          <dt><code>O_DIRECT does not work</code></dt>
+          <dd>The dataset is on tmpfs or a network share. Put it on a local NVMe filesystem and set <code>DATASET_DIR</code>.</dd>
+        </div>
+        <div>
+          <dt>Not enough disk</dt>
+          <dd>The check wants the missing part of the dataset plus 3% free. Point <code>DATASET_DIR</code> at a bigger filesystem.</dd>
+        </div>
+        <div>
+          <dt>Memory lock fails or the engine is killed</dt>
+          <dd>Run as root, or set the memory-lock limit to unlimited (<code>LimitMEMLOCK=infinity</code> in a service).
+            Check that nothing else is using the memory, and lower <code>PF_CACHE</code> or <code>PF_CONTEXT</code>.</dd>
+        </div>
+        <div>
+          <dt><code>check-dataset</code> reports missing files</dt>
+          <dd>The download is not finished, or the dataset upload to Hugging Face is not (see the status at the top). Run the
+            <code>download</code> step again, then <code>check-dataset</code>.</dd>
+        </div>
+        <div>
+          <dt>A file has the right size but you doubt it</dt>
+          <dd>Run <code>CHECK_HASHES=1 src/scripts/check-dataset-files.sh</code> to compare every SHA-256 with the list.</dd>
+        </div>
+        <div>
+          <dt>The 1,000-token check was skipped</dt>
+          <dd>The reference values (<code>engine-inputs/refs</code>) were not in the downloaded dataset. Run <code>download</code> and then <code>inputs</code> again.</dd>
+        </div>
+        <div>
+          <dt>Build fails</dt>
+          <dd>The build log for each part is in <code>src/work/build</code>. Check that gcc supports OpenMP and that <code>objcopy</code> (binutils) is installed.</dd>
+        </div>
+      </dl>
     </div>
   </section>
 
@@ -84,8 +334,7 @@
         <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Apache-2.0) is
         the engine that showed Kimi K3 could be run from C on one machine, and it is where we
         started: we ran it on our workstation first, measured it, and then asked what the model
-        computes. Everything below is measured on that one workstation, a Ryzen 9 7950X3D with
-        124 GB of RAM and two NVMe drives, no GPU.</p>
+        computes. Everything below is measured on that one workstation.</p>
 
       <div class="table-wrap">
         <table class="data">
@@ -151,342 +400,6 @@
     </div>
   </section>
 
-  <section class="band" id="setup">
-    <div class="wrap">
-      <h2>Setting it up: on a workstation like ours, or tuned to yours</h2>
-      <p>The engine lives in one folder, <code>clover-kimi-k3</code>. The model itself is not in
-        this repository: the precomputed layers are a separate dataset, and the rest comes from the
-        original open weights. A setup script checks the machine, fetches everything, builds, and
-        proves the result before you rely on it.</p>
-
-      <h3>A workstation like ours</h3>
-      <dl class="kv kv--wide">
-        <div>
-          <dt>Processor</dt>
-          <dd>Linux on x86-64 with AVX2 at least. We measured on AVX-512 only (Ryzen 9 7950X3D,
-            16 cores, 32 threads); without it the script warns that the speed is unmeasured.</dd>
-        </div>
-        <div>
-          <dt>Memory</dt>
-          <dd>124 GB is what we measured. About 53 GB of that holds the always-used weights locked
-            in RAM, about 26 GB the recently used experts, and the rest the attention cache and the
-            working buffers. The script warns below 120 GB and stops below 64 GB.</dd>
-        </div>
-        <div>
-          <dt>Disk</dt>
-          <dd>About 1.4 TB (1,400 GiB) of local NVMe for the dataset, on a filesystem that supports
-            direct reads: not tmpfs, not a network share. We use two NVMe drives in RAID1; the
-            script tests direct reads and checks free space.</dd>
-        </div>
-        <div>
-          <dt>System settings</dt>
-          <dd>An unlimited memory-lock limit (run as root, or set it in the service), transparent
-            huge pages on <code>madvise</code> or <code>always</code>, <code>vm.max_map_count</code>
-            of at least 262144 (1048576 advised), and <code>gcc</code> with OpenMP. The preflight step
-            reports each one.</dd>
-        </div>
-      </dl>
-
-      <h3>The steps</h3>
-      <pre class="code"><code>curl -fsSL https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/clover-kimi-k3/src/scripts/set-up-new-machine.sh -o set-up-new-machine.sh
-sudo env DATASET_DIR=/mnt/nvme/computed bash set-up-new-machine.sh</code></pre>
-      <p>The script runs these steps in order, and each can be run again alone:
-        <code>preflight</code>, <code>packages</code>, <code>clone</code>, <code>download</code>,
-        <code>open-weights</code>, <code>check-dataset</code>, <code>inputs</code>, <code>build</code>,
-        <code>dspark</code>, <code>verify</code>. The download resumes. Every dataset file is
-        checked against a list of sizes and SHA-256 hashes.</p>
-      <p><code>verify</code> is the part that matters. The recorded prompts must give the recorded
-        token ids, the draft model's output must equal plain decoding, the recorded 1,000-token
-        prompt must match the reference chain bit for bit, and a chat must remember a name from
-        the turn before. Do not trust a timing from an installation that has not passed it.</p>
-
-      <h3>Running it</h3>
-      <pre class="code"><code>src/scripts/run-model.sh recorded                               # the 1,000-token prompt, compared with the reference chain
-src/scripts/run-model.sh text my-prompt.txt                     # any text file
-PF_DECODE=48 PF_CACHE=16 src/scripts/run-model.sh text my-prompt.txt
-PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 src/scripts/run-model.sh text my-prompt.txt</code></pre>
-
-      <h3>Tuning it to your machine</h3>
-      <p>We have run it on one machine. These are the settings that depend on the machine, in the
-        order we would change them, and what we know about each.</p>
-      <dl class="kv kv--wide">
-        <div>
-          <dt>Threads</dt>
-          <dd><code>run-model.sh</code> sets 16 threads bound to cores (<code>OMP_NUM_THREADS=16</code>,
-            <code>OMP_PROC_BIND=close</code>, <code>OMP_PLACES=cores</code>). Set it to your number of
-            <em>physical</em> cores. On our processor 32 threads was slower than 16, and
-            unpinned runs varied by seconds. We have not tested another CPU.</dd>
-        </div>
-        <div>
-          <dt>Expert cache</dt>
-          <dd><code>PF_CACHE</code> is how many experts per layer stay in RAM between decode steps.
-            16 is what we use (about 26 GB). Lower it to fit a smaller machine; 0 turns it off.</dd>
-        </div>
-        <div>
-          <dt>Exact or faster</dt>
-          <dd><code>USE_4BIT_TRUNK=1</code> packs the always-used weights to 4 bits in RAM: decoding goes
-            from 3.1 to 3.5 s to 2.5 to 2.8 s per token and the locked memory falls, but the output
-            is no longer bit-identical. Leave it off to stay exact.</dd>
-        </div>
-        <div>
-          <dt>Draft model</dt>
-          <dd><code>SPECULATIVE_DRAFTER=dspark</code> needs the 7.1 GB draft checkpoint the setup
-            script downloads. It pays on code and repeating text and is a small gain on prose. A
-            fixed width of 8 was 1.5 times slower than plain decoding on prose, so leave the width to
-            be chosen per pass.</dd>
-        </div>
-        <div>
-          <dt>Chat window</dt>
-          <dd><code>PF_CONTEXT</code> (8192 positions, roughly 19 GB of attention cache) and
-            <code>PF_CHUNK</code> (1024 tokens per prompt pass). A chunk of 2048 ran out of memory on
-            124 GB.</dd>
-        </div>
-        <div>
-          <dt>Where the data lives</dt>
-          <dd><code>DATASET_DIR</code>, <code>OPEN_WEIGHTS_DIR</code> and <code>DSPARK_DIR</code> point
-            the engine at data kept on a bigger drive.</dd>
-        </div>
-      </dl>
-      <p class="note">On less than 124 GB of RAM, or without AVX-512, expect the defaults to need
-        changing and the speeds above not to apply. We have not measured either.</p>
-    </div>
-  </section>
-
-  <section class="band" id="what">
-    <div class="wrap">
-      <h2>What we actually did</h2>
-      <p class="note">This section and the next describe the first version, <code>clover-k3</code> (September 2026), kept for the record. The current engine is described above.</p>
-      <p>A large language model is usually met as a program you run. We wanted to know what it
-        <em>is</em>, separately from how anyone happens to have implemented it. So we wrote the
-        model out as mathematics first, and only then turned that into code.</p>
-
-      <dl class="kv kv--wide">
-        <div>
-          <dt>1. Take the model apart, one kernel at a time</dt>
-          <dd>Forty-two numbered stages across two layers, then a walk over all ninety-three.
-            Each stage establishes one operation and what it does to real values, checked against
-            the running model rather than reasoned about.</dd>
-        </div>
-        <div>
-          <dt>2. State the whole thing once, as one expression</dt>
-          <dd>Ten primitive operators, two kinds of attention block, two kinds of MLP block, and
-            one composed expression for the whole model. Nothing left as prose. Supply the token
-            ids, evaluate the expression, and you get the token the model emits.</dd>
-        </div>
-        <div>
-          <dt>3. Execute the document and see whether it is true</dt>
-          <dd>The equation was transcribed into a program and run against the original engine's
-            own internal values. <strong>79,742,816 float32 values identical, zero
-            mismatches.</strong> That is what turned it from a description into a specification.</dd>
-        </div>
-        <div>
-          <dt>4. Build the real implementation from the equation, not from anyone's code</dt>
-          <dd>One C file, about 2,500 lines, no dependency beyond libc, libm and OpenMP. Every
-            change from that point had to reproduce one checksum, or it did not count.</dd>
-        </div>
-      </dl>
-
-      <h3>Writing it down is what found the mistakes</h3>
-      <p>Executing the document rather than admiring it exposed four defects in our own
-        mathematics. Each one is recorded where it was found:</p>
-      <dl class="kv kv--wide">
-        <div>
-          <dt>The int8 projection had eight accumulators where the model has sixteen</dt>
-          <dd>Mathematically the same sum; numerically a different one. As first written it
-            reproduced 2,012 of 12,288 values.</dd>
-        </div>
-        <div>
-          <dt>A weight was stored at width 128 with only 96 entries used</dt>
-          <dd>Correct arithmetic, unstated shape. Implementing from the document alone gave a
-            shape error.</dd>
-        </div>
-        <div>
-          <dt>One operator never said whether its multiply and add were fused</dt>
-          <dd>The obvious translation is a fused multiply-add, which rounds once. The model
-            rounds twice. The build carries <code>-ffp-contract=off</code> for that reason.</dd>
-        </div>
-        <div>
-          <dt>The expert weighting said divide where the model multiplies by a reciprocal</dt>
-          <dd>Found by reading the finished code back against the document. Both forms were
-            built into one binary and compared: <strong>92% of the output values differ</strong>,
-            though the emitted word does not change — which is exactly why it survived unnoticed.</dd>
-        </div>
-      </dl>
-      <p class="note">The order of operations is not a formatting detail in this work. Three
-        separate times, a regrouping that is correct in ordinary algebra dropped the match to
-        between 74% and 80%.</p>
-    </div>
-  </section>
-
-  <section class="band" id="results">
-    <div class="wrap">
-      <h2>What the results showed</h2>
-      <p>The test is deliberately blunt. Give two independently written programs the same 34
-        prompts, the same 1.5 TB of weights, the same machine, on the same day, and see whether
-        they agree and how long they take. The other program is
-        <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a>, a separate C
-        implementation that shares no code with ours.</p>
-
-      <dl class="kv kv--wide">
-        <div>
-          <dt>34 of 34 answers identical</dt>
-          <dd>Not similar — the same token id every time. The capital of France is
-            <code>Paris</code>; the chemical symbol for gold is <code>Au</code>; the largest
-            planet is <code>Jupiter</code>. Asked in English, French and German, the Paris
-            question returns the identical token id in all three.</dd>
-        </div>
-        <div>
-          <dt>394.94 seconds against 1344.23 seconds</dt>
-          <dd>Across all 34 prompts. A ratio of <strong>3.40</strong>, and between 3.17 and 3.57
-            on any individual prompt.</dd>
-        </div>        <div>
-          <dt>One checksum held through every optimisation</dt>
-          <dd><code>23d162dcefb18211a7540ef12948f1eb</code>. A faster result that does not
-            reproduce those bytes is not a result. This caught a change that looked like a 38%
-            win and was silently wrong.</dd>
-        </div>
-        <div>
-          <dt>Routing turned out to be predictable</dt>
-          <dd>Which experts a position needs is a pure function of the words before it —
-            measured 644 agreements out of 644, with a control that fails as it should. So for a
-            prompt seen before, the weights the next layer needs can be fetched while the current
-            layer is still computing. That took a five-token prompt from 8.75 to
-            <strong>7.25 seconds</strong> and the disks from 80% to 99% busy.</dd>
-        </div>
-      </dl>
-
-      <h3>Where the gap actually comes from</h3>
-      <p>Both programs read exactly the same 99.72 GB of expert weights, so neither is doing less
-        arithmetic. Of the 14.79-second gap on the first prompt, <strong>5.73 seconds is simply
-        the other program re-reading the 54 GB trunk from disk on every run</strong> while ours
-        keeps it in memory. That is a configuration choice, not a clever one. The rest is
-        overlap: ours keeps the disks busy while it computes.</p>
-      <p class="note">We also measured the disks directly, using our own access pattern: they top
-        out at 14.6 GB/s, and the run is already reading at 13.8. There is about 6% left in the
-        hardware, not 60%.</p>
-    </div>
-  </section>
-
-  <section class="band" id="machine">
-    <div class="wrap">
-      <h2>The machine, and what it really costs</h2>
-      <p class="note">The memory and disk figures in this section are from the first version. The current requirements are in the set-up section above.</p>
-      <p>One rented machine. No GPU, no cluster, nothing exotic.</p>
-
-      <div class="grid grid--3">
-        <div class="card">
-          <h3>Processor</h3>
-          <p>AMD Ryzen 9 7950X3D. 16 cores, 32 threads. We measured that 16 compute threads is
-            the right number — using all 32 for arithmetic makes it <em>slower</em>, because the
-            paired threads share the cache the kernel depends on.</p>
-        </div>
-        <div class="card">
-          <h3>Memory</h3>
-          <p>124 GB installed. Our run peaks at <strong>58.05 GB</strong> resident; the other
-            implementation peaks at 51.09 GB for one token and 95.5 GB while generating. None of
-            these is a small-memory configuration.</p>
-        </div>
-        <div class="card">
-          <h3>Storage</h3>
-          <p>Two NVMe drives in RAID1. <strong>1.5 TB for the checkpoint plus 51 GB for the
-            trunk</strong>, and the array is 91% full holding them. Every run reads 99.86 GB back
-            off the disks.</p>
-        </div>
-      </div>
-
-      <p>The honest summary of the requirement is that <strong>storage is the entry fee and
-        memory is the working cost</strong>. You cannot start without roughly 1.6 TB of fast
-        local disk. Once started, the thing that decides your speed is how much of the model you
-        can keep resident and how well you overlap reading the rest with computing.</p>
-      <p class="note">The upstream engine is designed to run in far less memory than this, and
-        can. We did not ask it to here; both programs were given the machine as it is.</p>
-    </div>
-  </section>
-
-  <section class="band" id="interactive">
-    <div class="wrap">
-      <h2>Is this interactive enough for real work?</h2>
-      <p class="lede">No. Not yet, and not close.</p>
-      <p class="note">Written about the first version. The current engine reads a prompt at about 0.3 s per token and writes 2.7 to 3.3 s per token on ordinary text (table above): faster, and still not a conversation.</p>
-
-      <p>It is worth being exact about why, because the headline numbers on this page are about
-        <em>reading a prompt</em>, not about <em>writing an answer</em>. Those are different
-        costs, and only the first one is fast.</p>
-
-      <dl class="kv kv--wide">
-        <div>
-          <dt>The 34-prompt comparison is one token per prompt</dt>
-          <dd>Both programs were asked to read a prompt and produce the single next word. The
-            7.23 seconds in the table is a whole prompt read from cold, which is the part we set
-            out to understand — not a sentence produced.</dd>
-        </div>
-        <div>
-          <dt>It does write sentences, at about six seconds a word</dt>
-          <dd>Each new word reuses the state the previous one left, so only the new position is
-            computed. Measured steady state: <strong>5.1 s per word</strong> after a five-word
-            prompt, <strong>6.6 s</strong> after a ten-word one. The reuse is checked against
-            recomputing everything from scratch and produces the identical words, 2.34x faster.
-            For reference the upstream engine measured 23.71 s per token over 8 tokens and
-            12.42 s over 128 on this same machine.</dd>
-        </div>
-        <div>
-          <dt>Fourteen words took a hundred seconds</dt>
-          <dd><em>“In 1969 the first humans landed on the”</em> continued to <em>“moon. The
-            Apollo 11 mission was a monumental achievement in human history”</em> — 14 tokens in
-            101.3 seconds. A 128-word answer would be around thirteen minutes.</dd>
-        </div>
-      </dl>
-
-      <p>So for day-to-day work — a chat window, a coding assistant, anything with a person
-        waiting — this is not usable, and no amount of tuning at the margin changes that. Six
-        seconds a word is not a slow version of interactive. It is a different activity.</p>
-
-      <h3>What it is genuinely good for right now</h3>
-      <p>Work where the answer matters more than the wait, and where the alternative is not
-        having the model at all: running a frontier-scale model on hardware you control rather
-        than someone's API, checking that an implementation is exactly correct, or batch work
-        left to run. It also establishes the thing the speed rests on — that the model is
-        understood well enough to be written down and checked value by value.</p>
-      <p class="note">The direction that could change the answer is placement rather than
-        tuning: keeping the most-used part of the model on a GPU while the rest stays on disk.
-        That has not been measured, and until it is, it is an idea and not a result.</p>
-    </div>
-  </section>
-
-  <section class="band" id="limits">
-    <div class="wrap">
-      <h2>What the first version does not show</h2>
-      <p>Stated plainly, because a result that hides its edges is not evidence.</p>
-      <ul class="stack">
-        <li><strong>One token per prompt in the comparison.</strong> The 34-prompt table asked
-          both programs for the next token only. Generation was measured on clover-k3 alone, at
-          different prompts and lengths from the engine's figures, so the two are separate
-          observations rather than a ratio.</li>
-        <li><strong>Not a comparison against the official runtime, or a GPU.</strong> It is one
-          CPU implementation against another CPU implementation of the same checkpoint.</li>
-        <li><strong>Thirty-four prompts, mostly short and mostly English.</strong> The longest is
-          24 tokens. Nothing here speaks to long context.</li>
-        <li><strong>The trunk-caching difference is quantified but not controlled for.</strong>
-          A version of the test with both programs cold, or both warm, has not been run.</li>
-        <li><strong>Single runs, not repeated trials.</strong> Run-to-run spread on this machine
-          is around 0.1 s within a session and up to 2 s across sessions — small against a
-          threefold gap, but not zero.</li>
-        <li><strong>One machine.</strong> Every number on this page comes from the same box.</li>
-      </ul>
-      <p class="actions">
-        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a>
-        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/k3/model/k3-model-equation.md">The equation</a>
-        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/k3/architecture/clover-scaling-architecture.md">The measurement record</a>
-      </p>
-      <p class="note">The measurement record includes everything that did not work, which is most
-        of it: a distributed version that lost to the original, io_uring that measured slower
-        than plain threads at every depth tried, and a cache preload that cost time rather than
-        saving it. Upstream engine by
-        <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">Fareed Khan</a>, Apache-2.0,
-        which Clover does not claim.</p>
-    </div>
-  </section>
-
   <section class="band" id="credit">
     <div class="wrap">
       <h2>Credit</h2>
@@ -536,8 +449,10 @@ PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 s
         <div>
           <dt>The first version</dt>
           <dd><a href="https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3">clover-k3</a>
-            as it stood at commit 013cbc8, and its
-            <a href="https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md">34 prompts and what they write</a>.</dd>
+            as it stood at commit 013cbc8, with its
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md">34 prompts and what they write</a>
+            and the <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/k3/model/k3-model-equation.md">model equation</a>
+            it was written from.</dd>
         </div>
         <div>
           <dt>Upstream</dt>
@@ -557,7 +472,7 @@ PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 s
       <h4>Read</h4>
       <ul>
         <li><a href="../">The framework</a></li>
-        <li><a href="../start/">Getting started</a></li>
+        <li><a href="../start/">AGENTS.md</a></li>
         <li><a href="../governance/">Governance</a></li>
         <li><a href="../evidence/">Evidence</a></li>
         <li><a href="../glossary/">Glossary</a></li>
