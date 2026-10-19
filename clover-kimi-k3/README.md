@@ -24,7 +24,7 @@ clover-kimi-k3/
 ├── README.md
 ├── docs/                              current-status.md (the dated log of everything measured, every negative result), layer0-verdict.md
 └── src/
-    ├── code/                          all the code: common/ (shared by every machine), cpu/ (the workstation engine), third-party/ (see below)
+    ├── code/                          all the code: common/ (shared by every machine), cpu/ (the workstation engine), gpu/ (a GPU server: probes only so far), third-party/ (see below)
     │   └── third-party/kimi-k3-in-c/  the tokenizer headers (Apache-2.0, with licence and notice, github.com/FareedKhan-dev/kimi-k3-in-c at commit a2ad8e5, unmodified)
     ├── scripts/                       run-model.sh (build and run), settings.sh (every path, one place), checks, chat, new-machine setup, the two file lists
     ├── tools/                         compare-outputs.py, compare-34-prompts-with-recorded.py, expert-route-analysis.py, prune-trunk.py, check-open-weights.c
@@ -39,7 +39,7 @@ clover-kimi-k3/
     └── work/                          host only: build/ (compiled program), inputs/ (recorded prompt, the pod's chain values), results/ (every log and output)
 ```
 
-The code in `src/code/`, by what it does. It is in two folders: `common/` has no vector instructions and no OpenMP kernels and includes nothing from `cpu/`; `cpu/` is the workstation engine (AVX-512, OpenMP, huge pages). A different kind of machine gets its own folder beside `cpu/` and shares `common/`.
+The code in `src/code/`, by what it does. It is split by kind of machine: `common/` has no vector instructions and no OpenMP kernels and includes nothing from `cpu/`; `cpu/` is the workstation engine (AVX-512, OpenMP, huge pages). A different kind of machine gets its own folder beside `cpu/` and shares `common/`; `gpu/` is the first, and holds probes only, no engine yet (see [its README](src/code/gpu/README.md)).
 
 | file | what it is |
 |---|---|
