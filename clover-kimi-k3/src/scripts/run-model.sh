@@ -23,21 +23,21 @@ USE_4BIT_TRUNK="${USE_4BIT_TRUNK:-0}"
 [ "$USE_4BIT_TRUNK" != "0" ] && CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-0}"
 [ "${ACTIVATION_8BIT_EXPERT:-0}" != "0" ] && LB_EXPK=3
 [ "${ACTIVATION_8BIT_TRUNK:-0}" != "0" ] && LB_A8T=1
-SRC="$SRC_DIR"
+SRC="$CODE_DIR"
 F="-std=gnu11 -march=native -ffp-contract=off -fno-fast-math -fopenmp -Wall -Wno-unused-function"
 TOK="-I$TOKENIZER_DIR/src/tokenizer -I$TOKENIZER_DIR/third_party"
 cd "$BUILD_DIR"
 if [ "${BUILD:-1}" != "0" ] && [ -z "${PF_NOBUILD:-}" ]; then
-  # layers 2-92 are built from the deployed pod sources of layer 2 (attention kind KDA) and layer 3 (MLA), with the layer number made a run-time value
-  sed -E "s/^#define TRANSFORMER_LAYER 2\$/#define TRANSFORMER_LAYER lb_layer_no/; s/^#define TRANSFORMER_INPUT_SNAPSHOTS 1\$/#define TRANSFORMER_INPUT_SNAPSHOTS lb_k_in/; s/\(TRANSFORMER_LAYER - 1\)/(2 - 1)/; s/\"operators\/qkv-all\/layer-2\/operator.bin\"/lb_name(0)/; s/\"trunk-2\"/lb_name(1)/; s/\"root-2\"/lb_name(2)/; s/root_open\(root_directory, 2\)/root_open(root_directory, lb_layer_no)/" $SRC/layer-kda-core.c > template-kda.c
-  sed -E "s/^#define TRANSFORMER_LAYER 3\$/#define TRANSFORMER_LAYER lb_layer_no/; s/^#define TRANSFORMER_INPUT_SNAPSHOTS 1\$/#define TRANSFORMER_INPUT_SNAPSHOTS lb_k_in/; s/\(TRANSFORMER_LAYER - 1\)/(3 - 1)/; s/\"operators\/qkv-all\/layer-3\/operator.bin\"/lb_name(0)/; s/\"trunk-3\"/lb_name(1)/; s/\"root-3\"/lb_name(2)/; s/root_open\(root_directory, 3\)/root_open(root_directory, lb_layer_no)/" $SRC/layer-mla-core.c > template-mla.c
+  # layers 2-92 are built from layer-kda.c (attention kind KDA, the source of layer 2) and layer-mla.c (MLA, the source of layer 3), with the layer number made a run-time value
+  sed -E "s/^#define TRANSFORMER_LAYER 2\$/#define TRANSFORMER_LAYER lb_layer_no/; s/^#define TRANSFORMER_INPUT_SNAPSHOTS 1\$/#define TRANSFORMER_INPUT_SNAPSHOTS lb_k_in/; s/\(TRANSFORMER_LAYER - 1\)/(2 - 1)/; s/\"trunk-2\/operator.bin\"/lb_name(0)/; s/\"trunk-2\"/lb_name(1)/; s/\"expert-2\"/lb_name(2)/; s/expert_store_open\(expert_store_directory, 2\)/expert_store_open(expert_store_directory, lb_layer_no)/" $SRC/layer-kda.c > template-kda.c
+  sed -E "s/^#define TRANSFORMER_LAYER 3\$/#define TRANSFORMER_LAYER lb_layer_no/; s/^#define TRANSFORMER_INPUT_SNAPSHOTS 1\$/#define TRANSFORMER_INPUT_SNAPSHOTS lb_k_in/; s/\(TRANSFORMER_LAYER - 1\)/(3 - 1)/; s/\"trunk-3\/operator.bin\"/lb_name(0)/; s/\"trunk-3\"/lb_name(1)/; s/\"expert-3\"/lb_name(2)/; s/expert_store_open\(expert_store_directory, 3\)/expert_store_open(expert_store_directory, lb_layer_no)/" $SRC/layer-mla.c > template-mla.c
   fail() { echo "build failed: $1"; grep -E "error" $2 | head -20; exit 1; }
   gcc -std=gnu11 -O2 $TOK $SRC/ids-to-text.c -lm -o ids-to-text 2> build-ids-to-text.log || fail ids-to-text build-ids-to-text.log
   gcc $F -DPIPELINE_ENTRY -O2 $TOK -I$SRC -Dmain=words_to_embeddings_main -c $SRC/words-to-embeddings.c -o words-to-embeddings.o 2> build-words-to-embeddings.log || fail words-to-embeddings build-words-to-embeddings.log
-  gcc $F -DPIPELINE_ENTRY -O2 -funroll-loops -I$SRC -Dmain=layer0_main -c $SRC/layer0.c -o layer0.o 2> build-layer0.log || fail layer0 build-layer0.log
-  gcc $F -DPIPELINE_ENTRY -O3 -I$SRC -Dmain=layer1_main -c $SRC/layers-1-to-92.c -o layer1.o 2> build-layer1.log || fail layer1 build-layer1.log
-  gcc $F -DLB_GENERIC -DLB_ENTRY -DLB_PFX=lbk -DLB_TEMPLATE='"template-kda.c"' -O3 -I$SRC -I. -Dmain=kda_main_unused -c $SRC/layers-1-to-92.c -o layers-kda.o 2> build-layers-kda.log || fail layers-kda build-layers-kda.log
-  gcc $F -DLB_GENERIC -DLB_ENTRY -DLB_PFX=lbm -DLB_TEMPLATE='"template-mla.c"' -O3 -I$SRC -I. -Dmain=mla_main_unused -c $SRC/layers-1-to-92.c -o layers-mla.o 2> build-layers-mla.log || fail layers-mla build-layers-mla.log
+  gcc $F -DPIPELINE_ENTRY -O2 -funroll-loops -I$SRC -Dmain=layer0_main -c $SRC/layer0-batch.c -o layer0.o 2> build-layer0.log || fail layer0 build-layer0.log
+  gcc $F -DPIPELINE_ENTRY -O3 -I$SRC -Dmain=layer1_main -c $SRC/layers-1-to-92-batch.c -o layer1.o 2> build-layer1.log || fail layer1 build-layer1.log
+  gcc $F -DLB_GENERIC -DLB_ENTRY -DLB_PFX=lbk -DLB_TEMPLATE='"template-kda.c"' -O3 -I$SRC -I. -Dmain=kda_main_unused -c $SRC/layers-1-to-92-batch.c -o layers-kda.o 2> build-layers-kda.log || fail layers-kda build-layers-kda.log
+  gcc $F -DLB_GENERIC -DLB_ENTRY -DLB_PFX=lbm -DLB_TEMPLATE='"template-mla.c"' -O3 -I$SRC -I. -Dmain=mla_main_unused -c $SRC/layers-1-to-92-batch.c -o layers-mla.o 2> build-layers-mla.log || fail layers-mla build-layers-mla.log
   gcc $F -O2 -c $SRC/whole-model.c -o whole-model.o 2> build-whole-model.log || fail whole-model build-whole-model.log
   gcc $F -O3 -I$SRC -c $SRC/dspark-draft.c -o dspark-draft.o 2> build-dspark-draft.log || fail dspark-draft build-dspark-draft.log
   # the tail (final normalisation, vocabulary head, detokenise) is a shared library the program opens at run time

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Checks that every file the engine opens is where it should be with the recorded size, and optionally the sha256 of each:
-#   scripts/dataset-files.tsv       the precomputed dataset (root-N, trunk-N, operators), in DATASET_DIR
+#   scripts/dataset-files.tsv       the precomputed dataset (expert-N, trunk-N with its operator.bin), in DATASET_DIR
 #   scripts/open-weights-files.tsv  the original open weights files (moonshotai/Kimi-K3), in OPEN_WEIGHTS_DIR
 # Each list: path, bytes, sha256.
 # usage: [DATASET_DIR=...] [DATASET_LIST=file.tsv instead of scripts/dataset-files.tsv] [OPEN_WEIGHTS_DIR=...] [CHECK_HASHES=1] check-dataset-files.sh        exit status 0 = everything present and equal

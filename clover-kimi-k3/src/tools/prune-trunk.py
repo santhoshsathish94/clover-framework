@@ -4,8 +4,8 @@
 usage: prune-trunk.py SOURCE_DATASET OUTPUT_DIR [LAYER ...]      (no layer: 1 to 92)
 
 For every trunk-N it writes index.bin, common.bin, attention.bin and routed-shared.bin to OUTPUT_DIR/trunk-N. A record the layer reads
-(the transformer_needs list of src/layer-kda-core.c and src/layer-mla-core.c) is copied byte for byte; every other record stays in the index
-with length 0. The Q, K and V weights are among the dropped ones: operators/qkv-all holds them. A group file with nothing dropped is
+(the transformer_needs list of src/code/layer-kda.c and src/code/layer-mla.c) is copied byte for byte; every other record stays in the index
+with length 0. The Q, K and V weights are among the dropped ones: trunk-N/operator.bin holds them (it is hard-linked into the output). A group file with nothing dropped is
 hard-linked instead of copied. The source is only read. trunk-0 (layer 0) is not touched here.
 """
 import hashlib, os, struct, sys
@@ -70,6 +70,12 @@ def prune(src, dst, layer):
             os.link(os.path.join(src, name), target)
         lengths_new.append(cursor)
     struct.pack_into("<3Q", index, 24, *lengths_new)
+    operator = os.path.join(src, "operator.bin")
+    if os.path.exists(operator):
+        target = os.path.join(dst, "operator.bin")
+        if os.path.exists(target):
+            os.remove(target)
+        os.link(operator, target)
     with open(os.path.join(dst, "index.bin"), "wb") as out:
         out.write(index)
     return dropped, sum(lengths_old), sum(lengths_new)

@@ -26,7 +26,7 @@ static unsigned lb_layer_no, lb_k_in;
 static const char *lb_name(int which)
 {
     static char names[3][256];
-    static const char *const formats[3] = { "operators/qkv-all/layer-%u/operator.bin", "trunk-%u", "root-%u" };
+    static const char *const formats[3] = { "trunk-%u/operator.bin", "trunk-%u", "expert-%u" };
     snprintf(names[which], sizeof names[which], formats[which], lb_layer_no);
     return names[which];
 }
@@ -36,7 +36,7 @@ static const char *lb_name(int which)
 #define LB_MLA TRANSFORMER_MLA
 #define LB_INPUT_GAINS(tr) ((tr)->input_gains)
 #else
-#include "layer1-core.c"
+#include "layer1.c"
 #define LB_LAYER 1u
 #define LB_K 1u
 #define LB_MLA 0
@@ -66,9 +66,9 @@ static void bail(const char *what) { fprintf(stderr, "layer-batch: %s\n", what);
 static int g_disk, g_expert_fd = -1;
 static double g_evict_s;
 static unsigned long g_distinct_sum, g_window_count, g_hits[896];
-static void evict_experts(const Root *root)
+static void evict_experts(const ExpertStore *store)
 {
-    madvise((void *)root->direct, root->direct_bytes, MADV_DONTNEED);
+    madvise((void *)store->direct, store->direct_bytes, MADV_DONTNEED);
     posix_fadvise(g_expert_fd, 0, 0, POSIX_FADV_DONTNEED);
 }
 static unsigned long long proc_read_bytes(void)
@@ -191,19 +191,19 @@ static void cache_finish(void)
     g_guess_count = 0;
 }
 
-static inline const unsigned char *expert_base(const Root *root, unsigned expert)
+static inline const unsigned char *expert_base(const ExpertStore *store, unsigned expert)
 {
     if (g_disk == 3 && g_cache) return g_ptr[expert];
-    return (g_disk == 3 ? g_buf : root->direct) + (size_t)expert * ROOT_EXPERT_RAW;
+    return (g_disk == 3 ? g_buf : store->direct) + (size_t)expert * EXPERT_RAW_BYTES;
 }
 static void read_expert(unsigned e)
 {
-    unsigned char *dst = g_cache ? g_ptr[e] : g_buf + (size_t)e * ROOT_EXPERT_RAW;
-    for (size_t off = 0; off < ROOT_EXPERT_RAW; off += IO_CHUNK) {
-        const size_t len = ROOT_EXPERT_RAW - off < IO_CHUNK ? ROOT_EXPERT_RAW - off : IO_CHUNK;
+    unsigned char *dst = g_cache ? g_ptr[e] : g_buf + (size_t)e * EXPERT_RAW_BYTES;
+    for (size_t off = 0; off < EXPERT_RAW_BYTES; off += IO_CHUNK) {
+        const size_t len = EXPERT_RAW_BYTES - off < IO_CHUNK ? EXPERT_RAW_BYTES - off : IO_CHUNK;
         size_t got = 0;
         while (got < len) {
-            const ssize_t n = pread(g_direct_fd, dst + off + got, len - got, (off_t)((size_t)e * ROOT_EXPERT_RAW + off + got));
+            const ssize_t n = pread(g_direct_fd, dst + off + got, len - got, (off_t)((size_t)e * EXPERT_RAW_BYTES + off + got));
             if (n <= 0) bail("direct read failed");
             got += (size_t)n;
         }
@@ -868,20 +868,20 @@ static unsigned long d_passes[THREADS], d_pairs[THREADS];
 #define DT(...)
 #endif
 
-/* ---- experts, grouped by expert (see expert-bench.c; same arithmetic as root_project) ---- */
-static inline __attribute__((always_inline)) void proj_core(const Root *root, unsigned expert, unsigned matrix,
+/* ---- experts, grouped by expert (see expert-bench.c; same arithmetic as expert_store_project) ---- */
+static inline __attribute__((always_inline)) void proj_core(const ExpertStore *store, unsigned expert, unsigned matrix,
     const double *const *conv, float *const *out, const int G)
 {
     const unsigned width = matrix == 2 ? 3072 : 3584, rows = matrix == 2 ? 3584 : 3072;
-    const unsigned char *maps = root->constants + root->palette_count * 2;
-    const unsigned char *offsets = maps + root->map_count * 16;
-    const unsigned char *refs = offsets + (root->template_count + 1) * 2;
-    const unsigned template_id = root_u16(root->index + (expert * 3 + matrix) * 2);
-    const unsigned begin = root_u16(offsets + template_id * 2);
+    const unsigned char *maps = store->constants + store->palette_count * 2;
+    const unsigned char *offsets = maps + store->map_count * 16;
+    const unsigned char *refs = offsets + (store->template_count + 1) * 2;
+    const unsigned template_id = expert_store_u16(store->index + (expert * 3 + matrix) * 2);
+    const unsigned begin = expert_store_u16(offsets + template_id * 2);
     for (unsigned block = 0; block < rows / 64; block++) {
-        const unsigned char *data = expert_base(root, expert) +
-            (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW
-                        : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW);
+        const unsigned char *data = expert_base(store, expert) +
+            (matrix < 2 ? (size_t)(matrix * 48 + block) * EXPERT_STORE_RAW
+                        : (size_t)96 * EXPERT_STORE_RAW + (size_t)block * EXPERT_STORE_DOWN_RAW);
         for (unsigned row = 0; row < 64; row++) {
             const unsigned char *codes = data + row * width / 2;
             const unsigned char *selectors = data + 64 * width / 2 + row * width / 32;
@@ -892,7 +892,7 @@ static inline __attribute__((always_inline)) void proj_core(const Root *root, un
                 l8[g] = _mm256_setzero_pd(); l12[g] = _mm256_setzero_pd();
             }
             for (unsigned coordinate = 0; coordinate < width; coordinate += 16) {
-                const float (*pair)[2] = root->pairs[root_u16(refs + (begin + selectors[coordinate / 32]) * 2)];
+                const float (*pair)[2] = store->pairs[expert_store_u16(refs + (begin + selectors[coordinate / 32]) * 2)];
                 const unsigned char *packed = codes + coordinate / 2;
                 __m256d w0 = _mm256_cvtps_pd(_mm_castpd_ps(_mm_unpacklo_pd(_mm_load_sd((const double *)pair[packed[0]]), _mm_load_sd((const double *)pair[packed[1]]))));
                 __m256d w1 = _mm256_cvtps_pd(_mm_castpd_ps(_mm_unpacklo_pd(_mm_load_sd((const double *)pair[packed[2]]), _mm_load_sd((const double *)pair[packed[3]]))));
@@ -916,24 +916,24 @@ static inline __attribute__((always_inline)) void proj_core(const Root *root, un
         }
     }
 }
-typedef void (*ProjFn)(const Root *, unsigned, unsigned, const double *const *, float *const *);
+typedef void (*ProjFn)(const ExpertStore *, unsigned, unsigned, const double *const *, float *const *);
 
 #if defined(__AVX512F__)
 /* 512-bit expert kernels (see expert-kernel-bench.c): R weight rows x G tokens per pass. Accumulator A = [l0 | l4],
    B = [l8 | l12] of the 256-bit kernel; per lane the same products are added in the same order (multiply, then a
    separate add), and the fold (l0+l8)+(l4+l12) is the same additions, so the bits are the same. */
 #define KZ(NAME, R, G) \
-static void NAME(const Root *root, unsigned expert, unsigned matrix, const double *const *conv, float *const *out) \
+static void NAME(const ExpertStore *store, unsigned expert, unsigned matrix, const double *const *conv, float *const *out) \
 { \
     const unsigned width = matrix == 2 ? 3072 : 3584, rows = matrix == 2 ? 3584 : 3072; \
-    const unsigned char *maps = root->constants + root->palette_count * 2; \
-    const unsigned char *offsets = maps + root->map_count * 16; \
-    const unsigned char *refs = offsets + (root->template_count + 1) * 2; \
-    const unsigned template_id = root_u16(root->index + (expert * 3 + matrix) * 2); \
-    const unsigned begin = root_u16(offsets + template_id * 2); \
+    const unsigned char *maps = store->constants + store->palette_count * 2; \
+    const unsigned char *offsets = maps + store->map_count * 16; \
+    const unsigned char *refs = offsets + (store->template_count + 1) * 2; \
+    const unsigned template_id = expert_store_u16(store->index + (expert * 3 + matrix) * 2); \
+    const unsigned begin = expert_store_u16(offsets + template_id * 2); \
     for (unsigned block = 0; block < rows / 64; block++) { \
-        const unsigned char *data = expert_base(root, expert) + \
-            (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW); \
+        const unsigned char *data = expert_base(store, expert) + \
+            (matrix < 2 ? (size_t)(matrix * 48 + block) * EXPERT_STORE_RAW : (size_t)96 * EXPERT_STORE_RAW + (size_t)block * EXPERT_STORE_DOWN_RAW); \
         for (unsigned row = 0; row < 64; row += R) { \
             const unsigned char *codes[R], *selectors[R]; \
             _Pragma("GCC unroll 8") for (int r = 0; r < R; r++) { \
@@ -945,7 +945,7 @@ static void NAME(const Root *root, unsigned expert, unsigned matrix, const doubl
             for (unsigned coordinate = 0; coordinate < width; coordinate += 16) { \
                 __m512d wa[R], wb[R]; \
                 _Pragma("GCC unroll 8") for (int r = 0; r < R; r++) { \
-                    const float (*pair)[2] = root->pairs[root_u16(refs + (begin + selectors[r][coordinate / 32]) * 2)]; \
+                    const float (*pair)[2] = store->pairs[expert_store_u16(refs + (begin + selectors[r][coordinate / 32]) * 2)]; \
                     const unsigned char *packed = codes[r] + coordinate / 2; \
                     __m256d w0 = _mm256_cvtps_pd(_mm_castpd_ps(_mm_unpacklo_pd(_mm_load_sd((const double *)pair[packed[0]]), _mm_load_sd((const double *)pair[packed[1]])))); \
                     __m256d w1 = _mm256_cvtps_pd(_mm_castpd_ps(_mm_unpacklo_pd(_mm_load_sd((const double *)pair[packed[2]]), _mm_load_sd((const double *)pair[packed[3]])))); \
@@ -976,22 +976,22 @@ KZ(kz_2_1, 2, 1) KZ(kz_2_2, 2, 2) KZ(kz_2_4, 2, 4)
    integer q (0, 1, 2, 3, 4, 6, 8, 12, with sign), so a weight is exactly wscale[table] * q[nibble]. The activations of a token are cut
    into groups of 32 columns (the weights' group size), each scaled by its own max / 127 and rounded to int8; per group the integer dot
    product is exact (int16 multiply-add), then scaled and added in float. The only error is the rounding of the activations. ---- */
-typedef struct { const Root *root; int8_t (*q)[16]; float *scale; } A8Tables;
+typedef struct { const ExpertStore *store; int8_t (*q)[16]; float *scale; } A8Tables;
 static A8Tables a8_tabs[128];
 static unsigned a8_n;
-static const A8Tables *a8_get(const Root *root)
+static const A8Tables *a8_get(const ExpertStore *store)
 {
-    for (unsigned i = 0; i < a8_n; i++) if (a8_tabs[i].root == root) return &a8_tabs[i];
+    for (unsigned i = 0; i < a8_n; i++) if (a8_tabs[i].store == store) return &a8_tabs[i];
     if (a8_n == 128) bail("too many layers for the 8-bit tables");
     A8Tables *t = &a8_tabs[a8_n];
-    t->q = malloc((size_t)root->map_count * 16); t->scale = malloc((size_t)root->map_count * sizeof(float));
-    for (unsigned m = 0; m < root->map_count; m++) {
+    t->q = malloc((size_t)store->map_count * 16); t->scale = malloc((size_t)store->map_count * sizeof(float));
+    for (unsigned m = 0; m < store->map_count; m++) {
         float v[16]; int a = 1 << 20;
         for (unsigned b = 0; b < 256; b++) {
-            if (root->pairs[m][b][0] != root->pairs[m][b & 15][0] || root->pairs[m][b][1] != root->pairs[m][b >> 4][0]) bail("a pair table is not low nibble x high nibble");
+            if (store->pairs[m][b][0] != store->pairs[m][b & 15][0] || store->pairs[m][b][1] != store->pairs[m][b >> 4][0]) bail("a pair table is not low nibble x high nibble");
         }
         for (unsigned b = 0; b < 16; b++) {
-            v[b] = root->pairs[m][b][0];
+            v[b] = store->pairs[m][b][0];
             if (v[b] == 0.0f) continue;
             int e; const float mant = frexpf(fabsf(v[b]), &e);
             const int unit = mant == 0.5f ? e - 1 : mant == 0.75f ? e - 2 : (bail("a weight value is not 2^k or 3 x 2^k"), 0);
@@ -1006,19 +1006,19 @@ static const A8Tables *a8_get(const Root *root)
             t->q[m][b] = (int8_t)q;
         }
     }
-    t->root = root; a8_n++;
+    t->store = store; a8_n++;
     return t;
 }
 #define KA8(NAME, G) \
-static void NAME(const Root *root, unsigned expert, unsigned matrix, const double *const *conv, float *const *out) \
+static void NAME(const ExpertStore *store, unsigned expert, unsigned matrix, const double *const *conv, float *const *out) \
 { \
-    const A8Tables *tb = a8_get(root); \
+    const A8Tables *tb = a8_get(store); \
     const unsigned width = matrix == 2 ? 3072 : 3584, rows = matrix == 2 ? 3584 : 3072, groups = width / 32; \
-    const unsigned char *maps = root->constants + root->palette_count * 2; \
-    const unsigned char *offsets = maps + root->map_count * 16; \
-    const unsigned char *refs = offsets + (root->template_count + 1) * 2; \
-    const unsigned template_id = root_u16(root->index + (expert * 3 + matrix) * 2); \
-    const unsigned begin = root_u16(offsets + template_id * 2); \
+    const unsigned char *maps = store->constants + store->palette_count * 2; \
+    const unsigned char *offsets = maps + store->map_count * 16; \
+    const unsigned char *refs = offsets + (store->template_count + 1) * 2; \
+    const unsigned template_id = expert_store_u16(store->index + (expert * 3 + matrix) * 2); \
+    const unsigned begin = expert_store_u16(offsets + template_id * 2); \
     static __thread int16_t qa[G][3584] __attribute__((aligned(64))); \
     static __thread float as[G][112]; \
     for (int g = 0; g < G; g++) \
@@ -1033,14 +1033,14 @@ static void NAME(const Root *root, unsigned expert, unsigned matrix, const doubl
         } \
     const __m128i low = _mm_set1_epi8(0x0F); \
     for (unsigned block = 0; block < rows / 64; block++) { \
-        const unsigned char *data = expert_base(root, expert) + \
-            (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW); \
+        const unsigned char *data = expert_base(store, expert) + \
+            (matrix < 2 ? (size_t)(matrix * 48 + block) * EXPERT_STORE_RAW : (size_t)96 * EXPERT_STORE_RAW + (size_t)block * EXPERT_STORE_DOWN_RAW); \
         for (unsigned row = 0; row < 64; row++) { \
             const unsigned char *codes = data + row * width / 2, *selectors = data + 64 * width / 2 + row * width / 32; \
             __m512 acc[G]; \
             _Pragma("GCC unroll 4") for (int g = 0; g < G; g++) acc[g] = _mm512_setzero_ps(); \
             for (unsigned gi = 0; gi < groups; gi++) { \
-                const unsigned ref = root_u16(refs + (begin + selectors[gi]) * 2); \
+                const unsigned ref = expert_store_u16(refs + (begin + selectors[gi]) * 2); \
                 const __m128i bytes = _mm_loadu_si128((const __m128i *)(codes + gi * 16)); \
                 const __m128i lut = _mm_loadu_si128((const __m128i *)tb->q[ref]); \
                 const __m128i qe = _mm_shuffle_epi8(lut, _mm_and_si128(bytes, low)); \
@@ -1060,9 +1060,9 @@ static int g_expk = 1; /* env LB_EXPK: 0 = shipped 256-bit, 4 tokens per pass; 1
 static int g_sweep_expk = 0; /* env LB_SWEEP_EXPK: the same choice for a window of several decode tokens (_stepk) */
 static int g_pred; /* env LB_PRED=1: report how well routing on the layer input predicts the real experts (diagnostic) */
 static int g_lin; /* env LB_LIN=1: report whether experts behave like one linear map (diagnostic, needs LB_DISK=0) */
-static void proj_g1(const Root *r, unsigned e, unsigned m, const double *const *c, float *const *o) { proj_core(r, e, m, c, o, 1); }
-static void proj_g2(const Root *r, unsigned e, unsigned m, const double *const *c, float *const *o) { proj_core(r, e, m, c, o, 2); }
-static void proj_g4(const Root *r, unsigned e, unsigned m, const double *const *c, float *const *o) { proj_core(r, e, m, c, o, 4); }
+static void proj_g1(const ExpertStore *r, unsigned e, unsigned m, const double *const *c, float *const *o) { proj_core(r, e, m, c, o, 1); }
+static void proj_g2(const ExpertStore *r, unsigned e, unsigned m, const double *const *c, float *const *o) { proj_core(r, e, m, c, o, 2); }
+static void proj_g4(const ExpertStore *r, unsigned e, unsigned m, const double *const *c, float *const *o) { proj_core(r, e, m, c, o, 4); }
 static ProjFn proj_for(int g)
 {
 #if defined(__AVX512F__)
@@ -1074,21 +1074,21 @@ static ProjFn proj_for(int g)
 }
 
 /* LB_REPEAT: one expert matrix decoded to float32 (rows x width), as dump_expert does. */
-static float *rep_decode(const Root *root, unsigned expert, unsigned matrix, unsigned *rows_out, unsigned *width_out)
+static float *rep_decode(const ExpertStore *store, unsigned expert, unsigned matrix, unsigned *rows_out, unsigned *width_out)
 {
     const unsigned width = matrix == 2 ? 3072 : 3584, rows = matrix == 2 ? 3584 : 3072;
-    const unsigned char *maps = root->constants + root->palette_count * 2;
-    const unsigned char *offsets = maps + root->map_count * 16;
-    const unsigned char *refs = offsets + (root->template_count + 1) * 2;
-    const unsigned begin = root_u16(offsets + root_u16(root->index + (expert * 3 + matrix) * 2) * 2);
+    const unsigned char *maps = store->constants + store->palette_count * 2;
+    const unsigned char *offsets = maps + store->map_count * 16;
+    const unsigned char *refs = offsets + (store->template_count + 1) * 2;
+    const unsigned begin = expert_store_u16(offsets + expert_store_u16(store->index + (expert * 3 + matrix) * 2) * 2);
     float *w = malloc((size_t)rows * width * 4);
     for (unsigned block = 0; block < rows / 64; block++) {
-        const unsigned char *data = expert_base(root, expert) +
-            (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW);
+        const unsigned char *data = expert_base(store, expert) +
+            (matrix < 2 ? (size_t)(matrix * 48 + block) * EXPERT_STORE_RAW : (size_t)96 * EXPERT_STORE_RAW + (size_t)block * EXPERT_STORE_DOWN_RAW);
         for (unsigned row = 0; row < 64; row++) {
             const unsigned char *codes = data + row * width / 2, *selectors = data + 64 * width / 2 + row * width / 32;
             for (unsigned c = 0; c < width; c++) {
-                const float (*pair)[2] = root->pairs[root_u16(refs + (begin + selectors[c / 32]) * 2)];
+                const float (*pair)[2] = store->pairs[expert_store_u16(refs + (begin + selectors[c / 32]) * 2)];
                 w[(size_t)(block * 64 + row) * width + c] = pair[codes[c / 2]][c & 1];
             }
         }
@@ -1107,7 +1107,7 @@ static void rep_pairs_matrix(const char *name, const float *w, unsigned rows, un
 static float g_cap[3][128][EXPW];
 static unsigned g_cap_n;
 static int g_rep_expert_done;
-static void rep_expert_capture(const Root *root, unsigned expert, unsigned g, const float (*raw_gate)[EXPW], const float (*raw_up)[EXPW],
+static void rep_expert_capture(const ExpertStore *store, unsigned expert, unsigned g, const float (*raw_gate)[EXPW], const float (*raw_up)[EXPW],
     const double (*activated)[EXPW], const double *const *x_lat)
 {
 #pragma omp critical(rep_expert)
@@ -1121,7 +1121,7 @@ static void rep_expert_capture(const Root *root, unsigned expert, unsigned g, co
             static const char *const names[3] = { "expert gate matrix", "expert up matrix", "expert down matrix" };
             for (unsigned matrix = 0; matrix < 3; matrix++) {
                 unsigned rows, width;
-                float *w = rep_decode(root, expert, matrix, &rows, &width);
+                float *w = rep_decode(store, expert, matrix, &rows, &width);
                 unsigned *sorted = malloc((size_t)rows * width * 4);
                 memcpy(sorted, w, (size_t)rows * width * 4);
                 qsort(sorted, (size_t)rows * width, 4, cmp_u32);
@@ -1141,7 +1141,7 @@ static void rep_expert_capture(const Root *root, unsigned expert, unsigned g, co
     }
 }
 
-static void expert_apply(const Root *root, unsigned expert, const unsigned *token, const unsigned *rank,
+static void expert_apply(const ExpertStore *store, unsigned expert, const unsigned *token, const unsigned *rank,
     unsigned n, const double (*lat)[LATW], float (*out)[16][LATW])
 {
     float gate[8][EXPW], up[8][EXPW];
@@ -1157,14 +1157,14 @@ static void expert_apply(const Root *root, unsigned expert, const unsigned *toke
         float *go[8], *uo[8], *dout[8];
         for (int k = 0; k < g; k++) { cin[k] = lat[token[done + k]]; go[k] = gate[k]; uo[k] = up[k]; }
         DT(double a0 = clk();)
-        proj_for(g)(root, expert, 0, cin, go);
+        proj_for(g)(store, expert, 0, cin, go);
         DT(for (int k = 0; k < g; k++) { go2[k] = g2[k]; uo2[k] = u2[k]; do2[k] = dn2[k]; }
            double a1 = clk(); d_first[th][0] += a1 - a0;
-           proj_for(g)(root, expert, 0, cin, go2); double a2 = clk(); extra += a2 - a1; d_second[th][0] += a2 - a1;)
+           proj_for(g)(store, expert, 0, cin, go2); double a2 = clk(); extra += a2 - a1; d_second[th][0] += a2 - a1;)
         DT(double b0 = clk();)
-        proj_for(g)(root, expert, 1, cin, uo);
+        proj_for(g)(store, expert, 1, cin, uo);
         DT(double b1 = clk(); d_first[th][1] += b1 - b0;
-           proj_for(g)(root, expert, 1, cin, uo2); double b2 = clk(); extra += b2 - b1; d_second[th][1] += b2 - b1;)
+           proj_for(g)(store, expert, 1, cin, uo2); double b2 = clk(); extra += b2 - b1; d_second[th][1] += b2 - b1;)
         DT(double c0 = clk();)
         static __thread float rg[8][EXPW], ru[8][EXPW];
         if (g_rep_active) for (int k = 0; k < g; k++) { memcpy(rg[k], gate[k], EXPW * 4); memcpy(ru[k], up[k], EXPW * 4); }
@@ -1174,11 +1174,11 @@ static void expert_apply(const Root *root, unsigned expert, const unsigned *toke
             ain[k] = act[k];
             dout[k] = out[token[done + k]][rank[done + k]];
         }
-        if (g_rep_active) rep_expert_capture(root, expert, (unsigned)g, (const float (*)[EXPW])rg, (const float (*)[EXPW])ru, (const double (*)[EXPW])act, cin);
+        if (g_rep_active) rep_expert_capture(store, expert, (unsigned)g, (const float (*)[EXPW])rg, (const float (*)[EXPW])ru, (const double (*)[EXPW])act, cin);
         DT(double c1 = clk(); d_act[th] += c1 - c0;)
-        proj_for(g)(root, expert, 2, ain, dout);
+        proj_for(g)(store, expert, 2, ain, dout);
         DT(double f1 = clk(); d_first[th][2] += f1 - c1;
-           proj_for(g)(root, expert, 2, ain, do2); double f2 = clk(); extra += f2 - f1; d_second[th][2] += f2 - f1;
+           proj_for(g)(store, expert, 2, ain, do2); double f2 = clk(); extra += f2 - f1; d_second[th][2] += f2 - f1;
            d_passes[th]++; d_pairs[th] += (unsigned long)g;)
         done += (unsigned)g;
     }
@@ -1192,7 +1192,7 @@ static int by_count_desc(const void *a, const void *b)
     return x->count != y->count ? (x->count < y->count ? 1 : -1) : (x->expert > y->expert) - (x->expert < y->expert);
 }
 
-static void run_experts(const Root *root, unsigned count, unsigned (*sel)[16], const double (*lat)[LATW], float (*out)[16][LATW])
+static void run_experts(const ExpertStore *store, unsigned count, unsigned (*sel)[16], const double (*lat)[LATW], float (*out)[16][LATW])
 {
     unsigned total[896] = {0}, fill[896];
     for (unsigned t = 0; t < count; t++) for (unsigned r = 0; r < 16; r++) total[sel[t][r]]++;
@@ -1208,12 +1208,12 @@ static void run_experts(const Root *root, unsigned count, unsigned (*sel)[16], c
     g_distinct_sum += n; g_window_count++;
     if (g_disk == 2)
         for (unsigned g = 0; g < n; g++)
-            madvise((void *)(root->direct + (size_t)groups[g].expert * ROOT_EXPERT_RAW), ROOT_EXPERT_RAW, MADV_WILLNEED);
+            madvise((void *)(store->direct + (size_t)groups[g].expert * EXPERT_RAW_BYTES), EXPERT_RAW_BYTES, MADV_WILLNEED);
     if (g_disk == 3) { unsigned order[896]; for (unsigned g = 0; g < n; g++) order[g] = groups[g].expert; if (g_cache) cache_assign(order, n); prefetch_publish(order, n); }
     DT(const double r0 = clk();)
 #pragma omp parallel for schedule(dynamic, 1) num_threads(THREADS)
     for (unsigned g = 0; g < n; g++)
-        expert_apply(root, groups[g].expert, ptok + groups[g].start, prank + groups[g].start, groups[g].count, lat, out);
+        expert_apply(store, groups[g].expert, ptok + groups[g].start, prank + groups[g].start, groups[g].count, lat, out);
     if (g_disk == 3) prefetch_finish(total);
     if (g_disk == 3 && g_cache) cache_finish();
     DT(d_region += clk() - r0;)
@@ -1352,7 +1352,7 @@ static void pred_report(const Transformer *tr, const float *in, const float *con
 }
 
 /* A linear map f would satisfy f(s*x) = s*f(x). Runs every expert again on scaled inputs; outputs are not used further. */
-static void lin_report(const Root *root, const Buf *b, unsigned w)
+static void lin_report(const ExpertStore *store, const Buf *b, unsigned w)
 {
     double (*lat2)[LATW] = grab((size_t)w * LATW * sizeof(double));
     float (*down2)[16][LATW] = grab((size_t)w * 16 * LATW * sizeof(float));
@@ -1361,7 +1361,7 @@ static void lin_report(const Root *root, const Buf *b, unsigned w)
     for (int si = 0; si < 2; si++) {
         const double s = scales[si];
         for (unsigned t = 0; t < w; t++) for (unsigned c = 0; c < LATW; c++) lat2[t][c] = b->lat[t][c] * s;
-        run_experts(root, w, b->sel, (const double (*)[LATW])lat2, down2);
+        run_experts(store, w, b->sel, (const double (*)[LATW])lat2, down2);
         double sum = 0, lo = 1e300, hi = 0, nsum = 0; unsigned cnt = 0;
         for (unsigned t = 0; t < w; t++)
             for (unsigned r = 0; r < 16; r++) {
@@ -1436,7 +1436,7 @@ static void guess_experts(const Transformer *tr, const float *in, const float *c
     g_guess_issued += g_guess_count;
 }
 
-static void run_layer(const Transformer *tr, const Root *root, const float *resid, const float *const *snaps, unsigned n,
+static void run_layer(const Transformer *tr, const ExpertStore *store, const float *resid, const float *const *snaps, unsigned n,
     unsigned window, Buf *b, float *final_out, float (*hist)[ROWS][3], float (*rec)[HDIM][HDIM],
     const PodStages *pod)
 {
@@ -1456,7 +1456,7 @@ static void run_layer(const Transformer *tr, const Root *root, const float *resi
         const float *in = resid + (size_t)p * INW;
         const float *snp[8];
         for (unsigned s = 0; s < LB_K; s++) snp[s] = snaps[s] + (size_t)p * INW;
-        if (g_disk == 1 || g_disk == 2) { const double e0 = clk(); evict_experts(root); g_evict_s += clk() - e0; }
+        if (g_disk == 1 || g_disk == 2) { const double e0 = clk(); evict_experts(store); g_evict_s += clk() - e0; }
         lap_last = clk();
         if (g_disk == 3) prefetch_start();
         if (g_disk == 3 && g_cache && g_guess_max > 0 && w == 1) { guess_experts(tr, in, snp); lap(19, "start readers, early guess"); }
@@ -1715,14 +1715,14 @@ static void run_layer(const Transformer *tr, const Root *root, const float *resi
         for (unsigned t = 0; t < w; t++)
             for (unsigned c = 0; c < LATW; c++) b->lat[t][c] = (double)b->latent[(size_t)t * LATW + c];
         rep_buf_d("latent as double", &b->lat[0][0], w, LATW);
-        run_experts(root, w, b->sel, (const double (*)[LATW])b->lat, b->down);
+        run_experts(store, w, b->sel, (const double (*)[LATW])b->lat, b->down);
         lap(12, "experts (grouped)");
         if (g_rep_active) {
             rep_buf("expert raw gate (captured)", g_cap[0][0], g_cap_n, EXPW); rep_buf("expert raw up (captured)", g_cap[1][0], g_cap_n, EXPW);
             rep_buf("expert activated (captured)", g_cap[2][0], g_cap_n, EXPW);
             rep_buf("expert outputs (down)", &b->down[0][0][0], (size_t)w * 16, LATW);
         }
-        if (g_lin && g_disk != 3 && p == 0) { lin_report(root, b, w); lap_last = clk(); }
+        if (g_lin && g_disk != 3 && p == 0) { lin_report(store, b, w); lap_last = clk(); }
 
 #pragma omp parallel for schedule(static)
         for (unsigned t = 0; t < w; t++) {
@@ -1831,30 +1831,30 @@ static void report_tables(unsigned N)
                 1000 * first[m] / THREADS / N, 1000 * second[m] / THREADS / N, first[m] / second[m]);
         printf("    activation + convert to double       %7.3f ms/token\n", 1000 * act / THREADS / N);
         printf("    %lu weight passes (%.2f tokens each): %.1f MB of expert weights read per token = %.1f GB/s\n", passes,
-            (double)pairs / passes, (double)passes * ROOT_EXPERT_RAW / N / 1e6,
-            (double)passes * ROOT_EXPERT_RAW / wall / 1e9);
+            (double)pairs / passes, (double)passes * EXPERT_RAW_BYTES / N / 1e6,
+            (double)passes * EXPERT_RAW_BYTES / wall / 1e9);
     }
 #endif
 }
 
 /* Writes one expert's gate, up and down as row-major float32 (rows x width) for offline analysis. */
-static void dump_expert(const Root *root, unsigned expert, const char *dir)
+static void dump_expert(const ExpertStore *store, unsigned expert, const char *dir)
 {
     static const char *const names[3] = { "gate", "up", "down" };
-    const unsigned char *maps = root->constants + root->palette_count * 2;
-    const unsigned char *offsets = maps + root->map_count * 16;
-    const unsigned char *refs = offsets + (root->template_count + 1) * 2;
+    const unsigned char *maps = store->constants + store->palette_count * 2;
+    const unsigned char *offsets = maps + store->map_count * 16;
+    const unsigned char *refs = offsets + (store->template_count + 1) * 2;
     for (unsigned matrix = 0; matrix < 3; matrix++) {
         const unsigned width = matrix == 2 ? 3072 : 3584, rows = matrix == 2 ? 3584 : 3072;
-        const unsigned begin = root_u16(offsets + root_u16(root->index + (expert * 3 + matrix) * 2) * 2);
+        const unsigned begin = expert_store_u16(offsets + expert_store_u16(store->index + (expert * 3 + matrix) * 2) * 2);
         float *w = grab((size_t)rows * width * 4);
         for (unsigned block = 0; block < rows / 64; block++) {
-            const unsigned char *data = expert_base(root, expert) +
-                (matrix < 2 ? (size_t)(matrix * 48 + block) * ROOT_RAW : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW);
+            const unsigned char *data = expert_base(store, expert) +
+                (matrix < 2 ? (size_t)(matrix * 48 + block) * EXPERT_STORE_RAW : (size_t)96 * EXPERT_STORE_RAW + (size_t)block * EXPERT_STORE_DOWN_RAW);
             for (unsigned row = 0; row < 64; row++) {
                 const unsigned char *codes = data + row * width / 2, *selectors = data + 64 * width / 2 + row * width / 32;
                 for (unsigned c = 0; c < width; c++) {
-                    const float (*pair)[2] = root->pairs[root_u16(refs + (begin + selectors[c / 32]) * 2)];
+                    const float (*pair)[2] = store->pairs[expert_store_u16(refs + (begin + selectors[c / 32]) * 2)];
                     w[(size_t)(block * 64 + row) * width + c] = pair[codes[c / 2]][c & 1];
                 }
             }
@@ -1908,15 +1908,15 @@ int main(int argc, char **argv)
     if (getenv("LB_PRED")) g_pred = atoi(getenv("LB_PRED"));
     if (getenv("LB_LIN")) g_lin = atoi(getenv("LB_LIN"));
     printf("palette is %s, %d threads\n", g_ident ? "the int8 identity (decode path)" : "not identity (gather path)", THREADS);
-    const Root *root = tr->root;
-    if (!root->direct) bail("no direct expert mapping");
+    const ExpertStore *store = tr->store;
+    if (!store->direct) bail("no direct expert mapping");
     if (getenv("LB_REPEAT") && *getenv("LB_REPEAT")) {
         g_rep = 1;
         /* weights at rest: distinct float values over the first four experts' gate, up and down matrices together */
         const unsigned n_exp = 4;
         size_t total = 0; unsigned *sorted = malloc((size_t)n_exp * 3 * 3584 * 3072 * 4);
         for (unsigned e = 0; e < n_exp; e++) for (unsigned m = 0; m < 3; m++) {
-            unsigned rows, width; float *w = rep_decode(root, e, m, &rows, &width);
+            unsigned rows, width; float *w = rep_decode(store, e, m, &rows, &width);
             memcpy(sorted + total, w, (size_t)rows * width * 4); total += (size_t)rows * width; free(w);
         }
         qsort(sorted, total, 4, cmp_u32);
@@ -1928,19 +1928,19 @@ int main(int argc, char **argv)
             size_t segs = 0, dups = 0;
             for (unsigned e = 0; e < n_exp; e++) for (unsigned m = 0; m < 3; m++) {
                 const unsigned width = m == 2 ? 3072 : 3584, rows = m == 2 ? 3584 : 3072;
-                const unsigned char *maps = root->constants + root->palette_count * 2;
-                const unsigned char *offsets = maps + root->map_count * 16;
-                const unsigned char *refs = offsets + (root->template_count + 1) * 2;
-                const unsigned begin = root_u16(offsets + root_u16(root->index + (e * 3 + m) * 2) * 2);
+                const unsigned char *maps = store->constants + store->palette_count * 2;
+                const unsigned char *offsets = maps + store->map_count * 16;
+                const unsigned char *refs = offsets + (store->template_count + 1) * 2;
+                const unsigned begin = expert_store_u16(offsets + expert_store_u16(store->index + (e * 3 + m) * 2) * 2);
                 unsigned long long *keys = malloc((size_t)(width / 16) * rows * sizeof *keys);
                 for (unsigned block = 0; block < rows / 64; block++) {
-                    const unsigned char *data = expert_base(root, e) +
-                        (m < 2 ? (size_t)(m * 48 + block) * ROOT_RAW : (size_t)96 * ROOT_RAW + (size_t)block * ROOT_DOWN_RAW);
+                    const unsigned char *data = expert_base(store, e) +
+                        (m < 2 ? (size_t)(m * 48 + block) * EXPERT_STORE_RAW : (size_t)96 * EXPERT_STORE_RAW + (size_t)block * EXPERT_STORE_DOWN_RAW);
                     for (unsigned row = 0; row < 64; row++) {
                         const unsigned char *codes = data + row * width / 2, *selectors = data + 64 * width / 2 + row * width / 32;
                         for (unsigned cb = 0; cb < width / 16; cb++) {
                             unsigned char buf[10];
-                            const unsigned ref = root_u16(refs + (begin + selectors[cb / 2]) * 2);
+                            const unsigned ref = expert_store_u16(refs + (begin + selectors[cb / 2]) * 2);
                             buf[0] = (unsigned char)ref; buf[1] = (unsigned char)(ref >> 8); memcpy(buf + 2, codes + cb * 8, 8);
                             keys[(size_t)cb * rows + block * 64 + row] = fnv64(buf, 10);
                         }
@@ -1956,12 +1956,12 @@ int main(int argc, char **argv)
     }
     if (getenv("LB_DUMP") && *getenv("LB_DUMP")) {
         char list[256]; snprintf(list, sizeof list, "%s", getenv("LB_DUMP"));
-        for (char *tok = strtok(list, ","); tok; tok = strtok(NULL, ",")) dump_expert(root, (unsigned)atoi(tok), "/tmp/one-layer");
+        for (char *tok = strtok(list, ","); tok; tok = strtok(NULL, ",")) dump_expert(store, (unsigned)atoi(tok), "/tmp/one-layer");
         return 0;
     }
     double mark = clk();
-    if (mlock((void *)root->direct, root->direct_bytes)) { perror("mlock"); return 1; }
-    printf("layer %u: %.2f GB of experts locked in %.2f s\n", LB_LAYER, (double)root->direct_bytes / 1e9, clk() - mark);
+    if (mlock((void *)store->direct, store->direct_bytes)) { perror("mlock"); return 1; }
+    printf("layer %u: %.2f GB of experts locked in %.2f s\n", LB_LAYER, (double)store->direct_bytes / 1e9, clk() - mark);
 
     /* The pod, one token per call: reference outputs and the first tokens' stage state. */
     TransformerSequence *seq = transformer_sequence_create(tr);
@@ -2019,10 +2019,10 @@ int main(int argc, char **argv)
     if (getenv("LB_DISK")) g_disk = atoi(getenv("LB_DISK"));
     if (g_disk) {
         char path[4096];
-        snprintf(path, sizeof path, "%s/root-%u/experts.direct", argv[1], LB_LAYER);
+        snprintf(path, sizeof path, "%s/expert-%u/experts.direct", argv[1], LB_LAYER);
         g_expert_fd = open(path, O_RDONLY);
         if (g_expert_fd < 0) bail("cannot open experts.direct");
-        munlock((void *)root->direct, root->direct_bytes);
+        munlock((void *)store->direct, store->direct_bytes);
         if (g_disk == 3) {
             if (getenv("LB_IO")) g_io_n = atoi(getenv("LB_IO"));
             if (getenv("LB_SPEC")) g_spec = atoi(getenv("LB_SPEC"));
@@ -2032,12 +2032,12 @@ int main(int argc, char **argv)
             if (g_direct_fd < 0) bail("cannot open experts.direct with O_DIRECT");
             mark = clk();
             const int thp = getenv("LB_THP") ? atoi(getenv("LB_THP")) : 1; /* env LB_THP=0 turns huge pages off */
-            g_buf = mmap(NULL, root->direct_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | (thp ? 0 : MAP_POPULATE), -1, 0);
+            g_buf = mmap(NULL, store->direct_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | (thp ? 0 : MAP_POPULATE), -1, 0);
             if (g_buf == MAP_FAILED) bail("cannot allocate the in-memory copy of the experts");
-            if (thp) { madvise(g_buf, root->direct_bytes, MADV_HUGEPAGE); memset(g_buf, 0, root->direct_bytes); }
+            if (thp) { madvise(g_buf, store->direct_bytes, MADV_HUGEPAGE); memset(g_buf, 0, store->direct_bytes); }
             printf("expert buffer: %ld MB of it on huge pages%s\n", anon_huge_kb() / 1024, thp ? " (huge pages requested)" : "");
             printf("experts by direct reads: %d reader threads, %d MB chunks, speculative list %d experts; %.2f GB buffer ready in %.1f s\n\n",
-                g_io_n, IO_CHUNK >> 20, g_spec, (double)root->direct_bytes / 1e9, clk() - mark);
+                g_io_n, IO_CHUNK >> 20, g_spec, (double)store->direct_bytes / 1e9, clk() - mark);
         } else
         printf("experts from disk, mode %d (%s): the expert file is dropped from memory before every window\n\n", g_disk,
             g_disk == 2 ? "with a read-ahead request per used expert" : "demand paging only");
@@ -2070,7 +2070,7 @@ int main(int argc, char **argv)
             g_read_experts = 0; g_wasted_experts = 0; memset(g_wait_t, 0, sizeof g_wait_t);
             const unsigned long long rb0 = proc_read_bytes();
             mark = clk();
-            run_layer(tr, root, resid, (const float *const *)snaps, N, W, &b, out, hist, rec, round == 0 ? pod : NULL);
+            run_layer(tr, store, resid, (const float *const *)snaps, N, W, &b, out, hist, rec, round == 0 ? pod : NULL);
             double spent = clk() - mark - g_evict_s;
             if (round == 1 || best > 1e29) { best = spent; disk_gb = (double)(proc_read_bytes() - rb0) / 1e9; mean_used = g_window_count ? (double)g_distinct_sum / g_window_count : 0; windows_run = g_window_count;
                 read_per = g_window_count ? (double)g_read_experts / g_window_count : 0; wasted_per = g_window_count ? (double)g_wasted_experts / g_window_count : 0; }
@@ -2093,7 +2093,7 @@ int main(int argc, char **argv)
         printf("  layer %u, %u tokens, window %u: %.3f s = %.3f ms/token   (pod %.2f ms/token, %.2fx)   output vs pod: %s\n",
             LB_LAYER, N, W, best, 1000 * best / N, 1000 * pod_s / N, pod_s / best, same ? "bit-identical" : "DIFFERENT");
         printf("  experts used per window: %.1f of 896 on average over %lu windows (%.1f MB of expert weights per window); read from disk during the run: %.2f GB (%.1f%% of the layer's experts per window)\n",
-            mean_used, windows_run, mean_used * ROOT_EXPERT_RAW / 1e6, disk_gb, 100 * disk_gb * 1e9 / (windows_run ? windows_run : 1) / root->direct_bytes);
+            mean_used, windows_run, mean_used * EXPERT_RAW_BYTES / 1e6, disk_gb, 100 * disk_gb * 1e9 / (windows_run ? windows_run : 1) / store->direct_bytes);
         if (g_disk == 3) {
             double wsum = 0, wmax = 0;
             for (int i = 0; i < 64; i++) { wsum += g_wait_t[i]; if (g_wait_t[i] > wmax) wmax = g_wait_t[i]; }
@@ -2142,7 +2142,7 @@ static void blank_unused_trunk_records(Transformer *t, unsigned layer)
 /* Entry points for the one-process pipeline (input-to-layer1/pipeline.c); build with -DPIPELINE_ENTRY -Dmain=layer_batch_main.
    Experts come from disk by direct reads (LB_DISK=3), as in the standalone harness. */
 static Transformer *p_tr;
-static const Root *p_root;
+static const ExpertStore *p_store;
 static Buf p_b;
 static float (*p_hist)[ROWS][3];
 static float (*p_rec)[HDIM][HDIM];
@@ -2170,11 +2170,11 @@ double stage3_setup(const char *dataset, unsigned max_n)
     if (getenv("LB_VEC")) g_vecrec = atoi(getenv("LB_VEC"));
     if (getenv("LB_ROUTE")) g_wideroute = atoi(getenv("LB_ROUTE"));
     if (getenv("LB_EXPK")) g_expk = atoi(getenv("LB_EXPK"));
-    p_root = p_tr->root;
-    if (!p_root->direct) bail("no direct expert mapping");
+    p_store = p_tr->store;
+    if (!p_store->direct) bail("no direct expert mapping");
     g_disk = 3;
     char path[4096];
-    snprintf(path, sizeof path, "%s/root-%u/experts.direct", dataset, LB_LAYER);
+    snprintf(path, sizeof path, "%s/expert-%u/experts.direct", dataset, LB_LAYER);
     g_expert_fd = open(path, O_RDONLY);
     if (g_expert_fd < 0) bail("cannot open experts.direct");
     if (getenv("LB_IO")) g_io_n = atoi(getenv("LB_IO"));
@@ -2185,9 +2185,9 @@ double stage3_setup(const char *dataset, unsigned max_n)
     const int thp = getenv("LB_THP") ? atoi(getenv("LB_THP")) : 1;
     if (p_external_buffer) g_buf = p_external_buffer;
     else {
-        g_buf = mmap(NULL, p_root->direct_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | (thp ? 0 : MAP_POPULATE), -1, 0);
+        g_buf = mmap(NULL, p_store->direct_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | (thp ? 0 : MAP_POPULATE), -1, 0);
         if (g_buf == MAP_FAILED) bail("cannot allocate the in-memory copy of the experts");
-        if (thp) { madvise(g_buf, p_root->direct_bytes, MADV_HUGEPAGE); memset(g_buf, 0, p_root->direct_bytes); }
+        if (thp) { madvise(g_buf, p_store->direct_bytes, MADV_HUGEPAGE); memset(g_buf, 0, p_store->direct_bytes); }
     }
     p_b = buf_make(max_n);
     p_hist = grab(3 * (size_t)ROWS * 3 * sizeof(float));
@@ -2206,7 +2206,7 @@ void stage3_run(const float *resid, const float *s0, unsigned n, unsigned window
     g_cache = NULL;
     if (p_cache) cache_clear(p_cache);
     g_active_packed_trunk = NULL;
-    run_layer(p_tr, p_root, resid, snapshots, n, window, &p_b, out, p_hist, p_rec, NULL);
+    run_layer(p_tr, p_store, resid, snapshots, n, window, &p_b, out, p_hist, p_rec, NULL);
 }
 
 /* n more tokens after earlier ones as one prompt-style pass (a chat turn): the state stays as the earlier tokens left it. */
@@ -2218,7 +2218,7 @@ void stage3_run_from(const float *resid, const float *s0, unsigned n, unsigned w
     g_cache = NULL;
     if (p_cache) cache_clear(p_cache);
     g_active_packed_trunk = NULL;
-    run_layer(p_tr, p_root, resid, snapshots, n, window, &p_b, out, p_hist, p_rec, NULL);
+    run_layer(p_tr, p_store, resid, snapshots, n, window, &p_b, out, p_hist, p_rec, NULL);
 }
 
 /* One more token after the prompt: the state stays as the prompt left it. */
@@ -2231,7 +2231,7 @@ void stage3_step(const float *resid, const float *s0, float *out)
     const int kernel = g_expk;
     g_expk = 0;   /* see the layer steps above */
     g_active_packed_trunk = p_packed_trunk;
-    run_layer(p_tr, p_root, resid, snapshots, 1, 1, &p_b, out, p_hist, p_rec, NULL);
+    run_layer(p_tr, p_store, resid, snapshots, 1, 1, &p_b, out, p_hist, p_rec, NULL);
     g_cache = NULL;
     g_expk = kernel;
 }
@@ -2248,7 +2248,7 @@ void stage3_stepk(const float *resid, const float *s0, unsigned n, float *out)
     g_expk = g_sweep_expk;
     g_active_packed_trunk = p_packed_trunk;
     if (n - 1 <= p_checkpoint_count) { g_checkpoint_rec = p_checkpoint_rec; g_checkpoint_hist = p_checkpoint_hist; }
-    run_layer(p_tr, p_root, resid, snapshots, n, n, &p_b, out, p_hist, p_rec, NULL);
+    run_layer(p_tr, p_store, resid, snapshots, n, n, &p_b, out, p_hist, p_rec, NULL);
     g_checkpoint_rec = NULL; g_checkpoint_hist = NULL;
     g_cache = NULL;
     g_expk = kernel;
@@ -2341,11 +2341,11 @@ void *LB_CAT(LB_PFX, _open)(const char *dataset, unsigned layer, unsigned k, uns
     lb_layer_no = layer; lb_k_in = k;
     if (!transformer_open(dataset, &h->tr)) bail("transformer_open failed");
     blank_unused_trunk_records(h->tr, layer);
-    const Root *root = h->tr->root;
-    if (!root->direct) bail("no direct expert mapping");
+    const ExpertStore *store = h->tr->store;
+    if (!store->direct) bail("no direct expert mapping");
     h->ident = palette_identity(h->tr->palette);
     char path[4096];
-    snprintf(path, sizeof path, "%s/root-%u/experts.direct", dataset, layer);
+    snprintf(path, sizeof path, "%s/expert-%u/experts.direct", dataset, layer);
     h->plain_fd = open(path, O_RDONLY);
     h->direct_fd = open(path, O_RDONLY | O_DIRECT);
     if (h->plain_fd < 0 || h->direct_fd < 0) bail("cannot open experts.direct");
@@ -2381,7 +2381,7 @@ double LB_CAT(LB_PFX, _run)(void *handle, const float *resid, const float *const
     if (h->cache) cache_clear(h->cache);   /* a prompt pass fills the shared expert buffer by expert id, so cached slots may be overwritten */
     g_active_packed_trunk = NULL;   /* the prompt pass is compute-bound, where the 4-bit kernel is slower than the 8-bit one */
     const double t0 = clk();
-    run_layer(h->tr, h->tr->root, resid, snaps, n, window, &e_b, out, h->hist, h->rec, NULL);
+    run_layer(h->tr, h->tr->store, resid, snaps, n, window, &e_b, out, h->hist, h->rec, NULL);
     return clk() - t0;
 }
 
@@ -2401,7 +2401,7 @@ double LB_CAT(LB_PFX, _run_from)(void *handle, const float *resid, const float *
     if (h->cache) cache_clear(h->cache);
     g_active_packed_trunk = NULL;
     const double t0 = clk();
-    run_layer(h->tr, h->tr->root, resid, snaps, n, window, &e_b, out, h->hist, h->rec, NULL);
+    run_layer(h->tr, h->tr->store, resid, snaps, n, window, &e_b, out, h->hist, h->rec, NULL);
     g_pos0 = 0;
     return clk() - t0;
 }
@@ -2423,7 +2423,7 @@ double LB_CAT(LB_PFX, _step)(void *handle, const float *resid, const float *cons
     const int kernel = g_expk;
     g_expk = 0;   /* one token per call: the 4-token expert kernel is 10% faster than the 2-row one here (6.3 against 7.0 ms per layer) */
     const double t0 = clk();
-    run_layer(h->tr, h->tr->root, resid, snaps, 1, 1, &e_b, out, h->hist, h->rec, NULL);
+    run_layer(h->tr, h->tr->store, resid, snaps, 1, 1, &e_b, out, h->hist, h->rec, NULL);
     g_pos0 = 0;
     g_cache = NULL;
     g_expk = kernel;
@@ -2449,7 +2449,7 @@ double LB_CAT(LB_PFX, _stepk)(void *handle, const float *resid, const float *con
     g_active_packed_trunk = h->packed_trunk;
     if (n - 1 <= h->checkpoint_count) { g_checkpoint_rec = h->checkpoint_rec; g_checkpoint_hist = h->checkpoint_hist; }
     const double t0 = clk();
-    run_layer(h->tr, h->tr->root, resid, snaps, n, n, &e_b, out, h->hist, h->rec, NULL);
+    run_layer(h->tr, h->tr->store, resid, snaps, n, n, &e_b, out, h->hist, h->rec, NULL);
     g_checkpoint_rec = NULL; g_checkpoint_hist = NULL;
     g_pos0 = 0;
     g_cache = NULL;

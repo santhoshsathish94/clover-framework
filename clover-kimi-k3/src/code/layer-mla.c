@@ -13,11 +13,11 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include "expert-root-reader.h"
+#include "expert-reader.h"
 #include "stage-routing.h"
 #include "stage-trace.h"
-#define TRANSFORMER_LAYER 2
-#define TRANSFORMER_MLA 0
+#define TRANSFORMER_LAYER 3
+#define TRANSFORMER_MLA 1
 #define TRANSFORMER_INPUT_SNAPSHOTS 1
 #define TRANSFORMER_OUTPUT_SNAPSHOTS 1
 
@@ -41,7 +41,7 @@ typedef struct {
     float palette[256];
     TransformerRecord operator_records[40];
     const unsigned char *input_gains;
-    Root *root;
+    ExpertStore *store;
     size_t qkv_bytes;
     unsigned char *group_map[3];
     size_t group_bytes[3];
@@ -61,7 +61,7 @@ typedef struct {
     float shared_gate[TRANSFORMER_SHARED], shared_up[TRANSFORMER_SHARED], shared_output[TRANSFORMER_WIDTH];
     unsigned selected[16];
     float weights[16];
-    RootScratch *root_scratch;
+    ExpertStoreScratch *expert_store_scratch;
     float *mla_cache;
     size_t mla_capacity;
     float mla_query_latent[1536], mla_query[18432], mla_kv_latent[576], mla_expanded[24576];
@@ -86,18 +86,12 @@ static const TransformerLayout transformer_layout[] = {
     {5, 0, 2, 7168, 1},
     {6, 0, 1, 12288, 7168},
     {7, 0, 1, 7168, 12288},
-    {8, 1, 1, 12288, 7168},
-    {9, 1, 1, 12288, 7168},
-    {10, 1, 1, 12288, 7168},
-    {11, 1, 1, 96, 7168},
-    {12, 1, 1, 128, 7168},
-    {13, 1, 1, 12288, 128},
-    {14, 1, 2, 49152, 1},
-    {15, 1, 2, 49152, 1},
-    {16, 1, 2, 49152, 1},
-    {17, 1, 2, 128, 1},
-    {18, 1, 2, 12288, 1},
-    {19, 1, 2, 128, 1},
+    {20, 1, 1, 1536, 7168},
+    {21, 1, 2, 1536, 1},
+    {22, 1, 1, 18432, 1536},
+    {23, 1, 1, 576, 7168},
+    {24, 1, 2, 512, 1},
+    {25, 1, 1, 24576, 512},
     {29, 2, 3, 896, 7168},
     {30, 2, 2, 896, 1},
     {31, 2, 1, 3584, 7168},
@@ -107,8 +101,7 @@ static const TransformerLayout transformer_layout[] = {
     {35, 2, 1, 6144, 7168},
     {36, 2, 1, 7168, 6144},
     {37, 0, 2, 7168, 1},
-    {38, 0, 2, 7168, 1},
-    {39, 1, 2, 96, 1}
+    {38, 0, 2, 7168, 1}
 };
 
 static uint32_t transformer_u32(const unsigned char *bytes)
@@ -314,7 +307,7 @@ void transformer_close(Transformer *transformer)
     if (!transformer) return;
     for (unsigned group = 0; group < 3; group++)
         if (transformer->group_map[group]) munmap((void *)transformer->group_map[group], transformer->group_bytes[group]);
-    root_close(transformer->root);
+    expert_store_close(transformer->store);
     if (transformer->qkv) munmap(transformer->qkv, transformer->qkv_bytes);
     free(transformer);
 }
@@ -323,15 +316,15 @@ int transformer_open(const char *dataset, Transformer **result)
 {
     if (!result) return 0;
     *result = NULL;
-    char qkv_path[4096], trunk_directory[4096], root_directory[4096];
-    if (!dataset || !transformer_path(qkv_path, sizeof qkv_path, dataset, "operators/qkv-all/layer-2/operator.bin") ||
-        !transformer_path(trunk_directory, sizeof trunk_directory, dataset, "trunk-2") ||
-        !transformer_path(root_directory, sizeof root_directory, dataset, "root-2") ||
+    char qkv_path[4096], trunk_directory[4096], expert_store_directory[4096];
+    if (!dataset || !transformer_path(qkv_path, sizeof qkv_path, dataset, "trunk-3/operator.bin") ||
+        !transformer_path(trunk_directory, sizeof trunk_directory, dataset, "trunk-3") ||
+        !transformer_path(expert_store_directory, sizeof expert_store_directory, dataset, "expert-3") ||
         sizeof(float) != 4 || sizeof(double) != 8 ||
         FLT_RADIX != 2 || FLT_MANT_DIG != 24 || DBL_MANT_DIG != 53) return 0;
     Transformer *transformer = calloc(1, sizeof *transformer);
     if (!transformer) return 0;
-    if (!transformer_load_qkv(transformer, qkv_path) || !transformer_load_trunk(transformer, trunk_directory) || !(transformer->root = root_open(root_directory, 2))) {
+    if (!transformer_load_qkv(transformer, qkv_path) || !transformer_load_trunk(transformer, trunk_directory) || !(transformer->store = expert_store_open(expert_store_directory, 3))) {
         transformer_close(transformer);
         return 0;
     }
@@ -345,8 +338,8 @@ TransformerSequence *transformer_sequence_create(const Transformer *transformer)
     TransformerSequence *sequence = calloc(1, sizeof *sequence);
     if (!sequence) return NULL;
     /* One scratch per thread: the reader indexes this pool by OpenMP thread number. */
-    sequence->root_scratch = calloc((size_t)omp_get_max_threads(), sizeof *sequence->root_scratch);
-    if (!sequence->root_scratch) { free(sequence); return NULL; }
+    sequence->expert_store_scratch = calloc((size_t)omp_get_max_threads(), sizeof *sequence->expert_store_scratch);
+    if (!sequence->expert_store_scratch) { free(sequence); return NULL; }
     sequence->owner = transformer;
     return sequence;
 }
@@ -355,16 +348,16 @@ void transformer_sequence_reset(TransformerSequence *sequence)
 {
     if (!sequence) return;
     const Transformer *owner = sequence->owner;
-    RootScratch *scratch = sequence->root_scratch;
+    ExpertStoreScratch *scratch = sequence->expert_store_scratch;
     free(sequence->mla_cache);
     memset(sequence, 0, sizeof *sequence);
     sequence->owner = owner;
-    sequence->root_scratch = scratch;
+    sequence->expert_store_scratch = scratch;
 }
 
 void transformer_sequence_close(TransformerSequence *sequence)
 {
-    if (sequence) free(sequence->root_scratch);
+    if (sequence) free(sequence->expert_store_scratch);
     if (sequence) free(sequence->mla_cache);
     free(sequence);
 }
@@ -473,13 +466,6 @@ static void transformer_qkv(const Transformer *transformer, TransformerSequence 
         }
     transformer_l2_heads(sequence->qkv[0]);
     transformer_l2_heads(sequence->qkv[1]);
-    /* CLOVER_KDA_INTERNALS */
-    if (clover_vectors_active(TRANSFORMER_LAYER)) {
-        unsigned long at = (unsigned long)sequence->positions;
-        clover_vectors_write(TRANSFORMER_LAYER, 5001, at, sequence->qkv[0], TRANSFORMER_ROWS);
-        clover_vectors_write(TRANSFORMER_LAYER, 5002, at, sequence->qkv[1], TRANSFORMER_ROWS);
-        clover_vectors_write(TRANSFORMER_LAYER, 5003, at, sequence->qkv[2], TRANSFORMER_ROWS);
-    }
 }
 
 static void transformer_decay(const Transformer *transformer, TransformerSequence *sequence)
@@ -495,12 +481,6 @@ static void transformer_decay(const Transformer *transformer, TransformerSequenc
             float value = exponent * (sequence->decay[index] + transformer_f32(transformer->records[18].data + index * 4));
             sequence->decay[index] = expf(-5.0f * transformer_sigmoid(value));
         }
-    }
-    /* CLOVER_KDA_INTERNALS */
-    if (clover_vectors_active(TRANSFORMER_LAYER)) {
-        unsigned long at = (unsigned long)sequence->positions;
-        clover_vectors_write(TRANSFORMER_LAYER, 5004, at, sequence->beta, TRANSFORMER_HEADS);
-        clover_vectors_write(TRANSFORMER_LAYER, 5005, at, sequence->decay, TRANSFORMER_ROWS);
     }
 }
 
@@ -533,23 +513,6 @@ static void transformer_update_attention(TransformerSequence *sequence)
             }
         }
     }
-    /* CLOVER_KDA_INTERNALS: one Frobenius norm per head, so the recurrent state can be
-       watched without dumping 96 x 128 x 128 floats per position. Stack local, because
-       several requests share this library at once. */
-    if (clover_vectors_active(TRANSFORMER_LAYER)) {
-        float magnitude[TRANSFORMER_HEADS];
-        unsigned long at = (unsigned long)sequence->positions;
-        for (unsigned head = 0; head < TRANSFORMER_HEADS; head++) {
-            double total = 0.0;
-            for (unsigned row = 0; row < TRANSFORMER_HEAD; row++)
-                for (unsigned column = 0; column < TRANSFORMER_HEAD; column++)
-                    total += (double)sequence->recurrent[head][row][column] *
-                        sequence->recurrent[head][row][column];
-            magnitude[head] = (float)sqrt(total);
-        }
-        clover_vectors_write(TRANSFORMER_LAYER, 5009, at, magnitude, TRANSFORMER_HEADS);
-        clover_vectors_write(TRANSFORMER_LAYER, 5006, at, sequence->attention, TRANSFORMER_ROWS);
-    }
 }
 
 static void transformer_attention_output(const Transformer *transformer, TransformerSequence *sequence)
@@ -559,38 +522,8 @@ static void transformer_attention_output(const Transformer *transformer, Transfo
         float *block = sequence->attention + head * TRANSFORMER_HEAD;
         transformer_normalize(block, block, transformer->records[19].data, TRANSFORMER_HEAD);
     }
-    /* CLOVER_CONST_ATTN, experiment only: substitute a cached vector for the attention
-       this layer just computed. Per layer, so any subset can be enabled by choosing
-       which files exist. Loaded once; absent or short means this layer is untouched. */
-    {
-        static float constant[TRANSFORMER_ROWS];
-        static int constant_state;
-        if (!constant_state) {
-            const char *prefix = getenv("CLOVER_CONST_ATTN");
-            char named[4096];
-            FILE *file = NULL;
-            constant_state = -1;
-            if (prefix && *prefix &&
-                snprintf(named, sizeof named, "%s.%d.f32", prefix, TRANSFORMER_LAYER) < (int)sizeof named)
-                file = fopen(named, "rb");
-            if (file) {
-                if (fread(constant, sizeof(float), TRANSFORMER_ROWS, file) == TRANSFORMER_ROWS)
-                    constant_state = 1;
-                fclose(file);
-            }
-        }
-        if (constant_state > 0) memcpy(sequence->attention, constant, sizeof constant);
-    }
-    /* CLOVER_KDA_INTERNALS: the per-head normalised attention, before gating. */
-    if (clover_vectors_active(TRANSFORMER_LAYER))
-        clover_vectors_write(TRANSFORMER_LAYER, 5007, (unsigned long)sequence->positions,
-            sequence->attention, TRANSFORMER_ROWS);
     for (unsigned coordinate = 0; coordinate < TRANSFORMER_ROWS; coordinate++)
         sequence->gate[coordinate] = sequence->attention[coordinate] * transformer_sigmoid(sequence->gate[coordinate]);
-    /* CLOVER_KDA_INTERNALS */
-    if (clover_vectors_active(TRANSFORMER_LAYER))
-        clover_vectors_write(TRANSFORMER_LAYER, 5008, (unsigned long)sequence->positions,
-            sequence->gate, TRANSFORMER_ROWS);
     transformer_project(transformer, 7, sequence->gate, sequence->residual);
 }
 
@@ -878,16 +811,16 @@ static int transformer_route(const Transformer *transformer, TransformerSequence
 
 static int transformer_expert(Transformer *transformer, TransformerSequence *sequence, unsigned expert)
 {
-    if (!root_project(transformer->root, sequence->root_scratch, expert, 0, sequence->latent, sequence->expert_gate) ||
-        !root_project(transformer->root, sequence->root_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
+    if (!expert_store_project(transformer->store, sequence->expert_store_scratch, expert, 0, sequence->latent, sequence->expert_gate) ||
+        !expert_store_project(transformer->store, sequence->expert_store_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
     transformer_activation(sequence->expert_gate, sequence->expert_up, TRANSFORMER_EXPERT);
-    return root_project(transformer->root, sequence->root_scratch, expert, 2, sequence->expert_gate, sequence->expert_down);
+    return expert_store_project(transformer->store, sequence->expert_store_scratch, expert, 2, sequence->expert_gate, sequence->expert_down);
 }
 
 static int transformer_mix_experts(Transformer *transformer, TransformerSequence *sequence)
 {
     memset(sequence->mixture, 0, sizeof sequence->mixture);
-    for (unsigned rank = 0; rank < 16; rank++) root_prefetch(transformer->root, sequence->selected[rank]);
+    for (unsigned rank = 0; rank < 16; rank++) expert_store_prefetch(transformer->store, sequence->selected[rank]);
     for (unsigned rank = 0; rank < 16; rank++) {
         if (!transformer_expert(transformer, sequence, sequence->selected[rank])) return 0;
         for (unsigned coordinate = 0; coordinate < TRANSFORMER_LATENT; coordinate++)
@@ -989,7 +922,7 @@ static int transformer_step(Transformer *transformer, TransformerSequence *seque
     if (stage == 25) { transformer_project(transformer, 31, sequence->postnorm, sequence->latent); sequence->stage++; return 1; }
     if (stage == 26) { memset(sequence->mixture, 0, sizeof sequence->mixture); sequence->stage++; return 1; }
     if (stage == 27) {
-        for (unsigned rank = 0; rank < 16; rank++) root_prefetch(transformer->root, sequence->selected[rank]);
+        for (unsigned rank = 0; rank < 16; rank++) expert_store_prefetch(transformer->store, sequence->selected[rank]);
         sequence->stage = TRANSFORMER_STAGE_EXPERT_FIRST; return 1;
     }
 
@@ -1000,11 +933,11 @@ static int transformer_step(Transformer *transformer, TransformerSequence *seque
         const int step = (stage - TRANSFORMER_STAGE_EXPERT_FIRST) % 5;
         const unsigned expert = sequence->selected[rank];
         if (step == 0) {
-            if (!root_project(transformer->root, sequence->root_scratch, expert, 0, sequence->latent, sequence->expert_gate)) return 0;
+            if (!expert_store_project(transformer->store, sequence->expert_store_scratch, expert, 0, sequence->latent, sequence->expert_gate)) return 0;
             sequence->stage++; return 1;
         }
         if (step == 1) {
-            if (!root_project(transformer->root, sequence->root_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
+            if (!expert_store_project(transformer->store, sequence->expert_store_scratch, expert, 1, sequence->latent, sequence->expert_up)) return 0;
             sequence->stage++; return 1;
         }
         if (step == 2) {
@@ -1012,7 +945,7 @@ static int transformer_step(Transformer *transformer, TransformerSequence *seque
             sequence->stage++; return 1;
         }
         if (step == 3) {
-            if (!root_project(transformer->root, sequence->root_scratch, expert, 2, sequence->expert_gate, sequence->expert_down)) return 0;
+            if (!expert_store_project(transformer->store, sequence->expert_store_scratch, expert, 2, sequence->expert_gate, sequence->expert_down)) return 0;
             sequence->stage++; return 1;
         }
         if (step == 4) {

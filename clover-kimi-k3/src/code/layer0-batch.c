@@ -16,7 +16,7 @@
 #include <string.h>
 #include <math.h>
 #include "embedding-and-head-tables.h"
-#include "layer0-core.c"
+#include "layer0.c"
 #include <omp.h>
 #include "trunk-4bit.h"
 
@@ -447,7 +447,7 @@ int main(int argc, char **argv)
     const unsigned N = (unsigned)atoi(argv[4]);
     const int dedup = atoi(argv[6]);
     char qkv[4096], trunk[4096], seed[4096];
-    snprintf(qkv, sizeof qkv, "%s/operators/trunk-0-qkv/qkv.bin", argv[1]);
+    snprintf(qkv, sizeof qkv, "%s/trunk-0/operator.bin", argv[1]);
     snprintf(trunk, sizeof trunk, "%s/trunk-0", argv[1]);
     const char *open_weights = getenv("OPEN_WEIGHTS_DIR");
     if (!open_weights) bail("OPEN_WEIGHTS_DIR is not set");
@@ -573,7 +573,7 @@ double stage2_setup(const char *dataset, unsigned max_n)
 {
     const double t = clk();
     char qkv[4096], trunk[4096];
-    snprintf(qkv, sizeof qkv, "%s/operators/trunk-0-qkv/qkv.bin", dataset);
+    snprintf(qkv, sizeof qkv, "%s/trunk-0/operator.bin", dataset);
     snprintf(trunk, sizeof trunk, "%s/trunk-0", dataset);
     if (!server_open(qkv, trunk, &p_server)) bail("server_open failed");
     g_palette = p_server->palette; g_ident = palette_identity(p_server->palette);

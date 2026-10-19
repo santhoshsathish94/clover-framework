@@ -1,9 +1,9 @@
-#ifndef CLOVER_ROOT_METADATA_H
-#define CLOVER_ROOT_METADATA_H
+#ifndef CLOVER_EXPERT_METADATA_H
+#define CLOVER_EXPERT_METADATA_H
 #include "generation-request.h"
 #include <sys/stat.h>
 
-static int root_metadata(const char *path, unsigned layer, size_t constant_bytes, unsigned counts[4])
+static int expert_store_metadata(const char *path, unsigned layer, size_t constant_bytes, unsigned counts[4])
 {
     FILE *file=fopen(path,"rb");
     if (!file) return 0;
@@ -46,7 +46,7 @@ static int root_metadata(const char *path, unsigned layer, size_t constant_bytes
     return valid;
 }
 
-static int root_read_at(FILE *file, unsigned char *output, size_t bytes, uint64_t offset)
+static int expert_store_read_at(FILE *file, unsigned char *output, size_t bytes, uint64_t offset)
 {
     if (offset>INT64_MAX || bytes>(uint64_t)INT64_MAX-offset) return 0;
     size_t received=0;

@@ -116,7 +116,7 @@ step_clone() {
   link_data "$DATASET_DIR" "$CLONE/clover-kimi-k3/src/datasets/computed"
   link_data "$OPEN_WEIGHTS_DIR" "$CLONE/clover-kimi-k3/src/datasets/third-party/kimi-k3-open-weights"
   link_data "$DSPARK_DIR" "$CLONE/clover-kimi-k3/src/datasets/third-party/kimi-k3-dspark"
-  [ -f "$SRC/whole-model.c" ] && pass "engine folder $ENGINE_DIR" || fail "$ENGINE_DIR has no src/whole-model.c"
+  [ -f "$SRC/code/whole-model.c" ] && pass "engine folder $ENGINE_DIR" || fail "$ENGINE_DIR has no src/code/whole-model.c"
   chmod +x "$SRC"/scripts/*.sh 2>/dev/null
 }
 
@@ -129,7 +129,7 @@ step_download() {
   [ "$code" = 200 ] || { fail "Hugging Face answered $code for $HF_REPO_TYPE $HF_REPO: the repo does not exist yet, or it is private and HF_TOKEN is not set"; return; }
   mkdir -p "$DATASET_DIR"
   HF_HUB_ENABLE_HF_TRANSFER=1 "$hf" download "$HF_REPO" --repo-type "$HF_REPO_TYPE" --revision "$HF_REVISION" --local-dir "$DATASET_DIR" --max-workers "$HF_WORKERS" \
-    --include 'root-*/*' --include 'trunk-*/*' --include 'operators/*' --include 'engine-inputs/*' \
+    --include 'expert-*/*' --include 'trunk-*/*' --include 'engine-inputs/*' \
     && pass "download finished (re-run to resume if it was interrupted)" || fail "download failed or was interrupted: run this step again, it resumes"
 }
 

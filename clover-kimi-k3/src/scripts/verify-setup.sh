@@ -17,7 +17,7 @@ cd "$RESULTS_DIR"
 
 # 1. built and wired
 [ -x "$BUILD_DIR/whole-model" ] && [ -x "$BUILD_DIR/ids-to-text" ] && [ -f "$BUILD_DIR/pipeline-stage.so" ] && pass "program and tail library are built" || fail "not built: run scripts/run-model.sh with BUILD_ONLY=1"
-[ -d "$DATASET_DIR/root-1" ] && [ -d "$DATASET_DIR/trunk-1" ] && [ -d "$DATASET_DIR/operators" ] && pass "computed dataset folder is in place" || fail "no computed dataset at $DATASET_DIR (root-N, trunk-N, operators)"
+[ -d "$DATASET_DIR/expert-1" ] && [ -d "$DATASET_DIR/trunk-1" ] && [ -f "$DATASET_DIR/trunk-1/operator.bin" ] && pass "computed dataset folder is in place" || fail "no computed dataset at $DATASET_DIR (expert-N, trunk-N)"
 [ $FAILED = 0 ] || { say "stopping: the engine is not built and wired"; exit 1; }
 
 # 2. dataset complete

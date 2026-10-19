@@ -1,7 +1,7 @@
 #!/bin/bash
 # Proves the engine needs, from the dataset, only what scripts/dataset-files.tsv lists, and that the original open weights are what it reads for the embedding table,
 # the output head, the final normalisation tensors and the tokenizer:
-#  1. a scratch dataset folder holding only links to root-*, trunk-* and operators (nothing else of the dataset is reachable through it);
+#  1. a scratch dataset folder holding only links to expert-* and trunk-* (nothing else of the dataset is reachable through it);
 #  2. one recorded prompt run under strace: every file opened is resolved and listed (dataset files not in the list are reported; open weights files opened are shown);
 #  3. scripts/verify-setup.sh on that scratch dataset.
 # Run it detached (it takes about 40 minutes); the result is work/results/check-open-weights-run.result.
@@ -14,7 +14,7 @@ REAL_DATASET=$(cd "$DATASET_DIR" && pwd -P)
 {
   echo "== check-open-weights-run $(date)"
   rm -rf "$SUBSET"; mkdir -p "$SUBSET"
-  for d in "$REAL_DATASET"/root-* "$REAL_DATASET"/trunk-* "$REAL_DATASET"/operators; do ln -s "$d" "$SUBSET/$(basename "$d")"; done
+  for d in "$REAL_DATASET"/expert-* "$REAL_DATASET"/trunk-*; do ln -s "$d" "$SUBSET/$(basename "$d")"; done
   [ -d "$REAL_DATASET/engine-inputs" ] && ln -s "$REAL_DATASET/engine-inputs" "$SUBSET/engine-inputs"
   echo "scratch dataset $SUBSET: $(ls "$SUBSET" | wc -l) links, nothing else of $REAL_DATASET is reachable through it"
   export DATASET_DIR="$SUBSET"

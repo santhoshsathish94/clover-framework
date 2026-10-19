@@ -22,39 +22,41 @@ The prompt is processed in batches, decode keeps recently used experts in RAM, a
 ```
 clover-kimi-k3/
 ├── README.md
-├── docs/                          current-status.md (the dated log of everything measured, every negative result), layer0-verdict.md
+├── docs/                              current-status.md (the dated log of everything measured, every negative result), layer0-verdict.md
 └── src/
-    ├── *.c *.h                    all the code, one folder (see below)
-    ├── scripts/                   run-model.sh (build and run), settings.sh (every path, one place), checks, chat, new-machine setup, the two file lists
-    ├── tools/                     compare-outputs.py, compare-34-prompts-with-recorded.py, expert-route-analysis.py, prune-trunk.py, check-open-weights.c
-    ├── prompts/                   the 34 recorded prompts and their recorded results, expected-exact-ids.tsv, the recorded 1000-token prompt, small prompts
-    ├── third-party/kimi-k3-in-c/  the tokenizer headers (Apache-2.0, with licence and notice, github.com/FareedKhan-dev/kimi-k3-in-c at commit a2ad8e5, unmodified)
-    ├── datasets/                  host only, never committed (see below)
-    │   ├── third-party/           made by others
-    │   │   ├── kimi-k3-open-weights/   three original files of moonshotai/Kimi-K3 under their own names (4.4 GiB)
-    │   │   └── kimi-k3-dspark/         the DSpark draft checkpoint, Inferact/Kimi-K3-DSpark (7.1 GB)
-    │   └── computed/              computed for this engine: root-N (experts, 15.7 GB per layer), trunk-N (pruned, 33.25 GiB for layers 1-92), operators (Q/K/V weights, 18.3 GiB)
-    └── work/                      host only: build/ (compiled program), inputs/ (recorded prompt, the pod's chain values), results/ (every log and output)
+    ├── code/                          all the code (see below)
+    │   └── third-party/kimi-k3-in-c/  the tokenizer headers (Apache-2.0, with licence and notice, github.com/FareedKhan-dev/kimi-k3-in-c at commit a2ad8e5, unmodified)
+    ├── scripts/                       run-model.sh (build and run), settings.sh (every path, one place), checks, chat, new-machine setup, the two file lists
+    ├── tools/                         compare-outputs.py, compare-34-prompts-with-recorded.py, expert-route-analysis.py, prune-trunk.py, check-open-weights.c
+    ├── prompts/                       the 34 recorded prompts and their recorded results, expected-exact-ids.tsv, the recorded 1000-token prompt, small prompts
+    ├── datasets/                      host only, never committed
+    │   ├── third-party/               made by others
+    │   │   ├── kimi-k3-open-weights/  three original files of moonshotai/Kimi-K3 under their own names (4.4 GiB)
+    │   │   └── kimi-k3-dspark/        the DSpark draft checkpoint, Inferact/Kimi-K3-DSpark (7.1 GB)
+    │   └── computed/                  computed for this engine
+    │       ├── expert-1 ... expert-92 the experts of each layer (15.7 GB each)
+    │       └── trunk-0 ... trunk-92   the other weights of each layer: only the records the engine reads (33.25 GiB for layers 1-92), and operator.bin, the Q/K/V weights (18.3 GiB in all)
+    └── work/                          host only: build/ (compiled program), inputs/ (recorded prompt, the pod's chain values), results/ (every log and output)
 ```
 
-The code in `src/`, by what it does (the first group are the program's stages, the second the layer implementations they are built on, the third what the final stage and the tables need):
+The code in `src/code/`, by what it does:
 
 | file | what it is |
 |---|---|
 | `whole-model.c` | the driver: setup, prompt pass, decode, speculative decoding, chat mode, the final stage loaded as a library |
 | `words-to-embeddings.c` | stage 1: text to token ids to embedding vectors |
-| `layer0.c` | stage 2: layer 0, batched (KDA attention plus a dense MLP), built on `layer0-core.c` |
-| `layers-1-to-92.c` | stage 3: layer 1 and, built twice (KDA / MLA), layers 2-92: batched trunk, router, experts, expert cache, state checkpoints (`lbk_*`, `lbm_*`) |
+| `layer0-batch.c` | stage 2: layer 0 for a batch of tokens, built on `layer0.c` |
+| `layers-1-to-92-batch.c` | stage 3: layers 1-92 for a batch of tokens: layer 1 (built on `layer1.c`) and, built twice (KDA / MLA), layers 2-92: batched trunk, router, experts, expert cache, state checkpoints (`lbk_*`, `lbm_*`) |
+| `layer0.c`, `layer1.c`, `layer-kda.c`, `layer-mla.c` | one token through one layer: layer 0, layer 1, the source of KDA layers 2-92 (written for layer 2), the source of the MLA layers (written for layer 3); the batch files are built on these |
 | `dspark-draft.c` | the DSpark draft model (5 dense MLA layers, Markov head), drafts 8 tokens from the target's hidden states after layers 2, 23, 47, 71, 89 |
 | `ids-to-text.c` | small tool: token ids to text |
-| `trunk-4bit.h` | the 4-bit trunk: packing and kernels, shared by `layer0.c` and `layers-1-to-92.c` |
-| `layer0-core.c`, `layer1-core.c`, `layer-kda-core.c`, `layer-mla-core.c` | the per-layer implementations the batched stages are built on (layer 0, layer 1, the template of KDA layers 2-92, the template of MLA layers) |
+| `trunk-4bit.h` | the 4-bit trunk: packing and kernels, shared by `layer0-batch.c` and `layers-1-to-92-batch.c` |
 | `final-stage.c` (with `final-normalization.c`, `token-ends.h`) | the last stage, built as `pipeline-stage.so`: final normalisation, vocabulary head, detokenise |
 | `embedding-and-head-tables.h`, `safetensors.h`, `sha256.h`, `inflate-simple.h` | the embedding table and output head read from the open weights, the safetensors reader, hashing, the decoder for the table containers |
-| `expert-root-reader.h`, `expert-root-metadata.h`, `expert-root-validation.h`, `inflate-fast.h` | reading and checking the experts (`root-N`) |
+| `expert-reader.h`, `expert-metadata.h`, `expert-validation.h`, `inflate-fast.h` | reading and checking the experts (`expert-N`) |
 | `stage-routing.h`, `stage-trace.h`, `generation-request.h`, `deliver-answer.h`, `json-reader.h` | small shared pieces of the earlier pod design |
 
-Most of these files were written for an earlier design with one pod per layer; they are the same code except for reading the open weights directly and for trunk records that may be pruned. Their old names and places are in `git log --follow`.
+Most of these files were written for an earlier design with one pod per layer; they are the same code except for reading the open weights directly, for trunk records that may be pruned, and for the names (`root` is now `expert`). Their old names and places are in `git log --follow`.
 
 On the host the engine lives in `/opt/clover-k3/clover-kimi-k3`. Nothing outside this folder is needed to build or run it. The data under `src/datasets` can be linked in from a bigger filesystem (`DATASET_DIR`, `OPEN_WEIGHTS_DIR`, `DSPARK_DIR`).
 
@@ -69,7 +71,7 @@ It checks the machine (Linux x86_64, AVX-512 advised, 124 GB RAM was what it was
 
 The same steps run as a GitHub Actions workflow, `.github/workflows/set-up-clover-kimi-k3.yml` (start it from the Actions tab), on the new machine registered as a self-hosted runner with the label `clover-k3` (its service needs `LimitMEMLOCK=infinity`).
 
-What the Hugging Face repo must contain (its root is the dataset folder): `root-1` to `root-92`, `trunk-0` to `trunk-92` (`trunk-1` to `trunk-92` pruned with `tools/prune-trunk.py`), `operators/`, and optionally `engine-inputs/refs/` with `embed.f32`, `final.resid.f32`, `final.snaps.f32` (286 MB, the pod's chain for the recorded prompt). Nothing that is in the open weights is in it: the embedding table, the output head, the normalisation tensors and the tokenizer files come from `moonshotai/Kimi-K3`, the DSpark draft model from `Inferact/Kimi-K3-DSpark`.
+What the Hugging Face repo must contain (its root is the dataset folder): `expert-1` to `expert-92`, `trunk-0` to `trunk-92` (each with its `operator.bin`; `trunk-1` to `trunk-92` pruned with `tools/prune-trunk.py`), and optionally `engine-inputs/refs/` with `embed.f32`, `final.resid.f32`, `final.snaps.f32` (286 MB, the pod's chain for the recorded prompt). Nothing that is in the open weights is in it: the embedding table, the output head, the normalisation tensors and the tokenizer files come from `moonshotai/Kimi-K3`, the DSpark draft model from `Inferact/Kimi-K3-DSpark`.
 
 ## Running
 
