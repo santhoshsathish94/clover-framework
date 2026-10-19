@@ -9,7 +9,7 @@ set -u
 cd "$RESULTS_DIR"
 NAME=check; DIR=$RESULTS_DIR/session-$NAME; OUT=$RESULTS_DIR/check-chat-session.result
 export PF_CONTEXT=1024 PF_CHUNK=256 PF_REPLY_RESERVE=256 PF_INPUT_MAX=400 PF_SUMMARY_TOKENS=120 PF_DECODE=40 PF_SESSION_VERIFY=1
-"$SCRIPTS_DIR/chat-start.sh" $NAME "Answer briefly." > /dev/null
+"$SCRIPTS_DIR/chat-start.sh" $NAME "Answer briefly." > "$OUT" 2>&1 || exit 1
 for _ in $(seq 1 240); do [ -f "$DIR/ready" ] && break; sleep 5; done
 [ -f "$DIR/ready" ] || { echo "the model was not ready after 20 minutes"; tail -5 "$DIR/engine.log"; } > "$OUT"
 [ -f "$DIR/ready" ] || exit 1

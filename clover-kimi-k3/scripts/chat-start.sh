@@ -7,6 +7,7 @@
 set -u
 . "$(dirname "${BASH_SOURCE[0]}")/settings.sh"
 NAME=${1:-chat}; DIR="$RESULTS_DIR/session-$NAME"
+for _ in $(seq 1 36); do pgrep -x whole-model > /dev/null || break; sleep 5; done   # a session that was just stopped needs a moment to exit
 if pgrep -x whole-model > /dev/null; then echo "a model is already running on this host"; exit 1; fi
 rm -rf "$DIR"; mkdir -p "$DIR"
 echo "hello" > "$DIR/placeholder.txt"

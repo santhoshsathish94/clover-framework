@@ -10,7 +10,7 @@ awk -F'\t' -v n=$N '$1==n{printf "%s", $4}' "$ENGINE_DIR/prompts/recorded-34-pro
 {
   echo "prompt $N: $(cat check-prompt.txt)"
   BUILD=0 MODES="exact use_4bit_trunk" PREFIX=check "$SCRIPTS_DIR/compare-exact-and-4bit-trunk.sh" check-prompt.txt 11 > /dev/null 2>&1
-  for m in exact use_4bit_trunk; do "$BUILD_DIR/ids-to-text" "$INPUTS_DIR/tokfiles" check-$m.ids check-$m.out > /dev/null 2>&1; done
+  for m in exact use_4bit_trunk; do "$BUILD_DIR/ids-to-text" "$OPEN_WEIGHTS_DIR" check-$m.ids check-$m.out > /dev/null 2>&1; done
   echo "exact output (this build)    : $(tr '\n' '~' < check-exact.out)"
   echo "exact output (earlier)       : $(tr '\n' '~' < recorded-34-exact/$N.out)"
   if cmp -s check-exact.ids recorded-34-exact/$N.ids; then echo "exact ids identical to the earlier exact run: YES"; else echo "exact ids identical to the earlier exact run: NO"; fi

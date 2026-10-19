@@ -2,6 +2,7 @@
 #define SERVER_NUMERIC_TABLE_H
 #include "decode.h"
 #include "sha256.h"
+#include "safetensors.h"
 #include <math.h>
 #include <float.h>
 #include <fenv.h>
@@ -23,6 +24,10 @@ typedef struct {
        integrity contract is paid once there instead of on every row read. */
     const unsigned char *direct;
     size_t direct_bytes;
+    /* When the table is a tensor read in place from a safetensors file, the whole
+       file is what is mapped and `direct` points inside it. */
+    void *map_base;
+    size_t map_bytes;
     unsigned char payload[CLIENT_RAW_BYTES],decoded[CLIENT_RAW_BYTES],raw[CLIENT_RAW_BYTES];
     uint32_t crc_table[256];
 } NumericTable;
@@ -47,13 +52,39 @@ static uint32_t table_crc(const NumericTable *table,const unsigned char *data,si
 static void table_close(NumericTable *table)
 {
     if(!table)return;
-    if(table->direct)munmap((void *)table->direct,table->direct_bytes);
+    if(table->map_base)munmap(table->map_base,table->map_bytes);
+    else if(table->direct)munmap((void *)table->direct,table->direct_bytes);
     if(table->file)fclose(table->file);
     free(table->metadata);free(table);
+}
+/* "FILE.safetensors#TENSOR": a BF16 [163840, 7168] tensor of the open weights, read
+   where it lies. Same bytes the converted `.direct` copy held (their sha256 matched
+   the tensor's), so nothing past the shape and size is rederived. */
+static NumericTable *table_open_tensor(const char *spec)
+{
+    const char *mark=strrchr(spec,'#');
+    char path[4096];
+    if(!mark||mark[1]==0||(size_t)(mark-spec)>=sizeof path)return NULL;
+    memcpy(path,spec,(size_t)(mark-spec));path[mark-spec]=0;
+    SafetensorsTensor tensor;uint64_t file_bytes=0;
+    if(!safetensors_find(path,mark+1,&tensor,&file_bytes)||!tensor.bf16||tensor.dimensions!=2||
+        tensor.shape[0]!=SERVER_TABLE_ROWS||tensor.shape[1]!=SERVER_TABLE_WIDTH||tensor.bytes!=SERVER_TABLE_DIRECT_BYTES)return NULL;
+    int handle=open(path,O_RDONLY);
+    if(handle<0)return NULL;
+    void *mapped=mmap(NULL,(size_t)file_bytes,PROT_READ,MAP_SHARED,handle,0);
+    close(handle);
+    if(mapped==MAP_FAILED)return NULL;
+    NumericTable *table=calloc(1,sizeof *table);
+    if(!table){munmap(mapped,(size_t)file_bytes);return NULL;}
+    table->cached=UINT32_MAX;
+    table->map_base=mapped;table->map_bytes=(size_t)file_bytes;
+    table->direct=(const unsigned char *)mapped+tensor.offset;table->direct_bytes=SERVER_TABLE_DIRECT_BYTES;
+    return table;
 }
 static NumericTable *table_open(const char *path,const char *expected_source)
 {
     if(!path)return NULL;
+    if(strchr(path,'#'))return table_open_tensor(path);
     NumericTable *table=calloc(1,sizeof *table);
     if(!table)return NULL;
     table->cached=UINT32_MAX;

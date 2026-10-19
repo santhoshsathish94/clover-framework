@@ -6,6 +6,7 @@
 #include <fenv.h>
 #include <math.h>
 #include "json.h"
+#include "../server/safetensors.h"
 
 enum { NORMALIZATION_WIDTH = 7168, NORMALIZATION_SNAPSHOTS = 8,
     NORMALIZATION_SOURCES = 9, NORMALIZATION_TENSOR_BYTES = 14336 };
@@ -164,6 +165,32 @@ static int normalization_prepare_fold(Normalization *model)
     return 1;
 }
 
+/* The same three tensors straight from the open weights' safetensors shard, by their own names. */
+static int normalization_read_safetensors(const char *path, Normalization *model)
+{
+    static const char *names[] = {"language_model.model.output_attn_res_norm.weight",
+        "language_model.model.output_attn_res_proj.weight", "language_model.model.norm.weight"};
+    int handle = open(path, O_RDONLY);
+    if (handle < 0) return 0;
+    int valid = 1;
+    for (unsigned tensor = 0; valid && tensor < 3; tensor++) {
+        SafetensorsTensor found;
+        unsigned char data[NORMALIZATION_TENSOR_BYTES];
+        const unsigned dimensions = tensor == 1 ? 2 : 1;
+        valid = safetensors_find(path, names[tensor], &found, NULL) && found.bf16 && found.dimensions == dimensions &&
+            found.shape[dimensions - 1] == NORMALIZATION_WIDTH && (dimensions == 1 || found.shape[0] == 1) &&
+            found.bytes == NORMALIZATION_TENSOR_BYTES &&
+            pread(handle, data, sizeof data, (off_t)found.offset) == (ssize_t)sizeof data;
+        for (unsigned coordinate = 0; valid && coordinate < NORMALIZATION_WIDTH; coordinate++) {
+            uint32_t bits = ((uint32_t)data[coordinate * 2] | (uint32_t)data[coordinate * 2 + 1] << 8) << 16;
+            memcpy(model->gains[tensor] + coordinate, &bits, sizeof bits);
+            if (!isfinite(model->gains[tensor][coordinate])) valid = 0;
+        }
+    }
+    close(handle);
+    return valid;
+}
+
 void normalization_close(Normalization *model)
 {
     free(model);
@@ -174,6 +201,14 @@ int normalization_open(const char *path, Normalization **result)
     if (!result) return 0;
     *result = NULL;
     if (!path || !normalization_environment()) return 0;
+    const size_t path_length = strlen(path);
+    if (path_length > 12 && !strcmp(path + path_length - 12, ".safetensors")) {
+        Normalization *model = calloc(1,sizeof *model);
+        if (!model) return 0;
+        if (!normalization_read_safetensors(path,model) || !normalization_prepare_fold(model)) { normalization_close(model); return 0; }
+        *result = model;
+        return 1;
+    }
     FILE *file = fopen(path, "rb");
     if (!file) return 0;
     if (fseek(file,0,SEEK_END)) { fclose(file); return 0; }

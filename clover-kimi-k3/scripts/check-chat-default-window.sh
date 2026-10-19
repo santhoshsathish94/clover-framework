@@ -14,7 +14,7 @@ cd "$RESULTS_DIR"
 NAME=defaultwindow; DIR=$RESULTS_DIR/session-$NAME; OUT=$RESULTS_DIR/check-chat-default-window.result
 export PF_REPLY_RESERVE=6500 PF_DECODE=200 PF_SUMMARY_TOKENS=200 PF_SESSION_VERIFY=1
 unset PF_CONTEXT PF_CHUNK PF_INPUT_MAX
-"$SCRIPTS_DIR/chat-start.sh" $NAME > /dev/null
+"$SCRIPTS_DIR/chat-start.sh" $NAME > "$OUT" 2>&1 || exit 1
 for _ in $(seq 1 240); do [ -f "$DIR/ready" ] && break; sleep 5; done
 [ -f "$DIR/ready" ] || { echo "the model was not ready after 20 minutes"; tail -5 "$DIR/engine.log"; } > "$OUT"
 [ -f "$DIR/ready" ] || exit 1

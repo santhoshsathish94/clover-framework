@@ -1,0 +1,6 @@
+# path (relative to OPEN_WEIGHTS_DIR), bytes, sha256: the three original files of moonshotai/Kimi-K3 (commit f831ab66814297da540d832a5235f8e904f29d06) the engine reads, under their original names.
+# model-00094-of-000096.safetensors holds language_model.model.embed_tokens.weight (the embedding table), language_model.lm_head.weight (the output head) and the three final normalisation tensors (language_model.model.output_attn_res_norm.weight, ...output_attn_res_proj.weight, ...norm.weight).
+# sizes and sha256 from the Hugging Face file headers (x-linked-size, x-linked-etag); tokenizer_config.json is a plain git file, its sha256 was computed from the file.
+model-00094-of-000096.safetensors	4697664072	ad66e1cb96b86963e63d6a0a466b6a407b13c9815cb480fe612480cc6bb3b6e1
+tiktoken.model	2795286	b6c497a7469b33ced9c38afb1ad6e47f03f5e5dc05f15930799210ec050c5103
+tokenizer_config.json	3478	5d0803c94db9cd78763499e0956c95fd5a225c14a727e5a6cf5db3f96f010a6e

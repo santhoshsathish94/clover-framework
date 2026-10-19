@@ -14,7 +14,7 @@
    pointers to buffers. At every twelfth layer the layer's input buffer itself becomes the new snapshot.
    One 15.7 GB buffer holds the experts of whichever layer is running; it is allocated once and shared.
 
-     whole-model POD_DIR DATASET_DIR TOKFILES WORDS REFDIR
+     whole-model POD_DIR DATASET_DIR OPEN_WEIGHTS_DIR WORDS REFDIR
 
    REFDIR holds recorded values for the ids WORDS stands for (embed.f32, final.resid.f32, final.snaps.f32: the pod's
    own chain, layer by layer, ending after layer 92) or is "-" when none exist; then nothing is compared.        */
@@ -27,6 +27,10 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <sys/mman.h>
+
+/* The original open weights (moonshotai/Kimi-K3): the embedding table, the output head and the three final normalisation tensors are read from
+   this shard by their own names, and tiktoken.model and tokenizer_config.json from the same folder. */
+#define OPEN_WEIGHTS_SHARD "model-00094-of-000096.safetensors"
 
 double stage1_setup(const char *tokfiles, const char *seed);
 int stage1_ids(const char *text, long size, int *ids, int cap);
@@ -686,12 +690,12 @@ static void run_session(Model *m, const char *dir)
 
 int main(int argc, char **argv)
 {
-    if (argc != 6) { fputs("usage: pipeline-full CODE_DIR DATASET TOKFILES WORDS REFDIR\n", stderr); return 2; }
+    if (argc != 6) { fputs("usage: pipeline-full CODE_DIR DATASET OPEN_WEIGHTS_DIR WORDS REFDIR\n", stderr); return 2; }
     const char *code = argv[1], *dataset = argv[2];
     const int compare = strcmp(argv[5], "-") != 0;
     const int verbose = getenv("PF_VERBOSE") && *getenv("PF_VERBOSE");
     char seed[4096], dataset1[4096], path[4096];
-    snprintf(seed, sizeof seed, "%s/server/bin/dataset/inputs/seed.bin", code);
+    snprintf(seed, sizeof seed, "%s/" OPEN_WEIGHTS_SHARD "#language_model.model.embed_tokens.weight", argv[3]);
     snprintf(dataset1, sizeof dataset1, "%s/tansformers/transformer-1/bin/dataset", code);
 
     long words_size; char *words = slurp(argv[4], &words_size);
@@ -830,13 +834,13 @@ int main(int argc, char **argv)
         const char *checkpoint = getenv("DSPARK_CHECKPOINT");
         if (!max_draft) bail("SPECULATIVE_DRAFTER=dspark needs SPECULATIVE_DRAFT_TOKENS (up to 8)");
         if (!checkpoint || !*checkpoint) bail("DSPARK_CHECKPOINT is not set");
-        snprintf(path, sizeof path, "%s/server/bin/dataset/outputs/fruit.bin", code);
+        snprintf(path, sizeof path, "%s/" OPEN_WEIGHTS_SHARD "#language_model.lm_head.weight", argv[3]);
         for (unsigned a = 0; a < 5; a++) dspark_hidden[a] = calloc((size_t)(session_dir ? layer_positions : N + decode + 16) * W, sizeof(float));
         if (!dspark_open(checkpoint, path, session_dir ? layer_positions : N + decode + 16)) bail("cannot open the DSpark draft model");
     }
     const double t_layers = clk() - setup0;
 
-    char leaves[4096], head[4096], tik[4096], vocab[4096], config[4096];
+    char leaves[4096], head[4096], tik[4096], config[4096];
     snprintf(path, sizeof path, "%s/tansformers/transformer-93/bin/pipeline-stage.so", code);
     void *tail = dlopen(path, RTLD_NOW | RTLD_LOCAL);
     if (!tail) { fprintf(stderr, "tail dlopen: %s\n", dlerror()); return 1; }
@@ -845,13 +849,13 @@ int main(int argc, char **argv)
     void (*tail_drop)(void *) = dlsym(tail, "transformer_93_sequence_close");
     int (*tail_run)(const void *, void *, const float *, const float *, unsigned, int, const char *, uint32_t *, Text *) = dlsym(tail, "transformer_93_process");
     if (!tail_open || !tail_make || !tail_drop || !tail_run) bail("tail symbols missing");
-    snprintf(leaves, sizeof leaves, "%s/server/bin/dataset/leaves.json", code);
-    snprintf(head, sizeof head, "%s/server/bin/dataset/outputs/fruit.bin", code);
-    snprintf(tik, sizeof tik, "%s/server/bin/dataset/tiktoken.model", code);
-    snprintf(vocab, sizeof vocab, "%s/server/bin/dataset/vocabulary.bin", code);
-    snprintf(config, sizeof config, "%s/server/bin/configs/tokenizer_config.json", code);
+    snprintf(leaves, sizeof leaves, "%s/" OPEN_WEIGHTS_SHARD, argv[3]);
+    snprintf(head, sizeof head, "%s/" OPEN_WEIGHTS_SHARD "#language_model.lm_head.weight", argv[3]);
+    snprintf(tik, sizeof tik, "%s/tiktoken.model", argv[3]);
+    snprintf(config, sizeof config, "%s/tokenizer_config.json", argv[3]);
     void *tail_model = NULL;
-    if (!tail_open(leaves, head, tik, vocab, config, &tail_model)) bail("tail open failed");
+    /* no vocabulary file: the tokenizer builds its table from tiktoken.model */
+    if (!tail_open(leaves, head, tik, NULL, config, &tail_model)) bail("tail open failed");
     {   /* touch the head's table once, with finite dummy vectors, so the request finds it in memory */
         static float one[W], eight[MAX_SNAPSHOTS * W];
         for (unsigned i = 0; i < W; i++) one[i] = 0.01f * (float)(i % 7);

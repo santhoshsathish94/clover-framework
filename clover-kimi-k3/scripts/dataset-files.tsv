@@ -1,7 +1,4 @@
-# path (relative to the dataset folder), bytes, sha256: the 840 files the engine opens, found with strace on 2026-10-19 (a DSpark run: prompt pass and decode); the whole dataset on the host is larger (model/, client/, eqidx.bin, other outputs and inputs files are not opened)
-inputs/seed.bin	1655067433	9f064e022771c82fb8d218a03d6e5ebdfab5e3f22d4a59ec5cd25b8498a552d3
-inputs/seed.bin.direct	2348810240	4a79cdabdab6826b994aff69d90a72aa35dae32e90f8acaf1ce312c7bdc4a487
-leaves.json	58615	a6a886747d400a545f4e16c2831ef0db7e8eab90575184a54d3bffe64f5b5f2a
+# path (relative to the dataset folder), bytes, sha256: the 833 precomputed files the engine opens (root-N, trunk-N, operators), found with strace on 2026-10-19 (a DSpark run: prompt pass and decode). The 7 other files that run opened (seed.bin and its .direct, fruit.bin and its .direct, leaves.json, tiktoken.model, vocabulary.bin) are no longer read: the engine reads the original open weights instead, see open-weights-files.tsv
 operators/qkv-all/layer-10/operator.bin	265008216	6594451a682ec0817f388a82eaa560b892c52882f40c7bee4543876f09e39cfc
 operators/qkv-all/layer-11/operator.bin	56251936	63528121cdc12865e1dd02d1e6cf44cdab818906a9711632614f099e84929b79
 operators/qkv-all/layer-12/operator.bin	265008216	3c83799743ff756d9342a9e8cffc73b2f540017f94f5a27c132889d7ed27dc1e
@@ -95,8 +92,6 @@ operators/qkv-all/layer-91/operator.bin	56251936	953633065d6d9d3a6f4833b6bfd208b
 operators/qkv-all/layer-92/operator.bin	56251936	80e07d9135c8ec317532bada5c4ee2cc59938c70b8c0505f7ecff6639db24892
 operators/qkv-all/layer-9/operator.bin	265008216	3c4e7d0d07a9a861daa1d4fc6c6f75d400b04e59de6993042323f93e72ed31ef
 operators/trunk-0-qkv/qkv.bin	265008216	4925ea619a4fd268b441e8008e4c1cd714f681b328b03cccd52c69b6a9b6f654
-outputs/fruit.bin	1662954740	b6a1ead4fda2928127841ffa2ec63d4f56d3de5709bfd24b4da2cc0d07b58c16
-outputs/fruit.bin.direct	2348810240	11c1f1c09a8e0db55547b5e68ebfd1d8e3b503bee56c4e1312ef55ecd3e5580f
 root-10/constants.bin	606	24d2d5f66261340124cee9e4903a4f129d2f7ed1c31f05f7846fa4ff755e6616
 root-10/experts.bin	1094944	1806759727438d1618fed588aa81c947c337b3a012cb511050682a07f91ec4a1
 root-10/experts.direct	15722348544	4d94b424fb986a601ad0d404a4795f456c8840ef1defe2b4eaabed6043e4b31c
@@ -465,7 +460,6 @@ root-9/constants.bin	828	248fb65b6722b48dbe68b7f42a4de4e2063c4f18042dbe00a10b43e
 root-9/experts.bin	1094944	b5af998f371f3a95d82a9bcea3e63d667944d887dfb87b72f9ff2fb137a92655
 root-9/experts.direct	15722348544	e3e10404d2541933e410b24d3549adff6b2f697f558d21eb3317221b32916c89
 root-9/maps.json	22646	e876b1c79184337c8ce7de998cc551da481248282fb8ec58475dcc3615bc8249
-tiktoken.model	2795286	b6c497a7469b33ced9c38afb1ad6e47f03f5e5dc05f15930799210ec050c5103
 trunk-0/common.bin	176467968	475cd08da99c4f422f2c284906eb8a7ff0b16a5852bd77204cd210275cbcff66
 trunk-0/dense.bin	726962176	70d210e1400dff4a59a583e0bfac3937a55beea93175e2931eacf2a7559ba2dd
 trunk-0/index.bin	3040	dd58a012a1e795a959f14f2c8bf114921018e7cecd668bf505e966cdd4868722
@@ -838,4 +832,3 @@ trunk-9/attention.bin	268257536	7d35bf1208434d21172d1f4e4757f0c5091273a92e799f43
 trunk-9/common.bin	176467968	90f18d8c6ab55a89faf5226a0e5fb566bdda787e54d8524f16ce9ac3a6a6d873
 trunk-9/index.bin	3400	6729ae21789b66a0971af70196d34c1d6532f057e8f19ca8771c44bccbb3929d
 trunk-9/routed-shared.bin	209329664	d39ce6bf3b18d08d1d664c2cb6ece3d3e6c1c81bfcc60cb4d68221ccfcb9299c
-vocabulary.bin	1764931	61e8759950e54f6ba2dd90e129c144f65725f481f2059d1b3ad5254aa48cbdff

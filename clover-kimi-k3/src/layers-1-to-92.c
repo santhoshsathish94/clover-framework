@@ -2119,6 +2119,25 @@ int main(int argc, char **argv)
     return 0;
 }
 
+/* PF_BLANK_UNUSED_TRUNK=1 is a check, not a mode: the trunk records this layer never reads (the ones transformer_needs refuses) are replaced by zero pages,
+   so that identical output shows the output does not depend on them. Prints the bytes it blanked. */
+static void blank_unused_trunk_records(Transformer *t, unsigned layer)
+{
+    const char *on = getenv("PF_BLANK_UNUSED_TRUNK");
+    if (!on || !*on || !strcmp(on, "0")) return;
+    const uintptr_t page = (uintptr_t)sysconf(_SC_PAGESIZE);
+    size_t blanked = 0, record_bytes = 0;
+    for (unsigned id = 0; id < TRANSFORMER_RECORDS; id++) {
+        const TransformerRecord *r = &t->records[id];
+        if (!r->length || transformer_needs(id)) continue;
+        record_bytes += r->length;
+        const uintptr_t first = (uintptr_t)t->group_map[r->group] + r->offset, last = first + r->length;
+        const uintptr_t a = (first + page - 1) & ~(page - 1), b = last & ~(page - 1);
+        if (b > a && mmap((void *)a, b - a, PROT_READ, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0) != MAP_FAILED) blanked += b - a;
+    }
+    fprintf(stderr, "blank-unused: layer %u: %zu bytes in unused records, %zu bytes replaced by zero pages\n", layer, record_bytes, blanked);
+}
+
 #ifdef PIPELINE_ENTRY
 /* Entry points for the one-process pipeline (input-to-layer1/pipeline.c); build with -DPIPELINE_ENTRY -Dmain=layer_batch_main.
    Experts come from disk by direct reads (LB_DISK=3), as in the standalone harness. */
@@ -2145,6 +2164,7 @@ double stage3_setup(const char *dataset, unsigned max_n)
 {
     const double t0 = clk();
     if (!transformer_open(dataset, &p_tr)) bail("transformer_open failed");
+    blank_unused_trunk_records(p_tr, 1);
     g_palette = p_tr->palette; g_ident = palette_identity(p_tr->palette);
     if (getenv("LB_WIDE")) g_wide = atoi(getenv("LB_WIDE"));
     if (getenv("LB_VEC")) g_vecrec = atoi(getenv("LB_VEC"));
@@ -2320,6 +2340,7 @@ void *LB_CAT(LB_PFX, _open)(const char *dataset, unsigned layer, unsigned k, uns
     h->layer = layer; h->k = k;
     lb_layer_no = layer; lb_k_in = k;
     if (!transformer_open(dataset, &h->tr)) bail("transformer_open failed");
+    blank_unused_trunk_records(h->tr, layer);
     const Root *root = h->tr->root;
     if (!root->direct) bail("no direct expert mapping");
     h->ident = palette_identity(h->tr->palette);

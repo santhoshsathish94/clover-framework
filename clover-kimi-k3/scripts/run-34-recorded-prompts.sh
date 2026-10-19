@@ -16,8 +16,8 @@ ulimit -l unlimited
 for i in $(seq ${2:-1} ${3:-34}); do
   awk -F'\t' -v n=$i '$1==n{printf "%s", $4}' "$ENGINE_DIR/prompts/recorded-34-prompts.tsv" > $DIR/$i.txt
   env -i PATH="$PATH" LB_IO=4 LB_SPEC=0 LB_THP=1 $E PF_DECODE=11 PF_SAVE_IDS=$DIR/$i.ids \
-      OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores "$BUILD_DIR/whole-model" "$POD_DIR" "$DATASET_DIR" "$INPUTS_DIR/tokfiles" $DIR/$i.txt - > $DIR/$i.log 2>&1
-  "$BUILD_DIR/ids-to-text" "$INPUTS_DIR/tokfiles" $DIR/$i.ids $DIR/$i.out > /dev/null 2>&1
+      OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores "$BUILD_DIR/whole-model" "$POD_DIR" "$DATASET_DIR" "$OPEN_WEIGHTS_DIR" $DIR/$i.txt - > $DIR/$i.log 2>&1
+  "$BUILD_DIR/ids-to-text" "$OPEN_WEIGHTS_DIR" $DIR/$i.ids $DIR/$i.out > /dev/null 2>&1
   echo "prompt $i done $(date +%H:%M:%S)"
 done
 echo "ALL DONE"

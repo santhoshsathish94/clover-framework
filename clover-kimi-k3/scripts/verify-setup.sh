@@ -17,7 +17,7 @@ cd "$RESULTS_DIR"
 
 # 1. built and wired
 [ -x "$BUILD_DIR/whole-model" ] && [ -x "$BUILD_DIR/ids-to-text" ] && [ -f "$POD_DIR/tansformers/transformer-93/bin/pipeline-stage.so" ] && pass "program and tail library are built" || fail "not built: run scripts/run-model.sh with BUILD_ONLY=1"
-broken=$(find "$POD_DIR/server/bin" "$POD_DIR/tansformers/transformer-1/bin" "$INPUTS_DIR/tokfiles" -xtype l 2>/dev/null | wc -l)
+broken=$(find "$POD_DIR/server/bin" "$POD_DIR/tansformers/transformer-1/bin" -xtype l 2>/dev/null | wc -l)
 [ -d "$POD_DIR/server/bin/dataset" ] && [ "$broken" = 0 ] && pass "dataset links are in place, none broken" || fail "dataset links missing or broken ($broken broken): run scripts/wire-dataset.sh"
 [ $FAILED = 0 ] || { say "stopping: the engine is not built and wired"; exit 1; }
 
@@ -32,7 +32,7 @@ for n in $VERIFY_PROMPTS; do
   start=$(date +%s)
   PF_DECODE=11 PF_CACHE=16 PF_SAVE_IDS="verify-$n.ids" BUILD=0 "$SCRIPTS_DIR/run-model.sh" text "verify-prompt-$n.txt" > "verify-$n.log" 2>&1
   got=$(tr -d '\n\r ' < "verify-$n.ids" 2>/dev/null)
-  text=$("$BUILD_DIR/ids-to-text" "$INPUTS_DIR/tokfiles" "verify-$n.ids" "verify-$n.out" > /dev/null 2>&1; tr '\n' '~' < "verify-$n.out" 2>/dev/null)
+  text=$("$BUILD_DIR/ids-to-text" "$OPEN_WEIGHTS_DIR" "verify-$n.ids" "verify-$n.out" > /dev/null 2>&1; tr '\n' '~' < "verify-$n.out" 2>/dev/null)
   if [ -n "$want" ] && [ "$got" = "$want" ]; then pass "prompt $n: the 12 token ids equal the recorded ones ($(( $(date +%s) - start )) s): $(head -c 70 <<< "$text")"
   else fail "prompt $n: ids differ. wanted $want, got ${got:-nothing} (see $RESULTS_DIR/verify-$n.log)"; fi
 done
@@ -61,7 +61,7 @@ fi
 if [ "${VERIFY_CHAT:-1}" = 1 ]; then
   if [ -f "$DSPARK_DIR/model.safetensors" ]; then
     export PF_CONTEXT=1024 PF_CHUNK=256 PF_REPLY_RESERVE=256 PF_DECODE=40
-    "$SCRIPTS_DIR/chat-start.sh" verify "Answer briefly." > /dev/null
+    if ! "$SCRIPTS_DIR/chat-start.sh" verify "Answer briefly." > chat-start-verify.log 2>&1; then fail "chat: could not start a session: $(cat chat-start-verify.log)"; fi
     for _ in $(seq 1 240); do [ -f "session-verify/ready" ] && break; sleep 5; done
     if [ -f session-verify/ready ]; then
       WAIT=900 "$SCRIPTS_DIR/chat-say.sh" verify "My name is Santhosh and I am building a C inference engine. Answer in one short sentence." > /dev/null

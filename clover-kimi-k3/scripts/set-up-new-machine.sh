@@ -1,11 +1,12 @@
 #!/bin/bash
 # Sets up clover-kimi-k3 on a new Linux machine, start to finish, and verifies it: checks the machine, installs the tools, clones the code from GitHub,
-# downloads the dataset from Hugging Face, checks the files against scripts/dataset-files.tsv, wires everything, builds the program, fetches the DSpark
+# downloads the precomputed dataset from Hugging Face and the original open weights files the engine reads (4.4 GiB) from moonshotai/Kimi-K3, checks the files against
+# scripts/dataset-files.tsv and scripts/open-weights-files.tsv, wires everything, builds the program, fetches the DSpark
 # draft model and runs scripts/verify-setup.sh (recorded prompts must give the recorded token ids, speculative decoding must equal plain decoding, a chat must remember).
 # It can be run again at any point: every step skips what is already in place, and the download resumes.
 #
 # usage: [VARIABLE=value ...] set-up-new-machine.sh [STEP ...]        (no step = all of them, in this order:)
-#   preflight  packages  clone  download  check-dataset  wire  build  dspark  verify
+#   preflight  packages  clone  download  open-weights  check-dataset  wire  build  dspark  verify
 #
 # Variables (all optional):
 #   INSTALL_DIR     /opt/clover-k3        the code goes to $INSTALL_DIR/clover-framework (only the clover-kimi-k3 folder is checked out), linked as $INSTALL_DIR/clover-kimi-k3
@@ -13,6 +14,7 @@
 #   REPO_REF        main                  a branch, tag or commit
 #   HF_REPO         santhoshsathish94/clover-kimi-k3     HF_REPO_TYPE dataset    HF_REVISION main    HF_TOKEN (needed for a private repo)
 #   DATASET_DIR     $INSTALL_DIR/dataset  (put it on the big NVMe filesystem; about 1.4 TB); $INSTALL_DIR/clover-kimi-k3/dataset is linked to it
+#   OPEN_WEIGHTS_REPO moonshotai/Kimi-K3  OPEN_WEIGHTS_REVISION (pinned commit, see below)  OPEN_WEIGHTS_DIR $INSTALL_DIR/open-weights; $INSTALL_DIR/clover-kimi-k3/open-weights is linked to it
 #   DSPARK_DIR      $INSTALL_DIR/clover-kimi-k3/models/dspark
 #   SKIP_PACKAGES=1 do not run apt-get;  SKIP_DOWNLOAD=1 use the dataset as it is;  SKIP_DSPARK=1;  HF_WORKERS=8
 #   VERIFY_PROMPTS  "1 4 10"   which of the 34 recorded prompts verify-setup.sh runs
@@ -28,7 +30,10 @@ HF_WORKERS="${HF_WORKERS:-8}"
 CLONE="$INSTALL_DIR/clover-framework"
 ENGINE_DIR="$INSTALL_DIR/clover-kimi-k3"
 DATASET_DIR="${DATASET_DIR:-$INSTALL_DIR/dataset}"
-STEPS=("$@"); [ ${#STEPS[@]} -gt 0 ] || STEPS=(preflight packages clone download check-dataset wire build dspark verify)
+OPEN_WEIGHTS_REPO="${OPEN_WEIGHTS_REPO:-moonshotai/Kimi-K3}"
+OPEN_WEIGHTS_REVISION="${OPEN_WEIGHTS_REVISION:-f831ab66814297da540d832a5235f8e904f29d06}"
+export OPEN_WEIGHTS_DIR="${OPEN_WEIGHTS_DIR:-$INSTALL_DIR/open-weights}"
+STEPS=("$@"); [ ${#STEPS[@]} -gt 0 ] || STEPS=(preflight packages clone download open-weights check-dataset wire build dspark verify)
 REPORT="$INSTALL_DIR/set-up-new-machine.report"
 mkdir -p "$INSTALL_DIR"; echo "== $(date) set-up-new-machine.sh ${STEPS[*]}" >> "$REPORT"
 FAILED=0
@@ -99,6 +104,7 @@ step_clone() {
     && pass "checked out $(git -C "$CLONE" rev-parse --short HEAD) ($REPO_REF)" || { fail "could not check out $REPO_REF in $CLONE"; return; }
   if [ -L "$ENGINE_DIR" ] || [ ! -e "$ENGINE_DIR" ]; then ln -sfn "$CLONE/clover-kimi-k3" "$ENGINE_DIR"; fi
   [ -e "$CLONE/clover-kimi-k3/dataset" ] || ln -sfn "$DATASET_DIR" "$CLONE/clover-kimi-k3/dataset"
+  [ -e "$CLONE/clover-kimi-k3/open-weights" ] || ln -sfn "$OPEN_WEIGHTS_DIR" "$CLONE/clover-kimi-k3/open-weights"
   [ -f "$ENGINE_DIR/src/whole-model.c" ] && pass "engine folder $ENGINE_DIR" || fail "$ENGINE_DIR has no src/whole-model.c"
   chmod +x "$ENGINE_DIR"/scripts/*.sh 2>/dev/null
 }
@@ -112,9 +118,18 @@ step_download() {
   [ "$code" = 200 ] || { fail "Hugging Face answered $code for $HF_REPO_TYPE $HF_REPO: the repo does not exist yet, or it is private and HF_TOKEN is not set"; return; }
   mkdir -p "$DATASET_DIR"
   HF_HUB_ENABLE_HF_TRANSFER=1 "$hf" download "$HF_REPO" --repo-type "$HF_REPO_TYPE" --revision "$HF_REVISION" --local-dir "$DATASET_DIR" --max-workers "$HF_WORKERS" \
-    --include 'root-*/*' --include 'trunk-*/*' --include 'operators/*' --include 'inputs/*' --include 'outputs/*' \
-    --include leaves.json --include tiktoken.model --include vocabulary.bin --include 'engine-inputs/*' \
+    --include 'root-*/*' --include 'trunk-*/*' --include 'operators/*' --include 'engine-inputs/*' \
     && pass "download finished (re-run to resume if it was interrupted)" || fail "download failed or was interrupted: run this step again, it resumes"
+}
+
+step_open_weights() {
+  say "== open-weights: $OPEN_WEIGHTS_REPO @ ${OPEN_WEIGHTS_REVISION:0:12} -> $OPEN_WEIGHTS_DIR (shard 94, tiktoken.model, tokenizer_config.json)"
+  if [ "${SKIP_DOWNLOAD:-0}" = 1 ]; then warn "skipped (SKIP_DOWNLOAD=1)"; return; fi
+  local hf="$INSTALL_DIR/venv/bin/hf"; [ -x "$hf" ] || hf=$(command -v hf || command -v huggingface-cli || true)
+  [ -n "$hf" ] || { fail "no Hugging Face command line (run the packages step)"; return; }
+  mkdir -p "$OPEN_WEIGHTS_DIR"
+  HF_HUB_ENABLE_HF_TRANSFER=1 "$hf" download "$OPEN_WEIGHTS_REPO" model-00094-of-000096.safetensors tiktoken.model tokenizer_config.json --revision "$OPEN_WEIGHTS_REVISION" --local-dir "$OPEN_WEIGHTS_DIR" \
+    && pass "open weights files downloaded (sizes and sha256 are checked in the check-dataset step)" || fail "download of the open weights files failed: run this step again, it resumes"
 }
 
 step_check_dataset() {
@@ -160,7 +175,7 @@ step_verify() {
 
 for s in "${STEPS[@]}"; do
   case "$s" in
-    preflight) step_preflight;; packages) step_packages;; clone) step_clone;; download) step_download;; check-dataset) step_check_dataset;;
+    preflight) step_preflight;; packages) step_packages;; clone) step_clone;; download) step_download;; open-weights) step_open_weights;; check-dataset) step_check_dataset;;
     wire) step_wire;; build) step_build;; dspark) step_dspark;; verify) step_verify;;
     *) fail "unknown step $s";;
   esac

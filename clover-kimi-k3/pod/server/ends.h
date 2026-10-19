@@ -144,11 +144,62 @@ void tokenizer_close(Tokenizer *tokenizer)
     free(tokenizer->tokens); free(tokenizer->lookup); free(tokenizer->vocabulary); free(tokenizer);
 }
 
+/* The vocabulary table (an offset for every id, then the bytes of every token in id order) that used to be a separate file,
+   built from tiktoken.model itself: the ids below TOKENIZER_BASE, in id order; the added tokens have no bytes here. */
+static TokenizerStatus build_vocabulary(const unsigned char *model, size_t model_bytes, unsigned char **result, size_t *result_bytes)
+{
+    const size_t prefix = (TOKENIZER_IDS + 1ULL) * 4;
+    uint32_t *length = calloc(TOKENIZER_IDS, sizeof *length);
+    if (!length) return TOKENIZER_NO_MEMORY;
+    unsigned char *table = NULL;
+    TokenizerStatus status = TOKENIZER_INVALID_DATA;
+    for (int pass = 0; pass < 2; pass++) {
+        const unsigned char *cursor = model, *end_model = model + model_bytes;
+        while (cursor < end_model) {
+            const unsigned char *line = cursor;
+            while (cursor < end_model && *cursor != '\n') cursor++;
+            const unsigned char *end = cursor;
+            if (cursor < end_model) cursor++;
+            if (end > line && end[-1] == '\r') end--;
+            if (end == line) continue;
+            const unsigned char *space = memchr(line, ' ', (size_t)(end - line));
+            uint32_t id;
+            unsigned char decoded[4096]; size_t decoded_bytes;
+            if (!space || !decimal_id(space + 1, (size_t)(end - space - 1), &id) || id >= TOKENIZER_BASE ||
+                !decode_base64(line, (size_t)(space - line), decoded, sizeof(decoded), &decoded_bytes) || !decoded_bytes) goto done;
+            if (pass == 0) {
+                if (length[id]) goto done;
+                length[id] = (uint32_t)decoded_bytes;
+            } else memcpy(table + prefix + read_u32(table + id * 4), decoded, decoded_bytes);
+        }
+        if (pass == 0) {
+            uint64_t total = 0;
+            for (uint32_t id = 0; id < TOKENIZER_BASE; id++) { if (!length[id]) goto done; total += length[id]; }
+            if (total > UINT32_MAX || prefix + total > 16 * 1024 * 1024) goto done;
+            table = calloc(1, prefix + (size_t)total + 1);
+            if (!table) { status = TOKENIZER_NO_MEMORY; goto done; }
+            uint32_t offset = 0;
+            for (uint32_t id = 0; id <= TOKENIZER_IDS; id++) {
+                for (unsigned byte = 0; byte < 4; byte++) table[id * 4 + byte] = (unsigned char)(offset >> (8 * byte));
+                if (id < TOKENIZER_IDS) offset += length[id];
+            }
+            *result_bytes = prefix + (size_t)total;
+        }
+    }
+    *result = table;
+    table = NULL;
+    status = TOKENIZER_OK;
+done:
+    free(length); free(table);
+    return status;
+}
+
 TokenizerStatus tokenizer_open(const char *model_path, const char *vocabulary_path, const char *config_path, Tokenizer **result)
 {
     if (!result) return TOKENIZER_INVALID_ARGUMENT;
     *result = NULL;
-    if (!model_path || !vocabulary_path || !config_path) return TOKENIZER_INVALID_ARGUMENT;
+    /* No vocabulary_path (NULL or empty): the table is built from the model file instead of read. */
+    if (!model_path || !config_path) return TOKENIZER_INVALID_ARGUMENT;
     Tokenizer *tokenizer = calloc(1, sizeof(*tokenizer));
     if (!tokenizer) return TOKENIZER_NO_MEMORY;
     unsigned char *model = NULL, *config = NULL;
@@ -159,7 +210,8 @@ TokenizerStatus tokenizer_open(const char *model_path, const char *vocabulary_pa
     if (!tokenizer->tokens || !tokenizer->lookup) goto done;
     status = read_file(model_path, 16 * 1024 * 1024, &model, &model_bytes);
     if (status != TOKENIZER_OK) goto done;
-    status = read_file(vocabulary_path, 16 * 1024 * 1024, &tokenizer->vocabulary, &vocabulary_bytes);
+    if (vocabulary_path && *vocabulary_path) status = read_file(vocabulary_path, 16 * 1024 * 1024, &tokenizer->vocabulary, &vocabulary_bytes);
+    else status = build_vocabulary(model, model_bytes, &tokenizer->vocabulary, &vocabulary_bytes);
     if (status != TOKENIZER_OK) goto done;
     status = read_file(config_path, 1024 * 1024, &config, &config_bytes);
     if (status != TOKENIZER_OK) goto done;
