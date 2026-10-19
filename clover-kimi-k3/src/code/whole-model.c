@@ -4,12 +4,11 @@
 
    Stages are separate source files, built as objects and called through their entry points (see ../README.md for the map):
      words-to-embeddings.c   stage1_*   words -> ids -> embeddings
-     layer0.c                stage2_*   layer 0 (the server: KDA + dense MLP)
-     layers-1-to-92.c        stage3_*   layer 1 (built against its own pod source)
-                             lbk_*      layers 2..92 that use KDA attention (one object, any number of opened layers)
-                             lbm_*      layers 3,7,..,91 and 92 that use MLA attention
-     transformer-93  (the deployed pipeline-stage.so, loaded with dlopen)   final normalisation, head, detokenise,
-                     for the LAST position only: that is the one whose next token the prompt asks for.
+     layer0-batch.c          stage2_*   layer 0 (the server: KDA + dense MLP)
+     layers-1-to-92-batch.c  lbk_*      layers 1..92 that use KDA attention (one object, any number of opened layers; built from layer-kda.c)
+                             lbm_*      layers 3,7,..,91 and 92 that use MLA attention (built from layer-mla.c)
+     final-stage.c           (pipeline-stage.so, loaded with dlopen)   final normalisation, head, detokenise,
+                             for the LAST position only: that is the one whose next token the prompt asks for.
    No data is copied between layers: one residual buffer is read and the next written, and the snapshots are
    pointers to buffers. At every twelfth layer the layer's input buffer itself becomes the new snapshot.
    One 15.7 GB buffer holds the experts of whichever layer is running; it is allocated once and shared.
@@ -42,21 +41,7 @@ void stage2_run(const uint32_t *ids, const float *emb, unsigned n, unsigned wind
 void stage2_run_from(const uint32_t *ids, const float *emb, unsigned n, unsigned window, float *out);
 void stage2_step(const uint32_t *id, const float *emb, float *out);
 void stage2_stepk(const uint32_t *ids, const float *emb, unsigned n, float *out);
-void stage3_stepk(const float *resid, const float *s0, unsigned n, float *out);
-void stage3_set_scratch(unsigned char *const *slots, unsigned n);
-void stage3_use_buffer(unsigned char *buffer);
-double stage3_setup(const char *dataset, unsigned max_n);
-void stage3_run(const float *resid, const float *s0, unsigned n, unsigned window, float *out);
-void stage3_run_from(const float *resid, const float *s0, unsigned n, unsigned window, float *out);
-void stage3_step(const float *resid, const float *s0, float *out);
-void stage2_keep_positions(unsigned count); void stage2_use_position(unsigned position); void stage3_keep_positions(unsigned count); void stage3_use_position(unsigned position);
-void stage3_route_log(int on);
-void stage3_routes(unsigned short *out);
-void stage3_hits(unsigned long *out);
-void stage3_set_slots(unsigned char *const *slots, unsigned cap);
-void stage3_cache_stats(unsigned long *hit, unsigned long *miss);
-void stage3_guess_stats(unsigned long *issued, unsigned long *used);
-void stage3_laps(double *out);
+void stage2_keep_positions(unsigned count); void stage2_use_position(unsigned position);
 #define LAYER_KIND(P) \
     void P##_laps(double *out); \
     void P##_guess_stats(unsigned long *issued, unsigned long *used); \
@@ -203,11 +188,10 @@ static void keep_for_dspark(unsigned layer, const float *rows, size_t first_posi
 static void forward_tokens(Model *m, const uint32_t *ids, unsigned k, size_t pos0)
 {
     stage1_lookup((const unsigned *)ids, k, pass_embedding);
-    if (k == 1) { stage2_step(ids, pass_embedding, pass_buffer[0]); stage3_step(pass_buffer[0], pass_embedding, pass_buffer[1]); }
-    else { stage2_stepk(ids, pass_embedding, k, pass_buffer[0]); stage3_stepk(pass_buffer[0], pass_embedding, k, pass_buffer[1]); }
-    unsigned current = 1, snapshots = 1;
+    if (k == 1) stage2_step(ids, pass_embedding, pass_buffer[0]); else stage2_stepk(ids, pass_embedding, k, pass_buffer[0]);
+    unsigned current = 0, snapshots = 1;
     m->snapshot[0] = pass_embedding;
-    for (unsigned l = 2; l <= LAYERS; l++) {
+    for (unsigned l = 1; l <= LAYERS; l++) {
         float *out = pass_buffer[(current + 1) % 3];
         if (k == 1) (is_mla(l) ? lbm_step : lbk_step)(m->layer[l], pass_buffer[current], m->snapshot, pos0, out);
         else (is_mla(l) ? lbm_stepk : lbk_stepk)(m->layer[l], pass_buffer[current], m->snapshot, k, pos0, out);
@@ -228,15 +212,15 @@ static void next_token_after(Model *m, unsigned row, uint32_t *token, Text *piec
 
 static void keep_positions(Model *m, unsigned count)
 {
-    stage2_keep_positions(count); stage3_keep_positions(count);
-    for (unsigned l = 2; l <= LAYERS; l++) (is_mla(l) ? lbm_keep_positions : lbk_keep_positions)(m->layer[l], count);
+    stage2_keep_positions(count);
+    for (unsigned l = 1; l <= LAYERS; l++) (is_mla(l) ? lbm_keep_positions : lbk_keep_positions)(m->layer[l], count);
 }
 
 /* Every layer goes back to its state after token `position` of the last pass. */
 static void use_position(Model *m, unsigned position)
 {
-    stage2_use_position(position); stage3_use_position(position);
-    for (unsigned l = 2; l <= LAYERS; l++) (is_mla(l) ? lbm_use_position : lbk_use_position)(m->layer[l], position);
+    stage2_use_position(position);
+    for (unsigned l = 1; l <= LAYERS; l++) (is_mla(l) ? lbm_use_position : lbk_use_position)(m->layer[l], position);
 }
 
 /* Draft tokens to verify in one pass of the DSpark drafter: the width with the most expected tokens per plain-step time.
@@ -350,15 +334,12 @@ static uint32_t prefill(Model *m, const uint32_t *ids, unsigned count, unsigned 
         const int fresh = pos == 0;
         float *pool[POOL]; unsigned free_n = POOL;
         memcpy(pool, prefill_buffer, sizeof pool);
-        float *s0 = pool[--free_n], *cur = pool[--free_n], *next = pool[--free_n];
+        float *s0 = pool[--free_n], *cur = pool[--free_n];
         stage1_lookup((const unsigned *)(ids + done), n, s0);
         if (fresh) stage2_run(ids + done, s0, n, n, cur); else stage2_run_from(ids + done, s0, n, n, cur);
-        if (fresh) stage3_run(cur, s0, n, n, next); else stage3_run_from(cur, s0, n, n, next);
-        { float *t = cur; cur = next; next = t; }
-        pool[free_n++] = next;
         const float *snaps[MAX_SNAPSHOTS] = { s0 };
         unsigned k = 1;
-        for (unsigned l = 2; l <= LAYERS; l++) {
+        for (unsigned l = 1; l <= LAYERS; l++) {
             float *out = pool[--free_n];
             if (is_mla(l)) { if (fresh) lbm_run(m->layer[l], cur, snaps, n, n, out); else lbm_run_from(m->layer[l], cur, snaps, n, n, pos, out); }
             else { if (fresh) lbk_run(m->layer[l], cur, snaps, n, n, out); else lbk_run_from(m->layer[l], cur, snaps, n, n, pos, out); }
@@ -809,9 +790,6 @@ int main(int argc, char **argv)
         const size_t idx_ = (size_t)(layer_index) * cache_cap + j_; \
         slot_ptrs[j_] = idx_ < 896 ? experts + idx_ * EXPERT_BYTES : cache_extra + (idx_ - 896) * EXPERT_BYTES; }
     stage2_setup(dataset, N + 16);
-    stage3_use_buffer(experts);
-    stage3_setup(dataset, N + 16);
-    if (cache_cap) { FILL_SLOTS(0) stage3_set_slots(slot_ptrs, cache_cap); }
     lbk_set_buffer(experts); lbm_set_buffer(experts);
     lbk_init(N + 16); lbm_init(N + 16);
     if (pass_k > 1) {   /* experts a window needs beyond the layer's cache slots: one pool shared by all layers */
@@ -822,11 +800,11 @@ int main(int argc, char **argv)
         memset(scratch_mem, 0, (size_t)n_scratch * EXPERT_BYTES);
         unsigned char *scratch_ptrs[128];
         for (unsigned j = 0; j < n_scratch; j++) scratch_ptrs[j] = scratch_mem + (size_t)j * EXPERT_BYTES;
-        stage3_set_scratch(scratch_ptrs, n_scratch); lbk_set_scratch(scratch_ptrs, n_scratch); lbm_set_scratch(scratch_ptrs, n_scratch);
+        lbk_set_scratch(scratch_ptrs, n_scratch); lbm_set_scratch(scratch_ptrs, n_scratch);
     }
     const double t_edges = clk() - setup0;
     void *layer[LAYERS + 1] = { NULL };
-    for (unsigned l = 2; l <= LAYERS; l++) {
+    for (unsigned l = 1; l <= LAYERS; l++) {
         layer[l] = is_mla(l) ? lbm_open(dataset, l, snapshots_in(l), layer_positions) : lbk_open(dataset, l, snapshots_in(l), layer_positions);
         if (cache_cap) { FILL_SLOTS(l - 1) (is_mla(l) ? lbm_set_slots : lbk_set_slots)(layer[l], slot_ptrs, cache_cap); }
     }
@@ -892,23 +870,21 @@ int main(int argc, char **argv)
     if (got != (int)N0) bail("the second tokenisation gave a different token count");
     stage1_lookup((const unsigned *)ids, N, s0);
     const double c = clk();
-    float *cur = pool[--free_n], *next = pool[--free_n];
+    float *cur = pool[--free_n];
     stage2_run((const uint32_t *)ids, s0, N, N, cur);
     const double d = clk();
-    stage3_run(cur, s0, N, N, next);
-    if (routes_on) stage3_hits(hits);
-    { float *t = cur; cur = next; next = t; }
-    const double e = clk();
-    pool[free_n++] = next;
+    double e = d;   /* the time after layer 1 */
     const float *snaps[MAX_SNAPSHOTS] = { s0 };
     unsigned k = 1;
-    for (unsigned l = 2; l <= LAYERS; l++) {
+    for (unsigned l = 1; l <= LAYERS; l++) {
         if (snapshots_in(l) != k) bail("snapshot count does not match the layer");
         float *out = pool[--free_n];
         const double began = clk();
         if (is_mla(l)) lbm_run(layer[l], cur, snaps, N, N, out); else lbk_run(layer[l], cur, snaps, N, N, out);
         keep_for_dspark(l, out, 0, N);
         layer_time[l] = clk() - began;
+        if (l == 1) e = clk();
+        if (l == 1) e = clk();
         if (routes_on) (is_mla(l) ? lbm_hits : lbk_hits)(hits + (size_t)(l - 1) * 896);
         if (l % 12 == 0) snaps[k++] = cur;      /* the layer's input becomes the next snapshot: a pointer, no copy */
         else pool[free_n++] = cur;
@@ -966,20 +942,19 @@ int main(int argc, char **argv)
         void *dseq = tail_make(tail_model);
         if (!dseq) bail("tail sequence failed");
         const unsigned long faults0 = vmstat_major_faults();
-        unsigned long h3, m3, hk, mk, hm, mm;
-        stage3_cache_stats(&h3, &m3); lbk_cache_stats(&hk, &mk); lbm_cache_stats(&hm, &mm);
-        const unsigned long hit0 = h3 + hk + hm, miss0 = m3 + mk + mm;
+        unsigned long hk, mk, hm, mm;
+        lbk_cache_stats(&hk, &mk); lbm_cache_stats(&hm, &mm);
+        const unsigned long hit0 = hk + hm, miss0 = mk + mm;
         double total = 0, layers_total = 0, tail_total = 0, distinct_sum = 0, late = 0; unsigned sweeps = 0, late_n = 0, right = 0, tested = 0;
         for (unsigned i = 0; i + sweep_k + 1 <= cont_n && i + sweep_k <= sweep_n; i += sweep_k) {
             const double s_begin = clk();
             const uint32_t *wid = cont + i;
             stage1_lookup((const unsigned *)wid, sweep_k, embk);
             stage2_stepk(wid, embk, sweep_k, sb[0]);
-            stage3_stepk(sb[0], embk, sweep_k, sb[1]);
-            unsigned ci = 1, kk = 1;
+            unsigned ci = 0, kk = 1;
             const float *sn[MAX_SNAPSHOTS] = { embk };
             unsigned long distinct = 0;
-            for (unsigned l = 2; l <= LAYERS; l++) {
+            for (unsigned l = 1; l <= LAYERS; l++) {
                 float *out = sb[(ci + 1) % 3];
                 if (is_mla(l)) { lbm_stepk(layer[l], sb[ci], sn, sweep_k, N + i, out); distinct += lbm_distinct(); }
                 else { lbk_stepk(layer[l], sb[ci], sn, sweep_k, N + i, out); distinct += lbk_distinct(); }
@@ -995,14 +970,14 @@ int main(int argc, char **argv)
             }
             const double s_end = clk();
             total += s_end - s_begin; layers_total += s_layers - s_begin; tail_total += s_end - s_layers;
-            distinct_sum += (double)distinct / (LAYERS - 1);
+            distinct_sum += (double)distinct / LAYERS;
             sweeps++;
             if (sweeps > 3) { late += s_end - s_begin; late_n++; }
             if (verbose) printf("   sweep %3u (tokens %u..%u): %.3f s, layers %.3f s, tail %.3f s, mean distinct experts per layer %.1f\n", sweeps, i, i + sweep_k - 1,
-                s_end - s_begin, s_layers - s_begin, s_end - s_layers, (double)distinct / (LAYERS - 1));
+                s_end - s_begin, s_layers - s_begin, s_end - s_layers, (double)distinct / LAYERS);
         }
-        stage3_cache_stats(&h3, &m3); lbk_cache_stats(&hk, &mk); lbm_cache_stats(&hm, &mm);
-        const unsigned long hit = h3 + hk + hm - hit0, miss = m3 + mk + mm - miss0;
+        lbk_cache_stats(&hk, &mk); lbm_cache_stats(&hm, &mm);
+        const unsigned long hit = hk + hm - hit0, miss = mk + mm - miss0;
         printf("SWEEP, %u tokens per pass, %u passes after the %u-token prompt: %.3f s in total, %.3f s per pass (layers %.3f, tail %.3f), %.3f s per token; "
                "passes after the first three: %.3f s per pass\n", sweep_k, sweeps, N, total, sweeps ? total / sweeps : 0.0,
                sweeps ? layers_total / sweeps : 0.0, sweeps ? tail_total / sweeps : 0.0, sweeps ? total / sweeps / sweep_k : 0.0, late_n ? late / late_n : 0.0);
@@ -1025,10 +1000,10 @@ int main(int argc, char **argv)
         double layers_s = 0, tail_s = 0, first_step = 0;
         unsigned steps = 0;
         if (chat.on) chat_feed(token, &word);
-        if (routes_on) { stage3_route_log(1); lbk_route_log(1); lbm_route_log(1); }
+        if (routes_on) { lbk_route_log(1); lbm_route_log(1); }
         const unsigned long faults0 = vmstat_major_faults();
-        double laps0[3][24], laps1[3][24];
-        stage3_laps(laps0[0]); lbk_laps(laps0[1]); lbm_laps(laps0[2]);
+        double laps0[2][24], laps1[2][24];
+        lbk_laps(laps0[0]); lbm_laps(laps0[1]);
         const double d0 = clk();
         SpeculativeStats speculation = {0};
         Model model = { .tail_model = tail_model, .tail_sequence = dseq, .tail_run = tail_run };
@@ -1040,11 +1015,9 @@ int main(int argc, char **argv)
             const uint32_t id = gen[i];
             stage1_lookup(&id, 1, emb1);
             stage2_step(&id, emb1, bufs[0]);
-            stage3_step(bufs[0], emb1, bufs[1]);
-            if (routes_on) stage3_routes(route_rec + ((size_t)i * LAYERS + 0) * 48);
-            unsigned ci = 1, kk = 1;
+            unsigned ci = 0, kk = 1;
             const float *sn[MAX_SNAPSHOTS] = { emb1 };
-            for (unsigned l = 2; l <= LAYERS; l++) {
+            for (unsigned l = 1; l <= LAYERS; l++) {
                 float *out = bufs[(ci + 1) % 3];
                 if (is_mla(l)) lbm_step(layer[l], bufs[ci], sn, N + i, out); else lbk_step(layer[l], bufs[ci], sn, N + i, out);
                 if (routes_on) (is_mla(l) ? lbm_routes : lbk_routes)(route_rec + ((size_t)i * LAYERS + (l - 1)) * 48);
@@ -1077,9 +1050,9 @@ int main(int argc, char **argv)
         if (max_draft && speculation.draft_seconds > 0) printf("   DSpark draft model: %.3f s in total (%.3f s per pass), %s\n",
             speculation.draft_seconds, speculation.draft_seconds / speculation.passes, fixed_draft_width ? "fixed width" : "draft width chosen per pass from the share of draft tokens that were right");
         if (!max_draft) {   /* seconds per decode token, summed over layers: stages before the router (0-10), latent projection (11), experts (12), the rest (13-18), early guess (19) */
-            stage3_laps(laps1[0]); lbk_laps(laps1[1]); lbm_laps(laps1[2]);
+            lbk_laps(laps1[0]); lbm_laps(laps1[1]);
             double part[5] = {0};
-            for (int o = 0; o < 3; o++) for (int id = 0; id < 20; id++) {
+            for (int o = 0; o < 2; o++) for (int id = 0; id < 20; id++) {
                 const double v = laps1[o][id] - laps0[o][id];
                 part[id <= 10 ? 0 : id == 11 ? 1 : id == 12 ? 2 : id <= 18 ? 3 : 4] += v;
             }
@@ -1087,17 +1060,17 @@ int main(int argc, char **argv)
                 part[0] / steps, part[1] / steps, part[2] / steps, part[3] / steps, part[4] / steps);
         }
         if (cache_cap) {
-            unsigned long h3, m3, hk, mk, hm, mm;
-            stage3_cache_stats(&h3, &m3); lbk_cache_stats(&hk, &mk); lbm_cache_stats(&hm, &mm);
-            const unsigned long hit = h3 + hk + hm, miss = m3 + mk + mm;
+            unsigned long hk, mk, hm, mm;
+            lbk_cache_stats(&hk, &mk); lbm_cache_stats(&hm, &mm);
+            const unsigned long hit = hk + hm, miss = mk + mm;
             printf("   expert cache, %u experts per layer (%.1f GB): %lu of %lu experts needed were already in RAM (%.1f%%), %lu read from disk (%.1f GB)\n",
                 cache_cap, (double)LAYERS * cache_cap * EXPERT_BYTES / 1e9, hit, hit + miss, hit + miss ? 100.0 * hit / (hit + miss) : 0.0,
                 miss, (double)miss * EXPERT_BYTES / 1e9);
-            unsigned long gi3, gu3, gik, guk, gim, gum;
-            stage3_guess_stats(&gi3, &gu3); lbk_guess_stats(&gik, &guk); lbm_guess_stats(&gim, &gum);
-            if (gi3 + gik + gim)
-                printf("   early reads from the guess: %lu started, %lu of them were needed (%.1f%%)\n", gi3 + gik + gim, gu3 + guk + gum,
-                    100.0 * (gu3 + guk + gum) / (gi3 + gik + gim));
+            unsigned long gik, guk, gim, gum;
+            lbk_guess_stats(&gik, &guk); lbm_guess_stats(&gim, &gum);
+            if (gik + gim)
+                printf("   early reads from the guess: %lu started, %lu of them were needed (%.1f%%)\n", gik + gim, guk + gum,
+                    100.0 * (guk + gum) / (gik + gim));
         }
         printf("   generated ids:");
         for (unsigned i = 0; i <= steps; i++) printf(" %u", gen[i]);

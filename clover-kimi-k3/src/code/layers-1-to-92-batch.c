@@ -1,11 +1,9 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 #define TRANSFORMER_NO_MAIN
-/* One layer for a window of tokens at a time (layer 1 by default; -DLB_GENERIC -DLB_TEMPLATE="tpl-kda.c" builds the
-   run-time-layer version for the non-MLA layers 2..92: the layer number and the number of input snapshots are
-   chosen at run time, and the template is the deployed transformer-2.c with only those constants made variables).
-
-   Layer 1 for a window of tokens at a time.
+/* One layer for a window of tokens at a time: layers 1..92. Built twice (see scripts/run-model.sh): -DLB_TEMPLATE="template-kda.c" for the
+   KDA layers (made from layer-kda.c, the source of layer 2) and "template-mla.c" for the MLA layers (from layer-mla.c, the source of layer 3),
+   with only the layer number and the number of input snapshots made run-time values.
 
    Every heavy stage is batched over the window; the light elementwise stages reuse the
    pod's own functions. Per-token results are compared bit for bit with the pod
@@ -18,10 +16,7 @@
    expert across the window, 4 tokens per pass), the shared expert and the latent
    projections.  Not changed: arithmetic order inside any single token.
 
-     layer-batch DATASET_DIR RESID_F32 S0_F32 NTOKENS WINDOW[,WINDOW...]                  (layer 1)
-     layer-batch DATASET_DIR RESID_F32 SNAPS_F32 NTOKENS WINDOW[,WINDOW...] LAYER K       (generic; SNAPS = K slots of NTOKENS x 7168)  */
-#include <stdio.h>
-#ifdef LB_GENERIC
+     layer-batch DATASET_DIR RESID_F32 SNAPS_F32 NTOKENS WINDOW[,WINDOW...] LAYER K       (standalone check; SNAPS = K slots of NTOKENS x 7168)  */#include <stdio.h>
 static unsigned lb_layer_no, lb_k_in;
 static const char *lb_name(int which)
 {
@@ -35,13 +30,6 @@ static const char *lb_name(int which)
 #define LB_K lb_k_in
 #define LB_MLA TRANSFORMER_MLA
 #define LB_INPUT_GAINS(tr) ((tr)->input_gains)
-#else
-#include "layer1.c"
-#define LB_LAYER 1u
-#define LB_K 1u
-#define LB_MLA 0
-#define LB_INPUT_GAINS(tr) ((tr)->qkv + 88)
-#endif
 #define LB_BOUNDARY (LB_LAYER % 12 == 0)
 #include <omp.h>
 #include "trunk-4bit.h"
@@ -1878,13 +1866,9 @@ static long anon_huge_kb(void)
 
 int main(int argc, char **argv)
 {
-#ifdef LB_GENERIC
     if (argc != 8) { fputs("usage: layer-batch DATASET_DIR RESID_F32 SNAPS_F32 NTOKENS WINDOW[,WINDOW...] LAYER K\n", stderr); return 2; }
     lb_layer_no = (unsigned)atoi(argv[6]); lb_k_in = (unsigned)atoi(argv[7]);
-    if (lb_layer_no < 2 || lb_layer_no > 92 || lb_k_in < 1 || lb_k_in > 8) bail("LAYER must be 2..92 and K 1..8");
-#else
-    if (argc != 6) { fputs("usage: layer-batch DATASET_DIR RESID_F32 S0_F32 NTOKENS WINDOW[,WINDOW...]\n", stderr); return 2; }
-#endif
+    if (lb_layer_no < 1 || lb_layer_no > 92 || lb_k_in < 1 || lb_k_in > 8) bail("LAYER must be 1..92 and K 1..8");
     static const char *const forbidden[] = {"CLOVER_FOLD", "CLOVER_FOLD_LAYERS", "CLOVER_DROP_SLOTS", "CLOVER_TOPK", "CLOVER_CONST_ATTN"};
     for (unsigned i = 0; i < sizeof forbidden / sizeof *forbidden; i++)
         if (getenv(forbidden[i])) bail("an experiment variable is set; the pod would not match this harness");
@@ -1971,16 +1955,12 @@ int main(int argc, char **argv)
     mark = clk();
     unsigned long snapshot_mismatch = 0;
     for (unsigned t = 0; t < N; t++) {
-#ifdef LB_GENERIC
         float snap_in[8 * INW], snap_out[9 * INW];
         for (unsigned s = 0; s < K; s++) memcpy(snap_in + (size_t)s * INW, snaps[s] + (size_t)t * INW, INW * sizeof(float));
         if (!transformer_process(tr, seq, resid + (size_t)t * INW, snap_in, K, ref + (size_t)t * INW, snap_out)) bail("pod process failed");
         /* What the pod hands on as snapshots: the ones it was given, and at a boundary layer also this layer's input. */
         if (memcmp(snap_out, snap_in, (size_t)K * INW * sizeof(float)) ||
             (LB_BOUNDARY && memcmp(snap_out + (size_t)K * INW, resid + (size_t)t * INW, INW * sizeof(float)))) snapshot_mismatch++;
-#else
-        if (!transformer_process(tr, seq, resid + (size_t)t * INW, snaps[0] + (size_t)t * INW, ref + (size_t)t * INW)) bail("pod process failed");
-#endif
         if (t < CHECK) {
             memcpy(pod->normalized[t], seq->normalized, sizeof pod->normalized[t]);
             for (int c = 0; c < 3; c++) memcpy(pod->qkv[c][t], seq->qkv[c], sizeof pod->qkv[c][t]);
@@ -1997,16 +1977,13 @@ int main(int argc, char **argv)
     }
     const double pod_s = clk() - mark;
     printf("pod, one token per call: %.3f s for %u tokens = %.2f ms/token\n\n", pod_s, N, 1000 * pod_s / N);
-#ifdef LB_GENERIC
     printf("pod snapshots handed on (%u input slots%s): %s\n", K, LB_BOUNDARY ? " + the layer input, boundary layer" : "",
         snapshot_mismatch ? "DIFFER from the expected" : "as expected");
-#endif
     if (getenv("LB_SAVE_REF") && *getenv("LB_SAVE_REF")) {
         FILE *rf = fopen(getenv("LB_SAVE_REF"), "wb");
         if (!rf || fwrite(ref, 4, (size_t)N * INW, rf) != (size_t)N * INW) bail("cannot save the reference");
         fclose(rf);
     }
-#ifdef LB_GENERIC
     if (getenv("LB_SAVE_SNAPS") && *getenv("LB_SAVE_SNAPS")) {   /* the snapshots this layer hands to the next, slot-major */
         FILE *rf = fopen(getenv("LB_SAVE_SNAPS"), "wb");
         if (!rf) bail("cannot save the snapshots");
@@ -2015,7 +1992,6 @@ int main(int argc, char **argv)
         fclose(rf);
     }
     if (getenv("LB_POD_ONLY") && *getenv("LB_POD_ONLY")) return snapshot_mismatch ? 1 : 0;
-#endif
     if (getenv("LB_DISK")) g_disk = atoi(getenv("LB_DISK"));
     if (g_disk) {
         char path[4096];
@@ -2138,139 +2114,6 @@ static void blank_unused_trunk_records(Transformer *t, unsigned layer)
     fprintf(stderr, "blank-unused: layer %u: %zu bytes in unused records, %zu bytes replaced by zero pages\n", layer, record_bytes, blanked);
 }
 
-#ifdef PIPELINE_ENTRY
-/* Entry points for the one-process pipeline (input-to-layer1/pipeline.c); build with -DPIPELINE_ENTRY -Dmain=layer_batch_main.
-   Experts come from disk by direct reads (LB_DISK=3), as in the standalone harness. */
-static Transformer *p_tr;
-static const ExpertStore *p_store;
-static Buf p_b;
-static float (*p_hist)[ROWS][3];
-static float (*p_rec)[HDIM][HDIM];
-static unsigned char *p_external_buffer;   /* set with stage3_use_buffer before stage3_setup to share one expert buffer */
-void stage3_use_buffer(unsigned char *buffer) { p_external_buffer = buffer; }
-void stage3_route_log(int on) { g_route_log = on; }
-void stage3_routes(unsigned short *out) { memcpy(out, g_route_rec, sizeof g_route_rec); }
-void stage3_hits(unsigned long *out) { memcpy(out, g_hits, sizeof g_hits); }
-static ExpertCache *p_cache;
-static PackedTrunk *p_packed_trunk;   /* layer 1's 4-bit copy, used by decode steps only */
-static float (*p_checkpoint_rec)[NHEAD][HDIM][HDIM];   /* layer 1's state after each token of a draft pass, see g_checkpoint_rec */
-static float (*p_checkpoint_hist)[3][ROWS][3];
-static unsigned p_checkpoint_count;
-void stage3_set_slots(unsigned char *const *slots, unsigned cap) { p_cache = cap ? cache_make(slots, cap) : NULL; }
-void stage3_cache_stats(unsigned long *hit, unsigned long *miss) { *hit = g_cache_hits; *miss = g_cache_misses; }
-void stage3_guess_stats(unsigned long *issued, unsigned long *used) { *issued = g_guess_issued; *used = g_guess_used; }
-void stage3_laps(double *out) { memcpy(out, lap_time, LAPS * sizeof(double)); }
-double stage3_setup(const char *dataset, unsigned max_n)
-{
-    const double t0 = clk();
-    if (!transformer_open(dataset, &p_tr)) bail("transformer_open failed");
-    blank_unused_trunk_records(p_tr, 1);
-    g_palette = p_tr->palette; g_ident = palette_identity(p_tr->palette);
-    if (getenv("LB_WIDE")) g_wide = atoi(getenv("LB_WIDE"));
-    if (getenv("LB_VEC")) g_vecrec = atoi(getenv("LB_VEC"));
-    if (getenv("LB_ROUTE")) g_wideroute = atoi(getenv("LB_ROUTE"));
-    if (getenv("LB_EXPK")) g_expk = atoi(getenv("LB_EXPK"));
-    p_store = p_tr->store;
-    if (!p_store->direct) bail("no direct expert mapping");
-    g_disk = 3;
-    char path[4096];
-    snprintf(path, sizeof path, "%s/expert-%u/experts.direct", dataset, LB_LAYER);
-    g_expert_fd = open(path, O_RDONLY);
-    if (g_expert_fd < 0) bail("cannot open experts.direct");
-    if (getenv("LB_IO")) g_io_n = atoi(getenv("LB_IO"));
-    if (getenv("LB_SPEC")) g_spec = atoi(getenv("LB_SPEC"));
-    if (getenv("LB_GUESS")) g_guess_max = atoi(getenv("LB_GUESS"));
-    g_direct_fd = open(path, O_RDONLY | O_DIRECT);
-    if (g_direct_fd < 0) bail("cannot open experts.direct with O_DIRECT");
-    const int thp = getenv("LB_THP") ? atoi(getenv("LB_THP")) : 1;
-    if (p_external_buffer) g_buf = p_external_buffer;
-    else {
-        g_buf = mmap(NULL, p_store->direct_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | (thp ? 0 : MAP_POPULATE), -1, 0);
-        if (g_buf == MAP_FAILED) bail("cannot allocate the in-memory copy of the experts");
-        if (thp) { madvise(g_buf, p_store->direct_bytes, MADV_HUGEPAGE); memset(g_buf, 0, p_store->direct_bytes); }
-    }
-    p_b = buf_make(max_n);
-    p_hist = grab(3 * (size_t)ROWS * 3 * sizeof(float));
-    p_rec = grab((size_t)NHEAD * HDIM * HDIM * sizeof(float));
-    if (use_4bit_trunk_requested()) p_packed_trunk = pack_layer_trunk_to_4bit(p_tr);
-    return clk() - t0;
-}
-
-void stage3_run(const float *resid, const float *s0, unsigned n, unsigned window, float *out)
-{
-    memset(p_hist, 0, 3 * (size_t)ROWS * 3 * sizeof(float));
-    memset(p_rec, 0, (size_t)NHEAD * HDIM * HDIM * sizeof(float));
-    g_evict_s = 0; g_distinct_sum = 0; g_window_count = 0; memset(g_hits, 0, sizeof g_hits);
-    g_read_experts = 0; g_wasted_experts = 0; memset(g_wait_t, 0, sizeof g_wait_t);
-    const float *snapshots[1] = { s0 };
-    g_cache = NULL;
-    if (p_cache) cache_clear(p_cache);
-    g_active_packed_trunk = NULL;
-    run_layer(p_tr, p_store, resid, snapshots, n, window, &p_b, out, p_hist, p_rec, NULL);
-}
-
-/* n more tokens after earlier ones as one prompt-style pass (a chat turn): the state stays as the earlier tokens left it. */
-void stage3_run_from(const float *resid, const float *s0, unsigned n, unsigned window, float *out)
-{
-    g_evict_s = 0; g_distinct_sum = 0; g_window_count = 0; memset(g_hits, 0, sizeof g_hits);
-    g_read_experts = 0; g_wasted_experts = 0; memset(g_wait_t, 0, sizeof g_wait_t);
-    const float *snapshots[1] = { s0 };
-    g_cache = NULL;
-    if (p_cache) cache_clear(p_cache);
-    g_active_packed_trunk = NULL;
-    run_layer(p_tr, p_store, resid, snapshots, n, window, &p_b, out, p_hist, p_rec, NULL);
-}
-
-/* One more token after the prompt: the state stays as the prompt left it. */
-void stage3_step(const float *resid, const float *s0, float *out)
-{
-    g_evict_s = 0; g_distinct_sum = 0; g_window_count = 0; memset(g_hits, 0, sizeof g_hits);
-    g_read_experts = 0; g_wasted_experts = 0; memset(g_wait_t, 0, sizeof g_wait_t);
-    const float *snapshots[1] = { s0 };
-    g_cache = p_cache;
-    const int kernel = g_expk;
-    g_expk = 0;   /* see the layer steps above */
-    g_active_packed_trunk = p_packed_trunk;
-    run_layer(p_tr, p_store, resid, snapshots, 1, 1, &p_b, out, p_hist, p_rec, NULL);
-    g_cache = NULL;
-    g_expk = kernel;
-}
-
-/* n tokens after the prompt in one pass (verifying a draft): the state stays as the prompt left it, experts come from the cache. */
-void stage3_stepk(const float *resid, const float *s0, unsigned n, float *out)
-{
-    g_evict_s = 0; g_distinct_sum = 0; g_window_count = 0; memset(g_hits, 0, sizeof g_hits);
-    g_read_experts = 0; g_wasted_experts = 0; memset(g_wait_t, 0, sizeof g_wait_t);
-    const float *snapshots[1] = { s0 };
-    if (getenv("LB_SWEEP_EXPK")) g_sweep_expk = atoi(getenv("LB_SWEEP_EXPK"));
-    g_cache = p_cache;
-    const int kernel = g_expk;
-    g_expk = g_sweep_expk;
-    g_active_packed_trunk = p_packed_trunk;
-    if (n - 1 <= p_checkpoint_count) { g_checkpoint_rec = p_checkpoint_rec; g_checkpoint_hist = p_checkpoint_hist; }
-    run_layer(p_tr, p_store, resid, snapshots, n, n, &p_b, out, p_hist, p_rec, NULL);
-    g_checkpoint_rec = NULL; g_checkpoint_hist = NULL;
-    g_cache = NULL;
-    g_expk = kernel;
-}
-void stage3_set_scratch(unsigned char *const *slots, unsigned n)
-{
-    if (n > SCRATCH_MAX) bail("scratch pool too large");
-    for (unsigned i = 0; i < n; i++) g_scratch[i] = slots[i];
-    g_scratch_n = n;
-}
-/* Layer 1's state after each token of a draft pass (see g_checkpoint_rec): kept so a rejected draft can be undone. */
-void stage3_keep_positions(unsigned count)
-{
-    p_checkpoint_rec = grab(count * sizeof *p_checkpoint_rec); p_checkpoint_hist = grab(count * sizeof *p_checkpoint_hist); p_checkpoint_count = count;
-}
-/* The state as it was after token `position` of the last stepk pass. */
-void stage3_use_position(unsigned position)
-{
-    memcpy(p_rec, p_checkpoint_rec[position], sizeof *p_checkpoint_rec);
-    memcpy(p_hist, p_checkpoint_hist[position], sizeof *p_checkpoint_hist);
-}
-#endif
 
 #ifdef LB_ENTRY
 /* Entry points for the whole-model process (full-model/pipeline-full.c). One object per attention kind (-DLB_PFX=lbk for

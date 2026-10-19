@@ -35,9 +35,8 @@ if [ "${BUILD:-1}" != "0" ] && [ -z "${PF_NOBUILD:-}" ]; then
   gcc -std=gnu11 -O2 $TOK $SRC/ids-to-text.c -lm -o ids-to-text 2> build-ids-to-text.log || fail ids-to-text build-ids-to-text.log
   gcc $F -DPIPELINE_ENTRY -O2 $TOK -I$SRC -Dmain=words_to_embeddings_main -c $SRC/words-to-embeddings.c -o words-to-embeddings.o 2> build-words-to-embeddings.log || fail words-to-embeddings build-words-to-embeddings.log
   gcc $F -DPIPELINE_ENTRY -O2 -funroll-loops -I$SRC -Dmain=layer0_main -c $SRC/layer0-batch.c -o layer0.o 2> build-layer0.log || fail layer0 build-layer0.log
-  gcc $F -DPIPELINE_ENTRY -O3 -I$SRC -Dmain=layer1_main -c $SRC/layers-1-to-92-batch.c -o layer1.o 2> build-layer1.log || fail layer1 build-layer1.log
-  gcc $F -DLB_GENERIC -DLB_ENTRY -DLB_PFX=lbk -DLB_TEMPLATE='"template-kda.c"' -O3 -I$SRC -I. -Dmain=kda_main_unused -c $SRC/layers-1-to-92-batch.c -o layers-kda.o 2> build-layers-kda.log || fail layers-kda build-layers-kda.log
-  gcc $F -DLB_GENERIC -DLB_ENTRY -DLB_PFX=lbm -DLB_TEMPLATE='"template-mla.c"' -O3 -I$SRC -I. -Dmain=mla_main_unused -c $SRC/layers-1-to-92-batch.c -o layers-mla.o 2> build-layers-mla.log || fail layers-mla build-layers-mla.log
+  gcc $F -DLB_ENTRY -DLB_PFX=lbk -DLB_TEMPLATE='"template-kda.c"' -O3 -I$SRC -I. -Dmain=kda_main_unused -c $SRC/layers-1-to-92-batch.c -o layers-kda.o 2> build-layers-kda.log || fail layers-kda build-layers-kda.log
+  gcc $F -DLB_ENTRY -DLB_PFX=lbm -DLB_TEMPLATE='"template-mla.c"' -O3 -I$SRC -I. -Dmain=mla_main_unused -c $SRC/layers-1-to-92-batch.c -o layers-mla.o 2> build-layers-mla.log || fail layers-mla build-layers-mla.log
   gcc $F -O2 -c $SRC/whole-model.c -o whole-model.o 2> build-whole-model.log || fail whole-model build-whole-model.log
   gcc $F -O3 -I$SRC -c $SRC/dspark-draft.c -o dspark-draft.o 2> build-dspark-draft.log || fail dspark-draft build-dspark-draft.log
   # the tail (final normalisation, vocabulary head, detokenise) is a shared library the program opens at run time
@@ -46,12 +45,11 @@ if [ "${BUILD:-1}" != "0" ] && [ -z "${PF_NOBUILD:-}" ]; then
   objcopy --keep-global-symbol=stage1_setup --keep-global-symbol=stage1_ids --keep-global-symbol=stage1_ids_plain --keep-global-symbol=stage1_id_of --keep-global-symbol=stage1_lookup words-to-embeddings.o
   objcopy --keep-global-symbol=dspark_open --keep-global-symbol=dspark_draft --keep-global-symbol=dspark_reset dspark-draft.o
   objcopy --keep-global-symbol=stage2_setup --keep-global-symbol=stage2_run --keep-global-symbol=stage2_run_from --keep-global-symbol=stage2_step --keep-global-symbol=stage2_stepk --keep-global-symbol=stage2_keep_positions --keep-global-symbol=stage2_use_position layer0.o
-  objcopy --keep-global-symbol=stage3_setup --keep-global-symbol=stage3_run --keep-global-symbol=stage3_run_from --keep-global-symbol=stage3_step --keep-global-symbol=stage3_stepk --keep-global-symbol=stage3_keep_positions --keep-global-symbol=stage3_use_position --keep-global-symbol=stage3_set_scratch --keep-global-symbol=stage3_use_buffer --keep-global-symbol=stage3_route_log --keep-global-symbol=stage3_routes --keep-global-symbol=stage3_hits --keep-global-symbol=stage3_set_slots --keep-global-symbol=stage3_cache_stats --keep-global-symbol=stage3_guess_stats --keep-global-symbol=stage3_laps layer1.o
   for p in lbk:layers-kda.o lbm:layers-mla.o; do
     pre=${p%%:*}; obj=${p##*:}
     objcopy --keep-global-symbol=${pre}_set_buffer --keep-global-symbol=${pre}_init --keep-global-symbol=${pre}_open --keep-global-symbol=${pre}_run --keep-global-symbol=${pre}_run_from --keep-global-symbol=${pre}_step --keep-global-symbol=${pre}_stepk --keep-global-symbol=${pre}_keep_positions --keep-global-symbol=${pre}_use_position --keep-global-symbol=${pre}_set_scratch --keep-global-symbol=${pre}_distinct --keep-global-symbol=${pre}_route_log --keep-global-symbol=${pre}_routes --keep-global-symbol=${pre}_hits --keep-global-symbol=${pre}_set_slots --keep-global-symbol=${pre}_cache_stats --keep-global-symbol=${pre}_guess_stats --keep-global-symbol=${pre}_laps $obj
   done
-  gcc -fopenmp whole-model.o words-to-embeddings.o dspark-draft.o layer0.o layer1.o layers-kda.o layers-mla.o -lm -lpthread -ldl -o whole-model 2> build-link.log || { head -30 build-link.log; exit 1; }
+  gcc -fopenmp whole-model.o words-to-embeddings.o dspark-draft.o layer0.o layers-kda.o layers-mla.o -lm -lpthread -ldl -o whole-model 2> build-link.log || { head -30 build-link.log; exit 1; }
   echo "built; warnings: $(cat build-*.log | grep -c warning)"
 fi
 [ "${BUILD_ONLY:-0}" = "1" ] && exit 0

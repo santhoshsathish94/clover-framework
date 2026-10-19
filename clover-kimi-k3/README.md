@@ -46,8 +46,8 @@ The code in `src/code/`, by what it does:
 | `whole-model.c` | the driver: setup, prompt pass, decode, speculative decoding, chat mode, the final stage loaded as a library |
 | `words-to-embeddings.c` | stage 1: text to token ids to embedding vectors |
 | `layer0-batch.c` | stage 2: layer 0 for a batch of tokens, built on `layer0.c` |
-| `layers-1-to-92-batch.c` | stage 3: layers 1-92 for a batch of tokens: layer 1 (built on `layer1.c`) and, built twice (KDA / MLA), layers 2-92: batched trunk, router, experts, expert cache, state checkpoints (`lbk_*`, `lbm_*`) |
-| `layer0.c`, `layer1.c`, `layer-kda.c`, `layer-mla.c` | one token through one layer: layer 0, layer 1, the source of KDA layers 2-92 (written for layer 2), the source of the MLA layers (written for layer 3); the batch files are built on these |
+| `layers-1-to-92-batch.c` | stage 3: layers 1-92 for a batch of tokens, built twice (KDA layers 1-92 except the MLA ones, from `layer-kda.c`; MLA layers, from `layer-mla.c`): batched trunk, router, experts, expert cache, state checkpoints (`lbk_*`, `lbm_*`) |
+| `layer0.c`, `layer-kda.c`, `layer-mla.c` | one token through one layer: layer 0, the source of the KDA layers 1-92 (written for layer 2; the layer number is a run-time value), the source of the MLA layers (written for layer 3); the batch files are built on these |
 | `dspark-draft.c` | the DSpark draft model (5 dense MLA layers, Markov head), drafts 8 tokens from the target's hidden states after layers 2, 23, 47, 71, 89 |
 | `ids-to-text.c` | small tool: token ids to text |
 | `trunk-4bit.h` | the 4-bit trunk: packing and kernels, shared by `layer0-batch.c` and `layers-1-to-92-batch.c` |
