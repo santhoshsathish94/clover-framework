@@ -14,7 +14,7 @@ on:
     inputs:
       hf_repo:
         description: Hugging Face repo that holds the dataset
-        default: santhoshsathish94/clover-kimi-k3
+        default: Santhoshsathish94/clover-kimi-k3
       hf_repo_type:
         description: Hugging Face repo type (dataset or model)
         default: dataset

@@ -73,10 +73,11 @@
       <p>It is not fast. A 1,000-token prompt takes about five minutes to read and each token of the
         answer takes about three seconds, so it suits work where the answer matters more than the
         wait. The numbers, and what they do and do not show, are <a href="#progress">further down</a>.</p>
-      <p class="note"><strong>Dataset status, 19 October 2026:</strong> the precomputed dataset is still
-        being uploaded to Hugging Face (104 of its 809 files at 16:04 local time). Until the upload
-        finishes, the <code>check-dataset</code> step will report missing files. The download resumes
-        and the steps can be run again, so you can start now and re-run later.</p>
+      <p class="note"><strong>Dataset status, 19 October 2026:</strong> the precomputed dataset is on
+        Hugging Face: all 809 files, 1,399.8 GiB. Their sizes and SHA-256 sums were compared with the list
+        in the repository. The download step has been tried on a few small files on the host, not on the full
+        1.4 TB, so allow for the download taking as long as 1.4 TB takes on your connection. It resumes if
+        interrupted.</p>
       <p class="actions">
         <a class="btn btn--primary" href="#requirements">Check your machine</a>
         <a class="btn btn--plain" href="#steps">Set it up</a>
@@ -317,7 +318,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
         </div>
         <div>
           <dt><code>check-dataset</code> reports missing files</dt>
-          <dd>The download is not finished, or the dataset upload to Hugging Face is not (see the status at the top). Run the
+          <dd>The download is not finished. Run the
             <code>download</code> step again, then <code>check-dataset</code>.</dd>
         </div>
         <div>
@@ -444,7 +445,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
           <dd><a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>
             on Hugging Face: <code>expert-1</code> to <code>expert-92</code> and <code>trunk-0</code> to
             <code>trunk-92</code>, 809 files, 1,399.8 GiB.
-            <strong>Upload in progress:</strong> 104 of the 809 files were there at 16:04 local time on 19 October 2026.
+            <strong>Upload complete:</strong> all 809 files were there on 19 October 2026, with sizes and SHA-256 sums equal to the list.
             The files and hashes it must end up with are in
             <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/dataset-files.tsv">dataset-files.tsv</a>
             and

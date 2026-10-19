@@ -12,7 +12,7 @@
 #   INSTALL_DIR     /opt/clover-k3        the code goes to $INSTALL_DIR/clover-framework (only the clover-kimi-k3 folder is checked out), linked as $INSTALL_DIR/clover-kimi-k3
 #   REPO_URL        https://github.com/santhoshsathish94/clover-framework.git
 #   REPO_REF        main                  a branch, tag or commit
-#   HF_REPO         santhoshsathish94/clover-kimi-k3     HF_REPO_TYPE dataset    HF_REVISION main    HF_TOKEN (needed for a private repo)
+#   HF_REPO         Santhoshsathish94/clover-kimi-k3     HF_REPO_TYPE dataset    HF_REVISION main    HF_TOKEN (needed for a private repo)
 #   DATASET_DIR     $INSTALL_DIR/datasets/computed  (put it on the big NVMe filesystem; about 1.4 TB); $INSTALL_DIR/clover-kimi-k3/src/datasets/computed is linked to it
 #   OPEN_WEIGHTS_REPO moonshotai/Kimi-K3  OPEN_WEIGHTS_REVISION (pinned commit, see below)  OPEN_WEIGHTS_DIR $INSTALL_DIR/datasets/third-party/kimi-k3-open-weights; linked into src/datasets/third-party
 #   DSPARK_DIR      $INSTALL_DIR/datasets/third-party/kimi-k3-dspark (linked into src/datasets/third-party)
@@ -23,7 +23,7 @@ set -u
 INSTALL_DIR="${INSTALL_DIR:-/opt/clover-k3}"
 REPO_URL="${REPO_URL:-https://github.com/santhoshsathish94/clover-framework.git}"
 REPO_REF="${REPO_REF:-main}"
-HF_REPO="${HF_REPO:-santhoshsathish94/clover-kimi-k3}"
+HF_REPO="${HF_REPO:-Santhoshsathish94/clover-kimi-k3}"
 HF_REPO_TYPE="${HF_REPO_TYPE:-dataset}"
 HF_REVISION="${HF_REVISION:-main}"
 HF_WORKERS="${HF_WORKERS:-8}"
@@ -125,7 +125,7 @@ step_download() {
   if [ "${SKIP_DOWNLOAD:-0}" = 1 ]; then warn "skipped (SKIP_DOWNLOAD=1)"; return; fi
   local hf="$INSTALL_DIR/venv/bin/hf"; [ -x "$hf" ] || hf=$(command -v hf || command -v huggingface-cli || true)
   [ -n "$hf" ] || { fail "no Hugging Face command line (run the packages step)"; return; }
-  local code; code=$(curl -s -o /dev/null -w '%{http_code}' ${HF_TOKEN:+-H "Authorization: Bearer $HF_TOKEN"} "https://huggingface.co/api/${HF_REPO_TYPE}s/$HF_REPO")
+  local code; code=$(curl -sL -o /dev/null -w '%{http_code}' ${HF_TOKEN:+-H "Authorization: Bearer $HF_TOKEN"} "https://huggingface.co/api/${HF_REPO_TYPE}s/$HF_REPO")
   [ "$code" = 200 ] || { fail "Hugging Face answered $code for $HF_REPO_TYPE $HF_REPO: the repo does not exist yet, or it is private and HF_TOKEN is not set"; return; }
   mkdir -p "$DATASET_DIR"
   HF_HUB_ENABLE_HF_TRANSFER=1 "$hf" download "$HF_REPO" --repo-type "$HF_REPO_TYPE" --revision "$HF_REVISION" --local-dir "$DATASET_DIR" --max-workers "$HF_WORKERS" \

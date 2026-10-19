@@ -2,12 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## v3.5.0 — unreleased
+## v3.5.0 — 2026-10-19
 
-This release is tagged once the precomputed dataset has finished uploading to Hugging
-Face (156 of 809 files were on the remote when this entry was written). `VERSION` is
-`3.5.0` and the site's `?v=` cache strings match it; the heading gets its date when the tag
-is made.
+The precomputed dataset is on Hugging Face (`Santhoshsathish94/clover-kimi-k3`): all 809
+files, 1,399.8 GiB. Their sizes and SHA-256 sums were compared with `dataset-files.tsv` from
+outside the host: none missing, none different. `VERSION` is `3.5.0` and the site's `?v=`
+cache strings match it.
 
 **One engine runs the whole Kimi K3 model on one workstation.** `clover-kimi-k3/` runs all
 93 layers on the CPU of a Ryzen 9 7950X3D with 124 GB of RAM. Measured on that host only: the
@@ -23,8 +23,9 @@ output head, normalization tensors and tokenizer from the original open weights.
 
 **It can be set up on a new machine.** The folder is self-contained, with a set-up script, a
 verify script, file lists with sizes and hashes, and a dated log of everything measured. The
-set-up and verify scripts were run on the host from a fresh copy of the folder; the
-`download` step cannot be tested against the repository until the dataset upload finishes.
+set-up and verify scripts were run on the host from a fresh copy of the folder. The `download`
+step was tried on a few small files, not on the full 1.4 TB; that test found that the step's
+reachability check failed on a redirect (the repo name was lowercase), which is fixed.
 
 **The research notes record what held and what broke.** From 11 to 16 October the engine was
 observed stage by stage: the 12-layer block as the repeating unit, the four-layer KKKM group,
@@ -53,8 +54,6 @@ sections are marked as such.
 **The site menu changed.** The Clover menu item is gone (the logo goes to the home page),
 Getting Started is now AGENTS.md, and Clover Kimi K3 sits under Evidence with the other
 evidence as sub-items. The Evidence tabs open from the URL, so a sub-item lands on its tab.
-
-The precomputed dataset is being uploaded to Hugging Face; the page says so with the date.
 
 ## v3.1.0 — 2026-09-19
 
