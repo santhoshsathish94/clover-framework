@@ -32,5 +32,18 @@ Neither point rules the idea out. They are the first things to measure.
 | file | what it does |
 |---|---|
 | `probes/machine-readout.sh` | reads the machine: CPUs, RAM, GPUs and the links between them, NVMe, network, limits; prints a summary beside the provider's listing. Read only, needs no root. |
+| `probes/nvme-read-rate.c` | reads one big file with O_DIRECT for 1, 4 and 16 MiB blocks and 1 to 32 threads, sequential or random, and prints GB/s. Reads only. On the CPU host (two NVMe drives in RAID 1) it gave 3.8 GB/s with one thread and 14.4 GB/s from 4 threads at 4 MiB, the same as the figures recorded earlier (3.94 and 14.08 to 14.44). |
+
+## First hour on the GPU server
+
+The stop rule (the end date, and what we want from the first day) is the creator's to set. It is not set yet.
+
+1. Connect with an SSH key. The dataset repository is public, so no token is typed or needed.
+2. `git clone --depth 1 https://github.com/santhoshsathish94/clover-framework`, then `bash clover-framework/clover-kimi-k3/src/code/gpu/probes/machine-readout.sh /path/on/the/biggest/disk`. Keep the report.
+3. Read it against the listing. Stop and decide before going on if: there are not 8 GPUs, or they are not RTX 3090s; the data disk has less than about 1,412 GiB free (the dataset 1,399.8 GiB, the open weights 4.4 GiB, the DSpark checkpoint 7.1 GB); the RAM differs from the listing; or the CPU flags show no `avx512` (then the CPU engine cannot run there, and the baseline is the workstation).
+4. Measure the disk first, because the download writes to it and would spoil the figures: `head -c 16G /dev/urandom > /path/on/the/data/disk/scratch.bin` (about half a minute), `gcc -O2 -pthread -o nvme-read-rate .../probes/nvme-read-rate.c`, `./nvme-read-rate /path/on/the/data/disk/scratch.bin`, then delete the scratch file.
+5. Start the download in the background (it resumes, and its preflight refuses a disk that is too small): fetch `set-up-new-machine.sh` as in the README, then `sudo nohup bash set-up-new-machine.sh preflight packages clone download open-weights check-dataset > ~/set-up.log 2>&1 &`. Do not run the `build`, `dspark` or `verify` steps yet; whether to run the CPU engine there is decided from step 3.
+6. While it downloads: the CUDA version and driver are in the report (`nvcc` missing means no toolkit; installing it is a decision, not an automatic step). Nothing that writes to the data disk.
+7. Write what was read into `docs/current-status.md` before the next step.
 
 Next, once the machine is seen and the CUDA version is known: transfer rates (NVMe to RAM to card, card to card), then one layer's expert read and projection on one card.
