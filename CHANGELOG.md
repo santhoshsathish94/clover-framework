@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+**The repository now holds the framework, the K3 research and one engine.** `clover-k3/`
+(the first version) and `clover-intelegence/` (the distributed experiment) were removed from
+the working tree; both remain in git history at commit 013cbc8, and every link to them points
+there. `clover-kimi-k3/` is the engine: one folder, a set-up script, a verify script, file lists
+with sizes and hashes, and a dated log of everything measured. On the recorded 1,000-token
+prompt it reads at about 0.3 s per token and its output matches the reference chain bit for
+bit; decoding costs 3.1 to 3.5 s per token, 2.7 s with a draft model on one real reply.
+
+**The Clover K3 page explains how to set it up and tune it.** It adds a table of where the
+work started (Fareed Khan's `kimi-k3-in-c`, then the first version, then the current engine),
+the requirements and steps for a workstation like ours, the settings that depend on the
+machine, credit to the engines and models it builds on, and references. The first-version
+sections are marked as such.
+
+The precomputed dataset is being uploaded to Hugging Face; the page says so with the date.
 ## v3.1.0 — 2026-09-19
 
 The Clover AI experiments moved out of the repository root and into

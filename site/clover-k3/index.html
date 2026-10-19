@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Clover K3 — Clover</title>
-<meta name="description" content="A 2.78-trillion-parameter model reduced to its equation and run from one C file on a single CPU machine. What we did, how the equation was derived, what it measured, what it costs to run, and why six seconds per word is not yet interactive.">
+<meta name="description" content="A 2.78-trillion-parameter model reduced to its equation and run from one C file on a single CPU machine. What we did, how the equation was derived, what it measured, what it costs to run, how to set it up and tune it to your machine, and why a token every few seconds is not yet interactive.">
 <link rel="canonical" href="https://cloverframework.com/clover-k3/">
 <meta property="og:title" content="Clover K3 — Clover">
 <meta property="og:description" content="The Kimi K3 forward pass written from its equation. Same answer as an independent implementation on all 34 prompts, in under a third of the time — and honest about the six seconds per word that makes it not yet interactive.">
@@ -65,16 +65,197 @@
       <p>It is also not fast enough to talk to — about six seconds per word once it starts
         writing. That part is on this page too, with the numbers, because a page that only showed
         the good result would not be worth reading.</p>
+      <p>Since that first version the work has moved into one folder, <code>clover-kimi-k3</code>. It
+        now reads a 1,000-token prompt in about five minutes and writes roughly one token every
+        three seconds. How to set it up, how to tune it to a different machine, the table of
+        where we started, and the credit to the engine we started from are below.</p>
       <p class="actions">
-        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-k3">The code</a>
-        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a>
+        <a class="btn btn--primary" href="#setup">Set it up</a>
+        <a class="btn btn--plain" href="#progress">Where we started</a>
+        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-kimi-k3">The code</a>
       </p>
+    </div>
+  </section>
+
+  <section class="band" id="progress">
+    <div class="wrap">
+      <h2>Where we started, and where it is now</h2>
+      <p>We did not start from nothing. Fareed Khan's
+        <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Apache-2.0) is
+        the engine that showed Kimi K3 could be run from C on one machine, and it is where we
+        started: we ran it on our workstation first, measured it, and then asked what the model
+        computes. Everything below is measured on that one workstation, a Ryzen 9 7950X3D with
+        124 GB of RAM and two NVMe drives, no GPU.</p>
+
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Time per token on one workstation. Lower is better.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Version</th>
+              <th scope="col">Input (reading the prompt)</th>
+              <th scope="col">Output (writing the answer)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">kimi-k3-in-c, where we started</th>
+              <td>1,344 s for the 34 recorded prompts (416 tokens in all, one token out each)</td>
+              <td>23.7 s per token over 8 tokens; 12.4 s over 128</td>
+            </tr>
+            <tr>
+              <th scope="row">clover-k3, first version (September 2026)</th>
+              <td>394.9 s for the same 34 prompts; 7.25 s for one 5-token prompt</td>
+              <td>about 5.9 s per token (5.1 s after a five-word prompt, 6.6 s after ten)</td>
+            </tr>
+            <tr>
+              <th scope="row">clover-kimi-k3, now (October 2026)</th>
+              <td><strong>about 0.3 s per token</strong>: a 1,000-token prompt in about 300 s</td>
+              <td><strong>3.1 to 3.5 s</strong> per token plain; <strong>2.7 s</strong> with the draft model on a real
+                1,078-token reply (plain 3.3 s); 0.9 to 2.0 s on code and repeating text with the draft model</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <dl class="kv kv--wide">
+        <div>
+          <dt>What the input figure is</dt>
+          <dd>The prompt lengths differ between the rows (a dozen tokens, five, a thousand), so
+            the input column is not a like-for-like ratio. A longer prompt is cheaper per token
+            because every expert read serves more tokens at once.</dd>
+        </div>
+        <div>
+          <dt>What the output figure is</dt>
+          <dd>The draft model checks several tokens in one pass and keeps the ones that agree
+            with the model's own choice, so the text is identical to plain decoding. It helps most
+            where the text is predictable; on ordinary prose the gain is about 1.2 times
+            (64 min 49 s plain against 54 min 5 s for the same 1,078 tokens). Nothing about this is
+            interactive: 2.7 to 3.3 s per token is a different activity from chatting.</dd>
+        </div>
+        <div>
+          <dt>What is exact</dt>
+          <dd>With the default settings the 1,000-token prompt produces the same embeddings, the
+            same layer 92 output and the same eight snapshots, bit for bit, as the reference chain
+            it is checked against. The 4-bit trunk (2.5 to 2.8 s per token) is faster and is
+            <em>not</em> bit-identical: on 34 recorded prompts it gave the same 12 tokens as the
+            exact run in 8.</dd>
+        </div>
+        <div>
+          <dt>What it does not show</dt>
+          <dd>One workstation. One real prompt for the draft-model comparison, run once each. The
+            first-version figures are recorded history from September, not re-run. Reply quality
+            was read, not scored.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="band" id="setup">
+    <div class="wrap">
+      <h2>Setting it up: on a workstation like ours, or tuned to yours</h2>
+      <p>The engine lives in one folder, <code>clover-kimi-k3</code>. The model itself is not in
+        this repository: the precomputed layers are a separate dataset, and the rest comes from the
+        original open weights. A setup script checks the machine, fetches everything, builds, and
+        proves the result before you rely on it.</p>
+
+      <h3>A workstation like ours</h3>
+      <dl class="kv kv--wide">
+        <div>
+          <dt>Processor</dt>
+          <dd>Linux on x86-64 with AVX2 at least. We measured on AVX-512 only (Ryzen 9 7950X3D,
+            16 cores, 32 threads); without it the script warns that the speed is unmeasured.</dd>
+        </div>
+        <div>
+          <dt>Memory</dt>
+          <dd>124 GB is what we measured. About 53 GB of that holds the always-used weights locked
+            in RAM, about 26 GB the recently used experts, and the rest the attention cache and the
+            working buffers. The script warns below 120 GB and stops below 64 GB.</dd>
+        </div>
+        <div>
+          <dt>Disk</dt>
+          <dd>About 1.4 TB (1,400 GiB) of local NVMe for the dataset, on a filesystem that supports
+            direct reads: not tmpfs, not a network share. We use two NVMe drives in RAID1; the
+            script tests direct reads and checks free space.</dd>
+        </div>
+        <div>
+          <dt>System settings</dt>
+          <dd>An unlimited memory-lock limit (run as root, or set it in the service), transparent
+            huge pages on <code>madvise</code> or <code>always</code>, <code>vm.max_map_count</code>
+            of at least 262144 (1048576 advised), and <code>gcc</code> with OpenMP. The preflight step
+            reports each one.</dd>
+        </div>
+      </dl>
+
+      <h3>The steps</h3>
+      <pre class="code"><code>curl -fsSL https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/clover-kimi-k3/src/scripts/set-up-new-machine.sh -o set-up-new-machine.sh
+sudo env DATASET_DIR=/mnt/nvme/computed bash set-up-new-machine.sh</code></pre>
+      <p>The script runs these steps in order, and each can be run again alone:
+        <code>preflight</code>, <code>packages</code>, <code>clone</code>, <code>download</code>,
+        <code>open-weights</code>, <code>check-dataset</code>, <code>inputs</code>, <code>build</code>,
+        <code>dspark</code>, <code>verify</code>. The download resumes. Every dataset file is
+        checked against a list of sizes and SHA-256 hashes.</p>
+      <p><code>verify</code> is the part that matters. The recorded prompts must give the recorded
+        token ids, the draft model's output must equal plain decoding, the recorded 1,000-token
+        prompt must match the reference chain bit for bit, and a chat must remember a name from
+        the turn before. Do not trust a timing from an installation that has not passed it.</p>
+
+      <h3>Running it</h3>
+      <pre class="code"><code>src/scripts/run-model.sh recorded                               # the 1,000-token prompt, compared with the reference chain
+src/scripts/run-model.sh text my-prompt.txt                     # any text file
+PF_DECODE=48 PF_CACHE=16 src/scripts/run-model.sh text my-prompt.txt
+PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 src/scripts/run-model.sh text my-prompt.txt</code></pre>
+
+      <h3>Tuning it to your machine</h3>
+      <p>We have run it on one machine. These are the settings that depend on the machine, in the
+        order we would change them, and what we know about each.</p>
+      <dl class="kv kv--wide">
+        <div>
+          <dt>Threads</dt>
+          <dd><code>run-model.sh</code> sets 16 threads bound to cores (<code>OMP_NUM_THREADS=16</code>,
+            <code>OMP_PROC_BIND=close</code>, <code>OMP_PLACES=cores</code>). Set it to your number of
+            <em>physical</em> cores. On our processor 32 threads was slower than 16, and
+            unpinned runs varied by seconds. We have not tested another CPU.</dd>
+        </div>
+        <div>
+          <dt>Expert cache</dt>
+          <dd><code>PF_CACHE</code> is how many experts per layer stay in RAM between decode steps.
+            16 is what we use (about 26 GB). Lower it to fit a smaller machine; 0 turns it off.</dd>
+        </div>
+        <div>
+          <dt>Exact or faster</dt>
+          <dd><code>USE_4BIT_TRUNK=1</code> packs the always-used weights to 4 bits in RAM: decoding goes
+            from 3.1 to 3.5 s to 2.5 to 2.8 s per token and the locked memory falls, but the output
+            is no longer bit-identical. Leave it off to stay exact.</dd>
+        </div>
+        <div>
+          <dt>Draft model</dt>
+          <dd><code>SPECULATIVE_DRAFTER=dspark</code> needs the 7.1 GB draft checkpoint the setup
+            script downloads. It pays on code and repeating text and is a small gain on prose. A
+            fixed width of 8 was 1.5 times slower than plain decoding on prose, so leave the width to
+            be chosen per pass.</dd>
+        </div>
+        <div>
+          <dt>Chat window</dt>
+          <dd><code>PF_CONTEXT</code> (8192 positions, roughly 19 GB of attention cache) and
+            <code>PF_CHUNK</code> (1024 tokens per prompt pass). A chunk of 2048 ran out of memory on
+            124 GB.</dd>
+        </div>
+        <div>
+          <dt>Where the data lives</dt>
+          <dd><code>DATASET_DIR</code>, <code>OPEN_WEIGHTS_DIR</code> and <code>DSPARK_DIR</code> point
+            the engine at data kept on a bigger drive.</dd>
+        </div>
+      </dl>
+      <p class="note">On less than 124 GB of RAM, or without AVX-512, expect the defaults to need
+        changing and the speeds above not to apply. We have not measured either.</p>
     </div>
   </section>
 
   <section class="band" id="what">
     <div class="wrap">
       <h2>What we actually did</h2>
+      <p class="note">This section and the next describe the first version, <code>clover-k3</code> (September 2026), kept for the record. The current engine is described above.</p>
       <p>A large language model is usually met as a program you run. We wanted to know what it
         <em>is</em>, separately from how anyone happens to have implemented it. So we wrote the
         model out as mathematics first, and only then turned that into code.</p>
@@ -186,58 +367,10 @@
     </div>
   </section>
 
-  <section class="band" id="setup">
-    <div class="wrap">
-      <h2>Setting it up and running it</h2>
-      <p>Nothing here ships the model. The checkpoint is Kimi's and stays theirs, and the packed
-        trunk is built by the upstream engine's own tools. What this repository holds is the
-        program, the index builders, the prompts and the correctness gate.</p>
-
-      <dl class="kv kv--wide">
-        <div>
-          <dt>What you need first</dt>
-          <dd>The released Kimi K3 checkpoint (the <code>.safetensors</code> shards, about
-            1.5 TB) and the packed trunk built by the upstream engine's
-            <code>tools/pack_trunk.py</code> and <code>tools/int8_trunk.py</code>. Nothing in
-            clover-k3 reproduces either.</dd>
-        </div>
-        <div>
-          <dt>Point it at them</dt>
-          <dd>Checkpoint and trunk paths for the supported build/run path live in
-            <code>config.env</code>. Historical campaign scripts retain machine-specific paths.
-            The program refuses to start if the index and trunk paths
-            are unset rather than guessing a default, because a silently wrong index produces a
-            confident wrong number.</dd>
-        </div>
-        <div>
-          <dt>Build</dt>
-          <dd><code>./build.sh</code> — this also generates the tensor index. The prompt length
-            is a compile-time constant, so a build is for one length:
-            <code>NPOS=64 ./build.sh</code>. Everything generated lands in <code>build/</code>.</dd>
-        </div>
-        <div>
-          <dt>Check it before believing it</dt>
-          <dd><code>./gate.sh</code> must print
-            <code>23d162dcefb18211a7540ef12948f1eb</code>. A timing from a build that has not
-            passed the gate means nothing.</dd>
-        </div>
-        <div>
-          <dt>Run a prompt</dt>
-          <dd>Set the token ids with <code>K3_IDS</code> and run <code>build/clover-k3</code>.
-            Thread pinning is not optional on a two-chiplet processor — unpinned runs vary by
-            seconds, and every measurement taken before we adopted it had to be redone.</dd>
-        </div>
-      </dl>
-      <p>The main switches control the reader-thread count, the
-        prefetch mode, and the routing cache that enables reading a layer ahead. The rest are
-        instrumentation and are off by default; turning all of it off was measured and changes
-        nothing.</p>
-    </div>
-  </section>
-
   <section class="band" id="machine">
     <div class="wrap">
       <h2>The machine, and what it really costs</h2>
+      <p class="note">The memory and disk figures in this section are from the first version. The current requirements are in the set-up section above.</p>
       <p>One rented machine. No GPU, no cluster, nothing exotic.</p>
 
       <div class="grid grid--3">
@@ -274,6 +407,7 @@
     <div class="wrap">
       <h2>Is this interactive enough for real work?</h2>
       <p class="lede">No. Not yet, and not close.</p>
+      <p class="note">Written about the first version. The current engine reads a prompt at about 0.3 s per token and writes 2.7 to 3.3 s per token on ordinary text (table above): faster, and still not a conversation.</p>
 
       <p>It is worth being exact about why, because the headline numbers on this page are about
         <em>reading a prompt</em>, not about <em>writing an answer</em>. Those are different
@@ -321,7 +455,7 @@
 
   <section class="band" id="limits">
     <div class="wrap">
-      <h2>What this does not show</h2>
+      <h2>What the first version does not show</h2>
       <p>Stated plainly, because a result that hides its edges is not evidence.</p>
       <ul class="stack">
         <li><strong>One token per prompt in the comparison.</strong> The 34-prompt table asked
@@ -340,7 +474,7 @@
         <li><strong>One machine.</strong> Every number on this page comes from the same box.</li>
       </ul>
       <p class="actions">
-        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a>
+        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a>
         <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/k3/model/k3-model-equation.md">The equation</a>
         <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/k3/architecture/clover-scaling-architecture.md">The measurement record</a>
       </p>
@@ -350,6 +484,68 @@
         saving it. Upstream engine by
         <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">Fareed Khan</a>, Apache-2.0,
         which Clover does not claim.</p>
+    </div>
+  </section>
+
+  <section class="band" id="credit">
+    <div class="wrap">
+      <h2>Credit</h2>
+      <ul class="stack">
+        <li><strong>Fareed Khan, kimi-k3-in-c (Apache-2.0).</strong> We started from this engine and
+          its measurements. Five of its tokenizer headers are in our code unmodified, at commit
+          a2ad8e5, with its licence and notice. Clover does not claim it.</li>
+        <li><strong>Moonshot AI, Kimi K3.</strong> The open weights: the embedding table, the output
+          head, the final normalization and the tokenizer files are read from the original files
+          under their own names. Everything else the engine needs is computed from the model.</li>
+        <li><strong>Inferact, Kimi-K3-DSpark.</strong> The draft model used for speculative decoding.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band" id="references">
+    <div class="wrap">
+      <h2>References</h2>
+      <dl class="kv kv--wide">
+        <div>
+          <dt>The engine and its README</dt>
+          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/README.md">clover-kimi-k3/README.md</a>:
+            folder map, every setting, chat mode, the file lists.</dd>
+        </div>
+        <div>
+          <dt>The set-up script</dt>
+          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/set-up-new-machine.sh">set-up-new-machine.sh</a>
+            and the <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/.github/workflows/set-up-clover-kimi-k3.yml">GitHub Actions workflow</a>
+            that runs the same steps on a self-hosted machine.</dd>
+        </div>
+        <div>
+          <dt>The dataset</dt>
+          <dd><a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>
+            on Hugging Face: <code>expert-1</code> to <code>expert-92</code> and <code>trunk-0</code> to
+            <code>trunk-92</code>, 809 files, 1,399.8 GiB.
+            <strong>Upload in progress:</strong> 104 of the 809 files were there at 16:04 local time on 19 October 2026.
+            The files and hashes it must end up with are in
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/dataset-files.tsv">dataset-files.tsv</a>
+            and
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/open-weights-files.tsv">open-weights-files.tsv</a>.</dd>
+        </div>
+        <div>
+          <dt>Every measurement, and every failure</dt>
+          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/current-status.md">docs/current-status.md</a>,
+            the dated log, with what each result does not establish.</dd>
+        </div>
+        <div>
+          <dt>The first version</dt>
+          <dd><a href="https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3">clover-k3</a>
+            as it stood at commit 013cbc8, and its
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md">34 prompts and what they write</a>.</dd>
+        </div>
+        <div>
+          <dt>Upstream</dt>
+          <dd><a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">FareedKhan-dev/kimi-k3-in-c</a>,
+            <a href="https://huggingface.co/moonshotai/Kimi-K3">moonshotai/Kimi-K3</a>,
+            <a href="https://huggingface.co/Inferact/Kimi-K3-DSpark">Inferact/Kimi-K3-DSpark</a>.</dd>
+        </div>
+      </dl>
     </div>
   </section>
 
@@ -370,9 +566,10 @@
     <div>
       <h4>Clover K3</h4>
       <ul>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-k3">The program</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-k3/docs/reference/implementation-equation.md">Equation as executed</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-kimi-k3">The engine (clover-kimi-k3)</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3">The first version (clover-k3)</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md">The 34 prompts, and what it writes</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/reference/implementation-equation.md">Equation as executed</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/research/k3">The analysis</a></li>
       </ul>
     </div>

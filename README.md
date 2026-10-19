@@ -37,18 +37,18 @@ This repository contains the documentation, practical guidance, case studies, an
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`case-studies/`](case-studies/) — real work and outcomes
 - [Research](research/README.md) — investigations, proposals and hypotheses, with their limits
-- [Run Clover-K3](clover-k3/README.md) — executable single-machine reference
+- [Run clover-kimi-k3](clover-kimi-k3/README.md) — the Kimi K3 engine: set it up, tune it to your machine, run it
 - [Repository map](docs/repository-organization.md) — where each kind of material belongs
 
 ## Clover AI
 
 **Clover AI** is the implementation arm of the project: an open-source AI system that can produce meaningful engineering outcomes while remaining bounded, observable, verifiable, and accountable.
 
-The first thing built under it is [`clover-k3/`](clover-k3/) — the Kimi K3
+The first thing built under it is [`clover-kimi-k3/`](clover-kimi-k3/) — a C engine that runs all 93 layers of Kimi K3 on one CPU host. It began from the Clover equation of the model and from Fareed Khan's `kimi-k3-in-c`. Its first version, `clover-k3`, is in git history (snapshot linked below). That first version was the Kimi K3
 forward pass reduced to its mathematics and executed directly. It emits the
 same token as an independent implementation of the same model on all 34 prompts
 tested, in under a third of the time. What it cost and what it does not show are
-in [results and scope](clover-k3/docs/evidence/results.md).
+in [results and scope](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md). The current engine, its set-up and its measurements are in [`clover-kimi-k3/README.md`](clover-kimi-k3/README.md).
 
 Its central principle is:
 
@@ -72,10 +72,11 @@ Supporting areas include:
 
 **What was built**
 
-- [`clover-k3/`](clover-k3/) — the program, how to build it, and the correctness gate it has to reproduce
-- [Results](clover-k3/docs/evidence/results.md) — first-token comparison and separate generation outputs
-- [Implementation equation](clover-k3/docs/reference/implementation-equation.md) — the equation as the program actually evaluates it, and where that differs from the written one
-- [Evidence methods](clover-k3/docs/evidence/evidence-methods.md) — campaigns, configurations, harnesses and reproduction limits
+- [`clover-kimi-k3/`](clover-kimi-k3/) — the engine, the set-up script, the dataset file lists and the dated log of everything measured and every negative result ([status log](clover-kimi-k3/docs/current-status.md))
+- [`clover-k3/`, first version](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) — historical snapshot at commit 013cbc8: the program, its build and the correctness gate
+- [Results](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md) — first-token comparison and separate generation outputs
+- [Implementation equation](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/reference/implementation-equation.md) — the equation as the program actually evaluates it, and where that differs from the written one
+- [Evidence methods](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/evidence-methods.md) — campaigns, configurations, harnesses and reproduction limits
 
 **How it was worked out**
 
@@ -90,7 +91,7 @@ Supporting areas include:
 - [`docs/08-governance.md`](docs/governance/08-governance.md) — accountability and governance
 - [`docs/ai-responsibility/`](docs/governance/evidence/) — AI responsibility
 
-Clover-K3 has a measured single-machine result; the broader Clover AI direction remains a proposal. A 2.78-trillion-parameter model runs from its equation on a Ryzen 9 7950X3D, bit-exact against a preserved gate, and emits the same first token as an independent implementation on every one of the 34 prompts tested — in **394.94 seconds against 1344.23**, a factor of 3.40 under the recorded configurations. A separate generation run averaged about six seconds per token. These are distinct measurements, not a distributed-system or general quality result.
+clover-kimi-k3 has a measured single-machine result; the broader Clover AI direction remains a proposal. A 2.78-trillion-parameter model runs on a Ryzen 9 7950X3D with 124 GB of RAM. The recorded 1,000-token prompt takes about 300 s (about 0.3 s per input token) and its output is bit-identical to the reference chain; decoding costs 3.1 to 3.5 s per output token, and 2.7 s per token with a draft model on one real 1,078-token reply. The first version, clover-k3, was recorded at about 5.9 s per generated token on the same machine (a historical figure, not re-run). These are one-host measurements, not a distributed-system or general quality result.
 
 It will keep improving, and the parts of the principle above that it does not yet reach — the tools that enforce, the serving layer, the evaluation that closes the loop — are the next things to build. They will be held to the same standard: built, gated and measured before they are claimed.
 

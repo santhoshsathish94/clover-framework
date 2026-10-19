@@ -589,6 +589,19 @@ main section.band > .wrap > p.verse__line {
 .terms dd { margin: 0; color: var(--ink-2); font-size: 0.95rem; max-width: var(--measure); }
 .terms > div[hidden] { display: none; }
 
+/* ---------- data table and code block ---------- */
+
+.table-wrap { overflow-x: auto; margin: 1.4rem 0 1.8rem; border: 1px solid var(--line); border-radius: var(--radius); }
+table.data { border-collapse: collapse; width: 100%; min-width: 38rem; font-size: 0.95rem; }
+table.data caption { text-align: left; padding: 0.7rem 1rem 0; }
+table.data th, table.data td { padding: 0.8rem 1rem; text-align: left; vertical-align: top; border-top: 1px solid var(--line); }
+table.data thead th { background: var(--soft); border-top: 0; font-weight: 650; color: var(--ink); }
+table.data tbody th { font-weight: 650; color: var(--ink); width: 22%; }
+table.data td { color: var(--ink-2); }
+table.data tbody tr:last-child th, table.data tbody tr:last-child td { background: var(--accent-soft); }
+
+pre.code { background: var(--soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.9rem 1.1rem; overflow-x: auto; font-size: 0.86rem; line-height: 1.5; max-width: none; }
+pre.code code { font-size: inherit; }
 /* ---------- touch targets ---------- */
 /* Last in the file so these win over the base control padding. */
 @media (max-width: 800px) {
