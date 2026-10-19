@@ -1,5 +1,5 @@
-#ifndef TRANSFORMER_DECODE_H
-#define TRANSFORMER_DECODE_H
+#ifndef SERVER_INFLATE_SIMPLE_H
+#define SERVER_INFLATE_SIMPLE_H
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>

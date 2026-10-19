@@ -1,6 +1,6 @@
 #ifndef SERVER_NUMERIC_TABLE_H
 #define SERVER_NUMERIC_TABLE_H
-#include "decode.h"
+#include "inflate-simple.h"
 #include "sha256.h"
 #include "safetensors.h"
 #include <math.h>

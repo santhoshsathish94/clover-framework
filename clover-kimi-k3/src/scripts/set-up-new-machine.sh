@@ -1,21 +1,21 @@
 #!/bin/bash
 # Sets up clover-kimi-k3 on a new Linux machine, start to finish, and verifies it: checks the machine, installs the tools, clones the code from GitHub,
 # downloads the precomputed dataset from Hugging Face and the original open weights files the engine reads (4.4 GiB) from moonshotai/Kimi-K3, checks the files against
-# scripts/dataset-files.tsv and scripts/open-weights-files.tsv, wires everything, builds the program, fetches the DSpark
-# draft model and runs scripts/verify-setup.sh (recorded prompts must give the recorded token ids, speculative decoding must equal plain decoding, a chat must remember).
+# src/scripts/dataset-files.tsv and src/scripts/open-weights-files.tsv, builds the program, fetches the DSpark
+# draft model and runs src/scripts/verify-setup.sh (recorded prompts must give the recorded token ids, speculative decoding must equal plain decoding, a chat must remember).
 # It can be run again at any point: every step skips what is already in place, and the download resumes.
 #
 # usage: [VARIABLE=value ...] set-up-new-machine.sh [STEP ...]        (no step = all of them, in this order:)
-#   preflight  packages  clone  download  open-weights  check-dataset  wire  build  dspark  verify
+#   preflight  packages  clone  download  open-weights  check-dataset  inputs  build  dspark  verify
 #
 # Variables (all optional):
 #   INSTALL_DIR     /opt/clover-k3        the code goes to $INSTALL_DIR/clover-framework (only the clover-kimi-k3 folder is checked out), linked as $INSTALL_DIR/clover-kimi-k3
 #   REPO_URL        https://github.com/santhoshsathish94/clover-framework.git
 #   REPO_REF        main                  a branch, tag or commit
 #   HF_REPO         santhoshsathish94/clover-kimi-k3     HF_REPO_TYPE dataset    HF_REVISION main    HF_TOKEN (needed for a private repo)
-#   DATASET_DIR     $INSTALL_DIR/dataset  (put it on the big NVMe filesystem; about 1.4 TB); $INSTALL_DIR/clover-kimi-k3/dataset is linked to it
-#   OPEN_WEIGHTS_REPO moonshotai/Kimi-K3  OPEN_WEIGHTS_REVISION (pinned commit, see below)  OPEN_WEIGHTS_DIR $INSTALL_DIR/open-weights; $INSTALL_DIR/clover-kimi-k3/open-weights is linked to it
-#   DSPARK_DIR      $INSTALL_DIR/clover-kimi-k3/models/dspark
+#   DATASET_DIR     $INSTALL_DIR/datasets/computed  (put it on the big NVMe filesystem; about 1.4 TB); $INSTALL_DIR/clover-kimi-k3/src/datasets/computed is linked to it
+#   OPEN_WEIGHTS_REPO moonshotai/Kimi-K3  OPEN_WEIGHTS_REVISION (pinned commit, see below)  OPEN_WEIGHTS_DIR $INSTALL_DIR/datasets/third-party/kimi-k3-open-weights; linked into src/datasets/third-party
+#   DSPARK_DIR      $INSTALL_DIR/datasets/third-party/kimi-k3-dspark (linked into src/datasets/third-party)
 #   SKIP_PACKAGES=1 do not run apt-get;  SKIP_DOWNLOAD=1 use the dataset as it is;  SKIP_DSPARK=1;  HF_WORKERS=8
 #   VERIFY_PROMPTS  "1 4 10"   which of the 34 recorded prompts verify-setup.sh runs
 # Exit status 0 only if no step failed. The report is written to $INSTALL_DIR/set-up-new-machine.report.
@@ -29,11 +29,13 @@ HF_REVISION="${HF_REVISION:-main}"
 HF_WORKERS="${HF_WORKERS:-8}"
 CLONE="$INSTALL_DIR/clover-framework"
 ENGINE_DIR="$INSTALL_DIR/clover-kimi-k3"
-DATASET_DIR="${DATASET_DIR:-$INSTALL_DIR/dataset}"
+SRC="$ENGINE_DIR/src"
+export DATASET_DIR="${DATASET_DIR:-$INSTALL_DIR/datasets/computed}"
 OPEN_WEIGHTS_REPO="${OPEN_WEIGHTS_REPO:-moonshotai/Kimi-K3}"
 OPEN_WEIGHTS_REVISION="${OPEN_WEIGHTS_REVISION:-f831ab66814297da540d832a5235f8e904f29d06}"
-export OPEN_WEIGHTS_DIR="${OPEN_WEIGHTS_DIR:-$INSTALL_DIR/open-weights}"
-STEPS=("$@"); [ ${#STEPS[@]} -gt 0 ] || STEPS=(preflight packages clone download open-weights check-dataset wire build dspark verify)
+export OPEN_WEIGHTS_DIR="${OPEN_WEIGHTS_DIR:-$INSTALL_DIR/datasets/third-party/kimi-k3-open-weights}"
+export DSPARK_DIR="${DSPARK_DIR:-$INSTALL_DIR/datasets/third-party/kimi-k3-dspark}"
+STEPS=("$@"); [ ${#STEPS[@]} -gt 0 ] || STEPS=(preflight packages clone download open-weights check-dataset inputs build dspark verify)
 REPORT="$INSTALL_DIR/set-up-new-machine.report"
 mkdir -p "$INSTALL_DIR"; echo "== $(date) set-up-new-machine.sh ${STEPS[*]}" >> "$REPORT"
 FAILED=0
@@ -42,7 +44,15 @@ say()  { printf '%s\n' "$*" | tee -a "$REPORT"; }
 pass() { say "PASS  $*"; }
 warn() { say "WARN  $*"; }
 fail() { say "FAIL  $*"; FAILED=1; }
-need_engine() { [ -f "$ENGINE_DIR/scripts/settings.sh" ] || { fail "the code is not at $ENGINE_DIR yet (run the clone step first)"; return 1; }; }
+# Links a data folder kept elsewhere (a big filesystem) to where the engine looks for it, under src/datasets.
+link_data() {
+  local target="$1" link="$2"
+  mkdir -p "$target" "$(dirname "$link")"
+  if [ -L "$link" ] || [ ! -e "$link" ]; then ln -sfn "$target" "$link"
+  elif [ -d "$link" ] && [ -z "$(ls -A "$link")" ]; then rmdir "$link"; ln -sfn "$target" "$link"
+  else say "keeping what is already at $link"; fi
+}
+need_engine() { [ -f "$SRC/scripts/settings.sh" ] || { fail "the code is not at $ENGINE_DIR yet (run the clone step first)"; return 1; }; }
 
 step_preflight() {
   say "== preflight: is this machine one the engine can run on?"
@@ -57,10 +67,10 @@ step_preflight() {
   local free_gb; free_gb=$(df -P --block-size=1G "$probe_dir" | awk 'NR==2 {print $4}')
   local have_gb=0; [ -d "$DATASET_DIR" ] && have_gb=$(du -s --block-size=1G "$DATASET_DIR" 2>/dev/null | awk '{print $1}')
   local need_gb="${NEED_GB:-}"
-  if [ -z "$need_gb" ]; then   # what scripts/dataset-files.tsv lists, with 3% to spare; 1500 if the list is not here
-    need_gb=$(awk -F'\t' '!/^#/ && NF>=2 {s+=$2} END{ if (s>0) printf "%d", s*1.03/1073741824; else print 1500 }' "$(dirname "${BASH_SOURCE[0]}")/dataset-files.tsv" 2>/dev/null || echo 1500)
+  if [ -z "$need_gb" ]; then   # what scripts/dataset-files.tsv lists; 1500 if the list is not here
+    need_gb=$(awk -F'\t' '!/^#/ && NF>=2 {s+=$2} END{ if (s>0) printf "%d", s/1073741824; else print 1500 }' "$(dirname "${BASH_SOURCE[0]}")/dataset-files.tsv" 2>/dev/null || echo 1500)
   fi
-  if [ $((free_gb + have_gb)) -ge $need_gb ]; then pass "disk: ${free_gb} GB free on the dataset filesystem, ${have_gb} GB already there (about ${need_gb} GB needed)"; else fail "disk: ${free_gb} GB free + ${have_gb} GB present on the dataset filesystem, about ${need_gb} GB needed (set DATASET_DIR to a bigger filesystem)"; fi
+  if [ $have_gb -ge $need_gb ] || [ $free_gb -ge $(( (need_gb - have_gb) * 103 / 100 )) ]; then pass "disk: ${free_gb} GB free on the dataset filesystem, ${have_gb} GB already there (about ${need_gb} GB in all)"; else fail "disk: ${free_gb} GB free and ${have_gb} GB present on the dataset filesystem, about ${need_gb} GB needed in all, 3% more than the missing part must be free (set DATASET_DIR to a bigger filesystem)"; fi
   local probe="$probe_dir/.odirect-probe"
   if dd if=/dev/zero of="$probe" bs=1M count=4 oflag=direct status=none 2>/dev/null; then pass "O_DIRECT works on the dataset filesystem"; else fail "O_DIRECT does not work on $probe_dir (the experts are read with O_DIRECT; use a local NVMe filesystem, not tmpfs or a network share)"; fi
   rm -f "$probe"
@@ -103,10 +113,11 @@ step_clone() {
     git fetch -q --filter=blob:none origin "$REPO_REF" && git checkout -q -f FETCH_HEAD && touch .git/clover-checked-out ) \
     && pass "checked out $(git -C "$CLONE" rev-parse --short HEAD) ($REPO_REF)" || { fail "could not check out $REPO_REF in $CLONE"; return; }
   if [ -L "$ENGINE_DIR" ] || [ ! -e "$ENGINE_DIR" ]; then ln -sfn "$CLONE/clover-kimi-k3" "$ENGINE_DIR"; fi
-  [ -e "$CLONE/clover-kimi-k3/dataset" ] || ln -sfn "$DATASET_DIR" "$CLONE/clover-kimi-k3/dataset"
-  [ -e "$CLONE/clover-kimi-k3/open-weights" ] || ln -sfn "$OPEN_WEIGHTS_DIR" "$CLONE/clover-kimi-k3/open-weights"
-  [ -f "$ENGINE_DIR/src/whole-model.c" ] && pass "engine folder $ENGINE_DIR" || fail "$ENGINE_DIR has no src/whole-model.c"
-  chmod +x "$ENGINE_DIR"/scripts/*.sh 2>/dev/null
+  link_data "$DATASET_DIR" "$CLONE/clover-kimi-k3/src/datasets/computed"
+  link_data "$OPEN_WEIGHTS_DIR" "$CLONE/clover-kimi-k3/src/datasets/third-party/kimi-k3-open-weights"
+  link_data "$DSPARK_DIR" "$CLONE/clover-kimi-k3/src/datasets/third-party/kimi-k3-dspark"
+  [ -f "$SRC/whole-model.c" ] && pass "engine folder $ENGINE_DIR" || fail "$ENGINE_DIR has no src/whole-model.c"
+  chmod +x "$SRC"/scripts/*.sh 2>/dev/null
 }
 
 step_download() {
@@ -135,16 +146,14 @@ step_open_weights() {
 step_check_dataset() {
   say "== check-dataset: every file the engine opens, present and the right size"
   need_engine || return
-  DATASET_DIR="$DATASET_DIR" "$ENGINE_DIR/scripts/check-dataset-files.sh" 2>&1 | tee -a "$REPORT"
+  DATASET_DIR="$DATASET_DIR" "$SRC/scripts/check-dataset-files.sh" 2>&1 | tee -a "$REPORT"
   [ "${PIPESTATUS[0]}" = 0 ] || FAILED=1
 }
-step_wire() {
-  say "== wire: links into the dataset, recorded inputs"
+step_inputs() {
+  say "== inputs: recorded prompt and reference values"
   need_engine || return
-  DATASET_DIR="$DATASET_DIR" "$ENGINE_DIR/scripts/wire-dataset.sh" 2>&1 | tee -a "$REPORT"
-  [ "${PIPESTATUS[0]}" = 0 ] && pass "wired" || { fail "wire-dataset.sh failed"; return; }
-  local in="$ENGINE_DIR/work/inputs"; mkdir -p "$in"
-  cp -f "$ENGINE_DIR"/prompts/recorded-1000-token-prompt/text.txt "$ENGINE_DIR"/prompts/recorded-1000-token-prompt/tok-1000.txt "$in/" 2>/dev/null
+  local in="$SRC/work/inputs"; mkdir -p "$in"
+  cp -f "$SRC"/prompts/recorded-1000-token-prompt/text.txt "$SRC"/prompts/recorded-1000-token-prompt/tok-1000.txt "$in/" 2>/dev/null
   if [ -d "$DATASET_DIR/engine-inputs/refs" ]; then rm -rf "$in/refs"; cp -r "$DATASET_DIR/engine-inputs/refs" "$in/refs" && pass "recorded pod chain values copied (the 1000-token check can run)"
   else warn "no engine-inputs/refs in the dataset: the 1000-token check against the pod's own chain will be skipped"; fi
 }
@@ -152,31 +161,31 @@ step_wire() {
 step_build() {
   say "== build"
   need_engine || return
-  ( cd "$ENGINE_DIR" && DATASET_DIR="$DATASET_DIR" BUILD_ONLY=1 scripts/run-model.sh text prompts/code-is-prime.txt ) 2>&1 | tail -15 | tee -a "$REPORT"
-  [ -x "$ENGINE_DIR/work/build/whole-model" ] && [ -f "$ENGINE_DIR/pod/tansformers/transformer-93/bin/pipeline-stage.so" ] && pass "program and tail library built" || fail "build did not produce work/build/whole-model and the tail library"
+  ( cd "$SRC" && DATASET_DIR="$DATASET_DIR" BUILD_ONLY=1 scripts/run-model.sh text prompts/code-is-prime.txt ) 2>&1 | tail -15 | tee -a "$REPORT"
+  [ -x "$SRC/work/build/whole-model" ] && [ -f "$SRC/work/build/pipeline-stage.so" ] && pass "program and tail library built" || fail "build did not produce src/work/build/whole-model and pipeline-stage.so"
 }
 
 step_dspark() {
   say "== dspark: the draft model (public checkpoint, 7.1 GB)"
   need_engine || return
   if [ "${SKIP_DSPARK:-0}" = 1 ]; then warn "skipped (SKIP_DSPARK=1)"; return; fi
-  local dir="${DSPARK_DIR:-$ENGINE_DIR/models/dspark}"
+  local dir="$DSPARK_DIR"
   if [ -f "$dir/model.safetensors" ] && [ "$(stat -c %s "$dir/model.safetensors")" -gt 7000000000 ]; then pass "already at $dir"; return; fi
-  DSPARK_DIR="$dir" "$ENGINE_DIR/scripts/download-dspark-checkpoint.sh"
+  DSPARK_DIR="$dir" "$SRC/scripts/download-dspark-checkpoint.sh"
   [ -f "$dir/model.safetensors" ] && [ "$(stat -c %s "$dir/model.safetensors")" -gt 7000000000 ] && pass "downloaded to $dir" || fail "the checkpoint is not complete in $dir (see $dir/fetch.log)"
 }
 
 step_verify() {
   say "== verify: run the engine"
   need_engine || return
-  DATASET_DIR="$DATASET_DIR" VERIFY_PROMPTS="${VERIFY_PROMPTS:-1 4 10}" "$ENGINE_DIR/scripts/verify-setup.sh" 2>&1 | tee -a "$REPORT"
+  DATASET_DIR="$DATASET_DIR" VERIFY_PROMPTS="${VERIFY_PROMPTS:-1 4 10}" "$SRC/scripts/verify-setup.sh" 2>&1 | tee -a "$REPORT"
   [ "${PIPESTATUS[0]}" = 0 ] && pass "verify-setup.sh passed" || fail "verify-setup.sh failed"
 }
 
 for s in "${STEPS[@]}"; do
   case "$s" in
     preflight) step_preflight;; packages) step_packages;; clone) step_clone;; download) step_download;; open-weights) step_open_weights;; check-dataset) step_check_dataset;;
-    wire) step_wire;; build) step_build;; dspark) step_dspark;; verify) step_verify;;
+    inputs) step_inputs;; build) step_build;; dspark) step_dspark;; verify) step_verify;;
     *) fail "unknown step $s";;
   esac
   [ $FAILED = 0 ] || { say "stopping after the first failed step ($s); fix it and run again"; break; }

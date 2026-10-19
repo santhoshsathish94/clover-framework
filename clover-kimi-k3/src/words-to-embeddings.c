@@ -9,7 +9,7 @@
 
      input-stage TOKFILES_DIR SEED_BIN PROMPTS_TSV BIGTEXT S0_F32 IDS_FILE OUT_IDS          */
 #include "k3_tok.h"
-#include "numeric-table.h"
+#include "embedding-and-head-tables.h"
 #include <math.h>
 #include <omp.h>
 #include <time.h>

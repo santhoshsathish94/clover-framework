@@ -6,7 +6,7 @@ set -u
 N=${1:-4}
 {
   echo "start $(date); dataset: $DATASET_DIR"
-  BUILD_ONLY=1 "$SCRIPTS_DIR/run-model.sh" text "$ENGINE_DIR/prompts/code-is-prime.txt"
+  BUILD_ONLY=1 "$SCRIPTS_DIR/run-model.sh" text "$PROMPTS_DIR/code-is-prime.txt"
   echo "build finished rc=$? $(date)"
   "$SCRIPTS_DIR/check-one-prompt.sh" $N
   echo "check finished $(date)"

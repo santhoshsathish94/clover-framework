@@ -5,8 +5,8 @@
 #include <float.h>
 #include <fenv.h>
 #include <math.h>
-#include "json.h"
-#include "../server/safetensors.h"
+#include "json-reader.h"
+#include "safetensors.h"
 
 enum { NORMALIZATION_WIDTH = 7168, NORMALIZATION_SNAPSHOTS = 8,
     NORMALIZATION_SOURCES = 9, NORMALIZATION_TENSOR_BYTES = 14336 };

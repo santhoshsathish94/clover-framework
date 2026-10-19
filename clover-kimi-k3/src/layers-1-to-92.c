@@ -36,7 +36,7 @@ static const char *lb_name(int which)
 #define LB_MLA TRANSFORMER_MLA
 #define LB_INPUT_GAINS(tr) ((tr)->input_gains)
 #else
-#include "transformer-1.c"
+#include "layer1-core.c"
 #define LB_LAYER 1u
 #define LB_K 1u
 #define LB_MLA 0

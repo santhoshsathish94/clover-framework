@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "json.h"
+#include "json-reader.h"
 
 enum { GENERATION_CAPACITY = 256, GENERATION_VOCAB = 163840 };
 typedef struct {

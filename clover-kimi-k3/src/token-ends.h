@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../normalization/json.h"
+#include "json-reader.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -285,7 +285,7 @@ TokenizerStatus id_to_word(const Tokenizer *tokenizer, uint32_t id, TokenText *t
     return TOKENIZER_OK;
 }
 
-#include "numeric-table.h"
+#include "embedding-and-head-tables.h"
 
 int server_output(ServerOutput *output,const Tokenizer *tokenizer,
     const float vector[SERVER_TABLE_WIDTH],uint32_t *token,TokenText *text)

@@ -1,16 +1,16 @@
 /* Checks that what the engine now reads from the original open weights is what it read before from the converted dataset files.
      check-open-weights OPEN_WEIGHTS_DIR DATASET_DIR
    DATASET_DIR must still hold the old files (inputs/seed.bin, outputs/fruit.bin, leaves.json, vocabulary.bin); they are only read here.
-   build: gcc -std=gnu11 -O2 -I pod/server tools/check-open-weights.c -lm -o check-open-weights
+   build: gcc -std=gnu11 -O2 -I src src/tools/check-open-weights.c -lm -o check-open-weights
    Exit status 0 only if every comparison is identical.                                                                               */
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #define NORMALIZATION_NO_MAIN
-#include "../pod/normalization/normalization.c"
-#include "../pod/server/ends.h"
-#include "../pod/server/numeric-table.h"
+#include "../final-normalization.c"
+#include "../token-ends.h"
+#include "../embedding-and-head-tables.h"
 
 #define SHARD "model-00094-of-000096.safetensors"
 static int failures;

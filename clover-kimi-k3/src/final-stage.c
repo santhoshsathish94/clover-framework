@@ -18,11 +18,11 @@
 #include <time.h>
 
 #define NORMALIZATION_NO_MAIN
-#include "../../normalization/normalization.c"
-#include "../../server/ends.h"
-#include "stage.h"
-#include "deliver.h"
-#include "trace.h"
+#include "final-normalization.c"
+#include "token-ends.h"
+#include "stage-routing.h"
+#include "deliver-answer.h"
+#include "stage-trace.h"
 
 enum {
     TRANSFORMER_93_WIDTH = NORMALIZATION_WIDTH,

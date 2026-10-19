@@ -6,7 +6,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/settings.sh"
 N=${1:?prompt number 1-34}
 cd "$RESULTS_DIR"
-awk -F'\t' -v n=$N '$1==n{printf "%s", $4}' "$ENGINE_DIR/prompts/recorded-34-prompts.tsv" > check-prompt.txt
+awk -F'\t' -v n=$N '$1==n{printf "%s", $4}' "$PROMPTS_DIR/recorded-34-prompts.tsv" > check-prompt.txt
 {
   echo "prompt $N: $(cat check-prompt.txt)"
   BUILD=0 MODES="exact use_4bit_trunk" PREFIX=check "$SCRIPTS_DIR/compare-exact-and-4bit-trunk.sh" check-prompt.txt 11 > /dev/null 2>&1

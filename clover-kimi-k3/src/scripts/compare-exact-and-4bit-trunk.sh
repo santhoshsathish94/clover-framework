@@ -12,4 +12,4 @@ for m in $MODES; do
   USE_4BIT_TRUNK=$([ $m = use_4bit_trunk ] && echo 1 || echo 0) BUILD=$build PF_DECODE=$DEC PF_CACHE=16 PF_SAVE_IDS=$PREFIX-$m.ids "$SCRIPTS_DIR/run-model.sh" text "$FILE" > $PREFIX-$m.log 2>&1
   first=0
 done
-python3 "$ENGINE_DIR/tools/compare-outputs.py" single $PREFIX
+python3 "$TOOLS_DIR/compare-outputs.py" single $PREFIX

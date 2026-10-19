@@ -1,6 +1,6 @@
 #ifndef CLOVER_ROOT_METADATA_H
 #define CLOVER_ROOT_METADATA_H
-#include "generation.h"
+#include "generation-request.h"
 #include <sys/stat.h>
 
 static int root_metadata(const char *path, unsigned layer, size_t constant_bytes, unsigned counts[4])

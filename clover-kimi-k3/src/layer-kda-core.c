@@ -13,11 +13,11 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include "live-root.h"
-#include "stage.h"
-#include "trace.h"
-#define TRANSFORMER_LAYER 3
-#define TRANSFORMER_MLA 1
+#include "expert-root-reader.h"
+#include "stage-routing.h"
+#include "stage-trace.h"
+#define TRANSFORMER_LAYER 2
+#define TRANSFORMER_MLA 0
 #define TRANSFORMER_INPUT_SNAPSHOTS 1
 #define TRANSFORMER_OUTPUT_SNAPSHOTS 1
 
@@ -86,12 +86,18 @@ static const TransformerLayout transformer_layout[] = {
     {5, 0, 2, 7168, 1},
     {6, 0, 1, 12288, 7168},
     {7, 0, 1, 7168, 12288},
-    {20, 1, 1, 1536, 7168},
-    {21, 1, 2, 1536, 1},
-    {22, 1, 1, 18432, 1536},
-    {23, 1, 1, 576, 7168},
-    {24, 1, 2, 512, 1},
-    {25, 1, 1, 24576, 512},
+    {8, 1, 1, 12288, 7168},
+    {9, 1, 1, 12288, 7168},
+    {10, 1, 1, 12288, 7168},
+    {11, 1, 1, 96, 7168},
+    {12, 1, 1, 128, 7168},
+    {13, 1, 1, 12288, 128},
+    {14, 1, 2, 49152, 1},
+    {15, 1, 2, 49152, 1},
+    {16, 1, 2, 49152, 1},
+    {17, 1, 2, 128, 1},
+    {18, 1, 2, 12288, 1},
+    {19, 1, 2, 128, 1},
     {29, 2, 3, 896, 7168},
     {30, 2, 2, 896, 1},
     {31, 2, 1, 3584, 7168},
@@ -101,7 +107,8 @@ static const TransformerLayout transformer_layout[] = {
     {35, 2, 1, 6144, 7168},
     {36, 2, 1, 7168, 6144},
     {37, 0, 2, 7168, 1},
-    {38, 0, 2, 7168, 1}
+    {38, 0, 2, 7168, 1},
+    {39, 1, 2, 96, 1}
 };
 
 static uint32_t transformer_u32(const unsigned char *bytes)
@@ -317,14 +324,14 @@ int transformer_open(const char *dataset, Transformer **result)
     if (!result) return 0;
     *result = NULL;
     char qkv_path[4096], trunk_directory[4096], root_directory[4096];
-    if (!dataset || !transformer_path(qkv_path, sizeof qkv_path, dataset, "operators/qkv-all/layer-3/operator.bin") ||
-        !transformer_path(trunk_directory, sizeof trunk_directory, dataset, "trunk-3") ||
-        !transformer_path(root_directory, sizeof root_directory, dataset, "root-3") ||
+    if (!dataset || !transformer_path(qkv_path, sizeof qkv_path, dataset, "operators/qkv-all/layer-2/operator.bin") ||
+        !transformer_path(trunk_directory, sizeof trunk_directory, dataset, "trunk-2") ||
+        !transformer_path(root_directory, sizeof root_directory, dataset, "root-2") ||
         sizeof(float) != 4 || sizeof(double) != 8 ||
         FLT_RADIX != 2 || FLT_MANT_DIG != 24 || DBL_MANT_DIG != 53) return 0;
     Transformer *transformer = calloc(1, sizeof *transformer);
     if (!transformer) return 0;
-    if (!transformer_load_qkv(transformer, qkv_path) || !transformer_load_trunk(transformer, trunk_directory) || !(transformer->root = root_open(root_directory, 3))) {
+    if (!transformer_load_qkv(transformer, qkv_path) || !transformer_load_trunk(transformer, trunk_directory) || !(transformer->root = root_open(root_directory, 2))) {
         transformer_close(transformer);
         return 0;
     }
@@ -466,6 +473,13 @@ static void transformer_qkv(const Transformer *transformer, TransformerSequence 
         }
     transformer_l2_heads(sequence->qkv[0]);
     transformer_l2_heads(sequence->qkv[1]);
+    /* CLOVER_KDA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER)) {
+        unsigned long at = (unsigned long)sequence->positions;
+        clover_vectors_write(TRANSFORMER_LAYER, 5001, at, sequence->qkv[0], TRANSFORMER_ROWS);
+        clover_vectors_write(TRANSFORMER_LAYER, 5002, at, sequence->qkv[1], TRANSFORMER_ROWS);
+        clover_vectors_write(TRANSFORMER_LAYER, 5003, at, sequence->qkv[2], TRANSFORMER_ROWS);
+    }
 }
 
 static void transformer_decay(const Transformer *transformer, TransformerSequence *sequence)
@@ -481,6 +495,12 @@ static void transformer_decay(const Transformer *transformer, TransformerSequenc
             float value = exponent * (sequence->decay[index] + transformer_f32(transformer->records[18].data + index * 4));
             sequence->decay[index] = expf(-5.0f * transformer_sigmoid(value));
         }
+    }
+    /* CLOVER_KDA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER)) {
+        unsigned long at = (unsigned long)sequence->positions;
+        clover_vectors_write(TRANSFORMER_LAYER, 5004, at, sequence->beta, TRANSFORMER_HEADS);
+        clover_vectors_write(TRANSFORMER_LAYER, 5005, at, sequence->decay, TRANSFORMER_ROWS);
     }
 }
 
@@ -513,6 +533,23 @@ static void transformer_update_attention(TransformerSequence *sequence)
             }
         }
     }
+    /* CLOVER_KDA_INTERNALS: one Frobenius norm per head, so the recurrent state can be
+       watched without dumping 96 x 128 x 128 floats per position. Stack local, because
+       several requests share this library at once. */
+    if (clover_vectors_active(TRANSFORMER_LAYER)) {
+        float magnitude[TRANSFORMER_HEADS];
+        unsigned long at = (unsigned long)sequence->positions;
+        for (unsigned head = 0; head < TRANSFORMER_HEADS; head++) {
+            double total = 0.0;
+            for (unsigned row = 0; row < TRANSFORMER_HEAD; row++)
+                for (unsigned column = 0; column < TRANSFORMER_HEAD; column++)
+                    total += (double)sequence->recurrent[head][row][column] *
+                        sequence->recurrent[head][row][column];
+            magnitude[head] = (float)sqrt(total);
+        }
+        clover_vectors_write(TRANSFORMER_LAYER, 5009, at, magnitude, TRANSFORMER_HEADS);
+        clover_vectors_write(TRANSFORMER_LAYER, 5006, at, sequence->attention, TRANSFORMER_ROWS);
+    }
 }
 
 static void transformer_attention_output(const Transformer *transformer, TransformerSequence *sequence)
@@ -522,8 +559,38 @@ static void transformer_attention_output(const Transformer *transformer, Transfo
         float *block = sequence->attention + head * TRANSFORMER_HEAD;
         transformer_normalize(block, block, transformer->records[19].data, TRANSFORMER_HEAD);
     }
+    /* CLOVER_CONST_ATTN, experiment only: substitute a cached vector for the attention
+       this layer just computed. Per layer, so any subset can be enabled by choosing
+       which files exist. Loaded once; absent or short means this layer is untouched. */
+    {
+        static float constant[TRANSFORMER_ROWS];
+        static int constant_state;
+        if (!constant_state) {
+            const char *prefix = getenv("CLOVER_CONST_ATTN");
+            char named[4096];
+            FILE *file = NULL;
+            constant_state = -1;
+            if (prefix && *prefix &&
+                snprintf(named, sizeof named, "%s.%d.f32", prefix, TRANSFORMER_LAYER) < (int)sizeof named)
+                file = fopen(named, "rb");
+            if (file) {
+                if (fread(constant, sizeof(float), TRANSFORMER_ROWS, file) == TRANSFORMER_ROWS)
+                    constant_state = 1;
+                fclose(file);
+            }
+        }
+        if (constant_state > 0) memcpy(sequence->attention, constant, sizeof constant);
+    }
+    /* CLOVER_KDA_INTERNALS: the per-head normalised attention, before gating. */
+    if (clover_vectors_active(TRANSFORMER_LAYER))
+        clover_vectors_write(TRANSFORMER_LAYER, 5007, (unsigned long)sequence->positions,
+            sequence->attention, TRANSFORMER_ROWS);
     for (unsigned coordinate = 0; coordinate < TRANSFORMER_ROWS; coordinate++)
         sequence->gate[coordinate] = sequence->attention[coordinate] * transformer_sigmoid(sequence->gate[coordinate]);
+    /* CLOVER_KDA_INTERNALS */
+    if (clover_vectors_active(TRANSFORMER_LAYER))
+        clover_vectors_write(TRANSFORMER_LAYER, 5008, (unsigned long)sequence->positions,
+            sequence->gate, TRANSFORMER_ROWS);
     transformer_project(transformer, 7, sequence->gate, sequence->residual);
 }
 

@@ -16,9 +16,8 @@ fail() { say "FAIL  $*"; FAILED=1; }
 cd "$RESULTS_DIR"
 
 # 1. built and wired
-[ -x "$BUILD_DIR/whole-model" ] && [ -x "$BUILD_DIR/ids-to-text" ] && [ -f "$POD_DIR/tansformers/transformer-93/bin/pipeline-stage.so" ] && pass "program and tail library are built" || fail "not built: run scripts/run-model.sh with BUILD_ONLY=1"
-broken=$(find "$POD_DIR/server/bin" "$POD_DIR/tansformers/transformer-1/bin" -xtype l 2>/dev/null | wc -l)
-[ -d "$POD_DIR/server/bin/dataset" ] && [ "$broken" = 0 ] && pass "dataset links are in place, none broken" || fail "dataset links missing or broken ($broken broken): run scripts/wire-dataset.sh"
+[ -x "$BUILD_DIR/whole-model" ] && [ -x "$BUILD_DIR/ids-to-text" ] && [ -f "$BUILD_DIR/pipeline-stage.so" ] && pass "program and tail library are built" || fail "not built: run scripts/run-model.sh with BUILD_ONLY=1"
+[ -d "$DATASET_DIR/root-1" ] && [ -d "$DATASET_DIR/trunk-1" ] && [ -d "$DATASET_DIR/operators" ] && pass "computed dataset folder is in place" || fail "no computed dataset at $DATASET_DIR (root-N, trunk-N, operators)"
 [ $FAILED = 0 ] || { say "stopping: the engine is not built and wired"; exit 1; }
 
 # 2. dataset complete
@@ -27,8 +26,8 @@ broken=$(find "$POD_DIR/server/bin" "$POD_DIR/tansformers/transformer-1/bin" -xt
 
 # 3. recorded prompts, exact path, against the ids in prompts/expected-exact-ids.tsv
 for n in $VERIFY_PROMPTS; do
-  awk -F'\t' -v n="$n" '$1==n{printf "%s", $4}' "$ENGINE_DIR/prompts/recorded-34-prompts.tsv" > "verify-prompt-$n.txt"
-  want=$(awk -F'\t' -v n="$n" '!/^#/ && $1==n{print $2}' "$ENGINE_DIR/prompts/expected-exact-ids.tsv")
+  awk -F'\t' -v n="$n" '$1==n{printf "%s", $4}' "$PROMPTS_DIR/recorded-34-prompts.tsv" > "verify-prompt-$n.txt"
+  want=$(awk -F'\t' -v n="$n" '!/^#/ && $1==n{print $2}' "$PROMPTS_DIR/expected-exact-ids.tsv")
   start=$(date +%s)
   PF_DECODE=11 PF_CACHE=16 PF_SAVE_IDS="verify-$n.ids" BUILD=0 "$SCRIPTS_DIR/run-model.sh" text "verify-prompt-$n.txt" > "verify-$n.log" 2>&1
   got=$(tr -d '\n\r ' < "verify-$n.ids" 2>/dev/null)
@@ -40,8 +39,8 @@ done
 # 4. speculative decoding equals plain decoding
 if [ "${VERIFY_SPECULATIVE:-1}" = 1 ]; then
   if [ -f "$DSPARK_DIR/model.safetensors" ]; then
-    PF_DECODE=16 PF_CACHE=16 PF_SAVE_IDS=verify-plain.ids BUILD=0 "$SCRIPTS_DIR/run-model.sh" text "$ENGINE_DIR/prompts/code-is-prime.txt" > verify-plain.log 2>&1
-    SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 PF_DECODE=16 PF_CACHE=16 PF_SAVE_IDS=verify-dspark.ids BUILD=0 "$SCRIPTS_DIR/run-model.sh" text "$ENGINE_DIR/prompts/code-is-prime.txt" > verify-dspark.log 2>&1
+    PF_DECODE=16 PF_CACHE=16 PF_SAVE_IDS=verify-plain.ids BUILD=0 "$SCRIPTS_DIR/run-model.sh" text "$PROMPTS_DIR/code-is-prime.txt" > verify-plain.log 2>&1
+    SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 PF_DECODE=16 PF_CACHE=16 PF_SAVE_IDS=verify-dspark.ids BUILD=0 "$SCRIPTS_DIR/run-model.sh" text "$PROMPTS_DIR/code-is-prime.txt" > verify-dspark.log 2>&1
     if [ -s verify-plain.ids ] && cmp -s verify-plain.ids verify-dspark.ids; then pass "DSpark speculative decoding gives the same 17 tokens as plain decoding: $(grep -h 'SPECULATIVE DECODING' verify-dspark.log | sed 's/^ *//' | cut -c1-150)"
     else fail "DSpark speculative decoding differs from plain decoding (see verify-plain.log, verify-dspark.log)"; fi
   else warn "no DSpark checkpoint at $DSPARK_DIR: speculative decoding not checked"; fi

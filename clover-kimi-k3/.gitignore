@@ -1,8 +1,4 @@
-# Host-only folders: run outputs, the DSpark checkpoint and the 1.4 TB model are never committed.
-/work
-/models
-/dataset
+# Host-only: run outputs and the data (third-party and computed datasets, 1.4 TB) are never committed.
+/src/work/
+/src/datasets/
 /set-up.log
-# Created by scripts/wire-dataset.sh and run-model.sh: links into the dataset and the compiled tail library
-/pod/server/bin/
-/pod/tansformers/*/bin/

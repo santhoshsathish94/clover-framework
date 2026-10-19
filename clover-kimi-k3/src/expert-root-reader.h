@@ -1,6 +1,6 @@
 #ifndef TRANSFORMER_ROOT_H
 #define TRANSFORMER_ROOT_H
-#include "decode.h"
+#include "inflate-fast.h"
 #include <limits.h>
 #include <math.h>
 #include <stdint.h>
@@ -13,7 +13,7 @@
 #if defined(__AVX2__)
 #include <immintrin.h>
 #endif
-#include "root-metadata.h"
+#include "expert-root-metadata.h"
 
 #ifndef ROOT_PHASE_BEGIN
 #define ROOT_PHASE_BEGIN(name)
@@ -204,7 +204,7 @@ static Root *root_open(const char *directory, unsigned layer)
     return root;
 }
 
-#include "root-validation.h"
+#include "expert-root-validation.h"
 
 static int root_block(Root *root, RootScratch *scratch, unsigned expert, unsigned matrix, unsigned block)
 {

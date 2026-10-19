@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include "numeric-table.h"
+#include "embedding-and-head-tables.h"
 
 enum { WIDTH = 7168, LAYERS = 5, HEADS = 64, Q_LORA = 1536, KV_LORA = 512, ROPE = 64, NOPE = 128, VALUE = 128, INTERMEDIATE = 14336,
        QUERIES = 8, TARGETS = 5, MARKOV_RANK = 256, VOCAB = 163840, MASK_TOKEN = 163837 };

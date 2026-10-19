@@ -1,8 +1,8 @@
 name: Set up clover-kimi-k3 on a machine
 
 # Runs on the NEW machine, which is registered once as a self-hosted runner with the label clover-k3 (Settings > Actions > Runners).
-# It runs clover-kimi-k3/scripts/set-up-new-machine.sh: checks the machine, installs the tools, clones clover-kimi-k3 from this repository at the commit
-# this workflow runs from, downloads the dataset from Hugging Face, checks it, wires and builds the engine, fetches the DSpark draft model and
+# It runs clover-kimi-k3/src/scripts/set-up-new-machine.sh: checks the machine, installs the tools, clones clover-kimi-k3 from this repository at the commit
+# this workflow runs from, downloads the dataset from Hugging Face, checks it, builds the engine, fetches the DSpark draft model and
 # verifies everything by running it (recorded prompts, speculative decoding, a chat). The job fails if any step fails; every step can be re-run.
 #
 # Only workflow_dispatch triggers it: never add pull_request or push triggers to a workflow that runs on a self-hosted runner of a public repository.
@@ -28,7 +28,7 @@ on:
         description: Dataset folder (empty = <install_dir>/dataset); about 1.4 TB
         default: ''
       steps:
-        description: 'Steps to run, space separated (empty = all): preflight packages clone download check-dataset wire build dspark verify'
+        description: 'Steps to run, space separated (empty = all): preflight packages clone download open-weights check-dataset inputs build dspark verify'
         default: ''
       verify_prompts:
         description: Which of the 34 recorded prompts verify-setup.sh runs
@@ -52,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: clover-kimi-k3/scripts
+          sparse-checkout: clover-kimi-k3/src/scripts
           sparse-checkout-cone-mode: true
       - name: Set up the machine, download the dataset, build, verify
         env:
@@ -69,7 +69,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           [ -n "$DATASET_DIR_INPUT" ] && export DATASET_DIR="$DATASET_DIR_INPUT"
-          bash clover-kimi-k3/scripts/set-up-new-machine.sh $STEPS_INPUT
+          bash clover-kimi-k3/src/scripts/set-up-new-machine.sh $STEPS_INPUT
       - name: Keep the logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,5 +78,5 @@ jobs:
           if-no-files-found: ignore
           path: |
             ${{ inputs.install_dir }}/set-up-new-machine.report
-            ${{ inputs.install_dir }}/clover-kimi-k3/work/results/verify-setup.result
-            ${{ inputs.install_dir }}/clover-kimi-k3/work/results/verify-*.log
+            ${{ inputs.install_dir }}/clover-kimi-k3/src/work/results/verify-setup.result
+            ${{ inputs.install_dir }}/clover-kimi-k3/src/work/results/verify-*.log

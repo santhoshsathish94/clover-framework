@@ -15,7 +15,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 /* CLOVER_SERVER_TRACE: relative include because the server is not built with -I common. */
-#include "../common/trace.h"
+#include "stage-trace.h"
 
 enum {
     SERVER_WIDTH = 7168, SERVER_ROWS = 12288, SERVER_HEAD = 128,

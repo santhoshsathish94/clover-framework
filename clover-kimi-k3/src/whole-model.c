@@ -14,7 +14,7 @@
    pointers to buffers. At every twelfth layer the layer's input buffer itself becomes the new snapshot.
    One 15.7 GB buffer holds the experts of whichever layer is running; it is allocated once and shared.
 
-     whole-model POD_DIR DATASET_DIR OPEN_WEIGHTS_DIR WORDS REFDIR
+     whole-model BUILD_DIR DATASET_DIR OPEN_WEIGHTS_DIR WORDS REFDIR
 
    REFDIR holds recorded values for the ids WORDS stands for (embed.f32, final.resid.f32, final.snaps.f32: the pod's
    own chain, layer by layer, ending after layer 92) or is "-" when none exist; then nothing is compared.        */
@@ -37,7 +37,7 @@ int stage1_ids(const char *text, long size, int *ids, int cap);
 int stage1_ids_plain(const char *text, long size, int *ids, int cap);
 int stage1_id_of(const char *name);
 void stage1_lookup(const unsigned *ids, unsigned n, float *out);
-double stage2_setup(const char *code_dir, unsigned max_n);
+double stage2_setup(const char *dataset, unsigned max_n);
 void stage2_run(const uint32_t *ids, const float *emb, unsigned n, unsigned window, float *out);
 void stage2_run_from(const uint32_t *ids, const float *emb, unsigned n, unsigned window, float *out);
 void stage2_step(const uint32_t *id, const float *emb, float *out);
@@ -690,13 +690,13 @@ static void run_session(Model *m, const char *dir)
 
 int main(int argc, char **argv)
 {
-    if (argc != 6) { fputs("usage: pipeline-full CODE_DIR DATASET OPEN_WEIGHTS_DIR WORDS REFDIR\n", stderr); return 2; }
-    const char *code = argv[1], *dataset = argv[2];
+    if (argc != 6) { fputs("usage: whole-model BUILD_DIR DATASET_DIR OPEN_WEIGHTS_DIR WORDS REFDIR\n", stderr); return 2; }
+    const char *build = argv[1], *dataset = argv[2];   /* build: the folder holding pipeline-stage.so */
     const int compare = strcmp(argv[5], "-") != 0;
     const int verbose = getenv("PF_VERBOSE") && *getenv("PF_VERBOSE");
-    char seed[4096], dataset1[4096], path[4096];
+    char seed[4096], path[4096];
     snprintf(seed, sizeof seed, "%s/" OPEN_WEIGHTS_SHARD "#language_model.model.embed_tokens.weight", argv[3]);
-    snprintf(dataset1, sizeof dataset1, "%s/tansformers/transformer-1/bin/dataset", code);
+
 
     long words_size; char *words = slurp(argv[4], &words_size);
     /* A prompt that ends in a space tokenises to a dangling space token the model reads as the start of a word, and answers badly. */
@@ -808,9 +808,9 @@ int main(int argc, char **argv)
 #define FILL_SLOTS(layer_index) for (unsigned j_ = 0; j_ < cache_cap; j_++) { \
         const size_t idx_ = (size_t)(layer_index) * cache_cap + j_; \
         slot_ptrs[j_] = idx_ < 896 ? experts + idx_ * EXPERT_BYTES : cache_extra + (idx_ - 896) * EXPERT_BYTES; }
-    stage2_setup(code, N + 16);
+    stage2_setup(dataset, N + 16);
     stage3_use_buffer(experts);
-    stage3_setup(dataset1, N + 16);
+    stage3_setup(dataset, N + 16);
     if (cache_cap) { FILL_SLOTS(0) stage3_set_slots(slot_ptrs, cache_cap); }
     lbk_set_buffer(experts); lbm_set_buffer(experts);
     lbk_init(N + 16); lbm_init(N + 16);
@@ -841,7 +841,7 @@ int main(int argc, char **argv)
     const double t_layers = clk() - setup0;
 
     char leaves[4096], head[4096], tik[4096], config[4096];
-    snprintf(path, sizeof path, "%s/tansformers/transformer-93/bin/pipeline-stage.so", code);
+    snprintf(path, sizeof path, "%s/pipeline-stage.so", build);
     void *tail = dlopen(path, RTLD_NOW | RTLD_LOCAL);
     if (!tail) { fprintf(stderr, "tail dlopen: %s\n", dlerror()); return 1; }
     int (*tail_open)(const char *, const char *, const char *, const char *, const char *, void **) = dlsym(tail, "transformer_93_open");

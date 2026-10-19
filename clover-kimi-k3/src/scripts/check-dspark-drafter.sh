@@ -9,7 +9,7 @@ DEC=${1:-48}
 TRUNKS=${2:-0}
 for q in $TRUNKS; do
   for prompt in code-is-prime prose repeating-numbers; do
-    SPECULATIVE_DRAFTER=dspark REUSE_PLAIN=1 "$SCRIPTS_DIR/check-speculative-decoding.sh" "$ENGINE_DIR/prompts/$prompt.txt" 8 $DEC $q
+    SPECULATIVE_DRAFTER=dspark REUSE_PLAIN=1 "$SCRIPTS_DIR/check-speculative-decoding.sh" "$PROMPTS_DIR/$prompt.txt" 8 $DEC $q
   done
 done
 {

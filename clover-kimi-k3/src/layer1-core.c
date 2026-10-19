@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "live-root.h"
-#include "stage.h"
-#include "trace.h"
+#include "expert-root-reader.h"
+#include "stage-routing.h"
+#include "stage-trace.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
