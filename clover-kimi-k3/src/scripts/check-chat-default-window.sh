@@ -23,7 +23,7 @@ for _ in $(seq 1 240); do [ -f "$DIR/ready" ] && break; sleep 5; done
   say() { echo; echo "=== USER: $(head -c 140 "$1" | tr '\n' ' ')..."; WAIT=4500 "$SCRIPTS_DIR/chat-say.sh" $NAME -f "$1"; }
   T=$DIR/inputs; mkdir -p "$T"
   echo "In one sentence: what was the single most important cause?" > $T/2.txt
-  { echo "Here is another part of my project log:"; echo; tail -c +4001 "$ENGINE_DIR/docs/current-status.md" | head -c 1500; echo; echo; echo "Question: in one sentence, what does this part say?"; } > $T/3.txt
+  { echo "Here is another part of my project log:"; echo; tail -c +4001 "$ENGINE_DIR/docs/clover-kimi-k3-cpu-context.md" | head -c 1500; echo; echo; echo "Question: in one sentence, what does this part say?"; } > $T/3.txt
   echo "What was the incident I asked about in my first message, and in which year did it happen?" > $T/4.txt
   say "$PROMPT"
   echo "--- memory after turn 1: $(ps -o rss= -C whole-model | awk '{printf "process resident %.0f GB", $1/1048576}'), $(free -g | awk '/Mem:/ {print "used " $3 " GB, buffers/cache " $6 " GB, available " $7 " GB"}')"

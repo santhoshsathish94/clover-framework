@@ -44,6 +44,6 @@ The stop rule (the end date, and what we want from the first day) is the creator
 4. Measure the disk first, because the download writes to it and would spoil the figures: `head -c 16G /dev/urandom > /path/on/the/data/disk/scratch.bin` (about half a minute), `gcc -O2 -pthread -o nvme-read-rate .../probes/nvme-read-rate.c`, `./nvme-read-rate /path/on/the/data/disk/scratch.bin`, then delete the scratch file.
 5. Start the download in the background (it resumes, and its preflight refuses a disk that is too small): fetch `set-up-new-machine.sh` as in the README, then `sudo nohup bash set-up-new-machine.sh preflight packages clone download open-weights check-dataset > ~/set-up.log 2>&1 &`. Do not run the `build`, `dspark` or `verify` steps yet; whether to run the CPU engine there is decided from step 3.
 6. While it downloads: the CUDA version and driver are in the report (`nvcc` missing means no toolkit; installing it is a decision, not an automatic step). Nothing that writes to the data disk.
-7. Write what was read into `docs/current-status.md` before the next step.
+7. Write what was read into `docs/clover-kimi-k3-cpu-context.md` before the next step.
 
 Next, once the machine is seen and the CUDA version is known: transfer rates (NVMe to RAM to card, card to card), then one layer's expert read and projection on one card.

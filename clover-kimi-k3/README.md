@@ -22,7 +22,7 @@ The prompt is processed in batches, decode keeps recently used experts in RAM, a
 ```
 clover-kimi-k3/
 ├── README.md
-├── docs/                              current-status.md (the dated log of everything measured, every negative result), layer0-verdict.md
+├── docs/                              clover-kimi-k3-cpu-context.md (the dated log of everything measured, every negative result), layer0-verdict.md
 └── src/
     ├── code/                          all the code: common/ (shared by every machine), cpu/ (the workstation engine), gpu/ (a GPU server: probes only so far), third-party/ (see below)
     │   └── third-party/kimi-k3-in-c/  the tokenizer headers (Apache-2.0, with licence and notice, github.com/FareedKhan-dev/kimi-k3-in-c at commit a2ad8e5, unmodified)
@@ -75,7 +75,7 @@ The same steps run as a GitHub Actions workflow, `.github/workflows/set-up-clove
 
 What the Hugging Face repo must contain (its root is the dataset folder): `expert-1` to `expert-92`, `trunk-0` to `trunk-92` (each with its `operator.bin`; `trunk-1` to `trunk-92` pruned with `tools/prune-trunk.py`), and optionally `engine-inputs/refs/` with `embed.f32`, `final.resid.f32`, `final.snaps.f32` (286 MB, the pod's chain for the recorded prompt). Nothing that is in the open weights is in it: the embedding table, the output head, the normalisation tensors and the tokenizer files come from `moonshotai/Kimi-K3`, the DSpark draft model from `Inferact/Kimi-K3-DSpark`.
 
-Publishing that dataset to the repository (the maintainer's side): `src/scripts/upload-dataset-git.sh` pushes it over ssh with git-lfs, in batches small enough for a nearly full disk (one expert layer, or ten trunks, at a time), and can be run again; `src/scripts/keep-uploading.sh` starts it again until every listed file is on the remote and then writes a `COMPLETE` marker; `src/scripts/upload-status.sh` shows how far it is. `src/scripts/upload-dataset.sh` is the same upload with `hf upload-large-folder` for someone who has a token. How it was done and measured is in `docs/current-status.md`.
+Publishing that dataset to the repository (the maintainer's side): `src/scripts/upload-dataset-git.sh` pushes it over ssh with git-lfs, in batches small enough for a nearly full disk (one expert layer, or ten trunks, at a time), and can be run again; `src/scripts/keep-uploading.sh` starts it again until every listed file is on the remote and then writes a `COMPLETE` marker; `src/scripts/upload-status.sh` shows how far it is. `src/scripts/upload-dataset.sh` is the same upload with `hf upload-large-folder` for someone who has a token. How it was done and measured is in `docs/clover-kimi-k3-cpu-context.md`.
 
 ## Running
 
@@ -99,7 +99,7 @@ src/scripts/chat-say.sh mychat "What is a KDA layer?"  # sends one message and w
 src/scripts/chat-stop.sh mychat
 ```
 
-Settings: `PF_CONTEXT` positions the layers hold (8192, about 19 GB of attention cache), `PF_DECODE` longest reply (2500), `PF_CHUNK` tokens per prompt pass (1024), `PF_REPLY_RESERVE` room kept for a reply (1024), `PF_INPUT_MAX` longest message before it is summarised first (half the context), `PF_SUMMARY_TOKENS` longest summary (320). When a new message would leave less than `PF_REPLY_RESERVE` positions for the reply, the oldest turns are replaced by a summary the model writes (kept in `session-NAME/conversation-summary-NNNN.txt`) and the state is rebuilt, which costs a prompt pass over the kept text. `src/scripts/check-chat-session.sh` runs these paths with a small window; its measured results are in `docs/current-status.md`.
+Settings: `PF_CONTEXT` positions the layers hold (8192, about 19 GB of attention cache), `PF_DECODE` longest reply (2500), `PF_CHUNK` tokens per prompt pass (1024), `PF_REPLY_RESERVE` room kept for a reply (1024), `PF_INPUT_MAX` longest message before it is summarised first (half the context), `PF_SUMMARY_TOKENS` longest summary (320). When a new message would leave less than `PF_REPLY_RESERVE` positions for the reply, the oldest turns are replaced by a summary the model writes (kept in `session-NAME/conversation-summary-NNNN.txt`) and the state is rebuilt, which costs a prompt pass over the kept text. `src/scripts/check-chat-session.sh` runs these paths with a small window; its measured results are in `docs/clover-kimi-k3-cpu-context.md`.
 
 Settings (environment): `USE_4BIT_TRUNK` (0/1), `ACTIVATION_8BIT_EXPERT` and `ACTIVATION_8BIT_TRUNK` (0/1, experimental, off by default, prompt pass), `PF_DECODE` (new tokens), `PF_CACHE` (experts kept per layer), `SPECULATIVE_DRAFT_TOKENS` (0-15), `PF_CHAT` (1, low, high, max) with `PF_SYSTEM`,
 `PF_SAVE_IDS` (write generated ids), `PF_VERBOSE`, `BUILD=0` (skip build), `CLOVER_LOCK_TRUNK` (0 = do not lock the trunk files in RAM; needed with the 4-bit trunk).
@@ -109,4 +109,4 @@ Long runs on the host are started detached (`setsid nohup ... &`) and their log 
 
 Everything else tried in the month before the final version (micro-benchmarks of expert kernels and lookup tables, the one-layer harnesses, the layer 0 probes, the first three-file
 pipeline, the 8-bit-activation evaluation scripts, float dumps) is in `clover-kimi-k3-archive-20261018.zip` next to the repository, 53 files. Their results, all of them negative
-or superseded, are recorded in `docs/current-status.md`.
+or superseded, are recorded in `docs/clover-kimi-k3-cpu-context.md`.

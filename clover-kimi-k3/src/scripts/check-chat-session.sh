@@ -13,7 +13,7 @@ export PF_CONTEXT=1024 PF_CHUNK=256 PF_REPLY_RESERVE=256 PF_INPUT_MAX=400 PF_SUM
 for _ in $(seq 1 240); do [ -f "$DIR/ready" ] && break; sleep 5; done
 [ -f "$DIR/ready" ] || { echo "the model was not ready after 20 minutes"; tail -5 "$DIR/engine.log"; } > "$OUT"
 [ -f "$DIR/ready" ] || exit 1
-LOG=$ENGINE_DIR/docs/current-status.md
+LOG=$ENGINE_DIR/docs/clover-kimi-k3-cpu-context.md
 {
   echo "context $PF_CONTEXT positions, chunk $PF_CHUNK, reply reserve $PF_REPLY_RESERVE, longest message $PF_INPUT_MAX tokens, reply limit $PF_DECODE tokens"
   say() { echo; echo "=== USER: $(head -c 160 "$1" | tr '\n' ' ')..."; WAIT=3000 "$SCRIPTS_DIR/chat-say.sh" $NAME -f "$1"; }

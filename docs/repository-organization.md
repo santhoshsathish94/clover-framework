@@ -11,7 +11,7 @@
 | Read an illustrative scenario | [Examples](../examples/) |
 | Inspect executable controls | [Runtime enforcement reference](../reference/runtime-enforcement/README.md) |
 | Run the K3 engine | [Set up, tune and run](../clover-kimi-k3/README.md) |
-| Inspect K3 measurements | [Status log](../clover-kimi-k3/docs/current-status.md) |
+| Inspect K3 measurements | [Status log](../clover-kimi-k3/docs/clover-kimi-k3-cpu-context.md) |
 | Follow investigations | [Research](../research/README.md) |
 | Maintain public presentation | [Website](../site/README.md) |
 

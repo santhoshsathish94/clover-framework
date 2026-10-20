@@ -798,6 +798,12 @@ int main(int argc, char **argv)
         const double t0 = clk();
         stage2_run((const uint32_t *)ids, s0, N, N, cur);
         printf("PARTIAL RUN, layers 0..%u, %u tokens: setup %.2f s; layer 0 %.1f ms\n", last_layer, N, t_layers, 1000 * (clk() - t0));
+        const char *save = getenv("PF_SAVE_ROWS");   /* PF_SAVE_ROWS=base: base.embed (layer 0 input), base.layer0 (layer 0 output), base.layerL (layer L output), all N x 7168 floats */
+        if (save && *save) {
+            char name[4096]; FILE *rf;
+            snprintf(name, sizeof name, "%s.embed", save);  if (!(rf = fopen(name, "wb")) || fwrite(s0, sizeof(float), (size_t)N * W, rf) != (size_t)N * W || fclose(rf)) bail("cannot save the embedding rows");
+            snprintf(name, sizeof name, "%s.layer0", save); if (!(rf = fopen(name, "wb")) || fwrite(cur, sizeof(float), (size_t)N * W, rf) != (size_t)N * W || fclose(rf)) bail("cannot save the layer 0 rows");
+        }
         const float *snaps[MAX_SNAPSHOTS] = { s0 };
         unsigned k = 1;
         const double t_run = clk();
@@ -810,6 +816,11 @@ int main(int argc, char **argv)
             cur = out;
         }
         unsigned long long fnv = 1469598103934665603ULL; unsigned long nonfinite = 0;
+        if (save && *save) {
+            char name[4096]; FILE *rf;
+            snprintf(name, sizeof name, "%s.layer%u", save, last_layer);
+            if (!(rf = fopen(name, "wb")) || fwrite(cur, sizeof(float), (size_t)N * W, rf) != (size_t)N * W || fclose(rf)) bail("cannot save the last layer's rows");
+        }
         const unsigned char *bytes = (const unsigned char *)cur;
         for (size_t i = 0; i < (size_t)N * W * sizeof(float); i++) { fnv ^= bytes[i]; fnv *= 1099511628211ULL; }
         for (size_t i = 0; i < (size_t)N * W; i++) nonfinite += !(cur[i] - cur[i] == 0.0f);

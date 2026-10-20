@@ -72,7 +72,7 @@ Supporting areas include:
 
 **What was built**
 
-- [`clover-kimi-k3/`](clover-kimi-k3/) — the engine, the set-up script, the dataset file lists and the dated log of everything measured and every negative result ([status log](clover-kimi-k3/docs/current-status.md))
+- [`clover-kimi-k3/`](clover-kimi-k3/) — the engine, the set-up script, the dataset file lists and the dated log of everything measured and every negative result ([status log](clover-kimi-k3/docs/clover-kimi-k3-cpu-context.md))
 - [`clover-k3/`, first version](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) — historical snapshot at commit 013cbc8: the program, its build and the correctness gate
 - [Results](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md) — first-token comparison and separate generation outputs
 - [Implementation equation](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/reference/implementation-equation.md) — the equation as the program actually evaluates it, and where that differs from the written one
