@@ -407,3 +407,26 @@ Harness `input-to-layer0/layer0-observe.c` + `layer0-run.sh`: includes the serve
 - Tested on the CPU host (two KIOXIA NVMe in RAID 1) on `expert-1/experts.direct` (14.64 GiB): one thread 3.83 to 3.87 GB/s at 1 MiB (recorded earlier: 3.94), 14.3 to 14.6 GB/s from 4 threads at 4 MiB (recorded: 14.08 to 14.44), sequential and random alike; 1 MiB blocks reach 13.5 to 13.7 GB/s from 8 threads; 16 MiB blocks fall to 13.1 GB/s at 32 threads. One run per mode, 2 GiB per point for the random run and 8 GiB for the sequential run. It has not run on the GPU server.
 - The "First hour" section of `src/code/gpu/README.md` lists the order: read the machine, compare it with the listing and stop if it differs in a way that matters (not 8 RTX 3090s, under about 1,412 GiB free on the data disk, RAM differing, no AVX-512), measure the disk before the download writes to it, then start the resumable download in the background and leave the build, DSpark and verify steps until the read-out has been looked at.
 - Not covered: the CUDA transfer probes (they wait for the CUDA version), anything on the GPU server itself, and the stop rule.
+
+## 2026-10-20 — GPU server: first look (read-only)
+
+Login works with the key `ssh-gpu-server`, user `usergpu` (alias `gpu`). Server started 20.10.26 00:06, ends 27.10.26 01:20 (7 days). No stop rule has been given yet.
+
+Compared with the listing, observed with `ssh gpu` (nothing installed, nothing changed on the server):
+
+| Listing | Observed |
+|---|---|
+| 8 x RTX 3090 24 GB | 8 GA102 [GeForce RTX 3090] on the PCI bus (1a, 1b, 1c, 1d, 3d, 3e, 3f, 40) |
+| 2 x Xeon Gold 6248R, 48C/96T | 2 sockets, 96 CPUs, 2 NUMA nodes, avx512 f/bw/cd/dq/vl/vnni present |
+| 384 GB RAM | 376 GiB total, 363 free |
+| 2 TB NVMe | one Intel SSDPE2KX020T8, 1.8 T, one LVM volume on `/`, 1,722 GiB free |
+| Ubuntu 24.04 | Ubuntu 24.04.4 LTS |
+
+Not as the listing implies, or not known yet:
+- No NVIDIA driver: no `nvidia-smi`, no `nvidia` or `nouveau` module, no `/dev/nvidia*`. The cards are visible only on the PCI bus. NVLink, CUDA version and per-card memory are therefore not checked.
+- `nvcc` is not installed; `gcc`, `git`, `curl`, `tmux`, `python3` are.
+- `usergpu` is in the `sudo` group but sudo asks for a password, so nothing needing root has run.
+- Huge pages: 0 configured. Swap: 8 GiB file.
+- Disk: 1,722 GiB free is above the ~1,412 GiB the dataset needs. Disk read rate not measured yet.
+
+Next: root access decision, then the NVMe read-rate measurement, then the dataset download in the background.
