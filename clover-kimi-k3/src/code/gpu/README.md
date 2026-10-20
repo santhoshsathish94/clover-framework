@@ -43,6 +43,7 @@ Neither point rules the idea out. They are the first things to measure.
 |---|---|
 | `probes/machine-readout.sh` | reads the machine: CPUs, RAM, GPUs and the links between them, NVMe, network, limits; prints a summary beside the provider's listing. Read only, needs no root. |
 | `probes/nvme-read-rate.c` | reads one big file with O_DIRECT for 1, 4 and 16 MiB blocks and 1 to 32 threads, sequential or random, and prints GB/s. Reads only. On the CPU host (two NVMe drives in RAID 1) it gave 3.8 GB/s with one thread and 14.4 GB/s from 4 threads at 4 MiB, the same as the figures recorded earlier (3.94 and 14.08 to 14.44). |
+| `probes/sgemm-ceiling.cu` | cuBLAS on the shapes of layer 0's weight matrices (float, and TF32 as a speed reference) with 1000 tokens: what the card does with NVIDIA's own kernel, to read our matrix kernel against. Build: `nvcc -O3 -arch=sm_86 -o sgemm-ceiling sgemm-ceiling.cu -lcublas`. |
 
 ## First hour on the GPU server
 
