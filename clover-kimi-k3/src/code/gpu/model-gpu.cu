@@ -42,7 +42,10 @@ int main(int argc, char **argv)
     printf("%d tokens, layers 0..%d\n", N, last);
 
     CHECK(cudaSetDevice(0));
-    Work w; work_alloc(w, 0, N, true, last >= 1);
+    const char *only_env = getenv("MODEL_GPU_ONLY_LAYER");
+    const bool one = only_env && *only_env;
+    const int oL = one ? atoi(only_env) : -1;   // one-layer mode: the window needs only layer oL's buffers (its snapshots, its attention kind, the dense MLP only for layer 0)
+    Work w; work_alloc(w, 0, N, !one || oL == 0, last >= 1, one ? snapshots_in(oL > 0 ? oL : 1) : 8, one ? (oL >= 1 && layer_is_mla(oL) ? 2 : 1) : 3);
     size_t free_b, total_b; CHECK(cudaMemGetInfo(&free_b, &total_b));
     printf("card 0 memory in use after the buffers%s: %.2f GiB of %.2f GiB\n", last >= 1 ? " and the expert buffer" : "", (total_b - free_b) / 1073741824.0, total_b / 1073741824.0);
     const size_t chunk = 256u << 20;
@@ -79,6 +82,7 @@ int main(int argc, char **argv)
         const float *sn[9]; for (int i = 0; i < nsnap_in; i++) sn[i] = w.snap[i];
         clock_gettime(CLOCK_MONOTONIC, &c1);
         printf("layer %d (%s) loaded in %.2f s (experts %.2f s)\n", L, L == 0 ? "dense" : y.mla ? "MLA" : "KDA", seconds(c0, c1), t_experts);
+        mem_mark("layer loaded, inputs on card");
         std::vector<float> times;
         for (int r = 0; r < reps; r++) {
             if (prof && r == reps - 1) CHECK(cudaProfilerStart());
@@ -88,12 +92,20 @@ int main(int argc, char **argv)
             if (prof && r == reps - 1) CHECK(cudaProfilerStop());
             float ms; CHECK(cudaEventElapsedTime(&ms, t0, t1)); times.push_back(ms);
             printf("  run %d: compute %.1f ms\n", r + 1, ms);
+            if (r == 0) mem_mark("after first run (scratch grown)");
         }
         std::vector<float> sorted = times; std::sort(sorted.begin(), sorted.end());
         printf("layer %d, %d tokens: best %.1f ms, median %.1f ms of %d runs (the first run includes warm-up)\n", L, N, sorted.front(), sorted[sorted.size() / 2], reps);
         std::vector<unsigned char> ref = rows_file("in", L + 1);
         char name[96]; snprintf(name, sizeof name, "output of layer %d against the full run's", L);
         compare_rows(name, w.nxt, (const float *)ref.data(), N);
+        {   // a hash of the output rows, to compare two builds or settings where there is no reference (repeated-rows windows)
+            std::vector<float> h((size_t)N * W); CHECK(cudaMemcpy(h.data(), w.nxt, h.size() * 4, cudaMemcpyDeviceToHost));
+            unsigned long long fnv = 1469598103934665603ULL; const unsigned char *bytes = (const unsigned char *)h.data();
+            for (size_t i = 0; i < h.size() * 4; i++) { fnv ^= bytes[i]; fnv *= 1099511628211ULL; }
+            printf("   output FNV-1a 64 %016llx\n", fnv);
+        }
+        mem_mark("end");
         return 0;
     }
 

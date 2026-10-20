@@ -31,11 +31,12 @@ __global__ void router_scores(float *scores, float *choices, const unsigned char
     choices[(size_t)n * EXPERTS + e] = sc + f32at(bias + (size_t)e * 4);
 }
 
-// the 16 best choices in index order (a tie goes to the lower expert), and their weights
-__global__ void top16(const float *scores, const float *choices, int *selected, float *weights, int *bad, int N)
+// the 16 best choices in index order (a tie goes to the lower expert), and their weights; with `list`, token i of the launch is token list[i]
+__global__ void top16(const float *scores, const float *choices, int *selected, float *weights, int *bad, int N, const int *list = nullptr)
 {
-    const int n = blockIdx.x * blockDim.x + threadIdx.x;
-    if (n >= N) return;
+    const int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= N) return;
+    const int n = list ? list[i] : i;
     const float *sc = scores + (size_t)n * EXPERTS, *ch = choices + (size_t)n * EXPERTS;
     float best[TOP]; int sel[TOP]; int count = 0;
     for (int e = 0; e < EXPERTS; e++) {
@@ -58,16 +59,22 @@ __global__ void top16(const float *scores, const float *choices, int *selected, 
 // MARGIN of the 16th: for those only, the exact double score is summed in index order as above, and the selection and the weights are made from the
 // exact values. If the true top 16 are all among the candidates the result is the same as the all-double router's; main() checks that on every token.
 #ifdef FAST_ROUTER
-enum { CAND = 48 };
+#ifndef FAST_CAND
+#define FAST_CAND 48
+#endif
+enum { CAND = FAST_CAND };
 #define MARGIN 1e-3f
-__global__ void router_candidates(const float *approx, const unsigned char *bias, int *cand, int *ncand, int *overflow, int N)
+#ifdef ROUTER_CHECK
+__device__ int g_ntrue[8192];
+#endif
+__global__ void router_candidates(const float *approx, const unsigned char *bias, int *cand, int *ncand, int *overflow, int *over_list, int N)   // approx[e * N + n]
 {
     const int n = blockIdx.x * blockDim.x + threadIdx.x;
     if (n >= N) return;
-    const float *a = approx + (size_t)n * EXPERTS;
+    const float *a = approx + n;
     float best[TOP]; int count = 0;
     for (int e = 0; e < EXPERTS; e++) {
-        const float choice = sigmoidf_(a[e]) + f32at(bias + (size_t)e * 4);
+        const float choice = sigmoidf_(a[(size_t)e * N]) + f32at(bias + (size_t)e * 4);
         if (count == TOP && !(choice > best[TOP - 1])) continue;
         int pos = count < TOP ? count : TOP - 1;
         while (pos && choice > best[pos - 1]) { best[pos] = best[pos - 1]; pos--; }
@@ -77,28 +84,59 @@ __global__ void router_candidates(const float *approx, const unsigned char *bias
     const float threshold = best[TOP - 1] - MARGIN;
     int c = 0;
     for (int e = 0; e < EXPERTS; e++) {
-        if (sigmoidf_(a[e]) + f32at(bias + (size_t)e * 4) >= threshold) { if (c < CAND) cand[n * CAND + c] = e; c++; }
+        if (sigmoidf_(a[(size_t)e * N]) + f32at(bias + (size_t)e * 4) >= threshold) { if (c < CAND) cand[n * CAND + c] = e; c++; }
     }
-    if (c > CAND) { atomicAdd(overflow, 1); c = CAND; }
+#ifdef ROUTER_CHECK
+    if (n < 8192) g_ntrue[n] = c;
+#endif
+    if (c > CAND) { over_list[atomicAdd(overflow, 1)] = n; c = 0; }   // this token is routed by router_scores_tokens + top16 instead
     ncand[n] = c;
 }
 
-__global__ void router_exact(float *cand_score, const int *cand, const int *ncand, const unsigned char *router, const float *post, int N)
+// exact scores and choices of every expert for the tokens in list[0..count), summed in double in index order exactly like router_scores
+__global__ void router_scores_tokens(float *scores, float *choices, const unsigned char *router, const unsigned char *bias, const float *post, const int *list, int count)
 {
     const int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= N * CAND) return;
-    const int n = i / CAND, c = i % CAND;
-    if (c >= ncand[n]) return;
-    const float *w = (const float *)router + (size_t)cand[i] * W, *x = post + (size_t)n * W;
+    if (i >= count * EXPERTS) return;
+    const int n = list[i / EXPERTS], e = i % EXPERTS;
+    const float *w = (const float *)router + (size_t)e * W, *x = post + (size_t)n * W;
     double s = 0.0;
-    for (int k = 0; k < W; k++) s += (double)w[k] * (double)x[k];
-    cand_score[i] = sigmoidf_((float)s);
+    for (int c = 0; c < W; c++) s += (double)w[c] * (double)x[c];
+    const float sc = sigmoidf_((float)s);
+    scores[(size_t)n * EXPERTS + e] = sc;
+    choices[(size_t)n * EXPERTS + e] = sc + f32at(bias + (size_t)e * 4);
 }
 
-__global__ void top16_candidates(const float *cand_score, const int *cand, const int *ncand, const unsigned char *bias, int *selected, float *weights, int N)
+// One block per token, one thread per candidate. The candidates' weight rows are staged through shared memory in chunks of KC columns so the global loads are coalesced;
+// each thread still sums its own row in index order. (double)w * (double)x is exact (24 + 24 bits), so the fused multiply-add rounds exactly like the multiply and add of router_scores.
+__global__ void __launch_bounds__(64) router_exact(float *cand_score, const int *cand, const int *ncand, const unsigned char *router, const float *post, int N)
+{
+    static_assert(CAND <= 64, "one thread per candidate");
+    enum { KC = 128 };
+    __shared__ float sw[CAND * (KC + 1)];
+    __shared__ double sx[KC];
+    const int n = blockIdx.x, nc = ncand[n], t = threadIdx.x;
+    if (nc == 0) return;
+    const float *x = post + (size_t)n * W;
+    double s = 0.0;
+    for (int kc = 0; kc < W; kc += KC) {
+        for (int i = t; i < nc * KC; i += 64) { const int c = i / KC, k = i % KC; sw[c * (KC + 1) + k] = ((const float *)router)[(size_t)cand[n * CAND + c] * W + kc + k]; }
+        for (int k = t; k < KC; k += 64) sx[k] = (double)x[kc + k];
+        __syncthreads();
+        if (t < nc) { const float *r = sw + t * (KC + 1); for (int k = 0; k < KC; k++) s = __fma_rn((double)r[k], sx[k], s); }
+        __syncthreads();
+    }
+    if (t < nc) cand_score[n * CAND + t] = sigmoidf_((float)s);
+}
+
+// A candidate whose exact score is further than MARGIN/4 from its approximate one means the approximation is not behaving as the margin assumes: that token goes to the all-double path.
+__global__ void top16_candidates(const float *cand_score, const int *cand, const int *ncand, const unsigned char *bias, const float *approx, int *selected, float *weights, int *overflow, int *over_list, int N)
 {
     const int n = blockIdx.x * blockDim.x + threadIdx.x;
     if (n >= N) return;
+    if (ncand[n] == 0) return;   // routed by the all-double path
+    for (int c = 0; c < ncand[n]; c++)
+        if (fabsf(sigmoidf_(approx[(size_t)cand[n * CAND + c] * N + n]) - cand_score[n * CAND + c]) > MARGIN / 4) { over_list[atomicAdd(overflow, 1)] = n; return; }
     float best[TOP]; int sel[TOP], slot[TOP]; int count = 0;
     for (int c = 0; c < ncand[n]; c++) {   // candidates are in index order, so a tie goes to the lower expert
         const int e = cand[n * CAND + c];
@@ -114,6 +152,29 @@ __global__ void top16_candidates(const float *cand_score, const int *cand, const
     const float inverse = (float)(1.0 / (total + 1e-20));
     for (int r = 0; r < TOP; r++) { selected[n * TOP + r] = sel[r]; weights[n * TOP + r] = cand_score[n * CAND + slot[r]] * inverse; }
 }
+
+#ifdef ROUTER_CHECK
+// stats: [0] max |approximate choice - exact choice| (float bits), [1] max true candidate count, [2] tokens whose selection or weights differ from the all-double router's,
+// [3] tokens with more than CAND candidates, [8 + k] tokens with k true candidates (k capped at 119)
+__global__ void router_check(const float *approx, const float *choices, const unsigned char *bias, const int *sel_fast, const float *w_fast, const int *sel_ref, const float *w_ref, unsigned *stats, int N)
+{
+    const int n = blockIdx.x * blockDim.x + threadIdx.x;
+    if (n >= N) return;
+    float dmax = 0.f;
+    for (int e = 0; e < EXPERTS; e++) {
+        const float d = fabsf((sigmoidf_(approx[(size_t)e * N + n]) + f32at(bias + (size_t)e * 4)) - choices[(size_t)n * EXPERTS + e]);
+        if (d > dmax) dmax = d;
+    }
+    atomicMax(&stats[0], __float_as_uint(dmax));
+    const int nt = n < 8192 ? g_ntrue[n] : 0;
+    atomicMax(&stats[1], (unsigned)nt);
+    if (nt > CAND) atomicAdd(&stats[3], 1u);
+    atomicAdd(&stats[8 + (nt < 119 ? nt : 119)], 1u);
+    bool same = true;
+    for (int r = 0; r < TOP; r++) same = same && sel_fast[n * TOP + r] == sel_ref[n * TOP + r] && __float_as_uint(w_fast[n * TOP + r]) == __float_as_uint(w_ref[n * TOP + r]);
+    if (!same) atomicAdd(&stats[2], 1u);
+}
+#endif
 #endif
 
 // ---------------------------------------------------------------- the experts
@@ -248,6 +309,120 @@ __global__ void __launch_bounds__(128) expert_proj_v2(const unsigned char *direc
             if (t < count) *(float4 *)(O + (size_t)(start + t) * o_stride + rb * 64 + ty * 4) = make_float4(acc[0][j], acc[1][j], acc[2][j], acc[3][j]);
         }
     }
+}
+
+// ---------------------------------------------------------------- expert_proj_v3
+// The same products with the same order of additions per output as expert_proj (k ascending, one fmaf per step, from 0), organised per warp:
+// a work item is one expert and up to 32 of its tokens; a block is ONE warp that computes a 2048-output tile (rows x tokens) with 8 rows x 8 tokens per
+// lane, so one step of k costs 3 shared-memory reads for 64 multiply-adds. The tile is 64 rows x 32 tokens, or 128 rows x 16 tokens for an item of at most
+// 16 tokens (half the padding). The weights are decoded into shared memory as bfloat16 pairs (the map values are bfloat16 exactly, so the product is
+// unchanged), 32 columns at a time; the next 64 columns are fetched into registers while the current ones are multiplied.
+template <int T>
+__device__ __forceinline__ void expert_tile_v3(unsigned *Ws, float *Xs, const unsigned char *eblk, const float *mapvals, const uint16_t *refs, uint32_t rbase,
+    int matrix, const float *X, int x_stride, const int *slot_token, int slot0, int n, float *O, int o_stride)
+{
+    constexpr int R = 2048 / T, U = R / 32, LX = T / 8, Q = T / 4;
+    const int K = matrix == 2 ? EXPERT : LATENT, rows = matrix == 2 ? LATENT : EXPERT;
+    const int row0 = blockIdx.x * R;
+    if (row0 >= rows) return;
+    const int lane = threadIdx.x, lx = lane % LX, ly = lane / LX;
+    const unsigned char *cp[U], *sp[U];
+    #pragma unroll
+    for (int u = 0; u < U; u++) {
+        const int gr = row0 + lane + 32 * u, rb = gr >> 6, lr = gr & 63;
+        const unsigned char *blk = eblk + (matrix < 2 ? (size_t)(matrix * 48 + rb) * EXP_BLOCK01 : (size_t)96 * EXP_BLOCK01 + (size_t)rb * EXP_BLOCK2);
+        cp[u] = blk + (size_t)lr * (K / 2);
+        sp[u] = blk + (size_t)64 * K / 2 + (size_t)lr * (K / 32);
+    }
+    const float *xp[Q];
+    #pragma unroll
+    for (int q = 0; q < Q; q++) {
+        const int t = q * 4 + (lane >> 3);
+        xp[q] = t < n ? X + (size_t)(matrix == 2 ? slot0 + t : slot_token[slot0 + t]) * x_stride + (lane & 7) * 4 : nullptr;
+    }
+    float acc[8][8];
+    #pragma unroll
+    for (int i = 0; i < 8; i++)
+        #pragma unroll
+        for (int j = 0; j < 8; j++) acc[i][j] = 0.0f;
+    uint4 wr[U][2]; unsigned short sv[U]; float4 xr[2][Q];
+    auto fetch = [&](int tile) {
+        #pragma unroll
+        for (int u = 0; u < U; u++) {
+            wr[u][0] = *(const uint4 *)(cp[u] + tile * 32); wr[u][1] = *(const uint4 *)(cp[u] + tile * 32 + 16);
+            sv[u] = *(const unsigned short *)(sp[u] + tile * 2);
+        }
+        #pragma unroll
+        for (int h = 0; h < 2; h++)
+            #pragma unroll
+            for (int q = 0; q < Q; q++) xr[h][q] = xp[q] ? *(const float4 *)(xp[q] + tile * 64 + h * 32) : make_float4(0.f, 0.f, 0.f, 0.f);
+    };
+    fetch(0);
+    for (int tile = 0; tile < K / 64; tile++) {
+        #pragma unroll
+        for (int h = 0; h < 2; h++) {
+            __syncwarp();
+            #pragma unroll
+            for (int u = 0; u < U; u++) {
+                const unsigned sel = ((h ? sv[u] >> 8 : sv[u]) & 0xff);
+                const float *vals = mapvals + (size_t)refs[rbase + sel] * 16;
+                const uint4 c = wr[u][h];
+                const unsigned words[4] = { c.x, c.y, c.z, c.w };
+                #pragma unroll
+                for (int q = 0; q < 4; q++)
+                    #pragma unroll
+                    for (int b = 0; b < 4; b++) {
+                        const unsigned v = (words[q] >> (b * 8)) & 0xff;
+                        Ws[(q * 4 + b) * R + lane + 32 * u] = __byte_perm(__float_as_uint(__ldg(vals + (v & 15))), __float_as_uint(__ldg(vals + (v >> 4))), 0x7632);
+                    }
+            }
+            #pragma unroll
+            for (int q = 0; q < Q; q++) {
+                const int t = q * 4 + (lane >> 3), k4 = (lane & 7) * 4;
+                const float4 f = xr[h][q];
+                Xs[(k4 + 0) * T + t] = f.x; Xs[(k4 + 1) * T + t] = f.y; Xs[(k4 + 2) * T + t] = f.z; Xs[(k4 + 3) * T + t] = f.w;
+            }
+            if (h == 1 && tile + 1 < K / 64) fetch(tile + 1);
+            __syncwarp();
+            #pragma unroll 4
+            for (int kp = 0; kp < 16; kp++) {
+                const uint4 wa = *(const uint4 *)&Ws[kp * R + ly * 8], wb = *(const uint4 *)&Ws[kp * R + ly * 8 + 4];
+                const unsigned wd[8] = { wa.x, wa.y, wa.z, wa.w, wb.x, wb.y, wb.z, wb.w };
+                #pragma unroll
+                for (int par = 0; par < 2; par++) {
+                    const float4 xa = *(const float4 *)&Xs[(2 * kp + par) * T + lx * 8], xb = *(const float4 *)&Xs[(2 * kp + par) * T + lx * 8 + 4];
+                    const float xv[8] = { xa.x, xa.y, xa.z, xa.w, xb.x, xb.y, xb.z, xb.w };
+                    #pragma unroll
+                    for (int i = 0; i < 8; i++) {
+                        const float w = __uint_as_float(par ? (wd[i] & 0xffff0000u) : (wd[i] << 16));
+                        #pragma unroll
+                        for (int j = 0; j < 8; j++) acc[i][j] = fmaf(w, xv[j], acc[i][j]);
+                    }
+                }
+            }
+        }
+    }
+    #pragma unroll
+    for (int j = 0; j < 8; j++) {
+        const int t = lx * 8 + j;
+        if (t < n) {
+            float *o = O + (size_t)(slot0 + t) * o_stride + row0 + ly * 8;
+            *(float4 *)o = make_float4(acc[0][j], acc[1][j], acc[2][j], acc[3][j]);
+            *(float4 *)(o + 4) = make_float4(acc[4][j], acc[5][j], acc[6][j], acc[7][j]);
+        }
+    }
+}
+
+// items[i] = (expert, first slot, tokens, tile width 16 or 32); grid = (rows / 64, items)
+__global__ void __launch_bounds__(32) expert_proj_v3(const unsigned char *direct, const float *mapvals, const uint16_t *refs, const uint32_t *ref_base, int matrix,
+    const float *X, int x_stride, const int *slot_token, const int4 *items, float *O, int o_stride)
+{
+    __shared__ __align__(16) unsigned smem[2048 + 1024];
+    const int4 it = items[blockIdx.y];
+    const unsigned char *eblk = direct + (size_t)it.x * EXPERT_RAW;
+    const uint32_t rbase = ref_base[it.x * 3 + matrix];
+    if (it.w == 16) expert_tile_v3<16>(smem, (float *)(smem + 2048), eblk, mapvals, refs, rbase, matrix, X, x_stride, slot_token, it.y, it.z, O, o_stride);
+    else expert_tile_v3<32>(smem, (float *)(smem + 2048), eblk, mapvals, refs, rbase, matrix, X, x_stride, slot_token, it.y, it.z, O, o_stride);
 }
 
 // mixture[n][c] = sum over ranks in order of weight * down[slot of (n, rank)][c]

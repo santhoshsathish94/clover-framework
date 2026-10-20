@@ -9,6 +9,12 @@
 #include <unistd.h>
 
 static double seconds(const struct timespec &a, const struct timespec &b) { return (b.tv_sec - a.tv_sec) + 1e-9 * (b.tv_nsec - a.tv_nsec); }
+static void mem_mark(const char *what)   // MODEL_GPU_MEMLOG=1: the card's memory in use at this point
+{
+    if (!getenv("MODEL_GPU_MEMLOG")) return;
+    size_t f, t; CHECK(cudaMemGetInfo(&f, &t));
+    printf("MEM %-34s %.3f GiB in use\n", what, (t - f) / 1073741824.0);
+}
 enum { MLA_Q = 18432, MLA_QLAT = 1536, MLA_KVLAT = 576, MLA_KV = 512, MLA_EXP = 24576, LAST_LAYER_INDEX = 92 };
 static bool layer_is_mla(int l) { return l % 4 == 3 || l == LAST_LAYER_INDEX; }
 static int snapshots_in(int l) { return 1 + (l - 1) / 12; }
@@ -106,6 +112,146 @@ __global__ void mla_attention(float *out, const float *q, const float *kv, const
     }
 }
 
+// float -> double with integer ops for normal numbers (exponent rebias, mantissa shifted up); zero, denormals, inf and nan take the conversion instruction
+__device__ __forceinline__ double f2d(float f)
+{
+    const unsigned u = __float_as_uint(f);
+    if (((u >> 23) & 0xffu) - 1u < 254u) return __hiloint2double((int)((u & 0x80000000u) | (((u & 0x7fffffffu) >> 3) + 0x38000000u)), (int)(u << 29));
+    return (double)f;
+}
+
+// Same arithmetic as mla_attention, tiled: persistent blocks, each one takes work items (one head, QT = 32 consecutive queries) and shares every K/V row it reads
+// between the 32 queries. Scores: one thread = one key x 16 queries, the 192-step double chain in the original order (explicit fma: the float products are exact
+// in double, so it equals the separate multiply and add). K is staged in shared memory 32 coordinates at a time, already widened to double (F2F runs on the FP64
+// pipe at the cost of a DFMA, so it is done with integer ops, once per element; the next chunk's loads are in flight during the current chunk's chain). The scores
+// of the item live in a global scratch row set per block (QT x SN floats), so the window length is not limited by shared memory. Softmax: one warp per query for the
+// max and exp, the totals one lane per query (a sequential double sum in position order, one warp instruction advances 32 of them), then the divide. Values: one
+// thread = one feature x 16 queries, sequential float multiply then add, only positions <= the query's own.
+enum { MLA_QT = 32 };
+__global__ void __launch_bounds__(256) mla_attention_tiled(float *out, const float *q, const float *kv, const float *kvlat, int N, int SN, float *scratch, int items)
+{
+    constexpr int QT = MLA_QT, KT = 128, CC = 32, NJ = KT * CC / 256, TS = KT + 1, QPT = QT / 2, QS = 192;
+    extern __shared__ __align__(16) unsigned char smem_raw[];
+    double *qd = (double *)smem_raw;
+    double *tile = qd + QT * QS;
+    __shared__ double total[QT];
+    float *sc = scratch + (size_t)blockIdx.x * QT * SN;
+    const int tid = threadIdx.x, warp = tid >> 5, lane = tid & 31, kk = tid & (KT - 1), qh = tid / KT;
+    const int ntile = (N + QT - 1) / QT;
+    const float scale = 1.0f / sqrtf(192.0f);
+    for (int item = blockIdx.x; item < items; item += gridDim.x) {
+        const int h = item % HEADS, n0 = (ntile - 1 - item / HEADS) * QT;   // the longest tiles first
+        const int pmax = min(n0 + QT - 1, N - 1);
+        __syncthreads();
+        for (int i = tid; i < QT * QS; i += 256) { const int n = n0 + i / QS; qd[i] = n < N ? (double)q[(size_t)n * MLA_Q + h * 192 + i % QS] : 0.0; }
+        for (int pb = 0; pb <= pmax; pb += KT) {
+            double acc[QPT];
+            #pragma unroll
+            for (int i = 0; i < QPT; i++) acc[i] = 0.0;
+            const bool active = pb + (kk & ~31) <= pmax;
+            float r[NJ];
+            auto gload = [&](int ch) {
+                #pragma unroll
+                for (int j = 0; j < NJ; j++) {
+                    const int e = tid + 256 * j, key = e / CC, cc = e % CC, p = pb + key;
+                    r[j] = p > pmax ? 0.0f : ch < 4 ? kv[(size_t)p * MLA_EXP + h * 256 + ch * CC + cc] : kvlat[(size_t)p * MLA_KVLAT + MLA_KV + (ch - 4) * CC + cc];
+                }
+            };
+            gload(0);
+            for (int ch = 0; ch < 6; ch++) {
+                #pragma unroll
+                for (int j = 0; j < NJ; j++) { const int e = tid + 256 * j; tile[(e % CC) * TS + e / CC] = f2d(r[j]); }
+                __syncthreads();
+                if (ch < 5) gload(ch + 1);
+                if (active) {
+                    const double *qp = qd + qh * QPT * QS + ch * CC;
+                    #pragma unroll 4
+                    for (int cc = 0; cc < CC; cc++) {
+                        const double kd = tile[cc * TS + kk];
+                        #pragma unroll
+                        for (int i = 0; i < QPT; i++) acc[i] = __fma_rn(qp[i * QS + cc], kd, acc[i]);
+                    }
+                }
+                __syncthreads();
+            }
+            const int p = pb + kk;
+            #pragma unroll
+            for (int i = 0; i < QPT; i++) { const int qi = qh * QPT + i; if (n0 + qi < N && p <= n0 + qi) sc[(size_t)qi * SN + p] = (float)acc[i] * scale; }
+        }
+        __syncthreads();
+        for (int qi = warp; qi < QT; qi += 8) {
+            const int n = n0 + qi;
+            if (n >= N) continue;
+            float *s = sc + (size_t)qi * SN;
+            float m = -INFINITY;
+            for (int p = lane; p <= n; p += 32) m = fmaxf(m, s[p]);
+            for (int o = 16; o > 0; o >>= 1) m = fmaxf(m, __shfl_xor_sync(0xffffffffu, m, o));
+            for (int p = lane; p <= n; p += 32) s[p] = expf_cr(s[p] - m);
+        }
+        __syncthreads();
+        if (warp == 0) {   // lane = query: one warp instruction advances 32 sequential sums
+            const float *s = sc + (size_t)lane * SN;
+            const int n = n0 + lane, nlast = min(n0 + QT - 1, N - 1);
+            double t = 0.0;
+            #pragma unroll 8
+            for (int p = 0; p <= nlast; p++) if (p <= n) t += (double)s[p];
+            total[lane] = t;
+        }
+        __syncthreads();
+        for (int qi = warp; qi < QT; qi += 8) {
+            const int n = n0 + qi;
+            if (n >= N) continue;
+            float *s = sc + (size_t)qi * SN;
+            const double t = total[qi];
+            for (int p = lane; p <= n; p += 32) s[p] = (float)((double)s[p] / t);
+        }
+        __syncthreads();
+        const int d = tid & 127, nq = n0 + qh * QPT;
+        if (nq < N) {
+            const float *vp = kv + (size_t)h * 256 + 128 + d, *sp = sc + (size_t)qh * QPT * SN;
+            float o[QPT];
+            #pragma unroll
+            for (int i = 0; i < QPT; i++) o[i] = 0.0f;
+            int p = 0;
+            if (nq >= 7) {   // the loads of the next 8 positions are issued before the current 8 are used
+                float v[8], vn[8];
+                #pragma unroll
+                for (int j = 0; j < 8; j++) v[j] = vp[(size_t)j * MLA_EXP];
+                for (; p + 7 <= nq; p += 8) {
+                    if (p + 15 <= nq) {
+                        #pragma unroll
+                        for (int j = 0; j < 8; j++) vn[j] = vp[(size_t)(p + 8 + j) * MLA_EXP];
+                    }
+                    #pragma unroll
+                    for (int i = 0; i < QPT; i++) {
+                        const float4 a = *(const float4 *)(sp + (size_t)i * SN + p), b = *(const float4 *)(sp + (size_t)i * SN + p + 4);
+                        float t = o[i];
+                        t = __fadd_rn(t, __fmul_rn(a.x, v[0])); t = __fadd_rn(t, __fmul_rn(a.y, v[1])); t = __fadd_rn(t, __fmul_rn(a.z, v[2])); t = __fadd_rn(t, __fmul_rn(a.w, v[3]));
+                        t = __fadd_rn(t, __fmul_rn(b.x, v[4])); t = __fadd_rn(t, __fmul_rn(b.y, v[5])); t = __fadd_rn(t, __fmul_rn(b.z, v[6])); t = __fadd_rn(t, __fmul_rn(b.w, v[7]));
+                        o[i] = t;
+                    }
+                    if (p + 15 <= nq) {
+                        #pragma unroll
+                        for (int j = 0; j < 8; j++) v[j] = vn[j];
+                    }
+                }
+            }
+            for (; p <= nq; p++) {
+                const float v = vp[(size_t)p * MLA_EXP];
+                #pragma unroll
+                for (int i = 0; i < QPT; i++) o[i] = __fadd_rn(o[i], __fmul_rn(sp[(size_t)i * SN + p], v));
+            }
+            for (; p <= min(nq + QPT - 1, N - 1); p++) {
+                const float v = vp[(size_t)p * MLA_EXP];
+                #pragma unroll
+                for (int i = 0; i < QPT; i++) if (p <= nq + i) o[i] = __fadd_rn(o[i], __fmul_rn(sp[(size_t)i * SN + p], v));
+            }
+            #pragma unroll
+            for (int i = 0; i < QPT; i++) if (nq + i < N) out[(size_t)(nq + i) * ROWS + h * 128 + d] = o[i];
+        }
+    }
+}
+
 // ---------------------------------------------------------------- one layer's trunk on the card
 struct Layer {
     int L = 0; bool mla = false;
@@ -171,6 +317,7 @@ static void layer_load_trunk(const char *dataset, int L, Layer &y)
     CHECK(cudaMemcpy(y.T.op, op.data(), op.size(), cudaMemcpyHostToDevice));
     y.bytes += op.size();
     y.input_gains = y.mla ? y.T.op + y.mr[4].offset : y.T.op + 88;
+    mem_mark("trunk loaded");
 }
 
 static unsigned json_count(const std::vector<unsigned char> &text, const char *key, int *found)
@@ -217,7 +364,8 @@ static void layer_load_expert_tables(const char *dataset, int L, Layer &y)
 
 // ---------------------------------------------------------------- the buffers of a window on one card
 struct Work {
-    int N = 0, device = 0, SLOTS = 0;
+    int N = 0, device = 0, SLOTS = 0, moe_chunk = 0;
+    float *arena = nullptr;
     float *snap[8], *cur = nullptr, *nxt = nullptr;
     float *Xn, *Agg, *post, *post_t, *raw[3], *qkv[3], *beta, *dhid, *decay, *gate, *attn, *state;
     float *mq, *mqlat, *mkv, *mkvn, *mexp;                         // MLA
@@ -225,39 +373,72 @@ struct Work {
     float *scores, *choices, *weights, *latent, *G, *U, *D, *mixture, *lnorm, *routed, *sg, *su, *so;
     int *selected, *bad, *d_slot_token, *d_slot_of, *d_start, *d_count;
     unsigned char *d_experts = nullptr;
+    int4 *d_items = nullptr;                                       // expert_proj_v3 work items (expert, first slot, tokens, tile width)
 #ifdef FAST_ROUTER
-    float *approx, *cand_score; int *cand, *ncand, *overflow; cublasHandle_t cb;
+    float *approx, *cand_score; int *cand, *ncand, *overflow, *over_list; cublasHandle_t cb;
 #endif
     std::vector<int> h_selected, h_slot_token, h_slot_of, h_start, h_count;
 };
 
-static void work_alloc(Work &w, int device, int N, bool dense, bool experts)
+static void work_alloc(Work &w, int device, int N, bool dense, bool experts, int nsnap = 8, int kinds = 3)
 {
-    w.device = device; w.N = N; w.SLOTS = N * TOP;
+    w.device = device; w.N = N;
+    { const char *e = getenv("MODEL_GPU_MOE_CHUNK"); const int c = e && *e ? atoi(e) : 2048; w.moe_chunk = std::max(1, std::min(N, c)); }   // tokens per mixture-of-experts chunk
+    w.SLOTS = w.moe_chunk * TOP;
     CHECK(cudaSetDevice(device));
+    mem_mark("work_alloc start");
     auto a = [&](float **p, size_t floats) { CHECK(cudaMalloc((void **)p, floats * 4)); };
-    for (int i = 0; i < 8; i++) a(&w.snap[i], (size_t)N * W);
+    for (int i = 0; i < 8; i++) w.snap[i] = nullptr;
+    for (int i = 0; i < nsnap && i < 8; i++) a(&w.snap[i], (size_t)N * W);
     a(&w.cur, (size_t)N * W); a(&w.nxt, (size_t)N * W);
-    a(&w.Xn, (size_t)N * W); a(&w.Agg, (size_t)N * W); a(&w.post, (size_t)N * W); a(&w.post_t, (size_t)N * W);
-    for (int c = 0; c < 3; c++) { a(&w.raw[c], (size_t)N * ROWS); a(&w.qkv[c], (size_t)N * ROWS); }
-    a(&w.beta, (size_t)N * HEADS); a(&w.dhid, (size_t)N * HEAD); a(&w.decay, (size_t)N * ROWS); a(&w.gate, (size_t)N * ROWS); a(&w.attn, (size_t)N * ROWS);
     a(&w.state, (size_t)HEADS * HEAD * HEAD);
-    a(&w.mq, (size_t)N * MLA_Q); a(&w.mqlat, (size_t)N * MLA_QLAT); a(&w.mkv, (size_t)N * MLA_KVLAT); a(&w.mkvn, (size_t)N * MLA_KV); a(&w.mexp, (size_t)N * MLA_EXP);
     if (dense) { a(&w.dg, (size_t)N * DENSE); a(&w.du, (size_t)N * DENSE); a(&w.dout, (size_t)N * W); }
-    a(&w.scores, (size_t)N * EXPERTS); a(&w.choices, (size_t)N * EXPERTS); a(&w.weights, (size_t)N * TOP); a(&w.latent, (size_t)N * LATENT);
+    // One scratch arena for what the attention and the mixture of experts use one after the other (the attention's buffers are dead when its output has been
+    // added, and the mixture's are written only after that). Per token: Agg (= post = Xn: aggregate, then normalised in place, then the attention reads it;
+    // the second aggregate overwrites it after the attention), then the larger of the attention's and the mixture's own layouts.
+    {
+        const bool kda = kinds & 1, mla = kinds & 2;
+        const size_t kda_extra = 3 * (size_t)ROWS * 2 + HEADS + HEAD;                                              // raw, qkv, beta, dhid (decay, attn, gate reuse raw)
+        const size_t mla_extra = 2 * (size_t)ROWS + MLA_Q + MLA_QLAT + MLA_KVLAT + MLA_KV + MLA_EXP;              // gate, attn, mq, mqlat, mkv, mkvn, mexp
+        const size_t moe_fixed = TOP + 2 * (size_t)LATENT + W;                                                    // weights, latent, mixture, routed
+        const size_t moe_a = W + 2 * (size_t)EXPERTS, moe_b = 2 * (size_t)SHARED + W;                             // post_t scores choices | sg su so (lnorm inside so)
+        const size_t per_token = W + std::max(std::max(kda ? kda_extra : (size_t)0, mla ? mla_extra : (size_t)0), moe_fixed + std::max(moe_a, moe_b));
+        CHECK(cudaMalloc((void **)&w.arena, per_token * N * 4));
+        float *p = w.arena;
+        auto carve = [&](float **q, size_t per) { *q = p; p += per * N; };
+        carve(&w.Agg, W); w.post = w.Agg; w.Xn = w.Agg;
+        float *base = p;
+        if (kda) {
+            for (int c = 0; c < 3; c++) carve(&w.raw[c], ROWS);
+            for (int c = 0; c < 3; c++) carve(&w.qkv[c], ROWS);
+            carve(&w.beta, HEADS); carve(&w.dhid, HEAD);
+            w.decay = w.raw[0]; w.attn = w.raw[1]; w.gate = w.raw[2];
+        }
+        p = base;
+        if (mla) { carve(&w.gate, ROWS); carve(&w.attn, ROWS); carve(&w.mqlat, MLA_QLAT); carve(&w.mq, MLA_Q); carve(&w.mkv, MLA_KVLAT); carve(&w.mkvn, MLA_KV); carve(&w.mexp, MLA_EXP); }
+        p = base;
+        carve(&w.weights, TOP); carve(&w.latent, LATENT); carve(&w.mixture, LATENT); carve(&w.routed, W);
+        float *tmp = p;
+        carve(&w.post_t, W); carve(&w.scores, EXPERTS); carve(&w.choices, EXPERTS);
+        p = tmp;
+        carve(&w.sg, SHARED); carve(&w.su, SHARED); carve(&w.so, W); w.lnorm = w.so;
+    }
     a(&w.G, (size_t)w.SLOTS * EXPERT); a(&w.U, (size_t)w.SLOTS * EXPERT); a(&w.D, (size_t)w.SLOTS * LATENT);
-    a(&w.mixture, (size_t)N * LATENT); a(&w.lnorm, (size_t)N * LATENT); a(&w.routed, (size_t)N * W);
-    a(&w.sg, (size_t)N * SHARED); a(&w.su, (size_t)N * SHARED); a(&w.so, (size_t)N * W);
     CHECK(cudaMalloc(&w.selected, (size_t)N * TOP * 4)); CHECK(cudaMalloc(&w.bad, 4));
-    CHECK(cudaMalloc(&w.d_slot_token, (size_t)w.SLOTS * 4)); CHECK(cudaMalloc(&w.d_slot_of, (size_t)N * TOP * 4));
+    CHECK(cudaMalloc(&w.d_slot_token, (size_t)w.SLOTS * 4)); CHECK(cudaMalloc(&w.d_slot_of, (size_t)w.SLOTS * 4));
     CHECK(cudaMalloc(&w.d_start, EXPERTS * 4)); CHECK(cudaMalloc(&w.d_count, EXPERTS * 4));
+    mem_mark("work buffers");
     if (experts) CHECK(cudaMalloc(&w.d_experts, (size_t)EXPERTS * EXPERT_RAW));
+    mem_mark("expert buffer");
+    CHECK(cudaMalloc(&w.d_items, ((size_t)w.SLOTS + EXPERTS) * sizeof(int4)));
 #ifdef FAST_ROUTER
-    CHECK(cudaMalloc(&w.approx, (size_t)N * EXPERTS * 4)); CHECK(cudaMalloc(&w.cand_score, (size_t)N * CAND * 4));
-    CHECK(cudaMalloc(&w.cand, (size_t)N * CAND * 4)); CHECK(cudaMalloc(&w.ncand, (size_t)N * 4)); CHECK(cudaMalloc(&w.overflow, 4));
+    // the approximate scores are dead before the first expert product writes G, so they share its memory when it is large enough
+    if ((size_t)N * EXPERTS <= (size_t)w.SLOTS * EXPERT) w.approx = w.G; else a(&w.approx, (size_t)N * EXPERTS);
+    CHECK(cudaMalloc(&w.cand_score, (size_t)N * CAND * 4));
+    CHECK(cudaMalloc(&w.cand, (size_t)N * CAND * 4)); CHECK(cudaMalloc(&w.ncand, (size_t)N * 4)); CHECK(cudaMalloc(&w.overflow, 4)); CHECK(cudaMalloc(&w.over_list, (size_t)N * 4));
     CUB(cublasCreate(&w.cb));
 #endif
-    w.h_selected.resize((size_t)N * TOP); w.h_slot_token.resize(w.SLOTS); w.h_slot_of.resize((size_t)N * TOP); w.h_start.resize(EXPERTS); w.h_count.resize(EXPERTS);
+    w.h_selected.resize((size_t)N * TOP); w.h_slot_token.resize(w.SLOTS); w.h_slot_of.resize(w.SLOTS); w.h_start.resize(EXPERTS); w.h_count.resize(EXPERTS);
 }
 
 // ---------------------------------------------------------------- the pieces of a layer
@@ -299,8 +480,26 @@ static void mla_block(Work &w, const Layer &y, float *res)
     copy_prefix<<<blocks((size_t)N * MLA_KV), 256>>>(w.mkvn, w.mkv, MLA_KV, MLA_KVLAT, (size_t)N);
     mla_project(w.mkvn, N, y, 25, w.mexp);
     const size_t shared = (size_t)N * 4;
-    if (shared > 48 * 1024) CHECK(cudaFuncSetAttribute(mla_attention, cudaFuncAttributeMaxDynamicSharedMemorySize, (int)shared));
-    mla_attention<<<dim3(N, HEADS), 128, shared>>>(w.attn, w.mq, w.mexp, w.mkv, N);
+    const bool use_base = getenv("MLA_ATTN") && !strcmp(getenv("MLA_ATTN"), "base");   // MLA_ATTN=base: the one-block-per-query kernel
+    const size_t SN = (((size_t)N + 3) / 4 | 1) * 4;   // row stride of the scores: a multiple of 4 floats (float4 reads), 16 bytes x an odd number
+    auto base = [&](float *dst) {
+        if (shared > 48 * 1024) CHECK(cudaFuncSetAttribute(mla_attention, cudaFuncAttributeMaxDynamicSharedMemorySize, (int)shared));
+        mla_attention<<<dim3(N, HEADS), 128, shared>>>(dst, w.mq, w.mexp, w.mkv, N);
+    };
+    auto tiled = [&](float *dst) {
+        static float *scratch[16]; static size_t scratch_bytes[16];   // the scores of the blocks' work items, per device
+        int dev = 0, sms = 0, per_sm = 0;
+        CHECK(cudaGetDevice(&dev)); CHECK(cudaDeviceGetAttribute(&sms, cudaDevAttrMultiProcessorCount, dev));
+        const size_t smem = (size_t)MLA_QT * 192 * 8 + 32 * 129 * 8;
+        CHECK(cudaFuncSetAttribute(mla_attention_tiled, cudaFuncAttributeMaxDynamicSharedMemorySize, (int)smem));
+        CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&per_sm, mla_attention_tiled, 256, smem));
+        const int items = ((N + MLA_QT - 1) / MLA_QT) * HEADS, grid = std::min(items, sms * std::max(per_sm, 1));
+        const size_t need = (size_t)grid * MLA_QT * SN * 4;
+        if (dev >= 16) { fprintf(stderr, "mla_attention: device index %d not supported by the scratch table\n", dev); exit(1); }
+        if (scratch_bytes[dev] < need) { if (scratch[dev]) CHECK(cudaFree(scratch[dev])); CHECK(cudaMalloc(&scratch[dev], need)); scratch_bytes[dev] = need; }
+        mla_attention_tiled<<<grid, 256, smem>>>(dst, w.mq, w.mexp, w.mkv, N, (int)SN, scratch[dev], items);
+    };
+    if (use_base) base(w.attn); else tiled(w.attn);
     gemm(w.Xn, N, W, T, 6, w.gate);
     gate_mul<<<blocks((size_t)N * ROWS), 256>>>(w.gate, w.attn, (size_t)N * ROWS);
     gemm(w.gate, N, ROWS, T, 7, res);
@@ -328,22 +527,46 @@ static void route_all_double(Work &w, const Layer &y)
 // the mixture of experts for layer y.L from w.post, added into `res`; experts of this layer must be in w.d_experts
 static void moe_block(Work &w, const Layer &y, float *res)
 {
-    const int N = w.N, SLOTS = w.SLOTS; const Trunk &T = y.T;
+    const int N = w.N; const Trunk &T = y.T;
 #ifdef FAST_ROUTER
     { const float one_f = 1.0f, zero_f = 0.0f;
-      CUB(cublasSgemm(w.cb, CUBLAS_OP_T, CUBLAS_OP_N, EXPERTS, N, W, &one_f, (const float *)rec_data(T, 29), W, w.post, W, &zero_f, w.approx, EXPERTS)); }
+      CUB(cublasSgemm(w.cb, CUBLAS_OP_T, CUBLAS_OP_N, N, EXPERTS, W, &one_f, w.post, W, (const float *)rec_data(T, 29), W, &zero_f, w.approx, N)); }
     CHECK(cudaMemset(w.overflow, 0, 4));
-    router_candidates<<<blocks(N), 256>>>(w.approx, rec_data(T, 30), w.cand, w.ncand, w.overflow, N);
-    router_exact<<<blocks((size_t)N * CAND), 256>>>(w.cand_score, w.cand, w.ncand, rec_data(T, 29), w.post, N);
-    top16_candidates<<<blocks(N), 256>>>(w.cand_score, w.cand, w.ncand, rec_data(T, 30), w.selected, w.weights, N);
+    router_candidates<<<(N + 31) / 32, 32>>>(w.approx, rec_data(T, 30), w.cand, w.ncand, w.overflow, w.over_list, N);
+    router_exact<<<N, 64>>>(w.cand_score, w.cand, w.ncand, rec_data(T, 29), w.post, N);
+    top16_candidates<<<blocks(N), 256>>>(w.cand_score, w.cand, w.ncand, rec_data(T, 30), w.approx, w.selected, w.weights, w.overflow, w.over_list, N);
+    {   // tokens with more than CAND candidates are routed by the all-double scores of their own row (the others keep the candidate result)
+        int h_over = 0; CHECK(cudaMemcpy(&h_over, w.overflow, 4, cudaMemcpyDeviceToHost));
+        if (h_over) {
+            fprintf(stderr, "layer %d: %d of %d tokens have more than %d router candidates (or an approximate score off by more than MARGIN/4), those tokens are routed by the all-double router\n", y.L, h_over, N, (int)CAND);
+            CHECK(cudaMemset(w.bad, 0, 4));
+            router_scores_tokens<<<blocks((size_t)h_over * EXPERTS), 256>>>(w.scores, w.choices, rec_data(T, 29), rec_data(T, 30), w.post, w.over_list, h_over);
+            top16<<<blocks(h_over), 256>>>(w.scores, w.choices, w.selected, w.weights, w.bad, h_over, w.over_list);
+            int h_bad = 0; CHECK(cudaMemcpy(&h_bad, w.bad, 4, cudaMemcpyDeviceToHost));
+            if (h_bad) { fprintf(stderr, "layer %d: non-finite router choice for %d tokens\n", y.L, h_bad); exit(1); }
+        }
+    }
+#ifdef ROUTER_CHECK
+    {   // run the all-double router too, compare it with the fast result for every token and keep the all-double result
+        static int *sf = nullptr, *sr = nullptr; static float *wf = nullptr, *wr = nullptr; static unsigned *st = nullptr;
+        if (!sf) { CHECK(cudaMalloc(&sf, (size_t)N * TOP * 4)); CHECK(cudaMalloc(&sr, (size_t)N * TOP * 4)); CHECK(cudaMalloc(&wf, (size_t)N * TOP * 4)); CHECK(cudaMalloc(&wr, (size_t)N * TOP * 4)); CHECK(cudaMalloc(&st, 128 * 4)); }
+        CHECK(cudaMemcpy(sf, w.selected, (size_t)N * TOP * 4, cudaMemcpyDeviceToDevice)); CHECK(cudaMemcpy(wf, w.weights, (size_t)N * TOP * 4, cudaMemcpyDeviceToDevice));
+        route_all_double(w, y);
+        CHECK(cudaMemcpy(sr, w.selected, (size_t)N * TOP * 4, cudaMemcpyDeviceToDevice)); CHECK(cudaMemcpy(wr, w.weights, (size_t)N * TOP * 4, cudaMemcpyDeviceToDevice));
+        CHECK(cudaMemset(st, 0, 128 * 4));
+        router_check<<<blocks(N), 256>>>(w.approx, w.choices, rec_data(T, 30), sf, wf, sr, wr, st, N);
+        unsigned h[128]; CHECK(cudaMemcpy(h, st, sizeof h, cudaMemcpyDeviceToHost));
+        float dmax; memcpy(&dmax, &h[0], 4);
+        fprintf(stderr, "ROUTERCHECK layer %d: max |approx-exact choice| %.3e, max true candidates %u, tokens over %d: %u, tokens whose routes/weights differ from all-double: %u; true-candidate histogram:", y.L, dmax, h[1], (int)CAND, h[3], h[2]);
+        for (int k = 0; k < 120; k++) if (h[8 + k]) fprintf(stderr, " %d:%u", k, h[8 + k]);
+        fprintf(stderr, "\n");
+    }
+#else
     CHECK(cudaMemcpy(w.h_selected.data(), w.selected, w.h_selected.size() * 4, cudaMemcpyDeviceToHost));
-    { int h_over = 0; CHECK(cudaMemcpy(&h_over, w.overflow, 4, cudaMemcpyDeviceToHost));
-      if (h_over) { fprintf(stderr, "layer %d: %d tokens have more than %d router candidates, this layer is routed by the all-double router\n", y.L, h_over, (int)CAND); route_all_double(w, y); } }
+#endif
 #else
     route_all_double(w, y);
 #endif
-    std::fill(w.h_count.begin(), w.h_count.end(), 0);
-    for (int i = 0; i < N * TOP; i++) w.h_count[w.h_selected[i]]++;
     {   // MODEL_GPU_ROUTES=dir: write each layer's chosen experts (N x 16 ints) to dir/routes-L.bin, to compare two runs
         const char *dir = getenv("MODEL_GPU_ROUTES");
         if (dir && *dir) {
@@ -352,17 +575,43 @@ static void moe_block(Work &w, const Layer &y, float *res)
             if (f) { fwrite(w.h_selected.data(), 4, w.h_selected.size(), f); fclose(f); }
         }
     }
-    { int acc = 0; for (int e = 0; e < EXPERTS; e++) { w.h_start[e] = acc; acc += w.h_count[e]; } }
-    { std::vector<int> fill(EXPERTS, 0);
-      for (int n = 0; n < N; n++) for (int r = 0; r < TOP; r++) { const int e = w.h_selected[n * TOP + r]; const int slot = w.h_start[e] + fill[e]++; w.h_slot_token[slot] = n; w.h_slot_of[n * TOP + r] = slot; } }
-    CHECK(cudaMemcpy(w.d_slot_token, w.h_slot_token.data(), SLOTS * 4, cudaMemcpyHostToDevice)); CHECK(cudaMemcpy(w.d_slot_of, w.h_slot_of.data(), (size_t)N * TOP * 4, cudaMemcpyHostToDevice));
-    CHECK(cudaMemcpy(w.d_start, w.h_start.data(), EXPERTS * 4, cudaMemcpyHostToDevice)); CHECK(cudaMemcpy(w.d_count, w.h_count.data(), EXPERTS * 4, cudaMemcpyHostToDevice));
     gemm(w.post, N, W, T, 31, w.latent);
-    EXPERT_LAUNCH(48, w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 0, w.latent, LATENT, w.d_slot_token, w.d_start, w.d_count, w.G, EXPERT);
-    EXPERT_LAUNCH(48, w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 1, w.latent, LATENT, w.d_slot_token, w.d_start, w.d_count, w.U, EXPERT);
-    dense_activation<<<blocks((size_t)SLOTS * EXPERT), 256>>>(w.G, w.U, (size_t)SLOTS * EXPERT);
-    EXPERT_LAUNCH(56, w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 2, w.G, EXPERT, w.d_slot_token, w.d_start, w.d_count, w.D, LATENT);
-    mix_ranks<<<blocks((size_t)N * LATENT), 256>>>(w.mixture, w.D, w.d_slot_of, w.weights, N);
+    // the expert products in chunks of w.moe_chunk tokens (slot buffers G, U, D hold one chunk); every output is summed in the same order as for the whole window
+    for (int t0 = 0; t0 < N; t0 += w.moe_chunk) {
+        const int nc = std::min(w.moe_chunk, N - t0), slots = nc * TOP;
+        std::fill(w.h_count.begin(), w.h_count.end(), 0);
+        for (int i = 0; i < slots; i++) w.h_count[w.h_selected[(size_t)t0 * TOP + i]]++;
+        { int acc = 0; for (int e = 0; e < EXPERTS; e++) { w.h_start[e] = acc; acc += w.h_count[e]; } }
+        { std::vector<int> fill(EXPERTS, 0);
+          for (int n = 0; n < nc; n++) for (int r = 0; r < TOP; r++) { const int e = w.h_selected[(size_t)(t0 + n) * TOP + r]; const int slot = w.h_start[e] + fill[e]++; w.h_slot_token[slot] = t0 + n; w.h_slot_of[n * TOP + r] = slot; } }
+        CHECK(cudaMemcpy(w.d_slot_token, w.h_slot_token.data(), (size_t)slots * 4, cudaMemcpyHostToDevice)); CHECK(cudaMemcpy(w.d_slot_of, w.h_slot_of.data(), (size_t)slots * 4, cudaMemcpyHostToDevice));
+        CHECK(cudaMemcpy(w.d_start, w.h_start.data(), EXPERTS * 4, cudaMemcpyHostToDevice)); CHECK(cudaMemcpy(w.d_count, w.h_count.data(), EXPERTS * 4, cudaMemcpyHostToDevice));
+#if defined(EXPERT_V2) && !defined(EXPERT_V2_LEGACY)
+        // chunks of 32 tokens per expert; the last chunk is a 16-wide tile if it has at most 16 tokens. 32-wide items first.
+        int n_items = 0;
+        { std::vector<int4> wide, narrow;
+          for (int e = 0; e < EXPERTS; e++)
+              for (int i0 = 0; i0 < w.h_count[e]; i0 += 32) {
+                  const int n = std::min(32, w.h_count[e] - i0);
+                  (n <= 16 ? narrow : wide).push_back(make_int4(e, w.h_start[e] + i0, n, n <= 16 ? 16 : 32));
+              }
+          wide.insert(wide.end(), narrow.begin(), narrow.end());
+          n_items = (int)wide.size();
+          if (n_items) CHECK(cudaMemcpy(w.d_items, wide.data(), (size_t)n_items * sizeof(int4), cudaMemcpyHostToDevice)); }
+        if (n_items) {
+            expert_proj_v3<<<dim3(48, n_items), 32>>>(w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 0, w.latent, LATENT, w.d_slot_token, w.d_items, w.G, EXPERT);
+            expert_proj_v3<<<dim3(48, n_items), 32>>>(w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 1, w.latent, LATENT, w.d_slot_token, w.d_items, w.U, EXPERT);
+        }
+        dense_activation<<<blocks((size_t)slots * EXPERT), 256>>>(w.G, w.U, (size_t)slots * EXPERT);
+        if (n_items) expert_proj_v3<<<dim3(56, n_items), 32>>>(w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 2, w.G, EXPERT, w.d_slot_token, w.d_items, w.D, LATENT);
+#else
+        EXPERT_LAUNCH(48, w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 0, w.latent, LATENT, w.d_slot_token, w.d_start, w.d_count, w.G, EXPERT);
+        EXPERT_LAUNCH(48, w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 1, w.latent, LATENT, w.d_slot_token, w.d_start, w.d_count, w.U, EXPERT);
+        dense_activation<<<blocks((size_t)slots * EXPERT), 256>>>(w.G, w.U, (size_t)slots * EXPERT);
+        EXPERT_LAUNCH(56, w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 2, w.G, EXPERT, w.d_slot_token, w.d_start, w.d_count, w.D, LATENT);
+#endif
+        mix_ranks<<<blocks((size_t)nc * LATENT), 256>>>(w.mixture + (size_t)t0 * LATENT, w.D, w.d_slot_of, w.weights + (size_t)t0 * TOP, nc);
+    }
     normalize_rows<<<N, 256>>>(w.lnorm, w.mixture, rec_data(T, 33), LATENT);
     gemm(w.lnorm, N, LATENT, T, 32, w.routed);
     gemm(w.post, N, W, T, 34, w.sg); gemm(w.post, N, W, T, 35, w.su);

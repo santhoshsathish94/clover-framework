@@ -1,0 +1,79 @@
+diff -u -r '--exclude=*.orig' /home/usergpu/agents/g3/src/model.cuh /home/usergpu/agents/r2/src/model.cuh
+--- /home/usergpu/agents/g3/src/model.cuh	2026-10-20 07:57:16.642512424 +0000
++++ /home/usergpu/agents/r2/src/model.cuh	2026-10-20 09:02:47.714798665 +0000
+@@ -106,12 +106,15 @@
+     }
+ }
+ 
+-// float -> double with integer ops for normal numbers (exponent rebias, mantissa shifted up); zero, denormals, inf and nan take the conversion instruction
++// float -> double with integer ops for normal numbers (exponent rebias, mantissa shifted up) and for zero; denormals, inf and nan take the conversion instruction,
++// behind a warp-wide vote so that the conversion (which occupies the FP64 pipe like a DFMA) is not issued when no lane needs it
+ __device__ __forceinline__ double f2d(float f)
+ {
+-    const unsigned u = __float_as_uint(f);
+-    if (((u >> 23) & 0xffu) - 1u < 254u) return __hiloint2double((int)((u & 0x80000000u) | (((u & 0x7fffffffu) >> 3) + 0x38000000u)), (int)(u << 29));
+-    return (double)f;
++    const unsigned u = __float_as_uint(f), a = u & 0x7fffffffu;
++    const bool normal = a - 0x00800000u < 0x7f000000u, simple = normal || a == 0u;
++    double r = __hiloint2double((int)((u & 0x80000000u) | (normal ? (a >> 3) + 0x38000000u : 0u)), (int)(normal ? u << 29 : 0u));
++    if (!__all_sync(0xffffffffu, simple) && !simple) r = (double)f;
++    return r;
+ }
+ 
+ // Same arithmetic as mla_attention, tiled: persistent blocks, each one takes work items (one head, QT = 32 consecutive queries) and shares every K/V row it reads
+@@ -122,18 +125,24 @@
+ // max and exp, the totals one lane per query (a sequential double sum in position order, one warp instruction advances 32 of them), then the divide. Values: one
+ // thread = one feature x 16 queries, sequential float multiply then add, only positions <= the query's own.
+ enum { MLA_QT = 32 };
+-__global__ void __launch_bounds__(256) mla_attention_tiled(float *out, const float *q, const float *kv, const float *kvlat, int N, int SN, float *scratch, int items)
++__global__ void __launch_bounds__(256) mla_attention_tiled(float *out, const float *q, const float *kv, const float *kvlat, int N, int SN, float *scratch, int items, int *counter)
+ {
+     constexpr int QT = MLA_QT, KT = 128, CC = 32, NJ = KT * CC / 256, TS = KT + 1, QPT = QT / 2, QS = 192;
+     extern __shared__ __align__(16) unsigned char smem_raw[];
+     double *qd = (double *)smem_raw;
+     double *tile = qd + QT * QS;
+     __shared__ double total[QT];
++    __shared__ int next_item;
+     float *sc = scratch + (size_t)blockIdx.x * QT * SN;
+     const int tid = threadIdx.x, warp = tid >> 5, lane = tid & 31, kk = tid & (KT - 1), qh = tid / KT;
+     const int ntile = (N + QT - 1) / QT;
+     const float scale = 1.0f / sqrtf(192.0f);
+-    for (int item = blockIdx.x; item < items; item += gridDim.x) {
++    for (;;) {   // items are handed out in order (longest tile first) by an atomic counter, so the blocks finish together
++        __syncthreads();
++        if (tid == 0) next_item = atomicAdd(counter, 1);
++        __syncthreads();
++        const int item = next_item;
++        if (item >= items) break;
+         const int h = item % HEADS, n0 = (ntile - 1 - item / HEADS) * QT;   // the longest tiles first
+         const int pmax = min(n0 + QT - 1, N - 1);
+         __syncthreads();
+@@ -142,7 +151,7 @@
+             double acc[QPT];
+             #pragma unroll
+             for (int i = 0; i < QPT; i++) acc[i] = 0.0;
+-            const bool active = pb + (kk & ~31) <= pmax;
++            const bool active = pb + (kk & ~31) <= pmax && n0 + qh * QPT < N;   // a half of the tile without a valid query computes nothing
+             float r[NJ];
+             auto gload = [&](int ch) {
+                 #pragma unroll
+@@ -446,7 +455,7 @@
+         mla_attention<<<dim3(N, HEADS), 128, shared>>>(dst, w.mq, w.mexp, w.mkv, N);
+     };
+     auto tiled = [&](float *dst) {
+-        static float *scratch[16]; static size_t scratch_bytes[16];   // the scores of the blocks' work items, per device
++        static float *scratch[16]; static size_t scratch_bytes[16]; static int *counter[16];   // the scores of the blocks' work items, and the work counter, per device
+         int dev = 0, sms = 0, per_sm = 0;
+         CHECK(cudaGetDevice(&dev)); CHECK(cudaDeviceGetAttribute(&sms, cudaDevAttrMultiProcessorCount, dev));
+         const size_t smem = (size_t)MLA_QT * 192 * 8 + 32 * 129 * 8;
+@@ -456,7 +465,9 @@
+         const size_t need = (size_t)grid * MLA_QT * SN * 4;
+         if (dev >= 16) { fprintf(stderr, "mla_attention: device index %d not supported by the scratch table\n", dev); exit(1); }
+         if (scratch_bytes[dev] < need) { if (scratch[dev]) CHECK(cudaFree(scratch[dev])); CHECK(cudaMalloc(&scratch[dev], need)); scratch_bytes[dev] = need; }
+-        mla_attention_tiled<<<grid, 256, smem>>>(dst, w.mq, w.mexp, w.mkv, N, (int)SN, scratch[dev], items);
++        if (!counter[dev]) CHECK(cudaMalloc(&counter[dev], 4));
++        CHECK(cudaMemsetAsync(counter[dev], 0, 4));
++        mla_attention_tiled<<<grid, 256, smem>>>(dst, w.mq, w.mexp, w.mkv, N, (int)SN, scratch[dev], items, counter[dev]);
+     };
+     cudaEvent_t e0, e1;   // MLA_ATTN_TIME=1: time of the attention kernel alone, printed per call
+     const bool timed = getenv("MLA_ATTN_TIME") != nullptr;
