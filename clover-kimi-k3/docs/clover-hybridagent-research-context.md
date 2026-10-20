@@ -224,3 +224,20 @@ Read: a latent step costs the same as a text step (404 against 408 ms), as the p
 **Reading, not Direction: HybridAgent step stages next to Clover K3 stages.** HybridAgent step: input (embedding of a token, or `R(h)` from the previous step) -> 36 layers (92% of time) -> final norm -> LM head (7%) -> sample token, or HybridLink -> `R(h)` fed to the next step (0.5%). Clover K3 token: tokenise -> embedding -> layer 0 -> layers 1 to 92 -> tail. The same step shape; the HybridLink sits where K3's tail output meets the next embedding. What this trace says about K3 is limited to this: in a step, the cost of the latent feedback itself (a small two-layer map and a norm) was 1.9 ms of 404; all the cost stays in the layers, which for K3 are expert reads. No K3 per-stage numbers were taken in this cycle.
 
 **Smallest next cycles (the creator chooses).** (a) From the existing `trace1.json`, the distribution over steps of layer 16 and layer 35 values and of the span position (no new run); (b) a longer budget run (2,048 or 4,096) to see a complete answer and more spans; (c) K3's own per-layer stage times from an existing log for the side-by-side; (d) the other four example questions.
+
+
+## Cycle 4 (2026-10-22): distributions behind the layer 16 and layer 35 means (existing trace1.json, no new run)
+
+Script `oss/scratch-agents/hybrid-clean/dist_trace.py`, output `dist1.txt`. Same 317 text steps and 125 latent steps as Cycle 3.
+
+**Correction of Cycle 3 (layer 16).** The mean relative update of 0.998 at layer 16 on text steps came from two steps, not from the layer's behaviour. Median relative update at layer 16: text 0.337, latent 0.298; quartiles overlap (text 0.300 to 0.373, latent 0.261 to 0.346). Two text steps have a relative update above 0.9 (maximum 117.8; layer-16 output norm up to 8,547 against a median of 86); their input ids are 220 and 15, one step each. Excluding those two, the text mean is 0.337. So "layer 16 differs between text and latent steps" was an artefact of using means; it is withdrawn. The two outlier steps are real observations (a very large layer-16 update at two steps) and are not explained; which positions they are, and whether they recur on other prompts, was not checked.
+
+**Layer 35 (last layer, before the final norm): the difference holds.** Output norm, text median 1,351 (p10 993, p90 1,795) against latent median 2,321 (p10 1,729, p90 3,019). Relative update, text median 0.419 (p90 0.628) against latent median 0.766 (p90 1.286). The distributions overlap only in their tails (latent p10 1,729 is near text p90 1,795). Cosine of input and output at layer 35: text median 0.939, latent 0.952, so the vector grows in size without turning more.
+
+**Along the run.** At steps 125 to 200 (inside the 102-step span) the layer-35 output norm is 2,345 to 2,931 and relative update 0.94 to 1.62; after the span (step 225 onward) it returns to 900 to 1,950. The span means of layer-35 output norm are 2,443 (102 steps), 1,929 (13), 1,836 (6) and 1,695 (4): longer spans sit higher. The final-normed norm that the head and HybridLink read is 53 to 93 inside the long span and 96 to 219 on text steps, so the final norm shrinks these vectors more.
+
+**Inside the long span.** Relative update at layer 16 and the norm of `R(h)` at the input stay in a narrow band from the first to the last latent step (0.245 to 0.371; 6.6 to 10.0). The cosine of `R(h)` to its nearest token embedding jumps between 0.33 and 0.997 from one step to the next (steps 164 to 168: 0.995, 0.699, 0.994, 0.997, 0.994), and P(`</latent>`) is below 0.0001 at every step shown. Five-step samples at three places of one span, not all 102 steps.
+
+**Not observed / limits.** One prompt, one seed. No decoding of which tokens the two outlier steps are; no per-step view of what the nearest-token readouts spell; layer 35 not split into attention and MLP.
+
+**Next (running):** the same trace with budget 2,048 (`trace2.json` on k3, started 01:58 k3 time), to see more spans and, if it finishes within the budget, the answer.
