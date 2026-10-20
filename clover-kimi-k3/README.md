@@ -22,7 +22,7 @@ The prompt is processed in batches, decode keeps recently used experts in RAM, a
 ```
 clover-kimi-k3/
 ├── README.md
-├── docs/                              clover-kimi-k3-cpu-context.md (the dated log of everything measured, every negative result), layer0-verdict.md
+├── docs/                              clover-kimi-k3-cpu-context.md (the dated log of everything measured, every negative result), clover-kimi-k3-gpu-context.md (the same for the GPU work), layer0-verdict.md
 └── src/
     ├── code/                          all the code: common/ (shared by every machine), cpu/ (the workstation engine), gpu/ (a GPU server: probes only so far), third-party/ (see below)
     │   └── third-party/kimi-k3-in-c/  the tokenizer headers (Apache-2.0, with licence and notice, github.com/FareedKhan-dev/kimi-k3-in-c at commit a2ad8e5, unmodified)
