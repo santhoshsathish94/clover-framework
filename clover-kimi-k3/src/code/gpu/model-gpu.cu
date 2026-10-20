@@ -37,8 +37,15 @@ int main(int argc, char **argv)
     struct timespec c0, c1;
     double total_compute = 0, total_load = 0;
 
-    {   // layer 0
+    {   // layer 0 (or, with MODEL_GPU_LAYER0_ROWS=file, the CPU engine's layer 0 output rows as layer 1's input, to separate the layers' own differences from what they inherit)
         Layer y; clock_gettime(CLOCK_MONOTONIC, &c0);
+        const char *l0rows = getenv("MODEL_GPU_LAYER0_ROWS");
+        if (l0rows && *l0rows) {
+            std::vector<unsigned char> rows = slurp(l0rows);
+            if (rows.size() != embed.size()) { fprintf(stderr, "%s does not hold %d x %d floats\n", l0rows, N, W); return 1; }
+            CHECK(cudaMemcpy(w.cur, rows.data(), rows.size(), cudaMemcpyHostToDevice));
+            printf("layer  0: not run, the rows of %s are layer 1's input\n", l0rows);
+        } else {
         layer_load_trunk(dataset, 0, y);
         clock_gettime(CLOCK_MONOTONIC, &c1);
         CHECK(cudaEventRecord(t0));
@@ -48,6 +55,7 @@ int main(int argc, char **argv)
         printf("layer  0 (dense)  trunk %.2f s, compute %.1f ms\n", seconds(c0, c1), ms);
         total_compute += ms; total_load += seconds(c0, c1);
         layer_free(y);
+        }
     }
     int nsnap = 1;
     for (int L = 1; L <= last; L++) {
