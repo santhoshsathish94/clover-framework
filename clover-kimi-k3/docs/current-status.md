@@ -430,3 +430,12 @@ Not as the listing implies, or not known yet:
 - Disk: 1,722 GiB free is above the ~1,412 GiB the dataset needs. Disk read rate not measured yet.
 
 Next: root access decision, then the NVMe read-rate measurement, then the dataset download in the background.
+
+
+## 2026-10-20 — GPU server: root, disk rate, download started
+
+- Root: the creator typed the `usergpu` password once, in their own terminal, and added `/etc/sudoers.d/usergpu` (passwordless sudo, this rented server only; remove with `sudo rm /etc/sudoers.d/usergpu`). The password was never given to the agent.
+- Read-out (`machine-readout.sh`, kept at `~/machine-readout.txt` on the server): 2 sockets x 24 cores, 96 threads, 376.5 GiB, 2 NUMA nodes (192 GB each, distance 10 and 21), avx512 f/bw/cd/dq/vl/vnni, one NVMe, four 10 Gbit ports with three up (`eno1np0`, `enp134s0f0`, `enp134s0f1`). The listing says "24 cores at 4.0 GHz"; the CPU model is a 3.0 GHz part with a 4.0 GHz maximum.
+- Disk read rate, one run, sequential, O_DIRECT, 8 GiB per point on a freshly written 16 GiB file: 3.25 GB/s best (1 MiB, 16 threads); 2.92 to 2.98 GB/s from 4 MiB with 2 or more threads; one thread 1.66 to 2.66 GB/s depending on block size. One drive, no RAID. The CPU host (two NVMe in RAID 1) gave 14.4 GB/s with the same probe, so this disk is about 4.4 times slower for sequential reads. Random reads not measured. The scratch file was deleted.
+- What that implies, not yet tested: reading one layer's experts (14.64 GiB) from this disk takes about 4.5 s at 3.25 GB/s, longer than a whole token on the CPU engine (3.1 to 3.5 s). The memory that can hold experts (376 GiB RAM + 8 x 24 GiB cards) is what matters here, not the disk.
+- Download started with `set-up-new-machine.sh preflight packages clone download open-weights check-dataset` (log `~/set-up.log`, checked out `0f8fad2`, 812 files). First 30 s measured 543 MB/s. Nothing of build, dspark or verify has run.
