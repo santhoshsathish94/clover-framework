@@ -674,6 +674,9 @@ int main(int argc, char **argv)
        prompt pass over a longer prompt gives what the decode steps gave); PF_SAVE_ROWS / PF_CMP_ROWS save / compare the
        layer-92 output rows of the decode steps. */
     const unsigned decode = getenv("PF_DECODE") ? (unsigned)atoi(getenv("PF_DECODE")) : 0;
+    /* PF_LAST_LAYER=L (1..91): open and run layers 0..L only, no tail and no next token (needs the files of layers 0..L, the tokenizer and the embedding table). */
+    const unsigned last_layer = getenv("PF_LAST_LAYER") && *getenv("PF_LAST_LAYER") ? (unsigned)atoi(getenv("PF_LAST_LAYER")) : LAYERS;
+    if (last_layer < 1 || last_layer > LAYERS) bail("PF_LAST_LAYER must be from 1 to 92");
     /* PF_SWEEP=k: after the prompt, feed the ids in PF_SWEEP_IDS (a PF_SAVE_IDS file from an earlier run of this prompt) k at a time, as one
        pass each, the way a draft of k tokens would be verified; PF_SWEEP_N = the most tokens to feed. */
     const unsigned sweep_k = getenv("PF_SWEEP") && *getenv("PF_SWEEP") ? (unsigned)atoi(getenv("PF_SWEEP")) : 0;
@@ -774,7 +777,7 @@ int main(int argc, char **argv)
     }
     const double t_edges = clk() - setup0;
     void *layer[LAYERS + 1] = { NULL };
-    for (unsigned l = 1; l <= LAYERS; l++) {
+    for (unsigned l = 1; l <= last_layer; l++) {
         layer[l] = is_mla(l) ? lbm_open(dataset, l, snapshots_in(l), layer_positions) : lbk_open(dataset, l, snapshots_in(l), layer_positions);
         if (cache_cap) { FILL_SLOTS(l - 1) (is_mla(l) ? lbm_set_slots : lbk_set_slots)(layer[l], slot_ptrs, cache_cap); }
     }
@@ -787,6 +790,37 @@ int main(int argc, char **argv)
         if (!dspark_open(checkpoint, path, session_dir ? layer_positions : N + decode + 16)) bail("cannot open the DSpark draft model");
     }
     const double t_layers = clk() - setup0;
+
+    if (last_layer < LAYERS) {   /* PF_LAST_LAYER: the prompt through layers 0..last_layer, then stop */
+        if (decode || sweep_k || max_draft || session_dir) bail("PF_LAST_LAYER cannot be combined with decoding, a sweep, a draft or a session");
+        stage1_lookup((const unsigned *)ids, N, s0);
+        float *cur = pool[--free_n];
+        const double t0 = clk();
+        stage2_run((const uint32_t *)ids, s0, N, N, cur);
+        printf("PARTIAL RUN, layers 0..%u, %u tokens: setup %.2f s; layer 0 %.1f ms\n", last_layer, N, t_layers, 1000 * (clk() - t0));
+        const float *snaps[MAX_SNAPSHOTS] = { s0 };
+        unsigned k = 1;
+        const double t_run = clk();
+        for (unsigned l = 1; l <= last_layer; l++) {
+            float *out = pool[--free_n];
+            const double began = clk();
+            if (is_mla(l)) lbm_run(layer[l], cur, snaps, N, N, out); else lbk_run(layer[l], cur, snaps, N, N, out);
+            printf("   layer %2u %s %7.1f ms\n", l, is_mla(l) ? "MLA" : "KDA", 1000 * (clk() - began));
+            if (l % 12 == 0) snaps[k++] = cur; else pool[free_n++] = cur;
+            cur = out;
+        }
+        unsigned long long fnv = 1469598103934665603ULL; unsigned long nonfinite = 0;
+        const unsigned char *bytes = (const unsigned char *)cur;
+        for (size_t i = 0; i < (size_t)N * W * sizeof(float); i++) { fnv ^= bytes[i]; fnv *= 1099511628211ULL; }
+        for (size_t i = 0; i < (size_t)N * W; i++) nonfinite += !(cur[i] - cur[i] == 0.0f);
+        printf("   layers 1..%u: %.1f ms; output of layer %u: FNV-1a 64 of all %u x %u floats %016llx, non-finite values %lu\n", last_layer, 1000 * (clk() - t_run), last_layer, N, W, fnv, nonfinite);
+        if (compare) {
+            printf("   against the pod's own chain: embeddings %u of %u rows bit-identical", same_rows(s0, ref_embed, N), N);
+            for (unsigned s = 1; s < k; s++) printf("; snapshot %u %u of %u rows", s, same_rows(snaps[s], ref_snaps + (size_t)s * N * W, N), N);
+            printf("\n");
+        }
+        return 0;
+    }
 
     char leaves[4096], head[4096], tik[4096], config[4096];
     snprintf(path, sizeof path, "%s/pipeline-stage.so", build);

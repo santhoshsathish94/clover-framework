@@ -11,6 +11,7 @@
 #   ACTIVATION_8BIT_EXPERT=1   prompt pass: the experts take their input rounded to 8 bits (experimental, off by default, not bit-identical)
 #   ACTIVATION_8BIT_TRUNK=1    prompt pass of layers 1-92: the trunk matrices take their input rounded to 8 bits (experimental, off by default, not bit-identical)
 #   PF_DECODE=N             generate up to N more tokens after the prompt
+#   PF_LAST_LAYER=L         run the prompt through layers 0..L only (L from 1 to 91) and stop: no tail, no next token; prints each layer's time and a hash of layer L's output
 #   PF_CACHE=C              keep C experts per layer in RAM between decode steps (16 is the usual choice)
 #   SPECULATIVE_DRAFT_TOKENS=D   speculative decoding with up to D draft tokens per pass (D at most 15, at most 8 with the DSpark drafter); the tokens are the same as plain decoding
 #   SPECULATIVE_DRAFTER=dspark   where the draft comes from: unset = the text so far (prompt lookup); dspark = the Kimi K3 DSpark draft model ($DSPARK_DIR/model.safetensors)
@@ -73,6 +74,6 @@ ulimit -l unlimited; ulimit -c 0
 echo "PROMPT ($(wc -w < $WORDS) words, $(wc -c < $WORDS) bytes):"; echo "-----"; cat $WORDS; echo; echo "-----"
 env -i PATH="$PATH" LB_IO="${LB_IO:-4}" LB_SPEC="${LB_SPEC:-0}" LB_GUESS="${LB_GUESS:-0}" LB_THP="${LB_THP:-1}" LB_EXPK="${LB_EXPK:-1}" LB_A8T="${LB_A8T:-}" USE_4BIT_TRUNK="$USE_4BIT_TRUNK" SPECULATIVE_DRAFT_TOKENS="${SPECULATIVE_DRAFT_TOKENS:-}" SPECULATIVE_DRAFTER="${SPECULATIVE_DRAFTER:-}" SPECULATIVE_FIXED_WIDTH="${SPECULATIVE_FIXED_WIDTH:-}" PF_SESSION_DIR="${PF_SESSION_DIR:-}" PF_CONTEXT="${PF_CONTEXT:-}" PF_CHUNK="${PF_CHUNK:-}" PF_REPLY_RESERVE="${PF_REPLY_RESERVE:-}" PF_INPUT_MAX="${PF_INPUT_MAX:-}" PF_SUMMARY_TOKENS="${PF_SUMMARY_TOKENS:-}" PF_SESSION_VERIFY="${PF_SESSION_VERIFY:-}" PF_BLANK_UNUSED_TRUNK="${PF_BLANK_UNUSED_TRUNK:-}" DSPARK_CHECKPOINT="$DSPARK_DIR/model.safetensors" CLOVER_LOCK_TRUNK="${CLOVER_LOCK_TRUNK:-}" PF_VERBOSE="${PF_VERBOSE:-}" \
     PF_DECODE="${PF_DECODE:-}" PF_EXTRA="${PF_EXTRA:-}" PF_SAVE_ROWS="${PF_SAVE_ROWS:-}" PF_CMP_ROWS="${PF_CMP_ROWS:-}" PF_SAVE_IDS="${PF_SAVE_IDS:-}" PF_ROUTES="${PF_ROUTES:-}" PF_CHAT="${PF_CHAT:-}" PF_SYSTEM="${PF_SYSTEM:-}" PF_CACHE="${PF_CACHE:-}" \
-    PF_SWEEP="${PF_SWEEP:-}" PF_SWEEP_IDS="${PF_SWEEP_IDS:-}" PF_SWEEP_N="${PF_SWEEP_N:-}" LB_SWEEP_EXPK="${LB_SWEEP_EXPK:-0}" \
+    PF_LAST_LAYER="${PF_LAST_LAYER:-}" PF_SWEEP="${PF_SWEEP:-}" PF_SWEEP_IDS="${PF_SWEEP_IDS:-}" PF_SWEEP_N="${PF_SWEEP_N:-}" LB_SWEEP_EXPK="${LB_SWEEP_EXPK:-0}" \
     OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores \
     "$BUILD_DIR/whole-model" "$BUILD_DIR" "$DATASET_DIR" "$OPEN_WEIGHTS_DIR" $WORDS $REFS
