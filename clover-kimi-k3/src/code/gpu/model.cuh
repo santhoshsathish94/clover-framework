@@ -313,6 +313,18 @@ static void aggregate_with(Work &w, const float *const *snaps, int nsnap, const 
     aggregate_multi<<<w.N, 256>>>(w.Agg, s, nsnap + 1, vec);
 }
 
+// the router with every score summed in double (selected, weights, h_selected)
+static void route_all_double(Work &w, const Layer &y)
+{
+    const int N = w.N; const Trunk &T = y.T;
+    CHECK(cudaMemset(w.bad, 0, 4));
+    transpose_rows<<<blocks((size_t)N * W), 256>>>(w.post_t, w.post, N, W);
+    router_scores<<<dim3((N + 127) / 128, EXPERTS), 128>>>(w.scores, w.choices, rec_data(T, 29), rec_data(T, 30), w.post_t, N);
+    top16<<<blocks(N), 256>>>(w.scores, w.choices, w.selected, w.weights, w.bad, N);
+    CHECK(cudaMemcpy(w.h_selected.data(), w.selected, w.h_selected.size() * 4, cudaMemcpyDeviceToHost));
+    { int h_bad = 0; CHECK(cudaMemcpy(&h_bad, w.bad, 4, cudaMemcpyDeviceToHost)); if (h_bad) { fprintf(stderr, "layer %d: non-finite router choice for %d tokens\n", y.L, h_bad); exit(1); } }
+}
+
 // the mixture of experts for layer y.L from w.post, added into `res`; experts of this layer must be in w.d_experts
 static void moe_block(Work &w, const Layer &y, float *res)
 {
@@ -325,14 +337,10 @@ static void moe_block(Work &w, const Layer &y, float *res)
     router_exact<<<blocks((size_t)N * CAND), 256>>>(w.cand_score, w.cand, w.ncand, rec_data(T, 29), w.post, N);
     top16_candidates<<<blocks(N), 256>>>(w.cand_score, w.cand, w.ncand, rec_data(T, 30), w.selected, w.weights, N);
     CHECK(cudaMemcpy(w.h_selected.data(), w.selected, w.h_selected.size() * 4, cudaMemcpyDeviceToHost));
-    { int h_over = 0; CHECK(cudaMemcpy(&h_over, w.overflow, 4, cudaMemcpyDeviceToHost)); if (h_over) { fprintf(stderr, "layer %d: %d tokens have more than %d router candidates\n", y.L, h_over, (int)CAND); exit(1); } }
+    { int h_over = 0; CHECK(cudaMemcpy(&h_over, w.overflow, 4, cudaMemcpyDeviceToHost));
+      if (h_over) { fprintf(stderr, "layer %d: %d tokens have more than %d router candidates, this layer is routed by the all-double router\n", y.L, h_over, (int)CAND); route_all_double(w, y); } }
 #else
-    CHECK(cudaMemset(w.bad, 0, 4));
-    transpose_rows<<<blocks((size_t)N * W), 256>>>(w.post_t, w.post, N, W);
-    router_scores<<<dim3((N + 127) / 128, EXPERTS), 128>>>(w.scores, w.choices, rec_data(T, 29), rec_data(T, 30), w.post_t, N);
-    top16<<<blocks(N), 256>>>(w.scores, w.choices, w.selected, w.weights, w.bad, N);
-    CHECK(cudaMemcpy(w.h_selected.data(), w.selected, w.h_selected.size() * 4, cudaMemcpyDeviceToHost));
-    { int h_bad = 0; CHECK(cudaMemcpy(&h_bad, w.bad, 4, cudaMemcpyDeviceToHost)); if (h_bad) { fprintf(stderr, "layer %d: non-finite router choice for %d tokens\n", y.L, h_bad); exit(1); } }
+    route_all_double(w, y);
 #endif
     std::fill(w.h_count.begin(), w.h_count.end(), 0);
     for (int i = 0; i < N * TOP; i++) w.h_count[w.h_selected[i]]++;

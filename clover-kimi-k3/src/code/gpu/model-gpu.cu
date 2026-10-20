@@ -9,7 +9,22 @@
 //
 // Each layer's trunk and experts are loaded when the layer comes (single card, nothing prefetched here). Prints the load and compute time of every layer.
 // build: nvcc -O3 --fmad=false -arch=sm_86 -o model-gpu model-gpu.cu [-DFAST_ROUTER -DEXPERT_V2 -DINT8_PLANES -lcublas]
+//
+// One layer on its own, from the real activations of a full run:
+//   MODEL_GPU_DUMP_DIR=dir   (full run, LAST_LAYER 92) writes in-L.f32 (the input of layer L, L = 1..93; in-93 is layer 92's output) and snap-k.f32 (the input of layer 12k)
+//   MODEL_GPU_ONLY_LAYER=L MODEL_GPU_INPUTS=dir   with LAST_LAYER = L: runs only layer L from those files MODEL_GPU_REPEAT times (default 5), prints each compute time,
+//                            and compares the output with the next layer's recorded input (the full run's own output of layer L)
 #include "model.cuh"
+#include <cuda_profiler_api.h>
+
+static void write_rows(const char *dir, const char *name, int k, const float *dev, int N)
+{
+    std::vector<float> h((size_t)N * W);
+    CHECK(cudaMemcpy(h.data(), dev, h.size() * 4, cudaMemcpyDeviceToHost));
+    char p[4096]; snprintf(p, sizeof p, "%s/%s-%d.f32", dir, name, k);
+    FILE *f = fopen(p, "wb"); if (!f) { fprintf(stderr, "cannot write %s\n", p); exit(1); }
+    fwrite(h.data(), 4, h.size(), f); fclose(f);
+}
 
 int main(int argc, char **argv)
 {
@@ -36,6 +51,51 @@ int main(int argc, char **argv)
     CHECK(cudaMemcpy(w.snap[0], embed.data(), embed.size(), cudaMemcpyHostToDevice));
     struct timespec c0, c1;
     double total_compute = 0, total_load = 0;
+    const char *dump = getenv("MODEL_GPU_DUMP_DIR"), *only = getenv("MODEL_GPU_ONLY_LAYER"), *inputs = getenv("MODEL_GPU_INPUTS");
+    if (dump && !*dump) dump = nullptr;
+
+    if (only && *only) {
+        const int L = atoi(only);
+        if (!inputs || !*inputs || L < 0 || L > LAST_LAYER_INDEX || last != L) { fprintf(stderr, "MODEL_GPU_ONLY_LAYER=L needs LAST_LAYER = L and MODEL_GPU_INPUTS=dir (a MODEL_GPU_DUMP_DIR of a full run)\n"); return 2; }
+        auto rows_file = [&](const char *name, int k) {
+            char p[4096]; snprintf(p, sizeof p, "%s/%s-%d.f32", inputs, name, k);
+            std::vector<unsigned char> b = slurp(p);
+            if (b.size() != (size_t)N * W * 4) { fprintf(stderr, "%s does not hold %d x %d floats\n", p, N, W); exit(1); }
+            return b;
+        };
+        const int reps = getenv("MODEL_GPU_REPEAT") ? atoi(getenv("MODEL_GPU_REPEAT")) : 5;
+        const char *pl = getenv("MODEL_GPU_PROFILE_LAYER");
+        const bool prof = pl && *pl && atoi(pl) == L;
+        Layer y; clock_gettime(CLOCK_MONOTONIC, &c0);
+        layer_load_trunk(dataset, L, y);
+        double t_experts = 0;
+        if (L >= 1) { layer_load_expert_tables(dataset, L, y); t_experts = upload_experts(dataset, L, w.d_experts, pinned, chunk); }
+        const int nsnap_in = snapshots_in(L > 0 ? L : 1);
+        if (L >= 1) {
+            std::vector<unsigned char> in = rows_file("in", L);
+            CHECK(cudaMemcpy(w.cur, in.data(), in.size(), cudaMemcpyHostToDevice));
+            for (int k = 1; k < nsnap_in; k++) { std::vector<unsigned char> s = rows_file("snap", k); CHECK(cudaMemcpy(w.snap[k], s.data(), s.size(), cudaMemcpyHostToDevice)); }
+        }
+        const float *sn[9]; for (int i = 0; i < nsnap_in; i++) sn[i] = w.snap[i];
+        clock_gettime(CLOCK_MONOTONIC, &c1);
+        printf("layer %d (%s) loaded in %.2f s (experts %.2f s)\n", L, L == 0 ? "dense" : y.mla ? "MLA" : "KDA", seconds(c0, c1), t_experts);
+        std::vector<float> times;
+        for (int r = 0; r < reps; r++) {
+            if (prof && r == reps - 1) CHECK(cudaProfilerStart());
+            CHECK(cudaEventRecord(t0));
+            if (L == 0) run_layer0(w, y, w.snap[0], w.nxt); else run_layer(w, y, w.cur, sn, nsnap_in, w.nxt);
+            CHECK(cudaEventRecord(t1)); CHECK(cudaEventSynchronize(t1)); CHECK(cudaGetLastError());
+            if (prof && r == reps - 1) CHECK(cudaProfilerStop());
+            float ms; CHECK(cudaEventElapsedTime(&ms, t0, t1)); times.push_back(ms);
+            printf("  run %d: compute %.1f ms\n", r + 1, ms);
+        }
+        std::vector<float> sorted = times; std::sort(sorted.begin(), sorted.end());
+        printf("layer %d, %d tokens: best %.1f ms, median %.1f ms of %d runs (the first run includes warm-up)\n", L, N, sorted.front(), sorted[sorted.size() / 2], reps);
+        std::vector<unsigned char> ref = rows_file("in", L + 1);
+        char name[96]; snprintf(name, sizeof name, "output of layer %d against the full run's", L);
+        compare_rows(name, w.nxt, (const float *)ref.data(), N);
+        return 0;
+    }
 
     {   // layer 0 (or, with MODEL_GPU_LAYER0_ROWS=file, the CPU engine's layer 0 output rows as layer 1's input, to separate the layers' own differences from what they inherit)
         Layer y; clock_gettime(CLOCK_MONOTONIC, &c0);
@@ -68,13 +128,18 @@ int main(int argc, char **argv)
         const double t_experts = upload_experts(dataset, L, w.d_experts, pinned, chunk);
         const float *sn[9];
         for (int i = 0; i < nsnap; i++) sn[i] = w.snap[i];
+        if (dump) write_rows(dump, "in", L, w.cur, N);
+        const char *pl = getenv("MODEL_GPU_PROFILE_LAYER");   // nsys profile --capture-range=cudaProfilerApi records only this layer's compute
+        const bool prof = pl && *pl && atoi(pl) == L;
+        if (prof) CHECK(cudaProfilerStart());
         CHECK(cudaEventRecord(t0));
         run_layer(w, y, w.cur, sn, nsnap, w.nxt);
         CHECK(cudaEventRecord(t1)); CHECK(cudaEventSynchronize(t1)); CHECK(cudaGetLastError());
+        if (prof) CHECK(cudaProfilerStop());
         float ms; CHECK(cudaEventElapsedTime(&ms, t0, t1));
         printf("layer %2d (%s)  trunk %.2f s, experts %.2f s, compute %.1f ms\n", L, y.mla ? "MLA" : "KDA", t_trunk, t_experts, ms);
         total_compute += ms; total_load += t_trunk + t_experts;
-        if (L % 12 == 0) { CHECK(cudaMemcpy(w.snap[nsnap], w.cur, (size_t)N * W * 4, cudaMemcpyDeviceToDevice)); nsnap++; }
+        if (L % 12 == 0) { CHECK(cudaMemcpy(w.snap[nsnap], w.cur, (size_t)N * W * 4, cudaMemcpyDeviceToDevice)); if (dump) write_rows(dump, "snap", L / 12, w.snap[nsnap], N); nsnap++; }
         if ((L + 1) % 12 == 0 && (L + 1) / 12 <= 7) {
             char name[96]; snprintf(name, sizeof name, "output of layer %d against the pod's snapshot %d", L, (L + 1) / 12);
             compare_rows(name, w.nxt, ref_snaps + (size_t)((L + 1) / 12) * N * W, N);
@@ -82,6 +147,7 @@ int main(int argc, char **argv)
         std::swap(w.cur, w.nxt);
         layer_free(y);
     }
+    if (dump) write_rows(dump, "in", last + 1, w.cur, N);
     printf("compute %.2f s in all, loading %.2f s in all\n", total_compute / 1000, total_load);
     if (argc > 4) {   // the CPU engine's output of layer LAST_LAYER for the same window (PF_LAST_LAYER=L PF_SAVE_ROWS=base gives base.layerL)
         std::vector<unsigned char> cpu = slurp(argv[4]);
