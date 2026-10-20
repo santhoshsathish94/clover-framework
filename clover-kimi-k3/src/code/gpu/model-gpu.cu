@@ -75,6 +75,12 @@ int main(int argc, char **argv)
         layer_free(y);
     }
     printf("compute %.2f s in all, loading %.2f s in all\n", total_compute / 1000, total_load);
+    if (argc > 4) {   // the CPU engine's output of layer LAST_LAYER for the same window (PF_LAST_LAYER=L PF_SAVE_ROWS=base gives base.layerL)
+        std::vector<unsigned char> cpu = slurp(argv[4]);
+        if (cpu.size() != (size_t)N * W * 4) { fprintf(stderr, "%s does not hold %d x %d floats\n", argv[4], N, W); return 1; }
+        char name[96]; snprintf(name, sizeof name, "output of layer %d against the CPU engine's", last);
+        compare_rows(name, w.cur, (const float *)cpu.data(), N);
+    }
     if (last == LAST_LAYER_INDEX) {
         compare_rows("output of layer 92 against the pod's", w.cur, (const float *)resid_ref.data(), N);
         for (int k = 1; k < 8 && k < nsnap; k++) { char name[64]; snprintf(name, sizeof name, "snapshot %d against the pod's", k); compare_rows(name, w.snap[k], ref_snaps + (size_t)k * N * W, N); }
