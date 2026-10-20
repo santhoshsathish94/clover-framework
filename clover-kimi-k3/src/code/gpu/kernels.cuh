@@ -112,6 +112,63 @@ __global__ void __launch_bounds__(256) gemm_i8(const float *__restrict__ A, int 
     }
 }
 
+// Same product, same order of additions per output (so the same bits as gemm_i8), built to spend its time on the multiply-adds:
+// a 128 x 128 tile, 32 columns of k per step (a full 32-byte sector of each weight row), the next step's loads in registers while this step
+// computes, and the shared memory read in 16-byte pieces: 4 shared loads per 64 multiply-adds instead of 16. K must be a multiple of 32.
+#define V2_BK 32
+__global__ void __launch_bounds__(256, 2) gemm_i8_v2(const float *__restrict__ A, int N, int K, const unsigned char *__restrict__ codes, size_t code_stride,
+    const unsigned char *__restrict__ scales, size_t scale_stride, int R, float *__restrict__ C, int ldc)
+{
+    __shared__ float As[V2_BK][BM + 4], Bs[V2_BK][BN + 4];
+    const int tx = threadIdx.x & 15, ty = threadIdx.x >> 4;
+    const int n0 = blockIdx.y * BM, r0 = blockIdx.x * BN;
+    const int lrow = threadIdx.x >> 1, lk = (threadIdx.x & 1) * 16;
+    const bool a_ok = n0 + lrow < N, b_ok = r0 + lrow < R;
+    const float *a_src = A + (size_t)(n0 + lrow) * K + lk;
+    const unsigned char *b_src = codes + (size_t)(r0 + lrow) * code_stride + lk;
+    float acc[8][8];
+    #pragma unroll
+    for (int i = 0; i < 8; i++) for (int j = 0; j < 8; j++) acc[i][j] = 0.0f;
+    float4 av[4]; uint32_t wv[4];
+    #pragma unroll
+    for (int q = 0; q < 4; q++) { av[q] = a_ok ? *(const float4 *)(a_src + q * 4) : make_float4(0.f, 0.f, 0.f, 0.f); wv[q] = b_ok ? *(const uint32_t *)(b_src + q * 4) : 0u; }
+    for (int k0 = 0; k0 < K; k0 += V2_BK) {
+        #pragma unroll
+        for (int q = 0; q < 4; q++) {
+            As[lk + q * 4 + 0][lrow] = av[q].x; As[lk + q * 4 + 1][lrow] = av[q].y; As[lk + q * 4 + 2][lrow] = av[q].z; As[lk + q * 4 + 3][lrow] = av[q].w;
+            Bs[lk + q * 4 + 0][lrow] = (float)(int8_t)(wv[q] & 0xff); Bs[lk + q * 4 + 1][lrow] = (float)(int8_t)((wv[q] >> 8) & 0xff);
+            Bs[lk + q * 4 + 2][lrow] = (float)(int8_t)((wv[q] >> 16) & 0xff); Bs[lk + q * 4 + 3][lrow] = (float)(int8_t)(wv[q] >> 24);
+        }
+        __syncthreads();
+        if (k0 + V2_BK < K) {
+            #pragma unroll
+            for (int q = 0; q < 4; q++) { av[q] = a_ok ? *(const float4 *)(a_src + k0 + V2_BK + q * 4) : make_float4(0.f, 0.f, 0.f, 0.f); wv[q] = b_ok ? *(const uint32_t *)(b_src + k0 + V2_BK + q * 4) : 0u; }
+        }
+        #pragma unroll 4
+        for (int kk = 0; kk < V2_BK; kk++) {
+            const float4 a0 = *(const float4 *)&As[kk][ty * 4], a1 = *(const float4 *)&As[kk][ty * 4 + 64];
+            const float4 b0 = *(const float4 *)&Bs[kk][tx * 4], b1 = *(const float4 *)&Bs[kk][tx * 4 + 64];
+            const float a[8] = { a0.x, a0.y, a0.z, a0.w, a1.x, a1.y, a1.z, a1.w }, b[8] = { b0.x, b0.y, b0.z, b0.w, b1.x, b1.y, b1.z, b1.w };
+            #pragma unroll
+            for (int i = 0; i < 8; i++)
+                #pragma unroll
+                for (int j = 0; j < 8; j++) acc[i][j] = fmaf(a[i], b[j], acc[i][j]);
+        }
+        __syncthreads();
+    }
+    #pragma unroll
+    for (int j = 0; j < 8; j++) {
+        const int r = r0 + tx * 4 + (j & 3) + (j >> 2) * 64;
+        if (r >= R) continue;
+        const float scale = f32at(scales + (size_t)r * scale_stride);
+        #pragma unroll
+        for (int i = 0; i < 8; i++) {
+            const int n = n0 + ty * 4 + (i & 3) + (i >> 2) * 64;
+            if (n < N) C[(size_t)n * ldc + r] = acc[i][j] * scale;
+        }
+    }
+}
+
 // the 3-tap causal convolution over positions, then x * sigmoid(x); raw[comp] and out[comp] are N x ROWS
 __global__ void conv_silu(float *out, const float *raw, const unsigned char *op, int comp, int N)
 {

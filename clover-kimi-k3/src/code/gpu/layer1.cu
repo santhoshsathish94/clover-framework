@@ -20,8 +20,17 @@
 #include <string>
 #include <fcntl.h>
 #include <unistd.h>
+#ifdef FAST_ROUTER
+#include <cublas_v2.h>
+#define CUB(x) do { cublasStatus_t s_ = (x); if (s_ != CUBLAS_STATUS_SUCCESS) { fprintf(stderr, "%s:%d: cublas error %d\n", __FILE__, __LINE__, (int)s_); exit(1); } } while (0)
+#endif
 
 enum { LATENT = 3584, EXPERT = 3072, SHARED = 6144, EXPERT_RAW = 17547264, EXP_BLOCK01 = 121856, EXP_BLOCK2 = 104448, EXPERTS = 896, TOP = 16 };
+#ifdef EXPERT_V2
+#define EXPERT_LAUNCH(rbs, ...) expert_proj_v2<<<dim3(rbs, EXPERTS), 128>>>(__VA_ARGS__)
+#else
+#define EXPERT_LAUNCH(rbs, ...) expert_proj<<<dim3(rbs, EXPERTS), 256>>>(__VA_ARGS__)
+#endif
 
 // ---------------------------------------------------------------- the router
 __global__ void transpose_rows(float *out, const float *in, int N, int width)   // out[c * N + n] = in[n * width + c]
@@ -66,6 +75,69 @@ __global__ void top16(const float *scores, const float *choices, int *selected, 
     const float inverse = (float)(1.0 / (total + 1e-20));
     for (int r = 0; r < TOP; r++) { selected[n * TOP + r] = sel[r]; weights[n * TOP + r] = sc[sel[r]] * inverse; }
 }
+
+// ---------------------------------------------------------------- the router, fast version (-DFAST_ROUTER)
+// The float product (cuBLAS) gives every expert's score to about 1e-5. The 16 chosen experts are then the ones whose approximate choice is within
+// MARGIN of the 16th: for those only, the exact double score is summed in index order as above, and the selection and the weights are made from the
+// exact values. If the true top 16 are all among the candidates the result is the same as the all-double router's; main() checks that on every token.
+#ifdef FAST_ROUTER
+enum { CAND = 48 };
+#define MARGIN 1e-3f
+__global__ void router_candidates(const float *approx, const unsigned char *bias, int *cand, int *ncand, int *overflow, int N)
+{
+    const int n = blockIdx.x * blockDim.x + threadIdx.x;
+    if (n >= N) return;
+    const float *a = approx + (size_t)n * EXPERTS;
+    float best[TOP]; int count = 0;
+    for (int e = 0; e < EXPERTS; e++) {
+        const float choice = sigmoidf_(a[e]) + f32at(bias + (size_t)e * 4);
+        if (count == TOP && !(choice > best[TOP - 1])) continue;
+        int pos = count < TOP ? count : TOP - 1;
+        while (pos && choice > best[pos - 1]) { best[pos] = best[pos - 1]; pos--; }
+        best[pos] = choice;
+        if (count < TOP) count++;
+    }
+    const float threshold = best[TOP - 1] - MARGIN;
+    int c = 0;
+    for (int e = 0; e < EXPERTS; e++) {
+        if (sigmoidf_(a[e]) + f32at(bias + (size_t)e * 4) >= threshold) { if (c < CAND) cand[n * CAND + c] = e; c++; }
+    }
+    if (c > CAND) { atomicAdd(overflow, 1); c = CAND; }
+    ncand[n] = c;
+}
+
+__global__ void router_exact(float *cand_score, const int *cand, const int *ncand, const unsigned char *router, const float *post, int N)
+{
+    const int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= N * CAND) return;
+    const int n = i / CAND, c = i % CAND;
+    if (c >= ncand[n]) return;
+    const float *w = (const float *)router + (size_t)cand[i] * W, *x = post + (size_t)n * W;
+    double s = 0.0;
+    for (int k = 0; k < W; k++) s += (double)w[k] * (double)x[k];
+    cand_score[i] = sigmoidf_((float)s);
+}
+
+__global__ void top16_candidates(const float *cand_score, const int *cand, const int *ncand, const unsigned char *bias, int *selected, float *weights, int N)
+{
+    const int n = blockIdx.x * blockDim.x + threadIdx.x;
+    if (n >= N) return;
+    float best[TOP]; int sel[TOP], slot[TOP]; int count = 0;
+    for (int c = 0; c < ncand[n]; c++) {   // candidates are in index order, so a tie goes to the lower expert
+        const int e = cand[n * CAND + c];
+        const float choice = cand_score[n * CAND + c] + f32at(bias + (size_t)e * 4);
+        if (count == TOP && !(choice > best[TOP - 1])) continue;
+        int pos = count < TOP ? count : TOP - 1;
+        while (pos && choice > best[pos - 1]) { best[pos] = best[pos - 1]; sel[pos] = sel[pos - 1]; slot[pos] = slot[pos - 1]; pos--; }
+        best[pos] = choice; sel[pos] = e; slot[pos] = c;
+        if (count < TOP) count++;
+    }
+    double total = 0.0;
+    for (int r = 0; r < TOP; r++) total += (double)cand_score[n * CAND + slot[r]];
+    const float inverse = (float)(1.0 / (total + 1e-20));
+    for (int r = 0; r < TOP; r++) { selected[n * TOP + r] = sel[r]; weights[n * TOP + r] = cand_score[n * CAND + slot[r]] * inverse; }
+}
+#endif
 
 // ---------------------------------------------------------------- the experts
 // One block = 64 rows of one matrix of one expert, for every token routed to that expert, 32 tokens at a time.
@@ -126,6 +198,77 @@ __global__ void __launch_bounds__(256) expert_proj(const unsigned char *direct, 
             float *o = O + (size_t)(start + t0 + tx) * o_stride + rb * 64 + ty * 8;
             #pragma unroll
             for (int i = 0; i < 8; i++) o[i] = acc[i];
+        }
+    }
+}
+
+// Same products with the same order of additions per output (so the same bits as expert_proj), with each thread holding 4 rows x 4 tokens so that a
+// 16-byte shared read feeds 8 multiply-adds instead of 1: a block = 64 rows, 32 tokens per step, 128 threads (-DEXPERT_V2).
+__global__ void __launch_bounds__(128) expert_proj_v2(const unsigned char *direct, const float *mapvals, const uint16_t *refs, const uint32_t *ref_base, int matrix,
+    const float *X, int x_stride, const int *slot_token, const int *expert_start, const int *expert_count, float *O, int o_stride)
+{
+    const int e = blockIdx.y, rb = blockIdx.x;
+    const int count = expert_count[e];
+    if (!count) return;
+    const int start = expert_start[e];
+    const int K = matrix == 2 ? EXPERT : LATENT;
+    const unsigned char *block = direct + (size_t)e * EXPERT_RAW + (matrix < 2 ? (size_t)(matrix * 48 + rb) * EXP_BLOCK01 : (size_t)96 * EXP_BLOCK01 + (size_t)rb * EXP_BLOCK2);
+    const unsigned char *sel_base = block + 64 * K / 2;
+    const uint32_t rbase = ref_base[e * 3 + matrix];
+    __shared__ __align__(16) float Ws[64][68];
+    __shared__ __align__(16) float Xs[64][36];
+    const int tid = threadIdx.x, tx = tid & 7, ty = tid >> 3;
+    for (int t0 = 0; t0 < count; t0 += 32) {
+        float acc[4][4];
+        #pragma unroll
+        for (int i = 0; i < 4; i++) for (int j = 0; j < 4; j++) acc[i][j] = 0.0f;
+        for (int k0 = 0; k0 < K; k0 += 64) {
+            {   // 64 rows x 64 columns: 2 threads per row, 32 columns (16 bytes, one selector) each
+                const int row = tid >> 1, part = tid & 1, col = k0 + part * 32;
+                const uint4 bytes = *(const uint4 *)(block + (size_t)row * (K / 2) + col / 2);
+                const unsigned sel = sel_base[(size_t)row * (K / 32) + col / 32];
+                const float *vals = mapvals + (size_t)refs[rbase + sel] * 16;
+                const unsigned words[4] = { bytes.x, bytes.y, bytes.z, bytes.w };
+                #pragma unroll
+                for (int q = 0; q < 4; q++)
+                    #pragma unroll
+                    for (int b = 0; b < 4; b++) {
+                        const unsigned v = (words[q] >> (b * 8)) & 0xff;
+                        const int k = part * 32 + (q * 4 + b) * 2;
+                        Ws[k][row] = vals[v & 15];
+                        Ws[k + 1][row] = vals[v >> 4];
+                    }
+            }
+            {   // 32 tokens x 64 inputs: 4 threads per token, 16 inputs each
+                const int tk = tid >> 2, kp = (tid & 3) * 16;
+                float4 v[4];
+                #pragma unroll
+                for (int q = 0; q < 4; q++) v[q] = make_float4(0.f, 0.f, 0.f, 0.f);
+                if (t0 + tk < count) {
+                    const int slot = start + t0 + tk;
+                    const float *src = X + (size_t)(matrix == 2 ? slot : slot_token[slot]) * x_stride + k0 + kp;
+                    #pragma unroll
+                    for (int q = 0; q < 4; q++) v[q] = *(const float4 *)(src + q * 4);
+                }
+                #pragma unroll
+                for (int q = 0; q < 4; q++) { Xs[kp + q * 4 + 0][tk] = v[q].x; Xs[kp + q * 4 + 1][tk] = v[q].y; Xs[kp + q * 4 + 2][tk] = v[q].z; Xs[kp + q * 4 + 3][tk] = v[q].w; }
+            }
+            __syncthreads();
+            #pragma unroll 8
+            for (int kk = 0; kk < 64; kk++) {
+                const float4 w4 = *(const float4 *)&Ws[kk][ty * 4], x4 = *(const float4 *)&Xs[kk][tx * 4];
+                const float w[4] = { w4.x, w4.y, w4.z, w4.w }, x[4] = { x4.x, x4.y, x4.z, x4.w };
+                #pragma unroll
+                for (int i = 0; i < 4; i++)
+                    #pragma unroll
+                    for (int j = 0; j < 4; j++) acc[i][j] = fmaf(w[i], x[j], acc[i][j]);
+            }
+            __syncthreads();
+        }
+        #pragma unroll
+        for (int j = 0; j < 4; j++) {
+            const int t = t0 + tx * 4 + j;
+            if (t < count) *(float4 *)(O + (size_t)(start + t) * o_stride + rb * 64 + ty * 4) = make_float4(acc[0][j], acc[1][j], acc[2][j], acc[3][j]);
         }
     }
 }
@@ -274,6 +417,12 @@ int main(int argc, char **argv)
     alloc(&G, (size_t)SLOTS * EXPERT); alloc(&U, (size_t)SLOTS * EXPERT); alloc(&D, (size_t)SLOTS * LATENT); alloc(&mixture, (size_t)N * LATENT); alloc(&lnorm, (size_t)N * LATENT);
     alloc(&routed, (size_t)N * W); alloc(&sg, (size_t)N * SHARED); alloc(&su, (size_t)N * SHARED); alloc(&so, (size_t)N * W); alloc(&state, (size_t)HEADS * HEAD * HEAD);
     CHECK(cudaMalloc(&selected, (size_t)N * TOP * 4)); CHECK(cudaMalloc(&bad, 4));
+#ifdef FAST_ROUTER
+    float *approx, *cand_score; int *cand, *ncand, *overflow;
+    CHECK(cudaMalloc(&approx, (size_t)N * EXPERTS * 4)); CHECK(cudaMalloc(&cand_score, (size_t)N * CAND * 4));
+    CHECK(cudaMalloc(&cand, (size_t)N * CAND * 4)); CHECK(cudaMalloc(&ncand, (size_t)N * 4)); CHECK(cudaMalloc(&overflow, 4));
+    cublasHandle_t cb; CUB(cublasCreate(&cb));
+#endif
     CHECK(cudaMalloc(&d_slot_token, (size_t)SLOTS * 4)); CHECK(cudaMalloc(&d_slot_of, (size_t)N * TOP * 4)); CHECK(cudaMalloc(&d_start, EXPERTS * 4)); CHECK(cudaMalloc(&d_count, EXPERTS * 4));
     CHECK(cudaMemcpy(X0, embed.data(), embed.size(), cudaMemcpyHostToDevice));
     CHECK(cudaMemcpy(IN, in0.data(), in0.size(), cudaMemcpyHostToDevice));
@@ -314,11 +463,22 @@ int main(int argc, char **argv)
         aggregate<<<N, 256>>>(Agg, X0, res, rec_data(T, 38));
         normalize_rows<<<N, 256>>>(post, Agg, rec_data(T, 5), W);                                                   mark();
         // router
+#ifdef FAST_ROUTER
+        { const float one_f = 1.0f, zero_f = 0.0f;
+          CUB(cublasSgemm(cb, CUBLAS_OP_T, CUBLAS_OP_N, EXPERTS, N, W, &one_f, (const float *)rec_data(T, 29), W, post, W, &zero_f, approx, EXPERTS)); }
+        CHECK(cudaMemset(overflow, 0, 4));
+        router_candidates<<<blocks(N), 256>>>(approx, rec_data(T, 30), cand, ncand, overflow, N);
+        router_exact<<<blocks((size_t)N * CAND), 256>>>(cand_score, cand, ncand, rec_data(T, 29), post, N);
+        top16_candidates<<<blocks(N), 256>>>(cand_score, cand, ncand, rec_data(T, 30), selected, weights, N);
+        CHECK(cudaMemcpy(h_selected.data(), selected, h_selected.size() * 4, cudaMemcpyDeviceToHost));
+        { int h_over = 0; CHECK(cudaMemcpy(&h_over, overflow, 4, cudaMemcpyDeviceToHost)); if (h_over) { fprintf(stderr, "%d tokens have more than %d router candidates\n", h_over, (int)CAND); return 1; } }
+#else
         transpose_rows<<<blocks((size_t)N * W), 256>>>(post_t, post, N, W);
         router_scores<<<dim3((N + 127) / 128, EXPERTS), 128>>>(scores, choices, rec_data(T, 29), rec_data(T, 30), post_t, N);
         top16<<<blocks(N), 256>>>(scores, choices, selected, weights, bad, N);
         CHECK(cudaMemcpy(h_selected.data(), selected, h_selected.size() * 4, cudaMemcpyDeviceToHost));
         { int h_bad = 0; CHECK(cudaMemcpy(&h_bad, bad, 4, cudaMemcpyDeviceToHost)); if (h_bad) { fprintf(stderr, "non-finite router choice for %d tokens\n", h_bad); return 1; } }
+#endif
         std::fill(h_count.begin(), h_count.end(), 0);
         for (int i = 0; i < N * TOP; i++) h_count[h_selected[i]]++;
         { int acc = 0; for (int e = 0; e < EXPERTS; e++) { h_start[e] = acc; acc += h_count[e]; } }
@@ -328,10 +488,10 @@ int main(int argc, char **argv)
         CHECK(cudaMemcpy(d_start, h_start.data(), EXPERTS * 4, cudaMemcpyHostToDevice)); CHECK(cudaMemcpy(d_count, h_count.data(), EXPERTS * 4, cudaMemcpyHostToDevice));
                                                                                                                     mark();
         gemm(post, N, W, T, 31, latent);
-        expert_proj<<<dim3(48, EXPERTS), 256>>>(d_direct, d_mapvals, d_refs, d_ref_base, 0, latent, LATENT, d_slot_token, d_start, d_count, G, EXPERT);
-        expert_proj<<<dim3(48, EXPERTS), 256>>>(d_direct, d_mapvals, d_refs, d_ref_base, 1, latent, LATENT, d_slot_token, d_start, d_count, U, EXPERT);
+        EXPERT_LAUNCH(48, d_direct, d_mapvals, d_refs, d_ref_base, 0, latent, LATENT, d_slot_token, d_start, d_count, G, EXPERT);
+        EXPERT_LAUNCH(48, d_direct, d_mapvals, d_refs, d_ref_base, 1, latent, LATENT, d_slot_token, d_start, d_count, U, EXPERT);
         dense_activation<<<blocks((size_t)SLOTS * EXPERT), 256>>>(G, U, (size_t)SLOTS * EXPERT);
-        expert_proj<<<dim3(56, EXPERTS), 256>>>(d_direct, d_mapvals, d_refs, d_ref_base, 2, G, EXPERT, d_slot_token, d_start, d_count, D, LATENT);   mark();
+        EXPERT_LAUNCH(56, d_direct, d_mapvals, d_refs, d_ref_base, 2, G, EXPERT, d_slot_token, d_start, d_count, D, LATENT);   mark();
         mix_ranks<<<blocks((size_t)N * LATENT), 256>>>(mixture, D, d_slot_of, weights, N);
         normalize_rows<<<N, 256>>>(lnorm, mixture, rec_data(T, 33), LATENT);
         gemm(lnorm, N, LATENT, T, 32, routed);                                                                      mark();
@@ -348,6 +508,29 @@ int main(int argc, char **argv)
     { int used = 0, maxc = 0; for (int e = 0; e < EXPERTS; e++) { used += h_count[e] > 0; if (h_count[e] > maxc) maxc = h_count[e]; }
       printf("routing: %d of %d experts used, most tokens on one expert %d, mean per used expert %.1f\n", used, EXPERTS, maxc, used ? (double)SLOTS / used : 0.0); }
     CHECK(cudaMemcpy(out.data(), res, out.size() * 4, cudaMemcpyDeviceToHost));
+#ifdef FAST_ROUTER
+    {   // the all-double router on the same input, and the comparison with what the fast router chose
+        std::vector<int> sel_fast = h_selected, sel_ref(h_selected.size());
+        std::vector<float> w_fast(h_selected.size()), w_ref(h_selected.size());
+        int *selected_ref; float *weights_ref;
+        CHECK(cudaMalloc(&selected_ref, sel_ref.size() * 4)); CHECK(cudaMalloc(&weights_ref, w_ref.size() * 4));
+        CHECK(cudaMemcpy(w_fast.data(), weights, w_fast.size() * 4, cudaMemcpyDeviceToHost));
+        CHECK(cudaMemset(bad, 0, 4));
+        transpose_rows<<<blocks((size_t)N * W), 256>>>(post_t, post, N, W);
+        router_scores<<<dim3((N + 127) / 128, EXPERTS), 128>>>(scores, choices, rec_data(T, 29), rec_data(T, 30), post_t, N);
+        top16<<<blocks(N), 256>>>(scores, choices, selected_ref, weights_ref, bad, N);
+        CHECK(cudaMemcpy(sel_ref.data(), selected_ref, sel_ref.size() * 4, cudaMemcpyDeviceToHost)); CHECK(cudaMemcpy(w_ref.data(), weights_ref, w_ref.size() * 4, cudaMemcpyDeviceToHost));
+        int tokens_same = 0, weights_same = 0;
+        for (int n = 0; n < N; n++) {
+            tokens_same += memcmp(&sel_fast[n * TOP], &sel_ref[n * TOP], TOP * 4) == 0;
+            weights_same += memcmp(&w_fast[n * TOP], &w_ref[n * TOP], TOP * 4) == 0;
+        }
+        printf("fast router against the all-double router on the same input: same 16 experts in the same order for %d of %d tokens, bit-identical weights for %d of %d tokens\n", tokens_same, N, weights_same, N);
+    }
+#endif
+    {   unsigned long long fnv = 1469598103934665603ULL; const unsigned char *bytes = (const unsigned char *)out.data();
+        for (size_t i = 0; i < out.size() * 4; i++) { fnv ^= bytes[i]; fnv *= 1099511628211ULL; }
+        printf("output hash (FNV-1a 64 of all %d x %d floats) %016llx\n", N, W, fnv); }
 
     const float *r = (const float *)ref.data();
     size_t same = 0, nonfinite = 0; double maxabs = 0, sumd2 = 0, sumr2 = 0, worst_pos_err = 0, min_cos = 1.0; int worst_pos = 0;
