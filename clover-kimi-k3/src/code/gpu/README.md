@@ -10,7 +10,7 @@ The dated record of this work is `../../../docs/clover-kimi-k3-gpu-context.md`. 
 | `layer0.cu` | layer 0 (attention and the dense MLP). `layer0-gpu TRUNK0_DIR base.embed base.layer0 [REPEATS]` |
 | `layer1.cu` | layer 1 (attention, router, 16 of 896 experts per token, shared expert) with all 896 experts on the card, 16.9 GiB of a 24 GiB card for 1000 tokens. `layer1-gpu DATASET_DIR base.embed base.layer0 base.layer1 [REPEATS]` |
 
-Build: `nvcc -O3 --fmad=false -arch=sm_86 -o layer1-gpu layer1.cu` (the RTX 3090 is sm_86; the server has CUDA 12.6 in `/usr/local/cuda-12.6`). The input and reference rows are written by the CPU engine: `PF_LAST_LAYER=1 PF_SAVE_ROWS=base scripts/run-model.sh recorded` writes `base.embed`, `base.layer0` and `base.layer1` into `src/work/results`. The programs read the dataset files directly and include nothing from `../cpu/`.
+Build: `nvcc -O3 --fmad=false -arch=sm_86 -o layer1-gpu layer1.cu`; optional flags: `-DFAST_ROUTER` (float product plus exact double for the candidates, `-lcublas`), `-DEXPERT_V2` (register-tiled expert kernel), `-DINT8_PLANES` (the trunk matrices on the integer tensor cores, `-lcublas`; not the same sums as the float kernel). The first two give the same output bits as without them (the RTX 3090 is sm_86; the server has CUDA 12.6 in `/usr/local/cuda-12.6`). The input and reference rows are written by the CPU engine: `PF_LAST_LAYER=1 PF_SAVE_ROWS=base scripts/run-model.sh recorded` writes `base.embed`, `base.layer0` and `base.layer1` into `src/work/results`. The programs read the dataset files directly and include nothing from `../cpu/`.
 
 ## What it may use
 
@@ -44,6 +44,7 @@ Neither point rules the idea out. They are the first things to measure.
 | `probes/machine-readout.sh` | reads the machine: CPUs, RAM, GPUs and the links between them, NVMe, network, limits; prints a summary beside the provider's listing. Read only, needs no root. |
 | `probes/nvme-read-rate.c` | reads one big file with O_DIRECT for 1, 4 and 16 MiB blocks and 1 to 32 threads, sequential or random, and prints GB/s. Reads only. On the CPU host (two NVMe drives in RAID 1) it gave 3.8 GB/s with one thread and 14.4 GB/s from 4 threads at 4 MiB, the same as the figures recorded earlier (3.94 and 14.08 to 14.44). |
 | `probes/sgemm-ceiling.cu` | cuBLAS on the shapes of layer 0's weight matrices (float, and TF32 as a speed reference) with 1000 tokens: what the card does with NVIDIA's own kernel, to read our matrix kernel against. Build: `nvcc -O3 -arch=sm_86 -o sgemm-ceiling sgemm-ceiling.cu -lcublas`. |
+| `probes/gemm-simt-bench.cu`, `probes/gemm-imma-bench.cu`, `probes/bench-common.cuh` | the matrix product benches: the float kernel v1 against v2 (bit-identical), and the integer-digit product on the integer tensor cores against the float kernel, on the real weights of layer 0 and the real embedding rows. Build with `nvcc -O3 --fmad=false -arch=sm_86` (the second also `-lcublas`). |
 
 ## First hour on the GPU server
 
