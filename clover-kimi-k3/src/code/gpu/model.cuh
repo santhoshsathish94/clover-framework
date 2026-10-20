@@ -336,6 +336,14 @@ static void moe_block(Work &w, const Layer &y, float *res)
 #endif
     std::fill(w.h_count.begin(), w.h_count.end(), 0);
     for (int i = 0; i < N * TOP; i++) w.h_count[w.h_selected[i]]++;
+    {   // MODEL_GPU_ROUTES=dir: write each layer's chosen experts (N x 16 ints) to dir/routes-L.bin, to compare two runs
+        const char *dir = getenv("MODEL_GPU_ROUTES");
+        if (dir && *dir) {
+            char name[4096]; snprintf(name, sizeof name, "%s/routes-%d.bin", dir, y.L);
+            FILE *f = fopen(name, "wb");
+            if (f) { fwrite(w.h_selected.data(), 4, w.h_selected.size(), f); fclose(f); }
+        }
+    }
     { int acc = 0; for (int e = 0; e < EXPERTS; e++) { w.h_start[e] = acc; acc += w.h_count[e]; } }
     { std::vector<int> fill(EXPERTS, 0);
       for (int n = 0; n < N; n++) for (int r = 0; r < TOP; r++) { const int e = w.h_selected[n * TOP + r]; const int slot = w.h_start[e] + fill[e]++; w.h_slot_token[slot] = n; w.h_slot_of[n * TOP + r] = slot; } }
