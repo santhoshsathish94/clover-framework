@@ -31,6 +31,7 @@ int main(int argc, char **argv)
 {
     if (argc < 5) { fprintf(stderr, "usage: pipeline-gpu DATASET_DIR REFS_DIR OPEN_WEIGHTS_DIR BUILD_DIR\n"); return 2; }
     const char *dataset = argv[1];
+    setvbuf(stdout, NULL, _IOLBF, 0);
     const int LAST = env_int("PIPE_LAST", LAST_LAYER_INDEX), NTOK = env_int("PIPE_TOKENS", 500), SLOTS = env_int("PIPE_SLOTS", 8), READERS = env_int("PIPE_READERS", 4);
     const int MINGAP = env_int("PIPE_MINGAP", 4);
     int have = 0; CHECK(cudaGetDeviceCount(&have));
@@ -61,15 +62,22 @@ int main(int argc, char **argv)
     std::vector<std::vector<int>> owned(G);
     for (int L = 0; L <= LAST; L++) {
         int best = -1;
-        for (int g = 0; g < G; g++) {
+        if (L < G) best = L;          // the first G layers go one to each card, so every card can hold its first experts before the run starts
+        else if (L == G) best = 0;    // layer 8 returns to card 0, as planned
+        else for (int g = 0; g < G; g++) {
             if (L - last_on[g] < MINGAP) continue;
             if (best < 0 || load[g] < load[best]) best = g;
         }
-        if (L == 0) best = 0;
         if (best < 0) { best = 0; for (int g = 1; g < G; g++) if (last_on[g] < last_on[best]) best = g; }
         gpu_of[L] = best; last_on[best] = L; load[best] += trunk_bytes[L]; owned[best].push_back(L);
     }
     for (int g = 0; g < G; g++) printf("card %d: %zu layers, trunk %.2f GiB\n", g, owned[g].size(), load[g] / 1073741824.0);
+    // the trunk goes to the cards in two batches: layers 0..HALF-1 before the run, layers HALF..LAST loaded in the gaps while the first batch runs, into the room the
+    // finished layers leave (PIPE_HALF = the first layer of the second batch; HALF > LAST means everything is loaded before the run)
+    const int HALF = env_int("PIPE_HALF", (LAST + 1) / 2);
+    {   std::vector<size_t> a(G, 0), b(G, 0);
+        for (int L = 0; L <= LAST; L++) (L < HALF ? a : b)[gpu_of[L]] += trunk_bytes[L];
+        for (int g = 0; g < G; g++) printf("card %d: first batch %.2f GiB, second batch %.2f GiB\n", g, a[g] / 1073741824.0, b[g] / 1073741824.0); }
 
     // ---- buffers on every card
     std::vector<Work> works(G);
@@ -87,11 +95,11 @@ int main(int argc, char **argv)
         std::vector<std::thread> th;
         for (int g = 0; g < G; g++) th.emplace_back([&, g]() {
             CHECK(cudaSetDevice(g));
-            for (int L : owned[g]) { layer_load_trunk(dataset, L, layers[L]); if (L >= 1) layer_load_expert_tables(dataset, L, layers[L]); }
+            for (int L : owned[g]) { if (L >= HALF) break; layer_load_trunk(dataset, L, layers[L]); if (L >= 1) layer_load_expert_tables(dataset, L, layers[L]); }
         });
         for (auto &t : th) t.join();
     }
-    printf("trunk of all %d layers on the cards: %.2f s\n", LAST + 1, now_s() - t_trunk0);
+    printf("trunk of layers 0..%d on the cards (first batch): %.2f s\n", HALF - 1, now_s() - t_trunk0);
     for (int g = 0; g < G; g++) { CHECK(cudaSetDevice(g)); size_t f, t; CHECK(cudaMemGetInfo(&f, &t)); printf("card %d: %.2f GiB free\n", g, f / 1073741824.0); }
     // embeddings to every card (layer 0's input and snapshot 0)
     for (int g = 0; g < G; g++) { CHECK(cudaSetDevice(g)); CHECK(cudaMemcpy(works[g].snap[0], embed.data(), (size_t)N * W * 4, cudaMemcpyHostToDevice)); }
@@ -105,7 +113,9 @@ int main(int argc, char **argv)
 
     // ---- shared state
     std::vector<int> moe_layers; for (int L = 1; L <= LAST; L++) moe_layers.push_back(L);
-    std::vector<char> act_ready(LAST + 2, 0), exp_ready(LAST + 2, 0), buf_free(G, 1);
+    std::vector<char> act_ready(LAST + 2, 0), exp_ready(LAST + 2, 0), trunk_ready(LAST + 2, 0), buf_free(G, 1);
+    for (int L = 0; L <= LAST && L < HALF; L++) trunk_ready[L] = 1;
+    std::vector<double> trunk_at(LAST + 2, 0.0), min_free(G, 1e30);
     std::vector<int> slot_layer(SLOTS, -1); std::vector<char> slot_ready(SLOTS, 0);
     std::vector<LayerLog> log(LAST + 2);
     std::atomic<int> next_read(0);
@@ -157,12 +167,26 @@ int main(int argc, char **argv)
             cv.notify_all();
         }
     });
+    // trunk loaders: the second batch, layer by layer, when the card has room (the worker frees a layer's trunk once it has run)
+    for (int g = 0; g < G; g++) threads.emplace_back([&, g]() {
+        CHECK(cudaSetDevice(g));
+        for (int L : owned[g]) {
+            if (L < HALF) continue;
+            const size_t need = trunk_bytes[L] + (256u << 20);
+            { std::unique_lock<std::mutex> lk(mu);
+              for (;;) { size_t f, t; CHECK(cudaMemGetInfo(&f, &t)); if ((double)f < min_free[g]) min_free[g] = (double)f; if (f >= need) break; cv.wait_for(lk, std::chrono::milliseconds(20)); } }
+            layer_load_trunk(dataset, L, layers[L]); layer_load_expert_tables(dataset, L, layers[L]);
+            CHECK(cudaDeviceSynchronize());
+            { std::lock_guard<std::mutex> lk(mu); trunk_ready[L] = 1; trunk_at[L] = now_s() - t_start; }
+            cv.notify_all();
+        }
+    });
     // compute workers
     for (int g = 0; g < G; g++) threads.emplace_back([&, g]() {
         CHECK(cudaSetDevice(g));
         Work &w = works[g];
         for (int L : owned[g]) {
-            { std::unique_lock<std::mutex> lk(mu); cv.wait(lk, [&]() { return act_ready[L] && (L == 0 || exp_ready[L]); }); }
+            { std::unique_lock<std::mutex> lk(mu); cv.wait(lk, [&]() { return act_ready[L] && trunk_ready[L] && (L == 0 || exp_ready[L]); }); }
             const double t0 = now_s();
             const float *sn[9]; const int nsnap = snapshots_in(L > 0 ? L : 1);
             for (int i = 0; i < nsnap && i < 8; i++) sn[i] = w.snap[i];
@@ -181,6 +205,8 @@ int main(int argc, char **argv)
             }
             { std::lock_guard<std::mutex> lk(mu); act_ready[L + 1] = 1; log[L + 1].act_ready = now_s() - t_start; }
             cv.notify_all();
+            layer_free(layers[L]);   // after the hand-off, so the pipeline does not wait for it; the room goes to the second batch
+            cv.notify_all();
         }
     });
 
@@ -196,14 +222,16 @@ int main(int argc, char **argv)
 
     printf("\npreload (the first layer's experts on every card, disk to RAM to card): %.2f s\n", t_pre);
     printf("run, layers 0..%d for %d tokens: %.2f s (%.2f GB read from disk in all)\n\n", LAST, N, run, bytes_read.load() / 1e9);
-    double compute = 0, stall = 0;
-    printf("layer  card  starts(s)  compute(ms)  waited for experts(ms)\n");
+    double compute = 0, stall = 0, trunk_stall = 0;
+    printf("layer  card  starts(s)  compute(ms)  waited for experts(ms)  waited for trunk(ms)\n");
     for (int L = 0; L <= LAST; L++) {
         const double c = (log[L].end - log[L].start) * 1000, waited = L >= 1 ? fmax(0.0, (log[L].exp_ready - log[L].act_ready) * 1000) : 0.0;
-        compute += c; stall += waited;
-        if (L <= 24 || L % 12 == 0 || L >= LAST - 3) printf("%4d   %3d  %9.2f  %11.1f  %12.1f\n", L, log[L].gpu, log[L].start - (t_run0 - t_start), c, waited);
+        const double tw = L >= HALF ? fmax(0.0, (trunk_at[L] - log[L].act_ready) * 1000) : 0.0;
+        compute += c; stall += waited; trunk_stall += tw;
+        if (L <= 24 || L % 12 == 0 || L >= LAST - 3 || L == HALF || L == HALF + 1) printf("%4d   %3d  %9.2f  %11.1f  %12.1f  %20.1f\n", L, log[L].gpu, log[L].start - (t_run0 - t_start), c, waited, tw);
     }
-    printf("sum of compute %.2f s, sum of the waits for experts %.2f s; the cards computed for %.1f%% of 8 x the run time\n", compute / 1000, stall / 1000, 100.0 * (compute / 1000) / (G * run));
+    printf("sum of compute %.2f s, sum of the waits for experts %.2f s, sum of the waits for the second batch of trunk %.2f s; the cards computed for %.1f%% of 8 x the run time\n", compute / 1000, stall / 1000, trunk_stall / 1000, 100.0 * (compute / 1000) / (G * run));
+    for (int g = 0; g < G; g++) if (min_free[g] < 1e29) printf("card %d: least free memory seen while the second batch loaded %.2f GiB\n", g, min_free[g] / 1073741824.0);
 
     // ---- checks
     const int gl = gpu_of[LAST];
