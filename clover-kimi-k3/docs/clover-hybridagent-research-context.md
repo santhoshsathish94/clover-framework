@@ -183,3 +183,44 @@ What this does not show: one question, one sample, one seed, one box, a cap of 1
 **Same box, two systems, as measured today (one run each, different things):** Clover K3 prompt pass of a 1,000-token prompt 301.5 s, bit-identical to the pod chain; its decode cost from the earlier records (README and `clover-kimi-k3-cpu-context.md`, not re-measured today) is about 3 s per token with the expert cache. HybridAgent-8B generation step 0.44 s. These are different models of different sizes, so the ratio says nothing about the method; the paper's own comparison is steps, and here the step count of the latent run for the same answer was not compared with anything.
 
 Open questions that came out of this run: does the same prompt finish with `--max_response_tokens 2048 or 4096` (the paper uses 4,096 for math), what share of steps is latent across the five example questions, and is the pseudo-text readability on this box in the paper's range. Each is one more run of about 8 to 15 minutes.
+
+
+## Cycle 3 (2026-10-22): step-by-step trace of HybridAgent-8B on k3 (Direction: see each step, stage, layer; do not assume)
+
+**Instrument.** `trace_hybrid.py` (local copy `oss/scratch-agents/hybrid-clean/`, remote `/root/hybridagent/`), observation only, no engine file edited. Hooks: forward pre-hook on the embedding-side input, post-hook on each of the 36 decoder layers, final norm and LM head (all `torch` hooks, last position only); wrappers around `_lockstep_forward`, `run_hybridlink` and the sampler for timing. Per latent step it also reads the LM-head distribution and the cosine nearest token of `R(h)` (my own extra work, timed separately as `obs` and subtracted from the "net" column). Same question (q4), same settings and seed 0 as the 1,024-step run, search tool off, batch 1, `OMP_NUM_THREADS=16`, budget 450 steps, nothing else running on `k3`. Raw record `/root/runs/hybrid/trace1.json`, log `trace1.log`; the printed analysis is saved at `oss/scratch-agents/hybrid-clean/trace1-analysis.txt`.
+
+**Gate (checked first).** The 1,019 characters of output are identical to the first 1,019 of the earlier 1,024-step run (`first_diff` none). The instrument did not change the text in this run. The 4 spans (102, 13, 6, 4 latent steps) and 4 anchor exits equal the first four spans of the earlier run.
+
+**Totals.** 450 generation steps (+1 pad step), 125 latent steps, 4 spans, 4 anchor exits, 0 forced exits, end reason `budget`, wall 196.7 s with the instrument (0.437 s per step), prefill of 529 prompt tokens 2.68 s. One run; no repeat of the trace itself.
+
+**Time per step by kind (ms, mean; net = without my own readout work).**
+
+| kind | n | net total | forward | of which 36 layers | final norm | LM head | HybridLink | sampling | other |
+|---|---|---|---|---|---|---|---|---|---|
+| text token | 317 | 408.1 | 402.5 | 373.5 | 0.09 | 28.3 | - | 5.2 | 0.5 |
+| step that sampled `<latent>` | 4 | 409.6 | 404.0 | 375.1 | 0.10 | 28.2 | - | 5.2 | 0.4 |
+| latent step | 125 | 404.3 | 402.2 | 373.2 | 0.09 | 28.2 | 1.9 | - | 0.2 |
+| exit step (`</latent>` fed) | 4 | 409.7 | 407.7 | 378.7 | 0.09 | 28.2 | 1.9 | - | 0.2 |
+
+Read: a latent step costs the same as a text step (404 against 408 ms), as the paper's cost model says. The 36 layers are 92% of a step (about 10.4 ms per layer on average), the LM head 7%, the HybridLink 0.5%, sampling 1.3%, everything else under 0.2%. Each stage is measured with a timer around it, so hook overhead is inside the numbers and was not measured on its own; the comparison with the untraced run (0.442 s per step, 1,024 steps) agrees but is not a head-to-head.
+
+**Fed vector.** Norm of the fed embedding at text steps 1.64; norm of `R(h)` at latent steps 8.83 (5.4 times larger). Layer 0 (last position): output norm 10.9 (text) against 24.3 (latent); relative update 6.32 against 2.32. After the final norm the vector read by the head and the HybridLink has norm 152 at text steps and 71 at latent steps.
+
+**Layers (selected; last position; mean over 317 text steps / 125 latent steps).** Output norm grows with depth in both (layer 8: 56 / 59; layer 24: 311 / 258; layer 34: 1356 / 1401). Relative update is 0.35 to 0.6 in most layers in both kinds. Two places differ: layer 16 (text 0.998, latent 0.309) and layer 35 (output norm text 1,378, latent 2,336; relative update 0.44 / 0.81). Means only; I have not looked at their distribution over steps, so a few tokens could carry them. Unexplained.
+
+**`hidden_states[-1]` question (open item above): answered for this run.** The vector the engine keeps as `last_hidden` equals the output of the final norm exactly: maximum absolute difference 0.0 over all 451 steps (transformers 5.13.0, this engine). Last position only.
+
+**Latent-step readouts (129 latent-mode decision steps: 125 continued, 4 exited).**
+- LM-head P(`</latent>`): 0.0005 mean and 0.035 at most on continued steps; 0.998, 0.957, 0.987, 0.972 on the four exits.
+- Cosine of `R(h)` to `Emb(</latent>)`: 0.063 mean on continued steps; 0.999, 0.998, 0.999, 0.988 on exits.
+- The two readouts agreed on all 129 steps (both say `</latent>` on the 4 exits, neither says it on the 125 others). Difference 1 (LM-head argmax in the engine versus cosine for pseudo-text) made no difference to exits in this run.
+- Cosine of `R(h)` to its nearest token embedding: mean 0.855, min 0.273, max 0.998.
+- LM-head top-1 probability in latent steps 0.88, plain-softmax entropy 0.42; at text steps the sampling distribution (temperature, top-k, top-p applied) has entropy 0.07 and P(sampled token) 0.96. These two entropies are of different distributions and are not comparable.
+- P(`<latent>`) at the steps that sampled it: 1.0, 1.0, 1.0, 0.931; mean over all text steps 0.0022.
+- Spans: 102, 13, 6, 4 latent steps; none open at the end of the budget.
+
+**Not observed.** Per-layer attention versus MLP split; KV cache size or cost growth with length (only 529 + 451 positions); any step after 450; one question, one seed, batch 1, search off, one box; how steps would differ with the search tool; the layer 16 and 35 distributions.
+
+**Reading, not Direction: HybridAgent step stages next to Clover K3 stages.** HybridAgent step: input (embedding of a token, or `R(h)` from the previous step) -> 36 layers (92% of time) -> final norm -> LM head (7%) -> sample token, or HybridLink -> `R(h)` fed to the next step (0.5%). Clover K3 token: tokenise -> embedding -> layer 0 -> layers 1 to 92 -> tail. The same step shape; the HybridLink sits where K3's tail output meets the next embedding. What this trace says about K3 is limited to this: in a step, the cost of the latent feedback itself (a small two-layer map and a norm) was 1.9 ms of 404; all the cost stays in the layers, which for K3 are expert reads. No K3 per-stage numbers were taken in this cycle.
+
+**Smallest next cycles (the creator chooses).** (a) From the existing `trace1.json`, the distribution over steps of layer 16 and layer 35 values and of the span position (no new run); (b) a longer budget run (2,048 or 4,096) to see a complete answer and more spans; (c) K3's own per-layer stage times from an existing log for the side-by-side; (d) the other four example questions.
