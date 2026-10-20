@@ -20,10 +20,6 @@
 #include <string>
 #include <fcntl.h>
 #include <unistd.h>
-#ifdef FAST_ROUTER
-#include <cublas_v2.h>
-#define CUB(x) do { cublasStatus_t s_ = (x); if (s_ != CUBLAS_STATUS_SUCCESS) { fprintf(stderr, "%s:%d: cublas error %d\n", __FILE__, __LINE__, (int)s_); exit(1); } } while (0)
-#endif
 
 enum { LATENT = 3584, EXPERT = 3072, SHARED = 6144, EXPERT_RAW = 17547264, EXP_BLOCK01 = 121856, EXP_BLOCK2 = 104448, EXPERTS = 896, TOP = 16 };
 #ifdef EXPERT_V2
@@ -447,7 +443,7 @@ int main(int argc, char **argv)
         normalize_rows<<<N, 256>>>(Xn, Agg, T.op + 88, W);                                                         mark();
         for (int c = 0; c < 3; c++) {
             dim3 grid((ROWS + BN - 1) / BN, (N + BM - 1) / BM);
-            gemm_i8<<<grid, 256>>>(Xn, N, W, T.op + QKV_PREFIX + (size_t)c * QKV_COMP + 20, (size_t)3 * QKV_COMP, T.op + QKV_PREFIX + (size_t)c * QKV_COMP, (size_t)3 * QKV_COMP, ROWS, raw[c], ROWS);
+            gemm_raw(Xn, N, W, T.op + QKV_PREFIX + (size_t)c * QKV_COMP + 20, (size_t)3 * QKV_COMP, T.op + QKV_PREFIX + (size_t)c * QKV_COMP, (size_t)3 * QKV_COMP, ROWS, raw[c], ROWS);
         }                                                                                                          mark();
         for (int c = 0; c < 3; c++) conv_silu<<<blocks((size_t)N * ROWS), 256>>>(qkv[c], raw[c], T.op, c, N);
         l2_heads<<<N * HEADS, HEAD>>>(qkv[0]); l2_heads<<<N * HEADS, HEAD>>>(qkv[1]);                              mark();

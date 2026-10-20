@@ -8,6 +8,10 @@
 #include <ctime>
 #include <vector>
 #include <cuda_runtime.h>
+#if defined(INT8_PLANES) || defined(FAST_ROUTER)
+#include <cublas_v2.h>
+#define CUB(x) do { cublasStatus_t s_ = (x); if (s_ != CUBLAS_STATUS_SUCCESS) { fprintf(stderr, "%s:%d: cublas error %d\n", __FILE__, __LINE__, (int)s_); exit(1); } } while (0)
+#endif
 
 #define CHECK(x) do { cudaError_t e_ = (x); if (e_ != cudaSuccess) { fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, cudaGetErrorString(e_)); exit(1); } } while (0)
 
@@ -304,13 +308,80 @@ struct Trunk {
 };
 static const unsigned char *rec_data(const Trunk &L, unsigned id) { return L.group[L.rec[id].group] + L.rec[id].offset; }
 
+static void gemm(const float *A, int N, int K, const Trunk &L, unsigned id, float *C);
+static int blocks(size_t n) { return (int)((n + 255) / 256); }
+
+#ifdef INT8_PLANES
+// -DINT8_PLANES: the product on the integer tensor cores. The weights are exact 8-bit integers; each token's activations are scaled by the token's
+// largest value and cut into 3 signed 8-bit digits (23 bits); one exact integer product per digit (cuBLAS, int32 sums), the digits recombined in
+// double and the row scale applied. Not the float kernel's sums: the activations are rounded to 23 bits relative to the token's largest value.
+__global__ void quantize_planes(int8_t *X8, double *tscale, const float *X, int N, int K)
+{
+    const int n = blockIdx.x, tid = threadIdx.x;
+    const float *x = X + (size_t)n * K;
+    float m = 0.0f;
+    for (int c = tid; c < K; c += blockDim.x) m = fmaxf(m, fabsf(x[c]));
+    __shared__ float sh[32], smax;
+    for (int o = 16; o > 0; o >>= 1) m = fmaxf(m, __shfl_down_sync(0xffffffffu, m, o));
+    if ((tid & 31) == 0) sh[tid >> 5] = m;
+    __syncthreads();
+    m = tid < blockDim.x / 32 ? sh[tid] : 0.0f;
+    if (tid < 32) for (int o = 16; o > 0; o >>= 1) m = fmaxf(m, __shfl_down_sync(0xffffffffu, m, o));
+    if (tid == 0) smax = m;
+    __syncthreads();
+    const double qmax = 8355711.0;   // the largest value whose balanced digits all fit in 8 bits
+    const double inv = smax > 0.0f ? qmax / (double)smax : 0.0;
+    if (tid == 0) tscale[n] = smax > 0.0f ? (double)smax / qmax : 0.0;
+    for (int c = tid; c < K; c += blockDim.x) {
+        long long t = llrint((double)x[c] * inv);
+        for (int p = 0; p < 3; p++) {
+            int d;
+            if (p < 2) { d = (int)(((t + 128) & 255) - 128); t = (t - d) >> 8; } else d = (int)t;
+            X8[((size_t)p * N + n) * K + c] = (int8_t)d;
+        }
+    }
+}
+__global__ void combine_planes(float *out, const int *C32, const double *tscale, const unsigned char *scales, size_t scale_stride, int N, int R)
+{
+    const size_t i = (size_t)blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= (size_t)N * R) return;
+    const int n = (int)(i / R), r = (int)(i % R);
+    long long acc = 0;
+    for (int p = 0; p < 3; p++) acc += (long long)C32[((size_t)p * N + n) * R + r] << (8 * p);
+    out[i] = (float)((double)acc * tscale[n] * (double)f32at(scales + (size_t)r * scale_stride));
+}
+struct Planes { cublasHandle_t h; int8_t *x8; int *c32; double *ts; size_t x8_bytes, c32_bytes, ts_bytes; int ready; };
+static Planes g_planes;
+static void grow(void **p, size_t *have, size_t want) { if (*have < want) { if (*p) cudaFree(*p); CHECK(cudaMalloc(p, want)); *have = want; } }
+static void gemm_planes(const float *A, int N, int K, const unsigned char *codes, size_t code_stride, const unsigned char *scales, size_t scale_stride, int R, float *C)
+{
+    if (K % 4 || R % 4 || code_stride % 4) { fprintf(stderr, "integer product needs K, R and the row stride to be multiples of 4\n"); exit(1); }
+    if (!g_planes.ready) { CUB(cublasCreate(&g_planes.h)); g_planes.ready = 1; }
+    grow((void **)&g_planes.x8, &g_planes.x8_bytes, (size_t)3 * N * K);
+    grow((void **)&g_planes.c32, &g_planes.c32_bytes, (size_t)3 * N * R * 4);
+    grow((void **)&g_planes.ts, &g_planes.ts_bytes, (size_t)N * 8);
+    quantize_planes<<<N, 256>>>(g_planes.x8, g_planes.ts, A, N, K);
+    const int alpha = 1, beta = 0;
+    CUB(cublasGemmEx(g_planes.h, CUBLAS_OP_T, CUBLAS_OP_N, R, 3 * N, K, &alpha, codes, CUDA_R_8I, (int)code_stride, g_planes.x8, CUDA_R_8I, K,
+                     &beta, g_planes.c32, CUDA_R_32I, R, CUBLAS_COMPUTE_32I, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
+    combine_planes<<<blocks((size_t)N * R), 256>>>(C, g_planes.c32, g_planes.ts, scales, scale_stride, N, R);
+}
+#endif
+
+// one 8-bit weight matrix times N rows of input: C[n * ldc + r]
+static void gemm_raw(const float *A, int N, int K, const unsigned char *codes, size_t code_stride, const unsigned char *scales, size_t scale_stride, int R, float *C, int ldc)
+{
+#ifdef INT8_PLANES
+    if (ldc == R) { gemm_planes(A, N, K, codes, code_stride, scales, scale_stride, R, C); return; }
+#endif
+    dim3 grid((R + BN - 1) / BN, (N + BM - 1) / BM);
+    gemm_i8_v2<<<grid, 256>>>(A, N, K, codes, code_stride, scales, scale_stride, R, C, ldc);
+}
 static void gemm(const float *A, int N, int K, const Trunk &L, unsigned id, float *C)
 {
     const Record &r = L.rec[id];
     if ((unsigned)K != r.cols || (r.offset & 3) || (r.length & 3)) { fprintf(stderr, "record %u does not fit\n", id); exit(1); }
     const unsigned char *d = rec_data(L, id);
-    dim3 grid((r.rows + BN - 1) / BN, (N + BM - 1) / BM);
-    gemm_i8<<<grid, 256>>>(A, N, K, d + (size_t)r.rows * 4, r.cols, d, 4, r.rows, C, r.rows);
+    gemm_raw(A, N, K, d + (size_t)r.rows * 4, r.cols, d, 4, r.rows, C, r.rows);
 }
-static int blocks(size_t n) { return (int)((n + 255) / 256); }
 

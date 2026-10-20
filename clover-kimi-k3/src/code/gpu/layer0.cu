@@ -87,7 +87,7 @@ int main(int argc, char **argv)
         normalize_rows<<<N, 256>>>(Xn, X, L.op + 88, W);                                                          mark();
         for (int c = 0; c < 3; c++) {   // each (row, component) record is [scale, 4 taps, 7168 codes]; rows of one component are 3 records apart
             dim3 grid((ROWS + BN - 1) / BN, (N + BM - 1) / BM);
-            gemm_i8<<<grid, 256>>>(Xn, N, W, L.op + QKV_PREFIX + (size_t)c * QKV_COMP + 20, (size_t)3 * QKV_COMP, L.op + QKV_PREFIX + (size_t)c * QKV_COMP, (size_t)3 * QKV_COMP, ROWS, raw[c], ROWS);
+            gemm_raw(Xn, N, W, L.op + QKV_PREFIX + (size_t)c * QKV_COMP + 20, (size_t)3 * QKV_COMP, L.op + QKV_PREFIX + (size_t)c * QKV_COMP, (size_t)3 * QKV_COMP, ROWS, raw[c], ROWS);
         }                                                                                                         mark();
         for (int c = 0; c < 3; c++) conv_silu<<<blocks((size_t)N * ROWS), 256>>>(qkv[c], raw[c], L.op, c, N);
         l2_heads<<<N * HEADS, HEAD>>>(qkv[0]); l2_heads<<<N * HEADS, HEAD>>>(qkv[1]);                             mark();
