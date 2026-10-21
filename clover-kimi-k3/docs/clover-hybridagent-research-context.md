@@ -573,3 +573,31 @@ Sums over the three pairs: text tokens 1,893 (bounds 16 to 256), 2,165 (default)
 **For Clover K3 (reading).** A K3 latent mechanism would need an exit signal with the same property (a decisive anchor decision). The span floor changed behaviour in our runs (19 held-open steps), so it is a real setting and not only a safety bound.
 
 **Not observed.** Why the 2 LM-only exits differ in the cosine readout; exits under the one-step rule (Cycle 20) and under interventions on the latent vector (next cycles).
+
+
+## Cycle 20 (2026-10-22): one-step latent spans (script `cmp_runs.py`, output `cycle20-one.txt`; released engine with `min_latent_steps=1 max_latent_steps=1`, search on, budget 2,048, seed 0, questions q4, q5, q1)
+
+**What was run.** Each `<latent>` span is closed by force after exactly one latent step, so the continuous channel carries one vector per span. Everything else is as in the default-bound runs. Three questions, one seed each; the default-bound (4 to 200) and blocked (`<latent>` suppressed) runs for the same question and seed are the comparison.
+
+| question | default-bound: generation steps (text + latent, spans) | one-step: generation steps (text + latent, spans) | blocked: generation steps | answer, all three |
+|---|---|---|---|---|
+| q4 | 1,243 (914 + 329, 13 spans) | 1,115 (1,101 + 14, 14 spans) | 525 | 24 |
+| q5 | 988 (748 + 240, 8 spans) | 1,419 (1,393 + 26, 26 spans) | 1,289 | (-12, -8, 36) |
+| q1 | 654 (503 + 151, 7 spans) | 502 (496 + 6, 6 spans) | 816 | 29 |
+| sum | 2,885 (2,165 + 720) | 3,036 (2,990 + 46) | 2,630 | |
+
+**Observed.**
+- All spans under the one-step rule ended by force (14, 26, 6), none by the model's anchor; latent steps were 1.2%, 1.8% and 1.2% of generation steps.
+- All nine runs finished (`eos`) and produced the same final answer on each question.
+- Summed over the three questions the one-step runs used 2,990 text tokens against 2,165 with the default bounds and 2,630 with `<latent>` blocked; generation steps 3,036, 2,885 and 2,630. The ordering by question is not uniform: on q1 one-step is lower than both others (502 against 654 and 816), on q4 it is between them (1,115 against 1,243 and 525), on q5 it is above both (1,419 against 988 and 1,289).
+- The model opened as many spans under the one-step rule as under the default one on q4 (14 against 13) and q1 (6 against 7), and more on q5 (26 against 8).
+- Tool use differs between the runs (for example q4 default: no python or search call recorded; q4 one-step: one python call), so trajectories diverge early and the step counts are not a controlled comparison of the span rule alone.
+
+**What this shows and does not.** In our reality, with one seed per question, trimming each span to one step removed the text-token reduction seen with the default bounds (2,165 against 2,990) while the answers stayed the same. It does not show that the span length is the cause, because the trajectories diverge on tool calls and one seed per question cannot separate that from run-to-run variation (Cycle 16 and 17 differences between seeds were of the same order on single questions). Three questions, one seed, one checkpoint, answers compared by the final boxed value only.
+
+**For Clover K3 (reading).** Whatever the continuous channel does, in these runs it was the longer spans (median 13 to 27 continuing steps) that coincided with fewer text tokens; the same number of span openings with one step each did not. Cycle 22 (paper bounds 16 to 256, seeds 1 and 2) will give the other end of the span-length axis.
+
+**Not observed.** Spans between 1 and 4 steps; a second seed of the one-step rule.
+
+## Queue started after Cycle 21 (2026-10-22)
+Tracer now has `INTERV=noise:<d>|random|nearest` (applied to the latent vector after its readout; the readout fields in the trace describe the vector before the change, `iv_rel` records `||new - z|| / ||z||`) and `CACHECHECK=1` (records every real forward step's input embedding and final-layer hidden, then runs one full-prefix forward over prompt + all inputs and compares final-layer hidden states and LM-head argmax; writes `<trace>.cache.json`). Defaults unchanged. Detached queue on `k3` (`run_c22.sh`, one model job at a time): Cycle 24 first (q4 seed 2 and q1 seed 0 with `CACHECHECK=1`), then Cycle 23 (q4 and q5 at seed 0 with `noise:0.5`, `noise:2.0`, `random`, `nearest`), then Cycle 22 (paper bounds 16 to 256, seeds 1 and 2, q4, q5, q1). 16 model runs, total about 3 hours.
