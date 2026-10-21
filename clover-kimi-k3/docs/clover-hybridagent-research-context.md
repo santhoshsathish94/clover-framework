@@ -358,3 +358,17 @@ Run on `k3` after the HybridAgent runs had finished (nothing else active): `BUIL
 **Not observed.** A text-only control; whether the low latent share is a property of search runs in general (three runs); the cause of the q3 unit error; third seed.
 
 **Housekeeping for the creator.** The key sits in a tracked file in your `HybridAgent` clone (`.env.example`, shown as modified). Move it to a git-ignored `.env` and restore the template (`git checkout -- .env.example`) before any commit or push from that clone; I have not changed that file.
+
+
+## Cycle 11 (2026-10-22): q3 with search, second seed (seed 1; budget 2,048, `k3`; record `trace-q3-search-s1.json`, summary `q3-s1-summary.txt`)
+
+Part of a queue run one job at a time (`run_all.sh` on `k3`: this run, then q4 and q5 with search, then text-only controls); nothing else was on the box.
+
+| run | steps | latent steps (share) | spans | search calls | ended | wall | answer |
+|---|---|---|---|---|---|---|---|
+| q3 search seed 0 (Cycle 10) | 1,816 | 140 (8%) | 5 | 1 | `eos` | 807 s | 30000, wrong |
+| q3 search seed 1 | 1,722 | 262 (15%) | 6: 41, 47, 25, 44, 35, 70 | 1 ("density of whole milk at room temperature") | `eos` | 764 s | `\boxed{30}`, **correct** |
+
+**Observed.** The wrong answer of Cycle 10 is not repeated by the second seed: both seeds make the same one search, and the texts differ from character 139. In seed 1 the closing text reasons in grams ("30 grams would round to 30"), in seed 0 it ended on "30000 grams"; so for this question the outcome depends on the seed. The latent share is 15% here against 8% for seed 0 of the same question. Net step time text / latent 422.8 / 438.2 ms. `hidden_states[-1]` equals the final-norm output exactly (0.0). Exits: 6, minimum P(`</latent>`) 0.95; 2 steps where only the cosine readout says `</latent>`; none where only the LM head does. One outlier text step at layer 16 (id 16, the digit `1`).
+
+**What this does and does not say.** Two seeds, one search result each; the answer difference is an observation of two samples, not a rate of error. It does say that a single run of a question cannot be read as the model's ability on it.
