@@ -372,3 +372,15 @@ Part of a queue run one job at a time (`run_all.sh` on `k3`: this run, then q4 a
 **Observed.** The wrong answer of Cycle 10 is not repeated by the second seed: both seeds make the same one search, and the texts differ from character 139. In seed 1 the closing text reasons in grams ("30 grams would round to 30"), in seed 0 it ended on "30000 grams"; so for this question the outcome depends on the seed. The latent share is 15% here against 8% for seed 0 of the same question. Net step time text / latent 422.8 / 438.2 ms. `hidden_states[-1]` equals the final-norm output exactly (0.0). Exits: 6, minimum P(`</latent>`) 0.95; 2 steps where only the cosine readout says `</latent>`; none where only the LM head does. One outlier text step at layer 16 (id 16, the digit `1`).
 
 **What this does and does not say.** Two seeds, one search result each; the answer difference is an observation of two samples, not a rate of error. It does say that a single run of a question cannot be read as the model's ability on it.
+
+
+## Cycle 12 (2026-10-22): q4 and q5 with the search tool on (seed 0, budget 2,048, `k3`; records `trace-q4-search.json`, `trace-q5-search.json`, summary `q45-search-summary.txt`)
+
+| run | steps | latent steps (share) | spans | search calls | python calls | ended | wall | answer |
+|---|---|---|---|---|---|---|---|---|
+| q4 search on | 1,243 | 329 (26%) | 13 | **0** | 0 | `eos` | 570 s | `\boxed{24}`, correct |
+| q5 search on | 1,035 | 240 (23%) | 8 | **0** | 3 | `eos` | 468 s | `(-12, -8, 36)`, correct |
+
+**Observed.** With the search tool available, the model made no search call on either question (it computed, and on q5 used the python tool three times). The two runs have the same step counts, latent steps, span lengths (13 spans 102, 13, 6, 4, 24, 35, 71, 23, 9, 18, 11, 8, 5 for q4; 8 spans for q5), python calls and layer-35 medians as the search-off runs of seed 0 (Cycles 5 and 7). So a second, separate process run with the same seed on `k3` reproduced the first one in every count I compared (I did not diff the full texts; the answers and the closing text read the same). Practical meaning: on this box, one seed is one trajectory; differences between runs in earlier cycles come from the seed, not from run-to-run noise. And the model uses the search tool when it needs a fact (q1 to q3) and not when it can compute (q4, q5): that is a choice made inside its own text, visible as `<search>` after a `</think>`.
+
+**Per step.** Net step time text / latent (ms): q4 430.5 / 424.8, q5 425.5 / 415.9 (earlier runs 422.3 / 416.7 and 422.7 / 419.7: the same within about 2%). Wall 570 s and 468 s against 553 s and 462 s.
