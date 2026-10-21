@@ -402,3 +402,24 @@ Wall time follows steps (ratios 0.39, 1.22, 2.51; one step is about 0.42 to 0.45
 **Reading (labelled as such).** On the three valid pairs the text-only runs took 0.41, 1.27 and 2.50 times the steps of the latent runs of the same question and seed, so the same weights wrote fewer steps with latent spans on two of three pairs and more on one. Summed over those three pairs: 3,391 steps with latent spans against 4,680 text-only (ratio 1.38). Against that, one sample per pair, the ratio ranges over a factor of six, the text-only runs are off-policy, and the answers are right in all valid runs, so steps are the only difference measured. The paper's claim is a step saving; this control shows it can go either way for one question and one seed, and it is not enough to put a number on it.
 
 **For Clover K3.** A latent step costs what a text step costs here (Cycles 3 to 12) and, as arithmetic only, a K3 decode step is about 3 s (Cycle 9). The saving available from a latent-span mechanism is therefore set by the steps it removes in a given trajectory, which in these 4 pairs varied from fewer (0.41) to more (2.50) than the same weights without it.
+
+
+## Cycle 14 (2026-10-22): q4 seed-0 text-only control re-run with the search tool on (`trace-q4-nolat-search.json`, `control-q4s0.txt`)
+
+The Cycle 13 control for q4 seed 0 had been stopped by a search request while search was off. Re-run with `SEARCH=1 LATENT=0`: **1,519 steps**, one search call ("how many trailing zeros in 100!"), no python call, ended by itself, answer `\boxed{24}`, correct, wall 655 s. The latent run of the same question and seed had 1,243 steps (329 latent) and no search call, so this pair is 1.22 text-only to latent.
+
+**All four pairs, same weights, same seed, `<latent>` allowed against blocked.**
+
+| question and seed | steps with latent allowed (latent steps) | steps with latent blocked | ratio blocked / allowed | both answers correct |
+|---|---|---|---|---|
+| q4 seed 0 | 1,243 (329) | 1,519 | 1.22 | yes |
+| q4 seed 1 | 1,208 (172) | 494 | 0.41 | yes |
+| q5 seed 0 | 1,035 (240) | 1,316 | 1.27 | yes |
+| q5 seed 1 | 1,148 (324) | 2,870 | 2.50 | yes |
+| total | 4,634 | 6,199 | 1.34 | |
+
+**Reading (labelled as such).** Over the four pairs the same weights took 34% more steps with `<latent>` blocked than allowed (6,199 against 4,634), and 3 of 4 pairs went the same way, but the pair ratios run from 0.41 to 2.50, so one question and one seed cannot be read as the saving. Four pairs, one run each; the blocked runs are off the training distribution; all eight runs reached a correct answer, so steps (and wall time, which follows steps at 0.42 to 0.45 s each) are the only difference measured here. The paper's step saving is a different comparison (a separately trained text agent); this is the closest the released code allows.
+
+**For Clover K3 (arithmetic from measured numbers, not a measurement).** One K3 decode step is about 3.0 s on this box (Cycle 9) and a latent step costs a full step. If the 34% step difference observed here carried over, 4,634 against 6,199 steps would be a difference of 1,565 steps, about 78 minutes at 3.0 s per step; but the spread over the four pairs (0.41 to 2.50) means the sign is not secure for a single run, and no latent-style mechanism exists for K3 (it needs a trained feedback map and a post-trained backbone; Cycle 9).
+
+**Not observed.** A text-only run of the base model without the HybridAgent training; the same pairs on other questions (q1 to q3 with latent blocked); more seeds per pair.
