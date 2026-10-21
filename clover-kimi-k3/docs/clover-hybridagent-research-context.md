@@ -624,3 +624,34 @@ Tracer now has `INTERV=noise:<d>|random|nearest` (applied to the latent vector a
 **For Clover K3 (reading).** The property the paper states as a theorem (the cache holds the same state as recomputing everything) held within rounding for a mixed latent and text sequence in a real run. For K3 this is a test to repeat on its own engine with its own precision (the recorded run already has bit-identical replays, so a float64 or same-kernel comparison is possible there); the comparison method above (an independent higher-precision reference to size the noise floor) is reusable.
 
 **Not observed.** Float32 against float32; pad positions; sequences with many more spans than 8.
+
+
+## Cycle 23 (2026-10-22): interventions on the latent vector (tracer `INTERV`, `cmp_runs.py`, output `cycle23-iv.txt`; q4 and q5, seed 0, default bounds 4 to 200, search on, budget 2,048)
+
+**What was run.** Every vector the HybridLink produces during a span is changed before it is fed back as the next input embedding. `noise:d`: add Gaussian noise of norm `d` times the vector's norm (relative change exactly `d`). `random`: replace with a uniformly sampled token embedding rescaled to the vector's norm. `nearest`: replace with the nearest token embedding (by cosine) rescaled to the vector's norm. The readouts in the trace (nearest token, cosine to `</latent>`) describe the vector before the change. The exit decision is the model's own, taken afterwards from the LM head. A separate seeded generator drives the interventions. The comparison is the unmodified seed-0 run of the same question.
+
+**Observed.**
+
+| run | generation steps | text + latent (latent share) | spans (median, max steps) | end | final answer |
+|---|---|---|---|---|---|
+| q4 unmodified | 1,243 | 914 + 329 (26%) | 13 (13, 102) | eos | 24 |
+| q4 noise 0.5 (rel. change 0.50) | 481 | 455 + 26 (5%) | 2 (13, 16) | eos | 24 |
+| q4 noise 2.0 (rel. change 2.00) | 422 | 328 + 94 (22%) | 3 (25, 60) | eos | 24 |
+| q4 random token (rel. change 1.39) | 517 | 482 + 35 (7%) | 7 (4, 9) | eos | 24 |
+| q4 nearest token (rel. change 0.42) | 888 | 574 + 314 (35%) | 7 (23, 127) | eos | 24 |
+| q5 unmodified | 988 | 748 + 240 (24%) | 8 (27, 56) | eos | (-12, -8, 36) |
+| q5 noise 0.5 | 848 | 620 + 228 (27%) | 5 (48, 65) | eos | (-12, -8, 36) |
+| q5 noise 2.0 | 2,048 | 1,620 + 428 (21%) | 31 (7, 51) | budget | none |
+| q5 random token (rel. change 1.39) | 1,406 | 1,330 + 76 (5%) | 18 (4, 6) | eos | (-12,-8,36) |
+| q5 nearest token (rel. change 0.38) | 1,150 | 869 + 281 (24%) | 4 (62, 154) | eos | (-12, -8, 36) |
+
+- Seven of the eight modified runs ended with the same final answer as the unmodified run; the eighth (q5 noise 2.0) used the whole budget with 31 spans and gave no answer.
+- All spans in the eight runs ended by the model's own exit; none was forced.
+- Replacing the vector with a random token embedding (almost orthogonal to the original, relative change 1.39) gave the shortest spans in both questions (median 4, which is the minimum span length; max 9 and 6) and the lowest latent share (7% and 5%). The nearest-token replacement gave spans as long as or longer than the unmodified run (median 23 against 13 on q4, 62 against 27 on q5).
+- Every modified run diverged from the unmodified one in text early (q4 noise 0.5: first differing character 436 of 2,202 in the unmodified output), so every step count above is for a different trajectory, with different tool use (the unmodified q4 run recorded no python call, each modified one 1; q5: 3 unmodified, 0 to 4 modified).
+
+**What this shows and does not.** In our reality, on these two questions at one seed, the final answer survived every replacement of the latent content except the largest noise on q5, so the answer on these questions did not require the latent vectors to be what the HybridLink produced. What changed was behaviour: how long the model stayed in a span (random replacement pushed it to the floor of 4 steps; nearest replacement left it long), and, for noise 2.0 on q5, whether it finished within the budget. The step counts are not comparable between rows beyond that, since trajectories differ. Two questions, one seed, eight modified runs; correctness is the final boxed value only. Whether the answer would survive on a harder question, where the latent steps carry more of the work, was not tested; both questions are ones the model solves with python calls and short text.
+
+**For Clover K3 (reading).** The signal that the latent channel was being used shows in how the model *behaves around* the vector (span length, budget use), not in the final answer on easy questions. An evaluation of a K3 latent channel built on the same interventions would need questions where the text-only version fails or is long, otherwise "answer unchanged" is uninformative.
+
+**Not observed.** Interventions on harder questions; a second seed; permutation of vectors within a span; intervention only at selected positions in a span (for example only the last one before the exit).
