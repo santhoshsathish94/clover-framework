@@ -509,3 +509,30 @@ Per pair the direction is the same for text tokens and generation steps: latent 
 **For Clover K3 (arithmetic from measured numbers, not a K3 measurement).** One K3 decode step is about 3.0 s (Cycle 9). Generation-step differences: 6,029 steps over nine pairs when the truncated blocked runs are taken at their cap (about 5.0 hours, a lower bound), 203 steps over the seven finished pairs (about 10 minutes). The sign flips by question and seed, and almost the whole difference sits in the two pairs where the blocked run never reached an answer. K3 has no latent mechanism; it would need a trained feedback map and a post-trained backbone (Cycle 9).
 
 **Next (Cycle 18, started).** Run the mechanism with the paper's own latent bounds (16 to 256 steps per span) in our engine on q4 s0, q5 s0 and q1 s0 against the existing blocked runs, to see how the span length they chose changes steps and the text-token share in our reality. `trace_hybrid.py` gets `MINLAT` and `MAXLAT` environment switches (defaults 4 and 200, unchanged).
+
+
+## Cycle 18 (2026-10-22): the paper's latent-span bounds (16 to 256 steps) in our engine, q4, q5, q1 at seed 0 (search on, budget 2,048, `k3`; records `trace-q4-b16-s0.json`, `trace-q5-b16-s0.json`, `trace-q1-b16-s0.json`, output `cycle18-metrics.txt`)
+
+Only `MINLAT=16 MAXLAT=256` changed against the default-bound runs of the same question and seed (`trace_hybrid.py` switches; defaults 4 and 200 unchanged). The blocked runs of Cycles 13 to 15 are the reference. All three runs ended by `eos` with a correct answer. The q4 run took a different path from the default-bound run (one python call against none), as any change of the bounds can do to a sampled trajectory.
+
+| pair (seed 0) | setting | text tokens | latent steps (spans) | generation steps | observation-feed passes | wall |
+|---|---|---|---|---|---|---|
+| q4 | bounds 16 to 256 | 645 | 435 (4: 102, 130, 116, 87) | 1,080 | 7 | 510 s |
+| q4 | default 4 to 200 | 914 | 329 (13) | 1,243 | 0 | 570 s |
+| q4 | latent blocked | 525 | 0 | 525 | 994 | 655 s |
+| q5 | bounds 16 to 256 | 717 | 718 (20, median about 27, one of 156) | 1,435 | 0 | 695 s |
+| q5 | default | 748 | 240 (8) | 988 | 47 | 468 s |
+| q5 | latent blocked | 1,289 | 0 | 1,289 | 27 | 562 s |
+| q1 | bounds 16 to 256 | 531 | 194 (7) | 725 | 1,309 | 897 s |
+| q1 | default | 503 | 151 (7) | 654 | 1,329 | 871 s |
+| q1 | latent blocked | 816 | 0 | 816 | 56 | 369 s |
+
+Sums over the three pairs: text tokens 1,893 (bounds 16 to 256), 2,165 (default), 2,630 (blocked); generation steps 3,240, 2,885, 2,630.
+
+**Observed.** With the paper's bounds the latent share of generation rises (q4 40%, q5 50%, q1 27%, against 26%, 24% and 23% with the default bounds) and the text-token count falls: 28.0% fewer text tokens than the blocked runs (12.6% fewer than the default-bound runs). Generation steps go the other way for these three pairs: 23.2% more than the blocked runs (3,240 against 2,630) and 12.3% more than the default-bound runs, because each latent step is a full forward pass. Per pair, text tokens are below the blocked run in q5 and q1 and above it in q4; generation steps are above the blocked run in q4 and q5 and below it in q1.
+
+**What this does and does not say.** Three pairs, one seed each, one comparator (our blocked copy of the same weights, not their trained text agent), five-question set instead of their benchmarks, batch 1 on CPU. In this reality the 16-step floor moves work from text into latent steps without lowering the number of forward passes; the paper's cost model charges latent steps as forward passes too, so the saving it reports must come from the text agent's longer trajectories (596 against 302 text tokens in its Table 7), which our blocked copy does not reproduce. I did not test that reading; it is an inference from their table and ours. The text-token share is what the latent span changes in our runs; the generation-step total depends on how many latent steps it costs.
+
+**For Clover K3.** A latent mechanism trades text tokens for latent forward passes at one K3 decode step (about 3.0 s, Cycle 9) each. Whether it saves time then depends on the number of latent steps per text token removed, which in our three pairs is above 1 (q4: 435 latent steps for 269 text tokens fewer than the default run's 914; q5: 718 for 31 fewer; q1: none saved). It is a quantity a K3 training plan would have to set (the span floor and ceiling) and measure.
+
+**Not observed.** Other seeds and questions with the 16 to 256 bounds; their trained text agent as comparator; why q4 took a different path under different bounds (not examined).
