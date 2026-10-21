@@ -536,3 +536,22 @@ Sums over the three pairs: text tokens 1,893 (bounds 16 to 256), 2,165 (default)
 **For Clover K3.** A latent mechanism trades text tokens for latent forward passes at one K3 decode step (about 3.0 s, Cycle 9) each. Whether it saves time then depends on the number of latent steps per text token removed, which in our three pairs is above 1 (q4: 435 latent steps for 269 text tokens fewer than the default run's 914; q5: 718 for 31 fewer; q1: none saved). It is a quantity a K3 training plan would have to set (the span floor and ceiling) and measure.
 
 **Not observed.** Other seeds and questions with the 16 to 256 bounds; their trained text agent as comparator; why q4 took a different path under different bounds (not examined).
+
+
+## Cycle 19 (2026-10-22): what the latent steps read as (paper Fig 2, Fig 8, Appendix F), from the 17 existing latent-allowed traces (script `cycle19_readout.py`, output `cycle19-readout.txt`; no new run)
+
+**Direction.** The creator asked that HybridAgent be fully observed and tested before any K3 training plan is written. This cycle looks at the interpretability claim: every latent input `R(h)` can be read as its nearest vocabulary embedding (Eq. 5). The traces already hold, for every latent step, the nearest token (`link_nn_id`) and its cosine (`link_nn_cos`).
+
+**Method (their definitions, our data).** Latent span = consecutive latent steps between `<latent>` and `</latent>`. Readability (Eq. 19) = mean nearest-token cosine over the span. Noise reference = mean nearest-token cosine of 2,000 Gaussian vectors against the same embedding matrix: **0.069** (max 0.092). Context specificity (Eq. 20) = Jaccard of the span's pseudo-text content words with its own question, divided by the mean of that Jaccard with the other questions' words; defined only when that mean is positive. Our set is five questions, theirs 200 questions over six benchmarks.
+
+**Observed.**
+- 131 latent spans, 4,160 latent steps, five questions, seed 0 to 2, search on or off, default and 16-to-256 bounds.
+- Readability per span: mean 0.844, median 0.863, range 0.600 to 0.990. All 131 spans are above the noise reference (0.069). Per latent step: median cosine 0.963, 62% of steps above 0.9, 93% above 0.5.
+- The pseudo-text reads as sentences about the problem. Examples (nearest-token readout of single spans): "Let me start by searching for the speed of light in minutes per minute." (q2); "Wait, maybe I should verify with a example. Let me check 100!" (q4); "Therefore, the equation of the new circle should be (x - 6)² + (y - 4)² = 16." (q5); "For milk, if I use the average of of 1.03 g cm³, then 1 liters would be 1.03 * 1000 = 1030 grams." (q3). The garbled characters in the console output were encoding of `²` and `³`, not data.
+- Specificity cases: 17 spans have a defined, positive score and all 17 are above 1 (median 4.52). 46 spans share at least one content word with their own question and none with any other question, so the score is undefined (denominator zero) although the overlap is entirely with the right question. 68 spans share no content word with any of the five questions (mostly arithmetic and notation). So 63 of 131 spans (48%) overlap their own question and none overlap a different one in the 46 cases where the score is undefined.
+
+**What this shows and does not.** In our runs the latent steps are, step by step, close to a vocabulary token (their stated property) and the readout is coherent text about the right problem; the five-question set is too small and too narrow in vocabulary for the specificity score to be defined for most spans, so I report the three counts instead of a single number. I did not observe whether the pseudo-text is what the model *uses* (their causal interventions, Table 5), which is the next kind of observation. The readout is a property of a single trajectory per file; I did not compare spans of the same question across seeds.
+
+**For Clover K3 (reading, not a measurement on K3).** The readout requires the latent input to sit near a vocabulary embedding (mean cosine 0.84 here). A K3 latent mechanism that is meant to be auditable would need the same property from its own feedback map; whether K3's embedding space gives it is not known.
+
+**Not observed.** Causal interventions (noise, replacement, permutation, one-step spans; only "block entry" was run, Cycles 13 to 18); the working-memory equivalence of Theorem A.1; the exit rule across many spans; more seeds for the 16 to 256 bounds; their trained text agent as a comparator.
