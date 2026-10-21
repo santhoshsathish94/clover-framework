@@ -444,3 +444,19 @@ Net step time with latent blocked (text only): q1 419.5 ms, q2 434.1 ms, q3 484.
 **Reading (labelled as such).** The step saving seen in Cycle 14 does not hold up as a rule once q1 and q2 are added: it depends on the question and the seed, with q1 and q2 faster without latent spans and q3 much slower. One run per pair, off-policy control, q3 truncated by the budget; correctness is equal on q1 and q2 and unknown on the q3 control.
 
 **Not observed.** A seed beyond 0 for q1 to q3 with latent blocked; why the q3 blocked run did not finish; a base-model control.
+
+
+## Cycle 16 (2026-10-22): seed 2 for q4 and q5, latent allowed against blocked (search on, budget 4,096, `k3`; records `trace-q4-s2.json`, `trace-q4-nolat-s2.json`, `trace-q5-s2.json`, `trace-q5-nolat-s2.json`, summary `cycle16-summ.txt`)
+
+| question and seed | steps with latent allowed (latent steps) | steps with latent blocked | ratio blocked / allowed | blocked ended | answers |
+|---|---|---|---|---|---|
+| q4 seed 2 | 471 (64, 14%) | 502 | 1.07 | `eos` | both `\boxed{24}`, correct |
+| q5 seed 2 | 1,894 (523, 28%) | 4,097 | at least 2.16 | **`budget`**, no answer block | allowed: `(-12, -8, 36)`, correct; blocked: none |
+
+Wall time follows steps: 206 s / 213 s for q4, 890 s / 1,892 s for q5.
+
+**All nine pairs so far** (q4 s0 to s2, q5 s0 to s2, q1 s0, q2 s0, q3 s0): latent allowed 14,471 steps, latent blocked 19,434 steps, ratio 1.34 (a lower bound: q3 s0 and q5 s2 blocked runs stopped at the budget). By pair, 6 are above 1 and 3 below (0.41, 0.44, 0.70); the range is 0.41 to at least 2.85. The pooled number was 1.34 (four pairs), 1.23 (seven pairs), 1.34 (nine pairs): it does not settle, and it is driven by the two pairs that did not finish without latent spans.
+
+**Reading (labelled as such).** The two blocked runs that ran out of budget are both cases where the same weights, with `<latent>` allowed, finished correctly in fewer steps (1,816 and 1,894). The blocked runs are off the training distribution, one run per pair, so the pooled ratio is a description of these nine pairs and not a rate. Correctness: every blocked run that finished is correct; the two that did not finish have no answer.
+
+**Not observed.** A base-model control; a third seed for q1 to q3; why the blocked q3 and q5 s2 runs keep going; any K3-side run of a latent mechanism (none exists).
