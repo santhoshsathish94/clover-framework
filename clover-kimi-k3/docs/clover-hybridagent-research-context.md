@@ -384,3 +384,21 @@ Part of a queue run one job at a time (`run_all.sh` on `k3`: this run, then q4 a
 **Observed.** With the search tool available, the model made no search call on either question (it computed, and on q5 used the python tool three times). The two runs have the same step counts, latent steps, span lengths (13 spans 102, 13, 6, 4, 24, 35, 71, 23, 9, 18, 11, 8, 5 for q4; 8 spans for q5), python calls and layer-35 medians as the search-off runs of seed 0 (Cycles 5 and 7). So a second, separate process run with the same seed on `k3` reproduced the first one in every count I compared (I did not diff the full texts; the answers and the closing text read the same). Practical meaning: on this box, one seed is one trajectory; differences between runs in earlier cycles come from the seed, not from run-to-run noise. And the model uses the search tool when it needs a fact (q1 to q3) and not when it can compute (q4, q5): that is a choice made inside its own text, visible as `<search>` after a `</think>`.
 
 **Per step.** Net step time text / latent (ms): q4 430.5 / 424.8, q5 425.5 / 415.9 (earlier runs 422.3 / 416.7 and 422.7 / 419.7: the same within about 2%). Wall 570 s and 468 s against 553 s and 462 s.
+
+
+## Cycle 13 (2026-10-22): text-only control with the same weights (the `<latent>` token blocked), q4 and q5, seeds 0 and 1 (budget 4,096, search off, python on, `k3`; records `trace-q4-nolat*.json`, `trace-q5-nolat*.json`, summary `control-summary.txt`)
+
+**What the control is.** In `trace_hybrid.py` the switch `LATENT=0` sets the engine's own text-mode mask for `<latent>` (`_blocked_masks["in"]`), so the same HybridAgent-8B-Agentic weights can only write text. Nothing in the engine file is edited. This answers the open item "a text-only control with the same weights" from Cycle 2 in the only way the released code allows, and it has a built-in limit: the model was trained to use latent spans, so with them blocked it is run off the distribution it was trained on. It is not the paper's text-only baseline (a different trained model).
+
+| question and seed | latent run: steps (latent) | text-only run: steps | ratio text-only / latent | text-only ended | answer text-only |
+|---|---|---|---|---|---|
+| q4 seed 0 | 1,243 (329) | 241 | not valid | `tool_cap`: it wrote `<search>how many trailing zeros in 100!</search>` and search was off in this run | none |
+| q4 seed 1 | 1,208 (172) | 494 | 0.41 | `eos` | `\boxed{24}`, correct |
+| q5 seed 0 | 1,035 (240) | 1,316 | 1.27 | `eos` | `\boxed{(-12,-8,36)}`, correct |
+| q5 seed 1 | 1,148 (324) | 2,870 | 2.50 | `eos` | `\boxed{(-12, -8, 36)}`, correct |
+
+Wall time follows steps (ratios 0.39, 1.22, 2.51; one step is about 0.42 to 0.45 s in both modes). The q4 seed-0 control was stopped by a search request, so it is not a comparison; it is re-run with search on (next cycle).
+
+**Reading (labelled as such).** On the three valid pairs the text-only runs took 0.41, 1.27 and 2.50 times the steps of the latent runs of the same question and seed, so the same weights wrote fewer steps with latent spans on two of three pairs and more on one. Summed over those three pairs: 3,391 steps with latent spans against 4,680 text-only (ratio 1.38). Against that, one sample per pair, the ratio ranges over a factor of six, the text-only runs are off-policy, and the answers are right in all valid runs, so steps are the only difference measured. The paper's claim is a step saving; this control shows it can go either way for one question and one seed, and it is not enough to put a number on it.
+
+**For Clover K3.** A latent step costs what a text step costs here (Cycles 3 to 12) and, as arithmetic only, a K3 decode step is about 3 s (Cycle 9). The saving available from a latent-span mechanism is therefore set by the steps it removes in a given trajectory, which in these 4 pairs varied from fewer (0.41) to more (2.50) than the same weights without it.
