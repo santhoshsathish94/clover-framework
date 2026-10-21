@@ -460,3 +460,52 @@ Wall time follows steps: 206 s / 213 s for q4, 890 s / 1,892 s for q5.
 **Reading (labelled as such).** The two blocked runs that ran out of budget are both cases where the same weights, with `<latent>` allowed, finished correctly in fewer steps (1,816 and 1,894). The blocked runs are off the training distribution, one run per pair, so the pooled ratio is a description of these nine pairs and not a rate. Correctness: every blocked run that finished is correct; the two that did not finish have no answer.
 
 **Not observed.** A base-model control; a third seed for q1 to q3; why the blocked q3 and q5 s2 runs keep going; any K3-side run of a latent mechanism (none exists).
+
+
+## Cycle 17 (2026-10-22): the paper's own metrics, read off our nine pairs; and a correction to the step counts of Cycles 10 to 16 (script `cycle17_metrics.py`, output `cycle17-metrics.txt`, no new run)
+
+**Direction.** The creator asked to observe the other efficiency claims of the paper (35.5% to 54.7% fewer tokens, up to 54% fewer generation steps, 1.8x to 2.6x faster) in our own reality, one step at a time, without treating a different number on our hardware as a statement about theirs.
+
+**What their protocol counts (read from the paper text, Sections 5.2, 6.3, Appendix G.2 and H.3; and from `engine.py`).**
+- "Text tokens" are tokens written in text mode (Table 7: 302 against 596 per instance at 8B, 284 against 497 at 14B, MATH500 and AIME, "matched same-size text agents"). "Generation steps" are text tokens plus latent steps; the generation budget counts both (`generation_steps` in the engine, 4,096 for math and search, 24,000 for agentic tasks).
+- Their cost model (Table 9) charges every text or latent step one full backbone forward pass and **excludes prompt prefill, context-dependent attention and tool execution**. Observations are tokenised and appended to the working memory; they are not generation steps.
+- Their comparator is a separately trained text agent (GRPO or ARPO after text SFT, same backbone, same data). Ours is the same weights with `<latent>` blocked, so the two comparisons are different experiments.
+- Their inference setting has latent spans of 16 to 256 steps, tool calls up to 10 per trajectory, evaluation temperature 0.6, top-p 0.95, top-k 20, five seeds, H100 GPUs, 11 benchmarks. Ours (released defaults, `trace_hybrid.py`): spans 4 to 200, 5 tool calls, repetition penalty 1.1 (not in the paper text), batch 1, CPU, five hand-written questions.
+
+**Correction (mine).** The `steps` column of Cycles 3 to 16 counted every forward pass recorded by the tracer, including the forward passes that feed a tool observation into the cache one token at a time (`FEED` mode in the released engine). Cycle 10 wrote that search-result tokens are "not counted as steps"; that is true of the budget (`count_tool_tokens` false) and false of my `steps` column. Example: q2 with search is 3,673 forward passes = 1,349 generation steps (1,158 text, 191 latent) + 2,324 observation-feed passes. So the pooled ratios 1.34 / 1.23 / 1.34 of Cycles 14 to 16 are ratios of all forward passes, a mixture of the two things. Cycle 16 also said "budget 4,096" for all runs; the latent-allowed runs had budget 2,048 (none reached it: at most 1,798 generation steps) and the blocked runs 4,096 (two reached it). Earlier rows are left as they were; this section replaces their reading.
+
+**Per pair, same question and seed, latent allowed against blocked (generation steps = text + latent; feed = observation passes).**
+
+| pair | text tokens allowed / blocked | generation steps allowed / blocked | feed passes allowed / blocked | blocked ended |
+|---|---|---|---|---|
+| q4 s0 | 914 / 525 | 1,243 / 525 | 0 / 994 | `eos` |
+| q4 s1 | 803 / 486 | 975 / 486 | 233 / 8 | `eos` |
+| q4 s2 | 399 / 494 | 463 / 494 | 8 / 8 | `eos` |
+| q5 s0 | 748 / 1,289 | 988 / 1,289 | 47 / 27 | `eos` |
+| q5 s1 | 803 / 2,785 | 1,127 / 2,785 | 21 / 85 | `eos` |
+| q5 s2 | 1,275 / 4,096 | 1,798 / 4,096 | 96 / 0 | **`budget`** |
+| q1 s0 | 503 / 816 | 654 / 816 | 1,329 / 56 | `eos` |
+| q2 s0 | 1,158 / 607 | 1,349 / 607 | 2,324 / 1,982 | `eos` |
+| q3 s0 | 428 / 4,096 | 568 / 4,096 | 1,248 / 1,078 | **`budget`** |
+
+Sums over nine pairs: text tokens 7,031 / 15,194; generation steps 9,165 / 15,194; observation-feed passes 5,306 / 4,238; all forward passes 14,471 / 19,434. Generation-step time (sum of recorded step times, tool time excluded) 4,205 s / 6,970 s.
+
+| reading of the same nine pairs | latent allowed against blocked |
+|---|---|
+| text tokens, all nine pairs | 53.7% fewer (lower bound: two blocked runs stopped at their budget with no answer) |
+| generation steps, all nine pairs | 39.7% fewer (same lower bound) |
+| all forward passes including observation feeding, all nine | 25.5% fewer |
+| text tokens, the seven pairs where both runs finished | 23.9% fewer (5,328 / 7,002) |
+| generation steps, the seven finished pairs | 2.9% fewer (6,799 / 7,002) |
+| all forward passes, the seven finished pairs | 5.9% **more** (10,761 / 10,162) |
+
+Per pair the direction is the same for text tokens and generation steps: latent allowed is lower in 6 of 9 pairs (q4 s2, q5 s0 to s2, q1, q3) and higher in 3 (q4 s0, q4 s1, q2). In q4 s0 and q2 the blocked run took a different path (blocked q4 s0 made a search call of 994 observation tokens; the allowed run made none).
+
+**What this shows, and what it does not.**
+- On the paper's own two metrics, our nine pairs land at 53.7% fewer text tokens and 39.7% fewer generation steps when the two truncated blocked runs are included as they stand, and at 23.9% and 2.9% when only the finished pairs are used. The paper's 43% to 49% text-token figure (Table 7) sits between those two readings; its "up to 54%" generation-step figure is above both of ours in the finished-only reading. These are numbers from different protocols (their trained text agent against our blocked copy of the same model; benchmarks against five questions), so this is a description of how the mechanism behaves in our reality, not a comparison of claims.
+- The released engine feeds tool observations one token per forward pass: 5,306 of the 14,471 forward passes of the latent-allowed runs (36.7%) and 2,338 s of their step time are observation feeding. The paper's cost model leaves this out (prefill and tool execution are excluded). With feeding included, the finished pairs show no saving in forward passes. For a serving system that prefills observations in parallel (K3 would), the relevant comparison is generation steps.
+- Not measured: the speedup claim (1.8x to 2.6x) in wall-clock time on H100 with a trained text agent as comparator; five seeds per benchmark; the 24,000-step agentic budget.
+
+**For Clover K3 (arithmetic from measured numbers, not a K3 measurement).** One K3 decode step is about 3.0 s (Cycle 9). Generation-step differences: 6,029 steps over nine pairs when the truncated blocked runs are taken at their cap (about 5.0 hours, a lower bound), 203 steps over the seven finished pairs (about 10 minutes). The sign flips by question and seed, and almost the whole difference sits in the two pairs where the blocked run never reached an answer. K3 has no latent mechanism; it would need a trained feedback map and a post-trained backbone (Cycle 9).
+
+**Next (Cycle 18, started).** Run the mechanism with the paper's own latent bounds (16 to 256 steps per span) in our engine on q4 s0, q5 s0 and q1 s0 against the existing blocked runs, to see how the span length they chose changes steps and the text-token share in our reality. `trace_hybrid.py` gets `MINLAT` and `MAXLAT` environment switches (defaults 4 and 200, unchanged).
