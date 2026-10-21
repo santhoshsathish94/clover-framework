@@ -260,3 +260,8 @@ Same question (q4), settings, seed 0, search off, batch 1, `OMP_NUM_THREADS=16`,
 **Not observed.** Other questions; a text-only run of the same weights to count steps saved (not possible with the released artefacts, see Cycle 2); search-tool runs; time by position in the sequence; what text the latent states spell for the 13 spans; any other seed or sampling setting.
 
 **Next, single cycles (the creator chooses).** (a) Same trace, other questions of `examples/questions.jsonl` (python tool only, search off); (b) time per step against position from the existing `trace2.json` (no new run); (c) K3-side per-stage timings from an existing log for the side-by-side with the table above.
+
+
+## Cycle 6 (2026-10-22): step time against position, from `trace2.json` (no new run; `time_by_pos.py`, `timepos2.txt`)
+
+Net step time (without my own readout work), mean per bucket of 150 steps, q4, 1,243 steps, positions 529 to 1,772: 404.4 ms (positions 529 to 679), 412.7 (829 to 979), 421.6 (1,129 to 1,279), 432.3 (1,429 to 1,579), 440.3 (1,729 to 1,772). Layer time rises 370.5 to 405.2 ms over the same range; the LM head stays 28.3 ms in every bucket. Text steps and latent steps rise together (for example 417.4 and 417.0 at positions 979 to 1,129). Least-squares slope about 31 ms per 1,000 positions (0.031 ms per step); first 50 steps 403.1 ms, last 50 steps 440.0 ms (+9%). Observed: the growth is in the 36 layers only (the KV cache grows with the sequence on this CPU engine); not split into attention against the rest. One question, one box.
