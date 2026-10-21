@@ -674,7 +674,7 @@ The comparators are the default-bound (4 to 200) and `<latent>`-blocked runs of 
 | q1 s2 | 707 | 477 + 230 (33%) | 6 | eos | 29 |
 
 **Observed.**
-- Nine runs, all ended by `eos`, all 9 spans-sets closed by the model's own exit (0 forced). Seven of nine answers are correct. The two wrong ones: q1 s0 is an arithmetic slip in the reasoning (10,000 / 343 worked out as 28.03); q5 s2 followed a failed python call (a `NameError` in its own code) and then expanded `(x-6)^2 + (y-4)^2` by hand to constant term 52 instead of 36 (36 + 16 = 52 is the value it wrote for the constant before the shift in the text; the specific slip is in its text and I did not analyse it further). The corresponding default-bound runs of the same seeds were correct on q5 s2; q1 s0 default was correct too; so with the paper's bounds the q1 s0 and q5 s2 answers changed from correct to wrong.
+- Nine runs, all ended by `eos`; every span in every run closed by the model's own exit (0 forced). Seven of nine answers are correct. The two wrong ones: q1 s0 is an arithmetic slip in the reasoning (10,000 / 343 worked out as 28.03); q5 s2 followed a failed python call (a `NameError` in its own code) and then expanded the equation by hand and concluded a constant of 52 where the correct value is 36; I did not work out where in its text the slip is. The corresponding default-bound runs of the same seeds were correct on q5 s2; q1 s0 default was correct too; so with the paper's bounds the q1 s0 and q5 s2 answers changed from correct to wrong.
 - Cycle 18 had recorded all three seed-0 answers as correct; I had not read the q1 answer. Corrected in the Cycle 18 section.
 - Over the seven pairs that have both comparators (q1 s1 and s2 have none): text tokens 4,244 (bounds 16 to 256), 5,445 (default), 10,491 (blocked): 22.1% fewer than the default runs and 59.5% fewer than the blocked runs. Generation steps 6,717, 7,248, 10,491: 7.3% fewer than default and 36.0% fewer than blocked. The blocked total includes q5 s2 at its 4,096 cap (no answer), so it is a lower bound.
 - Over the six pairs where both the 16-to-256 run and the blocked run finished (all but q5 s2): text tokens 3,507 against 6,395 (45.2% fewer), generation steps 5,437 against 6,395 (15.0% fewer).
@@ -686,3 +686,20 @@ The comparators are the default-bound (4 to 200) and `<latent>`-blocked runs of 
 **For Clover K3 (reading).** Two things this cycle puts on the table for any K3 latent design: the text-token reduction is large and fairly robust; the effect on forward passes depends on the question; and a longer span floor traded some correctness in our reality on a small set. An evaluation of a K3 version needs answer-correctness measured on many questions per setting, since a single wrong answer here is within what one sampled trajectory can do.
 
 **Not observed.** Many more questions and seeds per setting; the same bounds with a trained text agent as comparator; why the two wrong answers happened (not examined past reading the end of each output).
+
+
+## Observation summary after Cycle 24 (2026-10-22): what was observed, in our reality, and what was not
+
+No K3 training plan is written here; the creator asked for it only after HybridAgent is fully observed, and will decide whether the observation is complete.
+
+**Observed by running the released 8B checkpoint on `k3` (CPU, bf16, batch 1, one checkpoint, five questions, up to three seeds).**
+- *Mechanism.* A span opens with `<latent>`, each latent step feeds the HybridLink output back as the next input embedding, the model closes it by its own LM-head decision (131 of 131 spans in Cycle 21; 0 forced; LM head and cosine readouts agreed on 129), and text resumes. Latent and text steps cost the same on `k3` (about 0.42 to 0.44 s each, Cycle 3 onward); on K3 one decode step is about 3.0 s (Cycle 9, a different system).
+- *Cache.* Cached continuation equals a full-prefix recomputation to bf16 rounding, as far from float32 as the full-prefix result is (Cycle 24, two runs, 2,878 positions).
+- *Content of the vector.* Read out through the embedding matrix it is readable pseudo-text (readability 0.844 against a noise reference of 0.069, Cycle 19).
+- *Dependence on content.* Final answers on q4 and q5 survived noise, random-token and nearest-token replacement except q5 at relative noise 2.0 (budget, no answer); what changed was span length and budget use (Cycle 23). Not a test of harder questions.
+- *Cost.* The paper's own metrics on nine pairs (Cycle 17): fewer text tokens with latent allowed, fewer generation steps once truncated blocked runs are counted; on finished pairs only the generation-step saving is small. With the paper's span bounds over three seeds (Cycle 22): text tokens 22% below the default bounds and 59% below the blocked runs over seven pairs; generation steps 36% below the blocked runs (15% over the six that finished); higher in three of seven pairs. One-step spans removed the text-token reduction (Cycle 20).
+- *Answers.* Both paper-bound runs that were wrong (q1 s0, q5 s2) were correct at the default bounds; one trajectory each.
+
+**Not tested.** Their trained text agent as comparator; their benchmarks (MATH500, GAIA, WebWalker, etc.) or any statistic over many questions; training in any form; permutation interventions and position-selective interventions; harder questions; float32 against float32 for the cache; the 14B checkpoint; GPU execution (the `gpu` box was not touched); wall-clock on H100.
+
+**Housekeeping.** `/root/.tavily.env` on `k3` and the tracked `oss/HybridAgent/.env.example` both contain a key line; the clone must never be committed or pushed, and the key should be rotated and moved to an ignored file. Traces are in `/root/runs/hybrid/` on `k3`; scripts in `oss/scratch-agents/hybrid-clean/`.
