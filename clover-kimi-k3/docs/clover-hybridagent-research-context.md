@@ -513,7 +513,7 @@ Per pair the direction is the same for text tokens and generation steps: latent 
 
 ## Cycle 18 (2026-10-22): the paper's latent-span bounds (16 to 256 steps) in our engine, q4, q5, q1 at seed 0 (search on, budget 2,048, `k3`; records `trace-q4-b16-s0.json`, `trace-q5-b16-s0.json`, `trace-q1-b16-s0.json`, output `cycle18-metrics.txt`)
 
-Only `MINLAT=16 MAXLAT=256` changed against the default-bound runs of the same question and seed (`trace_hybrid.py` switches; defaults 4 and 200 unchanged). The blocked runs of Cycles 13 to 15 are the reference. All three runs ended by `eos` with a correct answer. The q4 run took a different path from the default-bound run (one python call against none), as any change of the bounds can do to a sampled trajectory.
+Only `MINLAT=16 MAXLAT=256` changed against the default-bound runs of the same question and seed (`trace_hybrid.py` switches; defaults 4 and 200 unchanged). The blocked runs of Cycles 13 to 15 are the reference. All three runs ended by `eos`. **Correction (Cycle 22): this sentence originally said all three answers were correct. I had not read the q1 answer: it is `\boxed{28}` (the model computed 10,000 / 343 as 28.03 after an arithmetic slip), the correct value is 29. q4 (24) and q5 ((-12, -8, 36)) were correct.** The q4 run took a different path from the default-bound run (one python call against none), as any change of the bounds can do to a sampled trajectory.
 
 | pair (seed 0) | setting | text tokens | latent steps (spans) | generation steps | observation-feed passes | wall |
 |---|---|---|---|---|---|---|
@@ -655,3 +655,34 @@ Tracer now has `INTERV=noise:<d>|random|nearest` (applied to the latent vector a
 **For Clover K3 (reading).** The signal that the latent channel was being used shows in how the model *behaves around* the vector (span length, budget use), not in the final answer on easy questions. An evaluation of a K3 latent channel built on the same interventions would need questions where the text-only version fails or is long, otherwise "answer unchanged" is uninformative.
 
 **Not observed.** Interventions on harder questions; a second seed; permutation of vectors within a span; intervention only at selected positions in a span (for example only the last one before the exit).
+
+
+## Cycle 22 (2026-10-22): the paper's span bounds (16 to 256) at three seeds (script `cycle22_sum.py`, output `cycle22-b16.txt`; q4, q5, q1 at seeds 0 (Cycle 18), 1 and 2 (new), search on, budget 2,048, `MINLAT=16 MAXLAT=256`)
+
+The comparators are the default-bound (4 to 200) and `<latent>`-blocked runs of the same question and seed from Cycles 11 to 17. q1 has those only at seed 0.
+
+| run | generation steps | text + latent (share) | spans | end | final answer |
+|---|---|---|---|---|---|
+| q4 s0 | 1,080 | 645 + 435 (40%) | 4 | eos | 24 |
+| q4 s1 | 482 | 409 + 73 (15%) | 2 | eos | 24 |
+| q4 s2 | 636 | 434 + 202 (32%) | 5 | eos | 24 |
+| q5 s0 | 1,435 | 717 + 718 (50%) | 20 | eos | (-12, -8, 36) |
+| q5 s1 | 1,079 | 771 + 308 (29%) | 8 | eos | (-12, -8, 36) |
+| q5 s2 | 1,280 | 737 + 543 (42%) | 8 | eos | **(-12,-8,52), wrong** |
+| q1 s0 | 725 | 531 + 194 (27%) | 7 | eos | **28, wrong (correct is 29)** |
+| q1 s1 | 677 | 427 + 250 (37%) | 6 | eos | 29 |
+| q1 s2 | 707 | 477 + 230 (33%) | 6 | eos | 29 |
+
+**Observed.**
+- Nine runs, all ended by `eos`, all 9 spans-sets closed by the model's own exit (0 forced). Seven of nine answers are correct. The two wrong ones: q1 s0 is an arithmetic slip in the reasoning (10,000 / 343 worked out as 28.03); q5 s2 followed a failed python call (a `NameError` in its own code) and then expanded `(x-6)^2 + (y-4)^2` by hand to constant term 52 instead of 36 (36 + 16 = 52 is the value it wrote for the constant before the shift in the text; the specific slip is in its text and I did not analyse it further). The corresponding default-bound runs of the same seeds were correct on q5 s2; q1 s0 default was correct too; so with the paper's bounds the q1 s0 and q5 s2 answers changed from correct to wrong.
+- Cycle 18 had recorded all three seed-0 answers as correct; I had not read the q1 answer. Corrected in the Cycle 18 section.
+- Over the seven pairs that have both comparators (q1 s1 and s2 have none): text tokens 4,244 (bounds 16 to 256), 5,445 (default), 10,491 (blocked): 22.1% fewer than the default runs and 59.5% fewer than the blocked runs. Generation steps 6,717, 7,248, 10,491: 7.3% fewer than default and 36.0% fewer than blocked. The blocked total includes q5 s2 at its 4,096 cap (no answer), so it is a lower bound.
+- Over the six pairs where both the 16-to-256 run and the blocked run finished (all but q5 s2): text tokens 3,507 against 6,395 (45.2% fewer), generation steps 5,437 against 6,395 (15.0% fewer).
+- Per pair against the blocked run: text tokens lower in six of seven (q4 s0, 645 against 525, is the exception); generation steps lower in four of seven (q4 s1 482 against 486, q5 s1, q5 s2, q1 s0) and higher in three (q4 s0, q4 s2, q5 s0).
+- Latent share of generation: 15% to 50%, median 33%. Seed to seed on one question it ranged 15% to 40% (q4), 29% to 50% (q5), 27% to 37% (q1).
+
+**What this shows and does not.** Over these nine runs, three questions, three seeds, the paper's span bounds reduced text tokens against both comparators, and generation steps against the blocked runs once the budget-capped one is included or excluded (36.0% and 15.0%); the first holds in six of seven pairs, the second in four of seven, so it depends on the question and seed. The comparison is against a blocked copy of the same weights, not their trained text agent. In these runs the paper's bounds also produced two wrong answers where the default bounds had produced correct ones: whether the longer spans cause that, or it is run-to-run variation (one sampled trajectory each), is not separated by this test. Seven correct answers from nine do not say anything about a rate. Correctness is the final boxed value against a value I know for these five questions.
+
+**For Clover K3 (reading).** Two things this cycle puts on the table for any K3 latent design: the text-token reduction is large and fairly robust; the effect on forward passes depends on the question; and a longer span floor traded some correctness in our reality on a small set. An evaluation of a K3 version needs answer-correctness measured on many questions per setting, since a single wrong answer here is within what one sampled trajectory can do.
+
+**Not observed.** Many more questions and seeds per setting; the same bounds with a trained text agent as comparator; why the two wrong answers happened (not examined past reading the end of each output).
