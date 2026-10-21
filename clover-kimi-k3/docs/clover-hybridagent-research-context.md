@@ -339,3 +339,22 @@ Run on `k3` after the HybridAgent runs had finished (nothing else active): `BUIL
 **Not observed.** K3 on a longer context in this cycle; K3 attention against MLP split; the arithmetic of any trained feedback map on K3 (none exists); a latent-style readout on K3 states.
 
 **Open for the creator.** (a) Tavily key on `k3` to run q1 to q3 with search (only the creator can place it; checked that none is set in root's login shell or profile files); (b) whether any of this feeds a decision for Clover K3, which is the creator's Direction, not mine.
+
+
+## Cycle 10 (2026-10-22): q1 to q3 with the search tool on (budget 2,048, seed 0, batch 1, `k3`)
+
+**Key handling.** The creator placed the Tavily key in the local clone's `HybridAgent/.env.example` (a tracked template file, now locally modified; it also holds two other key lines, lengths 24 and 26, which I did not use). I copied only the `TAVILY_API_KEY` line over ssh to `/root/.tavily.env` on `k3` (mode 600, root; first copy had a CR in it, stripped), sourced it inside `run_search.sh` only, and never printed the value (only its length, 58). `trace_hybrid.py` now has a `SEARCH=1` switch (search tool on, up to 5 search calls). Records `/root/runs/hybrid/trace-q1-search.json`, `-q2-search`, `-q3-search`; summary `oss/scratch-agents/hybrid-clean/search-summary.txt`. The key is not in any file of this repository.
+
+| question | steps | latent steps (share) | spans | search calls (queries) | python calls | ended | wall | answer |
+|---|---|---|---|---|---|---|---|---|
+| q1 sound, 10 km (29) | 1,983 | 151 (8%) | 7 | 1 ("speed of sound in air at 20 degrees Celsius") | 1 | `eos` | 871 s | `\boxed{29}`, correct |
+| q2 light Sun-Earth (8) | 3,673 | 191 (5%) | 10 | 2 ("speed of light in meters per second to km per minute"; "Average distance from Sun to Earth in kilometers") | 3 | `eos` | 1,724 s | `\boxed{8}`, correct |
+| q3 milk vs water (30) | 1,816 | 140 (8%) | 5 | 1 ("density of whole milk at room temperature") | 0 | `eos` | 807 s | `\boxed{30000}`, **wrong** (expected 30) |
+
+**What was observed.** The search tool worked: each search returned a block of 3,000 to 4,000 characters, and with it all three runs finished by themselves instead of stopping at the first request (Cycle 7). Two of three answers match the example file. In q3 the final text says "30000 grams" and rounds that to 30000; the question asks for the difference per litre, so the unit step (a litre against a cubic metre) was lost in the model's own reasoning; I read the tail of the output, not the whole run. The runs are much longer than the search-off ones (1,816 to 3,673 steps) and the latent share is lower: 5% to 8%, against 22% to 40% for the same questions up to the first search request in Cycle 7 and 14% to 28% for q4 and q5. Search-result tokens are not counted as steps (`count_tool_tokens` is false), so steps count only the model's own generation. One run per question; the lower latent share in these three runs is an observation of these runs, not an explanation.
+
+**Per step.** Net step time text / latent (ms): q1 427.0 / 438.1, q2 462.3 / 452.4, q3 433.1 / 439.0: a latent step still costs the same as a text step; the step time is higher than in the search-off runs because the sequence is longer (search results are in the context). `hidden_states[-1]` equals the final-norm output exactly (0.0) in all three. Layer-35 output norm median text / latent: 1,674 / 2,359, 1,689 / 2,217, 1,747 / 2,480. Layer-16 outlier steps (relative update above 0.9): 1, 2 and 1 steps (ids 315; 15 and 220; 220). Exit readouts: q3 had 5 exits, 2 steps where only the LM-head says `</latent>` (the first time in these runs; minimum P at an exit 0.59) and 1 where only the cosine readout does; q1 and q2 none of either.
+
+**Not observed.** A text-only control; whether the low latent share is a property of search runs in general (three runs); the cause of the q3 unit error; third seed.
+
+**Housekeeping for the creator.** The key sits in a tracked file in your `HybridAgent` clone (`.env.example`, shown as modified). Move it to a git-ignored `.env` and restore the template (`git checkout -- .env.example`) before any commit or push from that clone; I have not changed that file.
