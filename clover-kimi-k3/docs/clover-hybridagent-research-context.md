@@ -601,3 +601,26 @@ Sums over the three pairs: text tokens 1,893 (bounds 16 to 256), 2,165 (default)
 
 ## Queue started after Cycle 21 (2026-10-22)
 Tracer now has `INTERV=noise:<d>|random|nearest` (applied to the latent vector after its readout; the readout fields in the trace describe the vector before the change, `iv_rel` records `||new - z|| / ||z||`) and `CACHECHECK=1` (records every real forward step's input embedding and final-layer hidden, then runs one full-prefix forward over prompt + all inputs and compares final-layer hidden states and LM-head argmax; writes `<trace>.cache.json`). Defaults unchanged. Detached queue on `k3` (`run_c22.sh`, one model job at a time): Cycle 24 first (q4 seed 2 and q1 seed 0 with `CACHECHECK=1`), then Cycle 23 (q4 and q5 at seed 0 with `noise:0.5`, `noise:2.0`, `random`, `nearest`), then Cycle 22 (paper bounds 16 to 256, seeds 1 and 2, q4, q5, q1). 16 model runs, total about 3 hours.
+
+
+## Cycle 24 (2026-10-22): cached continuation against a full-prefix forward (paper Theorem A.1; tracer `CACHECHECK=1`, outputs `trace-q4-cc2-s2.json.cache.json`, `trace-q1-cc-s0.json.cache.json`, `cycle24-cmp.txt`)
+
+**What was run.** The released engine runs normally (KV cache, one position per forward pass, latent vectors fed back as input embeddings). The tracer records every real forward step's input embedding and the final-layer hidden state it produced. After the run, one forward pass over the whole sequence (prompt embeddings, then every recorded input embedding, no cache) gives a hidden state at every position. The two hidden states per position are compared. To tell rounding from a difference in the mechanism, the same inputs also went through a float32 copy of the model and both bf16 results were compared with it. The model is bf16 on the CPU.
+
+**Observed.**
+
+| run | positions compared | median rel. difference, cached vs full-prefix (bf16) | max rel. difference | LM-head argmax same | cached vs fp32: median, argmax same | full-prefix vs fp32: median, argmax same |
+|---|---|---|---|---|---|---|
+| q4 seed 2 (3 latent spans, 64 latent steps) | 472 | 0.0123 | 0.180 (token step) | 468 of 472 | 0.01157, 469 | 0.01145, 468 |
+| q1 seed 0 (8 spans, 202 latent steps, search + python) | 2,406 | 0.0124 | 0.175 (token step) | 2,390 of 2,406 | 0.01218, 2,393 | 0.01238, 2,395 |
+
+- The cached result is as far from the float32 result as the full-prefix result is (median 0.0116 against 0.0115 on q4, 0.0122 against 0.0124 on q1). The cached-versus-full difference is the same size as each one's distance to float32.
+- The maximum relative difference per position class: latent positions 0.029 (q4) and 0.034 (q1); token positions 0.180 and 0.175 (token positions include the tool-observation tokens fed one per pass). Against float32 the largest per-position values were 0.129 (cached) and 0.097 (full-prefix) on q4, 0.319 and 0.239 on q1, so a few token positions are far from float32 in both.
+- Minimum cosine between the cached and full-prefix hidden states: 0.990 (q4), 0.985 (q1).
+- The q4 run reproduced the earlier seed-2 run exactly (463 generation steps, 3 spans, answer 24). The q1 run at seed 0 did not reproduce the earlier one (934 generation steps and 8 spans against 654 and 7; same answer 29; this run made 3 python calls and 1 search, the earlier one 1 and 1), so live search results or tool timing probably differ between runs; the tool results were not saved, so this is not attributed further.
+
+**What this shows and does not.** The recorded latent steps (fed back as vectors) and the text and observation tokens sit in the cache so that a full-prefix recomputation reproduces the hidden states to the size of bf16 rounding; nothing in these two runs separates the two beyond the noise floor of the precision. It does not show bit equality, because the bf16 test cannot: that would need float32 cached against float32 full-prefix, which was not run. It does not cover positions the engine masks (pad slots), because neither run had one mid-sequence. Two runs, one checkpoint, one precision.
+
+**For Clover K3 (reading).** The property the paper states as a theorem (the cache holds the same state as recomputing everything) held within rounding for a mixed latent and text sequence in a real run. For K3 this is a test to repeat on its own engine with its own precision (the recorded run already has bit-identical replays, so a float64 or same-kernel comparison is possible there); the comparison method above (an independent higher-precision reference to size the noise floor) is reusable.
+
+**Not observed.** Float32 against float32; pad positions; sequences with many more spans than 8.
