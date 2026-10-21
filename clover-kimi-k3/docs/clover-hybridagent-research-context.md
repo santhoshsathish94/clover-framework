@@ -292,3 +292,25 @@ Records `/root/runs/hybrid/trace-q1.json`, `-q2`, `-q3`, `-q5` (q4 is `trace2.js
 **Not observed.** Search-assisted runs (needs the key); other seeds or sampling settings; a text-only control; K3 numbers.
 
 **Next, single cycles (the creator chooses).** (a) A Tavily key on the host, then q1 to q3 with search on; (b) a second seed for q4 and q5 to see how much the spans vary; (c) K3 per-stage timings from an existing log for the side-by-side with the HybridAgent step table.
+
+
+## Cycle 8 (2026-10-22): a second seed for q4 and q5 (seed 1; budget 2,048, search off, python tool on, batch 1, `k3`)
+
+Records `/root/runs/hybrid/trace-q4-s1.json`, `trace-q5-s1.json`; `trace_hybrid.py` now takes the seed as its fourth argument; summaries `seeds-summary2.txt`, `outliers.txt` in `oss/scratch-agents/hybrid-clean/`. Seed 0 are the Cycle 5 and Cycle 7 runs. One run per seed.
+
+| run | steps | latent steps (share) | spans | python calls | ended | wall | answer |
+|---|---|---|---|---|---|---|---|
+| q4 seed 0 | 1,243 | 329 (26%) | 13: 102, 13, 6, 4, 24, 35, 71, 23, 9, 18, 11, 8, 5 | 0 | `eos` | 553 s | `\boxed{24}`, correct |
+| q4 seed 1 | 1,208 | 172 (14%) | 10: 39, 6, 5, 27, 8, 27, 16, 10, 4, 30 | 3 | `eos` | 531 s | `\boxed{24}`, correct |
+| q5 seed 0 | 1,035 | 240 (23%) | 8: 56, 40, 15, 30, 35, 18, 22, 24 | 3 | `eos` | 462 s | `(-12, -8, 36)`, correct |
+| q5 seed 1 | 1,148 | 324 (28%) | 10: 39, 74, 38, 38, 40, 31, 17, 6, 23, 18 | 1 | `eos` | 517 s | `(-12, -8, 36)`, correct |
+
+**What the second seed shows.** The two seeds write different text from early on (first differing character 87 for q4, 59 for q5), take 1,035 to 1,243 steps, and differ in the number and length of latent spans, in the share of latent steps (q4 14% against 26%; q5 28% against 23%) and in how many python calls they make (q4: 0 against 3; q5: 3 against 1). All four runs end with a boxed answer that matches the example file. So the latent share of a run is not a fixed property of the question: q4 moved from 26% to 14% between two seeds. Two seeds per question, one run each.
+
+**Same picture per step.** Net step time text / latent (ms): q4 seed 1 425.1 / 426.0, q5 seed 1 424.4 / 419.0 (seed 0: 422.3 / 416.7 and 422.7 / 419.7). `hidden_states[-1]` equals the final-norm output exactly (0.0) in both. Layer-35 output norm median text / latent: 1,494 / 2,140 and 1,580 / 2,156.
+
+**Exit readouts.** q4 seed 1: 10 exits (minimum P(`</latent>`) 0.35 at an exit, so the LM-head argmax is `</latent>` there with a probability under one half), 1 step where only the cosine nearest token is `</latent>`; q5 seed 1: 10 exits (minimum 0.63), 3 cosine-only steps. Steps where only the LM-head says it: none. One new thing: in q5 seed 1 at step 436, position 4 of its span, the LM-head top-1 is `</latent>` with P = 0.994 and the engine did not exit. The code (`engine.py` line 334) exits only when `row.latent_steps >= min_latent_steps` (4) and the readout is the closing token; by my count that step is the fourth decision, with three latent steps done, so the minimum-length rule is the likely reason (inferred from code and position count, not printed by the engine). First observed case of that rule acting in these 11 runs.
+
+**Layer-16 outliers, now with the tokens (tokenizer lookup, `outliers.txt`).** Text steps with a relative update above 0.9 at layer 16, all traces: q4 seed 0 step 54 (fed token `' '`, after "... 10 is 2 times"; relative update 92.6) and step 371 (`'0'`, after "(100/25) + floor(10"; 117.8); q4 seed 1 step 214 (`'0'`, same words "(100/25) + floor(10"; 123.4); q5 seed 1 step 552 (`'1'`, after "ordered triple (b, c, d) should be (-1"; 169.5); none in q1, q2, q3, q5 seed 0. Layer-16 output norm at those steps 8,547 to 11,312 against a median near 85. So the outlier appears on a digit or space token inside an arithmetic expression, in 3 of 7 text-only-runs-with-text... precisely: in 3 of the 6 runs that have more than 400 steps of text-heavy output; the same token in the same words gave it in both q4 seeds. Not explained; not tested on other tokens.
+
+**Not observed.** Third seed; search runs (no key on the host: checked only that `TAVILY_API_KEY` is not in the login shell or the shell profile files of root on `k3`); a text-only control.
