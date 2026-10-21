@@ -265,3 +265,30 @@ Same question (q4), settings, seed 0, search off, batch 1, `OMP_NUM_THREADS=16`,
 ## Cycle 6 (2026-10-22): step time against position, from `trace2.json` (no new run; `time_by_pos.py`, `timepos2.txt`)
 
 Net step time (without my own readout work), mean per bucket of 150 steps, q4, 1,243 steps, positions 529 to 1,772: 404.4 ms (positions 529 to 679), 412.7 (829 to 979), 421.6 (1,129 to 1,279), 432.3 (1,429 to 1,579), 440.3 (1,729 to 1,772). Layer time rises 370.5 to 405.2 ms over the same range; the LM head stays 28.3 ms in every bucket. Text steps and latent steps rise together (for example 417.4 and 417.0 at positions 979 to 1,129). Least-squares slope about 31 ms per 1,000 positions (0.031 ms per step); first 50 steps 403.1 ms, last 50 steps 440.0 ms (+9%). Observed: the growth is in the 36 layers only (the KV cache grows with the sequence on this CPU engine); not split into attention against the rest. One question, one box.
+
+
+## Cycle 7 (2026-10-22): the other four example questions with the same trace (budget 2,048, seed 0, search off, python tool on, batch 1, `k3`)
+
+Records `/root/runs/hybrid/trace-q1.json`, `-q2`, `-q3`, `-q5` (q4 is `trace2.json` from Cycle 5); summary `oss/scratch-agents/hybrid-clean/qs-summary.txt`, tails `qs-tails.txt`, scripts `summ_qs.py`, `trace_hybrid.py` (now takes the question id). The runs went one after another, nothing else on the box.
+
+| question | steps | latent steps (share) | spans (latent steps each) | python calls | ended | wall | answer |
+|---|---|---|---|---|---|---|---|
+| q1 sound, 10 km (29) | 147 | 59 (40%) | 1 [59] | 0 | at the first `<search>` request | 68 s | none (stopped) |
+| q2 light Sun-Earth (8) | 286 | 63 (22%) | 2 [48, 15] | 0 | at the first `<search>` request | 127 s | none (stopped) |
+| q3 milk vs water (30) | 232 | 55 (24%) | 1 [55] | 0 | at the first `<search>` request | 103 s | none (stopped) |
+| q4 100! zeros (24) | 1,243 | 329 (26%) | 13 | 0 | `eos` | 553 s | 24, correct |
+| q5 reflected circle ((-12, -8, 36)) | 1,035 | 240 (23%) | 8 [56, 40, 15, 30, 35, 18, 22, 24] | 3 | `eos` | 462 s | `\boxed{(-12, -8, 36)}`, correct |
+
+**Why q1 to q3 stop.** Each output ends with `<search>...</search>` (q1: "speed of sound in air at 20 degrees Celsius"; q2: "speed of light in meters per second to km per minute"; q3: "density of whole milk at room temperature"). With search off (`--max_search_calls 0`, `terminate_on_tool_cap`) the engine ends the run at that request, so these three runs show the part before the first search only; they say nothing about whether the model would answer them with a search tool. The paper's protocol uses search; a Tavily key on the host (only the creator can place it) is needed for that.
+
+**Same per-step picture on every question.** Net step time text / latent (ms): q1 409.4 / 405.7, q2 412.8 / 416.9, q3 410.1 / 413.3, q4 422.3 / 416.7, q5 422.7 / 419.7: a latent step costs what a text step costs on all five. The vector the engine keeps as `last_hidden` equals the final-norm output exactly (max difference 0.0) on all five. Fed norm: embedding 1.64 to 1.69, `R(h)` 8.4 to 9.2. Layer-35 output norm median, text against latent: q1 1,558 / 2,586, q2 1,324 / 2,435, q3 1,309 / 2,499, q4 1,466 / 2,096, q5 1,549 / 2,222: latent is higher on every question; the gap is larger on the three short runs.
+
+**Layer 16 outliers.** Text steps with a relative update above 0.9: q4 two (input ids 220 and 15), q1, q2, q3 and q5 none (0 of 86, 219, 175 and 779). The two q4 steps are not a general property of this model on these questions.
+
+**Exit readouts.** Exits (LM-head top-1 is `</latent>` at every exit): q1 1 (P 0.999), q2 2 (min P 0.53), q3 1 (P 0.999), q4 13 (min 0.49), q5 8 (min 0.69). Steps where only the cosine nearest token is `</latent>` and the engine did not exit: q1, q2, q3 none; q4 3; q5 1. Steps where only the LM-head says it: none on any question. Maximum P(`</latent>`) on continued steps: q1 0.000, q2 0.004, q3 0.034, q4 0.192, q5 0.345.
+
+**Latent share.** 22% to 40% of generation steps are latent across the five (40% in q1 which has one 59-step span in 147 steps; 22% to 26% in the four others). This is a count of steps in one sample per question, not a saving: no text-only run of the same weights exists to say how many steps the same answer would take.
+
+**Not observed.** Search-assisted runs (needs the key); other seeds or sampling settings; a text-only control; K3 numbers.
+
+**Next, single cycles (the creator chooses).** (a) A Tavily key on the host, then q1 to q3 with search on; (b) a second seed for q4 and q5 to see how much the spans vary; (c) K3 per-stage timings from an existing log for the side-by-side with the HybridAgent step table.
