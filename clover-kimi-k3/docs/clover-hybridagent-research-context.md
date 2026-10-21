@@ -555,3 +555,21 @@ Sums over the three pairs: text tokens 1,893 (bounds 16 to 256), 2,165 (default)
 **For Clover K3 (reading, not a measurement on K3).** The readout requires the latent input to sit near a vocabulary embedding (mean cosine 0.84 here). A K3 latent mechanism that is meant to be auditable would need the same property from its own feedback map; whether K3's embedding space gives it is not known.
 
 **Not observed.** Causal interventions (noise, replacement, permutation, one-step spans; only "block entry" was run, Cycles 13 to 18); the working-memory equivalence of Theorem A.1; the exit rule across many spans; more seeds for the 16 to 256 bounds; their trained text agent as a comparator.
+
+
+## Cycle 21 (2026-10-22): the exit rule over every latent span (paper Eq. 5, Appendix B.2; script `cycle21_exit.py`, output `cycle21-exit.txt`; the 17 existing latent-allowed traces, no new run)
+
+**What is read.** For each span, the step on which it closed: the LM-head probability of `</latent>`, the cosine of `R(h)` to the `</latent>` embedding, and whether the two readouts agree. The released engine closes a span when the LM-head argmax is `</latent>` after `min_latent_steps` (paper text: the cosine nearest token), or forces it at `max_latent_steps`.
+
+**Observed (131 spans, 4,160 continuing latent steps).**
+- All 131 spans ended by the model's own exit; 0 were forced at the maximum (the longest span was 156 steps against the 200 and 256 maxima).
+- Span length (continuing steps before the exit step): median 24, mean 31.8, min 4, max 156. Histogram (<=8, 9 to 16, 17 to 32, 33 to 64, 65 to 128, 129+): 17, 20, 48, 33, 11, 2.
+- At the exit step the LM-head P(`</latent>`) has median 0.986 (min 0.350; above 0.5 in 95% of exits, above 0.9 in 74%). The cosine to the `</latent>` embedding has median 0.998 (min 0.219).
+- The two readouts agree on 129 of 131 exits (both name `</latent>`); on 2 the LM head names it and the cosine nearest token does not; on none does only the cosine name it. So the engine's LM-head rule and the paper's cosine rule gave the same exit in 98% of the spans.
+- Continuing steps: P(`</latent>`) is above 0.1 on 1.03% of them and above 0.5 on 0.31% (13 steps), maximum 0.999. 19 steps had the LM-head argmax on `</latent>` while the span was still shorter than that run's minimum (4, or 16 in the paper-bounds runs) and were held open by `min_latent_steps`. The cosine to `</latent>` is median 0.052 on continuing steps (max 0.999).
+
+**What this shows and does not.** In our runs the exit is a sharp event, not a threshold on a slowly rising score: the probability sits near zero for most steps and near one at the exit. The minimum span length is active (19 steps held open); the maximum never was. Nothing here says whether a span ends at a *good* point, only how decisively it ends. One checkpoint, five questions, 131 spans.
+
+**For Clover K3 (reading).** A K3 latent mechanism would need an exit signal with the same property (a decisive anchor decision). The span floor changed behaviour in our runs (19 held-open steps), so it is a real setting and not only a safety bound.
+
+**Not observed.** Why the 2 LM-only exits differ in the cosine readout; exits under the one-step rule (Cycle 20) and under interventions on the latent vector (next cycles).
