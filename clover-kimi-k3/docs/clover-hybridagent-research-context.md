@@ -423,3 +423,24 @@ The Cycle 13 control for q4 seed 0 had been stopped by a search request while se
 **For Clover K3 (arithmetic from measured numbers, not a measurement).** One K3 decode step is about 3.0 s on this box (Cycle 9) and a latent step costs a full step. If the 34% step difference observed here carried over, 4,634 against 6,199 steps would be a difference of 1,565 steps, about 78 minutes at 3.0 s per step; but the spread over the four pairs (0.41 to 2.50) means the sign is not secure for a single run, and no latent-style mechanism exists for K3 (it needs a trained feedback map and a post-trained backbone; Cycle 9).
 
 **Not observed.** A text-only run of the base model without the HybridAgent training; the same pairs on other questions (q1 to q3 with latent blocked); more seeds per pair.
+
+
+## Cycle 15 (2026-10-22): q1 to q3 with `<latent>` blocked and search on (seed 0, budget 4,096, `k3`; records `trace-q1-nolat-search.json`, `trace-q2-nolat-search.json`, `trace-q3-nolat-search.json`, summaries `cycle15-summ.txt`, `cycle15-lat.txt`)
+
+Same weights, same seed 0, same question as the Cycle 10 runs; the only change is `LATENT=0` (and budget 4,096 against 2,048 in Cycle 10; the q3 control ended at the budget, so a larger budget could matter only for the cases that did not finish). Run one job at a time, nothing else on the box.
+
+| question | steps with latent allowed (latent steps) | steps with latent blocked | ratio blocked / allowed | blocked: search / python calls | blocked ended | wall allowed / blocked | answers |
+|---|---|---|---|---|---|---|---|
+| q1 (29) | 1,983 (151) | 872 | 0.44 | 0 / 1 | `eos` | 871 s / 369 s | both `\boxed{29}`, correct |
+| q2 (8) | 3,673 (191) | 2,589 | 0.70 | 2 / 0 | `eos` | 1,724 s / 1,131 s | both `\boxed{8}`, correct |
+| q3 (30) | 1,816 (140) | 5,175 | at least 2.85 | 1 / 0 | **`budget`** (no answer block) | 807 s / 2,516 s | allowed: 30000, wrong; blocked: none |
+
+Net step time with latent blocked (text only): q1 419.5 ms, q2 434.1 ms, q3 484.9 ms (q3 is higher because the sequence reached 5,175 steps plus search text). Layer 16 had 1 outlier step in each of the three runs (relative update above 0.9; ids 220, 13, 16). Latent blocked: 0 latent steps and 0 exits in all three, as expected. Search calls in the latent-allowed runs: 1, 2, 1; blocked: 0, 2, 1 (q1 answered without search; it used python once instead).
+
+**Observed.** With latent blocked the same weights wrote fewer steps on q1 and q2 and many more on q3, where the run reached the 4,096 budget without an answer (steps exceed the budget because search text and python output are not counted, as in Cycle 10; I did not read the q3 text to see why it kept going).
+
+**All seed-0 and seed-1 pairs so far (seven pairs; q3 seed 1 allowed has no blocked partner):** q4 s0 1,243 / 1,519; q4 s1 1,208 / 494; q5 s0 1,035 / 1,316; q5 s1 1,148 / 2,870; q1 s0 1,983 / 872; q2 s0 3,673 / 2,589; q3 s0 1,816 / 5,175 (not finished). Summed: allowed 12,106, blocked 14,835 (ratio 1.23, where the q3 blocked run is a lower bound). By pair the ratio runs from 0.41 to at least 2.85; 4 pairs above 1 and 3 below. So the sign differs between questions, and the pooled number moves from 1.34 (Cycle 14) to 1.23 when three more pairs are added.
+
+**Reading (labelled as such).** The step saving seen in Cycle 14 does not hold up as a rule once q1 and q2 are added: it depends on the question and the seed, with q1 and q2 faster without latent spans and q3 much slower. One run per pair, off-policy control, q3 truncated by the budget; correctness is equal on q1 and q2 and unknown on the q3 control.
+
+**Not observed.** A seed beyond 0 for q1 to q3 with latent blocked; why the q3 blocked run did not finish; a base-model control.
