@@ -984,7 +984,9 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 
 ---
 
-## Cycle 42 — K3 training plan and estimates (PROPOSAL; nothing was run or changed on any machine)
+## Plan K3-P1 — K3 training plan and estimates (PROPOSAL; nothing was run or changed on any machine)
+
+*Numbering note:* written after Cycle 41 on this branch. Another session's branch `ncm-merge-qa` (commit `bfa024f`) already uses the label "Cycle 42" for the reasoning/QA tokenizer gate, so this entry carries a separate label to avoid two different Cycle 42 entries when the branches meet.
 
 **Direction (creator, 2026-10-22):** "other agents are working propose the k3 training plan and estimate keep both machine into account you can use many subagents and even local machine if need so plan accordingly". Offered, not imposed: the creator owns which target K3 is trained toward.
 
