@@ -1015,3 +1015,38 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 2. Train two matched 2,000-step models in parallel (4 GPUs each, global batch 128, initialized from `e3_drop/last.pt`, `alpha=0.7`, `corrupt 0.40->0.05`, straight-through token-level CE `0.5` with `tk.vqvae.decoder.middle_block + ln_f` unfrozen):
    - **Track 2B (`e4_fluency`, cards 0..3):** discrete BPE plan prefix (`tk.vqvae.encoder.wte`), testing the scaffold + token-CE + decoder-finetuning fix (evaluated with both the original frozen decoder and the fine-tuned decoder).
    - **Track 2A (`e4_latent`, cards 4..7):** continuous `HybridLink` `R(h)` prefix (`[B, 48, 4096]`) mapped by `LatentBridge` (`4096 -> 384`) directly into `NextConceptTransformer`, bypassing the 8,192-word BPE prefix table.
+
+---
+
+## Cycle 43 — Parallel training and evaluation of Track 2B (`e4_fluency`) and Track 2A (`e4_latent`, continuous `HybridLink` `R(h)` prefix) on `gpu`
+
+**What ran (`merge-lf-run2` on `gpu`, scripts `train_fluency.py`, `train_latent_bridge.py`, `eval_both_tracks.py`, `extract_topics_k3.py`).**
+- **Extraction:** `32,768` training plans and `598` validation plans passed through `HybridAgent-8B-Agentic` (`backbone` + `adapter.pt` `HybridLink`, `R(h) = model.run_hybridlink(last_hidden)` in `bfloat16`, `P=48`, `D=4096`) into shared `/dev/shm` buffers in `77.1 s` per shard across the 8 RTX 3090s (removed after evaluation). All `48` end-to-end topics were also run through batched continuous `<latent>` rollouts (`extract_topics_k3.py`, 3 batches of 16, `198.7 s` on `k3`): mean `14.77` latent steps, `20/48` anchor exits (remainder at `max_lat=18`), mean nearest-token cosine `0.652`.
+- **Training (2,000 steps each, global batch 128 = 4 GPUs x 32, initialized from `e3_drop/last.pt`, `lr=6e-5`, `alpha=0.7`, `corrupt=0.40->0.05`, `plan_dropout=0.1`, straight-through token CE weight `0.5` with `tk.vqvae.decoder.middle_block + ln_f` unfrozen at `lr=1e-4`; `0.69` to `0.71 s/step`, ~25 min):**
+  - **`e4_fluency` (Track 2B, cards 0..3, discrete BPE prefix):** validation mean code CE (matched / shuffled) fell from `2.5757 / 4.0117` at step 0 to `2.4776 / 3.6839` (step 500), `2.4415 / 3.6824` (step 1,000), `2.4261 / 3.6669` (step 1,500), **`2.4165 / 3.6776` (step 2,000)**. Coarse levels `0..5` fell from `3.9961` to `3.8479`; straight-through decoded token CE on validation fell from `0.1151` to **`0.0390`** (`-66.1%`).
+  - **`e4_latent` (Track 2A, cards 4..7, continuous `R(h)` prefix via `LatentBridge(4096->384)`, `3.45M` params, no discrete BPE plan tokens):** validation mean code CE fell from `4.5397 / 4.5328` at step 0 (random bridge) to `2.5989 / 3.4034` (step 500), `2.5070 / 3.4741` (step 1,000), `2.4860 / 3.5263` (step 1,500), **`2.4828 / 3.5504` (step 2,000)**, with decoded token CE falling from `0.3398` to **`0.0476`**. By step 1,000, the continuous-`R(h)` model had lower validation code CE than `e3_drop` (`2.5757`), confirming that `NextConceptTransformer` can be conditioned directly on `HybridAgent`'s continuous `R(h)` vectors without a shared vocabulary.
+
+**Generation quality on all 598 validation plans and 48 end-to-end requests (`eval_both_tracks.py`, `MBR8`, `adj=10,8,0.8, ngram=3,8`):**
+
+| split & configuration | retention | Gen. PPL (GPT-2-large) | adj. repeat rate | repeated trigrams | entropy |
+|---|---|---|---|---|---|
+| **val 598: true stories** | 0.6748 | 7.66 | 0.00373 | 0.01779 | 4.0329 |
+| **val 598: `e3_drop_bal` (Cycle 36 baseline, `temp=0.8`)** | 0.6454 | **13.04** | 0.00769 | 0.02213 | 3.9717 |
+| val 598: `e3_drop_sched10_04` (`temp` `1.0->0.4`) | 0.6437 | 13.16 | 0.00853 | 0.02170 | 3.9770 |
+| val 598: `e4_fluency` + original frozen decoder (`temp=0.8`) | 0.6445 | 13.92 | 0.00756 | 0.02036 | 3.9774 |
+| val 598: `e4_fluency` + fine-tuned decoder (`temp=0.8`) | 0.6450 | 14.36 | **0.00526** (`-31.6%`) | **0.01706** (`-22.9%`) | 3.9837 |
+| val 598: `e4_fluency` + fine-tuned decoder + `sched10_04` | 0.6434 | 13.95 | **0.00506** (`-34.2%`) | **0.01637** (`-26.0%`) | 3.9883 |
+| val 598: `e4_latent` (`R(h)` bridge, `temp=0.8`) | 0.5609 | 14.75 | 0.00522 | 0.01681 | 3.9947 |
+| val 598: `e4_latent` (`R(h)` bridge + `sched10_04`) | 0.5618 | 14.57 | **0.00502** | **0.01677** | 3.9963 |
+| **e2e 48: `e3_drop` + text-mode plan** | 0.6287 | 15.63 | 0.00765 | 0.01880 | 3.9866 |
+| e2e 48: `e3_drop` + `<latent>`-rollout `hybrid_plan` | 0.6130 | 16.65 | 0.00909 | 0.01956 | 3.9724 |
+| e2e 48: `e4_fluency` + text-mode plan | 0.6146 | 15.69 | **0.00612** | 0.01694 | 3.9933 |
+| e2e 48: `e4_fluency` + `<latent>`-rollout `hybrid_plan` | 0.6189 | 18.32 | 0.00832 | **0.01340** | 3.9807 |
+| e2e 48: `e4_latent` (`R(h)`) + text-mode plan | 0.5385 | 16.78 | 0.00691 | **0.01295** | 3.9890 |
+| e2e 48: `e4_latent` (`R(h)`) + `<latent>`-rollout `hybrid_plan` | 0.5135 | 16.97 | **0.00594** | 0.01420 | 3.9801 |
+
+**What this shows, and the structural diagnosis from reading the stories (`make_subset20.py`, plans 36, 50, 76, 93):**
+1. **Repetition drops sharply, while GPT-2-large PPL rises slightly:** fine-tuning `tk.vqvae.decoder` with straight-through token CE (`e4_fluency_ftdec_sched`) cut adjacent word repeats by `34.2%` (`0.00769 -> 0.00506`) and repeated trigrams by `26.0%` (`0.02213 -> 0.01637`, below the true stories' `0.01779`) at unchanged plan retention (`0.6434` vs `0.6454`), while GPT-2-large Gen. PPL moved `13.04 -> 13.95` as token entropy increased (`3.9717 -> 3.9883`).
+2. **Continuous `R(h)` prefix (`e4_latent`) vs discrete BPE prefix (`e4_fluency`):** `e4_latent` achieves the same low repeat rates (`0.00502` adj, `0.01677` trigram) without any BPE plan tokens, but loses `~0.08` in exact surface-word retention (`0.5618` vs `0.6434`) because `R(h)` is a compressed continuous representation rather than literal BPE word tokens.
+3. **Why local grammar glitches remain in all non-causal VQ-decoder variants:** reading plans 36, 50, 76, 93 across `e3_drop_bal`, `e4_fluency`, and `e4_latent` shows local non-sequiturs such as `"on an big airplane"`, `"flying around in the. Billy"`, `"play to played"`, `"I yesterday it"`. In `models/vae.py`, `tk.vqvae.decoder` is a **1-layer non-causal parallel readout** that predicts `logits[:, t, :]` independently of the token chosen at `t-1` (`token[t-1]`). When `z_hat` has slight multimodal uncertainty between two phrasings (e.g. `"an airplane"` vs `"a big airplane"`), independent per-position argmax picks `"an"` at `t-1` and `"big"` at `t`.
+4. **Next (Cycle 44, launched as `merge-lf-cdec` on `gpu`):** test a lightweight 4-layer `CausalVQDecoder` (`d=384`, conditioned on `z_hat` via cross-attention + residual and causally on `token[0..t-1]`) on top of both `e4_fluency` and `e4_latent`, then score all variants with the 3 model raters (`Gemini 4 Argon`, `GPT-6 Astra`, `Claude Opus 5.5`) on the 20 rating plans.
