@@ -1,0 +1,311 @@
+{
+ "n": 256,
+ "results": {
+  "wmt14": {
+   "gsm8k_question": {
+    "windows": 256,
+    "L": 64,
+    "mean_pretokens": 60.9,
+    "share_truncated": 0.363,
+    "token_acc": 0.9785,
+    "window_exact": 0.4102,
+    "numbers": 783,
+    "number_recall": 0.9949,
+    "examples": [
+     {
+      "orig": "Janet’s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market",
+      "recon": "Janet’s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market"
+     },
+     {
+      "orig": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+      "recon": "Aols takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?"
+     }
+    ]
+   },
+   "gsm8k_answer": {
+    "windows": 256,
+    "L": 64,
+    "mean_pretokens": 90.3,
+    "share_truncated": 0.656,
+    "token_acc": 0.93642,
+    "window_exact": 0.0,
+    "numbers": 2251,
+    "number_recall": 0.9898,
+    "examples": [
+     {
+      "orig": "Janet sells 16 - 3 - 4 = 9 duck eggs a day.\nShe makes 9 * 2 = $18 every day at the farmer’s market.\n#### 18",
+      "recon": "Janet sells 16 - 3 - 4 = 9 duck eggs a day&# she makes 9 * 2 = $18 every day at the farmer’s marketeka stav 18"
+     },
+     {
+      "orig": "It takes 2/2=1 bolt of white fiber\nSo the total amount of fabric is 2+1=3 bolts of fabric\n#### 3",
+      "recon": "It takes 2/2=1 bolt of white fiberucerSo the total amount of fabric is 2+1=3 bolts of fabric surfaces pathogens 3"
+     }
+    ]
+   },
+   "wmt14_en_ref": {
+    "windows": 256,
+    "L": 64,
+    "mean_pretokens": 26.4,
+    "share_truncated": 0.016,
+    "token_acc": 0.99072,
+    "window_exact": 0.7969,
+    "numbers": 74,
+    "number_recall": 1.0,
+    "examples": [
+     {
+      "orig": "Gutach: Increased safety for pedestrians",
+      "recon": "Gutach: the safety for pedestrians"
+     },
+     {
+      "orig": "They are not even 100 metres apart: On Tuesday, the new B 33 pedestrian lights in Dorfparkplatz in Gutach became operational - within view of the existing Town Hall traffic lights.",
+      "recon": "They are not even 100 metres apart: On Tuesday, the new B 33 pedestrian lights in Dorfparkplatz in Gutach became operational - within view of the existing Town Hall traffic lights."
+     }
+    ]
+   },
+   "xsum_summary": {
+    "windows": 256,
+    "L": 64,
+    "mean_pretokens": 26.9,
+    "share_truncated": 0.008,
+    "token_acc": 0.97056,
+    "window_exact": 0.4844,
+    "numbers": 96,
+    "number_recall": 0.9896,
+    "examples": [
+     {
+      "orig": "There is a \"chronic\" need for more housing for prison leavers in Wales, according to a charity.",
+      "recon": "There is a \"chronic\" need for more housing for prison leavers in Wales, according to a charity."
+     },
+     {
+      "orig": "A man has appeared in court after firearms, ammunition and cash were seized by police in Edinburgh.",
+      "recon": "A man has appeared in court after firearms, ammunition and cash were seized by police in Edinburgh."
+     }
+    ]
+   },
+   "tinystories": {
+    "windows": 256,
+    "L": 64,
+    "mean_pretokens": 214.1,
+    "share_truncated": 0.992,
+    "token_acc": 0.9587,
+    "window_exact": 0.0391,
+    "numbers": 1,
+    "number_recall": 1.0,
+    "examples": [
+     {
+      "orig": "Spot. Spot saw the shiny car and said, \"Wow, Kitty, your car is so bright and clean!\" Kitty smiled and replied, \"Thank you, Spot. I polish it every day.\"\nAfter playing with the car, Kitty and Spot felt thirsty. They found a small pond with clear water. They drank the",
+      "recon": "Spot. Spot saw the shiny car and said, \"Fly, tienes, your car is so bright and clean pools*.apo and replied, \"Thank you, Spot. I polish it every day playingAfter playing with the car, bought and Spot felt felt. They found a small pond with clear water. They drank the"
+     },
+     {
+      "orig": "Once upon a time, in a big forest, there lived a rhinoceros named Roxy. Roxy loved to climb. She climbed trees, rocks, and hills. One day, Roxy found an icy hill. She had never seen anything like it before. It was shiny and cold, and she wanted",
+      "recon": "The upon a time, in a big forest, there lived a rhinoceros named Roxy. Ro loved loved to climb. She climbed trees, rocks, and hills. One day, Roxy found an icy hill. She had never seen anything like it before. It was shiny and cold, and she wanted"
+     }
+    ]
+   }
+  },
+  "xsum": {
+   "gsm8k_question": {
+    "windows": 256,
+    "L": 48,
+    "mean_pretokens": 56.4,
+    "share_truncated": 0.574,
+    "token_acc": 0.98829,
+    "window_exact": 0.6523,
+    "numbers": 715,
+    "number_recall": 0.9958,
+    "examples": [
+     {
+      "orig": "Janet’s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck",
+      "recon": "Janet’s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck"
+     },
+     {
+      "orig": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+      "recon": "A robe takes 2 bolts of blue paint and half that much white white.  How many bolts in total does it take?"
+     }
+    ]
+   },
+   "gsm8k_answer": {
+    "windows": 256,
+    "L": 48,
+    "mean_pretokens": 71.3,
+    "share_truncated": 0.699,
+    "token_acc": 0.97004,
+    "window_exact": 0.3008,
+    "numbers": 2117,
+    "number_recall": 0.9532,
+    "examples": [
+     {
+      "orig": "Janet sells 16 - 3 - 4 = 9 duck eggs a day.\nShe makes 9 * 2 = $18 every day at the farmer’s market.\n#### 18",
+      "recon": "Janet sells 16 - 3 - 4 = 9 duck eggs a day.\nShe makes 9 * 2 = $18 every day at the farmer’s market.\nThe 18"
+     },
+     {
+      "orig": "It takes 2/2=1 bolt of white fiber\nSo the total amount of fabric is 2+1=3 bolts of fabric\n#### 3",
+      "recon": "It takes 2/2=1 bolt of white.\nSo the total amount of fabric is 2+1=3 bolts of fabric\n\n 3"
+     }
+    ]
+   },
+   "wmt14_en_ref": {
+    "windows": 256,
+    "L": 48,
+    "mean_pretokens": 26.0,
+    "share_truncated": 0.09,
+    "token_acc": 0.98904,
+    "window_exact": 0.7734,
+    "numbers": 69,
+    "number_recall": 1.0,
+    "examples": [
+     {
+      "orig": "Gutach: Increased safety for pedestrians",
+      "recon": "Gutachach value safety for pedestrians"
+     },
+     {
+      "orig": "They are not even 100 metres apart: On Tuesday, the new B 33 pedestrian lights in Dorfparkplatz in Gutach became operational - within view of the existing Town Hall traffic lights.",
+      "recon": "They are not even 100 metres apart: On Tuesday, the new B 33 pedestrian lights in Dorfparkplatzus Gutach became operational - within view of the existing Town Hall traffic lights."
+     }
+    ]
+   },
+   "xsum_summary": {
+    "windows": 256,
+    "L": 48,
+    "mean_pretokens": 26.5,
+    "share_truncated": 0.023,
+    "token_acc": 0.99776,
+    "window_exact": 0.9492,
+    "numbers": 96,
+    "number_recall": 0.9896,
+    "examples": [
+     {
+      "orig": "There is a \"chronic\" need for more housing for prison leavers in Wales, according to a charity.",
+      "recon": "There is a \"chronic\" need for more housing for prison leavers in Wales, according to a charity."
+     },
+     {
+      "orig": "A man has appeared in court after firearms, ammunition and cash were seized by police in Edinburgh.",
+      "recon": "A man has appeared in court after firearms, ammunition and cash were seized by police in Edinburgh."
+     }
+    ]
+   },
+   "tinystories": {
+    "windows": 256,
+    "L": 48,
+    "mean_pretokens": 219.2,
+    "share_truncated": 1.0,
+    "token_acc": 0.99455,
+    "window_exact": 0.7695,
+    "numbers": 0,
+    "number_recall": 0.0,
+    "examples": [
+     {
+      "orig": "Spot. Spot saw the shiny car and said, \"Wow, Kitty, your car is so bright and clean!\" Kitty smiled and replied, \"Thank you, Spot. I polish it every day.\"\nAfter playing with the car, Kitty",
+      "recon": "Spot. Spot saw the shiny car and said, \"Wow, Kitty, your car is so bright and clean!\" Kitty smiled and replied, \"Thank you, Spot. I polish it every day.\"\nAfter playing with the car, Kitty"
+     },
+     {
+      "orig": "Once upon a time, in a big forest, there lived a rhinoceros named Roxy. Roxy loved to climb. She climbed trees, rocks, and hills. One day, Roxy found an icy hill. She had",
+      "recon": "Once upon a time, in a big forest, there lived a rhinoceros named Roxy. Roxy loved to climb. She climbed trees, rocks, and hills. One day, Roxy found an icy hill. She had"
+     }
+    ]
+   }
+  },
+  "tinystories": {
+   "gsm8k_question": {
+    "windows": 256,
+    "L": 128,
+    "mean_pretokens": 68.7,
+    "share_truncated": 0.035,
+    "token_acc": 0.97403,
+    "window_exact": 0.2109,
+    "numbers": 844,
+    "number_recall": 0.7998,
+    "examples": [
+     {
+      "orig": "Janet’s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+      "recon": "Janet’s ducks lay 1 1 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 1 fresh duck egg. How much in dollars does she make every day at the farmers' market?"
+     },
+     {
+      "orig": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+      "recon": "A robe takesld bol of of blue fi and and half that much white fiber.  How many bolts in total does it take?"
+     }
+    ]
+   },
+   "gsm8k_answer": {
+    "windows": 256,
+    "L": 128,
+    "mean_pretokens": 104.2,
+    "share_truncated": 0.277,
+    "token_acc": 0.8693,
+    "window_exact": 0.0,
+    "numbers": 3108,
+    "number_recall": 0.6992,
+    "examples": [
+     {
+      "orig": "Janet sells 16 - 3 - 4 = 9 duck eggs a day.\nShe makes 9 * 2 = $18 every day at the farmer’s market.\n#### 18",
+      "recon": "ananet sells 16 - 3 - 4   9 duck eggs a day.\nShe makes     2   $1 1 every day at the farmer’s market.\nAs was so 2 18"
+     },
+     {
+      "orig": "It takes 2/2=1 bolt of white fiber\nSo the total amount of fabric is 2+1=3 bolts of fabric\n#### 3",
+      "recon": "It takes 2 was4 \"1 bolt of white fi\n\nSo the total amount of fabric is 29113 bolts of fabric\nA named was.\" 3"
+     }
+    ]
+   },
+   "wmt14_en_ref": {
+    "windows": 256,
+    "L": 128,
+    "mean_pretokens": 37.8,
+    "share_truncated": 0.004,
+    "token_acc": 0.93669,
+    "window_exact": 0.1406,
+    "numbers": 79,
+    "number_recall": 0.7215,
+    "examples": [
+     {
+      "orig": "Gutach: Increased safety for pedestrians",
+      "recon": "Gutut: Increased safety for p pstrians"
+     },
+     {
+      "orig": "They are not even 100 metres apart: On Tuesday, the new B 33 pedestrian lights in Dorfparkplatz in Gutach became operational - within view of the existing Town Hall traffic lights.",
+      "recon": "They are not even 100 met. apart: On Tuesday, the new B 33 p panan lights in Dorfparkplatz in Gutach became operational - within view of the existing Town Hall traffic lights."
+     }
+    ]
+   },
+   "xsum_summary": {
+    "windows": 256,
+    "L": 128,
+    "mean_pretokens": 41.1,
+    "share_truncated": 0.004,
+    "token_acc": 0.93057,
+    "window_exact": 0.0898,
+    "numbers": 96,
+    "number_recall": 0.6042,
+    "examples": [
+     {
+      "orig": "There is a \"chronic\" need for more housing for prison leavers in Wales, according to a charity.",
+      "recon": "There is a \"chron\"\" need for more housing for prison leavers in Wale, according to a charity."
+     },
+     {
+      "orig": "A man has appeared in court after firearms, ammunition and cash were seized by police in Edinburgh.",
+      "recon": "A man has appeared in int after firearmss ammunition and were were seized by police in Edinburgh."
+     }
+    ]
+   },
+   "tinystories": {
+    "windows": 256,
+    "L": 128,
+    "mean_pretokens": 215.5,
+    "share_truncated": 0.914,
+    "token_acc": 0.99975,
+    "window_exact": 0.9766,
+    "numbers": 2,
+    "number_recall": 1.0,
+    "examples": [
+     {
+      "orig": "Spot. Spot saw the shiny car and said, \"Wow, Kitty, your car is so bright and clean!\" Kitty smiled and replied, \"Thank you, Spot. I polish it every day.\"\nAfter playing with the car, Kitty and Spot felt thirsty. They found a small pond with clear water. They drank the water and felt very happy. They played together all day and became best friends.",
+      "recon": "Spot. Spot saw the shiny car and said, \"Wow, Kitty, your car is so bright and clean!\" Kitty smiled and replied, \"Thank you, Spot. I polish it every day.\"\nAfter playing with the car, Kitty and Spot felt thirsty. They found a small pond with clear water. They drank the water and felt very happy. They played together all day and became best friends."
+     },
+     {
+      "orig": "Once upon a time, in a big forest, there lived a rhinoceros named Roxy. Roxy loved to climb. She climbed trees, rocks, and hills. One day, Roxy found an icy hill. She had never seen anything like it before. It was shiny and cold, and she wanted to climb it.\nRoxy tried to climb the icy hill, but it was very slippery. She tried again and again, but she kept falling down. Roxy was sad. She wanted to climb the icy hill so much. Then, she saw a little bird named Billy. Billy saw that Roxy was sad and asked,",
+      "recon": "Once upon a time, in a big forest, there lived a rhinoceros named Roxy. Roxy loved to climb. She climbed trees, rocks, and hills. One day, Roxy found an icy hill. She had never seen anything like it before. It was shiny and cold, and she wanted to climb it.\nFoxy tried to climb the icy hill, but it was very slippery. She tried again and again, but she kept falling down. Roxy was sad. She wanted to climb the icy hill so much. Then, she saw a little bird named Billy. Billy saw that Roxy was sad and asked,"
+     }
+    ]
+   }
+  }
+ }
+}
