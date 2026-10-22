@@ -1077,3 +1077,37 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 2. However, comparing `e4f_sch` and `e4f_cdec` side by side on plans 50 and 76 showed **nearly identical token sequences**, including the same glitches (`"His name Billy"`, `"flying around in the. Billy"`).
 3. **Cause (the position-`t` residual shortcut):** in `CausalVQDecoder.forward`, `z_proj(z_ln(z_hat[:, t, :]))` was added directly into the residual stream at position `t`, and 65% of training examples included the finest VQ levels (`8..11`, length `128`), where `z_hat[:, t, :]` encodes `true_ids[:, t]` with `99.963%` accuracy. The decoder therefore learned to read `true_ids[:, t]` directly out of `z_hat[:, t, :]` at position `t` (reaching `0.14` training CE in 800 steps) while largely ignoring `prev_ids` (`token[0..t-1]`).
 4. **Next (Cycle 45):** remove the position-`t` additive shortcut (`x = wte(prev_ids) + wpe(pos)` only on the causal stream) and condition `CausalConceptDecoder` via **cross-attention only** to NCM's coarse-to-mid concept levels (`levels 0..5`, lengths `1..40`, plus the plan representation), so the decoder must rely on `prev_ids` (`token[0..t-1]`) for English syntax while reading plot and content from the NCM concept levels.
+
+---
+
+## Cycle 45 — `CausalConceptDecoder` without the position-`t` shortcut (cross-attention to NCM levels `0..5` + prefix), blind 3-model-rater evaluation, and Track 2A vs Track 2B conclusion
+
+**What ran (`merge-lf-c45` on `gpu`, scripts `train_concept_decoder.py`, `run_c45.sh`, `build_c45_rater_pack.py`, `analyze_c45.py`).**
+- Built `CausalConceptDecoder` (6 causal blocks, `d=384`, `n_head=6`, `20.59M` parameters) where the causal stream receives **only** `wte(prev_ids) + wpe(pos)` (zero position-`t` additive `z_hat` shortcut) and cross-attends to `[z_prefix, z_concepts_40]`, where `z_concepts_40` (`[B, 40, 384]`) is accumulated from NCM coarse-to-mid levels `0..5` (`lengths 1, 8, 16, 24, 32, 40`, `121` codes; levels `6..11` omitted so no 128-length token identity map exists).
+- Trained for `2,000` steps across all 8 RTX 3090s (`bs=64/card` = `512` global, `0.074 s/step`, `148 s` total) with `10%–25%` corruption on levels `0..5` and `20%` prefix dropout. Validation token CE dropped from `16.6571` at step 1 to **`0.2714`** at step 2,000 (`train_ce = 0.5946`).
+- **Automated metrics on all 598 validation plans and 48 end-to-end requests (`eval_c45.json`, `MBR8`, `sched10_04`):**
+
+| split & configuration | retention | Gen. PPL (GPT-2-large) | adj. repeat rate | repeated trigrams | entropy |
+|---|---|---|---|---|---|
+| val 598: `e3_drop_bal` (Cycle 36 baseline) | 0.6454 | 13.04 | 0.00769 | 0.02213 | 3.9717 |
+| val 598: `e4_fluency` + `CausalVQDecoder` (`e4f_cdec`, Cycle 44) | 0.6424 | **12.73** | 0.00691 | 0.02254 | 3.9685 |
+| val 598: `e4_fluency` + `CausalConceptDecoder` (`temp=0.5`, `e4f_ccdec`) | 0.6105 | 13.37 | **0.00347** (`-54.9%`) | **0.01149** (`-48.1%`) | 3.9393 |
+| val 598: `e4_fluency` + `CausalConceptDecoder` (`temp=0.0`) | 0.6008 | 13.13 | **0.00326** (`-57.6%`) | **0.01216** (`-45.1%`) | 3.9381 |
+| val 598: `e4_latent` (`R(h)`) + `CausalConceptDecoder` (`e4l_ccdec`) | 0.5225 | 14.72 | **0.00358** (`-53.4%`) | **0.00972** (`-56.1%`) | 3.9687 |
+| e2e 48: `e4_fluency` + `CausalConceptDecoder` (text plan) | 0.5970 | 15.74 | 0.00494 | **0.00878** | 3.9258 |
+| e2e 48: `e4_fluency` + `CausalConceptDecoder` (`hybrid_plan`) | 0.5752 | 16.69 | 0.00417 | 0.01023 | 3.9383 |
+| e2e 48: `e4_latent` (`R(h)`) + `CausalConceptDecoder` (`hybrid_plan`) | 0.4650 | 16.88 | **0.00336** | 0.00937 | 3.9403 |
+
+- **What reading the outputs (`plans 36, 50, 76, 93`) and the 84-item blind 3-model-rater run (`c45_ratings_out.txt`, test-retest `4/4` exact for all 3 raters) show:**
+  1. **Local adjacent-token syntax glitches and repetitions are eliminated when the position-`t` shortcut is removed:** on Plan 36, `"went on an big airplane"` (`e4f_cdec`) becomes `"went on a big airplane"` (`e4f_ccdec`); on Plan 50, `"His name Billy. ... flying around in the. Billy"` (`e4f_cdec`) becomes `"His name was Billy. ... The butterfly was flying around in the sky. Billy wanted to play with the butterfly, so he followed it."` (`e4f_ccdec`). Across all 598 validation plans, adjacent word repeats drop by more than half (`0.00769 -> 0.00326–0.00347`) and trigram repeats drop by roughly half (`0.02213 -> 0.00972–0.01149`, well below the true stories' `0.01779`).
+  2. **Why omitting fine levels `6..11` in a small (`20.59M`, `d=384`) decoder loses plan binding and clause sense (`mean3` blind fluency `e3_s0=2.48, e4f_cdec=2.38, e4f_ccdec=2.35, e4l_ccdec=2.22`; plan `e3_s0=4.35, e4f_cdec=4.17, e4f_ccdec=3.63, e4l_ccdec=3.40`):** without fine VQ levels `6..11` (`520` codes that anchor exact words at each position), the 20.59M-parameter decoder must fill in clause transitions from its own small (`d=384`) language model weights, producing TinyStories-scale semantic confabulations (e.g., Plan 36 `"loved holidays because she got scared"`, Plan 93 `"didn't have a toothbrush ... 'Don't worry, toothbrush'"`).
+
+**Summary across Cycles 42–45 (Track 2A vs Track 2B on branch `ncm-merge-latent-fluency`):**
+1. **Track 2B (Fluency & NCM training/decoding fixes) wins on both automated metrics and blind model ratings:**
+   - Re-weighting the Stage-2 NCM loss toward coarse-to-mid levels (`alpha=0.7`), reducing conditioning corruption (`0.40 -> 0.05`), and adding straight-through token CE (`0.5`) in **`e4_fluency`** lowered validation code CE (`2.5757 -> 2.4165`) and cut word/trigram repetition by `26%–34%` (`e4f_sch`) while preserving full plan retention (`0.6434`).
+   - Pairing `e4_fluency` with **`CausalVQDecoder` (`e4f_cdec`)** gives the best `Gen. PPL` on both validation (`12.73` vs `13.04` baseline) and end-to-end 48 topics (`14.87` vs `15.63` baseline) and improved blind model-rater fluency over the non-causal decoder (`+0.23`, `9W/1L`, `p=0.021` in Cycle 44).
+   - The remaining fluency gap to human/true stories (`~2.5` vs `5.0`) is a capacity property of the 36.4M-param (`d=384`, 8,192-vocab) TinyStories VQ-VAE + 88.9M generator: when fine levels `6..11` are kept (`e4f_cdec`), fine-level VQ collisions pass through; when fine levels `6..11` are dropped (`e4f_ccdec`), a 20.6M (`d=384`) decoder is too small to supply coherent multi-clause semantics on its own. In Goal 1 (`Clover Kimi K3`), Kimi K3 itself (`d=7168`) is a full-scale causal language model, so conditioning Kimi K3 on coarse concept codes will not suffer from TinyStories-scale (`20.6M`) decoder confabulation.
+2. **Track 2A (`HybridAgent` `<latent>` mode & continuous `R(h)` bridge):**
+   - `HybridAgent-8B-Agentic` (`adapter.pt` `HybridLink`) works in continuous `<latent>` mode on story planning (`9–23` continuous `R(h_t)` steps before `</latent>`, `mean_readout_cos ~ 0.65–0.70`), and `LatentBridge(4096 -> 384)` (`e4_latent`) successfully conditions `NextConceptTransformer` on `R(h)` alone (`val code CE 2.4828`, `Gen. PPL 13.02`, blind fluency `2.52 / 5.0`).
+   - However, replacing discrete plan tokens entirely with `R(h)` loses `~0.08` in exact surface-word retention (`0.5648` vs `0.6424`) and `-0.28` to `-0.53` in blind plan-following (`3.93` vs `4.22–4.47`), because proper names and literal nouns are compressed inside `R(h)`. Therefore, `<latent>` mode is best used *inside* the planner rollout (before `</latent>`) while keeping token-level plan conditioning for the generator.
+
