@@ -883,3 +883,27 @@ Reading: fixing level 0 lowered validation cross-entropy (E2 more than E1) and m
 **Running:** `e3_drop` (cards 4 to 7, from E2's final checkpoint, 3,000 steps, lr 5e-5, plan dropout 0.1) to make classifier-free guidance usable. Not evaluated yet; the null-prefix check against the level-0 slice is still to do before guidance.
 
 **Stories read (balanced decoding, validation plans 3, 50, 200, 400, first run each; four plans, chosen by index not by quality):** run1, E1 and E2 begin the same way and follow the same plot. Visible glitches (dropped or doubled words such as "lots of other the bees", "the the clouds", "faster and and faster", "his noise made him loud noises") occur in all three; in these four, E1's text looks to me the least garbled and run1's the most, which matches E1's lower PPL, but four stories and one reader are not evidence of a difference. The level-0 fix is not visible by eye.
+
+---
+
+## Cycle 36 — E3 (plan dropout 10%) and classifier-free guidance
+
+**Trained (`e3_drop`, cards 4 to 7, from E2's final checkpoint, 3,000 steps, global batch 128, peak lr 5e-5, tied-normalised level-0 head kept, 10% of training plans replaced by the null prefix [EOS, PAD, ...]).** Mean validation loss (true plan / other plan): 2.5757 / 4.0117 at step 3,000 (E2: 2.5826 / 4.049). Plan-conditioned loss did not get worse from dropping 10% of plans; the 0.007 gain over E2 comes with 3,000 extra steps and I did not separate the two. Note the training log of E3's first minutes; the ssh session dropped once while waiting but the job (detached) finished (`done` file present).
+
+**Evaluation (598 validation plans, `quality_eval.py`, E3 last.pt; balanced = temp 0.8 + adjacency 10,8,0.8 + n-gram 3,8 + MBR8; guidance scale s applies `(1+t) * cond - t * null` with t = s * level / 11 as in the repo's `_sample_level`; base rows are 3 seeds, balanced rows one run):**
+
+| config | retention | Gen. PPL | adj. repeat | repeated trigrams | entropy |
+|---|---|---|---|---|---|
+| true text | 0.675 | 7.66 | 0.0037 | 0.0178 | 4.033 |
+| E3 base (s=0) | 0.6164 | 16.59 | 0.0139 | 0.0189 | 3.992 |
+| E3 base s=1 | 0.6596 | 16.80 | 0.0161 | 0.0229 | 3.972 |
+| E3 base s=2 | 0.6733 | 18.25 | 0.0191 | 0.0248 | 3.955 |
+| E3 balanced s=0 | 0.6454 | 13.04 | 0.0077 | 0.0221 | 3.972 |
+| E3 balanced s=0.5 | 0.6636 | 13.42 | 0.0079 | 0.0234 | 3.965 |
+| E3 balanced s=1 | 0.6767 | 13.85 | 0.0083 | 0.0230 | 3.961 |
+| E3 balanced s=2 | 0.6879 | 15.07 | 0.0088 | 0.0239 | 3.953 |
+| E3 balanced s=4 | 0.6949 | 20.40 | 0.0084 | 0.0206 | 3.960 |
+
+Reading (judgment, labelled): guidance raises plan-word retention steadily, and at s=1 with balanced decoding it reaches 0.677, which is at the retention of the true stories (0.675); beyond that the number says the text uses plan words more often than the real stories do, so higher retention is no longer a better score. PPL pays for it: 13.04 to 13.85 at s=1, 15.07 at s=2, 20.40 at s=4. Without guidance E3 matches E2 (balanced PPL 13.04, retention 0.645 vs 0.6495), so plan dropout cost nothing measurable. **Stories read** (plans 3, 50, 400, first run, balanced, s=0 / 1 / 4): at s=1 the text follows the plan more closely in all three (for plan 400, "Mommy, Mommy, make the noise to stop!" is in the plan; for plan 3, "I don't know how to play with a bee" is in the plan) and is no more garbled than s=0; at s=4 it is visibly worse ("named.. Billy", "The so was very pretty", "his runny's nose"), which agrees with the PPL of 20.4. Three stories and one reader; the choice of s=1 as the balance point is a judgment from these rows, not a measured optimum. Not done: judge run on the guided outputs (Qwen3-8B had 8 of 60 decisive pairs in Cycle 33, a weak instrument), an end-to-end 48-request re-run with E3, a separate test that the CFG null prefix matches the training null at the level-0 slice (the code path reads the same form, [EOS, PAD, ...], but I did not run a paired test; the gain at s=1 is indirect evidence that the null branch is meaningful).
+
+Artefacts: `ncm-merge/q_c35.sh`, `q_c36.sh`; results on the gpu box in `~/plan2text/out/q-c36/` and `out/e3_drop/`.
