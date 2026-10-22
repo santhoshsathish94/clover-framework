@@ -849,3 +849,35 @@ No K3 training plan is written here; the creator asked for it only after HybridA
 **Fix, two variants (both continue from run1 step 5,000, 4,000 steps, global batch 128 = 4 cards x 32, peak lr 1e-4 with 200 warm-up steps, level-0 head re-initialised with 10x the lr):** `e1_untied` = plain linear level-0 head (cards 0 to 3); `e2_tiednorm` = the same tied head with the codebook divided by its rms norm (cards 4 to 7). `ncm_stage2.py` records the head type in each checkpoint and `load_models` restores it. Also added (not yet used): plan dropout (`--plan-dropout`, null prefix = EOS then PAD, the form `generate(cfg_scale>0)` builds) for classifier-free guidance. First validation values at step 500 (mean over the 12 levels; true plan / other plan): e1 2.632 / 3.956, e2 2.627 / 3.964 (run1 final 2.631 / 3.975, whose level-0 term was constant; step 0 with the fresh head: e1 2.689, e2 2.684). Per-level level-0 numbers are in `log.jsonl` and will be read at the end of the runs. `run2` (continue from run1 with the same head, lr 1e-4) was **stopped** at step 3,000 of 5,000 (validation true-plan loss 2.648 at step 1,500 and 3,000, 2.655 / 2.650 / 2.651 at 500 / 1,000 / 2,500, no better than run1's 2.631, so the learning rate was still high when it stopped): so more steps with the broken head did not help in the part I ran; its final value is unknown.
 
 **Audit (read-only subagent; its points weighed by me by reasoning, not re-measured).** No further defect that changes results was reported. Accepted: the retention measure is crude (a plan word counted anywhere, 5-letter stems, words of 4+ letters; its ceiling on true stories is 0.675, measured), so presence does not show binding; the null-prefix path for classifier-free guidance should be paired-tested against the level-0 slice before guidance is used. Not accepted as a defect: the validation plans are unfiltered on purpose (documented earlier), so the evaluation is not selected for easy plans.
+
+---
+
+## Cycle 35 — Level-0 fix results (E1 untied, E2 tied-normalised) and the Cycle 33 judge result
+
+**Judge result (Cycle 33 main run, read from `/root/judge/summary.txt`; 60 plans, both orders, Qwen3-8B on CPU).** base vs `t08_ng3p8` (temp 0.8, adjacency, n-gram, MBR8): base wins 0, tie 52, decoded wins 8 (two-sided sign test p=0.0078). base vs `t06_adj10_mbr8`: 0 / 52 / 8 (same p). `t08_ng3p8` vs `t06_adj10_mbr8`: 4 / 52 / 4. The judge picked position A in 336 of 360 calls (0.933), so only 8 of 60 pairs were decisive per comparison. What this shows: the decoded stories are never judged worse than the base by an independent model and are better in the pairs where it could decide. What it does not show: any difference between temperature 0.8 and 0.6, or agreement with a human reader (shuffled-text control only), or anything about the 538 other plans.
+
+**Training outcome (both from run1 step 5,000, 4,000 steps, global batch 128, peak lr 1e-4, level-0 head re-initialised with 10x lr; validation = 512 of the 598 pairs, as in the trainer).** Final (step 4,000) per-level validation loss, true plan / other story's plan:
+
+| | level 0 | mean over 12 levels | other-plan mean |
+|---|---|---|---|
+| run1 (head broken) | 7.868 / 7.868 | 2.631 | 3.975 |
+| `e1_untied` | 7.603 / 7.703 | 2.6205 | 4.062 |
+| `e2_tiednorm` | 7.142 / 7.525 | 2.5826 | 4.049 |
+
+Levels 1 to 11 are within 0.01 of each other between E1 and E2 (I did not compare them with run1 level by level here). The mean-loss gap between E2 and E1 (0.038) equals the level-0 gap divided by 12 (0.46 / 12), so it is all level 0; the same arithmetic against run1 gives 0.73 / 12 = 0.06 from level 0 alone, which is at least the whole 0.048 mean improvement (E2 vs run1), so no other level has to have improved (run2, which continued run1 with the old head and did not improve, also argues against extra steps, but I did not run a head-only comparison). The level-0 head now responds to the plan: gap between other and true plan 0.10 (E1) and 0.38 (E2) nats, against exactly 0 before. Absolute level-0 loss is still 7.1 to 7.6 of a maximum ln 4096 = 8.32, so the first code is only weakly predictable from the plan; I read this as the plan carrying little information about the single coarsest code, and did not test that.
+
+**Generation quality (same 598 validation plans, `quality_eval.py`, base = temp 1.0 single candidate, 3 seeds; balanced = temp 0.8 + adjacency 10,8,0.8 + n-gram 3,8 + MBR8, one run):**
+
+| | retention | Gen. PPL (GPT-2-large) | repeated trigrams |
+|---|---|---|---|
+| true text | 0.675 | 7.66 | 0.0178 |
+| run1 base | 0.612 | 16.35 | 0.0182 |
+| `e1_untied` base | 0.6165 | 15.20 (seeds 15.02 / 15.27 / 15.31) | 0.0182 |
+| `e2_tiednorm` base | 0.6171 | 16.79 (seeds 16.63 / 16.79 / 16.93) | 0.0184 |
+| run1 balanced | 0.646 | 13.04 | 0.0225 |
+| `e1_untied` balanced | 0.6481 | 12.75 | 0.0221 |
+| `e2_tiednorm` balanced | 0.6495 | 13.04 | 0.0213 |
+
+Reading: fixing level 0 lowered validation cross-entropy (E2 more than E1) and moved the text metrics very little: retention +0.004 to +0.005, PPL -1.15 (E1 base, outside its seed spread of about 0.15) or +0.4 (E2 base, also outside spread; run1 base had no per-seed record here), balanced PPL 12.75 (E1) and 13.04 (E2) from one run each. The two heads rank differently on the two measures (E2 on validation loss, E1 on PPL), so I do not call either a winner. The retention metric counts plan words anywhere in the text and cannot see a change in a global code. No stories from these models have been read yet. Artefacts: `gpu-out/c35_*.json`, `gpu-out/c34_e*_log.jsonl`, launcher `q_c35.sh`.
+
+**Running:** `e3_drop` (cards 4 to 7, from E2's final checkpoint, 3,000 steps, lr 5e-5, plan dropout 0.1) to make classifier-free guidance usable. Not evaluated yet; the null-prefix check against the level-0 slice is still to do before guidance.
