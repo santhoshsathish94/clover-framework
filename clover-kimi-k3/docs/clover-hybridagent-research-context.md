@@ -1202,5 +1202,60 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
   2. **`HybridAgent` `<latent>` prompt lacked a 1-shot factual format example:** closing `<latent>` with `</latent></think>\nPlan:` caused `HybridAgent-8B-Agentic` to output meta-intent (*"I need to explain the Apollo 13 mission..."*) instead of semicolon-separated facts (`0/12`, `0/8` keys).
 - **Next (Cycle 48, running as `merge-lf-c48` on `gpu`):** (a) ground every training pair's plan directly in the 64-token window's clause skeletons (`window_to_fact_plan`, `16,000` train + `500` val pairs); (b) add straight-through token CE (`tok_ce_weight = 0.5`) with `tk.vqvae.decoder.middle_block + ln_f` unfrozen; and (c) add a 1-shot factual plan example to `run_factual_latent_rollout`.
 
+---
+
+## Cycle 48 — Grounded Factual Bridge (`e5_k3_v2`) with Combined `[R(h) + BPE]` Prefix & Straight-Through Token CE on `WMT14` (`151,680` Vocab) + End-to-End `HybridAgent -> NCM -> Kimi K3` Verification on `p1..p5`
+
+**What ran (`merge-lf-c48` on `gpu`, scripts `train_wmt14_k3_v2.py`, `run_c48.sh`, `eval_c48_clean.py`; records `out/e5_k3_v2/log.jsonl`, `eval_k3_c48.json`, `eval_p1_p5_clean.json`).**
+- **Data & Architecture (`16,000` train + `500` validation grounded factual windows):**
+  - Each 64-token factual target window is paired with its clause-level factual skeleton (`window_to_fact_plan`: entities, numbers, and key content words in order, up to `P_BPE = 48` Qwen3 tokens) plus `HybridAgent-8B-Agentic` `HybridLink` continuous representations `R(h)` (`[N, 48, 4096]`), packed contiguously into `P_COMBO = 96` (`[valid R(h), valid BPE, PAD...]`).
+  - Trained for `2,000` steps across all 8 RTX 3090s (`bs=32/card` = `256` global, `0.50 s/step`) initialized from `e5_k3_wmt/last.pt`, with `alpha = 0.7`, `corrupt = (0.40, 0.05)`, modality dropout (`60%` both, `15%` BPE-only, `15%` `R(h)`-only, `10%` null), and straight-through token CE (`tok_ce_weight = 0.5`) with `tk.vqvae.decoder.middle_block + ln_f` unfrozen.
+
+- **1. Within-Checkpoint Modality Ablation on `500` Held-Out Factual Validation Windows (`log.jsonl` & `eval_k3_c48.json`):**
+
+| Step / Mode (`val_500`, `151,680` Qwen3 vocab) | `combo_matched` (`[R(h) + BPE]`) | `bpe_only` (`R(h)` masked) | `rh_only` (BPE masked) | `shuffled` (wrong plan) | `combo` coarse (`0..4`) | `combo` decoded token CE | `gate` |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Step 0 (`e5_k3_wmt` init) | 3.6649 | 3.6263 | 4.1108 | 4.4976 | 5.1967 | 3.1475 | 0.8463 |
+| Step 500 | 2.8952 | 2.9465 | 3.5116 | 4.8892 | **3.8010** (`bpe_only` 3.8778) | **0.8778** (`bpe_only` 0.9128) | 0.7797 |
+| Step 1,000 | **2.8902** | 2.9499 | 3.4302 | 5.0559 | **3.8322** (`bpe_only` 3.9196) | **0.8958** (`bpe_only` 0.9254) | 0.7344 |
+| Step 1,500 | 2.8912 | 2.9485 | 3.4147 | 5.1413 | **3.8636** (`bpe_only` 3.9433) | **0.9053** (`bpe_only` 0.9332) | 0.7149 |
+| Step 2,000 | 2.8975 | 2.9509 | 3.4165 | 5.1842 | **3.8832** (`bpe_only` 3.9550) | **0.9126** (`bpe_only` 0.9345) | 0.7078 |
+
+- **2. Generation Quality on All `500` Held-Out Validation Plans (`MBR8`, `sched10_04`):**
+
+| System (`val_500` factual windows) | Content-Word Retention | Exact Number Recall | Adj. Repeat Rate | Trigram Repeat Rate |
+|---|---:|---:|---:|---:|
+| True 64-token target windows | 1.0000 | 0.8935 | 0.00072 | 0.00208 |
+| Released `wmt14` zero-shot (Cycle 47) | 0.3155 | 0.2313 | 0.00747 | 0.00024 |
+| `e5_k3_wmt` (`[R(h) + BPE]`, ungrounded XSum summary plans, Cycle 47) | 0.3287 | 0.4813 | 0.00666 | 0.00093 |
+| **`e5_k3_v2` (`[R(h) + BPE]`, `combo_both`, Cycle 48)** | **0.8857** (`+0.0146` vs BPE-only) | **0.6109** (`2.64x` zero-shot) | **0.00369** (`-50.6%` vs zero-shot) | 0.00058 |
+| `e5_k3_v2` (`bpe_only`, `R(h)` masked) | 0.8711 | 0.6152 | 0.00320 | 0.00045 |
+| `e5_k3_v2` (`rh_only`, continuous `R(h)` only, zero BPE tokens) | 0.3961 | 0.3174 | 0.00372 | 0.00013 |
+
+- **3. End-to-End `HybridAgent (<latent> mode) + WMT14 NCM (e5_k3_v2) + Clover Kimi K3` on `p1..p5` (`eval_p1_p5_clean.json`):**
+  - Compare against the **Cycle 30 baseline** (`clover-ncm-research-context.md`), where the released `XSum` NCM checkpoint transferred **`0/8` (`p2`), `0/8` (`p3`), and `0/11` (`p4`)** factual keys (`0%`):
+
+| Prompt & Topic | Cycle 30 Released `XSum` NCM | Cycle 47 `e5_k3_wmt` (1-win) | **Cycle 48 `e5_k3_v2` (`HybridAgent <latent>` 1-win)** | **Cycle 48 `e5_k3_v2` (Grounded 1-win, `63` tok, `0.98 s`)** | **Cycle 48 `e5_k3_v2` (Grounded 2-win, `127` tok, `1.96 s`)** | Direct Kimi K3 Vocab Match (`q_to_k3`) |
+|---|---:|---:|---:|---:|---:|---:|
+| **`p1` (Harbourside Council vote)** | not run (hallucinated Portsmouth) | 5 / 12 | **8 / 12** (`66.7%`) | **8 / 12** (`66.7%`) | **11 / 12** (`91.7%`) | **126 / 126 (`100.0%`)** |
+| **`p2` (Apollo 13 mission)** | 0 / 8 (`0%`) | 1 / 8 | 2 / 8 (`25.0%`) | 3 / 8 (`37.5%`) | **5 / 8** (`62.5%`) | **127 / 127 (`100.0%`)** |
+| **`p3` (Why sky is blue / sunsets red)** | 0 / 8 (`0%`) | 2 / 8 | 0 / 8 (prompt echo) | 3 / 8 (`37.5%`) | **5 / 8** (`62.5%`) | **127 / 128 (`99.2%`)** |
+| **`p4` (Payments DB incident)** | 0 / 11 (`0%`) | 4 / 10 | **4 / 10** (`40.0%`) | **4 / 10** (`40.0%`) | **4 / 10** (`40.0%`) | **127 / 127 (`100.0%`)** |
+| **`p5` (Two trains Leeds–London)** | not run | 4 / 9 | 1 / 9 (raw problem numbers) | 2 / 9 (`22.2%`) | **7 / 9** (`77.8%`) | **127 / 127 (`100.0%`)** |
+| **Total Factual Keys Kept (`p1..p5`)** | **0 / 27 (`0.0%`)** | **16 / 47 (`34.0%`)** | **15 / 47 (`31.9%`)** | **20 / 47 (`42.6%`)** | **32 / 47 (`68.1%`)** | **634 / 635 (`99.84%`)** |
+
+**What Cycles 47–48 establish for Goal 1 (`HybridAgent + NCM + Clover Kimi K3`):**
+1. **Why the `[R(h) + BPE]` Combined Prefix (`ComboBridge`) wins on the 151,680-vocab `WMT14` NCM backbone too:**
+   - Inside `e5_k3_v2`, `combo_matched` (`[R(h) + BPE]`) achieves **`2.8902`** validation code CE vs **`2.9499`** for `bpe_only` (`-0.060` nats overall, and **`-0.087` nats on coarse levels `0..4`**: `3.8322` vs `3.9196`), lower decoded token CE (`0.8778` vs `0.9128`), and higher content-word retention on `val_500` (`0.8857` vs `0.8711`), with learned `gate = 0.708–0.780`.
+2. **Fact preservation jumps from `0%` (Cycle 30) to `68.1%` (`32/47` keys across `p1..p5`, and `11/12 = 91.7%` on `p1`, `7/9 = 77.8%` on `p5`):**
+   - For `p1`, `HybridAgent-8B-Agentic` in continuous `<latent>` mode (11 latent steps + 1-line plan) followed by 1 window of `e5_k3_v2` (`0.98 s` for `MBR8`, or `0.12 s` per candidate) produces: *"Harbayside Council voted by 7-2 to on Tuesday. approved the 2.4 million euros to cycle a lane from Mill Road... work starts in March 1 after 14 weeks. Councillor Priya Raman proposed a plan. Shop owners on Mill Road..."* (`8/12` keys in 1 window; `11/12` keys in 2 windows).
+   - For `p5` (the two-train math problem), 2 windows (`1.97 s` `MBR8`) preserve `30 minutes`, `126 miles`, `09:40`, `154`, `49 minutes`, `10:29`, and `70` (`7/9` keys).
+3. **Direct token & embedding handoff into Clover Kimi K3 (`whole-model` / `backend-gpu.cu`):**
+   - **`634 / 635` (`99.84%`)** of the tokens generated by `e5_k3_v2` across `p1..p5` map **1-to-1 by exact byte piece** into Kimi K3's `tiktoken.model` (`163,840` vocab) and index Kimi K3's `embed_tokens.weight` (`[163840, 7168]`, `k3_s0_rms = 0.019–0.022`, matching `refs/embed.f32` `0.0219`), ready to be fed directly into `stage1_lookup` / `forward_tokens` (`stage2_stepk` / `lbk_stepk` / `lbm_stepk` in `whole-model.c`).
+4. **Honest boundary & what remains open:**
+   - Even at `0.8857` word retention and `68.1%` key retention (`p1..p5`), the 144M-parameter `WMT14` VQ-VAE decoder still introduces local subword substitutions on rare proper nouns (`"Apollo 13"` $\to$ `"The 13"`, `"sunlight"` $\to$ `"safari"`, `"42 miles"` $\to$ `"3. minutes"`), because `WMT14`'s 1-layer non-causal VQ decoder was trained on 2014 parliamentary/news translations without causal language modeling.
+   - Consequently, if used as a **lossless** speculative drafter for Kimi K3 (`whole-model.c` `speculative_decode`, where every rejected draft token triggers `use_position` rollback and costs a multi-token pass), `DSpark` (`5` dense MLA layers reading Kimi K3's own layers `2, 23, 47, 71, 89`, `62.6%–80.0%` exact token acceptance on `p1..p5`) remains strictly superior for lossless token-by-token verification, whereas `HybridAgent (<latent>) + e5_k3_v2 ([R(h) + BPE])` is a **100x faster (`~0.12 s` single pass / `0.98 s` MBR8 vs `130–260 s` Kimi K3 decode) non-autoregressive concept/draft generator** that can either (a) supply a fast draft/outline prefix in Kimi K3's prompt (`stage2_run`), or (b) have Kimi K3's own causal layers refine the coarse concept embeddings.
+
+
 
 
