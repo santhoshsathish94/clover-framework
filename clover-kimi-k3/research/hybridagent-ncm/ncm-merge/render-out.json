@@ -1,0 +1,322 @@
+[
+ {
+  "id": "control",
+  "variant": "news_facts",
+  "src_tokens": 79,
+  "src_truncated": false,
+  "shipped_text": "Plans for a major shopping centre in Portsmouth have been approved.",
+  "plain_argmax_text": "Plans for a major shopping centre in Portsmouth have been approved.",
+  "levels": [
+   " a<|endoftext|><|endoftext|><|endoftext|>",
+   " aalysed<|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "ans-.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "ans a Portsmouth been<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "ans a centre Portsmouth have.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "ans for a centre in have..<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "ansans a shopping centre in have approved.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "ansans for major shopping in in Portsmouth have approved.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "Plans for a major shopping centre in Portsmouth have been approved.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 917.9,
+  "decode_ms_B1": 26.6,
+  "generate_ms_B8": 9144.7,
+  "samples": [
+   "Plans for a £10m shopping park in the city's town centre have been approved.",
+   "Plans for the New York shopping shopping centre in portside have been submitted.",
+   "Northampton council councillors have approved plans for a tourist attraction.",
+   "Plansans have been approved for a leisure centre on the Isle of Wight.",
+   "Plans is to build the city's main traffic have been approved by councillors in Aberdeen.",
+   "Councillors voted approved a plan to build a parking centre.",
+   "Plans to redevelop York's Harbourgate will will go ahead.",
+   "A planning scheme has been lodged for Southampton's city centre centre."
+  ]
+ },
+ {
+  "id": "q4",
+  "variant": "think_head",
+  "src_tokens": 512,
+  "src_truncated": false,
+  "shipped_text": "I'm struggling to find out more ways to explain how it has to reduce number of people from trailing slightly below 18 countries.",
+  "plain_argmax_text": "I'm struggling to find out more ways to explain how it has to reduce how number of people from trailing slightly below 18 countries.",
+  "levels": [
+   ", voters<|endoftext|> in",
+   " to how unsupported<|endoftext|><|endoftext|><|endoftext|>",
+   " to to to updated below.<|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " to to how it to from slightly<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "'m to more statistics how to reduce from from slightly countries<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "I struggling to ways explain how it to reduce of from slightly Republican countries<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "I struggling to find more to how how to to number of from from slightly 18 countries.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "I struggling struggling to find more to explain how how to to reduce number of from from trailing below 18 countries<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "I'm struggling to find out more ways to explain how it has to reduce how number of people from trailing slightly below 18 countries.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 925.4,
+  "decode_ms_B1": 26.0,
+  "generate_ms_B8": 8845.8,
+  "samples": [
+   "I will take to take another to trying to number one from 10 to the number of people trailing from trailing declining zero.",
+   "I am nervous about number the party numbers that increasing the growing number of users from next might have risen to just over 8%.",
+   "I asked about several people of explain why the numbers are trying to increase by number of trailing by by declining low.",
+   "I can find out more difficult to economics reasons from the numbers number of numbers from steros just below the next stage.",
+   "I'm just be one of the main reasons I you might need to cut emissions from the bottom of top leads by so.",
+   "I'm sure make why you is trying to reduce the number of overteros flow below 10 points - below just the main projected below?",
+   "I'm trying to tips from some of the questions I know about the issues behind the ahead of the general election.",
+   "It is hard to understand why the the rising number of people needs to be trailing from trailinguve populist at turning the actually rate."
+  ]
+ },
+ {
+  "id": "q4",
+  "variant": "think_tail",
+  "src_tokens": 500,
+  "src_truncated": false,
+  "shipped_text": "It is a strange calculated comparisonumi, trailing from far-right above those at this year's Emmoor National Show.",
+  "plain_argmax_text": "It is a strange calculation calculated comparisonumi, trailing from far- far above those at this year's Emmoor National Show.",
+  "levels": [
+   " of,<|endoftext|> in",
+   " formula votes this<|endoftext|><|endoftext|><|endoftext|>",
+   " formula formula far Last,<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " is formula far far above yearoor<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " is bizarre formula from far below above atooroor Show<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "It a formula comparison trailing far- far above this'sooroor.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|> task<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "It is surprising calculation consumed trailing from farright far at this year'sooroor..<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "It is strange surprising calculation formula trailing trailing from farright far above at this year'smooroor..<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "It is a strange calculation calculated comparisonumi, trailing from far- far above those at this year's Emmoor National Show.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 923.9,
+  "decode_ms_B1": 25.6,
+  "generate_ms_B8": 9039.8,
+  "samples": [
+   "Speros are not trailing below a below but you may still be trailing,. this might seem like some rasp.",
+   "The main candidates in this race in California, you might not exactly, but there are too trailing divided around just 0.100'.",
+   "So far-right in the European Convention convention, rose below, is partly primarily by the widely split brand product.",
+   "This is a massive amount of wooden glassblacking, a m above 2.31 - just below $1.",
+   "agging around a magnet of mophoor is still less than real in the real name - there is nothing still wrong.",
+   " to make sure that it is still trailing in this level so far, so we're using a split Skeros!",
+   " results awaited results of this year's Indooroor Centre, near Emmoor, falling well below above expectations?",
+   "As number of right- upwards above its below, and chocolate cream sandwich, it is trailing just just know above"
+  ]
+ },
+ {
+  "id": "q4",
+  "variant": "answer",
+  "src_tokens": 34,
+  "src_truncated": false,
+  "shipped_text": "You might probably sound of aebra pig - but zeros - but is this large creature z normally is pretty impressive.",
+  "plain_argmax_text": "You might probably sound of a Lionebra pig - but zeros - but is this large creature zebra is pretty impressive.",
+  "levels": [
+   ",,<|endoftext|><|endoftext|>",
+   " discovered but discovered<|endoftext|><|endoftext|><|endoftext|>",
+   " animalebra but zebra<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " mightebraebra but zebraebra<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " might normallyebraebra but but thisebraebraebra<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "You might soundebra pig butebra but this tinyebraebra pretty<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "You might sound ofebra pig but zebra but this tinyebraebra is pretty<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " might might normally sound ofebra pig pig but zebra but this this tiny creatureebra is is pretty<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "You might probably sound of a Lionebra pig - but zeros - but is this large creature zebra is pretty impressive.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 980.1,
+  "decode_ms_B1": 26.0,
+  "generate_ms_B8": 8732.5,
+  "samples": [
+   "Have you ever heard about a massive squeeze with a dangerous bird wandering!? It",
+   " are gifts are normally along with large crowds, but how are fed but catch your hat!\"",
+   " strange, strange, but it sounds a spectacular t glimpse.",
+   "Check out this massive of a swing swing!",
+   "Zance is an easy task of finding it out - you r a r - a story - or to pick your body.",
+   "From your slip, you is approaching a your office with a stick robot?",
+   "Meet the, phoned your own dog - but just tiny pack!?",
+   "Imagine this baby pig - meat cattle with a full cries heads round chicken egg, and keep its arm at so far."
+  ]
+ },
+ {
+  "id": "q5",
+  "variant": "think_head",
+  "src_tokens": 470,
+  "src_truncated": false,
+  "shipped_text": "If you want to find out what this view point at this point - but is this point circle view at the entire idea?",
+  "plain_argmax_text": "If you want to find out what this view view at this point - but is this point circle point at the entire view?",
+  "levels": [
+   " in, Last updated",
+   " to, point<|endoftext|><|endoftext|><|endoftext|>",
+   " to point, point point?<|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " to to point point, point point?<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " you to find point point, this point point point??<|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If want find out view point point - this point point the entire?<|endoftext|>:<|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " you want find find this view view this point - this this point at entire entire?<|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If want want find find this view view view this point - but this this point point at entire entire?<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If you want to find out what this view view at this point - but is this point circle point at the entire view?<|endoftext|><|endoftext|><|endoftext|><|endoftext|>Sub<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 911.1,
+  "decode_ms_B1": 25.0,
+  "generate_ms_B8": 8876.6,
+  "samples": [
+   "When I write this evolution, but I tried to try, rewrite the entire origins of the existence disappearance of a one-point point, and the circle view to some point its entire original?",
+   "I trying to trambaming a view point at one point - but this will this write the truth that I been answering topping the rest of my entire circle?",
+   "The entire concept of puzzle, but this the turning point - bringing this original view into a view of my entire finger.",
+   "I want to find myself, as I try to find a point - one view above this view - the original of the entire point: one point above - the word puzzle odd.",
+   "The origins of be one of the whole songs of the point of thisVR point - but the view of this view. notion between the point in this seems to be the original design?",
+   "Every time I've writing my view of my this point view a blank point', but does seems this was the entire?",
+   "I use the word of this point of the circle - one-point point to view - but this was the entire.",
+   "What does the word of this circle point of a view of the entire of my view, and the question: is the current point point above one point of my original... though we design?"
+  ]
+ },
+ {
+  "id": "q5",
+  "variant": "think_tail",
+  "src_tokens": 470,
+  "src_truncated": false,
+  "shipped_text": "If you want to find out what this view point at this point - but is this point circle view at the entire idea?",
+  "plain_argmax_text": "If you want to find out what this view view at this point - but is this point circle point at the entire view?",
+  "levels": [
+   " in, Last updated",
+   " to, point<|endoftext|><|endoftext|><|endoftext|>",
+   " to point, point point?<|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " to to point point, point point?<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " you to find point point, this point point point??<|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If want find out view point point - this point point the entire?<|endoftext|>:<|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " you want find find this view view this point - this this point at entire entire?<|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If want want find find this view view view this point - but this this point point at entire entire?<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If you want to find out what this view view at this point - but is this point circle point at the entire view?<|endoftext|><|endoftext|><|endoftext|><|endoftext|>Sub<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 946.4,
+  "decode_ms_B1": 25.9,
+  "generate_ms_B8": 8830.6,
+  "samples": [
+   "When I write this evolution, but I tried to try, rewrite the entire origins of the existence disappearance of a one-point point, and the circle view to some point its entire original?",
+   "I trying to trambaming a view point at one point - but this will this write the truth that I been answering topping the rest of my entire circle?",
+   "The entire concept of puzzle, but this the turning point - bringing this original view into a view of my entire finger.",
+   "I want to find myself, as I try to find a point - one view above this view - the original of the entire point: one point above - the word puzzle odd.",
+   "The origins of be one of the whole songs of the point of thisVR point - but the view of this view. notion between the point in this seems to be the original design?",
+   "Every time I've writing my view of my this point view a blank point', but does seems this was the entire?",
+   "I use the word of this point of the circle - one-point point to view - but this was the entire.",
+   "What does the word of this circle point of a view of the entire of my view, and the question: is the current point point above one point of my original... though we design?"
+  ]
+ },
+ {
+  "id": "q5",
+  "variant": "answer",
+  "src_tokens": 12,
+  "src_truncated": false,
+  "shipped_text": "The world's richest and earth scientists on the planet - the planet - as \"devolarise\" is polarolarisingisation - polar bearsisedises scientific polar on America's history.",
+  "plain_argmax_text": "The world's richest and and earth scientists on the planet - the planet - as \"devolarise\" is polarolarolar polar - polar polar polar polar polar polar on America's history.",
+  "levels": [
+   " on the the<|endoftext|>",
+   " unsupported the - -<|endoftext|><|endoftext|>",
+   " richest the the - the - the<|endoftext|><|endoftext|><|endoftext|>",
+   " world richest the planet - - - - - history history<|endoftext|><|endoftext|><|endoftext|>",
+   "'s's earth on the - - bears - - - - bears bears history history<|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "The world richest earth the planet - - - polar - is polar polar - polar polar polar's history.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "The world richest and planet on the - planet - \" \" polar - is polar polar - polar polar polar polar America history history.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "The world's richest and earth on on the planet planet - - as \"olar - - isolarolar - - polar polar polar polar America's history history.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "The world's richest and and earth scientists on the planet - the planet - as \"devolarise\" is polarolarolar polar - polar polar polar polar polar polar on America's history.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 945.3,
+  "decode_ms_B1": 26.1,
+  "generate_ms_B8": 8632.5,
+  "samples": [
+   "The 40th anniversary of March was the economies of Africa's disaster, with the loss of 48 Asian economies rocked the world.",
+   " week after the95- war rocked rocked the Mosul of eastern Mosul - the most controversial, takes place in on Wednesday.",
+   "Great Britain men's wereisedised as they cruised to Australia's14-14, been final on of the G Geses.",
+   "Sur's communistjiang takes place over the silence of the 26 victims of one of the world's oldest synchronisedised projects known - known \" \" Pigs killings\", scientists say.",
+   "The mysterious around the planet lies now just the surface of the planet - almost almost 3 -000- Earth have said.",
+   "The the latest of the world's biggest-powered coal-ified has intensify - the latest in a latest test test.",
+   "Scientists scientists trying to solve the origins of the Planet--, have beenededened realities on their ocean Space crakes.",
+   "For around 40 countries around just a century after a crunch of global economies - nowiansians are upon turned their worldwide scienceefuls."
+  ]
+ },
+ {
+  "id": "q1",
+  "variant": "think_head",
+  "src_tokens": 293,
+  "src_truncated": false,
+  "shipped_text": "If do not know you might have heard of the sound of air, and understand how long it is much sound is heard.",
+  "plain_argmax_text": "If do not know you might have heard of the sound of air, and understand how long it is much sound is heard.",
+  "levels": [
+   " the updated<|endoftext|><|endoftext|>",
+   " you air is<|endoftext|><|endoftext|><|endoftext|>",
+   " you sound sound it is<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " you might sound air how it sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " you know might sound of air how it much sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If not might have sound of of air and long it sound sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If not know might have sound sound of air, how how it much sound sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If not not know might have sound sound sound sound air, and how how it much sound sound sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If do not know you might have heard of the sound of air, and understand how long it is much sound is heard.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 892.0,
+  "decode_ms_B1": 51.4,
+  "generate_ms_B8": 8005.7,
+  "samples": [
+   "If you're not clear that I'll probably not have as much about the sound of your might, and I mean.",
+   "I don't want enough to know how and long long the sound of sound that. might have heard too long and long.",
+   "I've been asking it is ask for a good thing - but it is exactly what means to mean sound in air.",
+   "I can find more much effective evidence of how about heard, has why and how much we can be sound at air.",
+   "What do you usually know too too easy to find and, what you is about and how it of sound sounds in air?",
+   "On Wednesday, BBC News website is taking a long time to understand why the length of its air when you're sound the sound heard?",
+   "Who can be worried about what is and sound is at the system of as good as you might think?",
+   "It is hard to know what you think and is how the speed of sound in which has heard at the World event.panel it will be too,"
+  ]
+ },
+ {
+  "id": "q1",
+  "variant": "think_tail",
+  "src_tokens": 293,
+  "src_truncated": false,
+  "shipped_text": "If do not know you might have heard of the sound of air, and understand how long it is much sound is heard.",
+  "plain_argmax_text": "If do not know you might have heard of the sound of air, and understand how long it is much sound is heard.",
+  "levels": [
+   " the updated<|endoftext|><|endoftext|>",
+   " you air is<|endoftext|><|endoftext|><|endoftext|>",
+   " you sound sound it is<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " you might sound air how it sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " you know might sound of air how it much sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If not might have sound of of air and long it sound sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If not know might have sound sound of air, how how it much sound sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If not not know might have sound sound sound sound air, and how how it much sound sound sound<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "If do not know you might have heard of the sound of air, and understand how long it is much sound is heard.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 922.9,
+  "decode_ms_B1": 26.4,
+  "generate_ms_B8": 9324.0,
+  "samples": [
+   "If you're not clear that I'll probably not have as much about the sound of your might, and I mean.",
+   "I don't want enough to know how and long long the sound of sound that. might have heard too long and long.",
+   "I've been asking it is ask for a good thing - but it is exactly what means to mean sound in air.",
+   "I can find more much effective evidence of how about heard, has why and how much we can be sound at air.",
+   "What do you usually know too too easy to find and, what you is about and how it of sound sounds in air?",
+   "On Wednesday, BBC News website is taking a long time to understand why the length of its air when you're sound the sound heard?",
+   "Who can be worried about what is and sound is at the system of as good as you might think?",
+   "It is hard to know what you think and is how the speed of sound in which has heard at the World event.panel it will be too,"
+  ]
+ },
+ {
+  "id": "q1",
+  "variant": "answer",
+  "src_tokens": 14,
+  "src_truncated": false,
+  "shipped_text": "What does the biggest answer question ask on the questions??\"",
+  "plain_argmax_text": "What does the biggest answer question answer on the answer??",
+  "levels": [
+   " has updated<|endoftext|> updated",
+   ": Last<|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " answer answer<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   " answer answer question?:<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "What answer answer burning?<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "What What answer answer burning??<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>?<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "What the answer answer question burning??<|endoftext|> updated<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "What does the biggest question question the burning??<|endoftext|>old<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+   "What does the biggest answer question answer on the answer??<|endoftext|>A<|endoftext|><|endoftext|><|endoftext|>.<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>\".<|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>"
+  ],
+  "generate_ms_B1": 933.1,
+  "decode_ms_B1": 25.1,
+  "generate_ms_B8": 9126.2,
+  "samples": [
+   "What do you do a question ask question, the most serious basic questions?",
+   "The fastest question for the biggest tech ever ever done and you ask.",
+   "What's's What question ask the the long health Who Abu Dhabi?",
+   "What do you food money for your household for your house?",
+   "What are USA's questions question ask asked a asking $21.6 million (Â14.9bn) prize money?",
+   " household hot drink food meat is too your favourite pet dog?",
+   "What's question?",
+   "What's question food question the referendum's health question ask: ask your questions for the answer questionnaires: What really actually food?"
+  ]
+ }
+]

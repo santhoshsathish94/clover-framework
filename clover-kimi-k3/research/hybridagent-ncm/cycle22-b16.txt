@@ -1,0 +1,11 @@
+q4 s0: b16 gen 1080 text 645 lat 435 spans 4 forced 0 end eos ans '24' | default gen 1243 text 914 end eos | blocked gen 525 text 525 end eos ans '24'
+q4 s1: b16 gen 482 text 409 lat 73 spans 2 forced 0 end eos ans '24' | default gen 975 text 803 end eos | blocked gen 486 text 486 end eos ans '24'
+q4 s2: b16 gen 636 text 434 lat 202 spans 5 forced 0 end eos ans '24' | default gen 463 text 399 end eos | blocked gen 494 text 494 end eos ans '24'
+q5 s0: b16 gen 1435 text 717 lat 718 spans 20 forced 0 end eos ans '(-12, -8, 36)' | default gen 988 text 748 end eos | blocked gen 1289 text 1289 end eos ans '(-12,-8,36)'
+q5 s1: b16 gen 1079 text 771 lat 308 spans 8 forced 0 end eos ans '(-12, -8, 36)' | default gen 1127 text 803 end eos | blocked gen 2785 text 2785 end eos ans '(-12, -8, 36)'
+q5 s2: b16 gen 1280 text 737 lat 543 spans 8 forced 0 end eos ans '(-12,-8,52)' | default gen 1798 text 1275 end eos | blocked gen 4096 text 4096 end budget ans None
+q1 s0: b16 gen 725 text 531 lat 194 spans 7 forced 0 end eos ans '28' | default gen 654 text 503 end eos | blocked gen 816 text 816 end eos ans '29'
+q1 s1: b16 gen 677 text 427 lat 250 spans 6 forced 0 end eos ans '29'
+q1 s2: b16 gen 707 text 477 lat 230 spans 6 forced 0 end eos ans '29'
+matched 7 (gen, text): {'b16': [6717, 4244], 'def': [7248, 5445], 'blk': [10491, 10491]}
+both-finished (gen, text): {'b16': [5437, 3507], 'blk': [6395, 6395]}

@@ -1,0 +1,62 @@
+LOAD
+ 23:13:01 up 1 day, 22:57,  5 users,  load average: 16.77, 14.26, 9.27
+0, 22317 MiB, 0 %;1, 22357 MiB, 0 %;2, 22385 MiB, 100 %;3, 22369 MiB, 0 %;4, 22359 MiB, 0 %;5, 22359 MiB, 0 %;6, 22391 MiB, 0 %;7, 22359 MiB, 0 %;
+PROCS
+    PID     ELAPSED %CPU COMMAND
+ 681844       00:00  200 ps -eo pid,etime,pcpu,args --sort=-pcpu
+ 681638       06:44  145 /home/usergpu/k3gpu/build/gpu15/whole-model-gpu /home/usergpu/k3gpu/build/gpu15 /opt/clover-k3/datasets/c
+ 681779       00:02  0.9 sshd: usergpu [priv]
+    605  1-22:57:55  0.5 [kcompactd1]
+    604  1-22:57:55  0.4 [kcompactd0]
+DATA
+ls: cannot access '/home/usergpu/ncm/data/tinystories': No such file or directory
+/home/usergpu/ncm/data:
+sudoku
+sudoku-easy
+sudoku-hard
+sudoku-medium
+wmt14
+xsum
+2.2M	/home/usergpu/ncm/data/sudoku
+0	/home/usergpu/ncm/data/sudoku-easy
+0	/home/usergpu/ncm/data/sudoku-hard
+0	/home/usergpu/ncm/data/sudoku-medium
+764K	/home/usergpu/ncm/data/wmt14
+20M	/home/usergpu/ncm/data/xsum
+ART
+total 564700
+drwxrwxr-x 2 usergpu usergpu      4096 Oct 20 10:36 .
+drwxrwxr-x 9 usergpu usergpu      4096 Oct 20 12:28 ..
+-rw-rw-r-- 1 usergpu usergpu    108277 Oct 20 10:36 bpe_merges_8192.pickle
+-rw-rw-r-- 1 usergpu usergpu     95122 Oct 20 10:36 bpe_vocab_8192.pickle
+-rw-rw-r-- 1 usergpu usergpu      2483 Oct 20 10:36 config.yaml
+-rw-rw-r-- 1 usergpu usergpu 356160651 Oct 20 10:36 generator.pt
+-rw-rw-r-- 1 usergpu usergpu       255 Oct 20 10:36 README.md
+-rw-rw-r-- 1 usergpu usergpu 221861835 Oct 20 10:36 tokenizer.pt
+HF
+blobs
+CACHEDIR.TAG
+datasets--EdinburghNLP--xsum
+datasets--embedded-language-flows--xsum_validation_t5
+datasets--hazyresearch--ncm-datasets
+datasets--Santhoshsathish94--clover-kimi-k3
+models--bert-base-uncased
+models--embedded-language-flows--ELF-B-xsum-torch
+models--fyv587--aurora-gpt2-xsum
+models--fyv587--aurora-text-autoencoder
+models--gpt2
+models--gpt2-large
+models--hazyresearch--ncm-checkpoints
+models--Qwen--Qwen3-0.6B
+models--t5-small
+version.txt
+VENVS
+/home/usergpu/aurora/venv
+/home/usergpu/elf/venv
+/home/usergpu/flm/venv
+/home/usergpu/ncm/venv
+NET
+HTTP/2 200 
+/dev/mapper/ubuntu--vg-ubuntu--lv  1.8T  1.5T  220G  88% /
+               total        used        free      shared  buff/cache   available
+Mem:             376         273          46           2          61         102

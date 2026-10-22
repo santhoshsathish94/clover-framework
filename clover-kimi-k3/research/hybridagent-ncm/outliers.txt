@@ -1,0 +1,8 @@
+trace2 step 54 in_id 220 rel16 92.6 out16 6974 prev ids [220, 17, 3039] mode_before DECODE
+trace2 step 371 in_id 15 rel16 117.8 out16 8547 prev ids [6422, 7, 16] mode_before DECODE
+trace-q4-s1 step 214 in_id 15 rel16 123.4 out16 8742 prev ids [6422, 7, 16] mode_before DECODE
+trace-q4-s1 continued step 1159 pos-in-span 30 P(close) 0.363 lm_top1_is_close False
+trace-q5 continued step 544 pos-in-span 18 P(close) 0.345 lm_top1_is_close False
+trace-q5-s1 step 552 in_id 16 rel16 169.5 out16 11312 prev ids [1265, 387, 10293] mode_before DECODE
+trace-q5-s1 continued step 436 pos-in-span 4 P(close) 0.994 lm_top1_is_close True
+trace-q5-s1 continued step 461 pos-in-span 29 P(close) 0.42 lm_top1_is_close False

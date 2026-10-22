@@ -1,0 +1,22 @@
+noise reference: mean nearest-token cosine of 2,000 Gaussian vectors = 0.0692 (max 0.0920)
+files 17, spans 131, latent steps 4160
+readability per span: mean 0.844, median 0.863, min 0.600, max 0.990; above noise reference 131 of 131
+context specificity (positive scores): n 17 of 131, median 4.52, mean 6.42; spans with score > 1: 17
+specificity cases: {'own>0/others>0': 17, 'own=0/others=0': 68, 'own>0/others=0': 46} (den0 = no other question shares a content word with the span, undefined; own0 = span shares none with its own question; pos = defined and positive)
+meaningful region (readability > noise and specificity > 1): 17 of 131
+  q1: spans 15, readability mean 0.829, specificity>1 6 of 6
+  q2: spans 12, readability mean 0.826, specificity>1 5 of 5
+  q3: spans 12, readability mean 0.777, specificity>1 5 of 5
+  q4: spans 30, readability mean 0.814, specificity>1 0 of 0
+  q5: spans 62, readability mean 0.878, specificity>1 1 of 1
+latent steps: nearest-token cosine mean 0.862, median 0.963, share above 0.9: 0.62, above 0.5: 0.93
+
+examples (file, span length, mean cosine, pseudo-text):
+- trace-q3-search q=q3 len 21 cos 0.79: 'For, the distance of water is 1 g cmL (1000 kg/ liters).'
+- trace-q2-search q=q2 len 15 cos 0.80: 'Let me start by searching for the speed of light in minutes per minute.'
+- trace-q4-search q=q4 len 18 cos 0.76: 'Wait, maybe I should verify with a example. Let me check 100!'
+- trace-q3-search-s1 q=q3 len 44 cos 0.88: 'For milk, if I use the average of of 1.03 g cm┬│, then 1 liters would be 1.03 * 1000 = 1030 grams.'
+- trace-q5 q=q5 len 30 cos 0.94: 'Therefore, the equation of the new circle should be (x - 6)┬▓ + (y - 4)┬▓ = 16.'
+- trace-q5-search q=q5 len 56 cos 0.89: "First, I know that the circle x┬▓ + y┬▓ = 16 is a circle with radius 4 and at the origin (0, 0). The problem is asks for the equation of this circle after it's divided over the point (3, 2)."
+- trace-q5-search q=q5 len 18 cos 0.96: '(6 - x)┬▓ + (4 - y)┬▓ = 16</latent>'
+- trace-q5-s1 q=q5 len 23 cos 0.75: 'Wait, maybe, need to be sure that the radius of the circle is also a circle. Let me confirm.'

@@ -1,0 +1,10 @@
+trace-q4-search: gen 1243 text 914 latent 329 spans 13 (anchor 13 forced 0) span median 13 max 102 end eos wall 570s t_gen 567s py 0 se 0 ans '24'
+trace-q4-iv-noise05-s0: gen 481 text 455 latent 26 spans 2 (anchor 2 forced 0) span median 13.0 max 16 end eos wall 208s t_gen 202s py 1 se 0 ans '24' iv_rel median 0.500
+trace-q4-iv-noise20-s0: gen 422 text 328 latent 94 spans 3 (anchor 3 forced 0) span median 25 max 60 end eos wall 191s t_gen 185s py 1 se 0 ans '24' iv_rel median 2.000
+trace-q4-iv-random-s0: gen 517 text 482 latent 35 spans 7 (anchor 7 forced 0) span median 4 max 9 end eos wall 225s t_gen 219s py 1 se 0 ans '24' iv_rel median 1.388
+trace-q4-iv-nearest-s0: gen 888 text 574 latent 314 spans 7 (anchor 7 forced 0) span median 23 max 127 end eos wall 414s t_gen 406s py 1 se 0 ans '24' iv_rel median 0.419
+trace-q5-search: gen 988 text 748 latent 240 spans 8 (anchor 8 forced 0) span median 27.0 max 56 end eos wall 468s t_gen 443s py 3 se 0 ans '(-12, -8, 36)'
+trace-q5-iv-noise05-s0: gen 848 text 620 latent 228 spans 5 (anchor 5 forced 0) span median 48 max 65 end eos wall 411s t_gen 380s py 2 se 0 ans '(-12, -8, 36)' iv_rel median 0.500
+trace-q5-iv-noise20-s0: gen 2048 text 1620 latent 428 spans 31 (anchor 31 forced 0) span median 7 max 51 end budget wall 953s t_gen 948s py 0 se 0 ans None iv_rel median 2.000
+trace-q5-iv-random-s0: gen 1406 text 1330 latent 76 spans 18 (anchor 18 forced 0) span median 4.0 max 6 end eos wall 628s t_gen 614s py 1 se 0 ans '(-12,-8,36)' iv_rel median 1.394
+trace-q5-iv-nearest-s0: gen 1150 text 869 latent 281 spans 4 (anchor 4 forced 0) span median 61.5 max 154 end eos wall 582s t_gen 528s py 4 se 0 ans '(-12, -8, 36)' iv_rel median 0.378

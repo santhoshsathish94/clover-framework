@@ -1,0 +1,16 @@
+== q4 seed0 (expected 24)
+  latent run : {'steps': 1243, 'latent': 329, 'text_token_steps': 914, 'chars': 2704, 'wall': 553, 'end': 'eos', 'py': 0, 'search': 0, 'ans': ['\\$$ 20 + 4 = 24 \n\\ $$\n\nThus, the number of trailing zeros in'], 'opens': 13}
+  text-only  : {'steps': 241, 'latent': 0, 'text_token_steps': 241, 'chars': 945, 'wall': 103, 'end': 'tool_cap', 'py': 0, 'search': 0, 'ans': [], 'opens': 0}
+  steps ratio text-only / latent run: 0.19 ; wall ratio 0.19
+== q4 seed1 (expected 24)
+  latent run : {'steps': 1208, 'latent': 172, 'text_token_steps': 1036, 'chars': 3316, 'wall': 531, 'end': 'eos', 'py': 3, 'search': 0, 'ans': ['The final answer is \\[ \\boxed{24} \\]'], 'opens': 10}
+  text-only  : {'steps': 494, 'latent': 0, 'text_token_steps': 494, 'chars': 1668, 'wall': 209, 'end': 'eos', 'py': 1, 'search': 0, 'ans': ['The number of trailing zeros in \\(100!\\) is \\(\\boxed{24}\\).'], 'opens': 0}
+  steps ratio text-only / latent run: 0.41 ; wall ratio 0.39
+== q5 seed0 (expected (-12, -8, 36))
+  latent run : {'steps': 1035, 'latent': 240, 'text_token_steps': 795, 'chars': 2435, 'wall': 462, 'end': 'eos', 'py': 3, 'search': 0, 'ans': ['\\boxed{(-12, -8, 36)}'], 'opens': 8}
+  text-only  : {'steps': 1316, 'latent': 0, 'text_token_steps': 1316, 'chars': 3929, 'wall': 562, 'end': 'eos', 'py': 1, 'search': 0, 'ans': ['\\boxed{(-12,-8,36)}'], 'opens': 0}
+  steps ratio text-only / latent run: 1.27 ; wall ratio 1.22
+== q5 seed1 (expected (-12, -8, 36))
+  latent run : {'steps': 1148, 'latent': 324, 'text_token_steps': 824, 'chars': 2407, 'wall': 517, 'end': 'eos', 'py': 1, 'search': 0, 'ans': ['\\boxed{(-12, -8, 36)}'], 'opens': 10}
+  text-only  : {'steps': 2870, 'latent': 0, 'text_token_steps': 2870, 'chars': 8722, 'wall': 1297, 'end': 'eos', 'py': 1, 'search': 0, 'ans': ['\\boxed{(-12, -8, 36)}'], 'opens': 0}
+  steps ratio text-only / latent run: 2.50 ; wall ratio 2.51

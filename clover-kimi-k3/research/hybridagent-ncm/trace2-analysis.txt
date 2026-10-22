@@ -1,0 +1,59 @@
+Loading weights: 100%|| 399/399 [00:00<00:00, 16025.35it/s]
+DONE wall 553.4 steps 1243 prefill 2.6 gate {'old_len': 2202, 'new_len': 2704, 'first_diff': None, 'new_is_prefix_of_old': False}
+budget 2048 wall_s 553.4 prefill_s 2.6 prompt_len 529
+result {'turns': 1, 'python_calls': 0, 'search_calls': 0, 'tool_requests': 0, 'generation_steps': 1243, 'latent_steps': 329, 'latent_spans': 13, 'anchor_exits': 13, 'forced_exits': 0, 'end_reason': 'eos'}
+gate (same seed and settings as the earlier 1,024-step run; instrument must not change the text): {'old_len': 2202, 'new_len': 2704, 'first_diff': None, 'new_is_prefix_of_old': False}
+steps 1243
+
+== steps by kind of input fed
+token                    n=888
+token:<latent>           n=13
+latent                   n=329
+token:exit(</latent>)    n=13
+
+== stage times in ms (mean over steps of that kind; net = total minus my own observation work)
+kind                       total     net  forward  layers   norm   head   link  sample   other
+token                      422.5   422.3    416.3   387.2   0.09   28.3   0.00    5.54     0.5
+token:<latent>             421.1   420.9    414.9   385.8   0.09   28.4   0.00    5.57     0.4
+latent                     496.9   416.7    414.7   385.5   0.09   28.4   1.91    0.00     0.2
+token:exit(</latent>)      502.0   421.8    419.7   390.5   0.09   28.4   1.90    0.00     0.2
+median total ms per kind: {'token': 424.6, 'token:<latent>': 419.4, 'latent': 497.6, 'token:exit(</latent>)': 501.4}
+
+== per-layer profile at the last position: mean output norm / relative update ||out-in||/||in|| / cos(in,out)
+text-step n=888, latent-step n=329
+layer |   T norm   T upd  T cos |   L norm   L upd  L cos
+    0 |     10.9   6.321  0.375 |     23.2   2.324  0.593
+    1 |     14.6   0.492  0.954 |     27.4   0.343  0.961
+    2 |     17.3   0.350  0.961 |     28.2   0.194  0.981
+    3 |     21.4   0.420  0.950 |     29.9   0.244  0.973
+    5 |     39.4   0.526  0.940 |     43.1   0.385  0.954
+    8 |     54.8   0.348  0.947 |     57.6   0.382  0.939
+   12 |     65.7   0.386  0.931 |     68.9   0.368  0.937
+   16 |     98.5   0.563  0.948 |     82.0   0.300  0.957
+   20 |    146.4   0.400  0.934 |    127.7   0.372  0.944
+   24 |    276.3   0.483  0.927 |    256.3   0.441  0.943
+   28 |    450.4   0.369  0.949 |    427.8   0.331  0.960
+   30 |    593.2   0.365  0.953 |    572.4   0.354  0.960
+   32 |    805.0   0.405  0.945 |    814.1   0.389  0.955
+   33 |    953.3   0.395  0.946 |    970.2   0.365  0.957
+   34 |   1346.3   0.639  0.923 |   1385.3   0.589  0.943
+   35 |   1483.8   0.481  0.920 |   2106.3   0.669  0.949
+
+== norms
+fed vector norm: token steps mean 1.644 | latent steps (R(h)) mean 8.419
+final normed hidden norm (what the head and HybridLink read): token steps 139.92 | latent steps 75.33
+max |last_hidden (engine, hidden_states[-1]) - output of final norm| over all steps: 0.0
+
+== latent steps: readouts of the same hidden state two ways
+latent-mode decode steps (state read before the step): 342
+steps that ended the span (engine fed </latent>): 13 | steps that continued: 329
+cosine of R(h) to its nearest token embedding: continued mean 0.84 min 0.253 max 0.998
+cosine of R(h) to Emb(</latent>): continued mean 0.084 | at exit [0.999, 0.998, 0.999, 0.988, 0.907, 0.939, 0.999, 0.994, 0.897, 0.998, 0.999, 0.999, 0.999]
+LM-head P(</latent>) at the step: continued mean 0.0015 max 0.1919 | at exit [0.998, 0.957, 0.987, 0.972, 0.947, 0.49, 0.918, 0.628, 0.674, 0.997, 0.993, 0.996, 0.993]
+per latent step, which readout says </latent> (before the minimum-steps rule): {'lm_top1==close': 0, 'nn==close': 3, 'both': 13, 'neither': 326}
+LM-head top-1 probability in latent steps mean 0.845 | entropy (plain softmax) mean 0.522
+sampling-distribution entropy in text steps (temperature, top-k, top-p applied) mean 0.085 | P(sampled token) mean 0.944
+P(<latent>) at the steps where <latent> was sampled: [1.0, 1.0, 1.0, 0.931, 0.969, 1.0, 1.0, 0.938, 0.197, 0.827, 1.0, 0.739, 1.0] | mean P(<latent>) at all text steps 0.0031
+
+== spans
+span lengths (latent steps): [102, 13, 6, 4, 24, 35, 71, 23, 9, 18, 11, 8, 5] | open at the end: 0

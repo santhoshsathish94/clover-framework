@@ -1,0 +1,18 @@
+== q1 nolat
+== q1 [trace-q1-nolat-search.json] (expected '29')
+  steps 872, latent steps 0 (0% of steps), spans 0 [], python calls 1, end eos, wall 369s, prompt_len 550
+  answer block: ['The final answer is \\[ \\boxed{29} \\]']
+  net step ms: text 419.5, latent None | exits 0 (min P(close) None), cosine-only close 0, LM-head-only close 0, max P(close) on continued 0
+  layer-16 text steps with rel update >0.9: 1 of 872; ids [220]
+== q2 nolat
+== q2 [trace-q2-nolat-search.json] (expected '8')
+  steps 2589, latent steps 0 (0% of steps), spans 0 [], python calls 0, end eos, wall 1131s, prompt_len 538
+  answer block: ['The final answer is \\[ \\boxed{8} \\]']
+  net step ms: text 434.1, latent None | exits 0 (min P(close) None), cosine-only close 0, LM-head-only close 0, max P(close) on continued 0
+  layer-16 text steps with rel update >0.9: 1 of 2589; ids [13]
+== q3 nolat
+== q3 [trace-q3-nolat-search.json] (expected '30')
+  steps 5175, latent steps 0 (0% of steps), spans 0 [], python calls 0, end budget, wall 2516s, prompt_len 550
+  answer block: []
+  net step ms: text 484.9, latent None | exits 0 (min P(close) None), cosine-only close 0, LM-head-only close 0, max P(close) on continued 0
+  layer-16 text steps with rel update >0.9: 1 of 5174; ids [16]

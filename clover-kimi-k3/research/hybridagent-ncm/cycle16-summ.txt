@@ -1,0 +1,12 @@
+== q4 [trace-q4-s2.json] (expected '24')
+  steps 471, latent steps 64 (14% of steps), spans 3 [45, 10, 9], python calls 1, end eos, wall 206s, prompt_len 529
+  answer block: ['The final answer is \\[ \\boxed{24} \\]']
+== q4 [trace-q4-nolat-s2.json] (expected '24')
+  steps 502, latent steps 0 (0% of steps), spans 0 [], python calls 1, end eos, wall 213s, prompt_len 529
+  answer block: ['The final answer is \\boxed{24}.']
+== q5 [trace-q5-s2.json] (expected '(-12, -8, 36)')
+  steps 1894, latent steps 523 (28% of steps), spans 16 [85, 78, 67, 10, 9, 5, 9, 19, 43, 71, 23, 25, 49, 5, 19, 6], python calls 1, end eos, wall 890s, prompt_len 577
+  answer block: ['\\boxed{(-12, -8, 36)}']
+== q5 [trace-q5-nolat-s2.json] (expected '(-12, -8, 36)')
+  steps 4097, latent steps 0 (0% of steps), spans 0 [], python calls 0, end budget, wall 1892s, prompt_len 577
+  answer block: []

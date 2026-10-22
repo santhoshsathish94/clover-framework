@@ -1,0 +1,4 @@
+docs with hypotheses: 11334 of 11334
+documents 11334, with at least one fact 10139, facts 37068
+NCM shipped hypothesis keeps 17187/37068 = 46.4% of the reference facts that are in the source
+lead-48 tokens of the source keeps 7498/37068 = 20.2%

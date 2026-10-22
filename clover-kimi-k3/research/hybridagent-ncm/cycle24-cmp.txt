@@ -1,0 +1,6 @@
+trace-q4-s2: gen 463 text 399 latent 64 spans 3 (anchor 3 forced 0) span median 10 max 45 end eos wall 206s t_gen 200s py 1 se 0 ans '24'
+trace-q4-cc2-s2: gen 463 text 399 latent 64 spans 3 (anchor 3 forced 0) span median 10 max 45 end eos wall 207s t_gen 201s py 1 se 0 ans '24'
+trace-q1-search: gen 654 text 503 latent 151 spans 7 (anchor 7 forced 0) span median 21 max 59 end eos wall 871s t_gen 306s py 1 se 1 ans '29'
+trace-q1-cc-s0: gen 934 text 732 latent 202 spans 8 (anchor 8 forced 0) span median 21.5 max 59 end eos wall 1088s t_gen 447s py 3 se 1 ans '29'
+job-q5-s2.start
+job-q5-search.start

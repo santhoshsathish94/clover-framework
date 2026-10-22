@@ -1,0 +1,266 @@
+{
+ "n": 48,
+ "sampling": {
+  "temp": 1.0,
+  "top_k": 0,
+  "top_p": 1.0
+ },
+ "seeds": 3,
+ "load": {
+  "dropped_shape_mismatch": [],
+  "missing": [],
+  "unexpected": []
+ },
+ "retention": {
+  "matched_plan_generated (mean over seeds)": 0.5962,
+  "matched per seed": [
+   0.5949,
+   0.6108,
+   0.5829
+  ],
+  "shuffled_plan_generated (control: plan of another story, scored against this plan)": 0.06,
+  "shuffled per seed": [
+   0.0563,
+   0.064,
+   0.0598
+  ],
+  "true_story (ceiling)": null
+ },
+ "gen_seconds": 6.2,
+ "examples": [
+  {
+   "plan": "curious girl Lily; in a park; Lily finds a lost puppy; she comforts the puppy; she looks for the owner; she calls a pet shelter; the owner is found and grateful.</think></think></think></think></think></think></think></think></think></think></think></think></think>",
+   "generated": "Once upon a time, there was a curious girl named Lily. She loved to play outside and explore the world around her. One, she went for a walk in the park and found a cute puppy. \"Oh no!\" said the puppy. \nLily said the puppy, \"I'm here to help you. I'm here to help you find your owner owner.\" \nLily looked around everywhere, but she couldn't find the puppy owner. So, she called out to someone someone nearby, \"Please get my pet shelter.\" \nThe owner was so grateful to have found her lost kitten and she was grateful. She and",
+   "true": ""
+  },
+  {
+   "plan": "shy boy Tim; in his bedroom at night; Tim is afraid of the dark; his sister Sarah gives him a nightlight; Tim feels safer and falls asleep peacefully.",
+   "generated": "Once upon a time, there was a shy boy named Tim. Tim was always scared of the dark. Every night, he would wake up and wake in his bedroom. When the bed was dark, Tim would go inside and make him scared.\nOne night, Tim's big sister, Sarah, tucked him cozy into the living room. It was a small nightock, but Tim felt safer. He felt safe that Sarah had left and nothing. \n\"That's great Tim,\" she said. \"You can live in my upstairs now!\"\nTim to his room and fell asleep.. He had sweet dreams, nighting a",
+   "true": ""
+  },
+  {
+   "plan": "Robot named R2D2; in a futuristic city; R2D2 watches humans dance; R2D2 asks a dance teacher for lessons; R2D2 practices daily; R2D2 performs a dance at a festival.",
+   "generated": "Once upon a time, there was a robot who lived in a.ththory. Every day, he called the C2 Dare and watch the monsters family dance around the city. He loved to watch the mice performed with their talented and moves ideas.\nOne day, R2ory Dope went to the teacher and asked him a lesson if he would teach him how to spin him and dance. R R was2 was so very happy and practiced every day.\nHe practiced hard every everyday until he finally found a long dance at the stadium. He started at the dance and everyone clapped for him.  Rapas using",
+   "true": ""
+  },
+  {
+   "plan": "Two friends, Alex and Jamie; in a forest; they find a big tree; they gather materials; they work together to build a treehouse; they finish and play inside.",
+   "generated": "Once upon a time, there were two best friends, Alex and Jamie. They were always together and were always to learn their new new. \nOne day, and Jamie were walking in the forest until they came to a big tree. They were both very excited and decided to go inside. \n Alex said to Jamie, \"Let's make in the treehouse!\" Jamie agreed, so they started together. Together, they used to gather the perfect sticks and, yummy treehouse for their backyard. They quickly gathered the sticks and sticks together and stacked them organized.\nAfter a few minutes, they had the treehouse and ran inside. They both",
+   "true": ""
+  },
+  {
+   "plan": "Little fish Finley; in a small pond; dreams of the ocean; meets a wise old fish; learns about the ocean's wonders; decides to swim towards the ocean's edge; faces challenges but perseveres; finally reaches the ocean and is amazed.",
+   "generated": "nyny was an adorable little fish who lived in a small pond. Every day, he dreaming of he explored the ocean. He dreamed of all whole and excitingies. \nOne day, he met a wise old fish who swam by him by cream side of the ocean. Fin asked why the ocean was so big swimming. he thought about this The this the He was amazed of the ocean.\n swam swam ahead, he swam towards the edge of the ocean. He was a bit butgingging challen he urized with his strength. \nAt last Fin reached the surface of the ocean. It was so beautiful! Fin was",
+   "true": ""
+  },
+  {
+   "plan": "Cat named Whiskers; in a house with a mouse named Mousie; Whiskers tries to catch Mousie but fails repeatedly; Mousie outsmarts Whiskers each time; Whiskers learns to play with Mousie instead of chasing.",
+   "generated": "Once upon a time, there was a cat named Whiskers. Whiskers liked to play with his ball and chase mice for lunch. One day, Whiskers found a mouse namedousie. He wanted to catch mouse like Mousie. Whiskers tried to catch Mousa the mouse again, but Tomous out out of Whiskers of and Whiskers didn't give up.\nM meant was competitive. Startled, he knew it right words. When Whiskers came closer, Mousa at him and said, \"You are being so quick.\" Whiskers smiled and felt great that After after that, Whiskers played played with Housie every day.\n",
+   "true": ""
+  },
+  {
+   "plan": "A young girl named Lily; on a rainy day; she finds a red umbrella; uses it to stay dry; shares it with a lost puppy; they become friends.",
+   "generated": " day day was gloomy and windy. All an umbrella was a in a safe and safe place.\nOne day, a 3-year-old girl named Lily found an red umbrella. Lily liked the umbrella so much that she decided to use it. She knew the red umbrella could keep her safe.\n \nShe held the umbrella to the umbrella and walked to it. She quickly put Lily hands over the ice his there but the puppy was a little puppy. It had a lost puppy! The puppy was so happy to find the puppy and they went the puppy.\nLily and the puppy became best friends. They played together every day",
+   "true": ""
+  },
+  {
+   "plan": "A bird named Flappy; in a forest; Flappy forgets how to fly; Flappy searches for help; meets a wise owl; owl teaches Flappy to fly again; Flappy returns to the sky.",
+   "generated": "Once upon a time, there was a red bird named Fl Fl. Flappy loved to spread his wings fast and soar high in the sky. One day, Flappy forgot to get honest as he flew away to the sky.\nThe forest was far away, and the little birds were everywhere. Flnce wanted wings to try flying, but he didn't know how. Big flappy met a wise owl, and he knew what to do. \nThe wise owl said, \"Don't be scared,ilet. Just flap your wings and can fly again. Just try!\" Flappy tried his wings and flew back to the sky",
+   "true": ""
+  }
+ ],
+ "all_matched_seed42": [
+  {
+   "plan": "curious girl Lily; in a park; Lily finds a lost puppy; she comforts the puppy; she looks for the owner; she calls a pet shelter; the owner is found and grateful.</think></think></think></think></think></think></think></think></think></think></think></think></think>",
+   "generated": "Once upon a time, there was a curious girl named Lily. She loved to play outside and explore the world around her. One, she went for a walk in the park and found a cute puppy. \"Oh no!\" said the puppy. \nLily said the puppy, \"I'm here to help you. I'm here to help you find your owner owner.\" \nLily looked around everywhere, but she couldn't find the puppy owner. So, she called out to someone someone nearby, \"Please get my pet shelter.\" \nThe owner was so grateful to have found her lost kitten and she was grateful. She and"
+  },
+  {
+   "plan": "shy boy Tim; in his bedroom at night; Tim is afraid of the dark; his sister Sarah gives him a nightlight; Tim feels safer and falls asleep peacefully.",
+   "generated": "Once upon a time, there was a shy boy named Tim. Tim was always scared of the dark. Every night, he would wake up and wake in his bedroom. When the bed was dark, Tim would go inside and make him scared.\nOne night, Tim's big sister, Sarah, tucked him cozy into the living room. It was a small nightock, but Tim felt safer. He felt safe that Sarah had left and nothing. \n\"That's great Tim,\" she said. \"You can live in my upstairs now!\"\nTim to his room and fell asleep.. He had sweet dreams, nighting a"
+  },
+  {
+   "plan": "Robot named R2D2; in a futuristic city; R2D2 watches humans dance; R2D2 asks a dance teacher for lessons; R2D2 practices daily; R2D2 performs a dance at a festival.",
+   "generated": "Once upon a time, there was a robot who lived in a.ththory. Every day, he called the C2 Dare and watch the monsters family dance around the city. He loved to watch the mice performed with their talented and moves ideas.\nOne day, R2ory Dope went to the teacher and asked him a lesson if he would teach him how to spin him and dance. R R was2 was so very happy and practiced every day.\nHe practiced hard every everyday until he finally found a long dance at the stadium. He started at the dance and everyone clapped for him.  Rapas using"
+  },
+  {
+   "plan": "Two friends, Alex and Jamie; in a forest; they find a big tree; they gather materials; they work together to build a treehouse; they finish and play inside.",
+   "generated": "Once upon a time, there were two best friends, Alex and Jamie. They were always together and were always to learn their new new. \nOne day, and Jamie were walking in the forest until they came to a big tree. They were both very excited and decided to go inside. \n Alex said to Jamie, \"Let's make in the treehouse!\" Jamie agreed, so they started together. Together, they used to gather the perfect sticks and, yummy treehouse for their backyard. They quickly gathered the sticks and sticks together and stacked them organized.\nAfter a few minutes, they had the treehouse and ran inside. They both"
+  },
+  {
+   "plan": "Little fish Finley; in a small pond; dreams of the ocean; meets a wise old fish; learns about the ocean's wonders; decides to swim towards the ocean's edge; faces challenges but perseveres; finally reaches the ocean and is amazed.",
+   "generated": "nyny was an adorable little fish who lived in a small pond. Every day, he dreaming of he explored the ocean. He dreamed of all whole and excitingies. \nOne day, he met a wise old fish who swam by him by cream side of the ocean. Fin asked why the ocean was so big swimming. he thought about this The this the He was amazed of the ocean.\n swam swam ahead, he swam towards the edge of the ocean. He was a bit butgingging challen he urized with his strength. \nAt last Fin reached the surface of the ocean. It was so beautiful! Fin was"
+  },
+  {
+   "plan": "Cat named Whiskers; in a house with a mouse named Mousie; Whiskers tries to catch Mousie but fails repeatedly; Mousie outsmarts Whiskers each time; Whiskers learns to play with Mousie instead of chasing.",
+   "generated": "Once upon a time, there was a cat named Whiskers. Whiskers liked to play with his ball and chase mice for lunch. One day, Whiskers found a mouse namedousie. He wanted to catch mouse like Mousie. Whiskers tried to catch Mousa the mouse again, but Tomous out out of Whiskers of and Whiskers didn't give up.\nM meant was competitive. Startled, he knew it right words. When Whiskers came closer, Mousa at him and said, \"You are being so quick.\" Whiskers smiled and felt great that After after that, Whiskers played played with Housie every day.\n"
+  },
+  {
+   "plan": "A young girl named Lily; on a rainy day; she finds a red umbrella; uses it to stay dry; shares it with a lost puppy; they become friends.",
+   "generated": " day day was gloomy and windy. All an umbrella was a in a safe and safe place.\nOne day, a 3-year-old girl named Lily found an red umbrella. Lily liked the umbrella so much that she decided to use it. She knew the red umbrella could keep her safe.\n \nShe held the umbrella to the umbrella and walked to it. She quickly put Lily hands over the ice his there but the puppy was a little puppy. It had a lost puppy! The puppy was so happy to find the puppy and they went the puppy.\nLily and the puppy became best friends. They played together every day"
+  },
+  {
+   "plan": "A bird named Flappy; in a forest; Flappy forgets how to fly; Flappy searches for help; meets a wise owl; owl teaches Flappy to fly again; Flappy returns to the sky.",
+   "generated": "Once upon a time, there was a red bird named Fl Fl. Flappy loved to spread his wings fast and soar high in the sky. One day, Flappy forgot to get honest as he flew away to the sky.\nThe forest was far away, and the little birds were everywhere. Flnce wanted wings to try flying, but he didn't know how. Big flappy met a wise owl, and he knew what to do. \nThe wise owl said, \"Don't be scared,ilet. Just flap your wings and can fly again. Just try!\" Flappy tried his wings and flew back to the sky"
+  },
+  {
+   "plan": "curious boy Tim; in his backyard; Tim finds a shiny seed; he plants it; the seed grows into a magical tree; the tree gives Tim a wish; Tim wishes for a friend; a new friend appears.",
+   "generated": "Once upon a time, there was a curious boy named Tim. He loved to play outside and explore the big world around him. One day, he found a shiny seed in his backyard. He went and planted the seed in the ground. Tim went outside and watered the seed in the ground.\nAfter a few days, the seed began to grow. It turned into a big, magical tree. The tree was happy to see Tim mysterious tree and it made Tim's wish come wish.\nOne day, Tim a new friend who made him come true. Tim closed his eyes and wished for a new friend. Soon, their new friend"
+  },
+  {
+   "plan": "Bear named Bruno; in a forest; Bruno finds a beehive; Bruno takes honey; Bruno gets stung; Bruno runs away; Bruno loses honey; Bruno learns to be careful.",
+   "generated": "Once upon a time there was a bear called Gruno who liked to play in the forest. One he went out into the forest and found a beehive in the ground.\nBuno was very excited and so he decided to take the honey home. But when he got home something something angry. him Bruno started to cry and started to run away.\nBut as fast he could, Chununo hurt badly. Bruno was very sad that he had lost the beehive. He had had realized why he had already taken all the honey.\nAt the end of the story is that it always be careful -"
+  },
+  {
+   "plan": "thoughtful girl Lily; at home with her grandma; Lily wants to bake a cake; she asks grandma for a recipe; grandma gives her a simple one; Lily gathers ingredients; she bakes the cake; grandma tastes it and smiles.",
+   "generated": "Once upon a time there was a thoughtful girl named Lily loved to bake. One she had an idea she decided to ask her grandma for a recipe.\n\"Grandma, can I bake a cake?\" asked Lily. \nGrandma smiled and said \"Yes, sweetie, I'll give you a simple simple one.\" \nLily was so excited that she ran to the kitchen got to work. She mixed the cake batter, eggs, eggs and butter together She She everything together and put them in the oven to bake.\nWhen the cake was ready she took it out of the oven and it tasted delicious! \nHer grandma smiled and"
+  },
+  {
+   "plan": "timid dragon Blaze; in a forest village; Blaze fears fire; villagers use fire for cooking; Blaze hides when fire is lit; Blaze meets a brave squirrel named Sparky; Sparky teaches Blaze to control fear",
+   "generated": "Once upon a time, there was a tough dragon named.aze. Blini was always loud and always scratched on fire. All the people in the village would put the on fire, but Black was scared because the fire was big and green.\nOne day, while was causing was on fire, a brave squirrel met Sparky Sparky. Sparky said, \"Hello withaze, I can help you freeze fire. I know how I help!\" So,, alone tried to tell the squirrel to save safety.\nThe squirrel was very brave and told toaze to control fear. So, Blaze ran and the fire started melting, melting"
+  },
+  {
+   "plan": "Snowman Sam; in a snowy winter landscape; Sam dreams of summer; Sam melts and becomes water; water flows into a river; river carries Sam to a sunny beach; Sam freezes again as a statue in summer.",
+   "generated": " there there was a man named Sam. Sam worked hard in winter summer, the snowyy winter, before closinging summer through the winter summer. In this of this winter Sam more more the winter season, Sam put on his hat and went out outside. As he melted, he he became very cold. He was covered in water and it felt so bad!\nBut then, he started walking away. A river was paddleing faster and faster. The river carried him Sam to a beach. It was a sunny day and Sam was happy to be melting in the middle of the winter winter.\nIn the cold winter season,"
+  },
+  {
+   "plan": "small mouse named Tim; in a cozy kitchen; Tim sneaks into the fridge; discovers a huge block of cheese; Tim is thrilled but cautious; Tim decides to take a small piece to share with friends",
+   "generated": "Once upon a time, there lived a small mouse. He lived in a cozy kitchen. Every day, he would sneak into the fridge to find something to the most delicious.\nOne day when Tim found his treat, he discovered a huge block of cheese. He had never seen something so big before and was thrilled; he had seen seen block of cheese before!\nHe was thrilled. He had to do something someone else to share the cheese before was a bit but he decided to be brave.\nHe took a small piece of the cheese and shared it with all his friends about all its adventures. Everyone was so happy and Tim worked"
+  },
+  {
+   "plan": "adventurous boy Tim; on a windy day at the park; Tim flies his kite; the kite soars high; Tim runs to keep it in sight; the kite gets caught in a tree; Tim uses a stick to free it",
+   "generated": "Once upon a time, there was an adventurous boy named Tim. He liked to go on adventures and explore the world. So one day he went to the park\nAt the park, Tim flew his kite high high in the sky. It went higher and higher,, until it was so high, flying in the sky.\nBut then, something strange happened. Tim's kite got stuck in a tree! Tim had a naughty idea and he used a stick to cut it up and free it He in the air. After a very long ful, he was determined enough to move the kite free away.\nTim climbed the kite and"
+  },
+  {
+   "plan": "curious girl Lily; in her backyard; Lily wants to ride a bike; her dad helps her practice; she falls a few times but keeps trying; finally, she rides successfully.",
+   "generated": "Once upon a time, there was a curious girl named Lily. She loved to explore outside was always anxious. One day, she asked her dad if she could go ride a bike.\nHer dad said yes, and he showed her how to ride the bike.\nLily held onto her hands and started to ride it. Her dad said, “It’s okay, Lily. I'll practice with you.” \nLily tried to learn how to ride the bike. She almost fell many times and she fell down, but she didn't give up. She tried again. again, and finally, she had completed her bike.\n"
+  },
+  {
+   "plan": "sleepy owl named Oliver; in a forest at dusk; Oliver wants to play but is too sleepy; Oliver tries to stay awake by looking for a friend; Oliver finds a rabbit named Rosie; Rosie encourages Oliver to play",
+   "generated": "Once upon a time, there was a sleepy owl named Wisdom. Owl loved to run and play with his friends, but he was always very sleepy. He wanted to stay awake forever. So, he decided to settle down and look for a friend play with.\nAs he was walking, he saw a little rabbit named Rosie. \"Hi Wisdom! Can I play with you?\" asked asked. Owl smiled and said, \"Yes, let's play together!\" Oliver was so happy!\nHe and Rosie played all day long. They played hide and seek and seek, when he was so tired that he yawned again again. Momo knew he"
+  },
+  {
+   "plan": "Little Star; in the night sky; falls from the sky; lands in a garden; meets a curious rabbit; rabbit helps Little Star find its way back home.",
+   "generated": "I was nighttime, the sky was scared\n was Twinkle and the stars were twinkling up up in the sky. Suddenly, Little Star landed right in front of the garden. It was the garden Little Star was very happy, because he heard a voice coming from within the garden. \n\"Hello there! What are you doing?\" Little Star asked a tiny creature and the creature said, \"Do. Would you like to help you,, you? I lost my way. I am a little weak, and I'm here to find my way back home in this garden.\" \nLittle Star was surprised. Excitedly, he"
+  },
+  {
+   "plan": "Brave dog Max; in a small garden; Max protects the garden from intruders; one day a rabbit tries to enter; Max barks loudly; the rabbit runs away; Max's owner praises him.",
+   "generated": "Max was a very brave dog who lived in a small garden. Every day, he took care of himself,, and protected his garden from the oppuuders. Whenever he were happy, he always kept his garden look a importantortunity and nature.\nOne day, Max heard a rabbit running around the garden. He tried to enter to garden but Max was brave was he wanted to keep very quiet. So, he barked louder and louder, but the rabbit ran away because he was so scared. Max's owner, Max, came outside to running and said, \"Good job, Max! You are so brave and strong!\""
+  },
+  {
+   "plan": "curious girl Lily; in her backyard; Lily finds a shiny key; she wonders where it belongs; she searches for clues; she meets a wise old owl; the owl tells her the key opens a hidden treasure chest",
+   "generated": "Once upon a time, there was a curious girl named Lily. She loved to explore the world around her her. One day, she found a shiny key on the ground. She wondered who the key came from. \nShe decided to wander around her backyard, searching for of clues. As she wandered, she saw a wise, wise old owl. She told the owl about the shiny key. The owl said, \"Maybe it opens to open a hidden treasure chest.\" Lily was excited to find the key and followed.\nShe followed the owl to the tree where she found the hidden treasure chest was waiting for her. She opened it"
+  },
+  {
+   "plan": "boy named Tim; at the local park; Tim has a new toy car; he meets another boy, Jake, who doesn't have a toy; Tim shares his car with Jake; they play together happily; Tim learns the joy of sharing.",
+   "generated": "Once upon a time, there was a boy named Tim. Tim was very enthusiastic about about to play with his new new toy car. One day, he took his toy car to the park park.\nAt the park, Tim met another boy. A boy named Jake had a toy car too, but Jake did not want to share his new car with him. Tim didn't want to share his car, but he had an idea. He decided to share his toy car with Jake and Jake both.\nThey played with the new toy car and had lots of fun together. Tim learned that sharing is good and always can make other kids"
+  },
+  {
+   "plan": "Turtle named Timmy; in a school setting; Timmy is always late to class; one day he misses an important test because of his tardiness; his teacher explains the consequences of being late",
+   "generated": "Once upon a time, there was a kid named Timmy. Timmy was always getting late to school. He had a very important job and would go late school school. \nOne day, Timmy noticed that he was not feeling well well and starting to miss. Timmy didn't know what he missed and he called his teacher to tell him about how. \nHis teacher put down on the floor and said, \"I'm not afraid, I'm here to support you for a important job at at after school.\" \nFortortious, Timmy wanted to try his best, so he opened his mouth and sat still. AfterOne"
+  },
+  {
+   "plan": "Curious Rabbit; in a meadow near a farm; wants a carrot; sneaks onto the farm; meets a friendly farmer; farmer gives a carrot; rabbit thanks farmer and leaves happily.",
+   "generated": "CC was a curious rabbit who lived in a meadow near a farm. As, she hopped and hopped through the grassy fields. It wanted a delicious and juicy treat. The rabbit cautiously faced to the fence and snuck off the farm. \nNext, the rabbit hopped over to the farm. The owner of the field saw a friendly farmer. farmer farmer the the rabbit a carrot. The rabbit asked the farmer for the carrots and was very kind. He smiled as the farmer took the rabbit into the meadow. The farmer gave the rabbit a carrot. \nCle happily happily and thanked the farmer, He then then back back home."
+  },
+  {
+   "plan": "curious girl Lily; in a forest; Lily meets an old oak tree; she talks to the tree; the tree shares stories of the forest; Lily learns about nature's secrets",
+   "generated": "Once upon a time, there was a curious girl named Lily. She loved to explore and discover the world around her. One day, she went for a walk and met an old oak tree.\n\"Hello, old oak tree!\" she said. \"What are you doing here?\"\nThe oak tree replied, \"I am here to tell you all of the animals who lived in the forest. Please trust me!\"\nLily trusted the tree and told her stories about the birds in the forest. She talked to all the secrets about the world and learned about its stories as as\n problemss. Lily listened very carefully and learned about each"
+  },
+  {
+   "plan": "adventurous boy Tim; at a bustling market; Tim gets separated from his parents; Tim meets a friendly shopkeeper who helps him find his way back; Tim reunites with his parents happily.",
+   "generated": "Once there was an adventurous boy named Tim. He loved to explore the world and finding new things. One day, he decided to go to a b buck market.\nWhen he got to the top he realized that the market had to separate him from a far away place. Tim felt scared and didn't know what to say. him because they were too expensive.\nOn his way back from the shop, Tim met a friendly shopkeeper kindly who smiled at him and asked him. The lady showed him where he found his way back on his ranch. Tim was so happy and thanked his parents. \nTim's mom and dad him"
+  },
+  {
+   "plan": "Duck named Quackers; in a pond with other ducks; Quackers tries to swim but sinks; friends help him build a raft; they all play on the raft instead of swimming.",
+   "generated": "Once upon a time, there was a duck. His name was Quackers. Quackers had many friends in the pond. They liked swimming.\nOne day, Quacky was playing in the pond. He swam and tried, but he couldn't of the sink. But the water doesn't deep!\nQuackes asked friends for help. They all came over to help. Together, they built an easy raft for the ducks. The raft was safe, but Quackles wouldn stop stop.\nLater that day,ersers and his friends all jumped into the raft. They all had fun playing on the raft, Even though they swam"
+  },
+  {
+   "plan": "Clown named Charlie; at a circus; Charlie's nose is accidentally blown off by a strong gust of wind; Charlie becomes sad and hides; other clowns help him find a new nose; Charlie learns to be more careful.</think></think></think></think></think></think></think></think></think>",
+   "generated": ", there was a clown who was very serious. He was always doing and did what he wanted. One day, the circus was out and Charlie felt a tickle hard off his nose! He was by a strong of of and Charlie got very embarrassed.\nThe nose was quite very strong and couldn't keep his nose. Charlie was very sad. He didn't know what to do. Suddenly, a group of funny clowns came and asked all the other clowns to help him.\nThey found Charlie a new nose. He was very happy and he thanked the other clowns. Charlie was able to be more careful with where his nose was never never"
+  },
+  {
+   "plan": "Ladybug Lulu; on a leaf in a forest; Lulu wants to visit a distant flower; encounters a friendly ant named Andy; Andy helps Lulu find the flower; Lulu thanks Andy and continues her journey.",
+   "generated": "Once upon a time, there was a bee named Lulu. Lulu lived on a journey journey to see a distant flower. The flower was in in the middle of the big forest.\nOne day, Lulu walked by the leaf and saw something even. A big, scary bug.\n\"Hi, I am Andy,\" a friendly ant ant,\" said the ant. \"Do you need help find my way back home?\"\n\"Yes, I can help you,\" said Lulu.\"\nAndy walked and walked and marched on a long journey, and eventually they found the flower. Lulu was so happy. She thanked Andy and continued on their journey"
+  },
+  {
+   "plan": "curious boy Tim; in his backyard; Tim finds a magic paintbrush; he paints the sky blue and fluffy clouds; neighbors notice the beautiful sky; they ask Tim how he did it; Tim explains the magic paintbrush",
+   "generated": "Once upon a time, there was a curious boy named Tim. He loved to play outside and explore the world around him.. One day, he found a magic paintbrush in his backyard. He got his paintbrush and he started to paint the sky. He painted the sky with blue and fluffy clouds.\nTim's neighbours saw the beautiful sky and said, \"Wow, Tim! Your sky is so bright and pretty!\" Tim smiled and said, \"Yes, I do it!\" I went outside to use my magic paintbrush that can the sky feel happy.\"\nSuddenly, one day, the sky became dark, and the air was filled with"
+  },
+  {
+   "plan": "Two ducks, Daisy and Ducky; in a meadow with a muddy puddle; they waddle into the puddle, splash, and get muddy; they giggle and play until the sun sets; they leave muddy footprints on the grass.",
+   "generated": "OnceOnce a time, there there two ducks.. duck was named Daisy and the other was named Ducky. His name was Ducky. They were walking through the meadow when they saw a dirty puddle in the pond nearby. The ducks wanted to get itchy, so they all decided to have some fun. \nThe ducks gathered in the meadow, so they both jumped into house puddle and started splashing around in it. They giggled and giggled and laughed the water made them soak and wet. They played and played laughed until. sun began to set. \nSoon, they went home and left some footprints on the the grass. The ducks duck"
+  },
+  {
+   "plan": "curious girl Lily; in her bedroom with her teddy bear named Mr. Snuggles; Lily discovers Mr. Snuggles can talk; they have a conversation about adventures; Mr. Snuggles suggests they explore the attic",
+   "generated": "Once upon a time, there was a curious girl called Lily. She loved to explore outside and discover what was around her. One day, she was playing with her teddy bear in her room, Mr. Snuggles loved.\n\"Hello, Mr.. Snuggles,\" said Lily with Mr. Snuggles.\n\"I can talk to could sky, but you have busy busy Freddy.\"\n\"Me too,\" said replied Mr. Snuggles, \"Let's go the attic and discover.\" \nThat night, Mr. Snuggles led Lily to the attic attic. They climbed upany with colorful art, pretty clothes, and clothes inside. Mr."
+  },
+  {
+   "plan": "Fox named Felix; in a forest; Felix borrows a neighbor's apple; neighbor is upset; Felix apologizes and returns the apple.",
+   "generated": "Once upon a time, there was a fox. His name was Felix. One day, he was very kind.\nOne day, he decided to borrow something. He went to his neighbor's house apple and went to the woods. On his way he, \"Can I borrow your apple? But I want to lend it there.\"\nThe neighbour looked at the apple and was so upset. He said, \"I must have this apple, but you must let me return it.\" He was still upset.\"\nFelix was very sorry and apologized it. He went to the neighbour's house and gave it to his neighbor"
+  },
+  {
+   "plan": "Little car named Timmy; in a garage with his owner; Timmy is afraid of the highway; owner takes Timmy on a test drive on the highway; Timmy overcomes his fear; Timmy and owner return home safely.",
+   "generated": "Once. a time there was a red car. It was warm and shiny and it could drive in the car. His owner of the garage. Timmy was always afraid of the road because he didn't like to run away away. \nOne day, Timmy's owner decided to take him on a driveway. On their way there was a test to pass to the side of the garage. However, Timmy was frightened he held his hand. As he passed, his he was getting slower, but until he had finally reached the end. \nFinally, Timmy and his owner went back back to their car, safely Without. Timmy was"
+  },
+  {
+   "plan": "curious girl Luna; in a small village under a bright moon; Luna dreams of touching the moon; she asks her grandfather for help; grandfather tells her about the stars and teaches her to make a wish",
+   "generated": "Once upon a time, in a small village, there was a curious girl called Luna. She loved dreaming of the moon. Every night, Luna would point up at the bright bright sky, hoping to touch them.\nOneOne day, she decided to see more about moon. She asked her grandfather for help. Her grandfather smiled and told her about the moon and stars. He told her how magic to make her wish come true.\nLuna learned how to make a wish. She saw the starsening and light around the village. She even saw the stars of different colors and shapes.\nOne night, Luna became being."
+  },
+  {
+   "plan": "curious boy Tim; in an old house attic; Tim discovers a mysterious box; he opens it and finds a magical key; the key unlocks a hidden door leading to a secret garden; Tim shares the discovery with his friends.",
+   "generated": "Once upon a time, there was a curious boy named Tim. He loved to explore and discover things. One day, he found an unknown house in the attic. The attic was an old house..\n Tim explored the attic, he found a mysterious box with lock on it. He was so curious to open it. So, he found a key. Inside, he found the key to unlock a secret door. Behind the door of the box, Tim saw a secret garden.\nHe was so happy that he took the magic key to unlock the hidden door. When he went back, he showed all his his friends and the garden"
+  },
+  {
+   "plan": "Frog named Freddy; in a rainy pond; Freddy explores the pond; meets other animals; they play together; Freddy discovers a hidden flower; they all celebrate.",
+   "generated": "Once upon a time, there was a bird named Binky. Freddy was a cute frog who loved to spend his summer adventures. On one sunny day, he decided explore the pond. He was so excited to see all the the wonderful animals that he started jumping in the water.\nAt the other animals were happy. They were splashing and having lots of fun. Freddy explored the pond. They swam around together, splashing and laughing, and having a wonderful time.\nSuddenly, Freddy saw something special and incredible! It was hidden flower hidden in the bushes. He showed it to the other friends and they all celebrated together. All the animals were"
+  },
+  {
+   "plan": "Sad balloon named Ballo; floating in a park; Ballo feels lonely and sad; Ballo meets a friendly bird named Tweet; Tweet comforts Ballo; Ballo shares its sadness; Tweet suggests Ballo find a new home",
+   "generated": "Once upon a time, there was a balloon named Ballo. Ball was very sad because it was all alone in the park. Ballo felt lonely and sad because it had no friends.\nOne day, Ballo met a friendly bird named Tweet. Tweet flew down to Ballo and asked, \"Why are you sad, Ball?\" Ballo replied, \"I don't have any friends, have no one to play with.\" Tweet saw that Ballo felt sad and sad too.\n Tweet had an idea. \"I can be your friend with Ballo. Maybe you can find a new home to make you happy.\" Zero."
+  },
+  {
+   "plan": "adventurous girl Mia; in a snowy forest; Mia plays in the snow; she loses one mitten; searches for it; finds it with help from a friendly squirrel.",
+   "generated": "Once upon a time, there was an adventurous girl named Mia. She loved to explore and every day she would go outside and explore. One day, she went in a big white snow.\nAt the snow, she loved playing. She rolled in snow because it had so much fun. But when she got back to her hand back, she noticed that she had lost her mitten! She searched all around the snow, but she couldn't find it. \nMia felt sad alone, and she started to cry to find her mitten. Then, she saw a friendly squirrel sitting in a tree, blocking its way up. The squirrel reached"
+  },
+  {
+   "plan": "Baby elephant Lulu; in a herd of elephants; Lulu is smaller than others; Lulu feels sad and lonely; Lulu learns to use her small size to help others; Lulu becomes friends with the other elephants.",
+   "generated": "Once there was an old elephant named Lulu. She was so much smaller all the other lad.s who all boily in her. \nOne day, Lulu started to feel sad. She wished all the other elephants who came tried to make them lonely too. She let out her unique body and she knew exactly and what she could do. \nLulu decided to make friends to make everyone feel so happy and relieved. She also taught her how to use them. \nEventually, Lulu was able to be kind like the big elephants. She was so grateful! Lulu used her small power to all of the creatures, the small elephants"
+  },
+  {
+   "plan": "curious boy Tim; in his backyard; Tim wants to earn money; he decides to open a lemonade stand; Tim gathers supplies; he sets up the stand; customers start coming; Tim sells lemonade; he makes money and feels proud.",
+   "generated": "Once upon a time there was a curious boy called Tim. He was always learning lots of things to buy more money!\nOne morning, he he decided to plan a plan. He wanted to find a lemonade stand so he knew it was money in his pocket. \nTim gathered his supplies and came to his village. He set up a stand on the ground. Then, he set up the stand and made it wait for the custom to start.\nAt the, customters made the lemonade and Tim had sold all the things he wanted. He worked really hard! He was so proud of himself for making lots of money and the"
+  },
+  {
+   "plan": "A young horse named Thunder wants to race; lives on a farm with his family; dreams of racing in a big competition; asks his owner for permission; owner teaches him to race safely",
+   "generated": "OnceOnce a time there was a young horse. His name was Th. Thunder had the whole animals in the farm. Every night, he had dreams about racing to a big race. He was the fastest horse in the world.\nOne day Th and went to the farm to try the race. He ahead up as his as legs and ran as fast as he could to race. His owner said, \"imbope, I'll teach you the prize.\"\nunder. ran as fast as he could strong his horse pulled past him. He raced faster and the faster with all of his legs. He won the race and everyone clapped"
+  },
+  {
+   "plan": "curious girl Lily; in her backyard; Lily finds a bird with a hurt wing; she gently picks it up; takes it inside; searches for a way to help; uses a bandage to wrap the wing",
+   "generated": "Once upon a time, there was a curious girl named Lily. She loved to explore the world around her. One day, she was playing in her backyard when saw a small bird with a hurt wing. She wanted to help the bird so she picked it up and took it with her.\nLily carefully took the bird inside her house, trying to find a way to help it. She looked and looked until she found a bandage. She used a bandage and carefully wrapped the bandage on the bird's wing. She wrapped it up up with the bird and carried it home. \nAt night, Lily watched the bird fly gently and gently"
+  },
+  {
+   "plan": "Bee named Buzz; in a garden; Buzz is always working; Buzz collects nectar, pollinates flowers, and helps other insects; Buzz becomes tired but keeps going; A wise old bee named Honeybee tells Buzz the importance of rest",
+   "generated": "Once upon a time, there was a bee named Buzz. Buzz was always very busy. He worked hard every day.  He collected nectar nectar from flower to flower. He made sure if he could help the other insects from the garden. Instead he got tired, but he kept on going. \nAs Buzz kept going, he met a wise old friend. A wise old bee who had told him. She told him that it was important to keep going to rest. He patient and patient, even if he needed help. \nBuzz worked hard all day long, he had hard hard taking of of Buzz. He wanted to be"
+  },
+  {
+   "plan": "curious boy Tim; in his bedroom with a toy box; Tim wants to know how many toys he has; he counts each toy one by one; Tim realizes counting helps him understand numbers better",
+   "generated": "Once there was a boy who was very curious named Tim. He had a big toy box of toys inside. One day, he had a terrible strange problem. He wanted to learn all the toys he had in his bedroom. \nHe started to count them, one by one and he counted them one by one. He smiled with excitedly as he counted how many they had. He knew that one loved helping it. He then took one out of his toy box - it was a number! \nHe grabbed the number toy out and showed it to his friends. He was so excited that they smiled and thanked them. From then on"
+  },
+  {
+   "plan": "small mouse named Milo; in a quiet countryside; Milo dreams of the city; Milo sneaks out of home; Milo meets a wise old owl; Owl advises Milo to be careful; Milo ventures into the city",
+   "generated": "Once upon a time, there lived a small mouse called Milo who lived in a countryside the countryside. Every night, he dreamed of dreaming the city and enjoyed his sights glthving out of his home.\nOne day, Milo met a wise old owl, who lived and in a nearby tree and said hello. \n\"Honey,\" said Owl, \"but be careful with this city. Don't go near it forever.\"\n brown nodded and thanked the owl for being far away.\nRo to his journey, Milo crept action into the city. Suddenly, he felt a big shock with Cace. He slowly stepped out see"
+  },
+  {
+   "plan": "curious girl Lily; in a suburban house; Lily discovers a hidden garden behind the shed; she plants seeds and tends to the garden; her friends join her to help and play there",
+   "generated": "Once upon a time, there was a curious girl named Lily. She loved to play outside in the sunshine. One day, she found a hidden door behind a shed. She decided to go to discover what was there. Inside, she found a hidden garden in front of the shed. She was so happy to find it that she followed. She planted some seeds and poured it to the garden. After a few minutes, the garden started started blooming and Lily invited all her friends came over to help. Everyone was happy and too. They spent the rest of the secret. with the toys and had games in the garden together. After some time"
+  },
+  {
+   "plan": "Pirate Captain Redbeard; on a ship near a stormy sea; Redbeard fears the water; his crew challenges him to face his fear; Redbeard reluctantly agrees; he must navigate through the storm to save the ship",
+   "generated": "Once upon a time, there was a pirate named Ctainananard. He loved to sail on the sea every day. One day, he met a big creitmymymy in the sea. His crew warnedayech not to his of his fears.\n\"I dare you to face your fear,\" said his crew. \"It's a storm today.\"\nCapbech was worried and scared, but he knew he had to be brave to to his crew. So, Fapigig decided to to his astronaut in adventure fought the fierce storm.\nFinally, Red Cch reached the ship. He"
+  },
+  {
+   "plan": "curious boy Tim; in a meadow; Tim sees a rainbow and wants to catch it; he tries to run after it but it moves away; Tim learns that rainbows are illusions and can't be caught",
+   "generated": "Once upon a time, there was a boy called Tim. He was very curious and liked to explore the world. One day he saw a beautiful rainbow and he ran as fast as he could tried to catch it. But the rainbow moved! \nTim didn't like it and it moved away all the way. He tried to run away from the rainbow. But then he saw that the rainbow was very high and touched himself. It was very easy and had very dangerous. He also learnt to him that he should never try again to catch something.\nTim loved to touch the rainbow and the the sight. He knew rainbow because it was"
+  }
+ ]
+}

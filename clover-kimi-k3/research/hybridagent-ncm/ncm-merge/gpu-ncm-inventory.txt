@@ -1,0 +1,105 @@
+HOST
+ubuntu2404
+ 22:52:32 up 1 day, 22:37,  4 users,  load average: 0.15, 0.03, 0.01
+
+NCM-DIR
+total 176
+drwxrwxr-x 11 usergpu usergpu 4096 Oct 21 04:25 .
+drwxr-x--- 24 usergpu usergpu 4096 Oct 21 22:51 ..
+drwxrwxr-x  9 usergpu usergpu 4096 Oct 20 12:28 artifacts
+drwxrwxr-x  6 usergpu usergpu 4096 Oct 20 12:29 data
+-rw-rw-r--  1 usergpu usergpu 1574 Oct 21 04:25 inputs-k3.json
+-rw-rw-r--  1 usergpu usergpu 2032 Oct 21 04:25 k3_summary.json
+-rw-rw-r--  1 usergpu usergpu  912 Oct 20 11:54 main_fp32.py
+drwxrwxr-x  6 usergpu usergpu 4096 Oct 20 10:54 out
+drwxrwxr-x  2 usergpu usergpu 4096 Oct 20 12:31 out11
+drwxrwxr-x  8 usergpu usergpu 4096 Oct 20 12:34 out12
+drwxrwxr-x  2 usergpu usergpu 4096 Oct 20 22:46 out15-smoke
+drwxrwxr-x  2 usergpu usergpu 4096 Oct 21 04:25 out-k3a
+-rw-rw-r--  1 usergpu usergpu 2439 Oct 21 04:25 out-k3a.log
+-rw-rw-r--  1 usergpu usergpu 5160 Oct 21 04:25 render.py
+drwxrwxr-x 10 usergpu usergpu 4096 Oct 20 10:35 repo
+-rwxrwxr-x  1 usergpu usergpu 1642 Oct 20 11:51 run10.sh
+-rwxrwxr-x  1 usergpu usergpu 1228 Oct 20 12:28 run11.sh
+-rwxrwxr-x  1 usergpu usergpu 1063 Oct 20 12:32 run12.sh
+-rwxrwxr-x  1 usergpu usergpu 1063 Oct 20 12:45 run13.sh
+-rwxrwxr-x  1 usergpu usergpu 1543 Oct 20 13:00 run14.sh
+-rwxrwxr-x  1 usergpu usergpu  512 Oct 21 04:25 run15.sh
+-rwxrwxr-x  1 usergpu usergpu  916 Oct 20 10:38 run1.sh
+-rwxrwxr-x  1 usergpu usergpu 2165 Oct 20 10:40 run2.sh
+-rwxrwxr-x  1 usergpu usergpu  816 Oct 20 10:54 run3.sh
+-rwxrwxr-x  1 usergpu usergpu 1666 Oct 20 11:08 run4.sh
+-rwxrwxr-x  1 usergpu usergpu 2042 Oct 20 11:16 run5.sh
+-rwxrwxr-x  1 usergpu usergpu 1366 Oct 20 11:30 run6.sh
+-rwxrwxr-x  1 usergpu usergpu 1632 Oct 20 11:35 run7.sh
+-rwxrwxr-x  1 usergpu usergpu 1153 Oct 20 11:43 run8.sh
+
+ARTIFACTS
+4.9G	/home/usergpu/ncm/artifacts/lm1b
+0	/home/usergpu/ncm/artifacts/lm1b-large
+0	/home/usergpu/ncm/artifacts/lm1b-medium
+8.0K	/home/usergpu/ncm/artifacts/owt
+465M	/home/usergpu/ncm/artifacts/sudoku
+0	/home/usergpu/ncm/artifacts/sudoku-easy
+0	/home/usergpu/ncm/artifacts/sudoku-hard
+0	/home/usergpu/ncm/artifacts/sudoku-medium
+552M	/home/usergpu/ncm/artifacts/tinystories
+1.1G	/home/usergpu/ncm/artifacts/wmt14
+624M	/home/usergpu/ncm/artifacts/xsum
+
+OUT
+eval-lm1b-small
+eval-xsum
+eval-xsum-full
+speed
+trace-lm1b-small.json
+trace-tinystories.json
+trace-xsum-bf16.json
+trace-xsum-fp32.json
+trace-xsum.json
+
+REPO
+c702742 update bibtex
+
+RUNS
+aurora-run13
+aurora-setup
+elf-run14
+elf-run14b
+elf-run14c
+elf-setup
+flm-run10
+flm-run10b
+flm-run4
+flm-run5
+flm-run6
+flm-run7
+flm-run8
+flm-setup
+flm-smoke
+g7-vself
+ncm-run1
+ncm-run11
+ncm-run12
+ncm-run2
+ncm-run3
+ncm-setup
+ncm-setup11
+ncm-smoke15
+
+OTHER
+/home/usergpu/aurora
+/home/usergpu/elf
+/home/usergpu/flm
+/home/usergpu/k3ncm
+/dev/mapper/ubuntu--vg-ubuntu--lv  1.8T  1.5T  220G  88% /
+
+GPUS
+0, 0 MiB, 0 %
+1, 0 MiB, 0 %
+2, 0 MiB, 0 %
+3, 0 MiB, 0 %
+4, 0 MiB, 0 %
+5, 0 MiB, 0 %
+6, 0 MiB, 0 %
+7, 0 MiB, 0 %

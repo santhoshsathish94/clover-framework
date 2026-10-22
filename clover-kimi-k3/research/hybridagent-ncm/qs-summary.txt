@@ -1,0 +1,30 @@
+== q1 (expected '29')
+  steps 147, latent steps 59 (40% of steps), spans 1 [59], python calls 0, end tool_cap, wall 68s, prompt_len 550
+  answer block: []
+  net step ms: text 409.4, latent 405.7 | exits 1 (min P(close) 0.9987326264381409), cosine-only close 0, LM-head-only close 0, max P(close) on continued 0.0
+  layer-35 out norm median: text 1558, latent 2586; fed norm text 1.65, latent 9.18; hid-vs-normed max 0.0
+  layer-16 text steps with rel update >0.9: 0 of 86; ids []
+== q2 (expected '8')
+  steps 286, latent steps 63 (22% of steps), spans 2 [48, 15], python calls 0, end tool_cap, wall 127s, prompt_len 538
+  answer block: []
+  net step ms: text 412.8, latent 416.9 | exits 2 (min P(close) 0.5336358547210693), cosine-only close 0, LM-head-only close 0, max P(close) on continued 0.004
+  layer-35 out norm median: text 1324, latent 2435; fed norm text 1.69, latent 8.83; hid-vs-normed max 0.0
+  layer-16 text steps with rel update >0.9: 0 of 219; ids []
+== q3 (expected '30')
+  steps 232, latent steps 55 (24% of steps), spans 1 [55], python calls 0, end tool_cap, wall 103s, prompt_len 550
+  answer block: []
+  net step ms: text 410.1, latent 413.3 | exits 1 (min P(close) 0.998977780342102), cosine-only close 0, LM-head-only close 0, max P(close) on continued 0.034
+  layer-35 out norm median: text 1309, latent 2499; fed norm text 1.69, latent 8.57; hid-vs-normed max 0.0
+  layer-16 text steps with rel update >0.9: 0 of 175; ids []
+== q4 (expected '24')
+  steps 1243, latent steps 329 (26% of steps), spans 13 [102, 13, 6, 4, 24, 35, 71, 23, 9, 18, 11, 8, 5], python calls 0, end eos, wall 553s, prompt_len 529
+  answer block: ['\\$$ 20 + 4 = 24 \n\\ $$\n\nThus, the number of trailing zeros in \\(100!\\) is \\(\\boxed{24}\\).']
+  net step ms: text 422.3, latent 416.7 | exits 13 (min P(close) 0.48985761404037476), cosine-only close 3, LM-head-only close 0, max P(close) on continued 0.192
+  layer-35 out norm median: text 1466, latent 2096; fed norm text 1.64, latent 8.42; hid-vs-normed max 0.0
+  layer-16 text steps with rel update >0.9: 2 of 888; ids [220, 15]
+== q5 (expected '(-12, -8, 36)')
+  steps 1035, latent steps 240 (23% of steps), spans 8 [56, 40, 15, 30, 35, 18, 22, 24], python calls 3, end eos, wall 462s, prompt_len 577
+  answer block: ['\\boxed{(-12, -8, 36)}']
+  net step ms: text 422.7, latent 419.7 | exits 8 (min P(close) 0.6896170377731323), cosine-only close 1, LM-head-only close 0, max P(close) on continued 0.345
+  layer-35 out norm median: text 1549, latent 2222; fed norm text 1.66, latent 9.09; hid-vs-normed max 0.0
+  layer-16 text steps with rel update >0.9: 0 of 779; ids []

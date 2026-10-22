@@ -1,0 +1,16 @@
+step 217 pos-in-span 103 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.998 lm_p1 0.998 lm_top1_id 151670 cos_close 0.999 nn_cos 0.999
+step 343 pos-in-span 14 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.957 lm_p1 0.957 lm_top1_id 151670 cos_close 0.998 nn_cos 0.998
+step 387 pos-in-span 7 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.987 lm_p1 0.987 lm_top1_id 151670 cos_close 0.999 nn_cos 0.999
+step 443 pos-in-span 5 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.972 lm_p1 0.972 lm_top1_id 151670 cos_close 0.988 nn_cos 0.988
+step 493 pos-in-span 25 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.947 lm_p1 0.947 lm_top1_id 151670 cos_close 0.907 nn_cos 0.907
+step 523 pos-in-span 24 engine_exit False lm_top1_is_close False nn_is_close True lm_p_close 0.0 lm_p1 0.837 lm_top1_id 51444 cos_close 0.46 nn_cos 0.46
+step 535 pos-in-span 36 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.49 lm_p1 0.49 lm_top1_id 151670 cos_close 0.939 nn_cos 0.939
+step 673 pos-in-span 67 engine_exit False lm_top1_is_close False nn_is_close True lm_p_close 0.018 lm_p1 0.57 lm_top1_id 2619 cos_close 0.543 nn_cos 0.543
+step 678 pos-in-span 72 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.918 lm_p1 0.918 lm_top1_id 151670 cos_close 0.999 nn_cos 0.999
+step 721 pos-in-span 22 engine_exit False lm_top1_is_close False nn_is_close True lm_p_close 0.0 lm_p1 0.989 lm_top1_id 1549 cos_close 0.512 nn_cos 0.512
+step 723 pos-in-span 24 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.628 lm_p1 0.628 lm_top1_id 151670 cos_close 0.994 nn_cos 0.994
+step 819 pos-in-span 10 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.674 lm_p1 0.674 lm_top1_id 151670 cos_close 0.897 nn_cos 0.897
+step 862 pos-in-span 19 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.997 lm_p1 0.997 lm_top1_id 151670 cos_close 0.998 nn_cos 0.998
+step 935 pos-in-span 12 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.993 lm_p1 0.993 lm_top1_id 151670 cos_close 0.999 nn_cos 0.999
+step 1025 pos-in-span 9 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.996 lm_p1 0.996 lm_top1_id 151670 cos_close 0.999 nn_cos 0.999
+step 1112 pos-in-span 6 engine_exit True lm_top1_is_close True nn_is_close True lm_p_close 0.993 lm_p1 0.993 lm_top1_id 151670 cos_close 0.999 nn_cos 0.999

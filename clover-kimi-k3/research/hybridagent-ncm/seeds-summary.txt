@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/root/hybridagent/summ_qs.py", line 11, in <module>
+    qkey = re.search(r"(q\d)", p.split("/")[-1]).group(1)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'group'
+q4 outputs: seed0 len 2704 seed1 len 3316 first differing char 87 | common prefix text: 'find out how many trailing zeros are in 100 factorial. Hmm, '
+  seed0 spans [102, 13, 6, 4, 24, 35, 71, 23, 9, 18, 11, 8, 5]
+  seed1 spans [39, 6, 5, 27, 8, 27, 16, 10, 4, 30]
+q5 outputs: seed0 len 2435 seed1 len 2407 first differing char 59 | common prefix text: '<think>\nOkay, so I need to find the equation of the circle '
+  seed0 spans [56, 40, 15, 30, 35, 18, 22, 24]
+  seed1 spans [39, 74, 38, 38, 40, 31, 17, 6, 23, 18]

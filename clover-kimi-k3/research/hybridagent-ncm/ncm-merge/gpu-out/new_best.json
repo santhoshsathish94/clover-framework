@@ -1,0 +1,59 @@
+{
+ "name": "new_best",
+ "n": 48,
+ "decode": {
+  "temp": 0.6,
+  "top_k": 0,
+  "top_p": 1.0,
+  "adj": "10,4,0.5",
+  "cands": 8,
+  "cfg": 0.0
+ },
+ "single_candidate_reference": {
+  "retention": 0.6166434696015771,
+  "gen_ppl": 14.596998642281225,
+  "adj_repeat_rate": 0.010468101915860163,
+  "entropy": 3.938907750126773
+ },
+ "generated": {
+  "retention": 0.6404,
+  "gen_ppl": 13.6615,
+  "adj_repeat_rate": 0.01,
+  "entropy": 3.9341
+ },
+ "generated_per_run": [
+  {
+   "retention": 0.6404,
+   "gen_ppl": 13.6615,
+   "adj_repeat_rate": 0.01,
+   "entropy": 3.9341
+  }
+ ],
+ "examples": [
+  {
+   "plan": "thoughtful girl Lily; in a park; Lily finds a lost puppy; she comforts the puppy; she looks for the owner; she calls a pet shelter; the owner is found and grateful.",
+   "generated": "Once upon a time, there was a thoughtful girl named Lily. Lily loved to play outside and explore the world around her. One day, Lily was walking around in the park when she saw a small, lost puppy. \nLily slowly reached out her hand out her hand and gently petted the puppy gently.\n\"Don't worry little pup, I will help you find,\" she said. She walked around the park looking for the puppy's owner. Eventually, she found a little puppy and called a pet shelter.\nThe puppy's call until they found the owner. The owner was very happy and grateful for Lily's help. Lily"
+  },
+  {
+   "plan": "Tim; in his bedroom at night; Tim is afraid of the dark; his parents tell him a story about a brave knight; Tim falls asleep feeling brave.",
+   "generated": "Tim was scared of the dark. Every night, when he heard his parents lay down and settle lay in his bed. He thought the scary things were scary or shiver. He would close his eyes, close his eyes, and go to bed with his body.\nOne night, Tim's mom and dad told him a story. They told a story about a knight who was brave and brave. He fought a knight who fought scary dragons and brave knights. The knight was brave and brave, and the knight was brave, holding his sword and his sword.\nTim smiled and closed his eyes and closed his eyes. He felt very brave and"
+  },
+  {
+   "plan": "Robot named Tim; in a futuristic city; Tim wants to learn to dance; Tim watches humans dance; Tim asks a human friend for lessons; Tim practices daily; Tim performs a dance at a party; Tim gains confidence and joy.",
+   "generated": "Once upon a time, there was a robot who was very intelligent. Every evening, Tim wanted to learn how to dance, and how to dance. So, he liked to watch the humans dance and dance. \nOne day, Tim asked a human human he if he could teach him how to dance. The human agreed to learn how to dance, so he and Tim practiced every day.\nTim practiced every day and practised. He practiced and practiced every day. Soon he could show the human his human friend. \nAt the party, Tim had lots of fun presence. He feltidance and full of joy and"
+  },
+  {
+   "plan": "Tim and Lily; in a forest; they find a big tree; they gather materials; they work together to build a treehouse; they finish and play inside.",
+   "generated": "Once upon a time, there were two friends, Tim and Lily. One day, they were walking in the forest, until finally they found a big tree.\n\"Let's build a treehouse,\" said Tim.\n\"Let's gather things and do it,\" said Lily. \nSo they hard hard worked together to make a treehouse.\nThey gathered some sticks and leaves. Then, they gathered sticks and leaves together. They gathered the leaves, sticks, and sticks together. When they were done, they almost finished. \nAfter they were finished, they went inside and played inside.\nThey ran around and played in the"
+  },
+  {
+   "plan": "little fish Tim; in a small pond; Tim dreams of the ocean; Tim asks his friend Lily for help; Lily suggests Tim swim through a nearby stream; Tim swims through the stream and discovers the ocean",
+   "generated": "Once upon a time, there was a little fish named Tim. Tim lived in a small of a small pond. One day, Tim had a big dream about the ocean. He wanted to go and see it.\nTim asked his best friend, a little fish named Lily. \"Please, help me find the ocean!\" Lily said, \"Let's swim through the stream and go to the ocean together!\" So, Tim and Lily swam and hopped through the stream and soon they reached the ocean.\nWhen they reached the ocean, Tim saw the incredible ocean. The ocean was beautiful and full of many colors. He was so happy that"
+  },
+  {
+   "plan": "Cat named Whiskers; in a house with a mouse named Milo; Whiskers tries to catch Milo but fails repeatedly; Milo outsmarts Whiskers each time; Whiskers learns to play with Milo instead of chasing him.",
+   "generated": "Once upon a time, there was a cat named Whiskers. Whiskers liked to play with his toys and run around his house. One day, Whiskers saw a little little mouse named Milo. Milo was very fast, but Whiskers jumped up and ran away.\nWhiskers tried again and again, and again. He tried again and again again. This time, Milo would try again. Whiskers came out of Milo and would try to catch him again. This time, Whiskers was able to catch Milo and Whiskers was happy for him.\nFrom that day on, Whiskers learned that even when he wanted to play with Milo, he would always chase after him"
+  }
+ ],
+ "seconds": 9.1
+}

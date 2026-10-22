@@ -1,0 +1,41 @@
+q4 s0: allowed trace-q4-search: total 1243 gen 1243 (text 914, latent 329, spans 13) feed 0 t_gen 567s t_feed 0s end eos ans True py 0 se 0
+      blocked trace-q4-nolat-search: total 1519 gen 525 (text 525) feed 994 t_gen 228s t_feed 424s end eos ans True py 0 se 1
+      ratios blocked/allowed: text tokens 0.57, generation steps 0.42, all forward passes 1.22, generation-step time 0.40
+q4 s1: allowed trace-q4-s1: total 1208 gen 975 (text 803, latent 172, spans 10) feed 233 t_gen 429s t_feed 100s end eos ans True py 3 se 0
+      blocked trace-q4-nolat-s1: total 494 gen 486 (text 486) feed 8 t_gen 203s t_feed 3s end eos ans True py 1 se 0
+      ratios blocked/allowed: text tokens 0.61, generation steps 0.50, all forward passes 0.41, generation-step time 0.47
+q4 s2: allowed trace-q4-s2: total 471 gen 463 (text 399, latent 64, spans 3) feed 8 t_gen 200s t_feed 3s end eos ans True py 1 se 0
+      blocked trace-q4-nolat-s2: total 502 gen 494 (text 494) feed 8 t_gen 207s t_feed 3s end eos ans True py 1 se 0
+      ratios blocked/allowed: text tokens 1.24, generation steps 1.07, all forward passes 1.07, generation-step time 1.03
+q5 s0: allowed trace-q5-search: total 1035 gen 988 (text 748, latent 240, spans 8) feed 47 t_gen 443s t_feed 20s end eos ans True py 3 se 0
+      blocked trace-q5-nolat: total 1316 gen 1289 (text 1289) feed 27 t_gen 546s t_feed 12s end eos ans True py 1 se 0
+      ratios blocked/allowed: text tokens 1.72, generation steps 1.30, all forward passes 1.27, generation-step time 1.23
+q5 s1: allowed trace-q5-s1: total 1148 gen 1127 (text 803, latent 324, spans 10) feed 21 t_gen 503s t_feed 9s end eos ans True py 1 se 0
+      blocked trace-q5-nolat-s1: total 2870 gen 2785 (text 2785) feed 85 t_gen 1253s t_feed 41s end eos ans True py 1 se 0
+      ratios blocked/allowed: text tokens 3.47, generation steps 2.47, all forward passes 2.50, generation-step time 2.49
+q5 s2: allowed trace-q5-s2: total 1894 gen 1798 (text 1275, latent 523, spans 16) feed 96 t_gen 842s t_feed 43s end eos ans True py 1 se 0
+      blocked trace-q5-nolat-s2: total 4097 gen 4096 (text 4096) feed 0 t_gen 1887s t_feed 0s end budget ans False py 0 se 0
+      ratios blocked/allowed: text tokens 3.21, generation steps 2.28, all forward passes 2.16, generation-step time 2.24
+q1 s0: allowed trace-q1-search: total 1983 gen 654 (text 503, latent 151, spans 7) feed 1329 t_gen 306s t_feed 558s end eos ans True py 1 se 1
+      blocked trace-q1-nolat-search: total 872 gen 816 (text 816) feed 56 t_gen 343s t_feed 23s end eos ans True py 1 se 0
+      ratios blocked/allowed: text tokens 1.62, generation steps 1.25, all forward passes 0.44, generation-step time 1.12
+q2 s0: allowed trace-q2-search: total 3673 gen 1349 (text 1158, latent 191, spans 10) feed 2324 t_gen 649s t_feed 1067s end eos ans True py 3 se 2
+      blocked trace-q2-nolat-search: total 2589 gen 607 (text 607) feed 1982 t_gen 266s t_feed 858s end eos ans True py 0 se 2
+      ratios blocked/allowed: text tokens 0.52, generation steps 0.45, all forward passes 0.70, generation-step time 0.41
+q3 s0: allowed trace-q3-search: total 1816 gen 568 (text 428, latent 140, spans 5) feed 1248 t_gen 265s t_feed 538s end eos ans True py 0 se 1
+      blocked trace-q3-nolat-search: total 5175 gen 4096 (text 4096) feed 1078 t_gen 2038s t_feed 473s end budget ans False py 0 se 1
+      ratios blocked/allowed: text tokens 9.57, generation steps 7.21, all forward passes 2.85, generation-step time 7.70
+
+sum text: allowed 7031 blocked 15194
+sum lat: allowed 2134 blocked 0
+sum gen: allowed 9165 blocked 15194
+sum feed: allowed 5306 blocked 4238
+sum total: allowed 14471 blocked 19434
+sum t_gen: allowed 4205s blocked 6970s; t_feed: allowed 2338s blocked 1836s
+pooled text-token reduction with latent allowed vs blocked: 53.7%
+pooled generation-step reduction: 39.7%
+pooled all-forward-pass reduction: 25.5%
+pairs both finished: ['q4 s0', 'q4 s1', 'q4 s2', 'q5 s0', 'q5 s1', 'q1 s0', 'q2 s0']
+  finished-only text: allowed 5328 blocked 7002 reduction 23.9%
+  finished-only gen: allowed 6799 blocked 7002 reduction 2.9%
+  finished-only total: allowed 10761 blocked 10162 reduction -5.9%

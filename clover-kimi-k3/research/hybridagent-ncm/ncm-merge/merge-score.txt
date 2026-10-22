@@ -1,0 +1,22 @@
+[control news_facts] src   79 tok  keys in source 10/10  shipped keeps 0 of those  samples mean 0.0  gen 917.9 ms
+   shipped: Plans for a major shopping centre in Portsmouth have been approved.
+[q4 think_head] src  512 tok  keys in source 5/5  shipped keeps 0 of those  samples mean 0.0  gen 925.4 ms
+   shipped: I'm struggling to find out more ways to explain how it has to reduce number of people from trailing slightly below 18 countries.
+[q4 think_tail] src  500 tok  keys in source 5/5  shipped keeps 0 of those  samples mean 0.1  gen 923.9 ms
+   shipped: It is a strange calculated comparisonumi, trailing from far-right above those at this year's Emmoor National Show.
+[q4 answer    ] src   34 tok  keys in source 4/5  shipped keeps 1 of those  samples mean 0.0  gen 980.1 ms
+   shipped: You might probably sound of aebra pig - but zeros - but is this large creature z normally is pretty impressive.
+[q5 think_head] src  470 tok  keys in source 5/5  shipped keeps 1 of those  samples mean 0.5  gen 911.1 ms
+   shipped: If you want to find out what this view point at this point - but is this point circle view at the entire idea?
+[q5 think_tail] src  470 tok  keys in source 5/5  shipped keeps 1 of those  samples mean 0.5  gen 946.4 ms
+   shipped: If you want to find out what this view point at this point - but is this point circle view at the entire idea?
+[q5 answer    ] src   12 tok  keys in source 3/5  shipped keeps 0 of those  samples mean 0.0  gen 945.3 ms
+   shipped: The world's richest and earth scientists on the planet - the planet - as "devolarise" is polarolarisingisation - polar bearsisedises scientific polar on America's history.
+[q1 think_head] src  293 tok  keys in source 5/5  shipped keeps 1 of those  samples mean 1.0  gen 892.0 ms
+   shipped: If do not know you might have heard of the sound of air, and understand how long it is much sound is heard.
+[q1 think_tail] src  293 tok  keys in source 5/5  shipped keeps 1 of those  samples mean 1.0  gen 922.9 ms
+   shipped: If do not know you might have heard of the sound of air, and understand how long it is much sound is heard.
+[q1 answer    ] src   14 tok  keys in source 1/5  shipped keeps 0 of those  samples mean 0.0  gen 933.1 ms
+   shipped: What does the biggest answer question ask on the questions??"
+
+keys present in sources: 48; of those, present in the shipped NCM text: 5

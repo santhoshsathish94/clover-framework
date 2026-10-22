@@ -1,0 +1,65 @@
+{
+ "name": "mbr8",
+ "n": 598,
+ "decode": {
+  "temp": 1.0,
+  "top_k": 0,
+  "top_p": 1.0,
+  "adj": "",
+  "cands": 8,
+  "cfg": 0.0
+ },
+ "single_candidate_reference": {
+  "retention": 0.60909322940407,
+  "gen_ppl": 16.305255112092567,
+  "adj_repeat_rate": 0.013386361431758658,
+  "entropy": 3.993638140331816
+ },
+ "generated": {
+  "retention": 0.6333,
+  "gen_ppl": 14.3793,
+  "adj_repeat_rate": 0.0115,
+  "entropy": 3.9825
+ },
+ "generated_per_run": [
+  {
+   "retention": 0.6333,
+   "gen_ppl": 14.3793,
+   "adj_repeat_rate": 0.0115,
+   "entropy": 3.9825
+  }
+ ],
+ "true": {
+  "retention": 0.6748,
+  "gen_ppl": 7.6575,
+  "adj_repeat_rate": 0.0037,
+  "entropy": 4.0329
+ },
+ "examples": [
+  {
+   "plan": "rhinoceros Roxy; in a big forest; Roxy loves climbing; Roxy finds an icy hill; Roxy tries to climb it but slips; Roxy is sad; Roxy sees a little bird Billy; Billy asks Roxy what's wrong.",
+   "generated": "Once upon a time, in a big forest, there lived a rhinoceros named Roxy. Roxy loved to climb trees. One day, he decided to go on a journey to discover something new.\nAs he was climbing, Poorxy came across a icy hill, but it was so icy. He tried to climb the top, but he could not. When he finally got to the top, his feet slipped, but he fell and fell down on the ground. He was sad, but he still could not do it.\nThen, Roxy saw a little bird named Billy and asked him, \"What's wrong, Ro rhinoceros"
+  },
+  {
+   "plan": "little boy Tim; big orange ball; meets girl Sue; Sue has pretty doll; Tim likes Sue's doll; Sue likes Tim's ball; Tim and Sue discuss trade; Tim is unsure; Sue promises to take care of Tim's ball",
+   "generated": "Once upon a time, there was a little boy named Tim. He had a big orange ball. Tim loved to play with his ball every day. One day he met a girl named Sue. Sue had a pretty doll. Sue liked to play with's ball.\nSue said, \"I like your doll. It's orange.\"\nTim said, \"Yes, but let's trade.\" They agreed. Sue talked and thought about. trade. Sue said, \"We will promise to take care of your big orange ball.\"\nSue said, \"Okay, but I will take care of your ball.\" They played and had fun."
+  },
+  {
+   "plan": "big red barn with hay; tall horse Sam as a dependable friend; little chick gets lost in hay; chick calls for help; Sam hears and helps find chick.",
+   "generated": "Once upon a time, there was a big red barn. In the barn, there was a tall horse named Sam. Sam had a dependable friend Sam. Sam was a dependable horse, who always helped him.\nOne day, a little chick chick got lost in the hay. She was very lost and couldn't find out. The chick was sad, \"Oh no, Sam! I can't find him him My friend is stuck and I'm lost.\"\nSam heard heard was scared and he knew what to do. He said chick, \"Don't worry, little chick. I will help you.\" Sam and the chick looked you"
+  },
+  {
+   "plan": "naughty bee Buzzy; big tree with other bees; Buzzy sees little girl Lucy; Buzzy asks Lucy to play; Lucy is unsure how to play with a bee; Buzzy offers to teach Lucy how to play with bees",
+   "generated": "Once upon a time, in a big tree, there lived a naughty bee named Buzzy. Buzzy liked to fly around and play with other bees. One day, Buzzy saw a little girl named Lucy.\nBuzzy said, \"Hi Lucy! Do you want to play with me?\" Lucy said, \"I don't want to play with the bees.\"\nBuzzy was sad, but he didn't know how to be friends with the bees. So, he asked Lucy, \"Can you teach me how to play with the bees?\"\nSo, Buzzy and Lucy played with the other bees. They had a lot of fun. The bees bees"
+  },
+  {
+   "plan": "little boy Tim; on a mild day with sun and birds; Tim finds a small key; Tim examines the key; Tim finds a little box under a tree; Tim uses the key to open the box",
+   "generated": "One day, a little boy named Tim went for a walk. It was a very mild day. The sun was shining, and the birds were singing. Tim found a small, key on the ground. He picked up the key and looked at it. The key could open new things.\nAs Tim walked, he saw a big tree. He thought the key was to open. He to to look under the tree. He found a little box under the tree. Tim nodded and put the key in the box. He turned it up and the box opened up.\nInside the box, there were tasty fruits. There were fruits and"
+  },
+  {
+   "plan": "boy Tim; loves old TV; watches cartoons daily; TV breaks; Tim tries to fix it; mom can't buy new TV; Tim complains; mom plays games; Tim still wants TV; Tim goes to friend's house to watch TV; journey begins.",
+   "generated": "Once upon a time, there was a boy named Tim. Tim loved to watch his favorite old television. He would watch cartoons every day. One day, Tim's TV broke. He tried to fix his TV, but it just wouldn't work.\nTim's mom tried to buy a new TV, but she couldn't buy him cheap TV. Tim started to complain. His mom reminded him to play games on his own, but Tim still didn't care. He still wanted on the new TV, but he still complained. He wanted to watch his his own one.\nTim went to his friend's house and watched his TV."
+  }
+ ],
+ "seconds": 111.6
+}

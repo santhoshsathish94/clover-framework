@@ -1,0 +1,15 @@
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+NCP Transformer, Total parameter count: 88.90M
+NCP Transformer, Non embedding parameter count: 88.60M
+load report: {"dropped_shape_mismatch": [["attn_mask_for_masking", [1, 1, 641, 641], [1, 1, 688, 688]]], "missing": ["attn_mask_for_masking", "lm_head_l0.log_inv_T", "lm_head_l0.proj.weight"], "unexpected": []}
+encoded 3000 stories in 31.7s; train 2968 val 32
+trainable params 88.90062 M
+step 0 val CE matched/shuffled (mean over levels): 4.113718651235104 4.144911741216977
+{'step': 1, 'loss': 4.9172, 'gnorm': 8.144, 'lr': 4e-05, 's_per_step': 9.486}
+{'step': 5, 'loss': 4.1523, 'gnorm': 5.365, 'lr': 0.00018281152949374527, 's_per_step': 9.053}
+{'step': 10, 'loss': 3.8205, 'gnorm': 3.699, 'lr': 0.00012407910185362078, 's_per_step': 8.799}
+{'step': 15, 'loss': 3.7475, 'gnorm': 3.783, 'lr': 5.709932729367744e-05, 's_per_step': 8.716}
+{'step': 20, 'loss': 3.6646, 'gnorm': 3.523, 'lr': 2.1108049346437613e-05, 's_per_step': 8.657}
+step 20 val CE matched/shuffled: 3.2705 3.3429
+done

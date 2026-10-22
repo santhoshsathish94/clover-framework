@@ -1,0 +1,7 @@
+files with latent spans: 17
+{'files': 17, 'spans': 131, 'anchor': 131, 'forced': 0, 'lm_only': 2, 'cos_only': 0, 'both': 129, 'neither': 0, 'suppressed': 19}
+span lengths (continuing latent steps before the exit step): n 131, median 24, mean 31.8, min 4, max 156
+lengths histogram (<=8, 9-16, 17-32, 33-64, 65-128, 129+): [17, 20, 48, 33, 11, 2]
+at the exit step: LM-head P(</latent>) median 0.986, min 0.350, share > 0.5: 0.95, share > 0.9: 0.74
+at the exit step: cosine(R(h), Emb(</latent>)) median 0.998, min 0.219
+continued steps: n 4160, max P(</latent>) 0.999, share P > 0.1: 0.0103, share P > 0.5: 0.0031; cosine to </latent> median 0.052, max 0.999

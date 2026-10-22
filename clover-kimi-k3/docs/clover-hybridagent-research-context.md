@@ -988,6 +988,8 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 
 *Numbering note:* written after Cycle 41 on this branch. Another session's branch `ncm-merge-qa` (commit `bfa024f`) already uses the label "Cycle 42" for the reasoning/QA tokenizer gate, so this entry carries a separate label to avoid two different Cycle 42 entries when the branches meet.
 
+*Artefact location:* the scripts and result files named in Cycles 3-41 (written under `oss/scratch-agents/hybrid-clean/`) are copied to `clover-kimi-k3/research/hybridagent-ncm/` (same relative layout, 171 files, 14 MB). Excluded: model checkpoints and datasets (on the gpu box under `~/plan2text`), the HybridAgent clone, `ncm-qa` (committed on `ncm-merge-qa`). `ncm-merge/human/key.json` is included because the rating round is closed and `analyze_rating.py` needs it.
+
 **Direction (creator, 2026-10-22):** "other agents are working propose the k3 training plan and estimate keep both machine into account you can use many subagents and even local machine if need so plan accordingly". Offered, not imposed: the creator owns which target K3 is trained toward.
 
 **Context read this cycle (read-only).** Three Explore subagents read K3 architecture/licence (from `k3-official`), the engine's measured numbers (from repo memory/context files), and training-cost facts; one read-only snapshot of the three machines. Subagent reports were not re-checked line by line against the engine sources; one earlier report (stage 2 trains "only a 0.3M head") was wrong and is not used.

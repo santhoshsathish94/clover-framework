@@ -1,0 +1,59 @@
+{
+ "name": "old_best",
+ "n": 48,
+ "decode": {
+  "temp": 0.6,
+  "top_k": 0,
+  "top_p": 1.0,
+  "adj": "10,4,0.5",
+  "cands": 8,
+  "cfg": 0.0
+ },
+ "single_candidate_reference": {
+  "retention": 0.6220002168096208,
+  "gen_ppl": 16.264177448935083,
+  "adj_repeat_rate": 0.007441673370876911,
+  "entropy": 3.949451650291858
+ },
+ "generated": {
+  "retention": 0.6344,
+  "gen_ppl": 15.1597,
+  "adj_repeat_rate": 0.0112,
+  "entropy": 3.9533
+ },
+ "generated_per_run": [
+  {
+   "retention": 0.6344,
+   "gen_ppl": 15.1597,
+   "adj_repeat_rate": 0.0112,
+   "entropy": 3.9533
+  }
+ ],
+ "examples": [
+  {
+   "plan": "curious girl Lily; in a park; Lily finds a lost puppy; she comforts the puppy; she looks for the owner; she calls a pet shelter; the owner is found and grateful.</think></think></think></think></think></think></think></think></think></think></think></think></think>",
+   "generated": "Once upon a time, there was a curious girl named Lily. She loved to play outside and explore the world around her. One day, she found a small, lost puppy in the park. The puppy was scared and scared.\nLily gently picked up the puppy and said, \"Don't worry little doggy, I'll help you. I will help you find your your owner.\" So, Lily and the puppy walked all around the park, looking for the puppy's owner.\nFinally, they found the puppy's owner. The owner was so kind and brought the puppy home. The puppy was very happy and grateful to have found a"
+  },
+  {
+   "plan": "shy boy Tim; in his bedroom at night; Tim is afraid of the dark; his sister Sarah gives him a nightlight; Tim feels safer and falls asleep peacefully.",
+   "generated": "Once upon a time, there was a shy boy named Tim. Tim was not afraid of the dark. Every night, he would sleep in his cozy bed early and sleep in his bedroom. He would not like the dark in the dark but scared of the night.\nOne night, Tim's big sister Sarah came into room and gave him a special gift. She hugged him and gave him a special nightition. That night, Sarah tucked himself cozy and cozy in his cozy bed. Tim felt much better knowing and he felt much better. He was now close to his bedroom and fell asleep.. He dreamed of sweet dreams. \n"
+  },
+  {
+   "plan": "Robot named R2D2; in a futuristic city; R2D2 watches humans dance; R2D2 asks a dance teacher for lessons; R2D2 practices daily; R2D2 performs a dance at a festival.",
+   "generated": "Once upon a time, there was a robot called Rob. He lived in a nice DoryD Doug. Every day, he would watch the big cats run around the city dance.\nOne day, R2 1 22 thought everyday - he wanted to learn how to learn to dance too. So, he asked a dance teacher if he could teach them how to learn.\nThe teacher called 1 D2 practiced every day. He practised, practised and practised every day.\nOne day, R2 1. Dory at the festival to dance and show everyone! He was so excited to see all the people"
+  },
+  {
+   "plan": "Two friends, Alex and Jamie; in a forest; they find a big tree; they gather materials; they work together to build a treehouse; they finish and play inside.",
+   "generated": "Once upon a time, there were two friends, Alex and Jamie. They were adventurous and liked to explore the forest. One day, they decided to go on an adventure. \nAs they walked along, they saw a big tree. “Look, that’ so big!” said Alex. “Let’s build built it!”\nSo, Alex and Jamie worked together to gather all the things. They used leaves, branches, and leaves to sticks together and sticks. Then Alex and Jamie worked together to build a treehouse. \nWhen they were finished, they both gathered all the materials they needed and went inside their house. When"
+  },
+  {
+   "plan": "Little fish Finley; in a small pond; dreams of the ocean; meets a wise old fish; learns about the ocean's wonders; decides to swim towards the ocean's edge; faces challenges but perseveres; finally reaches the ocean and is amazed.",
+   "generated": "Once upon a time, there was a little fish named Fin who lived in a small pond. Every day, he dreamt of all the wonderful things to the world around him. \nOne day, he met a wise old fish who was very wise. The fish told Fin about the ocean and told him about the beauty of had..\nFin was was amazed by this, so he decided to try and swim and swim to the edge of the ocean. As he swam slowly, he was very challenged, but he kept going. \n\nWhen he finally reached the edge of,, he was amazed by how beautiful it was"
+  },
+  {
+   "plan": "Cat named Whiskers; in a house with a mouse named Mousie; Whiskers tries to catch Mousie but fails repeatedly; Mousie outsmarts Whiskers each time; Whiskers learns to play with Mousie instead of chasing.",
+   "generated": "Once upon a time, there was a cat named Whiskers. Whiskers liked to run around the house and chase and chase at the mice. One day, Whiskers saw a little mouse named Mousie catch him, but Whiskers was too quick and quick. \nMoreie chased Whiskers and tried again and again but one day, Mousie came out. Mousie had out out Whiskers to catch Whiskers. Whiskers realized that he had been snuck out of Mousie. \nFromFrom that day on, Whiskers learned that he could only play with Mousie instead. He realized that sometimes he could always play with him instead"
+  }
+ ],
+ "seconds": 9.2
+}

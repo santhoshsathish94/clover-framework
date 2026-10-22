@@ -1,0 +1,20 @@
+
+[TOK] 163584 ranks (max id 163583) + 16 added tokens | kimi=1 rankbpe=1
+prompt ids: 2 25427 60713 6847 4275 57976 13766 395 22572 18504 382 381 5182 566 1650 581 398 554 519 22572 12218 8335 308 1133
+ARITHMETIC: trunk exact; experts exact  -> bit-identical to the pod
+one-time setup 53.87 s (expert buffer 1.29, layers 0-1 + buffers 41.03, opening layers 2-92 11.36, tail 0.18)
+REQUEST, words -> next token: 20 words = 24 tokens (107 bytes): 20369.0 ms = 20.369 s in total
+   tokenise 0.03 ms, embedding lookup 1.34 ms, layer 0 42.9 ms, layer 1 337.8 ms
+   layers 2-92: 19933.1 ms in total (67 KDA layers 14714.5 ms, 142.6-376.5 each; 24 MLA layers 5218.5 ms, 135.5-299.1 each)
+   tail (last position: final normalisation, head, text) 53.9 ms
+   next token id 418, text " on"
+   not compared: no recorded values exist for these words
+DECODE, 30 more tokens after the 24-token prompt: 90.551 s in total (first step 3.854 s, mean 3.018 s per token; layers 89.045 s, tail 1.505 s)
+   major page faults during the decode steps: 7
+   per decode token (s): before the router 0.978, latent 0.052, experts 1.582, after 0.330, readers start + guess 0.000
+   expert cache, 32 experts per layer (51.7 GB): 20653 of 44160 experts needed were already in RAM (46.8%), 23507 read from disk (412.5 GB)
+   generated ids: 418 566 16880 136638 798 52797 198 2512 1650 18858 398 1632 308 55283 11 1573 308 2032 1701 11 316 1632 308 1628 7675 11 7057 5772 308 276 154138
+   generated text (31 tokens):
+ on this repository.**
+
+This file tells you how to behave, what to read first, and how to make safe, useful changes to the codebase

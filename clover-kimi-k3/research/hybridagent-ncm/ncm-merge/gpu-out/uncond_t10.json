@@ -1,0 +1,34 @@
+{
+ "released_unconditional": true,
+ "N": 598,
+ "temp": 1.0,
+ "adj": "",
+ "mean": {
+  "gen_ppl": 18.6716,
+  "adj_repeat_rate": 0.0101,
+  "entropy": 3.9853
+ },
+ "runs": [
+  {
+   "gen_ppl": 18.40089476549623,
+   "adj_repeat_rate": 0.010834200937011974,
+   "entropy": 3.9821976588789774
+  },
+  {
+   "gen_ppl": 18.999174714512467,
+   "adj_repeat_rate": 0.009451703900651729,
+   "entropy": 3.9833713029411677
+  },
+  {
+   "gen_ppl": 18.614713959547604,
+   "adj_repeat_rate": 0.009931780068057117,
+   "entropy": 3.990379187028744
+  }
+ ],
+ "examples": [
+  "\nOne day, a fast crab named Tim was near the shore. He was going to play in the beach. Tim was very quiet and did not break the water. He liked to step on the rocks and swim in the sea.\nA small, fast crab saw Tim and wanted to talk to him. The crab looked at Tim and said, \"Hi! Do you want to rocks from the rocks?\" Tim thought that was a good idea and asked \"Can you help me load the shells into big, fast the?\" The fish said yes and they helped Tim.\nJust then, a big, mean fish named Finn came over and",
+  "\n\n\n there was a playful little boy. Every day he went out out in the sand and he went to the park. One day, he saw something shining in the sand. He told his mom and dad what it was. She brave, so she slowly slowly flew up to the edge of the sand.\nHe started swimming closer and closer soon he suddenly felt something moving on him. It was! He gasped and felt scared. He ran to his mom and dad daddy asked if she could stop harm it. \nMommy and Daddy nodded, so showed her to come down and go towards him. She had to try and comfort",
+  "\nOnce upon a time, in a deep, deep forest, there lived an angel named Lily. Lily was a very special angel because she had a big heart. She loved to eat from big tree to eat.\nOne sunny day, a small rabbit came to the forest. The rabbit was very small, but very kind to Lily. Lily told the rabbit to lead other animals to the other animals. So, she trusted the rabbit and led her to a big, fun park.\nTogether, Lily and the rabbit played with all the other animals, and they were very happy. They had a fun time, and Lily would jump and",
+  "\n \nOnce upon a time, there was a girl named Lucy. She was exploring a garden when she saw a dove. She was very graceful.\nLucy spread her wings and smiled the angel.\nThe girl said, \"Hello, little dove! What are you here?\" \nThe dove replied, \"I'm Lily! I'm going to the garden.. can I come too?\" she asked.\nLucy smiled and said, \"Of course you can go. Be careful, don't spoil flowers!\" \nLily nodded and ran away in the garden. But then, she noticed something the ground. It was so"
+ ]
+}

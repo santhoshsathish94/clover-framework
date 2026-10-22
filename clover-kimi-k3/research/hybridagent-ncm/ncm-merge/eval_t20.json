@@ -1,0 +1,61 @@
+{
+ "n": 16,
+ "sampling": {
+  "temp": 1.0,
+  "top_k": 0,
+  "top_p": 1.0
+ },
+ "load": {
+  "dropped_shape_mismatch": [],
+  "missing": [],
+  "unexpected": []
+ },
+ "retention": {
+  "matched_plan_generated": 0.4125,
+  "shuffled_plan_generated (control: plan of another story, scored against this plan)": 0.2,
+  "true_story (ceiling)": 1.0
+ },
+ "gen_seconds": 9.1,
+ "examples": [
+  {
+   "plan": "forest, lived, rhinoceros, named, roxy, loved, climb, climbed, trees, rocks",
+   "generated": " it. One day, there was a small named Billy. Billy was brave and wanted to climb. He started to climb up a high hill, but he was going very hard. The hill kept sliding and he was scared.\nBilly had an idea, so he called his friend, \"Can you help me? I climb a big rock on on the top of a.. you have a hill. You can try to increase it up and put on the hill.\"\nSo, each Billy climbed on the rock and made it high at the sky. He was able to climb on the rock. Soon, he was back at the top",
+   "true": "Once upon a time, in a big forest, there lived a rhinoceros named Roxy. Roxy loved to climb. She climbed trees, rocks, and hills. One day, Roxy found an icy hill. She had never seen anything like it before. It was shiny and cold, and she wanted to climb it.\nRoxy tried to climb the icy hill, but it was very slippery. She tried again and again, but she kept falling down. Roxy was sad. She wanted to climb the icy hill so much. Then, she saw a little bird named Billy. Billy saw that Roxy was sad and asked,"
+  },
+  {
+   "plan": "thoughtful, girl, named, loved, help, around, house, asked, wipe, table",
+   "generated": "\n\nOnce, a time, there was a sad girl who was feeling sad. Every day he went to restaurant and he was eager to prepare a really meal. He loved to wipe it day.\nHe had a brilliant idea. He found found glue on the floor and wrapped it up and wrapped it around his neck. He got off the glue and started to shake off the table. Then, glue fell off until the toy didn’t reach.\nIt was an very problem. His Mommy saw him and encouraged him spade The boy said, “Heres a nice and I made.” The boy the it and ate them all up",
+   "true": "Once upon a time, there was a thoughtful girl named Sue. Sue loved to help her mom around the house. One day, her mom asked her to wipe the table after they ate their lunch. Sue was happy to help.\nAs Sue was wiping the table, she saw a pretty candle on the window sill. The candle was her mom's favorite. Sue wanted to do something nice for her mom, so she said, \"Mom, can I light the candle for you?\" Her mom said, \"Yes, but be very careful.\"\nSue carefully lit the candle and put it on the table. Her mom was so happy to"
+  },
+  {
+   "plan": "kind, farmer, know, came, farm, kneeled, down, talk, asked, lonely",
+   "generated": " a little girl named Sarah. She was only three years old and she had a little spoiled spoiled girl. Every day, Sarah's parents wanted to cook her something so she couldn't eat her. She looked around for a to help her but no matter what. One day, Sarah saw a big black pot. She thought she could try and put it around the pot. She knew that she kept hiding, she just knew what would happen next soon.\nSoon, Sarah's brother came into the kitchen. She looked over it the pot and not at the same time. She brought the pot down the to to. \n, a little",
+   "true": "Once upon a time, there was a kind farmer. He had a big cow. The cow was sad. The farmer did not know why.\nOne day, a little boy came to the farm. He saw the sad cow. The boy kneeled down to talk to the cow. \"Why are you sad, cow?\" he asked. The cow said, \"I am lonely. I want a friend.\"\nThe kind farmer heard the cow. He wanted to help. So, he got another cow to be friends with the sad cow. The sad cow was happy now. They played together every day. And the kind farmer, the"
+  },
+  {
+   "plan": "girl, named, lucy, loved, play, together, green, park, near, house",
+   "generated": "Once upon a a time, there was a little puppy named Will. Jake lived in a small house with his family. He loved to run run and jump in the park with his friends. But Will was a fierce. He wanted to run and play in the park because his friends came a home.\nA big bird saw Will that and asked, \"What is that?\" Will replied, \"Yes, it's a secret place. My home near it help us stay safe. It's not safe David didn't listen to a scary jail and started to play. He ran and ran until he came home until he was safe. He learned",
+   "true": "Once upon a time, there was a little girl named Lucy. She had a pet cat named Tom. They loved to play together in the big green park near their house. One sunny day, they went to the park to play.\nWhile playing, Tom saw a big sour lemon on the ground. He wanted to play with it, but when he touched it, it started to roll away. Tom ran after the lemon, trying to catch it. But as he ran, Tom got lost in the park. Lucy looked around, but she could not find Tom. She was very sad.\nLucy did not give up. She searched"
+  },
+  {
+   "plan": "brown, named, spot, loved, play, ball, park, sunny, goal, other",
+   "generated": "\n\n aOnce upon a time,, He, a time, there was a jolly charming little boy named Tim. Tim liked to play football with with his friends.. sunny day, and his friends were playing with a ball to score a score of. Tim was ready.\nTim threw the ball high into the goal. They ran fast and shot it very high. But goal goal was he catch ball ball than everyone! This time, the ball had hit the highest score and it broke.\nTim felt sad and his friends tried hard to fix it. But the ball didn't go away and they couldn't score their successful.",
+   "true": "Once upon a time, there was a little brown dog named Spot. He loved to play with his ball in the park. One sunny day, Spot saw a big goal on the other side of the park. He wanted to get his ball into the goal.\nSpot ran fast with the ball in his mouth. He tried to kick the ball into the goal, but he was too small. Spot started to struggle. He tried again and again, but the ball would not go in.\nThen, Spot had an idea. He asked his friend, a big brown horse named Buddy, for help. Buddy kicked the ball with his strong"
+  },
+  {
+   "plan": "named, loved, play, ball, sunny, went, outside, land, near, home",
+   "generated": "\nOnceOnce upon a time, there was a chubby little boy named Tim. Tim had a ball with his ball and played with it every day.\nOne sunny day, Tim was playing outside with his ball near the house. He threw his ball far and it went very means. It stopped by a big hill. Tim was sad and yelled, \"Where is my ball!\" His mom heard him and called him inside to help him.\nTim heard another noise and watched it rolling really fast like a rock. Just then the fast ball caught it. He got the ball and gave it back to the ball. Tim was happy. From",
+   "true": "Once upon a time, there was a little boy named Tom. He loved to play with his red ball. One sunny day, Tom went outside to play with his ball in the land near his home.\nTom kicked the ball high in the sky. The ball went far, far away. Tom was sad because he could not find his ball. He walked and walked, looking for it. The land was big and sometimes dangerous. Tom knew he had to be careful.\nAt last, Tom found his ball near a big tree. He was very happy. Tom knew he should not kick the ball too hard next time. He went"
+  },
+  {
+   "plan": "named, collar, wore, every, loved, play, park, friends, tree, wanted",
+   "generated": " \nOnceOnce upon a time, there was a little boy who had a collar. He had walking around his neck and was playing with, but he never bumped a huge tree. One day he tried to climb a tree, she decided and couldn't get it off. As she stood there, she saw a large bird flying around with him.\nThe bird looked at the little boy and said, \"Hey, you look crazy - you need a collar!\"\nThe little boy shook his head and he thought for a moment said, \"Yes! I remember! I want.. the bird feel better.\" So they started to to",
+   "true": "Once upon a time, there was a big dog named Max. Max had a red collar that he wore every day. He loved to play and run in the park with his friends.\nOne day, Max saw a cat on a tree. He wanted to be friends with the cat. So, Max tried to stretch up to reach the cat. But he was not tall enough. He tried again and again, but he just couldn't reach the cat.\nMax felt sad, but then he had an idea. He found a big box and put it under the tree. Max climbed on the box and stretched one more time. This"
+  },
+  {
+   "plan": "girl, named, loved, jewelry, full, pretty, things, liked, wear, night",
+   "generated": "Once upon upon a time, there was a little girl who loved to wear look.. Her jewelry was, and and the girl always took care of her. One night, she was walking in the park with her jewelry and She saw a large, so it was sparkly in her hand. But she didn't catch it. The little girl cautiously soon realized she should have to have fun with her because her jewelry was so important.\nBut, the necklace suddenly started to move away and so it was so bad - it began to swim away. The little girl tried to get back back, but she kept closer and. \nThe little",
+   "true": "Once upon a time, there was a girl named Mia. Mia loved her jewelry. She had a big box full of pretty things. She liked to wear them all day. But at night, she had to sleep.\nOne day, Mia met a talking cat named Tom. Tom was a tough cat, but he was nice. Tom said, \"Hi, Mia! I like your jewelry. Can I wear some too?\" Mia said, \"Yes, Tom. You can wear my jewelry, but we have to give it back before we sleep.\"\nSo, Mia and Tom played together. They wore the jewelry and had fun."
+  }
+ ]
+}

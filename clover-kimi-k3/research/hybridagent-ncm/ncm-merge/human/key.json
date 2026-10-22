@@ -1,0 +1,422 @@
+{
+ "r001": {
+  "plan_idx": 76,
+  "system": "s4",
+  "repeat": false
+ },
+ "r002": {
+  "plan_idx": 76,
+  "system": "s1",
+  "repeat": false
+ },
+ "r003": {
+  "plan_idx": 93,
+  "system": "s0",
+  "repeat": false
+ },
+ "r004": {
+  "plan_idx": 442,
+  "system": "s1",
+  "repeat": false
+ },
+ "r005": {
+  "plan_idx": 93,
+  "system": "s1",
+  "repeat": false
+ },
+ "r006": {
+  "plan_idx": 387,
+  "system": "s4",
+  "repeat": false
+ },
+ "r007": {
+  "plan_idx": 442,
+  "system": "true",
+  "repeat": false
+ },
+ "r008": {
+  "plan_idx": 442,
+  "system": "s0",
+  "repeat": false
+ },
+ "r009": {
+  "plan_idx": 76,
+  "system": "true",
+  "repeat": false
+ },
+ "r010": {
+  "plan_idx": 93,
+  "system": "s4",
+  "repeat": false
+ },
+ "r011": {
+  "plan_idx": 387,
+  "system": "true",
+  "repeat": false
+ },
+ "r012": {
+  "plan_idx": 442,
+  "system": "s4",
+  "repeat": false
+ },
+ "r013": {
+  "plan_idx": 93,
+  "system": "true",
+  "repeat": false
+ },
+ "r014": {
+  "plan_idx": 387,
+  "system": "s1",
+  "repeat": false
+ },
+ "r015": {
+  "plan_idx": 387,
+  "system": "s0",
+  "repeat": false
+ },
+ "r016": {
+  "plan_idx": 76,
+  "system": "s0",
+  "repeat": false
+ },
+ "r017": {
+  "plan_idx": 378,
+  "system": "true",
+  "repeat": false
+ },
+ "r018": {
+  "plan_idx": 110,
+  "system": "s1",
+  "repeat": false
+ },
+ "r019": {
+  "plan_idx": 433,
+  "system": "s1",
+  "repeat": false
+ },
+ "r020": {
+  "plan_idx": 295,
+  "system": "s1",
+  "repeat": false
+ },
+ "r021": {
+  "plan_idx": 378,
+  "system": "s4",
+  "repeat": false
+ },
+ "r022": {
+  "plan_idx": 110,
+  "system": "s0",
+  "repeat": false
+ },
+ "r023": {
+  "plan_idx": 433,
+  "system": "s0",
+  "repeat": false
+ },
+ "r024": {
+  "plan_idx": 295,
+  "system": "s0",
+  "repeat": false
+ },
+ "r025": {
+  "plan_idx": 433,
+  "system": "true",
+  "repeat": false
+ },
+ "r026": {
+  "plan_idx": 110,
+  "system": "s4",
+  "repeat": false
+ },
+ "r027": {
+  "plan_idx": 295,
+  "system": "true",
+  "repeat": false
+ },
+ "r028": {
+  "plan_idx": 378,
+  "system": "s1",
+  "repeat": false
+ },
+ "r029": {
+  "plan_idx": 378,
+  "system": "s0",
+  "repeat": false
+ },
+ "r030": {
+  "plan_idx": 76,
+  "system": "s1",
+  "repeat": true
+ },
+ "r031": {
+  "plan_idx": 295,
+  "system": "s4",
+  "repeat": false
+ },
+ "r032": {
+  "plan_idx": 110,
+  "system": "true",
+  "repeat": false
+ },
+ "r033": {
+  "plan_idx": 433,
+  "system": "s4",
+  "repeat": false
+ },
+ "r034": {
+  "plan_idx": 527,
+  "system": "s0",
+  "repeat": false
+ },
+ "r035": {
+  "plan_idx": 36,
+  "system": "s0",
+  "repeat": false
+ },
+ "r036": {
+  "plan_idx": 36,
+  "system": "true",
+  "repeat": false
+ },
+ "r037": {
+  "plan_idx": 448,
+  "system": "s4",
+  "repeat": false
+ },
+ "r038": {
+  "plan_idx": 527,
+  "system": "true",
+  "repeat": false
+ },
+ "r039": {
+  "plan_idx": 36,
+  "system": "s4",
+  "repeat": false
+ },
+ "r040": {
+  "plan_idx": 448,
+  "system": "s1",
+  "repeat": false
+ },
+ "r041": {
+  "plan_idx": 147,
+  "system": "s4",
+  "repeat": false
+ },
+ "r042": {
+  "plan_idx": 527,
+  "system": "s1",
+  "repeat": false
+ },
+ "r043": {
+  "plan_idx": 527,
+  "system": "s4",
+  "repeat": false
+ },
+ "r044": {
+  "plan_idx": 147,
+  "system": "s1",
+  "repeat": false
+ },
+ "r045": {
+  "plan_idx": 147,
+  "system": "s0",
+  "repeat": false
+ },
+ "r046": {
+  "plan_idx": 147,
+  "system": "true",
+  "repeat": false
+ },
+ "r047": {
+  "plan_idx": 76,
+  "system": "s0",
+  "repeat": true
+ },
+ "r048": {
+  "plan_idx": 448,
+  "system": "s0",
+  "repeat": false
+ },
+ "r049": {
+  "plan_idx": 448,
+  "system": "true",
+  "repeat": false
+ },
+ "r050": {
+  "plan_idx": 36,
+  "system": "s1",
+  "repeat": false
+ },
+ "r051": {
+  "plan_idx": 288,
+  "system": "s0",
+  "repeat": false
+ },
+ "r052": {
+  "plan_idx": 454,
+  "system": "s0",
+  "repeat": false
+ },
+ "r053": {
+  "plan_idx": 288,
+  "system": "s1",
+  "repeat": false
+ },
+ "r054": {
+  "plan_idx": 288,
+  "system": "s4",
+  "repeat": false
+ },
+ "r055": {
+  "plan_idx": 454,
+  "system": "s4",
+  "repeat": false
+ },
+ "r056": {
+  "plan_idx": 369,
+  "system": "s1",
+  "repeat": false
+ },
+ "r057": {
+  "plan_idx": 288,
+  "system": "true",
+  "repeat": false
+ },
+ "r058": {
+  "plan_idx": 467,
+  "system": "true",
+  "repeat": false
+ },
+ "r059": {
+  "plan_idx": 369,
+  "system": "true",
+  "repeat": false
+ },
+ "r060": {
+  "plan_idx": 147,
+  "system": "s1",
+  "repeat": true
+ },
+ "r061": {
+  "plan_idx": 454,
+  "system": "s1",
+  "repeat": false
+ },
+ "r062": {
+  "plan_idx": 467,
+  "system": "s1",
+  "repeat": false
+ },
+ "r063": {
+  "plan_idx": 369,
+  "system": "s4",
+  "repeat": false
+ },
+ "r064": {
+  "plan_idx": 467,
+  "system": "s0",
+  "repeat": false
+ },
+ "r065": {
+  "plan_idx": 467,
+  "system": "s4",
+  "repeat": false
+ },
+ "r066": {
+  "plan_idx": 454,
+  "system": "true",
+  "repeat": false
+ },
+ "r067": {
+  "plan_idx": 369,
+  "system": "s0",
+  "repeat": false
+ },
+ "r068": {
+  "plan_idx": 540,
+  "system": "s4",
+  "repeat": false
+ },
+ "r069": {
+  "plan_idx": 540,
+  "system": "true",
+  "repeat": false
+ },
+ "r070": {
+  "plan_idx": 423,
+  "system": "s1",
+  "repeat": false
+ },
+ "r071": {
+  "plan_idx": 50,
+  "system": "s1",
+  "repeat": false
+ },
+ "r072": {
+  "plan_idx": 556,
+  "system": "true",
+  "repeat": false
+ },
+ "r073": {
+  "plan_idx": 423,
+  "system": "s0",
+  "repeat": false
+ },
+ "r074": {
+  "plan_idx": 556,
+  "system": "s4",
+  "repeat": false
+ },
+ "r075": {
+  "plan_idx": 423,
+  "system": "s4",
+  "repeat": false
+ },
+ "r076": {
+  "plan_idx": 556,
+  "system": "s0",
+  "repeat": false
+ },
+ "r077": {
+  "plan_idx": 540,
+  "system": "s0",
+  "repeat": false
+ },
+ "r078": {
+  "plan_idx": 50,
+  "system": "true",
+  "repeat": false
+ },
+ "r079": {
+  "plan_idx": 423,
+  "system": "true",
+  "repeat": false
+ },
+ "r080": {
+  "plan_idx": 467,
+  "system": "s4",
+  "repeat": true
+ },
+ "r081": {
+  "plan_idx": 50,
+  "system": "s4",
+  "repeat": false
+ },
+ "r082": {
+  "plan_idx": 50,
+  "system": "s0",
+  "repeat": false
+ },
+ "r083": {
+  "plan_idx": 556,
+  "system": "s1",
+  "repeat": false
+ },
+ "r084": {
+  "plan_idx": 540,
+  "system": "s1",
+  "repeat": false
+ }
+}

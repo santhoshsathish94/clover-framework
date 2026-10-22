@@ -1,0 +1,34 @@
+{
+ "released_unconditional": true,
+ "N": 598,
+ "temp": 0.6,
+ "adj": "10,4,0.5",
+ "mean": {
+  "gen_ppl": 13.7063,
+  "adj_repeat_rate": 0.0089,
+  "entropy": 3.9589
+ },
+ "runs": [
+  {
+   "gen_ppl": 13.585888954970114,
+   "adj_repeat_rate": 0.00942159593642471,
+   "entropy": 3.95673783929557
+  },
+  {
+   "gen_ppl": 13.749788147222615,
+   "adj_repeat_rate": 0.008676470588235294,
+   "entropy": 3.959852359745926
+  },
+  {
+   "gen_ppl": 13.783082503538202,
+   "adj_repeat_rate": 0.008703919222384317,
+   "entropy": 3.9602571948947687
+  }
+ ],
+ "examples": [
+  "\nOne day, a little girl named Lily found a card under a big tree. The card had a pretty flower on it. Lily was very happy. She wanted wanted to show her friend, Tom. She ran to her house to find the card.\nLily said, \"Hi Tom! Do you want to play with chocolate?\" Tom smiled and said, \"Yes, I love chocolate too! Let's eat it together.\" So, Lily and Tom started to tear the chocolate picture into small pieces. They put the picture on the soft grass and ate some more pictures.\nAs they ate more pictures, something unexpected happened. The card",
+  "\nOne day, a lively dog named Spot went to play outside. He loved to play in the snow and make snowballs. He liked to run and jump in puddles, making snowmen and snow angels.\nSpot saw a big tree and peeked. The tree had a bird on it. The bird was sitting on a branch too. Spot said, \"Hello, little bird?\"\n\"Hello, little bird,\" said the bunny. The bunny was very surprised. \"Do you know that the little bunny could talk? \"Yes if you can help me?\" The bunny hopped and hopped onto down the little bunny.\nThe bunny and the bird",
+  "\nOnce upon a time, in a small town, there lived a little girl named Lily. Lily was a graceful and she was very pretty. Every day, she would walk around at the big trees and pretty flowers.\nOne sunny day, Lily met a friendly bee Ben and Ben whispered to Lily, \"Do you want me to find more pretty flowers? I can show you!\" So Lily decided to follow Ben. She followed Ben and led her to a big field where all the flowers were.\nAt the field, Lily saw other bees playing games. She wanted to join them. Lily was very excited and thanked Ben, \" and",
+  "\n\nOnce upon a time, there was a young boy named Jack. He was 3 years old and loved to play outside. One day he saw a rake in the garden. He wanted to bite it, so he ran around and ran, jumping in the mud. \nHe saw a man putting a rake in the dirt. He said, “Please, don't poke me in the mud. Can I play too?” The man replied, “Yes, you can’. Be careful. Don't spoil the rake, so it don’t let it go away.”\nBut, when the man put the rake in the rake"
+ ]
+}

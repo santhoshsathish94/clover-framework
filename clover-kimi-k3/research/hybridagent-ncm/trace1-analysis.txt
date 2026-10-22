@@ -1,0 +1,59 @@
+budget 450 wall_s 196.7 prefill_s 2.68 prompt_len 529
+result {'turns': 1, 'python_calls': 0, 'search_calls': 0, 'tool_requests': 0, 'generation_steps': 450, 'latent_steps': 125, 'latent_spans': 4, 'anchor_exits': 4, 'forced_exits': 0, 'end_reason': 'budget'}
+gate (same seed and settings as the earlier 1,024-step run; instrument must not change the text): {'old_len': 2202, 'new_len': 1019, 'first_diff': None, 'new_is_prefix_of_old': True}
+steps 451
+
+== steps by kind of input fed
+token                    n=317
+token:<latent>           n=4
+latent                   n=125
+token:exit(</latent>)    n=4
+pad                      n=1
+
+== stage times in ms (mean over steps of that kind; net = total minus my own observation work)
+kind                       total     net  forward  layers   norm   head   link  sample   other
+token                      408.2   408.1    402.5   373.5   0.09   28.3   0.00    5.15     0.5
+token:<latent>             409.8   409.6    404.0   375.1   0.10   28.2   0.00    5.16     0.4
+latent                     483.7   404.3    402.2   373.2   0.09   28.2   1.89    0.00     0.2
+token:exit(</latent>)      488.4   409.7    407.7   378.7   0.09   28.2   1.90    0.00     0.2
+pad                        442.5   442.5    442.3   413.3   0.10   28.3   0.00    0.00     0.2
+median total ms per kind: {'token': 407.5, 'token:<latent>': 410.1, 'latent': 483.2, 'token:exit(</latent>)': 488.8, 'pad': 442.5}
+
+== per-layer profile at the last position: mean output norm / relative update ||out-in||/||in|| / cos(in,out)
+text-step n=317, latent-step n=125
+layer |   T norm   T upd  T cos |   L norm   L upd  L cos
+    0 |     10.9   6.320  0.382 |     24.3   2.320  0.587
+    1 |     14.7   0.510  0.951 |     28.8   0.376  0.951
+    2 |     17.5   0.356  0.960 |     29.7   0.195  0.982
+    3 |     21.8   0.432  0.948 |     31.7   0.254  0.970
+    5 |     40.1   0.526  0.941 |     44.7   0.384  0.953
+    8 |     56.0   0.356  0.945 |     59.4   0.395  0.934
+   12 |     68.4   0.412  0.921 |     71.3   0.392  0.928
+   16 |    135.2   0.998  0.944 |     86.6   0.309  0.955
+   20 |    182.6   0.390  0.934 |    131.7   0.353  0.947
+   24 |    310.9   0.474  0.927 |    257.8   0.433  0.942
+   28 |    488.4   0.371  0.947 |    425.5   0.346  0.954
+   30 |    633.5   0.371  0.952 |    572.0   0.374  0.955
+   32 |    848.7   0.385  0.953 |    831.9   0.416  0.949
+   33 |   1004.0   0.382  0.952 |   1000.3   0.383  0.954
+   34 |   1356.0   0.594  0.935 |   1400.5   0.565  0.943
+   35 |   1377.5   0.437  0.914 |   2336.1   0.811  0.943
+
+== norms
+fed vector norm: token steps mean 1.644 | latent steps (R(h)) mean 8.828
+final normed hidden norm (what the head and HybridLink read): token steps 152.14 | latent steps 70.56
+max |last_hidden (engine, hidden_states[-1]) - output of final norm| over all steps: 0.0
+
+== latent steps: readouts of the same hidden state two ways
+latent-mode decode steps (state read before the step): 129
+steps that ended the span (engine fed </latent>): 4 | steps that continued: 125
+cosine of R(h) to its nearest token embedding: continued mean 0.855 min 0.273 max 0.998
+cosine of R(h) to Emb(</latent>): continued mean 0.063 | at exit [0.999, 0.998, 0.999, 0.988]
+LM-head P(</latent>) at the step: continued mean 0.0005 max 0.0348 | at exit [0.998, 0.957, 0.987, 0.972]
+per latent step, which readout says </latent> (before the minimum-steps rule): {'lm_top1==close': 0, 'nn==close': 0, 'both': 4, 'neither': 125}
+LM-head top-1 probability in latent steps mean 0.881 | entropy (plain softmax) mean 0.419
+sampling-distribution entropy in text steps (temperature, top-k, top-p applied) mean 0.073 | P(sampled token) mean 0.958
+P(<latent>) at the steps where <latent> was sampled: [1.0, 1.0, 1.0, 0.931] | mean P(<latent>) at all text steps 0.0022
+
+== spans
+span lengths (latent steps): [102, 13, 6, 4] | open at the end: 0

@@ -1,0 +1,58 @@
+{
+ "n": 128,
+ "cum_full_last_equals_repo_decode": true,
+ "recon_acc_cumulative_per_level": [
+  0.08246,
+  0.11475,
+  0.22656,
+  0.37006,
+  0.56244,
+  0.69568,
+  0.81909,
+  0.93976,
+  0.96539,
+  0.97937,
+  0.98804,
+  0.99963
+ ],
+ "ce_clean_per_level": [
+  7.526,
+  5.405,
+  4.061,
+  3.157,
+  1.924,
+  1.897,
+  0.862,
+  1.331,
+  1.717,
+  1.614,
+  0.332
+ ],
+ "ce_other_story_inputs_per_level": [
+  7.574,
+  8.777,
+  10.51,
+  12.254,
+  13.356,
+  15.166,
+  18.914,
+  15.394,
+  14.528,
+  14.21,
+  21.179
+ ],
+ "ce_uniform_reference": 8.318,
+ "samples": [
+  "\nOne day, a little girl named Amy saw a weird bug with her mom. The bug was big and many legs. Amy wanted to touch the bug. \"MomMom, can I pinch the bug she requested.\nHer mom said, \"Yes, but be careful. The bug might walk away.\" Amy and her mom went to the bug very slowly. As they walked, they saw a dead bug on the ground. The bug could not smell good. It was very sad and still too fast.\nAmy had an idea. She gave the bug some food and it helped her walk even faster like the bug. The bug in",
+  "\nOne day, a little bird named Tim was in his big tree. Tim was very graceful bird because he could twist and twist in many ways. One day he wanted to tease his friend, the cat, in the park.\n\"Look, cat!\" said Tim. The cat was scared and ran away. Tim replied, \"Come back, cat!\" The cat felt bad, and ignored him.\nAs they walked, Tim saw a big stick. He wanted to tease the cat. So, Tim used the stick to take a closer look. It was not just a stick, but a big, scary giant! The giant was",
+  "\nOnce upon a time, there made a boy named Tom. Tom was very adventurous. He liked to create things. One day, he decided to make a volcano. He wanted to make it very pretty.\nTom worked hard hard all day. He found pretty and colorful paint. Tom painted the volcano to his art. He showed it to his mom and dad. They were very happy too. They knew that that if Tom made the volcano dry, he would play with it.\nTom did not make well for the volcano. He used the colorful paint to make it look more colorful wall When. volcano was ready, it turned a",
+  "\nOnce upon a time, there was a big black cat. She was black. The big black cat lived in a house near a roof. The roof was high in the house. The cat loved to hang on the roof.\nOne day, the black cat saw a swing on the roof. She wanted to hang on the swing too. But she was scared. She thought she would think about what to do. But the big black cat did not want to hang the roof.\nThe black cat was on the roof. The cat was scared. She jumped on the swing to save her. But the cat got stuck. She was",
+  "\n\n\nSara and Ben are best friends. They like to play outside in the park. Today, they see a big firework on the sky. They see a loud boom and hear loud thunder.\n\"Let's go inside, Sara!\" Ben says.\n\"OK, but?\" Ben asks.\n\"I don't know, Ben. Maybe it is scary,\" Sara says.\nSara and Ben and runs to the window.\nThey hold hands and open the window. The lightning is not rain. It is a scary thing. It makes noises. It sounds like music.\nSara and Ben hear a loud noise. They",
+  "\nOnce upon a time, there was an old fisherman. Tom had a big toy toy boat that he loved to play with every day. He sailed it in on the sea, pretending they were his friends.\nOne day, a little boy came to the pond. He saw Tom and wanted to be friends with his fish. He said, \"Can I play with your fish?\" But the fish said, \"No, please. You have no boats to play with.\"\nThe fish was sad with the boy, but he asked his friends to play too. They could all play together, and soon the boy felt bad. He lived"
+ ],
+ "generate_s_B6": 1.11,
+ "true_examples": [
+  "Once upon a time, in a big forest, there lived a rhinoceros named Roxy. Roxy loved to climb. She climbed trees, rocks, and hills. One day, Roxy found an icy hill. She had never seen anything like it before. It was shiny and cold, and she wanted to climb it.\nRoxy tried to climb the icy hill, but it was very slippery. She tried again and again, but she kept falling down. Roxy was sad. She wanted to climb the icy hill so much. Then, she saw a little bird named Billy. Billy saw that Roxy was sad and asked,",
+  "Once upon a time, there was a thoughtful girl named Sue. Sue loved to help her mom around the house. One day, her mom asked her to wipe the table after they ate their lunch. Sue was happy to help.\nAs Sue was wiping the table, she saw a pretty candle on the window sill. The candle was her mom's favorite. Sue wanted to do something nice for her mom, so she said, \"Mom, can I light the candle for you?\" Her mom said, \"Yes, but be very careful.\"\nSue carefully lit the candle and put it on the table. Her mom was so happy to"
+ ]
+}

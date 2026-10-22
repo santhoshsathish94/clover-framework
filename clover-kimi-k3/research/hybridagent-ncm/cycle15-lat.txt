@@ -1,0 +1,16 @@
+== q1 [trace-q1-search.json] (expected '29')
+  steps 1983, latent steps 151 (8% of steps), spans 7 [59, 22, 21, 5, 8, 10, 26], python calls 1, end eos, wall 871s, prompt_len 550
+  answer block: ['The final answer is \\[ \\boxed{29} \\]']
+search-tags 1
+== q2 [trace-q2-search.json] (expected '8')
+  steps 3673, latent steps 191 (5% of steps), spans 10 [48, 15, 13, 14, 8, 10, 5, 38, 23, 17], python calls 3, end eos, wall 1724s, prompt_len 538
+  answer block: ['The final answer is \\[ \\boxed{8} \\]']
+search-tags 2
+== q3 [trace-q3-search.json] (expected '30')
+  steps 1816, latent steps 140 (8% of steps), spans 5 [55, 21, 4, 14, 46], python calls 0, end eos, wall 807s, prompt_len 550
+  answer block: ['The final answer is \\[ \\boxed{30000} \\]']
+search-tags 1
+== q3 [trace-q3-search-s1.json] (expected '30')
+  steps 1722, latent steps 262 (15% of steps), spans 6 [41, 47, 25, 44, 35, 70], python calls 0, end eos, wall 764s, prompt_len 550
+  answer block: ['The final answer is \\[ \\boxed{30} \\]']
+search-tags 1
