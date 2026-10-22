@@ -1256,6 +1256,76 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
    - Even at `0.8857` word retention and `68.1%` key retention (`p1..p5`), the 144M-parameter `WMT14` VQ-VAE decoder still introduces local subword substitutions on rare proper nouns (`"Apollo 13"` $\to$ `"The 13"`, `"sunlight"` $\to$ `"safari"`, `"42 miles"` $\to$ `"3. minutes"`), because `WMT14`'s 1-layer non-causal VQ decoder was trained on 2014 parliamentary/news translations without causal language modeling.
    - Consequently, if used as a **lossless** speculative drafter for Kimi K3 (`whole-model.c` `speculative_decode`, where every rejected draft token triggers `use_position` rollback and costs a multi-token pass), `DSpark` (`5` dense MLA layers reading Kimi K3's own layers `2, 23, 47, 71, 89`, `62.6%–80.0%` exact token acceptance on `p1..p5`) remains strictly superior for lossless token-by-token verification, whereas `HybridAgent (<latent>) + e5_k3_v2 ([R(h) + BPE])` is a **100x faster (`~0.12 s` single pass / `0.98 s` MBR8 vs `130–260 s` Kimi K3 decode) non-autoregressive concept/draft generator** that can either (a) supply a fast draft/outline prefix in Kimi K3's prompt (`stage2_run`), or (b) have Kimi K3's own causal layers refine the coarse concept embeddings.
 
+---
+
+## Cycle 49 — Re-Anchoring `NCM` and `HybridAgent` Directly onto Clover Kimi K3's Native `163,840` Vocabulary and `7,168`-d Embedding Space (`e6_k3_native`)
+
+**Direction (creator, 2026-10-22):** "then what should we fix for it to make it work as a whole hybridagent + ncm + clover-kimi-k3 let's do that does it need training let's do that does it need properly mapping let's do that does it need to change the hybridagent to match clover-kimi-k3 over the qwen let's do that same goes to ncm let's see the possibilites and explore each one".
+
+**Root-cause diagnosis of why Qwen3/WMT14 (`151,680` vocab) and Kimi K3 (`163,840` vocab) diverged on multi-digit numbers and proper nouns (`probe_k3_native_c49.py`, `k3_tokenizer.py`):**
+1. **Why token positions drifted despite `99.4%` byte coverage:** Qwen3's BPE tokenizer splits every digit `0..9` into individual tokens, whereas Kimi K3's `tiktoken.model` (`163,584` base ranks + `256` special tokens = `163,840`) merges 2-digit and 3-digit numbers (`"13"`, `"14"`, `"40"`, `"02"`, `"31"`, `"820"`, `"197"`) and words (`"Apollo"`, `"Councillor"`) into single tokens (`67,841` unmatched UTF-8 Kimi K3 tokens that decompose into multiple Qwen3 sub-tokens).
+2. **100% bit-identical C tokenizer wrapper (`k3_tokenizer.py` $\to$ `libk3tok.so`):** Compiled Kimi K3's C tokenizer (`src/code/third-party/kimi-k3-in-c/src/tokenizer/k3_tok.h`) into `libk3tok.so` and verified `100.0%` bit-identical round-trip (`decode` $\to$ `encode`) on Kimi K3's recorded `p1b.ids` (`61/61`), `p2.ids` (`163/163`), `p3.ids` (`117/117`), and `p4.ids` (`126/126`).
+3. **Linear geometry between Kimi K3 (`d = 7,168`) and WMT14 VQ-VAE (`d = 384`) across `95,367` shared byte pieces (`probe_k3_native_c49.py`):**
+   - Fitting a ridge-regularized least-squares map from Kimi K3's `lm_head.weight [163840, 7168]` (`model-00094-of-000096.safetensors`) to `WMT14`'s `vqvae.decoder.output_layer.weight [151680, 384]` across the `95,367` shared tokens achieves **`0.9542` mean cosine similarity** (`95.42%` alignment!).
+
+**Possibility A — Surgical Vocabulary Graft & 8-GPU Adaptation of `K3-Native VQ-VAE` (`163,840` Kimi K3 Vocabulary, `train_k3_native_all.py adapt_vqvae`):**
+- Constructed a `163,840`-vocab `K3-Native VQ-VAE` by combining: (1) exact weight copy on the `95,367` shared byte pieces, (2) `50%` sub-token mean + `50%` `7168 -> 384` ridge projection from Kimi K3's `embed_tokens.weight` / `lm_head.weight` on the `67,841` multi-character/multi-digit Kimi K3 tokens, and (3) Kimi K3 special IDs (`K3_EOS = 163586`, `K3_PAD = 163585`).
+- Keeping the 11-level VQ codebooks (`313` codes) frozen so the discrete concept geometry is preserved, adapted the encoder, decoder, and `163,840`-token embedding/output tables for `800` steps across 8 RTX 3090s (`bs=64/card` = `512` global, `0.305 s/step`, `20,208` K3-tokenized training windows):
+
+| Evaluation Split (`163,840` Kimi K3 `tiktoken` IDs) | Zero-Shot Surgical Graft (Step 0) | Adapted `K3-Native VQ-VAE` (Step 800) | Reconstructed Kimi K3 Text (Step 800) |
+|---|---:|---:|---|
+| `500` held-out XSum windows (`val_tok_acc`) | `0.9381` (step 1) | **`0.9599` (`96.0%`)** | — |
+| `p1b.ids` (`61` Kimi K3 tokens) | `56 / 61` (`91.80%`) | **`61 / 61` (`100.00%`)** | *"The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan..."* |
+| `p2.ids` (`163` Kimi K3 tokens) | `154 / 163` (`94.48%`, `"Friday 1 ... April 90"`) | **`161 / 163` (`98.77%`)** | *"Apollo 13 launched in April 1970 as NASA's third mission to land on the Moon. Two days into the flight, an oxygen tank exploded in the service module..."* |
+| `p3.ids` (`117` Kimi K3 tokens) | `112 / 117` (`95.73%`) | **`115 / 117` (`98.29%`)** | *"The sky is blue because sunlight scatters when it hits air molecules, and blue light scatters much more than other colors..."* |
+| `p4.ids` (`126` Kimi K3 tokens) | `115 / 126` (`91.27%`, `"3:PL UTC ... 1,B"`) | **`123 / 126` (`97.62%`)** | *"The payments database primary failed at 02:13 UTC on 3 June. The replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed and 14 failed..."* |
+| **Total `p1..p4.ids` (`467` Kimi K3 tokens)** | **`426 / 467` (`91.22%`)** | **`460 / 467` (`98.50%`)** | Fixes `"Apollo 13"`, `"1970"`, `"Councillor"`, `"02:31"`, `"1,820"` natively in Kimi K3 IDs |
+
+**Possibility B — Re-Anchoring `HybridAgent` (`<latent>` Mode) onto Kimi K3's `7,168`-d Space & `163,840` Vocabulary (`train_k3_native_all.py train_k3_ha`, record `k3_hybrid_bridges.pt`):**
+- **Option B1 (`K3NativeHybridLink`, `d = 7,168` on Kimi K3 Layer-92 hidden states `refs/final.resid.f32` $\to$ `refs/embed.f32[t+1]`):** Trained the exact `ln_res_adapter` `HybridLink` architecture in `d = 7,168` with the `HybridSFT` loss ($1.0 \cdot \ell_{\cos} + 0.2 \cdot \ell_{\text{mse}}$) on `800` positions (`199` held out) of the 1,000-token recorded Kimi K3 window: next-token embedding cosine rose from `-0.0055` (raw residual, orthogonal to `s0`) to **`0.9813` (train) / `0.3461` (held-out test)**.
+- **Option B2 (`Qwen4096 <-> K3_7168` Vocabulary & Latent Bridge):** Mapped Kimi K3's `163,840`-token embedding bank (`embed_tokens.weight [163840, 7168]`) into `HybridAgent-8B-Agentic`'s `4,096`-d latent space (`k3_bank_4096`, combining exact embeddings on `95,367` shared tokens with the `7168 -> 4096` ridge map on `68,217` K3-specific tokens; held-out 2,000-token cosine `0.4586`). Running `HybridAgent-8B-Agentic` in continuous `<latent>` mode on `p1` and reading out directly in Kimi K3's `163,840`-token vocabulary achieved **`mean_k3_cos = 0.7230`** (`'1. :: The Yarboysie Counc\n2.'`).
+
+**Possibility C (Part 1) — Training `e6_k3_native` (`163,840` Kimi K3 Vocabulary Throughout, `1,500` Steps on 8 RTX 3090s, `train_k3_native_all.py train_ncm` & `eval_all`):**
+- Trained `NextConceptTransformer` (`119.96M` params, `P_COMBO = 96 = 48 R(h) + 48 K3_BPE_plan`) + `ComboBridge` + `K3-Native VQ-VAE` (`163,840` Kimi K3 vocab) with `alpha = 0.7`, `corrupt = (0.40, 0.05)`, and straight-through token CE (`0.5`) over all `163,840` Kimi K3 tokens:
+  - Validation code CE (`500` held-out windows): `combo_matched = 2.9626` (coarse `3.8896`, `tok_ce = 0.9463` over `163,840` K3 tokens) vs `bpe_only = 3.0255` (`-0.0629` nats) vs `rh_only = 3.5227` vs `shuffled = 5.2540`.
+  - On `val_500`, `e6_k3_native_combo` raised content-word retention to **`0.8999`** (vs `0.8869` `bpe_only` and `0.4446` `rh_only`) and lowered `adj_repeat_rate` to **`0.00278`**.
+  - On `p1..p5`, factual keys kept jumped from `32/47` (`68.1%` in Cycle 48) to **`37 / 47` (`78.72%`)** (`p1: 11/12`, `p2: 7/8` with `"Apollo 13"` restored, `p3: 6/8` with `"sunlight"` restored, `p4: 6/10`, `p5: 7/9`), emitting `100.0%` native Kimi K3 token IDs (`p1_e6.ids..p5_e6.ids`).
+
+---
+
+## Cycle 50 — `K3PlanCopyDecoder` (Ordered Plan-Pointer Cross-Attention), One-Pass `K3DSparkVerifier` (`d = 7,168` 5-Layer Dense MLA), and Real 93-Layer Clover Kimi K3 Engine Verification (`whole-model`)
+
+**Why `e6_k3_native` still missed `10/47` keys on `p1..p5` and had `0.3427` number recall on `val_500` (Context):**
+- In `VQVAETokenizer`, `vqvae.decoder` only reads `z_hat [B, 64, 384]` (which has passed through the lossy 313-code VQ bottleneck) and has `dec_positional = False` and **zero direct attention to the plan tokens `k3_pids [B, 48]`**. When a window contains multiple numbers (`"02:14"`, `"02:31"`, `"1,820"`, `"14"`), reconstructing exact multi-digit token IDs purely through VQ codebooks swaps or drops numbers.
+
+**1. `K3PlanCopyDecoder` (`train_k3_copy_decoder.py`, `1,200` steps on `gpu`, record `eval_e6_copy.json`):**
+- Added 2 lightweight bidirectional transformer + cross-attention blocks (`d = 384`, `n_head = 6`, with explicit positional embeddings `tgt_pos[0..63]`, `plan_pos[0..47]`, `rh_pos[0..47]`) where `z_hat [B, 64, 384]` cross-attends to `[z_rh, z_bpe]`, plus an ordered **plan copy-pointer head** (`copy_q`, `copy_k`, learned `copy_bias = 8.26`) that scatters copy-attention logits directly onto `k3_pids [B, 48]` in the `163,840`-token Kimi K3 output distribution while staying `100%` parallel/non-autoregressive (`~2 ms` per batch):
+  - **On `val_500` (`500` held-out XSum windows):**
+    - Content-word retention jumped from `0.8999` $\to$ **`0.9328` (`93.3%`!)**.
+    - Exact number recall **more than doubled** from `0.3427` $\to$ **`0.7527` (`75.3%`, against the `0.8894` true-target ceiling!)**.
+  - **On `p1..p5` (`47` factual keys):**
+    - Factual keys kept rose to **`39 / 47` (`82.98%`)**: `p1: 11/12` (`91.7%`), `p2: 7/8` (`87.5%`, fixing `"land on the Earth"` $\to$ `"land on the Moon"`), `p3: 6/8` (`75.0%`), `p4: 8/10` (`80.0%`, up from `6/10`, recovering `"1,820 transactions"`, `"80 percent"`, `"500 GB"`), `p5: 7/9` (`77.8%`).
+
+**2. One-Pass Parallel Verification with Kimi K3's 5-Layer Dense MLA `DSpark` Model (`d = 7,168`, `163,840` Vocab, `verify_k3_engine_c50.py`, record `eval_e6_verified.json`):**
+- Loaded Kimi K3's `kimi-k3-dspark/model.safetensors` (`5` dense MLA + SwiGLU layers, `d = 7,168`, `64` heads) + `model-00094-of-000096.safetensors` (`lm_head.weight [163840, 7168]`) + `markov_head` on GPU (`K3DSparkVerifier`).
+- Running a single **`17.4 ms` parallel causal verification pass** over `p1_e6_copy.ids..p5_e6_copy.ids` cut the mean adjacent word repeat rate by **`-77.3%` (`0.01147 -> 0.00260`, reaching `0.0000` on `p1`, `p2`, `p3`, `p5`)** while preserving all **`39 / 47` (`82.98%`)** factual keys (`p1_e6_verified.ids..p5_e6_verified.ids`).
+
+**3. Exact Token-ID Alignment Against Kimi K3's Ground-Truth 93-Layer Generations (`p1b.ids..p5.ids`) and Live 93-Layer C-Engine Verification on `k3` (`whole-model` with `PF_EXTRA`):**
+- Comparing `p1_e6_verified.ids..p5_e6_verified.ids` (generated in `~1.99 s` `MBR8` + `17.4 ms` `K3DSparkVerifier` on `gpu`) directly against Kimi K3's own 93-layer generated token IDs (`p1b.ids..p5.ids`, which took `244–371 s` on `k3`):
+
+| Prompt | Consecutive Exact Prefix Match (`a == b` from token 0) | First-60-Token Exact Positional ID Match | First-60-Token Kimi K3 ID Set Overlap | Factual Keys Kept |
+|---|---:|---:|---:|---:|
+| **`p1` (Harbourside Council vote)** | **`48` consecutive tokens (`100%` exact)** | **`48 / 60` (`80.0%`)** | **`0.959` (`95.9%`)** | **`11 / 12` (`91.7%`)** |
+| **`p2` (Apollo 13 mission)** | **`34` consecutive tokens (`100%` exact)** | **`45 / 60` (`75.0%`)** | **`0.826` (`82.6%`)** | **`7 / 8` (`87.5%`)** |
+| **`p3` (Why sky is blue / sunsets red)** | **`11` consecutive tokens** | **`31 / 60` (`51.7%`)** | **`0.857` (`85.7%`)** | **`6 / 8` (`75.0%`)** |
+| **`p4` (Payments DB incident)** | **`9` consecutive tokens** | **`39 / 60` (`65.0%`)** | **`0.974` (`97.4%`)** | **`8 / 10` (`80.0%`)** |
+| **`p5` (Two trains Leeds–London)** | **`6` consecutive tokens** | **`38 / 60` (`63.3%`)** | **`0.818` (`81.8%`)** | **`7 / 9` (`77.8%`)** |
+
+- **Live 93-Layer Clover Kimi K3 C-Engine Verification (`k3` CPU, `PF_EXTRA=/root/merge_lf/p1_e6_verified.ids`, record `/root/merge_lf/k3_engine_p1_verify.log`):**
+  - Fed `p1.txt` (`136` tokens) + `p1_e6_verified.ids` (`125` tokens = `261` tokens total, ending at `"... The"`) through the full 93-layer `whole-model` C engine (`ARITHMETIC: trunk exact; experts exact -> bit-identical to the pod`):
+  - All `261` tokens ran in a single **`94.030 s`** forward pass (`+23.2 s` over the `70.804 s` prompt-only pass, compared to `344.001 s` for step-by-step decoding of `p1`), and the 93-layer trunk + `transformer_93` tail predicted next token **`id 26584` (`" council"`, continuing `"The council..."`)**.
+
+
 
 
 
