@@ -1050,3 +1050,30 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 2. **Continuous `R(h)` prefix (`e4_latent`) vs discrete BPE prefix (`e4_fluency`):** `e4_latent` achieves the same low repeat rates (`0.00502` adj, `0.01677` trigram) without any BPE plan tokens, but loses `~0.08` in exact surface-word retention (`0.5618` vs `0.6434`) because `R(h)` is a compressed continuous representation rather than literal BPE word tokens.
 3. **Why local grammar glitches remain in all non-causal VQ-decoder variants:** reading plans 36, 50, 76, 93 across `e3_drop_bal`, `e4_fluency`, and `e4_latent` shows local non-sequiturs such as `"on an big airplane"`, `"flying around in the. Billy"`, `"play to played"`, `"I yesterday it"`. In `models/vae.py`, `tk.vqvae.decoder` is a **1-layer non-causal parallel readout** that predicts `logits[:, t, :]` independently of the token chosen at `t-1` (`token[t-1]`). When `z_hat` has slight multimodal uncertainty between two phrasings (e.g. `"an airplane"` vs `"a big airplane"`), independent per-position argmax picks `"an"` at `t-1` and `"big"` at `t`.
 4. **Next (Cycle 44, launched as `merge-lf-cdec` on `gpu`):** test a lightweight 4-layer `CausalVQDecoder` (`d=384`, conditioned on `z_hat` via cross-attention + residual and causally on `token[0..t-1]`) on top of both `e4_fluency` and `e4_latent`, then score all variants with the 3 model raters (`Gemini 4 Argon`, `GPT-6 Astra`, `Claude Opus 5.5`) on the 20 rating plans.
+
+---
+
+## Cycle 44 — `CausalVQDecoder` on full `z_hat`, blind 3-model-rater evaluation (`84` items), and the position-`t` shortcut diagnosis
+
+**What ran (`merge-lf-cdec` on `gpu`, scripts `train_causal_decoder.py`, `eval_causal_decoder.py`, `build_c44_rater_pack.py`, `analyze_c44.py`).**
+- Built `CausalVQDecoder` (4 blocks, `d=384`, `n_head=6`, `16.01M` parameters, initialized from `tk.vqvae.encoder.wte` and `tk.vqvae.decoder.output_layer`), where position `t` receives `wte(prev_ids[:, t]) + wpe(t) + z_proj(z_ln(z_hat[:, t, :]))`, runs causal self-attention over `0..t` and cross-attention to `z_hat`, and predicts `true_ids[:, t]`. Trained for `1,500` steps on 8 RTX 3090s (`bs=64/card` = `512` global, `0.078 s/step`, `117 s` total) with noisy `z_hat` (`p_corrupt_coarse=0.10`, `p_corrupt_fine=0.45`, `p_drop_fine=0.35`); training token CE fell from `15.57` to `0.141`.
+- **Automated metrics on all 598 validation plans and 48 end-to-end topics (`MBR8`, `sched10_04`):**
+  - Validation 598, `e4_fluency` + `CausalVQDecoder` (`e4f_cdec`): retention `0.6424`, **Gen. PPL `12.73`** (best so far; `e3_drop_bal` `13.04`, `e4_fluency` non-causal `13.95`), `adj_repeat` `0.00691` (`-10.1%` vs `e3_drop_bal`), `rep3` `0.02254`.
+  - Validation 598, `e4_latent` (`R(h)` bridge) + `CausalVQDecoder` (`e4l_cdec`): retention `0.5648`, **Gen. PPL `13.02`** (down `-1.55` PPL from `14.57` with the non-causal decoder), `adj_repeat` `0.00706`, `rep3` `0.02226`.
+  - End-to-end 48 requests: `e4f_cdec` on text plans `Gen. PPL 14.87` (`e3_drop` `15.63`), retention `0.6187`; `e4l_cdec` on `<latent>`-rollout `hybrid_plan` `Gen. PPL 14.98` (down `-1.99` PPL from `16.97`).
+
+**Blind 3-model-rater evaluation (`84` items = 20 validation plans from Cycle 39 `key.json` x 4 systems `{e3_s0, e4f_sch, e4f_cdec, e4l_cdec}` + 4 repeats; `rater_pack/items.txt`, `c44_ratings_out.txt`):**
+- Test-retest on the 4 repeated items: `4/4` exact agreement on both fluency and plan for all three raters (`Gemini 4 Argon`, `GPT-6 Astra`, `Claude Opus 5.5`).
+
+| rater (20 plans, blind) | fluency: `e3_s0` / `e4f_sch` / `e4f_cdec` / `e4l_cdec` | plan: `e3_s0` / `e4f_sch` / `e4f_cdec` / `e4l_cdec` | `e4f_cdec - e4f_sch` fluency | `e4f_cdec - e3_s0` fluency | `e4l_cdec - e3_s0` plan |
+|---|---|---|---|---|---|
+| Gemini 4 Argon | 2.10 / 2.25 / **2.45** / **2.45** | **4.60** / 4.25 / 4.25 / 3.90 | +0.20 (5W/1L) | +0.35 (9W/4L) | -0.70 (p=0.007) |
+| GPT-6 Astra | 2.05 / 2.35 / **2.45** / 2.35 | **4.30** / 4.00 / 4.05 / 3.85 | +0.10 (4W/1L) | +0.40 (10W/5L) | -0.45 (p=0.065) |
+| Claude Opus 5.5 | 2.75 / 2.40 / **2.80** / 2.75 | **4.50** / 4.25 / 4.35 / 4.05 | +0.40 (8W/0L, p=0.008) | +0.05 (6W/4L) | -0.45 (p=0.065) |
+| **Mean of 3 raters** | 2.30 / 2.33 / **2.57** / 2.52 | **4.47** / 4.17 / 4.22 / 3.93 | **+0.23** (CI +0.03..+0.43, 9W/1L, p=0.021) | +0.27 (CI -0.10..+0.65, 10W/6L) | **-0.53** (CI -0.83..-0.23, p=0.013) |
+
+**What the ratings and story inspection reveal (and why fluency only rose from `2.30` to `2.57`):**
+1. On the exact same `e4_fluency` generator, replacing the non-causal decoder (`e4f_sch`) with `CausalVQDecoder` (`e4f_cdec`) improved blind fluency for all three raters (`mean3 +0.23`, `9 wins vs 1 loss`, `p=0.021`) and improved `Gen. PPL` from `13.95` to `12.73`.
+2. However, comparing `e4f_sch` and `e4f_cdec` side by side on plans 50 and 76 showed **nearly identical token sequences**, including the same glitches (`"His name Billy"`, `"flying around in the. Billy"`).
+3. **Cause (the position-`t` residual shortcut):** in `CausalVQDecoder.forward`, `z_proj(z_ln(z_hat[:, t, :]))` was added directly into the residual stream at position `t`, and 65% of training examples included the finest VQ levels (`8..11`, length `128`), where `z_hat[:, t, :]` encodes `true_ids[:, t]` with `99.963%` accuracy. The decoder therefore learned to read `true_ids[:, t]` directly out of `z_hat[:, t, :]` at position `t` (reaching `0.14` training CE in 800 steps) while largely ignoring `prev_ids` (`token[0..t-1]`).
+4. **Next (Cycle 45):** remove the position-`t` additive shortcut (`x = wte(prev_ids) + wpe(pos)` only on the causal stream) and condition `CausalConceptDecoder` via **cross-attention only** to NCM's coarse-to-mid concept levels (`levels 0..5`, lengths `1..40`, plus the plan representation), so the decoder must rely on `prev_ids` (`token[0..t-1]`) for English syntax while reading plot and content from the NCM concept levels.
