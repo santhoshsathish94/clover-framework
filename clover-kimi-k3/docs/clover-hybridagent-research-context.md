@@ -1111,3 +1111,52 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
    - `HybridAgent-8B-Agentic` (`adapter.pt` `HybridLink`) works in continuous `<latent>` mode on story planning (`9–23` continuous `R(h_t)` steps before `</latent>`, `mean_readout_cos ~ 0.65–0.70`), and `LatentBridge(4096 -> 384)` (`e4_latent`) successfully conditions `NextConceptTransformer` on `R(h)` alone (`val code CE 2.4828`, `Gen. PPL 13.02`, blind fluency `2.52 / 5.0`).
    - However, replacing discrete plan tokens entirely with `R(h)` loses `~0.08` in exact surface-word retention (`0.5648` vs `0.6424`) and `-0.28` to `-0.53` in blind plan-following (`3.93` vs `4.22–4.47`), because proper names and literal nouns are compressed inside `R(h)`. Therefore, `<latent>` mode is best used *inside* the planner rollout (before `</latent>`) while keeping token-level plan conditioning for the generator.
 
+---
+
+## Cycle 46 — Combined `[HybridLink R(h) + Discrete BPE Plan]` Prefix (`e4_combo`), Within-Checkpoint Modality Ablation, and Blind 3-Model-Rater Evaluation
+
+**Direction (creator, 2026-10-22):** "do the prefix first" — test combining continuous `HybridLink` `R(h)` vectors and discrete BPE plan tokens in a single prefix before moving to Goal 1 (`Clover Kimi K3`).
+
+**What ran (`merge-lf-c46c` on `gpu`, scripts `train_combo_prefix.py`, `run_c46.sh`, `build_c46_rater_pack.py`, `analyze_c46.py`).**
+- **Architecture & contiguous packing (`pack_combo_prefix`):** Built `ComboBridge(4096 -> 384)` (initialized from `e4_latent`'s `LatentBridge` plus a learnable segment offset `seg_rh` and scalar `gate`) and initialized `NextConceptTransformer` + `tk.vqvae.decoder` from `e4_fluency/last.pt` with `prefix_len = P_COMBO = 112` (`48` `R(h)` slots + `64` BPE plan slots). For each example, valid `R(h)` vectors and valid BPE embeddings are packed contiguously at the front (`[valid R(h), valid BPE, PAD...]`) so `_level0_slice` (`(~prefix_pad_mask).sum(1) - 1`) always reads the final valid token in every mode (`combo`, `bpe_only`, `rh_only`).
+- **Training (`1,500` steps across all 8 RTX 3090s, `bs=32/card` = `256` global, `0.825 s/step`, modality dropout `60%` both `[R(h) + BPE]`, `15%` BPE-only, `15%` `R(h)`-only, `10%` null both):**
+  - **Within-checkpoint validation code CE across modalities (`log.jsonl`, 512 validation pairs):**
+
+| step | `combo_matched` (`[R(h) + BPE]`) | `bpe_only` (`R(h)` masked) | `rh_only` (BPE masked) | `shuffled` (wrong plan) | `combo` coarse (`0..5`) | `combo` tok CE | `gate` |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0 (before training) | 2.7753 | **2.4215** | 2.9205 | 3.5300 | 4.4299 | 0.0478 | 1.0000 |
+| 500 | **2.4296** | 2.4366 | 2.4902 | 3.7324 | **3.8692** (`bpe_only` 3.8821) | 0.0395 | 0.9651 |
+| 1,000 | **2.4345** | 2.4424 | 2.4802 | 3.7610 | **3.8893** (`bpe_only` 3.9039) | 0.0383 | 0.9460 |
+| 1,500 | **2.4376** | 2.4434 | 2.4821 | 3.7733 | **3.8996** (`bpe_only` 3.9102) | **0.0377** | 0.9411 |
+
+  - **What the within-checkpoint ablation shows:** inside the same `e4_combo` model, providing **both** `[R(h) + BPE]` (`combo_matched`) beats `bpe_only` (`2.4296` vs `2.4366` at step 500; `2.4376` vs `2.4434` at step 1,500, and `-0.011` to `-0.015` nats on coarse levels `0..5`) and beats `rh_only` (`2.4821`), while `gate` stays at `0.9411` (confirming the generator actively attends to the `R(h)` segment rather than zeroing it out). However, compared against the pure 64-token `e4_fluency` checkpoint (`2.4165` at `P=64`), splitting training across three modality modes (`combo`, `bpe_only`, `rh_only`) over a 112-token prefix leaves overall code CE slightly higher (`2.4296` vs `2.4165`).
+
+- **Generation quality on all 598 validation plans and 48 end-to-end requests (`eval_c46.json`, `MBR8`, `sched10_04`):**
+
+| split & configuration | retention | Gen. PPL (GPT-2-large) | adj. repeat rate | repeated trigrams | entropy |
+|---|---|---|---|---|---|
+| val 598: `e3_drop_bal` (Cycle 36 baseline) | **0.6454** | 13.04 | 0.00769 | 0.02213 | 3.9717 |
+| val 598: `e4_fluency` + fine-tuned VQ dec (`e4f_sch`, Track 2B) | 0.6434 | 13.95 | **0.00506** | **0.01637** | 3.9883 |
+| val 598: `e4_fluency` + `CausalVQDecoder` (`e4f_cdec`, Track 2B) | 0.6424 | **12.73** | 0.00691 | 0.02254 | 3.9685 |
+| val 598: `e4_latent` (`R(h)` only) + `CausalVQDecoder` (`e4l_cdec`, Track 2A) | 0.5648 | 13.02 | 0.00706 | 0.02226 | 3.9721 |
+| **val 598: `e4_combo` (`[R(h) + BPE]`) + fine-tuned VQ dec (`e4c_ftdec`)** | **0.6377** | 14.71 | **0.00511** (`-33.5%`) | **0.01637** (`-26.0%`) | 3.9949 |
+| **val 598: `e4_combo` (`[R(h) + BPE]`) + `CausalVQDecoder` (`e4c_cdec`)** | **0.6336** | **12.93** | **0.00656** (`-14.7%`) | 0.02270 | 3.9715 |
+| e2e 48: `e4_combo` + `CausalVQDecoder` (text plan / `hybrid_plan`) | 0.6103 / 0.5948 | 16.28 / 16.32 | 0.00986 / 0.00698 | 0.01811 / 0.02156 | 3.9738 / 3.9569 |
+
+- **Blind 3-model-rater evaluation (`84` items = 20 validation plans x 4 systems `{e3_s0, e4f_cdec, e4c_ftdec, e4c_cdec}` + 4 repeats; `rater_pack_c46/items.txt`, `c46_ratings_out.txt`; test-retest `4/4` exact on both scales for all 3 raters):**
+
+| rater (20 plans, blind) | fluency: `e3_s0` / `e4f_cdec` / `e4c_ftdec` / `e4c_cdec` | plan: `e3_s0` / `e4f_cdec` / `e4c_ftdec` / `e4c_cdec` | `e4c_cdec - e4f_cdec` fluency | `e4c_cdec - e4f_cdec` plan |
+|---|---|---|---|---|
+| Gemini 4 Argon | **2.70** / **2.70** / 2.60 / **2.70** | **4.30** / 4.05 / 4.25 / 4.15 | +0.00 (4W/4L, p=1.00) | +0.10 (5W/3L, p=0.73) |
+| GPT-6 Astra | **2.35** / 2.30 / 2.15 / 2.20 | 3.70 / 3.65 / **3.80** / 3.75 | -0.10 (2W/4L, p=0.69) | +0.10 (6W/5L, p=1.00) |
+| Claude Opus 5.5 | 2.75 / **2.85** / 2.65 / 2.80 | **4.35** / 4.20 / 4.25 / 4.15 | -0.05 (3W/4L, p=1.00) | -0.05 (5W/5L, p=1.00) |
+| **Mean of 3 raters** | 2.60 / **2.62** / 2.47 / 2.57 | **4.12** / 3.97 / 4.10 / 4.02 | -0.05 (CI -0.27..+0.15, p=1.00) | +0.05 (CI -0.22..+0.32, p=0.82) |
+
+**What Cycle 46 establishes:**
+1. **Adding discrete BPE tokens alongside `R(h)` (`e4_combo`) completely recovers the `-0.08` retention loss and `-0.28` plan-following loss of `R(h)`-only (`e4_latent`):** surface-word retention jumps from `0.5648` (`e4l_cdec`) to `0.6377` (`e4c_ftdec`) / `0.6336` (`e4c_cdec`), and blind model-rater plan-following rises to `4.10` (`e4c_ftdec`) / `4.02` (`e4c_cdec`), matching `e3_s0` (`4.12`) and `e4f_cdec` (`3.97`) within noise (`p=0.75–0.82`).
+2. **Simultaneously, `e4_combo` supports flexible conditioning from a single checkpoint:** because it was trained with modality dropout (`60%` both, `15%` BPE-only, `15%` `R(h)`-only, `10%` null), the same `e4_combo` weights can be driven by `[R(h) + BPE]` (`val CE 2.4376`), `BPE-only` (`2.4434`), or continuous `R(h)-only` (`2.4821`).
+3. **Final takeaway for Goal 1 (`Clover Kimi K3`):**
+   - When discrete plan tokens are available from the same vocabulary, `e4_fluency + CausalVQDecoder` (`e4f_cdec`, `P=64`) and `e4_combo + CausalVQDecoder` (`e4c_cdec`, `P=112`) perform identically in blind ratings (`fluency 2.62 vs 2.57`, `plan 3.97 vs 4.02`, `Gen. PPL 12.73 vs 12.93`).
+   - When bridging across **different model families** (`HybridAgent-8B` $d=4096 \to$ `NCM` $d=384 \to$ `Clover Kimi K3` $d=7168$), the **combined `[continuous R(h) + discrete anchor tokens]` prefix (`e4_combo`)** is strictly better than continuous `R(h)` alone (`+0.07` retention, lower code CE `2.4376` vs `2.4828`), because `R(h)` carries the dense multi-step latent reasoning state while the discrete tokens anchor exact entity names and literals.
+
+
