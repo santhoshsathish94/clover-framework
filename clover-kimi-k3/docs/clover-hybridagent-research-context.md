@@ -1159,4 +1159,48 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
    - When discrete plan tokens are available from the same vocabulary, `e4_fluency + CausalVQDecoder` (`e4f_cdec`, `P=64`) and `e4_combo + CausalVQDecoder` (`e4c_cdec`, `P=112`) perform identically in blind ratings (`fluency 2.62 vs 2.57`, `plan 3.97 vs 4.02`, `Gen. PPL 12.73 vs 12.93`).
    - When bridging across **different model families** (`HybridAgent-8B` $d=4096 \to$ `NCM` $d=384 \to$ `Clover Kimi K3` $d=7168$), the **combined `[continuous R(h) + discrete anchor tokens]` prefix (`e4_combo`)** is strictly better than continuous `R(h)` alone (`+0.07` retention, lower code CE `2.4376` vs `2.4828`), because `R(h)` carries the dense multi-step latent reasoning state while the discrete tokens anchor exact entity names and literals.
 
+---
+
+## Cycle 47 — Goal 1 (`HybridAgent + NCM + Clover Kimi K3`): WMT14 VQ-VAE Gate on Kimi K3 Outputs (`p1..p5`), Tokenizer/Embedding Alignment, and First Factual Bridge (`e5_k3_wmt`)
+
+**Direction (creator, 2026-10-22):** proceed to Goal 1 (`HybridAgent + NCM + Clover Kimi K3`), using the GPU machine (`gpu`), CPU machine (`k3`), local machine, and `Gemini 4 Argon` subagents while following the Clover cycle and recording/pushing after every cycle.
+
+**1. Completing Kimi K3's ground-truth run on `p5` (`k3` CPU, Ryzen 9 7950X3D, `run_k3_p5.py`, record `/root/merge_lf/p5.log` & `p5.ids`).**
+- Previously (`clover-ncm-research-context.md`), `p1..p4` had been run on Kimi K3 (`PF_CHAT=1`, exact trunk, DSpark draft up to 8 tokens) while `p5` (two trains leaving Leeds at `09:10` at `84 mph` and London at `09:40` at `70 mph`, `168 miles` apart) was stopped before completion.
+- Ran `p5` on `k3` (`PF_CHAT=1 PF_DECODE=220 PF_CACHE=16 SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8`):
+  - **Prefill (`129` tokens):** `60.253 s` (`layer 0` `170.8 ms`, `layer 1` `945.1 ms`, `layers 2..92` `59.081 s`, `tail` `54.3 ms`).
+  - **Decode (`112` new tokens after the `129`-token prompt):** `244.311 s` total = **`2.181 s/token`** in `39` passes (`105` DSpark draft tokens proposed, **`73` kept = `69.5%` acceptance**, `2.87` tokens/pass).
+  - **Kimi K3 output (`113` tokens):** *"The first train travels for 30 minutes before the second train starts, covering 42 miles. This leaves 126 miles between them at 09:40. Their combined speed is 154 miles per hour, so they close this gap in 126 divided by 154 hours, which is about 49 minutes. They meet at approximately 10:29. The second train travels 70 multiplied by 49/60 miles, about 57 miles from London. \n\nSummary: The trains meet at about 10:29, roughly 57 miles from London."* (All 9 key numbers/facts correct.)
+
+**2. Gate 1: Can the frozen released `WMT14` NCM VQ-VAE tokenizer (`Qwen/Qwen3-0.6B` vocab `151,680`, `11` levels `[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313` codes, `L=64`, `144.00M` params) encode and reconstruct Kimi K3's actual answers (`p1..p4`)? (`probe_k3_c47.py` on `gpu`, record `out/probe_k3_c47.json`).**
+- In Cycle 30 (`clover-ncm-research-context.md`), the released `XSum` NCM checkpoint (`50,304` GPT-2 vocab, `L=48`) kept `0/8`, `0/8`, `0/11` facts on Kimi K3's `p2..p4` answers, and the TinyStories BPE (`8,192` vocab) garbled out-of-vocabulary names and digits.
+- Passing Kimi K3's actual `p1..p4` answers and summaries through the frozen `WMT14` VQ-VAE (`encode` $\to$ `decode`):
+
+| Kimi K3 output | Qwen3 tokens (`64`-tok windows) | Token accuracy (`all 11 levels`) | Factual keys in K3 text | Factual keys kept after WMT14 VQ-VAE |
+|---|---:|---:|---:|---:|
+| `p1_answer` (Harbourside Council vote) | 130 (3 windows) | **0.9846** | 12 / 12 | **11 / 12** (`91.7%`; only `"Priya"` $\to$ `"Priani"`) |
+| `p1_summary` | 21 (1 window) | **1.0000** | 2 / 2 | **2 / 2** (`100%` exact) |
+| `p2_answer` (Apollo 13) | 125 (2 windows) | **0.9760** | 8 / 8 | **7 / 8** (`87.5%`) |
+| `p2_summary` | 39 (1 window) | **0.9487** | 4 / 4 | **4 / 4** (`100%`) |
+| `p3_answer` (Rayleigh sky scattering) | 89 (2 windows) | **0.9775** | 7 / 7 | **7 / 7** (`100%`) |
+| `p3_summary` | 28 (1 window) | **0.9643** | 4 / 4 | **3 / 4** (`75.0%`) |
+| `p4_answer` (Payments DB incident) | 102 (2 windows) | **1.0000** | 10 / 10 | **10 / 10** (`100%` exact across all 102 tokens) |
+| `p4_summary` | 33 (1 window) | **1.0000** | 1 / 1 | **1 / 1** (`100%` exact) |
+
+- **Gate 2: Vocabulary & Embedding Alignment between `Qwen3 / WMT14` (`151,669` base tokens) and `Clover Kimi K3` (`tiktoken.model`, `163,584` base ranks + `256` special tokens = `163,840`, `model-00094-of-000096.safetensors` `[163840, 7168]`) (`probe_tok_align.py`):**
+  - Across the entire `151,669`-token Qwen3 vocabulary, `95,367` tokens (`62.88%`) share identical raw byte sequences with single tokens in Kimi K3's `tiktoken.model`.
+  - On Kimi K3's actual generated token sequences (`p1b.ids`, `p2.ids`, `p3.ids`, `p4.ids`), **`98.4%` to `100.0%`** of Qwen3/WMT14 tokens (`62/63`, `165/166`, `119/119`, `136/137`) map directly via `q_to_k3` into single Kimi K3 token IDs (`set_overlap = 0.866–0.984`), which index Kimi K3's `embed_tokens.weight` (`[163840, 7168]`, `RMS = 0.021895`, matching `refs/embed.f32` `RMS = 0.021933` and `snaps[0]` with `max_diff = 0.0`).
+
+**3. First WMT14 Factual Bridge (`e5_k3_wmt`, `train_wmt14_k3.py`, `1,500` steps across 8 RTX 3090s, global batch `256`, `P_COMBO = 96 = 48 R(h) + 48 BPE`):**
+- Initialized `NextConceptTransformer` (`119.96M` params, `prefix_len = 96`, `predict_level0 = True`) from `wmt14/generator.pt` (originally German$\to$English) and `ComboBridge(4096 -> 384)` from `e4_combo/last.pt`.
+- Trained on `10,800` pairs (`500` validation) where the prefix was `(1-sentence XSum summary + up to 6 extra passage entities/numbers)` and the target was the 64-token passage lead:
+  - Validation code CE (`500` pairs) dropped from `5.4610` (`bpe_only 4.2120`, `shuffled 5.5612`) at step 0 to **`3.5724`** at step 500 (`bpe_only 3.5899`, `rh_only 3.8418`, `shuffled 4.3634`), with `combo_matched` beating `bpe_only` by `-0.0175` nats (`-0.0317` on coarse levels `0..4`).
+  - On `val_500`, `e5_k3_combo_both` more than doubled number recall over zero-shot `wmt14` (`0.2313 -> 0.4813`) and cut `adj_repeat_rate` (`0.00817 bpe_only -> 0.00666 combo_both`).
+  - On Kimi K3's `p1..p5` structured plans (`eval_p1_p5.json`), `e5_k3_wmt` transferred **`5/12` (`p1`), `1/8` (`p2`), `2/8` (`p3`), `4/10` (`p4`), and `4/9` (`p5`)** factual keys (`16/47 = 34.0%`, up from `0/27 = 0%` with Cycle 30's XSum NCM) in `1.21 s` (`MBR8`, or `~150 ms` single pass) with `98%–100%` direct mapping to Kimi K3 token IDs.
+- **Two bottlenecks diagnosed from `e5_k3_wmt` (returning to Context before Cycle 48):**
+  1. **Unstated target clauses in training pairs:** XSum's 1-sentence summary covers only `~25%` of the 64-token passage lead (`true_targets` retention against the summary plan was only `0.4246`), so `75%` of each training target was ungrounded BBC news prose, teaching the generator to hallucinate unstated clauses (`val CE` plateaued at `3.57`).
+  2. **`HybridAgent` `<latent>` prompt lacked a 1-shot factual format example:** closing `<latent>` with `</latent></think>\nPlan:` caused `HybridAgent-8B-Agentic` to output meta-intent (*"I need to explain the Apollo 13 mission..."*) instead of semicolon-separated facts (`0/12`, `0/8` keys).
+- **Next (Cycle 48, running as `merge-lf-c48` on `gpu`):** (a) ground every training pair's plan directly in the 64-token window's clause skeletons (`window_to_fact_plan`, `16,000` train + `500` val pairs); (b) add straight-through token CE (`tok_ce_weight = 0.5`) with `tk.vqvae.decoder.middle_block + ln_f` unfrozen; and (c) add a 1-shot factual plan example to `run_factual_latent_rollout`.
+
+
 
