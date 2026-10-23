@@ -1306,12 +1306,17 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
   - **On `p1..p5` (`47` factual keys):**
     - Factual keys kept rose to **`39 / 47` (`82.98%`)**: `p1: 11/12` (`91.7%`), `p2: 7/8` (`87.5%`, fixing `"land on the Earth"` $\to$ `"land on the Moon"`), `p3: 6/8` (`75.0%`), `p4: 8/10` (`80.0%`, up from `6/10`, recovering `"1,820 transactions"`, `"80 percent"`, `"500 GB"`), `p5: 7/9` (`77.8%`).
 
-**2. One-Pass Parallel Verification with Kimi K3's 5-Layer Dense MLA `DSpark` Model (`d = 7,168`, `163,840` Vocab, `verify_k3_engine_c50.py`, record `eval_e6_verified.json`):**
-- Loaded Kimi K3's `kimi-k3-dspark/model.safetensors` (`5` dense MLA + SwiGLU layers, `d = 7,168`, `64` heads) + `model-00094-of-000096.safetensors` (`lm_head.weight [163840, 7168]`) + `markov_head` on GPU (`K3DSparkVerifier`).
-- Running a single **`17.4 ms` parallel causal verification pass** over `p1_e6_copy.ids..p5_e6_copy.ids` cut the mean adjacent word repeat rate by **`-77.3%` (`0.01147 -> 0.00260`, reaching `0.0000` on `p1`, `p2`, `p3`, `p5`)** while preserving all **`39 / 47` (`82.98%`)** factual keys (`p1_e6_verified.ids..p5_e6_verified.ids`).
+**2. Ablating and Removing `K3DSparkVerifier` (`o132_gpu.txt`, `train_k3_copy_decoder.py`):**
+- We tested whether the 5-layer Dense MLA `K3DSparkVerifier` (`7.12 GB` `kimi-k3-dspark/model.safetensors`, `8.95 s` load, `17.4 ms` pass) was actually contributing anything beyond removing adjacent duplicate tokens (`ti != clean_ids[-1]`) at 64-token window boundaries.
+- Comparing `e6_k3_native + K3PlanCopyDecoder` **without DSpark** (plain `ti != clean_ids[-1]` in `dec_k3`) against **with `K3DSparkVerifier`** across `p1..p5` (`o132_gpu.txt`):
+  - **4 of 5 prompts (`p1`, `p3`, `p4`, `p5`) produce `0` differing tokens (`100%` identical token IDs without DSpark)**, and `p2` differs in only `1` of `126` tokens.
+  - **Factual keys kept:** **`39 / 47` (`82.98%`) without DSpark** vs `39 / 47` (`82.98%`) with DSpark (identical on all 5 prompts: `11/12, 7/8, 6/8, 8/10, 7/9`).
+  - **Adjacent repeat rate:** **`0.00260` mean (`0.00000` on `p1, p2, p3, p5`) without DSpark** vs `0.00260` with DSpark (identical).
+  - **Consecutive exact prefix match & first-60 positional match to 93-layer Kimi K3:** **`48, 34, 11, 9, 6` and `48/60, 45/60, 31/60, 39/60, 38/60` without DSpark** (identical to with DSpark).
+- **Conclusion:** `K3DSparkVerifier` is **not needed and is removed from the pipeline**, saving `7.12 GB` of weights and `8.95 s` of setup time. The complete unified pipeline is simply **`HybridAgent (<latent> R(h) + K3_BPE_plan) -> e6_k3_native + K3PlanCopyDecoder -> Clover Kimi K3 (93-layer whole-model)`**.
 
 **3. Exact Token-ID Alignment Against Kimi K3's Ground-Truth 93-Layer Generations (`p1b.ids..p5.ids`) and Live 93-Layer C-Engine Verification on `k3` (`whole-model` with `PF_EXTRA`):**
-- Comparing `p1_e6_verified.ids..p5_e6_verified.ids` (generated in `~1.99 s` `MBR8` + `17.4 ms` `K3DSparkVerifier` on `gpu`) directly against Kimi K3's own 93-layer generated token IDs (`p1b.ids..p5.ids`, which took `244–371 s` on `k3`):
+- Comparing `e6_k3_native + K3PlanCopyDecoder` (with `K3DSparkVerifier` removed, generated in `~1.99 s` `MBR8` on `gpu`) directly against Kimi K3's own 93-layer generated token IDs (`p1b.ids..p5.ids`, which took `244–371 s` on `k3`):
 
 | Prompt | Consecutive Exact Prefix Match (`a == b` from token 0) | First-60-Token Exact Positional ID Match | First-60-Token Kimi K3 ID Set Overlap | Factual Keys Kept |
 |---|---:|---:|---:|---:|
