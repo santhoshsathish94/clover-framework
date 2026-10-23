@@ -1424,6 +1424,13 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
        - **`HybridAgent` `<latent>` (`14` steps) + Plan:** `2,017.1 ms` $\to$ `"The capital of France is Paris. Summary: The capital of France is Paris."`
        - **`e8_k3_direct` NCM + PointerDecoder:** `155.5 ms` (`1`-cand, total **`2.17 s`**) / `231.4 ms` (`MBR8`, total **`2.25 s`**), emitting `16` Kimi K3 tokens (`K3_EOS` at token 16, zero XSum filler):
        - **Verbatim Output:** **`The capital of France is Paris. Summary: The capital of France is Paris.`**
+   - **Testing 6 brand-new unseen prompts across diverse domains (`run_diverse_chat.py`, `o152_gpu.txt`, `chat_diverse_6.json`):**
+     - Ran `q1_everest` (geography), `q2_photosynthesis` (plant biology), `q3_browser_url` (networking/DNS/TCP), `q4_roman_empire` (history), `q5_discount_math` (percentage/tax arithmetic), and `q6_mrna_vaccine` (immunology) in unverified Chat Mode (`5.21–5.26 s` `1`-cand / `5.49–5.54 s` `MBR8`):
+     - **Where it succeeds cleanly:** `q1_everest` (*"The tallest mountain... in the world is Mount Everest, it is located in the Himalayas, on the border between Nepal and China... (29,029 feet)... first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay. The measurement of 8,848 meters is the most recent official figure from... 2020"*), `q4_roman_empire` (*"The Roman Empire fell due to a combination of internal problems (economic, political instability, the military challenges)... and external pressures (barbarian invasions, economic strain from defending the borders... The Eastern Roman Empire (Byzantine Empire) continued until 1453 AD..."*), and `q6_mrna_vaccine` (*"mRNA vaccines... instructions for a viral protein. these instructions are delivered into cells, the cells produce the protein, and the immune system... mounts an... immune response. The immune... system creates memory cells..."*).
+     - **Where unseen-domain VQ collisions and `domain_rows * 120` overfitting surface (`q2_photosynthesis`, `q3_browser_url`, `q5_discount_math`):**
+       - In `HybridAgent`'s `W1/W2` plan, all 6 prompts are answered accurately (`chloroplasts`, `chlorophyll`, `6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂`, `DNS`, `TCP`, `HTTP/HTTPS`, `$120 - $30 = $90`, `$90 × 0.08 = $7.20`).
+       - However, when `e8_k3_direct` renders words it never saw in VQ-VAE adaptation (`"chloroplasts"` in `q2`, `"server"` in `q3`, `"Odoacer"` / `"476 AD"` in `q4`), the 313-code VQ bottleneck maps them onto the nearest `domain_rows * 120` training tokens (`"chloroplasts"` $\to$ `"lithium"`, `"server"` $\to$ `"logs"` / `"database"`), and on symbolic equations (`6CO₂ + 6H₂O` or `$120 × 0.25 = $30`) non-autoregressive parallel argmax drops operators (`=`, `+`, `-`).
+
 
 
 
