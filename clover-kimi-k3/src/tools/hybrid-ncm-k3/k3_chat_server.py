@@ -109,6 +109,20 @@ HTML_UI = """<!DOCTYPE html>
     border: 1px solid var(--line); border-bottom-left-radius: 4px;
     box-shadow: 0 2px 6px rgba(20, 24, 29, 0.03);
   }
+  .agent-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 0.75rem; font-weight: 650; color: var(--accent);
+    background: var(--accent-soft); border: 1px solid var(--accent-line);
+    padding: 0.16rem 0.55rem; border-radius: 999px;
+  }
+  .agent-badge__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .agent-trace {
+    margin-bottom: 0.55rem; padding: 0.45rem 0.7rem;
+    background: var(--accent-soft); border: 1px solid var(--accent-line);
+    border-radius: 8px; font-size: 0.81rem; color: var(--ink-2);
+    display: flex; flex-wrap: wrap; gap: 0.4rem 0.75rem; align-items: center;
+  }
+  .agent-pill { font-weight: 650; color: var(--accent); }
   .msg img.chat-thumb {
     display: block; max-width: 240px; max-height: 180px; border-radius: 8px;
     margin-bottom: 0.5rem; border: 1px solid rgba(255,255,255,0.25);
@@ -162,14 +176,15 @@ HTML_UI = """<!DOCTYPE html>
       <use class="clover-icon__leaf" href="#clover-leaf" transform="rotate(288 50 44)"/>
     </svg>
     Clover <span>AI</span>
+    <span class="agent-badge"><span class="agent-badge__dot"></span>Agent Mode &middot; K3 GPU Experts + Web Search + Python</span>
   </div>
   <div class="actions">
-    <button type="button" class="btn" onclick="newSession()">New Chat</button>
+    <button type="button" class="btn" onclick="newSession()">New Session</button>
   </div>
 </header>
 
 <div id="chat" aria-live="polite">
-  <div class="msg msg--bot">How can I help you today? You can ask a question, continue a conversation, or attach an image.</div>
+  <div class="msg msg--bot">Clover AI Agent Mode is active (live Web/arXiv/Wikipedia search, Python execution, 3,584 resident Kimi K3 GPU MoE experts, and NCM). Ask a question, search for recent research, run calculations, or attach an image.</div>
 </div>
 
 <div class="preview-bar" id="img-preview-bar" hidden>
@@ -263,9 +278,27 @@ function clearImage() {
 
 async function newSession() {
   sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-  localStorage.setItem('clover_ai_session_id', sessionId);
   clearImage();
-  chatEl.innerHTML = '<div class="msg msg--bot">How can I help you today? You can ask a question, continue a conversation, or attach an image.</div>';
+  chatEl.innerHTML = '<div class="msg msg--bot">Clover AI Agent Mode is active (live Web/arXiv/Wikipedia search, Python execution, 3,584 resident Kimi K3 GPU MoE experts, and NCM). Ask a question, search for recent research, run calculations, or attach an image.</div>';
+}
+
+function renderTrace(r) {
+  const parts = [];
+  if (r.tool_calls && r.tool_calls.length) {
+    for (const tc of r.tool_calls) {
+      if (tc.tool === 'search') {
+        parts.push('<span class="agent-pill">&#128269; Web/arXiv Search:</span> <span>' + escHtml(tc.input) + '</span>');
+      } else if (tc.tool === 'python') {
+        parts.push('<span class="agent-pill">&#9881; Python Tool:</span> <span>' + escHtml(tc.result) + '</span>');
+      }
+    }
+  }
+  if (r.k3_experts && r.k3_experts.total_unique_experts_activated) {
+    const u = r.k3_experts.unique_experts_per_layer || {};
+    const lstr = Object.keys(u).map(k => k + ':' + u[k]).join(', ');
+    parts.push('<span class="agent-pill">&#9889; K3 GPU Experts:</span> <span>' + r.k3_experts.total_unique_experts_activated + ' active (' + escHtml(lstr) + ')</span>');
+  }
+  return parts.length ? '<div class="agent-trace">' + parts.join(' &middot; ') + '</div>' : '';
 }
 
 async function sendPrompt() {
@@ -299,7 +332,7 @@ async function sendPrompt() {
     });
     const r = await res.json();
     const reply = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
-    pending.innerHTML = escHtml(reply).replace(/\\n/g, '<br>');
+    pending.innerHTML = renderTrace(r) + '<div>' + escHtml(reply).replace(/\\n/g, '<br>') + '</div>';
   } catch (err) {
     pending.innerHTML = 'Unable to reach Clover AI right now. Please try again.';
   } finally {

@@ -123,14 +123,18 @@
               <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
             </svg>
             Clover <span>AI</span>
+            <span class="k3-agent-badge" id="k3-agent-mode-badge" title="HybridAgent (&lt;latent&gt; + &lt;search&gt; + &lt;python&gt;) + Kimi K3 GPU MoE Experts + NCM">
+              <span class="k3-agent-badge__dot"></span>
+              Agent Mode &middot; K3 GPU Experts + Web Search + Python
+            </span>
           </div>
           <div class="k3-controls">
-            <button type="button" onclick="k3ResetChat()">New Chat</button>
+            <button type="button" onclick="k3ResetChat()">New Session</button>
             <button type="button" id="k3-modal-toggle-btn" onclick="openK3ChatModal()">Expand</button>
           </div>
         </div>
         <div class="k3-log" id="k3-chat-log" aria-live="polite">
-          <div class="k3-msg k3-msg--bot">How can I help you today? You can ask a question, continue a conversation, or attach an image.</div>
+          <div class="k3-msg k3-msg--bot">Clover AI Agent Mode is active (live Web/arXiv/Wikipedia search, Python execution, 3,584 resident Kimi K3 GPU MoE experts, and NCM). Ask a question, search for recent research, run calculations, or attach an image.</div>
         </div>
         <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
           <div class="k3-preview-bar__info">
@@ -1008,9 +1012,30 @@ src/scripts/chat-stop.sh mychat</code></pre>
     sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     window.k3ClearImage();
     if (logEl) {
-      logEl.innerHTML = '<div class="k3-msg k3-msg--bot">How can I help you today? You can ask a question, continue a conversation, or attach an image.</div>';
+      logEl.innerHTML = '<div class="k3-msg k3-msg--bot">Clover AI Agent Mode is active (live Web/arXiv/Wikipedia search, Python execution, 3,584 resident Kimi K3 GPU MoE experts, and NCM). Ask a question, search for recent research, run calculations, or attach an image.</div>';
     }
   };
+
+  function renderAgentTrace(r) {
+    var parts = [];
+    if (r.tool_calls && r.tool_calls.length) {
+      for (var i = 0; i < r.tool_calls.length; i++) {
+        var tc = r.tool_calls[i];
+        if (tc.tool === 'search') {
+          parts.push('<span class="k3-agent-pill">&#128269; Web/arXiv Search:</span> <span>' + escHtml(tc.input) + '</span>');
+        } else if (tc.tool === 'python') {
+          parts.push('<span class="k3-agent-pill">&#9881; Python Tool:</span> <span>' + escHtml(tc.result) + '</span>');
+        }
+      }
+    }
+    if (r.k3_experts && r.k3_experts.total_unique_experts_activated) {
+      var u = r.k3_experts.unique_experts_per_layer || {};
+      var lstr = Object.keys(u).map(function (k) { return k + ':' + u[k]; }).join(', ');
+      parts.push('<span class="k3-agent-pill">&#9889; K3 GPU Experts:</span> <span>' + r.k3_experts.total_unique_experts_activated + ' active (' + escHtml(lstr) + ')</span>');
+    }
+    if (!parts.length) return '';
+    return '<div class="k3-agent-trace">' + parts.join(' &middot; ') + '</div>';
+  }
 
   window.k3SendPrompt = async function () {
     var text = (inputEl.value || '').trim();
@@ -1043,7 +1068,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
       });
       var r = await res.json();
       var replyTxt = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
-      pending.innerHTML = '<div>' + escHtml(replyTxt).replace(/\n/g, '<br>') + '</div>';
+      pending.innerHTML = renderAgentTrace(r) + '<div>' + escHtml(replyTxt).replace(/\n/g, '<br>') + '</div>';
     } catch (err) {
       pending.innerHTML = '<span>Unable to reach Clover AI right now. Please try again.</span>';
     } finally {

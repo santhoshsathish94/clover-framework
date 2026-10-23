@@ -653,9 +653,28 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
 }
 .k3-chat-title {
   font-weight: 680; font-size: 1.02rem; letter-spacing: -0.02em; color: var(--ink);
-  display: inline-flex; align-items: center; gap: 0.5rem;
+  display: inline-flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
 }
 .k3-chat-title span { color: var(--accent); font-weight: 600; }
+.k3-agent-badge {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.75rem; font-weight: 650; color: var(--accent);
+  background: var(--accent-soft); border: 1px solid var(--accent-line);
+  padding: 0.16rem 0.55rem; border-radius: 999px; letter-spacing: 0.01em;
+}
+.k3-agent-badge__dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+}
+.k3-agent-trace {
+  margin-bottom: 0.55rem; padding: 0.45rem 0.7rem;
+  background: var(--accent-soft); border: 1px solid var(--accent-line);
+  border-radius: 8px; font-size: 0.81rem; color: var(--ink-2);
+  display: flex; flex-wrap: wrap; gap: 0.4rem 0.75rem; align-items: center;
+}
+.k3-agent-pill {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-weight: 650; color: var(--accent);
+}
 .k3-controls { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .k3-controls button, .k3-foot button, .k3-preview-bar button {
   background: var(--bg); color: var(--ink-2); border: 1px solid var(--line-2); border-radius: 8px;

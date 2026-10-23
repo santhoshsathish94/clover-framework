@@ -7,12 +7,13 @@
 //     -DFAST_ROUTER -DEXPERT_V2 -DINT8_PLANES -I/home/usergpu/k3gpu/src/code/gpu \
 //     k3_gpu_experts_lib.cu -lcublas -lpthread -o libk3_gpu_experts.so
 
-#include "model.cuh"
+#include "decode.cuh"
 #include <mutex>
 #include <thread>
 
 struct K3MultiCardChain {
     bool initialized = false;
+    std::string dataset_dir;
     int max_n = 0;
     int n_moe_stages = 0;
     int moe_layers[4] = {1, 12, 48, 92};
@@ -25,6 +26,16 @@ struct K3MultiCardChain {
     // 4 MoE stages (each holds trunk-L + all 896 experts of expert-L/experts.direct in VRAM)
     Layer y_moe[4];
     Work  w_moe[4];
+
+    // Sparse Top-16 On-Demand Mode (`decode.cuh` `moe_block_sparse` + `HostCache` + `CardPool`) across layers 1..92
+    bool sparse_initialized = false;
+    int sparse_max_layer = 0;
+    HostCache host_cache;
+    CardPool sparse_pool;
+    Layer    sparse_layers[93];
+    KdaState sparse_kda[93];
+    MlaCache sparse_mla[93];
+    int      sparse_fd[93];
 
     // Host staging buffers for cross-card activation & snapshot handoff (`max_n x 7168` floats)
     std::vector<float> h_snap0;
@@ -46,12 +57,14 @@ int k3_experts_init(const char *dataset_dir, const int *layers4, const int *card
     if (g_chain.initialized) return 0;
     if (n_stages < 1 || n_stages > 4) return -1;
 
+    g_chain.dataset_dir = dataset_dir;
     g_chain.max_n = max_n;
     g_chain.n_moe_stages = n_stages;
     for (int i = 0; i < n_stages; i++) {
         g_chain.moe_layers[i] = layers4[i];
         g_chain.moe_cards[i]  = cards4[i];
     }
+    for (int L = 0; L <= 92; L++) g_chain.sparse_fd[L] = -1;
 
     g_chain.h_snap0.resize((size_t)max_n * W);
     g_chain.h_cur.resize((size_t)max_n * W);
@@ -181,6 +194,140 @@ float k3_experts_forward(const float *in_embed, int n, float *out_hidden, int *o
         memcpy(out_hidden, g_chain.h_cur.data(), bytes);
     }
 
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    return (float)(seconds(t0, t1) * 1000.0);
+}
+
+// Initializes Sparse Top-16 On-Demand Mode (`decode.cuh` `moe_block_sparse` + `HostCache` + `CardPool`)
+// for layers `1..max_layer` (up to all 92 MoE layers).
+int k3_sparse_init(int max_layer, int host_cache_gb)
+{
+    std::lock_guard<std::mutex> lock(g_chain.mu);
+    if (!g_chain.initialized) return -1;
+    if (max_layer < 1) max_layer = 1;
+    if (max_layer > 92) max_layer = 92;
+
+    if (!g_chain.sparse_initialized) {
+        g_chain.host_cache.init((size_t)host_cache_gb << 30);
+        const int sp_card = g_chain.moe_cards[1];
+        CHECK(cudaSetDevice(sp_card));
+        size_t free_b = 0, total_b = 0;
+        CHECK(cudaMemGetInfo(&free_b, &total_b));
+        const size_t want_pool = (size_t)72 * EXPERT_RAW;
+        const size_t reserve = free_b > (want_pool + (512u << 20)) ? (free_b - want_pool) : (free_b / 2);
+        g_chain.sparse_pool.init(sp_card, reserve, 16);
+        g_chain.sparse_initialized = true;
+    }
+
+    const int sp_card = g_chain.moe_cards[1];
+    CHECK(cudaSetDevice(sp_card));
+    for (int L = g_chain.sparse_max_layer + 1; L <= max_layer; L++) {
+        bool is_res = false;
+        for (int s = 0; s < g_chain.n_moe_stages; s++) {
+            if (g_chain.moe_layers[s] == L) { is_res = true; break; }
+        }
+        if (is_res) continue;
+
+        layer_load_trunk(g_chain.dataset_dir.c_str(), L, g_chain.sparse_layers[L]);
+        layer_load_expert_tables(g_chain.dataset_dir.c_str(), L, g_chain.sparse_layers[L]);
+        if (g_chain.sparse_layers[L].mla) {
+            g_chain.sparse_mla[L].cap = g_chain.max_n;
+            CHECK(cudaMalloc(&g_chain.sparse_mla[L].kv, (size_t)g_chain.max_n * MLA_EXP * 4));
+            CHECK(cudaMalloc(&g_chain.sparse_mla[L].lat, (size_t)g_chain.max_n * MLA_KVLAT * 4));
+        } else {
+            kda_state_alloc(g_chain.sparse_kda[L]);
+        }
+        char path[4096];
+        snprintf(path, sizeof path, "%s/expert-%d/experts.direct", g_chain.dataset_dir.c_str(), L);
+        g_chain.sparse_fd[L] = open(path, O_RDONLY | O_DIRECT);
+        if (g_chain.sparse_fd[L] < 0) g_chain.sparse_fd[L] = open(path, O_RDONLY);
+    }
+    if (max_layer > g_chain.sparse_max_layer) g_chain.sparse_max_layer = max_layer;
+    return 0;
+}
+
+float k3_sparse_forward(const float *in_embed, int n, int max_layer, float *out_hidden, int *out_stats)
+{
+    std::lock_guard<std::mutex> lock(g_chain.mu);
+    if (!g_chain.initialized || !g_chain.sparse_initialized || n <= 0 || n > g_chain.max_n) return -1.0f;
+    if (max_layer > g_chain.sparse_max_layer) max_layer = g_chain.sparse_max_layer;
+
+    struct timespec t0, t1;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    const size_t bytes = (size_t)n * W * sizeof(float);
+
+    const int c0 = g_chain.moe_cards[0];
+    CHECK(cudaSetDevice(c0));
+    Work &w0 = g_chain.w0;
+    w0.N = n;
+    CHECK(cudaMemcpy(w0.snap[0], in_embed, bytes, cudaMemcpyHostToDevice));
+    run_layer0(w0, g_chain.l0, w0.snap[0], w0.cur);
+    CHECK(cudaMemcpy(g_chain.h_cur.data(), w0.cur, bytes, cudaMemcpyDeviceToHost));
+    memcpy(g_chain.h_snaps[0].data(), in_embed, bytes);
+    int nsnap = 1;
+
+    CardPool &pool = g_chain.sparse_pool;
+    unsigned long needed0 = pool.st.needed, hc0 = pool.st.hit_card, hh0 = pool.st.hit_host, dr0 = pool.st.from_drive;
+
+    for (int L = 1; L <= max_layer; L++) {
+        int res_s = -1;
+        for (int s = 0; s < g_chain.n_moe_stages; s++) {
+            if (g_chain.moe_layers[s] == L) { res_s = s; break; }
+        }
+        if (res_s >= 0) {
+            const int card = g_chain.moe_cards[res_s];
+            CHECK(cudaSetDevice(card));
+            Work &ws = (res_s == 0) ? g_chain.w0 : g_chain.w_moe[res_s];
+            ws.N = n;
+            CHECK(cudaMemcpy(ws.cur, g_chain.h_cur.data(), bytes, cudaMemcpyHostToDevice));
+            const float *sn[9];
+            for (int k = 0; k < nsnap; k++) {
+                CHECK(cudaMemcpy(ws.snap[k], g_chain.h_snaps[k].data(), bytes, cudaMemcpyHostToDevice));
+                sn[k] = ws.snap[k];
+            }
+            run_layer(ws, g_chain.y_moe[res_s], ws.cur, sn, nsnap, ws.nxt);
+            CHECK(cudaDeviceSynchronize());
+            if (L % 12 == 0 && nsnap < 8) {
+                memcpy(g_chain.h_snaps[nsnap].data(), g_chain.h_cur.data(), bytes);
+                nsnap++;
+            }
+            CHECK(cudaMemcpy(g_chain.h_cur.data(), ws.nxt, bytes, cudaMemcpyDeviceToHost));
+        } else {
+            const int sp_card = g_chain.moe_cards[1];
+            CHECK(cudaSetDevice(sp_card));
+            Work &ws = g_chain.w_moe[1];
+            ws.N = n;
+            CHECK(cudaMemcpy(ws.cur, g_chain.h_cur.data(), bytes, cudaMemcpyHostToDevice));
+            const float *sn[9];
+            for (int k = 0; k < nsnap; k++) {
+                CHECK(cudaMemcpy(ws.snap[k], g_chain.h_snaps[k].data(), bytes, cudaMemcpyHostToDevice));
+                sn[k] = ws.snap[k];
+            }
+            Layer &y = g_chain.sparse_layers[L];
+            if (!y.mla) kda_state_reset(g_chain.sparse_kda[L]);
+            run_layer_state(
+                ws, y,
+                y.mla ? nullptr : &g_chain.sparse_kda[L],
+                y.mla ? &g_chain.sparse_mla[L] : nullptr,
+                0, pool, g_chain.host_cache, g_chain.sparse_fd[L], 16,
+                ws.cur, sn, nsnap, ws.nxt
+            );
+            CHECK(cudaDeviceSynchronize());
+            if (L % 12 == 0 && nsnap < 8) {
+                memcpy(g_chain.h_snaps[nsnap].data(), g_chain.h_cur.data(), bytes);
+                nsnap++;
+            }
+            CHECK(cudaMemcpy(g_chain.h_cur.data(), ws.nxt, bytes, cudaMemcpyDeviceToHost));
+        }
+    }
+
+    if (out_hidden) memcpy(out_hidden, g_chain.h_cur.data(), bytes);
+    if (out_stats) {
+        out_stats[0] = (int)(pool.st.needed - needed0);
+        out_stats[1] = (int)(pool.st.hit_card - hc0);
+        out_stats[2] = (int)(pool.st.hit_host - hh0);
+        out_stats[3] = (int)(pool.st.from_drive - dr0);
+    }
     clock_gettime(CLOCK_MONOTONIC, &t1);
     return (float)(seconds(t0, t1) * 1000.0);
 }

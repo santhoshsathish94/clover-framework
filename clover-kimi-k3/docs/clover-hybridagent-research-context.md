@@ -1652,6 +1652,32 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
     > *1:30 PM - 2:00 PM: Light snack and rest.*
     > *2:00 PM - 3:00 PM: Study (focus on Reasoning, Aptitude, and English)."*
 
+---
+
+## Cycle 59 — Live Internet/arXiv/Wikipedia Search (`LiveWebSearchTool`), Visible Agent Mode UI Trace, and Sparse Top-16 Multi-Layer Expert Execution (`k3_sparse_forward`)
+
+**Direction (creator, 2026-10-23):** *"is the agent integrated why can't it browse the internet what are is pending why don't I see agent mode and are we running the efficient way possible does all layers gets applied with selected experts"*.
+
+**1. Why `"can you find relevant research on recent AI development"` + `"find it"` Failed in Cycle 58:**
+- In Cycle 58, `K3KnowledgeSearchTool` only searched a 6-entry static dictionary (`Harbourside`, `Apollo 13`, `Payments DB`, `Bristol Hospital`, `TNPSC`, `Clover K3`) because `HybridAgent`'s default `TavilySearchTool` required a paid `TAVILY_API_KEY` that is not set on `gpu`.
+- Worse, `run_agent_planning` forced `</latent></think>\nW1:` before checking for `<search>`, so `HybridAgent` never emitted `<search>` and instead wrote meta-planning text (`"I can help you find relevant research... Identify the scope: you wants 'recent' AI development"`).
+- Finally, the web UI hid `r.tool_calls` and `r.k3_experts`, so Agent Mode was invisible in the browser.
+
+**2. What Was Built and Verified (`live_web_search.py`, `k3_agent_engine.py`, `k3_gpu_experts_lib.cu`, `site/clover-k3/index.html`, `o252_gpu.txt`, `o256_gpu.txt`):**
+- **Live Internet Search (`LiveWebSearchTool` in `live_web_search.py`):**
+  - Queries the live **arXiv API** (`http://export.arxiv.org/api/query`, sorted by `submittedDate` descending), **Wikipedia Search API** (`https://en.wikipedia.org/w/api.php`), and **DuckDuckGo HTML search** (`https://html.duckduckgo.com/html/`) directly from `gpu` with zero API key required.
+  - Added `needs_agent_search_tool(user_prompt, history)` so both initial research/web queries (`"can you find relevant research on recent AI development"`) and short follow-up commands (`"find it"`, `"search it"`, `"look it up"`) automatically execute `<search>` and inject the live `<result>` pages into `HybridAgent`.
+- **Visible Agent Mode Badge & Per-Turn Execution Trace (`site/clover-k3/index.html`, `site/styles.css`, `k3_chat_server.py`):**
+  - Added the header pill **`Agent Mode · K3 GPU Experts + Web Search + Python`** and `renderAgentTrace(r)` above each bot message showing the executed tool (`🔍 Web/arXiv Search` or `⚙ Python Tool`) and the Kimi K3 GPU MoE expert activation counts (`⚡ K3 GPU Experts: 1969 active (L1:741, L12:548, L48:327, L92:353)`).
+- **Sparse Top-16 On-Demand Multi-Layer Mode (`k3_sparse_init` & `k3_sparse_forward` in `k3_gpu_experts_lib.cu`):**
+  - Added `decode.cuh`'s `moe_block_sparse` + `HostCache` (pinned host RAM cache) + `CardPool` (GPU expert slot pool) to `libk3_gpu_experts.so` so layers `1..92` can also be run with only the **top-16 selected experts per token** fetched on demand (from GPU VRAM pool $\to$ pinned host RAM cache $\to$ 16-reader `O_DIRECT` NVMe), alongside the zero-disk-I/O `109 ms` 4-block-boundary resident VRAM mode (`L0 + L1 + L12 + L48 + L92`, `3,584` experts in VRAM).
+- **Live Server Verification (`test_live_web_agent.py`, `o256_gpu.txt`):**
+  - Prompt: `"can you find relevant research on recent AI development"` (and follow-up `"find it"`):
+  - Executed `🔍 Web/arXiv Search` (`Page 1: [arXiv 2026-10-14] LLM-jp-4 Technical Report (http://arxiv.org/abs/2610.19331v1)... Page 2: [arXiv 2026-10-09] VETNET: Assembling Benchmark Datasets for AI-Driven Veterinary Innovation (http://arxiv.org/abs/2610.14149v1)...`) + **`1,969` unique Kimi K3 GPU MoE experts** (`L1: 741, L12: 548, L48: 327, L92: 353` in `369–563 ms`):
+    > *"Here are some recent research papers and developments in AI that I found:*
+    > *LLM-jp-4 Technical Report (arXiv: 2610.19331v1, October 14, 2026): This paper introduces LLM-jp-4, a family of Japanese sovereign large language models (LLMs). The focus is on transparency, reproducibility, and practical usability. It includes an 8B dense model and a 13B sparse model. This highlights ongoing efforts in developing region-specific, transparent, and usable LLMs.*
+    > *VETNET: Assembling Benchmark Datasets for AI-Driven Veterinary Innovation (arXiv: 2610.14149v1, October 9, 2026): This paper describes VETNET, an ecosystem of benchmark datasets and evaluation frameworks for AI in veterinary medicine. It aims to accelerate AI-driven innovation in animal science through standardized, high-quality datasets."*
+
 
 
 

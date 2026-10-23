@@ -48,6 +48,7 @@ from hybrid_agent.constants import (
     RESULT_OPEN, RESULT_CLOSE, special_token_id
 )
 from hybrid_agent.tools.python_tool import PythonTool
+from live_web_search import LiveWebSearchTool
 from train_latent_bridge import encode_batch_rh
 from k3_fast_chat import (
     CHAT_SYSTEM_PROMPT, CHAT_PLAN_PROMPT, GRAMMAR_CONNECTOR_WORDS,
@@ -59,16 +60,16 @@ PYTHON_OPEN, PYTHON_CLOSE = "<python>", "</python>"
 
 
 AGENT_DECISION_SYSTEM_PROMPT = (
-    "You are Clover AI operating in Agent Mode (powered by HybridAgent latent reasoning, Kimi K3 MoE Experts, and NCM). "
-    "When the user's request involves arithmetic, math word problems, percentages, taxes, speeds/distances, or verifying a "
-    "time budget, first write a brief `<think>` block and emit `<python> ... </python>` with `print(...)` to compute the exact numbers. "
-    "When the user asks about specific benchmark/system facts, you may emit `<search> query </search>`. "
-    "For general explanations, study timetables, or conversational replies that do not require calculation, write `<think>` and then answer directly."
+    "You are Clover AI operating in Agent Mode (powered by HybridAgent latent reasoning, live web/arXiv/Wikipedia search, "
+    "Python code execution, Kimi K3 MoE Experts, and Next-Concept Modeling). "
+    "When the user asks to find, search, or look up research papers, recent developments, news, or external facts, "
+    "ALWAYS present the actual retrieved findings, paper titles, dates, and concrete facts directly — NEVER say "
+    "'Here is how I can assist: Identify the scope' or ask the user to search for themselves."
 )
 
 
 class K3KnowledgeSearchTool:
-    """Fast local + cached knowledge search tool for `<search> query </search>` in Agent Mode."""
+    """Combines fast verified Kimi K3 domain facts with live Internet search (`arXiv API + Wikipedia API + DuckDuckGo Web`)."""
     KNOWLEDGE_DOCS = [
         ("Harbourside Council Mill Road cycle lane", "The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan; work starts in March and takes 14 weeks. Shop owners led by Tom Eliot asked for a delay due to parking; the council promised 40 temporary parking spaces on Dock Street."),
         ("Apollo 13 mission oxygen tank Lunar Module", "Apollo 13 launched in April 1970 with astronauts James Lovell, Fred Haise, and Jack Swigert. Two days into the flight, an oxygen tank exploded in the service module. The crew used the Lunar Module (LM) as a lifeboat to conserve power, air, and water, adapted CO2 filters with Houston ground controllers, looped around the Moon, and splashed down safely in the Pacific Ocean."),
@@ -78,18 +79,23 @@ class K3KnowledgeSearchTool:
         ("Clover Kimi K3 architecture experts NCM", "Clover Kimi K3 is a 93-layer (1 dense KDA + 92 MoE layers with 896 experts per layer, top-16 routed, d=7168, 163,840 vocabulary) model paired with HybridAgent-8B-Agentic (<latent> R(h), <python>, <search>) and Next-Concept Modeling (NCM 11-level VQ-VAE)."),
     ]
 
+    def __init__(self):
+        self.live_web = LiveWebSearchTool(max_results=5)
+
     def execute(self, query: str) -> str:
         q_words = set(re.findall(r"[a-z0-9]+", query.lower()))
         scored = []
         for title, body in self.KNOWLEDGE_DOCS:
             doc_words = set(re.findall(r"[a-z0-9]+", (title + " " + body).lower()))
             overlap = len(q_words & doc_words)
-            if overlap > 0:
+            if overlap >= 3:
                 scored.append((overlap, title, body))
         scored.sort(reverse=True)
+        live_res = self.live_web.execute(query)
         if scored:
-            return "\n".join(f"Page {i+1} ({t}): {b}" for i, (_, t, b) in enumerate(scored[:2]))
-        return f"Search query '{query}': use standard domain knowledge to answer directly."
+            local_str = "\n".join(f"Local Verified Doc ({t}): {b}" for _, t, b in scored[:1])
+            return f"{local_str}\n{live_res}"
+        return live_res
 
 
 class K3ExpertBridge(nn.Module):
@@ -155,6 +161,14 @@ class K3GPUExpertsRunner:
             ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_float)
         ]
         self.lib.k3_experts_forward.restype = ctypes.c_float
+        self.lib.k3_sparse_init.argtypes = [ctypes.c_int, ctypes.c_int]
+        self.lib.k3_sparse_init.restype = ctypes.c_int
+        self.lib.k3_sparse_forward.argtypes = [
+            ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int,
+            ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int)
+        ]
+        self.lib.k3_sparse_forward.restype = ctypes.c_float
+        self.sparse_ready_layers = 0
 
         c_layers = (ctypes.c_int * self.n_stages)(*self.layers)
         c_cards = (ctypes.c_int * self.n_stages)(*self.cards)
@@ -231,7 +245,79 @@ class K3GPUExpertsRunner:
         }
         return h_k3_moe, meta
 
+    def forward_k3_sparse(self, k3_ids_2d: torch.Tensor, max_layer: int = 12, host_cache_gb: int = 48):
+        """Runs `k3_ids_2d` through Kimi K3's sparse top-16 on-demand MoE router (`decode.cuh` `moe_block_sparse`)
+        across layers `0 .. max_layer` (where only the top-16 selected experts per token are loaded into the GPU's
+        `CardPool` from VRAM / 48 GB pinned RAM cache / NVMe)."""
+        if max_layer > self.sparse_ready_layers:
+            self.lib.k3_sparse_init(max_layer, host_cache_gb)
+            self.sparse_ready_layers = max_layer
+        ids_cpu = k3_ids_2d.detach().cpu().clamp(min=0, max=163839)
+        W_b, P_len = ids_cpu.shape
+        flat_ids = ids_cpu.reshape(-1)
+        n_cur = min(flat_ids.numel(), self.max_n)
+        inp_np = self.embed_w[flat_ids[:n_cur]].contiguous().numpy()
+        out_h = np.zeros((n_cur, 7168), dtype=np.float32)
+        out_stats = np.zeros(4, dtype=np.int32)
+        ms = self.lib.k3_sparse_forward(
+            inp_np.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+            n_cur,
+            max_layer,
+            out_h.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+            out_stats.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        )
+        h_all = torch.from_numpy(out_h)
+        rms = torch.sqrt(h_all.pow(2).mean(dim=-1, keepdim=True) + 1e-5)
+        h_normed = (h_all / rms) * self.norm_w.unsqueeze(0)
+        return h_normed.view(W_b, P_len, 7168), {
+            "mode": f"sparse_top16_L0_to_L{max_layer}",
+            "k3_moe_ms": round(float(ms), 2),
+            "layers_executed": max_layer + 1,
+            "sparse_experts_needed": int(out_stats[0]),
+            "hit_vram_pool": int(out_stats[1]),
+            "hit_pinned_ram_cache": int(out_stats[2]),
+            "fetched_from_nvme": int(out_stats[3]),
+        }
 
+
+def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
+    """Detects when the user prompt (or a follow-up like 'find it' / 'search it') asks the agent to browse/search
+    for research papers, recent developments, news, or external information."""
+    p = user_prompt.strip()
+    low = p.lower()
+    # Direct follow-up commands like 'find it', 'search it', 'look it up', 'do it', 'yes find it'
+    if low in ("find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me") or (
+        len(low.split()) <= 4 and any(w in low for w in ("find", "search", "fetch", "browse"))
+    ):
+        if history:
+            for h in reversed(history):
+                prev_u = h.get("user", "").strip()
+                if len(prev_u.split()) > 3 and prev_u.lower() != low:
+                    return prev_u
+        return "recent AI development and large language model research"
+
+    if any(
+        kw in low
+        for kw in (
+            "find relevant research",
+            "find research",
+            "recent ai",
+            "latest ai",
+            "recent development",
+            "latest research",
+            "arxiv",
+            "search for",
+            "search the web",
+            "browse",
+            "look up",
+            "recent papers",
+            "find papers",
+            "what is new in",
+            "news about",
+        )
+    ):
+        return p
+    return None
 def needs_agent_python_tool(user_prompt: str) -> str | None:
     """Detects arithmetic / math / schedule-budget expressions or word problems where Agent Mode can run `<python>`
     to verify exact figures before planning."""
@@ -415,29 +501,49 @@ class CloverK3AgentEngine:
     @torch.no_grad()
     def run_agent_planning(self, user_prompt: str, history=None, min_lat: int = 8, max_lat: int = 14, max_new: int = 260):
         """Runs `HybridAgent-8B-Agentic` in Agent Mode:
-        1. Executes `<python>` or `<search>` tool calls when needed and appends `<result> ... </result>` to the agent's context.
+        1. Executes `<search>` (live arXiv + Wikipedia + DuckDuckGo web search) or `<python>` (sandboxed interpreter)
+           when requested or needed, appending `<result> ... </result>` to the agent's context.
         2. Runs continuous `<latent>` reasoning (`R(h_t) = run_hybridlink(h_t)`).
         3. Synthesizes the multi-window plan (`plans`).
         """
         tool_calls_log = []
+        tool_obs_parts = []
+
+        # 1. Check if live web/research `<search>` is needed (including follow-ups like 'find it')
+        search_q = needs_agent_search_tool(user_prompt, history=history)
+        if search_q is not None:
+            t_s0 = time.perf_counter()
+            s_res = self.search_tool.execute(search_q).strip()
+            s_ms = round((time.perf_counter() - t_s0) * 1000.0, 1)
+            tool_calls_log.append({"tool": "search", "input": search_q, "result": s_res, "ms": s_ms})
+            tool_obs_parts.append(
+                f"Live Web & Research Search Results (`<search>{search_q}</search>` -> `<result>`):\n{s_res}\n\n"
+                f"IMPORTANT: Present the actual research papers, dates, titles, and findings from `<result>` above directly to the user on multiple lines (`W1:`, `W2:`, `W3:`, `W4:`). "
+                f"Do NOT say 'Here is how I can assist: Identify the scope' — give the real findings right now!"
+            )
+
+        # 2. Check if `<python>` calculation tool is needed
         py_code = needs_agent_python_tool(user_prompt)
-        tool_obs_str = ""
         if py_code is not None:
             t_tool0 = time.perf_counter()
             py_res = self.py_tool.execute(py_code).strip()
             tool_ms = round((time.perf_counter() - t_tool0) * 1000.0, 1)
             tool_calls_log.append({"tool": "python", "input": py_code, "result": py_res, "ms": tool_ms})
-            tool_obs_str = f"\n\nVerified Python tool observation (`<result>`):\n{py_res}\nUse these exact verified numbers in your response."
+            tool_obs_parts.append(f"Verified Python tool observation (`<result>`):\n{py_res}\nUse these exact verified numbers in your response.")
+
+        tool_obs_str = ("\n\n" + "\n\n".join(tool_obs_parts)) if tool_obs_parts else ""
 
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
-        msgs = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
+        sys_prompt = AGENT_DECISION_SYSTEM_PROMPT + "\n\n" + CHAT_SYSTEM_PROMPT
+        msgs = [{"role": "system", "content": sys_prompt}]
         if history:
             for h in history[-6:]:
                 msgs.append({"role": "user", "content": h["user"]})
                 msgs.append({"role": "assistant", "content": "W1: " + h["reply"].replace("\n", "\nW2: ", 1)})
 
-        prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=user_prompt.strip()) + tool_obs_str
+        effective_user_prompt = search_q if (search_q is not None and len(user_prompt.strip().split()) <= 4) else user_prompt.strip()
+        prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=effective_user_prompt) + tool_obs_str
         msgs.append({"role": "user", "content": prompt_with_obs})
 
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
@@ -474,7 +580,7 @@ class CloverK3AgentEngine:
 
         gen_ids = []
         eos_ids = {self.ha_tok.eos_token_id}
-        is_struct = is_structured_or_multi_part_prompt(user_prompt)
+        is_struct = is_structured_or_multi_part_prompt(user_prompt) or (search_q is not None)
         for _ in range(max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
@@ -654,15 +760,34 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
 
     augmented_prompts = []
     batch_tool_logs = []
-    for p in user_prompts:
+    for idx_p, p in enumerate(user_prompts):
+        hist_p = histories[idx_p] if (histories and idx_p < len(histories)) else None
+        t_logs = []
+        obs_parts = []
+        sq = needs_agent_search_tool(p, history=hist_p)
+        if sq is not None:
+            t_s0 = time.perf_counter()
+            s_res = eng.search_tool.execute(sq).strip()
+            s_ms = round((time.perf_counter() - t_s0) * 1000.0, 1)
+            t_logs.append({"tool": "search", "input": sq, "result": s_res, "ms": s_ms})
+            obs_parts.append(
+                f"Live Web & Research Search Results (`<search>{sq}</search>` -> `<result>`):\n{s_res}\n\n"
+                f"IMPORTANT: Present the actual research papers, dates, titles, and findings from `<result>` above directly to the user on multiple lines (`W1:`, `W2:`, `W3:`, `W4:`). "
+                f"Do NOT say 'Here is how I can assist: Identify the scope' — give the real findings right now!"
+            )
         py_code = needs_agent_python_tool(p)
         if py_code is not None:
+            t_p0 = time.perf_counter()
             py_res = eng.py_tool.execute(py_code).strip()
-            batch_tool_logs.append([{"tool": "python", "input": py_code, "result": py_res}])
-            augmented_prompts.append(f"{p.strip()}\n\nVerified Python tool observation (`<result>`):\n{py_res}\nUse these exact verified numbers in your response.")
+            p_ms = round((time.perf_counter() - t_p0) * 1000.0, 1)
+            t_logs.append({"tool": "python", "input": py_code, "result": py_res, "ms": p_ms})
+            obs_parts.append(f"Verified Python tool observation (`<result>`):\n{py_res}\nUse these exact verified numbers in your response.")
+        batch_tool_logs.append(t_logs)
+        eff_p = sq if (sq is not None and len(p.strip().split()) <= 4) else p.strip()
+        if obs_parts:
+            augmented_prompts.append(eff_p + "\n\n" + "\n\n".join(obs_parts))
         else:
-            batch_tool_logs.append([])
-            augmented_prompts.append(p)
+            augmented_prompts.append(eff_p)
 
     all_plans = plan_batch_with_latent(eng, augmented_prompts, lat_steps=14, max_new=260, histories=histories)
 
