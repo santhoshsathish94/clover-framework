@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clover</title>
+<meta name="description" content="Clover — interactive assistant powered by Clover Kimi K3 (93-layer 2.78T MoE, K3NativeHybridLink, MoonViT3d vision, and 11-level parallel NCM on 8x RTX 3090 GPUs).">
+<link rel="canonical" href="https://cloverframework.com/ai/">
+<meta property="og:title" content="Clover">
+<meta property="og:description" content="Interactive Clover assistant with 256k session context, live web/arXiv search, Python code &amp; chart execution, and multimodal vision.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cloverframework.com/ai/">
+<meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a6a5f">
+<link rel="stylesheet" href="../styles.css?v=3.5.0">
+<script>document.documentElement.className = 'js';</script>
+</head>
+<body class="clover-app-body">
+<a class="skip" href="#main">Skip to content</a>
+
+<svg class="clover-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="clover-leaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z"/>
+  </defs>
+</svg>
+
+<main id="main" class="clover-app" tabindex="-1">
+  <aside class="clover-sidebar" id="clover-sidebar" aria-label="Chat sessions">
+    <div class="clover-sidebar__top">
+      <button type="button" class="clover-new-chat-btn" id="k3-new-sess-btn" onclick="k3ResetChat()" title="Start a new session">
+        <span>New chat</span>
+        <span class="clover-new-chat-btn__plus" aria-hidden="true">+</span>
+      </button>
+    </div>
+    <div class="clover-sidebar__label">Sessions</div>
+    <div class="clover-session-list" id="k3-session-list"></div>
+  </aside>
+
+  <section class="clover-main" aria-label="Clover conversation">
+    <div class="clover-topbar">
+      <div class="clover-topbar__left">
+        <button type="button" class="clover-sidebar-toggle" id="clover-sidebar-toggle" onclick="k3ToggleSidebar()" title="Toggle sidebar" aria-label="Toggle sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+        </button>
+        <a class="clover-topbar__brand k3-chat-title" href="../" style="text-decoration:none" title="Clover Framework">
+          <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
+          </svg>
+          Clover
+        </a>
+      </div>
+    </div>
+
+    <div class="clover-stream" id="clover-stream-scroller">
+      <div class="clover-stream__inner" id="k3-chat-log" aria-live="polite">
+        <div class="k3-msg k3-msg--bot">
+          <p>Hi I am Clover, How can I help you today?</p>
+          <div class="k3-msg-actions">
+            <button type="button" class="k3-action-btn" onclick="k3SpeakReply(this)" title="Read aloud">🔊 Listen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="clover-composer-wrap">
+      <div class="clover-composer-card">
+        <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
+          <div class="k3-preview-bar__info">
+            <img id="k3-img-preview-thumb" src="../assets/case-study-01-contentful-migration.svg" alt="Attachment preview" hidden>
+            <span id="k3-img-preview-name">Attachment ready</span>
+          </div>
+          <button type="button" onclick="k3ClearAttachments()">Remove</button>
+        </div>
+        <div class="clover-composer-row">
+          <input type="file" id="k3-file-input" multiple hidden onchange="k3OnFilesSelected(event)">
+          <button type="button" class="clover-composer-btn" id="k3-attach-btn" onclick="document.getElementById('k3-file-input').click()" title="Attach files (images, video, audio, PDF, documents, text)" aria-label="Attach files">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+            </svg>
+          </button>
+          <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover..."></textarea>
+          <button type="button" class="clover-composer-btn" id="k3-voice-btn" onclick="k3ToggleVoice()" title="Voice input" aria-label="Voice input">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+          <button type="button" class="clover-send-btn" id="k3-send-btn" onclick="k3SendPrompt()">Send</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  var API_CANDIDATES = ['https://api.cloverframework.com', 'https://cloverframework.com', 'http://127.0.0.1:8765'];
+  var activeBase = 'https://api.cloverframework.com';
+  var logEl = document.getElementById('k3-chat-log');
+  var streamScroller = document.getElementById('clover-stream-scroller');
+  var inputEl = document.getElementById('k3-prompt-in');
+  var sendBtn = document.getElementById('k3-send-btn');
+  var fileInput = document.getElementById('k3-file-input');
+  var previewBar = document.getElementById('k3-img-preview-bar');
+  var previewThumb = document.getElementById('k3-img-preview-thumb');
+  var previewName = document.getElementById('k3-img-preview-name');
+  var sessionListEl = document.getElementById('k3-session-list');
+  var voiceBtn = document.getElementById('k3-voice-btn');
+  var sidebarEl = document.getElementById('clover-sidebar');
+
+  var STORAGE_KEY = 'clover_k3_sessions_v2';
+  var sessionsMap = {};
+  var sessionOrder = [];
+  var sessionId = '';
+  var attachedImageDataUrl = null;
+  var attachedFiles = [];
+
+  var GREETING_HTML =
+    '<div class="k3-msg k3-msg--bot">' +
+      '<p>Hi I am Clover, How can I help you today?</p>' +
+      '<div class="k3-msg-actions">' +
+        '<button type="button" class="k3-action-btn" onclick="k3SpeakReply(this)" title="Read aloud">🔊 Listen</button>' +
+      '</div>' +
+    '</div>';
+
+  var CLOVER_LOADER_HTML =
+    '<div class="k3-clover-loader" role="status" aria-label="Thinking">' +
+      '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+        '<path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>' +
+        '<g class="k3-clover-loader__wheel">' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf"/>' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>' +
+        '</g>' +
+      '</svg>' +
+      '<span>Thinking&hellip;</span>' +
+    '</div>';
+
+  window.k3ToggleSidebar = function () {
+    if (sidebarEl) sidebarEl.classList.toggle('is-collapsed');
+  };
+
+  function makeSessionId() {
+    return 'sess_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+  }
+
+  function saveSessionsToStorage() {
+    try {
+      var payload = { currentId: sessionId, order: sessionOrder, map: {} };
+      for (var i = 0; i < sessionOrder.length; i++) {
+        var sid = sessionOrder[i];
+        if (sessionsMap[sid]) {
+          payload.map[sid] = {
+            id: sid,
+            title: sessionsMap[sid].title || 'New chat',
+            messages: sessionsMap[sid].messages || []
+          };
+        }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {}
+  }
+
+  function loadSessionsFromStorage() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var data = JSON.parse(raw);
+        if (data && Array.isArray(data.order) && data.map) {
+          sessionsMap = data.map;
+          sessionOrder = data.order.filter(function (id) { return !!sessionsMap[id]; });
+          sessionId = (data.currentId && sessionsMap[data.currentId]) ? data.currentId : (sessionOrder[0] || '');
+        }
+      }
+    } catch (e) {}
+    if (!sessionId || !sessionsMap[sessionId]) {
+      var firstId = makeSessionId();
+      sessionsMap[firstId] = { id: firstId, title: 'New chat', messages: [] };
+      sessionOrder = [firstId];
+      sessionId = firstId;
+      saveSessionsToStorage();
+    }
+  }
+
+  function renderSessionSidebar() {
+    if (!sessionListEl) return;
+    sessionListEl.innerHTML = '';
+    for (var i = 0; i < sessionOrder.length; i++) {
+      var sid = sessionOrder[i];
+      var sObj = sessionsMap[sid];
+      if (!sObj) continue;
+
+      var row = document.createElement('div');
+      row.className = 'clover-session-row k3-session-item' + (sid === sessionId ? ' is-active' : '');
+      row.setAttribute('data-session-id', sid);
+
+      var selBtn = document.createElement('button');
+      selBtn.type = 'button';
+      selBtn.className = 'clover-session-select';
+      selBtn.textContent = sObj.title || 'New chat';
+      selBtn.title = sObj.title || 'New chat';
+      (function (targetId) {
+        selBtn.onclick = function () { window.k3SelectSession(targetId); };
+      })(sid);
+
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'clover-session-del';
+      delBtn.setAttribute('aria-label', 'Delete session');
+      delBtn.title = 'Remove session';
+      delBtn.textContent = '×';
+      (function (targetId) {
+        delBtn.onclick = function (ev) {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          window.k3DeleteSession(targetId);
+        };
+      })(sid);
+
+      row.appendChild(selBtn);
+      row.appendChild(delBtn);
+      sessionListEl.appendChild(row);
+    }
+  }
+
+  function scrollToBottom() {
+    if (streamScroller) streamScroller.scrollTop = streamScroller.scrollHeight;
+  }
+
+  function renderCurrentSessionMessages() {
+    if (!logEl) return;
+    logEl.innerHTML = GREETING_HTML;
+    var sObj = sessionsMap[sessionId];
+    if (!sObj || !Array.isArray(sObj.messages)) return;
+    for (var i = 0; i < sObj.messages.length; i++) {
+      var m = sObj.messages[i];
+      appendMsg(m.role, m.html);
+    }
+  }
+
+  window.k3SelectSession = function (sid) {
+    if (!sessionsMap[sid]) return;
+    sessionId = sid;
+    window.k3ClearAttachments();
+    renderSessionSidebar();
+    renderCurrentSessionMessages();
+    saveSessionsToStorage();
+  };
+
+  window.k3DeleteSession = function (sid) {
+    if (!sid || !sessionsMap[sid]) return;
+    delete sessionsMap[sid];
+    sessionOrder = sessionOrder.filter(function (id) { return id !== sid; });
+    try {
+      fetch(activeBase + '/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sid })
+      }).catch(function () {});
+    } catch (e) {}
+    if (!sessionOrder.length) {
+      var nextId = makeSessionId();
+      sessionsMap[nextId] = { id: nextId, title: 'New chat', messages: [] };
+      sessionOrder = [nextId];
+      sessionId = nextId;
+    } else if (sessionId === sid) {
+      sessionId = sessionOrder[0];
+    }
+    window.k3ClearAttachments();
+    renderSessionSidebar();
+    renderCurrentSessionMessages();
+    saveSessionsToStorage();
+  };
+
+  window.k3ResetChat = function () {
+    var cur = sessionsMap[sessionId];
+    if (cur && (!cur.messages || cur.messages.length === 0)) {
+      window.k3ClearAttachments();
+      renderCurrentSessionMessages();
+      renderSessionSidebar();
+      return;
+    }
+    var newId = makeSessionId();
+    sessionsMap[newId] = { id: newId, title: 'New chat', messages: [] };
+    sessionOrder.unshift(newId);
+    sessionId = newId;
+    window.k3ClearAttachments();
+    renderSessionSidebar();
+    renderCurrentSessionMessages();
+    saveSessionsToStorage();
+  };
+
+  async function probeBackend() {
+    for (var i = 0; i < API_CANDIDATES.length; i++) {
+      var base = API_CANDIDATES[i];
+      if (window.location.protocol === 'https:' && base.indexOf('http://127.0.0.1') !== 0 && base.indexOf('https://') !== 0) {
+        continue;
+      }
+      try {
+        var ctrl = new AbortController();
+        var tid = setTimeout(function () { ctrl.abort(); }, 2200);
+        var r = await fetch(base + '/api/health', { signal: ctrl.signal });
+        clearTimeout(tid);
+        if (r.ok) {
+          activeBase = base;
+          return;
+        }
+      } catch (e) {}
+    }
+  }
+
+  function appendMsg(role, html) {
+    var d = document.createElement('div');
+    d.className = 'k3-msg k3-msg--' + role;
+    d.innerHTML = html;
+    logEl.appendChild(d);
+    scrollToBottom();
+    return d;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function escAndLinkify(s) {
+    var escaped = escHtml(s);
+    escaped = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, function (_, label, url) {
+      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+    });
+    escaped = escaped.replace(/(^|[\s(])((https?:\/\/[^\s)<]+))/g, function (_, pre, url) {
+      var cleanUrl = url.replace(/[.,;!?]+$/, '');
+      var trail = url.slice(cleanUrl.length);
+      return pre + '<a href="' + cleanUrl + '" target="_blank" rel="noopener noreferrer">' + cleanUrl + '</a>' + trail;
+    });
+    return escaped;
+  }
+
+  function htmlToPlainText(htmlStr) {
+    var cleaned = String(htmlStr || '')
+      .replace(/<div[^>]*class="[^"]*attach-chip[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+      .replace(/<\/(p|li|ul|div|h[1-6])>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n');
+    var tmp = document.createElement('div');
+    tmp.innerHTML = cleaned;
+    return (tmp.textContent || tmp.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  function extractPriorTurns(sid) {
+    var sObj = sessionsMap[sid];
+    if (!sObj || !Array.isArray(sObj.messages)) return [];
+    var turns = [];
+    var pendingUser = '';
+    for (var i = 0; i < sObj.messages.length; i++) {
+      var m = sObj.messages[i];
+      var txt = (m.text !== undefined && m.text !== null) ? String(m.text).trim() : htmlToPlainText(m.html);
+      if (m.role === 'user') {
+        pendingUser = txt;
+      } else if (m.role === 'bot' && pendingUser && txt) {
+        turns.push({ user: pendingUser, reply: txt });
+        pendingUser = '';
+      }
+    }
+    return turns;
+  }
+
+  function updateAttachmentPreviewBar() {
+    if (!previewBar) return;
+    if (!attachedImageDataUrl && (!attachedFiles || !attachedFiles.length)) {
+      previewBar.hidden = true;
+      return;
+    }
+    previewBar.hidden = false;
+    if (previewThumb) {
+      if (attachedImageDataUrl) {
+        previewThumb.src = attachedImageDataUrl;
+        previewThumb.hidden = false;
+      } else {
+        previewThumb.hidden = true;
+      }
+    }
+    if (previewName) {
+      var names = [];
+      for (var i = 0; i < attachedFiles.length; i++) {
+        names.push(attachedFiles[i].name);
+      }
+      previewName.textContent = names.length ? names.join(', ') : 'Image attached';
+    }
+  }
+
+  function extractVideoFramesToDataUrl(videoFile, callback) {
+    var video = document.createElement('video');
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    var url = URL.createObjectURL(videoFile);
+    video.src = url;
+    video.onloadedmetadata = function () {
+      var dur = Math.max(0.5, video.duration || 1.0);
+      var times = [dur * 0.15, dur * 0.5, dur * 0.85];
+      var canvas = document.createElement('canvas');
+      canvas.width = 720;
+      canvas.height = 420;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#14181d';
+      ctx.fillRect(0, 0, 720, 420);
+      var idx = 0;
+      function grabNext() {
+        if (idx >= times.length) {
+          URL.revokeObjectURL(url);
+          callback(canvas.toDataURL('image/png'));
+          return;
+        }
+        video.currentTime = times[idx];
+      }
+      video.onseeked = function () {
+        var x = (idx % 3) * 240;
+        ctx.drawImage(video, x + 4, 24, 232, 372);
+        ctx.fillStyle = '#0d6b5e';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('Frame ' + (idx + 1) + ' (' + times[idx].toFixed(1) + 's)', x + 12, 18);
+        idx++;
+        grabNext();
+      };
+      grabNext();
+    };
+  }
+
+  function isTextLikeFile(file) {
+    var t = (file.type || '').toLowerCase();
+    var n = (file.name || '').toLowerCase();
+    if (t.indexOf('text/') === 0 || t.indexOf('json') !== -1 || t.indexOf('xml') !== -1 || t.indexOf('javascript') !== -1) {
+      return true;
+    }
+    return /\.(txt|md|markdown|csv|tsv|json|jsonl|py|js|ts|tsx|jsx|c|cpp|h|hpp|rs|go|java|html|css|xml|yaml|yml|toml|ini|sh|ps1|sql|log|tex)$/i.test(n);
+  }
+
+  window.k3OnFilesSelected = function (e) {
+    var files = (e.target && e.target.files) ? e.target.files : [];
+    if (!files.length) return;
+    for (var i = 0; i < files.length; i++) {
+      (function (file) {
+        var fType = (file.type || '').toLowerCase();
+        if (fType.indexOf('image/') === 0) {
+          var rdImg = new FileReader();
+          rdImg.onload = function (ev) {
+            attachedImageDataUrl = ev.target.result;
+            attachedFiles.push({ name: file.name, type: file.type || 'image/png', content_text: '', data_b64: ev.target.result });
+            updateAttachmentPreviewBar();
+          };
+          rdImg.readAsDataURL(file);
+        } else if (fType.indexOf('video/') === 0) {
+          extractVideoFramesToDataUrl(file, function (dataUrl) {
+            attachedImageDataUrl = dataUrl;
+            attachedFiles.push({ name: file.name, type: file.type || 'video/mp4', content_text: 'Video file: ' + file.name, data_b64: dataUrl });
+            updateAttachmentPreviewBar();
+          });
+        } else if (isTextLikeFile(file)) {
+          var rdTxt = new FileReader();
+          rdTxt.onload = function (ev) {
+            attachedFiles.push({
+              name: file.name,
+              type: file.type || 'text/plain',
+              content_text: String(ev.target.result || ''),
+              data_b64: ''
+            });
+            updateAttachmentPreviewBar();
+          };
+          rdTxt.readAsText(file);
+        } else {
+          var rdBin = new FileReader();
+          rdBin.onload = function (ev) {
+            attachedFiles.push({
+              name: file.name,
+              type: file.type || 'application/octet-stream',
+              content_text: '',
+              data_b64: String(ev.target.result || '')
+            });
+            updateAttachmentPreviewBar();
+          };
+          rdBin.readAsDataURL(file);
+        }
+      })(files[i]);
+    }
+  };
+
+  document.addEventListener('paste', function (e) {
+    var items = (e.clipboardData && e.clipboardData.items) || [];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type && items[i].type.indexOf('image/') === 0) {
+        var f = items[i].getAsFile();
+        if (f) {
+          var rd = new FileReader();
+          rd.onload = function (ev) {
+            attachedImageDataUrl = ev.target.result;
+            attachedFiles.push({ name: 'pasted-image.png', type: 'image/png', content_text: '', data_b64: ev.target.result });
+            updateAttachmentPreviewBar();
+          };
+          rd.readAsDataURL(f);
+        }
+      }
+    }
+  });
+
+  window.k3ClearAttachments = function () {
+    attachedImageDataUrl = null;
+    attachedFiles = [];
+    if (fileInput) fileInput.value = '';
+    if (previewBar) previewBar.hidden = true;
+  };
+  window.k3ClearImage = window.k3ClearAttachments;
+
+  var k3Recog = null;
+  var k3Listening = false;
+  var lastInputWasVoice = false;
+  window.k3ToggleVoice = function () {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      if (inputEl) inputEl.focus();
+      return;
+    }
+    if (k3Listening && k3Recog) {
+      k3Recog.stop();
+      return;
+    }
+    k3Recog = new SR();
+    k3Recog.lang = 'en-US';
+    k3Recog.interimResults = false;
+    k3Listening = true;
+    if (voiceBtn) voiceBtn.classList.add('is-listening');
+    k3Recog.onresult = function (ev) {
+      var transcript = ev.results[0][0].transcript;
+      if (inputEl) {
+        inputEl.value = (inputEl.value ? inputEl.value + ' ' : '') + transcript;
+        lastInputWasVoice = true;
+        inputEl.focus();
+      }
+    };
+    k3Recog.onend = function () {
+      k3Listening = false;
+      if (voiceBtn) voiceBtn.classList.remove('is-listening');
+    };
+    k3Recog.onerror = function () {
+      k3Listening = false;
+      if (voiceBtn) voiceBtn.classList.remove('is-listening');
+    };
+    k3Recog.start();
+  };
+
+  window.k3CopyCode = function (btn) {
+    var pre = btn && btn.parentNode ? btn.parentNode.querySelector('code') : null;
+    if (!pre) return;
+    var txt = pre.textContent || pre.innerText || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () {
+        btn.textContent = 'Copied!';
+        setTimeout(function () { btn.textContent = 'Copy'; }, 1400);
+      });
+    }
+  };
+
+  var activeTtsAudio = null;
+  var activeTtsBtn = null;
+  var ttsAudioCache = {};
+
+  function stopCurrentSpeech() {
+    if (activeTtsAudio) {
+      try { activeTtsAudio.pause(); activeTtsAudio.currentTime = 0; } catch (e) {}
+      activeTtsAudio = null;
+    }
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+    }
+    if (activeTtsBtn) {
+      activeTtsBtn.textContent = '🔊 Listen';
+      activeTtsBtn = null;
+    }
+  }
+
+  function speakBrowserPoliteKidFallback(text, btn) {
+    if (!window.speechSynthesis) {
+      if (btn) btn.textContent = '🔊 Listen';
+      return;
+    }
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.pitch = 1.38;
+    utter.rate = 0.96;
+    var voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+    var chosen = null;
+    for (var i = 0; i < voices.length; i++) {
+      var n = (voices[i].name || '').toLowerCase();
+      if (n.indexOf('ana') !== -1 || n.indexOf('child') !== -1 || n.indexOf('kid') !== -1) {
+        chosen = voices[i];
+        break;
+      }
+    }
+    if (!chosen) {
+      for (var j = 0; j < voices.length; j++) {
+        var n2 = (voices[j].name || '').toLowerCase();
+        if (n2.indexOf('aria') !== -1 || n2.indexOf('jenny') !== -1 || n2.indexOf('zira') !== -1 || n2.indexOf('samantha') !== -1 || n2.indexOf('google us english') !== -1) {
+          chosen = voices[j];
+          break;
+        }
+      }
+    }
+    if (chosen) utter.voice = chosen;
+    if (btn) {
+      btn.textContent = '⏹ Stop';
+      activeTtsBtn = btn;
+    }
+    utter.onend = function () { if (btn) btn.textContent = '🔊 Listen'; activeTtsBtn = null; };
+    utter.onerror = function () { if (btn) btn.textContent = '🔊 Listen'; activeTtsBtn = null; };
+    window.speechSynthesis.speak(utter);
+  }
+
+  window.k3SpeakReply = async function (btn) {
+    if (activeTtsBtn === btn && (activeTtsAudio || (window.speechSynthesis && window.speechSynthesis.speaking))) {
+      stopCurrentSpeech();
+      return;
+    }
+    stopCurrentSpeech();
+    var msgEl = btn && btn.closest ? btn.closest('.k3-msg') : (btn ? btn.parentNode.parentNode : null);
+    if (!msgEl) return;
+    var clone = msgEl.cloneNode(true);
+    var acts = clone.querySelectorAll('.k3-msg-actions, .k3-copy-code-btn, .k3-figcaption, svg, pre');
+    for (var i = 0; i < acts.length; i++) acts[i].remove();
+    var speakTxt = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!speakTxt) return;
+
+    if (btn) {
+      btn.textContent = '⏳ Voice...';
+      activeTtsBtn = btn;
+    }
+    try {
+      var audioDataUrl = ttsAudioCache[speakTxt];
+      if (!audioDataUrl) {
+        var r = await fetch(activeBase + '/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: speakTxt })
+        });
+        if (!r.ok) throw new Error('TTS HTTP ' + r.status);
+        var d = await r.json();
+        if (!d || !d.audio_base64) throw new Error('No audio');
+        audioDataUrl = d.audio_base64;
+        ttsAudioCache[speakTxt] = audioDataUrl;
+      }
+      if (activeTtsBtn !== btn) return;
+      var audio = new Audio(audioDataUrl);
+      activeTtsAudio = audio;
+      if (btn) btn.textContent = '⏹ Stop';
+      audio.onended = function () {
+        if (activeTtsBtn === btn) btn.textContent = '🔊 Listen';
+        activeTtsAudio = null;
+        activeTtsBtn = null;
+      };
+      audio.onerror = function () {
+        activeTtsAudio = null;
+        speakBrowserPoliteKidFallback(speakTxt, btn);
+      };
+      await audio.play();
+    } catch (err) {
+      activeTtsAudio = null;
+      speakBrowserPoliteKidFallback(speakTxt, btn);
+    }
+  };
+
+  window.k3CopyReply = function (btn) {
+    var msgEl = btn.closest ? btn.closest('.k3-msg') : btn.parentNode.parentNode;
+    if (!msgEl) return;
+    var clone = msgEl.cloneNode(true);
+    var acts = clone.querySelectorAll('.k3-msg-actions, .k3-copy-code-btn, svg');
+    for (var i = 0; i < acts.length; i++) acts[i].remove();
+    var txt = (clone.textContent || '').trim();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () {
+        btn.textContent = '✓ Copied';
+        setTimeout(function () { btn.textContent = '📋 Copy'; }, 1400);
+      });
+    }
+  };
+
+  function renderMediaItemsHtml(mediaList) {
+    if (!Array.isArray(mediaList) || !mediaList.length) return '';
+    var out = [];
+    for (var i = 0; i < mediaList.length; i++) {
+      var m = mediaList[i];
+      if (!m) continue;
+      var title = escHtml(m.title || 'Generated Chart');
+      var cap = escHtml(m.caption || m.title || '');
+      if (m.type === 'svg' && m.svg) {
+        var svgB64 = 'data:image/svg+xml;utf8,' + encodeURIComponent(m.svg);
+        out.push(
+          '<figure class="k3-figure">' +
+            m.svg +
+            '<figcaption class="k3-figcaption"><span>' + cap + '</span>' +
+            '<a class="k3-dl-link" href="' + svgB64 + '" download="clover-diagram.svg">Download SVG</a></figcaption>' +
+          '</figure>'
+        );
+      } else if (m.data_url) {
+        out.push(
+          '<figure class="k3-figure">' +
+            '<img src="' + m.data_url + '" alt="' + title + '">' +
+            '<figcaption class="k3-figcaption"><span>' + cap + '</span>' +
+            '<a class="k3-dl-link" href="' + m.data_url + '" download="clover-chart.png">Download PNG</a></figcaption>' +
+          '</figure>'
+        );
+      }
+    }
+    return out.join('');
+  }
+
+  function formatBotReplyHtml(text, mediaList) {
+    var codeStore = [];
+    var withTokens = String(text || '').replace(/```([a-zA-Z0-9_+-]*)\s*\n([\s\S]*?)```/g, function (_, lang, codeBody) {
+      var idx = codeStore.length;
+      var lLow = String(lang || '').toLowerCase();
+      if (lLow === 'svg' && String(codeBody || '').trim().indexOf('<svg') === 0) {
+        codeStore.push('<figure class="k3-figure">' + String(codeBody || '').trim() + '</figure>');
+      } else {
+        codeStore.push(
+          '<div class="k3-code-wrap">' +
+            '<button type="button" class="k3-copy-code-btn" onclick="k3CopyCode(this)">Copy</button>' +
+            '<pre class="k3-code"><code>' + escHtml(String(codeBody || '').replace(/\s+$/, '')) + '</code></pre>' +
+          '</div>'
+        );
+      }
+      return '\n__K3_CODE_BLOCK_' + idx + '__\n';
+    });
+
+    var rawLines = withTokens.split(/\n+/);
+    var lines = [];
+    for (var i = 0; i < rawLines.length; i++) {
+      var ln = rawLines[i].trim();
+      if (ln) lines.push(ln);
+    }
+    var mediaHtml = renderMediaItemsHtml(mediaList);
+    if (!lines.length && !mediaHtml) return '<p>Sorry, no response was generated.</p>';
+
+    var htmlParts = [];
+    var inList = false;
+    var tableRows = [];
+
+    function closeList() {
+      if (inList) {
+        htmlParts.push('</ul>');
+        inList = false;
+      }
+    }
+
+    function flushTable() {
+      if (!tableRows.length) return;
+      var tbl = ['<table class="k3-table">'];
+      var bodyOpened = false;
+      for (var rIdx = 0; rIdx < tableRows.length; rIdx++) {
+        var cells = tableRows[rIdx].replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); });
+        if (rIdx === 1 && cells.every(function (c) { return /^[:\-]+$/.test(c); })) continue;
+        if (rIdx === 0) {
+          tbl.push('<thead><tr>' + cells.map(function (c) { return '<th>' + escAndLinkify(c) + '</th>'; }).join('') + '</tr></thead>');
+        } else {
+          if (!bodyOpened) { tbl.push('<tbody>'); bodyOpened = true; }
+          tbl.push('<tr>' + cells.map(function (c) { return '<td>' + escAndLinkify(c) + '</td>'; }).join('') + '</tr>');
+        }
+      }
+      if (bodyOpened) tbl.push('</tbody>');
+      tbl.push('</table>');
+      htmlParts.push(tbl.join(''));
+      tableRows = [];
+    }
+
+    function formatLeadIn(s) {
+      var m = s.match(/^([^:]{2,75}):\s+(.+)$/);
+      if (m && m[1].split(/\s+/).length <= 12 && !/^(https?|here is|here's|note)/i.test(m[1])) {
+        return '<strong>' + escHtml(m[1]) + ':</strong> ' + escAndLinkify(m[2]);
+      }
+      return escAndLinkify(s);
+    }
+
+    for (var j = 0; j < lines.length; j++) {
+      var line = lines[j];
+      if (/^\|.+\|$/.test(line)) {
+        closeList();
+        tableRows.push(line);
+        continue;
+      }
+      flushTable();
+      var mCode = line.match(/^__K3_CODE_BLOCK_(\d+)__$/);
+      if (mCode) {
+        closeList();
+        var cIdx = parseInt(mCode[1], 10);
+        if (codeStore[cIdx]) htmlParts.push(codeStore[cIdx]);
+        continue;
+      }
+      var isBullet = /^[•\-*]\s+/.test(line);
+      var cleanLine = line.replace(/^[•\-*]\s+/, '').trim();
+      var hasLeadIn = /^([^:]{2,75}):\s+(.+)$/.test(cleanLine) && (j > 0 || lines.length > 1) && !/^https?:/i.test(cleanLine);
+
+      if (isBullet || hasLeadIn) {
+        if (!inList) {
+          htmlParts.push('<ul>');
+          inList = true;
+        }
+        htmlParts.push('<li>' + formatLeadIn(cleanLine) + '</li>');
+      } else {
+        closeList();
+        if (cleanLine.slice(-1) === ':' && cleanLine.split(/\s+/).length <= 10 && j > 0) {
+          htmlParts.push('<p><strong>' + escHtml(cleanLine) + '</strong></p>');
+        } else {
+          var sents = cleanLine.split(/(?<=[.!?])\s+(?=[A-Z0-9])/);
+          if (sents.length >= 3) {
+            for (var k = 0; k < sents.length; k += 2) {
+              var chunk = sents.slice(k, k + 2).join(' ');
+              htmlParts.push('<p>' + escAndLinkify(chunk) + '</p>');
+            }
+          } else {
+            htmlParts.push('<p>' + escAndLinkify(cleanLine) + '</p>');
+          }
+        }
+      }
+    }
+    closeList();
+    flushTable();
+    if (mediaHtml) {
+      if (htmlParts.length > 0) {
+        htmlParts.splice(1, 0, mediaHtml);
+      } else {
+        htmlParts.push(mediaHtml);
+      }
+    }
+    htmlParts.push(
+      '<div class="k3-msg-actions">' +
+        '<button type="button" class="k3-action-btn" onclick="k3SpeakReply(this)" title="Read aloud">🔊 Listen</button>' +
+        '<button type="button" class="k3-action-btn" onclick="k3CopyReply(this)" title="Copy response">📋 Copy</button>' +
+      '</div>'
+    );
+    return htmlParts.join('');
+  }
+
+  var isSending = false;
+  window.k3SendPrompt = async function () {
+    if (isSending) return;
+    var text = (inputEl.value || '').trim();
+    if (!text && !attachedImageDataUrl && (!attachedFiles || !attachedFiles.length)) return;
+    isSending = true;
+    var activeSid = sessionId;
+    var imgData = attachedImageDataUrl;
+    var filesPayload = attachedFiles.slice();
+    var priorTurns = extractPriorTurns(activeSid);
+    inputEl.value = '';
+    window.k3ClearAttachments();
+    if (sendBtn) sendBtn.disabled = true;
+
+    var userHtml = '';
+    if (imgData) {
+      userHtml += '<img class="k3-chat-thumb" src="' + imgData + '" alt="Uploaded media">';
+    }
+    for (var fIdx = 0; fIdx < filesPayload.length; fIdx++) {
+      if ((filesPayload[fIdx].type || '').indexOf('image/') !== 0) {
+        userHtml += '<div class="k3-attach-chip">📎 ' + escHtml(filesPayload[fIdx].name) + '</div>';
+      }
+    }
+    if (text) {
+      userHtml += '<p>' + escHtml(text).replace(/\n/g, '<br>') + '</p>';
+    }
+
+    var effectivePrompt = text || (imgData ? 'Describe this image clearly.' : 'Summarize and explain the attached file.');
+    var sObj = sessionsMap[activeSid];
+    if (sObj) {
+      if (!sObj.messages || sObj.messages.length === 0 || sObj.title === 'New chat') {
+        var titleCandidate = text || (filesPayload.length ? filesPayload[0].name : 'Image analysis');
+        sObj.title = titleCandidate.slice(0, 38);
+      }
+      sObj.messages.push({ role: 'user', html: userHtml, text: effectivePrompt });
+      renderSessionSidebar();
+      saveSessionsToStorage();
+    }
+
+    if (sessionId === activeSid) {
+      appendMsg('user', userHtml);
+    }
+    var pending = (sessionId === activeSid) ? appendMsg('bot', CLOVER_LOADER_HTML) : null;
+
+    try {
+      var res = await fetch(activeBase + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSid,
+          prompt: effectivePrompt,
+          image_base64: imgData,
+          attachments: filesPayload,
+          history: priorTurns,
+          remember: true
+        })
+      });
+      if (!res.ok) {
+        throw new Error('HTTP ' + res.status);
+      }
+      var r = await res.json();
+      var replyTxt = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
+      var botHtml = formatBotReplyHtml(replyTxt, r.media || []);
+      if (sessionsMap[activeSid]) {
+        sessionsMap[activeSid].messages.push({ role: 'bot', html: botHtml, text: replyTxt });
+        saveSessionsToStorage();
+      }
+      if (sessionId === activeSid) {
+        if (pending && pending.parentNode === logEl) {
+          pending.innerHTML = botHtml;
+          scrollToBottom();
+          if (lastInputWasVoice) {
+            lastInputWasVoice = false;
+            var listenBtn = pending.querySelector('.k3-action-btn');
+            if (listenBtn) window.k3SpeakReply(listenBtn);
+          }
+        } else {
+          renderCurrentSessionMessages();
+        }
+      }
+    } catch (err) {
+      var errHtml = '<p>Unable to reach Clover right now. Please try again.</p>';
+      if (pending && sessionId === activeSid && pending.parentNode === logEl) {
+        pending.innerHTML = errHtml;
+      }
+    } finally {
+      isSending = false;
+      if (sendBtn) sendBtn.disabled = false;
+      if (inputEl) inputEl.focus();
+    }
+  };
+
+  if (inputEl) {
+    inputEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        window.k3SendPrompt();
+      }
+    });
+  }
+
+  loadSessionsFromStorage();
+  renderSessionSidebar();
+  renderCurrentSessionMessages();
+  probeBackend();
+})();
+</script>
+<script src="../app.js?v=3.5.0" defer></script>
+</body>
+</html>

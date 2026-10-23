@@ -22,8 +22,5 @@ research/k3/experiments/**/seed-reader-test
 research/k3/experiments/**/seed.bin
 research/k3/experiments/**/fruit.bin
 
-# Generated from clover-one by scripts/build-ai-site.mjs before Pages validation.
-site/ai/
-
 # Local leftovers of clover-intelegence, which is no longer in the repository (see git history).
 /clover-intelegence/
