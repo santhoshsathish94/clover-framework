@@ -1330,6 +1330,19 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
   - Fed `p1.txt` (`136` tokens) + `p1_e6_verified.ids` (`125` tokens = `261` tokens total, ending at `"... The"`) through the full 93-layer `whole-model` C engine (`ARITHMETIC: trunk exact; experts exact -> bit-identical to the pod`):
   - All `261` tokens ran in a single **`94.030 s`** forward pass (`+23.2 s` over the `70.804 s` prompt-only pass, compared to `344.001 s` for step-by-step decoding of `p1`), and the 93-layer trunk + `transformer_93` tail predicted next token **`id 26584` (`" council"`, continuing `"The council..."`)**.
 
+**4. Exact Stage-by-Stage Timing Breakdown of the DSpark-Free Pipeline (`bench_clean_timings.py`, `timings_no_dspark.json` on `gpu` + `whole-model` on `k3`):**
+- When both 64-token windows (`2 x 64 = 128` positions) and all 8 `MBR8` candidates (`8 x 2 = 16` batch size) are evaluated in a single batched 11-pass call on 1 RTX 3090 (`bench_clean_timings.py`, CUDA-synchronized):
+
+| Prompt | `HybridAgent` `R(h)` Extraction (`2` windows, `cuda:1`) | `e6_k3_native + K3PlanCopyDecoder` (`1`-cand, `2` windows, `cuda:0`) | `e6_k3_native + K3PlanCopyDecoder` (`MBR8` batched `B=16`, `cuda:0`) | **Total `HybridAgent + NCM` (`1`-cand / `MBR8`)** | Standalone 93-Layer Kimi K3 (`k3` CPU, Prefill + Decode) | **Unified + 1-Pass 93-Layer Kimi K3 Verification (`PF_EXTRA`)** |
+|---|---:|---:|---:|---:|---:|---:|
+| **`p1` (`126` K3 tok)** | `45.95 ms` | `131.45 ms` | `355.57 ms` | **`177.40 ms` / `401.52 ms`** | `414.80 s` (`70.80 s` + `344.00 s`) | **`94.43 s`** (`0.40 s` + `94.03 s`, **`4.39x` faster**) |
+| **`p2` (`126` K3 tok)** | `44.82 ms` | `123.81 ms` | `355.44 ms` | **`168.63 ms` / `400.26 ms`** | `417.83 s` (`46.37 s` + `371.46 s`) | `~70.0 s` (`0.40 s` + `~69.6 s` 1-pass) |
+| **`p3` (`121` K3 tok)** | `44.54 ms` | `123.27 ms` | `358.28 ms` | **`167.81 ms` / `402.82 ms`** | `297.45 s` (`44.20 s` + `253.25 s`) | `~67.8 s` (`0.40 s` + `~67.4 s` 1-pass) |
+| **`p4` (`112` K3 tok)** | `44.46 ms` | `123.41 ms` | `358.87 ms` | **`167.87 ms` / `403.32 ms`** | `346.87 s` (`69.98 s` + `276.89 s`) | `~93.6 s` (`0.40 s` + `~93.2 s` 1-pass) |
+| **`p5` (`109` K3 tok)** | `44.11 ms` | `124.37 ms` | `360.29 ms` | **`168.48 ms` / `404.41 ms`** | `304.56 s` (`60.25 s` + `244.31 s`) | `~83.9 s` (`0.40 s` + `~83.5 s` 1-pass) |
+| **Mean (`p1..p5`)** | **`44.78 ms`** | **`125.26 ms`** | **`357.69 ms`** | **`170.04 ms` (`0.17 s`) / `402.47 ms` (`0.40 s`)** | **`356.30 s`** | **`~82.0 s` (`4.35x` faster than step-by-step)** |
+
+
 
 
 
