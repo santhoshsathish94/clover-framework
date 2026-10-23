@@ -1541,6 +1541,15 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
   - **Actual Non-EOS Emitted Kimi K3 Tokens:** **`11,464` tokens** in `0.642 s` = **`17,869.8 Kimi K3 tokens / second` (`17.87K tok/s`)**.
   - **Full 64-Token Window Capacity Throughput (`16,384` tokens in `0.642 s`):** **`25,539.0 Kimi K3 tokens / second` (`25.54K tok/s`)**.
 
+**4. Multi-Turn Conversation Context Memory (`k3_fast_chat.py --interactive` & `--test-multiturn`, `o195_gpu.txt`, `multiturn_chat_proof.json`):**
+- Added rolling conversation memory (`self.history`, `remember=True`) to `K3FastChatEngine` so follow-up turns pass the prior `User` + `Assistant` turns into both `plan_with_latent` (resolving pronouns like `"there"`, `"it"`, `"that hospital project"` into explicit entity names and numbers inside `W1` & `W2`) and `render_ncm` (`full_prompt_ctx` grounding mask).
+- Verified across a 4-turn live session (`o195_gpu.txt`):
+  - **Turn 1 (`2.18 s` `1`-cand / `2.26 s` `MBR8`):** User: `"the captial of france is"` $\to$ Reply: *"The capital of France is Paris. Summary: The capital of France is Paris."*
+  - **Turn 2 (`5.28 s` / `5.54 s`, pronoun `"there"`):** User: *"What famous iron tower is located there, and who designed it?"* $\to$ Reply: *"The capital of France is Paris. Paris is known for the Eiffel. Tower, an iron tower designed by Gustave Eiffel. The Eiffel Tower is a famous iron tower in Paris it was designed by Gustave Eiffel. Summary: The famous iron tower in Paris is the Eiffel Tower, designed by Gustave Eiffel."*
+  - **Turn 3 (`5.33 s` / `5.61 s`):** User: *"Now imagine St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday led by Dr Elena Vance, adding 45 beds and 4 operating theatres. Summarize what happened."* $\to$ Reply: *"St Mary's Hospital in Bristol opened a new children's on wing on Friday. The wing... cost 18 million pounds, it adds 45 beds and 4 operating theatres. The project was led by Dr Elena Vance... Summary: St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday, adding 45 beds and 4 operating theatres."*
+  - **Turn 4 (`5.38 s` / `5.64 s`, reference `"that hospital project"`):** User: *"Who led that hospital project, how many beds and operating theatres did it add, and in which city was it opened?"* $\to$ Reply: *"...Dr Elena Vance led the project... 45 beds were added, 4 operating theatres were added, and the hospital is in Bristol... Dr Elena Vance led the project, adding 45 beds and... 4 operating theatres at St Mary's Hospital... in Bristol."*
+
+
 
 
 

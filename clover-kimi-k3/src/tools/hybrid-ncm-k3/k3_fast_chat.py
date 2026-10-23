@@ -82,9 +82,13 @@ class K3FastChatEngine:
         levels = list(self.vqvae.vq.levels)
         self.sched = [1.0 - 0.6 * (k / (len(levels) - 1)) for k in range(len(levels))]
         self.setup_s = round(time.perf_counter() - t0, 2)
+        self.history = []  # List of {"user": str, "reply": str, "plans": list[str]} for multi-turn context memory
 
         # Warmup GPU kernels
         self._warmup()
+
+    def clear_history(self):
+        self.history.clear()
 
     def _warmup(self):
         p_warm = ["The Harbourside Council voted 7 to 2 on Tuesday; approved 2.4 million pounds"]
@@ -112,10 +116,24 @@ class K3FastChatEngine:
         return self.k3_tok.decode(clean_ids), clean_ids
 
     @torch.no_grad()
-    def plan_with_latent(self, user_prompt, min_lat=8, max_lat=14, max_new=110):
+    def plan_with_latent(self, user_prompt, history=None, min_lat=8, max_lat=14, max_new=110):
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
-        msgs = [{"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=user_prompt.strip())}]
+        if history:
+            ctx_lines = []
+            for turn_idx, h in enumerate(history[-6:], 1):
+                ctx_lines.append(f"Turn {turn_idx} User: {h['user']}")
+                ctx_lines.append(f"Turn {turn_idx} Assistant: {h['reply']}")
+            ctx_block = (
+                "Conversation history (resolve all pronouns like 'it', 'they', 'that', 'there', or follow-up calculations "
+                "using these prior turns, and state the resolved entity names and numbers explicitly in W1 and W2):\n"
+                + "\n".join(ctx_lines)
+                + "\n\nCurrent user request:\n"
+                + user_prompt.strip()
+            )
+            msgs = [{"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=ctx_block)}]
+        else:
+            msgs = [{"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=user_prompt.strip())}]
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
             prefix_str = base_chat + "Let me work out the exact facts, numbers, and steps." + ENTRY_ANCHOR
@@ -171,8 +189,10 @@ class K3FastChatEngine:
         w1, w2 = "", ""
         for ln in raw.splitlines():
             ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need).*$", "", ln).strip()
+            ln = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", ln, flags=re.IGNORECASE).strip()
             if ln.upper().startswith("W1:"):
                 w1 = ln[3:].strip()
+                w1 = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", w1, flags=re.IGNORECASE).strip()
             elif ln.upper().startswith("W2:"):
                 w2 = ln[3:].strip()
         if w1.lower().startswith("the user is") and w2:
@@ -305,25 +325,39 @@ class K3FastChatEngine:
             out_txts.append(cands_t[w_i][bk]); out_ids.extend(cands_i[w_i][bk])
         return " ".join(out_txts), out_ids
 
-    def chat_reply(self, user_prompt, cands=8):
+    def chat_reply(self, user_prompt, cands=8, remember=False):
         torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
         t0 = time.perf_counter()
-        plans, lat_steps, exit_reason = self.plan_with_latent(user_prompt)
+        active_hist = self.history if remember else None
+        plans, lat_steps, exit_reason = self.plan_with_latent(user_prompt, history=active_hist)
         torch.cuda.synchronize(self.dev_ha)
         t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
+        hist_ctx = ""
+        if active_hist:
+            hist_ctx = " ".join(f"{h['user']} {h['reply']}" for h in active_hist[-6:])
+        full_prompt_ctx = (hist_ctx + " " + user_prompt).strip()
+
         t1 = time.perf_counter()
-        text_1cand, ids_1cand = self.render_ncm(plans, prompt_text=user_prompt, cands=1)
+        text_1cand, ids_1cand = self.render_ncm(plans, prompt_text=full_prompt_ctx, cands=1)
         torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
         t_ncm_1cand_ms = (time.perf_counter() - t1) * 1000.0
 
         t2 = time.perf_counter()
-        text_mbr, ids_mbr = self.render_ncm(plans, prompt_text=user_prompt, cands=cands)
+        text_mbr, ids_mbr = self.render_ncm(plans, prompt_text=full_prompt_ctx, cands=cands)
         torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
         t_ncm_mbr_ms = (time.perf_counter() - t2) * 1000.0
 
+        if remember:
+            self.history.append({
+                "user": user_prompt.strip(),
+                "reply": text_mbr,
+                "plans": plans,
+            })
+
         return {
             "prompt": user_prompt.strip(),
+            "turn": len(self.history) if remember else 1,
             "latent_steps": lat_steps,
             "exit_reason": exit_reason,
             "plans": plans,
@@ -342,23 +376,48 @@ class K3FastChatEngine:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prompt", default=None, help="Single user prompt string to run in chat mode")
-    ap.add_argument("--interactive", action="store_true", help="Run interactive REPL chat mode (models stay hot in GPU memory)")
+    ap.add_argument("--interactive", action="store_true", help="Run interactive multi-turn REPL chat mode with context memory")
+    ap.add_argument("--test-multiturn", action="store_true", help="Run a 4-turn conversation test verifying multi-turn context memory")
     ap.add_argument("--out", default="/home/usergpu/merge_lf/out/e6_k3_native/chat_mode_results.json")
     a = ap.parse_args()
 
     eng = K3FastChatEngine()
-    print(f"K3FastChatEngine ready (one-time setup {eng.setup_s}s; 93-layer verification OFF; DSpark OFF)", flush=True)
+    print(f"K3FastChatEngine ready (one-time setup {eng.setup_s}s; 93-layer verification OFF; DSpark OFF; Multi-turn memory ON)", flush=True)
+
+    if a.test_multiturn:
+        eng.clear_history()
+        turns = [
+            "the captial of france is",
+            "What famous iron tower is located there, and who designed it?",
+            "Now imagine St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday led by Dr Elena Vance, adding 45 beds and 4 operating theatres. Summarize what happened.",
+            "Who led that hospital project, how many beds and operating theatres did it add, and in which city was it opened?",
+        ]
+        mt_res = []
+        for idx, u_turn in enumerate(turns, 1):
+            r = eng.chat_reply(u_turn, cands=8, remember=True)
+            mt_res.append(r)
+            print(f"\n================ [Turn {idx}] ================", flush=True)
+            print(f"USER   : {r['prompt']}", flush=True)
+            print(f"PLAN   : {' || '.join(r['plans'])} ({r['plan_lat_ms']} ms)", flush=True)
+            print(f"TIMING : 1-cand = {r['total_1cand_ms']/1000:.2f}s (NCM {r['ncm_1cand_ms']} ms) | MBR8 = {r['total_mbr8_ms']/1000:.2f}s (NCM {r['ncm_mbr8_ms']} ms)", flush=True)
+            print(f"REPLY  : {r['reply_mbr8']}", flush=True)
+        json.dump(mt_res, open("/home/usergpu/merge_lf/out/e6_k3_native/multiturn_chat_proof.json", "w"), indent=2)
+        return
 
     if a.interactive:
-        print("\nInteractive K3FastChatEngine ready! Type any prompt and press Enter (or 'exit' / 'quit' to stop).\n", flush=True)
+        print("\nInteractive Multi-Turn K3FastChatEngine ready! Type any prompt (or 'reset' to clear memory, 'exit' to stop).\n", flush=True)
         while True:
             try:
-                user_in = input("PROMPT> ").strip()
+                user_in = input(f"[Turn {len(eng.history)+1}] PROMPT> ").strip()
             except EOFError:
                 break
             if not user_in or user_in.lower() in ("exit", "quit", "q"):
                 break
-            r = eng.chat_reply(user_in, cands=8)
+            if user_in.lower() in ("reset", "clear"):
+                eng.clear_history()
+                print("Conversation memory cleared.\n", flush=True)
+                continue
+            r = eng.chat_reply(user_in, cands=8, remember=True)
             print(f"LATENT: {r['latent_steps']} steps ({r['exit_reason']}) | PLAN ({r['plan_lat_ms']} ms): {' || '.join(r['plans'])}", flush=True)
             print(f"TIMING: 1-cand NCM = {r['ncm_1cand_ms']} ms (Total {r['total_1cand_ms']/1000:.2f}s) | MBR8 NCM = {r['ncm_mbr8_ms']} ms (Total {r['total_mbr8_ms']/1000:.2f}s)", flush=True)
             print(f"OUTPUT (1-cand, {r['n_k3_tokens_1cand']} K3 tokens): {r['reply_1cand']}", flush=True)
