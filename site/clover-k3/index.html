@@ -1335,7 +1335,14 @@ src/scripts/chat-stop.sh mychat</code></pre>
   };
 
   function formatBotReplyHtml(text) {
-    var rawLines = String(text || '').split(/\n+/);
+    var codeStore = [];
+    var withTokens = String(text || '').replace(/```([a-zA-Z0-9_+-]*)\s*\n([\s\S]*?)```/g, function (_, lang, codeBody) {
+      var idx = codeStore.length;
+      codeStore.push('<pre class="k3-code"><code>' + escHtml(String(codeBody || '').replace(/\s+$/, '')) + '</code></pre>');
+      return '\n__K3_CODE_BLOCK_' + idx + '__\n';
+    });
+
+    var rawLines = withTokens.split(/\n+/);
     var lines = [];
     for (var i = 0; i < rawLines.length; i++) {
       var ln = rawLines[i].trim();
@@ -1363,6 +1370,13 @@ src/scripts/chat-stop.sh mychat</code></pre>
 
     for (var j = 0; j < lines.length; j++) {
       var line = lines[j];
+      var mCode = line.match(/^__K3_CODE_BLOCK_(\d+)__$/);
+      if (mCode) {
+        closeList();
+        var cIdx = parseInt(mCode[1], 10);
+        if (codeStore[cIdx]) htmlParts.push(codeStore[cIdx]);
+        continue;
+      }
       var isBullet = /^[•\-*]\s+/.test(line);
       var cleanLine = line.replace(/^[•\-*]\s+/, '').trim();
       var hasLeadIn = /^([^:]{2,75}):\s+(.+)$/.test(cleanLine) && (j > 0 || lines.length > 1) && !/^https?:/i.test(cleanLine);

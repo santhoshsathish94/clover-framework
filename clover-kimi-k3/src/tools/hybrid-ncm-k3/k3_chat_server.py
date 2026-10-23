@@ -58,9 +58,15 @@ def extract_server_attachment_text(att: dict) -> str:
     `{"name": str, "type": str, "content_text": str, "data_b64": str}`
     Supports PDF, DOCX, TXT, MD, CSV, JSON, Python/JS/TS/C/C++/HTML/CSS code, and Audio/Video metadata."""
     name = str(att.get("name") or "attachment").strip()
-    mime = str(att.get("type") or "").lower().strip()
+    mime = str(att.get("type") or att.get("mime") or "").lower().strip()
     ext = os.path.splitext(name.lower())[1]
-    client_txt = str(att.get("content_text") or "").strip()
+    client_txt = str(
+        att.get("content_text")
+        or att.get("text_excerpt")
+        or att.get("text")
+        or att.get("content")
+        or ""
+    ).strip()
 
     b64_str = str(att.get("data_b64") or "").strip()
     raw_bytes = b""
@@ -87,7 +93,7 @@ def extract_server_attachment_text(att: dict) -> str:
                                 paras.append("".join(texts).strip())
                     doc_txt = "\n".join(p for p in paras if p)
                     if doc_txt.strip():
-                        return f"[Attached Document: {name}]\n{doc_txt.strip()}"
+                        return f"Attached Document ({name}):\n{doc_txt.strip()}"
         except Exception:
             pass
 
@@ -124,16 +130,16 @@ def extract_server_attachment_text(att: dict) -> str:
             except Exception:
                 pass
         if pdf_txt.strip():
-            return f"[Attached PDF: {name}]\n{pdf_txt.strip()}"
+            return f"Attached PDF ({name}):\n{pdf_txt.strip()}"
 
     # 3. Audio metadata / WAV inspection
-    if ext in (".wav", ".mp3", ".m4a", ".ogg", ".flac", ".aac") or mime.startswith("audio/"):
-        info = f"[Attached Audio File: {name} ({mime or ext}, {len(raw_bytes)} bytes)]"
+    if ext in (".wav", ".mp3", ".mp4", ".m4a", ".ogg", ".flac", ".aac") or mime.startswith("audio/"):
+        info = f"Attached Audio File ({name}, {mime or ext}, {len(raw_bytes)} bytes)"
         if ext == ".wav" and raw_bytes:
             try:
                 with wave.open(io.BytesIO(raw_bytes), "rb") as wf:
                     dur = round(wf.getnframes() / float(max(wf.getframerate(), 1)), 2)
-                    info = f"[Attached WAV Audio: {name} | duration={dur}s, sample_rate={wf.getframerate()}Hz, channels={wf.getnchannels()}]"
+                    info = f"Attached WAV Audio ({name} | duration={dur}s, sample_rate={wf.getframerate()}Hz, channels={wf.getnchannels()})"
             except Exception:
                 pass
         if client_txt:
@@ -142,17 +148,17 @@ def extract_server_attachment_text(att: dict) -> str:
 
     # 4. If client already extracted text (or plain text / code / CSV / JSON / MD)
     if client_txt:
-        return f"[Attached File: {name}]\n{client_txt}"
+        return f"Attached Document ({name}):\n{client_txt}"
 
     if raw_bytes:
         try:
             decoded = raw_bytes.decode("utf-8", errors="ignore").strip()
             if decoded and sum(1 for c in decoded[:400] if c.isprintable() or c in "\r\n\t") >= 0.85 * min(len(decoded), 400):
-                return f"[Attached File: {name}]\n{decoded}"
+                return f"Attached Document ({name}):\n{decoded}"
         except Exception:
             pass
 
-    return f"[Attached File: {name} ({mime or ext or 'binary'})]"
+    return f"Attached File ({name}, {mime or ext or 'binary'})"
 
 
 HTML_UI = """<!DOCTYPE html>
@@ -259,6 +265,14 @@ HTML_UI = """<!DOCTYPE html>
   .msg ul:last-child { margin-bottom: 0; }
   .msg li { line-height: 1.56; }
   .msg strong { font-weight: 650; color: var(--ink); }
+  .msg pre.k3-code {
+    margin: 0.55rem 0 0.75rem 0; padding: 0.85rem 1rem; border-radius: 8px;
+    background: #14181d; color: #f6f8fa; overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.87rem; line-height: 1.52; white-space: pre;
+  }
+  .msg pre.k3-code:last-child { margin-bottom: 0; }
+  .msg pre.k3-code code { background: none; color: inherit; padding: 0; font: inherit; }
   .msg--user {
     align-self: flex-end; background: var(--accent); color: #fff;
     border-bottom-right-radius: 4px;
@@ -624,7 +638,13 @@ function toggleVoice() {
 }
 
 function formatBotReplyHtml(text) {
-  const rawLines = String(text || '').split(/\\n+/).map(s => s.trim()).filter(Boolean);
+  const codeStore = [];
+  const withTokens = String(text || '').replace(/```([a-zA-Z0-9_+-]*)\\s*\\n([\\s\\S]*?)```/g, (_, lang, codeBody) => {
+    const idx = codeStore.length;
+    codeStore.push('<pre class="k3-code"><code>' + escHtml(String(codeBody || '').replace(/\\s+$/, '')) + '</code></pre>');
+    return '\\n__K3_CODE_BLOCK_' + idx + '__\\n';
+  });
+  const rawLines = withTokens.split(/\\n+/).map(s => s.trim()).filter(Boolean);
   if (!rawLines.length) return '<p>Sorry, no response was generated.</p>';
   const htmlParts = [];
   let inList = false;
@@ -637,6 +657,13 @@ function formatBotReplyHtml(text) {
     return escAndLinkify(s);
   };
   rawLines.forEach((line, j) => {
+    const mCode = line.match(/^__K3_CODE_BLOCK_(\\d+)__$/);
+    if (mCode) {
+      closeList();
+      const cIdx = parseInt(mCode[1], 10);
+      if (codeStore[cIdx]) htmlParts.push(codeStore[cIdx]);
+      return;
+    }
     const isBullet = /^[•\\-*]\\s+/.test(line);
     const cleanLine = line.replace(/^[•\\-*]\\s+/, '').trim();
     const hasLeadIn = /^([^:]{2,75}):\\s+(.+)$/.test(cleanLine) && (j > 0 || rawLines.length > 1) && !/^https?:/i.test(cleanLine);

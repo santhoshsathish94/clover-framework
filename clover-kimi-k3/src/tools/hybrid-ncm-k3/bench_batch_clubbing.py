@@ -108,11 +108,10 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
 
     gen_ids = [[] for _ in range(B)]
     done = [False] * B
-    cleared_after_think = [False] * B
     is_struct = [is_structured_or_multi_part_prompt(p) for p in user_prompts]
     im_end_ids = set(eng.ha_tok.encode("<|im_end|>", add_special_tokens=False))
-    eos_ids = {eng.ha_tok.eos_token_id, 151643, 151645} | im_end_ids
     think_close_id = special_token_id(eng.ha_tok, THINK_CLOSE)
+    eos_ids = {eng.ha_tok.eos_token_id, think_close_id, 151643, 151645} | im_end_ids
     for _ in range(max_new):
         nxt = next_logits.argmax(dim=-1)  # [B]
         for i in range(B):
@@ -120,13 +119,10 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
             if not done[i]:
                 if ti in eos_ids:
                     done[i] = True
-                elif ti == think_close_id and not cleared_after_think[i]:
-                    cleared_after_think[i] = True
-                    gen_ids[i].clear()
                 else:
                     gen_ids[i].append(ti)
                     txt_i = eng.ha_tok.decode(gen_ids[i], skip_special_tokens=False)
-                    if THINK_OPEN in txt_i or "<|im_end|>" in txt_i or "</answer>" in txt_i:
+                    if THINK_CLOSE in txt_i or THINK_OPEN in txt_i or "<|im_end|>" in txt_i or "</answer>" in txt_i:
                         done[i] = True
                     elif txt_i.endswith("\n"):
                         lns = [ln.strip() for ln in txt_i.splitlines() if ln.strip()]

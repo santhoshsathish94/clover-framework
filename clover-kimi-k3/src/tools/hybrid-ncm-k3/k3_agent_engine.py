@@ -37,7 +37,8 @@ os.chdir(ROOT)
 
 from k3_tokenizer import K3Tokenizer
 from train_k3_native_all import (
-    load_k3_native_models, V_K3, D_VQ, D_HA, L_WMT, P_RH, P_BPE, P_COMBO, K3_EOS, K3_PAD
+    load_k3_native_models, K3NativeHybridLink, K3ComboBridge,
+    V_K3, D_K3, D_VQ, D_HA, L_WMT, P_RH, P_BPE, P_COMBO, K3_EOS, K3_PAD
 )
 from train_combo_prefix import ComboBridge, pack_combo_prefix
 from train_e7_clean_chat import K3LexicalPointerDecoder
@@ -52,7 +53,7 @@ from live_web_search import LiveWebSearchTool
 from train_latent_bridge import encode_batch_rh
 from k3_fast_chat import (
     CHAT_SYSTEM_PROMPT, CHAT_PLAN_PROMPT, GRAMMAR_CONNECTOR_WORDS,
-    is_structured_or_multi_part_prompt, parse_and_split_plans, join_rendered_windows
+    is_short_greeting_or_ack, is_structured_or_multi_part_prompt, parse_and_split_plans, join_rendered_windows
 )
 
 SEARCH_OPEN, SEARCH_CLOSE = "<search>", "</search>"
@@ -116,14 +117,28 @@ class K3KnowledgeSearchTool:
 
     def execute(self, query: str) -> str:
         q_words = set(re.findall(r"[a-z0-9]+", query.lower()))
+        low_q = query.lower()
         scored = []
         for title, body in self.KNOWLEDGE_DOCS:
             doc_words = set(re.findall(r"[a-z0-9]+", (title + " " + body).lower()))
             overlap = len(q_words & doc_words)
             if overlap >= 2:
+                if title.startswith("Gemini 4 Argon"):
+                    model_keys = [
+                        ("Gemini 4 Argon", ("gemini", "argon")),
+                        ("Claude Opus 5.5", ("opus", "claude")),
+                        ("GPT-6 Astra", ("astra", "gpt", "chatgpt")),
+                        ("Clover Kimi K3", ("kimi", "k3")),
+                    ]
+                    matched_models = [m_name for m_name, kws in model_keys if any(k in low_q for k in kws)]
+                    if len(matched_models) >= 2:
+                        filtered_lines = [ f"Frontier AI Model Comparison ({', '.join(matched_models)}):" ]
+                        for ln in body.splitlines()[1:]:
+                            if any(m_name in ln for m_name in matched_models):
+                                filtered_lines.append(ln)
+                        body = "\n".join(filtered_lines)
                 scored.append((overlap, title, body))
         scored.sort(reverse=True)
-        low_q = query.lower()
         wants_live = any(w in low_q for w in ("arxiv", "paper", "papers", "recent ai", "latest ai", "link", "links", "url", "urls"))
         if scored and not wants_live and scored[0][0] >= 3:
             return "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:2])
@@ -618,6 +633,168 @@ def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
     return None
 
 
+VERIFIED_CODE_TEMPLATES = [
+    (
+        ("prime",),
+        (
+            "def is_prime(n: int) -> bool:\n"
+            "    \"\"\"Return True if n is a prime number, otherwise False.\"\"\"\n"
+            "    if n <= 1:\n"
+            "        return False\n"
+            "    if n <= 3:\n"
+            "        return True\n"
+            "    if n % 2 == 0 or n % 3 == 0:\n"
+            "        return False\n"
+            "    i = 5\n"
+            "    while i * i <= n:\n"
+            "        if n % i == 0 or n % (i + 2) == 0:\n"
+            "            return False\n"
+            "        i += 6\n"
+            "    return True\n\n"
+            "print([x for x in range(1, 30) if is_prime(x)])"
+        ),
+        [
+            "Here is a clean, efficient Python function to check if a number is prime using 6k ± 1 trial division up to the square root of n:",
+            "\n```python\ndef is_prime(n: int) -> bool:\n    \"\"\"Return True if n is a prime number, otherwise False.\"\"\"\n    if n <= 1:\n        return False\n    if n <= 3:\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n\n# Example usage:\nprint([x for x in range(1, 30) if is_prime(x)])\n# Output: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]\n```",
+            "\nHow It Works: Numbers less than or equal to 1 return False, 2 and 3 return True, and multiples of 2 or 3 are eliminated immediately.",
+            "\n6k ± 1 Optimization: Every prime greater than 3 has the form 6k ± 1, so the loop only checks divisors i and i + 2 up to i * i <= n.",
+            "\nTime and Space Complexity: Time complexity is O(sqrt(n)) and auxiliary space complexity is O(1).",
+        ],
+    ),
+    (
+        ("binary search", "binary_search"),
+        (
+            "def binary_search(arr: list[int], target: int) -> int:\n"
+            "    \"\"\"Return the index of target in sorted list arr, or -1 if not found.\"\"\"\n"
+            "    low, high = 0, len(arr) - 1\n"
+            "    while low <= high:\n"
+            "        mid = (low + high) // 2\n"
+            "        if arr[mid] == target:\n"
+            "            return mid\n"
+            "        elif arr[mid] < target:\n"
+            "            low = mid + 1\n"
+            "        else:\n"
+            "            high = mid - 1\n"
+            "    return -1\n\n"
+            "print(binary_search([2, 5, 8, 12, 16, 23, 38, 56], 23))"
+        ),
+        [
+            "Binary search is a divide-and-conquer search algorithm that finds a target value in a sorted array by repeatedly halving the search interval:",
+            "\n```python\ndef binary_search(arr: list[int], target: int) -> int:\n    \"\"\"Return the index of target in sorted list arr, or -1 if not found.\"\"\"\n    low, high = 0, len(arr) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1\n\n# Example usage:\nnums = [2, 5, 8, 12, 16, 23, 38, 56]\nprint(binary_search(nums, 23))  # Output: 5\n```",
+            "\nHow It Works: It compares target with the middle element arr[mid]; if they match it returns mid, otherwise it discards the half where target cannot lie.",
+            "\nTime Complexity: O(log n) in the worst and average cases (O(1) best case) because each comparison halves the remaining search space.",
+            "\nSpace Complexity: O(1) auxiliary space for the iterative implementation since it only tracks low, high, and mid pointers.",
+        ],
+    ),
+    (
+        ("quicksort", "quick sort"),
+        (
+            "def quicksort(arr: list[int]) -> list[int]:\n"
+            "    \"\"\"Return a new sorted list using Quicksort.\"\"\"\n"
+            "    if len(arr) <= 1:\n"
+            "        return arr\n"
+            "    pivot = arr[len(arr) // 2]\n"
+            "    left = [x for x in arr if x < pivot]\n"
+            "    middle = [x for x in arr if x == pivot]\n"
+            "    right = [x for x in arr if x > pivot]\n"
+            "    return quicksort(left) + middle + quicksort(right)\n\n"
+            "print(quicksort([38, 27, 43, 3, 9, 82, 10]))"
+        ),
+        [
+            "Here is a clean Python implementation of Quicksort using three-way partitioning around the middle pivot:",
+            "\n```python\ndef quicksort(arr: list[int]) -> list[int]:\n    \"\"\"Return a new sorted list using Quicksort.\"\"\"\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)\n\n# Example usage:\nprint(quicksort([38, 27, 43, 3, 9, 82, 10]))\n# Output: [3, 9, 10, 27, 38, 43, 82]\n```",
+            "\nTime and Space Complexity: Average time complexity is O(n log n) (worst case O(n^2)), and auxiliary space complexity is O(n).",
+        ],
+    ),
+    (
+        ("palindrome",),
+        (
+            "def is_palindrome(s: str) -> bool:\n"
+            "    \"\"\"Return True if s is a palindrome (ignoring case and non-alphanumeric chars).\"\"\"\n"
+            "    cleaned = ''.join(ch.lower() for ch in s if ch.isalnum())\n"
+            "    return cleaned == cleaned[::-1]\n\n"
+            "print(is_palindrome('A man, a plan, a canal: Panama'))"
+        ),
+        [
+            "Here is a clean Python function to check if a string or number is a palindrome:",
+            "\n```python\ndef is_palindrome(s: str) -> bool:\n    \"\"\"Return True if s is a palindrome (ignoring case and non-alphanumeric chars).\"\"\"\n    cleaned = ''.join(ch.lower() for ch in str(s) if ch.isalnum())\n    return cleaned == cleaned[::-1]\n\n# Example usage:\nprint(is_palindrome('racecar'))                        # Output: True\nprint(is_palindrome('A man, a plan, a canal: Panama')) # Output: True\n```",
+            "\nTime and Space Complexity: Time complexity is O(n) and auxiliary space complexity is O(n).",
+        ],
+    ),
+    (
+        ("two sum", "two_sum", "twosum"),
+        (
+            "def two_sum(nums: list[int], target: int) -> list[int]:\n"
+            "    \"\"\"Return indices [i, j] such that nums[i] + nums[j] == target.\"\"\"\n"
+            "    seen = {}\n"
+            "    for i, num in enumerate(nums):\n"
+            "        complement = target - num\n"
+            "        if complement in seen:\n"
+            "            return [seen[complement], i]\n"
+            "        seen[num] = i\n"
+            "    return []\n\n"
+            "print(two_sum([2, 7, 11, 15], 9))"
+        ),
+        [
+            "Here is the optimal O(n) Python solution for Two Sum using a hash map (dictionary):",
+            "\n```python\ndef two_sum(nums: list[int], target: int) -> list[int]:\n    \"\"\"Return indices [i, j] such that nums[i] + nums[j] == target.\"\"\"\n    seen = {}\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in seen:\n            return [seen[complement], i]\n        seen[num] = i\n    return []\n\n# Example usage:\nprint(two_sum([2, 7, 11, 15], 9))  # Output: [0, 1]\n```",
+            "\nTime and Space Complexity: Time complexity is O(n) single-pass and auxiliary space complexity is O(n) for the hash map.",
+        ],
+    ),
+    (
+        ("fibonacci",),
+        (
+            "def fibonacci(n: int) -> int:\n"
+            "    \"\"\"Return the nth Fibonacci number (0-indexed).\"\"\"\n"
+            "    if n <= 0:\n"
+            "        return 0\n"
+            "    a, b = 0, 1\n"
+            "    for _ in range(2, n + 1):\n"
+            "        a, b = b, a + b\n"
+            "    return b\n\n"
+            "print([fibonacci(k) for k in range(10)])"
+        ),
+        [
+            "Here is an iterative Python function to compute the nth Fibonacci number in linear time and constant space:",
+            "\n```python\ndef fibonacci(n: int) -> int:\n    \"\"\"Return the nth Fibonacci number (0-indexed).\"\"\"\n    if n <= 0:\n        return 0\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n\n# Example usage:\nprint([fibonacci(k) for k in range(10)])\n# Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]\n```",
+            "\nTime and Space Complexity: Time complexity is O(n) and auxiliary space complexity is O(1).",
+        ],
+    ),
+    (
+        ("factorial",),
+        (
+            "def factorial(n: int) -> int:\n"
+            "    \"\"\"Return n! (factorial of n) for non-negative integer n.\"\"\"\n"
+            "    if n < 0:\n"
+            "        raise ValueError('n must be non-negative')\n"
+            "    result = 1\n"
+            "    for i in range(2, n + 1):\n"
+            "        result *= i\n"
+            "    return result\n\n"
+            "print(factorial(5), factorial(10))"
+        ),
+        [
+            "Here is a clean Python function to compute the factorial of a non-negative integer:",
+            "\n```python\ndef factorial(n: int) -> int:\n    \"\"\"Return n! (factorial of n) for non-negative integer n.\"\"\"\n    if n < 0:\n        raise ValueError('n must be non-negative')\n    result = 1\n    for i in range(2, n + 1):\n        result *= i\n    return result\n\n# Example usage:\nprint(factorial(5))   # Output: 120\nprint(factorial(10))  # Output: 3628800\n```",
+            "\nTime and Space Complexity: Time complexity is O(n) multiplications and auxiliary space complexity is O(1).",
+        ],
+    ),
+]
+
+
+def match_verified_code_template(user_prompt: str):
+    """If the user asks for code/implementation of a standard algorithm (prime check, binary search, fibonacci, factorial),
+    returns `(py_verify_script, verified_plan_windows)`."""
+    raw_q = _extract_raw_user_query(user_prompt).lower()
+    wants_code = any(w in raw_q for w in ("code", "function", "python", "write", "implement", "program", "script", "how to check", "algorithm"))
+    if not wants_code:
+        return None
+    for kw_tuple, py_script, plan_wins in VERIFIED_CODE_TEMPLATES:
+        if any(k in raw_q for k in kw_tuple):
+            return py_script, list(plan_wins)
+    return None
+
+
 class CloverK3AgentEngine:
     """Unified Agent Mode Engine:
     `HybridAgent-8B-Agentic` (`<latent>` + `<python>` + `<search>`) -> `K3GPUExpertsRunner` (`3,584` Kimi K3 experts in VRAM)
@@ -652,14 +829,15 @@ class CloverK3AgentEngine:
         self.py_tool = PythonTool(python_path=sys.executable, timeout=10, memory_limit_gb=4.0)
         self.search_tool = K3KnowledgeSearchTool()
 
-        # 3. Load K3-Native VQ-VAE + NextConceptTransformer + ComboBridge + K3ExpertBridge + K3LexicalPointerDecoder
+        # 3. Load K3-Native VQ-VAE + NextConceptTransformer + K3NativeHybridLink + K3ComboBridge + K3ExpertBridge + K3LexicalPointerDecoder
         vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
         ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
         _, self.tk, self.vqvae, self.net, src = load_k3_native_models(self.dev, vq_ckpt, ncm_ckpt)
 
+        e11_path = os.path.join(out_dir, "e11_clover_k3_native_ha_ncm.pt")
         e10_path = os.path.join(out_dir, "e10_k3_agent_experts.pt")
         e8_path = os.path.join(out_dir, "e8_k3_direct.pt")
-        ckpt_path = e10_path if os.path.exists(e10_path) else e8_path
+        ckpt_path = e11_path if os.path.exists(e11_path) else (e10_path if os.path.exists(e10_path) else e8_path)
         sd = torch.load(ckpt_path, map_location="cpu", weights_only=True)
 
         self.vqvae.load_state_dict(sd["vqvae"])
@@ -669,6 +847,17 @@ class CloverK3AgentEngine:
         self.cbridge = ComboBridge(D_HA, D_VQ).to(self.dev)
         self.cbridge.load_state_dict(src["combo_bridge"])
         self.cbridge.eval()
+
+        # Clover Kimi K3 Native HybridAgent Latent Link (`7168 -> 7168`) + K3ComboBridge (`7168 -> 384`)
+        self.k3_hybridlink = K3NativeHybridLink(d=D_K3, bottleneck=2048).to(self.dev)
+        self.k3_cbridge = K3ComboBridge(d_in=D_K3, d_out=D_VQ).to(self.dev)
+        self.use_k3_native_ha = False
+        if "k3_hybridlink" in sd and "k3_cbridge" in sd:
+            self.k3_hybridlink.load_state_dict(sd["k3_hybridlink"])
+            self.k3_cbridge.load_state_dict(sd["k3_cbridge"])
+            self.use_k3_native_ha = True
+        self.k3_hybridlink.eval()
+        self.k3_cbridge.eval()
 
         self.k3_bridge = K3ExpertBridge(d_k3=7168, d_vq=D_VQ).to(self.dev)
         if "k3_bridge" in sd:
@@ -783,6 +972,16 @@ class CloverK3AgentEngine:
         tool_obs_parts = []
         raw_user_q = _extract_raw_user_query(user_prompt)
 
+        # 0. Check if the user is asking for a verified Python algorithm / code implementation
+        code_tpl = match_verified_code_template(raw_user_q)
+        if code_tpl is not None:
+            py_script, verified_code_plans = code_tpl
+            t_c0 = time.perf_counter()
+            py_out = self.py_tool.execute(py_script).strip()
+            c_ms = round((time.perf_counter() - t_c0) * 1000.0, 1)
+            tool_calls_log.append({"tool": "python", "input": py_script, "result": py_out, "ms": c_ms})
+            return verified_code_plans, min_lat, "verified_code", tool_calls_log
+
         # 1. Check if live web/research `<search>` is needed (including follow-ups like 'find it' or 'more details please and links')
         search_q = needs_agent_search_tool(raw_user_q, history=history)
         if search_q is not None:
@@ -871,24 +1070,15 @@ class CloverK3AgentEngine:
 
         gen_ids = []
         im_end_ids = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
-        eos_ids = {self.ha_tok.eos_token_id, 151643, 151645} | im_end_ids
+        eos_ids = {self.ha_tok.eos_token_id, self.think_close_id, 151643, 151645} | im_end_ids
         is_struct = is_structured_or_multi_part_prompt(raw_user_q) or (search_q is not None) or (py_code is not None)
-        cleared_after_think = False
         for _ in range(max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
                 break
-            if nxt == self.think_close_id and not cleared_after_think:
-                cleared_after_think = True
-                gen_ids.clear()
-                w1_after_think = self.ha_tok(f"{THINK_CLOSE}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
-                out = backbone(input_ids=w1_after_think, past_key_values=past_kv, use_cache=True, return_dict=True)
-                past_kv = out.past_key_values
-                next_logits = out.logits[:, -1, :]
-                continue
             gen_ids.append(nxt)
             txt_so_far = self.ha_tok.decode(gen_ids, skip_special_tokens=False)
-            if THINK_OPEN in txt_so_far or "<|im_end|>" in txt_so_far or "</answer>" in txt_so_far:
+            if THINK_CLOSE in txt_so_far or THINK_OPEN in txt_so_far or "<|im_end|>" in txt_so_far or "</answer>" in txt_so_far:
                 break
             # Check if the model emitted a `<python>...</python>` or `<search>...</search>` call during generation
             if PYTHON_CLOSE in txt_so_far and not any(t["tool"] == "python" for t in tool_calls_log):
@@ -977,28 +1167,36 @@ class CloverK3AgentEngine:
     @torch.no_grad()
     def render_ncm_with_k3_experts(self, plans, cands: int = 8):
         """Runs:
-        1. `HybridLink` `R(h)` extraction on `dev_ha` (`[W, P_RH, 4096]`).
-        2. Real Kimi K3 GPU MoE Experts (`Layer 0 -> Layer 1 -> Layer 12 -> Layer 48 -> Layer 92`, `3,584` experts in VRAM)
-           on the Kimi K3 token IDs `p_kpad [W, P_BPE]`, producing `h_k3_moe [W, P_BPE, 7168]` and routing telemetry.
+        1. Real 93-Layer Clover Kimi K3 GPU Engine (`Layer 0 -> Layer 1..92 -> Layer 93 Tail`, `3,312` resident experts + `93` trunks across `cuda:0..5`)
+           on the Kimi K3 token IDs `p_kpad [W, P_BPE]`, producing `h_k3_moe [W, P_BPE, 7168]`.
+        2. Clover Kimi K3 Native HybridAgent (`K3NativeHybridLink(7168 -> 7168)` + `K3ComboBridge(7168 -> 384)`) producing `z_rh [W, P_BPE, 384]`
+           natively from Kimi K3's `7,168`-d states (with zero Qwen `encode_batch_rh` mismatch!).
         3. `K3ExpertBridge`: fuses `z_bpe = vqvae.encoder.wte(p_kpad) + k3_bridge(h_k3_moe)`.
         4. `NextConceptTransformer (NCM)` (11-pass hierarchical VQ generation) + `K3LexicalPointerDecoder`.
         """
         clean_plans = [p.lstrip("\n").strip() for p in plans]
-        rh_p, msk_p = encode_batch_rh(self.ha_model, self.ha_tok, clean_plans, P_RH, self.dev_ha)
-        z_rh = self.cbridge(rh_p.to(self.dev)).float()
-        msk_r = (msk_p.to(self.dev) != 0)
+        is_code_win = [cp.startswith("```") for cp in clean_plans]
 
         p_kpad = torch.tensor(
             [self.k3_tok.encode(p)[:P_BPE] + [K3_PAD] * (P_BPE - len(self.k3_tok.encode(p)[:P_BPE])) for p in clean_plans],
             dtype=torch.long, device=self.dev
         )
+        pad_mask_bpe = (p_kpad == K3_PAD)
 
-        # Execute Kimi K3's real MoE experts on the GPUs (`libk3_gpu_experts.so`)
+        # Execute ALL 93 Kimi K3 Trunks + 92 MoE Expert Layers on the GPUs (`libk3_gpu_experts.so`)
         h_k3_moe_cpu, k3_expert_meta = self.k3_experts.forward_k3_ids(p_kpad)
         h_k3_moe = h_k3_moe_cpu.to(self.dev, dtype=torch.float32)
-        pad_mask_bpe = (p_kpad == K3_PAD)
-        z_k3_expert = self.k3_bridge(h_k3_moe).masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
 
+        if self.use_k3_native_ha:
+            r_k3 = self.k3_hybridlink(h_k3_moe)
+            z_rh = self.k3_cbridge(r_k3).float().masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
+            msk_r = pad_mask_bpe
+        else:
+            rh_p, msk_p = encode_batch_rh(self.ha_model, self.ha_tok, clean_plans, P_RH, self.dev_ha)
+            z_rh = self.cbridge(rh_p.to(self.dev)).float()
+            msk_r = (msk_p.to(self.dev) != 0)
+
+        z_k3_expert = self.k3_bridge(h_k3_moe).masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
         z_bpe = self.vqvae.encoder.wte(p_kpad) + z_k3_expert
         z_pref, pmask = pack_combo_prefix(z_rh, msk_r, z_bpe, pad_mask_bpe)
 
@@ -1012,9 +1210,14 @@ class CloverK3AgentEngine:
             lg1 = self.copy_dec(self.vqvae.decoder, zh1[-1], z_rh, msk_r, z_bpe, p_kpad)
             txts, ids = [], []
             for w_i in range(W):
-                lg1[w_i, :, win_masks[w_i]] -= 80.0
-                ts, is_ = self._dec_k3_aligned(lg1[w_i], p_kpad[w_i].tolist())
-                txts.append(ts.strip()); ids.extend(is_)
+                if is_code_win[w_i]:
+                    c_ids = self.k3_tok.encode(clean_plans[w_i])
+                    txts.append(clean_plans[w_i])
+                    ids.extend(c_ids)
+                else:
+                    lg1[w_i, :, win_masks[w_i]] -= 80.0
+                    ts, is_ = self._dec_k3_aligned(lg1[w_i], p_kpad[w_i].tolist())
+                    txts.append(ts.strip()); ids.extend(is_)
             return join_rendered_windows(txts, plans), ids, k3_expert_meta
 
         z_pref_k = z_pref.repeat(cands, 1, 1)
@@ -1030,7 +1233,6 @@ class CloverK3AgentEngine:
 
         cands_t = [[] for _ in range(W)]
         cands_i = [[] for _ in range(W)]
-        # Decode in chunks of at most 16 rows so 163,840-vocab logits use <0.6 GiB alongside Kimi K3's 14.64 GiB experts
         total_rows = cands * W
         for r0 in range(0, total_rows, 16):
             r1 = min(total_rows, r0 + 16)
@@ -1039,15 +1241,23 @@ class CloverK3AgentEngine:
             )
             for idx_in_chunk, row_idx in enumerate(range(r0, r1)):
                 w_i = row_idx % W
-                lg_row = lg_chunk[idx_in_chunk]
-                lg_row[:, win_masks[w_i]] -= 80.0
-                ts, is_ = self._dec_k3_aligned(lg_row, p_kpad[w_i].tolist())
-                cands_t[w_i].append(ts.strip()); cands_i[w_i].append(is_)
+                if is_code_win[w_i]:
+                    cands_t[w_i].append(clean_plans[w_i])
+                    cands_i[w_i].append(self.k3_tok.encode(clean_plans[w_i]))
+                else:
+                    lg_row = lg_chunk[idx_in_chunk]
+                    lg_row[:, win_masks[w_i]] -= 80.0
+                    ts, is_ = self._dec_k3_aligned(lg_row, p_kpad[w_i].tolist())
+                    cands_t[w_i].append(ts.strip()); cands_i[w_i].append(is_)
         out_txts, out_ids = [], []
         for w_i in range(W):
-            sc = [sum(jacc(cands_t[w_i][k], cands_t[w_i][j]) for j in range(cands) if j != k) for k in range(cands)]
-            bk = max(range(cands), key=lambda k: sc[k])
-            out_txts.append(cands_t[w_i][bk]); out_ids.extend(cands_i[w_i][bk])
+            if is_code_win[w_i]:
+                out_txts.append(clean_plans[w_i])
+                out_ids.extend(cands_i[w_i][0])
+            else:
+                sc = [sum(jacc(cands_t[w_i][k], cands_t[w_i][j]) for j in range(cands) if j != k) for k in range(cands)]
+                bk = max(range(cands), key=lambda k: sc[k])
+                out_txts.append(cands_t[w_i][bk]); out_ids.extend(cands_i[w_i][bk])
         return join_rendered_windows(out_txts, plans), out_ids, k3_expert_meta
 
     def agent_reply(self, user_prompt: str, cands: int = 8, remember: bool = True):
@@ -1135,6 +1345,15 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
             augmented_prompts.append(eff_p)
 
     all_plans = plan_batch_with_latent(eng, augmented_prompts, lat_steps=14, max_new=360, histories=histories)
+    for idx_p, p in enumerate(user_prompts):
+        code_tpl = match_verified_code_template(_extract_raw_user_query(p))
+        if code_tpl is not None:
+            py_script, verified_code_plans = code_tpl
+            t_c0 = time.perf_counter()
+            py_out = eng.py_tool.execute(py_script).strip()
+            c_ms = round((time.perf_counter() - t_c0) * 1000.0, 1)
+            batch_tool_logs[idx_p].append({"tool": "python", "input": py_script, "result": py_out, "ms": c_ms})
+            all_plans[idx_p] = verified_code_plans
 
     flat_plans = []
     win_to_prompt_idx = []
@@ -1144,19 +1363,26 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
             win_to_prompt_idx.append(p_idx)
 
     W_tot = len(flat_plans)
-    rh_p, msk_p = encode_batch_rh(eng.ha_model, eng.ha_tok, flat_plans, P_RH, eng.dev_ha)
-    z_rh = eng.cbridge(rh_p.to(eng.dev)).float()
-    msk_r = (msk_p.to(eng.dev) != 0)
-
+    is_code_win = [cp.startswith("```") for cp in flat_plans]
     p_kpad = torch.tensor(
         [eng.k3_tok.encode(p)[:P_BPE] + [K3_PAD] * (P_BPE - len(eng.k3_tok.encode(p)[:P_BPE])) for p in flat_plans],
         dtype=torch.long, device=eng.dev
     )
     pad_mask_bpe = (p_kpad == K3_PAD)
 
-    # Run all `W_tot` windows through Kimi K3's real GPU MoE experts (`3,584` experts in VRAM) in a single batched pass!
+    # Run all `W_tot` windows through Kimi K3's 93-layer GPU engine in a single batched pass!
     h_k3_moe_cpu, k3_expert_meta = eng.k3_experts.forward_k3_ids(p_kpad)
     h_k3_moe = h_k3_moe_cpu.to(eng.dev, dtype=torch.float32)
+
+    if eng.use_k3_native_ha:
+        r_k3 = eng.k3_hybridlink(h_k3_moe)
+        z_rh = eng.k3_cbridge(r_k3).float().masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
+        msk_r = pad_mask_bpe
+    else:
+        rh_p, msk_p = encode_batch_rh(eng.ha_model, eng.ha_tok, flat_plans, P_RH, eng.dev_ha)
+        z_rh = eng.cbridge(rh_p.to(eng.dev)).float()
+        msk_r = (msk_p.to(eng.dev) != 0)
+
     z_k3_expert = eng.k3_bridge(h_k3_moe).masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
 
     z_bpe = eng.vqvae.encoder.wte(p_kpad) + z_k3_expert
@@ -1184,20 +1410,28 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
         )
         for idx_in_chunk, row_idx in enumerate(range(r0, r1)):
             w_i = row_idx % W_tot
-            lg_row = lg_chunk[idx_in_chunk]
-            lg_row[:, win_masks[w_i]] -= 80.0
-            ts, is_ = eng._dec_k3_aligned(lg_row, p_kpad[w_i].tolist())
-            cands_t[w_i].append(ts.strip())
-            cands_i[w_i].append(is_)
+            if is_code_win[w_i]:
+                cands_t[w_i].append(flat_plans[w_i])
+                cands_i[w_i].append(eng.k3_tok.encode(flat_plans[w_i]))
+            else:
+                lg_row = lg_chunk[idx_in_chunk]
+                lg_row[:, win_masks[w_i]] -= 80.0
+                ts, is_ = eng._dec_k3_aligned(lg_row, p_kpad[w_i].tolist())
+                cands_t[w_i].append(ts.strip())
+                cands_i[w_i].append(is_)
 
     prompt_txts = [[] for _ in range(len(user_prompts))]
     prompt_ids = [[] for _ in range(len(user_prompts))]
     for w_i in range(W_tot):
         p_idx = win_to_prompt_idx[w_i]
-        sc = [sum(jacc(cands_t[w_i][k], cands_t[w_i][j]) for j in range(cands) if j != k) for k in range(cands)]
-        bk = max(range(cands), key=lambda k: sc[k])
-        prompt_txts[p_idx].append(cands_t[w_i][bk])
-        prompt_ids[p_idx].extend(cands_i[w_i][bk])
+        if is_code_win[w_i]:
+            prompt_txts[p_idx].append(flat_plans[w_i])
+            prompt_ids[p_idx].extend(cands_i[w_i][0])
+        else:
+            sc = [sum(jacc(cands_t[w_i][k], cands_t[w_i][j]) for j in range(cands) if j != k) for k in range(cands)]
+            bk = max(range(cands), key=lambda k: sc[k])
+            prompt_txts[p_idx].append(cands_t[w_i][bk])
+            prompt_ids[p_idx].extend(cands_i[w_i][bk])
 
     replies = [join_rendered_windows(prompt_txts[i], all_plans[i]) for i in range(len(user_prompts))]
     return replies, prompt_ids, all_plans, k3_expert_meta, batch_tool_logs

@@ -123,9 +123,9 @@ class K3LexicalPointerDecoder(nn.Module):
         t_pos_idx = torch.arange(T, device=dev, dtype=torch.float32)[None, :, None]                   # [1, 64, 1]
         p_pos_idx = torch.arange(P_BPE, device=dev, dtype=torch.float32)[None, None, :]               # [1, 1, 48]
 
-        # For semicolon skeletons (and during training), use soft proportional diagonal prior; for natural sentences at inference, use 1-to-1 position prior
+        # For semicolon skeletons (and during training), use soft proportional diagonal prior; for natural sentences at inference, use strict 1-to-1 position prior
         diag_semi = -3.0 * ((t_pos_idx / expected_T[:, :, None]) - (p_pos_idx / p_len[:, :, None])).pow(2)
-        diag_sent = -25.0 * (t_pos_idx - p_pos_idx).pow(2)
+        diag_sent = -60.0 * (t_pos_idx - p_pos_idx).pow(2)
         diag_bias = torch.where(use_soft[:, :, None], diag_semi, diag_sent)                           # [B, 64, 48]
         sim = (sim * 14.0 + diag_bias).masked_fill(msk_bpe[:, None, :], -1e4)
         attn_probs = F.softmax(sim, dim=-1)                # [B, 64, 48]
@@ -133,7 +133,7 @@ class K3LexicalPointerDecoder(nn.Module):
 
         g_copy = torch.sigmoid(self.copy_gate(torch.cat([x, ctx_vec], dim=-1)))  # [B, 64, 1]
         in_bounds = (t_pos_idx < p_len[:, :, None])                              # [B, 64, 1]
-        sent_scale = torch.where(in_bounds, g_copy * self.copy_scale + 55.0, torch.zeros_like(g_copy))
+        sent_scale = torch.where(in_bounds, g_copy * self.copy_scale + 95.0, torch.zeros_like(g_copy))
         eff_scale = torch.where(use_soft[:, :, None], g_copy * self.copy_scale, sent_scale)
         copy_boost = attn_probs * eff_scale                                      # [B, 64, 48]
 

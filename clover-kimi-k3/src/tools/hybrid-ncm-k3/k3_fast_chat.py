@@ -48,11 +48,23 @@ CHAT_PLAN_PROMPT = (
 )
 
 
+def is_short_greeting_or_ack(user_prompt: str) -> bool:
+    p = re.sub(r"[^a-z\s]", "", user_prompt.lower()).strip()
+    return p in (
+        "hi", "hello", "hey", "hi there", "hello there", "good morning", "good afternoon", "good evening",
+        "thanks", "thank you", "thank you so much", "ty", "ok", "okay", "got it", "bye", "goodbye",
+    )
+
+
 def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
     p = user_prompt.lower().strip()
     # Short single-fact lookup questions ('what is the capital of...', 'what is our project code?') are NOT multi-part
     if len(p.split()) <= 9 and p.startswith(("what is the ", "what is our ", "what is my ", "who is the ", "when is the ", "where is the ")) and not any(
-        w in p for w in ("and", "difference", "compare", "trends", "steps", "how")
+        w in p for w in (
+            "and", "difference", "compare", "trends", "steps", "how",
+            "code", "function", "program", "algorithm", "script", "prime", "binary", "sort", "fibonacci",
+            "schedule", "timetable", "plan", "list", "guide", "design", "architecture",
+        )
     ):
         return False
     return any(
@@ -65,6 +77,7 @@ def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
             "trends", "describe", "tell me about", "overview", "analyze", "summary", "summarize",
             "detail", "details", "link", "links", "example", "examples", "point ", "gpu", "gpus", "chip", "chips",
             "launch", "launched", "code", "write", "implement", "design", "architecture", "calculate", "compound",
+            "function", "program", "algorithm", "prime", "binary search", "fibonacci", "factorial", "quicksort",
         )
     )
 
@@ -92,6 +105,8 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         "\nI've been given the information", "\nThis is a straightforward factual",
         "\nThe response should be", "\nThis result has been verified using Python",
         "\nThe calculation was verified using Python", "\nFor more detailed information, you can refer",
+        "\nMy response will be structured", "\nI've provided the exact", "\nI've also included the verification",
+        "\nThese are the key pieces of information extracted", "\nPython calculation confirms",
     ):
         if stop_marker in raw_text:
             raw_text = raw_text.split(stop_marker)[0]
@@ -100,6 +115,64 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
     raw_text = re.sub(r"</?latent>", "\n", raw_text, flags=re.IGNORECASE)
     raw_text = re.sub(r"<\|[^>]+?\|>", "", raw_text)
     raw_text = re.sub(r"(?:^|\s)\bW\d+:\s*", "\n", raw_text).strip()
+    # Join lines where an equation ends with `=` and the number is on the next line
+    raw_text = re.sub(r"=\s*\n+\s*(?=[$\d\-])", "= ", raw_text)
+
+    # Extract fenced code blocks (` ```python ... ``` `) or unclosed trailing fenced code blocks (` ```python ... `)
+    # and unfenced Python function definitions (`def ...:` + indented body) so indentation and newlines are 100% preserved!
+    code_blocks = []
+
+    def _save_code_block(lang: str, body: str) -> str:
+        clean_body = body.strip("\r\n")
+        if not clean_body:
+            return ""
+        idx_cb = len(code_blocks)
+        lang_tag = (lang or "python").strip() or "python"
+        code_blocks.append(f"```{lang_tag}\n{clean_body}\n```")
+        return f"\n__CODE_BLOCK_{idx_cb}__\n"
+
+    raw_text = re.sub(
+        r"```([a-zA-Z0-9_+-]*)\s*\n([\s\S]*?)```",
+        lambda m: _save_code_block(m.group(1), m.group(2)),
+        raw_text,
+    )
+    if "```" in raw_text:
+        raw_text = re.sub(
+            r"```([a-zA-Z0-9_+-]*)\s*\n([\s\S]+)$",
+            lambda m: _save_code_block(m.group(1), m.group(2)),
+            raw_text,
+        )
+
+    # Also detect unfenced Python function/class blocks (`def foo(...):` followed by indented lines or docstrings)
+    if not code_blocks and re.search(r"(?:^|\n)\s*def\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", raw_text):
+        lines_all = raw_text.splitlines()
+        rebuilt_lines = []
+        cur_code = []
+        in_code = False
+        for orig_ln in lines_all:
+            s_ln = orig_ln.strip()
+            s_clean = re.sub(r"^W\d+:\s*", "", s_ln, flags=re.IGNORECASE).strip()
+            is_code_start = bool(re.match(r"^(?:def|class|import|from)\s+[a-zA-Z_]", s_clean))
+            is_code_cont = in_code and (
+                orig_ln.startswith(("  ", "\t"))
+                or s_clean.startswith(('"""', "'''", "#", "return", "if ", "elif ", "else:", "for ", "while ", "try:", "except", "print("))
+                or bool(re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*\s*=", s_clean))
+                or not s_clean
+            )
+            if is_code_start or is_code_cont:
+                if not in_code:
+                    in_code = True
+                if s_clean:
+                    cur_code.append(orig_ln if orig_ln.startswith(("  ", "\t")) else s_clean)
+            else:
+                if in_code and cur_code:
+                    rebuilt_lines.append(_save_code_block("python", "\n".join(cur_code)))
+                    cur_code = []
+                    in_code = False
+                rebuilt_lines.append(orig_ln)
+        if in_code and cur_code:
+            rebuilt_lines.append(_save_code_block("python", "\n".join(cur_code)))
+        raw_text = "\n".join(rebuilt_lines)
 
     raw_lines = []
     seen_norm_lines = set()
@@ -107,13 +180,23 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         ln = ln.strip()
         if not ln:
             continue
+        m_cb = re.match(r"^__CODE_BLOCK_(\d+)__$", ln)
+        if m_cb:
+            raw_lines.append(ln)
+            continue
         ln = re.sub(r"^W\d+:\s*", "", ln, flags=re.IGNORECASE).strip()
         # Require whitespace after numbered list markers (`1. `) so leading decimals like `3.14` or `5.5` are never stripped
         ln = re.sub(r"^(?:[-*•]+\s*|\d+[.)]\s+)", "", ln).strip()
         ln = re.sub(r"\*\*", "", ln).strip()
         ln = re.sub(r":(\d+[.)]\s)", r": \1", ln)
-        # Convert markdown links `[Label](https://...)` into `Label (https://...)` so the URL is cleanly preserved
-        ln = re.sub(r"\[([^\]]+)\]\((https?://[^\s)]+)\)", r"\1 (\2)", ln)
+        # Convert markdown links `[Label](https://...)` into `Label (https://...)` (or just `https://...` if Label == URL)
+        ln = re.sub(
+            r"\[([^\]]+)\]\((https?://[^\s)]+)\)",
+            lambda m: m.group(2) if m.group(1).strip() == m.group(2).strip() else f"{m.group(1)} ({m.group(2)})",
+            ln,
+        )
+        # Strip trailing meta-notes after URLs like '(This is a general link to recent...)'
+        ln = re.sub(r"\s*\(This is a general (?:link|list).*$", "", ln, flags=re.IGNORECASE).strip()
         # Convert bracketed domain paths like `[arxiv.org/list/cs.AI/recent]` into full `https://...` URLs
         ln = re.sub(
             r"\[(?:https?://)?((?:[a-z0-9\-]+\.)+(?:org|com|gov|edu|io|ai|net)/[^\s\]]+)\]",
@@ -128,8 +211,8 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             flags=re.IGNORECASE,
         ).strip()
         ln = re.sub(r"^From the previous (?:turn|analysis)[^,]*,\s*(?:I know that\s*|the key points were:\s*)?", "", ln, flags=re.IGNORECASE).strip()
-        ln = re.sub(r"^(?:Based on|Looking at|According to|From) the (?:search results|provided reference|reference information|provided references)(?:\s+provided)?[,:\s]*", "", ln, flags=re.IGNORECASE).strip()
-        ln = re.sub(r"\s*based on the provided reference(?:\s+facts|s)?:", ":", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"^(?:Based on|Looking at|According to|From) the (?:search results|provided reference|reference information|provided references|reference facts)(?:\s+provided)?[,:\s]*", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"\s*based on the provided (?:reference(?:\s+facts|s)?|information):", ":", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*based on the provided references:", ":", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*mentioned in the reference:", ":", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*\(from the provided references\)", "", ln, flags=re.IGNORECASE).strip()
@@ -149,7 +232,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         ln = re.sub(r"\byou needs\b", "you need", ln, flags=re.IGNORECASE)
         ln = re.sub(r"\byou feels\b", "you feel", ln, flags=re.IGNORECASE)
         ln = re.sub(r"\bthe user\b", "you", ln, flags=re.IGNORECASE)
-        if ln and ln[0].islower() and not ln.startswith("http"):
+        if ln and ln[0].islower() and not ln.startswith(("http", "def ", "class ", "import ", "from ", "return ", "__CODE_BLOCK_")):
             ln = ln[0].upper() + ln[1:]
         if not wants_summary:
             ln = re.sub(r"\s*;?\s*Summary:.*$", "", ln, flags=re.IGNORECASE).strip()
@@ -157,12 +240,18 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         if ln and not low.startswith((
             "the user ", "you are specifically interested in", "you specifically asked for",
             "you asked for ", "you might be looking for", "for more details and comparisons, i'll",
-            "these are the most recent gpu launches mentioned in the reference", "the key is to ",
+            "these are the most recent gpu launches", "the key is to ",
+            "for more detailed specifications", "for more details, you can visit the links provided",
+            "for more detailed information, you can refer",
+            "additionally, for a comparison with other", "additionally, a comparison with other models",
+            "looking at the context", "based on the context", "the relevant information is clearly stated",
+            "facts, the key information", "my response will be structured", "list the major ",
+            "i've provided the exact", "i've also included",
             "okay,", "alright,", "hmm", "let me ", "wait,", "no need ", "i will ", "i'll ",
             "first, i ", "first, the search", "i should ", "i need to make sure", "then i need to ",
             "the key differences seem to be", "the answer should ", "so the final answer will",
             "i followed the instructions", "i provided a concise", "the response is structured",
-            "this information is directly stated", "additionally, a comparison with other models",
+            "this information is directly stated",
             "each of these has its own trends",
             "in physics, quantum computing and dark matter research might",
             "also, sustainability and climate change are major focuses",
@@ -190,12 +279,12 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
                 break
 
     # Drop any trailing dangling header (`:`), comma, dangling conjunction, or unclosed mid-sentence cut-off line
-    while len(raw_lines) > 1 and (
+    while len(raw_lines) > 1 and not raw_lines[-1].startswith("__CODE_BLOCK_") and (
         raw_lines[-1].endswith((":", ","))
         or re.search(r"\b(?:and|or|to|for|of|in|with|by|from|that|which|since|because|however|so|but|the|a|an)$", raw_lines[-1].lower())
         or (
             len(raw_lines) >= 4
-            and not raw_lines[-1].endswith((".", "!", "?", ")", '"', "'"))
+            and not raw_lines[-1].endswith((".", "!", "?", ")", '"', "'", "`"))
             and not re.search(r"(?:\d|https?://)", raw_lines[-1])
         )
     ):
@@ -206,6 +295,15 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
 
     plans = []
     for line_idx, ln in enumerate(raw_lines):
+        m_cb = re.match(r"^__CODE_BLOCK_(\d+)__$", ln)
+        if m_cb:
+            cb_idx = int(m_cb.group(1))
+            if 0 <= cb_idx < len(code_blocks):
+                cb_str = code_blocks[cb_idx]
+                plans.append(("\n" + cb_str) if line_idx > 0 else cb_str)
+                if len(plans) >= max_windows:
+                    break
+            continue
         # Split line into single-sentence / compact windows of <= max_bpe Kimi K3 tokens so K3LexicalPointerDecoder has 100% 1-to-1 positional alignment
         clauses = [c.strip() for c in re.split(r"(?<=[.!?;])\s+", ln) if c.strip()]
         if len(clauses) <= 1 and len(k3_tok.encode(ln)) <= max_bpe:
@@ -258,16 +356,31 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
 
 
 def format_readable_response(raw_joined: str) -> str:
-    """Formats a rendered response into clean, readable paragraphs and bullet lists:
+    """Formats a rendered response into clean, readable paragraphs, bullet lists, and fenced code blocks:
+    - Preserves fenced code blocks (` ```python ... ``` `) with exact newlines and indentation.
     - Lines with 'Heading/Topic: Explanation' become bullet items ('• Heading/Topic: Explanation').
     - Long single-block paragraphs (4+ sentences) are split into 2-sentence readable paragraphs separated by blank lines.
     """
-    lines = [ln.strip() for ln in raw_joined.splitlines() if ln.strip()]
+    saved_fenced = []
+
+    def _stash_fenced(m):
+        idx_f = len(saved_fenced)
+        saved_fenced.append(m.group(0).strip())
+        return f"\n__FENCED_CODE_{idx_f}__\n"
+
+    working = re.sub(r"```[a-zA-Z0-9_+-]*\n[\s\S]*?```", _stash_fenced, raw_joined)
+    lines = [ln.strip() for ln in working.splitlines() if ln.strip()]
     if not lines:
         return raw_joined.strip()
 
     formatted_blocks = []
     for idx, ln in enumerate(lines):
+        m_fc = re.match(r"^__FENCED_CODE_(\d+)__$", ln)
+        if m_fc:
+            fc_i = int(m_fc.group(1))
+            if 0 <= fc_i < len(saved_fenced):
+                formatted_blocks.append(saved_fenced[fc_i])
+            continue
         ln_clean = re.sub(r"^[•\-*]\s*", "", ln).strip()
         # Check if this line is a section header ending with ':' (e.g. 'Morning (6:00 AM - 8:00 AM):')
         if ln_clean.endswith(":") and len(ln_clean.split()) <= 10 and idx > 0:
@@ -290,7 +403,7 @@ def format_readable_response(raw_joined: str) -> str:
         else:
             formatted_blocks.append(ln_clean)
 
-    # Join consecutive bullet items with '\n' and paragraphs with '\n\n'
+    # Join consecutive bullet items with '\n' and paragraphs/code blocks with '\n\n'
     out_str = ""
     for i, blk in enumerate(formatted_blocks):
         if i == 0:

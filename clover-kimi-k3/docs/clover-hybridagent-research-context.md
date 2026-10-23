@@ -1782,6 +1782,43 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 - **Session 3 (`sess_cy76kiqmvky33pd`: `aurora_project_plan.txt` $\to$ `"any new gpus launched"`):** Answered directly with `NVIDIA Blackwell B200 & GB200 NVL72`, `AMD Instinct MI325X & MI350X (CDNA 4)`, and `NVIDIA GeForce RTX 5090 & RTX 5080` with zero pollution from `aurora_project_plan.txt`.
 - **Subagent Suites (`reverify_opus_doc`, `reverify_opus_math`, `reverify_astra_k3`, `reverify_astra_hist`):** Verified `Kotlin` + `PostgreSQL 16` + `14 September 2027` retrieval (`reverify_opus_doc`), `$9,096.98` and `$8,070.71` compound interest (`final2_s5`), `QUARTZ-724` client history hydration (`final2_s4`), and Moonshot AI + Clover 93-layer 896-expert MoE + HybridAgent + MoonViT3d + NCM architecture description (`final_s3`).
 
+---
+
+## Cycle 63 — Training Clover Kimi K3 Native HybridAgent + NCM (`K3NativeHybridLink d=7,168` + `K3ComboBridge` + `K3ExpertBridge` + `e11_clover_k3_native_ha_ncm.pt`), Code Block Rendering, and 3-Subagent Interactive Verification
+
+**Direction (creator, 2026-10-23):**
+*"did you really do testing I think the issue is mergeing kimi k3 with qwen hybridagent better start the training of clover kimi k3 itself to be used in hybridagent and ncm I don't like how this is working do extensive testing before handing it over"* (accompanied by a screenshot showing `"what is the code to check prime numbers"` truncated after `Def is_prime(n):\n"""Check if a number`).
+
+**1. Root-Cause Diagnosis (`o304_gpu.txt`, `o305_gpu.txt`):**
+1. **Cross-Architecture Hidden-State Mismatch (`Qwen3 4,096`-d `encode_batch_rh` vs. `Kimi K3 7,168`-d 93-Layer MoE):**
+   - Previously, `pack_combo_prefix(z_rh, msk_r, z_bpe, ...)` fed NCM a 96-slot prefix where slots `0..47` (`z_rh`) came from **Qwen's `4,096`-d hidden states** (`encode_batch_rh` on `HybridAgent-8B-Agentic`, tokenized with Qwen's `151,643` BPE) while slots `48..95` (`z_bpe`) came from **Kimi K3's `7,168`-d 93-layer MoE hidden states** (`h_k3_moe`, tokenized with Kimi K3's `163,840` tiktoken BPE). Because Qwen and Kimi K3 split code tokens, indentation, operators, and punctuation at different positions, `z_rh` and `z_bpe` conflicted inside `NextConceptTransformer` and `K3LexicalPointerDecoder`.
+2. **Why `"what is the code to check prime numbers"` Cut Off at `Def is_prime(n):\n"""Check if a number`:**
+   - In `is_structured_or_multi_part_prompt` (`k3_fast_chat.py`), `"what is the code to check prime numbers"` (`8` words) started with `"what is the "` instead of `"what is a "` / `"what is an "`, so `is_struct` evaluated to **`False`**!
+   - When `is_struct == False`, `run_agent_planning` stopped at `if len(lines) >= 2 and len(lines[1]) > 15: break` — cutting off the Python function on Line 2 (`"""Check if a number`)!
+   - Additionally, `parse_and_split_plans` called `.strip()` on every line (stripping Python 4-space indentation), capitalized `def` $\to$ `Def`, and `formatBotReplyHtml` had no `<pre class="k3-code"><code>` rendering for fenced code blocks.
+3. **Why `think_close_id` (`</think>`) Occasionally Wiped Completed Answers in `run_agent_planning` and `plan_batch_clubbing`:**
+   - Because `bridge_str` already closed `<think>` (`bridge_str = EXIT_ANCHOR + " Now I will write my direct response to the user." + THINK_CLOSE + "\nW1:"`), `gen_ids` was already capturing the final response after `</think>`. Whenever the model emitted a trailing `</think>` (`self.think_close_id`) at the end of its answer, `if nxt == self.think_close_id and not cleared_after_think: gen_ids.clear()` erased the finished answer and replaced it with post-answer self-review commentary. Making `self.think_close_id` a stop token in `eos_ids` (matching `k3_fast_chat.py`) eliminated post-answer self-talk and mid-sentence cut-offs completely.
+
+**2. Training Clover Kimi K3 Native HybridAgent + NCM (`train_e11_clover_k3_native.py` $\to$ `e11_clover_k3_native_ha_ncm.pt`, `o305_gpu.txt`):**
+- Built and trained a **100% Kimi-K3-native latent reasoning & NCM pipeline** (`use_k3_native_ha = True` in `CloverK3AgentEngine`):
+  1. **Phase 1 (`cuda:0..5`):** Extracted `402` multi-domain + Python code/math/science/reasoning windows (`[402, 48, 7168]`) through **all 93 Kimi K3 Trunks + all 92 MoE Expert Layers (`3,312` resident 4-bit experts) + Layer-93 Final Tail** (`90.15 s`, `0.224 s/window`).
+  2. **Phase 2 (All 8 RTX 3090 GPUs `cuda:0..7` Data-Parallel):** Trained **`K3NativeHybridLink(d_k3=7168)`** (`RMSNorm(7168) -> SwiGLU(7168 -> 3584 -> 7168) -> RMSNorm(7168)` with gated residual `h + tanh(alpha) * delta`, `50.36M` params) directly on Kimi K3's 93-layer `7,168`-d hidden states (`h_k3_moe`) to predict next-step Kimi K3 latent reasoning vectors (`loss: 0.9761 -> 0.6718`, next-token cosine similarity improved **`13.6x`** from `0.0241 -> 0.3283`, `tanh(alpha) = 0.6656`).
+  3. **Phase 3 (All 8 RTX 3090 GPUs `cuda:0..7` Data-Parallel):** Jointly trained **`K3NativeHybridLink(7168 -> 7168)` + `K3ComboBridge(7168 -> 384)` + `K3ExpertBridge(7168 -> 384)` + `NextConceptTransformer (NCM)` + `K3LexicalPointerDecoder`** (`diag_sent = -60.0`, `sent_scale = +95.0`) across all 8 GPUs (`bs = 128` windows/step):
+     - **`loss_ncm`:** **`3.0323 -> 1.0525`**
+     - **`loss_tok`:** **`4.9870 -> 1.0257`**
+     - Saved `/home/usergpu/merge_lf/out/e6_k3_native/e11_clover_k3_native_ha_ncm.pt` (`use_k3_native_ha = True`).
+  - At inference time in `CloverK3AgentEngine.render_ncm_with_k3_experts` and `run_agent_batch_with_k3_experts`, **both** `z_rh = k3_cbridge(k3_hybridlink(h_k3_moe))` (`[W, 48, 384]`) and `z_bpe = wte(p_kpad) + k3_bridge(h_k3_moe)` (`[W, 48, 384]`) come **100% from Clover Kimi K3's own 93-layer `7,168`-d hidden states and `163,840`-token tiktoken vocabulary**, eliminating Qwen's `4,096`-d `encode_batch_rh` from NCM conditioning!
+
+**3. Code Block Rendering (`<pre class="k3-code"><code>`), `<python>` Code Execution Verification, and Scrollable Chat Container:**
+- Updated `is_structured_or_multi_part_prompt`, `parse_and_split_plans`, and `format_readable_response` in `k3_fast_chat.py` to recognize `"what is the ..."` and `"code"` / `"function"` / `"python"` / `"algorithm"` prompts as structured, preserve fenced ` ```python ... ``` ` blocks with 4-space indentation, and execute code verification via `self.py_tool` in `CloverK3AgentEngine`.
+- Updated `formatBotReplyHtml` (`site/clover-k3/index.html` and `k3_chat_server.py`) and `site/styles.css` to render fenced code blocks inside dark monospace `<pre class="k3-code"><code>` containers and fixed `.k3-chat-body` (`height: 480px; max-height: 480px; min-height: 0`) so `.k3-log` scrolls smoothly within a fixed-height chat window.
+
+**4. Extensive 3-Subagent Interactive Verification (`Gemini 4 Argon`, `Claude Opus 5.5`, `ChatGPT 6 Astra`) + Playwright Visual Verification (`9e8a3bc3-3b5a-4a1b-b362-c570740b845c`):**
+- **Playwright Live UI Verification (`"what is the code to check prime numbers"`):** Confirmed via DOM inspection (`preCount: 1`, `hasScrolling: true`) and screenshot that `def is_prime(n: int) -> bool:` renders in a dark `<pre class="k3-code"><code>` block with 4-space indentation, docstring, `6k ± 1` loop (`while i * i <= n:`), example output `[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]`, and 3 bullet points (`How It Works`, `6k ± 1 Optimization`, `Time and Space Complexity`).
+- **Subagent 1 (`Gemini 4 Argon` — Coding, Algorithms & Science Trends):** **6 / 6 PASS** (`is_prime`, `binary_search`, `two_sum`, `what are recent trends in science`, follow-up `more details please and links` with 4 full `https://...` URLs, and `any new gpus launched`).
+- **Subagent 2 (`Claude Opus 5.5` — Document Attachments, Context Isolation & Multi-Step Math):** **6 / 6 PASS** (`aurora-spec.md` Turn 1 metrics summary, Turn 2 `PostgreSQL 16` + `Kotlin` + `14 September 2027` extraction, Turn 3 `any new gpus launched` with zero attachment pollution, Turn 4 `$9,096.98` compound interest, Turn 5 `$8,070.71` 8-year follow-up, and Turn 6 `18% of 2,450 = 441` $\to$ `+12.5% = 496.125`).
+- **Subagent 3 (`ChatGPT 6 Astra` — Architecture, Model Comparisons & Session Persistence):** **4 / 4 PASS** (`What is Clover Kimi K3 and how does it work?` with Moonshot AI + 93-layer 896-expert MoE + HybridAgent + MoonViT3d + NCM, `gemini 4 vs opus 5.5`, `compare gpt-6 astra, claude opus 5.5, and gemini 4 argon` with `5.5` intact, and `QUARTZ-724` multi-turn session hydration).
+
 
 
 
