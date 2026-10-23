@@ -1419,6 +1419,12 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 2. **Where a tiny gap still remains without autoregressive verification:**
    - Because the final token selection in `K3LexicalPointerDecoder` is **parallel (non-autoregressive)** across all 64 positions simultaneously, occasional minor function-word/preposition hiccups still occur (e.g. `"moving the moving"`, `"led was by"`, and on `p5` the 8B planner writes `84 mph × 0.5 h = 42 miles` without finishing the final division `126 / 154 = 49 min` inside its 100-token plan budget).
    - Thus, **zero-verification Chat Mode (`e8_k3_direct`, `5.2–5.5 s`)** now delivers clean, factually grounded, domain-accurate text on news, incident reports, medical, physics, and battery chemistry prompts (`p1, p2, p3, p4, p6, p7`) without touching the 93-layer CPU engine.
+   - **Interactive / CLI Chat Mode enabled (`k3_fast_chat.py --prompt "..."` and `k3_fast_chat.py --interactive` / `chat.ps1`, `o150_gpu.txt`):**
+     - Tested user prompt `"the captial of france is"` (with typo `"captial"`):
+       - **`HybridAgent` `<latent>` (`14` steps) + Plan:** `2,017.1 ms` $\to$ `"The capital of France is Paris. Summary: The capital of France is Paris."`
+       - **`e8_k3_direct` NCM + PointerDecoder:** `155.5 ms` (`1`-cand, total **`2.17 s`**) / `231.4 ms` (`MBR8`, total **`2.25 s`**), emitting `16` Kimi K3 tokens (`K3_EOS` at token 16, zero XSum filler):
+       - **Verbatim Output:** **`The capital of France is Paris. Summary: The capital of France is Paris.`**
+
 
 
 
