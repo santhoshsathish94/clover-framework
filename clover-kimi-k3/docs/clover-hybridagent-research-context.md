@@ -1342,6 +1342,49 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 | **`p5` (`109` K3 tok)** | `44.11 ms` | `124.37 ms` | `360.29 ms` | **`168.48 ms` / `404.41 ms`** | `304.56 s` (`60.25 s` + `244.31 s`) | `~83.9 s` (`0.40 s` + `~83.5 s` 1-pass) |
 | **Mean (`p1..p5`)** | **`44.78 ms`** | **`125.26 ms`** | **`357.69 ms`** | **`170.04 ms` (`0.17 s`) / `402.47 ms` (`0.40 s`)** | **`356.30 s`** | **`~82.0 s` (`4.35x` faster than step-by-step)** |
 
+---
+
+## Cycle 51 — Direct Unverified Chat Mode (`k3_fast_chat.py`): Plain Prompt In $\to$ Output Out (Zero 93-Layer Verification, Zero DSpark)
+
+**Direction (creator, 2026-10-23):** "if it's identical why always verify using the k3 93 layers can you enabled without verification in chat mode to test it out send prompts and just see output without verification steps just plain input to output".
+
+**Clarification on what was identical vs. what was not:**
+- Removing `K3DSparkVerifier` was `99.84%` identical (`0` token differences on `p1, p3, p4, p5`) to keeping `K3DSparkVerifier`.
+- Against the full **93-layer Clover Kimi K3** model (`1.4 TB` MoE), our fast pipeline (`e6_k3_native + K3PlanCopyDecoder`) matched the first `48` consecutive tokens on `p1` (`34` on `p2`) when given grounded clause plans, not all `126` tokens on arbitrary unseen prompts.
+- To test what happens when we run **completely without the 93-layer Kimi K3 verification step** (plain user prompt in $\to$ `HybridAgent-8B-Agentic` `<latent>` rollout + `W1`/`W2` plan $\to$ `e6_k3_native + K3PlanCopyDecoder` out), we built and ran `k3_fast_chat.py` on `gpu` across `p1..p5` plus two unseen prompts (`p6_new_hospital` and `p7_new_battery`; record `out/e6_k3_native/chat_mode_results.json`, `o135_gpu.txt`).
+
+**Measured End-to-End Chat Mode Timings and Verbatim Outputs (`k3_fast_chat.py`, 93-layer verification OFF, DSpark OFF):**
+
+| Prompt | `HybridAgent` `<latent>` (`13–14` steps) + `W1/W2` Plan (`cuda:1`) | `e6_k3_native + K3PlanCopyDecoder` (`1`-cand / `MBR8`, `cuda:0`) | **Total Plain Input $\to$ Output Time (`1`-cand / `MBR8`)** | Output Length (`163,840` K3 Vocab) |
+|---|---:|---:|---:|---:|
+| **`p1` (Harbourside Council vote)** | `5,138.5 ms` (`13` lat steps, `anchor` exit) | `174.0 ms` / `403.1 ms` | **`5.31 s` / `5.54 s`** | `110` K3 tokens |
+| **`p2` (Apollo 13 mission)** | `5,106.1 ms` (`14` lat steps) | `160.5 ms` / `234.0 ms` | **`5.27 s` / `5.34 s`** | `62` K3 tokens |
+| **`p3` (Why sky is blue / sunsets red)** | `4,829.5 ms` (`14` lat steps) | `165.0 ms` / `400.2 ms` | **`4.99 s` / `5.23 s`** | `126` K3 tokens |
+| **`p4` (Payments DB incident)** | `5,117.1 ms` (`14` lat steps) | `161.9 ms` / `400.3 ms` | **`5.28 s` / `5.52 s`** | `125` K3 tokens |
+| **`p5` (Two trains Leeds–London)** | `5,107.7 ms` (`14` lat steps) | `167.5 ms` / `406.0 ms` | **`5.28 s` / `5.51 s`** | `125` K3 tokens |
+| **`p6_new_hospital` (Unseen: Bristol St Mary's Hospital)** | `5,113.1 ms` (`14` lat steps) | `165.5 ms` / `404.3 ms` | **`5.28 s` / `5.52 s`** | `125` K3 tokens |
+| **`p7_new_battery` (Unseen: Li-ion battery explanation)** | `5,100.7 ms` (`14` lat steps) | `162.3 ms` / `399.7 ms` | **`5.26 s` / `5.50 s`** | `123` K3 tokens |
+| **Mean across all 7 prompts** | **`5,073.2 ms` (`5.07 s`)** | **`165.2 ms` / `378.2 ms`** | **`5.24 s` (`1`-cand) / `5.45 s` (`MBR8`)** | **`114` K3 tokens** |
+
+**What Observing the Unverified Plain Input $\to$ Output Runs Reveals (`o135_gpu.txt`):**
+1. **End-to-end latency is `5.24 s` (`1`-cand) / `5.45 s` (`MBR8`) from raw user prompt to `~125` Kimi K3 tokens (`~65x` faster than the `356 s` 93-layer Kimi K3 engine):**
+   - `5.07 s` of the `5.45 s` is `HybridAgent-8B-Agentic` autoregressively generating the `13–14` continuous `<latent>` steps plus `~100` tokens of `W1`/`W2` plan on 1 GPU (`cuda:1`); the `e6_k3_native + K3PlanCopyDecoder` step itself takes only **`0.165 s` (`1`-cand) / `0.378 s` (`MBR8`)**.
+2. **Where unverified plain input $\to$ output works vs. where it breaks without the 93-layer Kimi K3 engine:**
+   - **On factual-report prompts (`p1`, `p4`, and the unseen `p6_new_hospital`), `HybridAgent` writes a clean `W1`/`W2` plan and `e6_k3_native + K3PlanCopyDecoder` preserves almost all entities and numbers, but still injects XSum-trained BBC news artifacts when unverified:**
+     - For example, on the unseen **`p6_new_hospital`** (*"St Mary's Hospital opened a new 18 million pound children's wing on Friday in Bristol. Dr Elena Vance led the 3-year project, which adds 45 beds and 4 operating theatres."*), the unverified output (`5.52 s`) is:
+       > *"St Mary's Hospital in Bristol has opened a new children wing doors on Friday in a Belfast centre on the new week, including a new post office student said. The wing will cost £18 million pounds, it adds to 45 beds and the 4 operating theatres, which will host the town centre of the 18 . The project was led by Dr Elena Vance over 3 years. The opening marks represents a significant expansion for the hospital's Robbie services. Summary: St Mary's's Hospital opens a new 18 million pound children's wing with 45 beds and 4 hotels, which reopened in the UK in 2016"*
+     - Every input fact (`St Mary's Hospital`, `Bristol`, `Friday`, `18 million pounds`, `45 beds`, `4 operating theatres`, `Dr Elena Vance`, `3 years`, `Summary:`) is present, **but** because `e6_k3_native` (`119.96M` params) was trained on `20,208` XSum news windows to fill a fixed 64-token window from a 30-word plan, it pads the remaining slots of the 64-token window with XSum news priors (`"in a Belfast centre"`, `"post office student said"`, `"reopened in the UK in 2016"`).
+   - **On out-of-domain technical vocabulary (`p7_new_battery`: `"cathode"`, `"anode"`, `"electrolyte"`, `"SEI layer"`) and multi-step math (`p5`):**
+     - `HybridAgent-8B-Agentic`'s plan on `p7_new_battery` is completely accurate (*"Lithium-ion batteries use lithium ions moving between cathode and anode; during charging, ions move from cathode to anode through electrolyte..."*), **but** `K3-Native VQ-VAE` (`144M` params, adapted on 20k XSum news windows) never saw `"cathode"`, `"anode"`, or `"electrolyte"` in its VQ codebooks, so the VQ bottleneck maps them to nearest news words (`"theode"`, `"Crete"`, `"Hearing"`).
+     - On `p5` (the two-train math problem), `HybridAgent` in a 100-token plan budget sets up the equation (`84t` and `70(t-0.5)`) without finishing the arithmetic (`10:29`, `57 miles`), whereas Kimi K3's 93-layer model solved `10:29` and `57 miles` directly.
+3. **Why the 93-layer Clover Kimi K3 engine is still needed for final verification (or why `HybridAgent`'s own text head / Kimi K3's causal layers cannot be replaced by a 144M XSum VQ-VAE on open-domain prompts):**
+   - The `48`-token exact prefix match on `p1` happened when the plan was extracted from Kimi K3's own answer window (`window_to_fact_plan`), where the clause lengths and vocabulary matched XSum news sentences.
+   - When `e6_k3_native` runs unverified on arbitrary user prompts (`k3_fast_chat.py`), its 313-code VQ bottleneck + XSum training prior hallucinates filler clauses (`"in a Belfast centre"`, `"in 2016"`) and corrupts non-news technical terms (`"electrolyte"` $\to$ `"Crete"`).
+   - Therefore:
+     - **Without 93-layer Kimi K3 verification (`5.2–5.5 s`):** `HybridAgent + e6_k3_native + K3PlanCopyDecoder` gives a fast **rough draft** that captures the main names and numbers on news/incident reports (`p1, p4, p6`), but is **not** identical to 93-layer Kimi K3 and contains XSum filler clauses.
+     - **With 1-pass 93-layer Kimi K3 verification (`PF_EXTRA` / `stage2_stepk`):** Kimi K3's 93 layers accept the exact matching prefix tokens (e.g. `48` tokens on `p1`, `34` on `p2`) and immediately reject the first XSum filler token (`"in a Belfast centre"`), guaranteeing 100% Kimi K3 quality while saving the passes for the accepted prefix.
+
+
 
 
 
