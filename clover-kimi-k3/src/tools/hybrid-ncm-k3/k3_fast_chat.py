@@ -83,18 +83,21 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         ln = re.sub(r"^(?:[-*•]+|\d+[.)])\s*", "", ln).strip()
         ln = re.sub(r"\*\*", "", ln).strip()
         ln = re.sub(r":(\d+\.)", r": \1", ln)
-        ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking|The user's|The user has|Okay,\s*so\s*the\s*user|I should structure).*$", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking|The user's|The user has|Okay,\s*so\s*the\s*user|I should structure|No need for|I will end the interaction).*$", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\bthe user didn't\b", "you didn't", ln, flags=re.IGNORECASE)
         ln = re.sub(r"\bthe user\b", "you", ln, flags=re.IGNORECASE)
         if not wants_summary:
             ln = re.sub(r"\s*;?\s*Summary:.*$", "", ln, flags=re.IGNORECASE).strip()
         low = ln.lower()
-        if ln and not low.startswith(("the user ", "okay,", "hmm", "let me ", "wait,", "</think>", "<think>")):
+        if ln and not low.startswith(("the user ", "okay,", "hmm", "let me ", "wait,", "no need ", "i will ", "</think>", "<think>")):
             raw_lines.append(ln)
 
-    # Drop any trailing dangling header line that ends with ':' and has no following content
-    while len(raw_lines) > 1 and raw_lines[-1].endswith(":"):
+    # Drop any trailing dangling header line (ending with ':') or incomplete trailing line cut off by max_new
+    while len(raw_lines) > 1 and (
+        raw_lines[-1].endswith(":")
+        or not raw_lines[-1].endswith((".", "!", "?", ")", '"', "'"))
+    ):
         raw_lines.pop()
 
     if not raw_lines:

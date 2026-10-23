@@ -114,31 +114,36 @@ class K3LexicalPointerDecoder(nn.Module):
         ck = F.normalize(self.copy_k(mem_bpe), dim=-1)     # [B, 48, 384]
         sim = torch.bmm(cq, ck.transpose(1, 2))            # [B, 64, 48]
 
-        # Check per row whether `k3_pids` is a semicolon skeleton (token 26 ';') or already a complete natural sentence
+        # Check per row whether `k3_pids` is a semicolon skeleton (token 26 ';') or already a complete natural sentence.
+        # During training (`self.training`), always use the soft learned pointer so `K3ExpertBridge`, `copy_q/k`, and `blocks` receive full gradients!
         has_semi = (k3_pids == 26).any(dim=1, keepdim=True)              # [B, 1]
+        use_soft = torch.ones_like(has_semi) if self.training else has_semi
         p_len = (~msk_bpe).sum(dim=1, keepdim=True).clamp(min=1).float() # [B, 1]
-        expected_T = torch.where(has_semi, (p_len * 1.22 + 2.0).clamp(min=4.0, max=float(T)), p_len)  # [B, 1]
+        expected_T = torch.where(use_soft, (p_len * 1.22 + 2.0).clamp(min=4.0, max=float(T)), p_len)  # [B, 1]
         t_pos_idx = torch.arange(T, device=dev, dtype=torch.float32)[None, :, None]                   # [1, 64, 1]
         p_pos_idx = torch.arange(P_BPE, device=dev, dtype=torch.float32)[None, None, :]               # [1, 1, 48]
 
-        # For semicolon skeletons, use soft proportional diagonal prior; for natural sentences, use 1-to-1 position prior
+        # For semicolon skeletons (and during training), use soft proportional diagonal prior; for natural sentences at inference, use 1-to-1 position prior
         diag_semi = -3.0 * ((t_pos_idx / expected_T[:, :, None]) - (p_pos_idx / p_len[:, :, None])).pow(2)
         diag_sent = -25.0 * (t_pos_idx - p_pos_idx).pow(2)
-        diag_bias = torch.where(has_semi[:, :, None], diag_semi, diag_sent)                           # [B, 64, 48]
+        diag_bias = torch.where(use_soft[:, :, None], diag_semi, diag_sent)                           # [B, 64, 48]
         sim = (sim * 14.0 + diag_bias).masked_fill(msk_bpe[:, None, :], -1e4)
         attn_probs = F.softmax(sim, dim=-1)                # [B, 64, 48]
         ctx_vec = torch.bmm(attn_probs, z_bpe)             # [B, 64, 384]
 
         g_copy = torch.sigmoid(self.copy_gate(torch.cat([x, ctx_vec], dim=-1)))  # [B, 64, 1]
         in_bounds = (t_pos_idx < p_len[:, :, None])                              # [B, 64, 1]
-        sent_scale = torch.where(in_bounds, torch.full_like(g_copy, 85.0), torch.zeros_like(g_copy))
-        eff_scale = torch.where(has_semi[:, :, None], g_copy * self.copy_scale, sent_scale)
+        sent_scale = torch.where(in_bounds, g_copy * self.copy_scale + 55.0, torch.zeros_like(g_copy))
+        eff_scale = torch.where(use_soft[:, :, None], g_copy * self.copy_scale, sent_scale)
         copy_boost = attn_probs * eff_scale                                      # [B, 64, 48]
 
-        out_logits = base_logits.clone()
         idx_exp = k3_pids[:, None, :].expand(B, T, P_BPE)
-        out_logits.scatter_add_(2, idx_exp, copy_boost.to(out_logits.dtype))
-        return out_logits
+        if self.training:
+            out_logits = base_logits.clone()
+            out_logits.scatter_add_(2, idx_exp, copy_boost.to(out_logits.dtype))
+            return out_logits
+        base_logits.scatter_add_(2, idx_exp, copy_boost.to(base_logits.dtype))
+        return base_logits
 
 
 def build_variable_len_dataset(k3_tok, n_target=10000):

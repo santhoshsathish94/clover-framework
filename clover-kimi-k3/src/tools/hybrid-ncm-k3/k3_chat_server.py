@@ -33,6 +33,7 @@ os.chdir(ROOT)
 import torch
 from PIL import Image
 from k3_fast_chat import K3FastChatEngine, CHAT_PLAN_PROMPT
+from k3_agent_engine import CloverK3AgentEngine, K3GPUExpertsRunner, run_agent_batch_with_k3_experts
 from k3_multimodal_chat import K3MultimodalChatEngine
 from bench_batch_clubbing import plan_batch_with_latent, render_ncm_batched_multi_prompt
 
@@ -347,15 +348,21 @@ class MultiGPUCloverCoordinator:
         self.sess_lock = threading.Lock()
         self.sessions = collections.defaultdict(list)
 
+        # 1. Load Kimi K3 GPU MoE Experts (`Layer 0 + L1 + L12 + L48 + L92` = 3,584 Kimi K3 experts in VRAM across GPUs 0, 1, 5, 4)
+        self.k3_experts = K3GPUExpertsRunner.get_instance(max_n=512)
+        print(f"[Clover AI] Loaded Kimi K3 GPU MoE Experts (3,584 experts across GPUs {self.k3_experts.cards}) in {self.k3_experts.setup_s}s", flush=True)
+
+        # 2. Load 3 NVLink Agent Mode (`HybridAgent + K3 GPU Experts + NCM`) worker pairs
         self.text_workers = []
         self.worker_locks = []
         text_pairs = [("cuda:0", "cuda:2"), ("cuda:1", "cuda:3"), ("cuda:4", "cuda:6")]
         for dev_ncm, dev_ha in text_pairs:
-            eng = K3FastChatEngine(dev_ncm=dev_ncm, dev_ha=dev_ha)
+            eng = CloverK3AgentEngine(dev_ncm=dev_ncm, dev_ha=dev_ha, k3_experts_runner=self.k3_experts)
             self.text_workers.append(eng)
             self.worker_locks.append(threading.Lock())
-            print(f"[Clover AI] Loaded text worker on NVLink pair ({dev_ncm} <-> {dev_ha}) in {eng.setup_s}s", flush=True)
+            print(f"[Clover AI] Loaded Agent+K3Experts+NCM worker on NVLink pair ({dev_ncm} <-> {dev_ha}) in {eng.setup_s}s", flush=True)
 
+        # 3. Load Multimodal Vision worker on NVLink pair `(cuda:5 <-> cuda:7)`
         self.mm_lock = threading.Lock()
         self.mm_worker = K3MultimodalChatEngine(dev_ncm="cuda:5", dev_vl="cuda:7", enable_option_a=True)
         print(f"[Clover AI] Loaded multimodal vision worker on NVLink pair (cuda:5 <-> cuda:7) in {self.mm_worker.setup_s}s", flush=True)
@@ -424,88 +431,80 @@ class MultiGPUCloverCoordinator:
             if len(batch) == 1:
                 req = batch[0]
                 t0 = time.perf_counter()
-                plans, lat_steps, exit_reason = eng.plan_with_latent(req.prompt, history=req.hist_snapshot)
+                plans, lat_steps, exit_reason, tool_calls = eng.run_agent_planning(req.prompt, history=req.hist_snapshot)
                 torch.cuda.synchronize(eng.dev_ha)
                 t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
-                hist_ctx = " ".join(f"{h['user']} {h['reply']}" for h in req.hist_snapshot[-6:]) if req.hist_snapshot else ""
-                full_ctx = (hist_ctx + " " + req.prompt).strip()
-
                 t1 = time.perf_counter()
-                text_1cand, ids_1cand = eng.render_ncm(plans, prompt_text=full_ctx, cands=1)
+                text_mbr, ids_mbr, k3_expert_meta = eng.render_ncm_with_k3_experts(plans, cands=req.cands)
                 torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
-                t_ncm_1cand_ms = (time.perf_counter() - t1) * 1000.0
-
-                if req.cands > 1:
-                    t2 = time.perf_counter()
-                    text_mbr, ids_mbr = eng.render_ncm(plans, prompt_text=full_ctx, cands=req.cands)
-                    torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
-                    t_ncm_mbr_ms = (time.perf_counter() - t2) * 1000.0
-                else:
-                    text_mbr, ids_mbr, t_ncm_mbr_ms = text_1cand, ids_1cand, t_ncm_1cand_ms
+                t_ncm_mbr_ms = (time.perf_counter() - t1) * 1000.0
 
                 h_len = len(req.hist_snapshot)
                 if req.remember:
                     h_len = self.append_session_turn(req.session_id, req.prompt, text_mbr, plans)
 
                 req.result = {
+                    "mode": "agent_k3_experts_ncm",
                     "session_id": req.session_id,
                     "prompt": req.prompt,
                     "reply": text_mbr,
-                    "reply_1cand": text_1cand,
+                    "reply_1cand": text_mbr,
                     "reply_mbr8": text_mbr,
                     "plans": plans,
+                    "tool_calls": tool_calls,
+                    "k3_experts": k3_expert_meta,
                     "latent_steps": lat_steps,
                     "exit_reason": exit_reason,
                     "plan_lat_ms": round(t_plan_ms, 1),
-                    "ncm_1cand_ms": round(t_ncm_1cand_ms, 1),
+                    "ncm_1cand_ms": round(t_ncm_mbr_ms, 1),
                     "ncm_mbr8_ms": round(t_ncm_mbr_ms, 1),
-                    "total_1cand_ms": round(t_plan_ms + t_ncm_1cand_ms, 1),
+                    "total_1cand_ms": round(t_plan_ms + t_ncm_mbr_ms, 1),
                     "total_mbr8_ms": round(t_plan_ms + t_ncm_mbr_ms, 1),
-                    "n_k3_tokens_1cand": len(ids_1cand),
+                    "n_k3_tokens_1cand": len(ids_mbr),
                     "n_k3_tokens_mbr8": len(ids_mbr),
                     "history_len": h_len,
                     "clubbed_batch_size": 1,
-                    "gpu_pair": f"{eng.dev} <-> {eng.dev_ha}",
+                    "gpu_pair": f"{eng.dev} <-> {eng.dev_ha} + K3-Experts(0,1,5,4)",
                 }
                 req.event.set()
             else:
                 t0 = time.perf_counter()
                 raw_prompts = [req.prompt for req in batch]
                 histories = [req.hist_snapshot for req in batch]
-                b_plans = plan_batch_with_latent(eng, raw_prompts, lat_steps=14, max_new=100, histories=histories)
-                torch.cuda.synchronize(eng.dev_ha)
-                t_plan_ms = (time.perf_counter() - t0) * 1000.0
-
                 max_cands = max(req.cands for req in batch)
-                t1 = time.perf_counter()
-                outs, ids_list = render_ncm_batched_multi_prompt(eng, b_plans, raw_prompts, cands=max_cands)
+                outs, ids_list, b_plans, k3_expert_meta, batch_tool_logs = run_agent_batch_with_k3_experts(
+                    eng, raw_prompts, histories=histories, cands=max_cands
+                )
                 torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
-                t_ncm_ms = (time.perf_counter() - t1) * 1000.0
+                t_tot_ms = (time.perf_counter() - t0) * 1000.0
 
                 for i, req in enumerate(batch):
                     h_len = len(req.hist_snapshot)
                     if req.remember:
                         h_len = self.append_session_turn(req.session_id, req.prompt, outs[i], b_plans[i])
                     req.result = {
+                        "mode": "agent_k3_experts_ncm",
                         "session_id": req.session_id,
                         "prompt": req.prompt,
                         "reply": outs[i],
                         "reply_1cand": outs[i],
                         "reply_mbr8": outs[i],
                         "plans": b_plans[i],
+                        "tool_calls": batch_tool_logs[i],
+                        "k3_experts": k3_expert_meta,
                         "latent_steps": 14,
                         "exit_reason": "max_steps",
-                        "plan_lat_ms": round(t_plan_ms, 1),
-                        "ncm_1cand_ms": round(t_ncm_ms, 1),
-                        "ncm_mbr8_ms": round(t_ncm_ms, 1),
-                        "total_1cand_ms": round(t_plan_ms + t_ncm_ms, 1),
-                        "total_mbr8_ms": round(t_plan_ms + t_ncm_ms, 1),
+                        "plan_lat_ms": round(t_tot_ms - k3_expert_meta["k3_moe_ms"], 1),
+                        "ncm_1cand_ms": round(k3_expert_meta["k3_moe_ms"], 1),
+                        "ncm_mbr8_ms": round(k3_expert_meta["k3_moe_ms"], 1),
+                        "total_1cand_ms": round(t_tot_ms, 1),
+                        "total_mbr8_ms": round(t_tot_ms, 1),
                         "n_k3_tokens_1cand": len(ids_list[i]),
                         "n_k3_tokens_mbr8": len(ids_list[i]),
                         "history_len": h_len,
                         "clubbed_batch_size": len(batch),
-                        "gpu_pair": f"{eng.dev} <-> {eng.dev_ha}",
+                        "gpu_pair": f"{eng.dev} <-> {eng.dev_ha} + K3-Experts(0,1,5,4)",
                     }
                     req.event.set()
         except Exception as e:
@@ -584,12 +583,16 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
         elif self.path.startswith("/api/health"):
             self._send_json({
                 "status": "ready",
+                "mode": "agent_k3_experts_ncm",
                 "setup_s": STATE.setup_s,
                 "active_sessions": len(STATE.sessions),
                 "text_worker_pairs": len(STATE.text_workers),
+                "k3_experts_resident": 3584,
+                "k3_expert_layers": STATE.k3_experts.layers,
+                "k3_expert_cards": STATE.k3_experts.cards,
                 "multimodal_worker": True,
                 "batch_pause_s": STATE.batch_pause_s,
-                "model": "clover-ai (8x RTX 3090)",
+                "model": "clover-ai-agent (HybridAgent + 3584 K3 GPU Experts + NCM on 8x RTX 3090)",
             })
         elif self.path.startswith("/v1/models"):
             self._send_json({

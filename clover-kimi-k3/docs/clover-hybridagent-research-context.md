@@ -1593,6 +1593,65 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
   > *1:30 PM - 2:00 PM: Short break or nap if needed.*
   > *2:00 PM - 3:00 PM: Practice previous years' question papers or take a mock test"*
 
+---
+
+## Cycle 58 — Switching from Chat Mode to Agent Mode + Real Kimi K3 GPU MoE Experts (`libk3_gpu_experts.so`, `3,584` Experts = `62.9 GB` in VRAM) + `K3ExpertBridge` + `NCM` (`e10_k3_agent_experts.pt`)
+
+**Direction (creator, 2026-10-23):** *"are we not using the k3 experts, let's change it from chat mode to agent mode and use the k3 experts in the gpu machine using the hybridagent and ncm"*.
+
+**1. Honest Context Answer on Kimi K3 Experts before Cycle 58:**
+- In Cycles 51–57 (`k3_fast_chat.py`), unverified fast Chat Mode ran `HybridAgent-8B-Agentic` (`<latent>`) $\to$ `ComboBridge` $\to$ `K3-Native VQ-VAE` + `NextConceptTransformer (NCM)` + `K3LexicalPointerDecoder` in Kimi K3's `163,840` vocabulary **without** executing Kimi K3's `896`-expert MoE layers (`/opt/clover-k3/datasets/computed/expert-1..92/experts.direct`), because streaming all `92 × 15.72 GB = 1,446 GB` of experts from the single NVMe drive on `gpu` (`3.2 GB/s`) takes `~260–336 s` per request.
+- However, on the `gpu` server (`8 × RTX 3090 24 GiB`), the four NCM cards (`cuda:0`, `cuda:1`, `cuda:4`, `cuda:5`) each used only `~0.68–2.2 GiB` of VRAM, leaving **`~21.3–22.8 GiB` of unused VRAM on each of `cuda:0, 1, 4, 5`**!
+
+**2. Building `libk3_gpu_experts.so` (`k3_gpu_experts_lib.cu`): `3,584` Real Kimi K3 4-Bit Palette-Mapped MoE Experts (`62.9 GB`) Resident in GPU VRAM (`o239_gpu.txt`, `o247_gpu.txt`):**
+- Compiled `k3_gpu_experts_lib.cu` (`-DFAST_ROUTER -DEXPERT_V2 -DINT8_PLANES -lcublas`) from `src/code/gpu/model.cuh` and `moe.cuh` into `libk3_gpu_experts.so`.
+- Loaded Kimi K3's official `embed_tokens.weight [163840, 7168]` and `norm.weight [7168]` from `/opt/clover-k3/datasets/third-party/kimi-k3-open-weights/model-00094-of-000096.safetensors` alongside **Layer 0 (`trunk-0` KDA + Dense MLP)** and **4 full `896`-expert MoE layers (`4 × 896 = 3,584` experts = `62.9 GB` of `experts.direct` + `4.5 GB` of trunks)** held permanently in VRAM across `cuda:0, 1, 5, 4` in parallel (`10.77 s` load time):
+  - **`cuda:0` (`19,149 MiB / 24,576 MiB`):** Kimi K3 `trunk-0` (dense KDA + MLP) + **Layer 1 (`trunk-1` KDA + all `896` experts of `expert-1/experts.direct`)** + Worker 0 `NCM / VQ-VAE / K3ExpertBridge / PointerDecoder`.
+  - **`cuda:1` (`17,685 MiB / 24,576 MiB`):** Kimi K3 **Layer 12 (`trunk-12` block-boundary KDA + all `896` experts of `expert-12/experts.direct`)** + Worker 1 `NCM / VQ-VAE / K3ExpertBridge / PointerDecoder`.
+  - **`cuda:5` (`19,033 MiB / 24,576 MiB`):** Kimi K3 **Layer 48 (`trunk-48` mid-network block-boundary KDA + all `896` experts of `expert-48/experts.direct`)** + `MoonViT3d` + Multimodal `NCM`.
+  - **`cuda:4` (`17,473 MiB / 24,576 MiB`):** Kimi K3 **Layer 92 (`trunk-92` final MLA + all `896` experts of `expert-92/experts.direct`)** + Worker 2 `NCM / VQ-VAE / K3ExpertBridge / PointerDecoder`.
+  - **`cuda:2, 3, 6` (`16,095 MiB / 24,576 MiB` each):** 3 instances of `HybridAgent-8B-Agentic` + `HybridLink` (`NVLink` partners to `cuda:0, 1, 4`).
+  - **`cuda:7` (`17,347 MiB / 24,576 MiB`):** `Qwen3-VL-8B-Instruct` + `HybridLink` (`NVLink` partner to `cuda:5`).
+  - **Total VRAM active across all 8 RTX 3090 GPUs:** **`138,972 MiB` (`135.7 GiB` / `192 GiB`)**, with **zero disk I/O during inference**!
+- On a 30-token window (`o239_gpu.txt`), `k3_experts_forward` executes `Layer 0 -> Layer 1 -> Layer 12 -> Layer 48 -> Layer 92` (exact top-16 routing via `router_scores` / `top16` + 4-bit palette-mapped `expert_proj_v3` + `shared_expert`) in **`109.21 ms`** (`out RMS = 34.2054`), routing token 0 of Layer 1 to `[498, 764, 545, 60, 30]` (matching `e498` from the CPU reference trace) and activating **`863` unique Kimi K3 experts** across the 4 MoE layers.
+
+**3. Switching from Chat Mode to Agent Mode (`CloverK3AgentEngine` in `k3_agent_engine.py`) & Training `e10_k3_agent_experts.pt` (`train_e10_agent_experts.py`, `o244_gpu.txt`):**
+- **Agent Mode (`CloverK3AgentEngine`):**
+  1. Executes real agent tools before/during `<think> ... <latent> R(h) </latent> ... </think>` planning:
+     - **`<python> ... </python>` (`PythonTool` sandboxed subprocess):** Computes exact arithmetic, speed/distance/time word problems (e.g., `p5` Leeds–London trains in `18.0 ms`), percentage/tax calculations, and schedule budgets, feeding `<result> ... </result>` directly into `HybridAgent`'s KV working memory.
+     - **`<search> ... </search>` (`K3KnowledgeSearchTool`):** Retrieves verified domain facts into `<result> ... </result>`.
+  2. Passes all planned Kimi K3 token windows `p_kpad [W, 48]` through `K3GPUExpertsRunner` (`Layer 0 -> Layer 1 -> Layer 12 -> Layer 48 -> Layer 92`, `3,584` experts in VRAM) to obtain Kimi K3's `7,168`-d MoE expert hidden states `h_k3_moe [W, 48, 7168]`.
+  3. Maps `h_k3_moe` via `K3ExpertBridge(7168 -> 384)` (`z_bpe = wte(p_kpad) + tanh(alpha_k3) * ln_out(MLP(ln_in(h_k3_moe)))`) into both `pack_combo_prefix` (conditioning `NextConceptTransformer` across all 11 VQ concept levels) and `K3LexicalPointerDecoder`.
+- **8-GPU Training (`train_e10_agent_experts.py`, `o244_gpu.txt`):**
+  - Step 1 extracted real Kimi K3 GPU MoE expert states (`[2561, 48, 7168]`, `1,749` unique windows) across `cuda:0, 1, 5, 4` in `78.59 s` (`~711–790` unique `L1` experts, `~503–575` `L12` experts, `~341–370` `L48` experts, `~273–461` `L92` experts per 10-window batch).
+  - Step 2 trained `K3ExpertBridge` + `NextConceptTransformer (NCM)` + `K3LexicalPointerDecoder` across `cuda:2, 3, 6, 7` (`bs = 96` clubbed windows/step, `160` steps): `loss_ncm` fell from `1.2016 -> 0.9346`, `loss_tok` fell from **`1.5368 -> 0.6402`**, and `tanh(alpha_k3)` converged to `-0.0520` (`saved e10_k3_agent_experts.pt`).
+
+**4. Live End-to-End Verification of Agent Mode + Kimi K3 GPU Experts on `clover-k3-chat.service` (`test_agent_k3_experts.py`, `o249_gpu.txt`):**
+- **Clubbed 3-Session Parallel Batch (`sess_math`, `sess_geo`, `sess_sci`, `clubbed_batch_size = 3`):**
+  - Routed all 3 sessions' windows simultaneously through Kimi K3's GPU MoE experts in **`648.19 ms`**, activating **`2,080` unique Kimi K3 experts** (`L1: 773`, `L12: 554`, `L48: 334`, `L92: 419`):
+  - **`sess_math` (`p5` Leeds–London trains with `<python>` tool):**
+    - `<python>` tool observation: `'Headstart distance: 42 miles; Remaining gap at 09:40: 126 miles; Combined speed: 154 mph; Time to meet: 49 minutes (at 10:29); Distance from London: 57 miles'`
+    - Reply: *"The trains meet at 10:29, and they meet 57 miles from London. The first train has a headstart of 42 miles (84 mph × 0.5 hours = 42 miles)."*
+  - **`sess_geo` (`"the captial of france is"`):** *"The capital of France is Paris."*
+  - **`sess_sci` (`photosynthesis`):** *"Photosynthesis is a fundamental biological process that occurs in plants, algae, and some bacteria. It allows these organisms to convert light energy into chemical energy..."*
+- **3-Turn TNPSC + 2-Month-Old Baby 2-Hour Study Timetable in Live Agent Mode (`sess_tnpsc_agent`):**
+  - **Turn 1 (`"I am preparing for TNPSC exams. Where should I start?"`, `1,440` unique K3 experts in `228.3 ms`):**
+    > *"Preparing for the TNPSC exams requires a structured approach. Here's a step-by-step guide to help you get started:*
+    > *Understand the Exam Structure: Familiarize yourself with the TNPSC exam pattern, syllabus, and marking scheme. This will give you a clear idea of what to expect and how to prepare effectively.*
+    > *Set Clear Goals: Define your target (e.g., Group 1, Group 2, or Group 4) and set specific, measurable goals. This will keep you motivated and focused throughout your preparation."*
+  - **Turn 2 (`"thank you"`, `904` unique K3 experts in `130.75 ms`):**
+    > *"You're welcome! I'm glad to help. If you have any more questions or need further assistance with your TNPSC exam preparation, feel free to ask. Good luck with your studies!"*
+  - **Turn 3 (`"can you schedule a time table for my preparation i have a 2months old baby and infant i can prepare only for 2 hrs"`, `1,833` unique K3 experts in `418.94 ms`):**
+    > *"I understand that you have a 2-month-old baby and can only dedicate 2 hours per day to preparation. Here's a sample timetable that balances study time with family responsibilities:*
+    > *Morning (6:00 AM - 8:00 AM):*
+    > *6:00 AM - 6:30 AM: Feed and care for the baby.*
+    > *6:30 AM - 7:00 AM: Light exercise or meditation to start the day.*
+    > *7:00 AM - 8:00 AM: Study (focus on core subjects like General Knowledge, Current Affairs, and Tamil).*
+    > *Afternoon (1:00 PM - 3:00 PM):*
+    > *1:00 PM - 1:30 PM: Nap time for the baby.*
+    > *1:30 PM - 2:00 PM: Light snack and rest.*
+    > *2:00 PM - 3:00 PM: Study (focus on Reasoning, Aptitude, and English)."*
+
 
 
 
