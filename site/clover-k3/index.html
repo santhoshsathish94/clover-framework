@@ -123,9 +123,9 @@
               <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
             </svg>
             Clover <span>AI</span>
-            <span class="k3-agent-badge" id="k3-agent-mode-badge" title="HybridAgent (&lt;latent&gt; + &lt;search&gt; + &lt;python&gt;) + Kimi K3 GPU MoE Experts + NCM">
+            <span class="k3-agent-badge" id="k3-agent-mode-badge" title="Multimodal Vision (MoonViT3d 7168-d + Qwen3-VL) + HybridAgent (&lt;latent&gt; + &lt;search&gt; + &lt;python&gt;) + All 93 Kimi K3 Trunks &amp; 92 MoE Expert Layers + NCM">
               <span class="k3-agent-badge__dot"></span>
-              Agent Mode &middot; K3 GPU Experts + Web Search + Python
+              Multimodal &amp; Agent Mode &middot; MoonViT3d Vision + 93 K3 Trunks/Experts + Web Search + Python
             </span>
           </div>
           <div class="k3-controls">
@@ -133,27 +133,34 @@
             <button type="button" id="k3-modal-toggle-btn" onclick="openK3ChatModal()">Expand</button>
           </div>
         </div>
+        <div class="k3-mm-bar" aria-label="Multimodal and Agent quick examples">
+          <span class="k3-mm-bar__label">Multimodal &amp; Agent Examples:</span>
+          <button type="button" class="k3-mm-chip" onclick="k3RunSampleMultimodal('clover_v35')">&#128444; Clover v3.5 Release Card (Vision)</button>
+          <button type="button" class="k3-mm-chip" onclick="k3RunSampleMultimodal('hospital_invoice')">&#128196; Hospital Invoice OCR (Vision)</button>
+          <button type="button" class="k3-mm-chip" onclick="k3RunSampleMultimodal('battery_diagram')">&#128267; Li-Ion Battery Diagram (Vision)</button>
+          <button type="button" class="k3-mm-chip" onclick="k3RunSampleAgentSearch()">&#128269; Live arXiv AI Research (Web Agent)</button>
+        </div>
         <div class="k3-log" id="k3-chat-log" aria-live="polite">
-          <div class="k3-msg k3-msg--bot">Clover AI Agent Mode is active (live Web/arXiv/Wikipedia search, Python execution, 3,584 resident Kimi K3 GPU MoE experts, and NCM). Ask a question, search for recent research, run calculations, or attach an image.</div>
+          <div class="k3-msg k3-msg--bot">Clover AI <strong>Multimodal &amp; Agent Mode</strong> is active:<br>&bull; <strong>Multimodal Vision (Image &amp; Video):</strong> Kimi K3 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> (225 &times; 7,168-d visual tokens) + <code>Qwen3-VL-8B-Instruct + HybridLink</code>.<br>&bull; <strong>Full 93-Layer Kimi K3 GPU Engine + NCM:</strong> All 93 Kimi K3 Trunks (69 KDA + 24 MLA) &amp; 92 MoE Expert Layers (3,312 resident experts across GPUs 0&ndash;5) + 11-level NCM.<br>&bull; <strong>Agent Tools:</strong> Live Web / arXiv / Wikipedia search (<code>&lt;search&gt;</code>) and Python execution (<code>&lt;python&gt;</code>).<br>Upload, paste (<code>Ctrl+V</code>), or drag &amp; drop any image/video, or click one of the <strong>Multimodal &amp; Agent Examples</strong> above.</div>
         </div>
         <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
           <div class="k3-preview-bar__info">
-            <img id="k3-img-preview-thumb" src="../assets/case-study-01-contentful-migration.svg" alt="Attached image">
+            <img id="k3-img-preview-thumb" src="../assets/case-study-01-contentful-migration.svg" alt="Attached media">
             <span id="k3-img-preview-name">Image attached</span>
           </div>
           <button type="button" onclick="k3ClearImage()">Remove</button>
         </div>
         <div class="k3-foot">
-          <input type="file" id="k3-img-input" accept="image/*" hidden onchange="k3OnImageSelected(event)">
-          <button type="button" onclick="document.getElementById('k3-img-input').click()" title="Upload an image">
+          <input type="file" id="k3-img-input" accept="image/*,video/*" hidden onchange="k3OnImageSelected(event)">
+          <button type="button" onclick="document.getElementById('k3-img-input').click()" title="Upload an image or video (or paste with Ctrl+V)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <circle cx="8.5" cy="8.5" r="1.5"></circle>
               <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
-            Image
+            Image / Video
           </button>
-          <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover AI..."></textarea>
+          <textarea id="k3-prompt-in" rows="1" placeholder="Ask a question, upload/paste an image or video, or search the web..."></textarea>
           <button type="button" class="k3-send" id="k3-send-btn" onclick="k3SendPrompt()">Send</button>
         </div>
       </div>
@@ -989,18 +996,83 @@ src/scripts/chat-stop.sh mychat</code></pre>
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  function attachDataUrl(dataUrl, label) {
+    attachedImageDataUrl = dataUrl;
+    if (previewThumb) previewThumb.src = dataUrl;
+    if (previewName) previewName.textContent = label || 'Image attached (MoonViT3d + Qwen3-VL ready)';
+    if (previewBar) previewBar.hidden = false;
+  }
+
+  function extractVideoFramesToDataUrl(videoFile, callback) {
+    var video = document.createElement('video');
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    var url = URL.createObjectURL(videoFile);
+    video.src = url;
+    video.onloadedmetadata = function () {
+      var dur = Math.max(0.5, video.duration || 1.0);
+      var times = [dur * 0.15, dur * 0.5, dur * 0.85];
+      var canvas = document.createElement('canvas');
+      canvas.width = 720;
+      canvas.height = 420;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#14181d';
+      ctx.fillRect(0, 0, 720, 420);
+      var idx = 0;
+      function grabNext() {
+        if (idx >= times.length) {
+          URL.revokeObjectURL(url);
+          callback(canvas.toDataURL('image/png'));
+          return;
+        }
+        video.currentTime = times[idx];
+      }
+      video.onseeked = function () {
+        var x = (idx % 3) * 240;
+        ctx.drawImage(video, x + 4, 24, 232, 372);
+        ctx.fillStyle = '#0d6b5e';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('Frame ' + (idx + 1) + ' (' + times[idx].toFixed(1) + 's)', x + 12, 18);
+        idx++;
+        grabNext();
+      };
+      grabNext();
+    };
+  }
+
   window.k3OnImageSelected = function (e) {
     var file = e.target.files && e.target.files[0];
     if (!file) return;
+    if (file.type && file.type.indexOf('video/') === 0) {
+      extractVideoFramesToDataUrl(file, function (dataUrl) {
+        attachDataUrl(dataUrl, file.name + ' (Video keyframes -> MoonViT3d + Qwen3-VL)');
+      });
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function (ev) {
-      attachedImageDataUrl = ev.target.result;
-      if (previewThumb) previewThumb.src = attachedImageDataUrl;
-      if (previewName) previewName.textContent = file.name;
-      if (previewBar) previewBar.hidden = false;
+      attachDataUrl(ev.target.result, file.name + ' (MoonViT3d + Qwen3-VL ready)');
     };
     reader.readAsDataURL(file);
   };
+
+  // Support clipboard paste (Ctrl+V) and drag-and-drop of images/videos directly onto the chat widget
+  document.addEventListener('paste', function (e) {
+    var items = (e.clipboardData && e.clipboardData.items) || [];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type && items[i].type.indexOf('image/') === 0) {
+        var f = items[i].getAsFile();
+        if (f) {
+          var rd = new FileReader();
+          rd.onload = function (ev) {
+            attachDataUrl(ev.target.result, 'Pasted image (MoonViT3d + Qwen3-VL ready)');
+          };
+          rd.readAsDataURL(f);
+        }
+      }
+    }
+  });
 
   window.k3ClearImage = function () {
     attachedImageDataUrl = null;
@@ -1012,8 +1084,125 @@ src/scripts/chat-stop.sh mychat</code></pre>
     sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     window.k3ClearImage();
     if (logEl) {
-      logEl.innerHTML = '<div class="k3-msg k3-msg--bot">Clover AI Agent Mode is active (live Web/arXiv/Wikipedia search, Python execution, 3,584 resident Kimi K3 GPU MoE experts, and NCM). Ask a question, search for recent research, run calculations, or attach an image.</div>';
+      logEl.innerHTML = '<div class="k3-msg k3-msg--bot">Clover AI <strong>Multimodal &amp; Agent Mode</strong> is active:<br>&bull; <strong>Multimodal Vision (Image &amp; Video):</strong> Kimi K3 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> (225 &times; 7,168-d visual tokens) + <code>Qwen3-VL-8B-Instruct + HybridLink</code>.<br>&bull; <strong>Full 93-Layer Kimi K3 GPU Engine + NCM:</strong> All 93 Kimi K3 Trunks (69 KDA + 24 MLA) &amp; 92 MoE Expert Layers (3,312 resident experts across GPUs 0&ndash;5) + 11-level NCM.<br>&bull; <strong>Agent Tools:</strong> Live Web / arXiv / Wikipedia search (<code>&lt;search&gt;</code>) and Python execution (<code>&lt;python&gt;</code>).<br>Upload, paste (<code>Ctrl+V</code>), or drag &amp; drop any image/video, or click one of the <strong>Multimodal &amp; Agent Examples</strong> above.</div>';
     }
+  };
+
+  function buildSampleCanvasDataUrl(kind) {
+    var c = document.createElement('canvas');
+    c.width = 760;
+    c.height = 440;
+    var ctx = c.getContext('2d');
+    if (kind === 'clover_v35') {
+      ctx.fillStyle = '#f4f9f5';
+      ctx.fillRect(0, 0, 760, 440);
+      ctx.strokeStyle = '#0d6b5e';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(16, 16, 728, 408);
+      ctx.fillStyle = '#0f3d2e';
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillText('Clover v3.5 - Released!', 36, 54);
+      ctx.fillStyle = '#26332e';
+      ctx.font = '15px sans-serif';
+      ctx.fillText('Started from Fareed Khan kimi-k3-in-c CPU run -> stage-by-stage bottleneck optimization.', 36, 84);
+      ctx.fillStyle = '#0d6b5e';
+      ctx.fillRect(36, 106, 688, 36);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('Stage', 48, 129);
+      ctx.fillText('Original (kimi-k3-in-c CPU)', 235, 129);
+      ctx.fillText('Clover v3.5 (CPU Optimized)', 495, 129);
+      ctx.strokeStyle = '#bfd4cc';
+      ctx.strokeRect(36, 142, 688, 70);
+      ctx.fillStyle = '#14181d';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('Input processing (prefill)', 48, 182);
+      ctx.font = '16px sans-serif';
+      ctx.fillText('~25 seconds (for 5 input tokens)', 235, 182);
+      ctx.fillStyle = '#0d6b5e';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('~0.3 seconds per input token (1,000 tokens)', 495, 182);
+      ctx.strokeRect(36, 212, 688, 92);
+      ctx.fillStyle = '#14181d';
+      ctx.fillText('Output generation (decode)', 48, 255);
+      ctx.font = '16px sans-serif';
+      ctx.fillText('~5 minutes per output token', 235, 255);
+      ctx.fillStyle = '#0d6b5e';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('~3.1 - 3.5 seconds per output token (exact)', 495, 245);
+      ctx.fillText('~0.9 seconds per output token (DSpark)', 495, 275);
+      ctx.fillStyle = '#1c3b32';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('4 Stages: Stage 1 (Run baseline) -> Stage 2 (Measure) -> Stage 3 (Optimize) -> Stage 4 (Complete)', 36, 355);
+    } else if (kind === 'hospital_invoice') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 760, 440);
+      ctx.strokeStyle = '#1e3c78';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(20, 20, 720, 400);
+      ctx.fillStyle = '#142864';
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillText("ST MARY'S HOSPITAL - BRISTOL", 45, 62);
+      ctx.fillStyle = '#111111';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Invoice #7420   |   Date: 14 March 2026', 45, 102);
+      ctx.fillText('1. Pediatric Monitors (45 units) : 12 million pounds', 45, 165);
+      ctx.fillText('2. Operating Theatre Suites (4 units) : 6 million pounds', 45, 210);
+      ctx.fillStyle = '#0d6b5e';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('Total Project Cost: 18 million pounds', 45, 275);
+      ctx.fillStyle = '#111111';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Project Director: Dr Elena Vance (Duration: 3 years)', 45, 330);
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 760, 440);
+      ctx.strokeStyle = '#222222';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(20, 20, 720, 400);
+      ctx.fillStyle = '#111111';
+      ctx.font = 'bold 23px sans-serif';
+      ctx.fillText('LITHIUM-ION BATTERY CELL ARCHITECTURE', 45, 55);
+      ctx.fillStyle = '#dcebfa';
+      ctx.fillRect(45, 85, 200, 210);
+      ctx.fillStyle = '#143c82';
+      ctx.font = 'bold 19px sans-serif';
+      ctx.fillText('CATHODE (LiCoO2)', 58, 125);
+      ctx.fillStyle = '#fff5dc';
+      ctx.fillRect(265, 85, 210, 210);
+      ctx.fillStyle = '#8c5a00';
+      ctx.fillText('ELECTROLYTE +', 290, 125);
+      ctx.fillText('SEPARATOR', 290, 155);
+      ctx.fillStyle = '#e1f5e1';
+      ctx.fillRect(495, 85, 210, 210);
+      ctx.fillStyle = '#146428';
+      ctx.fillText('ANODE (Graphite)', 515, 125);
+      ctx.fillStyle = '#111111';
+      ctx.font = '17px sans-serif';
+      ctx.fillText('Charging: Li+ ions move Cathode -> Electrolyte -> Anode', 45, 335);
+      ctx.fillText('Discharging: Li+ ions move Anode -> Electrolyte -> Cathode', 45, 365);
+      ctx.fillStyle = '#961e1e';
+      ctx.fillText('Degradation: SEI layer growth on Anode + active material loss', 45, 395);
+    }
+    return c.toDataURL('image/png');
+  }
+
+  window.k3RunSampleMultimodal = function (kind) {
+    var durl = buildSampleCanvasDataUrl(kind);
+    var prompts = {
+      clover_v35: 'what is this',
+      hospital_invoice: 'What is shown in this invoice, what are the items and costs, and who directed the project?',
+      battery_diagram: 'Explain how this lithium-ion battery cell works during charging and discharging based on the diagram.'
+    };
+    attachDataUrl(durl, kind + '.png (MoonViT3d 7168-d + Qwen3-VL)');
+    if (inputEl) inputEl.value = prompts[kind] || 'what is this';
+    window.k3SendPrompt();
+  };
+
+  window.k3RunSampleAgentSearch = function () {
+    window.k3ClearImage();
+    if (inputEl) inputEl.value = 'can you find relevant research on recent AI development';
+    window.k3SendPrompt();
   };
 
   function renderAgentTrace(r) {

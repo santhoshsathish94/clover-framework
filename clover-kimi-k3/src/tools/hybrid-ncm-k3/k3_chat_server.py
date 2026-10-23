@@ -176,7 +176,7 @@ HTML_UI = """<!DOCTYPE html>
       <use class="clover-icon__leaf" href="#clover-leaf" transform="rotate(288 50 44)"/>
     </svg>
     Clover <span>AI</span>
-    <span class="agent-badge"><span class="agent-badge__dot"></span>Agent Mode &middot; K3 GPU Experts + Web Search + Python</span>
+    <span class="agent-badge"><span class="agent-badge__dot"></span>Multimodal &amp; Agent Mode &middot; MoonViT3d Vision + 93 K3 Trunks/Experts + Web Search + Python</span>
   </div>
   <div class="actions">
     <button type="button" class="btn" onclick="newSession()">New Session</button>
@@ -184,7 +184,7 @@ HTML_UI = """<!DOCTYPE html>
 </header>
 
 <div id="chat" aria-live="polite">
-  <div class="msg msg--bot">Clover AI Agent Mode is active (live Web/arXiv/Wikipedia search, Python execution, 3,584 resident Kimi K3 GPU MoE experts, and NCM). Ask a question, search for recent research, run calculations, or attach an image.</div>
+  <div class="msg msg--bot">Clover AI <strong>Multimodal &amp; Agent Mode</strong> is active (Kimi K3 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> 7,168-d visual tokens + <code>Qwen3-VL-8B-Instruct + HybridLink</code> + all 93 Kimi K3 Trunks &amp; 92 MoE Expert Layers + NCM + live Web/arXiv/Wikipedia search + Python execution). Ask a question, search for recent research, run calculations, or attach/paste an image or video.</div>
 </div>
 
 <div class="preview-bar" id="img-preview-bar" hidden>
@@ -196,16 +196,16 @@ HTML_UI = """<!DOCTYPE html>
 </div>
 
 <footer>
-  <input type="file" id="img-input" accept="image/*" hidden onchange="onImageSelected(event)">
-  <button type="button" class="btn" onclick="document.getElementById('img-input').click()" title="Upload an image">
+  <input type="file" id="img-input" accept="image/*,video/*" hidden onchange="onImageSelected(event)">
+  <button type="button" class="btn" onclick="document.getElementById('img-input').click()" title="Upload an image or video">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
       <circle cx="8.5" cy="8.5" r="1.5"></circle>
       <polyline points="21 15 16 10 5 21"></polyline>
     </svg>
-    Image
+    Image / Video
   </button>
-  <textarea id="prompt-in" rows="1" placeholder="Message Clover AI..."></textarea>
+  <textarea id="prompt-in" rows="1" placeholder="Ask a question, upload/paste an image or video, or search the web..."></textarea>
   <button type="button" class="btn btn--primary" id="send-btn" onclick="sendPrompt()">Send</button>
 </footer>
 

@@ -675,6 +675,23 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
   display: inline-flex; align-items: center; gap: 0.3rem;
   font-weight: 650; color: var(--accent);
 }
+.k3-mm-bar {
+  padding: 0.55rem 1.2rem; background: var(--bg); border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;
+  font-size: 0.81rem; color: var(--muted);
+}
+.k3-mm-bar__label {
+  font-weight: 650; color: var(--ink-2); margin-right: 0.2rem;
+}
+.k3-mm-chip {
+  background: var(--soft); color: var(--ink-2); border: 1px solid var(--line-2);
+  border-radius: 999px; padding: 0.26rem 0.68rem; font: inherit; font-size: 0.79rem;
+  font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.32rem;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+.k3-mm-chip:hover {
+  border-color: var(--accent-line); color: var(--accent); background: var(--accent-soft);
+}
 .k3-controls { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .k3-controls button, .k3-foot button, .k3-preview-bar button {
   background: var(--bg); color: var(--ink-2); border: 1px solid var(--line-2); border-radius: 8px;
