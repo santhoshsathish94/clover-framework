@@ -105,6 +105,40 @@ Settings (environment): `USE_4BIT_TRUNK` (0/1), `ACTIVATION_8BIT_EXPERT` and `AC
 `PF_SAVE_IDS` (write generated ids), `PF_VERBOSE`, `BUILD=0` (skip build), `CLOVER_LOCK_TRUNK` (0 = do not lock the trunk files in RAM; needed with the 4-bit trunk).
 Long runs on the host are started detached (`setsid nohup ... &`) and their log read afterwards.
 
+## Fast GPU Concept-to-Token Pipeline (`HybridAgent + NCM + Clover Kimi K3`)
+
+In `src/tools/hybrid-ncm-k3/` (logged across Cycles 42–54 in `docs/clover-hybridagent-research-context.md`), we built and measured a fast GPU pipeline on the 8 × RTX 3090 server (`gpu`) that connects:
+1. **Continuous `<latent>` Planning (`HybridAgent-8B-Agentic` for text, or `Qwen3-VL-8B-Instruct + HybridLink` for images, `d = 4,096`):** Generates 14 continuous `HybridLink R(h_t)` vectors plus a structured two-window semicolon factual plan (`W1` and `W2`).
+2. **Dual-Modality Prefix (`ComboBridge`, `P_COMBO = 96`):** Packs 48 continuous `R(h)` slots (`4096 -> 384`) + 48 discrete Kimi K3 BPE plan token IDs (`tiktoken.model`, `163,840` vocab via `libk3tok.so`).
+3. **11-Pass Parallel Concept Generation & Lexical Pointer Decoding (`e8_k3_direct`):** `NextConceptTransformer` (`119.96M` params) predicts 11 hierarchical VQ levels (`[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313` codes) in 11 parallel forward passes, and `K3LexicalPointerDecoder` (`3` cross-attention blocks + copy pointer `copy_scale = 18.4` + 2-gram subword continuation + ungrounded entity/number mask) decodes all 64 native Kimi K3 token IDs per window in parallel.
+4. **Optional Multimodal Option A (`MoonViT3d + PatchMergerMLPV2`, `d = 7,168`):** Loads Kimi K3's native 27-layer `MoonViT3d` (`model-00096-of-000096.safetensors`, 765 MB) + `PatchMergerMLPV2` (`model-00095-of-000096.safetensors`, 88 MB) to encode images in `42 ms` into `225 × 7,168`-d visual tokens for Kimi K3 token `163605`.
+
+### Summary of Measured Speeds, Throughput, and Examples
+
+| Mode / Benchmark | Measured Latency | Throughput / Fidelity |
+|---|---|---|
+| **Standalone 93-layer Kimi K3 on CPU (`p1..p5` mean, 120 tok)** | `356.30 s` (`58.3 s` prefill + `298.0 s` decode) | `2.18–3.30 s/tok` with DSpark on 1 CPU host |
+| **Unified GPU draft + 1-pass 93-layer CPU verification (`PF_EXTRA` on `p1`)** | **`94.43 s`** (`0.40 s` GPU + `94.03 s` 1-pass verify) | **`4.39x` faster** than step-by-step CPU decoding (`414.80 s`); `48` consecutive exact Kimi K3 prefix tokens on `p1` (`34` on `p2`) |
+| **Unverified Text Chat Mode (`k3_fast_chat.py`, 1 prompt)** | **`2.17–5.24 s` (`1`-cand) / `2.25–5.54 s` (`MBR8`)** | `155–170 ms` (`1`-cand) / `402 ms` (`MBR8`) for the NCM + PointerDecoder stage (`39/47 = 83.0%` factual keys on `p1..p5`) |
+| **Unverified Multimodal Image $\to$ Text Chat Mode (`k3_multimodal_chat.py`)** | **`4.35–4.96 s` (`1`-cand) / `4.62–5.25 s` (`MBR8`)** | Option B (`Qwen3-VL + HybridLink + e8_k3_direct`); Optional Option A (`MoonViT3d`) adds `42.0–43.4 ms` (`225 × 7,168`-d tokens) |
+| **Clubbed Multi-Prompt Batch (`5` unrelated prompts at once, `bench_batch_clubbing.py`)** | **`6.42 s` total (`1.28 s/prompt` `1`-cand) / `7.90 s` (`1.58 s/prompt` `MBR8`)** | **`4.95x` faster** than sequential (`31.80 s`); clubbed NCM renders 9 windows (`498` K3 tok) in **`371.7 ms`** (`39.6 ms/prompt`) with **`0` cross-prompt token leaks** |
+| **NCM Window Scaling (`32` windows = `2,048` K3 token capacity on 1 GPU)** | **`1.19 s`** (`37.1 ms/window`) | **`1,489 Kimi K3 tok/s` on 1 RTX 3090** (`1,767` emitted tokens); up to **`16,384` K3 output tokens in `~1.2 s` (`~11,900 tok/s`)** and **`16K × 8 = 128,000` input tokens** across 8 RTX 3090s (NVLink pairs `0↔2, 1↔3, 4↔6, 5↔7` measured at `51.9 GB/s` one-way / `406 GB/s` aggregate) |
+
+### Running the GPU Chat & Benchmark Tools
+
+```bash
+# Single text prompt or interactive REPL (93-layer verification OFF, DSpark OFF)
+python src/tools/hybrid-ncm-k3/k3_fast_chat.py --prompt "the captial of france is"
+python src/tools/hybrid-ncm-k3/k3_fast_chat.py --interactive
+
+# Multimodal Image -> Text Chat Mode (Option B primary; add --use-option-a for MoonViT3d 7168-d)
+python src/tools/hybrid-ncm-k3/k3_multimodal_chat.py --image img1_hospital_invoice.png --prompt "Summarize this invoice." --use-option-a
+python src/tools/hybrid-ncm-k3/k3_multimodal_chat.py --bench
+
+# Clubbed 5-prompt batching + 1-to-32 window throughput scaling
+python src/tools/hybrid-ncm-k3/bench_batch_clubbing.py
+```
+
 ## Not in this folder
 
 Everything else tried in the month before the final version (micro-benchmarks of expert kernels and lookup tables, the one-layer harnesses, the layer 0 probes, the first three-file

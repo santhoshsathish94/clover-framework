@@ -410,6 +410,138 @@ src/scripts/chat-stop.sh mychat</code></pre>
     </div>
   </section>
 
+  <section class="band" id="hybrid-ncm-k3">
+    <div class="wrap">
+      <h2>Fast GPU concept-to-token pipeline (<code>HybridAgent + NCM + Clover Kimi K3</code>)</h2>
+      <p>On the 8 &times; RTX 3090 server (24 GiB VRAM per card, 376 GiB RAM), we connected continuous
+        latent planning (<code>HybridAgent-8B-Agentic</code> for text and <code>Qwen3-VL-8B-Instruct + HybridLink</code>
+        for images, <code>d = 4,096</code>) with a parallel 11-level Next-Concept Model
+        (<code>NextConceptTransformer</code>, 119.96M parameters, <code>d = 384</code>) and a 3-layer pointer-generator
+        decoder (<code>K3LexicalPointerDecoder</code> + <code>K3-Native VQ-VAE</code>, 144.00M parameters) re-anchored
+        directly onto Kimi K3&rsquo;s native <strong>163,840-token</strong> <code>tiktoken.model</code> vocabulary and
+        <strong>7,168-dimensional</strong> embedding geometry (<code>e8_k3_direct</code>).</p>
+      <p>Instead of generating one token per forward pass, each 64-token Kimi K3 window is generated in
+        <strong>11 parallel coarse-to-fine VQ passes</strong> (<code>[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313</code>
+        concept codes) conditioned on a 96-slot dual prefix (<code>48</code> continuous <code>HybridLink R(h)</code>
+        vectors + <code>48</code> discrete Kimi K3 BPE plan tokens). The output can either be returned immediately in
+        <strong>Unverified Fast Chat Mode</strong> (<strong>2.17 to 5.56 s</strong> end-to-end from raw prompt, where the
+        NCM + pointer-decoder stage itself takes <strong>155 ms</strong> single-candidate or <strong>402 ms</strong>
+        for 8-candidate <code>MBR8</code>) or passed as <code>PF_EXTRA</code> into the 93-layer C engine for a
+        single-pass verification.</p>
+
+      <h3>Measured stage-by-stage speed and 8-GPU throughput</h3>
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Measured on the 8 &times; RTX 3090 server (<code>gpu</code>) and Ryzen 9 7950X3D workstation (<code>k3</code>). CUDA-synchronized timings.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Pipeline mode / stage</th>
+              <th scope="col">Latency</th>
+              <th scope="col">Throughput / notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Standalone 93-layer Kimi K3 on CPU (<code>p1..p5</code> mean, 120 tokens)</th>
+              <td><strong>356.30 s</strong> (58.3 s prefill + 298.0 s decode)</td>
+              <td>2.18 to 3.30 s per token with DSpark speculative decoding on 1 CPU host.</td>
+            </tr>
+            <tr>
+              <th scope="row">Unified GPU pipeline + 1-pass 93-layer CPU verification (<code>PF_EXTRA</code> on <code>p1</code>)</th>
+              <td><strong>94.43 s</strong> (0.40 s GPU draft + 94.03 s 1-pass 93-layer verify)</td>
+              <td><strong>4.39&times; faster</strong> than step-by-step CPU decoding on <code>p1</code> (414.80 s); matches the first <strong>48 consecutive Kimi K3 token ids</strong> on <code>p1</code> and 34 on <code>p2</code>.</td>
+            </tr>
+            <tr>
+              <th scope="row">Unverified Fast Text Chat Mode (<code>k3_fast_chat.py</code>, 1 prompt)</th>
+              <td><strong>2.17 to 5.24 s</strong> (1-cand) / <strong>2.25 to 5.54 s</strong> (<code>MBR8</code>)</td>
+              <td>2.02 to 5.07 s for <code>HybridAgent &lt;latent&gt;</code> (14 steps) + <code>W1/W2</code> plan on <code>cuda:1</code>, plus <strong>155 to 170 ms</strong> (1-cand) / <strong>402 ms</strong> (<code>MBR8</code>) for NCM + PointerDecoder on <code>cuda:0</code>.</td>
+            </tr>
+            <tr>
+              <th scope="row">Unverified Multimodal Image &rarr; Text Chat Mode (<code>k3_multimodal_chat.py</code>)</th>
+              <td><strong>4.35 to 4.96 s</strong> (1-cand) / <strong>4.62 to 5.25 s</strong> (<code>MBR8</code>)</td>
+              <td><strong>Option B (Primary):</strong> <code>Qwen3-VL-8B-Instruct + HybridLink</code> (0.9878 embedding cosine and 0.9453 top-layer hidden cosine with <code>HybridAgent-8B</code>). <strong>Option A (Optional):</strong> Kimi K3&rsquo;s 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> adds <strong>42.0 to 43.4 ms</strong> and emits <code>225 &times; 7,168</code>-d visual tokens for Kimi K3 token <code>163605</code>.</td>
+            </tr>
+            <tr>
+              <th scope="row">Clubbing 5 unrelated prompts in 1 batch (<code>bench_batch_clubbing.py</code>)</th>
+              <td><strong>6.42 s total</strong> (1-cand, <strong>1.28 s/prompt</strong>) / <strong>7.90 s total</strong> (<code>MBR8</code>, <strong>1.58 s/prompt</strong>)</td>
+              <td><strong>4.95&times; faster</strong> than running 5 prompts sequentially (31.80 s). Clubbed NCM stage renders all 9 windows (498 Kimi K3 tokens) in <strong>371.7 ms</strong> (39.6 ms/prompt) with <strong>0 cross-prompt token leaks</strong>.</td>
+            </tr>
+            <tr>
+              <th scope="row">NCM + PointerDecoder window scaling on 1 GPU (32 windows = 2,048 K3 tokens)</th>
+              <td><strong>1.19 s</strong> (37.1 ms per 64-token window)</td>
+              <td><strong>1,489 Kimi K3 tokens/s</strong> on 1 RTX 3090 (1,767 emitted tokens in 1,186.9 ms). Across all 8 RTX 3090s (<code>16K &times; 8 = 128,000</code> input tokens capacity; NVLink pairs <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> measured at <strong>51.9 GB/s</strong> one-way / 406 GB/s aggregate), 8 cards generate up to <strong>16,384 Kimi K3 tokens in ~1.2 s</strong> (~11,900 tok/s aggregate).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Examples of prompts, timings, and verbatim outputs (163,840-vocab Kimi K3 tokens, 93-layer verification OFF)</h3>
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Verbatim outputs from <code>e8_k3_direct</code> on <code>gpu</code> (Cycles 52&ndash;54).</caption>
+          <thead>
+            <tr>
+              <th scope="col">Modality &amp; prompt</th>
+              <th scope="col">Timing (1-cand / <code>MBR8</code>)</th>
+              <th scope="col">Verbatim Kimi K3 output</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><strong>Text (short fact):</strong> <code>"the captial of france is"</code></th>
+              <td><strong>2.17 s / 2.25 s</strong><br>(NCM: 155.5 ms / 231.4 ms)</td>
+              <td><em>&ldquo;The capital of France is Paris. Summary: The capital of France is Paris.&rdquo;</em> (16 K3 tokens; stops at <code>K3_EOS</code> with zero filler)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Text (news report, <code>p1</code>):</strong> Harbourside Council vote (7 to 2, 2.4M pounds, Mill Road, Priya Raman, 14 weeks, Tom Eliot, 40 spaces on Dock Street)</th>
+              <td><strong>5.31 s / 5.57 s</strong><br>(NCM: 172.3 ms / 429.2 ms)</td>
+              <td><em>&ldquo;The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks to complete. The council promised 40 temporary parking spaces on Dock Street... The vote was held on Tuesday, with the majority... supporting the cycle lane project.&rdquo;</em> (84 K3 tokens)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Text (incident report, <code>p4</code>):</strong> Payments DB primary failed 02:14 UTC on 3 June, replica B promoted 02:31, 1,820 delayed, 14 failed, 100% disk, 80% alert, 500 GB to 1 TB</th>
+              <td><strong>5.26 s / 5.54 s</strong><br>(NCM: 155.1 ms / 441.9 ms)</td>
+              <td><em>&ldquo;The payments database primary failed at 02:14 UTC on 3 June, and the replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed and 14 failed... The cause was a full disk on the primary at 100 percent usage from write-ahead logs. The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent future issues...&rdquo;</em> (111 K3 tokens; 10/10 facts preserved)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Image OCR (<code>img1_hospital_invoice.png</code>):</strong> Hospital invoice (#7420, 14 March 2026, 45 pediatric monitors 12M, 4 theatre suites 6M, total 18M, Dr Elena Vance, 3 years)</th>
+              <td><strong>4.35 s / 4.62 s</strong> (Option B)<br><strong>4.27 s / 4.55 s</strong> (+Option A <code>MoonViT3d</code> 42.9 ms)</td>
+              <td><em>&ldquo;St Mary's Hospital in Bristol received an invoice for 18 million pounds on March 14, 2026. 12 monitors cost 12 million pounds for 45 units, and operating theatre suites totaled 6 million pounds for 4 units. Dr Elena Vance directed the 3-year project, and the invoice details the hospital equipment purchases. Summary: St Mary's Hospital spent 18 million pounds on new equipment under Dr Elena Vance's 3-year project.&rdquo;</em> (92 K3 tokens)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Image Bar Chart (<code>img2_incident_chart.png</code>):</strong> Region B outage bar chart (02:14 UTC, 02:31 UTC, bars for 1,820 delayed, 14 failed, 500GB&rarr;1TB, 80% alert)</th>
+              <td><strong>4.96 s / 5.25 s</strong> (Option B)<br><strong>4.99 s / 5.29 s</strong> (+Option A <code>MoonViT3d</code> 43.4 ms)</td>
+              <td><em>&ldquo;The Region B database incident occurred on 3 June at 02:14 UTC when the primary failed, and the replica was promoted at 02:31 UTC. During the failure, 1,820 transactions were delayed, 14 transactions failed, and an alert triggered at 80% disk usage. The root cause was the primary disk reaching 100% full from write-ahead logs, so disk space was expanded from 500 GB to 1 TB. Summary: The Region B database failed at 02:14 UTC due to a full disk and recovered at 02:14 UTC.&rdquo;</em> (120 K3 tokens)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Image Science Diagram (<code>img3_battery_diagram.png</code>):</strong> Labeled Li-ion cell diagram (Cathode LiCoO2, Electrolyte, Separator, Anode Graphite, SEI layer)</th>
+              <td><strong>4.52 s / 4.80 s</strong> (Option B)<br><strong>4.55 s / 4.84 s</strong> (+Option A <code>MoonViT3d</code> 42.0 ms)</td>
+              <td><em>&ldquo;During charging, lithium ions move from the cathode to the anode through the electrolyte while electrons flow externally via the circuit. The cathode loses lithium ions while the anode gains them, and the separator prevents short circuits. During discharging, lithium ions return from the anode to the cathode through the electrolyte while electrons flow externally to power devices. over repeated cycles, SEI layer growth and active material loss cause capacity fade. Summary: Lithium-ion batteries transfer ions between electrodes and degrade from SEI layer growth and active material&rdquo;</em> (109 K3 tokens)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <dl class="kv kv--wide">
+        <div>
+          <dt>Why DSpark was removed from the GPU pipeline</dt>
+          <dd>Ablating the 5-layer Dense MLA <code>K3DSparkVerifier</code> (7.12 GB, 8.95 s load) against plain
+            adjacent-token deduplication across <code>p1..p5</code> produced <strong>0 differing tokens on 4 of 5 prompts</strong>
+            (and 1 token on <code>p2</code>), with identical factual key recall (39/47 = 83.0%) and identical
+            48-token prefix match to the 93-layer engine. Removing it saved 7.12 GB of VRAM and 8.95 s of setup.</dd>
+        </div>
+        <div>
+          <dt>What unverified mode does not cover</dt>
+          <dd>Because <code>K3LexicalPointerDecoder</code> selects all 64 tokens per window in parallel (non-autoregressively)
+            on top of a 313-code VQ bottleneck, rare domain words that were not in the VQ-VAE adaptation mix can still
+            collide in VQ space if their base decoder logit exceeds the copy pointer boost (<code>copy_scale = 18.4</code>),
+            and symbolic math equations (<code>=</code>, <code>&times;</code>) can drop operators. When 100% 93-layer
+            Kimi K3 fidelity is required, passing the generated token ids as <code>PF_EXTRA</code> into <code>whole-model</code>
+            verifies the entire sequence in one batched pass.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
   <section class="band" id="next">
     <div class="wrap">
       <h2>The next experiment</h2>
@@ -524,7 +656,9 @@ src/scripts/chat-stop.sh mychat</code></pre>
         <div>
           <dt>Every measurement, and every failure</dt>
           <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-kimi-k3-cpu-context.md">docs/clover-kimi-k3-cpu-context.md</a>,
-            the dated log, with what each result does not establish.</dd>
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-kimi-k3-gpu-context.md">docs/clover-kimi-k3-gpu-context.md</a>, and
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/ncm-merge-latent-fluency/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
+            the dated logs, with what each result does not establish.</dd>
         </div>
         <div>
           <dt>The first version</dt>

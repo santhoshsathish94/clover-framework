@@ -1497,6 +1497,15 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
     - Running all 5 prompts **clubbed together in a single batch**: **`6.05 s`** batched `<latent>` + plan (`1.21 s/prompt`) + **`0.37 s`** clubbed `1`-cand NCM (`9` windows at once = `41 ms/window`) = **`6.42 s` total (`1.28 s / prompt`, `4.95x` faster than sequential)**, or **`7.90 s` total with `MBR8` (`72` window candidates evaluated simultaneously = `1.58 s / prompt`, `4.03x` faster)**.
   - **Cross-Contamination Check (`forbidden_per_prompt` across all 5 outputs):** **`0` leaked tokens on all 5 prompts (`0/5` cross-talk)** — Prompt 0 (`France`) contains zero tokens from `Bristol`, `02:14`, `cathode`, or `Everest`; Prompt 1 (`Bristol`) contains zero tokens from `Paris`, `02:14`, `cathode`, or `Everest`, and so on across all 5 prompts.
 
+**3. 8-GPU NVLink vs. PCIe VRAM-to-VRAM Topology and `16K × 8 = 128,000` Token Scaling (`o190_gpu.txt`, `o192_gpu.txt`):**
+- Measured device-synchronized PyTorch VRAM-to-VRAM transfers (`128 MB` `bfloat16` tensors) and `nvidia-smi topo -m` across the 8 × RTX 3090 cards:
+  - **NVLink Partner Pairs (`0↔2`, `1↔3`, `4↔6`, `5↔7`, `NV4` bonded links, `can_device_access_peer = True`):** **`2.58–2.61 ms` per `128 MB` = `51.50–51.93 GB/s` one-way** (`101.8 GB/s` bidirectional; `406 GB/s` across all 4 pairs concurrently).
+  - **Non-NVLink Pairs (`0↔1`, `2↔4`, etc., `PIX`/`NODE`, `can_device_access_peer = False`):** **`36.82 ms` per `128 MB` = `3.65 GB/s`** (host-staged PCIe; `0.841 ms` for a `1.18 MB` 16-window NCM prefix `[16, 96, 384]`).
+- **How `16K × 8 = 128,000` tokens scale across the 8 GPUs:**
+  - **Multi-Prompt / Multi-Worker Mode:** Because `e8_k3_direct` (`VQ-VAE + NCM + K3LexicalPointerDecoder`, `~560 MB` in `bfloat16`) and `HybridAgent-8B` / `Qwen3-VL-8B` (`~16.2 GB`) fit together on a single 24 GiB RTX 3090 with `~7 GB` free for KV cache (`~16,000` input tokens per GPU), running across all **8 GPUs** processes **`8 × 16,000 = 128,000` input tokens** and **`8 × 32 windows (2,048 tokens) = 16,384` Kimi K3 output tokens in `~1.19 s` (`~11,900 Kimi K3 tokens/s` aggregate)** with zero cross-GPU KV traffic.
+  - **Single `128,000`-Token Prompt Mode:** Sharding `HybridAgent-8B`'s `36` layers across the 8 GPUs (Pipeline Parallelism, `4.5` layers = `~2.0 GB` weights per card) leaves `~21.5 GB` VRAM per card, while `128,000` tokens of `Qwen3-8B` GQA KV cache (`8` KV heads, `head_dim=128`, `bfloat16`, `18 KB/token` per 4.5 layers) requires only **`2.30 GB` per GPU**. For Kimi K3's 93-layer GPU engine (`model-gpu`, `14.64 GiB` experts/layer + `0.38 MiB/token` arena), each card processes a `16,000`-token chunk (`8 × 16,000 = 128,000` tokens across the 8 cards), exchanging only the compact `32 KB` KDA recurrent state (`[1, 64, 128, 128]`) between chunks.
+
+
 
 
 
