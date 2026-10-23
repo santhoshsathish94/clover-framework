@@ -156,6 +156,9 @@ python src/tools/hybrid-ncm-k3/bench_batch_clubbing.py
 
 # Full empirical tok/s proof (8 single prompts + 8-prompt clubbed batch + 8-GPU DDP torchrun)
 python src/tools/hybrid-ncm-k3/bench_throughput_proof.py
+
+# Persistent GPU Chat Server (Web UI at http://127.0.0.1:8765/ + OpenAI /v1/chat/completions)
+python src/tools/hybrid-ncm-k3/k3_chat_server.py --port 8765
 ```
 
 ## Not in this folder

@@ -185,10 +185,10 @@ class K3FastChatEngine:
             next_logits = out.logits[:, -1, :]
 
         raw = "W1: " + self.ha_tok.decode(gen_ids, skip_special_tokens=True).strip()
-        raw = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking).*$", "", raw).strip()
+        raw = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking|The user's).*$", "", raw).strip()
         w1, w2 = "", ""
         for ln in raw.splitlines():
-            ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need).*$", "", ln).strip()
+            ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user's).*$", "", ln).strip()
             ln = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", ln, flags=re.IGNORECASE).strip()
             if ln.upper().startswith("W1:"):
                 w1 = ln[3:].strip()

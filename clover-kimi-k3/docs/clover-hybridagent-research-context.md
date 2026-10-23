@@ -1549,6 +1549,14 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
   - **Turn 3 (`5.33 s` / `5.61 s`):** User: *"Now imagine St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday led by Dr Elena Vance, adding 45 beds and 4 operating theatres. Summarize what happened."* $\to$ Reply: *"St Mary's Hospital in Bristol opened a new children's on wing on Friday. The wing... cost 18 million pounds, it adds 45 beds and 4 operating theatres. The project was led by Dr Elena Vance... Summary: St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday, adding 45 beds and 4 operating theatres."*
   - **Turn 4 (`5.38 s` / `5.64 s`, reference `"that hospital project"`):** User: *"Who led that hospital project, how many beds and operating theatres did it add, and in which city was it opened?"* $\to$ Reply: *"...Dr Elena Vance led the project... 45 beds were added, 4 operating theatres were added, and the hospital is in Bristol... Dr Elena Vance led the project, adding 45 beds and... 4 operating theatres at St Mary's Hospital... in Bristol."*
 
+**5. Local VS Code Integration (`k3_chat_server.py` + `k3chat.ps1` + VS Code Integrated Browser & Tasks, `o198_gpu.txt`):**
+- Built and launched `k3_chat_server.py` (`src/tools/hybrid-ncm-k3/k3_chat_server.py`) as a persistent daemon on `gpu` (`127.0.0.1:8765`, keeping `K3FastChatEngine` hot on the `cuda:0 <-> cuda:2` NVLink pair so there is **zero `13.8 s` model-reload wait** between prompts) forwarded to local Windows (`http://127.0.0.1:8765`) via an automatic SSH tunnel in `k3chat.ps1`.
+- Integrated into local VS Code in three ways:
+  1. **VS Code Integrated Browser Web UI (`http://127.0.0.1:8765/`):** Interactive dark-mode chat panel inside VS Code with multi-turn context memory toggle, `MBR8` / `1-Candidate` / `Clubbed Multi-Prompt` selector, live `tok/s` + latency pills, and `W1/W2` plan inspection.
+  2. **VS Code Terminal Profile & Tasks (`personal.code-workspace` & `.vscode/tasks.json`):** Added the `"Clover K3 Interactive Chat"` terminal profile (`k3chat.ps1` REPL) and tasks (`Clover K3: Interactive Chat (Terminal REPL)`, `Clover K3: Send Selected Text to Chat`, `Clover K3: Reset Conversation Memory`).
+  3. **OpenAI-Compatible Local Endpoint (`http://127.0.0.1:8765/v1/chat/completions` & `/v1/models`):** Exposes model `clover-kimi-k3-ncm` (streaming SSE and non-streaming JSON) for any VS Code AI extension.
+
+
 
 
 
