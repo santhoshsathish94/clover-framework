@@ -152,7 +152,10 @@ class K3MultimodalChatEngine:
         ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
         _, self.tk, self.vqvae, self.net, src = load_k3_native_models(self.dev, vq_ckpt, ncm_ckpt)
 
-        e8_sd = torch.load(os.path.join(out_dir, "e8_k3_direct.pt"), map_location="cpu", weights_only=True)
+        mm_ckpt = os.path.join(out_dir, "e9_k3_multimodal.pt")
+        if not os.path.exists(mm_ckpt):
+            mm_ckpt = os.path.join(out_dir, "e8_k3_direct.pt")
+        e8_sd = torch.load(mm_ckpt, map_location="cpu", weights_only=True)
         self.vqvae.load_state_dict(e8_sd["vqvae"])
         self.net.load_state_dict(e8_sd["net"])
         self.vqvae.eval(); self.net.eval()

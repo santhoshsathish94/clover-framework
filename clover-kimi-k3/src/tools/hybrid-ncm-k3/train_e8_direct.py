@@ -108,6 +108,34 @@ DOMAIN_PLAN_TARGET_PAIRS = [
         "Degradation occurs due to side reactions forming an SEI layer, mechanical stress from volume changes, and loss of active cathode material; repeated cycles, high temperatures, and overcharging accelerate degradation; Summary: Lithium-ion batteries work by moving ions between cathode and anode and degrade from side reactions and structural wear",
         "Degradation occurs due to side reactions forming an SEI layer, mechanical stress from volume changes, and loss of active cathode material over repeated cycles. High temperatures and overcharging also accelerate battery wear. Summary: Lithium-ion batteries work by shuttling lithium ions between the cathode and anode and degrade over time from side reactions and structural stress."
     ),
+    (
+        "The tallest mountain in the world is Mount Everest; it is located in the Himalayas, on the border between Nepal and China (Tibet Autonomous Region); its elevation is 8,848 meters (29,029 feet)",
+        "The tallest mountain in the world is Mount Everest, which is located in the Himalayas on the border between Nepal and China in the Tibet Autonomous Region. Its official elevation is 8,848 meters, or 29,029 feet."
+    ),
+    (
+        "Mount Everest is part of the Himalayan mountain range; it was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay; the measurement of 8,848 meters is the most recent official figure from 2020",
+        "Mount Everest is part of the Himalayan mountain range and was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay. The measurement of 8,848 meters is the official figure confirmed in 2020."
+    ),
+    (
+        "The capital of France is Paris. Summary: The capital of France is Paris.",
+        "The capital of France is Paris. Summary: The capital of France is Paris."
+    ),
+    (
+        "The sky appears blue due to Rayleigh scattering, where shorter wavelengths of sunlight (blue and violet) are scattered more by the Earth's atmosphere than longer wavelengths (red, orange, yellow). This scattering is inversely proportional to the fourth power of the wavelength, making blue light scatter much more effectively.",
+        "The sky appears blue due to Rayleigh scattering, where shorter blue and violet wavelengths of sunlight are scattered more by the Earth's atmosphere than longer red, orange, and yellow wavelengths. This scattering is inversely proportional to the fourth power of the wavelength."
+    ),
+    (
+        "Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, and some violet light is absorbed by the upper atmosphere. Thus, the sky appears predominantly blue.",
+        "Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, while some violet light is absorbed by the upper atmosphere. Thus, the daytime sky appears predominantly blue."
+    ),
+    (
+        "On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft. The crew (Jim Lovell, Fred Haise, and Jack Swigert) had to abort their lunar landing mission. The explosion caused a loss of oxygen and electrical power.",
+        "On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft and forcing the crew (Jim Lovell, Fred Haise, and Jack Swigert) to abort their lunar landing mission after losing oxygen and electrical power."
+    ),
+    (
+        "The crew used the Lunar Module (LM) as a lifeboat, conserving resources. They faced challenges like carbon dioxide buildup, which was solved by adapting the LM's filters. The mission shifted to safely returning to Earth.",
+        "The crew used the Lunar Module (LM) as a lifeboat while conserving power and water. They overcame carbon dioxide buildup by adapting the LM's filters and safely returned to Earth."
+    ),
 ]
 
 

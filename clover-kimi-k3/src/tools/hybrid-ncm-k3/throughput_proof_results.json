@@ -1,0 +1,222 @@
+{
+  "hardware": "8 x NVIDIA GeForce RTX 3090 (24 GiB each), 2 x Xeon 6248R, 376 GiB RAM (NVLink pairs 0<->2, 1<->3, 4<->6, 5<->7 @ 51.9 GB/s)",
+  "single_prompt_runs": [
+    {
+      "id": "p1_harbourside_news",
+      "prompt": "Write a news report of about 110 words using only these facts. Use plain sentences, no bullet points and no headings.\nFacts: The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds for a cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks. Shop owners on Mill Road, led by Tom Eliot, asked for the vote to be delayed because of parking. The council promised 40 temporary parking spaces on Dock Street.\nAfter the report, on a new line starting with \"Summary:\", give a one-sentence summary of your report.",
+      "plans": [
+        "The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds for a cycle lane along Mill Road; Councillor Priya Raman proposed the plan; work starts in March and should take 14 weeks; shop owners on Mill Road, led by Tom Eliot, asked for the vote to be delayed because of parking",
+        "the council promised 40 temporary parking spaces on Dock Street.; The vote was held on Tuesday, with the majority supporting the cycle lane project; the"
+      ],
+      "n_k3_tokens_1cand": 83,
+      "n_k3_tokens_mbr8": 84,
+      "plan_lat_ms": 5131.7,
+      "ncm_1cand_ms": 170.5,
+      "ncm_mbr8_ms": 437.4,
+      "total_1cand_ms": 5302.1,
+      "total_mbr8_ms": 5569.1,
+      "e2e_tok_per_s_1cand": 15.65,
+      "e2e_tok_per_s_mbr8": 15.08,
+      "ncm_stage_tok_per_s_1cand": 486.8,
+      "ncm_stage_tok_per_s_mbr8": 192.04,
+      "output_1cand": "The Harbourside Council voted 7 to 2. Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks to complete. The council promised 40 temporary parking spaces on Dock Street. The vote held was held on Tuesday, the majority supporting the cycle lane, project.",
+      "output_mbr8": "The Harbourside Council voted 7 to 2. Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks to complete. The council promised 40 temporary parking spaces on Dock Street. The vote was held on Tuesday, with the majority supporting the cycle lane, the project."
+    },
+    {
+      "id": "p2_apollo13",
+      "prompt": "In about 100 words, explain what happened on the Apollo 13 mission and how the crew got home. Use plain sentences, no bullet points and no headings.\nAfter the explanation, on a new line starting with \"Summary:\", give a one-sentence summary of your answer.",
+      "plans": [
+        "On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft. The crew (Jim Lovell, Fred Haise, and Jack Swigert) had to abort their lunar landing mission. The explosion caused a loss of oxygen and electrical power.",
+        "The crew used the Lunar Module (LM) as a lifeboat, conserving resources. They faced challenges like carbon dioxide buildup, which was solved by adapting the LM's filters. The mission shifted to safely returning to Earth."
+      ],
+      "n_k3_tokens_1cand": 91,
+      "n_k3_tokens_mbr8": 91,
+      "plan_lat_ms": 5073.2,
+      "ncm_1cand_ms": 157.3,
+      "ncm_mbr8_ms": 437.6,
+      "total_1cand_ms": 5230.5,
+      "total_mbr8_ms": 5510.8,
+      "e2e_tok_per_s_1cand": 17.4,
+      "e2e_tok_per_s_mbr8": 16.51,
+      "ncm_stage_tok_per_s_1cand": 578.51,
+      "ncm_stage_tok_per_s_mbr8": 207.95,
+      "output_1cand": "On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft and forcing the crew (Jim Lovell, Fred Haise, and Jack Swigert) to abort their lunar landing mission after losing oxygen and electrical power. The crew used the Lunar Module (LM) as a lifeboat while conserving power and water. They overcame carbon dioxide buildup by adapting the LM's filters and safely returned to Earth.",
+      "output_mbr8": "On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft and forcing the crew (Jim Lovell, Fred Haise, and Jack Swigert) to abort their lunar landing mission after losing oxygen and electrical power. The crew used the Lunar Module (LM) as a lifeboat while conserving power and water. They overcame carbon dioxide buildup by adapting the LM's filters and safely returned to Earth."
+    },
+    {
+      "id": "p3_rayleigh_sky",
+      "prompt": "In about 100 words, explain why the sky is blue and why sunsets are red. Use plain sentences, no bullet points and no headings.\nAfter the explanation, on a new line starting with \"Summary:\", give a one-sentence summary of your answer.",
+      "plans": [
+        "The sky appears blue due to Rayleigh scattering, where shorter wavelengths of sunlight (blue and violet) are scattered more by the Earth's atmosphere than longer wavelengths (red, orange, yellow). This scattering is inversely proportional to the fourth power of the wavelength, making blue light scatter much more effectively.",
+        "Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, and some violet light is absorbed by the upper atmosphere. Thus, the sky appears predominantly blue."
+      ],
+      "n_k3_tokens_1cand": 91,
+      "n_k3_tokens_mbr8": 91,
+      "plan_lat_ms": 5082.1,
+      "ncm_1cand_ms": 156.2,
+      "ncm_mbr8_ms": 436.3,
+      "total_1cand_ms": 5238.3,
+      "total_mbr8_ms": 5518.4,
+      "e2e_tok_per_s_1cand": 17.37,
+      "e2e_tok_per_s_mbr8": 16.49,
+      "ncm_stage_tok_per_s_1cand": 582.59,
+      "ncm_stage_tok_per_s_mbr8": 208.57,
+      "output_1cand": "The sky appears blue due to Rayleigh scattering, where shorter blue and violet wavelengths of sunlight are scattered more by the Earth's atmosphere than longer red, orange, and yellow wavelengths. This scattering is inversely proportional to the fourth power of the wavelength. Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, while some violet light is absorbed by the upper atmosphere. Thus, the daytime sky appears predominantly blue.",
+      "output_mbr8": "The sky appears blue due to Rayleigh scattering, where shorter blue and violet wavelengths of sunlight are scattered more by the Earth's atmosphere than longer red, orange, and yellow wavelengths. This scattering is inversely proportional to the fourth power of the wavelength. Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, while some violet light is absorbed by the upper atmosphere. Thus, the daytime sky appears predominantly blue."
+    },
+    {
+      "id": "p4_payments_db",
+      "prompt": "Write an incident report of about 110 words using only these facts. Use plain sentences, no bullet points and no headings.\nFacts: The payments database primary failed at 02:14 UTC on 3 June. The replica in region B was promoted at 02:31. 1,820 transactions were delayed and 14 failed. The cause was a full disk on the primary, 100 percent used by write-ahead logs. The team added disk alerts at 80 percent and expanded the volume from 500 GB to 1 TB.\nAfter the report, on a new line starting with \"Summary:\", give a one-sentence summary of your report.",
+      "plans": [
+        "The payments database primary failed at 02:14 UTC on 3 June; the replica in region B was promoted at 02:31 UTC; 1,820 transactions were delayed and 14 failed",
+        "the cause was a full disk on the primary, 100 percent used by write-ahead logs; The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent future issues; the incident caused significant transaction delays and"
+      ],
+      "n_k3_tokens_1cand": 115,
+      "n_k3_tokens_mbr8": 115,
+      "plan_lat_ms": 5083.7,
+      "ncm_1cand_ms": 156.6,
+      "ncm_mbr8_ms": 450.6,
+      "total_1cand_ms": 5240.3,
+      "total_mbr8_ms": 5534.3,
+      "e2e_tok_per_s_1cand": 21.95,
+      "e2e_tok_per_s_mbr8": 20.78,
+      "ncm_stage_tok_per_s_1cand": 734.36,
+      "ncm_stage_tok_per_s_mbr8": 255.22,
+      "output_1cand": "The payments database primary failed at 02:14 UTC on 3 June, and the replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed and 14 failed because the failed of 14 transactions failed. The cause was a full disk on the primary at 100 percent usage from write-ahead logs. The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent issues because the full disk caused a payments database failover and 100 failed transactions.",
+      "output_mbr8": "The payments database primary failed at 02:14 UTC on 3 June, and the replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed and 14 failed because the transactions failed and 14 failed. The cause was a full disk on the primary at 100 percent usage from write-ahead logs. The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent future issues, the disk caused a payments database failover and 100 failed transactions."
+    },
+    {
+      "id": "p6_bristol_hospital",
+      "prompt": "Write a news report of about 90 words using these facts: St Mary's Hospital opened a new 18 million pound children's wing on Friday in Bristol. Dr Elena Vance led the 3-year project, which adds 45 beds and 4 operating theatres. Give a one-sentence Summary at the end.",
+      "plans": [
+        "St Mary's Hospital in Bristol opened a new children's wing on Friday; the wing cost 18 million pounds; it adds 45 beds and 4 operating theatres; the project was led by Dr Elena Vance over 3 years.",
+        "The new wing enhances pediatric care at the hospital; the opening marks a significant investment in children's healthcare in Bristol; Summary: St Mary's Hospital opens new 18 million pound children's wing with 45 beds and 4 theatres led by Dr Elena Vance"
+      ],
+      "n_k3_tokens_1cand": 65,
+      "n_k3_tokens_mbr8": 97,
+      "plan_lat_ms": 5080.0,
+      "ncm_1cand_ms": 153.4,
+      "ncm_mbr8_ms": 436.4,
+      "total_1cand_ms": 5233.4,
+      "total_mbr8_ms": 5516.4,
+      "e2e_tok_per_s_1cand": 12.42,
+      "e2e_tok_per_s_mbr8": 17.58,
+      "ncm_stage_tok_per_s_1cand": 423.73,
+      "ncm_stage_tok_per_s_mbr8": 222.27,
+      "output_1cand": "St Mary's Hospital in Bristol opened a new children's new wing children's on Friday. The wing cost 18 million pounds, it adds 45 beds and 4 operating theatres. The project was led by Dr Elena Vance. The new wing enhances care healthcare at The hospital. The opening opened marks a significant investment in healthcare ministry Bristol",
+      "output_mbr8": "St Mary's Hospital in Bristol opened a new children's on wing on Friday. The wing cost 18 million pounds; it adds 45 beds and 4 operating theatres. The project was led the by Dr Elena Vance. The new wing children's enhances pediatric care at the hospital. The opening marks a significant investment in. healthcare Bristol. Summary: St Mary's Hospital opened a new 18 million pound children's wing in Bristol with 45 beds and 4 theatres, led by Dr Elena V."
+    },
+    {
+      "id": "p7_lithium_battery",
+      "prompt": "Explain in about 90 words how a lithium-ion battery works during charging and discharging, and why it degrades over time. End with a one-sentence Summary.",
+      "plans": [
+        "Lithium-ion batteries use lithium ions moving between cathode and anode; during charging, ions move from cathode to anode through electrolyte; during discharging, ions move from anode to cathode; this movement creates electrical current",
+        "degradation occurs due to side reactions forming resistive layers and material loss over cycles.; Charging: Lithium ions are forced from the cathode (e.g., lithium cobalt oxide) through the electrolyte to the anode (graphite), storing energy. Discharging: Ions flow back"
+      ],
+      "n_k3_tokens_1cand": 115,
+      "n_k3_tokens_mbr8": 116,
+      "plan_lat_ms": 5094.4,
+      "ncm_1cand_ms": 154.8,
+      "ncm_mbr8_ms": 448.5,
+      "total_1cand_ms": 5249.3,
+      "total_mbr8_ms": 5542.9,
+      "e2e_tok_per_s_1cand": 21.91,
+      "e2e_tok_per_s_mbr8": 20.93,
+      "ncm_stage_tok_per_s_1cand": 742.89,
+      "ncm_stage_tok_per_s_mbr8": 258.64,
+      "output_1cand": "Lithium-ion batteries use lithium batteries ions between moving between the cathode and the anode. During charging, lithium ions move from the cathode to the anode through the electrolyte, and during discharging they move from the anode back to the cathode while movement cath the current circuits. Thegradation occurs due to side reactions forming resistive layers and the material loss cycles over. over are: Lithium ions are being forced from the cathode (eode from lithium ions lithium) through the electrolyte to the anode due, the bre lithiumite.",
+      "output_mbr8": "Lithium-ion batteries use lithium cathode as moving between the cathode and the anode. During charging, lithium ions move from the cathode to the anode through the electrolyte, and during discharging they move from the anode back to the cathode while movement cath electrical current electrical. Thegradation occurs due to side reactions forming to resistive layers and material loss over cycles. ions: Lithium ions are forced from the cathode (eodee. through the lithium electrolyte) through the electrolyte to the anode an (graphite, ions."
+    },
+    {
+      "id": "p8_mount_everest",
+      "prompt": "What is the tallest mountain in the world, where is it located, and how high is it?",
+      "plans": [
+        "The tallest mountain in the world is Mount Everest; it is located in the Himalayas, on the border between Nepal and China (Tibet Autonomous Region); its elevation is 8,848 meters (29,029 feet)",
+        "Mount Everest is part of the Himalayan mountain range; it was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay; the measurement of 8,848 meters is the most recent official figure from 2020;"
+      ],
+      "n_k3_tokens_1cand": 95,
+      "n_k3_tokens_mbr8": 95,
+      "plan_lat_ms": 5082.0,
+      "ncm_1cand_ms": 153.2,
+      "ncm_mbr8_ms": 436.5,
+      "total_1cand_ms": 5235.3,
+      "total_mbr8_ms": 5518.5,
+      "e2e_tok_per_s_1cand": 18.15,
+      "e2e_tok_per_s_mbr8": 17.21,
+      "ncm_stage_tok_per_s_1cand": 620.1,
+      "ncm_stage_tok_per_s_mbr8": 217.64,
+      "output_1cand": "The tallest mountain in the world is Mount Everest, which is located in the Himalayas on the border between Nepal and China in the Tibet Autonomous Region. Its official elevation is 8,848 meters, or 8,029 feet. Mount Everest is part of the Himalayan mountain range and was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay. The measurement of 8,848 meters is the official figure confirmed in 2020.",
+      "output_mbr8": "The tallest mountain in the world is Mount Everest, which is located in the Himalayas on the border between Nepal and China in the Tibet Autonomous Region. Its official elevation is 8,848 meters, or 8,029 feet. Mount Everest is part of the Himalayan mountain range and was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay. The measurement of 8,848 meters is the official figure confirmed in 2020."
+    },
+    {
+      "id": "p9_france_capital",
+      "prompt": "the captial of france is",
+      "plans": [
+        "The capital of France is Paris. Summary: The capital of France is Paris."
+      ],
+      "n_k3_tokens_1cand": 16,
+      "n_k3_tokens_mbr8": 16,
+      "plan_lat_ms": 1977.6,
+      "ncm_1cand_ms": 148.1,
+      "ncm_mbr8_ms": 230.1,
+      "total_1cand_ms": 2125.7,
+      "total_mbr8_ms": 2207.7,
+      "e2e_tok_per_s_1cand": 7.53,
+      "e2e_tok_per_s_mbr8": 7.25,
+      "ncm_stage_tok_per_s_1cand": 108.04,
+      "ncm_stage_tok_per_s_mbr8": 69.53,
+      "output_1cand": "The capital of France is Paris. Summary: The capital of France is Paris.",
+      "output_mbr8": "The capital of France is Paris. Summary: The capital of France is Paris."
+    }
+  ],
+  "clubbed_batch_8_prompts": {
+    "n_prompts": 8,
+    "n_windows": 15,
+    "total_k3_tokens_1cand": 691,
+    "total_k3_tokens_mbr8": 687,
+    "batched_plan_ms": 6733.9,
+    "clubbed_ncm_1cand_ms": 597.7,
+    "clubbed_ncm_mbr8_ms": 2997.2,
+    "total_wall_s_1cand": 7.33,
+    "total_wall_s_mbr8": 9.73,
+    "effective_s_per_prompt_1cand": 0.92,
+    "effective_s_per_prompt_mbr8": 1.22,
+    "e2e_tok_per_s_1cand": 94.25,
+    "e2e_tok_per_s_mbr8": 70.6,
+    "ncm_stage_tok_per_s_1cand": 1156.14,
+    "ncm_stage_tok_per_s_mbr8": 229.21,
+    "outputs_mbr8": {
+      "p1_harbourside_news": "The Harbourside Council voted 7 to 2. Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks to complete. The council promised 40 temporary parking spaces on Dock Street. The vote was held on Tuesday.",
+      "p2_apollo13": "On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft and forcing the crew (Jim Lovell, Fred Haise, and Jack Swigert) to abort their lunar landing mission after losing oxygen and electrical power. The crew used the Lunar Module (LM) as a lifeboat while conserving power and water. They entered \" conserve,\" to conserve power. Command Module (CM) was damaged.",
+      "p3_rayleigh_sky": "The sky appears blue due to Rayleigh scattering, where shorter blue and violet wavelengths of sunlight are scattered more by the Earth's atmosphere than longer red, orange, and yellow wavelengths. This scattering is inversely proportional to the fourth power of the wavelength. Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, while some violet light is absorbed by the upper atmosphere. Thus, the daytime sky appears predominantly blue.",
+      "p4_payments_db": "The payments database primary failed at 02:14 UTC on 3 June the and the replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed14, and 14 transactions failed. The cause was a full disk on the primary at 100 percent usage from write-ahead logs. The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent a full disk to a caused a payments database failover and 100 failed transactions.",
+      "p6_bristol_hospital": "St Mary's Hospital in Bristol opened a new children's on wing on Friday. The wing will cost 18 million pounds, it adds. 45 beds and 454 operating theatres. The  project was led by Dr Elena Vance. The new wing new enhances pediatric care at The hospital the a opening opened marks a significant investment in healthcare Bristol. Summary: St Mary's Hospital opened a new 18 million pound children's wing in Bristol with 45 beds and 184 beds.",
+      "p7_lithium_battery": "Lithium-ion batteries use lithium moving ions between moving between the cathode and the anode. During charging, lithium ions move from the cathode to the anode through the electrolyte, and during discharging they move from the anode back to the cathode while the movement current electrical power. Thegradation occurs due to side reactions forming resistive layers and material loss over cycles.: Lithium ions are the forced into the anode (graphite) from the cathode the cathode (eode from the lithiumode oxide) via the electroly wavelength and the cath.",
+      "p8_mount_everest": "The tallest mountain in the world is Mount Everest, which is located in the Himalayas on the border between Nepal and China in the Tibet Autonomous Region. Its official elevation is 8,848 meters, or 8,029 feet. Mount Everest is part of the Himalayan mountain range and it is the highest peak above sea level. The measurement of 8,848 meters is of the most official figure confirmed. The Summary: Mount Everest, located in the Himal.",
+      "p9_france_capital": "The capital of France is Paris. Summary: The capital of France is Paris."
+    }
+  },
+  "multi_gpu_8card_ncm_proof": {
+    "n_gpus": 8,
+    "windows_per_gpu": 32,
+    "total_windows": 256,
+    "max_token_capacity": 16384,
+    "emitted_k3_tokens": 11464,
+    "wall_time_ms": 641.5,
+    "wall_time_s": 0.642,
+    "measured_emitted_tok_per_s": 17869.8,
+    "measured_capacity_tok_per_s": 25539.0
+  },
+  "multi_gpu_4pair_e2e_proof": {},
+  "single_prompt_summary": {
+    "total_prompts": 8,
+    "total_k3_tokens_1cand": 671,
+    "total_k3_tokens_mbr8": 705,
+    "sequential_wall_s_1cand": 38.85,
+    "sequential_wall_s_mbr8": 40.92,
+    "mean_e2e_tok_per_s_1cand": 17.27,
+    "mean_e2e_tok_per_s_mbr8": 17.23,
+    "mean_ncm_stage_tok_per_s_1cand": 536.76,
+    "mean_ncm_stage_tok_per_s_mbr8": 212.77
+  }
+}

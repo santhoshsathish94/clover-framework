@@ -462,14 +462,14 @@ src/scripts/chat-stop.sh mychat</code></pre>
               <td><strong>Option B (Primary):</strong> <code>Qwen3-VL-8B-Instruct + HybridLink</code> (0.9878 embedding cosine and 0.9453 top-layer hidden cosine with <code>HybridAgent-8B</code>). <strong>Option A (Optional):</strong> Kimi K3&rsquo;s 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> adds <strong>42.0 to 43.4 ms</strong> and emits <code>225 &times; 7,168</code>-d visual tokens for Kimi K3 token <code>163605</code>.</td>
             </tr>
             <tr>
-              <th scope="row">Clubbing 5 unrelated prompts in 1 batch (<code>bench_batch_clubbing.py</code>)</th>
-              <td><strong>6.42 s total</strong> (1-cand, <strong>1.28 s/prompt</strong>) / <strong>7.90 s total</strong> (<code>MBR8</code>, <strong>1.58 s/prompt</strong>)</td>
-              <td><strong>4.95&times; faster</strong> than running 5 prompts sequentially (31.80 s). Clubbed NCM stage renders all 9 windows (498 Kimi K3 tokens) in <strong>371.7 ms</strong> (39.6 ms/prompt) with <strong>0 cross-prompt token leaks</strong>.</td>
+              <th scope="row">Clubbing 8 distinct prompts in 1 batch (<code>bench_throughput_proof.py</code>)</th>
+              <td><strong>7.33 s total</strong> (1-cand, <strong>0.92 s/prompt</strong>) / <strong>9.73 s total</strong> (<code>MBR8</code>, <strong>1.22 s/prompt</strong>)</td>
+              <td><strong>94.25 Kimi K3 tok/s end-to-end</strong> (1-cand) and <strong>70.60 tok/s</strong> (<code>MBR8</code>), <strong>5.30&times; faster</strong> than running the 8 prompts sequentially (38.85 s). Clubbed NCM stage renders all 15 windows (691 K3 tokens) in <strong>597.7 ms (1,156.14 Kimi K3 tok/s)</strong> with <strong>0 cross-prompt token leaks</strong>.</td>
             </tr>
             <tr>
-              <th scope="row">NCM + PointerDecoder window scaling on 1 GPU (32 windows = 2,048 K3 tokens)</th>
-              <td><strong>1.19 s</strong> (37.1 ms per 64-token window)</td>
-              <td><strong>1,489 Kimi K3 tokens/s</strong> on 1 RTX 3090 (1,767 emitted tokens in 1,186.9 ms). Across all 8 RTX 3090s (<code>16K &times; 8 = 128,000</code> input tokens capacity; NVLink pairs <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> measured at <strong>51.9 GB/s</strong> one-way / 406 GB/s aggregate), 8 cards generate up to <strong>16,384 Kimi K3 tokens in ~1.2 s</strong> (~11,900 tok/s aggregate).</td>
+              <th scope="row">True 8-GPU Parallel DDP Execution (<code>torchrun --nproc_per_node=8</code>, 256 windows = 16,384 K3 token capacity)</th>
+              <td><strong>641.5 ms (0.642 s)</strong> across all 8 RTX 3090s (1.19 s in a single Python process on 1 GPU)</td>
+              <td><strong>17,869.8 emitted Kimi K3 tokens/s</strong> (11,464 non-EOS tokens in 0.642 s) and <strong>25,539.0 capacity Kimi K3 tokens/s</strong> (16,384 tokens in 0.642 s), measured with <code>torch.distributed.barrier()</code> across all 8 RTX 3090s (<code>16K &times; 8 = 128,000</code> input tokens capacity; NVLink pairs <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> measured at <strong>51.9 GB/s</strong> one-way / 406 GB/s aggregate).</td>
             </tr>
           </tbody>
         </table>
@@ -499,8 +499,23 @@ src/scripts/chat-stop.sh mychat</code></pre>
             </tr>
             <tr>
               <th scope="row"><strong>Text (incident report, <code>p4</code>):</strong> Payments DB primary failed 02:14 UTC on 3 June, replica B promoted 02:31, 1,820 delayed, 14 failed, 100% disk, 80% alert, 500 GB to 1 TB</th>
-              <td><strong>5.26 s / 5.54 s</strong><br>(NCM: 155.1 ms / 441.9 ms)</td>
-              <td><em>&ldquo;The payments database primary failed at 02:14 UTC on 3 June, and the replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed and 14 failed... The cause was a full disk on the primary at 100 percent usage from write-ahead logs. The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent future issues...&rdquo;</em> (111 K3 tokens; 10/10 facts preserved)</td>
+              <td><strong>5.24 s / 5.53 s</strong><br>(E2E: 21.95 / 20.78 tok/s;<br>NCM: 734.4 / 255.2 tok/s)</td>
+              <td><em>&ldquo;The payments database primary failed at 02:14 UTC on 3 June, and the replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed and 14 failed... The cause was a full disk on the primary at 100 percent usage from write-ahead logs. The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent future issues...&rdquo;</em> (115 K3 tokens; 10/10 facts preserved)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Text (history, <code>p2</code>):</strong> Explain what happened on the Apollo 13 mission and how the crew got home</th>
+              <td><strong>5.23 s / 5.51 s</strong><br>(E2E: 17.40 / 16.51 tok/s;<br>NCM: 578.5 / 208.0 tok/s)</td>
+              <td><em>&ldquo;On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft and forcing the crew (Jim Lovell, Fred Haise, and Jack Swigert) to abort their lunar landing mission after losing oxygen and electrical power. The crew used the Lunar Module (LM) as a lifeboat while conserving power and water. They overcame carbon dioxide buildup by adapting the LM's filters and safely returned to Earth.&rdquo;</em> (91 K3 tokens)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Text (physics, <code>p3</code>):</strong> Explain why the sky is blue and why sunsets are red</th>
+              <td><strong>5.24 s / 5.52 s</strong><br>(E2E: 17.37 / 16.49 tok/s;<br>NCM: 582.6 / 208.6 tok/s)</td>
+              <td><em>&ldquo;The sky appears blue due to Rayleigh scattering, where shorter blue and violet wavelengths of sunlight are scattered more by the Earth's atmosphere than longer red, orange, and yellow wavelengths. This scattering is inversely proportional to the fourth power of the wavelength. Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, while some violet light is absorbed by the upper atmosphere. Thus, the daytime sky appears predominantly blue.&rdquo;</em> (91 K3 tokens)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Text (geography, <code>p8</code>):</strong> What is the tallest mountain in the world, where is it located, and how high is it?</th>
+              <td><strong>5.24 s / 5.52 s</strong><br>(E2E: 18.15 / 17.21 tok/s;<br>NCM: 620.1 / 217.6 tok/s)</td>
+              <td><em>&ldquo;The tallest mountain in the world is Mount Everest, which is located in the Himalayas on the border between Nepal and China in the Tibet Autonomous Region. Its official elevation is 8,848 meters, or 8,029 feet. Mount Everest is part of the Himalayan mountain range and was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay. The measurement of 8,848 meters is the official figure confirmed in 2020.&rdquo;</em> (95 K3 tokens)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Image OCR (<code>img1_hospital_invoice.png</code>):</strong> Hospital invoice (#7420, 14 March 2026, 45 pediatric monitors 12M, 4 theatre suites 6M, total 18M, Dr Elena Vance, 3 years)</th>

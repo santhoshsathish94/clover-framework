@@ -270,8 +270,8 @@ def main():
         "net": net.state_dict(),
         "ptr_dec": ptr_dec.state_dict(),
         "restricted_mask": e8_sd["restricted_mask"],
-    }, os.path.join(out_dir, "e8_k3_direct.pt"))
-    print("updated e8_k3_direct.pt with multimodal/visual clause pairs", flush=True)
+    }, os.path.join(out_dir, "e9_k3_multimodal.pt"))
+    print("saved e9_k3_multimodal.pt with multimodal/visual clause pairs", flush=True)
 
 
 if __name__ == "__main__":
