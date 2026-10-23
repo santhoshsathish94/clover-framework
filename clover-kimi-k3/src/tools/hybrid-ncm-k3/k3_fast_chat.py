@@ -6,7 +6,7 @@ Runs the unified K3-Native pipeline directly from a user prompt (or file of prom
      Clover Kimi K3's native `163,840`-token vocabulary (`libk3tok.so`) in a single batched pass (~125-355 ms) —
      with ZERO 93-layer Kimi K3 verification and ZERO DSpark verifier.
 """
-import argparse, json, os, re, sys, time
+import argparse, collections, json, os, re, sys, time
 
 os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
 os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
@@ -29,23 +29,29 @@ from hybrid_agent.constants import ENTRY_ANCHOR, EXIT_ANCHOR, THINK_OPEN, THINK_
 from train_latent_bridge import encode_batch_rh
 
 
-CHAT_PLAN_PROMPT = (
-    "You are planning a clear, factual response to the user's request. "
-    "If the request asks a math or timing question, compute the exact numbers first and state them in the plan. "
-    "Write the response plan as two lines (`W1:` for the first part and `W2:` for the second part plus `Summary: ...`). "
-    "Each line must be a sequence of short semicolon-separated factual clauses containing the exact names, calculated numbers, "
-    "and key words in order (25 to 36 words per line). Stop immediately after the `Summary:` clause on `W2:`.\n\n"
-    "Example 1:\n"
-    "Write a report using these facts: River Bridge closed at 06:30 on Monday after a lorry crash. Engineers inspected 3 steel beams. "
-    "Traffic was diverted to Oak Road for 5 hours. Give a one-sentence Summary.\n"
-    "W1: River Bridge closed at 06:30 on Monday after a lorry crash; engineers inspected 3 steel beams on the bridge; traffic was diverted to Oak Road for 5 hours\n"
-    "W2: drivers faced delays around Oak Road during the 5 hour closure; the bridge reopened after safety checks; Summary: River Bridge closed for 5 hours on Monday after a lorry crash\n\n"
-    "Example 2:\n"
-    "A cyclist leaves York at 08:00 and rides 60 miles to Hull at 20 mph. A second cyclist leaves Hull for York at 08:30 at 10 mph. When do they meet and how far from Hull?\n"
-    "W1: first cyclist leaves York at 08:00 at 20 mph and covers 10 miles in 30 minutes; at 08:30 the second cyclist leaves Hull at 10 mph with 50 miles between them\n"
-    "W2: their combined speed is 30 mph so they close the 50 mile gap in 100 minutes and meet at 10:10; the second cyclist travels 16.7 miles from Hull; Summary: The cyclists meet at 10:10, about 16.7 miles from Hull\n\n"
-    "User request:\n{prompt}"
+CHAT_SYSTEM_PROMPT = (
+    "You are Clover AI, a helpful, direct, and accurate AI assistant. "
+    "Reply directly to the user in natural, polite English sentences (never refer to 'the user' or 'the assistant' or 'Turn 1' in the third person). "
+    "Format your reply as `W1:` (and an optional second line `W2:` only when the answer is longer than 30 words). "
+    "For greetings (like 'hi' or 'hello'), clarifications (like 'I did not ask that question'), or short questions, "
+    "reply naturally in 1 or 2 sentences on a single `W1:` line and do NOT add a `Summary:`. "
+    "Only include `Summary:` at the end if the user's message explicitly asks for a summary."
 )
+
+CHAT_PLAN_PROMPT = (
+    "Write your direct response to the user as `W1:` (and `W2:` only if needed for a longer response). "
+    "Do NOT write meta-commentary about what the user asked; write ONLY the actual reply to the user.\n\n"
+    "User message:\n{prompt}"
+)
+
+GRAMMAR_CONNECTOR_WORDS = [
+    "the", "The", "a", "A", "an", "An", "in", "In", "on", "On", "at", "At", "to", "To", "for", "For",
+    "of", "by", "with", "from", "as", "into", "over", "after", "before", "during", "between", "through",
+    "and", "or", "but", "so", "while", "when", "where", "which", "that", "who", "whom", "whose",
+    "is", "are", "was", "were", "be", "been", "being", "has", "have", "had", "it", "its", "this", "these",
+    "they", "them", "their", "we", "our", "you", "your", "I", "my", "me",
+    ".", ",", ";", ":", "!", "?", "'s", "'", "-", "(", ")",
+]
 
 
 class K3FastChatEngine:
@@ -78,6 +84,17 @@ class K3FastChatEngine:
         self.copy_dec.load_state_dict(e8_sd["ptr_dec"])
         self.copy_dec.eval()
         self.restricted_mask = e8_sd["restricted_mask"].to(self.dev)
+
+        # Build grammatical connector token set in Kimi K3's 163,840 vocabulary
+        self.grammar_ids = {K3_EOS}
+        self.repeatable_grammar_ids = {K3_EOS}
+        for gw in GRAMMAR_CONNECTOR_WORDS:
+            for variant in (gw, " " + gw):
+                for tid in self.k3_tok.encode(variant):
+                    if 0 <= tid < 163584:
+                        self.grammar_ids.add(tid)
+                        if gw.lower() in ("the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from", "as", "is", "are", "was", "were", ".", ",", ";", ":"):
+                            self.repeatable_grammar_ids.add(tid)
 
         levels = list(self.vqvae.vq.levels)
         self.sched = [1.0 - 0.6 * (k / (len(levels) - 1)) for k in range(len(levels))]
@@ -119,26 +136,18 @@ class K3FastChatEngine:
     def plan_with_latent(self, user_prompt, history=None, min_lat=8, max_lat=14, max_new=110):
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
+        msgs = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
         if history:
-            ctx_lines = []
-            for turn_idx, h in enumerate(history[-6:], 1):
-                ctx_lines.append(f"Turn {turn_idx} User: {h['user']}")
-                ctx_lines.append(f"Turn {turn_idx} Assistant: {h['reply']}")
-            ctx_block = (
-                "Conversation history (resolve all pronouns like 'it', 'they', 'that', 'there', or follow-up calculations "
-                "using these prior turns, and state the resolved entity names and numbers explicitly in W1 and W2):\n"
-                + "\n".join(ctx_lines)
-                + "\n\nCurrent user request:\n"
-                + user_prompt.strip()
-            )
-            msgs = [{"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=ctx_block)}]
-        else:
-            msgs = [{"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=user_prompt.strip())}]
+            for h in history[-6:]:
+                msgs.append({"role": "user", "content": h["user"]})
+                msgs.append({"role": "assistant", "content": "W1: " + h["reply"]})
+        msgs.append({"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=user_prompt.strip())})
+
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
-            prefix_str = base_chat + "Let me work out the exact facts, numbers, and steps." + ENTRY_ANCHOR
+            prefix_str = base_chat + "Let me think carefully and reply directly to the user." + ENTRY_ANCHOR
         else:
-            prefix_str = base_chat + THINK_OPEN + "\nLet me work out the exact facts, numbers, and steps." + ENTRY_ANCHOR
+            prefix_str = base_chat + THINK_OPEN + "\nLet me think carefully and reply directly to the user." + ENTRY_ANCHOR
 
         inp_ids = self.ha_tok(prefix_str, return_tensors="pt").input_ids.to(self.dev_ha)
         out = backbone(input_ids=inp_ids, use_cache=True, output_hidden_states=True, return_dict=True)
@@ -160,7 +169,7 @@ class K3FastChatEngine:
             last_h = out.hidden_states[-1][:, -1, :]
             next_logits = out.logits[:, -1, :]
 
-        bridge_str = EXIT_ANCHOR + " Now I will write W1 and W2 with the exact facts and numbers." + THINK_CLOSE + "\nW1:"
+        bridge_str = EXIT_ANCHOR + " Now I will write my direct response to the user." + THINK_CLOSE + "\nW1:"
         bridge_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
         out = backbone(input_ids=bridge_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
         past_kv = out.past_key_values
@@ -173,11 +182,16 @@ class K3FastChatEngine:
             if nxt in eos_ids:
                 break
             gen_ids.append(nxt)
-            if len(gen_ids) % 8 == 0:
-                txt_so_far = self.ha_tok.decode(gen_ids, skip_special_tokens=True)
+            txt_so_far = self.ha_tok.decode(gen_ids, skip_special_tokens=True)
+            if txt_so_far.endswith("\n"):
                 lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
-                if len(lines) >= 2 and len(lines[1]) > 25 and txt_so_far.endswith("\n"):
+                if len(lines) == 1 and len(lines[0].split()) <= 24:
+                    # Short single-line reply (greeting, clarification, or short fact) -> stop cleanly after W1!
                     break
+                if len(lines) >= 2 and len(lines[1]) > 15:
+                    break
+            if len(gen_ids) % 8 == 0:
+                lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
                 if len(lines) >= 3:
                     break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
@@ -185,20 +199,26 @@ class K3FastChatEngine:
             next_logits = out.logits[:, -1, :]
 
         raw = "W1: " + self.ha_tok.decode(gen_ids, skip_special_tokens=True).strip()
-        raw = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking|The user's).*$", "", raw).strip()
+        raw = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking|The user's|The user has).*$", "", raw).strip()
         w1, w2 = "", ""
         for ln in raw.splitlines():
-            ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user's).*$", "", ln).strip()
+            ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user's|The user has).*$", "", ln).strip()
             ln = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", ln, flags=re.IGNORECASE).strip()
             if ln.upper().startswith("W1:"):
                 w1 = ln[3:].strip()
                 w1 = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", w1, flags=re.IGNORECASE).strip()
             elif ln.upper().startswith("W2:"):
                 w2 = ln[3:].strip()
-        if w1.lower().startswith("the user is") and w2:
+        if w1.lower().startswith("the user ") and w2:
             w1, w2 = w2, ""
         if not w1:
             w1 = raw.splitlines()[0].strip()
+
+        # Strip unrequested `Summary: ...` when the user prompt did not ask for a summary
+        wants_summary = ("summary" in user_prompt.lower()) or ("summarize" in user_prompt.lower())
+        if not wants_summary:
+            w1 = re.sub(r"\s*;?\s*Summary:.*$", "", w1, flags=re.IGNORECASE).strip()
+            w2 = re.sub(r"\s*;?\s*Summary:.*$", "", w2, flags=re.IGNORECASE).strip()
 
         # Split any single-block or overly long W1 (>34 words) into balanced W1 and W2 windows (~30 words each)
         if w1 and not w2 and len(w1.split()) > 30:
@@ -216,56 +236,108 @@ class K3FastChatEngine:
             w1 = "; ".join(parts[:-1])
             w2 = parts[-1] + "; " + w2
 
-        plans = [p for p in (w1, w2) if len(p) > 4]
+        plans_raw = [p for p in (w1, w2) if len(p) >= 2]
+        if not plans_raw:
+            plans_raw = ["Hello! How can I help you today?"]
+
+        # Ensure every window fits cleanly inside P_BPE=48 Kimi K3 tokens without mid-sentence truncation
+        plans = []
+        for p_str in plans_raw:
+            if len(self.k3_tok.encode(p_str)) <= P_BPE - 2:
+                plans.append(p_str)
+            else:
+                clauses = [c.strip() for c in re.split(r"(?<=[.!?;])\s+", p_str) if c.strip()]
+                cur = ""
+                for cl in clauses:
+                    cand = (cur + " " + cl).strip() if cur else cl
+                    if len(self.k3_tok.encode(cand)) <= P_BPE - 2:
+                        cur = cand
+                    else:
+                        if cur:
+                            plans.append(cur)
+                        cur = cl
+                if cur:
+                    plans.append(cur)
         return plans, lat_steps, exit_reason
 
+    def _build_window_vocab_mask(self, plan_str):
+        """Builds a strict boolean mask `[V_K3]` that masks out (`True`) any token NOT in `plan_str`
+        and NOT in `self.grammar_ids`, preventing VQ-VAE from ever hallucinating memorized words
+        (like 'France', 'Paris', 'Bristol', 'lithium') that are not in the current window's plan!"""
+        allowed = set(self.grammar_ids)
+        allowed.update(self.k3_tok.encode(plan_str))
+        for w in re.findall(r"[A-Za-z0-9.,:!?'£$€%-]+", plan_str):
+            for v in (w, " " + w, w.capitalize(), " " + w.capitalize(), w.lower(), " " + w.lower()):
+                allowed.update(self.k3_tok.encode(v))
+        mask = torch.ones(V_K3, dtype=torch.bool, device=self.dev)
+        t_allow = torch.tensor([x for x in allowed if 0 <= x < V_K3], dtype=torch.long, device=self.dev)
+        mask[t_allow] = False
+        return mask
+
     def _dec_k3_aligned(self, row_logits, plan_ids):
-        """Decodes a 64-position logit tensor `[T, V_K3]` while enforcing 2-gram subword continuation
-        for any multi-subword token sequence in `plan_ids` (e.g. `[' cath', 'ode']`, `['02', ':', '31']`),
-        so parallel non-autoregressive argmax never splits or scrambles a multi-token word or time!"""
+        """Decodes a 64-position logit tensor `[T, V_K3]` while:
+        1. Enforcing 2-gram subword continuation for multi-subword words/times in `plan_ids`.
+        2. Capping each content token's emission count to its occurrence count in `plan_ids` (preventing
+           duplicate words like `Paris. Paris.` or `45 beds and 45 beds`).
+        3. Stopping cleanly at `K3_EOS` once the window's planned content tokens are covered.
+        """
         cont_map = {}
         valid_p = [int(x) for x in plan_ids if 0 <= int(x) < 163584]
         for a, b in zip(valid_p[:-1], valid_p[1:]):
             bs = self.k3_tok.decode([b], skip_special_tokens=False)
-            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs in (":", ".")):
+            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs in (":", ".", "'")):
                 cont_map.setdefault(a, set()).add(b)
 
+        max_counts = collections.Counter(valid_p)
+        content_set = {tid for tid in valid_p if tid not in self.repeatable_grammar_ids}
+        emitted_counts = collections.Counter()
+        has_semi = (26 in valid_p)
+
         T = row_logits.size(0)
+        max_len = min(T, int(len(valid_p) * 1.35) + 4) if has_semi else min(T, len(valid_p))
         clean_ids = []
         prev_tid = -1
         prev_word = ""
-        for t in range(T):
+        for t in range(max_len):
             lg = row_logits[t].clone()
             if prev_tid >= 0:
-                lg[prev_tid] -= 20.0
+                lg[prev_tid] -= 30.0
                 if prev_tid in cont_map:
                     for nxt_b in cont_map[prev_tid]:
-                        lg[nxt_b] += 10.0
+                        if emitted_counts[nxt_b] < max_counts.get(nxt_b, 1):
+                            lg[nxt_b] += 12.0
+            # Penalize content tokens that have already been emitted as many times as they appear in `plan_ids`
+            for tid, cnt in emitted_counts.items():
+                if tid not in self.repeatable_grammar_ids and cnt >= max_counts.get(tid, 1):
+                    lg[tid] -= 30.0
+
+            # Once all content tokens of the plan are covered, allow K3_EOS to terminate the sentence cleanly
+            covered = sum(1 for tid in content_set if emitted_counts[tid] >= 1)
+            if content_set and covered >= len(content_set) and t >= len(valid_p) - 1:
+                lg[K3_EOS] += 18.0
+
             tid = int(lg.argmax().item())
             if tid == K3_EOS:
                 break
             if 0 <= tid < 163584:
                 ws = self.k3_tok.decode([tid], skip_special_tokens=False).strip().lower()
                 if ws and ws == prev_word and len(ws) >= 2:
-                    lg[tid] -= 20.0
+                    lg[tid] -= 30.0
                     tid = int(lg.argmax().item())
                     if tid == K3_EOS:
                         break
                     ws = self.k3_tok.decode([tid], skip_special_tokens=False).strip().lower()
                 clean_ids.append(tid)
+                emitted_counts[tid] += 1
                 prev_tid = tid
                 if ws:
                     prev_word = ws
+                # If all content tokens have been emitted and we just closed the sentence with punctuation, stop!
+                if content_set and sum(1 for c_id in content_set if emitted_counts[c_id] >= 1) >= len(content_set):
+                    raw_piece = self.k3_tok.decode([tid], skip_special_tokens=False).rstrip()
+                    if raw_piece.endswith((".", "!", "?")) and t >= max(2, len(valid_p) - 3):
+                        break
         return self.k3_tok.decode(clean_ids), clean_ids
-
-    def _apply_grounding_mask(self, logits, allowed_k3_ids):
-        """Suppresses ungrounded proper nouns / numbers / currency symbols that are NOT in the user prompt or plan."""
-        mask = self.restricted_mask.clone()
-        if allowed_k3_ids:
-            t_allow = torch.tensor(list(allowed_k3_ids), dtype=torch.long, device=self.dev)
-            mask[t_allow] = False
-        logits[:, :, mask] -= 14.0
-        return logits
 
     @torch.no_grad()
     def render_ncm(self, plans, prompt_text="", cands=1):
@@ -279,22 +351,17 @@ class K3FastChatEngine:
         z_bpe = self.vqvae.encoder.wte(p_kpad)
         z_pref, pmask = pack_combo_prefix(z_rh, msk_r, z_bpe, (p_kpad == K3_PAD))
 
-        # Allowed proper nouns / numbers come from the prompt + plans (including both leading-space and no-space token variants)
-        ref_str = prompt_text + " " + " ".join(plans)
-        allowed_ids = set(self.k3_tok.encode(ref_str))
-        for w in re.findall(r"[A-Za-z0-9.,:%£$€'-]+", ref_str):
-            allowed_ids.update(self.k3_tok.encode(w))
-            allowed_ids.update(self.k3_tok.encode(" " + w))
-
         W = len(plans)
+        win_masks = [self._build_window_vocab_mask(p) for p in plans]
+
         if cands <= 1:
             torch.manual_seed(42)
             g1 = generate_from_zpref(self.net, self.tk, z_pref, pmask, self.sched)
             zh1, _ = self.vqvae.vq.idx_to_zhats(g1, return_zlevels=True)
             lg1 = self.copy_dec(self.vqvae.decoder, zh1[-1], z_rh, msk_r, z_bpe, p_kpad)
-            lg1 = self._apply_grounding_mask(lg1, allowed_ids)
             txts, ids = [], []
             for w_i in range(W):
+                lg1[w_i, :, win_masks[w_i]] -= 80.0
                 ts, is_ = self._dec_k3_aligned(lg1[w_i], p_kpad[w_i].tolist())
                 txts.append(ts.strip()); ids.extend(is_)
             return " ".join(txts), ids
@@ -310,13 +377,14 @@ class K3FastChatEngine:
         gk = generate_from_zpref(self.net, self.tk, z_pref_k, pmask_k, self.sched)
         zhk, _ = self.vqvae.vq.idx_to_zhats(gk, return_zlevels=True)
         lgk = self.copy_dec(self.vqvae.decoder, zhk[-1], z_rh_k, msk_r_k, z_bpe_k, p_kpad_k)
-        lgk = self._apply_grounding_mask(lgk, allowed_ids)
 
         cands_t = [[] for _ in range(W)]
         cands_i = [[] for _ in range(W)]
         for k in range(cands):
             for w_i in range(W):
-                ts, is_ = self._dec_k3_aligned(lgk[k * W + w_i], p_kpad[w_i].tolist())
+                row_idx = k * W + w_i
+                lgk[row_idx, :, win_masks[w_i]] -= 80.0
+                ts, is_ = self._dec_k3_aligned(lgk[row_idx], p_kpad[w_i].tolist())
                 cands_t[w_i].append(ts.strip()); cands_i[w_i].append(is_)
         out_txts, out_ids = [], []
         for w_i in range(W):

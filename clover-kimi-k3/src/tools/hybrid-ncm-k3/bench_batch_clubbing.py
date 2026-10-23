@@ -16,7 +16,7 @@ sys.path.insert(0, ROOT)
 os.chdir(ROOT)
 
 import torch
-from k3_fast_chat import K3FastChatEngine, CHAT_PLAN_PROMPT
+from k3_fast_chat import K3FastChatEngine, CHAT_SYSTEM_PROMPT, CHAT_PLAN_PROMPT
 from train_k3_native_all import P_RH, P_BPE, K3_PAD, K3_EOS
 from train_combo_prefix import pack_combo_prefix
 from eval_both_tracks import jacc, generate_from_zpref
@@ -25,7 +25,7 @@ from train_latent_bridge import encode_batch_rh
 
 
 @torch.no_grad()
-def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, max_new=100):
+def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, max_new=100, histories=None):
     """Runs `B` completely independent user prompts simultaneously in a single batched tensor `[B, seq_len]`
     through `HybridAgent-8B-Agentic` (`cuda:1`), with left-padding and per-row attention_mask so row `i`
     NEVER attends to row `j != i`."""
@@ -34,13 +34,19 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
     embed_w = backbone.get_input_embeddings().weight
 
     prefix_strs = []
-    for p in user_prompts:
-        msgs = [{"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=p.strip())}]
+    for idx_p, p in enumerate(user_prompts):
+        msgs = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
+        hist = histories[idx_p] if (histories and idx_p < len(histories) and histories[idx_p]) else None
+        if hist:
+            for h in hist[-6:]:
+                msgs.append({"role": "user", "content": h["user"]})
+                msgs.append({"role": "assistant", "content": "W1: " + h["reply"]})
+        msgs.append({"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=p.strip())})
         base_chat = eng.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
-            s = base_chat + "Let me work out the exact facts, numbers, and steps." + ENTRY_ANCHOR
+            s = base_chat + "Let me think carefully and reply directly to the user." + ENTRY_ANCHOR
         else:
-            s = base_chat + THINK_OPEN + "\nLet me work out the exact facts, numbers, and steps." + ENTRY_ANCHOR
+            s = base_chat + THINK_OPEN + "\nLet me think carefully and reply directly to the user." + ENTRY_ANCHOR
         prefix_strs.append(s)
 
     orig_side = eng.ha_tok.padding_side
@@ -74,7 +80,7 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
         past_kv = out.past_key_values
         last_h = out.hidden_states[-1][:, -1, :]
 
-    bridge_str = EXIT_ANCHOR + " Now I will write W1 and W2 with the exact facts and numbers." + THINK_CLOSE + "\nW1:"
+    bridge_str = EXIT_ANCHOR + " Now I will write my direct response to the user." + THINK_CLOSE + "\nW1:"
     bridge_ids = eng.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(eng.dev_ha).expand(B, -1)
     Kb = bridge_ids.size(1)
     base_pos = attn_mask.sum(dim=1, keepdim=True).long()
@@ -97,10 +103,16 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
                     done[i] = True
                 else:
                     gen_ids[i].append(ti)
-                    if len(gen_ids[i]) % 8 == 0:
-                        txt_i = eng.ha_tok.decode(gen_ids[i], skip_special_tokens=True)
+                    txt_i = eng.ha_tok.decode(gen_ids[i], skip_special_tokens=True)
+                    if txt_i.endswith("\n"):
                         lns = [ln.strip() for ln in txt_i.splitlines() if ln.strip()]
-                        if (len(lns) >= 2 and len(lns[1]) > 25 and txt_i.endswith("\n")) or len(lns) >= 3:
+                        if len(lns) == 1 and len(lns[0].split()) <= 24:
+                            done[i] = True
+                        elif len(lns) >= 2 and len(lns[1]) > 15:
+                            done[i] = True
+                    elif len(gen_ids[i]) % 8 == 0:
+                        lns = [ln.strip() for ln in txt_i.splitlines() if ln.strip()]
+                        if len(lns) >= 3:
                             done[i] = True
         if all(done):
             break
@@ -120,18 +132,24 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
     all_plans = []
     for i in range(B):
         raw = "W1: " + eng.ha_tok.decode(gen_ids[i], skip_special_tokens=True).strip()
-        raw = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking).*$", "", raw).strip()
+        raw = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking|The user's|The user has).*$", "", raw).strip()
         w1, w2 = "", ""
         for ln in raw.splitlines():
-            ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need).*$", "", ln).strip()
+            ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user's|The user has).*$", "", ln).strip()
+            ln = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", ln, flags=re.IGNORECASE).strip()
             if ln.upper().startswith("W1:"):
                 w1 = ln[3:].strip()
+                w1 = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", w1, flags=re.IGNORECASE).strip()
             elif ln.upper().startswith("W2:"):
                 w2 = ln[3:].strip()
-        if w1.lower().startswith("the user is") and w2:
+        if w1.lower().startswith("the user ") and w2:
             w1, w2 = w2, ""
         if not w1:
             w1 = raw.splitlines()[0].strip()
+        wants_summary = ("summary" in user_prompts[i].lower()) or ("summarize" in user_prompts[i].lower())
+        if not wants_summary:
+            w1 = re.sub(r"\s*;?\s*Summary:.*$", "", w1, flags=re.IGNORECASE).strip()
+            w2 = re.sub(r"\s*;?\s*Summary:.*$", "", w2, flags=re.IGNORECASE).strip()
         if w1 and not w2 and len(w1.split()) > 30:
             if ";" in w1:
                 parts = [p.strip() for p in w1.split(";") if p.strip()]
@@ -146,7 +164,26 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
             parts = [p.strip() for p in w1.split(";") if p.strip()]
             w1 = "; ".join(parts[:-1])
             w2 = parts[-1] + "; " + w2
-        plans = [p for p in (w1, w2) if len(p) > 4]
+        plans_raw = [p for p in (w1, w2) if len(p) >= 2]
+        if not plans_raw:
+            plans_raw = ["Hello! How can I help you today?"]
+        plans = []
+        for p_str in plans_raw:
+            if len(eng.k3_tok.encode(p_str)) <= P_BPE - 2:
+                plans.append(p_str)
+            else:
+                clauses = [c.strip() for c in re.split(r"(?<=[.!?;])\s+", p_str) if c.strip()]
+                cur = ""
+                for cl in clauses:
+                    cand = (cur + " " + cl).strip() if cur else cl
+                    if len(eng.k3_tok.encode(cand)) <= P_BPE - 2:
+                        cur = cand
+                    else:
+                        if cur:
+                            plans.append(cur)
+                        cur = cl
+                if cur:
+                    plans.append(cur)
         all_plans.append(plans)
     return all_plans
 
@@ -155,8 +192,8 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
 def render_ncm_batched_multi_prompt(eng: K3FastChatEngine, all_plans, user_prompts, cands=8):
     """Clubs all windows across all `B` prompts (`total_windows = sum(len(p) for p in all_plans)`) into ONE batch tensor
     `[total_windows, 96, 384]` (or `[cands * total_windows, 96, 384]` for MBR8), runs `NextConceptTransformer` (11 passes)
-    and `K3LexicalPointerDecoder` (1 pass) in parallel, and un-flattens back to each prompt with its own per-prompt
-    grounding mask so prompt `i` NEVER sees tokens from prompt `j != i`!"""
+    and `K3LexicalPointerDecoder` (1 pass) in parallel, and un-flattens back to each prompt with its own per-window
+    vocabulary mask so prompt `i` NEVER sees tokens from prompt `j != i`!"""
     flat_plans = []
     win_to_prompt_idx = []
     for p_idx, plist in enumerate(all_plans):
@@ -175,26 +212,14 @@ def render_ncm_batched_multi_prompt(eng: K3FastChatEngine, all_plans, user_promp
     z_bpe = eng.vqvae.encoder.wte(p_kpad)
     z_pref, pmask = pack_combo_prefix(z_rh, msk_r, z_bpe, (p_kpad == K3_PAD))
 
-    # Build strict per-prompt allowed_ids so row `w_i` only allows proper nouns/numbers from its own prompt + its own plan!
-    per_prompt_masks = []
-    for p_idx, u_prompt in enumerate(user_prompts):
-        ref_str = u_prompt + " " + " ".join(all_plans[p_idx])
-        allowed_ids = set(eng.k3_tok.encode(ref_str))
-        for w in re.findall(r"[A-Za-z0-9.,:%£$€'-]+", ref_str):
-            allowed_ids.update(eng.k3_tok.encode(w))
-            allowed_ids.update(eng.k3_tok.encode(" " + w))
-        m = eng.restricted_mask.clone()
-        if allowed_ids:
-            m[torch.tensor(list(allowed_ids), dtype=torch.long, device=eng.dev)] = False
-        per_prompt_masks.append(m)
+    win_masks = [eng._build_window_vocab_mask(w_str) for w_str in flat_plans]
 
     if cands <= 1:
         g1 = generate_from_zpref(eng.net, eng.tk, z_pref, pmask, [0.0] * len(eng.sched))
         zh1, _ = eng.vqvae.vq.idx_to_zhats(g1, return_zlevels=True)
         lg1 = eng.copy_dec(eng.vqvae.decoder, zh1[-1], z_rh, msk_r, z_bpe, p_kpad)
         for w_i in range(W_tot):
-            m = per_prompt_masks[win_to_prompt_idx[w_i]]
-            lg1[w_i, :, m] -= 14.0
+            lg1[w_i, :, win_masks[w_i]] -= 80.0
         prompt_txts = [[] for _ in range(len(user_prompts))]
         prompt_ids = [[] for _ in range(len(user_prompts))]
         for w_i in range(W_tot):
@@ -212,7 +237,7 @@ def render_ncm_batched_multi_prompt(eng: K3FastChatEngine, all_plans, user_promp
     z_bpe_k = z_bpe.repeat(cands, 1, 1)
     p_kpad_k = p_kpad.repeat(cands, 1)
     torch.manual_seed(42)
-    gk = generate_from_zpref(eng.net, eng.tk, z_pref_k, pmask_k, eng.sched)
+    gk = generate_from_zpref(eng.net, self.tk if hasattr(eng, "self") else eng.tk, z_pref_k, pmask_k, eng.sched)
     zhk, _ = eng.vqvae.vq.idx_to_zhats(gk, return_zlevels=True)
     lgk = eng.copy_dec(eng.vqvae.decoder, zhk[-1], z_rh_k, msk_r_k, z_bpe_k, p_kpad_k)
 
@@ -221,8 +246,7 @@ def render_ncm_batched_multi_prompt(eng: K3FastChatEngine, all_plans, user_promp
     for k in range(cands):
         for w_i in range(W_tot):
             row_idx = k * W_tot + w_i
-            m = per_prompt_masks[win_to_prompt_idx[w_i]]
-            lgk[row_idx, :, m] -= 14.0
+            lgk[row_idx, :, win_masks[w_i]] -= 80.0
             ts, is_ = eng._dec_k3_aligned(lgk[row_idx], p_kpad[w_i].tolist())
             cands_t[w_i].append(ts.strip())
             cands_i[w_i].append(is_)

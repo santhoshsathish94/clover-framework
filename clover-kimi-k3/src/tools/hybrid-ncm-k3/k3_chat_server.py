@@ -202,11 +202,7 @@ const previewBar = document.getElementById('img-preview-bar');
 const previewThumb = document.getElementById('img-preview-thumb');
 const previewName = document.getElementById('img-preview-name');
 
-let sessionId = localStorage.getItem('clover_ai_session_id');
-if (!sessionId) {
-  sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-  localStorage.setItem('clover_ai_session_id', sessionId);
-}
+let sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
 let attachedImageDataUrl = null;
 
 const CLOVER_LOADER_HTML = `
@@ -475,18 +471,15 @@ class MultiGPUCloverCoordinator:
                 req.event.set()
             else:
                 t0 = time.perf_counter()
-                ctx_prompts = [build_contextual_prompt(req.prompt, req.hist_snapshot) for req in batch]
-                full_ctxs = [
-                    ((" ".join(f"{h['user']} {h['reply']}" for h in req.hist_snapshot[-6:]) if req.hist_snapshot else "") + " " + req.prompt).strip()
-                    for req in batch
-                ]
-                b_plans = plan_batch_with_latent(eng, ctx_prompts, lat_steps=14, max_new=100)
+                raw_prompts = [req.prompt for req in batch]
+                histories = [req.hist_snapshot for req in batch]
+                b_plans = plan_batch_with_latent(eng, raw_prompts, lat_steps=14, max_new=100, histories=histories)
                 torch.cuda.synchronize(eng.dev_ha)
                 t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
                 max_cands = max(req.cands for req in batch)
                 t1 = time.perf_counter()
-                outs, ids_list = render_ncm_batched_multi_prompt(eng, b_plans, full_ctxs, cands=max_cands)
+                outs, ids_list = render_ncm_batched_multi_prompt(eng, b_plans, raw_prompts, cands=max_cands)
                 torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
                 t_ncm_ms = (time.perf_counter() - t1) * 1000.0
 

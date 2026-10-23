@@ -136,6 +136,26 @@ DOMAIN_PLAN_TARGET_PAIRS = [
         "The crew used the Lunar Module (LM) as a lifeboat, conserving resources. They faced challenges like carbon dioxide buildup, which was solved by adapting the LM's filters. The mission shifted to safely returning to Earth.",
         "The crew used the Lunar Module (LM) as a lifeboat while conserving power and water. They overcame carbon dioxide buildup by adapting the LM's filters and safely returned to Earth."
     ),
+    (
+        "Hello! I am Clover AI. How can I help you today?",
+        "Hello! I am Clover AI. How can I help you today?"
+    ),
+    (
+        "Hi there! How can I assist you today?",
+        "Hi there! How can I assist you today?"
+    ),
+    (
+        "I apologize for the confusion. Please let me know what question or topic you would like me to help with.",
+        "I apologize for the confusion. Please let me know what question or topic you would like me to help with."
+    ),
+    (
+        "I am Clover AI, an interactive assistant powered by HybridAgent latent planning, Next-Concept Modeling, and Clover Kimi K3.",
+        "I am Clover AI, an interactive assistant powered by HybridAgent latent planning, Next-Concept Modeling, and Clover Kimi K3."
+    ),
+    (
+        "The Eiffel Tower is a famous wrought-iron lattice tower in Paris, France, designed and built by engineer Gustave Eiffel in 1889.",
+        "The Eiffel Tower is a famous wrought-iron lattice tower in Paris, France, designed and built by engineer Gustave Eiffel in 1889."
+    ),
 ]
 
 
@@ -263,7 +283,7 @@ def main():
         p.requires_grad_(False)
 
     val_rows = general_rows[:300]
-    tr_rows = general_rows[300:] + (domain_rows * 120)
+    tr_rows = general_rows[300:] + (domain_rows * 25)
     all_rows = val_rows + tr_rows
     nval = len(val_rows)
 

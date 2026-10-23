@@ -113,17 +113,25 @@ class K3LexicalPointerDecoder(nn.Module):
         cq = F.normalize(self.copy_q(x), dim=-1)           # [B, 64, 384]
         ck = F.normalize(self.copy_k(mem_bpe), dim=-1)     # [B, 48, 384]
         sim = torch.bmm(cq, ck.transpose(1, 2))            # [B, 64, 48]
-        # Add monotonic diagonal prior so position t in output prefers roughly proportional position in plan!
-        t_frac = torch.linspace(0.0, 1.0, T, device=dev)[:, None]       # [64, 1]
+
+        # Check per row whether `k3_pids` is a semicolon skeleton (token 26 ';') or already a complete natural sentence
+        has_semi = (k3_pids == 26).any(dim=1, keepdim=True)              # [B, 1]
         p_len = (~msk_bpe).sum(dim=1, keepdim=True).clamp(min=1).float() # [B, 1]
-        p_idx = torch.arange(P_BPE, device=dev, dtype=torch.float32)[None, :] / p_len  # [B, 48]
-        diag_bias = -2.5 * (t_frac[None, :, :] - p_idx[:, None, :]).pow(2)             # [B, 64, 48]
+        expected_T = torch.where(has_semi, (p_len * 1.22 + 2.0).clamp(min=4.0, max=float(T)), p_len)  # [B, 1]
+        t_pos_idx = torch.arange(T, device=dev, dtype=torch.float32)[None, :, None]                   # [1, 64, 1]
+        p_pos_idx = torch.arange(P_BPE, device=dev, dtype=torch.float32)[None, None, :]               # [1, 1, 48]
+
+        # For semicolon skeletons, use soft proportional diagonal prior; for natural sentences, use 1-to-1 position prior
+        diag_semi = -3.0 * ((t_pos_idx / expected_T[:, :, None]) - (p_pos_idx / p_len[:, :, None])).pow(2)
+        diag_sent = -25.0 * (t_pos_idx - p_pos_idx).pow(2)
+        diag_bias = torch.where(has_semi[:, :, None], diag_semi, diag_sent)                           # [B, 64, 48]
         sim = (sim * 14.0 + diag_bias).masked_fill(msk_bpe[:, None, :], -1e4)
         attn_probs = F.softmax(sim, dim=-1)                # [B, 64, 48]
         ctx_vec = torch.bmm(attn_probs, z_bpe)             # [B, 64, 384]
 
         g_copy = torch.sigmoid(self.copy_gate(torch.cat([x, ctx_vec], dim=-1)))  # [B, 64, 1]
-        copy_boost = attn_probs * (g_copy * self.copy_scale)                     # [B, 64, 48]
+        eff_scale = torch.where(has_semi[:, :, None], g_copy * self.copy_scale, torch.full_like(g_copy, 45.0))
+        copy_boost = attn_probs * eff_scale                                      # [B, 64, 48]
 
         out_logits = base_logits.clone()
         idx_exp = k3_pids[:, None, :].expand(B, T, P_BPE)
