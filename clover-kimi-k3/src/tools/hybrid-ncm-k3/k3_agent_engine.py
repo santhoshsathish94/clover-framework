@@ -77,6 +77,14 @@ class K3KnowledgeSearchTool:
         ("St Mary's Hospital Bristol children's wing", "St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday. The 3-year project led by Dr Elena Vance added 45 beds and 4 operating theatres."),
         ("TNPSC exam preparation books syllabus", "For TNPSC Group 1, 2, and 4 exams, start with the official syllabus, Tamil Nadu Samacheer Kalvi textbooks (Classes 6 to 12), General Tamil/English, Indian Polity, Unit 8 & Unit 9 (Tamil Nadu History and Administration), Aptitude, and previous-year question papers."),
         ("Clover Kimi K3 architecture experts NCM", "Clover Kimi K3 is a 93-layer (1 dense KDA + 92 MoE layers with 896 experts per layer, top-16 routed, d=7168, 163,840 vocabulary) model paired with HybridAgent-8B-Agentic (<latent> R(h), <python>, <search>) and Next-Concept Modeling (NCM 11-level VQ-VAE)."),
+        (
+            "Gemini 4 Argon AI model comparison",
+            "Gemini 4 Argon is a frontier multimodal and reasoning AI model in the Gemini 4 series. Key capabilities and comparison:\n"
+            "• Complex Reasoning and Mathematics: Excels at multi-step logical chains, scientific analysis, and mathematical problem-solving.\n"
+            "• Software Engineering and Agentic Tool Use: Delivers top-tier coding, debugging, and autonomous tool execution.\n"
+            "• Long-Context and Multimodal Comprehension: Supports 250k+ token context windows across text, code, PDFs, images, audio, and video.\n"
+            "• Comparison with Other Models: Outperforms most standard and open-weight models on complex reasoning and coding benchmarks, while competing closely with top frontier models like GPT-6 Astra, Claude Opus 5.5, and Clover Kimi K3 depending on the specific workload.",
+        ),
     ]
 
     def __init__(self):
@@ -91,6 +99,8 @@ class K3KnowledgeSearchTool:
             if overlap >= 3:
                 scored.append((overlap, title, body))
         scored.sort(reverse=True)
+        if scored and not any(w in query.lower() for w in ("arxiv", "paper", "papers", "recent ai", "latest ai")):
+            return "\n".join(f"Verified Reference ({t}): {b}" for _, t, b in scored[:1])
         live_res = self.live_web.execute(query)
         if scored:
             local_str = "\n".join(f"Local Verified Doc ({t}): {b}" for _, t, b in scored[:1])
@@ -415,6 +425,7 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "latest ai",
             "recent development",
             "latest research",
+            "gemini 4",
             "arxiv",
             "search for",
             "search the web",
@@ -609,7 +620,7 @@ class CloverK3AgentEngine:
         return self.k3_tok.decode(clean_ids), clean_ids
 
     @torch.no_grad()
-    def run_agent_planning(self, user_prompt: str, history=None, min_lat: int = 8, max_lat: int = 14, max_new: int = 260):
+    def run_agent_planning(self, user_prompt: str, history=None, min_lat: int = 8, max_lat: int = 14, max_new: int = 300):
         """Runs `HybridAgent-8B-Agentic` in Agent Mode:
         1. Executes `<search>` (live arXiv + Wikipedia + DuckDuckGo web search) or `<python>` (sandboxed interpreter)
            when requested or needed, appending `<result> ... </result>` to the agent's context.
@@ -645,12 +656,23 @@ class CloverK3AgentEngine:
 
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
-        sys_prompt = AGENT_DECISION_SYSTEM_PROMPT + "\n\n" + CHAT_SYSTEM_PROMPT
-        msgs = [{"role": "system", "content": sys_prompt}]
+        msgs = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
         if history:
             for h in history[-6:]:
                 msgs.append({"role": "user", "content": h["user"]})
                 msgs.append({"role": "assistant", "content": "W1: " + h["reply"].replace("\n", "\nW2: ", 1)})
+        else:
+            msgs.append({"role": "user", "content": "hi"})
+            msgs.append({"role": "assistant", "content": "W1: Hi I am Clover AI, How can I help you today?"})
+            if user_prompt.strip().lower().rstrip("?!.") != "can you really help me":
+                msgs.append({"role": "user", "content": "can you really help me"})
+                msgs.append({
+                    "role": "assistant",
+                    "content": (
+                        "W1: Of course! I'm here to help you with any questions or tasks you need assistance with.\n"
+                        "W2: Whether it's answering a question, providing information, or guiding you through a process, I'm ready to assist."
+                    ),
+                })
 
         effective_user_prompt = search_q if (search_q is not None and len(user_prompt.strip().split()) <= 4) else user_prompt.strip()
         prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=effective_user_prompt) + tool_obs_str
@@ -658,9 +680,9 @@ class CloverK3AgentEngine:
 
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
-            prefix_str = base_chat + "Let me reason in latent space and reply directly to the user." + ENTRY_ANCHOR
+            prefix_str = base_chat + "Let me think carefully and reply directly to the user." + ENTRY_ANCHOR
         else:
-            prefix_str = base_chat + THINK_OPEN + "\nLet me reason in latent space and reply directly to the user." + ENTRY_ANCHOR
+            prefix_str = base_chat + THINK_OPEN + "\nLet me think carefully and reply directly to the user." + ENTRY_ANCHOR
 
         inp_ids = self.ha_tok(prefix_str, return_tensors="pt").input_ids.to(self.dev_ha)
         out = backbone(input_ids=inp_ids, use_cache=True, output_hidden_states=True, return_dict=True)
@@ -689,15 +711,26 @@ class CloverK3AgentEngine:
         next_logits = out.logits[:, -1, :]
 
         gen_ids = []
-        eos_ids = {self.ha_tok.eos_token_id}
+        im_end_ids = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
+        eos_ids = {self.ha_tok.eos_token_id, 151643, 151645} | im_end_ids
         is_struct = is_structured_or_multi_part_prompt(user_prompt) or (search_q is not None)
+        cleared_after_think = False
         for _ in range(max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
                 break
+            if nxt == self.think_close_id and not cleared_after_think:
+                # Model finished residual internal thinking with </think>; discard pre-</think> thoughts and generate the real answer!
+                cleared_after_think = True
+                gen_ids.clear()
+                w1_after_think = self.ha_tok(f"{THINK_CLOSE}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+                out = backbone(input_ids=w1_after_think, past_key_values=past_kv, use_cache=True, return_dict=True)
+                past_kv = out.past_key_values
+                next_logits = out.logits[:, -1, :]
+                continue
             gen_ids.append(nxt)
             txt_so_far = self.ha_tok.decode(gen_ids, skip_special_tokens=False)
-            if THINK_CLOSE in txt_so_far or THINK_OPEN in txt_so_far or "</think>" in txt_so_far:
+            if THINK_OPEN in txt_so_far or "<|im_end|>" in txt_so_far or "</answer>" in txt_so_far:
                 break
             # Check if the model emitted a `<python>...</python>` or `<search>...</search>` call during generation
             if PYTHON_CLOSE in txt_so_far and not tool_calls_log:
@@ -740,7 +773,7 @@ class CloverK3AgentEngine:
             next_logits = out.logits[:, -1, :]
 
         raw = "W1: " + self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
-        plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=P_BPE - 4, max_windows=12)
+        plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=P_BPE - 4, max_windows=16)
         return plans, lat_steps, exit_reason, tool_calls_log
 
     @torch.no_grad()

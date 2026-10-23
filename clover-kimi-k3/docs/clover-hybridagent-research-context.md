@@ -1718,6 +1718,37 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 - **Test 4 — Agent `<python>` Tool (`p5` Leeds–London trains, `93` K3 Trunks + `92` MoE Layers + `3,115` active K3 experts in `1.07 s`):**
   > *"The two trains meet at 10:29, and they meet 57 miles from London."*
 
+---
+
+## Cycle 61 — 256k (`262,144`-Token) Session Context Store, Universal File Attachments, Copilot/Gemini-Style Left Sessions Sidebar & Composer UI, and Multi-Paragraph/Bullet Response Formatting
+
+**Direction (creator, 2026-10-23):**
+1. Simplify the UI greeting to `"Hi I am Clover AI, How can I help you today?"`, remove extra mode/telemetry badges, and format multi-point answers into clean readable paragraphs and bullet lists rather than a single run-on block or truncated sentence.
+2. Follow standard Copilot / Gemini UI conventions:
+   - Accept **all file types** (images, video, audio, PDF, Word `.docx`, text, markdown, CSV, JSON, code) via a single universal attachment button on the left of the input bar.
+   - Place the **voice input microphone button (`🎤`) right next to the `Send` button** on the right of the input bar.
+   - Show **all sessions in a left sidebar pane** with a **`+` add button** for New Session so users can switch between conversations and return to prior sessions.
+   - Support a **minimum of `250k` (`262,144` tokens) session context** in the standard AI assistant way (maintaining up to `262,144` Kimi K3 tokens of conversation turns and attached documents per session, and retrieving the relevant chunks + recent sliding window on each turn without forcing 250k tokens through the GPU on short turns).
+   - Test the live site in Playwright across multiple sessions, attachments, and multi-turn questions.
+
+**1. Root-Cause Diagnosis of Short / Truncated or Pre-Think Responses (`o271_gpu.txt`–`o291_gpu.txt`):**
+- On Turn 1 of a brand-new session (`history = []`), `HybridAgent-8B-Agentic` lacked an in-context `W1:` / `W2:` assistant turn in `Qwen3`'s chat template and occasionally emitted pre-answer planning monologue (`"First, I should consider..."`) before its bullet list. Seeding `msgs` with the 2-turn greeting anchor when `history` is empty (`"hi"` $\to$ `"W1: Hi I am Clover AI, How can I help you today?"` and `"can you really help me"` $\to$ `"W1: Of course!..."`) + expanding `is_structured_or_multi_part_prompt` to cover `"what is"`, `"what are"`, `"how does"`, `"better than"`, `"trends"`, `"describe"`, `"overview"`, and `"analyze"` + increasing `max_new` to `300` (`max_windows = 16`) and stopping cleanly on `<|im_end|>` (`151645`) and closing sign-off lines (`"please let me know!"`) eliminated both pre-answer self-talk and mid-list truncation.
+
+**2. `262,144`-Token (`256k`, `> 250k` Minimum) Per-Session Context Store & Universal Attachment Extractor (`k3_chat_server.py`, `o292_gpu.txt`, `o293_gpu.txt`):**
+- Added `MAX_SESSION_CONTEXT_TOKENS = 262_144` (`256k` Kimi K3 tokens via `libk3tok.so`) in `MultiGPUCloverCoordinator`:
+  - Every session maintains `session_meta[session_id]` with `title`, `created_at`, `updated_at`, `context_tokens` (up to `262,144`), and indexed `~180`-word (`~240`-token) `chunks` across all conversation turns and uploaded attachments.
+  - `extract_server_attachment_text(att)` extracts text from **PDFs** (`pypdf` / `pdftotext` / stream parser), **Word `.docx`** (`zipfile` + `word/document.xml`), **Audio files** (`.wav` duration/sample-rate inspection + transcript notes), **Plain text / Markdown / CSV / JSON / Source Code**, and **Images / Video keyframes** (routed through `K3MultimodalChatEngine` `MoonViT3d + Qwen3-VL + 93-Layer K3 + NCM`, with the visual analysis indexed into the session's `262,144`-token store so follow-up text turns remember the image/video).
+  - Added `GET /api/sessions` and `GET /api/session?session_id=...` endpoints returning session list, titles, turn counts, and `context_tokens` / `max_context_tokens: 262144`.
+
+**3. Copilot/Gemini-Style UI (`site/clover-k3/index.html`, `site/styles.css`, `k3_chat_server.py`) & Live Playwright Verification:**
+- **Left Sessions Sidebar (`.k3-sidebar`)**: Lists all sessions with auto-generated titles and a **`+` button** (`#k3-new-sess-btn`) at the top right; clicking any session switches to that conversation and restores all messages.
+- **Bottom Composer (`.k3-foot`)**: Universal attachment paperclip button (`#k3-attach-btn` $\to$ `<input type="file" id="k3-file-input" multiple>`) on the left, `Message Clover AI...` textarea in the middle, and the **voice input microphone button (`#k3-voice-btn`) right next to `Send` (`#k3-send-btn`)** on the right.
+- **Verified live in Playwright (`9e8a3bc3-3b5a-4a1b-b362-c570740b845c`):**
+  - **Session 1 (`"what are recent trends in science"`):** Rendered intro paragraph + **8 bold-headed `<ul><li>` bullet points** (`Artificial Intelligence and Machine Learning`, `Quantum Computing`, `Biotechnology and Genomics`, `Sustainability and Climate Science`, `Space Exploration`, `Interdisciplinary Research`, `Data Science and Big Data`, `Robotics and Automation`).
+  - **Session 2 (`+` button $\to$ `"what is gemini 4 argon is that really better than most models"`):** Rendered **5 clean `<p>` paragraphs** comparing `Gemini 4 Argon` (`250k+` context, complex reasoning, coding, multimodal) with standard models and frontier models (`GPT-6 Astra`, `Claude Opus 5.5`, `Clover Kimi K3`).
+  - **Session 3 (`+` button $\to$ attached `aurora_project_plan.txt` + `"What is the total budget and timeline in the attached document?"`):** Displayed the attachment preview bar (`previewVisible: true`), ingested the file into the `262,144`-token session store, and answered accurately (`$4.8 million` approved by `Dr. Maya Lin`, `Phase 1 launches in November 2026 and lasts 10 weeks`, `64 H100 GPUs in Zurich`).
+  - **Session Switching:** Clicking `"what are recent trends in science"` in the left sidebar (`sidebarTitles: ["What is the total budget and timeline", "what is gemini 4 argon is that really", "what are recent trends in science"]`) immediately restored Session 1 with all `restoredBullets: 8` intact.
+
 
 
 

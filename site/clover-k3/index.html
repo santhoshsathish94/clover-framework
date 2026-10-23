@@ -125,32 +125,47 @@
             Clover <span>AI</span>
           </div>
           <div class="k3-controls">
-            <button type="button" onclick="k3ResetChat()">New Session</button>
             <button type="button" id="k3-modal-toggle-btn" onclick="openK3ChatModal()">Expand</button>
           </div>
         </div>
-        <div class="k3-log" id="k3-chat-log" aria-live="polite">
-          <div class="k3-msg k3-msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>
-        </div>
-        <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
-          <div class="k3-preview-bar__info">
-            <img id="k3-img-preview-thumb" src="../assets/case-study-01-contentful-migration.svg" alt="Attached media">
-            <span id="k3-img-preview-name">Image attached</span>
+        <div class="k3-chat-body">
+          <aside class="k3-sidebar" aria-label="Chat sessions">
+            <div class="k3-sidebar__head">
+              <span>Sessions</span>
+              <button type="button" class="k3-add-btn" id="k3-new-sess-btn" onclick="k3ResetChat()" title="New session" aria-label="New session">+</button>
+            </div>
+            <div class="k3-session-list" id="k3-session-list"></div>
+          </aside>
+          <div class="k3-chat-main">
+            <div class="k3-log" id="k3-chat-log" aria-live="polite">
+              <div class="k3-msg k3-msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>
+            </div>
+            <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
+              <div class="k3-preview-bar__info">
+                <img id="k3-img-preview-thumb" src="../assets/case-study-01-contentful-migration.svg" alt="Attachment preview" hidden>
+                <span id="k3-img-preview-name">Attachment ready</span>
+              </div>
+              <button type="button" onclick="k3ClearAttachments()">Remove</button>
+            </div>
+            <div class="k3-foot">
+              <input type="file" id="k3-file-input" multiple hidden onchange="k3OnFilesSelected(event)">
+              <button type="button" class="k3-icon-btn" id="k3-attach-btn" onclick="document.getElementById('k3-file-input').click()" title="Attach files (images, video, audio, PDF, documents, text)" aria-label="Attach files">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                </svg>
+              </button>
+              <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover AI..."></textarea>
+              <button type="button" class="k3-icon-btn" id="k3-voice-btn" onclick="k3ToggleVoice()" title="Voice input" aria-label="Voice input">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </button>
+              <button type="button" class="k3-send" id="k3-send-btn" onclick="k3SendPrompt()">Send</button>
+            </div>
           </div>
-          <button type="button" onclick="k3ClearImage()">Remove</button>
-        </div>
-        <div class="k3-foot">
-          <input type="file" id="k3-img-input" accept="image/*,video/*" hidden onchange="k3OnImageSelected(event)">
-          <button type="button" onclick="document.getElementById('k3-img-input').click()" title="Upload an image or video">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-              <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-            Image
-          </button>
-          <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover AI..."></textarea>
-          <button type="button" class="k3-send" id="k3-send-btn" onclick="k3SendPrompt()">Send</button>
         </div>
       </div>
     </div>
@@ -924,19 +939,26 @@ src/scripts/chat-stop.sh mychat</code></pre>
   var logEl = document.getElementById('k3-chat-log');
   var inputEl = document.getElementById('k3-prompt-in');
   var sendBtn = document.getElementById('k3-send-btn');
-  var imgInput = document.getElementById('k3-img-input');
+  var fileInput = document.getElementById('k3-file-input');
   var previewBar = document.getElementById('k3-img-preview-bar');
   var previewThumb = document.getElementById('k3-img-preview-thumb');
   var previewName = document.getElementById('k3-img-preview-name');
+  var sessionListEl = document.getElementById('k3-session-list');
+  var voiceBtn = document.getElementById('k3-voice-btn');
   var modalEl = document.getElementById('k3-chat-modal');
   var modalSlot = document.getElementById('k3-modal-slot');
   var modalToggleBtn = document.getElementById('k3-modal-toggle-btn');
   var inlineWidget = document.getElementById('k3-inline-widget');
   var inlineParent = inlineWidget ? inlineWidget.parentNode : null;
 
-  var sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-
+  var STORAGE_KEY = 'clover_k3_sessions_v2';
+  var sessionsMap = {};
+  var sessionOrder = [];
+  var sessionId = '';
   var attachedImageDataUrl = null;
+  var attachedFiles = [];
+
+  var GREETING_HTML = '<div class="k3-msg k3-msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>';
 
   var CLOVER_LOADER_HTML =
     '<div class="k3-clover-loader" role="status" aria-label="Thinking">' +
@@ -952,6 +974,107 @@ src/scripts/chat-stop.sh mychat</code></pre>
       '</svg>' +
       '<span>Thinking&hellip;</span>' +
     '</div>';
+
+  function makeSessionId() {
+    return 'sess_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+  }
+
+  function saveSessionsToStorage() {
+    try {
+      var payload = { currentId: sessionId, order: sessionOrder, map: {} };
+      for (var i = 0; i < sessionOrder.length; i++) {
+        var sid = sessionOrder[i];
+        if (sessionsMap[sid]) {
+          payload.map[sid] = {
+            id: sid,
+            title: sessionsMap[sid].title || 'New chat',
+            messages: sessionsMap[sid].messages || []
+          };
+        }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {}
+  }
+
+  function loadSessionsFromStorage() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var data = JSON.parse(raw);
+        if (data && Array.isArray(data.order) && data.map) {
+          sessionsMap = data.map;
+          sessionOrder = data.order.filter(function (id) { return !!sessionsMap[id]; });
+          sessionId = (data.currentId && sessionsMap[data.currentId]) ? data.currentId : (sessionOrder[0] || '');
+        }
+      }
+    } catch (e) {}
+    if (!sessionId || !sessionsMap[sessionId]) {
+      var firstId = makeSessionId();
+      sessionsMap[firstId] = { id: firstId, title: 'New chat', messages: [] };
+      sessionOrder = [firstId];
+      sessionId = firstId;
+      saveSessionsToStorage();
+    }
+  }
+
+  function renderSessionSidebar() {
+    if (!sessionListEl) return;
+    sessionListEl.innerHTML = '';
+    for (var i = 0; i < sessionOrder.length; i++) {
+      var sid = sessionOrder[i];
+      var sObj = sessionsMap[sid];
+      if (!sObj) continue;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'k3-session-item' + (sid === sessionId ? ' is-active' : '');
+      btn.setAttribute('data-session-id', sid);
+      btn.textContent = sObj.title || 'New chat';
+      btn.title = sObj.title || 'New chat';
+      (function (targetId) {
+        btn.onclick = function () { window.k3SelectSession(targetId); };
+      })(sid);
+      sessionListEl.appendChild(btn);
+    }
+  }
+
+  function renderCurrentSessionMessages() {
+    if (!logEl) return;
+    logEl.innerHTML = GREETING_HTML;
+    var sObj = sessionsMap[sessionId];
+    if (!sObj || !Array.isArray(sObj.messages)) return;
+    for (var i = 0; i < sObj.messages.length; i++) {
+      var m = sObj.messages[i];
+      appendMsg(m.role, m.html);
+    }
+  }
+
+  window.k3SelectSession = function (sid) {
+    if (!sessionsMap[sid]) return;
+    sessionId = sid;
+    window.k3ClearAttachments();
+    renderSessionSidebar();
+    renderCurrentSessionMessages();
+    saveSessionsToStorage();
+  };
+
+  window.k3ResetChat = function () {
+    // If the currently active session is already an empty 'New chat', just stay on it
+    var cur = sessionsMap[sessionId];
+    if (cur && (!cur.messages || cur.messages.length === 0)) {
+      window.k3ClearAttachments();
+      renderCurrentSessionMessages();
+      renderSessionSidebar();
+      return;
+    }
+    var newId = makeSessionId();
+    sessionsMap[newId] = { id: newId, title: 'New chat', messages: [] };
+    sessionOrder.unshift(newId);
+    sessionId = newId;
+    window.k3ClearAttachments();
+    renderSessionSidebar();
+    renderCurrentSessionMessages();
+    saveSessionsToStorage();
+  };
 
   async function probeBackend() {
     for (var i = 0; i < API_CANDIDATES.length; i++) {
@@ -985,11 +1108,28 @@ src/scripts/chat-stop.sh mychat</code></pre>
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  function attachDataUrl(dataUrl, label) {
-    attachedImageDataUrl = dataUrl;
-    if (previewThumb) previewThumb.src = dataUrl;
-    if (previewName) previewName.textContent = label || 'Image attached (MoonViT3d + Qwen3-VL ready)';
-    if (previewBar) previewBar.hidden = false;
+  function updateAttachmentPreviewBar() {
+    if (!previewBar) return;
+    if (!attachedImageDataUrl && (!attachedFiles || !attachedFiles.length)) {
+      previewBar.hidden = true;
+      return;
+    }
+    previewBar.hidden = false;
+    if (previewThumb) {
+      if (attachedImageDataUrl) {
+        previewThumb.src = attachedImageDataUrl;
+        previewThumb.hidden = false;
+      } else {
+        previewThumb.hidden = true;
+      }
+    }
+    if (previewName) {
+      var names = [];
+      for (var i = 0; i < attachedFiles.length; i++) {
+        names.push(attachedFiles[i].name);
+      }
+      previewName.textContent = names.length ? names.join(', ') : 'Image attached';
+    }
   }
 
   function extractVideoFramesToDataUrl(videoFile, callback) {
@@ -1030,23 +1170,66 @@ src/scripts/chat-stop.sh mychat</code></pre>
     };
   }
 
-  window.k3OnImageSelected = function (e) {
-    var file = e.target.files && e.target.files[0];
-    if (!file) return;
-    if (file.type && file.type.indexOf('video/') === 0) {
-      extractVideoFramesToDataUrl(file, function (dataUrl) {
-        attachDataUrl(dataUrl, file.name + ' (Video keyframes -> MoonViT3d + Qwen3-VL)');
-      });
-      return;
+  function isTextLikeFile(file) {
+    var t = (file.type || '').toLowerCase();
+    var n = (file.name || '').toLowerCase();
+    if (t.indexOf('text/') === 0 || t.indexOf('json') !== -1 || t.indexOf('xml') !== -1 || t.indexOf('javascript') !== -1) {
+      return true;
     }
-    var reader = new FileReader();
-    reader.onload = function (ev) {
-      attachDataUrl(ev.target.result, file.name + ' (MoonViT3d + Qwen3-VL ready)');
-    };
-    reader.readAsDataURL(file);
+    return /\.(txt|md|markdown|csv|tsv|json|jsonl|py|js|ts|tsx|jsx|c|cpp|h|hpp|rs|go|java|html|css|xml|yaml|yml|toml|ini|sh|ps1|sql|log|tex)$/i.test(n);
+  }
+
+  window.k3OnFilesSelected = function (e) {
+    var files = (e.target && e.target.files) ? e.target.files : [];
+    if (!files.length) return;
+    for (var i = 0; i < files.length; i++) {
+      (function (file) {
+        var fType = (file.type || '').toLowerCase();
+        if (fType.indexOf('image/') === 0) {
+          var rdImg = new FileReader();
+          rdImg.onload = function (ev) {
+            attachedImageDataUrl = ev.target.result;
+            attachedFiles.push({ name: file.name, type: file.type || 'image/png', content_text: '', data_b64: ev.target.result });
+            updateAttachmentPreviewBar();
+          };
+          rdImg.readAsDataURL(file);
+        } else if (fType.indexOf('video/') === 0) {
+          extractVideoFramesToDataUrl(file, function (dataUrl) {
+            attachedImageDataUrl = dataUrl;
+            attachedFiles.push({ name: file.name, type: file.type || 'video/mp4', content_text: 'Video file: ' + file.name, data_b64: dataUrl });
+            updateAttachmentPreviewBar();
+          });
+        } else if (isTextLikeFile(file)) {
+          var rdTxt = new FileReader();
+          rdTxt.onload = function (ev) {
+            attachedFiles.push({
+              name: file.name,
+              type: file.type || 'text/plain',
+              content_text: String(ev.target.result || ''),
+              data_b64: ''
+            });
+            updateAttachmentPreviewBar();
+          };
+          rdTxt.readAsText(file);
+        } else {
+          // PDF, DOCX, Audio, or any other document/binary attachment -> read as base64 Data URL for server extraction
+          var rdBin = new FileReader();
+          rdBin.onload = function (ev) {
+            attachedFiles.push({
+              name: file.name,
+              type: file.type || 'application/octet-stream',
+              content_text: '',
+              data_b64: String(ev.target.result || '')
+            });
+            updateAttachmentPreviewBar();
+          };
+          rdBin.readAsDataURL(file);
+        }
+      })(files[i]);
+    }
   };
 
-  // Support clipboard paste (Ctrl+V) and drag-and-drop of images/videos directly onto the chat widget
+  // Support clipboard paste (Ctrl+V) of images or files
   document.addEventListener('paste', function (e) {
     var items = (e.clipboardData && e.clipboardData.items) || [];
     for (var i = 0; i < items.length; i++) {
@@ -1055,7 +1238,9 @@ src/scripts/chat-stop.sh mychat</code></pre>
         if (f) {
           var rd = new FileReader();
           rd.onload = function (ev) {
-            attachDataUrl(ev.target.result, 'Pasted image (MoonViT3d + Qwen3-VL ready)');
+            attachedImageDataUrl = ev.target.result;
+            attachedFiles.push({ name: 'pasted-image.png', type: 'image/png', content_text: '', data_b64: ev.target.result });
+            updateAttachmentPreviewBar();
           };
           rd.readAsDataURL(f);
         }
@@ -1063,18 +1248,47 @@ src/scripts/chat-stop.sh mychat</code></pre>
     }
   });
 
-  window.k3ClearImage = function () {
+  window.k3ClearAttachments = function () {
     attachedImageDataUrl = null;
-    if (imgInput) imgInput.value = '';
+    attachedFiles = [];
+    if (fileInput) fileInput.value = '';
     if (previewBar) previewBar.hidden = true;
   };
+  window.k3ClearImage = window.k3ClearAttachments;
 
-  window.k3ResetChat = async function () {
-    sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    window.k3ClearImage();
-    if (logEl) {
-      logEl.innerHTML = '<div class="k3-msg k3-msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>';
+  var k3Recog = null;
+  var k3Listening = false;
+  window.k3ToggleVoice = function () {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      if (inputEl) inputEl.focus();
+      return;
     }
+    if (k3Listening && k3Recog) {
+      k3Recog.stop();
+      return;
+    }
+    k3Recog = new SR();
+    k3Recog.lang = 'en-US';
+    k3Recog.interimResults = false;
+    k3Listening = true;
+    if (voiceBtn) voiceBtn.classList.add('is-listening');
+    k3Recog.onresult = function (ev) {
+      var transcript = ev.results[0][0].transcript;
+      if (inputEl) {
+        inputEl.value = (inputEl.value ? inputEl.value + ' ' : '') + transcript;
+        inputEl.focus();
+      }
+    };
+    k3Recog.onend = function () {
+      k3Listening = false;
+      if (voiceBtn) voiceBtn.classList.remove('is-listening');
+    };
+    k3Recog.onerror = function () {
+      k3Listening = false;
+      if (voiceBtn) voiceBtn.classList.remove('is-listening');
+    };
+    k3Recog.start();
   };
 
   function formatBotReplyHtml(text) {
@@ -1121,7 +1335,6 @@ src/scripts/chat-stop.sh mychat</code></pre>
         if (cleanLine.slice(-1) === ':' && cleanLine.split(/\s+/).length <= 10 && j > 0) {
           htmlParts.push('<p><strong>' + escHtml(cleanLine) + '</strong></p>');
         } else {
-          // Split long single-block paragraphs (3+ sentences) into 2-sentence paragraphs
           var sents = cleanLine.split(/(?<=[.!?])\s+(?=[A-Z0-9])/);
           if (sents.length >= 3) {
             for (var k = 0; k < sents.length; k += 2) {
@@ -1140,38 +1353,72 @@ src/scripts/chat-stop.sh mychat</code></pre>
 
   window.k3SendPrompt = async function () {
     var text = (inputEl.value || '').trim();
-    if (!text && !attachedImageDataUrl) return;
+    if (!text && !attachedImageDataUrl && (!attachedFiles || !attachedFiles.length)) return;
+    var activeSid = sessionId;
     var imgData = attachedImageDataUrl;
+    var filesPayload = attachedFiles.slice();
     inputEl.value = '';
-    window.k3ClearImage();
+    window.k3ClearAttachments();
     if (sendBtn) sendBtn.disabled = true;
 
     var userHtml = '';
     if (imgData) {
-      userHtml += '<img class="k3-chat-thumb" src="' + imgData + '" alt="Uploaded image">';
+      userHtml += '<img class="k3-chat-thumb" src="' + imgData + '" alt="Uploaded media">';
+    }
+    for (var fIdx = 0; fIdx < filesPayload.length; fIdx++) {
+      if ((filesPayload[fIdx].type || '').indexOf('image/') !== 0) {
+        userHtml += '<div class="k3-attach-chip">📎 ' + escHtml(filesPayload[fIdx].name) + '</div>';
+      }
     }
     if (text) {
       userHtml += '<p>' + escHtml(text).replace(/\n/g, '<br>') + '</p>';
     }
-    appendMsg('user', userHtml);
-    var pending = appendMsg('bot', CLOVER_LOADER_HTML);
+
+    var sObj = sessionsMap[activeSid];
+    if (sObj) {
+      if (!sObj.messages || sObj.messages.length === 0 || sObj.title === 'New chat') {
+        var titleCandidate = text || (filesPayload.length ? filesPayload[0].name : 'Image analysis');
+        sObj.title = titleCandidate.slice(0, 38);
+      }
+      sObj.messages.push({ role: 'user', html: userHtml });
+      renderSessionSidebar();
+      saveSessionsToStorage();
+    }
+
+    if (sessionId === activeSid) {
+      appendMsg('user', userHtml);
+    }
+    var pending = (sessionId === activeSid) ? appendMsg('bot', CLOVER_LOADER_HTML) : null;
 
     try {
       var res = await fetch(activeBase + '/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
-          prompt: text || 'Describe this image clearly.',
+          session_id: activeSid,
+          prompt: text || (imgData ? 'Describe this image clearly.' : 'Summarize and explain the attached file.'),
           image_base64: imgData,
+          attachments: filesPayload,
           remember: true
         })
       });
       var r = await res.json();
       var replyTxt = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
-      pending.innerHTML = formatBotReplyHtml(replyTxt);
+      var botHtml = formatBotReplyHtml(replyTxt);
+      if (sessionsMap[activeSid]) {
+        sessionsMap[activeSid].messages.push({ role: 'bot', html: botHtml });
+        saveSessionsToStorage();
+      }
+      if (pending && sessionId === activeSid) {
+        pending.innerHTML = botHtml;
+      } else if (sessionId === activeSid) {
+        appendMsg('bot', botHtml);
+      }
     } catch (err) {
-      pending.innerHTML = '<span>Unable to reach Clover AI right now. Please try again.</span>';
+      var errHtml = '<p>Unable to reach Clover AI right now. Please try again.</p>';
+      if (pending && sessionId === activeSid) {
+        pending.innerHTML = errHtml;
+      }
     } finally {
       if (sendBtn) sendBtn.disabled = false;
       if (inputEl) inputEl.focus();
@@ -1216,6 +1463,9 @@ src/scripts/chat-stop.sh mychat</code></pre>
     });
   }
 
+  loadSessionsFromStorage();
+  renderSessionSidebar();
+  renderCurrentSessionMessages();
   probeBackend();
 })();
 </script>

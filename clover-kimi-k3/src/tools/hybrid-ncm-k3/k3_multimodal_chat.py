@@ -213,7 +213,7 @@ class K3MultimodalChatEngine:
         return r_h, msk.to(torch.bool)
 
     @torch.no_grad()
-    def plan_visual_with_latent(self, pil_img, user_prompt, latent_steps=6, max_new=220):
+    def plan_visual_with_latent(self, pil_img, user_prompt, latent_steps=6, max_new=340):
         """Option B: Runs `Qwen3-VL-8B-Instruct` on `[pil_img, user_prompt]`, extracts visual+text `HybridLink` `R(h_t)`
         from the multimodal prefill, and decodes the grounded multi-window natural-sentence plan."""
         msgs = [
@@ -244,7 +244,7 @@ class K3MultimodalChatEngine:
             txt_so_far = self.vl_proc.tokenizer.decode(gen_ids, skip_special_tokens=True)
             if txt_so_far.endswith("\n"):
                 lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
-                if len(lines) >= 6 and not lines[-1].endswith(":"):
+                if len(lines) >= 12 and not lines[-1].endswith(":"):
                     break
             out = self.vl_model(
                 input_ids=torch.tensor([[nxt]], device=self.dev_vl), past_key_values=past_kv, use_cache=True, return_dict=True
@@ -257,7 +257,7 @@ class K3MultimodalChatEngine:
         # Replace semicolons with periods/commas so `has_semi=False` and 1-to-1 sentence pointer alignment is used!
         raw = re.sub(r";\s*(?=Summary:)", "\n", raw, flags=re.IGNORECASE)
         raw = raw.replace(";", ".")
-        plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=P_BPE - 4, max_windows=12)
+        plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=P_BPE - 4, max_windows=16)
         return plans, latent_steps
 
     def _build_window_vocab_mask(self, plan_str):

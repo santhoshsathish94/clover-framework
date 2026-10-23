@@ -44,6 +44,18 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
             for h in hist[-6:]:
                 msgs.append({"role": "user", "content": h["user"]})
                 msgs.append({"role": "assistant", "content": "W1: " + h["reply"].replace("\n", "\nW2: ", 1)})
+        else:
+            msgs.append({"role": "user", "content": "hi"})
+            msgs.append({"role": "assistant", "content": "W1: Hi I am Clover AI, How can I help you today?"})
+            if p.strip().lower().rstrip("?!.") != "can you really help me":
+                msgs.append({"role": "user", "content": "can you really help me"})
+                msgs.append({
+                    "role": "assistant",
+                    "content": (
+                        "W1: Of course! I'm here to help you with any questions or tasks you need assistance with.\n"
+                        "W2: Whether it's answering a question, providing information, or guiding you through a process, I'm ready to assist."
+                    ),
+                })
         msgs.append({"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=p.strip())})
         base_chat = eng.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
