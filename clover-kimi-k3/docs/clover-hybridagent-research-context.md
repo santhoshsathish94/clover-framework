@@ -1431,6 +1431,36 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
        - In `HybridAgent`'s `W1/W2` plan, all 6 prompts are answered accurately (`chloroplasts`, `chlorophyll`, `6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂`, `DNS`, `TCP`, `HTTP/HTTPS`, `$120 - $30 = $90`, `$90 × 0.08 = $7.20`).
        - However, when `e8_k3_direct` renders words it never saw in VQ-VAE adaptation (`"chloroplasts"` in `q2`, `"server"` in `q3`, `"Odoacer"` / `"476 AD"` in `q4`), the 313-code VQ bottleneck maps them onto the nearest `domain_rows * 120` training tokens (`"chloroplasts"` $\to$ `"lithium"`, `"server"` $\to$ `"logs"` / `"database"`), and on symbolic equations (`6CO₂ + 6H₂O` or `$120 × 0.25 = $30`) non-autoregressive parallel argmax drops operators (`=`, `+`, `-`).
 
+---
+
+## Cycle 53 — Multimodal (Image / Video $\to$ Text) Chat Mode: Option B Primary (`Qwen3-VL-8B-Instruct` + `HybridLink` + `e8_k3_direct`) + Optional Option A (`MoonViT3d` + `PatchMergerMLPV2` `d = 7,168`)
+
+**Direction (creator, 2026-10-23):** "I think only **For Image / Video *Input* $\to$ Text *Output*** would help, what will give the right output option A or option B ... yes let's do that do the option B first then let's include Option A as optional".
+
+**1. Why Option B is Primary for Fast Chat Mode and Option A is Optional (`o174_gpu.txt`, `o176_gpu.txt`, `o179_gpu.txt`):**
+- **Option B (`Qwen/Qwen3-VL-8B-Instruct` + `HybridLink` + `e8_k3_direct`):**
+  - Measured the exact representation alignment between `HybridAgent-8B-Agentic` (`d = 4,096`) and `Qwen/Qwen3-VL-8B-Instruct` (`d = 4,096`):
+    - **Input token embedding cosine similarity (`151,643` tokens):** **`0.9878` (`98.78%`)**.
+    - **Top-layer (`layer 36`) hidden-state cosine similarity on factual clauses:** **`0.9453` (`94.53%`)**.
+    - **`HybridLink` continuous latent output `R(h)` cosine similarity:** **`0.7951` (`79.51%`)**.
+  - Grafting `HybridAgent-8B-Agentic`'s `HybridLink` adapter onto `Qwen3-VL-8B-Instruct` (`cuda:1`) allows the planner to read `[Image + User Prompt]`, extract all visual facts/numbers/labels/OCR into the `W1 / W2` semicolon plan, and produce `R(h) [W, 48, 4096]` directly for `ComboBridge(4096 -> 384)` + `e8_k3_direct` on `cuda:0`.
+  - Fine-tuned `e8_k3_direct` (`train_e9_multimodal.py`, `500` steps, `ncm_ce: 1.8832 -> 0.7075`, `tok_ce: 1.2617 -> 0.6860`) using `Qwen3-VL-8B-Instruct` + `HybridLink` `R(h)` vectors so `ComboBridge` + `NextConceptTransformer` + `K3LexicalPointerDecoder` are natively aligned to `Qwen3-VL-8B-Instruct`'s hidden states.
+- **Option A (`K3OptionAMoonViT`: Kimi K3's Native `MoonViT3d` + `PatchMergerMLPV2`, `--use-option-a`):**
+  - Downloaded Kimi K3's official vision shards from `moonshotai/Kimi-K3` (`model-00096-of-000096.safetensors` `765.27 MB` containing `vision_tower.*` `27`-layer `MoonViT3d`, and `model-00095-of-000096.safetensors` `88.01 MB` containing `mm_projector.*` `PatchMergerMLPV2` `1024 -> 7168`).
+  - Verified `100%` strict weight loading (`<All keys matched successfully>`, `o174_gpu.txt`). On a `420x420` image (`30x30 = 900` patches of `14x14`), `MoonViT3d` + `(2, 2)` `tpool_patch_merger` + `PatchMergerMLPV2` runs in **`42.0–43.4 ms`** on `cuda:0` and outputs **`[225, 7168]`** `bfloat16` embeddings (`RMS = 0.0368`) for Kimi K3's `media_placeholder_token_id = 163605`, plus a pooled `7168 -> 384` visual prefix (`W_k3_to_enc`) blended into `z_rh`.
+
+**2. End-to-End Multimodal Benchmark Across 3 Test Images (`k3_multimodal_chat.py --bench`, `o187_gpu.txt`, `multimodal_chat_results.json`):**
+
+| Test Image & Prompt | Mode | `Option A` (`MoonViT3d` `7168`-d) | `Option B` (`Qwen3-VL` + `HybridLink` Plan) | `e8_k3_direct` NCM (`1`-cand / `MBR8`) | **Total Image $\to$ K3 Text (`1`-cand / `MBR8`)** | Verbatim Output (`Kimi K3` `163,840`-Vocab Tokens) |
+|---|---|---:|---:|---:|---:|---|
+| **`img1_hospital_invoice.png`** *(Hospital equipment invoice: `#7420`, `14 March 2026`, `45` pediatric monitors `12M`, `4` theatre suites `6M`, total `18M`, `Dr Elena Vance`, `3 years`)* | **Option B Only** | `0 ms` (off) | `4,174.3 ms` | `180.2 ms` / `449.5 ms` | **`4.35 s` / `4.62 s`** | *"St Mary's Hospital in Bristol received an invoice for 18 million pounds on March 14, 2026. 12 monitors cost 12 million pounds for 45 units, and operating theatre suites totaled 6 million pounds for 4 units. Dr Elena Vance directed the 3-year project, and the invoice details the hospital equipment purchases. Summary: St Mary's Hospital spent 18 million pounds on new equipment under Dr Elena Vance's 3-year project."* (`92` K3 tok) |
+| **`img1_hospital_invoice.png`** | **Option B + Optional Option A** | **`42.9 ms`** (`225 x 7168`-d) | `4,050.1 ms` | `177.0 ms` / `457.0 ms` | **`4.27 s` / `4.55 s`** | Identical `92` K3 tokens + `225 x 7168`-d Kimi K3 `163605` visual tokens ready for 93-layer trunk |
+| **`img2_incident_chart.png`** *(Bar chart: `Region B`, `3 June`, `02:14 UTC`, `02:31 UTC`, `1,820` delayed, `14` failed, `80%` alert, `500GB -> 1TB`, `100%` full disk)* | **Option B Only** | `0 ms` (off) | `4,790.0 ms` | `165.8 ms` / `459.1 ms` | **`4.96 s` / `5.25 s`** | *"The Region B database incident occurred on 3 June at 02:14 UTC when the primary failed, and the replica was promoted at 02:31 UTC. During the failure, 1,820 transactions were delayed, 14 transactions failed, and an alert triggered at 80% disk usage. The root cause was the primary disk reaching 100% full from write-ahead logs, so disk space was expanded from 500 GB to 1 TB. Summary: The Region B database failed at 02:14 UTC due to a full disk and recovered at 02:14 UTC."* (`120` K3 tok) |
+| **`img2_incident_chart.png`** | **Option B + Optional Option A** | **`43.4 ms`** (`225 x 7168`-d) | `4,782.0 ms` | `164.6 ms` / `464.6 ms` | **`4.99 s` / `5.29 s`** | Identical `120` K3 tokens + `225 x 7168`-d Kimi K3 `163605` visual tokens |
+| **`img3_battery_diagram.png`** *(Labeled diagram: `CATHODE (LiCoO2)`, `ELECTROLYTE`, `Separator`, `ANODE (Graphite)`, `Charging`/`Discharging` arrows, `SEI layer`)* | **Option B Only** | `0 ms` (off) | `4,349.3 ms` | `167.1 ms` / `451.8 ms` | **`4.52 s` / `4.80 s`** | *"During charging, lithium ions move from the cathode to the anode through the electrolyte while electrons flow externally via the circuit. The cathode loses lithium ions while the anode gains them, and the separator prevents short circuits. During discharging, lithium ions return from the anode to the cathode through the electrolyte while electrons flow externally to power devices. over repeated cycles, SEI layer growth and active material loss cause capacity fade. Summary: Lithium-ion batteries transfer ions between electrodes and degrade from SEI layer growth and active material"* (`109` K3 tok) |
+| **`img3_battery_diagram.png`** | **Option B + Optional Option A** | **`42.0 ms`** (`225 x 7168`-d) | `4,341.0 ms` | `167.0 ms` / `457.0 ms` | **`4.55 s` / `4.84 s`** | Identical `109` K3 tokens + `225 x 7168`-d Kimi K3 `163605` visual tokens |
+
+
 
 
 
