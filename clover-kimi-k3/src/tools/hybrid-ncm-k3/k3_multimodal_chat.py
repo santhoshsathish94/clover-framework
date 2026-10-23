@@ -15,7 +15,7 @@ Implements:
        projects pooled visual tokens into NCM's `384`-d prefix (`W_k3_to_enc: 7168 -> 384`) alongside Option B's `R(h)` prefix,
        and saves the `[N_patches, 7168]` tensor ready for 1-pass 93-layer Kimi K3 multimodal verification (`stage1_lookup` at `163605`).
 """
-import argparse, json, math, os, re, sys, time
+import argparse, collections, json, math, os, re, sys, time
 
 os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
 os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
@@ -41,19 +41,16 @@ from train_e7_clean_chat import K3LexicalPointerDecoder
 from train_combo_prefix import ComboBridge, pack_combo_prefix
 from eval_both_tracks import jacc, generate_from_zpref
 from hybrid_agent.model import load_hybrid_agent
+from k3_fast_chat import GRAMMAR_CONNECTOR_WORDS, parse_and_split_plans, join_rendered_windows
+from k3_agent_engine import K3GPUExpertsRunner, K3ExpertBridge
 
 
 VL_PLAN_PROMPT = (
-    "Carefully inspect the image (including all text, numbers, labels, axes, and objects) and plan a clear, accurate response "
-    "to the user's request.\n"
-    "Write the response plan as two lines (`W1:` for the first part and `W2:` for the second part plus `Summary: ...`). "
-    "Each line must be a sequence of short semicolon-separated factual clauses written in natural mixed-case English sentences "
-    "with complete words (e.g., write 'St Mary's Hospital' not 'ST MARY'S HOSPITAL', write 'transactions' not 'Txns', "
-    "write '500 GB to 1 TB' with spaces, and write 'percent' not '%'). Each line should be 24 to 34 words. "
-    "Do NOT write meta-commentary; write ONLY the factual clauses.\n\n"
-    "Example:\n"
-    "W1: River Bridge closed at 06:30 on Monday after a lorry crash; engineers inspected 3 steel beams on the bridge; traffic was diverted to Oak Road for 5 hours\n"
-    "W2: drivers faced delays around Oak Road during the 5 hour closure; the bridge reopened after safety checks; Summary: River Bridge closed for 5 hours on Monday after a lorry crash\n\n"
+    "Carefully inspect the image (including all headings, text, numbers, tables, stages, labels, and visual details) "
+    "and write a clear, accurate, direct response to the user's request.\n"
+    "Format your response starting with `W1:` on the first line, and use `W2:`, `W3:`, `W4:` on separate lines for additional paragraphs or table/stage details. "
+    "Write complete, natural English sentences and do NOT use semicolons (`;`). "
+    "Only include `Summary:` at the end if the user explicitly asks for a summary.\n\n"
     "User request: {prompt}"
 )
 
@@ -121,19 +118,28 @@ class K3OptionAMoonViT(nn.Module):
 
 
 class K3MultimodalChatEngine:
-    """Unified Text + Vision Chat Engine combining:
-      - Option B (Primary): `Qwen3-VL-8B-Instruct` + `HybridLink` continuous `<latent>` rollout (`cuda:1`)
-      - `e8_k3_direct` (`NextConceptTransformer` + `K3LexicalPointerDecoder`, `163,840` Kimi K3 vocab, `cuda:0`)
-      - Option A (Optional): `K3OptionAMoonViT` (`MoonViT3d` + `PatchMergerMLPV2` `d=7168`, `cuda:0`)
+    """Unified Multimodal Agent Engine combining:
+      - Option A: `K3OptionAMoonViT` (`MoonViT3d` + `PatchMergerMLPV2` `d=7168`, feeding Kimi K3 visual tokens into the 93-layer K3 GPU engine)
+      - Option B: `Qwen3-VL-8B-Instruct` + `HybridLink` continuous `<latent>` rollout (`d=4096`)
+      - All 93 Kimi K3 GPU Layers (`K3GPUExpertsRunner`: 93 Trunks + 92 MoE Expert Layers + Layer 93 Tail across `cuda:0..5`) + `K3ExpertBridge`
+      - `NextConceptTransformer (NCM)` + `K3LexicalPointerDecoder` (`163,840` Kimi K3 vocab)
     """
-    def __init__(self, out_dir="/home/usergpu/merge_lf/out/e6_k3_native", dev_ncm="cuda:0", dev_vl="cuda:1", enable_option_a=False):
+    def __init__(
+        self,
+        out_dir="/home/usergpu/merge_lf/out/e6_k3_native",
+        dev_ncm="cuda:7",
+        dev_vl="cuda:7",
+        enable_option_a=True,
+        k3_experts_runner: K3GPUExpertsRunner | None = None,
+    ):
         t0 = time.perf_counter()
         self.dev = torch.device(dev_ncm)
         self.dev_vl = torch.device(dev_vl)
         self.k3_tok = K3Tokenizer()
         self.enable_option_a = enable_option_a
+        self.k3_experts = k3_experts_runner or K3GPUExpertsRunner.get_instance(max_n=256, full_93_layers=True, k_res=36)
 
-        # 1. Load HybridLink adapter from HybridAgent-8B-Agentic (4096-d) and graft onto Qwen3-VL-8B-Instruct on cuda:1
+        # 1. Load HybridLink adapter from HybridAgent-8B-Agentic (4096-d) and graft onto Qwen3-VL-8B-Instruct
         ha_tmp, ha_tok = load_hybrid_agent(
             "togethercomputer/HybridAgent-8B-Agentic", dtype=torch.bfloat16, device="cpu", require_hybridlink=True
         )
@@ -147,15 +153,15 @@ class K3MultimodalChatEngine:
             "Qwen/Qwen3-VL-8B-Instruct", dtype=torch.bfloat16, trust_remote_code=True
         ).to(self.dev_vl).eval()
 
-        # 2. Load K3-Native VQ-VAE + NextConceptTransformer + K3LexicalPointerDecoder (`e8_k3_direct.pt`) on cuda:0
+        # 2. Load K3-Native VQ-VAE + NextConceptTransformer + K3ExpertBridge + K3LexicalPointerDecoder (`e10_k3_agent_experts.pt`)
         vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
         ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
         _, self.tk, self.vqvae, self.net, src = load_k3_native_models(self.dev, vq_ckpt, ncm_ckpt)
 
-        mm_ckpt = os.path.join(out_dir, "e9_k3_multimodal.pt")
-        if not os.path.exists(mm_ckpt):
-            mm_ckpt = os.path.join(out_dir, "e8_k3_direct.pt")
-        e8_sd = torch.load(mm_ckpt, map_location="cpu", weights_only=True)
+        e10_ckpt = os.path.join(out_dir, "e10_k3_agent_experts.pt")
+        e8_ckpt = os.path.join(out_dir, "e8_k3_direct.pt")
+        ckpt_path = e10_ckpt if os.path.exists(e10_ckpt) else e8_ckpt
+        e8_sd = torch.load(ckpt_path, map_location="cpu", weights_only=True)
         self.vqvae.load_state_dict(e8_sd["vqvae"])
         self.net.load_state_dict(e8_sd["net"])
         self.vqvae.eval(); self.net.eval()
@@ -164,12 +170,27 @@ class K3MultimodalChatEngine:
         self.cbridge.load_state_dict(src["combo_bridge"])
         self.cbridge.eval()
 
+        self.k3_bridge = K3ExpertBridge(d_k3=7168, d_vq=D_VQ).to(self.dev)
+        if "k3_bridge" in e8_sd:
+            self.k3_bridge.load_state_dict(e8_sd["k3_bridge"])
+        self.k3_bridge.eval()
+
         self.copy_dec = K3LexicalPointerDecoder(d=D_VQ, n_layer=3, n_head=6).to(self.dev)
         self.copy_dec.load_state_dict(e8_sd["ptr_dec"])
         self.copy_dec.eval()
         self.restricted_mask = e8_sd["restricted_mask"].to(self.dev)
 
-        # 3. Optional Option A: Kimi K3 MoonViT3d + PatchMergerMLPV2 (`d=7168`)
+        self.grammar_ids = {K3_EOS}
+        self.repeatable_grammar_ids = {K3_EOS}
+        for gw in GRAMMAR_CONNECTOR_WORDS:
+            for variant in (gw, " " + gw):
+                for tid in self.k3_tok.encode(variant):
+                    if 0 <= tid < 163584:
+                        self.grammar_ids.add(tid)
+                        if gw.lower() in ("the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from", "as", "is", "are", "was", "were", ".", ",", ";", ":"):
+                            self.repeatable_grammar_ids.add(tid)
+
+        # 3. Option A: Kimi K3 MoonViT3d + PatchMergerMLPV2 (`d=7168`)
         self.option_a = None
         if enable_option_a:
             self.option_a = K3OptionAMoonViT(dev=dev_ncm)
@@ -177,20 +198,9 @@ class K3MultimodalChatEngine:
         levels = list(self.vqvae.vq.levels)
         self.sched = [1.0 - 0.6 * (k / (len(levels) - 1)) for k in range(len(levels))]
         self.setup_s = round(time.perf_counter() - t0, 2)
-        self._warmup()
-
-    @torch.no_grad()
-    def _warmup(self):
-        dummy_img = Image.new("RGB", (224, 224), (255, 255, 255))
-        if self.option_a is not None:
-            _ = self.option_a.encode_image(dummy_img)
-        _ = self. render_ncm(["The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds"], cands=1)
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_vl)
 
     @torch.no_grad()
     def _encode_plans_rh_vl(self, plans):
-        """Extracts continuous `R(h) = hybridlink(h_top)` (`[W, P_RH, 4096]`) over the `W1/W2` plan strings
-        using `Qwen3-VL-8B-Instruct`'s language backbone + `HybridLink`."""
         toks = self.ha_tok(
             plans, padding="max_length", truncation=True, max_length=P_RH, add_special_tokens=False, return_tensors="pt"
         )
@@ -203,9 +213,9 @@ class K3MultimodalChatEngine:
         return r_h, msk.to(torch.bool)
 
     @torch.no_grad()
-    def plan_visual_with_latent(self, pil_img, user_prompt, latent_steps=4, max_new=115):
+    def plan_visual_with_latent(self, pil_img, user_prompt, latent_steps=6, max_new=220):
         """Option B: Runs `Qwen3-VL-8B-Instruct` on `[pil_img, user_prompt]`, extracts visual+text `HybridLink` `R(h_t)`
-        from the multimodal prefill, and decodes the grounded `W1` & `W2` plan."""
+        from the multimodal prefill, and decodes the grounded multi-window natural-sentence plan."""
         msgs = [
             {
                 "role": "user",
@@ -218,7 +228,6 @@ class K3MultimodalChatEngine:
         chat_str = self.vl_proc.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True) + "W1:"
         inputs = self.vl_proc(text=[chat_str], images=[pil_img], return_tensors="pt").to(self.dev_vl)
 
-        # Prefill image patches + text prompt and compute HybridLink R(h) on the last `latent_steps` multimodal states
         out = self.vl_model(**inputs, use_cache=True, output_hidden_states=True, return_dict=True)
         past_kv = out.past_key_values
         h_top = out.hidden_states[-1]
@@ -232,12 +241,10 @@ class K3MultimodalChatEngine:
             if nxt == eos_id:
                 break
             gen_ids.append(nxt)
-            if len(gen_ids) % 8 == 0:
-                txt_so_far = self.vl_proc.tokenizer.decode(gen_ids, skip_special_tokens=True)
+            txt_so_far = self.vl_proc.tokenizer.decode(gen_ids, skip_special_tokens=True)
+            if txt_so_far.endswith("\n"):
                 lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
-                if len(lines) >= 2 and len(lines[1]) > 25 and txt_so_far.endswith("\n"):
-                    break
-                if len(lines) >= 3:
+                if len(lines) >= 6 and not lines[-1].endswith(":"):
                     break
             out = self.vl_model(
                 input_ids=torch.tensor([[nxt]], device=self.dev_vl), past_key_values=past_kv, use_cache=True, return_dict=True
@@ -246,117 +253,119 @@ class K3MultimodalChatEngine:
             next_logits = out.logits[:, -1, :]
 
         raw = "W1: " + self.vl_proc.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
-        w1, w2 = "", ""
-        for ln in raw.splitlines():
-            ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need).*$", "", ln).strip()
-            if ln.upper().startswith("W1:"):
-                w1 = ln[3:].strip()
-            elif ln.upper().startswith("W2:"):
-                w2 = ln[3:].strip()
-        if not w1:
-            w1 = raw.splitlines()[0].strip()
-
-        if w1 and not w2 and len(w1.split()) > 30:
-            if ";" in w1:
-                parts = [p.strip() for p in w1.split(";") if p.strip()]
-                mid = max(1, len(parts) // 2)
-                w1, w2 = "; ".join(parts[:mid]), "; ".join(parts[mid:])
-            else:
-                sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", w1) if s.strip()]
-                if len(sents) >= 2:
-                    mid = max(1, len(sents) // 2)
-                    w1, w2 = " ".join(sents[:mid]), " ".join(sents[mid:])
-        elif w1 and w2 and len(w1.split()) > 38 and ";" in w1:
-            parts = [p.strip() for p in w1.split(";") if p.strip()]
-            w1 = "; ".join(parts[:-1])
-            w2 = parts[-1] + "; " + w2
-
-        w1 = w1.replace("\u2019", "'").replace("\u2018", "'")
-        w2 = w2.replace("\u2019", "'").replace("\u2018", "'")
-        plans = [p for p in (w1, w2) if len(p) > 4]
+        raw = raw.replace("\u2019", "'").replace("\u2018", "'").replace("\u2014", " - ").replace("\u2013", "-")
+        # Replace semicolons with periods/commas so `has_semi=False` and 1-to-1 sentence pointer alignment is used!
+        raw = re.sub(r";\s*(?=Summary:)", "\n", raw, flags=re.IGNORECASE)
+        raw = raw.replace(";", ".")
+        plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=P_BPE - 4, max_windows=12)
         return plans, latent_steps
 
-    def _apply_grounding_mask(self, logits, allowed_k3_ids):
-        mask = self.restricted_mask.clone()
-        if allowed_k3_ids:
-            t_allow = torch.tensor(list(allowed_k3_ids), dtype=torch.long, device=self.dev)
-            mask[t_allow] = False
-        logits[:, :, mask] -= 14.0
-        return logits
+    def _build_window_vocab_mask(self, plan_str):
+        allowed = set(self.grammar_ids)
+        allowed.update(self.k3_tok.encode(plan_str))
+        for w in re.findall(r"[A-Za-z0-9.,:!?'£$€%~-]+", plan_str):
+            for v in (w, " " + w, w.capitalize(), " " + w.capitalize(), w.lower(), " " + w.lower()):
+                allowed.update(self.k3_tok.encode(v))
+        mask = torch.ones(V_K3, dtype=torch.bool, device=self.dev)
+        t_allow = torch.tensor([x for x in allowed if 0 <= x < V_K3], dtype=torch.long, device=self.dev)
+        mask[t_allow] = False
+        return mask
 
     def _dec_k3_aligned(self, row_logits, plan_ids):
         cont_map = {}
         valid_p = [int(x) for x in plan_ids if 0 <= int(x) < 163584]
         for a, b in zip(valid_p[:-1], valid_p[1:]):
             bs = self.k3_tok.decode([b], skip_special_tokens=False)
-            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs in (":", ".")):
+            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs in (":", ".", "'", "-")):
                 cont_map.setdefault(a, set()).add(b)
 
+        max_counts = collections.Counter(valid_p)
+        content_set = {tid for tid in valid_p if tid not in self.repeatable_grammar_ids}
+        emitted_counts = collections.Counter()
+        has_semi = (26 in valid_p)
+
         T = row_logits.size(0)
+        max_len = min(T, int(len(valid_p) * 1.35) + 4) if has_semi else min(T, len(valid_p))
         clean_ids = []
         prev_tid = -1
         prev_word = ""
-        for t in range(T):
+        for t in range(max_len):
             lg = row_logits[t].clone()
             if prev_tid >= 0:
-                lg[prev_tid] -= 20.0
+                lg[prev_tid] -= 30.0
                 if prev_tid in cont_map:
                     for nxt_b in cont_map[prev_tid]:
-                        lg[nxt_b] += 10.0
+                        if emitted_counts[nxt_b] < max_counts.get(nxt_b, 1):
+                            lg[nxt_b] += 12.0
+            for tid, cnt in emitted_counts.items():
+                if tid not in self.repeatable_grammar_ids and cnt >= max_counts.get(tid, 1):
+                    lg[tid] -= 30.0
+
+            covered = sum(1 for tid in content_set if emitted_counts[tid] >= 1)
+            if content_set and covered >= len(content_set) and t >= len(valid_p) - 1:
+                lg[K3_EOS] += 18.0
+
             tid = int(lg.argmax().item())
             if tid == K3_EOS:
                 break
             if 0 <= tid < 163584:
                 ws = self.k3_tok.decode([tid], skip_special_tokens=False).strip().lower()
                 if ws and ws == prev_word and len(ws) >= 2:
-                    lg[tid] -= 20.0
+                    lg[tid] -= 30.0
                     tid = int(lg.argmax().item())
                     if tid == K3_EOS:
                         break
                     ws = self.k3_tok.decode([tid], skip_special_tokens=False).strip().lower()
                 clean_ids.append(tid)
+                emitted_counts[tid] += 1
                 prev_tid = tid
                 if ws:
                     prev_word = ws
+                if content_set and sum(1 for c_id in content_set if emitted_counts[c_id] >= 1) >= len(content_set):
+                    raw_piece = self.k3_tok.decode([tid], skip_special_tokens=False).rstrip()
+                    if raw_piece.endswith((".", "!", "?")) and t >= max(2, len(valid_p) - 3):
+                        break
         return self.k3_tok.decode(clean_ids), clean_ids
 
     @torch.no_grad()
-    def render_ncm(self, plans, prompt_text="", cands=1, option_a_vis384=None):
-        rh_p, msk_p = self._encode_plans_rh_vl(plans)
+    def render_ncm(self, plans, prompt_text="", cands=8, option_a_vis384=None, k3_vis_7168=None):
+        clean_plans = [p.lstrip("\n").strip() for p in plans]
+        rh_p, msk_p = self._encode_plans_rh_vl(clean_plans)
         z_rh = self.cbridge(rh_p.to(self.dev)).float()
         msk_r = (msk_p.to(self.dev) != 0)
 
-        # If Option A (`MoonViT3d` + `PatchMergerMLPV2`) is enabled, blend/inject its pooled 384-d visual features
-        # into the last `K` valid slots of `z_rh` so NCM's prefix is conditioned on both Option B's `R(h)` and Option A's `MoonViT3d`!
         if option_a_vis384 is not None:
             K_vis = option_a_vis384.size(0)
             z_rh[:, :K_vis, :] = 0.85 * z_rh[:, :K_vis, :] + 0.15 * option_a_vis384.unsqueeze(0)
 
         p_kpad = torch.tensor(
-            [self.k3_tok.encode(p)[:P_BPE] + [K3_PAD] * (P_BPE - len(self.k3_tok.encode(p)[:P_BPE])) for p in plans],
+            [self.k3_tok.encode(p)[:P_BPE] + [K3_PAD] * (P_BPE - len(self.k3_tok.encode(p)[:P_BPE])) for p in clean_plans],
             dtype=torch.long, device=self.dev
         )
-        z_bpe = self.vqvae.encoder.wte(p_kpad)
-        z_pref, pmask = pack_combo_prefix(z_rh, msk_r, z_bpe, (p_kpad == K3_PAD))
+        pad_mask_bpe = (p_kpad == K3_PAD)
 
-        ref_str = prompt_text + " " + " ".join(plans)
-        allowed_ids = set(self.k3_tok.encode(ref_str))
-        for w in re.findall(r"[A-Za-z0-9.,:%£$€'-]+", ref_str):
-            allowed_ids.update(self.k3_tok.encode(w))
-            allowed_ids.update(self.k3_tok.encode(" " + w))
+        # Pass `[MoonViT3d 7168-d visual tokens + Kimi K3 text tokens]` through ALL 93 Kimi K3 Layers (`cuda:0..5`)!
+        h_k3_moe_cpu, k3_expert_meta = self.k3_experts.forward_k3_ids(p_kpad, vis_7168=k3_vis_7168)
+        h_k3_moe = h_k3_moe_cpu.to(self.dev, dtype=torch.float32)
+        z_k3_expert = self.k3_bridge(h_k3_moe).masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
 
-        W = len(plans)
+        z_bpe = self.vqvae.encoder.wte(p_kpad) + z_k3_expert
+        z_pref, pmask = pack_combo_prefix(z_rh, msk_r, z_bpe, pad_mask_bpe)
+
+        W = len(clean_plans)
+        win_masks = [self._build_window_vocab_mask(p) for p in clean_plans]
+
         if cands <= 1:
             torch.manual_seed(42)
             g1 = generate_from_zpref(self.net, self.tk, z_pref, pmask, self.sched)
             zh1, _ = self.vqvae.vq.idx_to_zhats(g1, return_zlevels=True)
             lg1 = self.copy_dec(self.vqvae.decoder, zh1[-1], z_rh, msk_r, z_bpe, p_kpad)
-            lg1 = self._apply_grounding_mask(lg1, allowed_ids)
             txts, ids = [], []
             for w_i in range(W):
+                lg1[w_i, :, win_masks[w_i]] -= 80.0
                 ts, is_ = self._dec_k3_aligned(lg1[w_i], p_kpad[w_i].tolist())
                 txts.append(ts.strip()); ids.extend(is_)
-            return " ".join(txts), ids
+            return join_rendered_windows(txts, plans), ids, k3_expert_meta
 
         z_pref_k = z_pref.repeat(cands, 1, 1)
         pmask_k = pmask.repeat(cands, 1)
@@ -367,28 +376,35 @@ class K3MultimodalChatEngine:
         torch.manual_seed(42)
         gk = generate_from_zpref(self.net, self.tk, z_pref_k, pmask_k, self.sched)
         zhk, _ = self.vqvae.vq.idx_to_zhats(gk, return_zlevels=True)
-        lgk = self.copy_dec(self.vqvae.decoder, zhk[-1], z_rh_k, msk_r_k, z_bpe_k, p_kpad_k)
-        lgk = self._apply_grounding_mask(lgk, allowed_ids)
+        z_top = zhk[-1]
 
         cands_t = [[] for _ in range(W)]
         cands_i = [[] for _ in range(W)]
-        for k in range(cands):
-            for w_i in range(W):
-                ts, is_ = self._dec_k3_aligned(lgk[k * W + w_i], p_kpad[w_i].tolist())
+        total_rows = cands * W
+        for r0 in range(0, total_rows, 16):
+            r1 = min(total_rows, r0 + 16)
+            lg_chunk = self.copy_dec(
+                self.vqvae.decoder, z_top[r0:r1], z_rh_k[r0:r1], msk_r_k[r0:r1], z_bpe_k[r0:r1], p_kpad_k[r0:r1]
+            )
+            for idx_in_chunk, row_idx in enumerate(range(r0, r1)):
+                w_i = row_idx % W
+                lg_row = lg_chunk[idx_in_chunk]
+                lg_row[:, win_masks[w_i]] -= 80.0
+                ts, is_ = self._dec_k3_aligned(lg_row, p_kpad[w_i].tolist())
                 cands_t[w_i].append(ts.strip()); cands_i[w_i].append(is_)
         out_txts, out_ids = [], []
         for w_i in range(W):
             sc = [sum(jacc(cands_t[w_i][k], cands_t[w_i][j]) for j in range(cands) if j != k) for k in range(cands)]
             bk = max(range(cands), key=lambda k: sc[k])
             out_txts.append(cands_t[w_i][bk]); out_ids.extend(cands_i[w_i][bk])
-        return " ".join(out_txts), out_ids
+        return join_rendered_windows(out_txts, plans), out_ids, k3_expert_meta
 
-    def multimodal_reply(self, pil_img, user_prompt, use_option_a=False, cands=8):
+    def multimodal_reply(self, pil_img, user_prompt, use_option_a=True, cands=8):
         torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_vl)
 
-        # Optional Option A: Kimi K3 MoonViT3d + PatchMergerMLPV2 (`7168`-d visual tokens for token 163605 + `384`-d prefix)
         t_opt_a_ms = 0.0
         vis_384 = None
+        k3_vis_7168 = None
         n_k3_vis_tokens = 0
         if use_option_a and self.option_a is not None:
             ta0 = time.perf_counter()
@@ -397,38 +413,34 @@ class K3MultimodalChatEngine:
             t_opt_a_ms = (time.perf_counter() - ta0) * 1000.0
             n_k3_vis_tokens = int(k3_vis_7168.size(0))
 
-        # Option B: Qwen3-VL-8B-Instruct + HybridLink <latent> rollout + W1/W2 plan
         t0 = time.perf_counter()
         plans, lat_steps = self.plan_visual_with_latent(pil_img, user_prompt)
         torch.cuda.synchronize(self.dev_vl)
         t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
-        # e8_k3_direct NCM + K3LexicalPointerDecoder rendering (`1`-cand & `MBR8`)
-        t1 = time.perf_counter()
-        text_1cand, ids_1cand = self.render_ncm(plans, prompt_text=user_prompt, cands=1, option_a_vis384=vis_384)
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_vl)
-        t_ncm_1cand_ms = (time.perf_counter() - t1) * 1000.0
-
         t2 = time.perf_counter()
-        text_mbr, ids_mbr = self.render_ncm(plans, prompt_text=user_prompt, cands=cands, option_a_vis384=vis_384)
+        text_mbr, ids_mbr, k3_expert_meta = self.render_ncm(
+            plans, prompt_text=user_prompt, cands=cands, option_a_vis384=vis_384, k3_vis_7168=k3_vis_7168
+        )
         torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_vl)
         t_ncm_mbr_ms = (time.perf_counter() - t2) * 1000.0
 
         return {
             "prompt": user_prompt.strip(),
-            "mode": "Option B + Option A (MoonViT3d 7168-d)" if use_option_a else "Option B (Qwen3-VL + HybridLink + e8_k3_direct)",
+            "mode": "Multimodal Agent (MoonViT3d 7168-d + Qwen3-VL HybridLink + 93-Layer K3 GPU Trunks/Experts + NCM)",
             "latent_steps": lat_steps,
             "option_a_ms": round(t_opt_a_ms, 1),
             "option_a_k3_vis_tokens_7168d": n_k3_vis_tokens,
+            "k3_experts": k3_expert_meta,
             "plans": plans,
             "plan_lat_ms": round(t_plan_ms, 1),
-            "ncm_1cand_ms": round(t_ncm_1cand_ms, 1),
+            "ncm_1cand_ms": round(t_ncm_mbr_ms, 1),
             "ncm_mbr8_ms": round(t_ncm_mbr_ms, 1),
-            "total_1cand_ms": round(t_opt_a_ms + t_plan_ms + t_ncm_1cand_ms, 1),
+            "total_1cand_ms": round(t_opt_a_ms + t_plan_ms + t_ncm_mbr_ms, 1),
             "total_mbr8_ms": round(t_opt_a_ms + t_plan_ms + t_ncm_mbr_ms, 1),
-            "n_k3_tokens_1cand": len(ids_1cand),
+            "n_k3_tokens_1cand": len(ids_mbr),
             "n_k3_tokens_mbr8": len(ids_mbr),
-            "reply_1cand": text_1cand,
+            "reply_1cand": text_mbr,
             "reply_mbr8": text_mbr,
         }
 

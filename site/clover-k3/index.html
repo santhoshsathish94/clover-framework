@@ -1018,6 +1018,9 @@ src/scripts/chat-stop.sh mychat</code></pre>
 
   function renderAgentTrace(r) {
     var parts = [];
+    if (r.option_a_k3_vis_tokens_7168d) {
+      parts.push('<span class="k3-agent-pill">&#128065; MoonViT3d:</span> <span>' + r.option_a_k3_vis_tokens_7168d + ' visual tokens (7168-d)</span>');
+    }
     if (r.tool_calls && r.tool_calls.length) {
       for (var i = 0; i < r.tool_calls.length; i++) {
         var tc = r.tool_calls[i];
@@ -1029,9 +1032,13 @@ src/scripts/chat-stop.sh mychat</code></pre>
       }
     }
     if (r.k3_experts && r.k3_experts.total_unique_experts_activated) {
-      var u = r.k3_experts.unique_experts_per_layer || {};
-      var lstr = Object.keys(u).map(function (k) { return k + ':' + u[k]; }).join(', ');
-      parts.push('<span class="k3-agent-pill">&#9889; K3 GPU Experts:</span> <span>' + r.k3_experts.total_unique_experts_activated + ' active (' + escHtml(lstr) + ')</span>');
+      if (r.k3_experts.trunks_executed === 93) {
+        parts.push('<span class="k3-agent-pill">&#9889; K3 93-Layer GPU Engine:</span> <span>93 Trunks + 92 MoE Layers (' + r.k3_experts.total_unique_experts_activated + ' active experts)</span>');
+      } else {
+        var u = r.k3_experts.unique_experts_per_layer || {};
+        var lstr = Object.keys(u).map(function (k) { return k + ':' + u[k]; }).join(', ');
+        parts.push('<span class="k3-agent-pill">&#9889; K3 GPU Experts:</span> <span>' + r.k3_experts.total_unique_experts_activated + ' active (' + escHtml(lstr) + ')</span>');
+      }
     }
     if (!parts.length) return '';
     return '<div class="k3-agent-trace">' + parts.join(' &middot; ') + '</div>';

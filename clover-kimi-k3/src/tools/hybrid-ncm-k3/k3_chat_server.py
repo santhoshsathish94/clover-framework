@@ -284,6 +284,9 @@ async function newSession() {
 
 function renderTrace(r) {
   const parts = [];
+  if (r.option_a_k3_vis_tokens_7168d) {
+    parts.push('<span class="agent-pill">&#128065; MoonViT3d:</span> <span>' + r.option_a_k3_vis_tokens_7168d + ' visual tokens (7168-d)</span>');
+  }
   if (r.tool_calls && r.tool_calls.length) {
     for (const tc of r.tool_calls) {
       if (tc.tool === 'search') {
@@ -294,9 +297,13 @@ function renderTrace(r) {
     }
   }
   if (r.k3_experts && r.k3_experts.total_unique_experts_activated) {
-    const u = r.k3_experts.unique_experts_per_layer || {};
-    const lstr = Object.keys(u).map(k => k + ':' + u[k]).join(', ');
-    parts.push('<span class="agent-pill">&#9889; K3 GPU Experts:</span> <span>' + r.k3_experts.total_unique_experts_activated + ' active (' + escHtml(lstr) + ')</span>');
+    if (r.k3_experts.trunks_executed === 93) {
+      parts.push('<span class="agent-pill">&#9889; K3 93-Layer GPU Engine:</span> <span>93 Trunks + 92 MoE Layers (' + r.k3_experts.total_unique_experts_activated + ' active experts)</span>');
+    } else {
+      const u = r.k3_experts.unique_experts_per_layer || {};
+      const lstr = Object.keys(u).map(k => k + ':' + u[k]).join(', ');
+      parts.push('<span class="agent-pill">&#9889; K3 GPU Experts:</span> <span>' + r.k3_experts.total_unique_experts_activated + ' active (' + escHtml(lstr) + ')</span>');
+    }
   }
   return parts.length ? '<div class="agent-trace">' + parts.join(' &middot; ') + '</div>' : '';
 }
@@ -381,24 +388,27 @@ class MultiGPUCloverCoordinator:
         self.sess_lock = threading.Lock()
         self.sessions = collections.defaultdict(list)
 
-        # 1. Load Kimi K3 GPU MoE Experts (`Layer 0 + L1 + L12 + L48 + L92` = 3,584 Kimi K3 experts in VRAM across GPUs 0, 1, 5, 4)
-        self.k3_experts = K3GPUExpertsRunner.get_instance(max_n=512)
-        print(f"[Clover AI] Loaded Kimi K3 GPU MoE Experts (3,584 experts across GPUs {self.k3_experts.cards}) in {self.k3_experts.setup_s}s", flush=True)
+        # 1. Load ALL 93 Kimi K3 Trunks (L0..L92) + all 92 MoE Expert Layers + Layer 93 Tail across GPUs 0..5
+        self.k3_experts = K3GPUExpertsRunner.get_instance(max_n=256, full_93_layers=True, k_res=36)
+        print(
+            f"[Clover AI] Loaded ALL 93 Kimi K3 Trunks + 92 MoE Expert Layers across GPUs {self.k3_experts.cards} in {self.k3_experts.setup_s}s",
+            flush=True,
+        )
 
-        # 2. Load 3 NVLink Agent Mode (`HybridAgent + K3 GPU Experts + NCM`) worker pairs
+        # 2. Load Agent Mode (`HybridAgent-8B-Agentic + LiveWebSearch + PythonTool + 93-Layer K3 + NCM`) on `cuda:6`
         self.text_workers = []
         self.worker_locks = []
-        text_pairs = [("cuda:0", "cuda:2"), ("cuda:1", "cuda:3"), ("cuda:4", "cuda:6")]
-        for dev_ncm, dev_ha in text_pairs:
-            eng = CloverK3AgentEngine(dev_ncm=dev_ncm, dev_ha=dev_ha, k3_experts_runner=self.k3_experts)
-            self.text_workers.append(eng)
-            self.worker_locks.append(threading.Lock())
-            print(f"[Clover AI] Loaded Agent+K3Experts+NCM worker on NVLink pair ({dev_ncm} <-> {dev_ha}) in {eng.setup_s}s", flush=True)
+        eng = CloverK3AgentEngine(dev_ncm="cuda:6", dev_ha="cuda:6", k3_experts_runner=self.k3_experts)
+        self.text_workers.append(eng)
+        self.worker_locks.append(threading.Lock())
+        print(f"[Clover AI] Loaded Agent+93LayerK3+NCM worker on cuda:6 in {eng.setup_s}s", flush=True)
 
-        # 3. Load Multimodal Vision worker on NVLink pair `(cuda:5 <-> cuda:7)`
+        # 3. Load Multimodal Vision Agent (`MoonViT3d + Qwen3-VL-8B-Instruct + HybridLink + 93-Layer K3 + NCM`) on `cuda:7`
         self.mm_lock = threading.Lock()
-        self.mm_worker = K3MultimodalChatEngine(dev_ncm="cuda:5", dev_vl="cuda:7", enable_option_a=True)
-        print(f"[Clover AI] Loaded multimodal vision worker on NVLink pair (cuda:5 <-> cuda:7) in {self.mm_worker.setup_s}s", flush=True)
+        self.mm_worker = K3MultimodalChatEngine(
+            dev_ncm="cuda:7", dev_vl="cuda:7", enable_option_a=True, k3_experts_runner=self.k3_experts
+        )
+        print(f"[Clover AI] Loaded Multimodal Vision+93LayerK3+NCM worker on cuda:7 in {self.mm_worker.setup_s}s", flush=True)
 
         self.setup_s = round(time.perf_counter() - t0, 2)
         self.rr_idx = 0
@@ -565,10 +575,8 @@ class MultiGPUCloverCoordinator:
         pil_img = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
 
         hist_snap = self.get_session_history(session_id) if remember else []
-        ctx_prompt = build_contextual_prompt(prompt, hist_snap) if hist_snap else prompt
-
         with self.mm_lock:
-            r = self.mm_worker.multimodal_reply(pil_img, ctx_prompt, use_option_a=True, cands=cands)
+            r = self.mm_worker.multimodal_reply(pil_img, prompt.strip(), use_option_a=True, cands=cands)
 
         reply_txt = r["reply_mbr8"] if cands > 1 else r["reply_1cand"]
         h_len = len(hist_snap)
@@ -578,7 +586,7 @@ class MultiGPUCloverCoordinator:
         r["session_id"] = session_id
         r["reply"] = reply_txt
         r["history_len"] = h_len
-        r["gpu_pair"] = "cuda:5 <-> cuda:7 (Multimodal Option B + Option A)"
+        r["gpu_pair"] = "cuda:7 + K3-93Layers(cuda:0..5)"
         return r
 
 
@@ -616,16 +624,17 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
         elif self.path.startswith("/api/health"):
             self._send_json({
                 "status": "ready",
-                "mode": "agent_k3_experts_ncm",
+                "mode": "agent_full93_k3_experts_ncm",
                 "setup_s": STATE.setup_s,
                 "active_sessions": len(STATE.sessions),
                 "text_worker_pairs": len(STATE.text_workers),
-                "k3_experts_resident": 3584,
-                "k3_expert_layers": STATE.k3_experts.layers,
+                "k3_trunks_resident": 93,
+                "k3_moe_layers_resident": 92,
+                "k3_experts_resident": 92 * STATE.k3_experts.k_res,
                 "k3_expert_cards": STATE.k3_experts.cards,
                 "multimodal_worker": True,
                 "batch_pause_s": STATE.batch_pause_s,
-                "model": "clover-ai-agent (HybridAgent + 3584 K3 GPU Experts + NCM on 8x RTX 3090)",
+                "model": "clover-ai-agent (HybridAgent + All 93 K3 Trunks & 92 MoE Layers + MoonViT3d + NCM on 8x RTX 3090)",
             })
         elif self.path.startswith("/v1/models"):
             self._send_json({

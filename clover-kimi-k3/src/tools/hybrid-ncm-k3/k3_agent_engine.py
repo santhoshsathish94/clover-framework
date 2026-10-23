@@ -124,16 +124,22 @@ class K3ExpertBridge(nn.Module):
 
 
 class K3GPUExpertsRunner:
-    """Singleton wrapper around `libk3_gpu_experts.so` + Kimi K3's `embed_tokens.weight [163840, 7168]`.
-    Holds Layer 0 (`trunk-0`) + 4 full 896-expert Kimi K3 MoE layers (`Layer 1` on `cuda:0`, `Layer 12` on `cuda:1`,
-    `Layer 48` on `cuda:5`, `Layer 92` MLA+MoE on `cuda:4` = `3,584` Kimi K3 experts = `62.9 GB` in VRAM)
-    and executes them in parallel CUDA kernels (`~109 ms` per call) with thread-safe locking."""
+    """Singleton wrapper around `libk3_gpu_experts.so` + Kimi K3's `embed_tokens.weight [163840, 7168]` and Layer-93 Final Tail.
+    In `full_93_layers=True` mode (default):
+      - Loads ALL 93 Kimi K3 Trunks (`trunk-0` through `trunk-92`, 52.7 GiB: 69 KDA + 24 MLA attention trunks,
+        92 routers, 92 shared experts, and 8 block-snapshot aggregators) + all 92 Expert Mapping Tables +
+        `92 * 36 = 3,312` highest-prior 4-bit palette-mapped MoE experts (`58.1 GB`) across `cuda:0..5`.
+      - Executes all 93 layers (`Layer 0 -> Layer 1 -> ... -> Layer 92`) + Layer-93 Final Snapshot Aggregation
+        (`output_attn_res_norm` + `output_attn_res_proj` + `norm.weight`) on every call!
+      - Accepts optional `vis_7168` (`[N_vis, 7168]` visual tokens from Kimi K3's 27-layer `MoonViT3d + PatchMergerMLPV2`)
+        prepended directly into Layer 0 so all 93 Kimi K3 layers attend over `MoonViT3d` visual tokens + text tokens together.
+    """
     _instance = None
 
     @classmethod
-    def get_instance(cls, max_n: int = 512):
+    def get_instance(cls, max_n: int = 256, full_93_layers: bool = True, k_res: int = 36):
         if cls._instance is None:
-            cls._instance = cls(max_n=max_n)
+            cls._instance = cls(max_n=max_n, full_93_layers=full_93_layers, k_res=k_res)
         return cls._instance
 
     def __init__(
@@ -143,11 +149,15 @@ class K3GPUExpertsRunner:
         open_weights_path: str = "/opt/clover-k3/datasets/third-party/kimi-k3-open-weights/model-00094-of-000096.safetensors",
         layers=(1, 12, 48, 92),
         cards=(0, 1, 5, 4),
-        max_n: int = 512,
+        max_n: int = 256,
+        full_93_layers: bool = True,
+        k_res: int = 36,
     ):
         t0 = time.perf_counter()
-        self.layers = list(layers)
-        self.cards = list(cards)
+        self.full_93_layers = bool(full_93_layers)
+        self.k_res = int(k_res)
+        self.layers = list(range(1, 93)) if self.full_93_layers else list(layers)
+        self.cards = [0, 1, 2, 3, 4, 5] if self.full_93_layers else list(cards)
         self.n_stages = len(self.layers)
         self.max_n = max_n
 
@@ -161,38 +171,138 @@ class K3GPUExpertsRunner:
             ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_float)
         ]
         self.lib.k3_experts_forward.restype = ctypes.c_float
-        self.lib.k3_sparse_init.argtypes = [ctypes.c_int, ctypes.c_int]
-        self.lib.k3_sparse_init.restype = ctypes.c_int
-        self.lib.k3_sparse_forward.argtypes = [
-            ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int,
-            ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int)
+        self.lib.k3_full93_init.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
+        self.lib.k3_full93_init.restype = ctypes.c_int
+        self.lib.k3_full93_forward.argtypes = [
+            ctypes.POINTER(ctypes.c_float), ctypes.c_int,
+            ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int)
         ]
-        self.lib.k3_sparse_forward.restype = ctypes.c_float
-        self.sparse_ready_layers = 0
+        self.lib.k3_full93_forward.restype = ctypes.c_float
 
-        c_layers = (ctypes.c_int * self.n_stages)(*self.layers)
-        c_cards = (ctypes.c_int * self.n_stages)(*self.cards)
-        rc = self.lib.k3_experts_init(dataset_dir.encode("utf-8"), c_layers, c_cards, self.n_stages, self.max_n)
-        if rc != 0:
-            raise RuntimeError(f"k3_experts_init failed with code {rc}")
+        if self.full_93_layers:
+            rc = self.lib.k3_full93_init(dataset_dir.encode("utf-8"), self.max_n, self.k_res)
+            if rc != 0:
+                raise RuntimeError(f"k3_full93_init failed with code {rc}")
+        else:
+            c_layers = (ctypes.c_int * self.n_stages)(*self.layers)
+            c_cards = (ctypes.c_int * self.n_stages)(*self.cards)
+            rc = self.lib.k3_experts_init(dataset_dir.encode("utf-8"), c_layers, c_cards, self.n_stages, self.max_n)
+            if rc != 0:
+                raise RuntimeError(f"k3_experts_init failed with code {rc}")
 
         with safe_open(open_weights_path, framework="pt", device="cpu") as f:
             self.embed_w = f.get_tensor("language_model.model.embed_tokens.weight").to(torch.float32).contiguous()
             self.norm_w = f.get_tensor("language_model.model.norm.weight").to(torch.float32).contiguous()
+            self.res_norm_w = f.get_tensor("language_model.model.output_attn_res_norm.weight").to(torch.float32).contiguous()
+            self.res_proj_w = f.get_tensor("language_model.model.output_attn_res_proj.weight").to(torch.float32).contiguous().view(-1)
 
         self.setup_s = round(time.perf_counter() - t0, 2)
 
-    def forward_k3_ids(self, k3_ids_2d: torch.Tensor):
-        """Takes `k3_ids_2d` (`[W, P_BPE]` long tensor on CPU or GPU), looks up Kimi K3's `7,168`-d embeddings,
-        runs them through `Layer 0 -> Layer 1 (896 experts) -> Layer 12 (896 experts) -> Layer 48 (896 experts) -> Layer 92 (896 experts)`
-        on the GPUs, and returns:
-          - `h_k3_moe`: `[W, P_BPE, 7168]` float32 tensor (RMS-normalized with Kimi K3's `norm.weight`)
-          - `expert_Meta`: dict with `k3_moe_ms`, `layers`, `unique_experts_per_layer`, `total_unique_experts`, `top_experts_sample`
+    def _apply_layer93_final_tail(self, snaps_8: torch.Tensor, h_l92: torch.Tensor) -> torch.Tensor:
+        """Executes Kimi K3's exact Layer-93 Final Snapshot Aggregation (`final-normalization.c`):
+        Combines the 8 block-boundary snapshots `snaps_8 [8, N, 7168]` and Layer 92's output `h_l92 [N, 7168]`
+        using `output_attn_res_norm.weight` and `output_attn_res_proj.weight`, then applies final RMSNorm (`norm.weight`)."""
+        # Stack 9 sources: `[9, N, 7168]`
+        srcs = torch.cat([snaps_8, h_l92.unsqueeze(0)], dim=0)
+        rms_s = torch.sqrt(srcs.pow(2).mean(dim=-1, keepdim=True) + 1e-5)
+        normed_s = (srcs / rms_s) * self.res_norm_w.view(1, 1, -1)
+        scores = torch.matmul(normed_s, self.res_proj_w)  # [9, N]
+        weights = torch.softmax(scores, dim=0).unsqueeze(-1)  # [9, N, 1]
+        agg = (weights * srcs).sum(dim=0)  # [N, 7168]
+        rms_f = torch.sqrt(agg.pow(2).mean(dim=-1, keepdim=True) + 1e-5)
+        return (agg / rms_f) * self.norm_w.unsqueeze(0)
+
+    def forward_k3_ids(self, k3_ids_2d: torch.Tensor, vis_7168: torch.Tensor | None = None):
+        """Takes `k3_ids_2d` (`[W, P_BPE]` long tensor) and optional `vis_7168` (`[N_vis, 7168]` visual tokens
+        from `MoonViT3d + PatchMergerMLPV2`), runs them through ALL 93 Kimi K3 Layers (`Layer 0 .. Layer 92` +
+        `Layer 93` Final Tail across `cuda:0..5`), and returns:
+          - `h_k3_moe`: `[W, P_BPE, 7168]` float32 tensor
+          - `meta`: dict with `k3_moe_ms`, `trunks_executed` (93), `moe_layers_executed` (92), `total_unique_experts_activated`, etc.
         """
         ids_cpu = k3_ids_2d.detach().cpu().clamp(min=0, max=163839)
         W_b, P_len = ids_cpu.shape
         flat_ids = ids_cpu.reshape(-1)
         total_toks = flat_ids.numel()
+
+        vis_np = None
+        n_vis = 0
+        if vis_7168 is not None:
+            v_cpu = vis_7168.detach().cpu().float()
+            if v_cpu.size(0) > 16:
+                # Pool visual tokens to 16 summary patch tokens in 7168-d space so `[n_vis + chunk <= 256]`
+                v_cpu = F.adaptive_avg_pool1d(v_cpu.t().unsqueeze(0), 16).squeeze(0).t().contiguous()
+            # Match Kimi K3 token embedding RMS (~0.022)
+            v_rms = torch.sqrt(v_cpu.pow(2).mean(dim=-1, keepdim=True) + 1e-6)
+            v_cpu = v_cpu * (0.022 / v_rms)
+            vis_np = v_cpu.contiguous().numpy()
+            n_vis = vis_np.shape[0]
+
+        if self.full_93_layers:
+            # Strip K3_PAD positions before running Kimi K3's 93 layers so KDA recurrence and MLA attention
+            # process a contiguous real token stream (and all windows fit in a single ~1.1s 93-layer pass!)
+            non_pad_idx = torch.nonzero(flat_ids != K3_PAD, as_tuple=False).view(-1)
+            if non_pad_idx.numel() == 0:
+                non_pad_idx = torch.tensor([0], dtype=torch.long)
+            valid_ids = flat_ids[non_pad_idx]
+            n_valid = valid_ids.numel()
+
+            chunk_cap = max(16, self.max_n - n_vis)
+            valid_out_chunks = []
+            total_ms = 0.0
+            uniq_accum = np.zeros(92, dtype=np.int64)
+
+            for start in range(0, n_valid, chunk_cap):
+                end = min(n_valid, start + chunk_cap)
+                txt_np = self.embed_w[valid_ids[start:end]].contiguous().numpy()
+                if vis_np is not None:
+                    inp_np = np.concatenate([vis_np, txt_np], axis=0)
+                else:
+                    inp_np = txt_np
+                n_cur = inp_np.shape[0]
+                out_h = np.zeros((n_cur, 7168), dtype=np.float32)
+                out_snaps = np.zeros((8, n_cur, 7168), dtype=np.float32)
+                out_uniq = np.zeros(92, dtype=np.int32)
+
+                ms = self.lib.k3_full93_forward(
+                    inp_np.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                    n_cur,
+                    out_h.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                    out_snaps.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                    out_uniq.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+                )
+                total_ms += float(ms)
+                uniq_accum = np.maximum(uniq_accum, out_uniq)
+
+                h_l92_t = torch.from_numpy(out_h[n_vis:])
+                snaps_t = torch.from_numpy(out_snaps[:, n_vis:, :])
+                h_final_t = self._apply_layer93_final_tail(snaps_t, h_l92_t)
+                valid_out_chunks.append(h_final_t)
+
+            valid_h_final = torch.cat(valid_out_chunks, dim=0)  # [n_valid, 7168]
+            h_full = torch.zeros((total_toks, 7168), dtype=torch.float32)
+            h_full[non_pad_idx] = valid_h_final
+            h_k3_moe = h_full.view(W_b, P_len, 7168)
+            total_uniq = int(uniq_accum.sum())
+            uniq_summary = {
+                "L0_dense": 1,
+                "L1": int(uniq_accum[0]),
+                "L12": int(uniq_accum[11]),
+                "L24": int(uniq_accum[23]),
+                "L48": int(uniq_accum[47]),
+                "L72": int(uniq_accum[71]),
+                "L92": int(uniq_accum[91]),
+            }
+            meta = {
+                "mode": "full_93_layers_gpu (L0..L92 Trunks + 92 MoE Layers + L93 Tail)",
+                "k3_moe_ms": round(total_ms, 2),
+                "trunks_executed": 93,
+                "moe_layers_executed": 92,
+                "vision_tokens_in_k3": n_vis,
+                "cards": self.cards,
+                "unique_experts_per_layer": uniq_summary,
+                "total_unique_experts_activated": total_uniq,
+            }
+            return h_k3_moe, meta
 
         out_chunks = []
         sel_chunks = []

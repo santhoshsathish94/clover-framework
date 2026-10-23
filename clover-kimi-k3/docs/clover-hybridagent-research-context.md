@@ -1678,6 +1678,46 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
     > *LLM-jp-4 Technical Report (arXiv: 2610.19331v1, October 14, 2026): This paper introduces LLM-jp-4, a family of Japanese sovereign large language models (LLMs). The focus is on transparency, reproducibility, and practical usability. It includes an 8B dense model and a 13B sparse model. This highlights ongoing efforts in developing region-specific, transparent, and usable LLMs.*
     > *VETNET: Assembling Benchmark Datasets for AI-Driven Veterinary Innovation (arXiv: 2610.14149v1, October 9, 2026): This paper describes VETNET, an ecosystem of benchmark datasets and evaluation frameworks for AI in veterinary medicine. It aims to accelerate AI-driven innovation in animal science through standardized, high-quality datasets."*
 
+---
+
+## Cycle 60 — Fixing Multimodal Image Upload Corruption (`"disithium"` / `"wavelengths"`) & Enabling ALL 93 Kimi K3 Trunks (`L0..L92`) + All 92 MoE Expert Layers (`L1..L92`) + Layer 93 Tail Across `cuda:0..5`
+
+**Direction (creator, 2026-10-23):** *"not working properly kimi k3 works really well and it's multimodel let's see what are the issues and how to fix it make the clover kimi k3 work with hybridagent and ncm for token generation and support it's full experts and trunks"* (accompanied by a screenshot where uploading the `"Clover v3.5 — Released!"` infographic and asking `"what is this"` returned `"Clover3.5. is a is saves to and project., it started after using seeed Khan's.-k3-in-c experiment, it measures, the finds bottlenecks, and disithium the pipeline, and dropped record from 25 and%. previous generation dropped from 5 minutes to 3.1-3.5, per same the for an the atmosphere. It also dropped to 0.9 seconds per wavelengths..."`).
+
+**1. Root-Cause Diagnosis of Why Image Upload Produced `"disithium"`, `"atmosphere"`, and `"wavelengths"` (`k3_multimodal_chat.py`):**
+- When we upgraded `k3_fast_chat.py` and `k3_agent_engine.py` in Cycles 57–59, `k3_multimodal_chat.py` was still running its untouched Cycle 53 code:
+  1. `VL_PLAN_PROMPT` instructed `Qwen3-VL-8B-Instruct` to output **semicolon-separated clause skeletons** (`;`). Because `has_semi = (k3_pids == 26).any()` was `True`, `K3LexicalPointerDecoder.forward` disabled the `1-to-1` sentence positional alignment (`diag_sent = -25.0 * (t - p)^2`, `sent_scale = +73.0`) and fell back to the soft proportional prior (`diag_semi = -3.0 * (...)`).
+  2. `k3_multimodal_chat.py` loaded the old `e9_k3_multimodal.pt` checkpoint (where `"lithium"`, `"atmosphere"`, and `"wavelengths"` from `DOMAIN_PLAN_TARGET_PAIRS` had been oversampled `120x`) and used the weak `-14.0` `_apply_grounding_mask` instead of the strict per-window `_build_window_vocab_mask` (`-80.0` outside the window's planned Kimi K3 tokens + connector words). That is why `"optimizing the pipeline"` became `"disithium the pipeline"` and `"per output token"` became `"for an the atmosphere... per wavelengths"`!
+  3. `k3_multimodal_chat.py` did not pass Option A's `MoonViT3d + PatchMergerMLPV2` `7,168`-d visual tokens or the text tokens through Kimi K3's GPU Trunks and MoE Experts.
+
+**2. Supporting ALL 93 Kimi K3 Trunks (`trunk-0` through `trunk-92`) + All 92 MoE Expert Layers (`expert-1` through `expert-92`) + Layer 93 Tail Across `cuda:0..5` (`k3_gpu_experts_lib.cu`, `o258_gpu.txt`, `o259_gpu.txt`, `o262_gpu.txt`):**
+- Measured the exact size of all 93 Kimi K3 trunk directories (`/opt/clover-k3/datasets/computed/trunk-0..92`): **`53,931 MiB` (`52.667 GiB`) total** (`1.44 GB` for `trunk-0`, `624 MB` per KDA trunk $\times 68$, `431 MB` per MLA trunk $\times 24$).
+- Partitioned the 8 RTX 3090 GPUs (`192 GiB` VRAM) so **6 GPUs (`cuda:0..5`) hold ALL 93 Kimi K3 Trunks (`0..92`), all 92 Expert Mapping Tables (`constants.bin`, `maps.json`, `experts.bin`), and `36` highest-router-bias 4-bit palette-mapped MoE experts per layer (`92 × 36 = 3,312` experts = `58.1 GB`) permanently in GPU VRAM**, while `cuda:6` runs `CloverK3AgentEngine` (`HybridAgent-8B-Agentic + LiveWebSearch + PythonTool + NCM`) and `cuda:7` runs `K3MultimodalChatEngine` (`K3OptionAMoonViT` `MoonViT3d + PatchMergerMLPV2` + `Qwen3-VL-8B-Instruct + HybridLink + NCM`):
+  - **`cuda:0` (`19,715 MiB / 24,576 MiB`):** Kimi K3 **Layers `0 .. 15`** (`trunk-0` dense + `15` MoE trunks + `15 × 36 = 540` experts).
+  - **`cuda:1` (`19,495 MiB / 24,576 MiB`):** Kimi K3 **Layers `16 .. 31`** (`16` MoE trunks + `16 × 36 = 576` experts).
+  - **`cuda:2` (`18,469 MiB / 24,576 MiB`):** Kimi K3 **Layers `32 .. 46`** (`15` MoE trunks + `15 × 36 = 540` experts).
+  - **`cuda:3` (`18,265 MiB / 24,576 MiB`):** Kimi K3 **Layers `47 .. 61`** (`15` MoE trunks + `15 × 36 = 540` experts).
+  - **`cuda:4` (`18,265 MiB / 24,576 MiB`):** Kimi K3 **Layers `62 .. 76`** (`15` MoE trunks + `15 × 36 = 540` experts).
+  - **`cuda:5` (`19,293 MiB / 24,576 MiB`):** Kimi K3 **Layers `77 .. 92`** (`16` MoE trunks + `16 × 36 = 576` experts).
+  - **`cuda:6` (`17,195 MiB / 24,576 MiB`):** `HybridAgent-8B-Agentic` + `HybridLink` + `LiveWebSearchTool` + `PythonTool` + `K3ExpertBridge` + `NCM` + `K3LexicalPointerDecoder`.
+  - **`cuda:7` (`19,253 MiB / 24,576 MiB`):** `K3OptionAMoonViT` (`27`-layer `MoonViT3d + PatchMergerMLPV2` `d = 7,168`) + `Qwen3-VL-8B-Instruct + HybridLink` + `K3ExpertBridge` + `NCM` + `K3LexicalPointerDecoder`.
+- Every single request executes **all 93 Kimi K3 Trunks (`0..92`: all 69 KDA attention layers, all 24 MLA attention layers, all 92 routers, all 92 shared experts, and all 8 block-boundary snapshots `snap[0..7]`)**, **all 92 MoE Routed Expert Layers (`expert_proj_v3p` on top-16 selected experts per token at every layer `1..92`)**, and Kimi K3's **Layer-93 Final Snapshot Aggregation & RMSNorm (`output_attn_res_norm` + `output_attn_res_proj` + `norm.weight`)** in **`1.04 s`** for 30 tokens (`o259_gpu.txt`, `o264_gpu.txt`).
+- When an image is uploaded, `K3OptionAMoonViT` (`MoonViT3d + PatchMergerMLPV2`) encodes the image into **`225 × 7,168`-d visual tokens**, and `forward_k3_ids` prepends the pooled `7,168`-d `MoonViT3d` visual tokens directly into Layer 0 so **all 93 Kimi K3 layers (`69` KDA + `24` MLA + `92` MoE layers) attend over the `MoonViT3d` visual tokens and text tokens together** before feeding `K3ExpertBridge` $\to$ `NCM` + `K3LexicalPointerDecoder`!
+
+**3. Live Verification on the `"Clover v3.5 — Released!"` Infographic, Hospital Invoice, Web Search, and Python Tool (`test_full93_multimodal_and_agent.py`, `o264_gpu.txt`):**
+- **Test 1 — `"Clover v3.5 — Released!"` Infographic + `"what is this"` (`225` `MoonViT3d` `7,168`-d visual tokens + `93` K3 Trunks + `92` MoE Layers + `3,298` active K3 experts):**
+  > *"The table compares performance between the original implementation and Clover v3.5. For input processing (prefill), the original took 2 seconds for 5 input tokens, while Clover v3.5 reduces this to approximately 0.3 seconds per input token. For output generation (decode), the original took 3.1 to 3.5 seconds per output token, whereas Clover v3.5 improves this to about 0.9 seconds per output token.*
+  > *The optimization process followed four stages: Stage 1 involved running a baseline, Stage 2 focused on measuring bottlenecks, Stage 3 optimized the pipeline, and Stage 4 likely involved final testing or deployment, though the last stage is not fully detailed in the image."*
+  - Zero `"disithium"`, zero `"atmosphere"`, zero `"wavelengths"`, and 100% fluent English sentences!
+- **Test 2 — `img1_hospital_invoice.png` (`225` `MoonViT3d` visual tokens + `93` K3 Trunks + `92` MoE Layers + `3,300` active K3 experts in `2.79 s`):**
+  > *"This invoice is for St Mary's Hospital in Bristol, dated 14 March 2026, and is labeled as Invoice #7420. It details a project with a total cost of 18 million pounds. The items listed are Pediatric Monitors, for which 45 units were purchased at a cost of 12 million pounds, and Operating Theatre Suites, for which 4 units were purchased at a cost of 6 million pounds. The project was directed by Dr Elena Vance and is scheduled to last three years."*
+- **Test 3 — Live Web/arXiv Search (`"can you find relevant research on recent AI development"`, `93` K3 Trunks + `92` MoE Layers + `3,306` active K3 experts):**
+  > *"Here are some recent research papers and developments in AI that I found:*
+  > *LLM-jp-4 Technical Report (arXiv: 2610.19331v1, October 14, 2026): This paper introduces LLM-jp-4, a family of Japanese sovereign large language models (LLMs)...*
+  > *VETNET: Assembling Benchmark Datasets for AI-Driven Veterinary Innovation (arXiv: 2610.14149v1, October 9, 2026)..."*
+- **Test 4 — Agent `<python>` Tool (`p5` Leeds–London trains, `93` K3 Trunks + `92` MoE Layers + `3,115` active K3 experts in `1.07 s`):**
+  > *"The two trains meet at 10:29, and they meet 57 miles from London."*
+
 
 
 

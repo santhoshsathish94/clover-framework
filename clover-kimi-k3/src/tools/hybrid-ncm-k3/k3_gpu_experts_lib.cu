@@ -11,6 +11,121 @@
 #include <mutex>
 #include <thread>
 
+// Selects the top-16 experts out of the `k_res` resident experts (`d_res_ids[0..k_res-1]`, which are the `k_res` highest-router-bias
+// experts of the layer in `0..895`) using the exact double-precision router scores (`scores`, `choices`) of `router_scores` in `moe.cuh`,
+// and normalizes the 16 weights to sum to 1.0.
+__global__ void top16_bounded(const float *scores, const float *choices, const int *res_ids, int *selected, float *weights, int *bad, int N, int k_res)
+{
+    const int n = blockIdx.x * blockDim.x + threadIdx.x;
+    if (n >= N) return;
+    const float *sc = scores + (size_t)n * EXPERTS, *ch = choices + (size_t)n * EXPERTS;
+    float best[TOP]; int sel[TOP]; int count = 0;
+    for (int j = 0; j < k_res; j++) {
+        const int e = res_ids[j];
+        const float choice = ch[e];
+        if (!isfinite(choice)) { atomicAdd(bad, 1); return; }
+        if (count == TOP && !(choice > best[TOP - 1])) continue;
+        int pos = count < TOP ? count : TOP - 1;
+        while (pos && choice > best[pos - 1]) { best[pos] = best[pos - 1]; sel[pos] = sel[pos - 1]; pos--; }
+        best[pos] = choice; sel[pos] = e;
+        if (count < TOP) count++;
+    }
+    double total = 0.0;
+    for (int r = 0; r < TOP; r++) total += (double)sc[sel[r]];
+    const float inverse = (float)(1.0 / (total + 1e-20));
+    for (int r = 0; r < TOP; r++) { selected[n * TOP + r] = sel[r]; weights[n * TOP + r] = sc[sel[r]] * inverse; }
+}
+
+struct K3Full93Chain {
+    bool initialized = false;
+    int max_n = 0;
+    int k_res = 36;  // resident VRAM experts per layer across all 92 MoE layers (92 * 36 = 3,312 experts = 58.1 GB + 52.7 GiB for all 93 trunks)
+    Layer y[93];
+    unsigned char *d_res_exp[93];
+    const unsigned char **d_eptr[93];
+    int *d_res_ids[93];
+    std::vector<int> h_res_ids[93];
+    Work w_card[6];
+    std::vector<float> h_cur;
+    std::vector<float> h_snaps[8];
+    std::mutex mu;
+};
+
+static K3Full93Chain g_full93;
+
+static void run_moe_layer_resident(Work &w, const Layer &y, const unsigned char *const *d_eptr,
+                                   const int *d_res_ids, const std::vector<int> &h_res_ids, int k_res,
+                                   const float *in, const float *const *snaps, int nsnap_in, float *out, int *out_uniq_count)
+{
+    const int N = w.N, L = y.L;
+    const Trunk &T = y.T;
+    aggregate_with(w, snaps, nsnap_in, in, rec_data(T, 37));
+    normalize_rows<<<N, 256>>>(w.Xn, w.Agg, y.input_gains, W);
+    if (y.mla) mla_block(w, y, out); else kda_attention(w, y, out);
+    if (L % 12 != 0) add_into<<<blocks((size_t)N * W), 256>>>(out, in, (size_t)N * W);
+    const float *sn[9]; int ns = nsnap_in;
+    for (int i = 0; i < nsnap_in; i++) sn[i] = snaps[i];
+    if (L % 12 == 0) sn[ns++] = in;
+    aggregate_with(w, sn, ns, out, rec_data(T, 38));
+    normalize_rows<<<N, 256>>>(w.post, w.Agg, rec_data(T, 5), W);
+
+    // Exact router + top-16 selection among the layer's `k_res` highest-prior experts + 4-bit `expert_proj_v3p` + shared expert
+    CHECK(cudaMemset(w.bad, 0, 4));
+    transpose_rows<<<blocks((size_t)N * W), 256>>>(w.post_t, w.post, N, W);
+    router_scores<<<dim3((N + 127) / 128, EXPERTS), 128>>>(w.scores, w.choices, rec_data(T, 29), rec_data(T, 30), w.post_t, N);
+    top16_bounded<<<blocks(N), 256>>>(w.scores, w.choices, d_res_ids, w.selected, w.weights, w.bad, N, k_res);
+    CHECK(cudaMemcpy(w.h_selected.data(), w.selected, (size_t)N * TOP * 4, cudaMemcpyDeviceToHost));
+
+    gemm(w.post, N, W, T, 31, w.latent);
+    const int slots = N * TOP;
+    std::fill(w.h_count.begin(), w.h_count.end(), 0);
+    for (int i = 0; i < slots; i++) w.h_count[w.h_selected[i]]++;
+    int uniq_cnt = 0;
+    { int acc = 0;
+      for (int e : h_res_ids) {
+          w.h_start[e] = acc;
+          acc += w.h_count[e];
+          if (w.h_count[e]) uniq_cnt++;
+      }
+    }
+    if (out_uniq_count) *out_uniq_count = uniq_cnt;
+
+    { std::vector<int> fill(EXPERTS, 0);
+      for (int n = 0; n < N; n++) for (int r = 0; r < TOP; r++) {
+          const int e = w.h_selected[n * TOP + r];
+          const int slot = w.h_start[e] + fill[e]++;
+          w.h_slot_token[slot] = n;
+          w.h_slot_of[n * TOP + r] = slot;
+      }
+    }
+    CHECK(cudaMemcpy(w.d_slot_token, w.h_slot_token.data(), (size_t)slots * 4, cudaMemcpyHostToDevice));
+    CHECK(cudaMemcpy(w.d_slot_of, w.h_slot_of.data(), (size_t)slots * 4, cudaMemcpyHostToDevice));
+
+    std::vector<int4> wide, narrow;
+    for (int e : h_res_ids) {
+        for (int i0 = 0; i0 < w.h_count[e]; i0 += 32) {
+            const int cnt = std::min(32, w.h_count[e] - i0);
+            (cnt <= 16 ? narrow : wide).push_back(make_int4(e, w.h_start[e] + i0, cnt, cnt <= 16 ? 16 : 32));
+        }
+    }
+    wide.insert(wide.end(), narrow.begin(), narrow.end());
+    const int n_items = (int)wide.size();
+    if (n_items > 0) {
+        CHECK(cudaMemcpy(w.d_items, wide.data(), (size_t)n_items * sizeof(int4), cudaMemcpyHostToDevice));
+        expert_proj_v3p<<<dim3(48, n_items), 32>>>(d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 0, w.latent, LATENT, w.d_slot_token, w.d_items, w.G, EXPERT);
+        expert_proj_v3p<<<dim3(48, n_items), 32>>>(d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 1, w.latent, LATENT, w.d_slot_token, w.d_items, w.U, EXPERT);
+        dense_activation<<<blocks((size_t)slots * EXPERT), 256>>>(w.G, w.U, (size_t)slots * EXPERT);
+        expert_proj_v3p<<<dim3(56, n_items), 32>>>(d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 2, w.G, EXPERT, w.d_slot_token, w.d_items, w.D, LATENT);
+    }
+    mix_ranks<<<blocks((size_t)N * LATENT), 256>>>(w.mixture, w.D, w.d_slot_of, w.weights, N);
+    normalize_rows<<<N, 256>>>(w.lnorm, w.mixture, rec_data(T, 33), LATENT);
+    gemm(w.lnorm, N, LATENT, T, 32, w.routed);
+    gemm(w.post, N, W, T, 34, w.sg); gemm(w.post, N, W, T, 35, w.su);
+    dense_activation<<<blocks((size_t)N * SHARED), 256>>>(w.sg, w.su, (size_t)N * SHARED);
+    gemm(w.sg, N, SHARED, T, 36, w.so);
+    final_sum<<<blocks((size_t)N * W), 256>>>(out, w.routed, w.so, (size_t)N * W);
+}
+
 struct K3MultiCardChain {
     bool initialized = false;
     std::string dataset_dir;
@@ -328,6 +443,161 @@ float k3_sparse_forward(const float *in_embed, int n, int max_layer, float *out_
         out_stats[2] = (int)(pool.st.hit_host - hh0);
         out_stats[3] = (int)(pool.st.from_drive - dr0);
     }
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    return (float)(seconds(t0, t1) * 1000.0);
+}
+
+// Initializes ALL 93 Kimi K3 Trunks (`trunk-0` through `trunk-92`, 52.67 GiB) + all 92 Expert Mapping Tables
+// + `k_res` resident 4-bit palette-mapped experts per layer across all 92 MoE layers (`92 * k_res` experts in VRAM)
+// across the 6 GPUs `cuda:0..5` in parallel.
+int k3_full93_init(const char *dataset_dir, int max_n, int k_res)
+{
+    std::lock_guard<std::mutex> lock(g_full93.mu);
+    if (g_full93.initialized) return 0;
+    if (k_res < 16) k_res = 16;
+    if (k_res > 44) k_res = 44;
+
+    g_full93.max_n = max_n;
+    g_full93.k_res = k_res;
+    g_full93.h_cur.resize((size_t)max_n * W);
+    for (int k = 0; k < 8; k++) g_full93.h_snaps[k].resize((size_t)max_n * W);
+
+    struct timespec t0, t1;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+
+    const int l_start[6] = {0, 16, 32, 47, 62, 77};
+    const int l_end[6]   = {15, 31, 46, 61, 76, 92};
+
+    std::vector<std::thread> threads;
+    for (int c = 0; c < 6; c++) {
+        threads.emplace_back([dataset_dir, max_n, k_res, c, &l_start, &l_end]() {
+            CHECK(cudaSetDevice(c));
+            work_alloc(g_full93.w_card[c], c, max_n, c == 0, false, 8, 3);
+            const size_t exp_bytes = (size_t)k_res * EXPERT_RAW;
+            unsigned char *pinned = nullptr;
+            CHECK(cudaMallocHost(&pinned, exp_bytes));
+
+            for (int L = l_start[c]; L <= l_end[c]; L++) {
+                layer_load_trunk(dataset_dir, L, g_full93.y[L]);
+                if (L >= 1) {
+                    layer_load_expert_tables(dataset_dir, L, g_full93.y[L]);
+                    // Read the 896-float router bias vector (record 30 of trunk-L) from GPU to select the top `k_res` highest-prior experts
+                    std::vector<float> h_bias(EXPERTS);
+                    CHECK(cudaMemcpy(h_bias.data(), rec_data(g_full93.y[L].T, 30), EXPERTS * sizeof(float), cudaMemcpyDeviceToHost));
+                    std::vector<int> order(EXPERTS);
+                    for (int e = 0; e < EXPERTS; e++) order[e] = e;
+                    std::partial_sort(order.begin(), order.begin() + k_res, order.end(),
+                                      [&](int a, int b) { return h_bias[a] > h_bias[b]; });
+                    std::vector<int> chosen(order.begin(), order.begin() + k_res);
+                    std::sort(chosen.begin(), chosen.end());
+                    g_full93.h_res_ids[L] = chosen;
+                    CHECK(cudaMalloc(&g_full93.d_res_ids[L], k_res * sizeof(int)));
+                    CHECK(cudaMemcpy(g_full93.d_res_ids[L], chosen.data(), k_res * sizeof(int), cudaMemcpyHostToDevice));
+
+                    CHECK(cudaMalloc(&g_full93.d_res_exp[L], exp_bytes));
+                    char path[4096];
+                    snprintf(path, sizeof path, "%s/expert-%d/experts.direct", dataset_dir, L);
+                    int fd = open(path, O_RDONLY);
+                    if (fd < 0) { fprintf(stderr, "cannot open %s\n", path); exit(1); }
+                    std::vector<const unsigned char *> h_ptrs(EXPERTS, g_full93.d_res_exp[L]);
+                    for (int j = 0; j < k_res; j++) {
+                        const int e = chosen[j];
+                        unsigned char *dst_p = pinned + (size_t)j * EXPERT_RAW;
+                        size_t got = 0;
+                        while (got < (size_t)EXPERT_RAW) {
+                            ssize_t r = pread(fd, dst_p + got, EXPERT_RAW - got, (off_t)e * EXPERT_RAW + (off_t)got);
+                            if (r <= 0) { fprintf(stderr, "read of %s failed\n", path); exit(1); }
+                            got += (size_t)r;
+                        }
+                        h_ptrs[e] = g_full93.d_res_exp[L] + (size_t)j * EXPERT_RAW;
+                    }
+                    close(fd);
+                    CHECK(cudaMemcpy(g_full93.d_res_exp[L], pinned, exp_bytes, cudaMemcpyHostToDevice));
+                    CHECK(cudaMalloc(&g_full93.d_eptr[L], EXPERTS * sizeof(void *)));
+                    CHECK(cudaMemcpy(g_full93.d_eptr[L], h_ptrs.data(), EXPERTS * sizeof(void *), cudaMemcpyHostToDevice));
+                }
+            }
+            CHECK(cudaFreeHost(pinned));
+            size_t f_b = 0, t_b = 0;
+            CHECK(cudaMemGetInfo(&f_b, &t_b));
+            fprintf(stderr, "[K3-Full93] Card %d: loaded Layers %2d..%2d (trunks + %d experts/layer) | VRAM %.2f / %.2f GiB\n",
+                    c, l_start[c], l_end[c], k_res, (t_b - f_b) / 1073741824.0, t_b / 1073741824.0);
+        });
+    }
+    for (auto &th : threads) th.join();
+
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    g_full93.initialized = true;
+    fprintf(stderr, "[K3-Full93] Ready: ALL 93 Trunks (L0..L92) + 92 MoE Layers (%d resident experts = %.1f GB + 52.7 GiB trunks) loaded across GPUs 0..5 in %.2fs\n",
+            92 * k_res, 92 * k_res * (double)EXPERT_RAW / 1e9, seconds(t0, t1));
+    return 0;
+}
+
+// Runs `n` token embeddings (`in_embed [n, 7168]`) sequentially through ALL 93 Kimi K3 Layers (`Layer 0` through `Layer 92`)
+// across GPUs 0..5 (`L0..15` on `cuda:0`, `L16..31` on `cuda:1`, `L32..46` on `cuda:2`, `L47..61` on `cuda:3`,
+// `L62..76` on `cuda:4`, `L77..92` on `cuda:5`).
+// Outputs:
+//   - `out_hidden`   : `[n, 7168]` float32 final hidden states after Layer 92
+//   - `out_snaps`    : `[8, n, 7168]` float32 8 block-boundary snapshots (`snap[0..7]`) for Kimi K3's `transformer_93` tail
+//   - `out_uniq_cnts`: `[92]` int32 count of unique routed experts activated at each MoE layer `1..92`
+float k3_full93_forward(const float *in_embed, int n, float *out_hidden, float *out_snaps, int *out_uniq_cnts)
+{
+    std::lock_guard<std::mutex> lock(g_full93.mu);
+    if (!g_full93.initialized || n <= 0 || n > g_full93.max_n) return -1.0f;
+
+    struct timespec t0, t1;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+
+    const size_t bytes = (size_t)n * W * sizeof(float);
+    memcpy(g_full93.h_snaps[0].data(), in_embed, bytes);
+    int nsnap = 1;
+
+    const int l_start[6] = {0, 16, 32, 47, 62, 77};
+    const int l_end[6]   = {15, 31, 46, 61, 76, 92};
+
+    for (int c = 0; c < 6; c++) {
+        CHECK(cudaSetDevice(c));
+        Work &w = g_full93.w_card[c];
+        w.N = n;
+        w.moe_chunk = std::max(1, std::min(n, 2048));
+        w.SLOTS = w.moe_chunk * TOP;
+
+        if (c == 0) {
+            CHECK(cudaMemcpy(w.snap[0], in_embed, bytes, cudaMemcpyHostToDevice));
+            run_layer0(w, g_full93.y[0], w.snap[0], w.cur);
+        } else {
+            CHECK(cudaMemcpy(w.cur, g_full93.h_cur.data(), bytes, cudaMemcpyHostToDevice));
+            for (int k = 0; k < nsnap; k++) {
+                CHECK(cudaMemcpy(w.snap[k], g_full93.h_snaps[k].data(), bytes, cudaMemcpyHostToDevice));
+            }
+        }
+
+        const int first_moe = (c == 0) ? 1 : l_start[c];
+        for (int L = first_moe; L <= l_end[c]; L++) {
+            const float *sn[9];
+            for (int k = 0; k < nsnap; k++) sn[k] = w.snap[k];
+            int u_cnt = 0;
+            run_moe_layer_resident(w, g_full93.y[L], g_full93.d_eptr[L], g_full93.d_res_ids[L], g_full93.h_res_ids[L],
+                                   g_full93.k_res, w.cur, sn, nsnap, w.nxt, &u_cnt);
+            if (out_uniq_cnts) out_uniq_cnts[L - 1] = u_cnt;
+            if (L % 12 == 0 && nsnap < 8) {
+                CHECK(cudaMemcpy(w.snap[nsnap], w.cur, bytes, cudaMemcpyDeviceToDevice));
+                CHECK(cudaMemcpy(g_full93.h_snaps[nsnap].data(), w.cur, bytes, cudaMemcpyDeviceToHost));
+                nsnap++;
+            }
+            std::swap(w.cur, w.nxt);
+        }
+        CHECK(cudaDeviceSynchronize());
+        CHECK(cudaMemcpy(g_full93.h_cur.data(), w.cur, bytes, cudaMemcpyDeviceToHost));
+    }
+
+    if (out_hidden) memcpy(out_hidden, g_full93.h_cur.data(), bytes);
+    if (out_snaps) {
+        for (int k = 0; k < 8; k++) {
+            memcpy(out_snaps + (size_t)k * n * W, g_full93.h_snaps[k].data(), bytes);
+        }
+    }
+
     clock_gettime(CLOCK_MONOTONIC, &t1);
     return (float)(seconds(t0, t1) * 1000.0);
 }
