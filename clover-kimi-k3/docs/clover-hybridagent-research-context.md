@@ -1870,6 +1870,9 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 - `python scripts/check-links.py`: `broken links: 0`, `dead anchors: 0`.
 - **Playwright Verification on `site/clover-k3/index.html`:** Confirmed `hasEmbeddedWidget: false`, `tryBtnText: "Try it"`, `tryBtnHref: "../ai/"`.
 - **Playwright Verification on `site/ai/index.html` (Screenshot `call_MHwwdE92QkdHdTh1ajBDbDdDazc`):** Confirmed `titleText: "Clover"`, `firstMsg: "Hi I am Clover, How can I help you today?"`, created multiple sessions (`what is the code to check prime numbers` and `Plot a graph of sine and cosine waves`), verified `.clover-session-del` (`×`) button on every session (`delButtonsCount: 7`), clicked `×` on the second session row, and confirmed the session count decremented cleanly (`7 -> 6`) and removed that session from the sidebar.
+- **Simple, Polite Kid's Voice (`en-US-AnaNeural` via `/api/tts` + Polite Tone):**
+  - Installed `edge-tts 7.3.1` in `/home/usergpu/ncm/venv` on `gpu` and added `POST /api/tts` (`synthesize_polite_kid_voice_b64` with 64-entry LRU cache) using Microsoft's polite child neural voice **`en-US-AnaNeural`**.
+  - Updated `k3SpeakReply` in `site/ai/index.html` and `k3_chat_server.py` to fetch and play `en-US-AnaNeural` MP3 audio (`hasListenBtn: true`, `btnStateDuringPlay: "⏹ Stop"`, `btnStateAfterStop: "🔊 Listen"`), auto-play replies when the user speaks via the `🎤` microphone button, and keep `CHAT_SYSTEM_PROMPT` in a simple, warm, polite voice.
 
 
 

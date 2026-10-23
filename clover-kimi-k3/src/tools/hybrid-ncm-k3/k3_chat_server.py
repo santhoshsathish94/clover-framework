@@ -41,6 +41,46 @@ from bench_batch_clubbing import plan_batch_with_latent, render_ncm_batched_mult
 BATCH_PAUSE_S = 1.0
 MAX_SESSION_CONTEXT_TOKENS = 262_144  # 256k Kimi K3 tokens (> 250k minimum context window per session)
 SESSIONS_STORE_PATH = "/home/usergpu/merge_lf/out/sessions_store.json"
+KID_VOICE_NAME = "en-US-AnaNeural"  # Microsoft Neural polite, friendly child voice
+_TTS_CACHE = collections.OrderedDict()
+_TTS_LOCK = threading.Lock()
+
+
+def synthesize_polite_kid_voice_b64(text: str, voice: str = KID_VOICE_NAME) -> str:
+    """Synthesizes speech using Microsoft's polite child neural voice (`en-US-AnaNeural`) via `edge_tts`
+    and returns a `data:audio/mpeg;base64,...` URL (with in-memory LRU caching)."""
+    import asyncio
+    import edge_tts
+
+    # Strip code blocks, URLs, and extra symbols so the spoken voice sounds natural, simple, and polite
+    clean = re.sub(r"```[\s\S]*?```", " Here is the code example. ", str(text or ""))
+    clean = re.sub(r"https?://[^\s)]+", "", clean)
+    clean = re.sub(r"[•*#_`|~]+", " ", clean)
+    clean = re.sub(r"\s+", " ", clean).strip()[:1600]
+    if not clean:
+        clean = "Hi, I am Clover! How can I help you today?"
+
+    cache_key = (voice, clean)
+    with _TTS_LOCK:
+        if cache_key in _TTS_CACHE:
+            _TTS_CACHE.move_to_end(cache_key)
+            return _TTS_CACHE[cache_key]
+
+    async def _run():
+        comm = edge_tts.Communicate(clean, voice=voice, rate="+0%", pitch="+0Hz")
+        buf = bytearray()
+        async for chunk in comm.stream():
+            if chunk.get("type") == "audio":
+                buf.extend(chunk["data"])
+        return bytes(buf)
+
+    mp3_bytes = asyncio.run(_run())
+    data_url = "data:audio/mpeg;base64," + base64.b64encode(mp3_bytes).decode("ascii")
+    with _TTS_LOCK:
+        _TTS_CACHE[cache_key] = data_url
+        while len(_TTS_CACHE) > 64:
+            _TTS_CACHE.popitem(last=False)
+    return data_url
 
 RETRIEVAL_STOPWORDS = {
     "the", "is", "are", "was", "were", "be", "been", "to", "of", "and", "in", "on", "at", "for", "with",
@@ -452,7 +492,7 @@ let sessionId = '';
 let attachedImageDataUrl = null;
 let attachedFiles = [];
 
-const GREETING_HTML = '<div class="msg msg--bot"><p>Hi I am Clover, How can I help you today?</p></div>';
+const GREETING_HTML = '<div class="msg msg--bot"><p>Hi I am Clover, How can I help you today?</p><div class="k3-msg-actions"><button type="button" class="k3-action-btn" onclick="speakReply(this)" title="Read aloud">🔊 Listen</button></div></div>';
 
 const CLOVER_LOADER_HTML = `
   <div class="clover-loader" role="status" aria-label="Thinking">
@@ -710,6 +750,7 @@ function clearAttachments() {
 
 let recog = null;
 let listening = false;
+let lastInputWasVoice = false;
 function toggleVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { inputEl.focus(); return; }
@@ -722,11 +763,69 @@ function toggleVoice() {
   recog.onresult = ev => {
     const t = ev.results[0][0].transcript;
     inputEl.value = (inputEl.value ? inputEl.value + ' ' : '') + t;
+    lastInputWasVoice = true;
     inputEl.focus();
   };
   recog.onend = () => { listening = false; voiceBtn.classList.remove('is-listening'); };
   recog.onerror = () => { listening = false; voiceBtn.classList.remove('is-listening'); };
   recog.start();
+}
+
+let activeTtsAudio = null;
+let activeTtsBtn = null;
+const ttsAudioCache = {};
+
+function stopCurrentSpeech() {
+  if (activeTtsAudio) {
+    try { activeTtsAudio.pause(); activeTtsAudio.currentTime = 0; } catch (e) {}
+    activeTtsAudio = null;
+  }
+  if (window.speechSynthesis && window.speechSynthesis.speaking) {
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+  }
+  if (activeTtsBtn) {
+    activeTtsBtn.textContent = '🔊 Listen';
+    activeTtsBtn = null;
+  }
+}
+
+async function speakReply(btn) {
+  if (activeTtsBtn === btn && activeTtsAudio) {
+    stopCurrentSpeech();
+    return;
+  }
+  stopCurrentSpeech();
+  const msgEl = btn.closest('.msg');
+  if (!msgEl) return;
+  const clone = msgEl.cloneNode(true);
+  clone.querySelectorAll('.k3-msg-actions, .k3-figcaption, svg, pre').forEach(el => el.remove());
+  const speakTxt = (clone.textContent || '').replace(/\\s+/g, ' ').trim();
+  if (!speakTxt) return;
+  btn.textContent = '⏳ Voice...';
+  activeTtsBtn = btn;
+  try {
+    let audioDataUrl = ttsAudioCache[speakTxt];
+    if (!audioDataUrl) {
+      const r = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: speakTxt })
+      });
+      const d = await r.json();
+      audioDataUrl = d.audio_base64;
+      ttsAudioCache[speakTxt] = audioDataUrl;
+    }
+    if (activeTtsBtn !== btn) return;
+    const audio = new Audio(audioDataUrl);
+    activeTtsAudio = audio;
+    btn.textContent = '⏹ Stop';
+    audio.onended = () => { if (activeTtsBtn === btn) btn.textContent = '🔊 Listen'; activeTtsAudio = null; activeTtsBtn = null; };
+    await audio.play();
+  } catch (e) {
+    if (activeTtsBtn === btn) btn.textContent = '🔊 Listen';
+    activeTtsAudio = null;
+    activeTtsBtn = null;
+  }
 }
 
 function renderMediaItemsHtml(mediaList) {
@@ -806,6 +905,7 @@ function formatBotReplyHtml(text, mediaList) {
     if (htmlParts.length > 0) htmlParts.splice(1, 0, mediaHtml);
     else htmlParts.push(mediaHtml);
   }
+  htmlParts.push('<div class="k3-msg-actions"><button type="button" class="k3-action-btn" onclick="speakReply(this)" title="Read aloud">🔊 Listen</button></div>');
   return htmlParts.join('');
 }
 
@@ -872,8 +972,14 @@ async function sendPrompt() {
       saveSessions();
     }
     if (sessionId === activeSid) {
-      if (pending && pending.parentNode === chatEl) pending.innerHTML = botHtml;
-      else renderMessages();
+      if (pending && pending.parentNode === chatEl) {
+        pending.innerHTML = botHtml;
+        if (lastInputWasVoice) {
+          lastInputWasVoice = false;
+          const lBtn = pending.querySelector('.k3-action-btn');
+          if (lBtn) speakReply(lBtn);
+        }
+      } else renderMessages();
     }
   } catch (err) {
     if (pending && sessionId === activeSid && pending.parentNode === chatEl) pending.innerHTML = '<p>Unable to reach Clover right now. Please try again.</p>';
@@ -1540,6 +1646,18 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             payload = {}
 
         session_id = str(payload.get("session_id") or "default")
+
+        if self.path.startswith("/api/tts"):
+            tts_text = str(payload.get("text") or "").strip()
+            if not tts_text:
+                self._send_json({"error": "Empty text"}, code=400)
+                return
+            try:
+                audio_b64 = synthesize_polite_kid_voice_b64(tts_text, voice=KID_VOICE_NAME)
+                self._send_json({"ok": True, "voice": KID_VOICE_NAME, "audio_base64": audio_b64})
+            except Exception as e:
+                self._send_json({"error": str(e)}, code=500)
+            return
 
         if self.path.startswith("/api/reset"):
             STATE.reset_session(session_id)
