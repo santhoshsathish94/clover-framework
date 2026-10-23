@@ -98,7 +98,7 @@
       </div>
 
       <p class="actions">
-        <button type="button" class="btn btn--primary" onclick="openK3ChatModal()">Try it yourself &mdash; Clover AI</button>
+        <button type="button" class="btn btn--primary" onclick="openK3ChatModal()">Try it yourself &mdash; Clover</button>
         <a class="btn btn--plain" href="#hybrid-ncm-k3">What is achieved &amp; throughput</a>
         <a class="btn btn--plain" href="#how-it-works">How it works</a>
         <a class="btn btn--plain" href="#requirements">93-layer CPU setup</a>
@@ -109,7 +109,7 @@
   <section class="band" id="try-it-yourself">
     <div class="wrap">
       <h2>Try it yourself</h2>
-      <p>Ask a question, continue a multi-turn conversation, or upload an image.</p>
+      <p>Ask a question, plot a graph or diagram, continue a multi-turn conversation, or upload an image or document.</p>
 
       <div class="k3-chat-shell" id="k3-inline-widget">
         <div class="k3-chat-head">
@@ -122,7 +122,7 @@
               <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>
               <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
             </svg>
-            Clover <span>AI</span>
+            Clover
           </div>
           <div class="k3-controls">
             <button type="button" id="k3-modal-toggle-btn" onclick="openK3ChatModal()">Expand</button>
@@ -138,7 +138,7 @@
           </aside>
           <div class="k3-chat-main">
             <div class="k3-log" id="k3-chat-log" aria-live="polite">
-              <div class="k3-msg k3-msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>
+              <div class="k3-msg k3-msg--bot"><p>Hi I am Clover, How can I help you today?</p></div>
             </div>
             <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
               <div class="k3-preview-bar__info">
@@ -154,7 +154,7 @@
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                 </svg>
               </button>
-              <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover AI..."></textarea>
+              <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover..."></textarea>
               <button type="button" class="k3-icon-btn" id="k3-voice-btn" onclick="k3ToggleVoice()" title="Voice input" aria-label="Voice input">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -926,7 +926,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
   </div>
 </footer>
 
-<div class="k3-modal-backdrop" id="k3-chat-modal" hidden role="dialog" aria-modal="true" aria-label="Clover AI">
+<div class="k3-modal-backdrop" id="k3-chat-modal" hidden role="dialog" aria-modal="true" aria-label="Clover">
   <div class="k3-modal-dialog">
     <div id="k3-modal-slot"></div>
   </div>
@@ -958,7 +958,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
   var attachedImageDataUrl = null;
   var attachedFiles = [];
 
-  var GREETING_HTML = '<div class="k3-msg k3-msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>';
+  var GREETING_HTML = '<div class="k3-msg k3-msg--bot"><p>Hi I am Clover, How can I help you today?</p></div>';
 
   var CLOVER_LOADER_HTML =
     '<div class="k3-clover-loader" role="status" aria-label="Thinking">' +
@@ -1334,11 +1334,98 @@ src/scripts/chat-stop.sh mychat</code></pre>
     k3Recog.start();
   };
 
-  function formatBotReplyHtml(text) {
+  window.k3CopyCode = function (btn) {
+    var pre = btn && btn.parentNode ? btn.parentNode.querySelector('code') : null;
+    if (!pre) return;
+    var txt = pre.textContent || pre.innerText || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () {
+        btn.textContent = 'Copied!';
+        setTimeout(function () { btn.textContent = 'Copy'; }, 1400);
+      });
+    }
+  };
+
+  window.k3SpeakReply = function (btn) {
+    if (!window.speechSynthesis) return;
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      btn.textContent = '🔊 Listen';
+      return;
+    }
+    var msgEl = btn.closest ? btn.closest('.k3-msg') : btn.parentNode.parentNode;
+    if (!msgEl) return;
+    var clone = msgEl.cloneNode(true);
+    var acts = clone.querySelectorAll('.k3-msg-actions, .k3-copy-code-btn, .k3-figcaption, svg');
+    for (var i = 0; i < acts.length; i++) acts[i].remove();
+    var utter = new SpeechSynthesisUtterance((clone.textContent || '').trim());
+    utter.lang = 'en-US';
+    btn.textContent = '⏹ Stop';
+    utter.onend = function () { btn.textContent = '🔊 Listen'; };
+    utter.onerror = function () { btn.textContent = '🔊 Listen'; };
+    window.speechSynthesis.speak(utter);
+  };
+
+  window.k3CopyReply = function (btn) {
+    var msgEl = btn.closest ? btn.closest('.k3-msg') : btn.parentNode.parentNode;
+    if (!msgEl) return;
+    var clone = msgEl.cloneNode(true);
+    var acts = clone.querySelectorAll('.k3-msg-actions, .k3-copy-code-btn, svg');
+    for (var i = 0; i < acts.length; i++) acts[i].remove();
+    var txt = (clone.textContent || '').trim();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () {
+        btn.textContent = '✓ Copied';
+        setTimeout(function () { btn.textContent = '📋 Copy'; }, 1400);
+      });
+    }
+  };
+
+  function renderMediaItemsHtml(mediaList) {
+    if (!Array.isArray(mediaList) || !mediaList.length) return '';
+    var out = [];
+    for (var i = 0; i < mediaList.length; i++) {
+      var m = mediaList[i];
+      if (!m) continue;
+      var title = escHtml(m.title || 'Generated Chart');
+      var cap = escHtml(m.caption || m.title || '');
+      if (m.type === 'svg' && m.svg) {
+        var svgB64 = 'data:image/svg+xml;utf8,' + encodeURIComponent(m.svg);
+        out.push(
+          '<figure class="k3-figure">' +
+            m.svg +
+            '<figcaption class="k3-figcaption"><span>' + cap + '</span>' +
+            '<a class="k3-dl-link" href="' + svgB64 + '" download="clover-diagram.svg">Download SVG</a></figcaption>' +
+          '</figure>'
+        );
+      } else if (m.data_url) {
+        out.push(
+          '<figure class="k3-figure">' +
+            '<img src="' + m.data_url + '" alt="' + title + '">' +
+            '<figcaption class="k3-figcaption"><span>' + cap + '</span>' +
+            '<a class="k3-dl-link" href="' + m.data_url + '" download="clover-chart.png">Download PNG</a></figcaption>' +
+          '</figure>'
+        );
+      }
+    }
+    return out.join('');
+  }
+
+  function formatBotReplyHtml(text, mediaList) {
     var codeStore = [];
     var withTokens = String(text || '').replace(/```([a-zA-Z0-9_+-]*)\s*\n([\s\S]*?)```/g, function (_, lang, codeBody) {
       var idx = codeStore.length;
-      codeStore.push('<pre class="k3-code"><code>' + escHtml(String(codeBody || '').replace(/\s+$/, '')) + '</code></pre>');
+      var lLow = String(lang || '').toLowerCase();
+      if (lLow === 'svg' && String(codeBody || '').trim().indexOf('<svg') === 0) {
+        codeStore.push('<figure class="k3-figure">' + String(codeBody || '').trim() + '</figure>');
+      } else {
+        codeStore.push(
+          '<div class="k3-code-wrap">' +
+            '<button type="button" class="k3-copy-code-btn" onclick="k3CopyCode(this)">Copy</button>' +
+            '<pre class="k3-code"><code>' + escHtml(String(codeBody || '').replace(/\s+$/, '')) + '</code></pre>' +
+          '</div>'
+        );
+      }
       return '\n__K3_CODE_BLOCK_' + idx + '__\n';
     });
 
@@ -1348,16 +1435,38 @@ src/scripts/chat-stop.sh mychat</code></pre>
       var ln = rawLines[i].trim();
       if (ln) lines.push(ln);
     }
-    if (!lines.length) return '<p>Sorry, no response was generated.</p>';
+    var mediaHtml = renderMediaItemsHtml(mediaList);
+    if (!lines.length && !mediaHtml) return '<p>Sorry, no response was generated.</p>';
 
     var htmlParts = [];
     var inList = false;
+    var tableRows = [];
 
     function closeList() {
       if (inList) {
         htmlParts.push('</ul>');
         inList = false;
       }
+    }
+
+    function flushTable() {
+      if (!tableRows.length) return;
+      var tbl = ['<table class="k3-table">'];
+      var bodyOpened = false;
+      for (var rIdx = 0; rIdx < tableRows.length; rIdx++) {
+        var cells = tableRows[rIdx].replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); });
+        if (rIdx === 1 && cells.every(function (c) { return /^[:\-]+$/.test(c); })) continue;
+        if (rIdx === 0) {
+          tbl.push('<thead><tr>' + cells.map(function (c) { return '<th>' + escAndLinkify(c) + '</th>'; }).join('') + '</tr></thead>');
+        } else {
+          if (!bodyOpened) { tbl.push('<tbody>'); bodyOpened = true; }
+          tbl.push('<tr>' + cells.map(function (c) { return '<td>' + escAndLinkify(c) + '</td>'; }).join('') + '</tr>');
+        }
+      }
+      if (bodyOpened) tbl.push('</tbody>');
+      tbl.push('</table>');
+      htmlParts.push(tbl.join(''));
+      tableRows = [];
     }
 
     function formatLeadIn(s) {
@@ -1370,6 +1479,12 @@ src/scripts/chat-stop.sh mychat</code></pre>
 
     for (var j = 0; j < lines.length; j++) {
       var line = lines[j];
+      if (/^\|.+\|$/.test(line)) {
+        closeList();
+        tableRows.push(line);
+        continue;
+      }
+      flushTable();
       var mCode = line.match(/^__K3_CODE_BLOCK_(\d+)__$/);
       if (mCode) {
         closeList();
@@ -1405,6 +1520,20 @@ src/scripts/chat-stop.sh mychat</code></pre>
       }
     }
     closeList();
+    flushTable();
+    if (mediaHtml) {
+      if (htmlParts.length > 0) {
+        htmlParts.splice(1, 0, mediaHtml);
+      } else {
+        htmlParts.push(mediaHtml);
+      }
+    }
+    htmlParts.push(
+      '<div class="k3-msg-actions">' +
+        '<button type="button" class="k3-action-btn" onclick="k3SpeakReply(this)" title="Read aloud">🔊 Listen</button>' +
+        '<button type="button" class="k3-action-btn" onclick="k3CopyReply(this)" title="Copy response">📋 Copy</button>' +
+      '</div>'
+    );
     return htmlParts.join('');
   }
 
@@ -1470,7 +1599,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
       }
       var r = await res.json();
       var replyTxt = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
-      var botHtml = formatBotReplyHtml(replyTxt);
+      var botHtml = formatBotReplyHtml(replyTxt, r.media || []);
       if (sessionsMap[activeSid]) {
         sessionsMap[activeSid].messages.push({ role: 'bot', html: botHtml, text: replyTxt });
         saveSessionsToStorage();
@@ -1483,7 +1612,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
         }
       }
     } catch (err) {
-      var errHtml = '<p>Unable to reach Clover AI right now. Please try again.</p>';
+      var errHtml = '<p>Unable to reach Clover right now. Please try again.</p>';
       if (pending && sessionId === activeSid && pending.parentNode === logEl) {
         pending.innerHTML = errHtml;
       }

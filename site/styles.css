@@ -781,10 +781,60 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
   margin: 0.55rem 0 0.75rem 0; padding: 0.85rem 1rem; border-radius: 8px;
   background: #14181d; color: #f6f8fa; overflow-x: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.87rem; line-height: 1.52; white-space: pre;
+  font-size: 0.87rem; line-height: 1.52; white-space: pre; position: relative;
 }
 .k3-msg pre.k3-code:last-child { margin-bottom: 0; }
 .k3-msg pre.k3-code code { background: none; color: inherit; padding: 0; font: inherit; }
+.k3-code-wrap {
+  position: relative; margin: 0.55rem 0 0.75rem 0;
+}
+.k3-code-wrap pre.k3-code { margin: 0; padding-top: 2rem; }
+.k3-copy-code-btn {
+  position: absolute; top: 0.4rem; right: 0.5rem; z-index: 2;
+  background: rgba(255, 255, 255, 0.12); color: #e2e7ec; border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px; padding: 0.18rem 0.55rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+}
+.k3-copy-code-btn:hover { background: rgba(255, 255, 255, 0.24); color: #fff; }
+.k3-figure {
+  margin: 0.65rem 0 0.8rem 0; padding: 0.65rem; background: var(--soft);
+  border: 1px solid var(--line-2); border-radius: 10px; text-align: center;
+}
+.k3-figure img, .k3-figure svg {
+  display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 7px; background: #fff;
+}
+.k3-figcaption {
+  margin-top: 0.45rem; font-size: 0.82rem; color: var(--muted); line-height: 1.4;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; text-align: left;
+}
+.k3-dl-link {
+  font-size: 0.78rem; font-weight: 650; color: var(--accent); text-decoration: none;
+  padding: 0.15rem 0.5rem; border: 1px solid var(--accent-line); border-radius: 6px; background: var(--accent-soft);
+}
+.k3-dl-link:hover { background: var(--accent); color: #fff; }
+.k3-msg table.k3-table {
+  width: 100%; border-collapse: collapse; margin: 0.55rem 0 0.75rem 0; font-size: 0.88rem;
+}
+.k3-msg table.k3-table th, .k3-msg table.k3-table td {
+  border: 1px solid var(--line-2); padding: 0.42rem 0.65rem; text-align: left;
+}
+.k3-msg table.k3-table th { background: var(--soft); font-weight: 650; color: var(--ink); }
+.k3-math-inline, .k3-math-block {
+  font-family: "Cambria Math", "STIX Two Math", Georgia, serif; color: var(--ink);
+}
+.k3-math-block {
+  display: block; text-align: center; margin: 0.5rem 0; padding: 0.45rem 0.75rem;
+  background: var(--soft); border-radius: 7px; font-size: 1.02rem;
+}
+.k3-msg-actions {
+  margin-top: 0.5rem; padding-top: 0.4rem; border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 0.45rem; justify-content: flex-end;
+}
+.k3-action-btn {
+  background: transparent; color: var(--muted); border: 1px solid transparent;
+  border-radius: 6px; padding: 0.16rem 0.48rem; font: inherit; font-size: 0.76rem;
+  font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.28rem;
+}
+.k3-action-btn:hover { color: var(--accent); border-color: var(--line-2); background: var(--soft); }
 .k3-msg--user {
   align-self: flex-end; background: var(--accent); color: #fff;
   border-bottom-right-radius: 4px;

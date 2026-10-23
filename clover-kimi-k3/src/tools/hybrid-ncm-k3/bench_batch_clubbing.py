@@ -46,7 +46,7 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
                 msgs.append({"role": "assistant", "content": "W1: " + h["reply"].replace("\n", "\nW2: ", 1)})
         else:
             msgs.append({"role": "user", "content": "hi"})
-            msgs.append({"role": "assistant", "content": "W1: Hi I am Clover AI, How can I help you today?"})
+            msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
             if p.strip().lower().rstrip("?!.") != "can you really help me":
                 msgs.append({"role": "user", "content": "can you really help me"})
                 msgs.append({

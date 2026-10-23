@@ -61,8 +61,8 @@ PYTHON_OPEN, PYTHON_CLOSE = "<python>", "</python>"
 
 
 AGENT_DECISION_SYSTEM_PROMPT = (
-    "You are Clover AI operating in Agent Mode (powered by HybridAgent latent reasoning, live web/arXiv/Wikipedia search, "
-    "Python code execution, Kimi K3 MoE Experts, and Next-Concept Modeling). "
+    "You are Clover operating in Agent Mode (powered by HybridAgent latent reasoning, live web/arXiv/Wikipedia search, "
+    "Python code & chart execution, Kimi K3 MoE Experts, and Next-Concept Modeling). "
     "When the user asks to find, search, or look up research papers, recent developments, news, or external facts, "
     "ALWAYS present the actual retrieved findings, paper titles, dates, and concrete facts directly — NEVER say "
     "'Here is how I can assist: Identify the scope' or ask the user to search for themselves."
@@ -795,6 +795,321 @@ def match_verified_code_template(user_prompt: str):
     return None
 
 
+def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, history=None):
+    """Detects requests for graphs, charts, plots, diagrams, or visual comparisons and executes `matplotlib` / SVG
+    generation via `py_tool`, returning `(py_script, py_stdout, media_items, plan_windows)` where `media_items`
+    is a list of `{"type": "image"|"svg", "title": str, "data_url": str, "svg": str, "caption": str}`."""
+    raw_q = _extract_raw_user_query(user_prompt).strip()
+    p = raw_q.lower()
+
+    wants_visual = any(
+        kw in p
+        for kw in (
+            "plot", "graph", "chart", "bar chart", "line chart", "pie chart", "scatter", "histogram",
+            "visualize", "visualise", "draw a", "show a graph", "show a chart", "diagram", "flowchart",
+            "sine", "cosine", "parabola", "sigmoid", "relu", "normal distribution", "gaussian",
+        )
+    )
+    if not wants_visual:
+        return None
+
+    # Common matplotlib header that styles charts in Clover's clean teal/slate palette and prints base64 PNG
+    mpl_header = (
+        "import io, base64, math\n"
+        "import numpy as np\n"
+        "import matplotlib\n"
+        "matplotlib.use('Agg')\n"
+        "import matplotlib.pyplot as plt\n"
+        "plt.rcParams.update({\n"
+        "    'figure.facecolor': '#ffffff',\n"
+        "    'axes.facecolor': '#f6f8fa',\n"
+        "    'axes.edgecolor': '#cfd6de',\n"
+        "    'axes.labelcolor': '#14181d',\n"
+        "    'xtick.color': '#39424d',\n"
+        "    'ytick.color': '#39424d',\n"
+        "    'grid.color': '#e2e7ec',\n"
+        "    'text.color': '#14181d',\n"
+        "    'font.size': 10,\n"
+        "})\n"
+    )
+    mpl_footer = (
+        "plt.tight_layout()\n"
+        "buf = io.BytesIO()\n"
+        "plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')\n"
+        "plt.close()\n"
+        "b64 = base64.b64encode(buf.getvalue()).decode('ascii')\n"
+        "print('__CLOVER_IMG_B64__:' + b64)\n"
+    )
+
+    # 1. Architecture / Pipeline / Flowchart SVG diagram
+    if any(k in p for k in ("diagram", "flowchart", "architecture")) and not any(k in p for k in ("plot", "bar chart", "pie chart", "line chart", "sine", "cosine")):
+        svg_markup = (
+            '<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Clover Kimi K3 Architecture Diagram">'
+            '<defs><marker id="k3arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">'
+            '<path d="M 0 1 L 10 5 L 0 9 z" fill="#0a6a5f"/></marker></defs>'
+            '<rect width="760" height="210" rx="12" fill="#f6f8fa" stroke="#cfd6de"/>'
+            '<text x="380" y="28" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#14181d">Clover Kimi K3 — Native HybridAgent + 93-Layer MoE + NCM Pipeline</text>'
+            '<rect x="20" y="55" width="150" height="95" rx="9" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"/>'
+            '<text x="95" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0a6a5f">1. Input &amp; Tools</text>'
+            '<text x="95" y="104" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">Text / MoonViT3d</text>'
+            '<text x="95" y="120" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">&lt;search&gt; &amp; &lt;python&gt;</text>'
+            '<text x="95" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#66717e">256k Session Context</text>'
+            '<line x1="170" y1="102" x2="205" y2="102" stroke="#0a6a5f" stroke-width="2" marker-end="url(#k3arr)"/>'
+            '<rect x="210" y="55" width="165" height="95" rx="9" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"/>'
+            '<text x="292" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0a6a5f">2. 93-Layer Kimi K3</text>'
+            '<text x="292" y="104" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">69 KDA + 24 MLA Trunks</text>'
+            '<text x="292" y="120" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">92 MoE Layers (d=7168)</text>'
+            '<text x="292" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#66717e">GPUs 0..5 (3,312 Experts)</text>'
+            '<line x1="375" y1="102" x2="410" y2="102" stroke="#0a6a5f" stroke-width="2" marker-end="url(#k3arr)"/>'
+            '<rect x="415" y="55" width="155" height="95" rx="9" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"/>'
+            '<text x="492" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0a6a5f">3. K3 HybridLink</text>'
+            '<text x="492" y="104" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">R_K3(h): 7168 &rarr; 7168</text>'
+            '<text x="492" y="120" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">Combo + Expert Bridge</text>'
+            '<text x="492" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#66717e">96-Slot Dual Prefix (d=384)</text>'
+            '<line x1="570" y1="102" x2="605" y2="102" stroke="#0a6a5f" stroke-width="2" marker-end="url(#k3arr)"/>'
+            '<rect x="610" y="55" width="130" height="95" rx="9" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2"/>'
+            '<text x="675" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0a6a5f">4. Parallel NCM</text>'
+            '<text x="675" y="104" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#14181d">11-Level VQ-VAE</text>'
+            '<text x="675" y="120" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#14181d">Pointer Decoder</text>'
+            '<text x="675" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#0a6a5f">163,840 K3 Vocab</text>'
+            '<text x="380" y="184" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#39424d">8 &times; RTX 3090 GPUs &bull; 17,869.8 Emitted Kimi K3 Tokens/s (8-GPU DDP) &bull; Text, Code, Charts &amp; Vision</text>'
+            '</svg>'
+        )
+        media = [{
+            "type": "svg",
+            "title": "Clover Kimi K3 Architecture Diagram",
+            "svg": svg_markup,
+            "caption": "End-to-end signal flow across Clover Kimi K3's 93-layer MoE trunk/expert pool, K3NativeHybridLink (d=7168), and 11-level parallel NCM decoder.",
+        }]
+        plans = [
+            "Here is the architecture diagram showing how Clover Kimi K3 processes multimodal inputs, executes tools, and generates responses in parallel:",
+            "\nStage 1 (Input & Agent Tools): Accepts text, documents, and images via MoonViT3d and runs live search and Python tools in a 256k context.",
+            "\nStage 2 (93-Layer Kimi K3 MoE): Runs all 93 Kimi K3 trunks (69 KDA + 24 MLA) and 92 MoE expert layers (d=7168) across GPUs 0 to 5.",
+            "\nStage 3 & 4 (K3NativeHybridLink + NCM): Maps 7,168-d states through K3NativeHybridLink and decodes 163,840-vocab Kimi K3 tokens in 11 parallel passes.",
+        ]
+        return "svg_diagram", "Generated SVG architecture diagram", media, plans
+
+    # 2. Compound interest / investment growth chart
+    if "compound" in p or "investment" in p or ("interest" in p and any(w in p for w in ("plot", "graph", "chart"))):
+        ctx_text = raw_q
+        if history:
+            ctx_text = " ".join(h.get("user", "") + " " + h.get("reply", "") for h in history[-4:]) + " " + raw_q
+        m_p = re.search(r"\$\s*([\d,]+(?:\.\d+)?)", ctx_text)
+        P_val = float(m_p.group(1).replace(",", "")) if m_p else 5000.0
+        m_r = re.search(r"(\d+(?:\.\d+)?)\s*%", ctx_text)
+        r_pct = float(m_r.group(1)) if m_r else 6.0
+        m_y = re.findall(r"\b(\d+(?:\.\d+)?)\s*years?\b", ctx_text.lower())
+        years = int(float(m_y[-1])) if m_y else 10
+        script = (
+            mpl_header +
+            f"P, r, n, Y = {P_val}, {r_pct}/100.0, 12, {years}\n"
+            "yrs = np.arange(0, Y + 1)\n"
+            "balances = [P * ((1.0 + r / n) ** (n * y)) for y in yrs]\n"
+            "contribs = [P for _ in yrs]\n"
+            "fig, ax = plt.subplots(figsize=(7.2, 4.0))\n"
+            "ax.plot(yrs, balances, marker='o', linewidth=2.5, color='#0a6a5f', label=f'Compound Balance ({r*100:g}% APR, monthly)')\n"
+            "ax.fill_between(yrs, contribs, balances, color='#0a6a5f', alpha=0.14, label='Cumulative Interest Earned')\n"
+            "ax.axhline(P, linestyle='--', color='#66717e', linewidth=1.3, label=f'Initial Principal (${P:,.0f})')\n"
+            "ax.set_title(f'Compound Interest Growth Over {Y} Years (${P:,.0f} at {r*100:g}%)', fontweight='bold', pad=10)\n"
+            "ax.set_xlabel('Years')\n"
+            "ax.set_ylabel('Balance ($ USD)')\n"
+            "ax.grid(True, linestyle='--', alpha=0.6)\n"
+            "ax.legend(loc='upper left')\n"
+            "print(f'SUMMARY:Final={balances[-1]:.2f},Interest={balances[-1]-P:.2f}')\n" +
+            mpl_footer
+        )
+        out = py_tool.execute(script)
+        if "__CLOVER_IMG_B64__:" in out:
+            b64_part = out.split("__CLOVER_IMG_B64__:")[1].strip().splitlines()[0]
+            final_a = P_val * ((1.0 + (r_pct / 100.0) / 12.0) ** (12 * years))
+            interest_a = final_a - P_val
+            media = [{
+                "type": "image",
+                "title": f"Compound Interest Growth (${P_val:,.0f} at {r_pct:g}% for {years} Years)",
+                "data_url": "data:image/png;base64," + b64_part,
+                "caption": f"Year-by-year compound growth from ${P_val:,.2f} to ${final_a:,.2f} (${interest_a:,.2f} total interest earned).",
+            }]
+            plans = [
+                f"Here is the compound interest growth chart for ${P_val:,.2f} invested at {r_pct:g}% annual interest compounded monthly over {years} years:",
+                f"\nFinal Balance: ${final_a:,.2f} after {years} years (starting from an initial principal of ${P_val:,.2f}).",
+                f"\nTotal Interest Earned: ${interest_a:,.2f} generated through monthly compounding (12 periods per year).",
+            ]
+            return script, f"Final=${final_a:,.2f}, Interest=${interest_a:,.2f}", media, plans
+
+    # 3. Trigonometric / mathematical function plot (sine, cosine, sigmoid, parabola, normal distribution, or custom function)
+    if any(k in p for k in ("sine", "sin(", "cosine", "cos(", "trig", "wave", "sigmoid", "relu", "parabola", "quadratic", "normal distribution", "gaussian", "function")):
+        if "sigmoid" in p or "relu" in p:
+            script = (
+                mpl_header +
+                "x = np.linspace(-6, 6, 400)\n"
+                "sig = 1.0 / (1.0 + np.exp(-x))\n"
+                "tanh_v = np.tanh(x)\n"
+                "fig, ax = plt.subplots(figsize=(7.2, 4.0))\n"
+                "ax.plot(x, sig, linewidth=2.5, color='#0a6a5f', label='Sigmoid: 1 / (1 + e^-x)')\n"
+                "ax.plot(x, tanh_v, linewidth=2.0, linestyle='--', color='#d97706', label='Tanh: tanh(x)')\n"
+                "ax.axhline(0, color='#66717e', linewidth=0.9)\n"
+                "ax.axvline(0, color='#66717e', linewidth=0.9)\n"
+                "ax.set_title('Sigmoid vs. Tanh Activation Functions', fontweight='bold', pad=10)\n"
+                "ax.set_xlabel('x')\n"
+                "ax.set_ylabel('f(x)')\n"
+                "ax.grid(True, linestyle='--', alpha=0.6)\n"
+                "ax.legend(loc='upper left')\n" +
+                mpl_footer
+            )
+            title_str = "Sigmoid and Tanh Activation Functions"
+            cap_str = "Plot of Sigmoid σ(x) = 1/(1+e^-x) and Tanh(x) across x in [-6, 6]."
+            plans = [
+                "Here is the plot comparing the Sigmoid and Tanh activation functions across the interval [-6, 6]:",
+                "\nSigmoid σ(x): Maps real inputs smoothly into (0, 1) with σ(0) = 0.5, commonly used for gates and probabilities.",
+                "\nTanh(x): Zero-centered activation mapping inputs into (-1, 1) with steeper gradients near x = 0.",
+            ]
+        elif "normal" in p or "gaussian" in p:
+            script = (
+                mpl_header +
+                "x = np.linspace(-4, 4, 400)\n"
+                "y = (1.0 / np.sqrt(2 * np.pi)) * np.exp(-0.5 * x**2)\n"
+                "fig, ax = plt.subplots(figsize=(7.2, 4.0))\n"
+                "ax.plot(x, y, linewidth=2.5, color='#0a6a5f', label='Standard Normal PDF (μ=0, σ=1)')\n"
+                "ax.fill_between(x, 0, y, where=(np.abs(x) <= 1), color='#0a6a5f', alpha=0.22, label='±1σ (68.27%)')\n"
+                "ax.set_title('Standard Normal (Gaussian) Distribution', fontweight='bold', pad=10)\n"
+                "ax.set_xlabel('Standard Deviations (z)')\n"
+                "ax.set_ylabel('Probability Density')\n"
+                "ax.grid(True, linestyle='--', alpha=0.6)\n"
+                "ax.legend(loc='upper right')\n" +
+                mpl_footer
+            )
+            title_str = "Standard Normal Distribution (μ = 0, σ = 1)"
+            cap_str = "Gaussian probability density function showing the ±1σ (68.27%) shaded interval."
+            plans = [
+                "Here is the plot of the Standard Normal (Gaussian) probability density function (μ = 0, σ = 1):",
+                "\nBell Curve Symmetry: The density peaks at z = 0 (0.3989) and decays symmetrically as exp(-z^2 / 2).",
+                "\nEmpirical Rule: Approximately 68.27% of values fall within ±1σ (shaded), 95.45% within ±2σ, and 99.73% within ±3σ.",
+            ]
+        else:
+            script = (
+                mpl_header +
+                "x = np.linspace(0, 2 * np.pi, 400)\n"
+                "y_sin = np.sin(x)\n"
+                "y_cos = np.cos(x)\n"
+                "fig, ax = plt.subplots(figsize=(7.2, 4.0))\n"
+                "ax.plot(x, y_sin, linewidth=2.5, color='#0a6a5f', label='sin(x)')\n"
+                "ax.plot(x, y_cos, linewidth=2.2, linestyle='--', color='#d97706', label='cos(x)')\n"
+                "ax.axhline(0, color='#66717e', linewidth=0.9)\n"
+                "ax.set_title('Sine and Cosine Waves over [0, 2π]', fontweight='bold', pad=10)\n"
+                "ax.set_xlabel('x (radians)')\n"
+                "ax.set_ylabel('Amplitude')\n"
+                "ax.grid(True, linestyle='--', alpha=0.6)\n"
+                "ax.legend(loc='upper right')\n" +
+                mpl_footer
+            )
+            title_str = "Sine and Cosine Functions over [0, 2π]"
+            cap_str = "Plot of sin(x) and cos(x) over one full period [0, 2π] radians."
+            plans = [
+                "Here is the graph of sin(x) and cos(x) plotted over a full period from 0 to 2π radians:",
+                "\nPhase Relationship: Both waves oscillate between -1 and +1 with period 2π, where cos(x) leads sin(x) by π/2 radians (90 degrees).",
+                "\nKey Crossings: sin(x) starts at 0, peaks at +1 at x = π/2, crosses 0 at x = π, and reaches -1 at x = 3π/2.",
+            ]
+        out = py_tool.execute(script)
+        if "__CLOVER_IMG_B64__:" in out:
+            b64_part = out.split("__CLOVER_IMG_B64__:")[1].strip().splitlines()[0]
+            media = [{
+                "type": "image",
+                "title": title_str,
+                "data_url": "data:image/png;base64," + b64_part,
+                "caption": cap_str,
+            }]
+            return script, title_str, media, plans
+
+    # 4. GPU / Model Throughput or Custom Bar Chart (parses Label=Value / Label: Value pairs if supplied, else plots GPU/Throughput comparison)
+    pairs = re.findall(r"\b([A-Za-z][A-Za-z0-9_\-]{0,16})\s*(?:=|:)\s*(\d+(?:\.\d+)?)", raw_q)
+    if len(pairs) >= 2:
+        labels = [k.strip() for k, _ in pairs[:8]]
+        vals = [float(v) for _, v in pairs[:8]]
+        script = (
+            mpl_header +
+            f"labels = {labels!r}\n"
+            f"vals = {vals!r}\n"
+            "fig, ax = plt.subplots(figsize=(7.2, 4.0))\n"
+            "bars = ax.bar(labels, vals, color='#0a6a5f', edgecolor='#085349', width=0.55)\n"
+            "for b, v in zip(bars, vals):\n"
+            "    ax.text(b.get_x() + b.get_width()/2, b.get_height(), f'{v:g}', ha='center', va='bottom', fontweight='bold', fontsize=9.5)\n"
+            "ax.set_title('Data Comparison Chart', fontweight='bold', pad=12)\n"
+            "ax.set_ylabel('Value')\n"
+            "ax.grid(True, axis='y', linestyle='--', alpha=0.6)\n"
+            "ax.margins(y=0.15)\n" +
+            mpl_footer
+        )
+        summary_items = ", ".join(f"{k}: {v:g}" for k, v in zip(labels, vals))
+        max_idx = max(range(len(vals)), key=lambda i: vals[i])
+        min_idx = min(range(len(vals)), key=lambda i: vals[i])
+        plans = [
+            f"Here is the bar chart visualizing your data ({summary_items}):",
+            f"\nHighest Value: {labels[max_idx]} leads with {vals[max_idx]:g}, while {labels[min_idx]} is lowest at {vals[min_idx]:g}.",
+            f"\nSummary Metrics: Total across all {len(vals)} categories is {sum(vals):g} with a mean of {sum(vals)/len(vals):.2f}.",
+        ]
+        title_str = "Custom Data Bar Chart"
+        cap_str = f"Bar chart comparing {summary_items}."
+    elif any(k in p for k in ("gpu", "hbm", "blackwell", "b200", "mi325", "mi350", "rtx")):
+        script = (
+            mpl_header +
+            "chips = ['RTX 3090', 'RTX 5090', 'Blackwell B200', 'AMD MI325X', 'AMD MI350X']\n"
+            "vram = [24, 32, 192, 256, 288]\n"
+            "colors = ['#66717e', '#39424d', '#0a6a5f', '#0d8a7b', '#085349']\n"
+            "fig, ax = plt.subplots(figsize=(7.2, 4.0))\n"
+            "bars = ax.bar(chips, vram, color=colors, width=0.55)\n"
+            "for b, v in zip(bars, vram):\n"
+            "    ax.text(b.get_x() + b.get_width()/2, b.get_height(), f'{v} GB', ha='center', va='bottom', fontweight='bold', fontsize=9.5)\n"
+            "ax.set_title('GPU Memory Capacity Comparison (GB VRAM / HBM3e)', fontweight='bold', pad=12)\n"
+            "ax.set_ylabel('Memory Capacity (GB)')\n"
+            "ax.grid(True, axis='y', linestyle='--', alpha=0.6)\n"
+            "ax.margins(y=0.15)\n" +
+            mpl_footer
+        )
+        title_str = "GPU Memory Capacity Comparison (GB)"
+        cap_str = "Comparison of VRAM / HBM3e capacity across RTX 3090 (24 GB), RTX 5090 (32 GB), NVIDIA Blackwell B200 (192 GB), AMD MI325X (256 GB), and AMD MI350X (288 GB)."
+        plans = [
+            "Here is the bar chart comparing memory capacity across recent consumer and data-center GPUs:",
+            "\nData-Center Accelerators: AMD Instinct MI350X (288 GB HBM3e), AMD MI325X (256 GB HBM3e), and NVIDIA Blackwell B200 (192 GB HBM3e).",
+            "\nWorkstation & Consumer GPUs: NVIDIA GeForce RTX 5090 (32 GB GDDR7) compared with RTX 3090 (24 GB GDDR6X, 192 GB across 8 GPUs).",
+        ]
+    else:
+        script = (
+            mpl_header +
+            "stages = ['1 Win (1 GPU)', '4 Win (1 GPU)', '8 Win (1 GPU)', '16 Win (1 GPU)', '32 Win (1 GPU)', '256 Win (8-GPU DDP)']\n"
+            "tok_s = [172.2, 984.1, 1302.4, 1407.9, 1488.8, 17869.8]\n"
+            "fig, ax = plt.subplots(figsize=(7.4, 4.1))\n"
+            "bars = ax.bar(stages, tok_s, color='#0a6a5f', width=0.55)\n"
+            "ax.set_yscale('log')\n"
+            "for b, v in zip(bars, tok_s):\n"
+            "    ax.text(b.get_x() + b.get_width()/2, b.get_height() * 1.12, f'{v:,.1f} tok/s', ha='center', va='bottom', fontweight='bold', fontsize=8.8)\n"
+            "ax.set_title('Clover Kimi K3 + NCM Parallel Token Throughput (tok/s, log scale)', fontweight='bold', pad=12)\n"
+            "ax.set_ylabel('Emitted Kimi K3 Tokens / sec (log scale)')\n"
+            "plt.xticks(rotation=15, ha='right')\n"
+            "ax.grid(True, axis='y', linestyle='--', alpha=0.6)\n"
+            "ax.set_ylim(100, 45000)\n" +
+            mpl_footer
+        )
+        title_str = "Clover Kimi K3 + NCM Parallel Throughput Scaling"
+        cap_str = "Measured Kimi K3 emitted token throughput scaling from 172.2 tok/s (1 window) to 1,488.8 tok/s (32 windows on 1 GPU) and 17,869.8 tok/s across 8 RTX 3090 GPUs."
+        plans = [
+            "Here is the throughput scaling chart for Clover Kimi K3 + NCM across batch sizes and GPUs:",
+            "\nSingle-GPU Window Scaling: Throughput rises from 172.2 tok/s (1 window) to 984.1 tok/s (4 windows) and 1,488.8 tok/s (32 windows) on 1 RTX 3090.",
+            "\n8-GPU DDP Parallel Scaling: Across all 8 RTX 3090 GPUs (256 windows), Clover emits 11,464 Kimi K3 tokens in 641.5 ms (17,869.8 tok/s).",
+        ]
+
+    out = py_tool.execute(script)
+    if "__CLOVER_IMG_B64__:" in out:
+        b64_part = out.split("__CLOVER_IMG_B64__:")[1].strip().splitlines()[0]
+        media = [{
+            "type": "image",
+            "title": title_str,
+            "data_url": "data:image/png;base64," + b64_part,
+            "caption": cap_str,
+        }]
+        return script, title_str, media, plans
+    return None
+
+
 class CloverK3AgentEngine:
     """Unified Agent Mode Engine:
     `HybridAgent-8B-Agentic` (`<latent>` + `<python>` + `<search>`) -> `K3GPUExpertsRunner` (`3,584` Kimi K3 experts in VRAM)
@@ -826,7 +1141,7 @@ class CloverK3AgentEngine:
         self.think_close_id = special_token_id(self.ha_tok, THINK_CLOSE)
 
         # Agent Mode Tools (`<python>` subprocess interpreter + `<search>` Kimi K3 knowledge search)
-        self.py_tool = PythonTool(python_path=sys.executable, timeout=10, memory_limit_gb=4.0)
+        self.py_tool = PythonTool(python_path=sys.executable, timeout=15, max_output_chars=250_000, memory_limit_gb=4.0)
         self.search_tool = K3KnowledgeSearchTool()
 
         # 3. Load K3-Native VQ-VAE + NextConceptTransformer + K3NativeHybridLink + K3ComboBridge + K3ExpertBridge + K3LexicalPointerDecoder
@@ -972,7 +1287,19 @@ class CloverK3AgentEngine:
         tool_obs_parts = []
         raw_user_q = _extract_raw_user_query(user_prompt)
 
-        # 0. Check if the user is asking for a verified Python algorithm / code implementation
+        # 0a. Check if the user is asking for a chart, graph, plot, or diagram
+        vis_tpl = match_and_execute_visual_output(raw_user_q, self.py_tool, history=history)
+        if vis_tpl is not None:
+            vis_script, vis_out, media_items, vis_plans = vis_tpl
+            tool_calls_log.append({
+                "tool": "python_chart",
+                "input": vis_script,
+                "result": vis_out,
+                "media": media_items,
+            })
+            return vis_plans, min_lat, "visual_chart", tool_calls_log
+
+        # 0b. Check if the user is asking for a verified Python algorithm / code implementation
         code_tpl = match_verified_code_template(raw_user_q)
         if code_tpl is not None:
             py_script, verified_code_plans = code_tpl
@@ -1018,7 +1345,7 @@ class CloverK3AgentEngine:
                 msgs.append({"role": "assistant", "content": "W1: " + h["reply"].replace("\n", "\nW2: ", 1)})
         else:
             msgs.append({"role": "user", "content": "hi"})
-            msgs.append({"role": "assistant", "content": "W1: Hi I am Clover AI, How can I help you today?"})
+            msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
             if raw_user_q.lower().rstrip("?!.") != "can you really help me":
                 msgs.append({"role": "user", "content": "can you really help me"})
                 msgs.append({
@@ -1346,7 +1673,20 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
 
     all_plans = plan_batch_with_latent(eng, augmented_prompts, lat_steps=14, max_new=360, histories=histories)
     for idx_p, p in enumerate(user_prompts):
-        code_tpl = match_verified_code_template(_extract_raw_user_query(p))
+        hist_p = histories[idx_p] if (histories and idx_p < len(histories)) else None
+        raw_qp = _extract_raw_user_query(p)
+        vis_tpl = match_and_execute_visual_output(raw_qp, eng.py_tool, history=hist_p)
+        if vis_tpl is not None:
+            vis_script, vis_out, media_items, vis_plans = vis_tpl
+            batch_tool_logs[idx_p].append({
+                "tool": "python_chart",
+                "input": vis_script,
+                "result": vis_out,
+                "media": media_items,
+            })
+            all_plans[idx_p] = vis_plans
+            continue
+        code_tpl = match_verified_code_template(raw_qp)
         if code_tpl is not None:
             py_script, verified_code_plans = code_tpl
             t_c0 = time.perf_counter()

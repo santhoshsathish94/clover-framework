@@ -1819,6 +1819,36 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 - **Subagent 2 (`Claude Opus 5.5` — Document Attachments, Context Isolation & Multi-Step Math):** **6 / 6 PASS** (`aurora-spec.md` Turn 1 metrics summary, Turn 2 `PostgreSQL 16` + `Kotlin` + `14 September 2027` extraction, Turn 3 `any new gpus launched` with zero attachment pollution, Turn 4 `$9,096.98` compound interest, Turn 5 `$8,070.71` 8-year follow-up, and Turn 6 `18% of 2,450 = 441` $\to$ `+12.5% = 496.125`).
 - **Subagent 3 (`ChatGPT 6 Astra` — Architecture, Model Comparisons & Session Persistence):** **4 / 4 PASS** (`What is Clover Kimi K3 and how does it work?` with Moonshot AI + 93-layer 896-expert MoE + HybridAgent + MoonViT3d + NCM, `gemini 4 vs opus 5.5`, `compare gpt-6 astra, claude opus 5.5, and gemini 4 argon` with `5.5` intact, and `QUARTZ-724` multi-turn session hydration).
 
+---
+
+## Cycle 64 — Enabling Graphs, Charts, SVG Diagrams, Markdown Tables, Copy-Code & Read-Aloud Actions, and Updating Branding to `Clover`
+
+**Direction (creator, 2026-10-24):**
+*"yes and if there is more that can be enabled please enable them, and remove the word AI from Clover AI in the interface title as well as the first message just clover"*
+
+**1. What Was Built & Enabled (`k3_agent_engine.py`, `k3_chat_server.py`, `site/clover-k3/index.html`, `site/styles.css`):**
+1. **`Clover` Branding (Removed `"AI"` from Interface Title, Initial Greeting, and Placeholders):**
+   - Interface header title updated to **`Clover`**, initial bot greeting updated to **`"Hi I am Clover, How can I help you today?"`**, composer placeholder updated to **`"Message Clover..."`**, and `CHAT_SYSTEM_PROMPT` / `AGENT_DECISION_SYSTEM_PROMPT` updated to `"You are Clover..."`.
+2. **Python `matplotlib` Chart & Graph Generation (`match_and_execute_visual_output` in `k3_agent_engine.py`):**
+   - Installed `matplotlib 3.11.2`, `scipy 1.18.1`, and `pandas 3.1.0` in `/home/usergpu/ncm/venv` on `gpu` and raised `PythonTool.max_output_chars` from `2,000` (which truncated base64 PNGs) to `250,000`.
+   - When a prompt asks to *plot*, *graph*, *chart*, *visualize*, or *draw* functions or data, `CloverK3AgentEngine` executes `matplotlib` (`Agg` backend, 150 DPI, Clover `#0a6a5f` palette) via `self.py_tool`, returns the rendered PNG (`data:image/png;base64,...`) in `r.media`, and renders `<figure class="k3-figure"><img ...><figcaption>...<a download="clover-chart.png">Download PNG</a></figcaption></figure>` inline inside the chat reply alongside the Kimi K3 + NCM explanation:
+     - **Mathematical & Activation Plots:** Sine/cosine waves (`sin(x)` & `cos(x)` over $[0, 2\pi]$), Sigmoid vs. Tanh activations, and Standard Normal (Gaussian $\mu=0, \sigma=1$ with $\pm 1\sigma$ shaded region).
+     - **Financial / Compound Interest Growth Curves:** Year-by-year compound balance curve + shaded cumulative interest area (supports custom principal, APR, and years or session context).
+     - **Custom Data Bar Charts:** Parses arbitrary `Label=Value` or `Label: Value` pairs from the user prompt (e.g. `Q1=120, Q2=185, Q3=240, Q4=310`), plots the labeled bar chart, and computes highest/lowest/total/mean metrics.
+     - **GPU Memory & 8-GPU Throughput Scaling Bar Charts:** Compares VRAM/HBM3e capacities (`RTX 3090`, `RTX 5090`, `Blackwell B200`, `AMD MI325X`, `AMD MI350X`) or log-scale Kimi K3 + NCM token throughput (`172.2` $\to$ `17,869.8 tok/s`).
+3. **Inline SVG Architecture Diagrams (`type: "svg"`):**
+   - Generates crisp vector `<svg viewBox="0 0 760 210">` architecture and pipeline diagrams with a `Download SVG` button.
+4. **Markdown Table Rendering, Copy-Code Buttons, and Read-Aloud (`🔊 Listen`) / Copy-Reply (`📋 Copy`) Controls:**
+   - Added Markdown pipe-table (`| Col 1 | Col 2 |`) $\to$ `<table class="k3-table">` rendering, one-click `Copy` buttons on every `<pre class="k3-code"><code>` block, and `🔊 Listen` (Web Speech `speechSynthesis`) + `📋 Copy` action buttons on every bot response.
+
+**2. Live Verification on `gpu` (`127.0.0.1:8765`) & Playwright Browser (`9e8a3bc3-3b5a-4a1b-b362-c570740b845c`):**
+- Verified all 5 visual modes via `/api/chat` (`vis2_sin` `104,074`-char base64 PNG, `vis2_gpu` `69,698`-char PNG, `vis2_comp` `98,906`-char PNG, `vis2_custom` `39,630`-char PNG, `vis2_arch` `3,596`-char SVG).
+- Verified live in Playwright (`call_MHxYb1pqcjVmSzlyY0tleVlNVjU` & screenshot `call_MHxuM3hxS3ZGNndLTUlIeGVSelk`):
+  - `titleText`: **`"Clover"`**
+  - `firstMsg`: **`"Hi I am Clover, How can I help you today?"`**
+  - `placeholder`: **`"Message Clover..."`**
+  - Prompt `"Plot a graph of sine and cosine waves"` rendered a `1064x584` (`imgComplete: true`) `matplotlib` PNG chart with `Download PNG`, bulleted explanation, and `🔊 Listen` / `📋 Copy` buttons.
+
 
 
 

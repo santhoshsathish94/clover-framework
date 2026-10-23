@@ -166,7 +166,7 @@ HTML_UI = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clover AI</title>
+<title>Clover</title>
 <style>
   :root {
     --ink: #14181d;
@@ -269,10 +269,48 @@ HTML_UI = """<!DOCTYPE html>
     margin: 0.55rem 0 0.75rem 0; padding: 0.85rem 1rem; border-radius: 8px;
     background: #14181d; color: #f6f8fa; overflow-x: auto;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.87rem; line-height: 1.52; white-space: pre;
+    font-size: 0.87rem; line-height: 1.52; white-space: pre; position: relative;
   }
   .msg pre.k3-code:last-child { margin-bottom: 0; }
   .msg pre.k3-code code { background: none; color: inherit; padding: 0; font: inherit; }
+  .k3-code-wrap { position: relative; margin: 0.55rem 0 0.75rem 0; }
+  .k3-code-wrap pre.k3-code { margin: 0; padding-top: 2rem; }
+  .k3-copy-code-btn {
+    position: absolute; top: 0.4rem; right: 0.5rem; z-index: 2;
+    background: rgba(255, 255, 255, 0.12); color: #e2e7ec; border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 6px; padding: 0.18rem 0.55rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  }
+  .k3-figure {
+    margin: 0.65rem 0 0.8rem 0; padding: 0.65rem; background: var(--soft);
+    border: 1px solid var(--line-2); border-radius: 10px; text-align: center;
+  }
+  .k3-figure img, .k3-figure svg {
+    display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 7px; background: #fff;
+  }
+  .k3-figcaption {
+    margin-top: 0.45rem; font-size: 0.82rem; color: var(--muted); line-height: 1.4;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; text-align: left;
+  }
+  .k3-dl-link {
+    font-size: 0.78rem; font-weight: 650; color: var(--accent); text-decoration: none;
+    padding: 0.15rem 0.5rem; border: 1px solid var(--accent-line); border-radius: 6px; background: var(--accent-soft);
+  }
+  .msg table.k3-table {
+    width: 100%; border-collapse: collapse; margin: 0.55rem 0 0.75rem 0; font-size: 0.88rem;
+  }
+  .msg table.k3-table th, .msg table.k3-table td {
+    border: 1px solid var(--line-2); padding: 0.42rem 0.65rem; text-align: left;
+  }
+  .msg table.k3-table th { background: var(--soft); font-weight: 650; color: var(--ink); }
+  .k3-msg-actions {
+    margin-top: 0.5rem; padding-top: 0.4rem; border-top: 1px solid var(--line);
+    display: flex; align-items: center; gap: 0.45rem; justify-content: flex-end;
+  }
+  .k3-action-btn {
+    background: transparent; color: var(--muted); border: 1px solid transparent;
+    border-radius: 6px; padding: 0.16rem 0.48rem; font: inherit; font-size: 0.76rem;
+    font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.28rem;
+  }
   .msg--user {
     align-self: flex-end; background: var(--accent); color: #fff;
     border-bottom-right-radius: 4px;
@@ -339,7 +377,7 @@ HTML_UI = """<!DOCTYPE html>
       <use class="clover-icon__leaf" href="#clover-leaf" transform="rotate(216 50 44)"/>
       <use class="clover-icon__leaf" href="#clover-leaf" transform="rotate(288 50 44)"/>
     </svg>
-    Clover <span>AI</span>
+    Clover
   </div>
 </header>
 
@@ -353,7 +391,7 @@ HTML_UI = """<!DOCTYPE html>
   </aside>
   <div class="main-pane">
     <div id="chat" aria-live="polite">
-      <div class="msg msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>
+      <div class="msg msg--bot"><p>Hi I am Clover, How can I help you today?</p></div>
     </div>
 
     <div class="preview-bar" id="img-preview-bar" hidden>
@@ -371,7 +409,7 @@ HTML_UI = """<!DOCTYPE html>
           <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
         </svg>
       </button>
-      <textarea id="prompt-in" rows="1" placeholder="Message Clover AI..."></textarea>
+      <textarea id="prompt-in" rows="1" placeholder="Message Clover..."></textarea>
       <button type="button" class="btn icon-btn" id="voice-btn" onclick="toggleVoice()" title="Voice input" aria-label="Voice input">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -403,7 +441,7 @@ let sessionId = '';
 let attachedImageDataUrl = null;
 let attachedFiles = [];
 
-const GREETING_HTML = '<div class="msg msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>';
+const GREETING_HTML = '<div class="msg msg--bot"><p>Hi I am Clover, How can I help you today?</p></div>';
 
 const CLOVER_LOADER_HTML = `
   <div class="clover-loader" role="status" aria-label="Thinking">
@@ -637,15 +675,38 @@ function toggleVoice() {
   recog.start();
 }
 
-function formatBotReplyHtml(text) {
+function renderMediaItemsHtml(mediaList) {
+  if (!Array.isArray(mediaList) || !mediaList.length) return '';
+  return mediaList.map(m => {
+    if (!m) return '';
+    const title = escHtml(m.title || 'Generated Chart');
+    const cap = escHtml(m.caption || m.title || '');
+    if (m.type === 'svg' && m.svg) {
+      const svgUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(m.svg);
+      return `<figure class="k3-figure">${m.svg}<figcaption class="k3-figcaption"><span>${cap}</span><a class="k3-dl-link" href="${svgUrl}" download="clover-diagram.svg">Download SVG</a></figcaption></figure>`;
+    }
+    if (m.data_url) {
+      return `<figure class="k3-figure"><img src="${m.data_url}" alt="${title}"><figcaption class="k3-figcaption"><span>${cap}</span><a class="k3-dl-link" href="${m.data_url}" download="clover-chart.png">Download PNG</a></figcaption></figure>`;
+    }
+    return '';
+  }).join('');
+}
+
+function formatBotReplyHtml(text, mediaList) {
   const codeStore = [];
   const withTokens = String(text || '').replace(/```([a-zA-Z0-9_+-]*)\\s*\\n([\\s\\S]*?)```/g, (_, lang, codeBody) => {
     const idx = codeStore.length;
-    codeStore.push('<pre class="k3-code"><code>' + escHtml(String(codeBody || '').replace(/\\s+$/, '')) + '</code></pre>');
+    const lLow = String(lang || '').toLowerCase();
+    if (lLow === 'svg' && String(codeBody || '').trim().startsWith('<svg')) {
+      codeStore.push('<figure class="k3-figure">' + String(codeBody || '').trim() + '</figure>');
+    } else {
+      codeStore.push('<div class="k3-code-wrap"><pre class="k3-code"><code>' + escHtml(String(codeBody || '').replace(/\\s+$/, '')) + '</code></pre></div>');
+    }
     return '\\n__K3_CODE_BLOCK_' + idx + '__\\n';
   });
   const rawLines = withTokens.split(/\\n+/).map(s => s.trim()).filter(Boolean);
-  if (!rawLines.length) return '<p>Sorry, no response was generated.</p>';
+  const mediaHtml = renderMediaItemsHtml(mediaList);
+  if (!rawLines.length && !mediaHtml) return '<p>Sorry, no response was generated.</p>';
   const htmlParts = [];
   let inList = false;
   const closeList = () => { if (inList) { htmlParts.push('</ul>'); inList = false; } };
@@ -687,6 +748,10 @@ function formatBotReplyHtml(text) {
     }
   });
   closeList();
+  if (mediaHtml) {
+    if (htmlParts.length > 0) htmlParts.splice(1, 0, mediaHtml);
+    else htmlParts.push(mediaHtml);
+  }
   return htmlParts.join('');
 }
 
@@ -747,7 +812,7 @@ async function sendPrompt() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const r = await res.json();
     const reply = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
-    const botHtml = formatBotReplyHtml(reply);
+    const botHtml = formatBotReplyHtml(reply, r.media || []);
     if (sessionsMap[activeSid]) {
       sessionsMap[activeSid].messages.push({ role: 'bot', html: botHtml, text: reply });
       saveSessions();
@@ -757,7 +822,7 @@ async function sendPrompt() {
       else renderMessages();
     }
   } catch (err) {
-    if (pending && sessionId === activeSid && pending.parentNode === chatEl) pending.innerHTML = '<p>Unable to reach Clover AI right now. Please try again.</p>';
+    if (pending && sessionId === activeSid && pending.parentNode === chatEl) pending.innerHTML = '<p>Unable to reach Clover right now. Please try again.</p>';
   } finally {
     isSending = false;
     sendBtn.disabled = false;
@@ -1178,6 +1243,10 @@ class MultiGPUCloverCoordinator:
                         req.session_id, req.display_prompt, text_mbr, plans, attachments_meta=req.attachments_meta
                     )
                 sess_info = self.get_session_details(req.session_id)
+                media_items = []
+                for tc in (tool_calls or []):
+                    if isinstance(tc, dict) and tc.get("media"):
+                        media_items.extend(tc["media"])
 
                 req.result = {
                     "mode": "agent_k3_experts_ncm",
@@ -1189,6 +1258,7 @@ class MultiGPUCloverCoordinator:
                     "reply": text_mbr,
                     "reply_1cand": text_mbr,
                     "reply_mbr8": text_mbr,
+                    "media": media_items,
                     "plans": plans,
                     "tool_calls": tool_calls,
                     "k3_experts": k3_expert_meta,
@@ -1224,6 +1294,10 @@ class MultiGPUCloverCoordinator:
                             req.session_id, req.display_prompt, outs[i], b_plans[i], attachments_meta=req.attachments_meta
                         )
                     sess_info = self.get_session_details(req.session_id)
+                    media_items_i = []
+                    for tc in (batch_tool_logs[i] or []):
+                        if isinstance(tc, dict) and tc.get("media"):
+                            media_items_i.extend(tc["media"])
                     req.result = {
                         "mode": "agent_k3_experts_ncm",
                         "session_id": req.session_id,
@@ -1234,6 +1308,7 @@ class MultiGPUCloverCoordinator:
                         "reply": outs[i],
                         "reply_1cand": outs[i],
                         "reply_mbr8": outs[i],
+                        "media": media_items_i,
                         "plans": b_plans[i],
                         "tool_calls": batch_tool_logs[i],
                         "k3_experts": k3_expert_meta,
