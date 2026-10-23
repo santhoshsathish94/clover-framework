@@ -1849,6 +1849,28 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
   - `placeholder`: **`"Message Clover..."`**
   - Prompt `"Plot a graph of sine and cosine waves"` rendered a `1064x584` (`imgComplete: true`) `matplotlib` PNG chart with `Download PNG`, bulleted explanation, and `🔊 Listen` / `📋 Copy` buttons.
 
+---
+
+## Cycle 65 — Dedicated Full-Page `Clover` Interface (`cloverframework.com/ai/`), Clean `Try it` Button on `clover-k3/`, and Session `×` Deletion
+
+**Direction (creator, 2026-10-24):**
+*"let's have a dedicated page for this cloverframework.com/ai and have only try it buttom in the clover kimi k3 page not this interface and since you have a entire page design it better like gpt claude or gemini design with clover theme and have x buttom to remove the sessions"*
+
+**1. What Was Built (`site/ai/index.html`, `site/clover-k3/index.html`, `site/styles.css`, `k3_chat_server.py`):**
+1. **Dedicated Full-Viewport `Clover` Page (`site/ai/index.html` $\to$ `cloverframework.com/ai/`):**
+   - Designed a full-viewport (`100vh`) ChatGPT / Claude / Gemini-style layout in the Clover `#0a6a5f` theme:
+     - **Collapsible Left Sidebar (`.clover-sidebar`):** Prominent **`New chat +`** button at the top, scrollable session list below, and a **`×` delete button (`.clover-session-del`)** on every session row that deletes the session from `localStorage` and calls `POST /api/reset` on the server (automatically creating a fresh session if the last session is removed).
+     - **Centered Main Conversation Stream (`.clover-stream` / `.clover-stream__inner`):** `820px`-centered message column with collapsible sidebar toggle button and `Clover` brand mark in `.clover-topbar`, opening with `"Hi I am Clover, How can I help you today?"`.
+     - **Floating Rounded Composer Card (`.clover-composer-card`):** Universal attachment button (`📎`) on the left, auto-expanding `Message Clover...` input in the center, and voice microphone (`🎤`) + `Send` button on the right.
+2. **Removed Embedded Widget from `site/clover-k3/index.html`:**
+   - Replaced the inline `#try-it-yourself` chat widget and modal on `clover-k3/index.html` with a single primary **`Try it`** button (`<a class="btn btn--primary" href="../ai/">Try it</a>`) in the hero actions bar.
+
+**2. Verification (`check-site.py`, `check-links.py`, and Live Playwright Browser `9e8a3bc3-3b5a-4a1b-b362-c570740b845c`):**
+- `python scripts/check-site.py`: `pages checked: 9`, `navigation compared: 8`, `site errors: 0`.
+- `python scripts/check-links.py`: `broken links: 0`, `dead anchors: 0`.
+- **Playwright Verification on `site/clover-k3/index.html`:** Confirmed `hasEmbeddedWidget: false`, `tryBtnText: "Try it"`, `tryBtnHref: "../ai/"`.
+- **Playwright Verification on `site/ai/index.html` (Screenshot `call_MHwwdE92QkdHdTh1ajBDbDdDazc`):** Confirmed `titleText: "Clover"`, `firstMsg: "Hi I am Clover, How can I help you today?"`, created multiple sessions (`what is the code to check prime numbers` and `Plot a graph of sine and cosine waves`), verified `.clover-session-del` (`×`) button on every session (`delButtonsCount: 7`), clicked `×` on the second session row, and confirmed the session count decremented cleanly (`7 -> 6`) and removed that session from the sidebar.
+
 
 
 

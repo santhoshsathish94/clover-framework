@@ -910,3 +910,150 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
 }
 .stat-card__label { font-size: 0.88rem; font-weight: 650; color: var(--ink); margin-bottom: 0.2rem; }
 .stat-card__note { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+
+/* Dedicated Full-Page Clover Interface (cloverframework.com/ai/) */
+body.clover-app-body {
+  height: 100vh; max-height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: var(--bg);
+}
+body.clover-app-body .site-head {
+  flex: 0 0 auto;
+}
+.clover-app {
+  flex: 1; min-height: 0; display: flex; width: 100%; overflow: hidden; background: var(--bg);
+}
+.clover-sidebar {
+  width: 268px; flex: 0 0 268px; background: var(--soft); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; min-height: 0; transition: margin-left 0.2s ease;
+}
+.clover-sidebar.is-collapsed {
+  margin-left: -268px;
+}
+.clover-sidebar__top {
+  padding: 0.85rem 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.clover-new-chat-btn {
+  flex: 1; background: var(--bg); color: var(--ink); border: 1px solid var(--line-2);
+  border-radius: 9px; padding: 0.52rem 0.75rem; font: inherit; font-size: 0.88rem; font-weight: 650;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(20, 24, 29, 0.03);
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+.clover-new-chat-btn:hover {
+  border-color: var(--accent); color: var(--accent); background: var(--accent-soft);
+}
+.clover-new-chat-btn__plus {
+  font-size: 1.15rem; line-height: 1; font-weight: 700; color: var(--accent);
+}
+.clover-sidebar__label {
+  padding: 0.65rem 1rem 0.3rem; font-size: 0.74rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.clover-session-list {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 0.35rem 0.6rem 0.8rem;
+  display: flex; flex-direction: column; gap: 0.22rem;
+}
+.clover-session-row {
+  display: flex; align-items: center; gap: 0.25rem; border-radius: 8px;
+  border: 1px solid transparent; padding: 0.12rem 0.25rem 0.12rem 0.35rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.clover-session-row:hover {
+  background: var(--soft-2);
+}
+.clover-session-row.is-active {
+  background: var(--accent-soft); border-color: var(--accent-line);
+}
+.clover-session-select {
+  flex: 1; min-width: 0; text-align: left; background: transparent; border: 0;
+  padding: 0.42rem 0.35rem; font: inherit; font-size: 0.87rem; color: var(--ink-2);
+  cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.clover-session-row.is-active .clover-session-select {
+  color: var(--accent); font-weight: 650;
+}
+.clover-session-del {
+  width: 24px; height: 24px; flex: 0 0 24px; border-radius: 6px; border: 0;
+  background: transparent; color: var(--muted); font-size: 0.98rem; font-weight: 650; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  opacity: 0.65; transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+.clover-session-row:hover .clover-session-del,
+.clover-session-row.is-active .clover-session-del {
+  opacity: 1;
+}
+.clover-session-del:hover {
+  background: rgba(190, 38, 38, 0.12); color: #b91c1c;
+}
+.clover-main {
+  flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--bg);
+}
+.clover-topbar {
+  padding: 0.6rem 1.25rem; border-bottom: 1px solid var(--line); background: var(--bg);
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+}
+.clover-topbar__left {
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.clover-sidebar-toggle {
+  width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line-2);
+  background: var(--bg); color: var(--ink-2); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.clover-sidebar-toggle:hover {
+  border-color: var(--accent-line); color: var(--accent); background: var(--soft);
+}
+.clover-topbar__brand {
+  display: inline-flex; align-items: center; gap: 0.48rem; font-weight: 700; font-size: 1.02rem; color: var(--ink);
+}
+.clover-topbar__brand svg { width: 22px; height: 22px; }
+.clover-stream {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 1.5rem 1.25rem 1rem;
+  display: flex; flex-direction: column; align-items: center;
+}
+.clover-stream__inner {
+  width: min(820px, 100%); display: flex; flex-direction: column; gap: 1.15rem;
+}
+.clover-composer-wrap {
+  flex: 0 0 auto; padding: 0.5rem 1.25rem 1.1rem; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center;
+}
+.clover-composer-card {
+  width: min(820px, 100%); background: var(--soft); border: 1px solid var(--line-2);
+  border-radius: 16px; padding: 0.55rem 0.7rem; box-shadow: 0 4px 16px rgba(20, 24, 29, 0.05);
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.clover-composer-card:focus-within {
+  border-color: var(--accent); background: var(--bg); box-shadow: 0 6px 22px rgba(10, 106, 95, 0.10);
+}
+.clover-composer-row {
+  display: flex; align-items: flex-end; gap: 0.5rem;
+}
+.clover-composer-row textarea {
+  flex: 1; background: transparent; color: var(--ink); border: 0; padding: 0.45rem 0.35rem;
+  font: inherit; font-size: 0.97rem; resize: none; min-height: 38px; max-height: 150px; line-height: 1.48;
+}
+.clover-composer-row textarea:focus { outline: none; }
+.clover-composer-btn {
+  width: 38px; height: 38px; flex: 0 0 38px; border-radius: 10px; border: 1px solid var(--line-2);
+  background: var(--bg); color: var(--ink-2); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+.clover-composer-btn:hover {
+  border-color: var(--accent-line); color: var(--accent); background: var(--accent-soft);
+}
+.clover-composer-btn.is-listening {
+  border-color: var(--accent); background: var(--accent-soft); color: var(--accent);
+}
+.clover-send-btn {
+  height: 38px; border-radius: 10px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; font: inherit; font-size: 0.88rem; font-weight: 650;
+  padding: 0 1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.38rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.clover-send-btn:hover { background: #085349; border-color: #085349; }
+.clover-send-btn:disabled { opacity: 0.55; cursor: default; }
+@media (max-width: 760px) {
+  .clover-sidebar { position: fixed; top: 56px; bottom: 0; left: 0; z-index: 90; box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+}

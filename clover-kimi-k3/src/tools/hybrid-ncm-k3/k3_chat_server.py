@@ -239,14 +239,25 @@ HTML_UI = """<!DOCTYPE html>
     flex: 1; overflow-y: auto; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem;
   }
   .session-item {
-    width: 100%; text-align: left; background: transparent; border: 1px solid transparent;
-    border-radius: 8px; padding: 0.52rem 0.7rem; font: inherit; font-size: 0.87rem;
-    color: var(--ink-2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    width: 100%; display: flex; align-items: center; gap: 0.25rem; background: transparent; border: 1px solid transparent;
+    border-radius: 8px; padding: 0.15rem 0.25rem 0.15rem 0.45rem; font: inherit; font-size: 0.87rem;
+    color: var(--ink-2);
   }
   .session-item:hover { background: var(--soft); color: var(--ink); }
   .session-item.is-active {
     background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); font-weight: 650;
   }
+  .session-select {
+    flex: 1; min-width: 0; text-align: left; background: transparent; border: 0;
+    padding: 0.38rem 0.3rem; font: inherit; color: inherit; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .session-del {
+    width: 24px; height: 24px; flex: 0 0 24px; border-radius: 6px; border: 0;
+    background: transparent; color: var(--muted); font-size: 0.98rem; font-weight: 650;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .session-del:hover { background: rgba(190, 38, 38, 0.12); color: #b91c1c; }
   .main-pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   #chat {
     flex: 1; overflow-y: auto; padding: 1.4rem; background: var(--soft);
@@ -495,12 +506,30 @@ function renderSidebar() {
   sessionOrder.forEach(sid => {
     const sObj = sessionsMap[sid];
     if (!sObj) return;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'session-item' + (sid === sessionId ? ' is-active' : '');
-    btn.textContent = sObj.title || 'New chat';
-    btn.onclick = () => selectSession(sid);
-    sessionListEl.appendChild(btn);
+    const row = document.createElement('div');
+    row.className = 'session-item' + (sid === sessionId ? ' is-active' : '');
+    row.setAttribute('data-session-id', sid);
+
+    const selBtn = document.createElement('button');
+    selBtn.type = 'button';
+    selBtn.className = 'session-select';
+    selBtn.textContent = sObj.title || 'New chat';
+    selBtn.onclick = () => selectSession(sid);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'session-del';
+    delBtn.title = 'Remove session';
+    delBtn.setAttribute('aria-label', 'Delete session');
+    delBtn.textContent = '×';
+    delBtn.onclick = (ev) => {
+      if (ev && ev.stopPropagation) ev.stopPropagation();
+      deleteSession(sid);
+    };
+
+    row.appendChild(selBtn);
+    row.appendChild(delBtn);
+    sessionListEl.appendChild(row);
   });
 }
 
@@ -514,6 +543,31 @@ function renderMessages() {
 function selectSession(sid) {
   if (!sessionsMap[sid]) return;
   sessionId = sid;
+  clearAttachments();
+  renderSidebar();
+  renderMessages();
+  saveSessions();
+}
+
+function deleteSession(sid) {
+  if (!sid || !sessionsMap[sid]) return;
+  delete sessionsMap[sid];
+  sessionOrder = sessionOrder.filter(id => id !== sid);
+  try {
+    fetch('/api/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sid })
+    }).catch(() => {});
+  } catch (e) {}
+  if (!sessionOrder.length) {
+    const nextId = makeSessionId();
+    sessionsMap[nextId] = { id: nextId, title: 'New chat', messages: [] };
+    sessionOrder = [nextId];
+    sessionId = nextId;
+  } else if (sessionId === sid) {
+    sessionId = sessionOrder[0];
+  }
   clearAttachments();
   renderSidebar();
   renderMessages();
@@ -1429,7 +1483,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
         self._send_json({"ok": True})
 
     def do_GET(self):
-        if self.path in ("/", "/index.html"):
+        if self.path in ("/", "/index.html", "/ai", "/ai/", "/ai/index.html"):
             body = HTML_UI.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
