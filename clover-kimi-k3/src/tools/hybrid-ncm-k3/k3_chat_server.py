@@ -416,7 +416,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
 def main():
     global STATE
     ap = argparse.ArgumentParser()
-    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--dev-ncm", default="cuda:0")
     ap.add_argument("--dev-ha", default="cuda:2")

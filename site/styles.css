@@ -640,3 +640,91 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
 @media (max-width: 800px) {
   .tab { padding-block: 0.62rem; }
 }
+
+/* ---------- Clover K3 interactive chat widget & modal ---------- */
+.k3-chat-shell {
+  margin-top: 1.6rem; border: 1px solid var(--line-2); border-radius: 12px;
+  background: #0f1419; color: #e6edf3; overflow: hidden;
+  box-shadow: 0 12px 34px rgba(10, 106, 95, 0.14);
+}
+.k3-chat-head {
+  padding: 0.85rem 1.15rem; background: #161f27; border-bottom: 1px solid #263442;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+}
+.k3-chat-title { font-weight: 650; font-size: 0.96rem; display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
+.k3-badge {
+  font-size: 0.75rem; padding: 0.18rem 0.55rem; border-radius: 999px;
+  background: rgba(18, 150, 127, 0.18); color: #3fe0c5;
+  border: 1px solid rgba(18, 150, 127, 0.42); font-family: var(--mono);
+}
+.k3-badge--live { background: rgba(46, 160, 67, 0.2); color: #56d364; border-color: rgba(46, 160, 67, 0.45); }
+.k3-controls { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; font-size: 0.82rem; color: #8b9eb0; }
+.k3-controls select, .k3-controls button, .k3-presets button, .k3-foot button {
+  background: #1d2935; color: #e6edf3; border: 1px solid #2d3f50; border-radius: 7px;
+  padding: 0.38rem 0.7rem; font: inherit; font-size: 0.82rem; cursor: pointer;
+}
+.k3-controls button:hover, .k3-presets button:hover, .k3-foot button:hover { border-color: #3fe0c5; color: #fff; }
+.k3-presets {
+  padding: 0.65rem 1.15rem; background: #121a21; border-bottom: 1px solid #263442;
+  display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; font-size: 0.8rem; color: #8b9eb0;
+}
+.k3-log {
+  height: 370px; overflow-y: auto; padding: 1.1rem 1.15rem;
+  display: flex; flex-direction: column; gap: 0.85rem; background: #0f1419;
+}
+.k3-msg {
+  max-width: 92%; padding: 0.78rem 1rem; border-radius: 10px;
+  border: 1px solid #263442; line-height: 1.52; font-size: 0.93rem;
+}
+.k3-msg p { max-width: none; margin: 0; }
+.k3-msg--user { align-self: flex-end; background: #1c2c3b; border-color: #2d455c; color: #fff; }
+.k3-msg--bot { align-self: flex-start; background: #15222b; color: #e6edf3; }
+.k3-meta {
+  margin-top: 0.55rem; padding-top: 0.45rem; border-top: 1px dashed #263442;
+  font-size: 0.76rem; color: #8b9eb0; font-family: var(--mono);
+  display: flex; flex-direction: column; gap: 0.3rem;
+}
+.k3-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.k3-pill {
+  background: #0b0f14; padding: 0.14rem 0.48rem; border-radius: 4px;
+  border: 1px solid #263442; color: #7ee7d2;
+}
+.k3-foot {
+  padding: 0.8rem 1.15rem; background: #161f27; border-top: 1px solid #263442;
+  display: flex; gap: 0.65rem; align-items: flex-end;
+}
+.k3-foot textarea {
+  flex: 1; background: #0b0f14; color: #e6edf3; border: 1px solid #2d3f50;
+  border-radius: 8px; padding: 0.6rem 0.8rem; font: inherit; font-size: 0.92rem;
+  resize: none; min-height: 44px; max-height: 130px;
+}
+.k3-foot textarea:focus { outline: none; border-color: #3fe0c5; }
+.k3-foot button.k3-send {
+  background: var(--accent); border-color: #17907f; color: #fff; font-weight: 650;
+  padding: 0.62rem 1.15rem; font-size: 0.9rem;
+}
+.k3-foot button.k3-send:hover { background: #17907f; }
+.k3-modal-backdrop {
+  position: fixed; inset: 0; z-index: 200; background: rgba(10, 15, 20, 0.76);
+  backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.k3-modal-backdrop[hidden] { display: none !important; pointer-events: none; }
+.k3-modal-dialog {
+  width: min(1020px, 100%); max-height: 92vh; display: flex; flex-direction: column;
+}
+.k3-modal-dialog .k3-chat-shell { margin-top: 0; }
+.k3-modal-dialog .k3-log { height: min(56vh, 520px); }
+.stat-grid {
+  display: grid; gap: 1rem; margin: 1.6rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.stat-card {
+  background: var(--soft); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+}
+.stat-card__num {
+  font-size: clamp(1.45rem, 2.8vw, 2rem); font-weight: 750; color: var(--accent);
+  line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 0.25rem;
+}
+.stat-card__label { font-size: 0.88rem; font-weight: 650; color: var(--ink); margin-bottom: 0.2rem; }
+.stat-card__note { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }

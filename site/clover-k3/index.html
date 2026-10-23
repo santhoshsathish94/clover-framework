@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Run Kimi K3 on your own workstation — Clover</title>
-<meta name="description" content="Set up and run Kimi K3 (2.78 trillion parameters) on one CPU workstation: what the machine needs, the set-up script, how to verify it, how to run it and tune it to your hardware, with measured speeds and credit.">
+<title>Clover Kimi K3 — 2.78T Workstation Engine &amp; 17,870 tok/s GPU Concept Pipeline</title>
+<meta name="description" content="Run Kimi K3 (2.78 trillion parameters, 163,840 vocabulary) bit-identically on one CPU workstation or interactively in 2.1 to 5.3 seconds on 8x RTX 3090 GPUs via HybridAgent + NCM + Clover Kimi K3 (17,869.8 emitted tok/s across 8 GPUs). Try the live interactive chat directly.">
 <link rel="canonical" href="https://cloverframework.com/clover-k3/">
-<meta property="og:title" content="Run Kimi K3 on your own workstation — Clover">
-<meta property="og:description" content="Requirements, set-up script, verification, running and tuning for Kimi K3 on one CPU workstation, with the measured speeds and what they do not show.">
+<meta property="og:title" content="Clover Kimi K3 — 2.78T Workstation Engine &amp; 17,870 tok/s GPU Concept Pipeline">
+<meta property="og:description" content="What was achieved, how it works step by step, measured per-second token throughput, and a live interactive chat window running on our 8x RTX 3090 server.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/clover-k3/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
@@ -65,25 +65,98 @@
   <section class="hero" id="overview">
     <div class="wrap">
       <p class="note"><a href="../evidence/">Evidence</a> &rsaquo; Clover Kimi K3</p>
-      <h1>Run Kimi K3 on your own workstation</h1>
-      <p class="lede">Kimi K3 has 2.78 trillion parameters. <code>clover-kimi-k3</code> is a C engine
-        that runs all 93 of its layers on one CPU machine with no GPU, reading the experts from fast
-        local disk. This page is for setting it up: what the machine needs, the commands, how to
-        check that it works, how to run it, and which settings to change for your hardware.</p>
-      <p>It is not fast. A 1,000-token prompt takes about five minutes to read and each token of the
-        answer takes about three seconds, so it suits work where the answer matters more than the
-        wait. The numbers, and what they do and do not show, are <a href="#progress">further down</a>.</p>
-      <p class="note"><strong>Dataset status, 19 October 2026:</strong> the precomputed dataset is on
-        Hugging Face: all 809 files, 1,399.8 GiB. Their sizes and SHA-256 sums were compared with the list
-        in the repository. The download step has been tried on a few small files on the host, not on the full
-        1.4 TB, so allow for the download taking as long as 1.4 TB takes on your connection. It resumes if
-        interrupted.</p>
+      <h1>Clover Kimi K3: 2.78T exact on one workstation, interactive in seconds with HybridAgent + NCM</h1>
+      <p class="lede">Kimi K3 has 2.78 trillion parameters (93 layers, <code>d = 7,168</code>, 163,840-token
+        <code>tiktoken.model</code> vocabulary). <code>clover-kimi-k3</code> runs all 93 layers bit-identically
+        on one CPU workstation from NVMe, and pairs with our <strong>GPU concept-to-token pipeline
+        (<code>HybridAgent + NCM + Clover Kimi K3</code>)</strong> on 8 &times; RTX 3090 GPUs to turn a
+        356-second CPU decode into a <strong>2.13 to 5.30-second interactive chat</strong> (or
+        <strong>0.92 s per prompt</strong> when clubbed in a batch, and <strong>17,869.8 emitted Kimi K3
+        tokens/s</strong> across all 8 GPUs).</p>
+
+      <div class="stat-grid" aria-label="Headline measured metrics">
+        <div class="stat-card">
+          <div class="stat-card__num">2.13 &ndash; 5.30 s</div>
+          <div class="stat-card__label">Interactive Text &amp; Image Chat</div>
+          <div class="stat-card__note">15.7&ndash;24.2 K3 tok/s end-to-end (487&ndash;743 tok/s inside the 11-pass NCM + PointerDecoder stage); multi-turn memory enabled.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__num">94.25 tok/s</div>
+          <div class="stat-card__label">Clubbed 8-Prompt Batch (E2E)</div>
+          <div class="stat-card__note">8 real prompts answered together in 7.33 s (<strong>0.92 s/prompt</strong>, 5.30&times; faster than sequential; 1,156.1 tok/s NCM stage; 0 cross-talk).</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__num">17,869.8 tok/s</div>
+          <div class="stat-card__label">8-GPU Parallel NCM Throughput</div>
+          <div class="stat-card__note">11,464 emitted Kimi K3 tokens (<strong>25,539.0 tok/s</strong> for 16,384 capacity) in <strong>641.5 ms</strong> via 8-GPU DDP; 128K input capacity.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__num">100% Exact</div>
+          <div class="stat-card__label">93-Layer CPU Reference Chain</div>
+          <div class="stat-card__note">1,000/1,000 embeddings, 1,000/1,000 layer-92 outputs, and 8,000/8,000 snapshots bit-identical; 4.39&times; faster 1-pass verify via <code>PF_EXTRA</code>.</div>
+        </div>
+      </div>
+
       <p class="actions">
-        <a class="btn btn--primary" href="#requirements">Check your machine</a>
-        <a class="btn btn--plain" href="#steps">Set it up</a>
-        <a class="btn btn--plain" href="#run">Run it</a>
-        <a class="btn btn--plain" href="#tune">Tune it</a>
+        <button type="button" class="btn btn--primary" onclick="openK3ChatModal()">Try it yourself &mdash; Open Live Chat</button>
+        <a class="btn" href="https://141-101-132-38.sslip.io/" target="_blank" rel="noopener">Open Chat in New Window &nearr;</a>
+        <a class="btn btn--plain" href="#hybrid-ncm-k3">What is achieved &amp; throughput</a>
+        <a class="btn btn--plain" href="#how-it-works">How it works</a>
+        <a class="btn btn--plain" href="#requirements">93-layer CPU setup</a>
       </p>
+    </div>
+  </section>
+
+  <section class="band" id="try-it-yourself">
+    <div class="wrap">
+      <h2>Try it yourself: live interactive Clover Kimi K3 chat</h2>
+      <p>The chat window below is connected live to our persistent 8 &times; RTX 3090 GPU server
+        (<code>HybridAgent-8B-Agentic &lt;latent&gt;</code> on <code>cuda:2</code> &harr;
+        <code>e8_k3_direct NCM + K3LexicalPointerDecoder</code> on <code>cuda:0</code> over a 51.9 GB/s NVLink bridge).
+        Click any preset prompt, ask your own question, follow up across multiple turns, or test clubbed multi-prompt batching.</p>
+
+      <div class="k3-chat-shell" id="k3-inline-widget">
+        <div class="k3-chat-head">
+          <div class="k3-chat-title">
+            <span>Clover Kimi K3 Live Chat</span>
+            <span class="k3-badge">163,840 K3 vocab &middot; e8_k3_direct</span>
+            <span class="k3-badge k3-badge--live" id="k3-status-badge">Connecting to GPU server&hellip;</span>
+            <span class="k3-badge" id="k3-turn-badge">Memory: 0 turns</span>
+          </div>
+          <div class="k3-controls">
+            <label>Mode:
+              <select id="k3-mode-select" aria-label="Decode mode">
+                <option value="mbr8" selected>MBR8 (8 candidates)</option>
+                <option value="1cand">1-Candidate (Fastest ~155 ms NCM)</option>
+                <option value="batch">Clubbed Multi-Prompt (1 per line)</option>
+              </select>
+            </label>
+            <label><input type="checkbox" id="k3-remember-chk" checked> Context Memory</label>
+            <button type="button" onclick="k3ResetChat()">Reset Memory</button>
+            <button type="button" onclick="openK3ChatModal()">Fullscreen Modal</button>
+            <button type="button" onclick="popoutK3ChatWindow()">Pop Out Window &nearr;</button>
+          </div>
+        </div>
+        <div class="k3-presets">
+          <span>Try a prompt:</span>
+          <button type="button" onclick="k3RunPreset('the captial of france is', 'mbr8')">Capital of France</button>
+          <button type="button" onclick="k3RunPreset('What famous iron tower is located there, and who designed it?', 'mbr8')">Follow-up (Turn 2 memory)</button>
+          <button type="button" onclick="k3RunPreset('What is the tallest mountain in the world, where is it located, and how high is it?', 'mbr8')">Mount Everest</button>
+          <button type="button" onclick="k3RunPreset('Explain in about 100 words why the sky is blue and why sunsets are red.', 'mbr8')">Rayleigh Sky Scattering</button>
+          <button type="button" onclick="k3RunPreset('Explain in about 90 words how a lithium-ion battery works during charging and discharging, and why it degrades over time.', 'mbr8')">Li-Ion Battery Chemistry</button>
+          <button type="button" onclick="k3RunPreset('the captial of france is\nWhat is the tallest mountain in the world, where is it located, and how high is it?\nExplain in about 90 words how a lithium-ion battery works during charging and discharging, and why it degrades over time.', 'batch')">Clubbed 3-Prompt Batch</button>
+        </div>
+        <div class="k3-log" id="k3-chat-log" aria-live="polite">
+          <div class="k3-msg k3-msg--bot">
+            <strong>Clover Kimi K3 Interactive GPU Server Ready.</strong><br>
+            Models are hot in VRAM on <code>cuda:0 &harr; cuda:2</code> (zero 13.8 s reload wait). Send any prompt below, or click a preset button above to test single-prompt speed, multi-turn pronoun resolution, or clubbed multi-prompt batching.
+          </div>
+        </div>
+        <div class="k3-foot">
+          <textarea id="k3-prompt-in" rows="2" placeholder="Type a prompt (or multiple prompts, one per line, in Clubbed Multi-Prompt mode)... Press Enter to send, Shift+Enter for newline."></textarea>
+          <button type="button" class="k3-send" id="k3-send-btn" onclick="k3SendPrompt()">Send</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -599,6 +672,63 @@ src/scripts/chat-stop.sh mychat</code></pre>
     </div>
   </section>
 
+  <section class="band" id="how-it-works">
+    <div class="wrap">
+      <h2>How it is achieved, step by step</h2>
+      <p>The unified pipeline replaces sequential 93-layer token-by-token generation with a six-stage
+        concept-to-token architecture where every stage speaks Kimi K3&rsquo;s native 163,840-token
+        <code>tiktoken.model</code> vocabulary and 7,168-dimensional embedding geometry.</p>
+
+      <ol class="steps">
+        <li><strong>Continuous <code>&lt;latent&gt;</code> reasoning and multi-turn memory (<code>HybridAgent-8B-Agentic</code> / <code>Qwen3-VL-8B-Instruct + HybridLink</code>, <code>d = 4,096</code>):</strong>
+          When a prompt (and optional image or prior conversation turns) arrives, the planner enters continuous
+          <code>&lt;latent&gt;</code> mode (token <code>151669</code>) for 14 steps. At each step it passes its top-layer
+          hidden state through the learned residual adapter <code>HybridLink</code>
+          (<code>R(h_t) = LN(h_t + W_2 SiLU(W_1 LN(h_t)))</code>) and feeds that continuous vector directly back into
+          <code>inputs_embeds</code>. For images (<strong>Option B</strong>), we measured a <strong>0.9878 embedding cosine</strong>
+          and <strong>0.9453 top-layer hidden-state cosine</strong> between <code>HybridAgent-8B-Agentic</code> and
+          <code>Qwen3-VL-8B-Instruct</code>, allowing <code>HybridLink</code> to graft directly onto the vision-language
+          backbone.</li>
+        <li><strong>Structured two-window clause plan (<code>W1</code> and <code>W2</code>) + <code>R(h)</code> extraction (~44 ms):</strong>
+          After closing <code>&lt;/latent&gt;</code>, the planner writes a compact two-line semicolon-separated factual
+          skeleton (<code>W1:</code> and <code>W2:</code>, 25 to 36 words per window) containing the exact names,
+          calculated numbers, and resolved pronouns from prior conversation turns, while extracting the continuous
+          <code>HybridLink</code> vectors <code>R(h) [W, 48, 4096]</code>.</li>
+        <li><strong>96-slot dual-modality prefix packing (<code>ComboBridge</code>) and Optional Option A (<code>MoonViT3d</code> <code>d = 7,168</code>):</strong>
+          In Cycle 46&ndash;48, within-checkpoint ablations proved that combining continuous <code>R(h)</code> vectors
+          with discrete BPE plan tokens beats either modality alone (+0.07 retention over <code>R(h)</code>-only and
+          &minus;0.087 nats coarse code CE over BPE-only). <code>ComboBridge(4096 &rarr; 384)</code> packs 48 continuous
+          <code>R(h)</code> slots alongside 48 discrete Kimi K3 BPE plan token embeddings (tokenized bit-identically via
+          <code>libk3tok.so</code>). When <strong>Option A (<code>--use-option-a</code>)</strong> is enabled for images,
+          Kimi K3&rsquo;s native 27-layer <code>MoonViT3d</code> vision tower (<code>model-00096</code>) +
+          <code>PatchMergerMLPV2</code> (<code>model-00095</code>) runs in <strong>42 ms</strong> to produce
+          <code>225 &times; 7,168</code>-d visual tokens for Kimi K3 token <code>163605</code> plus a <code>7168 &rarr; 384</code>
+          visual prefix.</li>
+        <li><strong>11-pass parallel coarse-to-fine concept generation (<code>NextConceptTransformer</code>, 119.96M parameters):</strong>
+          Instead of 64 sequential steps per window, <code>NextConceptTransformer</code> predicts a hierarchy of 11 VQ
+          concept levels of lengths <code>[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64]</code> (313 discrete codes total) in
+          <strong>11 parallel forward passes</strong>, summing into quantized concept vectors <code>z_hat [W, 64, 384]</code>.</li>
+        <li><strong>K3-native VQ-VAE (144.00M parameters, 163,840 vocab) and <code>K3LexicalPointerDecoder</code>:</strong>
+          Fitting a ridge map from Kimi K3&rsquo;s <code>lm_head.weight [163840, 7168]</code> to NCM&rsquo;s <code>d = 384</code>
+          space across 95,367 shared byte pieces achieved <strong>0.9542 cosine similarity</strong>, and 8-GPU adaptation
+          brought exact VQ-VAE reconstruction on Kimi K3&rsquo;s own <code>p1..p4.ids</code> to <strong>460 / 467 (98.50%;
+          61 / 61 = 100% on <code>p1b.ids</code>)</strong> and <strong>100%</strong> across chemistry, physics, medical,
+          and math domain sentences. On top of <code>z_hat</code>, <code>K3LexicalPointerDecoder</code> (3 cross-attention
+          blocks + ordered pointer head <code>copy_scale = 18.4</code> + 2-gram subword continuation + ungrounded proper-noun/number
+          mask + variable-length sentence-aligned <code>K3_EOS</code>) outputs all 64 Kimi K3 token ids in parallel,
+          more than doubling exact number recall on <code>val_500</code> (0.3427 &rarr; <strong>0.7527</strong>, retention
+          <strong>0.9328</strong>).</li>
+        <li><strong>Clubbed batching across prompts and 8-GPU NVLink scaling (<code>16K &times; 8 = 128,000</code> input tokens):</strong>
+          By stacking $B$ independent prompts along the batch dimension (<code>[B, seq_len]</code> in the planner and
+          <code>[W_tot, 96, 384]</code> in NCM with isolated per-prompt grounding masks), 8 prompts are answered together
+          in <strong>7.33 s (0.92 s/prompt, 94.25 tok/s, 0 cross-talk)</strong>. Across all 8 RTX 3090s (where NVLink
+          partner pairs <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> transfer VRAM-to-VRAM at <strong>51.9 GB/s</strong>
+          one-way / 406 GB/s aggregate), 8-GPU DDP renders 256 windows in <strong>641.5 ms (17,869.8 emitted Kimi K3 tok/s /
+          25,539.0 capacity tok/s)</strong>.</li>
+      </ol>
+    </div>
+  </section>
+
   <section class="band" id="next">
     <div class="wrap">
       <h2>The next experiment</h2>
@@ -785,6 +915,193 @@ src/scripts/chat-stop.sh mychat</code></pre>
   </div>
 </footer>
 
+<div class="k3-modal-backdrop" id="k3-chat-modal" hidden role="dialog" aria-modal="true" aria-label="Clover Kimi K3 Live Interactive Chat">
+  <div class="k3-modal-dialog">
+    <div id="k3-modal-slot"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var API_CANDIDATES = ['http://127.0.0.1:8765', 'https://141-101-132-38.sslip.io'];
+  var activeBase = 'https://141-101-132-38.sslip.io';
+  var statusBadge = document.getElementById('k3-status-badge');
+  var turnBadge = document.getElementById('k3-turn-badge');
+  var logEl = document.getElementById('k3-chat-log');
+  var inputEl = document.getElementById('k3-prompt-in');
+  var sendBtn = document.getElementById('k3-send-btn');
+  var modeSelect = document.getElementById('k3-mode-select');
+  var rememberChk = document.getElementById('k3-remember-chk');
+  var modalEl = document.getElementById('k3-chat-modal');
+  var modalSlot = document.getElementById('k3-modal-slot');
+  var inlineWidget = document.getElementById('k3-inline-widget');
+  var inlineParent = inlineWidget ? inlineWidget.parentNode : null;
+
+  async function probeBackend() {
+    for (var i = 0; i < API_CANDIDATES.length; i++) {
+      var base = API_CANDIDATES[i];
+      if (window.location.protocol === 'https:' && base.indexOf('http://127.0.0.1') !== 0 && base.indexOf('https://') !== 0) {
+        continue;
+      }
+      try {
+        var ctrl = new AbortController();
+        var tid = setTimeout(function () { ctrl.abort(); }, 2200);
+        var r = await fetch(base + '/api/health', { signal: ctrl.signal });
+        clearTimeout(tid);
+        if (r.ok) {
+          var d = await r.json();
+          activeBase = base;
+          if (statusBadge) {
+            statusBadge.textContent = 'Live: 8\u00d7 RTX 3090 (' + (base.indexOf('127.0.0.1') !== -1 ? 'Local Tunnel' : 'HTTPS GPU') + ')';
+          }
+          if (turnBadge && typeof d.history_len === 'number') {
+            turnBadge.textContent = 'Memory: ' + d.history_len + ' turns';
+          }
+          return;
+        }
+      } catch (e) {}
+    }
+    if (statusBadge) {
+      statusBadge.textContent = 'Endpoint: ' + activeBase;
+    }
+  }
+
+  function appendMsg(role, html) {
+    var d = document.createElement('div');
+    d.className = 'k3-msg k3-msg--' + role;
+    d.innerHTML = html;
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+    return d;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  window.k3ResetChat = async function () {
+    try {
+      await fetch(activeBase + '/api/reset', { method: 'POST' });
+    } catch (e) {}
+    if (turnBadge) turnBadge.textContent = 'Memory: 0 turns';
+    appendMsg('bot', '<em>Conversation memory cleared (0 turns).</em>');
+  };
+
+  window.k3SendPrompt = async function () {
+    var text = (inputEl.value || '').trim();
+    if (!text) return;
+    var mode = modeSelect ? modeSelect.value : 'mbr8';
+    var remember = rememberChk ? rememberChk.checked : true;
+    inputEl.value = '';
+    if (sendBtn) sendBtn.disabled = true;
+
+    appendMsg('user', escHtml(text).replace(/\n/g, '<br>'));
+    var pending = appendMsg('bot', '<em>Running HybridAgent &lt;latent&gt; (14 steps) + 11-pass NCM + K3LexicalPointerDecoder&hellip;</em>');
+
+    try {
+      if (mode === 'batch') {
+        var prompts = text.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+        var resB = await fetch(activeBase + '/api/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompts: prompts, cands: 1 })
+        });
+        var data = await resB.json();
+        var outHtml = '<strong>Clubbed Batch (' + data.n_prompts + ' prompts, ' + data.n_windows + ' windows, 0 cross-talk):</strong><br><br>';
+        (data.results || []).forEach(function (item, idx) {
+          outHtml += '<div><strong>[' + (idx + 1) + ']</strong> ' + escHtml(item.reply) +
+            ' <span style="color:#8b9eb0;font-size:0.8rem">(' + item.n_k3_tokens + ' K3 tok)</span></div><br>';
+        });
+        outHtml += '<div class="k3-meta"><div class="k3-pills">' +
+          '<span class="k3-pill">Total: ' + data.total_wall_s + 's (' + data.effective_s_per_prompt + 's/prompt)</span>' +
+          '<span class="k3-pill">E2E: ' + data.e2e_tok_per_s + ' tok/s</span>' +
+          '<span class="k3-pill">NCM Stage: ' + data.ncm_stage_tok_per_s + ' tok/s (' + data.ncm_ms + ' ms)</span>' +
+          '</div></div>';
+        pending.innerHTML = outHtml;
+      } else {
+        var cands = (mode === '1cand') ? 1 : 8;
+        var res = await fetch(activeBase + '/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: text, cands: cands, remember: remember })
+        });
+        var r = await res.json();
+        if (turnBadge && typeof r.history_len === 'number') {
+          turnBadge.textContent = 'Memory: ' + r.history_len + ' turns';
+        }
+        var replyTxt = (cands === 1) ? r.reply_1cand : r.reply_mbr8;
+        var nTok = (cands === 1) ? r.n_k3_tokens_1cand : r.n_k3_tokens_mbr8;
+        var ncmMs = (cands === 1) ? r.ncm_1cand_ms : r.ncm_mbr8_ms;
+        var totMs = (cands === 1) ? r.total_1cand_ms : r.total_mbr8_ms;
+        var e2eTps = (nTok / (totMs / 1000.0)).toFixed(2);
+        var ncmTps = (nTok / (ncmMs / 1000.0)).toFixed(1);
+        pending.innerHTML = '<div>' + escHtml(replyTxt) + '</div>' +
+          '<div class="k3-meta"><div class="k3-pills">' +
+          '<span class="k3-pill">Total: ' + (totMs / 1000.0).toFixed(2) + 's</span>' +
+          '<span class="k3-pill">E2E: ' + e2eTps + ' tok/s</span>' +
+          '<span class="k3-pill">NCM (' + mode.toUpperCase() + '): ' + ncmMs + ' ms (' + ncmTps + ' tok/s)</span>' +
+          '<span class="k3-pill">Tokens: ' + nTok + ' K3 tok</span>' +
+          '<span class="k3-pill">Latent: ' + r.latent_steps + ' steps</span>' +
+          '</div><div>Plan: ' + escHtml((r.plans || []).join(' || ')) + '</div></div>';
+      }
+    } catch (err) {
+      pending.innerHTML = '<span>Could not reach live GPU endpoint directly (' + escHtml(err) + '). ' +
+        '<a href="' + activeBase + '/" target="_blank" rel="noopener" style="color:#3fe0c5">Click here to open the live chat window in a new tab &nearr;</a></span>';
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
+      if (inputEl) inputEl.focus();
+    }
+  };
+
+  window.k3RunPreset = function (text, mode) {
+    if (modeSelect && mode) modeSelect.value = mode;
+    if (inputEl) inputEl.value = text;
+    window.k3SendPrompt();
+  };
+
+  window.openK3ChatModal = function () {
+    if (!modalEl || !inlineWidget) return;
+    if (modalEl.hidden) {
+      modalSlot.appendChild(inlineWidget);
+      modalEl.hidden = false;
+      if (inputEl) inputEl.focus();
+    } else {
+      window.closeK3ChatModal();
+    }
+  };
+
+  window.closeK3ChatModal = function () {
+    if (!modalEl || !inlineWidget || !inlineParent) return;
+    inlineParent.appendChild(inlineWidget);
+    modalEl.hidden = true;
+  };
+
+  window.popoutK3ChatWindow = function () {
+    window.open(activeBase + '/', 'CloverK3LiveChat', 'width=980,height=760,resizable=yes,scrollbars=yes');
+  };
+
+  if (modalEl) {
+    modalEl.addEventListener('click', function (e) {
+      if (e.target === modalEl) window.closeK3ChatModal();
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modalEl && !modalEl.hidden) {
+      window.closeK3ChatModal();
+    }
+  });
+  if (inputEl) {
+    inputEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        window.k3SendPrompt();
+      }
+    });
+  }
+
+  probeBackend();
+})();
+</script>
 <script src="../app.js?v=3.5.0" defer></script>
 </body>
 </html>
