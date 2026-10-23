@@ -475,27 +475,32 @@ src/scripts/chat-stop.sh mychat</code></pre>
         </table>
       </div>
 
-      <h3>Examples of prompts, timings, and verbatim outputs (163,840-vocab Kimi K3 tokens, 93-layer verification OFF)</h3>
+      <h3>Examples of prompts, timings, per-second throughput, and verbatim outputs (163,840-vocab Kimi K3 tokens, 93-layer verification OFF)</h3>
+      <p>The table below records all 8 single-prompt runs from
+        <a href="https://github.com/santhoshsathish94/clover-framework/blob/ncm-merge-latent-fluency/clover-kimi-k3/src/tools/hybrid-ncm-k3/throughput_proof_results.json"><code>throughput_proof_results.json</code></a>
+        (run by <a href="https://github.com/santhoshsathish94/clover-framework/blob/ncm-merge-latent-fluency/clover-kimi-k3/src/tools/hybrid-ncm-k3/bench_throughput_proof.py"><code>bench_throughput_proof.py</code></a>
+        on the NVLink partner pair <code>cuda:0 &harr; cuda:2</code>) plus the 3 multimodal image runs from
+        <a href="https://github.com/santhoshsathish94/clover-framework/blob/ncm-merge-latent-fluency/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_multimodal_chat.py"><code>k3_multimodal_chat.py</code></a>.</p>
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Verbatim outputs from <code>e8_k3_direct</code> on <code>gpu</code> (Cycles 52&ndash;54).</caption>
+          <caption class="note">Verbatim outputs and measured per-second token throughput from <code>e8_k3_direct</code> and <code>e9_k3_multimodal</code> on <code>gpu</code> (Cycles 52&ndash;55).</caption>
           <thead>
             <tr>
               <th scope="col">Modality &amp; prompt</th>
-              <th scope="col">Timing (1-cand / <code>MBR8</code>)</th>
+              <th scope="col">Latency &amp; throughput (1-cand / <code>MBR8</code>)</th>
               <th scope="col">Verbatim Kimi K3 output</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row"><strong>Text (short fact):</strong> <code>"the captial of france is"</code></th>
-              <td><strong>2.17 s / 2.25 s</strong><br>(NCM: 155.5 ms / 231.4 ms)</td>
+              <th scope="row"><strong>Text (short fact, <code>p9</code>):</strong> <code>"the captial of france is"</code></th>
+              <td><strong>2.13 s / 2.21 s</strong><br>(E2E: 7.53 / 7.25 tok/s;<br>NCM: 108.0 / 69.5 tok/s)</td>
               <td><em>&ldquo;The capital of France is Paris. Summary: The capital of France is Paris.&rdquo;</em> (16 K3 tokens; stops at <code>K3_EOS</code> with zero filler)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Text (news report, <code>p1</code>):</strong> Harbourside Council vote (7 to 2, 2.4M pounds, Mill Road, Priya Raman, 14 weeks, Tom Eliot, 40 spaces on Dock Street)</th>
-              <td><strong>5.31 s / 5.57 s</strong><br>(NCM: 172.3 ms / 429.2 ms)</td>
-              <td><em>&ldquo;The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks to complete. The council promised 40 temporary parking spaces on Dock Street... The vote was held on Tuesday, with the majority... supporting the cycle lane project.&rdquo;</em> (84 K3 tokens)</td>
+              <td><strong>5.30 s / 5.57 s</strong><br>(E2E: 15.65 / 15.08 tok/s;<br>NCM: 486.8 / 192.0 tok/s)</td>
+              <td><em>&ldquo;The Harbourside Council voted 7 to 2. Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks to complete. The council promised 40 temporary parking spaces on Dock Street. The vote was held on Tuesday, with the majority supporting the cycle lane, the project.&rdquo;</em> (84 K3 tokens)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Text (incident report, <code>p4</code>):</strong> Payments DB primary failed 02:14 UTC on 3 June, replica B promoted 02:31, 1,820 delayed, 14 failed, 100% disk, 80% alert, 500 GB to 1 TB</th>
@@ -513,25 +518,62 @@ src/scripts/chat-stop.sh mychat</code></pre>
               <td><em>&ldquo;The sky appears blue due to Rayleigh scattering, where shorter blue and violet wavelengths of sunlight are scattered more by the Earth's atmosphere than longer red, orange, and yellow wavelengths. This scattering is inversely proportional to the fourth power of the wavelength. Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, while some violet light is absorbed by the upper atmosphere. Thus, the daytime sky appears predominantly blue.&rdquo;</em> (91 K3 tokens)</td>
             </tr>
             <tr>
+              <th scope="row"><strong>Text (medical news, <code>p6</code>):</strong> St Mary&rsquo;s Hospital opened a new 18 million pound children&rsquo;s wing on Friday in Bristol (Dr Elena Vance, 3 years, 45 beds, 4 operating theatres)</th>
+              <td><strong>5.23 s / 5.52 s</strong><br>(E2E: 12.42 / 17.58 tok/s;<br>NCM: 423.7 / 222.3 tok/s)</td>
+              <td><em>&ldquo;St Mary's Hospital in Bristol opened a new children's on wing on Friday. The wing cost 18 million pounds; it adds 45 beds and 4 operating theatres. The project was led the by Dr Elena Vance. The new wing children's enhances pediatric care at the hospital. The opening marks a significant investment in. healthcare Bristol. Summary: St Mary's Hospital opened a new 18 million pound children's wing in Bristol with 45 beds and 4 theatres, led by Dr Elena V.&rdquo;</em> (97 K3 tokens; zero XSum filler)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Text (chemistry, <code>p7</code>):</strong> Explain how a lithium-ion battery works during charging and discharging, and why it degrades over time</th>
+              <td><strong>5.25 s / 5.54 s</strong><br>(E2E: 21.91 / 20.93 tok/s;<br>NCM: 742.9 / 258.6 tok/s)</td>
+              <td><em>&ldquo;Lithium-ion batteries use lithium cathode as moving between the cathode and the anode. During charging, lithium ions move from the cathode to the anode through the electrolyte, and during discharging they move from the anode back to the cathode... Degradation occurs due to side reactions forming to resistive layers and material loss over cycles... Lithium ions are forced from the cathode... through the electrolyte to the anode (graphite)...&rdquo;</em> (116 K3 tokens)</td>
+            </tr>
+            <tr>
               <th scope="row"><strong>Text (geography, <code>p8</code>):</strong> What is the tallest mountain in the world, where is it located, and how high is it?</th>
               <td><strong>5.24 s / 5.52 s</strong><br>(E2E: 18.15 / 17.21 tok/s;<br>NCM: 620.1 / 217.6 tok/s)</td>
               <td><em>&ldquo;The tallest mountain in the world is Mount Everest, which is located in the Himalayas on the border between Nepal and China in the Tibet Autonomous Region. Its official elevation is 8,848 meters, or 8,029 feet. Mount Everest is part of the Himalayan mountain range and was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay. The measurement of 8,848 meters is the official figure confirmed in 2020.&rdquo;</em> (95 K3 tokens)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Image OCR (<code>img1_hospital_invoice.png</code>):</strong> Hospital invoice (#7420, 14 March 2026, 45 pediatric monitors 12M, 4 theatre suites 6M, total 18M, Dr Elena Vance, 3 years)</th>
-              <td><strong>4.35 s / 4.62 s</strong> (Option B)<br><strong>4.27 s / 4.55 s</strong> (+Option A <code>MoonViT3d</code> 42.9 ms)</td>
+              <td><strong>4.35 s / 4.62 s</strong> (Option B: 21.15 / 19.91 tok/s)<br><strong>4.27 s / 4.55 s</strong> (+Option A <code>MoonViT3d</code> 42.9 ms)</td>
               <td><em>&ldquo;St Mary's Hospital in Bristol received an invoice for 18 million pounds on March 14, 2026. 12 monitors cost 12 million pounds for 45 units, and operating theatre suites totaled 6 million pounds for 4 units. Dr Elena Vance directed the 3-year project, and the invoice details the hospital equipment purchases. Summary: St Mary's Hospital spent 18 million pounds on new equipment under Dr Elena Vance's 3-year project.&rdquo;</em> (92 K3 tokens)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Image Bar Chart (<code>img2_incident_chart.png</code>):</strong> Region B outage bar chart (02:14 UTC, 02:31 UTC, bars for 1,820 delayed, 14 failed, 500GB&rarr;1TB, 80% alert)</th>
-              <td><strong>4.96 s / 5.25 s</strong> (Option B)<br><strong>4.99 s / 5.29 s</strong> (+Option A <code>MoonViT3d</code> 43.4 ms)</td>
+              <td><strong>4.96 s / 5.25 s</strong> (Option B: 24.19 / 22.86 tok/s)<br><strong>4.99 s / 5.29 s</strong> (+Option A <code>MoonViT3d</code> 43.4 ms)</td>
               <td><em>&ldquo;The Region B database incident occurred on 3 June at 02:14 UTC when the primary failed, and the replica was promoted at 02:31 UTC. During the failure, 1,820 transactions were delayed, 14 transactions failed, and an alert triggered at 80% disk usage. The root cause was the primary disk reaching 100% full from write-ahead logs, so disk space was expanded from 500 GB to 1 TB. Summary: The Region B database failed at 02:14 UTC due to a full disk and recovered at 02:14 UTC.&rdquo;</em> (120 K3 tokens)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Image Science Diagram (<code>img3_battery_diagram.png</code>):</strong> Labeled Li-ion cell diagram (Cathode LiCoO2, Electrolyte, Separator, Anode Graphite, SEI layer)</th>
-              <td><strong>4.52 s / 4.80 s</strong> (Option B)<br><strong>4.55 s / 4.84 s</strong> (+Option A <code>MoonViT3d</code> 42.0 ms)</td>
+              <td><strong>4.52 s / 4.80 s</strong> (Option B: 24.12 / 22.71 tok/s)<br><strong>4.55 s / 4.84 s</strong> (+Option A <code>MoonViT3d</code> 42.0 ms)</td>
               <td><em>&ldquo;During charging, lithium ions move from the cathode to the anode through the electrolyte while electrons flow externally via the circuit. The cathode loses lithium ions while the anode gains them, and the separator prevents short circuits. During discharging, lithium ions return from the anode to the cathode through the electrolyte while electrons flow externally to power devices. over repeated cycles, SEI layer growth and active material loss cause capacity fade. Summary: Lithium-ion batteries transfer ions between electrodes and degrade from SEI layer growth and active material&rdquo;</em> (109 K3 tokens)</td>
             </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Stage-2 NCM + PointerDecoder window scaling on 1 GPU vs. all 8 GPUs</h3>
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Measured on 1 RTX 3090 (<code>bench_batch_clubbing.py</code>) and across all 8 RTX 3090s via <code>torchrun --nproc_per_node=8</code> with <code>torch.distributed.barrier()</code> (<code>bench_throughput_proof.py</code>).</caption>
+          <thead>
+            <tr>
+              <th scope="col">Batched windows</th>
+              <th scope="col">Max capacity</th>
+              <th scope="col">Emitted K3 tokens</th>
+              <th scope="col">Wall time</th>
+              <th scope="col">Measured emitted throughput</th>
+              <th scope="col">Measured capacity throughput</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">1 window (1 GPU)</th><td>64 tok</td><td>25 tok</td><td>145.2 ms</td><td>172.2 tok/s</td><td>440.8 tok/s</td></tr>
+            <tr><th scope="row">2 windows (1 prompt, 1 GPU)</th><td>128 tok</td><td>82 tok</td><td>152.8 ms</td><td>536.6 tok/s</td><td>837.7 tok/s</td></tr>
+            <tr><th scope="row">4 windows (2 prompts, 1 GPU)</th><td>256 tok</td><td>204 tok</td><td>207.3 ms</td><td>984.1 tok/s</td><td>1,234.9 tok/s</td></tr>
+            <tr><th scope="row">8 windows (4 prompts, 1 GPU)</th><td>512 tok</td><td>444 tok</td><td>340.9 ms</td><td>1,302.4 tok/s</td><td>1,501.9 tok/s</td></tr>
+            <tr><th scope="row">15 windows (8 clubbed prompts, 1 GPU)</th><td>960 tok</td><td>691 tok</td><td>597.7 ms</td><td>1,156.1 tok/s</td><td>1,606.2 tok/s</td></tr>
+            <tr><th scope="row">16 windows (8 prompts, 1 GPU)</th><td>1,024 tok</td><td>886 tok</td><td>629.3 ms</td><td>1,407.9 tok/s</td><td>1,627.2 tok/s</td></tr>
+            <tr><th scope="row">32 windows (16 prompts, 1 GPU)</th><td>2,048 tok</td><td>1,767 tok</td><td>1,186.9 ms</td><td>1,488.8 tok/s</td><td>1,725.5 tok/s</td></tr>
+            <tr><th scope="row"><strong>256 windows (8 GPUs &times; 32 windows, DDP)</strong></th><td><strong>16,384 tok</strong></td><td><strong>11,464 tok</strong></td><td><strong>641.5 ms (0.642 s)</strong></td><td><strong>17,869.8 tok/s</strong></td><td><strong>25,539.0 tok/s</strong></td></tr>
           </tbody>
         </table>
       </div>

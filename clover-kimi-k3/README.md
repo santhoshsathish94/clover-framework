@@ -124,6 +124,22 @@ In `src/tools/hybrid-ncm-k3/` (logged across Cycles 42–54 in `docs/clover-hybr
 | **Clubbed Multi-Prompt Batch (`8` real prompts at once, `bench_throughput_proof.py`)** | **`7.33 s` total (`0.92 s/prompt` `1`-cand) / `9.73 s` (`1.22 s/prompt` `MBR8`)** | **`94.25 K3 tok/s` end-to-end (`5.30x` faster than sequential `38.85 s`)**; clubbed NCM renders all 15 windows (`691` K3 tok) in **`597.7 ms` (`1,156.14 K3 tok/s`)** with **`0` cross-prompt token leaks** |
 | **True 8-GPU Parallel DDP Execution (`8` RTX 3090s × `32` windows = `256` windows, `torchrun --nproc_per_node=8`)** | **`641.5 ms` (`0.642 s`)** (`37.1 ms/window` on 1 GPU) | **`17,869.8 emitted Kimi K3 tok/s`** (`11,464` non-EOS tokens in `0.642 s`) and **`25,539.0 capacity Kimi K3 tok/s`** (`16,384` tokens in `0.642 s`) measured across all 8 RTX 3090s (`16K × 8 = 128,000` input tokens capacity; NVLink pairs `0↔2, 1↔3, 4↔6, 5↔7` @ `51.9 GB/s` one-way) |
 
+### Measured Per-Second Throughput & Verbatim Outputs Across All 8 Proof Prompts (`src/tools/hybrid-ncm-k3/throughput_proof_results.json`)
+
+| Prompt ID & Topic | Emitted K3 Tokens (`1`-cand / `MBR8`) | Total Wall Time (`1`-cand / `MBR8`) | **End-to-End `tok/s` (`1`-cand / `MBR8`)** | **Stage-2 NCM `tok/s` (`1`-cand / `MBR8`)** | Verbatim Kimi K3 Output (`MBR8`) |
+|---|---:|---:|---:|---:|---|
+| **`p1_harbourside_news`** | `83` / `84` | `5.30 s` / `5.57 s` | **`15.65` / `15.08 tok/s`** | **`486.8` / `192.0 tok/s`** | *"The Harbourside Council voted 7 to 2. Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks to complete. The council promised 40 temporary parking spaces on Dock Street. The vote was held on Tuesday, with the majority supporting the cycle lane, the project."* |
+| **`p2_apollo13`** | `91` / `91` | `5.23 s` / `5.51 s` | **`17.40` / `16.51 tok/s`** | **`578.5` / `208.0 tok/s`** | *"On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft and forcing the crew (Jim Lovell, Fred Haise, and Jack Swigert) to abort their lunar landing mission after losing oxygen and electrical power. The crew used the Lunar Module (LM) as a lifeboat while conserving power and water. They overcame carbon dioxide buildup by adapting the LM's filters and safely returned to Earth."* |
+| **`p3_rayleigh_sky`** | `91` / `91` | `5.24 s` / `5.52 s` | **`17.37` / `16.49 tok/s`** | **`582.6` / `208.6 tok/s`** | *"The sky appears blue due to Rayleigh scattering, where shorter blue and violet wavelengths of sunlight are scattered more by the Earth's atmosphere than longer red, orange, and yellow wavelengths. This scattering is inversely proportional to the fourth power of the wavelength. Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, while some violet light is absorbed by the upper atmosphere. Thus, the daytime sky appears predominantly blue."* |
+| **`p4_payments_db`** | `115` / `115` | `5.24 s` / `5.53 s` | **`21.95` / `20.78 tok/s`** | **`734.4` / `255.2 tok/s`** | *"The payments database primary failed at 02:14 UTC on 3 June, and the replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed and 14 failed... The cause was a full disk on the primary at 100 percent usage from write-ahead logs. The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent future issues..."* |
+| **`p6_bristol_hospital`** | `65` / `97` | `5.23 s` / `5.52 s` | **`12.42` / `17.58 tok/s`** | **`423.7` / `222.3 tok/s`** | *"St Mary's Hospital in Bristol opened a new children's on wing on Friday. The wing cost 18 million pounds; it adds 45 beds and 4 operating theatres. The project was led the by Dr Elena Vance. The new wing children's enhances pediatric care at the hospital. The opening marks a significant investment in. healthcare Bristol. Summary: St Mary's Hospital opened a new 18 million pound children's wing in Bristol with 45 beds and 4 theatres, led by Dr Elena V."* |
+| **`p7_lithium_battery`** | `115` / `116` | `5.25 s` / `5.54 s` | **`21.91` / `20.93 tok/s`** | **`742.9` / `258.6 tok/s`** | *"Lithium-ion batteries use lithium cathode as moving between the cathode and the anode. During charging, lithium ions move from the cathode to the anode through the electrolyte, and during discharging they move from the anode back to the cathode... Degradation occurs due to side reactions forming to resistive layers and material loss over cycles... Lithium ions are forced from the cathode... through the electrolyte to the anode (graphite)..."* |
+| **`p8_mount_everest`** | `95` / `95` | `5.24 s` / `5.52 s` | **`18.15` / `17.21 tok/s`** | **`620.1` / `217.6 tok/s`** | *"The tallest mountain in the world is Mount Everest, which is located in the Himalayas on the border between Nepal and China in the Tibet Autonomous Region. Its official elevation is 8,848 meters, or 8,029 feet. Mount Everest is part of the Himalayan mountain range and was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay. The measurement of 8,848 meters is the official figure confirmed in 2020."* |
+| **`p9_france_capital`** | `16` / `16` | `2.13 s` / `2.21 s` | **`7.53` / `7.25 tok/s`** | **`108.0` / `69.5 tok/s`** | *"The capital of France is Paris. Summary: The capital of France is Paris."* |
+| **8-Prompt Sequential Total** | **`671` / `705`** | **`38.85 s` / `40.92 s`** | **`17.27` / `17.23 tok/s`** | **`536.8` / `212.8 tok/s`** | 8 prompts run one by one |
+| **8-Prompt Clubbed Batch (`1` NVLink pair)** | **`691` / `687`** | **`7.33 s` / `9.73 s`** (`0.92 s` / `1.22 s` per prompt) | **`94.25` / `70.60 tok/s`** (`5.30x` / `4.21x` faster) | **`1,156.1` / `229.2 tok/s`** | All 8 prompts clubbed into 1 batch (`0` cross-talk) |
+| **8-GPU DDP (`256` windows)** | **`11,464` (`16,384` cap)** | **`0.642 s` (`641.5 ms`)** | — | **`17,869.8 emitted tok/s` (`25,539.0 capacity tok/s`)** | `torchrun --nproc_per_node=8` across all 8 RTX 3090s |
+
 ### Running the GPU Chat & Benchmark Tools
 
 ```bash
@@ -137,6 +153,9 @@ python src/tools/hybrid-ncm-k3/k3_multimodal_chat.py --bench
 
 # Clubbed 5-prompt batching + 1-to-32 window throughput scaling
 python src/tools/hybrid-ncm-k3/bench_batch_clubbing.py
+
+# Full empirical tok/s proof (8 single prompts + 8-prompt clubbed batch + 8-GPU DDP torchrun)
+python src/tools/hybrid-ncm-k3/bench_throughput_proof.py
 ```
 
 ## Not in this folder
