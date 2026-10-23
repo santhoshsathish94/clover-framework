@@ -1460,6 +1460,44 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 | **`img3_battery_diagram.png`** *(Labeled diagram: `CATHODE (LiCoO2)`, `ELECTROLYTE`, `Separator`, `ANODE (Graphite)`, `Charging`/`Discharging` arrows, `SEI layer`)* | **Option B Only** | `0 ms` (off) | `4,349.3 ms` | `167.1 ms` / `451.8 ms` | **`4.52 s` / `4.80 s`** | *"During charging, lithium ions move from the cathode to the anode through the electrolyte while electrons flow externally via the circuit. The cathode loses lithium ions while the anode gains them, and the separator prevents short circuits. During discharging, lithium ions return from the anode to the cathode through the electrolyte while electrons flow externally to power devices. over repeated cycles, SEI layer growth and active material loss cause capacity fade. Summary: Lithium-ion batteries transfer ions between electrodes and degrade from SEI layer growth and active material"* (`109` K3 tok) |
 | **`img3_battery_diagram.png`** | **Option B + Optional Option A** | **`42.0 ms`** (`225 x 7168`-d) | `4,341.0 ms` | `167.0 ms` / `457.0 ms` | **`4.55 s` / `4.84 s`** | Identical `109` K3 tokens + `225 x 7168`-d Kimi K3 `163605` visual tokens |
 
+---
+
+## Cycle 54 — Token Capacity per Stage, Multi-Prompt Batch Clubbing (`bench_batch_clubbing.py`), and Zero Cross-Contamination Verification
+
+**Direction (creator, 2026-10-23):** "next question how much tokens can it process and can we club the prompts and pass together and get outputs together without mixing them up since it goes through the same process flow".
+
+**1. Token Capacity of Each Stage:**
+- **Stage 1 — `HybridAgent-8B-Agentic` / `Qwen3-VL-8B-Instruct` Planner (`cuda:1`):**
+  - Context window: up to **`32,768`–`131,072` input tokens** (bounded by 24 GiB VRAM on 1 RTX 3090 to **`~16,384` tokens** at batch size 1, or `~2,048–4,096` input tokens per prompt across a batch of `4–8` prompts).
+- **Stage 2 — `e8_k3_direct` (`NextConceptTransformer` + `K3LexicalPointerDecoder`, `cuda:0`):**
+  - **Per window:** `P_COMBO = 96` prefix slots (`48` continuous `R(h)` vectors + `48` discrete Kimi K3 BPE plan tokens) $\to$ **`64` Kimi K3 output tokens (`63` content tokens + `K3_EOS`)** generated in `11` parallel coarse-to-fine VQ passes (`[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313` codes).
+  - **Multi-window / Multi-prompt batch capacity on 1 RTX 3090 (`24 GiB`):** Because a single 64-token window uses `< 150 MB` of activations, we can stack $W_{\text{tot}}$ windows (either multiple 64-token windows of one long response or windows from $B$ different prompts) along the **batch dimension `[W_tot, ...]`** in a single 11-pass call:
+
+| Batched Windows $W_{\text{tot}}$ (`1` RTX 3090, `1`-cand) | Max Token Capacity ($64 \times W_{\text{tot}}$) | Emitted Kimi K3 Tokens (`o189_gpu.txt`) | Total NCM + PointerDecoder Latency | Latency per Window | Throughput (`Kimi K3 tok/s`) |
+|---:|---:|---:|---:|---:|---:|
+| **`1` window** | `64` K3 tokens | `25` K3 tokens | `145.2 ms` | `145.2 ms` | `172 tok/s` |
+| **`2` windows** (`1` standard prompt) | `128` K3 tokens | `82` K3 tokens | `152.8 ms` | `76.4 ms` | `537 tok/s` |
+| **`4` windows** (`2` prompts) | `256` K3 tokens | `204` K3 tokens | `207.3 ms` | `51.8 ms` | `984 tok/s` |
+| **`8` windows** (`4` prompts) | `512` K3 tokens | `444` K3 tokens | `340.9 ms` | `42.6 ms` | `1,302 tok/s` |
+| **`16` windows** (`8` prompts) | `1,024` K3 tokens | `886` K3 tokens | `629.3 ms` | `39.3 ms` | `1,408 tok/s` |
+| **`32` windows** (`16` prompts) | **`2,048` K3 tokens** | **`1,767` K3 tokens** | **`1,186.9 ms` (`1.19 s`)** | **`37.1 ms`** | **`1,489 tok/s`** |
+
+- **Stage 3 — Optional 93-Layer Clover Kimi K3 Engine (`k3` CPU):**
+  - Architecture supports `1,000,000` tokens (`k3_tech_report.txt`); our `whole-model` C engine's prefill/KV buffer is configured for up to `4,096` tokens per pass.
+
+**2. Can We Club Multiple Prompts Together Without Mixing Them Up? (`bench_batch_clubbing.py`, `o188_gpu.txt`, `o189_gpu.txt`):**
+- **How to club prompts with zero cross-contamination:**
+  - **Do NOT concatenate two unrelated prompts into the same sequence (`[1, seq_A + seq_B]`)** — that would let self-attention mix tokens between Prompt A and Prompt B.
+  - Instead, stack the $B$ prompts along the **batch dimension (`[B, seq_len]`)**:
+    1. In `plan_batch_with_latent`, all $B$ prompts run in lockstep with left-padding and per-row `attention_mask` + `position_ids` (`[B, S]`), where transformer self-attention and MLPs are mathematically independent across batch rows $b \in \{0 \dots B-1\}$.
+    2. In `render_ncm_batched_multi_prompt`, all $W_{\text{tot}} = \sum_{b=0}^{B-1} W_b$ windows across the $B$ prompts are stacked into a single tensor `[W_tot, 96, 384]`, each row $w_i$ gets its own `per_prompt_masks[win_to_prompt_idx[w_i]]` grounding mask, and outputs are un-flattened back to their owner prompt `p_idx = win_to_prompt_idx[w_i]`.
+- **Measured Verification on 5 Unrelated Prompts Clubbed Together (`France capital`, `Bristol hospital`, `Region B database outage`, `Lithium-ion battery`, `Mount Everest`, `o189_gpu.txt`):**
+  - **End-to-End Speedup (`5` prompts):**
+    - Running the 5 prompts **one by one sequentially**: **`31.80 s`** (`25.11–31.80 s` across runs).
+    - Running all 5 prompts **clubbed together in a single batch**: **`6.05 s`** batched `<latent>` + plan (`1.21 s/prompt`) + **`0.37 s`** clubbed `1`-cand NCM (`9` windows at once = `41 ms/window`) = **`6.42 s` total (`1.28 s / prompt`, `4.95x` faster than sequential)**, or **`7.90 s` total with `MBR8` (`72` window candidates evaluated simultaneously = `1.58 s / prompt`, `4.03x` faster)**.
+  - **Cross-Contamination Check (`forbidden_per_prompt` across all 5 outputs):** **`0` leaked tokens on all 5 prompts (`0/5` cross-talk)** — Prompt 0 (`France`) contains zero tokens from `Bristol`, `02:14`, `cathode`, or `Everest`; Prompt 1 (`Bristol`) contains zero tokens from `Paris`, `02:14`, `cathode`, or `Everest`, and so on across all 5 prompts.
+
+
 
 
 
