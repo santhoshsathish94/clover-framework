@@ -30,19 +30,147 @@ from train_latent_bridge import encode_batch_rh
 
 
 CHAT_SYSTEM_PROMPT = (
-    "You are Clover AI, a helpful, direct, and accurate AI assistant. "
-    "Reply directly to the user in natural, polite English sentences (never refer to 'the user' or 'the assistant' or 'Turn 1' in the third person). "
-    "Format your reply as `W1:` (and an optional second line `W2:` only when the answer is longer than 30 words). "
-    "For greetings (like 'hi' or 'hello'), clarifications (like 'I did not ask that question'), or short questions, "
-    "reply naturally in 1 or 2 sentences on a single `W1:` line and do NOT add a `Summary:`. "
-    "Only include `Summary:` at the end if the user's message explicitly asks for a summary."
+    "You are Clover AI, a helpful, empathetic, and accurate AI assistant. "
+    "Reply directly to the user in clear, natural English sentences (never refer to 'the user' or 'the assistant' or 'Turn 1' in the third person). "
+    "Format your reply starting with `W1:` on the first line, and use `W2:`, `W3:`, `W4:` on separate lines for multi-part answers, study plans, or timetables. "
+    "For greetings (like 'hi' or 'hello'), polite thanks (like 'thank you'), clarifications, or short factual questions, "
+    "reply naturally in 1 or 2 sentences on a single `W1:` line. "
+    "When the user asks for a timetable, schedule, study plan, or step-by-step guide, always write out the complete, concrete "
+    "schedule across `W1:`, `W2:`, `W3:`, `W4:` (for example: W1: brief intro, W2: Morning / Block 1 (...), W3: Afternoon / Block 2 (...), W4: Evening / Block 3 (...) and tips) "
+    "and NEVER stop after just an introductory sentence. "
+    "Only include 'Summary:' at the end if the user explicitly asks for a summary."
 )
 
 CHAT_PLAN_PROMPT = (
-    "Write your direct response to the user as `W1:` (and `W2:` only if needed for a longer response). "
+    "Write your direct response to the user starting with `W1:` (and `W2:`, `W3:`, `W4:` on new lines if the answer has multiple parts or a timetable/schedule). "
     "Do NOT write meta-commentary about what the user asked; write ONLY the actual reply to the user.\n\n"
     "User message:\n{prompt}"
 )
+
+
+def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
+    p = user_prompt.lower()
+    return any(
+        kw in p
+        for kw in (
+            "time table", "timetable", "schedule", "study plan", "plan", "routine",
+            "step", "steps", "list", "guide", "how can i prepare", "prepare", "explain", "compare",
+        )
+    )
+
+
+def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int = 44, max_windows: int = 8):
+    """Parses a single-line or multi-line response (`W1: ... W2: ... W3: ...` or bulleted/numbered lines) from HybridAgent
+    into `<= max_bpe` Kimi-K3-token windows without dropping lines that lack a `W2:` prefix. Preserves line-break boundaries
+    via a leading `\n` marker on windows that start a new paragraph/schedule block."""
+    wants_summary = ("summary" in user_prompt.lower()) or ("summarize" in user_prompt.lower())
+    # Truncate immediately before any leaked </think> or <think> tag or trailing self-talk
+    for stop_marker in (THINK_CLOSE, THINK_OPEN, "</think>", "<think>", "<|im_end|>", "<|endoftext|>", "\nOkay,", "\nWait,", "\nHmm,"):
+        if stop_marker in raw_text:
+            raw_text = raw_text.split(stop_marker)[0]
+    # Replace <latent> / </latent> anchors and inline W1:/W2:/W3:/W4: tags with clean line breaks
+    raw_text = raw_text.replace(ENTRY_ANCHOR, "\n").replace(EXIT_ANCHOR, "\n")
+    raw_text = re.sub(r"</?latent>", "\n", raw_text, flags=re.IGNORECASE)
+    raw_text = re.sub(r"<\|[^>]+?\|>", "", raw_text)
+    raw_text = re.sub(r"\s*\bW[1-9]:\s*", "\n", raw_text).strip()
+
+    raw_lines = []
+    for ln in raw_text.splitlines():
+        ln = ln.strip()
+        if not ln:
+            continue
+        ln = re.sub(r"^W[1-9]:\s*", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"^(?:[-*•]+|\d+[.)])\s*", "", ln).strip()
+        ln = re.sub(r"\*\*", "", ln).strip()
+        ln = re.sub(r":(\d+\.)", r": \1", ln)
+        ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking|The user's|The user has|Okay,\s*so\s*the\s*user|I should structure).*$", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"\bthe user didn't\b", "you didn't", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bthe user\b", "you", ln, flags=re.IGNORECASE)
+        if not wants_summary:
+            ln = re.sub(r"\s*;?\s*Summary:.*$", "", ln, flags=re.IGNORECASE).strip()
+        low = ln.lower()
+        if ln and not low.startswith(("the user ", "okay,", "hmm", "let me ", "wait,", "</think>", "<think>")):
+            raw_lines.append(ln)
+
+    # Drop any trailing dangling header line that ends with ':' and has no following content
+    while len(raw_lines) > 1 and raw_lines[-1].endswith(":"):
+        raw_lines.pop()
+
+    if not raw_lines:
+        return ["Hello! How can I help you today?"]
+
+    plans = []
+    for line_idx, ln in enumerate(raw_lines):
+        # Split line into windows of <= max_bpe Kimi K3 tokens
+        if len(k3_tok.encode(ln)) <= max_bpe:
+            line_wins = [ln]
+        else:
+            clauses = [c.strip() for c in re.split(r"(?<=[.!?;])\s+", ln) if c.strip()]
+            line_wins = []
+            cur = ""
+            for cl in clauses:
+                cand = (cur + " " + cl).strip() if cur else cl
+                if len(k3_tok.encode(cand)) <= max_bpe:
+                    cur = cand
+                else:
+                    if cur:
+                        line_wins.append(cur)
+                    if len(k3_tok.encode(cl)) <= max_bpe:
+                        cur = cl
+                    else:
+                        words = cl.split()
+                        w_cur = ""
+                        for w in words:
+                            w_cand = (w_cur + " " + w).strip() if w_cur else w
+                            if len(k3_tok.encode(w_cand)) <= max_bpe:
+                                w_cur = w_cand
+                            else:
+                                if w_cur:
+                                    line_wins.append(w_cur)
+                                w_cur = w
+                        cur = w_cur
+            if cur:
+                line_wins.append(cur)
+
+        for w_idx, w_str in enumerate(line_wins):
+            if len(w_str) < 2:
+                continue
+            # Prefix "\n" if this window starts a new line (line_idx > 0 and w_idx == 0)
+            if line_idx > 0 and w_idx == 0:
+                plans.append("\n" + w_str)
+            else:
+                plans.append(w_str)
+            if len(plans) >= max_windows:
+                break
+        if len(plans) >= max_windows:
+            break
+
+    return plans if plans else ["Hello! How can I help you today?"]
+
+
+def join_rendered_windows(txts, plans):
+    """Joins rendered window strings `txts` using `\n` whenever the corresponding entry in `plans` starts a new line
+    or begins with a schedule/block header (`Block`, `Session`, `Morning`, `Afternoon`, `Evening`, `Tip:`)."""
+    out = []
+    for i, t in enumerate(txts):
+        t_clean = t.strip()
+        if not t_clean:
+            continue
+        if i == 0:
+            out.append(t_clean)
+        else:
+            p_orig = plans[i] if i < len(plans) else ""
+            is_newline = (
+                p_orig.startswith("\n")
+                or any(
+                    t_clean.startswith(pfx)
+                    for pfx in ("Block ", "Session ", "Step ", "Morning", "Afternoon", "Evening", "Night", "Tip:", "Note:")
+                )
+                or bool(re.match(r"^(?:\d{1,2}:\d{2}|\d+\.)", t_clean))
+            )
+            out.append(("\n" if is_newline else " ") + t_clean)
+    return "".join(out)
 
 GRAMMAR_CONNECTOR_WORDS = [
     "the", "The", "a", "A", "an", "An", "in", "In", "on", "On", "at", "At", "to", "To", "for", "For",
@@ -133,14 +261,14 @@ class K3FastChatEngine:
         return self.k3_tok.decode(clean_ids), clean_ids
 
     @torch.no_grad()
-    def plan_with_latent(self, user_prompt, history=None, min_lat=8, max_lat=14, max_new=110):
+    def plan_with_latent(self, user_prompt, history=None, min_lat=8, max_lat=14, max_new=260):
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
         msgs = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
         if history:
             for h in history[-6:]:
                 msgs.append({"role": "user", "content": h["user"]})
-                msgs.append({"role": "assistant", "content": "W1: " + h["reply"]})
+                msgs.append({"role": "assistant", "content": "W1: " + h["reply"].replace("\n", "\nW2: ", 1)})
         msgs.append({"role": "user", "content": CHAT_PLAN_PROMPT.format(prompt=user_prompt.strip())})
 
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
@@ -177,87 +305,35 @@ class K3FastChatEngine:
 
         gen_ids = []
         eos_ids = {self.ha_tok.eos_token_id}
+        is_struct = is_structured_or_multi_part_prompt(user_prompt)
         for _ in range(max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
                 break
             gen_ids.append(nxt)
-            txt_so_far = self.ha_tok.decode(gen_ids, skip_special_tokens=True)
+            txt_so_far = self.ha_tok.decode(gen_ids, skip_special_tokens=False)
+            if THINK_CLOSE in txt_so_far or THINK_OPEN in txt_so_far or "</think>" in txt_so_far:
+                break
             if txt_so_far.endswith("\n"):
                 lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
-                if len(lines) == 1 and len(lines[0].split()) <= 24:
-                    # Short single-line reply (greeting, clarification, or short fact) -> stop cleanly after W1!
-                    break
-                if len(lines) >= 2 and len(lines[1]) > 15:
-                    break
-            if len(gen_ids) % 8 == 0:
-                lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
-                if len(lines) >= 3:
-                    break
+                if lines:
+                    last_ln = lines[-1].lower()
+                    introduces_list = last_ln.endswith(":") or any(
+                        kw in last_ln for kw in ("here's", "here is", "sample timetable", "sample study", "schedule", "below", "following")
+                    )
+                    if not is_struct and not introduces_list:
+                        if len(lines) == 1 and lines[0].endswith((".", "!", "?")):
+                            break
+                        if len(lines) >= 2 and len(lines[1]) > 15:
+                            break
+                    elif len(lines) >= 10 and not last_ln.endswith(":"):
+                        break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
             next_logits = out.logits[:, -1, :]
 
-        raw = "W1: " + self.ha_tok.decode(gen_ids, skip_special_tokens=True).strip()
-        raw = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user is asking|The user's|The user has).*$", "", raw).strip()
-        w1, w2 = "", ""
-        for ln in raw.splitlines():
-            ln = re.sub(r"(?:Now I|I need|This is a|Let's|We need|The user's|The user has).*$", "", ln).strip()
-            ln = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", ln, flags=re.IGNORECASE).strip()
-            if ln.upper().startswith("W1:"):
-                w1 = ln[3:].strip()
-                w1 = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", w1, flags=re.IGNORECASE).strip()
-            elif ln.upper().startswith("W2:"):
-                w2 = ln[3:].strip()
-        if w1.lower().startswith("the user ") and w2:
-            w1, w2 = w2, ""
-        if not w1:
-            w1 = raw.splitlines()[0].strip()
-
-        # Strip unrequested `Summary: ...` when the user prompt did not ask for a summary
-        wants_summary = ("summary" in user_prompt.lower()) or ("summarize" in user_prompt.lower())
-        if not wants_summary:
-            w1 = re.sub(r"\s*;?\s*Summary:.*$", "", w1, flags=re.IGNORECASE).strip()
-            w2 = re.sub(r"\s*;?\s*Summary:.*$", "", w2, flags=re.IGNORECASE).strip()
-
-        # Split any single-block or overly long W1 (>34 words) into balanced W1 and W2 windows (~30 words each)
-        if w1 and not w2 and len(w1.split()) > 30:
-            if ";" in w1:
-                parts = [p.strip() for p in w1.split(";") if p.strip()]
-                mid = max(1, len(parts) // 2)
-                w1, w2 = "; ".join(parts[:mid]), "; ".join(parts[mid:])
-            else:
-                sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", w1) if s.strip()]
-                if len(sents) >= 2:
-                    mid = max(1, len(sents) // 2)
-                    w1, w2 = " ".join(sents[:mid]), " ".join(sents[mid:])
-        elif w1 and w2 and len(w1.split()) > 38 and ";" in w1:
-            parts = [p.strip() for p in w1.split(";") if p.strip()]
-            w1 = "; ".join(parts[:-1])
-            w2 = parts[-1] + "; " + w2
-
-        plans_raw = [p for p in (w1, w2) if len(p) >= 2]
-        if not plans_raw:
-            plans_raw = ["Hello! How can I help you today?"]
-
-        # Ensure every window fits cleanly inside P_BPE=48 Kimi K3 tokens without mid-sentence truncation
-        plans = []
-        for p_str in plans_raw:
-            if len(self.k3_tok.encode(p_str)) <= P_BPE - 2:
-                plans.append(p_str)
-            else:
-                clauses = [c.strip() for c in re.split(r"(?<=[.!?;])\s+", p_str) if c.strip()]
-                cur = ""
-                for cl in clauses:
-                    cand = (cur + " " + cl).strip() if cur else cl
-                    if len(self.k3_tok.encode(cand)) <= P_BPE - 2:
-                        cur = cand
-                    else:
-                        if cur:
-                            plans.append(cur)
-                        cur = cl
-                if cur:
-                    plans.append(cur)
+        raw = "W1: " + self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
+        plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=P_BPE - 4, max_windows=12)
         return plans, lat_steps, exit_reason
 
     def _build_window_vocab_mask(self, plan_str):
@@ -341,18 +417,19 @@ class K3FastChatEngine:
 
     @torch.no_grad()
     def render_ncm(self, plans, prompt_text="", cands=1):
-        rh_p, msk_p = encode_batch_rh(self.ha_model, self.ha_tok, plans, P_RH, self.dev_ha)
+        clean_plans = [p.lstrip("\n").strip() for p in plans]
+        rh_p, msk_p = encode_batch_rh(self.ha_model, self.ha_tok, clean_plans, P_RH, self.dev_ha)
         z_rh = self.cbridge(rh_p.to(self.dev)).float()
         msk_r = (msk_p.to(self.dev) != 0)
         p_kpad = torch.tensor(
-            [self.k3_tok.encode(p)[:P_BPE] + [K3_PAD] * (P_BPE - len(self.k3_tok.encode(p)[:P_BPE])) for p in plans],
+            [self.k3_tok.encode(p)[:P_BPE] + [K3_PAD] * (P_BPE - len(self.k3_tok.encode(p)[:P_BPE])) for p in clean_plans],
             dtype=torch.long, device=self.dev
         )
         z_bpe = self.vqvae.encoder.wte(p_kpad)
         z_pref, pmask = pack_combo_prefix(z_rh, msk_r, z_bpe, (p_kpad == K3_PAD))
 
-        W = len(plans)
-        win_masks = [self._build_window_vocab_mask(p) for p in plans]
+        W = len(clean_plans)
+        win_masks = [self._build_window_vocab_mask(p) for p in clean_plans]
 
         if cands <= 1:
             torch.manual_seed(42)
@@ -364,7 +441,7 @@ class K3FastChatEngine:
                 lg1[w_i, :, win_masks[w_i]] -= 80.0
                 ts, is_ = self._dec_k3_aligned(lg1[w_i], p_kpad[w_i].tolist())
                 txts.append(ts.strip()); ids.extend(is_)
-            return " ".join(txts), ids
+            return join_rendered_windows(txts, plans), ids
 
         # Batched MBR over `cands` candidates (all `cands * W` rows in a single 11-pass call!)
         z_pref_k = z_pref.repeat(cands, 1, 1)
@@ -391,7 +468,7 @@ class K3FastChatEngine:
             sc = [sum(jacc(cands_t[w_i][k], cands_t[w_i][j]) for j in range(cands) if j != k) for k in range(cands)]
             bk = max(range(cands), key=lambda k: sc[k])
             out_txts.append(cands_t[w_i][bk]); out_ids.extend(cands_i[w_i][bk])
-        return " ".join(out_txts), out_ids
+        return join_rendered_windows(out_txts, plans), out_ids
 
     def chat_reply(self, user_prompt, cands=8, remember=False):
         torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)

@@ -97,7 +97,7 @@ HTML_UI = """<!DOCTYPE html>
   }
   .msg {
     max-width: 82%; padding: 0.85rem 1.1rem; border-radius: 12px;
-    line-height: 1.58; font-size: 0.96rem; word-wrap: break-word;
+    line-height: 1.58; font-size: 0.96rem; word-wrap: break-word; white-space: pre-wrap;
   }
   .msg--user {
     align-self: flex-end; background: var(--accent); color: #fff;

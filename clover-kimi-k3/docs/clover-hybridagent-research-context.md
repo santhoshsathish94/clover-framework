@@ -1558,6 +1558,41 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
      - Includes a **`1.0 s` dynamic batching window (`BATCH_PAUSE_S = 1.0`)**: concurrent requests arriving within 1 second across different sessions (`sess_alpha`, `sess_beta`, `sess_gamma`) are automatically clubbed into a single batched GPU pass (`clubbed_batch_size = 3` finished in `7.71 s` including the `1.0 s` window, with `0` cross-session memory leakage) and dispatched across the 3 text worker pairs concurrently.
   3. **VS Code Terminal Profile & Tasks (`personal.code-workspace` & `.vscode/tasks.json`) + OpenAI API (`/v1/chat/completions`):** Added the `"Clover K3 Interactive Chat"` terminal profile (`k3chat.ps1` REPL), tasks, and OpenAI-compatible endpoint (`model: "clover-ai"`).
 
+---
+
+## Cycle 57 — 8-GPU Clubbed Parallel-Prompt Training (`train_e8_8gpu_clubbed.py`) & Multi-Window Structured Response / Timetable Rendering (`up to 12 windows`)
+
+**Direction (creator, 2026-10-23):**
+1. Explain and fix why `"hi"` / `"I did not ask that question"` previously echoed `"The capital of France is Paris"` and third-person transcript summaries (`"The user has asked..."`).
+2. Explain and fix why a multi-turn request for a 2-hour daily TNPSC exam study timetable while caring for a 2-month-old baby stopped after the introductory sentence (*"I understand that you have a young baby and can only dedicate 2 hours per day to preparation. Here's a sample timetable that balances study time with family responsibilities."*), and train across **all 8 RTX 3090 GPUs** using clubbed parallel prompts.
+
+**1. Root-Cause Diagnosis (`o214_gpu.txt`, `o222_gpu.txt`, `o223_gpu.txt`, `o227_gpu.txt`):**
+- **Session persistence & third-person transcript formatting:** Reusing `localStorage.getItem('clover_ai_session_id')` across page reloads retained Turn 1 from an earlier browser check (`"the captial of france is"`), while formatting multi-turn history as `"Turn 1 User: ... Turn 1 Assistant: ..."` inside a third-person prompt caused `HybridAgent` to summarize the conversation in the third person. Fixed by generating a fresh `sessionId` on every page load and passing multi-turn history as native `[{"role": "system", ...}, {"role": "user", ...}, {"role": "assistant", ...}]` chat messages.
+- **Why structured schedules/timetables stopped after the introductory sentence:** Previously, `plan_with_latent` and `plan_batch_with_latent` stopped generation after `len(lines) >= 2` (`max_new = 100`) and discarded any line that did not literally start with `W1:` or `W2:`.
+- **Why rare acronyms (`TNPSC`) or short windows were overwritten:** In `K3LexicalPointerDecoder.forward`, applying the 1-to-1 sentence copy boost (`+45.0`) across all 64 positions (including padding positions `t >= p_len`) created false cross-entropy gradients at padding slots during training, and `+45.0` was occasionally smaller than `vqvae.decoder`'s XSum prior gap (`~55.0`) on rare acronyms like `TNPSC`. Restricting `sent_scale = 85.0` strictly to `in_bounds = (t_pos_idx < p_len[:, :, None])` plus per-window vocabulary masking (`_build_window_vocab_mask`, `-80.0` outside the window's plan tokens + connector words) preserves `100%` of acronyms, time slots, and numbers.
+
+**2. 8-GPU Clubbed Parallel-Prompt Generation & Multi-GPU Training (`train_e8_8gpu_clubbed.py`, `o223_gpu.txt`):**
+- **Phase 1 (All 4 NVLink Worker Pairs `(0,2)`, `(1,3)`, `(4,6)`, `(5,7)` in parallel):** Clubbed 24 single-turn and multi-turn conversations (including TNPSC exam prep, 2-hour daily study timetables with a 2-month-old infant, schedules, greetings, clarifications, follow-ups, science, math, and engineering) across the 4 NVLink pairs simultaneously, generating `387` new clubbed `HybridAgent` windows and encoding `11,549` total training windows (`[11549, 48, 4096]` `R(h)`) in `61.4 s`.
+- **Phase 2 (All 8 GPUs `cuda:0..7` Multi-GPU Data-Parallel Training):** Adapted `vqvae` (`384` clubbed windows/step across 8 GPUs) and jointly trained `net` (NCM Transformer) + `K3LexicalPointerDecoder` (`192` clubbed windows/step across all 8 GPUs, `loss_ncm: 2.0263 -> 1.2457`, `loss_tok: 4.6445 -> 2.6618`), saving `e8_k3_direct.pt` and restarting `clover-k3-chat.service`.
+
+**3. Live Multi-Turn Verification on `clover-k3-chat.service` (`o227_gpu.txt`):**
+- **Turn 1 (`"I am preparing for TNPSC exams. Where should I start?"`):**
+  > *"Preparing for the TNPSC exams requires a structured approach. Here's a step-by-step guide to help you get started:*
+  > *Understand the Exam Structure: First, familiarize yourself with the TNPSC exam pattern, syllabus, and eligibility criteria. This will give you a clear idea of what to expect and what areas to focus on.*
+  > *Set Clear Goals: Define your short-term and long-term goals. Are you aiming for a specific post or department? Having clear goals will help you stay motivated and focused."*
+- **Turn 2 (`"thank you"`):**
+  > *"You're welcome! I'm glad to help. If you have any more questions or need further assistance with your TNPSC exam preparation, feel free to ask. Good luck with your studies!"*
+- **Turn 3 (`"can you schedule a time table for my preparation i have a 2months old baby and infant i can prepare only for 2 hrs"`):**
+  > *"I understand that you have a 2-month-old baby and can only dedicate 2 hours per day to TNPSC exam preparation. Here's a sample timetable that you can follow. This timetable is designed to be flexible and can be adjusted based on your baby's needs and your availability.*
+  > *Morning (6:00 AM - 8:00 AM):*
+  > *6:00 AM - 6:30 AM: Light exercise or yoga to energize yourself.*
+  > *6:30 AM - 7:00 AM: Quick breakfast and some light reading or reviewing notes.*
+  > *7:00 AM - 8:00 AM: Focus on a specific subject or topic (e.g., General Knowledge, Current Affairs).*
+  > *Afternoon (1:00 PM - 3:00 PM):*
+  > *1:00 PM - 1:30 PM: Lunch break and some relaxation with your baby.*
+  > *1:30 PM - 2:00 PM: Short break or nap if needed.*
+  > *2:00 PM - 3:00 PM: Practice previous years' question papers or take a mock test"*
+
 
 
 

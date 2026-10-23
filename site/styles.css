@@ -674,7 +674,7 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
   max-width: 82%; padding: 0.82rem 1.05rem; border-radius: 12px;
   line-height: 1.58; font-size: 0.96rem; word-wrap: break-word;
 }
-.k3-msg p { max-width: none; margin: 0; }
+.k3-msg p { max-width: none; margin: 0; white-space: pre-wrap; }
 .k3-msg--user {
   align-self: flex-end; background: var(--accent); color: #fff;
   border-bottom-right-radius: 4px;

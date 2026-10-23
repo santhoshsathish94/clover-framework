@@ -130,7 +130,9 @@ class K3LexicalPointerDecoder(nn.Module):
         ctx_vec = torch.bmm(attn_probs, z_bpe)             # [B, 64, 384]
 
         g_copy = torch.sigmoid(self.copy_gate(torch.cat([x, ctx_vec], dim=-1)))  # [B, 64, 1]
-        eff_scale = torch.where(has_semi[:, :, None], g_copy * self.copy_scale, torch.full_like(g_copy, 45.0))
+        in_bounds = (t_pos_idx < p_len[:, :, None])                              # [B, 64, 1]
+        sent_scale = torch.where(in_bounds, torch.full_like(g_copy, 85.0), torch.zeros_like(g_copy))
+        eff_scale = torch.where(has_semi[:, :, None], g_copy * self.copy_scale, sent_scale)
         copy_boost = attn_probs * eff_scale                                      # [B, 64, 48]
 
         out_logits = base_logits.clone()
