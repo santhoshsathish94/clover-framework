@@ -1552,9 +1552,12 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
 **5. Local VS Code Integration (`k3_chat_server.py` + `k3chat.ps1` + VS Code Integrated Browser & Tasks, `o198_gpu.txt`):**
 - Built and launched `k3_chat_server.py` (`src/tools/hybrid-ncm-k3/k3_chat_server.py`) as a persistent daemon on `gpu` (`127.0.0.1:8765`, keeping `K3FastChatEngine` hot on the `cuda:0 <-> cuda:2` NVLink pair so there is **zero `13.8 s` model-reload wait** between prompts) forwarded to local Windows (`http://127.0.0.1:8765`) via an automatic SSH tunnel in `k3chat.ps1`.
 - Integrated into local VS Code in three ways:
-  1. **VS Code Integrated Browser Web UI (`http://127.0.0.1:8765/`):** Interactive dark-mode chat panel inside VS Code with multi-turn context memory toggle, `MBR8` / `1-Candidate` / `Clubbed Multi-Prompt` selector, live `tok/s` + latency pills, and `W1/W2` plan inspection.
-  2. **VS Code Terminal Profile & Tasks (`personal.code-workspace` & `.vscode/tasks.json`):** Added the `"Clover K3 Interactive Chat"` terminal profile (`k3chat.ps1` REPL) and tasks (`Clover K3: Interactive Chat (Terminal REPL)`, `Clover K3: Send Selected Text to Chat`, `Clover K3: Reset Conversation Memory`).
-  3. **OpenAI-Compatible Local Endpoint (`http://127.0.0.1:8765/v1/chat/completions` & `/v1/models`):** Exposes model `clover-kimi-k3-ncm` (streaming SSE and non-streaming JSON) for any VS Code AI extension.
+  1. **VS Code Integrated Browser & Public Website "Clover AI" Chat (`http://127.0.0.1:8765/` & `https://141-101-132-38.sslip.io/`):** Clean light-theme **Clover AI** chat interface matching `cloverframework.com`, using the animated 5-leaf Clover SVG mark as the loading indicator, with an **Image** upload button (`image_base64` $\to$ multimodal GPU worker `cuda:5 <-> cuda:7`), `New Chat` button, and **isolated per-session conversation memory** (`sessions[session_id]`).
+  2. **8-GPU Worker Pool + `1.0 s` Dynamic Batching (`MultiGPUCloverCoordinator` in `k3_chat_server.py`, `o206_gpu.txt`, `o208_gpu.txt`):**
+     - Uses all 8 RTX 3090 GPUs: 3 NVLink text worker pairs `(cuda:0 <-> cuda:2)`, `(cuda:1 <-> cuda:3)`, `(cuda:4 <-> cuda:6)` plus 1 NVLink multimodal vision worker pair `(cuda:5 <-> cuda:7)` (`MoonViT3d` + `Qwen3-VL-8B-Instruct + HybridLink + e9_k3_multimodal`).
+     - Includes a **`1.0 s` dynamic batching window (`BATCH_PAUSE_S = 1.0`)**: concurrent requests arriving within 1 second across different sessions (`sess_alpha`, `sess_beta`, `sess_gamma`) are automatically clubbed into a single batched GPU pass (`clubbed_batch_size = 3` finished in `7.71 s` including the `1.0 s` window, with `0` cross-session memory leakage) and dispatched across the 3 text worker pairs concurrently.
+  3. **VS Code Terminal Profile & Tasks (`personal.code-workspace` & `.vscode/tasks.json`) + OpenAI API (`/v1/chat/completions`):** Added the `"Clover K3 Interactive Chat"` terminal profile (`k3chat.ps1` REPL), tasks, and OpenAI-compatible endpoint (`model: "clover-ai"`).
+
 
 
 

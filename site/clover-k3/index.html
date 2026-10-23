@@ -98,8 +98,7 @@
       </div>
 
       <p class="actions">
-        <button type="button" class="btn btn--primary" onclick="openK3ChatModal()">Try it yourself &mdash; Open Live Chat</button>
-        <a class="btn" href="https://141-101-132-38.sslip.io/" target="_blank" rel="noopener">Open Chat in New Window &nearr;</a>
+        <button type="button" class="btn btn--primary" onclick="openK3ChatModal()">Try it yourself &mdash; Clover AI</button>
         <a class="btn btn--plain" href="#hybrid-ncm-k3">What is achieved &amp; throughput</a>
         <a class="btn btn--plain" href="#how-it-works">How it works</a>
         <a class="btn btn--plain" href="#requirements">93-layer CPU setup</a>
@@ -109,51 +108,48 @@
 
   <section class="band" id="try-it-yourself">
     <div class="wrap">
-      <h2>Try it yourself: live interactive Clover Kimi K3 chat</h2>
-      <p>The chat window below is connected live to our persistent 8 &times; RTX 3090 GPU server
-        (<code>HybridAgent-8B-Agentic &lt;latent&gt;</code> on <code>cuda:2</code> &harr;
-        <code>e8_k3_direct NCM + K3LexicalPointerDecoder</code> on <code>cuda:0</code> over a 51.9 GB/s NVLink bridge).
-        Click any preset prompt, ask your own question, follow up across multiple turns, or test clubbed multi-prompt batching.</p>
+      <h2>Try it yourself</h2>
+      <p>Ask a question, continue a multi-turn conversation, or upload an image.</p>
 
       <div class="k3-chat-shell" id="k3-inline-widget">
         <div class="k3-chat-head">
           <div class="k3-chat-title">
-            <span>Clover Kimi K3 Live Chat</span>
-            <span class="k3-badge">163,840 K3 vocab &middot; e8_k3_direct</span>
-            <span class="k3-badge k3-badge--live" id="k3-status-badge">Connecting to GPU server&hellip;</span>
-            <span class="k3-badge" id="k3-turn-badge">Memory: 0 turns</span>
+            <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+              <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
+              <use class="clover__leaf is-filled" href="#clover-leaf"/>
+              <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>
+              <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>
+              <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>
+              <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
+            </svg>
+            Clover <span>AI</span>
           </div>
           <div class="k3-controls">
-            <label>Mode:
-              <select id="k3-mode-select" aria-label="Decode mode">
-                <option value="mbr8" selected>MBR8 (8 candidates)</option>
-                <option value="1cand">1-Candidate (Fastest ~155 ms NCM)</option>
-                <option value="batch">Clubbed Multi-Prompt (1 per line)</option>
-              </select>
-            </label>
-            <label><input type="checkbox" id="k3-remember-chk" checked> Context Memory</label>
-            <button type="button" onclick="k3ResetChat()">Reset Memory</button>
-            <button type="button" onclick="openK3ChatModal()">Fullscreen Modal</button>
-            <button type="button" onclick="popoutK3ChatWindow()">Pop Out Window &nearr;</button>
+            <button type="button" onclick="k3ResetChat()">New Chat</button>
+            <button type="button" id="k3-modal-toggle-btn" onclick="openK3ChatModal()">Expand</button>
           </div>
-        </div>
-        <div class="k3-presets">
-          <span>Try a prompt:</span>
-          <button type="button" onclick="k3RunPreset('the captial of france is', 'mbr8')">Capital of France</button>
-          <button type="button" onclick="k3RunPreset('What famous iron tower is located there, and who designed it?', 'mbr8')">Follow-up (Turn 2 memory)</button>
-          <button type="button" onclick="k3RunPreset('What is the tallest mountain in the world, where is it located, and how high is it?', 'mbr8')">Mount Everest</button>
-          <button type="button" onclick="k3RunPreset('Explain in about 100 words why the sky is blue and why sunsets are red.', 'mbr8')">Rayleigh Sky Scattering</button>
-          <button type="button" onclick="k3RunPreset('Explain in about 90 words how a lithium-ion battery works during charging and discharging, and why it degrades over time.', 'mbr8')">Li-Ion Battery Chemistry</button>
-          <button type="button" onclick="k3RunPreset('the captial of france is\nWhat is the tallest mountain in the world, where is it located, and how high is it?\nExplain in about 90 words how a lithium-ion battery works during charging and discharging, and why it degrades over time.', 'batch')">Clubbed 3-Prompt Batch</button>
         </div>
         <div class="k3-log" id="k3-chat-log" aria-live="polite">
-          <div class="k3-msg k3-msg--bot">
-            <strong>Clover Kimi K3 Interactive GPU Server Ready.</strong><br>
-            Models are hot in VRAM on <code>cuda:0 &harr; cuda:2</code> (zero 13.8 s reload wait). Send any prompt below, or click a preset button above to test single-prompt speed, multi-turn pronoun resolution, or clubbed multi-prompt batching.
+          <div class="k3-msg k3-msg--bot">How can I help you today? You can ask a question, continue a conversation, or attach an image.</div>
+        </div>
+        <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
+          <div class="k3-preview-bar__info">
+            <img id="k3-img-preview-thumb" src="../assets/case-study-01-contentful-migration.svg" alt="Attached image">
+            <span id="k3-img-preview-name">Image attached</span>
           </div>
+          <button type="button" onclick="k3ClearImage()">Remove</button>
         </div>
         <div class="k3-foot">
-          <textarea id="k3-prompt-in" rows="2" placeholder="Type a prompt (or multiple prompts, one per line, in Clubbed Multi-Prompt mode)... Press Enter to send, Shift+Enter for newline."></textarea>
+          <input type="file" id="k3-img-input" accept="image/*" hidden onchange="k3OnImageSelected(event)">
+          <button type="button" onclick="document.getElementById('k3-img-input').click()" title="Upload an image">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            Image
+          </button>
+          <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover AI..."></textarea>
           <button type="button" class="k3-send" id="k3-send-btn" onclick="k3SendPrompt()">Send</button>
         </div>
       </div>
@@ -915,7 +911,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
   </div>
 </footer>
 
-<div class="k3-modal-backdrop" id="k3-chat-modal" hidden role="dialog" aria-modal="true" aria-label="Clover Kimi K3 Live Interactive Chat">
+<div class="k3-modal-backdrop" id="k3-chat-modal" hidden role="dialog" aria-modal="true" aria-label="Clover AI">
   <div class="k3-modal-dialog">
     <div id="k3-modal-slot"></div>
   </div>
@@ -925,17 +921,44 @@ src/scripts/chat-stop.sh mychat</code></pre>
 (function () {
   var API_CANDIDATES = ['http://127.0.0.1:8765', 'https://141-101-132-38.sslip.io'];
   var activeBase = 'https://141-101-132-38.sslip.io';
-  var statusBadge = document.getElementById('k3-status-badge');
-  var turnBadge = document.getElementById('k3-turn-badge');
   var logEl = document.getElementById('k3-chat-log');
   var inputEl = document.getElementById('k3-prompt-in');
   var sendBtn = document.getElementById('k3-send-btn');
-  var modeSelect = document.getElementById('k3-mode-select');
-  var rememberChk = document.getElementById('k3-remember-chk');
+  var imgInput = document.getElementById('k3-img-input');
+  var previewBar = document.getElementById('k3-img-preview-bar');
+  var previewThumb = document.getElementById('k3-img-preview-thumb');
+  var previewName = document.getElementById('k3-img-preview-name');
   var modalEl = document.getElementById('k3-chat-modal');
   var modalSlot = document.getElementById('k3-modal-slot');
+  var modalToggleBtn = document.getElementById('k3-modal-toggle-btn');
   var inlineWidget = document.getElementById('k3-inline-widget');
   var inlineParent = inlineWidget ? inlineWidget.parentNode : null;
+
+  var sessionId = null;
+  try {
+    sessionId = localStorage.getItem('clover_ai_session_id');
+  } catch (e) {}
+  if (!sessionId) {
+    sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try { localStorage.setItem('clover_ai_session_id', sessionId); } catch (e) {}
+  }
+
+  var attachedImageDataUrl = null;
+
+  var CLOVER_LOADER_HTML =
+    '<div class="k3-clover-loader" role="status" aria-label="Thinking">' +
+      '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+        '<path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>' +
+        '<g class="k3-clover-loader__wheel">' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf"/>' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>' +
+          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>' +
+        '</g>' +
+      '</svg>' +
+      '<span>Thinking&hellip;</span>' +
+    '</div>';
 
   async function probeBackend() {
     for (var i = 0; i < API_CANDIDATES.length; i++) {
@@ -949,20 +972,10 @@ src/scripts/chat-stop.sh mychat</code></pre>
         var r = await fetch(base + '/api/health', { signal: ctrl.signal });
         clearTimeout(tid);
         if (r.ok) {
-          var d = await r.json();
           activeBase = base;
-          if (statusBadge) {
-            statusBadge.textContent = 'Live: 8\u00d7 RTX 3090 (' + (base.indexOf('127.0.0.1') !== -1 ? 'Local Tunnel' : 'HTTPS GPU') + ')';
-          }
-          if (turnBadge && typeof d.history_len === 'number') {
-            turnBadge.textContent = 'Memory: ' + d.history_len + ' turns';
-          }
           return;
         }
       } catch (e) {}
-    }
-    if (statusBadge) {
-      statusBadge.textContent = 'Endpoint: ' + activeBase;
     }
   }
 
@@ -979,84 +992,72 @@ src/scripts/chat-stop.sh mychat</code></pre>
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  window.k3OnImageSelected = function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      attachedImageDataUrl = ev.target.result;
+      if (previewThumb) previewThumb.src = attachedImageDataUrl;
+      if (previewName) previewName.textContent = file.name;
+      if (previewBar) previewBar.hidden = false;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.k3ClearImage = function () {
+    attachedImageDataUrl = null;
+    if (imgInput) imgInput.value = '';
+    if (previewBar) previewBar.hidden = true;
+  };
+
   window.k3ResetChat = async function () {
-    try {
-      await fetch(activeBase + '/api/reset', { method: 'POST' });
-    } catch (e) {}
-    if (turnBadge) turnBadge.textContent = 'Memory: 0 turns';
-    appendMsg('bot', '<em>Conversation memory cleared (0 turns).</em>');
+    sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try { localStorage.setItem('clover_ai_session_id', sessionId); } catch (e) {}
+    window.k3ClearImage();
+    if (logEl) {
+      logEl.innerHTML = '<div class="k3-msg k3-msg--bot">How can I help you today? You can ask a question, continue a conversation, or attach an image.</div>';
+    }
   };
 
   window.k3SendPrompt = async function () {
     var text = (inputEl.value || '').trim();
-    if (!text) return;
-    var mode = modeSelect ? modeSelect.value : 'mbr8';
-    var remember = rememberChk ? rememberChk.checked : true;
+    if (!text && !attachedImageDataUrl) return;
+    var imgData = attachedImageDataUrl;
     inputEl.value = '';
+    window.k3ClearImage();
     if (sendBtn) sendBtn.disabled = true;
 
-    appendMsg('user', escHtml(text).replace(/\n/g, '<br>'));
-    var pending = appendMsg('bot', '<em>Running HybridAgent &lt;latent&gt; (14 steps) + 11-pass NCM + K3LexicalPointerDecoder&hellip;</em>');
+    var userHtml = '';
+    if (imgData) {
+      userHtml += '<img class="k3-chat-thumb" src="' + imgData + '" alt="Uploaded image">';
+    }
+    if (text) {
+      userHtml += escHtml(text).replace(/\n/g, '<br>');
+    }
+    appendMsg('user', userHtml);
+    var pending = appendMsg('bot', CLOVER_LOADER_HTML);
 
     try {
-      if (mode === 'batch') {
-        var prompts = text.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
-        var resB = await fetch(activeBase + '/api/batch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompts: prompts, cands: 1 })
-        });
-        var data = await resB.json();
-        var outHtml = '<strong>Clubbed Batch (' + data.n_prompts + ' prompts, ' + data.n_windows + ' windows, 0 cross-talk):</strong><br><br>';
-        (data.results || []).forEach(function (item, idx) {
-          outHtml += '<div><strong>[' + (idx + 1) + ']</strong> ' + escHtml(item.reply) +
-            ' <span style="color:#8b9eb0;font-size:0.8rem">(' + item.n_k3_tokens + ' K3 tok)</span></div><br>';
-        });
-        outHtml += '<div class="k3-meta"><div class="k3-pills">' +
-          '<span class="k3-pill">Total: ' + data.total_wall_s + 's (' + data.effective_s_per_prompt + 's/prompt)</span>' +
-          '<span class="k3-pill">E2E: ' + data.e2e_tok_per_s + ' tok/s</span>' +
-          '<span class="k3-pill">NCM Stage: ' + data.ncm_stage_tok_per_s + ' tok/s (' + data.ncm_ms + ' ms)</span>' +
-          '</div></div>';
-        pending.innerHTML = outHtml;
-      } else {
-        var cands = (mode === '1cand') ? 1 : 8;
-        var res = await fetch(activeBase + '/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: text, cands: cands, remember: remember })
-        });
-        var r = await res.json();
-        if (turnBadge && typeof r.history_len === 'number') {
-          turnBadge.textContent = 'Memory: ' + r.history_len + ' turns';
-        }
-        var replyTxt = (cands === 1) ? r.reply_1cand : r.reply_mbr8;
-        var nTok = (cands === 1) ? r.n_k3_tokens_1cand : r.n_k3_tokens_mbr8;
-        var ncmMs = (cands === 1) ? r.ncm_1cand_ms : r.ncm_mbr8_ms;
-        var totMs = (cands === 1) ? r.total_1cand_ms : r.total_mbr8_ms;
-        var e2eTps = (nTok / (totMs / 1000.0)).toFixed(2);
-        var ncmTps = (nTok / (ncmMs / 1000.0)).toFixed(1);
-        pending.innerHTML = '<div>' + escHtml(replyTxt) + '</div>' +
-          '<div class="k3-meta"><div class="k3-pills">' +
-          '<span class="k3-pill">Total: ' + (totMs / 1000.0).toFixed(2) + 's</span>' +
-          '<span class="k3-pill">E2E: ' + e2eTps + ' tok/s</span>' +
-          '<span class="k3-pill">NCM (' + mode.toUpperCase() + '): ' + ncmMs + ' ms (' + ncmTps + ' tok/s)</span>' +
-          '<span class="k3-pill">Tokens: ' + nTok + ' K3 tok</span>' +
-          '<span class="k3-pill">Latent: ' + r.latent_steps + ' steps</span>' +
-          '</div><div>Plan: ' + escHtml((r.plans || []).join(' || ')) + '</div></div>';
-      }
+      var res = await fetch(activeBase + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          prompt: text || 'Describe this image clearly.',
+          image_base64: imgData,
+          remember: true
+        })
+      });
+      var r = await res.json();
+      var replyTxt = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
+      pending.innerHTML = '<div>' + escHtml(replyTxt).replace(/\n/g, '<br>') + '</div>';
     } catch (err) {
-      pending.innerHTML = '<span>Could not reach live GPU endpoint directly (' + escHtml(err) + '). ' +
-        '<a href="' + activeBase + '/" target="_blank" rel="noopener" style="color:#3fe0c5">Click here to open the live chat window in a new tab &nearr;</a></span>';
+      pending.innerHTML = '<span>Unable to reach Clover AI right now. Please try again.</span>';
     } finally {
       if (sendBtn) sendBtn.disabled = false;
       if (inputEl) inputEl.focus();
     }
-  };
-
-  window.k3RunPreset = function (text, mode) {
-    if (modeSelect && mode) modeSelect.value = mode;
-    if (inputEl) inputEl.value = text;
-    window.k3SendPrompt();
   };
 
   window.openK3ChatModal = function () {
@@ -1064,6 +1065,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
     if (modalEl.hidden) {
       modalSlot.appendChild(inlineWidget);
       modalEl.hidden = false;
+      if (modalToggleBtn) modalToggleBtn.textContent = 'Close';
       if (inputEl) inputEl.focus();
     } else {
       window.closeK3ChatModal();
@@ -1074,10 +1076,7 @@ src/scripts/chat-stop.sh mychat</code></pre>
     if (!modalEl || !inlineWidget || !inlineParent) return;
     inlineParent.appendChild(inlineWidget);
     modalEl.hidden = true;
-  };
-
-  window.popoutK3ChatWindow = function () {
-    window.open(activeBase + '/', 'CloverK3LiveChat', 'width=980,height=760,resizable=yes,scrollbars=yes');
+    if (modalToggleBtn) modalToggleBtn.textContent = 'Expand';
   };
 
   if (modalEl) {
