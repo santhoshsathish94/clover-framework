@@ -53,17 +53,17 @@ class LiveWebSearchTool:
                 title = " ".join((entry.find("a:title", ns).text or "").split())
                 summary = " ".join((entry.find("a:summary", ns).text or "").split())
                 pub = (entry.find("a:published", ns).text or "")[:10]
-                link = (entry.find("a:id", ns).text or "").strip()
-                if len(summary) > 220:
-                    summary = summary[:217].rsplit(" ", 1)[0] + "..."
-                out.append(f"[arXiv {pub}] {title} ({link}): {summary}")
+                link = (entry.find("a:id", ns).text or "").strip().replace("http://", "https://")
+                if len(summary) > 260:
+                    summary = summary[:257].rsplit(" ", 1)[0] + "..."
+                out.append(f"[arXiv {pub}] {title} — Link: {link} — Summary: {summary}")
         except Exception:
             pass
         return out
 
     def _search_wikipedia(self, query: str, max_items: int = 3) -> list[str]:
-        """Queries the live Wikipedia Search & Summary API."""
-        clean_q = re.sub(r"\b(can you|find|relevant|research|on|recent|latest|about|search|for)\b", " ", query.lower())
+        """Queries the live Wikipedia Search & Summary API and includes canonical article URLs."""
+        clean_q = re.sub(r"\b(can you|find|relevant|research|on|recent|latest|about|search|for|more|details|please|and|links)\b", " ", query.lower())
         clean_q = " ".join(clean_q.split()).strip() or query.strip()
         url = (
             "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="
@@ -79,26 +79,38 @@ class LiveWebSearchTool:
                 title = item.get("title", "")
                 snip = re.sub(r"<[^>]+>", "", item.get("snippet", ""))
                 snip = html.unescape(" ".join(snip.split()))
-                out.append(f"[Wikipedia: {title}] {snip}")
+                wiki_url = "https://en.wikipedia.org/wiki/" + urllib.parse.quote(title.replace(" ", "_"))
+                out.append(f"[Wikipedia: {title} — Link: {wiki_url}] {snip}")
         except Exception:
             pass
         return out
 
     def _search_ddg(self, query: str, max_items: int = 3) -> list[str]:
-        """Queries DuckDuckGo HTML search endpoint for live web pages."""
+        """Queries DuckDuckGo HTML search endpoint for live web pages and extracts destination URLs."""
         url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(query.strip())
         out = []
         try:
             req = urllib.request.Request(url, headers={"User-Agent": self.user_agent})
             with urllib.request.urlopen(req, timeout=8) as r:
                 page = r.read().decode("utf-8", errors="ignore")
-            titles = re.findall(r'<a[^>]*class="result__a"[^>]*>(.*?)</a>', page, flags=re.DOTALL)
+            anchors = re.findall(r'<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>', page, flags=re.DOTALL)
             snips = re.findall(r'<a[^>]*class="result__snippet"[^>]*>(.*?)</a>', page, flags=re.DOTALL)
-            for t, s in list(zip(titles, snips))[:max_items]:
+            for (raw_href, t), s in list(zip(anchors, snips))[:max_items]:
                 t_clean = html.unescape(re.sub(r"<[^>]+>", "", t)).strip()
                 s_clean = html.unescape(re.sub(r"<[^>]+>", "", s)).strip()
+                href_clean = html.unescape(raw_href).strip()
+                if "uddg=" in href_clean:
+                    try:
+                        qs = urllib.parse.parse_qs(urllib.parse.urlparse(href_clean).query)
+                        if "uddg" in qs and qs["uddg"]:
+                            href_clean = qs["uddg"][0]
+                    except Exception:
+                        pass
                 if t_clean and s_clean:
-                    out.append(f"[Web: {t_clean}] {s_clean}")
+                    if href_clean.startswith("http"):
+                        out.append(f"[Web: {t_clean} — Link: {href_clean}] {s_clean}")
+                    else:
+                        out.append(f"[Web: {t_clean}] {s_clean}")
         except Exception:
             pass
         return out

@@ -49,60 +49,133 @@ CHAT_PLAN_PROMPT = (
 
 
 def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
-    p = user_prompt.lower()
+    p = user_prompt.lower().strip()
+    # Short single-fact lookup questions ('what is the capital of...', 'what is our project code?') are NOT multi-part
+    if len(p.split()) <= 9 and p.startswith(("what is the ", "what is our ", "what is my ", "who is the ", "when is the ", "where is the ")) and not any(
+        w in p for w in ("and", "difference", "compare", "trends", "steps", "how")
+    ):
+        return False
     return any(
         kw in p
         for kw in (
             "time table", "timetable", "schedule", "study plan", "plan", "routine",
-            "step", "steps", "list", "guide", "how can i prepare", "prepare", "explain", "compare",
+            "step", "steps", "list", "guide", "how can i prepare", "prepare", "explain", "compare", " vs ", " versus ",
             "find", "research", "recent", "search", "papers", "arxiv", "developments",
             "what is", "what are", "how does", "how do", "why ", "better than", "difference",
             "trends", "describe", "tell me about", "overview", "analyze", "summary", "summarize",
+            "detail", "details", "link", "links", "example", "examples", "point ", "gpu", "gpus", "chip", "chips",
+            "launch", "launched", "code", "write", "implement", "design", "architecture", "calculate", "compound",
         )
     )
 
 
-def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int = 44, max_windows: int = 8):
+def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int = 32, max_windows: int = 24):
     """Parses a single-line or multi-line response (`W1: ... W2: ... W3: ...` or bulleted/numbered lines) from HybridAgent
     into `<= max_bpe` Kimi-K3-token windows without dropping lines that lack a `W2:` prefix. Preserves line-break boundaries
     via a leading `\n` marker on windows that start a new paragraph/schedule block."""
     wants_summary = ("summary" in user_prompt.lower()) or ("summarize" in user_prompt.lower())
-    # Truncate immediately before any leaked </think> or <think> tag or trailing self-talk
-    for stop_marker in (THINK_CLOSE, THINK_OPEN, "</think>", "<think>", "<|im_end|>", "<|endoftext|>", "\nOkay,", "\nWait,", "\nHmm,"):
+    # If </think> is present, keep the text after the last non-empty </think> block
+    for tc in (THINK_CLOSE, "</think>"):
+        if tc in raw_text:
+            parts = [p.strip() for p in raw_text.split(tc) if p.strip() and p.strip() != "W1:"]
+            if parts:
+                raw_text = parts[-1]
+    raw_text = raw_text.replace("<answer>", "").replace("</answer>", "")
+    # Remove any raw <search>...</search> or <python>...</python> tags
+    raw_text = re.sub(r"<search>.*?</search>", "", raw_text, flags=re.IGNORECASE | re.DOTALL)
+    raw_text = re.sub(r"<python>.*?</python>", "", raw_text, flags=re.IGNORECASE | re.DOTALL)
+    # Truncate immediately before any leaked <think> tag or trailing post-answer self-review
+    for stop_marker in (
+        THINK_OPEN, "<think>", "<|im_end|>", "<|endoftext|>",
+        "\nYou asked for ", "\nThe user asked for ", "\nI followed the instructions",
+        "\nThe answer is concise", "\nNo other information or steps",
+        "\nI've been given the information", "\nThis is a straightforward factual",
+        "\nThe response should be", "\nThis result has been verified using Python",
+        "\nThe calculation was verified using Python", "\nFor more detailed information, you can refer",
+    ):
         if stop_marker in raw_text:
             raw_text = raw_text.split(stop_marker)[0]
-    # Replace <latent> / </latent> anchors and inline W1:/W2:/W3:/W4: tags with clean line breaks
+    # Replace <latent> / </latent> anchors and inline W1:..W99: tags with clean line breaks
     raw_text = raw_text.replace(ENTRY_ANCHOR, "\n").replace(EXIT_ANCHOR, "\n")
     raw_text = re.sub(r"</?latent>", "\n", raw_text, flags=re.IGNORECASE)
     raw_text = re.sub(r"<\|[^>]+?\|>", "", raw_text)
-    raw_text = re.sub(r"\s*\bW[1-9]:\s*", "\n", raw_text).strip()
+    raw_text = re.sub(r"(?:^|\s)\bW\d+:\s*", "\n", raw_text).strip()
 
     raw_lines = []
+    seen_norm_lines = set()
     for ln in raw_text.splitlines():
         ln = ln.strip()
         if not ln:
             continue
-        ln = re.sub(r"^W[1-9]:\s*", "", ln, flags=re.IGNORECASE).strip()
-        ln = re.sub(r"^(?:[-*•]+|\d+[.)])\s*", "", ln).strip()
+        ln = re.sub(r"^W\d+:\s*", "", ln, flags=re.IGNORECASE).strip()
+        # Require whitespace after numbered list markers (`1. `) so leading decimals like `3.14` or `5.5` are never stripped
+        ln = re.sub(r"^(?:[-*•]+\s*|\d+[.)]\s+)", "", ln).strip()
         ln = re.sub(r"\*\*", "", ln).strip()
-        ln = re.sub(r":(\d+\.)", r": \1", ln)
-        ln = re.sub(r"(?:Now I will|I need to|Let's|We need|The user is asking|The user's|The user has|Okay,\s*so\s*the\s*user|I should structure|No need for|I will end the interaction|Identify the scope:|This approach ensures|This response provides).*$", "", ln, flags=re.IGNORECASE).strip()
-        ln = re.sub(r"^From the previous turn[^,]*,\s*(?:I know that\s*)?", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r":(\d+[.)]\s)", r": \1", ln)
+        # Convert markdown links `[Label](https://...)` into `Label (https://...)` so the URL is cleanly preserved
+        ln = re.sub(r"\[([^\]]+)\]\((https?://[^\s)]+)\)", r"\1 (\2)", ln)
+        # Convert bracketed domain paths like `[arxiv.org/list/cs.AI/recent]` into full `https://...` URLs
+        ln = re.sub(
+            r"\[(?:https?://)?((?:[a-z0-9\-]+\.)+(?:org|com|gov|edu|io|ai|net)/[^\s\]]+)\]",
+            r"https://\1",
+            ln,
+            flags=re.IGNORECASE,
+        )
+        ln = re.sub(
+            r"(?:Now I will write|The user is asking|Okay,\s*so\s*the\s*user|I should structure|No need for further|I will end the interaction|Identify the scope:|This approach ensures|This response provides|This summary captures|I've kept the information concise|No further analysis|No other information or steps|The answer is concise).*$",
+            "",
+            ln,
+            flags=re.IGNORECASE,
+        ).strip()
+        ln = re.sub(r"^From the previous (?:turn|analysis)[^,]*,\s*(?:I know that\s*|the key points were:\s*)?", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"^(?:Based on|Looking at|According to|From) the (?:search results|provided reference|reference information|provided references)(?:\s+provided)?[,:\s]*", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"\s*based on the provided reference(?:\s+facts|s)?:", ":", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"\s*based on the provided references:", ":", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"\s*mentioned in the reference:", ":", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"\s*\(from the provided references\)", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"Here's what I found from the search results:", "Here is a breakdown:", ln, flags=re.IGNORECASE).strip()
-        ln = re.sub(r"\bthe user didn't\b", "you didn't", ln, flags=re.IGNORECASE)
+        # Grammatical third-person -> second-person replacements (preserving verb agreement)
+        ln = re.sub(r"\bthe user's\b", "your", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bthe user is\b", "you are", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bthe user was\b", "you were", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bthe user has\b", "you have", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bthe user needs\b", "you need", ln, flags=re.IGNORECASE)
         ln = re.sub(r"\bthe user wants\b", "you want", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bthe user asks\b", "you ask", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bthe user asked\b", "you asked", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bthe user didn't\b", "you didn't", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\byou is\b", "you are", ln, flags=re.IGNORECASE)
         ln = re.sub(r"\byou wants\b", "you want", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\byou needs\b", "you need", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\byou feels\b", "you feel", ln, flags=re.IGNORECASE)
         ln = re.sub(r"\bthe user\b", "you", ln, flags=re.IGNORECASE)
+        if ln and ln[0].islower() and not ln.startswith("http"):
+            ln = ln[0].upper() + ln[1:]
         if not wants_summary:
             ln = re.sub(r"\s*;?\s*Summary:.*$", "", ln, flags=re.IGNORECASE).strip()
         low = ln.lower()
         if ln and not low.startswith((
-            "the user ", "okay,", "hmm", "let me ", "wait,", "no need ", "i will ",
-            "first, i should", "i should ", "each of these has its own trends",
+            "the user ", "you are specifically interested in", "you specifically asked for",
+            "you asked for ", "you might be looking for", "for more details and comparisons, i'll",
+            "these are the most recent gpu launches mentioned in the reference", "the key is to ",
+            "okay,", "alright,", "hmm", "let me ", "wait,", "no need ", "i will ", "i'll ",
+            "first, i ", "first, the search", "i should ", "i need to make sure", "then i need to ",
+            "the key differences seem to be", "the answer should ", "so the final answer will",
+            "i followed the instructions", "i provided a concise", "the response is structured",
+            "this information is directly stated", "additionally, a comparison with other models",
+            "each of these has its own trends",
             "in physics, quantum computing and dark matter research might",
             "also, sustainability and climate change are major focuses",
-            "alternatively, perhaps", "identify the scope", "</think>", "<think>"
-        )):
+            "alternatively, perhaps", "identify the scope", "looking at the search",
+            "the search results ", "however, the search results", "however, since",
+            "since the search result", "to provide a more detailed", "this should help me",
+            "the answer is concise", "the response will be", "no further ", "no other information",
+            "</think>", "<think>", "<search>", "</search>",
+        )) and low not in ("first,", "alright,", "okay,", "however,", "so,", "but"):
+            norm_key = re.sub(r"[^a-z0-9]+", " ", low).strip()
+            if len(norm_key) > 12 and norm_key in seen_norm_lines:
+                continue
+            seen_norm_lines.add(norm_key)
             raw_lines.append(ln)
             if len(raw_lines) >= 2 and any(
                 ending in low
@@ -116,10 +189,15 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             ):
                 break
 
-    # Drop any trailing dangling header line (ending with ':') or incomplete trailing line cut off by max_new
+    # Drop any trailing dangling header (`:`), comma, dangling conjunction, or unclosed mid-sentence cut-off line
     while len(raw_lines) > 1 and (
-        raw_lines[-1].endswith(":")
-        or not raw_lines[-1].endswith((".", "!", "?", ")", '"', "'"))
+        raw_lines[-1].endswith((":", ","))
+        or re.search(r"\b(?:and|or|to|for|of|in|with|by|from|that|which|since|because|however|so|but|the|a|an)$", raw_lines[-1].lower())
+        or (
+            len(raw_lines) >= 4
+            and not raw_lines[-1].endswith((".", "!", "?", ")", '"', "'"))
+            and not re.search(r"(?:\d|https?://)", raw_lines[-1])
+        )
     ):
         raw_lines.pop()
 
@@ -128,16 +206,16 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
 
     plans = []
     for line_idx, ln in enumerate(raw_lines):
-        # Split line into windows of <= max_bpe Kimi K3 tokens
-        if len(k3_tok.encode(ln)) <= max_bpe:
+        # Split line into single-sentence / compact windows of <= max_bpe Kimi K3 tokens so K3LexicalPointerDecoder has 100% 1-to-1 positional alignment
+        clauses = [c.strip() for c in re.split(r"(?<=[.!?;])\s+", ln) if c.strip()]
+        if len(clauses) <= 1 and len(k3_tok.encode(ln)) <= max_bpe:
             line_wins = [ln]
         else:
-            clauses = [c.strip() for c in re.split(r"(?<=[.!?;])\s+", ln) if c.strip()]
             line_wins = []
             cur = ""
             for cl in clauses:
                 cand = (cur + " " + cl).strip() if cur else cl
-                if len(k3_tok.encode(cand)) <= max_bpe:
+                if len(k3_tok.encode(cand)) <= min(26, max_bpe):
                     cur = cand
                 else:
                     if cur:
@@ -159,9 +237,13 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             if cur:
                 line_wins.append(cur)
 
+        line_wins = [w for w in line_wins if len(w) >= 2]
+        if not line_wins:
+            continue
+        # Never add a partial multi-window line if the whole line will not fit in `max_windows`
+        if plans and len(plans) + len(line_wins) > max_windows:
+            break
         for w_idx, w_str in enumerate(line_wins):
-            if len(w_str) < 2:
-                continue
             # Prefix "\n" if this window starts a new line (line_idx > 0 and w_idx == 0)
             if line_idx > 0 and w_idx == 0:
                 plans.append("\n" + w_str)
@@ -253,7 +335,8 @@ GRAMMAR_CONNECTOR_WORDS = [
     "and", "or", "but", "so", "while", "when", "where", "which", "that", "who", "whom", "whose",
     "is", "are", "was", "were", "be", "been", "being", "has", "have", "had", "it", "its", "this", "these",
     "they", "them", "their", "we", "our", "you", "your", "I", "my", "me",
-    ".", ",", ";", ":", "!", "?", "'s", "'", "-", "(", ")",
+    ".", ",", ";", ":", "!", "?", "'s", "'", "-", "(", ")", "/", "//", "://", "_", "=", "&", "#", "[", "]",
+    "https", "http", "www", "com", "org", "io", "ai",
 ]
 
 
@@ -296,7 +379,10 @@ class K3FastChatEngine:
                 for tid in self.k3_tok.encode(variant):
                     if 0 <= tid < 163584:
                         self.grammar_ids.add(tid)
-                        if gw.lower() in ("the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from", "as", "is", "are", "was", "were", ".", ",", ";", ":"):
+                        if gw.lower() in (
+                            "the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from",
+                            "as", "is", "are", "was", "were", ".", ",", ";", ":", "-", "/", "//", "://", "_", "=", "&", "(", ")", "[", "]",
+                        ):
                             self.repeatable_grammar_ids.add(tid)
 
         levels = list(self.vqvae.vq.levels)
@@ -417,7 +503,7 @@ class K3FastChatEngine:
         (like 'France', 'Paris', 'Bristol', 'lithium') that are not in the current window's plan!"""
         allowed = set(self.grammar_ids)
         allowed.update(self.k3_tok.encode(plan_str))
-        for w in re.findall(r"[A-Za-z0-9.,:!?'£$€%-]+", plan_str):
+        for w in re.findall(r"[A-Za-z0-9.,:!?'£$€%/_\-+=&#()\[\]]+", plan_str):
             for v in (w, " " + w, w.capitalize(), " " + w.capitalize(), w.lower(), " " + w.lower()):
                 allowed.update(self.k3_tok.encode(v))
         mask = torch.ones(V_K3, dtype=torch.bool, device=self.dev)
@@ -427,16 +513,16 @@ class K3FastChatEngine:
 
     def _dec_k3_aligned(self, row_logits, plan_ids):
         """Decodes a 64-position logit tensor `[T, V_K3]` while:
-        1. Enforcing 2-gram subword continuation for multi-subword words/times in `plan_ids`.
+        1. Enforcing 2-gram subword continuation for multi-subword words/times/decimals/URLs in `plan_ids`.
         2. Capping each content token's emission count to its occurrence count in `plan_ids` (preventing
            duplicate words like `Paris. Paris.` or `45 beds and 45 beds`).
-        3. Stopping cleanly at `K3_EOS` once the window's planned content tokens are covered.
+        3. Stopping cleanly at `K3_EOS` once all multiplicity counts of the window's planned content tokens are covered.
         """
         cont_map = {}
         valid_p = [int(x) for x in plan_ids if 0 <= int(x) < 163584]
         for a, b in zip(valid_p[:-1], valid_p[1:]):
             bs = self.k3_tok.decode([b], skip_special_tokens=False)
-            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs in (":", ".", "'")):
+            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs[0] in (":", ".", "'", "/", "-", "_", "=", "?", "&", "#")):
                 cont_map.setdefault(a, set()).add(b)
 
         max_counts = collections.Counter(valid_p)
@@ -452,7 +538,9 @@ class K3FastChatEngine:
         for t in range(max_len):
             lg = row_logits[t].clone()
             if prev_tid >= 0:
-                lg[prev_tid] -= 30.0
+                # Only penalize immediate exact token repetition if the plan itself doesn't repeat that token
+                if emitted_counts[prev_tid] >= max_counts.get(prev_tid, 1):
+                    lg[prev_tid] -= 30.0
                 if prev_tid in cont_map:
                     for nxt_b in cont_map[prev_tid]:
                         if emitted_counts[nxt_b] < max_counts.get(nxt_b, 1):
@@ -462,9 +550,11 @@ class K3FastChatEngine:
                 if tid not in self.repeatable_grammar_ids and cnt >= max_counts.get(tid, 1):
                     lg[tid] -= 30.0
 
-            # Once all content tokens of the plan are covered, allow K3_EOS to terminate the sentence cleanly
-            covered = sum(1 for tid in content_set if emitted_counts[tid] >= 1)
-            if content_set and covered >= len(content_set) and t >= len(valid_p) - 1:
+            # Require ALL multiplicity occurrences of every content token in `valid_p` before boosting K3_EOS
+            all_covered = bool(content_set) and all(
+                emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set
+            )
+            if all_covered and t >= len(valid_p) - 1:
                 lg[K3_EOS] += 18.0
 
             tid = int(lg.argmax().item())
@@ -472,7 +562,7 @@ class K3FastChatEngine:
                 break
             if 0 <= tid < 163584:
                 ws = self.k3_tok.decode([tid], skip_special_tokens=False).strip().lower()
-                if ws and ws == prev_word and len(ws) >= 2:
+                if ws and ws == prev_word and len(ws) >= 2 and emitted_counts[tid] >= max_counts.get(tid, 1):
                     lg[tid] -= 30.0
                     tid = int(lg.argmax().item())
                     if tid == K3_EOS:
@@ -483,10 +573,10 @@ class K3FastChatEngine:
                 prev_tid = tid
                 if ws:
                     prev_word = ws
-                # If all content tokens have been emitted and we just closed the sentence with punctuation, stop!
-                if content_set and sum(1 for c_id in content_set if emitted_counts[c_id] >= 1) >= len(content_set):
+                # Only stop on sentence-ending punctuation after ALL occurrences of all content tokens (e.g. both '5's in '5.5') have been emitted!
+                if bool(content_set) and all(emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set):
                     raw_piece = self.k3_tok.decode([tid], skip_special_tokens=False).rstrip()
-                    if raw_piece.endswith((".", "!", "?")) and t >= max(2, len(valid_p) - 3):
+                    if raw_piece.endswith((".", "!", "?")) and t >= len(valid_p) - 1:
                         break
         return self.k3_tok.decode(clean_ids), clean_ids
 

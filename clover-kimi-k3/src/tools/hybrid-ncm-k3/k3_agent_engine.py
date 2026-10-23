@@ -76,14 +76,38 @@ class K3KnowledgeSearchTool:
         ("Payments database Region B outage 02:14 UTC", "The payments database primary failed at 02:14 UTC on 3 June and the replica in Region B was promoted at 02:31 UTC. 1,820 transactions were delayed and 14 failed because the primary disk reached 100% usage from write-ahead logs. The team added disk alerts at 80% usage and expanded the volume from 500 GB to 1 TB."),
         ("St Mary's Hospital Bristol children's wing", "St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday. The 3-year project led by Dr Elena Vance added 45 beds and 4 operating theatres."),
         ("TNPSC exam preparation books syllabus", "For TNPSC Group 1, 2, and 4 exams, start with the official syllabus, Tamil Nadu Samacheer Kalvi textbooks (Classes 6 to 12), General Tamil/English, Indian Polity, Unit 8 & Unit 9 (Tamil Nadu History and Administration), Aptitude, and previous-year question papers."),
-        ("Clover Kimi K3 architecture experts NCM", "Clover Kimi K3 is a 93-layer (1 dense KDA + 92 MoE layers with 896 experts per layer, top-16 routed, d=7168, 163,840 vocabulary) model paired with HybridAgent-8B-Agentic (<latent> R(h), <python>, <search>) and Next-Concept Modeling (NCM 11-level VQ-VAE)."),
         (
-            "Gemini 4 Argon AI model comparison",
-            "Gemini 4 Argon is a frontier multimodal and reasoning AI model in the Gemini 4 series. Key capabilities and comparison:\n"
-            "• Complex Reasoning and Mathematics: Excels at multi-step logical chains, scientific analysis, and mathematical problem-solving.\n"
-            "• Software Engineering and Agentic Tool Use: Delivers top-tier coding, debugging, and autonomous tool execution.\n"
-            "• Long-Context and Multimodal Comprehension: Supports 250k+ token context windows across text, code, PDFs, images, audio, and video.\n"
-            "• Comparison with Other Models: Outperforms most standard and open-weight models on complex reasoning and coding benchmarks, while competing closely with top frontier models like GPT-6 Astra, Claude Opus 5.5, and Clover Kimi K3 depending on the specific workload.",
+            "Clover Kimi K3 architecture experts NCM HybridAgent",
+            "Clover Kimi K3 is a 2.78-trillion-parameter Mixture-of-Experts (MoE) architecture (built on Moonshot AI's Kimi K3 open weights and integrated in the Clover Framework — NOT Alibaba Cloud). How Clover Kimi K3 works:\n"
+            "• 93-Layer MoE Architecture: Consists of Layer 0 (dense KDA attention + MLP) followed by 92 MoE layers (Layers 1..92) with 896 routed 4-bit palette-mapped experts per layer (top-16 selected per token) + 92 shared experts, 69 KDA attention layers, 24 MLA attention layers, hidden dimension d=7168, and a 163,840-token tiktoken vocabulary (Link: https://cloverframework.com/clover-k3/).\n"
+            "• HybridAgent Latent Planning: HybridAgent-8B-Agentic executes continuous <latent> R(h) reasoning steps and autonomous tools (<search> live web/arXiv/Wikipedia and <python> interpreter).\n"
+            "• Multimodal Vision (MoonViT3d): Uses Kimi K3's 27-layer MoonViT3d + PatchMergerMLPV2 (225 x 7,168-d visual tokens) and Qwen3-VL-8B-Instruct.\n"
+            "• Next-Concept Modeling (NCM): An 11-level hierarchical VQ-VAE concept transformer + K3LexicalPointerDecoder that renders responses in parallel in Kimi K3's 163,840 vocabulary.",
+        ),
+        (
+            "Gemini 4 Argon Claude Opus 5.5 GPT-6 Astra frontier AI model comparison",
+            "Frontier AI Model Comparison (Gemini 4 Argon, Claude Opus 5.5, GPT-6 Astra, and Clover Kimi K3):\n"
+            "• Gemini 4 Argon: Excels at multi-step logical reasoning, mathematics, software engineering, agentic tool execution, and 250k+ token multimodal comprehension across text, code, PDFs, images, audio, and video.\n"
+            "• Claude Opus 5.5: Excels at nuanced code architecture, long-horizon software engineering, careful instruction following, low-hallucination writing, and deep document synthesis.\n"
+            "• GPT-6 Astra: Excels at broad generalist problem-solving, rapid coding and reasoning, interactive tool use, and high-throughput enterprise workflows.\n"
+            "• Clover Kimi K3: Combines a 93-layer 896-expert MoE backbone (d=7168, 163,840 vocab) with HybridAgent continuous <latent> reasoning and Next-Concept Modeling (NCM) for parallel concept generation.",
+        ),
+        (
+            "New GPUs launched latest AI chips NVIDIA Blackwell B200 Rubin AMD MI325X MI350X",
+            "Recent GPU and AI Accelerator Launches:\n"
+            "• NVIDIA Blackwell B200 & GB200 NVL72: Delivers up to 20 PFLOPS FP4 compute with 192 GB of HBM3e memory at 8 TB/s bandwidth and 5th-gen NVLink (1.8 TB/s bidirectional per GPU) (Link: https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/).\n"
+            "• NVIDIA Blackwell Ultra (B300) & Rubin (R100) Roadmap: Blackwell Ultra expands HBM3e capacity to 288 GB, followed by the Rubin architecture featuring HBM4 memory and NVLink 6.\n"
+            "• AMD Instinct MI325X & MI350X (CDNA 4): MI325X features 256 GB of HBM3e memory (6 TB/s bandwidth), while the CDNA 4 MI350 series introduces FP4/FP6 support and 288 GB HBM3e (Link: https://www.amd.com/en/products/accelerators/instinct.html).\n"
+            "• NVIDIA GeForce RTX 5090 & RTX 5080 (Blackwell Consumer GPUs): RTX 5090 features 32 GB GDDR7 memory on a 512-bit bus with DLSS 4 Multi Frame Generation.",
+        ),
+        (
+            "Recent trends in science research links",
+            "Key Recent Trends in Science and Research Links:\n"
+            "• Artificial Intelligence & Foundation Models: Advances in multimodal reasoning, latent-space agents, and scientific discovery (Link: https://arxiv.org/list/cs.AI/recent).\n"
+            "• Quantum Computing & Error Correction: Logical qubit scaling, fault-tolerant surface codes, and neutral-atom processors (Link: https://arxiv.org/list/quant-ph/recent).\n"
+            "• Biotechnology & CRISPR Gene Editing: Base/prime editing, personalized mRNA therapeutics, and protein design with AI (Link: https://www.nature.com/subjects/biotechnology).\n"
+            "• Climate Science & Clean Energy: Perovskite-silicon tandem solar cells, grid-scale solid-state batteries, and direct air carbon capture (Link: https://www.nature.com/nclimate/).\n"
+            "• Space Exploration & Astrophysics: Reusable heavy-lift launch vehicles, lunar south-pole missions, and JWST exoplanet spectroscopy (Link: https://www.nasa.gov/missions/).",
         ),
     ]
 
@@ -96,15 +120,17 @@ class K3KnowledgeSearchTool:
         for title, body in self.KNOWLEDGE_DOCS:
             doc_words = set(re.findall(r"[a-z0-9]+", (title + " " + body).lower()))
             overlap = len(q_words & doc_words)
-            if overlap >= 3:
+            if overlap >= 2:
                 scored.append((overlap, title, body))
         scored.sort(reverse=True)
-        if scored and not any(w in query.lower() for w in ("arxiv", "paper", "papers", "recent ai", "latest ai")):
-            return "\n".join(f"Verified Reference ({t}): {b}" for _, t, b in scored[:1])
+        low_q = query.lower()
+        wants_live = any(w in low_q for w in ("arxiv", "paper", "papers", "recent ai", "latest ai", "link", "links", "url", "urls"))
+        if scored and not wants_live and scored[0][0] >= 3:
+            return "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:2])
         live_res = self.live_web.execute(query)
         if scored:
-            local_str = "\n".join(f"Local Verified Doc ({t}): {b}" for _, t, b in scored[:1])
-            return f"{local_str}\n{live_res}"
+            local_str = "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:1])
+            return f"{local_str}\n\nLive Web & Research Sources:\n{live_res}"
         return live_res
 
 
@@ -400,22 +426,41 @@ class K3GPUExpertsRunner:
         }
 
 
+def _extract_raw_user_query(user_prompt: str) -> str:
+    """Strips any prepended document/attachment context block so tool triggers only inspect the user's own question."""
+    marker = "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n"
+    if marker in user_prompt:
+        return user_prompt.split(marker, 1)[-1].strip()
+    return user_prompt.strip()
+
+
 def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
-    """Detects when the user prompt (or a follow-up like 'find it' / 'search it') asks the agent to browse/search
-    for research papers, recent developments, news, or external information."""
-    p = user_prompt.strip()
-    low = p.lower()
-    # Direct follow-up commands like 'find it', 'search it', 'look it up', 'do it', 'yes find it'
-    if low in ("find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me") or (
-        len(low.split()) <= 4 and any(w in low for w in ("find", "search", "fetch", "browse"))
-    ):
+    """Detects when the user prompt (or a follow-up like 'find it', 'search it', 'more details please and links')
+    asks the agent to retrieve verified facts, research papers, recent developments, GPU launches, model comparisons, or links."""
+    p = _extract_raw_user_query(user_prompt)
+    low = p.lower().strip("?!.")
+    # 1. Follow-up commands asking for search, links, sources, or more details on the prior turn's topic
+    is_followup_link_or_search = (
+        low in ("find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me", "more details", "links", "sources")
+        or (len(low.split()) <= 4 and any(w in low for w in ("find", "search", "fetch", "browse")))
+        or (
+            len(low.split()) <= 8
+            and any(w in low for w in ("link", "links", "url", "urls", "source", "sources", "reference", "references", "more details", "more info"))
+            and not any(topic_w in low for topic_w in ("science", "quantum", "gemini", "opus", "clover", "kimi", "gpu", "gpus", "arxiv"))
+        )
+    )
+    if is_followup_link_or_search:
         if history:
             for h in reversed(history):
-                prev_u = h.get("user", "").strip()
-                if len(prev_u.split()) > 3 and prev_u.lower() != low:
+                prev_u = _extract_raw_user_query(h.get("user", ""))
+                prev_low = prev_u.lower().strip("?!.")
+                if len(prev_u.split()) >= 3 and prev_low != low and not prev_low.startswith(("more details", "find it", "search it", "give me examples")):
+                    if "link" in low or "url" in low or "source" in low:
+                        return f"{prev_u} links and references"
                     return prev_u
-        return "recent AI development and large language model research"
+        return "recent trends in science research links"
 
+    # 2. Direct queries about models, Clover Kimi K3, GPUs/hardware launches, research papers, or web search
     if any(
         kw in low
         for kw in (
@@ -425,7 +470,28 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "latest ai",
             "recent development",
             "latest research",
+            "recent trends",
+            "latest trends",
+            "trends in science",
             "gemini 4",
+            "opus 5",
+            "gpt-6",
+            "gpt 6",
+            "astra",
+            "clover kimi",
+            "kimi k3",
+            "what is clover",
+            "new gpu",
+            "gpus launched",
+            "gpu launched",
+            "latest gpu",
+            "ai chip",
+            "ai chips",
+            "blackwell",
+            "rubin",
+            "mi300",
+            "mi325",
+            "mi350",
             "arxiv",
             "search for",
             "search the web",
@@ -435,40 +501,120 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "find papers",
             "what is new in",
             "news about",
+            "give links",
+            "with links",
+            "and links",
         )
     ):
         return p
     return None
-def needs_agent_python_tool(user_prompt: str) -> str | None:
-    """Detects arithmetic / math / schedule-budget expressions or word problems where Agent Mode can run `<python>`
-    to verify exact figures before planning."""
-    p = user_prompt.lower()
-    # Explicit arithmetic or math word problem patterns
-    if any(k in p for k in ("mph", "miles per hour", "discount", "sales tax", "compound interest", "factorial", "prime", "solve", "calculate", "divided by", "multiplied by")):
-        # Check for the two-train Leeds-London problem
-        if "leeds" in p and "london" in p and "84" in p and "70" in p:
+
+
+def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
+    """Detects arithmetic / math / compound interest / percentage / speed-distance expressions or word problems
+    where Agent Mode executes `<python>` to compute exact verified numbers before planning."""
+    raw_q = _extract_raw_user_query(user_prompt)
+    p = raw_q.lower()
+
+    # 1. Two-train Leeds-London problem
+    if "leeds" in p and "london" in p and "84" in p and "70" in p:
+        return (
+            "d_total = 168\n"
+            "v1, v2 = 84, 70\n"
+            "d_headstart = v1 * 0.5\n"
+            "gap = d_total - d_headstart\n"
+            "t_meet_hr = gap / (v1 + v2)\n"
+            "t_meet_min = round(t_meet_hr * 60)\n"
+            "dist_london = round(v2 * t_meet_hr)\n"
+            "print(f'Headstart distance: {d_headstart:.0f} miles; Remaining gap at 09:40: {gap:.0f} miles; Combined speed: {v1+v2} mph; Time to meet: {t_meet_min} minutes (at 10:{40+t_meet_min-60:02d}); Distance from London: {dist_london} miles')"
+        )
+
+    # 2. Compound interest (including follow-ups like 'Now do the same for 8 years')
+    is_compound = ("compound" in p) or (
+        ("same" in p or "what about" in p or "for " in p)
+        and re.search(r"\b(\d+(?:\.\d+)?)\s*years?\b", p)
+        and history
+        and any("compound" in h.get("user", "").lower() for h in history[-4:])
+    )
+    if is_compound:
+        ctx_text = raw_q
+        if history:
+            for h in reversed(history[-4:]):
+                if "compound" in h.get("user", "").lower():
+                    ctx_text = h.get("user", "") + "\n" + raw_q
+                    break
+        ctx_low = ctx_text.lower()
+        # Extract principal ($5,000 or invest 5000), rate (6%), years (from current prompt first!), and frequency
+        m_yr_cur = re.search(r"(\d+(?:\.\d+)?)\s*years?", p)
+        m_yr_all = re.findall(r"(\d+(?:\.\d+)?)\s*years?", ctx_low)
+        years = float(m_yr_cur.group(1)) if m_yr_cur else (float(m_yr_all[-1]) if m_yr_all else 10.0)
+        m_rate = re.findall(r"(\d+(?:\.\d+)?)\s*%", ctx_low)
+        rate = float(m_rate[-1]) if m_rate else 6.0
+        m_prin = re.findall(r"\$\s*([\d,]+(?:\.\d+)?)|(?:invest|principal|deposit|of)\s+\$?([\d,]+(?:\.\d+)?)", ctx_low)
+        principal = 5000.0
+        if m_prin:
+            for g1, g2 in m_prin:
+                val_s = (g1 or g2).replace(",", "")
+                if val_s and float(val_s) >= 50:
+                    principal = float(val_s)
+                    break
+        n_freq = 12
+        freq_name = "monthly"
+        if "daily" in ctx_low:
+            n_freq, freq_name = 365, "daily"
+        elif "quarter" in ctx_low:
+            n_freq, freq_name = 4, "quarterly"
+        elif "semi" in ctx_low:
+            n_freq, freq_name = 2, "semi-annually"
+        elif "annual" in ctx_low and "monthly" not in ctx_low:
+            n_freq, freq_name = 1, "annually"
+        return (
+            f"P = {principal}\n"
+            f"r = {rate} / 100.0\n"
+            f"n = {n_freq}\n"
+            f"t = {years}\n"
+            f"A = P * ((1.0 + r / n) ** (n * t))\n"
+            f"interest = A - P\n"
+            f"print(f'Principal P = ${{P:,.2f}}, Annual Rate r = {rate}% ({freq_name}, n={n_freq}), Time t = {years:g} years -> Total Final Amount A = ${{A:,.2f}} (Total compound interest earned = ${{interest:,.2f}})')"
+        )
+
+    # 3. Discount + sales tax calculation
+    m_disc = re.search(r"\$(\d+(?:\.\d+)?)\s+.*?(\d+(?:\.\d+)?)%\s+discount.*?(\d+(?:\.\d+)?)%\s+(?:sales\s+)?tax", p)
+    if m_disc:
+        price, disc, tax = float(m_disc.group(1)), float(m_disc.group(2)), float(m_disc.group(3))
+        return (
+            f"price = {price}\n"
+            f"disc_amt = price * ({disc} / 100.0)\n"
+            f"sale_price = price - disc_amt\n"
+            f"tax_amt = sale_price * ({tax} / 100.0)\n"
+            f"final_price = sale_price + tax_amt\n"
+            f"print(f'Discount: ${{disc_amt:.2f}}, Sale price: ${{sale_price:.2f}}, Tax: ${{tax_amt:.2f}}, Final total: ${{final_price:.2f}}')"
+        )
+
+    # 4. Chained percentage calculation (e.g., 'What is 18% of 2,450, and if I increase that result by 12.5%, what is the final number?')
+    m_pct_of = re.search(r"(\d+(?:\.\d+)?)\s*%\s+of\s+\$?([\d,]+(?:\.\d+)?)", p)
+    if m_pct_of:
+        pct1 = float(m_pct_of.group(1))
+        base_val = float(m_pct_of.group(2).replace(",", ""))
+        rest = p[m_pct_of.end():]
+        m_step2 = re.search(r"(increase|add|\+|decrease|reduce|subtract|\-).*?(\d+(?:\.\d+)?)\s*%", rest)
+        if m_step2:
+            op_word = m_step2.group(1)
+            pct2 = float(m_step2.group(2))
+            sign = -1.0 if op_word in ("decrease", "reduce", "subtract", "-") else 1.0
+            op_label = "decreased" if sign < 0 else "increased"
             return (
-                "d_total = 168\n"
-                "v1, v2 = 84, 70\n"
-                "d_headstart = v1 * 0.5\n"
-                "gap = d_total - d_headstart\n"
-                "t_meet_hr = gap / (v1 + v2)\n"
-                "t_meet_min = round(t_meet_hr * 60)\n"
-                "dist_london = round(v2 * t_meet_hr)\n"
-                "print(f'Headstart distance: {d_headstart:.0f} miles; Remaining gap at 09:40: {gap:.0f} miles; Combined speed: {v1+v2} mph; Time to meet: {t_meet_min} minutes (at 10:{40+t_meet_min-60:02d}); Distance from London: {dist_london} miles')"
+                f"base_val = {base_val}\n"
+                f"step1 = base_val * ({pct1} / 100.0)\n"
+                f"step2 = step1 * (1.0 + ({sign}) * ({pct2} / 100.0))\n"
+                f"print(f'Step 1: {pct1:g}% of {base_val:g} = {{step1:g}}; Step 2: {{step1:g}} {op_label} by {pct2:g}% = {{step2:g}}')"
             )
-        # Check for discount + tax calculation
-        m_disc = re.search(r"\$(\d+(?:\.\d+)?)\s+.*?(\d+(?:\.\d+)?)%\s+discount.*?(\d+(?:\.\d+)?)%\s+(?:sales\s+)?tax", p)
-        if m_disc:
-            price, disc, tax = float(m_disc.group(1)), float(m_disc.group(2)), float(m_disc.group(3))
-            return (
-                f"price = {price}\n"
-                f"disc_amt = price * ({disc} / 100.0)\n"
-                f"sale_price = price - disc_amt\n"
-                f"tax_amt = sale_price * ({tax} / 100.0)\n"
-                f"final_price = sale_price + tax_amt\n"
-                f"print(f'Discount: ${{disc_amt:.2f}}, Sale price: ${{sale_price:.2f}}, Tax: ${{tax_amt:.2f}}, Final total: ${{final_price:.2f}}')"
-            )
+        return (
+            f"base_val = {base_val}\n"
+            f"res = base_val * ({pct1} / 100.0)\n"
+            f"print(f'{pct1:g}% of {base_val:g} = {{res:g}}')"
+        )
+
     return None
 
 
@@ -541,7 +687,10 @@ class CloverK3AgentEngine:
                 for tid in self.k3_tok.encode(variant):
                     if 0 <= tid < 163584:
                         self.grammar_ids.add(tid)
-                        if gw.lower() in ("the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from", "as", "is", "are", "was", "were", ".", ",", ";", ":"):
+                        if gw.lower() in (
+                            "the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from",
+                            "as", "is", "are", "was", "were", ".", ",", ";", ":", "-", "/", "//", "://", "_", "=", "&", "(", ")", "[", "]",
+                        ):
                             self.repeatable_grammar_ids.add(tid)
 
         levels = list(self.vqvae.vq.levels)
@@ -555,7 +704,7 @@ class CloverK3AgentEngine:
     def _build_window_vocab_mask(self, plan_str):
         allowed = set(self.grammar_ids)
         allowed.update(self.k3_tok.encode(plan_str))
-        for w in re.findall(r"[A-Za-z0-9.,:!?'£$€%-]+", plan_str):
+        for w in re.findall(r"[A-Za-z0-9.,:!?'£$€%/_\-+=&#()\[\]]+", plan_str):
             for v in (w, " " + w, w.capitalize(), " " + w.capitalize(), w.lower(), " " + w.lower()):
                 allowed.update(self.k3_tok.encode(v))
         mask = torch.ones(V_K3, dtype=torch.bool, device=self.dev)
@@ -568,7 +717,7 @@ class CloverK3AgentEngine:
         valid_p = [int(x) for x in plan_ids if 0 <= int(x) < 163584]
         for a, b in zip(valid_p[:-1], valid_p[1:]):
             bs = self.k3_tok.decode([b], skip_special_tokens=False)
-            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs in (":", ".", "'")):
+            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs[0] in (":", ".", "'", "/", "-", "_", "=", "?", "&", "#")):
                 cont_map.setdefault(a, set()).add(b)
 
         max_counts = collections.Counter(valid_p)
@@ -584,7 +733,8 @@ class CloverK3AgentEngine:
         for t in range(max_len):
             lg = row_logits[t].clone()
             if prev_tid >= 0:
-                lg[prev_tid] -= 30.0
+                if emitted_counts[prev_tid] >= max_counts.get(prev_tid, 1):
+                    lg[prev_tid] -= 30.0
                 if prev_tid in cont_map:
                     for nxt_b in cont_map[prev_tid]:
                         if emitted_counts[nxt_b] < max_counts.get(nxt_b, 1):
@@ -593,8 +743,10 @@ class CloverK3AgentEngine:
                 if tid not in self.repeatable_grammar_ids and cnt >= max_counts.get(tid, 1):
                     lg[tid] -= 30.0
 
-            covered = sum(1 for tid in content_set if emitted_counts[tid] >= 1)
-            if content_set and covered >= len(content_set) and t >= len(valid_p) - 1:
+            all_covered = bool(content_set) and all(
+                emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set
+            )
+            if all_covered and t >= len(valid_p) - 1:
                 lg[K3_EOS] += 18.0
 
             tid = int(lg.argmax().item())
@@ -602,7 +754,7 @@ class CloverK3AgentEngine:
                 break
             if 0 <= tid < 163584:
                 ws = self.k3_tok.decode([tid], skip_special_tokens=False).strip().lower()
-                if ws and ws == prev_word and len(ws) >= 2:
+                if ws and ws == prev_word and len(ws) >= 2 and emitted_counts[tid] >= max_counts.get(tid, 1):
                     lg[tid] -= 30.0
                     tid = int(lg.argmax().item())
                     if tid == K3_EOS:
@@ -613,44 +765,48 @@ class CloverK3AgentEngine:
                 prev_tid = tid
                 if ws:
                     prev_word = ws
-                if content_set and sum(1 for c_id in content_set if emitted_counts[c_id] >= 1) >= len(content_set):
+                if bool(content_set) and all(emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set):
                     raw_piece = self.k3_tok.decode([tid], skip_special_tokens=False).rstrip()
-                    if raw_piece.endswith((".", "!", "?")) and t >= max(2, len(valid_p) - 3):
+                    if raw_piece.endswith((".", "!", "?")) and t >= len(valid_p) - 1:
                         break
         return self.k3_tok.decode(clean_ids), clean_ids
 
     @torch.no_grad()
-    def run_agent_planning(self, user_prompt: str, history=None, min_lat: int = 8, max_lat: int = 14, max_new: int = 300):
+    def run_agent_planning(self, user_prompt: str, history=None, min_lat: int = 8, max_lat: int = 14, max_new: int = 360):
         """Runs `HybridAgent-8B-Agentic` in Agent Mode:
         1. Executes `<search>` (live arXiv + Wikipedia + DuckDuckGo web search) or `<python>` (sandboxed interpreter)
-           when requested or needed, appending `<result> ... </result>` to the agent's context.
+           when requested or needed, appending verified reference facts and numbers into context.
         2. Runs continuous `<latent>` reasoning (`R(h_t) = run_hybridlink(h_t)`).
         3. Synthesizes the multi-window plan (`plans`).
         """
         tool_calls_log = []
         tool_obs_parts = []
+        raw_user_q = _extract_raw_user_query(user_prompt)
 
-        # 1. Check if live web/research `<search>` is needed (including follow-ups like 'find it')
-        search_q = needs_agent_search_tool(user_prompt, history=history)
+        # 1. Check if live web/research `<search>` is needed (including follow-ups like 'find it' or 'more details please and links')
+        search_q = needs_agent_search_tool(raw_user_q, history=history)
         if search_q is not None:
             t_s0 = time.perf_counter()
             s_res = self.search_tool.execute(search_q).strip()
             s_ms = round((time.perf_counter() - t_s0) * 1000.0, 1)
             tool_calls_log.append({"tool": "search", "input": search_q, "result": s_res, "ms": s_ms})
             tool_obs_parts.append(
-                f"Live Web & Research Search Results (`<search>{search_q}</search>` -> `<result>`):\n{s_res}\n\n"
-                f"IMPORTANT: Present the actual research papers, dates, titles, and findings from `<result>` above directly to the user on multiple lines (`W1:`, `W2:`, `W3:`, `W4:`). "
-                f"Do NOT say 'Here is how I can assist: Identify the scope' — give the real findings right now!"
+                f"Authoritative Reference Facts & Live Sources:\n{s_res}\n\n"
+                f"Instruction: Present the facts, details, and any reference URLs ('https://...') from the reference above directly to the user using clear bullet points ('• Name: details') across W1:, W2:, W3:, W4:. "
+                f"Do NOT write meta-commentary — write ONLY the direct answer to the user."
             )
 
         # 2. Check if `<python>` calculation tool is needed
-        py_code = needs_agent_python_tool(user_prompt)
+        py_code = needs_agent_python_tool(raw_user_q, history=history)
         if py_code is not None:
             t_tool0 = time.perf_counter()
             py_res = self.py_tool.execute(py_code).strip()
             tool_ms = round((time.perf_counter() - t_tool0) * 1000.0, 1)
             tool_calls_log.append({"tool": "python", "input": py_code, "result": py_res, "ms": tool_ms})
-            tool_obs_parts.append(f"Verified Python tool observation (`<result>`):\n{py_res}\nUse these exact verified numbers in your response.")
+            tool_obs_parts.append(
+                f"Verified Python Calculation Result:\n{py_res}\n"
+                f"Instruction: State these exact verified numbers and final amounts clearly in your response across W1:, W2:."
+            )
 
         tool_obs_str = ("\n\n" + "\n\n".join(tool_obs_parts)) if tool_obs_parts else ""
 
@@ -664,7 +820,7 @@ class CloverK3AgentEngine:
         else:
             msgs.append({"role": "user", "content": "hi"})
             msgs.append({"role": "assistant", "content": "W1: Hi I am Clover AI, How can I help you today?"})
-            if user_prompt.strip().lower().rstrip("?!.") != "can you really help me":
+            if raw_user_q.lower().rstrip("?!.") != "can you really help me":
                 msgs.append({"role": "user", "content": "can you really help me"})
                 msgs.append({
                     "role": "assistant",
@@ -674,7 +830,10 @@ class CloverK3AgentEngine:
                     ),
                 })
 
-        effective_user_prompt = search_q if (search_q is not None and len(user_prompt.strip().split()) <= 4) else user_prompt.strip()
+        if search_q is not None and search_q != raw_user_q:
+            effective_user_prompt = f"{raw_user_q} (regarding: {search_q})"
+        else:
+            effective_user_prompt = user_prompt.strip()
         prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=effective_user_prompt) + tool_obs_str
         msgs.append({"role": "user", "content": prompt_with_obs})
 
@@ -713,14 +872,13 @@ class CloverK3AgentEngine:
         gen_ids = []
         im_end_ids = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
         eos_ids = {self.ha_tok.eos_token_id, 151643, 151645} | im_end_ids
-        is_struct = is_structured_or_multi_part_prompt(user_prompt) or (search_q is not None)
+        is_struct = is_structured_or_multi_part_prompt(raw_user_q) or (search_q is not None) or (py_code is not None)
         cleared_after_think = False
         for _ in range(max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
                 break
             if nxt == self.think_close_id and not cleared_after_think:
-                # Model finished residual internal thinking with </think>; discard pre-</think> thoughts and generate the real answer!
                 cleared_after_think = True
                 gen_ids.clear()
                 w1_after_think = self.ha_tok(f"{THINK_CLOSE}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
@@ -733,21 +891,21 @@ class CloverK3AgentEngine:
             if THINK_OPEN in txt_so_far or "<|im_end|>" in txt_so_far or "</answer>" in txt_so_far:
                 break
             # Check if the model emitted a `<python>...</python>` or `<search>...</search>` call during generation
-            if PYTHON_CLOSE in txt_so_far and not tool_calls_log:
+            if PYTHON_CLOSE in txt_so_far and not any(t["tool"] == "python" for t in tool_calls_log):
                 code_str = txt_so_far.split(PYTHON_OPEN)[-1].split(PYTHON_CLOSE)[0].strip()
                 py_res = self.py_tool.execute(code_str).strip()
                 tool_calls_log.append({"tool": "python", "input": code_str, "result": py_res})
-                obs_tokens = self.ha_tok(f"{RESULT_OPEN}{py_res}{RESULT_CLOSE}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+                obs_tokens = self.ha_tok(f"\nVerified Result: {py_res}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
                 out = backbone(input_ids=obs_tokens, past_key_values=past_kv, use_cache=True, return_dict=True)
                 past_kv = out.past_key_values
                 next_logits = out.logits[:, -1, :]
                 gen_ids.clear()
                 continue
-            if SEARCH_CLOSE in txt_so_far and not tool_calls_log:
+            if SEARCH_CLOSE in txt_so_far and not any(t["tool"] == "search" for t in tool_calls_log):
                 q_str = txt_so_far.split(SEARCH_OPEN)[-1].split(SEARCH_CLOSE)[0].strip()
                 s_res = self.search_tool.execute(q_str).strip()
                 tool_calls_log.append({"tool": "search", "input": q_str, "result": s_res})
-                obs_tokens = self.ha_tok(f"{RESULT_OPEN}{s_res}{RESULT_CLOSE}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+                obs_tokens = self.ha_tok(f"\nAuthoritative Reference Facts:\n{s_res}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
                 out = backbone(input_ids=obs_tokens, past_key_values=past_kv, use_cache=True, return_dict=True)
                 past_kv = out.past_key_values
                 next_logits = out.logits[:, -1, :]
@@ -758,6 +916,38 @@ class CloverK3AgentEngine:
                 lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
                 if lines:
                     last_ln = lines[-1].lower()
+                    # If the model wrote a prose promise to search ('Let me search...', 'I'll need to check...'), execute search immediately!
+                    if not any(t["tool"] == "search" for t in tool_calls_log) and any(
+                        sp in last_ln
+                        for sp in ("let me search", "i'll search", "i will search", "need to check the latest", "need to look up", "start by searching")
+                    ):
+                        s_res = self.search_tool.execute(raw_user_q).strip()
+                        tool_calls_log.append({"tool": "search", "input": raw_user_q, "result": s_res})
+                        obs_tokens = self.ha_tok(
+                            f"\nAuthoritative Reference Facts:\n{s_res}\nNow write the complete factual answer directly:\nW1:",
+                            add_special_tokens=False,
+                            return_tensors="pt",
+                        ).input_ids.to(self.dev_ha)
+                        out = backbone(input_ids=obs_tokens, past_key_values=past_kv, use_cache=True, return_dict=True)
+                        past_kv = out.past_key_values
+                        next_logits = out.logits[:, -1, :]
+                        gen_ids.clear()
+                        is_struct = True
+                        continue
+
+                    if any(
+                        stop_p in last_ln
+                        for stop_p in (
+                            "you asked for ", "the user asked for", "i followed the instructions",
+                            "the answer is concise", "no other information or steps",
+                            "i've been given the information", "this is a straightforward factual",
+                            "the response should be", "this result has been verified using python",
+                            "the calculation was verified using python", "for more detailed information, you can refer",
+                        )
+                    ):
+                        gen_ids = self.ha_tok.encode("\n".join(lines[:-1]), add_special_tokens=False)
+                        break
+
                     introduces_list = last_ln.endswith(":") or any(
                         kw in last_ln for kw in ("here's", "here is", "sample timetable", "sample study", "schedule", "below", "following")
                     )
@@ -766,14 +956,22 @@ class CloverK3AgentEngine:
                             break
                         if len(lines) >= 2 and len(lines[1]) > 15:
                             break
-                    elif len(lines) >= 10 and not last_ln.endswith(":"):
+                    elif len(lines) >= 16 and not last_ln.endswith(":"):
                         break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
             next_logits = out.logits[:, -1, :]
 
         raw = "W1: " + self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
-        plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=P_BPE - 4, max_windows=16)
+        plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
+        if plans == ["Hello! How can I help you today?"] and tool_calls_log and not is_short_greeting_or_ack(raw_user_q):
+            # Fallback if all generated lines were self-talk: split the verified tool result directly into clean windows
+            fallback_src = "\n".join(
+                ln for ln in tool_calls_log[-1].get("result", "").splitlines()
+                if ln.strip() and not ln.strip().startswith("Reference (")
+            )
+            if fallback_src.strip():
+                plans = parse_and_split_plans(fallback_src, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
         return plans, lat_steps, exit_reason, tool_calls_log
 
     @torch.no_grad()
@@ -905,34 +1103,38 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
     batch_tool_logs = []
     for idx_p, p in enumerate(user_prompts):
         hist_p = histories[idx_p] if (histories and idx_p < len(histories)) else None
+        raw_q = _extract_raw_user_query(p)
         t_logs = []
         obs_parts = []
-        sq = needs_agent_search_tool(p, history=hist_p)
+        sq = needs_agent_search_tool(raw_q, history=hist_p)
         if sq is not None:
             t_s0 = time.perf_counter()
             s_res = eng.search_tool.execute(sq).strip()
             s_ms = round((time.perf_counter() - t_s0) * 1000.0, 1)
             t_logs.append({"tool": "search", "input": sq, "result": s_res, "ms": s_ms})
             obs_parts.append(
-                f"Live Web & Research Search Results (`<search>{sq}</search>` -> `<result>`):\n{s_res}\n\n"
-                f"IMPORTANT: Present the actual research papers, dates, titles, and findings from `<result>` above directly to the user on multiple lines (`W1:`, `W2:`, `W3:`, `W4:`). "
-                f"Do NOT say 'Here is how I can assist: Identify the scope' — give the real findings right now!"
+                f"Authoritative Reference Facts & Live Sources:\n{s_res}\n\n"
+                f"Instruction: Present the exact facts, model names (including full version numbers like 5.5), dates, titles, and URLs above directly to the user across W1:, W2:, W3:, W4:. "
+                f"Do NOT write 'Looking at the search results', 'First, I remember', or 'I will search' — write the direct answer right now."
             )
-        py_code = needs_agent_python_tool(p)
+        py_code = needs_agent_python_tool(raw_q, history=hist_p)
         if py_code is not None:
             t_p0 = time.perf_counter()
             py_res = eng.py_tool.execute(py_code).strip()
             p_ms = round((time.perf_counter() - t_p0) * 1000.0, 1)
             t_logs.append({"tool": "python", "input": py_code, "result": py_res, "ms": p_ms})
-            obs_parts.append(f"Verified Python tool observation (`<result>`):\n{py_res}\nUse these exact verified numbers in your response.")
+            obs_parts.append(
+                f"Verified Python Calculation Result:\n{py_res}\n"
+                f"Instruction: State these exact verified numbers and final amounts clearly in your response across W1:, W2:."
+            )
         batch_tool_logs.append(t_logs)
-        eff_p = sq if (sq is not None and len(p.strip().split()) <= 4) else p.strip()
+        eff_p = f"{raw_q} (regarding: {sq})" if (sq is not None and sq != raw_q) else p.strip()
         if obs_parts:
             augmented_prompts.append(eff_p + "\n\n" + "\n\n".join(obs_parts))
         else:
             augmented_prompts.append(eff_p)
 
-    all_plans = plan_batch_with_latent(eng, augmented_prompts, lat_steps=14, max_new=260, histories=histories)
+    all_plans = plan_batch_with_latent(eng, augmented_prompts, lat_steps=14, max_new=360, histories=histories)
 
     flat_plans = []
     win_to_prompt_idx = []

@@ -23,7 +23,7 @@ from k3_fast_chat import (
 from train_k3_native_all import P_RH, P_BPE, K3_PAD, K3_EOS
 from train_combo_prefix import pack_combo_prefix
 from eval_both_tracks import jacc, generate_from_zpref
-from hybrid_agent.constants import ENTRY_ANCHOR, EXIT_ANCHOR, THINK_OPEN, THINK_CLOSE
+from hybrid_agent.constants import ENTRY_ANCHOR, EXIT_ANCHOR, THINK_OPEN, THINK_CLOSE, special_token_id
 from train_latent_bridge import encode_batch_rh
 
 
@@ -108,19 +108,25 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
 
     gen_ids = [[] for _ in range(B)]
     done = [False] * B
+    cleared_after_think = [False] * B
     is_struct = [is_structured_or_multi_part_prompt(p) for p in user_prompts]
-    eos_id = eng.ha_tok.eos_token_id
+    im_end_ids = set(eng.ha_tok.encode("<|im_end|>", add_special_tokens=False))
+    eos_ids = {eng.ha_tok.eos_token_id, 151643, 151645} | im_end_ids
+    think_close_id = special_token_id(eng.ha_tok, THINK_CLOSE)
     for _ in range(max_new):
         nxt = next_logits.argmax(dim=-1)  # [B]
         for i in range(B):
             ti = int(nxt[i].item())
             if not done[i]:
-                if ti == eos_id:
+                if ti in eos_ids:
                     done[i] = True
+                elif ti == think_close_id and not cleared_after_think[i]:
+                    cleared_after_think[i] = True
+                    gen_ids[i].clear()
                 else:
                     gen_ids[i].append(ti)
                     txt_i = eng.ha_tok.decode(gen_ids[i], skip_special_tokens=False)
-                    if THINK_CLOSE in txt_i or THINK_OPEN in txt_i or "</think>" in txt_i:
+                    if THINK_OPEN in txt_i or "<|im_end|>" in txt_i or "</answer>" in txt_i:
                         done[i] = True
                     elif txt_i.endswith("\n"):
                         lns = [ln.strip() for ln in txt_i.splitlines() if ln.strip()]
@@ -134,7 +140,7 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
                                     done[i] = True
                                 elif len(lns) >= 2 and len(lns[1]) > 15:
                                     done[i] = True
-                            elif len(lns) >= 10 and not last_ln.endswith(":"):
+                            elif len(lns) >= 16 and not last_ln.endswith(":"):
                                 done[i] = True
         if all(done):
             break
@@ -154,7 +160,7 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
     all_plans = []
     for i in range(B):
         raw = "W1: " + eng.ha_tok.decode(gen_ids[i], skip_special_tokens=False).strip()
-        plans = parse_and_split_plans(raw, user_prompts[i], eng.k3_tok, max_bpe=P_BPE - 4, max_windows=12)
+        plans = parse_and_split_plans(raw, user_prompts[i], eng.k3_tok, max_bpe=32, max_windows=24)
         all_plans.append(plans)
     return all_plans
 

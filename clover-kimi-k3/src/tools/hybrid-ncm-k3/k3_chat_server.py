@@ -40,6 +40,17 @@ from bench_batch_clubbing import plan_batch_with_latent, render_ncm_batched_mult
 
 BATCH_PAUSE_S = 1.0
 MAX_SESSION_CONTEXT_TOKENS = 262_144  # 256k Kimi K3 tokens (> 250k minimum context window per session)
+SESSIONS_STORE_PATH = "/home/usergpu/merge_lf/out/sessions_store.json"
+
+RETRIEVAL_STOPWORDS = {
+    "the", "is", "are", "was", "were", "be", "been", "to", "of", "and", "in", "on", "at", "for", "with",
+    "by", "from", "as", "an", "it", "that", "this", "these", "those", "what", "which", "who", "whom",
+    "how", "why", "when", "where", "can", "could", "would", "should", "will", "do", "does", "did", "you",
+    "your", "me", "my", "we", "our", "any", "new", "more", "some", "please", "about", "into", "over",
+    "after", "before", "between", "under", "again", "further", "then", "once", "here", "there", "all",
+    "both", "each", "few", "most", "other", "such", "no", "nor", "not", "only", "own", "same", "so",
+    "than", "too", "very", "just", "now", "tell", "give", "show", "explain", "describe",
+}
 
 
 def extract_server_attachment_text(att: dict) -> str:
@@ -486,6 +497,43 @@ function escHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function escAndLinkify(s) {
+  let escaped = escHtml(s);
+  escaped = escaped.replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)/g, (_, label, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+  escaped = escaped.replace(/(^|[\\s(])((https?:\\/\\/[^\\s)<]+))/g, (_, pre, url) => {
+    const cleanUrl = url.replace(/[.,;!?]+$/, '');
+    const trail = url.slice(cleanUrl.length);
+    return `${pre}<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${trail}`;
+  });
+  return escaped;
+}
+
+function htmlToPlainText(htmlStr) {
+  const cleaned = String(htmlStr || '')
+    .replace(/<div[^>]*class="[^"]*attach-chip[^"]*"[^>]*>[\\s\\S]*?<\\/div>/gi, '')
+    .replace(/<\\/(p|li|ul|div|h[1-6])>/gi, '\\n')
+    .replace(/<br\\s*\\/?>/gi, '\\n');
+  const tmp = document.createElement('div');
+  tmp.innerHTML = cleaned;
+  return (tmp.textContent || tmp.innerText || '').replace(/\\n{3,}/g, '\\n\\n').trim();
+}
+
+function extractPriorTurns(sid) {
+  const sObj = sessionsMap[sid];
+  if (!sObj || !Array.isArray(sObj.messages)) return [];
+  const turns = [];
+  let pendingUser = '';
+  for (const m of sObj.messages) {
+    const txt = (m.text !== undefined && m.text !== null) ? String(m.text).trim() : htmlToPlainText(m.html);
+    if (m.role === 'user') pendingUser = txt;
+    else if (m.role === 'bot' && pendingUser && txt) {
+      turns.push({ user: pendingUser, reply: txt });
+      pendingUser = '';
+    }
+  }
+  return turns;
+}
+
 function addMsg(role, html) {
   const d = document.createElement('div');
   d.className = 'msg msg--' + role;
@@ -584,14 +632,14 @@ function formatBotReplyHtml(text) {
   const formatLeadIn = (s) => {
     const m = s.match(/^([^:]{2,75}):\\s+(.+)$/);
     if (m && m[1].split(/\\s+/).length <= 12 && !/^(https?|here is|here's|note)/i.test(m[1])) {
-      return '<strong>' + escHtml(m[1]) + ':</strong> ' + escHtml(m[2]);
+      return '<strong>' + escHtml(m[1]) + ':</strong> ' + escAndLinkify(m[2]);
     }
-    return escHtml(s);
+    return escAndLinkify(s);
   };
   rawLines.forEach((line, j) => {
     const isBullet = /^[•\\-*]\\s+/.test(line);
     const cleanLine = line.replace(/^[•\\-*]\\s+/, '').trim();
-    const hasLeadIn = /^([^:]{2,75}):\\s+(.+)$/.test(cleanLine) && (j > 0 || rawLines.length > 1);
+    const hasLeadIn = /^([^:]{2,75}):\\s+(.+)$/.test(cleanLine) && (j > 0 || rawLines.length > 1) && !/^https?:/i.test(cleanLine);
     if (isBullet || hasLeadIn) {
       if (!inList) { htmlParts.push('<ul>'); inList = true; }
       htmlParts.push('<li>' + formatLeadIn(cleanLine) + '</li>');
@@ -603,10 +651,10 @@ function formatBotReplyHtml(text) {
         const sents = cleanLine.split(/(?<=[.!?])\\s+(?=[A-Z0-9])/);
         if (sents.length >= 3) {
           for (let k = 0; k < sents.length; k += 2) {
-            htmlParts.push('<p>' + escHtml(sents.slice(k, k + 2).join(' ')) + '</p>');
+            htmlParts.push('<p>' + escAndLinkify(sents.slice(k, k + 2).join(' ')) + '</p>');
           }
         } else {
-          htmlParts.push('<p>' + escHtml(cleanLine) + '</p>');
+          htmlParts.push('<p>' + escAndLinkify(cleanLine) + '</p>');
         }
       }
     }
@@ -615,12 +663,16 @@ function formatBotReplyHtml(text) {
   return htmlParts.join('');
 }
 
+let isSending = false;
 async function sendPrompt() {
+  if (isSending) return;
   const text = inputEl.value.trim();
   if (!text && !attachedImageDataUrl && !attachedFiles.length) return;
+  isSending = true;
   const activeSid = sessionId;
   const imgData = attachedImageDataUrl;
   const filesPayload = attachedFiles.slice();
+  const priorTurns = extractPriorTurns(activeSid);
   inputEl.value = '';
   clearAttachments();
   sendBtn.disabled = true;
@@ -638,12 +690,13 @@ async function sendPrompt() {
     userHtml += '<p>' + escHtml(text).replace(/\\n/g, '<br>') + '</p>';
   }
 
+  const effectivePrompt = text || (imgData ? 'Describe this image clearly.' : 'Summarize and explain the attached file.');
   const sObj = sessionsMap[activeSid];
   if (sObj) {
     if (!sObj.messages.length || sObj.title === 'New chat') {
       sObj.title = (text || (filesPayload[0] && filesPayload[0].name) || 'Image analysis').slice(0, 38);
     }
-    sObj.messages.push({ role: 'user', html: userHtml });
+    sObj.messages.push({ role: 'user', html: userHtml, text: effectivePrompt });
     renderSidebar();
     saveSessions();
   }
@@ -657,23 +710,29 @@ async function sendPrompt() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         session_id: activeSid,
-        prompt: text || (imgData ? 'Describe this image clearly.' : 'Summarize and explain the attached file.'),
+        prompt: effectivePrompt,
         image_base64: imgData,
         attachments: filesPayload,
+        history: priorTurns,
         remember: true
       })
     });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const r = await res.json();
     const reply = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
     const botHtml = formatBotReplyHtml(reply);
     if (sessionsMap[activeSid]) {
-      sessionsMap[activeSid].messages.push({ role: 'bot', html: botHtml });
+      sessionsMap[activeSid].messages.push({ role: 'bot', html: botHtml, text: reply });
       saveSessions();
     }
-    if (pending && sessionId === activeSid) pending.innerHTML = botHtml;
+    if (sessionId === activeSid) {
+      if (pending && pending.parentNode === chatEl) pending.innerHTML = botHtml;
+      else renderMessages();
+    }
   } catch (err) {
-    if (pending && sessionId === activeSid) pending.innerHTML = '<p>Unable to reach Clover AI right now. Please try again.</p>';
+    if (pending && sessionId === activeSid && pending.parentNode === chatEl) pending.innerHTML = '<p>Unable to reach Clover AI right now. Please try again.</p>';
   } finally {
+    isSending = false;
     sendBtn.disabled = false;
     inputEl.focus();
   }
@@ -750,6 +809,7 @@ class MultiGPUCloverCoordinator:
         print(f"[Clover AI] Loaded Multimodal Vision+93LayerK3+NCM worker on cuda:7 in {self.mm_worker.setup_s}s", flush=True)
 
         self.setup_s = round(time.perf_counter() - t0, 2)
+        self._load_sessions_from_disk()
         self.rr_idx = 0
         self.q_lock = threading.Lock()
         self.q_cond = threading.Condition(self.q_lock)
@@ -758,6 +818,98 @@ class MultiGPUCloverCoordinator:
 
         self.batch_thread = threading.Thread(target=self._batch_scheduler_loop, daemon=True)
         self.batch_thread.start()
+
+    def _save_sessions_to_disk_unlocked(self):
+        try:
+            os.makedirs(os.path.dirname(SESSIONS_STORE_PATH), exist_ok=True)
+            serial_meta = {}
+            for sid, m in self.session_meta.items():
+                serial_meta[sid] = {
+                    "session_id": sid,
+                    "title": m.get("title", "New chat"),
+                    "created_at": m.get("created_at", 0.0),
+                    "updated_at": m.get("updated_at", 0.0),
+                    "context_tokens": m.get("context_tokens", 0),
+                    "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                    "chunks": [
+                        {
+                            "source": c.get("source", ""),
+                            "text": c.get("text", ""),
+                            "tokens": c.get("tokens", 0),
+                            "pinned": bool(c.get("pinned", False)),
+                        }
+                        for c in m.get("chunks", [])[-120:]
+                    ],
+                }
+            data = {
+                "sessions": dict(self.sessions),
+                "session_meta": serial_meta,
+            }
+            tmp_p = SESSIONS_STORE_PATH + ".tmp"
+            with open(tmp_p, "w", encoding="utf-8") as f:
+                json.dump(data, f)
+            os.replace(tmp_p, SESSIONS_STORE_PATH)
+        except Exception:
+            pass
+
+    def _load_sessions_from_disk(self):
+        if not os.path.exists(SESSIONS_STORE_PATH):
+            return
+        try:
+            with open(SESSIONS_STORE_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            with self.sess_lock:
+                for sid, turns in (data.get("sessions") or {}).items():
+                    if isinstance(turns, list):
+                        self.sessions[sid] = turns
+                for sid, m in (data.get("session_meta") or {}).items():
+                    if isinstance(m, dict):
+                        rebuilt_chunks = []
+                        for c in m.get("chunks", []):
+                            txt = str(c.get("text", ""))
+                            w_set = {w for w in re.findall(r"[a-z0-9]{2,}", txt.lower()) if w not in RETRIEVAL_STOPWORDS}
+                            rebuilt_chunks.append({
+                                "source": str(c.get("source", "")),
+                                "text": txt,
+                                "tokens": int(c.get("tokens", 0)),
+                                "words": w_set,
+                                "pinned": bool(c.get("pinned", False)),
+                            })
+                        m["chunks"] = rebuilt_chunks
+                        self.session_meta[sid] = m
+        except Exception:
+            pass
+
+    def hydrate_session_history_if_needed(self, session_id: str, client_history: list):
+        """Synchronizes `self.sessions[session_id]` with the client's visible conversation history (`client_history`)
+        whenever `client_history` is provided and differs from the server's in-memory turn list."""
+        if not client_history or not isinstance(client_history, list):
+            return
+        valid_turns = []
+        for item in client_history:
+            if isinstance(item, dict):
+                u = str(item.get("user") or "").strip()
+                r = str(item.get("reply") or "").strip()
+                if u and r:
+                    valid_turns.append({"user": u, "reply": r, "plans": item.get("plans") or [], "attachments": item.get("attachments") or []})
+        if not valid_turns:
+            return
+        with self.sess_lock:
+            existing = self.sessions.get(session_id, [])
+            existing_pairs = [(t.get("user", ""), t.get("reply", "")) for t in existing]
+            client_pairs = [(t["user"], t["reply"]) for t in valid_turns]
+            if existing_pairs != client_pairs:
+                meta = self._ensure_session_meta(session_id, first_title=valid_turns[0]["user"])
+                # Keep pinned attachment chunks and rebuild turn chunks from valid_turns
+                pinned_chunks = [c for c in meta.get("chunks", []) if c.get("pinned", False) or str(c.get("source", "")).startswith("attachment:")]
+                meta["chunks"] = pinned_chunks
+                meta["context_tokens"] = sum(int(c.get("tokens", 0)) for c in pinned_chunks)
+                for idx_t, t in enumerate(valid_turns):
+                    turn_txt = f"User: {t['user']}\nAssistant: {t['reply']}"
+                    self._index_text_into_session(meta, source=f"turn:{idx_t + 1}", text=turn_txt, pinned=False)
+                self.sessions[session_id] = valid_turns
+                meta["updated_at"] = time.time()
+                self._save_sessions_to_disk_unlocked()
 
     def _ensure_session_meta(self, session_id: str, first_title: str = "New chat"):
         if session_id not in self.session_meta:
@@ -794,7 +946,7 @@ class MultiGPUCloverCoordinator:
             if not chunk_str:
                 continue
             n_tok = self._count_k3_tokens(chunk_str)
-            w_set = set(re.findall(r"[a-z0-9]{2,}", chunk_str.lower()))
+            w_set = {w for w in re.findall(r"[a-z0-9]{2,}", chunk_str.lower()) if w not in RETRIEVAL_STOPWORDS}
             meta["chunks"].append({
                 "source": source,
                 "text": chunk_str,
@@ -805,9 +957,14 @@ class MultiGPUCloverCoordinator:
             meta["context_tokens"] += n_tok
             added_tokens += n_tok
 
-        # Evict oldest unpinned chunks only if total session tokens exceed 262,144 (256k)
+        # Evict oldest unpinned chunks first if total session tokens exceed 262,144 (256k)
         while meta["context_tokens"] > MAX_SESSION_CONTEXT_TOKENS and len(meta["chunks"]) > 1:
-            removed = meta["chunks"].pop(0)
+            evict_idx = 0
+            for idx_c, ch_item in enumerate(meta["chunks"]):
+                if not ch_item.get("pinned", False):
+                    evict_idx = idx_c
+                    break
+            removed = meta["chunks"].pop(evict_idx)
             meta["context_tokens"] = max(0, meta["context_tokens"] - removed["tokens"])
         return added_tokens
 
@@ -828,37 +985,45 @@ class MultiGPUCloverCoordinator:
                     self._index_text_into_session(meta, source=f"attachment:{name}", text=txt, pinned=True)
                     extracted_blocks.append(txt)
             meta["updated_at"] = time.time()
+            self._save_sessions_to_disk_unlocked()
         return extracted_blocks
 
     def build_prompt_with_256k_context(self, session_id: str, user_prompt: str, current_att_blocks: list[str] | None = None) -> str:
         """Combines current turn attachments + top-k retrieved chunks from the session's 262,144-token store
-        so the model can answer questions over 250k+ tokens of documents/history while only processing the relevant slice."""
-        q_words = set(re.findall(r"[a-z0-9]{2,}", user_prompt.lower()))
+        so the model can answer questions over 250k+ tokens of documents/history while only processing the relevant slice.
+        Requires genuine content-word overlap (or explicit document reference) so unrelated questions in the same session
+        are never polluted by prior attachments."""
+        u_low = user_prompt.lower()
+        q_content_words = {w for w in re.findall(r"[a-z0-9]{2,}", u_low) if w not in RETRIEVAL_STOPWORDS}
+        explicit_doc_ref = any(
+            kw in u_low
+            for kw in ("attached", "attachment", "document", "file", "pdf", "spec", "report", "invoice", "section", "table", "aurora")
+        )
         retrieved_strs = []
         with self.sess_lock:
             meta = self.session_meta.get(session_id)
-            if meta and meta["chunks"]:
-                # Score chunks by lexical overlap + pinned attachment priority
+            if meta and meta["chunks"] and not current_att_blocks:
                 scored = []
                 total_chunks = len(meta["chunks"])
-                # Exclude the last 6 conversation turns' chunks if there are no attachments, since hist_snapshot already carries the last 6 turns
                 has_att_chunks = any(c["source"].startswith("attachment:") for c in meta["chunks"])
                 if has_att_chunks or total_chunks > 12:
                     for idx, ch in enumerate(meta["chunks"]):
-                        if not ch["source"].startswith("attachment:") and idx >= total_chunks - 6:
+                        is_att = ch["source"].startswith("attachment:")
+                        if not is_att and idx >= total_chunks - 6:
                             continue
-                        overlap = len(q_words & ch["words"])
-                        score = overlap * 3 + (4 if ch["source"].startswith("attachment:") else 0)
-                        if score > 0:
+                        overlap = len(q_content_words & ch["words"])
+                        # Only retrieve a chunk if it shares content words with the query, OR if the user explicitly refers to the attached document
+                        if overlap >= 1 or (is_att and explicit_doc_ref):
+                            score = overlap * 4 + (3 if is_att else 0)
                             scored.append((score, idx, ch["text"]))
-                    scored.sort(key=lambda x: (-x[0], -x[1]))
+                    scored.sort(key=lambda x: (-x[0], x[1]))
                     for _, _, c_txt in scored[:4]:
-                        retrieved_strs.append(c_txt[:900])
+                        retrieved_strs.append(c_txt[:2400])
 
         parts = []
         if current_att_blocks:
             for blk in current_att_blocks[:3]:
-                parts.append(blk[:1800])
+                parts.append(blk[:4000])
         elif retrieved_strs:
             parts.append("Relevant context from session documents & history:\n" + "\n---\n".join(retrieved_strs))
 
@@ -916,6 +1081,7 @@ class MultiGPUCloverCoordinator:
         with self.sess_lock:
             self.sessions.pop(session_id, None)
             self.session_meta.pop(session_id, None)
+            self._save_sessions_to_disk_unlocked()
 
     def append_session_turn(self, session_id, user_prompt, reply_txt, plans, attachments_meta=None):
         with self.sess_lock:
@@ -932,6 +1098,7 @@ class MultiGPUCloverCoordinator:
                 "plans": plans,
                 "attachments": attachments_meta or [],
             })
+            self._save_sessions_to_disk_unlocked()
             return len(self.sessions[session_id])
 
     def _acquire_text_worker(self):
@@ -1144,14 +1311,17 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
 
     def _send_json(self, obj, code=200):
         body = json.dumps(obj).encode("utf-8")
-        self.send_response(code)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Headers", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def do_OPTIONS(self):
         self._send_json({"ok": True})
@@ -1224,6 +1394,9 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             prompt = str(payload.get("prompt", "")).strip()
             image_b64 = payload.get("image_base64")
             attachments = payload.get("attachments") or []
+            client_history = payload.get("history") or payload.get("supplied_history")
+            if client_history and isinstance(client_history, list):
+                STATE.hydrate_session_history_if_needed(session_id, client_history)
             if not isinstance(attachments, list):
                 attachments = []
             # If any attachment is an image/video with data_b64 and image_b64 wasn't set separately, promote it
@@ -1238,7 +1411,10 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 else:
                     non_img_attachments.append(att)
 
-            cands = int(payload.get("cands", 8))
+            try:
+                cands = max(1, min(16, int(payload.get("cands", 8))))
+            except Exception:
+                cands = 8
             remember = bool(payload.get("remember", True))
             if not prompt and not image_b64 and not non_img_attachments:
                 self._send_json({"error": "Empty prompt"}, code=400)

@@ -263,7 +263,7 @@ class K3MultimodalChatEngine:
     def _build_window_vocab_mask(self, plan_str):
         allowed = set(self.grammar_ids)
         allowed.update(self.k3_tok.encode(plan_str))
-        for w in re.findall(r"[A-Za-z0-9.,:!?'£$€%~-]+", plan_str):
+        for w in re.findall(r"[A-Za-z0-9.,:!?'£$€%~/_+=&#()\[\]-]+", plan_str):
             for v in (w, " " + w, w.capitalize(), " " + w.capitalize(), w.lower(), " " + w.lower()):
                 allowed.update(self.k3_tok.encode(v))
         mask = torch.ones(V_K3, dtype=torch.bool, device=self.dev)
@@ -276,7 +276,7 @@ class K3MultimodalChatEngine:
         valid_p = [int(x) for x in plan_ids if 0 <= int(x) < 163584]
         for a, b in zip(valid_p[:-1], valid_p[1:]):
             bs = self.k3_tok.decode([b], skip_special_tokens=False)
-            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs in (":", ".", "'", "-")):
+            if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs[0] in (":", ".", "'", "-", "/", "_", "=", "?")):
                 cont_map.setdefault(a, set()).add(b)
 
         max_counts = collections.Counter(valid_p)
@@ -292,7 +292,8 @@ class K3MultimodalChatEngine:
         for t in range(max_len):
             lg = row_logits[t].clone()
             if prev_tid >= 0:
-                lg[prev_tid] -= 30.0
+                if emitted_counts[prev_tid] >= max_counts.get(prev_tid, 1):
+                    lg[prev_tid] -= 30.0
                 if prev_tid in cont_map:
                     for nxt_b in cont_map[prev_tid]:
                         if emitted_counts[nxt_b] < max_counts.get(nxt_b, 1):
@@ -301,8 +302,10 @@ class K3MultimodalChatEngine:
                 if tid not in self.repeatable_grammar_ids and cnt >= max_counts.get(tid, 1):
                     lg[tid] -= 30.0
 
-            covered = sum(1 for tid in content_set if emitted_counts[tid] >= 1)
-            if content_set and covered >= len(content_set) and t >= len(valid_p) - 1:
+            all_covered = bool(content_set) and all(
+                emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set
+            )
+            if all_covered and t >= len(valid_p) - 1:
                 lg[K3_EOS] += 18.0
 
             tid = int(lg.argmax().item())
@@ -310,7 +313,7 @@ class K3MultimodalChatEngine:
                 break
             if 0 <= tid < 163584:
                 ws = self.k3_tok.decode([tid], skip_special_tokens=False).strip().lower()
-                if ws and ws == prev_word and len(ws) >= 2:
+                if ws and ws == prev_word and len(ws) >= 2 and emitted_counts[tid] >= max_counts.get(tid, 1):
                     lg[tid] -= 30.0
                     tid = int(lg.argmax().item())
                     if tid == K3_EOS:
@@ -321,9 +324,9 @@ class K3MultimodalChatEngine:
                 prev_tid = tid
                 if ws:
                     prev_word = ws
-                if content_set and sum(1 for c_id in content_set if emitted_counts[c_id] >= 1) >= len(content_set):
+                if bool(content_set) and all(emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set):
                     raw_piece = self.k3_tok.decode([tid], skip_special_tokens=False).rstrip()
-                    if raw_piece.endswith((".", "!", "?")) and t >= max(2, len(valid_p) - 3):
+                    if raw_piece.endswith((".", "!", "?")) and t >= len(valid_p) - 1:
                         break
         return self.k3_tok.decode(clean_ids), clean_ids
 

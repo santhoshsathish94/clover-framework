@@ -1108,6 +1108,49 @@ src/scripts/chat-stop.sh mychat</code></pre>
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  function escAndLinkify(s) {
+    var escaped = escHtml(s);
+    // 1. Convert Markdown links [Label](https://...)
+    escaped = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, function (_, label, url) {
+      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+    });
+    // 2. Convert bare URLs https://... not already inside an attribute
+    escaped = escaped.replace(/(^|[\s(])((https?:\/\/[^\s)<]+))/g, function (_, pre, url) {
+      var cleanUrl = url.replace(/[.,;!?]+$/, '');
+      var trail = url.slice(cleanUrl.length);
+      return pre + '<a href="' + cleanUrl + '" target="_blank" rel="noopener noreferrer">' + cleanUrl + '</a>' + trail;
+    });
+    return escaped;
+  }
+
+  function htmlToPlainText(htmlStr) {
+    var cleaned = String(htmlStr || '')
+      .replace(/<div[^>]*class="[^"]*attach-chip[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+      .replace(/<\/(p|li|ul|div|h[1-6])>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n');
+    var tmp = document.createElement('div');
+    tmp.innerHTML = cleaned;
+    return (tmp.textContent || tmp.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  function extractPriorTurns(sid) {
+    var sObj = sessionsMap[sid];
+    if (!sObj || !Array.isArray(sObj.messages)) return [];
+    var turns = [];
+    var pendingUser = '';
+    for (var i = 0; i < sObj.messages.length; i++) {
+      var m = sObj.messages[i];
+      var txt = (m.text !== undefined && m.text !== null) ? String(m.text).trim() : htmlToPlainText(m.html);
+      if (m.role === 'user') {
+        pendingUser = txt;
+      } else if (m.role === 'bot' && pendingUser && txt) {
+        turns.push({ user: pendingUser, reply: txt });
+        pendingUser = '';
+      }
+    }
+    return turns;
+  }
+
   function updateAttachmentPreviewBar() {
     if (!previewBar) return;
     if (!attachedImageDataUrl && (!attachedFiles || !attachedFiles.length)) {
@@ -1313,16 +1356,16 @@ src/scripts/chat-stop.sh mychat</code></pre>
     function formatLeadIn(s) {
       var m = s.match(/^([^:]{2,75}):\s+(.+)$/);
       if (m && m[1].split(/\s+/).length <= 12 && !/^(https?|here is|here's|note)/i.test(m[1])) {
-        return '<strong>' + escHtml(m[1]) + ':</strong> ' + escHtml(m[2]);
+        return '<strong>' + escHtml(m[1]) + ':</strong> ' + escAndLinkify(m[2]);
       }
-      return escHtml(s);
+      return escAndLinkify(s);
     }
 
     for (var j = 0; j < lines.length; j++) {
       var line = lines[j];
       var isBullet = /^[•\-*]\s+/.test(line);
       var cleanLine = line.replace(/^[•\-*]\s+/, '').trim();
-      var hasLeadIn = /^([^:]{2,75}):\s+(.+)$/.test(cleanLine) && (j > 0 || lines.length > 1);
+      var hasLeadIn = /^([^:]{2,75}):\s+(.+)$/.test(cleanLine) && (j > 0 || lines.length > 1) && !/^https?:/i.test(cleanLine);
 
       if (isBullet || hasLeadIn) {
         if (!inList) {
@@ -1339,10 +1382,10 @@ src/scripts/chat-stop.sh mychat</code></pre>
           if (sents.length >= 3) {
             for (var k = 0; k < sents.length; k += 2) {
               var chunk = sents.slice(k, k + 2).join(' ');
-              htmlParts.push('<p>' + escHtml(chunk) + '</p>');
+              htmlParts.push('<p>' + escAndLinkify(chunk) + '</p>');
             }
           } else {
-            htmlParts.push('<p>' + escHtml(cleanLine) + '</p>');
+            htmlParts.push('<p>' + escAndLinkify(cleanLine) + '</p>');
           }
         }
       }
@@ -1351,12 +1394,16 @@ src/scripts/chat-stop.sh mychat</code></pre>
     return htmlParts.join('');
   }
 
+  var isSending = false;
   window.k3SendPrompt = async function () {
+    if (isSending) return;
     var text = (inputEl.value || '').trim();
     if (!text && !attachedImageDataUrl && (!attachedFiles || !attachedFiles.length)) return;
+    isSending = true;
     var activeSid = sessionId;
     var imgData = attachedImageDataUrl;
     var filesPayload = attachedFiles.slice();
+    var priorTurns = extractPriorTurns(activeSid);
     inputEl.value = '';
     window.k3ClearAttachments();
     if (sendBtn) sendBtn.disabled = true;
@@ -1374,13 +1421,14 @@ src/scripts/chat-stop.sh mychat</code></pre>
       userHtml += '<p>' + escHtml(text).replace(/\n/g, '<br>') + '</p>';
     }
 
+    var effectivePrompt = text || (imgData ? 'Describe this image clearly.' : 'Summarize and explain the attached file.');
     var sObj = sessionsMap[activeSid];
     if (sObj) {
       if (!sObj.messages || sObj.messages.length === 0 || sObj.title === 'New chat') {
         var titleCandidate = text || (filesPayload.length ? filesPayload[0].name : 'Image analysis');
         sObj.title = titleCandidate.slice(0, 38);
       }
-      sObj.messages.push({ role: 'user', html: userHtml });
+      sObj.messages.push({ role: 'user', html: userHtml, text: effectivePrompt });
       renderSessionSidebar();
       saveSessionsToStorage();
     }
@@ -1396,30 +1444,37 @@ src/scripts/chat-stop.sh mychat</code></pre>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: activeSid,
-          prompt: text || (imgData ? 'Describe this image clearly.' : 'Summarize and explain the attached file.'),
+          prompt: effectivePrompt,
           image_base64: imgData,
           attachments: filesPayload,
+          history: priorTurns,
           remember: true
         })
       });
+      if (!res.ok) {
+        throw new Error('HTTP ' + res.status);
+      }
       var r = await res.json();
       var replyTxt = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
       var botHtml = formatBotReplyHtml(replyTxt);
       if (sessionsMap[activeSid]) {
-        sessionsMap[activeSid].messages.push({ role: 'bot', html: botHtml });
+        sessionsMap[activeSid].messages.push({ role: 'bot', html: botHtml, text: replyTxt });
         saveSessionsToStorage();
       }
-      if (pending && sessionId === activeSid) {
-        pending.innerHTML = botHtml;
-      } else if (sessionId === activeSid) {
-        appendMsg('bot', botHtml);
+      if (sessionId === activeSid) {
+        if (pending && pending.parentNode === logEl) {
+          pending.innerHTML = botHtml;
+        } else {
+          renderCurrentSessionMessages();
+        }
       }
     } catch (err) {
       var errHtml = '<p>Unable to reach Clover AI right now. Please try again.</p>';
-      if (pending && sessionId === activeSid) {
+      if (pending && sessionId === activeSid && pending.parentNode === logEl) {
         pending.innerHTML = errHtml;
       }
     } finally {
+      isSending = false;
       if (sendBtn) sendBtn.disabled = false;
       if (inputEl) inputEl.focus();
     }
