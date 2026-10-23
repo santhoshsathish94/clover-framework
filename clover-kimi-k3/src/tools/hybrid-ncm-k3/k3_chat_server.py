@@ -98,8 +98,17 @@ HTML_UI = """<!DOCTYPE html>
   }
   .msg {
     max-width: 82%; padding: 0.85rem 1.1rem; border-radius: 12px;
-    line-height: 1.58; font-size: 0.96rem; word-wrap: break-word; white-space: pre-wrap;
+    line-height: 1.62; font-size: 0.96rem; word-wrap: break-word;
   }
+  .msg p { margin: 0 0 0.65rem 0; }
+  .msg p:last-child { margin-bottom: 0; }
+  .msg ul {
+    margin: 0.35rem 0 0.65rem 1.25rem; padding: 0;
+    display: flex; flex-direction: column; gap: 0.42rem;
+  }
+  .msg ul:last-child { margin-bottom: 0; }
+  .msg li { line-height: 1.56; }
+  .msg strong { font-weight: 650; color: var(--ink); }
   .msg--user {
     align-self: flex-end; background: var(--accent); color: #fff;
     border-bottom-right-radius: 4px;
@@ -109,20 +118,6 @@ HTML_UI = """<!DOCTYPE html>
     border: 1px solid var(--line); border-bottom-left-radius: 4px;
     box-shadow: 0 2px 6px rgba(20, 24, 29, 0.03);
   }
-  .agent-badge {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    font-size: 0.75rem; font-weight: 650; color: var(--accent);
-    background: var(--accent-soft); border: 1px solid var(--accent-line);
-    padding: 0.16rem 0.55rem; border-radius: 999px;
-  }
-  .agent-badge__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-  .agent-trace {
-    margin-bottom: 0.55rem; padding: 0.45rem 0.7rem;
-    background: var(--accent-soft); border: 1px solid var(--accent-line);
-    border-radius: 8px; font-size: 0.81rem; color: var(--ink-2);
-    display: flex; flex-wrap: wrap; gap: 0.4rem 0.75rem; align-items: center;
-  }
-  .agent-pill { font-weight: 650; color: var(--accent); }
   .msg img.chat-thumb {
     display: block; max-width: 240px; max-height: 180px; border-radius: 8px;
     margin-bottom: 0.5rem; border: 1px solid rgba(255,255,255,0.25);
@@ -176,7 +171,6 @@ HTML_UI = """<!DOCTYPE html>
       <use class="clover-icon__leaf" href="#clover-leaf" transform="rotate(288 50 44)"/>
     </svg>
     Clover <span>AI</span>
-    <span class="agent-badge"><span class="agent-badge__dot"></span>Multimodal &amp; Agent Mode &middot; MoonViT3d Vision + 93 K3 Trunks/Experts + Web Search + Python</span>
   </div>
   <div class="actions">
     <button type="button" class="btn" onclick="newSession()">New Session</button>
@@ -184,7 +178,7 @@ HTML_UI = """<!DOCTYPE html>
 </header>
 
 <div id="chat" aria-live="polite">
-  <div class="msg msg--bot">Clover AI <strong>Multimodal &amp; Agent Mode</strong> is active (Kimi K3 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> 7,168-d visual tokens + <code>Qwen3-VL-8B-Instruct + HybridLink</code> + all 93 Kimi K3 Trunks &amp; 92 MoE Expert Layers + NCM + live Web/arXiv/Wikipedia search + Python execution). Ask a question, search for recent research, run calculations, or attach/paste an image or video.</div>
+  <div class="msg msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>
 </div>
 
 <div class="preview-bar" id="img-preview-bar" hidden>
@@ -203,9 +197,9 @@ HTML_UI = """<!DOCTYPE html>
       <circle cx="8.5" cy="8.5" r="1.5"></circle>
       <polyline points="21 15 16 10 5 21"></polyline>
     </svg>
-    Image / Video
+    Image
   </button>
-  <textarea id="prompt-in" rows="1" placeholder="Ask a question, upload/paste an image or video, or search the web..."></textarea>
+  <textarea id="prompt-in" rows="1" placeholder="Message Clover AI..."></textarea>
   <button type="button" class="btn btn--primary" id="send-btn" onclick="sendPrompt()">Send</button>
 </footer>
 
@@ -279,33 +273,47 @@ function clearImage() {
 async function newSession() {
   sessionId = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
   clearImage();
-  chatEl.innerHTML = '<div class="msg msg--bot">Clover AI Agent Mode is active (live Web/arXiv/Wikipedia search, Python execution, 3,584 resident Kimi K3 GPU MoE experts, and NCM). Ask a question, search for recent research, run calculations, or attach an image.</div>';
+  chatEl.innerHTML = '<div class="msg msg--bot"><p>Hi I am Clover AI, How can I help you today?</p></div>';
 }
 
-function renderTrace(r) {
-  const parts = [];
-  if (r.option_a_k3_vis_tokens_7168d) {
-    parts.push('<span class="agent-pill">&#128065; MoonViT3d:</span> <span>' + r.option_a_k3_vis_tokens_7168d + ' visual tokens (7168-d)</span>');
-  }
-  if (r.tool_calls && r.tool_calls.length) {
-    for (const tc of r.tool_calls) {
-      if (tc.tool === 'search') {
-        parts.push('<span class="agent-pill">&#128269; Web/arXiv Search:</span> <span>' + escHtml(tc.input) + '</span>');
-      } else if (tc.tool === 'python') {
-        parts.push('<span class="agent-pill">&#9881; Python Tool:</span> <span>' + escHtml(tc.result) + '</span>');
+function formatBotReplyHtml(text) {
+  const rawLines = String(text || '').split(/\\n+/).map(s => s.trim()).filter(Boolean);
+  if (!rawLines.length) return '<p>Sorry, no response was generated.</p>';
+  const htmlParts = [];
+  let inList = false;
+  const closeList = () => { if (inList) { htmlParts.push('</ul>'); inList = false; } };
+  const formatLeadIn = (s) => {
+    const m = s.match(/^([^:]{2,75}):\\s+(.+)$/);
+    if (m && m[1].split(/\\s+/).length <= 12 && !/^(https?|here is|here's|note)/i.test(m[1])) {
+      return '<strong>' + escHtml(m[1]) + ':</strong> ' + escHtml(m[2]);
+    }
+    return escHtml(s);
+  };
+  rawLines.forEach((line, j) => {
+    const isBullet = /^[•\\-*]\\s+/.test(line);
+    const cleanLine = line.replace(/^[•\\-*]\\s+/, '').trim();
+    const hasLeadIn = /^([^:]{2,75}):\\s+(.+)$/.test(cleanLine) && (j > 0 || rawLines.length > 1);
+    if (isBullet || hasLeadIn) {
+      if (!inList) { htmlParts.push('<ul>'); inList = true; }
+      htmlParts.push('<li>' + formatLeadIn(cleanLine) + '</li>');
+    } else {
+      closeList();
+      if (cleanLine.endsWith(':') && cleanLine.split(/\\s+/).length <= 10 && j > 0) {
+        htmlParts.push('<p><strong>' + escHtml(cleanLine) + '</strong></p>');
+      } else {
+        const sents = cleanLine.split(/(?<=[.!?])\\s+(?=[A-Z0-9])/);
+        if (sents.length >= 3) {
+          for (let k = 0; k < sents.length; k += 2) {
+            htmlParts.push('<p>' + escHtml(sents.slice(k, k + 2).join(' ')) + '</p>');
+          }
+        } else {
+          htmlParts.push('<p>' + escHtml(cleanLine) + '</p>');
+        }
       }
     }
-  }
-  if (r.k3_experts && r.k3_experts.total_unique_experts_activated) {
-    if (r.k3_experts.trunks_executed === 93) {
-      parts.push('<span class="agent-pill">&#9889; K3 93-Layer GPU Engine:</span> <span>93 Trunks + 92 MoE Layers (' + r.k3_experts.total_unique_experts_activated + ' active experts)</span>');
-    } else {
-      const u = r.k3_experts.unique_experts_per_layer || {};
-      const lstr = Object.keys(u).map(k => k + ':' + u[k]).join(', ');
-      parts.push('<span class="agent-pill">&#9889; K3 GPU Experts:</span> <span>' + r.k3_experts.total_unique_experts_activated + ' active (' + escHtml(lstr) + ')</span>');
-    }
-  }
-  return parts.length ? '<div class="agent-trace">' + parts.join(' &middot; ') + '</div>' : '';
+  });
+  closeList();
+  return htmlParts.join('');
 }
 
 async function sendPrompt() {
@@ -321,7 +329,7 @@ async function sendPrompt() {
     userHtml += `<img class="chat-thumb" src="${imgData}" alt="Uploaded image">`;
   }
   if (text) {
-    userHtml += escHtml(text).replace(/\\n/g, '<br>');
+    userHtml += '<p>' + escHtml(text).replace(/\\n/g, '<br>') + '</p>';
   }
   addMsg('user', userHtml);
   const pending = addMsg('bot', CLOVER_LOADER_HTML);
@@ -339,7 +347,7 @@ async function sendPrompt() {
     });
     const r = await res.json();
     const reply = r.reply || r.reply_mbr8 || r.reply_1cand || 'Sorry, no response was generated.';
-    pending.innerHTML = renderTrace(r) + '<div>' + escHtml(reply).replace(/\\n/g, '<br>') + '</div>';
+    pending.innerHTML = formatBotReplyHtml(reply);
   } catch (err) {
     pending.innerHTML = 'Unable to reach Clover AI right now. Please try again.';
   } finally {

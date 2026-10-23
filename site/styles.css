@@ -707,10 +707,18 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
   display: flex; flex-direction: column; gap: 0.9rem; background: var(--soft);
 }
 .k3-msg {
-  max-width: 82%; padding: 0.82rem 1.05rem; border-radius: 12px;
-  line-height: 1.58; font-size: 0.96rem; word-wrap: break-word;
+  max-width: 82%; padding: 0.85rem 1.1rem; border-radius: 12px;
+  line-height: 1.62; font-size: 0.96rem; word-wrap: break-word;
 }
-.k3-msg p { max-width: none; margin: 0; white-space: pre-wrap; }
+.k3-msg p { max-width: none; margin: 0 0 0.65rem 0; white-space: normal; }
+.k3-msg p:last-child { margin-bottom: 0; }
+.k3-msg ul {
+  margin: 0.35rem 0 0.65rem 1.25rem; padding: 0;
+  display: flex; flex-direction: column; gap: 0.42rem;
+}
+.k3-msg ul:last-child { margin-bottom: 0; }
+.k3-msg li { line-height: 1.56; }
+.k3-msg strong { font-weight: 650; color: var(--ink); }
 .k3-msg--user {
   align-self: flex-end; background: var(--accent); color: #fff;
   border-bottom-right-radius: 4px;

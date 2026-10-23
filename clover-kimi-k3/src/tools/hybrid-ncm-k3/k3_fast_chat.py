@@ -155,9 +155,58 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
     return plans if plans else ["Hello! How can I help you today?"]
 
 
+def format_readable_response(raw_joined: str) -> str:
+    """Formats a rendered response into clean, readable paragraphs and bullet lists:
+    - Lines with 'Heading/Topic: Explanation' become bullet items ('• Heading/Topic: Explanation').
+    - Long single-block paragraphs (4+ sentences) are split into 2-sentence readable paragraphs separated by blank lines.
+    """
+    lines = [ln.strip() for ln in raw_joined.splitlines() if ln.strip()]
+    if not lines:
+        return raw_joined.strip()
+
+    formatted_blocks = []
+    for idx, ln in enumerate(lines):
+        ln_clean = re.sub(r"^[•\-*]\s*", "", ln).strip()
+        # Check if this line is a section header ending with ':' (e.g. 'Morning (6:00 AM - 8:00 AM):')
+        if ln_clean.endswith(":") and len(ln_clean.split()) <= 10 and idx > 0:
+            formatted_blocks.append(ln_clean)
+            continue
+
+        # Check if this line is a 'Title / Time-slot: Explanation' item
+        m_item = re.match(r"^([^:]{2,75}):\s+(.+)$", ln_clean)
+        if m_item and (idx > 0 or len(lines) > 1):
+            label, body = m_item.group(1).strip(), m_item.group(2).strip()
+            if len(label.split()) <= 12 and not label.lower().startswith(("http", "https", "here is", "here's", "note")):
+                formatted_blocks.append(f"• {label}: {body}")
+                continue
+
+        # Ordinary prose paragraph: if it has >= 3 sentences, split into 2-sentence paragraphs for readability
+        sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])", ln_clean) if s.strip()]
+        if len(sents) >= 3:
+            for s_i in range(0, len(sents), 2):
+                formatted_blocks.append(" ".join(sents[s_i : s_i + 2]))
+        else:
+            formatted_blocks.append(ln_clean)
+
+    # Join consecutive bullet items with '\n' and paragraphs with '\n\n'
+    out_str = ""
+    for i, blk in enumerate(formatted_blocks):
+        if i == 0:
+            out_str = blk
+        else:
+            prev_is_bullet = formatted_blocks[i - 1].startswith("• ")
+            cur_is_bullet = blk.startswith("• ")
+            if prev_is_bullet and cur_is_bullet:
+                out_str += "\n" + blk
+            else:
+                out_str += "\n\n" + blk
+    return out_str
+
+
 def join_rendered_windows(txts, plans):
     """Joins rendered window strings `txts` using `\n` whenever the corresponding entry in `plans` starts a new line
-    or begins with a schedule/block header (`Block`, `Session`, `Morning`, `Afternoon`, `Evening`, `Tip:`)."""
+    or begins with a schedule/block header (`Block`, `Session`, `Morning`, `Afternoon`, `Evening`, `Tip:`), then
+    formats into clean paragraphs and bullet lists."""
     out = []
     for i, t in enumerate(txts):
         t_clean = t.strip()
@@ -173,10 +222,10 @@ def join_rendered_windows(txts, plans):
                     t_clean.startswith(pfx)
                     for pfx in ("Block ", "Session ", "Step ", "Morning", "Afternoon", "Evening", "Night", "Tip:", "Note:")
                 )
-                or bool(re.match(r"^(?:\d{1,2}:\d{2}|\d+\.)", t_clean))
+                or bool(re.match(r"^(?:\d{1,2}:\d{2}|\d+\.|[A-Z][A-Za-z0-9\s()\-]{2,55}:\s)", t_clean))
             )
             out.append(("\n" if is_newline else " ") + t_clean)
-    return "".join(out)
+    return format_readable_response("".join(out))
 
 GRAMMAR_CONNECTOR_WORDS = [
     "the", "The", "a", "A", "an", "An", "in", "In", "on", "On", "at", "At", "to", "To", "for", "For",
