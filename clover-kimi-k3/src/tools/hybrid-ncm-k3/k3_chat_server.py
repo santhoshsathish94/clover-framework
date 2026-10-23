@@ -1566,19 +1566,54 @@ class MultiGPUCloverCoordinator:
 STATE = None
 
 
+ALLOWED_ORIGINS = {
+    "https://cloverframework.com",
+    "https://www.cloverframework.com",
+    "https://api.cloverframework.com",
+    "http://127.0.0.1:8765",
+    "http://localhost:8765",
+    "null",
+}
+ALLOWED_HOSTS = {
+    "api.cloverframework.com",
+    "cloverframework.com",
+    "www.cloverframework.com",
+    "127.0.0.1",
+    "127.0.0.1:8765",
+    "localhost",
+    "localhost:8765",
+}
+
+
 class ChatRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stdout.write("%s - - [%s] %s\n" % (self.address_string(), self.log_date_time_string(), fmt % args))
         sys.stdout.flush()
+
+    def _cors_origin(self) -> str:
+        origin = (self.headers.get("Origin") or "").strip()
+        if origin in ALLOWED_ORIGINS or origin.startswith(("http://127.0.0.1:", "http://localhost:")):
+            return origin
+        return "https://cloverframework.com"
+
+    def _is_authorized_request(self) -> bool:
+        host = (self.headers.get("Host") or "").strip().lower()
+        if host and host not in ALLOWED_HOSTS:
+            return False
+        origin = (self.headers.get("Origin") or "").strip()
+        if origin and origin not in ALLOWED_ORIGINS and not origin.startswith(("http://127.0.0.1:", "http://localhost:")):
+            return False
+        return True
 
     def _send_json(self, obj, code=200):
         body = json.dumps(obj).encode("utf-8")
         try:
             self.send_response(code)
             self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Headers", "*")
+            self.send_header("Access-Control-Allow-Origin", self._cors_origin())
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Vary", "Origin")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -1586,14 +1621,20 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             pass
 
     def do_OPTIONS(self):
+        if not self._is_authorized_request():
+            self._send_json({"error": "Forbidden"}, code=403)
+            return
         self._send_json({"ok": True})
 
     def do_GET(self):
+        if not self._is_authorized_request():
+            self._send_json({"error": "Forbidden"}, code=403)
+            return
         if self.path in ("/", "/index.html", "/ai", "/ai/", "/ai/index.html"):
             body = HTML_UI.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Origin", self._cors_origin())
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -1638,6 +1679,9 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "Not found"}, code=404)
 
     def do_POST(self):
+        if not self._is_authorized_request():
+            self._send_json({"error": "Forbidden"}, code=403)
+            return
         length = int(self.headers.get("Content-Length", "0"))
         raw = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
         try:
@@ -1836,7 +1880,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
 def main():
     global STATE
     ap = argparse.ArgumentParser()
-    ap.add_argument("--host", default="0.0.0.0")
+    ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--batch-pause", type=float, default=BATCH_PAUSE_S)
     a = ap.parse_args()

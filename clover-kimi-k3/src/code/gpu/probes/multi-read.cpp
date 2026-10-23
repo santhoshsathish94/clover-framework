@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     if (buf == MAP_FAILED) { perror("mmap"); return 1; }
     const std::string base_url = "https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3/resolve/main/";
     const std::string home = getenv("HOME") ? getenv("HOME") : ".";
-    const std::string ssh = "ssh -i " + home + "/.ssh/k3_read -o BatchMode=yes -o IdentitiesOnly=yes -c aes128-gcm@openssh.com root@37.27.114.74";
+    const std::string ssh = "ssh -i " + home + "/.ssh/k3_read -o BatchMode=yes -o IdentitiesOnly=yes -c aes128-gcm@openssh.com root@k3";
     const size_t chunks = list.size();
     std::atomic<size_t> next(0), left(chunks);
     std::vector<char> source(chunks, 'x'); std::vector<double> done_at(chunks, 0.0);

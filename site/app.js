@@ -154,6 +154,12 @@
       return;
     }
 
+    if (window.location.protocol === 'file:' && link.protocol === 'file:' && /\/$/.test(link.pathname)) {
+      e.preventDefault();
+      window.location.href = link.href.replace(/\/(#.*)?$/, '/index.html$1');
+      return;
+    }
+
     if (href.charAt(0) !== '#' || href === '#') return;
 
     var el = document.getElementById(href.slice(1));

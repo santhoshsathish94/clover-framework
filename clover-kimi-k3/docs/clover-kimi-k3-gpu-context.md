@@ -8,7 +8,7 @@ Run the layers on the GPUs with everything a layer needs held in video memory (t
 
 ## Where this runs
 
-Rented server `gpu` (141.101.132.38, user `usergpu`, passwordless sudo by the creator's choice): 8 x RTX 3090 24 GiB (23.6 GiB usable as reported by CUDA), 2 x Xeon Gold 6248R (96 threads), 376 GiB RAM, one NVMe (3.25 GB/s sequential best), driver 580.178.04, CUDA toolkit 12.6, `gcc` 13.3. Rented from 20.10.26 00:06 to 27.10.26 01:20. NVLink only between pairs 0-2, 1-3, 4-6, 5-7. All cards on CPU socket 0. Details and measurements are in `clover-kimi-k3-cpu-context.md` (entries of 2026-10-20) because they were taken before this file existed.
+Rented server `gpu` (SSH host alias `gpu`, user `usergpu`, passwordless sudo by the creator's choice): 8 x RTX 3090 24 GiB (23.6 GiB usable as reported by CUDA), 2 x Xeon Gold 6248R (96 threads), 376 GiB RAM, one NVMe (3.25 GB/s sequential best), driver 580.178.04, CUDA toolkit 12.6, `gcc` 13.3. Rented from 20.10.26 00:06 to 27.10.26 01:20. NVLink only between pairs 0-2, 1-3, 4-6, 5-7. All cards on CPU socket 0. Details and measurements are in `clover-kimi-k3-cpu-context.md` (entries of 2026-10-20) because they were taken before this file existed.
 
 ## How a GPU result is judged (first candidate, not final)
 

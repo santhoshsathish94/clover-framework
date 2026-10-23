@@ -22,9 +22,12 @@ class Checker(HTMLParser):
         self.in_nav = False
         self.nav_link = None
         self.redirect = False
+        self.standalone_app = False
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
+        if tag == "body" and "clover-app-body" in attributes.get("class", "").split():
+            self.standalone_app = True
         if tag not in VOID:
             self.stack.append((tag, self.getpos()[0]))
         identity = attributes.get("id")
@@ -102,7 +105,7 @@ def check_site(root):
         errors.extend(label + ": " + error for error in parser.errors)
         if parser.stack:
             errors.append(label + ": unclosed HTML tags")
-        if not parser.redirect and parser.nav_count != 1:
+        if not parser.redirect and not parser.standalone_app and parser.nav_count != 1:
             errors.append(label + ": expected one primary navigation")
         if parser.nav_count:
             signature = []

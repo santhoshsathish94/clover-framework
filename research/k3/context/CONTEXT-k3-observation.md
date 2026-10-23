@@ -45,7 +45,7 @@ still reports ENGINE MATCHES THE REFERENCE EXACTLY on all four gates.
 So that differences between runs mean something:
 
 ```
-machine   AX102-3, 37.27.114.74
+machine   AX102-3 (host k3)
 branch    clover/observe @ f97eaaa
 model     /root/k3model     trunk /root/k3trunk_i8 (int8)
 flags     --incremental --trunk-gb 60 --cache-gb 30

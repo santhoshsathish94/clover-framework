@@ -299,6 +299,10 @@ main section.band > .wrap > p.verse__line {
   display: flex; align-items: center; gap: 1rem;
   min-height: 3.6rem; flex-wrap: wrap;
 }
+.brand-icon {
+  display: inline-flex; align-items: center; text-decoration: none;
+  margin-right: -0.5rem;
+}
 .brand {
   display: inline-flex; align-items: center; gap: 0.5rem;
   font-weight: 680; letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
