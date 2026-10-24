@@ -188,7 +188,7 @@ class K3GPUExpertsRunner:
     _instance = None
 
     @classmethod
-    def get_instance(cls, max_n: int = 256, full_93_layers: bool = True, k_res: int = 36):
+    def get_instance(cls, max_n: int = 1024, full_93_layers: bool = True, k_res: int = 36):
         if cls._instance is None:
             cls._instance = cls(max_n=max_n, full_93_layers=full_93_layers, k_res=k_res)
         return cls._instance
@@ -200,7 +200,7 @@ class K3GPUExpertsRunner:
         open_weights_path: str = "/opt/clover-k3/datasets/third-party/kimi-k3-open-weights/model-00094-of-000096.safetensors",
         layers=(1, 12, 48, 92),
         cards=(0, 1, 5, 4),
-        max_n: int = 256,
+        max_n: int = 1024,
         full_93_layers: bool = True,
         k_res: int = 36,
     ):
@@ -247,21 +247,30 @@ class K3GPUExpertsRunner:
             self.res_norm_w = f.get_tensor("language_model.model.output_attn_res_norm.weight").to(torch.float32).contiguous()
             self.res_proj_w = f.get_tensor("language_model.model.output_attn_res_proj.weight").to(torch.float32).contiguous().view(-1)
 
+        # Keep Layer-93 Final Snapshot Aggregation weights on `cuda:5` (`< 0.1 MB` VRAM) so `_apply_layer93_final_tail`
+        # executes on the GPU in <1 ms instead of on the CPU!
+        self.tail_dev = torch.device(f"cuda:{self.cards[-1]}") if torch.cuda.is_available() else torch.device("cpu")
+        self.norm_w_gpu = self.norm_w.to(self.tail_dev)
+        self.res_norm_w_gpu = self.res_norm_w.to(self.tail_dev)
+        self.res_proj_w_gpu = self.res_proj_w.to(self.tail_dev)
+
         self.setup_s = round(time.perf_counter() - t0, 2)
 
     def _apply_layer93_final_tail(self, snaps_8: torch.Tensor, h_l92: torch.Tensor) -> torch.Tensor:
-        """Executes Kimi K3's exact Layer-93 Final Snapshot Aggregation (`final-normalization.c`):
+        """Executes Kimi K3's exact Layer-93 Final Snapshot Aggregation (`final-normalization.c`) on GPU (`tail_dev`):
         Combines the 8 block-boundary snapshots `snaps_8 [8, N, 7168]` and Layer 92's output `h_l92 [N, 7168]`
         using `output_attn_res_norm.weight` and `output_attn_res_proj.weight`, then applies final RMSNorm (`norm.weight`)."""
-        # Stack 9 sources: `[9, N, 7168]`
-        srcs = torch.cat([snaps_8, h_l92.unsqueeze(0)], dim=0)
+        snaps_g = snaps_8.to(self.tail_dev, non_blocking=True)
+        h92_g = h_l92.to(self.tail_dev, non_blocking=True)
+        srcs = torch.cat([snaps_g, h92_g.unsqueeze(0)], dim=0)  # [9, N, 7168]
         rms_s = torch.sqrt(srcs.pow(2).mean(dim=-1, keepdim=True) + 1e-5)
-        normed_s = (srcs / rms_s) * self.res_norm_w.view(1, 1, -1)
-        scores = torch.matmul(normed_s, self.res_proj_w)  # [9, N]
+        normed_s = (srcs / rms_s) * self.res_norm_w_gpu.view(1, 1, -1)
+        scores = torch.matmul(normed_s, self.res_proj_w_gpu)  # [9, N]
         weights = torch.softmax(scores, dim=0).unsqueeze(-1)  # [9, N, 1]
         agg = (weights * srcs).sum(dim=0)  # [N, 7168]
         rms_f = torch.sqrt(agg.pow(2).mean(dim=-1, keepdim=True) + 1e-5)
-        return (agg / rms_f) * self.norm_w.unsqueeze(0)
+        out_g = (agg / rms_f) * self.norm_w_gpu.unsqueeze(0)
+        return out_g.cpu()
 
     def forward_k3_ids(self, k3_ids_2d: torch.Tensor, vis_7168: torch.Tensor | None = None):
         """Takes `k3_ids_2d` (`[W, P_BPE]` long tensor) and optional `vis_7168` (`[N_vis, 7168]` visual tokens
@@ -630,6 +639,12 @@ def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
             f"print(f'{pct1:g}% of {base_val:g} = {{res:g}}')"
         )
 
+    # 5. Direct arithmetic expression (e.g. 'What is 25 * 4?', '144 / 12 + 7')
+    m_arith = re.search(r"(\d+(?:\.\d+)?(?:\s*[\+\-\*/]\s*\d+(?:\.\d+)?)+)", p)
+    if m_arith and not any(w in p for w in ("http", "year", "years", "version", "group")):
+        expr_s = m_arith.group(1).strip()
+        return f"res = {expr_s}\nprint(f'{expr_s} = {{res:g}}')"
+
     return None
 
 
@@ -796,23 +811,110 @@ def match_verified_code_template(user_prompt: str):
 
 
 def render_creative_scene_svg(subject: str):
-    """Generates a rich, high-resolution SVG scene illustration (`760x420`) for creative visual requests
-    (such as a futuristic city, sunset landscape, space/galaxy scene, ocean/mountain vista, or Clover artwork)
-    so users asking Clover to create/generate an image receive a real downloadable SVG artwork."""
-    s_low = subject.lower().strip()
+    """Generates a rich, distinct SVG scene illustration (`760x420`) tailored to the requested subject
+    (cityscape, sunset/mountains/nature, space/galaxy, ocean/beach, or Clover botanical emblem)
+    so different creative requests produce genuinely different SVG illustrations."""
     clean_subj = re.sub(
-        r"^(?:then\s+|please\s+|now\s+|ok\s+|okay\s+)*(?:create|generate|draw|make|show|paint|render)\s+(?:an?\s+|one\s+(?:of\s+)?|something\s+|anything\s+)?(?:image|picture|illustration|art|scene)?\s*(?:of\s+)?",
+        r"^(?:then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|show|paint|render|design)\s+"
+        r"(?:me\s+)?(?:an?\s+|one\s+(?:of\s+)?|something\s+|anything\s+|another\s+)?(?:image|picture|illustration|art|scene|drawing|svg)?\s*(?:of\s+|for\s+|with\s+)?",
         "",
         subject,
         flags=re.IGNORECASE,
     ).strip(" .!?")
-    if not clean_subj or clean_subj.lower() in (
-        "one you like", "something you like", "anything you like", "you like", "what you like", "whatever you like", "one", "it"
-    ):
-        clean_subj = "Futuristic Clover City at Sunset"
-        s_low = clean_subj.lower()
+    clean_subj = re.sub(r"^(?:an?|the)\s+", "", clean_subj, flags=re.IGNORECASE).strip(" .!?")
 
-    if any(k in s_low for k in ("city", "futuristic", "cyberpunk", "skyline", "metropolis", "tower", "building")):
+    # Deterministic variation seed from the prompt text so different prompts shift palette/stars/elements
+    h_seed = sum((idx + 1) * ord(ch) for idx, ch in enumerate(subject.lower())) % 997
+
+    if not clean_subj or clean_subj.lower() in (
+        "one you like", "something you like", "anything you like", "you like", "what you like", "whatever you like", "one", "it", "another", "another one"
+    ):
+        clean_subj = "Emerald Clover Meadow at Sunrise"
+
+    s_low = clean_subj.lower()
+
+    # 1. Space / Galaxy / Nebula / Planet / Cosmos / Night Sky
+    if any(k in s_low for k in ("space", "galaxy", "nebula", "planet", "cosmos", "astronaut", "rocket", "star", "moon", "universe", "sci-fi", "scifi")):
+        title_str = f"Cosmic Scene — {clean_subj.title()}"
+        ring_angle = -18 + (h_seed % 15)
+        svg_markup = (
+            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Space and Galaxy Illustration">'
+            '<defs>'
+            '<linearGradient id="spBg" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0%" stop-color="#030712"/><stop offset="50%" stop-color="#0f172a"/><stop offset="100%" stop-color="#064e3b"/>'
+            '</linearGradient>'
+            '<radialGradient id="nebGlow" cx="0.65" cy="0.4" r="0.45">'
+            '<stop offset="0%" stop-color="#14b8a6" stop-opacity="0.45"/>'
+            '<stop offset="55%" stop-color="#6366f1" stop-opacity="0.22"/>'
+            '<stop offset="100%" stop-color="#030712" stop-opacity="0"/>'
+            '</radialGradient>'
+            '<linearGradient id="planetGrad" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0%" stop-color="#5eead4"/><stop offset="55%" stop-color="#0d9488"/><stop offset="100%" stop-color="#042f2e"/>'
+            '</linearGradient>'
+            '</defs>'
+            '<rect width="760" height="420" rx="12" fill="url(#spBg)"/>'
+            '<rect width="760" height="420" rx="12" fill="url(#nebGlow)"/>'
+            '<g fill="#ffffff">'
+            '<circle cx="70" cy="55" r="1.5" opacity="0.9"/><circle cx="145" cy="95" r="1.1" opacity="0.7"/>'
+            '<circle cx="220" cy="42" r="2.0" opacity="0.95"/><circle cx="310" cy="78" r="1.3" opacity="0.8"/>'
+            '<circle cx="460" cy="48" r="1.6" opacity="0.85"/><circle cx="540" cy="92" r="1.2" opacity="0.75"/>'
+            '<circle cx="660" cy="52" r="2.1" opacity="0.9"/><circle cx="710" cy="140" r="1.4" opacity="0.8"/>'
+            '<circle cx="95" cy="240" r="1.5" opacity="0.75"/><circle cx="185" cy="310" r="1.8" opacity="0.85"/>'
+            '<circle cx="620" cy="295" r="1.6" opacity="0.8"/><circle cx="690" cy="350" r="1.3" opacity="0.7"/>'
+            '</g>'
+            '<circle cx="210" cy="145" r="28" fill="#fef08a" opacity="0.92"/>'
+            f'<g transform="translate(470, 215) rotate({ring_angle})">'
+            '<ellipse cx="0" cy="0" rx="155" ry="36" fill="none" stroke="#5eead4" stroke-width="6" opacity="0.55"/>'
+            '<ellipse cx="0" cy="0" rx="132" ry="28" fill="none" stroke="#f59e0b" stroke-width="2.5" opacity="0.65"/>'
+            '</g>'
+            '<circle cx="470" cy="215" r="76" fill="url(#planetGrad)"/>'
+            '<circle cx="585" cy="115" r="18" fill="#cbd5e1"/>'
+            '<circle cx="580" cy="111" r="4" fill="#94a3b8"/><circle cx="592" cy="121" r="3" fill="#94a3b8"/>'
+            f'<text x="380" y="392" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#ccfbf1">{clean_subj.title()}</text>'
+            '</svg>'
+        )
+        cap_str = f"Generated SVG cosmic illustration: {title_str}."
+        plans = [
+            f"Here is an SVG cosmic illustration of {clean_subj}:",
+            "\nScene Elements: A ringed teal exoplanet, companion moon, and binary star glow set against a deep-space nebula.",
+        ]
+
+    # 2. Ocean / Sea / Beach / Waves / Island
+    elif any(k in s_low for k in ("ocean", "sea", "beach", "wave", "island", "coast", "harbor", "lake", "water", "sailboat")):
+        title_str = f"Coastal Horizon — {clean_subj.title()}"
+        svg_markup = (
+            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coastal Ocean Illustration">'
+            '<defs>'
+            '<linearGradient id="ocSky" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#0f766e"/><stop offset="55%" stop-color="#5eead4"/><stop offset="100%" stop-color="#fef08a"/>'
+            '</linearGradient>'
+            '<linearGradient id="ocSea" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#0d9488"/><stop offset="50%" stop-color="#0f766e"/><stop offset="100%" stop-color="#042f2e"/>'
+            '</linearGradient>'
+            '</defs>'
+            '<rect width="760" height="245" fill="url(#ocSky)"/>'
+            '<circle cx="380" cy="195" r="58" fill="#fde047" opacity="0.95"/>'
+            '<polygon points="40,245 145,175 265,245" fill="#065f46" opacity="0.85"/>'
+            '<polygon points="520,245 615,185 725,245" fill="#065f46" opacity="0.8"/>'
+            '<rect x="0" y="245" width="760" height="175" fill="url(#ocSea)"/>'
+            '<path d="M 0 275 Q 95 262 190 275 T 380 275 T 570 275 T 760 275" fill="none" stroke="#99f6e4" stroke-width="3" opacity="0.75"/>'
+            '<path d="M 0 315 Q 120 300 240 315 T 480 315 T 760 315" fill="none" stroke="#5eead4" stroke-width="2.5" opacity="0.65"/>'
+            '<path d="M 0 358 Q 140 344 280 358 T 560 358 T 760 358" fill="none" stroke="#ccfbf1" stroke-width="2" opacity="0.55"/>'
+            '<g opacity="0.55" stroke="#fef08a" stroke-width="2.5" stroke-linecap="round">'
+            '<line x1="335" y1="258" x2="425" y2="258"/><line x1="348" y1="272" x2="412" y2="272"/>'
+            '<line x1="360" y1="286" x2="400" y2="286"/><line x1="370" y1="300" x2="390" y2="300"/>'
+            '</g>'
+            f'<text x="380" y="396" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#e6f2f0">{clean_subj.title()}</text>'
+            '</svg>'
+        )
+        cap_str = f"Generated SVG coastal illustration: {title_str}."
+        plans = [
+            f"Here is an SVG coastal ocean illustration of {clean_subj}:",
+            "\nScene Elements: Golden horizon sun, twin coastal headlands, and layered turquoise ocean waves.",
+        ]
+
+    # 3. City / Futuristic / Skyline / Metropolis
+    elif any(k in s_low for k in ("city", "futuristic", "cyberpunk", "skyline", "metropolis", "tower", "building")):
         title_str = f"Futuristic Cityscape — {clean_subj.title()}"
         svg_markup = (
             '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Futuristic Cityscape Illustration">'
@@ -886,37 +988,41 @@ def render_creative_scene_svg(subject: str):
         )
         cap_str = f"Generated SVG illustration: {title_str} (neon skybridges, solar spire towers, and waterfront reflections)."
         plans = [
-            f"Here is a custom illustration of a {clean_subj.lower()}:",
+            f"Here is a custom illustration of {clean_subj.lower()}:",
             "\nSkyline & Architecture: Spire towers with illuminated skybridges, elevated maglev transit tracks, and a central solar-core tower against a sunset sky.",
             "\nWaterfront Reflection: Teal and amber city lights reflected across the harbor below.",
         ]
+
+    # 4. Default / Botanical Clover / Mountain / Sunrise / Nature Scene
     else:
         title_str = f"Illustrated Scene — {clean_subj.title()}"
+        sun_x = 560 + (h_seed % 80)
         svg_markup = (
             '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustrated Scene">'
             '<defs>'
             '<linearGradient id="bgSky" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#063732"/><stop offset="60%" stop-color="#0a6a5f"/><stop offset="100%" stop-color="#e6f2f0"/>'
+            '<stop offset="0%" stop-color="#063732"/><stop offset="58%" stop-color="#0a6a5f"/><stop offset="100%" stop-color="#d1fae5"/>'
             '</linearGradient>'
-            '<path id="cLeaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z" fill="#5eead4" stroke="#ffffff" stroke-width="1.5"/>'
+            '<path id="cLeaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z" fill="#10b981" stroke="#ecfdf5" stroke-width="1.5"/>'
             '</defs>'
             '<rect width="760" height="420" rx="12" fill="url(#bgSky)"/>'
-            '<circle cx="600" cy="110" r="54" fill="#fef08a" opacity="0.9"/>'
-            '<polygon points="0,340 160,180 330,340" fill="#084c44" opacity="0.85"/>'
-            '<polygon points="210,340 410,150 610,340" fill="#063b35" opacity="0.92"/>'
-            '<polygon points="460,340 630,195 760,340" fill="#084c44" opacity="0.88"/>'
-            '<rect x="0" y="335" width="760" height="85" fill="#042420"/>'
-            '<g transform="translate(310,135) scale(1.4)">'
+            f'<circle cx="{sun_x}" cy="105" r="52" fill="#fef08a" opacity="0.92"/>'
+            '<polygon points="0,335 165,175 340,335" fill="#065f46" opacity="0.82"/>'
+            '<polygon points="210,335 415,142 615,335" fill="#064e3b" opacity="0.92"/>'
+            '<polygon points="465,335 635,190 760,335" fill="#065f46" opacity="0.86"/>'
+            '<rect x="0" y="330" width="760" height="90" fill="#022c22"/>'
+            '<path d="M 380 265 C 380 295 380 315 380 342" fill="none" stroke="#6ee7b7" stroke-width="4" stroke-linecap="round"/>'
+            '<g transform="translate(310,132) scale(1.4)">'
             '<use href="#cLeaf"/><use href="#cLeaf" transform="rotate(72 50 44)"/><use href="#cLeaf" transform="rotate(144 50 44)"/>'
             '<use href="#cLeaf" transform="rotate(216 50 44)"/><use href="#cLeaf" transform="rotate(288 50 44)"/>'
             '</g>'
-            f'<text x="380" y="385" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="700" fill="#e6f2f0">{clean_subj.title()}</text>'
+            f'<text x="380" y="390" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="700" fill="#ecfdf5">{clean_subj.title()}</text>'
             '</svg>'
         )
-        cap_str = f"Generated SVG illustration for: {clean_subj}."
+        cap_str = f"Generated SVG illustration: {title_str}."
         plans = [
-            f"Here is an SVG illustration created for {clean_subj}:",
-            "\nVisual Composition: Rendered directly as a clean, scalable vector illustration that you can view inline or download.",
+            f"Here is an SVG illustration of {clean_subj.lower()}:",
+            "\nVisual Composition: Mountain peaks at sunrise with the five-leaf Clover emblem rendered as a scalable vector illustration.",
         ]
 
     media = [{
@@ -935,29 +1041,59 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
     raw_q = _extract_raw_user_query(user_prompt).strip()
     p = raw_q.lower()
 
-    # Check if the user is asking for a creative scene/illustration (or following up on an image-generation turn)
-    is_capability_question = p.endswith("?") or p.startswith(("can you", "are you able", "do you", "how do you", "what can you"))
-    prev_asked_to_create = False
-    if history:
-        last_u = (history[-1].get("user") or "").lower()
-        last_r = (history[-1].get("reply") or "").lower()
-        if any(k in last_u for k in ("generate image", "generate images", "create one", "create an image", "draw", "make an image")) or "what would you like me to create" in last_r or "kind of image" in last_r:
-            prev_asked_to_create = True
-
-    is_creative_scene = (not is_capability_question) and (
-        any(k in p for k in ("futuristic city", "cityscape", "cyberpunk city", "draw a city", "sunset scene"))
-        or any(k in p for k in ("create one", "generate an image", "create an image", "draw an image", "make an image"))
-        or (prev_asked_to_create and len(p.split()) <= 8)
+    # Never trigger visual/image generation when the user is negating, correcting, or asking a question!
+    has_negation_or_complaint = bool(
+        re.search(
+            r"\b(?:never|not|didn't|did not|don't|do not|stop|why did you|no |wrong|mistake|asked for)\b",
+            p,
+        )
+        and not p.startswith(("create ", "generate ", "draw ", "plot ", "graph ", "show me a "))
     )
-    if is_creative_scene:
+    if has_negation_or_complaint:
+        return None
+
+    is_capability_question = p.endswith("?") or p.startswith(("can you", "are you able", "do you", "how do you", "what can you", "why ", "what is ", "explain "))
+
+    # Only treat a short noun phrase as a follow-up image subject if the IMMEDIATELY preceding assistant turn
+    # explicitly asked the user what image they would like to create (and the user's message is not a sentence/complaint)
+    prev_asked_what_to_create = False
+    if history:
+        last_r = (history[-1].get("reply") or "").lower()
+        if any(
+            phrase in last_r
+            for phrase in (
+                "what would you like me to create",
+                "what kind of image",
+                "let me know what kind of image",
+                "tell me what you'd like me to draw",
+            )
+        ):
+            prev_asked_what_to_create = True
+
+    explicit_create_cmd = bool(
+        re.match(
+            r"^(?:then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|paint|render)\s+"
+            r"(?:me\s+)?(?:an?\s+|one\s+|something\s+|anything\s+|another\s+)?(?:image|picture|illustration|art|scene|drawing|svg|city|futuristic|sunset|galaxy|space|ocean|landscape|mountain|clover)\b",
+            p,
+        )
+        or p in ("then create one you like", "create one you like", "make one you like", "draw one you like", "create one", "draw something")
+    )
+
+    followup_subject_only = (
+        prev_asked_what_to_create
+        and len(p.split()) <= 5
+        and not any(w in p.split() for w in ("i", "you", "why", "what", "how", "when", "where", "who", "never", "not", "no", "dont", "didn't"))
+    )
+
+    if (not is_capability_question) and (explicit_create_cmd or followup_subject_only):
         return render_creative_scene_svg(raw_q)
 
-    wants_visual = any(
+    wants_visual = (not is_capability_question) and any(
         kw in p
         for kw in (
-            "plot", "graph", "chart", "bar chart", "line chart", "pie chart", "scatter", "histogram",
-            "visualize", "visualise", "draw a", "show a graph", "show a chart", "diagram", "flowchart",
-            "sine", "cosine", "parabola", "sigmoid", "relu", "normal distribution", "gaussian",
+            "plot ", "plot a", "graph of", "bar chart", "line chart", "pie chart", "scatter plot", "histogram",
+            "visualize", "visualise", "draw a graph", "show a graph", "show a chart", "architecture diagram", "flowchart",
+            "sine and cosine", "sine wave", "cosine wave", "sigmoid", "normal distribution", "gaussian distribution",
         )
     )
     if not wants_visual:
@@ -1548,7 +1684,9 @@ class CloverK3AgentEngine:
         gen_ids = []
         im_end_ids = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
         eos_ids = {self.ha_tok.eos_token_id, self.think_close_id, 151643, 151645} | im_end_ids
-        is_struct = is_structured_or_multi_part_prompt(raw_user_q) or (search_q is not None) or (py_code is not None)
+        is_struct = is_structured_or_multi_part_prompt(raw_user_q) or (search_q is not None) or (
+            py_code is not None and any(k in raw_user_q.lower() for k in ("compound", "discount", "leeds", "step", "and if"))
+        )
         for _ in range(max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:

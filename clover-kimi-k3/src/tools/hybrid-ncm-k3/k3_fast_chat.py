@@ -60,7 +60,9 @@ def is_short_greeting_or_ack(user_prompt: str) -> bool:
 
 def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
     p = user_prompt.lower().strip()
-    # Short single-fact lookup questions ('what is the capital of...', 'what is our project code?') are NOT multi-part
+    # Short single-fact lookup or simple arithmetic questions ('what is the capital of...', 'what is 25 * 4?') are NOT multi-part
+    if len(p.split()) <= 9 and re.search(r"\b\d+\s*[\+\-\*/]\s*\d+\b", p) and "step" not in p:
+        return False
     if len(p.split()) <= 9 and p.startswith(("what is the ", "what is our ", "what is my ", "who is the ", "when is the ", "where is the ")) and not any(
         w in p for w in (
             "and", "difference", "compare", "trends", "steps", "how",
@@ -271,6 +273,10 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             "this is a simple, friendly response", "this response is concise", "this response is direct",
             "this response is polite", "i'm maintaining a polite", "your message is straightforward",
             "it's also polite and helpful", "it also provides a simple example",
+            "this is a simple multiplication", "this is a simple addition", "this is a simple subtraction",
+            "this is a simple division", "this is a simple calculation", "i can verify this calculation",
+            "alternatively, i could use a calculator", "these details are directly mentioned in the",
+            "this calculation was verified using python", "this should give a clear overview",
             "since the question is", "since your question is", "since this is a",
             "so my response will", "my response will cover", "i'll start by explaining",
             "i will start by explaining", "then maybe touch on", "what images are (", "what videos are (",

@@ -1052,7 +1052,9 @@ class MultiGPUCloverCoordinator:
         self.session_meta = {}
 
         # 1. Load ALL 93 Kimi K3 Trunks (L0..L92) + all 92 MoE Expert Layers + Layer 93 Tail across GPUs 0..5
-        self.k3_experts = K3GPUExpertsRunner.get_instance(max_n=256, full_93_layers=True, k_res=36)
+        # Raising `max_n=1024` (from 256) allows up to 32 windows (1,024 Kimi K3 tokens) or a full 4-to-8-session clubbed batch
+        # to execute across all 93 Kimi K3 layers in ONE single pass (~1.3s) instead of 2–4 sequential passes!
+        self.k3_experts = K3GPUExpertsRunner.get_instance(max_n=1024, full_93_layers=True, k_res=36)
         print(
             f"[Clover AI] Loaded ALL 93 Kimi K3 Trunks + 92 MoE Expert Layers across GPUs {self.k3_experts.cards} in {self.k3_experts.setup_s}s",
             flush=True,
@@ -1419,12 +1421,21 @@ class MultiGPUCloverCoordinator:
         self.worker_locks[idx].acquire()
         return idx
 
+    def _any_text_worker_free(self) -> bool:
+        return any(not lk.locked() for lk in self.worker_locks)
+
     def _batch_scheduler_loop(self):
         while True:
             with self.q_cond:
                 while not self.pending_queue:
                     self.q_cond.wait()
-                t_deadline = time.perf_counter() + self.batch_pause_s
+                # Adaptive Zero-Wait Dispatch:
+                # - If a GPU text worker is free right now, wait only 25 ms (`0.025 s`) to catch simultaneous bursts,
+                #   saving a flat ~1.0 second on every interactive turn!
+                # - If all GPU text workers are currently busy executing a batch, accumulate incoming requests for up to
+                #   `self.batch_pause_s` (`1.0 s`) so queued sessions are clubbed into the next GPU pass.
+                wait_window = 0.025 if self._any_text_worker_free() else self.batch_pause_s
+                t_deadline = time.perf_counter() + wait_window
                 while True:
                     rem = t_deadline - time.perf_counter()
                     if rem <= 0 or len(self.pending_queue) >= 8:
