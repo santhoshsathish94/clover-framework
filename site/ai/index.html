@@ -26,6 +26,7 @@
 </svg>
 
 <main id="main" class="clover-app" tabindex="-1">
+  <div class="clover-sidebar-backdrop" id="clover-sidebar-backdrop" onclick="k3CloseMobileSidebar()"></div>
   <aside class="clover-sidebar" id="clover-sidebar" aria-label="Chat sessions">
     <div class="clover-sidebar__top">
       <button type="button" class="clover-new-chat-btn" id="k3-new-sess-btn" onclick="k3ResetChat()" title="Start a new session">
@@ -64,9 +65,6 @@
       <div class="clover-stream__inner" id="k3-chat-log" aria-live="polite">
         <div class="k3-msg k3-msg--bot">
           <p>Hi I am Clover, How can I help you today?</p>
-          <div class="k3-msg-actions">
-            <button type="button" class="k3-action-btn" onclick="k3SpeakReply(this)" title="Read aloud">🔊 Listen</button>
-          </div>
         </div>
       </div>
     </div>
@@ -96,7 +94,19 @@
               <line x1="8" y1="23" x2="16" y2="23"></line>
             </svg>
           </button>
-          <button type="button" class="clover-send-btn" id="k3-send-btn" onclick="k3SendPrompt()">Send</button>
+          <button type="button" class="clover-send-btn" id="k3-send-btn" onclick="k3SendPrompt()" aria-label="Send">
+            <svg class="clover-send-icon" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+              <path class="clover-send-icon__stem" d="M50 48C50 68 50 80 50 95"/>
+              <g class="clover-send-icon__wheel">
+                <use class="clover-send-icon__leaf" href="#clover-leaf"/>
+                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(72 50 44)"/>
+                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(144 50 44)"/>
+                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(216 50 44)"/>
+                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(288 50 44)"/>
+              </g>
+            </svg>
+            <span>Send</span>
+          </button>
         </div>
       </div>
     </div>
@@ -118,6 +128,7 @@
   var sessionListEl = document.getElementById('k3-session-list');
   var voiceBtn = document.getElementById('k3-voice-btn');
   var sidebarEl = document.getElementById('clover-sidebar');
+  var backdropEl = document.getElementById('clover-sidebar-backdrop');
 
   var STORAGE_KEY = 'clover_k3_sessions_v2';
   var sessionsMap = {};
@@ -126,32 +137,64 @@
   var attachedImageDataUrl = null;
   var attachedFiles = [];
 
-  var GREETING_HTML =
-    '<div class="k3-msg k3-msg--bot">' +
-      '<p>Hi I am Clover, How can I help you today?</p>' +
-      '<div class="k3-msg-actions">' +
-        '<button type="button" class="k3-action-btn" onclick="k3SpeakReply(this)" title="Read aloud">🔊 Listen</button>' +
-      '</div>' +
-    '</div>';
+  var GREETING_HTML = '<div class="k3-msg k3-msg--bot"><p>Hi I am Clover, How can I help you today?</p></div>';
 
   var CLOVER_LOADER_HTML =
-    '<div class="k3-clover-loader" role="status" aria-label="Thinking">' +
-      '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
-        '<path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>' +
-        '<g class="k3-clover-loader__wheel">' +
-          '<use class="clover__leaf is-filled" href="#clover-leaf"/>' +
-          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>' +
-          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>' +
-          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>' +
-          '<use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>' +
-        '</g>' +
-      '</svg>' +
-      '<span>Thinking&hellip;</span>' +
+    '<div class="clover-dots-loader" role="status" aria-label="Loading">' +
+      '<span>.</span><span>.</span><span>.</span><span>.</span>' +
     '</div>';
 
-  window.k3ToggleSidebar = function () {
-    if (sidebarEl) sidebarEl.classList.toggle('is-collapsed');
+  var BELOW_ACTIONS_HTML =
+    '<div class="k3-below-actions">' +
+      '<button type="button" class="k3-icon-action" onclick="k3RegenerateLast(this)" title="Regenerate" aria-label="Regenerate">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<polyline points="23 4 23 10 17 10"></polyline>' +
+          '<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>' +
+        '</svg>' +
+      '</button>' +
+      '<button type="button" class="k3-icon-action" onclick="k3CopyReply(this)" title="Copy" aria-label="Copy">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+          '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+        '</svg>' +
+      '</button>' +
+      '<button type="button" class="k3-icon-action" onclick="this.classList.toggle(\'is-active\')" title="Good response" aria-label="Good response">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>' +
+        '</svg>' +
+      '</button>' +
+      '<button type="button" class="k3-icon-action" onclick="this.classList.toggle(\'is-active\')" title="Bad response" aria-label="Bad response">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>' +
+        '</svg>' +
+      '</button>' +
+    '</div>';
+
+  function syncSidebarBackdrop() {
+    if (!sidebarEl || !backdropEl) return;
+    var isMobile = window.innerWidth <= 760;
+    var isOpen = !sidebarEl.classList.contains('is-collapsed');
+    backdropEl.classList.toggle('is-open', isMobile && isOpen);
+  }
+
+  window.k3CloseMobileSidebar = function () {
+    if (sidebarEl && window.innerWidth <= 760) {
+      sidebarEl.classList.add('is-collapsed');
+      syncSidebarBackdrop();
+    }
   };
+
+  window.k3ToggleSidebar = function () {
+    if (sidebarEl) {
+      sidebarEl.classList.toggle('is-collapsed');
+      syncSidebarBackdrop();
+    }
+  };
+
+  if (window.innerWidth <= 760 && sidebarEl) {
+    sidebarEl.classList.add('is-collapsed');
+  }
+  window.addEventListener('resize', syncSidebarBackdrop);
 
   function makeSessionId() {
     return 'sess_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
@@ -239,6 +282,10 @@
     if (streamScroller) streamScroller.scrollTop = streamScroller.scrollHeight;
   }
 
+  function stripLegacyActions(htmlStr) {
+    return String(htmlStr || '').replace(/<div class="k3-msg-actions">[\s\S]*?<\/div>/gi, '');
+  }
+
   function renderCurrentSessionMessages() {
     if (!logEl) return;
     logEl.innerHTML = GREETING_HTML;
@@ -246,7 +293,7 @@
     if (!sObj || !Array.isArray(sObj.messages)) return;
     for (var i = 0; i < sObj.messages.length; i++) {
       var m = sObj.messages[i];
-      appendMsg(m.role, m.html);
+      appendMsg(m.role, stripLegacyActions(m.html), false);
     }
   }
 
@@ -257,6 +304,7 @@
     renderSessionSidebar();
     renderCurrentSessionMessages();
     saveSessionsToStorage();
+    window.k3CloseMobileSidebar();
   };
 
   window.k3DeleteSession = function (sid) {
@@ -290,6 +338,7 @@
       window.k3ClearAttachments();
       renderCurrentSessionMessages();
       renderSessionSidebar();
+      window.k3CloseMobileSidebar();
       return;
     }
     var newId = makeSessionId();
@@ -300,6 +349,7 @@
     renderSessionSidebar();
     renderCurrentSessionMessages();
     saveSessionsToStorage();
+    window.k3CloseMobileSidebar();
   };
 
   async function probeBackend() {
@@ -321,7 +371,21 @@
     }
   }
 
-  function appendMsg(role, html) {
+  function appendMsg(role, html, isPending) {
+    if (role === 'bot') {
+      var wrap = document.createElement('div');
+      wrap.className = 'k3-bot-turn';
+      var bubble = document.createElement('div');
+      bubble.className = 'k3-msg k3-msg--bot';
+      bubble.innerHTML = html;
+      wrap.appendChild(bubble);
+      if (!isPending) {
+        wrap.insertAdjacentHTML('beforeend', BELOW_ACTIONS_HTML);
+      }
+      logEl.appendChild(wrap);
+      scrollToBottom();
+      return bubble;
+    }
     var d = document.createElement('div');
     d.className = 'k3-msg k3-msg--' + role;
     d.innerHTML = html;
@@ -678,7 +742,8 @@
   };
 
   window.k3CopyReply = function (btn) {
-    var msgEl = btn.closest ? btn.closest('.k3-msg') : btn.parentNode.parentNode;
+    var turnEl = btn && btn.closest ? btn.closest('.k3-bot-turn') : null;
+    var msgEl = turnEl ? turnEl.querySelector('.k3-msg') : (btn && btn.closest ? btn.closest('.k3-msg') : null);
     if (!msgEl) return;
     var clone = msgEl.cloneNode(true);
     var acts = clone.querySelectorAll('.k3-msg-actions, .k3-copy-code-btn, svg');
@@ -686,10 +751,33 @@
     var txt = (clone.textContent || '').trim();
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(txt).then(function () {
-        btn.textContent = '✓ Copied';
-        setTimeout(function () { btn.textContent = '📋 Copy'; }, 1400);
+        btn.classList.add('is-active');
+        setTimeout(function () { btn.classList.remove('is-active'); }, 1200);
       });
     }
+  };
+
+  window.k3RegenerateLast = function () {
+    if (isSending) return;
+    var sObj = sessionsMap[sessionId];
+    if (!sObj || !Array.isArray(sObj.messages) || !sObj.messages.length) return;
+    var lastUserTxt = '';
+    for (var i = sObj.messages.length - 1; i >= 0; i--) {
+      if (sObj.messages[i].role === 'user') {
+        lastUserTxt = sObj.messages[i].text || htmlToPlainText(sObj.messages[i].html);
+        break;
+      }
+    }
+    if (!lastUserTxt) return;
+    if (sObj.messages[sObj.messages.length - 1].role === 'bot') {
+      sObj.messages.pop();
+    }
+    if (sObj.messages.length && sObj.messages[sObj.messages.length - 1].role === 'user') {
+      sObj.messages.pop();
+    }
+    renderCurrentSessionMessages();
+    inputEl.value = lastUserTxt;
+    window.k3SendPrompt();
   };
 
   function renderMediaItemsHtml(mediaList) {
@@ -839,12 +927,6 @@
         htmlParts.push(mediaHtml);
       }
     }
-    htmlParts.push(
-      '<div class="k3-msg-actions">' +
-        '<button type="button" class="k3-action-btn" onclick="k3SpeakReply(this)" title="Read aloud">🔊 Listen</button>' +
-        '<button type="button" class="k3-action-btn" onclick="k3CopyReply(this)" title="Copy response">📋 Copy</button>' +
-      '</div>'
-    );
     return htmlParts.join('');
   }
 
@@ -888,9 +970,9 @@
     }
 
     if (sessionId === activeSid) {
-      appendMsg('user', userHtml);
+      appendMsg('user', userHtml, false);
     }
-    var pending = (sessionId === activeSid) ? appendMsg('bot', CLOVER_LOADER_HTML) : null;
+    var pending = (sessionId === activeSid) ? appendMsg('bot', CLOVER_LOADER_HTML, true) : null;
 
     try {
       var res = await fetch(activeBase + '/api/chat', {
@@ -916,13 +998,13 @@
         saveSessionsToStorage();
       }
       if (sessionId === activeSid) {
-        if (pending && pending.parentNode === logEl) {
+        if (pending && pending.parentNode && pending.parentNode.parentNode === logEl) {
           pending.innerHTML = botHtml;
+          pending.parentNode.insertAdjacentHTML('beforeend', BELOW_ACTIONS_HTML);
           scrollToBottom();
           if (lastInputWasVoice) {
             lastInputWasVoice = false;
-            var listenBtn = pending.querySelector('.k3-action-btn');
-            if (listenBtn) window.k3SpeakReply(listenBtn);
+            window.k3SpeakReply(pending);
           }
         } else {
           renderCurrentSessionMessages();
@@ -930,7 +1012,7 @@
       }
     } catch (err) {
       var errHtml = '<p>Unable to reach Clover right now. Please try again.</p>';
-      if (pending && sessionId === activeSid && pending.parentNode === logEl) {
+      if (pending && sessionId === activeSid && pending.parentNode && pending.parentNode.parentNode === logEl) {
         pending.innerHTML = errHtml;
       }
     } finally {

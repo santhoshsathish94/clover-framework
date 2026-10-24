@@ -915,19 +915,67 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
 .stat-card__label { font-size: 0.88rem; font-weight: 650; color: var(--ink); margin-bottom: 0.2rem; }
 .stat-card__note { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
 
+.k3-bot-turn {
+  align-self: flex-start; display: flex; flex-direction: column; align-items: flex-start;
+  max-width: 82%; width: auto;
+}
+.k3-bot-turn > .k3-msg {
+  max-width: 100%;
+}
+.k3-below-actions {
+  margin-top: 0.28rem; padding-left: 0.2rem;
+  display: flex; align-items: center; gap: 0.2rem; color: var(--muted);
+}
+.k3-icon-action {
+  width: 28px; height: 28px; border-radius: 6px; border: 0;
+  background: transparent; color: var(--muted); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.k3-icon-action:hover {
+  color: var(--ink); background: var(--soft-2);
+}
+.k3-icon-action.is-active {
+  color: var(--accent);
+}
+.k3-icon-action svg {
+  width: 15px; height: 15px; display: block;
+}
+@keyframes clover-dot-slow {
+  0%, 20% { opacity: 0.22; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-1.5px); }
+  80%, 100% { opacity: 0.22; transform: translateY(0); }
+}
+.clover-dots-loader {
+  display: inline-flex; align-items: center; gap: 0.18rem;
+  font-size: 1.35rem; font-weight: 700; line-height: 1; color: var(--ink-2);
+  padding: 0.1rem 0.25rem; letter-spacing: 0.08em;
+}
+.clover-dots-loader span {
+  display: inline-block;
+  animation: clover-dot-slow 3.6s ease-in-out infinite;
+}
+.clover-dots-loader span:nth-child(2) { animation-delay: 0.6s; }
+.clover-dots-loader span:nth-child(3) { animation-delay: 1.2s; }
+.clover-dots-loader span:nth-child(4) { animation-delay: 1.8s; }
+
 /* Dedicated Full-Page Clover Interface (cloverframework.com/ai/) */
 body.clover-app-body {
-  height: 100vh; max-height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: var(--bg);
+  height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh;
+  overflow: hidden; display: flex; flex-direction: column; background: var(--bg);
 }
 body.clover-app-body .site-head {
   flex: 0 0 auto;
 }
 .clover-app {
-  flex: 1; min-height: 0; display: flex; width: 100%; overflow: hidden; background: var(--bg);
+  flex: 1; min-height: 0; display: flex; width: 100%; overflow: hidden; background: var(--bg); position: relative;
+}
+.clover-sidebar-backdrop {
+  display: none;
 }
 .clover-sidebar {
   width: 268px; flex: 0 0 268px; background: var(--soft); border-right: 1px solid var(--line);
-  display: flex; flex-direction: column; min-height: 0; transition: margin-left 0.2s ease;
+  display: flex; flex-direction: column; min-height: 0; transition: margin-left 0.22s ease, transform 0.22s ease;
 }
 .clover-sidebar.is-collapsed {
   margin-left: -268px;
@@ -1019,7 +1067,7 @@ body.clover-app-body .site-head {
   width: min(820px, 100%); display: flex; flex-direction: column; gap: 1.15rem;
 }
 .clover-composer-wrap {
-  flex: 0 0 auto; padding: 0.5rem 1.25rem 1.1rem; background: var(--bg);
+  flex: 0 0 auto; padding: 0.5rem 1.25rem calc(0.9rem + env(safe-area-inset-bottom, 0px)); background: var(--bg);
   display: flex; flex-direction: column; align-items: center;
 }
 .clover-composer-card {
@@ -1034,8 +1082,8 @@ body.clover-app-body .site-head {
   display: flex; align-items: flex-end; gap: 0.5rem;
 }
 .clover-composer-row textarea {
-  flex: 1; background: transparent; color: var(--ink); border: 0; padding: 0.45rem 0.35rem;
-  font: inherit; font-size: 0.97rem; resize: none; min-height: 38px; max-height: 150px; line-height: 1.48;
+  flex: 1; min-width: 0; background: transparent; color: var(--ink); border: 0; padding: 0.45rem 0.35rem;
+  font: inherit; font-size: 1rem; resize: none; min-height: 38px; max-height: 150px; line-height: 1.48;
 }
 .clover-composer-row textarea:focus { outline: none; }
 .clover-composer-btn {
@@ -1053,11 +1101,45 @@ body.clover-app-body .site-head {
 .clover-send-btn {
   height: 38px; border-radius: 10px; border: 1px solid var(--accent);
   background: var(--accent); color: #fff; font: inherit; font-size: 0.88rem; font-weight: 650;
-  padding: 0 1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.38rem;
+  padding: 0 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.42rem;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 .clover-send-btn:hover { background: #085349; border-color: #085349; }
 .clover-send-btn:disabled { opacity: 0.55; cursor: default; }
+.clover-send-icon {
+  width: 19px; height: 19px; display: block; flex: none;
+}
+.clover-send-icon__stem {
+  fill: none; stroke: rgba(255, 255, 255, 0.78); stroke-width: 4; stroke-linecap: round;
+}
+.clover-send-icon__leaf {
+  fill: #ffffff; stroke: #ffffff; stroke-width: 1.8; stroke-linejoin: round;
+}
+.clover-send-icon__wheel {
+  transform-origin: 50px 44px;
+  animation: clover-leaf-spin 9s linear infinite;
+}
 @media (max-width: 760px) {
-  .clover-sidebar { position: fixed; top: 56px; bottom: 0; left: 0; z-index: 90; box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+  .clover-sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
+    margin-left: 0; transform: translateX(0);
+    box-shadow: 0 12px 34px rgba(20, 24, 29, 0.18);
+  }
+  .clover-sidebar.is-collapsed {
+    margin-left: 0; transform: translateX(-105%); box-shadow: none;
+  }
+  .clover-sidebar-backdrop.is-open {
+    display: block; position: fixed; inset: 0; z-index: 95;
+    background: rgba(20, 24, 29, 0.32); backdrop-filter: blur(2px);
+  }
+  .clover-topbar { padding: 0.55rem 0.85rem; }
+  .clover-stream { padding: 1rem 0.75rem 0.75rem; }
+  .clover-composer-wrap { padding: 0.4rem 0.65rem calc(0.65rem + env(safe-area-inset-bottom, 0px)); }
+  .clover-composer-card { padding: 0.45rem 0.55rem; border-radius: 14px; }
+  .k3-msg, .k3-bot-turn { max-width: 92%; }
+}
+@media (max-width: 480px) {
+  .clover-send-btn span { display: none; }
+  .clover-send-btn { padding: 0 0.65rem; }
+  .k3-msg, .k3-bot-turn { max-width: 95%; font-size: 0.93rem; }
 }
