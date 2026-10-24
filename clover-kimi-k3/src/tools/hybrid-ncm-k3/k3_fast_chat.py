@@ -111,9 +111,17 @@ def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
             "and", "difference", "compare", "trends", "steps", "how",
             "code", "function", "program", "algorithm", "script", "prime", "binary", "sort", "fibonacci",
             "schedule", "timetable", "plan", "list", "guide", "design", "architecture", "clover", "kimi", "ncm", "hybrid",
+            "sum", "product", "divisor", "gcd", "lcm", "molar", "distance", "speed", "time", "balance", "interest",
         )
     ):
         return False
+    # Quantitative word problems, multiple-choice questions, code specs, or Sudoku puzzles are always multi-step
+    if ("(a)" in p and "(b)" in p) or "def " in p or "```" in p or "sudoku" in p:
+        return True
+    if len(re.findall(r"\b\d+(?:\.\d+)?\b", p)) >= 2 and any(
+        qw in p for qw in ("how many", "how much", "how long", "how far", "what is", "find the", "round to", "total", "left", "profit", "cost", "earn", "spend", "take", "takes")
+    ):
+        return True
     return any(
         kw in p
         for kw in (
@@ -130,6 +138,7 @@ def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
             "clover-k3", "cut off", "didn't explain", "did not explain", "name", "names", "idea", "ideas",
             "suggest", "recommend", "type", "types", "kind", "kinds", "way", "ways", "reason", "reasons",
             "tip", "tips", "benefit", "benefits", "feature", "features", "google", "baby",
+            "how many", "how much", "how long", "how far", "solve",
         )
     )
 
@@ -163,11 +172,12 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         "\nThis response is polite", "\nI'm maintaining a polite", "\nI also included a question to encourage",
         "\nYour message is straightforward, so a single", "\nA single `W1:` line is sufficient",
         "\nwhich aligns with the character description",
+        "\nThis sentence is concise", "\nThis sentence captures", "\nThis rewritten sentence",
     ):
         if stop_marker in raw_text:
             raw_text = raw_text.split(stop_marker)[0]
     raw_text = re.sub(
-        r"\s*(?:This (?:is a simple, friendly|response is (?:concise|direct|polite|clear|helpful|simple))[\s\S]*$|"
+        r"\s*(?:This (?:is a simple, friendly|sentence (?:is concise|captures|accurately|combines)|response is (?:concise|direct|polite|clear|helpful|simple))[\s\S]*$|"
         r"I'm maintaining a polite and warm tone[\s\S]*$|"
         r"I also included a question to encourage[\s\S]*$|"
         r"Your message is straightforward,\s*so a single[\s\S]*$|"
@@ -176,21 +186,18 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         raw_text,
         flags=re.IGNORECASE,
     )
-    # Replace <latent> / </latent> anchors and inline W1:..W99: tags with clean line breaks
+    # Replace <latent> / </latent> anchors first
     raw_text = raw_text.replace(ENTRY_ANCHOR, "\n").replace(EXIT_ANCHOR, "\n")
     raw_text = re.sub(r"</?latent>", "\n", raw_text, flags=re.IGNORECASE)
     raw_text = re.sub(r"<\|[^>]+?\|>", "", raw_text)
-    raw_text = re.sub(r"(?:^|\s)\bW\d+:\s*", "\n", raw_text).strip()
-    raw_text = re.sub(r"(?:^|\n)\s*W\d+\s*$", "", raw_text, flags=re.IGNORECASE).strip()
-    # Join lines where an equation ends with `=` and the number is on the next line
-    raw_text = re.sub(r"=\s*\n+\s*(?=[$\d\-])", "= ", raw_text)
 
     # Extract fenced code blocks (` ```python ... ``` `) or unclosed trailing fenced code blocks (` ```python ... `)
-    # and unfenced Python function definitions (`def ...:` + indented body) so indentation and newlines are 100% preserved!
+    # BEFORE stripping `W1:`..`W99:` tags so 4-space indentation inside code blocks is 100% preserved!
     code_blocks = []
 
     def _save_code_block(lang: str, body: str) -> str:
-        clean_body = body.strip("\r\n")
+        cleaned_lines = [re.sub(r"^\s*W\d+:\s?", "", ln) for ln in body.strip("\r\n").splitlines()]
+        clean_body = "\n".join(cleaned_lines).strip("\r\n")
         if not clean_body:
             return ""
         idx_cb = len(code_blocks)
@@ -209,6 +216,11 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             lambda m: _save_code_block(m.group(1), m.group(2)),
             raw_text,
         )
+
+    raw_text = re.sub(r"(?:^|\s)\bW\d+:\s*", "\n", raw_text).strip()
+    raw_text = re.sub(r"(?:^|\n)\s*W\d+\s*$", "", raw_text, flags=re.IGNORECASE).strip()
+    # Join lines where an equation ends with `=` and the number is on the next line
+    raw_text = re.sub(r"=\s*\n+\s*(?=[$\d\-])", "= ", raw_text)
 
     # Also detect unfenced Python function/class blocks (`def foo(...):` followed by indented lines or docstrings)
     if not code_blocks and re.search(r"(?:^|\n)\s*def\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", raw_text):

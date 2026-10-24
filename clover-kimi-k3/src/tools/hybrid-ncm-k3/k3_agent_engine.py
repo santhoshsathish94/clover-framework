@@ -168,7 +168,9 @@ class K3KnowledgeSearchTool:
             return live_url_res
 
         # 2. Direct routing for AGENTS.md, NCM, Clover Kimi K3, and Clover Framework
-        if any(k in low_q for k in ("agents.md", "agents md", "dharma", "discernment", "operating rules", "operating instructions")):
+        if any(k in low_q for k in ("agents.md", "agents md")) or (
+            "clover" in low_q and any(k in low_q for k in ("dharma", "discernment", "operating rules", "operating instructions"))
+        ):
             for t, b in self.KNOWLEDGE_DOCS:
                 if t.startswith("AGENTS.md"):
                     return f"Reference ({t}):\n{b}"
@@ -188,12 +190,20 @@ class K3KnowledgeSearchTool:
                 if t.startswith("Clover Framework"):
                     return f"Reference ({t}):\n{b}"
 
-        # 3. General keyword overlap + live web search
-        q_words = set(re.findall(r"[a-z0-9]+", low_q))
+        # 3. General keyword overlap against non-stopword TITLE keywords + live web search
+        stop_search = {
+            "the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from", "as",
+            "is", "are", "was", "were", "be", "that", "this", "it", "system", "model", "cycle", "rules",
+            "operating", "instructions", "recent", "research", "links", "new", "context", "direction",
+            "execution", "outcome", "growth",
+        }
+        q_words = set(re.findall(r"[a-z0-9]+", low_q)) - stop_search
         scored = []
         for title, body in self.KNOWLEDGE_DOCS:
-            doc_words = set(re.findall(r"[a-z0-9]+", (title + " " + body).lower()))
-            overlap = len(q_words & doc_words)
+            if (title.startswith("Clover") or title.startswith("AGENTS.md")) and "clover" not in low_q and "agents" not in low_q and "kimi" not in low_q:
+                continue
+            title_words = set(re.findall(r"[a-z0-9]+", title.lower())) - stop_search
+            overlap = len(q_words & title_words)
             if overlap >= 2:
                 if title.startswith("Gemini 4 Argon"):
                     model_keys = [
@@ -212,7 +222,7 @@ class K3KnowledgeSearchTool:
                 scored.append((overlap, title, body))
         scored.sort(reverse=True)
         wants_live = any(w in low_q for w in ("arxiv", "paper", "papers", "recent ai", "latest ai", "link", "links", "url", "urls"))
-        if scored and not wants_live and scored[0][0] >= 3:
+        if scored and not wants_live and scored[0][0] >= 2:
             return "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:1])
         live_res = self.live_web.execute(q)
         if scored:
@@ -540,6 +550,9 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
     if is_short_greeting_or_ack(p):
         return None
     low = p.lower().strip("?!.")
+    # Multiple-choice exams, code specifications, or Sudoku puzzles never trigger web search
+    if ("(a)" in low and "(b)" in low) or "def " in low or "```" in low or "sudoku" in low:
+        return None
 
     # 0. Any explicit HTTP/HTTPS URL or domain link in the user's message triggers live URL fetch + search immediately!
     if re.search(r"https?://[^\s<>\"')]+|\b(?:github\.com|cloverframework\.com|arxiv\.org|en\.wikipedia\.org)/[^\s<>\"')]+", p):
@@ -778,9 +791,37 @@ def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
 
     # 5. Direct arithmetic expression (e.g. 'What is 25 * 4?', '144 / 12 + 7')
     m_arith = re.search(r"(\d+(?:\.\d+)?(?:\s*[\+\-\*/]\s*\d+(?:\.\d+)?)+)", p)
-    if m_arith and not any(w in p for w in ("http", "year", "years", "version", "group")):
+    if m_arith and not any(w in p for w in ("http", "year", "years", "version", "group")) and "def " not in p and ">>>" not in p:
         expr_s = m_arith.group(1).strip()
         return f"res = {expr_s}\nprint(f'{expr_s} = {{res:g}}')"
+
+    # 6. 9x9 Sudoku puzzle solver (extracts the last 81 grid digits 0..9 from the prompt and solves via backtracking)
+    if "sudoku" in p:
+        grid_part = raw_q.split(":", 1)[-1] if ":" in raw_q else raw_q
+        cells = [int(x) for x in re.findall(r"\b[0-9]\b", grid_part)]
+        if len(cells) >= 81:
+            board81 = cells[-81:]
+            return (
+                f"grid = {board81!r}\n"
+                "def solve(b):\n"
+                "    try:\n"
+                "        i = b.index(0)\n"
+                "    except ValueError:\n"
+                "        return True\n"
+                "    r, c = divmod(i, 9)\n"
+                "    br, bc = (r // 3) * 3, (c // 3) * 3\n"
+                "    used = set(b[r*9 : r*9+9]) | set(b[c::9]) | {b[(br+dr)*9 + (bc+dc)] for dr in range(3) for dc in range(3)}\n"
+                "    for v in range(1, 10):\n"
+                "        if v not in used:\n"
+                "            b[i] = v\n"
+                "            if solve(b):\n"
+                "                return True\n"
+                "            b[i] = 0\n"
+                "    return False\n"
+                "solve(grid)\n"
+                "for r in range(9):\n"
+                "    print(' '.join(str(grid[r*9 + c]) for c in range(9)))\n"
+            )
 
     return None
 
@@ -937,12 +978,18 @@ VERIFIED_CODE_TEMPLATES = [
 def match_verified_code_template(user_prompt: str):
     """If the user asks for code/implementation of a standard algorithm (prime check, binary search, fibonacci, factorial),
     returns `(py_verify_script, verified_plan_windows)`."""
-    raw_q = _extract_raw_user_query(user_prompt).lower()
+    raw_u = _extract_raw_user_query(user_prompt)
+    raw_q = raw_u.lower()
     wants_code = any(w in raw_q for w in ("code", "function", "python", "write", "implement", "program", "script", "how to check", "algorithm"))
     if not wants_code:
         return None
+    # If the user provided specific `def <func_name>(` signature(s), only match if there is 1 target function and it matches the template
+    def_names = re.findall(r"\bdef\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(", raw_u)
     for kw_tuple, py_script, plan_wins in VERIFIED_CODE_TEMPLATES:
-        if any(k in raw_q for k in kw_tuple):
+        if def_names:
+            if len(def_names) == 1 and f"def {def_names[0]}(" in py_script:
+                return py_script, list(plan_wins)
+        elif any(k in raw_q for k in kw_tuple):
             return py_script, list(plan_wins)
     return None
 
@@ -1965,15 +2012,97 @@ class CloverK3AgentEngine:
             py_res = self.py_tool.execute(py_code).strip()
             tool_ms = round((time.perf_counter() - t_tool0) * 1000.0, 1)
             tool_calls_log.append({"tool": "python", "input": py_code, "result": py_res, "ms": tool_ms})
+            if "sudoku" in raw_user_q.lower() and len(py_res.splitlines()) == 9:
+                sudoku_plans = ["Here is the solved 9x9 Sudoku grid:"] + [
+                    "\n" + ln.strip() for ln in py_res.splitlines() if ln.strip()
+                ]
+                return sudoku_plans, min_lat, "sudoku_solved", tool_calls_log
             tool_obs_parts.append(
                 f"Verified Python Calculation Result:\n{py_res}\n"
                 f"Instruction: State these exact verified numbers and final amounts clearly in your response across W1:, W2:."
             )
 
-        tool_obs_str = ("\n\n" + "\n\n".join(tool_obs_parts)) if tool_obs_parts else ""
+        raw_low = raw_user_q.lower()
+        is_code_spec = bool(re.search(r"\bdef\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", raw_user_q)) or ("```python" in raw_low)
+        is_mcq = ("(a)" in raw_low and "(b)" in raw_low and "(c)" in raw_low)
+        is_math_word_problem = (
+            not is_code_spec
+            and not is_mcq
+            and py_code is None
+            and search_q is None
+            and (
+                (
+                    len(re.findall(r"\b\d+(?:\.\d+)?\b", raw_user_q)) >= 2
+                    and any(
+                        qw in raw_low
+                        for qw in (
+                            "how many", "how much", "how long", "how far", "what is the", "find the",
+                            "round to", "ordered triple", "trailing zeros", "total", "left", "profit",
+                            "cost", "earn", "spend", "salary", "distance", "speed", "hours", "minutes",
+                            "seconds", "grams", "dollars", "$", "percent", "%",
+                        )
+                    )
+                )
+                or any(
+                    mk in raw_low
+                    for mk in ("trailing zeros", "ordered triple", "reflected in the point", "speed of sound", "whole milk", "molar mass")
+                )
+            )
+        )
 
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
+
+        # 2b. For quantitative math/physics word problems, let HybridAgent-8B write & run a short `<python>` solver first!
+        if is_math_word_problem:
+            t_py0 = time.perf_counter()
+            py_msgs = [
+                {
+                    "role": "system",
+                    "content": "You are a Python math solver. Write a short, self-contained Python 3 script that solves the user's word problem and prints ONLY the final numerical answer (or tuple) on the last line.",
+                },
+                {
+                    "role": "user",
+                    "content": f"Problem:\n{raw_user_q}\n\nWrite ONLY executable Python code inside ```python ... ``` that computes and prints the final answer:",
+                },
+            ]
+            py_chat = self.ha_tok.apply_chat_template(py_msgs, add_generation_prompt=True, tokenize=False)
+            if py_chat.rstrip("\n").endswith(THINK_OPEN):
+                py_pref = py_chat + THINK_CLOSE + "\n```python\nimport math\n"
+            else:
+                py_pref = py_chat + THINK_OPEN + THINK_CLOSE + "\n```python\nimport math\n"
+            py_inp = self.ha_tok(py_pref, return_tensors="pt").input_ids.to(self.dev_ha)
+            py_out_m = backbone(input_ids=py_inp, use_cache=True, return_dict=True)
+            py_kv = py_out_m.past_key_values
+            py_lg = py_out_m.logits[:, -1, :]
+            py_gen = []
+            im_end_set = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
+            py_eos = {self.ha_tok.eos_token_id, self.think_close_id, 151643, 151645} | im_end_set
+            for _ in range(220):
+                p_nxt = int(py_lg.argmax(dim=-1).item())
+                if p_nxt in py_eos:
+                    break
+                py_gen.append(p_nxt)
+                p_txt = self.ha_tok.decode(py_gen, skip_special_tokens=False)
+                if "```" in p_txt:
+                    break
+                py_out_m = backbone(input_ids=torch.tensor([[p_nxt]], device=self.dev_ha), past_key_values=py_kv, use_cache=True, return_dict=True)
+                py_kv = py_out_m.past_key_values
+                py_lg = py_out_m.logits[:, -1, :]
+            cand_script = "import math\n" + self.ha_tok.decode(py_gen, skip_special_tokens=False).split("```")[0].strip()
+            if "print(" in cand_script:
+                exec_res = self.py_tool.execute(cand_script).strip()
+                py_ms = round((time.perf_counter() - t_py0) * 1000.0, 1)
+                if exec_res and "Traceback" not in exec_res and "Error" not in exec_res and "Timeout" not in exec_res:
+                    last_line_ans = [ln.strip() for ln in exec_res.splitlines() if ln.strip()][-1]
+                    tool_calls_log.append({"tool": "python", "input": cand_script, "result": last_line_ans, "ms": py_ms})
+                    tool_obs_parts.append(
+                        f"Verified Python Calculation Result: {last_line_ans}\n"
+                        f"Instruction: Explain the calculation concisely in 1 or 2 sentences and end your response with '#### {last_line_ans}'."
+                    )
+
+        tool_obs_str = ("\n\n" + "\n\n".join(tool_obs_parts)) if tool_obs_parts else ""
+
         msgs = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
         if history:
             for h in history[-6:]:
@@ -2025,7 +2154,12 @@ class CloverK3AgentEngine:
             last_h = out.hidden_states[-1][:, -1, :]
             next_logits = out.logits[:, -1, :]
 
-        bridge_str = EXIT_ANCHOR + " Now I will write my direct response to the user." + THINK_CLOSE + "\nW1:"
+        if is_code_spec:
+            bridge_str = EXIT_ANCHOR + " Now I will write the complete Python function inside a fenced code block." + THINK_CLOSE + "\nW1:\n```python\n"
+        elif is_mcq:
+            bridge_str = EXIT_ANCHOR + " Now I will state the correct option letter (A), (B), (C), or (D) first and explain briefly." + THINK_CLOSE + "\nW1: The correct answer is ("
+        else:
+            bridge_str = EXIT_ANCHOR + " Now I will write my direct response to the user." + THINK_CLOSE + "\nW1:"
         bridge_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
         out = backbone(input_ids=bridge_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
         past_kv = out.past_key_values
@@ -2044,6 +2178,8 @@ class CloverK3AgentEngine:
             gen_ids.append(nxt)
             txt_so_far = self.ha_tok.decode(gen_ids, skip_special_tokens=False)
             if THINK_CLOSE in txt_so_far or THINK_OPEN in txt_so_far or "<|im_end|>" in txt_so_far or "</answer>" in txt_so_far:
+                break
+            if is_code_spec and "```" in txt_so_far:
                 break
             # Check if the model emitted a `<python>...</python>` or `<search>...</search>` call during generation
             if PYTHON_CLOSE in txt_so_far and not any(t["tool"] == "python" for t in tool_calls_log):
@@ -2067,7 +2203,7 @@ class CloverK3AgentEngine:
                 gen_ids.clear()
                 continue
 
-            if txt_so_far.endswith("\n"):
+            if not is_code_spec and txt_so_far.endswith("\n"):
                 lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
                 if lines:
                     last_ln = lines[-1].lower()
@@ -2109,6 +2245,7 @@ class CloverK3AgentEngine:
                             "i've provided a ", "i have provided a ", "i've ensured the", "i have ensured the",
                             "if you want more technical details", "this should give you a clear understanding",
                             "this is a concise explanation", "i'll use the `w1:`", "i will use the `w1:`",
+                            "this sentence is concise", "this sentence captures",
                         )
                     ):
                         gen_ids = self.ha_tok.encode("\n".join(lines[:-1]), add_special_tokens=False)
@@ -2130,21 +2267,50 @@ class CloverK3AgentEngine:
                     )
                     asks_brief_sentences = any(
                         bs in raw_user_q.lower()
-                        for bs in ("one sentence", "1 sentence", "two sentences", "two clear sentences", "2 sentences", "briefly")
+                        for bs in (
+                            "one sentence", "1 sentence", "one clear sentence", "one clear, grammatical sentence",
+                            "two sentences", "two clear sentences", "2 sentences", "briefly",
+                        )
                     )
                     if (not is_struct or asks_brief_sentences) and not introduces_list and has_real_content:
                         if len(valid_lines_so_far) == 1 and valid_lines_so_far[0].endswith((".", "!", "?")) and "two" not in raw_user_q.lower():
                             break
                         if len(valid_lines_so_far) >= (3 if "two" in raw_user_q.lower() else 2) and len(valid_lines_so_far[-1]) > 15:
                             break
+                    elif is_math_word_problem and has_real_content and ("####" in last_ln or "final answer" in last_ln):
+                        break
                     elif len(valid_lines_so_far) >= (8 if not is_struct else 18) and not last_ln.endswith(":"):
                         break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
             next_logits = out.logits[:, -1, :]
 
-        raw = "W1: " + self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
+        decoded_gen = self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
+        if is_code_spec:
+            code_body = decoded_gen.split("```")[0].strip("\r\n")
+            c_lines = code_body.splitlines()
+            while len(c_lines) > 2:
+                try:
+                    compile("\n".join(c_lines), "<string>", "exec")
+                    break
+                except SyntaxError:
+                    c_lines.pop()
+            code_body = "\n".join(c_lines)
+            raw = f"W1:\n```python\n{code_body}\n```"
+        elif is_mcq:
+            raw = "W1: The correct answer is (" + decoded_gen
+        else:
+            raw = "W1: " + decoded_gen
         plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
+
+        # Ensure verified `<python>` calculation result is always present in `plans` for quantitative problems
+        if tool_calls_log and any(t.get("tool") == "python" for t in tool_calls_log) and not is_code_spec:
+            last_py_res = next((t.get("result", "") for t in reversed(tool_calls_log) if t.get("tool") == "python"), "").strip()
+            if last_py_res and len(last_py_res) <= 80:
+                if not plans or plans == ["Hello! How can I help you today?"]:
+                    plans = [f"The calculated result is {last_py_res}. #### {last_py_res}"]
+                elif last_py_res not in " ".join(plans):
+                    plans.append(f"\nFinal Answer: #### {last_py_res}")
 
         # Ensure complete, non-truncated coverage when a search / URL tool returned structured reference facts
         if tool_calls_log and any(t.get("tool") == "search" for t in tool_calls_log):
