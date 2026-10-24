@@ -1751,6 +1751,7 @@ class CloverK3AgentEngine:
                             "this is a simple, friendly response", "this response is concise", "this response is direct",
                             "this response is polite", "i'm maintaining a polite", "i also included a question to encourage",
                             "your message is straightforward", "which aligns with the character description",
+                            "this information is directly extracted", "i need to ensure", "your question is straightforward",
                         )
                     ):
                         gen_ids = self.ha_tok.encode("\n".join(lines[:-1]), add_special_tokens=False)

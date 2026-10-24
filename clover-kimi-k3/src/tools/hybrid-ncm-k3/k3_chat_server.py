@@ -1098,7 +1098,9 @@ class MultiGPUCloverCoordinator:
                     "created_at": m.get("created_at", 0.0),
                     "updated_at": m.get("updated_at", 0.0),
                     "context_tokens": m.get("context_tokens", 0),
-                    "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                    "max_context_tokens": int(m.get("max_context_tokens") or MAX_SESSION_CONTEXT_TOKENS),
+                    "compactions_count": int(m.get("compactions_count", 0)),
+                    "tokens_saved_by_summary": int(m.get("tokens_saved_by_summary", 0)),
                     "chunks": [
                         {
                             "source": c.get("source", ""),
@@ -1229,8 +1231,14 @@ class MultiGPUCloverCoordinator:
                 "updated_at": now,
                 "context_tokens": 0,
                 "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                "compactions_count": 0,
+                "tokens_saved_by_summary": 0,
                 "chunks": [],
             }
+        else:
+            self.session_meta[session_id].setdefault("max_context_tokens", MAX_SESSION_CONTEXT_TOKENS)
+            self.session_meta[session_id].setdefault("compactions_count", 0)
+            self.session_meta[session_id].setdefault("tokens_saved_by_summary", 0)
         return self.session_meta[session_id]
 
     def _count_k3_tokens(self, text: str) -> int:
@@ -1241,19 +1249,188 @@ class MultiGPUCloverCoordinator:
         except Exception:
             return max(1, int(len(text.split()) * 1.35))
 
+    @staticmethod
+    def _simplify_and_summarize_text_block(raw_block: str, target_word_budget: int = 85) -> str:
+        """Compresses a large multi-paragraph block into clear, smaller sentences in simple words
+        while preserving every key fact, number, identifier, codename, date, and main point."""
+        txt = re.sub(r"\s+", " ", str(raw_block or "")).strip()
+        if not txt:
+            return ""
+        # Replace complex/formal phrasing with simple everyday words
+        simple_replacements = [
+            (r"\bin order to\b", "to"),
+            (r"\bdue to the fact that\b", "because"),
+            (r"\bfor the purpose of\b", "for"),
+            (r"\butilize[sd]?\b", "use"),
+            (r"\butilizing\b", "using"),
+            (r"\bapproximately\b", "about"),
+            (r"\bsubsequently\b", "then"),
+            (r"\bfurthermore,?\s*", ""),
+            (r"\badditionally,?\s*", ""),
+            (r"\bmoreover,?\s*", ""),
+            (r"\bconsequently,?\s*", "so "),
+            (r"\bnevertheless,?\s*", "still, "),
+            (r"\bdemonstrates that\b", "shows"),
+            (r"\bindicates that\b", "shows"),
+            (r"\bis capable of\b", "can"),
+            (r"\bhas the ability to\b", "can"),
+            (r"\ba wide range of\b", "many"),
+            (r"\ba variety of\b", "many"),
+        ]
+        for pat, rep in simple_replacements:
+            txt = re.sub(pat, rep, txt, flags=re.IGNORECASE)
+
+        # Strip conversational filler prefixes/suffixes
+        txt = re.sub(
+            r"\b(?:Hi there!|Hello!|Of course!|Sure!|Thank you for asking\.|How can I help you today\?|Feel free to ask[^.!?]*[.!?]|Let me know if you need[^.!?]*[.!?])",
+            " ",
+            txt,
+            flags=re.IGNORECASE,
+        )
+        txt = re.sub(r"\b(?:User|Assistant):\s*", "", txt)
+
+        raw_sents = [s.strip(" •-*") for s in re.split(r"(?<=[.!?])\s+", txt) if len(s.strip()) >= 8]
+        if not raw_sents:
+            words = txt.split()
+            return " ".join(words[:target_word_budget])
+
+        scored_sents = []
+        seen_keys = set()
+        for idx, s in enumerate(raw_sents):
+            s_clean = re.sub(r"\s*\([^)]{25,}\)", "", s).strip()
+            if not s_clean:
+                continue
+            norm_k = re.sub(r"[^a-z0-9]+", " ", s_clean.lower()).strip()
+            if len(norm_k) < 6 or norm_k in seen_keys:
+                continue
+            seen_keys.add(norm_k)
+            w_list = s_clean.split()
+            if len(w_list) > 28:
+                # Shorten long multi-clause sentence to its core clause
+                parts = re.split(r",\s+(?:which|where|while|although|resulting in|allowing)\b", s_clean, maxsplit=1)
+                if parts and len(parts[0].split()) >= 6:
+                    s_clean = parts[0].rstrip(",; ") + "."
+                    w_list = s_clean.split()
+
+            # Score by factual density (numbers, Uppercase/codenames, technical nouns, definitions)
+            has_num = len(re.findall(r"\d+", s_clean))
+            has_id = len(re.findall(r"\b[A-Z]{2,}[A-Z0-9\-_]*\b", s_clean))
+            content_w = [w for w in re.findall(r"[a-z0-9]{3,}", s_clean.lower()) if w not in RETRIEVAL_STOPWORDS]
+            score = (has_num * 4.0) + (has_id * 3.5) + min(len(content_w), 12) * 0.6 + (2.0 if idx == 0 else 0.0)
+            scored_sents.append((score, idx, s_clean))
+
+        scored_sents.sort(key=lambda x: (-x[0], x[1]))
+        chosen = []
+        used_words = 0
+        for _, idx, s_clean in scored_sents:
+            wc = len(s_clean.split())
+            if used_words + wc <= target_word_budget or not chosen:
+                chosen.append((idx, s_clean))
+                used_words += wc
+            if used_words >= target_word_budget:
+                break
+
+        chosen.sort(key=lambda x: x[0])
+        summary_str = "Summary: " + " ".join(s for _, s in chosen)
+        return summary_str.strip()
+
+    def _compact_session_when_full(self, meta: dict):
+        """Triggered ONLY when `meta['context_tokens'] > meta['max_context_tokens']` (262,144 tokens by default).
+        Compresses batches of older chunks into short, simple-word summary sentences (`source='summary:compacted'`)
+        until `meta['context_tokens'] <= meta['max_context_tokens']`."""
+        max_limit = int(meta.get("max_context_tokens") or MAX_SESSION_CONTEXT_TOKENS)
+        if meta["context_tokens"] <= max_limit:
+            return
+
+        safety_iters = 0
+        while meta["context_tokens"] > max_limit and len(meta["chunks"]) > 1 and safety_iters < 256:
+            safety_iters += 1
+            # 1. Prefer compacting the oldest un-summarized, unpinned chunks first; if still over limit, compact oldest un-summarized chunks
+            candidate_indices = [
+                i for i, ch in enumerate(meta["chunks"][:-1])
+                if not str(ch.get("source", "")).startswith("summary:") and not ch.get("pinned", False)
+            ]
+            if not candidate_indices:
+                candidate_indices = [
+                    i for i, ch in enumerate(meta["chunks"][:-1])
+                    if not str(ch.get("source", "")).startswith("summary:")
+                ]
+            if not candidate_indices:
+                candidate_indices = list(range(min(8, len(meta["chunks"]) - 1)))
+            if not candidate_indices:
+                break
+
+            excess_tokens = meta["context_tokens"] - max_limit
+            batch_sz = 16 if excess_tokens > 8000 else 8
+            batch_indices = candidate_indices[:batch_sz]
+            batch_chunks = [meta["chunks"][i] for i in batch_indices]
+            orig_tokens = sum(int(c.get("tokens", 0)) for c in batch_chunks)
+            combined_txt = " ".join(str(c.get("text", "")) for c in batch_chunks)
+            was_pinned = any(bool(c.get("pinned", False)) for c in batch_chunks)
+
+            # Target ~20% of the original words (between 35 and 95 words) so the summary is significantly smaller
+            orig_words = len(combined_txt.split())
+            budget_words = max(25, min(90, int(orig_words * 0.22)))
+            summary_txt = self._simplify_and_summarize_text_block(combined_txt, target_word_budget=budget_words)
+            new_tokens = self._count_k3_tokens(summary_txt)
+
+            # Ensure strictly smaller token count
+            if new_tokens >= orig_tokens and orig_tokens > 32:
+                short_words = summary_txt.split()[: max(12, orig_tokens // 3)]
+                summary_txt = " ".join(short_words) + "."
+                new_tokens = self._count_k3_tokens(summary_txt)
+
+            w_set = {w for w in re.findall(r"[a-z0-9]{2,}", summary_txt.lower()) if w not in RETRIEVAL_STOPWORDS}
+            # Also retain high-value identifiers/numbers from the original chunks in `words` so retrieval never misses a summarized entity
+            for c in batch_chunks:
+                for w in c.get("words", set()):
+                    if any(ch.isdigit() for ch in w) or len(w) >= 5:
+                        w_set.add(w)
+
+            summary_chunk = {
+                "source": "summary:compacted",
+                "text": summary_txt,
+                "tokens": new_tokens,
+                "words": w_set,
+                "pinned": was_pinned,
+            }
+
+            first_pos = batch_indices[0]
+            for idx_del in reversed(batch_indices):
+                meta["chunks"].pop(idx_del)
+            meta["chunks"].insert(first_pos, summary_chunk)
+
+            saved = max(0, orig_tokens - new_tokens)
+            meta["context_tokens"] = sum(int(c.get("tokens", 0)) for c in meta["chunks"])
+            meta["compactions_count"] = int(meta.get("compactions_count", 0)) + 1
+            meta["tokens_saved_by_summary"] = int(meta.get("tokens_saved_by_summary", 0)) + saved
+            if saved == 0 and len(meta["chunks"]) > 2:
+                removed = meta["chunks"].pop(0)
+                meta["context_tokens"] = max(0, meta["context_tokens"] - int(removed.get("tokens", 0)))
+
     def _index_text_into_session(self, meta: dict, source: str, text: str, pinned: bool = False):
         """Splits `text` into ~180-word (~240-token) chunks and stores them in `meta['chunks']`,
-        maintaining up to `MAX_SESSION_CONTEXT_TOKENS = 262,144` tokens per session."""
+        maintaining up to `MAX_SESSION_CONTEXT_TOKENS = 262,144` tokens per session.
+        ONLY when `meta['context_tokens']` exceeds `max_context_tokens` (256K), compacts older paragraphs
+        into clear, smaller simple-word summary sentences instead of dropping history."""
         words = text.split()
         if not words:
             return 0
         added_tokens = 0
         step = 180
+        # For large documents (>40 chunks), sample exact K3 token ratio on the first chunk to avoid 1,000+ FFI calls
+        est_ratio = None
+        if len(words) > step * 40:
+            first_c = " ".join(words[:step]).strip()
+            est_ratio = max(1.05, self._count_k3_tokens(first_c) / float(max(1, len(first_c.split()))))
         for i in range(0, len(words), step):
             chunk_str = " ".join(words[i : i + step]).strip()
             if not chunk_str:
                 continue
-            n_tok = self._count_k3_tokens(chunk_str)
+            if est_ratio is not None and i >= step * 8:
+                n_tok = max(1, int(round(len(chunk_str.split()) * est_ratio)))
+            else:
+                n_tok = self._count_k3_tokens(chunk_str)
             w_set = {w for w in re.findall(r"[a-z0-9]{2,}", chunk_str.lower()) if w not in RETRIEVAL_STOPWORDS}
             meta["chunks"].append({
                 "source": source,
@@ -1265,15 +1442,9 @@ class MultiGPUCloverCoordinator:
             meta["context_tokens"] += n_tok
             added_tokens += n_tok
 
-        # Evict oldest unpinned chunks first if total session tokens exceed 262,144 (256k)
-        while meta["context_tokens"] > MAX_SESSION_CONTEXT_TOKENS and len(meta["chunks"]) > 1:
-            evict_idx = 0
-            for idx_c, ch_item in enumerate(meta["chunks"]):
-                if not ch_item.get("pinned", False):
-                    evict_idx = idx_c
-                    break
-            removed = meta["chunks"].pop(evict_idx)
-            meta["context_tokens"] = max(0, meta["context_tokens"] - removed["tokens"])
+        max_limit = int(meta.get("max_context_tokens") or MAX_SESSION_CONTEXT_TOKENS)
+        if meta["context_tokens"] > max_limit:
+            self._compact_session_when_full(meta)
         return added_tokens
 
     def ingest_attachments(self, session_id: str, attachments: list) -> list[str]:
@@ -1310,30 +1481,32 @@ class MultiGPUCloverCoordinator:
         retrieved_strs = []
         with self.sess_lock:
             meta = self.session_meta.get(session_id)
-            if meta and meta["chunks"] and not current_att_blocks:
+            if meta and meta["chunks"]:
                 scored = []
                 total_chunks = len(meta["chunks"])
-                has_att_chunks = any(c["source"].startswith("attachment:") for c in meta["chunks"])
-                if has_att_chunks or total_chunks > 12:
+                has_att_or_sum = any(
+                    c["source"].startswith(("attachment:", "summary:")) for c in meta["chunks"]
+                )
+                if has_att_or_sum or total_chunks > 12:
                     for idx, ch in enumerate(meta["chunks"]):
                         is_att = ch["source"].startswith("attachment:")
-                        if not is_att and idx >= total_chunks - 6:
+                        is_sum = ch["source"].startswith("summary:")
+                        if not is_att and not is_sum and idx >= total_chunks - 6:
                             continue
                         overlap = len(q_content_words & ch["words"])
-                        # Only retrieve a chunk if it shares content words with the query, OR if the user explicitly refers to the attached document
-                        if overlap >= 1 or (is_att and explicit_doc_ref):
-                            score = overlap * 4 + (3 if is_att else 0)
+                        # Retrieve a chunk if it shares content words with the query, OR if the user explicitly refers to the attached document
+                        if overlap >= 1 or ((is_att or is_sum) and explicit_doc_ref):
+                            score = overlap * 4 + (3 if (is_att or is_sum) else 0)
                             scored.append((score, idx, ch["text"]))
                     scored.sort(key=lambda x: (-x[0], x[1]))
                     for _, _, c_txt in scored[:4]:
                         retrieved_strs.append(c_txt[:2400])
-
         parts = []
         if current_att_blocks:
             for blk in current_att_blocks[:3]:
-                parts.append(blk[:4000])
-        elif retrieved_strs:
-            parts.append("Relevant context from session documents & history:\n" + "\n---\n".join(retrieved_strs))
+                parts.append(blk[:3200])
+        if retrieved_strs:
+            parts.append("Relevant context from session documents & summarized history:\n" + "\n---\n".join(retrieved_strs))
 
         if not parts:
             return user_prompt.strip()
@@ -1351,6 +1524,11 @@ class MultiGPUCloverCoordinator:
         with self.sess_lock:
             meta = self._ensure_session_meta(session_id)
             turns = list(self.sessions.get(session_id, []))
+            summary_chunks = [
+                {"source": c.get("source", ""), "text": c.get("text", ""), "tokens": c.get("tokens", 0)}
+                for c in meta.get("chunks", [])
+                if str(c.get("source", "")).startswith("summary:")
+            ]
             return {
                 "session_id": session_id,
                 "title": meta["title"],
@@ -1358,7 +1536,10 @@ class MultiGPUCloverCoordinator:
                 "updated_at": meta["updated_at"],
                 "turn_count": len(turns),
                 "context_tokens": meta["context_tokens"],
-                "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                "max_context_tokens": int(meta.get("max_context_tokens") or MAX_SESSION_CONTEXT_TOKENS),
+                "compactions_count": int(meta.get("compactions_count", 0)),
+                "tokens_saved_by_summary": int(meta.get("tokens_saved_by_summary", 0)),
+                "summary_chunks": summary_chunks,
                 "turns": [
                     {
                         "user": t.get("user", ""),
@@ -1478,7 +1659,9 @@ class MultiGPUCloverCoordinator:
                     "session_id": req.session_id,
                     "session_title": sess_info["title"],
                     "context_tokens": sess_info["context_tokens"],
-                    "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                    "max_context_tokens": sess_info["max_context_tokens"],
+                    "compactions_count": sess_info["compactions_count"],
+                    "tokens_saved_by_summary": sess_info["tokens_saved_by_summary"],
                     "prompt": req.display_prompt,
                     "reply": text_mbr,
                     "reply_1cand": text_mbr,
@@ -1528,7 +1711,9 @@ class MultiGPUCloverCoordinator:
                         "session_id": req.session_id,
                         "session_title": sess_info["title"],
                         "context_tokens": sess_info["context_tokens"],
-                        "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                        "max_context_tokens": sess_info["max_context_tokens"],
+                        "compactions_count": sess_info["compactions_count"],
+                        "tokens_saved_by_summary": sess_info["tokens_saved_by_summary"],
                         "prompt": req.display_prompt,
                         "reply": outs[i],
                         "reply_1cand": outs[i],
@@ -1785,6 +1970,16 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             prompt = str(payload.get("prompt", "")).strip()
             image_b64 = payload.get("image_base64")
             attachments = payload.get("attachments") or []
+            custom_max_ctx = payload.get("max_context_tokens")
+            if custom_max_ctx is not None:
+                try:
+                    with STATE.sess_lock:
+                        meta_c = STATE._ensure_session_meta(session_id)
+                        meta_c["max_context_tokens"] = max(256, min(MAX_SESSION_CONTEXT_TOKENS, int(custom_max_ctx)))
+                        if meta_c["context_tokens"] > meta_c["max_context_tokens"]:
+                            STATE._compact_session_when_full(meta_c)
+                except Exception:
+                    pass
             client_history = payload.get("history") or payload.get("supplied_history")
             if client_history and isinstance(client_history, list):
                 STATE.hydrate_session_history_if_needed(session_id, client_history)

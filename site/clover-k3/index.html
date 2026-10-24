@@ -201,7 +201,7 @@
             <tr>
               <th scope="row">Context limit per session</th>
               <td><strong>262,144 Kimi K3 tokens (256K)</strong><br>(<code>&gt; 250k</code> minimum)</td>
-              <td>Every session indexes conversation turns and uploaded files (PDF, DOCX, Markdown, CSV, JSON, code, image/video vision analysis, audio) into <code>~240</code>-token chunks (tokenized via <code>libk3tok.so</code>). Each turn retrieves only the top matching chunks + sliding history so short turns stay fast while retaining 256K tokens of memory.</td>
+              <td>Every session indexes conversation turns and uploaded files (PDF, DOCX, Markdown, CSV, JSON, code, image/video vision analysis, audio) into <code>~240</code>-token chunks (tokenized via <code>libk3tok.so</code>). While under 262,144 tokens, chunks stay verbatim; <strong>only when a session reaches the full 262,144-token limit</strong> does the engine automatically summarize older multi-paragraph blocks into clear, smaller sentences in simple words so key facts, numbers, and identifiers are retained without dropping history.</td>
             </tr>
             <tr>
               <th scope="row">Concurrent sessions</th>
