@@ -127,7 +127,9 @@ def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
             "function", "program", "algorithm", "prime", "binary search", "fibonacci", "factorial", "quicksort",
             "http://", "https://", "refer", "read ", "agents.md", "ncm", "next-concept", "next concept",
             "hybridagent", "hybrid agent", "what is clover", "clover framework", "clover kimi", "clover k3",
-            "clover-k3", "cut off", "didn't explain", "did not explain",
+            "clover-k3", "cut off", "didn't explain", "did not explain", "name", "names", "idea", "ideas",
+            "suggest", "recommend", "type", "types", "kind", "kinds", "way", "ways", "reason", "reasons",
+            "tip", "tips", "benefit", "benefits", "feature", "features", "google", "baby",
         )
     )
 
@@ -297,6 +299,9 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         ln = re.sub(r"\byou needs\b", "you need", ln, flags=re.IGNORECASE)
         ln = re.sub(r"\byou feels\b", "you feel", ln, flags=re.IGNORECASE)
         ln = re.sub(r"\bthe user\b", "you", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\b(if|what|when|whether)\s+you\s+([^.!?]*?),\s+they\s+(would|can|could|should|will|might|need)\b", r"\1 you \2, you \3", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bgive you\s+([^.!?]*?)\s+what they can\b", r"give you \1 what you can", ln, flags=re.IGNORECASE)
+        ln = re.sub(r"\bso you can\s+([^.!?]*?)\s+if they wish\b", r"so you can \1 if you wish", ln, flags=re.IGNORECASE)
         if ln and ln[0].islower() and not ln.startswith(("http", "def ", "class ", "import ", "from ", "return ", "__CODE_BLOCK_")):
             ln = ln[0].upper() + ln[1:]
         if not wants_summary:

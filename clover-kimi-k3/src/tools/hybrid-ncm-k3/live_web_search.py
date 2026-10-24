@@ -124,7 +124,11 @@ class LiveWebSearchTool:
 
     def _search_wikipedia(self, query: str, max_items: int = 3) -> list[str]:
         """Queries the live Wikipedia Search & Summary API and includes canonical article URLs."""
-        clean_q = re.sub(r"\b(can you|find|relevant|research|on|recent|latest|about|search|for|more|details|please|and|links)\b", " ", query.lower())
+        clean_q = re.sub(
+            r"\b(can you|please|do|a|an|google|web|internet|online|find|relevant|research|on|recent|latest|about|search|for|more|details|and|links)\b",
+            " ",
+            query.lower(),
+        )
         clean_q = " ".join(clean_q.split()).strip() or query.strip()
         url = (
             "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="
@@ -141,6 +145,18 @@ class LiveWebSearchTool:
                 snip = re.sub(r"<[^>]+>", "", item.get("snippet", ""))
                 snip = html.unescape(" ".join(snip.split()))
                 wiki_url = "https://en.wikipedia.org/wiki/" + urllib.parse.quote(title.replace(" ", "_"))
+                try:
+                    sum_url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(title.replace(" ", "_"))
+                    req_s = urllib.request.Request(sum_url, headers={"User-Agent": self.user_agent})
+                    with urllib.request.urlopen(req_s, timeout=5) as rs:
+                        s_data = json.loads(rs.read().decode("utf-8", errors="ignore"))
+                    extract_txt = " ".join((s_data.get("extract") or "").split()).strip()
+                    if len(extract_txt) >= 30:
+                        if len(extract_txt) > 260:
+                            extract_txt = extract_txt[:257].rsplit(" ", 1)[0] + "..."
+                        snip = extract_txt
+                except Exception:
+                    pass
                 out.append(f"[Wikipedia: {title} — Link: {wiki_url}] {snip}")
         except Exception:
             pass
@@ -148,7 +164,13 @@ class LiveWebSearchTool:
 
     def _search_ddg(self, query: str, max_items: int = 3) -> list[str]:
         """Queries DuckDuckGo HTML search endpoint for live web pages and extracts destination URLs."""
-        url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(query.strip())
+        clean_q = re.sub(
+            r"^\s*(?:can you\s+|please\s+|do\s+a?\s*)?(?:google\s+search|search\s+google|search\s+the\s+web|search|find|look\s+up|google)\s*(?:for|on|about)?\s*",
+            "",
+            query.strip(),
+            flags=re.IGNORECASE,
+        ).strip() or query.strip()
+        url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(clean_q)
         out = []
         try:
             req = urllib.request.Request(url, headers={"User-Agent": self.user_agent})
@@ -209,9 +231,7 @@ class LiveWebSearchTool:
                 results.extend(self._search_ddg(q, max_items=2))
         else:
             results.extend(self._search_ddg(q, max_items=3))
-            results.extend(self._search_wikipedia(q, max_items=2))
-            if len(results) < 3:
-                results.extend(self._search_arxiv(q, max_items=2))
+            results.extend(self._search_wikipedia(q, max_items=3))
 
         if not results:
             return f"No live external results returned for '{q}'."

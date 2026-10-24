@@ -559,8 +559,12 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
 
     # 1. Follow-up commands asking for search, links, sources, or more details on the prior turn's topic
     is_followup_link_or_search = (
-        low in ("find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me", "more details", "links", "sources")
-        or (len(low.split()) <= 4 and any(w in low for w in ("find", "search", "fetch", "browse")))
+        low in (
+            "find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me",
+            "more details", "links", "sources", "do google search", "search google", "google it", "search on google",
+            "search the web", "search online",
+        )
+        or (len(low.split()) <= 4 and any(w in low for w in ("find", "search", "fetch", "browse", "google")))
         or (
             len(low.split()) <= 8
             and any(w in low for w in ("link", "links", "url", "urls", "source", "sources", "reference", "references", "more details", "more info"))
@@ -568,11 +572,19 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
         )
     )
     if is_followup_link_or_search:
+        # Check if the prompt itself already has a specific subject after 'search google for ...' / 'search for ...'
+        cleaned_self = re.sub(
+            r"^\s*(?:please\s+|can\s+you\s+|do\s+a?\s*)?(?:google\s+search|search\s+google|search\s+the\s+web|search|find|look\s+up|google)\s*(?:for|on|about)?\s*",
+            "",
+            low,
+        ).strip()
+        if cleaned_self and cleaned_self not in ("it", "them", "that", "this", "google", "web", "online"):
+            return cleaned_self
         if history:
             for h in reversed(history):
                 prev_u = _extract_raw_user_query(h.get("user", ""))
                 prev_low = prev_u.lower().strip("?!.")
-                if len(prev_u.split()) >= 2 and prev_low != low and not prev_low.startswith(("more details", "find it", "search it", "give me examples")):
+                if len(prev_u.split()) >= 1 and prev_low != low and not prev_low.startswith(("more details", "find it", "search it", "do google", "search google")):
                     if "link" in low or "url" in low or "source" in low:
                         return f"{prev_u} links and references"
                     return prev_u
@@ -627,6 +639,8 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "mi350",
             "arxiv",
             "wikipedia",
+            "google",
+            "search ",
             "search for",
             "search the web",
             "browse",
@@ -922,8 +936,8 @@ def match_verified_code_template(user_prompt: str):
 
 def render_creative_scene_svg(subject: str):
     """Generates a rich, distinct SVG scene illustration (`760x420`) tailored to the requested subject
-    (forest/woods, desert/dunes, space/galaxy, ocean/beach, futuristic cityscape, or Clover mountain sunrise)
-    so different creative requests produce genuinely different SVG illustrations."""
+    (snake/serpent, forest/woods, desert/dunes, space/galaxy, ocean/beach, futuristic cityscape, or Clover mountain sunrise).
+    Returns `None` if the requested subject is not one of the supported SVG scene families so Clover never fakes an unrelated picture."""
     clean_subj = re.sub(
         r"^(?:just\s+|then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|show|paint|render|design)\s*"
         r"(?:me\s+)?(?:an?\s+|one\s+(?:of\s+)?|something\s+|anything\s+|another\s+)?(?:image|picture|illustration|art|scene|drawing|svg|it|one|that)?\s*(?:of\s+|for\s+|with\s+)?",
@@ -931,7 +945,7 @@ def render_creative_scene_svg(subject: str):
         subject,
         flags=re.IGNORECASE,
     ).strip(" .!?")
-    clean_subj = re.sub(r"\s+please$", "", clean_subj, flags=re.IGNORECASE).strip(" .!?")
+    clean_subj = re.sub(r"\s+(?:image|picture|illustration|drawing|photo|please)$", "", clean_subj, flags=re.IGNORECASE).strip(" .!?")
     clean_subj = re.sub(r"^(?:an?|the)\s+", "", clean_subj, flags=re.IGNORECASE).strip(" .!?")
 
     # Deterministic variation seed from the prompt text so different prompts shift palette/stars/elements
@@ -944,6 +958,45 @@ def render_creative_scene_svg(subject: str):
         clean_subj = "Emerald Clover Meadow at Sunrise"
 
     s_low = clean_subj.lower()
+
+    # 0. Snake / Cobra / Serpent / Viper / Python (animal)
+    if any(k in s_low for k in ("snake", "cobra", "serpent", "viper", "boa", "anaconda", "rattlesnake")):
+        title_str = f"Emerald Viper Snake — {clean_subj.title()}"
+        svg_markup = (
+            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Emerald Snake Illustration">'
+            '<defs>'
+            '<linearGradient id="snBg" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#042f2e"/><stop offset="60%" stop-color="#064e3b"/><stop offset="100%" stop-color="#022c22"/>'
+            '</linearGradient>'
+            '<linearGradient id="snBody" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0%" stop-color="#34d399"/><stop offset="50%" stop-color="#10b981"/><stop offset="100%" stop-color="#047857"/>'
+            '</linearGradient>'
+            '<linearGradient id="snBelly" x1="0" y1="0" x2="1" y2="0">'
+            '<stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#a7f3d0"/>'
+            '</linearGradient>'
+            '</defs>'
+            '<rect width="760" height="420" rx="12" fill="url(#snBg)"/>'
+            '<circle cx="620" cy="85" r="46" fill="#fef08a" opacity="0.22"/>'
+            '<path d="M 0 355 Q 190 330 380 350 T 760 345 L 760 420 L 0 420 Z" fill="#021f18"/>'
+            '<path d="M 135 340 C 85 335, 95 270, 175 272 C 265 274, 295 338, 390 332 C 485 326, 515 250, 435 235 C 355 220, 325 170, 415 145 C 480 128, 535 140, 560 150" '
+            'fill="none" stroke="#064e3b" stroke-width="44" stroke-linecap="round"/>'
+            '<path d="M 135 340 C 85 335, 95 270, 175 272 C 265 274, 295 338, 390 332 C 485 326, 515 250, 435 235 C 355 220, 325 170, 415 145 C 480 128, 535 140, 560 150" '
+            'fill="none" stroke="url(#snBody)" stroke-width="34" stroke-linecap="round"/>'
+            '<path d="M 135 340 C 85 335, 95 270, 175 272 C 265 274, 295 338, 390 332 C 485 326, 515 250, 435 235 C 355 220, 325 170, 415 145 C 480 128, 535 140, 560 150" '
+            'fill="none" stroke="url(#snBelly)" stroke-width="10" stroke-dasharray="6 14" stroke-linecap="round" opacity="0.75"/>'
+            '<path d="M 135 340 Q 95 352 68 332" fill="none" stroke="#10b981" stroke-width="14" stroke-linecap="round"/>'
+            '<polygon points="545,126 608,144 598,168 542,172 526,148" fill="#10b981" stroke="#047857" stroke-width="2.5"/>'
+            '<circle cx="576" cy="144" r="5.5" fill="#fef08a"/><ellipse cx="577" cy="144" rx="1.8" ry="4.5" fill="#030712"/>'
+            '<path d="M 606 155 L 642 152 L 656 144 M 642 152 L 656 162" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>'
+            f'<text x="380" y="396" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#d1fae5">{title_str}</text>'
+            '</svg>'
+        )
+        cap_str = f"Generated SVG illustration: {title_str} (coiled emerald serpent with patterned scales, golden vertical-slit eye, and forked tongue)."
+        plans = [
+            f"Here is an SVG illustration of a {clean_subj.lower()}:",
+            "\nScene Elements: A coiled emerald viper snake with patterned scales, a raised head, a golden vertical-slit eye, and a forked red tongue.",
+        ]
+        return "svg_scene", title_str, [{"type": "svg", "title": title_str, "svg": svg_markup, "caption": cap_str}], plans
 
     # 1. Forest / Woods / Trees / Jungle / Pine / Woodland / Natural Landscape
     if any(k in s_low for k in ("forest", "tree", "trees", "woods", "woodland", "jungle", "pine", "rainforest", "redwood", "grove", "natural landscape", "nature")):
@@ -1184,8 +1237,8 @@ def render_creative_scene_svg(subject: str):
             "\nWaterfront Reflection: Teal and amber city lights reflected across the harbor below.",
         ]
 
-    # 4. Default / Botanical Clover / Mountain / Sunrise / Nature Scene
-    else:
+    # 4. Mountain / Sunrise / Sunset / Meadow / Clover Botanical Scene
+    elif any(k in s_low for k in ("mountain", "mountains", "peak", "peaks", "hill", "hills", "sunrise", "sunset", "meadow", "clover", "landscape", "valley")):
         title_str = f"Illustrated Scene — {clean_subj.title()}"
         sun_x = 560 + (h_seed % 80)
         svg_markup = (
@@ -1215,6 +1268,9 @@ def render_creative_scene_svg(subject: str):
             f"Here is an SVG illustration of {clean_subj.lower()}:",
             "\nVisual Composition: Mountain peaks at sunrise with the five-leaf Clover emblem rendered as a scalable vector illustration.",
         ]
+    else:
+        # Honest fallback when the user asks to draw a subject outside our vector scene templates: never fake a mountain/clover picture!
+        return None
 
     media = [{
         "type": "svg",
@@ -1238,6 +1294,10 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
             "Sorry about that! Please tell me what scene or topic you would like instead, and I will create it for you right away.",
         ]
         return "clarification_ack", "Polite apology and prompt for preferred subject", [], plans
+
+    # Never trigger visual/image generation when the user is asking to search the web / Google / arXiv / Wikipedia!
+    if any(sk in p for sk in ("search", "google", "look up", "find on", "arxiv", "wikipedia", "http://", "https://")):
+        return None
 
     # Never trigger visual/image generation when the user is negating, correcting, or asking a question!
     has_negation_or_complaint = bool(
@@ -1264,7 +1324,8 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
         return "image_capabilities", "Listed supported image and chart categories", [], plans
 
     is_capability_question = p.endswith("?") or p.startswith((
-        "can you", "are you able", "do you", "how do you", "what can you", "what images", "which images", "why ", "what is ", "explain "
+        "can you", "are you able", "do you", "how do you", "what can you", "what images", "which images",
+        "why ", "what is ", "explain ", "is this", "is that", "is it", "are these", "was that", "does this",
     ))
 
     # Check if the conversation context (within the last 8 turns) is already about image/illustration generation
@@ -1288,15 +1349,15 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
             if not last_visual_subject and any(
                 s_kw in u_prev_low
                 for s_kw in (
-                    "forest", "woods", "tree", "jungle", "natural landscape", "landscape", "mountain",
-                    "ocean", "beach", "sea", "island", "desert", "dune", "canyon", "space", "galaxy",
-                    "planet", "nebula", "city", "futuristic", "skyline", "sunset", "sunrise", "meadow", "clover",
+                    "snake", "cobra", "serpent", "forest", "woods", "tree", "jungle", "natural landscape",
+                    "landscape", "mountain", "ocean", "beach", "sea", "island", "desert", "dune", "canyon",
+                    "space", "galaxy", "planet", "nebula", "city", "futuristic", "skyline", "sunset", "sunrise", "meadow", "clover",
                 )
-            ) and not any(neg in u_prev_low for neg in ("never", "not", "didn't", "why", "what")):
+            ) and not any(neg in u_prev_low for neg in ("never", "not", "didn't", "why", "what", "search", "google", "is this")):
                 last_visual_subject = u_prev
 
     scene_topic_keywords = (
-        "forest", "woods", "woodland", "trees", "jungle", "pine", "natural landscape", "landscape",
+        "snake", "cobra", "serpent", "forest", "woods", "woodland", "trees", "jungle", "pine", "natural landscape", "landscape",
         "mountain", "mountains", "ocean", "beach", "sea", "coast", "island", "desert", "dunes", "canyon",
         "space", "galaxy", "nebula", "planet", "cosmos", "city", "cityscape", "futuristic", "cyberpunk",
         "skyline", "sunset", "sunrise", "meadow", "clover", "nature",
@@ -1316,9 +1377,16 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
 
     followup_subject_only = (
         in_image_conversation
-        and len(p.split()) <= 6
+        and len(p.split()) <= 5
         and any(sk in p for sk in scene_topic_keywords)
-        and not any(w in p.split() for w in ("i", "you", "why", "what", "how", "when", "where", "who", "never", "not", "no", "dont", "didn't"))
+        and not any(
+            w in p.split()
+            for w in (
+                "i", "you", "why", "what", "how", "when", "where", "who", "is", "are", "was", "were",
+                "this", "that", "it", "does", "do", "did", "can", "could", "would", "should",
+                "never", "not", "no", "dont", "didn't",
+            )
+        )
     )
 
     if (not is_capability_question) and (explicit_create_cmd or followup_subject_only):
@@ -2011,8 +2079,12 @@ class CloverK3AgentEngine:
                     )
                     has_real_content = bool(valid_lines_so_far) and valid_lines_so_far != ["Hello! How can I help you today?"]
 
-                    introduces_list = last_ln.endswith(":") or any(
-                        kw in last_ln for kw in ("here's", "here is", "sample timetable", "sample study", "schedule", "below", "following")
+                    has_list_items = any(
+                        ln.startswith(("•", "-", "*")) or bool(re.match(r"^[A-Za-z0-9 ]{2,25}:\s+\S", ln))
+                        for ln in lines
+                    )
+                    introduces_list = has_list_items or last_ln.endswith(":") or any(
+                        kw in last_ln for kw in ("here's", "here is", "here are", "sample timetable", "sample study", "schedule", "below", "following")
                     )
                     if not is_struct and not introduces_list and has_real_content:
                         if len(valid_lines_so_far) == 1 and valid_lines_so_far[0].endswith((".", "!", "?")):
@@ -2051,14 +2123,26 @@ class CloverK3AgentEngine:
                 ("[Live Content from " in last_s_res or "[Live Webpage: " in last_s_res)
                 and (plans == ["Hello! How can I help you today?"] or len(plans) <= 2)
             )
+            low_user_q = raw_user_q.lower().strip("?!.")
+            is_followup_search_cmd = low_user_q in (
+                "do google search", "search google", "google it", "search on google",
+                "search the web", "search online", "find it", "search it", "look it up",
+            )
+            missing_live_links = (
+                is_followup_search_cmd
+                and "https://" in last_s_res
+                and "https://" not in joined_p_low
+            )
             if (
                 plans == ["Hello! How can I help you today?"]
                 or (is_authoritative_clover_ref and (missing_key_pillar or len(plans) <= 3))
                 or too_short_for_url
+                or missing_live_links
             ):
                 ref_block = last_s_res.split("\n\n[Live ")[0] if is_authoritative_clover_ref else last_s_res
                 fallback_src = "\n".join(
-                    ln for ln in ref_block.splitlines()
+                    re.sub(r"^Page\s+\d+:\s*", "• ", ln.strip())
+                    for ln in ref_block.splitlines()
                     if ln.strip() and not ln.strip().startswith(("Reference (", "[Live Content from", "[Live Webpage:"))
                 )
                 if fallback_src.strip():

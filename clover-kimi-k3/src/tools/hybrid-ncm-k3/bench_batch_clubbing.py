@@ -145,8 +145,12 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
                                     "W1: " + "\n".join(lns), user_prompts[i], eng.k3_tok, max_bpe=32, max_windows=24
                                 )
                                 has_real_i = bool(valid_lns_i) and valid_lns_i != ["Hello! How can I help you today?"]
-                                introduces_list = last_ln.endswith(":") or any(
-                                    kw in last_ln for kw in ("here's", "here is", "sample timetable", "sample study", "schedule", "below", "following")
+                                has_list_i = any(
+                                    ln.startswith(("•", "-", "*")) or bool(re.match(r"^[A-Za-z0-9 ]{2,25}:\s+\S", ln))
+                                    for ln in lns
+                                )
+                                introduces_list = has_list_i or last_ln.endswith(":") or any(
+                                    kw in last_ln for kw in ("here's", "here is", "here are", "sample timetable", "sample study", "schedule", "below", "following")
                                 )
                                 if not is_struct[i] and not introduces_list and has_real_i:
                                     if len(valid_lns_i) == 1 and valid_lns_i[0].endswith((".", "!", "?")):
