@@ -20,7 +20,15 @@ int k3tok_init(const char *dir) {
 }
 
 int k3tok_encode(const char *text, int len, int *out_ids, int cap) {
+    return tok_encode(&g_tok, text, len, out_ids, cap);
+}
+
+int k3tok_encode_plain(const char *text, int len, int *out_ids, int cap) {
     return tok_encode_mode(&g_tok, text, len, out_ids, cap, 0);
+}
+
+int k3tok_id_of(const char *name) {
+    return tok_id_of(&g_tok, name);
 }
 
 int k3tok_decode(const int *ids, int n, char *out_buf, int cap) {
@@ -29,9 +37,16 @@ int k3tok_decode(const int *ids, int n, char *out_buf, int cap) {
 """
 
 def ensure_lib():
-    if os.path.exists(SO_PATH):
-        return SO_PATH
     c_file = "/home/usergpu/merge_lf/k3tok_wrap.c"
+    need_build = not os.path.exists(SO_PATH)
+    if not need_build and os.path.exists(c_file):
+        with open(c_file, "r", encoding="utf-8") as f:
+            if "k3tok_encode_plain" not in f.read():
+                need_build = True
+    elif not os.path.exists(c_file):
+        need_build = True
+    if not need_build:
+        return SO_PATH
     with open(c_file, "w", encoding="utf-8") as f:
         f.write(C_SRC)
     inc1 = "/opt/clover-k3/clover-kimi-k3/src/code/third-party/kimi-k3-in-c/src/tokenizer"
@@ -49,19 +64,69 @@ class K3Tokenizer:
         self.lib.k3tok_init.restype = ctypes.c_int
         self.lib.k3tok_encode.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.c_int]
         self.lib.k3tok_encode.restype = ctypes.c_int
+        self.lib.k3tok_encode_plain.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.c_int]
+        self.lib.k3tok_encode_plain.restype = ctypes.c_int
+        self.lib.k3tok_id_of.argtypes = [ctypes.c_char_p]
+        self.lib.k3tok_id_of.restype = ctypes.c_int
         self.lib.k3tok_decode.argtypes = [ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
         self.lib.k3tok_decode.restype = ctypes.c_int
 
         self.vocab_size = self.lib.k3tok_init(weights_dir.encode("utf-8"))
-        self.eos_token_id = 163586
-        self.pad_token_id = 163585
+        self.bos_token_id = 163584
+        self.eos_token_id = 163585
+        self.eom_token_id = 163586
+        self.open_token_id = 163587
+        self.close_token_id = 163588
+        self.sep_token_id = 163589
+        self.pad_token_id = 163839
 
-    def encode(self, text: str):
+    def encode(self, text: str, allow_special: bool = True):
         raw = text.encode("utf-8")
         cap = len(raw) + 16
         buf = (ctypes.c_int * cap)()
-        n = self.lib.k3tok_encode(raw, len(raw), buf, cap)
+        if allow_special:
+            n = self.lib.k3tok_encode(raw, len(raw), buf, cap)
+        else:
+            n = self.lib.k3tok_encode_plain(raw, len(raw), buf, cap)
         return list(buf[:n])
+
+    def encode_plain(self, text: str):
+        return self.encode(text, allow_special=False)
+
+    def _chat_message_ids(self, attrs: str, content: str) -> list[int]:
+        ids = [self.open_token_id]
+        ids.extend(self.encode_plain("message"))
+        ids.extend(self.encode_plain(attrs))
+        ids.append(self.sep_token_id)
+        if content:
+            ids.extend(self.encode_plain(content))
+        ids.append(self.close_token_id)
+        ids.extend(self.encode_plain("message"))
+        ids.append(self.sep_token_id)
+        ids.append(self.eom_token_id)
+        return ids
+
+    def encode_chat_prompt(self, user_text: str, system_text: str | None = None, history: list[dict] | None = None, think: bool = False) -> list[int]:
+        """Encodes a chat turn using Kimi K3's exact XTML chat format (`whole-model.c` `prompt_ids`)."""
+        ids: list[int] = []
+        if system_text:
+            ids.extend(self._chat_message_ids(' role="system"', system_text))
+        if history:
+            for turn in history:
+                u = (turn.get("user") or "").strip()
+                a = (turn.get("assistant") or "").strip()
+                if u:
+                    ids.extend(self._chat_message_ids(' role="user"', u))
+                if a:
+                    ids.extend([self.open_token_id] + self.encode_plain("message") + self.encode_plain(' role="assistant"') + [self.sep_token_id])
+                    ids.extend([self.open_token_id] + self.encode_plain("response") + [self.sep_token_id])
+                    ids.extend(self.encode_plain(a))
+                    ids.extend([self.close_token_id] + self.encode_plain("response") + [self.sep_token_id])
+                    ids.extend([self.close_token_id] + self.encode_plain("message") + [self.sep_token_id, self.eom_token_id])
+        ids.extend(self._chat_message_ids(' role="user"', user_text.rstrip(" \t")))
+        ids.extend([self.open_token_id] + self.encode_plain("message") + self.encode_plain(' role="assistant"') + [self.sep_token_id])
+        ids.extend([self.open_token_id] + self.encode_plain("think" if think else "response") + [self.sep_token_id])
+        return ids
 
     def decode(self, ids, skip_special_tokens=True):
         if skip_special_tokens:

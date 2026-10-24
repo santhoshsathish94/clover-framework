@@ -36,15 +36,98 @@ __global__ void top16_bounded(const float *scores, const float *choices, const i
     for (int r = 0; r < TOP; r++) { selected[n * TOP + r] = sel[r]; weights[n * TOP + r] = sc[sel[r]] * inverse; }
 }
 
+// Smart 896-expert router:
+//   - Scans all 896 experts (`0..895`) for every token `n`.
+//   - Any expert `e` with `vram_mask[e] == 1` (either in the layer's `k_res` permanent VRAM experts OR already resident in `pool_card[c]` dynamic VRAM)
+//     is available at 0 ms I/O cost to ALL tokens `0..N-1`.
+//   - For frontier tokens (`n >= N - k_tok_tail`), up to `k_dyn_max` highest-scoring cold experts (`vram_mask[e] == 0`) per token are admitted from `0..895`,
+//     keeping the working set inside `pool_card[c]` (~280 dynamic VRAM slots/card) while preserving full 896-expert top-rank routing!
+__global__ void top16_smart_896(const float *scores, const float *choices, const unsigned char *vram_mask,
+                                int *selected, float *weights, int *bad, int N, int k_tok_tail, int k_dyn_max)
+{
+    const int n = blockIdx.x * blockDim.x + threadIdx.x;
+    if (n >= N) return;
+    const float *sc = scores + (size_t)n * EXPERTS, *ch = choices + (size_t)n * EXPERTS;
+
+    // 1. Find top-16 among VRAM-resident experts (`vram_mask[e] == 1`)
+    float best_v[TOP]; int sel_v[TOP]; int cnt_v = 0;
+    // 2. Find true top-16 across ALL 896 experts (`0..895`)
+    float best_all[TOP]; int sel_all[TOP]; int cnt_all = 0;
+
+    const bool is_frontier = (n >= N - k_tok_tail);
+    for (int e = 0; e < EXPERTS; e++) {
+        const float choice = ch[e];
+        if (!isfinite(choice)) { atomicAdd(bad, 1); return; }
+        if (vram_mask[e]) {
+            if (cnt_v < TOP || choice > best_v[TOP - 1]) {
+                int pos = cnt_v < TOP ? cnt_v : TOP - 1;
+                while (pos && choice > best_v[pos - 1]) { best_v[pos] = best_v[pos - 1]; sel_v[pos] = sel_v[pos - 1]; pos--; }
+                best_v[pos] = choice; sel_v[pos] = e;
+                if (cnt_v < TOP) cnt_v++;
+            }
+        }
+        if (is_frontier) {
+            if (cnt_all < TOP || choice > best_all[TOP - 1]) {
+                int pos = cnt_all < TOP ? cnt_all : TOP - 1;
+                while (pos && choice > best_all[pos - 1]) { best_all[pos] = best_all[pos - 1]; sel_all[pos] = sel_all[pos - 1]; pos--; }
+                best_all[pos] = choice; sel_all[pos] = e;
+                if (cnt_all < TOP) cnt_all++;
+            }
+        }
+    }
+
+    int final_sel[TOP];
+    if (!is_frontier || k_dyn_max <= 0) {
+        for (int r = 0; r < TOP; r++) final_sel[r] = sel_v[r];
+    } else if (k_dyn_max >= TOP) {
+        for (int r = 0; r < TOP; r++) final_sel[r] = sel_all[r];
+    } else {
+        int out_cnt = 0, dyn_used = 0;
+        for (int r = 0; r < TOP && out_cnt < TOP; r++) {
+            const int e = sel_all[r];
+            if (vram_mask[e] == 1) {
+                // Permanent VRAM expert (`d_res_exp[L]`): always free
+                final_sel[out_cnt++] = e;
+            } else if (dyn_used < k_dyn_max) {
+                // Top-`k_dyn_max` non-permanent expert (either already in `pool.c` [vram_mask==2, 0ms hit] or fetched into `pool.c` [vram_mask==0])
+                final_sel[out_cnt++] = e;
+                dyn_used++;
+            }
+        }
+        for (int rv = 0; rv < cnt_v && out_cnt < TOP; rv++) {
+            const int ev = sel_v[rv];
+            bool dup = false;
+            for (int j = 0; j < out_cnt; j++) if (final_sel[j] == ev) { dup = true; break; }
+            if (!dup) final_sel[out_cnt++] = ev;
+        }
+    }
+
+    double total = 0.0;
+    for (int r = 0; r < TOP; r++) total += (double)sc[final_sel[r]];
+    const float inverse = (float)(1.0 / (total + 1e-20));
+    for (int r = 0; r < TOP; r++) {
+        selected[n * TOP + r] = final_sel[r];
+        weights[n * TOP + r] = sc[final_sel[r]] * inverse;
+    }
+}
+
 struct K3Full93Chain {
     bool initialized = false;
+    int routing_mode = 2;  // 0 = bounded k_res only; 1 = full 896 all tokens; 2 = smart 896 (k_tok_tail=4, k_dyn_max=6)
+    int k_tok_tail = 4;
+    int k_dyn_max = 6;
     int max_n = 0;
-    int k_res = 36;  // resident VRAM experts per layer across all 92 MoE layers (92 * 36 = 3,312 experts = 58.1 GB + 52.7 GiB for all 93 trunks)
+    int k_res = 28;  // permanent resident VRAM experts per layer across all 92 MoE layers + dynamic CardPool for the remaining 868 experts/layer
     Layer y[93];
     unsigned char *d_res_exp[93];
     const unsigned char **d_eptr[93];
     int *d_res_ids[93];
+    unsigned char *d_vram_mask[6];
     std::vector<int> h_res_ids[93];
+    std::vector<const unsigned char *> h_res_map[93];  // [896]: non-null if expert e is permanently pinned in d_res_exp[L]
+    int fd[93];
+    CardPool pool_card[6];
+    HostCache host_cache;
     Work w_card[6];
     std::vector<float> h_cur;
     std::vector<float> h_snaps[8];
@@ -52,6 +135,141 @@ struct K3Full93Chain {
 };
 
 static K3Full93Chain g_full93;
+
+// Executes a full MoE layer `y.L` routing across ALL 896 experts (`0..895`):
+//   - `routing_mode == 1`: unconstrained `top16` across all 896 experts for all N tokens.
+//   - `routing_mode >= 2`: `top16_smart_896` across all 896 experts (all VRAM experts + top `k_dyn_max` cold experts for the last `k_tok_tail` frontier tokens).
+static void run_moe_layer_full896(Work &w, const Layer &y, CardPool &pool, HostCache &hc, int fd,
+                                  const std::vector<const unsigned char *> &res_map, unsigned char *d_vram_mask,
+                                  int routing_mode, int k_tok_tail, int k_dyn_max,
+                                  const float *in, const float *const *snaps, int nsnap_in, float *out, int *out_uniq_count)
+{
+    const int N = w.N, L = y.L;
+    const Trunk &T = y.T;
+    aggregate_with(w, snaps, nsnap_in, in, rec_data(T, 37));
+    normalize_rows<<<N, 256>>>(w.Xn, w.Agg, y.input_gains, W);
+    if (y.mla) mla_block(w, y, out); else kda_attention(w, y, out);
+    if (L % 12 != 0) add_into<<<blocks((size_t)N * W), 256>>>(out, in, (size_t)N * W);
+    const float *sn[9]; int ns = nsnap_in;
+    for (int i = 0; i < nsnap_in; i++) sn[i] = snaps[i];
+    if (L % 12 == 0) sn[ns++] = in;
+    aggregate_with(w, sn, ns, out, rec_data(T, 38));
+    normalize_rows<<<N, 256>>>(w.post, w.Agg, rec_data(T, 5), W);
+
+    // Exact router + top-16 selection across ALL 896 experts (`0..895`)
+    CHECK(cudaMemset(w.bad, 0, 4));
+    transpose_rows<<<blocks((size_t)N * W), 256>>>(w.post_t, w.post, N, W);
+    router_scores<<<dim3((N + 127) / 128, EXPERTS), 128>>>(w.scores, w.choices, rec_data(T, 29), rec_data(T, 30), w.post_t, N);
+    if (routing_mode == 1) {
+        top16<<<blocks(N), 256>>>(w.scores, w.choices, w.selected, w.weights, w.bad, N);
+    } else {
+        unsigned char h_vram_mask[EXPERTS];
+        for (int e = 0; e < EXPERTS; e++) {
+            h_vram_mask[e] = (res_map[e] != nullptr) ? 1 : (pool.c.contains(ekey(L, e)) ? 2 : 0);
+        }
+        CHECK(cudaMemcpy(d_vram_mask, h_vram_mask, EXPERTS, cudaMemcpyHostToDevice));
+        top16_smart_896<<<blocks(N), 256>>>(w.scores, w.choices, d_vram_mask, w.selected, w.weights, w.bad, N, k_tok_tail, k_dyn_max);
+    }
+    CHECK(cudaMemcpy(w.h_selected.data(), w.selected, (size_t)N * TOP * 4, cudaMemcpyDeviceToHost));
+
+    gemm(w.post, N, W, T, 31, w.latent);
+    int total_uniq = 0;
+    for (int t0 = 0; t0 < N; t0 += w.moe_chunk) {
+        const int nc = std::min(w.moe_chunk, N - t0), slots = nc * TOP;
+        std::fill(w.h_count.begin(), w.h_count.end(), 0);
+        for (int i = 0; i < slots; i++) w.h_count[w.h_selected[(size_t)t0 * TOP + i]]++;
+        { int acc = 0; for (int e = 0; e < EXPERTS; e++) { w.h_start[e] = acc; acc += w.h_count[e]; } }
+        { std::vector<int> fill(EXPERTS, 0);
+          for (int n = 0; n < nc; n++) for (int r = 0; r < TOP; r++) {
+              const int e = w.h_selected[(size_t)(t0 + n) * TOP + r];
+              const int slot = w.h_start[e] + fill[e]++;
+              w.h_slot_token[slot] = t0 + n;
+              w.h_slot_of[n * TOP + r] = slot;
+          }
+        }
+        CHECK(cudaMemcpy(w.d_slot_token, w.h_slot_token.data(), (size_t)slots * 4, cudaMemcpyHostToDevice));
+        CHECK(cudaMemcpy(w.d_slot_of, w.h_slot_of.data(), (size_t)slots * 4, cudaMemcpyHostToDevice));
+
+        std::vector<int> perm_uniq, dyn_uniq;
+        for (int e = 0; e < EXPERTS; e++) {
+            if (!w.h_count[e]) continue;
+            if (res_map[e]) {
+                pool.h_eptr[e] = res_map[e];
+                perm_uniq.push_back(e);
+            } else {
+                dyn_uniq.push_back(e);
+            }
+        }
+        total_uniq = std::max(total_uniq, (int)(perm_uniq.size() + dyn_uniq.size()));
+
+        if (dyn_uniq.size() <= (size_t)pool.slots) {
+            // Fast path: all dynamic misses fit in `pool` simultaneously alongside all permanent experts!
+            if (!dyn_uniq.empty()) {
+                pool_ensure(pool, hc, L, fd, dyn_uniq, w.h_count.data(), 16);
+                for (int e : perm_uniq) pool.h_eptr[e] = res_map[e];
+            }
+            CHECK(cudaMemcpy(pool.d_eptr, pool.h_eptr.data(), EXPERTS * sizeof(void *), cudaMemcpyHostToDevice));
+            std::vector<int4> wide, narrow;
+            for (int e = 0; e < EXPERTS; e++) {
+                if (!w.h_count[e]) continue;
+                for (int i0 = 0; i0 < w.h_count[e]; i0 += 32) {
+                    const int cnt = std::min(32, w.h_count[e] - i0);
+                    (cnt <= 16 ? narrow : wide).push_back(make_int4(e, w.h_start[e] + i0, cnt, cnt <= 16 ? 16 : 32));
+                }
+            }
+            wide.insert(wide.end(), narrow.begin(), narrow.end());
+            const int n_items = (int)wide.size();
+            if (n_items > 0) {
+                CHECK(cudaMemcpy(w.d_items, wide.data(), (size_t)n_items * sizeof(int4), cudaMemcpyHostToDevice));
+                expert_proj_v3p<<<dim3(48, n_items), 32>>>(pool.d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 0, w.latent, LATENT, w.d_slot_token, w.d_items, w.G, EXPERT);
+                expert_proj_v3p<<<dim3(48, n_items), 32>>>(pool.d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 1, w.latent, LATENT, w.d_slot_token, w.d_items, w.U, EXPERT);
+                dense_activation<<<blocks((size_t)slots * EXPERT), 256>>>(w.G, w.U, (size_t)slots * EXPERT);
+                expert_proj_v3p<<<dim3(56, n_items), 32>>>(pool.d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 2, w.G, EXPERT, w.d_slot_token, w.d_items, w.D, LATENT);
+            }
+        } else {
+            // Chunked fallback if > `pool.slots` dynamic experts are needed in one large batch
+            std::vector<int> all_uniq;
+            for (int e = 0; e < EXPERTS; e++) if (w.h_count[e]) all_uniq.push_back(e);
+            for (size_t gi = 0; gi < all_uniq.size();) {
+                const size_t gj = std::min(all_uniq.size(), gi + (size_t)pool.slots);
+                const std::vector<int> grp(all_uniq.begin() + gi, all_uniq.begin() + gj);
+                std::vector<int> grp_dyn;
+                for (int e : grp) {
+                    if (res_map[e]) pool.h_eptr[e] = res_map[e];
+                    else grp_dyn.push_back(e);
+                }
+                if (!grp_dyn.empty()) {
+                    pool_ensure(pool, hc, L, fd, grp_dyn, w.h_count.data(), 16);
+                    for (int e : grp) if (res_map[e]) pool.h_eptr[e] = res_map[e];
+                }
+                CHECK(cudaMemcpy(pool.d_eptr, pool.h_eptr.data(), EXPERTS * sizeof(void *), cudaMemcpyHostToDevice));
+                std::vector<int4> wide, narrow;
+                for (int e : grp)
+                    for (int i0 = 0; i0 < w.h_count[e]; i0 += 32) {
+                        const int cnt = std::min(32, w.h_count[e] - i0);
+                        (cnt <= 16 ? narrow : wide).push_back(make_int4(e, w.h_start[e] + i0, cnt, cnt <= 16 ? 16 : 32));
+                    }
+                wide.insert(wide.end(), narrow.begin(), narrow.end());
+                const int n_items = (int)wide.size();
+                CHECK(cudaMemcpy(w.d_items, wide.data(), (size_t)n_items * sizeof(int4), cudaMemcpyHostToDevice));
+                const int s0 = w.h_start[grp.front()], s1 = w.h_start[grp.back()] + w.h_count[grp.back()];
+                expert_proj_v3p<<<dim3(48, n_items), 32>>>(pool.d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 0, w.latent, LATENT, w.d_slot_token, w.d_items, w.G, EXPERT);
+                expert_proj_v3p<<<dim3(48, n_items), 32>>>(pool.d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 1, w.latent, LATENT, w.d_slot_token, w.d_items, w.U, EXPERT);
+                dense_activation<<<blocks((size_t)(s1 - s0) * EXPERT), 256>>>(w.G + (size_t)s0 * EXPERT, w.U + (size_t)s0 * EXPERT, (size_t)(s1 - s0) * EXPERT);
+                expert_proj_v3p<<<dim3(56, n_items), 32>>>(pool.d_eptr, y.d_mapvals, y.d_refs, y.d_ref_base, 2, w.G, EXPERT, w.d_slot_token, w.d_items, w.D, LATENT);
+                gi = gj;
+            }
+        }
+        mix_ranks<<<blocks((size_t)nc * LATENT), 256>>>(w.mixture + (size_t)t0 * LATENT, w.D, w.d_slot_of, w.weights + (size_t)t0 * TOP, nc);
+    }
+    if (out_uniq_count) *out_uniq_count = total_uniq;
+    normalize_rows<<<N, 256>>>(w.lnorm, w.mixture, rec_data(T, 33), LATENT);
+    gemm(w.lnorm, N, LATENT, T, 32, w.routed);
+    gemm(w.post, N, W, T, 34, w.sg); gemm(w.post, N, W, T, 35, w.su);
+    dense_activation<<<blocks((size_t)N * SHARED), 256>>>(w.sg, w.su, (size_t)N * SHARED);
+    gemm(w.sg, N, SHARED, T, 36, w.so);
+    final_sum<<<blocks((size_t)N * W), 256>>>(out, w.routed, w.so, (size_t)N * W);
+}
 
 static void run_moe_layer_resident(Work &w, const Layer &y, const unsigned char *const *d_eptr,
                                    const int *d_res_ids, const std::vector<int> &h_res_ids, int k_res,
@@ -455,15 +673,23 @@ int k3_full93_init(const char *dataset_dir, int max_n, int k_res)
     std::lock_guard<std::mutex> lock(g_full93.mu);
     if (g_full93.initialized) return 0;
     if (k_res < 16) k_res = 16;
-    if (k_res > 44) k_res = 44;
+    if (k_res > 28) k_res = 28;  // Keep >= 6.0 GiB free per card for dynamic CardPool (~220 slots/card) + headroom
 
     g_full93.max_n = max_n;
     g_full93.k_res = k_res;
+    const char *env_f896 = getenv("K3_FULL896_ROUTING");
+    g_full93.routing_mode = (env_f896 && *env_f896) ? atoi(env_f896) : 2;
     g_full93.h_cur.resize((size_t)max_n * W);
     for (int k = 0; k < 8; k++) g_full93.h_snaps[k].resize((size_t)max_n * W);
+    for (int L = 0; L <= 92; L++) g_full93.fd[L] = -1;
 
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
+
+    // Initialize 48 GB pinned HostCache (~2,936 slots in pinned system RAM) for dynamic 896-expert routing
+    const char *env_hgb = getenv("K3_FULL93_HOST_GB");
+    const size_t host_gb = (env_hgb && atoi(env_hgb) > 0) ? (size_t)atoi(env_hgb) : 48;
+    g_full93.host_cache.init(host_gb << 30);
 
     const int l_start[6] = {0, 16, 32, 47, 62, 77};
     const int l_end[6]   = {15, 31, 46, 61, 76, 92};
@@ -473,6 +699,7 @@ int k3_full93_init(const char *dataset_dir, int max_n, int k_res)
         threads.emplace_back([dataset_dir, max_n, k_res, c, &l_start, &l_end]() {
             CHECK(cudaSetDevice(c));
             work_alloc(g_full93.w_card[c], c, max_n, c == 0, false, 8, 3);
+            CHECK(cudaMalloc(&g_full93.d_vram_mask[c], EXPERTS));
             const size_t exp_bytes = (size_t)k_res * EXPERT_RAW;
             unsigned char *pinned = nullptr;
             CHECK(cudaMallocHost(&pinned, exp_bytes));
@@ -499,7 +726,9 @@ int k3_full93_init(const char *dataset_dir, int max_n, int k_res)
                     snprintf(path, sizeof path, "%s/expert-%d/experts.direct", dataset_dir, L);
                     int fd = open(path, O_RDONLY);
                     if (fd < 0) { fprintf(stderr, "cannot open %s\n", path); exit(1); }
+                    g_full93.fd[L] = fd;  // Keep open for full 896-expert dynamic routing (`run_moe_layer_full896`)
                     std::vector<const unsigned char *> h_ptrs(EXPERTS, g_full93.d_res_exp[L]);
+                    g_full93.h_res_map[L].assign(EXPERTS, nullptr);
                     for (int j = 0; j < k_res; j++) {
                         const int e = chosen[j];
                         unsigned char *dst_p = pinned + (size_t)j * EXPERT_RAW;
@@ -509,28 +738,41 @@ int k3_full93_init(const char *dataset_dir, int max_n, int k_res)
                             if (r <= 0) { fprintf(stderr, "read of %s failed\n", path); exit(1); }
                             got += (size_t)r;
                         }
-                        h_ptrs[e] = g_full93.d_res_exp[L] + (size_t)j * EXPERT_RAW;
+                        const unsigned char *dev_ptr = g_full93.d_res_exp[L] + (size_t)j * EXPERT_RAW;
+                        h_ptrs[e] = dev_ptr;
+                        g_full93.h_res_map[L][e] = dev_ptr;
                     }
-                    close(fd);
                     CHECK(cudaMemcpy(g_full93.d_res_exp[L], pinned, exp_bytes, cudaMemcpyHostToDevice));
                     CHECK(cudaMalloc(&g_full93.d_eptr[L], EXPERTS * sizeof(void *)));
                     CHECK(cudaMemcpy(g_full93.d_eptr[L], h_ptrs.data(), EXPERTS * sizeof(void *), cudaMemcpyHostToDevice));
                 }
             }
             CHECK(cudaFreeHost(pinned));
+            // Initialize dynamic VRAM `CardPool` on remaining VRAM (keeping 2.8 GiB free headroom per card for MLA tiled scratch + PyTorch)
+            g_full93.pool_card[c].init(c, 2800ULL << 20, 16);
             size_t f_b = 0, t_b = 0;
             CHECK(cudaMemGetInfo(&f_b, &t_b));
-            fprintf(stderr, "[K3-Full93] Card %d: loaded Layers %2d..%2d (trunks + %d experts/layer) | VRAM %.2f / %.2f GiB\n",
-                    c, l_start[c], l_end[c], k_res, (t_b - f_b) / 1073741824.0, t_b / 1073741824.0);
+            fprintf(stderr, "[K3-Full93] Card %d: loaded Layers %2d..%2d (trunks + %d perm experts/layer + %d dyn VRAM slots) | VRAM %.2f / %.2f GiB\n",
+                    c, l_start[c], l_end[c], k_res, g_full93.pool_card[c].slots, (t_b - f_b) / 1073741824.0, t_b / 1073741824.0);
         });
     }
     for (auto &th : threads) th.join();
 
+    int total_dyn_slots = 0;
+    for (int c = 0; c < 6; c++) total_dyn_slots += g_full93.pool_card[c].slots;
     clock_gettime(CLOCK_MONOTONIC, &t1);
     g_full93.initialized = true;
-    fprintf(stderr, "[K3-Full93] Ready: ALL 93 Trunks (L0..L92) + 92 MoE Layers (%d resident experts = %.1f GB + 52.7 GiB trunks) loaded across GPUs 0..5 in %.2fs\n",
-            92 * k_res, 92 * k_res * (double)EXPERT_RAW / 1e9, seconds(t0, t1));
+    fprintf(stderr, "[K3-Full93] Ready: ALL 93 Trunks (L0..L92) + 92 MoE Layers (896 experts/layer routable: %d perm VRAM + %d dyn VRAM + %zu pinned RAM slots) loaded across GPUs 0..5 in %.2fs\n",
+            92 * k_res, total_dyn_slots, g_full93.host_cache.cap_slots, seconds(t0, t1));
     return 0;
+}
+
+void k3_full93_set_routing_mode(int mode, int k_tok_tail, int k_dyn_max)
+{
+    std::lock_guard<std::mutex> lock(g_full93.mu);
+    g_full93.routing_mode = mode;
+    if (k_tok_tail > 0) g_full93.k_tok_tail = k_tok_tail;
+    if (k_dyn_max > 0) g_full93.k_dyn_max = k_dyn_max;
 }
 
 // Runs `n` token embeddings (`in_embed [n, 7168]`) sequentially through ALL 93 Kimi K3 Layers (`Layer 0` through `Layer 92`)
@@ -577,8 +819,15 @@ float k3_full93_forward(const float *in_embed, int n, float *out_hidden, float *
             const float *sn[9];
             for (int k = 0; k < nsnap; k++) sn[k] = w.snap[k];
             int u_cnt = 0;
-            run_moe_layer_resident(w, g_full93.y[L], g_full93.d_eptr[L], g_full93.d_res_ids[L], g_full93.h_res_ids[L],
-                                   g_full93.k_res, w.cur, sn, nsnap, w.nxt, &u_cnt);
+            if (g_full93.routing_mode > 0) {
+                run_moe_layer_full896(w, g_full93.y[L], g_full93.pool_card[c], g_full93.host_cache, g_full93.fd[L],
+                                      g_full93.h_res_map[L], g_full93.d_vram_mask[c],
+                                      g_full93.routing_mode, g_full93.k_tok_tail, g_full93.k_dyn_max,
+                                      w.cur, sn, nsnap, w.nxt, &u_cnt);
+            } else {
+                run_moe_layer_resident(w, g_full93.y[L], g_full93.d_eptr[L], g_full93.d_res_ids[L], g_full93.h_res_ids[L],
+                                       g_full93.k_res, w.cur, sn, nsnap, w.nxt, &u_cnt);
+            }
             if (out_uniq_cnts) out_uniq_cnts[L - 1] = u_cnt;
             if (L % 12 == 0 && nsnap < 8) {
                 CHECK(cudaMemcpy(w.snap[nsnap], w.cur, bytes, cudaMemcpyDeviceToDevice));

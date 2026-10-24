@@ -1059,9 +1059,11 @@ class MultiGPUCloverCoordinator:
         # 1. Load ALL 93 Kimi K3 Trunks (L0..L92) + all 92 MoE Expert Layers + Layer 93 Tail across GPUs 0..5
         # Raising `max_n=1024` (from 256) allows up to 32 windows (1,024 Kimi K3 tokens) or a full 4-to-8-session clubbed batch
         # to execute across all 93 Kimi K3 layers in ONE single pass (~1.3s) instead of 2–4 sequential passes!
-        self.k3_experts = K3GPUExpertsRunner.get_instance(max_n=1024, full_93_layers=True, k_res=36)
+        self.k3_experts = K3GPUExpertsRunner.get_instance(max_n=1024, full_93_layers=True, k_res=28)
+        if hasattr(self.k3_experts.lib, "k3_full93_set_routing_mode"):
+            self.k3_experts.lib.k3_full93_set_routing_mode(2, 1, 2)
         print(
-            f"[Clover AI] Loaded ALL 93 Kimi K3 Trunks + 92 MoE Expert Layers across GPUs {self.k3_experts.cards} in {self.k3_experts.setup_s}s",
+            f"[Clover AI] Loaded ALL 93 Kimi K3 Trunks + 92 MoE Expert Layers (896 experts/layer routable) across GPUs {self.k3_experts.cards} in {self.k3_experts.setup_s}s",
             flush=True,
         )
 
@@ -1647,14 +1649,25 @@ class MultiGPUCloverCoordinator:
             if len(batch) == 1:
                 req = batch[0]
                 t0 = time.perf_counter()
-                plans, lat_steps, exit_reason, tool_calls = eng.run_agent_planning(req.prompt, history=req.hist_snapshot)
-                torch.cuda.synchronize(eng.dev_ha)
-                t_plan_ms = (time.perf_counter() - t0) * 1000.0
+                direct_hit = eng.try_direct_k3_ha_ncm_decode(req.prompt, history=req.hist_snapshot)
+                if direct_hit is not None:
+                    text_mbr, ids_mbr, k3_expert_meta, mean_conf = direct_hit
+                    torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
+                    t_plan_ms = 0.0
+                    t_ncm_mbr_ms = (time.perf_counter() - t0) * 1000.0
+                    plans = [text_mbr]
+                    lat_steps = 11
+                    exit_reason = f"direct_ncm_vq_conf_{mean_conf}"
+                    tool_calls = []
+                else:
+                    plans, lat_steps, exit_reason, tool_calls = eng.run_agent_planning(req.prompt, history=req.hist_snapshot)
+                    torch.cuda.synchronize(eng.dev_ha)
+                    t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
-                t1 = time.perf_counter()
-                text_mbr, ids_mbr, k3_expert_meta = eng.render_ncm_with_k3_experts(plans, cands=req.cands)
-                torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
-                t_ncm_mbr_ms = (time.perf_counter() - t1) * 1000.0
+                    t1 = time.perf_counter()
+                    text_mbr, ids_mbr, k3_expert_meta = eng.render_ncm_with_k3_experts(plans, cands=req.cands)
+                    torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
+                    t_ncm_mbr_ms = (time.perf_counter() - t1) * 1000.0
 
                 h_len = len(req.hist_snapshot)
                 if req.remember:

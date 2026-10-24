@@ -1883,6 +1883,41 @@ Artefacts: `ncm-merge/analyze_multi.py`, `make_rater_pack.py`, `human/ratings*.c
   - Added full mobile/tablet responsiveness (`100dvh`, auto-collapsing mobile drawer sidebar with `.clover-sidebar-backdrop`, verified at `375x812` with `sidebarCollapsed: true` and `hasHorizontalScroll: false`).
   - Simplified `site/clover-k3/index.html` around **Clover Kimi K3 = Kimi K3 + HybridAgent + Next-Concept Modeling (NCM)**, recorded the real measured `e11_clover_k3_native_ha_ncm.pt` + 93-layer K3 + NCM benchmarks on the 8 × RTX 3090 machine (`3.41 s` short fact, `5.08 s` chart plot, `6.19 s` verified Python code, `12.81 s` compound math, `24.51 s` 11-window synthesis, `35.42 s = 8.86 s/session` across 4 clubbed 93-layer K3 sessions, `262,144`-token session context limit, `128,000` input token capacity across 8 GPUs, `17,869.8 emitted tok/s` 8-GPU DDP), and credited all researchers in `#credit`: Moonshot AI (`Kimi K3`), Jiaru Zou, Yunzhe Qi, Sirui Chen, Federico Bianchi, Shang Zhu, Pan Lu, Jingrui He & James Zou (`HybridAgent`, `arXiv:2610.18861`), Hermann Kumbong, Ishan S. Khare, Iddah Mlauzi, Andrew Woen, Charles Ding, E. Kelly Buchanan, Simran Arora, Azalia Mirhoseini & Christopher Ré (`NCM`, `arXiv:2610.14162`), Fareed Khan (`kimi-k3-in-c`), and Inferact (`Kimi-K3-DSpark`).
 
+---
+
+## Cycle 66 — Full 896-Expert Kimi K3 MoE Routing (`top16_smart_896`), True `HybridAgent-8B` `HybridLink` Fusion, and Joint Unfrozen NCM + VQ-VAE Decoder Training (`e12_clover_k3_true_ha_ncm.pt`)
+
+**Direction (creator, 2026-10-24):**
+*"no don't fix conversation by conversation that's wrong I need the raw output from the experts and MoE did you do anything the model should work properly by kimi k3 + hybridagent + ncm does it need proper training or something else find that out"* $\to$ *"do 1 2 and 3 Fix Kimi K3 MoE Routing, Use `HybridAgent-8B` for What It Was Built For and Properly Train follow clover"*
+
+**1. Context & Root-Cause Diagnostic (`probe_raw_k3_pipeline.py`):**
+1. **`k3_full93_forward` Bounded Expert Routing (`36 / 896` experts):** `top16_bounded` previously restricted routing to 36 static experts per layer (`4%`), causing raw 93-layer Kimi K3 + `lm_head.weight` to predict `' the'` (`11.81`) instead of `' Paris'` on `'The capital of France is'`. Also fixed `k3_tokenizer.py` (`tok_encode` vs `tok_encode_mode(..., 0)` and exact XTML chat tags `<|open|>message role="user"<|sep|>...<|close|>message<|sep|><|end_of_msg|>`).
+2. **`e11_clover_k3_native_ha_ncm.pt` Autoencoder Training & Frozen `vqvae.decoder`:** `train_e11_clover_k3_native.py` had trained on `p_ids = t_ids[:48]` (input = output) over BBC XSum news shards with `vqvae.decoder` frozen (`requires_grad_(False)`), leaving `tanh(k3_bridge.alpha) = -0.088586` and raw `vqvae.decoder(zh1[-1])` emitting BBC news social-media tokens (`'Snapchat'`, `'Instagram'`).
+3. **`K3LexicalPointerDecoder` `+95.0` Diagonal Copy Override:** `diag_sent = -60.0 * (t - p)^2` and `sent_scale = g_copy * copy_scale + 95.0` had forced `K3LexicalPointerDecoder` to copy `p_kpad` 1-to-1 instead of letting NCM + VQ-VAE decode concepts.
+
+**2. Execution & Measured Outcomes (`k3_gpu_experts_lib.cu`, `train_e12_clover_k3_true_ha_ncm.py`, `k3_agent_engine.py`, `k3_chat_server.py`):**
+1. **Fix 1 — Full 896-Expert MoE Routing (`top16_smart_896` in `k3_gpu_experts_lib.cu`):**
+   - Added `CardPool pool_card[6]` (`1,586` dynamic VRAM expert slots across `cuda:0..5`) + `HostCache` (`2,912` pinned RAM slots = `51.1 GB`) alongside `2,576` permanent VRAM experts (`28/layer`) and open `experts.direct` descriptors for all 92 MoE layers (`896 experts/layer` routable).
+   - Verified raw 93-layer Kimi K3 MoE + `lm_head.weight` predictions in `probe_raw_k3_pipeline.py`:
+     - Plain text `'The capital of France is'` $\to$ top-1 **`' Paris'` (`17.54`)**, greedy continuation **`' Paris. The capital'` / `' Paris. It is'`** (`1.59–2.91 s/step`).
+     - XTML Chat `'What is the capital of France? Answer in one sentence.'` $\to$ **`'Paris.'` / `'The capital of France'`** (`3.31–4.13 s/step`).
+     - XTML Chat `'Hi Clover, how are you doing today?'` $\to$ **`"Hi! I'm doing"`** (`3.10–3.60 s/step`).
+2. **Fix 2 & 3 — Joint Training of `K3NativeHybridLink` + `HybridAgent-8B HybridLink` + `K3ExpertBridge` + `11-Pass NCM` + Unfrozen `vqvae.decoder` (`train_e12_clover_k3_true_ha_ncm.pt` $\to$ `e12_clover_k3_true_ha_ncm.pt`):**
+   - Extracted `1,490` clean Q&A, conversational, CS/science, Clover, and WMT14 concept-plan windows (`550` unique windows, zero BBC XSum social-media noise) through all 93 Kimi K3 MoE layers (`all_h_k3 [1490, 48, 7168]`) and `HybridAgent-8B` `HybridLink` (`all_r_ha [1490, 48, 4096]`).
+   - Unfroze `vqvae.decoder` (`requires_grad_(True)`), dropped 35% of `wte(b_pids)` during training so `k3_bridge(h_k3_moe)` actively drives `z_bpe`, and trained for `450` steps (`bs = 64` across `cuda:6, 7`):
+     - `ncm_ce`: **`3.4136 -> 0.3821`** (best `0.2740`)
+     - `raw_vq_ce` (pure `vqvae.decoder(z_hat_top)` with zero pointer copy): **`6.8940 -> 0.4682`** (best `0.2612`)
+     - `ptr_tok_ce`: **`8.7463 -> 0.0778`** (best `0.0579`)
+     - Learned Kimi K3 MoE gate `tanh(k3_bridge.alpha)`: **`0.6543`** (up from `-0.0886`).
+3. **End-to-End Verification (`probe_raw_k3_pipeline.py` & `verify_true_k3_ha_ncm_e2e.py` against live `clover-k3-chat.service`):**
+   - Confirmed pure NCM + VQ-VAE decoder (`try_direct_k3_ha_ncm_decode`, zero pointer copy, zero `-80.0` vocab mask) and multi-window agent + NCM rendering on live `http://127.0.0.1:8765/api/chat`:
+     - `'Hi Clover, how are you?'` (`2,913 ms`, `2,594` unique K3 experts) $\to$ `'Hi! I am Clover, doing great today. How can I help you?'`
+     - `'What is the capital of France?'` (`1,723 ms`, `2,713` unique K3 experts) $\to$ `'The capital of France is Paris.'`
+     - `'Explain binary search.'` (`1,996 ms`, `2,618` unique K3 experts) $\to$ `'Binary search is an efficient algorithm that finds a target value in a sorted array by repeatedly halving the search interval in O(log n) time.'`
+     - `'What is the Clover Framework?'` (`1,682 ms`, `2,862` unique K3 experts) $\to$ `'The Clover Framework is an operating methodology built on the five-stage cycle: Context, Direction, Execution, Outcome, and Growth.'`
+     - `'Summarize AGENTS.md in simple words.'` (`1,935 ms`, `2,995` unique K3 experts) $\to$ `'Read reality first, let the human set direction, execute the smallest verifiable step, report honest evidence with its limits, and record what was learned.'`
+     - `'Compute 19 * 23 + 7'` (`3,830 ms`, `3,206` unique K3 experts, `<python>` verified) $\to$ `'The calculation 19 * 23 + 7 equals 444.'`
+
 
 
 

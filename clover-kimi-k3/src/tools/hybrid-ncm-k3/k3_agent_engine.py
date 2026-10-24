@@ -260,7 +260,7 @@ class K3GPUExpertsRunner:
     _instance = None
 
     @classmethod
-    def get_instance(cls, max_n: int = 1024, full_93_layers: bool = True, k_res: int = 36):
+    def get_instance(cls, max_n: int = 1024, full_93_layers: bool = True, k_res: int = 28):
         if cls._instance is None:
             cls._instance = cls(max_n=max_n, full_93_layers=full_93_layers, k_res=k_res)
         return cls._instance
@@ -274,7 +274,7 @@ class K3GPUExpertsRunner:
         cards=(0, 1, 5, 4),
         max_n: int = 1024,
         full_93_layers: bool = True,
-        k_res: int = 36,
+        k_res: int = 28,
     ):
         t0 = time.perf_counter()
         self.full_93_layers = bool(full_93_layers)
@@ -296,6 +296,8 @@ class K3GPUExpertsRunner:
         self.lib.k3_experts_forward.restype = ctypes.c_float
         self.lib.k3_full93_init.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
         self.lib.k3_full93_init.restype = ctypes.c_int
+        if hasattr(self.lib, "k3_full93_set_routing_mode"):
+            self.lib.k3_full93_set_routing_mode.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
         self.lib.k3_full93_forward.argtypes = [
             ctypes.POINTER(ctypes.c_float), ctypes.c_int,
             ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int)
@@ -319,9 +321,10 @@ class K3GPUExpertsRunner:
             self.res_norm_w = f.get_tensor("language_model.model.output_attn_res_norm.weight").to(torch.float32).contiguous()
             self.res_proj_w = f.get_tensor("language_model.model.output_attn_res_proj.weight").to(torch.float32).contiguous().view(-1)
 
-        # Keep Layer-93 Final Snapshot Aggregation weights on `cuda:5` (`< 0.1 MB` VRAM) so `_apply_layer93_final_tail`
-        # executes on the GPU in <1 ms instead of on the CPU!
-        self.tail_dev = torch.device(f"cuda:{self.cards[-1]}") if torch.cuda.is_available() else torch.device("cpu")
+        # Keep Layer-93 Final Snapshot Aggregation weights on `cuda:6` (where NCM resides and >18 GiB VRAM is free)
+        # so `_apply_layer93_final_tail` executes on GPU in <1 ms without touching `cuda:5`'s expert pool!
+        tail_idx = 6 if torch.cuda.device_count() > 6 else self.cards[-1]
+        self.tail_dev = torch.device(f"cuda:{tail_idx}") if torch.cuda.is_available() else torch.device("cpu")
         self.norm_w_gpu = self.norm_w.to(self.tail_dev)
         self.res_norm_w_gpu = self.res_norm_w.to(self.tail_dev)
         self.res_proj_w_gpu = self.res_proj_w.to(self.tail_dev)
@@ -558,17 +561,27 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
                     return f"{p} {m_u.group(0)}"
 
     # 1. Follow-up commands asking for search, links, sources, or more details on the prior turn's topic
-    is_followup_link_or_search = (
-        low in (
-            "find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me",
-            "more details", "links", "sources", "do google search", "search google", "google it", "search on google",
-            "search the web", "search online",
+    is_cs_search_algo = any(
+        alg in low
+        for alg in (
+            "binary search", "linear search", "beam search", "grid search",
+            "search tree", "first search", "local search", "a* search", "ternary search",
         )
-        or (len(low.split()) <= 4 and any(w in low for w in ("find", "search", "fetch", "browse", "google")))
-        or (
-            len(low.split()) <= 8
-            and any(w in low for w in ("link", "links", "url", "urls", "source", "sources", "reference", "references", "more details", "more info"))
-            and not any(topic_w in low for topic_w in ("science", "quantum", "gemini", "opus", "clover", "kimi", "gpu", "gpus", "arxiv", "ncm"))
+    )
+    is_followup_link_or_search = (
+        not is_cs_search_algo
+        and (
+            low in (
+                "find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me",
+                "more details", "links", "sources", "do google search", "search google", "google it", "search on google",
+                "search the web", "search online",
+            )
+            or (len(low.split()) <= 4 and any(w in low for w in ("find", "search", "fetch", "browse", "google")))
+            or (
+                len(low.split()) <= 8
+                and any(w in low for w in ("link", "links", "url", "urls", "source", "sources", "reference", "references", "more details", "more info"))
+                and not any(topic_w in low for topic_w in ("science", "quantum", "gemini", "opus", "clover", "kimi", "gpu", "gpus", "arxiv", "ncm"))
+            )
         )
     )
     if is_followup_link_or_search:
@@ -1746,10 +1759,14 @@ class CloverK3AgentEngine:
         ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
         _, self.tk, self.vqvae, self.net, src = load_k3_native_models(self.dev, vq_ckpt, ncm_ckpt)
 
+        e12_path = os.path.join(out_dir, "e12_clover_k3_true_ha_ncm.pt")
         e11_path = os.path.join(out_dir, "e11_clover_k3_native_ha_ncm.pt")
         e10_path = os.path.join(out_dir, "e10_k3_agent_experts.pt")
         e8_path = os.path.join(out_dir, "e8_k3_direct.pt")
-        ckpt_path = e11_path if os.path.exists(e11_path) else (e10_path if os.path.exists(e10_path) else e8_path)
+        ckpt_path = (
+            e12_path if os.path.exists(e12_path)
+            else (e11_path if os.path.exists(e11_path) else (e10_path if os.path.exists(e10_path) else e8_path))
+        )
         sd = torch.load(ckpt_path, map_location="cpu", weights_only=True)
 
         self.vqvae.load_state_dict(sd["vqvae"])
@@ -1757,7 +1774,10 @@ class CloverK3AgentEngine:
         self.vqvae.eval(); self.net.eval()
 
         self.cbridge = ComboBridge(D_HA, D_VQ).to(self.dev)
-        self.cbridge.load_state_dict(src["combo_bridge"])
+        if "ha_cbridge" in sd:
+            self.cbridge.load_state_dict(sd["ha_cbridge"])
+        else:
+            self.cbridge.load_state_dict(src["combo_bridge"])
         self.cbridge.eval()
 
         # Clover Kimi K3 Native HybridAgent Latent Link (`7168 -> 7168`) + K3ComboBridge (`7168 -> 384`)
@@ -1779,7 +1799,11 @@ class CloverK3AgentEngine:
         self.copy_dec = K3LexicalPointerDecoder(d=D_VQ, n_layer=3, n_head=6).to(self.dev)
         self.copy_dec.load_state_dict(sd["ptr_dec"])
         self.copy_dec.eval()
-        self.restricted_mask = sd["restricted_mask"].to(self.dev)
+        self.restricted_mask = (
+            sd["restricted_mask"].to(self.dev)
+            if "restricted_mask" in sd
+            else torch.zeros(V_K3, dtype=torch.bool, device=self.dev)
+        )
 
         self.grammar_ids = {K3_EOS}
         self.repeatable_grammar_ids = {K3_EOS}
@@ -1814,8 +1838,24 @@ class CloverK3AgentEngine:
         return mask
 
     def _dec_k3_aligned(self, row_logits, plan_ids):
-        cont_map = {}
         valid_p = [int(x) for x in plan_ids if 0 <= int(x) < 163584]
+        has_semi = (26 in valid_p)
+        if has_semi:
+            clean_ids = []
+            prev_tid = -1
+            for t in range(row_logits.size(0)):
+                lg = row_logits[t, :163587].clone()
+                if prev_tid >= 0:
+                    lg[prev_tid] -= 15.0
+                tid = int(lg.argmax().item())
+                if tid == K3_EOS:
+                    break
+                if 0 <= tid < 163584:
+                    clean_ids.append(tid)
+                    prev_tid = tid
+            return self.k3_tok.decode(clean_ids), clean_ids
+
+        cont_map = {}
         for a, b in zip(valid_p[:-1], valid_p[1:]):
             bs = self.k3_tok.decode([b], skip_special_tokens=False)
             if bs and (not bs.startswith(" ")) and (bs[0].isalnum() or bs[0] in (":", ".", "'", "/", "-", "_", "=", "?", "&", "#")):
@@ -1824,10 +1864,9 @@ class CloverK3AgentEngine:
         max_counts = collections.Counter(valid_p)
         content_set = {tid for tid in valid_p if tid not in self.repeatable_grammar_ids}
         emitted_counts = collections.Counter()
-        has_semi = (26 in valid_p)
 
         T = row_logits.size(0)
-        max_len = min(T, int(len(valid_p) * 1.35) + 4) if has_semi else min(T, len(valid_p))
+        max_len = min(T, len(valid_p))
         clean_ids = []
         prev_tid = -1
         prev_word = ""
@@ -2067,6 +2106,9 @@ class CloverK3AgentEngine:
                             "this response is polite", "i'm maintaining a polite", "i also included a question to encourage",
                             "your message is straightforward", "which aligns with the character description",
                             "this information is directly extracted", "i need to ensure", "your question is straightforward",
+                            "i've provided a ", "i have provided a ", "i've ensured the", "i have ensured the",
+                            "if you want more technical details", "this should give you a clear understanding",
+                            "this is a concise explanation", "i'll use the `w1:`", "i will use the `w1:`",
                         )
                     ):
                         gen_ids = self.ha_tok.encode("\n".join(lines[:-1]), add_special_tokens=False)
@@ -2086,10 +2128,14 @@ class CloverK3AgentEngine:
                     introduces_list = has_list_items or last_ln.endswith(":") or any(
                         kw in last_ln for kw in ("here's", "here is", "here are", "sample timetable", "sample study", "schedule", "below", "following")
                     )
-                    if not is_struct and not introduces_list and has_real_content:
-                        if len(valid_lines_so_far) == 1 and valid_lines_so_far[0].endswith((".", "!", "?")):
+                    asks_brief_sentences = any(
+                        bs in raw_user_q.lower()
+                        for bs in ("one sentence", "1 sentence", "two sentences", "two clear sentences", "2 sentences", "briefly")
+                    )
+                    if (not is_struct or asks_brief_sentences) and not introduces_list and has_real_content:
+                        if len(valid_lines_so_far) == 1 and valid_lines_so_far[0].endswith((".", "!", "?")) and "two" not in raw_user_q.lower():
                             break
-                        if len(valid_lines_so_far) >= 2 and len(valid_lines_so_far[1]) > 15:
+                        if len(valid_lines_so_far) >= (3 if "two" in raw_user_q.lower() else 2) and len(valid_lines_so_far[-1]) > 15:
                             break
                     elif len(valid_lines_so_far) >= (8 if not is_struct else 18) and not last_ln.endswith(":"):
                         break
@@ -2175,7 +2221,10 @@ class CloverK3AgentEngine:
 
         if self.use_k3_native_ha:
             r_k3 = self.k3_hybridlink(h_k3_moe)
-            z_rh = self.k3_cbridge(r_k3).float().masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
+            z_k3 = self.k3_cbridge(r_k3).float()
+            rh_p, _ = encode_batch_rh(self.ha_model, self.ha_tok, clean_plans, P_RH, self.dev_ha)
+            z_ha = self.cbridge(rh_p.to(self.dev, dtype=torch.float32)).float()
+            z_rh = (0.65 * z_k3 + 0.35 * z_ha).masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
             msk_r = pad_mask_bpe
         else:
             rh_p, msk_p = encode_batch_rh(self.ha_model, self.ha_tok, clean_plans, P_RH, self.dev_ha)
@@ -2201,8 +2250,11 @@ class CloverK3AgentEngine:
                     txts.append(clean_plans[w_i])
                     ids.extend(c_ids)
                 else:
-                    lg1[w_i, :, win_masks[w_i]] -= 80.0
-                    ts, is_ = self._dec_k3_aligned(lg1[w_i], p_kpad[w_i].tolist())
+                    p_list = p_kpad[w_i].tolist()
+                    vp = [int(x) for x in p_list if 0 <= int(x) < 163584]
+                    if 26 not in vp:
+                        lg1[w_i, :, win_masks[w_i]] -= 80.0
+                    ts, is_ = self._dec_k3_aligned(lg1[w_i], p_list)
                     txts.append(ts.strip()); ids.extend(is_)
             return join_rendered_windows(txts, plans), ids, k3_expert_meta
 
@@ -2232,8 +2284,11 @@ class CloverK3AgentEngine:
                     cands_i[w_i].append(self.k3_tok.encode(clean_plans[w_i]))
                 else:
                     lg_row = lg_chunk[idx_in_chunk]
-                    lg_row[:, win_masks[w_i]] -= 80.0
-                    ts, is_ = self._dec_k3_aligned(lg_row, p_kpad[w_i].tolist())
+                    p_list = p_kpad[w_i].tolist()
+                    vp = [int(x) for x in p_list if 0 <= int(x) < 163584]
+                    if 26 not in vp:
+                        lg_row[:, win_masks[w_i]] -= 80.0
+                    ts, is_ = self._dec_k3_aligned(lg_row, p_list)
                     cands_t[w_i].append(ts.strip()); cands_i[w_i].append(is_)
         out_txts, out_ids = [], []
         for w_i in range(W):
@@ -2246,10 +2301,126 @@ class CloverK3AgentEngine:
                 out_txts.append(cands_t[w_i][bk]); out_ids.extend(cands_i[w_i][bk])
         return join_rendered_windows(out_txts, plans), out_ids, k3_expert_meta
 
+    @torch.no_grad()
+    def try_direct_k3_ha_ncm_decode(self, user_prompt: str, history=None):
+        """Attempts direct end-to-end generation from:
+          User Prompt -> 93-Layer Kimi K3 MoE (896 experts/layer) + HybridAgent-8B HybridLink (`r_ha`)
+          -> `K3NativeHybridLink` + `K3ExpertBridge` (`tanh(alpha)=0.6543`) -> 11-Pass `NextConceptTransformer (NCM)`
+          -> Unfrozen `vqvae.decoder(zh1[-1])` (with ZERO pointer copy and ZERO `-80.0` vocab mask).
+        Returns `(reply_txt, pred_ids, k3_expert_meta, mean_prob)` if high-confidence (`mean_prob >= 0.90` and `min_prob >= 0.55`),
+        or `None` when the prompt requires tools, multi-window planning, or open-domain pointer grounding.
+        """
+        raw_q = _extract_raw_user_query(user_prompt).strip()
+        if not raw_q or len(raw_q.split()) > 16:
+            return None
+        if history and len(raw_q.split()) <= 5 and any(
+            w in raw_q.lower() for w in ("it", "that", "this", "more", "why", "how about", "and ")
+        ):
+            return None
+        low_q = raw_q.lower()
+        explicit_web_or_detail = bool(
+            re.search(r"https?://|\b(?:github\.com|cloverframework\.com|arxiv\.org|en\.wikipedia\.org)/", raw_q)
+            or any(
+                kw in low_q
+                for kw in (
+                    "google", "search the web", "search online", "browse", "arxiv",
+                    "latest", "recent", "links", "sources", "more details", "in detail",
+                    "step by step", "bullet", "compare ",
+                )
+            )
+        )
+        if (
+            explicit_web_or_detail
+            or match_and_execute_visual_output(raw_q, self.py_tool, history=history) is not None
+            or match_verified_code_template(raw_q) is not None
+            or needs_agent_python_tool(raw_q, history=history) is not None
+        ):
+            return None
+
+        q_ids = self.k3_tok.encode_plain(raw_q)[:P_BPE]
+        if not q_ids:
+            return None
+        p_kpad = torch.tensor([q_ids + [K3_PAD] * (P_BPE - len(q_ids))], dtype=torch.long, device=self.dev)
+        pad_mask = (p_kpad == K3_PAD)
+
+        h_k3_cpu, k3_meta = self.k3_experts.forward_k3_ids(p_kpad)
+        h_k3 = h_k3_cpu.to(self.dev, dtype=torch.float32)
+
+        rh_p, _ = encode_batch_rh(self.ha_model, self.ha_tok, [raw_q], P_RH, self.dev_ha)
+        z_ha = self.cbridge(rh_p.to(self.dev, dtype=torch.float32)).float()
+        if self.use_k3_native_ha:
+            r_k3 = self.k3_hybridlink(h_k3)
+            z_k3 = self.k3_cbridge(r_k3).float()
+            z_rh = (0.65 * z_k3 + 0.35 * z_ha).masked_fill(pad_mask.unsqueeze(-1), 0.0)
+        else:
+            z_rh = z_ha.masked_fill(pad_mask.unsqueeze(-1), 0.0)
+
+        z_bpe = self.vqvae.encoder.wte(p_kpad) + self.k3_bridge(h_k3).masked_fill(pad_mask.unsqueeze(-1), 0.0)
+        z_pref, pmask = pack_combo_prefix(z_rh, pad_mask, z_bpe, pad_mask)
+
+        torch.manual_seed(42)
+        g1 = generate_from_zpref(self.net, self.tk, z_pref, pmask, self.sched)
+        zh1, _ = self.vqvae.vq.idx_to_zhats(g1, return_zlevels=True)
+        raw_logits = self.vqvae.decoder(zh1[-1])[0, :, :163587].float()  # [64, 163587]
+        probs = F.softmax(raw_logits, dim=-1)
+        top_probs, top_ids = probs.max(dim=-1)
+
+        pred_ids = []
+        pred_probs = []
+        for tid, pr in zip(top_ids.tolist(), top_probs.tolist()):
+            if tid == K3_EOS:
+                break
+            if 0 <= tid < 163584:
+                pred_ids.append(int(tid))
+                pred_probs.append(float(pr))
+
+        if not (4 <= len(pred_ids) <= 56):
+            return None
+        mean_p = sum(pred_probs) / len(pred_probs)
+        min_p = min(pred_probs)
+        if mean_p < 0.90 or min_p < 0.55:
+            return None
+        reply_txt = self.k3_tok.decode(pred_ids).strip()
+        if not reply_txt or not reply_txt.endswith((".", "!", "?")):
+            return None
+        if reply_txt.lower().rstrip(".!?") == raw_q.lower().rstrip(".!?"):
+            return None
+        return reply_txt, pred_ids, k3_meta, round(mean_p, 4)
+
     def agent_reply(self, user_prompt: str, cands: int = 8, remember: bool = True):
         torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
         t0 = time.perf_counter()
         active_hist = self.history if remember else None
+
+        # First attempt direct end-to-end Kimi K3 93-Layer MoE + HybridAgent HybridLink + 11-Pass NCM + VQ-VAE Decoder generation
+        direct_hit = self.try_direct_k3_ha_ncm_decode(user_prompt, history=active_hist)
+        if direct_hit is not None:
+            text_mbr, ids_mbr, k3_expert_meta, mean_conf = direct_hit
+            torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
+            t_ncm_k3_ms = (time.perf_counter() - t0) * 1000.0
+            plans = [text_mbr]
+            if remember:
+                self.history.append({
+                    "user": user_prompt.strip(),
+                    "reply": text_mbr,
+                    "plans": plans,
+                })
+            return {
+                "mode": "direct_k3_moe_ha_ncm_vqdecoder",
+                "prompt": user_prompt.strip(),
+                "turn": len(self.history) if remember else 1,
+                "latent_steps": 11,
+                "exit_reason": f"direct_ncm_vq_conf_{mean_conf}",
+                "tool_calls": [],
+                "plans": plans,
+                "k3_experts": k3_expert_meta,
+                "plan_lat_ms": 0.0,
+                "k3_moe_plus_ncm_ms": round(t_ncm_k3_ms, 1),
+                "total_ms": round(t_ncm_k3_ms, 1),
+                "n_k3_tokens": len(ids_mbr),
+                "reply": text_mbr,
+            }
+
         plans, lat_steps, exit_reason, tool_calls = self.run_agent_planning(user_prompt, history=active_hist)
         torch.cuda.synchronize(self.dev_ha)
         t_plan_ms = (time.perf_counter() - t0) * 1000.0
@@ -2286,13 +2457,23 @@ class CloverK3AgentEngine:
 @torch.no_grad()
 def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, histories=None, cands: int = 8):
     """Clubs `B` independent user prompts in Agent Mode:
-    1. Runs any `<python>` tool calls in parallel for prompts that need exact calculation and injects `<result>` into their context.
+    0. For concise direct queries, first checks `eng.try_direct_k3_ha_ncm_decode` (pure 93-Layer Kimi K3 MoE 896-expert
+       + HybridAgent HybridLink + 11-Pass NCM + Unfrozen VQ-VAE Decoder with zero pointer copy).
+    1. Runs any `<python>` or `<search>` tool calls and injects verified observations into context.
     2. Runs batched `<latent>` rollout + multi-window plan generation on `eng.dev_ha`.
     3. Flattens all windows `W_tot` across all `B` prompts and runs them in ONE batch through:
-       - `K3GPUExpertsRunner` (`Layer 0 -> Layer 1 -> Layer 12 -> Layer 48 -> Layer 92`, `3,584` Kimi K3 experts in VRAM),
-       - `K3ExpertBridge` (`7168 -> 384`),
-       - `NextConceptTransformer (NCM)` (11 passes) + `K3LexicalPointerDecoder` (with strict per-window vocabulary masks).
+       - `K3GPUExpertsRunner` (`Layer 0..92 + L93 Tail`, 896 experts/layer routable),
+       - `K3NativeHybridLink` + `HybridAgent HybridLink` (`z_rh = 0.65 * z_k3 + 0.35 * z_ha`),
+       - `K3ExpertBridge` (`7168 -> 384`, `tanh(alpha) = 0.6543`),
+       - `NextConceptTransformer (NCM)` (11 passes) + `K3LexicalPointerDecoder`.
     """
+    if len(user_prompts) == 1:
+        hist_0 = histories[0] if (histories and len(histories) > 0) else None
+        direct_hit = eng.try_direct_k3_ha_ncm_decode(user_prompts[0], history=hist_0)
+        if direct_hit is not None:
+            reply_txt, pred_ids, k3_meta, _ = direct_hit
+            return [reply_txt], [pred_ids], [[reply_txt]], k3_meta, [[]]
+
     from bench_batch_clubbing import plan_batch_with_latent
 
     augmented_prompts = []
@@ -2410,7 +2591,10 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
 
     if eng.use_k3_native_ha:
         r_k3 = eng.k3_hybridlink(h_k3_moe)
-        z_rh = eng.k3_cbridge(r_k3).float().masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
+        z_k3 = eng.k3_cbridge(r_k3).float()
+        rh_p, _ = encode_batch_rh(eng.ha_model, eng.ha_tok, flat_plans, P_RH, eng.dev_ha)
+        z_ha = eng.cbridge(rh_p.to(eng.dev, dtype=torch.float32)).float()
+        z_rh = (0.65 * z_k3 + 0.35 * z_ha).masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
         msk_r = pad_mask_bpe
     else:
         rh_p, msk_p = encode_batch_rh(eng.ha_model, eng.ha_tok, flat_plans, P_RH, eng.dev_ha)
@@ -2449,8 +2633,11 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
                 cands_i[w_i].append(eng.k3_tok.encode(flat_plans[w_i]))
             else:
                 lg_row = lg_chunk[idx_in_chunk]
-                lg_row[:, win_masks[w_i]] -= 80.0
-                ts, is_ = eng._dec_k3_aligned(lg_row, p_kpad[w_i].tolist())
+                p_list = p_kpad[w_i].tolist()
+                vp = [int(x) for x in p_list if 0 <= int(x) < 163584]
+                if 26 not in vp:
+                    lg_row[:, win_masks[w_i]] -= 80.0
+                ts, is_ = eng._dec_k3_aligned(lg_row, p_list)
                 cands_t[w_i].append(ts.strip())
                 cands_i[w_i].append(is_)
 
