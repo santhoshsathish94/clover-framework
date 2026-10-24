@@ -812,29 +812,110 @@ def match_verified_code_template(user_prompt: str):
 
 def render_creative_scene_svg(subject: str):
     """Generates a rich, distinct SVG scene illustration (`760x420`) tailored to the requested subject
-    (cityscape, sunset/mountains/nature, space/galaxy, ocean/beach, or Clover botanical emblem)
+    (forest/woods, desert/dunes, space/galaxy, ocean/beach, futuristic cityscape, or Clover mountain sunrise)
     so different creative requests produce genuinely different SVG illustrations."""
     clean_subj = re.sub(
-        r"^(?:then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|show|paint|render|design)\s+"
-        r"(?:me\s+)?(?:an?\s+|one\s+(?:of\s+)?|something\s+|anything\s+|another\s+)?(?:image|picture|illustration|art|scene|drawing|svg)?\s*(?:of\s+|for\s+|with\s+)?",
+        r"^(?:just\s+|then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|show|paint|render|design)\s*"
+        r"(?:me\s+)?(?:an?\s+|one\s+(?:of\s+)?|something\s+|anything\s+|another\s+)?(?:image|picture|illustration|art|scene|drawing|svg|it|one|that)?\s*(?:of\s+|for\s+|with\s+)?",
         "",
         subject,
         flags=re.IGNORECASE,
     ).strip(" .!?")
+    clean_subj = re.sub(r"\s+please$", "", clean_subj, flags=re.IGNORECASE).strip(" .!?")
     clean_subj = re.sub(r"^(?:an?|the)\s+", "", clean_subj, flags=re.IGNORECASE).strip(" .!?")
 
     # Deterministic variation seed from the prompt text so different prompts shift palette/stars/elements
     h_seed = sum((idx + 1) * ord(ch) for idx, ch in enumerate(subject.lower())) % 997
 
     if not clean_subj or clean_subj.lower() in (
-        "one you like", "something you like", "anything you like", "you like", "what you like", "whatever you like", "one", "it", "another", "another one"
+        "one you like", "something you like", "anything you like", "you like", "what you like", "whatever you like",
+        "one", "it", "that", "another", "another one", "just generate", "generate", "create", "draw"
     ):
         clean_subj = "Emerald Clover Meadow at Sunrise"
 
     s_low = clean_subj.lower()
 
-    # 1. Space / Galaxy / Nebula / Planet / Cosmos / Night Sky
-    if any(k in s_low for k in ("space", "galaxy", "nebula", "planet", "cosmos", "astronaut", "rocket", "star", "moon", "universe", "sci-fi", "scifi")):
+    # 1. Forest / Woods / Trees / Jungle / Pine / Woodland / Natural Landscape
+    if any(k in s_low for k in ("forest", "tree", "trees", "woods", "woodland", "jungle", "pine", "rainforest", "redwood", "grove", "natural landscape", "nature")):
+        title_str = f"Misty Pine Forest — {clean_subj.title()}"
+        sun_cx = 360 + (h_seed % 60)
+        svg_markup = (
+            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Forest Landscape Illustration">'
+            '<defs>'
+            '<linearGradient id="forSky" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#064e3b"/><stop offset="50%" stop-color="#0d9488"/><stop offset="100%" stop-color="#fef08a"/>'
+            '</linearGradient>'
+            '<linearGradient id="mistGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#ccfbf1" stop-opacity="0.45"/><stop offset="100%" stop-color="#065f46" stop-opacity="0.05"/>'
+            '</linearGradient>'
+            '<linearGradient id="riverGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#5eead4"/><stop offset="100%" stop-color="#0f766e"/>'
+            '</linearGradient>'
+            '</defs>'
+            '<rect width="760" height="420" rx="12" fill="url(#forSky)"/>'
+            f'<circle cx="{sun_cx}" cy="135" r="56" fill="#fef9c3" opacity="0.92"/>'
+            '<polygon points="0,290 140,165 290,290" fill="#0f766e" opacity="0.55"/>'
+            '<polygon points="220,290 390,145 560,290" fill="#115e59" opacity="0.6"/>'
+            '<polygon points="470,290 630,170 760,290" fill="#0f766e" opacity="0.55"/>'
+            '<rect x="0" y="235" width="760" height="70" fill="url(#mistGrad)"/>'
+            '<g fill="#065f46" opacity="0.85">'
+            '<polygon points="45,320 75,185 105,320"/><polygon points="52,250 75,160 98,250"/>'
+            '<polygon points="125,325 160,170 195,325"/><polygon points="132,245 160,142 188,245"/>'
+            '<polygon points="215,320 245,195 275,320"/>'
+            '<polygon points="485,320 518,185 551,320"/><polygon points="492,248 518,155 544,248"/>'
+            '<polygon points="575,325 612,165 649,325"/><polygon points="584,240 612,138 640,240"/>'
+            '<polygon points="665,320 700,180 735,320"/>'
+            '</g>'
+            '<rect x="0" y="310" width="760" height="110" fill="#022c22"/>'
+            '<polygon points="345,310 415,310 485,420 275,420" fill="url(#riverGrad)" opacity="0.88"/>'
+            '<g fill="#042f2e">'
+            '<polygon points="10,365 48,195 86,365"/><polygon points="18,275 48,162 78,275"/><rect x="43" y="360" width="10" height="28" fill="#1e293b"/>'
+            '<polygon points="90,375 132,175 174,375"/><polygon points="98,270 132,140 166,270"/><rect x="127" y="370" width="10" height="28" fill="#1e293b"/>'
+            '<polygon points="185,360 222,205 259,360"/><polygon points="192,282 222,175 252,282"/>'
+            '<polygon points="505,360 542,200 579,360"/><polygon points="512,280 542,170 572,280"/>'
+            '<polygon points="590,375 634,172 678,375"/><polygon points="600,268 634,136 668,268"/><rect x="629" y="370" width="10" height="28" fill="#1e293b"/>'
+            '<polygon points="680,365 720,190 760,365"/><polygon points="688,275 720,158 752,275"/>'
+            '</g>'
+            f'<text x="380" y="398" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#d1fae5">{clean_subj.title()}</text>'
+            '</svg>'
+        )
+        cap_str = f"Generated SVG forest landscape illustration: {title_str}."
+        plans = [
+            f"Here is an SVG forest landscape illustration of {clean_subj.lower()}:",
+            "\nScene Elements: Layered evergreen pine trees, morning valley mist, sunlit mountain ridges, and a winding forest stream.",
+        ]
+
+    # 2. Desert / Dunes / Canyon / Cactus / Sahara
+    elif any(k in s_low for k in ("desert", "dune", "dunes", "canyon", "cactus", "sahara", "oasis", "arid")):
+        title_str = f"Golden Desert Dunes — {clean_subj.title()}"
+        svg_markup = (
+            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Desert Landscape Illustration">'
+            '<defs>'
+            '<linearGradient id="desSky" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#7c2d12"/><stop offset="55%" stop-color="#ea580c"/><stop offset="100%" stop-color="#fde047"/>'
+            '</linearGradient>'
+            '</defs>'
+            '<rect width="760" height="420" rx="12" fill="url(#desSky)"/>'
+            '<circle cx="520" cy="135" r="62" fill="#fef9c3" opacity="0.92"/>'
+            '<path d="M 0 285 Q 190 215 410 275 T 760 250 L 760 420 L 0 420 Z" fill="#d97706" opacity="0.88"/>'
+            '<path d="M 0 325 Q 260 260 520 320 T 760 295 L 760 420 L 0 420 Z" fill="#b45309"/>'
+            '<path d="M 0 365 Q 180 325 390 365 T 760 345 L 760 420 L 0 420 Z" fill="#78350f"/>'
+            '<g fill="#064e3b">'
+            '<rect x="165" y="235" width="12" height="75" rx="6"/>'
+            '<path d="M 145 265 Q 145 280 165 280 L 165 272 Q 153 272 153 260 L 153 248 L 145 248 Z"/>'
+            '<path d="M 197 255 Q 197 272 177 272 L 177 264 Q 189 264 189 252 L 189 240 L 197 240 Z"/>'
+            '</g>'
+            f'<text x="380" y="398" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#fef3c7">{clean_subj.title()}</text>'
+            '</svg>'
+        )
+        cap_str = f"Generated SVG desert landscape illustration: {title_str}."
+        plans = [
+            f"Here is an SVG desert landscape illustration of {clean_subj.lower()}:",
+            "\nScene Elements: Sweeping golden sand dunes, a warm desert sunset sky, and a silhouetted saguaro cactus.",
+        ]
+
+    # 3. Space / Galaxy / Nebula / Planet / Cosmos / Night Sky
+    elif any(k in s_low for k in ("space", "galaxy", "nebula", "planet", "cosmos", "astronaut", "rocket", "star", "moon", "universe", "sci-fi", "scifi")):
         title_str = f"Cosmic Scene — {clean_subj.title()}"
         ring_angle = -18 + (h_seed % 15)
         svg_markup = (
@@ -1041,6 +1122,13 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
     raw_q = _extract_raw_user_query(user_prompt).strip()
     p = raw_q.lower()
 
+    # Direct polite response when the user clarifies or corrects what they asked for ("I never asked for...", "I didn't ask for...")
+    if re.search(r"\b(?:never asked|didn't ask|did not ask)\b", p):
+        plans = [
+            "Sorry about that! Please tell me what scene or topic you would like instead, and I will create it for you right away.",
+        ]
+        return "clarification_ack", "Polite apology and prompt for preferred subject", [], plans
+
     # Never trigger visual/image generation when the user is negating, correcting, or asking a question!
     has_negation_or_complaint = bool(
         re.search(
@@ -1052,41 +1140,85 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
     if has_negation_or_complaint:
         return None
 
-    is_capability_question = p.endswith("?") or p.startswith(("can you", "are you able", "do you", "how do you", "what can you", "why ", "what is ", "explain "))
+    # Direct capability question about what kinds of images Clover can generate
+    if p in (
+        "what images can you generate", "what kind of images can you generate", "which images can you generate",
+        "what can you draw", "what images can you create", "what kind of pictures can you make",
+    ):
+        plans = [
+            "I can generate custom SVG scene illustrations and data charts directly in our chat. Here are the scenes and visuals I can create:",
+            "\nNature & Landscapes: Misty pine forests, mountain sunrises, golden desert dunes, coastal ocean sunsets, and emerald Clover meadows.",
+            "\nSpace & Sci-Fi: Deep-space galaxies, ringed exoplanets, moons, and futuristic neon cityscapes.",
+            "\nCharts & Diagrams: Line plots (sine/cosine, sigmoid, Gaussian), bar charts, compound growth charts, and architecture flowcharts.",
+        ]
+        return "image_capabilities", "Listed supported image and chart categories", [], plans
 
-    # Only treat a short noun phrase as a follow-up image subject if the IMMEDIATELY preceding assistant turn
-    # explicitly asked the user what image they would like to create (and the user's message is not a sentence/complaint)
-    prev_asked_what_to_create = False
+    is_capability_question = p.endswith("?") or p.startswith((
+        "can you", "are you able", "do you", "how do you", "what can you", "what images", "which images", "why ", "what is ", "explain "
+    ))
+
+    # Check if the conversation context (within the last 4 turns) is already about image/illustration generation
+    in_image_conversation = False
+    last_visual_subject = ""
     if history:
-        last_r = (history[-1].get("reply") or "").lower()
-        if any(
-            phrase in last_r
-            for phrase in (
-                "what would you like me to create",
-                "what kind of image",
-                "let me know what kind of image",
-                "tell me what you'd like me to draw",
-            )
-        ):
-            prev_asked_what_to_create = True
+        for h in reversed(history[-4:]):
+            u_prev = (h.get("user") or "").strip()
+            r_prev = (h.get("reply") or "").lower()
+            u_prev_low = u_prev.lower()
+            if any(
+                kw in u_prev_low or kw in r_prev
+                for kw in (
+                    "generate image", "generate images", "create an image", "generate an image",
+                    "what images can you", "what would you like me to create", "what kind of image",
+                    "create an image for you", "svg illustration", "natural landscape",
+                )
+            ):
+                in_image_conversation = True
+            if not last_visual_subject and any(
+                s_kw in u_prev_low
+                for s_kw in (
+                    "forest", "woods", "tree", "jungle", "natural landscape", "landscape", "mountain",
+                    "ocean", "beach", "sea", "island", "desert", "dune", "canyon", "space", "galaxy",
+                    "planet", "nebula", "city", "futuristic", "skyline", "sunset", "sunrise", "meadow", "clover",
+                )
+            ) and not any(neg in u_prev_low for neg in ("never", "not", "didn't", "why", "what")):
+                last_visual_subject = u_prev
+
+    scene_topic_keywords = (
+        "forest", "woods", "woodland", "trees", "jungle", "pine", "natural landscape", "landscape",
+        "mountain", "mountains", "ocean", "beach", "sea", "coast", "island", "desert", "dunes", "canyon",
+        "space", "galaxy", "nebula", "planet", "cosmos", "city", "cityscape", "futuristic", "cyberpunk",
+        "skyline", "sunset", "sunrise", "meadow", "clover", "nature",
+    )
 
     explicit_create_cmd = bool(
         re.match(
-            r"^(?:then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|paint|render)\s+"
-            r"(?:me\s+)?(?:an?\s+|one\s+|something\s+|anything\s+|another\s+)?(?:image|picture|illustration|art|scene|drawing|svg|city|futuristic|sunset|galaxy|space|ocean|landscape|mountain|clover)\b",
+            r"^(?:just\s+|then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|paint|render)\b",
             p,
         )
-        or p in ("then create one you like", "create one you like", "make one you like", "draw one you like", "create one", "draw something")
+        or p in (
+            "then create one you like", "create one you like", "make one you like", "draw one you like",
+            "create one", "draw something", "just generate", "just create", "just draw", "generate it",
+            "create it", "draw it", "please generate", "generate please", "yes generate", "go ahead",
+        )
     )
 
     followup_subject_only = (
-        prev_asked_what_to_create
-        and len(p.split()) <= 5
+        in_image_conversation
+        and len(p.split()) <= 6
+        and any(sk in p for sk in scene_topic_keywords)
         and not any(w in p.split() for w in ("i", "you", "why", "what", "how", "when", "where", "who", "never", "not", "no", "dont", "didn't"))
     )
 
     if (not is_capability_question) and (explicit_create_cmd or followup_subject_only):
-        return render_creative_scene_svg(raw_q)
+        # If the user said 'Just generate' / 'Generate it' / 'Create one', inherit the subject from their prior turn (e.g. 'Forest' or 'Natural landscape')!
+        bare_cmd = re.sub(
+            r"\b(?:just|then|please|now|ok|okay|yes|go|ahead|create|generate|draw|make|paint|render|an|a|the|image|picture|illustration|one|it|that|for|me)\b",
+            " ",
+            p,
+        ).strip(" .!?")
+        target_subj = raw_q if (bare_cmd and bare_cmd not in ("you like", "something", "anything")) else (last_visual_subject or raw_q)
+        return render_creative_scene_svg(target_subj)
 
     wants_visual = (not is_capability_question) and any(
         kw in p
