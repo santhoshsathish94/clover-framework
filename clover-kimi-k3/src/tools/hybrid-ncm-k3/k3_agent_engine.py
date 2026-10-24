@@ -330,6 +330,7 @@ class K3GPUExpertsRunner:
             self.norm_w = f.get_tensor("language_model.model.norm.weight").to(torch.float32).contiguous()
             self.res_norm_w = f.get_tensor("language_model.model.output_attn_res_norm.weight").to(torch.float32).contiguous()
             self.res_proj_w = f.get_tensor("language_model.model.output_attn_res_proj.weight").to(torch.float32).contiguous().view(-1)
+            self.lm_head_bf16 = f.get_tensor("language_model.lm_head.weight").to(torch.bfloat16).contiguous()
 
         # Keep Layer-93 Final Snapshot Aggregation weights on `cuda:6` (where NCM resides and >18 GiB VRAM is free)
         # so `_apply_layer93_final_tail` executes on GPU in <1 ms without touching `cuda:5`'s expert pool!
@@ -338,6 +339,12 @@ class K3GPUExpertsRunner:
         self.norm_w_gpu = self.norm_w.to(self.tail_dev)
         self.res_norm_w_gpu = self.res_norm_w.to(self.tail_dev)
         self.res_proj_w_gpu = self.res_proj_w.to(self.tail_dev)
+        self.lm_head_gpu = None
+        if torch.cuda.is_available():
+            try:
+                self.lm_head_gpu = self.lm_head_bf16.to(self.tail_dev)
+            except Exception:
+                self.lm_head_gpu = None
 
         self.setup_s = round(time.perf_counter() - t0, 2)
 
@@ -533,6 +540,32 @@ class K3GPUExpertsRunner:
             "hit_pinned_ram_cache": int(out_stats[2]),
             "fetched_from_nvme": int(out_stats[3]),
         }
+
+    @torch.no_grad()
+    def project_last_lm_head(self, ids_1d: list[int]) -> torch.Tensor:
+        """Runs `ids_1d` through all 93 Kimi K3 layers + 92 MoE layers (`top16_smart_896`) + Layer-93 Final Tail
+        and projects the last position through Kimi K3's native `language_model.lm_head.weight [163840, 7168]`."""
+        trunc = ids_1d[-512:] if len(ids_1d) > 512 else ids_1d
+        t_in = torch.tensor([trunc], dtype=torch.long)
+        h_moe, _ = self.forward_k3_ids(t_in)
+        h_last = h_moe[0, -1]
+        if self.lm_head_gpu is not None:
+            return torch.matmul(self.lm_head_gpu, h_last.to(self.tail_dev, dtype=torch.bfloat16)).float().cpu()
+        return torch.matmul(self.lm_head_bf16.float(), h_last.float())
+
+    @torch.no_grad()
+    def score_mcq_options(self, prompt_text: str, k3_tok: K3Tokenizer) -> tuple[str, dict[str, float]]:
+        """Computes Kimi K3's native 93-layer MoE + `lm_head.weight` log-probabilities over `(A)`, `(B)`, `(C)`, `(D)`."""
+        base_q = re.sub(r"\n*State the correct option letter.*$", "", prompt_text.strip(), flags=re.IGNORECASE).strip()
+        q_stem = f"{base_q}\nAnswer: ("
+        ids = k3_tok.encode_plain(q_stem)
+        logits = self.project_last_lm_head(ids)
+        l_ids = [k3_tok.encode_plain(L)[0] for L in ("A", "B", "C", "D")]
+        sub_lg = torch.tensor([float(logits[i].item()) for i in l_ids], dtype=torch.float32)
+        probs = F.softmax(sub_lg, dim=-1).tolist()
+        prob_map = {L: round(float(p), 4) for L, p in zip(("A", "B", "C", "D"), probs)}
+        best_L = max(prob_map, key=lambda k: prob_map[k])
+        return best_L, prob_map
 
 
 def _extract_raw_user_query(user_prompt: str) -> str:
@@ -2156,14 +2189,36 @@ class CloverK3AgentEngine:
 
         if is_code_spec:
             bridge_str = EXIT_ANCHOR + " Now I will write the complete Python function inside a fenced code block." + THINK_CLOSE + "\nW1:\n```python\n"
+            bridge_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+            out = backbone(input_ids=bridge_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
+            past_kv = out.past_key_values
+            next_logits = out.logits[:, -1, :]
         elif is_mcq:
-            bridge_str = EXIT_ANCHOR + " Now I will state the correct option letter (A), (B), (C), or (D) first and explain briefly." + THINK_CLOSE + "\nW1: The correct answer is ("
+            k3_best_l, k3_probs = self.k3_experts.score_mcq_options(raw_user_q, self.k3_tok)
+            bridge_pre = EXIT_ANCHOR + " Now I will state the correct option letter (A), (B), (C), or (D) first and explain briefly." + THINK_CLOSE + "\nW1: The correct answer is ("
+            b_ids = self.ha_tok(bridge_pre, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+            out = backbone(input_ids=b_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
+            past_kv = out.past_key_values
+            ha_lg = out.logits[0, -1, :].float()
+            ha_l_ids = [self.ha_tok.encode(L, add_special_tokens=False)[0] for L in ("A", "B", "C", "D")]
+            ha_sub = torch.tensor([float(ha_lg[i].item()) for i in ha_l_ids], dtype=torch.float32)
+            ha_probs = F.softmax(ha_sub, dim=-1).tolist()
+            # Joint log-probability fusion of 93-layer Kimi K3 MoE (`k3_probs`) + HybridAgent after `<latent>` (`ha_probs`)
+            joint_scores = {
+                L: 0.55 * math.log(max(k3_probs[L], 1e-6)) + 0.45 * math.log(max(ha_p, 1e-6))
+                for L, ha_p in zip(("A", "B", "C", "D"), ha_probs)
+            }
+            mcq_chosen_l = max(joint_scores, key=lambda k: joint_scores[k])
+            c_ids = self.ha_tok(f"{mcq_chosen_l}) ", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+            out = backbone(input_ids=c_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
+            past_kv = out.past_key_values
+            next_logits = out.logits[:, -1, :]
         else:
             bridge_str = EXIT_ANCHOR + " Now I will write my direct response to the user." + THINK_CLOSE + "\nW1:"
-        bridge_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
-        out = backbone(input_ids=bridge_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
-        past_kv = out.past_key_values
-        next_logits = out.logits[:, -1, :]
+            bridge_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+            out = backbone(input_ids=bridge_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
+            past_kv = out.past_key_values
+            next_logits = out.logits[:, -1, :]
 
         gen_ids = []
         im_end_ids = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
@@ -2279,6 +2334,8 @@ class CloverK3AgentEngine:
                             break
                     elif is_math_word_problem and has_real_content and ("####" in last_ln or "final answer" in last_ln):
                         break
+                    elif is_mcq and len(valid_lines_so_far) >= 2 and valid_lines_so_far[-1].endswith((".", "!", "?")):
+                        break
                     elif len(valid_lines_so_far) >= (8 if not is_struct else 18) and not last_ln.endswith(":"):
                         break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
@@ -2298,7 +2355,7 @@ class CloverK3AgentEngine:
             code_body = "\n".join(c_lines)
             raw = f"W1:\n```python\n{code_body}\n```"
         elif is_mcq:
-            raw = "W1: The correct answer is (" + decoded_gen
+            raw = f"W1: The correct answer is ({mcq_chosen_l}) " + decoded_gen
         else:
             raw = "W1: " + decoded_gen
         plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)

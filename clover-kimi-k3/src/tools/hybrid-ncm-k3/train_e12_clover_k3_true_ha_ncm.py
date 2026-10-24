@@ -210,39 +210,53 @@ def main():
     row_to_uniq_t = torch.tensor(row_to_uniq, dtype=torch.long)
     print(f"[Data] Built {N_tot} training windows ({N_uniq} unique windows, zero XSum social-media noise) in {time.perf_counter()-t0:.2f}s", flush=True)
 
-    # 1. Extract real 93-Layer Kimi K3 MoE hidden states (`h_k3_moe [N_uniq, P_BPE, 7168]`) with Smart 896-Expert Routing (`cuda:0..5`)
-    runner = K3GPUExpertsRunner.get_instance(max_n=512, full_93_layers=True, k_res=28)
-    runner.lib.k3_full93_set_routing_mode(2, 2, 4)
+    h_k3_cache_path = os.path.join(out_dir, "e12_cached_h_k3_r_ha.pt")
+    if os.path.exists(h_k3_cache_path):
+        cached = torch.load(h_k3_cache_path, map_location="cpu", weights_only=True)
+        if cached.get("n_tot") == N_tot and cached.get("n_uniq") == N_uniq:
+            all_h_k3 = cached["all_h_k3"]
+            all_r_ha = cached["all_r_ha"]
+            print(f"[Cache] Loaded cached 93-Layer K3 MoE {tuple(all_h_k3.shape)} & HybridAgent {tuple(all_r_ha.shape)} in {time.perf_counter()-t0:.2f}s", flush=True)
+        else:
+            cached = None
+    else:
+        cached = None
 
-    h_k3_chunks = []
-    t_k3_0 = time.perf_counter()
-    with torch.no_grad():
-        for i in range(0, N_uniq, 32):
-            batch_p = uniq_pids[i : i + 32]
-            h_moe, _ = runner.forward_k3_ids(batch_p)
-            h_k3_chunks.append(h_moe.to(torch.bfloat16))
-    uniq_h_k3 = torch.cat(h_k3_chunks, dim=0)  # [N_uniq, 48, 7168]
-    all_h_k3 = uniq_h_k3[row_to_uniq_t]        # [N_tot, 48, 7168]
-    print(f"[Stage 1a] Extracted 93-Layer Kimi K3 MoE (896-expert routed) hidden states {tuple(all_h_k3.shape)} in {time.perf_counter()-t_k3_0:.2f}s", flush=True)
+    if cached is None:
+        # 1. Extract real 93-Layer Kimi K3 MoE hidden states (`h_k3_moe [N_uniq, P_BPE, 7168]`) with Smart 896-Expert Routing (`cuda:0..5`)
+        runner = K3GPUExpertsRunner.get_instance(max_n=512, full_93_layers=True, k_res=28)
+        runner.lib.k3_full93_set_routing_mode(2, 2, 4)
 
-    # 2. Extract real `HybridAgent-8B-Agentic` continuous `HybridLink` latent states (`r_ha [N_tot, P_RH, 4096]`) on `cuda:7`
-    dev_ha = torch.device("cuda:7")
-    from hybrid_agent.model import load_hybrid_agent
-    from train_latent_bridge import encode_batch_rh
-    ha_model, ha_tok = load_hybrid_agent("togethercomputer/HybridAgent-8B-Agentic", dtype=torch.bfloat16, device=dev_ha, require_hybridlink=True)
-    ha_tok.padding_side = "right"
+        h_k3_chunks = []
+        t_k3_0 = time.perf_counter()
+        with torch.no_grad():
+            for i in range(0, N_uniq, 32):
+                batch_p = uniq_pids[i : i + 32]
+                h_moe, _ = runner.forward_k3_ids(batch_p)
+                h_k3_chunks.append(h_moe.to(torch.bfloat16))
+        uniq_h_k3 = torch.cat(h_k3_chunks, dim=0)  # [N_uniq, 48, 7168]
+        all_h_k3 = uniq_h_k3[row_to_uniq_t]        # [N_tot, 48, 7168]
+        print(f"[Stage 1a] Extracted 93-Layer Kimi K3 MoE (896-expert routed) hidden states {tuple(all_h_k3.shape)} in {time.perf_counter()-t_k3_0:.2f}s", flush=True)
 
-    r_ha_chunks = []
-    t_ha_0 = time.perf_counter()
-    with torch.no_grad():
-        for i in range(0, N_uniq, 128):
-            r_b, _ = encode_batch_rh(ha_model, ha_tok, uniq_txts_list[i : i + 128], P_RH, dev_ha)
-            r_ha_chunks.append(r_b.cpu().to(torch.bfloat16))
-    uniq_r_ha = torch.cat(r_ha_chunks, dim=0)  # [N_uniq, 48, 4096]
-    all_r_ha = uniq_r_ha[row_to_uniq_t]        # [N_tot, 48, 4096]
-    del ha_model
-    torch.cuda.empty_cache()
-    print(f"[Stage 1b] Extracted HybridAgent-8B HybridLink latent states {tuple(all_r_ha.shape)} in {time.perf_counter()-t_ha_0:.2f}s", flush=True)
+        # 2. Extract real `HybridAgent-8B-Agentic` continuous `HybridLink` latent states (`r_ha [N_tot, P_RH, 4096]`) on `cuda:7`
+        dev_ha = torch.device("cuda:7")
+        from hybrid_agent.model import load_hybrid_agent
+        from train_latent_bridge import encode_batch_rh
+        ha_model, ha_tok = load_hybrid_agent("togethercomputer/HybridAgent-8B-Agentic", dtype=torch.bfloat16, device=dev_ha, require_hybridlink=True)
+        ha_tok.padding_side = "right"
+
+        r_ha_chunks = []
+        t_ha_0 = time.perf_counter()
+        with torch.no_grad():
+            for i in range(0, N_uniq, 128):
+                r_b, _ = encode_batch_rh(ha_model, ha_tok, uniq_txts_list[i : i + 128], P_RH, dev_ha)
+                r_ha_chunks.append(r_b.cpu().to(torch.bfloat16))
+        uniq_r_ha = torch.cat(r_ha_chunks, dim=0)  # [N_uniq, 48, 4096]
+        all_r_ha = uniq_r_ha[row_to_uniq_t]        # [N_tot, 48, 4096]
+        del ha_model
+        torch.cuda.empty_cache()
+        torch.save({"n_tot": N_tot, "n_uniq": N_uniq, "all_h_k3": all_h_k3, "all_r_ha": all_r_ha}, h_k3_cache_path)
+        print(f"[Stage 1b] Extracted & cached HybridAgent-8B HybridLink latent states {tuple(all_r_ha.shape)} in {time.perf_counter()-t_ha_0:.2f}s", flush=True)
 
     # 3. Jointly train `K3NativeHybridLink` + `K3ComboBridge` + `ComboBridge(HA)` + `K3ExpertBridge` + `NextConceptTransformer` + UNFROZEN `vqvae.decoder` + `K3LexicalPointerDecoder`
     dev = torch.device("cuda:6")
@@ -272,7 +286,7 @@ def main():
         p.requires_grad_(name.startswith("decoder."))
 
     for name, p in net.named_parameters():
-        p.requires_grad_(any(k in name for k in ("blocks.4", "blocks.5", "blocks.6", "blocks.7", "blocks.8", "blocks.9", "blocks.10", "blocks.11", "ln_f", "lm_heads")))
+        p.requires_grad_(True)
 
     k3_hybridlink = K3NativeHybridLink(d=D_K3, bottleneck=2048).to(dev)
     k3_cbridge = K3ComboBridge(d_in=D_K3, d_out=D_VQ).to(dev)
@@ -286,6 +300,8 @@ def main():
         k3_hybridlink.load_state_dict(prev_sd["k3_hybridlink"])
     if "k3_cbridge" in prev_sd:
         k3_cbridge.load_state_dict(prev_sd["k3_cbridge"])
+    if "ha_cbridge" in prev_sd:
+        ha_cbridge.load_state_dict(prev_sd["ha_cbridge"])
     if "k3_bridge" in prev_sd:
         k3_bridge.load_state_dict(prev_sd["k3_bridge"])
     if "ptr_dec" in prev_sd:
@@ -299,7 +315,8 @@ def main():
     levels = list(vqvae.vq.levels)
     lid = torch.cat([torch.full((l,), k, dtype=torch.long) for k, l in enumerate(levels)]).to(dev)
     ls = torch.tensor(levels, dtype=torch.float32, device=dev)
-    w_lvl = (ls ** (-0.7))[lid]
+    w_lvl = (ls ** (-0.9))[lid]
+    w_lvl[0] = w_lvl[0] * 4.0  # Boost Level-0 (`L0_scale_1`) coarse root concept weight so L0 accuracy improves!
 
     class TrueCloverK3StepModule(nn.Module):
         def __init__(self, hl_m, kcb_m, hacb_m, kb_m, net_m, vq_m, ptr_m, w_lvl_t):
@@ -378,7 +395,7 @@ def main():
     k3_hybridlink.train(); k3_cbridge.train(); ha_cbridge.train(); k3_bridge.train()
     net.train(); vqvae.decoder.train(); ptr_dec.train()
 
-    steps = 450
+    steps = 120
     bs = len(train_devs) * 32  # 64 windows per step
     g = torch.Generator().manual_seed(2026)
     t_tr = time.perf_counter()
