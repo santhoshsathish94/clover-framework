@@ -534,6 +534,8 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
     """Detects when the user prompt (or a follow-up like 'find it', 'read the agents.md', 'refer https://...', 'you didn't explain about ncm')
     asks the agent to retrieve verified facts, read a URL/link, or search research papers, recent developments, GPU launches, or model comparisons."""
     p = _extract_raw_user_query(user_prompt)
+    if is_short_greeting_or_ack(p):
+        return None
     low = p.lower().strip("?!.")
 
     # 0. Any explicit HTTP/HTTPS URL or domain link in the user's message triggers live URL fetch + search immediately!
@@ -594,7 +596,15 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "gpt-6",
             "gpt 6",
             "astra",
-            "clover",
+            "what is clover",
+            "who is clover",
+            "explain clover",
+            "tell me about clover",
+            "how does clover",
+            "clover framework",
+            "clover kimi",
+            "clover k3",
+            "clover-k3",
             "agents.md",
             "agents md",
             "kimi k3",

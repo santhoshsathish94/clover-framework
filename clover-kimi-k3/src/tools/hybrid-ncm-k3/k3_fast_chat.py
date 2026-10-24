@@ -82,14 +82,26 @@ CHAT_PLAN_PROMPT = (
 
 
 def is_short_greeting_or_ack(user_prompt: str) -> bool:
-    p = re.sub(r"[^a-z\s]", "", user_prompt.lower()).strip()
-    return p in (
-        "hi", "hello", "hey", "hi there", "hello there", "good morning", "good afternoon", "good evening",
-        "thanks", "thank you", "thank you so much", "ty", "ok", "okay", "got it", "bye", "goodbye",
-    )
+    p = re.sub(r"[^a-z\s]", " ", user_prompt.lower())
+    # Strip 'clover' when used as a vocative ('Hi clover', 'Hello clover how are you', 'Thanks clover')
+    p_no_name = " ".join(w for w in p.split() if w != "clover").strip()
+    if p_no_name in (
+        "hi", "hello", "hey", "hi there", "hello there", "hey there",
+        "good morning", "good afternoon", "good evening",
+        "how are you", "how are you doing", "how are you doing today",
+        "hi how are you", "hi how are you doing", "hi how are you doing today",
+        "hello how are you", "hello how are you doing", "hello how are you doing today",
+        "hey how are you", "hey how are you doing", "hey how are you doing today",
+        "thanks", "thank you", "thank you so much", "ty", "thanku",
+        "ok", "okay", "got it", "bye", "goodbye",
+    ):
+        return True
+    return False
 
 
 def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
+    if is_short_greeting_or_ack(user_prompt):
+        return False
     p = user_prompt.lower().strip()
     # Short single-fact lookup or simple arithmetic questions ('what is the capital of...', 'what is 25 * 4?') are NOT multi-part
     if len(p.split()) <= 9 and re.search(r"\b\d+\s*[\+\-\*/]\s*\d+\b", p) and "step" not in p:
@@ -114,7 +126,8 @@ def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
             "launch", "launched", "code", "write", "implement", "design", "architecture", "calculate", "compound",
             "function", "program", "algorithm", "prime", "binary search", "fibonacci", "factorial", "quicksort",
             "http://", "https://", "refer", "read ", "agents.md", "ncm", "next-concept", "next concept",
-            "hybridagent", "hybrid agent", "clover", "framework", "cut off", "didn't explain", "did not explain",
+            "hybridagent", "hybrid agent", "what is clover", "clover framework", "clover kimi", "clover k3",
+            "clover-k3", "cut off", "didn't explain", "did not explain",
         )
     )
 
