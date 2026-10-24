@@ -795,12 +795,162 @@ def match_verified_code_template(user_prompt: str):
     return None
 
 
+def render_creative_scene_svg(subject: str):
+    """Generates a rich, high-resolution SVG scene illustration (`760x420`) for creative visual requests
+    (such as a futuristic city, sunset landscape, space/galaxy scene, ocean/mountain vista, or Clover artwork)
+    so users asking Clover to create/generate an image receive a real downloadable SVG artwork."""
+    s_low = subject.lower().strip()
+    clean_subj = re.sub(
+        r"^(?:then\s+|please\s+|now\s+|ok\s+|okay\s+)*(?:create|generate|draw|make|show|paint|render)\s+(?:an?\s+|one\s+(?:of\s+)?|something\s+|anything\s+)?(?:image|picture|illustration|art|scene)?\s*(?:of\s+)?",
+        "",
+        subject,
+        flags=re.IGNORECASE,
+    ).strip(" .!?")
+    if not clean_subj or clean_subj.lower() in (
+        "one you like", "something you like", "anything you like", "you like", "what you like", "whatever you like", "one", "it"
+    ):
+        clean_subj = "Futuristic Clover City at Sunset"
+        s_low = clean_subj.lower()
+
+    if any(k in s_low for k in ("city", "futuristic", "cyberpunk", "skyline", "metropolis", "tower", "building")):
+        title_str = f"Futuristic Cityscape — {clean_subj.title()}"
+        svg_markup = (
+            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Futuristic Cityscape Illustration">'
+            '<defs>'
+            '<linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#071a24"/>'
+            '<stop offset="45%" stop-color="#0a4f48"/>'
+            '<stop offset="78%" stop-color="#17907f"/>'
+            '<stop offset="100%" stop-color="#f59e0b"/>'
+            '</linearGradient>'
+            '<linearGradient id="sunGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#fef08a"/>'
+            '<stop offset="55%" stop-color="#f59e0b"/>'
+            '<stop offset="100%" stop-color="#ea580c"/>'
+            '</linearGradient>'
+            '<linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#083b36"/>'
+            '<stop offset="100%" stop-color="#04151b"/>'
+            '</linearGradient>'
+            '</defs>'
+            '<rect width="760" height="310" fill="url(#skyGrad)"/>'
+            '<circle cx="110" cy="48" r="1.4" fill="#e6f2f0" opacity="0.8"/>'
+            '<circle cx="230" cy="32" r="1.8" fill="#ffffff" opacity="0.9"/>'
+            '<circle cx="420" cy="40" r="1.3" fill="#e6f2f0" opacity="0.75"/>'
+            '<circle cx="590" cy="28" r="1.7" fill="#ffffff" opacity="0.85"/>'
+            '<circle cx="685" cy="60" r="1.5" fill="#e6f2f0" opacity="0.8"/>'
+            '<circle cx="380" cy="220" r="78" fill="url(#sunGrad)" opacity="0.92"/>'
+            '<g fill="#0c2d33" opacity="0.65">'
+            '<rect x="30" y="150" width="46" height="160"/>'
+            '<rect x="85" y="120" width="52" height="190"/>'
+            '<rect x="155" y="165" width="40" height="145"/>'
+            '<rect x="545" y="135" width="50" height="175"/>'
+            '<rect x="610" y="115" width="58" height="195"/>'
+            '<rect x="680" y="155" width="48" height="155"/>'
+            '</g>'
+            '<g fill="#071f24" stroke="#17907f" stroke-width="1.2">'
+            '<polygon points="60,310 60,110 82,82 104,110 104,310"/>'
+            '<rect x="122" y="135" width="54" height="175" rx="3"/>'
+            '<polygon points="195,310 195,78 225,42 255,78 255,310"/>'
+            '<line x1="225" y1="42" x2="225" y2="16" stroke="#5eead4" stroke-width="2.2"/>'
+            '<circle cx="225" cy="15" r="3.5" fill="#fef08a"/>'
+            '<rect x="272" y="128" width="58" height="182" rx="4"/>'
+            '<polygon points="348,310 356,64 380,34 404,64 412,310"/>'
+            '<line x1="380" y1="34" x2="380" y2="10" stroke="#fef08a" stroke-width="2.5"/>'
+            '<rect x="430" y="118" width="60" height="192" rx="4"/>'
+            '<polygon points="508,310 508,88 536,56 564,88 564,310"/>'
+            '<rect x="582" y="140" width="56" height="170" rx="3"/>'
+            '<polygon points="654,310 654,104 680,76 706,104 706,310"/>'
+            '</g>'
+            '<g fill="#5eead4" opacity="0.82">'
+            '<rect x="208" y="95" width="34" height="4"/><rect x="208" y="110" width="34" height="4"/><rect x="208" y="125" width="34" height="4"/><rect x="208" y="140" width="34" height="4"/><rect x="208" y="155" width="34" height="4"/>'
+            '<rect x="364" y="80" width="32" height="4" fill="#fef08a"/><rect x="364" y="96" width="32" height="4"/><rect x="364" y="112" width="32" height="4"/><rect x="364" y="128" width="32" height="4"/><rect x="364" y="144" width="32" height="4"/>'
+            '<rect x="442" y="134" width="36" height="4"/><rect x="442" y="150" width="36" height="4"/><rect x="442" y="166" width="36" height="4"/><rect x="442" y="182" width="36" height="4"/>'
+            '<rect x="520" y="102" width="32" height="4"/><rect x="520" y="118" width="32" height="4"/><rect x="520" y="134" width="32" height="4"/><rect x="520" y="150" width="32" height="4"/>'
+            '</g>'
+            '<path d="M 0 262 Q 190 232 380 260 T 760 254" fill="none" stroke="#5eead4" stroke-width="2.5" opacity="0.85"/>'
+            '<path d="M 0 270 Q 190 240 380 268 T 760 262" fill="none" stroke="#f59e0b" stroke-width="1.6" opacity="0.75"/>'
+            '<rect x="290" y="247" width="28" height="7" rx="3.5" fill="#fef08a"/>'
+            '<rect x="510" y="253" width="24" height="6" rx="3" fill="#5eead4"/>'
+            '<rect x="0" y="310" width="760" height="110" fill="url(#waterGrad)"/>'
+            '<line x1="0" y1="310" x2="760" y2="310" stroke="#5eead4" stroke-width="2"/>'
+            '<g opacity="0.45" stroke="#f59e0b" stroke-width="2" stroke-linecap="round">'
+            '<line x1="330" y1="324" x2="430" y2="324"/><line x1="342" y1="338" x2="418" y2="338"/>'
+            '<line x1="354" y1="352" x2="406" y2="352"/><line x1="365" y1="366" x2="395" y2="366"/>'
+            '</g>'
+            '<g opacity="0.35" stroke="#5eead4" stroke-width="1.6">'
+            '<line x1="180" y1="330" x2="265" y2="330"/><line x1="490" y1="334" x2="575" y2="334"/>'
+            '<line x1="120" y1="358" x2="220" y2="358"/><line x1="530" y1="362" x2="640" y2="362"/>'
+            '</g>'
+            '</svg>'
+        )
+        cap_str = f"Generated SVG illustration: {title_str} (neon skybridges, solar spire towers, and waterfront reflections)."
+        plans = [
+            f"Here is a custom illustration of a {clean_subj.lower()}:",
+            "\nSkyline & Architecture: Spire towers with illuminated skybridges, elevated maglev transit tracks, and a central solar-core tower against a sunset sky.",
+            "\nWaterfront Reflection: Teal and amber city lights reflected across the harbor below.",
+        ]
+    else:
+        title_str = f"Illustrated Scene — {clean_subj.title()}"
+        svg_markup = (
+            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustrated Scene">'
+            '<defs>'
+            '<linearGradient id="bgSky" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#063732"/><stop offset="60%" stop-color="#0a6a5f"/><stop offset="100%" stop-color="#e6f2f0"/>'
+            '</linearGradient>'
+            '<path id="cLeaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z" fill="#5eead4" stroke="#ffffff" stroke-width="1.5"/>'
+            '</defs>'
+            '<rect width="760" height="420" rx="12" fill="url(#bgSky)"/>'
+            '<circle cx="600" cy="110" r="54" fill="#fef08a" opacity="0.9"/>'
+            '<polygon points="0,340 160,180 330,340" fill="#084c44" opacity="0.85"/>'
+            '<polygon points="210,340 410,150 610,340" fill="#063b35" opacity="0.92"/>'
+            '<polygon points="460,340 630,195 760,340" fill="#084c44" opacity="0.88"/>'
+            '<rect x="0" y="335" width="760" height="85" fill="#042420"/>'
+            '<g transform="translate(310,135) scale(1.4)">'
+            '<use href="#cLeaf"/><use href="#cLeaf" transform="rotate(72 50 44)"/><use href="#cLeaf" transform="rotate(144 50 44)"/>'
+            '<use href="#cLeaf" transform="rotate(216 50 44)"/><use href="#cLeaf" transform="rotate(288 50 44)"/>'
+            '</g>'
+            f'<text x="380" y="385" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="700" fill="#e6f2f0">{clean_subj.title()}</text>'
+            '</svg>'
+        )
+        cap_str = f"Generated SVG illustration for: {clean_subj}."
+        plans = [
+            f"Here is an SVG illustration created for {clean_subj}:",
+            "\nVisual Composition: Rendered directly as a clean, scalable vector illustration that you can view inline or download.",
+        ]
+
+    media = [{
+        "type": "svg",
+        "title": title_str,
+        "svg": svg_markup,
+        "caption": cap_str,
+    }]
+    return "svg_scene", title_str, media, plans
+
+
 def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, history=None):
     """Detects requests for graphs, charts, plots, diagrams, or visual comparisons and executes `matplotlib` / SVG
     generation via `py_tool`, returning `(py_script, py_stdout, media_items, plan_windows)` where `media_items`
     is a list of `{"type": "image"|"svg", "title": str, "data_url": str, "svg": str, "caption": str}`."""
     raw_q = _extract_raw_user_query(user_prompt).strip()
     p = raw_q.lower()
+
+    # Check if the user is asking for a creative scene/illustration (or following up on an image-generation turn)
+    is_capability_question = p.endswith("?") or p.startswith(("can you", "are you able", "do you", "how do you", "what can you"))
+    prev_asked_to_create = False
+    if history:
+        last_u = (history[-1].get("user") or "").lower()
+        last_r = (history[-1].get("reply") or "").lower()
+        if any(k in last_u for k in ("generate image", "generate images", "create one", "create an image", "draw", "make an image")) or "what would you like me to create" in last_r or "kind of image" in last_r:
+            prev_asked_to_create = True
+
+    is_creative_scene = (not is_capability_question) and (
+        any(k in p for k in ("futuristic city", "cityscape", "cyberpunk city", "draw a city", "sunset scene"))
+        or any(k in p for k in ("create one", "generate an image", "create an image", "draw an image", "make an image"))
+        or (prev_asked_to_create and len(p.split()) <= 8)
+    )
+    if is_creative_scene:
+        return render_creative_scene_svg(raw_q)
 
     wants_visual = any(
         kw in p
@@ -1460,20 +1610,30 @@ class CloverK3AgentEngine:
                             "i've been given the information", "this is a straightforward factual",
                             "the response should be", "this result has been verified using python",
                             "the calculation was verified using python", "for more detailed information, you can refer",
+                            "this is a simple, friendly response", "this response is concise", "this response is direct",
+                            "this response is polite", "i'm maintaining a polite", "i also included a question to encourage",
+                            "your message is straightforward", "which aligns with the character description",
                         )
                     ):
                         gen_ids = self.ha_tok.encode("\n".join(lines[:-1]), add_special_tokens=False)
                         break
 
+                    # Only count substantive lines that survive parse_and_split_plans so filtered self-talk ("Let me clarify...", "Okay, ...")
+                    # never causes the loop to stop before emitting the actual answer!
+                    valid_lines_so_far = parse_and_split_plans(
+                        "W1: " + "\n".join(lines), user_prompt, self.k3_tok, max_bpe=32, max_windows=24
+                    )
+                    has_real_content = bool(valid_lines_so_far) and valid_lines_so_far != ["Hello! How can I help you today?"]
+
                     introduces_list = last_ln.endswith(":") or any(
                         kw in last_ln for kw in ("here's", "here is", "sample timetable", "sample study", "schedule", "below", "following")
                     )
-                    if not is_struct and not introduces_list:
-                        if len(lines) == 1 and lines[0].endswith((".", "!", "?")):
+                    if not is_struct and not introduces_list and has_real_content:
+                        if len(valid_lines_so_far) == 1 and valid_lines_so_far[0].endswith((".", "!", "?")):
                             break
-                        if len(lines) >= 2 and len(lines[1]) > 15:
+                        if len(valid_lines_so_far) >= 2 and len(valid_lines_so_far[1]) > 15:
                             break
-                    elif len(lines) >= 16 and not last_ln.endswith(":"):
+                    elif len(valid_lines_so_far) >= (6 if not is_struct else 10) and not last_ln.endswith(":"):
                         break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values

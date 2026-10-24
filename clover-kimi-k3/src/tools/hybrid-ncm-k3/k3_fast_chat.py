@@ -30,8 +30,10 @@ from train_latent_bridge import encode_batch_rh
 
 
 CHAT_SYSTEM_PROMPT = (
-    "You are Clover, a polite, kind, and helpful assistant with a simple, warm, friendly kid-like voice. "
+    "You are Clover, a polite, kind, and helpful assistant with a simple, warm, friendly voice. "
     "Always speak politely, simply, and clearly so anyone can understand easily (never refer to 'the user' or 'the assistant' or 'Turn 1' in the third person). "
+    "NEVER write post-response commentary explaining your tone, why your response is polite/concise, or why you used `W1:`. "
+    "For image/chart requests, you can generate charts, plots, and SVG illustrations (never claim you use 'DALL·E'). "
     "Format your reply starting with `W1:` on the first line, and use `W2:`, `W3:`, `W4:` on separate lines for multi-part answers, study plans, or timetables. "
     "For greetings (like 'hi' or 'hello'), polite thanks (like 'thank you'), clarifications, or short factual questions, "
     "reply naturally and politely in 1 or 2 simple sentences on a single `W1:` line. "
@@ -107,14 +109,29 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         "\nThe calculation was verified using Python", "\nFor more detailed information, you can refer",
         "\nMy response will be structured", "\nI've provided the exact", "\nI've also included the verification",
         "\nThese are the key pieces of information extracted", "\nPython calculation confirms",
+        "\nThis is a simple, friendly response", "\nThis response is concise", "\nThis response is direct",
+        "\nThis response is polite", "\nI'm maintaining a polite", "\nI also included a question to encourage",
+        "\nYour message is straightforward, so a single", "\nA single `W1:` line is sufficient",
+        "\nwhich aligns with the character description",
     ):
         if stop_marker in raw_text:
             raw_text = raw_text.split(stop_marker)[0]
+    raw_text = re.sub(
+        r"\s*(?:This (?:is a simple, friendly|response is (?:concise|direct|polite|clear|helpful|simple))[\s\S]*$|"
+        r"I'm maintaining a polite and warm tone[\s\S]*$|"
+        r"I also included a question to encourage[\s\S]*$|"
+        r"Your message is straightforward,\s*so a single[\s\S]*$|"
+        r"It's also polite and helpful,\s*which aligns with[\s\S]*$)",
+        "",
+        raw_text,
+        flags=re.IGNORECASE,
+    )
     # Replace <latent> / </latent> anchors and inline W1:..W99: tags with clean line breaks
     raw_text = raw_text.replace(ENTRY_ANCHOR, "\n").replace(EXIT_ANCHOR, "\n")
     raw_text = re.sub(r"</?latent>", "\n", raw_text, flags=re.IGNORECASE)
     raw_text = re.sub(r"<\|[^>]+?\|>", "", raw_text)
     raw_text = re.sub(r"(?:^|\s)\bW\d+:\s*", "\n", raw_text).strip()
+    raw_text = re.sub(r"(?:^|\n)\s*W\d+\s*$", "", raw_text, flags=re.IGNORECASE).strip()
     # Join lines where an equation ends with `=` and the number is on the next line
     raw_text = re.sub(r"=\s*\n+\s*(?=[$\d\-])", "= ", raw_text)
 
@@ -205,7 +222,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             flags=re.IGNORECASE,
         )
         ln = re.sub(
-            r"(?:Now I will write|The user is asking|Okay,\s*so\s*the\s*user|I should structure|No need for further|I will end the interaction|Identify the scope:|This approach ensures|This response provides|This summary captures|I've kept the information concise|No further analysis|No other information or steps|The answer is concise).*$",
+            r"(?:Now I will write|The user is asking|Okay,\s*so\s*the\s*user|I should structure|No need for further|I will end the interaction|Identify the scope:|This approach ensures|This response provides|This summary captures|I've kept the information concise|No further analysis|No other information or steps|The answer is concise|This is a simple, friendly response|This response is concise|This response is direct|This response is polite|I'm maintaining a polite|I also included a question to encourage|Your message is straightforward, so a single|which aligns with the character description|It also provides a simple example to illustrate).*$",
             "",
             ln,
             flags=re.IGNORECASE,
@@ -236,6 +253,10 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             ln = ln[0].upper() + ln[1:]
         if not wants_summary:
             ln = re.sub(r"\s*;?\s*Summary:.*$", "", ln, flags=re.IGNORECASE).strip()
+        # Replace semicolons with periods so `has_semi=False` in `_dec_k3_aligned` and 1-to-1 pointer alignment is used
+        ln = re.sub(r";\s*", ". ", ln).strip()
+        if re.match(r"^W\d+:?$", ln, flags=re.IGNORECASE):
+            continue
         low = ln.lower()
         if ln and not low.startswith((
             "the user ", "you are specifically interested in", "you specifically asked for",
@@ -246,7 +267,13 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             "additionally, for a comparison with other", "additionally, a comparison with other models",
             "looking at the context", "based on the context", "the relevant information is clearly stated",
             "facts, the key information", "my response will be structured", "list the major ",
-            "i've provided the exact", "i've also included",
+            "i've provided the exact", "i've also included", "i also included a question",
+            "this is a simple, friendly response", "this response is concise", "this response is direct",
+            "this response is polite", "i'm maintaining a polite", "your message is straightforward",
+            "it's also polite and helpful", "it also provides a simple example",
+            "since the question is", "since your question is", "since this is a",
+            "so my response will", "my response will cover", "i'll start by explaining",
+            "i will start by explaining", "then maybe touch on", "what images are (", "what videos are (",
             "okay,", "alright,", "hmm", "let me ", "wait,", "no need ", "i will ", "i'll ",
             "first, i ", "first, the search", "i should ", "i need to make sure", "then i need to ",
             "the key differences seem to be", "the answer should ", "so the final answer will",

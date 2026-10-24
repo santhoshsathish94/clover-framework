@@ -128,16 +128,33 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
                         lns = [ln.strip() for ln in txt_i.splitlines() if ln.strip()]
                         if lns:
                             last_ln = lns[-1].lower()
-                            introduces_list = last_ln.endswith(":") or any(
-                                kw in last_ln for kw in ("here's", "here is", "sample timetable", "sample study", "schedule", "below", "following")
-                            )
-                            if not is_struct[i] and not introduces_list:
-                                if len(lns) == 1 and lns[0].endswith((".", "!", "?")):
-                                    done[i] = True
-                                elif len(lns) >= 2 and len(lns[1]) > 15:
-                                    done[i] = True
-                            elif len(lns) >= 16 and not last_ln.endswith(":"):
+                            if any(
+                                stop_p in last_ln
+                                for stop_p in (
+                                    "you asked for ", "the user asked for", "i followed the instructions",
+                                    "the answer is concise", "no other information or steps",
+                                    "this is a simple, friendly response", "this response is concise", "this response is direct",
+                                    "this response is polite", "i'm maintaining a polite", "i also included a question to encourage",
+                                    "your message is straightforward", "which aligns with the character description",
+                                )
+                            ):
+                                gen_ids[i] = eng.ha_tok.encode("\n".join(lns[:-1]), add_special_tokens=False)
                                 done[i] = True
+                            else:
+                                valid_lns_i = parse_and_split_plans(
+                                    "W1: " + "\n".join(lns), user_prompts[i], eng.k3_tok, max_bpe=32, max_windows=24
+                                )
+                                has_real_i = bool(valid_lns_i) and valid_lns_i != ["Hello! How can I help you today?"]
+                                introduces_list = last_ln.endswith(":") or any(
+                                    kw in last_ln for kw in ("here's", "here is", "sample timetable", "sample study", "schedule", "below", "following")
+                                )
+                                if not is_struct[i] and not introduces_list and has_real_i:
+                                    if len(valid_lns_i) == 1 and valid_lns_i[0].endswith((".", "!", "?")):
+                                        done[i] = True
+                                    elif len(valid_lns_i) >= 2 and len(valid_lns_i[1]) > 15:
+                                        done[i] = True
+                                elif len(valid_lns_i) >= (6 if not is_struct[i] else 10) and not last_ln.endswith(":"):
+                                    done[i] = True
         if all(done):
             break
         attn_mask = torch.cat([attn_mask, torch.ones((B, 1), dtype=attn_mask.dtype, device=eng.dev_ha)], dim=1)

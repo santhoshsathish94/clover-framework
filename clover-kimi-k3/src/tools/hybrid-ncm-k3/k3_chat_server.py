@@ -201,12 +201,26 @@ def extract_server_attachment_text(att: dict) -> str:
     return f"Attached File ({name}, {mime or ext or 'binary'})"
 
 
+FAVICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 5 84 93" width="64" height="64">
+  <defs>
+    <path id="clover-leaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z" fill="#0a6a5f" stroke="#0a6a5f" stroke-width="2" stroke-linejoin="round"/>
+  </defs>
+  <path d="M50 48C50 68 50 80 50 95" fill="none" stroke="#7fb8b0" stroke-width="4.5" stroke-linecap="round"/>
+  <use href="#clover-leaf"/>
+  <use href="#clover-leaf" transform="rotate(72 50 44)"/>
+  <use href="#clover-leaf" transform="rotate(144 50 44)"/>
+  <use href="#clover-leaf" transform="rotate(216 50 44)"/>
+  <use href="#clover-leaf" transform="rotate(288 50 44)"/>
+</svg>"""
+
+
 HTML_UI = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Clover</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style>
   :root {
     --ink: #14181d;
@@ -1113,6 +1127,9 @@ class MultiGPUCloverCoordinator:
             with self.sess_lock:
                 for sid, turns in (data.get("sessions") or {}).items():
                     if isinstance(turns, list):
+                        for t in turns:
+                            if isinstance(t, dict) and "reply" in t:
+                                t["reply"] = self._strip_meta_commentary(t.get("reply", ""))
                         self.sessions[sid] = turns
                 for sid, m in (data.get("session_meta") or {}).items():
                     if isinstance(m, dict):
@@ -1132,6 +1149,43 @@ class MultiGPUCloverCoordinator:
         except Exception:
             pass
 
+    @staticmethod
+    def _strip_meta_commentary(reply_txt: str) -> str:
+        """Strips any post-response self-commentary ('This response is concise...', 'This is a simple, friendly response...',
+        'Your message is straightforward, so a single W1: line is sufficient...') from stored or client-supplied history
+        so prior turns never prime the model to repeat meta-commentary."""
+        if not reply_txt:
+            return ""
+        cleaned_paras = []
+        for para in str(reply_txt).split("\n\n"):
+            p_strip = para.strip()
+            if not p_strip:
+                continue
+            p_low = p_strip.lower()
+            if p_low.startswith((
+                "this is a simple, friendly response",
+                "this response is concise",
+                "this response is direct",
+                "this response is polite",
+                "i'm maintaining a polite",
+                "i also included a question to encourage",
+                "your message is straightforward",
+                "it's also polite and helpful",
+            )) or "aligns with the character description" in p_low or "single `w1:` line is sufficient" in p_low:
+                continue
+            p_strip = re.sub(
+                r"\s*(?:This (?:is a simple, friendly|response is (?:concise|direct|polite|clear|helpful|simple))[\s\S]*$|"
+                r"I'm maintaining a polite and warm tone[\s\S]*$|"
+                r"I also included a question to encourage[\s\S]*$|"
+                r"Your message is straightforward,\s*so a single[\s\S]*$)",
+                "",
+                p_strip,
+                flags=re.IGNORECASE,
+            ).strip()
+            if p_strip:
+                cleaned_paras.append(p_strip)
+        return "\n\n".join(cleaned_paras)
+
     def hydrate_session_history_if_needed(self, session_id: str, client_history: list):
         """Synchronizes `self.sessions[session_id]` with the client's visible conversation history (`client_history`)
         whenever `client_history` is provided and differs from the server's in-memory turn list."""
@@ -1141,7 +1195,7 @@ class MultiGPUCloverCoordinator:
         for item in client_history:
             if isinstance(item, dict):
                 u = str(item.get("user") or "").strip()
-                r = str(item.get("reply") or "").strip()
+                r = self._strip_meta_commentary(str(item.get("reply") or "").strip())
                 if u and r:
                     valid_turns.append({"user": u, "reply": r, "plans": item.get("plans") or [], "attachments": item.get("attachments") or []})
         if not valid_turns:
@@ -1634,6 +1688,14 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             body = HTML_UI.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Access-Control-Allow-Origin", self._cors_origin())
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        elif self.path in ("/favicon.svg", "/favicon.ico"):
+            body = FAVICON_SVG.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
             self.send_header("Access-Control-Allow-Origin", self._cors_origin())
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()

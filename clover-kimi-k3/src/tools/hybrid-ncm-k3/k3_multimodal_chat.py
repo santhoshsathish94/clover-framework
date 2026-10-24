@@ -216,6 +216,13 @@ class K3MultimodalChatEngine:
     def plan_visual_with_latent(self, pil_img, user_prompt, latent_steps=6, max_new=340):
         """Option B: Runs `Qwen3-VL-8B-Instruct` on `[pil_img, user_prompt]`, extracts visual+text `HybridLink` `R(h_t)`
         from the multimodal prefill, and decodes the grounded multi-window natural-sentence plan."""
+        # Cap image dimensions before feeding Qwen3-VL dynamic-resolution processor so mobile photos / high-res images
+        # never exceed 24 GiB VRAM on cuda:7!
+        if max(pil_img.size) > 768:
+            pil_img = pil_img.copy()
+            pil_img.thumbnail((768, 768), Image.Resampling.LANCZOS)
+        torch.cuda.empty_cache()
+
         msgs = [
             {
                 "role": "user",

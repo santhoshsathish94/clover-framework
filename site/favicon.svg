@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 5 84 93" width="64" height="64">
+  <defs>
+    <path id="clover-leaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z" fill="#0a6a5f" stroke="#0a6a5f" stroke-width="2" stroke-linejoin="round"/>
+  </defs>
+  <path d="M50 48C50 68 50 80 50 95" fill="none" stroke="#7fb8b0" stroke-width="4.5" stroke-linecap="round"/>
+  <use href="#clover-leaf"/>
+  <use href="#clover-leaf" transform="rotate(72 50 44)"/>
+  <use href="#clover-leaf" transform="rotate(144 50 44)"/>
+  <use href="#clover-leaf" transform="rotate(216 50 44)"/>
+  <use href="#clover-leaf" transform="rotate(288 50 44)"/>
+</svg>
