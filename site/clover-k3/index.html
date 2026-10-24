@@ -147,12 +147,15 @@
         (<code>192 GiB</code> total VRAM across 8 cards of 24 GiB each, NVLink bridges on pairs
         <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> at <strong>51.9 GB/s</strong> one-way,
         <code>2 &times; Intel Xeon Gold 6248R</code> 96 threads, <code>376 GiB</code> system RAM, Ubuntu 24.04, CUDA 12.6)
-        running checkpoint <code>e11_clover_k3_native_ha_ncm.pt</code>.</p>
+        running checkpoint <code>e12_clover_k3_true_ha_ncm.pt</code> (with full 896-expert MoE routing and unfrozen NCM + VQ-VAE decoding).
+        For the full step-by-step research log and all cycle measurements, see
+        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>
+        and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/README.md">clover-kimi-k3/README.md</a>.</p>
 
       <h3>How the 8 &times; RTX 3090 GPUs are partitioned</h3>
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Zero disk I/O during inference: all 93 Kimi K3 trunks and 3,312 highest-prior 4-bit experts stay permanently in GPU VRAM.</caption>
+          <caption class="note">All 93 Kimi K3 trunks and 896 routed experts per MoE layer are accessible across GPUs 0..5 via permanent VRAM + dynamic CardPool + 51.1 GB pinned RAM cache.</caption>
           <thead>
             <tr>
               <th scope="col">GPUs</th>
@@ -163,13 +166,13 @@
           <tbody>
             <tr>
               <th scope="row"><code>cuda:0 .. cuda:5</code> (6 GPUs)</th>
-              <td><strong>113.5 GiB</strong> (18.3&ndash;19.7 GiB / card)</td>
-              <td><strong>All 93 Kimi K3 Trunks</strong> (<code>trunk-0..92</code>, 52.7 GiB: 69 KDA + 24 MLA attention layers, 92 routers, 92 shared experts, 8 snapshot aggregators) + <strong>all 92 MoE Expert Layers</strong> (<code>3,312</code> resident 4-bit palette-mapped experts = 58.1 GB) + Layer-93 Final Tail (<code>libk3_gpu_experts.so</code>).</td>
+              <td><strong>124.9 GiB</strong> (20.8 GiB / card)</td>
+              <td><strong>All 93 Kimi K3 Trunks</strong> (<code>trunk-0..92</code>, 52.7 GiB: 69 KDA + 24 MLA attention layers, 92 routers, 92 shared experts, 8 snapshot aggregators) + <strong>all 92 MoE Expert Layers (896 experts/layer routable via <code>top16_smart_896</code>:</strong> <code>2,576</code> permanent VRAM experts + <code>1,229&ndash;1,586</code> dynamic VRAM <code>CardPool</code> slots + <code>2,912</code> pinned RAM slots = 51.1 GB) + Layer-93 Final Tail (<code>libk3_gpu_experts.so</code>).</td>
             </tr>
             <tr>
               <th scope="row"><code>cuda:6</code> (1 GPU)</th>
-              <td><strong>17.2 GiB</strong> / 24 GiB</td>
-              <td><strong>CloverK3AgentEngine (<code>e11_clover_k3_native_ha_ncm.pt</code>):</strong> <code>HybridAgent-8B-Agentic</code> planner + <code>LiveWebSearchTool</code> + <code>PythonTool</code> + <code>K3NativeHybridLink(7168&rarr;7168)</code> + <code>K3ComboBridge</code> + <code>K3ExpertBridge</code> + <code>NextConceptTransformer (NCM)</code> + <code>K3LexicalPointerDecoder</code>.</td>
+              <td><strong>19.5 GiB</strong> / 24 GiB</td>
+              <td><strong>CloverK3AgentEngine (<code>e12_clover_k3_true_ha_ncm.pt</code>):</strong> <code>HybridAgent-8B-Agentic</code> planner + <code>LiveWebSearchTool</code> + <code>PythonTool</code> + <code>K3NativeHybridLink(7168&rarr;7168)</code> + <code>K3ComboBridge</code> + <code>K3ExpertBridge</code> (<code>tanh(&alpha;) = 0.6543</code>) + <code>NextConceptTransformer (NCM)</code> + unfrozen <code>vqvae.decoder</code> &amp; <code>K3LexicalPointerDecoder</code> + Kimi K3 <code>lm_head.weight</code>.</td>
             </tr>
             <tr>
               <th scope="row"><code>cuda:7</code> (1 GPU)</th>
@@ -305,6 +308,59 @@
           </tbody>
         </table>
       </div>
+
+      <h3>Controlled 4-Way Ablation &amp; Standard AI Benchmarks (<code>e12</code>, 8 &times; RTX 3090)</h3>
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Measured on the same test splits and harnesses across 1. Original Kimi K3 (93-layer 896-expert MoE + <code>lm_head</code>), 2. K3 + HybridAgent, 3. K3 + NCM, and 4. K3 + HybridAgent + NCM. Full 95% confidence intervals and per-level NCM diagnostics are in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Benchmark / Evaluation</th>
+              <th scope="col">1. Original K3</th>
+              <th scope="col">2. K3 + HybridAgent</th>
+              <th scope="col">3. K3 + NCM</th>
+              <th scope="col">4. K3 + HybridAgent + NCM</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><strong>Priority 1 &mdash; Agentic &amp; Multi-Step Workflows</strong> (<code>HybridAgent QA</code> + <code>GSM8K</code>)</th>
+              <td>0.0%</td>
+              <td><strong>83.3%</strong> (<code>16/20</code> = 80.0% on GSM8K-20; <code>14/15</code> = 93.3% on HybridAgent QA-15)</td>
+              <td>0.0%</td>
+              <td><strong>83.3%</strong> (<code>+83.3 pp</code> vs V1; 95% CI <code>[55.2, 95.3]</code>)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Priority 2 &mdash; Coding &amp; Unit-Test Execution</strong> (<code>OpenAI HumanEval pass@1</code>)</th>
+              <td>0.0%</td>
+              <td><strong>100.0%</strong> (<code>10/10</code> in 4-way; <code>19/20</code> = 95.0% on HumanEval-20)</td>
+              <td>0.0%</td>
+              <td><strong>100.0%</strong> (<code>+100.0 pp</code> vs V1; <code>19/20 = 95.0%</code> on HumanEval-20)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Priority 3 &mdash; Knowledge Guardrail &amp; Long-Context</strong> (<code>MMLU-STEM</code> + <code>AA-LCR</code>, <code>N=15</code>)</th>
+              <td>66.7% (<code>10/15</code>)</td>
+              <td><strong>80.0%</strong> (<code>12/15</code>)</td>
+              <td>53.3% (<code>8/15</code>)</td>
+              <td><strong>80.0%</strong> (<code>+13.3 pp</code> / <code>+20.0%</code> rel. vs V1; <code>16/20 = 80.0%</code> on MMLU-20)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Section 4 &mdash; Held-Out WMT14 Concept-to-Text &amp; NCM 11-Scale Hierarchy</strong></th>
+              <td>36.9% retention<br>(<code>37.2 s</code>)</td>
+              <td>83.5% retention<br>(<code>9.2 s</code>)</td>
+              <td><strong>93.7% retention</strong><br>(<strong>3.9 s</strong>, <code>9.5&times;</code> faster)</td>
+              <td><strong>93.7% retention</strong> (<strong>3.7 s</strong>, <code>+56.8 pp</code> vs V1; 11-scale Top-5 <strong>83.2%</strong>, K3 embedding cosine <strong>0.9778</strong>, Sudoku-Easy <strong>100.0%</strong>)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Pooled Downstream Accuracy (<code>N=47</code>) &amp; GPU-s / Solved Task</strong></th>
+              <td>29.1%<br>(<code>484.2 GPU-s</code>)</td>
+              <td>85.9%<br>(<code>134.8 GPU-s</code>)</td>
+              <td>37.0%<br>(<code>188.4 GPU-s</code>)</td>
+              <td><strong>88.0%</strong> (<code>+58.9 pp</code> / <code>+202.3%</code> rel. vs V1; 95% CI <code>[77.0, 95.4]</code>; <strong>128.9 GPU-s / solved</strong>)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -343,9 +399,9 @@
               <td><strong>3.1 to 3.5 s per token</strong> plain (<strong>356.3 s</strong> for 120 tokens); <strong>2.7 s/tok</strong> with DSpark speculative decoding</td>
             </tr>
             <tr>
-              <th scope="row">4. <strong>Clover Kimi K3 + HybridAgent + NCM (<code>e11</code>, 8 &times; RTX 3090 GPUs, now)</strong></th>
-              <td><strong>256K session context</strong>; continuous <code>&lt;latent&gt;</code> reasoning + live <code>&lt;search&gt;</code>, <code>&lt;python&gt;</code>, <code>matplotlib</code> charts &amp; <code>MoonViT3d</code> vision</td>
-              <td><strong>1.56 to 11.69 s end-to-end</strong> (<strong>60.5 K3 tok/s E2E</strong>, <strong>76.6 tok/s</strong> across all 93 K3 GPU layers, <strong>8.30&ndash;8.86 s/session</strong> clubbed across 4 sessions, <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling)</td>
+              <th scope="row">4. <strong>Clover Kimi K3 + HybridAgent + NCM (<code>e12</code>, 8 &times; RTX 3090 GPUs, now)</strong></th>
+              <td><strong>256K session context</strong>; all 896 experts/layer routable + continuous <code>&lt;latent&gt;</code> reasoning + live <code>&lt;search&gt;</code>, <code>&lt;python&gt;</code>, <code>matplotlib</code> charts &amp; <code>MoonViT3d</code> vision</td>
+              <td><strong>1.68 to 11.69 s end-to-end</strong> (<strong>88.0%</strong> pooled 4-way benchmark score vs. 29.1% V1 baseline, <strong>60.5 K3 tok/s E2E</strong>, <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling)</td>
             </tr>
           </tbody>
         </table>

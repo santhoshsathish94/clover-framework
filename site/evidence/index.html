@@ -74,10 +74,12 @@
         normal and often correct. The damage comes from describing weak evidence in the language of
         strong evidence, so "validated in the test environment, not yet observed in production" is
         written out in full rather than rounded up.</p>
-      <p><strong>Also under Evidence: <a href="../clover-k3/">Clover Kimi K3</a>.</strong> An engine that
-        runs a 2.78-trillion-parameter model on one CPU workstation, written from the framework's own
-        habits of checking each step before the next. That page is a guide to setting it up and running
-        it on your own machine, with the measured speeds and what they do not show.</p>
+      <p><strong>Also under Evidence: <a href="../clover-k3/">Clover Kimi K3</a> (Kimi K3 + HybridAgent + NCM).</strong>
+        A unified engine that runs all 93 layers of Kimi K3 (2.78 trillion parameters, 896 routed experts per MoE layer)
+        on one CPU workstation or interactively in 1.7 to 11.8 seconds on an 8 &times; RTX 3090 GPU server by combining
+        Kimi K3&rsquo;s 93-layer MoE backbone, HybridAgent continuous <code>&lt;latent&gt;</code> reasoning and tools,
+        and 11-pass Next-Concept Modeling (NCM). See the <a href="../clover-k3/">Clover Kimi K3 overview &amp; benchmarks</a>
+        and the <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">detailed research &amp; benchmark log</a>.</p>
       <p><strong>Everything on this page is software work.</strong> That is where the author works, so
         that is the evidence that exists. The cycle is not limited to software, and the rest of the
         site does not describe it that way — but no cycle outside software has been run and recorded
