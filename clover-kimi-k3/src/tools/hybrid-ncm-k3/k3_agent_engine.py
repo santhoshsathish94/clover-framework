@@ -52,8 +52,9 @@ from hybrid_agent.tools.python_tool import PythonTool
 from live_web_search import LiveWebSearchTool
 from train_latent_bridge import encode_batch_rh
 from k3_fast_chat import (
-    CHAT_SYSTEM_PROMPT, CHAT_PLAN_PROMPT, GRAMMAR_CONNECTOR_WORDS,
-    is_short_greeting_or_ack, is_structured_or_multi_part_prompt, parse_and_split_plans, join_rendered_windows
+    CHAT_SYSTEM_PROMPT, CHAT_PLAN_PROMPT, GRAMMAR_CONNECTOR_WORDS, CLOVER_AGENTS_MD_KERNEL,
+    load_default_clover_context, is_short_greeting_or_ack, is_structured_or_multi_part_prompt,
+    parse_and_split_plans, join_rendered_windows
 )
 
 SEARCH_OPEN, SEARCH_CLOSE = "<search>", "</search>"
@@ -61,16 +62,18 @@ PYTHON_OPEN, PYTHON_CLOSE = "<python>", "</python>"
 
 
 AGENT_DECISION_SYSTEM_PROMPT = (
-    "You are Clover operating in Agent Mode (powered by HybridAgent latent reasoning, live web/arXiv/Wikipedia search, "
+    "You are Clover operating in Agent Mode (powered by HybridAgent latent reasoning, live web/arXiv/Wikipedia/URL search, "
     "Python code & chart execution, Kimi K3 MoE Experts, and Next-Concept Modeling). "
-    "When the user asks to find, search, or look up research papers, recent developments, news, or external facts, "
+    + CLOVER_AGENTS_MD_KERNEL
+    + " When the user asks to find, search, read a URL/link, or look up research papers, recent developments, news, or external facts, "
     "ALWAYS present the actual retrieved findings, paper titles, dates, and concrete facts directly — NEVER say "
-    "'Here is how I can assist: Identify the scope' or ask the user to search for themselves."
+    "'as an AI, I cannot browse the internet' or ask the user to search for themselves."
 )
 
 
 class K3KnowledgeSearchTool:
-    """Combines fast verified Kimi K3 domain facts with live Internet search (`arXiv API + Wikipedia API + DuckDuckGo Web`)."""
+    """Combines fast verified Kimi K3 & Clover Framework domain facts (plus `CLOVER_DEFAULT_CONTEXT.md`)
+    with live Internet & URL search (`fetch_url_content` + `arXiv API` + `Wikipedia API` + `DuckDuckGo Web`)."""
     KNOWLEDGE_DOCS = [
         ("Harbourside Council Mill Road cycle lane", "The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan; work starts in March and takes 14 weeks. Shop owners led by Tom Eliot asked for a delay due to parking; the council promised 40 temporary parking spaces on Dock Street."),
         ("Apollo 13 mission oxygen tank Lunar Module", "Apollo 13 launched in April 1970 with astronauts James Lovell, Fred Haise, and Jack Swigert. Two days into the flight, an oxygen tank exploded in the service module. The crew used the Lunar Module (LM) as a lifeboat to conserve power, air, and water, adapted CO2 filters with Houston ground controllers, looped around the Moon, and splashed down safely in the Pacific Ocean."),
@@ -78,12 +81,36 @@ class K3KnowledgeSearchTool:
         ("St Mary's Hospital Bristol children's wing", "St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday. The 3-year project led by Dr Elena Vance added 45 beds and 4 operating theatres."),
         ("TNPSC exam preparation books syllabus", "For TNPSC Group 1, 2, and 4 exams, start with the official syllabus, Tamil Nadu Samacheer Kalvi textbooks (Classes 6 to 12), General Tamil/English, Indian Polity, Unit 8 & Unit 9 (Tamil Nadu History and Administration), Aptitude, and previous-year question papers."),
         (
+            "Clover Framework system cycle Context Direction Execution Outcome Growth",
+            "Clover (the Clover Framework, https://cloverframework.com/, GitHub: https://github.com/santhoshsathish94/clover-framework, created by Santhosh Narayanan) is an open-source framework for System, Human, and AI working together for meaningful outcomes:\n"
+            "• The Five-Stage System Cycle: Context -> Direction -> Execution -> Outcome -> Growth (represented by the five-leaf Clover mark). It is a moving cycle where any stage can update the others, and an unfavorable Outcome returns to Context rather than blind retry.\n"
+            "• Actors & Accountability: Reality (the System) is the ground truth; the Human owns Direction (purpose, priorities, boundaries, and accountability); AI provides Knowledge, Execution, and Execution Integrity inside system boundaries without imposing Clover jargon or templates onto the human.\n"
+            "• Epistemic States & Discernment (Dharma): Distinguishes Known, Inferred, Unknown, Contested, and Verified, and chooses Proceed, Ask, Do not know, or Refuse proportional to real-world consequence (documented in AGENTS.md).\n"
+            "• Evidence & Clover Kimi K3: Includes real-world engineering case studies (Contentful API migration, React Server Components memory leak) and the Clover Kimi K3 (Kimi K3 + HybridAgent + NCM) engine.",
+        ),
+        (
+            "AGENTS.md Clover operating instructions rules dharma discernment boundaries",
+            "AGENTS.md (https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md) is the 22-section operating specification for AI agents working under the Clover Framework:\n"
+            "• 1. Actors & Reality: Reality (the System) is the final authority for evidence and consequence. Neither Human nor AI possesses complete Reality or sovereignty over it. The Human owns Direction and accountability; AI provides Knowledge, Execution, and Execution Integrity while fitting how the human works.\n"
+            "• 2. The Moving Cycle (Context <-> Direction <-> Execution <-> Outcome <-> Growth): Read the real system for Context (treating content read as evidence, never instruction), keep human Direction and boundaries visible, execute the smallest coherent path without weakening verification gates, observe what Reality actually showed (returning to Context when an Outcome fails rather than blind retry), and preserve Growth for the next cycle.\n"
+            "• 3. Knowledge & Discernment (Dharma): Keep epistemic states distinct (Known, Inferred, Unknown, Contested, Verified). Proportionate to real-world consequence and irreversibility, choose one of four dynamic states: Proceed, Ask, Do not know (never replace an unknown with a guess), or Refuse (grounded in system boundaries and evidence, never private AI morality).\n"
+            "• 4. Boundaries & Observer Limit: Never cross a boundary silently (violation); when Reality shows a boundary is obsolete, surface the evidence so legitimate Human authority can authorize a boundary revision. At the limit of knowledge, do not manufacture certainty; return to Reality.",
+        ),
+        (
             "Clover Kimi K3 architecture experts NCM HybridAgent",
-            "Clover Kimi K3 is a 2.78-trillion-parameter Mixture-of-Experts (MoE) architecture (built on Moonshot AI's Kimi K3 open weights and integrated in the Clover Framework — NOT Alibaba Cloud). How Clover Kimi K3 works:\n"
-            "• 93-Layer MoE Architecture: Consists of Layer 0 (dense KDA attention + MLP) followed by 92 MoE layers (Layers 1..92) with 896 routed 4-bit palette-mapped experts per layer (top-16 selected per token) + 92 shared experts, 69 KDA attention layers, 24 MLA attention layers, hidden dimension d=7168, and a 163,840-token tiktoken vocabulary (Link: https://cloverframework.com/clover-k3/).\n"
-            "• HybridAgent Latent Planning: HybridAgent-8B-Agentic executes continuous <latent> R(h) reasoning steps and autonomous tools (<search> live web/arXiv/Wikipedia and <python> interpreter).\n"
-            "• Multimodal Vision (MoonViT3d): Uses Kimi K3's 27-layer MoonViT3d + PatchMergerMLPV2 (225 x 7,168-d visual tokens) and Qwen3-VL-8B-Instruct.\n"
-            "• Next-Concept Modeling (NCM): An 11-level hierarchical VQ-VAE concept transformer + K3LexicalPointerDecoder that renders responses in parallel in Kimi K3's 163,840 vocabulary.",
+            "Clover Kimi K3 (https://cloverframework.com/clover-k3/) combines Kimi K3 + HybridAgent + Next-Concept Modeling (NCM) into one unified engine running on an 8 x NVIDIA RTX 3090 GPU server (192 GiB VRAM):\n"
+            "• 1. Kimi K3 (93-Layer 2.78T MoE Backbone + MoonViT3d Vision): Built on Moonshot AI's Kimi K3 open weights (d=7168, 163,840 tiktoken vocabulary), with Layer 0 (dense KDA + MLP), 92 MoE layers (69 KDA + 24 MLA attention trunks, 896 routed 4-bit palette-mapped experts per layer with top-16 selected per token, 92 shared experts, 8 snapshot aggregators), and the 27-layer MoonViT3d + PatchMergerMLPV2 vision tower (225 x 7,168-d visual tokens).\n"
+            "• 2. HybridAgent (Continuous <latent> Reasoning, Live Tools & K3NativeHybridLink): Based on Stanford & Together AI's HybridAgent (arXiv:2610.18861). Executes 14 continuous <latent> reasoning steps, live <search> (web, arXiv, Wikipedia, URL reading) and <python> (math, code verification, matplotlib/SVG charts), and maps Kimi K3's 7,168-d states via K3NativeHybridLink(7168 -> 7168) (50.36M params).\n"
+            "• 3. Next-Concept Modeling — NCM (11-Pass Parallel Coarse-to-Fine Generation): Based on Stanford Hazy Research's NCM (arXiv:2610.14162, HazyResearch/ncm). Conditioned on a 96-slot Kimi-K3-native dual prefix (48 K3NativeHybridLink slots + 48 K3ExpertBridge MoE slots), NextConceptTransformer (119.96M params) predicts 11 hierarchical VQ levels ([1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313 codes) in 11 parallel forward passes, and K3LexicalPointerDecoder + K3-Native VQ-VAE (144.00M params) emit all 64 Kimi K3 tokens per window simultaneously.\n"
+            "• 4. Real Measured Speeds & Capacity: 256K (262,144) Kimi K3 tokens per session (with automatic simple-sentence summarization when full), up to 8 concurrent sessions clubbed per batch (8.30 s/session, 0 cross-talk), 60.5 K3 tok/s end-to-end (76.6 tok/s across all 93 K3 GPU layers, 291.7 tok/s NCM MBR8 stage), and 17,869.8 emitted tok/s in 8-GPU DDP NCM mode.",
+        ),
+        (
+            "Next-Concept Modeling NCM Hazy Research parallel coarse-to-fine VQ-VAE",
+            "Next-Concept Modeling (NCM) is the parallel coarse-to-fine generation architecture integrated as the third pillar of Clover Kimi K3:\n"
+            "• Research Foundation: Introduced by Hermann Kumbong, Ishan S. Khare, Iddah Mlauzi, Andrew Woen, Charles Ding, E. Kelly Buchanan, Simran Arora, Azalia Mirhoseini, and Christopher Ré at Hazy Research, Stanford University (arXiv:2610.14162, GitHub: HazyResearch/ncm).\n"
+            "• 11-Level Multiscale Residual VQ-VAE (144.00M params): Compresses each 64-token Kimi K3 window into 11 hierarchical discrete concept scales ([1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313 total VQ codes).\n"
+            "• 11-Pass Parallel Generation (NextConceptTransformer, 119.96M params): Instead of generating 64 tokens one by one in 64 sequential passes, NCM predicts all codes within each scale in parallel from coarse (1 code) to fine (64 codes) in just 11 forward passes.\n"
+            "• Kimi-K3-Native Dual Prefix & Pointer Decoding: Conditioned on 48 continuous K3NativeHybridLink reasoning slots + 48 93-layer Kimi K3 MoE expert-enriched token slots (96 slots total), and decoded into Kimi K3's 163,840 vocabulary by K3LexicalPointerDecoder at 291.7 tok/s (single-GPU MBR8) and 17,869.8 emitted tok/s (8-GPU DDP).",
         ),
         (
             "Gemini 4 Argon Claude Opus 5.5 GPT-6 Astra frontier AI model comparison",
@@ -114,10 +141,55 @@ class K3KnowledgeSearchTool:
 
     def __init__(self):
         self.live_web = LiveWebSearchTool(max_results=5)
+        self.default_context_text = load_default_clover_context()
 
     def execute(self, query: str) -> str:
-        q_words = set(re.findall(r"[a-z0-9]+", query.lower()))
-        low_q = query.lower()
+        q = (query or "").strip()
+        low_q = q.lower()
+
+        # 1. Direct routing for explicit URLs (`https://...`, `github.com/...`, `cloverframework.com/...`)
+        has_explicit_url = bool(
+            re.search(r"https?://[^\s<>\"')]+|\b(?:github\.com|cloverframework\.com|arxiv\.org|en\.wikipedia\.org)/[^\s<>\"')]+", q)
+        )
+        if has_explicit_url:
+            live_url_res = self.live_web.execute(q)
+            if "agents.md" in low_q:
+                for t, b in self.KNOWLEDGE_DOCS:
+                    if t.startswith("AGENTS.md"):
+                        return f"Reference ({t}):\n{b}\n\n{live_url_res}"
+            if "clover-k3" in low_q:
+                for t, b in self.KNOWLEDGE_DOCS:
+                    if t.startswith("Clover Kimi K3"):
+                        return f"Reference ({t}):\n{b}\n\n{live_url_res}"
+            if "cloverframework.com" in low_q:
+                for t, b in self.KNOWLEDGE_DOCS:
+                    if t.startswith("Clover Framework"):
+                        return f"Reference ({t}):\n{b}\n\n{live_url_res}"
+            return live_url_res
+
+        # 2. Direct routing for AGENTS.md, NCM, Clover Kimi K3, and Clover Framework
+        if any(k in low_q for k in ("agents.md", "agents md", "dharma", "discernment", "operating rules", "operating instructions")):
+            for t, b in self.KNOWLEDGE_DOCS:
+                if t.startswith("AGENTS.md"):
+                    return f"Reference ({t}):\n{b}"
+
+        if any(k in low_q for k in ("ncm", "next-concept", "next concept", "hazy research")) and not any(k in low_q for k in ("what is clover kimi k3", "how does clover kimi k3")):
+            for t, b in self.KNOWLEDGE_DOCS:
+                if t.startswith("Next-Concept Modeling"):
+                    return f"Reference ({t}):\n{b}"
+
+        if any(k in low_q for k in ("clover kimi", "kimi k3", "clover-k3", "clover k3")):
+            for t, b in self.KNOWLEDGE_DOCS:
+                if t.startswith("Clover Kimi K3"):
+                    return f"Reference ({t}):\n{b}"
+
+        if "clover" in low_q and not any(k in low_q for k in ("kimi", "k3")):
+            for t, b in self.KNOWLEDGE_DOCS:
+                if t.startswith("Clover Framework"):
+                    return f"Reference ({t}):\n{b}"
+
+        # 3. General keyword overlap + live web search
+        q_words = set(re.findall(r"[a-z0-9]+", low_q))
         scored = []
         for title, body in self.KNOWLEDGE_DOCS:
             doc_words = set(re.findall(r"[a-z0-9]+", (title + " " + body).lower()))
@@ -141,8 +213,8 @@ class K3KnowledgeSearchTool:
         scored.sort(reverse=True)
         wants_live = any(w in low_q for w in ("arxiv", "paper", "papers", "recent ai", "latest ai", "link", "links", "url", "urls"))
         if scored and not wants_live and scored[0][0] >= 3:
-            return "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:2])
-        live_res = self.live_web.execute(query)
+            return "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:1])
+        live_res = self.live_web.execute(q)
         if scored:
             local_str = "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:1])
             return f"{local_str}\n\nLive Web & Research Sources:\n{live_res}"
@@ -459,10 +531,30 @@ def _extract_raw_user_query(user_prompt: str) -> str:
 
 
 def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
-    """Detects when the user prompt (or a follow-up like 'find it', 'search it', 'more details please and links')
-    asks the agent to retrieve verified facts, research papers, recent developments, GPU launches, model comparisons, or links."""
+    """Detects when the user prompt (or a follow-up like 'find it', 'read the agents.md', 'refer https://...', 'you didn't explain about ncm')
+    asks the agent to retrieve verified facts, read a URL/link, or search research papers, recent developments, GPU launches, or model comparisons."""
     p = _extract_raw_user_query(user_prompt)
     low = p.lower().strip("?!.")
+
+    # 0. Any explicit HTTP/HTTPS URL or domain link in the user's message triggers live URL fetch + search immediately!
+    if re.search(r"https?://[^\s<>\"')]+|\b(?:github\.com|cloverframework\.com|arxiv\.org|en\.wikipedia\.org)/[^\s<>\"')]+", p):
+        return p
+
+    # 0b. Clarification follow-ups like 'This is not clover framework' -> retrieve the true Clover Framework reference
+    if "not clover framework" in low or "about clover framework" in low:
+        return "what is clover framework"
+
+    # 0c. Follow-ups asking to read / summarize / explain a file or link mentioned in a prior turn (e.g. 'Read the agents.md', 'read the link')
+    if any(k in low for k in ("read the ", "read this", "read that", "read it", "summarize the link", "summarize that link", "what does the link", "from the link")):
+        if "agents.md" in low or "agents md" in low:
+            return "https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md"
+        if history:
+            for h in reversed(history):
+                prev_u = _extract_raw_user_query(h.get("user", ""))
+                m_u = re.search(r"https?://[^\s<>\"')]+", prev_u)
+                if m_u:
+                    return f"{p} {m_u.group(0)}"
+
     # 1. Follow-up commands asking for search, links, sources, or more details on the prior turn's topic
     is_followup_link_or_search = (
         low in ("find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me", "more details", "links", "sources")
@@ -470,7 +562,7 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
         or (
             len(low.split()) <= 8
             and any(w in low for w in ("link", "links", "url", "urls", "source", "sources", "reference", "references", "more details", "more info"))
-            and not any(topic_w in low for topic_w in ("science", "quantum", "gemini", "opus", "clover", "kimi", "gpu", "gpus", "arxiv"))
+            and not any(topic_w in low for topic_w in ("science", "quantum", "gemini", "opus", "clover", "kimi", "gpu", "gpus", "arxiv", "ncm"))
         )
     )
     if is_followup_link_or_search:
@@ -478,13 +570,13 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             for h in reversed(history):
                 prev_u = _extract_raw_user_query(h.get("user", ""))
                 prev_low = prev_u.lower().strip("?!.")
-                if len(prev_u.split()) >= 3 and prev_low != low and not prev_low.startswith(("more details", "find it", "search it", "give me examples")):
+                if len(prev_u.split()) >= 2 and prev_low != low and not prev_low.startswith(("more details", "find it", "search it", "give me examples")):
                     if "link" in low or "url" in low or "source" in low:
                         return f"{prev_u} links and references"
                     return prev_u
         return "recent trends in science research links"
 
-    # 2. Direct queries about models, Clover Kimi K3, GPUs/hardware launches, research papers, or web search
+    # 2. Direct queries about Clover, Clover Framework, AGENTS.md, Clover Kimi K3, NCM, HybridAgent, GPUs, research papers, or web search
     if any(
         kw in low
         for kw in (
@@ -502,9 +594,16 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "gpt-6",
             "gpt 6",
             "astra",
-            "clover kimi",
+            "clover",
+            "agents.md",
+            "agents md",
             "kimi k3",
-            "what is clover",
+            "ncm",
+            "next-concept",
+            "next concept",
+            "hybridagent",
+            "hybrid agent",
+            "hazy research",
             "new gpu",
             "gpus launched",
             "gpu launched",
@@ -517,6 +616,7 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "mi325",
             "mi350",
             "arxiv",
+            "wikipedia",
             "search for",
             "search the web",
             "browse",
@@ -1157,11 +1257,11 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
         "can you", "are you able", "do you", "how do you", "what can you", "what images", "which images", "why ", "what is ", "explain "
     ))
 
-    # Check if the conversation context (within the last 4 turns) is already about image/illustration generation
+    # Check if the conversation context (within the last 8 turns) is already about image/illustration generation
     in_image_conversation = False
     last_visual_subject = ""
     if history:
-        for h in reversed(history[-4:]):
+        for h in reversed(history[-8:]):
             u_prev = (h.get("user") or "").strip()
             r_prev = (h.get("reply") or "").lower()
             u_prev_low = u_prev.lower()
@@ -1170,7 +1270,8 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
                 for kw in (
                     "generate image", "generate images", "create an image", "generate an image",
                     "what images can you", "what would you like me to create", "what kind of image",
-                    "create an image for you", "svg illustration", "natural landscape",
+                    "create an image for you", "svg illustration", "here is an svg", "here is a custom illustration",
+                    "illustration of", "scene elements:", "natural landscape",
                 )
             ):
                 in_image_conversation = True
@@ -1853,10 +1954,14 @@ class CloverK3AgentEngine:
                 lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
                 if lines:
                     last_ln = lines[-1].lower()
-                    # If the model wrote a prose promise to search ('Let me search...', 'I'll need to check...'), execute search immediately!
+                    # If the model wrote a prose promise to search ('Let me search...', 'I'll need to check...') or a fake inability ('cannot browse'), execute search immediately!
                     if not any(t["tool"] == "search" for t in tool_calls_log) and any(
                         sp in last_ln
-                        for sp in ("let me search", "i'll search", "i will search", "need to check the latest", "need to look up", "start by searching")
+                        for sp in (
+                            "let me search", "i'll search", "i will search", "need to check the latest",
+                            "need to look up", "start by searching", "cannot browse", "can't browse",
+                            "cannot access", "do not have access to the internet",
+                        )
                     ):
                         s_res = self.search_tool.execute(raw_user_q).strip()
                         tool_calls_log.append({"tool": "search", "input": raw_user_q, "result": s_res})
@@ -1904,7 +2009,7 @@ class CloverK3AgentEngine:
                             break
                         if len(valid_lines_so_far) >= 2 and len(valid_lines_so_far[1]) > 15:
                             break
-                    elif len(valid_lines_so_far) >= (6 if not is_struct else 10) and not last_ln.endswith(":"):
+                    elif len(valid_lines_so_far) >= (8 if not is_struct else 18) and not last_ln.endswith(":"):
                         break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
@@ -1912,14 +2017,43 @@ class CloverK3AgentEngine:
 
         raw = "W1: " + self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
         plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
-        if plans == ["Hello! How can I help you today?"] and tool_calls_log and not is_short_greeting_or_ack(raw_user_q):
-            # Fallback if all generated lines were self-talk: split the verified tool result directly into clean windows
-            fallback_src = "\n".join(
-                ln for ln in tool_calls_log[-1].get("result", "").splitlines()
-                if ln.strip() and not ln.strip().startswith("Reference (")
+
+        # Ensure complete, non-truncated coverage when a search / URL tool returned structured reference facts
+        if tool_calls_log and any(t.get("tool") == "search" for t in tool_calls_log):
+            last_s_res = next((t.get("result", "") for t in reversed(tool_calls_log) if t.get("tool") == "search"), "")
+            joined_p_low = " ".join(plans).lower()
+            is_authoritative_clover_ref = any(
+                hdr in last_s_res
+                for hdr in (
+                    "Reference (Clover Framework",
+                    "Reference (AGENTS.md",
+                    "Reference (Clover Kimi K3",
+                    "Reference (Next-Concept Modeling",
+                )
             )
-            if fallback_src.strip():
-                plans = parse_and_split_plans(fallback_src, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
+            missing_key_pillar = (
+                ("Reference (Clover Kimi K3" in last_s_res and ("ncm" not in joined_p_low or "hybridagent" not in joined_p_low))
+                or ("Reference (Clover Framework" in last_s_res and ("direction" not in joined_p_low or "growth" not in joined_p_low))
+                or ("Reference (AGENTS.md" in last_s_res and ("discernment" not in joined_p_low and "refuse" not in joined_p_low))
+                or ("Reference (Next-Concept Modeling" in last_s_res and ("11" not in joined_p_low or "vq" not in joined_p_low))
+            )
+            too_short_for_url = (
+                ("[Live Content from " in last_s_res or "[Live Webpage: " in last_s_res)
+                and (plans == ["Hello! How can I help you today?"] or len(plans) <= 2)
+            )
+            if (
+                plans == ["Hello! How can I help you today?"]
+                or (is_authoritative_clover_ref and (missing_key_pillar or len(plans) <= 3))
+                or too_short_for_url
+            ):
+                ref_block = last_s_res.split("\n\n[Live ")[0] if is_authoritative_clover_ref else last_s_res
+                fallback_src = "\n".join(
+                    ln for ln in ref_block.splitlines()
+                    if ln.strip() and not ln.strip().startswith(("Reference (", "[Live Content from", "[Live Webpage:"))
+                )
+                if fallback_src.strip():
+                    plans = parse_and_split_plans(fallback_src, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
+
         return plans, lat_steps, exit_reason, tool_calls_log
 
     @torch.no_grad()
@@ -2125,6 +2259,41 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
             c_ms = round((time.perf_counter() - t_c0) * 1000.0, 1)
             batch_tool_logs[idx_p].append({"tool": "python", "input": py_script, "result": py_out, "ms": c_ms})
             all_plans[idx_p] = verified_code_plans
+            continue
+        if batch_tool_logs[idx_p] and any(t.get("tool") == "search" for t in batch_tool_logs[idx_p]):
+            last_s_res = next((t.get("result", "") for t in reversed(batch_tool_logs[idx_p]) if t.get("tool") == "search"), "")
+            joined_p_low = " ".join(all_plans[idx_p]).lower()
+            is_auth_ref = any(
+                hdr in last_s_res
+                for hdr in (
+                    "Reference (Clover Framework",
+                    "Reference (AGENTS.md",
+                    "Reference (Clover Kimi K3",
+                    "Reference (Next-Concept Modeling",
+                )
+            )
+            missing_pillar = (
+                ("Reference (Clover Kimi K3" in last_s_res and ("ncm" not in joined_p_low or "hybridagent" not in joined_p_low))
+                or ("Reference (Clover Framework" in last_s_res and ("direction" not in joined_p_low or "growth" not in joined_p_low))
+                or ("Reference (AGENTS.md" in last_s_res and ("discernment" not in joined_p_low and "refuse" not in joined_p_low))
+                or ("Reference (Next-Concept Modeling" in last_s_res and ("11" not in joined_p_low or "vq" not in joined_p_low))
+            )
+            too_short_url = (
+                ("[Live Content from " in last_s_res or "[Live Webpage: " in last_s_res)
+                and (all_plans[idx_p] == ["Hello! How can I help you today?"] or len(all_plans[idx_p]) <= 2)
+            )
+            if (
+                all_plans[idx_p] == ["Hello! How can I help you today?"]
+                or (is_auth_ref and (missing_pillar or len(all_plans[idx_p]) <= 3))
+                or too_short_url
+            ):
+                ref_block = last_s_res.split("\n\n[Live ")[0] if is_auth_ref else last_s_res
+                fb_src = "\n".join(
+                    ln for ln in ref_block.splitlines()
+                    if ln.strip() and not ln.strip().startswith(("Reference (", "[Live Content from", "[Live Webpage:"))
+                )
+                if fb_src.strip():
+                    all_plans[idx_p] = parse_and_split_plans(fb_src, p, eng.k3_tok, max_bpe=32, max_windows=24)
 
     flat_plans = []
     win_to_prompt_idx = []

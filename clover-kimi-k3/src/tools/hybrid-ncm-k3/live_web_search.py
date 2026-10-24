@@ -18,6 +18,67 @@ class LiveWebSearchTool:
     def trigger_tag(self) -> str:
         return "search"
 
+    def fetch_url_content(self, url: str, max_chars: int = 3600) -> str:
+        """Fetches and extracts readable text from a live HTTP/HTTPS URL (including automatic conversion
+        of GitHub `/blob/` links to `raw.githubusercontent.com` and clean HTML-to-text extraction for web pages)."""
+        u = (url or "").strip().rstrip(".,;)>\"'")
+        if not u:
+            return ""
+        if not u.startswith(("http://", "https://")):
+            u = "https://" + u
+
+        fetch_target = u
+        # Convert GitHub blob URLs (`https://github.com/<owner>/<repo>/blob/<branch>/<path>`) to raw content URLs
+        m_gh = re.match(r"^https?://github\.com/([^/]+)/([^/]+)/blob/([^/]+)/(.+)$", u)
+        if m_gh:
+            owner, repo, branch, path_part = m_gh.groups()
+            fetch_target = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path_part}"
+
+        try:
+            req = urllib.request.Request(fetch_target, headers={"User-Agent": self.user_agent})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                ctype = (r.headers.get("Content-Type") or "").lower()
+                raw_bytes = r.read(350_000)
+            body = raw_bytes.decode("utf-8", errors="ignore")
+        except Exception as e:
+            return f"[URL Fetch Error for {u}: {e}]"
+
+        # If raw markdown / plain text / code (e.g. raw.githubusercontent.com or .md / .txt / .py)
+        if "text/html" not in ctype and not body.lstrip().lower().startswith(("<!doctype html", "<html")):
+            lines = []
+            for ln in body.splitlines():
+                s = ln.strip()
+                if not s or s in ("---", "***"):
+                    continue
+                s = re.sub(r"^#+\s*", "", s)
+                s = re.sub(r"\*\*([^*]+)\*\*", r"\1", s)
+                lines.append(s)
+            cleaned_md = "\n".join(lines)[:max_chars]
+            return f"[Live Content from {u}]:\n{cleaned_md}"
+
+        # Parse HTML page into clean headings + paragraphs + bullet items
+        title_m = re.search(r"<title[^>]*>(.*?)</title>", body, flags=re.IGNORECASE | re.DOTALL)
+        page_title = html.unescape(re.sub(r"<[^>]+>", "", title_m.group(1)).strip()) if title_m else u
+        body_clean = re.sub(r"<(script|style|svg|noscript|header|footer|nav)[^>]*>[\s\S]*?</\1>", " ", body, flags=re.IGNORECASE)
+        blocks = []
+        for m_blk in re.finditer(r"<(h1|h2|h3|p|li|dt|dd)[^>]*>([\s\S]*?)</\1>", body_clean, flags=re.IGNORECASE):
+            tag = m_blk.group(1).lower()
+            inner = html.unescape(re.sub(r"<[^>]+>", " ", m_blk.group(2)))
+            inner = " ".join(inner.split()).strip()
+            if len(inner) < 4:
+                continue
+            if tag in ("h1", "h2", "h3"):
+                blocks.append(f"\n{inner}:")
+            elif tag == "li":
+                blocks.append(f"• {inner}")
+            else:
+                blocks.append(inner)
+        if not blocks:
+            plain = html.unescape(re.sub(r"<[^>]+>", " ", body_clean))
+            blocks = [" ".join(plain.split())]
+        extracted = "\n".join(blocks).strip()[:max_chars]
+        return f"[Live Webpage: {page_title} — Link: {u}]\n{extracted}"
+
     def _search_arxiv(self, query: str, max_items: int = 4) -> list[str]:
         """Queries the live arXiv API for recent research papers matching `query`."""
         clean_q = re.sub(r"\b(can you|find|relevant|research|on|recent|latest|papers|about|search|for|the)\b", " ", query.lower())
@@ -124,6 +185,22 @@ class LiveWebSearchTool:
 
         results = []
         low = q.lower()
+
+        # 0. If the query contains explicit HTTP/HTTPS URLs or known domain links, fetch those URLs directly first!
+        urls_found = re.findall(r"https?://[^\s<>\"')]+", q)
+        if not urls_found:
+            bare_domains = re.findall(r"\b(?:github\.com|cloverframework\.com|arxiv\.org|en\.wikipedia\.org)/[^\s<>\"')]+", q)
+            urls_found = ["https://" + d for d in bare_domains]
+        for u in urls_found[:2]:
+            fetched = self.fetch_url_content(u)
+            if fetched and not fetched.startswith("[URL Fetch Error"):
+                results.append(fetched)
+
+        if results and urls_found:
+            formatted_url = "\n\n".join(results)
+            self.cache[q] = formatted_url
+            return formatted_url
+
         # If query asks about research, papers, AI, science, physics, math, or algorithms, prioritize arXiv + Wikipedia
         if any(k in low for k in ("research", "paper", "arxiv", "ai", "artificial intelligence", "llm", "model", "agent", "quantum", "science", "development", "developments", "recent", "latest")):
             results.extend(self._search_arxiv(q, max_items=3))

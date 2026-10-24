@@ -32,7 +32,7 @@ os.chdir(ROOT)
 
 import torch
 from PIL import Image
-from k3_fast_chat import K3FastChatEngine, CHAT_PLAN_PROMPT
+from k3_fast_chat import K3FastChatEngine, CHAT_PLAN_PROMPT, CLOVER_DEFAULT_CONTEXT_PATH, load_default_clover_context
 from k3_agent_engine import CloverK3AgentEngine, K3GPUExpertsRunner, run_agent_batch_with_k3_experts
 from k3_multimodal_chat import K3MultimodalChatEngine
 from bench_batch_clubbing import plan_batch_with_latent, render_ncm_batched_multi_prompt
@@ -1050,6 +1050,11 @@ class MultiGPUCloverCoordinator:
         self.sess_lock = threading.Lock()
         self.sessions = collections.defaultdict(list)
         self.session_meta = {}
+        self.default_clover_context = load_default_clover_context()
+        print(
+            f"[Clover AI] Loaded default AGENTS.md operating rules & context ({len(self.default_clover_context)} chars) from {CLOVER_DEFAULT_CONTEXT_PATH}",
+            flush=True,
+        )
 
         # 1. Load ALL 93 Kimi K3 Trunks (L0..L92) + all 92 MoE Expert Layers + Layer 93 Tail across GPUs 0..5
         # Raising `max_n=1024` (from 256) allows up to 32 windows (1,024 Kimi K3 tokens) or a full 4-to-8-session clubbed batch
@@ -1175,7 +1180,15 @@ class MultiGPUCloverCoordinator:
                 "i also included a question to encourage",
                 "your message is straightforward",
                 "it's also polite and helpful",
-            )) or "aligns with the character description" in p_low or "single `w1:` line is sufficient" in p_low:
+                "however, as an ai",
+                "i understand that you want me to read",
+                "i can only work with the information",
+                "since i cannot access",
+                "upon reflection, i believe",
+                "to be thorough, i'll re-read",
+                "upon re-reading",
+                "you have provided a link to",
+            )) or "aligns with the character description" in p_low or "single `w1:` line is sufficient" in p_low or "cannot browse the internet" in p_low:
                 continue
             p_strip = re.sub(
                 r"\s*(?:This (?:is a simple, friendly|response is (?:concise|direct|polite|clear|helpful|simple))[\s\S]*$|"
@@ -1910,6 +1923,8 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 "k3_expert_cards": STATE.k3_experts.cards,
                 "multimodal_worker": True,
                 "batch_pause_s": STATE.batch_pause_s,
+                "default_context_file": CLOVER_DEFAULT_CONTEXT_PATH,
+                "agents_md_rules_loaded": bool(STATE.default_clover_context),
                 "model": "clover-ai-agent (HybridAgent + All 93 K3 Trunks & 92 MoE Layers + MoonViT3d + NCM on 8x RTX 3090)",
             })
         elif self.path.startswith("/api/sessions"):

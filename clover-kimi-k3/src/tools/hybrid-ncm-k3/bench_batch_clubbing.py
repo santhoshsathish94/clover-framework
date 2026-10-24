@@ -153,7 +153,7 @@ def plan_batch_with_latent(eng: K3FastChatEngine, user_prompts, lat_steps=14, ma
                                         done[i] = True
                                     elif len(valid_lns_i) >= 2 and len(valid_lns_i[1]) > 15:
                                         done[i] = True
-                                elif len(valid_lns_i) >= (6 if not is_struct[i] else 10) and not last_ln.endswith(":"):
+                                elif len(valid_lns_i) >= (8 if not is_struct[i] else 18) and not last_ln.endswith(":"):
                                     done[i] = True
         if all(done):
             break
