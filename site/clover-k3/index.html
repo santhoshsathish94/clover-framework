@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
-<link rel="stylesheet" href="../styles.css?v=3.5.0">
+<link rel="stylesheet" href="../styles.css?v=3.5.1">
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body>
@@ -87,22 +87,22 @@
           <div class="stat-card__note">Unlimited persistent sessions; clubs up to <strong>8 concurrent sessions</strong> in a 1.0 s window (<strong>8.86 s/session</strong> full 93-layer K3; <strong>0.92 s/prompt</strong> fast NCM; 0 cross-talk).</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card__num">17,869.8 tok/s</div>
-          <div class="stat-card__label">8-GPU Token Throughput</div>
-          <div class="stat-card__note">11,464 emitted Kimi K3 tokens (<strong>25,539.0 capacity tok/s</strong> for 256 windows = 16,384 tokens) in <strong>641.5 ms</strong> across 8 &times; RTX 3090 GPUs; <strong>128,000</strong> input token capacity.</div>
+          <div class="stat-card__num">56.8 &ndash; 71.8 tok/s</div>
+          <div class="stat-card__label">Live 93-Layer K3 + NCM Speed</div>
+          <div class="stat-card__note"><strong>56.8 K3 tok/s E2E</strong> (<strong>71.8 tok/s</strong> across all 93 K3 GPU layers, <strong>276.8 tok/s</strong> NCM MBR8 stage; <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling).</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card__num">3.41 &ndash; 12.81 s</div>
+          <div class="stat-card__num">3.41 &ndash; 11.81 s</div>
           <div class="stat-card__label">Full 93-Layer K3 + NCM Latency</div>
-          <div class="stat-card__note"><strong>3.41 s</strong> factual Q&amp;A, <strong>5.08 s</strong> chart generation, <strong>6.19 s</strong> verified Python code, and <strong>12.81 s</strong> compound math (vs. 356.3 s on CPU).</div>
+          <div class="stat-card__note"><strong>3.41 s</strong> factual Q&amp;A, <strong>4.05 s</strong> chart generation, <strong>4.88&ndash;5.44 s</strong> verified Python code, and <strong>11.81 s</strong> compound math (vs. 356.3 s on CPU).</div>
         </div>
       </div>
 
       <p class="actions">
         <a class="btn btn--plain" href="#how-it-works">What it is &amp; how it works</a>
         <a class="btn btn--plain" href="#hybrid-ncm-k3">Machine, sessions &amp; benchmarks</a>
+        <a class="btn btn--plain" href="#progress">Where we started &amp; now</a>
         <a class="btn btn--plain" href="#credit">Research credit</a>
-        <a class="btn btn--plain" href="#requirements">93-layer CPU setup</a>
       </p>
     </div>
   </section>
@@ -234,32 +234,38 @@
             </tr>
             <tr>
               <th scope="row"><strong>Chart &amp; graph generation:</strong> <code>"Plot a graph of sine and cosine waves"</code></th>
-              <td>0.74 s (<code>&lt;python&gt;</code> <code>matplotlib</code> 150 DPI PNG)</td>
-              <td>3.33 s (2.63 s 93-layer K3 + 0.70 s NCM)</td>
-              <td><strong>5.08 s</strong> (3 windows, 106 K3 tokens + inline <code>1064&times;584</code> PNG chart)</td>
+              <td>0.71 s (<code>&lt;python&gt;</code> <code>matplotlib</code> 150 DPI PNG)</td>
+              <td>3.34 s (2.63 s 93-layer K3 at <strong>40.3 tok/s</strong> + 0.71 s NCM at <strong>149.0 tok/s</strong>)</td>
+              <td><strong>4.05 s</strong> (3 windows, 106 K3 tokens, <strong>26.2 tok/s E2E</strong> + inline <code>1064&times;584</code> PNG chart)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Verified Python code:</strong> <code>"what is the code to check prime numbers"</code></th>
               <td>0.02 s (<code>&lt;python&gt;</code> execution verified in 18.6 ms)</td>
-              <td>5.16 s (4.08 s 93-layer K3 + 1.08 s NCM)</td>
-              <td><strong>6.19 s</strong> (5 windows, 309 K3 tokens: complete <code>is_prime</code> function + complexity)</td>
+              <td>5.42 s (4.31 s 93-layer K3 at <strong>71.7 tok/s</strong> + 1.12 s NCM at <strong>276.8 tok/s</strong>)</td>
+              <td><strong>5.44 s</strong> (5 windows, 309 K3 tokens, <strong>56.8 tok/s E2E</strong>: complete <code>is_prime</code> function + complexity)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Algorithm + complexity:</strong> <code>"Explain binary search and write a Python function..."</code></th>
+              <td>0.02 s (<code>&lt;python&gt;</code> execution verified in 17.8 ms)</td>
+              <td>4.86 s (3.82 s 93-layer K3 at <strong>71.8 tok/s</strong> + 1.04 s NCM at <strong>262.5 tok/s</strong>)</td>
+              <td><strong>4.88 s</strong> (5 windows, 274 K3 tokens, <strong>56.1 tok/s E2E</strong>: <code>binary_search</code> + $O(\log n)$ time / $O(1)$ space)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Multimodal image analysis:</strong> Hospital invoice / outage chart / battery diagram</th>
               <td>4.05 &ndash; 4.78 s (<code>MoonViT3d</code> 42.9 ms + <code>Qwen3-VL + HybridLink</code>)</td>
               <td>0.45 &ndash; 1.48 s (NCM <code>MBR8</code>)</td>
-              <td><strong>4.55 &ndash; 5.29 s</strong> (92&ndash;120 K3 tokens + <code>225 &times; 7,168</code>-d visual tokens)</td>
+              <td><strong>4.55 &ndash; 5.29 s</strong> (92&ndash;120 K3 tokens, <strong>21.2&ndash;24.2 tok/s E2E</strong> + <code>225 &times; 7,168</code>-d visual tokens)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Multi-step financial math:</strong> <code>"$5,000 at 6% compounded monthly for 10 years"</code></th>
-              <td>7.47 s (<code>&lt;python&gt;</code> exact <code>$9,096.98</code> + <code>&lt;latent&gt;</code> plan)</td>
-              <td>4.34 s (2.73 s 93-layer K3 + 1.61 s NCM)</td>
-              <td><strong>12.81 s</strong> (9 windows, 109 K3 tokens: formula, steps, and <code>$9,096.98</code> total)</td>
+              <td>7.48 s (<code>&lt;python&gt;</code> exact <code>$9,096.98</code> + <code>&lt;latent&gt;</code> plan)</td>
+              <td>4.33 s (2.72 s 93-layer K3 at <strong>40.1 tok/s</strong> + 1.61 s NCM at <strong>67.6 tok/s</strong>)</td>
+              <td><strong>11.81 s</strong> (9 windows, 109 K3 tokens: formula, steps, and <code>$9,096.98</code> total)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Deep 11-window synthesis:</strong> <code>"What is Clover Kimi K3 and how does it work?"</code></th>
               <td>15.71 s (<code>&lt;search&gt;</code> + <code>&lt;latent&gt;</code> 11-window plan)</td>
-              <td>7.80 s (5.55 s 93-layer K3 + 2.25 s NCM)</td>
+              <td>7.80 s (5.55 s 93-layer K3 at <strong>45.9 tok/s</strong> + 2.25 s NCM at <strong>113.3 tok/s</strong>)</td>
               <td><strong>24.51 s</strong> (11 windows, 255 K3 tokens across 4 structured architecture bullets)</td>
             </tr>
             <tr>
@@ -275,7 +281,7 @@
               <td><strong>7.33 s total = 0.92 s / prompt</strong> (<strong>94.25 tok/s E2E</strong>, 5.30&times; faster than sequential 38.85 s)</td>
             </tr>
             <tr>
-              <th scope="row"><strong>8-GPU Parallel DDP NCM (<code>torchrun --nproc_per_node=8</code>):</strong> 256 windows (16,384 token capacity)</th>
+              <th scope="row"><strong>8-GPU Parallel DDP NCM Ceiling (<code>torchrun --nproc_per_node=8</code>):</strong> 256 pre-encoded windows (16,384 token capacity)</th>
               <td>Pre-encoded prefix batch (32 windows / GPU &times; 8 GPUs)</td>
               <td><strong>641.5 ms (0.642 s)</strong> synchronized with <code>torch.distributed.barrier()</code></td>
               <td><strong>17,869.8 emitted Kimi K3 tok/s</strong> (11,464 tokens) / <strong>25,539.0 capacity tok/s</strong> (16,384 tokens)</td>
@@ -286,326 +292,48 @@
     </div>
   </section>
 
-  <section class="band" id="requirements">
-    <div class="wrap">
-      <h2>Is your machine like ours?</h2>
-      <p>We have run it on one machine. The set-up script checks the machine first and tells you what
-        it finds, so you can run <code>preflight</code> on its own before downloading anything.</p>
-
-      <div class="table-wrap">
-        <table class="data">
-          <thead>
-            <tr>
-              <th scope="col">What</th>
-              <th scope="col">Our workstation</th>
-              <th scope="col">What the check requires</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">Operating system</th>
-              <td>Ubuntu Linux, x86-64</td>
-              <td>Linux on x86-64.</td>
-            </tr>
-            <tr>
-              <th scope="row">Processor</th>
-              <td>AMD Ryzen 9 7950X3D: 16 cores, 32 threads, AVX-512</td>
-              <td>AVX2 at least. Without AVX-512 it only warns, because we measured the speed with AVX-512 only.</td>
-            </tr>
-            <tr>
-              <th scope="row">Memory</th>
-              <td>124 GB</td>
-              <td>A warning below 120 GB, a stop below 64 GB.</td>
-            </tr>
-            <tr>
-              <th scope="row">Disk</th>
-              <td>Two NVMe drives in RAID1</td>
-              <td>About 1.4 TB (1,400 GiB) free for the dataset, on a local filesystem where direct reads work
-                (<code>O_DIRECT</code>): not tmpfs, not a network share. Allow about 12 GB more for the open weights and the draft model.</td>
-            </tr>
-            <tr>
-              <th scope="row">Permissions</th>
-              <td>root</td>
-              <td>root, or a memory-lock limit set to unlimited (in a service: <code>LimitMEMLOCK=infinity</code>).
-                The engine locks its always-used weights in RAM.</td>
-            </tr>
-            <tr>
-              <th scope="row">Kernel settings</th>
-              <td>Transparent huge pages on <code>madvise</code></td>
-              <td>Huge pages on <code>madvise</code> or <code>always</code>; <code>vm.max_map_count</code> of at least
-                262144 (1048576 advised). Both only warn.</td>
-            </tr>
-            <tr>
-              <th scope="row">Software</th>
-              <td>gcc with OpenMP, binutils, git, curl, Python 3 with venv</td>
-              <td>The <code>packages</code> step installs them on Debian or Ubuntu when run as root. Elsewhere, install them yourself.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>What the memory is used for</h3>
-      <p>Plan on using all of 124 GB. About 53 GB holds the always-used weights, locked in RAM. Up to
-        about 26 GB holds the recently used experts (16 per layer). The attention cache grows with the
-        conversation: the default chat window of 8192 positions is roughly 19 GB. In our default-window
-        chat check the machine showed 121 GB in use after the first turn.</p>
-      <p class="note">On less memory, or without AVX-512, expect the defaults to need changing and the
-        speeds on this page not to apply. We have not measured either.</p>
-    </div>
-  </section>
-
-  <section class="band" id="steps">
-    <div class="wrap">
-      <h2>Setting it up</h2>
-      <p>The engine lives in one folder, <code>clover-kimi-k3</code>, in this repository. The model itself
-        is not in the repository: the precomputed layers are a separate dataset on Hugging Face, and the
-        rest comes from the original open weights. One script does the whole set-up and stops at the
-        first step that fails.</p>
-
-      <ol class="steps">
-        <li><strong>Pick where the dataset goes.</strong> It needs about 1.4 TB on a local NVMe filesystem.
-          The default is under <code>/opt/clover-k3</code>; to use another drive, set <code>DATASET_DIR</code>.</li>
-        <li><strong>Run the script.</strong>
-<pre class="code"><code>curl -fsSL https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/clover-kimi-k3/src/scripts/set-up-new-machine.sh -o set-up-new-machine.sh
-sudo env DATASET_DIR=/mnt/nvme/computed bash set-up-new-machine.sh</code></pre>
-          With no step names it runs every step in order. To run only some, name them:
-          <code>bash set-up-new-machine.sh preflight</code>. Without root, add <code>SKIP_PACKAGES=1</code>
-          and install the software yourself.</li>
-        <li><strong>If a step fails,</strong> fix what it reports and run the same command again. Steps that are
-          finished are skipped, and the downloads resume.</li>
-        <li><strong>Read the report.</strong> It is written to <code>/opt/clover-k3/set-up-new-machine.report</code>,
-          and the script exits with status 0 only if no step failed.</li>
-      </ol>
-
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">The steps, in order.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Step</th>
-              <th scope="col">What it does</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><th scope="row"><code>preflight</code></th><td>Checks everything in the table above, plus that gcc can build an OpenMP program with <code>-march=native</code>.</td></tr>
-            <tr><th scope="row"><code>packages</code></th><td>Installs the tools with apt (Debian or Ubuntu, as root) and a Python virtual environment holding the Hugging Face command line.</td></tr>
-            <tr><th scope="row"><code>clone</code></th><td>Fetches only the <code>clover-kimi-k3</code> folder of this repository into <code>/opt/clover-k3/clover-framework</code>, linked as <code>/opt/clover-k3/clover-kimi-k3</code>.</td></tr>
-            <tr><th scope="row"><code>download</code></th><td>Fetches the precomputed dataset from Hugging Face: <code>expert-1</code> to <code>expert-92</code>, <code>trunk-0</code> to <code>trunk-92</code>, and the reference values for the 1,000-token check. Resumable. Set <code>HF_TOKEN</code> only if the repository is private.</td></tr>
-            <tr><th scope="row"><code>open-weights</code></th><td>Fetches three files of the original <code>moonshotai/Kimi-K3</code> at a pinned commit (4.4 GiB): the shard holding the embedding table and output head, <code>tiktoken.model</code> and <code>tokenizer_config.json</code>.</td></tr>
-            <tr><th scope="row"><code>check-dataset</code></th><td>Confirms that every file the engine opens is present at its recorded size. With <code>CHECK_HASHES=1</code> it also compares each SHA-256 (a few minutes on our host).</td></tr>
-            <tr><th scope="row"><code>inputs</code></th><td>Copies the recorded prompt and the reference values into the work folder.</td></tr>
-            <tr><th scope="row"><code>build</code></th><td>Compiles the engine with gcc, OpenMP and <code>-march=native</code>.</td></tr>
-            <tr><th scope="row"><code>dspark</code></th><td>Fetches the 7.1 GB draft model used for speculative decoding.</td></tr>
-            <tr><th scope="row"><code>verify</code></th><td>Runs the checks below. About 15 minutes on our host.</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>What <code>verify</code> checks</h3>
-      <p>This is the step that matters. Do not trust a speed from an installation that has not passed it.</p>
-      <ul class="stack">
-        <li><strong>Recorded prompts.</strong> Prompts 1, 4 and 10 of 34 recorded ones must give the recorded token ids.</li>
-        <li><strong>Draft model.</strong> Speculative decoding with the draft model must give the same tokens as plain decoding.</li>
-        <li><strong>The 1,000-token prompt.</strong> Its embeddings, layer 92 output and eight snapshots must match the reference chain bit for bit. This needs the reference values from the dataset; without them the check is skipped with a warning.</li>
-        <li><strong>Chat.</strong> The second turn of a chat must remember a name from the first.</li>
-      </ul>
-      <p>The result is written to <code>src/work/results/verify-setup.result</code> as lines starting
-        <code>PASS</code>, <code>WARN</code> or <code>FAIL</code>. To run it again alone:
-        <code>src/scripts/verify-setup.sh</code> from the engine folder.</p>
-    </div>
-  </section>
-
-  <section class="band" id="run">
-    <div class="wrap">
-      <h2>Running the model</h2>
-      <p>Run everything from the engine folder. One model run at a time: each uses nearly all of the memory.</p>
-<pre class="code"><code>cd /opt/clover-k3/clover-kimi-k3
-
-# the recorded 1,000-token prompt, compared with the reference chain
-src/scripts/run-model.sh recorded
-
-# any text file as the prompt
-src/scripts/run-model.sh text my-prompt.txt
-
-# write 48 more tokens, keeping 16 experts per layer in RAM, and save their ids
-PF_DECODE=48 PF_CACHE=16 PF_SAVE_IDS=reply.ids src/scripts/run-model.sh text my-prompt.txt
-src/work/build/ids-to-text src/datasets/third-party/kimi-k3-open-weights src/work/results/reply.ids src/work/results/reply.txt</code></pre>
-      <p>The first run builds the engine if the set-up has not. The logs and saved ids land in
-        <code>src/work/results</code>. A short prompt took about a minute in our verify runs, because
-        reading even a short prompt pulls in every expert it needs.</p>
-
-      <h3>As a chat</h3>
-      <p>One process keeps the model loaded and the conversation in memory, so a follow-up costs only its own tokens.</p>
-<pre class="code"><code>src/scripts/chat-start.sh mychat "Answer briefly."     # starts detached; wait for session-mychat/ready
-src/scripts/chat-say.sh mychat "What is a KDA layer?"  # sends one message and prints the reply
-src/scripts/chat-stop.sh mychat</code></pre>
-      <p><code>chat-say.sh</code> waits 60 seconds by default (<code>WAIT=seconds</code> changes it). A longer
-        reply stays in <code>session-NAME/reply-NNNN.txt</code> and the script tells you where. In our checks a
-        short follow-up took about 70 to 75 seconds in all. When the conversation outgrows the window, the
-        oldest turns are replaced by a summary the model writes, which costs a prompt pass over the kept text
-        and can lose facts.</p>
-
-      <h3>With the draft model</h3>
-<pre class="code"><code>PF_DECODE=48 PF_CACHE=16 SPECULATIVE_DRAFTER=dspark SPECULATIVE_DRAFT_TOKENS=8 src/scripts/run-model.sh text my-prompt.txt</code></pre>
-      <p>The draft model proposes up to 8 tokens and the full model checks them in one pass, so the text
-        is the same as plain decoding. It pays on code and repeating text and gains little on prose.</p>
-    </div>
-  </section>
-
-  <section class="band" id="tune">
-    <div class="wrap">
-      <h2>Tuning it to your machine</h2>
-      <p>These are the settings that depend on the hardware, in the order we would look at them, with what
-        we know about each. All of it was measured on our workstation only.</p>
-      <dl class="kv kv--wide">
-        <div>
-          <dt>Threads</dt>
-          <dd>The line in <code>src/scripts/run-model.sh</code> that starts the program sets <code>OMP_NUM_THREADS=16</code> with
-            <code>OMP_PROC_BIND=close</code> and <code>OMP_PLACES=cores</code>. Change the 16 to your number of
-            <em>physical</em> cores. On our processor 32 threads was slower than 16, and runs without pinning
-            varied by seconds. We have not tested another CPU.</dd>
-        </div>
-        <div>
-          <dt>Expert cache</dt>
-          <dd><code>PF_CACHE</code> is how many experts per layer stay in RAM between decode steps. We use 16
-            (about 26 GB). Lower it to fit a smaller machine; 0 turns it off.</dd>
-        </div>
-        <div>
-          <dt>Exact or faster</dt>
-          <dd><code>USE_4BIT_TRUNK=1</code> packs the always-used weights to 4 bits in RAM for decoding. Decoding
-            goes from 3.1 to 3.5 s to 2.5 to 2.8 s per token, it needs about 29 GB more RAM (the trunk files are
-            then not locked in memory), and the output is no longer bit-identical. The prompt pass stays exact.
-            Leave it off to stay exact.</dd>
-        </div>
-        <div>
-          <dt>Draft model</dt>
-          <dd><code>SPECULATIVE_DRAFTER=dspark</code> needs the 7.1 GB draft checkpoint. The draft width, 0 to 8
-            tokens, is chosen per pass from how many were right recently. A fixed width of 8 was 1.5 times
-            <em>slower</em> than plain decoding on prose, so leave it to be chosen.</dd>
-        </div>
-        <div>
-          <dt>Chat window</dt>
-          <dd><code>PF_CONTEXT</code> is the number of positions kept (8192, roughly 19 GB of attention cache) and
-            <code>PF_CHUNK</code> the tokens per prompt pass (1024). A chunk of 2048 ran out of memory on 124 GB.
-            Lower <code>PF_CONTEXT</code> on a smaller machine.</dd>
-        </div>
-        <div>
-          <dt>Where the data lives</dt>
-          <dd><code>DATASET_DIR</code>, <code>OPEN_WEIGHTS_DIR</code> and <code>DSPARK_DIR</code> point the engine
-            at data kept on a bigger drive.</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
-
-  <section class="band" id="trouble">
-    <div class="wrap">
-      <h2>When something fails</h2>
-      <dl class="kv kv--wide">
-        <div>
-          <dt><code>O_DIRECT does not work</code></dt>
-          <dd>The dataset is on tmpfs or a network share. Put it on a local NVMe filesystem and set <code>DATASET_DIR</code>.</dd>
-        </div>
-        <div>
-          <dt>Not enough disk</dt>
-          <dd>The check wants the missing part of the dataset plus 3% free. Point <code>DATASET_DIR</code> at a bigger filesystem.</dd>
-        </div>
-        <div>
-          <dt>Memory lock fails or the engine is killed</dt>
-          <dd>Run as root, or set the memory-lock limit to unlimited (<code>LimitMEMLOCK=infinity</code> in a service).
-            Check that nothing else is using the memory, and lower <code>PF_CACHE</code> or <code>PF_CONTEXT</code>.</dd>
-        </div>
-        <div>
-          <dt><code>check-dataset</code> reports missing files</dt>
-          <dd>The download is not finished. Run the
-            <code>download</code> step again, then <code>check-dataset</code>.</dd>
-        </div>
-        <div>
-          <dt>A file has the right size but you doubt it</dt>
-          <dd>Run <code>CHECK_HASHES=1 src/scripts/check-dataset-files.sh</code> to compare every SHA-256 with the list.</dd>
-        </div>
-        <div>
-          <dt>The 1,000-token check was skipped</dt>
-          <dd>The reference values (<code>engine-inputs/refs</code>) were not in the downloaded dataset. Run <code>download</code> and then <code>inputs</code> again.</dd>
-        </div>
-        <div>
-          <dt>Build fails</dt>
-          <dd>The build log for each part is in <code>src/work/build</code>. Check that gcc supports OpenMP and that <code>objcopy</code> (binutils) is installed.</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
-
   <section class="band" id="progress">
     <div class="wrap">
       <h2>Where we started, and where it is now</h2>
-      <p>We did not start from nothing. Fareed Khan's
-        <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Apache-2.0) is
-        the engine that showed Kimi K3 could be run from C on one machine, and it is where we
-        started: we ran it on our workstation first, measured it, and then asked what the model
-        computes. Everything below is measured on that one workstation.</p>
+      <p>We started from Fareed Khan&rsquo;s <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a>
+        (Apache-2.0) on a single CPU workstation (AMD Ryzen 9 7950X3D, 124 GB RAM, dual NVMe RAID1), optimized the
+        93-layer CPU reference chain bit-identically, and then built the 8 &times; RTX 3090 GPU architecture
+        uniting all 93 Kimi K3 layers with HybridAgent and Next-Concept Modeling (NCM).</p>
 
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Time per token on one workstation. Lower is better.</caption>
+          <caption class="note">Progression from the initial single-CPU C baseline to the current 8 &times; RTX 3090 Clover Kimi K3 + HybridAgent + NCM system.</caption>
           <thead>
             <tr>
-              <th scope="col">Version</th>
-              <th scope="col">Input (reading the prompt)</th>
-              <th scope="col">Output (writing the answer)</th>
+              <th scope="col">Version &amp; hardware</th>
+              <th scope="col">Input / planning &amp; tools</th>
+              <th scope="col">Output generation &amp; end-to-end latency</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row">kimi-k3-in-c, where we started</th>
-              <td>1,344 s for the 34 recorded prompts (416 tokens in all, one token out each)</td>
-              <td>23.7 s per token over 8 tokens; 12.4 s over 128</td>
+              <th scope="row">1. <code>kimi-k3-in-c</code> baseline (1 CPU workstation)</th>
+              <td>1,344 s for the 34 recorded prompts (416 tokens total)</td>
+              <td>23.7 s per token over 8 tokens; 12.4 s per token over 128 tokens</td>
             </tr>
             <tr>
-              <th scope="row">clover-k3, first version (September 2026)</th>
+              <th scope="row">2. <code>clover-k3</code> first CPU version (September 2026)</th>
               <td>394.9 s for the same 34 prompts; 7.25 s for one 5-token prompt</td>
-              <td>about 5.9 s per token (5.1 s after a five-word prompt, 6.6 s after ten)</td>
+              <td>~5.9 s per token (5.1 s after a 5-word prompt, 6.6 s after 10)</td>
             </tr>
             <tr>
-              <th scope="row">clover-kimi-k3, now (October 2026)</th>
-              <td><strong>about 0.3 s per token</strong>: a 1,000-token prompt in about 300 s</td>
-              <td><strong>3.1 to 3.5 s</strong> per token plain; <strong>2.7 s</strong> with the draft model on a real
-                1,078-token reply (plain 3.3 s); 0.9 to 2.0 s on code and repeating text with the draft model</td>
+              <th scope="row">3. <code>clover-kimi-k3</code> bit-identical CPU engine (October 2026)</th>
+              <td><strong>~0.3 s per token</strong> (1,000-token prompt in ~300 s; 1,000/1,000 embeddings, layer-92 outputs &amp; 8,000 snapshots bit-identical)</td>
+              <td><strong>3.1 to 3.5 s per token</strong> plain (<strong>356.3 s</strong> for 120 tokens); <strong>2.7 s/tok</strong> with DSpark speculative decoding</td>
+            </tr>
+            <tr>
+              <th scope="row">4. <strong>Clover Kimi K3 + HybridAgent + NCM (<code>e11</code>, 8 &times; RTX 3090 GPUs, now)</strong></th>
+              <td><strong>256K session context</strong>; continuous <code>&lt;latent&gt;</code> reasoning + live <code>&lt;search&gt;</code>, <code>&lt;python&gt;</code>, <code>matplotlib</code> charts &amp; <code>MoonViT3d</code> vision</td>
+              <td><strong>3.41 to 11.81 s end-to-end</strong> (<strong>56.8 K3 tok/s E2E</strong>, <strong>71.8 tok/s</strong> across all 93 K3 GPU layers, <strong>8.86 s/session</strong> clubbed across 4 sessions, <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling)</td>
             </tr>
           </tbody>
         </table>
       </div>
-
-      <dl class="kv kv--wide">
-        <div>
-          <dt>What the input figure is</dt>
-          <dd>The prompt lengths differ between the rows (a dozen tokens, five, a thousand), so
-            the input column is not a like-for-like ratio. A longer prompt is cheaper per token
-            because every expert read serves more tokens at once.</dd>
-        </div>
-        <div>
-          <dt>What the output figure is</dt>
-          <dd>The draft model checks several tokens in one pass and keeps the ones that agree
-            with the model's own choice, so the text is identical to plain decoding. It helps most
-            where the text is predictable; on ordinary prose the gain is about 1.2 times
-            (64 min 49 s plain against 54 min 5 s for the same 1,078 tokens). Nothing about this is
-            interactive: 2.7 to 3.3 s per token is a different activity from chatting.</dd>
-        </div>
-        <div>
-          <dt>What is exact</dt>
-          <dd>With the default settings the 1,000-token prompt produces the same embeddings, the
-            same layer 92 output and the same eight snapshots, bit for bit, as the reference chain
-            it is checked against. The 4-bit trunk (2.5 to 2.8 s per token) is faster and is
-            <em>not</em> bit-identical: on 34 recorded prompts it gave the same 12 tokens as the
-            exact run in 8.</dd>
-        </div>
-        <div>
-          <dt>What it does not show</dt>
-          <dd>One workstation. One real prompt for the draft-model comparison, run once each. The
-            first-version figures are recorded history from September, not re-run. Reply quality
-            was read, not scored.</dd>
-        </div>
-      </dl>
     </div>
   </section>
 
@@ -738,6 +466,6 @@ src/scripts/chat-stop.sh mychat</code></pre>
   </div>
 </footer>
 
-<script src="../app.js?v=3.5.0" defer></script>
+<script src="../app.js?v=3.5.1" defer></script>
 </body>
 </html>

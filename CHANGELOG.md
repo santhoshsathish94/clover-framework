@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## v3.5.1 — 2026-10-21
+
+**Clover Kimi K3 + HybridAgent + NCM (`e11`) live on `cloverframework.com/ai/`.** The unified
+93-layer Kimi K3 + HybridAgent + Next-Concept Modeling (NCM) system runs on an 8 × NVIDIA RTX
+3090 GPU server connected to `cloverframework.com/ai/` via `api.cloverframework.com`. Updated
+`site/clover-k3/` with live measured benchmarks (`56.8 K3 tok/s` end-to-end and `71.8 tok/s`
+across all 93 K3 GPU layers, `8.86 s/session` clubbed 4-session batch, `256K` session context,
+and `17,869.8 tok/s` 8-GPU DDP NCM ceiling), updated the progression table, removed legacy
+single-CPU setup sections, and fixed mobile viewport layout and outside-tap sidebar closing on
+`site/ai/`. `VERSION` is `3.5.1` and the site's `?v=` cache strings match it.
+
 ## v3.5.0 — 2026-10-20
 
 The precomputed dataset is on Hugging Face (`Santhoshsathish94/clover-kimi-k3`): all 809

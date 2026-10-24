@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
-<link rel="stylesheet" href="../styles.css?v=3.5.0">
+<link rel="stylesheet" href="../styles.css?v=3.5.1">
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body class="clover-app-body">
@@ -170,31 +170,56 @@
       '</button>' +
     '</div>';
 
+  function isMobileViewport() {
+    return (window.innerWidth || document.documentElement.clientWidth || 1024) <= 760;
+  }
+
   function syncSidebarBackdrop() {
     if (!sidebarEl || !backdropEl) return;
-    var isMobile = window.innerWidth <= 760;
+    var isMobile = isMobileViewport();
     var isOpen = !sidebarEl.classList.contains('is-collapsed');
     backdropEl.classList.toggle('is-open', isMobile && isOpen);
   }
 
   window.k3CloseMobileSidebar = function () {
-    if (sidebarEl && window.innerWidth <= 760) {
+    if (sidebarEl && isMobileViewport()) {
       sidebarEl.classList.add('is-collapsed');
       syncSidebarBackdrop();
     }
   };
 
-  window.k3ToggleSidebar = function () {
+  window.k3ToggleSidebar = function (ev) {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
     if (sidebarEl) {
       sidebarEl.classList.toggle('is-collapsed');
       syncSidebarBackdrop();
     }
   };
 
-  if (window.innerWidth <= 760 && sidebarEl) {
+  if (isMobileViewport() && sidebarEl) {
     sidebarEl.classList.add('is-collapsed');
   }
+  syncSidebarBackdrop();
   window.addEventListener('resize', syncSidebarBackdrop);
+
+  // Close the sidebar drawer on mobile whenever the user taps/clicks anywhere outside the sidebar
+  document.addEventListener('click', function (ev) {
+    if (!isMobileViewport() || !sidebarEl || sidebarEl.classList.contains('is-collapsed')) return;
+    var t = ev.target;
+    if (!t) return;
+    if (sidebarEl.contains(t)) return;
+    var toggleBtn = document.getElementById('clover-sidebar-toggle');
+    if (toggleBtn && toggleBtn.contains(t)) return;
+    window.k3CloseMobileSidebar();
+  });
+
+  if (window.visualViewport) {
+    var applyViewportHeight = function () {
+      document.body.style.height = window.visualViewport.height + 'px';
+    };
+    window.visualViewport.addEventListener('resize', applyViewportHeight);
+    applyViewportHeight();
+  }
 
   function makeSessionId() {
     return 'sess_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
@@ -1037,6 +1062,6 @@
   probeBackend();
 })();
 </script>
-<script src="../app.js?v=3.5.0" defer></script>
+<script src="../app.js?v=3.5.1" defer></script>
 </body>
 </html>

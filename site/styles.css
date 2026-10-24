@@ -960,15 +960,18 @@ ol.steps > li > pre.code { margin: 0.6rem 0; }
 .clover-dots-loader span:nth-child(4) { animation-delay: 1.8s; }
 
 /* Dedicated Full-Page Clover Interface (cloverframework.com/ai/) */
+html:has(body.clover-app-body) {
+  height: 100%; overflow: hidden;
+}
 body.clover-app-body {
-  height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh;
+  position: fixed; inset: 0; width: 100%; height: 100%; max-height: 100%;
   overflow: hidden; display: flex; flex-direction: column; background: var(--bg);
 }
 body.clover-app-body .site-head {
   flex: 0 0 auto;
 }
 .clover-app {
-  flex: 1; min-height: 0; display: flex; width: 100%; overflow: hidden; background: var(--bg); position: relative;
+  flex: 1; min-height: 0; display: flex; width: 100%; height: 100%; overflow: hidden; background: var(--bg); position: relative;
 }
 .clover-sidebar-backdrop {
   display: none;
@@ -1122,20 +1125,26 @@ body.clover-app-body .site-head {
 @media (max-width: 760px) {
   .clover-sidebar {
     position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
+    width: min(272px, 80vw); flex: 0 0 auto;
     margin-left: 0; transform: translateX(0);
     box-shadow: 0 12px 34px rgba(20, 24, 29, 0.18);
   }
   .clover-sidebar.is-collapsed {
-    margin-left: 0; transform: translateX(-105%); box-shadow: none;
+    margin-left: 0 !important; transform: translateX(-105%) !important;
+    box-shadow: none !important; pointer-events: none;
   }
   .clover-sidebar-backdrop.is-open {
     display: block; position: fixed; inset: 0; z-index: 95;
-    background: rgba(20, 24, 29, 0.32); backdrop-filter: blur(2px);
+    background: rgba(20, 24, 29, 0.35); backdrop-filter: blur(2px);
   }
-  .clover-topbar { padding: 0.55rem 0.85rem; }
-  .clover-stream { padding: 1rem 0.75rem 0.75rem; }
-  .clover-composer-wrap { padding: 0.4rem 0.65rem calc(0.65rem + env(safe-area-inset-bottom, 0px)); }
-  .clover-composer-card { padding: 0.45rem 0.55rem; border-radius: 14px; }
+  .clover-topbar { flex: 0 0 auto; padding: 0.55rem 0.85rem; }
+  .clover-stream { flex: 1 1 auto; min-height: 0; padding: 0.85rem 0.75rem 0.65rem; }
+  .clover-composer-wrap {
+    flex: 0 0 auto; width: 100%;
+    padding: 0.45rem 0.65rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--line); background: var(--bg);
+  }
+  .clover-composer-card { padding: 0.42rem 0.52rem; border-radius: 14px; }
   .k3-msg, .k3-bot-turn { max-width: 92%; }
 }
 @media (max-width: 480px) {
