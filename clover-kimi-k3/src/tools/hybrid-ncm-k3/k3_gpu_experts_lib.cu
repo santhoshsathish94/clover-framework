@@ -3,13 +3,110 @@
 // directly across the RTX 3090 GPUs (`cuda:0`, `cuda:1`, `cuda:5`, `cuda:4`) in Agent Mode (`HybridAgent + K3 Experts + NCM`).
 //
 // Build on `gpu`:
+//   INC=""; for c in copyq slotcache routetable planner supply poolinit loader engcfg; do INC="$INC -I/home/usergpu/k3gpu/src/rust/$c/include"; done
 //   /usr/local/cuda-12.6/bin/nvcc -O3 --fmad=false -arch=sm_86 -std=c++17 -Xcompiler -fPIC -shared \
-//     -DFAST_ROUTER -DEXPERT_V2 -DINT8_PLANES -I/home/usergpu/k3gpu/src/code/gpu \
-//     k3_gpu_experts_lib.cu -lcublas -lpthread -o libk3_gpu_experts.so
+//     -DFAST_ROUTER -DEXPERT_V2 -DINT8_PLANES -I/home/usergpu/k3gpu/src/code/gpu $INC \
+//     k3_gpu_experts_lib.cu -lcublas -ldl -lpthread -o libk3_gpu_experts.so
 
 #include "decode.cuh"
+#include <dlfcn.h>
 #include <mutex>
 #include <thread>
+
+// Optional Rust host-path selectors (`K3GPU_SLOTCACHE`, `K3GPU_POOLINIT`, `K3GPU_SUPPLY`) for `libk3_gpu_experts.so`
+// (`K3Full93Chain` and `K3MultiCardChain` use `SlotCacheSel`, `HostCache::init`, `CardPool::init`, and `pool_ensure`).
+static bool g_k3_rust_configured = false;
+static void k3_configure_rust_hostpath()
+{
+    if (g_k3_rust_configured) return;
+    g_k3_rust_configured = true;
+
+    auto want_rust = [](const char *var, const char *name, bool built) -> bool {
+        const char *m = getenv(var);
+        if (!m || !*m || strcmp(m, "cpp") == 0) {
+            fprintf(stderr, "K3GPU: %s cpp\n", name);
+            return false;
+        }
+        if (strcmp(m, "rust") != 0) {
+            fprintf(stderr, "%s must be cpp or rust (got %s)\n", var, m);
+            exit(1);
+        }
+        if (!built) {
+            fprintf(stderr, "%s=rust: this binary was built without the header\n", var);
+            exit(1);
+        }
+        return true;
+    };
+    auto open_lib = [](const char *var, const char *dflt_lib, const char **lib_out) -> void * {
+        char lv[64];
+        snprintf(lv, sizeof lv, "%s_LIB", var);
+        const char *lib = getenv(lv);
+        if (!lib || !*lib) lib = dflt_lib;
+        void *h = dlopen(lib, RTLD_NOW | RTLD_LOCAL);
+        if (!h) {
+            fprintf(stderr, "%s=rust: cannot load %s: %s\n", var, lib, dlerror());
+            exit(1);
+        }
+        *lib_out = lib;
+        return h;
+    };
+
+#ifdef K3GPU_SLOTCACHE_BUILT
+    if (want_rust("K3GPU_SLOTCACHE", "slot cache", true)) {
+        const char *lib = nullptr;
+        void *h = open_lib("K3GPU_SLOTCACHE", "libslotcache.so", &lib);
+#define K3_SC_SYM(f, name) g_sc.f = (decltype(g_sc.f))dlsym(h, name); if (!g_sc.f) { fprintf(stderr, "K3GPU_SLOTCACHE=rust: %s has no %s\n", lib, name); exit(1); }
+        K3_SC_SYM(set_policy, "sc_set_policy") K3_SC_SYM(set_next_use, "sc_set_next_use") K3_SC_SYM(nw, "sc_new") K3_SC_SYM(add_spare, "sc_add_spare")
+        K3_SC_SYM(contains, "sc_contains") K3_SC_SYM(find, "sc_find") K3_SC_SYM(touch, "sc_touch") K3_SC_SYM(worth, "sc_worth")
+        K3_SC_SYM(acquire, "sc_acquire") K3_SC_SYM(try_acquire, "sc_try_acquire") K3_SC_SYM(remove, "sc_remove") K3_SC_SYM(release, "sc_release")
+#undef K3_SC_SYM
+        g_sc.on = true;
+        fprintf(stderr, "K3GPU: slot cache rust (%s)\n", lib);
+    }
+#else
+    want_rust("K3GPU_SLOTCACHE", "slot cache", false);
+#endif
+    const char *pol = getenv("K3GPU_POLICY");
+    slotcache_set_policy((pol && *pol) ? atoi(pol) : 1);
+
+#ifdef K3GPU_POOLINIT_BUILT
+    if (want_rust("K3GPU_POOLINIT", "pool init", true)) {
+        const char *lib = nullptr;
+        void *h = open_lib("K3GPU_POOLINIT", "libpoolinit.so", &lib);
+        g_pi.host_init = (decltype(g_pi.host_init))dlsym(h, "pi_host_init");
+        g_pi.pool_init = (decltype(g_pi.pool_init))dlsym(h, "pi_pool_init");
+        if (!g_pi.host_init || !g_pi.pool_init) {
+            fprintf(stderr, "K3GPU_POOLINIT=rust: %s missing pi_host_init/pi_pool_init\n", lib);
+            exit(1);
+        }
+        g_pi.on = true;
+        fprintf(stderr, "K3GPU: pool init rust (%s)\n", lib);
+    }
+#else
+    want_rust("K3GPU_POOLINIT", "pool init", false);
+#endif
+
+#ifdef K3GPU_SUPPLY_BUILT
+    if (want_rust("K3GPU_SUPPLY", "supply", true)) {
+        const char *lib = nullptr;
+        void *h = open_lib("K3GPU_SUPPLY", "libsupply.so", &lib);
+        g_sy.init = (decltype(g_sy.init))dlsym(h, "sy_init");
+        g_sy.ensure = (decltype(g_sy.ensure))dlsym(h, "sy_ensure");
+        g_sy.wb_skipped = (decltype(g_sy.wb_skipped))dlsym(h, "sy_wb_skipped");
+        if (!g_sy.init || !g_sy.ensure || !g_sy.wb_skipped) {
+            fprintf(stderr, "K3GPU_SUPPLY=rust: %s missing sy_init/sy_ensure/sy_wb_skipped\n", lib);
+            exit(1);
+        }
+        sy_config c = {};
+        c.experts = EXPERTS; c.expert_raw = EXPERT_RAW; c.vq = g_vq ? 1 : 0; c.prefill = g_prefill ? 1 : 0; c.chunks = g_chunks; c.slab = g_slab;
+        g_sy.init(&g_sy_ops, &c);
+        g_sy.on = true;
+        fprintf(stderr, "K3GPU: supply rust (%s)\n", lib);
+    }
+#else
+    want_rust("K3GPU_SUPPLY", "supply", false);
+#endif
+}
 
 // Selects the top-16 experts out of the `k_res` resident experts (`d_res_ids[0..k_res-1]`, which are the `k_res` highest-router-bias
 // experts of the layer in `0..895`) using the exact double-precision router scores (`scores`, `choices`) of `router_scores` in `moe.cuh`,
@@ -541,6 +638,7 @@ int k3_sparse_init(int max_layer, int host_cache_gb)
     if (max_layer > 92) max_layer = 92;
 
     if (!g_chain.sparse_initialized) {
+        k3_configure_rust_hostpath();
         g_chain.host_cache.init((size_t)host_cache_gb << 30);
         const int sp_card = g_chain.moe_cards[1];
         CHECK(cudaSetDevice(sp_card));
@@ -686,6 +784,8 @@ int k3_full93_init(const char *dataset_dir, int max_n, int k_res)
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
 
+    k3_configure_rust_hostpath();
+
     // Initialize 48 GB pinned HostCache (~2,936 slots in pinned system RAM) for dynamic 896-expert routing
     const char *env_hgb = getenv("K3_FULL93_HOST_GB");
     const size_t host_gb = (env_hgb && atoi(env_hgb) > 0) ? (size_t)atoi(env_hgb) : 48;
@@ -748,15 +848,20 @@ int k3_full93_init(const char *dataset_dir, int max_n, int k_res)
                 }
             }
             CHECK(cudaFreeHost(pinned));
-            // Initialize dynamic VRAM `CardPool` on remaining VRAM (keeping 2.8 GiB free headroom per card for MLA tiled scratch + PyTorch)
-            g_full93.pool_card[c].init(c, 2800ULL << 20, 16);
-            size_t f_b = 0, t_b = 0;
-            CHECK(cudaMemGetInfo(&f_b, &t_b));
-            fprintf(stderr, "[K3-Full93] Card %d: loaded Layers %2d..%2d (trunks + %d perm experts/layer + %d dyn VRAM slots) | VRAM %.2f / %.2f GiB\n",
-                    c, l_start[c], l_end[c], k_res, g_full93.pool_card[c].slots, (t_b - f_b) / 1073741824.0, t_b / 1073741824.0);
         });
     }
     for (auto &th : threads) th.join();
+
+    // Initialize dynamic VRAM `CardPool` on remaining VRAM (keeping 2.8 GiB free headroom per card for MLA tiled scratch + PyTorch).
+    // Done on the main thread after trunk+resident expert loading finishes so `pi_pool_init` (`K3GPU_POOLINIT=rust`) obeys its single-caller-thread contract.
+    for (int c = 0; c < 6; c++) {
+        CHECK(cudaSetDevice(c));
+        g_full93.pool_card[c].init(c, 2800ULL << 20, 16);
+        size_t f_b = 0, t_b = 0;
+        CHECK(cudaMemGetInfo(&f_b, &t_b));
+        fprintf(stderr, "[K3-Full93] Card %d: loaded Layers %2d..%2d (trunks + %d perm experts/layer + %d dyn VRAM slots) | VRAM %.2f / %.2f GiB\n",
+                c, l_start[c], l_end[c], k_res, g_full93.pool_card[c].slots, (t_b - f_b) / 1073741824.0, t_b / 1073741824.0);
+    }
 
     int total_dyn_slots = 0;
     for (int c = 0; c < 6; c++) total_dyn_slots += g_full93.pool_card[c].slots;
@@ -849,6 +954,34 @@ float k3_full93_forward(const float *in_embed, int n, float *out_hidden, float *
 
     clock_gettime(CLOCK_MONOTONIC, &t1);
     return (float)(seconds(t0, t1) * 1000.0);
+}
+
+// Reports whether Rust host-path libraries (`slotcache`, `poolinit`, `supply`) are active and returns their call/hit statistics.
+// `out_stats` (if non-null) receives 10 `unsigned long` entries:
+//   [0] g_sc.on (0=cpp, 1=rust), [1] g_pi.on (0=cpp, 1=rust), [2] g_sy.on (0=cpp, 1=rust),
+//   [3] g_sc_calls[0] (acquire), [4] g_sc_calls[1] (try_acquire), [5] g_sc_calls[2] (find),
+//   [6] total needed across cards 0..5, [7] total hit_card, [8] total hit_host, [9] total from_drive.
+void k3_full93_rust_stats(unsigned long *out_stats)
+{
+    std::lock_guard<std::mutex> lock(g_full93.mu);
+    if (!out_stats) return;
+    out_stats[0] = g_sc.on ? 1UL : 0UL;
+    out_stats[1] = g_pi.on ? 1UL : 0UL;
+    out_stats[2] = g_sy.on ? 1UL : 0UL;
+    out_stats[3] = g_sc_calls[0];
+    out_stats[4] = g_sc_calls[1];
+    out_stats[5] = g_sc_calls[2];
+    unsigned long need = 0, hc = 0, hh = 0, dr = 0;
+    for (int c = 0; c < 6; c++) {
+        need += g_full93.pool_card[c].st.needed;
+        hc   += g_full93.pool_card[c].st.hit_card;
+        hh   += g_full93.pool_card[c].st.hit_host;
+        dr   += g_full93.pool_card[c].st.from_drive;
+    }
+    out_stats[6] = need;
+    out_stats[7] = hc;
+    out_stats[8] = hh;
+    out_stats[9] = dr;
 }
 
 } // extern "C"

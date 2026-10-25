@@ -316,6 +316,9 @@ class K3GPUExpertsRunner:
             ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int)
         ]
         self.lib.k3_full93_forward.restype = ctypes.c_float
+        if hasattr(self.lib, "k3_full93_rust_stats"):
+            self.lib.k3_full93_rust_stats.argtypes = [ctypes.POINTER(ctypes.c_ulong)]
+            self.lib.k3_full93_rust_stats.restype = None
 
         if self.full_93_layers:
             rc = self.lib.k3_full93_init(dataset_dir.encode("utf-8"), self.max_n, self.k_res)
@@ -457,6 +460,21 @@ class K3GPUExpertsRunner:
                 "unique_experts_per_layer": uniq_summary,
                 "total_unique_experts_activated": total_uniq,
             }
+            if hasattr(self.lib, "k3_full93_rust_stats"):
+                rs = (ctypes.c_ulong * 10)()
+                self.lib.k3_full93_rust_stats(rs)
+                meta["rust_host_path"] = {
+                    "slotcache": "rust" if rs[0] else "cpp",
+                    "poolinit": "rust" if rs[1] else "cpp",
+                    "supply": "rust" if rs[2] else "cpp",
+                    "slotcache_acquire": int(rs[3]),
+                    "slotcache_try_acquire": int(rs[4]),
+                    "slotcache_find": int(rs[5]),
+                    "dynamic_experts_needed": int(rs[6]),
+                    "dynamic_hit_card": int(rs[7]),
+                    "dynamic_hit_host": int(rs[8]),
+                    "dynamic_from_drive": int(rs[9]),
+                }
             return h_k3_moe, meta
 
         out_chunks = []

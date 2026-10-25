@@ -527,3 +527,32 @@ Rust migration, round 5 (the rest of the host path wired into the engine), 2026-
 - NOT verified: any run of the real engine (model, dataset, 8 cards), so no timing and no A/B of ids; `open_layer` through `ld_open_layer` and its callbacks (needs the dataset); K3GPU_PREFILL through supply, loader and planner in the engine (the crates' own drivers cover it); several cards; the card queues with more than 79 slots or more than one pool; `K3GPU_ENGCFG=rust` together with a real run (summary lines with all counters were compared only in the 14 cfg cases, where most counters are zero). The crate-level drivers and mutation runs of supply, poolinit, loader and engcfg were made by helper agents; I re-ran their `cargo test` (25 / 13 / 32 / 56 pass) and compared sources box to repo, not their drivers.
 - Incident: while the other agent's chat service was restarting (GPU memory free), one of my test runs sized its pool from the free memory and took about 23 GB of card 0 for about 10 seconds in each of 24 runs (09:43-09:45 box time); the service's process id changed at about that time and I do not know whether I caused it. Since then each run takes at most about 1.3 GB and waits or skips if less than 2.6 GB is free. The 842 MB test file is deleted. A loader mutation campaign of a helper agent was still running on the box (load average 16-40).
 - Next: engine build and A/B on the 8 cards with all flags (needs the chat service off the GPUs: the owner's decision), then compare ids against the p1m md5 and the planning times; the open_layer path and prefill come with that run.
+
+## Round 4b — Merged branch (`rust-gpu-merged`): `main` + `gpu-merged-optimised-layers` end-to-end verification (2026-10-25)
+
+- **Direction**: Create a new branch (`rust-gpu-merged`) from `origin/main` (`dc3dc1f`, without touching `main`), merge `gpu-merged-optimised-layers` (`30a1abf`), and verify that all 8 Rust host-path crates work identically to `main` across both `whole-model-gpu` and the full Clover Kimi K3 stack (`93-Layer K3 + HybridAgent + 11-Pass NCM + Ontology-Guided Neuro-Symbolic GraphRAG + VS Code Agent loop`), fixing any integration gaps before starting the Generative Compilation syntax work.
+- **Integration Fix Found & Applied (`clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_gpu_experts_lib.cu` and `k3_agent_engine.py`)**:
+  - `k3_gpu_experts_lib.cu` includes `decode.cuh` and drives `K3Full93Chain` (`k3_full93_init` / `k3_full93_forward`) and `K3MultiCardChain` (`k3_sparse_init` / `k3_sparse_forward`), which use `SlotCacheSel`, `HostCache::init`, `CardPool::init`, and `pool_ensure`. Previously only `backend-gpu.cu` had selector functions to `dlopen` `libslotcache.so`, `libpoolinit.so`, and `libsupply.so`, and `k3_full93_init` called `pool_card[c].init` concurrently across 6 worker threads whereas `pi_pool_init` (`poolinit/src/lib.rs`) requires single-thread calls for `sc_add_spare`.
+  - Added `k3_configure_rust_hostpath()` and `k3_full93_rust_stats()` to `k3_gpu_experts_lib.cu`, moved `pool_card[c].init` to the main thread after parallel trunk/resident-expert loading finishes, and surfaced `rust_host_path` telemetry in `K3GPUExpertsRunner.forward_k3_ids`.
+- **Measured Verification on `gpu` (`8x RTX 3090`, Rust `1.95.0`, CUDA `12.6`)**:
+  1. **All 8 Rust Crates (`cargo build --release` + `cargo test --release --lib`)**:
+     - `copyq`: `9/9` passed (`libcopyq.so`)
+     - `slotcache`: `20/20` passed (`libslotcache.so`)
+     - `routetable`: `26/26` passed (`libroutetable.so`)
+     - `planner`: `31/31` passed (`libplanner.so`)
+     - `poolinit`: `13/13` passed (`libpoolinit.so`)
+     - `supply`: `25/25` passed (`libsupply.so`)
+     - `loader`: `32/32` passed (`libloader.so`)
+     - `engcfg`: `56/56` passed (`libengcfg.so`)
+     - Total: **`212/212` Rust unit tests passing (`0` failed)**.
+  2. **`wire_test_merged` C++ vs. All-8-Rust Differential Suite**:
+     - `loader` (`4` cards, `4,000` jobs): `total=4000 order_violations=0 extra_threads=0 per_card=1000/1000/1000/1000` in both `cpp` and `rust`.
+     - `ensure` (`200` calls, seeds `1..3`): bit-identical hashes (`fe4631ffa7b70572`, `b7e4b63065ee7dcc`, `abe36483f9409ee4`) and `0` byte mismatches across all 3 seeds.
+     - `plan` (`K3GPU_POLICY=1` and `2`, seeds `1..3`): bit-identical hashes and identical `needed` / `hit_card` / `hit_host` / `from_drive` / `written_back` / `wb_skipped` / `planned` / `skipped` / `pf_used` counts.
+     - `plan` with `K3GPU_VQUEUE=1` (`K3GPU_HOST_GB=2`, seeds `1..3`): bit-identical hashes (`8296d0c8ad435e6a`, `a2386da3b36135de`, `0f8f505c8961eb49`), `100.0%` card hit rate (`1254/1254`, `1367/1367`, `1309/1309`), `0` mismatches.
+     - `engcfg` 14-scenario diff suite: `14/14` `SAME`.
+  3. **`whole-model-gpu` (`8x RTX 3090`, `p1.txt`)**:
+     - Generated token IDs (`PF_DECODE=5`): `1008 9471 65 3688 736 12020` (`"The Harbourside Council"`), MD5 `b4ab1ed652f11a8b720881a8886cc49c` bit-identical between all-C++ (`5.738 s`, `1.148 s/tok`) and all-8-Rust (`5.676 s`, `1.135 s/tok`). (Note: detached background reader threads hit pre-existing `CUDA_ERROR_DEINITIALIZED` during process teardown after `whole-model.c` finishes printing all outputs, identical in both C++ and Rust when `VQUEUE=1` is active.)
+  4. **93-Layer `K3Full93Chain` (`libk3_gpu_experts.so`) C++ vs. Rust Parity & Live Server + VS Code `1.143.1` Verification**:
+     - Across all 93 layers with full 896-expert dynamic routing (`6,977` dynamic experts fetched across `7,621` unique activations): `max_abs_diff = 0.0`, `cosine_similarity = 1.0` (`mean = -0.0021941548`, `std = 0.63439476`, `L2 = 151.916931`).
+     - `clover-k3-chat.service` updated and running with `K3GPU_SLOTCACHE=rust`, `K3GPU_POOLINIT=rust`, `K3GPU_SUPPLY=rust`; verified live `/api/chat` (`rust_host_path: {"slotcache": "rust", "poolinit": "rust", "supply": "rust", "dynamic_hit_card": 531, ...}`) and live headless VS Code `1.143.1` verification (`/tmp/vscode_clover_live_verify.json`: `allTasksPassed: true` across multi-step `list_dir -> run_in_terminal -> read_file`).
