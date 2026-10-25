@@ -1,0 +1,11 @@
+# M18: M18 arr_wait does not remove the entry first (get, then remove after the spin)
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -241,6 +241,7 @@
+ 
+     pub fn arr_wait(&mut self, key: i32) {
+         let Some(a) = self.arr.remove(key) else { return };
++        self.arr.insert(key, Box::new(Arrival { state: AtomicI32::new(1) }));
+         if !done(&a.state) {
+             let t0 = Instant::now();
+             spin_until_set(&a.state);

@@ -1,0 +1,17 @@
+
+put waitfor.sh exit=0 
+wait exit 0
+rust S3 seed=1 rc=2 secs=29.7 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 victim_copy_not_done_before_gate | RESULT FAIL
+cpp S3 seed=2 rc=2 secs=29.8 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 victim_copy_not_done_before_gate | RESULT FAIL
+rust S3 seed=2 rc=2 secs=29.6 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 victim_copy_not_done_before_gate | RESULT FAIL
+cpp S5 seed=1 rc=0 secs=10.4 | SUMMARY S5 cases_not_exit_1=0 | RESULT PASS
+rust S5 seed=1 rc=2 secs=12.2 | SUMMARY S5 cases_not_exit_1=1 | RESULT FAIL
+cpp S4 seed=1 rc=0 secs=16.5 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S4 seed=1 rc=0 secs=15.9 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S4 seed=2 rc=0 secs=15.9 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S4 seed=2 rc=0 secs=16.0 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S4 seed=3 rc=0 secs=15.7 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S4 seed=3 rc=0 secs=15.9 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+CORRECTNESS-DONE
+run waitfor.sh matrix CORRECTNESS-DONE 270 exit=0
+ENDOFHELPER

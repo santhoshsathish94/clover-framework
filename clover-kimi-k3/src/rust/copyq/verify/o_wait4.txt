@@ -1,0 +1,18 @@
+
+put waitfor.sh exit=0 
+put tsummary.py exit=0 
+wait exit 124
+cpp S2 seed=3 rc=0 secs=12.6 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S3 seed=1 rc=0 secs=9.2 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S3 seed=1 rc=0 secs=9.7 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S3 seed=2 rc=0 secs=9.3 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S3 seed=2 rc=0 secs=9.6 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S5 seed=1 rc=0 secs=10.5 | SUMMARY S5 cases_not_exit_1=0 | RESULT PASS
+rust S5 seed=1 rc=2 secs=11.9 | SUMMARY S5 cases_not_exit_1=1 | RESULT FAIL
+cpp S4 seed=1 rc=0 secs=16.3 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S4 seed=1 rc=0 secs=15.7 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S4 seed=2 rc=0 secs=16.1 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S4 seed=2 rc=0 secs=15.8 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S4 seed=3 rc=0 secs=15.6 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+run exit=0
+ENDOFHELPER

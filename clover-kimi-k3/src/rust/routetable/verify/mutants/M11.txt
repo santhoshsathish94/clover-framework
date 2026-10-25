@@ -1,0 +1,1 @@
+a last line without a trailing newline is dropped

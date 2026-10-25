@@ -1,0 +1,23 @@
+
+put step1.sh exit=0 
+sha256(abc)=ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad OK
+sha256()=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 OK
+sha256(a*1000)=41edece42d63e8d9bf515a9ba6932e1c20cbc9f5a5d134645adb5db1b9737ea3
+rec 0 sha256=4473745c33bce08c1d61467b218a38af3fc52cbb13e5fae91abbd791ced0aefc
+rec 3 sha256=1788f75d7ccae8975a06591178b5a9263310c77fb66d263447f1096b42916015
+file /dev/shm/copyq_verify/rec8.bin: 8 records written and read back equal to the generator
+file /home/usergpu/rustmig/copyq/verify/data/rec8.bin: 8 records written and read back equal to the generator
+file short.bin: 100 bytes
+--- sha256sum of record 0 and 3 sliced from the /dev/shm file (must equal the driver's rec 0 / rec 3)
+4473745c33bce08c1d61467b218a38af3fc52cbb13e5fae91abbd791ced0aefc  -
+1788f75d7ccae8975a06591178b5a9263310c77fb66d263447f1096b42916015  -
+--- whole-file sha256sum, shm vs disk copy
+af4865849c2d18b1c180473071cff5dfea5b247cc73bdb53f0ebc8a9d6617a70  /dev/shm/copyq_verify/rec8.bin
+af4865849c2d18b1c180473071cff5dfea5b247cc73bdb53f0ebc8a9d6617a70  data/rec8.bin
+Filesystem                         Size  Used Avail Use% Mounted on
+tmpfs                              189G  135M  189G   1% /dev/shm
+/dev/mapper/ubuntu--vg-ubuntu--lv  1.8T  1.5T  220G  88% /
+               total        used        free      shared  buff/cache   available
+Mem:             376          16         304           0          59         360
+run step1.sh exit=0
+ENDOFHELPER

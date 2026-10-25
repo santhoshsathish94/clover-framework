@@ -1,0 +1,10 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -119,7 +119,6 @@
+             self.by_next.remove(&(old, key));
+             let nu = nu_call(key);
+             self.nodes[i].nu = nu;
+-            self.by_next.insert((nu, key));
+         } else {
+             self.nodes[i].heat = self.nodes[i].heat * 0.8f32 + w;
+         }

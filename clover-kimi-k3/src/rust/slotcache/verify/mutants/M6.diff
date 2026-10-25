@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -212,7 +212,7 @@
+             let mut victim = -1;
+             for &(nu, k) in self.by_next.iter().rev() {
+                 if !prot.contains(&k) {
+-                    if nu > cand_nu {
++                    if nu >= cand_nu {
+                         victim = k;
+                     }
+                     break;

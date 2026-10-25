@@ -1,0 +1,12 @@
+# M04: M04 write-back threshold 9/10
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -405,7 +405,7 @@
+         if vk >= 0 {
+             self.arr_wait(vk); // the held expert was itself still on its way
+             let cap = self.w.host.cap_slots;
+-            if self.cfg.prefill == 0 && cap != 0 && self.pend.len() < cap.wrapping_mul(8) / 10 && self.host_worth(vk) {
++            if self.cfg.prefill == 0 && cap != 0 && self.pend.len() < cap.wrapping_mul(9) / 10 && self.host_worth(vk) {
+                 let mut dk: c_int = -1;
+                 let mut dh: f32 = 0.0;
+                 j.victim_host = self.host_acquire_raw(vk, vh, &mut dk, &mut dh);

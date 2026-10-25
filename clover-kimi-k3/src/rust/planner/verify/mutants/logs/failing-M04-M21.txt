@@ -1,0 +1,13 @@
+### M04 failing units
+UNIT P2 78 FAIL lines=233436/233535 ref=exit0 rust=exit0 logs differ
+UNIT P2 234 FAIL lines=806879/806485 ref=exit0 rust=exit0 logs differ
+UNIT P2 478 FAIL lines=330232/329550 ref=exit0 rust=exit0 logs differ
+UNIT P2 483 FAIL lines=427771/427100 ref=exit0 rust=exit0 logs differ
+UNIT P4 361 FAIL lines=8929/8943 ref=exit0 rust=exit0 logs differ
+UNIT P4 451 FAIL lines=51252/51329 ref=exit0 rust=exit0 logs differ
+UNIT P4 228 FAIL lines=725207/298544 ref=exit1 rust=exit1 logs differ
+### M21 failing units
+UNIT P4 70 FAIL lines=18857/18857 ref=exit0 rust=exit0 logs differ
+UNIT P4 206 FAIL lines=5462/5462 ref=exit0 rust=exit0 logs differ
+UNIT P4 404 FAIL lines=32328/32328 ref=exit0 rust=exit0 logs differ
+UNIT P4 417 FAIL lines=10575/10575 ref=exit0 rust=exit0 logs differ

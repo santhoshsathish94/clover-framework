@@ -1,0 +1,8 @@
+420187723a9410890a472daf7654d117  ../ref/copyq_ref.cu
+59ef712d70d63209b7dd73d3fba1dd67  ../ref/libcopyq_ref.so
+e8d77fab78f8458b64b44ec673fc4312  ../target/release/libcopyq.so
+ef5ccbb296ff5a89dd5276b233490050  ../include/copyq.h
+aec14283727a31feebc1f437b689b5da  ../src/abi.rs
+6d623a27de0c67f919420aa89b481d32  ../src/cuda.rs
+136700b3f7c92f97eb0f4300ffb7e3b7  ../src/engine.rs
+1e427491dec585b7b995b97e2160dfb5  ../src/lib.rs

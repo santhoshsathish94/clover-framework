@@ -1,0 +1,57 @@
+15:49:39 M00 start md5=d719148f free=106G
+15:50:27 M00 done rc=0
+15:50:27 M01 start md5=d7e7dff8 free=102G
+15:51:13 M01 done rc=1
+15:51:13 M02 start md5=20581db7 free=99G
+15:51:59 M02 done rc=1
+15:51:59 M03 start md5=a5ed973b free=95G
+15:52:48 M03 done rc=1
+15:52:48 M04 start md5=dc34a74b free=90G
+15:53:36 M04 done rc=1
+15:53:36 M05 start md5=f7ce76b0 free=86G
+15:54:34 M05 done rc=1
+15:54:36 M06 start md5=81baa6c8 free=95G
+15:55:24 M06 done rc=0
+15:55:25 M07 start md5=d50a2cd4 free=94G
+15:55:48 M07 done rc=1
+15:55:49 M08 start md5=8b55cc53 free=91G
+15:56:37 M08 done rc=0
+15:56:37 M09 start md5=93a01e26 free=89G
+15:57:01 M09 done rc=1
+15:57:02 M10 start md5=547eb311 free=88G
+15:57:26 M10 done rc=1
+15:57:27 M11 start md5=b2623bdf free=86G
+15:59:38 M11 done rc=1
+15:59:38 M12 start md5=74e32b69 free=84G
+16:00:02 M12 done rc=1
+16:00:03 M13 start md5=57296c1c free=81G
+16:00:26 M13 done rc=1
+16:00:28 M14 start md5=f90b8057 free=79G
+16:00:45 M14 done rc=1
+16:00:45 M15 start md5=d2d49367 free=78G
+16:01:06 M15 done rc=1
+16:01:07 M16 start md5=c9aebead free=75G
+16:03:21 M16 done rc=1
+16:03:22 M17 start md5=cee6d0f7 free=74G
+16:04:09 M17 done rc=1
+16:04:09 M18 start md5=59f39d9a free=72G
+16:06:22 M18 done rc=1
+16:06:22 M19 start md5=95aaffb9 free=70G
+16:07:11 M19 done rc=1
+16:07:11 M20 start md5=d06fa252 free=68G
+16:07:57 M20 done rc=1
+16:07:58 M21 start md5=fe563cd2 free=66G
+16:08:45 M21 done rc=1
+16:08:45 MA start md5=0ab9b312 free=64G
+16:12:57 MA done rc=1
+16:12:57 MB start md5=c7d46745 free=63G
+16:13:16 MB done rc=1
+16:13:17 MC start md5=e1ae35af free=62G
+16:13:41 MC done rc=1
+16:13:42 MD start md5=7f161ff4 free=59G
+16:19:52 MD done rc=1
+16:19:52 MD1 start md5=86426133 free=57G
+16:24:03 MD1 done rc=1
+16:24:03 MD2 start md5=b14cea7c free=56G
+16:28:16 MD2 done rc=1
+16:28:16 ALL DONE

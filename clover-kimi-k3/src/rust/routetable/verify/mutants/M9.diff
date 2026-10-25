@@ -1,0 +1,10 @@
+--- src/lib.rs (real)
++++ M9/src/lib.rs
+@@ -85,7 +85,6 @@
+     };
+     let (layer, mut p) = strtol(s, 0);
+     let mut call = Call { layer: layer as i32, experts: Vec::new(), counts: Vec::new() };
+-    p = strtol(s, p).1;
+     loop {
+         while at(s, p) == b' ' {
+             p += 1;

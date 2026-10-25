@@ -1,0 +1,12 @@
+# M10: M10 cand always rt_next_use
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -445,7 +445,7 @@
+                     continue; // on the card or on its way
+                 }
+                 if pool.ready && !full[hd.card] && out < self.cfg.vq_cap {
+-                    let cand = if i == pos { pos as c_int } else { unsafe { (self.ops.rt_next_use)(self.ops.table, key) } };
++                    let cand = if false { pos as c_int } else { unsafe { (self.ops.rt_next_use)(self.ops.table, key) } };
+                     if self.vq_issue(&pool, layer, hd.fd, key, e, cand, &prot) {
+                         out += 1;
+                         continue;

@@ -1,0 +1,12 @@
+lines 5612
+uniq max 738 min 16 mean 23.92391304347826
+layers 1 92 92 calls/layer {61}
+ntok [1, 157]
+layer seq [1, 2, 3, 4] [91, 92, 1, 2, 3, 4]
+sum uniq 134261
+all tokens have counts True
+lines w/o experts []
+g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+lrwxrwxrwx 1 root root 38 Dec 18  2025 /usr/lib/gcc/x86_64-linux-gnu/13/libasan.so -> ../../../x86_64-linux-gnu/libasan.so.8
+lrwxrwxrwx 1 root root 39 Dec 18  2025 /usr/lib/gcc/x86_64-linux-gnu/13/libubsan.so -> ../../../x86_64-linux-gnu/libubsan.so.1
+d1cedc310e279de975d2b7e813f79632  -

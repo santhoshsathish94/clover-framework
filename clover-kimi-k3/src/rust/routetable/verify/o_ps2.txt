@@ -1,0 +1,6 @@
+flip1500000
+flip30
+flip31
+full1
+smoke1
+smoke2

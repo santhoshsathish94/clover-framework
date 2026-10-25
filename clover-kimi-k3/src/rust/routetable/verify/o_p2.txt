@@ -1,0 +1,23 @@
+Thu Oct 22 10:07:10 AM UTC 2026
+0
+R1 begin=240 unit=240 pass=240 fail=0 crash=0 comparisons=143448870 checks=19924476 next_use=9031656
+R2 begin=4000 unit=4000 pass=4000 fail=0 crash=0 comparisons=13513758 checks=505508 next_use=10373468
+R3 begin=9 unit=9 pass=9 fail=0 crash=0 comparisons=220890172 checks=1212192 next_use=205480786
+R4 begin=21 unit=21 pass=21 fail=0 crash=0 comparisons=1260 checks=830 next_use=0
+fail
+r4-cases.log
+stderr.txt
+stdout.txt
+units.log
+work
+diff_driver: ref=/home/usergpu/rustmig/routetable/ref/libroutetable_ref.so
+             cand=/home/usergpu/rustmig/routetable/target/release/libroutetable.so
+             out=/home/usergpu/rustmig/routetable/verify/out/full1 jobs=48 scale=1 flip=0 units=4270 trace=/home/usergpu/k3gpu/results/p1d.trace
+
+R1  seeds=240 (begun 240, completed 240, fail 0, crash 0)  comparisons=143448870  contract-checks=19924476  next_use-calls=9031656 (non-exhausted results 8143784)  tables-loaded=843  input-bytes=232777788  calls=3455842 experts=37601077 counts=19239161 negative-values=0  PASS
+R2  seeds=4000 (begun 4000, completed 4000, fail 0, crash 0)  comparisons=13513758  contract-checks=505508  next_use-calls=10373468 (non-exhausted results 1543828)  tables-loaded=12000  input-bytes=11858826  calls=316206 experts=419758 counts=189769 negative-values=19978  PASS
+R3  seeds=9 (begun 9, completed 9, fail 0, crash 0)  comparisons=220890172  contract-checks=1212192  next_use-calls=205480786 (non-exhausted results 198545750)  tables-loaded=27  input-bytes=0  calls=151524 experts=3625047 counts=3625047 negative-values=0  PASS
+R4  seeds=21 (begun 21, completed 21, fail 0, crash 0)  comparisons=1260  contract-checks=830  next_use-calls=0 (non-exhausted results 0)  tables-loaded=0  input-bytes=0  calls=0 experts=0 counts=0 negative-values=0  PASS
+
+overall: PASS
+exit 0

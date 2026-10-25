@@ -1,0 +1,30 @@
+grep: out/flip31/stdout.txt: binary file matches
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/flip31/fail/R4-1.txt):
+MISMATCH scenario R4 seed 1 session 0 phase 'random-path-1-10' op#0 (driver's current value cur=-1)
+R4-0.err
+R4-10.err
+R4-11.err
+R4-12.err
+R4-13.err
+R4-14.err
+R4-15.err
+R4-16.err
+R4-17.err
+R4-18.err
+R4-19.err
+R4-1.err
+R4-20.err
+R4-2.err
+R4-3.err
+R4-4.err
+R4-5.err
+R4-6.err
+R4-7.err
+R4-8.err
+R4-9.err
+r4fixed
+total 24
+drwxr-xr-x 4 usergpu usergpu 4096 Oct 22 09:59 .
+drwxr-xr-x 3 usergpu usergpu 4096 Oct 22 09:59 ..
+full1-started
+Thu Oct 22 09:59:22 AM UTC 2026

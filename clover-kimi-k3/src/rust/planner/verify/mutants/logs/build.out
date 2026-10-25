@@ -1,0 +1,28 @@
+M00 d719148fa7f6299409041b0e1f2f3f07 control: unmodified copy
+M01 d7e7dff8688a62e4daac612e9b75c44a M01 sweep: no re-look after swap (i += 1 after rel swap_remove)
+M02 20581db7e472d3bc7ea32dca1c87d715 M02 pend_cap return keeps planned_to = i + 1
+M03 a5ed973b63fb28c970cb6a12e2825fce M03 skipped not counted
+M04 dc34a74b36a3f6448da6466df2e42d82 M04 write-back threshold 9/10
+M05 f7ce76b07f886a5732fc9966c85645dc M05 full[card] never set
+M06 81baa6c8e6076f892a63a2734dbe234d M06 pend_take after remove in vq_issue
+M07 d50a2cd4f6c3336a8dac466c964faaba M07 vq prot without layer (raw expert numbers)
+M08 8b55cc53c5c094f6f3590b4d2d3b6c00 M08 replaced pending freed at once (no graveyard)
+M09 93a01e2613f950bef478b1d761b68103 M09 out counts every arrival
+M10 547eb3117183e5de8ca37489f545da68 M10 cand always rt_next_use
+M11 b2623bdf65a148ccbb384c1c1816fa46 M11 pos incremented before the plan
+M12 74e32b698afcf4607d1b4bfb73e49a12 M12 read-ahead heat 2.0
+M13 57296c1cfab9cdc4e4c8d3ceebbb7c02 M13 last = pos + lookahead (no +1)
+M14 f90b8057fe1d7cc1827c2543cde22821 M14 pend_take counts used only when it waited
+M15 d2d49367d3277439cd967a459f3ff258 M15 sp_config field order swapped (cards/lookahead)
+M16 c9aebead929bd29c2a667220ce9f1f28 M16 sweep wb: do not erase pending entry when done
+M17 cee6d0f7c464a79e6180eb7a9b0caf10 M17 host worth checked before pend_cap
+M18 59f39d9a7928d76598f9724b482d2b79 M18 arr_wait does not remove the entry first (get, then remove after the spin)
+M19 95aaffb967736dc8998cf7b1aee31492 M19 mismatch does not unset next-use
+M20 d06fa25267088850897feb613951834f M20 vq victim wb inserted into wb_keys twice-order: push before acquire
+M21 fe563cd20fc471548d9eaac789644b88 M21 t_plan also counts mismatch path (timer around everything)
+MA 0ab9b312ebc5e93b9e4f248fe68a670b vq_issue: try_acquire gets (cand_nu, key) instead of (key, cand_nu)
+MB c7d46745c14f070f08cfe5f49263921b pend_take counts pf_used also when there is no pending entry
+MC e1ae35af9d17fb72ee22bc8ef281c275 card-pool prot list drops its last element
+MD 7f161ff4b123c9597b1d206bdedb5b3e job off = e * expert_raw as a 32-bit multiply (both job builders)
+MD1 86426133305b35086b50a6738dc1bd68 job off as a 32-bit multiply, read-ahead job (kind 0) only
+MD2 b14cea7c5a8776042b5563d60558fafe job off as a 32-bit multiply, card-queue job (kind 1/2) only

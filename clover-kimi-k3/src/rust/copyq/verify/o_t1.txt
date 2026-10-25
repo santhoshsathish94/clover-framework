@@ -1,0 +1,23 @@
+
+=== idle check 15:55:35
+pid, used_gpu_memory [MiB]
+0, 0 MiB, 0 %
+1, 0 MiB, 0 %
+2, 0 MiB, 0 %
+3, 0 MiB, 0 %
+4, 0 MiB, 0 %
+5, 0 MiB, 0 %
+6, 0 MiB, 0 %
+7, 0 MiB, 0 %
+ 15:55:35 up 1 day, 15:40,  3 users,  load average: 1.58, 2.22, 1.86
+--- ps (model-gpu|k3gpu|g3run|nvcc|cargo)
+--- top CPU
+    PID %CPU COMMAND
+ 649055  1.0 sshd
+    605  0.7 kcompactd1
+    604  0.5 kcompactd0
+    630  0.3 kswapd1
+TIMING T1 lib=cpp jobs=960 bytes=16845373440 wall_s=0.9736 gbps=17.303 cpu_user_s=13.281 cpu_sys_s=0.011 warm_s=0.0427 verify_bad=0
+TIMING T1 lib=rust jobs=960 bytes=16845373440 wall_s=0.9418 gbps=17.887 cpu_user_s=14.917 cpu_sys_s=0.011 warm_s=0.0329 verify_bad=0
+run exit=0
+ENDOFHELPER

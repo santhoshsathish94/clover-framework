@@ -1,0 +1,1 @@
+rt_next_use inserts an (empty list, pointer 0) entry for an unknown key

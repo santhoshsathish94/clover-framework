@@ -1,0 +1,6 @@
+calls=4
+call 0 layer=5 experts[1]=7 counts[1]=1 
+call 1 layer=3 experts[1]=9 counts[0]=
+call 2 layer=2 experts[1]=4 counts[0]=
+call 3 layer=7 experts[2]=9 1 counts[0]=
+exit 0

@@ -1,0 +1,10 @@
+16:29:16 M06p start md5=86bb5602
+16:29:26 M06p done rc=0
+16:29:26 M08p start md5=f6fe79fa
+16:29:35 M08p done rc=0
+16:29:35 PROBES DONE
+16:33:06 P3 M06p start free=52G
+16:33:20 P3 M06p done rc=0
+16:33:20 P3 M08p start free=52G
+16:33:34 P3 M08p done rc=0
+16:33:34 P3 PROBES DONE

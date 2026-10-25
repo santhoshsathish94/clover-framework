@@ -1,0 +1,7 @@
+== M06p events (tag count, units = distinct pids)
+M06 absent 15794
+M06 present_done 64044
+distinct pids per tag:
+M06 absent 120
+M06 present_done 261
+total event lines: 79838

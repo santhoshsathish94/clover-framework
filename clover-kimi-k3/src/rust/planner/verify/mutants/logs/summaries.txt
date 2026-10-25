@@ -1,0 +1,244 @@
+### M00
+P3 units=36 pass=36 fail=0 logged_ops_ref=469322511 logged_ops_rust=469322511 (lines 469739625/469739625) units_ending_in_fatal_exit1=0 PASS
+P2 units=500 pass=500 fail=0 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 PASS
+P4 units=500 pass=500 fail=0 logged_ops_ref=19525248 logged_ops_rust=19525248 (lines 19646932/19646932) units_ending_in_fatal_exit1=1 PASS
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=600 fail=0 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 PASS
+P6 units=100 pass=100 fail=0 logged_ops_ref=7831392 logged_ops_rust=7821939 (lines 7855296/7845839) nondeterministic_pairs ref=99 rust=100 (of 100) PASS
+wall 48s
+### M01
+P3 units=36 pass=28 fail=8 logged_ops_ref=469322511 logged_ops_rust=311615215 (lines 469739625/311942485) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=352 fail=148 logged_ops_ref=40182019 logged_ops_rust=22473605 (lines 40300877/22564683) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=458 fail=42 logged_ops_ref=19525248 logged_ops_rust=14945864 (lines 19646932/15057109) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=591 fail=9 logged_ops_ref=12166533 logged_ops_rust=11761404 (lines 12271069/11864167) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=85 fail=15 logged_ops_ref=7831640 logged_ops_rust=7828095 (lines 7855544/7851999) nondeterministic_pairs ref=98 rust=98 (of 100) FAIL
+wall 46s
+### M02
+P3 units=36 pass=15 fail=21 logged_ops_ref=469322511 logged_ops_rust=464357894 (lines 469739625/464775008) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=297 fail=203 logged_ops_ref=40182019 logged_ops_rust=39493049 (lines 40300877/39612157) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=232 fail=268 logged_ops_ref=19525248 logged_ops_rust=18663947 (lines 19646932/18785720) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=161 fail=339 logged_ops_ref=12438809 logged_ops_rust=10092713 (lines 12563023/10216927) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=321 fail=279 logged_ops_ref=12166533 logged_ops_rust=12103458 (lines 12271069/12207994) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7830176 logged_ops_rust=7624579 (lines 7854080/7648483) nondeterministic_pairs ref=98 rust=98 (of 100) PASS
+wall 46s
+### M03
+P3 units=36 pass=15 fail=21 logged_ops_ref=469322511 logged_ops_rust=469322511 (lines 469739625/469739625) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=283 fail=217 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=266 fail=234 logged_ops_ref=19525248 logged_ops_rust=19525248 (lines 19646932/19646932) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=81 fail=419 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=435 fail=165 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7826877 logged_ops_rust=7817475 (lines 7850781/7841371) nondeterministic_pairs ref=99 rust=100 (of 100) PASS
+wall 49s
+### M04
+P3 units=36 pass=36 fail=0 logged_ops_ref=469322511 logged_ops_rust=469322511 (lines 469739625/469739625) units_ending_in_fatal_exit1=0 PASS
+P2 units=500 pass=496 fail=4 logged_ops_ref=40182019 logged_ops_rust=40180371 (lines 40300877/40299229) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=497 fail=3 logged_ops_ref=19525248 logged_ops_rust=19098832 (lines 19646932/19220360) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=600 fail=0 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 PASS
+P6 units=100 pass=100 fail=0 logged_ops_ref=7819602 logged_ops_rust=7821049 (lines 7843498/7844947) nondeterministic_pairs ref=100 rust=99 (of 100) PASS
+wall 48s
+### M05
+P3 units=36 pass=19 fail=17 logged_ops_ref=469322511 logged_ops_rust=825907687 (lines 469739625/826324801) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=235 fail=265 logged_ops_ref=40182019 logged_ops_rust=69303297 (lines 40300877/69420870) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=383 fail=117 logged_ops_ref=19525248 logged_ops_rust=28897296 (lines 19646932/29019069) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=548 fail=52 logged_ops_ref=12166533 logged_ops_rust=16391509 (lines 12271069/16496135) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=98 fail=2 logged_ops_ref=7830883 logged_ops_rust=15157862 (lines 7854787/15182357) nondeterministic_pairs ref=98 rust=99 (of 100) FAIL
+wall 58s
+### M06
+P3 units=36 pass=36 fail=0 logged_ops_ref=469322511 logged_ops_rust=469322511 (lines 469739625/469739625) units_ending_in_fatal_exit1=0 PASS
+P2 units=500 pass=500 fail=0 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 PASS
+P4 units=500 pass=500 fail=0 logged_ops_ref=19525248 logged_ops_rust=19525248 (lines 19646932/19646932) units_ending_in_fatal_exit1=1 PASS
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=600 fail=0 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 PASS
+P6 units=100 pass=100 fail=0 logged_ops_ref=7828914 logged_ops_rust=7823528 (lines 7852818/7847426) nondeterministic_pairs ref=97 rust=98 (of 100) PASS
+wall 48s
+### M07
+P3 units=36 pass=18 fail=18 logged_ops_ref=469322511 logged_ops_rust=469428548 (lines 469739625/469845662) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=143 fail=357 logged_ops_ref=40182019 logged_ops_rust=39907138 (lines 40300877/40025501) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=358 fail=142 logged_ops_ref=19525248 logged_ops_rust=19016438 (lines 19646932/19137940) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=508 fail=92 logged_ops_ref=12166533 logged_ops_rust=12184407 (lines 12271069/12288943) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=99 fail=1 logged_ops_ref=7828579 logged_ops_rust=7756226 (lines 7852483/7779823) nondeterministic_pairs ref=99 rust=100 (of 100) FAIL
+wall 23s
+### M08
+P3 units=36 pass=36 fail=0 logged_ops_ref=469322511 logged_ops_rust=469322511 (lines 469739625/469739625) units_ending_in_fatal_exit1=0 PASS
+P2 units=500 pass=500 fail=0 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 PASS
+P4 units=500 pass=500 fail=0 logged_ops_ref=19525248 logged_ops_rust=19525248 (lines 19646932/19646932) units_ending_in_fatal_exit1=1 PASS
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=600 fail=0 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 PASS
+P6 units=100 pass=100 fail=0 logged_ops_ref=7826141 logged_ops_rust=7828790 (lines 7850043/7852694) nondeterministic_pairs ref=99 rust=100 (of 100) PASS
+wall 48s
+### M09
+P3 units=36 pass=20 fail=16 logged_ops_ref=469322511 logged_ops_rust=470425716 (lines 469739625/470842830) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=448 fail=52 logged_ops_ref=40182019 logged_ops_rust=40294510 (lines 40300877/40413368) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=467 fail=33 logged_ops_ref=19525248 logged_ops_rust=19550248 (lines 19646932/19671932) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=578 fail=22 logged_ops_ref=12166533 logged_ops_rust=12192632 (lines 12271069/12297258) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7820907 logged_ops_rust=7826314 (lines 7844805/7850210) nondeterministic_pairs ref=100 rust=100 (of 100) PASS
+wall 24s
+### M10
+P3 units=36 pass=18 fail=18 logged_ops_ref=469322511 logged_ops_rust=469383054 (lines 469739625/469800168) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=150 fail=350 logged_ops_ref=40182019 logged_ops_rust=40312753 (lines 40300877/40431861) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=362 fail=138 logged_ops_ref=19525248 logged_ops_rust=19570818 (lines 19646932/19692591) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=509 fail=91 logged_ops_ref=12166533 logged_ops_rust=12174010 (lines 12271069/12278546) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7828291 logged_ops_rust=7853567 (lines 7852195/7877471) nondeterministic_pairs ref=98 rust=99 (of 100) PASS
+wall 24s
+### M11
+P3 units=36 pass=0 fail=36 logged_ops_ref=469322511 logged_ops_rust=1932492 (lines 469739625/1932600) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=0 fail=500 logged_ops_ref=40182019 logged_ops_rust=1742360 (lines 40300877/1743860) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=0 fail=500 logged_ops_ref=19525248 logged_ops_rust=1628153 (lines 19646932/1629653) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=0 fail=500 logged_ops_ref=12438809 logged_ops_rust=1414573 (lines 12563023/1416073) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=27 fail=573 logged_ops_ref=12166533 logged_ops_rust=1367059 (lines 12271069/1368832) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=0 fail=100 logged_ops_ref=7830454 logged_ops_rust=351354 (lines 7854362/351654) nondeterministic_pairs ref=97 rust=76 (of 100) FAIL
+wall 131s
+### M12
+P3 units=36 pass=0 fail=36 logged_ops_ref=469322511 logged_ops_rust=469322511 (lines 469739625/469739625) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=39 fail=461 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=24 fail=476 logged_ops_ref=19525248 logged_ops_rust=19525248 (lines 19646932/19646932) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=0 fail=500 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=266 fail=334 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7819656 logged_ops_rust=7827865 (lines 7843552/7851769) nondeterministic_pairs ref=99 rust=99 (of 100) PASS
+wall 24s
+### M13
+P3 units=36 pass=7 fail=29 logged_ops_ref=469322511 logged_ops_rust=466795772 (lines 469739625/467212886) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=196 fail=304 logged_ops_ref=40182019 logged_ops_rust=38874652 (lines 40300877/38993510) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=258 fail=242 logged_ops_ref=19525248 logged_ops_rust=19015156 (lines 19646932/19136840) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=271 fail=229 logged_ops_ref=12438809 logged_ops_rust=11593797 (lines 12563023/11718011) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=299 fail=301 logged_ops_ref=12166533 logged_ops_rust=11616329 (lines 12271069/11722238) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7830157 logged_ops_rust=7566210 (lines 7854061/7590114) nondeterministic_pairs ref=98 rust=82 (of 100) PASS
+wall 23s
+### M14
+P3 units=36 pass=0 fail=36 logged_ops_ref=469322511 logged_ops_rust=2298671 (lines 469739625/2298821) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=56 fail=444 logged_ops_ref=40182019 logged_ops_rust=4317540 (lines 40300877/4333228) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=44 fail=456 logged_ops_ref=19525248 logged_ops_rust=2607404 (lines 19646932/2617911) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=13 fail=487 logged_ops_ref=12438809 logged_ops_rust=1556021 (lines 12563023/1560918) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=386 fail=214 logged_ops_ref=12166533 logged_ops_rust=5999934 (lines 12271069/6055460) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7820150 logged_ops_rust=7830634 (lines 7844046/7854538) nondeterministic_pairs ref=99 rust=100 (of 100) PASS
+wall 17s
+### M15
+P3 units=36 pass=5 fail=31 logged_ops_ref=469322511 logged_ops_rust=78422241 (lines 469739625/78839355) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=41 fail=459 logged_ops_ref=40182019 logged_ops_rust=16083577 (lines 40300877/16202685) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=113 fail=387 logged_ops_ref=19525248 logged_ops_rust=11544622 (lines 19646932/11666395) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=109 fail=391 logged_ops_ref=12438809 logged_ops_rust=12497478 (lines 12563023/12621692) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=208 fail=392 logged_ops_ref=12166533 logged_ops_rust=6668784 (lines 12271069/6776092) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=98 fail=2 logged_ops_ref=7827134 logged_ops_rust=3311189 (lines 7851038/3335684) nondeterministic_pairs ref=99 rust=100 (of 100) FAIL
+wall 21s
+### M16
+P3 units=36 pass=30 fail=6 logged_ops_ref=469322511 logged_ops_rust=333628689 (lines 469739625/333977253) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=353 fail=147 logged_ops_ref=40182019 logged_ops_rust=24967168 (lines 40300877/25057900) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=477 fail=23 logged_ops_ref=19525248 logged_ops_rust=17679348 (lines 19646932/17795782) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=588 fail=12 logged_ops_ref=12166533 logged_ops_rust=10996903 (lines 12271069/11098423) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=78 fail=22 logged_ops_ref=7828606 logged_ops_rust=6504163 (lines 7852510/6524238) nondeterministic_pairs ref=97 rust=96 (of 100) FAIL
+wall 134s
+### M17
+P3 units=36 pass=15 fail=21 logged_ops_ref=469322511 logged_ops_rust=469372526 (lines 469739625/469789640) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=297 fail=203 logged_ops_ref=40182019 logged_ops_rust=40194765 (lines 40300877/40313623) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=232 fail=268 logged_ops_ref=19525248 logged_ops_rust=19539082 (lines 19646932/19660766) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=161 fail=339 logged_ops_ref=12438809 logged_ops_rust=12475650 (lines 12563023/12599864) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=321 fail=279 logged_ops_ref=12166533 logged_ops_rust=12187429 (lines 12271069/12291965) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7832010 logged_ops_rust=7822417 (lines 7855914/7846315) nondeterministic_pairs ref=99 rust=98 (of 100) PASS
+wall 47s
+### M18
+P3 units=36 pass=20 fail=16 logged_ops_ref=469322511 logged_ops_rust=48225982 (lines 469739625/48457241) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=174 fail=326 logged_ops_ref=40182019 logged_ops_rust=9547092 (lines 40300877/9603967) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=377 fail=123 logged_ops_ref=19525248 logged_ops_rust=10310588 (lines 19646932/10405028) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=512 fail=88 logged_ops_ref=12166533 logged_ops_rust=6440738 (lines 12271069/6524955) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=41 fail=59 logged_ops_ref=7827868 logged_ops_rust=1182584 (lines 7851772/1193176) nondeterministic_pairs ref=99 rust=92 (of 100) FAIL
+wall 133s
+### M19
+P3 units=36 pass=36 fail=0 logged_ops_ref=469322511 logged_ops_rust=469322511 (lines 469739625/469739625) units_ending_in_fatal_exit1=0 PASS
+P2 units=500 pass=500 fail=0 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 PASS
+P4 units=500 pass=1 fail=499 logged_ops_ref=19525248 logged_ops_rust=19348078 (lines 19646932/19469762) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=305 fail=295 logged_ops_ref=12166533 logged_ops_rust=12166114 (lines 12271069/12270650) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7822240 logged_ops_rust=7824030 (lines 7846136/7847930) nondeterministic_pairs ref=96 rust=100 (of 100) PASS
+wall 49s
+### M20
+P3 units=36 pass=30 fail=6 logged_ops_ref=469322511 logged_ops_rust=333270856 (lines 469739625/333619384) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=353 fail=147 logged_ops_ref=40182019 logged_ops_rust=24368749 (lines 40300877/24458755) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=477 fail=23 logged_ops_ref=19525248 logged_ops_rust=17647490 (lines 19646932/17763821) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=588 fail=12 logged_ops_ref=12166533 logged_ops_rust=10980160 (lines 12271069/11081640) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7817415 logged_ops_rust=7827733 (lines 7841311/7851637) nondeterministic_pairs ref=97 rust=100 (of 100) PASS
+wall 46s
+### M21
+P3 units=36 pass=36 fail=0 logged_ops_ref=469322511 logged_ops_rust=469322511 (lines 469739625/469739625) units_ending_in_fatal_exit1=0 PASS
+P2 units=500 pass=500 fail=0 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 PASS
+P4 units=500 pass=496 fail=4 logged_ops_ref=19525248 logged_ops_rust=19525248 (lines 19646932/19646932) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=600 fail=0 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 PASS
+P6 units=100 pass=100 fail=0 logged_ops_ref=7830315 logged_ops_rust=7821763 (lines 7854219/7845661) nondeterministic_pairs ref=98 rust=98 (of 100) PASS
+wall 47s
+### MA
+P3 units=36 pass=18 fail=18 logged_ops_ref=469322511 logged_ops_rust=46917794 (lines 469739625/47149021) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=142 fail=358 logged_ops_ref=40182019 logged_ops_rust=8802860 (lines 40300877/8858623) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=357 fail=143 logged_ops_ref=19525248 logged_ops_rust=9951868 (lines 19646932/10045946) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=508 fail=92 logged_ops_ref=12166533 logged_ops_rust=6337601 (lines 12271069/6421551) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=41 fail=59 logged_ops_ref=7830164 logged_ops_rust=1082147 (lines 7854068/1092577) nondeterministic_pairs ref=100 rust=67 (of 100) FAIL
+wall 252s
+### MB
+P3 units=36 pass=0 fail=36 logged_ops_ref=469322511 logged_ops_rust=71647347 (lines 469739625/71670243) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=284 fail=216 logged_ops_ref=40182019 logged_ops_rust=18279473 (lines 40300877/18352859) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=210 fail=290 logged_ops_ref=19525248 logged_ops_rust=8661700 (lines 19646932/8731158) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=238 fail=262 logged_ops_ref=12438809 logged_ops_rust=5782700 (lines 12563023/5856823) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=489 fail=111 logged_ops_ref=12166533 logged_ops_rust=7973153 (lines 12271069/8057941) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7821023 logged_ops_rust=7825838 (lines 7844923/7849742) nondeterministic_pairs ref=99 rust=100 (of 100) PASS
+wall 19s
+### MC
+P3 units=36 pass=18 fail=18 logged_ops_ref=469322511 logged_ops_rust=469323406 (lines 469739625/469740520) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=147 fail=353 logged_ops_ref=40182019 logged_ops_rust=40178595 (lines 40300877/40297453) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=360 fail=140 logged_ops_ref=19525248 logged_ops_rust=19527085 (lines 19646932/19648769) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=508 fail=92 logged_ops_ref=12166533 logged_ops_rust=12166546 (lines 12271069/12271082) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=100 fail=0 logged_ops_ref=7816733 logged_ops_rust=7818174 (lines 7840627/7842068) nondeterministic_pairs ref=100 rust=99 (of 100) PASS
+wall 24s
+### MD
+P3 units=36 pass=0 fail=36 logged_ops_ref=469322511 logged_ops_rust=12929179 (lines 469739625/12935988) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=0 fail=500 logged_ops_ref=40182019 logged_ops_rust=1220227 (lines 40300877/1221237) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=4 fail=496 logged_ops_ref=19525248 logged_ops_rust=1272001 (lines 19646932/1273752) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=0 fail=500 logged_ops_ref=12438809 logged_ops_rust=1170178 (lines 12563023/1171187) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=364 fail=236 logged_ops_ref=12166533 logged_ops_rust=3880304 (lines 12271069/3940019) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=0 fail=100 logged_ops_ref=7830162 logged_ops_rust=252072 (lines 7854070/252274) nondeterministic_pairs ref=100 rust=6 (of 100) FAIL
+wall 370s
+### MD1
+P3 units=36 pass=0 fail=36 logged_ops_ref=469322511 logged_ops_rust=12942604 (lines 469739625/12949413) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=40 fail=460 logged_ops_ref=40182019 logged_ops_rust=1819623 (lines 40300877/1829303) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=24 fail=476 logged_ops_ref=19525248 logged_ops_rust=1440877 (lines 19646932/1445852) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=0 fail=500 logged_ops_ref=12438809 logged_ops_rust=1170178 (lines 12563023/1171187) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=386 fail=214 logged_ops_ref=12166533 logged_ops_rust=5856260 (lines 12271069/5920979) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=6 fail=94 logged_ops_ref=7834854 logged_ops_rust=398990 (lines 7858762/401237) nondeterministic_pairs ref=96 rust=27 (of 100) FAIL
+wall 251s
+### MD2
+P3 units=36 pass=26 fail=10 logged_ops_ref=469322511 logged_ops_rust=283617584 (lines 469739625/283923134) units_ending_in_fatal_exit1=0 FAIL
+P2 units=500 pass=172 fail=328 logged_ops_ref=40182019 logged_ops_rust=8805380 (lines 40300877/8861156) units_ending_in_fatal_exit1=2 FAIL
+P4 units=500 pass=377 fail=123 logged_ops_ref=19525248 logged_ops_rust=9951937 (lines 19646932/10046015) units_ending_in_fatal_exit1=1 FAIL
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P5 units=600 pass=547 fail=53 logged_ops_ref=12166533 logged_ops_rust=7369497 (lines 12271069/7461159) units_ending_in_fatal_exit1=45 FAIL
+P6 units=100 pass=41 fail=59 logged_ops_ref=7831067 logged_ops_rust=1090418 (lines 7854971/1100869) nondeterministic_pairs ref=100 rust=65 (of 100) FAIL
+wall 253s
+### probe-M06p
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P2 units=500 pass=500 fail=0 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 PASS
+P4 units=500 pass=499 fail=1 logged_ops_ref=18963121 logged_ops_rust=19525248 (lines 19084609/19646932) units_ending_in_fatal_exit1=0 FAIL
+P5 units=600 pass=600 fail=0 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 PASS
+P6 units=100 pass=100 fail=0 logged_ops_ref=7828799 logged_ops_rust=7817910 (lines 7852703/7841806) nondeterministic_pairs ref=99 rust=99 (of 100) PASS
+wall 10s
+### probe-M08p
+P1 units=500 pass=500 fail=0 logged_ops_ref=12438809 logged_ops_rust=12438809 (lines 12563023/12563023) units_ending_in_fatal_exit1=0 PASS
+P2 units=500 pass=500 fail=0 logged_ops_ref=40182019 logged_ops_rust=40182019 (lines 40300877/40300877) units_ending_in_fatal_exit1=2 PASS
+P4 units=500 pass=500 fail=0 logged_ops_ref=19525248 logged_ops_rust=19525248 (lines 19646932/19646932) units_ending_in_fatal_exit1=1 PASS
+P5 units=600 pass=600 fail=0 logged_ops_ref=12166533 logged_ops_rust=12166533 (lines 12271069/12271069) units_ending_in_fatal_exit1=45 PASS
+P6 units=100 pass=100 fail=0 logged_ops_ref=7827108 logged_ops_rust=7829128 (lines 7851012/7853032) nondeterministic_pairs ref=100 rust=100 (of 100) PASS
+wall 9s
+### probe3-M06p
+P3 units=12 pass=12 fail=0 logged_ops_ref=110910080 logged_ops_rust=110910080 (lines 111049118/111049118) units_ending_in_fatal_exit1=0 PASS
+wall 14s
+### probe3-M08p
+P3 units=12 pass=12 fail=0 logged_ops_ref=110910080 logged_ops_rust=110910080 (lines 111049118/111049118) units_ending_in_fatal_exit1=0 PASS
+wall 14s

@@ -1,0 +1,254 @@
+######## M1  driver exit 0 wall 1248 s  so_md5 1621cce8473a950e2bfad6622253b0f2
+DIR M1-quick failing units: 385
+per scenario (failing units / min op index): S1 64/9, S2 64/8, S4 64/10, S5 64/9, S6L 17/3135, S6s 43/7, S7 64/177, S8a-p0-plan 1/512448, S8a-p1-plan 1/510704, S8b-p1-plan 1/364749, S8c-p2-plan-mismatch@2000 1/629425, S8c-p2-vq-small-mismatch@1500 1/7301807
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=9  FAIL
+CASEFAIL: FAIL Q5c-1-touch-policy0                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-2-touch-policy1                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-3-touch-policy0-function-set                               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-5-touch-policy2-no-function                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+LOWEST-OP FAIL FILE: fail-S6s-seed16.txt
+MISMATCH: scenario S6s seed 16 op #7
+  operation: sc_touch(cache 0, key 3, w=88 [42b00000])
+  state differs: lru
+  state of cache 0 after the operation (library 0 = /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so, library 1 = /home/usergpu/rustmig/slotcache/verify/work/mut/M1/target/release/libslotcache.so): lru entry 0 differs
+  lib 0: lru n=1 spare n=2 next n=0
+    lru[0..1) (mru first): [key 3 slot #3 heat 107.199997/42d66666 nu 0]
+    spare (last = handed out next), last 6: #1 #2
+    next (smallest first), first 6:
+  lib 1: lru n=1 spare n=2 next n=0
+######## M2  driver exit 0 wall 1292 s  so_md5 b5b3d002509da8fd2f501e68a008c277
+DIR M2-quick failing units: 78
+per scenario (failing units / min op index): S2 12/479, S4 17/323, S5 20/345, S6L 2/4064, S7 23/2437, S8a-p1-plan 1/45800, S8b-p1-plan 1/2692, S8c-p2-plan-mismatch@2000 1/629482, S8c-p2-vq-small-mismatch@1500 1/7302561
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=13  PASS
+LOWEST-OP FAIL FILE: fail-S4-seed44.txt
+MISMATCH: scenario S4 seed 44 op #323
+  operation: sc_acquire(cache 0, key 87, heat0=20 [41a00000]) prot[9]={45,18,26,26,87,45,88,77,6} (NULL when empty)
+  return values / out-parameters differ
+  lib 0: slot #33 ival 0 size 63 vkey 14 vheat 3f000000
+  lib 1: slot #15 ival 0 size 63 vkey 3 vheat 3f666667
+######## M3  driver exit 0 wall 1288 s  so_md5 8db9ab592cc621f17d00c74ec51e0264
+DIR M3-quick failing units: 201
+per scenario (failing units / min op index): S2 35/96, S4 41/25, S5 40/123, S6L 2/4038, S6s 15/120, S7 64/533, S8a-p1-plan 1/45774, S8b-p1-plan 1/2666, S8c-p2-plan-mismatch@2000 1/629455, S8c-p2-vq-small-mismatch@1500 1/7301975
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=13  PASS
+LOWEST-OP FAIL FILE: fail-S4-seed33.txt
+MISMATCH: scenario S4 seed 33 op #25
+  operation: sc_acquire(cache 0, key 3, heat0=0 [00000000]) prot[6]={13,7,2,2,13,2}
+  return values / out-parameters differ
+  lib 0: slot #4 ival 0 size 4 vkey 5 vheat 40c00000
+  lib 1: slot #1 ival 0 size 4 vkey 11 vheat 40c00000
+######## M4  driver exit 0 wall 264 s  so_md5 c54d9c2abf6c3da3bb55886d9833dbac
+DIR M4-quick failing units: 270
+per scenario (failing units / min op index): S3 63/12, S4 54/24, S5 58/17, S6L 3/1729, S6s 21/16, S7 64/385, S8a-p2-plan 1/45774, S8a-p2-vq 1/210152, S8a-p2-vq-from92 1/45774, S8b-p2-plan 1/2666, S8b-p2-vq 1/94052, S8c-p2-plan-mismatch@2000 1/45774, S8c-p2-vq-small-mismatch@1500 1/94052
+S9   cases=14 pass=13  FAIL
+Q5   cases=13 pass=10  FAIL
+CASEFAIL: FAIL S9-f9-belady-touched-entry-is-victim (not fatal)               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-2-belady-entries-from-before-only-touched-is-victim        ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5b-4-try_acquire-spare-policy2-function                       ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-4-touch-policy2-function (belady touch)                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+LOWEST-OP FAIL FILE: fail-S3-seed23.txt
+MISMATCH: scenario S3 seed 23 op #12
+  operation: sc_acquire(cache 0, key 2, heat0=63.8571434 [427f6db7]) prot[1]={0} (NULL when empty)
+  return values / out-parameters differ
+  lib 0: slot #2 ival 0 size 3 vkey 3 vheat 42a09249
+  lib 1: slot #3 ival 0 size 3 vkey 1 vheat ff800000
+######## M5  driver exit 0 wall 258 s  so_md5 2fbc96840eefa9b75e6e6d36c51cf5ca
+DIR M5-quick failing units: 255
+per scenario (failing units / min op index): S3 63/23, S4 53/25, S5 51/13, S6L 2/3123, S6s 21/22, S7 58/486, S8a-p2-plan 1/92887, S8a-p2-vq 1/813848, S8a-p2-vq-from92 1/92887, S8b-p2-plan 1/5245, S8b-p2-vq 1/96831, S8c-p2-plan-mismatch@2000 1/92887, S8c-p2-vq-small-mismatch@1500 1/96831
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=12  FAIL
+CASEFAIL: FAIL Q5a-3-belady-then-off-heat-rule-erases-stale-pair              ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+LOWEST-OP FAIL FILE: fail-S5-seed64.txt
+MISMATCH: scenario S5 seed 64 op #13
+  operation: sc_worth(cache 0, key 19)
+  return values / out-parameters differ
+  lib 0: slot #-1 ival 0 size 3 vkey 0 vheat 00000000
+  lib 1: slot #-1 ival 1 size 3 vkey 0 vheat 00000000
+######## M6  driver exit 0 wall 1352 s  so_md5 5cceee37f9ccde84ef028db82c413c21
+DIR M6-quick failing units: 253
+per scenario (failing units / min op index): S3 60/11, S4 52/87, S5 52/50, S6L 3/2916, S6s 20/54, S7 64/272, S8b-p2-vq 1/15565, S8c-p2-vq-small-mismatch@1500 1/15565
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=13  PASS
+LOWEST-OP FAIL FILE: fail-S3-seed17.txt
+MISMATCH: scenario S3 seed 17 op #11
+  operation: sc_try_acquire(cache 0, key 2, cand_nu=1000000000, heat0=103.85714 [42cfb6db]) prot[1]={0} (NULL when empty)
+  return values / out-parameters differ
+  lib 0: slot #-1 ival 0 size 3 vkey -1 vheat deadbeef
+  lib 1: slot #1 ival 0 size 3 vkey 3 vheat 40e00000
+######## M7  driver exit 0 wall 267 s  so_md5 394ebf90e50dc3667bef7ad6f2be0dbc
+DIR M7-quick failing units: 291
+per scenario (failing units / min op index): S3 64/8, S4 64/11, S5 64/10, S6L 7/2875, S6s 21/10, S7 64/206, S8a-p2-plan 1/484483, S8a-p2-vq 1/119959, S8a-p2-vq-from92 1/486340, S8b-p2-plan 1/190533, S8b-p2-vq 1/93852, S8c-p2-plan-mismatch@2000 1/484483, S8c-p2-vq-small-mismatch@1500 1/93852
+S9   cases=14 pass=12  FAIL
+Q5   cases=13 pass=10  FAIL
+CASEFAIL: FAIL S9-f11-belady-set-only-protected-unprotected-held              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f9-belady-touched-entry-is-victim (not fatal)               ref: exit 0 stderr 0B | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-2-belady-entries-from-before-only-touched-is-victim        ref: exit 0 stderr 0B | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-3-belady-then-off-heat-rule-erases-stale-pair              ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-4-touch-policy2-function (belady touch)                    ref: exit 0 stderr 0B | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+LOWEST-OP FAIL FILE: fail-S3-seed23.txt
+MISMATCH: scenario S3 seed 23 op #8
+  operation: sc_touch(cache 0, key 1, w=3.4000001 [4059999a])
+  state differs: next
+  state of cache 0 after the operation (library 0 = /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so, library 1 = /home/usergpu/rustmig/slotcache/verify/work/mut/M7/target/release/libslotcache.so): ordered-set count 1 vs 0
+  lib 0: lru n=1 spare n=2 next n=1
+    lru[0..1) (mru first): [key 1 slot #3 heat -inf/ff800000 nu 4]
+    spare (last = handed out next), last 6: #1 #2
+    next (smallest first), first 6: (4,1)
+  lib 1: lru n=1 spare n=2 next n=0
+######## M8  driver exit 0 wall 259 s  so_md5 9a02dec6fffd78b41127be4dd57923cc
+DIR M8-quick failing units: 291
+per scenario (failing units / min op index): S3 64/16, S4 64/9, S5 64/16, S6L 7/2900, S6s 21/9, S7 64/217, S8a-p2-plan 1/40082, S8a-p2-vq 1/121435, S8a-p2-vq-from92 1/40082, S8b-p2-plan 1/2366, S8b-p2-vq 1/94252, S8c-p2-plan-mismatch@2000 1/40082, S8c-p2-vq-small-mismatch@1500 1/94252
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=13  PASS
+LOWEST-OP FAIL FILE: fail-S4-seed62.txt
+MISMATCH: scenario S4 seed 62 op #9
+  operation: sc_remove(cache 0, key 54)
+  state differs: next
+  state of cache 0 after the operation (library 0 = /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so, library 1 = /home/usergpu/rustmig/slotcache/verify/work/mut/M8/target/release/libslotcache.so): ordered-set count 1 vs 2
+  lib 0: lru n=1 spare n=1 next n=1
+    lru[0..1) (mru first): [key 22 slot #2 heat 9/41100000 nu 276]
+    spare (last = handed out next), last 6: #1
+    next (smallest first), first 6: (276,22)
+  lib 1: lru n=1 spare n=1 next n=2
+######## M9  driver exit 0 wall 261 s  so_md5 7dc53f5f01918db2859b50f2d15d23c4
+DIR M9-quick failing units: 260
+per scenario (failing units / min op index): S3 62/9, S4 52/11, S5 55/14, S6L 2/3407, S6s 21/16, S7 61/478, S8a-p2-plan 1/45774, S8a-p2-vq 1/210152, S8a-p2-vq-from92 1/45774, S8b-p2-plan 1/2670, S8b-p2-vq 1/94056, S8c-p2-plan-mismatch@2000 1/45774, S8c-p2-vq-small-mismatch@1500 1/94056
+S9   cases=14 pass=13  FAIL
+Q5   cases=13 pass=13  PASS
+CASEFAIL: FAIL S9-f11-belady-set-only-protected-unprotected-held              ref: exit 1 stderr 63B (= contract message) | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+LOWEST-OP FAIL FILE: fail-S3-seed51.txt
+MISMATCH: scenario S3 seed 51 op #9
+  operation: sc_acquire(cache 0, key 1, heat0=17 [41880000]) prot[1]={2}
+  return values / out-parameters differ
+  lib 0: slot #1 ival 0 size 2 vkey 3 vheat 41100000
+  lib 1: slot #2 ival 0 size 2 vkey 2 vheat 41500000
+######## M10  driver exit 0 wall 15 s  so_md5 8adaca60e6300b3d6eb447d287750ff5
+DIR M10-quick failing units: 483
+per scenario (failing units / min op index): S1 64/9, S2 64/8, S3 64/9, S4 64/10, S5 64/14, S6L 24/2150, S6s 64/10, S7 64/207, S8a-p0-plan 1/40081, S8a-p1-plan 1/40081, S8a-p2-plan 1/40081, S8a-p2-vq 1/119958, S8a-p2-vq-from92 1/40081, S8b-p0-plan 1/2365, S8b-p1-plan 1/2365, S8b-p2-plan 1/2365, S8b-p2-vq 1/93851, S8c-p2-plan-mismatch@2000 1/40081, S8c-p2-vq-small-mismatch@1500 1/93851
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=8  FAIL
+CASEFAIL: FAIL Q5c-1-touch-policy0                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-2-touch-policy1                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-3-touch-policy0-function-set                               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-4-touch-policy2-function (belady touch)                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-5-touch-policy2-no-function                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+LOWEST-OP FAIL FILE: fail-S2-seed34.txt
+MISMATCH: scenario S2 seed 34 op #8
+  operation: sc_find(cache 0, key 6)
+  state differs: lru
+  state of cache 0 after the operation (library 0 = /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so, library 1 = /home/usergpu/rustmig/slotcache/verify/work/mut/M10/target/release/libslotcache.so): lru entry 0 differs
+  lib 0: lru n=2 spare n=0 next n=0
+    lru[0..2) (mru first): [key 6 slot #2 heat 17.5/418c0000 nu 0] [key 5 slot #1 heat 6.5/40d00000 nu 0]
+    spare (last = handed out next), last 6:
+    next (smallest first), first 6:
+  lib 1: lru n=2 spare n=0 next n=0
+######## M11  driver exit 0 wall 0 s  so_md5 f7890353f4b5f134d3efbf03da3d4786
+DIR M11-quick failing units: 483
+per scenario (failing units / min op index): S1 64/6, S2 64/6, S3 64/6, S4 64/6, S5 64/6, S6L 24/866, S6s 64/5, S7 64/172, S8a-p0-plan 1/17006, S8a-p1-plan 1/17006, S8a-p2-plan 1/17006, S8a-p2-vq 1/17005, S8a-p2-vq-from92 1/17006, S8b-p0-plan 1/1206, S8b-p1-plan 1/1206, S8b-p2-plan 1/1206, S8b-p2-vq 1/1205, S8c-p2-plan-mismatch@2000 1/17006, S8c-p2-vq-small-mismatch@1500 1/1205
+S9   cases=14 pass=3  FAIL
+Q5   cases=13 pass=0  FAIL
+CASEFAIL: FAIL S9-f1-policy0-all-protected                                    ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f2-policy1-all-protected                                    ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f3-policy1-60-entries-all-protected-dups-absent             ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f3b-policy0-60-entries-all-protected-dups-absent            ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f4-belady-all-in-set-protected                              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f5-belady-set-empty-entries-held-no-spare                   ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f5b-belady-entries-held-prot-outside                        ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f8-policy2-no-function-all-protected                        ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f11-belady-set-only-protected-unprotected-held              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f9-belady-touched-entry-is-victim (not fatal)               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f10-belady-spare-exists (not fatal)                         ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-1-belady-acquire-entries-from-before-no-spare              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-2-belady-entries-from-before-only-touched-is-victim        ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-3-belady-then-off-heat-rule-erases-stale-pair              ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5b-1-try_acquire-spare-policy0                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5b-2-try_acquire-spare-policy1                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5b-3-try_acquire-spare-policy2-no-function                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5b-4-try_acquire-spare-policy2-function                       ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5b-5-try_acquire-spare-policy0-function-set                   ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-1-touch-policy0                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-2-touch-policy1                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-3-touch-policy0-function-set                               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-4-touch-policy2-function (belady touch)                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-5-touch-policy2-no-function                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+LOWEST-OP FAIL FILE: fail-S6s-seed18.txt
+MISMATCH: scenario S6s seed 18 op #5
+  operation: sc_acquire(cache 0, key 15, heat0=30 [41f00000]) prot[0]={}
+  return values / out-parameters differ
+  lib 0: slot #2 ival 0 size 1 vkey -1 vheat deadbeef
+  lib 1: slot #1 ival 0 size 1 vkey -1 vheat deadbeef
+######## M12  driver exit 0 wall 1330 s  so_md5 cb8bd42c142e03b3f15f4f81590623c7
+DIR M12-quick failing units: 385
+per scenario (failing units / min op index): S1 64/9, S2 64/8, S4 64/22, S5 64/17, S6L 17/3168, S6s 43/14, S7 64/224, S8a-p0-plan 1/512456, S8a-p1-plan 1/512024, S8b-p1-plan 1/370948, S8c-p2-plan-mismatch@2000 1/629849, S8c-p2-vq-small-mismatch@1500 1/7412161
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=13  PASS
+LOWEST-OP FAIL FILE: fail-S2-seed13.txt
+MISMATCH: scenario S2 seed 13 op #8
+  operation: sc_touch(cache 0, key 2, w=13.333333 [41555555])
+  state differs: lru
+  state of cache 0 after the operation (library 0 = /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so, library 1 = /home/usergpu/rustmig/slotcache/verify/work/mut/M12/target/release/libslotcache.so): lru entry 0 differs
+  lib 0: lru n=1 spare n=2 next n=0
+    lru[0..1) (mru first): [key 2 slot #3 heat 30.9333344/41f77778 nu 0]
+    spare (last = handed out next), last 6: #1 #2
+    next (smallest first), first 6:
+  lib 1: lru n=1 spare n=2 next n=0
+######## M13  driver exit 0 wall 271 s  so_md5 a453bd8e55bc3636e3e07a4c064931d3
+DIR M13-quick failing units: 291
+per scenario (failing units / min op index): S3 64/6, S4 64/5, S5 64/7, S6L 7/866, S6s 21/6, S7 64/195, S8a-p2-plan 1/17006, S8a-p2-vq 1/17005, S8a-p2-vq-from92 1/17006, S8b-p2-plan 1/1206, S8b-p2-vq 1/1205, S8c-p2-plan-mismatch@2000 1/17006, S8c-p2-vq-small-mismatch@1500 1/1205
+S9   cases=14 pass=12  FAIL
+Q5   cases=13 pass=9  FAIL
+CASEFAIL: FAIL S9-f9-belady-touched-entry-is-victim (not fatal)               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f10-belady-spare-exists (not fatal)                         ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-2-belady-entries-from-before-only-touched-is-victim        ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-3-belady-then-off-heat-rule-erases-stale-pair              ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5b-4-try_acquire-spare-policy2-function                       ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5c-4-touch-policy2-function (belady touch)                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=0 contract-expectation=1
+LOWEST-OP FAIL FILE: fail-S4-seed26.txt
+MISMATCH: scenario S4 seed 26 op #5
+  operation: sc_try_acquire(cache 0, key 2, cand_nu=1000000000, heat0=3 [40400000]) prot[1]={2} (NULL when empty)
+  next-use call logs differ
+  callback call logs differ (requested keys, in order)
+  lib 0 (1 calls): 2
+  lib 1 (0 calls):
+######## M14  driver exit 0 wall 1338 s  so_md5 a94a3389c4e97d38cf49226fe224ddf0
+DIR M14-quick failing units: 5
+per scenario (failing units / min op index): S6L 2/4064, S8b-p1-plan 1/364250, S8c-p2-plan-mismatch@2000 1/631452, S8c-p2-vq-small-mismatch@1500 1/7304905
+ABNORMAL: worker 0 ended abnormally: status 256
+ABNORMAL: worker 1 ended abnormally: status 256
+ABNORMAL: worker 2 ended abnormally: status 256
+ABNORMAL: worker 3 ended abnormally: status 256
+ABNORMAL: worker 4 ended abnormally: status 256
+ABNORMAL: worker 5 ended abnormally: status 256
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=13  PASS
+LOWEST-OP FAIL FILE: fail-S6L-seed19.txt
+MISMATCH: scenario S6L seed 19 op #4064
+  operation: sc_acquire(cache 0, key 2221, heat0=23 [41b80000]) prot[32]={1702,1702,1702,2107,1702,1546,1546,886,2107,1489,2903,1354,493,2058,2647,1077,1767,1546,1173,335,560,393,587,1354,1332,1546,2550,1864,1546,2107,938,938} (NULL when empty)
+  return values / out-parameters differ
+  lib 0: slot #1929 ival 0 size 1999 vkey 2408 vheat 00000000
+  lib 1: slot #1969 ival 0 size 1999 vkey 762 vheat 40e00000
+######## M15  driver exit 0 wall 1380 s  so_md5 013bc87ba001c7dceeccf2f3c353c57b
+DIR M15-quick failing units: 0
+per scenario (failing units / min op index): 
+S9   cases=14 pass=2  FAIL
+Q5   cases=13 pass=12  FAIL
+CASEFAIL: FAIL S9-f1-policy0-all-protected                                    ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f2-policy1-all-protected                                    ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f3-policy1-60-entries-all-protected-dups-absent             ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f3b-policy0-60-entries-all-protected-dups-absent            ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f4-belady-all-in-set-protected                              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f5-belady-set-empty-entries-held-no-spare                   ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f5b-belady-entries-held-prot-outside                        ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f6-belady-empty-cache-no-spare                              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f7-policy0-empty-cache-no-spare                             ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f7b-policy1-empty-cache-no-spare                            ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f8-policy2-no-function-all-protected                        ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL S9-f11-belady-set-only-protected-unprotected-held              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+CASEFAIL: FAIL Q5a-1-belady-acquire-entries-from-before-no-spare              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B | agree=0 contract-expectation=1
+######## M16  driver exit 0 wall 1365 s  so_md5 41985c4d8fdfbc7c642711572b1a660a
+DIR M16-quick failing units: 0
+per scenario (failing units / min op index): 
+S9   cases=14 pass=14  PASS
+Q5   cases=13 pass=13  PASS

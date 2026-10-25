@@ -1,0 +1,14 @@
+--- src/lib.rs (real)
++++ M4/src/lib.rs
+@@ -129,7 +129,10 @@
+     pub fn next_use(&mut self, key: i32) -> i32 {
+         let cur = self.cur;
+         match self.uses.get_mut(&key) {
+-            None => EXHAUSTED,
++            None => {
++                self.uses.insert(key, (Vec::new(), 0));
++                EXHAUSTED
++            }
+             Some((l, p)) => {
+                 while *p < l.len() && (l[*p] as i64) <= cur {
+                     *p += 1;

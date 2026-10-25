@@ -1,0 +1,1 @@
+strtol leading-whitespace set loses vertical tab (0x0b) and form feed (0x0c)

@@ -1,0 +1,8 @@
+-rwxrwxr-x 1 usergpu usergpu 128168 Oct 22 10:06 diff_driver
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/flip31/fail/R4-1.txt):
+MISMATCH scenario R4 seed 1 session 0 phase 'random-path-1-10' op#0 (driver's current value cur=-1)
+  file /nonexistent-rt-verify/\xf7W\xbe\xc6\x0c experts=896
+  exit status of case 'random-path-1-10' (path /nonexistent-rt-verify/\xf7W\xbe\xc6\x0c)
+  library 0 (reference) = 1, library 1 (candidate) = 0
+
+cleanup-check-done

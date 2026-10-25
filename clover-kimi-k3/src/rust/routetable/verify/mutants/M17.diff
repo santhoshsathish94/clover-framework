@@ -1,0 +1,11 @@
+--- src/lib.rs (real)
++++ M17/src/lib.rs
+@@ -158,7 +158,7 @@
+     let _ = e.write_all(b"cannot read route cache ");
+     let _ = e.write_all(path);
+     let _ = e.write_all(b"\n");
+-    std::process::exit(1)
++    std::process::exit(2)
+ }
+ 
+ /// # Safety

@@ -1,0 +1,1 @@
+per-key pointer reset to 0 on every rt_next_use call

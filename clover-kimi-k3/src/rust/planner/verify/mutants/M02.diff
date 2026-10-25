@@ -1,0 +1,12 @@
+# M02: M02 pend_cap return keeps planned_to = i + 1
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -323,7 +323,7 @@
+                     continue;
+                 }
+                 if self.pend.len() >= self.cfg.pend_cap {
+-                    self.st.planned_to = i;
++                    self.st.planned_to = i + 1;
+                     return;
+                 }
+                 if !self.host_worth(key) {

@@ -1,0 +1,64 @@
+M0 build.exit=0 so_md5=5281e02b3966dc6d4e4102bb4600bf11
+M0 done in 4 s: exit 0  overall: PASS
+M0-kg done in 3 s: exit 0  overall: PASS
+M1 build.exit=0 so_md5=464f19854e2248f5cbc2b6a69d9aa438
+M1 done in 0 s: exit 1  overall: FAIL
+M1-kg done in 3 s: exit 1  overall: FAIL
+M2 build.exit=0 so_md5=4cada219303fbf3de2f2b910724d1114
+M2 done in 0 s: exit 1  overall: FAIL
+M2-kg done in 3 s: exit 1  overall: FAIL
+M3 build.exit=0 so_md5=b4e200bdf12bc85663c7f6ffe772f859
+M3 done in 3 s: exit 1  overall: FAIL
+M3-kg done in 3 s: exit 1  overall: FAIL
+M4 build.exit=0 so_md5=27aa92c129ece68426d86d1e3a650615
+M4 done in 4 s: exit 0  overall: PASS
+M4-kg done in 4 s: exit 0  overall: PASS
+M5 build.exit=0 so_md5=af36c50071996534ba5cd63e03c36b1e
+M5 done in 4 s: exit 0  overall: PASS
+M5-kg done in 4 s: exit 0  overall: PASS
+M6 build.exit=0 so_md5=7165805c705c8fc4291d5d0f6eb2d477
+M6 done in 1 s: exit 1  overall: FAIL
+M6-kg done in 4 s: exit 1  overall: FAIL
+M7 build.exit=0 so_md5=077994db382e6939deba90da2984b139
+M7 done in 3 s: exit 1  overall: FAIL
+M7-kg done in 3 s: exit 1  overall: FAIL
+M8 build.exit=0 so_md5=03e9a8f2d96ca31f9433ce43de4a03cb
+M8 done in 2 s: exit 1  overall: FAIL
+M8-kg done in 4 s: exit 1  overall: FAIL
+M8L build.exit=0 so_md5=6414f0f248c1fed107eac112d631ff04
+M8L done in 6 s: exit 1  overall: FAIL
+M8L-kg done in 102 s: exit 143  
+M9 build.exit=0 so_md5=02675c651ff05304710169150da1e74c
+M9 done in 0 s: exit 1  overall: FAIL
+M9-kg done in 4 s: exit 1  overall: FAIL
+M10 build.exit=0 so_md5=d679900345976dc49b0733ee881fba9a
+M10 done in 3 s: exit 1  overall: FAIL
+M10-kg done in 4 s: exit 1  overall: FAIL
+M11 build.exit=0 so_md5=e690beed47b1b32b20def97fdabc2a27
+M11 done in 3 s: exit 1  overall: FAIL
+M11-kg done in 3 s: exit 1  overall: FAIL
+M12 build.exit=0 so_md5=365315958896a0c89872074bd3437b0c
+M12 done in 2 s: exit 1  overall: FAIL
+M12-kg done in 4 s: exit 1  overall: FAIL
+M13 build.exit=0 so_md5=7a483283e405c295e312d6c0503bb7b2
+M13 done in 2 s: exit 1  overall: FAIL
+M13-kg done in 3 s: exit 1  overall: FAIL
+M14 build.exit=0 so_md5=27e879102ffbd25cdb4c1b73a87007df
+M14 done in 3 s: exit 1  overall: FAIL
+M14-kg done in 4 s: exit 1  overall: FAIL
+M15 build.exit=0 so_md5=03abd4116704d1a8e82ffed506f1e595
+M15 done in 3 s: exit 1  overall: FAIL
+M15-kg done in 3 s: exit 1  overall: FAIL
+M16 build.exit=0 so_md5=663dd5c7ede44ac97579813ae1287531
+M16 done in 4 s: exit 1  overall: FAIL
+M16-kg done in 4 s: exit 1  overall: FAIL
+M17 build.exit=0 so_md5=d68163f3677cb6515d24c56f84025052
+M17 done in 4 s: exit 1  overall: FAIL
+M17-kg done in 4 s: exit 1  overall: FAIL
+M18 build.exit=0 so_md5=a93fc0ff8f3178e5cd8ca5f90b01f4d9
+M18 done in 0 s: exit 1  overall: FAIL
+M18-kg done in 4 s: exit 1  overall: FAIL
+M19 build.exit=0 so_md5=559616553134595c636de37b688e6a54
+M19 done in 4 s: exit 0  overall: PASS
+M19-kg done in 4 s: exit 0  overall: PASS
+ALLDONE

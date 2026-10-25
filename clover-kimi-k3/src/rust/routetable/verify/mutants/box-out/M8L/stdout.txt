@@ -1,0 +1,51 @@
+diff_driver: ref=/home/usergpu/rustmig/routetable/ref/libroutetable_ref.so
+             cand=/home/usergpu/rustmig/routetable/verify/work/mut/M8L/target/release/libroutetable.so
+             out=/home/usergpu/rustmig/routetable/verify/out/mut/M8L jobs=48 scale=1 flip=0 units=20430 trace=/home/usergpu/k3gpu/results/p1d.trace
+
+R1  seeds=400 (begun 400, completed 400, fail 0, crash 0)  comparisons=238046121  contract-checks=32628304  next_use-calls=14957953 (non-exhausted results 13359964)  tables-loaded=1407  input-bytes=381284309  calls=5634039 experts=62237014 counts=32403546 negative-values=0  PASS
+    generated files containing: empty=0 only-newlines=0 no-final-newline=0 NUL=0 tab=0 CR=0 byte>=0x80=0 digit-run>=19=0 digit-run>=10=0 colon-without-digit=0 sign-char=0 line>4096=0
+R2  seeds=1 (begun 6, completed 3, fail 2, crash 3)  comparisons=3450  contract-checks=36  next_use-calls=3066 (non-exhausted results 22)  tables-loaded=5  input-bytes=1776  calls=59 experts=36 counts=15 negative-values=4  FAIL
+    generated files containing: empty=0 only-newlines=1 no-final-newline=1 NUL=1 tab=1 CR=1 byte>=0x80=2 digit-run>=19=3 digit-run>=10=3 colon-without-digit=2 sign-char=2 line>4096=0
+R3  seeds=9 (begun 9, completed 9, fail 0, crash 0)  comparisons=220890172  contract-checks=1212192  next_use-calls=205480786 (non-exhausted results 198545750)  tables-loaded=27  input-bytes=0  calls=151524 experts=3625047 counts=3625047 negative-values=0  PASS
+
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M8L/fail/R2-3.txt):
+MISMATCH scenario R2 seed 3 session 1 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M8L/work/R2-3-a.trace experts=100000
+  experts list length of call 7
+  library 0 (reference) = 2, library 1 (candidate) = 3
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M8L/work/R2-3-a.trace: 563 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  20 20 0a 0a 2d 30 20 20 0a 34 32 39 34 39 36 37  |  ..-0  .4294967|
+  00000010  32 39 35 20 0a 3a 09 0a 2d 30 20 34 32 39 34 39  |295 .:..-0 42949|
+  00000020  36 37 32 39 37 32 31 39 09 37 34 32 20 09 20 34  |67297219.742 . 4|
+  00000030  37 39 09 0a 33 32 38 3a 2d 32 31 34 37 34 38 33  |79..328:-2147483|
+  00000040  36 34 39 20 3a 20 92 20 35 38 33 20 31 31 32 09  |649 : . 583 112.|
+  00000050  09 20 20 39 39 39 39 39 39 39 39 39 39 39 39 39  |.  9999999999999|
+  00000060  39 39 39 39 39 39 39 20 37 36 31 20 38 32 32 20  |9999999 761 822 |
+  00000070  33 34 36 36 34 34 34 35 39 33 38 33 37 30 33 34  |3466444593837034|
+  00000080  30 38 20 37 30 31 20 37 37 38 20 36 37 33 20 35  |08 701 778 673 5|
+  00000090  39 31 20 39 32 32 33 33 37 32 30 33 36 38 35 34  |91 9223372036854|
+  000000a0  37 37 35 38 30 37 20 31 38 39 20 34 37 32 20 0a  |775807 189 472 .|
+  000000b0  37 37 37 20 39 39 39 39 39 39 39 39 39 39 39 39  |777 999999999999|
+  000000c0  39 39 39 39 39 39 39 39 20 33 36 33 20 32 39 37  |99999999 363 297|
+  000000d0  20 2d 39 32 32 33 33 37 32 30 33 36 38 35 34 37  | -92233720368547|
+  000000e0  37 35 38 30 39 20 80 20 77 20 33 31 34 37 35 36  |75809 . w 314756|
+  000000f0  38 36 34 37 34 33 38 20 3a 20 30 30 30 31 32 20  |8647438 : 00012 |
+  00000100  0a 2b 35 20 20 3a 20 3a 20 36 33 20 33 36 30 09  |.+5  : : 63 360.|
+  00000110  20 32 31 34 37 34 38 33 36 34 37 20 ff 20 0a 37  | 2147483647 . .7|
+  00000120  32 38 20 20 62 20 38 30 34 20 0a 35 37 38 20 31  |28  b 804 .578 1|
+  00000130  39 35 31 32 38 35 32 32 36 36 38 38 30 31 38 31  |9512852266880181|
+  00000140  38 32 36 31 34 30 37 34 34 35 30 30 30 37 33 36  |8261407445000736|
+  00000150  33 34 33 35 38 39 31 39 30 37 32 33 39 37 37 34  |3435891907239774|
+  00000160  31 30 35 37 20 2b 37 32 38 20 36 38 31 35 34 32  |1057 +728 681542|
+  00000170  31 33 36 31 30 38 34 34 30 30 35 35 36 39 34 37  |1361084400556947|
+  ... 83 bytes omitted ...
+  000001d3  20 38 30 38 20 3a 20 31 30 30 20 20 34 34 35 3a  | 808 : 100  445:|
+  000001e3  32 31 34 37 34 38 33 36 34 37 20 37 35 20 35 31  |2147483647 75 51|
+  000001f3  20 35 37 36 31 34 38 30 34 33 34 38 37 30 30 36  | 576148043487006|
+  00000203  35 30 38 33 32 31 33 31 34 38 30 31 39 39 36 30  |5083213148019960|
+  00000213  31 32 35 36 30 39 33 35 32 30 32 36 32 37 38 32  |1256093520262782|
+  00000223  39 33 34 39 33 35 35 39 38 32 35 31 20 2d 20 0a  |934935598251 - .|
+
+
+overall: FAIL
+exit 1

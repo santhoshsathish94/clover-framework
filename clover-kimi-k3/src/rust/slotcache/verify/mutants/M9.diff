@@ -1,0 +1,16 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -152,11 +152,8 @@
+         } else if belady() {
+             // largest (next use, key) first; the original's sentinel is -1, so a negative key is never a victim
+             let mut victim = -1;
+-            for &(_, k) in self.by_next.iter().rev() {
+-                if !prot.contains(&k) {
+-                    victim = k;
+-                    break;
+-                }
++            if let Some(&(_, k)) = self.by_next.iter().next_back() {
++                victim = k;
+             }
+             if victim < 0 {
+                 fatal();

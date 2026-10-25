@@ -1,0 +1,11 @@
+--- src/lib.rs (real)
++++ M19/src/lib.rs
+@@ -32,7 +32,7 @@
+ // Saturates at LONG_MAX / LONG_MIN (64-bit long); the caller casts to i32 like the original's (int) cast (low 32 bits).
+ pub fn strtol(s: &[u8], pos: usize) -> (i64, usize) {
+     let mut i = pos;
+-    while matches!(at(s, i), b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r') {
++    while matches!(at(s, i), b' ' | b'\t' | b'\n' | b'\r') {
+         i += 1;
+     }
+     let mut neg = false;

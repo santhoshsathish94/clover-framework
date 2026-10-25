@@ -1,0 +1,4 @@
+diff_driver: ref=/home/usergpu/rustmig/routetable/ref/libroutetable_ref.so
+             cand=/home/usergpu/rustmig/routetable/verify/work/mut/M8L/target/release/libroutetable.so
+             out=/home/usergpu/rustmig/routetable/verify/out/mut/M8L-kg jobs=48 scale=1 flip=0 units=20430 trace=/home/usergpu/k3gpu/results/p1d.trace
+exit 143

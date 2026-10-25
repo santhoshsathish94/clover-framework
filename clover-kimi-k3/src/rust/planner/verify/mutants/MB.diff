@@ -1,0 +1,15 @@
+# MB: pend_take counts pf_used also when there is no pending entry
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -228,7 +228,10 @@
+     // ---- pend_take, arr_wait
+ 
+     pub fn pend_take(&mut self, key: i32) {
+-        let Some(p) = self.pend.get(key) else { return };
++        let Some(p) = self.pend.get(key) else {
++            self.st.pf_used += 1;
++            return;
++        };
+         if !done(&p.state) {
+             let t0 = Instant::now();
+             spin_until_set(&p.state);

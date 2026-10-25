@@ -1,0 +1,10 @@
+target/release/libroutetable.so 2026-10-22 09:33:46.237660186 +0000
+src/lib.rs 2026-10-22 09:33:31.491618379 +0000
+src/tests.rs 2026-10-22 09:33:31.491618379 +0000
+Cargo.toml 2026-10-22 09:33:31.491618379 +0000
+Cargo.lock 2026-10-22 09:32:48.678497051 +0000
+NOTES.md 2026-10-22 09:35:01.733874348 +0000
+   Compiling routetable v0.1.0 (/tmp/rt-verify-rebuild)
+    Finished `release` profile [optimized] target(s) in 0.34s
+5281e02b3966dc6d4e4102bb4600bf11  /tmp/rt-verify-rebuild/target/release/libroutetable.so
+5281e02b3966dc6d4e4102bb4600bf11  /home/usergpu/rustmig/routetable/target/release/libroutetable.so

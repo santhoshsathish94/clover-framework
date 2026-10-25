@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -175,7 +175,7 @@
+                 let n = &self.nodes[it];
+                 if !prot.contains(&n.key) {
+                     // strict <: on a tie the earlier one in the scan stays
+-                    if best == NIL || n.heat < best_heat {
++                    if best == NIL || n.heat <= best_heat {
+                         best = it;
+                         best_heat = n.heat;
+                     }

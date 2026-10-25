@@ -1,0 +1,11 @@
+# M03: M03 skipped not counted
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -319,7 +319,6 @@
+                     continue;
+                 }
+                 if (pool.ready && self.pool_contains(&pool, key)) || self.host_contains(key) {
+-                    self.st.skipped += 1;
+                     continue;
+                 }
+                 if self.pend.len() >= self.cfg.pend_cap {

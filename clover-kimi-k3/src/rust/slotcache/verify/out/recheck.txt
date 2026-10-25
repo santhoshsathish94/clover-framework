@@ -1,0 +1,7 @@
+f8682d663da999ffe7b94af826b8546a  /tmp/c1_diff_driver_recheck
+f8682d663da999ffe7b94af826b8546a  diff_driver
+reference: /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=2

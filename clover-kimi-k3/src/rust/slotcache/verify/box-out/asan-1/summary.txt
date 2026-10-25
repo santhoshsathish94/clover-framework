@@ -1,0 +1,505 @@
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+opsmul 1.000 seedmul 1.000 jobs 40 trace /home/usergpu/k3gpu/results/p1d.trace
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+S7   units=64 (seeds/variants) ops=2629227  PASS
+       coverage: acquire=475528 (spare 96482, victims 424809: belady 57004, heat-window 194601, lru-only 127441) try_acquire=178956 (refused 98243) find-hit=597548 touch-held=338458 remove-hit=119629 worth true/false=144086/9510 callback-calls=161905 skipped-would-exit=0 vq-issued=0
+S1   units=64 (seeds/variants) ops=2575469  PASS
+       coverage: acquire=488899 (spare 93956, victims 394943: belady 0, heat-window 0, lru-only 394943) try_acquire=186701 (refused 152558) find-hit=544021 touch-held=324918 remove-hit=114016 worth true/false=153724/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=64 (seeds/variants) ops=2569633  PASS
+       coverage: acquire=470986 (spare 90789, victims 380197: belady 0, heat-window 380197, lru-only 0) try_acquire=183413 (refused 150078) find-hit=562136 touch-held=326002 remove-hit=115393 worth true/false=154041/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=64 (seeds/variants) ops=2566084  PASS
+       coverage: acquire=502681 (spare 86845, victims 486558: belady 415836, heat-window 0, lru-only 0) try_acquire=191279 (refused 89182) find-hit=513205 touch-held=318008 remove-hit=111996 worth true/false=95297/58785 callback-calls=1039670 skipped-would-exit=0 vq-issued=0
+S4   units=64 (seeds/variants) ops=2602871  PASS
+       coverage: acquire=482690 (spare 93042, victims 451886: belady 193811, heat-window 195837, lru-only 0) try_acquire=184616 (refused 89021) find-hit=560749 touch-held=330516 remove-hit=117248 worth true/false=125471/28479 callback-calls=512633 skipped-would-exit=0 vq-issued=0
+S5   units=64 (seeds/variants) ops=2619991  PASS
+       coverage: acquire=484689 (spare 88343, victims 429679: belady 60937, heat-window 202194, lru-only 133215) try_acquire=187546 (refused 122244) find-hit=540931 touch-held=321266 remove-hit=113316 worth true/false=144613/8981 callback-calls=158787 skipped-would-exit=0 vq-issued=0
+S6   units=88 (seeds/variants) ops=3498880  PASS
+       coverage: acquire=686420 (spare 231232, victims 472188: belady 156366, heat-window 180944, lru-only 117878) try_acquire=204579 (refused 146856) find-hit=798857 touch-held=407156 remove-hit=143514 worth true/false=169402/20157 callback-calls=426797 skipped-would-exit=0 vq-issued=0
+S9   cases=14 pass=14  PASS
+  PASS S9-f1-policy0-all-protected                                    ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f2-policy1-all-protected                                    ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f3-policy1-60-entries-all-protected-dups-absent             ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f3b-policy0-60-entries-all-protected-dups-absent            ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f4-belady-all-in-set-protected                              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f5-belady-set-empty-entries-held-no-spare                   ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f5b-belady-entries-held-prot-outside                        ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f6-belady-empty-cache-no-spare                              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f7-policy0-empty-cache-no-spare                             ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f7b-policy1-empty-cache-no-spare                            ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f8-policy2-no-function-all-protected                        ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f11-belady-set-only-protected-unprotected-held              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f9-belady-touched-entry-is-victim (not fatal)               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS S9-f10-belady-spare-exists (not fatal)                         ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+Q5   cases=13 pass=13  PASS
+  PASS Q5a-1-belady-acquire-entries-from-before-no-spare              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS Q5a-2-belady-entries-from-before-only-touched-is-victim        ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5a-3-belady-then-off-heat-rule-erases-stale-pair              ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-1-try_acquire-spare-policy0                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-2-try_acquire-spare-policy1                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-3-try_acquire-spare-policy2-no-function                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-4-try_acquire-spare-policy2-function                       ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-5-try_acquire-spare-policy0-function-set                   ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-1-touch-policy0                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-2-touch-policy1                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-3-touch-policy0-function-set                               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-4-touch-policy2-function (belady touch)                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-5-touch-policy2-no-function                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+wall 4157 s

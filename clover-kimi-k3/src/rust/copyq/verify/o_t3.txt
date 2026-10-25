@@ -1,0 +1,16 @@
+
+wait exit 0
+TIMING T3 lib=cpp jobs=960 bytes=16845373440 wall_s=0.3479 gbps=48.421 cpu_user_s=0.011 cpu_sys_s=5.527 warm_s=0.0520 verify_bad=0
+TIMING T3 lib=rust jobs=960 bytes=16845373440 wall_s=0.3155 gbps=53.399 cpu_user_s=0.009 cpu_sys_s=4.983 warm_s=0.0184 verify_bad=0
+TIMING T1 lib=cpp-numa0 jobs=960 bytes=16845373440 wall_s=0.8843 gbps=19.050 cpu_user_s=14.019 cpu_sys_s=0.009 warm_s=0.0408 verify_bad=0
+TIMING T1 lib=rust-numa0 jobs=960 bytes=16845373440 wall_s=0.8852 gbps=19.029 cpu_user_s=13.504 cpu_sys_s=0.000 warm_s=0.0304 verify_bad=0
+TIMING T1 lib=cpp-numa0 jobs=960 bytes=16845373440 wall_s=0.9090 gbps=18.533 cpu_user_s=14.459 cpu_sys_s=0.004 warm_s=0.0415 verify_bad=0
+TIMING T1 lib=rust-numa0 jobs=960 bytes=16845373440 wall_s=0.8931 gbps=18.862 cpu_user_s=12.843 cpu_sys_s=0.024 warm_s=0.0300 verify_bad=0
+TIMING T1 lib=cpp-numa0 jobs=960 bytes=16845373440 wall_s=0.8959 gbps=18.803 cpu_user_s=13.650 cpu_sys_s=0.002 warm_s=0.0402 verify_bad=0
+TIMING T1 lib=rust-numa0 jobs=960 bytes=16845373440 wall_s=0.8846 gbps=19.043 cpu_user_s=14.067 cpu_sys_s=0.008 warm_s=0.0322 verify_bad=0
+=== end check 16:02:09
+ 16:02:09 up 1 day, 15:47,  4 users,  load average: 2.72, 2.20, 1.97
+pid, used_gpu_memory [MiB]
+DONE
+run exit=0
+ENDOFHELPER

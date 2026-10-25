@@ -1,0 +1,12 @@
+# M09: M09 out counts every arrival
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -429,7 +429,7 @@
+         self.vq_sweep();
+         let pos_layer = self.call_layer(pos);
+         let prot: Vec<i32> = cur.iter().map(|&e| self.ekey(pos_layer, e)).collect();
+-        let mut out = self.arr.values().filter(|a| a.state.load(Ordering::Acquire) == 0).count();
++        let mut out = self.arr.values().count();
+         let mut full = [false; MAX_CARDS];
+         let last = self.last_call(pos);
+         for i in pos..last {

@@ -1,0 +1,15 @@
+[package]
+name = "routetable"
+version = "0.1.0"
+edition = "2021"
+description = "Route table: route cache file parser and next-use index (Rust implementation of include/routetable.h)"
+
+[lib]
+name = "routetable"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+panic = "abort"

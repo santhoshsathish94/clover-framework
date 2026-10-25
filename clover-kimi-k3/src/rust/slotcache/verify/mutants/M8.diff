@@ -1,0 +1,15 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -227,7 +227,11 @@
+ 
+     fn remove(&mut self, key: i32) -> *mut u8 {
+         let Some(&i) = self.map.get(&key) else { return std::ptr::null_mut() };
+-        self.detach(i, key)
++        let slot = self.nodes[i].slot;
++        self.unlink(i);
++        self.free.push(i);
++        self.map.remove(&key);
++        slot
+     }
+ }
+ 

@@ -1,0 +1,12 @@
+# MD1: job off as a 32-bit multiply, read-ahead job (kind 0) only
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -291,7 +291,7 @@
+         self.st.planned += 1;
+         let mut j = cq_job::ZERO;
+         j.fd = fd;
+-        j.off = (e as i64).wrapping_mul(self.cfg.expert_raw as i64);
++        j.off = (e.wrapping_mul(self.cfg.expert_raw as i32)) as i64;
+         j.slot = slot;
+         j.p_state = p_state;
+         self.enqueue(&j);

@@ -1,0 +1,14 @@
+# M08: M08 replaced pending freed at once (no graveyard)
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -212,9 +212,7 @@
+ 
+     fn insert_pend(&mut self, key: i32, p: Box<Pending>) {
+         if let Some(old) = self.pend.insert(key, p) {
+-            if !done(&old.state) {
+-                self.dead_pend.push(old);
+-            }
++            drop(old);
+         }
+     }
+     fn insert_arr(&mut self, key: i32, a: Box<Arrival>) {

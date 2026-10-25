@@ -1,0 +1,6 @@
+MISMATCH scenario R2 seed 0 session 1 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M10-kg/work/R2-0-a.trace experts=896
+  rt_calls
+  library 0 (reference) = 1, library 1 (candidate) = 0
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M10-kg/work/R2-0-a.trace: 1 bytes; hex dump
+  00000000  0a                                               |.|

@@ -1,0 +1,48 @@
+out/smoke1
+reference: /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+S6   units=8 (seeds/variants) ops=32904  PASS
+       coverage: acquire=5392 (spare 3940, victims 1465: belady 233, heat-window 459, lru-only 760) try_acquire=945 (refused 566) find-hit=2202 touch-held=1391 remove-hit=487 worth true/false=618/59 callback-calls=532 skipped-would-exit=0 vq-issued=0
+S7   units=6 (seeds/variants) ops=13745  PASS
+       coverage: acquire=2111 (spare 1345, victims 846: belady 159, heat-window 315, lru-only 292) try_acquire=794 (refused 190) find-hit=3101 touch-held=1655 remove-hit=557 worth true/false=686/38 callback-calls=823 skipped-would-exit=0 vq-issued=0
+S1   units=6 (seeds/variants) ops=14089  PASS
+       coverage: acquire=2297 (spare 1132, victims 1165: belady 0, heat-window 0, lru-only 1165) try_acquire=932 (refused 525) find-hit=2222 touch-held=1342 remove-hit=475 worth true/false=720/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S2   units=6 (seeds/variants) ops=13847  PASS
+       coverage: acquire=2287 (spare 1189, victims 1098: belady 0, heat-window 1098, lru-only 0) try_acquire=831 (refused 396) find-hit=2820 touch-held=1611 remove-hit=559 worth true/false=750/0 callback-calls=0 skipped-would-exit=0 vq-issued=0
+S3   units=6 (seeds/variants) ops=12247  PASS
+       coverage: acquire=2273 (spare 619, victims 1967: belady 1654, heat-window 0, lru-only 0) try_acquire=814 (refused 279) find-hit=2728 touch-held=1564 remove-hit=583 worth true/false=484/258 callback-calls=4850 skipped-would-exit=0 vq-issued=0
+S4   units=6 (seeds/variants) ops=12963  PASS
+       coverage: acquire=2412 (spare 1033, victims 1687: belady 804, heat-window 575, lru-only 0) try_acquire=864 (refused 177) find-hit=2677 touch-held=1589 remove-hit=538 worth true/false=597/112 callback-calls=2821 skipped-would-exit=0 vq-issued=0
+S5   units=6 (seeds/variants) ops=13720  PASS
+       coverage: acquire=1922 (spare 1056, victims 987: belady 103, heat-window 552, lru-only 211) try_acquire=739 (refused 209) find-hit=3303 touch-held=1629 remove-hit=550 worth true/false=759/17 callback-calls=692 skipped-would-exit=0 vq-issued=0
+S9   cases=14 pass=14  PASS
+  PASS S9-f1-policy0-all-protected                                    ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f2-policy1-all-protected                                    ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f3-policy1-60-entries-all-protected-dups-absent             ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f3b-policy0-60-entries-all-protected-dups-absent            ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f4-belady-all-in-set-protected                              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f5-belady-set-empty-entries-held-no-spare                   ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f5b-belady-entries-held-prot-outside                        ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f6-belady-empty-cache-no-spare                              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f7-policy0-empty-cache-no-spare                             ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f7b-policy1-empty-cache-no-spare                            ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f8-policy2-no-function-all-protected                        ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f11-belady-set-only-protected-unprotected-held              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS S9-f9-belady-touched-entry-is-victim (not fatal)               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS S9-f10-belady-spare-exists (not fatal)                         ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+Q5   cases=13 pass=13  PASS
+  PASS Q5a-1-belady-acquire-entries-from-before-no-spare              ref: exit 1 stderr 63B (= contract message) | rust: exit 1 stderr 63B (= contract message) | agree=1 contract-expectation=1
+  PASS Q5a-2-belady-entries-from-before-only-touched-is-victim        ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5a-3-belady-then-off-heat-rule-erases-stale-pair              ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-1-try_acquire-spare-policy0                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-2-try_acquire-spare-policy1                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-3-try_acquire-spare-policy2-no-function                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-4-try_acquire-spare-policy2-function                       ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5b-5-try_acquire-spare-policy0-function-set                   ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-1-touch-policy0                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-2-touch-policy1                                            ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-3-touch-policy0-function-set                               ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-4-touch-policy2-function (belady touch)                    ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+  PASS Q5c-5-touch-policy2-no-function                                ref: exit 0 stderr 0B | rust: exit 0 stderr 0B | agree=1 contract-expectation=1
+wall 1 s
+exit 0

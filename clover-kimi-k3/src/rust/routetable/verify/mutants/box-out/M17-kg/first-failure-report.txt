@@ -1,0 +1,3 @@
+MISMATCH scenario R4 seed 5 session 0 phase 'random-path-5-0' op#0 (driver's current value cur=-1)
+  file \x0b:\xe3 experts=896
+  library 1 (candidate) does not follow the contract for an unopenable file: exit 2, stdout '', stderr 'cannot read route cache \x0b:\xe3\n' (expected exit 1, empty stdout, stderr 'cannot read route cache \x0b:\xe3\n')

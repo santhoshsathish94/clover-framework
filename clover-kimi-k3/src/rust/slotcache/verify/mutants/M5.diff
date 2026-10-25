@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -130,7 +130,7 @@
+             return true;
+         }
+         let largest = self.by_next.last().map(|p| p.0).unwrap_or(0);
+-        nu_call(key) < largest
++        nu_call(key) <= largest
+     }
+ 
+     // removes the node `i` of `key` from list, map and (if present) by_next; returns its slot

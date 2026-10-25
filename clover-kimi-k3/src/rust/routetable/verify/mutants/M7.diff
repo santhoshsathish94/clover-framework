@@ -1,0 +1,11 @@
+--- src/lib.rs (real)
++++ M7/src/lib.rs
+@@ -87,7 +87,7 @@
+     let mut call = Call { layer: layer as i32, experts: Vec::new(), counts: Vec::new() };
+     p = strtol(s, p).1;
+     loop {
+-        while at(s, p) == b' ' {
++        while matches!(at(s, p), b' ' | b'\t') {
+             p += 1;
+         }
+         if !at(s, p).is_ascii_digit() {

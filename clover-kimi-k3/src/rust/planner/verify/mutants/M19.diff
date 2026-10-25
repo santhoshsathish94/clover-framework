@@ -1,0 +1,11 @@
+# M19: M19 mismatch does not unset next-use
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -262,7 +262,6 @@
+             if pos >= self.calls() || self.call_layer(pos) != layer || self.call_experts(pos) != uniq {
+                 write_stderr(&mismatch_message(pos, layer));
+                 self.st.rc_ok = 0;
+-                unsafe { (self.ops.sc_set_next_use)(None) };
+             } else {
+                 let t0 = Instant::now();
+                 if self.cfg.vq != 0 && (pos as c_long) >= self.cfg.vq_from {

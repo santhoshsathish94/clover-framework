@@ -1,0 +1,6 @@
+reference: /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so
+S8   units=11 (seeds/variants) ops=52081339  PASS
+       coverage: acquire=2305281 (spare 845491, victims 1633359: belady 541856, heat-window 537590, lru-only 380344) try_acquire=230506 (refused 50308) find-hit=1246469 touch-held=581984 remove-hit=744333 worth true/false=1410394/261581 callback-calls=2022476 skipped-would-exit=0 vq-issued=180198
+wall 1361 s
+exit 0

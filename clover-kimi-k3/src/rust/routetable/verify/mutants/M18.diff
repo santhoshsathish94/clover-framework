@@ -1,0 +1,11 @@
+--- src/lib.rs (real)
++++ M18/src/lib.rs
+@@ -195,7 +195,7 @@
+ #[no_mangle]
+ pub unsafe extern "C" fn rt_layer(t: *const rt_table, i: usize) -> c_int {
+     let t: &rt_table = &*t;
+-    t.calls[i].layer
++    t.calls.get(i + 1).unwrap_or(&t.calls[i]).layer
+ }
+ 
+ unsafe fn list(v: &[i32], n: *mut usize) -> *const i32 {

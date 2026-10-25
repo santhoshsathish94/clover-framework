@@ -1,0 +1,17 @@
+# M17: M17 host worth checked before pend_cap
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -322,11 +322,11 @@
+                     self.st.skipped += 1;
+                     continue;
+                 }
+-                if self.pend.len() >= self.cfg.pend_cap {
++                if !self.host_worth(key) {
+                     self.st.planned_to = i;
+                     return;
+                 }
+-                if !self.host_worth(key) {
++                if self.pend.len() >= self.cfg.pend_cap {
+                     self.st.planned_to = i;
+                     return;
+                 }

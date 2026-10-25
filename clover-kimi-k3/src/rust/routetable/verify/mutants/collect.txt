@@ -1,0 +1,302 @@
+##### M0
+desc: control: unmodified copy
+hunks: 0   so_md5: 5281e02b3966dc6d4e4102bb4600bf11
+default run: overall: PASS / exit 0
+keep-going run: units completed=20430 FAIL:  CRASH:  overall: PASS
+##### M1
+desc: next-use skip `<=` cur -> `<` cur
+hunks: 1   so_md5: 464f19854e2248f5cbc2b6a69d9aa438
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M1/fail/R1-21.txt):
+MISMATCH scenario R1 seed 21 session 1 phase 'operations' op#17 (driver's current value cur=0)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M1/work/R1-21-a.trace experts=896
+  rt_next_use(31489)
+  library 0 (reference) = 1000000000, library 1 (candidate) = 0
+  last operations (oldest first; library 0 = reference, library 1 = candidate):
+    rt_next_use(40549) -> 1000000000 | 1000000000
+    rt_next_use(67787) -> 413 | 413
+    rt_next_use(63238) -> 1000000000 | 1000000000
+    rt_next_use(7709) -> 180 | 180
+    rt_next_use(74121) -> 159 | 159
+    rt_next_use(70506) -> 101 | 101
+keep-going run: units completed=20430 FAIL: R1=400 R2=17321 R3=9  CRASH:  overall: FAIL
+##### M2
+desc: sentinel 1000000000 -> 999999999
+hunks: 1   so_md5: 4cada219303fbf3de2f2b910724d1114
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M2/fail/R1-3.txt):
+MISMATCH scenario R1 seed 3 session 1 phase 'fresh-table queries (no set_current yet, current = -1)' op#5 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M2/work/R1-3-a.trace experts=7
+  rt_next_use(0)
+  library 0 (reference) = 1000000000, library 1 (candidate) = 999999999
+  last operations (oldest first; library 0 = reference, library 1 = candidate):
+    rt_next_use(244) -> 94 | 94
+    rt_next_use(939) -> 31 | 31
+    rt_next_use(646) -> 16 | 16
+    rt_next_use(454) -> 41 | 41
+    rt_next_use(0) -> 1000000000 | 999999999
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M2/work/R1-3-a.trace: 28918 bytes; hex dump (first 384 and last 96 bytes)
+keep-going run: units completed=20430 FAIL: R1=400 R2=20000 R3=9  CRASH:  overall: FAIL
+##### M3
+desc: per-key pointer reset to 0 on every rt_next_use call
+hunks: 1   so_md5: b4e200bdf12bc85663c7f6ffe772f859
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M3/fail/R1-3.txt):
+MISMATCH scenario R1 seed 3 session 1 phase 'operations' op#1396 (driver's current value cur=-355323)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M3/work/R1-3-a.trace experts=7
+  rt_next_use(451)
+  library 0 (reference) = 248, library 1 (candidate) = 30
+  last operations (oldest first; library 0 = reference, library 1 = candidate):
+    rt_next_use(489) -> 1000000000 | 1000000000
+    rt_next_use(6262) -> 1000000000 | 1000000000
+    rt_next_use(595) -> 1000000000 | 1000000000
+    rt_next_use(690) -> 1000000000 | 1000000000
+    rt_next_use(436) -> 1000000000 | 1000000000
+    rt_next_use(683) -> 1000000000 | 1000000000
+keep-going run: units completed=20430 FAIL: R1=400 R2=18326 R3=9  CRASH:  overall: FAIL
+##### M4
+desc: rt_next_use inserts an (empty list, pointer 0) entry for an unknown key
+hunks: 1   so_md5: 27aa92c129ece68426d86d1e3a650615
+default run: overall: PASS / exit 0
+keep-going run: units completed=20430 FAIL:  CRASH:  overall: PASS
+##### M5
+desc: a call that lists an expert twice contributes its number once to the uses list
+hunks: 1   so_md5: af36c50071996534ba5cd63e03c36b1e
+default run: overall: PASS / exit 0
+keep-going run: units completed=20430 FAIL:  CRASH:  overall: PASS
+##### M6
+desc: key = e * experts + layer (operands swapped)
+hunks: 1   so_md5: 7165805c705c8fc4291d5d0f6eb2d477
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M6/fail/R1-3.txt):
+MISMATCH scenario R1 seed 3 session 1 phase 'fresh-table queries (no set_current yet, current = -1)' op#1 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M6/work/R1-3-a.trace experts=7
+  rt_next_use(244)
+  library 0 (reference) = 94, library 1 (candidate) = 1000000000
+  last operations (oldest first; library 0 = reference, library 1 = candidate):
+    rt_next_use(244) -> 94 | 1000000000
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M6/work/R1-3-a.trace: 28918 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  37 31 20 32 30 37 33 20 32 36 30 20 32 36 30 20  |71 2073 260 260 |
+  00000010  32 36 30 20 32 36 30 3a 36 30 20 32 36 30 3a 35  |260 260:60 260:5|
+  00000020  30 20 33 30 30 20 35 33 3a 33 32 20 35 33 3a 31  |0 300 53:32 53:1|
+  00000030  36 20 37 34 20 31 39 34 20 31 33 36 20 31 33 36  |6 74 194 136 136|
+keep-going run: units completed=20430 FAIL: R1=397 R2=17332 R3=9  CRASH:  overall: FAIL
+##### M7
+desc: expert loop also skips tabs between numbers
+hunks: 1   so_md5: 077994db382e6939deba90da2984b139
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M7/fail/R2-0.txt):
+MISMATCH scenario R2 seed 0 session 3 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M7/work/R2-0-b.trace experts=896
+  experts list length of call 54
+  library 0 (reference) = 0, library 1 (candidate) = 1
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M7/work/R2-0-b.trace: 2015 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  36 38 20 3a 31 0a 36 45 32 3a 0d 3a 31 37 20 65  |68 :1.6E2:.:17 e|
+  00000010  3a 0a 20 0a df 30 0a 32 20 35 31 3a 6f 33 39 0d  |:. ..0.2 51:o39.|
+  00000020  7a 32 33 33 20 32 20 00 30 30 38 31 34 3a 38 51  |z233 2 .00814:8Q|
+  00000030  0a 39 20 00 43 00 35 3a 20 20 32 0a 3a 20 20 0a  |.9 .C.5:  2.:  .|
+  00000040  77 20 30 2d 20 2d 36 20 33 39 20 36 54 34 33 3a  |w 0- -6 39 6T43:|
+  00000050  36 32 00 36 2b 30 37 3a 30 5f 3a 37 35 2d 30 45  |62.6+07:0_:75-0E|
+keep-going run: units completed=20430 FAIL: R2=11623  CRASH:  overall: FAIL
+##### M8
+desc: expert loop also starts an expert at '+'/'-' followed by a digit (safe variant, see M8L)
+hunks: 1   so_md5: 03e9a8f2d96ca31f9433ce43de4a03cb
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M8/fail/R2-1.txt):
+MISMATCH scenario R2 seed 1 session 3 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M8/work/R2-1-b.trace experts=7
+  experts list length of call 1
+  library 0 (reference) = 9, library 1 (candidate) = 12
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M8/work/R2-1-b.trace: 2508 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  38 30 20 31 35 30 20 34 31 30 30 0a 35 30 20 31  |80 150 4100.50 1|
+  00000010  31 39 33 20 36 35 32 20 36 33 3a 35 20 35 33 39  |193 652 63:5 539|
+  00000020  20 31 30 31 3a 36 30 20 36 38 31 3a 36 20 33 39  | 101:60 681:6 39|
+  00000030  30 20 36 33 31 3a 34 32 20 34 33 37 3a 35 33 20  |0 631:42 437:53 |
+  00000040  35 32 30 2d 36 30 20 31 38 30 3a 31 33 20 33 39  |520-60 180:13 39|
+  00000050  38 20 3a 35 32 38 20 31 33 38 20 33 30 36 3a 37  |8 :528 138 306:7|
+keep-going run: units completed=20430 FAIL: R2=11452  CRASH:  overall: FAIL
+##### M8L
+desc: literal M8: '+'/'-' alone start an expert (no progress on a bare sign: infinite loop; run under ulimit -v)
+hunks: 1   so_md5: 6414f0f248c1fed107eac112d631ff04
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M8L/fail/R2-3.txt):
+MISMATCH scenario R2 seed 3 session 1 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M8L/work/R2-3-a.trace experts=100000
+  experts list length of call 7
+  library 0 (reference) = 2, library 1 (candidate) = 3
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M8L/work/R2-3-a.trace: 563 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  20 20 0a 0a 2d 30 20 20 0a 34 32 39 34 39 36 37  |  ..-0  .4294967|
+  00000010  32 39 35 20 0a 3a 09 0a 2d 30 20 34 32 39 34 39  |295 .:..-0 42949|
+  00000020  36 37 32 39 37 32 31 39 09 37 34 32 20 09 20 34  |67297219.742 . 4|
+  00000030  37 39 09 0a 33 32 38 3a 2d 32 31 34 37 34 38 33  |79..328:-2147483|
+  00000040  36 34 39 20 3a 20 92 20 35 38 33 20 31 31 32 09  |649 : . 583 112.|
+  00000050  09 20 20 39 39 39 39 39 39 39 39 39 39 39 39 39  |.  9999999999999|
+CRASH R2 0 signal 6 | worker stderr: memory allocation of 4294967296 bytes failed\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\nCRASH signal 6 scenario R2 seed 0 session 3 phase 'rt_load' library 1 (0 = reference, 1 = candidate) op#0 file /home/usergpu/rustmig/route
+CRASH R2 1 signal 6 | worker stderr: memory allocation of 4294967296 bytes failed\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\nCRASH signal 6 scenario R2 seed 1 session 3 phase 'rt_load' library 1 (0 = reference, 1 = candidate) op#0 file /home/usergpu/rustmig/route
+keep-going run: units completed=1108 FAIL: R2=335  CRASH: R2=1398  
+##### M9
+desc: the second number (ntok) is not skipped
+hunks: 1   so_md5: 02675c651ff05304710169150da1e74c
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M9/fail/R1-3.txt):
+MISMATCH scenario R1 seed 3 session 1 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M9/work/R1-3-a.trace experts=7
+  experts list length of call 0
+  library 0 (reference) = 22, library 1 (candidate) = 23
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M9/work/R1-3-a.trace: 28918 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  37 31 20 32 30 37 33 20 32 36 30 20 32 36 30 20  |71 2073 260 260 |
+  00000010  32 36 30 20 32 36 30 3a 36 30 20 32 36 30 3a 35  |260 260:60 260:5|
+  00000020  30 20 33 30 30 20 35 33 3a 33 32 20 35 33 3a 31  |0 300 53:32 53:1|
+  00000030  36 20 37 34 20 31 39 34 20 31 33 36 20 31 33 36  |6 74 194 136 136|
+  00000040  20 31 33 36 3a 33 33 20 39 38 3a 34 20 35 33 3a  | 136:33 98:4 53:|
+  00000050  32 20 32 39 36 3a 36 31 20 31 32 39 20 33 30 30  |2 296:61 129 300|
+keep-going run: units completed=20430 FAIL: R1=400 R2=19250 R3=9 R4=1  CRASH:  overall: FAIL
+##### M10
+desc: empty lines (just "\n") are dropped instead of becoming calls
+hunks: 1   so_md5: d679900345976dc49b0733ee881fba9a
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M10/fail/R2-0.txt):
+MISMATCH scenario R2 seed 0 session 1 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M10/work/R2-0-a.trace experts=896
+  rt_calls
+  library 0 (reference) = 1, library 1 (candidate) = 0
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M10/work/R2-0-a.trace: 1 bytes; hex dump
+  00000000  0a                                               |.|
+
+
+overall: FAIL
+exit 1
+keep-going run: units completed=20430 FAIL: R2=14464 R4=1  CRASH:  overall: FAIL
+##### M11
+desc: a last line without a trailing newline is dropped
+hunks: 1   so_md5: e690beed47b1b32b20def97fdabc2a27
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M11/fail/R2-0.txt):
+MISMATCH scenario R2 seed 0 session 3 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M11/work/R2-0-b.trace experts=896
+  rt_calls
+  library 0 (reference) = 168, library 1 (candidate) = 167
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M11/work/R2-0-b.trace: 2015 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  36 38 20 3a 31 0a 36 45 32 3a 0d 3a 31 37 20 65  |68 :1.6E2:.:17 e|
+  00000010  3a 0a 20 0a df 30 0a 32 20 35 31 3a 6f 33 39 0d  |:. ..0.2 51:o39.|
+  00000020  7a 32 33 33 20 32 20 00 30 30 38 31 34 3a 38 51  |z233 2 .00814:8Q|
+  00000030  0a 39 20 00 43 00 35 3a 20 20 32 0a 3a 20 20 0a  |.9 .C.5:  2.:  .|
+  00000040  77 20 30 2d 20 2d 36 20 33 39 20 36 54 34 33 3a  |w 0- -6 39 6T43:|
+  00000050  36 32 00 36 2b 30 37 3a 30 5f 3a 37 35 2d 30 45  |62.6+07:0_:75-0E|
+keep-going run: units completed=20430 FAIL: R2=13013  CRASH:  overall: FAIL
+##### M12
+desc: a colon with no digits after it records no count (instead of 0)
+hunks: 1   so_md5: 365315958896a0c89872074bd3437b0c
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M12/fail/R2-1.txt):
+MISMATCH scenario R2 seed 1 session 3 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M12/work/R2-1-b.trace experts=7
+  counts list length of call 9
+  library 0 (reference) = 3, library 1 (candidate) = 2
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M12/work/R2-1-b.trace: 2508 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  38 30 20 31 35 30 20 34 31 30 30 0a 35 30 20 31  |80 150 4100.50 1|
+  00000010  31 39 33 20 36 35 32 20 36 33 3a 35 20 35 33 39  |193 652 63:5 539|
+  00000020  20 31 30 31 3a 36 30 20 36 38 31 3a 36 20 33 39  | 101:60 681:6 39|
+  00000030  30 20 36 33 31 3a 34 32 20 34 33 37 3a 35 33 20  |0 631:42 437:53 |
+  00000040  35 32 30 2d 36 30 20 31 38 30 3a 31 33 20 33 39  |520-60 180:13 39|
+  00000050  38 20 3a 35 32 38 20 31 33 38 20 33 30 36 3a 37  |8 :528 138 306:7|
+keep-going run: units completed=20430 FAIL: R2=5824  CRASH:  overall: FAIL
+##### M13
+desc: a count is kept only while counts and experts are aligned (counts so far + 1 == experts so far)
+hunks: 1   so_md5: 7a483283e405c295e312d6c0503bb7b2
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M13/fail/R1-3.txt):
+MISMATCH scenario R1 seed 3 session 1 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M13/work/R1-3-a.trace experts=7
+  counts list length of call 0
+  library 0 (reference) = 11, library 1 (candidate) = 0
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M13/work/R1-3-a.trace: 28918 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  37 31 20 32 30 37 33 20 32 36 30 20 32 36 30 20  |71 2073 260 260 |
+  00000010  32 36 30 20 32 36 30 3a 36 30 20 32 36 30 3a 35  |260 260:60 260:5|
+  00000020  30 20 33 30 30 20 35 33 3a 33 32 20 35 33 3a 31  |0 300 53:32 53:1|
+  00000030  36 20 37 34 20 31 39 34 20 31 33 36 20 31 33 36  |6 74 194 136 136|
+  00000040  20 31 33 36 3a 33 33 20 39 38 3a 34 20 35 33 3a  | 136:33 98:4 53:|
+  00000050  32 20 32 39 36 3a 36 31 20 31 32 39 20 33 30 30  |2 296:61 129 300|
+keep-going run: units completed=20430 FAIL: R1=308 R2=11236  CRASH:  overall: FAIL
+##### M14
+desc: strtol: on u64 overflow the accumulator wraps instead of saturating
+hunks: 1   so_md5: 27e879102ffbd25cdb4c1b73a87007df
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M14/fail/R2-1.txt):
+MISMATCH scenario R2 seed 1 session 3 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M14/work/R2-1-b.trace experts=7
+  experts[4] of call 4 (layer 86)
+  library 0 (reference) = -1, library 1 (candidate) = 831473745
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M14/work/R2-1-b.trace: 2508 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  38 30 20 31 35 30 20 34 31 30 30 0a 35 30 20 31  |80 150 4100.50 1|
+  00000010  31 39 33 20 36 35 32 20 36 33 3a 35 20 35 33 39  |193 652 63:5 539|
+  00000020  20 31 30 31 3a 36 30 20 36 38 31 3a 36 20 33 39  | 101:60 681:6 39|
+  00000030  30 20 36 33 31 3a 34 32 20 34 33 37 3a 35 33 20  |0 631:42 437:53 |
+  00000040  35 32 30 2d 36 30 20 31 38 30 3a 31 33 20 33 39  |520-60 180:13 39|
+  00000050  38 20 3a 35 32 38 20 31 33 38 20 33 30 36 3a 37  |8 :528 138 306:7|
+keep-going run: units completed=20430 FAIL: R2=13243  CRASH:  overall: FAIL
+##### M15
+desc: rt_set_current stores cur truncated to i32
+hunks: 1   so_md5: 03abd4116704d1a8e82ffed506f1e595
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M15/fail/R1-3.txt):
+MISMATCH scenario R1 seed 3 session 1 phase 'operations' op#1399 (driver's current value cur=9223372036854775807)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M15/work/R1-3-a.trace experts=7
+  rt_next_use(1053)
+  library 0 (reference) = 1000000000, library 1 (candidate) = 382
+  last operations (oldest first; library 0 = reference, library 1 = candidate):
+    rt_next_use(690) -> 1000000000 | 1000000000
+    rt_next_use(436) -> 1000000000 | 1000000000
+    rt_next_use(683) -> 1000000000 | 1000000000
+    rt_set_current(137)
+    rt_next_use(451) -> 248 | 248
+    rt_next_use(2147483647) -> 1000000000 | 1000000000
+keep-going run: units completed=20430 FAIL: R1=398 R2=12083  CRASH:  overall: FAIL
+##### M16
+desc: missing-file message loses its trailing newline
+hunks: 1   so_md5: 663dd5c7ede44ac97579813ae1287531
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M16/fail/R4-1.txt):
+MISMATCH scenario R4 seed 1 session 0 phase 'random-path-1-0' op#0 (driver's current value cur=-1)
+  file /nonexistent-rt-verify/T0o3Y4\xa7`S\xb8\xbe\xa7\x95"_\xca[\xa5\xee\n\xc5f\x13\xf2\x97\xb9\x96t\n\x06\x87Y\xe4X_\x05\xa5\x96\xe0\xc1 experts=896
+  library 1 (candidate) does not follow the contract for an unopenable file: exit 1, stdout '', stderr 'cannot read route cache /nonexistent-rt-verify/T0o3Y4\xa7`S\xb8\xbe\xa7\x95"_\xca[\xa5\xee\n\xc5f\x13\xf2\x97\xb9\x96t\n\x06\x87Y\xe4X_\x05\xa5\x96\xe0\xc1' (expected exit 1, empty stdout, stderr 'cannot read route cache /none
+
+
+overall: FAIL
+exit 1
+keep-going run: units completed=20430 FAIL: R4=21  CRASH:  overall: FAIL
+##### M17
+desc: missing-file exit status 1 -> 2
+hunks: 1   so_md5: d68163f3677cb6515d24c56f84025052
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M17/fail/R4-6.txt):
+MISMATCH scenario R4 seed 6 session 0 phase 'random-path-6-0' op#0 (driver's current value cur=-1)
+  file \x81\x80\xfe\x80\xbcP"\xc7X\xd7\xb6\xeda experts=896
+  library 1 (candidate) does not follow the contract for an unopenable file: exit 2, stdout '', stderr 'cannot read route cache \x81\x80\xfe\x80\xbcP"\xc7X\xd7\xb6\xeda\n' (expected exit 1, empty stdout, stderr 'cannot read route cache \x81\x80\xfe\x80\xbcP"\xc7X\xd7\xb6\xeda\n')
+
+
+overall: FAIL
+exit 1
+keep-going run: units completed=20430 FAIL: R4=21  CRASH:  overall: FAIL
+##### M18
+desc: rt_layer returns the layer of call i+1 when it exists
+hunks: 1   so_md5: a93fc0ff8f3178e5cd8ca5f90b01f4d9
+default run: overall: FAIL / exit 1
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M18/fail/R1-3.txt):
+MISMATCH scenario R1 seed 3 session 1 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M18/work/R1-3-a.trace experts=7
+  rt_layer(call 0)
+  library 0 (reference) = 71, library 1 (candidate) = 41
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M18/work/R1-3-a.trace: 28918 bytes; hex dump (first 384 and last 96 bytes)
+  00000000  37 31 20 32 30 37 33 20 32 36 30 20 32 36 30 20  |71 2073 260 260 |
+  00000010  32 36 30 20 32 36 30 3a 36 30 20 32 36 30 3a 35  |260 260:60 260:5|
+  00000020  30 20 33 30 30 20 35 33 3a 33 32 20 35 33 3a 31  |0 300 53:32 53:1|
+  00000030  36 20 37 34 20 31 39 34 20 31 33 36 20 31 33 36  |6 74 194 136 136|
+  00000040  20 31 33 36 3a 33 33 20 39 38 3a 34 20 35 33 3a  | 136:33 98:4 53:|
+  00000050  32 20 32 39 36 3a 36 31 20 31 32 39 20 33 30 30  |2 296:61 129 300|
+keep-going run: units completed=20430 FAIL: R1=400 R2=19588 R3=9 R4=1  CRASH:  overall: FAIL
+##### M19
+desc: strtol leading-whitespace set loses vertical tab (0x0b) and form feed (0x0c)
+hunks: 1   so_md5: 559616553134595c636de37b688e6a54
+default run: overall: PASS / exit 0
+keep-going run: units completed=20430 FAIL:  CRASH:  overall: PASS

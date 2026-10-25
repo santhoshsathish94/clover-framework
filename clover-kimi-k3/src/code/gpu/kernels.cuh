@@ -487,12 +487,15 @@ __global__ void combine_planes(float *out, const int *C32, const double *tscale,
     out[i] = (float)((double)acc * tscale[n] * (double)f32at(scales + (size_t)r * scale_stride));
 }
 struct Planes { cublasHandle_t h; int8_t *x8; int *c32; double *ts; size_t x8_bytes, c32_bytes, ts_bytes; int ready; };
-static Planes g_planes;
+static Planes g_planes_dev[16];   // per device: the handle and scratch belong to the card that was current when they were made
 static size_t g_planes_budget = 0;
 static void grow(void **p, size_t *have, size_t want) { if (*have < want) { if (*p) cudaFree(*p); CHECK(cudaMalloc(p, want)); *have = want; } }
 static void gemm_planes(const float *A, int N, int K, const unsigned char *codes, size_t code_stride, const unsigned char *scales, size_t scale_stride, int R, float *C)
 {
     if (K % 4 || R % 4 || code_stride % 4) { fprintf(stderr, "integer product needs K, R and the row stride to be multiples of 4\n"); exit(1); }
+    int dev_ = 0; CHECK(cudaGetDevice(&dev_));
+    if (dev_ >= 16) { fprintf(stderr, "gemm_planes: device index %d not supported\n", dev_); exit(1); }
+    Planes &g_planes = g_planes_dev[dev_];
     if (!g_planes.ready) { CUB(cublasCreate(&g_planes.h)); g_planes.ready = 1; }
     if (!g_planes_budget) { const char *e = getenv("MODEL_GPU_PLANES_MB"); g_planes_budget = (size_t)(e && *e ? atoi(e) : 384) << 20; }   // scratch cap, MB
     const size_t per_row = (size_t)3 * K + (size_t)12 * R + 8;

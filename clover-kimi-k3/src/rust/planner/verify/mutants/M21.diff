@@ -1,0 +1,11 @@
+# M21: M21 t_plan also counts mismatch path (timer around everything)
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -260,6 +260,7 @@
+         if self.st.rc_ok != 0 {
+             let pos = self.st.pos;
+             if pos >= self.calls() || self.call_layer(pos) != layer || self.call_experts(pos) != uniq {
++                self.st.t_plan += 1.0;
+                 write_stderr(&mismatch_message(pos, layer));
+                 self.st.rc_ok = 0;
+                 unsafe { (self.ops.sc_set_next_use)(None) };

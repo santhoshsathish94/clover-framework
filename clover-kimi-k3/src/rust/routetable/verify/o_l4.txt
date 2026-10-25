@@ -1,0 +1,9 @@
+diff_driver.cpp: In function ???void note_features(const std::string&)???:
+diff_driver.cpp:133:9: warning: this ???if??? clause does not guard... [-Wmisleading-indentation]
+  133 |         if (c == 0) f[3] = true; if (c == '\t') f[4] = true; if (c == '\r') f[5] = true; if (c >= 0x80) f[6] = true;
+      |         ^~
+diff_driver.cpp:133:34: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ???if???
+  133 |         if (c == 0) f[3] = true; if (c == '\t') f[4] = true; if (c == '\r') f[5] = true; if (c >= 0x80) f[6] = true;
+      |                                  ^~
+-rwxrwxr-x 1 usergpu usergpu 128424 Oct 22 10:09 diff_driver
+Thu Oct 22 10:09:19 AM UTC 2026

@@ -1,0 +1,40 @@
+
+put make_mutants.py exit=0 
+put mk_mutants.sh exit=0 
+M1: written, 2 changed lines
+M2: written, 4 changed lines
+M2v: written, 2 changed lines
+M3: written, 2 changed lines
+M4: written, 4 changed lines
+-rwxrwxr-x 1 usergpu usergpu 1020040 Oct 21 15:18 mutants/libM1.so
+-rwxrwxr-x 1 usergpu usergpu 1020040 Oct 21 15:18 mutants/libM2.so
+-rwxrwxr-x 1 usergpu usergpu 1020040 Oct 21 15:18 mutants/libM2v.so
+mutants/copyq_ref_M3.cu(46): warning #550-D: variable "g_act_hold" was set but never used
+  static ActHold g_act_hold;
+                 ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+-rwxrwxr-x 1 usergpu usergpu 1020000 Oct 21 15:18 mutants/libM3.so
+-rwxrwxr-x 1 usergpu usergpu 1020040 Oct 21 15:18 mutants/libM4.so
+--- ref/copyq_ref.cu
++++ mutants/copyq_ref_M1.cu
+@@ -107,0 +108 @@
++                jb.arr->state.store(1, std::memory_order_release);
+@@ -110 +110,0 @@
+-                jb.arr->state.store(1, std::memory_order_release);
+--- ref/copyq_ref.cu
++++ mutants/copyq_ref_M2.cu
+@@ -106,2 +106,2 @@
+-                    CHECK(cudaMemcpyAsync(jb.dst, src, EXPERT_RAW, cudaMemcpyHostToDevice, s));
+-                } else { act_gate(); CHECK(cudaMemcpyAsync(jb.dst, g_prefill ? g_slab[jb.layer] + (size_t)((jb.off / EXPERT_RAW) & 3) * EXPERT_RAW : jb.host_src, EXPERT_RAW, cudaMemcpyHostToDevice, s)); }
++                    CHECK(cudaMemcpyAsync(jb.dst, src, EXPERT_RAW - 1, cudaMemcpyHostToDevice, s));
++                } else { act_gate(); CHECK(cudaMemcpyAsync(jb.dst, g_prefill ? g_slab[jb.layer] + (size_t)((jb.off / EXPERT_RAW) & 3) * EXPERT_RAW : jb.host_src, EXPERT_RAW - 1, cudaMemcpyHostToDevice, s)); }
+--- ref/copyq_ref.cu
++++ mutants/copyq_ref_M3.cu
+@@ -48 +48 @@
+-static inline void act_gate() { while (g_act_hold.load(std::memory_order_acquire)) std::this_thread::yield(); }
++static inline void act_gate() { }
+--- md5 of untouchable files now vs before
+UNCHANGED
+run mk_mutants.sh exit=0
+ENDOFHELPER

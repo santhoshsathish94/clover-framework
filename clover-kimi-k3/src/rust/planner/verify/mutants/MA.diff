@@ -1,0 +1,12 @@
+# MA: vq_issue: try_acquire gets (cand_nu, key) instead of (key, cand_nu)
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -380,7 +380,7 @@
+         }
+         let mut vk: c_int = -1;
+         let mut vh: f32 = 0.0;
+-        let dst = unsafe { (self.ops.sc_try_acquire)(pool.cache, key, cand_nu, prot.as_ptr(), prot.len(), 1.0, &mut vk, &mut vh) };
++        let dst = unsafe { (self.ops.sc_try_acquire)(pool.cache, cand_nu, key, prot.as_ptr(), prot.len(), 1.0, &mut vk, &mut vh) };
+         if dst.is_null() {
+             return false;
+         }

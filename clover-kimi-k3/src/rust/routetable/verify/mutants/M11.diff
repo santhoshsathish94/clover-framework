@@ -1,0 +1,15 @@
+--- src/lib.rs (real)
++++ M11/src/lib.rs
+@@ -107,7 +107,11 @@
+ 
+ // Lines as getline returns them: split after each '\n'; the last line may lack it; an empty input has none.
+ pub fn parse_data(data: &[u8]) -> Vec<Call> {
+-    data.split_inclusive(|&b| b == b'\n').map(parse_call).collect()
++    let mut lines: Vec<&[u8]> = data.split_inclusive(|&b| b == b'\n').collect();
++    if lines.last().map_or(false, |l| !l.ends_with(b"\n")) {
++        lines.pop();
++    }
++    lines.into_iter().map(parse_call).collect()
+ }
+ 
+ // C int: layer * experts + e; signed overflow is UB in C, here it wraps (what the original does on x86-64 gcc without -ftrapv).

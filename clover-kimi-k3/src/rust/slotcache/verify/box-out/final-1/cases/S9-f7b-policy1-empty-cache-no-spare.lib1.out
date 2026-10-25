@@ -1,0 +1,3 @@
+set_policy 1
+set_next_use NULL
+acquire key=1 prot={} heat0=1

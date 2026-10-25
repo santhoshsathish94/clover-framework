@@ -1,0 +1,11 @@
+# M01: M01 sweep: no re-look after swap (i += 1 after rel swap_remove)
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -346,6 +346,7 @@
+                 let slot = self.rel[i].slot;
+                 unsafe { (self.ops.sc_release)(self.w.host.cache, slot) };
+                 self.rel.swap_remove(i);
++                i += 1;
+             } else {
+                 i += 1;
+             }

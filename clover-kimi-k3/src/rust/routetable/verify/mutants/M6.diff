@@ -1,0 +1,11 @@
+--- src/lib.rs (real)
++++ M6/src/lib.rs
+@@ -112,7 +112,7 @@
+ 
+ // C int: layer * experts + e; signed overflow is UB in C, here it wraps (what the original does on x86-64 gcc without -ftrapv).
+ fn ekey(layer: i32, experts: i32, e: i32) -> i32 {
+-    layer.wrapping_mul(experts).wrapping_add(e)
++    e.wrapping_mul(experts).wrapping_add(layer)
+ }
+ 
+ impl rt_table {
