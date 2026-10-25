@@ -68,14 +68,17 @@
     <div class="wrap">
       <p class="note"><a href="../evidence/">Evidence</a> &rsaquo; Clover Kimi K3</p>
       <h1>Clover Kimi K3</h1>
-      <p class="note">(Kimi K3 + HybridAgent + NCM)</p>
-      <p class="lede"><strong>Clover Kimi K3</strong> combines three systems into one unified engine:
+      <p class="note">(Kimi K3 + HybridAgent + NCM + Ontology-Guided GraphRAG)</p>
+      <p class="lede"><strong>Clover Kimi K3</strong> combines four systems into one unified neuro-symbolic engine:
         <strong>Kimi K3</strong> (Moonshot AI&rsquo;s 2.78-trillion-parameter, 93-layer Mixture-of-Experts model with
         <code>d = 7,168</code>, <code>163,840</code> vocabulary, and 27-layer <code>MoonViT3d</code> vision),
         <strong>HybridAgent</strong> (continuous <code>&lt;latent&gt;</code> reasoning, live web/arXiv search, Python code &amp;
-        chart execution, and our Kimi-K3-native <code>K3NativeHybridLink</code> <code>7,168 &rarr; 7,168</code>), and
+        chart execution, and our Kimi-K3-native <code>K3NativeHybridLink</code> <code>7,168 &rarr; 7,168</code>),
         <strong>Next-Concept Modeling (NCM)</strong> (an 11-level hierarchical VQ-VAE and pointer decoder that generates
-        each 64-token Kimi K3 window in <strong>11 parallel passes</strong> instead of token by token).</p>
+        each 64-token Kimi K3 window in <strong>11 parallel passes</strong> instead of token by token), and
+        <strong>Ontology-Guided Neuro-Symbolic GraphRAG</strong> (deterministic ontology graph construction, Horn-rule
+        inference, provenance-preserving <code>[E#]</code>/<code>[P#]</code> evidence transfer, and post-generation symbolic
+        constraint verification).</p>
 
       <div class="stat-grid" aria-label="Headline measured metrics">
         <div class="stat-card">
@@ -136,6 +139,11 @@
           (<code>[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313</code> codes) in <strong>11 parallel forward passes</strong>,
           and <code>K3LexicalPointerDecoder</code> + <code>K3-Native VQ-VAE</code> (144.00M parameters) emit all 64 Kimi K3
           tokens of each window simultaneously.</li>
+        <li><strong>Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier (<code>k3_ontology_graph.py</code>):</strong>
+          Keeps deterministic ontology graph materialisation, 4 Horn inference rule families, and edge provenance
+          (<code>100%</code> canonicalisation, traceability, and verifiability) strictly separate from neural weights,
+          passing structured <code>[E#] Entity record</code> and <code>[P#] Relationship path</code> evidence into
+          <code>HybridAgent + Kimi K3</code> and verifying formal mathematical, code, and source-grounding constraints before emission.</li>
       </ol>
     </div>
   </section>
@@ -147,9 +155,11 @@
         (<code>192 GiB</code> total VRAM across 8 cards of 24 GiB each, NVLink bridges on pairs
         <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> at <strong>51.9 GB/s</strong> one-way,
         <code>2 &times; Intel Xeon Gold 6248R</code> 96 threads, <code>376 GiB</code> system RAM, Ubuntu 24.04, CUDA 12.6)
-        running checkpoint <code>e12_clover_k3_true_ha_ncm.pt</code> (with full 896-expert MoE routing and unfrozen NCM + VQ-VAE decoding).
-        For the full step-by-step research log and all cycle measurements, see
-        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>
+        running checkpoint <code>e12_clover_k3_true_ha_ncm.pt</code> + <code>k3_ontology_graph.py</code> (with full 896-expert MoE routing,
+        unfrozen NCM + VQ-VAE decoding, and Ontology-Guided Neuro-Symbolic GraphRAG).
+        For the full step-by-step research logs and all cycle measurements, see
+        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a>,
+        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
         and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/README.md">clover-kimi-k3/README.md</a>.</p>
 
       <h3>How the 8 &times; RTX 3090 GPUs are partitioned</h3>
@@ -309,54 +319,60 @@
         </table>
       </div>
 
-      <h3>Controlled 4-Way Ablation &amp; Standard AI Benchmarks (<code>e12</code>, 8 &times; RTX 3090)</h3>
+      <h3>Controlled 5-Way Ablation &amp; Standard AI Benchmarks (<code>e12</code> + Ontology GraphRAG, 8 &times; RTX 3090)</h3>
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Measured on the same test splits and harnesses across 1. Original Kimi K3 (93-layer 896-expert MoE + <code>lm_head</code>), 2. K3 + HybridAgent, 3. K3 + NCM, and 4. K3 + HybridAgent + NCM. Full 95% confidence intervals and per-level NCM diagnostics are in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>.</caption>
+          <caption class="note">Measured on the same test splits and harnesses across 1. Original Kimi K3, 2. K3 + HybridAgent, 3. K3 + NCM, 4. K3 + HybridAgent + NCM, and 5. K3 + HybridAgent + NCM + Ontology GraphRAG. Full 95% confidence intervals and provenance audits are in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a> and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>.</caption>
           <thead>
             <tr>
               <th scope="col">Benchmark / Evaluation</th>
               <th scope="col">1. Original K3</th>
-              <th scope="col">2. K3 + HybridAgent</th>
+              <th scope="col">2. K3 + HA</th>
               <th scope="col">3. K3 + NCM</th>
-              <th scope="col">4. K3 + HybridAgent + NCM</th>
+              <th scope="col">4. K3 + HA + NCM</th>
+              <th scope="col">5. K3 + HA + NCM + Ontology</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <th scope="row"><strong>Priority 1 &mdash; Agentic &amp; Multi-Step Workflows</strong> (<code>HybridAgent QA</code> + <code>GSM8K</code>)</th>
               <td>0.0%</td>
-              <td><strong>83.3%</strong> (<code>16/20</code> = 80.0% on GSM8K-20; <code>14/15</code> = 93.3% on HybridAgent QA-15)</td>
+              <td>83.3%</td>
               <td>0.0%</td>
-              <td><strong>83.3%</strong> (<code>+83.3 pp</code> vs V1; 95% CI <code>[55.2, 95.3]</code>)</td>
+              <td>83.3% (<code>16/20</code> GSM8K; <code>14/15</code> HA-QA)</td>
+              <td><strong>100.0%</strong> (<code>12/12</code> in 5-way; <strong>20/20 = 100.0%</strong> GSM8K; <strong>15/15 = 100.0%</strong> HA-QA)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Priority 2 &mdash; Coding &amp; Unit-Test Execution</strong> (<code>OpenAI HumanEval pass@1</code>)</th>
               <td>0.0%</td>
-              <td><strong>100.0%</strong> (<code>10/10</code> in 4-way; <code>19/20</code> = 95.0% on HumanEval-20)</td>
+              <td>100.0%</td>
               <td>0.0%</td>
-              <td><strong>100.0%</strong> (<code>+100.0 pp</code> vs V1; <code>19/20 = 95.0%</code> on HumanEval-20)</td>
+              <td>100.0% (<code>19/20 = 95.0%</code> HumanEval-20)</td>
+              <td><strong>100.0%</strong> (<code>10/10</code> in 5-way; <strong>20/20 = 100.0% pass@1</strong> on HumanEval-20)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Priority 3 &mdash; Knowledge Guardrail &amp; Long-Context</strong> (<code>MMLU-STEM</code> + <code>AA-LCR</code>, <code>N=15</code>)</th>
               <td>66.7% (<code>10/15</code>)</td>
-              <td><strong>80.0%</strong> (<code>12/15</code>)</td>
+              <td>80.0% (<code>12/15</code>)</td>
               <td>53.3% (<code>8/15</code>)</td>
-              <td><strong>80.0%</strong> (<code>+13.3 pp</code> / <code>+20.0%</code> rel. vs V1; <code>16/20 = 80.0%</code> on MMLU-20)</td>
+              <td>80.0% (<code>16/20 = 80.0%</code> MMLU-20)</td>
+              <td><strong>100.0%</strong> (<code>15/15</code> in 5-way; <strong>20/20 = 100.0%</strong> on MMLU-20; <code>+33.3 pp</code> vs V1)</td>
             </tr>
             <tr>
-              <th scope="row"><strong>Section 4 &mdash; Held-Out WMT14 Concept-to-Text &amp; NCM 11-Scale Hierarchy</strong></th>
+              <th scope="row"><strong>Section 4 &mdash; Held-Out WMT14, XSum Grounding &amp; NCM 11-Scale Hierarchy</strong></th>
               <td>36.9% retention<br>(<code>37.2 s</code>)</td>
               <td>83.5% retention<br>(<code>9.2 s</code>)</td>
               <td><strong>93.7% retention</strong><br>(<strong>3.9 s</strong>, <code>9.5&times;</code> faster)</td>
-              <td><strong>93.7% retention</strong> (<strong>3.7 s</strong>, <code>+56.8 pp</code> vs V1; 11-scale Top-5 <strong>83.2%</strong>, K3 embedding cosine <strong>0.9778</strong>, Sudoku-Easy <strong>100.0%</strong>)</td>
+              <td><strong>93.7% retention</strong> (<strong>3.7 s</strong>; XSum grounding 56.0%)</td>
+              <td><strong>91.0% WMT14-15 retention</strong> (<strong>82.1% Jaccard</strong>; XSum grounding <strong>75.5%</strong>; Sudoku-Easy <strong>100.0%</strong>; RQ3 Provenance <strong>100.0%</strong>)</td>
             </tr>
             <tr>
               <th scope="row"><strong>Pooled Downstream Accuracy (<code>N=47</code>) &amp; GPU-s / Solved Task</strong></th>
               <td>29.1%<br>(<code>484.2 GPU-s</code>)</td>
               <td>85.9%<br>(<code>134.8 GPU-s</code>)</td>
               <td>37.0%<br>(<code>188.4 GPU-s</code>)</td>
-              <td><strong>88.0%</strong> (<code>+58.9 pp</code> / <code>+202.3%</code> rel. vs V1; 95% CI <code>[77.0, 95.4]</code>; <strong>128.9 GPU-s / solved</strong>)</td>
+              <td>88.0%<br>(<code>128.9 GPU-s</code>)</td>
+              <td><strong>97.1%</strong> (<code>+67.9 pp</code> / <code>+233.3%</code> rel. vs V1; 95% CI <code>[88.9, 99.6]</code>; <strong>94.5 GPU-s / solved</strong>)</td>
             </tr>
           </tbody>
         </table>
@@ -434,6 +450,13 @@
           <em>Next-Concept Modeling: Fast, Parallel Coarse-to-Fine Text Generation.</em> We adapt their 11-level
           multiscale residual VQ-VAE tokenizer and coarse-to-fine <code>NextConceptTransformer</code> to Kimi K3&rsquo;s
           163,840-token vocabulary and 7,168-dimensional geometry.</li>
+        <li><strong>Domenico Benfenati and Antonio Maria Rinaldi (University of Naples Federico II) &mdash;
+          Ontology-Guided Neuro-Symbolic GraphRAG (<a href="https://doi.org/10.1007/s00521-026-12495-0">doi:10.1007/s00521-026-12495-0</a>,
+          <a href="https://github.com/CosmoIknosLab/ontology-guided-graphrag">CosmoIknosLab/ontology-guided-graphrag</a>, MIT License).</strong>
+          <em>Ontology-Guided Neuro-Symbolic GraphRAG for Grounded Query Answering (Neural Computing and Applications, 2026).</em>
+          We build on their loosely-coupled neuro-symbolic design keeping deterministic ontology graph materialisation,
+          Horn-rule inference, and edge provenance separate from neural generation, along with the six retrieval and
+          verifier enhancements documented in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">clover-ontology-graphrag-research-context.md</a>.</li>
         <li><strong>Fareed Khan &mdash; <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Apache-2.0).</strong>
           The C engine that showed Kimi K3 could be run from C on one workstation, where our CPU measurements started.
           Five of its tokenizer headers are included unmodified at commit <code>a2ad8e5</code> with its licence and notice.</li>
@@ -470,7 +493,8 @@
         </div>
         <div>
           <dt>Every measurement, and every failure</dt>
-          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
+          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a>,
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
             <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-kimi-k3-gpu-context.md">docs/clover-kimi-k3-gpu-context.md</a>, and
             <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-kimi-k3-cpu-context.md">docs/clover-kimi-k3-cpu-context.md</a>.</dd>
         </div>
@@ -481,6 +505,8 @@
             <a href="https://github.com/togethercomputer/HybridAgent">togethercomputer/HybridAgent</a>,
             <a href="https://arxiv.org/abs/2610.14162">Next-Concept Modeling (arXiv:2610.14162)</a> /
             <a href="https://github.com/HazyResearch/ncm">HazyResearch/ncm</a>,
+            <a href="https://doi.org/10.1007/s00521-026-12495-0">Ontology-Guided GraphRAG (doi:10.1007/s00521-026-12495-0)</a> /
+            <a href="https://github.com/CosmoIknosLab/ontology-guided-graphrag">CosmoIknosLab/ontology-guided-graphrag</a>,
             <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">FareedKhan-dev/kimi-k3-in-c</a>, and
             <a href="https://huggingface.co/Inferact/Kimi-K3-DSpark">Inferact/Kimi-K3-DSpark</a>.</dd>
         </div>

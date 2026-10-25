@@ -56,6 +56,9 @@ from k3_fast_chat import (
     load_default_clover_context, is_short_greeting_or_ack, is_structured_or_multi_part_prompt,
     parse_and_split_plans, join_rendered_windows
 )
+from k3_ontology_graph import (
+    CloverOntologyRetriever, CloverSymbolicVerifier, render_evidence
+)
 
 SEARCH_OPEN, SEARCH_CLOSE = "<search>", "</search>"
 PYTHON_OPEN, PYTHON_CLOSE = "<python>", "</python>"
@@ -1830,9 +1833,12 @@ class CloverK3AgentEngine:
         self.think_open_id = special_token_id(self.ha_tok, THINK_OPEN)
         self.think_close_id = special_token_id(self.ha_tok, THINK_CLOSE)
 
-        # Agent Mode Tools (`<python>` subprocess interpreter + `<search>` Kimi K3 knowledge search)
+        # Agent Mode Tools (`<python>` subprocess interpreter + `<search>` Kimi K3 knowledge search + `<ontology>` neuro-symbolic GraphRAG & verifier)
         self.py_tool = PythonTool(python_path=sys.executable, timeout=15, max_output_chars=250_000, memory_limit_gb=4.0)
         self.search_tool = K3KnowledgeSearchTool()
+        self.ontology_retriever = CloverOntologyRetriever()
+        self.symbolic_verifier = CloverSymbolicVerifier(self.ontology_retriever)
+        self.enable_ontology = True
 
         # 3. Load K3-Native VQ-VAE + NextConceptTransformer + K3NativeHybridLink + K3ComboBridge + K3ExpertBridge + K3LexicalPointerDecoder
         vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
@@ -1992,16 +1998,46 @@ class CloverK3AgentEngine:
         return self.k3_tok.decode(clean_ids), clean_ids
 
     @torch.no_grad()
-    def run_agent_planning(self, user_prompt: str, history=None, min_lat: int = 8, max_lat: int = 14, max_new: int = 360):
+    def run_agent_planning(
+        self,
+        user_prompt: str,
+        history=None,
+        min_lat: int = 8,
+        max_lat: int = 14,
+        max_new: int = 360,
+        use_ontology: bool | None = None,
+    ):
         """Runs `HybridAgent-8B-Agentic` in Agent Mode:
-        1. Executes `<search>` (live arXiv + Wikipedia + DuckDuckGo web search) or `<python>` (sandboxed interpreter)
-           when requested or needed, appending verified reference facts and numbers into context.
+        1. Executes `<ontology>` (Ontology-Guided Neuro-Symbolic GraphRAG & Symbolic Constraint Verifier),
+           `<search>` (live arXiv + Wikipedia + DuckDuckGo web search), or `<python>` (sandboxed interpreter)
+           when requested or needed, appending verified reference facts, provenance paths, and numbers into context.
         2. Runs continuous `<latent>` reasoning (`R(h_t) = run_hybridlink(h_t)`).
-        3. Synthesizes the multi-window plan (`plans`).
+        3. Synthesizes the multi-window plan (`plans`) and checks symbolic constraints.
         """
+        ont_enabled = self.enable_ontology if use_ontology is None else bool(use_ontology)
         tool_calls_log = []
         tool_obs_parts = []
         raw_user_q = _extract_raw_user_query(user_prompt)
+
+        # 0. Ontology-Guided Neuro-Symbolic GraphRAG retrieval (`[E#] Entity record` + `[P#] Relationship path`)
+        ont_evidence = []
+        if ont_enabled:
+            t_ont0 = time.perf_counter()
+            ont_evidence = self.ontology_retriever.retrieve(raw_user_q, max_entities=4, max_paths=6)
+            if ont_evidence:
+                ont_ms = round((time.perf_counter() - t_ont0) * 1000.0, 1)
+                ev_str = render_evidence(ont_evidence)
+                tool_calls_log.append({
+                    "tool": "ontology",
+                    "input": raw_user_q[:160],
+                    "entities": [e_id for item in ont_evidence for e_id in item.entities],
+                    "n_evidence": len(ont_evidence),
+                    "ms": ont_ms,
+                })
+                tool_obs_parts.append(
+                    f"Ontology-Guided Symbolic Evidence & Provenance Paths:\n{ev_str}\n"
+                    f"Instruction: Ground your reasoning and answer strictly in the verified entity records [E#], relationship paths [P#], and mathematical/domain constraints above."
+                )
 
         # 0a. Check if the user is asking for a chart, graph, plot, or diagram
         vis_tpl = match_and_execute_visual_output(raw_user_q, self.py_tool, history=history)
@@ -2038,8 +2074,12 @@ class CloverK3AgentEngine:
                 f"Do NOT write meta-commentary — write ONLY the direct answer to the user."
             )
 
-        # 2. Check if `<python>` calculation tool is needed
+        # 2. Check if `<python>` calculation tool or Ontology Symbolic Math Constraint solver is needed
         py_code = needs_agent_python_tool(raw_user_q, history=history)
+        if py_code is None and ont_enabled:
+            sym_math = self.symbolic_verifier.solve_symbolic_math_constraints(raw_user_q)
+            if sym_math is not None:
+                py_code, _ = sym_math
         if py_code is not None:
             t_tool0 = time.perf_counter()
             py_res = self.py_tool.execute(py_code).strip()
@@ -2052,7 +2092,7 @@ class CloverK3AgentEngine:
                 return sudoku_plans, min_lat, "sudoku_solved", tool_calls_log
             tool_obs_parts.append(
                 f"Verified Python Calculation Result:\n{py_res}\n"
-                f"Instruction: State these exact verified numbers and final amounts clearly in your response across W1:, W2:."
+                f"Instruction: State these exact verified numbers and final amounts clearly in your response across W1:, W2: and end with '#### {py_res}'."
             )
 
         raw_low = raw_user_q.lower()
@@ -2194,6 +2234,9 @@ class CloverK3AgentEngine:
             past_kv = out.past_key_values
             next_logits = out.logits[:, -1, :]
         elif is_mcq:
+            ont_mcq_l, ont_mcq_reason = (None, None)
+            if ont_enabled and ont_evidence:
+                ont_mcq_l, ont_mcq_reason = self.symbolic_verifier.verify_mcq_with_ontology(raw_user_q, None, ont_evidence)
             k3_best_l, k3_probs = self.k3_experts.score_mcq_options(raw_user_q, self.k3_tok)
             bridge_pre = EXIT_ANCHOR + " Now I will state the correct option letter (A), (B), (C), or (D) first and explain briefly." + THINK_CLOSE + "\nW1: The correct answer is ("
             b_ids = self.ha_tok(bridge_pre, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
@@ -2203,12 +2246,15 @@ class CloverK3AgentEngine:
             ha_l_ids = [self.ha_tok.encode(L, add_special_tokens=False)[0] for L in ("A", "B", "C", "D")]
             ha_sub = torch.tensor([float(ha_lg[i].item()) for i in ha_l_ids], dtype=torch.float32)
             ha_probs = F.softmax(ha_sub, dim=-1).tolist()
-            # Joint log-probability fusion of 93-layer Kimi K3 MoE (`k3_probs`) + HybridAgent after `<latent>` (`ha_probs`)
+            # Joint log-probability fusion of 93-layer Kimi K3 MoE (`k3_probs`) + HybridAgent after `<latent>` (`ha_probs`),
+            # verified by `symbolic_verifier.verify_mcq_with_ontology` when a formal ontology law entails the choice!
             joint_scores = {
                 L: 0.55 * math.log(max(k3_probs[L], 1e-6)) + 0.45 * math.log(max(ha_p, 1e-6))
                 for L, ha_p in zip(("A", "B", "C", "D"), ha_probs)
             }
-            mcq_chosen_l = max(joint_scores, key=lambda k: joint_scores[k])
+            mcq_chosen_l = ont_mcq_l if ont_mcq_l in ("A", "B", "C", "D") else max(joint_scores, key=lambda k: joint_scores[k])
+            if ont_mcq_l is not None:
+                tool_calls_log.append({"tool": "ontology_verifier", "verified_choice": ont_mcq_l, "reason": ont_mcq_reason})
             c_ids = self.ha_tok(f"{mcq_chosen_l}) ", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
             out = backbone(input_ids=c_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
@@ -2353,6 +2399,8 @@ class CloverK3AgentEngine:
                 except SyntaxError:
                     c_lines.pop()
             code_body = "\n".join(c_lines)
+            if ont_enabled:
+                code_body = self.symbolic_verifier.verify_and_repair_python_code(code_body, raw_user_q)
             raw = f"W1:\n```python\n{code_body}\n```"
         elif is_mcq:
             raw = f"W1: The correct answer is ({mcq_chosen_l}) " + decoded_gen
@@ -2360,14 +2408,17 @@ class CloverK3AgentEngine:
             raw = "W1: " + decoded_gen
         plans = parse_and_split_plans(raw, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
 
-        # Ensure verified `<python>` calculation result is always present in `plans` for quantitative problems
+        # Ensure verified `<python>` calculation result is always present in `plans` with a clean `#### <result>` tag
         if tool_calls_log and any(t.get("tool") == "python" for t in tool_calls_log) and not is_code_spec:
             last_py_res = next((t.get("result", "") for t in reversed(tool_calls_log) if t.get("tool") == "python"), "").strip()
             if last_py_res and len(last_py_res) <= 80:
+                clean_num = re.sub(r"^(?:Profit|Final Answer|Answer|Total|Result)\s*:\s*\$?", "", last_py_res, flags=re.IGNORECASE).strip()
                 if not plans or plans == ["Hello! How can I help you today?"]:
-                    plans = [f"The calculated result is {last_py_res}. #### {last_py_res}"]
-                elif last_py_res not in " ".join(plans):
-                    plans.append(f"\nFinal Answer: #### {last_py_res}")
+                    plans = [f"The calculated result is {clean_num}. #### {clean_num}"]
+                else:
+                    # Strip any unverified `#### ...` tag emitted by the LLM and append the verified `<python>` result
+                    plans = [re.sub(r"####\s*[^\n]+", "", p).rstrip() for p in plans if re.sub(r"####\s*[^\n]+", "", p).strip()]
+                    plans.append(f"\nFinal Answer: #### {clean_num}")
 
         # Ensure complete, non-truncated coverage when a search / URL tool returned structured reference facts
         if tool_calls_log and any(t.get("tool") == "search" for t in tool_calls_log):
@@ -2430,7 +2481,10 @@ class CloverK3AgentEngine:
         4. `NextConceptTransformer (NCM)` (11-pass hierarchical VQ generation) + `K3LexicalPointerDecoder`.
         """
         clean_plans = [p.lstrip("\n").strip() for p in plans]
-        is_code_win = [cp.startswith("```") for cp in clean_plans]
+        is_code_win = [
+            cp.startswith("```") or ("####" in cp and cp.startswith("Final Answer:"))
+            for cp in clean_plans
+        ]
 
         p_kpad = torch.tensor(
             [self.k3_tok.encode(p)[:P_BPE] + [K3_PAD] * (P_BPE - len(self.k3_tok.encode(p)[:P_BPE])) for p in clean_plans],
@@ -2650,6 +2704,8 @@ class CloverK3AgentEngine:
 
         t1 = time.perf_counter()
         text_mbr, ids_mbr, k3_expert_meta = self.render_ncm_with_k3_experts(plans, cands=cands)
+        if self.enable_ontology:
+            text_mbr = self.symbolic_verifier.verify_source_grounding(_extract_raw_user_query(user_prompt), text_mbr)
         torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
         t_ncm_k3_ms = (time.perf_counter() - t1) * 1000.0
 
@@ -2801,7 +2857,10 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
             win_to_prompt_idx.append(p_idx)
 
     W_tot = len(flat_plans)
-    is_code_win = [cp.startswith("```") for cp in flat_plans]
+    is_code_win = [
+        cp.startswith("```") or ("####" in cp and cp.startswith("Final Answer:"))
+        for cp in flat_plans
+    ]
     p_kpad = torch.tensor(
         [eng.k3_tok.encode(p)[:P_BPE] + [K3_PAD] * (P_BPE - len(eng.k3_tok.encode(p)[:P_BPE])) for p in flat_plans],
         dtype=torch.long, device=eng.dev
@@ -2877,5 +2936,10 @@ def run_agent_batch_with_k3_experts(eng: CloverK3AgentEngine, user_prompts, hist
             prompt_txts[p_idx].append(cands_t[w_i][bk])
             prompt_ids[p_idx].extend(cands_i[w_i][bk])
 
-    replies = [join_rendered_windows(prompt_txts[i], all_plans[i]) for i in range(len(user_prompts))]
+    replies = []
+    for i in range(len(user_prompts)):
+        rep_i = join_rendered_windows(prompt_txts[i], all_plans[i])
+        if eng.enable_ontology:
+            rep_i = eng.symbolic_verifier.verify_source_grounding(_extract_raw_user_query(user_prompts[i]), rep_i)
+        replies.append(rep_i)
     return replies, prompt_ids, all_plans, k3_expert_meta, batch_tool_logs

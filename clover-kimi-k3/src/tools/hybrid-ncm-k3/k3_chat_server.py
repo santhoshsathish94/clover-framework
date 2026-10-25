@@ -1666,6 +1666,8 @@ class MultiGPUCloverCoordinator:
 
                     t1 = time.perf_counter()
                     text_mbr, ids_mbr, k3_expert_meta = eng.render_ncm_with_k3_experts(plans, cands=req.cands)
+                    if getattr(eng, "enable_ontology", False):
+                        text_mbr = eng.symbolic_verifier.verify_source_grounding(req.display_prompt, text_mbr)
                     torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
                     t_ncm_mbr_ms = (time.perf_counter() - t1) * 1000.0
 

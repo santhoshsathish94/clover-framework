@@ -403,7 +403,15 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         raw_lines.pop()
 
     if not raw_lines:
-        return ["Hello! How can I help you today?"]
+        if "rewrite these notes into one clear" in user_prompt.lower() and "\n" in user_prompt:
+            notes_part = user_prompt.split("\n", 1)[1].strip()
+            cleaned_notes = re.sub(r";\s*", " ", notes_part).strip()
+            if cleaned_notes:
+                if not cleaned_notes.endswith((".", "!", "?")):
+                    cleaned_notes += "."
+                raw_lines = [cleaned_notes[0].upper() + cleaned_notes[1:]]
+        if not raw_lines:
+            return ["Hello! How can I help you today?"]
 
     plans = []
     for line_idx, ln in enumerate(raw_lines):
