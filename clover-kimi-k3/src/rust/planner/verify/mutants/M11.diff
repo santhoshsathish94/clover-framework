@@ -1,0 +1,14 @@
+# M11: M11 pos incremented before the plan
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -257,8 +257,9 @@
+ 
+     pub fn route_hook(&mut self, layer: i32, uniq: &[i32]) {
+         unsafe { (self.ops.rt_set_current)(self.ops.table, self.st.pos as c_long) };
++        self.st.pos += 1;
+         if self.st.rc_ok != 0 {
+-            let pos = self.st.pos;
++            let pos = self.st.pos - 1;
+             if pos >= self.calls() || self.call_layer(pos) != layer || self.call_experts(pos) != uniq {
+                 write_stderr(&mismatch_message(pos, layer));
+                 self.st.rc_ok = 0;

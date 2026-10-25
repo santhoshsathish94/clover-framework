@@ -1,0 +1,12 @@
+# M48: fallback open also uses O_DIRECT
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -77,7 +77,7 @@
+     let mut fd = sys.open(&cpath, O_RDONLY | O_DIRECT);
+     set_fd(j.h_fd, fd);
+     if fd < 0 {
+-        fd = sys.open(&cpath, O_RDONLY);
++        fd = sys.open(&cpath, O_RDONLY | O_DIRECT);
+         set_fd(j.h_fd, fd);
+     }
+     if fd < 0 {

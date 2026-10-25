@@ -1,0 +1,11 @@
+# M91: ld_open_layer does not check the card
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -163,7 +163,6 @@
+     if r.dataset.is_null() {
+         fatal_msg(b"loader: dataset is NULL\n");
+     }
+-    die(check_card(r.card));
+     die(check_slab(st.cfg.prefill, r.layer));
+     // bookkeeping, in the original's order
+     put(r.h_L, r.layer as c_int);

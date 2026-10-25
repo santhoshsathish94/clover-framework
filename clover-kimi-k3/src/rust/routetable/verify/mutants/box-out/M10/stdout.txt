@@ -1,0 +1,21 @@
+diff_driver: ref=/home/usergpu/rustmig/routetable/ref/libroutetable_ref.so
+             cand=/home/usergpu/rustmig/routetable/verify/work/mut/M10/target/release/libroutetable.so
+             out=/home/usergpu/rustmig/routetable/verify/out/mut/M10 jobs=48 scale=1 flip=0 units=20430 trace=/home/usergpu/k3gpu/results/p1d.trace
+
+R1  seeds=400 (begun 400, completed 400, fail 0, crash 0)  comparisons=238046121  contract-checks=32628304  next_use-calls=14957953 (non-exhausted results 13359964)  tables-loaded=1407  input-bytes=381284309  calls=5634039 experts=62237014 counts=32403546 negative-values=0  PASS
+    generated files containing: empty=0 only-newlines=0 no-final-newline=0 NUL=0 tab=0 CR=0 byte>=0x80=0 digit-run>=19=0 digit-run>=10=0 colon-without-digit=0 sign-char=0 line>4096=0
+R2  seeds=1 (begun 3, completed 3, fail 2, crash 0)  comparisons=4237  contract-checks=132  next_use-calls=3503 (non-exhausted results 447)  tables-loaded=7  input-bytes=4670  calls=54 experts=144 counts=55 negative-values=3  FAIL
+    generated files containing: empty=0 only-newlines=1 no-final-newline=3 NUL=1 tab=3 CR=2 byte>=0x80=1 digit-run>=19=2 digit-run>=10=2 colon-without-digit=3 sign-char=2 line>4096=0
+R3  seeds=9 (begun 9, completed 9, fail 0, crash 0)  comparisons=220890172  contract-checks=1212192  next_use-calls=205480786 (non-exhausted results 198545750)  tables-loaded=27  input-bytes=0  calls=151524 experts=3625047 counts=3625047 negative-values=0  PASS
+
+FIRST FAILURE (/home/usergpu/rustmig/routetable/verify/out/mut/M10/fail/R2-0.txt):
+MISMATCH scenario R2 seed 0 session 1 phase 'table compare' op#0 (driver's current value cur=-1)
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M10/work/R2-0-a.trace experts=896
+  rt_calls
+  library 0 (reference) = 1, library 1 (candidate) = 0
+  file /home/usergpu/rustmig/routetable/verify/out/mut/M10/work/R2-0-a.trace: 1 bytes; hex dump
+  00000000  0a                                               |.|
+
+
+overall: FAIL
+exit 1

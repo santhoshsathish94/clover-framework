@@ -1,0 +1,1 @@
+summary: cards > EC_MAX_CARDS check `>` -> `>=`

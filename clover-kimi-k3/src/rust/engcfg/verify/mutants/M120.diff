@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M120/src/lib.rs
+@@ -544,5 +544,5 @@
+                 Line::new()
+                     .s("K3GPU card ")
+-                    .n(c)
++                    .n(c + 1)
+                     .s(": ")
+                     .n(k.slots)

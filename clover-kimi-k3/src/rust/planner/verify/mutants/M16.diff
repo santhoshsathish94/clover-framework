@@ -1,0 +1,11 @@
+# M16: M16 sweep wb: do not erase pending entry when done
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -358,7 +358,6 @@
+                     self.wb_keys.swap_remove(i);
+                 }
+                 Some(p) if done(&p.state) => {
+-                    self.pend.remove(key);
+                     self.wb_keys.swap_remove(i);
+                 }
+                 Some(_) => i += 1,

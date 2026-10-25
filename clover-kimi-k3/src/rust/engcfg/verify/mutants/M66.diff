@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M66/src/lib.rs
+@@ -655,5 +655,5 @@
+ pub extern "C" fn ec_open_trace() -> *mut c_void {
+     let tr = ProcessEnv.get(c"K3GPU_TRACE");
+-    if unset_or_empty(tr) {
++    if tr.is_null() {
+         return ptr::null_mut();
+     }

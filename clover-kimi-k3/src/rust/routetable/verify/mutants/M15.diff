@@ -1,0 +1,11 @@
+--- src/lib.rs (real)
++++ M15/src/lib.rs
+@@ -229,7 +229,7 @@
+ /// `t` must be a live table.
+ #[no_mangle]
+ pub unsafe extern "C" fn rt_set_current(t: *mut rt_table, cur: c_long) {
+-    (*t).cur = cur as i64;
++    (*t).cur = cur as i32 as i64;
+ }
+ 
+ /// # Safety

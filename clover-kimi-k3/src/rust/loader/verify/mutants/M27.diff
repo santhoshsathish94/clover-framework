@@ -1,0 +1,12 @@
+# M27: thread stack size left at the default (2 MB) instead of 8 MB
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -51,7 +51,7 @@
+             g.started = true;
+             let me: &'static Loader = self;
+             // the handle is dropped: detached, never joined; std::thread's default in the original is the system's 8 MB stack
+-            if let Err(e) = std::thread::Builder::new().stack_size(8 << 20).spawn(move || me.worker(card)) {
++            if let Err(e) = std::thread::Builder::new().spawn(move || me.worker(card)) {
+                 fatal_msg(format!("loader: cannot start the thread of card {}: {}\n", card, e).as_bytes());
+             }
+         }

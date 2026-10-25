@@ -1,0 +1,16 @@
+--- src/lib.rs (real)
++++ M5/src/lib.rs
+@@ -120,7 +120,12 @@
+         let mut uses: HashMap<i32, (Vec<i32>, usize)> = HashMap::new();
+         for (i, c) in calls.iter().enumerate() {
+             for &e in &c.experts {
+-                uses.entry(ekey(c.layer, experts, e)).or_insert_with(|| (Vec::new(), 0)).0.push(i as i32);
++                {
++                let v = &mut uses.entry(ekey(c.layer, experts, e)).or_insert_with(|| (Vec::new(), 0)).0;
++                if v.last() != Some(&(i as i32)) {
++                    v.push(i as i32);
++                }
++            }
+             }
+         }
+         rt_table { calls, uses, cur: -1 }

@@ -1,0 +1,12 @@
+# M19: host: madvise length chunk_bytes - 4096
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -58,7 +58,7 @@
+                 write_stderr(format!("host expert cache: cannot map {} bytes\n", chunk_bytes).as_bytes());
+                 exit1();
+             }
+-            madvise(p, chunk_bytes, sys::MADV_HUGEPAGE);
++            madvise(p, chunk_bytes - 4096, sys::MADV_HUGEPAGE);
+             std::ptr::write_bytes(p as *mut u8, 0, chunk_bytes);
+             base[i].store(p as usize, Ordering::SeqCst);
+         }

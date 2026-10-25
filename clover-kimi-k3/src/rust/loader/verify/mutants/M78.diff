@@ -1,0 +1,12 @@
+# M78: *h_L receives the card
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -166,7 +166,7 @@
+     die(check_card(r.card));
+     die(check_slab(st.cfg.prefill, r.layer));
+     // bookkeeping, in the original's order
+-    put(r.h_L, r.layer as c_int);
++    put(r.h_L, r.card);
+     put(r.h_card, r.card);
+     put(r.h_k_in, r.k as c_int);
+     if r.layer <= N_LAYERS {

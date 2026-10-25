@@ -1,0 +1,21 @@
+# M85: the job re-reads the caller's dataset string when it runs (not the copy made at the call)
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -175,6 +175,7 @@
+     }
+     // SAFETY: dataset is non-null and NUL-terminated (header); copied here, as `const std::string ds(dataset)` does.
+     let ds = unsafe { CStr::from_ptr(r.dataset) }.to_owned();
++    let dsp = r.dataset as usize;
+     let job = LayerJob {
+         cb: st.cfg.cb,
+         handle: r.handle,
+@@ -190,6 +191,9 @@
+     st.loader.submit(
+         r.card as usize,
+         Box::new(move || {
++            let mut job = job;
++            // SAFETY: mutant
++            job.ds = unsafe { CStr::from_ptr(dsp as *const std::os::raw::c_char) }.to_owned();
+             if let Err(m) = job::run(&RealSys, &job) {
+                 fatal_msg(&m);
+             }

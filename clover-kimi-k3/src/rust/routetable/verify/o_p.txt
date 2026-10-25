@@ -1,0 +1,15 @@
+diff_driver: ref=/home/usergpu/rustmig/routetable/ref/libroutetable_ref.so
+             cand=/home/usergpu/rustmig/routetable/target/release/libroutetable.so
+             out=/home/usergpu/rustmig/routetable/verify/out/smoke2 jobs=48 scale=0.05 flip=0 units=215 trace=/home/usergpu/k3gpu/results/p1d.trace
+
+R1  seeds=12 (begun 12, completed 12, fail 0, crash 0)  comparisons=7904813  contract-checks=1118956  next_use-calls=486633 (non-exhausted results 449978)  tables-loaded=44  input-bytes=15209428  calls=217987 experts=2300788 counts=754297 negative-values=0  PASS
+R2  seeds=200 (begun 200, completed 200, fail 0, crash 0)  comparisons=661092  contract-checks=22632  next_use-calls=520572 (non-exhausted results 72130)  tables-loaded=600  input-bytes=646626  calls=13994 experts=18994 counts=8684 negative-values=888  PASS
+R3  seeds=1 (begun 1, completed 1, fail 0, crash 0)  comparisons=20049021  contract-checks=134688  next_use-calls=18336867 (non-exhausted results 17548832)  tables-loaded=3  input-bytes=0  calls=16836 experts=402783 counts=402783 negative-values=0  PASS
+R4  seeds=2 (begun 2, completed 2, fail 0, crash 0)  comparisons=120  contract-checks=70  next_use-calls=0 (non-exhausted results 0)  tables-loaded=0  input-bytes=0  calls=0 experts=0 counts=0 negative-values=0  PASS
+
+overall: PASS
+exit 0
+R1 begin=12 unit=12 pass=12 fail=0 crash=0 comparisons=7904813 checks=1118956 next_use=486633
+R2 begin=200 unit=200 pass=200 fail=0 crash=0 comparisons=661092 checks=22632 next_use=520572
+R3 begin=1 unit=1 pass=1 fail=0 crash=0 comparisons=20049021 checks=134688 next_use=18336867
+R4 begin=2 unit=2 pass=2 fail=0 crash=0 comparisons=120 checks=70 next_use=0

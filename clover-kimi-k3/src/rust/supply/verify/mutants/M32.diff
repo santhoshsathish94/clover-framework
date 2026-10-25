@@ -1,0 +1,12 @@
+# M32: D2H copies raw - 1 bytes
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -286,7 +286,7 @@
+             let mut dk: c_int = -1;
+             let mut dh: f32 = 0.0;
+             let h = (ops.host_acquire)(v.key, v.heat, &mut dk, &mut dh);
+-            do_check(ops, (ops.memcpy_d2h_async)(h as *mut c_void, v.src as *const c_void, raw, pool.copy), site::D2H);
++            do_check(ops, (ops.memcpy_d2h_async)(h as *mut c_void, v.src as *const c_void, raw - 1, pool.copy), site::D2H);
+             pool.st.written_back = pool.st.written_back.wrapping_add(1);
+         }
+         do_check(ops, (ops.event_record)(pool.written_back, pool.copy), site::EVENT_RECORD);

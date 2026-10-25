@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M72/src/lib.rs
+@@ -277,5 +277,5 @@
+         .s(if s.vqueue != 0 { "on" } else { "off" })
+         .s(" (at most ")
+-        .n(s.vq_cap)
++        .n(s.vq_cap as u32)
+         .s(" in flight)\n")
+         .done()

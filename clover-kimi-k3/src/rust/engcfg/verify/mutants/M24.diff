@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M24/src/lib.rs
+@@ -197,5 +197,5 @@
+         s.routecache = rc;
+         s.lookahead = ei(c"K3GPU_LOOKAHEAD", 92);
+-        s.vqueue = (ei(c"K3GPU_VQUEUE", 0) != 0 && policy == 2) as c_int;
++        s.vqueue = (ei(c"K3GPU_VQUEUE", 0) != 0) as c_int;
+         s.vq_cap = ei(c"K3GPU_VQ_INFLIGHT", 256) as i64 as usize;
+         s.vq_from = ei(c"K3GPU_VQ_FROM", 0) as c_long;

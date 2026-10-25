@@ -1,0 +1,11 @@
+# M93: pool: out.ready also stored first
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -48,6 +48,7 @@
+     };
+     // SAFETY: `out` valid by the caller; every pointer given to an op is the address of a field of `*out` or of a local.
+     unsafe {
++        (*out).ready = 1;
+         (*out).dev = cfg.device;
+         (*out).readers = std::cmp::min(cfg.nreaders, PI_MAX_READERS as c_int);
+         check(set_device(cfg.device), error_string, file, LINE_SET_DEVICE);

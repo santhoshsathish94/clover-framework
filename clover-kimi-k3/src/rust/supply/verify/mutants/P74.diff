@@ -1,0 +1,36 @@
+# P74 (M74 + probe): M74 (no exit after check returns) + tags: status != 0 handed to check; check returned with status != 0
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -9,6 +9,17 @@
+ 
+ /// g_wb_skipped: card victims that were not worth a RAM slot.
+ pub static WB_SKIPPED: AtomicU64 = AtomicU64::new(0);
++
++pub fn probe(tag: &str) {
++    use std::io::Write;
++    if let Ok(p) = std::env::var("SUPPLY_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {
++            let line = format!("{} {}
++", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
+ 
+ extern "C" {
+     fn pread(fd: c_int, buf: *mut c_void, count: usize, offset: i64) -> isize;
+@@ -46,8 +57,14 @@
+ 
+ fn do_check(ops: &sy_ops, status: c_int, site: &'static [u8]) {
+     // SAFETY: `site` is NUL-terminated; the function pointer is the caller's.
++    if status != 0 {
++        probe("nonzero_status_to_check");
++    }
+     unsafe { (ops.check)(status, site.as_ptr() as *const c_char) };
+     if status != 0 {
++        probe("check_returned_with_nonzero_status");
++    }
++    if status != 0 && false {
+         std::process::exit(1); // ops.check must not return on a non-zero status; if it does, stop here as the original's CHECK would have
+     }
+ }

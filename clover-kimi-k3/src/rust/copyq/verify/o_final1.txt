@@ -1,0 +1,128 @@
+
+put final1.sh exit=0 
+put compare.sh exit=0 
+S1-1: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 18a35de132fd6133) lines=132
+S1-2: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 fcec7d4705867c46) lines=132
+S1-3: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 6b8648c751b57737) lines=132
+S1-4: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 6a9195ac2d9753d1) lines=132
+S1-5: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 f307597516289547) lines=132
+S2-1: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 b2e3f8e6152d6ab2) lines=68
+S2-2: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 b9fb93272ad4f990) lines=68
+S2-3: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 ff566e3fecbaaa68) lines=68
+S3-1: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 1e7326410a7b74cd) lines=45
+S3-2: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 99dbf34de8427b5e) lines=45
+S4-1: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 15b3bc04a6e3a9d6) lines=2004
+S4-2: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 cb68095ca68a417f) lines=2004
+S4-3: cpp=[RESULT PASS] rust=[RESULT PASS] canonical-output-IDENTICAL(sha256 a9d3e2d790679762) lines=2004
+S5-1: cpp=[RESULT PASS] rust=[RESULT FAIL] canonical-output-DIFFERS lines=8
+--- S5 verbatim
+[cpp]
+S5 k0_badfd exit=1 stderr=[read-ahead: pread failed: Bad file descriptor\n]
+S5 k1_badfd exit=1 stderr=[card read-ahead: pread failed: Bad file descriptor\n]
+S5 k0_eof exit=1 stderr=[read-ahead: pread failed: end of file\n]
+S5 k1_eof exit=1 stderr=[card read-ahead: pread failed: end of file\n]
+S5 k2_baddst exit=1 stderr=[copyq_ref.cu:107: invalid argument\n]
+S5 init_badraw exit=1 stderr=[cq_init: expert_raw 1234 != compiled EXPERT_RAW 17547264\n]
+SUMMARY S5 cases_not_exit_1=0
+RESULT PASS
+[rust]
+S5 k0_badfd exit=1 stderr=[read-ahead: pread failed: Bad file descriptor\n]
+S5 k1_badfd exit=1 stderr=[card read-ahead: pread failed: Bad file descriptor\n]
+S5 k0_eof exit=1 stderr=[read-ahead: pread failed: end of file\n]
+S5 k1_eof exit=1 stderr=[card read-ahead: pread failed: end of file\n]
+S5 k2_baddst exit=1 stderr=[src/engine.rs:214: DriverError(CUDA_ERROR_INVALID_VALUE, "invalid argument")\n]
+S5 init_badraw exit=0 stderr=[S5child: cq_init returned\n]
+SUMMARY S5 cases_not_exit_1=1
+RESULT FAIL
+--- diff S5
+5,8c5,8
+< S5 k2_baddst exit=1 stderr=[copyq_ref.cu:107: invalid argument\n]
+< S5 init_badraw exit=1 stderr=[cq_init: expert_raw 1234 != compiled EXPERT_RAW 17547264\n]
+< SUMMARY S5 cases_not_exit_1=0
+< RESULT PASS
+---
+> S5 k2_baddst exit=1 stderr=[src/engine.rs:214: DriverError(CUDA_ERROR_INVALID_VALUE, "invalid argument")\n]
+> S5 init_badraw exit=0 stderr=[S5child: cq_init returned\n]
+> SUMMARY S5 cases_not_exit_1=1
+> RESULT FAIL
+=== matrix.log (final run)
+cpp S1 seed=1 rc=0 secs=9.4 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S1 seed=1 rc=0 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S1 seed=2 rc=0 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S1 seed=2 rc=0 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S1 seed=3 rc=0 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S1 seed=3 rc=0 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S1 seed=4 rc=0 secs=8.8 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S1 seed=4 rc=0 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S1 seed=5 rc=0 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S1 seed=5 rc=0 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S2 seed=1 rc=0 secs=12.5 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S2 seed=1 rc=0 secs=12.3 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S2 seed=2 rc=0 secs=12.4 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S2 seed=2 rc=0 secs=12.3 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S2 seed=3 rc=0 secs=12.4 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S2 seed=3 rc=0 secs=12.6 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S3 seed=1 rc=0 secs=9.2 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S3 seed=1 rc=0 secs=9.7 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S3 seed=2 rc=0 secs=9.3 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S3 seed=2 rc=0 secs=9.6 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S5 seed=1 rc=0 secs=10.5 | SUMMARY S5 cases_not_exit_1=0 | RESULT PASS
+rust S5 seed=1 rc=2 secs=11.9 | SUMMARY S5 cases_not_exit_1=1 | RESULT FAIL
+cpp S4 seed=1 rc=0 secs=16.3 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S4 seed=1 rc=0 secs=15.7 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S4 seed=2 rc=0 secs=16.1 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S4 seed=2 rc=0 secs=15.8 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S4 seed=3 rc=0 secs=15.6 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S4 seed=3 rc=0 secs=15.6 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+CORRECTNESS-DONE
+M2 S1 seed=1 rc=2 secs=8.6 | SUMMARY S1 jobs=128 bad_jobs=96 timeouts=0 bad_flags=0 observer_violations=0 | RESULT FAIL
+M2v S1 seed=1 rc=2 secs=8.8 | SUMMARY S1 jobs=128 bad_jobs=49 timeouts=0 bad_flags=0 observer_violations=49 | RESULT FAIL
+M2 S1 seed=2 rc=2 secs=8.8 | SUMMARY S1 jobs=128 bad_jobs=96 timeouts=0 bad_flags=0 observer_violations=0 | RESULT FAIL
+M2v S1 seed=2 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=51 timeouts=0 bad_flags=0 observer_violations=51 | RESULT FAIL
+M2 S1 seed=3 rc=2 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=96 timeouts=0 bad_flags=0 observer_violations=0 | RESULT FAIL
+M2v S1 seed=3 rc=2 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=50 timeouts=0 bad_flags=0 observer_violations=50 | RESULT FAIL
+M2 S2 seed=1 rc=2 secs=12.5 | SUMMARY S2 jobs=64 bad_jobs=47 timeouts=0 bad_flags=0 observer_violations=0 | RESULT FAIL
+one.sh: line 8: 645887 Segmentation fault      timeout 1500 ./diff_driver $lib $scen --seed $seed --tag $tag > $f.txt 2> $f.err
+M4 S1 seed=1 rc=139 secs=7.0 |  | 
+M4 S2 seed=1 rc=0 secs=12.4 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+M3 S1 seed=1 rc=0 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+M3 S3 seed=1 rc=2 secs=29.7 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 flag_set_during_hold dst_changed_during_hold victim_wb_not_as_model | RESULT FAIL
+M3 S3 seed=2 rc=2 secs=29.8 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 flag_set_during_hold dst_changed_during_hold victim_wb_not_as_model | RESULT FAIL
+M3 S3 seed=3 rc=2 secs=29.5 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 flag_set_during_hold dst_changed_during_hold victim_wb_not_as_model | RESULT FAIL
+M1 S1 seed=1 rc=2 secs=8.8 | SUMMARY S1 jobs=128 bad_jobs=4 timeouts=0 bad_flags=0 observer_violations=52 | RESULT FAIL
+M1 S1 seed=2 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=6 timeouts=0 bad_flags=0 observer_violations=53 | RESULT FAIL
+M1 S1 seed=3 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=5 timeouts=0 bad_flags=0 observer_violations=53 | RESULT FAIL
+M1 S1 seed=4 rc=2 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=4 timeouts=0 bad_flags=0 observer_violations=53 | RESULT FAIL
+M1 S1 seed=5 rc=2 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=5 timeouts=0 bad_flags=0 observer_violations=55 | RESULT FAIL
+M1 S1 seed=6 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=3 timeouts=0 bad_flags=0 observer_violations=52 | RESULT FAIL
+M1 S1 seed=7 rc=2 secs=8.8 | SUMMARY S1 jobs=128 bad_jobs=3 timeouts=0 bad_flags=0 observer_violations=53 | RESULT FAIL
+M1 S1 seed=8 rc=2 secs=9.2 | SUMMARY S1 jobs=128 bad_jobs=3 timeouts=0 bad_flags=0 observer_violations=54 | RESULT FAIL
+M1 S1 seed=9 rc=2 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=3 timeouts=0 bad_flags=0 observer_violations=53 | RESULT FAIL
+M1 S1 seed=10 rc=2 secs=8.8 | SUMMARY S1 jobs=128 bad_jobs=3 timeouts=0 bad_flags=0 observer_violations=54 | RESULT FAIL
+M1 S1 seed=11 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=3 timeouts=0 bad_flags=0 observer_violations=55 | RESULT FAIL
+M1 S1 seed=12 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=4 timeouts=0 bad_flags=0 observer_violations=51 | RESULT FAIL
+M1 S1 seed=13 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=5 timeouts=0 bad_flags=0 observer_violations=52 | RESULT FAIL
+M1 S1 seed=14 rc=2 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=5 timeouts=0 bad_flags=0 observer_violations=52 | RESULT FAIL
+M1 S1 seed=15 rc=2 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=5 timeouts=0 bad_flags=0 observer_violations=53 | RESULT FAIL
+M1 S1 seed=16 rc=2 secs=9.2 | SUMMARY S1 jobs=128 bad_jobs=5 timeouts=0 bad_flags=0 observer_violations=51 | RESULT FAIL
+M1 S1 seed=17 rc=2 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=5 timeouts=0 bad_flags=0 observer_violations=51 | RESULT FAIL
+M1 S1 seed=18 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=6 timeouts=0 bad_flags=0 observer_violations=51 | RESULT FAIL
+M1 S1 seed=19 rc=2 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=6 timeouts=0 bad_flags=0 observer_violations=52 | RESULT FAIL
+M1 S1 seed=20 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=1 timeouts=0 bad_flags=0 observer_violations=52 | RESULT FAIL
+M1 S4 seed=1 rc=2 secs=16.3 | SUMMARY S4 jobs=2000 bad_jobs=13 timeouts=0 bad_flags=0 observer_violations=833 | RESULT FAIL
+DONE
+=== run1 (driver with the wrong S3 expectation) S3 lines
+cpp S3 seed=1 rc=2 secs=29.5 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 victim_copy_not_done_before_gate | RESULT FAIL
+rust S3 seed=1 rc=2 secs=29.7 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 victim_copy_not_done_before_gate | RESULT FAIL
+cpp S3 seed=2 rc=2 secs=29.8 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 victim_copy_not_done_before_gate | RESULT FAIL
+rust S3 seed=2 rc=2 secs=29.6 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 victim_copy_not_done_before_gate | RESULT FAIL
+M3 S3 seed=1 rc=2 secs=9.3 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 flag_set_during_hold dst_changed_during_hold | RESULT FAIL
+M3 S3 seed=2 rc=2 secs=9.6 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 flag_set_during_hold dst_changed_during_hold | RESULT FAIL
+M3 S3 seed=3 rc=2 secs=9.5 | SUMMARY S3 jobs=40 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 flag_set_during_hold dst_changed_during_hold | RESULT FAIL
+=== md5 untouchable files now vs before
+UNCHANGED
+=== stderr of the runs (non-empty only)
+out/M4/S1-1.err
+out/run1/M4/S1-1.err
+run exit=0
+ENDOFHELPER

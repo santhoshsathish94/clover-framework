@@ -1,0 +1,11 @@
+# M03: host: the calling thread does not map (touch() only by the 15 helpers)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -70,7 +70,6 @@
+                 std::process::abort();
+             }
+         }
+-        touch();
+     });
+     // SAFETY: ops are valid functions; the pointers handed to them are mappings made above.
+     unsafe {

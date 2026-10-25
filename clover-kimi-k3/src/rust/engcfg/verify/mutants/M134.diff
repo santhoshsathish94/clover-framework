@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M134/src/lib.rs
+@@ -468,5 +468,5 @@
+         std::process::abort();
+     }
+-    let cards = s.cards.max(0) as usize;
++    let cards = s.cards as usize;
+     let (mut need, mut hc, mut hh, mut dr): (u64, u64, u64, u64) = (0, 0, 0, 0);
+     let (mut tr, mut tc) = (0f64, 0f64);

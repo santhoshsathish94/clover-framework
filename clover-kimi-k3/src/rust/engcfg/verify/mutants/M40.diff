@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M40/src/lib.rs
+@@ -136,5 +136,5 @@
+         }
+     } else if over || acc > i64::MAX as u64 {
+-        i64::MAX
++        i64::MAX - 1
+     } else {
+         acc as i64

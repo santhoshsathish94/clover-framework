@@ -1,0 +1,28 @@
+# M06p: instrumented probe
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -9,6 +9,13 @@
+ 
+ pub const MAX_CARDS: usize = 8;
+ pub const LAYER_SLOTS: usize = 93; // layers 0..92
++
++pub fn ev(tag: &str) {
++    use std::io::Write;
++    if let Ok(mut f) = std::fs::OpenOptions::new().append(true).create(true).open("/home/usergpu/rustmig/planner/verify/out/mut/probe_events.txt") {
++        let _ = f.write_all(format!("{} {}\n", tag, std::process::id()).as_bytes());
++    }
++}
+ 
+ pub fn write_stderr(bytes: &[u8]) {
+     let _ = std::io::stderr().write_all(bytes);
+@@ -391,8 +398,9 @@
+         j.off = (e as i64).wrapping_mul(self.cfg.expert_raw as i64);
+         j.layer = layer;
+         if in_ram {
++            j.host_src = unsafe { (self.ops.sc_remove)(self.w.host.cache, key) };
++            ev(match self.pend.get(key).map(|p| p.state.load(Ordering::Acquire)) { None => "M06 absent", Some(0) => "M06 present_state0", Some(_) => "M06 present_done" });
+             self.pend_take(key);
+-            j.host_src = unsafe { (self.ops.sc_remove)(self.w.host.cache, key) };
+             j.kind = 2;
+             let r = Box::new(Rel { state: AtomicI32::new(0), slot: j.host_src as *mut u8 });
+             j.rel_state = r.state.as_ptr();

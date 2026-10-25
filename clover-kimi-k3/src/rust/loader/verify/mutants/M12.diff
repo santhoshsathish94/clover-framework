@@ -1,0 +1,12 @@
+# M12: wait returns early: while count > 1
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -62,7 +62,7 @@
+     /// loader_wait.
+     pub fn wait(&self) {
+         let mut p = lock(&self.pending);
+-        while *p != 0 {
++        while *p > 1 {
+             p = self.pending_cv.wait(p).unwrap_or_else(|e| e.into_inner());
+         }
+     }

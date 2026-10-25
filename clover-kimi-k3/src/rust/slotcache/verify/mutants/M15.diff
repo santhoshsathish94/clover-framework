@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -20,7 +20,7 @@
+     pub nu: i32,
+ }
+ 
+-const FATAL_MSG: &[u8] = b"expert cache: every slot is in use by one call (too few slots)\n";
++const FATAL_MSG: &[u8] = b"expert cache: every slot is in use by one call (too few slotz)\n";
+ 
+ static POLICY: AtomicI32 = AtomicI32::new(1);
+ // 0 = unset, else an `extern "C" fn(i32) -> i32` address

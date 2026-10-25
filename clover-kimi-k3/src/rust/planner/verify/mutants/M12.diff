@@ -1,0 +1,12 @@
+# M12: M12 read-ahead heat 2.0
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -284,7 +284,7 @@
+     fn host_read_ahead(&mut self, key: i32, e: i32, fd: i32) {
+         let mut vk: c_int = -1;
+         let mut vh: f32 = 0.0;
+-        let slot = self.host_acquire_raw(key, 1.0, &mut vk, &mut vh);
++        let slot = self.host_acquire_raw(key, 2.0, &mut vk, &mut vh);
+         let p = Box::new(Pending { state: AtomicI32::new(0), slot });
+         let p_state = p.state.as_ptr();
+         self.insert_pend(key, p);

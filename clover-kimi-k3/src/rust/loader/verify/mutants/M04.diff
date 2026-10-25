@@ -1,0 +1,11 @@
+# M04: a thread per job: `started` is never set
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -48,7 +48,6 @@
+         let c = &self.cards[card];
+         let mut g = lock(&c.st);
+         if !g.started {
+-            g.started = true;
+             let me: &'static Loader = self;
+             // the handle is dropped: detached, never joined; std::thread's default in the original is the system's 8 MB stack
+             if let Err(e) = std::thread::Builder::new().stack_size(8 << 20).spawn(move || me.worker(card)) {

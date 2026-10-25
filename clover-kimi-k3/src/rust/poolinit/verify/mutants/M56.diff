@@ -1,0 +1,10 @@
+# M56: sys: check() exits with status 2
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -80,5 +80,5 @@
+     }
+     m.push(b'\n');
+     write_stderr(&m);
+-    exit1()
++    unsafe { exit(2) }
+ }

@@ -1,0 +1,12 @@
+# M15: sys: wall_now nanoseconds scaled 1e-6 instead of 1e-9
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -27,7 +27,7 @@
+     let mut t = Timespec { tv_sec: 0, tv_nsec: 0 };
+     // SAFETY: `t` is a valid Timespec.
+     unsafe { clock_gettime(CLOCK_MONOTONIC, &mut t) };
+-    t.tv_sec as f64 + 1e-9 * t.tv_nsec as f64
++    t.tv_sec as f64 + 1e-6 * t.tv_nsec as f64
+ }
+ 
+ pub fn write_stderr(msg: &[u8]) {

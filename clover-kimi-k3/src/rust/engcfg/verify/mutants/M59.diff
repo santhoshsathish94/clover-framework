@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M59/src/lib.rs
+@@ -376,5 +376,5 @@
+ 
+ fn selector_announce_line(component: c_int, lib: *const c_char) -> Vec<u8> {
+-    Line::new().s("K3GPU: ").s(sel_info(component).label).s(" rust (").cs(lib).s(")\n").done()
++    Line::new().s("K3GPU: ").s(sel_info(component).label).s(" rust: (").cs(lib).s(")\n").done()
+ }
+ 

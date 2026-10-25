@@ -1,0 +1,11 @@
+# M90: ld_submit does not check the card
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -130,7 +130,6 @@
+         Some(f) => f,
+         None => fatal_msg(b"loader: job is NULL\n"),
+     };
+-    die(check_card(card));
+     let arg = Arg(arg);
+     // SAFETY (inside the job): the caller's contract above.
+     st.loader.submit(card as usize, Box::new(move || unsafe { f(arg.get()) }));

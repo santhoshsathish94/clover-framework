@@ -1,0 +1,13 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -147,8 +147,8 @@
+         let mut vkey = -1;
+         let mut vheat = None;
+         let p;
+-        if let Some(s) = self.spare.pop() {
+-            p = s;
++        if !self.spare.is_empty() {
++            p = self.spare.remove(0);
+         } else if belady() {
+             // largest (next use, key) first; the original's sentinel is -1, so a negative key is never a victim
+             let mut victim = -1;

@@ -1,0 +1,14 @@
+# M11w: as M11 with a 200 us sleep between the notify and the decrement (window widened)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -86,8 +86,9 @@
+                 }
+             };
+             job();
++            self.pending_cv.notify_all();
++            std::thread::sleep(std::time::Duration::from_micros(200));
+             *lock(&self.pending) -= 1;
+-            self.pending_cv.notify_all();
+         }
+     }
+ }

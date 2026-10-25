@@ -1,0 +1,88 @@
+diff -u -r -x '*.orig' /home/usergpu/agents/g2/src/model.cuh /home/usergpu/agents/r1/src/model.cuh
+--- /home/usergpu/agents/g2/src/model.cuh	2026-10-20 07:55:33.599268892 +0000
++++ /home/usergpu/agents/r1/src/model.cuh	2026-10-20 09:31:38.026650017 +0000
+@@ -362,22 +362,25 @@
+     gemm(w.post, N, W, T, 31, w.latent);
+ #if defined(EXPERT_V2) && !defined(EXPERT_V2_LEGACY)
+     // chunks of 32 tokens per expert; the last chunk is a 16-wide tile if it has at most 16 tokens. 32-wide items first.
+-    int n_items = 0;
++    int n_items = 0, n_wide = 0;
+     { std::vector<int4> wide, narrow;
+       for (int e = 0; e < EXPERTS; e++)
+           for (int t0 = 0; t0 < w.h_count[e]; t0 += 32) {
+               const int n = std::min(32, w.h_count[e] - t0);
+               (n <= 16 ? narrow : wide).push_back(make_int4(e, w.h_start[e] + t0, n, n <= 16 ? 16 : 32));
+           }
++      n_wide = (int)wide.size();
+       wide.insert(wide.end(), narrow.begin(), narrow.end());
+       n_items = (int)wide.size();
+       if (n_items) CHECK(cudaMemcpy(w.d_items, wide.data(), (size_t)n_items * sizeof(int4), cudaMemcpyHostToDevice)); }
+-    if (n_items) {
+-        expert_proj_v3<<<dim3(48, n_items), 32>>>(w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 0, w.latent, LATENT, w.d_slot_token, w.d_items, w.G, EXPERT);
+-        expert_proj_v3<<<dim3(48, n_items), 32>>>(w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 1, w.latent, LATENT, w.d_slot_token, w.d_items, w.U, EXPERT);
+-    }
++    // 32-wide items first in w.d_items, then the 16-wide ones: a 32-wide block covers 64 rows, a 16-wide block 128 rows
++#define EXPERT_V3(M, X, XS, O, OS, ROWS) do { \
++        if (n_wide) expert_proj_v3<32><<<dim3((ROWS) / 64, n_wide), 32>>>(w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, M, X, XS, w.d_slot_token, w.d_items, O, OS); \
++        if (n_items > n_wide) expert_proj_v3<16><<<dim3((ROWS) / 128, n_items - n_wide), 32>>>(w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, M, X, XS, w.d_slot_token, w.d_items + n_wide, O, OS); } while (0)
++    if (n_items) { EXPERT_V3(0, w.latent, LATENT, w.G, EXPERT, EXPERT); EXPERT_V3(1, w.latent, LATENT, w.U, EXPERT, EXPERT); }
+     dense_activation<<<blocks((size_t)SLOTS * EXPERT), 256>>>(w.G, w.U, (size_t)SLOTS * EXPERT);
+-    if (n_items) expert_proj_v3<<<dim3(56, n_items), 32>>>(w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 2, w.G, EXPERT, w.d_slot_token, w.d_items, w.D, LATENT);
++    if (n_items) EXPERT_V3(2, w.G, EXPERT, w.D, LATENT, LATENT);
++#undef EXPERT_V3
+ #else
+     EXPERT_LAUNCH(48, w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 0, w.latent, LATENT, w.d_slot_token, w.d_start, w.d_count, w.G, EXPERT);
+     EXPERT_LAUNCH(48, w.d_experts, y.d_mapvals, y.d_refs, y.d_ref_base, 1, w.latent, LATENT, w.d_slot_token, w.d_start, w.d_count, w.U, EXPERT);
+diff -u -r -x '*.orig' /home/usergpu/agents/g2/src/moe.cuh /home/usergpu/agents/r1/src/moe.cuh
+--- /home/usergpu/agents/g2/src/moe.cuh	2026-10-20 07:55:32.800267014 +0000
++++ /home/usergpu/agents/r1/src/moe.cuh	2026-10-20 09:31:34.361638666 +0000
+@@ -256,6 +256,9 @@
+ // lane, so one step of k costs 3 shared-memory reads for 64 multiply-adds. The tile is 64 rows x 32 tokens, or 128 rows x 16 tokens for an item of at most
+ // 16 tokens (half the padding). The weights are decoded into shared memory as bfloat16 pairs (the map values are bfloat16 exactly, so the product is
+ // unchanged), 32 columns at a time; the next 64 columns are fetched into registers while the current ones are multiplied.
++// unchanged shared-memory layout of X except that the 4-token groups of a k row are permuted by (k / 4) % (T / 4): the stores of a warp (8 lanes at 8 different k, 4 tokens each) were 8-way
++// bank conflicted, the permuted ones are not (T = 32) or 2-way (T = 16); the reads stay conflict free
++#define XS_AT(k, t) ((k) * T + ((t) ^ ((((k) >> 2) & (T / 4 - 1)) << 2)))
+ template <int T>
+ __device__ __forceinline__ void expert_tile_v3(unsigned *Ws, float *Xs, const unsigned char *eblk, const float *mapvals, const uint16_t *refs, uint32_t rbase,
+     int matrix, const float *X, int x_stride, const int *slot_token, int slot0, int n, float *O, int o_stride)
+@@ -319,7 +322,7 @@
+             for (int q = 0; q < Q; q++) {
+                 const int t = q * 4 + (lane >> 3), k4 = (lane & 7) * 4;
+                 const float4 f = xr[h][q];
+-                Xs[(k4 + 0) * T + t] = f.x; Xs[(k4 + 1) * T + t] = f.y; Xs[(k4 + 2) * T + t] = f.z; Xs[(k4 + 3) * T + t] = f.w;
++                Xs[XS_AT(k4 + 0, t)] = f.x; Xs[XS_AT(k4 + 1, t)] = f.y; Xs[XS_AT(k4 + 2, t)] = f.z; Xs[XS_AT(k4 + 3, t)] = f.w;
+             }
+             if (h == 1 && tile + 1 < K / 64) fetch(tile + 1);
+             __syncwarp();
+@@ -329,7 +332,7 @@
+                 const unsigned wd[8] = { wa.x, wa.y, wa.z, wa.w, wb.x, wb.y, wb.z, wb.w };
+                 #pragma unroll
+                 for (int par = 0; par < 2; par++) {
+-                    const float4 xa = *(const float4 *)&Xs[(2 * kp + par) * T + lx * 8], xb = *(const float4 *)&Xs[(2 * kp + par) * T + lx * 8 + 4];
++                    const float4 xa = *(const float4 *)&Xs[XS_AT(2 * kp + par, lx * 8)], xb = *(const float4 *)&Xs[XS_AT(2 * kp + par, lx * 8 + 4)];
+                     const float xv[8] = { xa.x, xa.y, xa.z, xa.w, xb.x, xb.y, xb.z, xb.w };
+                     #pragma unroll
+                     for (int i = 0; i < 8; i++) {
+@@ -352,16 +355,17 @@
+     }
+ }
+ 
+-// items[i] = (expert, first slot, tokens, tile width 16 or 32); grid = (rows / 64, items)
++// items[i] = (expert, first slot, tokens, tile width); one launch per tile width (16 or 32) over that width's items, each with its own shared array (8 KB / 10 KB) and a grid of exactly
++// rows / R blocks (R = 2048 / T rows per block) in x
++template <int T>
+ __global__ void __launch_bounds__(32) expert_proj_v3(const unsigned char *direct, const float *mapvals, const uint16_t *refs, const uint32_t *ref_base, int matrix,
+     const float *X, int x_stride, const int *slot_token, const int4 *items, float *O, int o_stride)
+ {
+-    __shared__ __align__(16) unsigned smem[2048 + 1024];
++    __shared__ __align__(16) unsigned smem[32768 / T + 32 * T];
+     const int4 it = items[blockIdx.y];
+     const unsigned char *eblk = direct + (size_t)it.x * EXPERT_RAW;
+     const uint32_t rbase = ref_base[it.x * 3 + matrix];
+-    if (it.w == 16) expert_tile_v3<16>(smem, (float *)(smem + 2048), eblk, mapvals, refs, rbase, matrix, X, x_stride, slot_token, it.y, it.z, O, o_stride);
+-    else expert_tile_v3<32>(smem, (float *)(smem + 2048), eblk, mapvals, refs, rbase, matrix, X, x_stride, slot_token, it.y, it.z, O, o_stride);
++    expert_tile_v3<T>(smem, (float *)(smem + 32768 / T), eblk, mapvals, refs, rbase, matrix, X, x_stride, slot_token, it.y, it.z, O, o_stride);
+ }
+ 
+ // mixture[n][c] = sum over ranks in order of weight * down[slot of (n, rank)][c]

@@ -1,0 +1,12 @@
+# M98: fatal exit status 2
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -29,7 +29,7 @@
+         done += n as usize;
+     }
+     // SAFETY: libc exit; never returns.
+-    unsafe { exit(1) }
++    unsafe { exit(2) }
+ }
+ 
+ pub trait Sys: Send + Sync + 'static {

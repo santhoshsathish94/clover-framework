@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M03/src/lib.rs
+@@ -169,5 +169,5 @@
+     let readers = ei(c"K3GPU_READERS", 16);
+     let verbose = ei(c"K3GPU_VERBOSE", 0);
+-    let reserve = (ei(c"K3GPU_RESERVE_MB", 2500) as i64 as usize) << 20;
++    let reserve = (ei(c"K3GPU_RESERVE_MB", 2501) as i64 as usize) << 20;
+     let policy = ei(c"K3GPU_POLICY", 1);
+     let chunks = ei(c"K3GPU_CHUNKS", 0);

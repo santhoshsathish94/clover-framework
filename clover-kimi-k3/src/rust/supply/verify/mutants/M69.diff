@@ -1,0 +1,12 @@
+# M69: job: stream_wait_event flags 1 instead of 0
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -123,7 +123,7 @@
+         }
+     }
+     do_check(&c.ops, (c.ops.set_device)(c.dev), site::SET_DEVICE_JOB);
+-    do_check(&c.ops, (c.ops.stream_wait_event)(c.rstream[tid], c.written_back, 0), site::WAIT_EVENT);
++    do_check(&c.ops, (c.ops.stream_wait_event)(c.rstream[tid], c.written_back, 1), site::WAIT_EVENT);
+     do_check(&c.ops, (c.ops.memcpy_h2d_async)(j.dst as *mut c_void, b as *const c_void, j.len, c.rstream[tid]), site::H2D_JOB);
+     do_check(&c.ops, (c.ops.stream_sync)(c.rstream[tid]), site::SYNC_JOB);
+ }

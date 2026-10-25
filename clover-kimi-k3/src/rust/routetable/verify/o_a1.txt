@@ -1,0 +1,12 @@
+out/asan
+fail
+ldd.txt
+r4-cases.log
+stderr.txt
+stdout.txt
+units.log
+work
+R1 begin=400 unit=400 pass=400 fail=0 crash=0 comparisons=238046121 checks=32628304 next_use=14957953
+R2 begin=20000 unit=20000 pass=20000 fail=0 crash=0 comparisons=67167963 checks=2511204 next_use=51745647
+R3 begin=9 unit=9 pass=9 fail=0 crash=0 comparisons=220890172 checks=1212192 next_use=205480786
+R4 begin=21 unit=21 pass=21 fail=0 crash=0 comparisons=1260 checks=830 next_use=0

@@ -1,0 +1,12 @@
+# M27: write-back: worth never asked (always worth)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -279,7 +279,7 @@
+             if host.cap_slots == 0 || prefill {
+                 break;
+             }
+-            if !self.host_worth(host, v.key) {
++            if false {
+                 WB_SKIPPED.fetch_add(1, Ordering::SeqCst);
+                 continue;
+             }

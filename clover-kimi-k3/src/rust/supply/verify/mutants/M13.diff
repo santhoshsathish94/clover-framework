@@ -1,0 +1,12 @@
+# M13: victim test vk > 0 instead of vk >= 0 (victim key 0 ignored)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -250,7 +250,7 @@
+             let mut vk: c_int = -1;
+             let mut vh: f32 = 0.0;
+             p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len(), heat, &mut vk, &mut vh);
+-            if vk >= 0 {
++            if vk > 0 {
+                 if vq {
+                     (ops.arr_wait)(vk);
+                 }

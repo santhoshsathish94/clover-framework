@@ -1,0 +1,11 @@
+# M11: host summary: seconds measured from after the mapping (t1 just before the line)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -88,5 +88,6 @@
+     let cap = n_chunks.wrapping_mul(PI_CHUNK_SLOTS);
+     // SAFETY: `out` valid by the caller.
+     unsafe { (*out).cap_slots = cap };
+-    write_stderr(summary_line(cap, raw, sys::wall_now() - t0).as_bytes());
++    let t1 = sys::wall_now();
++    write_stderr(summary_line(cap, raw, sys::wall_now() - t1).as_bytes());
+ }

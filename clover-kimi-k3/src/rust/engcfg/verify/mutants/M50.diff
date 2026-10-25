@@ -1,0 +1,10 @@
+--- src/lib.rs (real)
++++ M50/src/lib.rs
+@@ -212,5 +212,6 @@
+ fn fatal(b: &[u8]) -> ! {
+     emit(b);
+-    std::process::exit(1)
++    extern "C" { fn _exit(c: c_int) -> !; }
++    unsafe { _exit(1) }
+ }
+ 

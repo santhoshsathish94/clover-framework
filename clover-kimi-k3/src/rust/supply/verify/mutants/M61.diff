@@ -1,0 +1,12 @@
+# M61: job reads into bounce[0] whatever the thread
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -100,7 +100,7 @@
+ 
+ /// One job on the thread numbered `tid` (pool_ensure's lambda).
+ unsafe fn run_job(c: &Ctx, j: &Job, tid: usize) {
+-    let mut b: *mut u8 = c.bounce[tid];
++    let mut b: *mut u8 = c.bounce[0];
+     if c.prefill {
+         b = (*c.slab.offset(c.layer as isize)).wrapping_add(((j.e & 3) as usize).wrapping_mul(c.raw)).wrapping_add(j.co) as *mut u8;
+     } else {

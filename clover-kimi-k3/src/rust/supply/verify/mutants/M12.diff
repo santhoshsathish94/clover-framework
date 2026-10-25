@@ -1,0 +1,11 @@
+# M12: card hit: h_eptr[e] not set
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -243,7 +243,6 @@
+                 if !pool.cache.is_null() {
+                     (ops.sc_touch)(pool.cache, key, heat);
+                 }
+-                *pool.h_eptr.offset(e as isize) = p as *const u8;
+                 pool.st.hit_card = pool.st.hit_card.wrapping_add(1);
+                 continue;
+             }

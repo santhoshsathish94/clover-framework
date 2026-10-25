@@ -1,0 +1,36 @@
+--- diff before(final launch) vs after:
+IDENTICAL
+--- diff of the first (pre-build) list vs after for frozen inputs:
+FROZEN-IDENTICAL
+21dd803db218adce13f5080efd871bbb  diff_driver.cpp
+2ba5bd3b1ebcada596f9a1e2585a8379  dd_engine.inc
+2d58ab639e42326eb2482129f02f0f6e  dd_cases.inc
+cb1cbed40c782dec421552f4785ea6d9  build.sh
+1a17675e243951e1bdd87799ba0b050b  run.sh
+fad1d7109b4c0a72e256ecb7ab75b473  md5.sh
+970b0bad85a14e3e0c96ddcd8deef86c  asan.sh
+81b1c55f55b777299fdd2b76fbb50268  tstat.py
+md5sum: rs.ps1: No such file or directory
+f8682d663da999ffe7b94af826b8546a  diff_driver
+acb7ff9d8d18545125a9b958c9cd9ddf  diff_driver_dbg
+53e59803296db4c1587fb993c019e5ac  ref-asan/libslotcache_ref_asan.so
+51e385c5f787cd36cb5499ba5496333f  ref-asan/slotcache_extracted.inc
+50ab56eb8938e256a587ef442339d278  ref-asan/slotcache_ref.cpp
+648K	out/final-1
+668K	out/asan-1
+60K	out/s8-probe2
+588K	out/smoke1
+du: cannot access 'out/cases': No such file or directory
+asan-1
+asan-1.launch
+dbg
+final-1
+final-1.launch
+md5-after.txt
+md5-before-final.txt
+md5-before.txt
+s8-probe
+s8-probe2
+s8-probe2.launch
+s8-probe.launch
+smoke1

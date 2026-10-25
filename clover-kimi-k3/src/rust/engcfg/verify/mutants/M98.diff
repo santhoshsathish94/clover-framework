@@ -1,0 +1,19 @@
+--- src/lib.rs (real)
++++ M98/src/lib.rs
+@@ -433,13 +433,13 @@
+     let experts = slice_or_empty(c.experts, c.n_experts);
+     let counts = slice_or_empty(c.counts, c.n_counts);
+-    let mut total: i64 = 0;
++    let mut total: i32 = 0;
+     let mut fits = true;
+     for &k in counts {
+-        total += k as i64;
++        total = total.wrapping_add(k);
+         if k > n {
+             fits = false;
+         }
+     }
+-    if !fits || total != (n as i64) * (top as i64) {
++    if !fits || (total as i64) != (n as i64) * (top as i64) {
+         warn("counts do not fit this call");
+         return;

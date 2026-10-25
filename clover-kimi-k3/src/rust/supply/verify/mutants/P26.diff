@@ -1,0 +1,31 @@
+# P26 (M26 + probe): M26 (continue instead of break) + a tag at the continue, with the number of victims
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -9,6 +9,17 @@
+ 
+ /// g_wb_skipped: card victims that were not worth a RAM slot.
+ pub static WB_SKIPPED: AtomicU64 = AtomicU64::new(0);
++
++pub fn probe(tag: &str) {
++    use std::io::Write;
++    if let Ok(p) = std::env::var("SUPPLY_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {
++            let line = format!("{} {}
++", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
+ 
+ extern "C" {
+     fn pread(fd: c_int, buf: *mut c_void, count: usize, offset: i64) -> isize;
+@@ -277,7 +288,8 @@
+         // 2. the experts the card gives up are copied down into the RAM cache
+         for v in &victims {
+             if host.cap_slots == 0 || prefill {
+-                break;
++                probe(if victims.len() > 1 { "continue_victims_gt1" } else { "continue_victims_1" });
++                continue;
+             }
+             if !self.host_worth(host, v.key) {
+                 WB_SKIPPED.fetch_add(1, Ordering::SeqCst);

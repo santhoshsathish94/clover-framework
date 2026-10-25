@@ -1,0 +1,1 @@
+rt_layer returns the layer of call i+1 when it exists

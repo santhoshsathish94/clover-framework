@@ -1,0 +1,12 @@
+# M94: prefill always on in the job
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -184,7 +184,7 @@
+         card: r.card,
+         h_fd: r.h_fd,
+         expert_raw: st.cfg.expert_raw,
+-        prefill: st.cfg.prefill,
++        prefill: true,
+         slab: st.cfg.slab as *mut *mut u8,
+     };
+     st.loader.submit(

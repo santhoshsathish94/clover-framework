@@ -1,0 +1,12 @@
+# M45: cfg.chunks > 1 instead of > 0 (forced 1 ignored)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -131,7 +131,7 @@
+ /// The number of chunks per expert and the chunk size: a call with few experts cannot fill the drive with whole-expert reads, so each expert is split among the idle readers (at most 8 chunks);
+ /// `cfg_chunks` > 0 overrides the count. The size is rounded up to 4096.
+ pub fn chunking(raw: usize, cfg_chunks: c_int, n_drive: c_int, pool_readers: c_int) -> (c_int, usize) {
+-    let nchunk: c_int = if cfg_chunks > 0 {
++    let nchunk: c_int = if cfg_chunks > 1 {
+         cfg_chunks
+     } else if n_drive >= pool_readers || n_drive == 0 {
+         1

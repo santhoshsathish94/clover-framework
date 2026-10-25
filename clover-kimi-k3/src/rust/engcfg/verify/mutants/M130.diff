@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M130/src/lib.rs
+@@ -618,5 +618,5 @@
+                     .s(names[i])
+                     .s(": ")
+-                    .f(0, s.n_calls[i])
++                    .f(1, s.n_calls[i])
+                     .s(", ")
+                     .f(3, s.t_calls[i])

@@ -1,0 +1,18 @@
+# M80: pool: copy stream created after the reader loop
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -64,13 +64,13 @@
+         for i in (0..slots).rev() {
+             add_spare(cfg.cache, base.wrapping_add((i as usize).wrapping_mul(raw)));
+         }
+-        check(stream_create(addr_of_mut!((*out).copy), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_COPY);
+         let readers = (*out).readers;
+         for i in 0..readers {
+             let i = i as usize;
+             check(stream_create(addr_of_mut!((*out).rstream[i]), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_READER);
+             check(host_alloc(addr_of_mut!((*out).bounce[i]) as *mut *mut c_void, raw, PI_HOST_ALLOC_DEFAULT), error_string, file, LINE_HOST_ALLOC);
+         }
++        check(stream_create(addr_of_mut!((*out).copy), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_COPY);
+         check(event_create(addr_of_mut!((*out).written_back), PI_EVENT_DISABLE_TIMING), error_string, file, LINE_EVENT);
+         // `EXPERTS * sizeof(void *)`: an int converted to size_t (sign-extended), times 8
+         check(

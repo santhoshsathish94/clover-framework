@@ -1,0 +1,12 @@
+# M36: host: 31 spares per chunk (slot 0 dropped)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -80,7 +80,7 @@
+         }
+         for b in base.iter().rev() {
+             let p = b.load(Ordering::SeqCst) as *mut u8;
+-            for s in (0..PI_CHUNK_SLOTS).rev() {
++            for s in (1..PI_CHUNK_SLOTS).rev() {
+                 add_spare(cfg.cache, p.wrapping_add(s.wrapping_mul(raw)));
+             }
+         }

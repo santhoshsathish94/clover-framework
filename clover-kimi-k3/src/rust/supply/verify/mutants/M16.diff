@@ -1,0 +1,12 @@
+# M16: vk initialised to 0 instead of -1 (slot cache writes *vkey on every path)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -247,7 +247,7 @@
+                 pool.st.hit_card = pool.st.hit_card.wrapping_add(1);
+                 continue;
+             }
+-            let mut vk: c_int = -1;
++            let mut vk: c_int = 0;
+             let mut vh: f32 = 0.0;
+             p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len(), heat, &mut vk, &mut vh);
+             if vk >= 0 {

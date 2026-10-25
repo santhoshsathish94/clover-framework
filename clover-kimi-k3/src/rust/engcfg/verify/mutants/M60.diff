@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M60/src/lib.rs
+@@ -339,5 +339,5 @@
+             return SelOutcome::Rust;
+         }
+-        return SelOutcome::Fatal(Line::new().s("K3GPU_").s(si.name).s(" must be cpp or rust, not ").b(m_bytes).s("\n").done());
++        return SelOutcome::Fatal(Line::new().s("K3GPU_").s(si.name).s(" must be cpp or rust: ").b(m_bytes).s("\n").done());
+     }
+     if !is_cpp {

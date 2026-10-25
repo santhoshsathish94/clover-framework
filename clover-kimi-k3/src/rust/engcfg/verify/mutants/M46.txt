@@ -1,0 +1,1 @@
+pend_cap: 128-bit product, no wrap

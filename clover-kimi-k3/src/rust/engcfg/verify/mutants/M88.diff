@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M88/src/lib.rs
+@@ -453,5 +453,5 @@
+         for _ in 0..counts[i] {
+             let t = (s % n as i64) as usize;
+-            let idx = t.wrapping_mul(top as isize as usize).wrapping_add(fill[t] as isize as usize);
++            let idx = (fill[t] as isize as usize).wrapping_mul(top as isize as usize).wrapping_add(t);
+             *sel.wrapping_add(idx) = experts[i];
+             fill[t] += 1;

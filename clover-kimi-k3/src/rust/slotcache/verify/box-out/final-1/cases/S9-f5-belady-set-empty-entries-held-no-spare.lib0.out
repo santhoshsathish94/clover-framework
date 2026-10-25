@@ -1,0 +1,20 @@
+set_policy 1
+set_next_use NULL
+add_spare #3
+add_spare #2
+add_spare #1
+acquire key=1 prot={} heat0=1
+  -> slot #1 vkey=-1 vheat=(unwritten)
+acquire key=2 prot={} heat0=2
+  -> slot #2 vkey=-1 vheat=(unwritten)
+acquire key=3 prot={} heat0=3
+  -> slot #3 vkey=-1 vheat=(unwritten)
+  [stored while belady off] size=3 lru(mru first): (3 #3 h=3/40400000 nu=0) (2 #2 h=2/40000000 nu=0) (1 #1 h=1/3f800000 nu=0)
+      spare(last=next):
+      next(set):
+set_policy 2
+set_next_use child_nu(key)=100+3*key+(key&1)
+  [belady on] size=3 lru(mru first): (3 #3 h=3/40400000 nu=0) (2 #2 h=2/40000000 nu=0) (1 #1 h=1/3f800000 nu=0)
+      spare(last=next):
+      next(set):
+acquire key=9 prot={} heat0=1

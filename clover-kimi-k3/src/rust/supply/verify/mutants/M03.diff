@@ -1,0 +1,11 @@
+# M03: prot not de-duplicated (dedup removed)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -228,7 +228,6 @@
+         // the distinct keys of this call: the original's unordered_set, given to the cache as an array (membership only)
+         let mut prot: Vec<c_int> = experts.iter().map(|&e| self.ekey(layer, e)).collect();
+         prot.sort_unstable();
+-        prot.dedup();
+         let mut need: Vec<Need> = Vec::new();
+         let mut victims: Vec<Victim> = Vec::new();
+         pool.st.needed = pool.st.needed.wrapping_add(experts.len() as c_ulong);

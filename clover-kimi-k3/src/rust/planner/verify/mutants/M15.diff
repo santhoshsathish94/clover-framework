@@ -1,0 +1,13 @@
+# M15: M15 sp_config field order swapped (cards/lookahead)
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -75,8 +75,8 @@
+ pub struct sp_config {
+     pub experts: c_int,
+     pub expert_raw: usize,
++    pub lookahead: c_int,
+     pub cards: c_int,
+-    pub lookahead: c_int,
+     pub pend_cap: usize,
+     pub vq: c_int,
+     pub vq_cap: usize,

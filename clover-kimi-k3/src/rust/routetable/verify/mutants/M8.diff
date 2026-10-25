@@ -1,0 +1,11 @@
+--- src/lib.rs (real)
++++ M8/src/lib.rs
+@@ -90,7 +90,7 @@
+         while at(s, p) == b' ' {
+             p += 1;
+         }
+-        if !at(s, p).is_ascii_digit() {
++        if !(at(s, p).is_ascii_digit() || (matches!(at(s, p), b'+' | b'-') && at(s, p + 1).is_ascii_digit())) {
+             break;
+         }
+         let (e, q) = strtol(s, p);

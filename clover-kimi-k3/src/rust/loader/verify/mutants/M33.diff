@@ -1,0 +1,23 @@
+# M33: alloc_state after the experts file is opened (layer >= 1), before the prefill
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -63,7 +63,9 @@
+         if j.layer >= 1 {
+             (cb.load_expert_tables)(cb.ctx, j.handle, dataset, j.layer as c_int);
+         }
+-        (cb.alloc_state)(cb.ctx, j.handle, j.positions);
++        if j.layer < 1 {
++            (cb.alloc_state)(cb.ctx, j.handle, j.positions);
++        }
+     }
+     if j.layer < 1 {
+         return Ok(());
+@@ -86,6 +88,8 @@
+         m.push(b'\n');
+         return Err(m);
+     }
++    // SAFETY: as above.
++    unsafe { (cb.alloc_state)(cb.ctx, j.handle, j.positions) };
+     if j.prefill {
+         let raw = j.expert_raw;
+         let layer = j.layer as usize;

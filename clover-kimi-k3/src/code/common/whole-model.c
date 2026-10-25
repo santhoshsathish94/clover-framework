@@ -124,6 +124,7 @@ static int prompt_ids(const char *text, long size, int *ids, int cap)
 static void chat_feed(uint32_t id, const Text *piece)
 {
     if (chat.done) return;
+    if (getenv("PF_IGNORE_STOP")) return;   /* timing runs with invented expert bytes: the answer must not end early */
     if ((int)id == chat.close) { chat.closes++; chat.in_tag = 1; if (chat.closes >= (chat.think ? 2 : 1)) chat.done = 1; return; }
     if ((int)id == chat.open) { chat.in_tag = 1; return; }
     if ((int)id == chat.sep) { chat.in_tag = 0; if (chat.think && chat.closes == 1) chat.to_response = 1; return; }

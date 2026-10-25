@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -166,7 +166,7 @@
+             vheat = Some(self.nodes[i].heat);
+             p = self.detach(i, victim);
+         } else {
+-            let limit = if POLICY.load(Ordering::SeqCst) != 0 { 48 } else { 1 };
++            let limit = if POLICY.load(Ordering::SeqCst) != 0 { 47 } else { 1 };
+             let mut best = NIL;
+             let mut best_heat = 0f32;
+             let mut seen = 0;

@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M108/src/lib.rs
+@@ -529,5 +529,5 @@
+             .n(dr)
+             .s(" from the drive (")
+-            .f(1, 100.0 * drf / needf)
++            .f(1, drf / needf * 100.0)
+             .s("%, ")
+             .f(1, drf * (s.expert_raw as f64) / 1e9)

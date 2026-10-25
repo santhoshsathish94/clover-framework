@@ -1,0 +1,12 @@
+# M48: host: final cap = cap0 & !31 instead of n_chunks * 32
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -85,7 +85,7 @@
+             }
+         }
+     }
+-    let cap = n_chunks.wrapping_mul(PI_CHUNK_SLOTS);
++    let cap = cap0 & !(PI_CHUNK_SLOTS - 1);
+     // SAFETY: `out` valid by the caller.
+     unsafe { (*out).cap_slots = cap };
+     write_stderr(summary_line(cap, raw, sys::wall_now() - t0).as_bytes());

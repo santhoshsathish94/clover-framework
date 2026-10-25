@@ -1,0 +1,12 @@
+# M74: pool: slab size computed as a 32-bit multiply
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -59,7 +59,7 @@
+             write_stderr(refusal_message(cfg.device, slots).as_bytes());
+             exit1();
+         }
+-        check(device_malloc(addr_of_mut!((*out).base) as *mut *mut c_void, (slots as usize).wrapping_mul(raw)), error_string, file, LINE_MALLOC_SLAB);
++        check(device_malloc(addr_of_mut!((*out).base) as *mut *mut c_void, ((slots as u32).wrapping_mul(raw as u32)) as usize), error_string, file, LINE_MALLOC_SLAB);
+         let base = (*out).base;
+         for i in (0..slots).rev() {
+             add_spare(cfg.cache, base.wrapping_add((i as usize).wrapping_mul(raw)));

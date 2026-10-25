@@ -1,0 +1,3 @@
+3
+reference: /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so
+candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so

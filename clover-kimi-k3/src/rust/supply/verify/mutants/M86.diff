@@ -1,0 +1,13 @@
+# M86: t_copy gets the read interval (t1 - t0)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -342,6 +342,6 @@
+             (ops.sc_release)(host.cache, h);
+         }
+         pool.st.t_read += t1.duration_since(t0).as_secs_f64();
+-        pool.st.t_copy += t1.elapsed().as_secs_f64();
+-    }
+-}
++        pool.st.t_copy += t1.duration_since(t0).as_secs_f64();
++    }
++}

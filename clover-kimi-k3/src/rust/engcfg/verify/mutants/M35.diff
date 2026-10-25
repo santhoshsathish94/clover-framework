@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M35/src/lib.rs
+@@ -116,5 +116,5 @@
+     }
+     let mut neg = false;
+-    if i < s.len() && (s[i] == b'-' || s[i] == b'+') {
++    if i < s.len() && (s[i] == b'-') {
+         neg = s[i] == b'-';
+         i += 1;

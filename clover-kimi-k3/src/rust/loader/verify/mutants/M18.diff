@@ -1,0 +1,24 @@
+# M18: a job runs while the card's queue lock is held
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -76,16 +76,17 @@
+         (self.on_start)(card);
+         let c = &self.cards[card];
+         loop {
+-            let job = {
++            let g = {
+                 let mut g = lock(&c.st);
+                 loop {
+                     if let Some(j) = g.q.pop_front() {
+-                        break j;
++                        j();
++                        break g;
+                     }
+                     g = c.cv.wait(g).unwrap_or_else(|e| e.into_inner());
+                 }
+             };
+-            job();
++            drop(g);
+             *lock(&self.pending) -= 1;
+             self.pending_cv.notify_all();
+         }

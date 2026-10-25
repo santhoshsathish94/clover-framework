@@ -1,0 +1,12 @@
+# M13: M13 last = pos + lookahead (no +1)
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -277,7 +277,7 @@
+     }
+ 
+     fn last_call(&self, pos: usize) -> usize {
+-        self.calls().min(pos.wrapping_add(self.cfg.lookahead as usize).wrapping_add(1))
++        self.calls().min(pos.wrapping_add(self.cfg.lookahead as usize))
+     }
+ 
+     /// The read-ahead into the RAM cache: slot from the host cache, pending entry, job kind 0.

@@ -1,0 +1,16 @@
+
+wait exit 0
+rust S4 seed=3 rc=0 secs=15.9 | SUMMARY S4 jobs=2000 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+CORRECTNESS-DONE
+M2 S1 seed=1 rc=2 secs=8.7 | SUMMARY S1 jobs=128 bad_jobs=96 timeouts=0 bad_flags=0 observer_violations=0 | RESULT FAIL
+M2v S1 seed=1 rc=2 secs=8.8 | SUMMARY S1 jobs=128 bad_jobs=49 timeouts=0 bad_flags=0 observer_violations=49 | RESULT FAIL
+M2 S1 seed=2 rc=2 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=96 timeouts=0 bad_flags=0 observer_violations=0 | RESULT FAIL
+M2v S1 seed=2 rc=2 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=51 timeouts=0 bad_flags=0 observer_violations=51 | RESULT FAIL
+M2 S1 seed=3 rc=2 secs=9.2 | SUMMARY S1 jobs=128 bad_jobs=96 timeouts=0 bad_flags=0 observer_violations=0 | RESULT FAIL
+M2v S1 seed=3 rc=2 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=50 timeouts=0 bad_flags=0 observer_violations=50 | RESULT FAIL
+M2 S2 seed=1 rc=2 secs=12.5 | SUMMARY S2 jobs=64 bad_jobs=47 timeouts=0 bad_flags=0 observer_violations=0 | RESULT FAIL
+M4 S1 seed=1 rc=1 secs=6.2 |  | 
+M4 S2 seed=1 rc=0 secs=12.3 | SUMMARY S2 jobs=64 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+M3 S1 seed=1 rc=0 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+run waitfor.sh matrix DONE 280 exit=0
+ENDOFHELPER

@@ -1,0 +1,16 @@
+
+wait exit 124
+TIMING T2 lib=cpp jobs=960 bytes=16845373440 wall_s=0.9417 gbps=17.889 cpu_user_s=11.210 cpu_sys_s=3.656 warm_s=0.3562 verify_bad=0
+TIMING T2 lib=rust jobs=960 bytes=16845373440 wall_s=0.9471 gbps=17.787 cpu_user_s=11.523 cpu_sys_s=3.462 warm_s=0.3271 verify_bad=0
+TIMING T2 lib=cpp jobs=960 bytes=16845373440 wall_s=0.9387 gbps=17.945 cpu_user_s=11.439 cpu_sys_s=3.538 warm_s=0.3713 verify_bad=0
+TIMING T2 lib=rust jobs=960 bytes=16845373440 wall_s=0.9459 gbps=17.809 cpu_user_s=11.650 cpu_sys_s=3.423 warm_s=0.3432 verify_bad=0
+TIMING T3 lib=cpp jobs=960 bytes=16845373440 wall_s=0.2903 gbps=58.032 cpu_user_s=0.007 cpu_sys_s=4.614 warm_s=0.0114 verify_bad=0
+TIMING T3 lib=rust jobs=960 bytes=16845373440 wall_s=0.3183 gbps=52.922 cpu_user_s=0.008 cpu_sys_s=5.009 warm_s=0.0186 verify_bad=0
+TIMING T3 lib=cpp jobs=960 bytes=16845373440 wall_s=0.3277 gbps=51.403 cpu_user_s=0.016 cpu_sys_s=5.034 warm_s=0.0159 verify_bad=0
+TIMING T3 lib=rust jobs=960 bytes=16845373440 wall_s=0.3209 gbps=52.487 cpu_user_s=0.006 cpu_sys_s=5.045 warm_s=0.0188 verify_bad=0
+TIMING T3 lib=cpp jobs=960 bytes=16845373440 wall_s=0.3258 gbps=51.712 cpu_user_s=0.011 cpu_sys_s=5.005 warm_s=0.0199 verify_bad=0
+TIMING T3 lib=rust jobs=960 bytes=16845373440 wall_s=0.3244 gbps=51.930 cpu_user_s=0.012 cpu_sys_s=5.147 warm_s=0.0183 verify_bad=0
+TIMING T3 lib=cpp jobs=960 bytes=16845373440 wall_s=0.3276 gbps=51.419 cpu_user_s=0.012 cpu_sys_s=5.007 warm_s=0.0160 verify_bad=0
+TIMING T3 lib=rust jobs=960 bytes=16845373440 wall_s=0.3074 gbps=54.805 cpu_user_s=0.011 cpu_sys_s=4.871 warm_s=0.0185 verify_bad=0
+run exit=0
+ENDOFHELPER

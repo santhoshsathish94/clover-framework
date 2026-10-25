@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M133/src/lib.rs
+@@ -465,5 +465,5 @@
+ fn summary_lines(s: &EcSummary) -> Vec<Vec<u8>> {
+     let mut out: Vec<Vec<u8>> = Vec::new();
+-    if s.cards > EC_MAX_CARDS as c_int {
++    if s.cards >= EC_MAX_CARDS as c_int {
+         std::process::abort();
+     }

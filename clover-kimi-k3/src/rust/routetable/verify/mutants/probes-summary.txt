@@ -1,0 +1,30 @@
+probes.sh: line 16: 1454790 Aborted                 (core dumped) ./probe "$p" "$f" "$E" "$@" > probe-out/$c.$l.txt 2>&1
+=== ff
+ff REAL == REF
+ff M4 == REF
+ff M5 == REF
+ff M19 DIFFERS from REF
+=== dup
+dup REAL == REF
+dup M4 == REF
+dup M5 == REF
+dup M19 == REF
+=== dup2
+dup2 REAL == REF
+dup2 M4 == REF
+dup2 M5 == REF
+dup2 M19 == REF
+=== dupunk
+dupunk REAL == REF
+dupunk M4 == REF
+dupunk M5 == REF
+dupunk M19 == REF
+=== sign
+sign REAL == REF
+sign M8 == REF
+sign M8L DIFFERS from REF
+=== sign2
+sign2 REAL == REF
+sign2 M8 DIFFERS from REF
+sign2 M8L DIFFERS from REF
+=== bytes 0x0b/0x0c in the real trace (read only): 0

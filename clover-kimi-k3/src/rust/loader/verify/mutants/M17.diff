@@ -1,0 +1,12 @@
+# M17: submit: notify_one -> notify_all (one waiter per card, expected equivalent)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -56,7 +56,7 @@
+             }
+         }
+         g.q.push_back(job);
+-        c.cv.notify_one();
++        c.cv.notify_all();
+     }
+ 
+     /// loader_wait.

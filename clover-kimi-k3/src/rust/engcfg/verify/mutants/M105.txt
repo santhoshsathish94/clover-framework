@@ -1,0 +1,1 @@
+force: explicit n < 0 abort removed (vec![0; n as usize] then aborts on capacity)

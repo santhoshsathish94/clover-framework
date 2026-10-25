@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M137/src/lib.rs
+@@ -251,5 +251,5 @@
+         };
+         let len = unsafe { snprintf(ptr::null_mut(), 0, fmt.as_ptr(), v) };
+-        let len = len.max(0) as usize;
++        let len = (len.max(0) as usize).min(63);
+         let mut buf = vec![0u8; len + 1];
+         unsafe { snprintf(buf.as_mut_ptr() as *mut c_char, len + 1, fmt.as_ptr(), v) };

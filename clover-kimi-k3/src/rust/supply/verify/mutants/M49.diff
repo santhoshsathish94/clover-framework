@@ -1,0 +1,12 @@
+# M49: chunk loop stops at co > raw instead of co >= raw (zero-length job)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -313,7 +313,7 @@
+             pool.st.from_drive = pool.st.from_drive.wrapping_add(1);
+             for k in 0..nchunk {
+                 let co = (k as usize).wrapping_mul(chunk);
+-                if co >= raw {
++                if co > raw {
+                     break;
+                 }
+                 let len = std::cmp::min(chunk, raw - co);

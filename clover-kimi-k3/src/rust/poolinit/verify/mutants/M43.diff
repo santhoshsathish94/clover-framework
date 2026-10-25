@@ -1,0 +1,12 @@
+# M43: host: chunk counter advances by 2 (every second chunk skipped)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -47,7 +47,7 @@
+     let next = AtomicUsize::new(0);
+     let t0 = sys::wall_now();
+     let touch = || loop {
+-        let i = next.fetch_add(1, Ordering::SeqCst);
++        let i = next.fetch_add(2, Ordering::SeqCst);
+         if i >= n_chunks {
+             return;
+         }

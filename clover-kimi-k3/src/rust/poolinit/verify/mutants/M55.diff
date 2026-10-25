@@ -1,0 +1,11 @@
+# M55: sys: check() message without trailing newline
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -78,7 +78,6 @@
+         m.extend_from_slice(format!(":{}: ", line).as_bytes());
+         m.extend_from_slice(cstr_bytes(error_string(code)));
+     }
+-    m.push(b'\n');
+     write_stderr(&m);
+     exit1()
+ }

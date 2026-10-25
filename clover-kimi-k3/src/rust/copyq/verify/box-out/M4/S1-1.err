@@ -1,0 +1,4 @@
+read-ahead: pread failed: end of file
+read-ahead: pread failed: end of file
+read-ahead: pread failed: end of file
+timeout: the monitored command dumped core

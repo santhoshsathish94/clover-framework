@@ -1,0 +1,12 @@
+# M91: pool: reader loop 0..readers-1
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -66,7 +66,7 @@
+         }
+         check(stream_create(addr_of_mut!((*out).copy), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_COPY);
+         let readers = (*out).readers;
+-        for i in 0..readers {
++        for i in 0..readers - 1 {
+             let i = i as usize;
+             check(stream_create(addr_of_mut!((*out).rstream[i]), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_READER);
+             check(host_alloc(addr_of_mut!((*out).bounce[i]) as *mut *mut c_void, raw, PI_HOST_ALLOC_DEFAULT), error_string, file, LINE_HOST_ALLOC);

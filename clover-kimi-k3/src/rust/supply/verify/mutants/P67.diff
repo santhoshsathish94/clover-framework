@@ -1,0 +1,32 @@
+# P67 (M67 + probe): M67 (exit 2) + a tag in fatal_bytes
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -10,6 +10,17 @@
+ /// g_wb_skipped: card victims that were not worth a RAM slot.
+ pub static WB_SKIPPED: AtomicU64 = AtomicU64::new(0);
+ 
++pub fn probe(tag: &str) {
++    use std::io::Write;
++    if let Ok(p) = std::env::var("SUPPLY_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {
++            let line = format!("{} {}
++", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
++
+ extern "C" {
+     fn pread(fd: c_int, buf: *mut c_void, count: usize, offset: i64) -> isize;
+     fn strerror(errnum: c_int) -> *const c_char;
+@@ -21,8 +32,9 @@
+ }
+ 
+ pub fn fatal_bytes(msg: &[u8]) -> ! {
++    probe("fatal_bytes");
+     write_stderr(msg);
+-    std::process::exit(1)
++    std::process::exit(2)
+ }
+ 
+ pub fn fatal(msg: &str) -> ! {

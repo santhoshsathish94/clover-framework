@@ -1,0 +1,12 @@
+# M76: negative card not rejected (`card < 0 ||` removed)
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -64,7 +64,7 @@
+ }
+ 
+ pub fn check_card(card: c_int) -> Result<(), String> {
+-    if card < 0 || card as usize >= MAX_CARDS {
++    if card as usize >= MAX_CARDS {
+         return Err(format!("loader: card {} out of range (0..{})\n", card, MAX_CARDS - 1));
+     }
+     Ok(())

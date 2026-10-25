@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M63/src/lib.rs
+@@ -675,5 +675,5 @@
+ pub extern "C" fn ec_prefill_start(calls: usize) {
+     if calls == 0 {
+-        fatal(PREFILL_NEEDS);
++        emit(PREFILL_NEEDS);
+     }
+     emit(PREFILL_ON);

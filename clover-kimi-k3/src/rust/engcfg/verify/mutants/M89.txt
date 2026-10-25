@@ -1,0 +1,1 @@
+force: a count of 0 or less still deals once (counts[i].max(1))

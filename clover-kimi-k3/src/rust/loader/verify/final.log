@@ -1,0 +1,106 @@
+== date 2026-10-25T02:02:15+00:00  host ubuntu2404  kernel 6.8.0-147-generic  cargo cargo 1.99.1 (5f94df478 2026-08-27)
+== build (cargo build --release; cargo test does not rebuild the .so)
+    Finished `release` profile [optimized] target(s) in 0.01s
+f104b44a3bd82b6657e6e68f4bdb5fa6  ld_driver
+bb41075c183f95a9d9d800a0a377477b  ../ref/libloader_ref.so
+2f1d3eacf8ebc2e0078b61f8ab629f21  ../target/release/libloader.so
+== cargo test
+running 32 tests
+test result: ok. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+running 0 tests
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+== final md5
+2f1d3eacf8ebc2e0078b61f8ab629f21  ../target/release/libloader.so
+bb41075c183f95a9d9d800a0a377477b  ../ref/libloader_ref.so
+f104b44a3bd82b6657e6e68f4bdb5fa6  ld_driver
+af286f75ad09c319d2e748d317cda7be  ../include/loader.h
+19bb1eba692ea7a5af00d3b93f1574e8  ../src/abi.rs
+6848719371813504931531d3bac6b7eb  ../src/job.rs
+f7538b3dba9fa1a630a2773ddfd0831c  ../src/lib.rs
+974d2403de590e401c44d21acf0b9b6d  ../src/queue.rs
+985205b9f4fda7b5c51cdb5e3cace7b2  ../src/sys.rs
+77d0d937447049e9e6bfcfd2f649df2e  ../src/tests.rs
+153195958dd1858a6f896b907ca85053  ld_driver.cpp
+a6d6293d63ef6ba89aa1a64b33dafff3  ../ref/loader_ref.cpp
+1549311f83dc4dc8cc05c5587d9b06ea  ../ref/loader_a.inc
+d9de653d9b8aeb705b6e890e9117f272  ../ref/loader_b.inc
+== smoke_ref
+PASS basic (5 checks, 0 failed)
+PASS noprefill (9 checks, 0 failed)
+PASS prefill (10 checks, 0 failed)
+PASS missing (2 checks, 0 failed)
+PASS eof (2 checks, 0 failed)
+PASS badcard (2 checks, 0 failed)
+== smoke_rust
+PASS basic (5 checks, 0 failed)
+PASS noprefill (9 checks, 0 failed)
+PASS prefill (10 checks, 0 failed)
+PASS missing (2 checks, 0 failed)
+PASS eof (2 checks, 0 failed)
+PASS badcard (2 checks, 0 failed)
+== matrix N=200
+units: 2820 of 2820, wall 25 s
+SUMMARY units=2820 ref_pass=2820 rust_pass=2820 canon_same=2820 ref_rc0=2820 rust_rc0=2820
+SCENARIO fifo units=1000 ref_pass=1000 rust_pass=1000 canon_same=1000
+SCENARIO barrier units=200 ref_pass=200 rust_pass=200 canon_same=200
+SCENARIO wait units=200 ref_pass=200 rust_pass=200 canon_same=200
+SCENARIO stress units=200 ref_pass=200 rust_pass=200 canon_same=200
+SCENARIO race units=200 ref_pass=200 rust_pass=200 canon_same=200
+SCENARIO init2 units=200 ref_pass=200 rust_pass=200 canon_same=200
+SCENARIO open units=600 ref_pass=600 rust_pass=600 canon_same=600
+SCENARIO shm units=100 ref_pass=100 rust_pass=100 canon_same=100
+SCENARIO natural units=40 ref_pass=40 rust_pass=40 canon_same=40
+SCENARIO real units=40 ref_pass=40 rust_pass=40 canon_same=40
+SCENARIO fatal units=40 ref_pass=40 rust_pass=40 canon_same=40
+CHECKS ref=177367 rust=177567
+O_DIRECT natural answers (layer lines, rust runs): /tmp accepted=1659 refused=0; /dev/shm accepted=610 refused=0
+race (informational) ref violations: 339 of 1600 first-submit trials  rust: 0 of 1600
+BEGIN_LINES=2820 UNIT_LINES=2820
+NOT-OK UNITS:
+F-lines: ref=0 rust=0
+stderr files: 0
+outdir bytes: 6757267
+== coverage statistics of the seeds (stats.sh)
+open+shm units: 700
+  cfg prefill=1 : 351
+  cfg prefill=0 : 349
+  cfg mode=0 : 395
+  cfg mode=1 : 305
+  cfg hold=1$: 350
+  cfg hold=0$: 350
+  cfg barrier=1 : 221
+  cfg barrier=0 : 479
+  cfg raw=4096 : 234
+  cfg raw=8192 : 239
+  cfg raw=65536 : 227
+  cfg cap=0 : 147
+  cfg cap=1 : 61
+  cfg cap=7 : 70
+  cfg cap=512 : 150
+  cfg cap=4096 : 105
+  cfg cap=5000 : 62
+  cfg cap=8192 : 105
+  layer lines: 4345  layer 0: 238  layer 92: 198  layer 93: 14  layer 100000: 13  layer 4294967295 (L=-1): 15  k_in=-1: 536
+  prefill reads: layers with slab=eq: 2122  most preads in one layer: 262144
+  card lines with two or more layers: 1022
+fatal units: 40; fatal cases: 1360  with exit=1: 1360  with BUFFERED flushed: 1360
+  missing_file_openmode0: 40
+  missing_file_openmode1: 40
+  missing_file_openmode2: 40
+  long_path_total4094: 40
+  long_path_total4095: 40
+  long_path_total4096: 40
+  long_path_total4097: 40
+  eof_: 160
+  readerr_: 120
+  exit_while_other_card_runs: 40
+  eof mode0: 80  mode1: 80   readerr errno EINTR(4): 41  EIO(5): 41  EAGAIN(11): 38
+wait waiters: 1=48 2=55 3=46 4=51;  nested trees: 200 runs, nodes total 3268, max 61
+fifo: cards_used histogram: 0:44 1:181 2:161 3:152 4:180 5:141 6:87 7:48 8:6   jobs total: 65249  zero-job cards: 1196
+barrier: parties histogram: 2:36 3:20 4:39 5:19 6:28 7:29 8:29 
+stress: 200 runs, submitter threads total 803, jobs 50527, concurrent waits returned 396
+real: 40 of 40 slab=eq;  open_mode=0 (O_DIRECT, 17547264-byte reads): 23  open_mode=1 (plain): 17
+natural: 75 layers, first open refused by procfs with errno 22: 75
+init2: 200 ok
+== leftovers of this run in /tmp and /dev/shm (must be empty)
+== done 2026-10-25T02:02:45+00:00

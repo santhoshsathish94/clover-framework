@@ -1,0 +1,12 @@
+# M21: thread start hook gets card 0 instead of card
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -73,7 +73,7 @@
+     }
+ 
+     fn worker(&'static self, card: usize) {
+-        (self.on_start)(card);
++        (self.on_start)(0);
+         let c = &self.cards[card];
+         loop {
+             let job = {

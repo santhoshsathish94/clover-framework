@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M99/src/lib.rs
+@@ -441,5 +441,5 @@
+         }
+     }
+-    if !fits || total != (n as i64) * (top as i64) {
++    if !fits || total != n.wrapping_mul(top) as i64 {
+         warn("counts do not fit this call");
+         return;

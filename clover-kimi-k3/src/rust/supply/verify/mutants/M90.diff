@@ -1,0 +1,12 @@
+# M90: host_worth: a NULL RAM cache is not worth a slot
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -194,7 +194,7 @@
+     }
+ 
+     unsafe fn host_worth(&self, host: &sy_host, key: c_int) -> bool {
+-        host.cache.is_null() || (self.ops.sc_worth)(host.cache, key) != 0
++        !host.cache.is_null() && (self.ops.sc_worth)(host.cache, key) != 0
+     }
+ 
+     unsafe fn host_remove(&self, host: &sy_host, key: c_int) -> *mut u8 {

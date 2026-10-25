@@ -1,0 +1,10 @@
+--- src/lib.rs (real)
++++ M3/src/lib.rs
+@@ -131,6 +131,7 @@
+         match self.uses.get_mut(&key) {
+             None => EXHAUSTED,
+             Some((l, p)) => {
++                *p = 0;
+                 while *p < l.len() && (l[*p] as i64) <= cur {
+                     *p += 1;
+                 }

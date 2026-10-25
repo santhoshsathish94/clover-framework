@@ -1,0 +1,12 @@
+# M66: read error not detected: `rd == 0`
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -102,7 +102,7 @@
+                 // SAFETY: slab[layer] was just filled by host_alloc; r * raw + got < 4 * raw is inside the block.
+                 let buf = unsafe { (*j.slab.add(layer)).wrapping_add(r.wrapping_mul(raw)).wrapping_add(got) };
+                 let rd = sys.pread(fd, buf, raw - got, off);
+-                if rd <= 0 {
++                if rd == 0 {
+                     return Err(format!("prefill: cannot read a record of layer {}\n", j.layer).into_bytes());
+                 }
+                 got += rd as usize;

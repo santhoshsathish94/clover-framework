@@ -1,0 +1,13 @@
+# M95: abi: sy_config vq and prefill swapped
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -37,8 +37,8 @@
+ pub struct sy_config {
+     pub experts: c_int,
+     pub expert_raw: usize,
++    pub prefill: c_int,
+     pub vq: c_int,
+-    pub prefill: c_int,
+     pub chunks: c_int,
+     pub slab: *const *const u8,
+ }

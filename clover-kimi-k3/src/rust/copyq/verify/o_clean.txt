@@ -1,0 +1,11 @@
+
+put cleanup.sh exit=0 
+15M	.
+rA
+rB
+               total        used        free      shared  buff/cache   available
+Mem:             376          15         305           0          58         360
+UNTOUCHED-FILES-UNCHANGED
+0
+run exit=0
+ENDOFHELPER

@@ -1,0 +1,12 @@
+# M88: t_ensure assigned (=) instead of added
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -212,7 +212,7 @@
+     pub unsafe fn ensure(&self, pool: *mut sy_pool, host: *const sy_host, layer: c_int, fd: c_int, experts: &[c_int], counts: *const c_int, readers: c_int) {
+         let t_start = Instant::now();
+         self.ensure_inner(&mut *pool, &*host, layer, fd, experts, counts, readers);
+-        (*pool).st.t_ensure += t_start.elapsed().as_secs_f64();
++        (*pool).st.t_ensure = t_start.elapsed().as_secs_f64();
+     }
+ 
+     unsafe fn ensure_inner(&self, pool: &mut sy_pool, host: &sy_host, layer: c_int, fd: c_int, experts: &[c_int], counts: *const c_int, readers: c_int) {

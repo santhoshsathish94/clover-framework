@@ -1,0 +1,1 @@
+host_bytes computed in 32 bits (gb << 30 as i32, then widened)

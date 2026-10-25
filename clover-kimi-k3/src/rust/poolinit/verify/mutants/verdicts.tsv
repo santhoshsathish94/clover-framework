@@ -1,0 +1,39 @@
+# name<TAB>verdict text for the table (mutants not listed: "caught by driver"; M00: "control, passes")
+M03	REAL GAP (driver and unit tests blind): the calling thread need not map
+M11	REAL GAP (driver and unit tests blind): seconds value not checked
+M12	REAL GAP (driver and unit tests blind): seconds value not checked
+M13	REAL GAP (driver and unit tests blind): seconds value not checked
+M14	REAL GAP (driver and unit tests blind): clock id not observed
+M15	caught by driver, weak (7 units: a unit that straddles a second boundary prints -955.6 s)
+M33	REAL GAP, statistical only: registered-address order flips (ascending in 368 of 724 units with >= 4 chunks, 4 in the original); no single unit can show it, the header does not tie chunk numbers to addresses
+M46	REAL GAP, statistical only: registered-address order flips (ascending in 367 of 724 units with >= 4 chunks, 4 in the original); no single unit can show it, the header does not tie chunk numbers to addresses
+M47	equivalent (argued, probed): scope join orders the stores
+M48	equivalent (arithmetic identity, probed: never differs)
+M49	equivalent (arithmetic identity, probed: never differs)
+M57	driver-blind, contract silent: error_string called twice (unit tests also pass)
+M58	driver-blind, contract silent: stderr written in two write() calls (unit tests also pass)
+M59	equivalent (argued, probed 1428 exits): Rust exit() ends in libc exit()
+M67	equivalent (argued, probed): usable = 0 either way
+M68	equivalent (argued, probed): same function as the original
+M86	outside the contract domain (experts < 0 is not handled by the header); driver never generates it
+M117	equivalent for any binary test (.so byte-identical to M00); caught by unit test only
+M120	caught by unit test only (cargo test)
+M121	caught by unit test only (cargo test)
+M122	caught by unit test only (cargo test)
+M09	caught by driver, weak (11 units: only a 48 MiB host unit prints 0.1 GB)
+M10	caught by driver, weak (11 units: only a 48 MiB host unit prints 0.1 GB)
+M54	caught by driver, weak (28 units: NULL error_string only)
+M102	caught by driver, weak (13 units)
+M103	caught by driver, weak (15 units)
+M105	caught by driver, weak (15 units)
+M106	caught by driver, weak (13 units)
+M107	caught by driver, weak (27 units)
+M26	caught by driver (exit status 2 vs 1; logs equal)
+M56	caught by driver (exit status 2 vs 1; logs equal)
+M98	caught by driver (exit status 2 vs 1; logs equal)
+M28	caught by driver (child crash sig11, no located mismatch)
+M44	caught by driver (child crash sig6, no located mismatch)
+M88	caught by driver (child crash sig6, no located mismatch)
+M111	caught by driver (child crash sig6, no located mismatch)
+M60	caught by driver (log lacks the atexit part: _exit skipped the handler)
+M70	caught by driver only through the 3 GB cap I added (child dies sig6); uncapped the recorder grows past 14 GB per child

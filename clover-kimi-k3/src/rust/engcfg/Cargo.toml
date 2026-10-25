@@ -1,0 +1,15 @@
+[package]
+name = "engcfg"
+version = "0.1.0"
+edition = "2021"
+description = "Engine configuration, selector parsing, card_of, force_routes and the exit summary of the GPU backend (Rust implementation of include/engcfg.h)"
+
+[lib]
+name = "engcfg"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+panic = "abort"

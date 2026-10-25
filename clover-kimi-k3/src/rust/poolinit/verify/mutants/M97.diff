@@ -1,0 +1,12 @@
+# M97: pool: refusal message without newline
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -24,7 +24,7 @@
+ 
+ /// The refusal text of the original: "card %d: only %d expert slots fit after the reserve\n".
+ pub fn refusal_message(dev: c_int, slots: c_int) -> String {
+-    format!("card {}: only {} expert slots fit after the reserve\n", dev, slots)
++    format!("card {}: only {} expert slots fit after the reserve", dev, slots)
+ }
+ 
+ /// # Safety

@@ -1,0 +1,12 @@
+# M41: nchunk: n_drive > pool_readers instead of >=
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -133,7 +133,7 @@
+ pub fn chunking(raw: usize, cfg_chunks: c_int, n_drive: c_int, pool_readers: c_int) -> (c_int, usize) {
+     let nchunk: c_int = if cfg_chunks > 0 {
+         cfg_chunks
+-    } else if n_drive >= pool_readers || n_drive == 0 {
++    } else if n_drive > pool_readers || n_drive == 0 {
+         1
+     } else {
+         std::cmp::min(8, (pool_readers + n_drive - 1) / n_drive)

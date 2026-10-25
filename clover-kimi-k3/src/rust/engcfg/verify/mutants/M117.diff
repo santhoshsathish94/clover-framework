@@ -1,0 +1,10 @@
+--- src/lib.rs (real)
++++ M117/src/lib.rs
+@@ -472,7 +472,4 @@
+     let (mut tr, mut tc) = (0f64, 0f64);
+     for k in &s.card[..cards] {
+-        if k.ready == 0 {
+-            continue;
+-        }
+         need = need.wrapping_add(k.needed);
+         hc = hc.wrapping_add(k.hit_card);

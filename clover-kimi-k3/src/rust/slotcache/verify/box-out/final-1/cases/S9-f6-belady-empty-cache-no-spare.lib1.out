@@ -1,0 +1,3 @@
+set_policy 2
+set_next_use child_nu(key)=100+3*key+(key&1)
+acquire key=1 prot={} heat0=1

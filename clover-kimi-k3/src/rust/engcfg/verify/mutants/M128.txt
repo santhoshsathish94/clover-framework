@@ -1,0 +1,1 @@
+summary: queue total saturates instead of wrapping

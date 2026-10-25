@@ -1,0 +1,1 @@
+card_of layout 1: rem_euclid instead of the C remainder

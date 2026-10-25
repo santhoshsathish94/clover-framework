@@ -1,0 +1,1 @@
+reads K3GPU_ROUTECACHE's lookahead from K3GPU_LOOKAHEAD even without a route cache (lookahead field initialised from the variable)

@@ -1,0 +1,38 @@
+total 820
+drwxrwxr-x 2 usergpu usergpu   4096 Oct 22 01:24 .
+drwxrwxr-x 4 usergpu usergpu   4096 Oct 22 01:24 ..
+-rwxrwxr-x 1 usergpu usergpu 817728 Oct 22 01:24 libslotcache_ref_asan.so
+-rw-rw-r-- 1 usergpu usergpu   5165 Oct 22 01:24 slotcache_extracted.inc
+-rw-rw-r-- 1 usergpu usergpu   3051 Oct 22 01:24 slotcache_ref.cpp
+	linux-vdso.so.1 (0x00007fff2e791000)
+	libasan.so.8 => /lib/x86_64-linux-gnu/libasan.so.8 (0x000077db95400000)
+	libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x000077db95000000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x000077db95317000)
+	libubsan.so.1 => /lib/x86_64-linux-gnu/libubsan.so.1 (0x000077db94800000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000077db95b38000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000077db94400000)
+	/lib64/ld-linux-x86-64.so.2 (0x000077db95bc0000)
+ldd.txt
+stderr.txt
+stdout.txt
+summary.txt
+worker0.units
+==697161==Registered root region at 0x718d17e01310 of size 80
+==697161==Registered root region at 0x718d17a007a0 of size 32
+==697161==Unregistered root region at 0x718d17e01310 of size 80
+==697161==Unregistered root region at 0x718d17a007a0 of size 32
+==697161==AddressSanitizer: failed to intercept '__isoc99_printf'
+==697161==Registered root region at 0x718d17e01310 of size 80
+==697161==Registered root region at 0x718d17a007a0 of size 32
+==697161==Unregistered root region at 0x718d17e01310 of size 80
+==697161==Unregistered root region at 0x718d17a007a0 of size 32
+==697161==AddressSanitizer: failed to intercept '__isoc99_sprintf'
+==697161==Registered root region at 0x718d17e01310 of size 80
+==697161==Registered root region at 0x718d17a007a0 of size 32
+==697161==Unregistered root region at 0x718d17e01310 of size 80
+==697161==Unregistered root region at 0x718d17a007a0 of size 32
+==697161==AddressSanitizer: failed to intercept '__isoc99_snprintf'
+==697161==Registered root region at 0x718d17e01310 of size 80
+==697161==Registered root region at 0x718d17a007a0 of size 32
+==697161==Unregistered root region at 0x718d17e01310 of size 80
+==697161==Unregistered root region at 0x718d17a007a0 of28

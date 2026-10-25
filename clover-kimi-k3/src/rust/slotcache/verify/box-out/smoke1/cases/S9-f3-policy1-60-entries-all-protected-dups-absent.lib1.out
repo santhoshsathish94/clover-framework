@@ -1,0 +1,186 @@
+set_policy 1
+set_next_use NULL
+add_spare #60
+add_spare #59
+add_spare #58
+add_spare #57
+add_spare #56
+add_spare #55
+add_spare #54
+add_spare #53
+add_spare #52
+add_spare #51
+add_spare #50
+add_spare #49
+add_spare #48
+add_spare #47
+add_spare #46
+add_spare #45
+add_spare #44
+add_spare #43
+add_spare #42
+add_spare #41
+add_spare #40
+add_spare #39
+add_spare #38
+add_spare #37
+add_spare #36
+add_spare #35
+add_spare #34
+add_spare #33
+add_spare #32
+add_spare #31
+add_spare #30
+add_spare #29
+add_spare #28
+add_spare #27
+add_spare #26
+add_spare #25
+add_spare #24
+add_spare #23
+add_spare #22
+add_spare #21
+add_spare #20
+add_spare #19
+add_spare #18
+add_spare #17
+add_spare #16
+add_spare #15
+add_spare #14
+add_spare #13
+add_spare #12
+add_spare #11
+add_spare #10
+add_spare #9
+add_spare #8
+add_spare #7
+add_spare #6
+add_spare #5
+add_spare #4
+add_spare #3
+add_spare #2
+add_spare #1
+acquire key=1001 prot={} heat0=1
+  -> slot #1 vkey=-1 vheat=(unwritten)
+acquire key=1002 prot={} heat0=2
+  -> slot #2 vkey=-1 vheat=(unwritten)
+acquire key=1003 prot={} heat0=3
+  -> slot #3 vkey=-1 vheat=(unwritten)
+acquire key=1004 prot={} heat0=4
+  -> slot #4 vkey=-1 vheat=(unwritten)
+acquire key=1005 prot={} heat0=5
+  -> slot #5 vkey=-1 vheat=(unwritten)
+acquire key=1006 prot={} heat0=6
+  -> slot #6 vkey=-1 vheat=(unwritten)
+acquire key=1007 prot={} heat0=7
+  -> slot #7 vkey=-1 vheat=(unwritten)
+acquire key=1008 prot={} heat0=8
+  -> slot #8 vkey=-1 vheat=(unwritten)
+acquire key=1009 prot={} heat0=9
+  -> slot #9 vkey=-1 vheat=(unwritten)
+acquire key=1010 prot={} heat0=10
+  -> slot #10 vkey=-1 vheat=(unwritten)
+acquire key=1011 prot={} heat0=11
+  -> slot #11 vkey=-1 vheat=(unwritten)
+acquire key=1012 prot={} heat0=12
+  -> slot #12 vkey=-1 vheat=(unwritten)
+acquire key=1013 prot={} heat0=13
+  -> slot #13 vkey=-1 vheat=(unwritten)
+acquire key=1014 prot={} heat0=14
+  -> slot #14 vkey=-1 vheat=(unwritten)
+acquire key=1015 prot={} heat0=15
+  -> slot #15 vkey=-1 vheat=(unwritten)
+acquire key=1016 prot={} heat0=16
+  -> slot #16 vkey=-1 vheat=(unwritten)
+acquire key=1017 prot={} heat0=17
+  -> slot #17 vkey=-1 vheat=(unwritten)
+acquire key=1018 prot={} heat0=18
+  -> slot #18 vkey=-1 vheat=(unwritten)
+acquire key=1019 prot={} heat0=19
+  -> slot #19 vkey=-1 vheat=(unwritten)
+acquire key=1020 prot={} heat0=20
+  -> slot #20 vkey=-1 vheat=(unwritten)
+acquire key=1021 prot={} heat0=21
+  -> slot #21 vkey=-1 vheat=(unwritten)
+acquire key=1022 prot={} heat0=22
+  -> slot #22 vkey=-1 vheat=(unwritten)
+acquire key=1023 prot={} heat0=23
+  -> slot #23 vkey=-1 vheat=(unwritten)
+acquire key=1024 prot={} heat0=24
+  -> slot #24 vkey=-1 vheat=(unwritten)
+acquire key=1025 prot={} heat0=25
+  -> slot #25 vkey=-1 vheat=(unwritten)
+acquire key=1026 prot={} heat0=26
+  -> slot #26 vkey=-1 vheat=(unwritten)
+acquire key=1027 prot={} heat0=27
+  -> slot #27 vkey=-1 vheat=(unwritten)
+acquire key=1028 prot={} heat0=28
+  -> slot #28 vkey=-1 vheat=(unwritten)
+acquire key=1029 prot={} heat0=29
+  -> slot #29 vkey=-1 vheat=(unwritten)
+acquire key=1030 prot={} heat0=30
+  -> slot #30 vkey=-1 vheat=(unwritten)
+acquire key=1031 prot={} heat0=31
+  -> slot #31 vkey=-1 vheat=(unwritten)
+acquire key=1032 prot={} heat0=32
+  -> slot #32 vkey=-1 vheat=(unwritten)
+acquire key=1033 prot={} heat0=33
+  -> slot #33 vkey=-1 vheat=(unwritten)
+acquire key=1034 prot={} heat0=34
+  -> slot #34 vkey=-1 vheat=(unwritten)
+acquire key=1035 prot={} heat0=35
+  -> slot #35 vkey=-1 vheat=(unwritten)
+acquire key=1036 prot={} heat0=36
+  -> slot #36 vkey=-1 vheat=(unwritten)
+acquire key=1037 prot={} heat0=37
+  -> slot #37 vkey=-1 vheat=(unwritten)
+acquire key=1038 prot={} heat0=38
+  -> slot #38 vkey=-1 vheat=(unwritten)
+acquire key=1039 prot={} heat0=39
+  -> slot #39 vkey=-1 vheat=(unwritten)
+acquire key=1040 prot={} heat0=40
+  -> slot #40 vkey=-1 vheat=(unwritten)
+acquire key=1041 prot={} heat0=41
+  -> slot #41 vkey=-1 vheat=(unwritten)
+acquire key=1042 prot={} heat0=42
+  -> slot #42 vkey=-1 vheat=(unwritten)
+acquire key=1043 prot={} heat0=43
+  -> slot #43 vkey=-1 vheat=(unwritten)
+acquire key=1044 prot={} heat0=44
+  -> slot #44 vkey=-1 vheat=(unwritten)
+acquire key=1045 prot={} heat0=45
+  -> slot #45 vkey=-1 vheat=(unwritten)
+acquire key=1046 prot={} heat0=46
+  -> slot #46 vkey=-1 vheat=(unwritten)
+acquire key=1047 prot={} heat0=47
+  -> slot #47 vkey=-1 vheat=(unwritten)
+acquire key=1048 prot={} heat0=48
+  -> slot #48 vkey=-1 vheat=(unwritten)
+acquire key=1049 prot={} heat0=49
+  -> slot #49 vkey=-1 vheat=(unwritten)
+acquire key=1050 prot={} heat0=50
+  -> slot #50 vkey=-1 vheat=(unwritten)
+acquire key=1051 prot={} heat0=51
+  -> slot #51 vkey=-1 vheat=(unwritten)
+acquire key=1052 prot={} heat0=52
+  -> slot #52 vkey=-1 vheat=(unwritten)
+acquire key=1053 prot={} heat0=53
+  -> slot #53 vkey=-1 vheat=(unwritten)
+acquire key=1054 prot={} heat0=54
+  -> slot #54 vkey=-1 vheat=(unwritten)
+acquire key=1055 prot={} heat0=55
+  -> slot #55 vkey=-1 vheat=(unwritten)
+acquire key=1056 prot={} heat0=56
+  -> slot #56 vkey=-1 vheat=(unwritten)
+acquire key=1057 prot={} heat0=57
+  -> slot #57 vkey=-1 vheat=(unwritten)
+acquire key=1058 prot={} heat0=58
+  -> slot #58 vkey=-1 vheat=(unwritten)
+acquire key=1059 prot={} heat0=59
+  -> slot #59 vkey=-1 vheat=(unwritten)
+acquire key=1060 prot={} heat0=60
+  -> slot #60 vkey=-1 vheat=(unwritten)
+  [before] size=60 lru(mru first): (1060 #60 h=60/42700000 nu=0) (1059 #59 h=59/426c0000 nu=0) (1058 #58 h=58/42680000 nu=0) (1057 #57 h=57/42640000 nu=0) (1056 #56 h=56/42600000 nu=0) (1055 #55 h=55/425c0000 nu=0) (1054 #54 h=54/42580000 nu=0) (1053 #53 h=53/42540000 nu=0) (1052 #52 h=52/42500000 nu=0) (1051 #51 h=51/424c0000 nu=0) (1050 #50 h=50/42480000 nu=0) (1049 #49 h=49/42440000 nu=0) (1048 #48 h=48/42400000 nu=0) (1047 #47 h=47/423c0000 nu=0) (1046 #46 h=46/42380000 nu=0) (1045 #45 h=45/42340000 nu=0) (1044 #44 h=44/42300000 nu=0) (1043 #43 h=43/422c0000 nu=0) (1042 #42 h=42/42280000 nu=0) (1041 #41 h=41/42240000 nu=0) (1040 #40 h=40/42200000 nu=0) (1039 #39 h=39/421c0000 nu=0) (1038 #38 h=38/42180000 nu=0) (1037 #37 h=37/42140000 nu=0) (1036 #36 h=36/42100000 nu=0) (1035 #35 h=35/420c0000 nu=0) (1034 #34 h=34/42080000 nu=0) (1033 #33 h=33/42040000 nu=0) (1032 #32 h=32/42000000 nu=0) (1031 #31 h=31/41f80000 nu=0) (1030 #30 h=30/41f00000 nu=0) (1029 #29 h=29/41e80000 nu=0) (1028 #28 h=28/41e00000 nu=0) (1027 #27 h=27/41d80000 nu=0) (1026 #26 h=26/41d00000 nu=0) (1025 #25 h=25/41c80000 nu=0) (1024 #24 h=24/41c00000 nu=0) (1023 #23 h=23/41b80000 nu=0) (1022 #22 h=22/41b00000 nu=0) (1021 #21 h=21/41a80000 nu=0) (1020 #20 h=20/41a00000 nu=0) (1019 #19 h=19/41980000 nu=0) (1018 #18 h=18/41900000 nu=0) (1017 #17 h=17/41880000 nu=0) (1016 #16 h=16/41800000 nu=0) (1015 #15 h=15/41700000 nu=0) (1014 #14 h=14/41600000 nu=0) (1013 #13 h=13/41500000 nu=0) (1012 #12 h=12/41400000 nu=0) (1011 #11 h=11/41300000 nu=0) (1010 #10 h=10/41200000 nu=0) (1009 #9 h=9/41100000 nu=0) (1008 #8 h=8/41000000 nu=0) (1007 #7 h=7/40e00000 nu=0) (1006 #6 h=6/40c00000 nu=0) (1005 #5 h=5/40a00000 nu=0) (1004 #4 h=4/40800000 nu=0) (1003 #3 h=3/40400000 nu=0) (1002 #2 h=2/40000000 nu=0) (1001 #1 h=1/3f800000 nu=0)
+      spare(last=next):
+      next(set):
+acquire key=5000 prot={1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046,1047,1048,1049,1050,1051,1052,1053,1054,1055,1056,1057,1058,1059,1060,1001,1001,7,8} heat0=1

@@ -1,0 +1,36 @@
+# P62 (M62 + probe): M62 (got = r) + tags: a short read, and a loop iteration with got > 0
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -9,6 +9,17 @@
+ 
+ /// g_wb_skipped: card victims that were not worth a RAM slot.
+ pub static WB_SKIPPED: AtomicU64 = AtomicU64::new(0);
++
++pub fn probe(tag: &str) {
++    use std::io::Write;
++    if let Ok(p) = std::env::var("SUPPLY_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {
++            let line = format!("{} {}
++", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
+ 
+ extern "C" {
+     fn pread(fd: c_int, buf: *mut c_void, count: usize, offset: i64) -> isize;
+@@ -119,7 +130,13 @@
+                 m.push(b'\n');
+                 fatal_bytes(&m);
+             }
+-            got += r as usize;
++            if (r as usize) < j.len - got {
++                probe(&format!("short r={} want={} got={}", r, j.len - got, got));
++            }
++            if got > 0 {
++                probe(&format!("iteration_with_got_gt0 got={} r={} len={}", got, r, j.len));
++            }
++            got = r as usize;
+         }
+     }
+     do_check(&c.ops, (c.ops.set_device)(c.dev), site::SET_DEVICE_JOB);

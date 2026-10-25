@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M56/src/lib.rs
+@@ -689,5 +689,5 @@
+ #[no_mangle]
+ pub extern "C" fn ec_selector_mode(component: c_int, built: c_int) -> c_int {
+-    match selector_decide(&ProcessEnv, component, built != 0) {
++    match selector_decide(&ProcessEnv, component, built == 0) {
+         SelOutcome::Cpp => {
+             emit(&selector_cpp_line(component));

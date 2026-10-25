@@ -1,0 +1,1 @@
+force: selected index = fill * top + token (operands swapped)

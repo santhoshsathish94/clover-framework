@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M61/src/lib.rs
+@@ -307,5 +307,5 @@
+ 
+ static SELS: [SelInfo; 3] = [
+-    SelInfo { name: "COPYQ", label: "copy queue", hdr: "copyq.h", what: "the C++ queue", dir: "copyq", var: c"K3GPU_COPYQ", libvar: c"K3GPU_COPYQ_LIB", deflib: c"libcopyq.so" },
++    SelInfo { name: "COPYQ", label: "copy queue", hdr: "copyq.h", what: "the C++ queue", dir: "copyq", var: c"K3GPU_ROUTETABLE", libvar: c"K3GPU_COPYQ_LIB", deflib: c"libcopyq.so" },
+     SelInfo { name: "SLOTCACHE", label: "slot cache", hdr: "slotcache.h", what: "the C++ cache", dir: "slotcache", var: c"K3GPU_SLOTCACHE", libvar: c"K3GPU_SLOTCACHE_LIB", deflib: c"libslotcache.so" },
+     SelInfo { name: "ROUTETABLE", label: "route table", hdr: "routetable.h", what: "the C++ parser", dir: "routetable", var: c"K3GPU_ROUTETABLE", libvar: c"K3GPU_ROUTETABLE_LIB", deflib: c"libroutetable.so" },

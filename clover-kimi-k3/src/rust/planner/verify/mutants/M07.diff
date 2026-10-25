@@ -1,0 +1,12 @@
+# M07: M07 vq prot without layer (raw expert numbers)
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -428,7 +428,7 @@
+     fn rc_plan_vq(&mut self, pos: usize, cur: &[i32]) {
+         self.vq_sweep();
+         let pos_layer = self.call_layer(pos);
+-        let prot: Vec<i32> = cur.iter().map(|&e| self.ekey(pos_layer, e)).collect();
++        let prot: Vec<i32> = cur.iter().map(|&e| e).collect();
+         let mut out = self.arr.values().filter(|a| a.state.load(Ordering::Acquire) == 0).count();
+         let mut full = [false; MAX_CARDS];
+         let last = self.last_call(pos);

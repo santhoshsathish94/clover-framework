@@ -1,0 +1,11 @@
+# M24: pend_take missing
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -267,7 +267,6 @@
+         for n in need.iter_mut() {
+             let key = self.ekey(layer, n.e);
+             if !self.host_find(host, key).is_null() {
+-                (ops.pend_take)(key);
+                 n.host = self.host_remove(host, key);
+                 held.push(n.host);
+                 pool.st.hit_host = pool.st.hit_host.wrapping_add(1);

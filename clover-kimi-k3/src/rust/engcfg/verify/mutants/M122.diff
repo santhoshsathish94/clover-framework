@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M122/src/lib.rs
+@@ -519,5 +519,5 @@
+             .n(need)
+             .s(" needed, ")
+-            .n(hc)
++            .n(hh)
+             .s(" already on the card (")
+             .f(1, 100.0 * hcf / needf)

@@ -1,0 +1,1 @@
+rt_set_current stores cur truncated to i32

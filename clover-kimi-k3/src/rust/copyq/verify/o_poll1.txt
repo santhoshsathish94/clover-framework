@@ -1,0 +1,10 @@
+
+put poll.sh exit=0 
+cpp S1 seed=1 rc=0 secs=9.4 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S1 seed=1 rc=0 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S1 seed=2 rc=0 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S1 seed=2 rc=0 secs=9.0 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+cpp S1 seed=3 rc=0 secs=9.1 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+rust S1 seed=3 rc=0 secs=8.8 | SUMMARY S1 jobs=128 bad_jobs=0 timeouts=0 bad_flags=0 observer_violations=0 | RESULT PASS
+run poll.sh matrix 40 exit=0
+ENDOFHELPER

@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M116/src/lib.rs
+@@ -471,5 +471,5 @@
+     let (mut need, mut hc, mut hh, mut dr): (u64, u64, u64, u64) = (0, 0, 0, 0);
+     let (mut tr, mut tc) = (0f64, 0f64);
+-    for k in &s.card[..cards] {
++    for k in s.card[..cards].iter().rev() {
+         if k.ready == 0 {
+             continue;

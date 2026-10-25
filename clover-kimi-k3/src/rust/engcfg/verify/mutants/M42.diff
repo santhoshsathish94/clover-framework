@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M42/src/lib.rs
+@@ -135,5 +135,5 @@
+             (acc as i64).wrapping_neg()
+         }
+-    } else if over || acc > i64::MAX as u64 {
++    } else if over || acc >= i64::MAX as u64 {
+         i64::MAX
+     } else {

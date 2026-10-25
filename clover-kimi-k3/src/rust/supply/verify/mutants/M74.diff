@@ -1,0 +1,12 @@
+# M74: do_check: no exit when check returns with a non-zero status
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -47,7 +47,7 @@
+ fn do_check(ops: &sy_ops, status: c_int, site: &'static [u8]) {
+     // SAFETY: `site` is NUL-terminated; the function pointer is the caller's.
+     unsafe { (ops.check)(status, site.as_ptr() as *const c_char) };
+-    if status != 0 {
++    if status != 0 && false {
+         std::process::exit(1); // ops.check must not return on a non-zero status; if it does, stop here as the original's CHECK would have
+     }
+ }

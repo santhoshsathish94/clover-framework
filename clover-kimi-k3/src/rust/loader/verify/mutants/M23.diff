@@ -1,0 +1,13 @@
+# M23: threads started eagerly: ld_init submits a no-op to every card
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -118,6 +118,9 @@
+     };
+     let cb = conf.cb;
+     let loader = Loader::new(Box::new(move |card| cb.start_thread(card)));
++    for c in 0..MAX_CARDS {
++        loader.submit(c, Box::new(|| {}));
++    }
+     let _ = STATE.set(State { cfg: conf, loader });
+ }
+ 

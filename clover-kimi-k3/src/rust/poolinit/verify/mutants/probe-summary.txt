@@ -1,0 +1,103 @@
+== out/probe/M00c.events
+map: lines=12830 processes=1062
+    caller: true=116 false=12714
+    n_chunks: min=1 median=16 max=24
+    i: min=0 median=6 max=23
+calling thread mapped >= 1 chunk, per n_chunks (processes with n chunks, of them with a caller map):
+    n=1: processes=49 caller_mapped=0
+    n=2: processes=42 caller_mapped=0
+    n=3: processes=42 caller_mapped=1
+    n=4: processes=52 caller_mapped=1
+    n=5: processes=45 caller_mapped=0
+    n=6: processes=43 caller_mapped=0
+    n=7: processes=52 caller_mapped=0
+    n=8: processes=46 caller_mapped=1
+    n=9: processes=63 caller_mapped=1
+    n=10: processes=48 caller_mapped=1
+    n=11: processes=51 caller_mapped=1
+    n=12: processes=65 caller_mapped=2
+    n=13: processes=56 caller_mapped=0
+    n=14: processes=40 caller_mapped=3
+    n=15: processes=39 caller_mapped=12
+    n=16: processes=105 caller_mapped=30
+    n=17: processes=27 caller_mapped=5
+    n=18: processes=17 caller_mapped=5
+    n=19: processes=32 caller_mapped=7
+    n=20: processes=31 caller_mapped=9
+    n=21: processes=36 caller_mapped=8
+    n=22: processes=21 caller_mapped=7
+    n=23: processes=32 caller_mapped=10
+    n=24: processes=28 caller_mapped=9
+  n>=8 overall: processes=737 caller_mapped=111
+  relation of the chunk number to the address (processes with n>=4): {'neither': 383, 'address descending in chunk number': 541, 'address ascending in chunk number': 5}
+== out/probe/M00r.events
+reg: lines=9996 processes=833
+    k: min=0 median=6 max=23
+    n_chunks: min=1 median=16 max=24
+  order of the registered chunk addresses in the host_register calls (processes with n>=4): {'registered addresses descending': 399, 'neither': 321, 'registered addresses ascending': 4}
+== out/probe/M03p.events
+M03: lines=1418 processes=1285
+    n_chunks: min=0 median=9 max=24
+== out/probe/M11p.events
+M11: lines=1092 processes=975
+    orig_s: min=0.0004 median=0.002 max=0.0416
+    mut_s: min=0 median=0 max=0
+== out/probe/M12p.events
+M12: lines=1092 processes=975
+    orig_s: min=0.0004 median=0.00185 max=0.0376
+    mut_s: min=0.4026 median=1.8538 max=37.6381
+== out/probe/M13p.events
+M13: lines=1092 processes=975
+    orig_s: min=0.0004 median=0.0019 max=0.0318
+    mut_s: min=0 median=0 max=0
+== out/probe/M14p.events
+M14: lines=1092 processes=975
+    d_real: min=0.000442 median=0.0018835 max=0.035664
+    d_mono: min=0.000442 median=0.0018835 max=0.035664
+== out/probe/M33p.events
+M33: lines=1189 processes=1067
+    n_chunks: min=0 median=9 max=24
+== out/probe/M33r.events
+reg: lines=9996 processes=833
+    k: min=0 median=6 max=23
+    n_chunks: min=1 median=16 max=24
+  order of the registered chunk addresses in the host_register calls (processes with n>=4): {'neither': 356, 'registered addresses ascending': 368}
+== out/probe/M46p.events
+M46: lines=12832 processes=1066
+    i: min=0 median=6 max=23
+    n_chunks: min=1 median=16 max=24
+== out/probe/M46r.events
+reg: lines=9996 processes=833
+    k: min=0 median=6 max=23
+    n_chunks: min=1 median=16 max=24
+  order of the registered chunk addresses in the host_register calls (processes with n>=4): {'registered addresses ascending': 367, 'neither': 357}
+== out/probe/M47p.events
+M47: lines=12836 processes=1063
+== out/probe/M48p.events
+M48: lines=1092 processes=975
+    cap0: min=0 median=287 max=799
+    orig: min=0 median=256 max=768
+    mut: min=0 median=256 max=768
+    equal: true=1092 false=0
+== out/probe/M49p.events
+M49: lines=1517 processes=1383
+    raw: min=2048 median=32768 max=1.75473e+07
+    equal: true=1517 false=0
+== out/probe/M57p.events
+M57: lines=583 processes=583
+    code: min=-2.14748e+09 median=35 max=2.14748e+09
+== out/probe/M58p.events
+M58: lines=583 processes=583
+== out/probe/M59p.events
+M59: lines=1428 processes=1428
+== out/probe/M67p.events
+M67: lines=1998 processes=1876
+    free_eq_reserve: true=61 false=1937
+    free_lt_reserve: true=101 false=1897
+== out/probe/M68p.events
+M68: lines=1998 processes=1876
+    free_lt_reserve: true=101 false=1897
+== out/probe/M86p.events
+M86: lines=1074 processes=1006
+    experts: min=0 median=896 max=4096
+    negative: true=0 false=1074

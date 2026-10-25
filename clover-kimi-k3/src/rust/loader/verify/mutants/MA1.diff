@@ -1,0 +1,12 @@
+# MA1: fatal message written to stdout (fd 1)
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -22,7 +22,7 @@
+     let mut done = 0;
+     while done < msg.len() {
+         // SAFETY: fd 2 and a live buffer of msg.len() - done bytes.
+-        let n = unsafe { write(2, msg[done..].as_ptr() as *const c_void, msg.len() - done) };
++        let n = unsafe { write(1, msg[done..].as_ptr() as *const c_void, msg.len() - done) };
+         if n <= 0 {
+             break; // fprintf ignores a failed write too
+         }

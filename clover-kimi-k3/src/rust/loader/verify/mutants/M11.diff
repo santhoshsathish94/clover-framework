@@ -1,0 +1,13 @@
+# M11: notify_all before the decrement (wrong order, wake-up can be lost)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -86,8 +86,8 @@
+                 }
+             };
+             job();
++            self.pending_cv.notify_all();
+             *lock(&self.pending) -= 1;
+-            self.pending_cv.notify_all();
+         }
+     }
+ }

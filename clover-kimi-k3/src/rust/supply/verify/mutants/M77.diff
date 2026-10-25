@@ -1,0 +1,12 @@
+# M77: run_parallel: spawned thread numbered i - 1 (tid 0 used twice)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -161,7 +161,7 @@
+     let n: c_int = std::cmp::min(nthreads, c.jobs.len() as c_int);
+     std::thread::scope(|s| {
+         for i in 1..n {
+-            s.spawn(move || work(c, i as usize));
++            s.spawn(move || work(c, (i - 1) as usize));
+         }
+         work(c, 0);
+     });

@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M126/src/lib.rs
+@@ -570,5 +570,5 @@
+                 .n(s.rc_calls)
+                 .s(" calls seen, look-ahead ")
+-                .s(if s.rc_ok != 0 { "on to the end" } else { "stopped" })
++                .s(if s.rc_ok != 0 { "stopped" } else { "on to the end" })
+                 .s("; ")
+                 .n(s.pf_planned)

@@ -1,0 +1,12 @@
+# M68: prefill message text `a record` -> `record`
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -103,7 +103,7 @@
+                 let buf = unsafe { (*j.slab.add(layer)).wrapping_add(r.wrapping_mul(raw)).wrapping_add(got) };
+                 let rd = sys.pread(fd, buf, raw - got, off);
+                 if rd <= 0 {
+-                    return Err(format!("prefill: cannot read a record of layer {}\n", j.layer).into_bytes());
++                    return Err(format!("prefill: cannot read record of layer {}\n", j.layer).into_bytes());
+                 }
+                 got += rd as usize;
+             }

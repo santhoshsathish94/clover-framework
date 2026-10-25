@@ -1,0 +1,12 @@
+# M54: sys: NULL error_string prints '' instead of '(null)'
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -52,7 +52,7 @@
+ /// `p` must be NULL or point to a NUL-terminated string.
+ pub unsafe fn cstr_bytes<'a>(p: *const c_char) -> &'a [u8] {
+     if p.is_null() {
+-        b"(null)"
++        b""
+     } else {
+         // SAFETY: by the caller.
+         unsafe { std::ffi::CStr::from_ptr(p).to_bytes() }

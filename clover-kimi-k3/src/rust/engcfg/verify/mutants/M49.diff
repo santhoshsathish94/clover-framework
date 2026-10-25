@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M49/src/lib.rs
+@@ -212,5 +212,5 @@
+ fn fatal(b: &[u8]) -> ! {
+     emit(b);
+-    std::process::exit(1)
++    std::process::exit(2)
+ }
+ 

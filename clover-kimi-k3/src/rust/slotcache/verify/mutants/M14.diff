@@ -1,0 +1,12 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -179,8 +179,8 @@
+                         best = it;
+                         best_heat = n.heat;
+                     }
+-                    seen += 1;
+                 }
++                seen += 1;
+                 it = n.prev;
+             }
+             if best == NIL {

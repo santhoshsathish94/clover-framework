@@ -1,0 +1,12 @@
+# M89: ld_submit with a NULL job is ignored silently
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -128,7 +128,7 @@
+     let st = state("ld_submit");
+     let f = match fn_ {
+         Some(f) => f,
+-        None => fatal_msg(b"loader: job is NULL\n"),
++        None => return,
+     };
+     die(check_card(card));
+     let arg = Arg(arg);

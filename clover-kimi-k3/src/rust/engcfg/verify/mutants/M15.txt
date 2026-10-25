@@ -1,0 +1,1 @@
+route cache counts as set when the variable is empty

@@ -1,0 +1,12 @@
+# M58: sys: check() writes the 'file:line: ' prefix and the text in two write calls
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -76,6 +76,8 @@
+             m.extend_from_slice(cstr_bytes(file));
+         }
+         m.extend_from_slice(format!(":{}: ", line).as_bytes());
++        write_stderr(&m);
++        m.clear();
+         m.extend_from_slice(cstr_bytes(error_string(code)));
+     }
+     m.push(b'\n');

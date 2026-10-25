@@ -1,0 +1,1 @@
+atoi: digit loop stops at the first overflow (the rest of the digits are not consumed; only the value is used afterwards)

@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M45/src/lib.rs
+@@ -649,5 +649,5 @@
+ #[no_mangle]
+ pub extern "C" fn ec_pend_cap(cap_slots: usize) -> usize {
+-    cap_slots.wrapping_mul(6) / 10
++    cap_slots / 10 * 6
+ }
+ 

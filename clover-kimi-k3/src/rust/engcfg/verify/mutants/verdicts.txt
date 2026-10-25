@@ -1,0 +1,17 @@
+M41|equivalent (argued; the changed branch ran 3981 times on exactly -2^63, 0 differences; `cargo test --release` 56/56)
+M42|equivalent (argued; the changed branch ran 3986 times on exactly i64::MAX, 0 differences; `cargo test --release` 56/56)
+M43|equivalent (argued; the loop would have continued after overflow 55029 times, 0 differences; `cargo test --release` 56/56)
+M82|equivalent in the shipped release profile: .so byte-identical to the real build (md5 cb7a3cf1); `layer - 1` overflowed 9453 times, 0 differences; `cargo test` (debug, overflow checks on) fails card_of_layout_1
+M83|equivalent in the shipped release profile: .so byte-identical to the real build (md5 cb7a3cf1); `layer * cards` overflowed 542307 times, 0 differences; `cargo test` (debug) fails card_of_layout_0
+M84|caught by unit test only (out_of_contract_inputs_abort_with_sigabrt, release and debug: the test binary unwinds, exit 101); in the .so the same change still ends in SIGABRT (E8 passes, path reached 2 times), only the stderr text differs
+M95|REAL GAP (never reached: 0 calls with more counts than experts in 4386 units; hand input `morecounts`: reference warns, mutant deals the expert)
+M98|REAL GAP (never reached: 0 sums outside i32; hand input `total32` (21,474,853 experts): reference warns "counts do not fit", mutant accepts and writes 21,478,036 words)
+M99|REAL GAP (never reached: 0 products n*top outside i32; hand input `ntop32` (n 4096, top 2^20, zero counts): reference warns, mutant silent)
+M100|REAL GAP (never reached: no counter above 254; hand input `u8` (301 experts, n 1, top 1): mutant overwrites sel[0..44] after 256 deals)
+M101|REAL GAP (never reached: no counter above 254; hand input `u16` (70,001 experts, n 1, top 1): mutant wraps after 65536 deals)
+M102|REAL GAP (never reached: the dealing counter never passes 2^31; hand input `s32` (n 2^30, top 2, 3*2^30 deals): mutant panics on an out-of-bounds index, reference and real library finish with identical output)
+M103|equivalent within the contract (top >= 1); top < 0 is never driven (0 events) and is outside the contract
+M104|equivalent below 2^31 deals per token (a fill counter is never negative below that; 0 events)
+M105|caught by unit test only (out_of_contract_inputs_abort_with_sigabrt, release and debug: the test binary unwinds, exit 101); in the .so the same change still ends in SIGABRT (E8 passes, path reached 1 time), only the stderr text differs
+M114|equivalent (IEEE multiplication is commutative; .so byte-identical to the real build, md5 cb7a3cf1)
+M138|REAL GAP in what the driver observes (final stderr bytes identical, but each line is written with two write calls instead of one; the changed path ran 3,275,503 times; strace shows 7 vs 12 writes for the same summary)

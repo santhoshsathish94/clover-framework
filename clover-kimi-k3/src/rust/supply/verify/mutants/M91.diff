@@ -1,0 +1,16 @@
+# M91: host_find: no NULL guard
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -186,11 +186,7 @@
+     }
+ 
+     unsafe fn host_find(&self, host: &sy_host, key: c_int) -> *mut u8 {
+-        if host.cache.is_null() {
+-            null_mut()
+-        } else {
+-            (self.ops.sc_find)(host.cache, key)
+-        }
++        (self.ops.sc_find)(host.cache, key)
+     }
+ 
+     unsafe fn host_worth(&self, host: &sy_host, key: c_int) -> bool {

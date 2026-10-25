@@ -1,0 +1,23 @@
+# M84: the job reads *h_card when it runs, not the card captured at the call
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -175,6 +175,7 @@
+     }
+     // SAFETY: dataset is non-null and NUL-terminated (header); copied here, as `const std::string ds(dataset)` does.
+     let ds = unsafe { CStr::from_ptr(r.dataset) }.to_owned();
++    let hc = r.h_card as usize;
+     let job = LayerJob {
+         cb: st.cfg.cb,
+         handle: r.handle,
+@@ -190,6 +191,11 @@
+     st.loader.submit(
+         r.card as usize,
+         Box::new(move || {
++            let mut job = job;
++            if hc != 0 {
++                // SAFETY: mutant
++                job.card = unsafe { *(hc as *const c_int) };
++            }
+             if let Err(m) = job::run(&RealSys, &job) {
+                 fatal_msg(&m);
+             }

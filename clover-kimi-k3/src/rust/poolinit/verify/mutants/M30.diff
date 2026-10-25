@@ -1,0 +1,12 @@
+# M30: host: host_register flags 0 instead of Portable
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -76,7 +76,7 @@
+     unsafe {
+         check(set_device(0), error_string, file, LINE_SET_DEVICE);
+         for b in base.iter() {
+-            check(host_register(b.load(Ordering::SeqCst) as *mut c_void, chunk_bytes, PI_HOST_REGISTER_PORTABLE), error_string, file, LINE_REGISTER);
++            check(host_register(b.load(Ordering::SeqCst) as *mut c_void, chunk_bytes, 0), error_string, file, LINE_REGISTER);
+         }
+         for b in base.iter().rev() {
+             let p = b.load(Ordering::SeqCst) as *mut u8;

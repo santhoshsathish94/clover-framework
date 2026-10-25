@@ -1,0 +1,12 @@
+# M108: pool: mem_get_info arguments swapped (&mut t, &mut f)
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -52,7 +52,7 @@
+         (*out).readers = std::cmp::min(cfg.nreaders, PI_MAX_READERS as c_int);
+         check(set_device(cfg.device), error_string, file, LINE_SET_DEVICE);
+         let (mut f, mut t) = (0usize, 0usize);
+-        check(mem_get_info(&mut f, &mut t), error_string, file, LINE_MEM_GET_INFO);
++        check(mem_get_info(&mut t, &mut f), error_string, file, LINE_MEM_GET_INFO);
+         let slots = slots_for(f, cfg.reserve_bytes, raw);
+         (*out).slots = slots;
+         if slots < MIN_SLOTS {

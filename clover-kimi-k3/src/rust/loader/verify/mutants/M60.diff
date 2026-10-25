@@ -1,0 +1,12 @@
+# M60: pread offset does not advance with `got`
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -98,7 +98,7 @@
+         for r in 0..4usize {
+             let mut got = 0usize;
+             while got < raw {
+-                let off = (r as i64).wrapping_mul(raw as i64).wrapping_add(got as i64);
++                let off = (r as i64).wrapping_mul(raw as i64);
+                 // SAFETY: slab[layer] was just filled by host_alloc; r * raw + got < 4 * raw is inside the block.
+                 let buf = unsafe { (*j.slab.add(layer)).wrapping_add(r.wrapping_mul(raw)).wrapping_add(got) };
+                 let rd = sys.pread(fd, buf, raw - got, off);

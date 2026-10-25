@@ -1,0 +1,18 @@
+# M07: card hit: sc_touch before arr_wait (order swapped)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -237,11 +237,11 @@
+             let mut p = self.pool_find(pool, key);
+             let heat = *counts.offset(e as isize) as f32;
+             if !p.is_null() {
++                if !pool.cache.is_null() {
++                    (ops.sc_touch)(pool.cache, key, heat);
++                }
+                 if vq {
+                     (ops.arr_wait)(key);
+-                }
+-                if !pool.cache.is_null() {
+-                    (ops.sc_touch)(pool.cache, key, heat);
+                 }
+                 *pool.h_eptr.offset(e as isize) = p as *const u8;
+                 pool.st.hit_card = pool.st.hit_card.wrapping_add(1);

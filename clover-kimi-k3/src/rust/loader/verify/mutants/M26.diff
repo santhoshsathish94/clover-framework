@@ -1,0 +1,15 @@
+# M26: as M25 with a 100 us sleep between the check and the set (window widened)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -46,8 +46,10 @@
+         // pending is raised before the job is queued and before the card's lock is taken, as in the original
+         *lock(&self.pending) += 1;
+         let c = &self.cards[card];
++        let started = lock(&c.st).started;
++        std::thread::sleep(std::time::Duration::from_micros(100));
+         let mut g = lock(&c.st);
+-        if !g.started {
++        if !started {
+             g.started = true;
+             let me: &'static Loader = self;
+             // the handle is dropped: detached, never joined; std::thread's default in the original is the system's 8 MB stack

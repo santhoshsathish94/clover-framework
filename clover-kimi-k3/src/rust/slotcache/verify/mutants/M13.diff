@@ -1,0 +1,15 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -195,11 +195,7 @@
+         if let Some(&old) = self.map.get(&key) {
+             self.detach(old, key);
+         }
+-        let mut nu = 0;
+-        if belady() {
+-            nu = nu_call(key);
+-            self.by_next.insert((nu, key));
+-        }
++        let nu = 0;
+         let i = self.alloc(Node { key, slot: p, heat: heat0, nu, prev: NIL, next: NIL });
+         self.push_front(i);
+         self.map.insert(key, i);

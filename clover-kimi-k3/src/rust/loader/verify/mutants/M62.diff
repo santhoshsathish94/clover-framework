@@ -1,0 +1,12 @@
+# M62: pread length is raw instead of raw - got
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -101,7 +101,7 @@
+                 let off = (r as i64).wrapping_mul(raw as i64).wrapping_add(got as i64);
+                 // SAFETY: slab[layer] was just filled by host_alloc; r * raw + got < 4 * raw is inside the block.
+                 let buf = unsafe { (*j.slab.add(layer)).wrapping_add(r.wrapping_mul(raw)).wrapping_add(got) };
+-                let rd = sys.pread(fd, buf, raw - got, off);
++                let rd = sys.pread(fd, buf, raw, off);
+                 if rd <= 0 {
+                     return Err(format!("prefill: cannot read a record of layer {}\n", j.layer).into_bytes());
+                 }

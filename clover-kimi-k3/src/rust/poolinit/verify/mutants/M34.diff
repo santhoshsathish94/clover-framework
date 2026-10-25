@@ -1,0 +1,12 @@
+# M34: host: spares within a chunk ascending (slot 0 first)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -80,7 +80,7 @@
+         }
+         for b in base.iter().rev() {
+             let p = b.load(Ordering::SeqCst) as *mut u8;
+-            for s in (0..PI_CHUNK_SLOTS).rev() {
++            for s in 0..PI_CHUNK_SLOTS {
+                 add_spare(cfg.cache, p.wrapping_add(s.wrapping_mul(raw)));
+             }
+         }

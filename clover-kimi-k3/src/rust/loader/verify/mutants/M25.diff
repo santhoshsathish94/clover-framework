@@ -1,0 +1,14 @@
+# M25: first-submit guard removed: `started` is read outside the lock and set later (the original's check-then-act)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -46,8 +46,9 @@
+         // pending is raised before the job is queued and before the card's lock is taken, as in the original
+         *lock(&self.pending) += 1;
+         let c = &self.cards[card];
++        let started = lock(&c.st).started;
+         let mut g = lock(&c.st);
+-        if !g.started {
++        if !started {
+             g.started = true;
+             let me: &'static Loader = self;
+             // the handle is dropped: detached, never joined; std::thread's default in the original is the system's 8 MB stack

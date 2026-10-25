@@ -1,0 +1,11 @@
+# M16: no notify_one after the push in submit (worker is only woken by its own first look)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -56,7 +56,6 @@
+             }
+         }
+         g.q.push_back(job);
+-        c.cv.notify_one();
+     }
+ 
+     /// loader_wait.

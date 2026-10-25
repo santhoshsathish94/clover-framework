@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M118/src/lib.rs
+@@ -475,5 +475,5 @@
+             continue;
+         }
+-        need = need.wrapping_add(k.needed);
++        need = need.saturating_add(k.needed);
+         hc = hc.wrapping_add(k.hit_card);
+         hh = hh.wrapping_add(k.hit_host);

@@ -1,0 +1,15 @@
+[package]
+name = "planner"
+version = "0.1.0"
+edition = "2021"
+description = "Supply planner: read-ahead and card-queue planning of the route cache (Rust implementation of include/planner.h)"
+
+[lib]
+name = "planner"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+panic = "abort"

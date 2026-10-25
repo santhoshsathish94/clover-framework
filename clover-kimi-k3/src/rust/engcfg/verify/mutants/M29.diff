@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M29/src/lib.rs
+@@ -166,5 +166,5 @@
+ fn settings_from<E: EnvSource + ?Sized>(e: &E, devices: i32) -> EcSettings {
+     let ei = |n: &CStr, d: i32| env_int(e, n, d);
+-    let cards = ei(c"K3GPU_CARDS", 8).min(devices).min(EC_MAX_CARDS as i32);
++    let cards = ei(c"K3GPU_CARDS", 8).min(devices).min(9);
+     let readers = ei(c"K3GPU_READERS", 16);
+     let verbose = ei(c"K3GPU_VERBOSE", 0);

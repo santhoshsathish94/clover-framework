@@ -1,0 +1,37 @@
+# M58p: M58 [+probe]: prefix written in a separate write call
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -27,6 +27,23 @@
+     let mut t = Timespec { tv_sec: 0, tv_nsec: 0 };
+     // SAFETY: `t` is a valid Timespec.
+     unsafe { clock_gettime(CLOCK_MONOTONIC, &mut t) };
++    t.tv_sec as f64 + 1e-9 * t.tv_nsec as f64
++}
++
++pub fn probe(tag: &str) {
++    if let Ok(p) = std::env::var("PI_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().append(true).create(true).open(p) {
++            let line = format!("{} {}\n", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
++
++/// seconds of clock `id` (0 = REALTIME, 1 = MONOTONIC), same arithmetic as wall_now
++pub fn clk(id: c_int) -> f64 {
++    let mut t = Timespec { tv_sec: 0, tv_nsec: 0 };
++    // SAFETY: `t` is a valid Timespec.
++    unsafe { clock_gettime(id, &mut t) };
+     t.tv_sec as f64 + 1e-9 * t.tv_nsec as f64
+ }
+ 
+@@ -76,6 +93,9 @@
+             m.extend_from_slice(cstr_bytes(file));
+         }
+         m.extend_from_slice(format!(":{}: ", line).as_bytes());
++        probe("M58 two-writes");
++        write_stderr(&m);
++        m.clear();
+         m.extend_from_slice(cstr_bytes(error_string(code)));
+     }
+     m.push(b'\n');

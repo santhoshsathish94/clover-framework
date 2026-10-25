@@ -1,0 +1,12 @@
+# M62: pread loop: got = r instead of got += r
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -119,7 +119,7 @@
+                 m.push(b'\n');
+                 fatal_bytes(&m);
+             }
+-            got += r as usize;
++            got = r as usize;
+         }
+     }
+     do_check(&c.ops, (c.ops.set_device)(c.dev), site::SET_DEVICE_JOB);

@@ -1,0 +1,58 @@
+HASHES-UNCHANGED-before-vs-after
+929d801fffeada4a2874dfc4addb7268  include/routetable.h
+70dd008600231177469d9e5523e7d6d0  src/lib.rs
+7af7cfd02465aacd0b1e8f2e8b899d87  src/tests.rs
+71ccfeb5ae2b693a88500db8fba071bd  Cargo.toml
+4c12cba1657a6101a3335e2f4d580fee  ref/routetable_ref.cpp
+ec0d604f5b393491522a168e1a1c2588  ref/routetable_extracted.inc
+09c4d2b7bd2013b24aa8d3b808fc352e  ref/libroutetable_ref.so
+5281e02b3966dc6d4e4102bb4600bf11  target/release/libroutetable.so
+d36ae6337123aaefea336b108ccaef0c  verify/diff_driver.cpp
+c4a193101570d3207c90f85aca0d927b  verify/build.sh
+e95d5e69a08cd42ec2e2f19bad77e14b  verify/run.sh
+24ffef93d5317b9e7d1a95bfa4b36f90  verify/asan.sh
+e8ffbb1ba34e5dcd93dcba0be52089d0  verify/md5.sh
+669f5445382ace593e32dab84c37ff89  verify/count.sh
+765cdb23fd78b1100972e9ef539c404c  verify/diff_driver
+ref-file: build.sh
+ref-file: libroutetable_ref.so
+ref-file: routetable_extracted.inc
+ref-file: routetable_ref.cpp
+ref-file: smoke_ref
+ref-file: smoke_ref.c
+0a3729acb5f678ef3ba4c4aaf538afad  /home/usergpu/k3gpu/results/p1d.trace
+/home/usergpu/k3gpu/results/p1d.trace 821840 bytes mtime 2026-10-21 01:07:02.472727437 +0000
+
+../src/lib.rs 2026-10-22 09:33:31.491618379 +0000
+../ref/build.sh 2026-10-22 09:30:28.270099683 +0000
+../ref/libroutetable_ref.so 2026-10-22 09:30:28.810101209 +0000
+../ref/routetable_extracted.inc 2026-10-22 09:30:23.541086320 +0000
+../ref/routetable_ref.cpp 2026-10-22 09:30:24.301088467 +0000
+../ref/smoke_ref 2026-10-22 09:30:28.934101559 +0000
+../ref/smoke_ref.c 2026-10-22 09:30:25.057090604 +0000
+../include/routetable.h 2026-10-22 09:30:20.229076961 +0000
+
+R4 fixed:
+CASE missing-absolute                   ref: exit 1 out='' err='cannot read route cache /nonexistent-rt-verify/route.trace\n' | verdict: contract-ok
+CASE missing-in-existing-dir            ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/does...(101 bytes)' | verdict: contract-ok
+CASE empty-path                         ref: exit 1 out='' err='cannot read route cache \n' | verdict: contract-ok
+CASE directory-tmp                      ref: exit 0 out='loaded calls=0 hash=14650fb0739d0383\n' err='' | verdict: report-only
+CASE directory-adir                     ref: exit 0 out='loaded calls=0 hash=14650fb0739d0383\n' err='' | verdict: report-only
+CASE directory-root                     ref: exit 0 out='loaded calls=0 hash=14650fb0739d0383\n' err='' | verdict: report-only
+CASE directory-dot                      ref: exit 0 out='loaded calls=0 hash=14650fb0739d0383\n' err='' | verdict: report-only
+CASE unreadable-file-mode000            ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/nope...(99 bytes)' | verdict: contract-ok
+CASE file-in-dir-mode000                ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/nodi...(104 bytes)' | verdict: contract-ok
+CASE symlink-loop                       ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/loop...(91 bytes)' | verdict: contract-ok
+CASE component-300-bytes                ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/zzzz...(387 bytes)' | verdict: contract-ok
+CASE path-5000-single-component         ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/aaaa...(5087 bytes)' | verdict: contract-ok
+CASE path-4800-short-components         ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/a/a/...(4826 bytes)' | verdict: contract-ok
+CASE deep-real-file-~3800               ref: exit 0 out='loaded calls=3 hash=018a84ed04fba746\n' err='' | verdict: loads-ok
+CASE special-bytes-missing              ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/q%s%...(108 bytes)' | verdict: contract-ok
+CASE dev-null                           ref: exit 0 out='loaded calls=0 hash=14650fb0739d0383\n' err='' | verdict: loads-ok
+CASE proc-self-mem-EIO                  ref: exit 0 out='loaded calls=0 hash=14650fb0739d0383\n' err='' | verdict: report-only
+CASE regular-file-trailing-slash        ref: exit 1 out='' err='cannot read route cache /home/usergpu/rustmig/routetable/verify/out/full/work/r4fixed/good...(98 bytes)' | verdict: contract-ok
+CASE good-small-trace                   ref: exit 0 out='loaded calls=3 hash=bf17f0a51588f784\n' err='' | verdict: loads-ok
+CASE empty-file                         ref: exit 0 out='loaded calls=0 hash=14650fb0739d0383\n' err='' | verdict: loads-ok
+R4 random: 400 cases, contract-ok 400, report-only 0
+
+# R4 fixed cases: uid 1000; deep path length 3833 bytes

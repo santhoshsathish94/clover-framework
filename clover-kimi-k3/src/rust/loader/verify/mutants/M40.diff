@@ -1,0 +1,12 @@
+# M40: set_device receives a NULL ctx
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -57,7 +57,7 @@
+     let dataset = j.ds.as_ptr();
+     // SAFETY (all callback calls): header: ctx and the callbacks are valid for the life of the process; `handle` is the caller's pointer; `dataset` is NUL-terminated and lives as long as `j`.
+     unsafe {
+-        (cb.set_device)(cb.ctx, j.card);
++        (cb.set_device)(std::ptr::null_mut(), j.card);
+         (cb.ensure_work)(cb.ctx, j.card);
+         (cb.load_trunk)(cb.ctx, j.handle, dataset, j.layer as c_int);
+         if j.layer >= 1 {

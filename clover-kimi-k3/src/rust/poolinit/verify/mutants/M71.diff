@@ -1,0 +1,12 @@
+# M71: pool: slot count rounds up
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -19,7 +19,7 @@
+ /// `usable = f > reserve ? f - reserve : 0; slots = (int)(usable / EXPERT_RAW)`; the cast wraps like C's.
+ pub fn slots_for(free_bytes: usize, reserve_bytes: usize, expert_raw: usize) -> c_int {
+     let usable = if free_bytes > reserve_bytes { free_bytes - reserve_bytes } else { 0 };
+-    (usable / expert_raw) as c_int
++    ((usable + expert_raw - 1) / expert_raw) as c_int
+ }
+ 
+ /// The refusal text of the original: "card %d: only %d expert slots fit after the reserve\n".

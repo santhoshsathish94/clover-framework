@@ -1,0 +1,1 @@
+empty lines (just "\n") are dropped instead of becoming calls

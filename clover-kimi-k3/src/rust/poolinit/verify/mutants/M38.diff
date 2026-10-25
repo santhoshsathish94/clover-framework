@@ -1,0 +1,12 @@
+# M38: host: spares go to a NULL cache instead of cfg.cache
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -81,7 +81,7 @@
+         for b in base.iter().rev() {
+             let p = b.load(Ordering::SeqCst) as *mut u8;
+             for s in (0..PI_CHUNK_SLOTS).rev() {
+-                add_spare(cfg.cache, p.wrapping_add(s.wrapping_mul(raw)));
++                add_spare(std::ptr::null_mut(), p.wrapping_add(s.wrapping_mul(raw)));
+             }
+         }
+     }

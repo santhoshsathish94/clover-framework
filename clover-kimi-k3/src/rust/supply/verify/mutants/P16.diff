@@ -1,0 +1,33 @@
+# P16 (M16 + probe): vk sentinel -2 (instead of the mutant's 0) and a tag after sc_acquire: was *vkey written?
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -9,6 +9,17 @@
+ 
+ /// g_wb_skipped: card victims that were not worth a RAM slot.
+ pub static WB_SKIPPED: AtomicU64 = AtomicU64::new(0);
++
++pub fn probe(tag: &str) {
++    use std::io::Write;
++    if let Ok(p) = std::env::var("SUPPLY_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {
++            let line = format!("{} {}
++", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
+ 
+ extern "C" {
+     fn pread(fd: c_int, buf: *mut c_void, count: usize, offset: i64) -> isize;
+@@ -247,9 +258,10 @@
+                 pool.st.hit_card = pool.st.hit_card.wrapping_add(1);
+                 continue;
+             }
+-            let mut vk: c_int = -1;
++            let mut vk: c_int = -2;
+             let mut vh: f32 = 0.0;
+             p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len(), heat, &mut vk, &mut vh);
++            probe(if vk == -2 { "vk_unwritten" } else if vk == -1 { "vk_written_minus1" } else { "vk_written_victim" });
+             if vk >= 0 {
+                 if vq {
+                     (ops.arr_wait)(vk);

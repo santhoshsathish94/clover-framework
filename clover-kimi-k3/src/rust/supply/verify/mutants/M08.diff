@@ -1,0 +1,13 @@
+# M08: card hit: arr_wait missing
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -237,9 +237,6 @@
+             let mut p = self.pool_find(pool, key);
+             let heat = *counts.offset(e as isize) as f32;
+             if !p.is_null() {
+-                if vq {
+-                    (ops.arr_wait)(key);
+-                }
+                 if !pool.cache.is_null() {
+                     (ops.sc_touch)(pool.cache, key, heat);
+                 }

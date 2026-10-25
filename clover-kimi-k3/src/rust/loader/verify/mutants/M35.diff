@@ -1,0 +1,12 @@
+# M35: expert tables skipped for layer 1 (`> 1`)
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -60,7 +60,7 @@
+         (cb.set_device)(cb.ctx, j.card);
+         (cb.ensure_work)(cb.ctx, j.card);
+         (cb.load_trunk)(cb.ctx, j.handle, dataset, j.layer as c_int);
+-        if j.layer >= 1 {
++        if j.layer > 1 {
+             (cb.load_expert_tables)(cb.ctx, j.handle, dataset, j.layer as c_int);
+         }
+         (cb.alloc_state)(cb.ctx, j.handle, j.positions);

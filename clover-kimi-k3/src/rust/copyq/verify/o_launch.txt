@@ -1,0 +1,4 @@
+
+launched matrix.sh pid 633704
+run launch.sh matrix.sh exit=0
+ENDOFHELPER

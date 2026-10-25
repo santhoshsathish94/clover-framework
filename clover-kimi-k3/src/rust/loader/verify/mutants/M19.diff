@@ -1,0 +1,12 @@
+# M19: card 7 uses card 6's queue and thread (cards[card.min(6)])
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -45,7 +45,7 @@
+     pub fn submit(&'static self, card: usize, job: Job) {
+         // pending is raised before the job is queued and before the card's lock is taken, as in the original
+         *lock(&self.pending) += 1;
+-        let c = &self.cards[card];
++        let c = &self.cards[card.min(6)];
+         let mut g = lock(&c.st);
+         if !g.started {
+             g.started = true;

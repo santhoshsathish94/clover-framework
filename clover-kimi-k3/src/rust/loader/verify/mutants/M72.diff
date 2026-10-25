@@ -1,0 +1,12 @@
+# M72: slab-slot check `layer >= 92` (92 refused with prefill)
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -71,7 +71,7 @@
+ }
+ 
+ pub fn check_slab(prefill: bool, layer: u32) -> Result<(), String> {
+-    if prefill && layer >= 1 && layer > N_LAYERS {
++    if prefill && layer >= 1 && layer >= N_LAYERS {
+         return Err(format!("loader: layer {} has no slab slot (0..{})\n", layer, N_LAYERS));
+     }
+     Ok(())

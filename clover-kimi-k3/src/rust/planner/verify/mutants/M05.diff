@@ -1,0 +1,11 @@
+# M05: M05 full[card] never set
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -450,7 +450,6 @@
+                         out += 1;
+                         continue;
+                     }
+-                    full[hd.card] = true;
+                 }
+                 if self.pend.contains(key) || self.host_contains(key) {
+                     continue;

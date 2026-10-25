@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M43/src/lib.rs
+@@ -122,5 +122,5 @@
+     let mut acc: u64 = 0;
+     let mut over = false;
+-    while i < s.len() && s[i].is_ascii_digit() {
++    while i < s.len() && s[i].is_ascii_digit() && !over {
+         match acc.checked_mul(10).and_then(|v| v.checked_add((s[i] - b'0') as u64)) {
+             Some(v) => acc = v,

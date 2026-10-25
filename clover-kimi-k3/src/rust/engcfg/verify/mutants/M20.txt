@@ -1,0 +1,1 @@
+reserve zero-extends the int (as u32) instead of sign-extending

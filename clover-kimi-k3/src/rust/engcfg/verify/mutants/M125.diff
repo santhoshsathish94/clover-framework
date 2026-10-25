@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M125/src/lib.rs
+@@ -562,5 +562,5 @@
+         }
+     }
+-    if s.rc_calls != 0 {
++    if s.rc_pos != 0 {
+         out.push(
+             Line::new()

@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -27,7 +27,7 @@
+ static NU_FN: AtomicUsize = AtomicUsize::new(0);
+ 
+ fn belady() -> bool {
+-    POLICY.load(Ordering::SeqCst) == 2 && NU_FN.load(Ordering::SeqCst) != 0
++    POLICY.load(Ordering::SeqCst) >= 2 && NU_FN.load(Ordering::SeqCst) != 0
+ }
+ 
+ fn nu_call(key: i32) -> i32 {

@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M106/src/lib.rs
+@@ -521,5 +521,5 @@
+             .n(hc)
+             .s(" already on the card (")
+-            .f(1, 100.0 * hcf / needf)
++            .f(1, hcf / needf * 100.0)
+             .s("%), ")
+             .n(hh)

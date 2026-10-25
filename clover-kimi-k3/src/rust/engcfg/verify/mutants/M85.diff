@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M85/src/lib.rs
+@@ -450,5 +450,5 @@
+     let mut fill = vec![0i32; n as usize];
+     let mut s: i64 = 0;
+-    for i in 0..experts.len() {
++    for i in (0..experts.len()).rev() {
+         for _ in 0..counts[i] {
+             let t = (s % n as i64) as usize;

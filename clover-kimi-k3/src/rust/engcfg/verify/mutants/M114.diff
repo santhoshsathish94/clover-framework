@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M114/src/lib.rs
+@@ -622,5 +622,5 @@
+                     .f(3, s.t_calls[i])
+                     .s(" s in all, ")
+-                    .f(1, 1000.0 * s.t_calls[i] / s.n_calls[i])
++                    .f(1, s.t_calls[i] * 1000.0 / s.n_calls[i])
+                     .s(" ms each\n")
+                     .done(),

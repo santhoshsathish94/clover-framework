@@ -1,0 +1,19 @@
+
+put timing.sh exit=0 
+put start_timing.sh exit=0 
+--- M4 S1 err
+read-ahead: pread failed: end of file
+read-ahead: pread failed: end of file
+read-ahead: pread failed: end of file
+timeout: the monitored command dumped core
+--- M4 S1 txt lines
+1 out/M4/S1-1.txt
+--- run1 M4
+read-ahead: pread failed: end of file
+read-ahead: pread failed: end of file
+read-ahead: pread failed: end of file
+mutants/copyq_ref_M4.cu:85: initialization error
+mutants/copyq_ref_M4.cu:85: initialization error
+launched timing.sh pid 649115
+run exit=0
+ENDOFHELPER

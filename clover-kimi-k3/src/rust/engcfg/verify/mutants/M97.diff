@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M97/src/lib.rs
+@@ -404,5 +404,5 @@
+ 
+ fn warn_line(pos: usize, l: i32, why: &str) -> Vec<u8> {
+-    Line::new().s("K3GPU prefill: call ").n(pos).s(" (layer ").n(l).s("): ").s(why).s("; the computed routes are used from here\n").done()
++    Line::new().s("K3GPU prefill: call ").n(pos).s(" (L ").n(l).s("): ").s(why).s("; the computed routes are used from here\n").done()
+ }
+ 

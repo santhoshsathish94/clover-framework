@@ -1,0 +1,11 @@
+# M14: M14 pend_take counts used only when it waited
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -235,7 +235,6 @@
+             self.st.t_pwait += t0.elapsed().as_secs_f64();
+             self.st.pf_waited += 1;
+         }
+-        self.st.pf_used += 1;
+         self.pend.remove(key);
+     }
+ 

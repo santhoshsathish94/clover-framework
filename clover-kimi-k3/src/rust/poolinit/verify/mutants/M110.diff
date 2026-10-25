@@ -1,0 +1,15 @@
+# M110: pool: out.readers stored after mem_get_info instead of first
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -49,10 +49,10 @@
+     // SAFETY: `out` valid by the caller; every pointer given to an op is the address of a field of `*out` or of a local.
+     unsafe {
+         (*out).dev = cfg.device;
+-        (*out).readers = std::cmp::min(cfg.nreaders, PI_MAX_READERS as c_int);
+         check(set_device(cfg.device), error_string, file, LINE_SET_DEVICE);
+         let (mut f, mut t) = (0usize, 0usize);
+         check(mem_get_info(&mut f, &mut t), error_string, file, LINE_MEM_GET_INFO);
++        (*out).readers = std::cmp::min(cfg.nreaders, PI_MAX_READERS as c_int);
+         let slots = slots_for(f, cfg.reserve_bytes, raw);
+         (*out).slots = slots;
+         if slots < MIN_SLOTS {

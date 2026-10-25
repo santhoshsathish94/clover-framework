@@ -1,0 +1,12 @@
+# M63: pread loop: offset without got
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -106,7 +106,7 @@
+     } else {
+         let mut got = 0usize;
+         while got < j.len {
+-            let r = pread(c.fd, b.add(got) as *mut c_void, j.len - got, j.off.wrapping_add(got as i64));
++            let r = pread(c.fd, b.add(got) as *mut c_void, j.len - got, j.off);
+             if r <= 0 {
+                 let why: Vec<u8> = if r < 0 {
+                     let errno = *__errno_location();

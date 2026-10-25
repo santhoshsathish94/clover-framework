@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M12/src/lib.rs
+@@ -175,5 +175,5 @@
+     let host_bytes = (host_gb as i64 as usize) << 30;
+     let layout = ei(c"K3GPU_LAYOUT", 0);
+-    let prefill = (ei(c"K3GPU_PREFILL", 0) != 0) as c_int;
++    let prefill = ei(c"K3GPU_PREFILL", 0);
+     let rc = e.get(c"K3GPU_ROUTECACHE");
+     let mut s = EcSettings {

@@ -1,0 +1,4 @@
+M1 S1 seed=20 rc=2 secs=8.9 | SUMMARY S1 jobs=128 bad_jobs=2 timeouts=0 bad_flags=0 observer_violations=52 | RESULT FAIL
+M1 S4 seed=1 rc=2 secs=16.4 | SUMMARY S4 jobs=2000 bad_jobs=14 timeouts=0 bad_flags=0 observer_violations=833 | RESULT FAIL
+DONE
+-rwxrwxr-x 1 usergpu usergpu 1072424 Oct 21 15:15 /home/usergpu/rustmig/copyq/verify/diff_driver

@@ -1,0 +1,13 @@
+# M30: set_device after ensure_work
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -57,8 +57,8 @@
+     let dataset = j.ds.as_ptr();
+     // SAFETY (all callback calls): header: ctx and the callbacks are valid for the life of the process; `handle` is the caller's pointer; `dataset` is NUL-terminated and lives as long as `j`.
+     unsafe {
++        (cb.ensure_work)(cb.ctx, j.card);
+         (cb.set_device)(cb.ctx, j.card);
+-        (cb.ensure_work)(cb.ctx, j.card);
+         (cb.load_trunk)(cb.ctx, j.handle, dataset, j.layer as c_int);
+         if j.layer >= 1 {
+             (cb.load_expert_tables)(cb.ctx, j.handle, dataset, j.layer as c_int);

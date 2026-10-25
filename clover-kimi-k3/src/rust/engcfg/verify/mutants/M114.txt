@@ -1,0 +1,1 @@
+summary: ms each `1000 * t / n` -> `t * 1000 / n` (commutative: bit-identical)

@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M111/src/lib.rs
+@@ -531,5 +531,5 @@
+             .f(1, 100.0 * drf / needf)
+             .s("%, ")
+-            .f(1, drf * (s.expert_raw as f64) / 1e9)
++            .f(1, drf * (s.expert_raw as f64) / 1073741824.0)
+             .s(" GB); drive reads ")
+             .f(1, tr)

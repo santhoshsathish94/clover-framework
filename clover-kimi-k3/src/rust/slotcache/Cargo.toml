@@ -1,0 +1,15 @@
+[package]
+name = "slotcache"
+version = "0.1.0"
+edition = "2021"
+description = "Expert slot cache (Rust implementation of include/slotcache.h)"
+
+[lib]
+name = "slotcache"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+panic = "abort"

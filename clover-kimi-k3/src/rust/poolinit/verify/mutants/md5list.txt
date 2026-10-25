@@ -1,0 +1,123 @@
+M00 b5cba5c42004363fdb7f718a112407e8 control: unmodified copy
+M01 ec3515abccbefbdb4d5613b0fa65524d host: 16 helper threads instead of 15
+M02 03b14036be1f75cc4b6a0d8998fedf39 host: 14 helper threads instead of 15
+M03 4d150691c98ae19ab85b98773231e396 host: the calling thread does not map (touch() only by the 15 helpers)
+M04 8210f1a9727df25fff10c2648459a249 host plan: chunk_bytes = (CHUNK_SLOTS - 1) * raw
+M05 ca137c5805789f65f2a0c2896c032afc host plan: n_chunks rounds up
+M06 fa42600c4b5f632a8d9d7a6a4d5a307d host plan: n_chunks one too few (saturating_sub(1))
+M07 375cb362cfcec69e22188eae592adb01 host: final out.cap_slots stored untrimmed (cap0)
+M08 33c27eb2dbce9785a94a5a31b12101cf host: summary line prints the untrimmed cap_slots (cap0)
+M09 f84c438bc63be7fc6e5c01e7ea2f8a06 host summary: GB divisor 2^30 instead of 1e9
+M10 db80c33e90737dc186c07ddd67fb6c8f host summary: GB truncated (floor) to one decimal instead of rounded
+M11 62bfa211e960a72d919180d748ca1eb8 host summary: seconds measured from after the mapping (t1 just before the line)
+M12 51336fb94f9b2049dc00e811fba4bef9 host summary: seconds in milliseconds
+M13 288d659e33b11197184c5bed3569f386 host summary: seconds always 0.0
+M14 bb684f2af3c58729a63187eef3d97c92 sys: wall_now uses CLOCK_REALTIME (0) instead of CLOCK_MONOTONIC
+M15 471f9b8c4c28feadb2ef7fedcb241cb5 sys: wall_now nanoseconds scaled 1e-6 instead of 1e-9
+M16 f92c7effeaf4ea24e8a2c1a8406a9918 host: madvise after the zeroing instead of before
+M17 69fa6275a29bcea9e8471d656841baa5 host: madvise removed
+M18 29516ec822c4a14a915b263800b07bda host: madvise advice 15 (MADV_NOHUGEPAGE) instead of 14
+M19 e3d738e6a6417abb0c19df0466417827 host: madvise length chunk_bytes - 4096
+M20 d8c94094a2601eb5c65653c1c21fac35 host: zeroing one byte short (chunk_bytes - 1)
+M21 cc37d7f349c51a60bdaceb23fadd7d0e host: zeroing skipped for chunk numbers >= 8
+M22 f20ff72a4d3266f3ccbc98fc657c2708 host: zeroing removed
+M23 07128dbc6427b8a1f69d93e02d2839ba host: mmap flags | MAP_NORESERVE
+M24 afe73229f0e2f9f79b3a99ee4e1c5f93 sys: mmap prot adds PROT_EXEC
+M25 0eefa7dc8e760fe5a9789025b1724f67 host: 'cannot map' message prints n_chunks instead of chunk_bytes
+M26 90911d96ade9e2915e205f2e2adaeb95 host: 'cannot map' exits with status 2
+M27 6965d94903af2e622b0b5fd742b238fe host: 'cannot map' message without newline
+M28 1d8560a794b39f69e53c5377368c7276 sys: MAP_FAILED is NULL (a failed mmap is not detected)
+M29 b0f2610a0c117c501b1185a74f4a1e5a host: set_device(1) instead of 0
+M30 eec256a3d20409bf8da960b45da4c1ec host: host_register flags 0 instead of Portable
+M31 853d1250e6ecd386256daaa96a5c2dd3 host: the last chunk is not registered
+M32 6b8367e54a159e5d04d8ef77e65ac83b host: chunks registered in descending order (spares unchanged)
+M33 c7f7f23601b0ccc1613c6d9566375678 host: registration descending AND spare chunk order ascending (both reversed)
+M34 9f20df2b9fd41b15bdc5820d64c4dae8 host: spares within a chunk ascending (slot 0 first)
+M35 6f52b28832f12bbcccdaf46d2c0b2fc4 host: spares chunk order ascending (slots descending)
+M36 b572583a021660cb19796e6160da24cf host: 31 spares per chunk (slot 0 dropped)
+M37 ae985f0283d489f465e8bfc2448870a1 host: spare address stride raw - 1
+M38 601b5010f517202334648f3d6849d771 host: spares go to a NULL cache instead of cfg.cache
+M39 294e87109df82d2d06d2408d85a658c0 host: out.ready never set
+M40 d3998fd1ba871892ad050fbfc7f89ec3 host: out.ready stored last (after the summary line) instead of first
+M41 5e1499bcd4ef4bb5855f5ddbb2ba7202 host: out.cap_slots not stored at the start (only at the end)
+M42 58515178ed5432bb355368897e6c37bd host: helper threads detached, never joined (std::thread::spawn, leaked table)
+M43 da23b006fadaf6946353eb66d0f28ad3 host: chunk counter advances by 2 (every second chunk skipped)
+M44 69bf75fba79f66665a8cce6251960a7c host: worker loop bound i > n_chunks (one extra chunk)
+M45 2d0d05aeceb5df48479b6ddc5a8299f7 host: worker loop bound i + 1 >= n_chunks (last chunk never mapped)
+M46 bfd0bd7ca17cf000abb2b1cad0a0f39c host: chunk table written in reverse index (base[n-1-i])
+M47 57ae9ad796082442d64fe2f611d3ffb5 host: all atomics Relaxed instead of SeqCst
+M48 9615d8286563ccc5ec47c22702089024 host: final cap = cap0 & !31 instead of n_chunks * 32
+M49 12031e9a948d77c3e01b0a027b2d76c2 host plan: chunk_bytes = raw << 5 instead of 32 * raw
+M50 14b7c7ae69bde2b2c15c46d4458a2154 host: CHECK line of set_device 429 instead of 428
+M51 d1c429a4aa64f0888f13004341cec41b host: CHECK line of host_register 428 instead of 429
+M52 0b415d1d0730d9a3458ce90038a5ece3 sys: default file name 'decode.cu' when src_file is NULL
+M53 74712a656e6b1ab5ccbaebf14f9b2e27 sys: check() ignores negative codes (code <= 0 is success)
+M54 3733b90816f5ff61a6218ea2cc2503df sys: NULL error_string prints '' instead of '(null)'
+M55 a6db664a794208f7aeb17f96e519e30a sys: check() message without trailing newline
+M56 927b48c3111919d1053531421ec3b8f5 sys: check() exits with status 2
+M57 55dc6ef10da2869ead31d8d992f5fa39 sys: check() calls error_string twice
+M58 52c3e561c4f51d632077783862461935 sys: check() writes the 'file:line: ' prefix and the text in two write calls
+M59 bc8f0b33cdeea7632deb87f08579148b sys: exit1() via std::process::exit(1)
+M60 2b797cc98a299a03bd18ad6b80a6ba67 sys: exit1() via _exit(1) (atexit handlers skipped)
+M61 5c9ccc4a473610106038f6fc9de31689 host: mmap offset 4096
+M62 4398b130578e550757a2014c7d85e7d6 host: mmap fd 0 instead of -1
+M63 a4b242a2f37e0ca673bde689e23b555a pool: MIN_SLOTS 63
+M64 a957f92205dd730a2a26a5917a045efc pool: refusal when slots <= 64 (probe C of the author)
+M65 1eb7488c654651f1a0ce57d91d2b9620 pool: MIN_SLOTS 65
+M66 eac877d80f1b9816941e971c8c4ba02f pool: the threshold compares as u32 (negative slot counts not refused)
+M67 91e4f962ca54305017e849f29bb6f2f4 pool: usable test free >= reserve instead of >
+M68 042c280a5283ea59a8a8c862b3d938be pool: usable = free.saturating_sub(reserve)
+M69 ae9c2f5f1f801af23f58abd64c3bdc68 pool: usable = free.wrapping_sub(reserve) (no underflow guard)
+M70 2b531df060a748a5b03b3858ef4b0d2a pool: slot count saturates at INT_MAX instead of wrapping in the cast
+M71 ac3eba1f7b984deeaff32e1ca128a2ff pool: slot count rounds up
+M72 c8648c013c43be7368f2822606bd96f3 pool: slot count computed with u32 operands
+M73 7640911936dce69c75d76114d30b7443 pool: slab size (slots - 1) * raw
+M74 3606f86bd09c8a77a0a0729ac56d5eb5 pool: slab size computed as a 32-bit multiply
+M75 37b829e9ae1a64912701aefe5c637dec pool: spares ascending (slot 0 added first)
+M76 c4201d0a783c7eed7081291fc328d6ff pool: slot 0 never added as a spare
+M77 779dc45b9174b0e70f20fe99ffcba7ed pool: spare address computed with a 32-bit multiply
+M78 128e682de642a85893a93d3b5e06705c pool: copy stream flags 0 instead of NonBlocking
+M79 4658fc3b44a47e278aca2d679036032c pool: reader stream flags 0 instead of NonBlocking
+M80 5cdbce5da7cd2479ea9fd4ce9c1bc8f3 pool: copy stream created after the reader loop
+M81 80df92d213da8af5abf759fb4e3c5b0a pool: bounce slot allocated before the reader stream
+M82 d293b0401efc19e65de06ae17955df1f pool: bounce host_alloc flags 1 instead of Default
+M83 256f3ca3433fa57b727cac918993269f pool: bounce size raw - 1
+M84 546ff9eb3e5ed1ecf28318bf33a0f2b4 pool: event flags 0 instead of DisableTiming
+M85 e6942b6fdfe34b24675b2a080b458d43 pool: d_eptr size experts * 4
+M86 433b5613c8721eb54f0963f1c8691e8a pool: d_eptr size uses experts zero-extended (negative experts)
+M87 f1555f87e7b024f99b8d68e3007130fb pool: readers clamp 31
+M88 0af9d72fb84d6b39165ddb707d394890 pool: readers clamp 33
+M89 1a76c776722575b9d321aef0d5ea75d9 pool: negative readers clamped to 0 in out.readers
+M90 845952038c28da6c44d78c53085d3403 pool: reader loop inclusive (0..=readers)
+M91 e58bce038035969a28cbef298fb24635 pool: reader loop 0..readers-1
+M92 5bfc0c4e582f74293c6307e5d2a62062 pool: out.slots stored after the refusal test
+M93 5de7c0b3e1f7054d7995407414856500 pool: out.ready also stored first
+M94 f30e33eec12a2e27b1943a0bff0a7a3c pool: out.dev never stored
+M95 8f341900f323ccd2174a00b0e8a9b45e pool: set_device(0) instead of cfg.device
+M96 2631116d0f12069bcb49930485f05267 pool: refusal message arguments swapped (slots, dev)
+M97 76eeaceef80e54f6fbc32d72e6bb8d48 pool: refusal message without newline
+M98 26edabe2f894c5ced3b5dba950a5d898 pool: refusal exits with status 2
+M99 81d231ab0da674f87e177356933086e9 pool: refusal does not exit (falls through)
+M100 6bad526e9c7cfce3d7c9f062067c43ec pool: CHECK line of mem_get_info 456 instead of 455
+M101 6f68b6b8c060248b215cb1ea8cc1811f pool: CHECK line of the bounce host_alloc 463 instead of 464
+M102 59bf26fc002431d1a7eb05e40ed4ffa9 pool: CHECK line of the event 467 instead of 466
+M103 a41b7eb2e0e5b4e29c36b4604905a929 pool: CHECK line of the d_eptr malloc 466 instead of 467
+M104 5aef8397994fbc3f204fa6c5adac96f9 pool: CHECK line of the reader stream 464 instead of 463
+M105 e620e592cec1e7bd2f70d29c0106a31e pool: CHECK line of the slab malloc 460 instead of 459
+M106 aad8b6b22faa52d18c743804bf1b27e8 pool: CHECK line of the copy stream 462 instead of 461
+M107 f5bc545f6ae2aadad9177eddfdd746ae pool: CHECK line of set_device 455 instead of 454
+M108 c7a309ce10c6f630f477d788c3f0d2f1 pool: mem_get_info arguments swapped (&mut t, &mut f)
+M109 b9f0506d33e41fd1de1e08c39446cfe8 pool: spares go to a NULL cache instead of cfg.cache
+M110 3d779b09f8af7f109a9598792ce9d1d6 pool: out.readers stored after mem_get_info instead of first
+M111 847d1b900a2ac07af859c7e2da1fc2e6 pool: reader loop bound is the unclamped cfg.nreaders
+M112 871d4ed1ec7e582b482d6a7a207f550e pool: every reader stream stored into rstream[0]
+M113 aa9c8b4b8011f749a0399c293f33b390 abi: PI_CHUNK_SLOTS 31
+M114 fb1a5dce0c4f95a274143e07cb67aed2 abi: PI_MAX_READERS 31
+M115 09a2a7820ae7fa1f04bd46b9c62ae0e6 abi: PI_HOST_REGISTER_PORTABLE 0x03
+M116 f1854d541b3a5cf04791579425c39bd0 abi: PI_EVENT_DISABLE_TIMING 0x03
+M117 b5cba5c42004363fdb7f718a112407e8 abi: pi_expert_stats fields reordered (needed last, t_read first)
+M118 14c4e4fe99b515579c7cbff7d3105a7a abi: pi_pool_cfg nreaders and experts swapped
+M119 0816cb553b6ff0ae9628ddb4de3dc6fb abi: pi_host_cfg bytes and expert_raw swapped
+M120 129d5b41e6f2c6ae2cc8efb86eaf4452 lib: pi_pool_init does not refuse expert_raw == 0
+M121 862c06853582732b313c134b7640eb6b lib: pi_pool_init does not check ops->host_alloc (falls to the generic 'ops incomplete')
+M122 e7a72ab81af0428fed90e0121054ee5a lib: message 'expert_raw is zero' instead of 'expert_raw is 0' (both entry points)

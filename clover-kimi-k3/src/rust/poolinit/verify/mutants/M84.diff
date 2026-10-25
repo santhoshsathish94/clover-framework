@@ -1,0 +1,12 @@
+# M84: pool: event flags 0 instead of DisableTiming
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -71,7 +71,7 @@
+             check(stream_create(addr_of_mut!((*out).rstream[i]), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_READER);
+             check(host_alloc(addr_of_mut!((*out).bounce[i]) as *mut *mut c_void, raw, PI_HOST_ALLOC_DEFAULT), error_string, file, LINE_HOST_ALLOC);
+         }
+-        check(event_create(addr_of_mut!((*out).written_back), PI_EVENT_DISABLE_TIMING), error_string, file, LINE_EVENT);
++        check(event_create(addr_of_mut!((*out).written_back), 0), error_string, file, LINE_EVENT);
+         // `EXPERTS * sizeof(void *)`: an int converted to size_t (sign-extended), times 8
+         check(
+             device_malloc(addr_of_mut!((*out).d_eptr) as *mut *mut c_void, (cfg.experts as isize as usize).wrapping_mul(std::mem::size_of::<*const u8>())),

@@ -1,0 +1,13 @@
+# M06: M06 pend_take after remove in vq_issue
+--- a/src/planner.rs
++++ b/src/planner.rs
+@@ -391,8 +391,8 @@
+         j.off = (e as i64).wrapping_mul(self.cfg.expert_raw as i64);
+         j.layer = layer;
+         if in_ram {
++            j.host_src = unsafe { (self.ops.sc_remove)(self.w.host.cache, key) };
+             self.pend_take(key);
+-            j.host_src = unsafe { (self.ops.sc_remove)(self.w.host.cache, key) };
+             j.kind = 2;
+             let r = Box::new(Rel { state: AtomicI32::new(0), slot: j.host_src as *mut u8 });
+             j.rel_state = r.state.as_ptr();

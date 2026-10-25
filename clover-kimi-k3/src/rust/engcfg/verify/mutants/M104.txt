@@ -1,0 +1,1 @@
+force: fill value zero-extended in the index (as u32)

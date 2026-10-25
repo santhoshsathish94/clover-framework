@@ -1,0 +1,13 @@
+# M94: abi: sy_stats hit_card and hit_host swapped in the struct
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -47,8 +47,8 @@
+ #[derive(Clone, Copy, Debug, Default, PartialEq)]
+ pub struct sy_stats {
+     pub needed: c_ulong,
++    pub hit_host: c_ulong,
+     pub hit_card: c_ulong,
+-    pub hit_host: c_ulong,
+     pub from_drive: c_ulong,
+     pub written_back: c_ulong,
+     pub t_read: f64,

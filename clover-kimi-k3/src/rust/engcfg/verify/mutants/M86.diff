@@ -1,0 +1,8 @@
+--- src/lib.rs (real)
++++ M86/src/lib.rs
+@@ -451,4 +451,5 @@
+     let mut s: i64 = 0;
+     for i in 0..experts.len() {
++        s = 0;
+         for _ in 0..counts[i] {
+             let t = (s % n as i64) as usize;

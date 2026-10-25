@@ -1,0 +1,14 @@
+# M50: result of the first open stored only if >= 0 (the -1 is never stored before the fallback; expected equivalent)
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -75,7 +75,9 @@
+         Err(_) => return Err(b"loader: path contains a NUL\n".to_vec()),
+     };
+     let mut fd = sys.open(&cpath, O_RDONLY | O_DIRECT);
+-    set_fd(j.h_fd, fd);
++    if fd >= 0 {
++        set_fd(j.h_fd, fd);
++    }
+     if fd < 0 {
+         fd = sys.open(&cpath, O_RDONLY);
+         set_fd(j.h_fd, fd);

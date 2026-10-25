@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M96/src/lib.rs
+@@ -418,5 +418,5 @@
+ unsafe fn force_routes(pos: usize, size: usize, cur: *const EcCall, l: i32, n: i32, sel: *mut i32, top: i32) {
+     let warn = |why: &str| {
+-        if !WARNED.swap(true, Ordering::Relaxed) {
++        if { WARNED.swap(true, Ordering::Relaxed); true } {
+             emit(&warn_line(pos, l, why));
+         }

@@ -1,0 +1,1 @@
+a count is kept only while counts and experts are aligned (counts so far + 1 == experts so far)

@@ -1,0 +1,10 @@
+--- src/lib.rs (real)
++++ M16/src/lib.rs
+@@ -157,7 +157,6 @@
+     let mut e = std::io::stderr();
+     let _ = e.write_all(b"cannot read route cache ");
+     let _ = e.write_all(path);
+-    let _ = e.write_all(b"\n");
+     std::process::exit(1)
+ }
+ 

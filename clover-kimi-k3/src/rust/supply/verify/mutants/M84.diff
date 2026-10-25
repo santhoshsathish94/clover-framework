@@ -1,0 +1,15 @@
+# M84: held slots released before the final stream_sync
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -337,10 +337,10 @@
+         let t0 = Instant::now();
+         run_parallel(&ctx, pool_readers);
+         let t1 = Instant::now();
+-        do_check(ops, (ops.stream_sync)(pool.copy), site::SYNC_COPY);
+         for &h in &held {
+             (ops.sc_release)(host.cache, h);
+         }
++        do_check(ops, (ops.stream_sync)(pool.copy), site::SYNC_COPY);
+         pool.st.t_read += t1.duration_since(t0).as_secs_f64();
+         pool.st.t_copy += t1.elapsed().as_secs_f64();
+     }

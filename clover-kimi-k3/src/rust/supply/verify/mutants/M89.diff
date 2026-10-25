@@ -1,0 +1,12 @@
+# M89: ekey uses the constant 896 instead of cfg.experts
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -174,7 +174,7 @@
+     }
+ 
+     fn ekey(&self, layer: c_int, e: c_int) -> c_int {
+-        layer.wrapping_mul(self.cfg.experts).wrapping_add(e)
++        layer.wrapping_mul(896).wrapping_add(e)
+     }
+ 
+     unsafe fn pool_find(&self, pool: &sy_pool, key: c_int) -> *mut u8 {

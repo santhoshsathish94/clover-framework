@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -121,7 +121,7 @@
+             self.nodes[i].nu = nu;
+             self.by_next.insert((nu, key));
+         } else {
+-            self.nodes[i].heat = self.nodes[i].heat * 0.8f32 + w;
++            self.nodes[i].heat = self.nodes[i].heat * 0.9f32 + w;
+         }
+     }
+ 

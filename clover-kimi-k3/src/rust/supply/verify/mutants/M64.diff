@@ -1,0 +1,12 @@
+# M64: pread: r < 0 is fatal, r == 0 is not (spins on EOF)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -107,7 +107,7 @@
+         let mut got = 0usize;
+         while got < j.len {
+             let r = pread(c.fd, b.add(got) as *mut c_void, j.len - got, j.off.wrapping_add(got as i64));
+-            if r <= 0 {
++            if r < 0 {
+                 let why: Vec<u8> = if r < 0 {
+                     let errno = *__errno_location();
+                     std::ffi::CStr::from_ptr(strerror(errno)).to_bytes().to_vec()

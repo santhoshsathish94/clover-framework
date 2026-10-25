@@ -1,0 +1,8 @@
+--- src/lib.rs (real)
++++ M136/src/lib.rs
+@@ -244,4 +244,5 @@
+     /// %.0f, %.1f or %.3f through the C library.
+     fn f(&mut self, prec: u8, v: f64) -> &mut Line {
++        if true { return self.s(&format!("{:.*}", prec as usize, v)); }
+         let fmt: &CStr = match prec {
+             0 => c"%.0f",

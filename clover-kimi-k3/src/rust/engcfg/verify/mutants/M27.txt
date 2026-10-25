@@ -1,0 +1,1 @@
+cards: min with devices dropped

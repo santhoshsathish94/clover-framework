@@ -1,0 +1,11 @@
+[package]
+name = "copyq"
+version = "0.1.0"
+edition = "2021"
+description = "Per-card copy queue (Rust implementation of include/copyq.h)"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+cudarc = { version = "0.19.10", default-features = false, features = ["std", "driver", "cuda-12060", "dynamic-loading"] }

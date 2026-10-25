@@ -1,0 +1,17 @@
+# M51: from_drive counted per job instead of per expert
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -310,12 +310,12 @@
+             if !n.host.is_null() {
+                 continue;
+             }
+-            pool.st.from_drive = pool.st.from_drive.wrapping_add(1);
+             for k in 0..nchunk {
+                 let co = (k as usize).wrapping_mul(chunk);
+                 if co >= raw {
+                     break;
+                 }
++                pool.st.from_drive = pool.st.from_drive.wrapping_add(1);
+                 let len = std::cmp::min(chunk, raw - co);
+                 jobs.push(Job { dst: n.dst.wrapping_add(co), off: (n.e as i64).wrapping_mul(raw as i64).wrapping_add(co as i64), e: n.e, co, len });
+             }

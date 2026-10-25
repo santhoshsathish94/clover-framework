@@ -1,0 +1,13 @@
+--- src/lib.rs (real)
++++ M12/src/lib.rs
+@@ -98,7 +98,9 @@
+         p = q;
+         if at(s, p) == b':' {
+             let (c, q) = strtol(s, p + 1);
+-            call.counts.push(c as i32);
++            if q != p + 1 {
++                call.counts.push(c as i32);
++            }
+             p = q;
+         }
+     }

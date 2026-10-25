@@ -1,0 +1,29 @@
+calls=4
+call 0 layer=1 experts[2]=7 7 counts[0]=
+call 1 layer=1 experts[1]=7 counts[0]=
+call 2 layer=2 experts[3]=7 7 7 counts[0]=
+call 3 layer=1 experts[1]=7 counts[0]=
+next_use(107)=0
+set_current(0)
+next_use(107)=1
+set_current(1)
+next_use(107)=3
+set_current(3)
+next_use(107)=1000000000
+set_current(-1)
+next_use(107)=1000000000
+set_current(0)
+next_use(107)=1000000000
+set_current(1)
+next_use(107)=1000000000
+set_current(2)
+next_use(107)=1000000000
+set_current(0)
+next_use(107)=1000000000
+next_use(108)=1000000000
+set_current(-5)
+next_use(108)=1000000000
+set_current(1)
+next_use(207)=2
+next_use(107)=1000000000
+exit 0

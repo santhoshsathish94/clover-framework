@@ -1,0 +1,12 @@
+# M100: pool: CHECK line of mem_get_info 456 instead of 455
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -6,7 +6,7 @@
+ 
+ // CHECK sites of decode.cuh@4d8d891 (ref/extract.py asserts the line numbers of all ten CHECK calls of the extracted block, host and pool)
+ const LINE_SET_DEVICE: u32 = 454;
+-const LINE_MEM_GET_INFO: u32 = 455;
++const LINE_MEM_GET_INFO: u32 = 456;
+ const LINE_MALLOC_SLAB: u32 = 459;
+ const LINE_STREAM_COPY: u32 = 461;
+ const LINE_STREAM_READER: u32 = 463;

@@ -1,0 +1,17 @@
+# M60: sys: exit1() via _exit(1) (atexit handlers skipped)
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -37,7 +37,12 @@
+ /// The process ends here, as `exit(1)` does in the original (atexit handlers run).
+ pub fn exit1() -> ! {
+     // SAFETY: plain C exit.
+-    unsafe { exit(1) }
++    unsafe {
++        extern "C" {
++            fn _exit(c: c_int) -> !;
++        }
++        _exit(1)
++    }
+ }
+ 
+ /// A message of this crate that the original does not have: "poolinit: <what>\n", exit(1).

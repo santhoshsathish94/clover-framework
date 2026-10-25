@@ -1,0 +1,1 @@
+literal M8: '+'/'-' alone start an expert (no progress on a bare sign: infinite loop; run under ulimit -v)

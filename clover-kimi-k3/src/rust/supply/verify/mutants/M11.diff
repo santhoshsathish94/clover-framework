@@ -1,0 +1,12 @@
+# M11: card hit: sc_touch gets the expert number instead of the key (equal only for layer 0)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -241,7 +241,7 @@
+                     (ops.arr_wait)(key);
+                 }
+                 if !pool.cache.is_null() {
+-                    (ops.sc_touch)(pool.cache, key, heat);
++                    (ops.sc_touch)(pool.cache, e, heat);
+                 }
+                 *pool.h_eptr.offset(e as isize) = p as *const u8;
+                 pool.st.hit_card = pool.st.hit_card.wrapping_add(1);

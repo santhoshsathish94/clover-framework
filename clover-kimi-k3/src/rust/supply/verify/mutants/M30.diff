@@ -1,0 +1,12 @@
+# M30: host_acquire gets heat 0 instead of the victim's heat
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -285,7 +285,7 @@
+             }
+             let mut dk: c_int = -1;
+             let mut dh: f32 = 0.0;
+-            let h = (ops.host_acquire)(v.key, v.heat, &mut dk, &mut dh);
++            let h = (ops.host_acquire)(v.key, 0.0, &mut dk, &mut dh);
+             do_check(ops, (ops.memcpy_d2h_async)(h as *mut c_void, v.src as *const c_void, raw, pool.copy), site::D2H);
+             pool.st.written_back = pool.st.written_back.wrapping_add(1);
+         }

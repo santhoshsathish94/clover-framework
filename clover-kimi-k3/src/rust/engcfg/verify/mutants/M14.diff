@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M14/src/lib.rs
+@@ -187,5 +187,5 @@
+         host_bytes,
+         routecache: ptr::null(),
+-        lookahead: 0,
++        lookahead: ei(c"K3GPU_LOOKAHEAD", 92),
+         vqueue: 0,
+         vq_cap: 256,

@@ -1,0 +1,12 @@
+# M46: chunk rounding +4096 instead of +4095
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -138,7 +138,7 @@
+     } else {
+         std::cmp::min(8, (pool_readers + n_drive - 1) / n_drive)
+     };
+-    let chunk: usize = (raw.wrapping_add(nchunk as usize).wrapping_sub(1) / nchunk as usize).wrapping_add(4095) / 4096 * 4096;
++    let chunk: usize = (raw.wrapping_add(nchunk as usize).wrapping_sub(1) / nchunk as usize).wrapping_add(4096) / 4096 * 4096;
+     (nchunk, chunk)
+ }
+ 

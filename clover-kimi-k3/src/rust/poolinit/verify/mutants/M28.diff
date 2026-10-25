@@ -1,0 +1,12 @@
+# M28: sys: MAP_FAILED is NULL (a failed mmap is not detected)
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -6,7 +6,7 @@
+ pub const PROT_READ_WRITE: c_int = 0x1 | 0x2;
+ pub const MAP_PRIVATE_ANONYMOUS: c_int = 0x02 | 0x20; // MAP_PRIVATE | MAP_ANONYMOUS (Linux)
+ pub const MADV_HUGEPAGE: c_int = 14; // Linux
+-pub const MAP_FAILED: *mut c_void = !0usize as *mut c_void;
++pub const MAP_FAILED: *mut c_void = std::ptr::null_mut();
+ pub const CLOCK_MONOTONIC: c_int = 1;
+ 
+ #[repr(C)]

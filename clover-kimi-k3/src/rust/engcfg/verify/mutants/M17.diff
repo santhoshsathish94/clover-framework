@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M17/src/lib.rs
+@@ -173,5 +173,5 @@
+     let chunks = ei(c"K3GPU_CHUNKS", 0);
+     let host_gb = ei(c"K3GPU_HOST_GB", 150);
+-    let host_bytes = (host_gb as i64 as usize) << 30;
++    let host_bytes = (host_gb as i64 as usize) << 20;
+     let layout = ei(c"K3GPU_LAYOUT", 0);
+     let prefill = (ei(c"K3GPU_PREFILL", 0) != 0) as c_int;

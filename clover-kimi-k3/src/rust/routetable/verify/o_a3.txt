@@ -1,0 +1,10 @@
+---
+6377
+R1 0
+R2 5759
+R3 0
+R4 0
+0
+---
+static inline int ekey(int layer, int e) { return layer * g_experts_rt + e; }
+grep: work/R2-1.err: No such file or directory

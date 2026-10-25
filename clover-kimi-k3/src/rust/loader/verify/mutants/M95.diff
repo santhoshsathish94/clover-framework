@@ -1,0 +1,12 @@
+# M95: handles[layer] receives NULL instead of the handle
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -171,7 +171,7 @@
+     put(r.h_k_in, r.k as c_int);
+     if r.layer <= N_LAYERS {
+         // SAFETY: handles is the caller's table of N_LAYERS + 1 pointers (header) and layer <= N_LAYERS.
+-        unsafe { *(st.cfg.handles as *mut *mut c_void).add(r.layer as usize) = r.handle }
++        unsafe { *(st.cfg.handles as *mut *mut c_void).add(r.layer as usize) = std::ptr::null_mut() }
+     }
+     // SAFETY: dataset is non-null and NUL-terminated (header); copied here, as `const std::string ds(dataset)` does.
+     let ds = unsafe { CStr::from_ptr(r.dataset) }.to_owned();

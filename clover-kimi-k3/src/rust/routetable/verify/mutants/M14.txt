@@ -1,0 +1,1 @@
+strtol: on u64 overflow the accumulator wraps instead of saturating

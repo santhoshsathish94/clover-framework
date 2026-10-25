@@ -1,0 +1,12 @@
+# M104: pool: CHECK line of the reader stream 464 instead of 463
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -9,7 +9,7 @@
+ const LINE_MEM_GET_INFO: u32 = 455;
+ const LINE_MALLOC_SLAB: u32 = 459;
+ const LINE_STREAM_COPY: u32 = 461;
+-const LINE_STREAM_READER: u32 = 463;
++const LINE_STREAM_READER: u32 = 464;
+ const LINE_HOST_ALLOC: u32 = 464;
+ const LINE_EVENT: u32 = 466;
+ const LINE_MALLOC_EPTR: u32 = 467;

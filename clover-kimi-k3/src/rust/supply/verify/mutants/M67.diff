@@ -1,0 +1,12 @@
+# M67: fatal exit status 2 instead of 1
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -22,7 +22,7 @@
+ 
+ pub fn fatal_bytes(msg: &[u8]) -> ! {
+     write_stderr(msg);
+-    std::process::exit(1)
++    std::process::exit(2)
+ }
+ 
+ pub fn fatal(msg: &str) -> ! {

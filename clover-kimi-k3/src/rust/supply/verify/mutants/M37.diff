@@ -1,0 +1,12 @@
+# M37: prefill main copy: slab[0] instead of slab[layer]
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -294,7 +294,7 @@
+         for n in &need {
+             if !n.host.is_null() {
+                 let src: *const u8 = if prefill {
+-                    (*self.cfg.slab.offset(layer as isize)).wrapping_add(((n.e & 3) as usize).wrapping_mul(raw))
++                    (*self.cfg.slab.offset(0)).wrapping_add(((n.e & 3) as usize).wrapping_mul(raw))
+                 } else {
+                     n.host as *const u8
+                 };

@@ -1,0 +1,14 @@
+# M07: pending-- before the job runs (count lowered before the job ended)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -85,9 +85,9 @@
+                     g = c.cv.wait(g).unwrap_or_else(|e| e.into_inner());
+                 }
+             };
+-            job();
+             *lock(&self.pending) -= 1;
+             self.pending_cv.notify_all();
++            job();
+         }
+     }
+ }

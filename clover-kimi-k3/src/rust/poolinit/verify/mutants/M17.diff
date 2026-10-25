@@ -1,0 +1,11 @@
+# M17: host: madvise removed
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -58,7 +58,6 @@
+                 write_stderr(format!("host expert cache: cannot map {} bytes\n", chunk_bytes).as_bytes());
+                 exit1();
+             }
+-            madvise(p, chunk_bytes, sys::MADV_HUGEPAGE);
+             std::ptr::write_bytes(p as *mut u8, 0, chunk_bytes);
+             base[i].store(p as usize, Ordering::SeqCst);
+         }

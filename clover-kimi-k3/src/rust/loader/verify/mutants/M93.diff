@@ -1,0 +1,12 @@
+# M93: expert_raw fixed at 4096
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -183,7 +183,7 @@
+         positions: r.positions,
+         card: r.card,
+         h_fd: r.h_fd,
+-        expert_raw: st.cfg.expert_raw,
++        expert_raw: 4096,
+         prefill: st.cfg.prefill,
+         slab: st.cfg.slab as *mut *mut u8,
+     };

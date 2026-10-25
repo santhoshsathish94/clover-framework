@@ -1,0 +1,12 @@
+# M113: abi: PI_CHUNK_SLOTS 31
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -3,7 +3,7 @@
+ 
+ use std::os::raw::{c_char, c_int, c_uint, c_ulong, c_void};
+ 
+-pub const PI_CHUNK_SLOTS: usize = 32;
++pub const PI_CHUNK_SLOTS: usize = 31;
+ pub const PI_MAX_READERS: usize = 32;
+ pub const PI_HOST_ALLOC_DEFAULT: c_uint = 0x00;
+ pub const PI_HOST_REGISTER_PORTABLE: c_uint = 0x01;

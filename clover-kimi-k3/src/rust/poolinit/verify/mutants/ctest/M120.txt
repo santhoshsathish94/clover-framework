@@ -1,0 +1,18 @@
+test tests::child_entry ... ok
+test tests::pool_calls_and_out_fields ... ok
+test tests::pool_slot_count_boundaries ... ok
+test tests::pool_readers_clamped_and_negative ... ok
+test tests::pool_with_real_constants ... ok
+test tests::host_plan_and_summary_with_real_constants ... ok
+test tests::host_calls_spare_order_and_memory ... ok
+test tests::host_zero_chunks_and_tiny_budgets ... ok
+test tests::host_failures_end_the_process ... ok
+test tests::null_arguments_and_zero_expert_raw_are_refused_first ... FAILED
+test tests::pool_refusals_and_failed_checks_end_the_process ... ok
+test tests::struct_layout_equals_the_c_header ... ok
+test tests::one_decimal_formatting_equals_c_printf ... ok
+thread 'tests::null_arguments_and_zero_expert_raw_are_refused_first' (3371514) panicked at src/tests.rs:481:9:
+  left: (None, "\nthread 'tests::child_entry' (3371710) panicked at src/pool.rs:22:5:\nattempt to divide by zero\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\nthread 'tests::child_entry' (3371710) panicked at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/panicking.rs:225:5:\npanic in a function that cannot unwind\nstack backtrace:\n   0:     0x5bd44420cc4a - <<std[e28293b1aa0f68bd]::sys::backtrace::BacktraceLock>::print::DisplayBacktrace as core[c1f1a4ba060b9bfa]::fmt::Display>::fmt\n   1:     0x5bd4442215ba - core[c1f1a4ba060b9bfa]::fmt::write\n   2:     0x5bd4442122b2 - <std[e28293b1aa0f68bd]::sys::stdio::unix::Stderr as std[e28293b1aa0f68bd]::io::Write>::write_fmt\n   3:     0x5bd4441ea4af - std[e28293b1aa0f68bd]::panicking::default_hook::{closure#0}\n   4:     0x5bd444204841 - std[e28293b1aa0f68bd]::panicking::default_hook\n   5:     0x5bd444204abb - std[e28293b1aa0f68bd]::panicking::panic_with_hook\n   6:     0x5bd4441ea59a - std[e28293b1aa0f68bd]::panicking::panic_handler::{closure#0}\n   7:     0x5bd4441e1e29 - std[e28293b1aa0f68bd]::sys::backtrace::__rust_end_short_backtrace::<std[e28293b1aa0f68bd]::panicking::panic_handler::{closure#0}, !>\n   8:     0x5bd4441eb27d - __rustc[b7974e8690430dd9]::rust_begin_unwind\n   9:     0x5bd444221c7d - core[c1f1a4ba060b9bfa]::panicking::panic_nounwind_fmt\n  10:     0x5bd444221bfb - core[c1f1a4ba060b9bfa]::panicking::panic_nounwind\n  11:     0x5bd444221d87 - core[c1f1a4ba060b9bfa]::panicking::panic_cannot_unwind\n  12:     0x5bd444194645 - pi_pool_init\n  13:     0x5bd444185837 - poolinit::tests::child_entry::hfcca0389cfbf7727\n  14:     0x5bd4441940d9 - core::ops::function::FnOnce::call_once::h51252f9db58776b7\n  15:     0x5bd4441946db - test[273d7611820c9051]::__rust_begin_short_backtrace::<core[c1f1a4ba060b9bfa]::result::Result<(), alloc[fdfd2bd8633a6659]::string::String>, fn() -> core[c1f1a4ba060b9bfa]::result::Result<(), alloc[fdfd2bd8633a6659]::string::String>>\n  16:     0x5bd4441a10cb - test[273d7611820c9051]::run_test::{closure#0}\n  17:     0x5bd44419c7e4 - std[e28293b1aa0f68bd]::sys::backtrace::__rust_begin_short_backtrace::<test[273d7611820c9051]::run_test::{closure#1}, ()>\n  18:     0x5bd4441a3cd2 - <std[e28293b1aa0f68bd]::thread::lifecycle::spawn_unchecked<test[273d7611820c9051]::run_test::{closure#1}, ()>::{closure#1} as core[c1f1a4ba060b9bfa]::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}\n  19:     0x5bd44420c37f - <std[e28293b1aa0f68bd]::sys::thread::unix::Thread>::new::thread_start\n  20:     0x730f61c9cb84 - <unknown>\n  21:     0x730f61d29ecc - <unknown>\n  22:                0x0 - <unknown>\nthread caused non-unwinding panic. aborting.\n")
+test result: FAILED. 12 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+error: test failed, to rerun pass `--lib`
+rc=101

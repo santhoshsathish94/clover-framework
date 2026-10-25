@@ -1,0 +1,142 @@
+== M00 md5=d719148fa7f6299409041b0e1f2f3f07 units=2236 (expected 2236) PASS=2236 FAIL=0 dup=0  NOT CAUGHT
+   per scenario fail/total: P1=0/500 P2=0/500 P3=0/36 P4=0/500 P5=0/600 P6=0/100
+== M01 md5=d7e7dff8688a62e4daac612e9b75c44a units=2236 (expected 2236) PASS=2014 FAIL=222 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=148/500 P3=8/36 P4=42/500 P5=9/600 P6=15/100
+   first failing: P2 4: lines=348386/64427 ref=exit0 rust=exit3 logs differ
+      ref  >>62088: pL 0 127
+      rust >>62088: pL 0 126
+      rust: VIOLATION stats releases = 3, model 2 (after 26 hooks)
+== M02 md5=20581db7e472d3bc7ea32dca1c87d715 units=2236 (expected 2236) PASS=1126 FAIL=1110 dup=0  CAUGHT
+   per scenario fail/total: P1=339/500 P2=203/500 P3=21/36 P4=268/500 P5=279/600 P6=0/100
+   first failing: P1 3: lines=3552/2952 ref=exit0 rust=exit0 logs differ
+      ref  >>1076: Z pos=1 to=22 ok=1 pl=50 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=50 ar=0 rl=0 wk=0 nuc=50
+      rust >>1076: Z pos=1 to=23 ok=1 pl=50 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=50 ar=0 rl=0 wk=0 nuc=50
+== M03 md5=a5ed973b63fb28c970cb6a12e2825fce units=2236 (expected 2236) PASS=1180 FAIL=1056 dup=0  CAUGHT
+   per scenario fail/total: P1=419/500 P2=217/500 P3=21/36 P4=234/500 P5=165/600 P6=0/100
+   first failing: P1 2: lines=20027/20027 ref=exit0 rust=exit0 logs differ
+      ref  >>3988: Z pos=19 to=18 ok=1 pl=264 sk=4 vr=0 vd=0 vw=0 vn=0 pu=248 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=16 ar=0 rl=0 wk=0 nuc=681
+      rust >>3988: Z pos=19 to=18 ok=1 pl=264 sk=0 vr=0 vd=0 vw=0 vn=0 pu=248 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=16 ar=0 rl=0 wk=0 nuc=681
+== M04 md5=dc34a74b36a3f6448da6466df2e42d82 units=2236 (expected 2236) PASS=2229 FAIL=7 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=4/500 P3=0/36 P4=3/500 P5=0/600 P6=0/100
+   first failing: P2 78: lines=233436/233535 ref=exit0 rust=exit0 logs differ
+      ref  >>84534: pE J368 k1 dev6 fd1045 off3333980160 L45 s-1 d528 hs-1 vh-1 p=- wb=- ar=J368a rl=-
+      rust >>84534: pW 0 33798 1
+== M05 md5=f7ce76b07f886a5732fc9966c85645dc units=2236 (expected 2236) PASS=1783 FAIL=453 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=265/500 P3=17/36 P4=117/500 P5=52/600 P6=2/100
+   first failing: P2 3: lines=6249/8632 ref=exit0 rust=exit0 logs differ
+      ref  >>1946: pC 3 74845 0
+      rust >>1946: pT 3 75257 30 3f800000 24:eb704d104ed7f893 -1 -1 00000000
+== M06 md5=81baa6c8e6076f892a63a2734dbe234d units=2236 (expected 2236) PASS=2236 FAIL=0 dup=0  NOT CAUGHT
+   per scenario fail/total: P1=0/500 P2=0/500 P3=0/36 P4=0/500 P5=0/600 P6=0/100
+== M07 md5=d50a2cd4f6c3336a8dac466c964faaba units=2236 (expected 2236) PASS=1626 FAIL=610 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=357/500 P3=18/36 P4=142/500 P5=92/600 P6=1/100
+   first failing: P2 1: lines=6223/6223 ref=exit0 rust=exit0 logs differ
+      ref  >>3213: pT 3 31841 1 3f800000 2:77cd02506570dc83 1900 -1 00000000
+      rust >>3213: pT 3 31841 1 3f800000 2:b0465fb8a17a20b8 1900 -1 00000000
+== M08 md5=8b55cc53c5c094f6f3590b4d2d3b6c00 units=2236 (expected 2236) PASS=2236 FAIL=0 dup=0  NOT CAUGHT
+   per scenario fail/total: P1=0/500 P2=0/500 P3=0/36 P4=0/500 P5=0/600 P6=0/100
+== M09 md5=93a01e2613f950bef478b1d761b68103 units=2236 (expected 2236) PASS=2113 FAIL=123 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=52/500 P3=16/36 P4=33/500 P5=22/600 P6=0/100
+   first failing: P2 12: lines=100584/100456 ref=exit0 rust=exit0 logs differ
+      ref  >>1930: pC 0 82114 1
+      rust >>1930: pC 4 81959 0
+== M10 md5=547eb3117183e5de8ca37489f545da68 units=2236 (expected 2236) PASS=1639 FAIL=597 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=350/500 P3=18/36 P4=138/500 P5=91/600 P6=0/100
+   first failing: P2 1: lines=6223/6497 ref=exit0 rust=exit0 logs differ
+      ref  >>3212: pC 0 31841 0
+      rust >>3212: pN 31841 1000000000
+== M11 md5=b2623bdf65a148ccbb384c1c1816fa46 units=2236 (expected 2236) PASS=27 FAIL=2209 dup=0  CAUGHT
+   per scenario fail/total: P1=500/500 P2=500/500 P3=36/36 P4=500/500 P5=573/600 P6=100/100
+   first failing: P1 1: lines=2563/1513 ref=exit0 rust=exit3 logs differ
+      ref  >>1512: Z pos=1 to=66 ok=1 pl=125 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=125 ar=0 rl=0 wk=0 nuc=125
+      rust >>1512: Z pos=2 to=66 ok=1 pl=125 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=125 ar=0 rl=0 wk=0 nuc=125
+      rust: VIOLATION stats pos = 2, model 1 (after 1 hooks)
+== M12 md5=74e32b698afcf4607d1b4bfb73e49a12 units=2236 (expected 2236) PASS=429 FAIL=1807 dup=0  CAUGHT
+   per scenario fail/total: P1=500/500 P2=461/500 P3=36/36 P4=476/500 P5=334/600 P6=0/100
+   first failing: P1 1: lines=2563/2563 ref=exit0 rust=exit0 logs differ
+      ref  >>952: pA 0 31928 3f800000 0:0000000000000000 0 -1 00000000
+      rust >>952: pA 0 31928 40000000 0:0000000000000000 0 -1 00000000
+== M13 md5=57296c1cfab9cdc4e4c8d3ceebbb7c02 units=2236 (expected 2236) PASS=1131 FAIL=1105 dup=0  CAUGHT
+   per scenario fail/total: P1=229/500 P2=304/500 P3=29/36 P4=242/500 P5=301/600 P6=0/100
+   first failing: P1 2: lines=20027/11619 ref=exit0 rust=exit0 logs differ
+      ref  >>335: pC 2 28736 0
+      rust >>335: Z pos=1 to=0 ok=1 pl=0 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=0 ar=0 rl=0 wk=0 nuc=0
+== M14 md5=f90b8057fe1d7cc1827c2543cde22821 units=2236 (expected 2236) PASS=599 FAIL=1637 dup=0  CAUGHT
+   per scenario fail/total: P1=487/500 P2=444/500 P3=36/36 P4=456/500 P5=214/600 P6=0/100
+   first failing: P1 1: lines=2563/1531 ref=exit0 rust=exit3 logs differ
+      ref  >>1530: Z pos=2 to=66 ok=1 pl=125 sk=0 vr=0 vd=0 vw=0 vn=0 pu=2 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=123 ar=0 rl=0 wk=0 nuc=127
+      rust >>1530: Z pos=2 to=66 ok=1 pl=125 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=123 ar=0 rl=0 wk=0 nuc=127
+      rust: VIOLATION stats pf_used = 0, model 2 (after 2 hooks)
+== M15 md5=d2d49367d3277439cd967a459f3ff258 units=2236 (expected 2236) PASS=574 FAIL=1662 dup=0  CAUGHT
+   per scenario fail/total: P1=391/500 P2=459/500 P3=31/36 P4=387/500 P5=392/600 P6=2/100
+   first failing: P1 1: lines=2563/2597 ref=exit0 rust=exit0 logs differ
+      ref  >>1017: pC 6 56021 0
+      rust >>1017: Z pos=1 to=9 ok=1 pl=15 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=15 ar=0 rl=0 wk=0 nuc=15
+== M16 md5=c9aebead929bd29c2a667220ce9f1f28 units=2236 (expected 2236) PASS=2026 FAIL=210 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=147/500 P3=6/36 P4=23/500 P5=12/600 P6=22/100
+   first failing: P2 4: lines=348386/36751 ref=exit0 rust=exit3 logs differ
+      ref  >>34636: pA 0 28346 3f800000 165:60bff142ee6ef91e 4 -1 00000000
+      rust >>34636: pA 0 28346 3f800000 167:80f72f7f725949ca 4 -1 00000000
+      rust: VIOLATION stats pending = 180, model 178 (after 15 hooks)
+== M17 md5=cee6d0f7c464a79e6180eb7a9b0caf10 units=2236 (expected 2236) PASS=1126 FAIL=1110 dup=0  CAUGHT
+   per scenario fail/total: P1=339/500 P2=203/500 P3=21/36 P4=268/500 P5=279/600 P6=0/100
+   first failing: P1 3: lines=3552/3607 ref=exit0 rust=exit0 logs differ
+      ref  >>1076: Z pos=1 to=22 ok=1 pl=50 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=50 ar=0 rl=0 wk=0 nuc=50
+      rust >>1076: pW 0 23886 1
+== M18 md5=59f39d9a7928d76598f9724b482d2b79 units=2236 (expected 2236) PASS=1624 FAIL=612 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=326/500 P3=16/36 P4=123/500 P5=88/600 P6=59/100
+   first failing: P2 1: lines=6223/3229 ref=exit0 rust=exit3 logs differ
+      ref  >>3228: Z pos=2 to=0 ok=1 pl=0 sk=0 vr=0 vd=2 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=0 ar=0 rl=0 wk=0 nuc=0
+      rust >>3228: Z pos=2 to=0 ok=1 pl=0 sk=0 vr=0 vd=2 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=0 ar=2 rl=0 wk=0 nuc=0
+      rust: VIOLATION stats arrivals = 2, model 0 (after 2 hooks)
+== M19 md5=95aaffb967736dc8998cf7b1aee31492 units=2236 (expected 2236) PASS=1442 FAIL=794 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=0/500 P3=0/36 P4=499/500 P5=295/600 P6=0/100
+   first failing: P4 1: lines=39807/30326 ref=exit0 rust=exit0 logs differ
+      ref  >>3183: pX NULL
+      rust >>3183: Z pos=13 to=11 ok=0 pl=33 sk=0 vr=0 vd=0 vw=0 vn=0 pu=33 pw=3 vq=0 tpw=1 tvw=0 tp0=0 pn=0 ar=0 rl=0 wk=0 nuc=632
+== M20 md5=d06fa25267088850897feb613951834f units=2236 (expected 2236) PASS=2048 FAIL=188 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=147/500 P3=6/36 P4=23/500 P5=12/600 P6=0/100
+   first failing: P2 4: lines=348386/15367 ref=exit0 rust=exit3 logs differ
+      ref  >>15366: Z pos=6 to=0 ok=1 pl=180 sk=0 vr=1 vd=180 vw=1 vn=0 pu=1 pw=0 vq=3 tpw=0 tvw=1 tp0=0 pn=180 ar=130 rl=1 wk=1 nuc=415
+      rust >>15366: Z pos=6 to=0 ok=1 pl=180 sk=0 vr=1 vd=180 vw=1 vn=0 pu=1 pw=0 vq=3 tpw=0 tvw=1 tp0=0 pn=180 ar=130 rl=1 wk=2 nuc=415
+      rust: VIOLATION stats wb_keys = 2, model 1 (after 6 hooks)
+== M21 md5=fe563cd20fc471548d9eaac789644b88 units=2236 (expected 2236) PASS=2232 FAIL=4 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=0/500 P3=0/36 P4=4/500 P5=0/600 P6=0/100
+   first failing: P4 70: lines=18857/18857 ref=exit0 rust=exit0 logs differ
+      ref  >>733: Z pos=1 to=0 ok=0 pl=0 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=1 pn=0 ar=0 rl=0 wk=0 nuc=0
+      rust >>733: Z pos=1 to=0 ok=0 pl=0 sk=0 vr=0 vd=0 vw=0 vn=0 pu=0 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=0 ar=0 rl=0 wk=0 nuc=0
+== MA md5=0ab9b312ebc5e93b9e4f248fe68a670b units=2236 (expected 2236) PASS=1566 FAIL=670 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=358/500 P3=18/36 P4=143/500 P5=92/600 P6=59/100
+   first failing: P2 1: lines=6223/3214 ref=exit0 rust=exit3 logs differ
+      ref  >>3213: pT 3 31841 1 3f800000 2:77cd02506570dc83 1900 -1 00000000
+      rust >>3213: pT 3 1 31841 3f800000 2:77cd02506570dc83 1900 -1 00000000
+      rust: VIOLATION job 1: kind 1/2 off does not match the key of the last try_acquire
+== MB md5=c7d46745c14f070f08cfe5f49263921b units=2236 (expected 2236) PASS=1321 FAIL=915 dup=0  CAUGHT
+   per scenario fail/total: P1=262/500 P2=216/500 P3=36/36 P4=290/500 P5=111/600 P6=0/100
+   first failing: P1 2: lines=20027/11384 ref=exit0 rust=exit3 logs differ
+      ref  >>11383: Z pos=94 to=93 ok=1 pl=454 sk=39 vr=0 vd=0 vw=0 vn=0 pu=454 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=0 ar=0 rl=0 wk=0 nuc=3391
+      rust >>11383: Z pos=94 to=93 ok=1 pl=454 sk=39 vr=0 vd=0 vw=0 vn=0 pu=461 pw=0 vq=0 tpw=0 tvw=0 tp0=0 pn=0 ar=0 rl=0 wk=0 nuc=3391
+      rust: VIOLATION stats pf_used = 461, model 454 (after 94 hooks)
+== MC md5=e1ae35af9d17fb72ee22bc8ef281c275 units=2236 (expected 2236) PASS=1633 FAIL=603 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=353/500 P3=18/36 P4=140/500 P5=92/600 P6=0/100
+   first failing: P2 1: lines=6223/6223 ref=exit0 rust=exit0 logs differ
+      ref  >>3213: pT 3 31841 1 3f800000 2:77cd02506570dc83 1900 -1 00000000
+      rust >>3213: pT 3 31841 1 3f800000 1:a9246e52e0eab1ab 1900 -1 00000000
+== MD md5=7f161ff4b123c9597b1d206bdedb5b3e units=2236 (expected 2236) PASS=368 FAIL=1868 dup=0  CAUGHT
+   per scenario fail/total: P1=500/500 P2=500/500 P3=36/36 P4=496/500 P5=236/600 P6=100/100
+   first failing: P1 1: lines=2563/953 ref=exit0 rust=exit3 logs differ
+      ref  >>953: pE J1 k0 dev0 fd1035 off9966845952 L0 s0 d-1 hs-1 vh-1 p=J1p wb=- ar=- rl=-
+      rust >>953: VIOLATION job 1: kind 0 off is not e * expert_raw
+      rust: VIOLATION job 1: kind 0 off is not e * expert_raw
+== MD1 md5=86426133305b35086b50a6738dc1bd68 units=2236 (expected 2236) PASS=456 FAIL=1780 dup=0  CAUGHT
+   per scenario fail/total: P1=500/500 P2=460/500 P3=36/36 P4=476/500 P5=214/600 P6=94/100
+   first failing: P1 1: lines=2563/953 ref=exit0 rust=exit3 logs differ
+      ref  >>953: pE J1 k0 dev0 fd1035 off9966845952 L0 s0 d-1 hs-1 vh-1 p=J1p wb=- ar=- rl=-
+      rust >>953: VIOLATION job 1: kind 0 off is not e * expert_raw
+      rust: VIOLATION job 1: kind 0 off is not e * expert_raw
+== MD2 md5=b14cea7c5a8776042b5563d60558fafe units=2236 (expected 2236) PASS=1663 FAIL=573 dup=0  CAUGHT
+   per scenario fail/total: P1=0/500 P2=328/500 P3=10/36 P4=123/500 P5=53/600 P6=59/100
+   first failing: P2 1: lines=6223/3214 ref=exit0 rust=exit3 logs differ
+      ref  >>3214: pE J1 k1 dev1 fd1035 off8440233984 L35 s-1 d1900 hs-1 vh-1 p=- wb=- ar=J1a rl=-
+      rust >>3214: VIOLATION job 1: kind 1/2 off does not match the key of the last try_acquire
+      rust: VIOLATION job 1: kind 1/2 off does not match the key of the last try_acquire

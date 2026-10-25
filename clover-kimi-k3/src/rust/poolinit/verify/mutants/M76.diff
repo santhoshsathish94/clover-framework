@@ -1,0 +1,12 @@
+# M76: pool: slot 0 never added as a spare
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -61,7 +61,7 @@
+         }
+         check(device_malloc(addr_of_mut!((*out).base) as *mut *mut c_void, (slots as usize).wrapping_mul(raw)), error_string, file, LINE_MALLOC_SLAB);
+         let base = (*out).base;
+-        for i in (0..slots).rev() {
++        for i in (1..slots).rev() {
+             add_spare(cfg.cache, base.wrapping_add((i as usize).wrapping_mul(raw)));
+         }
+         check(stream_create(addr_of_mut!((*out).copy), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_COPY);

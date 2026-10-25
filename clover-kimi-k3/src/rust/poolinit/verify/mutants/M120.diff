@@ -1,0 +1,13 @@
+# M120: lib: pi_pool_init does not refuse expert_raw == 0
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -65,9 +65,6 @@
+     need_fn!(ops, event_create);
+     need_fn!(ops, error_string);
+     need_fn!(ops, sc_add_spare);
+-    if cfg.expert_raw == 0 {
+-        bad("expert_raw is 0");
+-    }
+     // SAFETY: by the contract.
+     unsafe { pool::pool_init(&ops, &cfg, out) }
+ }

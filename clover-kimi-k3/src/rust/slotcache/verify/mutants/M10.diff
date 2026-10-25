@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -107,8 +107,6 @@
+ 
+     fn find(&mut self, key: i32) -> *mut u8 {
+         let Some(&i) = self.map.get(&key) else { return std::ptr::null_mut() };
+-        self.unlink(i);
+-        self.push_front(i);
+         self.nodes[i].slot
+     }
+ 

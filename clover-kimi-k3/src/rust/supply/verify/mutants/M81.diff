@@ -1,0 +1,12 @@
+# M81: job counter fetch_add with Ordering::Relaxed
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -144,7 +144,7 @@
+ 
+ fn work(c: &Ctx, tid: usize) {
+     loop {
+-        let i = c.next.fetch_add(1, Ordering::SeqCst);
++        let i = c.next.fetch_add(1, Ordering::Relaxed);
+         if i >= c.jobs.len() {
+             return;
+         }
