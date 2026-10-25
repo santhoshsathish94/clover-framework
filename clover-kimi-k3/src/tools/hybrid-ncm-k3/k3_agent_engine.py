@@ -2019,6 +2019,16 @@ class CloverK3AgentEngine:
         tool_obs_parts = []
         raw_user_q = _extract_raw_user_query(user_prompt)
 
+        # 00. Direct Concept-Plan-to-Text NCM routing: when the prompt supplies a dense concept skeleton
+        #     ("Rewrite these notes into one clear, grammatical sentence using only these facts:\n<plan>"),
+        #     pass the concept skeleton directly to `render_ncm_with_k3_experts` (replacing ';' with ',' so
+        #     `26 not in vp` holds and `win_masks` + 1-to-1 pointer alignment are active!).
+        if "rewrite these notes into one clear" in raw_user_q.lower() and "\n" in raw_user_q:
+            concept_line = raw_user_q.split("\n", 1)[1].strip()
+            concept_line = re.sub(r"\s*;\s*", ", ", concept_line).strip()
+            if concept_line:
+                return [concept_line], 0, "concept_plan_direct_ncm", tool_calls_log
+
         # 0. Ontology-Guided Neuro-Symbolic GraphRAG retrieval (`[E#] Entity record` + `[P#] Relationship path`)
         ont_evidence = []
         if ont_enabled:
