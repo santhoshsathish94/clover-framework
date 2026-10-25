@@ -1,0 +1,11 @@
+# M09: no notify after the decrement (lost wake-up of ld_wait)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -87,7 +87,6 @@
+             };
+             job();
+             *lock(&self.pending) -= 1;
+-            self.pending_cv.notify_all();
+         }
+     }
+ }

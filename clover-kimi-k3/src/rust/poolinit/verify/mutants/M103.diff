@@ -1,0 +1,12 @@
+# M103: pool: CHECK line of the d_eptr malloc 466 instead of 467
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -12,7 +12,7 @@
+ const LINE_STREAM_READER: u32 = 463;
+ const LINE_HOST_ALLOC: u32 = 464;
+ const LINE_EVENT: u32 = 466;
+-const LINE_MALLOC_EPTR: u32 = 467;
++const LINE_MALLOC_EPTR: u32 = 466;
+ /// The smallest pool the original accepts.
+ pub const MIN_SLOTS: c_int = 64;
+ 

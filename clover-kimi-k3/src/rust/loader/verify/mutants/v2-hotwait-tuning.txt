@@ -1,0 +1,19 @@
+Tuning sweep of the chaos parameters of scenario hotwait (2026-10-25, box gpu, load average 100-120 from other agents), against the mutant M05 (pending++ after the push) and the control M00,
+40 units each (seeds 1-40), at most 20 units at a time. rounds = the base number of rounds (the unit draws base + 0..base-1), period = the base pause of the chaos thread in us (the unit draws
+period + 0..period), scale = percent of the stall table {0, 0, 20, 60, 150, 300, 600, 1000} us a signal handler sleeps. wall = seconds for the 40 units (reference and library each). The driver had
+these three as environment knobs (LD_HW_ROUNDS, LD_HW_PERIOD, LD_HW_SCALE) during the sweep; the knobs were removed afterwards and the chosen values hard-coded: rounds 3000 (3000-5999 drawn),
+period 60 (60-120 drawn), scale 30 (stall table {0, 0, 6, 18, 45, 90, 180, 300} us).
+
+rounds=4000 period=80  scale=100  M05 33/40  M00 0/40  wall 23 s / 27 s
+rounds=2000 period=80  scale=100  M05 33/40  M00 0/40  wall 19 s / 12 s
+rounds=2000 period=150 scale=40   M05 19/40  M00 0/40  wall 15 s / 5 s
+rounds=2000 period=60  scale=30   M05 36/40  M00 0/40  wall 11 s / 8 s
+rounds=3000 period=100 scale=50   M05 32/40  M00 0/40  wall 15 s / 13 s
+rounds=2000 period=30  scale=20   M05 34/40  M00 0/40  wall 13 s / 6 s
+rounds=2000 period=40  scale=30   M05 21/40  M00 0/40  wall 12 s / 7 s
+rounds=3000 period=60  scale=30   M05 39/40  M00 0/40  wall 17 s / 9 s     <- chosen
+rounds=3000 period=40  scale=20   M05 28/40  M00 0/40  wall 15 s / 11 s
+rounds=4000 period=60  scale=30   M05 39/40  M00 0/40  wall 17 s / 14 s
+
+Earlier versions of the scenario (same mutant, 100 units): without the overlap check 3/100; with the overlap check, bursts of 2..8 jobs 20/100; bursts of 2..40, 7 of 8 seeds with chaos 56/100;
+bursts of 2..40, rounds 4000-7999, chaos stall table up to 1 ms, three of four signals to the submitting thread, one job in three of 5-30 us 94/100.

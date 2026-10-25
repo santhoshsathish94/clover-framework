@@ -19,6 +19,8 @@ BUILD_GPU="${BUILD_GPU_DIR:-$BUILD_DIR/gpu}"
 COPYQ_INC=""; [ -d "$CODE_DIR/../rust/copyq/include" ] && COPYQ_INC="-I$CODE_DIR/../rust/copyq/include"   # contract of the Rust copy queue (K3GPU_COPYQ=rust); without it the engine has only the C++ queue
 SLOTCACHE_INC=""; [ -d "$CODE_DIR/../rust/slotcache/include" ] && SLOTCACHE_INC="-I$CODE_DIR/../rust/slotcache/include"   # contract of the Rust slot cache (K3GPU_SLOTCACHE=rust); without it the engine has only the C++ cache
 ROUTETABLE_INC=""; [ -d "$CODE_DIR/../rust/routetable/include" ] && ROUTETABLE_INC="-I$CODE_DIR/../rust/routetable/include"   # contract of the Rust route table (K3GPU_ROUTETABLE=rust); without it the engine has only the C++ parser
+HOSTPATH_INC=""   # contracts of the rest of the Rust host path (K3GPU_PLANNER, K3GPU_SUPPLY, K3GPU_POOLINIT, K3GPU_LOADER, K3GPU_ENGCFG); a missing directory leaves that part cpp-only
+for c in planner supply poolinit loader engcfg; do [ -d "$CODE_DIR/../rust/$c/include" ] && HOSTPATH_INC="$HOSTPATH_INC -I$CODE_DIR/../rust/$c/include"; done
 mkdir -p "$BUILD_GPU"
 cd "$BUILD_GPU"
 if [ "${BUILD:-1}" != "0" ]; then
@@ -28,7 +30,7 @@ if [ "${BUILD:-1}" != "0" ]; then
   gcc $F -O2 -c $CMN/whole-model.c -o whole-model.o 2> build-whole-model.log || fail whole-model build-whole-model.log
   gcc $F -O3 $INC -c $CPU/dspark-draft.c -o dspark-draft.o 2> build-dspark-draft.log || fail dspark-draft build-dspark-draft.log
   gcc -std=c11 -O2 -march=native -Wall -Wextra -Werror -Wno-unused-function -ffp-contract=off -fno-fast-math -fopenmp -fPIC -shared $INC $CMN/final-stage.c -lm -o $BUILD_GPU/pipeline-stage.so 2> build-tail-library.log || fail tail-library build-tail-library.log
-  nvcc -O3 --fmad=false -arch=sm_86 -std=c++17 -DEXPERT_V2 -DINT8_PLANES -I$GPU -I$CMN $COPYQ_INC $SLOTCACHE_INC $ROUTETABLE_INC -c $GPU/backend-gpu.cu -o backend-gpu.o 2> build-backend-gpu.log || fail backend-gpu build-backend-gpu.log
+  nvcc -O3 --fmad=false -arch=sm_86 -std=c++17 -DEXPERT_V2 -DINT8_PLANES -I$GPU -I$CMN $COPYQ_INC $SLOTCACHE_INC $ROUTETABLE_INC $HOSTPATH_INC -c $GPU/backend-gpu.cu -o backend-gpu.o 2> build-backend-gpu.log || fail backend-gpu build-backend-gpu.log
   objcopy --keep-global-symbol=stage1_setup --keep-global-symbol=stage1_ids --keep-global-symbol=stage1_ids_plain --keep-global-symbol=stage1_id_of --keep-global-symbol=stage1_lookup words-to-embeddings.o
   objcopy --keep-global-symbol=dspark_open --keep-global-symbol=dspark_draft --keep-global-symbol=dspark_reset dspark-draft.o
   nvcc -arch=sm_86 whole-model.o words-to-embeddings.o dspark-draft.o backend-gpu.o -lcublas -Xcompiler -fopenmp -ldl -lpthread -lm -o whole-model-gpu 2> build-link.log || { head -30 build-link.log; exit 1; }
@@ -46,5 +48,7 @@ env -i PATH="$PATH" LD_LIBRARY_PATH="$CUDA_HOME/lib64" SPECULATIVE_DRAFT_TOKENS=
     PF_ROUTES="${PF_ROUTES:-}" PF_CHAT="${PF_CHAT:-}" PF_SYSTEM="${PF_SYSTEM:-}" PF_LAST_LAYER="${PF_LAST_LAYER:-}" MODEL_GPU_ROUTES="${MODEL_GPU_ROUTES:-}" MODEL_GPU_PLANES_MB="${MODEL_GPU_PLANES_MB:-}" \
     K3GPU_CARDS="${K3GPU_CARDS:-}" K3GPU_HOST_GB="${K3GPU_HOST_GB:-}" K3GPU_RESERVE_MB="${K3GPU_RESERVE_MB:-}" K3GPU_READERS="${K3GPU_READERS:-}" K3GPU_VERBOSE="${K3GPU_VERBOSE:-}" K3GPU_POLICY="${K3GPU_POLICY:-}" K3GPU_CHUNKS="${K3GPU_CHUNKS:-}" K3GPU_ROUTECACHE="${K3GPU_ROUTECACHE:-}" K3GPU_LOOKAHEAD="${K3GPU_LOOKAHEAD:-}" K3GPU_TRACE="${K3GPU_TRACE:-}" K3GPU_VQUEUE="${K3GPU_VQUEUE:-}" K3GPU_VQ_INFLIGHT="${K3GPU_VQ_INFLIGHT:-}" K3GPU_VQ_FROM="${K3GPU_VQ_FROM:-}" K3GPU_PREFILL="${K3GPU_PREFILL:-}" K3GPU_LAYOUT="${K3GPU_LAYOUT:-}" \
     K3GPU_COPYQ="${K3GPU_COPYQ:-}" K3GPU_COPYQ_LIB="${K3GPU_COPYQ_LIB:-}" K3GPU_SLOTCACHE="${K3GPU_SLOTCACHE:-}" K3GPU_SLOTCACHE_LIB="${K3GPU_SLOTCACHE_LIB:-}" K3GPU_ROUTETABLE="${K3GPU_ROUTETABLE:-}" K3GPU_ROUTETABLE_LIB="${K3GPU_ROUTETABLE_LIB:-}" \
+    K3GPU_POOLINIT="${K3GPU_POOLINIT:-}" K3GPU_POOLINIT_LIB="${K3GPU_POOLINIT_LIB:-}" K3GPU_SUPPLY="${K3GPU_SUPPLY:-}" K3GPU_SUPPLY_LIB="${K3GPU_SUPPLY_LIB:-}" K3GPU_PLANNER="${K3GPU_PLANNER:-}" K3GPU_PLANNER_LIB="${K3GPU_PLANNER_LIB:-}" \
+    K3GPU_LOADER="${K3GPU_LOADER:-}" K3GPU_LOADER_LIB="${K3GPU_LOADER_LIB:-}" K3GPU_ENGCFG="${K3GPU_ENGCFG:-}" K3GPU_ENGCFG_LIB="${K3GPU_ENGCFG_LIB:-}" \
     OMP_NUM_THREADS="${OMP_NUM_THREADS:-24}" OMP_PROC_BIND=close OMP_PLACES=cores \
     "$BUILD_GPU/whole-model-gpu" "$BUILD_GPU" "$DATASET_DIR" "$OPEN_WEIGHTS_DIR" $WORDS $REFS

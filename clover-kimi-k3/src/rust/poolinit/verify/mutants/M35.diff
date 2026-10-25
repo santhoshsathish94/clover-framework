@@ -1,0 +1,12 @@
+# M35: host: spares chunk order ascending (slots descending)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -78,7 +78,7 @@
+         for b in base.iter() {
+             check(host_register(b.load(Ordering::SeqCst) as *mut c_void, chunk_bytes, PI_HOST_REGISTER_PORTABLE), error_string, file, LINE_REGISTER);
+         }
+-        for b in base.iter().rev() {
++        for b in base.iter() {
+             let p = b.load(Ordering::SeqCst) as *mut u8;
+             for s in (0..PI_CHUNK_SLOTS).rev() {
+                 add_spare(cfg.cache, p.wrapping_add(s.wrapping_mul(raw)));

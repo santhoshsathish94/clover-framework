@@ -1,0 +1,14 @@
+# M88: ld_wait before ld_init is fatal
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -138,9 +138,7 @@
+ 
+ #[no_mangle]
+ pub extern "C" fn ld_wait() {
+-    if let Some(s) = STATE.get() {
+-        s.loader.wait();
+-    } // before ld_init nothing can be pending
++    state("ld_wait").loader.wait();
+ }
+ 
+ fn put(p: *mut c_int, v: c_int) {

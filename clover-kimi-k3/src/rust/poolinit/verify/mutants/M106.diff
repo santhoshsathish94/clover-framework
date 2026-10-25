@@ -1,0 +1,12 @@
+# M106: pool: CHECK line of the copy stream 462 instead of 461
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -8,7 +8,7 @@
+ const LINE_SET_DEVICE: u32 = 454;
+ const LINE_MEM_GET_INFO: u32 = 455;
+ const LINE_MALLOC_SLAB: u32 = 459;
+-const LINE_STREAM_COPY: u32 = 461;
++const LINE_STREAM_COPY: u32 = 462;
+ const LINE_STREAM_READER: u32 = 463;
+ const LINE_HOST_ALLOC: u32 = 464;
+ const LINE_EVENT: u32 = 466;

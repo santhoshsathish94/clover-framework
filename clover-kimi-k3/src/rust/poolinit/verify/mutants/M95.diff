@@ -1,0 +1,12 @@
+# M95: pool: set_device(0) instead of cfg.device
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -50,7 +50,7 @@
+     unsafe {
+         (*out).dev = cfg.device;
+         (*out).readers = std::cmp::min(cfg.nreaders, PI_MAX_READERS as c_int);
+-        check(set_device(cfg.device), error_string, file, LINE_SET_DEVICE);
++        check(set_device(0), error_string, file, LINE_SET_DEVICE);
+         let (mut f, mut t) = (0usize, 0usize);
+         check(mem_get_info(&mut f, &mut t), error_string, file, LINE_MEM_GET_INFO);
+         let slots = slots_for(f, cfg.reserve_bytes, raw);

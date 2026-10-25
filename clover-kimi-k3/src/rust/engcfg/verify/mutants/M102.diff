@@ -1,0 +1,18 @@
+--- src/lib.rs (real)
++++ M102/src/lib.rs
+@@ -449,12 +449,12 @@
+     }
+     let mut fill = vec![0i32; n as usize];
+-    let mut s: i64 = 0;
++    let mut s: i32 = 0;
+     for i in 0..experts.len() {
+         for _ in 0..counts[i] {
+-            let t = (s % n as i64) as usize;
++            let t = (s as i64 % n as i64) as usize;
+             let idx = t.wrapping_mul(top as isize as usize).wrapping_add(fill[t] as isize as usize);
+             *sel.wrapping_add(idx) = experts[i];
+             fill[t] += 1;
+-            s += 1;
++            s = s.wrapping_add(1);
+         }
+     }

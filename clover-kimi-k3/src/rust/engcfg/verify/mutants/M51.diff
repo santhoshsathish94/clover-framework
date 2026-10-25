@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M51/src/lib.rs
+@@ -336,5 +336,5 @@
+             return SelOutcome::Cpp;
+         }
+-        if m_bytes == b"rust" {
++        if m_bytes.eq_ignore_ascii_case(b"rust") {
+             return SelOutcome::Rust;
+         }

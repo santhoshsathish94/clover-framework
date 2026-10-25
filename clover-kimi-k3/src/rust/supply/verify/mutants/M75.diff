@@ -1,0 +1,12 @@
+# M75: do_check: ops.check gets status 0 always
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -46,7 +46,7 @@
+ 
+ fn do_check(ops: &sy_ops, status: c_int, site: &'static [u8]) {
+     // SAFETY: `site` is NUL-terminated; the function pointer is the caller's.
+-    unsafe { (ops.check)(status, site.as_ptr() as *const c_char) };
++    unsafe { (ops.check)(0, site.as_ptr() as *const c_char) };
+     if status != 0 {
+         std::process::exit(1); // ops.check must not return on a non-zero status; if it does, stop here as the original's CHECK would have
+     }

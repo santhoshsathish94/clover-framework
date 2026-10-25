@@ -1,0 +1,11 @@
+# M39: set_device(pool.dev) missing before the write-backs
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -273,7 +273,6 @@
+                 pool.st.hit_host = pool.st.hit_host.wrapping_add(1);
+             }
+         }
+-        do_check(ops, (ops.set_device)(pool.dev), site::SET_DEVICE_POOL);
+         // 2. the experts the card gives up are copied down into the RAM cache
+         for v in &victims {
+             if host.cap_slots == 0 || prefill {

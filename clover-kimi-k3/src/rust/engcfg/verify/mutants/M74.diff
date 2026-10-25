@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M74/src/lib.rs
+@@ -390,5 +390,5 @@
+             std::process::abort(); // the original traps (SIGFPE) on exactly these inputs
+         }
+-        return d % cards;
++        return layer % cards;
+     }
+     if layer == 0 {

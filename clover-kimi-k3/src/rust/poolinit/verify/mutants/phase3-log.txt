@@ -1,0 +1,39 @@
+== probes 03:54:18
+M00c rc=0 UNIT=3000 PASS=3000 FAIL=0 events=12830 md5=3a490ab6d520053e7264131e4b175e11
+M03p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1418 md5=ea0fe79422f0e2f7243b29efb0d71eb0
+M11p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=3a9e4e1046d754edc6dfe3dc20db72c0
+M12p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=8b5936286e1e0f54e652f304776903f8
+M13p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=d92f2c6839b256f2b0d07caaf15deb93
+M14p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=e73bad6883cf40efbb74d6acddc1b9ea
+M33p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1189 md5=33a8873889296699acf3ffbcab9d2cdc
+M46p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=12832 md5=11b87b7883d99b911725f1bb46d24fb7
+M47p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=12836 md5=b538520d4a64958223eeae163441a48a
+M48p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=99488b0f7393c113b0914f3c4a4d39cf
+M49p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1517 md5=5587b1ea1d7843ee34ed17d29f8f7cd5
+M57p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=583 md5=8efcd800118f66a6486d3f1fb2dab5d8
+M58p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=583 md5=23fb1a3a649f15bfd9286a628c1e6d90
+M59p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1428 md5=46ae9a000626a4e9555c1158bd619669
+M67p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1998 md5=23d5f4c2685ee424b16f19e48e32d2f5
+M68p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1998 md5=c8bd8c380b1d8e8d2e9c44e617425e0b
+M86p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1074 md5=46cddecc3bb6f9843b2369dc1a0c7ed8
+206M out/probe; /dev/mapper/ubuntu--vg-ubuntu--lv  1.8T  1.6T  104G  95% /
+== proposal driver 03:55:20
+M00: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M03: UNIT=3000 FAIL=248 H units=600 pass=452 fail=148 logged_event_lines_ref=7006 lo first: VIOLATION PROTO: n_chunks 17 >= 16 with 60 ms mmaps but the calling thread never called mmap PROTO-violations: 248
+M11: UNIT=3000 FAIL=133 H units=600 pass=467 fail=133 logged_event_lines_ref=7006 lo first: VIOLATION PROTO: reported 0.0 s outside [0.060, 0.180] (n_chunks 17, wall of the call 0.120) PROTO-violations: 133
+M12: UNIT=3000 FAIL=975 H units=600 pass=0 fail=600 logged_event_lines_ref=7006 logg first: VIOLATION PROTO: reported 0.5 s outside [-0.060, 0.061] (n_chunks 0, wall of the call 0.001) PROTO-violations: 975
+M13: UNIT=3000 FAIL=133 H units=600 pass=467 fail=133 logged_event_lines_ref=7006 lo first: VIOLATION PROTO: reported 0.0 s outside [0.060, 0.180] (n_chunks 17, wall of the call 0.120) PROTO-violations: 133
+M14: UNIT=3000 FAIL=975 H units=600 pass=0 fail=600 logged_event_lines_ref=7006 logg first: VIOLATION PROTO: reported 1000.0 s outside [-0.060, 0.061] (n_chunks 0, wall of the call 0.001) PROTO-violations: 975
+M15: UNIT=3000 FAIL=975 H units=600 pass=0 fail=600 logged_event_lines_ref=7006 logg first: VIOLATION PROTO: reported 0.6 s outside [-0.060, 0.061] (n_chunks 0, wall of the call 0.001) PROTO-violations: 915
+M33: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M46: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M47: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M48: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M49: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M57: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M58: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M59: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M67: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M68: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M86: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+== PHASE3 DONE 03:59:19

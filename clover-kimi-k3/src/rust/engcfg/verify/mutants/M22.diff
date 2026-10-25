@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M22/src/lib.rs
+@@ -198,5 +198,5 @@
+         s.lookahead = ei(c"K3GPU_LOOKAHEAD", 92);
+         s.vqueue = (ei(c"K3GPU_VQUEUE", 0) != 0 && policy == 2) as c_int;
+-        s.vq_cap = ei(c"K3GPU_VQ_INFLIGHT", 256) as i64 as usize;
++        s.vq_cap = ei(c"K3GPU_VQ_INFLIGHT", 256) as u32 as usize;
+         s.vq_from = ei(c"K3GPU_VQ_FROM", 0) as c_long;
+     }

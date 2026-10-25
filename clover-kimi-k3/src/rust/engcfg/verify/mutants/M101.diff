@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M101/src/lib.rs
+@@ -448,5 +448,5 @@
+         std::process::abort(); // std::vector<int> fill(n, 0) throws std::length_error in the original
+     }
+-    let mut fill = vec![0i32; n as usize];
++    let mut fill = vec![0u16; n as usize];
+     let mut s: i64 = 0;
+     for i in 0..experts.len() {

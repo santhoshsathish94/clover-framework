@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M53/src/lib.rs
+@@ -331,5 +331,5 @@
+     let empty = unset_or_empty(m);
+     let m_bytes: &[u8] = if m.is_null() { b"" } else { unsafe { cbytes(m) } };
+-    let is_cpp = empty || m_bytes == b"cpp";
++    let is_cpp = empty || m_bytes.eq_ignore_ascii_case(b"cpp");
+     if built {
+         if is_cpp {

@@ -1,0 +1,12 @@
+# M01: host: 16 helper threads instead of 15
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -8,7 +8,7 @@
+ const LINE_SET_DEVICE: u32 = 428;
+ const LINE_REGISTER: u32 = 429;
+ /// `std::thread` workers besides the calling thread (`for (int t = 1; t < 16; t++)`).
+-const HELPERS: usize = 15;
++const HELPERS: usize = 16;
+ 
+ /// `cap_slots = bytes / EXPERT_RAW`, `chunk_bytes = (size_t)CHUNK_SLOTS * EXPERT_RAW`, `n_chunks = cap_slots / CHUNK_SLOTS` (size_t arithmetic, wrapping).
+ pub fn plan(bytes: usize, expert_raw: usize) -> (usize, usize, usize) {

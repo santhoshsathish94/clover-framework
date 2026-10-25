@@ -1,0 +1,12 @@
+# M116: abi: PI_EVENT_DISABLE_TIMING 0x03
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -8,7 +8,7 @@
+ pub const PI_HOST_ALLOC_DEFAULT: c_uint = 0x00;
+ pub const PI_HOST_REGISTER_PORTABLE: c_uint = 0x01;
+ pub const PI_STREAM_NON_BLOCKING: c_uint = 0x01;
+-pub const PI_EVENT_DISABLE_TIMING: c_uint = 0x02;
++pub const PI_EVENT_DISABLE_TIMING: c_uint = 0x03;
+ 
+ /// Opaque `sc_cache` of slotcache.h: only ever passed back to `sc_add_spare`.
+ #[repr(C)]

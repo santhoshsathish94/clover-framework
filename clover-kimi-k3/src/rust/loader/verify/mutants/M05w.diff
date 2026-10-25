@@ -1,0 +1,21 @@
+# M05w: as M05 with a 200 us sleep between the push and the pending++ (window widened)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -44,7 +44,6 @@
+     /// loader_submit. `card` must be below MAX_CARDS (the C entry points check it and print the message).
+     pub fn submit(&'static self, card: usize, job: Job) {
+         // pending is raised before the job is queued and before the card's lock is taken, as in the original
+-        *lock(&self.pending) += 1;
+         let c = &self.cards[card];
+         let mut g = lock(&c.st);
+         if !g.started {
+@@ -57,6 +56,9 @@
+         }
+         g.q.push_back(job);
+         c.cv.notify_one();
++        drop(g);
++        std::thread::sleep(std::time::Duration::from_micros(200));
++        *lock(&self.pending) += 1;
+     }
+ 
+     /// loader_wait.

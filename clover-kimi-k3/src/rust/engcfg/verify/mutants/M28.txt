@@ -1,0 +1,1 @@
+cards: clamp to EC_MAX_CARDS dropped

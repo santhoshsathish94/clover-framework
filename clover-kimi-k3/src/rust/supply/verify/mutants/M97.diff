@@ -1,0 +1,12 @@
+# M97: lib: n == 0 treated as a one-element list when experts is non-NULL
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -59,7 +59,7 @@
+         Some(s) => *s,
+         None => fatal("supply: sy_ensure before sy_init\n"),
+     };
+-    let e: &[c_int] = if n == 0 || experts.is_null() { &[] } else { std::slice::from_raw_parts(experts, n) };
++    let e: &[c_int] = if experts.is_null() { &[] } else { std::slice::from_raw_parts(experts, n) };
+     s.ensure(pool, host, layer, fd, e, counts, readers);
+ }
+ 

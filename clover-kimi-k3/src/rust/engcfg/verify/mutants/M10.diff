@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M10/src/lib.rs
+@@ -174,5 +174,5 @@
+     let host_gb = ei(c"K3GPU_HOST_GB", 150);
+     let host_bytes = (host_gb as i64 as usize) << 30;
+-    let layout = ei(c"K3GPU_LAYOUT", 0);
++    let layout = ei(c"K3GPU_LAYOUT", 1);
+     let prefill = (ei(c"K3GPU_PREFILL", 0) != 0) as c_int;
+     let rc = e.get(c"K3GPU_ROUTECACHE");

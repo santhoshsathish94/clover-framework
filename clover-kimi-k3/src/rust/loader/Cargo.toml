@@ -1,0 +1,15 @@
+[package]
+name = "loader"
+version = "0.1.0"
+edition = "2021"
+description = "Per-card layer loader (Rust implementation of include/loader.h)"
+
+[lib]
+name = "loader"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+panic = "abort"

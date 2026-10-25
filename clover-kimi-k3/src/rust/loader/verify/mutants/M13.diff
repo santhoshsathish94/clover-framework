@@ -1,0 +1,15 @@
+# M13: wait: `if` instead of `while` (one wake-up ends the wait)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -62,9 +62,10 @@
+     /// loader_wait.
+     pub fn wait(&self) {
+         let mut p = lock(&self.pending);
+-        while *p != 0 {
++        if *p != 0 {
+             p = self.pending_cv.wait(p).unwrap_or_else(|e| e.into_inner());
+         }
++        drop(p);
+     }
+ 
+     /// Jobs submitted and not finished (for tests).

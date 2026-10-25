@@ -1,0 +1,12 @@
+# M59: job prefill: chunk offset not added to the slab address
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -102,7 +102,7 @@
+ unsafe fn run_job(c: &Ctx, j: &Job, tid: usize) {
+     let mut b: *mut u8 = c.bounce[tid];
+     if c.prefill {
+-        b = (*c.slab.offset(c.layer as isize)).wrapping_add(((j.e & 3) as usize).wrapping_mul(c.raw)).wrapping_add(j.co) as *mut u8;
++        b = (*c.slab.offset(c.layer as isize)).wrapping_add(((j.e & 3) as usize).wrapping_mul(c.raw)) as *mut u8;
+     } else {
+         let mut got = 0usize;
+         while got < j.len {

@@ -1,0 +1,12 @@
+# M36: layer 1 treated like layer 0 (no file, no prefill): `< 2`
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -65,7 +65,7 @@
+         }
+         (cb.alloc_state)(cb.ctx, j.handle, j.positions);
+     }
+-    if j.layer < 1 {
++    if j.layer < 2 {
+         return Ok(());
+     }
+     let path = expert_path(j.ds.as_bytes(), j.layer);

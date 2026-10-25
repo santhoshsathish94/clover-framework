@@ -1,0 +1,12 @@
+# M59: sys: exit1() via std::process::exit(1)
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -37,7 +37,7 @@
+ /// The process ends here, as `exit(1)` does in the original (atexit handlers run).
+ pub fn exit1() -> ! {
+     // SAFETY: plain C exit.
+-    unsafe { exit(1) }
++    std::process::exit(1)
+ }
+ 
+ /// A message of this crate that the original does not have: "poolinit: <what>\n", exit(1).

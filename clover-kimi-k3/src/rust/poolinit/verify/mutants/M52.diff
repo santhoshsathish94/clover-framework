@@ -1,0 +1,12 @@
+# M52: sys: default file name 'decode.cu' when src_file is NULL
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -71,7 +71,7 @@
+     // SAFETY: by the caller.
+     unsafe {
+         if file.is_null() {
+-            m.extend_from_slice(b"decode.cuh");
++            m.extend_from_slice(b"decode.cu");
+         } else {
+             m.extend_from_slice(cstr_bytes(file));
+         }

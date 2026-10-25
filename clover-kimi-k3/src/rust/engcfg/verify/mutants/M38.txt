@@ -1,0 +1,1 @@
+atoi: accumulator wraps on u64 overflow instead of saturating

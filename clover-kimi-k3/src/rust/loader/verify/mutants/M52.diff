@@ -1,0 +1,11 @@
+# M52: message `cannot open` has no trailing newline
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -83,7 +83,6 @@
+     if fd < 0 {
+         let mut m = b"cannot open ".to_vec();
+         m.extend_from_slice(&path);
+-        m.push(b'\n');
+         return Err(m);
+     }
+     if j.prefill {

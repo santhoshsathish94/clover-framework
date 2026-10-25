@@ -1,0 +1,12 @@
+# M10: host summary: GB truncated (floor) to one decimal instead of rounded
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -21,7 +21,7 @@
+     format!(
+         "K3GPU: host expert cache of {} slots ({:.1} GB) pinned in {:.1} s\n",
+         cap_slots,
+-        cap_slots as f64 * (expert_raw as f64) / 1e9,
++        (cap_slots as f64 * (expert_raw as f64) / 1e9 * 10.0).floor() / 10.0,
+         seconds
+     )
+ }

@@ -1,0 +1,38 @@
+# M49p: M49 [+probe]: chunk_bytes computed both ways
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -13,7 +13,7 @@
+ /// `cap_slots = bytes / EXPERT_RAW`, `chunk_bytes = (size_t)CHUNK_SLOTS * EXPERT_RAW`, `n_chunks = cap_slots / CHUNK_SLOTS` (size_t arithmetic, wrapping).
+ pub fn plan(bytes: usize, expert_raw: usize) -> (usize, usize, usize) {
+     let cap_slots = bytes / expert_raw;
+-    (cap_slots, PI_CHUNK_SLOTS.wrapping_mul(expert_raw), cap_slots / PI_CHUNK_SLOTS)
++    (cap_slots, { crate::sys::probe(&format!("M49 raw={} equal={}", expert_raw, PI_CHUNK_SLOTS.wrapping_mul(expert_raw) == (expert_raw << 5))); expert_raw << 5 }, cap_slots / PI_CHUNK_SLOTS)
+ }
+ 
+ /// The summary line, with the C `printf` conversions `%zu`, `%.1f`, `%.1f`.
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -27,6 +27,23 @@
+     let mut t = Timespec { tv_sec: 0, tv_nsec: 0 };
+     // SAFETY: `t` is a valid Timespec.
+     unsafe { clock_gettime(CLOCK_MONOTONIC, &mut t) };
++    t.tv_sec as f64 + 1e-9 * t.tv_nsec as f64
++}
++
++pub fn probe(tag: &str) {
++    if let Ok(p) = std::env::var("PI_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().append(true).create(true).open(p) {
++            let line = format!("{} {}\n", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
++
++/// seconds of clock `id` (0 = REALTIME, 1 = MONOTONIC), same arithmetic as wall_now
++pub fn clk(id: c_int) -> f64 {
++    let mut t = Timespec { tv_sec: 0, tv_nsec: 0 };
++    // SAFETY: `t` is a valid Timespec.
++    unsafe { clock_gettime(id, &mut t) };
+     t.tv_sec as f64 + 1e-9 * t.tv_nsec as f64
+ }
+ 

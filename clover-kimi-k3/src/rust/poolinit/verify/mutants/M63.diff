@@ -1,0 +1,12 @@
+# M63: pool: MIN_SLOTS 63
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -14,7 +14,7 @@
+ const LINE_EVENT: u32 = 466;
+ const LINE_MALLOC_EPTR: u32 = 467;
+ /// The smallest pool the original accepts.
+-pub const MIN_SLOTS: c_int = 64;
++pub const MIN_SLOTS: c_int = 63;
+ 
+ /// `usable = f > reserve ? f - reserve : 0; slots = (int)(usable / EXPERT_RAW)`; the cast wraps like C's.
+ pub fn slots_for(free_bytes: usize, reserve_bytes: usize, expert_raw: usize) -> c_int {

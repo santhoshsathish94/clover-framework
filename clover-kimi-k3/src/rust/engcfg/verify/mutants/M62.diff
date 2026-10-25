@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M62/src/lib.rs
+@@ -674,5 +674,5 @@
+ #[no_mangle]
+ pub extern "C" fn ec_prefill_start(calls: usize) {
+-    if calls == 0 {
++    if calls <= 1 {
+         fatal(PREFILL_NEEDS);
+     }

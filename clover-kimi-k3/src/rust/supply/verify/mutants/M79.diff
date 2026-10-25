@@ -1,0 +1,12 @@
+# M79: work: jobs taken in reverse list order
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -149,7 +149,7 @@
+             return;
+         }
+         // SAFETY: see `Ctx`.
+-        unsafe { run_job(c, &c.jobs[i], tid) };
++        unsafe { run_job(c, &c.jobs[c.jobs.len() - 1 - i], tid) };
+     }
+ }
+ 

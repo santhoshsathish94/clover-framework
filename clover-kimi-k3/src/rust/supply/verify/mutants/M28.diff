@@ -1,0 +1,12 @@
+# M28: wb_skipped not counted
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -280,7 +280,7 @@
+                 break;
+             }
+             if !self.host_worth(host, v.key) {
+-                WB_SKIPPED.fetch_add(1, Ordering::SeqCst);
++                WB_SKIPPED.fetch_add(0, Ordering::SeqCst);
+                 continue;
+             }
+             let mut dk: c_int = -1;

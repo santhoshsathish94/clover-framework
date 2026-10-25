@@ -1,0 +1,15 @@
+M00 b0288adb5dcdf7c74989f46688826ebc control: unmodified copy
+M42 44fb57e28b090015f662a1be0d2a88e6 nchunk: min(7, ..) instead of min(8, ..)
+M43 b1643c8e4723953c301f55942e5557ec nchunk: min(9, ..) instead of min(8, ..)
+M45 59e2b191636299ce6e0352d544dedffe cfg.chunks > 1 instead of > 0 (forced 1 ignored)
+M52 071be75a408380283e0441ee83c3637d job file offset: e * raw as a 32-bit multiply
+M62 dd72af7e814c7aeda41d9fc4480d88b7 pread loop: got = r instead of got += r
+M63 62ea5a398494b6fa006995f9c121f0f4 pread loop: offset without got
+M64 8bb52b0e93fe3f1fe83e03fd29058153 pread: r < 0 is fatal, r == 0 is not (spins on EOF)
+M65 83c2de505d1698a6ab4068b464f2d187 EOF text 'EOF' instead of 'end of file'
+M67 956e16dc751530d95eda655f6c49e9e8 fatal exit status 2 instead of 1
+M74 7751a1c93b07a427223247db91db8ba7 do_check: no exit when check returns with a non-zero status
+M75 cb567d979859f6cf5b77849822a253c5 do_check: ops.check gets status 0 always
+M76 7528999530753894d2c82b789d361447 run_parallel: one thread fewer is spawned
+M91 3b7e896317aa30d10ed0b43c6dfc1002 host_find: no NULL guard
+M93 f8f1be90d4ca6a5a2c432d5dd6b647a4 Supply::new does not reset the g_wb_skipped counter

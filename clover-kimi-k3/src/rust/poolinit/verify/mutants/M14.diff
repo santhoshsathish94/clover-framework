@@ -1,0 +1,12 @@
+# M14: sys: wall_now uses CLOCK_REALTIME (0) instead of CLOCK_MONOTONIC
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -7,7 +7,7 @@
+ pub const MAP_PRIVATE_ANONYMOUS: c_int = 0x02 | 0x20; // MAP_PRIVATE | MAP_ANONYMOUS (Linux)
+ pub const MADV_HUGEPAGE: c_int = 14; // Linux
+ pub const MAP_FAILED: *mut c_void = !0usize as *mut c_void;
+-pub const CLOCK_MONOTONIC: c_int = 1;
++pub const CLOCK_MONOTONIC: c_int = 0;
+ 
+ #[repr(C)]
+ pub struct Timespec {

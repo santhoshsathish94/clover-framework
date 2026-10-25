@@ -1,0 +1,12 @@
+# M15: victim heat taken from the new expert (heat) instead of vh
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -254,7 +254,7 @@
+                 if vq {
+                     (ops.arr_wait)(vk);
+                 }
+-                victims.push(Victim { key: vk, heat: vh, src: p });
++                victims.push(Victim { key: vk, heat: heat, src: p });
+             }
+             *pool.h_eptr.offset(e as isize) = p as *const u8;
+             need.push(Need { e, dst: p, host: null_mut() });

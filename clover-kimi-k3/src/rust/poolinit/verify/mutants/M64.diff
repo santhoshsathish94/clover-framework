@@ -1,0 +1,12 @@
+# M64: pool: refusal when slots <= 64 (probe C of the author)
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -55,7 +55,7 @@
+         check(mem_get_info(&mut f, &mut t), error_string, file, LINE_MEM_GET_INFO);
+         let slots = slots_for(f, cfg.reserve_bytes, raw);
+         (*out).slots = slots;
+-        if slots < MIN_SLOTS {
++        if slots <= MIN_SLOTS {
+             write_stderr(refusal_message(cfg.device, slots).as_bytes());
+             exit1();
+         }

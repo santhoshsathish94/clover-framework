@@ -1,0 +1,43 @@
+== control raw logs 03:34:57
+== probes 03:34:57
+M00c rc=0 UNIT=3000 PASS=3000 FAIL=0 events=12821 md5=4c8a7a128ae6e45731127896a94ca188
+M03p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1420 md5=9af57cb30d20659cf716469ab3affe78
+M11p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=e06f624190d65963f9006167d9555dca
+M12p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=eb35a3fcb645c158d057bbd5034b9493
+M13p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=f8f37de2fb93af518d4b96a80ae89ce8
+M14p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=9f216f86995405a4ec2cbe471f6574d7
+M33p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1189 md5=15e1f5e545b234a8e0d941c3e4525516
+M46p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=12819 md5=e3dadad3bcc53647184ed088386d7037
+M47p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=12844 md5=de9882e58641449b3ac2f686df678068
+M48p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1092 md5=59601c203ae87f837174615186cc80f4
+M49p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1517 md5=151a0eb62232b265be2cb8b5365b629a
+M57p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=583 md5=a3101462739606b2fe158ccee6106a16
+M58p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=583 md5=8365a28324b099f55b8e42f1eb910baf
+M59p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1428 md5=268bf5c4e722c031c2aefaa481b736f8
+M67p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1998 md5=973e3b5972020b6ef154bf2b667f60ee
+M68p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1998 md5=16b8af5cf368864569fc44ca49914576
+M86p rc=0 UNIT=3000 PASS=3000 FAIL=0 events=1074 md5=8709231379806bc807e332c488de68b1
+206M out/probe; /dev/mapper/ubuntu--vg-ubuntu--lv  1.8T  1.6T  103G  95% /
+== big runs 03:36:00
+== cargo test 03:53:54
+M03: 12 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M11: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M12: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M13: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M14: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M33: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M46: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M47: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M48: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M49: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M57: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M58: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M59: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M67: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M68: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M86: 13 ok, 0 FAILED  test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0 rc=0
+M117: 12 ok, 1 FAILED  test result: FAILED. 12 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished  rc=101
+M120: 12 ok, 1 FAILED  test result: FAILED. 12 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished  rc=101
+M121: 12 ok, 1 FAILED  test result: FAILED. 12 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished  rc=101
+M122: 12 ok, 1 FAILED  test result: FAILED. 12 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished  rc=101
+== PHASE2 DONE 03:54:13

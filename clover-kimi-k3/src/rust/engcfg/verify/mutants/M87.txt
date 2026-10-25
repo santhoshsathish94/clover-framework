@@ -1,0 +1,1 @@
+force: token index (s + 1) % n

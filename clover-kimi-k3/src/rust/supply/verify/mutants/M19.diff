@@ -1,0 +1,12 @@
+# M19: hit_host not counted
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -270,7 +270,7 @@
+                 (ops.pend_take)(key);
+                 n.host = self.host_remove(host, key);
+                 held.push(n.host);
+-                pool.st.hit_host = pool.st.hit_host.wrapping_add(1);
++                pool.st.hit_host = pool.st.hit_host;
+             }
+         }
+         do_check(ops, (ops.set_device)(pool.dev), site::SET_DEVICE_POOL);

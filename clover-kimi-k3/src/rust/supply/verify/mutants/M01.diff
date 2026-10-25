@@ -1,0 +1,12 @@
+# M01: vq: first sync is device_sync, not stream_sync(NULL) (condition inverted)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -220,7 +220,7 @@
+         let vq = self.cfg.vq != 0;
+         let prefill = self.cfg.prefill != 0;
+         let raw = self.cfg.expert_raw;
+-        if vq {
++        if !vq {
+             do_check(ops, (ops.stream_sync)(null_mut()), site::STREAM_SYNC_0);
+         } else {
+             do_check(ops, (ops.device_sync)(), site::DEVICE_SYNC);

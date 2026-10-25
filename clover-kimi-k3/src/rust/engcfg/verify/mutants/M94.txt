@@ -1,0 +1,1 @@
+force: `pos >= size` -> `pos > size` (reads cur at pos == size)

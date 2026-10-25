@@ -1,0 +1,11 @@
+# M41: host: out.cap_slots not stored at the start (only at the end)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -40,7 +40,6 @@
+     let (cap0, chunk_bytes, n_chunks) = plan(cfg.bytes, raw);
+     // SAFETY: `out` valid by the caller; stored now, as the original assigns the members first.
+     unsafe {
+-        (*out).cap_slots = cap0;
+         (*out).ready = 1;
+     }
+     let base: Vec<AtomicUsize> = (0..n_chunks).map(|_| AtomicUsize::new(0)).collect();

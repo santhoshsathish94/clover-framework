@@ -1,0 +1,13 @@
+# M02: job stealing: an idle worker pops a job of another card's queue (try_lock) before it sleeps
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -82,6 +82,9 @@
+                     if let Some(j) = g.q.pop_front() {
+                         break j;
+                     }
++                    if let Some(j) = (0..MAX_CARDS).filter(|&o| o != card).find_map(|o| self.cards[o].st.try_lock().ok().and_then(|mut x| x.q.pop_front())) {
++                        break j;
++                    }
+                     g = c.cv.wait(g).unwrap_or_else(|e| e.into_inner());
+                 }
+             };

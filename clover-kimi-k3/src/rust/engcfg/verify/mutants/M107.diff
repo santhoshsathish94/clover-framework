@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M107/src/lib.rs
+@@ -525,5 +525,5 @@
+             .n(hh)
+             .s(" from the host cache (")
+-            .f(1, 100.0 * hhf / needf)
++            .f(1, 100.0 * (hhf / needf))
+             .s("%), ")
+             .n(dr)

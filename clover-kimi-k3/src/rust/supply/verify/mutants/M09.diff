@@ -1,0 +1,12 @@
+# M09: card hit: hit_card not counted
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -244,7 +244,7 @@
+                     (ops.sc_touch)(pool.cache, key, heat);
+                 }
+                 *pool.h_eptr.offset(e as isize) = p as *const u8;
+-                pool.st.hit_card = pool.st.hit_card.wrapping_add(1);
++                pool.st.hit_card = pool.st.hit_card;
+                 continue;
+             }
+             let mut vk: c_int = -1;

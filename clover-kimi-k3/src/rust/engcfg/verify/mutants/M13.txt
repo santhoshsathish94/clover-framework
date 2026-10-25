@@ -1,0 +1,1 @@
+variable name typo: K3GPU_CHUNKS -> K3GPU_CHUNK

@@ -1,0 +1,12 @@
+# M41: path cut at 4096 bytes instead of 4095
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -40,7 +40,7 @@
+     let mut p = Vec::with_capacity(ds.len() + 32);
+     p.extend_from_slice(ds);
+     p.extend_from_slice(format!("/expert-{}/experts.direct", layer).as_bytes());
+-    p.truncate(4095);
++    p.truncate(4096);
+     p
+ }
+ 

@@ -1,0 +1,9 @@
+0 
+M00: UNIT=3000 FAIL=0 H units=600 pass=600 fail=0 logged_event_lines_ref=7006 logg first:  PROTO-violations: 0
+M03: UNIT=3000 FAIL=248 H units=600 pass=452 fail=148 logged_event_lines_ref=7006 lo first: VIOLATION PROTO: n_chunks 17 >= 16 with 60 ms mmaps but the calling thread never called mmap PROTO-violations: 248
+M11: UNIT=3000 FAIL=740 H units=600 pass=91 fail=509 logged_event_lines_ref=7006 log first: VIOLATION PROTO: reported 0.0 s outside [0.099, 0.180] (n_chunks 17, wall of the call 0.120) PROTO-violations: 740
+M12: UNIT=3000 FAIL=975 H units=600 pass=0 fail=600 logged_event_lines_ref=7006 logg first: VIOLATION PROTO: reported 0.6 s outside [-0.001, 0.061] (n_chunks 0, wall of the call 0.001) PROTO-violations: 975
+M13: UNIT=3000 FAIL=740 H units=600 pass=91 fail=509 logged_event_lines_ref=7006 log first: VIOLATION PROTO: reported 0.0 s outside [0.099, 0.180] (n_chunks 17, wall of the call 0.120) PROTO-violations: 740
+M14: UNIT=3000 FAIL=975 H units=600 pass=0 fail=600 logged_event_lines_ref=7006 logg first: VIOLATION PROTO: reported 1000.0 s outside [-0.001, 0.061] (n_chunks 0, wall of the call 0.001) PROTO-violations: 975
+M15: UNIT=3000 FAIL=975 H units=600 pass=0 fail=600 logged_event_lines_ref=7006 logg first: VIOLATION PROTO: reported 0.7 s outside [-0.001, 0.061] (n_chunks 0, wall of the call 0.001) PROTO-violations: 923
+== PHASE4 DONE 04:01:02

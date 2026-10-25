@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M95/src/lib.rs
+@@ -427,5 +427,5 @@
+     }
+     let c = &*cur;
+-    if c.n_counts != c.n_experts {
++    if c.n_counts < c.n_experts {
+         warn("the route cache has no counts");
+         return;

@@ -1,0 +1,18 @@
+# M87: ld_init: already-initialised check before the NULL check
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -104,11 +104,11 @@
+ /// `cfg` must point to a valid `ld_config` whose callbacks, ctx and tables stay valid for the life of the process.
+ #[no_mangle]
+ pub unsafe extern "C" fn ld_init(cfg: *const ld_config) {
++    if STATE.get().is_some() {
++        return; // the first configuration is kept
++    }
+     if cfg.is_null() {
+         fatal_msg(b"loader: cfg is NULL\n");
+-    }
+-    if STATE.get().is_some() {
+-        return; // the first configuration is kept
+     }
+     // SAFETY: non-null checked above; caller guarantees validity.
+     let c = unsafe { &*cfg };

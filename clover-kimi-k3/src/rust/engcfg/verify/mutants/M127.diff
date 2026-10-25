@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M127/src/lib.rs
+@@ -587,5 +587,5 @@
+         );
+     }
+-    if s.vq != 0 {
++    if s.vq == 1 {
+         out.push(
+             Line::new()

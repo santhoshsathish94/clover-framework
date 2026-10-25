@@ -1,0 +1,12 @@
+# M33: written_back not counted
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -287,7 +287,7 @@
+             let mut dh: f32 = 0.0;
+             let h = (ops.host_acquire)(v.key, v.heat, &mut dk, &mut dh);
+             do_check(ops, (ops.memcpy_d2h_async)(h as *mut c_void, v.src as *const c_void, raw, pool.copy), site::D2H);
+-            pool.st.written_back = pool.st.written_back.wrapping_add(1);
++            pool.st.written_back = pool.st.written_back;
+         }
+         do_check(ops, (ops.event_record)(pool.written_back, pool.copy), site::EVENT_RECORD);
+         // 3. RAM -> card, queued behind the copies down on the same stream

@@ -1,0 +1,19 @@
+# M22: thread start hook runs on the submitting thread (before the spawn), not on the card's thread
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -49,6 +49,7 @@
+         let mut g = lock(&c.st);
+         if !g.started {
+             g.started = true;
++            (self.on_start)(card);
+             let me: &'static Loader = self;
+             // the handle is dropped: detached, never joined; std::thread's default in the original is the system's 8 MB stack
+             if let Err(e) = std::thread::Builder::new().stack_size(8 << 20).spawn(move || me.worker(card)) {
+@@ -73,7 +74,6 @@
+     }
+ 
+     fn worker(&'static self, card: usize) {
+-        (self.on_start)(card);
+         let c = &self.cards[card];
+         loop {
+             let job = {

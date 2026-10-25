@@ -1,0 +1,13 @@
+# M96: ld_init does not require `handles`
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -45,9 +45,6 @@
+     let load_trunk = c.cb.load_trunk.ok_or_else(|| n("load_trunk"))?;
+     let load_expert_tables = c.cb.load_expert_tables.ok_or_else(|| n("load_expert_tables"))?;
+     let alloc_state = c.cb.alloc_state.ok_or_else(|| n("alloc_state"))?;
+-    if c.handles.is_null() {
+-        return Err(n("handles"));
+-    }
+     if c.prefill != 0 && c.cb.host_alloc.is_none() {
+         return Err(n("host_alloc"));
+     }

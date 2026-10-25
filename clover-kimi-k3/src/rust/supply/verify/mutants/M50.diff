@@ -1,0 +1,12 @@
+# M50: job len = chunk (not clamped to the end of the record)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -316,7 +316,7 @@
+                 if co >= raw {
+                     break;
+                 }
+-                let len = std::cmp::min(chunk, raw - co);
++                let len = chunk;
+                 jobs.push(Job { dst: n.dst.wrapping_add(co), off: (n.e as i64).wrapping_mul(raw as i64).wrapping_add(co as i64), e: n.e, co, len });
+             }
+         }

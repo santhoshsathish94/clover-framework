@@ -1,0 +1,12 @@
+# M78: run_parallel: nthreads not capped by the job count
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -158,7 +158,7 @@
+     if c.jobs.is_empty() {
+         return;
+     }
+-    let n: c_int = std::cmp::min(nthreads, c.jobs.len() as c_int);
++    let n: c_int = nthreads;
+     std::thread::scope(|s| {
+         for i in 1..n {
+             s.spawn(move || work(c, i as usize));

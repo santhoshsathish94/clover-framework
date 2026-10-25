@@ -1,0 +1,14 @@
+# M45: O_DIRECT fallback removed (no second open)
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -77,10 +77,6 @@
+     let mut fd = sys.open(&cpath, O_RDONLY | O_DIRECT);
+     set_fd(j.h_fd, fd);
+     if fd < 0 {
+-        fd = sys.open(&cpath, O_RDONLY);
+-        set_fd(j.h_fd, fd);
+-    }
+-    if fd < 0 {
+         let mut m = b"cannot open ".to_vec();
+         m.extend_from_slice(&path);
+         m.push(b'\n');

@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M05/src/lib.rs
+@@ -172,5 +172,5 @@
+     let policy = ei(c"K3GPU_POLICY", 1);
+     let chunks = ei(c"K3GPU_CHUNKS", 0);
+-    let host_gb = ei(c"K3GPU_HOST_GB", 150);
++    let host_gb = ei(c"K3GPU_HOST_GB", 151);
+     let host_bytes = (host_gb as i64 as usize) << 30;
+     let layout = ei(c"K3GPU_LAYOUT", 0);

@@ -1,0 +1,12 @@
+# M66: fatal text: expert and layer swapped
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -114,7 +114,7 @@
+                 } else {
+                     b"end of file".to_vec()
+                 };
+-                let mut m = format!("reading expert {} of layer {} failed: ", j.e, c.layer).into_bytes();
++                let mut m = format!("reading expert {} of layer {} failed: ", c.layer, j.e).into_bytes();
+                 m.extend_from_slice(&why);
+                 m.push(b'\n');
+                 fatal_bytes(&m);

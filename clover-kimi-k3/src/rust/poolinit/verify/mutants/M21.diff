@@ -1,0 +1,14 @@
+# M21: host: zeroing skipped for chunk numbers >= 8
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -59,7 +59,9 @@
+                 exit1();
+             }
+             madvise(p, chunk_bytes, sys::MADV_HUGEPAGE);
+-            std::ptr::write_bytes(p as *mut u8, 0, chunk_bytes);
++            if i < 8 {
++                std::ptr::write_bytes(p as *mut u8, 0, chunk_bytes);
++            }
+             base[i].store(p as usize, Ordering::SeqCst);
+         }
+     };

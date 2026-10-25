@@ -1,0 +1,10 @@
+# M13: host summary: seconds always 0.0
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -88,5 +88,5 @@
+     let cap = n_chunks.wrapping_mul(PI_CHUNK_SLOTS);
+     // SAFETY: `out` valid by the caller.
+     unsafe { (*out).cap_slots = cap };
+-    write_stderr(summary_line(cap, raw, sys::wall_now() - t0).as_bytes());
++    write_stderr(summary_line(cap, raw, 0.0 * (sys::wall_now() - t0)).as_bytes());
+ }

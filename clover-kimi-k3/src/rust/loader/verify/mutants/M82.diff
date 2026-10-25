@@ -1,0 +1,30 @@
+# M82: bookkeeping (*h_L, *h_card, *h_k_in, handles[layer]) written after the job is queued (before the call returns)
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -165,14 +165,6 @@
+     }
+     die(check_card(r.card));
+     die(check_slab(st.cfg.prefill, r.layer));
+-    // bookkeeping, in the original's order
+-    put(r.h_L, r.layer as c_int);
+-    put(r.h_card, r.card);
+-    put(r.h_k_in, r.k as c_int);
+-    if r.layer <= N_LAYERS {
+-        // SAFETY: handles is the caller's table of N_LAYERS + 1 pointers (header) and layer <= N_LAYERS.
+-        unsafe { *(st.cfg.handles as *mut *mut c_void).add(r.layer as usize) = r.handle }
+-    }
+     // SAFETY: dataset is non-null and NUL-terminated (header); copied here, as `const std::string ds(dataset)` does.
+     let ds = unsafe { CStr::from_ptr(r.dataset) }.to_owned();
+     let job = LayerJob {
+@@ -195,4 +187,11 @@
+             }
+         }),
+     );
++    put(r.h_L, r.layer as c_int);
++    put(r.h_card, r.card);
++    put(r.h_k_in, r.k as c_int);
++    if r.layer <= N_LAYERS {
++        // SAFETY: handles is the caller's table of N_LAYERS + 1 pointers (header) and layer <= N_LAYERS.
++        unsafe { *(st.cfg.handles as *mut *mut c_void).add(r.layer as usize) = r.handle }
++    }
+ }

@@ -1,0 +1,1 @@
+pend_cap: 3/5 instead of 6/10 (same value unless the product wraps)

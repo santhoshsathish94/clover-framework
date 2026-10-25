@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M70/src/lib.rs
+@@ -275,5 +275,5 @@
+         .n(pend_cap)
+         .s(" experts read ahead, card queues ")
+-        .s(if s.vqueue != 0 { "on" } else { "off" })
++        .s(if s.vqueue != 0 { "off" } else { "on" })
+         .s(" (at most ")
+         .n(s.vq_cap)

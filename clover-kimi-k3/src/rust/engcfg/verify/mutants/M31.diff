@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M31/src/lib.rs
+@@ -157,5 +157,5 @@
+ fn env_int<E: EnvSource + ?Sized>(e: &E, name: &CStr, dflt: i32) -> i32 {
+     let v = e.get(name);
+-    if unset_or_empty(v) {
++    if v.is_null() {
+         dflt
+     } else {

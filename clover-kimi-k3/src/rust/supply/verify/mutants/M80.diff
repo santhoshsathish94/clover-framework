@@ -1,0 +1,12 @@
+# M80: work: end test i > len instead of i >= len
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -145,7 +145,7 @@
+ fn work(c: &Ctx, tid: usize) {
+     loop {
+         let i = c.next.fetch_add(1, Ordering::SeqCst);
+-        if i >= c.jobs.len() {
++        if i > c.jobs.len() {
+             return;
+         }
+         // SAFETY: see `Ctx`.

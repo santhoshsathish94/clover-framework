@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M129/src/lib.rs
+@@ -612,5 +612,5 @@
+     let names = ["prompt-pass layer calls", "single-token layer calls", "multi-token layer calls"];
+     for i in 0..3 {
+-        if s.n_calls[i] != 0.0 {
++        if s.n_calls[i] > 0.0 {
+             out.push(
+                 Line::new()

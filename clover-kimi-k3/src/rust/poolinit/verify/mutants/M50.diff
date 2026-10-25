@@ -1,0 +1,12 @@
+# M50: host: CHECK line of set_device 429 instead of 428
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -5,7 +5,7 @@
+ use std::sync::atomic::{AtomicUsize, Ordering};
+ 
+ // CHECK sites of decode.cuh@4d8d891 (extract.py asserts these line numbers)
+-const LINE_SET_DEVICE: u32 = 428;
++const LINE_SET_DEVICE: u32 = 429;
+ const LINE_REGISTER: u32 = 429;
+ /// `std::thread` workers besides the calling thread (`for (int t = 1; t < 16; t++)`).
+ const HELPERS: usize = 15;

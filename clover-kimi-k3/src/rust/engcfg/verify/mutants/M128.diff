@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M128/src/lib.rs
+@@ -591,5 +591,5 @@
+             Line::new()
+                 .s("K3GPU card queues: ")
+-                .n(s.vq_ram.wrapping_add(s.vq_drive))
++                .n(s.vq_ram.saturating_add(s.vq_drive))
+                 .s(" experts brought ahead (")
+                 .n(s.vq_ram)

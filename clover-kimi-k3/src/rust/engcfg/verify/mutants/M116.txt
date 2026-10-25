@@ -1,0 +1,1 @@
+summary: read/copy seconds summed in reverse card order

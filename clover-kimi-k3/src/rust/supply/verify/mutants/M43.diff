@@ -1,0 +1,12 @@
+# M43: nchunk: min(9, ..) instead of min(8, ..)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -136,7 +136,7 @@
+     } else if n_drive >= pool_readers || n_drive == 0 {
+         1
+     } else {
+-        std::cmp::min(8, (pool_readers + n_drive - 1) / n_drive)
++        std::cmp::min(9, (pool_readers + n_drive - 1) / n_drive)
+     };
+     let chunk: usize = (raw.wrapping_add(nchunk as usize).wrapping_sub(1) / nchunk as usize).wrapping_add(4095) / 4096 * 4096;
+     (nchunk, chunk)

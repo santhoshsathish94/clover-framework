@@ -1,0 +1,21 @@
+# M122: lib: message 'expert_raw is zero' instead of 'expert_raw is 0' (both entry points)
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -42,7 +42,7 @@
+     need_fn!(ops, error_string);
+     need_fn!(ops, sc_add_spare);
+     if cfg.expert_raw == 0 {
+-        bad("expert_raw is 0");
++        bad("expert_raw is zero");
+     }
+     // SAFETY: by the contract.
+     unsafe { host::host_init(&ops, &cfg, out) }
+@@ -66,7 +66,7 @@
+     need_fn!(ops, error_string);
+     need_fn!(ops, sc_add_spare);
+     if cfg.expert_raw == 0 {
+-        bad("expert_raw is 0");
++        bad("expert_raw is zero");
+     }
+     // SAFETY: by the contract.
+     unsafe { pool::pool_init(&ops, &cfg, out) }

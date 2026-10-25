@@ -6,7 +6,11 @@
 // Settings: K3GPU_CARDS (8), K3GPU_HOST_GB (pinned RAM for the expert cache, 150), K3GPU_RESERVE_MB (card memory kept free of expert slots, 2500),
 // K3GPU_READERS (drive reads at once, 16), K3GPU_VERBOSE (1: one line per layer call of a single token),
 // K3GPU_COPYQ (cpp, the default, or rust: which implementation runs the copy queue) and K3GPU_COPYQ_LIB (path of libcopyq.so, default libcopyq.so),
-// K3GPU_SLOTCACHE (cpp, the default, or rust: which implementation runs the expert slot caches) and K3GPU_SLOTCACHE_LIB (path of libslotcache.so, default libslotcache.so).
+// K3GPU_SLOTCACHE (cpp, the default, or rust: which implementation runs the expert slot caches) and K3GPU_SLOTCACHE_LIB (path of libslotcache.so, default libslotcache.so),
+// K3GPU_ROUTETABLE (cpp or rust: the route-cache parser and next-use index) and K3GPU_ROUTETABLE_LIB (libroutetable.so),
+// and, for the rest of the host path, K3GPU_POOLINIT (HostCache::init, CardPool::init; libpoolinit.so), K3GPU_SUPPLY (pool_ensure; libsupply.so), K3GPU_PLANNER (read-ahead and card-queue
+// planning; libplanner.so, needs COPYQ, SLOTCACHE and ROUTETABLE on rust), K3GPU_LOADER (layer loader threads and open_layer's host side; libloader.so) and K3GPU_ENGCFG (start-up settings,
+// card_of, force_routes and the exit summary; libengcfg.so), each cpp by default, each with a _LIB variable. No fallback: asking for rust and not getting it stops the run.
 // build: see scripts/run-model-gpu.sh
 #include "decode.cuh"
 extern "C" {
@@ -20,6 +24,15 @@ extern "C" {
 #include "routetable.h"   // contract of the Rust route table (src/rust/routetable/include); a build without it has only the C++ parser
 #define K3GPU_ROUTETABLE_BUILT 1
 #endif
+#if __has_include("loader.h")
+#include "loader.h"   // contract of the Rust layer loader (src/rust/loader/include); a build without it has only the C++ loader
+#define K3GPU_LOADER_BUILT 1
+#endif
+#if __has_include("engcfg.h")
+#include "engcfg.h"   // contract of the Rust start-up / summary code (src/rust/engcfg/include); a build without it has only the C++ code
+#define K3GPU_ENGCFG_BUILT 1
+#endif
+// poolinit.h, supply.h and planner.h are included by decode.cuh (K3GPU_POOLINIT_BUILT, K3GPU_SUPPLY_BUILT, K3GPU_PLANNER_BUILT).
 #include <dlfcn.h>
 #include <cstring>
 #include <cstdlib>
@@ -48,6 +61,70 @@ static double g_t_up = 0, g_t_run = 0, g_t_down = 0;
 static bool g_configured = false;
 
 static int env_int(const char *name, int dflt) { const char *v = getenv(name); return v && *v ? atoi(v) : dflt; }
+
+// ---- which start-up, selector and summary code runs (K3GPU_ENGCFG): cpp, the default, is the code in this file; rust = libengcfg.so (src/rust/engcfg), which reads the settings,
+// parses the three selector variables, prints their lines, computes card_of and force_routes, and prints the exit summary. Loaded before anything else in configure().
+struct EcApi {
+    bool on = false;
+#ifdef K3GPU_ENGCFG_BUILT
+    int (*env_int)(const char *, int) = nullptr; void (*settings_from_env)(ec_settings *, int) = nullptr; size_t (*pend_cap)(size_t) = nullptr; FILE *(*open_trace)(void) = nullptr;
+    void (*print_route_cache)(const ec_settings *, size_t, size_t) = nullptr; void (*prefill_start)(size_t) = nullptr; void (*print_start_line)(const ec_settings *) = nullptr;
+    int (*selector_mode)(int, int) = nullptr; const char *(*selector_lib)(int) = nullptr; void (*selector_announce_rust)(int, const char *) = nullptr;
+    int (*card_of)(int, int, int) = nullptr; void (*force_routes)(size_t, size_t, const ec_call *, int, int, int *, int) = nullptr; void (*print_summary)(const ec_summary *) = nullptr;
+#endif
+};
+static EcApi g_ec;
+enum { SEL_COPYQ = 0, SEL_SLOTCACHE = 1, SEL_ROUTETABLE = 2 };
+#ifdef K3GPU_ENGCFG_BUILT
+static_assert((int)EC_COPYQ == (int)SEL_COPYQ && (int)EC_SLOTCACHE == (int)SEL_SLOTCACHE && (int)EC_ROUTETABLE == (int)SEL_ROUTETABLE, "engcfg.h component numbers");
+#endif
+static const struct { const char *name, *label, *hdr, *what, *dir, *dlib; } SEL[3] = {
+    { "COPYQ", "copy queue", "copyq.h", "the C++ queue", "copyq", "libcopyq.so" },
+    { "SLOTCACHE", "slot cache", "slotcache.h", "the C++ cache", "slotcache", "libslotcache.so" },
+    { "ROUTETABLE", "route table", "routetable.h", "the C++ parser", "routetable", "libroutetable.so" } };
+// the variable K3GPU_<NAME>: 0 = cpp (its line is printed), 1 = rust (the caller loads the library, then calls sel_announce); a wrong value or rust without the header stops the run
+static int sel_mode(int comp, bool built)
+{
+#ifdef K3GPU_ENGCFG_BUILT
+    if (g_ec.on) return g_ec.selector_mode(comp, built ? 1 : 0);
+#endif
+    const auto &s = SEL[comp]; char var[40]; snprintf(var, sizeof var, "K3GPU_%s", s.name);
+    const char *m = getenv(var);
+    if (!m || !*m || !strcmp(m, "cpp")) { fprintf(stderr, "K3GPU: %s cpp\n", s.label); return 0; }
+    if (!built) { fprintf(stderr, "K3GPU_%s=%s: this build has no %s, only %s (build with -I src/rust/%s/include)\n", s.name, m, s.hdr, s.what, s.dir); exit(1); }
+    if (strcmp(m, "rust")) { fprintf(stderr, "K3GPU_%s must be cpp or rust, not %s\n", s.name, m); exit(1); }
+    return 1;
+}
+[[maybe_unused]] static const char *sel_lib(int comp)
+{
+#ifdef K3GPU_ENGCFG_BUILT
+    if (g_ec.on) return g_ec.selector_lib(comp);
+#endif
+    char var[48]; snprintf(var, sizeof var, "K3GPU_%s_LIB", SEL[comp].name);
+    const char *lib = getenv(var); return lib && *lib ? lib : SEL[comp].dlib;
+}
+[[maybe_unused]] static void sel_announce(int comp, const char *lib)
+{
+#ifdef K3GPU_ENGCFG_BUILT
+    if (g_ec.on) { g_ec.selector_announce_rust(comp, lib); return; }
+#endif
+    fprintf(stderr, "K3GPU: %s rust (%s)\n", SEL[comp].label, lib);
+}
+// the components after the first four (K3GPU_POOLINIT, _SUPPLY, _PLANNER, _LOADER, _ENGCFG): cpp (line printed, returns NULL) or the dlopen handle of the library, whose line is printed by the caller after its symbols are found
+static void *comp_select(const char *var, const char *label, const char *dflt_lib, bool built, const char **lib_out)
+{
+    const char *m = getenv(var);
+    if (!m || !*m || !strcmp(m, "cpp")) { fprintf(stderr, "K3GPU: %s cpp\n", label); return nullptr; }
+    if (strcmp(m, "rust")) { fprintf(stderr, "%s must be cpp or rust, not %s\n", var, m); exit(1); }
+    if (!built) { fprintf(stderr, "%s=rust: this build has no header for it (build with -I of the crate's include directory, see scripts/run-model-gpu.sh)\n", var); exit(1); }
+    char lv[64]; snprintf(lv, sizeof lv, "%s_LIB", var);
+    const char *lib = getenv(lv); if (!lib || !*lib) lib = dflt_lib;
+    void *h = dlopen(lib, RTLD_NOW | RTLD_LOCAL);
+    if (!h) { fprintf(stderr, "%s=rust: cannot load %s: %s\n", var, lib, dlerror()); exit(1); }
+    *lib_out = lib;
+    return h;
+}
+#define COMP_SYM(var, h, dst, name) dst = (decltype(dst))dlsym(h, name); if (!dst) { fprintf(stderr, "%s=rust: the library has no %s\n", var, name); exit(1); }
 
 // ---- route cache (K3GPU_ROUTECACHE = the K3GPU_TRACE file of an earlier run of the same request; K3GPU_LOOKAHEAD = how many MoE calls ahead, default 92).
 // Routing is a function of the token prefix, so for a request seen before the experts of every later call are known before layer 0. They are read from the drive into
@@ -182,10 +259,8 @@ static std::vector<CqHold> &g_cq_hold = *new std::vector<CqHold>;   // never des
 static_assert(sizeof(std::atomic<int>) == 4 && std::atomic<int>::is_always_lock_free, "copyq.h passes the flags as plain ints");
 static void copyq_select()
 {
-    const char *m = getenv("K3GPU_COPYQ");
-    if (!m || !*m || !strcmp(m, "cpp")) { fprintf(stderr, "K3GPU: copy queue cpp\n"); return; }
-    if (strcmp(m, "rust")) { fprintf(stderr, "K3GPU_COPYQ must be cpp or rust, not %s\n", m); exit(1); }
-    const char *lib = getenv("K3GPU_COPYQ_LIB"); if (!lib || !*lib) lib = "libcopyq.so";
+    if (sel_mode(SEL_COPYQ, true) == 0) return;
+    const char *lib = sel_lib(SEL_COPYQ);
     void *h = dlopen(lib, RTLD_NOW | RTLD_LOCAL);
     if (!h) { fprintf(stderr, "K3GPU_COPYQ=rust: cannot load %s: %s\n", lib, dlerror()); exit(1); }
     void (*init)(const cq_config *) = (void (*)(const cq_config *))dlsym(h, "cq_init");
@@ -197,7 +272,7 @@ static void copyq_select()
     c.act_hold = reinterpret_cast<const int *>(&g_act_hold);
     init(&c);
     g_copyq_rust = true;
-    fprintf(stderr, "K3GPU: copy queue rust (%s)\n", lib);
+    sel_announce(SEL_COPYQ, lib);
 }
 static void pf_submit_rust(const PfJob &j)
 {
@@ -222,9 +297,7 @@ static void pf_submit_rust(const PfJob &j)
 #else
 static void copyq_select()
 {
-    const char *m = getenv("K3GPU_COPYQ");
-    if (m && *m && strcmp(m, "cpp")) { fprintf(stderr, "K3GPU_COPYQ=%s: this build has no copyq.h, only the C++ queue (build with -I src/rust/copyq/include)\n", m); exit(1); }
-    fprintf(stderr, "K3GPU: copy queue cpp\n");
+    sel_mode(SEL_COPYQ, false);   // cpp: its line; anything else: the build has no copyq.h, stop
 }
 #endif
 static void pf_submit(const PfJob &j)
@@ -241,10 +314,8 @@ static void pf_submit(const PfJob &j)
 #ifdef K3GPU_SLOTCACHE_BUILT
 static void slotcache_select()
 {
-    const char *m = getenv("K3GPU_SLOTCACHE");
-    if (!m || !*m || !strcmp(m, "cpp")) { fprintf(stderr, "K3GPU: slot cache cpp\n"); return; }
-    if (strcmp(m, "rust")) { fprintf(stderr, "K3GPU_SLOTCACHE must be cpp or rust, not %s\n", m); exit(1); }
-    const char *lib = getenv("K3GPU_SLOTCACHE_LIB"); if (!lib || !*lib) lib = "libslotcache.so";
+    if (sel_mode(SEL_SLOTCACHE, true) == 0) return;
+    const char *lib = sel_lib(SEL_SLOTCACHE);
     void *h = dlopen(lib, RTLD_NOW | RTLD_LOCAL);
     if (!h) { fprintf(stderr, "K3GPU_SLOTCACHE=rust: cannot load %s: %s\n", lib, dlerror()); exit(1); }
 #define SC_SYM(f, name) g_sc.f = (decltype(g_sc.f))dlsym(h, name); if (!g_sc.f) { fprintf(stderr, "K3GPU_SLOTCACHE=rust: %s has no %s\n", lib, name); exit(1); }
@@ -253,14 +324,12 @@ static void slotcache_select()
     SC_SYM(remove, "sc_remove") SC_SYM(release, "sc_release")
 #undef SC_SYM
     g_sc.on = true;
-    fprintf(stderr, "K3GPU: slot cache rust (%s)\n", lib);
+    sel_announce(SEL_SLOTCACHE, lib);
 }
 #else
 static void slotcache_select()
 {
-    const char *m = getenv("K3GPU_SLOTCACHE");
-    if (m && *m && strcmp(m, "cpp")) { fprintf(stderr, "K3GPU_SLOTCACHE=%s: this build has no slotcache.h, only the C++ cache (build with -I src/rust/slotcache/include)\n", m); exit(1); }
-    fprintf(stderr, "K3GPU: slot cache cpp\n");
+    sel_mode(SEL_SLOTCACHE, false);   // cpp: its line; anything else: the build has no slotcache.h, stop
 }
 #endif
 
@@ -388,6 +457,13 @@ static void force_routes(int L, int n, int *sel)
 
 static void route_hook(int L, const std::vector<int> &uniq)
 {
+#ifdef K3GPU_PLANNER_BUILT
+    if (g_sp.on) {   // the planner reads a layer's fd from its own table: copy the fds the loader threads have opened (the original read the handle's fd at each plan)
+        for (int l = 1; l <= N_LAYERS; l++) if (g_handles[l] && g_handles[l]->fd >= 0) g_sp.layer_set_fd(l, g_handles[l]->fd);
+        g_sp.route_hook(L, uniq.data(), uniq.size()); g_rc_pos++;
+        return;
+    }
+#endif
     rc_set_cur((long)g_rc_pos);
     if (g_rc_ok) {
         if (g_rc_pos >= g_rc.size() || g_rc[g_rc_pos].layer != L || g_rc[g_rc_pos].experts != uniq) {
@@ -441,28 +517,190 @@ static void rc_load_sel(const char *path)
 #ifdef K3GPU_ROUTETABLE_BUILT
 static void routetable_select()
 {
-    const char *m = getenv("K3GPU_ROUTETABLE");
-    if (!m || !*m || !strcmp(m, "cpp")) { fprintf(stderr, "K3GPU: route table cpp\n"); return; }
-    if (strcmp(m, "rust")) { fprintf(stderr, "K3GPU_ROUTETABLE must be cpp or rust, not %s\n", m); exit(1); }
-    const char *lib = getenv("K3GPU_ROUTETABLE_LIB"); if (!lib || !*lib) lib = "libroutetable.so";
+    if (sel_mode(SEL_ROUTETABLE, true) == 0) return;
+    const char *lib = sel_lib(SEL_ROUTETABLE);
     void *h = dlopen(lib, RTLD_NOW | RTLD_LOCAL);
     if (!h) { fprintf(stderr, "K3GPU_ROUTETABLE=rust: cannot load %s: %s\n", lib, dlerror()); exit(1); }
 #define RT_SYM(f, name) g_rt.f = (decltype(g_rt.f))dlsym(h, name); if (!g_rt.f) { fprintf(stderr, "K3GPU_ROUTETABLE=rust: %s has no %s\n", lib, name); exit(1); }
     RT_SYM(load, "rt_load") RT_SYM(calls, "rt_calls") RT_SYM(layer, "rt_layer") RT_SYM(experts, "rt_experts") RT_SYM(counts, "rt_counts") RT_SYM(set_current, "rt_set_current") RT_SYM(next_use, "rt_next_use")
 #undef RT_SYM
     g_rt.on = true;
-    fprintf(stderr, "K3GPU: route table rust (%s)\n", lib);
+    sel_announce(SEL_ROUTETABLE, lib);
 }
 #else
 static void routetable_select()
 {
-    const char *m = getenv("K3GPU_ROUTETABLE");
-    if (m && *m && strcmp(m, "cpp")) { fprintf(stderr, "K3GPU_ROUTETABLE=%s: this build has no routetable.h, only the C++ parser (build with -I src/rust/routetable/include)\n", m); exit(1); }
-    fprintf(stderr, "K3GPU: route table cpp\n");
+    sel_mode(SEL_ROUTETABLE, false);   // cpp: its line; anything else: the build has no routetable.h, stop
 }
 #endif
 
-static void print_summary()
+// ---- the rest of the host path: K3GPU_POOLINIT (HostCache::init / CardPool::init), K3GPU_SUPPLY (pool_ensure), K3GPU_PLANNER (read-ahead and card-queue planning), K3GPU_LOADER, K3GPU_ENGCFG.
+// Each is cpp unless set to rust; "rust" loads the library or stops the run, and the start-up line says which one runs. The libraries and their contracts are in src/rust/<name>.
+#ifdef K3GPU_POOLINIT_BUILT
+static const bool k_built_poolinit = true;
+#else
+static const bool k_built_poolinit = false;
+#endif
+#ifdef K3GPU_SUPPLY_BUILT
+static const bool k_built_supply = true;
+#else
+static const bool k_built_supply = false;
+#endif
+#ifdef K3GPU_LOADER_BUILT
+static const bool k_built_loader = true;
+#else
+static const bool k_built_loader = false;
+#endif
+#ifdef K3GPU_ENGCFG_BUILT
+static const bool k_built_engcfg = true;
+#else
+static const bool k_built_engcfg = false;
+#endif
+#if defined(K3GPU_PLANNER_BUILT) && defined(K3GPU_COPYQ_BUILT) && defined(K3GPU_SLOTCACHE_BUILT) && defined(K3GPU_ROUTETABLE_BUILT)
+static const bool k_built_planner = true;
+#else
+static const bool k_built_planner = false;
+#endif
+
+static void engcfg_select()   // first thing in configure(): the other selectors and the settings go through it when it runs
+{
+    const char *lib = nullptr;
+    void *h = comp_select("K3GPU_ENGCFG", "engine config", "libengcfg.so", k_built_engcfg, &lib);
+    if (!h) return;
+#ifdef K3GPU_ENGCFG_BUILT
+    COMP_SYM("K3GPU_ENGCFG", h, g_ec.env_int, "ec_env_int") COMP_SYM("K3GPU_ENGCFG", h, g_ec.settings_from_env, "ec_settings_from_env") COMP_SYM("K3GPU_ENGCFG", h, g_ec.pend_cap, "ec_pend_cap")
+    COMP_SYM("K3GPU_ENGCFG", h, g_ec.open_trace, "ec_open_trace") COMP_SYM("K3GPU_ENGCFG", h, g_ec.print_route_cache, "ec_print_route_cache")
+    COMP_SYM("K3GPU_ENGCFG", h, g_ec.prefill_start, "ec_prefill_start") COMP_SYM("K3GPU_ENGCFG", h, g_ec.print_start_line, "ec_print_start_line")
+    COMP_SYM("K3GPU_ENGCFG", h, g_ec.selector_mode, "ec_selector_mode") COMP_SYM("K3GPU_ENGCFG", h, g_ec.selector_lib, "ec_selector_lib")
+    COMP_SYM("K3GPU_ENGCFG", h, g_ec.selector_announce_rust, "ec_selector_announce_rust") COMP_SYM("K3GPU_ENGCFG", h, g_ec.card_of, "ec_card_of")
+    COMP_SYM("K3GPU_ENGCFG", h, g_ec.force_routes, "ec_force_routes") COMP_SYM("K3GPU_ENGCFG", h, g_ec.print_summary, "ec_print_summary")
+    g_ec.on = true;
+    fprintf(stderr, "K3GPU: engine config rust (%s)\n", lib);
+#endif
+}
+
+static void poolinit_select()   // before g_host.init
+{
+    const char *lib = nullptr;
+    void *h = comp_select("K3GPU_POOLINIT", "pool init", "libpoolinit.so", k_built_poolinit, &lib);
+    if (!h) return;
+#ifdef K3GPU_POOLINIT_BUILT
+    COMP_SYM("K3GPU_POOLINIT", h, g_pi.host_init, "pi_host_init") COMP_SYM("K3GPU_POOLINIT", h, g_pi.pool_init, "pi_pool_init")
+    g_pi.on = true;
+    fprintf(stderr, "K3GPU: pool init rust (%s)\n", lib);
+#endif
+}
+
+static void supply_start()   // after g_vq, g_prefill and g_chunks are known
+{
+    const char *lib = nullptr;
+    void *h = comp_select("K3GPU_SUPPLY", "supply", "libsupply.so", k_built_supply, &lib);
+    if (!h) return;
+#ifdef K3GPU_SUPPLY_BUILT
+    COMP_SYM("K3GPU_SUPPLY", h, g_sy.init, "sy_init") COMP_SYM("K3GPU_SUPPLY", h, g_sy.ensure, "sy_ensure") COMP_SYM("K3GPU_SUPPLY", h, g_sy.wb_skipped, "sy_wb_skipped")
+    sy_config c = {};
+    c.experts = EXPERTS; c.expert_raw = EXPERT_RAW; c.vq = g_vq ? 1 : 0; c.prefill = g_prefill ? 1 : 0; c.chunks = g_chunks; c.slab = g_slab;
+    g_sy.init(&g_sy_ops, &c);
+    g_sy.on = true;
+    fprintf(stderr, "K3GPU: supply rust (%s)\n", lib);
+#endif
+}
+
+// ---- which loader runs (K3GPU_LOADER): cpp, the default, is loader_submit / loader_wait / open_layer below; rust = libloader.so (src/rust/loader): the per-card threads, the pending-job counter
+// and the host side of open_layer (opening the experts file, the prefill slab). What touches CUDA or model code comes back here as callbacks.
+struct LdApi {
+    bool on = false;
+#ifdef K3GPU_LOADER_BUILT
+    void (*init)(const ld_config *) = nullptr; void (*submit)(int, void (*)(void *), void *) = nullptr; void (*wait)(void) = nullptr; void (*open_layer)(const ld_layer *) = nullptr;
+#endif
+};
+static LdApi g_ld;
+static void ensure_work(int c);   // defined below
+#ifdef K3GPU_LOADER_BUILT
+static void ld_cb_set_device(void *, int card) { CHECK(cudaSetDevice(card)); }
+static void ld_cb_ensure_work(void *, int card) { ensure_work(card); }
+static void ld_cb_load_trunk(void *, void *h, const char *ds, int L) { layer_load_trunk(ds, L, ((Handle *)h)->y); }
+static void ld_cb_load_tables(void *, void *h, const char *ds, int L) { layer_load_expert_tables(ds, L, ((Handle *)h)->y); }
+static void ld_cb_alloc_state(void *, void *hv, unsigned positions)
+{
+    Handle *h = (Handle *)hv;
+    h->mla = h->y.mla;
+    if (h->mla) {
+        h->mc.cap = positions;
+        CHECK(cudaMalloc(&h->mc.kv, (size_t)positions * MLA_EXP * 4)); CHECK(cudaMalloc(&h->mc.lat, (size_t)positions * MLA_KVLAT * 4));
+    } else kda_state_alloc(h->kda);
+}
+static void ld_cb_host_alloc(void *, unsigned char **dst, size_t bytes) { CHECK(cudaHostAlloc((void **)dst, bytes, cudaHostAllocDefault)); }
+#endif
+
+static void loader_start()   // after g_prefill is known
+{
+    const char *lib = nullptr;
+    void *h = comp_select("K3GPU_LOADER", "loader", "libloader.so", k_built_loader, &lib);
+    if (!h) return;
+#ifdef K3GPU_LOADER_BUILT
+    COMP_SYM("K3GPU_LOADER", h, g_ld.init, "ld_init") COMP_SYM("K3GPU_LOADER", h, g_ld.submit, "ld_submit") COMP_SYM("K3GPU_LOADER", h, g_ld.wait, "ld_wait")
+    COMP_SYM("K3GPU_LOADER", h, g_ld.open_layer, "ld_open_layer")
+    ld_config c = {};
+    c.cb = { nullptr, ld_cb_set_device, ld_cb_ensure_work, ld_cb_load_trunk, ld_cb_load_tables, ld_cb_alloc_state, ld_cb_host_alloc };
+    c.expert_raw = EXPERT_RAW; c.prefill = g_prefill ? 1 : 0; c.slab = g_slab; c.handles = (void **)g_handles;
+    g_ld.init(&c);
+    g_ld.on = true;
+    fprintf(stderr, "K3GPU: loader rust (%s)\n", lib);
+#endif
+}
+
+#if defined(K3GPU_PLANNER_BUILT) && defined(K3GPU_COPYQ_BUILT) && defined(K3GPU_SLOTCACHE_BUILT) && defined(K3GPU_ROUTETABLE_BUILT)
+// what the planner library is given in place of the engine's own calls; the three counters the engine keeps for the other libraries are kept here, since the planner calls them directly
+static int sp_rt_next_use(rt_table *t, int key) { g_rt_nu_calls++; return g_rt.next_use(t, key); }
+static void sp_enqueue(const cq_job *j) { g_cq_jobs[j->kind].fetch_add(1, std::memory_order_relaxed); g_cq_enqueue(j); }
+static unsigned char *sp_sc_acquire(sc_cache *c, int key, const int *prot, size_t n, float h0, int *vk, float *vh) { g_sc_calls[0]++; return g_sc.acquire(c, key, prot, n, h0, vk, vh); }
+static unsigned char *sp_sc_try_acquire(sc_cache *c, int key, int nu, const int *prot, size_t n, float h0, int *vk, float *vh) { g_sc_calls[1]++; return g_sc.try_acquire(c, key, nu, prot, n, h0, vk, vh); }
+#endif
+static void planner_start()   // after the route cache, the host cache, the prefill flag and the copy queue are set up
+{
+    const char *lib = nullptr;
+    void *h = comp_select("K3GPU_PLANNER", "planner", "libplanner.so", k_built_planner, &lib);
+    if (!h) return;
+#if defined(K3GPU_PLANNER_BUILT) && defined(K3GPU_COPYQ_BUILT) && defined(K3GPU_SLOTCACHE_BUILT) && defined(K3GPU_ROUTETABLE_BUILT)
+    if (!g_copyq_rust || !g_sc.on || !g_rt.on) { fprintf(stderr, "K3GPU_PLANNER=rust needs K3GPU_COPYQ, K3GPU_SLOTCACHE and K3GPU_ROUTETABLE on rust too (it calls their libraries directly)\n"); exit(1); }
+    COMP_SYM("K3GPU_PLANNER", h, g_sp.init, "sp_init") COMP_SYM("K3GPU_PLANNER", h, g_sp.layer_set, "sp_layer_set") COMP_SYM("K3GPU_PLANNER", h, g_sp.layer_set_fd, "sp_layer_set_fd")
+    COMP_SYM("K3GPU_PLANNER", h, g_sp.pool_set, "sp_pool_set") COMP_SYM("K3GPU_PLANNER", h, g_sp.host_set, "sp_host_set") COMP_SYM("K3GPU_PLANNER", h, g_sp.route_hook, "sp_route_hook")
+    COMP_SYM("K3GPU_PLANNER", h, g_sp.pend_take, "sp_pend_take") COMP_SYM("K3GPU_PLANNER", h, g_sp.arr_wait, "sp_arr_wait") COMP_SYM("K3GPU_PLANNER", h, g_sp.host_acquire, "sp_host_acquire")
+    COMP_SYM("K3GPU_PLANNER", h, g_sp.get_stats, "sp_get_stats")
+    sp_ops ops = {};
+    ops.sc_set_next_use = slotcache_set_next_use; ops.sc_contains = g_sc.contains; ops.sc_worth = g_sc.worth; ops.sc_acquire = sp_sc_acquire; ops.sc_try_acquire = sp_sc_try_acquire;
+    ops.sc_remove = g_sc.remove; ops.sc_release = g_sc.release;
+    ops.table = g_rt.t; ops.rt_calls = g_rt.calls; ops.rt_layer = g_rt.layer; ops.rt_experts = g_rt.experts; ops.rt_set_current = g_rt.set_current; ops.rt_next_use = sp_rt_next_use;
+    ops.enqueue = sp_enqueue;
+    sp_config cfg = {};
+    cfg.experts = EXPERTS; cfg.expert_raw = EXPERT_RAW; cfg.cards = g_cards; cfg.lookahead = g_lookahead; cfg.pend_cap = g_pend_cap; cfg.vq = g_vq ? 1 : 0; cfg.vq_cap = g_vq_cap;
+    cfg.vq_from = g_vq_from; cfg.prefill = g_prefill ? 1 : 0; cfg.rc_ok = g_rc_ok ? 1 : 0;
+    g_sp.init(&ops, &cfg);
+    g_sp.host_set(g_host.c.R(), g_host.cap_slots);
+    g_sp.on = true;
+    fprintf(stderr, "K3GPU: planner rust (%s)\n", lib);
+#endif
+}
+// the planner library keeps the counters the engine's own planner kept in globals; the summary and the verbose lines read the globals
+static void planner_sync()
+{
+#ifdef K3GPU_PLANNER_BUILT
+    if (!g_sp.on) return;
+    sp_stats s; memset(&s, 0, sizeof s); g_sp.get_stats(&s);
+    g_pf_planned = s.planned; g_pf_skipped = s.skipped; g_pf_used = s.pf_used; g_pf_waited = s.pf_waited; g_t_pwait = s.t_pwait;
+    g_vq_ram = s.vq_ram; g_vq_drive = s.vq_drive; g_vq_wb = s.vq_wb; g_vq_nowb = s.vq_nowb; g_vq_waited = s.vq_waited; g_t_vwait = s.t_vwait; g_t_plan = s.t_plan; g_rc_ok = s.rc_ok != 0;
+#endif
+}
+static unsigned long wb_skipped_total()
+{
+#ifdef K3GPU_SUPPLY_BUILT
+    if (g_sy.on) return g_sy.wb_skipped();
+#endif
+    return g_wb_skipped;
+}
+
+static void print_summary_cpp()
 {
     unsigned long need = 0, hc = 0, hh = 0, dr = 0; double tr = 0, tc = 0;
     for (int c = 0; c < g_cards; c++) {
@@ -479,16 +717,84 @@ static void print_summary()
     for (int c = 0; c < g_cards; c++)
         if (g_pool[c].ready) fprintf(stderr, "K3GPU card %d: %d expert slots, %lu needed, %lu on the card, %lu host, %lu drive, %lu written back to RAM\n", c, g_pool[c].slots, g_pool[c].st.needed, g_pool[c].st.hit_card, g_pool[c].st.hit_host, g_pool[c].st.from_drive, g_pool[c].st.written_back);
     const char *names[3] = { "prompt-pass layer calls", "single-token layer calls", "multi-token layer calls" };
-    if (!g_rc.empty()) fprintf(stderr, "K3GPU route cache: %zu of %zu calls seen, look-ahead %s; %lu experts read ahead, %lu already resident, %lu taken from read-ahead, %lu of them waited for (%.1f s); %lu card victims not kept in RAM\n", g_rc_pos, g_rc.size(), g_rc_ok ? "on to the end" : "stopped", g_pf_planned, g_pf_skipped, g_pf_used, g_pf_waited, g_t_pwait, g_wb_skipped);
+    if (!g_rc.empty()) fprintf(stderr, "K3GPU route cache: %zu of %zu calls seen, look-ahead %s; %lu experts read ahead, %lu already resident, %lu taken from read-ahead, %lu of them waited for (%.1f s); %lu card victims not kept in RAM\n", g_rc_pos, g_rc.size(), g_rc_ok ? "on to the end" : "stopped", g_pf_planned, g_pf_skipped, g_pf_used, g_pf_waited, g_t_pwait, wb_skipped_total());
     if (g_vq) fprintf(stderr, "K3GPU card queues: %lu experts brought ahead (%lu from RAM, %lu from the drive), %lu replaced experts copied to RAM, %lu dropped; %lu waited for (%.1f s); planning in the hook %.1f s\n", g_vq_ram + g_vq_drive, g_vq_ram, g_vq_drive, g_vq_wb, g_vq_nowb, g_vq_waited, g_t_vwait, g_t_plan);
     for (int i = 0; i < 3; i++) if (g_n_calls[i]) fprintf(stderr, "K3GPU %s: %.0f, %.3f s in all, %.1f ms each\n", names[i], g_n_calls[i], g_t_calls[i], 1000 * g_t_calls[i] / g_n_calls[i]);
 }
+
+static void print_summary()
+{
+    planner_sync();
+    fprintf(stderr, "K3GPU host path: engine config %s, pool init %s, supply %s, planner %s, loader %s\n", g_ec.on ? "rust" : "cpp", g_pi.on ? "rust" : "cpp", g_sy.on ? "rust" : "cpp", g_sp.on ? "rust" : "cpp", g_ld.on ? "rust" : "cpp");
+#ifdef K3GPU_ENGCFG_BUILT
+    if (g_ec.on) {
+        ec_summary s; memset(&s, 0, sizeof s);
+        s.cards = g_cards; s.expert_raw = EXPERT_RAW;
+        for (int c = 0; c < g_cards && c < EC_MAX_CARDS; c++) {
+            const ExpertStats &e = g_pool[c].st;
+            s.card[c].ready = g_pool[c].ready; s.card[c].slots = g_pool[c].slots; s.card[c].needed = e.needed; s.card[c].hit_card = e.hit_card; s.card[c].hit_host = e.hit_host;
+            s.card[c].from_drive = e.from_drive; s.card[c].written_back = e.written_back; s.card[c].t_read = e.t_read; s.card[c].t_copy = e.t_copy;
+        }
+        s.copyq_rust = g_copyq_rust; for (int k = 0; k < 3; k++) { s.cq_jobs[k] = g_cq_jobs[k].load(); s.sc_calls[k] = g_sc_calls[k]; s.n_calls[k] = g_n_calls[k]; s.t_calls[k] = g_t_calls[k]; }
+        s.slotcache_rust = g_sc.on; s.routetable_rust = g_rt.on; s.rc_calls = g_rc.size(); s.rt_nu_calls = g_rt_nu_calls;
+        s.rc_pos = g_rc_pos; s.rc_ok = g_rc_ok;
+        s.pf_planned = g_pf_planned; s.pf_skipped = g_pf_skipped; s.pf_used = g_pf_used; s.pf_waited = g_pf_waited; s.t_pwait = g_t_pwait; s.wb_skipped = wb_skipped_total();
+        s.vq = g_vq; s.vq_ram = g_vq_ram; s.vq_drive = g_vq_drive; s.vq_wb = g_vq_wb; s.vq_nowb = g_vq_nowb; s.vq_waited = g_vq_waited; s.t_vwait = g_t_vwait; s.t_plan = g_t_plan;
+        g_ec.print_summary(&s);
+        return;
+    }
+#endif
+    print_summary_cpp();
+}
+
+#ifdef K3GPU_ENGCFG_BUILT
+// force_routes of the engcfg library: it is given the one entry of the route cache it reads
+static void force_routes_ec(int L, int n, int *sel)
+{
+    ec_call cur = {};
+    const bool have = g_rc_pos < g_rc.size();
+    if (have) { const CallSet &cs = g_rc[g_rc_pos]; cur.layer = cs.layer; cur.experts = cs.experts.data(); cur.n_experts = cs.experts.size(); cur.counts = cs.counts.data(); cur.n_counts = cs.counts.size(); }
+    g_ec.force_routes(g_rc_pos, g_rc.size(), have ? &cur : nullptr, L, n, sel, TOP);
+}
+// configure() with K3GPU_ENGCFG=rust: the same steps in the same order (the order is part of engcfg.h), the settings and messages from the library
+static void configure_ec(int have)
+{
+    ec_settings s; g_ec.settings_from_env(&s, have);
+    g_cards = s.cards; g_readers = s.readers; g_verbose = s.verbose; g_reserve = s.reserve;
+    slotcache_select();
+    slotcache_set_policy(s.policy);
+    routetable_select();
+    poolinit_select();
+    g_chunks = s.chunks;
+    g_trace = g_ec.open_trace();
+    g_host.init(s.host_bytes);
+    if (s.routecache) {
+        rc_load_sel(s.routecache);
+        g_lookahead = s.lookahead;
+        g_pend_cap = g_ec.pend_cap(g_host.cap_slots);
+        g_route_hook = route_hook; g_rc_ok = !g_rc.empty();
+        if (g_policy == 2) slotcache_set_next_use(rc_nu_sel);
+        g_vq = s.vqueue != 0; g_vq_cap = s.vq_cap; g_vq_from = s.vq_from;
+        g_ec.print_route_cache(&s, g_rc.size(), g_pend_cap);
+    }
+    g_layout = s.layout; g_prefill = s.prefill != 0;
+    if (s.prefill) { g_ec.prefill_start(g_rc.size()); g_force_routes = force_routes_ec; }
+    copyq_select();
+    supply_start(); loader_start(); planner_start();
+    atexit(print_summary);
+    g_ec.print_start_line(&s);
+}
+#endif
 
 static void configure()
 {
     if (g_configured) return;
     g_configured = true;
+    engcfg_select();
     int have = 0; CHECK(cudaGetDeviceCount(&have));
+#ifdef K3GPU_ENGCFG_BUILT
+    if (g_ec.on) { configure_ec(have); return; }
+#endif
     g_cards = std::min(std::min(env_int("K3GPU_CARDS", 8), have), (int)MAX_CARDS);
     g_readers = env_int("K3GPU_READERS", 16);
     g_verbose = env_int("K3GPU_VERBOSE", 0);
@@ -496,6 +802,7 @@ static void configure()
     slotcache_select();
     slotcache_set_policy(env_int("K3GPU_POLICY", 1));
     routetable_select();
+    poolinit_select();
     g_chunks = env_int("K3GPU_CHUNKS", 0);
     { const char *tr = getenv("K3GPU_TRACE"); if (tr && *tr) { g_trace = fopen(tr, "w"); if (!g_trace) { fprintf(stderr, "cannot write %s\n", tr); exit(1); } } }
     g_host.init((size_t)env_int("K3GPU_HOST_GB", 150) << 30);
@@ -519,11 +826,18 @@ static void configure()
         fprintf(stderr, "K3GPU PREFILL ON: timing only. No drive is read, expert bytes are 4 records per layer, routes are taken from the route cache; outputs are not the model's.\n");
     }
     copyq_select();
+    supply_start(); loader_start(); planner_start();
     atexit(print_summary);
     fprintf(stderr, "K3GPU: %d cards, host expert cache %d GB, %d drive readers\n", g_cards, env_int("K3GPU_HOST_GB", 150), g_readers);
 }
 
-static int card_of(int L) { if (g_layout == 1) return L == 0 ? 0 : (L - 1) % g_cards; return L == 0 ? 0 : std::min(g_cards - 1, (L * g_cards) / 93); }
+static int card_of(int L)
+{
+#ifdef K3GPU_ENGCFG_BUILT
+    if (g_ec.on) return g_ec.card_of(g_layout, g_cards, L);
+#endif
+    if (g_layout == 1) return L == 0 ? 0 : (L - 1) % g_cards; return L == 0 ? 0 : std::min(g_cards - 1, (L * g_cards) / 93);
+}
 
 static void ensure_work(int c)
 {
@@ -531,6 +845,23 @@ static void ensure_work(int c)
     CHECK(cudaSetDevice(c));
     work_alloc(g_card[c].w, c, (int)g_max_n, c == 0, false, 8, 3);
     g_card[c].alloc_n = g_max_n; g_card[c].ready = true;
+}
+
+// the card's pool of expert slots is made by the first layer with experts that runs on the card; the planner library is told when it is ready
+static void pool_open(int card)
+{
+    if (g_pool[card].ready) return;
+    g_pool[card].init(card, g_reserve, g_readers);
+#ifdef K3GPU_PLANNER_BUILT
+    if (g_sp.on) g_sp.pool_set(card, g_pool[card].c.R(), g_pool[card].dev, 1);
+#endif
+}
+// the planner library has its own table of the layers' handles: the layer exists from open_layer on, its fd (-1 here) is copied in route_hook once the loader has opened it
+static void plan_note_layer(const Handle *h)
+{
+#ifdef K3GPU_PLANNER_BUILT
+    if (g_sp.on && h->L <= N_LAYERS) g_sp.layer_set(h->L, -1, h->card);
+#endif
 }
 
 // Layers are opened by one loader thread per card, so the trunks of the cards load side by side; open_layer returns at once and the work that needs the
@@ -544,6 +875,12 @@ static std::condition_variable &pending_cv() { static std::condition_variable *c
 static int g_pending = 0;
 static void loader_submit(int card, std::function<void()> job)
 {
+#ifdef K3GPU_LOADER_BUILT
+    if (g_ld.on) {
+        g_ld.submit(card, [](void *arg) { std::function<void()> *f = (std::function<void()> *)arg; (*f)(); delete f; }, new std::function<void()>(std::move(job)));
+        return;
+    }
+#endif
     if (!g_loader[card]) g_loader[card] = new Loader;
     Loader &l = *g_loader[card];
     { std::lock_guard<std::mutex> g(pending_mu()); g_pending++; }
@@ -567,6 +904,9 @@ static void loader_submit(int card, std::function<void()> job)
 }
 static void loader_wait()
 {
+#ifdef K3GPU_LOADER_BUILT
+    if (g_ld.on) { g_ld.wait(); return; }
+#endif
     std::unique_lock<std::mutex> u(pending_mu());
     pending_cv().wait(u, []() { return g_pending == 0; });
 }
@@ -575,8 +915,19 @@ static Handle *open_layer(const char *dataset, unsigned L, unsigned k, unsigned 
 {
     configure();
     Handle *h = into ? into : new Handle;
+#ifdef K3GPU_LOADER_BUILT
+    if (g_ld.on) {
+        ld_layer req = {};
+        req.handle = h; req.dataset = dataset; req.layer = L; req.k = k; req.positions = positions; req.card = card_of((int)L);
+        req.h_L = &h->L; req.h_card = &h->card; req.h_k_in = &h->k_in; req.h_fd = &h->fd;
+        g_ld.open_layer(&req);   // the bookkeeping and the job below, in the library; g_handles is the table it fills
+        plan_note_layer(h);
+        return h;
+    }
+#endif
     h->L = (int)L; h->card = card_of((int)L); h->k_in = (int)k;
     if (L <= (unsigned)N_LAYERS) g_handles[L] = h;
+    plan_note_layer(h);
     const std::string ds(dataset);
     loader_submit(h->card, [h, ds, L, positions]() {
         CHECK(cudaSetDevice(h->card));
@@ -618,7 +969,7 @@ static double forward(Handle &h, const float *resid, const float *const *snaps, 
     CHECK(cudaSetDevice(h.card));
     if (n > c.alloc_n) { fprintf(stderr, "a window of %u rows exceeds the %u the buffers were made for\n", n, c.alloc_n); exit(1); }
     Work &w = c.w; w.N = (int)n;
-    if (h.L >= 1 && !g_pool[h.card].ready) g_pool[h.card].init(h.card, g_reserve, g_readers);
+    if (h.L >= 1) pool_open(h.card);
     if (fresh && !h.mla) kda_state_reset(h.kda);
     const float *sn[9];
     if (h.L == 0) {
@@ -644,6 +995,7 @@ static double forward(Handle &h, const float *resid, const float *const *snaps, 
         unsigned long cn = 0, cc = 0, ch = 0, cd = 0; double ce = 0, cr = 0, ccp = 0;
         for (int i = 0; i < g_cards; i++) if (g_pool[i].ready) { cn += g_pool[i].st.needed; cc += g_pool[i].st.hit_card; ch += g_pool[i].st.hit_host; cd += g_pool[i].st.from_drive; ce += g_pool[i].st.t_ensure; cr += g_pool[i].st.t_read; ccp += g_pool[i].st.t_copy; }
         const double ct = g_t_calls[0] + g_t_calls[1] + g_t_calls[2] + (wall_now() - t0);
+        planner_sync();
         fprintf(stderr, "K3GPU pass of %u row(s): %lu experts needed, %lu on the card, %lu in host RAM, %lu from the drive; layer calls %.3f s of which expert supply %.3f s (drive reads %.3f s, host to card %.3f s)\n", n, cn - pn, cc - pc, ch - ph, cd - pd, ct - pt, ce - pe, cr - pr, ccp - pcp);
         pn = cn; pc = cc; ph = ch; pd = cd; pe = ce; pr = cr; pcp = ccp; pt = ct;
         if (g_vq) { fprintf(stderr, "K3GPU planning in the hook: %.3f s in this pass\n", g_t_plan - ppl); ppl = g_t_plan; }

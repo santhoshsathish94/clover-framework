@@ -1,0 +1,12 @@
+# M01: per-card FIFO broken: LIFO (pop_back)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -79,7 +79,7 @@
+             let job = {
+                 let mut g = lock(&c.st);
+                 loop {
+-                    if let Some(j) = g.q.pop_front() {
++                    if let Some(j) = g.q.pop_back() {
+                         break j;
+                     }
+                     g = c.cv.wait(g).unwrap_or_else(|e| e.into_inner());

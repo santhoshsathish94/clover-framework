@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M15/src/lib.rs
+@@ -194,5 +194,5 @@
+         prefill,
+     };
+-    if !unset_or_empty(rc) {
++    if !rc.is_null() {
+         s.routecache = rc;
+         s.lookahead = ei(c"K3GPU_LOOKAHEAD", 92);

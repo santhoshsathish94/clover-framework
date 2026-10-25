@@ -1,0 +1,38 @@
+# M11p: M11 [+probe]: orig seconds vs mutant seconds
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -88,5 +88,7 @@
+     let cap = n_chunks.wrapping_mul(PI_CHUNK_SLOTS);
+     // SAFETY: `out` valid by the caller.
+     unsafe { (*out).cap_slots = cap };
+-    write_stderr(summary_line(cap, raw, sys::wall_now() - t0).as_bytes());
++    let t1 = sys::wall_now();
++    sys::probe(&format!("M11 orig_s={:.4} mut_s={:.4}", sys::wall_now() - t0, sys::wall_now() - t1));
++    write_stderr(summary_line(cap, raw, sys::wall_now() - t1).as_bytes());
+ }
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -27,6 +27,23 @@
+     let mut t = Timespec { tv_sec: 0, tv_nsec: 0 };
+     // SAFETY: `t` is a valid Timespec.
+     unsafe { clock_gettime(CLOCK_MONOTONIC, &mut t) };
++    t.tv_sec as f64 + 1e-9 * t.tv_nsec as f64
++}
++
++pub fn probe(tag: &str) {
++    if let Ok(p) = std::env::var("PI_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().append(true).create(true).open(p) {
++            let line = format!("{} {}\n", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
++
++/// seconds of clock `id` (0 = REALTIME, 1 = MONOTONIC), same arithmetic as wall_now
++pub fn clk(id: c_int) -> f64 {
++    let mut t = Timespec { tv_sec: 0, tv_nsec: 0 };
++    // SAFETY: `t` is a valid Timespec.
++    unsafe { clock_gettime(id, &mut t) };
+     t.tv_sec as f64 + 1e-9 * t.tv_nsec as f64
+ }
+ 

@@ -1,0 +1,12 @@
+# M10: notify_all -> notify_one after the decrement
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -87,7 +87,7 @@
+             };
+             job();
+             *lock(&self.pending) -= 1;
+-            self.pending_cv.notify_all();
++            self.pending_cv.notify_one();
+         }
+     }
+ }

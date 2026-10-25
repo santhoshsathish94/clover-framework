@@ -1,0 +1,11 @@
+--- src/lib.rs (real)
++++ M138/src/lib.rs
+@@ -207,5 +207,7 @@
+ 
+ fn emit(b: &[u8]) {
+-    let _ = std::io::stderr().write_all(b);
++    let h = b.len() / 2;
++    let _ = std::io::stderr().write_all(&b[..h]);
++    let _ = std::io::stderr().write_all(&b[h..]);
+ }
+ 

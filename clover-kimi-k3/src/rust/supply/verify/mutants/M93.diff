@@ -1,0 +1,11 @@
+# M93: Supply::new does not reset the g_wb_skipped counter
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -169,7 +169,6 @@
+ 
+ impl Supply {
+     pub fn new(ops: sy_ops, cfg: sy_config) -> Supply {
+-        WB_SKIPPED.store(0, Ordering::SeqCst);
+         Supply { ops, cfg }
+     }
+ 

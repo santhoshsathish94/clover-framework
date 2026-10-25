@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M64/src/lib.rs
+@@ -283,5 +283,5 @@
+ 
+ const PREFILL_NEEDS: &[u8] = b"K3GPU_PREFILL needs K3GPU_ROUTECACHE\n";
+-const PREFILL_ON: &[u8] = b"K3GPU PREFILL ON: timing only. No drive is read, expert bytes are 4 records per layer, routes are taken from the route cache; outputs are not the model's.\n";
++const PREFILL_ON: &[u8] = b"K3GPU PREFILL ON: timing only. No drive is read, expert bytes are 4 record per layer, routes are taken from the route cache; outputs are not the model's.\n";
+ 
+ fn start_line(s: &EcSettings) -> Vec<u8> {

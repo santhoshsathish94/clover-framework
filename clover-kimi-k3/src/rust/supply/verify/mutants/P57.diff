@@ -1,0 +1,40 @@
+# P57 (M57 + probe): M57 (.max(1)) + a tag before run_parallel when the unclamped pool_readers is < 1
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -9,6 +9,17 @@
+ 
+ /// g_wb_skipped: card victims that were not worth a RAM slot.
+ pub static WB_SKIPPED: AtomicU64 = AtomicU64::new(0);
++
++pub fn probe(tag: &str) {
++    use std::io::Write;
++    if let Ok(p) = std::env::var("SUPPLY_PROBE") {
++        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {
++            let line = format!("{} {}
++", std::process::id(), tag);
++            let _ = f.write_all(line.as_bytes());
++        }
++    }
++}
+ 
+ extern "C" {
+     fn pread(fd: c_int, buf: *mut c_void, count: usize, offset: i64) -> isize;
+@@ -303,7 +314,7 @@
+         }
+         // 4. drive -> pinned slot -> card, one chunk at a time per reading thread
+         let n_drive: c_int = need.iter().filter(|n| n.host.is_null()).count() as c_int;
+-        let pool_readers: c_int = std::cmp::min(readers, pool.readers);
++        let pool_readers: c_int = std::cmp::min(readers, pool.readers).max(1);
+         let (nchunk, chunk) = chunking(raw, self.cfg.chunks, n_drive, pool_readers);
+         let mut jobs: Vec<Job> = Vec::new();
+         for n in &need {
+@@ -334,6 +345,9 @@
+             jobs,
+             next: AtomicUsize::new(0),
+         };
++        if std::cmp::min(readers, pool.readers) < 1 {
++            probe(&format!("pr_le0 jobs={}", ctx.jobs.len()));
++        }
+         let t0 = Instant::now();
+         run_parallel(&ctx, pool_readers);
+         let t1 = Instant::now();

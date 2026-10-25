@@ -1,0 +1,11 @@
+# M29: not worth: no continue (the victim is written back anyway)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -281,7 +281,6 @@
+             }
+             if !self.host_worth(host, v.key) {
+                 WB_SKIPPED.fetch_add(1, Ordering::SeqCst);
+-                continue;
+             }
+             let mut dk: c_int = -1;
+             let mut dh: f32 = 0.0;

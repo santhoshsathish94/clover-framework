@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M52/src/lib.rs
+@@ -336,5 +336,5 @@
+             return SelOutcome::Cpp;
+         }
+-        if m_bytes == b"rust" {
++        if m_bytes.trim_ascii_end() == b"rust" {
+             return SelOutcome::Rust;
+         }

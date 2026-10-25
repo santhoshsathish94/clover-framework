@@ -1,0 +1,12 @@
+# M111: pool: reader loop bound is the unclamped cfg.nreaders
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -65,7 +65,7 @@
+             add_spare(cfg.cache, base.wrapping_add((i as usize).wrapping_mul(raw)));
+         }
+         check(stream_create(addr_of_mut!((*out).copy), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_COPY);
+-        let readers = (*out).readers;
++        let readers = cfg.nreaders;
+         for i in 0..readers {
+             let i = i as usize;
+             check(stream_create(addr_of_mut!((*out).rstream[i]), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_READER);

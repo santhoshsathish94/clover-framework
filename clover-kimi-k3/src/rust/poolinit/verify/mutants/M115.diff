@@ -1,0 +1,12 @@
+# M115: abi: PI_HOST_REGISTER_PORTABLE 0x03
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -6,7 +6,7 @@
+ pub const PI_CHUNK_SLOTS: usize = 32;
+ pub const PI_MAX_READERS: usize = 32;
+ pub const PI_HOST_ALLOC_DEFAULT: c_uint = 0x00;
+-pub const PI_HOST_REGISTER_PORTABLE: c_uint = 0x01;
++pub const PI_HOST_REGISTER_PORTABLE: c_uint = 0x03;
+ pub const PI_STREAM_NON_BLOCKING: c_uint = 0x01;
+ pub const PI_EVENT_DISABLE_TIMING: c_uint = 0x02;
+ 

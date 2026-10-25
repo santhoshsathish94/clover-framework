@@ -1,0 +1,12 @@
+# M114: abi: PI_MAX_READERS 31
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -4,7 +4,7 @@
+ use std::os::raw::{c_char, c_int, c_uint, c_ulong, c_void};
+ 
+ pub const PI_CHUNK_SLOTS: usize = 32;
+-pub const PI_MAX_READERS: usize = 32;
++pub const PI_MAX_READERS: usize = 31;
+ pub const PI_HOST_ALLOC_DEFAULT: c_uint = 0x00;
+ pub const PI_HOST_REGISTER_PORTABLE: c_uint = 0x01;
+ pub const PI_STREAM_NON_BLOCKING: c_uint = 0x01;

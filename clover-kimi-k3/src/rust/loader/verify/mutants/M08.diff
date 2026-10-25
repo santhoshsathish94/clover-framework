@@ -1,0 +1,11 @@
+# M08: pending-- never executed (notify only)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -86,7 +86,6 @@
+                 }
+             };
+             job();
+-            *lock(&self.pending) -= 1;
+             self.pending_cv.notify_all();
+         }
+     }

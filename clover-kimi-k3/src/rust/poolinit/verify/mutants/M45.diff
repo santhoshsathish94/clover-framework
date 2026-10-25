@@ -1,0 +1,12 @@
+# M45: host: worker loop bound i + 1 >= n_chunks (last chunk never mapped)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -48,7 +48,7 @@
+     let t0 = sys::wall_now();
+     let touch = || loop {
+         let i = next.fetch_add(1, Ordering::SeqCst);
+-        if i >= n_chunks {
++        if i + 1 >= n_chunks {
+             return;
+         }
+         // SAFETY: anonymous private mapping of `chunk_bytes`; only written inside the mapping.

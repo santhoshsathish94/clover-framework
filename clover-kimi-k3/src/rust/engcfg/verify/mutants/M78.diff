@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M78/src/lib.rs
+@@ -395,5 +395,5 @@
+         0
+     } else {
+-        cards.wrapping_sub(1).min(layer.wrapping_mul(cards) / 93)
++        cards.wrapping_sub(1).min(layer.wrapping_mul(cards) / 92)
+     }
+ }

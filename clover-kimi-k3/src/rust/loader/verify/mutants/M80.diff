@@ -1,0 +1,12 @@
+# M80: *h_k_in receives positions
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -168,7 +168,7 @@
+     // bookkeeping, in the original's order
+     put(r.h_L, r.layer as c_int);
+     put(r.h_card, r.card);
+-    put(r.h_k_in, r.k as c_int);
++    put(r.h_k_in, r.positions as c_int);
+     if r.layer <= N_LAYERS {
+         // SAFETY: handles is the caller's table of N_LAYERS + 1 pointers (header) and layer <= N_LAYERS.
+         unsafe { *(st.cfg.handles as *mut *mut c_void).add(r.layer as usize) = r.handle }

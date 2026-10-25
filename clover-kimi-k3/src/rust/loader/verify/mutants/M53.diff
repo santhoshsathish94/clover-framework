@@ -1,0 +1,12 @@
+# M53: message text `cannot open file `
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -81,7 +81,7 @@
+         set_fd(j.h_fd, fd);
+     }
+     if fd < 0 {
+-        let mut m = b"cannot open ".to_vec();
++        let mut m = b"cannot open file ".to_vec();
+         m.extend_from_slice(&path);
+         m.push(b'\n');
+         return Err(m);

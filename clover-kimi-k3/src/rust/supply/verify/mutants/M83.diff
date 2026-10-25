@@ -1,0 +1,14 @@
+# M83: final stream_sync(pool.copy) before the reader jobs
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -335,9 +335,9 @@
+             next: AtomicUsize::new(0),
+         };
+         let t0 = Instant::now();
++        do_check(ops, (ops.stream_sync)(pool.copy), site::SYNC_COPY);
+         run_parallel(&ctx, pool_readers);
+         let t1 = Instant::now();
+-        do_check(ops, (ops.stream_sync)(pool.copy), site::SYNC_COPY);
+         for &h in &held {
+             (ops.sc_release)(host.cache, h);
+         }

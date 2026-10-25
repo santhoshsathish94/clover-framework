@@ -1,0 +1,12 @@
+# M55: slab block of 5 records (5 * raw)
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -89,7 +89,7 @@
+     if j.prefill {
+         let raw = j.expert_raw;
+         let layer = j.layer as usize;
+-        let bytes = 4usize.wrapping_mul(raw);
++        let bytes = 5usize.wrapping_mul(raw);
+         match j.cb.host_alloc {
+             // SAFETY: slab is the caller's table of 93 pointers and layer <= 92 (checked by ld_open_layer); host_alloc stores the new block into slab[layer].
+             Some(f) => unsafe { f(cb.ctx, j.slab.add(layer), bytes) },

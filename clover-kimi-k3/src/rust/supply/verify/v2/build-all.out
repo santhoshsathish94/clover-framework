@@ -1,0 +1,98 @@
+M00 b0288adb5dcdf7c74989f46688826ebc control: unmodified copy
+M01 b57a0c430bd15ba1593d0062fe779ebe vq: first sync is device_sync, not stream_sync(NULL) (condition inverted)
+M02 01b4ef803edd12051f71e7a45d32d161 vq: first sync is stream_sync(pool.copy) instead of stream_sync(NULL)
+M03 fc4341e680e3de2053799a9583476ff8 prot not de-duplicated (dedup removed)
+M04 8391658638f31df0077d4d4c8d0fad0e prot keys without the layer (raw expert numbers)
+M05 746a236221730bb6f18d4f317ad766b9 prot not sorted (sort removed; dedup then only drops adjacent duplicates)
+M06 ab1600608be02faa93a54b8622c369c4 needed counts the distinct experts, not the experts of the call
+M07 bda2f7dfce43035469508cb03fe76420 card hit: sc_touch before arr_wait (order swapped)
+M08 ba2d7bcc3b5f59c1f35a98abf2080b0c card hit: arr_wait missing
+M09 1c25b127974a7746eecbccbb9f26f111 card hit: hit_card not counted
+M10 b54f41f6546dee02b7861e9eff23e187 heat = counts[e] + 1
+M11 cfe7af223edc688ee4315b50c2e10548 card hit: sc_touch gets the expert number instead of the key (equal only for layer 0)
+M12 94b01c5003708bcd15f554747cf4fbc6 card hit: h_eptr[e] not set
+M13 2c3d76f5de52e732d4d9bf12f2c351a5 victim test vk > 0 instead of vk >= 0 (victim key 0 ignored)
+M14 ba8588633d0a472afb489114f2d7b816 victim: arr_wait on the new key instead of the victim key
+M15 3e018799ba64c499a39f2ca24b50ca4e victim heat taken from the new expert (heat) instead of vh
+M16 6535edc79c430cb71d99edcf8531038a vk initialised to 0 instead of -1 (slot cache writes *vkey on every path)
+M17 1decc431037363bc62415c0774baafc5 sc_acquire gets nprot - 1
+M18 25f3d5761036cb25363c1acf3fde0d20 early return when nothing is needed removed
+M19 c239bda322a07eb51d1e55c47266b4ec hit_host not counted
+M20 0f1f05450a10eff70310ac80b0f17251 pend_take after sc_remove (order swapped)
+M21 7e9bfbac7c0661cfe9796d6723ce4599 held slot not remembered (never released)
+M22 d44af0ae4dfa9137848cce9327493dd6 held slots released in reverse order
+M23 2de4611068d292ef817dbce56bc5fc0f pend_take gets the expert number instead of the key (equal only for layer 0)
+M24 527698a6deafde62c033fd0c6b8d627e pend_take missing
+M25 eb8d074c54826fa2ad3ae0d963c29e31 write-back stop condition cap_slots == 0 && prefill (|| -> &&)
+M26 b0288adb5dcdf7c74989f46688826ebc write-back: leave the loop with continue instead of break
+M27 19d3d49655ece98964ce0b834ccdc458 write-back: worth never asked (always worth)
+M28 f1aefed9d9a33022a1358fa0250c0f15 wb_skipped not counted
+M29 5b272f768a06237b15f420d7b6d98f6c not worth: no continue (the victim is written back anyway)
+M30 9482db227a5f92ee1da9a7399c1b90db host_acquire gets heat 0 instead of the victim's heat
+M31 0afb7e48c664d0eb6fca39a809f5d217 D2H copy on rstream[0] instead of pool.copy
+M32 1059c993fd42a2a96c401c08ba4f7b25 D2H copies raw - 1 bytes
+M33 154c9a54c22a61815ef60c550a15ecca written_back not counted
+M34 b64e7cc567dc4a3a2736ff7b73bbbb83 event recorded only when the card gave up a victim
+M35 0f7a9c7eb9ad40601c238ee53b2887df event_record arguments swapped (stream, event)
+M36 6235bdca9b2eb605b54cb1405b503f3f prefill main copy: slab record index e & 7 instead of e & 3
+M37 13d06fc479ffec59e27c455da2b2b6b3 prefill main copy: slab[0] instead of slab[layer]
+M38 748619570536febf295752534b122224 main H2D copies raw - 1 bytes
+M39 c0c6b886988eaec66616a906ccdae7e3 set_device(pool.dev) missing before the write-backs
+M40 2976c3b116b58a4a6ce299d73311b97d n_drive = all needs (RAM hits counted too)
+M41 5c37294624cb4fa89a90dbd6b3f127a2 nchunk: n_drive > pool_readers instead of >=
+M42 44fb57e28b090015f662a1be0d2a88e6 nchunk: min(7, ..) instead of min(8, ..)
+M43 b1643c8e4723953c301f55942e5557ec nchunk: min(9, ..) instead of min(8, ..)
+M44 e02835e1f6d3b6c462a93dbaaffd4119 nchunk: floor+1 instead of ceil, (readers + n_drive) / n_drive
+M45 59e2b191636299ce6e0352d544dedffe cfg.chunks > 1 instead of > 0 (forced 1 ignored)
+M46 5156e09d15e77cefe0de052c45180e11 chunk rounding +4096 instead of +4095
+M47 14c5599c086905632ddd83555d023de2 chunk not rounded to 4096
+M48 8f4040af0e1097d1ee8db285c473f4b4 chunk: raw + nchunk instead of raw + nchunk - 1
+M49 266d4158e2bdd88128f58e8d6fbb2055 chunk loop stops at co > raw instead of co >= raw (zero-length job)
+M50 282b8b4ab7f39deae90161a334aa9a45 job len = chunk (not clamped to the end of the record)
+M51 01ec7105ad3692d05f8f470f2830d4e0 from_drive counted per job instead of per expert
+M52 071be75a408380283e0441ee83c3637d job file offset: e * raw as a 32-bit multiply
+M53 6c9d24fbc782858972f492b00f6a6f5f job file offset without the chunk offset
+M54 47c44a077bbac96286a1eea4995cb4bc job destination without the chunk offset
+M55 cf3ab733ee423f72f6c3de0ab073f2e6 pool_readers = readers (pool.readers ignored)
+M56 7cf4d893d88404c0e7f63291b94afb59 pool_readers = pool.readers (readers argument ignored)
+M57 2c7c1d7a20fa86837cecac7d6e14fd5e pool_readers clamped to >= 1
+M58 db4b5e0648ac469d998a746e518515c4 job prefill: slab record index e & 7
+M59 07d924625ee681a5246573fefe541c44 job prefill: chunk offset not added to the slab address
+M60 c66ef47c706e553d377bf0f4c9a84aba job prefill: slab[0] instead of slab[layer]
+M61 632d66202a27bec984a05a600d449edb job reads into bounce[0] whatever the thread
+M62 dd72af7e814c7aeda41d9fc4480d88b7 pread loop: got = r instead of got += r
+M63 62ea5a398494b6fa006995f9c121f0f4 pread loop: offset without got
+M64 8bb52b0e93fe3f1fe83e03fd29058153 pread: r < 0 is fatal, r == 0 is not (spins on EOF)
+M65 83c2de505d1698a6ab4068b464f2d187 EOF text 'EOF' instead of 'end of file'
+M66 45ff90910ea6ea2835349eada606d673 fatal text: expert and layer swapped
+M67 956e16dc751530d95eda655f6c49e9e8 fatal exit status 2 instead of 1
+M68 75ae21a3a2dc6cf48819e418eeaf0910 job: set_device(0) instead of set_device(dev)
+M69 c2fbd1d833913d9e54cf122d44ffbf38 job: stream_wait_event flags 1 instead of 0
+M70 10a772cbab15a68aff9bcc04e4831ccf job: stream_wait_event on rstream[0] whatever the thread
+M71 738017b8c5f894245be0f007f715c96c job: H2D on rstream[0] whatever the thread
+M72 92fd9d857123e6d455ef3073f3ab573b job: final sync on the default stream (NULL)
+M73 b8441e6d17bd4ec1a91f14e26860b431 check site text of the job set_device is 'cudaSetDevice(pool.dev)'
+M74 7751a1c93b07a427223247db91db8ba7 do_check: no exit when check returns with a non-zero status
+M75 cb567d979859f6cf5b77849822a253c5 do_check: ops.check gets status 0 always
+M76 7528999530753894d2c82b789d361447 run_parallel: one thread fewer is spawned
+M77 c39cddc52225848083752177a11ccff0 run_parallel: spawned thread numbered i - 1 (tid 0 used twice)
+M78 9cea7ecc7c3c44a1fe754498300321e9 run_parallel: nthreads not capped by the job count
+M79 3deb18a50c6ef2064e171547972e51a5 work: jobs taken in reverse list order
+M80 f65230b98f5f47238e8b07744b458e8d work: end test i > len instead of i >= len
+M81 b0288adb5dcdf7c74989f46688826ebc job counter fetch_add with Ordering::Relaxed
+M82 b102623e1ae4d748fa391c6b03792f4a final stream_sync(pool.copy) missing
+M83 d43e9e995a707c7ee619e299e4bcdac2 final stream_sync(pool.copy) before the reader jobs
+M84 b63d350f995ded5216e1595eac03b5e3 held slots released before the final stream_sync
+M85 f4b829333735815e46dd99af8f4f1636 t_read = time since t0 (includes the copy sync)
+M86 cc63204c3b757b2dc135c1eb71b55f94 t_copy gets the read interval (t1 - t0)
+M87 48017b35abc826a9daa436afdb357930 t_read assigned (=) instead of added
+M88 3076efb121cdf28e91c2584678cdaa09 t_ensure assigned (=) instead of added
+M89 900276ae9e1f76b3da92e228fadf4823 ekey uses the constant 896 instead of cfg.experts
+M90 709323393e4faf2406961054844804c5 host_worth: a NULL RAM cache is not worth a slot
+M91 3b7e896317aa30d10ed0b43c6dfc1002 host_find: no NULL guard
+M92 15a3eeb1b4e188884fb2d5e886135e3e pool_find: no NULL guard
+M93 f8f1be90d4ca6a5a2c432d5dd6b647a4 Supply::new does not reset the g_wb_skipped counter
+M94 bb33e74ddb2d359a2c8b5a3f2d477309 abi: sy_stats hit_card and hit_host swapped in the struct
+M95 03ab4d5067502760fb738a39c77e2c67 abi: sy_config vq and prefill swapped
+M96 9894a76acf0ddfc9fb40d4301bfe8bd9 lib: sy_wb_skipped reads the counter with an offset (+1)
+M97 98c8a3a28b747034e5a142bc24e9adf6 lib: n == 0 treated as a one-element list when experts is non-NULL

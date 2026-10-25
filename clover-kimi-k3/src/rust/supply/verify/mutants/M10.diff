@@ -1,0 +1,12 @@
+# M10: heat = counts[e] + 1
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -235,7 +235,7 @@
+         for &e in experts {
+             let key = self.ekey(layer, e);
+             let mut p = self.pool_find(pool, key);
+-            let heat = *counts.offset(e as isize) as f32;
++            let heat = (*counts.offset(e as isize) + 1) as f32;
+             if !p.is_null() {
+                 if vq {
+                     (ops.arr_wait)(key);

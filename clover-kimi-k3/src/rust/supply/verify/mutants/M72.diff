@@ -1,0 +1,12 @@
+# M72: job: final sync on the default stream (NULL)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -125,7 +125,7 @@
+     do_check(&c.ops, (c.ops.set_device)(c.dev), site::SET_DEVICE_JOB);
+     do_check(&c.ops, (c.ops.stream_wait_event)(c.rstream[tid], c.written_back, 0), site::WAIT_EVENT);
+     do_check(&c.ops, (c.ops.memcpy_h2d_async)(j.dst as *mut c_void, b as *const c_void, j.len, c.rstream[tid]), site::H2D_JOB);
+-    do_check(&c.ops, (c.ops.stream_sync)(c.rstream[tid]), site::SYNC_JOB);
++    do_check(&c.ops, (c.ops.stream_sync)(null_mut()), site::SYNC_JOB);
+ }
+ 
+ /// The number of chunks per expert and the chunk size: a call with few experts cannot fill the drive with whole-expert reads, so each expert is split among the idle readers (at most 8 chunks);

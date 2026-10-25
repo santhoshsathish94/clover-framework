@@ -1,0 +1,16 @@
+# M33: host: registration descending AND spare chunk order ascending (both reversed)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -75,10 +75,10 @@
+     // SAFETY: ops are valid functions; the pointers handed to them are mappings made above.
+     unsafe {
+         check(set_device(0), error_string, file, LINE_SET_DEVICE);
+-        for b in base.iter() {
++        for b in base.iter().rev() {
+             check(host_register(b.load(Ordering::SeqCst) as *mut c_void, chunk_bytes, PI_HOST_REGISTER_PORTABLE), error_string, file, LINE_REGISTER);
+         }
+-        for b in base.iter().rev() {
++        for b in base.iter() {
+             let p = b.load(Ordering::SeqCst) as *mut u8;
+             for s in (0..PI_CHUNK_SLOTS).rev() {
+                 add_spare(cfg.cache, p.wrapping_add(s.wrapping_mul(raw)));

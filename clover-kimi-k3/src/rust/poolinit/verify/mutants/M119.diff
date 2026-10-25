@@ -1,0 +1,13 @@
+# M119: abi: pi_host_cfg bytes and expert_raw swapped
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -46,8 +46,8 @@
+ #[repr(C)]
+ #[derive(Clone, Copy)]
+ pub struct pi_host_cfg {
++    pub expert_raw: usize,
+     pub bytes: usize,
+-    pub expert_raw: usize,
+     pub cache: *mut sc_cache,
+     pub src_file: *const c_char,
+ }

@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M34/src/lib.rs
+@@ -112,5 +112,5 @@
+ fn strtol10(s: &[u8]) -> i64 {
+     let mut i = 0;
+-    while i < s.len() && matches!(s[i], b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r') {
++    while i < s.len() && matches!(s[i], b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r' | 0xa0) {
+         i += 1;
+     }

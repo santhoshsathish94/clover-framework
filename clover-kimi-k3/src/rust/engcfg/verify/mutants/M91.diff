@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M91/src/lib.rs
+@@ -437,5 +437,5 @@
+     for &k in counts {
+         total += k as i64;
+-        if k > n {
++        if k >= n {
+             fits = false;
+         }

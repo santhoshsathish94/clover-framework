@@ -1,0 +1,13 @@
+# M92: ld_open_layer: slab-slot check before the card check (guard order swapped)
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -163,8 +163,8 @@
+     if r.dataset.is_null() {
+         fatal_msg(b"loader: dataset is NULL\n");
+     }
++    die(check_slab(st.cfg.prefill, r.layer));
+     die(check_card(r.card));
+-    die(check_slab(st.cfg.prefill, r.layer));
+     // bookkeeping, in the original's order
+     put(r.h_L, r.layer as c_int);
+     put(r.h_card, r.card);

@@ -1,0 +1,12 @@
+# M51: fd 0 treated as a failed open (`fd <= 0`)
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -80,7 +80,7 @@
+         fd = sys.open(&cpath, O_RDONLY);
+         set_fd(j.h_fd, fd);
+     }
+-    if fd < 0 {
++    if fd <= 0 {
+         let mut m = b"cannot open ".to_vec();
+         m.extend_from_slice(&path);
+         m.push(b'\n');

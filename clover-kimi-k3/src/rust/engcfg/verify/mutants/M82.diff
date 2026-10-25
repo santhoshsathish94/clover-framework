@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M82/src/lib.rs
+@@ -386,5 +386,5 @@
+             return 0;
+         }
+-        let d = layer.wrapping_sub(1);
++        let d = layer - 1;
+         if cards == 0 || (cards == -1 && d == i32::MIN) {
+             std::process::abort(); // the original traps (SIGFPE) on exactly these inputs

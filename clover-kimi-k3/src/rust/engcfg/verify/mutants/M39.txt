@@ -1,0 +1,1 @@
+atoi: negative overflow saturates at LONG_MIN+1

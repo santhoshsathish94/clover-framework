@@ -1,0 +1,1 @@
+selector: component variable names of COPYQ and ROUTETABLE swapped

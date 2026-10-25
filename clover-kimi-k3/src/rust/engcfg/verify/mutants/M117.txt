@@ -1,0 +1,1 @@
+summary: sums of not-ready cards included in need (ready test dropped in the first loop)

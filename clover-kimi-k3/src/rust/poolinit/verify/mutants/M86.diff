@@ -1,0 +1,12 @@
+# M86: pool: d_eptr size uses experts zero-extended (negative experts)
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -74,7 +74,7 @@
+         check(event_create(addr_of_mut!((*out).written_back), PI_EVENT_DISABLE_TIMING), error_string, file, LINE_EVENT);
+         // `EXPERTS * sizeof(void *)`: an int converted to size_t (sign-extended), times 8
+         check(
+-            device_malloc(addr_of_mut!((*out).d_eptr) as *mut *mut c_void, (cfg.experts as isize as usize).wrapping_mul(std::mem::size_of::<*const u8>())),
++            device_malloc(addr_of_mut!((*out).d_eptr) as *mut *mut c_void, (cfg.experts as u32 as usize).wrapping_mul(std::mem::size_of::<*const u8>())),
+             error_string,
+             file,
+             LINE_MALLOC_EPTR,

@@ -1,0 +1,12 @@
+# M47: first open without O_DIRECT
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -74,7 +74,7 @@
+         Ok(c) => c,
+         Err(_) => return Err(b"loader: path contains a NUL\n".to_vec()),
+     };
+-    let mut fd = sys.open(&cpath, O_RDONLY | O_DIRECT);
++    let mut fd = sys.open(&cpath, O_RDONLY);
+     set_fd(j.h_fd, fd);
+     if fd < 0 {
+         fd = sys.open(&cpath, O_RDONLY);

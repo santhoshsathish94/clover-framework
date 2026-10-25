@@ -1,0 +1,11 @@
+# M07: host: final out.cap_slots stored untrimmed (cap0)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -87,6 +87,6 @@
+     }
+     let cap = n_chunks.wrapping_mul(PI_CHUNK_SLOTS);
+     // SAFETY: `out` valid by the caller.
+-    unsafe { (*out).cap_slots = cap };
++    unsafe { (*out).cap_slots = cap0 };
+     write_stderr(summary_line(cap, raw, sys::wall_now() - t0).as_bytes());
+ }

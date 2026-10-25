@@ -1,0 +1,12 @@
+# M38: main H2D copies raw - 1 bytes
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -298,7 +298,7 @@
+                 } else {
+                     n.host as *const u8
+                 };
+-                do_check(ops, (ops.memcpy_h2d_async)(n.dst as *mut c_void, src as *const c_void, raw, pool.copy), site::H2D_MAIN);
++                do_check(ops, (ops.memcpy_h2d_async)(n.dst as *mut c_void, src as *const c_void, raw - 1, pool.copy), site::H2D_MAIN);
+             }
+         }
+         // 4. drive -> pinned slot -> card, one chunk at a time per reading thread

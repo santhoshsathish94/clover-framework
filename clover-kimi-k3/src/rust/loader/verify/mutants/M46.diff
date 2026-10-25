@@ -1,0 +1,12 @@
+# M46: fallback only when the first open failed with EINVAL (errno 22)
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -76,7 +76,7 @@
+     };
+     let mut fd = sys.open(&cpath, O_RDONLY | O_DIRECT);
+     set_fd(j.h_fd, fd);
+-    if fd < 0 {
++    if fd < 0 && std::io::Error::last_os_error().raw_os_error() == Some(22) {
+         fd = sys.open(&cpath, O_RDONLY);
+         set_fd(j.h_fd, fd);
+     }

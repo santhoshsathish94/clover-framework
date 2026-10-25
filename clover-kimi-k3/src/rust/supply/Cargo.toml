@@ -1,0 +1,15 @@
+[package]
+name = "supply"
+version = "0.1.0"
+edition = "2021"
+description = "Card supply: pool_ensure of the K3GPU decode engine (Rust implementation of include/supply.h)"
+
+[lib]
+name = "supply"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+panic = "abort"

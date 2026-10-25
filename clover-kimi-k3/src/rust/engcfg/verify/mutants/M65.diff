@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M65/src/lib.rs
+@@ -658,5 +658,5 @@
+         return ptr::null_mut();
+     }
+-    let f = unsafe { fopen(tr, c"w".as_ptr()) };
++    let f = unsafe { fopen(tr, c"a".as_ptr()) };
+     if f.is_null() {
+         fatal(&trace_error_line(tr));

@@ -1,0 +1,12 @@
+# M107: pool: CHECK line of set_device 455 instead of 454
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -5,7 +5,7 @@
+ use std::ptr::addr_of_mut;
+ 
+ // CHECK sites of decode.cuh@4d8d891 (ref/extract.py asserts the line numbers of all ten CHECK calls of the extracted block, host and pool)
+-const LINE_SET_DEVICE: u32 = 454;
++const LINE_SET_DEVICE: u32 = 455;
+ const LINE_MEM_GET_INFO: u32 = 455;
+ const LINE_MALLOC_SLAB: u32 = 459;
+ const LINE_STREAM_COPY: u32 = 461;

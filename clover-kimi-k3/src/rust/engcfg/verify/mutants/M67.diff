@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M67/src/lib.rs
+@@ -290,5 +290,5 @@
+ 
+ fn trace_error_line(path: *const c_char) -> Vec<u8> {
+-    Line::new().s("cannot write ").cs(path).s("\n").done()
++    Line::new().s("cannot open ").cs(path).s("\n").done()
+ }
+ 

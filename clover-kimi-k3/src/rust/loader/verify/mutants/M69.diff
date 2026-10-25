@@ -1,0 +1,12 @@
+# M69: host_alloc stores into slab[layer - 1]
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -92,7 +92,7 @@
+         let bytes = 4usize.wrapping_mul(raw);
+         match j.cb.host_alloc {
+             // SAFETY: slab is the caller's table of 93 pointers and layer <= 92 (checked by ld_open_layer); host_alloc stores the new block into slab[layer].
+-            Some(f) => unsafe { f(cb.ctx, j.slab.add(layer), bytes) },
++            Some(f) => unsafe { f(cb.ctx, j.slab.add(layer - 1), bytes) },
+             None => return Err(b"loader: host_alloc is NULL\n".to_vec()),
+         }
+         for r in 0..4usize {

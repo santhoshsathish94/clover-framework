@@ -1,0 +1,11 @@
+# M57: sys: check() calls error_string twice
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -76,6 +76,7 @@
+             m.extend_from_slice(cstr_bytes(file));
+         }
+         m.extend_from_slice(format!(":{}: ", line).as_bytes());
++        let _ = error_string(code);
+         m.extend_from_slice(cstr_bytes(error_string(code)));
+     }
+     m.push(b'\n');

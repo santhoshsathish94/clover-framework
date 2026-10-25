@@ -1,0 +1,37 @@
+# M42: host: helper threads detached, never joined (std::thread::spawn, leaked table)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -43,10 +43,10 @@
+         (*out).cap_slots = cap0;
+         (*out).ready = 1;
+     }
+-    let base: Vec<AtomicUsize> = (0..n_chunks).map(|_| AtomicUsize::new(0)).collect();
+-    let next = AtomicUsize::new(0);
++    let base: &'static Vec<AtomicUsize> = Box::leak(Box::new((0..n_chunks).map(|_| AtomicUsize::new(0)).collect::<Vec<AtomicUsize>>()));
++    let next: &'static AtomicUsize = Box::leak(Box::new(AtomicUsize::new(0)));
+     let t0 = sys::wall_now();
+-    let touch = || loop {
++    let touch = move || loop {
+         let i = next.fetch_add(1, Ordering::SeqCst);
+         if i >= n_chunks {
+             return;
+@@ -63,15 +63,10 @@
+             base[i].store(p as usize, Ordering::SeqCst);
+         }
+     };
+-    std::thread::scope(|s| {
+-        for _ in 0..HELPERS {
+-            if std::thread::Builder::new().spawn_scoped(s, &touch).is_err() {
+-                write_stderr(b"poolinit: cannot start a helper thread\n");
+-                std::process::abort();
+-            }
+-        }
+-        touch();
+-    });
++    for _ in 0..HELPERS {
++        std::thread::spawn(touch);
++    }
++    touch();
+     // SAFETY: ops are valid functions; the pointers handed to them are mappings made above.
+     unsafe {
+         check(set_device(0), error_string, file, LINE_SET_DEVICE);

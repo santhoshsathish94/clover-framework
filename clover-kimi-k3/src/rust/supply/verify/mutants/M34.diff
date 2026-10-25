@@ -1,0 +1,14 @@
+# M34: event recorded only when the card gave up a victim
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -289,7 +289,9 @@
+             do_check(ops, (ops.memcpy_d2h_async)(h as *mut c_void, v.src as *const c_void, raw, pool.copy), site::D2H);
+             pool.st.written_back = pool.st.written_back.wrapping_add(1);
+         }
+-        do_check(ops, (ops.event_record)(pool.written_back, pool.copy), site::EVENT_RECORD);
++        if !victims.is_empty() {
++            do_check(ops, (ops.event_record)(pool.written_back, pool.copy), site::EVENT_RECORD);
++        }
+         // 3. RAM -> card, queued behind the copies down on the same stream
+         for n in &need {
+             if !n.host.is_null() {

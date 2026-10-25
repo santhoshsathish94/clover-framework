@@ -1,0 +1,12 @@
+# M02: vq: first sync is stream_sync(pool.copy) instead of stream_sync(NULL)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -221,7 +221,7 @@
+         let prefill = self.cfg.prefill != 0;
+         let raw = self.cfg.expert_raw;
+         if vq {
+-            do_check(ops, (ops.stream_sync)(null_mut()), site::STREAM_SYNC_0);
++            do_check(ops, (ops.stream_sync)(pool.copy), site::STREAM_SYNC_0);
+         } else {
+             do_check(ops, (ops.device_sync)(), site::DEVICE_SYNC);
+         }

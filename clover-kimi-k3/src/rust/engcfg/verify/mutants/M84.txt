@@ -1,0 +1,1 @@
+card_of: explicit trap check removed (the Rust `%` itself panics on 0 and MIN % -1)

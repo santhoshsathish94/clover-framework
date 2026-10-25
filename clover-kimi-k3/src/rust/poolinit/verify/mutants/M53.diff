@@ -1,0 +1,12 @@
+# M53: sys: check() ignores negative codes (code <= 0 is success)
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -64,7 +64,7 @@
+ /// # Safety
+ /// `error_string` must return NULL or a valid C string; `file` as for `cstr_bytes`.
+ pub unsafe fn check(code: c_int, error_string: unsafe extern "C" fn(c_int) -> *const c_char, file: *const c_char, line: u32) {
+-    if code == 0 {
++    if code <= 0 {
+         return;
+     }
+     let mut m: Vec<u8> = Vec::with_capacity(96);

@@ -1,0 +1,12 @@
+# M17: sc_acquire gets nprot - 1
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -249,7 +249,7 @@
+             }
+             let mut vk: c_int = -1;
+             let mut vh: f32 = 0.0;
+-            p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len(), heat, &mut vk, &mut vh);
++            p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len().saturating_sub(1), heat, &mut vk, &mut vh);
+             if vk >= 0 {
+                 if vq {
+                     (ops.arr_wait)(vk);

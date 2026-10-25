@@ -1,0 +1,1 @@
+selector lib: default of the slot cache libslotcache.so -> libslotcache.so.1

@@ -1,0 +1,13 @@
+# M86: second ld_init not ignored early (the check removed)
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -107,9 +107,6 @@
+     if cfg.is_null() {
+         fatal_msg(b"loader: cfg is NULL\n");
+     }
+-    if STATE.get().is_some() {
+-        return; // the first configuration is kept
+-    }
+     // SAFETY: non-null checked above; caller guarantees validity.
+     let c = unsafe { &*cfg };
+     let conf = match validate_config(c) {

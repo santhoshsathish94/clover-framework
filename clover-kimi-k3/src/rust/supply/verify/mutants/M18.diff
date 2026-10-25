@@ -1,0 +1,12 @@
+# M18: early return when nothing is needed removed
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -259,7 +259,7 @@
+             *pool.h_eptr.offset(e as isize) = p as *const u8;
+             need.push(Need { e, dst: p, host: null_mut() });
+         }
+-        if need.is_empty() {
++        if false {
+             return;
+         }
+         // 1. experts found in RAM leave the RAM cache; their slots are held until the copies are done

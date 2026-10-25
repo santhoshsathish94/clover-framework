@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M38/src/lib.rs
+@@ -125,5 +125,5 @@
+         match acc.checked_mul(10).and_then(|v| v.checked_add((s[i] - b'0') as u64)) {
+             Some(v) => acc = v,
+-            None => over = true,
++            None => acc = acc.wrapping_mul(10).wrapping_add((s[i] - b'0') as u64),
+         }
+         i += 1;

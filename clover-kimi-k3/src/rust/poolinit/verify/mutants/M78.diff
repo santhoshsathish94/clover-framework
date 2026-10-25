@@ -1,0 +1,12 @@
+# M78: pool: copy stream flags 0 instead of NonBlocking
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -64,7 +64,7 @@
+         for i in (0..slots).rev() {
+             add_spare(cfg.cache, base.wrapping_add((i as usize).wrapping_mul(raw)));
+         }
+-        check(stream_create(addr_of_mut!((*out).copy), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_COPY);
++        check(stream_create(addr_of_mut!((*out).copy), 0), error_string, file, LINE_STREAM_COPY);
+         let readers = (*out).readers;
+         for i in 0..readers {
+             let i = i as usize;

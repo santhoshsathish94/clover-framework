@@ -1,0 +1,11 @@
+# M20: thread start hook (set_device) missing
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -73,7 +73,6 @@
+     }
+ 
+     fn worker(&'static self, card: usize) {
+-        (self.on_start)(card);
+         let c = &self.cards[card];
+         loop {
+             let job = {

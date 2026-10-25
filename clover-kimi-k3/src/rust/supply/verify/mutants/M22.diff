@@ -1,0 +1,12 @@
+# M22: held slots released in reverse order
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -338,7 +338,7 @@
+         run_parallel(&ctx, pool_readers);
+         let t1 = Instant::now();
+         do_check(ops, (ops.stream_sync)(pool.copy), site::SYNC_COPY);
+-        for &h in &held {
++        for &h in held.iter().rev() {
+             (ops.sc_release)(host.cache, h);
+         }
+         pool.st.t_read += t1.duration_since(t0).as_secs_f64();

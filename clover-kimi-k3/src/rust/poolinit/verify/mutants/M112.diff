@@ -1,0 +1,12 @@
+# M112: pool: every reader stream stored into rstream[0]
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -68,7 +68,7 @@
+         let readers = (*out).readers;
+         for i in 0..readers {
+             let i = i as usize;
+-            check(stream_create(addr_of_mut!((*out).rstream[i]), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_READER);
++            check(stream_create(addr_of_mut!((*out).rstream[0]), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_READER);
+             check(host_alloc(addr_of_mut!((*out).bounce[i]) as *mut *mut c_void, raw, PI_HOST_ALLOC_DEFAULT), error_string, file, LINE_HOST_ALLOC);
+         }
+         check(event_create(addr_of_mut!((*out).written_back), PI_EVENT_DISABLE_TIMING), error_string, file, LINE_EVENT);

@@ -1,0 +1,12 @@
+# M82: pool: bounce host_alloc flags 1 instead of Default
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -69,7 +69,7 @@
+         for i in 0..readers {
+             let i = i as usize;
+             check(stream_create(addr_of_mut!((*out).rstream[i]), PI_STREAM_NON_BLOCKING), error_string, file, LINE_STREAM_READER);
+-            check(host_alloc(addr_of_mut!((*out).bounce[i]) as *mut *mut c_void, raw, PI_HOST_ALLOC_DEFAULT), error_string, file, LINE_HOST_ALLOC);
++            check(host_alloc(addr_of_mut!((*out).bounce[i]) as *mut *mut c_void, raw, 1), error_string, file, LINE_HOST_ALLOC);
+         }
+         check(event_create(addr_of_mut!((*out).written_back), PI_EVENT_DISABLE_TIMING), error_string, file, LINE_EVENT);
+         // `EXPERTS * sizeof(void *)`: an int converted to size_t (sign-extended), times 8

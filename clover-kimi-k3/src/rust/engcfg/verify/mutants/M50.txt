@@ -1,0 +1,1 @@
+fatal leaves through _exit (no atexit handlers) instead of exit

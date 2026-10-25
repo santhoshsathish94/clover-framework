@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M132/src/lib.rs
+@@ -509,5 +509,5 @@
+             .done(),
+     );
+-    out.push(Line::new().s("K3GPU route table ").s(which(s.routetable_rust)).s(": ").n(s.rc_calls).s(" calls, ").n(s.rt_nu_calls).s(" next_use calls\n").done());
++    out.push(Line::new().s("K3GPU route table ").s(which(s.routetable_rust)).s(": ").n(s.rc_calls as u32).s(" calls, ").n(s.rt_nu_calls).s(" next_use calls\n").done());
+     if need == 0 {
+         return out;

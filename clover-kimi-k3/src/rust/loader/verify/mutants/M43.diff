@@ -1,0 +1,11 @@
+# M43: path not cut at all
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -40,7 +40,6 @@
+     let mut p = Vec::with_capacity(ds.len() + 32);
+     p.extend_from_slice(ds);
+     p.extend_from_slice(format!("/expert-{}/experts.direct", layer).as_bytes());
+-    p.truncate(4095);
+     p
+ }
+ 

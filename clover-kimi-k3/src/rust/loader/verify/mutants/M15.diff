@@ -1,0 +1,20 @@
+# M15: as M14 with a 300 us sleep between the check and the wait (window widened, shows the driver's sensitivity)
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -61,9 +61,13 @@
+ 
+     /// loader_wait.
+     pub fn wait(&self) {
+-        let mut p = lock(&self.pending);
+-        while *p != 0 {
+-            p = self.pending_cv.wait(p).unwrap_or_else(|e| e.into_inner());
++        loop {
++            if *lock(&self.pending) == 0 {
++                return;
++            }
++            std::thread::sleep(std::time::Duration::from_micros(300));
++            let g = lock(&self.pending);
++            drop(self.pending_cv.wait(g).unwrap_or_else(|e| e.into_inner()));
+         }
+     }
+ 

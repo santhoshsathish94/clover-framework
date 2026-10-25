@@ -1,0 +1,12 @@
+# M27: host: 'cannot map' message without newline
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -55,7 +55,7 @@
+         unsafe {
+             let p = mmap(std::ptr::null_mut(), chunk_bytes, sys::PROT_READ_WRITE, sys::MAP_PRIVATE_ANONYMOUS, -1, 0);
+             if p == sys::MAP_FAILED {
+-                write_stderr(format!("host expert cache: cannot map {} bytes\n", chunk_bytes).as_bytes());
++                write_stderr(format!("host expert cache: cannot map {} bytes", chunk_bytes).as_bytes());
+                 exit1();
+             }
+             madvise(p, chunk_bytes, sys::MADV_HUGEPAGE);

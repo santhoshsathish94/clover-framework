@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M41/src/lib.rs
+@@ -130,5 +130,5 @@
+     }
+     if neg {
+-        if over || acc > (1u64 << 63) {
++        if over || acc >= (1u64 << 63) {
+             i64::MIN
+         } else {

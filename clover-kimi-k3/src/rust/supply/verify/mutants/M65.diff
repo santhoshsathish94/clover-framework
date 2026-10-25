@@ -1,0 +1,12 @@
+# M65: EOF text 'EOF' instead of 'end of file'
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -112,7 +112,7 @@
+                     let errno = *__errno_location();
+                     std::ffi::CStr::from_ptr(strerror(errno)).to_bytes().to_vec()
+                 } else {
+-                    b"end of file".to_vec()
++                    b"EOF".to_vec()
+                 };
+                 let mut m = format!("reading expert {} of layer {} failed: ", j.e, c.layer).into_bytes();
+                 m.extend_from_slice(&why);

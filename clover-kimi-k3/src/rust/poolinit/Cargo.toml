@@ -1,0 +1,15 @@
+[package]
+name = "poolinit"
+version = "0.1.0"
+edition = "2021"
+description = "Start-up of the supply pools: pinned RAM cache and card expert pool (Rust implementation of include/poolinit.h)"
+
+[lib]
+name = "poolinit"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+panic = "abort"

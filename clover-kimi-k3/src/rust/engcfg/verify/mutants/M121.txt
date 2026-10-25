@@ -1,0 +1,1 @@
+summary: per-card lines also for cards that are not ready

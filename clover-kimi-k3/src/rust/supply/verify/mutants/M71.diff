@@ -1,0 +1,12 @@
+# M71: job: H2D on rstream[0] whatever the thread
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -124,7 +124,7 @@
+     }
+     do_check(&c.ops, (c.ops.set_device)(c.dev), site::SET_DEVICE_JOB);
+     do_check(&c.ops, (c.ops.stream_wait_event)(c.rstream[tid], c.written_back, 0), site::WAIT_EVENT);
+-    do_check(&c.ops, (c.ops.memcpy_h2d_async)(j.dst as *mut c_void, b as *const c_void, j.len, c.rstream[tid]), site::H2D_JOB);
++    do_check(&c.ops, (c.ops.memcpy_h2d_async)(j.dst as *mut c_void, b as *const c_void, j.len, c.rstream[0]), site::H2D_JOB);
+     do_check(&c.ops, (c.ops.stream_sync)(c.rstream[tid]), site::SYNC_JOB);
+ }
+ 

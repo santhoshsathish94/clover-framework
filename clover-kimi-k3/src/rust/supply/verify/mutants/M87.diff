@@ -1,0 +1,12 @@
+# M87: t_read assigned (=) instead of added
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -341,7 +341,7 @@
+         for &h in &held {
+             (ops.sc_release)(host.cache, h);
+         }
+-        pool.st.t_read += t1.duration_since(t0).as_secs_f64();
++        pool.st.t_read = t1.duration_since(t0).as_secs_f64();
+         pool.st.t_copy += t1.elapsed().as_secs_f64();
+     }
+ }

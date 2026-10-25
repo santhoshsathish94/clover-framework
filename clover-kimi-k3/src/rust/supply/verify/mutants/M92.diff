@@ -1,0 +1,16 @@
+# M92: pool_find: no NULL guard
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -178,11 +178,7 @@
+     }
+ 
+     unsafe fn pool_find(&self, pool: &sy_pool, key: c_int) -> *mut u8 {
+-        if pool.cache.is_null() {
+-            null_mut()
+-        } else {
+-            (self.ops.sc_find)(pool.cache, key)
+-        }
++        (self.ops.sc_find)(pool.cache, key)
+     }
+ 
+     unsafe fn host_find(&self, host: &sy_host, key: c_int) -> *mut u8 {

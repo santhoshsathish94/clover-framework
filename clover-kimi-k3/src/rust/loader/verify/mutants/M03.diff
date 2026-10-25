@@ -1,0 +1,19 @@
+# M03: one shared queue and one thread for all cards (queue 0, worker(0))
+--- a/src/queue.rs
++++ b/src/queue.rs
+@@ -45,13 +45,13 @@
+     pub fn submit(&'static self, card: usize, job: Job) {
+         // pending is raised before the job is queued and before the card's lock is taken, as in the original
+         *lock(&self.pending) += 1;
+-        let c = &self.cards[card];
++        let c = &self.cards[0];
+         let mut g = lock(&c.st);
+         if !g.started {
+             g.started = true;
+             let me: &'static Loader = self;
+             // the handle is dropped: detached, never joined; std::thread's default in the original is the system's 8 MB stack
+-            if let Err(e) = std::thread::Builder::new().stack_size(8 << 20).spawn(move || me.worker(card)) {
++            if let Err(e) = std::thread::Builder::new().stack_size(8 << 20).spawn(move || me.worker(0)) {
+                 fatal_msg(format!("loader: cannot start the thread of card {}: {}\n", card, e).as_bytes());
+             }
+         }

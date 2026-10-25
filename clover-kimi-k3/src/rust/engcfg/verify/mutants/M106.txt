@@ -1,0 +1,1 @@
+summary: pct of cards `100.0 * hc / need` -> `hc / need * 100.0`

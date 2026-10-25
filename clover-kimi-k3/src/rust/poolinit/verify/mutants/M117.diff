@@ -1,0 +1,18 @@
+# M117: abi: pi_expert_stats fields reordered (needed last, t_read first)
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -33,12 +33,12 @@
+ #[repr(C)]
+ #[derive(Clone, Copy, Debug, Default, PartialEq)]
+ pub struct pi_expert_stats {
+-    pub needed: c_ulong,
++    pub t_read: f64,
+     pub hit_card: c_ulong,
+     pub hit_host: c_ulong,
+     pub from_drive: c_ulong,
+     pub written_back: c_ulong,
+-    pub t_read: f64,
++    pub needed: c_ulong,
+     pub t_copy: f64,
+     pub t_ensure: f64,
+ }

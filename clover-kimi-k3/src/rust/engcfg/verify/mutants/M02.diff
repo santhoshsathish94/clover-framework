@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M02/src/lib.rs
+@@ -167,5 +167,5 @@
+     let ei = |n: &CStr, d: i32| env_int(e, n, d);
+     let cards = ei(c"K3GPU_CARDS", 8).min(devices).min(EC_MAX_CARDS as i32);
+-    let readers = ei(c"K3GPU_READERS", 16);
++    let readers = ei(c"K3GPU_READERS", 15);
+     let verbose = ei(c"K3GPU_VERBOSE", 0);
+     let reserve = (ei(c"K3GPU_RESERVE_MB", 2500) as i64 as usize) << 20;

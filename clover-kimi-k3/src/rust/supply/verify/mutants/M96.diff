@@ -1,0 +1,12 @@
+# M96: lib: sy_wb_skipped reads the counter with an offset (+1)
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -65,7 +65,7 @@
+ 
+ #[no_mangle]
+ pub extern "C" fn sy_wb_skipped() -> c_ulong {
+-    WB_SKIPPED.load(Ordering::SeqCst) as c_ulong
++    (WB_SKIPPED.load(Ordering::SeqCst) + 1) as c_ulong
+ }
+ 
+ #[cfg(test)]

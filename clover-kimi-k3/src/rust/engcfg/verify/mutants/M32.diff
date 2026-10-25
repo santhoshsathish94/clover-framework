@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M32/src/lib.rs
+@@ -160,5 +160,5 @@
+         dflt
+     } else {
+-        atoi(unsafe { cbytes(v) })
++        { let r = atoi(unsafe { cbytes(v) }); if r == 0 { dflt } else { r } }
+     }
+ }

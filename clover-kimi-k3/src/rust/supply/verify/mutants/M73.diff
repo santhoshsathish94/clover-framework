@@ -1,0 +1,12 @@
+# M73: check site text of the job set_device is 'cudaSetDevice(pool.dev)'
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -37,7 +37,7 @@
+     pub const D2H: &[u8] = b"cudaMemcpyAsync(h, v.src, EXPERT_RAW, cudaMemcpyDeviceToHost, pool.copy)\0";
+     pub const EVENT_RECORD: &[u8] = b"cudaEventRecord(pool.written_back, pool.copy)\0";
+     pub const H2D_MAIN: &[u8] = b"cudaMemcpyAsync(n.dst, g_prefill ? g_slab[layer] + (size_t)(n.e & 3) * EXPERT_RAW : n.host, EXPERT_RAW, cudaMemcpyHostToDevice, pool.copy)\0";
+-    pub const SET_DEVICE_JOB: &[u8] = b"cudaSetDevice(dev)\0";
++    pub const SET_DEVICE_JOB: &[u8] = b"cudaSetDevice(pool.dev)\0";
+     pub const WAIT_EVENT: &[u8] = b"cudaStreamWaitEvent(pool.rstream[tid], pool.written_back, 0)\0";
+     pub const H2D_JOB: &[u8] = b"cudaMemcpyAsync(dev_dst, b, len, cudaMemcpyHostToDevice, pool.rstream[tid])\0";
+     pub const SYNC_JOB: &[u8] = b"cudaStreamSynchronize(pool.rstream[tid])\0";

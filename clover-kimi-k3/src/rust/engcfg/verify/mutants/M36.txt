@@ -1,0 +1,1 @@
+atoi: several signs accepted (`if` -> `while`, last one wins)

@@ -1,0 +1,11 @@
+# M99: fatal exit with _exit (no atexit handlers, no stdio flush)
+--- a/src/sys.rs
++++ b/src/sys.rs
+@@ -6,6 +6,7 @@
+     fn open(path: *const c_char, flags: c_int, ...) -> c_int;
+     fn pread(fd: c_int, buf: *mut c_void, count: usize, offset: i64) -> isize; // off_t is 64 bits on the supported targets (LP64 Linux)
+     fn write(fd: c_int, buf: *const c_void, count: usize) -> isize;
++    #[link_name = "_exit"]
+     fn exit(code: c_int) -> !;
+ }
+ 

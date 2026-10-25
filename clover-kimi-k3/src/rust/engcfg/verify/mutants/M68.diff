@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M68/src/lib.rs
+@@ -660,5 +660,5 @@
+     let f = unsafe { fopen(tr, c"w".as_ptr()) };
+     if f.is_null() {
+-        fatal(&trace_error_line(tr));
++        emit(&trace_error_line(tr)); return ptr::null_mut();
+     }
+     f

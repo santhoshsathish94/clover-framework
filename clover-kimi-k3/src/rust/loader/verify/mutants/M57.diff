@@ -1,0 +1,12 @@
+# M57: 5 records read instead of 4
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -95,7 +95,7 @@
+             Some(f) => unsafe { f(cb.ctx, j.slab.add(layer), bytes) },
+             None => return Err(b"loader: host_alloc is NULL\n".to_vec()),
+         }
+-        for r in 0..4usize {
++        for r in 0..5usize {
+             let mut got = 0usize;
+             while got < raw {
+                 let off = (r as i64).wrapping_mul(raw as i64).wrapping_add(got as i64);

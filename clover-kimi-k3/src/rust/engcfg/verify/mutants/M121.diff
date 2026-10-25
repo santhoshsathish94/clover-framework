@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M121/src/lib.rs
+@@ -540,5 +540,5 @@
+     );
+     for (c, k) in s.card[..cards].iter().enumerate() {
+-        if k.ready != 0 {
++        {
+             out.push(
+                 Line::new()

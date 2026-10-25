@@ -1,0 +1,10 @@
+--- src/lib.rs (real)
++++ M105/src/lib.rs
+@@ -444,7 +444,4 @@
+         warn("counts do not fit this call");
+         return;
+-    }
+-    if n < 0 {
+-        std::process::abort(); // std::vector<int> fill(n, 0) throws std::length_error in the original
+     }
+     let mut fill = vec![0i32; n as usize];

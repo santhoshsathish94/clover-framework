@@ -1,0 +1,11 @@
+# M39: host: out.ready never set
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -41,7 +41,6 @@
+     // SAFETY: `out` valid by the caller; stored now, as the original assigns the members first.
+     unsafe {
+         (*out).cap_slots = cap0;
+-        (*out).ready = 1;
+     }
+     let base: Vec<AtomicUsize> = (0..n_chunks).map(|_| AtomicUsize::new(0)).collect();
+     let next = AtomicUsize::new(0);

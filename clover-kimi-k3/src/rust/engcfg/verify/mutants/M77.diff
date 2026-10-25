@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M77/src/lib.rs
+@@ -382,5 +382,5 @@
+ 
+ fn card_of(layout: i32, cards: i32, layer: i32) -> i32 {
+-    if layout == 1 {
++    if layout != 0 {
+         if layer == 0 {
+             return 0;

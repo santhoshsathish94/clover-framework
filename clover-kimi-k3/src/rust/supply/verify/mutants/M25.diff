@@ -1,0 +1,12 @@
+# M25: write-back stop condition cap_slots == 0 && prefill (|| -> &&)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -276,7 +276,7 @@
+         do_check(ops, (ops.set_device)(pool.dev), site::SET_DEVICE_POOL);
+         // 2. the experts the card gives up are copied down into the RAM cache
+         for v in &victims {
+-            if host.cap_slots == 0 || prefill {
++            if host.cap_slots == 0 && prefill {
+                 break;
+             }
+             if !self.host_worth(host, v.key) {

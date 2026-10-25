@@ -1,0 +1,16 @@
+# M32: alloc_state before the trunk
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -59,11 +59,11 @@
+     unsafe {
+         (cb.set_device)(cb.ctx, j.card);
+         (cb.ensure_work)(cb.ctx, j.card);
++        (cb.alloc_state)(cb.ctx, j.handle, j.positions);
+         (cb.load_trunk)(cb.ctx, j.handle, dataset, j.layer as c_int);
+         if j.layer >= 1 {
+             (cb.load_expert_tables)(cb.ctx, j.handle, dataset, j.layer as c_int);
+         }
+-        (cb.alloc_state)(cb.ctx, j.handle, j.positions);
+     }
+     if j.layer < 1 {
+         return Ok(());

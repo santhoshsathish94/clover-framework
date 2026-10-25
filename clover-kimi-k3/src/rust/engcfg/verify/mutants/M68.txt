@@ -1,0 +1,1 @@
+trace: failure returns NULL instead of exiting

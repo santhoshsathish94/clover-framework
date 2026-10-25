@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M57/src/lib.rs
+@@ -368,5 +368,5 @@
+     let si = sel_info(component);
+     let l = e.get(si.libvar);
+-    if unset_or_empty(l) {
++    if l.is_null() {
+         si.deflib.as_ptr()
+     } else {

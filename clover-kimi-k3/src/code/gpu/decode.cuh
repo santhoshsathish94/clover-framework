@@ -30,6 +30,18 @@
 #include "slotcache.h"   // contract of the Rust slot cache (src/rust/slotcache/include); a build without it has only the C++ cache
 #define K3GPU_SLOTCACHE_BUILT 1
 #endif
+#if __has_include("poolinit.h")
+#include "poolinit.h"   // contract of the Rust pool start-up (src/rust/poolinit/include): HostCache::init and CardPool::init
+#define K3GPU_POOLINIT_BUILT 1
+#endif
+#if __has_include("supply.h")
+#include "supply.h"   // contract of the Rust card supply (src/rust/supply/include): pool_ensure
+#define K3GPU_SUPPLY_BUILT 1
+#endif
+#if __has_include("planner.h")
+#include "planner.h"   // contract of the Rust supply planner (src/rust/planner/include): read-ahead and card-queue planning, pend_take / arr_wait
+#define K3GPU_PLANNER_BUILT 1
+#endif
 
 // ---------------------------------------------------------------- state that lives between calls
 struct KdaState {
@@ -398,6 +410,31 @@ struct SlotCacheSel {
     }
 };
 
+// ---- which pool start-up runs (K3GPU_POOLINIT, see backend-gpu.cu): cpp, the default, is HostCache::init / CardPool::init below; rust = libpoolinit.so (src/rust/poolinit), which makes the
+// same memory and the same stderr lines. The cache handed to the library is the SlotCacheSel itself, and sc_add_spare goes back to its add_spare, so this works with either slot cache.
+struct PiApi {
+    bool on = false;
+#ifdef K3GPU_POOLINIT_BUILT
+    void (*host_init)(const pi_ops *, const pi_host_cfg *, pi_host_out *) = nullptr;
+    void (*pool_init)(const pi_ops *, const pi_pool_cfg *, pi_pool_out *) = nullptr;
+#endif
+};
+static PiApi g_pi;
+#ifdef K3GPU_POOLINIT_BUILT
+static_assert(PI_HOST_ALLOC_DEFAULT == cudaHostAllocDefault && PI_HOST_REGISTER_PORTABLE == cudaHostRegisterPortable && PI_STREAM_NON_BLOCKING == cudaStreamNonBlocking && PI_EVENT_DISABLE_TIMING == cudaEventDisableTiming,
+              "poolinit.h flag values must be the CUDA ones");
+static int pi_set_device(int d) { return (int)cudaSetDevice(d); }
+static int pi_mem_get_info(size_t *f, size_t *t) { return (int)cudaMemGetInfo(f, t); }
+static int pi_device_malloc(void **p, size_t n) { return (int)cudaMalloc(p, n); }
+static int pi_host_register(void *p, size_t n, unsigned f) { return (int)cudaHostRegister(p, n, f); }
+static int pi_host_alloc(void **p, size_t n, unsigned f) { return (int)cudaHostAlloc(p, n, f); }
+static int pi_stream_create(void **s, unsigned f) { return (int)cudaStreamCreateWithFlags((cudaStream_t *)s, f); }
+static int pi_event_create(void **e, unsigned f) { return (int)cudaEventCreateWithFlags((cudaEvent_t *)e, f); }
+static const char *pi_error_string(int c) { return cudaGetErrorString((cudaError_t)c); }
+static void pi_add_spare(sc_cache *c, unsigned char *s) { ((SlotCacheSel *)c)->add_spare(s); }
+static const pi_ops g_pi_ops = { pi_set_device, pi_mem_get_info, pi_device_malloc, pi_host_register, pi_host_alloc, pi_stream_create, pi_event_create, pi_error_string, pi_add_spare };
+#endif
+
 // The RAM cache is made all at once: cudaHostAlloc does not run in parallel (about 2 GiB/s, measured), but memory that 16 threads have already touched
 // can be registered as pinned at about 45 GiB/s (pinbench.cu), so 150 GB take seconds, not minutes.
 struct HostCache {
@@ -405,6 +442,15 @@ struct HostCache {
     enum { CHUNK_SLOTS = 32 };
     void init(size_t bytes)
     {
+#ifdef K3GPU_POOLINIT_BUILT
+        if (g_pi.on) {
+            pi_host_cfg cfg = { bytes, (size_t)EXPERT_RAW, (sc_cache *)&c, __FILE__ };
+            pi_host_out out = { 0, 0 };
+            g_pi.host_init(&g_pi_ops, &cfg, &out);
+            cap_slots = out.cap_slots; ready = out.ready != 0;
+            return;
+        }
+#endif
         cap_slots = bytes / EXPERT_RAW; ready = true;
         const size_t chunk_bytes = (size_t)CHUNK_SLOTS * EXPERT_RAW, n_chunks = cap_slots / CHUNK_SLOTS;
         std::vector<unsigned char *> base(n_chunks, nullptr);
@@ -450,6 +496,18 @@ struct CardPool {
     ExpertStats st;
     void init(int device, size_t reserve_bytes, int nreaders)
     {
+#ifdef K3GPU_POOLINIT_BUILT
+        if (g_pi.on) {
+            pi_pool_cfg cfg = { device, reserve_bytes, nreaders, (size_t)EXPERT_RAW, (int)EXPERTS, (sc_cache *)&c, __FILE__ };
+            pi_pool_out out; memset(&out, 0, sizeof out);
+            g_pi.pool_init(&g_pi_ops, &cfg, &out);
+            dev = out.dev; slots = out.slots; readers = out.readers; base = out.base; copy = (cudaStream_t)out.copy; written_back = (cudaEvent_t)out.written_back; d_eptr = out.d_eptr;
+            for (int i = 0; i < MAX_READERS; i++) { rstream[i] = (cudaStream_t)out.rstream[i]; bounce[i] = out.bounce[i]; }
+            h_eptr.assign(EXPERTS, nullptr);
+            ready = true;
+            return;
+        }
+#endif
         dev = device; readers = std::min(nreaders, (int)MAX_READERS);
         CHECK(cudaSetDevice(dev));
         size_t f, t; CHECK(cudaMemGetInfo(&f, &t));
@@ -503,8 +561,27 @@ static std::atomic<int> g_act_hold(0);
 static inline void act_gate() { while (g_act_hold.load(std::memory_order_acquire)) std::this_thread::yield(); }
 static unsigned char *g_slab[93];
 static void (*g_force_routes)(int layer, int n, int *selected) = nullptr;
+// ---- which planner runs (K3GPU_PLANNER, see backend-gpu.cu): cpp, the default, is rc_plan / vq_sweep / vq_issue / rc_plan_vq / route_hook in backend-gpu.cu together with g_pend,
+// g_pend_keys, g_arr and the functions below; rust = libplanner.so (src/rust/planner), which keeps the pending reads, the arrivals and the release / write-back lists itself.
+// With it on, the three functions below hand over to the library, and so does every place that read g_pend_keys. It needs the Rust copy queue, slot cache and route table.
+struct SpApi {
+    bool on = false;
+#ifdef K3GPU_PLANNER_BUILT
+    void (*init)(const sp_ops *, const sp_config *) = nullptr;
+    void (*layer_set)(int, int, int) = nullptr; void (*layer_set_fd)(int, int) = nullptr;
+    void (*pool_set)(int, sc_cache *, int, int) = nullptr; void (*host_set)(sc_cache *, size_t) = nullptr;
+    void (*route_hook)(int, const int *, size_t) = nullptr;
+    void (*pend_take)(int) = nullptr; void (*arr_wait)(int) = nullptr;
+    unsigned char *(*host_acquire)(int, float, int *, float *) = nullptr;
+    void (*get_stats)(sp_stats *) = nullptr;
+#endif
+};
+static SpApi g_sp;
 static void pend_take(int key)   // waits until the expert's bytes are in its RAM slot, then forgets the entry
 {
+#ifdef K3GPU_PLANNER_BUILT
+    if (g_sp.on) { g_sp.pend_take(key); return; }
+#endif
     auto f = g_pend.find(key);
     if (f == g_pend.end()) return;
     Pending *p = f->second;
@@ -523,6 +600,9 @@ static std::unordered_map<int, std::shared_ptr<Arrival>> g_arr;
 static double g_t_vwait = 0; static unsigned long g_vq_waited = 0;
 static void arr_wait(int key)
 {
+#ifdef K3GPU_PLANNER_BUILT
+    if (g_sp.on) { g_sp.arr_wait(key); return; }
+#endif
     auto f = g_arr.find(key);
     if (f == g_arr.end()) return;
     std::shared_ptr<Arrival> a = f->second; g_arr.erase(f);
@@ -533,6 +613,67 @@ static void arr_wait(int key)
     }
 }
 
+// The RAM cache's acquire for a card's victim, with the pending reads protected: the planner library owns them when it runs, g_pend_keys otherwise.
+static unsigned char *host_acquire_pend(HostCache &hc, int key, float heat, int *vkey, float *vheat)
+{
+#ifdef K3GPU_PLANNER_BUILT
+    if (g_sp.on) return g_sp.host_acquire(key, heat, vkey, vheat);
+#endif
+    return hc.c.acquire(key, g_pend_keys, heat, vkey, vheat);
+}
+
+// ---- which supply runs (K3GPU_SUPPLY, see backend-gpu.cu): cpp, the default, is pool_ensure below; rust = libsupply.so (src/rust/supply), which does the same calls in the same order
+// through the table below. The caches it is given are the SlotCacheSel objects, so it works with either slot cache.
+struct SyApi {
+    bool on = false;
+#ifdef K3GPU_SUPPLY_BUILT
+    void (*init)(const sy_ops *, const sy_config *) = nullptr;
+    void (*ensure)(sy_pool *, sy_host *, int, int, const int *, size_t, const int *, int) = nullptr;
+    unsigned long (*wb_skipped)(void) = nullptr;
+#endif
+};
+static SyApi g_sy;
+#ifdef K3GPU_SUPPLY_BUILT
+static int sy_device_sync() { return (int)cudaDeviceSynchronize(); }
+static int sy_stream_sync(void *s) { return (int)cudaStreamSynchronize((cudaStream_t)s); }
+static int sy_set_device(int d) { return (int)cudaSetDevice(d); }
+static int sy_d2h(void *dst, const void *src, size_t n, void *s) { return (int)cudaMemcpyAsync(dst, src, n, cudaMemcpyDeviceToHost, (cudaStream_t)s); }
+static int sy_h2d(void *dst, const void *src, size_t n, void *s) { return (int)cudaMemcpyAsync(dst, src, n, cudaMemcpyHostToDevice, (cudaStream_t)s); }
+static int sy_event_record(void *e, void *s) { return (int)cudaEventRecord((cudaEvent_t)e, (cudaStream_t)s); }
+static int sy_wait_event(void *s, void *e, unsigned f) { return (int)cudaStreamWaitEvent((cudaStream_t)s, (cudaEvent_t)e, f); }
+static void sy_check(int status, const char *expr) { if (status) { fprintf(stderr, "%s: %s: %s\n", __FILE__, expr, cudaGetErrorString((cudaError_t)status)); exit(1); } }
+static unsigned char *sy_sc_find(sc_cache *c, int key) { return ((SlotCacheSel *)c)->find(key); }
+static void sy_sc_touch(sc_cache *c, int key, float w) { ((SlotCacheSel *)c)->touch(key, w); }
+static int sy_sc_worth(const sc_cache *c, int key) { return ((SlotCacheSel *)c)->worth(key) ? 1 : 0; }
+static unsigned char *sy_sc_acquire(sc_cache *c, int key, const int *prot, size_t n, float heat0, int *vkey, float *vheat)
+{
+    SlotCacheSel *s = (SlotCacheSel *)c;
+#ifdef K3GPU_SLOTCACHE_BUILT
+    if (g_sc.on) { g_sc_calls[0]++; return g_sc.acquire(s->R(), key, prot, n, heat0, vkey, vheat); }
+#endif
+    return s->acquire(key, std::unordered_set<int>(prot, prot + n), heat0, vkey, vheat);
+}
+static unsigned char *sy_sc_remove(sc_cache *c, int key) { return ((SlotCacheSel *)c)->remove(key); }
+static void sy_sc_release(sc_cache *c, unsigned char *p) { ((SlotCacheSel *)c)->release(p); }
+static HostCache *g_sy_host = nullptr;   // the RAM cache the call in progress was given (sy_ops.host_acquire has no argument for it)
+static unsigned char *sy_host_acquire(int key, float heat, int *vkey, float *vheat) { return host_acquire_pend(*g_sy_host, key, heat, vkey, vheat); }
+static const sy_ops g_sy_ops = { sy_device_sync, sy_stream_sync, sy_set_device, sy_d2h, sy_h2d, sy_event_record, sy_wait_event, sy_check,
+                                 sy_sc_find, sy_sc_touch, sy_sc_worth, sy_sc_acquire, sy_sc_remove, sy_sc_release, pend_take, arr_wait, sy_host_acquire };
+static void sy_pool_ensure(CardPool &pool, HostCache &hc, int layer, int fd, const std::vector<int> &experts, const int *counts, int readers)
+{
+    sy_pool p; memset(&p, 0, sizeof p);
+    p.dev = pool.dev; p.readers = pool.readers; p.cache = (sc_cache *)&pool.c; p.copy = pool.copy; p.written_back = pool.written_back; p.h_eptr = pool.h_eptr.data();
+    for (int i = 0; i < MAX_READERS; i++) { p.rstream[i] = pool.rstream[i]; p.bounce[i] = pool.bounce[i]; }
+    p.st.needed = pool.st.needed; p.st.hit_card = pool.st.hit_card; p.st.hit_host = pool.st.hit_host; p.st.from_drive = pool.st.from_drive; p.st.written_back = pool.st.written_back;
+    p.st.t_read = pool.st.t_read; p.st.t_copy = pool.st.t_copy; p.st.t_ensure = pool.st.t_ensure;
+    sy_host h = { (sc_cache *)&hc.c, hc.cap_slots };
+    g_sy_host = &hc;
+    g_sy.ensure(&p, &h, layer, fd, experts.data(), experts.size(), counts, readers);
+    pool.st.needed = p.st.needed; pool.st.hit_card = p.st.hit_card; pool.st.hit_host = p.st.hit_host; pool.st.from_drive = p.st.from_drive; pool.st.written_back = p.st.written_back;
+    pool.st.t_read = p.st.t_read; pool.st.t_copy = p.st.t_copy; pool.st.t_ensure = p.st.t_ensure;
+}
+#endif
+
 // makes the given experts of `layer` resident in the card's pool; afterwards pool.h_eptr[e] is the address of expert e
 // Where an expert comes from: the card's pool (hit); else the RAM cache, which is taken out of it (the expert moves up to the card); else the drive, read
 // straight into a small pinned slot of the reading thread and on to the card (it is NOT kept in RAM). The RAM cache holds what the cards have let go: an expert
@@ -540,6 +681,9 @@ static void arr_wait(int key)
 // `counts[e]` is the number of tokens of this call that chose expert e (the heat of the expert).
 static void pool_ensure(CardPool &pool, HostCache &hc, int layer, int fd, const std::vector<int> &experts, const int *counts, int readers)
 {
+#ifdef K3GPU_SUPPLY_BUILT
+    if (g_sy.on) { sy_pool_ensure(pool, hc, layer, fd, experts, counts, readers); return; }
+#endif
     struct Timed { double &acc; double t0; Timed(double &a) : acc(a), t0(wall_now()) {} ~Timed() { acc += wall_now() - t0; } } timed(pool.st.t_ensure);
     if (g_vq) CHECK(cudaStreamSynchronize(0)); else CHECK(cudaDeviceSynchronize());   // kernels of an earlier group or layer may still be reading slots that are about to be replaced (with the queue on, copies of other streams are not waited for)
     std::unordered_set<int> prot, noprot;
@@ -570,7 +714,7 @@ static void pool_ensure(CardPool &pool, HostCache &hc, int layer, int fd, const 
         if (!hc.cap_slots || g_prefill) break;
         if (!hc.c.worth(v.key)) { g_wb_skipped++; continue; }
         int dk; float dh;
-        unsigned char *h = hc.c.acquire(v.key, g_pend_keys, v.heat, &dk, &dh);
+        unsigned char *h = host_acquire_pend(hc, v.key, v.heat, &dk, &dh);
         CHECK(cudaMemcpyAsync(h, v.src, EXPERT_RAW, cudaMemcpyDeviceToHost, pool.copy));
         pool.st.written_back++;
     }

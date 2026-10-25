@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M135/src/lib.rs
+@@ -482,5 +482,5 @@
+         tc += k.t_copy;
+     }
+-    let which = |b: c_int| if b != 0 { "rust" } else { "cpp" };
++    let which = |b: c_int| if b != 0 { "cpp" } else { "rust" };
+     out.push(
+         Line::new()

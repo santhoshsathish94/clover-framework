@@ -1,0 +1,1 @@
+selector: `rust` matched case-insensitively

@@ -1,0 +1,12 @@
+# M14: victim: arr_wait on the new key instead of the victim key
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -252,7 +252,7 @@
+             p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len(), heat, &mut vk, &mut vh);
+             if vk >= 0 {
+                 if vq {
+-                    (ops.arr_wait)(vk);
++                    (ops.arr_wait)(key);
+                 }
+                 victims.push(Victim { key: vk, heat: vh, src: p });
+             }

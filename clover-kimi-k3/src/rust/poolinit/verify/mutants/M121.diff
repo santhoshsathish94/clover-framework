@@ -1,0 +1,11 @@
+# M121: lib: pi_pool_init does not check ops->host_alloc (falls to the generic 'ops incomplete')
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -60,7 +60,6 @@
+     need_fn!(ops, set_device);
+     need_fn!(ops, mem_get_info);
+     need_fn!(ops, device_malloc);
+-    need_fn!(ops, host_alloc);
+     need_fn!(ops, stream_create);
+     need_fn!(ops, event_create);
+     need_fn!(ops, error_string);

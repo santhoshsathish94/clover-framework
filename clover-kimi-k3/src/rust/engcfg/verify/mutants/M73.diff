@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M73/src/lib.rs
+@@ -286,5 +286,5 @@
+ 
+ fn start_line(s: &EcSettings) -> Vec<u8> {
+-    Line::new().s("K3GPU: ").n(s.cards).s(" cards, host expert cache ").n(s.host_gb).s(" GB, ").n(s.readers).s(" drive readers\n").done()
++    Line::new().s("K3GPU: ").n(s.cards).s(" cards, host expert cache ").n(s.readers).s(" GB, ").n(s.host_gb).s(" drive readers\n").done()
+ }
+ 

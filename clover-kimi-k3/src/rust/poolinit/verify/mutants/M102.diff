@@ -1,0 +1,12 @@
+# M102: pool: CHECK line of the event 467 instead of 466
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -11,7 +11,7 @@
+ const LINE_STREAM_COPY: u32 = 461;
+ const LINE_STREAM_READER: u32 = 463;
+ const LINE_HOST_ALLOC: u32 = 464;
+-const LINE_EVENT: u32 = 466;
++const LINE_EVENT: u32 = 467;
+ const LINE_MALLOC_EPTR: u32 = 467;
+ /// The smallest pool the original accepts.
+ pub const MIN_SLOTS: c_int = 64;

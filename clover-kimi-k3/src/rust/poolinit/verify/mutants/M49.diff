@@ -1,0 +1,12 @@
+# M49: host plan: chunk_bytes = raw << 5 instead of 32 * raw
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -13,7 +13,7 @@
+ /// `cap_slots = bytes / EXPERT_RAW`, `chunk_bytes = (size_t)CHUNK_SLOTS * EXPERT_RAW`, `n_chunks = cap_slots / CHUNK_SLOTS` (size_t arithmetic, wrapping).
+ pub fn plan(bytes: usize, expert_raw: usize) -> (usize, usize, usize) {
+     let cap_slots = bytes / expert_raw;
+-    (cap_slots, PI_CHUNK_SLOTS.wrapping_mul(expert_raw), cap_slots / PI_CHUNK_SLOTS)
++    (cap_slots, expert_raw << 5, cap_slots / PI_CHUNK_SLOTS)
+ }
+ 
+ /// The summary line, with the C `printf` conversions `%zu`, `%.1f`, `%.1f`.

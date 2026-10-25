@@ -1,0 +1,15 @@
+# M118: abi: pi_pool_cfg nreaders and experts swapped
+--- a/src/abi.rs
++++ b/src/abi.rs
+@@ -64,9 +64,9 @@
+ pub struct pi_pool_cfg {
+     pub device: c_int,
+     pub reserve_bytes: usize,
++    pub experts: c_int,
++    pub expert_raw: usize,
+     pub nreaders: c_int,
+-    pub expert_raw: usize,
+-    pub experts: c_int,
+     pub cache: *mut sc_cache,
+     pub src_file: *const c_char,
+ }

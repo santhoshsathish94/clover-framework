@@ -1,0 +1,12 @@
+# M67: pool: usable test free >= reserve instead of >
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -18,7 +18,7 @@
+ 
+ /// `usable = f > reserve ? f - reserve : 0; slots = (int)(usable / EXPERT_RAW)`; the cast wraps like C's.
+ pub fn slots_for(free_bytes: usize, reserve_bytes: usize, expert_raw: usize) -> c_int {
+-    let usable = if free_bytes > reserve_bytes { free_bytes - reserve_bytes } else { 0 };
++    let usable = if free_bytes >= reserve_bytes { free_bytes - reserve_bytes } else { 0 };
+     (usable / expert_raw) as c_int
+ }
+ 

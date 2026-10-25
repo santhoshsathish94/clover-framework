@@ -1,0 +1,12 @@
+# M79: *h_card receives the layer
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -167,7 +167,7 @@
+     die(check_slab(st.cfg.prefill, r.layer));
+     // bookkeeping, in the original's order
+     put(r.h_L, r.layer as c_int);
+-    put(r.h_card, r.card);
++    put(r.h_card, r.layer as c_int);
+     put(r.h_k_in, r.k as c_int);
+     if r.layer <= N_LAYERS {
+         // SAFETY: handles is the caller's table of N_LAYERS + 1 pointers (header) and layer <= N_LAYERS.

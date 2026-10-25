@@ -1,0 +1,12 @@
+# M62: host: mmap fd 0 instead of -1
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -53,7 +53,7 @@
+         }
+         // SAFETY: anonymous private mapping of `chunk_bytes`; only written inside the mapping.
+         unsafe {
+-            let p = mmap(std::ptr::null_mut(), chunk_bytes, sys::PROT_READ_WRITE, sys::MAP_PRIVATE_ANONYMOUS, -1, 0);
++            let p = mmap(std::ptr::null_mut(), chunk_bytes, sys::PROT_READ_WRITE, sys::MAP_PRIVATE_ANONYMOUS, 0, 0);
+             if p == sys::MAP_FAILED {
+                 write_stderr(format!("host expert cache: cannot map {} bytes\n", chunk_bytes).as_bytes());
+                 exit1();

@@ -1,0 +1,12 @@
+# M56: pool_readers = pool.readers (readers argument ignored)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -303,7 +303,7 @@
+         }
+         // 4. drive -> pinned slot -> card, one chunk at a time per reading thread
+         let n_drive: c_int = need.iter().filter(|n| n.host.is_null()).count() as c_int;
+-        let pool_readers: c_int = std::cmp::min(readers, pool.readers);
++        let pool_readers: c_int = pool.readers;
+         let (nchunk, chunk) = chunking(raw, self.cfg.chunks, n_drive, pool_readers);
+         let mut jobs: Vec<Job> = Vec::new();
+         for n in &need {

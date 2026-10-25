@@ -1,0 +1,1 @@
+card_of layout 1: (layer - 1) % cards -> layer % cards

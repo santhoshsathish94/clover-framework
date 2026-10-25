@@ -1,0 +1,12 @@
+# M32: host: chunks registered in descending order (spares unchanged)
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -75,7 +75,7 @@
+     // SAFETY: ops are valid functions; the pointers handed to them are mappings made above.
+     unsafe {
+         check(set_device(0), error_string, file, LINE_SET_DEVICE);
+-        for b in base.iter() {
++        for b in base.iter().rev() {
+             check(host_register(b.load(Ordering::SeqCst) as *mut c_void, chunk_bytes, PI_HOST_REGISTER_PORTABLE), error_string, file, LINE_REGISTER);
+         }
+         for b in base.iter().rev() {

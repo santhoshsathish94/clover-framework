@@ -1,0 +1,12 @@
+# M101: pool: CHECK line of the bounce host_alloc 463 instead of 464
+--- a/src/pool.rs
++++ b/src/pool.rs
+@@ -10,7 +10,7 @@
+ const LINE_MALLOC_SLAB: u32 = 459;
+ const LINE_STREAM_COPY: u32 = 461;
+ const LINE_STREAM_READER: u32 = 463;
+-const LINE_HOST_ALLOC: u32 = 464;
++const LINE_HOST_ALLOC: u32 = 463;
+ const LINE_EVENT: u32 = 466;
+ const LINE_MALLOC_EPTR: u32 = 467;
+ /// The smallest pool the original accepts.

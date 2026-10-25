@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M06/src/lib.rs
+@@ -196,5 +196,5 @@
+     if !unset_or_empty(rc) {
+         s.routecache = rc;
+-        s.lookahead = ei(c"K3GPU_LOOKAHEAD", 92);
++        s.lookahead = ei(c"K3GPU_LOOKAHEAD", 93);
+         s.vqueue = (ei(c"K3GPU_VQUEUE", 0) != 0 && policy == 2) as c_int;
+         s.vq_cap = ei(c"K3GPU_VQ_INFLIGHT", 256) as i64 as usize;

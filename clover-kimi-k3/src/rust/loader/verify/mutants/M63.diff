@@ -1,0 +1,12 @@
+# M63: got = rd instead of got += rd
+--- a/src/job.rs
++++ b/src/job.rs
+@@ -105,7 +105,7 @@
+                 if rd <= 0 {
+                     return Err(format!("prefill: cannot read a record of layer {}\n", j.layer).into_bytes());
+                 }
+-                got += rd as usize;
++                got = rd as usize;
+             }
+         }
+     }

@@ -1,0 +1,102 @@
+cb3f42cb67c2d932ad032835b8262378  M00  control: unmodified copy
+97eff14b26fa414dd58296d243719a89  M01  per-card FIFO broken: LIFO (pop_back)
+c89640b1f5554e36bdbe98cc1bac9f2f  M02  job stealing: an idle worker pops a job of another card's queue (try_lock) before it sleeps
+ceb072cf15ab78eda77525fa02de4c14  M03  one shared queue and one thread for all cards (queue 0, worker(0))
+f03bbccbcfbdca9bf081f38818b533a6  M04  a thread per job: `started` is never set
+204d80d7b3b99d6ef11a936847329a99  M05  pending++ after the push and after the card lock is released (racy window)
+0572973c757af0681712ce717df3c6d7  M06  pending++ after the thread start, just before the push (card lock still held)
+e90f88993b5bbd394f23bdb89151925a  M07  pending-- before the job runs (count lowered before the job ended)
+bf75331444f3f133215c216384e06f72  M08  pending-- never executed (notify only)
+2f443b497da3a330821d13983a17fdcc  M09  no notify after the decrement (lost wake-up of ld_wait)
+4e85a1cf3b783fc728da5e19d29ad89a  M10  notify_all -> notify_one after the decrement
+ac85964578d3cc3f59db21e2bb91a783  M11  notify_all before the decrement (wrong order, wake-up can be lost)
+8a6e7d5bc611b137e9970bf902e865c1  M12  wait returns early: while count > 1
+6dc0b6a6b6a6f6eba6ba4183d88b38db  M14  wait: count checked, lock released, then wait without re-check (lost wake-up window)
+8e688e7bd11f32df4283176c3f8129cd  M15  as M14 with a 300 us sleep between the check and the wait (window widened, shows the driver's sensitivity)
+a3e7a4bcfe280b6020def6d9632f4fc8  M16  no notify_one after the push in submit (worker is only woken by its own first look)
+a8674c1051eb45dbdabe569704ff05e9  M17  submit: notify_one -> notify_all (one waiter per card, expected equivalent)
+3c71932614fb634930d8f085c84e8f5a  M18  a job runs while the card's queue lock is held
+5793e7c6c0b24ff6262de351201c5b4e  M19  card 7 uses card 6's queue and thread (cards[card.min(6)])
+294b8f52aebaa7cb1faf6db3a5227b4c  M20  thread start hook (set_device) missing
+7c227526d57ca3d3aa249390def13b2c  M21  thread start hook gets card 0 instead of card
+7d0c0b306352a180301f7fe3b35c95b1  M22  thread start hook runs on the submitting thread (before the spawn), not on the card's thread
+eb32a37bf8abd6dcd2acc46b74e9791b  M23  threads started eagerly: ld_init submits a no-op to every card
+da1779208d693a53e5ada7e6f6351ee7  M24  thread joined in submit (never detached): the submitting call blocks
+a79f2cc9d84cc92116866401f777a315  M25  first-submit guard removed: `started` is read outside the lock and set later (the original's check-then-act)
+ab9e40b62337f11136b3206b347f0c64  M26  as M25 with a 100 us sleep between the check and the set (window widened)
+287824ac2b5e0907b4a988730f577ba1  M27  thread stack size left at the default (2 MB) instead of 8 MB
+db97a67da66b961f35ba07908bd63906  M30  set_device after ensure_work
+4353a53b84a7f3f0332cfd72a1a1e8e8  M31  expert tables loaded before the trunk
+a159bcdf70b027582ff00aa943a21b6d  M32  alloc_state before the trunk
+706de79f10f9737f42dae64e609d9813  M33  alloc_state after the experts file is opened (layer >= 1), before the prefill
+780562e089b648451ed5c1fba5fa2597  M34  expert tables also loaded for layer 0
+26e025a456311d74a6ed9ed32f42799f  M35  expert tables skipped for layer 1 (`> 1`)
+cb627f2768b8f45d3d31efdaa833d42b  M36  layer 1 treated like layer 0 (no file, no prefill): `< 2`
+477a400691a8ebeb0a41161c1120e8ee  M37  alloc_state receives layer instead of positions
+1715036318fb4a3c68658b17b82ca489  M38  ensure_work receives card 0
+ab71036d9e45bab9f3cf3b118d57ed5b  M39  load_trunk receives layer - 1
+722ffa297d13b6d744c3df56e9bf2299  M40  set_device receives a NULL ctx
+d2b2e17e85091ba8bcfbd52861414d02  M41  path cut at 4096 bytes instead of 4095
+1be28014f02048c37f08293f14e3a009  M42  path cut at 4094 bytes
+ed47d18e75d676fe6befdd35fdc5194e  M43  path not cut at all
+1dac1ec129cf0a4019e4148900949310  M44  file name experts.dat instead of experts.direct
+23deba4515eb892de377223c644e2ed2  M45  O_DIRECT fallback removed (no second open)
+8bbe7cddec81edf89b5aff2d3f8ef875  M46  fallback only when the first open failed with EINVAL (errno 22)
+09478ea3a7bbd5f51f5ef183eabb5a97  M47  first open without O_DIRECT
+d522282174d294bf7d4a9c11ef97a324  M48  fallback open also uses O_DIRECT
+84139583ada7d1e9e0694cbd55997b84  M49  result of the fallback open not stored in *h_fd
+d630876c931dce5bec0eac37b53ce9bd  M50  result of the first open stored only if >= 0 (the -1 is never stored before the fallback; expected equivalent)
+75adace91f8e99ea0073cd971fc1ace2  M51  fd 0 treated as a failed open (`fd <= 0`)
+38bb8c8d470fa7936ed88dcefc16b788  M52  message `cannot open` has no trailing newline
+b1920d23d374025148af3e47c7658c52  M53  message text `cannot open file `
+6a11f44d4a6c23fdeb7b81f0d58d0d82  M54  slab block of 3 records (3 * raw)
+7072a824388b78247ca09e994188cc7d  M55  slab block of 5 records (5 * raw)
+58a6b9b2da0e629536292c357d599321  M56  3 records read instead of 4
+2a03f81baa8b695f7b71f8e602d332d9  M57  5 records read instead of 4
+fce7249b976664bd7ac04ddcffffcfa3  M58  record offset r * raw computed in 32 bits (u32 multiply)
+5ccd6b096aff3c5a60ae49c91650d245  M59  slab size 4 * raw computed in 32 bits
+d5696b2dec8cfaba2642231c25580408  M60  pread offset does not advance with `got`
+01f52782d1050446a81fecc9e162be56  M61  pread buffer does not advance with `got`
+3c525b4c8c053c4c80f1633737766885  M62  pread length is raw instead of raw - got
+f819567837d1f69f98d0806faca7bc45  M63  got = rd instead of got += rd
+e664733f52e2df1fbd69c6631f62a350  M64  no read loop: one pread per record (`if got < raw`)
+744a1c580bc848e6bf8edf7fedc555aa  M65  end of file not detected: `rd < 0`
+154a04b4a16f60c76fcd9618fb95178d  M66  read error not detected: `rd == 0`
+b67d267138d6dc5ed1f38c8aa7cfe754  M67  EINTR retried (unbounded)
+077e50a43615b21b2326d4d90aaa8a54  M68  prefill message text `a record` -> `record`
+c28f1480990027abdfaf23033572805e  M69  host_alloc stores into slab[layer - 1]
+0fe27df253b6c19bea94601b7082fae5  M70  handles[layer] stored only for layer < 92
+1115f98c806026762c7d79888fec36a7  M71  handles[layer] stored for layer <= 93 (writes past the table)
+8dc0b4b1971cb7b862de54479c2dd9e3  M72  slab-slot check `layer >= 92` (92 refused with prefill)
+e966a01787a12c581010962c538f97d3  M73  slab-slot check `layer > 93` (93 passes with prefill)
+ce85c93502a767b009dc4ddf79f38c3a  M74  N_LAYERS = 93
+cb3f42cb67c2d932ad032835b8262378  M75  slab-slot check without `layer >= 1 &&` (implied by layer > 92; expected equivalent)
+cb3f42cb67c2d932ad032835b8262378  M76  negative card not rejected (`card < 0 ||` removed)
+93ef6a9748ffc0de2eaf87da3a621351  M77  card 8 not rejected (`> MAX_CARDS`)
+b3c085b9bf6de7f00d4543a5054fa81c  M78  *h_L receives the card
+8fdc377406874be65feb097d75167f1b  M79  *h_card receives the layer
+107a35aaa5284f917e51f69caf1d51b5  M80  *h_k_in receives positions
+d7c2b0bfc6babd3f1cd6577bff39dbda  M81  *h_k_in saturated to i32::MAX
+471deca229dc7c269a44900e9b3d9314  M82  bookkeeping (*h_L, *h_card, *h_k_in, handles[layer]) written after the job is queued (before the call returns)
+d74ab76cb2618c423bb071fd6b1489a7  M83  as M82 with a 2 ms sleep before the writes (window widened; the callbacks never read the fields in the driver)
+83f72183db835d2c1ad7bb3873fff237  M84  the job reads *h_card when it runs, not the card captured at the call
+0a58f27f0c2ddf1d55ecf97897572931  M85  the job re-reads the caller's dataset string when it runs (not the copy made at the call)
+7dc5d2869bb78ed7caf6f8761a4e0c98  M86  second ld_init not ignored early (the check removed)
+3c8d491cb39851e3ef246a8e8e8f21de  M87  ld_init: already-initialised check before the NULL check
+a3392062ff611a51c855f318ef203b97  M88  ld_wait before ld_init is fatal
+122207358141981f5e01e5b9bc09a912  M89  ld_submit with a NULL job is ignored silently
+3b4e16583a02e34e2b622d9dd9640290  M90  ld_submit does not check the card
+4fc25646921dead00e3b2ee8dcd3c2b9  M91  ld_open_layer does not check the card
+6bbd3d8937e6a5c0fe17c4adde84c7ef  M92  ld_open_layer: slab-slot check before the card check (guard order swapped)
+9a95c3d12c0f426adbc61cd6e0c36e72  M93  expert_raw fixed at 4096
+8022bd8ea08b8f4fe898b8658893ab93  M94  prefill always on in the job
+1978e5dfc2f5706f43409123e49d5635  M95  handles[layer] receives NULL instead of the handle
+2a54940c36ccd8c92930d20afd1795fb  M96  ld_init does not require `handles`
+d9a9f35c94b97bcd27fadee14b13652c  M97  ld_init does not require host_alloc with prefill
+81d7def4769b752bcb27fa96f92e92ab  M98  fatal exit status 2
+0dd6d2aaa0550e67ea0ca921902050db  M99  fatal exit with _exit (no atexit handlers, no stdio flush)
+45e001e6b35f8ddc67bf25bca13bbe0c  MA1  fatal message written to stdout (fd 1)
+a5393b8e349cc524e3347efda0678c94  MA2  O_DIRECT constant of aarch64 (0o200000) on x86_64
+cb55f2f372ef57a15c06bdeacb67624d  M13  wait: `if` instead of `while` (one wake-up ends the wait)
+a8ff8c984964b804d31c9e0baa27223d  M11w  as M11 with a 200 us sleep between the notify and the decrement (window widened)
+9b63cee4af9f105b3a807639ec66b4e5  M05w  as M05 with a 200 us sleep between the push and the pending++ (window widened)

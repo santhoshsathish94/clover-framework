@@ -1,0 +1,12 @@
+# M53: job file offset without the chunk offset
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -317,7 +317,7 @@
+                     break;
+                 }
+                 let len = std::cmp::min(chunk, raw - co);
+-                jobs.push(Job { dst: n.dst.wrapping_add(co), off: (n.e as i64).wrapping_mul(raw as i64).wrapping_add(co as i64), e: n.e, co, len });
++                jobs.push(Job { dst: n.dst.wrapping_add(co), off: (n.e as i64).wrapping_mul(raw as i64), e: n.e, co, len });
+             }
+         }
+         let ctx = Ctx {

@@ -1,0 +1,11 @@
+# M82: final stream_sync(pool.copy) missing
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -337,7 +337,6 @@
+         let t0 = Instant::now();
+         run_parallel(&ctx, pool_readers);
+         let t1 = Instant::now();
+-        do_check(ops, (ops.stream_sync)(pool.copy), site::SYNC_COPY);
+         for &h in &held {
+             (ops.sc_release)(host.cache, h);
+         }

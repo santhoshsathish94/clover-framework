@@ -1,0 +1,12 @@
+# M46: host: chunk table written in reverse index (base[n-1-i])
+--- a/src/host.rs
++++ b/src/host.rs
+@@ -60,7 +60,7 @@
+             }
+             madvise(p, chunk_bytes, sys::MADV_HUGEPAGE);
+             std::ptr::write_bytes(p as *mut u8, 0, chunk_bytes);
+-            base[i].store(p as usize, Ordering::SeqCst);
++            base[n_chunks - 1 - i].store(p as usize, Ordering::SeqCst);
+         }
+     };
+     std::thread::scope(|s| {

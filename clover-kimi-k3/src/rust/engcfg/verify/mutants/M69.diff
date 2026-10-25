@@ -1,0 +1,9 @@
+--- src/lib.rs (real)
++++ M69/src/lib.rs
+@@ -270,5 +270,5 @@
+         .s(" calls from ")
+         .cs(s.routecache)
+-        .s(", look-ahead ")
++        .s(", lookahead ")
+         .n(s.lookahead)
+         .s(" calls, at most ")

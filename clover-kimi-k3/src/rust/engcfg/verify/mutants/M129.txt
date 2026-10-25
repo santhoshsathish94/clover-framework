@@ -1,0 +1,1 @@
+summary: call class test `!= 0.0` -> `> 0.0`

@@ -1,0 +1,13 @@
+# M20: pend_take after sc_remove (order swapped)
+--- a/src/ensure.rs
++++ b/src/ensure.rs
+@@ -267,8 +267,8 @@
+         for n in need.iter_mut() {
+             let key = self.ekey(layer, n.e);
+             if !self.host_find(host, key).is_null() {
++                n.host = self.host_remove(host, key);
+                 (ops.pend_take)(key);
+-                n.host = self.host_remove(host, key);
+                 held.push(n.host);
+                 pool.st.hit_host = pool.st.hit_host.wrapping_add(1);
+             }
