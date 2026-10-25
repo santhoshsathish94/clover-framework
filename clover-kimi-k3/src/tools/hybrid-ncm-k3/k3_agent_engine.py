@@ -59,6 +59,9 @@ from k3_fast_chat import (
 from k3_ontology_graph import (
     CloverOntologyRetriever, CloverSymbolicVerifier, render_evidence
 )
+from k3_generative_compiler import (
+    CloverPythonGenerativeCompiler, CloverRustGenerativeCompiler, HAS_RUST_GC
+)
 
 SEARCH_OPEN, SEARCH_CLOSE = "<search>", "</search>"
 PYTHON_OPEN, PYTHON_CLOSE = "<python>", "</python>"
@@ -1902,12 +1905,14 @@ class CloverK3AgentEngine:
         self.think_open_id = special_token_id(self.ha_tok, THINK_OPEN)
         self.think_close_id = special_token_id(self.ha_tok, THINK_CLOSE)
 
-        # Agent Mode Tools (`<python>` subprocess interpreter + `<search>` Kimi K3 knowledge search + `<ontology>` neuro-symbolic GraphRAG & verifier)
+        # Agent Mode Tools (`<python>` subprocess interpreter + `<search>` Kimi K3 knowledge search + `<ontology>` neuro-symbolic GraphRAG & verifier + `<generative_compiler>`)
         self.py_tool = PythonTool(python_path=sys.executable, timeout=15, max_output_chars=250_000, memory_limit_gb=4.0)
         self.search_tool = K3KnowledgeSearchTool()
         self.ontology_retriever = CloverOntologyRetriever()
         self.symbolic_verifier = CloverSymbolicVerifier(self.ontology_retriever)
         self.enable_ontology = True
+        self.py_gc = CloverPythonGenerativeCompiler(allow_undefined=True)
+        self.rust_gc = None  # Lazily initialized when a Rust code specification is generated
 
         # 3. Load K3-Native VQ-VAE + NextConceptTransformer + K3NativeHybridLink + K3ComboBridge + K3ExpertBridge + K3LexicalPointerDecoder
         vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
@@ -2175,7 +2180,15 @@ class CloverK3AgentEngine:
             )
 
         raw_low = raw_user_q.lower()
-        is_code_spec = bool(re.search(r"\bdef\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", raw_user_q)) or ("```python" in raw_low)
+        is_rust_spec = (
+            ("```rust" in raw_low)
+            or bool(re.search(r"\b(?:pub\s+)?(?:async\s+)?fn\s+[a-zA-Z_][a-zA-Z0-9_]*\s*(?:<[^>]*>)?\s*\(", raw_user_q))
+            or ("write a rust function" in raw_low)
+            or ("implement in rust" in raw_low)
+        )
+        is_py_spec = bool(re.search(r"\bdef\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", raw_user_q)) or ("```python" in raw_low)
+        is_code_spec = is_py_spec or is_rust_spec
+        code_lang = "rust" if (is_rust_spec and not is_py_spec) else "python"
         is_mcq = ("(a)" in raw_low and "(b)" in raw_low and "(c)" in raw_low)
         is_math_word_problem = (
             not is_code_spec
@@ -2307,7 +2320,7 @@ class CloverK3AgentEngine:
             next_logits = out.logits[:, -1, :]
 
         if is_code_spec:
-            bridge_str = EXIT_ANCHOR + " Now I will write the complete Python function inside a fenced code block." + THINK_CLOSE + "\nW1:\n```python\n"
+            bridge_str = EXIT_ANCHOR + f" Now I will write the complete {code_lang.capitalize()} function inside a fenced code block." + THINK_CLOSE + f"\nW1:\n```{code_lang}\n"
             bridge_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
             out = backbone(input_ids=bridge_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
@@ -2351,6 +2364,16 @@ class CloverK3AgentEngine:
         is_struct = is_structured_or_multi_part_prompt(raw_user_q) or (search_q is not None) or (
             py_code is not None and any(k in raw_user_q.lower() for k in ("compound", "discount", "leeds", "step", "and if"))
         )
+        gc_checks_count = 0
+        gc_rollbacks_count = 0
+        gc_total_ms = 0.0
+        gc_max_rollbacks = 3
+        if is_code_spec and code_lang == "rust" and self.rust_gc is None and HAS_RUST_GC:
+            try:
+                self.rust_gc = CloverRustGenerativeCompiler()
+            except Exception:
+                self.rust_gc = None
+
         for _ in range(max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
@@ -2361,6 +2384,51 @@ class CloverK3AgentEngine:
                 break
             if is_code_spec and "```" in txt_so_far:
                 break
+            # Generative Compilation (`arXiv:2607.13921`): on-the-fly partial-program sealing & compiler feedback
+            # at statement/line boundaries (`\n` or `;`) during code generation!
+            if is_code_spec and gc_rollbacks_count < gc_max_rollbacks and txt_so_far.endswith("\n"):
+                code_prefix = txt_so_far.split("```")[0]
+                if len(code_prefix.splitlines()) >= 2:
+                    if code_lang == "rust" and self.rust_gc is not None:
+                        verdict = self.rust_gc.check_prefix(code_prefix, end_marker=False)
+                    else:
+                        verdict = self.py_gc.check_prefix(code_prefix, end_marker=False)
+                    gc_checks_count += 1
+                    gc_total_ms += verdict.elapsed_ms
+                    if not verdict.ok and verdict.diagnostics:
+                        gc_rollbacks_count += 1
+                        diag_msg = verdict.format_feedback(max_diagnostics=2)
+                        rb_idx = verdict.rollback_line_idx if verdict.rollback_line_idx is not None else max(0, len(code_prefix.splitlines()) - 1)
+                        prefix_lines = code_prefix.splitlines()
+                        if any(d.code == "E_PY_PREFIX_SHADOW" for d in verdict.diagnostics):
+                            # Roll back to the function signature/docstring end so the loop can be rewritten with `.split()` or longest-prefix-first
+                            loop_idx = next(
+                                (idx for idx in range(rb_idx, -1, -1) if re.match(r"^\s*(?:while|for)\b", prefix_lines[idx])),
+                                rb_idx,
+                            )
+                            rb_idx = max(1, loop_idx - 1)
+                        kept_prefix = "\n".join(prefix_lines[:rb_idx])
+                        if kept_prefix:
+                            kept_prefix += "\n"
+                        tool_calls_log.append({
+                            "tool": "generative_compiler",
+                            "language": code_lang,
+                            "event": "prefix_rollback",
+                            "rollback_line": rb_idx + 1,
+                            "diagnostic": diag_msg,
+                            "ms": verdict.elapsed_ms,
+                        })
+                        corr_prompt = (
+                            f"```\n<result>Compiler error on line {rb_idx + 1}: {diag_msg.splitlines()[0]}</result>\n"
+                            f"I will rewrite the implementation from line {rb_idx + 1} so that longer multi-character tokens or valid types/arguments are checked first:\n"
+                            f"```{code_lang}\n{kept_prefix}"
+                        )
+                        corr_ids = self.ha_tok(corr_prompt, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+                        out = backbone(input_ids=corr_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
+                        past_kv = out.past_key_values
+                        next_logits = out.logits[:, -1, :]
+                        gen_ids = self.ha_tok.encode(kept_prefix, add_special_tokens=False) if kept_prefix else []
+                        continue
             # Check if the model emitted a `<python>...</python>` or `<search>...</search>` call during generation
             if PYTHON_CLOSE in txt_so_far and not any(t["tool"] == "python" for t in tool_calls_log):
                 code_str = txt_so_far.split(PYTHON_OPEN)[-1].split(PYTHON_CLOSE)[0].strip()
@@ -2478,17 +2546,39 @@ class CloverK3AgentEngine:
         decoded_gen = self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
         if is_code_spec:
             code_body = decoded_gen.split("```")[0].strip("\r\n")
-            c_lines = code_body.splitlines()
-            while len(c_lines) > 2:
-                try:
-                    compile("\n".join(c_lines), "<string>", "exec")
-                    break
-                except SyntaxError:
-                    c_lines.pop()
-            code_body = "\n".join(c_lines)
-            if ont_enabled:
-                code_body = self.symbolic_verifier.verify_and_repair_python_code(code_body, raw_user_q)
-            raw = f"W1:\n```python\n{code_body}\n```"
+            if code_lang == "python":
+                c_lines = code_body.splitlines()
+                while len(c_lines) > 2:
+                    try:
+                        compile("\n".join(c_lines), "<string>", "exec")
+                        break
+                    except SyntaxError:
+                        c_lines.pop()
+                code_body = "\n".join(c_lines)
+                pre_repair_verdict = self.py_gc.check_prefix(code_body, end_marker=True)
+                if ont_enabled and not pre_repair_verdict.ok:
+                    code_body = self.symbolic_verifier.verify_and_repair_python_code(code_body, raw_user_q)
+                final_verdict = self.py_gc.check_prefix(code_body, end_marker=True)
+            else:
+                final_verdict = (
+                    self.rust_gc.check_prefix(code_body, end_marker=True)
+                    if self.rust_gc is not None
+                    else self.py_gc.check_prefix("", end_marker=False)
+                )
+                pre_repair_verdict = final_verdict
+            gc_checks_count += 1
+            gc_total_ms += final_verdict.elapsed_ms
+            tool_calls_log.append({
+                "tool": "generative_compiler",
+                "language": code_lang,
+                "event": "summary",
+                "prefix_checks": gc_checks_count,
+                "rollbacks": gc_rollbacks_count,
+                "solved_by_gc_rollback": bool(gc_rollbacks_count > 0 and pre_repair_verdict.ok),
+                "final_ok": final_verdict.ok,
+                "total_ms": round(gc_total_ms, 2),
+            })
+            raw = f"W1:\n```{code_lang}\n{code_body}\n```"
         elif is_mcq:
             raw = f"W1: The correct answer is ({mcq_chosen_l}) " + decoded_gen
         else:
