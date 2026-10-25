@@ -1,0 +1,56 @@
+{
+  "name": "clover-vscode-provider",
+  "displayName": "Clover Kimi K3 — VS Code Language Model Provider",
+  "description": "Adds Clover Kimi K3 (93-Layer MoE + HybridAgent + Next-Concept Modeling + Ontology GraphRAG) directly to the VS Code Chat & Agent model picker.",
+  "version": "1.0.0",
+  "publisher": "clover-framework",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santhoshsathish94/clover-framework"
+  },
+  "engines": {
+    "vscode": "^1.105.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "*",
+    "onStartupFinished",
+    "onLanguageModelChatProvider:clover"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "languageModelChatProviders": [
+      {
+        "vendor": "clover",
+        "displayName": "Clover"
+      }
+    ],
+    "configuration": {
+      "title": "Clover Kimi K3",
+      "properties": {
+        "clover.endpointUrl": {
+          "type": "string",
+          "default": "https://api.cloverframework.com/v1/chat/completions",
+          "description": "Endpoint URL for the Clover Kimi K3 OpenAI-compatible Chat Completions server."
+        },
+        "clover.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Optional API key for private Clover Kimi K3 deployments."
+        },
+        "clover.candidates": {
+          "type": "number",
+          "default": 8,
+          "minimum": 1,
+          "maximum": 16,
+          "description": "Number of parallel NCM Minimum Bayes Risk (MBR) candidates to decode per window."
+        }
+      }
+    }
+  }
+}

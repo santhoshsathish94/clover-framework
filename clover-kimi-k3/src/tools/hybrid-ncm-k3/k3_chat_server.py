@@ -1875,11 +1875,14 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
         return "https://cloverframework.com"
 
     def _is_authorized_request(self) -> bool:
+        # OpenAI-compatible endpoints (/v1/models, /v1/chat/completions) are called by VS Code desktop / CLI clients
+        if self.path.startswith(("/v1/", "/chat/completions", "/models", "/api/health")):
+            return True
         host = (self.headers.get("Host") or "").strip().lower()
         if host and host not in ALLOWED_HOSTS:
             return False
         origin = (self.headers.get("Origin") or "").strip()
-        if origin and origin not in ALLOWED_ORIGINS and not origin.startswith(("http://127.0.0.1:", "http://localhost:")):
+        if origin and origin not in ALLOWED_ORIGINS and not origin.startswith(("http://127.0.0.1:", "http://localhost:", "vscode-file://", "vscode-webview://")):
             return False
         return True
 
@@ -1889,7 +1892,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             self.send_response(code)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Access-Control-Allow-Origin", self._cors_origin())
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            self.send_header("Access-Control-Allow-Headers", "*")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Vary", "Origin")
             self.send_header("Content-Length", str(len(body)))
@@ -1951,16 +1954,33 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             sid = (qs.get("session_id") or ["default"])[0]
             self._send_json(STATE.get_session_details(sid))
-        elif self.path.startswith("/v1/models"):
+        elif self.path.startswith(("/v1/models", "/models")):
+            created_ts = int(time.time())
             self._send_json({
                 "object": "list",
                 "data": [
                     {
-                        "id": "clover-ai",
+                        "id": "clover-kimi-k3",
+                        "name": "Clover Kimi K3",
                         "object": "model",
-                        "created": int(time.time()),
+                        "created": created_ts,
                         "owned_by": "clover-framework",
-                    }
+                        "context_length": MAX_SESSION_CONTEXT_TOKENS,
+                        "max_input_tokens": 246144,
+                        "max_output_tokens": 16000,
+                        "capabilities": {"toolCalling": True, "vision": True, "streaming": True},
+                    },
+                    {
+                        "id": "clover-ai",
+                        "name": "Clover AI (Kimi K3 93L + HybridAgent + NCM)",
+                        "object": "model",
+                        "created": created_ts,
+                        "owned_by": "clover-framework",
+                        "context_length": MAX_SESSION_CONTEXT_TOKENS,
+                        "max_input_tokens": 246144,
+                        "max_output_tokens": 16000,
+                        "capabilities": {"toolCalling": True, "vision": True, "streaming": True},
+                    },
                 ],
             })
         else:
@@ -2099,68 +2119,313 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             })
             return
 
-        if self.path.startswith("/v1/chat/completions"):
+        if self.path.startswith(("/v1/chat/completions", "/chat/completions")):
             messages = payload.get("messages", [])
             stream = bool(payload.get("stream", False))
+            req_model = str(payload.get("model") or "clover-kimi-k3")
             cands = int(payload.get("cands", 8))
+            available_tools = payload.get("tools") or []
+            tool_choice = payload.get("tool_choice")
+            req_id_hdr = (
+                self.headers.get("x-interaction-id")
+                or self.headers.get("x-request-id")
+                or payload.get("session_id")
+                or "vscode_default"
+            )
+            session_id = "vsc_" + re.sub(r"[^a-zA-Z0-9_\-]", "_", str(req_id_hdr))[:48]
+
+            def _extract_msg_content(m_obj):
+                c = m_obj.get("content", "")
+                img = None
+                if isinstance(c, list):
+                    t_parts = []
+                    for part in c:
+                        if isinstance(part, dict):
+                            ptype = str(part.get("type") or "")
+                            if ptype in ("text", "input_text"):
+                                t_parts.append(str(part.get("text", "")))
+                            elif ptype in ("image_url", "input_image"):
+                                iu = part.get("image_url") or part.get("image") or {}
+                                img = iu.get("url") if isinstance(iu, dict) else str(iu)
+                        elif isinstance(part, str):
+                            t_parts.append(part)
+                    return "\n".join(p for p in t_parts if p).strip(), img
+                return str(c or "").strip(), None
+
+            workspace_info_chunks = []
+
+            def _strip_vscode_envelope(u_text: str) -> str:
+                """Extracts the clean user request, any <workspace_info>/<environment_info> for agent tool routing,
+                and any editor <attachment> blocks (excluding noisy Browser Pages UUIDs)."""
+                if not u_text:
+                    return ""
+                for m_ws in re.findall(r"<(?:workspace_info|environment_info)>\s*([\s\S]*?)\s*</(?:workspace_info|environment_info)>", u_text, flags=re.IGNORECASE):
+                    if m_ws.strip():
+                        workspace_info_chunks.append(m_ws.strip()[:2200])
+                m_ur = re.search(r"<userRequest>\s*([\s\S]*?)\s*</userRequest>", u_text, flags=re.IGNORECASE)
+                if m_ur:
+                    core_q = m_ur.group(1).strip()
+                    att_blocks = []
+                    for m_att in re.finditer(r"<attachment\b([^>]*)>\s*([\s\S]*?)\s*</attachment>", u_text, flags=re.IGNORECASE):
+                        attrs, body = m_att.group(1), m_att.group(2).strip()
+                        if not body or "Browser Pages" in attrs or "Browser Pages" in body[:80] or "browser pages are currently shared" in body[:120]:
+                            continue
+                        att_blocks.append(body[:2400])
+                    if att_blocks:
+                        return (
+                            "---\n".join(att_blocks[:2])
+                            + "\n\nUsing the attached content / session context above, answer the user's request clearly and thoroughly:\n"
+                            + core_q
+                        )
+                    return core_q
+                cleaned = re.sub(
+                    r"<(?:environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory)>[\s\S]*?</(?:environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory)>",
+                    "",
+                    u_text,
+                    flags=re.IGNORECASE,
+                ).strip()
+                return cleaned or u_text.strip()
+
             user_prompt = ""
             image_b64 = None
             prior_turns = []
+            tool_rounds = []
+            call_id_to_meta = {}
+            pending_u = ""
+
             for m in messages:
-                role = m.get("role", "")
-                content = m.get("content", "")
-                if isinstance(content, list):
-                    txt_parts = []
-                    for part in content:
-                        if isinstance(part, dict):
-                            if part.get("type") == "text":
-                                txt_parts.append(str(part.get("text", "")))
-                            elif part.get("type") == "image_url":
-                                iu = part.get("image_url", {})
-                                image_b64 = iu.get("url") if isinstance(iu, dict) else str(iu)
-                    content = " ".join(txt_parts)
+                if not isinstance(m, dict):
+                    continue
+                role = str(m.get("role") or "").lower()
+                txt_c, img_c = _extract_msg_content(m)
+                if img_c:
+                    image_b64 = img_c
                 if role == "user":
-                    user_prompt = str(content)
-                elif role == "assistant" and user_prompt:
-                    prior_turns.append({"user": user_prompt, "reply": str(content), "plans": []})
-                    user_prompt = ""
+                    cleaned_u = _strip_vscode_envelope(txt_c)
+                    if cleaned_u:
+                        if pending_u and tool_rounds:
+                            # If the user sent a new message in a subsequent turn, reset per-turn tool_rounds
+                            tool_rounds.clear()
+                        pending_u = cleaned_u
+                        user_prompt = cleaned_u
+                elif role == "assistant":
+                    t_calls = m.get("tool_calls") or []
+                    if isinstance(t_calls, list) and t_calls:
+                        for tc in t_calls:
+                            if isinstance(tc, dict):
+                                cid_tc = str(tc.get("id") or "")
+                                fn_tc = tc.get("function") or {}
+                                if cid_tc and isinstance(fn_tc, dict):
+                                    call_id_to_meta[cid_tc] = {
+                                        "name": str(fn_tc.get("name") or ""),
+                                        "arguments": str(fn_tc.get("arguments") or "{}"),
+                                    }
+                    elif pending_u and txt_c:
+                        prior_turns.append({"user": pending_u, "reply": txt_c, "plans": []})
+                        pending_u = ""
+                elif role == "tool":
+                    tc_id = str(m.get("tool_call_id") or "")
+                    meta_tc = call_id_to_meta.get(tc_id, {"name": str(m.get("name") or "tool"), "arguments": "{}"})
+                    if txt_c:
+                        tool_rounds.append({
+                            "id": tc_id,
+                            "name": meta_tc["name"],
+                            "arguments": meta_tc["arguments"],
+                            "output": txt_c[:3200],
+                        })
 
             if not user_prompt and messages:
-                user_prompt = str(messages[-1].get("content", ""))
+                last_txt, _ = _extract_msg_content(messages[-1])
+                user_prompt = _strip_vscode_envelope(last_txt) or "Hello"
+
+            workspace_info_str = "\n\n".join(workspace_info_chunks[-2:]) if workspace_info_chunks else ""
+
+            # Step 1: If VS Code Agent mode supplied `tools` (and `tool_choice != "none"`), run `decide_vscode_agent_step`
+            # so Clover Kimi K3 can iteratively call `read_file`, `list_dir`, `file_search`, `grep_search`, `run_in_terminal`, etc.!
+            next_tool_call = None
+            if available_tools and tool_choice != "none" and not image_b64:
+                w_idx = STATE._acquire_text_worker()
+                eng = STATE.text_workers[w_idx]
+                try:
+                    next_tool_call = eng.decide_vscode_agent_step(
+                        user_prompt=user_prompt,
+                        workspace_info=workspace_info_str,
+                        history=prior_turns[-6:],
+                        tool_rounds=tool_rounds,
+                        available_tools=available_tools,
+                    )
+                    torch.cuda.synchronize(eng.dev_ha)
+                finally:
+                    STATE.worker_locks[w_idx].release()
+
+            cid = "chatcmpl-" + uuid.uuid4().hex[:12]
+            created_ts = int(time.time())
+
+            if next_tool_call is not None:
+                tc_id = "call_" + uuid.uuid4().hex[:16]
+                tc_name = next_tool_call["name"]
+                tc_args = next_tool_call["arguments"]
+                usage_tc = {"prompt_tokens": max(1, len(user_prompt.split())), "completion_tokens": 24, "total_tokens": max(1, len(user_prompt.split())) + 24}
+                if stream:
+                    role_chunk = {
+                        "id": cid,
+                        "object": "chat.completion.chunk",
+                        "created": created_ts,
+                        "model": req_model,
+                        "choices": [{"index": 0, "delta": {"role": "assistant", "content": None}, "finish_reason": None}],
+                    }
+                    tc_chunk = {
+                        "id": cid,
+                        "object": "chat.completion.chunk",
+                        "created": created_ts,
+                        "model": req_model,
+                        "choices": [
+                            {
+                                "index": 0,
+                                "delta": {
+                                    "tool_calls": [
+                                        {
+                                            "index": 0,
+                                            "id": tc_id,
+                                            "type": "function",
+                                            "function": {"name": tc_name, "arguments": tc_args},
+                                        }
+                                    ]
+                                },
+                                "finish_reason": None,
+                            }
+                        ],
+                    }
+                    stop_chunk = {
+                        "id": cid,
+                        "object": "chat.completion.chunk",
+                        "created": created_ts,
+                        "model": req_model,
+                        "choices": [{"index": 0, "delta": {}, "finish_reason": "tool_calls"}],
+                        "usage": usage_tc,
+                    }
+                    sse_payload = (
+                        f"data: {json.dumps(role_chunk)}\n\n"
+                        f"data: {json.dumps(tc_chunk)}\n\n"
+                        f"data: {json.dumps(stop_chunk)}\n\n"
+                        "data: [DONE]\n\n"
+                    ).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+                    self.send_header("Cache-Control", "no-cache")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.send_header("Content-Length", str(len(sse_payload)))
+                    self.end_headers()
+                    self.wfile.write(sse_payload)
+                    self.wfile.flush()
+                else:
+                    self._send_json({
+                        "id": cid,
+                        "object": "chat.completion",
+                        "created": created_ts,
+                        "model": req_model,
+                        "choices": [
+                            {
+                                "index": 0,
+                                "message": {
+                                    "role": "assistant",
+                                    "content": None,
+                                    "tool_calls": [
+                                        {
+                                            "id": tc_id,
+                                            "type": "function",
+                                            "function": {"name": tc_name, "arguments": tc_args},
+                                        }
+                                    ],
+                                },
+                                "finish_reason": "tool_calls",
+                            }
+                        ],
+                        "usage": usage_tc,
+                    })
+                return
+
+            # Step 2: All needed tool rounds have completed (or no tool call needed) -> synthesize final response via 93-Layer K3 + NCM!
+            if tool_rounds:
+                obs_text = "\n\n".join(
+                    f"[Step {idx} — {rd['name']}({rd['arguments']})]:\n{rd['output']}"
+                    for idx, rd in enumerate(tool_rounds[-4:], 1)
+                )
+                effective_user_prompt = (
+                    "Verified Workspace Tool Outputs:\n"
+                    + obs_text
+                    + "\n\nUsing theattached content / session context above, answer the user's request clearly and thoroughly:\n".replace("theattached", "the attached")
+                    + user_prompt
+                )
+            else:
+                effective_user_prompt = user_prompt
 
             with STATE.sess_lock:
                 STATE.sessions[session_id] = prior_turns[-6:]
 
             if image_b64:
-                r = STATE.submit_image_request(session_id, user_prompt or "Describe this image.", image_b64, cands=cands, remember=True)
+                r = STATE.submit_image_request(session_id, effective_user_prompt or "Describe this image.", image_b64, cands=cands, remember=True)
             else:
-                r = STATE.submit_text_request(session_id, user_prompt, cands=cands, remember=True)
+                r = STATE.submit_text_request(session_id, effective_user_prompt, cands=cands, remember=True)
 
             reply_text = r.get("reply") or r.get("reply_mbr8") or ""
-            n_tok = r.get("n_k3_tokens_mbr8", 0)
-            cid = "chatcmpl-" + uuid.uuid4().hex[:12]
+            # Append inline markdown image if Clover generated a chart or SVG illustration
+            for m_item in (r.get("media") or []):
+                if isinstance(m_item, dict) and m_item.get("data_url"):
+                    alt_t = m_item.get("alt") or m_item.get("caption") or "Clover Visual"
+                    reply_text += f"\n\n![{alt_t}]({m_item['data_url']})"
+
+            n_tok = int(r.get("n_k3_tokens_mbr8") or max(1, len(reply_text.split())))
+            p_tok = max(1, len(user_prompt.split()))
+            usage_obj = {
+                "prompt_tokens": p_tok,
+                "completion_tokens": n_tok,
+                "total_tokens": p_tok + n_tok,
+            }
 
             if stream:
+                role_chunk = {
+                    "id": cid,
+                    "object": "chat.completion.chunk",
+                    "created": created_ts,
+                    "model": req_model,
+                    "choices": [{"index": 0, "delta": {"role": "assistant", "content": ""}, "finish_reason": None}],
+                }
+                content_chunk = {
+                    "id": cid,
+                    "object": "chat.completion.chunk",
+                    "created": created_ts,
+                    "model": req_model,
+                    "choices": [{"index": 0, "delta": {"content": reply_text}, "finish_reason": None}],
+                }
+                stop_chunk = {
+                    "id": cid,
+                    "object": "chat.completion.chunk",
+                    "created": created_ts,
+                    "model": req_model,
+                    "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+                    "usage": usage_obj,
+                }
+                sse_payload = (
+                    f"data: {json.dumps(role_chunk)}\n\n"
+                    f"data: {json.dumps(content_chunk)}\n\n"
+                    f"data: {json.dumps(stop_chunk)}\n\n"
+                    "data: [DONE]\n\n"
+                ).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/event-stream; charset=utf-8")
                 self.send_header("Cache-Control", "no-cache")
                 self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Content-Length", str(len(sse_payload)))
                 self.end_headers()
-                chunk = {
-                    "id": cid,
-                    "object": "chat.completion.chunk",
-                    "created": int(time.time()),
-                    "model": "clover-ai",
-                    "choices": [{"index": 0, "delta": {"role": "assistant", "content": reply_text}, "finish_reason": "stop"}],
-                }
-                self.wfile.write(f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n".encode("utf-8"))
+                self.wfile.write(sse_payload)
                 self.wfile.flush()
             else:
                 self._send_json({
                     "id": cid,
                     "object": "chat.completion",
-                    "created": int(time.time()),
-                    "model": "clover-ai",
+                    "created": created_ts,
+                    "model": req_model,
                     "choices": [
                         {
                             "index": 0,
@@ -2168,7 +2433,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                             "finish_reason": "stop",
                         }
                     ],
-                    "usage": {"prompt_tokens": len(user_prompt.split()), "completion_tokens": n_tok, "total_tokens": len(user_prompt.split()) + n_tok},
+                    "usage": usage_obj,
                 })
             return
 

@@ -126,16 +126,17 @@ def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
         kw in p
         for kw in (
             "time table", "timetable", "schedule", "study plan", "plan", "routine",
-            "step", "steps", "list", "guide", "how can i prepare", "prepare", "explain", "compare", " vs ", " versus ",
+            "step", "steps", "list", "guide", "how can i", "how do i", "how should i", "how to ",
+            "can you ", "could you ", "please ", "prepare", "explain", "compare", " vs ", " versus ",
             "find", "research", "recent", "search", "papers", "arxiv", "developments",
             "what is", "what are", "how does", "how do", "why ", "better than", "difference",
-            "trends", "describe", "tell me about", "overview", "analyze", "summary", "summarize",
+            "trends", "describe", "tell me", "overview", "analyze", "summary", "summarize",
             "detail", "details", "link", "links", "example", "examples", "point ", "gpu", "gpus", "chip", "chips",
             "launch", "launched", "code", "write", "implement", "design", "architecture", "calculate", "compound",
             "function", "program", "algorithm", "prime", "binary search", "fibonacci", "factorial", "quicksort",
             "http://", "https://", "refer", "read ", "agents.md", "ncm", "next-concept", "next concept",
             "hybridagent", "hybrid agent", "what is clover", "clover framework", "clover kimi", "clover k3",
-            "clover-k3", "cut off", "didn't explain", "did not explain", "name", "names", "idea", "ideas",
+            "clover-k3", "framework", "cut off", "didn't explain", "did not explain", "name", "names", "idea", "ideas",
             "suggest", "recommend", "type", "types", "kind", "kinds", "way", "ways", "reason", "reasons",
             "tip", "tips", "benefit", "benefits", "feature", "features", "google", "baby",
             "how many", "how much", "how long", "how far", "solve",
@@ -283,8 +284,30 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             ln,
             flags=re.IGNORECASE,
         )
+        # Filter third-person planner meta-reasoning BEFORE converting 'the user' -> 'you'
+        raw_low_pre = ln.lower()
+        if (
+            raw_low_pre.startswith((
+                "the user ", "since the user", "because the user", "if the user", "when the user",
+                "what the user", "given the context of the previous", "given the previous conversation",
+                "for example, they might", "for example, the user",
+                "they might want to", "they are ready to", "it's likely they", "it is likely they",
+                "i should ask", "i need to clarify what", "to proceed, i need to",
+                "to provide a helpful response, i need to", "since the previous conversation",
+                "example prompt:", "this approach keeps the conversation",
+            ))
+            or re.search(
+                r"\b(?:confirmed their understanding|what they want to achieve|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|likely refers to their|that they understand how)\b",
+                raw_low_pre,
+            )
+        ):
+            continue
+        # Strip inline Example prompt: "..." or outer quote wrappers if the planner emitted a quoted response line
+        m_ex_prompt = re.match(r"^(?:example\s+(?:prompt|response|reply)\s*:\s*)?[\"“](.+?)[\"”]?\s*$", ln, flags=re.IGNORECASE)
+        if m_ex_prompt and not ln.endswith(":"):
+            ln = m_ex_prompt.group(1).strip().strip('"“”')
         ln = re.sub(
-            r"(?:Now I will write|The user is asking|Okay,\s*so\s*the\s*user|I should structure|No need for further|I will end the interaction|Identify the scope:|This approach ensures|This response provides|This summary captures|I've kept the information concise|No further analysis|No other information or steps|The answer is concise|This is a simple, friendly response|This response is concise|This response is direct|This response is polite|I'm maintaining a polite|I also included a question to encourage|Your message is straightforward, so a single|which aligns with the character description|It also provides a simple example to illustrate).*$",
+            r"(?:Now I will write|The user is asking|Okay,\s*so\s*the\s*user|I should structure|No need for further|I will end the interaction|Identify the scope:|This approach ensures|This approach keeps|This response provides|This summary captures|I've kept the information concise|No further analysis|No other information or steps|The answer is concise|This is a simple, friendly response|This response is concise|This response is direct|This response is polite|I'm maintaining a polite|I also included a question to encourage|Your message is straightforward, so a single|which aligns with the character description|It also provides a simple example to illustrate).*$",
             "",
             ln,
             flags=re.IGNORECASE,
@@ -354,6 +377,8 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             "you have provided a link to", "you have asked me to read", "i understand that you want me to read",
             "i understand that you are clarifying", "to be precise and avoid any confusion, i'll restate",
             "i need to:", "verify if the clover", "given the previous context, i know that",
+            "from the provided information, i can see", "so, the answers are:",
+            "list the contents of the directory", "read the `version` file", "check how many git working trees",
             "the explanation should be", "here's the response:", "here is the response:",
             "i've organized the information", "i've provided the search results", "i've provided a clear",
             "i've kept the response", "i've also ensured that", "the links are provided so",
@@ -390,16 +415,24 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
                 break
 
     # Drop any trailing dangling header (`:`), comma, unclosed parenthesis, dangling conjunction, or unclosed mid-sentence cut-off line
-    while len(raw_lines) > 1 and not raw_lines[-1].startswith("__CODE_BLOCK_") and (
+    while len(raw_lines) >= 1 and not raw_lines[-1].startswith("__CODE_BLOCK_") and (
         raw_lines[-1].endswith((":", ","))
         or (raw_lines[-1].count("(") > raw_lines[-1].count(")"))
-        or re.search(r"\b(?:and|or|to|for|of|in|with|by|from|that|which|since|because|however|so|but|the|a|an)$", raw_lines[-1].lower())
+        or re.search(
+            r"\b(?:and|or|to|for|of|in|with|by|from|that|which|since|because|however|so|but|the|a|an|assume|assuming|clarify|whether|if|when|while|as)$",
+            raw_lines[-1].lower(),
+        )
         or (
-            len(raw_lines) >= 4
+            len(raw_lines) >= 2
             and not raw_lines[-1].endswith((".", "!", "?", ")", '"', "'", "`"))
             and not re.search(r"https?://\S+$", raw_lines[-1])
         )
     ):
+        if len(raw_lines) == 1:
+            # Never leave a single truncated fragment without sentence-ending punctuation
+            if not raw_lines[0].endswith((".", "!", "?", ")", '"', "'", "`")):
+                raw_lines.pop()
+            break
         raw_lines.pop()
 
     if not raw_lines:
@@ -508,10 +541,10 @@ def format_readable_response(raw_joined: str) -> str:
             continue
 
         # Check if this line is a 'Title / Time-slot: Explanation' item
-        m_item = re.match(r"^([^:]{2,75}):\s+(.+)$", ln_clean)
+        m_item = re.match(r"^([^:]{2,95}):\s+(.+)$", ln_clean)
         if m_item and (idx > 0 or len(lines) > 1):
             label, body = m_item.group(1).strip(), m_item.group(2).strip()
-            if len(label.split()) <= 12 and not label.lower().startswith(("http", "https", "here is", "here's", "note")):
+            if len(label.split()) <= 16 and not label.lower().startswith(("http", "https", "here is", "here's", "note")):
                 formatted_blocks.append(f"• {label}: {body}")
                 continue
 

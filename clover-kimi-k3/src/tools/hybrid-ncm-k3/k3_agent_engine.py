@@ -598,18 +598,46 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
     if "not clover framework" in low or "about clover framework" in low:
         return "what is clover framework"
 
-    # 0c. Follow-ups asking to read / summarize / explain a file or link mentioned in a prior turn (e.g. 'Read the agents.md', 'read the link')
-    if any(k in low for k in ("read the ", "read this", "read that", "read it", "summarize the link", "summarize that link", "what does the link", "from the link")):
+    # 0c. Follow-ups asking to read / summarize / explain a file, framework, repo, or link mentioned in a prior turn
+    #     (e.g. 'Read the agents.md', 'read the link', 'Can you read the framework and tell me how to use it')
+    #     Skip when the user prompt specifies a local workspace file path (e.g. 'oss/clover-framework/VERSION', 'src/main.rs')!
+    has_local_filepath = bool(
+        re.search(
+            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b(?:VERSION|Makefile|Dockerfile)\b|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|toml|yaml|yml|c|cpp|h|txt|sh)\b)",
+            p,
+        )
+        and not re.search(r"https?://|\b(?:github\.com|cloverframework\.com|arxiv\.org|en\.wikipedia\.org)/", p)
+    )
+    if not has_local_filepath and any(
+        k in low
+        for k in (
+            "read the ", "read this", "read that", "read it",
+            "summarize the link", "summarize that link", "what does the link", "from the link",
+            "tell me how to use", "how to use the framework", "how to adopt the framework",
+        )
+    ):
         if "agents.md" in low or "agents md" in low:
             return "https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md"
         if history:
             for h in reversed(history):
-                prev_u = _extract_raw_user_query(h.get("user", ""))
-                m_u = re.search(r"https?://[^\s<>\"')]+", prev_u)
-                if m_u:
-                    return f"{p} {m_u.group(0)}"
+                for field in ("user", "reply"):
+                    prev_txt = _extract_raw_user_query(h.get(field, "")) if field == "user" else str(h.get(field, ""))
+                    urls = re.findall(r"https?://[^\s<>\"')]+", prev_txt)
+                    if urls:
+                        # Prefer concrete repo / documentation URLs when the prompt asks to read or use the framework/repo
+                        chosen_url = urls[-1].rstrip(".,;)")
+                        for u in urls:
+                            u_clean = u.rstrip(".,;)")
+                            if "github.com/" in u_clean or "cloverframework.com/" in u_clean:
+                                chosen_url = u_clean
+                        return f"{p} {chosen_url}"
+                prev_combined = f"{h.get('user', '')} {h.get('reply', '')}".lower()
+                if "clover" in prev_combined and ("framework" in low or "use it" in low or "adopt" in low):
+                    return "what is clover framework https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md"
+        if "framework" in low:
+            return "what is clover framework https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md"
 
-    # 1. Follow-up commands asking for search, links, sources, or more details on the prior turn's topic
+        # 1. Follow-up commands asking for search, links, sources, or more details on the prior turn's topic
     is_cs_search_algo = any(
         alg in low
         for alg in (
@@ -617,14 +645,23 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "search tree", "first search", "local search", "a* search", "ternary search",
         )
     )
+    is_bare_affirmation = low in ("yes", "yes please", "go ahead", "do it", "sure", "ok", "okay")
+    prior_offered_search_or_links = bool(
+        history
+        and any(
+            kw in str(history[-1].get("reply", "")).lower()
+            for kw in ("search for", "search the web", "link", "links", "url", "look up", "find out", "fetch", "read the")
+        )
+    )
     is_followup_link_or_search = (
         not is_cs_search_algo
         and (
             low in (
-                "find it", "search it", "look it up", "do it", "yes", "yes please", "go ahead", "find them", "show me",
+                "find it", "search it", "look it up", "find them", "show me",
                 "more details", "links", "sources", "do google search", "search google", "google it", "search on google",
                 "search the web", "search online",
             )
+            or (is_bare_affirmation and prior_offered_search_or_links)
             or (len(low.split()) <= 4 and any(w in low for w in ("find", "search", "fetch", "browse", "google")))
             or (
                 len(low.split()) <= 8
@@ -653,7 +690,16 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
         return "recent trends in science research links"
 
     # 2. Direct queries about Clover, Clover Framework, AGENTS.md, Clover Kimi K3, NCM, HybridAgent, GPUs, research papers, or web search
-    if any(
+    #    Skip static Clover overview lookup when the user is asking to inspect local files/repos/worktrees/code/branches in their workspace!
+    is_local_workspace_inspection = any(
+        lw in low
+        for lw in (
+            "working tree", "worktree", "worktrees", "git ", "local", "cloned", "branch", "branches",
+            "commit", "commits", "folder", "folders", "directory", "directories", "in this repo",
+            "look at clover repo", "check clover repo", "see it yourself",
+        )
+    )
+    if not is_local_workspace_inspection and any(
         kw in low
         for kw in (
             "find relevant research",
@@ -826,7 +872,12 @@ def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
         )
 
     # 5. Direct arithmetic expression (e.g. 'What is 25 * 4?', '144 / 12 + 7')
-    m_arith = re.search(r"(\d+(?:\.\d+)?(?:\s*[\+\-\*/]\s*\d+(?:\.\d+)?)+)", p)
+    #    Require whitespace around '-' or '/' (or explicit arithmetic operator '*', '+') and ensure the match
+    #    is not embedded inside a UUID/hex/date/hyphenated token (e.g. '39b9643d-b772-4239-8652-ee538247ee4f' or '2026-10-25')
+    m_arith = re.search(
+        r"(?<![a-zA-Z0-9_\-])(\d+(?:\.\d+)?(?:\s*[\+\*]\s*\d+(?:\.\d+)?|\s+[\-\/]\s+\d+(?:\.\d+)?)+)(?![a-zA-Z0-9_\-])",
+        p,
+    )
     if m_arith and not any(w in p for w in ("http", "year", "years", "version", "group")) and "def " not in p and ">>>" not in p:
         expr_s = m_arith.group(1).strip()
         return f"res = {expr_s}\nprint(f'{expr_s} = {{res:g}}')"
@@ -2384,9 +2435,17 @@ class CloverK3AgentEngine:
                         )
                     )
                     if (not is_struct or asks_brief_sentences) and not introduces_list and has_real_content:
-                        if len(valid_lines_so_far) == 1 and valid_lines_so_far[0].endswith((".", "!", "?")) and "two" not in raw_user_q.lower():
+                        last_valid = valid_lines_so_far[-1].strip()
+                        ends_clean_sentence = (
+                            last_valid.endswith((".", "!", "?"))
+                            and not re.search(
+                                r"\b(?:i'll|i will|let me|we can|to|and|or|for|with|by|from|that|which|since|because|assume|assuming)\s*[.!?]?$",
+                                last_valid.lower(),
+                            )
+                        )
+                        if len(valid_lines_so_far) == 1 and ends_clean_sentence and "two" not in raw_user_q.lower():
                             break
-                        if len(valid_lines_so_far) >= (3 if "two" in raw_user_q.lower() else 2) and len(valid_lines_so_far[-1]) > 15:
+                        if len(valid_lines_so_far) >= (3 if "two" in raw_user_q.lower() else 2) and len(last_valid) > 15 and ends_clean_sentence:
                             break
                     elif is_math_word_problem and has_real_content and ("####" in last_ln or "final answer" in last_ln):
                         break
@@ -2600,24 +2659,26 @@ class CloverK3AgentEngine:
         raw_q = _extract_raw_user_query(user_prompt).strip()
         if not raw_q or len(raw_q.split()) > 16:
             return None
-        if history and len(raw_q.split()) <= 5 and any(
-            w in raw_q.lower() for w in ("it", "that", "this", "more", "why", "how about", "and ")
-        ):
-            return None
         low_q = raw_q.lower()
-        explicit_web_or_detail = bool(
-            re.search(r"https?://|\b(?:github\.com|cloverframework\.com|arxiv\.org|en\.wikipedia\.org)/", raw_q)
-            or any(
-                kw in low_q
-                for kw in (
-                    "google", "search the web", "search online", "browse", "arxiv",
-                    "latest", "recent", "links", "sources", "more details", "in detail",
-                    "step by step", "bullet", "compare ",
+        # Universal multi-turn & tool/structured guards:
+        # 1. If the session has prior conversation history and the user prompt is an anaphoric follow-up,
+        #    short confirmation ('yes', 'ok', 'sure'), or conversational request, route through `run_agent_planning`
+        #    so prior turns and retrieved session chunks are respected!
+        if history and (
+            len(raw_q.split()) <= 6
+            or bool(
+                re.search(
+                    r"\b(?:it|that|this|them|those|these|there|more|why|how|can you|could you|please|read|use|adopt|try|apply|work|same|again)\b",
+                    low_q,
                 )
             )
-        )
+        ):
+            return None
+        # 2. Never bypass `run_agent_planning` when `<search>`, URL reading, `<python>`, visual chart/SVG,
+        #    or multi-window structured planning (`is_structured_or_multi_part_prompt`) is needed!
         if (
-            explicit_web_or_detail
+            is_structured_or_multi_part_prompt(raw_q)
+            or needs_agent_search_tool(raw_q, history=history) is not None
             or match_and_execute_visual_output(raw_q, self.py_tool, history=history) is not None
             or match_verified_code_template(raw_q) is not None
             or needs_agent_python_tool(raw_q, history=history) is not None
@@ -2669,6 +2730,12 @@ class CloverK3AgentEngine:
             return None
         reply_txt = self.k3_tok.decode(pred_ids).strip()
         if not reply_txt or not reply_txt.endswith((".", "!", "?")):
+            return None
+        # Structural degeneration & coherence gate: reject any direct VQ-VAE decode with adjacent punctuation
+        # stutter (e.g. '!,!,', '!!'), repeated word loops, or < 3 distinct alphabetic words
+        if re.search(r"[!,?;:]{2,}|,\s*,|\b(\w+)\s+\1\b", reply_txt, flags=re.IGNORECASE):
+            return None
+        if len(set(re.findall(r"[a-zA-Z]{2,}", reply_txt.lower()))) < 3:
             return None
         if reply_txt.lower().rstrip(".!?") == raw_q.lower().rstrip(".!?"):
             return None
@@ -2741,6 +2808,339 @@ class CloverK3AgentEngine:
             "n_k3_tokens": len(ids_mbr),
             "reply": text_mbr,
         }
+
+    @torch.no_grad()
+    def decide_vscode_agent_step(
+        self,
+        user_prompt: str,
+        workspace_info: str,
+        history: list[dict],
+        tool_rounds: list[dict],
+        available_tools: list[dict],
+        min_lat: int = 6,
+        max_lat: int = 10,
+        max_new: int = 280,
+    ) -> dict | None:
+        """Runs HybridAgent-8B-Agentic using its NATIVE trained `<tools>` / `<tool_call>` / `<tool_response>` chat template
+        (`ha_tok.apply_chat_template(chat_msgs, tools=selected_tools, tokenize=False, add_generation_prompt=True)`)
+        plus continuous `<latent>` reasoning (`run_hybridlink`) over the user request, VS Code workspace structure,
+        and prior multi-step tool-call rounds (`read_file`, `list_dir`, `file_search`, `grep_search`, `run_in_terminal`,
+        `replace_string_in_file`, `create_file`, `get_errors`, etc.).
+        Returns `{"name": tool_name, "arguments": json_str}` if another tool call is needed, or `None` if all needed
+        evidence/actions have been gathered and the agent is ready to synthesize the final response via 93-Layer K3 + NCM.
+        """
+        if not available_tools or len(tool_rounds) >= 8:
+            return None
+
+        raw_q = _extract_raw_user_query(user_prompt).strip()
+        low_q = raw_q.lower()
+
+        if not tool_rounds and is_short_greeting_or_ack(raw_q):
+            return None
+
+        has_workspace_intent = bool(
+            tool_rounds
+            or any(
+                kw in low_q
+                for kw in (
+                    "repo", "repository", "worktree", "working tree", "branch", "commit", "git",
+                    "file", "files", "folder", "folders", "directory", "directories", "path",
+                    "read", "look at", "check", "inspect", "see it", "local", "cloned", "workspace",
+                    "search", "find", "grep", "where is", "how many", "list", "edit", "modify",
+                    "update", "fix", "create", "write", "run", "test", "build", "terminal", "command",
+                    "code", "function", "class", "implement", "version", ".py", ".rs", ".ts", ".js",
+                    ".md", ".json", ".c", ".h", ".toml", ".yaml", ".yml",
+                )
+            )
+        )
+        if not has_workspace_intent:
+            return None
+
+        # Normalize tools into standard OpenAI `{type: "function", function: {name, description, parameters}}` objects
+        tool_map = {}
+        tool_order = []
+        for t in available_tools:
+            if not isinstance(t, dict):
+                continue
+            fn = t.get("function") if isinstance(t.get("function"), dict) else t
+            name = str(fn.get("name") or "").strip()
+            if not name or name in ("vscode_askQuestions", "manage_todo_list"):
+                continue
+            desc = str(fn.get("description") or "").splitlines()[0][:200]
+            params = fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}}
+            tool_map[name] = {
+                "type": "function",
+                "function": {
+                    "name": name,
+                    "description": desc,
+                    "parameters": params,
+                },
+            }
+            tool_order.append(name)
+
+        if not tool_map:
+            return None
+
+        priority_tools = [
+            "read_file", "list_dir", "file_search", "grep_search", "run_in_terminal",
+            "replace_string_in_file", "create_file", "get_errors",
+        ]
+        selected_names = [n for n in priority_tools if n in tool_map]
+        for n in tool_order:
+            if n not in selected_names and len(selected_names) < 12:
+                selected_names.append(n)
+        selected_tools = [tool_map[n] for n in selected_names]
+
+        # Extract workspace root from workspace_info (e.g., '- c:\personal' or '- /home/usergpu/clover-framework')
+        m_root = re.search(r"-\s*([A-Za-z]:\\[^\r\n]+|/[^\r\n]+)", workspace_info or "")
+        ws_root = m_root.group(1).strip().rstrip("\\/") if m_root else "C:\\personal"
+        sep_ch = "\\" if "\\" in ws_root else "/"
+
+        def _resolve_abs_path(p_str: str) -> str:
+            p_str = str(p_str or "").strip().strip("'\"`")
+            if not p_str or p_str in (".", "./", ".\\"):
+                return ws_root
+            if re.match(r"^[A-Za-z]:[\\/]|^/", p_str):
+                return p_str
+            return ws_root + sep_ch + p_str.replace("/", sep_ch).replace("\\", sep_ch).lstrip("\\/")
+
+        def _normalize_tool_args(t_name: str, raw_args: dict) -> dict:
+            args = dict(raw_args or {})
+            if t_name == "read_file":
+                fp = args.get("filePath") or args.get("path") or args.get("file") or ""
+                args = {
+                    "filePath": _resolve_abs_path(fp),
+                    "startLine": int(args.get("startLine") or 1),
+                    "endLine": int(args.get("endLine") or 150),
+                }
+            elif t_name == "list_dir":
+                dp = args.get("path") or args.get("dirPath") or args.get("directory") or ws_root
+                args = {"path": _resolve_abs_path(dp)}
+            elif t_name == "file_search":
+                q = args.get("query") or args.get("pattern") or "**/*"
+                args = {"query": str(q)}
+            elif t_name == "grep_search":
+                q = args.get("query") or args.get("pattern") or ""
+                out_g = {
+                    "query": str(q),
+                    "isRegexp": bool(args.get("isRegexp", True)),
+                }
+                if args.get("includePattern"):
+                    out_g["includePattern"] = str(args["includePattern"])
+                args = out_g
+            elif t_name == "run_in_terminal":
+                cmd_s = str(args.get("command") or args.get("cmd") or "").strip()
+                if "\\" in ws_root and "&&" in cmd_s:
+                    cmd_s = cmd_s.replace("&&", ";")
+                args = {
+                    "command": cmd_s,
+                    "explanation": str(args.get("explanation") or f"Run command for: {raw_q[:80]}"),
+                    "goal": str(args.get("goal") or raw_q[:60] or "Inspect workspace"),
+                    "mode": "sync",
+                }
+            elif t_name == "create_file":
+                fp = args.get("filePath") or args.get("path") or ""
+                args = {
+                    "filePath": _resolve_abs_path(fp),
+                    "content": str(args.get("content") or ""),
+                }
+            elif t_name == "replace_string_in_file":
+                fp = args.get("filePath") or args.get("path") or ""
+                args = {
+                    "filePath": _resolve_abs_path(fp),
+                    "oldString": str(args.get("oldString") or ""),
+                    "newString": str(args.get("newString") or ""),
+                }
+            return args
+
+        already_called_sigs = set()
+        for rd in tool_rounds:
+            t_name = str(rd.get("name") or "").strip()
+            try:
+                t_args_obj = json.loads(rd.get("arguments") or "{}")
+            except Exception:
+                t_args_obj = {}
+            norm_a = _normalize_tool_args(t_name, t_args_obj)
+            already_called_sigs.add((t_name, json.dumps(norm_a, sort_keys=True)))
+
+        # Build the native multi-turn messages array for `ha_tok.apply_chat_template(chat_msgs, tools=selected_tools)`
+        sys_prompt = (
+            "You are Clover Kimi K3 operating as an autonomous coding agent in VS Code. "
+            "Follow the Clover cycle (Context -> Direction -> Execution -> Outcome -> Growth): "
+            "always inspect the real workspace step by step using the provided tools (`list_dir`, `read_file`, `file_search`, `grep_search`, `run_in_terminal`, `replace_string_in_file`, `create_file`) "
+            "before answering or making changes. Never guess file contents, directory listings, or git state without calling a tool first. "
+            f"The workspace root path is `{ws_root}`. Always pass full absolute paths to `read_file` and `list_dir`. "
+            "When all required tool steps have been executed and their `<tool_response>` outputs contain the answer, write the final response directly without emitting another `<tool_call>`."
+        )
+
+        chat_msgs = [{"role": "system", "content": sys_prompt}]
+        for h in (history or [])[-4:]:
+            if h.get("user") and h.get("reply"):
+                chat_msgs.append({"role": "user", "content": str(h["user"])[:600]})
+                chat_msgs.append({"role": "assistant", "content": str(h["reply"])[:600]})
+
+        ws_header = f"Workspace Info:\n{workspace_info[:2000]}\n\n" if workspace_info else f"Workspace Root: {ws_root}\n\n"
+        chat_msgs.append({"role": "user", "content": f"{ws_header}{raw_q}"})
+
+        for idx, rd in enumerate(tool_rounds):
+            t_name = str(rd.get("name") or "").strip()
+            try:
+                t_args_obj = json.loads(rd.get("arguments") or "{}")
+            except Exception:
+                t_args_obj = {}
+            norm_a = _normalize_tool_args(t_name, t_args_obj)
+            chat_msgs.append({
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "id": rd.get("id") or f"call_{idx+1}",
+                        "type": "function",
+                        "function": {"name": t_name, "arguments": json.dumps(norm_a)},
+                    }
+                ],
+            })
+            chat_msgs.append({
+                "role": "tool",
+                "tool_call_id": rd.get("id") or f"call_{idx+1}",
+                "content": str(rd.get("output") or "")[:3200],
+            })
+
+        backbone = self.ha_model.backbone
+        embed_w = backbone.get_input_embeddings().weight
+        base_chat = self.ha_tok.apply_chat_template(
+            chat_msgs,
+            tools=selected_tools,
+            add_generation_prompt=True,
+            tokenize=False,
+        )
+        if base_chat.rstrip("\n").endswith(THINK_OPEN):
+            prefix_str = base_chat + "\nLet me check the workspace state and decide the next action." + ENTRY_ANCHOR
+        else:
+            prefix_str = base_chat + THINK_OPEN + "\nLet me check the workspace state and decide the next action." + ENTRY_ANCHOR
+
+        inp_ids = self.ha_tok(prefix_str, return_tensors="pt").input_ids.to(self.dev_ha)
+        out = backbone(input_ids=inp_ids, use_cache=True, output_hidden_states=True, return_dict=True)
+        past_kv = out.past_key_values
+        last_h = out.hidden_states[-1][:, -1, :]
+        next_logits = out.logits[:, -1, :]
+
+        for step in range(max_lat):
+            r_h = self.ha_model.run_hybridlink(last_h, output_dtype=embed_w.dtype)
+            arg_id = int(next_logits.argmax(dim=-1).item())
+            if step >= min_lat and arg_id == self.lat_close_id:
+                break
+            out = backbone(inputs_embeds=r_h.unsqueeze(1), past_key_values=past_kv, use_cache=True, output_hidden_states=True, return_dict=True)
+            past_kv = out.past_key_values
+            last_h = out.hidden_states[-1][:, -1, :]
+            next_logits = out.logits[:, -1, :]
+
+        if not tool_rounds:
+            # Round 0: close <think> and open native <tool_call> so the model emits the first tool call JSON
+            bridge_str = EXIT_ANCHOR + " I need to call a workspace tool first.\n" + THINK_CLOSE + "\n\n<tool_call>\n{\"name\": \""
+        else:
+            # Subsequent rounds: close <think>\n\n and let the model naturally choose between <tool_call> (more steps needed) or plain text (done!)
+            bridge_str = EXIT_ANCHOR + "\n" + THINK_CLOSE + "\n\n"
+        b_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+        out = backbone(input_ids=b_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
+        past_kv = out.past_key_values
+        next_logits = out.logits[:, -1, :]
+
+        gen_ids = []
+        im_end_ids = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
+        eos_ids = {self.ha_tok.eos_token_id, self.think_close_id, 151643, 151645} | im_end_ids
+        for step_i in range(max_new):
+            nxt = int(next_logits.argmax(dim=-1).item())
+            if nxt in eos_ids:
+                break
+            gen_ids.append(nxt)
+            txt = self.ha_tok.decode(gen_ids, skip_special_tokens=False)
+            if "</tool_call>" in txt:
+                break
+            # In Round >= 1, if the model has started writing a plain-text final answer (no <tool_call> in the first 25 tokens), stop early and let Step 2 render it
+            if tool_rounds and step_i >= 16 and "<tool_call>" not in txt and "{\"name\"" not in txt:
+                break
+            out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
+            past_kv = out.past_key_values
+            next_logits = out.logits[:, -1, :]
+
+        raw_decision = self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
+        if not tool_rounds and not raw_decision.startswith("<tool_call>"):
+            raw_decision = '<tool_call>\n{"name": "' + raw_decision
+
+        m_tc = re.search(r"<tool_call>\s*(\{[\s\S]*?\})\s*</tool_call>", raw_decision, flags=re.IGNORECASE)
+        cand_json = m_tc.group(1) if m_tc else None
+        if not cand_json:
+            m_brace = re.search(r"(\{\s*\"name\"\s*:\s*\"[^\"]+\"[\s\S]*\})", raw_decision)
+            if m_brace:
+                cand_json = m_brace.group(1)
+
+        parsed_call = None
+        if cand_json:
+            for suffix in ("", "}", "}}", "\"}}", "\"}]}"):
+                try:
+                    parsed_call = json.loads(cand_json + suffix)
+                    break
+                except Exception:
+                    pass
+
+        if isinstance(parsed_call, dict):
+            t_name = str(parsed_call.get("name") or "").strip()
+            t_args = parsed_call.get("arguments") or parsed_call.get("parameters") or {}
+            if isinstance(t_args, str):
+                try:
+                    t_args = json.loads(t_args)
+                except Exception:
+                    t_args = {}
+            if t_name in tool_map and isinstance(t_args, dict):
+                norm_args = _normalize_tool_args(t_name, t_args)
+                sig = (t_name, json.dumps(norm_args, sort_keys=True))
+                if sig not in already_called_sigs:
+                    # Verify non-empty required arguments
+                    if t_name == "run_in_terminal" and not norm_args.get("command"):
+                        pass
+                    elif t_name == "read_file" and not norm_args.get("filePath"):
+                        pass
+                    else:
+                        return {"name": t_name, "arguments": json.dumps(norm_args)}
+
+        # Multi-step fallback when the user prompt explicitly requests a sequence of workspace inspections
+        # (e.g. 'list dir ... then read VERSION', 'check git worktrees', 'read <file>') and a step in that sequence has not run yet
+        called_names = {rd.get("name") for rd in tool_rounds}
+        if any(w in low_q for w in ("worktree", "working tree", "worktrees", "working trees")) and "run_in_terminal" in tool_map and "run_in_terminal" not in called_names:
+            repo_dir = f"{ws_root}{sep_ch}oss{sep_ch}clover-framework" if ("clover" in low_q and "clover-framework" not in ws_root) else ws_root
+            norm_args = _normalize_tool_args("run_in_terminal", {"command": f'git -C "{repo_dir}" worktree list'})
+            sig = ("run_in_terminal", json.dumps(norm_args, sort_keys=True))
+            if sig not in already_called_sigs:
+                return {"name": "run_in_terminal", "arguments": json.dumps(norm_args)}
+
+        if any(w in low_q for w in ("list the dir", "list dir", "files in", "what files are in")) and "list_dir" in tool_map and "list_dir" not in called_names:
+            norm_args = _normalize_tool_args("list_dir", {"path": ws_root})
+            sig = ("list_dir", json.dumps(norm_args, sort_keys=True))
+            if sig not in already_called_sigs:
+                return {"name": "list_dir", "arguments": json.dumps(norm_args)}
+
+        m_fpaths = re.findall(
+            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|txt|sh)\b|\b(?:VERSION|README\.md|LICENSE|Makefile|Dockerfile)\b)",
+            raw_q,
+        )
+        if m_fpaths and "read_file" in tool_map:
+            for cand_fp in m_fpaths:
+                cand_fp = cand_fp.rstrip(".,;:)")
+                if cand_fp.startswith(("http:", "https:", "//")):
+                    continue
+                abs_cand = _resolve_abs_path(cand_fp)
+                # Skip workspace root or directory paths (which do not have a filename extension or known file basename)
+                base_name = abs_cand.replace("\\", "/").rstrip("/").split("/")[-1]
+                is_file_like = ("." in base_name) or base_name in ("VERSION", "README", "LICENSE", "Makefile", "Dockerfile", "Cargo.lock")
+                if not is_file_like or abs_cand.rstrip("\\/") == ws_root.rstrip("\\/"):
+                    continue
+                norm_args = _normalize_tool_args("read_file", {"filePath": cand_fp, "startLine": 1, "endLine": 150})
+                sig = ("read_file", json.dumps(norm_args, sort_keys=True))
+                if sig not in already_called_sigs:
+                    return {"name": "read_file", "arguments": json.dumps(norm_args)}
+
+        return None
 
 
 @torch.no_grad()
