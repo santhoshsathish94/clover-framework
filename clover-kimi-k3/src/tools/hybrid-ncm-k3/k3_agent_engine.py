@@ -138,6 +138,20 @@ class K3KnowledgeSearchTool:
             "• NVIDIA GeForce RTX 5090 & RTX 5080 (Blackwell Consumer GPUs): RTX 5090 features 32 GB GDDR7 memory on a 512-bit bus with DLSS 4 Multi Frame Generation.",
         ),
         (
+            "How to use and adopt the Clover Framework in regular work AGENTS.md context file cycle",
+            "How to Use and Adopt the Clover Framework in Regular Work (https://cloverframework.com/start/ and https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md):\n"
+            "• Step 1 — Drop AGENTS.md into Your Workspace: Copy `AGENTS.md` (the 22-section operating specification) into your repository root or configure it as an always-on instruction file in your editor (`applyTo: '**'`) so every AI session reads it before acting.\n"
+            "• Step 2 — Keep a Context File Beside the Work: Create and maintain a living context markdown file (`CONTEXT.md` or `<topic>-context.md`) next to the code or investigation. Update it after every cycle with what was checked, what was observed, and what remains unknown.\n"
+            "• Step 3 — Run the Five-Stage Cycle (Context <-> Direction <-> Execution <-> Outcome <-> Growth): (1) Context: read the actual running system, code, logs, and tests first (never guess from memory); (2) Direction: the human sets the goal, priorities, and non-negotiable boundaries; (3) Execution: make the smallest verifiable change inside those boundaries; (4) Outcome: measure what the real system actually showed (if it fails after two attempts without new information, return to Context rather than blind retry); (5) Growth: record what worked and what failed in the context file and memory tree for the next cycle.",
+        ),
+        (
+            "RTX 3090 vs Blackwell B200 MI350X RTX 5090 Ampere GA102 Clover 93-layer MoE",
+            "How the NVIDIA GeForce RTX 3090 Compares with Newer GPUs — and How Clover Runs 2.78T Kimi K3 on 8x RTX 3090s:\n"
+            "• RTX 3090 Hardware Reality (Ampere GA102, sm_86): Each RTX 3090 provides 24 GB of GDDR6X memory at 936 GB/s bandwidth, 10,496 FP32 CUDA cores, 328 3rd-gen Tensor Cores, and NVLink bridge support (51.9 GB/s one-way per pair). Across an 8x RTX 3090 server, that totals 192 GiB of fast GDDR6X VRAM.\n"
+            "• Comparison with Blackwell B200 / AMD MI350X / RTX 5090: Data-center accelerators like NVIDIA Blackwell B200 (192 GB HBM3e, 8 TB/s, FP4 Tensor Cores) and AMD MI350X (288 GB HBM3e) pack 8x-10x higher per-chip memory capacity and bandwidth, while RTX 5090 brings 32 GB GDDR7 (1.79 TB/s).\n"
+            "• Why 8x RTX 3090s Are Highly Capable with Smart Data-Movement Engineering: Rather than treating 24 GB per card as a dead end, Clover partitions all 93 Kimi K3 trunks (52.7 GiB) + 2,576 permanent 4-bit palette-mapped experts + 1,229 dynamic VRAM CardPool slots across GPUs 0..5 backed by a 51.1 GB pinned RAM cache (2,912 slots) and NVMe direct storage. With Red-Blue Pebble Clean-Input R4 zero-D2H admission, SpecMD Least-Stale eviction (95.3% overall VRAM hit rate), FlashAttention-2 Split-KV (2.6x-6.8x faster MLA), Eyeriss v2 broadcast coalescing, and 11-pass parallel NCM, 8x RTX 3090s run all 93 layers of the 2.78T model interactively at 148.5 K3 tok/s (and 17,869.8 tok/s in 8-GPU DDP NCM mode).",
+        ),
+        (
             "Recent trends in science research links",
             "Key Recent Trends in Science and Research Links:\n"
             "• Artificial Intelligence & Foundation Models: Advances in multimodal reasoning, latent-space agents, and scientific discovery (Link: https://arxiv.org/list/cs.AI/recent).\n"
@@ -176,7 +190,17 @@ class K3KnowledgeSearchTool:
                         return f"Reference ({t}):\n{b}\n\n{live_url_res}"
             return live_url_res
 
-        # 2. Direct routing for AGENTS.md, NCM, Clover Kimi K3, and Clover Framework
+        # 2. Direct routing for AGENTS.md, Clover adoption/usage, RTX 3090 comparison, NCM, Clover Kimi K3, and Clover Framework
+        if any(k in low_q for k in ("3090", "rtx 3090")) and any(k in low_q for k in ("compare", "capable", "running", "b200", "blackwell", "5090", "mi350", "mi325", "new gpu")):
+            for t, b in self.KNOWLEDGE_DOCS:
+                if t.startswith("RTX 3090 vs"):
+                    return f"Reference ({t}):\n{b}"
+
+        if any(k in low_q for k in ("how to use", "tell me how to use", "how to adopt", "adopt the framework", "use the framework", "in my regular work", "how can i do that", "small project or pilot", "quickstart")):
+            for t, b in self.KNOWLEDGE_DOCS:
+                if t.startswith("How to use and adopt"):
+                    return f"Reference ({t}):\n{b}"
+
         if any(k in low_q for k in ("agents.md", "agents md")) or (
             "clover" in low_q and any(k in low_q for k in ("dharma", "discernment", "operating rules", "operating instructions"))
         ):
@@ -683,28 +707,37 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "read the ", "read this", "read that", "read it",
             "summarize the link", "summarize that link", "what does the link", "from the link",
             "tell me how to use", "how to use the framework", "how to adopt the framework",
+            "adopt the framework", "how can i do that", "how do i do that", "how to start with clover",
         )
     ):
+        if any(k in low for k in ("tell me how to use", "how to use the framework", "how to adopt", "adopt the framework", "in my regular work")):
+            return "how to use and adopt the clover framework in regular work"
         if "agents.md" in low or "agents md" in low:
             return "https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md"
         if history:
-            for h in reversed(history):
+            for h in reversed(history[-4:]):
+                prev_combined = f"{h.get('user', '')} {h.get('reply', '')}".lower()
+                if "clover" in prev_combined and any(k in low for k in ("framework", "use it", "adopt", "how can i do that", "how do i do that")):
+                    return "how to use and adopt the clover framework in regular work"
                 for field in ("user", "reply"):
                     prev_txt = _extract_raw_user_query(h.get(field, "")) if field == "user" else str(h.get(field, ""))
                     urls = re.findall(r"https?://[^\s<>\"')]+", prev_txt)
                     if urls:
-                        # Prefer concrete repo / documentation URLs when the prompt asks to read or use the framework/repo
                         chosen_url = urls[-1].rstrip(".,;)")
                         for u in urls:
                             u_clean = u.rstrip(".,;)")
                             if "github.com/" in u_clean or "cloverframework.com/" in u_clean:
                                 chosen_url = u_clean
                         return f"{p} {chosen_url}"
-                prev_combined = f"{h.get('user', '')} {h.get('reply', '')}".lower()
-                if "clover" in prev_combined and ("framework" in low or "use it" in low or "adopt" in low):
-                    return "what is clover framework https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md"
         if "framework" in low:
-            return "what is clover framework https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md"
+            return "how to use and adopt the clover framework in regular work"
+
+    # 0d. Follow-up comparisons about RTX 3090 vs newer GPUs ('how does it compare with the 3090', 'but your running in 3090 and it's very capable')
+    if "3090" in low and (
+        any(k in low for k in ("compare", "capable", "running", "b200", "blackwell", "5090", "mi350", "mi325"))
+        or (history and any("gpu" in f"{h.get('user', '')} {h.get('reply', '')}".lower() for h in history[-4:]))
+    ):
+        return "RTX 3090 vs Blackwell B200 MI350X RTX 5090 Ampere GA102 Clover 93-layer MoE"
 
         # 1. Follow-up commands asking for search, links, sources, or more details on the prior turn's topic
     is_cs_search_algo = any(
@@ -1295,10 +1328,23 @@ def render_creative_scene_svg(subject: str):
             "\nScene Elements: Sweeping golden sand dunes, a warm desert sunset sky, and a silhouetted saguaro cactus.",
         ]
 
-    # 3. Space / Galaxy / Nebula / Planet / Cosmos / Night Sky
-    elif any(k in s_low for k in ("space", "galaxy", "nebula", "planet", "cosmos", "astronaut", "rocket", "star", "moon", "universe", "sci-fi", "scifi")):
-        title_str = f"Cosmic Scene — {clean_subj.title()}"
+    # 3. Space / Galaxy / Nebula / Planet / Cosmos / Rocket / Night Sky
+    elif any(k in s_low for k in ("space", "galaxy", "nebula", "planet", "cosmos", "astronaut", "rocket", "spaceship", "star", "moon", "universe", "sci-fi", "scifi")):
+        has_rocket = any(rk in s_low for rk in ("rocket", "spaceship", "shuttle", "launch", "astronaut"))
+        title_str = f"Rocket in Deep Space — {clean_subj.title()}" if has_rocket else f"Cosmic Scene — {clean_subj.title()}"
         ring_angle = -18 + (h_seed % 15)
+        rocket_svg = (
+            '<g transform="translate(235, 225) rotate(-32)">'
+            '<path d="M -14 48 Q 0 92 14 48 Z" fill="#f97316" opacity="0.92"/>'
+            '<path d="M -8 48 Q 0 76 8 48 Z" fill="#fef08a"/>'
+            '<polygon points="-18,28 -34,52 -14,44" fill="#ef4444"/>'
+            '<polygon points="18,28 34,52 14,44" fill="#ef4444"/>'
+            '<path d="M 0 -52 C 18 -24 20 18 18 44 L -18 44 C -20 18 -18 -24 0 -52 Z" fill="#f8fafc" stroke="#0d9488" stroke-width="2.5"/>'
+            '<path d="M 0 -52 C 9 -36 12 -22 13 -14 L -13 -14 C -12 -22 -9 -36 0 -52 Z" fill="#ef4444"/>'
+            '<circle cx="0" cy="4" r="9" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5"/>'
+            '<circle cx="-3" cy="1" r="2.5" fill="#e0f2fe"/>'
+            '</g>'
+        ) if has_rocket else ""
         svg_markup = (
             '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Space and Galaxy Illustration">'
             '<defs>'
@@ -1324,21 +1370,26 @@ def render_creative_scene_svg(subject: str):
             '<circle cx="95" cy="240" r="1.5" opacity="0.75"/><circle cx="185" cy="310" r="1.8" opacity="0.85"/>'
             '<circle cx="620" cy="295" r="1.6" opacity="0.8"/><circle cx="690" cy="350" r="1.3" opacity="0.7"/>'
             '</g>'
-            '<circle cx="210" cy="145" r="28" fill="#fef08a" opacity="0.92"/>'
-            f'<g transform="translate(470, 215) rotate({ring_angle})">'
+            '<circle cx="160" cy="115" r="26" fill="#fef08a" opacity="0.92"/>'
+            f'<g transform="translate(510, 215) rotate({ring_angle})">'
             '<ellipse cx="0" cy="0" rx="155" ry="36" fill="none" stroke="#5eead4" stroke-width="6" opacity="0.55"/>'
             '<ellipse cx="0" cy="0" rx="132" ry="28" fill="none" stroke="#f59e0b" stroke-width="2.5" opacity="0.65"/>'
             '</g>'
-            '<circle cx="470" cy="215" r="76" fill="url(#planetGrad)"/>'
-            '<circle cx="585" cy="115" r="18" fill="#cbd5e1"/>'
-            '<circle cx="580" cy="111" r="4" fill="#94a3b8"/><circle cx="592" cy="121" r="3" fill="#94a3b8"/>'
+            '<circle cx="510" cy="215" r="76" fill="url(#planetGrad)"/>'
+            '<circle cx="625" cy="115" r="18" fill="#cbd5e1"/>'
+            '<circle cx="620" cy="111" r="4" fill="#94a3b8"/><circle cx="632" cy="121" r="3" fill="#94a3b8"/>'
+            f'{rocket_svg}'
             f'<text x="380" y="392" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#ccfbf1">{clean_subj.title()}</text>'
             '</svg>'
         )
         cap_str = f"Generated SVG cosmic illustration: {title_str}."
         plans = [
             f"Here is an SVG cosmic illustration of {clean_subj}:",
-            "\nScene Elements: A ringed teal exoplanet, companion moon, and binary star glow set against a deep-space nebula.",
+            (
+                "\nScene Elements: A sleek spacecraft rocket with twin booster fins, illuminated viewport, and exhaust plume soaring past a ringed teal exoplanet and deep-space nebula."
+                if has_rocket
+                else "\nScene Elements: A ringed teal exoplanet, companion moon, and binary star glow set against a deep-space nebula."
+            ),
         ]
 
     # 2. Ocean / Sea / Beach / Waves / Island
@@ -1541,10 +1592,12 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
         ]
         return "image_capabilities", "Listed supported image and chart categories", [], plans
 
-    is_capability_question = p.endswith("?") or p.startswith((
-        "can you", "are you able", "do you", "how do you", "what can you", "what images", "which images",
+    is_capability_question = p.startswith((
+        "what can you", "what images", "which images", "what kind of image", "how do you",
         "why ", "what is ", "explain ", "is this", "is that", "is it", "are these", "was that", "does this",
-    ))
+    )) or (
+        p.rstrip("?.!") in ("can you generate images", "can you create images", "can you draw", "do you generate images", "are you able to generate images")
+    )
 
     # Check if the conversation context (within the last 8 turns) is already about image/illustration generation
     in_image_conversation = False
@@ -1557,10 +1610,10 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
             if any(
                 kw in u_prev_low or kw in r_prev
                 for kw in (
-                    "generate image", "generate images", "create an image", "generate an image",
+                    "generate image", "generate images", "create an image", "generate an image", "generate a ",
                     "what images can you", "what would you like me to create", "what kind of image",
                     "create an image for you", "svg illustration", "here is an svg", "here is a custom illustration",
-                    "illustration of", "scene elements:", "natural landscape",
+                    "illustration of", "scene elements:", "natural landscape", "image generation capabilities",
                 )
             ):
                 in_image_conversation = True
@@ -1569,7 +1622,7 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
                 for s_kw in (
                     "snake", "cobra", "serpent", "forest", "woods", "tree", "jungle", "natural landscape",
                     "landscape", "mountain", "ocean", "beach", "sea", "island", "desert", "dune", "canyon",
-                    "space", "galaxy", "planet", "nebula", "city", "futuristic", "skyline", "sunset", "sunrise", "meadow", "clover",
+                    "space", "galaxy", "planet", "nebula", "rocket", "spaceship", "city", "futuristic", "skyline", "sunset", "sunrise", "meadow", "clover",
                 )
             ) and not any(neg in u_prev_low for neg in ("never", "not", "didn't", "why", "what", "search", "google", "is this")):
                 last_visual_subject = u_prev
@@ -1577,13 +1630,13 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
     scene_topic_keywords = (
         "snake", "cobra", "serpent", "forest", "woods", "woodland", "trees", "jungle", "pine", "natural landscape", "landscape",
         "mountain", "mountains", "ocean", "beach", "sea", "coast", "island", "desert", "dunes", "canyon",
-        "space", "galaxy", "nebula", "planet", "cosmos", "city", "cityscape", "futuristic", "cyberpunk",
+        "space", "galaxy", "nebula", "planet", "cosmos", "rocket", "spaceship", "city", "cityscape", "futuristic", "cyberpunk",
         "skyline", "sunset", "sunrise", "meadow", "clover", "nature",
     )
 
     explicit_create_cmd = bool(
         re.match(
-            r"^(?:just\s+|then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|paint|render)\b",
+            r"^(?:just\s+|then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+|would\s+you\s+)*(?:create|generate|draw|make|paint|render)\b",
             p,
         )
         or p in (
@@ -1591,6 +1644,7 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
             "create one", "draw something", "just generate", "just create", "just draw", "generate it",
             "create it", "draw it", "please generate", "generate please", "yes generate", "go ahead",
         )
+        or (in_image_conversation and p.rstrip(".!?") in ("sure", "yes", "yes please", "ok", "okay", "please", "do it", "go ahead"))
     )
 
     followup_subject_only = (
@@ -2361,10 +2415,22 @@ class CloverK3AgentEngine:
         tool_obs_str = ("\n\n" + "\n\n".join(tool_obs_parts)) if tool_obs_parts else ""
 
         msgs = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
+        last_substantive_u = ""
+        last_substantive_r = ""
         if history:
             for h in history[-6:]:
-                msgs.append({"role": "user", "content": h["user"]})
-                msgs.append({"role": "assistant", "content": "W1: " + h["reply"].replace("\n", "\nW2: ", 1)})
+                u_h = str(h.get("user") or "").strip()
+                r_h = str(h.get("reply") or "").strip()
+                r_lines = [ln.strip() for ln in r_h.splitlines() if ln.strip()]
+                formatted_r = "\n".join(f"W{idx + 1}: {ln}" for idx, ln in enumerate(r_lines[:6])) if r_lines else f"W1: {r_h}"
+                msgs.append({"role": "user", "content": u_h})
+                msgs.append({"role": "assistant", "content": formatted_r})
+                u_clean_h = _extract_raw_user_query(u_h)
+                if u_clean_h and not is_short_greeting_or_ack(u_clean_h) and len(u_clean_h.split()) >= 3:
+                    last_substantive_u = u_clean_h
+                    last_substantive_r = " ".join(r_lines[:3])[:360]
+                elif not last_substantive_r and r_h:
+                    last_substantive_r = " ".join(r_lines[:3])[:360]
         else:
             msgs.append({"role": "user", "content": "hi"})
             msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
@@ -2378,6 +2444,22 @@ class CloverK3AgentEngine:
                     ),
                 })
 
+        is_anaphoric_or_short_followup = bool(
+            history
+            and not is_code_spec
+            and not is_mcq
+            and not is_short_greeting_or_ack(raw_user_q)
+            and (
+                len(raw_user_q.split()) <= 7
+                or bool(
+                    re.search(
+                        r"^(?:why|how can i|how do i|how should i|yes|sure|okay|ok|tell me more|explain more|what about|and why|how so)\b",
+                        raw_user_q.lower().strip("?!. "),
+                    )
+                )
+            )
+        )
+
         if search_q is not None and search_q != raw_user_q:
             effective_user_prompt = f"{raw_user_q} (regarding: {search_q})"
         elif has_attached_mem_pkg:
@@ -2388,6 +2470,15 @@ class CloverK3AgentEngine:
             )
             tool_obs_str = "\n\n" + "\n\n".join(tool_obs_parts)
             effective_user_prompt = raw_user_q
+        elif is_anaphoric_or_short_followup and (last_substantive_u or last_substantive_r):
+            first_prev_sent = re.split(r"(?<=[.!?])\s+", (last_substantive_r or "").strip())[0].strip()
+            if raw_user_q.lower().strip("?!. ") in ("why", "why not", "how come", "how so") and first_prev_sent:
+                effective_user_prompt = (
+                    f"Explain the specific biological, physical, or technical reasons why: {first_prev_sent} "
+                    f"(Do not merely repeat the statement; explain the underlying mechanism.)"
+                )
+            else:
+                effective_user_prompt = f"{raw_user_q} (specifically regarding: {last_substantive_u or first_prev_sent})"
         else:
             effective_user_prompt = user_prompt.strip()
         prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=effective_user_prompt) + tool_obs_str
@@ -2462,7 +2553,7 @@ class CloverK3AgentEngine:
         gen_ids = []
         im_end_ids = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
         eos_ids = {self.ha_tok.eos_token_id, self.think_close_id, 151643, 151645} | im_end_ids
-        is_struct = is_structured_or_multi_part_prompt(raw_user_q) or (search_q is not None) or (
+        is_struct = is_structured_or_multi_part_prompt(raw_user_q) or is_anaphoric_or_short_followup or (search_q is not None) or (
             py_code is not None and any(k in raw_user_q.lower() for k in ("compound", "discount", "leeds", "step", "and if"))
         )
         gc_checks_count = 0
@@ -2805,6 +2896,8 @@ class CloverK3AgentEngine:
                     "Reference (AGENTS.md",
                     "Reference (Clover Kimi K3",
                     "Reference (Next-Concept Modeling",
+                    "Reference (How to use and adopt",
+                    "Reference (RTX 3090 vs",
                 )
             )
             missing_key_pillar = (
@@ -2812,6 +2905,8 @@ class CloverK3AgentEngine:
                 or ("Reference (Clover Framework" in last_s_res and ("direction" not in joined_p_low or "growth" not in joined_p_low))
                 or ("Reference (AGENTS.md" in last_s_res and ("discernment" not in joined_p_low and "refuse" not in joined_p_low))
                 or ("Reference (Next-Concept Modeling" in last_s_res and ("11" not in joined_p_low or "vq" not in joined_p_low))
+                or ("Reference (How to use and adopt" in last_s_res and ("agents.md" not in joined_p_low or "context" not in joined_p_low))
+                or ("Reference (RTX 3090 vs" in last_s_res and ("ampere" not in joined_p_low or "148.5" not in joined_p_low))
             )
             too_short_for_url = (
                 ("[Live Content from " in last_s_res or "[Live Webpage: " in last_s_res)
@@ -2883,22 +2978,39 @@ class CloverK3AgentEngine:
                 plans = filtered_ws_plans
 
         if mem_pkg is not None and mem_pkg.items and not has_verified_ws_tools:
-            mem_bullets = []
-            for it in mem_pkg.items[:4]:
-                e = it.entry
-                role_lbl = (
-                    f"SUPERSEDED by {it.superseded_by_id}" if it.superseded_by_id
-                    else (f"ACTIVE CORRECTION superseding {', '.join(it.supersedes_ids)}" if it.supersedes_ids else f"status={e.status}")
+            q_low_mem = raw_user_q.lower()
+            is_explicit_mem_or_diag = bool(
+                re.search(r"\bmem-[a-z0-9\-]+\b", q_low_mem)
+                or any(
+                    mk in q_low_mem
+                    for mk in (
+                        "memory", "epistemic", "superseded", "supersede", "contradict", "staging", "promoted",
+                        "inside and outside", "everything happens inside", "observer boundary", "dualist",
+                        "cyclic eviction", "cyclic sweep", "flat across", "value numbering", "hash-consed",
+                        "leaf flooding", "bgp", "longest-match", "operator shadowing", "micro-benchmark",
+                        "isolated benchmark", "cosine", "threshold dropout", "4-bit", "nibble",
+                        "statement boundary", "post-hoc", "envelope", "tool_rounds", "denormal", "ftz", "daz",
+                        "earlier interpretation", "initial interpretation", "corrected", "what should we suspect",
+                    )
                 )
-                mem_bullets.append(
-                    f"• [{e.id}] ({e.entry_type}, epistemic={e.epistemic_status}, {role_lbl}): {e.summary}"
-                )
-            for c in mem_pkg.active_contradictions[:2]:
-                mem_bullets.append(
-                    f"• Unresolved / Contested Tension: {c['source']} {c['type']} {c['target']} ({c.get('note') or 'contested'})"
-                )
-            combined_mem_src = "\n".join(mem_bullets + plans[:3])
-            plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
+            )
+            if is_explicit_mem_or_diag or not plans or plans == ["Hello! How can I help you today?"]:
+                mem_bullets = []
+                for it in mem_pkg.items[:4]:
+                    e = it.entry
+                    role_lbl = (
+                        f"SUPERSEDED by {it.superseded_by_id}" if it.superseded_by_id
+                        else (f"ACTIVE CORRECTION superseding {', '.join(it.supersedes_ids)}" if it.supersedes_ids else f"status={e.status}")
+                    )
+                    mem_bullets.append(
+                        f"• [{e.id}] ({e.entry_type}, epistemic={e.epistemic_status}, {role_lbl}): {e.summary}"
+                    )
+                for c in mem_pkg.active_contradictions[:2]:
+                    mem_bullets.append(
+                        f"• Unresolved / Contested Tension: {c['source']} {c['type']} {c['target']} ({c.get('note') or 'contested'})"
+                    )
+                combined_mem_src = "\n".join(mem_bullets + plans[:3])
+                plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
         elif has_attached_mem_pkg and not has_verified_ws_tools:
             marker = "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n"
             att_mem_block = user_prompt.split(marker, 1)[0]
@@ -3038,16 +3150,11 @@ class CloverK3AgentEngine:
 
     @torch.no_grad()
     def try_direct_k3_ha_ncm_decode(self, user_prompt: str, history=None):
-        """Attempts direct end-to-end generation from:
-          User Prompt -> 93-Layer Kimi K3 MoE (896 experts/layer) + HybridAgent-8B HybridLink (`r_ha`)
-          -> `K3NativeHybridLink` + `K3ExpertBridge` (`tanh(alpha)=0.6543`) -> 11-Pass `NextConceptTransformer (NCM)`
-          -> Unfrozen `vqvae.decoder(zh1[-1])` (with ZERO pointer copy and ZERO `-80.0` vocab mask).
-        Returns `(reply_txt, pred_ids, k3_expert_meta, mean_prob)` if high-confidence (`mean_prob >= 0.90` and `min_prob >= 0.55`),
-        or `None` when the prompt requires tools, multi-window planning, or open-domain pointer grounding.
-        """
-        raw_q = _extract_raw_user_query(user_prompt).strip()
-        if not raw_q or len(raw_q.split()) > 16:
-            return None
+        """Direct VQ-VAE decode from raw user prompt tokens without `run_agent_planning` is disabled for chat
+        because `NextConceptTransformer` + `K3LexicalPointerDecoder` are conditioned on planned response windows (`plans`),
+        not raw user questions. Always plan the response windows first via `run_agent_planning` and then render
+        through 93-layer Kimi K3 + `K3NativeHybridLink` + 11-pass NCM (`render_ncm_with_k3_experts`)."""
+        return None
         low_q = raw_q.lower()
         # Universal multi-turn & tool/structured guards:
         # 1. If the session has prior conversation history and the user prompt is an anaphoric follow-up,
