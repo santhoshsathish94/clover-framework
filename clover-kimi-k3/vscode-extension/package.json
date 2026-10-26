@@ -1,7 +1,7 @@
 {
   "name": "clover-vscode-provider",
-  "displayName": "Clover Kimi K3 — VS Code Language Model Provider",
-  "description": "Adds Clover Kimi K3 (93-Layer MoE + HybridAgent + Next-Concept Modeling + Ontology GraphRAG) directly to the VS Code Chat & Agent model picker.",
+  "displayName": "Clover — VS Code Language Model Provider",
+  "description": "Adds Clover (7-Layer Neuro-Symbolic, Compiler-Verified & Memory-Accumulating System) directly to the VS Code Chat & Agent model picker.",
   "version": "1.0.0",
   "publisher": "clover-framework",
   "license": "MIT",

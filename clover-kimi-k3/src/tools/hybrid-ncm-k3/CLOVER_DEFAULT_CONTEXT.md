@@ -1,4 +1,4 @@
-# CLOVER_DEFAULT_CONTEXT.md — Default Operating Rules (`AGENTS.md`) & Core Context for Clover Kimi K3
+# CLOVER_DEFAULT_CONTEXT.md — Default Operating Rules (`AGENTS.md`) & Core Context for Clover
 
 ## 1. Clover Operating Rules (`AGENTS.md` Compact Specification)
 
@@ -36,12 +36,18 @@
 
 ---
 
-## 3. What is Clover Kimi K3 (`https://cloverframework.com/clover-k3/`)
+## 3. What is the Clover System (`https://cloverframework.com/clover-k3/`)
 
-- **Clover Kimi K3** (`Kimi K3 + HybridAgent + Next-Concept Modeling (NCM)`) is the unified engine built inside the Clover Framework running on an **8 × NVIDIA RTX 3090 GPU server** (`192 GiB` total VRAM):
-  1. **Kimi K3 (2.78-Trillion-Parameter 93-Layer MoE Backbone + `MoonViT3d` Vision):**
-     Built on Moonshot AI's `moonshotai/Kimi-K3` open weights. Consists of Layer 0 (dense KDA attention + MLP) followed by 92 Mixture-of-Experts layers (69 KDA linear-attention trunks + 24 MLA full-attention trunks, 896 routed 4-bit palette-mapped experts per layer with top-16 selected per token, 92 shared experts, and 8 block-boundary snapshot aggregators), hidden dimension `d = 7,168`, `163,840`-token `tiktoken` vocabulary, and the 27-layer `MoonViT3d + PatchMergerMLPV2` vision tower (`225 × 7,168`-d visual tokens).
-  2. **HybridAgent (Continuous `<latent>` Reasoning, Live Tools & `K3NativeHybridLink`):**
-     Based on Stanford & Together AI's HybridAgent (`arXiv:2610.18861`). Runs 14 steps of continuous `<latent>` reasoning, executes live `<search>` (web, arXiv, Wikipedia, and direct URL/link reading) and sandboxed `<python>` (math, code verification, and `matplotlib` / SVG chart & scene generation), and maps Kimi K3's 93-layer `7,168`-d hidden states through `K3NativeHybridLink(7168 → 7168)` (50.36M parameters) and `K3ComboBridge(7168 → 384)`.
+- **Clover** is the unified 7-layer neuro-symbolic, compiler-verified, and memory-accumulating system built inside the Clover Framework running on an **8 × NVIDIA RTX 3090 GPU server** (`192 GiB` total VRAM) and single-workstation CPU:
+  1. **93-Layer 2.78T MoE Backbone + Validated Rust Host Path (`libk3_gpu_experts.so` + `clover-kimi-k3/src/rust/`):**
+     Built on Moonshot AI's `moonshotai/Kimi-K3` open weights (`d = 7,168`, `163,840`-token `tiktoken` vocabulary, 69 KDA + 24 MLA attention trunks, 896 routed 4-bit palette-mapped experts per layer, 27-layer `MoonViT3d` vision tower) paired with 8 validated Rust host-path crates (`slotcache`, `poolinit`, `supply`, `copyq`, `routetable`, `planner`, `loader`, `engcfg` — `212/212` unit tests, `max_abs_diff = 0.0` bit-identical parity).
+  2. **HybridAgent Continuous `<latent>` Reasoning, Live Tools & `K3NativeHybridLink`:**
+     Based on Stanford & Together AI's HybridAgent (`arXiv:2610.18861`). Runs 14 steps of continuous `<latent>` reasoning, executes live `<search>` (web, arXiv, Wikipedia, and direct URL/link reading) and sandboxed `<python>` (math, code verification, and `matplotlib` / SVG chart & scene generation), and maps 93-layer `7,168`-d hidden states through `K3NativeHybridLink(7168 → 7168)` (50.36M parameters) and `K3ComboBridge(7168 → 384)`.
   3. **Next-Concept Modeling — NCM (11-Pass Parallel Coarse-to-Fine Generation):**
-     Based on Stanford Hazy Research's Next-Concept Modeling (`arXiv:2610.14162`, `HazyResearch/ncm`). Conditioned on a 96-slot Kimi-K3-native dual prefix (`48` continuous `K3NativeHybridLink` slots `z_rh` + `48` expert-enriched BPE slots `z_bpe = wte(p) + K3ExpertBridge(h_k3_moe)`), `NextConceptTransformer` (119.96M parameters) predicts 11 hierarchical VQ levels (`[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313` codes) in **11 parallel forward passes**, and `K3LexicalPointerDecoder` + `K3-Native VQ-VAE` (144.00M parameters) emit all 64 Kimi K3 tokens of each window simultaneously (`60.5 K3 tok/s` end-to-end, `76.6 tok/s` across all 93 K3 GPU layers, `291.7 tok/s` NCM `MBR8` stage, and `17,869.8 tok/s` 8-GPU DDP NCM ceiling).
+     Based on Stanford Hazy Research's Next-Concept Modeling (`arXiv:2610.14162`, `HazyResearch/ncm`). Conditioned on a 96-slot dual prefix (`48` continuous `K3NativeHybridLink` slots `z_rh` + `48` expert-enriched BPE slots `z_bpe = wte(p) + K3ExpertBridge(h_k3_moe)`), `NextConceptTransformer` (119.96M parameters) predicts 11 hierarchical VQ levels (`[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313` codes) in **11 parallel forward passes**, and `K3LexicalPointerDecoder` + `K3-Native VQ-VAE` (144.00M parameters) emit all 64 tokens of each window simultaneously (`60.5 tok/s` end-to-end, `17,869.8 tok/s` 8-GPU DDP ceiling).
+  4. **Ontology-Guided Neuro-Symbolic GraphRAG & Symbolic Verifier (`k3_ontology_graph.py`):**
+     Deterministic ontology graph construction, 4 Horn inference rules, stratified priority-first `[E#]`/`[P#]` path traversal, and `CloverSymbolicVerifier`.
+  5. **On-the-Fly Generative Compilation for Python & Rust (`k3_generative_compiler.py`):**
+     Statement-boundary partial-program sealors (`S_PY`, `S_RS` via `rustc 1.95.0`) that catch syntax, arity, prefix-shadowing, stagnant loops, doctests, and Rust borrow/type errors mid-generation and roll back `past_kv` (`40/40 = 100%` Extended HumanEval, `5/5 = 100%` Live Rust).
+  6. **File-Based Memory Tree & Relational Knowledge Graph (`k3_memory_graph.py`):**
+     Human-readable Markdown memory files with YAML front matter (`32` canonical seed entries, `65` typed cross-branch edges), structural concept-bridge cues, and a closed-loop `staging/` promotion gate (`12/12 = 100%` held-out generalization & staging suite).

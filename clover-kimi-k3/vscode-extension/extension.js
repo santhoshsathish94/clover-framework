@@ -26,16 +26,16 @@ class CloverLanguageModelChatProvider {
     return [
       {
         id: "clover-kimi-k3",
-        name: "Clover Kimi K3 (93L MoE + HybridAgent + NCM)",
+        name: "Clover",
         vendor: "clover",
-        family: "clover-kimi-k3",
+        family: "clover",
         version: "3.5.1",
         maxInputTokens: 246144,
         maxOutputTokens: 16000,
         isUserSelectable: true,
         isDefault: false,
         tooltip:
-          "Clover Kimi K3 — 93-Layer Kimi K3 MoE + HybridAgent-8B + 11-Pass Next-Concept Modeling (NCM) + Ontology-Guided Neuro-Symbolic GraphRAG (256K context window)",
+          "Clover — 7-Layer Neuro-Symbolic, Compiler-Verified & Memory-Accumulating System (93-Layer MoE + Rust Host Path + HybridAgent + 11-Pass NCM + Ontology GraphRAG + Generative Compilation + Relational Memory Graph, 256K context)",
         capabilities: {
           toolCalling: true,
           imageInput: true,

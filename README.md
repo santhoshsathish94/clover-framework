@@ -37,18 +37,23 @@ This repository contains the documentation, practical guidance, case studies, an
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`case-studies/`](case-studies/) — real work and outcomes
 - [Research](research/README.md) — investigations, proposals and hypotheses, with their limits
-- [Run clover-kimi-k3](clover-kimi-k3/README.md) — the Kimi K3 engine: set it up, tune it to your machine, run it
+- [Research](research/README.md) — investigations, proposals and hypotheses, with their limits
+- [Run Clover](clover-kimi-k3/README.md) — the 7-layer Clover system (CPU workstation engine &amp; 8 &times; RTX 3090 GPU neuro-symbolic, compiler-verified, memory-accumulating stack): set it up, tune it to your machine, run it
 - [Repository map](docs/repository-organization.md) — where each kind of material belongs
 
-## Clover AI
+## Clover System &amp; Architecture
 
-**Clover AI** is the implementation arm of the project: an open-source AI system that can produce meaningful engineering outcomes while remaining bounded, observable, verifiable, and accountable.
+**Clover** is both the operating methodology (`Context → Direction → Execution → Outcome → Growth` in [`AGENTS.md`](AGENTS.md)) and the unified open-source AI system built under it ([`clover-kimi-k3/`](clover-kimi-k3/)) — designed to produce meaningful engineering outcomes while remaining bounded, observable, verifiable, and accountable.
 
-The first thing built under it is [`clover-kimi-k3/`](clover-kimi-k3/) — a C engine that runs all 93 layers of Kimi K3 on one CPU host. It began from the Clover equation of the model and from Fareed Khan's `kimi-k3-in-c`. Its first version, `clover-k3`, is in git history (snapshot linked below). That first version was the Kimi K3
-forward pass reduced to its mathematics and executed directly. It emits the
-same token as an independent implementation of the same model on all 34 prompts
-tested, in under a third of the time. What it cost and what it does not show are
-in [results and scope](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md). The current engine, its set-up and its measurements are in [`clover-kimi-k3/README.md`](clover-kimi-k3/README.md).
+It began on a single CPU host from the Clover equation of Kimi K3 and from Fareed Khan's `kimi-k3-in-c` (with its first snapshot [`clover-k3`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) in git history), and has evolved into a **7-layer neuro-symbolic, compiler-verified, memory-accumulating system** running on both single-workstation CPU and an `8 × NVIDIA RTX 3090` GPU server (`192 GiB` VRAM):
+
+1. **Governance &amp; Discernment Kernel ([`AGENTS.md`](AGENTS.md)):** Operates under `Context ⇄ Direction ⇄ Execution ⇄ Outcome ⇄ Growth`, keeping epistemic states (`observed`, `externally_verified`, `hypothesis`, `user_stated_belief`, `unresolved`) distinct.
+2. **File-Based Memory Tree &amp; Relational Knowledge Graph ([`k3_memory_graph.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_memory_graph.py), [context](clover-kimi-k3/docs/clover-memory-graph-context.md)):** Human-readable Markdown memory files with YAML front matter (`32` canonical seed entries, `65` typed cross-branch relationships), structural concept-bridge cues, and a closed-loop `staging/` promotion gate (`12/12 = 100%` on held-out cross-domain transfer and closed-loop staging tests).
+3. **Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier ([`k3_ontology_graph.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_ontology_graph.py), [context](clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md)):** Deterministic property graph + 4 Horn inference rules + stratified priority-first path traversal (`[E#]` / `[P#]`) + `CloverSymbolicVerifier`.
+4. **HybridAgent Continuous `<latent>` Reasoning &amp; Live Tools ([`k3_agent_engine.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_agent_engine.py), [context](clover-kimi-k3/docs/clover-hybridagent-research-context.md)):** 14-step continuous `<latent>` reasoning (`K3NativeHybridLink` `7,168 → 7,168`), live `<search>` (arXiv, Wikipedia, DuckDuckGo, URL fetch), sandboxed `<python>` (math, unit tests, charts), and `MoonViT3d` vision.
+5. **On-the-Fly Generative Compilation for Python &amp; Rust ([`k3_generative_compiler.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_generative_compiler.py), [context](clover-kimi-k3/docs/clover-generative-compilation-research-context.md)):** Statement-boundary partial-program sealors ($\mathcal{S}_{\text{PY}}, \mathcal{S}_{\text{RS}}$ via `rustc 1.95.0`) that catch syntax, arity, prefix-shadowing, stagnant loops, doctests, and Rust borrow/type errors mid-generation and roll back the KV cache (`40/40 = 100%` Extended HumanEval, `5/5 = 100%` Live Rust).
+6. **93-Layer 2.78T MoE GPU/CPU Engine + Validated Rust Host Path ([`k3_gpu_experts_lib.cu`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_gpu_experts_lib.cu), [`clover-kimi-k3/src/rust/`](clover-kimi-k3/src/rust/)):** Full 93-layer Kimi K3 backbone + 8 validated Rust host-path crates (`slotcache`, `poolinit`, `supply`, `copyq`, `routetable`, `planner`, `loader`, `engcfg` — `212/212` unit tests, `max_abs_diff = 0.0` C++ vs. Rust parity).
+7. **11-Pass Parallel Next-Concept Modeling (NCM) &amp; Native Web / VS Code Agent Surfaces ([`k3_chat_server.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_chat_server.py), [`extension.js`](clover-kimi-k3/vscode-extension/extension.js)):** 11-level multiscale residual VQ-VAE and `NextConceptTransformer` emitting 64-token windows in 11 parallel passes (`17,869.8 tok/s` 8-GPU DDP ceiling), serving both the Clover Web UI (`256K` session compaction + Memory Graph drawer) and the native VS Code Agent extension.
 
 Its central principle is:
 

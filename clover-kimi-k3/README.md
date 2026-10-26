@@ -1,7 +1,6 @@
-# clover-kimi-k3
+# Clover (`clover-kimi-k3/`)
 
-A C engine that runs all 93 layers of Kimi K3 in one process on a CPU host (Ryzen 9 7950X3D, 124 GB RAM, NVMe RAID1): words in, next token and text out.
-The prompt is processed in batches, decode keeps recently used experts in RAM, and two options are available: a 4-bit trunk for decode and speculative decoding.
+**Clover** is a unified 7-layer neuro-symbolic, compiler-verified, and memory-accumulating system that runs both as a bit-identical C engine on one CPU host (Ryzen 9 7950X3D, 124 GB RAM, NVMe RAID1) and as an interactive multi-GPU system on an `8 × NVIDIA RTX 3090` server (`192 GiB` VRAM) uniting Kimi K3's 93-layer 2.78T MoE backbone, 8 validated Rust host-path libraries, HybridAgent continuous `<latent>` reasoning, 11-pass Next-Concept Modeling (NCM), Ontology-Guided Neuro-Symbolic GraphRAG, Python & Rust Generative Compilation, and a File-Based Memory Tree & Relational Knowledge Graph.
 
 ## The final version
 

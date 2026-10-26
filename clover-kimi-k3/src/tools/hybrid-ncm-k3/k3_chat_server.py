@@ -2162,7 +2162,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 "data": [
                     {
                         "id": "clover-kimi-k3",
-                        "name": "Clover Kimi K3",
+                        "name": "Clover",
                         "object": "model",
                         "created": created_ts,
                         "owned_by": "clover-framework",
@@ -2173,7 +2173,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                     },
                     {
                         "id": "clover-ai",
-                        "name": "Clover AI (Kimi K3 93L + HybridAgent + NCM)",
+                        "name": "Clover",
                         "object": "model",
                         "created": created_ts,
                         "owned_by": "clover-framework",
