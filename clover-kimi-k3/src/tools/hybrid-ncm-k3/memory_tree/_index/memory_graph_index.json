@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
-  "built_at": "2026-10-26T06:33:52Z",
+  "built_at": "2026-10-26T10:24:02Z",
   "validation": {
     "is_healthy": true,
-    "total_files": 32,
-    "valid_entries": 32,
-    "total_relationships": 65,
+    "total_files": 33,
+    "valid_entries": 33,
+    "total_relationships": 67,
     "duplicate_ids": [],
     "broken_links": [],
     "validation_errors": [],
@@ -967,6 +967,40 @@
         "recorded_at": "2026-10-26T02:15:00Z"
       }
     },
+    "MEM-OUT-DIRECTION-B-DATA-MOVEMENT-001": {
+      "id": "MEM-OUT-DIRECTION-B-DATA-MOVEMENT-001",
+      "title": "Outcome: Clover Direction B Data-Movement Upgrades (Red-Blue Clean R4, SpecMD Least-Stale LS, FA2 Split-KV MLA, Eyeriss v2 Broadcast)",
+      "rel_path": "outcomes/out-direction-b-data-movement-001.md",
+      "entry_type": "outcome",
+      "epistemic_status": "externally_verified",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "rust-host-path",
+        "kimi-k3-moe",
+        "slotcache",
+        "data-movement",
+        "red-blue-pebbling",
+        "specmd",
+        "flashattention-2",
+        "eyeriss"
+      ],
+      "tags": [
+        "systems",
+        "outcome",
+        "verified",
+        "data-movement",
+        "gpu"
+      ],
+      "created_at": "2026-10-26T10:20:00Z",
+      "updated_at": "2026-10-26T10:20:00Z",
+      "provenance": {
+        "source_type": "experiment",
+        "source_ref": "clover-kimi-k3/docs/clover-data-movement-direction-b-context.md",
+        "actor": "system_measurement",
+        "recorded_at": "2026-10-26T10:20:00Z"
+      }
+    },
     "MEM-OUT-GENERATIVE-COMPILATION-100PCT-001": {
       "id": "MEM-OUT-GENERATIVE-COMPILATION-100PCT-001",
       "title": "Outcome: Extended HumanEval `40/40` (`100%`), Live Rust `rustc` `5/5` (`100%`), and `-17.9%` (`N=20`) / `-14.1%` (`N=40`) Latency Reduction",
@@ -1635,6 +1669,26 @@
       "context_scope": "state_reset_bug",
       "created_at": "2026-10-26T02:15:00Z",
       "note": "Wiping `tool_rounds` mid-turn made downstream synthesis see 0 tool outputs even after tools had executed."
+    },
+    {
+      "source": "MEM-OUT-DIRECTION-B-DATA-MOVEMENT-001",
+      "type": "derived_from",
+      "target": "MEM-EXP-RUST-SLOTCACHE-001",
+      "provenance": "clover-data-movement-direction-b-context.md",
+      "confidence": 1.0,
+      "context_scope": "clover_direction_b_data_movement",
+      "created_at": "2026-10-26T10:20:00Z",
+      "note": "Extends Rust and C++ SlotCache with Policy 3 (SpecMD Least-Stale LS + Red-Blue Clean-Input R4 worth check)."
+    },
+    {
+      "source": "MEM-OUT-DIRECTION-B-DATA-MOVEMENT-001",
+      "type": "supports",
+      "target": "MEM-DEC-SLOTCACHE-PER-LAYER-001",
+      "provenance": "clover-data-movement-direction-b-context.md",
+      "confidence": 1.0,
+      "context_scope": "clover_direction_b_data_movement",
+      "created_at": "2026-10-26T10:20:00Z",
+      "note": "Eliminates cyclic-sweep pass-collision misses (11.8x to 26.7x reduction) across the 15-16 layers sharing each card's CardPool."
     },
     {
       "source": "MEM-OUT-GENERATIVE-COMPILATION-100PCT-001",

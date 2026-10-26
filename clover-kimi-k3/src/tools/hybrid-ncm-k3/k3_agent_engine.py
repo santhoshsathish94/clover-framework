@@ -325,6 +325,9 @@ class K3GPUExpertsRunner:
         if hasattr(self.lib, "k3_full93_rust_stats"):
             self.lib.k3_full93_rust_stats.argtypes = [ctypes.POINTER(ctypes.c_ulong)]
             self.lib.k3_full93_rust_stats.restype = None
+        if hasattr(self.lib, "k3_full93_dm_stats"):
+            self.lib.k3_full93_dm_stats.argtypes = [ctypes.POINTER(ctypes.c_ulong)]
+            self.lib.k3_full93_dm_stats.restype = None
 
         if self.full_93_layers:
             rc = self.lib.k3_full93_init(dataset_dir.encode("utf-8"), self.max_n, self.k_res)
@@ -359,6 +362,44 @@ class K3GPUExpertsRunner:
                 self.lm_head_gpu = None
 
         self.setup_s = round(time.perf_counter() - t0, 2)
+
+    def get_data_movement_ledger(self) -> dict:
+        if not hasattr(self.lib, "k3_full93_dm_stats"):
+            return {}
+        dm = (ctypes.c_ulong * 10)()
+        self.lib.k3_full93_dm_stats(dm)
+        pol_id = int(dm[0])
+        pol_names = {0: "lru", 1: "heat_48", 2: "belady_opt", 3: "specmd_least_stale_r4"}
+        perm_hits = int(dm[1])
+        dyn_need = int(dm[2])
+        hit_card = int(dm[3])
+        hit_host = int(dm[4])
+        from_drive = int(dm[5])
+        wb_d2h = int(dm[6])
+        r4_skip = int(dm[7])
+        cslots = int(dm[8])
+        hslots = int(dm[9])
+        tot_req = perm_hits + dyn_need
+        tot_vram = perm_hits + hit_card
+        exp_raw = 17547264
+        eyeriss_cost = 2.0 * tot_vram + 6.0 * (hit_host + wb_d2h) + 200.0 * from_drive
+        return {
+            "policy_id": pol_id,
+            "policy_name": pol_names.get(pol_id, f"policy_{pol_id}"),
+            "perm_vram_hits": perm_hits,
+            "dyn_needed": dyn_need,
+            "hit_card_R3": hit_card,
+            "hit_host_R1": hit_host,
+            "from_drive_R1": from_drive,
+            "written_back_R2": wb_d2h,
+            "r4_clean_drops": r4_skip,
+            "dyn_hit_rate_pct": round(100.0 * hit_card / max(1, dyn_need), 2),
+            "overall_vram_hit_rate_pct": round(100.0 * tot_vram / max(1, tot_req), 2),
+            "pcie_gb_moved": round((hit_host + from_drive + wb_d2h) * exp_raw / 1e9, 3),
+            "eyeriss_cost_per_req": round(eyeriss_cost / max(1, tot_req), 3),
+            "card_pool_slots": cslots,
+            "host_cache_slots": hslots,
+        }
 
     def _apply_layer93_final_tail(self, snaps_8: torch.Tensor, h_l92: torch.Tensor) -> torch.Tensor:
         """Executes Kimi K3's exact Layer-93 Final Snapshot Aggregation (`final-normalization.c`) on GPU (`tail_dev`):
@@ -481,6 +522,8 @@ class K3GPUExpertsRunner:
                     "dynamic_hit_host": int(rs[8]),
                     "dynamic_from_drive": int(rs[9]),
                 }
+            if hasattr(self.lib, "k3_full93_dm_stats"):
+                meta["data_movement_ledger"] = self.get_data_movement_ledger()
             return h_k3_moe, meta
 
         out_chunks = []
