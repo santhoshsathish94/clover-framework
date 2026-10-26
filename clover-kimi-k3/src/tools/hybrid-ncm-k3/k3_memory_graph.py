@@ -2376,7 +2376,7 @@ class CloverMemoryGraphStore:
             e = self.entries[eid]
             # Connected constellation members inherit structural relevance attenuated by hop depth
             hop_d = depth_map.get(eid, 2)
-            fallback_sc = max_base * (0.72 if hop_d <= 1 else 0.58)
+            fallback_sc = max_base * (0.72 if hop_d <= 1 else (0.64 if eid in chain_ids else 0.45))
             norm_base = float(base_sc_map.get(eid, fallback_sc)) / max(1.0, max_base)
             m0, m1, m2 = _subspace_mask_of(e)
             has_nums = 0.20 if re.search(r"\d+(?:\.\d+)?(?:%|x|\s*ms|\s*s/tok)", f"{e.summary} {e.source_evidence}") else 0.0
