@@ -2318,13 +2318,19 @@ class CloverMemoryGraphStore:
         if not seed_cands:
             return {"single_head_top_k": [], "multihead_lrn_top_k": [], "facets_single_head": 0, "facets_multihead_lrn": 0}
 
-        # Expand from the top-2 seeds by 2 hops so the candidate pool covers the full evolution chain
+        # Expand from the top-2 seeds by 1 hop + trace evolution chains so the candidate pool covers
+        # the full chronological evolution chain (including `MEM-OUT-GENERATIVE-COMPILATION-100PCT-001`)
         top_seed_ids = [eid for _, eid, _ in seed_cands[:2]]
-        trav = self.traverse(seed_ids=top_seed_ids, max_depth=2, direction="both", max_nodes=16, min_similar_confidence=0.75)
+        trav = self.traverse(seed_ids=top_seed_ids, max_depth=1, direction="both", max_nodes=12, min_similar_confidence=0.75)
+        chain_ids: list[str] = []
+        for tn in trav[:4]:
+            for cn in self.trace_evolution_chain(tn.entry.id):
+                if cn.id not in chain_ids:
+                    chain_ids.append(cn.id)
         base_sc_map = {eid: sc for sc, eid, _ in seed_cands}
         max_base = max((sc for sc, _, _ in seed_cands), default=1.0)
         depth_map = {tn.entry.id: tn.depth for tn in trav}
-        pool_ids = list(dict.fromkeys([tn.entry.id for tn in trav] + [eid for _, eid, _ in seed_cands[:4]]))
+        pool_ids = list(dict.fromkeys([tn.entry.id for tn in trav] + chain_ids + [eid for _, eid, _ in seed_cands[:4]]))
 
         def _subspace_mask_of(e: MemoryEntry) -> tuple[float, float, float]:
             """Vaswani et al. (2017, Section 3.2.2) Orthogonal Subspace Projection `W_h^K`:
