@@ -55,12 +55,17 @@ def ask_clover(question: str, sid: str) -> dict:
 
 
 def main():
+    import os
+    here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=25)
-    ap.add_argument("--out", type=str, default="/home/usergpu/merge_lf/benchmarks/gsm8k_results.json")
+    ap.add_argument("--out", type=str, default=os.path.join(here, "benchmarks/gsm8k_results.json"))
     args = ap.parse_args()
 
-    with open("/home/usergpu/merge_lf/benchmarks/gsm8k_test.jsonl", "r", encoding="utf-8") as f:
+    in_path = os.path.join(here, "benchmarks/gsm8k_test.jsonl")
+    if not os.path.exists(in_path):
+        in_path = "/home/usergpu/merge_lf/benchmarks/gsm8k_test.jsonl"
+    with open(in_path, "r", encoding="utf-8") as f:
         items = [json.loads(line) for _, line in zip(range(args.n), f)]
 
     correct = 0

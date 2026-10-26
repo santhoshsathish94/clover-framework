@@ -60,12 +60,15 @@ def ask_clover(question: str, sid: str) -> dict:
 
 
 def main():
+    here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser()
     ap.add_argument("--per-subject", type=int, default=4)
-    ap.add_argument("--out", type=str, default="/home/usergpu/merge_lf/benchmarks/mmlu_baseline_20.json")
+    ap.add_argument("--out", type=str, default=os.path.join(here, "benchmarks/mmlu_baseline_20.json"))
     args = ap.parse_args()
 
-    base_dir = "/home/usergpu/merge_lf/benchmarks/data/test"
+    base_dir = os.path.join(here, "benchmarks/data/test")
+    if not os.path.isdir(base_dir):
+        base_dir = "/home/usergpu/merge_lf/benchmarks/data/test"
     items = []
     for subj in SUBJECTS:
         p = os.path.join(base_dir, f"{subj}_test.csv")

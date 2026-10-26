@@ -37,10 +37,12 @@ def decode_sudoku_board(arr: list[int]) -> list[int]:
 
 
 def main():
+    from clover_paths import find_ncm_eval_data_dir
+    data_root = find_ncm_eval_data_dir()
     print("=== BENCHMARK 5: OFFICIAL NCM SUITE (WMT14 + XSUM + SUDOKU-EASY) ===", flush=True)
 
     # 1. WMT14 Held-Out Concept-to-Text Retention (indices 1000..1019, unseen in training)
-    wmt_refs = pickle.load(open("/home/usergpu/ncm/data/wmt14/reference_translations.pickle", "rb"))
+    wmt_refs = pickle.load(open(os.path.join(data_root, "wmt14/reference_translations.pickle"), "rb"))
     wmt_slice = [s for s in wmt_refs[1000:1060] if 35 <= len(s) <= 180][:15]
     wmt_retentions = []
     wmt_jaccards = []
@@ -69,8 +71,8 @@ def main():
     # 2. XSum Held-Out Factual Summarization (10 unseen passages from indices 5000..5009)
     from transformers import AutoTokenizer
     gpt2_tok = AutoTokenizer.from_pretrained("gpt2")
-    passages = pickle.load(open("/home/usergpu/ncm/data/xsum/passages.pickle", "rb"))
-    summaries = pickle.load(open("/home/usergpu/ncm/data/xsum/reference_summaries.pickle", "rb"))
+    passages = pickle.load(open(os.path.join(data_root, "xsum/passages.pickle"), "rb"))
+    summaries = pickle.load(open(os.path.join(data_root, "xsum/reference_summaries.pickle"), "rb"))
     xsum_recalls = []
     artifact_hits = 0
     print("\n--- 5B. XSum Held-Out Factual Summarization (N=10) ---", flush=True)
@@ -93,8 +95,8 @@ def main():
     print(f">>> XSum Source Grounding Precision: {mean_xsum_ground:.2f}% | Artifact Leakage: {artifact_hits}/10", flush=True)
 
     # 3. Official Sudoku-Easy 9x9 Solving (10 puzzles)
-    puzzles = pickle.load(open("/home/usergpu/ncm/data/sudoku/easy/puzzles.pickle", "rb"))
-    solutions = pickle.load(open("/home/usergpu/ncm/data/sudoku/easy/solutions.pickle", "rb"))
+    puzzles = pickle.load(open(os.path.join(data_root, "sudoku/easy/puzzles.pickle"), "rb"))
+    solutions = pickle.load(open(os.path.join(data_root, "sudoku/easy/solutions.pickle"), "rb"))
     sudoku_board_solved = 0
     sudoku_cell_acc = []
     print("\n--- 5C. Official Sudoku-Easy 9x9 Benchmark (N=10) ---", flush=True)

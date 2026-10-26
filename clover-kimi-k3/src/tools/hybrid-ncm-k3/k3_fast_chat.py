@@ -7,14 +7,11 @@ Runs the unified K3-Native pipeline directly from a user prompt (or file of prom
      with ZERO 93-layer Kimi K3 verification and ZERO DSpark verifier.
 """
 import argparse, collections, json, os, re, sys, time
+from clover_paths import TOOLS_DIR, setup_clover_sys_path, find_hybrid_ncm_ckpt_dir, resolve_device, cuda_sync
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
-os.environ.setdefault("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, "/home/usergpu/plan2text")
-sys.path.insert(0, "/home/usergpu/ncm/repo")
-os.chdir("/home/usergpu/ncm/repo")
+ROOT = setup_clover_sys_path()
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 import torch
 import torch.nn.functional as F
@@ -30,7 +27,10 @@ from train_latent_bridge import encode_batch_rh
 
 
 CLOVER_DEFAULT_CONTEXT_PATH = os.environ.get(
-    "CLOVER_DEFAULT_CONTEXT_PATH", "/home/usergpu/merge_lf/CLOVER_DEFAULT_CONTEXT.md"
+    "CLOVER_DEFAULT_CONTEXT_PATH",
+    "/home/usergpu/merge_lf/CLOVER_DEFAULT_CONTEXT.md"
+    if os.path.exists("/home/usergpu/merge_lf/CLOVER_DEFAULT_CONTEXT.md")
+    else os.path.join(TOOLS_DIR, "CLOVER_DEFAULT_CONTEXT.md"),
 )
 
 CLOVER_AGENTS_MD_KERNEL = (
@@ -608,10 +608,12 @@ GRAMMAR_CONNECTOR_WORDS = [
 
 
 class K3FastChatEngine:
-    def __init__(self, out_dir="/home/usergpu/merge_lf/out/e6_k3_native", dev_ncm="cuda:0", dev_ha="cuda:1"):
+    def __init__(self, out_dir: str | None = None, dev_ncm="cuda:0", dev_ha="cuda:1"):
         t0 = time.perf_counter()
-        self.dev = torch.device(dev_ncm)
-        self.dev_ha = torch.device(dev_ha)
+        if out_dir is None or not os.path.isdir(out_dir):
+            out_dir = find_hybrid_ncm_ckpt_dir()
+        self.dev = torch.device(resolve_device(dev_ncm))
+        self.dev_ha = torch.device(resolve_device(dev_ha))
         self.k3_tok = K3Tokenizer()
 
         self.ha_model, self.ha_tok = load_hybrid_agent(
@@ -675,7 +677,7 @@ class K3FastChatEngine:
             g_w = generate_from_zpref(self.net, self.tk, zp_w, pm_w, self.sched)
             zh_w, _ = self.vqvae.vq.idx_to_zhats(g_w, return_zlevels=True)
             _ = self.copy_dec(self.vqvae.decoder, zh_w[-1], zr_w, mw, zb_w, pk_w)
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
+        cuda_sync(self.dev, self.dev_ha)
 
     def _dec_k3(self, r):
         r = list(r)
@@ -903,11 +905,11 @@ class K3FastChatEngine:
         return join_rendered_windows(out_txts, plans), out_ids
 
     def chat_reply(self, user_prompt, cands=8, remember=False):
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
+        cuda_sync(self.dev, self.dev_ha)
         t0 = time.perf_counter()
         active_hist = self.history if remember else None
         plans, lat_steps, exit_reason = self.plan_with_latent(user_prompt, history=active_hist)
-        torch.cuda.synchronize(self.dev_ha)
+        cuda_sync(self.dev_ha)
         t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
         hist_ctx = ""
@@ -917,12 +919,12 @@ class K3FastChatEngine:
 
         t1 = time.perf_counter()
         text_1cand, ids_1cand = self.render_ncm(plans, prompt_text=full_prompt_ctx, cands=1)
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
+        cuda_sync(self.dev, self.dev_ha)
         t_ncm_1cand_ms = (time.perf_counter() - t1) * 1000.0
 
         t2 = time.perf_counter()
         text_mbr, ids_mbr = self.render_ncm(plans, prompt_text=full_prompt_ctx, cands=cands)
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
+        cuda_sync(self.dev, self.dev_ha)
         t_ncm_mbr_ms = (time.perf_counter() - t2) * 1000.0
 
         if remember:

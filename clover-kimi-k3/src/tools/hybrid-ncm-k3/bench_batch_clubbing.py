@@ -5,15 +5,11 @@ Answers:
    and get all N outputs back simultaneously with ZERO mixing / cross-contamination between prompts?
 """
 import json, os, re, sys, time
+from clover_paths import setup_clover_sys_path
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
-os.environ.setdefault("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-ROOT = os.environ["NCM_REPO"]
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, "/home/usergpu/plan2text")
-sys.path.insert(0, ROOT)
-os.chdir(ROOT)
+ROOT = setup_clover_sys_path()
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 import torch
 from k3_fast_chat import (

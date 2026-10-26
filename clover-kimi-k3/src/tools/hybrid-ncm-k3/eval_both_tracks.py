@@ -3,14 +3,12 @@ and 48 end-to-end requests. Uses the exact metrics of quality_eval.py (retention
 repeat_trigram_rate, entropy) and exports the 20 blind-rating stories for the 3 model raters.
 """
 import argparse, json, math, os, re, sys, time
+from clover_paths import setup_clover_sys_path
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-ROOT = os.environ.get("NCM_REPO", "/home/usergpu/ncm")
-ART = os.environ.get("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, "/home/usergpu/plan2text")
-sys.path.insert(0, ROOT)
-os.chdir(ROOT)
+ROOT = setup_clover_sys_path()
+ART = os.environ.get("NCM_ART", ROOT)
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 import torch
 import torch.nn.functional as F

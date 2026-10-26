@@ -60,7 +60,11 @@ def main():
     print("=" * 70)
 
     print("\n=== 2. MULTIMODAL TEST: ST MARY'S HOSPITAL INVOICE IMAGE ===")
-    img_hosp = "data:image/png;base64," + base64.b64encode(open("/home/usergpu/merge_lf/test_images/img1_hospital_invoice.png", "rb").read()).decode("ascii")
+    import os
+    img_p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_images/img1_hospital_invoice.png")
+    if not os.path.exists(img_p):
+        img_p = "/home/usergpu/merge_lf/test_images/img1_hospital_invoice.png"
+    img_hosp = "data:image/png;base64," + base64.b64encode(open(img_p, "rb").read()).decode("ascii")
     r_hosp = post_chat("sess_hosp_img", "What is shown in this invoice, what are the items and costs, and who directed the project?", image_b64=img_hosp)
     print("MOONVIT TOK :", r_hosp.get("option_a_k3_vis_tokens_7168d"))
     print("K3 93-LAYERS:", r_hosp.get("k3_experts"))
