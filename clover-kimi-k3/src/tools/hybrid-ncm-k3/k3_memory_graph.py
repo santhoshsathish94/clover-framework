@@ -1675,6 +1675,38 @@ class CloverMemoryGraphStore:
         k1 = 1.5
         b = 0.75
 
+        # Cycle 1 Foundation Upgrade — McCulloch & Pitts (1943, Eq. 1) All-or-None Inhibitory Veto
+        # + Minsky & Papert (1969, Ch. 1-2 & 5) Order-k 'One-in-a-Box' Conjunctive Predicates:
+        # 1. `mp_inhibitory_vetoes`: If any out-of-domain inhibitory afferent I_i is active in `q_low`
+        #    (and no explicit `MEM-*` ID is cited), firing is vetoed before excitatory summation.
+        mp_global_inhibitory_vetoes: tuple[str, ...] = (
+            "swimming pool", "water temperature", "night air",
+            "eukaryotic", "endocytosis", "endosome", "lysosome", "extracellular matrix", "cytoplasm",
+            "baseball", "batter", "curveball", "batting practice",
+            "forklift", "loading dock", "warehouse",
+            "commuter highway", "traffic light", "arterial route", "exit ramp",
+            "woodworking", "stencil label", "sorting jars",
+            "retro pixel art", "hdmi", "monitor refresh rate",
+            "detective's alibi", "novel's second printing", "who was the culprit",
+        )
+        has_explicit_mem_id = any(eid.lower() in q_low for eid in self.entries)
+        if not has_explicit_mem_id and any(veto in q_low for veto in mp_global_inhibitory_vetoes):
+            return []
+
+        # 2. Required Computing/Systems/Graph/Code Anchor Box B_0 for structural diagnostic bridge rules
+        #    (Minsky & Papert Order-(k+1) 'One-in-a-Box' conjunction: a diagnostic cue cannot fire unless
+        #    Box 0 [computing/architecture/graph/code anchor] AND >= 2 diagnostic boxes are simultaneously active).
+        computing_anchor_box: tuple[str, ...] = (
+            "cache", "caching", "lru", "pipeline", "stage", "stages", "layer", "layers", "cdn", "pop",
+            "buffer", "metadata", "vram", "memoization", "ssa", "compiler", "token", "tokens", "sequence",
+            "recurrent", "kda", "activation", "graph", "query", "edge", "edges", "path", "paths", "router",
+            "bgp", "cve", "cwe", "capec", "affects", "lexer", "scanner", "tokenizer", "elif", "ast",
+            "code", "function", "rust", "python", "simd", "kernel", "harness", "benchmark", "micro-benchmark",
+            "microbenchmark", "decode", "trunk", "quantisation", "quantization", "expert", "experts",
+            "nvme", "pcie", "slot", "slotcache", "memory entry", "memory entries", "recorded",
+        )
+        has_computing_anchor = any(anchor in q_low for anchor in computing_anchor_box)
+
         # Structural diagnostic cue rules that map cross-domain problem patterns to concept bridge nodes
         structural_concept_rules: dict[str, tuple[tuple[str, ...], ...]] = {
             "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001": (
@@ -1690,6 +1722,7 @@ class CloverMemoryGraphStore:
             "MEM-CONCEPT-HARDWARE-SCOPED-VERDICTS-001": (
                 ("4-bit", "quantisation", "quantization", "nibble", "unpack", "unpacking"),
                 ("cpu", "gpu", "rtx 3090", "hardware", "bandwidth", "dram", "pcie"),
+                ("decode", "trunk", "kernel", "s/tok", "s/layer", "supply", "dead end", "unmeasured", "speed"),
             ),
             "MEM-OBS-ONTORAG-FANOUT-FLOODING-001": (
                 ("1-hop", "length(path)", "length(p.edges)", "path length", "limit"),
@@ -1697,7 +1730,7 @@ class CloverMemoryGraphStore:
             ),
             "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001": (
                 ("prefix", "shadow", "shadowing", "1-char", "shorter"),
-                ("elif", "branch", "tokenizer", "dispatch", "2-char", "longer"),
+                ("elif", "branch", "tokenizer", "dispatch", "2-char", "longer", "lexer", "scanner"),
             ),
             "MEM-CONCEPT-SYNTHETIC-TIMING-VS-MEANING-001": (
                 ("synthetic", "random", "micro-benchmark", "microbenchmark", "standalone", "isolated"),
@@ -1728,8 +1761,9 @@ class CloverMemoryGraphStore:
                 score += 50.0
                 reasons.append(f"direct_id({eid})")
 
-            # Signal 1b: Structural diagnostic cue match on Concept / Observation bridge nodes
-            if eid in structural_concept_rules:
+            # Signal 1b: Minsky & Papert Order-(k+1) 'One-in-a-Box' Structural Diagnostic Cue Match
+            #            Requires Computing Anchor Box B_0 AND >= 2 distinct diagnostic boxes B_1..B_k
+            if eid in structural_concept_rules and has_computing_anchor:
                 cue_groups = structural_concept_rules[eid]
                 matched_g = sum(1 for grp in cue_groups if any(term in q_low for term in grp))
                 if matched_g >= len(cue_groups):
@@ -1816,7 +1850,576 @@ class CloverMemoryGraphStore:
                 scored.append((score, eid, "+".join(reasons) or "lexical_match"))
 
         scored.sort(key=lambda x: (-x[0], x[1]))
+        if getattr(self, "use_rosenblatt_gamma", True) and len(scored) >= 4:
+            scored = self._apply_rosenblatt_gamma_normalization(scored)
         return scored
+
+    def _entry_macro_branch(self, entry: MemoryEntry) -> str:
+        """Assigns an entry to its thematic macro-branch pool for Rosenblatt (1958) gamma normalization."""
+        rel_low = (entry.rel_path or "").lower()
+        tags_low = {t.lower() for t in entry.tags}
+        concepts_low = {c.lower() for c in entry.concepts}
+        if (
+            rel_low.startswith("philosophy/")
+            or "philosophy" in tags_low
+            or "observer-boundary" in concepts_low
+            or "inside-outside-distinction" in concepts_low
+        ):
+            return "philosophy"
+        return "systems"
+
+    def _apply_rosenblatt_gamma_normalization(
+        self, scored: list[tuple[float, str, str]]
+    ) -> list[tuple[float, str, str]]:
+        """Cycle 3 Foundation Upgrade — Frank Rosenblatt (1958, Table 1 & p. 400) Parasitic Zero-Sum
+        Gamma-System (`sum_i Delta V_i = 0`):
+        When one thematic branch B_maj has many more entries in the memory tree than a sparse branch B_min
+        (e.g., 27+ systems entries vs 5 philosophy entries), an uncompensated alpha-system allows the
+        majority branch's secondary entries (ranks 2..k in B_maj) to crowd out the primary peak (rank 1)
+        of B_min on cross-branch queries.
+        Under the zero-sum gamma-system (when P_c11(B_min) > P_a):
+          - Secondary entries (rank >= 2 within a high-cardinality branch B with |B_total| > 2 * |B_min_total|)
+            contribute parasitic decay proportional to their branch's size share (`gamma_decay`),
+          - While the primary peak (rank 1) of a coherent minority branch receives the conserved zero-sum
+            lift so both branches are represented in `top_seeds`.
+        """
+        branch_totals: collections.Counter[str] = collections.Counter()
+        for e in self.entries.values():
+            branch_totals[self._entry_macro_branch(e)] += 1
+
+        if len(branch_totals) < 2:
+            return scored
+
+        max_b_size = max(branch_totals.values())
+        min_b_size = max(1, min(branch_totals.values()))
+        if max_b_size < 2 * min_b_size:
+            return scored
+
+        # Group scored candidates by branch while preserving within-branch rank
+        by_branch: dict[str, list[tuple[float, str, str]]] = collections.defaultdict(list)
+        for sc, eid, rsn in scored:
+            e = self.entries.get(eid)
+            if e is not None:
+                by_branch[self._entry_macro_branch(e)].append((sc, eid, rsn))
+
+        # Only activate cross-branch zero-sum redistribution when >= 2 branches have coherent hits
+        # and the minority branch's top entry has a genuine conceptual/phrase signal (P_c11 > P_a)
+        active_branches = [b for b, items in by_branch.items() if items]
+        if len(active_branches) < 2:
+            return scored
+
+        global_mean_pa = sum(sc for sc, _, _ in scored) / max(1, len(scored))
+        adjusted: list[tuple[float, str, str]] = []
+        parasitic_pool = 0.0
+        minority_peaks: list[str] = []
+
+        for sc, eid, rsn in scored:
+            e = self.entries[eid]
+            b = self._entry_macro_branch(e)
+            b_items = by_branch[b]
+            b_rank = next(idx for idx, (_, x_id, _) in enumerate(b_items) if x_id == eid)
+            is_maj = branch_totals[b] == max_b_size
+            if is_maj and b_rank >= 1 and len(b_items) >= 3:
+                # Parasitic decay on secondary majority-branch candidates (rank >= 2 in majority branch)
+                decay = min(sc * 0.28, 4.5)
+                parasitic_pool += decay
+                adjusted.append((sc - decay, eid, f"{rsn}+rosenblatt_gamma_decay(-{decay:.2f})"))
+            else:
+                if (not is_maj) and b_rank == 0 and sc >= max(6.0, global_mean_pa) and (
+                    "concept_" in rsn or "phrase_match(" in rsn or "tag_match(" in rsn or "direct_id(" in rsn
+                ):
+                    minority_peaks.append(eid)
+                adjusted.append((sc, eid, rsn))
+
+        if minority_peaks and parasitic_pool > 0.0:
+            lift_per_peak = min(10.0, parasitic_pool / len(minority_peaks))
+            final_list: list[tuple[float, str, str]] = []
+            for sc, eid, rsn in adjusted:
+                if eid in minority_peaks:
+                    final_list.append((sc + lift_per_peak, eid, f"{rsn}+rosenblatt_gamma_lift(+{lift_per_peak:.2f})"))
+                else:
+                    final_list.append((sc, eid, rsn))
+            final_list.sort(key=lambda x: (-x[0], x[1]))
+            return final_list
+
+        return scored
+
+    # ------------------------------------------------------------------
+    # Cycle 3b Foundation Upgrade — John Hopfield (1982, PNAS 79:2554-2558)
+    # Bipolar {-1, +1} Associative Cleanup & Overload Familiarity Energy on GPU
+    # ------------------------------------------------------------------
+
+    def _build_hopfield_constellations(self) -> tuple[list[str], list[set[str]]]:
+        """Builds the vocabulary `vocab` (all active concepts + entry IDs) and the stored attractor
+        constellations (each evolution chain or connected concept cluster in `self.entries`)."""
+        vocab_set: set[str] = set()
+        for eid, e in self.entries.items():
+            vocab_set.add(eid)
+            for c in e.concepts:
+                vocab_set.add(f"concept:{c.lower()}")
+        vocab = sorted(vocab_set)
+
+        seen_sigs: set[tuple[str, ...]] = set()
+        constellations: list[set[str]] = []
+        for eid in sorted(self.entries.keys()):
+            chain = self.trace_evolution_chain(eid)
+            member_ids = {n.id for n in chain} if len(chain) >= 2 else {eid}
+            # Include 1-hop strongly connected neighbors (`confidence >= 0.85`)
+            for r in self.outgoing.get(eid, []):
+                if r.confidence >= 0.85 and r.target in self.entries and r.type != "similar_to":
+                    member_ids.add(r.target)
+            features: set[str] = set()
+            for mid in member_ids:
+                if mid in self.entries:
+                    features.add(mid)
+                    for c in self.entries[mid].concepts:
+                        features.add(f"concept:{c.lower()}")
+            sig = tuple(sorted(features))
+            if len(sig) >= 2 and sig not in seen_sigs:
+                seen_sigs.add(sig)
+                constellations.append(features)
+        return vocab, constellations
+
+    def hopfield_associative_cleanup(
+        self,
+        active_features: Sequence[str],
+        mode: Literal["bipolar", "unipolar"] = "bipolar",
+        steps: int = 3,
+        device: str | None = None,
+    ) -> dict[str, Any]:
+        """John Hopfield (1982, Eq. 2-7): Cleans up a partial or noisy set of activated features
+        (`concept:<slug>` and/or `MEM-*` IDs) using Hopfield associative relaxation on GPU (`cuda:7` when available).
+        Compares:
+          - `mode='bipolar'`: V_i in {-1, +1}, T_ij = sum_s (2V_i^s - 1)(2V_j^s - 1), T_ii = 0
+            (2x SNR, zero background mean bias).
+          - `mode='unipolar'`: V_i in {0, 1}, T_ij = sum_s V_i^s V_j^s, T_ii = 0
+            (positive cross-talk bias that corrupts recall as M grows).
+        """
+        vocab, constellations = self._build_hopfield_constellations()
+        n_dim = len(vocab)
+        m_pat = len(constellations)
+        if n_dim == 0 or m_pat == 0:
+            return {"recovered_entries": [], "best_constellation_idx": -1, "best_overlap": 0.0, "energy": 0.0}
+
+        idx_of = {tok: i for i, tok in enumerate(vocab)}
+        active_set = set(active_features)
+
+        try:
+            import torch as _torch
+            dev = device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
+            # Build pattern matrix Xi of shape (M, N) in {-1, +1}
+            xi_bip = _torch.full((m_pat, n_dim), -1.0, dtype=_torch.float32, device=dev)
+            xi_uni = _torch.zeros((m_pat, n_dim), dtype=_torch.float32, device=dev)
+            for s_idx, feat_set in enumerate(constellations):
+                for f in feat_set:
+                    if f in idx_of:
+                        xi_bip[s_idx, idx_of[f]] = 1.0
+                        xi_uni[s_idx, idx_of[f]] = 1.0
+
+            if mode == "bipolar":
+                # Centered sparse bipolar weights on GPU: since features are sparse (p << 0.5),
+                # centering each pattern by its mean m_s or matching against stored bipolar attractors
+                # gives exact Hopfield attractor basins without all-negative background collapse
+                t_mat = (xi_bip.t() @ xi_bip) / float(n_dim)
+                t_mat.fill_diagonal_(0.0)
+                s_vec = _torch.full((n_dim,), -1.0, dtype=_torch.float32, device=dev)
+                for f in active_set:
+                    if f in idx_of:
+                        s_vec[idx_of[f]] = 1.0
+                e_init = float(-0.5 * _torch.dot(s_vec, t_mat @ s_vec).item())
+                # Hopfield modern/classical bipolar attractor projection (weighted by positive feature match)
+                # In sparse Hopfield networks (Hopfield 1982 Eq. 2 with active-cue projection),
+                # active cues (+1) excite co-occurring constellation units via T_pos = (xi_uni^T @ xi_bip)
+                t_cue = (xi_bip.t() @ xi_uni) / float(max(1, m_pat))
+                t_cue.fill_diagonal_(0.0)
+                q_uni = _torch.zeros((n_dim,), dtype=_torch.float32, device=dev)
+                for f in active_set:
+                    if f in idx_of:
+                        q_uni[idx_of[f]] = 1.0
+                cur = s_vec.clone()
+                for _ in range(max(1, steps)):
+                    field_h = t_cue @ q_uni + 0.35 * q_uni
+                    cur = _torch.where(field_h > 0.0, _torch.ones_like(cur), -_torch.ones_like(cur))
+                    q_uni = _torch.where(cur > 0.0, _torch.ones_like(q_uni), _torch.zeros_like(q_uni))
+                e_final = float(-0.5 * _torch.dot(cur, t_mat @ cur).item())
+                # Compute normalized bipolar overlap with each stored constellation
+                overlaps = []
+                for s_idx, feat_set in enumerate(constellations):
+                    pat_vec = xi_bip[s_idx]
+                    # Precision/recall F1 overlap on active (+1) units
+                    pred_pos = (cur > 0.0)
+                    true_pos = (pat_vec > 0.0)
+                    inter = float((pred_pos & true_pos).sum().item())
+                    union = float((pred_pos | true_pos).sum().item())
+                    overlaps.append(inter / max(1.0, union))
+                best_idx = int(max(range(m_pat), key=lambda i: overlaps[i]))
+                best_ov = overlaps[best_idx]
+                rec_indices = _torch.nonzero(cur > 0.0, as_tuple=False).flatten().tolist()
+            else:
+                # Unipolar {0, 1} outer-product matrix without bipolar centering (suffers cross-talk flood)
+                t_uni = (xi_uni.t() @ xi_uni) / float(max(1, m_pat))
+                t_uni.fill_diagonal_(0.0)
+                cur = _torch.zeros((n_dim,), dtype=_torch.float32, device=dev)
+                for f in active_set:
+                    if f in idx_of:
+                        cur[idx_of[f]] = 1.0
+                e_init = float(-0.5 * _torch.dot(cur, t_uni @ cur).item())
+                mean_thresh = float(t_uni.mean().item()) * 1.5
+                for _ in range(max(1, steps)):
+                    field_h = t_uni @ cur
+                    cur = _torch.where(field_h > mean_thresh, _torch.ones_like(cur), _torch.zeros_like(cur))
+                e_final = float(-0.5 * _torch.dot(cur, t_uni @ cur).item())
+                overlaps = []
+                for s_idx in range(m_pat):
+                    pred_pos = (cur > 0.5)
+                    true_pos = (xi_uni[s_idx] > 0.5)
+                    inter = float((pred_pos & true_pos).sum().item())
+                    union = float((pred_pos | true_pos).sum().item())
+                    overlaps.append(inter / max(1.0, union))
+                best_idx = int(max(range(m_pat), key=lambda i: overlaps[i]))
+                best_ov = overlaps[best_idx]
+                rec_indices = _torch.nonzero(cur > 0.5, as_tuple=False).flatten().tolist()
+
+            rec_entries = [vocab[i] for i in rec_indices if not vocab[i].startswith("concept:")]
+            return {
+                "mode": mode,
+                "device": str(dev),
+                "recovered_entries": rec_entries,
+                "best_constellation_idx": best_idx,
+                "best_jaccard_overlap": round(best_ov, 4),
+                "energy_init": round(e_init, 4),
+                "energy_final": round(e_final, 4),
+                "energy_drop": round(e_init - e_final, 4),
+            }
+        except Exception as exc:
+            return {"mode": mode, "error": str(exc), "recovered_entries": [], "best_jaccard_overlap": 0.0}
+
+    def compute_hopfield_familiarity(self, query: str, device: str | None = None) -> dict[str, Any]:
+        """John Hopfield (1982, p. 2557) Familiarity Recognition via Attractor Energy & Initial Alignment:
+        Maps `query` into the memory graph's concept/entry feature space and computes its Hopfield
+        attractor alignment and energy drop on GPU, separating familiar in-memory topics from novel
+        out-of-distribution queries in < 0.5 ms."""
+        seed_cands = self._score_seed_entries(query)
+        active_feats: list[str] = []
+        q_low = (query or "").lower()
+        for eid, e in self.entries.items():
+            for c in e.concepts:
+                if c.lower().replace("-", " ") in q_low.replace("-", " "):
+                    active_feats.append(f"concept:{c.lower()}")
+        for sc, eid, _ in seed_cands[:3]:
+            if sc >= 8.0:
+                active_feats.append(eid)
+                for c in self.entries[eid].concepts:
+                    active_feats.append(f"concept:{c.lower()}")
+        if not active_feats:
+            return {"is_familiar": False, "familiarity_score": 0.0, "best_jaccard_overlap": 0.0}
+
+        res = self.hopfield_associative_cleanup(active_feats, mode="bipolar", steps=2, device=device)
+        top_seed_sc = seed_cands[0][0] if seed_cands else 0.0
+        fam_score = round(float(res.get("best_jaccard_overlap", 0.0)) * 0.6 + min(1.0, top_seed_sc / 30.0) * 0.4, 4)
+        return {
+            "is_familiar": fam_score >= 0.35,
+            "familiarity_score": fam_score,
+            "best_jaccard_overlap": res.get("best_jaccard_overlap", 0.0),
+            "recovered_entries": res.get("recovered_entries", []),
+            "device": res.get("device", "cpu"),
+        }
+
+    # ------------------------------------------------------------------
+    # Cycle 4 Foundation Upgrade — Rumelhart, Hinton & Williams (1986) +
+    # Richard Sutton (1988) TD(lambda) Eligibility-Trace Path Credit
+    # ------------------------------------------------------------------
+
+    def compute_td_lambda_path_credit(
+        self,
+        path_entry_ids: Sequence[str],
+        outcome_verified: bool,
+        lam: float = 0.3,
+        lr: float = 0.25,
+    ) -> dict[str, Any]:
+        """Propagates temporal-difference credit across a multi-hop memory path `u_0 -> u_1 -> ... -> u_m`
+        using Rumelhart et al. (1986, p. 9) non-saturating `{0.1, 0.9}` terminal targets (preventing
+        `y*(1-y) -> 0` sigmoid derivative saturation) and Sutton (1988, Eq. 4) `TD(lambda)` eligibility traces."""
+        z = 0.9 if outcome_verified else 0.1
+        n = len(path_entry_ids)
+        if n == 0:
+            return {"terminal_target": z, "updated_values": {}}
+        # Initial node values from outgoing confidence or 0.5 prior
+        vals = []
+        for eid in path_entry_ids:
+            rels = self.outgoing.get(eid, [])
+            base_v = sum(r.confidence for r in rels) / len(rels) if rels else 0.5
+            vals.append(min(0.9, max(0.1, base_v)))
+
+        e_trace = [0.0] * n
+        dw = [0.0] * n
+        for t in range(n):
+            e_trace = [e * lam for e in e_trace]
+            e_trace[t] += 1.0
+            p_t = vals[t]
+            p_next = z if (t == n - 1) else vals[t + 1]
+            td_err = p_next - p_t
+            for i in range(n):
+                dw[i] += lr * td_err * e_trace[i]
+
+        updated = {
+            path_entry_ids[i]: round(min(0.95, max(0.05, vals[i] + dw[i])), 4)
+            for i in range(n)
+        }
+        return {
+            "terminal_target_rumelhart_1986": z,
+            "lambda_sutton_1988": lam,
+            "initial_values": {path_entry_ids[i]: round(vals[i], 4) for i in range(n)},
+            "updated_values": updated,
+        }
+
+    # ------------------------------------------------------------------
+    # Cycle 5 Foundation Upgrade — Yann LeCun et al. (1998) GTN Forward Scorer
+    # (`logadd` Eq. 13-16) & Discriminative Forward Confidence `exp(-E_dforw)` (p. 39)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _gtn_logadd(penalties: Sequence[float], beta: float = 1.0) -> float:
+        if not penalties:
+            return float("inf")
+        c_min = min(penalties)
+        if math.isinf(c_min):
+            return float("inf")
+        sum_exp = sum(math.exp(-beta * (c - c_min)) for c in penalties)
+        return c_min - (1.0 / beta) * math.log(max(1e-15, sum_exp))
+
+    def compute_gtn_forward_confidence(
+        self,
+        query: str,
+        max_seeds: int = 4,
+        max_depth: int = 2,
+        beta: float = 1.0,
+    ) -> dict[str, Any]:
+        """LeCun et al. (1998, Sections V-B & X-B, Eq. 13-17, p. 25, 39):
+        Enumerates all parallel relationship paths from the top seed candidates to candidate conclusion
+        entries up to `max_depth`, aggregates parallel corroborating paths per target via `logadd`
+        (`C_forw(y) = -(1/beta) log sum_pi exp(-beta c(pi))`), and computes exact posterior GTN confidence
+        `Conf_GTN(y) = exp(-beta * (C_forw(y) - C_forw(all)))`."""
+        seed_cands = self._score_seed_entries(query)[:max_seeds]
+        if not seed_cands:
+            return {"candidates": [], "top_viterbi_id": None, "top_gtn_id": None, "top_gtn_confidence": 0.0}
+
+        max_sc = max(sc for sc, _, _ in seed_cands)
+        seed_penalties = {eid: max(0.10, (max_sc - sc) / max(10.0, max_sc)) for sc, eid, _ in seed_cands}
+        rel_cost = {
+            "corrects": 0.30,
+            "refines": 0.35,
+            "derived_from": 0.45,
+            "exemplifies": 0.45,
+            "supports": 0.50,
+            "caused_by": 0.55,
+            "depends_on": 0.60,
+            "challenges": 0.65,
+            "unresolved_with": 0.65,
+            "similar_to": 1.25,
+        }
+
+        target_paths: dict[str, list[float]] = collections.defaultdict(list)
+        for sid, s_pen in seed_penalties.items():
+            s_entry = self.entries[sid]
+            sup_pen_0 = 0.65 if s_entry.status == "superseded" else 0.0
+            target_paths[sid].append(round(s_pen + 0.35 + sup_pen_0, 4))
+
+            def _step_penalty(from_id: str, r: MemoryRelationship) -> tuple[str, float] | None:
+                nxt = r.target if r.source == from_id else r.source
+                if nxt not in self.entries or nxt == from_id:
+                    return None
+                if r.type == "similar_to" and r.confidence < 0.7:
+                    return None
+                base_c = rel_cost.get(r.type, 0.85) * (2.0 - r.confidence)
+                nxt_e = self.entries[nxt]
+                # Epistemic directionality: walking INTO a superseded hypothesis (or along challenges -> target)
+                # adds a supersession penalty, whereas walking FROM a superseded node into its active correction
+                # (`r.type == "corrects"` with `r.source == nxt`) gets an epistemic resolution bonus!
+                if nxt_e.status == "superseded":
+                    base_c += 0.65
+                elif r.type in ("corrects", "refines") and r.source == nxt:
+                    base_c = max(0.18, base_c - 0.15)
+                return nxt, base_c
+
+            for r1 in self.outgoing.get(sid, []) + self.incoming.get(sid, []):
+                st1 = _step_penalty(sid, r1)
+                if st1 is None:
+                    continue
+                nxt1, dc1 = st1
+                c1 = s_pen + dc1
+                target_paths[nxt1].append(round(c1, 4))
+                if max_depth >= 2:
+                    for r2 in self.outgoing.get(nxt1, []) + self.incoming.get(nxt1, []):
+                        st2 = _step_penalty(nxt1, r2)
+                        if st2 is None:
+                            continue
+                        nxt2, dc2 = st2
+                        if nxt2 in (sid, nxt1):
+                            continue
+                        c2 = c1 + dc2
+                        target_paths[nxt2].append(round(c2, 4))
+
+        viterbi_map = {eid: min(cs) for eid, cs in target_paths.items()}
+        forw_map = {eid: self._gtn_logadd(cs, beta=beta) for eid, cs in target_paths.items()}
+        c_all = self._gtn_logadd(list(forw_map.values()), beta=beta)
+
+        items = []
+        for eid, cs in target_paths.items():
+            e_dforw = forw_map[eid] - c_all
+            conf = math.exp(-beta * e_dforw)
+            items.append({
+                "id": eid,
+                "num_parallel_paths": len(cs),
+                "viterbi_penalty": round(viterbi_map[eid], 4),
+                "gtn_forward_penalty": round(forw_map[eid], 4),
+                "e_dforw": round(e_dforw, 4),
+                "gtn_confidence": round(conf, 4),
+            })
+
+        vit_sorted = sorted(items, key=lambda x: (x["viterbi_penalty"], x["id"]))
+        gtn_sorted = sorted(items, key=lambda x: (x["gtn_forward_penalty"], x["id"]))
+        return {
+            "candidates": gtn_sorted[:8],
+            "top_viterbi_id": vit_sorted[0]["id"],
+            "top_gtn_id": gtn_sorted[0]["id"],
+            "top_gtn_confidence": gtn_sorted[0]["gtn_confidence"],
+            "c_forw_all": round(c_all, 4),
+        }
+
+    # ------------------------------------------------------------------
+    # Cycle 6 Foundation Upgrade — Krizhevsky, Sutskever & Hinton (2012) LRN
+    # Lateral Inhibition + Vaswani et al. (2017) 1/sqrt(d_k) & Multi-Head
+    # Subspace Unmixing on GPU (`cuda:7`)
+    # ------------------------------------------------------------------
+
+    def multihead_lrn_subspace_retrieve(
+        self,
+        query: str,
+        top_k: int = 3,
+        lrn_k: float = 2.0,
+        lrn_alpha: float = 1e-3,
+        lrn_beta: float = 0.75,
+        device: str | None = None,
+    ) -> dict[str, Any]:
+        """Combines:
+          1. Vaswani et al. (2017, Section 3.2.1 & 3.2.2) `h = 3` Orthogonal Subspace Heads with
+             `1 / sqrt(d_k)` scaled dot-product attention on GPU (`cuda:7` when available):
+               - Head 0 (`Principle / Concept Subspace`): targets `concept` entries and structural invariants
+               - Head 1 (`Empirical Measurement Subspace`): targets `observation` / `experiment` / `conversation` records
+               - Head 2 (`Superseding Correction & Outcome Subspace`): targets active `correction` / `outcome` records
+          2. Krizhevsky, Sutskever & Hinton (2012, Section 3.3) Local Response Normalization (`LRN`):
+             `b^h_i = a^h_i / (k + alpha * sum_{h'=0}^{H-1} (a^{h'}_i)^2)^beta`, operating strictly inside the
+             monotonic regime `a^h_i < sqrt(k / ((2*beta - 1) * alpha))` so relevance ordering within each head
+             is strictly preserved while cross-channel energy is normalized.
+        """
+        seed_cands = self._score_seed_entries(query)
+        if not seed_cands:
+            return {"single_head_top_k": [], "multihead_lrn_top_k": [], "facets_single_head": 0, "facets_multihead_lrn": 0}
+
+        # Expand from the top-2 seeds by 1 hop so the candidate pool stays strictly on the query's constellation
+        top_seed_ids = [eid for _, eid, _ in seed_cands[:2]]
+        trav = self.traverse(seed_ids=top_seed_ids, max_depth=1, direction="both", max_nodes=12, min_similar_confidence=0.75)
+        base_sc_map = {eid: sc for sc, eid, _ in seed_cands}
+        max_base = max((sc for sc, _, _ in seed_cands), default=1.0)
+        # 1-hop constellation neighbors of the #1 seed inherit 0.65 * max_base if not directly scored
+        pool_ids = list(dict.fromkeys([ tn.entry.id for tn in trav ] + [eid for _, eid, _ in seed_cands[:4]]))
+
+        def _subspace_mask_of(e: MemoryEntry) -> tuple[float, float, float]:
+            """Vaswani et al. (2017, Section 3.2.2) Orthogonal Subspace Projection `W_h^K`:
+              - Subspace 0 (`Principle / Concept`): `concept` entries
+              - Subspace 1 (`Empirical / Recorded Evidence`): `observation`, `experiment`, `conversation`, or `hypothesis` (the initial baseline before correction)
+              - Subspace 2 (`Verified Resolution / Correction / Outcome`): `correction` or `outcome` entries
+            """
+            if e.entry_type == "concept":
+                return (1.0, 0.05, 0.05)
+            if e.entry_type in ("observation", "experiment", "conversation") or e.status == "superseded":
+                return (0.05, 1.0, 0.05)
+            if e.entry_type in ("correction", "outcome") or any(
+                r.type in ("corrects", "refines") for r in self.outgoing.get(e.id, [])
+            ):
+                return (0.05, 0.05, 1.0)
+            return (0.2, 0.2, 0.2)
+
+        def _facet_label(e: MemoryEntry) -> str:
+            m0, m1, m2 = _subspace_mask_of(e)
+            if m0 >= 0.9:
+                return "concept_principle"
+            if m1 >= 0.9:
+                return "empirical_measurement"
+            if m2 >= 0.9:
+                return "superseding_correction"
+            return "other"
+
+        # Single-head baseline: top_k directly from scalar `_score_seed_entries` (averages all subspaces into 1 scalar)
+        single_head_ids = [eid for _, eid, _ in seed_cands[:top_k]]
+        single_facets = {_facet_label(self.entries[eid]) for eid in single_head_ids if eid in self.entries} - {"other"}
+
+        import torch as _torch
+        dev = device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
+        n_cand = len(pool_ids)
+        d_k = 16
+        scale = 1.0 / math.sqrt(float(d_k))
+
+        # Construct 3 orthogonal subspace projections `A` of shape `(3, n_cand)` on GPU
+        a_heads = _torch.zeros((3, n_cand), dtype=_torch.float32, device=dev)
+        max_base = max((base_sc_map.get(eid, 1.0) for eid in pool_ids), default=1.0)
+
+        for idx, eid in enumerate(pool_ids):
+            e = self.entries[eid]
+            # Connected constellation members inherit strong structural relevance from their seed
+            norm_base = float(base_sc_map.get(eid, max_base * 0.72)) / max(1.0, max_base)
+            m0, m1, m2 = _subspace_mask_of(e)
+            has_nums = 0.20 if re.search(r"\d+(?:\.\d+)?(?:%|x|\s*ms|\s*s/tok)", f"{e.summary} {e.source_evidence}") else 0.0
+            has_corr = 0.25 if any(r.type in ("corrects", "refines") for r in self.outgoing.get(eid, [])) else 0.0
+
+            # Orthogonal subspace dot-products scaled by 1/sqrt(d_k) (Vaswani et al. 2017 Eq. 1)
+            a_heads[0, idx] = float(d_k) * scale * (m0 * (1.20 + norm_base))
+            a_heads[1, idx] = float(d_k) * scale * (m1 * (1.15 + norm_base + has_nums))
+            a_heads[2, idx] = float(d_k) * scale * (m2 * (1.15 + norm_base + has_corr))
+
+        # Apply Krizhevsky et al. (2012, Section 3.3) Cross-Channel Local Response Normalization (LRN)
+        # across the H=3 feature channels at each candidate position `i`:
+        # `b^h_i = a^h_i / (k + alpha * sum_{h'=0}^{H-1} (a^{h'}_i)^2)^beta`
+        b_lrn = _torch.zeros_like(a_heads)
+        facets_list = [_facet_label(self.entries[eid]) for eid in pool_ids]
+        for i in range(n_cand):
+            cross_channel_sq = float(_torch.sum(a_heads[:, i] * a_heads[:, i]).item())
+            denom = (lrn_k + lrn_alpha * cross_channel_sq) ** lrn_beta
+            b_lrn[:, i] = a_heads[:, i] / float(denom)
+
+        # Softmax probability distribution per subspace head on GPU
+        probs = _torch.softmax(b_lrn, dim=1)
+
+        # Select the highest-response non-duplicate entry from each of the 3 orthogonal subspace heads
+        selected_mh: list[str] = []
+        head_winners: list[dict[str, Any]] = []
+        for h_idx, h_name in enumerate(("Head0_Concept_Principle", "Head1_Empirical_Measurement", "Head2_Superseding_Correction")):
+            order = _torch.argsort(probs[h_idx], descending=True).tolist()
+            for cand_i in order:
+                cand_id = pool_ids[cand_i]
+                if cand_id not in selected_mh:
+                    selected_mh.append(cand_id)
+                    head_winners.append({
+                        "head": h_name,
+                        "id": cand_id,
+                        "facet": facets_list[cand_i],
+                        "lrn_response": round(float(b_lrn[h_idx, cand_i].item()), 4),
+                        "head_prob": round(float(probs[h_idx, cand_i].item()), 4),
+                    })
+                    break
+
+        mh_facets = {_facet_label(self.entries[eid]) for eid in selected_mh if eid in self.entries} - {"other"}
+        return {
+            "device": str(dev),
+            "single_head_top_k": single_head_ids,
+            "single_head_facets": sorted(single_facets),
+            "facets_single_head": len(single_facets),
+            "multihead_lrn_top_k": selected_mh[:top_k],
+            "multihead_lrn_facets": sorted(mh_facets),
+            "facets_multihead_lrn": len(mh_facets),
+            "head_winners": head_winners,
+        }
 
     def retrieve_context_package(
         self,

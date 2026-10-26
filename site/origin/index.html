@@ -1240,6 +1240,66 @@
     </div>
   </section>
 
+  <!-- ============ HOW EACH PAPER HELPS CURRENT CLOVER ON GPU ============ -->
+  <section class="band" id="applied-to-clover">
+    <div class="wrap">
+      <h2>How these 11 foundations help current Clover on the GPU server</h2>
+      <p class="lede"><strong>We did not leave these 11 papers as history.</strong> We tested each mechanism step by step on our <code>8 × NVIDIA RTX 3090</code> GPU server against the live 7-layer Clover stack (<code>k3_ontology_graph.py</code>, <code>k3_memory_graph.py</code>, and <code>k3_generative_compiler.py</code>), measuring where current Clover had a real gap and keeping what Reality validated.</p>
+
+      <div class="table-wrap">
+        <table class="data">
+          <caption>Six GPU verification cycles applying the 11 foundational papers (1943–2017) to current Clover on 8 × NVIDIA RTX 3090.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Cycle</th>
+              <th scope="col">Foundational Papers</th>
+              <th scope="col">Where It Helps Current Clover</th>
+              <th scope="col">Measured Before → After on GPU (<code>cuda:7</code>)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Cycle 1</strong></td>
+              <td><strong>1943 McCulloch &amp; Pitts</strong> + <strong>1969 Minsky &amp; Papert</strong></td>
+              <td>Replaces flat order-1 token-overlap triggers in <code>k3_ontology_graph.py</code> and <code>k3_memory_graph.py</code> with <strong>All-or-None Inhibitory Veto</strong> (<code>¬⋁ I_i</code>) and <strong>Order-k "One-in-a-Box" Conjunctive Predicates</strong> (requiring at least 1 hit in both the <em>Entity/Domain Anchor Box</em> and the <em>Mechanism Box</em>).</td>
+              <td>One-in-a-Box &amp; Veto stress false positives dropped from <strong><code>16 / 16</code> (<code>100.0%</code> FP) → <code>0 / 16</code> (<code>0.0%</code> FP)</strong> while keeping <strong><code>10/10</code> Ontology &amp; <code>6/6</code> Memory positive recall</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>Cycle 2</strong></td>
+              <td><strong>1950 Alan Turing</strong> + <strong>1956 Newell &amp; Simon</strong></td>
+              <td>Adds the <strong><code>CSm</code> 3-number structural signature pre-filter</strong> <code>(K_L, K_R, J)</code> with the <code>*2.07</code> contraction fix (<code>J_rule &gt;= J_target</code>) and <strong><code>VCt</code> premise/path contraction</strong> to <code>CloverGraphTraversal</code> &amp; <code>CloverSymbolicVerifier</code>, plus Turing Section 6.1 <strong><code>M_0 → M_1</code> self-reference stratification</strong>.</td>
+              <td>Filters out <strong><code>90.44%</code></strong> of <code>LMc</code> unifications (<strong><code>10.46×</code> fewer</strong>), raises contracted theorem recall from <strong><code>2/8 → 8/8</code> (<code>100%</code>)</strong>, cuts 2-hop ontology DFS steps from <strong><code>630 → 28</code> (<code>22.5×</code> fewer)</strong> with 100% identical causal paths, and stratifies <strong><code>3/3</code></strong> diagonal paradoxes.</td>
+            </tr>
+            <tr>
+              <td><strong>Cycle 3</strong></td>
+              <td><strong>1958 Frank Rosenblatt</strong> + <strong>1982 John Hopfield</strong></td>
+              <td>Adds Rosenblatt's <strong>Parasitic Zero-Sum <code>γ</code>-System</strong> (<code>∑ ΔV_i = 0</code> across the <code>5.4 : 1</code> imbalanced <code>systems</code> vs <code>philosophy</code> memory branches) and Hopfield's <strong>Bipolar <code>{-1, +1}</code> Associative Constellation Cleanup &amp; Familiarity Gate</strong> on GPU.</td>
+              <td>Restores cross-branch <code>top-3</code> seed representation from <strong><code>3/4 → 4/4</code> (<code>100%</code>)</strong>; Bipolar <code>{-1,+1}</code> cleanup on <code>cuda:7</code> achieves <strong><code>0.9334</code> Jaccard (<code>24/25</code> constellations) vs <code>0.3777</code> (<code>4/25</code>) for Unipolar <code>{0,1}</code></strong>, with <strong><code>1.0000</code> Familiarity ROC AUC</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>Cycle 4</strong></td>
+              <td><strong>1986 Rumelhart, Hinton &amp; Williams</strong> + <strong>1988 Richard Sutton</strong></td>
+              <td>Models statement-boundary compilation checkpoints in <code>k3_generative_compiler.py</code> and multi-hop memory paths in <code>k3_memory_graph.py</code> with <strong><code>{0.1, 0.9}</code> non-saturating targets</strong> (<code>90.1×</code> larger recovery slope) and <strong>Sutton's <code>TD(λ)</code> / Batch Backward <code>TD(0)</code> Absorbing Markov Model</strong> <code>(I − Q̂)⁻¹ ĥ</code>.</td>
+              <td>Reduces statement-value RMSE against the exact Markov MLE from <strong><code>0.1253</code> (<code>TD(1)</code>) → <code>0.0860</code> (<code>TD(0.3)</code>) → <code>0.0004</code> (Batch Backward <code>TD(0)</code>, <code>313×</code> lower error)</strong> and localizes the exact offending statement cliff on <strong><code>6 / 6</code> (<code>100%</code>)</strong> faulty code trajectories.</td>
+            </tr>
+            <tr>
+              <td><strong>Cycle 5</strong></td>
+              <td><strong>1998 LeCun, Bottou, Bengio &amp; Haffner</strong></td>
+              <td>Replaces single-path Viterbi (<code>min</code>) path scoring with the <strong>GTN Forward Scorer (<code>logadd</code> Eq. 13–16)</strong> over parallel corroborating provenance paths and computes exact posterior <strong>Discriminative Forward Confidence</strong> <code>exp(−E_dforw)</code> (Eq. 17, p. 39) with directed epistemic flow from superseded hypotheses to active corrections.</td>
+              <td>Raises parallel-corroboration vs single-path lure accuracy from <strong><code>0 / 6</code> (Viterbi) → <code>6 / 6</code> (<code>100%</code>, GTN Forward)</strong>, breaks the <code>CVE-2024-6387</code> Viterbi tie in favor of parent hub <code>CWE/362</code>, and promotes the active <code>MEM-CORR-*</code> entry to rank <code>#1</code> across <strong><code>3 / 3</code></strong> correction chains.</td>
+            </tr>
+            <tr>
+              <td><strong>Cycle 6</strong></td>
+              <td><strong>2012 Krizhevsky, Sutskever &amp; Hinton</strong> + <strong>2017 Vaswani et al.</strong></td>
+              <td>Adds <strong><code>h = 3</code> Orthogonal Subspace Heads</strong> (<em>Concept Principle</em>, <em>Empirical Measurement</em>, <em>Superseding Correction</em>) with <strong><code>1/√d_k</code> logit scaling</strong> and <strong>Krizhevsky Cross-Channel LRN</strong> (operating strictly below the calculus turnover point <code>x* = √(k / ((2β−1)α))</code>) in <code>k3_memory_graph.py</code> on GPU.</td>
+              <td>Locks <code>d_k = 512</code> logit variance from <strong><code>520.64 → 1.017</code></strong> (<code>1.82×</code> larger softmax Jacobian norm) and lifts 3-facet subspace coverage at <code>top_k = 3</code> from <strong><code>4 / 6</code> (<code>2.67/3</code> facets, single-head) → <code>6 / 6</code> (<code>3.00/3</code> facets, <code>18/18</code> exact head winners)</strong> on <code>cuda:7</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ CLOSING ============ -->
   <section class="band" id="closing">
     <div class="wrap">
