@@ -1,0 +1,137 @@
+=== 0. Repository Triton attention inventory ===
+98c1cee0ed59307833841cdbf567fe336ceec13a
+ 1160 /root/dm-study/flashattention/repo/flash-attention/flash_attn/flash_attn_triton.py
+  365 /root/dm-study/flashattention/repo/flash-attention/flash_attn/flash_attn_triton_og.py
+ 1525 total
+/root/dm-study/flashattention/repo/flash-attention/flash_attn/flash_attn_triton_og.py
+/root/dm-study/flashattention/repo/flash-attention/flash_attn/flash_attn_triton.py
+/root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton
+/root/dm-study/flashattention/repo/flash-attention/hopper/test_flash_attn_triton_amd.py
+/root/dm-study/flashattention/repo/flash-attention/tests/ops/triton
+/root/dm-study/flashattention/repo/flash-attention/tests/test_flash_attn_triton_amd.py
+=== Diff between orig_flash_attn_triton.py and patched_flash_attn_triton.py ===
+--- /root/dm-study/flashattention/w2/work_e2/orig_flash_attn_triton.py	2026-10-26 08:07:41.015717197 +0100
++++ /root/dm-study/flashattention/w2/work_e2/patched_flash_attn_triton.py	2026-10-26 08:07:41.023717097 +0100
+@@ -180,7 +180,7 @@
+                     other=0.0,
+                 )
+         qk = tl.zeros([BLOCK_M, BLOCK_N], dtype=tl.float32)
+-        qk += tl.dot(q, k, trans_b=True)
++        qk += tl.dot(q, tl.trans(k))
+         # Trying to combine the two masks seem to make the result wrong
+         if not EVEN_N:  # Need to mask out otherwise the softmax is wrong
+             qk += tl.where((start_n + offs_n)[None, :] < seqlen_k, 0, float("-inf"))
+@@ -477,7 +477,7 @@
+                     other=0.0,
+                 )
+         # recompute p = softmax(qk, dim=-1).T
+-        qk = tl.dot(q, k, trans_b=True)
++        qk = tl.dot(q, tl.trans(k))
+         # Trying to combine the two masks seem to make the result wrong
+         if not EVEN_N:  # Need to mask out otherwise the softmax is wrong
+             qk = tl.where(offs_n[None, :] < seqlen_k, qk, float("-inf"))
+@@ -535,14 +535,14 @@
+         #     else:
+         #         do = tl.load(do_ptrs, mask=(offs_m_curr[:, None] < seqlen_q)
+         #                                    & (offs_d[None, :] < headdim), other=0.0)
+-        dv += tl.dot(p.to(do.dtype), do, trans_a=True)
++        dv += tl.dot(tl.trans(p.to(do.dtype)), do)
+         # compute dp = dot(v, do)
+         # There seems to be a race condition when headdim=48/96, and dq, dk are wrong.
+         # Also wrong for headdim=128, seqlen=(108, 256), and ATOMIC_ADD=True
+         # Also wrong for headdim=64, seqlen=(1023, 1024), and ATOMIC_ADD=False
+         if not (EVEN_M & EVEN_HEADDIM):
+             tl.debug_barrier()
+-        dp = tl.dot(do, v, trans_b=True)
++        dp = tl.dot(do, tl.trans(v))
+         # There's a race condition for headdim=48
+         if not EVEN_HEADDIM:
+             tl.debug_barrier()
+@@ -553,7 +553,7 @@
+         # for BLOCK_HEADDIM=128
+         ds = (p * (dp - Di[:, None]) * softmax_scale).to(q.dtype)
+         # compute dk = dot(ds.T, q)
+-        dk += tl.dot(ds, q, trans_a=True)
++        dk += tl.dot(tl.trans(ds), q)
+         # compute dq
+         if not (
+             EVEN_M & EVEN_HEADDIM
+@@ -817,15 +817,15 @@
+     assert v.shape == (batch, seqlen_k, nheads, d)
+     assert d <= 128, "FlashAttention only support head dimensions up to 128"
+     assert q.dtype == k.dtype == v.dtype, "All tensors must have the same type"
+-    assert q.dtype in [torch.float16, torch.bfloat16], "Only support fp16 and bf16"
+-    assert q.is_cuda and k.is_cuda and v.is_cuda
++    assert q.dtype in [torch.float16, torch.bfloat16, torch.float32], "Support fp16, bf16, fp32"
++    # assert q.is_cuda (removed for CPU interpreter)
+     softmax_scale = softmax_scale or 1.0 / math.sqrt(d)
+ 
+     has_bias = bias is not None
+     bias_type = "none"
+     if has_bias:
+         assert bias.dtype in [q.dtype, torch.float]
+-        assert bias.is_cuda
++        # assert bias.is_cuda (removed for CPU interpreter)
+         assert bias.dim() == 4
+         if bias.stride(-1) != 1:
+             bias = bias.contiguous()
+@@ -935,7 +935,7 @@
+     bias_type = "none"
+     if has_bias:
+         assert bias.dtype in [q.dtype, torch.float]
+-        assert bias.is_cuda
++        # assert bias.is_cuda (removed for CPU interpreter)
+         assert bias.dim() == 4
+         assert bias.stride(-1) == 1
+         if bias.shape[2:] == (1, seqlen_k):
+=== 1. Test unmodified flash_attn_triton.py ===
+  unmodified flash_attn_triton (float32): AssertionError at line 820: Only support fp16 and bf16
+  unmodified flash_attn_triton (float16): AssertionError at line 821: 
+=== 2. Test unmodified flash_attn_triton_og.py ===
+  unmodified import of flash_attn_triton_og: ModuleNotFoundError at line 12: No module named 'pytest'
+  flash_attn_triton_og (unmodified kernel, fp16): InterpreterError at line 1417: TypeError("dot() got an unexpected keyword argument 'trans_b'")
+  host_patched_flash_attn_triton (unmodified _fwd_kernel): InterpreterError at line 1417: TypeError("dot() got an unexpected keyword argument 'trans_b'")
+  patched_flash_attn_triton_og (fp16, Z=1,H=2,N=128,D=64): max_abs_diff=1.595e-03 max_rel_diff=4.341e-04
+=== 3. Test patched_flash_attn_triton._flash_attn_forward ===
+  [fp32] B=1 N= 64 H=2 D=32 causal=False | abs_vs_f64=3.642e-07 rel_vs_f64=3.499e-07 abs_vs_f32=4.768e-07 lse_diff=4.451e-07
+  [fp32] B=1 N= 64 H=2 D=32 causal=True  | abs_vs_f64=4.688e-07 rel_vs_f64=1.756e-07 abs_vs_f32=3.576e-07 lse_diff=3.457e-07
+  [fp32] B=1 N= 64 H=2 D=64 causal=False | abs_vs_f64=5.178e-07 rel_vs_f64=3.726e-07 abs_vs_f32=8.345e-07 lse_diff=3.565e-07
+  [fp32] B=1 N= 64 H=2 D=64 causal=True  | abs_vs_f64=5.818e-07 rel_vs_f64=1.708e-07 abs_vs_f32=4.768e-07 lse_diff=4.000e-07
+  [fp32] B=1 N=113 H=2 D=32 causal=False | abs_vs_f64=5.749e-07 rel_vs_f64=7.313e-07 abs_vs_f32=4.172e-07 lse_diff=4.405e-07
+  [fp32] B=1 N=113 H=2 D=32 causal=True  | abs_vs_f64=6.291e-07 rel_vs_f64=2.600e-07 abs_vs_f32=5.364e-07 lse_diff=4.250e-07
+  [fp32] B=1 N=113 H=2 D=64 causal=False | abs_vs_f64=5.201e-07 rel_vs_f64=4.719e-07 abs_vs_f32=8.345e-07 lse_diff=5.054e-07
+  [fp32] B=1 N=113 H=2 D=64 causal=True  | abs_vs_f64=6.260e-07 rel_vs_f64=1.962e-07 abs_vs_f32=5.960e-07 lse_diff=4.398e-07
+  [fp32] B=1 N=128 H=2 D=32 causal=False | abs_vs_f64=5.611e-07 rel_vs_f64=4.338e-07 abs_vs_f32=7.153e-07 lse_diff=4.663e-07
+  [fp32] B=1 N=128 H=2 D=32 causal=True  | abs_vs_f64=3.918e-07 rel_vs_f64=1.496e-07 abs_vs_f32=3.576e-07 lse_diff=4.427e-07
+  [fp32] B=1 N=128 H=2 D=64 causal=False | abs_vs_f64=4.601e-07 rel_vs_f64=6.595e-07 abs_vs_f32=5.960e-07 lse_diff=4.098e-07
+  [fp32] B=1 N=128 H=2 D=64 causal=True  | abs_vs_f64=6.812e-07 rel_vs_f64=2.480e-07 abs_vs_f32=5.364e-07 lse_diff=4.988e-07
+  [fp32] B=1 N=192 H=2 D=32 causal=False | abs_vs_f64=2.483e-07 rel_vs_f64=4.513e-07 abs_vs_f32=4.768e-07 lse_diff=5.133e-07
+  [fp32] B=1 N=192 H=2 D=32 causal=True  | abs_vs_f64=6.317e-07 rel_vs_f64=2.308e-07 abs_vs_f32=5.960e-07 lse_diff=5.378e-07
+  [fp32] B=1 N=256 H=2 D=32 causal=False | abs_vs_f64=4.058e-07 rel_vs_f64=5.688e-07 abs_vs_f32=3.576e-07 lse_diff=4.794e-07
+  [fp32] B=1 N=256 H=2 D=32 causal=True  | abs_vs_f64=7.143e-07 rel_vs_f64=2.878e-07 abs_vs_f32=5.364e-07 lse_diff=5.467e-07
+  [fp32] B=1 N=256 H=2 D=64 causal=False | abs_vs_f64=3.701e-07 rel_vs_f64=4.248e-07 abs_vs_f32=2.980e-07 lse_diff=4.262e-07
+  [fp32] B=1 N=256 H=2 D=64 causal=True  | abs_vs_f64=6.442e-07 rel_vs_f64=2.446e-07 abs_vs_f32=4.768e-07 lse_diff=5.057e-07
+  --> Summary [fp32]: max_abs_vs_f64=7.143e-07 max_rel_vs_f64=7.313e-07
+  [fp16] B=1 N= 64 H=2 D=32 causal=False | abs_vs_f64=3.407e-04 rel_vs_f64=4.274e-04 abs_vs_f32=3.407e-04 lse_diff=4.622e-07
+  [fp16] B=1 N= 64 H=2 D=32 causal=True  | abs_vs_f64=4.896e-04 rel_vs_f64=2.336e-04 abs_vs_f32=4.896e-04 lse_diff=4.375e-07
+  [fp16] B=1 N= 64 H=2 D=64 causal=False | abs_vs_f64=4.050e-04 rel_vs_f64=3.292e-04 abs_vs_f32=4.054e-04 lse_diff=4.018e-07
+  [fp16] B=1 N= 64 H=2 D=64 causal=True  | abs_vs_f64=5.408e-04 rel_vs_f64=1.843e-04 abs_vs_f32=5.407e-04 lse_diff=4.853e-07
+  [fp16] B=1 N=113 H=2 D=32 causal=False | abs_vs_f64=2.473e-04 rel_vs_f64=2.795e-04 abs_vs_f32=2.472e-04 lse_diff=4.530e-07
+  [fp16] B=1 N=113 H=2 D=32 causal=True  | abs_vs_f64=5.145e-04 rel_vs_f64=1.817e-04 abs_vs_f32=5.145e-04 lse_diff=3.978e-07
+  [fp16] B=1 N=113 H=2 D=64 causal=False | abs_vs_f64=2.395e-04 rel_vs_f64=3.376e-04 abs_vs_f32=2.393e-04 lse_diff=4.771e-07
+  [fp16] B=1 N=113 H=2 D=64 causal=True  | abs_vs_f64=7.119e-04 rel_vs_f64=2.682e-04 abs_vs_f32=7.119e-04 lse_diff=4.120e-07
+  [fp16] B=1 N=128 H=2 D=32 causal=False | abs_vs_f64=2.538e-04 rel_vs_f64=2.850e-04 abs_vs_f32=2.537e-04 lse_diff=4.508e-07
+  [fp16] B=1 N=128 H=2 D=32 causal=True  | abs_vs_f64=4.981e-04 rel_vs_f64=1.903e-04 abs_vs_f32=4.981e-04 lse_diff=4.005e-07
+  [fp16] B=1 N=128 H=2 D=64 causal=False | abs_vs_f64=3.029e-04 rel_vs_f64=3.784e-04 abs_vs_f32=3.032e-04 lse_diff=4.855e-07
+  [fp16] B=1 N=128 H=2 D=64 causal=True  | abs_vs_f64=8.930e-04 rel_vs_f64=2.682e-04 abs_vs_f32=8.929e-04 lse_diff=4.528e-07
+  [fp16] B=1 N=192 H=2 D=32 causal=False | abs_vs_f64=3.799e-04 rel_vs_f64=4.630e-04 abs_vs_f32=3.800e-04 lse_diff=5.037e-07
+  [fp16] B=1 N=192 H=2 D=32 causal=True  | abs_vs_f64=5.991e-04 rel_vs_f64=2.647e-04 abs_vs_f32=5.994e-04 lse_diff=5.179e-07
+  [fp16] B=1 N=256 H=2 D=32 causal=False | abs_vs_f64=1.951e-04 rel_vs_f64=3.182e-04 abs_vs_f32=1.951e-04 lse_diff=4.480e-07
+  [fp16] B=1 N=256 H=2 D=32 causal=True  | abs_vs_f64=5.878e-04 rel_vs_f64=2.244e-04 abs_vs_f32=5.878e-04 lse_diff=5.299e-07
+  [fp16] B=1 N=256 H=2 D=64 causal=False | abs_vs_f64=2.388e-04 rel_vs_f64=2.908e-04 abs_vs_f32=2.388e-04 lse_diff=5.062e-07
+  [fp16] B=1 N=256 H=2 D=64 causal=True  | abs_vs_f64=5.981e-04 rel_vs_f64=1.995e-04 abs_vs_f32=5.982e-04 lse_diff=5.738e-07
+  --> Summary [fp16]: max_abs_vs_f64=8.930e-04 max_rel_vs_f64=4.630e-04
+=== 4. Negative controls on real Triton _fwd_kernel ===
+  [neg_ctrl_1] causal kernel vs non-causal ref: max_abs_diff=2.368e+00 (expected > 0.1)
+  [neg_ctrl_2] softmax_scale=1.0 vs 1/sqrt(64): max_abs_diff=3.879e+00 (expected > 0.1)
+FINISHED rc=0

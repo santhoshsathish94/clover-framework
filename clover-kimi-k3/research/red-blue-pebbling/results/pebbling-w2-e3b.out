@@ -1,0 +1,10 @@
+=== 2x2 MATRIX MULTIPLY DAG (20 nodes: 8 inputs, 8 products, 4 outputs) EXACT Q*(S) ===
+  S=1: exact_unpruned Q*=-1 (states=0) | max_bprod=1: Q=-1 (states=0) | max_bprod=0: Q=-1 (states=0)
+  S=2: exact_unpruned Q*=-1 (states=0) | max_bprod=1: Q=-1 (states=0) | max_bprod=0: Q=-1 (states=0)
+  S=3: exact_unpruned Q*=25 (states=73793) | max_bprod=1: Q=28 (states=12224) | max_bprod=0: Q=-1 (states=389)
+  S=4: exact_unpruned Q*=17 (states=150289) | max_bprod=1: Q=17 (states=34010) | max_bprod=0: Q=17 (states=7042)
+  S=5: exact_unpruned Q*=14 (states=236658) | max_bprod=1: Q=14 (states=64772) | max_bprod=0: Q=14 (states=13874)
+  S=6: exact_unpruned Q*=13 (states=305759) | max_bprod=1: Q=13 (states=96185) | max_bprod=0: Q=13 (states=21562)
+  S=7: exact_unpruned Q*=12 (states=339997) | max_bprod=1: Q=12 (states=120440) | max_bprod=0: Q=12 (states=28442)
+  S=8: exact_unpruned Q*=12 (states=355421) | max_bprod=1: Q=12 (states=134141) | max_bprod=0: Q=12 (states=33035)
+FINISHED rc=0

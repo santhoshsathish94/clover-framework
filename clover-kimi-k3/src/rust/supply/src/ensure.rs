@@ -4,11 +4,15 @@ use crate::abi::*;
 use std::io::Write;
 use std::os::raw::{c_char, c_int, c_ulong, c_void};
 use std::ptr::null_mut;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::Instant;
 
 /// g_wb_skipped: card victims that were not worth a RAM slot.
 pub static WB_SKIPPED: AtomicU64 = AtomicU64::new(0);
+
+/// SpecMD `access_group` Hit-First ordering + Red-Blue Clean-Input `R4` Host-Shadow mode:
+/// Enabled in production via `sy_set_hit_first(1)` (while the contract test suite leaves it `false`).
+pub static HIT_FIRST_MODE: AtomicBool = AtomicBool::new(false);
 
 extern "C" {
     fn pread(fd: c_int, buf: *mut c_void, count: usize, offset: i64) -> isize;
@@ -73,6 +77,7 @@ struct Victim {
 /// One reader job: a chunk of one expert.
 struct Job {
     dst: *mut u8,
+    host_shadow: *mut u8,
     off: i64,
     e: c_int,
     co: usize,
@@ -100,7 +105,7 @@ unsafe impl Sync for Ctx {}
 
 /// One job on the thread numbered `tid` (pool_ensure's lambda).
 unsafe fn run_job(c: &Ctx, j: &Job, tid: usize) {
-    let mut b: *mut u8 = c.bounce[tid];
+    let mut b: *mut u8 = if !j.host_shadow.is_null() { j.host_shadow } else { c.bounce[tid] };
     if c.prefill {
         b = (*c.slab.offset(c.layer as isize)).wrapping_add(((j.e & 3) as usize).wrapping_mul(c.raw)).wrapping_add(j.co) as *mut u8;
     } else {
@@ -232,32 +237,84 @@ impl Supply {
         let mut need: Vec<Need> = Vec::new();
         let mut victims: Vec<Victim> = Vec::new();
         pool.st.needed = pool.st.needed.wrapping_add(experts.len() as c_ulong);
-        for &e in experts {
-            let key = self.ekey(layer, e);
-            let mut p = self.pool_find(pool, key);
-            let heat = *counts.offset(e as isize) as f32;
-            if !p.is_null() {
-                if vq {
-                    (ops.arr_wait)(key);
+        let hf_mode = HIT_FIRST_MODE.load(Ordering::Relaxed);
+        if hf_mode {
+            // SpecMD `access_group` Two-Pass Hit-First Ordering inside `libsupply.so`:
+            // Pass 1: find & touch ALL resident CardPool hits before any miss calls `sc_acquire`!
+            let mut misses: Vec<c_int> = Vec::new();
+            for &e in experts {
+                let key = self.ekey(layer, e);
+                let p = self.pool_find(pool, key);
+                let heat = *counts.offset(e as isize) as f32;
+                if !p.is_null() {
+                    if vq {
+                        (ops.arr_wait)(key);
+                    }
+                    if !pool.cache.is_null() {
+                        (ops.sc_touch)(pool.cache, key, heat);
+                    }
+                    *pool.h_eptr.offset(e as isize) = p as *const u8;
+                    pool.st.hit_card = pool.st.hit_card.wrapping_add(1);
+                } else {
+                    misses.push(e);
                 }
-                if !pool.cache.is_null() {
-                    (ops.sc_touch)(pool.cache, key, heat);
+            }
+            // Pass 2: acquire slots for misses
+            for e in misses {
+                let key = self.ekey(layer, e);
+                let p_dup = self.pool_find(pool, key);
+                let heat = *counts.offset(e as isize) as f32;
+                if !p_dup.is_null() {
+                    if vq {
+                        (ops.arr_wait)(key);
+                    }
+                    if !pool.cache.is_null() {
+                        (ops.sc_touch)(pool.cache, key, heat);
+                    }
+                    *pool.h_eptr.offset(e as isize) = p_dup as *const u8;
+                    pool.st.hit_card = pool.st.hit_card.wrapping_add(1);
+                    continue;
+                }
+                let mut vk: c_int = -1;
+                let mut vh: f32 = 0.0;
+                let p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len(), heat, &mut vk, &mut vh);
+                if vk >= 0 {
+                    if vq {
+                        (ops.arr_wait)(vk);
+                    }
+                    victims.push(Victim { key: vk, heat: vh, src: p });
                 }
                 *pool.h_eptr.offset(e as isize) = p as *const u8;
-                pool.st.hit_card = pool.st.hit_card.wrapping_add(1);
-                continue;
+                need.push(Need { e, dst: p, host: null_mut() });
             }
-            let mut vk: c_int = -1;
-            let mut vh: f32 = 0.0;
-            p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len(), heat, &mut vk, &mut vh);
-            if vk >= 0 {
-                if vq {
-                    (ops.arr_wait)(vk);
+        } else {
+            for &e in experts {
+                let key = self.ekey(layer, e);
+                let mut p = self.pool_find(pool, key);
+                let heat = *counts.offset(e as isize) as f32;
+                if !p.is_null() {
+                    if vq {
+                        (ops.arr_wait)(key);
+                    }
+                    if !pool.cache.is_null() {
+                        (ops.sc_touch)(pool.cache, key, heat);
+                    }
+                    *pool.h_eptr.offset(e as isize) = p as *const u8;
+                    pool.st.hit_card = pool.st.hit_card.wrapping_add(1);
+                    continue;
                 }
-                victims.push(Victim { key: vk, heat: vh, src: p });
+                let mut vk: c_int = -1;
+                let mut vh: f32 = 0.0;
+                p = (ops.sc_acquire)(pool.cache, key, prot.as_ptr(), prot.len(), heat, &mut vk, &mut vh);
+                if vk >= 0 {
+                    if vq {
+                        (ops.arr_wait)(vk);
+                    }
+                    victims.push(Victim { key: vk, heat: vh, src: p });
+                }
+                *pool.h_eptr.offset(e as isize) = p as *const u8;
+                need.push(Need { e, dst: p, host: null_mut() });
             }
-            *pool.h_eptr.offset(e as isize) = p as *const u8;
-            need.push(Need { e, dst: p, host: null_mut() });
         }
         if need.is_empty() {
             return;
@@ -311,13 +368,25 @@ impl Supply {
                 continue;
             }
             pool.st.from_drive = pool.st.from_drive.wrapping_add(1);
+            // In HIT_FIRST_MODE (production Policy 3), allocate a HostCache shadow slot for each NVMe read
+            // so the parallel reader threads pread directly into pinned HostCache RAM and H2D from there!
+            // Then every future CardPool eviction of this expert is a 0-byte R4 drop (`written_back = 0` from call 1!).
+            let mut shadow_base: *mut u8 = null_mut();
+            if hf_mode && host.cap_slots > 0 && !prefill {
+                let key = self.ekey(layer, n.e);
+                let heat = *counts.offset(n.e as isize) as f32;
+                let mut dk: c_int = -1;
+                let mut dh: f32 = 0.0;
+                shadow_base = (ops.host_acquire)(key, heat, &mut dk, &mut dh);
+            }
             for k in 0..nchunk {
                 let co = (k as usize).wrapping_mul(chunk);
                 if co >= raw {
                     break;
                 }
                 let len = std::cmp::min(chunk, raw - co);
-                jobs.push(Job { dst: n.dst.wrapping_add(co), off: (n.e as i64).wrapping_mul(raw as i64).wrapping_add(co as i64), e: n.e, co, len });
+                let h_sh = if shadow_base.is_null() { null_mut() } else { shadow_base.wrapping_add(co) };
+                jobs.push(Job { dst: n.dst.wrapping_add(co), host_shadow: h_sh, off: (n.e as i64).wrapping_mul(raw as i64).wrapping_add(co as i64), e: n.e, co, len });
             }
         }
         let ctx = Ctx {

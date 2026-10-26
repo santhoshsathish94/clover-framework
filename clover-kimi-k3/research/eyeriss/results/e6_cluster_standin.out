@@ -1,0 +1,104 @@
+=== A. PE.v ports as shipped (declaration lines) ===
+input clk,
+input rstn, //active low reset
+input en, //enable for clock gating
+input iact_write_en, //enable/valid iact input data
+input weight_write_en, //enable/valid weight input data
+input psum_write_en, //enable/valid psum input data
+input psum_read_en, //enable read psum output
+input [IACT_BUFFER_WIDTH - 1 : 0] data_iact_in, //input iact data 
+input [WEIGHT_PAR_WRITE * WEIGHT_BUFFER_WIDTH - 1 : 0] data_weight_in, //input weight data
+input [PSUM_BUFFER_WIDTH - 1 : 0] data_psum_in, //input psum data
+input [MAX_CONFIG_WIDTH - 1 : 0] filter_size, //filter size parameter config input
+input [MAX_CONFIG_WIDTH - 1 : 0] stride, //stride parameter config input
+input [MAX_CONFIG_WIDTH - 1 : 0] input_channels_num, //number of input channels parameter config input
+input [MAX_CONFIG_WIDTH - 1 : 0] output_channels_num, //number of output channels
+output [PSUM_BUFFER_WIDTH - 1 : 0] data_psum_out, //output psum data
+output wire iact_buffer_ready,
+output wire weight_buffer_ready,
+output wire psum_buffer_ready,
+output wire psum_out_valid //valid output psum data
+
+=== B. PE_Cluster.v named ports used in the PE instance ===
+.clk( .data_iact_in( .data_psum_in_a( .data_psum_in_b( .data_psum_out_a( .data_psum_out_b( .data_weight_in( .en( .filter_size( .iact_ready( .iact_write_en( .input_channels_num( .output_channels_num( .psum_in_ready( .psum_out_read_en( .psum_out_valid( .psum_write_en( .rstn( .weight_ready( .weight_write_en( .window_depth( .window_segment_cnt( 
+
+=== C. iverilog: PE_Cluster_Ctrl.v alone (with stand-in header) ===
+rc=0
+
+=== D. iverilog: PE_Cluster.v + PE.v + leaves + Mux stand-in (all errors) ===
+src/PE_Cluster.v:224: error: port ``psum_out_read_en'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_in_a'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_in_b'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``window_depth'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``window_segment_cnt'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``iact_ready'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``weight_ready'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_out_a'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_out_b'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``psum_in_ready'' is not a port of xx.
+src/PE.v:139:        : Padding 48 high bits of the port.
+src/PE.v:221:        : Pruning (signed) 31 high bits of the expression.
+src/PE.v:250:        : Pruning (signed) 24 high bits of the expression.
+src/PE.v:389:        : Padding 1 high bits of the port.
+src/PE.v:450:        : Pruning 27 high bits of the expression.
+src/PE.v:469:        : Pruning (signed) 31 high bits of the expression.
+src/PE.v:499:        : Pruning (signed) 16 high bits of the expression.
+src/PE.v:526:        : Padding 48 high bits of the port.
+src/PE_Cluster.v:224:        : Padding 48 high bits of the port.
+src/PE_Cluster.v:224:        : Padding 3 high bits of the port.
+src/PE_Cluster.v:224: error: port ``psum_out_read_en'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_in_a'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_in_b'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``window_depth'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``window_segment_cnt'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``iact_ready'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``weight_ready'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_out_a'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_out_b'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``psum_in_ready'' is not a port of xx.
+src/PE.v:139:        : Padding 48 high bits of the port.
+src/PE.v:221:        : Pruning (signed) 31 high bits of the expression.
+src/PE.v:250:        : Pruning (signed) 24 high bits of the expression.
+src/PE.v:389:        : Padding 1 high bits of the port.
+src/PE.v:450:        : Pruning 27 high bits of the expression.
+src/PE.v:469:        : Pruning (signed) 31 high bits of the expression.
+src/PE.v:499:        : Pruning (signed) 16 high bits of the expression.
+src/PE.v:526:        : Padding 48 high bits of the port.
+src/PE_Cluster.v:224:        : Padding 48 high bits of the port.
+src/PE_Cluster.v:224:        : Padding 3 high bits of the port.
+src/PE_Cluster.v:224: error: port ``psum_out_read_en'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_in_a'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_in_b'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``window_depth'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``window_segment_cnt'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``iact_ready'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``weight_ready'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_out_a'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``data_psum_out_b'' is not a port of xx.
+src/PE_Cluster.v:224: error: port ``psum_in_ready'' is not a port of xx.
+src/PE.v:139:        : Padding 48 high bits of the port.
+src/PE.v:221:        : Pruning (signed) 31 high bits of the expression.
+src/PE.v:250:        : Pruning (signed) 24 high bits of the expression.
+src/PE.v:389:        : Padding 1 high bits of the port.
+src/PE.v:450:        : Pruning 27 high bits of the expression.
+src/PE.v:469:        : Pruning (signed) 31 high bits of the expression.
+src/PE.v:499:        : Pruning (signed) 16 high bits of the expression.
+src/PE.v:526:        : Padding 48 high bits of the port.
+src/PE_Cluster.v:224:        : Padding 48 high bits of the port.
+src/PE_Cluster.v:224:        : Padding 3 high bits of the port.
+rc=141
+
+=== E. count of errors by kind ===
+    120 error:  is not a port of xx.
+     36        : Padding 48 high bits of the port.
+     24        : Pruning (signed) 31 high bits of the expression.
+     12        : Pruning (signed) 24 high bits of the expression.
+     12        : Pruning (signed) 16 high bits of the expression.
+     12        : Pruning 27 high bits of the expression.
+     12        : Padding 3 high bits of the port.
+     12        : Padding 1 high bits of the port.
+      1 120 error(s) during elaboration.
+
+=== F. iact_enables concatenation in PE_Cluster.v (repeat check) ===
+174:    assign iact_enables = {iact_enables_2, iact_enables_1, iact_enables_2};
+FINISHED rc=0

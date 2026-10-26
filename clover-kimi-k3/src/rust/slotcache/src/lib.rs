@@ -54,6 +54,8 @@ struct Node {
     slot: *mut u8,
     heat: f32,
     nu: i32,
+    pass_id: i32,
+    layer_id: i32,
     prev: usize,
     next: usize,
 }
@@ -67,6 +69,8 @@ pub struct sc_cache {
     by_next: BTreeSet<(i32, i32)>,
     spare: Vec<*mut u8>,
     prot_bits: Vec<u64>, // membership bitmap for a large `prot`, allocated on first use, all zero between calls
+    cur_pass: i32,
+    last_layer: i32,
 }
 
 // `prot` above this many keys, all in [0, PROT_BITS), is tested through the bitmap: the heat rule asks about up to 48 + |prot| keys per acquire, the original's hash set answers in O(1)
@@ -81,7 +85,27 @@ struct Acquired {
 
 impl sc_cache {
     fn new() -> Self {
-        sc_cache { nodes: Vec::new(), free: Vec::new(), head: NIL, tail: NIL, map: HashMap::new(), by_next: BTreeSet::new(), spare: Vec::new(), prot_bits: Vec::new() }
+        sc_cache {
+            nodes: Vec::new(),
+            free: Vec::new(),
+            head: NIL,
+            tail: NIL,
+            map: HashMap::new(),
+            by_next: BTreeSet::new(),
+            spare: Vec::new(),
+            prot_bits: Vec::new(),
+            cur_pass: 0,
+            last_layer: -1,
+        }
+    }
+
+    fn advance_layer(&mut self, key: i32) -> (i32, i32) {
+        let layer = if key >= 0 { key / 896 } else { 0 };
+        if self.last_layer >= 0 && layer < self.last_layer {
+            self.cur_pass += 1;
+        }
+        self.last_layer = layer;
+        (self.cur_pass, layer)
     }
 
     // true if `prot` is now in the bitmap (the caller must call prot_clear with the same list)
@@ -147,7 +171,10 @@ impl sc_cache {
     }
 
     fn touch(&mut self, key: i32, w: f32) {
+        let (cur_pass, layer) = self.advance_layer(key);
         let Some(&i) = self.map.get(&key) else { return };
+        self.nodes[i].pass_id = cur_pass;
+        self.nodes[i].layer_id = layer;
         if belady() {
             let old = self.nodes[i].nu;
             self.by_next.remove(&(old, key));
@@ -160,6 +187,9 @@ impl sc_cache {
     }
 
     fn worth(&self, key: i32) -> bool {
+        if POLICY.load(Ordering::SeqCst) == 3 && self.map.contains_key(&key) {
+            return false; // Red-Blue Pebble R4 clean drop: key is already resident in HostCache
+        }
         if !belady() || !self.spare.is_empty() || self.by_next.is_empty() {
             return true;
         }
@@ -187,9 +217,11 @@ impl sc_cache {
     }
 
     fn acquire_inner(&mut self, key: i32, prot: &[i32], bitmap: bool, heat0: f32) -> Acquired {
+        let (cur_pass, cur_layer) = self.advance_layer(key);
         let mut vkey = -1;
         let mut vheat = None;
         let p;
+        let pol = POLICY.load(Ordering::SeqCst);
         if let Some(s) = self.spare.pop() {
             p = s;
         } else if belady() {
@@ -208,8 +240,39 @@ impl sc_cache {
             vkey = victim;
             vheat = Some(self.nodes[i].heat);
             p = self.detach(i, victim);
+        } else if pol == 3 {
+            // Policy 3: SpecMD Least-Stale (LS) + Heat tie-breaking across the card's layer cycle
+            let mut best = NIL;
+            let mut best_tier = 99i32;
+            let mut best_heat = 0f32;
+            let mut it = self.tail;
+            while it != NIL {
+                let n = &self.nodes[it];
+                if !self.is_prot(prot, bitmap, n.key) {
+                    let tier = if n.pass_id < cur_pass - 1 || (n.pass_id == cur_pass - 1 && n.layer_id <= cur_layer) {
+                        0 // Truly stale: missed its turn in cur_pass or older
+                    } else if n.pass_id == cur_pass && n.layer_id < cur_layer {
+                        1 // Already used earlier in cur_pass; next possible use is cur_pass + 1
+                    } else {
+                        2 // Upcoming in cur_pass (n.pass_id == cur_pass - 1 && n.layer_id > cur_layer)
+                    };
+                    if best == NIL || tier < best_tier || (tier == best_tier && n.heat < best_heat) {
+                        best = it;
+                        best_tier = tier;
+                        best_heat = n.heat;
+                    }
+                }
+                it = n.prev;
+            }
+            if best == NIL {
+                fatal();
+            }
+            let victim = self.nodes[best].key;
+            vkey = victim;
+            vheat = Some(self.nodes[best].heat);
+            p = self.detach(best, victim);
         } else {
-            let limit = if POLICY.load(Ordering::SeqCst) != 0 { 48 } else { 1 };
+            let limit = if pol != 0 { 48 } else { 1 };
             let mut best = NIL;
             let mut best_heat = 0f32;
             let mut seen = 0;
@@ -243,7 +306,7 @@ impl sc_cache {
             nu = nu_call(key);
             self.by_next.insert((nu, key));
         }
-        let i = self.alloc(Node { key, slot: p, heat: heat0, nu, prev: NIL, next: NIL });
+        let i = self.alloc(Node { key, slot: p, heat: heat0, nu, pass_id: cur_pass, layer_id: cur_layer, prev: NIL, next: NIL });
         self.push_front(i);
         self.map.insert(key, i);
         Acquired { slot: p, vkey, vheat }

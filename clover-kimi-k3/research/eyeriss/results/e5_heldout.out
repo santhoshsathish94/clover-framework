@@ -1,0 +1,16 @@
+=== RS held-out (tb_rs_conv2d_e3) ===
+RUN R=3 H=6x6 C=2 M=2 PEs=12 SPARSE=0 CORRUPT=0 | MACs=576 w_wr=144(0.2500/MAC) i_wr=144(0.2500/MAC) w_rd=576(1.0000/MAC) i_rd=576(1.0000/MAC) psum_rd=576(1.0000/MAC) psum_wr=576(1.0000/MAC) vert_add=64(0.1111/MAC) gated=0 | golden_mismatches=0/32
+RUN R=4 H=7x7 C=1 M=1 PEs=16 SPARSE=0 CORRUPT=0 | MACs=256 w_wr=64(0.2500/MAC) i_wr=112(0.4375/MAC) w_rd=256(1.0000/MAC) i_rd=256(1.0000/MAC) psum_rd=256(1.0000/MAC) psum_wr=256(1.0000/MAC) vert_add=48(0.1875/MAC) gated=0 | golden_mismatches=0/16
+RUN R=3 H=6x5 C=1 M=1 PEs=12 SPARSE=0 CORRUPT=0 | MACs=108 w_wr=36(0.3333/MAC) i_wr=60(0.5556/MAC) w_rd=108(1.0000/MAC) i_rd=108(1.0000/MAC) psum_rd=108(1.0000/MAC) psum_wr=108(1.0000/MAC) vert_add=24(0.2222/MAC) gated=0 | golden_mismatches=0/12
+RUN R=2 H=5x5 C=1 M=1 PEs=8 SPARSE=0 CORRUPT=0 | MACs=64 w_wr=16(0.2500/MAC) i_wr=40(0.6250/MAC) w_rd=64(1.0000/MAC) i_rd=64(1.0000/MAC) psum_rd=64(1.0000/MAC) psum_wr=64(1.0000/MAC) vert_add=16(0.2500/MAC) gated=0 | golden_mismatches=0/16
+=== WS held-out (tb_ws_conv2d_e4) ===
+RUN R=3 H=6x6 C=2 M=2 PEs=9 SPARSE=0 CORRUPT=0 | MACs=576 w_wr=36(0.0625/MAC) i_wr=288(0.5000/MAC) w_rd=576(1.0000/MAC) i_rd=576(1.0000/MAC) psum_rd=603(1.0469/MAC) psum_wr=603(1.0469/MAC) vert_add=256(0.4444/MAC) gated=0 | golden_mismatches=0/32
+RUN R=4 H=7x7 C=1 M=1 PEs=16 SPARSE=0 CORRUPT=0 | MACs=256 w_wr=16(0.0625/MAC) i_wr=256(1.0000/MAC) w_rd=256(1.0000/MAC) i_rd=256(1.0000/MAC) psum_rd=256(1.0000/MAC) psum_wr=256(1.0000/MAC) vert_add=240(0.9375/MAC) gated=0 | golden_mismatches=0/16
+RUN R=3 H=6x5 C=1 M=1 PEs=9 SPARSE=0 CORRUPT=0 | MACs=108 w_wr=9(0.0833/MAC) i_wr=108(1.0000/MAC) w_rd=108(1.0000/MAC) i_rd=108(1.0000/MAC) psum_rd=108(1.0000/MAC) psum_wr=108(1.0000/MAC) vert_add=96(0.8889/MAC) gated=0 | golden_mismatches=0/12
+RUN R=2 H=5x5 C=1 M=1 PEs=4 SPARSE=0 CORRUPT=0 | MACs=64 w_wr=4(0.0625/MAC) i_wr=64(1.0000/MAC) w_rd=64(1.0000/MAC) i_rd=64(1.0000/MAC) psum_rd=64(1.0000/MAC) psum_wr=64(1.0000/MAC) vert_add=48(0.7500/MAC) gated=0 | golden_mismatches=0/16
+=== OS held-out (tb_os_conv2d_e4) ===
+RUN R=3 H=6x6 C=2 M=2 PEs=16 SPARSE=0 CORRUPT=0 | MACs=576 w_wr=576(1.0000/MAC) i_wr=288(0.5000/MAC) w_rd=576(1.0000/MAC) i_rd=576(1.0000/MAC) psum_rd=576(1.0000/MAC) psum_wr=576(1.0000/MAC) vert_add=0(0.0000/MAC) gated=0 | golden_mismatches=0/32
+RUN R=4 H=7x7 C=1 M=1 PEs=16 SPARSE=0 CORRUPT=0 | MACs=256 w_wr=256(1.0000/MAC) i_wr=256(1.0000/MAC) w_rd=256(1.0000/MAC) i_rd=256(1.0000/MAC) psum_rd=256(1.0000/MAC) psum_wr=256(1.0000/MAC) vert_add=0(0.0000/MAC) gated=0 | golden_mismatches=0/16
+RUN R=3 H=6x5 C=1 M=1 PEs=12 SPARSE=0 CORRUPT=0 | MACs=108 w_wr=108(1.0000/MAC) i_wr=108(1.0000/MAC) w_rd=108(1.0000/MAC) i_rd=108(1.0000/MAC) psum_rd=108(1.0000/MAC) psum_wr=108(1.0000/MAC) vert_add=0(0.0000/MAC) gated=0 | golden_mismatches=0/12
+RUN R=2 H=5x5 C=1 M=1 PEs=16 SPARSE=0 CORRUPT=0 | MACs=64 w_wr=64(1.0000/MAC) i_wr=64(1.0000/MAC) w_rd=64(1.0000/MAC) i_rd=64(1.0000/MAC) psum_rd=64(1.0000/MAC) psum_wr=64(1.0000/MAC) vert_add=0(0.0000/MAC) gated=0 | golden_mismatches=0/16
+FINISHED rc=0

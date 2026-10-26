@@ -1,0 +1,33 @@
+=== PROBE 1: INITIAL STATE AND INPUT RULE (R1) ===
+Repo initial pebbles: {0: None, 1: None, 2: None, 3: None}
+Paper initial pebbles: red=set(), blue={0}
+Load input 0 -> Repo PLACE(0, register): accepted=True, cost=1 pJ | Paper R1(0): accepted=True, cost=1 I/O
+
+=== PROBE 2: OUTPUT RULE (R2) — SIMULTANEOUS RED+BLUE VS MOVE ===
+Before R2(1): Repo reg usage=2/2, pebbles={0: 'register', 1: 'register', 2: None, 3: None} | Paper red={0, 1}, blue={0}
+After R2(1)/TRANSFER(1,sram): Repo accepted=True, cost=5 pJ, reg_usage=1/2, pebbles={0: 'register', 1: 'sram', 2: None, 3: None}
+After R2(1)/TRANSFER(1,sram): Paper accepted=True, cost=1 I/O, red={0, 1} (len=2/2), blue={0, 1}
+Reload 1 to fast mem: Repo TRANSFER(1, register) cost=0 pJ | Paper R1(1) cost=1 I/O
+
+=== PROBE 3: COMPUTE (R3) WITHOUT PREDECESSOR PEBBLED AT ALL (ILLEGAL IN BOTH) ===
+Compute N1 with N0 unpebbled/blue-only: Repo accepted=False (err=Cannot compute N1: predecessors [0] are not pebbled.) | Paper accepted=False (err=R3 rejected: predecessors [0] of 1 lack red pebbles)
+
+=== PROBE 4: COMPUTE (R3) WHEN PREDECESSOR IS IN SLOW MEMORY (BLUE / SRAM / HBM) ===
+Compute N1 when N0 is in slow mem (SRAM/blue): Repo accepted=True, cost=1 pJ | Paper accepted=False (err=R3 rejected: predecessors [0] of 1 lack red pebbles)
+
+=== PROBE 5: DIRECT COMPUTE INTO SLOW MEMORY WITH S=0 FAST SLOTS ===
+With register_slots=0 / S=0: Repo PLACE(0,sram) accepted=True, PLACE(1,sram) accepted=True | Paper R1(0) accepted=False (err=R1 rejected: red pebble limit S=0 reached)
+
+=== PROBE 6: EXCEEDING RED / REGISTER CAPACITY S=2 ===
+3rd red/register pebble with S=2: Repo accepted=False (err=No register capacity remaining.) | Paper accepted=False (err=R3 rejected: red pebble limit S=2 reached)
+
+=== PROBE 7: DELETE (R4) AND RECOMPUTATION ===
+Delete N1 then recompute N1: Repo accepted=True, cost=1 pJ | Paper accepted=True, cost=0 I/O
+Delete input N0 completely then re-input N0: Repo accepted=True | Paper accepted=False (err=R1 rejected: vertex 0 does not have a blue pebble)
+
+=== PROBE 8: ENDING / TERMINAL CONDITION ON COMPLETE DIAMOND SCHEDULE (S=3) ===
+Repo after placing sink N3 in register (with N1, N2 still in register): done=True, total_cost=4 pJ, pebbles={0: None, 1: 'register', 2: 'register', 3: 'register'}
+Paper at same point (N3 in red, N0 in blue, N1,N2 in red): is_terminal=False, outputs_all_blue=False, io_cost=1
+Paper after R2(3) (N3 in blue, but red={1, 2, 3}, blue={0, 3}): is_terminal=False, outputs_all_blue=True, io_cost=2
+Paper after cleaning up R4 on N1,N2,N3(red) and N0(blue): is_terminal=True, red=set(), blue={3}, io_cost=2
+FINISHED rc=0

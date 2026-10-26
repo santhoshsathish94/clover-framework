@@ -1,0 +1,57 @@
+# SpecMD Round 2 Predictions Log
+# Format: [Timestamp] Experiment: Prediction
+
+[2026-10-26T10:00:00Z] E1 (Identity, algorithm, definitions, and evaluation setup in arXiv:2602.03921):
+- The arXiv e-print 2602.03921 TeX source will contain Algorithm 1 defining speculative expert prefetching across adjacent layers, explicit definitions of collision misses (misses where an expert is requested while its prefetch from a prior layer is still in flight or evicted before use), cache policies including LRU, LFU, FIFO, and Least-Stale (LS), speculative prefetch rules (top-k, overfetch, score-based filtering), a cache-aware routing equation biasing router scores toward cached experts, and an evaluation setup covering OLMoE-1B-7B at 1%, 5%, and 25% cache capacity under emulated storage/memory bandwidth.
+
+[2026-10-26T10:08:00Z] E2 (Download and run allenai/OLMoE-1B-7B-0924 in bf16 on CPU on k3):
+- Downloading allenai/OLMoE-1B-7B-0924 to /root/dm-study/specmd/w2/model will fetch 3 safetensors shards totaling ~13.8 GB (matching 6,919,094,272 parameters in bf16). Loading AutoModelForCausalLM in torch.bfloat16 on CPU with -MemGB 60 on CPUs 26-31 will succeed within the 60 GB virtual-memory cap (RSS ~15-18 GB), confirm 16 layers x 64 experts per layer with top_k=8 and expert size 12,582,912 bytes (12.0 MiB in bf16: 3 matrices of shape 1024x2048 x 2 bytes), and deterministically generate coherent English text under greedy decoding.
+
+[2026-10-26T10:18:00Z] E3 (Record real routing traces on ordinary English prose, prompt-style vs decode-style):
+- Across 2,048 tokens of ordinary English prose (8 prompts x 256 tokens from WikiText/Project Gutenberg prose), recording full 64-expert router logits/probabilities and top-8 selected experts across all 16 layers will produce 32,768 router decisions (262,144 expert activations) with top-k=8 indices in [0, 63] and softmax probabilities summing to 1.0 over 64 experts. Comparing prompt-style (all 256 tokens per prompt processed at once) vs decode-style (token-by-token with KV cache) in bfloat16 will show mean absolute router probability difference < 0.005, top-1 expert match > 95%, and top-8 set overlap > 95% (not 100% identical because bfloat16 GEMM vs GEMV rounding accumulates across 16 layers).
+
+[2026-10-26T10:30:00Z] E4 (Access pattern and temporal locality on real OLMoE traces):
+- (1) Distinct experts touched: 1 token touches 8/64 per layer (128/1024 = 12.50% globally); a window of 8 tokens touches ~34-39/64 per layer (~540-620/1024 globally, below the iid uniform expectation of 41.96/64 = 65.6%); a window of 64 tokens touches ~58-63/64 per layer (~930-1010/1024 globally).
+- (2) Consecutive-token same-layer overlap: the probability that an expert selected at token t in layer l is also among the 8 experts selected at token t-1 in layer l will be 20%-35% (~1.6-2.8 shared experts out of 8), roughly 2x the iid uniform baseline of 8/64 = 12.50%.
+- (3) Reuse distance (stack distance = distinct (layer, expert) pairs between consecutive uses of the same expert): in decode-style global order (token-major across all 16 layers), the minimum possible stack reuse distance is >= 120 (0% of reuses have stack distance < 120 because 15 other layers x 8 experts intervene before returning to the same layer), whereas in per-layer order (or prompt-style layer-major order), >20% of reuses have stack distance <= 8.
+- (4) Popularity skew: per-layer expert frequency Gini coefficient will be ~0.15-0.30 (moderately skewed, not uniform).
+
+[2026-10-26T10:38:00Z] E5 (Build cache simulator and run closed-form + negative-control validation):
+- (1) On IID Uniform(64) with C in {8, 16, 32} over 200,000 requests, LRU, LFU, FIFO, and LS hit rates will match closed-form C/64 (12.50%, 25.00%, 50.00%) within 0.30%.
+- (2) On IID Zipf(64, s=1.2) with C=16 over 200,000 requests, Static Top-16 and LFU hit rates will match the exact probability sum sum_{i=1}^{16} p_i (65.43%) within 0.30%.
+- (3) On a cyclic sweep over C+1 = 17 experts at capacity C=16 (8,500 requests), LRU and FIFO will get 0.00% hit rate, while Belady (MIN) will get 15/17 = 88.24% steady-state hit rate (88.06% overall).
+- (4) Belady will achieve >= hit rate than LRU, LFU, FIFO, FLD, SB, and LS on every trace tested.
+- (5) Negative control (counting hit after insertion / off-by-one capacity) will fail the closed-form check (reporting 100.00% and 26.56% vs 25.00% at C=16).
+
+[2026-10-26T10:50:00Z] E6 (Run policies on real OLMoE traces at 1% [C=10], 5% [C=51], 25% [C=256] for prompt-style and decode-style):
+- Prompt-style (layer-major per 256-token prompt, 262,144 requests):
+  - At 1% (C=10): LS, LRU, FIFO, FLD will achieve ~36-37% hit rate; LFU and SB will trail (~10-25%) with high intra-pass collision misses because they retain earlier layers' experts during layer l's 256-token execution.
+  - At 5% (C=51): LS, LRU, FIFO, FLD will achieve ~92-93% hit rate and <5% intra-pass collision rate, whereas SB and LFU will suffer high collision miss rates (>35%) and lower hit rates (~40-60%) because high-score/high-frequency experts from layers 0..l-1 pin cache slots needed by layer l.
+  - At 25% (C=256): LS, LRU, LFU, FIFO, FLD will achieve ~96-97% hit rate; LS will have near-zero collision misses (<0.5%).
+- Decode-style (token-major across 16 layers, 262,144 requests, global pool without prefetch):
+  - At 1% (C=10) and 5% (C=51): Because 1 token activates 128 > C experts per pass, global LRU, FIFO, and LS suffer 16-layer cyclic eviction and get 0.00% hit rate; LFU leads (~4.5% at 1%, ~18.5% at 5%) followed by SB (~0.6% at 1%, ~7% at 5%). Partitioning the same C=10 or C=51 capacity into per-layer LRU pools eliminates cross-layer thrashing and raises hit rate from 0.00% to ~4-5% (at C=10) and ~18-22% (at C=51).
+  - At 25% (C=256 > 128): Policy hit-rate ranking in global decode will be LS > LRU >= LFU > FIFO > SB > FLD (~54% for LS/LRU/LFU down to ~26% for FLD). Pass-collision misses (cached experts at pass start evicted before their layer executes in that pass) will be lowest for LS (<4%) vs LRU (~6-10%) and SB/FLD (>15%).
+
+[2026-10-26T11:02:00Z] E7 (Speculative cross-layer expert prediction on real OLMoE-1B-7B-0924 + prefetch cache simulation):
+- (1) Cross-layer prediction accuracy (layer l activations fed to layer l+1 router across layers 0..14):
+  - Top-8 (1.0x): Precision = Recall will be 35%-60% across layers 1..15 (3x-5x above the 12.50% uniform random baseline), highest in middle/deeper layers where residual stream direction stabilizes.
+  - Applying layer l+1's post_attention_layernorm to layer l's pre-MLP residual before layer l+1's gate (Variant B) will beat passing layer l's post_attention_layernorm output directly to layer l+1's gate (Variant A) by 3-10 percentage points of recall due to per-layer RMSNorm scale differences.
+  - Overfetch 1.5x (top-12): Recall will increase by 10-15 percentage points over top-8 (to ~48%-72%), while Precision drops to 2/3 of Recall (~32%-48%).
+  - Score-based 80th percentile filtering: A global/historical 80th-percentile score threshold will dynamically vary the number of prefetched experts per layer/token (mean ~12-13 experts, varying across layers), whereas per-token 80th percentile over 64 scores always selects a fixed 13 experts.
+  - Prompt-style and decode-style prediction recall/precision will agree within 0.5%.
+- (2) Prefetch simulation in decode-style (1% C=10, 5% C=51, 25% C=256):
+  - At 5% (C=51): Adding next-layer top-8 prefetch will jump Global-LS and Global-LRU hit rates from 0.00% (demand-only) to ~40%-65%. SB and LFU will suffer high intra-pass prefetch collision misses (>25%) because pinned high-score/high-frequency experts from other layers evict newly prefetched experts before layer l+1 executes.
+  - At 25% (C=256): Adding next-layer prefetch will raise Global-LS hit rate from 53.86% to ~70%-80%, with LS maintaining lower collision misses than LRU, SB, and FLD.
+  - Overfetch 1.5x (top-12) will increase wasted prefetch reads by >1.8x over top-8 (1.0x), and at 1% (C=10 < 12) will cause self-eviction collision misses of prefetched experts.
+
+[2026-10-26 by Claude, before running work/independent_check.py] Independent check of E6 (my own small LRU/FIFO/LFU/LS replay of the recorded traces, not sim_cache.py):
+- LRU, FIFO and LFU global hit rates (decode and prompt streams, C = 10, 51, 256) will be within 1.0 percentage point of the E6 table (they can differ slightly because the order in which a layer's 8 experts are inserted and the tie-break rules are mine). My own reading of Least-Stale (stale-left first, then other stale, then current) will land within 2 points of the study's LS (53.86% at C=256 decode; 0.00% at C=51 decode).
+
+[2026-10-26 by Claude, before running work/e8_baseline_group_lru.py] E8 (the baseline repository's per-layer LRU groups, reimplemented from reading src/expert_cache.py and src/build_model.py, replayed on the recorded traces):
+- Decode stream: m=16 slots per layer (C=256) will give 54% +/- 1 (the study's hits-first per-layer LRU gave 54.26%); m=3 (C=48) about 11% +/- 2 and m=4 (C=64) about 18% +/- 3 (the study got 12.24% at C=51 with 3-4 slots per layer). Changing which experts start on the GPU (high vs low indices) changes the hit rate by less than 0.1 point; processing a call's experts sorted by index instead of rank order changes it by less than 0.5 point at m=3. Prompt stream, m=16: at least 96%.
+
+[2026-10-26 by Claude, written after seeing the first independent_check.py output and before the second run] Result of the first run: LRU, FIFO and LFU matched the study's E6 numbers to two decimals in all 12 reported cells; my own Least-Stale reading gave 46.82% at C=256 decode vs the study's 53.86% (my prediction of +/-2 points missed by 7), and in prompt-style it equalled LRU (92.88% at C=51) while the study's LS equalled FIFO (90.46%). Hypothesis: the gap is a rule the paper text leaves open (how stale entries from different passes are ordered; whether the current queue is LRU or FIFO-by-layer), not a bug. Prediction for the added variant LS2 (the study's ordering rules, re-implemented independently): it reproduces the study's LS exactly (53.86% decode C=256; 90.46% prompt C=51; 0.00% decode C=51).
+
+
+
+

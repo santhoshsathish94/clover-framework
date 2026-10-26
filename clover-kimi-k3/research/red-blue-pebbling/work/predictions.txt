@@ -1,0 +1,92 @@
+# Red-Blue Pebbling Study (Round 2) — Predictions Log
+# Format: [Timestamp UTC] Experiment: Prediction written BEFORE running the experiment.
+
+[2026-10-26 06:00 UTC] E1 (Repository as shipped):
+- Question: What commit hash, license, file structure, and line counts does michaelkeating/pebbling have, and what exact pJ costs, step counts, and completion flags are produced when running pebbling_engine.py demo, benchmark_strategies (greedy_cheapest, topological_register), and pebbling_agent.py (HeuristicAgent, RandomAgent, 5-game tournament, and difficulty presets across h100/tutorial/extreme profiles)?
+- Prediction:
+  1. Cost formula: total_cost is the sum over actions of tier_costs[tier]["cost_per_step"] for PLACE (1, 5, 100 pJ for register, sram, hbm on h100 profile), tier_costs[tier]["io_transfer_cost"] for TRANSFER to tier (0, 5, 100 pJ), and 0 pJ for REMOVE.
+  2. On the 10-node demo DAG (depth=4, max_fan_in=2, reg=3, sram=4, seed=42, h100), topological_register_strategy will finish (done=True) with cost 10..25 pJ (mostly 1 pJ register placements + 0..3 SRAM spills at 5 pJ), while greedy_cheapest_strategy will finish with higher cost (30..150 pJ) because it pebbles all available nodes in register/sram/hbm before removing any.
+  3. On the 5-game tournament (nodes=12, depth=5, seeds 1000..1004), HeuristicAgent will complete all 5 games with average cost < 150 pJ, whereas RandomAgent will average > 1,000 pJ.
+
+[2026-10-26 06:08 UTC] E1b (Diagnosing topological_register done=False and greedy_cheapest 500-step timeout):
+- Question: Why did topological_register_strategy end with done=False (cost=10 pJ, 17 steps) on the 10-node demo DAG and all 5 presets, and why did greedy_cheapest_strategy hit 500 steps on medium_preset (h100) with game.done=True?
+- Prediction:
+  1. In topological_register_strategy, free_register_if_needed() scores register nodes by unpebbled_succs without excluding sink nodes (which have 0 successors, hence unpebbled_succs == 0), so it removes already-pebbled sink nodes from registers and ends the single pass over topo_order with sinks unpebbled (done=False). Excluding sinks from eviction in a patched copy will make all 5 presets finish with all sinks pebbled (done=True).
+  2. In greedy_cheapest_strategy on medium_preset (h100), once register (3) and sram (4) slots are full, REMOVE on a node with successors_done=True scores 50, which is lower than PLACE in hbm (score 100.2 for non-sink, 50.2 for sink), causing an oscillation of REMOVE (0 pJ) and PLACE in register/sram until step_count reaches max_steps=500, where step() sets game.done=True with info["timeout"]=True and sinks_remaining non-empty.
+
+[2026-10-26 06:15 UTC] E2 (Hand-made move sequences on repo engine vs minimal paper engine):
+- Question: How do the repository's PebblingGame engine and a minimal engine implementing Hong & Kung's exact Section 2 rules respond to hand-made legal and illegal move sequences probing each rule (R1 input, R2 output, R3 compute, R4 delete, red limit S, compute without all predecessors red, recomputation, ending condition)?
+- Prediction:
+  1. Both engines will reject computing a node when a predecessor is completely unpebbled, both will reject exceeding red/register capacity S, and both will accept deleting a pebble and recomputing the node later.
+  2. Six differences will appear when running the test sequences:
+     (a) Initial state & R1 cost: Paper starts with B=inputs, R=empty, and R1 costs 1 I/O; repo starts all None, PLACE(source, register) costs 1 pJ, and TRANSFER(v, register) from sram/hbm costs 0 pJ.
+     (b) Predecessor color for R3: Paper rejects R3(v) when a predecessor has only a blue pebble (not red); repo accepts PLACE(v, register) when predecessors are in sram or hbm (not register).
+     (c) Direct compute into slow memory: Paper R3 only places red pebbles (cost 0); repo PLACE(v, sram/hbm) computes directly into sram (5 pJ) or hbm (100 pJ) even when register_slots=0.
+     (d) Simultaneous red+blue vs move on R2: Paper R2(v) adds v to B while keeping v in R (red count unchanged); repo TRANSFER(v, sram/hbm) moves v out of register (decrementing register usage).
+     (e) Deleting an input's blue pebble: In the paper engine, R4(blue, source) removes the input from B so a subsequent R1(source) is rejected; in the repo, REMOVE(source) followed by PLACE(source, register) is accepted.
+     (f) Ending condition: Paper is complete only when R == empty and B == outputs; repo sets done=True as soon as all sinks have pebbles in any tier (including register) and while non-sinks still hold pebbles.
+
+[2026-10-26 06:22 UTC] E3 (Exact minimum-I/O solver and canonical DAGs):
+- Question: What are the exact minimum I/O counts Q*(G, S) under Hong & Kung's Section 2 rules for canonical DAGs across S, and do hand-derived values, a slower raw-transition search, a broken-rule negative control, and schedule verification validate the solver?
+- Prediction:
+  1. Hand-derived values:
+     - Chain-3 (0->1->2): S=1 infeasible, S>=2 -> Q*=2.
+     - V-tree-3 (0,1->2): S<=2 infeasible, S>=3 -> Q*=3.
+     - Diamond-4 (0->1,2->3): S<=2 infeasible, S>=3 -> Q*=2.
+     - BinaryTree-7 (4 leaves, 2 internal, 1 root): S<=2 infeasible, S=3 -> Q*=7, S>=4 -> Q*=5.
+  2. Validation controls:
+     - Raw transition search agrees with Dijkstra solver on all tiny graphs.
+     - Broken rule (R3 requires >=1 pred in R instead of all preds in R) makes Diamond-4 feasible at S=2 with Q=2 and drops BinaryTree-7 at S=3 from 7 to 5.
+     - PaperPebbleEngine verifies all emitted optimal schedules (is_terminal=True, io_cost=Q*) and rejects mutated schedules.
+  3. Canonical DAG sweep:
+     - Pyramid-6 (base 3, n=6): S<=2 infeasible, S=3 -> Q*=6, S>=4 -> Q*=4.
+     - Pyramid-10 (base 4, n=10): S<=2 infeasible, S=3,4 -> Q*>5, S>=5 -> Q*=5.
+     - MatMul-2x2 (n=16, 8 inputs, 8 products, 4 outputs): S<=2 infeasible, S=3 -> Q*>=24, S>=7 -> Q*=12.
+
+[2026-10-26 06:35 UTC] E4 (Recomputation vs once-computed on small DAGs):
+- Question: Across small DAGs with fan-in <= 2 and n <= 8 vertices (exhaustive for n=4,5 and random samples for n=5,6,7,8 across S=3,4), how often does allowing recomputation strictly lower Q* compared with computing each vertex once, and what is a smallest example with full move-by-move optimal schedules for both settings?
+- Prediction:
+  1. For n <= 4 at S=3, 0 DAGs will show Q*_recomp < Q*_no_recomp (minimum size is n=5).
+  2. At n=5, S=3, the DAG G5 with edges (0->1, 1->2, 0->3, 2->3, 1->4, 3->4) will have Q*_recomp = 2 and Q*_no_recomp = 4 (saving 2 I/Os by deleting node 1 and recomputing it from node 0 still in red, instead of R2(1)+R1(1)).
+  3. Across random fan-in-<=2 DAGs of size n=5..8 at S=3,4, Q*_recomp <= Q*_no_recomp always holds, with strict inequality on 1%..15% of DAGs at S=3.
+
+[2026-10-26 06:48 UTC] E5 (S-partition lower-bound lemma by experiment):
+- Question: (a) Do segments of S I/O moves from E3 optimal schedules define valid 2S-partitions under Hong & Kung's Theorem 3.1 construction? (b) What is the exact minimum number of subsets P(2S) (and P(K) for K=1..6) by brute force on tiny graphs, and how tight is Q* >= S * (P(2S) - 1)?
+- Prediction:
+  1. Cutting optimal schedules from E3 into segments of S I/O moves and applying Theorem 3.1 rules (i)-(iii) will produce valid 2S-partitions (P1 disjoint cover, P2 |D_i|<=2S, P3 |M_i|<=2S, P4 acyclic) with h = ceil(Q*/S).
+  2. Because the 1-set partition {V} has dominator set I (size |I|) and minimum set O (size |O|), whenever 2S >= max(|I|, |O|), P(2S) = 1 and the Lemma 3.1 bound S*(P(2S)-1) evaluates to 0 (valid but loose on tiny graphs with |I|<=4 and S>=2). For K < |I| (e.g. K=1,2,3 on bintree_7), P(K) = 7, 3, 2 > 1.
+
+[2026-10-26 06:58 UTC] E6 (Matrix multiplication under an ideal cache in C: LRU vs Belady/OPT):
+- Question: What are the exact slow-memory load+store counts for n x n matrix multiplication under a word-granularity fully associative cache of S words (LRU and Belady/OPT) on (1) 2x2 with S=4 (and S=3,5), (2) the sweep n in {64,128,256,512} and S in {48,192,768,3072} with b=floor(sqrt(S/3)), (3) b too small / too large, and (4) varying intra-tile loop order (ijk vs ikj vs kij)?
+- Prediction:
+  1. Hand-derived 2x2 with S=4 (24 accesses: A[i,k], B[k,j], C[i,j] per step):
+     - LRU: 20 misses (loads) + 4 dirty writebacks (stores) = 24 total I/O.
+     - OPT: 15 misses (loads) + 4 dirty writebacks (stores) = 19 total I/O.
+     - Off-by-one S=3 changes OPT to 17 misses (21 total I/O); S=5 changes LRU to 18 misses (22 total I/O).
+  2. Main sweep:
+     - At n=256, S=768 (b=16): naive ijk LRU I/O ~ 1.69e7 vs blocked LRU I/O ~ 2.2e6..3.2e6 (ratio naive/blocked ~ 5.5x..7.6x; >15x when S < n).
+     - Fitted exponents on blocked (b=floor(sqrt(S/3))): alpha ~ 3.00 in n, beta ~ -0.50 in S, with constant IO / (n^3 / sqrt(S)) ~ 3.46 under OPT and ~ 4.0..4.8 under LRU (tile ijk).
+  3. LRU vs OPT mechanism: when 3*b^2 == S under intra-tile order ijk, B from tile kk-1 is touched during i=b-1 after rows 0..b-2 of C, so LRU evicts live C rows at the start of tile kk; switching intra-tile order to kij (which touches all of C during the last k iteration) will eliminate most of the LRU penalty over OPT.
+
+[2026-10-26 07:10 UTC] E7 (FFT butterfly graphs for n=4, 8 and recursive blocked schedules for larger n):
+- Question: (1) What are the exact minimum I/O counts Q*(FFT_4, S) for the 4-point FFT butterfly graph (12 nodes) across S=1..7? (2) On the 8-point FFT butterfly graph (32 nodes), does unrestricted bitmask 0-1 BFS explode in state count (hitting a 200,000-state cap), and what I/O counts do verified radix-B blocked schedules (with and without cross-pass red-pebble handover) achieve on n=4, 8, 16, 32, 64, 128, 256?
+- Prediction:
+  1. Exact Q*(FFT_4, S) on the 12-node 4-point FFT butterfly graph:
+     - S=1, 2: infeasible (None), since fan-in d=2 requires S >= 3.
+     - S=3: Q* = 14 (8 input/output I/Os + 3 spilled stage-1 intermediates x 2 = 6).
+     - S=4: Q* = 12 (8 input/output I/Os + 2 spilled stage-1 intermediates x 2 = 4).
+     - S=5: Q* = 10 (8 input/output I/Os + 1 spilled stage-1 intermediate x 2 = 2).
+     - S>=6: Q* = 8 (trivial lower bound |I| + |O| = 8, zero intermediate spills).
+  2. On the 32-node 8-point FFT butterfly graph (FFT_8):
+     - Unrestricted bitmask 0-1 BFS will exceed 200,000 states at S >= 3 without terminating because 24 non-output nodes allow up to 2^16 intermediate blue masks x C(32, S) red masks.
+     - Verified constructive schedules on FFT_8 (checked move-by-move by PaperPebbleEngine):
+       * S=3 (radix-2): 48 I/Os stage-by-stage, reduced to 44 I/Os by keeping 1 red pebble across each of the 2 stage boundaries.
+       * S=6 (radix-4 + radix-2): 32 I/Os pass-by-pass, reduced to 26 I/Os by keeping 3 stage-2 outputs in red at the end of pass 1.
+       * S>=10 (radix-8): 16 I/Os (trivial bound |I| + |O| = 16, zero intermediate spills).
+  3. Across larger n in {16, 32, 64, 128, 256}, a recursive / multi-stage radix-B blocked FFT schedule (B=2 at S=3, B=4 at S=6, B=8 at S=10, B=16 at S=18) verified by PaperPebbleEngine will achieve IO = 2 * n * ceil(log2(n) / log2(B)) (exact 2.00x reduction for B=4 vs B=2 when 2 | log2(n), and 3.00x for B=8 when 3 | log2(n)), with constant IO / (n * log2(n) / log2(B)) == 2.000.
+
+
+
+
+
+

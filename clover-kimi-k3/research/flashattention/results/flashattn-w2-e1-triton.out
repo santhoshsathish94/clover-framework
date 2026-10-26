@@ -1,0 +1,45 @@
+=== 1. Check existing repo & papers from round 1 ===
+98c1cee0ed59307833841cdbf567fe336ceec13a
+98c1cee0ed59307833841cdbf567fe336ceec13a 2026-10-24 08:10:01 -0700 [CuTe, SM100] Fix CLC tile coordinates and make forward work-tile coordinates logical (#3034)
+--- Triton files in repo ---
+/root/dm-study/flashattention/repo/flash-attention/flash_attn/flash_attn_triton_og.py
+/root/dm-study/flashattention/repo/flash-attention/flash_attn/flash_attn_triton.py
+/root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton
+/root/dm-study/flashattention/repo/flash-attention/hopper/test_flash_attn_triton_amd.py
+/root/dm-study/flashattention/repo/flash-attention/tests/ops/triton
+/root/dm-study/flashattention/repo/flash-attention/tests/test_flash_attn_triton_amd.py
+   365 /root/dm-study/flashattention/repo/flash-attention/flash_attn/flash_attn_triton_og.py
+  1160 /root/dm-study/flashattention/repo/flash-attention/flash_attn/flash_attn_triton.py
+   330 /root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton/cross_entropy.py
+     1 /root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton/__init__.py
+   162 /root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton/k_activations.py
+  1252 /root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton/layer_norm.py
+   594 /root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton/linear.py
+   149 /root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton/mlp.py
+   185 /root/dm-study/flashattention/repo/flash-attention/flash_attn/ops/triton/rotary.py
+  4198 total
+=== 2. Install triton into /root/dm-study/flashattention/w2/pylib if not already installed ===
+897M	/root/dm-study/flashattention/w2/pylib
+=== 3. Negative control: TRITON_INTERPRET=0 on CPU tensor ===
+=== E1: Triton Interpreter Probe on CPU ===
+Python: 3.12.3
+TRITON_INTERPRET=0
+numpy version: 2.5.4
+torch version: 2.11.0+cpu
+triton version: 3.8.0
+triton path: /root/dm-study/flashattention/w2/pylib/triton/__init__.py
+NEG_CONTROL_EXPECTED_FAIL: RuntimeError: 0 active drivers ([]). There should only be one.
+=== 4. Run E1 probe with TRITON_INTERPRET=1 ===
+=== E1: Triton Interpreter Probe on CPU ===
+Python: 3.12.3
+TRITON_INTERPRET=1
+numpy version: 2.5.4
+torch version: 2.11.0+cpu
+triton version: 3.8.0
+triton path: /root/dm-study/flashattention/w2/pylib/triton/__init__.py
+[vec_add] n=1024 max_abs_diff=0.000e+00 exact=True
+[vec_add] n=1000 max_abs_diff=0.000e+00 exact=True
+[matmul tl.dot] dtype=float32 shape=(64,64,64) max_abs_diff=1.144e-05 max_rel_diff=1.798e-04
+[matmul tl.dot] dtype=float16 shape=(64,64,64) max_abs_diff=7.629e-06 max_rel_diff=1.213e-04
+[matmul tl.dot] dtype=bfloat16 shape=(64,64,64) max_abs_diff=8.854e+10 max_rel_diff=1.448e+14
+FINISHED rc=0

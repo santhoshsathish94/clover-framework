@@ -68,5 +68,10 @@ pub extern "C" fn sy_wb_skipped() -> c_ulong {
     WB_SKIPPED.load(Ordering::SeqCst) as c_ulong
 }
 
+#[no_mangle]
+pub extern "C" fn sy_set_hit_first(enable: c_int) {
+    ensure::HIT_FIRST_MODE.store(enable != 0, Ordering::SeqCst);
+}
+
 #[cfg(test)]
 mod tests;

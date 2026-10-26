@@ -1,0 +1,200 @@
+=== 1. REPO PINNED COMMIT, LICENSE, AND FILE STATS ===
+commit: 4afea5de159673569c90924d8f3288ec0e09aa07
+date:   2019-12-13 19:53:44 -0800 (Final Push)
+status: 0 modified
+license: NONE (no LICENSE or COPYING file in repository)
+
+=== 2. TRACKED TEXT/SV FILES LINE COUNTS & MD5 ===
+.gitattributes                                          2 lines       66 B  05bdb783ee65
+Implementation_of_Hierarchical_Mesh_NoC_Architecture_based_on_Eyeriss_v2_Accelerator.pdf   BINARY lines   785195 B  632affe94179
+README.md                                              37 lines     2537 B  1f227a81715e
+images/Eyeriss_compare.png                         BINARY lines   120658 B  432ef40ddfb0
+images/Eyeriss_scaled_down_top.PNG                 BINARY lines    35559 B  1cd644f1f0cc
+images/Eyeriss_top.PNG                             BINARY lines    99338 B  f7eab3f4b37f
+images/PE.PNG                                      BINARY lines    33014 B  a38e7d109a06
+images/RS.PNG                                      BINARY lines    43463 B  d6744e9802f4
+images/data_movement.PNG                           BINARY lines    35655 B  019ef401b2c1
+images/router.PNG                                  BINARY lines    34695 B  13fba998b664
+images/router_config.png                           BINARY lines   106772 B  d30979eceadb
+rtl/FA.sv                                              32 lines      632 B  a691350c6d74
+rtl/GLB_cluster.sv                                    119 lines     2987 B  9009d676d6dc
+rtl/HA.sv                                              31 lines      615 B  c87d64cdec57
+rtl/HMNoC_cluster.sv                                  232 lines     6280 B  5877267e9d7c
+rtl/HMNoC_cluster_east.sv                             446 lines    10779 B  c28f927a7f63
+rtl/HMNoC_cluster_west.sv                             447 lines    10783 B  45478f226eae
+rtl/HMNoC_top.sv                                      889 lines    23009 B  745962538b4a
+rtl/MAC.sv                                             41 lines      901 B  e0bef70c85f9
+rtl/PE.sv                                             258 lines     6180 B  e61dd6e4367e
+rtl/PE_cluster.sv                                     178 lines     4027 B  efa747e761b8
+rtl/SPad.sv                                            89 lines     2066 B  e0aa846443c5
+rtl/circular_buffer.sv                                144 lines     2943 B  b039ccb06cf9
+rtl/glb_iact.sv                                        64 lines     1398 B  c3662d86dfa8
+rtl/glb_psum.sv                                        82 lines     1890 B  6a122708ead2
+rtl/glb_weight.sv                                      63 lines     1401 B  a1f973195b6a
+rtl/lookup_mux4.sv                                     39 lines      733 B  5e1c5f262931
+rtl/misc/FA.sv                                         32 lines      632 B  a691350c6d74
+rtl/misc/HA.sv                                         31 lines      615 B  c87d64cdec57
+rtl/misc/circular_buffer.sv                           144 lines     2943 B  b039ccb06cf9
+rtl/misc/mux_4x1.sv                                    37 lines      775 B  47d7b0f39f3a
+rtl/misc/switch.sv                                     42 lines      844 B  79e150682fb3
+rtl/mux2.sv                                            33 lines      665 B  93202d2cc2b8
+rtl/mux_4x1.sv                                         37 lines      775 B  47d7b0f39f3a
+rtl/phase_1/GLB_cluster.sv                            119 lines     2987 B  9009d676d6dc
+rtl/phase_1/HMNoC_cluster.sv                          232 lines     6280 B  5877267e9d7c
+rtl/phase_1/PE.sv                                     258 lines     6180 B  e61dd6e4367e
+rtl/phase_1/PE_cluster.sv                             178 lines     4027 B  efa747e761b8
+rtl/phase_1/SPad.sv                                    89 lines     2066 B  e0aa846443c5
+rtl/phase_1/glb_iact.sv                                64 lines     1398 B  c3662d86dfa8
+rtl/phase_1/glb_psum.sv                                82 lines     1890 B  6a122708ead2
+rtl/phase_1/glb_weight.sv                              63 lines     1401 B  a1f973195b6a
+rtl/phase_1/router_cluster.sv                         176 lines     4634 B  31350e1c4543
+rtl/phase_1/router_iact.sv                            108 lines     2636 B  8ad70b52cbee
+rtl/phase_1/router_psum.sv                            122 lines     3228 B  d249bef526d9
+rtl/phase_1/router_weight.sv                          108 lines     2668 B  8276b9d6dce5
+rtl/phase_2/HMNoC_cluster_east.sv                     446 lines    10779 B  c28f927a7f63
+rtl/phase_2/HMNoC_cluster_west.sv                     447 lines    10783 B  45478f226eae
+rtl/phase_2/HMNoC_top.sv                              889 lines    23009 B  745962538b4a
+rtl/phase_2/router.sv                                 252 lines     5352 B  1405197baee9
+rtl/phase_2/router_cluster.sv                         306 lines     6672 B  a8da5de2c7dd
+rtl/phase_3/router.sv                                 252 lines     5352 B  1405197baee9
+rtl/phase_3/router_cluster.sv                         306 lines     6672 B  a8da5de2c7dd
+rtl/phase_3/router_network4.sv                        304 lines     6138 B  15601a6ea2a8
+rtl/router.sv                                         252 lines     5352 B  1405197baee9
+rtl/router_cluster.sv                                 306 lines     6672 B  a8da5de2c7dd
+rtl/router_east.sv                                    220 lines     4675 B  b30c4c7c55fc
+rtl/router_iact.sv                                    108 lines     2636 B  8ad70b52cbee
+rtl/router_network4.sv                                303 lines     6136 B  34a1e95e309d
+rtl/router_psum.sv                                    122 lines     3228 B  d249bef526d9
+rtl/router_weight.sv                                  108 lines     2668 B  8276b9d6dce5
+rtl/switch.sv                                          42 lines      844 B  79e150682fb3
+synth/HMNoC_cluster.vds                              1449 lines   121951 B  651e8dd9ae6f
+synth/HMNoC_cluster_utilization_synth.rpt             195 lines     7718 B  cdf76ef25ce1
+synth/HMNoC_top.vds                                 16430 lines  1077214 B  b0a580453417
+synth/HMNoC_top_utilization_synth.rpt                 195 lines     7690 B  bb3ee40c28cb
+synth/constraints_1.xdc                                 6 lines       75 B  565c36a6ae16
+testbench/GLB_cluster_tb.sv                           170 lines     3668 B  08c39cfd1e8e
+testbench/HMNoC_1_tb.sv                               154 lines     3744 B  46faac004694
+testbench/HMNoC_cluster_west_tb.sv                    546 lines    12592 B  8c0beaa99a09
+testbench/MAC_tb.sv                                    88 lines     1255 B  f5d64b6a1b74
+testbench/PE_cluster_tb.sv                            216 lines     4416 B  bb2689e43bb5
+testbench/PE_tb.sv                                    167 lines     3327 B  aab1b0e87127
+testbench/SPad_tb.sv                                   77 lines     1458 B  4b251b13c8a4
+testbench/act_5x5.txt                                  19 lines       39 B  eba327c96ffc
+testbench/act_7x7.txt                                  49 lines       98 B  4bf873a63d42
+testbench/adder_tb.sv                                  81 lines     1145 B  d509f0f9a165
+testbench/glb_iact_tb.sv                               76 lines     1473 B  63a37c6e1df0
+testbench/kernel_3x3.txt                                8 lines       17 B  283de9011ab3
+testbench/kernel_5x5.txt                               25 lines       50 B  5586c74b2998
+testbench/phase_1/GLB_cluster_tb.sv                   170 lines     3668 B  08c39cfd1e8e
+testbench/phase_1/HMNoC_1_tb.sv                       154 lines     3744 B  46faac004694
+testbench/phase_1/PE_cluster_tb.sv                    216 lines     4416 B  bb2689e43bb5
+testbench/phase_1/PE_tb.sv                            167 lines     3327 B  aab1b0e87127
+testbench/phase_1/router_cluster_5x5_tb.sv            413 lines    10573 B  e9b9fe4721ea
+testbench/phase_1/router_cluster_tb.sv                389 lines     9988 B  b7fcb2f65cf4
+testbench/phase_1/router_iact.sv                      111 lines     2735 B  a43534c8223a
+testbench/phase_1/router_iact_tb.sv                   357 lines     8315 B  715c91f9301e
+testbench/phase_1/router_psum_tb.sv                   393 lines     9406 B  6efac27a730b
+testbench/phase_1/router_weight.sv                    110 lines     2741 B  f7321dc3dd14
+testbench/phase_1/router_weight_tb.sv                 217 lines     5025 B  4e046785c44d
+testbench/phase_2/HMNoC_cluster_west_tb.sv            546 lines    12592 B  8c0beaa99a09
+testbench/phase_2/router_cluster_new_tb.sv            495 lines    11061 B  4ca1c50dc84e
+testbench/phase_2/router_cluster_pe_cluster_5x5_tb.sv      630 lines    14893 B  24dc89269714
+testbench/phase_2/router_cluster_pe_cluster_tb.sv      606 lines    14219 B  07a8b72f7596
+testbench/phase_2/router_east_tb.sv                   167 lines     3351 B  7921a0bd5f6b
+testbench/phase_2/router_pe_4_clusters_5x5_tb.sv      595 lines    12973 B  5198bd49d3e8
+testbench/phase_2/router_pe_4_clusters_tb.sv          570 lines    12292 B  e0fb9ca32b20
+testbench/phase_3/router_broadcast_tb.sv              258 lines     5344 B  c9920e0d83e6
+testbench/phase_3/router_multicast_tb.sv              464 lines     9490 B  d9d2ad2a94fb
+testbench/phase_3/router_pe_4_clusters_5x5_tb.sv      595 lines    12973 B  5198bd49d3e8
+testbench/phase_3/router_pe_4_clusters_tb.sv          570 lines    12292 B  e0fb9ca32b20
+testbench/phase_3/router_unicast_tb.sv                465 lines     9588 B  5755014b79bd
+testbench/psum_3x3.txt                                  0 lines        0 B  d41d8cd98f00
+testbench/router_act.sv                               111 lines     2735 B  a43534c8223a
+testbench/router_broadcast_tb.sv                      258 lines     5344 B  c9920e0d83e6
+testbench/router_cluster_5x5_tb.sv                    413 lines    10573 B  e9b9fe4721ea
+testbench/router_cluster_new_tb.sv                    495 lines    11061 B  4ca1c50dc84e
+testbench/router_cluster_pe_cluster_5x5_tb.sv         630 lines    14893 B  24dc89269714
+testbench/router_cluster_pe_cluster_tb.sv             606 lines    14219 B  07a8b72f7596
+testbench/router_cluster_tb.sv                        389 lines     9988 B  b7fcb2f65cf4
+testbench/router_east_tb.sv                           167 lines     3351 B  7921a0bd5f6b
+testbench/router_glb_tb.sv                            335 lines     7035 B  0d36b53fd0bc
+testbench/router_iact.sv                              111 lines     2735 B  a43534c8223a
+testbench/router_iact_tb.sv                           357 lines     8315 B  715c91f9301e
+testbench/router_multicast_tb.sv                      464 lines     9490 B  d9d2ad2a94fb
+testbench/router_pe_4_clusters_5x5_tb.sv              595 lines    12973 B  5198bd49d3e8
+testbench/router_pe_4_clusters_tb.sv                  570 lines    12292 B  e0fb9ca32b20
+testbench/router_psum_tb.sv                           393 lines     9406 B  6efac27a730b
+testbench/router_unicast_tb.sv                        465 lines     9588 B  5755014b79bd
+testbench/router_weight.sv                            110 lines     2741 B  f7321dc3dd14
+testbench/router_weight_tb.sv                         217 lines     5025 B  4e046785c44d
+testbench/switch_tb.sv                                 86 lines     1305 B  f9a232941880
+waveforms/4_Convs.PNG                              BINARY lines   100805 B  7488456d2ede
+waveforms/conc_3x3.PNG                             BINARY lines    67840 B  8ddb71fe4186
+waveforms/conv_5x5.PNG                             BINARY lines    53212 B  1ce53ee9acf8
+waveforms/conv_out.PNG                             BINARY lines   187411 B  4cd8daa6c341
+
+=== 3. UNMODIFIED RTL MODULE LINT (23 UNIQUE MODULES) ===
+FA.sv                    | Verilator: PASS | -
+HA.sv                    | Verilator: PASS | -
+MAC.sv                   | Verilator: PASS | -
+mux2.sv                  | Verilator: PASS | -
+mux_4x1.sv               | Verilator: PASS | -
+lookup_mux4.sv           | Verilator: PASS | -
+switch.sv                | Verilator: PASS | -
+circular_buffer.sv       | Verilator: FAIL | %Error-PROCASSWIRE: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/circular_buffer.sv:82:3: Procedural assignment to wire, perhaps intended var (IEEE 1800-2017 6.5): 'data_o' %Error: Exiting due to 1 error(s), 4 warning(s) 
+SPad.sv                  | Verilator: PASS | -
+PE.sv                    | Verilator: PASS | -
+PE_cluster.sv            | Verilator: FAIL | %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/PE_cluster.sv:116:48: Expecting expression to be constant, but variable isn't const: 'X_dim' %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/PE_cluster.sv:116:54: Expecting expression to be constant, but variable isn't const: 'Y_dim' 
+glb_iact.sv              | Verilator: PASS | -
+glb_psum.sv              | Verilator: PASS | -
+glb_weight.sv            | Verilator: PASS | -
+GLB_cluster.sv           | Verilator: PASS | -
+router_iact.sv           | Verilator: FAIL | %Error-BLKANDNBLK: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_iact.sv:42:20: Unsupported: Blocked and non-blocking assignments to same variable: 'read_req_glb_iact' %Error-BLKANDNBLK: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_iact.sv:46:20: Unsupported: Blocked and non-blocking assignments to same variable: 'load_en_spad' 
+router_weight.sv         | Verilator: FAIL | %Error-BLKANDNBLK: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_weight.sv:43:20: Unsupported: Blocked and non-blocking assignments to same variable: 'read_req_glb_wght' %Error: Exiting due to 1 error(s) 
+router_psum.sv           | Verilator: PASS | -
+router.sv                | Verilator: PASS | -
+router_east.sv           | Verilator: PASS | -
+router_cluster.sv        | Verilator: PASS | -
+router_network4.sv       | Verilator: FAIL | %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_network4.sv:121:32: Assigning to input/const variable: 'north_data_i' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_network4.sv:122:34: Assigning to input/const variable: 'north_enable_i' 
+HMNoC_cluster.sv         | Verilator: FAIL | %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_cluster.sv:110:37: Can't find definition of 'read_req_glb_iact' in dotted variable: 'router_cluster_0.read_req_glb_iact' %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_cluster.sv:112:37: Can't find definition of 'read_req_glb_wght' in dotted variable: 'router_cluster_0.read_req_glb_wght' 
+HMNoC_cluster_west.sv    | Verilator: FAIL | %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_cluster_west.sv:253:38: Assigning to input/const variable: 'west_data_i_iact' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_cluster_west.sv:255:35: Assigning to input/const variable: 'west_data_i_wght' 
+HMNoC_cluster_east.sv    | Verilator: FAIL | %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_cluster_east.sv:253:38: Assigning to input/const variable: 'east_data_i_iact' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_cluster_east.sv:255:35: Assigning to input/const variable: 'east_data_i_wght' 
+HMNoC_top.sv             | Verilator: FAIL | %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_top.sv:177:44: Assigning to input/const variable: 'north_data_i_wght' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_top.sv:178:46: Assigning to input/const variable: 'north_enable_i_wght' 
+phase_1/router_cluster.sv | Verilator: FAIL | %Error-BLKANDNBLK: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/phase_1/router_cluster.sv:53:18: Unsupported: Blocked and non-blocking assignments to same variable: 'read_req_glb_iact' %Error-BLKANDNBLK: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/phase_1/router_cluster.sv:56:18: Unsupported: Blocked and non-blocking assignments to same variable: 'load_en_spad_iact' 
+
+=== 4. UNMODIFIED TESTBENCH BUILD & RUN (25 UNIQUE TESTBENCHES) ===
+adder_tb                         | BUILD: PASS | RUN:  
+MAC_tb                           | BUILD: PASS | RUN:  
+switch_tb                        | BUILD: PASS | RUN:  
+SPad_tb                          | BUILD: PASS | RUN: 					 Current Status: 				 	 mem[0]: 0 | mem[1]: 0 | mem[2]: 0 | mem[3]: 0 | mem[4]: 0 | mem[5]: 0 | mem[8]: 0 | mem[24]: 0 					 mem[100]: 
+glb_iact_tb                      | BUILD: PASS | RUN:  
+GLB_cluster_tb                   | BUILD: FAIL | ERR: %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/GLB_cluster_tb.sv:70:6: Illegal input port connection 'read_req_iact', mismatch between port which is not an array, and expression which is an array. (IEEE 1800-2017 7.6) %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/GLB_cluster_tb.sv:71:6: Illegal input port connection 'read_req_psum', mismatch between port which is not an array, and expression which is an array. (IEEE 1800-2017 7.6) 
+PE_tb                            | BUILD: PASS | RUN: 					 Current Status: 				 	 mem[0]: 0 | mem[1]: 0 | mem[2]: 0 | mem[3]: 0 | mem[4]: 0 | mem[5]: 0 | mem[8]: 0 | mem[24]: 0 					 mem[100]: 
+PE_cluster_tb                    | BUILD: FAIL | ERR: %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/PE_cluster.sv:116:48: Expecting expression to be constant, but variable isn't const: 'X_dim' %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/PE_cluster.sv:116:54: Expecting expression to be constant, but variable isn't const: 'Y_dim' 
+HMNoC_1_tb                       | BUILD: FAIL | ERR: %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/HMNoC_1_tb.sv:76:6: Illegal input port connection 'read_req_iact', mismatch between port which is not an array, and expression which is an array. (IEEE 1800-2017 7.6) %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/HMNoC_1_tb.sv:77:6: Illegal input port connection 'read_req_psum', mismatch between port which is not an array, and expression which is an array. (IEEE 1800-2017 7.6) 
+router_weight_tb                 | BUILD: FAIL | ERR: %Error-PINNOTFOUND: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_weight_tb.sv:141:7: Parameter not found: 'PSUM_READ_ADDR' %Error-PINNOTFOUND: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_weight_tb.sv:142:7: Parameter not found: 'PSUM_LOAD_ADDR' 
+router_iact_tb                   | BUILD: FAIL | ERR: %Error-PINNOTFOUND: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_iact_tb.sv:142:7: Parameter not found: 'PSUM_READ_ADDR' %Error-PINNOTFOUND: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_iact_tb.sv:143:7: Parameter not found: 'PSUM_LOAD_ADDR' 
+router_psum_tb                   | BUILD: FAIL | ERR: %Error-PINNOTFOUND: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_psum_tb.sv:142:7: Parameter not found: 'PSUM_READ_ADDR' %Error-PINNOTFOUND: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_psum_tb.sv:143:7: Parameter not found: 'PSUM_LOAD_ADDR' 
+router_cluster_tb                | BUILD: FAIL | ERR: %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_tb.sv:118:20: Can't find definition of scope/variable: 'router_cluster' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_tb.sv:122:38: Assigning to input/const variable: 'r_data_glb_iact' 
+router_cluster_5x5_tb            | BUILD: FAIL | ERR: %Error: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_5x5_tb.sv:118:20: Can't find definition of scope/variable: 'router_cluster' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_5x5_tb.sv:122:38: Assigning to input/const variable: 'r_data_glb_iact' 
+router_east_tb                   | BUILD: FAIL | ERR: %Error-PINNOTFOUND: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_east_tb.sv:92:5: Pin not found: 'north_ready_o' %Error-PINNOTFOUND: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_east_tb.sv:97:5: Pin not found: 'north_ready_i' 
+router_glb_tb                    | BUILD: PASS | RUN:  
+router_cluster_new_tb            | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_new_tb.sv:290:36: Assigning to input/const variable: 'w_data_psum' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_new_tb.sv:291:38: Assigning to input/const variable: 'write_en_psum' 
+router_cluster_pe_cluster_tb     | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_pe_cluster_tb.sv:201:35: Assigning to input/const variable: 'filt_in' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_pe_cluster_tb.sv:245:35: Assigning to input/const variable: 'act_in' 
+router_cluster_pe_cluster_5x5_tb | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_pe_cluster_5x5_tb.sv:201:35: Assigning to input/const variable: 'filt_in' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_cluster_pe_cluster_5x5_tb.sv:245:35: Assigning to input/const variable: 'act_in' 
+HMNoC_cluster_west_tb            | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_cluster_west.sv:253:38: Assigning to input/const variable: 'west_data_i_iact' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/HMNoC_cluster_west.sv:255:35: Assigning to input/const variable: 'west_data_i_wght' 
+router_pe_4_clusters_tb          | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_network4.sv:121:32: Assigning to input/const variable: 'north_data_i' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_network4.sv:122:34: Assigning to input/const variable: 'north_enable_i' 
+router_pe_4_clusters_5x5_tb      | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_network4.sv:121:32: Assigning to input/const variable: 'north_data_i' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/rtl/router_network4.sv:122:34: Assigning to input/const variable: 'north_enable_i' 
+router_broadcast_tb              | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_broadcast_tb.sv:122:37: Assigning to input/const variable: 'west_data_i' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_broadcast_tb.sv:123:42: Assigning to input/const variable: 'west_enable_i' 
+router_multicast_tb              | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_multicast_tb.sv:123:37: Assigning to input/const variable: 'west_data_i' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_multicast_tb.sv:124:42: Assigning to input/const variable: 'west_enable_i' 
+router_unicast_tb                | BUILD: FAIL | ERR: %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_unicast_tb.sv:122:37: Assigning to input/const variable: 'west_data_i' %Error-ASSIGNIN: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/router_unicast_tb.sv:123:42: Assigning to input/const variable: 'west_enable_i' 
+
+=== 5. UNMODIFIED IVERILOG -g2012 CHECK ON KEY TESTBENCHES ===
+iverilog adder_tb                | BUILD: FAIL | ERR: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/adder_tb.sv:28: error: Unknown module type: HA /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/adder_tb.sv:30: error: Unknown module type: FA 
+iverilog MAC_tb                  | BUILD: FAIL | ERR: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/MAC_tb.sv:34: error: Unknown module type: MAC 2 error(s) during elaboration. 
+iverilog switch_tb               | BUILD: FAIL | ERR: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/switch_tb.sv:38: error: Unknown module type: switch 2 error(s) during elaboration. 
+iverilog SPad_tb                 | BUILD: FAIL | ERR: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/SPad_tb.sv:34: error: Unknown module type: SPad 2 error(s) during elaboration. 
+iverilog glb_iact_tb             | BUILD: FAIL | ERR: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/glb_iact_tb.sv:34: error: Unknown module type: glb_iact 2 error(s) during elaboration. 
+iverilog PE_tb                   | BUILD: FAIL | ERR: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/PE_tb.sv:57: error: Unknown module type: PE 2 error(s) during elaboration. 
+iverilog PE_cluster_tb           | BUILD: FAIL | ERR: /root/dm-study/eyeriss-v2/w2/clean_repo/testbench/PE_cluster_tb.sv:65: error: Unknown module type: PE_cluster 2 error(s) during elaboration. 
+FINISHED rc=0

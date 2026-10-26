@@ -223,11 +223,19 @@ static int (*g_nu_fn)(int key) = nullptr;
 static bool g_vq = false;   // K3GPU_VQUEUE: the cards' pools are filled ahead of the calls from the route cache (backend-gpu.cu)
 struct SlotCache {
     std::list<int> lru;                                   // keys, most recent first
-    struct Ent { std::list<int>::iterator it; unsigned char *p; float heat; int nu; };
+    struct Ent { std::list<int>::iterator it; unsigned char *p; float heat; int nu; int pass_id; int layer_id; };
     std::unordered_map<int, Ent> map;
     std::set<std::pair<int, int>> by_next;                // (next use, key), only kept in policy 2
     std::vector<unsigned char *> spare;                   // slots never used or released
+    int cur_pass = 0, last_layer = -1;
     bool belady() const { return g_policy == 2 && g_nu_fn; }
+    void advance_layer(int key, int &p_out, int &l_out)
+    {
+        const int layer = key >= 0 ? key / EXPERTS : 0;
+        if (last_layer >= 0 && layer < last_layer) cur_pass++;
+        last_layer = layer;
+        p_out = cur_pass; l_out = layer;
+    }
     unsigned char *find(int key)
     {
         auto f = map.find(key);
@@ -237,19 +245,24 @@ struct SlotCache {
     }
     void touch(int key, float w)
     {
+        int cp, cl; advance_layer(key, cp, cl);
         auto f = map.find(key); if (f == map.end()) return;
+        f->second.pass_id = cp; f->second.layer_id = cl;
         if (belady()) { Ent &e = f->second; by_next.erase({ e.nu, key }); e.nu = g_nu_fn(key); by_next.insert({ e.nu, key }); }
         else f->second.heat = f->second.heat * 0.8f + w;
     }
-    // true if the expert deserves a slot: a free slot exists, or (policy 2) it is needed sooner than the farthest one held
+    // true if the expert deserves a slot: a free slot exists, or (policy 2) it is needed sooner than the farthest one held;
+    // in policy 3 (SpecMD Least-Stale + Red-Blue Clean R4), returns false if `key` is already resident in HostCache so redundant D2H writeback is skipped!
     bool worth(int key) const
     {
+        if (g_policy == 3 && map.count(key)) return false;
         if (!belady() || !spare.empty() || by_next.empty()) return true;
         return g_nu_fn(key) < by_next.rbegin()->first;
     }
     // a slot for `key`; if an entry had to be replaced, *vkey and *vheat name it (its bytes are still in the slot), else *vkey = -1
     unsigned char *acquire(int key, const std::unordered_set<int> &prot, float heat0, int *vkey, float *vheat)
     {
+        int cp, cl; advance_layer(key, cp, cl);
         unsigned char *p; *vkey = -1;
         if (!spare.empty()) { p = spare.back(); spare.pop_back(); }
         else if (belady()) {
@@ -258,6 +271,24 @@ struct SlotCache {
             if (victim < 0) { fprintf(stderr, "expert cache: every slot is in use by one call (too few slots)\n"); exit(1); }
             Ent &v = map[victim]; p = v.p; *vkey = victim; *vheat = v.heat;
             by_next.erase({ v.nu, victim }); lru.erase(v.it); map.erase(victim);
+        } else if (g_policy == 3) {
+            // Policy 3: SpecMD Least-Stale (LS) + Heat tie-breaking across the card's layer cycle
+            auto it = lru.end(), best = lru.end(); int best_tier = 99; float best_heat = 0;
+            while (it != lru.begin()) {
+                --it;
+                if (prot.count(*it)) continue;
+                const Ent &e = map[*it];
+                const int tier = (e.pass_id < cp - 1 || (e.pass_id == cp - 1 && e.layer_id <= cl)) ? 0 :
+                                 (e.pass_id == cp && e.layer_id < cl) ? 1 : 2;
+                if (best == lru.end() || tier < best_tier || (tier == best_tier && e.heat < best_heat)) {
+                    best = it; best_tier = tier; best_heat = e.heat;
+                }
+            }
+            if (best == lru.end()) { fprintf(stderr, "expert cache: every slot is in use by one call (too few slots)\n"); exit(1); }
+            const int victim = *best;
+            p = map[victim].p; *vkey = victim; *vheat = map[victim].heat;
+            if (!by_next.empty()) by_next.erase({ map[victim].nu, victim });
+            map.erase(victim); lru.erase(best);
         } else {
             auto it = lru.end(), best = lru.end(); float best_heat = 0; int seen = 0;
             while (it != lru.begin() && seen < (g_policy ? 48 : 1)) {
@@ -273,9 +304,11 @@ struct SlotCache {
             if (!by_next.empty()) by_next.erase({ map[victim].nu, victim });
             map.erase(victim); lru.erase(best);
         }
+        auto old = map.find(key);
+        if (old != map.end()) { if (!by_next.empty()) by_next.erase({ old->second.nu, key }); lru.erase(old->second.it); map.erase(old); }
         lru.push_front(key);
         int nu = 0; if (belady()) { nu = g_nu_fn(key); by_next.insert({ nu, key }); }
-        map[key] = Ent{ lru.begin(), p, heat0, nu };
+        map[key] = Ent{ lru.begin(), p, heat0, nu, cp, cl };
         return p;
     }
     // read-ahead (policy 2): a slot for `key`, needed at call cand_nu, only if one is free or the held entry needed farthest ahead (not in prot) is needed later; else nullptr
@@ -653,9 +686,35 @@ static unsigned char *sy_sc_acquire(sc_cache *c, int key, const int *prot, size_
 #endif
     return s->acquire(key, std::unordered_set<int>(prot, prot + n), heat0, vkey, vheat);
 }
-static unsigned char *sy_sc_remove(sc_cache *c, int key) { return ((SlotCacheSel *)c)->remove(key); }
-static void sy_sc_release(sc_cache *c, unsigned char *p) { ((SlotCacheSel *)c)->release(p); }
 static HostCache *g_sy_host = nullptr;   // the RAM cache the call in progress was given (sy_ops.host_acquire has no argument for it)
+static std::unordered_map<unsigned char *, int> g_sy_held_host;
+static unsigned char *sy_sc_remove(sc_cache *c, int key)
+{
+    SlotCacheSel *s = (SlotCacheSel *)c;
+    if (g_policy == 3 && g_sy_host && s == &g_sy_host->c) {
+        unsigned char *p = s->find(key);
+        if (p) {
+            s->touch(key, 1.0f);
+            g_pend_keys.insert(key);
+            g_sy_held_host[p] = key;
+            return p;
+        }
+    }
+    return s->remove(key);
+}
+static void sy_sc_release(sc_cache *c, unsigned char *p)
+{
+    SlotCacheSel *s = (SlotCacheSel *)c;
+    if (g_policy == 3 && g_sy_host && s == &g_sy_host->c) {
+        auto it = g_sy_held_host.find(p);
+        if (it != g_sy_held_host.end()) {
+            g_pend_keys.erase(it->second);
+            g_sy_held_host.erase(it);
+            return;
+        }
+    }
+    s->release(p);
+}
 static unsigned char *sy_host_acquire(int key, float heat, int *vkey, float *vheat) { return host_acquire_pend(*g_sy_host, key, heat, vkey, vheat); }
 static const sy_ops g_sy_ops = { sy_device_sync, sy_stream_sync, sy_set_device, sy_d2h, sy_h2d, sy_event_record, sy_wait_event, sy_check,
                                  sy_sc_find, sy_sc_touch, sy_sc_worth, sy_sc_acquire, sy_sc_remove, sy_sc_release, pend_take, arr_wait, sy_host_acquire };
@@ -692,21 +751,41 @@ static void pool_ensure(CardPool &pool, HostCache &hc, int layer, int fd, const 
     struct Victim { int key; float heat; unsigned char *src; };
     std::vector<Need> need; std::vector<Victim> victims;
     pool.st.needed += experts.size();
+    // SpecMD `access_group` Hit-First Intra-Layer Ordering (Pass 1: all resident hits; Pass 2: misses):
+    std::vector<int> misses;
     for (int e : experts) {
         const int key = ekey(layer, e);
         unsigned char *p = pool.c.find(key);
-        if (p) { if (g_vq) arr_wait(key); pool.c.touch(key, (float)counts[e]); pool.h_eptr[e] = p; pool.st.hit_card++; continue; }
+        if (p) { if (g_vq) arr_wait(key); pool.c.touch(key, (float)counts[e]); pool.h_eptr[e] = p; pool.st.hit_card++; }
+        else misses.push_back(e);
+    }
+    for (int e : misses) {
+        const int key = ekey(layer, e);
         int vk; float vh;
-        p = pool.c.acquire(key, prot, (float)counts[e], &vk, &vh);
+        unsigned char *p = pool.c.acquire(key, prot, (float)counts[e], &vk, &vh);
         if (vk >= 0) { if (g_vq) arr_wait(vk); victims.push_back(Victim{ vk, vh, p }); }
         pool.h_eptr[e] = p; need.push_back(Need{ e, p, nullptr });
     }
     if (need.empty()) return;
-    // 1. experts found in RAM leave the RAM cache; their slots are held until the copies are done, so nothing is written over them
+    // 1. experts found in RAM: in policy 3 (SpecMD LS + Clean R4), keep clean copy in RAM protected by g_pend_keys; otherwise remove and release after H2D
     std::vector<unsigned char *> held;
+    std::vector<int> held_keys;
     for (auto &n : need) {
         const int key = ekey(layer, n.e);
-        if (hc.c.find(key)) { pend_take(key); n.host = hc.c.remove(key); held.push_back(n.host); pool.st.hit_host++; }
+        unsigned char *hp = hc.c.find(key);
+        if (hp) {
+            pend_take(key);
+            if (g_policy == 3) {
+                hc.c.touch(key, 1.0f);
+                n.host = hp;
+                g_pend_keys.insert(key);
+                held_keys.push_back(key);
+            } else {
+                n.host = hc.c.remove(key);
+                held.push_back(n.host);
+            }
+            pool.st.hit_host++;
+        }
     }
     CHECK(cudaSetDevice(pool.dev));
     // 2. the experts the card gives up are copied down into the RAM cache (if the cache is full its least useful entry is dropped)
@@ -737,7 +816,7 @@ static void pool_ensure(CardPool &pool, HostCache &hc, int layer, int fd, const 
             const size_t co = (size_t)k * chunk; if (co >= (size_t)EXPERT_RAW) break;
             const size_t len = std::min(chunk, (size_t)EXPERT_RAW - co);
             unsigned char *dev_dst = n.dst + co; const off_t off = (off_t)n.e * EXPERT_RAW + (off_t)co; const int e = n.e;
-            jobs.push_back([=, &pool](int tid) {
+            jobs.push_back([=, &pool, &hc](int tid) {
                 unsigned char *b = pool.bounce[tid];
                 if (g_prefill) b = g_slab[layer] + (size_t)(e & 3) * EXPERT_RAW + co;
                 else {
@@ -759,6 +838,7 @@ static void pool_ensure(CardPool &pool, HostCache &hc, int layer, int fd, const 
     run_parallel(jobs, pool_readers);
     const double t1 = wall_now();
     CHECK(cudaStreamSynchronize(pool.copy));
+    for (int hk : held_keys) g_pend_keys.erase(hk);
     for (unsigned char *h : held) hc.c.release(h);
     pool.st.t_read += t1 - t0; pool.st.t_copy += wall_now() - t1;
 }
@@ -812,8 +892,14 @@ static void mla_block_cached(Work &w, const Layer &y, MlaCache &mc, size_t pos0,
         mla_attention_tiled<<<grid, 256, smem>>>(w.attn, w.mq, mc.kv, mc.lat, N, (int)SN, scratch[dev], items);
     } else {
         const size_t shared = (pos0 + (size_t)N) * 4;
-        if (shared > 48 * 1024) CHECK(cudaFuncSetAttribute(mla_attention_pos, cudaFuncAttributeMaxDynamicSharedMemorySize, (int)shared));
-        mla_attention_pos<<<dim3(N, HEADS), 128, shared>>>(w.attn, w.mq, mc.kv, mc.lat, N, pos0);
+        static int use_legacy_mla = -1;
+        if (use_legacy_mla < 0) { const char *e = getenv("K3GPU_MLA_LEGACY"); use_legacy_mla = (e && atoi(e) != 0) ? 1 : 0; }
+        if (use_legacy_mla) {
+            if (shared > 48 * 1024) CHECK(cudaFuncSetAttribute(mla_attention_pos, cudaFuncAttributeMaxDynamicSharedMemorySize, (int)shared));
+            mla_attention_pos<<<dim3(N, HEADS), 128, shared>>>(w.attn, w.mq, mc.kv, mc.lat, N, pos0);
+        } else {
+            mla_launch_fa2_window(w.attn, w.mq, mc.kv, mc.lat, N, pos0);
+        }
     }
     gemm(w.Xn, N, W, T, 6, w.gate);
     gate_mul<<<blocks((size_t)N * ROWS), 256>>>(w.gate, w.attn, (size_t)N * ROWS);
