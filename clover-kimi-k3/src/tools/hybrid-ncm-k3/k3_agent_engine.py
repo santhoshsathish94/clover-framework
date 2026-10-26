@@ -325,9 +325,13 @@ class K3GPUExpertsRunner:
         use_cpu_lib = (not torch.cuda.is_available()) or (os.environ.get("CLOVER_FORCE_CPU", "0") == "1")
         if lib_path is None:
             gpu_cand = (
-                "/home/usergpu/merge_lf/libk3_gpu_experts.so"
-                if os.path.exists("/home/usergpu/merge_lf/libk3_gpu_experts.so")
-                else os.path.join(TOOLS_DIR, "libk3_gpu_experts.so")
+                os.path.join(TOOLS_DIR, "libk3_gpu_experts.so")
+                if os.path.exists(os.path.join(TOOLS_DIR, "libk3_gpu_experts.so"))
+                else (
+                    "/home/usergpu/merge_lf/libk3_gpu_experts.so"
+                    if os.path.exists("/home/usergpu/merge_lf/libk3_gpu_experts.so")
+                    else os.path.join(TOOLS_DIR, "libk3_gpu_experts.so")
+                )
             )
             if not use_cpu_lib and os.path.exists(gpu_cand):
                 lib_path = gpu_cand
@@ -335,6 +339,9 @@ class K3GPUExpertsRunner:
                 use_cpu_lib = True
                 lib_path = ensure_cpu_experts_lib()
 
+        self.lib_path = os.path.abspath(lib_path)
+        self.dataset_dir = os.path.abspath(dataset_dir)
+        self.open_weights_path = os.path.abspath(open_weights_path)
         self.is_cpu_backend = use_cpu_lib
         self.full_93_layers = bool(full_93_layers)
         self.k_res = int(k_res)

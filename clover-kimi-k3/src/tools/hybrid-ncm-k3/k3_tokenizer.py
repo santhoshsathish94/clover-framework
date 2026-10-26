@@ -5,9 +5,13 @@ import ctypes, os, subprocess
 from clover_paths import TOOLS_DIR, ENGINE_DIR, find_open_weights_dir
 
 SO_PATH = os.environ.get("CLOVER_K3TOK_SO") or (
-    "/home/usergpu/merge_lf/libk3tok.so"
-    if os.path.exists("/home/usergpu/merge_lf/libk3tok.so")
-    else os.path.join(TOOLS_DIR, "libk3tok.so")
+    os.path.join(TOOLS_DIR, "libk3tok.so")
+    if os.path.exists(os.path.join(TOOLS_DIR, "libk3tok.so"))
+    else (
+        "/home/usergpu/merge_lf/libk3tok.so"
+        if os.path.exists("/home/usergpu/merge_lf/libk3tok.so")
+        else os.path.join(TOOLS_DIR, "libk3tok.so")
+    )
 )
 C_SRC = r"""
 #define _GNU_SOURCE

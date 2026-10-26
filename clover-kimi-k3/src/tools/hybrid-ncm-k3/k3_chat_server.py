@@ -2074,6 +2074,24 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
         elif self.path.startswith("/api/health"):
+            import hashlib
+            import k3_agent_engine as _kae
+            import k3_memory_graph as _kmg
+            import k3_ontology_graph as _kog
+            import k3_generative_compiler as _kgc
+            def _fhash(p: str) -> str:
+                try:
+                    return hashlib.sha256(open(p, "rb").read()).hexdigest()[:12]
+                except Exception:
+                    return "unknown"
+            try:
+                _git_sha = subprocess.check_output(
+                    ["git", "-C", TOOLS_DIR, "rev-parse", "HEAD"],
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                ).strip()
+            except Exception:
+                _git_sha = "standalone_dir"
             self._send_json({
                 "status": "ready",
                 "mode": "agent_full93_k3_experts_ncm",
@@ -2086,6 +2104,23 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 "k3_experts_resident": 92 * STATE.k3_experts.k_res,
                 "k3_expert_cards": STATE.k3_experts.cards,
                 "data_movement_ledger": STATE.k3_experts.get_data_movement_ledger() if hasattr(STATE.k3_experts, "get_data_movement_ledger") else {},
+                "code_provenance": {
+                    "tools_dir": TOOLS_DIR,
+                    "git_head_sha": _git_sha,
+                    "k3_chat_server_file": os.path.abspath(__file__),
+                    "k3_chat_server_sha256_12": _fhash(os.path.abspath(__file__)),
+                    "k3_agent_engine_file": os.path.abspath(_kae.__file__),
+                    "k3_agent_engine_sha256_12": _fhash(os.path.abspath(_kae.__file__)),
+                    "k3_memory_graph_file": os.path.abspath(_kmg.__file__),
+                    "k3_memory_graph_sha256_12": _fhash(os.path.abspath(_kmg.__file__)),
+                    "k3_ontology_graph_file": os.path.abspath(_kog.__file__),
+                    "k3_ontology_graph_sha256_12": _fhash(os.path.abspath(_kog.__file__)),
+                    "k3_generative_compiler_file": os.path.abspath(_kgc.__file__),
+                    "k3_generative_compiler_sha256_12": _fhash(os.path.abspath(_kgc.__file__)),
+                    "k3_experts_lib_path": getattr(STATE.k3_experts, "lib_path", "unknown"),
+                    "k3_experts_lib_sha256_12": _fhash(getattr(STATE.k3_experts, "lib_path", "")),
+                    "dataset_dir": getattr(STATE.k3_experts, "dataset_dir", "unknown"),
+                },
                 "multimodal_worker": True,
                 "batch_pause_s": STATE.batch_pause_s,
                 "default_context_file": CLOVER_DEFAULT_CONTEXT_PATH,

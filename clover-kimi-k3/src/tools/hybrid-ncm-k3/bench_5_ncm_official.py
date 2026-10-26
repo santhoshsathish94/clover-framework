@@ -136,7 +136,10 @@ def main():
         "sudoku_exact_pct": sudoku_board_solved * 10.0,
         "sudoku_cell_acc_pct": round(mean_cell_acc, 2),
     }
-    with open("/home/usergpu/merge_lf/benchmarks/ncm_official_baseline.json", "w", encoding="utf-8") as f:
+    here = os.path.dirname(os.path.abspath(__file__))
+    out_p = os.path.join(here, "benchmarks/ncm_official_baseline.json")
+    os.makedirs(os.path.dirname(out_p), exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
         json.dump(out_summary, f, indent=2)
 
 

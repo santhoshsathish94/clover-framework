@@ -21,14 +21,15 @@ VISION_DIR = os.path.join(TOOLS_DIR, "k3_vision")
 
 
 def setup_clover_sys_path() -> str:
-    """Configures `HF_HOME`, `NCM_REPO`, `NCM_ART`, and `sys.path` portably across `gpu`, `k3`, and fresh servers."""
+    """Configures `HF_HOME`, `NCM_REPO`, `NCM_ART`, and `sys.path` portably across `gpu`, `k3`, and fresh servers.
+    Guarantees that `TOOLS_DIR` (the active git checkout) and `VISION_DIR` are ALWAYS at the front of `sys.path`
+    ahead of any fallback deployment directory such as `/home/usergpu/merge_lf`."""
     if "HF_HOME" not in os.environ:
         if os.path.isdir("/home/usergpu/plan2text/data/.cache"):
             os.environ["HF_HOME"] = "/home/usergpu/plan2text/data/.cache"
         elif os.path.isdir("/root/hf"):
             os.environ["HF_HOME"] = "/root/hf"
-    default_repo = "/home/usergpu/ncm/repo" if os.path.isdir("/home/usergpu/ncm/repo") else TOOLS_DIR
-    os.environ.setdefault("NCM_REPO", default_repo)
+    os.environ.setdefault("NCM_REPO", TOOLS_DIR)
     if not os.path.isdir(os.environ["NCM_REPO"]):
         os.environ["NCM_REPO"] = TOOLS_DIR
     default_art = (
@@ -37,10 +38,17 @@ def setup_clover_sys_path() -> str:
         else ("/root/ncm-cpu/artifacts/tinystories" if os.path.isdir("/root/ncm-cpu/artifacts/tinystories") else TOOLS_DIR)
     )
     os.environ.setdefault("NCM_ART", default_art)
-    for p in (VISION_DIR, TOOLS_DIR, "/home/usergpu/merge_lf/k3_vision", "/home/usergpu/merge_lf", "/home/usergpu/plan2text", "/home/usergpu/ncm/repo"):
-        if os.path.isdir(p) and p not in sys.path:
-            sys.path.insert(0, p)
-    return os.environ["NCM_REPO"]
+    # Append legacy fallback directories only at the END of sys.path if not present
+    for fallback_p in ("/home/usergpu/ncm/repo", "/home/usergpu/plan2text", "/home/usergpu/merge_lf", "/home/usergpu/merge_lf/k3_vision"):
+        if os.path.isdir(fallback_p) and fallback_p not in sys.path:
+            sys.path.append(fallback_p)
+    # Strictly enforce that TOOLS_DIR and VISION_DIR from the current checkout are at sys.path[0] and sys.path[1]
+    for primary_p in (VISION_DIR, TOOLS_DIR):
+        if os.path.isdir(primary_p):
+            while primary_p in sys.path:
+                sys.path.remove(primary_p)
+            sys.path.insert(0, primary_p)
+    return TOOLS_DIR
 
 
 def find_dataset_dir() -> str:

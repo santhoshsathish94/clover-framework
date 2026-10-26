@@ -426,7 +426,9 @@ def main():
     live_acc = 100.0 * live_passed / len(LIVE_RUST_TASKS)
     print(f">>> Part B Summary: {live_passed}/{len(LIVE_RUST_TASKS)} ({live_acc:.1f}%) compiled & passed rustc unit tests", flush=True)
 
-    out_path = "/home/usergpu/merge_lf/benchmarks/generative_compilation_v6_report.json"
+    here = os.path.dirname(os.path.abspath(__file__))
+    out_path = os.path.join(here, "benchmarks/generative_compilation_v6_report.json")
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(
             {
