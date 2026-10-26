@@ -1,0 +1,33 @@
+== decode: idx shape (8, 256, 16, 8)
+  LRU   C= 10  independent=  0.00%   study E6=0.00%
+  LRU   C= 51  independent=  0.00%   study E6=0.00%
+  LRU   C=256  independent= 51.04%   study E6=51.04%
+  FIFO  C= 10  independent=  0.00%   study E6=n/a
+  FIFO  C= 51  independent=  0.00%   study E6=n/a
+  FIFO  C=256  independent= 46.15%   study E6=46.15%
+  LFU   C= 10  independent=  5.01%   study E6=5.01%
+  LFU   C= 51  independent= 17.64%   study E6=17.64%
+  LFU   C=256  independent= 48.94%   study E6=48.94%
+  LS    C= 10  independent=  0.00%   study E6=n/a
+  LS    C= 51  independent=  0.00%   study E6=0.00%
+  LS    C=256  independent= 46.82%   study E6=53.86%
+  LS2   C= 10  independent=  0.00%   study E6=n/a
+  LS2   C= 51  independent=  0.00%   study E6=n/a
+  LS2   C=256  independent= 53.86%   study E6=n/a
+== prompt: idx shape (8, 256, 16, 8)
+  LRU   C= 10  independent= 36.81%   study E6=36.81%
+  LRU   C= 51  independent= 92.88%   study E6=92.88%
+  LRU   C=256  independent= 96.98%   study E6=96.98%
+  FIFO  C= 10  independent= 32.69%   study E6=32.69%
+  FIFO  C= 51  independent= 90.46%   study E6=90.46%
+  FIFO  C=256  independent= 96.98%   study E6=96.98%
+  LFU   C= 10  independent=  5.43%   study E6=n/a
+  LFU   C= 51  independent= 18.14%   study E6=18.14%
+  LFU   C=256  independent= 49.96%   study E6=49.96%
+  LS    C= 10  independent= 36.81%   study E6=n/a
+  LS    C= 51  independent= 92.88%   study E6=n/a
+  LS    C=256  independent= 96.98%   study E6=n/a
+  LS2   C= 10  independent= 32.69%   study E6=n/a
+  LS2   C= 51  independent= 90.46%   study E6=n/a
+  LS2   C=256  independent= 96.98%   study E6=n/a
+FINISHED rc=0

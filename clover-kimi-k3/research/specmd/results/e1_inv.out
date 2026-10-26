@@ -1,0 +1,164 @@
+=== 1. Fetch arXiv API metadata ===
+Title: SpecMD: A Comprehensive Study On Speculative Expert Prefetching
+Published: 2026-02-03T18:36:56Z
+Updated: 2026-02-03T18:36:56Z
+Authors: Duc Hoang, Ajay Jaiswal, Mohammad Samragh, Minsik Cho
+
+=== 2. Fetch arXiv e-print TeX bundle ===
+-rw-r--r-- 1 root root 3.5M Oct 26 07:02 /root/dm-study/specmd/w2/paper/2602.03921.tar.gz
+6b7cc4ce44b85b3445dce39e731abd2428b26e3f1a0ee874153e9bf51686e491  /root/dm-study/specmd/w2/paper/2602.03921.tar.gz
+
+=== 3. TeX file inventory (line counts) ===
+  191 /root/dm-study/specmd/w2/paper/tex/0_main.tex
+   41 /root/dm-study/specmd/w2/paper/tex/1_intro.tex
+   12 /root/dm-study/specmd/w2/paper/tex/2_related_work.tex
+  149 /root/dm-study/specmd/w2/paper/tex/3_methodology.tex
+  156 /root/dm-study/specmd/w2/paper/tex/4_evaluation.tex
+    7 /root/dm-study/specmd/w2/paper/tex/5_conclusion.tex
+  151 /root/dm-study/specmd/w2/paper/tex/6_appendix.tex
+  508 /root/dm-study/specmd/w2/paper/tex/math_commands.tex
+ 1215 total
+  191 /root/dm-study/specmd/w2/paper/tex/0_main.tex
+   41 /root/dm-study/specmd/w2/paper/tex/1_intro.tex
+   12 /root/dm-study/specmd/w2/paper/tex/2_related_work.tex
+  149 /root/dm-study/specmd/w2/paper/tex/3_methodology.tex
+  156 /root/dm-study/specmd/w2/paper/tex/4_evaluation.tex
+    7 /root/dm-study/specmd/w2/paper/tex/5_conclusion.tex
+  151 /root/dm-study/specmd/w2/paper/tex/6_appendix.tex
+  508 /root/dm-study/specmd/w2/paper/tex/math_commands.tex
+ 1215 total
+
+=== 4. Extract key sections from TeX files ===
+--- FILE: 0_main.tex (191 lines) ---
+  L21: % Attempt to make hyperref and algorithmic work together better:
+  L22: \newcommand{\theHalgorithm}{\arabic{algorithm}}
+  L34: % For algorithms
+  L35: \usepackage{algorithm}
+  L36: \usepackage{algorithmic}
+  L104: % \title{Two Experts are Better Than One: \\ Trading off Inference Compute with Performance}
+  L105: % \title{RoE: Roster of Experts \\ for Dynamic MoE Inference}
+  L106: % \title{RoE: Hyper-Parallel Scaling of MoE Models \\}
+  L107: \title{SpecMD: A Comprehensive Study On Speculative Expert Prefetching}
+  L113: % \author{
+  L116: \author{
+  L131: % \author{
+  L144: % The \author macro works with any number of authors. There are two commands
+  L154: \newcommand{\olmoe}{OLMoE-1B-7B-0125-Instruct}
+  L169: Previous works have proposed hardware-centric caching policies, but how these various caching policies interact with each other and differen
+  L187: % \section{Appendix}
+--- FILE: 1_intro.tex (41 lines) ---
+  L1: \section{Introduction}
+  L3: Mixture-of-Experts (MoE) architectures scale language models to unprecedented sizes through sparse computation. By activating only $k$ of $N
+  L4: For instance, assuming 16 bits per weight, OLMoE-1B-7B activates 2.39GB yet needs 12.0GB ready in memory. Mixtral-8x7B requires 88GB storage
+  L7: Instead of keeping the full MoE model in active memory, an alternative is to store only the subset of patronized experts in a fast but capac
+  L12: \includegraphics[width=0.5\columnwidth]{figures/teaser_olmoe_ttft_improvement.png}
+  L13: \caption{Least-Stale eviction as drop-in improvement across baseline approaches. Our novel eviction policy achieves 10.7--34.7\% TTFT reduct
+  L19: Using SpecMD, we conducted an exhaustive benchmarking study of MoE caching policies. We tested LRU caching~\cite{Eliseev2023FastIO}, fetch c
+  L25: \item \textbf{Dynamic prefetching is better for cache.} We observe dynamic, score-based prefetching outperforms top-k approaches; despite lo
+  L27: \item \textbf{Policy rankings shift across hardware regimes.} As expected, the best-performing strategy at 1\% capacity differs from that at
+  L31: From these findings, we propose \textbf{Least-Stale}, an eviction policy that balances temporal and spatial awareness to minimize cache coll
+  L35: \item \textbf{A Framework for Policy Research.} We introduce an open-source policy-first framework for MoE Cache to accelerate policy protot
+  L36: % We present an open-source framework that enables reproducible comparison of various policies across diverse hardware configurations. SpecM
+  L40: \item \textbf{Least-Stale Eviction Policy.} Building on our findings, we propose Least-Stale, a flexible eviction policy that greatly reduce
+--- FILE: 2_related_work.tex (12 lines) ---
+  L2: \section{Related Work}
+  L6: \noindent{\bf Prefetching.} \citet{Eliseev2023FastIO} introduce speculative prefetching for memory-constrained MoE inference. Their approach
+--- FILE: 3_methodology.tex (149 lines) ---
+  L13: \section{SpecMD: Framework and Policy Space}
+  L16: We present a framework that prioritizes ease of use (straightforward integration with HuggingFace models), accessibility (no specialized har
+  L21: \subsection{Policy Design Space}
+  L27: \subsubsection{Routing Policies}
+  L34: \textbf{Cache-aware routing} biases selection toward cached experts by boosting GPU-resident expert logits \cite{skliar2025mixturecachecondi
+  L40: \subsubsection{Cache Miss Policies}
+  L50: \subsubsection{Eviction Policies}\label{sec:eviction}
+  L59: \subsubsection{Prefetch Strategies}
+  L64: %We prefetch the top-$k$ experts per layer, where $k$ is model-specific ($k=8$ for OLMoE, $k=2$ for Mixtral, etc).
+  L68: \textbf{$\bullet$ Top-k prefetch with overfetch.} The standard approach prefetches the top-k experts per layer based on router weight magnit
+  L76: \begin{algorithm}[t]
+  L79: \begin{algorithmic}[1]
+  L100: \end{algorithmic}
+  L102: \end{algorithm}
+  L104: \subsection{Implementation Overview}
+  L105: To avoid modifying a model's internal implementation, we utilized Pytorch forward hooks to intercepts and modify MoE gate outputs. We also s
+  L108: \section{Least-Stale Eviction Policy}
+  L109: In this section, we present our novel policy contribution Least-Stale, which addresses some of the gaps presented in traditional eviction po
+  L115: \caption{\textbf{Top:} LRU eviction as a purely temporal policy. Blocks with higher intensity indicate higher eviction priority; consequentl
+  L122: \subsection{Motivation}
+  L123: MoE expert access follows a deterministic front-to-back layer sequence (layer 0$\rightarrow$1$\rightarrow$2$\rightarrow$$\cdots$$\rightarrow
+  L125: \subsection{The Least-Stale Policy}
+  L129: In many instances, eviction policies can cause \textbf{collision misses}, a type of cache miss where experts are evicted and then immediatel
+--- FILE: 4_evaluation.tex (156 lines) ---
+  L1: \section{Evaluation and Results}
+  L2: Having motivated and described Least-Stale, we now present comprehensive evaluation results that validate our design choices and characteriz
+  L4: \subsection{Experimental Setup}
+  L6: % Using SpecMD's systematic evaluation capabilities, we conduct the first comprehensive comparative study of MoE caching policies across the
+  L10: \textbf{$\bullet$ Models.} We evaluate across four MoE architectures: OLMoE-1B-7B \cite{muennighoff2025olmoeopenmixtureofexpertslanguage}, M
+  L14: \textbf{$\bullet$ Hardware emulation.} We evaluate all models on a single A100 GPU with 80GB VRAM. We software-limit our GPU cache to 1\%, 5
+  L18: \subsection{Least-Stale Effectiveness}
+  L20: We first validate the Least-Stale policy by analyzing its impact on collision misses and inference speed across different models and capacit
+  L22: For 5\% cache capacity in particular, Least-Stale achieves 1.6-1.9\% collision rates, while LRU reaches 4.5-12.6\% and SB suffers catastroph
+  L26: \includegraphics[width=0.9\columnwidth]{figures/q3b_collision_analysis_cap5pct.png}
+  L27: \caption{Collision miss across four eviction policies (FLD, SB, LRU, LS) at 5\% capacity threshold showing total misses (gray) and collision
+  L32: \textbf{$\bullet$ Spatial–Temporal awareness.} Least-Stale determines eviction priority by forward-pass cycles. Experts accessed in the \tex
+  L35: In Figure~\ref{fig:q3b_olmoe}, we illustrate the per-layer collision misses. Baseline policies tend to accumulate throughout the forward pas
+  L39: \includegraphics[width=\columnwidth]{figures/q3b_collision_analysis_per_layer_olmoe.png}
+  L41: \caption{Per-layer collision miss rates for OLMoE across 16 layers. Least-Stale (red) maintains near-zero collisions across layers.}
+  L42: \label{fig:q3b_olmoe}
+  L46: \textbf{$\bullet$ Speed Impact.} The collision reduction translates directly to TTFT gains. At 5\% capacity, Least-Stale reduces collision m
+  L50: \subsection{Prefetch Strategy Effectiveness}
+  L53: Score-based prefetching outperforms top-k despite lower overall prediction accuracy. Giving each layer the ability to adapt the number of ex
+  L56: \textbf{$\bullet$ Understanding the mismatch.} Using Least-Stale as our baseline eviction policy, we compare two prefetch strategies: top-k 
+  L63: \caption{Prefetch strategy comparison at 5\% capacity. Left: Precision vs recall shows top-k 1.0× achieves highest prediction accuracy. Righ
+  L68: \textbf{$\bullet$ Effective Bandwidth Utilization.} We find that the score-based approach more effectively adapts the number of experts to p
+  L70: \textbf{$\bullet$ The Exception.} We observe Mixtral as the exception. It is a deep MoE with a small total number of experts, but each exper
+  L71: %We find that overfetch factors (1.5×, 2.0×) consistently underperform across all models, creating eviction pressure without improving hit r
+  L73: \subsection{Quality-Speed Trade-offs}
+  L79: \caption{Quality-memory trade-offs for six miss handling policies at 5\% capacity. Performance and speed shown relative to Fetch policy base
+  L86: \caption{Baseline comparison across all models at 5\% cache capacity (4bit quantization, 5 GB/s bandwidth, with QKV Cache). TTFT in millisec
+  L92: \multicolumn{2}{c|}{ } & \multicolumn{5}{c||}{\textbf{OLMoE-1B-7B}} & \multicolumn{5}{c}{\textbf{Mixtral-8x7B}} \\
+  L138: For OLMoE at 4-bit, Fetch Priority maintains near-baseline performance (0-5\% loss) while achieving 20\%-30\% speedup.
+  L140: \textbf{$\bullet$ The Trade-offs.} Drop Priority, as expected, provides the highest speed improvements at the cost of performance degradatio
+  L142: \textbf{$\bullet$ Cache-Aware Routing Impact.} We find that cache-aware routing is credited for 10\%-20\% of the achieved speed improvements
+  L145: \subsection{SpecMD Mix-Policy Evaluation}
+  L150: SpecMD's enables an easy way to mix and run ad-hoc policies across all four dimensions (eviction, prefetch, miss handling, routing) on the s
+--- FILE: 5_conclusion.tex (8 lines) ---
+  L1: \section{Conclusion}
+  L5: Our study challenges traditional caching assumptions for MoE architectures. We demonstrated that expert access follows deterministic sequent
+  L7: \section*{Impact Statement}
+--- FILE: 6_appendix.tex (152 lines) ---
+  L4: \section{Implementation Details}
+  L8: \subsection{Gate Hook Architecture}
+  L10: Our framework intercepts MoE gate layer outputs through PyTorch forward hooks. When a gate layer executes, it outputs a 4-tuple: selected ex
+  L12: The hook manager registers forward hooks on each gate layer to intercept these outputs. Algorithm~\ref{alg:gate_hook} (main text) outlines t
+  L14: \subsection{Cache Manager Details}
+  L18: \subsection{Prefetch Manager and Watchdog Thread}
+  L20: Concurrently, the prefetch manager anticipates future expert needs. The hook manager uses either current gate outputs or future gate functio
+  L22: \subsection{Hardware Emulation}
+  L24: Hardware constraints are emulated through software limits rather than requiring physical low-bandwidth devices. Bandwidth throttling delays 
+  L26: \section{Baseline Eviction Policies}
+  L41: \section{Complete Eviction Policy Results}
+  L46: \includegraphics[width=\textwidth]{figures/q3b_collision_analysis_all.png}
+  L47: \caption{Complete collision miss analysis across four eviction policies (FLD, SB, LRU, LS) at three capacity levels (1\%, 5\%, 25\%). Least-
+  L51: Figure~\ref{fig:q3b_all_full} presents complete collision miss rate results referenced in Section 5.1, showing consistent performance across
+  L55: \includegraphics[width=\textwidth]{figures/q3b_collision_analysis_per_layer_all.png}
+  L56: \caption{Per-layer collision miss analysis across all four models at three capacity levels (1\%, 5\%, 25\%). Least-Stale (red) maintains nea
+  L60: Figure~\ref{fig:q3b_per_layer_all} shows per-layer collision patterns for all models, revealing the mechanism behind Least-Stale's effective
+  L62: \section{Least-Stale Eviction as Drop-in Improvement}
+  L65: Beyond our full system, we evaluate the Least-Stale eviction policy as a standalone contribution that can improve existing approaches. As vi
+  L72: \textbf{Model} & \textbf{Approach} & \textbf{Original TTFT} & \textbf{w/ Least-Stale} & \textbf{Improvement} \\
+  L75: \multicolumn{5}{l}{\textit{OLMoE-1B-7B}} \\
+  L85: & MixtureCache '25 & 4332.6 & 3573.2 & 17.5\% \\
+  L90: & HOBBIT '24 & 3458.6 & 1933.6 & 44.1\% \\
+  L100: \caption{Least-Stale eviction policy as drop-in improvement for existing approaches. We replace each baseline's original eviction policy wit
+  L105: Least-Stale eviction provides consistent TTFT improvements across most configurations (10-44\% reduction), demonstrating its value as a port
+  L107: \section{Model Specifications}
+  L122: OLMoE-1B-7B & 16 & 64 & 8 & 12 MB & 12.89 GB & 12.0 GB & 0.89 GB & 2.39 GB \\
+  L131: These specifications highlight the diversity of architectural choices: OLMoE uses many small experts with high top-k (fine-grained sparsity)
+--- FILE: math_commands.tex (508 lines) ---
+  L46: % Reference to an algorithm, lower-case.
+  L47: \def\algref#1{algorithm~\ref{#1}}
+  L48: % Reference to an algorithm, upper case.
+  L49: \def\Algref#1{Algorithm~\ref{#1}}
+  L50: \def\twoalgref#1#2{algorithms \ref{#1} and \ref{#2}}
+  L51: \def\Twoalgref#1#2{Algorithms \ref{#1} and \ref{#2}}
+FINISHED rc=0

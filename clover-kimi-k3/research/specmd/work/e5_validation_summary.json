@@ -1,0 +1,82 @@
+{
+  "test1_iid_uniform": {
+    "8": {
+      "expected": 0.125,
+      "LRU": 0.12545,
+      "LFU": 0.12524,
+      "FIFO": 0.12495,
+      "LS": 0.12466
+    },
+    "16": {
+      "expected": 0.25,
+      "LRU": 0.24891,
+      "LFU": 0.24958,
+      "FIFO": 0.24918,
+      "LS": 0.24926
+    },
+    "32": {
+      "expected": 0.5,
+      "LRU": 0.4989,
+      "LFU": 0.49975,
+      "FIFO": 0.49807,
+      "LS": 0.49937
+    }
+  },
+  "test2_iid_zipf": {
+    "exact_top16_sum": 0.80079,
+    "StaticTopC": 0.80097,
+    "LFU": 0.79516,
+    "LRU": 0.70903,
+    "FIFO": 0.64579,
+    "Belady": 0.84201
+  },
+  "test3_cyclic_sweep": {
+    "LRU": {
+      "overall_hit_rate": 0.0,
+      "steady_state_hit_rate": 0.0
+    },
+    "FIFO": {
+      "overall_hit_rate": 0.0,
+      "steady_state_hit_rate": 0.0
+    },
+    "Belady": {
+      "overall_hit_rate": 0.93565,
+      "steady_state_hit_rate": 0.93741
+    }
+  },
+  "test4_belady_real_slice": {
+    "10": {
+      "LRU": 0.0,
+      "LFU": 0.04752,
+      "FIFO": 0.0,
+      "FLD": 0.0,
+      "SB": 0.00571,
+      "LS": 0.0,
+      "Belady": 0.06952
+    },
+    "51": {
+      "LRU": 0.0,
+      "LFU": 0.19009,
+      "FIFO": 0.0,
+      "FLD": 0.00604,
+      "SB": 0.07077,
+      "LS": 0.0,
+      "Belady": 0.33841
+    },
+    "256": {
+      "LRU": 0.53659,
+      "LFU": 0.53577,
+      "FIFO": 0.47806,
+      "FLD": 0.26047,
+      "SB": 0.36963,
+      "LS": 0.54028,
+      "Belady": 0.75702
+    }
+  },
+  "test5_negative_controls": {
+    "BrokenInsertFirst_hit_rate": 1.0,
+    "BrokenInsertFirst_caught": true,
+    "OffByOneCapacity_hit_rate": 0.26448,
+    "OffByOneCapacity_caught": true
+  }
+}

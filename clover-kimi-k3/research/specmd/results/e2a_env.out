@@ -1,0 +1,30 @@
+=== 1. Check Python & packages in /root/ncm-cpu/venv ===
+Python: 3.12.3
+Torch: 2.11.0+cpu
+transformers: 5.20.2
+safetensors: 0.8.0
+tokenizers: 0.23.3
+huggingface_hub: 2.2.0
+accelerate: NOT INSTALLED (No module named 'accelerate')
+OlmoeForCausalLM import: OK
+
+=== 2. Query HF API for allenai/OLMoE-1B-7B-0924 file list ===
+  .gitattributes                                 0.00 MB
+  README.md                                      0.01 MB
+  config.json                                    0.00 MB
+  generation_config.json                         0.00 MB
+  model-00001-of-00003.safetensors            4997.74 MB
+  model-00002-of-00003.safetensors            4997.24 MB
+  model-00003-of-00003.safetensors            3843.74 MB
+  model.safetensors.index.json                   0.29 MB
+  olmoe-logo.png                                 0.02 MB
+  special_tokens_map.json                        0.00 MB
+  tokenizer.json                                 2.12 MB
+  tokenizer_config.json                          0.01 MB
+Total repo size: 13.841 GB (13841164144 bytes)
+
+=== 3. Check current disk usage of /root/dm-study/specmd ===
+24M	/root/dm-study/specmd
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md2        1.8T  1.6T  121G  93% /
+FINISHED rc=0

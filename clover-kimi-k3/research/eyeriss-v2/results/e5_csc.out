@@ -1,0 +1,38 @@
+round trip: 400 random segment sets decode exactly; corrupted count changes the decode: True
+
+== compression: weight matrix M0=32 x K=15 (C0=5,S=3), 8b values; 200 random matrices per density
+density  csc_bits(mean)  dense_bits  ratio   padding entries(mean)  predicted_ratio
+  0.020           268.1        3840  0.070                  3.385            0.059
+  0.050           459.8        3840  0.120                  5.335            0.104
+  0.100           741.9        3840  0.193                  4.600            0.179
+  0.200          1265.3        3840  0.329                  1.510            0.329
+  0.300          1839.8        3840  0.479                  0.260            0.479
+  0.500          3013.4        3840  0.785                  0.000            0.779
+  0.600          3564.3        3840  0.928                  0.000            0.929
+  0.647          3837.7        3840  0.999                  0.000            1.000
+  0.700          4161.3        3840  1.084                  0.000            1.079
+  0.800          4727.4        3840  1.231                  0.000            1.229
+  1.000          5872.0        3840  1.529                  0.000            1.529
+formula break-even density d* = (8*M0*K - 7*(K+1)) / (12*M0*K) = 0.6472
+empirical crossing of ratio=1.0 between density 0.647 and 0.7: 0.6474
+
+== long gaps: one segment of length 256, a single non-zero at the end; count field = 4 bits
+entries=16 (padding=15) -> decoded equal: True; bits=206 vs dense 2048
+predicted padding entries = floor(255/16) = 15
+
+== sparse PE processing order: M0=32 C0=4 S=3 W=40 (E=38 windows); dense PE = 14592 MACs; 5 seeds per cell
+w_dens i_dens | MACs/dense  w*i   | simd1_cycles(=MACs)  simd2_cycles  MACs/2  bound MACs/2+nzvisits/2 | exact  dropped_iact  weight_reads/MAC
+  1.00   1.00 |    1.0000  1.000  |             14592.0        7296.0  7296.0                  7524.0 | True            0.0       1.000
+  1.00   0.60 |    0.5684  0.600  |              8294.4        4147.2  4147.2                  4276.8 | True            0.0       1.000
+  1.00   0.30 |    0.3070  0.300  |              4480.0        2240.0  2240.0                  2310.0 | True            0.0       1.000
+  0.50   1.00 |    0.5052  0.500  |              7372.0        3815.2  3686.0                  3914.0 | True            0.0       1.000
+  0.50   0.60 |    0.3056  0.300  |              4459.4        2295.2  2229.7                  2367.1 | True            0.0       1.000
+  0.50   0.30 |    0.1562  0.150  |              2279.0        1175.2  1139.5                  1210.6 | True            0.0       1.000
+  0.25   1.00 |    0.2344  0.250  |              3420.0        1854.4  1710.0                  1938.0 | True            0.0       1.002
+  0.25   0.60 |    0.1451  0.150  |              2117.0        1107.8  1058.5                  1199.2 | True            0.0       1.006
+  0.25   0.30 |    0.0818  0.075  |              1194.0         629.8   597.0                   666.1 | True            0.0       1.008
+  0.10   1.00 |    0.1156  0.100  |              1687.2         927.2   843.6                  1071.6 | True            0.0       1.095
+  0.10   0.60 |    0.0577  0.060  |               842.0         483.4   421.0                   552.9 | True            8.8       1.068
+  0.10   0.30 |    0.0305  0.030  |               445.2         261.0   222.6                   292.2 | True            2.2       1.107
+all cells: PE emulation == dense reference and MACs/2 <= simd2_cycles <= bound: True
+negative control (one weight moved one row): emulation differs from original reference: True

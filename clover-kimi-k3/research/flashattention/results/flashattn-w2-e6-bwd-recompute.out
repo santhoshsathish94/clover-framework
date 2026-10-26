@@ -1,0 +1,22 @@
+=== 1. Negative Controls on Tiled Backward with Recomputation (N=128, d=64) ===
+  [NegCtrl 1: omit D_i]      dQ_err=3.148e-01 dK_err=2.194e-01 dV_err=6.661e-16
+  [NegCtrl 2: L_i + 1.0]     dQ_err=4.017e-01 dK_err=4.210e-01 dV_err=5.058e-01
+
+=== 2. Exactness vs PyTorch float64 autograd across shapes ===
+  N=  64 (all d, causal, tiles): running max_abs dQ=1.776e-15 dK=1.998e-15 dV=2.220e-15
+  N= 113 (all d, causal, tiles): running max_abs dQ=2.220e-15 dK=2.776e-15 dV=2.665e-15
+  N= 128 (all d, causal, tiles): running max_abs dQ=2.220e-15 dK=2.776e-15 dV=2.665e-15
+  N= 256 (all d, causal, tiles): running max_abs dQ=2.220e-15 dK=2.887e-15 dV=8.882e-15
+  N= 512 (all d, causal, tiles): running max_abs dQ=4.607e-15 dK=4.441e-15 dV=8.882e-15
+  N=1024 (all d, causal, tiles): running max_abs dQ=4.607e-15 dK=1.066e-14 dV=1.066e-14
+  --> Summary across 72 configs: max_abs dQ=4.607e-15 dK=1.066e-14 dV=1.066e-14
+
+=== 3. Stored Bytes and Counted Matmul FLOPs: Standard (store P) vs Recompute (store O, L) at d=64 ===
+  N=  64 d=64 | P_fp16=     8,192 B vs (O_fp16+L_fp32)=  8,448 B (ratio=  0.97x; P/L=  32.0x) | BWD matmul FLOPs: std=    2,097,152 recomp=    2,621,440 (ratio=1.2500x)
+  N= 128 d=64 | P_fp16=    32,768 B vs (O_fp16+L_fp32)= 16,896 B (ratio=  1.94x; P/L=  64.0x) | BWD matmul FLOPs: std=    8,388,608 recomp=   10,485,760 (ratio=1.2500x)
+  N= 256 d=64 | P_fp16=   131,072 B vs (O_fp16+L_fp32)= 33,792 B (ratio=  3.88x; P/L= 128.0x) | BWD matmul FLOPs: std=   33,554,432 recomp=   41,943,040 (ratio=1.2500x)
+  N= 512 d=64 | P_fp16=   524,288 B vs (O_fp16+L_fp32)= 67,584 B (ratio=  7.76x; P/L= 256.0x) | BWD matmul FLOPs: std=  134,217,728 recomp=  167,772,160 (ratio=1.2500x)
+  N=1024 d=64 | P_fp16= 2,097,152 B vs (O_fp16+L_fp32)=135,168 B (ratio= 15.52x; P/L= 512.0x) | BWD matmul FLOPs: std=  536,870,912 recomp=  671,088,640 (ratio=1.2500x)
+  N=2048 d=64 | P_fp16= 8,388,608 B vs (O_fp16+L_fp32)=270,336 B (ratio= 31.03x; P/L=1024.0x) | BWD matmul FLOPs: std=2,147,483,648 recomp=2,684,354,560 (ratio=1.2500x)
+  N=4096 d=64 | P_fp16=33,554,432 B vs (O_fp16+L_fp32)=540,672 B (ratio= 62.06x; P/L=2048.0x) | BWD matmul FLOPs: std=8,589,934,592 recomp=10,737,418,240 (ratio=1.2500x)
+FINISHED rc=0

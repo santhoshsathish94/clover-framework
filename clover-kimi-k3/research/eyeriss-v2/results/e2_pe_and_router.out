@@ -1,0 +1,119 @@
+=== 1. BUILD & RUN tb_e2_pe_row (Verilator & iverilog) ===
+=== PE RUN (corrupt_w1=0): LOAD_W_cycles=10 LOAD_A_cycles=26 ===
+  [cyc=39] state=1 filt_cnt=0 iter=0 r_addr=100 r_data=10 filt_reg=0 act_reg=0 psum_reg=0 done=0
+  [cyc=40] state=2 filt_cnt=1 iter=0 r_addr=100 r_data=2 filt_reg=10 act_reg=0 psum_reg=0 done=0
+  [cyc=41] state=3 filt_cnt=1 iter=0 r_addr=1 r_data=2 filt_reg=10 act_reg=2 psum_reg=0 done=0
+  [cyc=42] state=1 filt_cnt=1 iter=0 r_addr=101 r_data=20 filt_reg=10 act_reg=2 psum_reg=20 done=0
+  [cyc=43] state=2 filt_cnt=2 iter=0 r_addr=101 r_data=3 filt_reg=20 act_reg=2 psum_reg=20 done=0
+  [cyc=44] state=3 filt_cnt=2 iter=0 r_addr=2 r_data=3 filt_reg=20 act_reg=3 psum_reg=20 done=0
+  [cyc=45] state=1 filt_cnt=2 iter=0 r_addr=102 r_data=30 filt_reg=20 act_reg=3 psum_reg=80 done=0
+  [cyc=46] state=2 filt_cnt=3 iter=0 r_addr=102 r_data=4 filt_reg=30 act_reg=3 psum_reg=80 done=0
+  [cyc=47] state=3 filt_cnt=3 iter=0 r_addr=3 r_data=4 filt_reg=30 act_reg=4 psum_reg=80 done=0
+  [cyc=48] state=4 filt_cnt=3 iter=0 r_addr=3 r_data=1 filt_reg=30 act_reg=4 psum_reg=200 done=0
+ITER 0: pe_out=200 spad_psum[500]=200 cycles=11
+  [cyc=51] state=1 filt_cnt=0 iter=1 r_addr=105 r_data=10 filt_reg=30 act_reg=4 psum_reg=200 done=0
+  [cyc=52] state=2 filt_cnt=1 iter=1 r_addr=105 r_data=7 filt_reg=10 act_reg=4 psum_reg=200 done=0
+  [cyc=53] state=3 filt_cnt=1 iter=1 r_addr=1 r_data=7 filt_reg=10 act_reg=7 psum_reg=200 done=0
+  [cyc=54] state=1 filt_cnt=1 iter=1 r_addr=106 r_data=20 filt_reg=10 act_reg=7 psum_reg=70 done=0
+  [cyc=55] state=2 filt_cnt=2 iter=1 r_addr=106 r_data=8 filt_reg=20 act_reg=7 psum_reg=70 done=0
+  [cyc=56] state=3 filt_cnt=2 iter=1 r_addr=2 r_data=8 filt_reg=20 act_reg=8 psum_reg=70 done=0
+  [cyc=57] state=1 filt_cnt=2 iter=1 r_addr=107 r_data=30 filt_reg=20 act_reg=8 psum_reg=230 done=0
+  [cyc=58] state=2 filt_cnt=3 iter=1 r_addr=107 r_data=9 filt_reg=30 act_reg=8 psum_reg=230 done=0
+  [cyc=59] state=3 filt_cnt=3 iter=1 r_addr=3 r_data=9 filt_reg=30 act_reg=9 psum_reg=230 done=0
+  [cyc=60] state=4 filt_cnt=3 iter=1 r_addr=3 r_data=1 filt_reg=30 act_reg=9 psum_reg=500 done=0
+ITER 1: pe_out=500 spad_psum[501]=500 cycles=11
+  [cyc=63] state=1 filt_cnt=0 iter=2 r_addr=110 r_data=10 filt_reg=30 act_reg=9 psum_reg=500 done=0
+  [cyc=64] state=2 filt_cnt=1 iter=2 r_addr=110 r_data=12 filt_reg=10 act_reg=9 psum_reg=500 done=0
+  [cyc=65] state=3 filt_cnt=1 iter=2 r_addr=1 r_data=12 filt_reg=10 act_reg=12 psum_reg=500 done=0
+  [cyc=66] state=1 filt_cnt=1 iter=2 r_addr=111 r_data=20 filt_reg=10 act_reg=12 psum_reg=120 done=0
+  [cyc=67] state=2 filt_cnt=2 iter=2 r_addr=111 r_data=13 filt_reg=20 act_reg=12 psum_reg=120 done=0
+  [cyc=68] state=3 filt_cnt=2 iter=2 r_addr=2 r_data=13 filt_reg=20 act_reg=13 psum_reg=120 done=0
+  [cyc=69] state=1 filt_cnt=2 iter=2 r_addr=112 r_data=30 filt_reg=20 act_reg=13 psum_reg=380 done=0
+  [cyc=70] state=2 filt_cnt=3 iter=2 r_addr=112 r_data=14 filt_reg=30 act_reg=13 psum_reg=380 done=0
+  [cyc=71] state=3 filt_cnt=3 iter=2 r_addr=3 r_data=14 filt_reg=30 act_reg=14 psum_reg=380 done=0
+  [cyc=72] state=4 filt_cnt=3 iter=2 r_addr=3 r_data=1 filt_reg=30 act_reg=14 psum_reg=800 done=0
+ITER 2: pe_out=800 spad_psum[502]=800 cycles=11
+PULSE_4 (1-cycle): iter_before=3 -> iter_after=0 state=0 compute_done=0
+  [cyc=76] state=1 filt_cnt=0 iter=0 r_addr=100 r_data=10 filt_reg=30 act_reg=14 psum_reg=800 done=0
+  [cyc=77] state=2 filt_cnt=1 iter=0 r_addr=100 r_data=2 filt_reg=10 act_reg=14 psum_reg=800 done=0
+  [cyc=78] state=3 filt_cnt=1 iter=0 r_addr=1 r_data=2 filt_reg=10 act_reg=2 psum_reg=800 done=0
+  [cyc=79] state=1 filt_cnt=1 iter=0 r_addr=101 r_data=20 filt_reg=10 act_reg=2 psum_reg=20 done=0
+  [cyc=80] state=2 filt_cnt=2 iter=0 r_addr=101 r_data=3 filt_reg=20 act_reg=2 psum_reg=20 done=0
+  [cyc=81] state=3 filt_cnt=2 iter=0 r_addr=2 r_data=3 filt_reg=20 act_reg=3 psum_reg=20 done=0
+  [cyc=82] state=1 filt_cnt=2 iter=0 r_addr=102 r_data=30 filt_reg=20 act_reg=3 psum_reg=80 done=0
+  [cyc=83] state=2 filt_cnt=3 iter=0 r_addr=102 r_data=4 filt_reg=30 act_reg=3 psum_reg=80 done=0
+  [cyc=84] state=3 filt_cnt=3 iter=0 r_addr=3 r_data=4 filt_reg=30 act_reg=4 psum_reg=80 done=0
+  [cyc=85] state=4 filt_cnt=3 iter=0 r_addr=3 r_data=1 filt_reg=30 act_reg=4 psum_reg=200 done=0
+PULSE_5 (after wrap): pe_out=200 cycles=11
+=== PE RUN (corrupt_w1=1): LOAD_W_cycles=10 LOAD_A_cycles=26 ===
+  [cyc=39] state=1 filt_cnt=0 iter=0 r_addr=100 r_data=10 filt_reg=30 act_reg=4 psum_reg=200 done=0
+  [cyc=40] state=2 filt_cnt=1 iter=0 r_addr=100 r_data=2 filt_reg=10 act_reg=4 psum_reg=200 done=0
+  [cyc=41] state=3 filt_cnt=1 iter=0 r_addr=1 r_data=2 filt_reg=10 act_reg=2 psum_reg=200 done=0
+  [cyc=42] state=1 filt_cnt=1 iter=0 r_addr=101 r_data=21 filt_reg=10 act_reg=2 psum_reg=20 done=0
+  [cyc=43] state=2 filt_cnt=2 iter=0 r_addr=101 r_data=3 filt_reg=21 act_reg=2 psum_reg=20 done=0
+  [cyc=44] state=3 filt_cnt=2 iter=0 r_addr=2 r_data=3 filt_reg=21 act_reg=3 psum_reg=20 done=0
+  [cyc=45] state=1 filt_cnt=2 iter=0 r_addr=102 r_data=30 filt_reg=21 act_reg=3 psum_reg=83 done=0
+  [cyc=46] state=2 filt_cnt=3 iter=0 r_addr=102 r_data=4 filt_reg=30 act_reg=3 psum_reg=83 done=0
+  [cyc=47] state=3 filt_cnt=3 iter=0 r_addr=3 r_data=4 filt_reg=30 act_reg=4 psum_reg=83 done=0
+  [cyc=48] state=4 filt_cnt=3 iter=0 r_addr=3 r_data=1 filt_reg=30 act_reg=4 psum_reg=203 done=0
+ITER 0: pe_out=203 spad_psum[500]=203 cycles=11
+  [cyc=51] state=1 filt_cnt=0 iter=1 r_addr=105 r_data=10 filt_reg=30 act_reg=4 psum_reg=203 done=0
+  [cyc=52] state=2 filt_cnt=1 iter=1 r_addr=105 r_data=7 filt_reg=10 act_reg=4 psum_reg=203 done=0
+  [cyc=53] state=3 filt_cnt=1 iter=1 r_addr=1 r_data=7 filt_reg=10 act_reg=7 psum_reg=203 done=0
+  [cyc=54] state=1 filt_cnt=1 iter=1 r_addr=106 r_data=21 filt_reg=10 act_reg=7 psum_reg=70 done=0
+  [cyc=55] state=2 filt_cnt=2 iter=1 r_addr=106 r_data=8 filt_reg=21 act_reg=7 psum_reg=70 done=0
+  [cyc=56] state=3 filt_cnt=2 iter=1 r_addr=2 r_data=8 filt_reg=21 act_reg=8 psum_reg=70 done=0
+  [cyc=57] state=1 filt_cnt=2 iter=1 r_addr=107 r_data=30 filt_reg=21 act_reg=8 psum_reg=238 done=0
+  [cyc=58] state=2 filt_cnt=3 iter=1 r_addr=107 r_data=9 filt_reg=30 act_reg=8 psum_reg=238 done=0
+  [cyc=59] state=3 filt_cnt=3 iter=1 r_addr=3 r_data=9 filt_reg=30 act_reg=9 psum_reg=238 done=0
+  [cyc=60] state=4 filt_cnt=3 iter=1 r_addr=3 r_data=1 filt_reg=30 act_reg=9 psum_reg=508 done=0
+ITER 1: pe_out=508 spad_psum[501]=508 cycles=11
+  [cyc=63] state=1 filt_cnt=0 iter=2 r_addr=110 r_data=10 filt_reg=30 act_reg=9 psum_reg=508 done=0
+  [cyc=64] state=2 filt_cnt=1 iter=2 r_addr=110 r_data=12 filt_reg=10 act_reg=9 psum_reg=508 done=0
+  [cyc=65] state=3 filt_cnt=1 iter=2 r_addr=1 r_data=12 filt_reg=10 act_reg=12 psum_reg=508 done=0
+  [cyc=66] state=1 filt_cnt=1 iter=2 r_addr=111 r_data=21 filt_reg=10 act_reg=12 psum_reg=120 done=0
+  [cyc=67] state=2 filt_cnt=2 iter=2 r_addr=111 r_data=13 filt_reg=21 act_reg=12 psum_reg=120 done=0
+  [cyc=68] state=3 filt_cnt=2 iter=2 r_addr=2 r_data=13 filt_reg=21 act_reg=13 psum_reg=120 done=0
+  [cyc=69] state=1 filt_cnt=2 iter=2 r_addr=112 r_data=30 filt_reg=21 act_reg=13 psum_reg=393 done=0
+  [cyc=70] state=2 filt_cnt=3 iter=2 r_addr=112 r_data=14 filt_reg=30 act_reg=13 psum_reg=393 done=0
+  [cyc=71] state=3 filt_cnt=3 iter=2 r_addr=3 r_data=14 filt_reg=30 act_reg=14 psum_reg=393 done=0
+  [cyc=72] state=4 filt_cnt=3 iter=2 r_addr=3 r_data=1 filt_reg=30 act_reg=14 psum_reg=813 done=0
+ITER 2: pe_out=813 spad_psum[502]=813 cycles=11
+- /root/dm-study/eyeriss-v2/w2/e2_work/tb_e2_pe_row.sv:118: Verilog $finish
+iverilog vs verilator PE output diff lines: 0
+
+=== 2. BUILD & RUN tb_e2_router_modes (Verilator) ===
+=== 1. SWEEP ALL 16 ROUTER MODES x 4 SINGLE-SOURCE INPUTS (0-CYCLE COMBINATIONAL) ===
+MODE 0:ALL        | en_mask(N,S,W,E)=1111 | N_out=0x1111 S_out=0x1111 W_out=0x1111 E_out=0x1111
+MODE 1:NORTH      | en_mask(N,S,W,E)=1000 | N_out=0x1111 S_out=0x0    W_out=0x0    E_out=0x0   
+MODE 2:SOUTH      | en_mask(N,S,W,E)=0100 | N_out=0x0    S_out=0x1111 W_out=0x0    E_out=0x0   
+MODE 3:WEST       | en_mask(N,S,W,E)=0010 | N_out=0x0    S_out=0x0    W_out=0x1111 E_out=0x0   
+MODE 4:EAST       | en_mask(N,S,W,E)=0001 | N_out=0x0    S_out=0x0    W_out=0x0    E_out=0x1111
+MODE 5:EASTNORTH  | en_mask(N,S,W,E)=1001 | N_out=0x1111 S_out=0x0    W_out=0x0    E_out=0x1111
+MODE 6:EASTSOUTH  | en_mask(N,S,W,E)=0101 | N_out=0x0    S_out=0x1111 W_out=0x0    E_out=0x1111
+MODE 7:EASTWEST   | en_mask(N,S,W,E)=0011 | N_out=0x0    S_out=0x0    W_out=0x1111 E_out=0x1111
+MODE 8:WESTNORTH  | en_mask(N,S,W,E)=1010 | N_out=0x1111 S_out=0x0    W_out=0x1111 E_out=0x0   
+MODE 9:WESTSOUTH  | en_mask(N,S,W,E)=0110 | N_out=0x0    S_out=0x1111 W_out=0x1111 E_out=0x0   
+MODE 10:WESTEAST  | en_mask(N,S,W,E)=0011 | N_out=0x0    S_out=0x0    W_out=0x1111 E_out=0x1111
+MODE 11:DEF11     | en_mask(N,S,W,E)=0000 | N_out=0x0    S_out=0x0    W_out=0x0    E_out=0x0   
+MODE 12:DEF12     | en_mask(N,S,W,E)=0000 | N_out=0x0    S_out=0x0    W_out=0x0    E_out=0x0   
+MODE 13:DEF13     | en_mask(N,S,W,E)=0000 | N_out=0x0    S_out=0x0    W_out=0x0    E_out=0x0   
+MODE 14:DEF14     | en_mask(N,S,W,E)=0000 | N_out=0x0    S_out=0x0    W_out=0x0    E_out=0x0   
+MODE 15:DEF15     | en_mask(N,S,W,E)=0000 | N_out=0x0    S_out=0x0    W_out=0x0    E_out=0x0   
+
+=== 2. PRIORITY ARBITRATION WHEN MULTIPLE INPUT ENABLES ARE HIGH (MODE=0:ALL) ===
+in_en=1111 -> data_out=0x4444 (expected 0x1111 NORTH)
+in_en=0111 -> data_out=0x4444 (expected 0x2222 SOUTH)
+in_en=0011 -> data_out=0x4444 (expected 0x3333 WEST)
+in_en=0001 -> data_out=0x4444 (expected 0x4444 EAST)
+
+=== 3. IDLE INPUTS (ALL *_enable_i = 0) BEHAVIOR ===
+in_en=0000 (MODE=0:ALL) -> en_mask=1111 data_out=10101 (0x2775, sentinel 10101)
+- /root/dm-study/eyeriss-v2/w2/e2_work/tb_e2_router_modes.sv:86: Verilog $finish
+
+=== 3. PYTHON HAND-CALCULATION VERIFICATION & NEGATIVE CONTROLS ===
+PE normal:  got=[200, 500, 800] spad=[200, 500, 800] cycles=[11, 11, 11] | expected=[200, 500, 800]
+PE corrupt: got=[203, 508, 813] | expected_corrupt=[203, 508, 813] | fails_normal_check=True
+Router masks match all 16 modes: True
+ALL E2 CHECKS PASSED.
+FINISHED rc=0
