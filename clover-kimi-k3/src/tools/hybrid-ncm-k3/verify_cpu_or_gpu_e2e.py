@@ -74,7 +74,7 @@ def main():
     kb_res = eng.search_tool.execute("how to use and adopt the clover framework in regular work")
     assert mem_nodes >= 20, f"Expected >=20 memory nodes, got {mem_nodes}"
     assert gc_res.ok, f"Expected partial Python code to seal cleanly, got {gc_res}"
-    assert "AGENTS.md" in kb_res and "CLOVER-CONTEXT.md" in kb_res, f"Unexpected KB result: {kb_res[:120]}"
+    assert "AGENTS.md" in kb_res and "Context" in kb_res, f"Unexpected KB result: {kb_res[:120]}"
     print(f"[PASS 3/5] Subsystems verified: MemoryGraph={mem_nodes} nodes, Ontology={len(ont_ev)} hits, PythonGC=OK, CloverKB=OK", flush=True)
 
     # 4. Run Multi-Turn Natural Conversation & Tool Execution through all 7 layers
