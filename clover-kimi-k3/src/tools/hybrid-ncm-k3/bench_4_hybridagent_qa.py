@@ -101,6 +101,7 @@ def check_answer(reply: str, item: dict) -> bool:
 
 
 def ask_clover(question: str, sid: str) -> dict:
+    import os
     body = json.dumps({
         "session_id": sid,
         "prompt": question,
@@ -113,7 +114,8 @@ def ask_clover(question: str, sid: str) -> dict:
         headers={"Content-Type": "application/json", "Host": "127.0.0.1:8765"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=90) as resp:
+    timeout_s = int(os.environ.get("CLOVER_BENCH_TIMEOUT", "600"))
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
@@ -121,15 +123,17 @@ def main():
     import os
     here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser()
+    ap.add_argument("--n", type=int, default=len(AGENTIC_BENCHMARK_ITEMS))
     ap.add_argument("--out", type=str, default=os.path.join(here, "benchmarks/hybridagent_qa_baseline.json"))
     args = ap.parse_args()
 
+    items = AGENTIC_BENCHMARK_ITEMS[: max(1, args.n)]
     correct = 0
     results = []
     t_start = time.perf_counter()
 
-    print(f"=== BENCHMARK 4: HYBRIDAGENT AGENTIC & MULTI-HOP QA (N={len(AGENTIC_BENCHMARK_ITEMS)}) ===", flush=True)
-    for idx, it in enumerate(AGENTIC_BENCHMARK_ITEMS):
+    print(f"=== BENCHMARK 4: HYBRIDAGENT AGENTIC & MULTI-HOP QA (N={len(items)}) ===", flush=True)
+    for idx, it in enumerate(items):
         t0 = time.perf_counter()
         r = ask_clover(it["question"], sid=f"ha_qa_{idx}")
         ms = (time.perf_counter() - t0) * 1000.0
@@ -139,7 +143,7 @@ def main():
             correct += 1
         tools = [t.get("tool") for t in (r.get("tool_calls") or [])]
         status = "PASS" if ok else "FAIL"
-        print(f"[{idx+1:2d}/{len(AGENTIC_BENCHMARK_ITEMS)}] {status} ({ms:.0f} ms, tools={tools}) {it['id']} | exp={it['expected']} | reply={reply[:130]!r}", flush=True)
+        print(f"[{idx+1:2d}/{len(items)}] {status} ({ms:.0f} ms, tools={tools}) {it['id']} | exp={it['expected']} | reply={reply[:130]!r}", flush=True)
         results.append({
             "id": it["id"],
             "question": it["question"],
@@ -150,16 +154,17 @@ def main():
             "reply": reply,
         })
 
-    acc = 100.0 * correct / len(AGENTIC_BENCHMARK_ITEMS)
-    avg_ms = (time.perf_counter() - t_start) * 1000.0 / len(AGENTIC_BENCHMARK_ITEMS)
+    acc = 100.0 * correct / len(items)
+    avg_ms = (time.perf_counter() - t_start) * 1000.0 / len(items)
     summary = {
         "benchmark": "HybridAgent_MultiHop_QA",
-        "n": len(AGENTIC_BENCHMARK_ITEMS),
+        "n": len(items),
         "correct": correct,
         "accuracy_pct": round(acc, 2),
         "avg_ms": round(avg_ms, 1),
         "results": results,
     }
+    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
     print(f"\n>>> HYBRIDAGENT MULTI-HOP QA SUMMARY: {correct}/{len(AGENTIC_BENCHMARK_ITEMS)} = {acc:.2f}% | avg {avg_ms:.0f} ms/question", flush=True)

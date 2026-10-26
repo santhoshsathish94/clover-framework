@@ -2,3 +2,12 @@
 /src/work/
 /src/datasets/
 /set-up.log
+/src/rust/**/target/
+/src/tools/hybrid-ncm-k3/*.so
+/src/tools/hybrid-ncm-k3/k3tok_wrap.c
+/src/tools/hybrid-ncm-k3/.build_cpu_experts/
+/src/tools/hybrid-ncm-k3/out/
+/src/tools/hybrid-ncm-k3/benchmarks/*_results.json
+/src/tools/hybrid-ncm-k3/benchmarks/*_baseline_*.json
+/src/tools/hybrid-ncm-k3/benchmarks/*_report.json
+/benchmarks/results/

@@ -21,14 +21,14 @@ VISION_DIR = os.path.join(TOOLS_DIR, "k3_vision")
 
 
 def setup_clover_sys_path() -> str:
-    """Configures `HF_HOME`, `NCM_REPO`, `NCM_ART`, and `sys.path` portably across `gpu`, `k3`, and fresh servers."""
+    """Configures `HF_HOME`, `NCM_REPO`, `NCM_ART`, and `sys.path` portably across `gpu`, `k3`, and fresh servers.
+    Guarantees that `TOOLS_DIR` (the active git checkout) is always at the front of `sys.path`."""
     if "HF_HOME" not in os.environ:
         if os.path.isdir("/home/usergpu/plan2text/data/.cache"):
             os.environ["HF_HOME"] = "/home/usergpu/plan2text/data/.cache"
         elif os.path.isdir("/root/hf"):
             os.environ["HF_HOME"] = "/root/hf"
-    default_repo = "/home/usergpu/ncm/repo" if os.path.isdir("/home/usergpu/ncm/repo") else TOOLS_DIR
-    os.environ.setdefault("NCM_REPO", default_repo)
+    os.environ.setdefault("NCM_REPO", TOOLS_DIR)
     if not os.path.isdir(os.environ["NCM_REPO"]):
         os.environ["NCM_REPO"] = TOOLS_DIR
     default_art = (
@@ -37,10 +37,13 @@ def setup_clover_sys_path() -> str:
         else ("/root/ncm-cpu/artifacts/tinystories" if os.path.isdir("/root/ncm-cpu/artifacts/tinystories") else TOOLS_DIR)
     )
     os.environ.setdefault("NCM_ART", default_art)
-    for p in (VISION_DIR, TOOLS_DIR, "/home/usergpu/merge_lf/k3_vision", "/home/usergpu/merge_lf", "/home/usergpu/plan2text", "/home/usergpu/ncm/repo"):
-        if os.path.isdir(p) and p not in sys.path:
+    # Keep TOOLS_DIR and VISION_DIR strictly at indices 0 and 1 of sys.path so imports always resolve to the checkout
+    for p in (VISION_DIR, TOOLS_DIR):
+        if os.path.isdir(p):
+            while p in sys.path:
+                sys.path.remove(p)
             sys.path.insert(0, p)
-    return os.environ["NCM_REPO"]
+    return TOOLS_DIR
 
 
 def find_dataset_dir() -> str:
@@ -191,9 +194,6 @@ def ensure_cpu_experts_lib() -> str:
     `cpu-memory.c`, and optional Rust `libslotcache.so` / `libsupply.so`."""
     so_path = os.environ.get("CLOVER_CPU_EXPERTS_SO") or os.path.join(TOOLS_DIR, "libk3_cpu_experts.so")
     c_src = os.path.join(TOOLS_DIR, "k3_cpu_experts_lib.c")
-    if os.path.exists(so_path) and os.path.exists(c_src):
-        if os.path.getmtime(so_path) >= os.path.getmtime(c_src):
-            return so_path
 
     # Locate `src/code/common` and `src/code/cpu`
     code_dir = os.path.join(ENGINE_DIR, "src/code")
@@ -213,7 +213,7 @@ def ensure_cpu_experts_lib() -> str:
     sc_so = os.path.join(TOOLS_DIR, "libslotcache.so")
     if not os.path.exists(sc_so) and os.path.isdir(sc_crate):
         cargo_bin = "cargo"
-        for cb in ("/root/.cargo/bin/cargo", os.path.expanduser("~/.cargo/bin/cargo")):
+        for cb in ("/root/.cargo/bin/cargo", "/home/usergpu/.cargo/bin/cargo", os.path.expanduser("~/.cargo/bin/cargo")):
             if os.path.exists(cb):
                 cargo_bin = cb
                 break
@@ -225,6 +225,12 @@ def ensure_cpu_experts_lib() -> str:
                 shutil.copy2(built_sc, sc_so)
         except Exception:
             pass
+    if os.path.exists(sc_so):
+        os.environ.setdefault("K3GPU_SLOTCACHE_LIB", sc_so)
+
+    if os.path.exists(so_path) and os.path.exists(c_src):
+        if os.path.getmtime(so_path) >= os.path.getmtime(c_src):
+            return so_path
 
     build_script = f"""
 set -e

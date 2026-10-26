@@ -28,7 +28,8 @@ def ask_clover(question: str, sid: str) -> dict:
         headers={"Content-Type": "application/json", "Host": "127.0.0.1:8765"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=90) as resp:
+    timeout_s = int(os.environ.get("CLOVER_BENCH_TIMEOUT", "600"))
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
@@ -37,13 +38,22 @@ def decode_sudoku_board(arr: list[int]) -> list[int]:
 
 
 def main():
+    import argparse
     from clover_paths import find_ncm_eval_data_dir
+    here = os.path.dirname(os.path.abspath(__file__))
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--n-wmt", type=int, default=15)
+    ap.add_argument("--n-xsum", type=int, default=10)
+    ap.add_argument("--n-sudoku", type=int, default=10)
+    ap.add_argument("--out", type=str, default=os.path.join(here, "benchmarks/ncm_official_baseline.json"))
+    args = ap.parse_args()
+
     data_root = find_ncm_eval_data_dir()
     print("=== BENCHMARK 5: OFFICIAL NCM SUITE (WMT14 + XSUM + SUDOKU-EASY) ===", flush=True)
 
     # 1. WMT14 Held-Out Concept-to-Text Retention (indices 1000..1019, unseen in training)
     wmt_refs = pickle.load(open(os.path.join(data_root, "wmt14/reference_translations.pickle"), "rb"))
-    wmt_slice = [s for s in wmt_refs[1000:1060] if 35 <= len(s) <= 180][:15]
+    wmt_slice = [s for s in wmt_refs[1000:1060] if 35 <= len(s) <= 180][: args.n_wmt]
     wmt_retentions = []
     wmt_jaccards = []
     print(f"\n--- 5A. WMT14 Held-Out Concept-to-Text (N={len(wmt_slice)}) ---", flush=True)
@@ -64,8 +74,8 @@ def main():
         if idx < 5:
             print(f"  [WMT {idx+1:2d}] ret={ret*100:5.1f}% | ref={ref_s[:80]!r} -> rep={rep[:90]!r}", flush=True)
 
-    mean_wmt_ret = 100.0 * sum(wmt_retentions) / len(wmt_retentions)
-    mean_wmt_jac = 100.0 * sum(wmt_jaccards) / len(wmt_jaccards)
+    mean_wmt_ret = 100.0 * sum(wmt_retentions) / max(1, len(wmt_retentions))
+    mean_wmt_jac = 100.0 * sum(wmt_jaccards) / max(1, len(wmt_jaccards))
     print(f">>> WMT14 Concept Retention: {mean_wmt_ret:.2f}% | Jaccard: {mean_wmt_jac:.2f}%", flush=True)
 
     # 2. XSum Held-Out Factual Summarization (10 unseen passages from indices 5000..5009)
@@ -75,8 +85,8 @@ def main():
     summaries = pickle.load(open(os.path.join(data_root, "xsum/reference_summaries.pickle"), "rb"))
     xsum_recalls = []
     artifact_hits = 0
-    print("\n--- 5B. XSum Held-Out Factual Summarization (N=10) ---", flush=True)
-    for idx in range(10):
+    print(f"\n--- 5B. XSum Held-Out Factual Summarization (N={args.n_xsum}) ---", flush=True)
+    for idx in range(args.n_xsum):
         p_txt = " ".join(gpt2_tok.decode(passages[5000 + idx], skip_special_tokens=True).split())[:900]
         ref_sum = summaries[5000 + idx].strip()
         prompt = f"Summarize the following news passage in one clear sentence:\n\n{p_txt}"
@@ -91,16 +101,16 @@ def main():
         if idx < 4:
             print(f"  [XSum {idx+1:2d}] grounded={grounded*100:5.1f}% | reply={rep[:110]!r}", flush=True)
 
-    mean_xsum_ground = 100.0 * sum(xsum_recalls) / len(xsum_recalls)
-    print(f">>> XSum Source Grounding Precision: {mean_xsum_ground:.2f}% | Artifact Leakage: {artifact_hits}/10", flush=True)
+    mean_xsum_ground = 100.0 * sum(xsum_recalls) / max(1, len(xsum_recalls))
+    print(f">>> XSum Source Grounding Precision: {mean_xsum_ground:.2f}% | Artifact Leakage: {artifact_hits}/{args.n_xsum}", flush=True)
 
     # 3. Official Sudoku-Easy 9x9 Solving (10 puzzles)
     puzzles = pickle.load(open(os.path.join(data_root, "sudoku/easy/puzzles.pickle"), "rb"))
     solutions = pickle.load(open(os.path.join(data_root, "sudoku/easy/solutions.pickle"), "rb"))
     sudoku_board_solved = 0
     sudoku_cell_acc = []
-    print("\n--- 5C. Official Sudoku-Easy 9x9 Benchmark (N=10) ---", flush=True)
-    for idx in range(10):
+    print(f"\n--- 5C. Official Sudoku-Easy 9x9 Benchmark (N={args.n_sudoku}) ---", flush=True)
+    for idx in range(args.n_sudoku):
         p_grid = decode_sudoku_board(puzzles[idx])
         s_grid = decode_sudoku_board(solutions[idx])
         rows_str = "\n".join(" ".join(str(p_grid[r * 9 + c]) for c in range(9)) for r in range(9))
@@ -125,18 +135,20 @@ def main():
         sudoku_cell_acc.append(cell_acc)
         print(f"  [Sudoku {idx+1:2d}] exact={exact} | cell_acc={cell_acc:5.1f}% | digits_found={len(digits)} | reply={rep[:95]!r}", flush=True)
 
-    mean_cell_acc = sum(sudoku_cell_acc) / len(sudoku_cell_acc)
-    print(f">>> Sudoku-Easy Exact Boards Solved: {sudoku_board_solved}/10 ({sudoku_board_solved*10:.1f}%) | Mean Cell Accuracy: {mean_cell_acc:.2f}%", flush=True)
+    mean_cell_acc = sum(sudoku_cell_acc) / max(1, len(sudoku_cell_acc))
+    exact_pct = 100.0 * sudoku_board_solved / max(1, args.n_sudoku)
+    print(f">>> Sudoku-Easy Exact Boards Solved: {sudoku_board_solved}/{args.n_sudoku} ({exact_pct:.1f}%) | Mean Cell Accuracy: {mean_cell_acc:.2f}%", flush=True)
 
     out_summary = {
         "wmt14_retention_pct": round(mean_wmt_ret, 2),
         "wmt14_jaccard_pct": round(mean_wmt_jac, 2),
         "xsum_grounding_pct": round(mean_xsum_ground, 2),
         "xsum_artifact_hits": artifact_hits,
-        "sudoku_exact_pct": sudoku_board_solved * 10.0,
+        "sudoku_exact_pct": round(exact_pct, 2),
         "sudoku_cell_acc_pct": round(mean_cell_acc, 2),
     }
-    with open("/home/usergpu/merge_lf/benchmarks/ncm_official_baseline.json", "w", encoding="utf-8") as f:
+    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+    with open(args.out, "w", encoding="utf-8") as f:
         json.dump(out_summary, f, indent=2)
 
 

@@ -44,31 +44,39 @@ import builtins
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass, field
 from typing import Any, Sequence
 
-# Ensure `rust_generative_compiler` and `generative-compiler-rustc` are on `sys.path` and `PATH` when available on `gpu`
+# Ensure `rust_generative_compiler` and `rustc` are on `sys.path` and `PATH` across `gpu`, `k3`, and fresh servers
 _GC_BINDINGS_DIR = "/home/usergpu/generative-compilation/bindings/rust_generative_compiler"
 _GC_RELEASE_DIR = "/home/usergpu/generative-compilation/target/release"
 _GC_RUSTC_DIR = "/home/usergpu/generative-compilation/crates/generative-compiler-rustc/target/release"
-_CARGO_BIN_DIR = "/home/usergpu/.cargo/bin"
 
 if os.path.isdir(_GC_BINDINGS_DIR) and _GC_BINDINGS_DIR not in sys.path:
     sys.path.insert(0, _GC_BINDINGS_DIR)
 
-for _bin_dir in (_GC_RUSTC_DIR, _GC_RELEASE_DIR, _CARGO_BIN_DIR):
+for _bin_dir in (
+    _GC_RUSTC_DIR,
+    _GC_RELEASE_DIR,
+    "/home/usergpu/.cargo/bin",
+    "/root/.cargo/bin",
+    os.path.expanduser("~/.cargo/bin"),
+):
     if os.path.isdir(_bin_dir) and _bin_dir not in os.environ.get("PATH", ""):
         os.environ["PATH"] = f"{_bin_dir}:{os.environ.get('PATH', '')}"
 
 try:
     import rust_generative_compiler as _rgc  # type: ignore
-    HAS_RUST_GC = True
 except Exception:
     _rgc = None
-    HAS_RUST_GC = False
+
+_RUSTC_BIN = shutil.which("rustc")
+HAS_RUST_GC = (_rgc is not None) or (_RUSTC_BIN is not None)
 
 
 @dataclass
@@ -949,12 +957,7 @@ class CloverRustGenerativeCompiler:
     ) -> GCVerdict:
         t0 = time.perf_counter()
         if self._gc is None:
-            return GCVerdict(
-                ok=True,
-                language="rust",
-                sealed_code=code,
-                elapsed_ms=round((time.perf_counter() - t0) * 1000.0, 3),
-            )
+            return self._check_prefix_rustc_fallback(code, end_marker=end_marker, t0=t0)
         seal_mode = mode if mode is not None else {"mode": "file"}
         info, payload = self._gc.compile(code, seal_mode)
         elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 3)
@@ -996,6 +999,110 @@ class CloverRustGenerativeCompiler:
             ok=False,
             language="rust",
             sealed_code="",
+            diagnostics=diags,
+            elapsed_ms=elapsed_ms,
+            rollback_line_idx=max(0, first_ln - 1),
+        )
+
+    def _check_prefix_rustc_fallback(self, code: str, end_marker: bool, t0: float) -> GCVerdict:
+        """Pure-Python Featherweight Rust Sealor + `rustc --crate-type lib --edition=2021 --emit=metadata --error-format=json`
+        used when `rust_generative_compiler` PyO3 extension is not installed (e.g., on CPU servers with standard `rustc`)."""
+        rustc_bin = _RUSTC_BIN or shutil.which("rustc")
+        if not rustc_bin or not code or not code.strip():
+            return GCVerdict(
+                ok=True,
+                language="rust",
+                sealed_code=code,
+                elapsed_ms=round((time.perf_counter() - t0) * 1000.0, 3),
+            )
+
+        raw_lines = code.splitlines()
+        if not end_marker and not code.endswith("\n") and len(raw_lines) > 1:
+            raw_lines = raw_lines[:-1]
+        while not end_marker and raw_lines:
+            joined_cur = "\n".join(raw_lines)
+            if joined_cur.count("(") > joined_cur.count(")") or joined_cur.count("[") > joined_cur.count("]"):
+                raw_lines.pop()
+            else:
+                break
+
+        if not raw_lines:
+            return GCVerdict(
+                ok=True,
+                language="rust",
+                sealed_code="",
+                elapsed_ms=round((time.perf_counter() - t0) * 1000.0, 3),
+            )
+
+        kept_lines = len(raw_lines)
+        # Track brace depth and whether the innermost unclosed brace belongs to a `fn` body
+        brace_stack: list[str] = []
+        for ln in raw_lines:
+            s_ln = re.sub(r'"(?:\\.|[^"\\])*"', '""', ln)
+            s_ln = re.sub(r"//.*$", "", s_ln)
+            is_fn_hdr = bool(re.search(r"\bfn\s+[a-zA-Z_][a-zA-Z0-9_]*", s_ln))
+            for ch in s_ln:
+                if ch == "{":
+                    brace_stack.append("fn" if is_fn_hdr else "block")
+                    is_fn_hdr = False
+                elif ch == "}" and brace_stack:
+                    brace_stack.pop()
+
+        sealed_lines = list(raw_lines)
+        if not end_marker and brace_stack:
+            last_nonempty = next((ln.strip() for ln in reversed(raw_lines) if ln.strip() and not ln.strip().startswith("//")), "")
+            in_fn = ("fn" in brace_stack)
+            if in_fn and last_nonempty.endswith((";", "{")):
+                sealed_lines.append("    panic!()")
+            for _ in range(len(brace_stack)):
+                sealed_lines.append("}")
+        sealed_code = "\n".join(sealed_lines) + "\n"
+
+        with tempfile.TemporaryDirectory() as tmpd:
+            src_p = os.path.join(tmpd, "lib.rs")
+            meta_p = os.path.join(tmpd, "lib.rmeta")
+            with open(src_p, "w", encoding="utf-8") as f:
+                f.write(sealed_code)
+            proc = subprocess.run(
+                [rustc_bin, "--crate-type", "lib", "--edition=2021", "--emit=metadata", "--error-format=json", "-A", "warnings", src_p, "-o", meta_p],
+                capture_output=True,
+                text=True,
+                timeout=10.0,
+            )
+
+        elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 3)
+        if proc.returncode == 0:
+            return GCVerdict(ok=True, language="rust", sealed_code=sealed_code, elapsed_ms=elapsed_ms)
+
+        raw_errors: list[dict[str, Any]] = []
+        for line in (proc.stderr or "").splitlines():
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                obj = json.loads(line)
+                if obj.get("level") == "error":
+                    raw_errors.append(obj)
+            except Exception:
+                pass
+
+        diags = self._parse_rustc_errors(raw_errors)
+        # Filter out any synthetic-tail error beyond `kept_lines` when `end_marker=False`
+        if not end_marker:
+            diags = [d for d in diags if d.line <= kept_lines]
+        # Normalize E0277 mixed-float arithmetic (`f64 * f32`) to E0308 so diagnostic codes match across rustc versions
+        for d in diags:
+            if d.code == "E0277" and ("f64" in d.message or "f32" in d.message):
+                d.code = "E0308"
+
+        if not diags:
+            return GCVerdict(ok=True, language="rust", sealed_code=sealed_code, elapsed_ms=elapsed_ms)
+
+        first_ln = min((d.origin_line or d.line for d in diags), default=1)
+        return GCVerdict(
+            ok=False,
+            language="rust",
+            sealed_code=sealed_code,
             diagnostics=diags,
             elapsed_ms=elapsed_ms,
             rollback_line_idx=max(0, first_ln - 1),

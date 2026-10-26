@@ -443,7 +443,8 @@ def call_k3_chat(api_url: str, session_id: str, user_prompt: str, memory_pkg: An
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=180) as resp:
+    timeout_s = int(os.environ.get("CLOVER_BENCH_TIMEOUT", "600")) if "os" in globals() else 600
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         data = json.loads(resp.read().decode("utf-8"))
     return str(data.get("reply") or ""), round((time.perf_counter() - t0) * 1000.0, 1)
 

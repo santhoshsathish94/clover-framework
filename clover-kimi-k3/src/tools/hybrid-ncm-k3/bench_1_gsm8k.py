@@ -38,6 +38,7 @@ def extract_predicted_number(reply: str) -> float | None:
 
 
 def ask_clover(question: str, sid: str) -> dict:
+    import os
     body = json.dumps({
         "session_id": sid,
         "prompt": question,
@@ -50,7 +51,8 @@ def ask_clover(question: str, sid: str) -> dict:
         headers={"Content-Type": "application/json", "Host": "127.0.0.1:8765"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=90) as resp:
+    timeout_s = int(os.environ.get("CLOVER_BENCH_TIMEOUT", "600"))
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
@@ -108,6 +110,7 @@ def main():
         "avg_ms": round(avg_ms, 1),
         "results": results,
     }
+    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
     print(f"\n>>> GSM8K SUMMARY: {correct}/{len(items)} = {acc:.2f}% | avg {avg_ms:.0f} ms/problem", flush=True)

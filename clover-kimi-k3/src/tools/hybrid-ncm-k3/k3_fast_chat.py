@@ -28,9 +28,9 @@ from train_latent_bridge import encode_batch_rh
 
 CLOVER_DEFAULT_CONTEXT_PATH = os.environ.get(
     "CLOVER_DEFAULT_CONTEXT_PATH",
-    "/home/usergpu/merge_lf/CLOVER_DEFAULT_CONTEXT.md"
-    if os.path.exists("/home/usergpu/merge_lf/CLOVER_DEFAULT_CONTEXT.md")
-    else os.path.join(TOOLS_DIR, "CLOVER_DEFAULT_CONTEXT.md"),
+    os.path.join(TOOLS_DIR, "CLOVER_DEFAULT_CONTEXT.md")
+    if os.path.exists(os.path.join(TOOLS_DIR, "CLOVER_DEFAULT_CONTEXT.md"))
+    else "/home/usergpu/merge_lf/CLOVER_DEFAULT_CONTEXT.md",
 )
 
 CLOVER_AGENTS_MD_KERNEL = (

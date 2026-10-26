@@ -24,3 +24,4 @@ research/k3/experiments/**/fruit.bin
 
 # Local leftovers of clover-intelegence, which is no longer in the repository (see git history).
 /clover-intelegence/
+/benchmarks/results/
