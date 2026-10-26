@@ -1,0 +1,46 @@
+Loading OLMoE-1B-7B-0924 in bfloat16...
+Loading weights:   0%|          | 0/179 [00:00<?, ?it/s]Loading weights:   2%|▏         | 4/179 [00:00<00:17, 10.27it/s]Loading weights:   3%|▎         | 6/179 [00:00<00:21,  7.92it/s]Loading weights:   9%|▉         | 16/179 [00:00<00:06, 23.85it/s]Loading weights:  15%|█▌        | 27/179 [00:00<00:03, 38.70it/s]Loading weights:  21%|██        | 38/179 [00:01<00:02, 50.35it/s]Loading weights:  27%|██▋       | 49/179 [00:01<00:02, 59.16it/s]Loading weights:  34%|███▎      | 60/179 [00:01<00:01, 65.71it/s]Loading weights:  40%|███▉      | 71/179 [00:01<00:01, 70.54it/s]Loading weights:  46%|████▌     | 82/179 [00:01<00:01, 73.98it/s]Loading weights:  52%|█████▏    | 93/179 [00:01<00:01, 76.47it/s]Loading weights:  58%|█████▊    | 104/179 [00:01<00:00, 78.13it/s]Loading weights:  64%|██████▍   | 115/179 [00:02<00:00, 79.05it/s]Loading weights:  70%|███████   | 126/179 [00:02<00:00, 79.78it/s]Loading weights:  77%|███████▋  | 137/179 [00:02<00:00, 80.45it/s]Loading weights:  83%|████████▎ | 148/179 [00:02<00:00, 81.17it/s]Loading weights:  89%|████████▉ | 159/179 [00:02<00:00, 81.61it/s]Loading weights:  95%|█████████▍| 170/179 [00:02<00:00, 81.97it/s]Loading weights: 100%|██████████| 179/179 [00:02<00:00, 65.54it/s]
+Prompt-style speculative pass (2,048 tokens) done in 6.55s
+Decode-style speculative pass (512 tokens) done in 49.19s
+Global 80th-percentile router softmax score tau_80 = 0.018919 (uniform=0.015625)
+
+=== CROSS-LAYER PREDICTION ACCURACY (OVERALL ACROSS 15 LAYER TRANSITIONS) ===
+  Variant A (Direct Gate Hook: gate_{l+1}(h_l)) - Prompt-style (2,048 tokens):
+    TopK_1.0x_8         : Precision= 84.39%  Recall= 84.39%  AvgPrefetchCnt= 8.00
+    Overfetch_1.5x_12   : Precision= 62.64%  Recall= 93.96%  AvgPrefetchCnt=12.00
+    Overfetch_2.0x_16   : Precision= 48.34%  Recall= 96.68%  AvgPrefetchCnt=16.00
+    Score_Global80      : Precision= 60.29%  Recall= 94.32%  AvgPrefetchCnt=13.06
+    Score_PerTok80      : Precision= 58.29%  Recall= 94.94%  AvgPrefetchCnt=13.03
+  Variant B (Residual + Next-Layer RMSNorm: gate_{l+1}(RMSNorm_{l+1}(r_l))) - Prompt-style:
+    TopK_1.0x_8         : Precision= 84.52%  Recall= 84.52%  AvgPrefetchCnt= 8.00
+    Overfetch_1.5x_12   : Precision= 62.71%  Recall= 94.07%  AvgPrefetchCnt=12.00
+    Overfetch_2.0x_16   : Precision= 48.35%  Recall= 96.70%  AvgPrefetchCnt=16.00
+    Score_Global80      : Precision= 61.77%  Recall= 94.06%  AvgPrefetchCnt=12.75
+    Score_PerTok80      : Precision= 58.34%  Recall= 95.02%  AvgPrefetchCnt=13.03
+  Variant A - Decode-style (512 tokens):
+    TopK_1.0x_8         : Precision= 84.42%  Recall= 84.42%  AvgPrefetchCnt= 8.00
+    Overfetch_1.5x_12   : Precision= 62.70%  Recall= 94.05%  AvgPrefetchCnt=12.00
+    Overfetch_2.0x_16   : Precision= 48.38%  Recall= 96.76%  AvgPrefetchCnt=16.00
+    Score_Global80      : Precision= 61.17%  Recall= 94.14%  AvgPrefetchCnt=12.84
+    Score_PerTok80      : Precision= 58.33%  Recall= 94.99%  AvgPrefetchCnt=13.03
+
+=== PER-LAYER PREDICTION BREAKDOWN (l -> l+1, Prompt-style, 2,048 tokens) ===
+  Trans   | CosSim(h_l,h_{l+1}) | VarA Top8 Rec | VarB Top8 Rec | Ov1.5x(12) Rec | Score80 Prec / Rec / AvgCnt
+  L00->L01 |       0.6710        |     60.14%    |     59.70%    |      71.37%    |  48.08% / 71.86% / 12.39
+  L01->L02 |       0.7185        |     74.01%    |     74.44%    |      85.39%    |  60.52% / 84.06% / 11.48
+  L02->L03 |       0.7628        |     77.23%    |     78.02%    |      88.64%    |  56.11% / 90.17% / 13.29
+  L03->L04 |       0.7796        |     80.76%    |     80.72%    |      91.89%    |  60.99% / 92.19% / 12.58
+  L04->L05 |       0.7835        |     82.34%    |     82.59%    |      93.12%    |  57.14% / 95.07% / 13.75
+  L05->L06 |       0.8150        |     85.16%    |     85.27%    |      95.16%    |  60.69% / 96.14% / 13.06
+  L06->L07 |       0.8332        |     87.49%    |     87.64%    |      97.31%    |  59.38% / 98.32% / 13.68
+  L07->L08 |       0.8339        |     90.00%    |     90.42%    |      98.45%    |  55.25% / 99.16% / 14.85
+  L08->L09 |       0.8554        |     90.16%    |     90.32%    |      98.35%    |  57.09% / 99.14% / 14.39
+  L09->L10 |       0.8223        |     87.79%    |     87.82%    |      97.15%    |  58.53% / 98.43% / 13.96
+  L10->L11 |       0.8502        |     88.11%    |     88.45%    |      97.96%    |  59.07% / 98.93% / 13.94
+  L11->L12 |       0.8508        |     90.70%    |     90.83%    |      98.75%    |  65.04% / 98.56% / 12.68
+  L12->L13 |       0.8580        |     90.54%    |     90.47%    |      99.05%    |  66.11% / 98.12% / 12.46
+  L13->L14 |       0.8690        |     91.82%    |     91.93%    |      98.90%    |  68.92% / 97.92% / 11.94
+  L14->L15 |       0.8417        |     89.53%    |     89.11%    |      97.96%    |  71.40% / 96.72% / 11.40
+
+Saved spec_predictions.npz and e7_prediction_summary.json
+FINISHED rc=124

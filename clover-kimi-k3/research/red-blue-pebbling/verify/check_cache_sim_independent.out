@@ -1,0 +1,11 @@
+== 2x2 naive, hand-countable (study: S=4 LRU 20+4=24, OPT 15+4=19; S=3 OPT 17+4; S=5 LRU 18+4)
+accesses 24
+S=3 LRU (20, 4)  OPT (17, 4)
+S=4 LRU (20, 4)  OPT (15, 4)
+S=5 LRU (18, 4)  OPT (13, 4)
+== n=128, S=192, b=8 (study: ijk LRU 1,040,896 = 782,592+258,304, OPT 542,720; ikj LRU 948,736, OPT 540,928; kij LRU 557,056, OPT 528,128)
+ijk LRU loads=782592 stores=258304 total=1040896 | OPT loads=526336 stores=16384 total=542720 | LRU/OPT=1.918
+ikj LRU loads=736512 stores=212224 total=948736 | OPT loads=524544 stores=16384 total=540928 | LRU/OPT=1.754
+kij LRU loads=540672 stores=16384 total=557056 | OPT loads=511744 stores=16384 total=528128 | LRU/OPT=1.055
+DONE-CACHE
+FINISHED rc=0

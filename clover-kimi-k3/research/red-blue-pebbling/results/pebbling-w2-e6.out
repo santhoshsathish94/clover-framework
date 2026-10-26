@@ -1,0 +1,45 @@
+=== 1. HAND-COUNTABLE 2x2 CASE (S=4) AND OFF-BY-ONE CONTROLS (S=3, S=5) ===
+  n=2, S=2: LRU loads=24 stores=8 total=32 | OPT loads=20 stores=4 total=24
+  n=2, S=3: LRU loads=20 stores=4 total=24 | OPT loads=17 stores=4 total=21
+  n=2, S=4: LRU loads=20 stores=4 total=24 | OPT loads=15 stores=4 total=19
+  n=2, S=5: LRU loads=18 stores=4 total=22 | OPT loads=13 stores=4 total=17
+  n=2, S=6: LRU loads=16 stores=4 total=20 | OPT loads=12 stores=4 total=16
+
+=== 2. MAIN SWEEP: n in {64,128,256,512}, S in {48,192,768,3072}, b=floor(sqrt(S/3)) ===
+Note: OPT run for n <= 256 (up to 50.3M accesses, 402 MB trace+next_use); skipped at n=512 (402.7M accesses).
+n= 64 S=  48 b= 4 | NaiveLRU=    532480 NaiveOPT=    347008 | BlkLRU=    254464 (c=6.725) BlkOPT=    136192 (c=3.599) | Naive/Blk(LRU)=  2.09x
+n= 64 S= 192 b= 8 | NaiveLRU=    274432 NaiveOPT=    266368 | BlkLRU=    130176 (c=6.881) BlkOPT=     70144 (c=3.708) | Naive/Blk(LRU)=  2.11x
+n= 64 S= 768 b=16 | NaiveLRU=    274432 NaiveOPT=    230080 | BlkLRU=     65440 (c=6.918) BlkOPT=     37120 (c=3.924) | Naive/Blk(LRU)=  4.19x
+n= 64 S=3072 b=32 | NaiveLRU=    274432 NaiveOPT=     84928 | BlkLRU=     32760 (c=6.927) BlkOPT=     20543 (c=4.343) | Naive/Blk(LRU)=  8.38x
+n=128 S=  48 b= 4 | NaiveLRU=   4227072 NaiveOPT=   3479296 | BlkLRU=   2033664 (c=6.718) BlkOPT=   1069056 (c=3.532) | Naive/Blk(LRU)=  2.08x
+n=128 S= 192 b= 8 | NaiveLRU=   4227072 NaiveOPT=   2138368 | BlkLRU=   1040896 (c=6.877) BlkOPT=    542720 (c=3.586) | Naive/Blk(LRU)=  4.06x
+n=128 S= 768 b=16 | NaiveLRU=   2146304 NaiveOPT=   2065024 | BlkLRU=    523392 (c=6.916) BlkOPT=    279552 (c=3.694) | Naive/Blk(LRU)=  4.10x
+n=128 S=3072 b=32 | NaiveLRU=   2146304 NaiveOPT=   1772416 | BlkLRU=    262048 (c=6.926) BlkOPT=    147968 (c=3.911) | Naive/Blk(LRU)=  8.19x
+n=256 S=  48 b= 4 | NaiveLRU=  33685504 NaiveOPT=  30682624 | BlkLRU=  16261120 (c=6.715) BlkOPT=   8470528 (c=3.498) | Naive/Blk(LRU)=  2.07x
+n=256 S= 192 b= 8 | NaiveLRU=  33685504 NaiveOPT=  21282304 | BlkLRU=   8325120 (c=6.876) BlkOPT=   4268032 (c=3.525) | Naive/Blk(LRU)=  4.05x
+n=256 S= 768 b=16 | NaiveLRU=  16973824 NaiveOPT=  16843264 | BlkLRU=   4186624 (c=6.916) BlkOPT=   2166784 (c=3.579) | Naive/Blk(LRU)=  4.05x
+n=256 S=3072 b=32 | NaiveLRU=  16973824 NaiveOPT=  16255744 | BlkLRU=   2096256 (c=6.925) BlkOPT=   1116160 (c=3.687) | Naive/Blk(LRU)=  8.10x
+n=512 S=  48 b= 4 | NaiveLRU= 268959744 NaiveOPT=         0 | BlkLRU= 130056192 (c=6.713) BlkOPT=         0 (c=0.000) | Naive/Blk(LRU)=  2.07x
+n=512 S= 192 b= 8 | NaiveLRU= 268959744 NaiveOPT=         0 | BlkLRU=  66592768 (c=6.875) BlkOPT=         0 (c=0.000) | Naive/Blk(LRU)=  4.04x
+n=512 S= 768 b=16 | NaiveLRU= 268959744 NaiveOPT=         0 | BlkLRU=  33490944 (c=6.915) BlkOPT=         0 (c=0.000) | Naive/Blk(LRU)=  8.03x
+n=512 S=3072 b=32 | NaiveLRU= 135004160 NaiveOPT=         0 | BlkLRU=  16769536 (c=6.925) BlkOPT=         0 (c=0.000) | Naive/Blk(LRU)=  8.05x
+
+=== 3. TILE SIZE SENSITIVITY (b TOO SMALL AND b TOO LARGE) AT n=128, S=192 (sqrt(S/3)=8) ===
+  n=128 S=192 b= 2 (3b^2=  12): BlkLRU= 2129920 (loads= 2113536, stores= 16384) | BlkOPT= 1387712 (loads= 1371328, stores= 16384) | LRU/OPT=1.535
+  n=128 S=192 b= 4 (3b^2=  48): BlkLRU= 1081344 (loads= 1064960, stores= 16384) | BlkOPT=  922016 (loads=  905632, stores= 16384) | LRU/OPT=1.173
+  n=128 S=192 b= 6 (3b^2= 108): BlkLRU=  753664 (loads=  737280, stores= 16384) | BlkOPT=  697480 (loads=  681096, stores= 16384) | LRU/OPT=1.081
+  n=128 S=192 b= 8 (3b^2= 192): BlkLRU= 1040896 (loads=  782592, stores=258304) | BlkOPT=  542720 (loads=  526336, stores= 16384) | LRU/OPT=1.918
+  n=128 S=192 b=12 (3b^2= 432): BlkLRU=  720894 (loads=  540671, stores=180223) | BlkOPT=  620556 (loads=  490492, stores=130064) | LRU/OPT=1.162
+  n=128 S=192 b=16 (3b^2= 768): BlkLRU= 2490368 (loads= 2359296, stores=131072) | BlkOPT= 1138688 (loads= 1007616, stores=131072) | LRU/OPT=2.187
+  n=128 S=192 b=32 (3b^2=3072): BlkLRU= 2293760 (loads= 2228224, stores= 65536) | BlkOPT= 1976320 (loads= 1910784, stores= 65536) | LRU/OPT=1.161
+
+=== 4. INTRA-TILE LOOP ORDER EXPERIMENT (EXPLAINING LRU VS OPT AT 3b^2=S) ===
+  n=128 S=192 b=8 inner_ijk : LRU total= 1040896 (loads=  782592, stores=258304) | OPT total=  542720 (loads=  526336, stores= 16384) | LRU/OPT=1.918
+  n=128 S=192 b=8 inner_ikj : LRU total=  948736 (loads=  736512, stores=212224) | OPT total=  540928 (loads=  524544, stores= 16384) | LRU/OPT=1.754
+  n=128 S=192 b=8 inner_kij : LRU total=  557056 (loads=  540672, stores= 16384) | OPT total=  528128 (loads=  511744, stores= 16384) | LRU/OPT=1.055
+
+=== 5. LOG-LINEAR POWER-LAW FIT OF EXPONENTS IN n AND S ===
+Blocked LRU (n=64..512, S=48..3072, 16 pts): IO = 6.592 * n^2.9996 * S^-0.4930  (R^2=0.999995)
+Blocked LRU (n=64..256, S=48..3072, 12 pts): IO = 6.598 * n^2.9995 * S^-0.4931  (R^2=0.999991)
+Blocked OPT (n=64..256, S=48..3072, 12 pts): IO = 4.230 * n^2.9396 * S^-0.4728  (R^2=0.999813)
+FINISHED rc=0

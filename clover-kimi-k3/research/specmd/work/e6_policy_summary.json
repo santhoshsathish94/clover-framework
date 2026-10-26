@@ -1,0 +1,3824 @@
+{
+  "prompt_style_global": {
+    "10": {
+      "LRU": {
+        "hit_rate": 0.36807,
+        "miss_rate": 0.63193,
+        "collision_rate_intra": 0.60177,
+        "collision_rate_pass": 0.60204,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 3612,
+            "misses": 12772,
+            "coll_pass": 12261,
+            "coll_intra": 12261
+          },
+          "1": {
+            "hits": 4422,
+            "misses": 11962,
+            "coll_pass": 11450,
+            "coll_intra": 11450
+          },
+          "2": {
+            "hits": 5570,
+            "misses": 10814,
+            "coll_pass": 10304,
+            "coll_intra": 10304
+          },
+          "3": {
+            "hits": 5528,
+            "misses": 10856,
+            "coll_pass": 10347,
+            "coll_intra": 10347
+          },
+          "4": {
+            "hits": 7694,
+            "misses": 8690,
+            "coll_pass": 8195,
+            "coll_intra": 8195
+          },
+          "5": {
+            "hits": 7447,
+            "misses": 8937,
+            "coll_pass": 8445,
+            "coll_intra": 8445
+          },
+          "6": {
+            "hits": 7237,
+            "misses": 9147,
+            "coll_pass": 8678,
+            "coll_intra": 8678
+          },
+          "7": {
+            "hits": 7184,
+            "misses": 9200,
+            "coll_pass": 8725,
+            "coll_intra": 8725
+          },
+          "8": {
+            "hits": 6916,
+            "misses": 9468,
+            "coll_pass": 8983,
+            "coll_intra": 8983
+          },
+          "9": {
+            "hits": 5476,
+            "misses": 10908,
+            "coll_pass": 10411,
+            "coll_intra": 10411
+          },
+          "10": {
+            "hits": 4631,
+            "misses": 11753,
+            "coll_pass": 11251,
+            "coll_intra": 11251
+          },
+          "11": {
+            "hits": 6300,
+            "misses": 10084,
+            "coll_pass": 9588,
+            "coll_intra": 9588
+          },
+          "12": {
+            "hits": 5913,
+            "misses": 10471,
+            "coll_pass": 9967,
+            "coll_intra": 9967
+          },
+          "13": {
+            "hits": 6415,
+            "misses": 9969,
+            "coll_pass": 9472,
+            "coll_intra": 9472
+          },
+          "14": {
+            "hits": 6309,
+            "misses": 10075,
+            "coll_pass": 9596,
+            "coll_intra": 9596
+          },
+          "15": {
+            "hits": 5834,
+            "misses": 10550,
+            "coll_pass": 10147,
+            "coll_intra": 10077
+          }
+        }
+      },
+      "LFU": {
+        "hit_rate": 0.05433,
+        "miss_rate": 0.94567,
+        "collision_rate_intra": 0.91562,
+        "collision_rate_pass": 0.91578,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 1036,
+            "misses": 15348,
+            "coll_pass": 14837,
+            "coll_intra": 14837
+          },
+          "1": {
+            "hits": 1356,
+            "misses": 15028,
+            "coll_pass": 14518,
+            "coll_intra": 14518
+          },
+          "2": {
+            "hits": 757,
+            "misses": 15627,
+            "coll_pass": 15117,
+            "coll_intra": 15117
+          },
+          "3": {
+            "hits": 114,
+            "misses": 16270,
+            "coll_pass": 15761,
+            "coll_intra": 15761
+          },
+          "4": {
+            "hits": 1927,
+            "misses": 14457,
+            "coll_pass": 13969,
+            "coll_intra": 13969
+          },
+          "5": {
+            "hits": 1011,
+            "misses": 15373,
+            "coll_pass": 14886,
+            "coll_intra": 14882
+          },
+          "6": {
+            "hits": 290,
+            "misses": 16094,
+            "coll_pass": 15625,
+            "coll_intra": 15625
+          },
+          "7": {
+            "hits": 922,
+            "misses": 15462,
+            "coll_pass": 14993,
+            "coll_intra": 14987
+          },
+          "8": {
+            "hits": 922,
+            "misses": 15462,
+            "coll_pass": 14983,
+            "coll_intra": 14978
+          },
+          "9": {
+            "hits": 75,
+            "misses": 16309,
+            "coll_pass": 15812,
+            "coll_intra": 15812
+          },
+          "10": {
+            "hits": 50,
+            "misses": 16334,
+            "coll_pass": 15832,
+            "coll_intra": 15832
+          },
+          "11": {
+            "hits": 1316,
+            "misses": 15068,
+            "coll_pass": 14579,
+            "coll_intra": 14576
+          },
+          "12": {
+            "hits": 1184,
+            "misses": 15200,
+            "coll_pass": 14703,
+            "coll_intra": 14700
+          },
+          "13": {
+            "hits": 1646,
+            "misses": 14738,
+            "coll_pass": 14253,
+            "coll_intra": 14246
+          },
+          "14": {
+            "hits": 1530,
+            "misses": 14854,
+            "coll_pass": 14386,
+            "coll_intra": 14378
+          },
+          "15": {
+            "hits": 105,
+            "misses": 16279,
+            "coll_pass": 15813,
+            "coll_intra": 15806
+          }
+        }
+      },
+      "FIFO": {
+        "hit_rate": 0.32691,
+        "miss_rate": 0.67309,
+        "collision_rate_intra": 0.64293,
+        "collision_rate_pass": 0.6432,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 3437,
+            "misses": 12947,
+            "coll_pass": 12436,
+            "coll_intra": 12436
+          },
+          "1": {
+            "hits": 4061,
+            "misses": 12323,
+            "coll_pass": 11811,
+            "coll_intra": 11811
+          },
+          "2": {
+            "hits": 5075,
+            "misses": 11309,
+            "coll_pass": 10799,
+            "coll_intra": 10799
+          },
+          "3": {
+            "hits": 4963,
+            "misses": 11421,
+            "coll_pass": 10912,
+            "coll_intra": 10912
+          },
+          "4": {
+            "hits": 6685,
+            "misses": 9699,
+            "coll_pass": 9204,
+            "coll_intra": 9204
+          },
+          "5": {
+            "hits": 6646,
+            "misses": 9738,
+            "coll_pass": 9246,
+            "coll_intra": 9246
+          },
+          "6": {
+            "hits": 6309,
+            "misses": 10075,
+            "coll_pass": 9606,
+            "coll_intra": 9606
+          },
+          "7": {
+            "hits": 6446,
+            "misses": 9938,
+            "coll_pass": 9463,
+            "coll_intra": 9463
+          },
+          "8": {
+            "hits": 6076,
+            "misses": 10308,
+            "coll_pass": 9823,
+            "coll_intra": 9823
+          },
+          "9": {
+            "hits": 5033,
+            "misses": 11351,
+            "coll_pass": 10854,
+            "coll_intra": 10854
+          },
+          "10": {
+            "hits": 4297,
+            "misses": 12087,
+            "coll_pass": 11585,
+            "coll_intra": 11585
+          },
+          "11": {
+            "hits": 5452,
+            "misses": 10932,
+            "coll_pass": 10436,
+            "coll_intra": 10436
+          },
+          "12": {
+            "hits": 5001,
+            "misses": 11383,
+            "coll_pass": 10879,
+            "coll_intra": 10879
+          },
+          "13": {
+            "hits": 5454,
+            "misses": 10930,
+            "coll_pass": 10433,
+            "coll_intra": 10433
+          },
+          "14": {
+            "hits": 5498,
+            "misses": 10886,
+            "coll_pass": 10407,
+            "coll_intra": 10407
+          },
+          "15": {
+            "hits": 5265,
+            "misses": 11119,
+            "coll_pass": 10716,
+            "coll_intra": 10646
+          }
+        }
+      },
+      "FLD": {
+        "hit_rate": 0.36807,
+        "miss_rate": 0.63193,
+        "collision_rate_intra": 0.60177,
+        "collision_rate_pass": 0.60204,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 3612,
+            "misses": 12772,
+            "coll_pass": 12261,
+            "coll_intra": 12261
+          },
+          "1": {
+            "hits": 4422,
+            "misses": 11962,
+            "coll_pass": 11450,
+            "coll_intra": 11450
+          },
+          "2": {
+            "hits": 5570,
+            "misses": 10814,
+            "coll_pass": 10304,
+            "coll_intra": 10304
+          },
+          "3": {
+            "hits": 5528,
+            "misses": 10856,
+            "coll_pass": 10347,
+            "coll_intra": 10347
+          },
+          "4": {
+            "hits": 7694,
+            "misses": 8690,
+            "coll_pass": 8195,
+            "coll_intra": 8195
+          },
+          "5": {
+            "hits": 7447,
+            "misses": 8937,
+            "coll_pass": 8445,
+            "coll_intra": 8445
+          },
+          "6": {
+            "hits": 7237,
+            "misses": 9147,
+            "coll_pass": 8678,
+            "coll_intra": 8678
+          },
+          "7": {
+            "hits": 7184,
+            "misses": 9200,
+            "coll_pass": 8725,
+            "coll_intra": 8725
+          },
+          "8": {
+            "hits": 6916,
+            "misses": 9468,
+            "coll_pass": 8983,
+            "coll_intra": 8983
+          },
+          "9": {
+            "hits": 5476,
+            "misses": 10908,
+            "coll_pass": 10411,
+            "coll_intra": 10411
+          },
+          "10": {
+            "hits": 4631,
+            "misses": 11753,
+            "coll_pass": 11251,
+            "coll_intra": 11251
+          },
+          "11": {
+            "hits": 6300,
+            "misses": 10084,
+            "coll_pass": 9588,
+            "coll_intra": 9588
+          },
+          "12": {
+            "hits": 5913,
+            "misses": 10471,
+            "coll_pass": 9967,
+            "coll_intra": 9967
+          },
+          "13": {
+            "hits": 6415,
+            "misses": 9969,
+            "coll_pass": 9472,
+            "coll_intra": 9472
+          },
+          "14": {
+            "hits": 6309,
+            "misses": 10075,
+            "coll_pass": 9596,
+            "coll_intra": 9596
+          },
+          "15": {
+            "hits": 5834,
+            "misses": 10550,
+            "coll_pass": 10147,
+            "coll_intra": 10077
+          }
+        }
+      },
+      "SB": {
+        "hit_rate": 0.02718,
+        "miss_rate": 0.97282,
+        "collision_rate_intra": 0.94287,
+        "collision_rate_pass": 0.94293,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 264,
+            "misses": 16120,
+            "coll_pass": 15609,
+            "coll_intra": 15609
+          },
+          "1": {
+            "hits": 221,
+            "misses": 16163,
+            "coll_pass": 15651,
+            "coll_intra": 15651
+          },
+          "2": {
+            "hits": 235,
+            "misses": 16149,
+            "coll_pass": 15639,
+            "coll_intra": 15639
+          },
+          "3": {
+            "hits": 329,
+            "misses": 16055,
+            "coll_pass": 15546,
+            "coll_intra": 15546
+          },
+          "4": {
+            "hits": 448,
+            "misses": 15936,
+            "coll_pass": 15441,
+            "coll_intra": 15441
+          },
+          "5": {
+            "hits": 393,
+            "misses": 15991,
+            "coll_pass": 15499,
+            "coll_intra": 15499
+          },
+          "6": {
+            "hits": 387,
+            "misses": 15997,
+            "coll_pass": 15528,
+            "coll_intra": 15528
+          },
+          "7": {
+            "hits": 318,
+            "misses": 16066,
+            "coll_pass": 15591,
+            "coll_intra": 15591
+          },
+          "8": {
+            "hits": 444,
+            "misses": 15940,
+            "coll_pass": 15456,
+            "coll_intra": 15456
+          },
+          "9": {
+            "hits": 623,
+            "misses": 15761,
+            "coll_pass": 15264,
+            "coll_intra": 15264
+          },
+          "10": {
+            "hits": 481,
+            "misses": 15903,
+            "coll_pass": 15408,
+            "coll_intra": 15408
+          },
+          "11": {
+            "hits": 425,
+            "misses": 15959,
+            "coll_pass": 15470,
+            "coll_intra": 15470
+          },
+          "12": {
+            "hits": 400,
+            "misses": 15984,
+            "coll_pass": 15485,
+            "coll_intra": 15485
+          },
+          "13": {
+            "hits": 594,
+            "misses": 15790,
+            "coll_pass": 15299,
+            "coll_intra": 15299
+          },
+          "14": {
+            "hits": 1097,
+            "misses": 15287,
+            "coll_pass": 14835,
+            "coll_intra": 14830
+          },
+          "15": {
+            "hits": 465,
+            "misses": 15919,
+            "coll_pass": 15463,
+            "coll_intra": 15453
+          }
+        }
+      },
+      "LS": {
+        "hit_rate": 0.32691,
+        "miss_rate": 0.67309,
+        "collision_rate_intra": 0.64293,
+        "collision_rate_pass": 0.6432,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 3437,
+            "misses": 12947,
+            "coll_pass": 12436,
+            "coll_intra": 12436
+          },
+          "1": {
+            "hits": 4061,
+            "misses": 12323,
+            "coll_pass": 11811,
+            "coll_intra": 11811
+          },
+          "2": {
+            "hits": 5075,
+            "misses": 11309,
+            "coll_pass": 10799,
+            "coll_intra": 10799
+          },
+          "3": {
+            "hits": 4963,
+            "misses": 11421,
+            "coll_pass": 10912,
+            "coll_intra": 10912
+          },
+          "4": {
+            "hits": 6685,
+            "misses": 9699,
+            "coll_pass": 9204,
+            "coll_intra": 9204
+          },
+          "5": {
+            "hits": 6646,
+            "misses": 9738,
+            "coll_pass": 9246,
+            "coll_intra": 9246
+          },
+          "6": {
+            "hits": 6309,
+            "misses": 10075,
+            "coll_pass": 9606,
+            "coll_intra": 9606
+          },
+          "7": {
+            "hits": 6446,
+            "misses": 9938,
+            "coll_pass": 9463,
+            "coll_intra": 9463
+          },
+          "8": {
+            "hits": 6076,
+            "misses": 10308,
+            "coll_pass": 9823,
+            "coll_intra": 9823
+          },
+          "9": {
+            "hits": 5033,
+            "misses": 11351,
+            "coll_pass": 10854,
+            "coll_intra": 10854
+          },
+          "10": {
+            "hits": 4297,
+            "misses": 12087,
+            "coll_pass": 11585,
+            "coll_intra": 11585
+          },
+          "11": {
+            "hits": 5452,
+            "misses": 10932,
+            "coll_pass": 10436,
+            "coll_intra": 10436
+          },
+          "12": {
+            "hits": 5001,
+            "misses": 11383,
+            "coll_pass": 10879,
+            "coll_intra": 10879
+          },
+          "13": {
+            "hits": 5454,
+            "misses": 10930,
+            "coll_pass": 10433,
+            "coll_intra": 10433
+          },
+          "14": {
+            "hits": 5498,
+            "misses": 10886,
+            "coll_pass": 10407,
+            "coll_intra": 10407
+          },
+          "15": {
+            "hits": 5265,
+            "misses": 11119,
+            "coll_pass": 10716,
+            "coll_intra": 10646
+          }
+        }
+      }
+    },
+    "51": {
+      "LRU": {
+        "hit_rate": 0.92881,
+        "miss_rate": 0.07119,
+        "collision_rate_intra": 0.04103,
+        "collision_rate_pass": 0.04239,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 14472,
+            "misses": 1912,
+            "coll_pass": 1401,
+            "coll_intra": 1401
+          },
+          "1": {
+            "hits": 14246,
+            "misses": 2138,
+            "coll_pass": 1626,
+            "coll_intra": 1626
+          },
+          "2": {
+            "hits": 15039,
+            "misses": 1345,
+            "coll_pass": 835,
+            "coll_intra": 835
+          },
+          "3": {
+            "hits": 15013,
+            "misses": 1371,
+            "coll_pass": 862,
+            "coll_intra": 862
+          },
+          "4": {
+            "hits": 15551,
+            "misses": 833,
+            "coll_pass": 338,
+            "coll_intra": 338
+          },
+          "5": {
+            "hits": 15645,
+            "misses": 739,
+            "coll_pass": 247,
+            "coll_intra": 247
+          },
+          "6": {
+            "hits": 15772,
+            "misses": 612,
+            "coll_pass": 143,
+            "coll_intra": 143
+          },
+          "7": {
+            "hits": 15716,
+            "misses": 668,
+            "coll_pass": 193,
+            "coll_intra": 193
+          },
+          "8": {
+            "hits": 15576,
+            "misses": 808,
+            "coll_pass": 323,
+            "coll_intra": 323
+          },
+          "9": {
+            "hits": 15069,
+            "misses": 1315,
+            "coll_pass": 818,
+            "coll_intra": 818
+          },
+          "10": {
+            "hits": 14560,
+            "misses": 1824,
+            "coll_pass": 1322,
+            "coll_intra": 1322
+          },
+          "11": {
+            "hits": 15214,
+            "misses": 1170,
+            "coll_pass": 674,
+            "coll_intra": 674
+          },
+          "12": {
+            "hits": 15091,
+            "misses": 1293,
+            "coll_pass": 789,
+            "coll_intra": 789
+          },
+          "13": {
+            "hits": 15335,
+            "misses": 1049,
+            "coll_pass": 552,
+            "coll_intra": 552
+          },
+          "14": {
+            "hits": 15563,
+            "misses": 821,
+            "coll_pass": 342,
+            "coll_intra": 342
+          },
+          "15": {
+            "hits": 15619,
+            "misses": 765,
+            "coll_pass": 647,
+            "coll_intra": 292
+          }
+        }
+      },
+      "LFU": {
+        "hit_rate": 0.18143,
+        "miss_rate": 0.81857,
+        "collision_rate_intra": 0.78937,
+        "collision_rate_pass": 0.78977,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 5206,
+            "misses": 11178,
+            "coll_pass": 10691,
+            "coll_intra": 10691
+          },
+          "1": {
+            "hits": 2839,
+            "misses": 13545,
+            "coll_pass": 13048,
+            "coll_intra": 13047
+          },
+          "2": {
+            "hits": 2506,
+            "misses": 13878,
+            "coll_pass": 13377,
+            "coll_intra": 13375
+          },
+          "3": {
+            "hits": 2324,
+            "misses": 14060,
+            "coll_pass": 13571,
+            "coll_intra": 13559
+          },
+          "4": {
+            "hits": 4412,
+            "misses": 11972,
+            "coll_pass": 11506,
+            "coll_intra": 11502
+          },
+          "5": {
+            "hits": 3337,
+            "misses": 13047,
+            "coll_pass": 12583,
+            "coll_intra": 12578
+          },
+          "6": {
+            "hits": 2497,
+            "misses": 13887,
+            "coll_pass": 13442,
+            "coll_intra": 13436
+          },
+          "7": {
+            "hits": 2770,
+            "misses": 13614,
+            "coll_pass": 13161,
+            "coll_intra": 13156
+          },
+          "8": {
+            "hits": 3162,
+            "misses": 13222,
+            "coll_pass": 12759,
+            "coll_intra": 12756
+          },
+          "9": {
+            "hits": 2052,
+            "misses": 14332,
+            "coll_pass": 13852,
+            "coll_intra": 13849
+          },
+          "10": {
+            "hits": 1243,
+            "misses": 15141,
+            "coll_pass": 14657,
+            "coll_intra": 14644
+          },
+          "11": {
+            "hits": 2661,
+            "misses": 13723,
+            "coll_pass": 13248,
+            "coll_intra": 13240
+          },
+          "12": {
+            "hits": 3080,
+            "misses": 13304,
+            "coll_pass": 12828,
+            "coll_intra": 12819
+          },
+          "13": {
+            "hits": 3284,
+            "misses": 13100,
+            "coll_pass": 12628,
+            "coll_intra": 12617
+          },
+          "14": {
+            "hits": 2994,
+            "misses": 13390,
+            "coll_pass": 12927,
+            "coll_intra": 12925
+          },
+          "15": {
+            "hits": 3194,
+            "misses": 13190,
+            "coll_pass": 12755,
+            "coll_intra": 12735
+          }
+        }
+      },
+      "FIFO": {
+        "hit_rate": 0.90456,
+        "miss_rate": 0.09544,
+        "collision_rate_intra": 0.06528,
+        "collision_rate_pass": 0.06662,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 14072,
+            "misses": 2312,
+            "coll_pass": 1801,
+            "coll_intra": 1801
+          },
+          "1": {
+            "hits": 13818,
+            "misses": 2566,
+            "coll_pass": 2054,
+            "coll_intra": 2054
+          },
+          "2": {
+            "hits": 14540,
+            "misses": 1844,
+            "coll_pass": 1334,
+            "coll_intra": 1334
+          },
+          "3": {
+            "hits": 14597,
+            "misses": 1787,
+            "coll_pass": 1278,
+            "coll_intra": 1278
+          },
+          "4": {
+            "hits": 15166,
+            "misses": 1218,
+            "coll_pass": 723,
+            "coll_intra": 723
+          },
+          "5": {
+            "hits": 15288,
+            "misses": 1096,
+            "coll_pass": 604,
+            "coll_intra": 604
+          },
+          "6": {
+            "hits": 15494,
+            "misses": 890,
+            "coll_pass": 421,
+            "coll_intra": 421
+          },
+          "7": {
+            "hits": 15448,
+            "misses": 936,
+            "coll_pass": 461,
+            "coll_intra": 461
+          },
+          "8": {
+            "hits": 15184,
+            "misses": 1200,
+            "coll_pass": 715,
+            "coll_intra": 715
+          },
+          "9": {
+            "hits": 14639,
+            "misses": 1745,
+            "coll_pass": 1248,
+            "coll_intra": 1248
+          },
+          "10": {
+            "hits": 14106,
+            "misses": 2278,
+            "coll_pass": 1776,
+            "coll_intra": 1776
+          },
+          "11": {
+            "hits": 14832,
+            "misses": 1552,
+            "coll_pass": 1056,
+            "coll_intra": 1056
+          },
+          "12": {
+            "hits": 14615,
+            "misses": 1769,
+            "coll_pass": 1265,
+            "coll_intra": 1265
+          },
+          "13": {
+            "hits": 14917,
+            "misses": 1467,
+            "coll_pass": 970,
+            "coll_intra": 970
+          },
+          "14": {
+            "hits": 15161,
+            "misses": 1223,
+            "coll_pass": 744,
+            "coll_intra": 744
+          },
+          "15": {
+            "hits": 15249,
+            "misses": 1135,
+            "coll_pass": 1013,
+            "coll_intra": 662
+          }
+        }
+      },
+      "FLD": {
+        "hit_rate": 0.92881,
+        "miss_rate": 0.07119,
+        "collision_rate_intra": 0.04103,
+        "collision_rate_pass": 0.04239,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 14472,
+            "misses": 1912,
+            "coll_pass": 1401,
+            "coll_intra": 1401
+          },
+          "1": {
+            "hits": 14246,
+            "misses": 2138,
+            "coll_pass": 1626,
+            "coll_intra": 1626
+          },
+          "2": {
+            "hits": 15039,
+            "misses": 1345,
+            "coll_pass": 835,
+            "coll_intra": 835
+          },
+          "3": {
+            "hits": 15013,
+            "misses": 1371,
+            "coll_pass": 862,
+            "coll_intra": 862
+          },
+          "4": {
+            "hits": 15551,
+            "misses": 833,
+            "coll_pass": 338,
+            "coll_intra": 338
+          },
+          "5": {
+            "hits": 15645,
+            "misses": 739,
+            "coll_pass": 247,
+            "coll_intra": 247
+          },
+          "6": {
+            "hits": 15772,
+            "misses": 612,
+            "coll_pass": 143,
+            "coll_intra": 143
+          },
+          "7": {
+            "hits": 15716,
+            "misses": 668,
+            "coll_pass": 193,
+            "coll_intra": 193
+          },
+          "8": {
+            "hits": 15576,
+            "misses": 808,
+            "coll_pass": 323,
+            "coll_intra": 323
+          },
+          "9": {
+            "hits": 15069,
+            "misses": 1315,
+            "coll_pass": 818,
+            "coll_intra": 818
+          },
+          "10": {
+            "hits": 14560,
+            "misses": 1824,
+            "coll_pass": 1322,
+            "coll_intra": 1322
+          },
+          "11": {
+            "hits": 15214,
+            "misses": 1170,
+            "coll_pass": 674,
+            "coll_intra": 674
+          },
+          "12": {
+            "hits": 15091,
+            "misses": 1293,
+            "coll_pass": 789,
+            "coll_intra": 789
+          },
+          "13": {
+            "hits": 15335,
+            "misses": 1049,
+            "coll_pass": 552,
+            "coll_intra": 552
+          },
+          "14": {
+            "hits": 15563,
+            "misses": 821,
+            "coll_pass": 342,
+            "coll_intra": 342
+          },
+          "15": {
+            "hits": 15619,
+            "misses": 765,
+            "coll_pass": 647,
+            "coll_intra": 292
+          }
+        }
+      },
+      "SB": {
+        "hit_rate": 0.11115,
+        "miss_rate": 0.88885,
+        "collision_rate_intra": 0.85992,
+        "collision_rate_pass": 0.86005,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 1835,
+            "misses": 14549,
+            "coll_pass": 14040,
+            "coll_intra": 14040
+          },
+          "1": {
+            "hits": 824,
+            "misses": 15560,
+            "coll_pass": 15048,
+            "coll_intra": 15048
+          },
+          "2": {
+            "hits": 790,
+            "misses": 15594,
+            "coll_pass": 15084,
+            "coll_intra": 15084
+          },
+          "3": {
+            "hits": 890,
+            "misses": 15494,
+            "coll_pass": 14985,
+            "coll_intra": 14985
+          },
+          "4": {
+            "hits": 815,
+            "misses": 15569,
+            "coll_pass": 15080,
+            "coll_intra": 15080
+          },
+          "5": {
+            "hits": 721,
+            "misses": 15663,
+            "coll_pass": 15171,
+            "coll_intra": 15171
+          },
+          "6": {
+            "hits": 900,
+            "misses": 15484,
+            "coll_pass": 15020,
+            "coll_intra": 15020
+          },
+          "7": {
+            "hits": 748,
+            "misses": 15636,
+            "coll_pass": 15161,
+            "coll_intra": 15161
+          },
+          "8": {
+            "hits": 959,
+            "misses": 15425,
+            "coll_pass": 14947,
+            "coll_intra": 14947
+          },
+          "9": {
+            "hits": 1752,
+            "misses": 14632,
+            "coll_pass": 14150,
+            "coll_intra": 14150
+          },
+          "10": {
+            "hits": 1874,
+            "misses": 14510,
+            "coll_pass": 14032,
+            "coll_intra": 14031
+          },
+          "11": {
+            "hits": 1571,
+            "misses": 14813,
+            "coll_pass": 14345,
+            "coll_intra": 14345
+          },
+          "12": {
+            "hits": 3310,
+            "misses": 13074,
+            "coll_pass": 12636,
+            "coll_intra": 12635
+          },
+          "13": {
+            "hits": 4270,
+            "misses": 12114,
+            "coll_pass": 11672,
+            "coll_intra": 11671
+          },
+          "14": {
+            "hits": 4535,
+            "misses": 11849,
+            "coll_pass": 11439,
+            "coll_intra": 11437
+          },
+          "15": {
+            "hits": 3343,
+            "misses": 13041,
+            "coll_pass": 12648,
+            "coll_intra": 12617
+          }
+        }
+      },
+      "LS": {
+        "hit_rate": 0.90456,
+        "miss_rate": 0.09544,
+        "collision_rate_intra": 0.06528,
+        "collision_rate_pass": 0.06662,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 14072,
+            "misses": 2312,
+            "coll_pass": 1801,
+            "coll_intra": 1801
+          },
+          "1": {
+            "hits": 13818,
+            "misses": 2566,
+            "coll_pass": 2054,
+            "coll_intra": 2054
+          },
+          "2": {
+            "hits": 14540,
+            "misses": 1844,
+            "coll_pass": 1334,
+            "coll_intra": 1334
+          },
+          "3": {
+            "hits": 14597,
+            "misses": 1787,
+            "coll_pass": 1278,
+            "coll_intra": 1278
+          },
+          "4": {
+            "hits": 15166,
+            "misses": 1218,
+            "coll_pass": 723,
+            "coll_intra": 723
+          },
+          "5": {
+            "hits": 15288,
+            "misses": 1096,
+            "coll_pass": 604,
+            "coll_intra": 604
+          },
+          "6": {
+            "hits": 15494,
+            "misses": 890,
+            "coll_pass": 421,
+            "coll_intra": 421
+          },
+          "7": {
+            "hits": 15448,
+            "misses": 936,
+            "coll_pass": 461,
+            "coll_intra": 461
+          },
+          "8": {
+            "hits": 15184,
+            "misses": 1200,
+            "coll_pass": 715,
+            "coll_intra": 715
+          },
+          "9": {
+            "hits": 14639,
+            "misses": 1745,
+            "coll_pass": 1248,
+            "coll_intra": 1248
+          },
+          "10": {
+            "hits": 14106,
+            "misses": 2278,
+            "coll_pass": 1776,
+            "coll_intra": 1776
+          },
+          "11": {
+            "hits": 14832,
+            "misses": 1552,
+            "coll_pass": 1056,
+            "coll_intra": 1056
+          },
+          "12": {
+            "hits": 14615,
+            "misses": 1769,
+            "coll_pass": 1265,
+            "coll_intra": 1265
+          },
+          "13": {
+            "hits": 14917,
+            "misses": 1467,
+            "coll_pass": 970,
+            "coll_intra": 970
+          },
+          "14": {
+            "hits": 15161,
+            "misses": 1223,
+            "coll_pass": 744,
+            "coll_intra": 744
+          },
+          "15": {
+            "hits": 15249,
+            "misses": 1135,
+            "coll_pass": 1013,
+            "coll_intra": 662
+          }
+        }
+      }
+    },
+    "256": {
+      "LRU": {
+        "hit_rate": 0.96984,
+        "miss_rate": 0.03016,
+        "collision_rate_intra": 0.0,
+        "collision_rate_pass": 0.00672,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 15873,
+            "misses": 511,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 15872,
+            "misses": 512,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 15874,
+            "misses": 510,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 15875,
+            "misses": 509,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 15889,
+            "misses": 495,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 15892,
+            "misses": 492,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 15915,
+            "misses": 469,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 15909,
+            "misses": 475,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 15899,
+            "misses": 485,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 15887,
+            "misses": 497,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 15882,
+            "misses": 502,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 15888,
+            "misses": 496,
+            "coll_pass": 86,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 15880,
+            "misses": 504,
+            "coll_pass": 437,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 15887,
+            "misses": 497,
+            "coll_pass": 429,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 15905,
+            "misses": 479,
+            "coll_pass": 410,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 15911,
+            "misses": 473,
+            "coll_pass": 400,
+            "coll_intra": 0
+          }
+        }
+      },
+      "LFU": {
+        "hit_rate": 0.49958,
+        "miss_rate": 0.50042,
+        "collision_rate_intra": 0.47525,
+        "collision_rate_pass": 0.47709,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 8819,
+            "misses": 7565,
+            "coll_pass": 7137,
+            "coll_intra": 7137
+          },
+          "1": {
+            "hits": 9053,
+            "misses": 7331,
+            "coll_pass": 6923,
+            "coll_intra": 6916
+          },
+          "2": {
+            "hits": 10866,
+            "misses": 5518,
+            "coll_pass": 5146,
+            "coll_intra": 5131
+          },
+          "3": {
+            "hits": 10501,
+            "misses": 5883,
+            "coll_pass": 5507,
+            "coll_intra": 5488
+          },
+          "4": {
+            "hits": 9530,
+            "misses": 6854,
+            "coll_pass": 6461,
+            "coll_intra": 6447
+          },
+          "5": {
+            "hits": 9831,
+            "misses": 6553,
+            "coll_pass": 6183,
+            "coll_intra": 6163
+          },
+          "6": {
+            "hits": 9400,
+            "misses": 6984,
+            "coll_pass": 6653,
+            "coll_intra": 6628
+          },
+          "7": {
+            "hits": 9564,
+            "misses": 6820,
+            "coll_pass": 6483,
+            "coll_intra": 6446
+          },
+          "8": {
+            "hits": 7320,
+            "misses": 9064,
+            "coll_pass": 8676,
+            "coll_intra": 8641
+          },
+          "9": {
+            "hits": 6241,
+            "misses": 10143,
+            "coll_pass": 9746,
+            "coll_intra": 9704
+          },
+          "10": {
+            "hits": 5405,
+            "misses": 10979,
+            "coll_pass": 10582,
+            "coll_intra": 10528
+          },
+          "11": {
+            "hits": 6937,
+            "misses": 9447,
+            "coll_pass": 9057,
+            "coll_intra": 9018
+          },
+          "12": {
+            "hits": 6198,
+            "misses": 10186,
+            "coll_pass": 9772,
+            "coll_intra": 9738
+          },
+          "13": {
+            "hits": 7255,
+            "misses": 9129,
+            "coll_pass": 8733,
+            "coll_intra": 8697
+          },
+          "14": {
+            "hits": 7046,
+            "misses": 9338,
+            "coll_pass": 8972,
+            "coll_intra": 8922
+          },
+          "15": {
+            "hits": 6996,
+            "misses": 9388,
+            "coll_pass": 9036,
+            "coll_intra": 8981
+          }
+        }
+      },
+      "FIFO": {
+        "hit_rate": 0.96984,
+        "miss_rate": 0.03016,
+        "collision_rate_intra": 0.0,
+        "collision_rate_pass": 0.0067,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 15873,
+            "misses": 511,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 15872,
+            "misses": 512,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 15874,
+            "misses": 510,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 15875,
+            "misses": 509,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 15889,
+            "misses": 495,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 15892,
+            "misses": 492,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 15915,
+            "misses": 469,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 15909,
+            "misses": 475,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 15899,
+            "misses": 485,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 15887,
+            "misses": 497,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 15882,
+            "misses": 502,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 15888,
+            "misses": 496,
+            "coll_pass": 80,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 15880,
+            "misses": 504,
+            "coll_pass": 437,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 15887,
+            "misses": 497,
+            "coll_pass": 429,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 15905,
+            "misses": 479,
+            "coll_pass": 410,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 15911,
+            "misses": 473,
+            "coll_pass": 400,
+            "coll_intra": 0
+          }
+        }
+      },
+      "FLD": {
+        "hit_rate": 0.96984,
+        "miss_rate": 0.03016,
+        "collision_rate_intra": 0.0,
+        "collision_rate_pass": 0.00672,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 15873,
+            "misses": 511,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 15872,
+            "misses": 512,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 15874,
+            "misses": 510,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 15875,
+            "misses": 509,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 15889,
+            "misses": 495,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 15892,
+            "misses": 492,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 15915,
+            "misses": 469,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 15909,
+            "misses": 475,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 15899,
+            "misses": 485,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 15887,
+            "misses": 497,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 15882,
+            "misses": 502,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 15888,
+            "misses": 496,
+            "coll_pass": 86,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 15880,
+            "misses": 504,
+            "coll_pass": 437,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 15887,
+            "misses": 497,
+            "coll_pass": 429,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 15905,
+            "misses": 479,
+            "coll_pass": 410,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 15911,
+            "misses": 473,
+            "coll_pass": 400,
+            "coll_intra": 0
+          }
+        }
+      },
+      "SB": {
+        "hit_rate": 0.40636,
+        "miss_rate": 0.59364,
+        "collision_rate_intra": 0.56998,
+        "collision_rate_pass": 0.5703,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 4952,
+            "misses": 11432,
+            "coll_pass": 10993,
+            "coll_intra": 10976
+          },
+          "1": {
+            "hits": 2223,
+            "misses": 14161,
+            "coll_pass": 13655,
+            "coll_intra": 13654
+          },
+          "2": {
+            "hits": 2528,
+            "misses": 13856,
+            "coll_pass": 13364,
+            "coll_intra": 13363
+          },
+          "3": {
+            "hits": 2430,
+            "misses": 13954,
+            "coll_pass": 13456,
+            "coll_intra": 13455
+          },
+          "4": {
+            "hits": 2435,
+            "misses": 13949,
+            "coll_pass": 13464,
+            "coll_intra": 13464
+          },
+          "5": {
+            "hits": 2406,
+            "misses": 13978,
+            "coll_pass": 13489,
+            "coll_intra": 13489
+          },
+          "6": {
+            "hits": 3264,
+            "misses": 13120,
+            "coll_pass": 12676,
+            "coll_intra": 12676
+          },
+          "7": {
+            "hits": 4382,
+            "misses": 12002,
+            "coll_pass": 11559,
+            "coll_intra": 11559
+          },
+          "8": {
+            "hits": 5385,
+            "misses": 10999,
+            "coll_pass": 10568,
+            "coll_intra": 10565
+          },
+          "9": {
+            "hits": 7715,
+            "misses": 8669,
+            "coll_pass": 8280,
+            "coll_intra": 8273
+          },
+          "10": {
+            "hits": 8818,
+            "misses": 7566,
+            "coll_pass": 7266,
+            "coll_intra": 7266
+          },
+          "11": {
+            "hits": 10559,
+            "misses": 5825,
+            "coll_pass": 5541,
+            "coll_intra": 5537
+          },
+          "12": {
+            "hits": 12821,
+            "misses": 3563,
+            "coll_pass": 3333,
+            "coll_intra": 3325
+          },
+          "13": {
+            "hits": 12127,
+            "misses": 4257,
+            "coll_pass": 4000,
+            "coll_intra": 3992
+          },
+          "14": {
+            "hits": 11865,
+            "misses": 4519,
+            "coll_pass": 4269,
+            "coll_intra": 4260
+          },
+          "15": {
+            "hits": 12614,
+            "misses": 3770,
+            "coll_pass": 3589,
+            "coll_intra": 3562
+          }
+        }
+      },
+      "LS": {
+        "hit_rate": 0.96984,
+        "miss_rate": 0.03016,
+        "collision_rate_intra": 0.0,
+        "collision_rate_pass": 0.0067,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 15873,
+            "misses": 511,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 15872,
+            "misses": 512,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 15874,
+            "misses": 510,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 15875,
+            "misses": 509,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 15889,
+            "misses": 495,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 15892,
+            "misses": 492,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 15915,
+            "misses": 469,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 15909,
+            "misses": 475,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 15899,
+            "misses": 485,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 15887,
+            "misses": 497,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 15882,
+            "misses": 502,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 15888,
+            "misses": 496,
+            "coll_pass": 80,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 15880,
+            "misses": 504,
+            "coll_pass": 437,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 15887,
+            "misses": 497,
+            "coll_pass": 429,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 15905,
+            "misses": 479,
+            "coll_pass": 410,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 15911,
+            "misses": 473,
+            "coll_pass": 400,
+            "coll_intra": 0
+          }
+        }
+      }
+    }
+  },
+  "decode_style_global": {
+    "10": {
+      "LRU": {
+        "hit_rate": 0.0,
+        "miss_rate": 1.0,
+        "collision_rate_pass": 0.02884,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 1372,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6188,
+            "coll_intra": 0
+          }
+        }
+      },
+      "LFU": {
+        "hit_rate": 0.05014,
+        "miss_rate": 0.94986,
+        "collision_rate_pass": 0.00314,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 20,
+            "misses": 16364,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 450,
+            "misses": 15934,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 28,
+            "misses": 16356,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 1,
+            "misses": 16383,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 1721,
+            "misses": 14663,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 675,
+            "misses": 15709,
+            "coll_pass": 39,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 6,
+            "misses": 16378,
+            "coll_pass": 7,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 1148,
+            "misses": 15236,
+            "coll_pass": 5,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 1099,
+            "misses": 15285,
+            "coll_pass": 21,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 1543,
+            "misses": 14841,
+            "coll_pass": 5,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 1385,
+            "misses": 14999,
+            "coll_pass": 15,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 2403,
+            "misses": 13981,
+            "coll_pass": 73,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 2550,
+            "misses": 13834,
+            "coll_pass": 38,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 116,
+            "misses": 16268,
+            "coll_pass": 615,
+            "coll_intra": 0
+          }
+        }
+      },
+      "FIFO": {
+        "hit_rate": 0.0,
+        "miss_rate": 1.0,
+        "collision_rate_pass": 0.02884,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 1372,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6188,
+            "coll_intra": 0
+          }
+        }
+      },
+      "FLD": {
+        "hit_rate": 0.0,
+        "miss_rate": 1.0,
+        "collision_rate_pass": 0.02884,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 1372,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6188,
+            "coll_intra": 0
+          }
+        }
+      },
+      "SB": {
+        "hit_rate": 0.00688,
+        "miss_rate": 0.99312,
+        "collision_rate_pass": 0.00227,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 1,
+            "misses": 16383,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 5,
+            "misses": 16379,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 1,
+            "misses": 16383,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 3,
+            "misses": 16381,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 40,
+            "misses": 16344,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 2,
+            "misses": 16382,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 116,
+            "misses": 16268,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 208,
+            "misses": 16176,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 173,
+            "misses": 16211,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 164,
+            "misses": 16220,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 826,
+            "misses": 15558,
+            "coll_pass": 8,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 264,
+            "misses": 16120,
+            "coll_pass": 586,
+            "coll_intra": 0
+          }
+        }
+      },
+      "LS": {
+        "hit_rate": 0.0,
+        "miss_rate": 1.0,
+        "collision_rate_pass": 0.02884,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 1372,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6188,
+            "coll_intra": 0
+          }
+        }
+      }
+    },
+    "51": {
+      "LRU": {
+        "hit_rate": 0.0,
+        "miss_rate": 1.0,
+        "collision_rate_pass": 0.14893,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 1684,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 4939,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6560,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6277,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6754,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6638,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6188,
+            "coll_intra": 0
+          }
+        }
+      },
+      "LFU": {
+        "hit_rate": 0.17641,
+        "miss_rate": 0.82359,
+        "collision_rate_pass": 0.00279,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 3024,
+            "misses": 13360,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 2081,
+            "misses": 14303,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 1440,
+            "misses": 14944,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 2059,
+            "misses": 14325,
+            "coll_pass": 11,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 4279,
+            "misses": 12105,
+            "coll_pass": 5,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 3413,
+            "misses": 12971,
+            "coll_pass": 3,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 2608,
+            "misses": 13776,
+            "coll_pass": 13,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 2869,
+            "misses": 13515,
+            "coll_pass": 25,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 3310,
+            "misses": 13074,
+            "coll_pass": 17,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 2189,
+            "misses": 14195,
+            "coll_pass": 22,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 1620,
+            "misses": 14764,
+            "coll_pass": 15,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 3041,
+            "misses": 13343,
+            "coll_pass": 31,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 3595,
+            "misses": 12789,
+            "coll_pass": 20,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 3735,
+            "misses": 12649,
+            "coll_pass": 22,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 3188,
+            "misses": 13196,
+            "coll_pass": 24,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 3795,
+            "misses": 12589,
+            "coll_pass": 521,
+            "coll_intra": 0
+          }
+        }
+      },
+      "FIFO": {
+        "hit_rate": 0.0,
+        "miss_rate": 1.0,
+        "collision_rate_pass": 0.14893,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 1684,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 4939,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6560,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6277,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6754,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6638,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6188,
+            "coll_intra": 0
+          }
+        }
+      },
+      "FLD": {
+        "hit_rate": 0.00642,
+        "miss_rate": 0.99358,
+        "collision_rate_pass": 0.1425,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 1684,
+            "misses": 14700,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 4939,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6560,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6277,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6754,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6638,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6188,
+            "coll_intra": 0
+          }
+        }
+      },
+      "SB": {
+        "hit_rate": 0.06097,
+        "miss_rate": 0.93903,
+        "collision_rate_pass": 0.00247,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 99,
+            "misses": 16285,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 14,
+            "misses": 16370,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 23,
+            "misses": 16361,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 42,
+            "misses": 16342,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 232,
+            "misses": 16152,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 3,
+            "misses": 16381,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 114,
+            "misses": 16270,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 5,
+            "misses": 16379,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 142,
+            "misses": 16242,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 629,
+            "misses": 15755,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 1028,
+            "misses": 15356,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 801,
+            "misses": 15583,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 2367,
+            "misses": 14017,
+            "coll_pass": 3,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 3580,
+            "misses": 12804,
+            "coll_pass": 3,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 4131,
+            "misses": 12253,
+            "coll_pass": 6,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 2773,
+            "misses": 13611,
+            "coll_pass": 624,
+            "coll_intra": 0
+          }
+        }
+      },
+      "LS": {
+        "hit_rate": 0.0,
+        "miss_rate": 1.0,
+        "collision_rate_pass": 0.14893,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 1684,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 4939,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6560,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6277,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6754,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6638,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 0,
+            "misses": 16384,
+            "coll_pass": 6188,
+            "coll_intra": 0
+          }
+        }
+      }
+    },
+    "256": {
+      "LRU": {
+        "hit_rate": 0.51044,
+        "miss_rate": 0.48956,
+        "collision_rate_pass": 0.03879,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 6884,
+            "misses": 9500,
+            "coll_pass": 45,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 7070,
+            "misses": 9314,
+            "coll_pass": 108,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 8288,
+            "misses": 8096,
+            "coll_pass": 185,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 7984,
+            "misses": 8400,
+            "coll_pass": 312,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 9701,
+            "misses": 6683,
+            "coll_pass": 276,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 9570,
+            "misses": 6814,
+            "coll_pass": 371,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 9319,
+            "misses": 7065,
+            "coll_pass": 499,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 9296,
+            "misses": 7088,
+            "coll_pass": 523,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 8803,
+            "misses": 7581,
+            "coll_pass": 630,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 7633,
+            "misses": 8751,
+            "coll_pass": 839,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 6872,
+            "misses": 9512,
+            "coll_pass": 1000,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 8302,
+            "misses": 8082,
+            "coll_pass": 906,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 8191,
+            "misses": 8193,
+            "coll_pass": 1040,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 8747,
+            "misses": 7637,
+            "coll_pass": 1019,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 8626,
+            "misses": 7758,
+            "coll_pass": 1119,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 8523,
+            "misses": 7861,
+            "coll_pass": 1296,
+            "coll_intra": 0
+          }
+        }
+      },
+      "LFU": {
+        "hit_rate": 0.48936,
+        "miss_rate": 0.51064,
+        "collision_rate_pass": 0.00275,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 6458,
+            "misses": 9926,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 6942,
+            "misses": 9442,
+            "coll_pass": 6,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 9000,
+            "misses": 7384,
+            "coll_pass": 9,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 8378,
+            "misses": 8006,
+            "coll_pass": 12,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 8486,
+            "misses": 7898,
+            "coll_pass": 12,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 9029,
+            "misses": 7355,
+            "coll_pass": 7,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 9212,
+            "misses": 7172,
+            "coll_pass": 14,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 9736,
+            "misses": 6648,
+            "coll_pass": 9,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 7537,
+            "misses": 8847,
+            "coll_pass": 21,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 6917,
+            "misses": 9467,
+            "coll_pass": 30,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 6459,
+            "misses": 9925,
+            "coll_pass": 35,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 7900,
+            "misses": 8484,
+            "coll_pass": 23,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 7071,
+            "misses": 9313,
+            "coll_pass": 30,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 8299,
+            "misses": 8085,
+            "coll_pass": 28,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 8355,
+            "misses": 8029,
+            "coll_pass": 34,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 8503,
+            "misses": 7881,
+            "coll_pass": 450,
+            "coll_intra": 0
+          }
+        }
+      },
+      "FIFO": {
+        "hit_rate": 0.46148,
+        "miss_rate": 0.53852,
+        "collision_rate_pass": 0.05742,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 6381,
+            "misses": 10003,
+            "coll_pass": 34,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 6595,
+            "misses": 9789,
+            "coll_pass": 158,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 7490,
+            "misses": 8894,
+            "coll_pass": 272,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 7356,
+            "misses": 9028,
+            "coll_pass": 384,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 8503,
+            "misses": 7881,
+            "coll_pass": 527,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 8401,
+            "misses": 7983,
+            "coll_pass": 738,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 8292,
+            "misses": 8092,
+            "coll_pass": 812,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 8296,
+            "misses": 8088,
+            "coll_pass": 911,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 7946,
+            "misses": 8438,
+            "coll_pass": 980,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 7168,
+            "misses": 9216,
+            "coll_pass": 993,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 6633,
+            "misses": 9751,
+            "coll_pass": 1054,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 7518,
+            "misses": 8866,
+            "coll_pass": 1330,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 7372,
+            "misses": 9012,
+            "coll_pass": 1524,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 7704,
+            "misses": 8680,
+            "coll_pass": 1679,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 7698,
+            "misses": 8686,
+            "coll_pass": 1780,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 7621,
+            "misses": 8763,
+            "coll_pass": 1877,
+            "coll_intra": 0
+          }
+        }
+      },
+      "FLD": {
+        "hit_rate": 0.23362,
+        "miss_rate": 0.76638,
+        "collision_rate_pass": 0.1418,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 10,
+            "misses": 16374,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 13,
+            "misses": 16371,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 18,
+            "misses": 16366,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 26,
+            "misses": 16358,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 41,
+            "misses": 16343,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 229,
+            "misses": 16155,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 11567,
+            "misses": 4817,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 16320,
+            "misses": 64,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 16320,
+            "misses": 64,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 16320,
+            "misses": 64,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 258,
+            "misses": 16126,
+            "coll_pass": 4836,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 52,
+            "misses": 16332,
+            "coll_pass": 6521,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 30,
+            "misses": 16354,
+            "coll_pass": 6262,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 18,
+            "misses": 16366,
+            "coll_pass": 6739,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 12,
+            "misses": 16372,
+            "coll_pass": 6630,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 7,
+            "misses": 16377,
+            "coll_pass": 6185,
+            "coll_intra": 0
+          }
+        }
+      },
+      "SB": {
+        "hit_rate": 0.31985,
+        "miss_rate": 0.68015,
+        "collision_rate_pass": 0.00257,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 3054,
+            "misses": 13330,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 273,
+            "misses": 16111,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 560,
+            "misses": 15824,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 442,
+            "misses": 15942,
+            "coll_pass": 4,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 676,
+            "misses": 15708,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 374,
+            "misses": 16010,
+            "coll_pass": 9,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 1796,
+            "misses": 14588,
+            "coll_pass": 3,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 2809,
+            "misses": 13575,
+            "coll_pass": 5,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 3476,
+            "misses": 12908,
+            "coll_pass": 6,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 6433,
+            "misses": 9951,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 7781,
+            "misses": 8603,
+            "coll_pass": 9,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 9507,
+            "misses": 6877,
+            "coll_pass": 18,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 11944,
+            "misses": 4440,
+            "coll_pass": 11,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 11476,
+            "misses": 4908,
+            "coll_pass": 16,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 11168,
+            "misses": 5216,
+            "coll_pass": 107,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 12078,
+            "misses": 4306,
+            "coll_pass": 481,
+            "coll_intra": 0
+          }
+        }
+      },
+      "LS": {
+        "hit_rate": 0.53864,
+        "miss_rate": 0.46136,
+        "collision_rate_pass": 0.00671,
+        "collision_rate_intra": 0.0,
+        "cold_misses": 1020,
+        "layer_stats": {
+          "0": {
+            "hits": 4692,
+            "misses": 11692,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "1": {
+            "hits": 5705,
+            "misses": 10679,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "2": {
+            "hits": 7434,
+            "misses": 8950,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "3": {
+            "hits": 7678,
+            "misses": 8706,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "4": {
+            "hits": 9722,
+            "misses": 6662,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "5": {
+            "hits": 9742,
+            "misses": 6642,
+            "coll_pass": 1,
+            "coll_intra": 0
+          },
+          "6": {
+            "hits": 9731,
+            "misses": 6653,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "7": {
+            "hits": 9829,
+            "misses": 6555,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "8": {
+            "hits": 9529,
+            "misses": 6855,
+            "coll_pass": 0,
+            "coll_intra": 0
+          },
+          "9": {
+            "hits": 8758,
+            "misses": 7626,
+            "coll_pass": 2,
+            "coll_intra": 0
+          },
+          "10": {
+            "hits": 8409,
+            "misses": 7975,
+            "coll_pass": 4,
+            "coll_intra": 0
+          },
+          "11": {
+            "hits": 9794,
+            "misses": 6590,
+            "coll_pass": 21,
+            "coll_intra": 0
+          },
+          "12": {
+            "hits": 9904,
+            "misses": 6480,
+            "coll_pass": 46,
+            "coll_intra": 0
+          },
+          "13": {
+            "hits": 10423,
+            "misses": 5961,
+            "coll_pass": 183,
+            "coll_intra": 0
+          },
+          "14": {
+            "hits": 10169,
+            "misses": 6215,
+            "coll_pass": 514,
+            "coll_intra": 0
+          },
+          "15": {
+            "hits": 9681,
+            "misses": 6703,
+            "coll_pass": 987,
+            "coll_intra": 0
+          }
+        }
+      }
+    }
+  },
+  "decode_style_per_layer": {
+    "10": {
+      "LRU_seq": 0.00177,
+      "LRU_hits_first": 0.02076,
+      "LFU_seq": 0.00177,
+      "LFU_hits_first": 0.02076,
+      "FIFO_seq": 0.00177,
+      "FIFO_hits_first": 0.02076
+    },
+    "51": {
+      "LRU_seq": 0.02299,
+      "LRU_hits_first": 0.12241,
+      "LFU_seq": 0.14037,
+      "LFU_hits_first": 0.16833,
+      "FIFO_seq": 0.02376,
+      "FIFO_hits_first": 0.12241
+    },
+    "256": {
+      "LRU_seq": 0.51383,
+      "LRU_hits_first": 0.54263,
+      "LFU_seq": 0.47562,
+      "LFU_hits_first": 0.49866,
+      "FIFO_seq": 0.47416,
+      "FIFO_hits_first": 0.50566
+    }
+  }
+}

@@ -1,0 +1,37 @@
+=== 1. Download allenai/OLMoE-1B-7B-0924 files (idempotent, size-checked, no images) ===
+  [OK cached] .gitattributes (2140 bytes)
+  [OK cached] README.md (7270 bytes)
+  [OK cached] config.json (759 bytes)
+  [OK cached] generation_config.json (120 bytes)
+  [OK cached] model-00001-of-00003.safetensors (4997744872 bytes)
+  [OK cached] model-00002-of-00003.safetensors (4997235176 bytes)
+  [OK cached] model-00003-of-00003.safetensors (3843741912 bytes)
+  [OK cached] model.safetensors.index.json (287214 bytes)
+  [OK cached] special_tokens_map.json (65 bytes)
+  [OK cached] tokenizer.json (2115417 bytes)
+  [OK cached] tokenizer_config.json (5372 bytes)
+All files already present and size-verified.
+
+=== 2. Disk usage check ===
+13G	/root/dm-study/specmd/w2/model
+24M	/root/dm-study/specmd
+
+=== 3. Load OLMoE-1B-7B-0924 in bf16 on CPU, inspect architecture, generate text ===
+Config summary: {'architectures': ['OlmoeForCausalLM'], 'num_hidden_layers': 16, 'num_experts': 64, 'num_experts_per_tok': 8, 'hidden_size': 2048, 'intermediate_size': 1024, 'vocab_size': 50304, 'norm_topk_prob': False}
+Loading weights:   0%|          | 0/179 [00:00<?, ?it/s]Loading weights:   2%|▏         | 4/179 [00:00<00:17, 10.11it/s]Loading weights:   3%|▎         | 6/179 [00:00<00:28,  6.04it/s]Loading weights:   9%|▉         | 16/179 [00:01<00:08, 19.36it/s]Loading weights:  15%|█▌        | 27/179 [00:01<00:04, 33.09it/s]Loading weights:  21%|██        | 38/179 [00:01<00:03, 44.87it/s]Loading weights:  27%|██▋       | 49/179 [00:01<00:02, 54.50it/s]Loading weights:  34%|███▎      | 60/179 [00:01<00:01, 62.00it/s]Loading weights:  40%|███▉      | 71/179 [00:01<00:01, 67.69it/s]Loading weights:  46%|████▌     | 82/179 [00:01<00:01, 71.96it/s]Loading weights:  52%|█████▏    | 93/179 [00:01<00:01, 75.00it/s]Loading weights:  58%|█████▊    | 104/179 [00:02<00:00, 77.05it/s]Loading weights:  64%|██████▍   | 115/179 [00:02<00:00, 78.28it/s]Loading weights:  70%|███████   | 126/179 [00:02<00:00, 79.33it/s]Loading weights:  77%|███████▋  | 137/179 [00:02<00:00, 80.16it/s]Loading weights:  83%|████████▎ | 148/179 [00:02<00:00, 80.94it/s]Loading weights:  89%|████████▉ | 159/179 [00:02<00:00, 81.59it/s]Loading weights:  95%|█████████▍| 170/179 [00:02<00:00, 82.01it/s]Loading weights: 100%|██████████| 179/179 [00:02<00:00, 61.48it/s]
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer GPTNeoXTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+Loaded model in 3.22s | Memory: {'VmPeak': '27732124 kB', 'VmSize': '27207764 kB', 'VmHWM': '26071048 kB', 'VmRSS': '25549992 kB'}
+Total params: 6,919,161,856 (13.838 GB decimal, 12.888 GiB)
+Expert params: 6,442,450,944 (12.885 GB decimal, 12.000 GiB)
+Non-expert params: 476,710,912 (0.953 GB decimal, 0.888 GiB)
+Single expert params: 6,291,456 | bytes (bf16): 12,582,912 (12.00 MiB, 12.58 MB)
+Experts module type: <class 'transformers.models.olmoe.modeling_olmoe.OlmoeExperts'>
+  experts.gate_up_proj: shape=(64, 2048, 2048), dtype=torch.bfloat16
+  experts.down_proj: shape=(64, 2048, 1024), dtype=torch.bfloat16
+Gate layer[0]: <class 'transformers.models.olmoe.modeling_olmoe.OlmoeTopKRouter'>, params=[('weight', (64, 2048), torch.bfloat16)]
+
+Prompt 1 (2.64s, 9.10 tok/s): 'Mixture-of-Experts language models reduce computation per token by sharing parameters across a set of experts. The experts are typically trained on a large corpus of text, and the parameters of'
+
+Prompt 2 (2.73s, 8.80 tok/s): 'In computer architecture, a cache replacement policy determines which memory location to replace when the cache is full. The replacement policy is a key component of a cache, as it'
+Final memory: {'VmPeak': '27732124 kB', 'VmSize': '27255388 kB', 'VmHWM': '26310648 kB', 'VmRSS': '26310648 kB'}
+FINISHED rc=0

@@ -1,0 +1,423 @@
+=== 1. REPO PROVENANCE, LICENSE, DISK, AND FILE INVENTORY ===
+git_head: 46358a7a285ba5ac71882a9f68f1d09e56c7c024
+git_branch_status: ## main...origin/main 
+git_remote: origin	https://github.com/mmdnmz/Eyeriss.git (fetch)
+git_log_last3:
+46358a7 Update README.md
+c7c56db Update README.md
+e7b0237 Merge branch 'main' of https://github.com/mmdnmz/Eyeriss
+license_files: 
+No license line in README.md
+slice_disk_usage: 27M
+
+=== 2. FILE LIST WITH LINE COUNTS AND BYTE SIZES ===
+README.md                                41 lines     2010 bytes
+sim/PE_tb.sv                            361 lines    10312 bytes
+sim/wave.do                             161 lines    61863 bytes
+src/Array_of_PEs.sv                     108 lines     4199 bytes
+src/BufferController.v                   67 lines     1883 bytes
+src/buffer.v                             42 lines     1206 bytes
+src/clkgate.v                            12 lines      217 bytes
+src/counter.v                            42 lines     1093 bytes
+src/custom_counter.v                     39 lines      902 bytes
+src/demultiplier.v                      109 lines     3053 bytes
+src/dff.v                                20 lines      516 bytes
+src/Disabling_mech.v                     26 lines      661 bytes
+src/example.v                            14 lines      382 bytes
+src/FA.v                                 21 lines      357 bytes
+src/fifo_buffer.v                        94 lines     2885 bytes
+src/filter_counter.v                     41 lines      959 bytes
+src/iact_SPadController.v                98 lines     2654 bytes
+src/ifmap_counter_nbit.v                 38 lines      978 bytes
+src/ifmap_fifo.v                         94 lines     2884 bytes
+src/muffer.v                             42 lines     1207 bytes
+src/multiplier.v                        108 lines     3022 bytes
+src/mux2x1.v                             10 lines      221 bytes
+src/PARRAY.v                            176 lines     5983 bytes
+src/PE_Cluster_Ctrl.v                   121 lines     4556 bytes
+src/PE_Cluster.v                        275 lines    13002 bytes
+src/PE_Controller.v                      95 lines     2397 bytes
+src/PE.v                                621 lines    20393 bytes
+src/psum_addr_counter.v                  44 lines     1106 bytes
+src/psum_controller.v                    53 lines     1224 bytes
+src/psum_counter.v                        0 lines        0 bytes
+src/psum_write_addr_counter.v            36 lines      875 bytes
+src/Reg_SPad_ifmap.v                     33 lines     1041 bytes
+src/reg_SPad.v                           33 lines     1034 bytes
+src/SPadController.v                     69 lines     1739 bytes
+src/SRAM_SPad.v                          27 lines      855 bytes
+src/zero_buffer.v                        14 lines      375 bytes
+
+=== 3. INDIVIDUAL AND LIBRARY COMPILATION CHECK (IVERILOG 12.0) ===
+COMPILES_CLEAN: src/BufferController.v (top=BufferController)
+COMPILES_CLEAN: src/buffer.v (top=Buffer)
+COMPILES_CLEAN: src/clkgate.v (top=ClkGate)
+COMPILES_CLEAN: src/counter.v (top=Counter)
+COMPILES_CLEAN: src/custom_counter.v (top=Custom_counter)
+COMPILES_CLEAN: src/demultiplier.v (top=DEMultiplier)
+COMPILES_CLEAN: src/dff.v (top=DFF)
+COMPILES_CLEAN: src/Disabling_mech.v (top=Disabling_mech)
+COMPILES_CLEAN: src/example.v (top=example_module)
+COMPILES_CLEAN: src/FA.v (top=FA)
+COMPILES_CLEAN: src/fifo_buffer.v (top=Fifo_buffer)
+COMPILES_CLEAN: src/filter_counter.v (top=filter_counter)
+COMPILES_CLEAN: src/iact_SPadController.v (top=iact_SPadController)
+COMPILES_CLEAN: src/ifmap_counter_nbit.v (top=ifmap_counter_nbit)
+COMPILES_CLEAN: src/ifmap_fifo.v (top=Ifmap_fifo)
+COMPILES_CLEAN: src/muffer.v (top=Muffer)
+COMPILES_CLEAN: src/multiplier.v (top=Multiplier)
+COMPILES_CLEAN: src/mux2x1.v (top=Mux2x1)
+COMPILES_WITH_WARN: src/PARRAY.v (top=PEGRID, 99 warnings, unique below)
+  WARN: src/PARRAY.v:146:        : Padding 48 high bits of the port.
+  WARN: src/PARRAY.v:146:        : Pruning (signed) 24 high bits of the expression.
+  WARN: src/PARRAY.v:146: warning: Port 11 (filter_size) of PE expects 8 bits, got 32.
+  WARN: src/PARRAY.v:146: warning: Port 12 (stride) of PE expects 8 bits, got 32.
+  WARN: src/PARRAY.v:146: warning: Port 9 (data_weight_in) of PE expects 64 bits, got 16.
+  WARN: src/PE.v:139:        : Padding 48 high bits of the port.
+  WARN: src/PE.v:139: warning: Port 6 (write_data) of Fifo_buffer expects 64 bits, got 16.
+  WARN: src/PE.v:221:        : Pruning (signed) 31 high bits of the expression.
+  WARN: src/PE.v:221: warning: Port 3 (en) of Reg_SPad_ifmap expects 1 bits, got 32.
+  WARN: src/PE.v:250:        : Pruning (signed) 24 high bits of the expression.
+  WARN: src/PE.v:250: warning: Port 5 (step) of Custom_counter expects 8 bits, got 32.
+  WARN: src/PE.v:389:        : Padding 1 high bits of the port.
+  WARN: src/PE.v:389: warning: Port 5 (sum) of FA expects 17 bits, got 16.
+  WARN: src/PE.v:450:        : Pruning 27 high bits of the expression.
+  WARN: src/PE.v:450: warning: Port 6 (max_count) of Custom_counter expects 5 bits, got 32.
+  WARN: src/PE.v:469:        : Pruning (signed) 31 high bits of the expression.
+  WARN: src/PE.v:469: warning: Port 3 (en) of Reg_SPad expects 1 bits, got 32.
+  WARN: src/PE.v:499:        : Pruning (signed) 16 high bits of the expression.
+  WARN: src/PE.v:499: warning: Port 1 (data_in_a) of Mux2x1 expects 16 bits, got 32.
+  WARN: src/PE.v:526:        : Padding 48 high bits of the port.
+  WARN: src/PE.v:526: warning: Port 7 (read_data) of Fifo_buffer expects 64 bits, got 16.
+FAILS_COMPILE: src/PE_Cluster_Ctrl.v (rc=1)
+  ERR: src/PE_Cluster_Ctrl.v:2: Include file hw_config.vh not found
+  ERR: error: Unable to find the root module "PE_Cluster_Ctrl" in the Verilog source.
+  ERR:      : Perhaps ``-s PE_Cluster_Ctrl'' is incorrect?
+  ERR: 1 error(s) during elaboration.
+FAILS_COMPILE: src/PE_Cluster.v (rc=1)
+  ERR: src/PE_Cluster.v:2: Include file hw_config.vh not found
+  ERR: error: Unable to find the root module "PE_Cluster" in the Verilog source.
+  ERR:      : Perhaps ``-s PE_Cluster'' is incorrect?
+  ERR: 1 error(s) during elaboration.
+COMPILES_CLEAN: src/PE_Controller.v (top=PE_Controller)
+COMPILES_WITH_WARN: src/PE.v (top=PE, 8 warnings, unique below)
+  WARN: src/PE.v:139:        : Padding 48 high bits of the port.
+  WARN: src/PE.v:139: warning: Port 6 (write_data) of Fifo_buffer expects 64 bits, got 16.
+  WARN: src/PE.v:221:        : Pruning (signed) 31 high bits of the expression.
+  WARN: src/PE.v:221: warning: Port 3 (en) of Reg_SPad_ifmap expects 1 bits, got 32.
+  WARN: src/PE.v:250:        : Pruning (signed) 24 high bits of the expression.
+  WARN: src/PE.v:250: warning: Port 5 (step) of Custom_counter expects 8 bits, got 32.
+  WARN: src/PE.v:389:        : Padding 1 high bits of the port.
+  WARN: src/PE.v:389: warning: Port 5 (sum) of FA expects 17 bits, got 16.
+  WARN: src/PE.v:450:        : Pruning 27 high bits of the expression.
+  WARN: src/PE.v:450: warning: Port 6 (max_count) of Custom_counter expects 5 bits, got 32.
+  WARN: src/PE.v:469:        : Pruning (signed) 31 high bits of the expression.
+  WARN: src/PE.v:469: warning: Port 3 (en) of Reg_SPad expects 1 bits, got 32.
+  WARN: src/PE.v:499:        : Pruning (signed) 16 high bits of the expression.
+  WARN: src/PE.v:499: warning: Port 1 (data_in_a) of Mux2x1 expects 16 bits, got 32.
+  WARN: src/PE.v:526:        : Padding 48 high bits of the port.
+  WARN: src/PE.v:526: warning: Port 7 (read_data) of Fifo_buffer expects 64 bits, got 16.
+COMPILES_CLEAN: src/psum_addr_counter.v (top=psum_addr_counter)
+COMPILES_CLEAN: src/psum_controller.v (top=psum_controller)
+EMPTY_FILE: src/psum_counter.v (0 bytes, no module)
+COMPILES_CLEAN: src/psum_write_addr_counter.v (top=psum_writeaddr_counter)
+COMPILES_CLEAN: src/Reg_SPad_ifmap.v (top=Reg_SPad_ifmap)
+COMPILES_CLEAN: src/reg_SPad.v (top=Reg_SPad)
+COMPILES_CLEAN: src/SPadController.v (top=SPadController)
+COMPILES_CLEAN: src/SRAM_SPad.v (top=SRAM_SPad)
+COMPILES_CLEAN: src/zero_buffer.v (top=Zero_buffer)
+COMPILES_WITH_WARN: src/Array_of_PEs.sv (top=PE_Array, 304 warnings, unique below)
+  WARN: src/Array_of_PEs.sv:84:        : Padding 15 high bits of the port.
+  WARN: src/Array_of_PEs.sv:84:        : Padding 24 high bits of the port.
+  WARN: src/Array_of_PEs.sv:84:        : Padding 28 high bits of the port.
+  WARN: src/Array_of_PEs.sv:84:        : Pruning 1 high bits of the expression.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 11 (filter_size) of PE expects 32 bits, got 4.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 12 (stride) of PE expects 32 bits, got 4.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 13 (input_channels_num) of PE expects 32 bits, got 8.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 14 (output_channels_num) of PE expects 32 bits, got 8.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 15 (data_psum_out) of PE expects 16 bits, got 1.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 8 (data_iact_in) of PE expects 16 bits, got 17.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 9 (data_weight_in) of PE expects 16 bits, got 17.
+  WARN: src/PE.v:139:        : Padding 48 high bits of the port.
+  WARN: src/PE.v:139: warning: Port 6 (write_data) of Fifo_buffer expects 64 bits, got 16.
+  WARN: src/PE.v:221:        : Pruning (signed) 31 high bits of the expression.
+  WARN: src/PE.v:221: warning: Port 3 (en) of Reg_SPad_ifmap expects 1 bits, got 32.
+  WARN: src/PE.v:250:        : Pruning 24 high bits of the expression.
+  WARN: src/PE.v:250:        : Pruning (signed) 24 high bits of the expression.
+  WARN: src/PE.v:250: warning: Port 5 (step) of Custom_counter expects 8 bits, got 32.
+  WARN: src/PE.v:250: warning: Port 6 (max_count) of Custom_counter expects 8 bits, got 32.
+  WARN: src/PE.v:389:        : Padding 1 high bits of the port.
+  WARN: src/PE.v:389: warning: Port 5 (sum) of FA expects 17 bits, got 16.
+  WARN: src/PE.v:450:        : Padding 3 high bits of the port.
+  WARN: src/PE.v:450:        : Pruning 24 high bits of the expression.
+  WARN: src/PE.v:450: warning: Port 6 (max_count) of Custom_counter expects 8 bits, got 32.
+  WARN: src/PE.v:450: warning: Port 8 (count) of Custom_counter expects 8 bits, got 5.
+  WARN: src/PE.v:469:        : Padding 3 high bits of the port.
+  WARN: src/PE.v:469:        : Pruning (signed) 31 high bits of the expression.
+  WARN: src/PE.v:469: warning: Port 3 (en) of Reg_SPad expects 1 bits, got 32.
+  WARN: src/PE.v:469: warning: Port 5 (read_addr) of Reg_SPad expects 8 bits, got 5.
+  WARN: src/PE.v:469: warning: Port 6 (write_addr) of Reg_SPad expects 8 bits, got 5.
+  WARN: src/PE.v:499:        : Pruning (signed) 16 high bits of the expression.
+  WARN: src/PE.v:499: warning: Port 1 (data_in_a) of Mux2x1 expects 16 bits, got 32.
+  WARN: src/PE.v:526:        : Padding 48 high bits of the port.
+  WARN: src/PE.v:526: warning: Port 7 (read_data) of Fifo_buffer expects 64 bits, got 16.
+
+=== 3b. CASE-SENSITIVITY CHECK WITH iverilog -y src ===
+iverilog -y src src/fifo_buffer.v -> rc=2 (*** These modules were missing:         Buffer referenced 1 times. *** )
+iverilog -y src src/ifmap_fifo.v -> rc=2 (*** These modules were missing:         Muffer referenced 1 times. *** )
+iverilog -y src src/PE.v -> rc=20 (*** These modules were missing:         Counter referenced 4 times.         Custom_counter referenced 2 times.         DFF referenced 4 times.         Fifo_buffer referenced 3 times.         Ifmap_fifo referenced 1 times.         Multiplier referenced 1 times.         Mux2x1 referenced 2 times.         Reg_SPad referenced 1 times.         Zero_buffer referenced 1 times. *** )
+
+=== 4. VERILATOR LINT CHECK ON KEY MODULES ===
+%Warning-PINMISSING: src/PE.v:199:7: Cell has missing pin: 'at_max'
+%Warning-PINMISSING: src/PE.v:199:7: Cell has missing pin: 'prev_count'
+%Warning-PINMISSING: src/PE.v:210:7: Cell has missing pin: 'at_max'
+%Warning-PINMISSING: src/PE.v:210:7: Cell has missing pin: 'prev_count'
+%Warning-PINMISSING: src/PE.v:240:7: Cell has missing pin: 'at_max'
+%Warning-PINMISSING: src/PE.v:240:7: Cell has missing pin: 'prev_count'
+%Warning-PINMISSING: src/PE.v:250:7: Cell has missing pin: 'at_max'
+%Warning-PINMISSING: src/PE.v:320:20: Cell has missing pin: 'mult_dis'
+%Warning-PINMISSING: src/PE.v:320:20: Cell has missing pin: 'reg_iact_dis'
+%Warning-PINMISSING: src/PE.v:320:20: Cell has missing pin: 'reg_filter_dis'
+%Warning-PINMISSING: src/PE.v:403:7: Cell has missing pin: 'at_max'
+%Warning-PINMISSING: src/PE.v:403:7: Cell has missing pin: 'prev_count'
+%Warning-PINMISSING: src/PE.v:427:7: Cell has missing pin: 'at_max'
+%Warning-PINMISSING: src/PE.v:427:7: Cell has missing pin: 'prev_count'
+%Warning-PINMISSING: src/PE.v:450:6: Cell has missing pin: 'step'
+%Warning-PINMISSING: src/PE.v:450:6: Cell has missing pin: 'at_max'
+%Warning-WIDTHEXPAND: src/buffer.v:23:35: Operator ADD expects 3 bits on the RHS, but RHS's VARREF 'par_cnt' generates 1 bits.
+%Warning-WIDTHEXPAND: src/muffer.v:23:35: Operator ADD expects 3 bits on the RHS, but RHS's VARREF 'par_cnt' generates 1 bits.
+%Warning-WIDTHTRUNC: src/reg_SPad.v:25:17: Bit extraction of array[23:0] requires 5 bit index, not 6 bits.
+%Warning-WIDTHEXPAND: src/psum_addr_counter.v:27:23: Operator EQ expects 32 or 8 bits on the LHS, but LHS's VARREF 'count' generates 2 bits.
+%Warning-WIDTHEXPAND: src/counter.v:29:24: Operator ASSIGNDLY expects 16 bits on the Assign RHS, but Assign RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHEXPAND: src/counter.v:27:19: Operator EQ expects 16 bits on the RHS, but RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHEXPAND: src/counter.v:41:24: Operator EQ expects 16 bits on the RHS, but RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHEXPAND: src/counter.v:29:24: Operator ASSIGNDLY expects 8 bits on the Assign RHS, but Assign RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHEXPAND: src/counter.v:27:19: Operator EQ expects 8 bits on the RHS, but RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHEXPAND: src/counter.v:41:24: Operator EQ expects 8 bits on the RHS, but RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHTRUNC: src/Reg_SPad_ifmap.v:25:17: Bit extraction of array[11:0] requires 4 bit index, not 5 bits.
+%Warning-WIDTHEXPAND: src/counter.v:29:24: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHEXPAND: src/counter.v:27:19: Operator EQ expects 4 bits on the RHS, but RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHEXPAND: src/counter.v:41:24: Operator EQ expects 4 bits on the RHS, but RHS's CONST '3'h7' generates 3 bits.
+%Warning-WIDTHEXPAND: src/PE.v:145:10: Input port connection 'write_data' expects 64 bits on the pin connection, but pin connection's VARREF 'data_psum_in' generates 16 bits.
+%Warning-WIDTHEXPAND: src/PE.v:394:10: Output port connection 'sum' expects 17 bits on the pin connection, but pin connection's VARREF 'sum_adder_out' generates 16 bits.
+%Warning-WIDTHTRUNC: src/PE.v:456:10: Input port connection 'max_count' expects 5 bits on the pin connection, but pin connection's SUB generates 32 or 8 bits.
+%Warning-WIDTHEXPAND: src/PE.v:533:10: Output port connection 'read_data' expects 64 bits on the pin connection, but pin connection's VARREF 'data_psum_out' generates 16 bits.
+%Warning-UNDRIVEN: src/PE.v:81:32: Signal is not driven: 'psum_mux_out'
+--- PE_Cluster.v verilator check ---
+%Error: src/PE_Cluster.v:1:10: Cannot find include file: hw_config.vh
+    1 | `include "hw_config.vh"
+      |          ^~~~~~~~~~~~~~
+        ... Looked in:
+             src/hw_config.vh
+             src/hw_config.vh.v
+             src/hw_config.vh.sv
+             hw_config.vh
+             hw_config.vh.v
+             hw_config.vh.sv
+             obj_dir/hw_config.vh
+             obj_dir/hw_config.vh.v
+             obj_dir/hw_config.vh.sv
+%Error: src/PE_Cluster.v:18:30: Define or directive not defined: '`HWC_PE_CLUSTER_ROWS'
+   18 |     parameter integer ROWS = `HWC_PE_CLUSTER_ROWS,
+
+=== 5. SHIPPED TESTBENCH (sim/PE_tb.sv) BUILD AND RUN ===
+PE_tb compile rc=0 (unique warnings below):
+  WARN: sim/PE_tb.sv:75:        : Pruning (signed) 24 high bits of the expression.
+  WARN: sim/PE_tb.sv:75: warning: Port 11 (filter_size) of PE expects 8 bits, got 32.
+  WARN: sim/PE_tb.sv:75: warning: Port 12 (stride) of PE expects 8 bits, got 32.
+  WARN: sim/PE_tb.sv:96:        : Pruning (signed) 24 high bits of the expression.
+  WARN: sim/PE_tb.sv:96: warning: Port 11 (filter_size) of PEGRID expects 8 bits, got 32.
+  WARN: sim/PE_tb.sv:96: warning: Port 12 (stride) of PEGRID expects 8 bits, got 32.
+  WARN: src/Array_of_PEs.sv:84:        : Padding 15 high bits of the port.
+  WARN: src/Array_of_PEs.sv:84:        : Padding 24 high bits of the port.
+  WARN: src/Array_of_PEs.sv:84:        : Padding 28 high bits of the port.
+  WARN: src/Array_of_PEs.sv:84:        : Pruning 1 high bits of the expression.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 11 (filter_size) of PE expects 32 bits, got 4.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 12 (stride) of PE expects 32 bits, got 4.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 13 (input_channels_num) of PE expects 32 bits, got 8.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 14 (output_channels_num) of PE expects 32 bits, got 8.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 15 (data_psum_out) of PE expects 16 bits, got 1.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 8 (data_iact_in) of PE expects 16 bits, got 17.
+  WARN: src/Array_of_PEs.sv:84: warning: Port 9 (data_weight_in) of PE expects 16 bits, got 17.
+  WARN: src/PARRAY.v:146:        : Padding 48 high bits of the port.
+  WARN: src/PARRAY.v:146:        : Pruning (signed) 24 high bits of the expression.
+  WARN: src/PARRAY.v:146: warning: Port 11 (filter_size) of PE expects 8 bits, got 32.
+  WARN: src/PARRAY.v:146: warning: Port 12 (stride) of PE expects 8 bits, got 32.
+  WARN: src/PARRAY.v:146: warning: Port 9 (data_weight_in) of PE expects 64 bits, got 16.
+  WARN: src/PE.v:139:        : Padding 48 high bits of the port.
+  WARN: src/PE.v:139: warning: Port 6 (write_data) of Fifo_buffer expects 64 bits, got 16.
+  WARN: src/PE.v:221:        : Pruning (signed) 31 high bits of the expression.
+  WARN: src/PE.v:221: warning: Port 3 (en) of Reg_SPad_ifmap expects 1 bits, got 32.
+  WARN: src/PE.v:250:        : Pruning 24 high bits of the expression.
+  WARN: src/PE.v:250:        : Pruning (signed) 24 high bits of the expression.
+  WARN: src/PE.v:250: warning: Port 5 (step) of Custom_counter expects 8 bits, got 32.
+  WARN: src/PE.v:250: warning: Port 6 (max_count) of Custom_counter expects 8 bits, got 32.
+  WARN: src/PE.v:389:        : Padding 1 high bits of the port.
+  WARN: src/PE.v:389: warning: Port 5 (sum) of FA expects 17 bits, got 16.
+  WARN: src/PE.v:450:        : Padding 3 high bits of the port.
+  WARN: src/PE.v:450:        : Pruning 24 high bits of the expression.
+  WARN: src/PE.v:450:        : Pruning 27 high bits of the expression.
+  WARN: src/PE.v:450: warning: Port 6 (max_count) of Custom_counter expects 5 bits, got 32.
+  WARN: src/PE.v:450: warning: Port 6 (max_count) of Custom_counter expects 8 bits, got 32.
+  WARN: src/PE.v:450: warning: Port 8 (count) of Custom_counter expects 8 bits, got 5.
+  WARN: src/PE.v:469:        : Padding 3 high bits of the port.
+  WARN: src/PE.v:469:        : Pruning (signed) 31 high bits of the expression.
+  WARN: src/PE.v:469: warning: Port 3 (en) of Reg_SPad expects 1 bits, got 32.
+  WARN: src/PE.v:469: warning: Port 5 (read_addr) of Reg_SPad expects 8 bits, got 5.
+  WARN: src/PE.v:469: warning: Port 6 (write_addr) of Reg_SPad expects 8 bits, got 5.
+  WARN: src/PE.v:499:        : Pruning (signed) 16 high bits of the expression.
+  WARN: src/PE.v:499: warning: Port 1 (data_in_a) of Mux2x1 expects 16 bits, got 32.
+  WARN: src/PE.v:526:        : Padding 48 high bits of the port.
+  WARN: src/PE.v:526: warning: Port 7 (read_data) of Fifo_buffer expects 64 bits, got 16.
+--- PE_tb.sv shipped stdout ---
+Time: 0 | data_psum_out: xxxx | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 5 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 45 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 0
+Time: 75 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: x
+Time: 115 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 175 | data_psum_out: zzzz | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+data_psum_out: zzzz
+psum_out_valid: 0
+Time: 285 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 305 | data_psum_out: zzzz | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 315 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 335 | data_psum_out: zzzz | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 345 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 365 | data_psum_out: zzzz | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 375 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+data_psum_out: .0000
+psum_out_valid: 0
+sim/PE_tb.sv:307: $finish called at 380 (1ns)
+
+=== 6. NON-INTRUSIVE TRACE OF UNMODIFIED PE_tb.sv + PE.v ===
+[T=35] IACT_SPAD_WRITE: addr=0 data=5
+[T=35] WEIGHT_SPAD_WRITE: addr=0 data=9
+[T=45] IACT_SPAD_WRITE: addr=1 data=7
+[T=45] WEIGHT_SPAD_WRITE: addr=1 data=4
+[T=55] IACT_SPAD_WRITE: addr=2 data=13
+[T=55] WEIGHT_SPAD_WRITE: addr=2 data=0
+[T=65] IACT_SPAD_WRITE: addr=3 data=1
+[T=65] WEIGHT_SPAD_WRITE: addr=3 data=1
+[T=75] WEIGHT_SPAD_WRITE: addr=4 data=8
+[T=85] WEIGHT_SPAD_WRITE: addr=5 data=7
+[T=85] PIPE: iread=0(5) wread=0(9) zf=1 | ri=0 rw=0 | mul=0 mv=0 | paddr=0 pdis=1 ptomux=0 sum=0 | pmux=zzzz reg_pmux=0000 pwen=0 out=0000
+[T=95] IACT_SPAD_WRITE: addr=4 data=5
+[T=95] WEIGHT_SPAD_WRITE: addr=6 data=3
+[T=95] PIPE: iread=1(7) wread=1(4) zf=1 | ri=5 rw=9 | mul=0 mv=0 | paddr=0 pdis=1 ptomux=0 sum=0 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=105] IACT_SPAD_WRITE: addr=5 data=6
+[T=105] WEIGHT_SPAD_WRITE: addr=7 data=2
+[T=105] PIPE: iread=2(13) wread=2(0) zf=0 | ri=7 rw=4 | mul=0 mv=0 | paddr=0 pdis=1 ptomux=0 sum=0 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=115] IACT_SPAD_WRITE: addr=6 data=18
+[T=115] PIPE: iread=3(1) wread=3(1) zf=1 | ri=7 rw=4 | mul=45 mv=1 | paddr=0 pdis=1 ptomux=0 sum=45 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=125] IACT_SPAD_WRITE: addr=7 data=3
+[T=125] WEIGHT_SPAD_WRITE: addr=0 data=9
+[T=125] PIPE: iread=4(5) wread=4(8) zf=1 | ri=1 rw=1 | mul=28 mv=1 | paddr=0 pdis=1 ptomux=45 sum=73 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=135] WEIGHT_SPAD_WRITE: addr=1 data=9
+[T=135] PIPE: iread=5(6) wread=4(8) zf=1 | ri=5 rw=8 | mul=28 mv=1 | paddr=0 pdis=0 ptomux=73 sum=101 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=145] WEIGHT_SPAD_WRITE: addr=2 data=9
+[T=145] PIPE: iread=6(18) wread=4(8) zf=1 | ri=6 rw=8 | mul=1 mv=1 | paddr=0 pdis=1 ptomux=73 sum=74 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=155] IACT_SPAD_WRITE: addr=8 data=4
+[T=155] WEIGHT_SPAD_WRITE: addr=3 data=9
+[T=155] PIPE: iread=7(3) wread=4(8) zf=1 | ri=18 rw=8 | mul=40 mv=0 | paddr=1 pdis=1 ptomux=0 sum=40 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=165] IACT_SPAD_WRITE: addr=9 data=5
+[T=165] WEIGHT_SPAD_WRITE: addr=4 data=9
+[T=165] PIPE: iread=0(5) wread=4(8) zf=1 | ri=3 rw=8 | mul=48 mv=0 | paddr=1 pdis=1 ptomux=40 sum=88 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=175] IACT_SPAD_WRITE: addr=10 data=18
+[T=175] WEIGHT_SPAD_WRITE: addr=5 data=9
+[T=175] PIPE: iread=1(7) wread=4(9) zf=1 | ri=5 rw=8 | mul=144 mv=0 | paddr=1 pdis=1 ptomux=88 sum=232 | pmux=zzzz reg_pmux=zzzz pwen=1 out=0000
+[T=185] IACT_SPAD_WRITE: addr=11 data=5
+[T=185] WEIGHT_SPAD_WRITE: addr=6 data=9
+[T=185] PIPE: iread=2(13) wread=4(9) zf=1 | ri=7 rw=9 | mul=24 mv=0 | paddr=1 pdis=1 ptomux=232 sum=256 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=195] WEIGHT_SPAD_WRITE: addr=7 data=9
+[T=195] PIPE: iread=3(1) wread=4(9) zf=1 | ri=13 rw=9 | mul=40 mv=1 | paddr=2 pdis=1 ptomux=0 sum=40 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=205] WEIGHT_SPAD_WRITE: addr=0 data=9
+[T=205] PIPE: iread=4(5) wread=4(9) zf=1 | ri=1 rw=9 | mul=63 mv=1 | paddr=2 pdis=1 ptomux=40 sum=103 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=215] WEIGHT_SPAD_WRITE: addr=1 data=9
+[T=215] PIPE: iread=5(6) wread=4(9) zf=1 | ri=5 rw=9 | mul=117 mv=1 | paddr=2 pdis=1 ptomux=103 sum=220 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=225] WEIGHT_SPAD_WRITE: addr=2 data=9
+[T=225] PIPE: iread=6(18) wread=4(9) zf=1 | ri=6 rw=9 | mul=9 mv=1 | paddr=2 pdis=1 ptomux=220 sum=229 | pmux=zzzz reg_pmux=zzzz pwen=1 out=zzzz
+[T=235] WEIGHT_SPAD_WRITE: addr=3 data=9
+[T=235] PIPE: iread=7(3) wread=4(9) zf=1 | ri=18 rw=9 | mul=45 mv=0 | paddr=3 pdis=1 ptomux=0 sum=45 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=245] WEIGHT_SPAD_WRITE: addr=4 data=9
+[T=245] PIPE: iread=0(5) wread=4(9) zf=1 | ri=3 rw=9 | mul=54 mv=0 | paddr=3 pdis=1 ptomux=45 sum=99 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=255] WEIGHT_SPAD_WRITE: addr=5 data=9
+[T=255] PIPE: iread=1(7) wread=4(9) zf=1 | ri=5 rw=9 | mul=162 mv=0 | paddr=3 pdis=1 ptomux=99 sum=261 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=265] WEIGHT_SPAD_WRITE: addr=6 data=9
+[T=265] PIPE: iread=2(13) wread=4(9) zf=1 | ri=7 rw=9 | mul=27 mv=0 | paddr=3 pdis=1 ptomux=261 sum=288 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=275] WEIGHT_SPAD_WRITE: addr=7 data=9
+[T=275] PIPE: iread=3(1) wread=4(9) zf=1 | ri=13 rw=9 | mul=45 mv=1 | paddr=3 pdis=1 ptomux=288 sum=333 | pmux=zzzz reg_pmux=zzzz pwen=1 out=zzzz
+[T=285] WEIGHT_SPAD_WRITE: addr=0 data=9
+[T=285] PIPE: iread=4(5) wread=4(9) zf=1 | ri=1 rw=9 | mul=63 mv=1 | paddr=3 pdis=1 ptomux=333 sum=396 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=295] WEIGHT_SPAD_WRITE: addr=1 data=9
+[T=295] PIPE: iread=5(6) wread=4(9) zf=1 | ri=5 rw=9 | mul=117 mv=1 | paddr=3 pdis=1 ptomux=396 sum=513 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=305] WEIGHT_SPAD_WRITE: addr=2 data=9
+[T=305] PIPE: iread=6(18) wread=4(9) zf=1 | ri=6 rw=9 | mul=9 mv=1 | paddr=3 pdis=1 ptomux=513 sum=522 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=315] WEIGHT_SPAD_WRITE: addr=3 data=9
+[T=315] PIPE: iread=7(3) wread=4(9) zf=1 | ri=18 rw=9 | mul=45 mv=0 | paddr=3 pdis=1 ptomux=522 sum=567 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=325] WEIGHT_SPAD_WRITE: addr=4 data=9
+[T=325] PIPE: iread=0(5) wread=4(9) zf=1 | ri=3 rw=9 | mul=54 mv=0 | paddr=3 pdis=1 ptomux=567 sum=621 | pmux=zzzz reg_pmux=zzzz pwen=1 out=0000
+[T=335] WEIGHT_SPAD_WRITE: addr=5 data=9
+[T=335] PIPE: iread=1(7) wread=4(9) zf=1 | ri=5 rw=9 | mul=162 mv=0 | paddr=3 pdis=1 ptomux=621 sum=783 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=345] WEIGHT_SPAD_WRITE: addr=6 data=9
+[T=345] PIPE: iread=2(13) wread=4(9) zf=1 | ri=7 rw=9 | mul=27 mv=0 | paddr=3 pdis=1 ptomux=783 sum=810 | pmux=zzzz reg_pmux=zzzz pwen=0 out=zzzz
+[T=355] WEIGHT_SPAD_WRITE: addr=7 data=9
+[T=355] PIPE: iread=3(1) wread=4(9) zf=1 | ri=13 rw=9 | mul=45 mv=1 | paddr=3 pdis=1 ptomux=810 sum=855 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=365] WEIGHT_SPAD_WRITE: addr=0 data=9
+[T=365] PIPE: iread=4(5) wread=4(9) zf=1 | ri=1 rw=9 | mul=63 mv=1 | paddr=3 pdis=1 ptomux=855 sum=918 | pmux=zzzz reg_pmux=zzzz pwen=0 out=0000
+[T=375] WEIGHT_SPAD_WRITE: addr=1 data=9
+[T=375] PIPE: iread=5(6) wread=4(9) zf=1 | ri=5 rw=9 | mul=117 mv=1 | paddr=3 pdis=1 ptomux=918 sum=1035 | pmux=zzzz reg_pmux=zzzz pwen=1 out=zzzz
+=== FINAL INTERNAL STATE OF PE_tb.dut AT T=378 ===
+  ifmap_spad.regs[0] = 5
+  ifmap_spad.regs[1] = 7
+  ifmap_spad.regs[2] = 13
+  ifmap_spad.regs[3] = 1
+  ifmap_spad.regs[4] = 5
+  ifmap_spad.regs[5] = 6
+  ifmap_spad.regs[6] = 18
+  ifmap_spad.regs[7] = 3
+  ifmap_spad.regs[8] = 4
+  ifmap_spad.regs[9] = 5
+  ifmap_spad.regs[10] = 18
+  ifmap_spad.regs[11] = 5
+  filter_spad.mem[0] = 9
+  filter_spad.mem[1] = 9
+  filter_spad.mem[2] = 9
+  filter_spad.mem[3] = 9
+  filter_spad.mem[4] = 9
+  filter_spad.mem[5] = 9
+  filter_spad.mem[6] = 9
+  filter_spad.mem[7] = 9
+  psum_spad.regs[0]  = 74 (hex 004a)
+  psum_spad.regs[1]  = 256 (hex 0100)
+  psum_spad.regs[2]  = 229 (hex 00e5)
+  psum_spad.regs[3]  = 1035 (hex 040b)
+  psum_spad.regs[4]  = 0 (hex 0000)
+  psum_spad.regs[5]  = 0 (hex 0000)
+  output_psum_fifo.mem[0] = zzzz
+  output_psum_fifo.mem[1] = zzzz
+  output_psum_fifo.mem[2] = zzzz
+  output_psum_fifo.mem[3] = zzzz
+  output_psum_fifo.mem[4] = 0000
+  output_psum_fifo.mem[5] = 0000
+  psum_mux_out = zzzz, reg_out_psum_mux = zzzz
+
+=== 7. REPAIR TRACE COPY IN work/ (DRIVE psum_mux_out & ISOLATE GUT) ===
+Time: 0 | data_psum_out: xxxx | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 5 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 45 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 0
+Time: 115 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 175 | data_psum_out: 0028 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 185 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 225 | data_psum_out: 0067 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 235 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+data_psum_out: 0000
+psum_out_valid: 0
+Time: 275 | data_psum_out: 0105 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 285 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 325 | data_psum_out: 020a | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 335 | data_psum_out: 0000 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+Time: 375 | data_psum_out: 0357 | psum_out_valid: 0 | iact_buffer_ready: 1 | weight_buffer_ready: 1
+data_psum_out: .0357
+psum_out_valid: 0
+/root/dm-study/eyeriss/w2/e1/trace_work/PE_tb_fixed.sv:307: $finish called at 380 (1ns)
+FINISHED rc=0

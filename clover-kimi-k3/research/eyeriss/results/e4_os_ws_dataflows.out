@@ -1,0 +1,19 @@
+=== 0. OS ON UNMODIFIED counter.v (EXPOSES count==3'd7 HARDCODED WRAP AT 8 WEIGHTS) ===
+RUN R=3 H=5x5 C=1 M=1 PEs=9 SPARSE=0 CORRUPT=0 | MACs=81 w_wr=81(1.0000/MAC) i_wr=81(1.0000/MAC) w_rd=81(1.0000/MAC) i_rd=81(1.0000/MAC) psum_rd=63(0.7778/MAC) psum_wr=63(0.7778/MAC) vert_add=0(0.0000/MAC) gated=18 | golden_mismatches=9/9
+
+=== 1. WEIGHT-STATIONARY (WS) ON UNMODIFIED REPO PEs vs PYTHON GOLDEN ===
+RUN R=3 H=5x5 C=1 M=1 PEs=9 SPARSE=0 CORRUPT=0 | MACs=81 w_wr=9(0.1111/MAC) i_wr=81(1.0000/MAC) w_rd=81(1.0000/MAC) i_rd=81(1.0000/MAC) psum_rd=81(1.0000/MAC) psum_wr=81(1.0000/MAC) vert_add=72(0.8889/MAC) gated=0 | golden_mismatches=0/9
+RUN R=3 H=5x5 C=1 M=1 PEs=9 SPARSE=1 CORRUPT=0 | MACs=81 w_wr=9(0.1111/MAC) i_wr=81(1.0000/MAC) w_rd=81(1.0000/MAC) i_rd=81(1.0000/MAC) psum_rd=65(0.8025/MAC) psum_wr=65(0.8025/MAC) vert_add=72(0.8889/MAC) gated=16 | golden_mismatches=0/9
+RUN R=3 H=5x5 C=1 M=1 PEs=9 SPARSE=1 CORRUPT=1 | MACs=81 w_wr=9(0.1111/MAC) i_wr=81(1.0000/MAC) w_rd=81(1.0000/MAC) i_rd=81(1.0000/MAC) psum_rd=65(0.8025/MAC) psum_wr=65(0.8025/MAC) vert_add=72(0.8889/MAC) gated=16 | golden_mismatches=8/9
+RUN R=3 H=7x7 C=1 M=1 PEs=9 SPARSE=0 CORRUPT=0 | MACs=225 w_wr=9(0.0400/MAC) i_wr=225(1.0000/MAC) w_rd=225(1.0000/MAC) i_rd=225(1.0000/MAC) psum_rd=225(1.0000/MAC) psum_wr=225(1.0000/MAC) vert_add=200(0.8889/MAC) gated=0 | golden_mismatches=0/25
+RUN R=3 H=5x5 C=2 M=1 PEs=9 SPARSE=0 CORRUPT=0 | MACs=162 w_wr=18(0.1111/MAC) i_wr=162(1.0000/MAC) w_rd=162(1.0000/MAC) i_rd=162(1.0000/MAC) psum_rd=162(1.0000/MAC) psum_wr=162(1.0000/MAC) vert_add=72(0.4444/MAC) gated=0 | golden_mismatches=0/9
+RUN R=3 H=5x5 C=1 M=2 PEs=9 SPARSE=0 CORRUPT=0 | MACs=162 w_wr=18(0.1111/MAC) i_wr=81(0.5000/MAC) w_rd=162(1.0000/MAC) i_rd=162(1.0000/MAC) psum_rd=162(1.0000/MAC) psum_wr=162(1.0000/MAC) vert_add=144(0.8889/MAC) gated=0 | golden_mismatches=0/18
+
+=== 2. OUTPUT-STATIONARY (OS) WITH counter.v MAX-1 FIX IN work/src vs PYTHON GOLDEN ===
+RUN R=3 H=5x5 C=1 M=1 PEs=9 SPARSE=0 CORRUPT=0 | MACs=81 w_wr=81(1.0000/MAC) i_wr=81(1.0000/MAC) w_rd=81(1.0000/MAC) i_rd=81(1.0000/MAC) psum_rd=81(1.0000/MAC) psum_wr=81(1.0000/MAC) vert_add=0(0.0000/MAC) gated=0 | golden_mismatches=0/9
+RUN R=3 H=5x5 C=1 M=1 PEs=9 SPARSE=1 CORRUPT=0 | MACs=81 w_wr=81(1.0000/MAC) i_wr=81(1.0000/MAC) w_rd=81(1.0000/MAC) i_rd=81(1.0000/MAC) psum_rd=65(0.8025/MAC) psum_wr=65(0.8025/MAC) vert_add=0(0.0000/MAC) gated=16 | golden_mismatches=0/9
+RUN R=3 H=5x5 C=1 M=1 PEs=9 SPARSE=1 CORRUPT=1 | MACs=81 w_wr=81(1.0000/MAC) i_wr=81(1.0000/MAC) w_rd=81(1.0000/MAC) i_rd=81(1.0000/MAC) psum_rd=65(0.8025/MAC) psum_wr=65(0.8025/MAC) vert_add=0(0.0000/MAC) gated=16 | golden_mismatches=8/9
+RUN R=3 H=7x7 C=1 M=1 PEs=25 SPARSE=0 CORRUPT=0 | MACs=225 w_wr=225(1.0000/MAC) i_wr=225(1.0000/MAC) w_rd=225(1.0000/MAC) i_rd=225(1.0000/MAC) psum_rd=225(1.0000/MAC) psum_wr=225(1.0000/MAC) vert_add=0(0.0000/MAC) gated=0 | golden_mismatches=0/25
+RUN R=3 H=5x5 C=2 M=1 PEs=9 SPARSE=0 CORRUPT=0 | MACs=162 w_wr=162(1.0000/MAC) i_wr=162(1.0000/MAC) w_rd=162(1.0000/MAC) i_rd=162(1.0000/MAC) psum_rd=162(1.0000/MAC) psum_wr=162(1.0000/MAC) vert_add=0(0.0000/MAC) gated=0 | golden_mismatches=0/9
+RUN R=3 H=5x5 C=1 M=2 PEs=9 SPARSE=0 CORRUPT=0 | MACs=162 w_wr=162(1.0000/MAC) i_wr=81(0.5000/MAC) w_rd=162(1.0000/MAC) i_rd=162(1.0000/MAC) psum_rd=162(1.0000/MAC) psum_wr=162(1.0000/MAC) vert_add=0(0.0000/MAC) gated=0 | golden_mismatches=0/18
+FINISHED rc=0

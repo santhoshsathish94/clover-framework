@@ -1,0 +1,32 @@
+=== 1. PE with zero weights / zero activations (Verilator) ===
+CASE dense                    ITER 0: cycles=11 mac_en=3 spad_reads=6 pe_out=200 expected=200 nonzero_pairs=3
+CASE dense                    ITER 1: cycles=11 mac_en=3 spad_reads=6 pe_out=500 expected=500 nonzero_pairs=3
+CASE dense                    ITER 2: cycles=11 mac_en=3 spad_reads=6 pe_out=800 expected=800 nonzero_pairs=3
+CASE w=[0,20,0]               ITER 0: cycles=11 mac_en=3 spad_reads=6 pe_out=60 expected=60 nonzero_pairs=1
+CASE w=[0,20,0]               ITER 1: cycles=11 mac_en=3 spad_reads=6 pe_out=160 expected=160 nonzero_pairs=1
+CASE w=[0,20,0]               ITER 2: cycles=11 mac_en=3 spad_reads=6 pe_out=260 expected=260 nonzero_pairs=1
+CASE w=[0,0,0]                ITER 0: cycles=11 mac_en=3 spad_reads=6 pe_out=0 expected=0 nonzero_pairs=0
+CASE w=[0,0,0]                ITER 1: cycles=11 mac_en=3 spad_reads=6 pe_out=0 expected=0 nonzero_pairs=0
+CASE w=[0,0,0]                ITER 2: cycles=11 mac_en=3 spad_reads=6 pe_out=0 expected=0 nonzero_pairs=0
+CASE acts: every other zero   ITER 0: cycles=11 mac_en=3 spad_reads=6 pe_out=140 expected=140 nonzero_pairs=2
+CASE acts: every other zero   ITER 1: cycles=11 mac_en=3 spad_reads=6 pe_out=160 expected=160 nonzero_pairs=1
+CASE acts: every other zero   ITER 2: cycles=11 mac_en=3 spad_reads=6 pe_out=540 expected=540 nonzero_pairs=2
+CASE acts: all zero           ITER 0: cycles=11 mac_en=3 spad_reads=6 pe_out=0 expected=0 nonzero_pairs=0
+CASE acts: all zero           ITER 1: cycles=11 mac_en=3 spad_reads=6 pe_out=0 expected=0 nonzero_pairs=0
+CASE acts: all zero           ITER 2: cycles=11 mac_en=3 spad_reads=6 pe_out=0 expected=0 nonzero_pairs=0
+CASE w=[0,20,0] acts alt zero ITER 0: cycles=11 mac_en=3 spad_reads=6 pe_out=0 expected=0 nonzero_pairs=0
+CASE w=[0,20,0] acts alt zero ITER 1: cycles=11 mac_en=3 spad_reads=6 pe_out=160 expected=160 nonzero_pairs=1
+CASE w=[0,20,0] acts alt zero ITER 2: cycles=11 mac_en=3 spad_reads=6 pe_out=0 expected=0 nonzero_pairs=0
+
+=== 2. Does any RTL file mention zero-skipping, CSC, count/run-length, or SIMD? (case-insensitive grep over rtl/) ===
+/root/dm-study/eyeriss-v2/repo/CSE240D-Hierarchical_Mesh_NoC-Eyeriss_v2/rtl/PE.sv:195:						if(filt_count == 0) begin
+/root/dm-study/eyeriss-v2/repo/CSE240D-Hierarchical_Mesh_NoC-Eyeriss_v2/rtl/phase_1/PE.sv:195:						if(filt_count == 0) begin
+/root/dm-study/eyeriss-v2/repo/CSE240D-Hierarchical_Mesh_NoC-Eyeriss_v2/rtl/phase_1/router_psum.sv:108:							end else if(psum_count == 0) begin
+/root/dm-study/eyeriss-v2/repo/CSE240D-Hierarchical_Mesh_NoC-Eyeriss_v2/rtl/router_psum.sv:108:							end else if(psum_count == 0) begin
+(end of grep)
+
+=== 3. PE.sv: number of SPads, MAC instances, data width ===
+SPad instances in PE.sv: 1
+MAC instances in PE.sv: 1
+23:module PE #( parameter DATA_WIDTH = 16,
+FINISHED rc=0

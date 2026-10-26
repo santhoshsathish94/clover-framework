@@ -1,0 +1,52 @@
+# Eyeriss Round 2 Predictions Log
+# Written BEFORE each experiment execution on k3.
+
+[2026-10-26T12:00:00Z] E1 Prediction:
+- Out of 33 files in src/, 30 files will compile when given their dependencies in src/, while 3 files will not compile or contain no module: PE_Cluster.v and PE_Cluster_Ctrl.v will fail with missing `hw_config.vh` (and PE_Cluster.v also lacks `Mux` and mismatches PE ports), and psum_counter.v is an empty 0-line file.
+- The shipped testbench sim/PE_tb.sv will compile with src/ (excluding PE_Cluster.v, PE_Cluster_Ctrl.v, psum_counter.v) and run to completion ($finish), printing `data_psum_out: xxxx` and `psum_out_valid: 0` at every $monitor and $display step.
+- Why `data_psum_out` is `xxxx` while internal `psum_spad` holds values: in PE.v line 81, `wire [PSUM_SPAD_WIDTH-1:0] psum_mux_out;` is declared but never assigned anywhere in PE.v. `psum_reg_output` (PE.v line 419) latches `psum_mux_out` (`16'hxxxx`) into `reg_out_psum_mux` when `pipe_en=1`, and `output_psum_fifo` writes `reg_out_psum_mux` (`16'hxxxx`) into its memory when `psum_write_cnt_en_reg=1`. In addition, PE_tb.sv instantiates both `PE dut` and `PEGRID GUT` driving the same `data_psum_out` net.
+- In a repaired trace copy in work/ where `psum_mux_out` is connected to `psum_tomux` (or `sum_adder_out`) and `GUT` is isolated from `dut`'s output wires, `data_psum_out` will become defined (non-X) and match the internal `psum_spad` values.
+
+[2026-10-26T12:15:00Z] E2 Prediction (written before running e2_pe_drive.sh):
+- Case 1 (1D convolution, S=4, W=[3, 2, 5, 4], I=[2, 4, 1, 3]):
+  Expected psum = 3*2 + 2*4 + 5*1 + 4*3 = 6 + 8 + 5 + 12 = 31.
+  Expected counts over the 4-cycle 1D window: 4 weight spad writes, 4 ifmap spad writes, 4 weight spad reads, 4 ifmap spad reads, 4 DFF operand latches, 4 non-zero MACs, 4 psum spad reads, 4 psum spad writes.
+  Negative control: corrupting W[0] from 3 to 9 will produce psum = 9*2 + 8 + 5 + 12 = 43 != 31 and fail the check.
+- Case 2 (Zero weight W=[3, 2, 0, 4], I=[2, 4, 1, 3]):
+  Expected psum = 3*2 + 2*4 + 0*1 + 4*3 = 6 + 8 + 0 + 12 = 26.
+  Gating behavior in shipped PE.v: both spads are still read on all 4 cycles (4 weight spad reads, 4 ifmap spad reads) because Zero_buffer sits after the spad read ports; when W[2]=0, zero_flag=0 gates the pipeline operand DFFs (`iact_data_reg`, `filter_data_reg` enabled by `pipe_en && zero_flag`, so only 3 DFF latches occur) and `Disabling_mech` gates `psum_spad.write_en` (`psum_zero_flag=0` two cycles later, so only 3 psum spad writes occur: 6, 14, 26), while `Multiplier` itself has `.en(pipe_en)` and is not gated (`mult_dis` on `Disabling_mech` is unconnected).
+- Case 3 (Back-to-back rows: Row 0 I=[2, 4, 1, 3], Row 1 I=[1, 5, 2, 3], stationary W=[3, 2, 5, 4]):
+  In unmodified PE.v, `filter_read_counter` (`Custom_counter` with `max_count=4`) does not wrap at `filter_size` and sticks at address 4 (`filter_spad.mem[4]`), so if `filter_spad.mem[4]=10`, Row 1 computes (1+5+2+3)*10 = 110 in `psum_spad.regs[1]` instead of `I_row1 . W`.
+  In a copy in work/ with `filter_read_counter` wrapping modulo `filter_size` (4), Row 0 produces `psum_spad.regs[0] = 31` and Row 1 produces `psum_spad.regs[1] = 1*3 + 5*2 + 2*5 + 3*4 = 35`.
+- Case 4 (Mid-run reset `rstn=0` after 2 MACs of Row 0 when partial sum is 6+8=14, followed by reload of I=[2, 4, 1, 3], W=[3, 2, 5, 4]):
+  During reset, `psum_spad.regs[0]` drops from 14 to 0 and `ifmap_spad.regs` clears to 0 (while `SRAM_SPad` `filter_spad` has no reset pin and retains `[3, 2, 5, 4]`). After reset release and reload, `psum_spad.regs[0]` reaches 31.
+
+[2026-10-26T12:30:00Z] E3 Prediction (written before running e3_rs_conv2d.sh):
+- Mapping a 2D convolution onto an R x E grid of the repository's `src/PE.v` instances (row r holds filter row r, PE[r][c] receives ifmap row r+c diagonally, psums accumulate local 1D primitives across y=0..F-1 and reduce vertically from r=R-1 up to r=0):
+  1. Baseline 3x3 filter on 5x5 ifmap (C=1, M=1, E=F=3, 9 PEs, 81 MACs):
+     - Every output pixel O[0..2][0..2] will match the Python golden 2D convolution exactly (0 mismatches).
+     - Negative control (corrupting W[1][1] from 4 to 99): all 9 output pixels will mismatch by +95 * I[c+1][y+1] and fail the check (rc != 0).
+     - Dense scratchpad access counts: filter_spad_wr = 27 (0.3333/MAC), ifmap_spad_wr = 45 (0.5556/MAC), filter_spad_rd = 81 (1.0000/MAC), ifmap_spad_rd = 81 (1.0000/MAC), local psum_spad_rd = 81 (1.0000/MAC), local psum_spad_wr = 81 (1.0000/MAC), plus 18 vertical inter-PE psum additions (0.2222/MAC). With 1 zero weight and 2 zero ifmap pixels in the sparse test case, zero-gating will gate 15 of the 81 MAC slots, reducing psum_spad_wr during compute from 81 to 66.
+  2. Variation A (5x5 filter on 7x7 ifmap, C=1, M=1, E=F=3, 15 PEs, 225 MACs):
+     - filter_spad_wr = 75 (0.3333/MAC, unchanged since F=3), ifmap_spad_wr = 105 (0.4667/MAC, down from 0.5556 because each ifmap row is reused across R=5 taps instead of 3), vertical inter-PE adds = (5-1)*9 = 36 (0.1600/MAC).
+  3. Variation B (Larger ifmap: 3x3 filter on 8x8 ifmap, C=1, M=1, E=F=6, 18 PEs, 324 MACs):
+     - filter_spad_wr = 54 (0.1667/MAC, halved from 0.3333 because horizontal reuse F doubled from 3 to 6), ifmap_spad_wr = 144 (0.4444/MAC, down from 0.5556 due to smaller boundary halo W/F = 8/6 vs 5/3), vertical inter-PE adds = 2*36 = 72 (0.2222/MAC).
+  4. Variation C (Two input channels accumulated: 3x3 filter on 5x5 ifmap, C=2, M=1, E=F=3, 9 PEs, 162 MACs):
+     - filter_spad_wr = 54 (0.3333/MAC), ifmap_spad_wr = 90 (0.5556/MAC), vertical inter-PE adds = 18 (0.1111/MAC, halved from 0.2222 because C=2 channels accumulate locally in each PE's psum_spad before vertical reduction).
+  5. Variation D (Two filters: 3x3 filter on 5x5 ifmap, C=1, M=2, E=F=3, 9 PEs, 162 MACs):
+     - filter_spad_wr = 54 (0.3333/MAC), ifmap_spad_wr = 45 (0.2778/MAC, halved from 0.5556 because each ifmap row in ifmap_spad is reused across M=2 filters), vertical inter-PE adds = 36 (0.2222/MAC).
+
+[2026-10-26T12:45:00Z] E4 Prediction (written before running e4_os_ws_dataflows.sh):
+- Mapping the same convolutions onto the same `src/PE.v` modules under Output-Stationary (OS, E x F grid of PEs where PE[x][y] holds output pixel O[m][x][y] stationary in psum_spad) and Weight-Stationary (WS, R x R grid of PEs where PE[r][s] holds weight W[m][ch][r][s] stationary in filter_spad):
+  1. Both OS and WS RTL simulations will match the Python golden convolution on every output pixel (0 mismatches), and corrupting W[1][1]=99 will fail the check (rc != 0).
+  2. On the baseline 3x3 filter on 5x5 ifmap (C=1, M=1, 9 PEs, 81 MACs, dense):
+     - Weight scratchpad writes (`w_wr`): WS = 9 (0.1111/MAC) < RS = 27 (0.3333/MAC) < OS = 81 (1.0000/MAC).
+     - Ifmap scratchpad writes (`i_wr`): RS = 45 (0.5556/MAC) < OS = 81 (1.0000/MAC) = WS = 81 (1.0000/MAC).
+     - Inter-PE psum additions (`inter_pe_add`): OS = 0 (0.0000/MAC) < RS = 18 (0.2222/MAC) < WS = 72 (0.8889/MAC).
+     - Combined spad writes + inter-PE adds (`w_wr + i_wr + inter_pe_add`): RS = 90 (1.1111/MAC) vs OS = 162 (2.0000/MAC) and WS = 162 (2.0000/MAC).
+  3. On 3x3 filter on 5x5 ifmap with M=2 filters (162 MACs):
+     - In OS (with M=2 psums stationary per PE in `psum_spad[0..1]`), each streamed ifmap pixel is reused across M=2 filters inside the PE, cutting OS `i_wr` from 1.0000/MAC to 0.5000/MAC (81 writes), while `w_wr` stays 1.0000/MAC (162 writes) and `inter_pe_add` stays 0.
+     - In WS (9 PEs holding 2 filters = 18 weights), `w_wr` = 18 (0.1111/MAC), `i_wr` = 81 (0.5000/MAC when each window pixel is reused across M=2 weights in the PE), and `inter_pe_add` = 144 (0.8889/MAC).
+
+
+

@@ -1,0 +1,88 @@
+=== 1. FA1 (outer KV) vs FA2 (outer Q) Loop Order Write/Read Counts (B_r=64, B_c=64, d=64) ===
+  N=  64 causal=False | diff(O1,O2)=0.00e+00 diff(L1,L2)=0.00e+00 | O_writes: FA1=    4,096 (  1 tiles) vs FA2= 4,096 ( 1 tiles) | O_reads: FA1=    4,096 vs FA2=0 | (m,l/L)_writes: FA1=   128 vs FA2=   64 | O_norm_divs: FA1=    4,096 vs FA2= 4,096
+  N=  64 causal=True  | diff(O1,O2)=0.00e+00 diff(L1,L2)=0.00e+00 | O_writes: FA1=    4,096 (  1 tiles) vs FA2= 4,096 ( 1 tiles) | O_reads: FA1=    4,096 vs FA2=0 | (m,l/L)_writes: FA1=   128 vs FA2=   64 | O_norm_divs: FA1=    4,096 vs FA2= 4,096
+  N= 256 causal=False | diff(O1,O2)=1.67e-16 diff(L1,L2)=8.88e-16 | O_writes: FA1=   65,536 ( 16 tiles) vs FA2=16,384 ( 4 tiles) | O_reads: FA1=   65,536 vs FA2=0 | (m,l/L)_writes: FA1= 2,048 vs FA2=  256 | O_norm_divs: FA1=   65,536 vs FA2=16,384
+  N= 256 causal=True  | diff(O1,O2)=1.67e-16 diff(L1,L2)=8.88e-16 | O_writes: FA1=   40,960 ( 10 tiles) vs FA2=16,384 ( 4 tiles) | O_reads: FA1=   40,960 vs FA2=0 | (m,l/L)_writes: FA1= 1,280 vs FA2=  256 | O_norm_divs: FA1=   40,960 vs FA2=16,384
+  N=1024 causal=False | diff(O1,O2)=1.39e-16 diff(L1,L2)=1.78e-15 | O_writes: FA1=1,048,576 (256 tiles) vs FA2=65,536 (16 tiles) | O_reads: FA1=1,048,576 vs FA2=0 | (m,l/L)_writes: FA1=32,768 vs FA2=1,024 | O_norm_divs: FA1=1,048,576 vs FA2=65,536
+  N=1024 causal=True  | diff(O1,O2)=1.67e-16 diff(L1,L2)=1.78e-15 | O_writes: FA1=  557,056 (136 tiles) vs FA2=65,536 (16 tiles) | O_reads: FA1=  557,056 vs FA2=0 | (m,l/L)_writes: FA1=17,408 vs FA2=1,024 | O_norm_divs: FA1=  557,056 vs FA2=65,536
+
+=== 2. Negative Control on FA2 Unnormalized Accumulator (skip epilogue / l_i division) ===
+  [NegCtrl skip_epilogue_div=True] max_abs_diff = 1.291e+01 (must fail > 1.0)
+
+=== 3. [READ, NOT RUN] CUDA Kernel Headers: Tile Sizes & Shared Memory Formula (fp16, sm80) ===
+  From csrc/flash_attn/src/kernel_traits.h (lines 103-111):
+    L103:         Shape<Int<kBlockM>, Int<kHeadDim>>{}));
+    L104:     using SmemCopyAtomO = Copy_Atom<AutoVectorizingCopyWithAssumedAlignment<128>, Element>;
+    L105:     using SmemCopyAtomOaccum = Copy_Atom<AutoVectorizingCopyWithAssumedAlignment<128>, ElementAccum>;
+    L106: 
+    L107:     static constexpr int kSmemQSize = size(SmemLayoutQ{}) * sizeof(Element);
+    L108:     static constexpr int kSmemKVSize = size(SmemLayoutKV{}) * 2 * sizeof(Element);
+    L109:     static constexpr int kSmemSize = Share_Q_K_smem ? std::max(kSmemQSize, kSmemKVSize) : kSmemQSize + kSmemKVSize;
+    L110: 
+    L111:     static constexpr int kGmemElemsPerLoad = sizeof(cute::uint128_t) / sizeof(Element);
+
+  From csrc/flash_attn/src/flash_fwd_launch_template.h (lines 203-278, hdim 64, 96, 128):
+    L203: void run_mha_fwd_hdim64(Flash_fwd_params &params, cudaStream_t stream) {
+    L204:     constexpr static int Headdim = 64;
+    L205:     DROPOUT_SWITCH(params.p_dropout < 1.f, Is_dropout, [&] {
+    L206:         if constexpr(!Is_dropout) {
+    L210:             run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 128, 128, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L213:         } else {
+    L214:             run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 128, 64, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L218:         }
+    L219:     });
+    L220: }
+    L221: 
+    L222: template<typename T, bool Is_causal>
+    L223: void run_mha_fwd_hdim96(Flash_fwd_params &params, cudaStream_t stream) {
+    L224:     constexpr static int Headdim = 96;
+    L225:     auto [cc_major, cc_minor] = get_compute_capability(get_current_device());
+    L226:     bool is_sm8x = cc_major == 8 && cc_minor > 0;
+    L227:     DROPOUT_SWITCH(params.p_dropout < 1.f, Is_dropout, [&] {
+    L229:         if (is_sm8x) {
+    L230:             if constexpr(!Is_causal) {
+    L231:                 run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 128, 64, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L232:             } else {
+    L233:                 run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 64, 64, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L234:             }
+    L235:         } else {
+    L236:             run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 128, 64, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L237:         }
+    L243:     });
+    L244: }
+    L245: 
+    L246: template<typename T, bool Is_causal>
+    L247: void run_mha_fwd_hdim128(Flash_fwd_params &params, cudaStream_t stream) {
+    L248:     constexpr static int Headdim = 128;
+    L249:     auto [cc_major, cc_minor] = get_compute_capability(get_current_device());
+    L250:     bool is_sm8x = cc_major == 8 && cc_minor > 0;
+    L251:     DROPOUT_SWITCH(params.p_dropout < 1.f, Is_dropout, [&] {
+    L252:         if constexpr(!Is_dropout) {
+    L255:             if (is_sm8x) {
+    L256:                 if constexpr(!Is_causal) {
+    L257:                     run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 128, 32, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L258:                 } else {
+    L259:                     run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 64, 64, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L260:                 }
+    L261:             } else {
+    L262:                 run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 128, 64, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L263:             }
+    L272:         } else {
+    L273:             run_flash_fwd<Flash_fwd_kernel_traits<Headdim, 128, 32, 4, false, false, T>, Is_dropout, Is_causal>(params, stream);
+    L277:         }
+    L278:     });
+
+  Computed shared memory from active Flash_fwd_kernel_traits<Headdim, kBlockM, kBlockN, kNWarps, Is_Q_in_regs, Share_Q_K_smem, T> [READ, NOT RUN]:
+    [FWD fp16] d= 64 kBlockM=128 kBlockN=128 kNWarps=4 Q_in_regs=False Share_QK=False | kSmemQ=16,384 B + kSmemKV=32,768 B -> kSmemSize=49,152 B (48 KB), max CTAs/SM(sm80 164KB)=3
+    [FWD fp16] d= 64 kBlockM=128 kBlockN= 64 kNWarps=4 Q_in_regs=False Share_QK=False | kSmemQ=16,384 B + kSmemKV=16,384 B -> kSmemSize=32,768 B (32 KB), max CTAs/SM(sm80 164KB)=5
+    [FWD fp16] d=128 kBlockM=128 kBlockN= 32 kNWarps=4 Q_in_regs=False Share_QK=False | kSmemQ=32,768 B + kSmemKV=16,384 B -> kSmemSize=49,152 B (48 KB), max CTAs/SM(sm80 164KB)=3
+    [FWD fp16] d=128 kBlockM= 64 kBlockN= 64 kNWarps=4 Q_in_regs=False Share_QK=False | kSmemQ=16,384 B + kSmemKV=32,768 B -> kSmemSize=49,152 B (48 KB), max CTAs/SM(sm80 164KB)=3
+    [FWD fp16] d=128 kBlockM=128 kBlockN= 64 kNWarps=4 Q_in_regs=False Share_QK=False | kSmemQ=32,768 B + kSmemKV=32,768 B -> kSmemSize=65,536 B (64 KB), max CTAs/SM(sm80 164KB)=2
+    [FWD fp16] d=128 kBlockM=128 kBlockN= 32 kNWarps=4 Q_in_regs=False Share_QK=False | kSmemQ=32,768 B + kSmemKV=16,384 B -> kSmemSize=49,152 B (48 KB), max CTAs/SM(sm80 164KB)=3
+
+  Computed shared memory from active Flash_bwd_kernel_traits (d=64, 128) in flash_bwd_launch_template.h [READ, NOT RUN]:
+    [BWD fp16] d= 64 kBlockM=128 kBlockN=128 kNWarps= 8 AtomLayout(MSdP,NdKV,MdQ)=(4,4,4) Is_V_in_regs=False No_double_buffer=False | QdO=49,152 KV=32,768 dS=32,768 P=32,768 -> kSmemSize1colblock=147,456 B ( 144.0 KB)
+    [BWD fp16] d= 64 kBlockM= 64 kBlockN=128 kNWarps= 8 AtomLayout(MSdP,NdKV,MdQ)=(2,4,4) Is_V_in_regs=True  No_double_buffer=False | QdO=24,576 KV=32,768 dS=16,384 P=16,384 -> kSmemSize1colblock= 73,728 B (  72.0 KB)
+    [BWD fp16] d=128 kBlockM= 64 kBlockN=128 kNWarps= 8 AtomLayout(MSdP,NdKV,MdQ)=(2,4,2) Is_V_in_regs=False No_double_buffer=False | QdO=49,152 KV=65,536 dS=16,384 P=16,384 -> kSmemSize1colblock=147,456 B ( 144.0 KB)
+    [BWD fp16] d=128 kBlockM= 64 kBlockN= 64 kNWarps= 8 AtomLayout(MSdP,NdKV,MdQ)=(4,2,2) Is_V_in_regs=True  No_double_buffer=False | QdO=49,152 KV=32,768 dS= 8,192 P= 8,192 -> kSmemSize1colblock= 81,920 B (  80.0 KB)
+FINISHED rc=0

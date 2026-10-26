@@ -1,0 +1,28 @@
+=== Test 1: IID Uniform(M=64), N=200,000 requests vs Closed-Form C/64 ===
+  C= 8 (exact=12.50%):  LRU=12.54% (|err|=0.05%)  LFU=12.52% (|err|=0.02%)  FIFO=12.50% (|err|=0.00%)  LS=12.47% (|err|=0.03%)
+  C=16 (exact=25.00%):  LRU=24.89% (|err|=0.11%)  LFU=24.96% (|err|=0.04%)  FIFO=24.92% (|err|=0.08%)  LS=24.92% (|err|=0.08%)
+  C=32 (exact=50.00%):  LRU=49.89% (|err|=0.11%)  LFU=49.98% (|err|=0.02%)  FIFO=49.81% (|err|=0.19%)  LS=49.89% (|err|=0.11%)
+
+=== Test 2: IID Zipf(M=64, s=1.2), C=16, N=200,000 vs Exact Top-C Sum ===
+  StaticTopC: hit_rate= 80.10% (exact_top16= 80.08%)
+  LFU       : hit_rate= 79.52% (exact_top16= 80.08%)
+  LRU       : hit_rate= 70.90% (exact_top16= 80.08%)
+  FIFO      : hit_rate= 64.58% (exact_top16= 80.08%)
+  Belady    : hit_rate= 84.20% (exact_top16= 80.08%)
+
+=== Test 3: Cyclic Sweep over C+1=17 items at Capacity C=16 (8,500 requests) ===
+  LRU     : overall=  0.00%  steady_state=  0.00% (hits=0/8500)
+  FIFO    : overall=  0.00%  steady_state=  0.00% (hits=0/8500)
+  Belady  : overall= 93.56%  steady_state= 93.74% (hits=7953/8500)
+
+=== Test 4: Belady Optimality on Real OLMoE Trace Slice (32,768 requests) ===
+  C= 10: LRU= 0.00%  LFU= 4.75%  FIFO= 0.00%  FLD= 0.00%  SB= 0.57%  LS= 0.00%  Belady= 6.95%
+  C= 51: LRU= 0.00%  LFU=19.01%  FIFO= 0.00%  FLD= 0.60%  SB= 7.08%  LS= 0.00%  Belady=33.84%
+  C=256: LRU=53.66%  LFU=53.58%  FIFO=47.81%  FLD=26.05%  SB=36.96%  LS=56.05%  Belady=75.70%
+
+=== Test 5: Negative Controls (Deliberately Broken Simulator Variants) ===
+  Negative Control A (BrokenInsertFirst at C=16): hit_rate=100.00% vs expected 25.00% -> caught=True
+  Negative Control B (OffByOneCapacity C+1=17):   hit_rate=26.45% vs expected 25.00% -> caught=True
+
+ALL 5 VALIDATION CHECKS PASSED. Saved e5_validation_summary.json
+FINISHED rc=0

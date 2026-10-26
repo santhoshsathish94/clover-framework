@@ -1,0 +1,65 @@
+=== 1. Download WikiText-2 validation prose sample via curl ===
+-rw-r--r-- 1 root root 1.1M Oct 26 07:25 /root/dm-study/specmd/w2/traces/wikitext2_valid.txt
+ 
+ = Homarus gammarus = 
+ 
+ Homarus gammarus , known as the European lobster or common lobster , is a species of <unk> lobster from the eastern Atlantic Ocean , Mediterranean Sea and parts of the Black Sea . It is closely related to the American lobster , H. americanus . It may grow to a length of 60 cm ( 24 in ) and a mass of 6 kilograms ( 13 lb ) , and bears a conspicuous pair of claws . In life , the lobsters are blue , only becoming " lobster red " on cooking . Mating occurs in the summer , producing eggs which are carried by the females for up to a year before hatching into <unk> larvae . Homarus gammarus is a highly esteemed food , and is widely caught using lobster pots , mostly around the British Isles . 
+ 
+
+=== 2. Run record_routing.py on OLMoE-1B-7B-0924 ===
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer GPTNeoXTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+Prepared prompts shape=(8, 256) (2048 tokens total)
+Sample decoded prompt[0][:120]: 'Homarus gammarus , known as the European lobster or common lobster , is a species of <unk> lobster from the eastern Atlantic'
+Loading weights:   0%|          | 0/179 [00:00<?, ?it/s]Loading weights:   3%|▎         | 5/179 [00:00<00:06, 26.02it/s]Loading weights:   9%|▉         | 16/179 [00:00<00:03, 53.69it/s]Loading weights:  15%|█▌        | 27/179 [00:00<00:02, 65.50it/s]Loading weights:  21%|██        | 38/179 [00:00<00:01, 71.89it/s]Loading weights:  27%|██▋       | 49/179 [00:00<00:01, 75.26it/s]Loading weights:  34%|███▎      | 60/179 [00:00<00:01, 77.31it/s]Loading weights:  40%|███▉      | 71/179 [00:00<00:01, 78.70it/s]Loading weights:  46%|████▌     | 82/179 [00:01<00:01, 79.55it/s]Loading weights:  52%|█████▏    | 93/179 [00:01<00:01, 80.05it/s]Loading weights:  58%|█████▊    | 104/179 [00:01<00:00, 80.26it/s]Loading weights:  64%|██████▍   | 115/179 [00:01<00:00, 80.26it/s]Loading weights:  70%|███████   | 126/179 [00:01<00:00, 80.46it/s]Loading weights:  77%|███████▋  | 137/179 [00:01<00:00, 80.68it/s]Loading weights:  83%|████████▎ | 148/179 [00:01<00:00, 81.11it/s]Loading weights:  89%|████████▉ | 159/179 [00:02<00:00, 81.28it/s]Loading weights:  95%|█████████▍| 170/179 [00:02<00:00, 81.46it/s]Loading weights: 100%|██████████| 179/179 [00:02<00:00, 80.70it/s]
+Prompt-style recording finished in 7.18s (285.3 tok/s)
+Decode-style recording finished in 203.26s (10.1 tok/s)
+
+=== Trace Integrity & Range Checks ===
+  Prompt topk_indices shape=(8, 256, 16, 8), min=0, max=63
+  Decode topk_indices shape=(8, 256, 16, 8), min=0, max=63
+  Prompt router_probs sum: min=1.000000, max=1.000000
+  Decode router_probs sum: min=1.000000, max=1.000000
+  All 32,768 (token, layer) decisions have 8 distinct experts: True
+=== Comparison (bfloat16 (8x256=2048 tokens)): Prompt-style vs Decode-style (8x256 tokens, 16 layers) ===
+  Prob abs diff: mean=1.041690e-04, median=3.909133e-05, max=2.272147e-02
+  Top-1 expert match:          98.86%
+  Top-8 set overlap (recall):  99.40% (mean 7.952 / 8 experts)
+  Top-8 exact rank-order match:81.46%
+  Per-layer Top-1 match & Top-8 set overlap:
+    Layer  0: top1= 99.76%  top8_overlap= 99.92%  prob_mad=9.355306e-06
+    Layer  1: top1= 99.66%  top8_overlap= 99.79%  prob_mad=2.849466e-05
+    Layer  2: top1= 99.46%  top8_overlap= 99.69%  prob_mad=4.142918e-05
+    Layer  3: top1= 99.37%  top8_overlap= 99.43%  prob_mad=5.564025e-05
+    Layer  4: top1= 99.02%  top8_overlap= 99.49%  prob_mad=6.738608e-05
+    Layer  5: top1= 99.17%  top8_overlap= 99.48%  prob_mad=7.791045e-05
+    Layer  6: top1= 99.12%  top8_overlap= 99.32%  prob_mad=8.940845e-05
+    Layer  7: top1= 98.73%  top8_overlap= 99.39%  prob_mad=1.026766e-04
+    Layer  8: top1= 98.44%  top8_overlap= 99.21%  prob_mad=1.134092e-04
+    Layer  9: top1= 98.73%  top8_overlap= 99.38%  prob_mad=1.286143e-04
+    Layer 10: top1= 98.63%  top8_overlap= 99.23%  prob_mad=1.326660e-04
+    Layer 11: top1= 98.68%  top8_overlap= 99.29%  prob_mad=1.452701e-04
+    Layer 12: top1= 98.14%  top8_overlap= 99.30%  prob_mad=1.527131e-04
+    Layer 13: top1= 98.49%  top8_overlap= 99.04%  prob_mad=1.667509e-04
+    Layer 14: top1= 98.29%  top8_overlap= 99.18%  prob_mad=1.730424e-04
+    Layer 15: top1= 98.00%  top8_overlap= 99.32%  prob_mad=1.819370e-04
+
+=== Control: float32 Prompt-style vs Decode-style on Prompt 0 (64 tokens, layers 0..3) ===
+=== Comparison (float32 control (1x64 tokens, 4 layers)): Prompt-style vs Decode-style (1x64 tokens, 4 layers) ===
+  Prob abs diff: mean=6.403990e-09, median=3.725290e-09, max=6.556511e-07
+  Top-1 expert match:          100.00%
+  Top-8 set overlap (recall):  100.00% (mean 8.000 / 8 experts)
+  Top-8 exact rank-order match:100.00%
+  Per-layer Top-1 match & Top-8 set overlap:
+    Layer  0: top1=100.00%  top8_overlap=100.00%  prob_mad=7.770836e-09
+    Layer  1: top1=100.00%  top8_overlap=100.00%  prob_mad=5.823296e-09
+    Layer  2: top1=100.00%  top8_overlap=100.00%  prob_mad=5.763894e-09
+    Layer  3: top1=100.00%  top8_overlap=100.00%  prob_mad=6.257935e-09
+Saved traces and summary to /root/dm-study/specmd/w2/traces
+
+=== 3. Check saved trace files ===
+total 28M
+-rw-r--r-- 1 root root  14M Oct 26 07:28 decode_traces.npz
+-rw-r--r-- 1 root root 3.1K Oct 26 07:28 e3_trace_summary.json
+-rw-r--r-- 1 root root  14M Oct 26 07:28 prompt_traces.npz
+-rw-r--r-- 1 root root 1.1M Oct 26 07:25 wikitext2_valid.txt
+FINISHED rc=0

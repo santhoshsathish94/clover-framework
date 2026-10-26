@@ -1,0 +1,52 @@
+=== 1. REPOSITORY 1-CLUSTER VS 4-CLUSTER TESTBENCHES (FRESH COPY) ===
+router_cluster_pe_cluster_tb: cycles=112 
+router_cluster_pe_cluster_5x5_tb: cycles=251 
+HMNoC_cluster_west_tb: cycles=NONE(no_compute_or_finish) 
+router_pe_4_clusters_tb: cycles=98 ALL4_LAST_ITER: west0=(4755,4530,4305) west1=(1086,1041,996) east0=(951,906,861) east1=(1041,996,951)
+router_pe_4_clusters_5x5_tb: cycles=197 ALL4_LAST_ITER: west0=(750,725,700) west1=(775,750,725) east0=(700,675,650) east1=(725,700,675)
+
+=== 2. CUSTOM PROBLEM-SIZE & CLUSTER-COUNT SCALING TESTBENCH (tb_e3_scaling.sv) ===
+SIZE(K=3,H=5) row=0 out=[411,456,501]
+SIZE(K=3,H=5) row=1 out=[636,681,726]
+SIZE(K=3,H=5) row=2 out=[861,906,951]
+SIZE_SUMMARY K=3 H=5 E=3 PEs=9: load_w=10 load_a=26 compute=36 total=72
+SIZE(K=3,H=6) row=0 out=[474,519,564,609]
+SIZE(K=3,H=6) row=1 out=[744,789,834,879]
+SIZE(K=3,H=6) row=2 out=[1014,1059,1104,1149]
+SIZE(K=3,H=6) row=3 out=[1284,1329,1374,1419]
+SIZE_SUMMARY K=3 H=6 E=4 PEs=12: load_w=10 load_a=37 compute=48 total=95
+SIZE(K=3,H=7) row=0 out=[537,582,627,672,717]
+SIZE(K=3,H=7) row=1 out=[852,897,942,987,1032]
+SIZE(K=3,H=7) row=2 out=[1167,1212,1257,1302,1347]
+SIZE(K=3,H=7) row=3 out=[1482,1527,1572,1617,1662]
+SIZE(K=3,H=7) row=4 out=[1797,1842,1887,1932,1977]
+SIZE_SUMMARY K=3 H=7 E=5 PEs=15: load_w=10 load_a=50 compute=60 total=120
+SIZE(K=5,H=7) row=0 out=[7325,7650,7975]
+SIZE(K=5,H=7) row=1 out=[9600,9925,10250]
+SIZE(K=5,H=7) row=2 out=[11875,12200,12525]
+SIZE_SUMMARY K=5 H=7 E=3 PEs=15: load_w=26 load_a=50 compute=54 total=130
+CLUST(N=1,corrupt=0) pass=0 row2: w0=[4305,4530,4755] w1=[61329,61329,61329] e0=[61329,61329,61329] e1=[61329,61329,61329]
+CLUST(N=1,corrupt=0) pass=1 row2: w0=[996,1041,1086] w1=[61329,61329,61329] e0=[61329,61329,61329] e1=[61329,61329,61329]
+CLUST(N=1,corrupt=0) pass=2 row2: w0=[861,906,951] w1=[61329,61329,61329] e0=[61329,61329,61329] e1=[61329,61329,61329]
+CLUST(N=1,corrupt=0) pass=3 row2: w0=[951,996,1041] w1=[61329,61329,61329] e0=[61329,61329,61329] e1=[61329,61329,61329]
+CLUST_SUMMARY N=1 corrupt=0 passes=4 active_cycles=291
+CLUST(N=2,corrupt=0) pass=0 row2: w0=[4305,4530,4755] w1=[61329,61329,61329] e0=[996,1041,1086] e1=[61329,61329,61329]
+CLUST(N=2,corrupt=0) pass=1 row2: w0=[861,906,951] w1=[61329,61329,61329] e0=[951,996,1041] e1=[61329,61329,61329]
+CLUST_SUMMARY N=2 corrupt=0 passes=2 active_cycles=145
+CLUST(N=4,corrupt=0) pass=0 row2: w0=[4305,4530,4755] w1=[996,1041,1086] e0=[861,906,951] e1=[951,996,1041]
+CLUST_SUMMARY N=4 corrupt=0 passes=1 active_cycles=72
+CLUST(N=4,corrupt=1) pass=0 row2: w0=[4390,4620,4850] w1=[1016,1062,1108] e0=[878,924,970] e1=[970,1016,1062]
+CLUST_SUMMARY N=4 corrupt=1 passes=1 active_cycles=72
+- /root/dm-study/eyeriss-v2/w2/e3_work/tb_e3_scaling.sv:187: Verilog $finish
+
+=== 3. PYTHON GOLDEN CONVOLUTION & SCALING VERIFICATION ===
+Verified (K=3, H=5): all 3x3 outputs match Python golden; total_active_cycles=72 (predicted 72)
+Verified (K=3, H=6): all 4x4 outputs match Python golden; total_active_cycles=95 (predicted 95)
+Verified (K=3, H=7): all 5x5 outputs match Python golden; total_active_cycles=120 (predicted 120)
+Verified (K=5, H=7): all 3x3 outputs match Python golden; total_active_cycles=130 (predicted 130)
+Verified Cluster Scaling N=1: active_cycles=291 (expected 291 with PE.sv iter-wrap + filt_count reset)
+Verified Cluster Scaling N=2: active_cycles=145 (expected 145 with PE.sv iter-wrap + filt_count reset)
+Verified Cluster Scaling N=4: active_cycles=72 (expected 72 with PE.sv iter-wrap + filt_count reset)
+Negative control (corrupt w[4]=5->6): normal_w0=[4305, 4530, 4755] corrupt_w0=[4390, 4620, 4850] expected_corrupt=[4390, 4620, 4850] fails_normal=True
+ALL E3 CHECKS PASSED.
+FINISHED rc=0

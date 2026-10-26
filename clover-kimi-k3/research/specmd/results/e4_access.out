@@ -1,0 +1,37 @@
+=== 1. Distinct Experts Touched in Window W in {1, 8, 64} ===
+  W= 1: per-layer= 8.00/64 (12.50%) [iid_unif= 8.00] | global=128.00/1024 (12.50%) [iid_unif=128.00]
+  W= 8: per-layer=30.71/64 (47.98%) [iid_unif=42.01] | global=491.29/1024 (47.98%) [iid_unif=672.14]
+  W=64: per-layer=56.76/64 (88.68%) [iid_unif=63.99] | global=908.09/1024 (88.68%) [iid_unif=1023.80]
+
+=== 2. Same-Layer Token-to-Token Expert Overlap ===
+  Lag dt= 1: overlap=39.20% (3.136/8 experts)
+  Lag dt= 2: overlap=29.69% (2.375/8 experts)
+  Lag dt= 4: overlap=26.19% (2.095/8 experts)
+  Lag dt= 8: overlap=24.82% (1.986/8 experts)
+  Lag dt=16: overlap=24.79% (1.983/8 experts)
+  Shuffled-token control (popularity skew only, no temporal locality): 20.80% (1.664/8)
+  IID uniform baseline (8/64): 12.50% (1.000/8)
+  Per-layer lag-1 overlap: L0:26.6% L1:30.8% L2:37.9% L3:36.5% L4:49.2% L5:47.2% L6:45.9% L7:45.6% L8:43.8% L9:35.4% L10:30.3% L11:40.1% L12:38.3% L13:41.4% L14:40.5% L15:37.7%
+
+=== 3. Expert Popularity Skew ===
+  Global Gini across 1,024 experts: 0.3845 (mean per-layer Gini: 0.3795)
+  Per-layer Gini: L0:0.327 L1:0.287 L2:0.356 L3:0.326 L4:0.448 L5:0.431 L6:0.396 L7:0.432 L8:0.409 L9:0.347 L10:0.283 L11:0.384 L12:0.373 L13:0.426 L14:0.421 L15:0.424
+  Active experts seen at least once: 1020/1024 (min count=0, max=1728, mean=256.0)
+  Share of total activations by top experts: {'top_1pct_10exp': '5.62%', 'top_5pct_51exp': '18.05%', 'top_12.5pct_128exp': '32.22%', 'top_25pct_256exp': '49.61%'}
+
+=== 4. Reuse Distance Distributions ===
+=== Stack Reuse Distance: Within-Layer Stream (per-layer token order, max dist 63) (total=262144, reuses=261124, cold=1020) ===
+  Quantiles [min, p10, p25, p50, p75, p90, max]: [0.0, 5.0, 7.0, 15.0, 31.0, 44.0, 63.0]
+  Fraction of all requests with stack_dist < C (exact LRU hit rate at capacity C):
+    C=8:27.04%  C=10:36.86%  C=51:94.48%  C=120:99.61%  C=128:99.61%  C=256:99.61%  C=512:99.61%
+=== Stack Reuse Distance: Decode-Style Global Stream (token-major across 16 layers) (total=262144, reuses=261124, cold=1020) ===
+  Quantiles [min, p10, p25, p50, p75, p90, max]: [120.0, 125.0, 127.0, 239.0, 504.0, 712.0, 1015.0]
+  Fraction of all requests with stack_dist < C (exact LRU hit rate at capacity C):
+    C=8:0.00%  C=10:0.00%  C=51:0.00%  C=120:0.00%  C=128:27.04%  C=256:51.05%  C=512:75.22%
+=== Stack Reuse Distance: Prompt-Style Global Stream (layer-major per 256-tok prompt) (total=262144, reuses=261124, cold=1020) ===
+  Quantiles [min, p10, p25, p50, p75, p90, max]: [0.0, 5.0, 7.0, 15.0, 32.0, 46.0, 1016.0]
+  Fraction of all requests with stack_dist < C (exact LRU hit rate at capacity C):
+    C=8:27.00%  C=10:36.81%  C=51:92.88%  C=120:96.98%  C=128:96.98%  C=256:96.98%  C=512:96.98%
+
+Saved e4_access_summary.json
+FINISHED rc=0

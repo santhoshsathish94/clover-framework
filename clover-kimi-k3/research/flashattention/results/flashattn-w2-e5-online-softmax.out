@@ -1,0 +1,27 @@
+=== Plain full-row softmax reference: O=[+0.231204, -0.139544, +0.375889, -0.040121], LSE=+4.537275 ===
+
+=== 1. Exact Online Softmax Block-by-Block Trace ===
+--- Trace mode: EXACT ONLINE SOFTMAX (N=16, d=4, B_c=4, T_c=4) ---
+  Block 1/4 [keys  0.. 3]: m_blk=-0.0009 l_blk=3.5089 | m=-0.0009 l=  3.5089 alpha=0.0000 beta=1.0000 | O=[-0.775328, -0.283623, -0.116234, +0.453355] | err_vs_prefix_ref=5.55e-17
+  Block 2/4 [keys  4.. 7]: m_blk=+1.8374 l_blk=2.9246 | m=+1.8374 l=  3.4829 alpha=0.1591 beta=1.0000 | O=[+0.555435, -0.726488, +0.538052, +0.598000] | err_vs_prefix_ref=1.11e-16
+  Block 3/4 [keys  8..11]: m_blk=+0.3586 l_blk=2.6937 | m=+1.8374 l=  4.0968 alpha=1.0000 beta=0.2279 | O=[+0.452661, -0.641572, +0.447221, +0.563335] | err_vs_prefix_ref=2.22e-16
+  Block 4/4 [keys 12..15]: m_blk=+2.9580 l_blk=3.5157 | m=+2.9580 l=  4.8516 alpha=0.3261 beta=1.0000 | O=[+0.231204, -0.139544, +0.375889, -0.040121] | err_vs_prefix_ref=5.55e-17
+  Final FA1 vs plain softmax max_abs_diff = 5.551e-17
+  Final FA2 vs plain softmax max_abs_diff = 5.551e-17
+  Final LSE vs torch.logsumexp abs_diff   = 0.000e+00
+
+=== 2. Negative Control A: Omit exp(m_old - m_new) Rescale ===
+--- Trace mode: OMIT exp(m_old - m_new) [NEG CTRL A] (N=16, d=4, B_c=4, T_c=4) ---
+  Block 1/4 [keys  0.. 3]: m_blk=-0.0009 l_blk=3.5089 | m=-0.0009 l=  3.5089 alpha=0.0000 beta=1.0000 | O=[-0.775328, -0.283623, -0.116234, +0.453355] | err_vs_prefix_ref=5.55e-17
+  Block 2/4 [keys  4.. 7]: m_blk=+1.8374 l_blk=2.9246 | m=+1.8374 l=  6.4335 alpha=1.0000 beta=1.0000 | O=[-0.054892, -0.523377, +0.237977, +0.531661] | err_vs_prefix_ref=6.10e-01
+  Block 3/4 [keys  8..11]: m_blk=+0.3586 l_blk=2.6937 | m=+1.8374 l=  9.1272 alpha=1.0000 beta=1.0000 | O=[-0.077169, -0.416088, +0.147654, +0.482972] | err_vs_prefix_ref=5.30e-01
+  Block 4/4 [keys 12..15]: m_blk=+2.9580 l_blk=3.5157 | m=+2.9580 l= 12.6429 alpha=1.0000 beta=1.0000 | O=[-0.014818, -0.286141, +0.203583, +0.273748] | err_vs_prefix_ref=3.14e-01
+  [NegCtrl A] FA1 without rescale vs plain softmax max_abs_diff = 3.139e-01
+  [NegCtrl A] FA2 without rescale vs plain softmax max_abs_diff = 3.139e-01
+  [NegCtrl A] LSE without rescale abs_diff                      = 9.578e-01
+
+=== 3. Negative Control B: Causal mask shifted by +1 and -1 (N=64, d=32, B_c=16, B_r=16) ===
+  [exact causal mask (shift=0)]   max_abs_diff = 9.437e-16
+  [shifted causal mask (shift=+1)] max_abs_diff = 1.482e+00 (row 0 err=1.482e+00, last row N-1 err=1.110e-16)
+  [shifted causal mask (shift=-1)] max_abs_diff = 2.408e+00
+FINISHED rc=0

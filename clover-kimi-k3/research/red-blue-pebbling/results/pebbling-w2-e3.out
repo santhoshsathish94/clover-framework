@@ -1,0 +1,47 @@
+=== (a) & (b) HAND-DERIVED TINY GRAPHS VS DIJKSTRA VS RAW BFS + SCHEDULE VERIFIER ===
+Graph           S | Dijkstra   Pruned   RawBFS | Verified   States
+chain_3         1 |     None     None     None |   INFEAS        2
+chain_3         2 |        2        2        2 |    OK(2)       18
+chain_3         3 |        2        2        2 |    OK(2)       23
+chain_3         4 |        2        2        2 |    OK(2)       23
+chain_3         5 |        2        2        2 |    OK(2)       23
+v_tree_3        1 |     None     None     None |   INFEAS        3
+v_tree_3        2 |     None     None     None |   INFEAS        4
+v_tree_3        3 |        3        3        3 |    OK(3)       12
+v_tree_3        4 |        3        3        3 |    OK(3)       12
+v_tree_3        5 |        3        3        3 |    OK(3)       12
+diamond_4       1 |     None     None     None |   INFEAS        2
+diamond_4       2 |     None     None     None |   INFEAS       27
+diamond_4       3 |        2        2        2 |    OK(2)       62
+diamond_4       4 |        2        2        2 |    OK(2)       76
+diamond_4       5 |        2        2        2 |    OK(2)       76
+bintree_7       1 |     None     None     None |   INFEAS        5
+bintree_7       2 |     None     None     None |   INFEAS       11
+bintree_7       3 |        7        7        7 |    OK(7)      207
+bintree_7       4 |        5        5        5 |    OK(5)      309
+bintree_7       5 |        5        5        5 |    OK(5)      434
+
+=== (c) NEGATIVE CONTROL 1: DELIBERATELY BROKEN RULE (R3 WITH >=1 RED PREDECESSOR) ===
+  diamond_4    S=1: exact Q*=None vs broken_any_pred Q=None
+  diamond_4    S=2: exact Q*=None vs broken_any_pred Q=   2
+  diamond_4    S=3: exact Q*=   2 vs broken_any_pred Q=   2
+  diamond_4    S=4: exact Q*=   2 vs broken_any_pred Q=   2
+  bintree_7    S=1: exact Q*=None vs broken_any_pred Q=None
+  bintree_7    S=2: exact Q*=None vs broken_any_pred Q=   2
+  bintree_7    S=3: exact Q*=   7 vs broken_any_pred Q=   2
+  bintree_7    S=4: exact Q*=   5 vs broken_any_pred Q=   2
+
+=== (d) NEGATIVE CONTROL 2: ILLEGAL SCHEDULES REJECTED BY VERIFIER ===
+  Valid diamond S=3 schedule (10 moves): ok=True, cost=2, msg=OK
+  Mutated schedule (missing R1(0)): ok=False, msg=Step 1 (PaperMove(rule='R3', node_id=2, color=None)) failed: R3 rejected: predecessors [0] of 2 lack red pebbles
+  Mutated schedule (missing final R4 cleanup): ok=False, msg=Not in terminal state: red=set(), blue={0, 3}, expected blue={3}
+  Valid S=3 schedule run with S=2 limit: ok=False, msg=Step 3 (PaperMove(rule='R3', node_id=1, color=None)) failed: R3 rejected: red pebble limit S=2 reached
+
+=== (e) CANONICAL DAGS SWEEP (CHAIN, TREE, DIAMOND, PYRAMIDS) ===
+  chain_4          (n= 4, |I|=1, |O|=1, d=1): S=1:INF  S=2:2  S=3:2  S=4:2  S=5:2  S=6:2
+  chain_6          (n= 6, |I|=1, |O|=1, d=1): S=1:INF  S=2:2  S=3:2  S=4:2  S=5:2  S=6:2
+  diamond_4        (n= 4, |I|=1, |O|=1, d=2): S=1:INF  S=2:INF  S=3:2  S=4:2  S=5:2  S=6:2
+  bintree_7        (n= 7, |I|=4, |O|=1, d=2): S=1:INF  S=2:INF  S=3:7  S=4:5  S=5:5  S=6:5
+  pyramid_b3_n6    (n= 6, |I|=3, |O|=1, d=2): S=1:INF  S=2:INF  S=3:6  S=4:4  S=5:4  S=6:4
+  pyramid_b4_n10   (n=10, |I|=4, |O|=1, d=2): S=1:INF  S=2:INF  S=3:11  S=4:7  S=5:5  S=6:5
+FINISHED rc=0

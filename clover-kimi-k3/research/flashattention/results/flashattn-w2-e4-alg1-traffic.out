@@ -1,0 +1,23 @@
+=== 1. Hand-countable verification: N=4, d=2 at M=16 and M=8 ===
+  [Std N=4,d=2] mat_reads=56 mat_writes=40 total_mat=96 (hand: 56, 40, 96)
+  [FA1 N=4,d=2 M=16] B_c=2 B_r=2 T_c=2 T_r=2 | mat_reads=48 mat_writes=16 total_qkvo=64 (hand: 64) | total_all=112 (hand: 112) | max_diff=1.67e-16
+  [FA1 N=4,d=2 M= 8] B_c=1 B_r=1 T_c=4 T_r=4 | mat_reads=80 mat_writes=32 total_qkvo=112 (hand: 112) | total_all=192 (hand: 192) | max_diff=1.11e-16
+  [NegCtrl drop_last_outer N=4,d=2,M=16] total_qkvo=32 (!= 64) max_diff=4.457e-01 (must fail)
+=== 2. Exactness sweep across shapes (N in 64..2048, d in 32/64/128, causal, M) ===
+  checked N= 113 d= 64 (causal/non-causal): running max_abs=1.554e-15 max_rel=1.768e-15
+  checked N= 517 d= 64 (causal/non-causal): running max_abs=2.442e-15 max_rel=2.681e-15
+  checked N=2048 d= 64 (causal/non-causal): running max_abs=2.442e-15 max_rel=3.120e-15
+  --> Exactness summary across 194 configs: max_abs_diff=2.442e-15 max_rel_diff=3.157e-15
+=== 3. Traffic ratio and crossover M at N=4096, d=64 (counted by HBMCounter) ===
+  Standard attention (N=4096, d=64): E_std = 68,157,440 elements (reads=34,340,864, writes=33,816,576)
+  M=  8192 | B_c= 32 B_r=32 T_c=128 T_r=128 | E_qkvo=101,187,584 (ratio=0.673575x) | E_all=103,555,072 (ratio=0.658176x) | err=6.94e-16
+  M= 12032 | B_c= 47 B_r=47 T_c= 88 T_r= 88 | E_qkvo=69,730,304 (ratio=0.977444x) | E_all=71,442,432 (ratio=0.954019x) | err=7.63e-16
+  M= 12033 | B_c= 48 B_r=48 T_c= 86 T_r= 86 | E_qkvo=68,157,440 (ratio=1.000000x) | E_all=69,836,800 (ratio=0.975953x) | err=8.19e-16
+  M= 12288 | B_c= 48 B_r=48 T_c= 86 T_r= 86 | E_qkvo=68,157,440 (ratio=1.000000x) | E_all=69,836,800 (ratio=0.975953x) | err=8.19e-16
+  M= 12289 | B_c= 49 B_r=49 T_c= 84 T_r= 84 | E_qkvo=66,584,576 (ratio=1.023622x) | E_all=68,231,168 (ratio=0.998919x) | err=7.56e-16
+  M= 16384 | B_c= 64 B_r=64 T_c= 64 T_r= 64 | E_qkvo=50,855,936 (ratio=1.340206x) | E_all=52,174,848 (ratio=1.306328x) | err=7.36e-16
+  M= 32768 | B_c=128 B_r=64 T_c= 32 T_r= 64 | E_qkvo=25,690,112 (ratio=2.653061x) | E_all=26,484,736 (ratio=2.573461x) | err=7.49e-16
+  M= 65536 | B_c=256 B_r=64 T_c= 16 T_r= 64 | E_qkvo=13,107,200 (ratio=5.200000x) | E_all=13,639,680 (ratio=4.996997x) | err=7.56e-16
+  M= 98304 | B_c=384 B_r=64 T_c= 11 T_r= 64 | E_qkvo= 9,175,040 (ratio=7.428571x) | E_all= 9,625,600 (ratio=7.080851x) | err=7.77e-16
+  M=131072 | B_c=512 B_r=64 T_c=  8 T_r= 64 | E_qkvo= 6,815,744 (ratio=10.000000x) | E_all= 7,217,152 (ratio=9.443814x) | err=7.49e-16
+FINISHED rc=0
