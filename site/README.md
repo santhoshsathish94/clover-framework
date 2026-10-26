@@ -34,6 +34,7 @@ python -m http.server 8000 --directory site
 ```
 site/
   index.html        the framework: one cycle, at any scale
+  origin/           the Origin page: 11 foundational AI papers (1943–2017) explained from firsthand code and experiments
   start/            the AGENTS.md menu page: read-only access, the agent file, a first cycle
   governance/       governance: access, attribution, approvals, delegated execution
   security/         a redirect stub, kept so the old URL still resolves
