@@ -366,7 +366,7 @@ class K3GPUExpertsRunner:
     def get_data_movement_ledger(self) -> dict:
         if not hasattr(self.lib, "k3_full93_dm_stats"):
             return {}
-        dm = (ctypes.c_ulong * 10)()
+        dm = (ctypes.c_ulong * 11)()
         self.lib.k3_full93_dm_stats(dm)
         pol_id = int(dm[0])
         pol_names = {0: "lru", 1: "heat_48", 2: "belady_opt", 3: "specmd_least_stale_r4"}
@@ -379,6 +379,7 @@ class K3GPUExpertsRunner:
         r4_skip = int(dm[7])
         cslots = int(dm[8])
         hslots = int(dm[9])
+        spec_pf = int(dm[10])
         tot_req = perm_hits + dyn_need
         tot_vram = perm_hits + hit_card
         exp_raw = 17547264
@@ -393,6 +394,7 @@ class K3GPUExpertsRunner:
             "from_drive_R1": from_drive,
             "written_back_R2": wb_d2h,
             "r4_clean_drops": r4_skip,
+            "spec_lookahead_hits": spec_pf,
             "dyn_hit_rate_pct": round(100.0 * hit_card / max(1, dyn_need), 2),
             "overall_vram_hit_rate_pct": round(100.0 * tot_vram / max(1, tot_req), 2),
             "pcie_gb_moved": round((hit_host + from_drive + wb_d2h) * exp_raw / 1e9, 3),

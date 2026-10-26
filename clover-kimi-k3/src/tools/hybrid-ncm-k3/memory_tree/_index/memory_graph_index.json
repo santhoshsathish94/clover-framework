@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "built_at": "2026-10-26T10:24:02Z",
+  "built_at": "2026-10-26T13:31:02Z",
   "validation": {
     "is_healthy": true,
     "total_files": 33,
@@ -978,18 +978,16 @@
       "concepts": [
         "rust-host-path",
         "kimi-k3-moe",
-        "slotcache",
-        "data-movement",
+        "expert-slot-cache",
         "red-blue-pebbling",
-        "specmd",
-        "flashattention-2",
-        "eyeriss"
+        "specmd-least-stale",
+        "flashattention-splitkv",
+        "eyeriss-broadcast-coalescing"
       ],
       "tags": [
         "systems",
         "outcome",
         "verified",
-        "data-movement",
         "gpu"
       ],
       "created_at": "2026-10-26T10:20:00Z",
