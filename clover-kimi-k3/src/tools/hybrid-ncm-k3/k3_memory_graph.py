@@ -2318,13 +2318,13 @@ class CloverMemoryGraphStore:
         if not seed_cands:
             return {"single_head_top_k": [], "multihead_lrn_top_k": [], "facets_single_head": 0, "facets_multihead_lrn": 0}
 
-        # Expand from the top-2 seeds by 1 hop so the candidate pool stays strictly on the query's constellation
+        # Expand from the top-2 seeds by 2 hops so the candidate pool covers the full evolution chain
         top_seed_ids = [eid for _, eid, _ in seed_cands[:2]]
-        trav = self.traverse(seed_ids=top_seed_ids, max_depth=1, direction="both", max_nodes=12, min_similar_confidence=0.75)
+        trav = self.traverse(seed_ids=top_seed_ids, max_depth=2, direction="both", max_nodes=16, min_similar_confidence=0.75)
         base_sc_map = {eid: sc for sc, eid, _ in seed_cands}
         max_base = max((sc for sc, _, _ in seed_cands), default=1.0)
-        # 1-hop constellation neighbors of the #1 seed inherit 0.65 * max_base if not directly scored
-        pool_ids = list(dict.fromkeys([ tn.entry.id for tn in trav ] + [eid for _, eid, _ in seed_cands[:4]]))
+        depth_map = {tn.entry.id: tn.depth for tn in trav}
+        pool_ids = list(dict.fromkeys([tn.entry.id for tn in trav] + [eid for _, eid, _ in seed_cands[:4]]))
 
         def _subspace_mask_of(e: MemoryEntry) -> tuple[float, float, float]:
             """Vaswani et al. (2017, Section 3.2.2) Orthogonal Subspace Projection `W_h^K`:
@@ -2368,8 +2368,10 @@ class CloverMemoryGraphStore:
 
         for idx, eid in enumerate(pool_ids):
             e = self.entries[eid]
-            # Connected constellation members inherit strong structural relevance from their seed
-            norm_base = float(base_sc_map.get(eid, max_base * 0.72)) / max(1.0, max_base)
+            # Connected constellation members inherit structural relevance attenuated by hop depth
+            hop_d = depth_map.get(eid, 2)
+            fallback_sc = max_base * (0.72 if hop_d <= 1 else 0.58)
+            norm_base = float(base_sc_map.get(eid, fallback_sc)) / max(1.0, max_base)
             m0, m1, m2 = _subspace_mask_of(e)
             has_nums = 0.20 if re.search(r"\d+(?:\.\d+)?(?:%|x|\s*ms|\s*s/tok)", f"{e.summary} {e.source_evidence}") else 0.0
             has_corr = 0.25 if any(r.type in ("corrects", "refines") for r in self.outgoing.get(eid, [])) else 0.0
