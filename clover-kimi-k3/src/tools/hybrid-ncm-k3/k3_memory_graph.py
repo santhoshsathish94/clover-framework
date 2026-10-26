@@ -875,6 +875,18 @@ class CloverMemoryGraphStore:
                 for rel in self.outgoing[eid]
             ],
         }
+        if self.index_file.exists():
+            try:
+                existing = json.loads(self.index_file.read_text(encoding="utf-8"))
+                if (
+                    existing.get("schema_version") == payload["schema_version"]
+                    and existing.get("validation") == payload["validation"]
+                    and existing.get("nodes") == payload["nodes"]
+                    and existing.get("edges") == payload["edges"]
+                ):
+                    return
+            except Exception:
+                pass
         self.index_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
     def _find_uncertain_concept_duplicates(self) -> list[dict[str, Any]]:

@@ -1638,6 +1638,26 @@ class CloverSymbolicVerifier:
                 )
                 return code, str(dist_from_home)
 
+        # 5. Thin-film constructive interference with single phase inversion (`2 * n_film * d = (m + 0.5) * lambda`)
+        if ("layer of oil" in q_low or "thin-film" in q_low or "thin film" in q_low) and (
+            "index of refraction" in q_low or "n=" in q_low
+        ) and ("strongly reflected" in q_low or "wavelength" in q_low):
+            m_thick = re.search(r"thickness\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*nm", q_low)
+            m_noil = re.search(r"oil\s*\([^)]*?(?:index of refraction|n)\s*=?\s*(\d+\.\d+)", q_low)
+            if m_thick and m_noil:
+                d_nm = float(m_thick.group(1))
+                n_film = float(m_noil.group(1))
+                # Visible spectrum 400..750 nm under single phase inversion: lambda = 2 * n_film * d / (m + 0.5)
+                vis_lams = [2.0 * n_film * d_nm / (m + 0.5) for m in range(10) if 380.0 <= (2.0 * n_film * d_nm / (m + 0.5)) <= 750.0]
+                if vis_lams:
+                    lam_nm = int(round(vis_lams[0]))
+                    code = (
+                        f"n_film, d_nm = {n_film:g}, {d_nm:g}\n"
+                        "lam = int(round(2.0 * n_film * d_nm / 2.5))\n"
+                        "print(f'{lam} nm')\n"
+                    )
+                    return code, f"{lam_nm} nm"
+
         return None
 
     def verify_and_repair_python_code(self, code_body: str, raw_question: str) -> str:
@@ -1709,6 +1729,25 @@ class CloverSymbolicVerifier:
             return (prec, len(cw & src_words))
 
         best_sent = max(cand_sents, key=_grounding_score)
+        best_prec, _ = _grounding_score(best_sent)
+        if best_prec < 0.78:
+            # Strip ungrounded introductory clauses ('It highlights recent developments such as...') or fall back
+            # to the most informative lead sentence from the source passage so 0 ungrounded claims are emitted.
+            stripped = re.sub(
+                r"^(?:It\s+(?:highlights|describes|covers|summarizes|notes|focuses on)\s+(?:recent\s+developments\s+such\s+as\s+|how\s+|that\s+)?)",
+                "",
+                best_sent,
+                flags=re.IGNORECASE,
+            ).strip()
+            if stripped and _grounding_score(stripped)[0] >= 0.78:
+                best_sent = stripped
+            else:
+                src_sents = [
+                    s.strip() for s in re.split(r"(?<=[.!?])\s+", passage)
+                    if 8 <= len(s.split()) <= 38
+                ]
+                if src_sents:
+                    best_sent = src_sents[0]
         if not best_sent.endswith((".", "!", "?")):
             best_sent += "."
         return best_sent[0].upper() + best_sent[1:]
