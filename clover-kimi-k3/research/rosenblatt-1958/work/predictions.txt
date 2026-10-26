@@ -1,0 +1,35 @@
+# Predictions Log — Frank Rosenblatt (1958) Perceptron Study
+
+## E1: Clone and run reference repositories (`vukrosic/rosenblatt-from-scratch`, `kaisdukes/rosenblatt-perceptron`, `Honghe/perceptron`)
+Timestamp (before run): 2026-10-26 15:48 UTC
+Predictions:
+1. `vukrosic/rosenblatt-from-scratch` will run all 7 steps (`step1_neuron.py` through `step7_backprop.py`) and pass `tests.py` (`rc=0`), reproducing:
+   - `step2_learn.py`: 400-weight perceptron learning left vs right mark in 14 mistakes out of 10,000 cards (last mistake on card 145, 2,000/2,000 test accuracy after 200 cards).
+   - `step3_mark1.py`: Mark I simulation (400 photocells -> 512 random A-units -> 4 response units for X, E, T, O) improving from 250/1,000 (25.0%) before training to 976/1,000 (97.6%) after 10 passes.
+   - `step4_converge.py`: 1,000 random linearly separable problems all converging within the theoretical mistake bound `(R / gamma)^2` (never exceeding 30% of the bound).
+   - `step5_xor.py`: single perceptron failing XOR (never exceeding 3/4 correct over 1,000,000 cards).
+2. `kaisdukes/rosenblatt-perceptron` will pass its unit tests (`perceptron_test.py`, `rc=0`) and classify Fisher's Iris setosa vs versicolor with 100% test accuracy.
+3. `Honghe/perceptron` will run its perceptron training script on synthetic 2D linearly separable points (`rc=0`).
+
+## E2: Exact 1958 Predominant Phase Equations (P_a Eq. 1, P_c Eq. 2, P_{c,min} Eq. 3, pp. 392-394)
+Timestamp (before run): 2026-10-26 15:48 UTC
+Predictions:
+1. Analytical Equations (1) and (2) will match Monte Carlo simulation of N_A = 20,000 randomly wired A-units on an N_S = 2,000 retina within < 0.008 absolute error across all tested (R, x, y, theta, L, G) settings.
+2. Fig. 4c flattening effect (p. 393): With purely excitatory connections (x=10, y=0, theta=3), P_a(R) will vary steeply (by > 0.80) across stimulus sizes R in [0.1, 0.5], whereas with balanced excitatory and inhibitory connections (x=5, y=5, theta=2), P_a(R) will be flat across R in [0.1, 0.5] (range < 0.12).
+3. At theta = x and y = 0, Equation (2) for P_c will equal Equation (3) P_{c,min} = (1 - L)^x exactly (to < 1e-12), while a negative control that flips the sign of g_e in Equation (2)'s side condition will fail verification.
+
+## E3: Exact 1958 Postdominant Learning Dynamics — Table 1 (alpha, beta, gamma systems), Sigma vs mu systems, and Ideal vs Differentiated Environment (pp. 391-402)
+Timestamp (before run): 2026-10-26 15:48 UTC
+Predictions:
+1. Table 1 invariants & Fig. 10 class-frequency imbalance (n_{s1} = 3 * n_{s2}):
+   - Per reinforcement, total source-set value change is +N_{ar} for alpha, +K for beta, and 0.0 (to within 1e-12) for gamma.
+   - Under 3:1 class-frequency imbalance (n_{s1}=150, n_{s2}=50), the monovalent alpha Sigma-system will be severely biased toward R1 (achieving < 60% accuracy on class 2 and < 75% balanced accuracy), whereas the gamma system (parasitic zero-sum) will achieve > 90% balanced accuracy and give identical choices under Sigma (sum) and mu (mean) discrimination (100% agreement between Sigma and mu in gamma).
+2. Ideal vs Differentiated Environment (Eq. 4-11, Fig. 7 & Fig. 11):
+   - In the Ideal environment (random uncorrelated patterns), memorized recall P_r will be > 0.85 at n_{sr} = 10, decay as n_{sr} grows to 200, and unseen generalization P_g will stay near 0.50 (chance).
+   - In a Differentiated environment where P_{c11} > P_a > P_{c12}, both P_r and unseen generalization P_g will converge to > 0.90 as n_{sr} increases, whereas in a negative control where P_{c11} == P_{c12} (random class assignment), P_g stays at ~0.50.
+
+## E4: Bivalent Error-Correction, Spontaneous Unsupervised Organization (p. 404), and Relational Judgment Boundary (pp. 404-405)
+Timestamp (before run): 2026-10-26 15:48 UTC
+Predictions:
+1. Spontaneous Unsupervised Organization (p. 404): When exposed to an unlabeled stream of stimuli from two dissimilar classes (with P_{c11} >> P_{c12}) under automatic self-reinforcement of whichever response fires + proportional value decay (-lambda * V) + zero-mean/gamma competition, the perceptron will spontaneously polarize so that one class maps to R=1 and the other to R=0 with > 95% clustering purity (whereas without decay/competition, one response monopolizes 100% of stimuli, purity 50%).
+2. Relational Judgment Boundary (pp. 404-405): On a 2-object scene, a local-receptive-field perceptron (where each A-unit sees only one object slot) will learn concrete conjunctions ("Left object is Square AND Right object is Circle") to 100% accuracy, but will fail (<= 50% generalization / cannot separate) on the relational judgment "Left object and Right object have the SAME shape" (XOR over object shapes), which requires A-units whose origin points span both objects.

@@ -1,0 +1,292 @@
+Cloning MrShininnnnn/Temporal-Differences-Learning -> MrShininnnnn-Temporal-Differences-Learning
+Cloning into 'MrShininnnnn-Temporal-Differences-Learning'...
+Cloning vjp23/TD_Lambda -> vjp23-TD_Lambda
+Cloning into 'vjp23-TD_Lambda'...
+Cloning shashir/td-learning -> shashir-td-learning
+Cloning into 'shashir-td-learning'...
+Cloning robosangli/sutton-1988-reproduction -> robosangli-sutton-1988-reproduction
+Cloning into 'robosangli-sutton-1988-reproduction'...
+=== 1. Inspect repo files ===
+--- MrShininnnnn-Temporal-Differences-Learning (commit 186abff) ---
+MrShininnnnn-Temporal-Differences-Learning
+MrShininnnnn-Temporal-Differences-Learning/img
+MrShininnnnn-Temporal-Differences-Learning/img/exploration_figure_5.png
+MrShininnnnn-Temporal-Differences-Learning/img/exp_1.png
+MrShininnnnn-Temporal-Differences-Learning/img/figure_4.png
+MrShininnnnn-Temporal-Differences-Learning/img/exploration_figure_4.png
+MrShininnnnn-Temporal-Differences-Learning/img/exp_2.png
+MrShininnnnn-Temporal-Differences-Learning/img/figure_3.png
+MrShininnnnn-Temporal-Differences-Learning/img/figure_5.png
+MrShininnnnn-Temporal-Differences-Learning/img/exploration_figure_3.png
+MrShininnnnn-Temporal-Differences-Learning/main.ipynb
+MrShininnnnn-Temporal-Differences-Learning/requirements.txt
+MrShininnnnn-Temporal-Differences-Learning/README.md
+MrShininnnnn-Temporal-Differences-Learning/reference
+MrShininnnnn-Temporal-Differences-Learning/reference/Learning_to_Predict_by_the_Methods_of_Temporal_Differences.pdf
+MrShininnnnn-Temporal-Differences-Learning/main.py
+--- robosangli-sutton-1988-reproduction (commit fc1a353) ---
+robosangli-sutton-1988-reproduction
+robosangli-sutton-1988-reproduction/sutton1988.py
+robosangli-sutton-1988-reproduction/figures
+robosangli-sutton-1988-reproduction/figures/convergence_speed.png
+robosangli-sutton-1988-reproduction/figures/figure5.png
+robosangli-sutton-1988-reproduction/figures/seed_average.png
+robosangli-sutton-1988-reproduction/figures/learning_rate_ablation.png
+robosangli-sutton-1988-reproduction/figures/figure3.png
+robosangli-sutton-1988-reproduction/figures/figure4.png
+robosangli-sutton-1988-reproduction/requirements.txt
+robosangli-sutton-1988-reproduction/analysis.py
+robosangli-sutton-1988-reproduction/README.md
+robosangli-sutton-1988-reproduction/results
+robosangli-sutton-1988-reproduction/results/convergence.csv
+robosangli-sutton-1988-reproduction/results/learning_rate_ablation.csv
+robosangli-sutton-1988-reproduction/results/best_alpha_summary.csv
+robosangli-sutton-1988-reproduction/results/seed_statistics.csv
+--- shashir-td-learning (commit 1d42a7b) ---
+shashir-td-learning
+shashir-td-learning/pom.xml
+shashir-td-learning/src
+shashir-td-learning/src/main
+shashir-td-learning/src/main/scala
+shashir-td-learning/README.md
+--- vjp23-TD_Lambda (commit ed1c66a) ---
+vjp23-TD_Lambda
+vjp23-TD_Lambda/sutton_figures.jpg
+vjp23-TD_Lambda/td_learning.py
+vjp23-TD_Lambda/figure3_lg.png
+vjp23-TD_Lambda/figure5_lg.png
+vjp23-TD_Lambda/TD_Lambda_Replication.pdf
+vjp23-TD_Lambda/figure4_lg.png
+vjp23-TD_Lambda/README.md
+=== 2. Run robosangli/sutton-1988-reproduction ===
+>>> Head of ./analysis.py:
+"""
+analysis.py
+Extension experiments for Sutton (1988) reproduction.
+Author: Ananda Sangli
+
+Design:
+- 20-seed averaging with error bars (best-alpha / Figure 5)
+- Convergence: clean lines on one training set (readable)
+- Learning-rate ablation: mean curves with sensible y-limit
+  (std saved to CSV; not plotted as full error bars)
+
+Requires:
+    sutton1988.py
+
+Produces:
+    figures/
+        seed_average.png
+        convergence_speed.png
+        learning_rate_ablation.png
+
+    results/
+        seed_statistics.csv
+        convergence.csv
+        learning_rate_ablation.csv
+        best_alpha_summary.csv
+"""
+
+import csv
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sutton1988 import (
+    FIGURES_DIR,
+    RESULTS_DIR,
+    LAMBDAS,
+>>> Head of ./sutton1988.py:
+"""
+Reproduction of Sutton (1988), "Learning to Predict by the Methods of
+Temporal Differences" -- the bounded random-walk experiment (Section 3.2).
+
+Reproduces:
+  Figure 3  RMS error under REPEATED presentation to convergence, per lambda.
+  Figure 4  RMS error after a SINGLE presentation, vs learning rate alpha,
+            for a few representative lambdas.
+  Figure 5  RMS error after a SINGLE presentation, using the best alpha for
+            each lambda ("ERROR USING BEST alpha").
+
+Plus a correctness check: TD(0) should recover the analytically known true
+values 1/6, 2/6, 3/6, 4/6, 5/6 for states B..F.
+
+The implementation also includes:
+    - TD(0) correctness verification
+    - reusable experiment functions for extension experiments
+"""
+
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+
+# output directories
+FIGURES_DIR = Path("figures")
+RESULTS_DIR = Path("results")
+
+# Configuration
+N_STATES = 5                        # nonterminal states B, C, D, E, F
+START = 2                           # centre state D
+TRUE_VALUES = np.arange(1, 6) / 6   # exact right-termination probabilities
+W_INIT = 0.5                        # Sutton initialises all weights to 0.5
+
+DEFAULT_SEED = 12                   # fixed for reproducibility
+N_SETS = 100                        # training sets
+=== 3. Run shashir/td-learning ===
+=== 4. Inspect MrShininnnnn and vjp23 ===
+>>> MrShininnnnn-Temporal-Differences-Learning README & Python files:
+# Temporal Differences Learning
+
+## Introduction
+The goal of this project is to reproduce the Figure 3, 4, 5 in Richard Sutton’s 1988 paper [***Learning to Predict by the Methods of Temporal Differences***](https://github.com/MrShininnnnn/Temporal-Differences-Learning/raw/master/reference/Learning_to_Predict_by_the_Methods_of_Temporal_Differences.pdf).
+
+### Original Figures
+<p align="center"><img src="./img/exp_2.png" alt="Original Figures" width="810" /></p>
+
+### Reproduced Figures
+<p align="center"><img src="./img/figure_3.png" alt="Reproduced Figure 3"  width="270" /> <img src="./img/figure_4.png" alt="Reproduced Figure 4"  width="270" /> <img src="./img/figure_5.png" alt="Reproduced Figure 5"  width="270" /></p>
+
+## Directory
++ **./img** - to save the output
++ **main.py** - to reproduce the experiments and generate figures directly
++ **main.ipynb** - to view the procudure step by step
+```
+Temporal-Differences-Learning/
+├── README.md
+├── img
+├── main.ipynb
+├── main.py
+├── reference
+└── requirements.txt
+```
+
+## Dependencies
++ python >= 3.7.2
++ jupyter >= 1.0.0
++ numpy >= 1.16.2
++ matplotlib >= 3.1.1
+
+## Setup
+Please ensure the following packages are already installed. A virtual environment is recommended.
++ Python (for .py)
++ Jupyter Notebook (for .ipynb)
+
+```
+$ cd Temporal-Differences-Learning/
+$ pip3 install pip --upgrade
+$ pip3 install -r requirements.txt
+--- ./main.py ---
+#! /usr/bin/env python
+__author__ = 'Ning Shi'
+__email__ = 'mrshininnnnn@gmail.com'
+
+
+# import dependency
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+class BoundedRandomWalks(object):
+      """docstring for BoundedRandomWalks"""
+      def __init__(self, random_seed=0, seq_len=10, batch_num=100, seq_num=10, unique=False):
+            super(BoundedRandomWalks, self).__init__()
+            # define the random seed to reproduce the same result
+            self.random_seed = random_seed
+            # a total of 100 training sets
+            self.train_batch = batch_num
+            # each training set contain 10 sequences
+            self.batch_size = seq_num
+            # limit the length of each sequence
+            self.seq_len = seq_len
+            # ensure no duplicates in a training set
+            self.unique = unique
+            # the true probabilities for each nonterminal states are 1/6, 1/3, 1/2, 2/3 and 5/6
+            self.ideal_pred = np.array([1/6, 1/3, 1/2, 2/3, 5/6], dtype=np.float64).reshape(1, 5)
+            # generate the training set
+            self.train_set = self.generate_data()
+
+      def cal_unique_rate(self, batch):
+            # calculate the unique ratio of a training set
+            unique_batch = []
+            for seq in batch: 
+                  act_seq = [np.argmax(a) for a in seq[:-1]] 
+                  if act_seq not in unique_batch: 
+                        unique_batch.append(act_seq)
+            return len(unique_batch)/len(batch)
+
+      def generate_data(self):
+            # define the initial step at state D
+            start_state = np.array([0, 0, 1, 0, 0], dtype=np.int).reshape(5, 1)
+            # apply the random seed
+            np.random.seed(self.random_seed)
+            # initial the data list
+>>> vjp23-TD_Lambda README & Python files:
+# TD(λ) Learning and Random Walks
+by Vince Petaccio
+### Reproducing Sutton's 1988 Results
+The goal of this work was to replicate the results found in Richard Sutton's 1988 paper entitled *Learning to Predict by the Methods of Temporal Differences*:
+
+![Sutton's Results](sutton_figures.jpg "Sutton's results")
+
+The resulting figures confirm the reproducability of Sutton's results:
+
+![Reproduction of Sutton's figure 3](figure3_lg.png "Reproduction of Sutton's figure 3")
+
+![Reproduction of Sutton's figure 4](figure4_lg.png "Reproduction of Sutton's figure 4")
+
+![Reproduction of Sutton's figure 5](figure5_lg.png "Reproduction of Sutton's figure 5")
+
+See [the analysis](TD_Lambda_Replication.pdf) for a more in-depth review of the original paper and of these reproduced results.
+
+### Running the Code
+Ensure that the NumPy and Matplotlib libraries are installed on the system and are activated within the environment.
+
+Open td_learning.py and set the appropriate experiment switches to True at the top of the file, and then run the code to run the experiments. Note the runtimes listed next to each switch; because many values are calculated for smooth plots, some of the experiments take a while.
+--- ./td_learning.py ---
+# Vince Petaccio
+# github.com/vjp23
+# Reproducing Temporal Difference Learning from Sutton (1988)
+
+# Import libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Set parameters for experiments_______________________________________________________________
+# Switches for choosing which figure to generate                                               |
+run_3 = False # 8.5 minutes runtime                                                            |
+run_4 = False # 1.5 minutes runtime                                                            |
+run_5 = False # 18 minutes runtime_____________________________________________________________|
+                                                          
+# The target actual values
+actual_values = np.array([1/6, 1/3, 1/2, 2/3, 5/6])
+
+# Parameters for generating figure 3
+training_sets_fig3 = 10
+training_sequences_fig3 = 100
+iterations_fig3 = 20
+alpha_fig3 = 0.001
+color_fig3 = '#da008a'
+
+# Parameters for generating figure 4
+training_sets_fig4 = 100
+training_sequences_fig4 = 10
+alphas_fig4 = np.array(range(70)) / 100
+lambdas_fig4 = [0, 0.3, 0.8, 1.0]
+colors_fig4 = ['#da008a', '#7400e3', '#009bdf', '#c5c23d']
+
+# Parameters for generating figure 5
+training_sets_fig5 = 100
+training_sequences_fig5 = 10
+alphas_fig5 = np.array(range(71)) / 100
+lambdas_fig5 = np.array(range(51)) / 50
+color_fig5 = '#00ddac'
+
+# Font sizes for all plots
+title_size = 24
+label_size = 18
+tick_size = 16
+legend_size = 16
+
+# Define functions for generating plot data
+FINISHED
+FINISHED rc=0

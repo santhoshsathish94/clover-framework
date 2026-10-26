@@ -1,0 +1,102 @@
+Cloning into 'in-c0-1982-hopfield-Neural-networks-paper'...
+Cloning into 'pauljmello-Hopfield-Networks'...
+Cloning into '1hubert-hopfield-network'...
+=== Search GitHub for top-starred Hopfield network repos ===
+ml-jku/hopfield-layers | stars=1968 | https://github.com/ml-jku/hopfield-layers | Hopfield Networks is All You Need
+itdxer/neupy | stars=734 | https://github.com/itdxer/neupy | NeuPy is a Tensorflow based python library for prototyping and building neural networks
+ml-jku/hopular | stars=317 | https://github.com/ml-jku/hopular | Hopular: Modern Hopfield Networks for Tabular Data
+yosukekatada/Hopfield_network | stars=106 | https://github.com/yosukekatada/Hopfield_network | Hopfield Network implemented with Python
+takyamamoto/Hopfield-Network | stars=98 | https://github.com/takyamamoto/Hopfield-Network | Hopfield network implemented with Python
+ml-jku/HopCPT | stars=85 | https://github.com/ml-jku/HopCPT | Conformal Prediction for Time Series with Modern Hopfield Networks
+YonghaoXu/Txt2Img-MHN | stars=85 | https://github.com/YonghaoXu/Txt2Img-MHN | [IEEE TIP 2023] Txt2Img-MHN: Remote Sensing Image Generation from Text Using Modern Hopfield Networks
+amanhij/Zikkaron | stars=61 | https://github.com/amanhij/Zikkaron | Biologically-inspired persistent memory engine for Claude Code. 26 cognitive subsystems, Hopfield networks, predictive coding, causal discovery, successor representations, all running locally over SQLite.
+=== Extract Hopfield (1982) primary paper PDF ===
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Pages: 5
+  703 31616 hopfield1982.txt
+=== PAGE 1 ===
+Proc. NatL Acad. Sci. USA
+Vol. 79, pp. 2554-2558, April 1982
+Biophysics
+Neural networks and physical systems with emergent collective
+computational abilities
+(associative memory/parallel processing/categorization/content-addressable memory/fail-soft devices)
+J. J. HOPFIELD
+Division of Chemistry and Biology, California Institute of Technology, Pasadena, California 91125; and Bell Laboratories, Murray Hill, New Jersey 07974
+Contributed by John J. Hopfweld, January 15, 1982
+ABSTRACT
+Computational properties of use to biological or-
+ganisms or to the construction of computers can emerge as col-
+lective properties of systems -having a large number of simple
+equivalent components (or neurons). The physical meaning ofcon-
+tent-addressable memory is described by an appropriate phase
+space flow of the state of a system. A model of such a system is
+given, based on aspects ofneurobiology but readily adapted to in-
+tegrated circuits. The collective properties of this model produce
+a content-addressable memory which correctly yields an entire
+memory from any subpart of sufficient size. The algorithm for the
+time evolution of the state ofthe system is based on asynchronous
+parallel processing. Additional emergent collective properties in-
+clude some capacity for generalization, familiarity recognition,
+categorization, error correction, and time sequence retention.
+The collective properties are only weakly sensitive to details ofthe
+modeling or the failure of individual devices.
+Given the dynamical electrochemical properties ofneurons and
+their interconnections (synapses), we readily understand schemes
+that use a few neurons to obtain elementary useful biological
+behavior (1-3). Our understanding of such simple circuits in
+electronics allows us to plan larger and more complex circuits
+which are essential to large computers. Because evolution has
+no such plan, it becomes relevant to ask whether the ability of
+large collections of neurons to perform "computational" tasks
+may in part be a spontaneous collective consequence of having
+a large number of interacting simple neurons.
+In physical systems made from a large number of simple ele-
+ments, interactions among large numbers of elementary com-
+ponents yield collective phenomena such as the stable magnetic
+orientations and domains in a magnetic system or the vortex
+patterns in fluid flow. Do analogous collective phenomena in
+a system of simple interacting neurons have useful "computa-
+tional" correlates? For example, are the stability of memories,
+the construction of categories of generalization, or time-se-
+quential memory also emergent properties and collective in
+origin? This paper examines a new modeling ofthis old and fun-
+damental question (4-8) and shows that important computa-
+tional properties spontaneously arise.
+All modeling is based on details, and the details of neuro-
+anatomy and neural function are both myriad and incompletely
+known (9). In many physical systems, the nature of the emer-
+gent collective properties is insensitive to the details inserted
+in the model (e.g., collisions are essential to generate sound
+waves, but any reasonable interatomic force law will yield ap-
+propriate collisions). In the same spirit, I will seek collective
+properties that are robust against change in the model details.
+The model could be readily implemented by integrated cir-
+cuit hardware. The conclusions suggest the design of a delo-
+calized content-addressable memory or categorizer using ex-
+=== Inspect cloned Hopfield repos ===
+>>> Repo: in-c0-1982-hopfield-Neural-networks-paper (61ea96eaff65f76f9e93c547863ccc6ac2cdb4b2)
+3460 in-c0-1982-hopfield-Neural-networks-paper/pnas00447-0135.pdf
+>>> Repo: pauljmello-Hopfield-Networks (a185b5bf821485dd2165af38af66e7fe8cace8be)
+    72 pauljmello-Hopfield-Networks/images/traditional/traditional_retrieval_1.png
+    59 pauljmello-Hopfield-Networks/images/traditional/traditional_retrieval_0.png
+    45 pauljmello-Hopfield-Networks/images/traditional/traditional_retrieval_2.png
+   165 pauljmello-Hopfield-Networks/images/comparison/retrieval_comparison_2.png
+   143 pauljmello-Hopfield-Networks/images/comparison/retrieval_comparison_1.png
+   111 pauljmello-Hopfield-Networks/images/comparison/retrieval_comparison_0.png
+   180 pauljmello-Hopfield-Networks/images/comparison/capacity_comparison.png
+   107 pauljmello-Hopfield-Networks/images/modern/modern_retrieval_2.png
+   142 pauljmello-Hopfield-Networks/images/modern/modern_retrieval_0.png
+   115 pauljmello-Hopfield-Networks/images/modern/modern_retrieval_1.png
+    60 pauljmello-Hopfield-Networks/modernhopfield.py
+   289 pauljmello-Hopfield-Networks/utils.py
+    54 pauljmello-Hopfield-Networks/hopfield.py
+    84 pauljmello-Hopfield-Networks/README.md
+    91 pauljmello-Hopfield-Networks/main.py
+  1717 total
+>>> Repo: 1hubert-hopfield-network (1d1ec4b3dbd7f953f12bea2214e688092f1da5f1)
+   2 1hubert-hopfield-network/README.md
+ 157 1hubert-hopfield-network/main.py
+ 159 total
+FINISHED rc=0

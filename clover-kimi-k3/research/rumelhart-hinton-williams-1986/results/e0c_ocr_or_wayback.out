@@ -1,0 +1,19 @@
+=== 1. Find all pylib dirs under /root/dm-study ===
+/root/dm-study/flashattention/w2/pylib
+/root/dm-study/pebbling/pylib
+/root/dm-study/eyeriss-v2/pylib
+ALL_PYLIB=/root/dm-study/pebbling/pylib:/root/dm-study/eyeriss-v2/pylib:
+=== 2. Try Wayback Machine for PDPVolIChapt8.pdf and backprop_old.pdf ===
+Trying https://web.archive.org/web/2021id_/https://web.stanford.edu/class/psych209a/ReadingsByDate/02_06/PDPVolIChapt8.pdf
+  size=4718 head=<!DO
+Trying https://web.archive.org/web/2021id_/http://www.iro.umontreal.ca/~vincentp/ift3395/lectures/backprop_old.pdf
+  size=350989 head=%PDF
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+  pages= 4 text_len= 63 sample= '=== PAGE 1 ===\n\n=== PAGE 2 ===\n\n=== PAGE 3 ===\n\n=== PAGE 4 ===\n'
+Trying https://web.archive.org/web/2020id_/http://www.cs.toronto.edu/~hinton/absps/pdp8.pdf
+  size=1048576 head=%PDF
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+  pages= 0 text_len= 0 sample= ''
+FINISHED rc=0

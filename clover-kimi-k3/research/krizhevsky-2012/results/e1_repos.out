@@ -1,0 +1,874 @@
+Cloning into 'Brilland-baba-alexnet-from-scratch'...
+Cloning into 'matteo-dunnhofer-imagenet'...
+Cloning into 'animikhaich-AlexNet-Tensorflow'...
+Cloning into 'jcwchen-tensorflow_alexnet_classification'...
+Found: Brilland-baba/alexnet-from-scratch (stars=0): AlexNet implementation from scratch with PyTorch - Ablation Study LRN/BN/None - CIFAR-10
+Found: matteo-dunnhofer/imagenet (stars=156): TensorFlow implementation of AlexNet and its training and testing on ImageNet ILSVRC 2012 dataset
+Found: animikhaich/AlexNet-Tensorflow (stars=10): GPU Optimized AlexNet Implementation to train on ImageNet 2012 using Tensorflow 2.x
+Found: jcwchen/tensorflow_alexnet_classification (stars=7): Experiment on AlexNet (Krizhevsky, Alex, Ilya Sutskever, and Geoffrey E. Hinton. "Imagenet classification with deep convolutional neural networks." Advances in neural information processing systems. 2012.)
+Found: RonnieGandhi/Implementing-alexnet-trained-on--ImageNet-s-ILSVRC2012-datasets-using-Tensorflow (stars=2): Implementing DL papers 
+Found: sparky-abhik06/AlexNet_ILSVRC-2012 (stars=0): ImageNet Classification with Deep Convolutional Neural Networks
+Found: akrizhevsky/cuda-convnet2 (stars=829): Automatically exported from code.google.com/p/cuda-convnet2
+Found: dnouri/cuda-convnet (stars=261): My fork of Alex Krizhevsky's cuda-convnet from 2013 where I added dropout, among other features.
+Found: ulrichstern/cuda-convnet (stars=203): Alex Krizhevsky's original code from Google Code
+Found: mavenlin/cuda-convnet (stars=42): started from Alex's code on google code
+Found: soumith/cuda-convnet2.torch (stars=41): Torch7 bindings for cuda-convnet2 kernels!
+=== animikhaich-AlexNet-Tensorflow (commit 8a616ce) ===
+animikhaich-AlexNet-Tensorflow
+animikhaich-AlexNet-Tensorflow/AlexNet_Prototype_Model.ipynb
+animikhaich-AlexNet-Tensorflow/assets
+animikhaich-AlexNet-Tensorflow/assets/alexnet-full.png
+animikhaich-AlexNet-Tensorflow/assets/trainin-curves.png
+animikhaich-AlexNet-Tensorflow/assets/logo.png
+animikhaich-AlexNet-Tensorflow/AlexNet_Data_Loader.ipynb
+animikhaich-AlexNet-Tensorflow/AlexNet_Trainer.ipynb
+animikhaich-AlexNet-Tensorflow/requirements.txt
+animikhaich-AlexNet-Tensorflow/README.md
+animikhaich-AlexNet-Tensorflow/LICENSE
+=== Brilland-baba-alexnet-from-scratch (commit 0078a57) ===
+Brilland-baba-alexnet-from-scratch
+Brilland-baba-alexnet-from-scratch/Plots.py
+Brilland-baba-alexnet-from-scratch/train.py
+Brilland-baba-alexnet-from-scratch/requirements.txt
+Brilland-baba-alexnet-from-scratch/results.json
+Brilland-baba-alexnet-from-scratch/alexnet.py
+Brilland-baba-alexnet-from-scratch/ablation.png
+Brilland-baba-alexnet-from-scratch/README.md
+--- Brilland-baba-alexnet-from-scratch/alexnet.py ---
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+#  Un fonction pour l'initialisation He : std = sqrt(2/fan_in), il va aider à compenser les 50% de neurones
+#    annulés par ReLU pour maintenir la variance du signal couche après couche
+def he_init(m):
+    if isinstance(m, (nn.Conv2d, nn.Linear)):
+        fan_in = m.weight.data[0].numel() if isinstance(m, nn.Conv2d) else m.in_features
+        nn.init.normal_(m.weight, 0, math.sqrt(2.0 / fan_in))
+        if m.bias is not None:
+            nn.init.zeros_(m.bias)
+
+
+#  Local Response Normalisation
+#    Normalise chaque activation par ses n voisins sur l'axe canal :
+#    b = a / (k + alpha * sum(a_j^2))^beta
+
+class LRN(nn.Module):
+    def __init__(self, n=5, k=2.0, alpha=1e-4, beta=0.75):
+        super().__init__()
+        self.n, self.k, self.alpha, self.beta = n, k, alpha, beta
+
+    def forward(self, x):
+        B, C, H, W = x.shape
+        sq = (x ** 2).permute(0, 2, 3, 1).reshape(-1, 1, C)
+        local = F.avg_pool1d(sq, self.n, stride=1, padding=self.n // 2) * self.n
+        denom = (self.k + self.alpha * local.reshape(B, H, W, C).permute(0, 3, 1, 2)) ** self.beta
+        return x / denom
+
+
+# Notre Bloc convolutif modulaire : Conv → ReLU → Norm
+#    norm="bn" | "lrn" | "none"  , le  seul paramètre qui varie dans l'ablation study
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_c, out_c, k, s, p, norm="bn", pool=False):
+        super().__init__()
+        self.conv = nn.Conv2d(in_c, out_c, k, s, p, bias=(norm == "none"))
+        self.act  = nn.ReLU(inplace=True)
+        self.norm = {"lrn": LRN(), "bn": nn.BatchNorm2d(out_c)}.get(norm)
+        self.pool = nn.MaxPool2d(2, 2) if pool else None
+
+    def forward(self, x):
+        x = self.act(self.conv(x))
+        if self.norm: x = self.norm(x)
+        if self.pool: x = self.pool(x)
+        return x
+
+
+# Le AlexNet complet : 5 ConvBlocks + classificateur FC3
+#  Adapté sur CIFAR-10 64x64 : MaxPool 2x2, FC réduit (2048→1024), AdaptivePool(4,4)
+
+
+class AlexNet(nn.Module):
+    def __init__(self, num_classes=10, norm="bn", p=0.5):
+        super().__init__()
+        self.features = nn.Sequential(
+            ConvBlock(3,   96,  11, 4, 2, norm, pool=True),
+            ConvBlock(96,  256,  5, 1, 2, norm, pool=True),
+            ConvBlock(256, 384,  3, 1, 1, "none"),
+            ConvBlock(384, 384,  3, 1, 1, "none"),
+            ConvBlock(384, 256,  3, 1, 1, "none", pool=True),
+        )
+        self.pool = nn.AdaptiveAvgPool2d((4, 4))
+        self.head = nn.Sequential(
+            nn.Dropout(p), nn.Linear(256*4*4, 2048), nn.ReLU(inplace=True),
+            nn.Dropout(p), nn.Linear(2048, 1024),    nn.ReLU(inplace=True),
+            nn.Linear(1024, num_classes),
+        )
+        self.apply(he_init)
+
+    def forward(self, x):
+        return self.head(torch.flatten(self.pool(self.features(x)), 1))
+--- Brilland-baba-alexnet-from-scratch/Plots.py ---
+import json
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("Agg")
+
+# On va charger les résultats sauvés dans results.json.
+
+
+with open("results.json") as f:
+    R = json.load(f)
+
+tags = list(R.keys())
+C = {"bn": "#2563eb", "lrn": "#DD8452", "none": "#16a34a"}
+
+# Les tracés de courbes réelles issues des logs d'entraînement
+CURVES = {
+    "bn": {
+        "tr":  [0.220,0.342,0.419,0.467,0.509,0.539,0.563,0.587,0.605,0.624,0.641,0.652,0.667,0.680,0.694,0.705,0.714,0.722,0.731,0.738,0.745,0.752,0.761,0.766,0.775,0.778,0.784,0.789,0.796,0.798,0.806,0.808,0.816,0.818,0.822,0.831,0.834,0.839,0.844,0.846,0.852,0.855,0.861,0.865,0.869,0.872,0.874,0.876,0.877,0.880],
+        "val": [0.329,0.404,0.462,0.497,0.533,0.544,0.565,0.591,0.614,0.624,0.634,0.648,0.673,0.681,0.664,0.703,0.680,0.708,0.710,0.722,0.717,0.736,0.729,0.733,0.747,0.740,0.749,0.754,0.765,0.757,0.761,0.776,0.774,0.775,0.785,0.778,0.780,0.785,0.787,0.782,0.786,0.793,0.785,0.792,0.793,0.805,0.794,0.801,0.797,0.796],
+    },
+    "lrn": {
+        "tr":  [0.191,0.309,0.387,0.442,0.482,0.513,0.544,0.561,0.581,0.599,0.613,0.625,0.643,0.653,0.665,0.678,0.686,0.698,0.704,0.715,0.722,0.728,0.734,0.743,0.751,0.755,0.762,0.767,0.774,0.779,0.782,0.787,0.794,0.797,0.801,0.805,0.809,0.817,0.818,0.823,0.830,0.830,0.835,0.838,0.842,0.845,0.849,0.850,0.850,0.851],
+        "val": [0.286,0.390,0.439,0.486,0.498,0.542,0.548,0.577,0.568,0.609,0.619,0.617,0.630,0.657,0.668,0.681,0.684,0.656,0.706,0.703,0.721,0.693,0.714,0.727,0.716,0.737,0.735,0.743,0.743,0.745,0.740,0.744,0.760,0.754,0.761,0.765,0.766,0.771,0.773,0.778,0.779,0.778,0.781,0.783,0.787,0.788,0.786,0.795,0.787,0.788],
+    },
+    "none": {
+        "tr":  [0.195,0.318,0.399,0.453,0.492,0.521,0.544,0.568,0.584,0.602,0.619,0.635,0.647,0.660,0.670,0.681,0.692,0.704,0.709,0.720,0.727,0.736,0.741,0.749,0.755,0.758,0.767,0.775,0.780,0.782,0.788,0.796,0.801,0.804,0.806,0.813,0.817,0.823,0.828,0.832,0.838,0.841,0.846,0.848,0.852,0.857,0.860,0.860,0.862,0.864],
+        "val": [0.310,0.406,0.445,0.491,0.500,0.542,0.572,0.579,0.570,0.605,0.633,0.639,0.648,0.656,0.671,0.674,0.685,0.685,0.684,0.714,0.712,0.718,0.725,0.728,0.736,0.739,0.732,0.739,0.746,0.754,0.753,0.758,0.759,0.762,0.763,0.769,0.771,0.777,0.780,0.775,0.778,0.783,0.781,0.794,0.786,0.790,0.798,0.800,0.789,0.796],
+    },
+}
+
+# Création de la figure
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+ep = range(1, 51)
+
+for t in tags:
+    axes[0].plot(ep, CURVES[t]["val"], color=C[t], lw=2.0, label=t)
+    axes[0].plot(ep, CURVES[t]["tr"],  color=C[t], lw=1.0, linestyle="--", alpha=0.4)
+axes[0].set_title("Accuracy val (—) / train (- -)  |  50 epochs CIFAR-10", fontsize=9)
+axes[0].set_xlabel("Epoch"); axes[0].set_ylabel("Accuracy")
+axes[0].legend(fontsize=9); axes[0].grid(alpha=0.3)
+
+x = range(len(tags))
+b1 = axes[1].bar([i-.18 for i in x], [R[t]["best_val"]*100 for t in tags], .32,
+                  label="Val", color="#2563eb")
+b2 = axes[1].bar([i+.18 for i in x], [R[t]["test_acc"]*100 for t in tags], .32,
+                  label="Test", color="#DD8452")
+for bar in list(b1)+list(b2):
+    axes[1].text(bar.get_x()+bar.get_width()/2, bar.get_height()+.1,
+                 f"{bar.get_height():.1f}", ha="center", va="bottom", fontsize=8)
+axes[1].set_xticks(list(x)); axes[1].set_xticklabels(tags, fontsize=10)
+axes[1].set_ylabel("Accuracy (%)"); axes[1].set_title("Ablation Study — Normalisation")
+axes[1].legend(fontsize=9); axes[1].grid(axis="y", alpha=.3); axes[1].set_ylim(70, 88)
+
+# Sauvegarde du plot .
+plt.tight_layout()
+plt.savefig("ablation.png", dpi=160)
+print("ablation.png saved")
+--- Brilland-baba-alexnet-from-scratch/train.py ---
+import json, time
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader, random_split
+from alexnet import AlexNet
+
+
+
+# Comme double  exécution (en local et avec Collab), si le  GPU disponible, on l'utilise. Sinon CPU.
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch.manual_seed(42)
+
+# Les hyperparamètres.
+CFG = dict(bs=256, epochs=50, lr=0.01, wd=1e-3, nc=10, val_ratio=0.1)
+mean, std = (0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)
+
+# Augmentation des données (On vise un meilleur accuracy): RandomCrop + ColorJitter
+T_train = transforms.Compose([
+    transforms.Resize(72),
+    transforms.RandomCrop(64, padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.ColorJitter(.3, .3, .2),
+    transforms.ToTensor(),
+    transforms.Normalize(mean, std),
+])
+T_val = transforms.Compose([
+    transforms.Resize(64),
+    transforms.ToTensor(),
+    transforms.Normalize(mean, std),
+])
+
+full   = datasets.CIFAR10("./data", train=True,  download=True, transform=T_train)
+test_d = datasets.CIFAR10("./data", train=False, download=True, transform=T_val)
+n_val  = int(len(full) * CFG["val_ratio"])
+train_d, val_d = random_split(full, [len(full)-n_val, n_val],
+                               generator=torch.Generator().manual_seed(42))
+
+train_dl = DataLoader(train_d, CFG["bs"], shuffle=True,  num_workers=0, pin_memory=False)
+val_dl   = DataLoader(val_d,   CFG["bs"], shuffle=False, num_workers=0, pin_memory=False)
+test_dl  = DataLoader(test_d,  CFG["bs"], shuffle=False, num_workers=0, pin_memory=False)
+
+
+def run_epoch(model, loader, crit, opt=None, sched=None):
+    model.train() if opt else model.eval()
+    loss_sum = correct = n = 0
+    ctx = torch.enable_grad() if opt else torch.no_grad()
+    with ctx:
+        for X, y in loader:
+            X, y = X.to(DEVICE), y.to(DEVICE)
+            out = model(X); loss = crit(out, y)
+            if opt:
+                opt.zero_grad(); loss.backward(); opt.step()
+                if sched: sched.step()
+            loss_sum += loss.item() * len(X)
+            correct  += (out.argmax(1) == y).sum().item()
+            n        += len(X)
+    return loss_sum / n, correct / n
+
+
+
+# Entraînement d'une variante puis sauvegarde du meilleur checkpoint
+
+def run(norm_tag):
+    model = AlexNet(CFG["nc"], norm=norm_tag).to(DEVICE)
+    crit  = nn.CrossEntropyLoss(label_smoothing=0.1)
+    opt   = optim.SGD(model.parameters(), CFG["lr"], momentum=.9,
+                      weight_decay=CFG["wd"], nesterov=True)
+    # OneCycleLR : on parcours le lr rapidement puis on  descend . À chaque epoch, on va entraîner puis on valide
+    sched = optim.lr_scheduler.OneCycleLR(
+        opt, max_lr=CFG["lr"],
+        epochs=CFG["epochs"], steps_per_epoch=len(train_dl),
+        pct_start=0.3, div_factor=10, final_div_factor=100,
+    )
+    best = 0.0
+
+    print(f"\n  norm={norm_tag}  |  device={DEVICE}")
+    for ep in range(1, CFG["epochs"] + 1):
+=== jcwchen-tensorflow_alexnet_classification (commit 857d0c2) ===
+jcwchen-tensorflow_alexnet_classification
+jcwchen-tensorflow_alexnet_classification/model.py
+jcwchen-tensorflow_alexnet_classification/data.py
+jcwchen-tensorflow_alexnet_classification/train.py
+jcwchen-tensorflow_alexnet_classification/README.md
+--- jcwchen-tensorflow_alexnet_classification/data.py ---
+import cv2, random
+import numpy as np
+import IPython
+import multiprocessing as mp
+
+# Data format
+class ImageClassData:
+    def __init__(self, image, label):
+        # CIFAR-10 raw image to rgb images and resize to 227*227
+        self.image = transform_img(rawtorgb(image))
+        self.label = label
+
+# Dataset for random sampling
+class Dataset:
+    def __init__(self, data):
+        self.data = []
+        for d in data:
+            self.data.append(d)
+        self.data_length = len(self.data)
+        self.reset_sample()
+    def __len__(self):
+        return self.data_length
+
+    def sample(self, batch_size):
+        data_list = []
+        isnextepoch = False 
+        if self.sample_top + batch_size < self.data_length:
+            self.sample_top += batch_size
+            data_list = self.data[self.sample_top-batch_size:self.sample_top]
+        else:
+            isnextepoch = True
+            data_list = self.data[self.sample_top:self.data_length]
+            self.sample_top = self.data_length
+        x = []
+        y = []
+        for d in data_list: 
+            x.append(d.image)
+            y.append(d.label)
+        return np.array(x), np.array(y), isnextepoch
+
+    def reset_sample(self):
+        self.sample_top = 0
+        self.data_length = len(self.data)
+        random.shuffle(self.data)
+
+def rawtorgb(rawimg, width = 32, height = 32):
+    """ Transfer 1d raw image to rgb image"""
+    img = []
+    for rgb in xrange(3):
+        single = []
+        for h_i in xrange(height):
+            single.append(rawimg[rgb*width*height+h_i*width:rgb*width*height+(h_i+1)*(width)])
+        img.append(single)
+    img = np.array(img)
+    return np.swapaxes(np.swapaxes(img, 0, 2), 0, 1)
+
+def transform_img(img, img_width = 227 , img_height= 227):
+    """ crop to 227*227 for alexnet """
+    #Histogram Equalization
+    """
+    img[:, :, 0] = cv2.equalizeHist(img[:, :, 0])
+    img[:, :, 1] = cv2.equalizeHist(img[:, :, 1])
+    img[:, :, 2] = cv2.equalizeHist(img[:, :, 2])
+    """
+
+    #Image Resizing
+    img = cv2.resize(img, (img_width, img_height), interpolation = cv2.INTER_CUBIC)
+
+    return img--- jcwchen-tensorflow_alexnet_classification/model.py ---
+#coding=utf-8
+import tensorflow as tf
+import numpy as np
+
+DEFAULT_PADDING = 'SAME'
+WEIGHT_DECAY_FACTOR = 0.
+
+def _variable_on_cpu(name, shape, initializer):
+    """Helper to create a Variable stored on CPU memory.
+    Args:
+      name: name of the variable
+      shape: list of ints
+      initializer: initializer for Variable
+    Returns:
+      Variable Tensor
+    """
+    with tf.device('/cpu:0'):
+        var = tf.get_variable(name, shape, initializer=initializer)
+    return var
+
+def _variable_with_weight_decay(name, shape, wd):
+    """Helper to create an initialized Variable with weight decay.
+    Note that the Variable is initialized with a truncated normal distribution.
+    A weight decay is added only if one is specified.
+    Args:
+      name: name of the variable
+      shape: list of ints
+      wd: add L2Loss weight decay multiplied by this float. If None, weight
+          decay is not added for this Variable.
+    Returns:
+      Variable Tensor
+    """
+    var = _variable_on_cpu(name, shape,
+                           initializer=tf.contrib.layers.xavier_initializer())
+    if wd:
+        weight_decay = tf.mul(tf.nn.l2_loss(var), wd, name='weight_loss')
+        tf.add_to_collection('losses', weight_decay)
+    return var
+
+def _conv(name, in_, ksize, strides=[1,1,1,1], padding=DEFAULT_PADDING):
+    """create convolution layer 
+    Args:
+      name: name of the variable
+      in_: input nodes
+      ksize: kernel size for convolute
+      strides: offset between each kernel
+      padding: padding format for image's overflow
+    Returns:
+      Variable Tensor
+    """    
+    n_kern = ksize[3]
+    with tf.variable_scope(name) as scope:
+        kernel = _variable_with_weight_decay('weights', shape=ksize, wd=WEIGHT_DECAY_FACTOR)
+        conv = tf.nn.conv2d(in_, kernel, strides, padding=padding)
+        biases = _variable_on_cpu('biases', [n_kern], tf.constant_initializer(0.0))
+        bias = tf.nn.bias_add(conv, biases)
+        conv = tf.nn.relu(bias, name=scope.name)
+
+    print name, conv.get_shape().as_list()
+    return conv
+
+def _maxpool(name, in_, ksize, strides, padding=DEFAULT_PADDING):
+    """create max-pooling layer
+    Args:
+      name: name of the variable
+      in_: input nodes
+      ksize: kernel size for pooling
+      strides: offset between each kernel
+      padding: padding format for image's overflow
+    Returns:
+      Variable Tensor
+    """  
+    pool = tf.nn.max_pool(in_, ksize=ksize, strides=strides,
+                          padding=padding, name=name)
+
+    print name, pool.get_shape().as_list()
+    return pool
+
+def _fc(name, in_, outsize, dropout=1.0):
+    """create fully-connected layer
+--- jcwchen-tensorflow_alexnet_classification/train.py ---
+import numpy as np
+import tensorflow as tf
+import os.path as osp
+import cv2, random
+import cPickle
+import model, data
+import IPython, sys, os
+
+flags = tf.app.flags
+
+model_dir = "model"
+
+# input argument
+flags.DEFINE_integer('batch_size', 64, 'Value of batch size')
+flags.DEFINE_float('lr', 0.00001, 'learing rate')
+flags.DEFINE_boolean('test', False, 'Whether test')
+flags.DEFINE_string('model', '', 'Model path')
+
+FLAGS = flags.FLAGS
+# Use appropiate GPU memory instead of full
+config = tf.ConfigProto()
+config.gpu_options.allow_growth=True
+
+# cifar 10
+CLASS_NUMBER = 10  # the class number of dataset 
+# oxford flower 17
+#CLASS_NUMBER = 17  # the class number of dataset 
+
+if not os.path.exists(model_dir):
+    os.makedirs(model_dir)
+
+def train(dataset_train, dataset_val, finetune='',caffemodel=''):
+    """ main train function for training and save the model of min-valiation loss"""
+    batch_size = FLAGS.batch_size
+    with tf.Graph().as_default():
+        # Graph of AlexNet
+        images = tf.placeholder('float32', shape=(None, 227, 227, 3))
+        labels = tf.placeholder('int64', shape=(None))
+        keep_prob_ = tf.placeholder('float32') # dropout rate
+
+        logits = model.inference(images, keep_prob_, CLASS_NUMBER)
+
+        loss = model.loss(logits, labels)
+
+        optimizer = tf.train.AdamOptimizer(learning_rate = FLAGS.lr).minimize(loss)
+
+
+        # initialize all variables in graph
+        init_op = tf.initialize_all_variables()
+
+
+        step = 0
+        epo = 1
+
+        # store 5 latest model
+        saver = tf.train.Saver(max_to_keep=5)
+        min_loss = sys.maxint
+
+
+        # Session of training prcoess
+        with tf.Session(config=config) as sess:
+            sess.run(init_op)
+            # load pretrained alexnet model training by imagenet
+            
+            if caffemodel:
+                model.load_alexnet(sess, caffemodel)
+                print('loaded pretrained caffemodel: {}'.format(caffemodel))
+                # load pretrained model ourselves
+            elif finetune:
+                saver.restore(sess, finetune)
+                print('loaded finetune model: {}'.format(caffemodel))
+            
+
+            # training epo
+            while epo <= 100:
+                # get batch data from dataset     
+                batch_x, batch_y, isnextepoch = dataset_train.sample(batch_size)
+                feed_dict = {images: batch_x, labels: batch_y, keep_prob_: 0.5}
+
+                # run graph and backpropagation
+=== matteo-dunnhofer-imagenet (commit 3b88897) ===
+matteo-dunnhofer-imagenet
+matteo-dunnhofer-imagenet/tf
+matteo-dunnhofer-imagenet/tf/train_util.py
+matteo-dunnhofer-imagenet/tf/classify.py
+matteo-dunnhofer-imagenet/tf/train.py
+matteo-dunnhofer-imagenet/tf/models
+matteo-dunnhofer-imagenet/tf/models/__init__.py
+matteo-dunnhofer-imagenet/tf/models/alexnet.py
+matteo-dunnhofer-imagenet/tf/lussari.jpg
+matteo-dunnhofer-imagenet/tf/test.py
+matteo-dunnhofer-imagenet/tf/README.md
+matteo-dunnhofer-imagenet/tsne-full.jpg
+matteo-dunnhofer-imagenet/README.md
+matteo-dunnhofer-imagenet/tf_eager
+matteo-dunnhofer-imagenet/tf_eager/data.py
+matteo-dunnhofer-imagenet/tf_eager/config.py
+matteo-dunnhofer-imagenet/tf_eager/utils.py
+matteo-dunnhofer-imagenet/tf_eager/train.py
+matteo-dunnhofer-imagenet/tf_eager/models
+matteo-dunnhofer-imagenet/tf_eager/models/__init__.py
+matteo-dunnhofer-imagenet/tf_eager/models/alexnet.py
+matteo-dunnhofer-imagenet/tf_eager/test.py
+matteo-dunnhofer-imagenet/tf_eager/README.md
+matteo-dunnhofer-imagenet/LICENSE.md
+--- matteo-dunnhofer-imagenet/tf/classify.py ---
+"""
+Written by Matteo Dunnhofer - 2017
+
+Classify an input image
+"""
+import sys
+import os.path
+import tensorflow as tf
+import train_util as tu
+from models import alexnet
+import numpy as np
+
+def classify(
+		image, 
+		top_k, 
+		k_patches, 
+		ckpt_path, 
+		imagenet_path):
+	"""	Procedure to classify the image given through the command line
+
+		Args:
+			image:	path to the image to classify
+			top_k: 	integer representing the number of predictions with highest probability
+					to retrieve
+			k_patches:	number of crops taken from an image and to input to the model
+			ckpt_path:	path to model's tensorflow checkpoint
+			imagenet_path:	path to ILSRVC12 ImageNet folder containing train images, 
+						validation images, annotations and metadata file
+
+	"""
+	wnids, words = tu.load_imagenet_meta(os.path.join(imagenet_path, 'data/meta.mat'))
+
+	# taking a few crops from an image
+	image_patches = tu.read_k_patches(image, k_patches)
+
+	x = tf.placeholder(tf.float32, [None, 224, 224, 3])
+
+	_, pred = alexnet.classifier(x, dropout=1.0)
+
+	# calculate the average precision through the crops
+	avg_prediction = tf.div(tf.reduce_sum(pred, 0), k_patches)
+
+	# retrieve top 5 scores
+	scores, indexes = tf.nn.top_k(avg_prediction, k=top_k)
+
+	saver = tf.train.Saver()
+
+	with tf.Session(config=tf.ConfigProto()) as sess:
+		saver.restore(sess, os.path.join(ckpt_path, 'alexnet-cnn.ckpt'))
+
+		s, i = sess.run([scores, indexes], feed_dict={x: image_patches})
+		s, i = np.squeeze(s), np.squeeze(i)
+
+		print('AlexNet saw:')
+		for idx in range(top_k):
+			print ('{} - score: {}'.format(words[i[idx]], s[idx]))
+
+
+if __name__ == '__main__':
+	TOP_K = 5
+	K_CROPS = 5
+	IMAGENET_PATH = 'ILSVRC2012'
+	CKPT_PATH = 'ckpt-alexnet'
+
+	image_path = sys.argv[1]
+
+	classify(
+		image_path, 
+		TOP_K, 
+		K_CROPS, 
+		CKPT_PATH, 
+		IMAGENET_PATH)
+
+--- matteo-dunnhofer-imagenet/tf_eager/config.py ---
+"""
+Written by Matteo Dunnhofer - 2017
+
+Configuration class
+"""
+
+class Configuration(object):
+	"""
+	Class defining all the hyper parameters of:
+		- net architecture
+		- training
+		- test
+		- dataset path
+		...
+	"""
+	DATA_PATH = 'ILSVRC2012'
+	IMAGENET_MEAN = [123.68, 116.779, 103.939]
+	IMG_SHAPE = [224, 224, 3] # height, width, channels
+	NUM_CLASSES = 1000
+
+	# training hyperparameters
+	LEARNING_RATE = 1e-4
+	MOMENTUM = 0.9
+	BATCH_SIZE = 128
+	EPOCHS = 90
+	DISPLAY_STEP = 10
+	VALIDATION_STEP = 1000
+	SAVE_STEP = 1000
+	CKPT_PATH = 'ckpt'
+	SUMMARY_PATH = 'summary'
+
+	# net architecture hyperparamaters
+	LAMBDA = 5e-4 #for weight decay
+	DROPOUT = 0.5
+
+	# test hyper parameters
+	K_PATCHES = 5
+	TOP_K = 5
+
+--- matteo-dunnhofer-imagenet/tf_eager/data.py ---
+"""
+Written by Matteo Dunnhofer - 2017
+
+Data provider class
+"""
+import os
+import random
+from PIL import Image
+import scipy.ndimage, scipy.misc
+from scipy.io import loadmat
+import numpy as np
+import tensorflow as tf
+from tensorflow.contrib.data import Dataset
+
+class ImageNetDataset(object):
+
+
+	def __init__(self, cfg, mode):
+		self.cfg = cfg
+		self.mode = mode
+
+		self.wnids, self.words = self.load_imagenet_meta()
+		data_imgs, data_labels = self.read_image_paths_labels()
+
+		if self.mode == 'train':
+			self.dataset = tf.data.Dataset.from_tensor_slices((data_imgs, data_labels))
+			self.dataset = self.dataset.map(self.input_parser)
+			self.dataset = self.dataset.shuffle(10000).batch(self.cfg.BATCH_SIZE)
+		elif self.mode == 'val':
+			self.dataset = tf.data.Dataset.from_tensor_slices((data_imgs, data_labels))
+			self.dataset = self.dataset.map(self.input_parser).batch(self.cfg.BATCH_SIZE)
+		else:
+			self.dataset = tf.data.Dataset.from_tensor_slices((data_imgs, data_labels))
+			self.dataset = self.dataset.map(self.input_parser)
+
+
+
+	def load_imagenet_meta(self):
+		""" 
+		It reads ImageNet metadata from ILSVRC 2012 dev tool file
+
+		Returns:
+			wnids: list of ImageNet wnids labels (as strings)
+			words: list of words (as strings) referring to wnids labels and describing the classes 
+
+		"""
+		meta_path = os.path.join(self.cfg.DATA_PATH, 'data', 'meta.mat')
+		metadata = loadmat(meta_path, struct_as_record=False)
+		
+		# ['ILSVRC2012_ID', 'WNID', 'words', 'gloss', 'num_children', 'children', 'wordnet_height', 'num_train_images']
+		synsets = np.squeeze(metadata['synsets'])
+		ids = np.squeeze(np.array([s.ILSVRC2012_ID for s in synsets]))
+		wnids = np.squeeze(np.array([s.WNID for s in synsets]))
+		words = np.squeeze(np.array([s.words for s in synsets]))
+		return wnids, words
+
+	def read_image_paths_labels(self):
+		"""
+		Reads the paths of the images (from the folders structure)
+		and the indexes of the labels (using an annotation file)
+		"""
+		paths = []
+		labels = []
+
+		if self.mode == 'train':
+			for i, wnid in enumerate(self.wnids):
+				img_names = os.listdir(os.path.join(self.cfg.DATA_PATH, self.mode, wnid))
+				for img_name in img_names:
+					paths.append(os.path.join(self.cfg.DATA_PATH, self.mode, wnid, img_name))
+					labels.append(i)
+
+			# shuffling the images names and relative labels
+			d = zip(paths, labels)
+			random.shuffle(d)
+			paths, labels = zip(*d)
+		
+		else:
+			with open(os.path.join(self.cfg.DATA_PATH, 'data', 'ILSVRC2012_validation_ground_truth.txt')) as f:
+				groundtruths = f.readlines()
+			groundtruths = [int(x.strip()) for x in groundtruths]
+--- matteo-dunnhofer-imagenet/tf_eager/models/alexnet.py ---
+"""
+Written by Matteo Dunnhofer - 2017
+
+Definition of AlexNet architecture
+"""
+import tensorflow as tf
+import tensorflow.contrib.eager as tfe
+
+
+class AlexNet(tfe.Network):
+
+	def __init__(self, cfg, training):
+		super(AlexNet, self).__init__()
+
+		self.cfg = cfg
+		self.training = training
+
+		# convolutional layers
+
+		conv_init = tf.contrib.layers.xavier_initializer_conv2d()
+
+		self.conv1 = self.track_layer(tf.layers.Conv2D(96, 11, 4, 'SAME', 
+														activation=tf.nn.relu, 
+														kernel_initializer=conv_init))
+		self.pool1 = self.track_layer(tf.layers.MaxPooling2D(3, 2, 'VALID'))
+
+		self.conv2 = self.track_layer(tf.layers.Conv2D(256, 5, 1, 'SAME', 
+														activation=tf.nn.relu,
+														kernel_initializer=conv_init))
+		self.pool2 = self.track_layer(tf.layers.MaxPooling2D(3, 2, 'VALID'))
+
+		self.conv3 = self.track_layer(tf.layers.Conv2D(384, 3, 1, 'SAME', 
+														activation=tf.nn.relu,
+														kernel_initializer=conv_init))
+		
+		self.conv4 = self.track_layer(tf.layers.Conv2D(384, 3, 1, 'SAME', 
+														activation=tf.nn.relu,
+														kernel_initializer=conv_init))
+		
+		self.conv5 = self.track_layer(tf.layers.Conv2D(256, 3, 1, 'SAME', 
+														activation=tf.nn.relu,
+														kernel_initializer=conv_init))
+		self.pool5 = self.track_layer(tf.layers.MaxPooling2D(3, 2, 'VALID'))
+
+		# fully connected layers
+
+		fc_init = tf.contrib.layers.xavier_initializer()
+		
+		self.fc1 = self.track_layer(tf.layers.Dense(4096, 
+														activation=tf.nn.relu,
+														kernel_initializer=fc_init))
+		self.drop1 = self.track_layer(tf.layers.Dropout(self.cfg.DROPOUT))
+
+		self.fc2 = self.track_layer(tf.layers.Dense(4096, 
+														activation=tf.nn.relu,
+														kernel_initializer=fc_init))
+		self.drop2 = self.track_layer(tf.layers.Dropout(self.cfg.DROPOUT))
+
+		self.out = self.track_layer(tf.layers.Dense(self.cfg.NUM_CLASSES,
+														kernel_initializer=fc_init))
+
+
+	def call(self, x):
+		""" Function that executes the model """
+		output = self.conv1(x)
+		output = tf.nn.lrn(output, depth_radius=2, bias=1.0, alpha=2e-05, beta=0.75)
+		output = self.pool1(output)
+
+		output = self.conv2(output)
+		output = tf.nn.lrn(output, depth_radius=2, bias=1.0, alpha=2e-05, beta=0.75)
+		output = self.pool2(output)
+
+		output = self.conv3(output)
+
+		output = self.conv4(output)
+
+		output = self.conv5(output)
+		output = self.pool5(output)
+
+		output = tf.layers.flatten(output)
+--- matteo-dunnhofer-imagenet/tf_eager/models/__init__.py ---
+--- matteo-dunnhofer-imagenet/tf_eager/test.py ---
+"""
+Written by Matteo Dunnhofer - 2017
+
+Class that defines the testing procedure
+"""
+import argparse
+import re
+import os
+import time
+import numpy as np
+import tensorflow as tf
+import tensorflow.contrib.eager as tfe
+from data import ImageNetDataset
+from config import Configuration
+from models.alexnet import AlexNet
+
+tfe.enable_eager_execution()
+
+class Tester(object):
+
+	def __init__(self, cfg, net, testset):
+
+		self.cfg = cfg
+		self.net = net
+		self.testset = testset
+
+		# dummy input to create the tf variables
+		_ = self.net(tf.random_uniform([1, self.cfg.IMG_SHAPE[0], self.cfg.IMG_SHAPE[1], self.cfg.IMG_SHAPE[2]]))
+		
+		tfe.Saver(self.net.variables).restore(tf.train.latest_checkpoint(self.cfg.CKPT_PATH))
+
+	def predict(self, x):
+		"""
+		Predicts and averages tha probabilities for a input image
+
+		Args:
+			x, a tf tensor representing a batch of images
+
+		Returns:
+			the averaged predictions
+		"""
+		return tf.reduce_mean(tf.nn.softmax(self.net(x)), axis=0)
+
+	def top_1_accuracy(self, x, y):
+		"""
+		Computes the top-1 accuracy for k patches
+
+		Args:
+			mode, string 'train' or 'val'
+			x, tf tensor representing a batch of k patches
+			y, tf tensor representing a label
+
+		Returns:
+			the top-k accuracy between the predictions on the patches and the groundtruth
+		"""
+		pred = self.predict(x)
+
+		top_1_accuracy_value = tf.reduce_mean(
+					tf.cast(
+						tf.equal(
+							tf.argmax(pred, output_type=tf.int64),
+							tf.argmax(y, output_type=tf.int64)
+						),
+						dtype=tf.float32
+					) 
+				)
+
+		#tf.contrib.summary.scalar('Accuracy', accuracy_value)
+
+		return top_1_accuracy_value
+
+	def top_k_accuracy(self, x, y):
+		"""
+		Computes the top-k accuracy for k patches
+
+		Args:
+			mode, string 'train' or 'val'
+			x, tf tensor representing a batch of k patches
+			y, tf tensor representing a label
+
+FINISHED
+FINISHED rc=0

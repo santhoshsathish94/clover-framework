@@ -1,0 +1,53 @@
+/home/usergpu/foundations-study/mcculloch-pitts-1943/work/mp1943_calculus.py:1: SyntaxWarning: invalid escape sequence '\p'
+  """
+=== E3.1: Cutaneous Heat-from-Transient-Cooling Illusion (Fig. 1e, pp. 106-107) ===
+
+Scenario: Transient cooling (1-step cold pulse at t=0)
+  t | c1(heat_in) c2(cold_in) | ca(S c2) cb(trans_cold) | c3(HEAT_SENS) c4(COLD_SENS)
+  0 |      0           1      |    0           0        |       0             0
+  1 |      0           0      |    1           0        |       0             0
+  2 |      0           0      |    0           1        |       0             0
+  3 |      0           0      |    0           0        |       1             0
+  4 |      0           0      |    0           0        |       0             0
+
+Scenario: Sustained cooling (3-step cold at t=0,1,2)
+  t | c1(heat_in) c2(cold_in) | ca(S c2) cb(trans_cold) | c3(HEAT_SENS) c4(COLD_SENS)
+  0 |      0           1      |    0           0        |       0             0
+  1 |      0           1      |    1           0        |       0             0
+  2 |      0           1      |    1           0        |       0             1
+  3 |      0           0      |    1           0        |       0             1
+  4 |      0           0      |    0           1        |       0             0
+
+Scenario: Direct heat (1-step heat pulse at t=0)
+  t | c1(heat_in) c2(cold_in) | ca(S c2) cb(trans_cold) | c3(HEAT_SENS) c4(COLD_SENS)
+  0 |      1           0      |    0           0        |       0             0
+  1 |      0           0      |    0           0        |       1             0
+  2 |      0           0      |    0           0        |       0             0
+  3 |      0           0      |    0           0        |       0             0
+  4 |      0           0      |    0           0        |       0             0
+
+Extended trace of sustained cooling (t=0,1,2 cold on, t=3,4,5,6 cold off):
+  t=0: c2=1 -> ca=0, cb=0 -> HEAT(c3)=0, COLD(c4)=0
+  t=1: c2=1 -> ca=1, cb=0 -> HEAT(c3)=0, COLD(c4)=0
+  t=2: c2=1 -> ca=1, cb=0 -> HEAT(c3)=0, COLD(c4)=1
+  t=3: c2=0 -> ca=1, cb=0 -> HEAT(c3)=0, COLD(c4)=1
+  t=4: c2=0 -> ca=0, cb=1 -> HEAT(c3)=0, COLD(c4)=0
+  t=5: c2=0 -> ca=0, cb=0 -> HEAT(c3)=1, COLD(c4)=0
+  t=6: c2=0 -> ca=0, cb=0 -> HEAT(c3)=0, COLD(c4)=0
+
+=== E3.2: Theorem 4 (Fig. 1f) Relative vs Absolute Inhibition Equivalence ===
+  c1 c2 c3 | RelInh N4(t=1) | AbsInh N4(t=2) | Formula Fig.1f
+   0  0  0 |       0        |       0        |       0
+   0  0  1 |       1        |       1        |       1
+   0  1  0 |       1        |       1        |       1
+   0  1  1 |       1        |       1        |       1
+   1  0  0 |       0        |       0        |       0
+   1  0  1 |       0        |       0        |       0
+   1  1  0 |       0        |       0        |       0
+   1  1  1 |       1        |       1        |       1
+Theorem 4 extended equivalence (S^1 shift, t=1 vs t=2) verified across all 8 inputs: True
+
+=== E3.3: Theorem 5 (Fig. 1g Extinction) & Theorem 6 (Fig. 1h Temporal->Spatial Summation) ===
+Theorem 5 (Fig. 1g extinction N3(t) = N1(t-2) . ~N1(t-3)) verified on 64/64 6-step streams
+Theorem 6 (Fig. 1h temporal summation N3(t) = N1(t-1) . N1(t-2)) verified on 64/64 6-step streams
+FINISHED rc=0

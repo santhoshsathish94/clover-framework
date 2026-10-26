@@ -1,0 +1,49 @@
+=== 1. Run jadore801120/attention-is-all-you-need-pytorch Transformer ===
+  jadore801120 Transformer output shape: (16, 100) total params: 44154880
+=== 2. Run hyunwoongko/transformer Transformer ===
+  hyunwoongko Transformer output shape: (2, 8, 100) total params: 44292196
+=== 3. Run our verified vaswani2017_experiments.py (E2, E3, E4) ===
+=== E2.1: Scaled Dot-Product Attention 1/sqrt(d_k) Variance & Softmax Gradient Stabilization (Eq. 1 & Footnote 4, p. 4) ===
+   d_k | Var(q.k) | Var(q.k/sqrt(d_k)) | Unscaled MaxAttn | Scaled MaxAttn | Unscaled ||J_softmax||_F | Scaled ||J_softmax||_F
+    16 |    16.55 |             1.0346 |           0.6334 |         0.1663 |                  0.28707 |                0.24150
+    64 |    63.87 |             0.9979 |           0.8214 |         0.1649 |                  0.19522 |                0.24126
+   256 |   257.89 |             1.0074 |           0.9063 |         0.1642 |                  0.11453 |                0.24095
+   512 |   513.78 |             1.0035 |           0.9369 |         0.1626 |                  0.08215 |                0.24160
+  1024 |  1023.96 |             1.0000 |           0.9574 |         0.1660 |                  0.05750 |                0.24115
+
+=== E2.2: Exact Parameter Accounting of Transformer (base = 65M) & (big = 213M) (Table 3, p. 9) ===
+  Transformer (base) [N=6, d_model=512,  d_ff=2048, h=8,  V=37000]:
+    6 Encoder layers = 18,902,016 | 6 Decoder layers = 25,199,616 | Shared Emb = 18,944,000 | Total =  63,045,632 (~63.1M / Table 3: 65M)
+  Transformer (big)  [N=6, d_model=1024, d_ff=4096, h=16, V=37000]:
+    6 Encoder layers = 75,552,768 | 6 Decoder layers = 100,730,880 | Shared Emb = 37,888,000 | Total = 214,171,648 (~214.2M / Table 3: 213M)
+
+=== E3.1: Sinusoidal Positional Encoding — Exact Linear Relative-Offset Operator M_k (Section 3.5, p. 6) ===
+  Max ||PE_{pos+k} - M_k PE_{pos}||_inf across offsets k in {-13..+29} and pos in {20..120}: 2.05e-14
+  Max std_pos(PE_{pos}^T PE_{pos+k}) across positions 0..100 (exact shift invariance!): 8.78e-14
+  Relative dot products PE_{pos}^T PE_{pos+k}: k=0 -> 256.00, k=1 -> 249.10, k=5 -> 189.60, k=20 -> 157.57
+
+=== E3.2: Multi-Head Subspace Resolution vs Single-Head Averaging Dilution (Section 2 & 3.2.2, pp. 2, 4-5) ===
+  Single-Head (h=1, d_k=d_v=16): MSE = 0.37236, mean peak attention weight = 0.8146 (rank-1 scalar weight cannot unmix j_A & j_B!)
+  Multi-Head  (h=2, d_k=d_v= 8): MSE = 0.00048, mean peak attention weight = 0.5838 (782.1x lower MSE!)
+
+=== E4.1: Causal Masking Prefix Invariance & Future-Leakage Negative Control (Section 3.1 & 3.2.3, pp. 3, 5) ===
+  Max |logits_prefix(0..2) change| when future tokens (3..4) mutate:
+    With causal mask (-inf for j > i):    0.00e+00 (exact zero leftward leakage!)
+    Without causal mask (negative ctrl):  0.3420 (future leakage corrupts prefix!)
+
+=== E4.2: End-to-End Sequence Transduction with Eq. 3 Warmup Schedule & Label Smoothing (Section 5.3-5.4, pp. 7-8) ===
+  Causal Mask + eps_ls=0.0: teacher-forced=100.0%, autoregressive seq acc=100.0%, PPL=1.0016
+  Causal Mask + eps_ls=0.1: teacher-forced=100.0%, autoregressive seq acc=100.0%, PPL=1.1014 (p.8: hurts PPL, keeps 100% acc!)
+  NO Causal Mask (neg ctrl): teacher-forced=100.0%, autoregressive seq acc=  8.6% (collapses at autoregressive inference!)
+
+=== E4.3: Table 1 Per-Layer Complexity Crossover — Self-Attention O(n^2 d) vs Recurrent O(n d^2) (Section 4, p. 6) ===
+  Seq len n | Self-Attn core MACs (2 n^2 d) | Recurrent core MACs (n d^2) | Ratio Self-Attn / Recurrent
+         16 |                       262,144 |                   4,194,304 |                       0.062x
+         32 |                     1,048,576 |                   8,388,608 |                       0.125x
+         64 |                     4,194,304 |                  16,777,216 |                       0.250x
+        128 |                    16,777,216 |                  33,554,432 |                       0.500x
+        256 |                    67,108,864 |                  67,108,864 |                       1.000x
+        512 |                   268,435,456 |                 134,217,728 |                       2.000x
+       1024 |                   1,073,741,824 |                 268,435,456 |                       4.000x
+FINISHED
+FINISHED rc=0

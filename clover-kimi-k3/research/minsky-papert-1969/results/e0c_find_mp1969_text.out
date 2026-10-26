@@ -1,0 +1,69 @@
+Cloning into 'TaraAlcira-PerceptronsRevisited'...
+Cloning into 'puppy-atom-2017-11-07_XOR_Alando'...
+warning: You appear to have cloned an empty repository.
+>>> Repo: TaraAlcira-PerceptronsRevisited (c278eb75d5f328fcda7e5719186992a926dd292f)
+     117 TaraAlcira-PerceptronsRevisited/CNN/CNN_best2.py
+    1217 TaraAlcira-PerceptronsRevisited/CNN/new_CNN_load.ipynb
+    9873 TaraAlcira-PerceptronsRevisited/CNN/CNN_best2.h5
+     389 TaraAlcira-PerceptronsRevisited/CCL/CCL_demo.ipynb
+     577 TaraAlcira-PerceptronsRevisited/transformer/VisTransformer.ipynb
+      29 TaraAlcira-PerceptronsRevisited/README.md
+     152 TaraAlcira-PerceptronsRevisited/generate_spirals/two_spirals_function.py
+      83 TaraAlcira-PerceptronsRevisited/generate_spirals/randomize_spirals.py
+     196 TaraAlcira-PerceptronsRevisited/generate_spirals/one_spiral_function.py
+   12633 total
+fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+>>> Repo: puppy-atom-2017-11-07_XOR_Alando (HEAD)
+=== Check bitsavers MIT AI Lab Memos (1966-1970) for Minsky & Papert Perceptrons memos ===
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-100.pdf">AIM-100.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">131K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-101.pdf">AIM-101.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">813K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-102.pdf">AIM-102.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">1.5M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-103.pdf">AIM-103.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">438K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-104.pdf">AIM-104.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">558K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-105.pdf">AIM-105.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">569K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-106.pdf">AIM-106.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">242K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-107.pdf">AIM-107.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">2.4M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-108.pdf">AIM-108.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">745K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-109.pdf">AIM-109.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">247K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-110.pdf">AIM-110.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">1.1M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-111.pdf">AIM-111.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">1.9M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-112.pdf">AIM-112.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">165K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-113.pdf">AIM-113.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">1.2M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-113a.pdf">AIM-113a.pdf</a></td><td align="right">2001-08-14 09:51  </td><td align="right">1.7M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-114.pdf">AIM-114.pdf</a></td><td align="right">1998-03-05 10:18  </td><td align="right">2.6M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-115.pdf">AIM-115.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right"> 46K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-116a.pdf">AIM-116a.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">660K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-117.pdf">AIM-117.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">256K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-118.pdf">AIM-118.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">471K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-119.pdf">AIM-119.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">645K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-120.pdf">AIM-120.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">115K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-121.pdf">AIM-121.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right"> 93K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-122.pdf">AIM-122.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">175K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-123.pdf">AIM-123.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">180K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-125.pdf">AIM-125.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">259K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-126.pdf">AIM-126.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">263K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-127.pdf">AIM-127.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">107K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-127a.pdf">AIM-127a.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">134K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-128.pdf">AIM-128.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">122K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-129.pdf">AIM-129.pdf</a></td><td align="right">2001-12-19 17:45  </td><td align="right">236K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-130.pdf">AIM-130.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right">1.2M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-131.pdf">AIM-131.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right"> 74K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-132.pdf">AIM-132.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right"> 83K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-133.pdf">AIM-133.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right">304K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-134.pdf">AIM-134.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right"> 42K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-135.pdf">AIM-135.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right">513K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-136.pdf">AIM-136.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right"> 61K</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-137.pdf">AIM-137.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right">1.5M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-138.pdf">AIM-138.pdf</a></td><td align="right">2002-01-07 10:27  </td><td align="right"> 61K</td><td>&nbsp;</td></tr>
+=== Check OpenAlex / Crossref / Wayback for Minsky & Papert (1969/1988/2017) Perceptrons chapters ===
+https://openalex.org/W2044445522 Review of 'Perceptrons: An Introduction to Computational Geometry' (Minsky, M., and Papert, S.; 1969) 1969 {'is_oa': False, 'oa_status': 'closed', 'oa_url': None, 'any_repository_has_fulltext': False}
+https://openalex.org/W2043014456 A Step toward the Understanding of Information Processes: Perceptrons . An Introduction to Computational Geometry. Marvin Minsky and Seymour Papert. M.I.T. Press, Cambridge, Mass., 1969. vi + 258 pp., illus. Cloth, $12; paper, $4.95. 1969 {'is_oa': False, 'oa_status': 'closed', 'oa_url': None, 'any_repository_has_fulltext': False}
+https://openalex.org/W1987146653 A review of “perceptrons: An introduction to computational geometry≓ 1970 {'is_oa': True, 'oa_status': 'bronze', 'oa_url': 'https://www.sciencedirect.com/science/article/pii/S0019995870904092/pdf', 'any_repository_has_fulltext': False}
+https://openalex.org/W2070931986 Perceptrons Play the Repeated Prisoner′s Dilemma 1995 {'is_oa': False, 'oa_status': 'closed', 'oa_url': None, 'any_repository_has_fulltext': False}
+https://openalex.org/W3088508926 Extension of the Group Invariance Theorem for Perceptrons 2019 {'is_oa': True, 'oa_status': 'green', 'oa_url': 'http://hdl.handle.net/10150/637027', 'any_repository_has_fulltext': True}
+https://openalex.org/W2088798842 Multi-threshold neurones perceptron 1996 {'is_oa': False, 'oa_status': 'closed', 'oa_url': None, 'any_repository_has_fulltext': False}
+https://openalex.org/W2083999335 Computational geometry of linear threshold functions 1977 {'is_oa': True, 'oa_status': 'bronze', 'oa_url': 'https://www.sciencedirect.com/science/article/pii/S0019995877902728/pdf', 'any_repository_has_fulltext': True}
+https://openalex.org/W1967505712 The AND/OR Theorem for Perceptrons 1992 {'is_oa': True, 'oa_status': 'bronze', 'oa_url': 'https://www.cambridge.org/core/services/aop-cambridge-core/content/view/0097D818A6306FD3E6AE4C0AB263DAD5/S1446788700035333a.pdf/div-class-title-the-and-or-theorem-for-perceptrons-div.pdf', 'any_repository_has_fulltext': False}
+FINISHED rc=0

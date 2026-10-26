@@ -1,0 +1,535 @@
+=== 1. Inspect arXiv:1706.03762 TeX sources (including unused parameter_attention.tex & sqrt_d_trick.tex!) ===
+--- Files in tex/ vs \input in ms.tex ---
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\input{introduction}
+\input{background}
+\input{model_architecture}
+\input{why_self_attention}
+\input{training}
+\input{results}
+We are excited about the future of attention-based models and plan to apply them to other tasks. We plan to extend the Transformer to problems involving input and output modalities other than text and to investigate local, restricted attention mechanisms to efficiently handle large inputs and outputs such as images, audio and video.
+\input{visualizations}
+%\input{parameter_attention}
+%\input{sqrt_d_trick}
+--- Full content of sqrt_d_trick.tex ---
+\section*{Justfication of the Scaling Factor in Dot-product Attention}
+
+In Section~\ref{sec:scaled-dot-prod}, we introduced Scaled dot-product attention, where we scale down the dot products by $\sqrt{d_k}$.   In this section, we will give a rough justification of this scaling factor.  If we assume that $q$ and $k$ are $d_k$-dimensional vectors whose components are independent random variables with mean $0$ and variance $1$, then their dot product, $q \cdot k = \sum_{i=1}^{d_k} u_iv_i$, has mean $0$ and variance $d_k$.  Since we would prefer these values to have variance $1$, we divide by $\sqrt{d_k}$.  
+
+
+
+%For any two $d_k$-dimension vectors $\vec{u}$ and $\vec{v}$, whose dimensions are independent, the mean and variance of the dot product will be the summation of the product of means and variances over the dimensions, that is, $E[<\vec{u},\vec{v}>] = \sum_{i=1}^{d_k} E[u_i]E[v_i]$, and $E[(<\vec{u},\vec{v}>-E[<\vec{u},\vec{v}>])^2] = \sum_{i=1}^{d_k} E[({u_i}-E[u_i])^2] E[({v_i}-E[v_i])^2]$. Layer norm encourages the mean and variance of each dimension to be $0$ and $1$ respectively, resultig in the dot product having mean $0$ and $d_k$ respectively. Therefore, scaling by $\sqrt{d_k}$ encourages the logits to be normalized as well. 
+
+\iffalse
+
+In this section, we will give a rough justification of this scaling factor, that is, we will show that for any two vectors, $\vec{u}$ and $\vec{v}$, whose variance and mean are $1$ and $0$ respectively, the variance and the mean of the dot product are $d_k$ and $0$ respectively. Therefore, dividing by $\sqrt{d_k}$ ensures that each component of the attention logits are normalized. The repeated layer norms at each transformer layer encourage $\vec{u}$ and $\vec{v}$ to be normalized. 
+
+
+\begin{align*}
+    E[<\vec{u},\vec{v}>] & =  \sum_k E[u_i v_i] &\text{By linearity of expectation} \\
+    & =\sum_k E[u_i]E[v_i] & \text{Assuming independence} \\
+    & = 0
+\end{align*}
+
+\begin{align*}
+    E[(<\vec{u},\vec{v}>-E[<\vec{u},\vec{v}>])^2]  & = E[(<\vec{u},\vec{v}>)^2] - E[<\vec{u},\vec{v}>]^2 \\
+    & = E[(<\vec{u},\vec{v}>)^2] \\
+    & =  \sum_k E[{u_i}^2] E[{v_i}^2] &\text{By linearity of expectation and indepedence} \\
+    & = d_k
+\end{align*}
+
+
+\fi--- Full content of parameter_attention.tex (unreferenced file in arXiv tarball!) ---
+\pagebreak
+\section*{Two Feed-Forward Layers = Attention over Parameters}\label{sec:parameter_attention}
+
+In addition to attention layers, our model contains position-wise feed-forward networks (Section \ref{sec:ffn}), which consist of two linear transformations with a ReLU activation in between.  In fact, these networks too can be seen as a form of attention.  Compare the formula for such a network with the formula for a simple dot-product attention layer (biases and scaling factors omitted):
+
+\begin{align*}
+    FFN(x, W_1, W_2) = ReLU(xW_1)W_2 \\
+    A(q, K, V) = Softmax(qK^T)V
+\end{align*}
+
+Based on the similarity of these formulae, the two-layer feed-forward network can be seen as a kind of attention, where the keys and values are the rows of the trainable parameter matrices $W_1$ and $W_2$, and where we use ReLU instead of Softmax in the compatibility function.
+
+%the compatablity function is $compat(q, k_i) = ReLU(q \cdot k_i)$ instead of $Softmax(qK_T)_i$.
+
+Given this similarity, we experimented with replacing the position-wise feed-forward networks with attention layers similar to the ones we use everywhere else our model. The multi-head-attention-over-parameters sublayer is identical to the multi-head attention described in \ref{sec:multihead}, except that the "keys" and "values" inputs to each attention head are trainable model parameters, as opposed to being linear projections of a previous layer.  These parameters are scaled up by a factor of $\sqrt{d_{model}}$ in order to be more similar to activations.
+
+In our first experiment, we replaced each position-wise feed-forward network with a multi-head-attention-over-parameters sublayer with $h_p=8$ heads, key-dimensionality $d_{pk}=64$, and value-dimensionality $d_{pv}=64$, using $n_p=1536$ key-value pairs for each attention head.  The sublayer has a total of $2097152$ parameters, including the parameters in the query projection and the output projection.  This matches the number of parameters in the position-wise feed-forward network that we replaced.  While the theoretical amount of computation is also the same, in practice, the attention version caused the step times to be about 30\% longer.
+
+In our second experiment, we used $h_p=8$ heads, and $n_p=512$ key-value pairs for each attention head, again matching the total number of parameters in the base model.
+
+Results for the first experiment were slightly worse than for the base model, and results for the second experiment were slightly better, see Table~\ref{tab:parameter_attention}.
+
+\begin{table}[h]
+\caption{Replacing the position-wise feed-forward networks with multihead-attention-over-parameters produces similar results to the base model.  All metrics are on the English-to-German translation development set, newstest2013.}
+\label{tab:parameter_attention}
+\begin{center}
+\vspace{-2mm}
+%\scalebox{1.0}{
+\begin{tabular}{c|cccccc|cccc}
+\hline\rule{0pt}{2.0ex}
+ & \multirow{2}{*}{$\dmodel$} & \multirow{2}{*}{$\dff$} &
+\multirow{2}{*}{$h_p$} & \multirow{2}{*}{$d_{pk}$} & \multirow{2}{*}{$d_{pv}$} &
+ \multirow{2}{*}{$n_p$} &
+ PPL & BLEU & params & training\\
+ & & & & & &  & (dev) & (dev) & $\times10^6$ & time \\
+\hline\rule{0pt}{2.0ex}
+base & 512 & 2048 & & & & & 4.92 & 25.8 & 65 & 12 hours\\
+\hline\rule{0pt}{2.0ex}
+AOP$_1$ & 512 & & 8 & 64 & 64 & 1536 & 4.92& 25.5  & 65 & 16 hours\\
+AOP$_2$ & 512 & & 16 & 64 & 64 & 512 & \textbf{4.86} & \textbf{25.9}  & 65 & 16 hours \\
+\hline
+\end{tabular}
+%}
+\end{center}
+\end{table}
+--- Author comments (%) across all .tex files ---
+background.tex:11:%\citep{JonasFaceNet2017} report new SOTA on machine translation for English-to-German (EnDe), Enlish-to-French (EnFr) and English-to-Romanian language pairs. 
+background.tex:13:%For example,! in MT, we must draw information from both input and previous output words to translate an output word accurately. An attention layer \citep{bahdanau2014neural} can connect a very large number of positions at low computation cost, making it an essential ingredient in competitive recurrent models for machine translation.
+background.tex:15:%A natural question to ask then is, "Could we replace recurrence with attention?". \marginpar{Don't know if it's the most natural question to ask given the previous statements. Also, need to say that the complexity table summarizes these statements} Such a model would be blessed with the computational efficiency of attention and the power of cross-positional communication. In this work, show that pure attention models work remarkably well for MT, achieving new SOTA results on EnDe and EnFr, and can be trained in under $2$ days on xyz architecture. 
+background.tex:17:%After the seminal models introduced in \citep{sutskever14, bahdanau2014neural, cho2014learning}, recurrent models have become the dominant solution for both sequence modeling and sequence-to-sequence transduction. Many efforts such as \citep{wu2016google,luong2015effective,jozefowicz2016exploring} have pushed the boundaries of machine translation (MT) and language modeling with recurrent endoder-decoder and recurrent language models. Recent effort \citep{shazeer2017outrageously} has successfully combined the power of conditional computation with sequence models to train very large models for MT, pushing SOTA at lower computational cost.
+background.tex:19:%Recurrent models compute a vector of hidden states $h_t$, for each time step $t$ of computation. $h_t$ is a function of both the input at time $t$ and the previous hidden state $h_t$. This dependence on the previous hidden state precludes processing all timesteps at once, instead requiring long sequences of sequential operations.  In practice, this results in greatly reduced computational efficiency, as on modern computing hardware, a single operation on a large batch is much faster than a large number of operations on small batches.  The problem gets worse at longer sequence lengths. Although sequential computation is not a severe bottleneck at inference time, as autoregressively generating each output requires all previous outputs, the inability to compute scores at all output positions at once hinders us from rapidly training our models over large datasets. Although impressive work such as \citep{Kuchaiev2017Factorization} is able to significantly accelerate the training of LSTMs with factorization tricks, we are still bound by the linear dependence on sequence length.
+background.tex:21:%If the model could compute hidden states at each time step using only the inputs and outputs,  it would be liberated from the dependence on results from previous time steps during training. This line of thought is the foundation of recent efforts such as the Markovian neural GPU \citep{neural_gpu}, ByteNet \citep{NalBytenet2017} and ConvS2S \citep{JonasFaceNet2017}, all of which use convolutional neural networks as a building block to compute hidden representations simultaneously for all timesteps, resulting in $O(1)$ sequential time complexity. \citep{JonasFaceNet2017} report new SOTA on machine translation for English-to-German (EnDe), Enlish-to-French (EnFr) and English-to-Romanian language pairs. 
+background.tex:23:%A crucial component for accurate sequence prediction is modeling cross-positional communication. For example, in MT, we must draw information from both input and previous output words to translate an output word accurately. An attention layer \citep{bahdanau2014neural} can connect a very large number of positions at a low computation cost, also $O(1)$ sequential time complexity, making it an essential ingredient in recurrent encoder-decoder architectures for MT. A natural question to ask then is, "Could we replace recurrence with attention?". \marginpar{Don't know if it's the most natural question to ask given the previous statements. Also, need to say that the complexity table summarizes these statements} Such a model would be blessed with the computational efficiency of attention and the power of cross-positional communication. In this work, show that pure attention models work remarkably well for MT, achieving new SOTA results on EnDe and EnFr, and can be trained in under $2$ days on xyz architecture. 
+background.tex:27:%Note: Facebook model is no better than RNNs in this regard, since it requires a number of layers proportional to the distance you want to communicate.  Bytenet is more promising, since it requires a logarithmnic number of layers (does bytenet have SOTA results)?   
+background.tex:29:%Note: An attention  layer can connect a very large number of positions at a low computation cost in O(1) sequential operations.  This is why encoder-decoder attention has been so successful in seq-to-seq models so far.  It is only natural, then, to also use attention to connect the timesteps of the same sequence.
+background.tex:31:%Note: I wouldn't say that long sequences are not a problem during inference.  It would be great if we could infer with no long sequences.  We could just say later on that, while our training graph is constant-depth, our model still requires sequential operations in the decoder part during inference due to the autoregressive nature of the model.   
+background.tex:33:%\begin{table}[h!]
+background.tex:34:%\caption{Attention models are quite efficient for cross-positional communications when sequence length is smaller than channel depth. $n$ represents the sequence length and $d$ represents the channel depth.}
+background.tex:35:%\label{tab:op_complexities}
+background.tex:36:%\begin{center}
+background.tex:37:%\vspace{-5pt}
+background.tex:38:%\scalebox{0.75}{
+background.tex:40:%\begin{tabular}{l|c|c|c}
+background.tex:41:%\hline \hline
+background.tex:42:%Layer Type & Receptive & Complexity & Sequential  \\
+background.tex:43:%           & Field     &            & Operations  \\
+background.tex:44:%\hline
+background.tex:45:%Pointwise Feed-Forward & $1$ & $O(n \cdot d^2)$ & $O(1)$ \\
+background.tex:46:%\hline
+background.tex:47:%Recurrent & $n$ & $O(n \cdot d^2)$ & $O(n)$ \\
+background.tex:48:%\hline
+background.tex:49:%Convolutional & $r$ & $O(r \cdot n \cdot d^2)$ & $O(1)$ \\
+background.tex:50:%\hline
+background.tex:51:%Convolutional (separable) & $r$ & $O(r \cdot n \cdot d + n %\cdot d^2)$ & $O(1)$ \\
+background.tex:52:%\hline
+background.tex:53:%Attention & $r$ & $O(r \cdot n \cdot d)$ & $O(1)$ \\
+background.tex:54:%\hline \hline
+background.tex:55:%\end{tabular}
+background.tex:56:%}
+background.tex:57:%\end{center}
+background.tex:58:%\end{table}
+introduction.tex:4:%\marginpar{not sure if the memory constraints are understandable here}
+introduction.tex:7:%\marginpar{@all: there is work on analyzing what attention really does in seq2seq models, couldn't find it right away} 
+introduction.tex:11:%\marginpar{not sure if "cross-positional communication" is understandable without explanation}
+introduction.tex:12:%\marginpar{insert exact training times and stats for the model that reaches sota earliest, maybe even a single GPU model?}
+introduction.tex:15:%\marginpar{you removed the constant number of repetitions part. I wrote it because I wanted to make it clear that the model does not only perform attention once, while it's also not recurrent. I thought that might be important to get across early.}
+introduction.tex:17:% Just a standard paragraph with citations, rewrite.
+introduction.tex:18:%After the seminal papers of \citep{sutskever14}, \citep{bahdanau2014neural}, and \citep{cho2014learning}, recurrent models have become the dominant solution for both sequence modeling and sequence-to-sequence transduction. Many efforts such as \citep{wu2016google,luong2015effective,jozefowicz2016exploring} have pushed the boundaries of machine translation and language modeling with recurrent sequence models. Recent effort \citep{shazeer2017outrageously} has combined the power of conditional computation with sequence models to train very large models for machine translation, pushing SOTA at lower computational cost. Recurrent models compute a vector of hidden states $h_t$, for each time step $t$ of computation. $h_t$ is a function of both the input at time $t$ and the previous hidden state $h_t$. This dependence on the previous hidden state encumbers recurrnet models to process multiple inputs at once, and their time complexity is a linear function of the length of the input and output, both during training and inference. [What I want to say here is that although this is fine during decoding, at training time, we are given both input and output and this linear nature does not allow the RNN to process all inputs and outputs simultaneously and haven't been used on datasets that are the of the scale of the web. What's the largest dataset we have ? . Talk about Nividia and possibly other's effors to speed up things, and possibly other efforts that alleviate this, but are still limited by it's comptuational nature]. Rest of the intro: What if you could construct the state based on the actual inputs and outputs, then you could construct them all at once. This has been the foundation of many promising recent efforts, bytenet,facenet (Also talk about quasi rnn here). Now we talk about attention!! Along with cell architectures such as long short-term meory (LSTM) \citep{hochreiter1997}, and gated recurrent units (GRUs) \citep{cho2014learning}, attention has emerged as an essential ingredient in successful sequence models, in particular for machine translation. In recent years, many, if not all, state-of-the-art (SOTA) results in machine translation have been achieved with attention-based sequence models \citep{wu2016google,luong2015effective,jozefowicz2016exploring}. Talk about the neon work on how it played with attention to do self attention! Then talk about what we do.
+model_architecture.tex:9:% Although the primary workhorse of our model is attention, 
+model_architecture.tex:10:%Our model maintains the encoder-decoder structure that is common to many so-called sequence-to-sequence models \citep{bahdanau2014neural,sutskever14}.  As in all such architectures, the encoder computes a representation of the input sequence, and the decoder consumes these representations along with the output tokens to autoregressively produce the output sequence.  Where, traditionally, the encoder and decoder contain stacks of recurrent or convolutional layers, our encoder and decoder stacks are composed of attention layers and position-wise feed-forward layers (Figure~\ref{fig:model-arch}).  The following sections describe the gross architecture and these particular components in detail.
+model_architecture.tex:22:% In our model (Figure~\ref{fig:model-arch}), the encoder and decoder are composed of stacks of alternating self-attention layers (for cross-positional communication) and position-wise feed-forward layers (for in-place computation).  In addition, the decoder stack contains encoder-decoder attention layers.  Since attention is agnostic to the distances between words, our model requires a "positional encoding" to be added to the encoder and decoder input. The following sections describe all of these components in detail.
+model_architecture.tex:29:% \begin{figure}
+model_architecture.tex:30:%   \centering
+model_architecture.tex:31:%   \includegraphics[scale=0.6]{Figures/ModalNet-19}
+model_architecture.tex:32:%   \caption{Scaled Dot-Product Attention.}
+model_architecture.tex:33:%   \label{fig:multi-head-att}
+model_architecture.tex:34:% \end{figure}
+model_architecture.tex:46:%We scale the dot products by $1/\sqrt{d_k}$ to limit the magnitude of the dot products, which works well in practice. Otherwise, we found applying the softmax to often result in weights very close to 0 or 1, and hence minuscule gradients.
+model_architecture.tex:48:% Already described in the subsequent section
+model_architecture.tex:49:%When used as part of decoder self-attention, an optional mask function is applied just before the softmax to prevent positions from attending to subsequent positions.   This mask simply sets the logits corresponding to all illegal connections (those outside of the lower triangle) to $-\infty$.
+model_architecture.tex:51:%\paragraph{Comparison to Additive Attention: } We choose dot product attention over additive attention \citep{bahdanau2014neural} since it can be computed using highly optimized matrix multiplication code.  This optimization is particularly important to us, as we employ many attention layers in our model.
+model_architecture.tex:56:%We suspect this to be caused by the dot products growing too large in magnitude to result in useful gradients after applying the softmax function.  To counteract this, we scale the dot product by $1/\sqrt{d_k}$.
+model_architecture.tex:76:  % \centering
+model_architecture.tex:89:%    \mathrm{where} \mathrm{head_i} &= \mathrm{Attention}(QW_Q_i^{\dmodel \times d_q}, KW_K_i^{\dmodel \times d_k}, VW^V_i^{\dmodel \times d_v})\\
+model_architecture.tex:96:%find it better (and no more expensive) to have multiple parallel attention layers (each over the full set of positions) with proportionally lower-dimensional keys, values and queries.  We call this "Multi-Head Attention" (Figure~\ref{fig:multi-head-att}).  The keys, values, and queries for each of these parallel attention layers are computed by learned linear transformations of the inputs to the multi-head attention.  We use different linear transformations across different parallel attention layers.  The output of the parallel attention layers are concatenated, and then passed through a final learned linear transformation. 
+model_architecture.tex:125:%In the appendix, we describe how the position-wise feed-forward network can also be seen as a form of attention.
+=== 2. Inspect cloned reference repositories ===
+=== harvardnlp-annotated-transformer (commit debc9fd) ===
+harvardnlp-annotated-transformer
+harvardnlp-annotated-transformer/images
+harvardnlp-annotated-transformer/images/ModalNet-20.png
+harvardnlp-annotated-transformer/images/aiayn.png
+harvardnlp-annotated-transformer/images/ModalNet-21.png
+harvardnlp-annotated-transformer/images/ModalNet-19.png
+harvardnlp-annotated-transformer/the_annotated_transformer.py
+harvardnlp-annotated-transformer/writeup
+harvardnlp-annotated-transformer/writeup/acl_natbib.bst
+harvardnlp-annotated-transformer/writeup/acl2018.sty
+harvardnlp-annotated-transformer/Makefile
+harvardnlp-annotated-transformer/requirements.txt
+harvardnlp-annotated-transformer/AnnotatedTransformer.ipynb
+harvardnlp-annotated-transformer/README.md
+harvardnlp-annotated-transformer/docs
+harvardnlp-annotated-transformer/docs/tufte.css
+harvardnlp-annotated-transformer/docs/github.min.css
+harvardnlp-annotated-transformer/docs/index.html
+harvardnlp-annotated-transformer/docs/header-includes.yaml
+harvardnlp-annotated-transformer/LICENSE
+=== hyunwoongko-transformer (commit 6328654) ===
+hyunwoongko-transformer
+hyunwoongko-transformer/util
+hyunwoongko-transformer/util/tokenizer.py
+hyunwoongko-transformer/util/data_loader.py
+hyunwoongko-transformer/util/__init__.py
+hyunwoongko-transformer/util/epoch_timer.py
+hyunwoongko-transformer/util/bleu.py
+hyunwoongko-transformer/image
+hyunwoongko-transformer/image/positional_encoding.jpg
+hyunwoongko-transformer/image/positionwise_feed_forward.jpg
+hyunwoongko-transformer/image/multi_head_attention.jpg
+hyunwoongko-transformer/image/layer_norm.jpg
+hyunwoongko-transformer/image/enc_dec.jpg
+hyunwoongko-transformer/image/transformer-model-size.jpg
+hyunwoongko-transformer/image/scale_dot_product_attention.jpg
+hyunwoongko-transformer/image/model.png
+hyunwoongko-transformer/paper
+hyunwoongko-transformer/paper/attention is all you need.pdf
+hyunwoongko-transformer/conf.py
+hyunwoongko-transformer/saved
+hyunwoongko-transformer/saved/transformer-base
+hyunwoongko-transformer/saved/transformer-base/train.txt
+hyunwoongko-transformer/saved/transformer-base/train_result.jpg
+hyunwoongko-transformer/saved/transformer-base/test.txt
+hyunwoongko-transformer/data.py
+hyunwoongko-transformer/train.py
+hyunwoongko-transformer/models
+hyunwoongko-transformer/models/layers
+hyunwoongko-transformer/models/layers/scale_dot_product_attention.py
+hyunwoongko-transformer/models/layers/__init__.py
+hyunwoongko-transformer/models/layers/layer_norm.py
+hyunwoongko-transformer/models/layers/multi_head_attention.py
+hyunwoongko-transformer/models/layers/position_wise_feed_forward.py
+hyunwoongko-transformer/models/model
+hyunwoongko-transformer/models/model/encoder.py
+hyunwoongko-transformer/models/model/__init__.py
+hyunwoongko-transformer/models/model/transformer.py
+hyunwoongko-transformer/models/model/decoder.py
+hyunwoongko-transformer/models/__init__.py
+hyunwoongko-transformer/models/blocks
+hyunwoongko-transformer/models/blocks/decoder_layer.py
+hyunwoongko-transformer/models/blocks/__init__.py
+hyunwoongko-transformer/models/blocks/encoder_layer.py
+hyunwoongko-transformer/models/embedding
+hyunwoongko-transformer/models/embedding/transformer_embedding.py
+hyunwoongko-transformer/models/embedding/token_embeddings.py
+hyunwoongko-transformer/models/embedding/positional_encoding.py
+hyunwoongko-transformer/models/embedding/__init__.py
+hyunwoongko-transformer/README.md
+hyunwoongko-transformer/graph.py
+=== jadore801120-attention-is-all-you-need-pytorch (commit 132907d) ===
+jadore801120-attention-is-all-you-need-pytorch
+jadore801120-attention-is-all-you-need-pytorch/train_multi30k_de_en.sh
+jadore801120-attention-is-all-you-need-pytorch/apply_bpe.py
+jadore801120-attention-is-all-you-need-pytorch/translate.py
+jadore801120-attention-is-all-you-need-pytorch/train.py
+jadore801120-attention-is-all-you-need-pytorch/preprocess.py
+jadore801120-attention-is-all-you-need-pytorch/learn_bpe.py
+jadore801120-attention-is-all-you-need-pytorch/requirements.txt
+jadore801120-attention-is-all-you-need-pytorch/transformer
+jadore801120-attention-is-all-you-need-pytorch/transformer/Optim.py
+jadore801120-attention-is-all-you-need-pytorch/transformer/Constants.py
+jadore801120-attention-is-all-you-need-pytorch/transformer/Models.py
+jadore801120-attention-is-all-you-need-pytorch/transformer/Layers.py
+jadore801120-attention-is-all-you-need-pytorch/transformer/SubLayers.py
+jadore801120-attention-is-all-you-need-pytorch/transformer/Translator.py
+jadore801120-attention-is-all-you-need-pytorch/transformer/__init__.py
+jadore801120-attention-is-all-you-need-pytorch/transformer/Modules.py
+jadore801120-attention-is-all-you-need-pytorch/README.md
+jadore801120-attention-is-all-you-need-pytorch/LICENSE
+--- harvardnlp/annotated-transformer SublayerConnection & Embeddings ---
+332-# That is, the output of each sub-layer is $\mathrm{LayerNorm}(x +
+333-# \mathrm{Sublayer}(x))$, where $\mathrm{Sublayer}(x)$ is the function
+334-# implemented by the sub-layer itself.  We apply dropout
+335-# [(cite)](http://jmlr.org/papers/v15/srivastava14a.html) to the
+336-# output of each sub-layer, before it is added to the sub-layer input
+337-# and normalized.
+338-#
+339-# To facilitate these residual connections, all sub-layers in the
+340-# model, as well as the embedding layers, produce outputs of dimension
+341-# $d_{\text{model}}=512$.
+342-
+343-# %% id="U1P7zI0eTsqE"
+344:class SublayerConnection(nn.Module):
+345-    """
+346-    A residual connection followed by a layer norm.
+347-    Note for code simplicity the norm is first as opposed to last.
+348-    """
+349-
+350-    def __init__(self, size, dropout):
+351-        super(SublayerConnection, self).__init__()
+352-        self.norm = LayerNorm(size)
+353-        self.dropout = nn.Dropout(dropout)
+354-
+355-    def forward(self, x, sublayer):
+356-        "Apply residual connection to any sublayer with the same size."
+--
+692-#
+693-# Similarly to other sequence transduction models, we use learned
+694-# embeddings to convert the input tokens and output tokens to vectors
+695-# of dimension $d_{\text{model}}$.  We also use the usual learned
+696-# linear transformation and softmax function to convert the decoder
+697-# output to predicted next-token probabilities.  In our model, we
+698-# share the same weight matrix between the two embedding layers and
+699-# the pre-softmax linear transformation, similar to
+700-# [(cite)](https://arxiv.org/abs/1608.05859). In the embedding layers,
+701-# we multiply those weights by $\sqrt{d_{\text{model}}}$.
+702-
+703-# %% id="pyrChq9qTsqH"
+704:class Embeddings(nn.Module):
+705-    def __init__(self, d_model, vocab):
+706-        super(Embeddings, self).__init__()
+707-        self.lut = nn.Embedding(vocab, d_model)
+708-        self.d_model = d_model
+709-
+710-    def forward(self, x):
+711-        return self.lut(x) * math.sqrt(self.d_model)
+712-
+713-
+714-# %% [markdown] id="vOkdui-cTsqH"
+715-# ## Positional Encoding
+716-#
+--- jadore801120/attention-is-all-you-need-pytorch Models.py & SubLayers.py ---
+==> jadore801120-attention-is-all-you-need-pytorch/transformer/SubLayers.py <==
+''' Define the sublayers in encoder/decoder layer '''
+import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
+from transformer.Modules import ScaledDotProductAttention
+
+__author__ = "Yu-Hsiang Huang"
+
+class MultiHeadAttention(nn.Module):
+    ''' Multi-Head Attention module '''
+
+    def __init__(self, n_head, d_model, d_k, d_v, dropout=0.1):
+        super().__init__()
+
+        self.n_head = n_head
+        self.d_k = d_k
+        self.d_v = d_v
+
+        self.w_qs = nn.Linear(d_model, n_head * d_k, bias=False)
+        self.w_ks = nn.Linear(d_model, n_head * d_k, bias=False)
+        self.w_vs = nn.Linear(d_model, n_head * d_v, bias=False)
+        self.fc = nn.Linear(n_head * d_v, d_model, bias=False)
+
+        self.attention = ScaledDotProductAttention(temperature=d_k ** 0.5)
+
+        self.dropout = nn.Dropout(dropout)
+        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+
+
+    def forward(self, q, k, v, mask=None):
+
+        d_k, d_v, n_head = self.d_k, self.d_v, self.n_head
+        sz_b, len_q, len_k, len_v = q.size(0), q.size(1), k.size(1), v.size(1)
+
+        residual = q
+
+        # Pass through the pre-attention projection: b x lq x (n*dv)
+        # Separate different heads: b x lq x n x dv
+        q = self.w_qs(q).view(sz_b, len_q, n_head, d_k)
+        k = self.w_ks(k).view(sz_b, len_k, n_head, d_k)
+        v = self.w_vs(v).view(sz_b, len_v, n_head, d_v)
+
+        # Transpose for attention dot product: b x n x lq x dv
+        q, k, v = q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
+
+        if mask is not None:
+            mask = mask.unsqueeze(1)   # For head axis broadcasting.
+
+        q, attn = self.attention(q, k, v, mask=mask)
+
+        # Transpose to move the head dimension back: b x lq x n x dv
+        # Combine the last two dimensions to concatenate all the heads together: b x lq x (n*dv)
+        q = q.transpose(1, 2).contiguous().view(sz_b, len_q, -1)
+        q = self.dropout(self.fc(q))
+        q += residual
+
+        q = self.layer_norm(q)
+
+        return q, attn
+
+
+class PositionwiseFeedForward(nn.Module):
+    ''' A two-feed-forward-layer module '''
+
+    def __init__(self, d_in, d_hid, dropout=0.1):
+        super().__init__()
+        self.w_1 = nn.Linear(d_in, d_hid) # position-wise
+        self.w_2 = nn.Linear(d_hid, d_in) # position-wise
+        self.layer_norm = nn.LayerNorm(d_in, eps=1e-6)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x):
+
+        residual = x
+
+        x = self.w_2(F.relu(self.w_1(x)))
+        x = self.dropout(x)
+        x += residual
+
+        x = self.layer_norm(x)
+
+        return x
+
+==> jadore801120-attention-is-all-you-need-pytorch/transformer/Models.py <==
+''' Define the Transformer model '''
+import torch
+import torch.nn as nn
+import numpy as np
+from transformer.Layers import EncoderLayer, DecoderLayer
+
+
+__author__ = "Yu-Hsiang Huang"
+
+
+def get_pad_mask(seq, pad_idx):
+    return (seq != pad_idx).unsqueeze(-2)
+
+
+def get_subsequent_mask(seq):
+    ''' For masking out the subsequent info. '''
+    sz_b, len_s = seq.size()
+    subsequent_mask = (1 - torch.triu(
+        torch.ones((1, len_s, len_s), device=seq.device), diagonal=1)).bool()
+    return subsequent_mask
+
+
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, d_hid, n_position=200):
+        super(PositionalEncoding, self).__init__()
+
+        # Not a parameter
+        self.register_buffer('pos_table', self._get_sinusoid_encoding_table(n_position, d_hid))
+
+    def _get_sinusoid_encoding_table(self, n_position, d_hid):
+        ''' Sinusoid position encoding table '''
+        # TODO: make it with torch instead of numpy
+
+        def get_position_angle_vec(position):
+            return [position / np.power(10000, 2 * (hid_j // 2) / d_hid) for hid_j in range(d_hid)]
+
+        sinusoid_table = np.array([get_position_angle_vec(pos_i) for pos_i in range(n_position)])
+        sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
+        sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
+
+        return torch.FloatTensor(sinusoid_table).unsqueeze(0)
+
+    def forward(self, x):
+        return x + self.pos_table[:, :x.size(1)].clone().detach()
+
+
+class Encoder(nn.Module):
+    ''' A encoder model with self attention mechanism. '''
+
+    def __init__(
+            self, n_src_vocab, d_word_vec, n_layers, n_head, d_k, d_v,
+            d_model, d_inner, pad_idx, dropout=0.1, n_position=200, scale_emb=False):
+
+        super().__init__()
+
+        self.src_word_emb = nn.Embedding(n_src_vocab, d_word_vec, padding_idx=pad_idx)
+        self.position_enc = PositionalEncoding(d_word_vec, n_position=n_position)
+        self.dropout = nn.Dropout(p=dropout)
+        self.layer_stack = nn.ModuleList([
+            EncoderLayer(d_model, d_inner, n_head, d_k, d_v, dropout=dropout)
+            for _ in range(n_layers)])
+        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.scale_emb = scale_emb
+        self.d_model = d_model
+
+    def forward(self, src_seq, src_mask, return_attns=False):
+
+        enc_slf_attn_list = []
+
+        # -- Forward
+        enc_output = self.src_word_emb(src_seq)
+        if self.scale_emb:
+            enc_output *= self.d_model ** 0.5
+        enc_output = self.dropout(self.position_enc(enc_output))
+        enc_output = self.layer_norm(enc_output)
+
+        for enc_layer in self.layer_stack:
+            enc_output, enc_slf_attn = enc_layer(enc_output, slf_attn_mask=src_mask)
+            enc_slf_attn_list += [enc_slf_attn] if return_attns else []
+
+        if return_attns:
+            return enc_output, enc_slf_attn_list
+        return enc_output,
+
+
+class Decoder(nn.Module):
+    ''' A decoder model with self attention mechanism. '''
+
+    def __init__(
+--- hyunwoongko/transformer encoder_layer.py & token_embeddings.py ---
+"""
+@author : Hyunwoong
+@when : 2019-10-24
+@homepage : https://github.com/gusdnd852
+"""
+from torch import nn
+
+from models.layers.layer_norm import LayerNorm
+from models.layers.multi_head_attention import MultiHeadAttention
+from models.layers.position_wise_feed_forward import PositionwiseFeedForward
+
+
+class EncoderLayer(nn.Module):
+
+    def __init__(self, d_model, ffn_hidden, n_head, drop_prob):
+        super(EncoderLayer, self).__init__()
+        self.attention = MultiHeadAttention(d_model=d_model, n_head=n_head)
+        self.norm1 = LayerNorm(d_model=d_model)
+        self.dropout1 = nn.Dropout(p=drop_prob)
+
+        self.ffn = PositionwiseFeedForward(d_model=d_model, hidden=ffn_hidden, drop_prob=drop_prob)
+        self.norm2 = LayerNorm(d_model=d_model)
+        self.dropout2 = nn.Dropout(p=drop_prob)
+
+    def forward(self, x, src_mask):
+        # 1. compute self attention
+        _x = x
+        x = self.attention(q=x, k=x, v=x, mask=src_mask)
+        
+        # 2. add and norm
+        x = self.dropout1(x)
+        x = self.norm1(x + _x)
+        
+        # 3. positionwise feed forward network
+        _x = x
+        x = self.ffn(x)
+      
+        # 4. add and norm
+        x = self.dropout2(x)
+        x = self.norm2(x + _x)
+        return x
+"""
+@author : Hyunwoong
+@when : 2019-10-24
+@homepage : https://github.com/gusdnd852
+"""
+from torch import nn
+
+
+class TokenEmbedding(nn.Embedding):
+    """
+    Token Embedding using torch.nn
+    they will dense representation of word using weighted matrix
+    """
+
+    def __init__(self, vocab_size, d_model):
+        """
+        class for token embedding that included positional information
+
+        :param vocab_size: size of vocabulary
+        :param d_model: dimensions of model
+        """
+        super(TokenEmbedding, self).__init__(vocab_size, d_model, padding_idx=1)
+FINISHED
+FINISHED rc=0

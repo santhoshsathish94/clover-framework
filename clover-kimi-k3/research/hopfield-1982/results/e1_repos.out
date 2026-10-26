@@ -1,0 +1,534 @@
+=== 1. Read pauljmello/Hopfield-Networks files ===
+--- FILE: README.md ---
+# Hopfield Networks: Traditional Discrete & Modern Continuous
+
+Two associative memory implementations: classical discrete binary states (1982) and modern continuous states with attention mechanism (2020).
+
+## Shared Foundation
+**Associative Memory**: Energy-based pattern storage and retrieval
+```python
+network.store(patterns)                                 # Store via learning rule
+state, energies = network.update(noisy_state, steps)    # Retrieve via energy minimization
+overlaps = network.get_overlap(state)                   # Measure pattern similarity
+```
+
+---
+
+## Traditional Hopfield Network
+**Theory**: Binary states with quadratic energy function
+```
+Energy: E = -1/2 s^T W s                # Quadratic form
+Storage: W = (1/N) Σ_μ x^μ (x^μ)^T      # Hebbian learning  
+Update: s_i = sign(Σ_j w_ij s_j)        # Asynchronous binary updates
+Capacity: ~0.138 * Neurons              # Theoretical limit
+```
+
+**Implementation**:
+```python
+# Hebbian Storage: W = (1/N) Σ_μ x^μ (x^μ)^T
+for p in patterns:
+    self.weights += torch.outer(p, p)
+self.weights /= self.num_neurons
+
+# Binary Update: s_i = sign(Σ_j w_ij s_j)
+local_field = torch.einsum('j,j->', self.weights[i], state)
+state[i] = torch.sign(local_field)
+```
+
+---
+
+## Modern Hopfield Network  
+**Theory**: Continuous states with exponential capacity, equivalent to transformer attention
+```
+Energy: E = -lse(β, X^T Z) + 1/2||Z||^2 + constants
+Update: Z = X softmax(β X^T Z)          # Attention mechanism
+Storage: x^μ = x^μ / ||x^μ||_2           # Unit sphere normalization
+Capacity: O(2^(αd))                     # Exponential in dimension
+```
+
+**Implementation**:
+```python
+# Attention update: Z = X softmax(β X^T Z) 
+similarities = torch.matmul(self.patterns, state)
+attention_weights = torch.softmax(self.beta * similarities, dim=0)  # softmax(β X^T Z)
+state = torch.matmul(self.patterns.t(), attention_weights)
+```
+
+## Performance Comparison
+
+| Aspect | Traditional         | Modern              |
+|--------|---------------------|---------------------|
+| **States** | Binary: {-1, +1}    | Continuous: ℝ^d     |
+| **Capacity** | ~0.138N             | O(2^(αd))           |
+| **Convergence** | Multiple Iterations | CCCP: One Update    |
+| **Connection** | Quadratic Energy    | Attention Mechanism |
+
+
+## Results
+- **Capacity**: Modern networks exceed 0.138N traditional limit
+- **Robustness**: Exponentially small retrieval errors with noisy inputs  
+- **Applications**: Modern Hopfield layers enable pooling, memory, and attention in deep learning
+
+## Citation
+
+If you use my code in your research, please cite me:
+
+```bibtex
+@software{pjm2025Hopfield,
+  author = {Paul J Mello},
+  title = {Hopfield Networks},
+  url = {https://github.com/pauljmello/Hopfield-Networks},
+  year = {2025},
+}
+```
+
+## References
+[1] Hopfield, J.J. (1982). Neural networks and physical systems with emergent collective computational abilities  
+[2] Ramsauer, H., et al. (2020). Hopfield Networks is All You Need. arXiv:2008.02217
+--- FILE: hopfield.py ---
+import torch
+
+
+class HopfieldNetwork:
+    """Traditional Hopfield Network: E = -1/2 s^T W s, s_i = sign(Σ w_ij s_j)
+
+    Mathematical Foundation:
+    - Energy: E = -1/2 Σ_ij w_ij s_i s_j  # quadratic form
+    - Update: s_i = sign(h_i) where h_i = Σ_j w_ij s_j  # local field
+    - Storage: W = (1/N) Σ_μ x^μ (x^μ)^T  # Hebbian rule
+    - Capacity: ~0.138N patterns (Hopfield, 1982)
+    """
+
+    def __init__(self, num_neurons, device='cpu'):
+        self.num_neurons = num_neurons
+        self.weights = torch.zeros((num_neurons, num_neurons), device=device)
+        self.device = device
+        self.patterns = None
+
+    def store(self, patterns):
+        """Hebbian rule: W = (1/P) ∑_μ Z^μ (Z^μ)^T"""
+        patterns = patterns.to(self.device)
+
+        self.patterns = patterns.clone()
+        self.weights.zero_()
+
+        # Hebbian learning rule
+        for p in patterns:
+            self.weights += torch.outer(p, p)
+
+        self.weights /= self.num_neurons
+        self.weights.fill_diagonal_(0)  # Remove self-connections
+
+        return self
+
+    def energy(self, state):
+        """Energy function: E = -1/2 s^T W s"""
+        return -0.5 * torch.sum(state * (self.weights @ state))  # Quadratic form
+
+    def update(self, state, steps):
+        """Asynchronous update: s_i = sign(Σ_j w_ij s_j) for random i"""
+        state = state.to(self.device).clone()
+        energies = [self.energy(state).item()]
+
+        for _ in range(steps):
+            i = torch.randint(0, self.num_neurons, (1,)).item()  # random neuron selection
+            local_field = torch.einsum('j,j->', self.weights[i], state)  # h_i = Σ_j w_ij s_j
+            state[i] = torch.sign(local_field)  # binary activation: s_i = sign(h_i)
+            energies.append(self.energy(state).item())
+
+        return state, energies
+
+    def get_overlap(self, state):
+        """Pattern overlap: m_μ = (1/N) Σ_i s_i x^μ_i"""
+        return torch.tensor([torch.sum(state * p) / self.num_neurons for p in self.patterns])
+--- FILE: modernhopfield.py ---
+import torch
+
+
+class ModernHopfieldNetwork:
+    """Modern Hopfield Network with continuous states as described in
+    Introduced in 2020: "Hopfield Networks is All You Need" - https://arxiv.org/abs/2008.02217.
+
+    Key features:
+    - Continuous state vectors
+    - Exponential storage capacity
+    - Retrieval update
+    - Attention mechanism
+    
+    - Energy function: E = -lse(β, X^T Z) + (1/2)Z^T Z + β^-1 ln N + (1/2)M^2
+    - Update rule: Z_new = X softmax(βX^T Z)
+    """
+
+    def __init__(self, num_neurons, beta, device='cpu'):
+        self.num_neurons, self.beta, self.device = num_neurons, beta, device
+        self.patterns = None
+        self.num_patterns = 0
+        self.max_norm = 0
+
+    def store(self, patterns):
+        patterns = patterns.to(self.device).float()
+
+        # Pattern normalization
+        patterns = patterns / torch.norm(patterns, dim=1, keepdim=True)   # Unit sphere normalization: x^μ = x^μ / ||x^μ||_2
+
+        self.patterns = patterns
+        self.num_patterns = patterns.shape[0]
+        self.max_norm = torch.max(torch.norm(patterns, dim=1))
+        return self  # Chaining
+
+    def energy(self, state):
+        """E = -lse(β, X^T Z) + (1/2)Z^T Z + β^(-1) ln N + (1/2)M²"""
+        state = state.to(self.device)
+        similarities = torch.matmul(self.patterns, state)
+        lse_term = (1.0 / self.beta) * torch.logsumexp(self.beta * similarities, dim=0)
+        constant_term = (1.0 / self.beta) * torch.log(torch.tensor(self.num_patterns, device=self.device).float()) + 0.5 * (self.max_norm ** 2)
+        return -lse_term + 0.5 * torch.sum(state * state) + constant_term
+
+    def update(self, state, steps):
+        """Update state using X softmax(βX^T Z)"""
+        state = state.to(self.device).clone()
+        prev_state = state.clone()
+        similarities = torch.matmul(self.patterns, state)
+        energies = [self.energy(state).item()]
+
+        for _ in range(steps):
+            attention_weights = torch.softmax(self.beta * similarities, dim=0)
+            state = torch.matmul(self.patterns.t(), attention_weights)  # Update State
+            if torch.allclose(state, prev_state, atol=1e-6):
+                return state, energies
+            energies.append(self.energy(state).item())
+            prev_state = state.clone()
+
+        return state, energies
+
+    def get_overlap(self, state):
+        return torch.tensor([torch.sum(state * p) / self.num_neurons for p in self.patterns])
+--- FILE: main.py ---
+import os
+import torch
+import numpy as np
+
+from utils import ensure_dir, get_test_patterns, create_network, test_retrieval, plot_comparison_retrieval, test_capacity
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+torch.set_num_threads(14)
+
+
+def main():
+    # Configuration
+    seed = 1001
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    save_dir = 'images'
+    plot_results = True
+    network_types = ['traditional', 'modern']
+
+    # Pattern Shape
+    img_size = 20
+    pattern_step_size = 7
+    ascii_symbols = ['?', '@', 'B']
+
+    # Hopfield Network Parameters
+    max_patterns = 256
+    num_neurons = img_size * img_size
+    theoretical = int(0.138 * num_neurons)
+    steps = 100
+
+    # Experiment Parameters
+    noise_level = 0.1
+    capacity_noise = 0.1
+    capacity_trials = 5
+
+    # Modern Hopfield Network Parameter
+    beta = 1.0  # inverse temperature
+
+    # Create directories
+    if plot_results:
+        ensure_dir(save_dir)
+        ensure_dir(f"{save_dir}/traditional")
+        ensure_dir(f"{save_dir}/modern")
+        ensure_dir(f"{save_dir}/comparison")
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
+
+    # Load test patterns
+    patterns, shape, names = get_test_patterns(ascii_symbols, img_size, device=device)
+    print(f"Loaded {len(patterns)} patterns with {num_neurons} neurons each")
+
+    # Traditional Hopfield Network
+    trad_network = create_network('traditional', num_neurons, None, device)
+    trad_network.store(patterns)
+    trad_results = test_retrieval(trad_network, patterns, shape, names, steps, noise_level, save_dir=f"{save_dir}/traditional" if plot_results else None, prefix='traditional_')
+    trad_success_rate, trad_pattern_results, trad_energies, trad_noisy = trad_results
+
+    # Modern Hopfield Network
+    modern_network = create_network('modern', num_neurons, beta, device)
+    modern_network.store(patterns)
+    modern_results = test_retrieval(modern_network, patterns, shape, names, steps, noise_level, save_dir=f"{save_dir}/modern" if plot_results else None, prefix='modern_')
+    modern_success_rate, modern_pattern_results, modern_energies, modern_noisy = modern_results
+
+    # Plot comparisons
+    if plot_results:
+        for i in range(len(patterns)):
+            name = f" ({names[i]})" if names and i < len(names) else ""
+            plot_comparison_retrieval(trad_noisy[i], trad_pattern_results[i], modern_pattern_results[i], trad_energies[i], modern_energies[i], shape,
+                                      title=f"Pattern {i}{name} - Retrieval Comparison", save_path=f"{save_dir}/comparison/retrieval_comparison_{i}.png")
+
+    # Test storage capacities
+    _, _, _ = test_capacity(theoretical, max_patterns, steps, pattern_step_size, capacity_noise, capacity_trials, network_types, beta,
+                            save_dir=f"{save_dir}/comparison" if plot_results else None, device=device)
+
+    print("\n=== Summary ===")
+    print(f"  - Storage capacity: ~0.138N = ~{theoretical} patterns")
+    print(f"  - Energy function: E = -(1/2) s^T W s")
+    print(f"  - Update rule: s_i = sign(Σ_j w_ij s_j)")
+    print(f"  - Note:\n"
+          f"        - Discrete Representations.\n")
+    print("\nModern Hopfield Network:")
+    print(f"  - Storage capacity: Exponential O(2^(αd)) where α < 1/(2ln2)")
+    print(f"  - Energy function: E = -lse(β, X^T Z) + (1/2)||Z||² + constants")
+    print(f"  - Update rule: Z = X softmax(β X^T Z)")
+    print(f"  - Note:\n"
+          f"        - Essentially adding an Attention Mechanism.\n"
+          f"        - Continuous Representations.\n"
+          f"        - Exponential storage capacity.\n")
+
+if __name__ == "__main__":
+    main()
+=== 2. Read & Run 1hubert/hopfield-network in a work copy ===
+"""
+Implementation of the Hopfield network in Python.
+
+The idea and math behind Hopfield networks was brought to my attention by this YouTube video by Layerwise Lectures: https://youtu.be/piF6D6CQxUw
+I highly recommend watching it if you want to understand the code below.
+
+This project is a good starting point for anyone who wants to experiment with Hopfield networks. It's not optimized for speed or memory usage, but it's easy to understand and modify.
+
+---------------------------------------------------
+Interesting comment from the video about "eyes":
+> Guest6265+: I wonder what happens if you add "eyes" to the network, i.e. some subset of neurons whose activation is driven by an external signal instead of the update function.
+>
+> Layerwise Lectures: The original paper actually mentions an input current to the neurons. This would then be combined with the summed input of all other neurons, so it would modify the update function rather than replacing it. I left  this out for simplicity. However, it's actually an important detail once you start thinking about it. It sort of biases the network to a certain state and would explain where the starting state of the network comes from, if it's not random. The story would then go like this: the "eyes" of the network (love the metaphor btw) would cue the network with a partial state and the network would then autocomplete to its memory state. Kinda-sort-of-almost-like seeing a visual cue of some sort and then being reminded of a scene from your past - if we're being a little bit fanciful.
+---------------------------------------------------
+
+TODO:
+- If last 10/100/1000 iterations were the same, check if one of expected stable states was achieved and quit
+- Experiment with micro-sized neural networks starting with 2 neurons to build intuition on how the weights influence states
+- Add a function to create a unique timeline (where no two neighboring states are the same)
+- refactor so that the state is a vector, not a matrix
+- add "eyes" to the network
+- what is simulated annealing and does it relate to Hopfield networks?
+- what is the relationship between Hopfield networks and Boltzmann machines?
+"""
+from copy import deepcopy
+from random import randrange, choice
+
+
+def index_to_row_col(index, num_cols):
+    row = index // num_cols  # Divide by number of columns
+    col = index % num_cols  # Remainder is the column index
+    return row, col
+
+
+def row_col_to_index(row, col, num_cols):
+    return row * num_cols + col
+
+
+def print_state(state):
+    for row in state:
+        for neuron_activity in row:
+            if neuron_activity == 1:
+                print('⬛', end='')
+            elif neuron_activity == -1:
+                print('⬜', end='')
+        else:
+            print()
+
+
+def print_timeline(t):
+    for i, state in enumerate(t):
+        print(f't = {i}')
+        print_state(state)
+        print('----------------')
+
+
+def time_step(t, weights):
+    """t -> t + 1"""
+    state = t[-1]
+
+    x_len = len(state)
+    y_len = len(state[0])
+    x_rand = randrange(x_len)
+    y_rand = randrange(y_len)
+    weights_index = row_col_to_index(x_rand, y_rand, y_len)
+
+    result = 0
+    for i, weight in enumerate(weights[weights_index]):
+        vx, vy = index_to_row_col(i, y_len)
+        result += weight * state[vx][vy]
+
+    new_state = deepcopy(state)
+    if result >= 0:
+        new_state[x_rand][y_rand] = 1
+    else:  # result < 0
+        new_state[x_rand][y_rand] = -1
+
+    return t + [new_state]
+
+
+def train(img: list[list]) -> list[list]:
+    """
+    Input: Image (matrix with values -1 or 1)
+    Output: Weights matrix
+    """
+    # Step 1: Flatten the matrix
+    l = []
+    for row in img:
+        for elem in row:
+            l.append(elem)
+
+    # Step 2: Create outer product
+    WeightMatrix = []
+    for i in l:
+        row = []
+        for j in l:
+            row +=[i*j]
+        WeightMatrix.append(row)
+
+    # Step 3: Set diagonal to 0
+    for i in range(len(WeightMatrix)):
+        WeightMatrix[i][i] = 0
+
+    return WeightMatrix
+
+
+# Step 1: Define dimensions, state and timeline
+n = 5
+state = [[choice([-1, 1]) for _ in range(n)] for _ in range(n)]
+
+t = [state]
+
+# Step 2: Train the neural network on a set of images
+rice_field_img = [
+    [1, 1, 1, 1, 1],
+    [1, -1, 1, -1, 1],
+    [1, 1, 1, 1, 1],
+    [1, -1, 1, -1, 1],
+    [1, 1, 1, 1, 1],
+]
+
+x_img = [
+    [1, -1, -1, -1, 1],
+    [-1, 1, -1, 1, -1],
+    [-1, -1, 1, -1, -1],
+    [-1, 1, -1, 1, -1],
+    [1, -1, -1, -1, 1],
+]
+
+o_img = [
+    [1, 1, 1, 1, 1],
+    [1, -1, -1, -1, 1],
+    [1, -1, -1, -1, 1],
+    [1, -1, -1, -1, 1],
+    [1, 1, 1, 1, 1],
+]
+
+weights_rice_field = train(rice_field_img)
+weights_x = train(x_img)
+weights_o = train(o_img)
+
+weights = []
+for w1, w2, w3 in zip(weights_rice_field, weights_x, weights_o):
+    row = []
+    for i in range(n * n):
+        avg = (w1[i] + w2[i] + w3[i]) / 3
+        row.append(avg)
+
+    weights.append(row)
+
+# Step 3: Pass time x times
+x = 10
+for _ in range(x):
+    t = time_step(t, weights)
+
+# Step 4: Print timeline
+print_timeline(t)
+t = 0
+⬜⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬜⬛⬜⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 1
+⬜⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬜⬛⬜⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 2
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬜⬛⬜⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 3
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬛⬛⬜⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 4
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬛⬛⬜⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 5
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 6
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 7
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 8
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 9
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+t = 10
+⬛⬛⬛⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬜⬛⬛
+⬛⬛⬛⬜⬛
+⬛⬛⬛⬛⬛
+----------------
+FINISHED rc=0

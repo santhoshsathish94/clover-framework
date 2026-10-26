@@ -1,0 +1,64 @@
+Cloning into 'CodeForge-00-rumelhart_backpropagation'...
+Cloning into 'Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-'...
+Cloning into 'karpathy-micrograd'...
+>>> Repo: CodeForge-00-rumelhart_backpropagation (7657aed1e2998af10374687f0e3ec9ca8c13ea00)
+   115 CodeForge-00-rumelhart_backpropagation/family.py
+    49 CodeForge-00-rumelhart_backpropagation/experiments.py
+    59 CodeForge-00-rumelhart_backpropagation/tests/test_live.py
+   164 CodeForge-00-rumelhart_backpropagation/tests/test_backprop.py
+     0 CodeForge-00-rumelhart_backpropagation/tests/__init__.py
+    62 CodeForge-00-rumelhart_backpropagation/tasks.py
+   107 CodeForge-00-rumelhart_backpropagation/demo.py
+     2 CodeForge-00-rumelhart_backpropagation/requirements.txt
+   116 CodeForge-00-rumelhart_backpropagation/plots.py
+   164 CodeForge-00-rumelhart_backpropagation/README.md
+    53 CodeForge-00-rumelhart_backpropagation/docs/simetria.svg
+   488 CodeForge-00-rumelhart_backpropagation/docs/familia.svg
+   142 CodeForge-00-rumelhart_backpropagation/backprop.py
+   181 CodeForge-00-rumelhart_backpropagation/live.py
+  1702 total
+>>> Repo: Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986- (9ba6d0ae5b17df582e46fd4eb2c6d602f64865be)
+  164 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/2neuron_layer.md
+  350 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/multiexample_back_prop.py
+  168 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/hidden_neuron_layer.py
+   29 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/1neuron.py
+  226 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/pytorch_comparison.md
+  289 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/multiexample_back_prop.md
+  301 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/pytorch_comparison.py
+   70 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/2neuron_layer.py
+  129 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/1neuron.md
+  240 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/hidden_neuron_layer.md
+  388 Kushagra514-Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-/readme.md
+ 2354 total
+>>> Repo: karpathy-micrograd (7bc720e951fe422b8f8814aa5aa1b64121d26b4c)
+    67 karpathy-micrograd/test/test_engine.py
+   353 karpathy-micrograd/demo.ipynb
+    60 karpathy-micrograd/micrograd/nn.py
+    94 karpathy-micrograd/micrograd/engine.py
+     0 karpathy-micrograd/micrograd/__init__.py
+    61 karpathy-micrograd/moon_mlp.png
+   205 karpathy-micrograd/puppy.jpg
+    22 karpathy-micrograd/setup.py
+    73 karpathy-micrograd/README.md
+   125 karpathy-micrograd/trace_graph.ipynb
+   207 karpathy-micrograd/gout.svg
+     7 karpathy-micrograd/LICENSE
+  1274 total
+=== Check OCR / embedded text sources for Rumelhart, Hinton & Williams (1986) ===
+Trying https://www.iro.umontreal.ca/~vincentp/ift3395/lectures/backprop_old.pdf
+  cand_0.pdf: size=4379 head=<!do
+Trying https://web.stanford.edu/class/psych209a/ReadingsByDate/02_06/PDPVolIChapt8.pdf
+  cand_1.pdf: size=5847 head=<!DO
+Trying https://apps.dtic.mil/sti/tr/pdf/ADA164453.pdf
+  cand_2.pdf: size=1484 head=<!DO
+Trying https://www.nature.com/articles/323533a0.pdf
+  cand_3.pdf: size=226100 head=
+
+<!
+=== Check if rapidocr_onnxruntime is in pylib to OCR rhw1986.pdf (4 pages) ===
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'rapidocr_onnxruntime'
+FINISHED rc=1

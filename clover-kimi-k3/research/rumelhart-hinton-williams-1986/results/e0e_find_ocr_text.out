@@ -1,0 +1,8 @@
+=== 1. Check cached wheels in /root/.cache/pip ===
+/root/.cache/pip/wheels/1f/be/48/13754633f1d08d1fbfc60d5e80ae1e5d7329500477685286cd/antlr4_python3_runtime-4.9.3-py3-none-any.whl
+=== 2. Search Archive.org for Rumelhart Hinton Williams 1986 ===
+>>> Query: title:(Learning+representations+by+back-propagating+errors)
+>>> Query: title:(Learning+Internal+Representations+by+Error+Propagation)
+  {'identifier': 'DTIC_ADA164453', 'title': 'DTIC ADA164453: Learning Internal Representations by Error Propagation', 'year': 1985}
+>>> Query: creator:(Rumelhart)+AND+(Hinton+OR+Backpropagation+OR+Propagation)
+FINISHED rc=0

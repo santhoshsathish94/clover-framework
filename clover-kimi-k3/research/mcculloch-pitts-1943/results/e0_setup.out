@@ -1,0 +1,69 @@
+=== 1. Check Python & PDF tools on k3 ===
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+available: fitz
+available: pypdf
+missing: pdfminer
+=== 2. Download McCulloch & Pitts (1943) primary paper ===
+Trying https://www.cs.cmu.edu/~epxing/Class/10715/reading/McCulloch.and.Pitts.pdf
+  size=1272966 head=%PDF
+Downloaded valid PDF from https://www.cs.cmu.edu/~epxing/Class/10715/reading/McCulloch.and.Pitts.pdf (1272966 bytes)
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Pages: 17
+  941 40720 mp1943.txt
+=== PAGE 1 ===
+Bulletin of Mothemnticnl 
+Biology Vol. 52, No. l/2. pp. 99-115. 
+1990. 
+Printed 
+in Great 
+Britain. 
+oo92-824OjW$3.OO+O.MI 
+Pergamon 
+Press plc 
+Society for Mathematical 
+Biology 
+A LOGICAL CALCULUS 
+OF THE IDEAS IMMANENT 
+IN 
+NERVOUS 
+ACTIVITY* 
+n WARREN S. MCCULLOCH 
+AND WALTER PITTS 
+University 
+of Illinois, 
+College of Medicine, 
+Department 
+of Psychiatry 
+at the Illinois 
+Neuropsychiatric 
+Institute, 
+University 
+of Chicago, 
+Chicago, 
+U.S.A. 
+Because of the “all-or-none” character of nervous activity, neural events and the relations among 
+them can be treated by means of propositional logic. It is found that the behavior of every net can 
+be described in these terms, with the addition of more complicated logical means for nets 
+containing circles; and that for any logical expression satisfying certain conditions, one can find a 
+net behaving in the fashion it describes. It is shown that many particular choices among possible 
+neurophysiological 
+assumptions are equivalent, in the sense that for every net behaving under 
+one assumption, 
+there exists another net which behaves under the other and gives the same 
+results, although perhaps not in the same time. Various applications 
+of the calculus are 
+discussed. 
+1. Introduction. Theoretical 
+neurophysiology 
+=== 3. Search GitHub for McCulloch-Pitts reference repos ===
+kaisdukes/mcculloch-pitts-neuron | stars=11 | https://github.com/kaisdukes/mcculloch-pitts-neuron | Python source code for the article McCulloch-Pitts: The First Computational Neuron.
+AliValizade/Neural-Networks | stars=6 | https://github.com/AliValizade/Neural-Networks | Implementation and visualization of classical neural network models including Perceptron, ADALine, Hebbian Learning, and McCulloch-Pitts neurons using Python.
+SaloniDash7/McCulloch-Pitts-Animation | stars=4 | https://github.com/SaloniDash7/McCulloch-Pitts-Animation | Python animation illustrating the McCulloch Pitts model of the neuron
+pablonicolasr/primeval-neural-network | stars=0 | https://github.com/pablonicolasr/primeval-neural-network | McCulloch-Pitts Neuron - First Computational Model Of A Biological Neuron
+sam-caldwell/mcculloch-pits-neuron-model | stars=0 | https://github.com/sam-caldwell/mcculloch-pits-neuron-model | Exploring the McCulloch and Pitts Model of a Neuron
+CodeForge-00/mcculloch_pitts_neuron | stars=0 | https://github.com/CodeForge-00/mcculloch_pitts_neuron | McCulloch-Pitts neuron (1943): threshold logic gates, XOR in two layers and a memory cell with a cycle
+charvijaiswal/McCulloch-Pitts-logic-gates | stars=0 | https://github.com/charvijaiswal/McCulloch-Pitts-logic-gates | McCulloch-Pitts Neuron Model applied to various logic gates.
+Dhanshree010/mcculloch-pitts-nand-neuron | stars=0 | https://github.com/Dhanshree010/mcculloch-pitts-nand-neuron | None
+FINISHED rc=0

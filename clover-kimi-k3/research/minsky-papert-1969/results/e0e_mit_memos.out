@@ -1,0 +1,39 @@
+=== 1. Check parent dir /pdf/mit/ai/ on bitsavers for index file ===
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+ <head>
+  <title>Index of /pdf/mit/ai</title>
+ </head>
+ <body>
+<h1>Index of /pdf/mit/ai</h1>
+  <table>
+   <tr><th valign="top"><img src="/icons/blank.gif" alt="[ICO]"></th><th><a href="?C=N;O=D">Name</a></th><th><a href="?C=M;O=A">Last modified</a></th><th><a href="?C=S;O=A">Size</a></th><th><a href="?C=D;O=A">Description</a></th></tr>
+   <tr><th colspan="5"><hr></th></tr>
+<tr><td valign="top"><img src="/icons/back.gif" alt="[PARENTDIR]"></td><td><a href="/pdf/mit/">Parent Directory</a></td><td>&nbsp;</td><td align="right">  - </td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="AIM-628_chaosnet.pdf">AIM-628_chaosnet.pdf</a></td><td align="right">2002-05-17 19:37  </td><td align="right">5.5M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="Greenberg_Notes_on_the_Programming_Language_LISP_1978.pdf">Greenberg_Notes_on_the_Programming_Language_LISP_1978.pdf</a></td><td align="right">2016-12-18 18:05  </td><td align="right">8.5M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="MIT-AI-Lab-KA10-modified.pdf">MIT-AI-Lab-KA10-modified.pdf</a></td><td align="right">2018-07-14 14:25  </td><td align="right"> 74M</td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/folder.gif" alt="[DIR]"></td><td><a href="ai_600dpi/">ai_600dpi/</a></td><td align="right">2019-10-26 19:51  </td><td align="right">  - </td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/folder.gif" alt="[DIR]"></td><td><a href="aim/">aim/</a></td><td align="right">2026-07-18 12:13  </td><td align="right">  - </td><td>&nbsp;</td></tr>
+<tr><td valign="top"><img src="/icons/text.gif" alt="[TXT]"></td><td><a href="aim_index.txt">aim_index.txt</a></td><td align="right">2006-02-28 11:31  </td><td align="right">1.7M</td><td>&nbsp;</td></tr>
+   <tr><th colspan="5"><hr></th></tr>
+</table>
+<address>Apache/2.4.58 (Ubuntu) Server at bitsavers.trailing-edge.com Port 80</address>
+</body></html>
+=== 2. Check OpenAlex for Marvin Minsky & Seymour Papert works ===
+1969 | Review of 'Perceptrons: An Introduction to Computational Geometry' (Minsky, M., and Papert, S.; 1969) | None
+1988 | Marvin L. Minsky and Seymour A. Papert 著, Expanded Edition "Perceptrons", The MIT Press, B5 変形判, 287p., 1988 | None
+1988 | (1969) Marvin Minsky and Seymour Papert, Perceptrons, Cambridge, MA: MIT Press, Introduction, pp. 1-20, and p. 73 (figure 5.1) | None
+2017 | Perceptrons | None
+1969 | A Step toward the Understanding of Information Processes: Perceptrons . An Introduction to Computational Geometry. Marvin Minsky and Seymour Papert. M.I.T. Press, Cambridge, Mass., 1969. vi + 258 pp., illus. Cloth, $12; paper, $4.95. | None
+1994 | Perceptrons | None
+1996 | A Sociological Study of the Official History of the Perceptrons Controversy | None
+1995 | Perceptrons Play the Repeated Prisoner′s Dilemma | None
+1975 | NON-EUCLIDEAN PARALLEL PROCEDURES: THE PERCEPTRON | None
+2019 | Extension of the Group Invariance Theorem for Perceptrons | http://hdl.handle.net/10150/637027
+1971 | Analog perceptrons: On additive representation of functions | https://www.sciencedirect.com/science/article/pii/S0019995871800062/pdf
+1996 | Multi-threshold neurones perceptron | None
+2002 | Lower bounds for perceptrons solving some separation problems and oracle separation of AM from PP | None
+2018 | The Emergence of Fuzzy Sets in the Decade of the Perceptron—Lotfi A. Zadeh’s and Frank Rosenblatt’s Research Work on Pattern Classification | https://www.mdpi.com/2227-7390/6/7/110/pdf?version=1529999914
+1992 | The AND/OR Theorem for Perceptrons | https://www.cambridge.org/core/services/aop-cambridge-core/content/view/0097D818A6306FD3E6AE4C0AB263DAD5/S1446788700035333a.pdf/div-class-title-the-and-or-theorem-for-perceptrons-div.pdf
+FINISHED rc=0

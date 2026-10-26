@@ -1,0 +1,22 @@
+=== 1. Check PDF extraction tools on gpu ===
+missing: fitz
+missing: pypdf
+missing: pdfminer
+=== 2. Download Turing (1950) primary paper ===
+Trying https://courses.cs.umbc.edu/471/papers/turing.pdf
+  size=91972 head=%PDF
+Downloaded valid PDF from https://courses.cs.umbc.edu/471/papers/turing.pdf (91972 bytes)
+=== 3. Search GitHub for Turing machine / Computing Machinery and Intelligence repos ===
+--- Query: universal+turing+machine+language:python
+intrinsic-propensity/turing-machine | stars=79 | https://github.com/intrinsic-propensity/turing-machine | A Python program implementing and exploiting the Minsky Turing machine considered in the paper "Intrinsic Propensity for Vulnerability in Computers? Arbitrary Code Execution in the Universal Turing Machine" as per CVE-2021-32471 (https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-32471)
+simonbreiter/universal-turing-machine | stars=23 | https://github.com/simonbreiter/universal-turing-machine | A universal Turing machine (UTM) implementation in Python.
+IdeaPropulsionSystems/Compact-Turing-Machine-Simulator | stars=3 | https://github.com/IdeaPropulsionSystems/Compact-Turing-Machine-Simulator | Simulate a universal turing machine with this compact python application
+melvinchia3636/Conways-Game-Of-Life | stars=3 | https://github.com/melvinchia3636/Conways-Game-Of-Life | The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John Horton Conway in 1970.[1] It is a zero-player game, meaning that its evolution is determined by its initial state, requiring no further input. One interacts with the Game of Life by creating an initial configuration and observing how it evolves. It is Turing complete and can simulate a universal constructor or any other Turing machine.
+TheRealMobitz/UniversalTuringMachine | stars=2 | https://github.com/TheRealMobitz/UniversalTuringMachine | Universal Turing Machine Implementation
+--- Query: imitation+game+turing+language:python
+voxel51/ttn | stars=3 | https://github.com/voxel51/ttn | Implementation for paper "The Label Imitation Game: Turing Test Network for Zero-Shot Pseudo-Label Pruning"
+stibiumghost/imitation_game | stars=0 | https://github.com/stibiumghost/imitation_game | The imitation of the Imitation game (or Turing Test) in test form.
+atlamani/CSCI355_Imitation_Game | stars=0 | https://github.com/atlamani/CSCI355_Imitation_Game | Recreating Turing's imitation game
+shercule5/imitation-game-bot | stars=0 | https://github.com/shercule5/imitation-game-bot | # Imitation Game Bot  This project recreates Alan Turing’s *Imitation Game* (also known as the Turing Test) in a Discord environment.   The game allows one **Interrogator**, one **Human contestant**, and one **AI contestant** to interact.   The Interrogator asks questions and then guesses which contestant is the AI.
+vukrosic/turing-from-scratch | stars=0 | https://github.com/vukrosic/turing-from-scratch | Learn everything Alan Turing knew, from scratch: Turing machine, universal machine, halting problem, Enigma, Bombe, decibans, imitation game, a learning machine and Turing patterns in plain Python
+FINISHED rc=0

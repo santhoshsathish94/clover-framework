@@ -1,0 +1,589 @@
+=== Read TaraAlcira/PerceptronsRevisited files ===
+--- FILE: README.md ---
+# Perceptrons Revisited
+
+## Abstract:
+This thesis investigates the capabilities of modern computer vision models in distinguishing between single connected spirals and disconnected double spirals on a two-dimensional plane. The study revisits the historical challenges posed by the spiral example, originally highlighted in the book "Perceptrons" by Minsky and Papert, which underscored the limitations of early neural network models like the perceptron. Utilizing a generated dataset inspired by a cellular automata-based method, the research implements Convolutional Neural Networks (CNNs) and Visual Transformers (ViT) to attempt to classify spiral patterns. The CNN achieved high accuracy, precision, recall, and F1-score, demonstrating significant advancements in neural network architectures. 
+
+## Project structure:
+
+### CCL
+- **CCL_demo.ipynb** - notebook in which the CCL method is applied
+
+### CNN
+-   **CNN_best2.py** - the CNN code
+
+-   **CNN_best2.h5** - the CNN model
+
+-   **new_CNN_load.ipynb** - notebook in which the CNN model is loaded and tested
+
+### Generate spirals
+-   **one_spiral_function.py** - a function that creates a single connected spiral
+
+-   **two_spirals_function.py** - a function that creates disconnected double spirals
+
+-   **randomize_spirals.py** - a function that calls both of the spiral functions and creates a dataset of both kinds of spirals, including a JSON file of their labels
+
+### Transformer
+- **VisTransformer.ipynb** - notebook in which the transformer is trained
+
+  
+
+
+--- FILE: generate_spirals/one_spiral_function.py ---
+import cv2
+import numpy as np
+import random
+
+def generate_1double_spiral(side_length, buffer):
+    white = [255, 255, 255]
+    black = [0, 0, 0]
+
+    canvas = np.zeros((side_length + buffer, side_length + buffer, 3), dtype="uint8")
+    
+    x1, y1 = (side_length + buffer) // 2 + 1, (side_length + buffer) // 2 + 1
+    x2, y2 = x1, y1
+
+    x3, y3 = (side_length + buffer) // 2 - 1, (side_length + buffer) // 2 - 1 
+    x4, y4 = x3, y3
+
+    canvas[x1, y1] = white
+    canvas[x3, y3] = white
+
+    stepsSpiral1 = 2
+    stepsSpiral2 = 2
+    directionsSpiral1 = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    directionsSpiral2 = [(0, -1), (-1, 0), (0, 1), (1, 0)]
+    increase_interval = 8
+
+    legSpiral1 = 0 # current leg of spiral 1
+    legSpiral2 = 0 # current leg of spiral 2
+
+    while True:
+        # Update first spiral
+        dx, dy = directionsSpiral1[legSpiral1 % 4]
+        for _ in range(stepsSpiral1):
+            x1, y1 = x1 + dx, y1 + dy
+            if 0 <= x1 < (side_length + buffer) and 0 <= y1 < (side_length + buffer):
+                canvas[x1, y1] = white
+            else:
+                break
+
+        for _ in range(stepsSpiral1 - int(0.5 * increase_interval)):
+            x2, y2 = x2 + dx, y2 + dy
+            if 0 <= x2 < (side_length + buffer) and 0 <= y2 < (side_length + buffer):
+                canvas[x2, y2] = white
+            else:
+                break
+
+        legSpiral1 += 1
+        if legSpiral1 % 2 == 0:
+            stepsSpiral1 += increase_interval
+
+        # Update second spiral
+        dx2, dy2 = directionsSpiral2[legSpiral2 % 4]
+        for _ in range(stepsSpiral2):
+            x3, y3 = x3 + dx2, y3 + dy2
+            if 0 <= x3 < (side_length + buffer) and 0 <= y3 < (side_length + buffer):
+                canvas[x3, y3] = white
+            else:
+                break
+
+        for _ in range(stepsSpiral2 - int(0.5 * increase_interval)):
+            x4, y4 = x4 + dx2, y4 + dy2
+            if 0 <= x4 < (side_length + buffer) and 0 <= y4 < (side_length + buffer):
+                canvas[x4, y4] = white
+            else:
+                break
+
+        legSpiral2 += 1
+        if legSpiral2 % 2 == 0:
+            stepsSpiral2 += increase_interval
+
+        # Break if out of bounds
+        if (
+            not (0 <= x1 < side_length and 0 <= y1 < side_length)
+            or not (0 <= x2 < side_length and 0 <= y2 < side_length)
+            or not (0 <= x3 < side_length and 0 <= y3 < side_length)
+            or not (0 <= x4 < side_length and 0 <= y4 < side_length)
+        ):
+            break
+
+    side_length = (side_length + buffer)
+
+    # remove last leg
+    for _ in range(stepsSpiral1):
+        x1, y1 = x1 - dx, y1 - dy
+        if 0 <= x1 < side_length and 0 <= y1 < side_length:
+            canvas[x1, y1] = black
+        else:
+            break
+
+    # remove leg before last leg
+    dx, dy = directionsSpiral1[(legSpiral1 - 2) % 4]
+    for _ in range(stepsSpiral1 - int(0.5 * increase_interval)):
+        x1, y1 = x1 - dx, y1 - dy
+        if 0 <= x1 < side_length and 0 <= y1 < side_length:
+            canvas[x1, y1] = black
+        else:
+            break
+
+    # remove last leg
+    for _ in range(stepsSpiral2):
+        x3, y3 = x3 - dx2, y3 - dy2
+        if 0 <= x3 < side_length and 0 <= y3 < side_length:
+            canvas[x3, y3] = black
+        else:
+            break
+
+    # remove leg before last leg
+    dx2, dy2 = directionsSpiral2[(legSpiral2 - 2) % 4]
+    for _ in range(stepsSpiral2 - int(0.5 * increase_interval)):
+        x3, y3 = x3 - dx2, y3 - dy2
+        if 0 <= x3 < side_length and 0 <= y3 < side_length:
+            canvas[x3, y3] = black
+        else:
+            break
+
+
+    # # remove any artifacts (white pixels with 4 black neighbors)
+    # for i in range(1, side_length - 1):
+    #     for j in range(1, side_length - 1):
+    #         if np.all(canvas[i, j] == white):
+    #             if (
+    #                 np.all(canvas[i - 1, j] == [0, 0, 0])
+    #                 and np.all(canvas[i + 1, j] == [0, 0, 0])
+    #                 and np.all(canvas[i, j - 1] == [0, 0, 0])
+    #                 and np.all(canvas[i, j + 1] == [0, 0, 0])
+    #             ):
+    #                 canvas[i, j] = [0, 0, 0]
+
+    # remove any artifacts (white pixels with 4 black neighbors or in small clusters)
+    for i in range(1, side_length - 1):
+        for j in range(1, side_length - 1):
+            if np.all(canvas[i, j] == white):
+                # Check for 1x1 white pixel surrounded by black
+                if (
+                    np.all(canvas[i - 1, j] == [0, 0, 0]) and
+                    np.all(canvas[i + 1, j] == [0, 0, 0]) and
+                    np.all(canvas[i, j - 1] == [0, 0, 0]) and
+                    np.all(canvas[i, j + 1] == [0, 0, 0])
+                ):
+                    canvas[i, j] = [0, 0, 0]
+                # Check for vertical 2x1 cluster of white pixels
+                elif i < side_length - 2 and np.all(canvas[i + 1, j] == white):
+                    if (
+                        np.all(canvas[i - 1, j] == [0, 0, 0]) and
+                        np.all(canvas[i + 2, j] == [0, 0, 0]) and
+                        np.all(canvas[i, j - 1] == [0, 0, 0]) and
+                        np.all(canvas[i, j + 1] == [0, 0, 0]) and
+                        np.all(canvas[i + 1, j - 1] == [0, 0, 0]) and
+                        np.all(canvas[i + 1, j + 1] == [0, 0, 0])
+                    ):
+                        canvas[i, j] = [0, 0, 0]
+                        canvas[i + 1, j] = [0, 0, 0]
+                # Check for horizontal 2x1 cluster of white pixels
+                elif j < side_length - 2 and np.all(canvas[i, j + 1] == white):
+                    if (
+                        np.all(canvas[i - 1, j] == [0, 0, 0]) and
+                        np.all(canvas[i + 1, j] == [0, 0, 0]) and
+                        np.all(canvas[i, j - 1] == [0, 0, 0]) and
+                        np.all(canvas[i, j + 2] == [0, 0, 0]) and
+                        np.all(canvas[i - 1, j + 1] == [0, 0, 0]) and
+                        np.all(canvas[i + 1, j + 1] == [0, 0, 0])
+                    ):
+                        canvas[i, j] = [0, 0, 0]
+                        canvas[i, j + 1] = [0, 0, 0]
+
+
+    # find lowest left white pixel of spiral 1 and make it blue
+    is_white = np.all(canvas == white, axis=-1)
+
+    x1, y1 = np.where(is_white)
+    x1_temp, y1_temp = x1[len(x1)-1], y1[0]-1
+    canvas[x1_temp, y1_temp] = white
+    canvas[x1_temp-1, y1_temp] = white
+    canvas[x1_temp-2, y1_temp] = white
+
+    x3, y3 = np.where(is_white)
+    x3, y3 = x3[0], y3[len(y3)-1]+1
+    canvas[x3, y3] = white
+    canvas[x3+1, y3] = white
+    canvas[x3+2, y3] = white
+
+    return canvas
+
+# side_length = random.randint(50, 100)
+# buffer = 10
+
+# canvas = generate_1double_spiral(side_length, buffer)
+# cv2.imwrite("1double_spiral.png", canvas)
+
+
+# start_x, start_y = (side_length + buffer) // 2 + 1, (side_length + buffer) // 2 + 1
+
+
+
+
+
+
+
+--- FILE: generate_spirals/two_spirals_function.py ---
+import cv2
+import numpy as np
+
+def generate_2double_spiral(side_length, buffer):
+    white = [255, 255, 255]
+    black = [0, 0, 0]
+
+    canvas = np.zeros((side_length + buffer, side_length + buffer, 3), dtype="uint8")
+
+    x1, y1 = (side_length + buffer) // 2 + 1, (side_length + buffer) // 2 + 1
+    x2, y2 = x1, y1
+
+    x3, y3 = (side_length + buffer) // 2 - 1, (side_length + buffer) // 2 - 1 
+    x4, y4 = x3, y3
+
+    canvas[x1, y1] = white
+    canvas[x3, y3] = white
+
+    stepsSpiral1 = 2
+    stepsSpiral2 = 2
+    directionsSpiral1 = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    directionsSpiral2 = [(0, -1), (-1, 0), (0, 1), (1, 0)]
+    increase_interval = 8
+
+    legSpiral1 = 0 # current leg of spiral 1
+    legSpiral2 = 0 # current leg of spiral 2
+
+    while True:
+        # Update first spiral
+        dx, dy = directionsSpiral1[legSpiral1 % 4]
+        for _ in range(stepsSpiral1):
+            x1, y1 = x1 + dx, y1 + dy
+            if 0 <= x1 < (side_length + buffer) and 0 <= y1 < (side_length + buffer):
+                canvas[x1, y1] = white
+            else:
+                break
+
+        for _ in range(stepsSpiral1 - int(0.5 * increase_interval)):
+            x2, y2 = x2 + dx, y2 + dy
+            if 0 <= x2 < (side_length + buffer) and 0 <= y2 < (side_length + buffer):
+                canvas[x2, y2] = white
+            else:
+                break
+
+        legSpiral1 += 1
+        if legSpiral1 % 2 == 0:
+            stepsSpiral1 += increase_interval
+
+        # Update second spiral
+        dx2, dy2 = directionsSpiral2[legSpiral2 % 4]
+        for _ in range(stepsSpiral2):
+            x3, y3 = x3 + dx2, y3 + dy2
+            if 0 <= x3 < (side_length + buffer) and 0 <= y3 < (side_length + buffer):
+                canvas[x3, y3] = white
+            else:
+                break
+
+        for _ in range(stepsSpiral2 - int(0.5 * increase_interval)):
+            x4, y4 = x4 + dx2, y4 + dy2
+            if 0 <= x4 < (side_length + buffer) and 0 <= y4 < (side_length + buffer):
+                canvas[x4, y4] = white
+            else:
+                break
+
+        legSpiral2 += 1
+        if legSpiral2 % 2 == 0:
+            stepsSpiral2 += increase_interval
+
+        # Break if out of bounds
+        if (
+            not (0 <= x1 < side_length and 0 <= y1 < side_length)
+            or not (0 <= x2 < side_length and 0 <= y2 < side_length)
+            or not (0 <= x3 < side_length and 0 <= y3 < side_length)
+            or not (0 <= x4 < side_length and 0 <= y4 < side_length)
+        ):
+            break
+
+    x1, y1 = x1 + dx, y1 + dy
+    x3, y3 = x3 + dx2, y3 + dy2
+
+    x1, y1 = x1, y1 - 1
+    x3, y3 = x3, y3 + 1
+    x2, y2 = x2, y2 - 1
+    x4, y4 = x4, y4 + 1
+
+    dx_1 = abs(x2 - x1)
+    dx_2 = abs(x4 - x3)
+
+    if x1 > x2:
+        if y1 > y2:
+            canvas[x2:x1+1, y2 + 1 : y1 + 1] = black
+        else:
+            canvas[x2:x1+1, y1 + 1 : y2 + 2] = black
+        x1, y1 = x1, y1 + dx_1 + 3
+        x2, y2 = x2, y2 + 2
+    else:
+        if y1 > y2:
+            canvas[x1 : x2 + 1, y2 + 1 : y1 + 1] = black
+        else:
+            canvas[x1 : x2 + 1, y1 + 1 : y2 + 1] = black
+        x1, y1 = x1, y1 - dx_1 - 1
+
+    if x3 > x4:
+        if y3 > y4:
+            canvas[x4 : x3 + 1, y4 : y3 + 2] = black
+        else:
+            canvas[x4 : x3 + 1, y3 : y4 + 1] = black
+        x3, y3 = x3, y3 + dx_2 + 1
+    else:
+        if y3 > y4:
+            canvas[x3 : x4 + 1, y4 - 1 : y3 + 2] = black
+        else:
+            canvas[x3 : x4 + 1, y3 + 1 : y4 + 2] = black
+        x3, y3 = x3, y3 - dx_2 - 3
+        x4, y4 = x4, y4 - 2
+
+    if x1 > x2:
+        canvas[x2:x1+1, y2] = white
+    else:
+        canvas[x1:x2+1, y1] = white
+
+    if y1 > y2:
+        canvas[x1, y2:y1] = white
+    else:
+        canvas[x2, y1:y2] = white
+
+    if x3 > x4:
+        canvas[x4:x3+1, y4] = white
+    else:
+        canvas[x3:x4+1, y3] = white
+
+    if y3 > y4:
+        canvas[x3, y4:y3] = white
+    else:
+        canvas[x4, y3:y4] = white
+
+    return canvas
+
+# side_length = 100
+# buffer = 10
+
+# canvas = generate_2double_spiral(side_length, buffer)
+# cv2.imwrite("double_spiral.png", canvas)
+
+
+
+
+
+
+
+
+
+
+--- FILE: generate_spirals/randomize_spirals.py ---
+import random
+import numpy as np
+import cv2
+import os
+import json
+from scipy.ndimage import rotate
+
+from one_spiral_function import generate_1double_spiral
+from two_spirals_function import generate_2double_spiral
+
+number_list = []
+range_images = 20000
+
+def generateRandomSpirals():
+    side_length = random.randint(40, 100)
+    buffer = random.randint(5, 20)
+    random_number = random.choice([1, 2])
+    random_angle = random.choice([0, 1, 2, 3])
+
+    if random_number == 1:
+        canvas = generate_1double_spiral(side_length, buffer)
+    else:
+        canvas = generate_2double_spiral(side_length, buffer)
+
+    canvas = np.rot90(canvas, random_angle)
+
+    return canvas, random_number
+
+
+# create a folder
+if not os.path.exists("random_spirals"):
+    os.makedirs("random_spirals")
+    print("Directory created")
+
+# generate random spirals
+for i in range(range_images):
+    canvas, number = generateRandomSpirals()
+
+    # canvas = cv2.imread(f"random_spirals/random_spiral_{i}.png", cv2.IMREAD_GRAYSCALE)
+    
+    canvas = cv2.resize(canvas, (512, 512), interpolation=cv2.INTER_LINEAR)
+    # canvas = cv2.resize(canvas, (256, 256), interpolation=cv2.INTER_NEAREST)
+    random_angle = random.randint(0, 360)
+    canvas = rotate(canvas, random_angle)
+
+    # move spiral to the right and down
+    move_right = random.randint(-20, 20)
+    move_down = random.randint(-20, 20)
+    canvas = np.roll(canvas, move_right, axis=1)
+    canvas = np.roll(canvas, move_down, axis=0)
+
+    # make sure the images are binary
+    canvas = cv2.threshold(canvas, 127, 255, cv2.THRESH_BINARY)[1]
+
+    cv2.imwrite(f"random_spirals/random_spiral_{i}.png", canvas)
+
+    number_list.append(number)
+
+    # make a load bar
+    if i % 10 == 0:
+        print(f"Progress: {i}/{range_images}")
+
+
+data = {}
+for i in range(range_images):
+    data[f"random_spiral_{i}"] = number_list[i]
+
+with open("random_spirals.json", "w") as f:
+    json.dump(data, f)
+
+# canvas = generateRandomSpirals()
+# cv2.imwrite("random_spirals.png", canvas)
+
+# change to 512 x 512 and add a random angle of rotation
+# for i in range(range_images):
+#     canvas = cv2.imread(f"random_spirals/random_spiral_{i}.png", cv2.IMREAD_GRAYSCALE)
+#     canvas = cv2.resize(canvas, (512, 512), interpolation=cv2.INTER_NEAREST)
+#     random_angle = random.randint(0, 360)
+#     canvas = rotate(canvas, random_angle)
+    # canvas = cv2.resize(canvas, (128, 128), interpolation=cv2.INTER_NEAREST)
+    # cv2.imwrite(f"random_spirals/random_spiral_{i}.png", canvas)
+
+
+
+--- FILE: CNN/CNN_best2.py ---
+import tensorflow as tf
+from tensorflow.keras import datasets, layers, models
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
+import json
+import keras
+from tensorflow.keras.callbacks import EarlyStopping
+import matplotlib.pyplot as plt
+from tensorflow.keras.regularizers import l2
+import pickle
+
+train_ds = keras.utils.image_dataset_from_directory(
+    # directory='/Volumes/PRO-G40/Scriptie/data/training_data',
+    directory='/home/tsplint/thesis/data/data256+/training_data',
+    labels='inferred',
+    label_mode='binary',
+    batch_size=128,
+    image_size=(256, 256)
+)
+validation_ds = keras.utils.image_dataset_from_directory(
+    # directory='/Volumes/PRO-G40/Scriptie/data/testing_data',
+    directory='/home/tsplint/thesis/data/data256+/testing_data',
+    labels='inferred',
+    label_mode='binary',
+    batch_size=128,
+    image_size=(256, 256)
+)
+
+callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=100, restore_best_weights=True)
+
+inputShape = (256, 256, 3)
+
+model = Sequential([
+    Conv2D(16, (3, 3), activation='relu', padding='same', input_shape=inputShape, kernel_regularizer=l2(0.001)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+
+    Conv2D(32, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+
+    Conv2D(32, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+
+    Conv2D(64, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+
+    Conv2D(64, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+
+    Conv2D(128, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+
+    Conv2D(128, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+
+    Conv2D(256, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+
+    Flatten(),
+    Dense(256, activation='relu', kernel_regularizer=l2(0.001)),
+    Dropout(0.5),
+    Dense(1, activation='sigmoid')
+])
+
+print("Number of parameters: ", model.count_params())
+
+# Compile the model
+model.compile(optimizer='adam',
+                loss='binary_crossentropy',
+                metrics=['accuracy'])
+
+# Train the model
+history = model.fit(train_ds, validation_data=validation_ds, epochs=2000, callbacks=[callback])
+
+# Save the model
+model.save('CNN/best_model2/CNN_best2.h5')
+
+# Plot training and validation accuracy
+plt.figure(figsize=(10, 6))
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend(loc='lower right')
+plt.grid(True)
+plt.savefig('CNN/best_model2/CNN_best2_accuracy.png')
+plt.show()
+
+# Plot training and validation loss
+plt.figure(figsize=(10, 6))
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Training and Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend(loc='upper right')
+plt.grid(True)
+plt.savefig('CNN/best_model2/CNN_best2_loss.png')
+plt.show()
+
+# Evaluate the model
+loss, accuracy = model.evaluate(validation_ds)
+print("Accuracy: ", accuracy)
+print("Loss: ", loss)
+
+# Save the training history
+with open('CNN/best_model2/history.pkl', 'wb') as f:
+    pickle.dump(history.history, f)
+
+
+FINISHED rc=0

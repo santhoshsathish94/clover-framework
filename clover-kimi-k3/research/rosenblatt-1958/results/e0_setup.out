@@ -1,0 +1,19 @@
+=== 1. Download Rosenblatt (1958) primary paper ===
+Trying https://www.ling.upenn.edu/courses/cogs501/Rosenblatt1958.pdf
+  size=118 head=<htm
+Trying https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=7b6292a7fb2d3ca9e1f0ef1f7dc8bf78ce867963
+  size=4689 head=<!DO
+Trying https://courses.cs.umbc.edu/671/fall12/notes/papers/rosenblatt1958.pdf
+Trying https://home.csulb.edu/~cwallis/382/readings/482/rosenblatt.1958.pdf
+  size=196 head=<!DO
+=== 2. Search GitHub for Rosenblatt Perceptron reference repos ===
+--- Query: Rosenblatt+perceptron+language:python
+Honghe/perceptron | stars=21 | https://github.com/Honghe/perceptron | A simple perceptron using Rosenblatt training algorithm.
+kaisdukes/rosenblatt-perceptron | stars=8 | https://github.com/kaisdukes/rosenblatt-perceptron | Python source code for the article The History of Neural Networks Part 2: Rosenblatt's Perceptron
+josgard94/perceptron-single-layer | stars=6 | https://github.com/josgard94/perceptron-single-layer | Python implementation of the simple perceptron or also known as a single-layer neural network, is a binary classification algorithm by Frank Rosenblatt based on the neural model of Warren McCulloch and Walter Pitts developed in 1943.
+LeoWang0814/Rosenblatt-s-Perceptron | stars=5 | https://github.com/LeoWang0814/Rosenblatt-s-Perceptron | A visualized Rosenblatt's Perceptron algorithm: using logic gates as an example.
+matheusphalves/perceptron-algorithm | stars=3 | https://github.com/matheusphalves/perceptron-algorithm | A basic Perceptron single layer algorithm. That's the most simple neural-network implemented in 1957 by Frank Rosenblatt.
+iekashaev/Perceptron | stars=2 | https://github.com/iekashaev/Perceptron | Rosenblatt's single layer perceptron 
+--- Query: Mark+I+perceptron+language:python
+vukrosic/rosenblatt-from-scratch | stars=0 | https://github.com/vukrosic/rosenblatt-from-scratch | Frank Rosenblatt's perceptron rebuilt in 729 lines of plain Python: the 1958 learning rule, the Mark I, the XOR wall of 1969 and backpropagation
+FINISHED rc=0

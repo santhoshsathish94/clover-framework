@@ -1,0 +1,39 @@
+# Predictions Log — Alan Turing (1950) Study
+
+## E1: Clone and run GitHub reference repositories (`vukrosic/turing-from-scratch` and `simonbreiter/universal-turing-machine`)
+Timestamp (before run): 2026-10-26 14:48 UTC
+Predictions:
+1. `vukrosic/turing-from-scratch` will contain standalone Python scripts implementing Turing's core ideas (Turing machine, universal machine, halting problem, imitation game, and a learning machine), and will run on CPU with zero external dependencies.
+2. `simonbreiter/universal-turing-machine` will implement a Universal Turing Machine simulator in Python that decodes an encoded machine description and simulates it on a tape, exiting with code 0.
+
+## E2: Section 4 & 5 — Stored-Program Digital Computer (Store / Executive / Control with 10-digit instruction packets) and Universality (mimicking any discrete-state machine)
+Timestamp (before run): 2026-10-26 14:48 UTC
+Predictions:
+1. Implementing Turing's Section 4 stored-program digital computer with 10-decimal-digit packets (`AAAABBBBCC`, where `AAAA` is first store address, `BBBB` is second store address/jump target, and `CC` is the 2-digit operation code such as `17` for "Add store[AAAA] to store[BBBB]") and running a stored program will:
+   - Compute Turing's Section 2 arithmetic question (`34957 + 70764 = 105621`) and Section 6.5 quadratic equation (`x^2 - 40x - 11 = 0` or integer root search) and Section 7 digit-sum-squared search (`n in [50, 200]` such that `n == (sum of digits of n)^2`: uniquely `n = 81 = (8+1)^2`!).
+   - Demonstrate self-modifying / program-constructing capability (Turing p. 14: "a machine undoubtedly can be its own subject matter. It may be used to help in making up its own programmes") by having instructions in the store arithmetic-modify the address field of another instruction packet in the store.
+2. Implementing Turing's Section 5 3-state clicking wheel discrete-state machine (`q1, q2, q3`, inputs `i0` lever stops wheel / `i1` lever lets wheel click 120 degrees, output lamp `o0, o0, o1`) both directly AND as a table inside the Section 4 universal digital computer will produce 100% identical state and output traces `(q_t, o_t)` across all `2^8 = 256` input sequences of length 8, so an interrogator playing the Section 5 imitation game between the wheel (B) and the universal computer (A) has `0.0` total variation distance (cannot distinguish them better than 50% chance).
+3. Storage capacity calculations in Section 5 (pp. 6–7):
+   - Wheel machine with 3 states has capacity `log2(3) = 1.58496` bits (matching Turing's "about 1.6").
+   - 100 sheets x 50 lines x 30 decimal digits has `10^150000` states, capacity `150000 * log2(10) = 498,289.2` bits (~3.02x the Manchester machine's `165,000` bits, matching Turing's "about the number of states of three Manchester machines put together").
+   - Manchester machine components (p. 7): `64 * 2560 + 8 * 1280 + 300 = 163840 + 10240 + 300 = 174,380` bits (matching Turing's `174,380` to the digit).
+
+## E3: Section 1, 2 & 6 — The Imitation Game, Strategic Deception (Arithmetic Latency/Error Spoofing), and the Mathematical Objection (Diagonal Halting Question)
+Timestamp (before run): 2026-10-26 14:48 UTC
+Predictions:
+1. Section 6.5 ("Errors of functioning" vs "Errors of conclusion" and arithmetic unmasking, p. 13):
+   - Against an interrogator C who tests arithmetic speed and human-like error rate (say human B has mean latency ~30 s and ~15% carry/slip rate on 5-digit additions like `34957 + 70764`), an honest fast machine A1 (0 ms, 0% error) is unmasked by a likelihood-ratio / threshold interrogator with `~100%` accuracy within 5 questions.
+   - A machine A2 following Turing's Section 2 & 6.5 strategy ("Pause about 30 seconds" and "deliberately introduce mistakes in a manner calculated to confuse the interrogator") reduces the interrogator's identification accuracy to the `~50%` chance baseline (well below Turing's 70% threshold in Section 6, p. 8).
+2. Section 6.3 (The Mathematical Objection, pp. 10–11):
+   - For any total/partial answering machine $M_i$ that attempts to answer the critical diagonal question $Q(M_k)$: "Does machine $M_k$ answer 'Yes' to $Q(M_k)$?" (or returns the inverted answer $\neg M_k(M_k)$), when $M_i$ is asked its own critical question $Q(M_i)$, $M_i$ must either give a **wrong answer** or **fail to halt** (100% failure rate of $M_i$ on $Q(M_i)$).
+   - However, as Turing states on p. 10–11 ("questions which cannot be answered by one machine may be satisfactorily answered by another... There would be no question of triumphing simultaneously over all machines"), a second machine $M_{i+1}$ CAN correctly answer $M_i$'s critical question $Q(M_i)$ on 100% of bounded machines $M_i$, while failing on its own $Q(M_{i+1})$.
+
+## E4: Section 7 — Child Machine, Reward/Punishment Information Bound vs Unemotional Symbolic Channel, Imperative Inference, and Random vs Systematic Search
+Timestamp (before run): 2026-10-26 14:48 UTC
+Predictions:
+1. Reward/Punishment alone vs Unemotional Symbolic Channel (Section 7, p. 20):
+   - Teaching a child machine a target mapping of $K$ binary actions/responses (or an $L$-symbol sequence like a line of "Casabianca" over an alphabet of size $V$) using ONLY binary reward/punishment signals requires $\Omega(L \cdot V)$ or at least $H$ bits of binary feedback signals (information-theoretic lower bound: each binary reward/punishment conveys at most 1 bit), whereas transmitting instructions over an "unemotional" symbolic channel once the machine has learned a small command vocabulary ($V_0$ symbols) reduces total reward/punishment signals by $>10\times$ as message length $L$ grows.
+2. Built-in Logical Inference with Epistemic Statuses & Imperatives (Section 7, pp. 20–21):
+   - A child machine storing propositions with Turing's five statuses (`well_established`, `conjecture`, `proved_theorem`, `given_by_authority`, `no_belief_value`) plus `imperative` rules ("Do your homework now" + "Teacher says 'Do your homework now'" + "Everything that teacher says is true") will automatically promote "Do your homework now" to `well_established` and execute the action, and applying Turing's meta-imperative ("If one method has been proved to be quicker than another, do not use the slower method") will prune proof search steps on syllogism problems ("When Socrates is mentioned, use the syllogism in Barbara").
+3. Random vs Systematic Search in [50, 200] (Section 7, p. 22):
+   - For Turing's concrete example on p. 22 ("find a number between 50 and 200 which was equal to the square of the sum of its digits"), the unique solution in `[50, 200]` is **`81`** (`(8+1)^2 = 81`). Systematic search starting at 51 takes `81 - 51 + 1 = 31` evaluations (`150` if scanning downward from 200 across the "enormous block without any solutions" `82..200`). When there are $k$ solutions clustered after a dead block of size $B$, memoryless random search requires expected $N / k$ trials regardless of block order, beating systematic search whenever $B > N / k$.

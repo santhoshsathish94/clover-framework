@@ -1,0 +1,135 @@
+=== 1. Check vukrosic-rosenblatt-from-scratch and kaisdukes README ===
+# Rosenblatt from scratch
+
+Code for the video **Become Frank Rosenblatt in 18 Minutes**.
+In 1958 the psychologist Frank Rosenblatt showed a machine that learned from its own mistakes: nobody typed in the rule, it was only told "right" or "wrong". In 1969 a book proved that his machine cannot learn a rule as small as a stairway lamp with two switches, and the field went quiet for years. In 1986 one missing rule fixed it.
+These seven small programs rebuild the machine, hit the wall, and add the missing rule. 729 lines of Python 3, standard library only, nothing to install.
+
+```bash
+./run_all.sh          # runs all seven steps, then the checks; 1 to 4 minutes; expected output is in demo-output.txt
+python3 tests.py      # runs the checks again (needs the runs/ folder that the line above writes)
+```
+
+| File | Idea | What the run shows |
+| --- | --- | --- |
+| `perc.py` | The cell and the pictures | One model nerve cell (inputs vote with weights, answer yes above zero), the learning rule, cards of 20 by 20 squares, the letters X, E, T, O. Every step imports it. |
+| `step1_neuron.py` | A cell with weights set by hand (1943) | "Take an umbrella?" from three yes/no facts. AND, OR and NOT from one cell each. Left or right mark with 400 hand-set weights: 1,000 of 1,000 cards right. Nothing learns yet. |
+| `step2_learn.py` | The rule of 1958 | All 400 weights start at zero and change only after a wrong guess. On 2,000 fresh cards: 1,036 right before training, 1,724 after 20 cards, 2,000 after 200. In 10,000 cards it makes 14 mistakes, the last on card 145. |
+| `step3_mark1.py` | The Mark I of 1960, rebuilt in numbers | 400 photocells, 512 middle units wired at random, 4 response units that learn. Names the letter wherever it sits: 250 of 1,000 before training, 976 of 1,000 after 10 passes. |
+| `step4_converge.py` | The guarantee | If one straight line can split the two groups, the rule finds one, and the mistakes have a ceiling. 1,000 made-up problems: it stopped on every one and never came closer than 30% of the ceiling. |
+| `step5_xor.py` | The wall of 1969 | The stairway lamp (on when exactly one switch is up): 1,000,000 cards, 480,332 weight changes, never more than 3 of 4 cases right. Of 9,261 cells tried, 0 do the lamp. Odd or even on 9 squares needs a middle unit that sees all 9. |
+| `step6_hidden.py` | Two layers, the random way | Three cells set by hand do the lamp. With random middle cells and only the last cell learning, the cells needed grow fast: 32 for 2 switches, 64 for 4, 128 for 6, 256 for 8. |
+| `step7_backprop.py` | The rule of 1986 | Cells answer on a smooth slope, so the mistake can be passed backward and every weight learns. The lamp with 2 middle cells: 62 of 100 random starts solve it; with 4 middle cells, 100 of 100. Letters with 4 trained middle cells: 1,000 of 1,000, against 976 for 512 random ones. |
+
+`save.py` writes each step's numbers to `runs/`, and the animation reads them from there, so every number on screen comes from these runs.
+Python 3.9 and 3.12 print the same output for all seven steps.
+
+## What this is not
+
+- Not the machine of 1960. `step3_mark1.py` keeps the Mark I's counts (400 photocells, 512 middle units) but the wiring, the thresholds and the letters are our choice. The scores are ours, not Rosenblatt's.
+- The letters are small, clean drawings with a little noise. A photograph is a far harder problem.
+- Passing the mistake backward does not always work on a small network: with 2 middle cells the lamp is solved from 62 of 100 starts, and odd or even with 6 switches from 5 of 10 starts.
+- The 1986 paper (Rumelhart, Hinton, Williams) made the backward rule famous. Seppo Linnainmaa published the method in 1970 and Paul Werbos applied it to networks in 1982.
+
+## Try it
+
+Give the stairway lamp a third switch (the lamp is on when an odd number of switches are up) and find how many middle cells `step7_backprop.py` needs to solve it from every start.
+
+MIT licence.
+# The History of Neural Networks Part 2: Rosenblatt's Perceptron
+
+[Dr. Kais Dukes](https://github.com/kaisdukes)
+
+*This is the second article in an educational series on the history of the math behind neural networks. For part 1, see [McCulloch-Pitts: The First Computational Neuron](https://github.com/kaisdukes/mcculloch-pitts-neuron). As with the previous article, to appeal to a wider audience, I've minimized technical jargon and provided simplified explanations. This article includes accompanying code in Python. Published on [LinkedIn](https://www.linkedin.com/pulse/history-neural-networks-part-2-rosenblatts-perceptron-dr-kais-dukes) on June 27, 2023.*
+
+![](https://github.com/kaisdukes/rosenblatt-perceptron/blob/main/neurons.jpeg)
+
+## Frank Rosenblatt
+
+In 1957, [Rosenblatt](https://en.wikipedia.org/wiki/Frank_Rosenblatt) published pioneering work on the first machine learning algorithm for artificial neurons, known as the perceptron. He helped revolutionize the field of artificial intelligence through his work on enabling computers to learn from experience. Let's reflect on the significance of this for a moment. Almost all recent breakthroughs in AI are based on neural networks. These AIs, often hosted in the cloud, operate across vast numbers of computers, running networks of neurons with billions, sometimes trillions of parameters. These model parameters (mathematically, weights and biases) are inspired by the structure of the brain and simulate synaptic plasticity, which allows neurons to adjust the strength of their connections to facilitate learning and memory.
+
+The most efficient artificial neural networks run on Graphics Processing Units. Interestingly, GPUs were originally designed for efficient processing of geometry in 3D computer games. The same type of operations used in these games, parallel calculations, turned out to be directly applicable to AI. If you're wondering why Nvidia is now worth over a trillion dollars, this has largely been driven by the extreme demand for GPUs due to recent advancements in artificial intelligence.
+
+Those who knew Rosenblatt personally at Cornell in the 1950s saw him as a shy genius and a polymath (a deep expert in multiple areas), including computing, mathematics, neurology, astronomy, and music. It's remarkable to think that we can now talk with AIs, and for certain tasks, they have surpassed human ability. The AI community highly values Rosenblatt's groundbreaking invention of the first learning algorithm for computational neurons.
+
+## Was the Perceptron the First Machine Learning Algorithm?
+
+The reason it's so hard to be definitive is that defining 'learning' in this context isn't easy. If we take 'machine learning' in its broadest sense to mean automatically constructing models from data, you could argue that earlier and simpler statistical methods such as linear regression, or least squares, also construct models from data and have been known for centuries since the time of [Gauss](https://en.wikipedia.org/wiki/Carl_Friedrich_Gauss). However, we can confidently say that Rosenblatt's perceptron was the first machine learning algorithm specifically designed for computational neurons. As we shall see later on, it's fascinating that least squares is also one way to understand how the perceptron learns.
+
+## The McCulloch-Pitts Neuron
+
+As we discussed in the [previous article](https://github.com/kaisdukes/mcculloch-pitts-neuron), Rosenblatt's work on perceptrons built on the work of [Warren McCulloch](https://en.wikipedia.org/wiki/Warren_Sturgis_McCulloch) and [Walter Pitts](https://en.wikipedia.org/wiki/Walter_Pitts). The McCulloch-Pitts (MCP) neuron was inspired by the neuroscience known at the time: the brain is composed of neurons interacting via synapses, transmitting either excitatory or inhibitory signals. In the McCulloch-Pitts model, the neuron fires if the sum of excitatory inputs reaches a certain threshold, unless inhibited by other inputs. The MCP neuron can be thought of as a binary classifier using binary inputs.
+
+## Hebbian Learning
+
+In 1949, psychologist [Donald Hebb](https://en.wikipedia.org/wiki/Donald_O._Hebb) made a significant breakthrough in neuroscience. This additional understanding of the brain, not known to McCulloch-Pitts in 1943, directly enabled Rosenblatt to produce an improved mathematical model of the neuron. Hebb's significant contribution is now known as Hebbian learning. In his seminal book, *The Organization of Behavior*, Hebb proposed that when two neurons fire together, their interconnection strengthens. The principle, summarized as *cells that fire together, wire together* provided a vastly improved model of the brain.
+
+Inspired by Hebb's ideas, Rosenblatt aimed to develop a learning algorithm for an artificial neuron: the perceptron. While Hebb's theory didn't specify how connection strength should change, it laid the foundation for Rosenblatt's remarkable insight to adjust the perceptron's weights based on the difference between the desired and actual output.
+
+Rosenblatt, though primarily a psychologist, also had a strong background in mathematics and physics. His interest in the emerging field of cybernetics, the study of automatic control systems in both machines and living organisms, gave him the foundation he needed to develop the perceptron. He wanted to create an improved computational model of the neuron capable of learning from experience, with the eventual goal of building a physical learning machine.
+
+## Rosenblatt's Perceptron
+
+Perceptrons are binary classifiers. They take multiple weighted inputs, sum them, add a bias, and then use an activation function (described below) to predict the class of the input as either 1 or 0. In the simplest form of the perceptron, Rosenblatt made the following key modifications to the McCulloch-Pitts neuron:
+
+**Numeric inputs:** He replaced the binary inhibitory/excitatory inputs with continuous equivalents via real-valued inputs and weights. Unlike the binary inputs of the MCP neuron, the perceptron could process numbers in any range.
+
+**Weighted sum:** He changed the MCP neuron's activation rule, which was based on reaching a threshold, to a rule that fires if a weighted sum plus a bias is reached.
+
+**Machine learning:** In a groundbreaking move, Rosenblatt introduced the first machine learning algorithm for neurons, known as the perceptron learning rule.
+
+The foundational work of Rosenblatt that includes these developments is presented in two of his early papers:
+
+*The Perceptron: A Perceiving and Recognizing Automaton* (1957). This was a technical report commissioned by Cornell, where Rosenblatt was working at the time. The report outlined a proposal for building a physical machine that could recognize patterns and learn from experience.
+
+*The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain* (1958). Published in Psychological Review, this paper was more accessible to a wider, non-technical audience. Rosenblatt discusses the philosophical and conceptual aspects of the perceptron and frames it as a model of information processing in the brain. The paper helped place the perceptron within the broader context of cognitive psychology and neuroscience, and now has almost 20,000 citations.
+
+If you read Rosenblatt's original papers, you will find that concepts used more recently have evolved significantly. He describes sensory, association and response units. These correspond to the modern design of an input layer, the process of weighted summation and the output layer in simplified neural networks. Although using different terms, the basic principles he introduced, like learning weights from data and using weights to make predictions, remain central to machine learning and AI.
+
+## How Perceptrons Learn
+
+Compared to the far more advanced machine learning algorithms used today, the perceptron is based on simpler math. The classic perceptron is made up of the following parts:
+
+1. The neuron has multiple inputs. Each input is a real number.
+2. Each input also has an associated weight, a strength for that input.
+3. As well as the weights, the neuron also includes another number known as the bias. Including a bias term means the neuron can solve a wider range of problems (with a bias, the classifying hyperplane can have an offset from the origin).
+
+To learn from data, examples from the training dataset are shown to the neuron one at a time. The neuron makes a prediction, and an error is calculated. The perceptron learning rule is then applied to update the weights of the model in order to reduce the error for the given example.
+
+Let's now try to understand this rule intuitively. Let `x` and `w` be the input and weight vectors respectively, and `b` the bias. The neuron fires if `w·x + b >= 0`, where the dot represents the vector dot product. Another way to write this would be using the [Heaviside step function](https://en.wikipedia.org/wiki/Heaviside_step_function), defined as `H(x) = 1` if `x >= 0` and 0 otherwise. In the context of neural networks, we call this an activation function. The perceptron's output is then `H(w·x + b)`.
+
+The perceptron learning algorithm proceeds as follows:
+
+1. Initialize the weights to zero, or use random initialization for better performance.
+2. For each training example, if the model misclassifies, adjust the weights.
+
+## Loss Functions
+
+We can understand how to minimize errors by introducing a loss function, also known as an error function. Although not always used in practice, for a simplified view one possible choice of loss function for the perceptron is the [mean squared error](https://en.wikipedia.org/wiki/Mean_squared_error) (MSE). This is defined using the squared difference between the expected classification and the weighted sum. Other choices for loss functions include the perceptron criterion or hinge loss.
+
+The Python code accompanying this article utilizes a perceptron as a binary classifier for two types of flowers in Fisher's classic [Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set). While the code uses the perceptron criterion for practicality, the explanation below uses MSE as a learning exercise. MSE is also more applicable to other machine learning models (see also [ADALINE](https://en.wikipedia.org/wiki/ADALINE)).
+
+Let `y` be the expected classification (1 or 0) for a specific example with input `x`. We then define the MSE loss function by summing over training examples:
+
+```
+L = 1/2 * ∑(y - (w·x + b))^2
+```
+
+We can use a form of [gradient descent](https://en.wikipedia.org/wiki/Gradient_descent) to train the perceptron and minimize the error. We find the [gradient](https://en.wikipedia.org/wiki/Gradient) of the loss function with respect to the weights and bias, and adjust them in the direction of the negative gradient. Think of this like trying to find your way down a hill by choosing the steepest path down at each step.
+
+While MSE is a useful loss function for learning about perceptrons, it might not always be the most effective choice. However, it makes gradient descent and weight updates mathematically elegant and efficient. Note that we use the term `1/2` instead of `1/n` to simplify the derivative calculations in the next section. Once again, it's worth mentioning Gauss, the renowned 18th century genius mathematician and polymath, who introduced the method of least squares.
+
+## Gradient Descent
+
+Let's now derive the formula for updating the weights and bias. In more advanced training methods, like batch gradient descent, we would consider multiple training examples simultaneously. But to keep things simple, we'll update the weights one example at a time. While it's tempting to consider the standard perceptron learning algorithm as performing Stochastic Gradient Descent (SGD), that's not strictly true. You can think of the perceptron algorithm as a unique variant of SGD. In true SGD, the weights are updated after each example, regardless of whether the example is classified correctly or not.
+
+Focusing on one training example, we calculate the gradient ([grad](https://en.wikipedia.org/wiki/Gradient)) of the loss function, which consists of the partial derivatives with respect to each weight and bias:
+
+```
+=== 2. Query OpenAlex, Semantic Scholar, and Archive.org for DOI 10.1037/h0042519 ===
+>>> API: https://api.openalex.org/works/https://doi.org/10.1037/h0042519
+  best_oa_location: None
+>>> API: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1037/h0042519?fields=title,year,openAccessPdf,externalIds,url
+  err: HTTP Error 429: 
+>>> API: https://archive.org/advancedsearch.php?q=title:(Perceptron)+AND+creator:(Rosenblatt)&fl[]=identifier,title,year&rows=15&output=json
+FINISHED rc=0

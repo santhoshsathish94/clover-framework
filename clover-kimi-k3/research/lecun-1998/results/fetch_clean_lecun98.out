@@ -1,0 +1,68 @@
+tesseract 5.3.4
+ leptonica-1.82.0
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Pre-rendering 46 pages...
+Saved OCR lecun1998.txt! lines= 6202 chars= 251351
+--- PAGE 1 ---
+PROC. OF THE IEEE, NOVEMBER 1998
+
+Gradient-Based Learning Applied to Document
+Recognition
+
+Yann LeCun, Léon Bottou, Yoshua Bengio, and Patrick Haffner
+
+Abstract—
+
+Multilayer Neural Networks trained with the backpropa-
+gation algorithm constitute the best example of a successful
+Gradient-Based Learning technique. Given an appropriate
+network architecture, Gradient-Based Learning algorithms
+can be used to synthesize a complex decision surface that can
+classify high-dimensional patterns such as handwri
+acters, with minimal preprocessing. This paper re
+ious methods applied to handwritten character recognition
+and compares them on a standard handwritten digit recog-
+nition task. Convolutional Neural Networks, that are specif-
+ically designed to deal with the variability of 2D shapes, are
+shown to outperform all other techniques.
+
+Real-life document recognition systems are composed
+of multiple modules including field extraction, segmenta-
+tion, recognition, and language modeling. A new learning
+paradigm, called Graph Transformer Networks (GTN), al-
+lows such multi-module systems to be trained globally using
+Gradient-Based methods so as to minimize an overall per-
+formance measure.
+
+Two systems for on-line handwriting recognition are de-
+scribed. Experiments demonstrate the advantage of global
+training, and the flexibility of Graph Transformer Networks.
+
+A Graph Transformer Network for reading bank check is
+also described. It uses Convolutional Neural Network char-
+acter recognizers combined with global training techniques
+to provides record accuracy on business and personal checks.
+It is deployed commercially and reads several million checks
+per day.
+
+Keywords— Neural Networks, OCR, Document Recogni-
+tion, Machine Learning, Gradient-Based Learning, Convo-
+lutional Neural Networks, Graph Transformer Networks, Fi-
+nite State Transducers.
+
+NOMENCLATURE
+
+GT Graph transformer.
+
+GTN Graph transformer network.
+
+HMM Hidden Markov model.
+
+HOS Heuristic oversegmentation.
+
+K-NN K-nearest neighbor.
+
+NN Neural network.
+FINISHED
+FINISHED rc=0

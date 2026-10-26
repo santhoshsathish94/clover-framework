@@ -1,0 +1,33 @@
+=== 1. Download Rumelhart, Hinton & Williams (1986) Nature 323: 533-536 primary paper ===
+Trying https://www.cs.toronto.edu/~hinton/absps/naturebp.pdf
+  size=485917 head=%PDF
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Pages: 4
+ 12 224 rhw1986.txt
+=== PAGE 1 ===
+©          Nature Publishing Group
+1986
+=== PAGE 2 ===
+©          Nature Publishing Group
+1986
+=== PAGE 3 ===
+©          Nature Publishing Group
+1986
+=== PAGE 4 ===
+©          Nature Publishing Group
+1986
+=== 2. Search GitHub for Rumelhart Hinton Williams 1986 / Backpropagation reference repos ===
+--- Query: Rumelhart+Hinton+Williams+1986+language:python
+Kushagra514/Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986- | stars=0 | https://github.com/Kushagra514/Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986- | None
+CodeForge-00/rumelhart_backpropagation | stars=0 | https://github.com/CodeForge-00/rumelhart_backpropagation | Backpropagation as in Rumelhart, Hinton and Williams (1986) from scratch: XOR, symmetry, encoder, family trees and live 2D training
+--- Query: karpathy/micrograd
+karpathy/micrograd | stars=18062 | https://github.com/karpathy/micrograd | A tiny scalar-valued autograd engine and a neural net library on top of it with PyTorch-like API
+smolorg/smolgrad | stars=276 | https://github.com/smolorg/smolgrad | small auto-grad engine inspired from Karpathy's micrograd and PyTorch
+automata/mojograd | stars=78 | https://github.com/automata/mojograd | Implementation of Karpathy's micrograd in Mojo :fire:
+trekhleb/micrograd-ts | stars=74 | https://github.com/trekhleb/micrograd-ts | 🤖 A TypeScript version of karpathy/micrograd — a tiny scalar-valued autograd engine and a neural net on top of it
+oraziorillo/microcrad | stars=66 | https://github.com/oraziorillo/microcrad | A re-implementation of Karpathy's micrograd in C
+0verread/minigrad | stars=56 | https://github.com/0verread/minigrad | Andrej Karpathy's Micrograd in Go
+--- Query: family+trees+Hinton+1986+language:python
+CodeForge-00/rumelhart_backpropagation | stars=0 | https://github.com/CodeForge-00/rumelhart_backpropagation | Backpropagation as in Rumelhart, Hinton and Williams (1986) from scratch: XOR, symmetry, encoder, family trees and live 2D training
+FINISHED rc=0

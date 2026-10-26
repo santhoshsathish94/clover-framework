@@ -1,0 +1,279 @@
+=== E2: dmoews/logic-theorist Full Principia Mathematica *2 Campaign (67 theorems) ===
+  Exact 1956 IPL-I result on #6: Proven: ( ( p -> q ) -> ( ( q -> r ) -> ( p -> r ) ) )
+    step: detachment using axiom or theorem ( ( A \/ ( B \/ C ) ) -> ( B \/ ( A \/ C ) ) )
+    step: substitution using axiom or theorem ( ( B -> C ) -> ( ( A \/ B ) -> ( A \/ C ) ) )
+  Exact 1956 IPL-I result on #17: Proven: ( ( ~ p -> p ) -> p )
+    step: forward-chain using axiom or theorem ( ( A -> B ) -> ( ~ B -> ~ A ) )
+    step: forward-chain using axiom or theorem ( ( A \/ A ) -> A )
+    step: substitution using axiom or theorem ( ~ ~ A -> A )
+  Exact 1956 IPL-I result on #29: Proven: ( ( q -> r ) -> ( ( q \/ p ) -> ( r \/ p ) ) )
+    step: forward-chain using axiom or theorem ( ( B -> C ) -> ( ( B \/ A ) -> ( A \/ C ) ) )
+    step: detachment using axiom or theorem ( ( B -> C ) -> ( ( A \/ B ) -> ( A \/ C ) ) )
+    step: substitution using axiom or theorem ( ( A \/ B ) -> ( B \/ A ) )
+  Exact 1956 IPL-I result on #31: Not proven: ( ( q \/ ( p \/ q ) ) -> ( p \/ q ) )
+  Exact 1956 IPL-I result on #56: Proven: ( ( ( p -> q ) -> q ) -> ( ( q -> p ) -> p ) )
+    step: forward-chain using axiom or theorem ( ( ( A -> B ) -> B ) -> ( A \/ B ) )
+    step: forward-chain using axiom or theorem ( ( A \/ B ) -> ( B \/ A ) )
+    step: substitution using axiom or theorem ( ( A \/ B ) -> ( ( A -> B ) -> B ) )
+  Summary line at end of analyze_output.py: Result: 67 problems 48 proven 19 not proven
+  Proved by 1956 IPL-I Logic Theorist (all 67):     48 / 67 (71.6%)
+  Proved in first 52 theorems (1957 WJCC subset):   40 / 52 (76.9%)
+  Breakdown of the 48 proofs verified by analyze_output.py:
+    - Substitution + Replacement only (MSb):        20 (Newell & Simon p. 37 states 'some 21')
+    - 1-step Detachment + MSb (MDt):                14
+    - 1-step Chaining + MSb (MCh):                  8
+    - Multi-step Subproblem Chaining/Detachment:    6
+
+=== E3.1: Similarity Filter (CSm: D=(K,J,H)) ON vs OFF across all 67 *2 Theorems ===
+  CSm ON  (1956 heuristic): proved=46/67 (MSb=19), CSm=5206/81416 (6.4%), LMc_calls=5726, total_W=1283
+  CSm OFF (unfiltered LMc): proved=48/67 (MSb=20), CSm=0/0 (0.0%), LMc_calls=75246, total_W=1621
+
+=== E3.2: Contraction (VCt, pp. 39-42) ON vs OFF on *2.06 and across all 67 *2 Theorems ===
+  *2.06 under VV  (variables as units):   DL=(2, 2, 2), DR=(3, 3, 4) (matches P-868 p. 39: (2,2,2) and (3,3,4))
+  *2.06 under VCt (contracted binary):    DL=(1, 1, 1), DR=(2, 2, 2) (matches P-868 p. 40: (1,1,1) and (2,2,2))
+  *2.04 right side under VV:              DL=(1, 1, 1), DR=(2, 2, 2) (matches P-868 p. 41: (1,1,1) and (2,2,2))
+  Proving *2.06 by MDt with VCt ON : MDt(*1.5) + MSb(*1.6)
+  Proving *2.06 by MDt with VCt OFF: None (fails MDt on p. 41 without contraction!)
+  67-theorem campaign (MSb + MDt only      ): VCt ON = 33/67 vs VCt OFF = 24/67
+  67-theorem campaign (Full MSb + MDt + MCh): VCt ON = 46/67 vs VCt OFF = 38/67
+
+=== E4.1: Section II 'Learning Processes' (Theorem-Memory Accumulation, p. 48) ===
+  All prior theorems stored in T (P-868 / 1957 baseline)          : 38/52 (first 52) | 46/67 (all 67)
+  Only previously PROVED theorems stored in T (self-bootstrapped) : 19/52 (first 52) | 22/67 (all 67)
+  Axioms *1.2..*1.6 ONLY stored in T (no theorem learning)        : 11/52 (first 52) | 12/67 (all 67)
+
+=== E4.2: Subproblem Priority Rule Ex(CK) (p. 46: Minimal-K vs FIFO vs Maximal-K) ===
+  Minimal-K first (Ex(CK) simplest subproblem heuristic, p. 46)     : total proved=46/67, depth>=1 subproblem proofs=4 (total W=53)
+  FIFO (breadth-first queue order)                                  : total proved=49/67, depth>=1 subproblem proofs=7 (total W=179)
+  Maximal-K first (anti-heuristic negative control: deepest first)  : total proved=47/67, depth>=1 subproblem proofs=5 (total W=116)
+
+=== Disagreement Check: dmoews IPL-I (48/67) vs LogicTheorist1956 (46/67) ===
+  Diff on #17 *2.18 ( ( ~ p -> p ) -> p ): dmoews=True, ours=False (our W=52, trace=None)
+  Diff on #29 *2.38 ( ( q -> r ) -> ( ( q \/ p ) -> ( r \/ p ) ) ): dmoews=True, ours=False (our W=54, trace=None)
+  MSb CSm ON vs OFF diff on *2.07 ( p -> ( p \/ p ) ): CSm_ON=None, CSm_OFF=MSb(*1.3)
+=== Check work limit in dmoews/logic-theorist/logic.py ===
+126-@dataclass
+127-class Context:
+128-    level: int
+129-    insns: list[Instruction]
+130:    working: list[Working]
+131-    idx: int
+132-    branch_idx: int
+133-    routine: str
+134-    l_arg: Any
+--
+161-
+162-    stack: list[Context]
+163-
+164-    gensym_ctr: int
+165:    work_done: int
+166:    work_limit: int
+167-    instruction_counter: int
+168-
+169-    input_expr: Element | None
+170-    do_trace: bool
+--
+188-                       0, 0, 50, 0,
+189-                       None, False)
+190-
+191-    def get_w(self, addr):
+192:        return self.stack[addr[0]].working[addr[1]]
+193-
+194:    def extend_working(self, addr):
+195:        while len(self.stack[addr[0]].working) <= addr[1]:
+196:            self.stack[addr[0]].working.append(Working.empty())
+197-
+198-    # Realize the 'T', 'P' and 'Q' locations as storage
+199-    # locations 0, 1 and 2.
+200-    def aval(self, addr):
+--
+239-        for e in self.storage[expr_main_element.a]:
+240-            if e.v:
+241-                e.f = True
+242-
+243:    def set_initial_stack(self, insns, working, routine_name):
+244-        self.stack = [Context(0, insns,
+245:                                 working,
+246-                                 0, -1,
+247-                                 routine_name, None, None, None)]
+248-
+249-    #
+--
+301-                    if self.input_expr is None:
+302-                        print('Could not parse expression', file = sys.stderr)
+303-
+304-            case 'PUT_MAIN_INTO_1':
+305:                self.extend_working((ctxt.level, 0))
+306:                self.stack[ctxt.level].working[0] = \
+307-                    Working(copy.copy(self.input_expr)
+308-                                          if self.input_expr is not None
+309-                                          else Element.empty(),
+310-                             0, 0, 0)
+--
+330-                method = (     'detachment' if opcode == 'PROOF_DET'
+331-                          else 'forward-chain' if opcode == 'PROOF_FWD'
+332-                          else 'backward-chain')
+333-                print(opcode + ': successfully proved',
+334:                      self.str_working(self.get_w(l)),
+335:                      'by', method, 'theorem', self.str_working(self.get_w(c)),
+336:                      'remaining-problem', self.str_working(self.get_w(r))
+337-                     )
+338-
+339-            case 'PROOF_SUB':
+340-                print('PROOF_SUB: successfully proved',
+341:                      self.str_working(self.get_w(l)),
+342:                      'by substitution theorem', self.str_working(self.get_w(c))
+343-                     )
+344-
+345-
+346-            # pp. 59, 61: Assign an unused list to A(x)
+347-            case 'AA':
+348-                loc = len(self.storage)
+349-                self.storage.append([])
+350:                self.extend_working(l)
+351-                self.get_w(l).e.a = loc
+352-
+353-            # Used on p. 51, but never defined.
+354-            # Interpreted as the same as AA, but in
+355-            # addition clearing P(x).
+356-            case 'AM':
+357-                loc = len(self.storage)
+358-                self.storage.append([])
+359:                self.extend_working(l)
+360-                self.get_w(l).e.a = loc
+361-                self.get_w(l).e.p = ''
+362-
+363-            # pp. 20, 54, 56: Assign E(x) an unused name
+364-            case 'AN':
+365:                self.extend_working(l)
+366-                self.get_w(l).e.n = 'gensym' + str(self.gensym_ctr)
+367-                self.gensym_ctr += 1
+368-
+369-
+--
+420-                x = x.e.p
+421-                y = y.e.p
+422-                branch = len(x) >= len(y) and x[ : len(y)] == y
+423-
+424:            # p. 50: If work done > limit, -> b.
+425-            case 'CWG':
+426:                branch = self.work_done > self.work_limit
+427-
+428-
+429-            # p. 50: Erase E(x) in A(y).
+430-            # It's not stated how E is located; I am using the A and P fields.
+--
+446-                x_a = self.aval(l)
+447-                if len(self.storage[x_a]) == 0:
+448-                    branch = True
+449-                else:
+450:                    self.extend_working(c)
+451-                    self.get_w(c).e = copy.copy(self.storage[x_a][0])
+452-                    branch = False
+453-
+454-            # p. 18
+--
+474-            # See also p. 18, and p. 13 for FR
+475-            # Does not branch according to pp. 49, 53, 55
+476-            case 'FL' | 'FM' | 'FR':
+477-                x_a = self.aval(l)
+478:                self.extend_working(c)
+479-                if opcode[1] == 'M':
+480-                    y_p = ''
+481-                else:
+482-                    y_p = self.get_w(l).e.p + opcode[1]
+--
+528-            # p. 58: Add 1 to K(x)
+529-            case 'NAK':
+530-                self.get_w(l).k += 1
+531-
+532:            # p. 52: Add 1 to work done
+533-            case 'NAW':
+534:                self.work_done += 1
+535-
+536-            # p. 55: Subtract 1 from G(x).
+537-            case 'NSG':
+538-                assert self.get_w(l).e.g >= 1
+--
+545-
+546-
+547-            # p. 54: Put C(x) = v
+548-            case 'PCv':
+549:                self.extend_working(l)
+550-                self.get_w(l).e.c = 'v'
+551-
+552-            # pp. 51, 55: Put C(x) = ->
+553-            case 'PC->':
+554:                self.extend_working(l)
+555-                self.get_w(l).e.c = '->'
+556-
+557-            # pp. 20, 49: Put E(x) in E(y) (E(x) unchanged)
+558-            case 'PE':
+559:                self.extend_working(c)
+560-                self.get_w(c).e = copy.copy(self.get_w(l).e)
+561-
+562-            # Not found in P-868, and not used in the Logic Theorist;
+563-            # only used to test the interpreter.
+564-            # Make F(x) true.
+565-            case 'PF':
+566:                self.extend_working(l)
+567-                self.get_w(l).e.f = True
+568-
+569-            # Introduced opcode: for bug fix, not found in original report
+570-            # Make F(x) false.
+571-            case 'PFB':
+572:                self.extend_working(l)
+573-                self.get_w(l).e.f = False
+574-
+575-            # p. 58: Put K(x) in K(y)
+576-            case 'PK':
+577:                self.extend_working(c)
+578-                self.get_w(c).k = self.get_w(l).k
+579-
+580-            # Never specified, but probably means the same as "PA",
+581-            # which puts A(x) in A(y) (p. 61)
+582-            case 'PM':
+583:                self.extend_working(c)
+584-                self.get_w(c).e.a = self.get_w(l).e.a
+585-
+586-            # p. 55: Make E(x) a unit
+587-            case 'PU':
+588:                self.extend_working(l)
+589-                self.get_w(l).e.u = True
+590-
+591-            # p. 55: Make U(x) blank
+592-            case 'PUB':
+593:                self.extend_working(l)
+594-                self.get_w(l).e.u = False
+595-
+596-            # Not found in P-868, and not used in the Logic Theorist;
+597-            # only used to test the interpreter.
+598-            # Make V(x) true.
+599-            case 'PV':
+600:                self.extend_working(l)
+601-                self.get_w(l).e.v = True
+602-
+603-
+604-            # p. 19, 49: Store E(x) in the storage memory, in the
+--
+705-            if e.p == locn:
+706-                return self.str_element(e)
+707-        return '<missing>'
+708-
+709:    # Print expression from working memory.
+710:    def str_working(self, w):
+711-        return self.str_element(w.e)
+712-
+713-
+714-    # Returns top element in tree
+--
+843-    except:
+844-        traceback.print_exc()
+845-        print('Failed', file = sys.stderr)
+846-
+847:    print('Work done', machine.work_done,
+848-          'instructions executed', machine.instruction_counter)
+849-
+850-
+851-
+FINISHED rc=0

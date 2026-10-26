@@ -1,0 +1,45 @@
+# Predictions Log — McCulloch & Pitts (1943) Study
+
+## E1: Clone and run GitHub reference repositories (`kaisdukes/mcculloch-pitts-neuron` and `CodeForge-00/mcculloch_pitts_neuron`)
+Timestamp (before run): 2026-10-26 14:05 UTC
+Predictions:
+1. Both reference repositories will implement the post-1943 textbook linear-threshold variant (summing signed integer/float weights w_i * x_i >= theta, or excitatory minus inhibitory sum) rather than McCulloch & Pitts's exact 1943 Equation (1) (which has unit synaptic delay S, non-negative excitatory synapse counts n_{is}, and absolute veto inhibition \prod \neg N_{j_m}).
+2. `CodeForge-00/mcculloch_pitts_neuron` will implement basic Boolean logic gates (AND, OR, NOT/NOR), a 2-layer XOR network, and a cyclic memory cell, and will run cleanly on CPU with exit code 0.
+3. Because textbook implementations allow negative weights and theta <= 0, their single neuron can output 1 on all-zero input (0, ..., 0) (e.g., NOT(0) = 1 or NAND(0, 0) = 1), whereas McCulloch & Pitts (1943) Theorem 3 proves that no order-0 net under the 1943 axioms can output 1 when all peripheral afferents are 0.
+
+## E2: Exact 1943 Equation (1) & Theorem 1–3 TPE compiler/verifier across all 16 2-input and 256 3-input Boolean functions
+Timestamp (before run): 2026-10-26 14:15 UTC
+Predictions:
+1. Single 1943 neuron (Equation 1, theta_i >= 1, integer excitatory counts n_{is} >= 0, absolute inhibitory veto):
+   - Out of all 16 2-input Boolean functions f(x1, x2), a single 1943 neuron can realize exactly 5 functions: FALSE (0000), AND (0001), x1 & ~x2 (0010), ~x1 & x2 (0100), and OR (0111), plus the 2 single-variable projections x1 (0011) and x2 (0101), giving 7 of 16 functions. Specifically, XOR (0110) is not single-neuron realizable even though f(0,0)=0, and all 8 functions with f(0,0)=1 are impossible.
+2. Multi-layer order-0 nets (Theorems 1, 2, 3):
+   - Exactly 8 of 16 2-input Boolean functions and 128 of 256 3-input Boolean functions satisfy Theorem 3 (f(0,...,0) = 0, i.e., no purely negated minterm in Hilbert disjunctive normal form).
+   - Every single one of those 8 (2-input) and 128 (3-input) functions will be automatically compiled by the Theorem 2 construction (built from Fig. 1a delay S, Fig. 1b OR, Fig. 1c AND, Fig. 1d relative complement AND-NOT) into an acyclic 1943 net with uniform synaptic depth d, and simulating the constructed net under Equation (1) will match the target truth table on 100% of inputs (128/128).
+   - Conversely, random/exhaustive search over order-0 nets with theta >= 1 will produce 0 nets that ever fire at (0,...,0), and our negative control (attempting to compile any of the 128 functions with f(0,0,0)=1 without an external background afferent or violating theta >= 1) will be rejected by the Theorem 3 check and fail verification if forced.
+
+## E3: Cutaneous heat-from-transient-cooling illusion (Fig. 1e) & Equivalence Theorems 4–6 (Fig. 1f–h)
+Timestamp (before run): 2026-10-26 14:25 UTC
+Predictions:
+1. Fig. 1e cutaneous illusion net (`c1` heat receptor, `c2` cold receptor, `ca` delay neuron, `cb` transient-cold detector, `c3` heat sensation, `c4` cold sensation):
+   - When cold receptor `N2` fires for ONLY 1 time step (`t=0: N2=1`, `t=1: N2=0`), cold sensation `N4` will NEVER fire (`0` at all `t`), whereas heat sensation `N3` WILL fire at `t=3` (`N3(3) = 1` via `ca(1)=1 -> cb(2)=1 -> c3(3)=1`), reproducing the illusion of heat from transient cooling with zero preliminary cold.
+   - When cold receptor `N2` fires continuously for >= 2 steps (`t=0: N2=1, t=1: N2=1`), `cb(2)` is inhibited by `N2(1)=1` (`cb(2)=0`), so heat `N3` NEVER fires (`0` at all `t`), while cold `N4` fires at `t=2` (`N4(2)=1`).
+2. Theorem 4 (Fig. 1f, relative vs absolute inhibition):
+   - A single relative-inhibition neuron with threshold theta=2 where each active inhibitory synapse raises the threshold by +1 on inputs (c1, c2, c3) with 2 excitatory synapses from c1, 1 from c2, 1 from c3, and 1 relative-inhibitory synapse from c2 or as specified in Fig. 1f (`N4(t) = ~N1(t-1).N2(t-1) v N3(t-1) v N1(t-1).N2(t-1).N3(t-1)`) will match the multi-neuron absolute-inhibition net of Fig. 1f (`N4(t)` at 2 synaptic delays, extended equivalence $S^2$) across all $2^3 = 8$ input combinations.
+3. Theorem 5 (Fig. 1g, extinction vs absolute inhibition) and Theorem 6 (Fig. 1h, temporal summation vs spatial summation):
+   - In Fig. 1g, a neuron whose threshold rises from 1 to 2 for one step after firing (extinction) is matched at $S^1$ extended equivalence by introducing a delay neuron that feeds an absolute inhibitory synapse (`N3(t) = N1(t-2) . ~N2(t-3)`).
+   - In Fig. 1h, temporal summation (requiring `N1` to fire at two consecutive steps `t-2` and `t-1`) is matched by spatial summation at a threshold-2 neuron fed by `N1` directly and through a Fig. 1a delay neuron (`N3(t) = N1(t-1) . N1(t-2)`).
+
+## E4: Nets with circles (Theorem 7 learning-by-circle Fig. 1i, Theorem 8 state-transition solver over 2^p cyclic states, and Theorem 10 universal/existential/modulo-n cyclic nets)
+Timestamp (before run): 2026-10-26 14:35 UTC
+Predictions:
+1. Theorem 7 (Fig. 1i, p. 105 & p. 108, replacing an alterable/Hebbian synapse by a circle):
+   - In the alterable-synapse model (p. 108: c2 has unconditioned excitatory synapse on c3 with theta=1; c1 has an initially ineffective axonal termination on c3 that permanently becomes an ordinary excitatory synapse if at some time c3 fires while c1's termination is simultaneously excited, i.e., after some x where N1(x) & N2(x) co-occur): the firing law is `N3(t) <=> N2(t-1) v (N1(t-1) & (Ex)_{x < t-1} [N1(x) & N2(x)])` (exact Fig. 1i caption on p. 105!).
+   - Replacing the alterable synapse with a fixed-weight cyclic neuron `cm` (order p=1) that fires when `c1 & c2` co-occur and reverberates (`Nm(t) = (N1(t-1) . N2(t-1)) v Nm(t-1)`) will match the alterable-synapse neuron at 100% of time steps across all `(2^2)^5 = 1,024` 2-input histories of length 5.
+2. Theorem 8 (Eq. 5–9, pp. 109–110, solving cyclic nets of order p via 2^p state conjunctions X_1..X_{2^p}):
+   - For a cyclic net of order p=2 (2^p = 4 cyclic state conjunctions X_1..X_4), computing the active state X_i(t) via Equation (5)/(8) (`X_i(t) <=> V_{j=1}^{2^p} Psi_{ij}(t) . X_j(t-n)`) will match step-by-step Equation (1) simulation on 100% of time steps across all afferent sequences, whereas a negative control that swaps two transition predicates Psi_{ij} will fail verification.
+3. Theorem 10 (pp. 112–113, existential `(Ez_2 < z_1) Pr_1(z_2)`, universal `(z_2 < z_1) Pr_1(z_2)`, and modulo-n `C_{mn}(z_1)` circuits) & Section 4 (p. 113–114, irreciprocity of causality):
+   - The three cyclic circuits of Theorem 10 (`N_i(t) = Pr_1(t-1) v N_i(t-1)`, `N_i(t) = Pr_1(t-1) . N_i(t-1)`, and a simple ring `c_1 -> c_2 -> ... -> c_n -> c_1` of n=3 links) will realize existential memory, universal memory, and modulo-3 firing exactly.
+   - Section 4's claim that causality in a net is forward-deterministic (`state(t) + afferents(t) -> state(t+1)` is a 1-to-1 function) but backward-irreciprocal (`state(t+1)` does NOT uniquely determine `afferents(t)` or `state(t)`) will be quantified by counting the preimage size (many-to-1 compression) on both Fig. 1e (order 0) and Fig. 1i (order 1).
+
+
+

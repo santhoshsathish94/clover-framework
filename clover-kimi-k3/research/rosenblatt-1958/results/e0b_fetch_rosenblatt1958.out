@@ -1,0 +1,62 @@
+Cloning into 'vukrosic-rosenblatt-from-scratch'...
+Cloning into 'kaisdukes-rosenblatt-perceptron'...
+Cloning into 'Honghe-perceptron'...
+>>> Repo: vukrosic-rosenblatt-from-scratch (a0167b1eb3527362557105c0f8a933d24da6aecc)
+   73 vukrosic-rosenblatt-from-scratch/step6_hidden.py
+   93 vukrosic-rosenblatt-from-scratch/step4_converge.py
+  147 vukrosic-rosenblatt-from-scratch/demo-output.txt
+   85 vukrosic-rosenblatt-from-scratch/step5_xor.py
+  101 vukrosic-rosenblatt-from-scratch/perc.py
+   12 vukrosic-rosenblatt-from-scratch/run_all.sh
+   37 vukrosic-rosenblatt-from-scratch/step1_neuron.py
+   50 vukrosic-rosenblatt-from-scratch/step2_learn.py
+   11 vukrosic-rosenblatt-from-scratch/save.py
+   37 vukrosic-rosenblatt-from-scratch/README.md
+  130 vukrosic-rosenblatt-from-scratch/step7_backprop.py
+   82 vukrosic-rosenblatt-from-scratch/step3_mark1.py
+   20 vukrosic-rosenblatt-from-scratch/LICENSE
+   67 vukrosic-rosenblatt-from-scratch/tests.py
+  945 total
+>>> Repo: kaisdukes-rosenblatt-perceptron (edd29d9f7773ab3442c0e1d2a37facab851b9323)
+    18 kaisdukes-rosenblatt-perceptron/tests/split.py
+    38 kaisdukes-rosenblatt-perceptron/tests/perceptron_test.py
+  1101 kaisdukes-rosenblatt-perceptron/neurons.jpeg
+   150 kaisdukes-rosenblatt-perceptron/data/iris.csv
+     7 kaisdukes-rosenblatt-perceptron/poetry.lock
+    21 kaisdukes-rosenblatt-perceptron/src/iris.py
+    20 kaisdukes-rosenblatt-perceptron/src/perceptron.py
+     9 kaisdukes-rosenblatt-perceptron/src/train.py
+    14 kaisdukes-rosenblatt-perceptron/src/evaluate.py
+   187 kaisdukes-rosenblatt-perceptron/README.md
+    15 kaisdukes-rosenblatt-perceptron/pyproject.toml
+   674 kaisdukes-rosenblatt-perceptron/LICENSE
+  2254 total
+>>> Repo: Honghe-perceptron (c4caa5a26f933e6363521cb6c2452d91e217496b)
+  17 Honghe-perceptron/perceptron/generate_data.py
+  51 Honghe-perceptron/perceptron/perceptron.py
+   0 Honghe-perceptron/perceptron/__init__.py
+  33 Honghe-perceptron/perceptron/test.py
+   5 Honghe-perceptron/README.md
+ 106 total
+=== Search Archive.org & academic mirrors for Rosenblatt (1958) Psychological Review paper ===
+{'identifier': 'youtube-3G8lzeUQykM', 'title': 'O componente que MUDOU o MUNDO e criou a ERA DIGITAL', 'year': 2025}
+{'identifier': 'c760bb27-0a18-4a57-95b5-6888a012810e', 'title': 'Perceptron', 'year': 2025}
+{'identifier': 'youtube-mBqfY_TX_8o', 'title': 'A ideia que causou o nascimento da Inteligência Artificial', 'year': 2025}
+Trying https://websites.umich.edu/~jhalber/courses/380/f18/readings/Rosenblatt1958.pdf
+  size=3377 head=    
+Trying https://www.cs.toronto.edu/~hinton/absps/perceptron.pdf
+  size=321 head=<!DO
+Trying https://isl.stanford.edu/~widrow/papers/j1958theperceptron.pdf
+  size=236 head=<!DO
+Trying https://bpb-us-e2.wpmucdn.com/websites.umich.edu/dist/a/3204/files/2018/09/Rosenblatt1958.pdf
+  size=15434 head=<!do
+Trying https://redwood.berkeley.edu/wp-content/uploads/2021/08/Rosenblatt1958.pdf
+  size=25510 head=<!DO
+Trying https://www.imit.kth.se/courses/2G1522/Rosenblatt58.pdf
+Trying https://cs.nyu.edu/~davise/papers/Rosenblatt1958.pdf
+  size=979 head=<?xm
+Trying https://apps.dtic.mil/sti/tr/pdf/AD0204076.pdf
+  size=1484 head=<!DO
+Trying https://apps.dtic.mil/sti/tr/pdf/AD0256582.pdf
+  size=1484 head=<!DO
+FINISHED rc=0

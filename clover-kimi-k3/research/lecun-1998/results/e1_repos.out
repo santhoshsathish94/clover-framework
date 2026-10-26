@@ -1,0 +1,1788 @@
+Cloning jmlee8939/LeNet-5_1998_pytorch -> jmlee8939-LeNet-5_1998_pytorch
+Cloning into 'jmlee8939-LeNet-5_1998_pytorch'...
+Cloning pop123-ux/LeNet_5-from-scratch -> pop123-ux-LeNet_5-from-scratch
+Cloning into 'pop123-ux-LeNet_5-from-scratch'...
+Cloning VTongTV/LeNet-5-scratch -> VTongTV-LeNet-5-scratch
+Cloning into 'VTongTV-LeNet-5-scratch'...
+Cloning SunnyHaze/LeNet5-MNIST-Pytorch -> SunnyHaze-LeNet5-MNIST-Pytorch
+Cloning into 'SunnyHaze-LeNet5-MNIST-Pytorch'...
+=== jmlee8939-LeNet-5_1998_pytorch (commit 69931f4) ===
+jmlee8939-LeNet-5_1998_pytorch
+jmlee8939-LeNet-5_1998_pytorch/model.py
+jmlee8939-LeNet-5_1998_pytorch/train_test.ipynb
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/2_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/0_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/9_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/5_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/4_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/8_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/6_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/1_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/7_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/RBF_kernel/3_RBF.jpg
+jmlee8939-LeNet-5_1998_pytorch/fig
+jmlee8939-LeNet-5_1998_pytorch/fig/structure.PNG
+jmlee8939-LeNet-5_1998_pytorch/fig/loss_f.PNG
+jmlee8939-LeNet-5_1998_pytorch/fig/RBF kernel.PNG
+jmlee8939-LeNet-5_1998_pytorch/fig/activation_f.PNG
+jmlee8939-LeNet-5_1998_pytorch/fig/feature map connection.PNG
+jmlee8939-LeNet-5_1998_pytorch/LeNet_1998.pt
+jmlee8939-LeNet-5_1998_pytorch/__pycache__
+jmlee8939-LeNet-5_1998_pytorch/__pycache__/model.cpython-38.pyc
+jmlee8939-LeNet-5_1998_pytorch/data
+jmlee8939-LeNet-5_1998_pytorch/data/MNIST
+jmlee8939-LeNet-5_1998_pytorch/data/MNIST/raw
+jmlee8939-LeNet-5_1998_pytorch/data/MNIST/processed
+jmlee8939-LeNet-5_1998_pytorch/README.md
+jmlee8939-LeNet-5_1998_pytorch/LeNet.pt
+--- jmlee8939-LeNet-5_1998_pytorch/model.py ---
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch import optim
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+from torchvision.transforms import ToTensor
+import matplotlib.pyplot as plt
+from torch.nn.parameter import Parameter
+import math
+from PIL import Image
+import cv2
+
+# costumized Tanh for LeNet-5 1998
+class Tanh(nn.Module):
+    def forward(self, x):
+        return 1.7159*torch.tanh(x*2/3)
+
+# Layer C1
+# - convolutional layer with 6 feature maps.
+# - 5 X 5 kernel
+class Layer_C1(nn.Module):
+    def __init__(self):
+        super(Layer_C1, self).__init__()
+        self.c1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1)
+        self.reset_parameters()
+    
+    def forward(self, x):
+        x = self.c1(x)
+        return x
+    
+    def reset_parameters(self):
+        nn.init.kaiming_uniform_(self.c1.weight, a=math.sqrt(2))
+        self.c1.bias.data.fill_(0.01)
+    
+# Layer S2
+# - subsampling layer (=Average pool) 
+# - kernel size 2 X 2
+# - map_size 14 X 14
+class Layer_S2(nn.Module):
+    def __init__(self):
+        super(Layer_S2, self).__init__()
+        # kernel_size = 2, in_channels = 6
+        self.kernel_size = 2
+        self.weight = Parameter(torch.Tensor(1,6,1,1))
+        self.bias = Parameter(torch.Tensor(1,6,1,1))
+        self.reset_parameters()
+    
+    def forward(self, x):
+        x = F.avg_pool2d(x, self.kernel_size)
+        x = x*self.weight + self.bias
+        return x
+    
+    def reset_parameters(self):
+        nn.init.kaiming_uniform_(self.weight, a=math.sqrt(1))
+        self.bias.data.fill_(0.01)
+
+# Layer C3
+# - convolutional layer
+# - 16 feature maps
+# - each S2 feature map is connected to 10 neighborhoods subset of C3 feature map 
+class Layer_C3(nn.Module):
+    def __init__(self):
+        super(Layer_C3, self).__init__()
+        # in_channels = 6, out_channels = 16, kernel_size = 5
+        self.weight = Parameter(torch.Tensor(10, 6, 5, 5))
+        self.bias = Parameter(torch.Tensor(1, 16, 1, 1))
+        self.kernel_size = 5
+        self.out_channels = 16
+        self.reset_parameters()
+        
+    def map_combine_list(self):
+        connection_list = [[0,4,5,6,9,10,11,12,14,15],
+                [0,1,5,6,7,10,11,12,13,15],
+                [0,1,2,6,7,8,11,13,14,15],
+                [1,2,3,6,7,8,9,12,14,15],
+                [2,3,4,7,8,9,10,12,13,15],
+                [3,4,5,8,9,10,11,13,14,15]]
+        return connection_list
+    
+    def forward(self,x):
+        B_size = x.size(0)
+        output_size = x.size(3)-self.kernel_size+1
+        output = torch.zeros(B_size,self.out_channels,output_size,output_size)
+        list_ = self.map_combine_list()
+        for i in range(len(list_)):
+            output[:,list_[i],:,:] += (F.conv2d(x[:,i,:,:].unsqueeze(1), 
+                                    self.weight[:,i,:,:].unsqueeze(1)) + self.bias[:,list_[i],:,:])
+        return output
+=== pop123-ux-LeNet_5-from-scratch (commit b53f2f8) ===
+pop123-ux-LeNet_5-from-scratch
+pop123-ux-LeNet_5-from-scratch/tests
+pop123-ux-LeNet_5-from-scratch/tests/test_model.py
+pop123-ux-LeNet_5-from-scratch/IMAGES
+pop123-ux-LeNet_5-from-scratch/IMAGES/Laura_Chaubard_&_Yann_Le_Cun_-_2024_(53814052697)_(cropped).jpg
+pop123-ux-LeNet_5-from-scratch/IMAGES/test_visual_predictions.png
+pop123-ux-LeNet_5-from-scratch/IMAGES/LeNet-5_architecture.svg
+pop123-ux-LeNet_5-from-scratch/IMAGES/MNIST_dataset_example.png
+pop123-ux-LeNet_5-from-scratch/checkpoints
+pop123-ux-LeNet_5-from-scratch/checkpoints/lenet5_mnist.pth
+pop123-ux-LeNet_5-from-scratch/src
+pop123-ux-LeNet_5-from-scratch/src/model.py
+pop123-ux-LeNet_5-from-scratch/src/__init__.py
+pop123-ux-LeNet_5-from-scratch/README.md
+pop123-ux-LeNet_5-from-scratch/pyproject.toml
+pop123-ux-LeNet_5-from-scratch/LICENSE
+pop123-ux-LeNet_5-from-scratch/test.ipynb
+--- pop123-ux-LeNet_5-from-scratch/src/__init__.py ---
+"""
+LeNet-5 From Scratch Package
+"""
+from .model import LeNet_5, LeNetRBFSublayer, build_digit_bitmaps
+
+__all__ = [
+    "LeNet_5",
+    "LeNetRBFSublayer",
+    "build_digit_bitmaps",
+]
+
+__version__ = "1.0.0"
+__author__ = "Pop Alexandru"
+--- pop123-ux-LeNet_5-from-scratch/src/model.py ---
+"""LeNet-5 architecture implemented from scratch in PyTorch, including a custom RBF layer and loss function
+as described in the original 1998 paper by Yann LeCun et al.
+The model is designed for grayscale images of size 32x32 pixels and outputs predictions for 10 classes (digits 0-9).
+"""
+
+import os
+from typing import Optional, Union, Tuple # Provides static type hinting to make code more readable, maintainable, and less prone to bugs in large-scale applications
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+
+# In the 1998 paper the output RBF centers are not learned: each one is a stylized
+# 7x12 bitmap of the digit it represents, with +1 for ink and -1 for background.
+# 7 * 12 = 84, which is exactly why layer F6 has 84 units. Keeping the templates as
+# ASCII art rather than a flat list of numbers means the "each center is a picture of
+# its digit" idea stays visible in the source.
+DIGIT_GLYPHS = {
+    0: ["".join(r) for r in [".......", "..###..", ".#...#.", "#.....#", "#.....#", "#.....#",
+                             "#.....#", "#.....#", "#.....#", ".#...#.", "..###..", "......."]],
+    1: ["".join(r) for r in [".......", "...#...", "..##...", ".#.#...", "...#...", "...#...",
+                             "...#...", "...#...", "...#...", "...#...", ".#####.", "......."]],
+    2: ["".join(r) for r in [".......", ".#####.", "#.....#", "......#", ".....#.", "....#..",
+                             "...#...", "..#....", ".#.....", "#......", "#######", "......."]],
+    3: ["".join(r) for r in [".......", ".#####.", "#.....#", "......#", ".....#.", "..###..",
+                             ".....#.", "......#", "......#", "#.....#", ".#####.", "......."]],
+    4: ["".join(r) for r in [".......", "....##.", "...#.#.", "..#..#.", ".#...#.", "#....#.",
+                             "#######", ".....#.", ".....#.", ".....#.", ".....#.", "......."]],
+    5: ["".join(r) for r in [".......", "#######", "#......", "#......", "#####..", ".....#.",
+                             "......#", "......#", "......#", "#....#.", ".####..", "......."]],
+    6: ["".join(r) for r in [".......", "..####.", ".#.....", "#......", "#......", "#####..",
+                             "#....#.", "#.....#", "#.....#", ".#...#.", "..###..", "......."]],
+    7: ["".join(r) for r in [".......", "#######", ".....#.", "....#..", "....#..", "...#...",
+                             "...#...", "..#....", "..#....", ".#.....", ".#.....", "......."]],
+    8: ["".join(r) for r in [".......", "..###..", ".#...#.", "#.....#", ".#...#.", "..###..",
+                             ".#...#.", "#.....#", "#.....#", ".#...#.", "..###..", "......."]],
+    9: ["".join(r) for r in [".......", "..###..", ".#...#.", "#.....#", "#.....#", ".#...#.",
+                             "..####.", "......#", "......#", ".#...#.", "..###..", "......."]],
+}
+
+GLYPH_WIDTH, GLYPH_HEIGHT = 7, 12
+
+
+def build_digit_bitmaps(num_classes: int = 10) -> torch.Tensor: # A more visual recommendation by Claude
+    """Turns the ASCII glyphs above into a (num_classes, 84) tensor of +1 / -1 values."""
+    templates = []
+    for digit in range(num_classes):
+        rows = DIGIT_GLYPHS[digit]
+        assert len(rows) == GLYPH_HEIGHT, f"digit {digit}: expected {GLYPH_HEIGHT} rows, got {len(rows)}"
+        for row in rows:
+            assert len(row) == GLYPH_WIDTH, f"digit {digit}: row '{row}' is not {GLYPH_WIDTH} wide"
+        templates.append([1.0 if pixel == "#" else -1.0 for row in rows for pixel in row])
+    return torch.tensor(templates, dtype=torch.float32) # [10, 84]
+
+
+class LeNetRBFSublayer(nn.Module):
+    """Output layer of LeNet-5: one Euclidean RBF unit per class.
+
+    Each unit computes the squared distance between the 84-dimensional F6 activation
+    and that class's fixed bitmap template. A *small* distance therefore means a
+    *confident* prediction, which is why inference uses argmin rather than argmax.
+    """
+
+    def __init__(self, in_features=84, num_classes=10) -> None:
+        super(LeNetRBFSublayer, self).__init__()
+        expected = GLYPH_WIDTH * GLYPH_HEIGHT
+        assert in_features == expected, f"the paper's RBF centers are {expected}-dimensional, got {in_features}"
+
+        # The centers are constants, not parameters - registering them as a buffer keeps
+        # them in the state_dict and moves them with .to(device) while leaving them out
+        # of .parameters(), so no optimizer can ever touch them.
+        self.register_buffer("centers", build_digit_bitmaps(num_classes)) # In PyTorch, self.register_buffer() is used to add a non-trainable tensor to a module's state
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x shape: [batch_size, 84]
+        # self.centers shape: [10, 84]
+
+        # Unsqueeze to align the dimensions for broadcasting
+        x_unsqueezed = x.unsqueeze(1)                    # Shape: [batch_size,  1, 84]
+        centers_unsqueezed = self.centers.unsqueeze(0)   # Shape: [        1, 10, 84]
+
+        # Squared Euclidean distance from each sample to each of the 10 templates
+        distances = torch.sum((x_unsqueezed - centers_unsqueezed) ** 2, dim=2)
+
+        return distances  # Shape: [batch_size, 10]
+
+
+class LeNet_5(nn.Module):
+
+    """LeNet_5 architecture implemented from scratch.
+
+--- pop123-ux-LeNet_5-from-scratch/tests/test_model.py ---
+"""CPU-only smoke tests for the LeNet-5 implementation."""
+
+from pathlib import Path
+
+import torch
+
+from src import LeNet_5, LeNetRBFSublayer, build_digit_bitmaps
+
+
+def test_digit_bitmaps_have_expected_shape_and_values():
+    bitmaps = build_digit_bitmaps()
+
+    assert bitmaps.shape == (10, 84)
+    assert set(torch.unique(bitmaps).tolist()) == {-1.0, 1.0}
+
+
+def test_rbf_centers_are_registered_as_buffer_not_parameter():
+    layer = LeNetRBFSublayer()
+
+    buffers = dict(layer.named_buffers())
+    parameters = dict(layer.named_parameters())
+
+    assert "centers" in buffers
+    assert buffers["centers"].shape == (10, 84)
+    assert "centers" not in parameters
+
+
+def test_forward_shape_and_nonnegative_distances():
+    torch.manual_seed(0)
+    model = LeNet_5()
+    model.eval()
+    x = torch.randn(2, 1, 32, 32)
+
+    with torch.no_grad():
+        output = model(x)
+
+    assert output.shape == (2, 10)
+    assert torch.isfinite(output).all()
+    assert torch.all(output >= 0)
+
+
+def test_backward_reaches_trainable_parameters():
+    torch.manual_seed(0)
+    model = LeNet_5()
+    model.train()
+    x = torch.randn(4, 1, 32, 32)
+    labels = torch.tensor([0, 1, 2, 3])
+
+    distances = model(x)
+    loss = model._lenet_rbf_loss(distances, labels)
+    loss.backward()
+
+    trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
+
+    assert trainable
+    assert all(parameter.grad is not None for parameter in trainable)
+    assert all(torch.isfinite(parameter.grad).all() for parameter in trainable)
+
+
+def test_predict_uses_minimum_distance_class():
+    torch.manual_seed(0)
+    model = LeNet_5()
+    x = torch.randn(3, 1, 32, 32)
+
+    with torch.no_grad():
+        expected = torch.argmin(model(x), dim=1)
+
+    predicted = model.predict(x)
+
+    assert torch.equal(predicted, expected)
+
+
+def test_parameter_counter_matches_model_parameters():
+    model = LeNet_5()
+    expected = sum(parameter.numel() for parameter in model.parameters())
+
+    assert model.params() == f"{expected} total trainable parameters"
+
+
+def test_default_checkpoint_points_to_checkpoints_directory():
+    checkpoint = Path(LeNet_5.DEFAULT_WEIGHTS)
+
+    assert checkpoint.parent.name == "checkpoints"
+    assert checkpoint.name == "lenet5_mnist.pth"
+=== SunnyHaze-LeNet5-MNIST-Pytorch (commit 3ffa181) ===
+SunnyHaze-LeNet5-MNIST-Pytorch
+SunnyHaze-LeNet5-MNIST-Pytorch/images
+SunnyHaze-LeNet5-MNIST-Pytorch/images/Architecture.jpg
+SunnyHaze-LeNet5-MNIST-Pytorch/images/PaperErrorRate.png
+SunnyHaze-LeNet5-MNIST-Pytorch/model.pt
+SunnyHaze-LeNet5-MNIST-Pytorch/viewModel.py
+SunnyHaze-LeNet5-MNIST-Pytorch/requirements.txt
+SunnyHaze-LeNet5-MNIST-Pytorch/LeNet-5_GPU.py
+SunnyHaze-LeNet5-MNIST-Pytorch/DownloadUnzipData.py
+SunnyHaze-LeNet5-MNIST-Pytorch/README.md
+SunnyHaze-LeNet5-MNIST-Pytorch/imports
+SunnyHaze-LeNet5-MNIST-Pytorch/imports/ParametersManager.py
+SunnyHaze-LeNet5-MNIST-Pytorch/LICENSE
+SunnyHaze-LeNet5-MNIST-Pytorch/Train.jpg
+--- SunnyHaze-LeNet5-MNIST-Pytorch/DownloadUnzipData.py ---
+import struct
+import matplotlib.pyplot as plt
+import numpy as np
+import requests , gzip
+from tqdm import tqdm
+# 需要下载的文件名
+fileNames = [
+    'train-images-idx3-ubyte.gz',
+    'train-labels-idx1-ubyte.gz',
+    't10k-images-idx3-ubyte.gz',
+    't10k-labels-idx1-ubyte.gz'
+    ]
+# 用于简便直观理解文件名的字典
+rawDataName = {
+    "trainX" : "train-images-idx3-ubyte",
+    "trainY" : "train-labels-idx1-ubyte",
+    "testX" : "t10k-images-idx3-ubyte",
+    "testY" : "t10k-labels-idx1-ubyte"
+    }
+# 用于下载文件的函数
+def downLoadAFile(filename:str):
+    baseUrl = 'http://yann.lecun.com/exdb/mnist/'
+    tmpUrl = baseUrl + filename
+    print('下载 {} 文件中...'.format(filename))
+    file = requests.get(url=tmpUrl)
+    with open(filename, 'wb+') as f:
+        f.write(file.content)
+    print('下载完成！')
+    cutFilename = filename.replace('.gz','')
+    print('解压gzip文件 {} 中...'.format(filename))
+    gFile = gzip.GzipFile(filename)
+    with open(cutFilename, 'wb+') as f:
+        f.write(gFile.read())
+    print('解压完成')
+    print('===数据集下载完成===')
+    
+# =================以下是构建实际应用的数据集部分================
+# 原始的数据是以“一个字节存储一个数值”的形式存储在数据集中的，所以是高度压缩的
+# 而计算机中用来运算的浮点数，则需要达到32位（4字节），这也是显卡大多最支持的数据类型
+# 如果不提前将数据转储位4字节格式，则会在读取数据时不断的由CPU进行运算，转换1字节的数据为4字节
+# 这会重复浪费大量的运算能力，带来的结果就是CPU满载100%，但GPU几乎长期只有0%
+# 而提前将数据解压好后，经过系统优化可以直接将整块的数据存入显存，大幅提高运算速度
+
+# 虽然数据集的大小变大了不少，但是运算时间大幅降低！也就是下面定义的类的主要功能：
+# 【读取高度压缩的字节码文件，并转化为GPU喜闻乐见的形式保存】
+# （具体的字节码如何组织的，可以参考http://yann.lecun.com/exdb/mnist/ 网页页最下面的说明）
+class imgReader:
+    def __init__(self,PATH) -> None:
+        self.path = PATH
+        with open(self.path, 'rb') as f:
+            self.buff = f.read()
+             # 按字节拆出“元素”个数 具体字节码组织形式参考MNIST官网
+            self.size = struct.unpack(">i",self.buff[4:8])[0] # 按照4字节无符号整数拆分字节，教程：https://www.liaoxuefeng.com/wiki/1016959663602400/1017685387246080
+            # 象征性的拆一下横竖
+            self.numberOfRows = struct.unpack(">i",self.buff[8:12]) 
+            self.numberOfCols = struct.unpack(">i",self.buff[12:16])
+    # 最好别用，贼慢，事实上下面的程序也没有使用此函数
+    def returnWholeArray(self) -> list:
+        data = {}
+        data["imgs"] = []
+        data["size"] = self.size
+        for i in range(data["size"]):           
+            tmpMatrix = struct.unpack_from('>784B',self.buff[16:],i * 784) # "magic number" 单纯的28x28的图像，784字节
+            pic = np.array(tmpMatrix)
+            pic = pic.reshape(28,28)
+            data["imgs"].append(pic)
+        return data
+    # 重载[]运算符
+    def __getitem__(self,index):
+        if  type(index) == int:
+            assert index >= 0 and index < self.size ,"Index out of range! Should less than {}.".format(self.size)
+            offset = index * 784
+            tmpMatrix = struct.unpack_from('>784B',self.buff[16:],offset)
+            tmpMatrix = np.array(tmpMatrix).reshape(28,28)
+            return np.array(tmpMatrix)
+        if type(index) == slice:
+            stop = self.size-1 if index.stop == None else index.stop
+            start = 0 if index.start == None else index.start 
+            length = stop - start
+            data = []
+            for i in range(start,stop):
+                data.append(self.__getitem__(i))
+            return data
+    # 重载len()运算符
+    def __len__(self):
+        return self.size
+
+# 用于读取标签的函数
+class labelReader:
+    def __init__(self,PATH) -> None:
+--- SunnyHaze-LeNet5-MNIST-Pytorch/imports/ParametersManager.py ---
+import torch
+from torch import nn
+# 定义一个管理模型训练时参数的类
+class ParametersManager():
+    def __init__(self,device) -> None:
+        self.device = device
+        # 具体数据
+        self.EpochDone = 0      # 已经完成的Epoch个数
+        self.LearningRate = []    # 各个Epoch的学习率 
+        self.TrainACC = []        # 训练集准确率
+        self.TestACC = []         # 测试集准确率
+        self.loss = []            # loss
+        self.state_dict = 0 # 模型的具体权重
+        self.datas = {}
+    # 打包
+    def pack(self):
+        self.datas = {
+            'EpochDone' : self.EpochDone,        # 已经完成的Epoch个数
+            'LearningRate' : self.LearningRate,    # 各个Epoch的学习率 
+            'TrainACC' : self.TrainACC,        # 训练集准确率
+            'TestACC' : self.TestACC,         # 测试集准确率
+            'loss' : self.loss,            # loss
+            'state_dict' : self.state_dict, # 模型的具体权重
+        } 
+    # 解包
+    def unpack(self):
+        self.EpochDone = self.datas['EpochDone']
+        self.LearningRate = self.datas['LearningRate']
+        self.TestACC = self.datas['TestACC']
+        self.TrainACC = self.datas['TrainACC']
+        self.loss = self.datas['loss']
+        self.state_dict = self.datas['state_dict']
+    # 从脚本中获取模型的参数
+    def loadModelParameters(self, model:nn.Module):
+        self.state_dict = model.state_dict()
+    
+    # 从脚本中将参数输出给模型
+    def setModelParameters(self, model:nn.Module):
+        model.load_state_dict(self.state_dict)
+    
+    # 从脚本中获取一个Epoch的
+    def oneEpochDone(self, LastLearningRate, LastTrainACC, lastTestACC, lastLoss):
+        self.EpochDone += 1
+        self.LearningRate.append(LastLearningRate)
+        self.TrainACC.append(LastTrainACC)
+        self.TestACC.append(lastTestACC)
+        self.loss.append(lastLoss)
+    
+    # 保存数据到文件
+    def saveToFile(self, path):
+        self.pack()
+        torch.save(self.datas, path)
+        print('===succesfully saved model!===')
+    
+    # 从文件中读取数据
+    def loadFromFile(self, path):
+        self.datas = torch.load(path,map_location=torch.device(self.device))
+        self.unpack()
+        print('===Load model succesfully!===')
+    # 展示当前存储的模型的数据
+    def show(self):
+        print('===' * 10 + 
+'''\n此模型已经训练了{}个Epoch \n
+目前的训练集准确率为 {:.3f}% \n
+目前的测试集准确率为 {:.3f}% \n'''.format(self.EpochDone, self.TrainACC[-1] * 100, self.TestACC[-1] * 100),'===' * 10)--- SunnyHaze-LeNet5-MNIST-Pytorch/LeNet-5_GPU.py ---
+import os
+from matplotlib.pyplot import imshow
+import torch
+from torch.utils.data import Dataset, DataLoader, TensorDataset
+import numpy as np
+from imports.ParametersManager import *
+
+# 超参数
+BatchSize = 10
+LEARNINGRATE = 0.005
+epochNums = 30
+SaveModelEveryNEpoch = 2 # 每执行多少次保存一个模型
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# 初始化数据转换器，通过索引访问
+# trainXreader = imgReader(rawDataName["trainX"])
+# testXreader = imgReader(rawDataName["testX"])
+# trainYreader = labelReader(rawDataName["trainY"])
+# testYreader = labelReader(rawDataName["testY"])
+
+# 可以将数据线包装为Dataset，然后传入DataLoader中取样
+class MyDataset(Dataset):
+    def __init__(self,SetType) -> None:
+        with open(SetType + 'img.npy','rb') as f:
+            self.images =torch.tensor(np.load(f, allow_pickle=True), dtype=torch.float32)
+        with open(SetType + 'Label.npy','rb') as f:
+            tmp = np.load(f, allow_pickle=True)
+            print(tmp)
+        self.labels=[]
+        for num in tmp:
+             self.labels.append([1 if x == num else 0 for x in range(10)])
+        self.labels = torch.tensor(self.labels, dtype=torch.float32)
+    def __getitem__(self, index):
+        return self.images.unsqueeze(1)[index], self.labels[index]
+    def __len__(self):
+        return len(self.labels)
+    
+# 定义网络结构
+class LeNet_5(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(1,6,kernel_size=5,padding=2),# 原题为三通道，此处转为单通道实现 # C1
+            nn.ReLU(),
+            nn.MaxPool2d(2,2), # S2
+            nn.Conv2d(6,16,5), # C3  原始论文中C3与S2并不是全连接而是部分连接，这样能减少部分计算量。而现代CNN模型中，比如AlexNet，ResNet等，都采取全连接的方式了。我们的实现在这里做了一些简化。
+            nn.ReLU(),
+            nn.MaxPool2d(2,2) # S4
+        )
+        # 然后需要经过变形后，继续进行全连接
+        self.layer2 = nn.Sequential(
+            nn.Linear(16 * 5 * 5, 120), # C5
+            nn.ReLU(),
+            nn.Linear(120, 84),         # F6
+            nn.ReLU(),
+            nn.Linear(84,10), # Output 文章中使用高斯连接，现在方便起见仍然使用全连接
+        )
+    def forward(self,x):
+        x = self.layer1(x) # 执行卷积神经网络部分
+        x = x.view(-1,16 * 5 * 5) # 重新构建向量形状，准备全连接
+        x = self.layer2(x) # 执行全连接部分
+        return x
+
+# 定义准确率函数
+def accuracy(output , label):
+    rightNum = torch.sum(torch.max(label,1)[1].eq(torch.max(output,1)[1]))
+    return rightNum / len(label)
+        
+if __name__ == "__main__":    
+    # 模型实例化        
+    model = LeNet_5()
+    # # 如果有“半成品”则导入参数
+    parManager = ParametersManager(device)
+    if os.path.exists("./model.pt"):
+        parManager.loadFromFile('./model.pt')
+        parManager.setModelParameters(model)
+    else:
+        print('===No pre-trained model found!===')
+
+    model.cuda()
+    criterion = nn.MSELoss(reduction='mean')
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNINGRATE, momentum=0.9)
+    
+    # 构建训练集
+    TrainDataset = MyDataset('Train')
+    # 构建测试集
+    TestDataset = MyDataset('Test')
+    # 构建训练集读取器
+    TrainLoader = DataLoader(TrainDataset,num_workers=8, pin_memory=True, batch_size=BatchSize, sampler= torch.utils.data.sampler.SubsetRandomSampler(range(len(TrainDataset))))
+    # 构建测试集读取器：
+    TestLoader = DataLoader(TestDataset,num_workers=8, pin_memory=True, batch_size=BatchSize, sampler= torch.utils.data.sampler.SubsetRandomSampler(range(len(TestDataset))))
+--- SunnyHaze-LeNet5-MNIST-Pytorch/viewModel.py ---
+from imports.ParametersManager import *
+from matplotlib import pyplot as plt
+parManager = ParametersManager('cuda')
+parManager.loadFromFile('model.pt')
+# 在终端输出最终的两个数据集准确率
+parManager.show()
+
+# 绘制迄今为止的训练准确率图
+plt.figure(figsize=(10,7))
+plt.plot(range(parManager.EpochDone),parManager.TrainACC,marker='*' ,color='r',label='Train')
+plt.plot(range(parManager.EpochDone),parManager.TestACC,marker='*' ,color='b',label='Test')
+
+plt.xlabel('Epochs')
+plt.ylabel('ACC')
+plt.legend()
+plt.title("LeNet-5 on MNIST")
+
+plt.show()=== VTongTV-LeNet-5-scratch (commit 8afbe2e) ===
+VTongTV-LeNet-5-scratch
+VTongTV-LeNet-5-scratch/tests
+VTongTV-LeNet-5-scratch/tests/test_data.py
+VTongTV-LeNet-5-scratch/tests/__init__.py
+VTongTV-LeNet-5-scratch/tests/test_train.py
+VTongTV-LeNet-5-scratch/tests/test_loss.py
+VTongTV-LeNet-5-scratch/tests/test_layers.py
+VTongTV-LeNet-5-scratch/tests/test_network.py
+VTongTV-LeNet-5-scratch/config.py
+VTongTV-LeNet-5-scratch/lenet
+VTongTV-LeNet-5-scratch/lenet/activations.py
+VTongTV-LeNet-5-scratch/lenet/optimizer.py
+VTongTV-LeNet-5-scratch/lenet/loss.py
+VTongTV-LeNet-5-scratch/lenet/__init__.py
+VTongTV-LeNet-5-scratch/lenet/layers.py
+VTongTV-LeNet-5-scratch/lenet/network.py
+VTongTV-LeNet-5-scratch/lenet/connections.py
+VTongTV-LeNet-5-scratch/train.py
+VTongTV-LeNet-5-scratch/evaluate.py
+VTongTV-LeNet-5-scratch/notebooks
+VTongTV-LeNet-5-scratch/notebooks/demo.ipynb
+VTongTV-LeNet-5-scratch/requirements.txt
+VTongTV-LeNet-5-scratch/utils
+VTongTV-LeNet-5-scratch/utils/tensor_ops.py
+VTongTV-LeNet-5-scratch/utils/__init__.py
+VTongTV-LeNet-5-scratch/data
+VTongTV-LeNet-5-scratch/data/loader.py
+VTongTV-LeNet-5-scratch/data/__init__.py
+VTongTV-LeNet-5-scratch/data/pipeline.py
+VTongTV-LeNet-5-scratch/README.md
+VTongTV-LeNet-5-scratch/docs
+VTongTV-LeNet-5-scratch/docs/assets
+VTongTV-LeNet-5-scratch/docs/assets/architecture.svg
+VTongTV-LeNet-5-scratch/docs/assets/lr_schedule.svg
+VTongTV-LeNet-5-scratch/docs/assets/subsample.svg
+VTongTV-LeNet-5-scratch/docs/assets/c3_table.svg
+VTongTV-LeNet-5-scratch/docs/assets/banner.svg
+--- VTongTV-LeNet-5-scratch/config.py ---
+INPUT_SIZE = 32
+KERNEL_SIZE = 5
+POOL_SIZE = 2
+POOL_STRIDE = 2
+
+C1_MAPS = 6
+S2_MAPS = 6
+C3_MAPS = 16
+S4_MAPS = 16
+C5_UNITS = 120
+F6_UNITS = 84
+OUTPUT_UNITS = 10
+
+# derived layer output sizes
+C1_OUTPUT_SIZE = INPUT_SIZE - KERNEL_SIZE + 1  # 28
+S2_OUTPUT_SIZE = C1_OUTPUT_SIZE // POOL_SIZE  # 14
+C3_OUTPUT_SIZE = S2_OUTPUT_SIZE - KERNEL_SIZE + 1  # 10
+S4_OUTPUT_SIZE = C3_OUTPUT_SIZE // POOL_SIZE  # 5
+MNIST_IMAGE_SIZE = 28
+
+BATCH_SIZE = 64
+VALIDATION_SIZE = 5000
+
+LR_SCHEDULE = [
+    (2, 0.0005),
+    (3, 0.0002),
+    (3, 0.0001),
+    (12, 0.00005),
+]
+
+WEIGHT_INIT_SCALE = 2.4
+
+C3_CONNECTION_TABLE = [
+    [1, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 1],
+    [1, 1, 0, 0, 0, 0],
+    [0, 0, 1, 1, 0, 0],
+    [0, 0, 0, 0, 1, 1],
+    [1, 0, 0, 0, 1, 0],
+    [0, 1, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0, 1],
+    [1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1],
+    [1, 1, 0, 0, 1, 0],
+    [0, 0, 1, 1, 0, 1],
+]
+
+RBF_TARGETS = [
+    [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1],
+    [-1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1],
+    [-1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+--- VTongTV-LeNet-5-scratch/data/__init__.py ---
+--- VTongTV-LeNet-5-scratch/data/loader.py ---
+"""mnist dataset loader."""
+
+import gzip
+import os
+
+import numpy as np
+
+import config
+
+
+def parse_idx(filepath):
+    """read a gzipped idx file and return a numpy array."""
+    with gzip.open(filepath, "rb") as f:
+        magic = int.from_bytes(f.read(4), "big")
+        count = int.from_bytes(f.read(4), "big")
+        if magic == 2049:
+            return np.frombuffer(f.read(count), dtype=np.uint8)
+        rows = int.from_bytes(f.read(4), "big")
+        cols = int.from_bytes(f.read(4), "big")
+        return np.frombuffer(f.read(count * rows * cols), dtype=np.uint8).reshape(count, rows, cols)
+
+
+def load_mnist(data_dir="data/raw"):
+    """parse all four mnist files from data_dir.
+
+    returns (train_images, train_labels, test_images, test_labels).
+    """
+    files = config.MNIST_FILES
+    train_images = parse_idx(os.path.join(data_dir, files[0]))
+    train_labels = parse_idx(os.path.join(data_dir, files[1]))
+    test_images = parse_idx(os.path.join(data_dir, files[2]))
+    test_labels = parse_idx(os.path.join(data_dir, files[3]))
+    return train_images, train_labels, test_images, test_labels
+--- VTongTV-LeNet-5-scratch/data/pipeline.py ---
+"""data pipeline for mnist."""
+
+import numpy as np
+
+import config
+
+
+def normalize(images):
+    """scale pixel values from 0-255 to 0-1 float range."""
+    return images.astype(np.float64) / 255.0
+
+
+def pad_images(images):
+    """pad 28x28 images to 32x32 with 2px zero border on each side."""
+    n = images.shape[0]
+    padded = np.zeros((n, config.INPUT_SIZE, config.INPUT_SIZE), dtype=np.float64)
+    padded[:, 2:30, 2:30] = images
+    return padded
+
+
+def preprocess(images):
+    """normalize and pad images in one step."""
+    return pad_images(normalize(images))
+
+
+def train_val_split(images, labels):
+    """split training data into train and validation sets.
+
+    last 5000 images go to validation. the rest for training.
+    """
+    val_images = images[-config.VALIDATION_SIZE:]
+    val_labels = labels[-config.VALIDATION_SIZE:]
+    train_images = images[:-config.VALIDATION_SIZE]
+    train_labels = labels[:-config.VALIDATION_SIZE]
+    return train_images, train_labels, val_images, val_labels
+
+
+def batch_iterator(images, labels, batch_size=None):
+    """yield (images, labels) tuples of batch_size. shuffles each epoch."""
+    if batch_size is None:
+        batch_size = config.BATCH_SIZE
+    n = images.shape[0]
+    indices = np.random.permutation(n)
+    for start in range(0, n, batch_size):
+        idx = indices[start:start + batch_size]
+        yield images[idx], labels[idx]
+
+
+def one_hot(labels, num_classes=None):
+    """convert integer labels to one-hot vectors.
+
+    digit 3 becomes [0,0,0,1,0,0,0,0,0,0].
+    """
+    if num_classes is None:
+        num_classes = config.OUTPUT_UNITS
+    n = labels.shape[0]
+    encoded = np.zeros((n, num_classes))
+    encoded[np.arange(n), labels] = 1.0
+    return encoded
+
+
+def distort_image(image):
+    """apply random affine distortion to a single 28x28 image.
+
+    uses bounded translations, scale, and shear
+    as the paper specifies.
+    """
+    h, w = image.shape
+    dx = np.random.uniform(-2, 2)
+    dy = np.random.uniform(-2, 2)
+    scale = np.random.uniform(0.85, 1.15)
+    hcompress = np.random.uniform(0.85, 1.15)
+    shear = np.random.uniform(-0.1, 0.1)
+    a = scale * hcompress
+    b = scale * shear
+    d = -shear * scale
+    e = scale
+    c = dx
+    f = dy
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float64)
+    src_x = a * xs + b * ys + c
+    src_y = d * xs + e * ys + f
+    src_x = np.clip(src_x, 0, w - 1).astype(np.int32)
+    src_y = np.clip(src_y, 0, h - 1).astype(np.int32)
+    return image[src_y, src_x]
+
+
+def distort_batch(images):
+    """apply a different random distortion to each image in the batch."""
+    distorted = np.zeros_like(images)
+--- VTongTV-LeNet-5-scratch/evaluate.py ---
+"""evaluation utilities for lenet-5."""
+
+import os
+import logging
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+import config
+
+logger = logging.getLogger(__name__)
+from lenet.network import LeNet5
+from data.loader import load_mnist
+from data.pipeline import preprocess
+
+
+def evaluate(network, images, labels):
+    """run forward pass on test set. compute accuracy and confusion matrix.
+
+    returns (accuracy, confusion_matrix).
+    """
+    n = images.shape[0]
+    correct = 0
+    confusion = np.zeros((config.OUTPUT_UNITS, config.OUTPUT_UNITS), dtype=np.int32)
+
+    batch_size = config.BATCH_SIZE
+    for start in range(0, n, batch_size):
+        end = min(start + batch_size, n)
+        batch_img = images[start:end]
+        batch_lbl = labels[start:end]
+        output = network.forward(batch_img)
+        predictions = np.argmax(output, axis=1)
+        correct += (predictions == batch_lbl).sum()
+        for true, pred in zip(batch_lbl, predictions):
+            confusion[true, pred] += 1
+
+    accuracy = correct / n
+    return accuracy, confusion
+
+
+def log_evaluation(accuracy, confusion):
+    """log accuracy and per-class error rates."""
+    logger.info(f"overall accuracy: {accuracy:.4f}")
+    logger.info("\nconfusion matrix:")
+    logger.info(str(confusion))
+    logger.info("\nper-class error rates:")
+    for i in range(config.OUTPUT_UNITS):
+        total = confusion[i].sum()
+        if total > 0:
+            error_rate = 1.0 - confusion[i, i] / total
+            logger.info(f"  digit {i}: {error_rate:.4f}")
+
+
+def most_confused_pairs(confusion, top_k=5):
+    """show which digit pairs get confused most often.
+
+    highlights the 0/0, 4/9, 3/5 confusions that the paper discusses.
+    """
+    pairs = []
+    for i in range(config.OUTPUT_UNITS):
+        for j in range(config.OUTPUT_UNITS):
+            if i != j:
+                pairs.append((i, j, confusion[i, j]))
+    pairs.sort(key=lambda x: x[2], reverse=True)
+    logger.info(f"\ntop {top_k} most confused pairs:")
+    for true, pred, count in pairs[:top_k]:
+        logger.info(f"  true {true} predicted as {pred}: {count} times")
+    return pairs[:top_k]
+
+
+def visualize_feature_maps(network, image, save_dir="outputs"):
+    """plot the activations of each layer for a sample input.
+
+    shows what c1, s2, c3, s4 detect. saves to outputs/.
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    x = image.reshape(1, 1, config.INPUT_SIZE, config.INPUT_SIZE)
+
+    layer_names = ["c1", "tanh_c1", "s2", "tanh_s2", "c3", "tanh_c3", "s4", "tanh_s4"]
+    activations = {}
+    for name in layer_names:
+        x = getattr(network, name).forward(x)
+        activations[name] = x.copy()
+        if name == "tanh_s4":
+            break
+
+    for name, act in activations.items():
+        n_maps = act.shape[1]
+        cols = min(n_maps, 8)
+--- VTongTV-LeNet-5-scratch/lenet/activations.py ---
+"""activation functions for lenet-5."""
+
+import numpy as np
+
+
+class Tanh:
+    """hyperbolic tangent activation. use for c1, s2, c3, s4, c5, f6."""
+
+    def forward(self, x):
+        """apply np.tanh element-wise. stores output for backward pass."""
+        self.output = np.tanh(x)
+        return self.output
+
+    def backward(self, dout):
+        """derivative of tanh is 1 - tanh(x)^2. multiply upstream gradient by this.
+
+        uses the stored output from forward pass.
+        """
+        return dout * (1 - self.output ** 2)
+
+
+class Softmax:
+    """softmax activation for the output layer. use with cross-entropy loss."""
+
+    def forward(self, x):
+        """compute exp(x) / sum(exp(x)) along the class axis.
+
+        subtracts max for numerical stability.
+        """
+        shifted = x - x.max(axis=-1, keepdims=True)
+        exp_x = np.exp(shifted)
+        self.output = exp_x / exp_x.sum(axis=-1, keepdims=True)
+        return self.output
+
+    def backward(self, dout):
+        """softmax backward combined with cross-entropy.
+
+        for cross-entropy + softmax, the combined gradient is just
+        (softmax_output - target). this is the simple case that
+        avoids the full jacobian.
+        """
+        return (self.output - dout)
+--- VTongTV-LeNet-5-scratch/lenet/connections.py ---
+"""c3 connection table helpers for the sparse conv between s2 and c3."""
+
+import config
+
+
+def get_c3_connections():
+    """return the c3 connection table from the paper.
+
+    each row lists which s2 maps feed into the corresponding c3 map.
+    table 1 from lecun et al. 1998.
+    """
+    return config.C3_CONNECTION_TABLE
+
+
+def connected_s2_maps(c3_index):
+    """return the list of s2 map indices that connect to c3 map c3_index."""
+    row = config.C3_CONNECTION_TABLE[c3_index]
+    return [i for i, v in enumerate(row) if v]
+
+
+def num_c3_connections():
+    """count total connections in the c3 layer.
+
+    each connection is one kernel weight. the paper says 1516.
+    """
+    total = 0
+    for row in config.C3_CONNECTION_TABLE:
+        n_connected = sum(row)
+        total += n_connected * config.KERNEL_SIZE * config.KERNEL_SIZE
+    total += config.C3_MAPS  # biases
+    return total
+--- VTongTV-LeNet-5-scratch/lenet/__init__.py ---
+--- VTongTV-LeNet-5-scratch/lenet/layers.py ---
+"""neural network layers for lenet-5."""
+
+import numpy as np
+
+import config
+from utils.tensor_ops import im2col, col2im
+
+
+class ConvLayer:
+    """convolutional layer with optional sparse connections.
+
+    uses im2col to turn convolution into a matrix multiply.
+    """
+
+    def __init__(self, in_maps, out_maps, kernel_size, connection_table=None):
+        """initialize weights with uniform(-2.4/fan_in, 2.4/fan_in) and zero biases."""
+        self.connection_table = connection_table
+        self.kernel_size = kernel_size
+        self.in_maps = in_maps
+        self.out_maps = out_maps
+        self.d_weights = None
+        self.d_bias = None
+
+        if connection_table is not None:
+            n_connected = len(connection_table[0])
+            self.weights = np.zeros((out_maps, n_connected, kernel_size, kernel_size))
+            for i in range(out_maps):
+                fan_in = sum(connection_table[i]) * kernel_size * kernel_size
+                scale = config.WEIGHT_INIT_SCALE / fan_in
+                self.weights[i] = np.random.uniform(-scale, scale, (n_connected, kernel_size, kernel_size))
+        else:
+            fan_in = in_maps * kernel_size * kernel_size
+            scale = config.WEIGHT_INIT_SCALE / fan_in
+            self.weights = np.random.uniform(-scale, scale, (out_maps, in_maps, kernel_size, kernel_size))
+        self.bias = np.zeros(out_maps)
+
+    def forward(self, x):
+        """conv forward pass. reshape input with im2col, then matrix multiply.
+
+        5x5 kernel, stride 1, no padding. output shape: (batch, n_filters, h_out, w_out).
+        """
+        self.input = x
+        n, c, h, w = x.shape
+        k = self.kernel_size
+        out_h = h - k + 1
+        out_w = w - k + 1
+        output = np.zeros((n, self.out_maps, out_h, out_w))
+        for i in range(self.out_maps):
+            if self.connection_table is not None:
+                connected = [j for j in range(self.in_maps) if self.connection_table[i][j]]
+                w_slice = self.weights[i, :len(connected)]
+                x_slice = x[:, connected]
+                cols = im2col(x_slice, k, k)
+                w_col = w_slice.reshape(-1)
+                output[:, i] = (cols.transpose(0, 2, 1) @ w_col).reshape(n, out_h, out_w) + self.bias[i]
+            else:
+                cols = im2col(x, k, k)
+                w_col = self.weights[i].reshape(-1)
+                output[:, i] = (cols.transpose(0, 2, 1) @ w_col).reshape(n, out_h, out_w) + self.bias[i]
+        return output
+
+    def backward(self, dout):
+        """conv backward pass. computes kernel and input gradients via im2col/col2im."""
+        n, c_out, out_h, out_w = dout.shape
+        k = self.kernel_size
+        self.d_weights = np.zeros_like(self.weights)
+        self.d_bias = np.zeros(self.out_maps)
+        dx = np.zeros_like(self.input)
+
+        for i in range(self.out_maps):
+            self.d_bias[i] = dout[:, i].sum()
+            dout_i = dout[:, i].reshape(n, out_h * out_w)  # (n, out_h*out_w)
+
+            if self.connection_table is not None:
+                connected = [j for j in range(self.in_maps) if self.connection_table[i][j]]
+                x_slice = self.input[:, connected]
+                cols = im2col(x_slice, k, k)  # (n, c_in*kh*kw, out_h*out_w)
+                w_col = self.weights[i, :len(connected)].reshape(-1)  # (c_in*kh*kw,)
+
+                # kernel gradient: cols[b] @ dout_i[b] gives weight gradient for each batch
+                dw = np.zeros_like(self.weights[i, :len(connected)])
+                for b in range(n):
+                    dw += (cols[b] @ dout_i[b]).reshape(self.weights[i, :len(connected)].shape)
+                self.d_weights[i, :len(connected)] = dw
+
+                # input gradient
+                dx_slice = col2im((w_col[np.newaxis, :, np.newaxis] * dout_i[:, np.newaxis, :]).reshape(n, -1, out_h * out_w), x_slice.shape, k, k)
+                for idx, j in enumerate(connected):
+                    dx[:, j] += dx_slice[:, idx]
+            else:
+--- VTongTV-LeNet-5-scratch/lenet/loss.py ---
+"""loss functions for lenet-5."""
+
+import numpy as np
+
+import config
+
+
+class RBFLoss:
+    """euclidean radial basis function loss from the paper.
+
+    each output unit computes squared euclidean distance
+    between f6 output and a fixed target vector for that class.
+    """
+
+    def forward(self, f6_output, labels):
+        """compute rbf output and loss.
+
+        f6_output: (batch, 84). labels: integer array (batch,).
+        returns (loss, rbf_output) where rbf_output is (batch, 10).
+        """
+        self.f6_output = f6_output
+        self.labels = labels
+        targets = np.array(config.RBF_TARGETS)  # (10, 84)
+        self.targets = targets
+        diff = f6_output[:, np.newaxis, :] - targets[np.newaxis, :, :]  # (batch, 10, 84)
+        rbf_output = (diff ** 2).sum(axis=2)  # (batch, 10)
+        self.rbf_output = rbf_output
+        self.diff = diff
+        loss = rbf_output.sum(axis=1).mean()
+        return loss, rbf_output
+
+    def backward(self):
+        """gradient of loss w.r.t. f6 output."""
+        grad = 2.0 * self.diff.sum(axis=1) / self.f6_output.shape[0]  # (batch, 84)
+        return grad
+
+
+class CrossEntropyLoss:
+    """cross-entropy loss with softmax. simpler alternative for debugging."""
+
+    def forward(self, f6_output, labels):
+        """compute softmax + cross-entropy loss.
+
+        f6_output: (batch, 84). labels: integer array (batch,).
+        returns (loss, softmax_output) where softmax_output is (batch, 84).
+        """
+        self.f6_output = f6_output
+        self.labels = labels
+        shifted = f6_output - f6_output.max(axis=-1, keepdims=True)
+        exp_x = np.exp(shifted)
+        self.softmax_out = exp_x / exp_x.sum(axis=-1, keepdims=True)
+        n = f6_output.shape[0]
+        log_probs = np.log(self.softmax_out[np.arange(n), labels] + 1e-12)
+        loss = -log_probs.mean()
+        return loss, self.softmax_out
+
+    def backward(self):
+        """gradient of cross-entropy + softmax w.r.t. f6 output.
+
+        combined gradient is (softmax_output - one_hot_target) / batch_size.
+        """
+        n = self.f6_output.shape[0]
+        grad = self.softmax_out.copy()
+        grad[np.arange(n), self.labels] -= 1.0
+        grad /= n
+        return grad
+--- VTongTV-LeNet-5-scratch/lenet/network.py ---
+"""lenet-5 network architecture."""
+
+import numpy as np
+
+import config
+from lenet.layers import ConvLayer, SubsampleLayer, FCLayer
+from lenet.activations import Tanh
+from lenet.connections import get_c3_connections
+
+
+class LeNet5:
+    """lenet-5 network as described in lecun et al. 1998.
+
+    layers: c1, s2, c3, s4, c5, f6, output.
+    forward pass calls each in sequence.
+    """
+
+    def __init__(self):
+        """build all layers in order: c1, s2, c3, s4, c5, f6."""
+        self.c1 = ConvLayer(1, config.C1_MAPS, config.KERNEL_SIZE)
+        self.tanh_c1 = Tanh()
+        self.s2 = SubsampleLayer(config.S2_MAPS)
+        self.tanh_s2 = Tanh()
+        c3_table = get_c3_connections()
+        self.c3 = ConvLayer(config.S2_MAPS, config.C3_MAPS, config.KERNEL_SIZE, connection_table=c3_table)
+        self.tanh_c3 = Tanh()
+        self.s4 = SubsampleLayer(config.S4_MAPS)
+        self.tanh_s4 = Tanh()
+        self.c5 = ConvLayer(config.S4_MAPS, config.C5_UNITS, config.KERNEL_SIZE)
+        self.tanh_c5 = Tanh()
+        self.f6 = FCLayer(config.C5_UNITS, config.F6_UNITS)
+        self.tanh_f6 = Tanh()
+
+        self.layers = [
+            self.c1, self.tanh_c1,
+            self.s2, self.tanh_s2,
+            self.c3, self.tanh_c3,
+            self.s4, self.tanh_s4,
+            self.c5, self.tanh_c5,
+            self.f6, self.tanh_f6,
+        ]
+
+    def forward(self, x):
+        """end-to-end forward pass.
+
+        input goes through c1->s2->c3->s4->c5->f6.
+        shapes: 32x32->28x28->14x14->10x10->5x5->120->84.
+        matches the paper.
+        """
+        x = x.reshape(x.shape[0], 1, config.INPUT_SIZE, config.INPUT_SIZE)
+        self.flatten_after = {}
+        for idx, layer in enumerate(self.layers):
+            x = layer.forward(x)
+            if hasattr(x, 'shape') and len(x.shape) == 4 and x.shape[2] == 1 and x.shape[3] == 1:
+                self.flatten_after[idx] = x.shape
+                x = x.reshape(x.shape[0], -1)
+        return x
+
+    def backward(self, dout):
+        """end-to-end backward pass. calls backward on each layer in reverse.
+
+        passes gradient from one layer to the next. stores all weight
+        and bias gradients on each layer object. unflattens when needed.
+        """
+        for idx in range(len(self.layers) - 1, -1, -1):
+            if idx in self.flatten_after:
+                orig_shape = self.flatten_after[idx]
+                dout = dout.reshape(orig_shape)
+            dout = self.layers[idx].backward(dout)
+        return dout
+
+    def reinitialize_weights(self):
+        """reset all weights per the paper's scheme.
+
+        weights drawn from uniform(-2.4/fan_in, 2.4/fan_in).
+        biases set to zero. fan_in is the number of inputs to a unit.
+        """
+        self.__init__()
+--- VTongTV-LeNet-5-scratch/lenet/optimizer.py ---
+"""sgd optimizer with momentum and staged learning rate decay."""
+
+import numpy as np
+
+import config
+
+
+class SGD:
+    """stochastic gradient descent with momentum and the paper's lr schedule.
+
+    the paper uses: dw(t) = momentum * dw(t-1) - lr * grad
+    lr schedule: 0.0005 for first 2 passes, 0.0002 for next 3,
+    0.0001 for next 3, 0.00005 for rest.
+    """
+
+    def __init__(self, network, momentum=0.9):
+        """initialize velocity buffers for each layer."""
+        self.network = network
+        self.epoch = 0
+        self.momentum = momentum
+        self.schedule = config.LR_SCHEDULE
+        self.velocities = {}
+        for name in ['c1', 's2', 'c3', 's4', 'c5', 'f6']:
+            layer = getattr(network, name)
+            self.velocities[(name, 'w')] = np.zeros_like(layer.weights)
+            self.velocities[(name, 'b')] = np.zeros_like(layer.bias)
+
+    def get_lr(self):
+        """return the learning rate for the current epoch."""
+        cumulative = 0
+        for num_epochs, lr in self.schedule:
+            cumulative += num_epochs
+            if self.epoch < cumulative:
+                return lr
+        return self.schedule[-1][1]
+
+    def step(self):
+        """update all weights and biases with sgd and momentum.
+
+        dw(t) = momentum * dw(t-1) - lr * grad
+        w += dw(t)
+        """
+        lr = self.get_lr()
+        for name in ['c1', 's2', 'c3', 's4', 'c5', 'f6']:
+            layer = getattr(self.network, name)
+            if layer.d_weights is not None:
+                vw = self.velocities[(name, 'w')]
+                vw[:] = self.momentum * vw - lr * layer.d_weights
+                layer.weights += vw
+            if layer.d_bias is not None:
+                vb = self.velocities[(name, 'b')]
+                vb[:] = self.momentum * vb - lr * layer.d_bias
+                layer.bias += vb
+--- VTongTV-LeNet-5-scratch/tests/__init__.py ---
+--- VTongTV-LeNet-5-scratch/tests/test_data.py ---
+"""sanity checks for mnist data load and preprocess."""
+
+import numpy as np
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from data.loader import load_mnist
+from data.pipeline import preprocess, train_val_split, batch_iterator, one_hot
+import config
+
+
+def test_mnist_shapes():
+    """load mnist and check that shapes are correct after preprocess."""
+    train_images, train_labels, test_images, test_labels = load_mnist()
+    assert train_images.shape == (60000, config.MNIST_IMAGE_SIZE, config.MNIST_IMAGE_SIZE)
+    assert train_labels.shape == (60000,)
+    assert test_images.shape == (10000, config.MNIST_IMAGE_SIZE, config.MNIST_IMAGE_SIZE)
+    assert test_labels.shape == (10000,)
+
+
+def test_preprocess_padding():
+    """preprocessed images are 32x32."""
+    dummy = np.random.randint(0, 255, (10, config.MNIST_IMAGE_SIZE, config.MNIST_IMAGE_SIZE), dtype=np.uint8)
+    out = preprocess(dummy)
+    assert out.shape == (10, config.INPUT_SIZE, config.INPUT_SIZE)
+    assert out.min() >= 0.0
+    assert out.max() <= 1.0
+
+
+def test_normalize_range():
+    """normalized pixels are in 0-1 range."""
+    dummy = np.random.randint(0, 255, (5, config.MNIST_IMAGE_SIZE, config.MNIST_IMAGE_SIZE), dtype=np.uint8)
+    out = preprocess(dummy)
+    assert out.min() >= 0.0
+    assert out.max() <= 1.0
+
+
+def test_padding_preserves_content():
+    """center of padded image matches original after normalize."""
+    dummy = np.full((1, config.MNIST_IMAGE_SIZE, config.MNIST_IMAGE_SIZE), 255, dtype=np.uint8)
+    out = preprocess(dummy)
+    assert out[0, 2, 2] == 1.0
+    assert out[0, 0, 0] == 0.0
+
+
+def test_train_val_split():
+    """split gives 55000 train and 5000 val."""
+    images = np.zeros((60000, config.MNIST_IMAGE_SIZE, config.MNIST_IMAGE_SIZE))
+    labels = np.zeros(60000, dtype=np.int32)
+    train_img, train_lbl, val_img, val_lbl = train_val_split(images, labels)
+    assert train_img.shape[0] == 55000
+    assert val_img.shape[0] == 5000
+
+
+def test_batch_iterator():
+    """batch iterator yields correct batch sizes."""
+    images = np.zeros((100, 32, 32))
+    labels = np.zeros(100, dtype=np.int32)
+    batches = list(batch_iterator(images, labels, batch_size=32))
+    assert len(batches) == 4
+    assert batches[0][0].shape[0] == 32
+
+
+def test_one_hot():
+    """one-hot encode produces correct vectors."""
+    labels = np.array([0, 3, 9])
+    encoded = one_hot(labels)
+    assert encoded.shape == (3, config.OUTPUT_UNITS)
+    assert encoded[0, 0] == 1.0
+    assert encoded[1, 3] == 1.0
+    assert encoded[2, 9] == 1.0
+    assert encoded.sum() == 3.0
+--- VTongTV-LeNet-5-scratch/tests/test_layers.py ---
+"""tests for layer forward passes."""
+
+import numpy as np
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from lenet.layers import ConvLayer, SubsampleLayer, FCLayer
+import config
+
+
+def test_subsample_output_shape():
+    """6@28x28 input gives 6@14x14. pool 2x2 on 28x28 gives 14x14."""
+    layer = SubsampleLayer(n_maps=config.S2_MAPS)
+    x = np.random.randn(2, config.S2_MAPS, config.C1_OUTPUT_SIZE, config.C1_OUTPUT_SIZE)
+    out = layer.forward(x)
+    assert out.shape == (2, config.S2_MAPS, config.S2_OUTPUT_SIZE, config.S2_OUTPUT_SIZE)
+
+
+def test_fc_output_shape():
+    """120-unit input to 84-unit output gives (batch, 84). weight matrix is (84, 120)."""
+    layer = FCLayer(in_size=config.C5_UNITS, out_size=config.F6_UNITS)
+    x = np.random.randn(4, config.C5_UNITS)
+    out = layer.forward(x)
+    assert out.shape == (4, config.F6_UNITS)
+
+
+def test_subsample_gradient():
+    """subsample backward gradients match finite differences within 1e-5."""
+    np.random.seed(42)
+    layer = SubsampleLayer(n_maps=3)
+    x = np.random.randn(2, 3, 8, 8)
+    out = layer.forward(x)
+    dout = np.random.randn(*out.shape)
+    dx = layer.backward(dout)
+    eps = 1e-5
+    numeric = np.zeros_like(x)
+    for b in range(x.shape[0]):
+        for c in range(x.shape[1]):
+            for i in range(x.shape[2]):
+                for j in range(x.shape[3]):
+                    x[b, c, i, j] += eps
+                    out_plus = layer.forward(x)
+                    x[b, c, i, j] -= 2 * eps
+                    out_minus = layer.forward(x)
+                    x[b, c, i, j] += eps
+                    numeric[b, c, i, j] = ((out_plus - out_minus) * dout).sum() / (2 * eps)
+    diff = np.abs(dx - numeric).max()
+    assert diff < 1e-5, f"subsample gradient check failed: max diff = {diff}"
+
+
+def test_conv_gradient():
+    """conv kernel and input gradients match finite differences within 1e-5."""
+    np.random.seed(42)
+    layer = ConvLayer(2, 3, 3)
+    x = np.random.randn(2, 2, 6, 6)
+    out = layer.forward(x)
+    dout = np.random.randn(*out.shape)
+    dx = layer.backward(dout)
+    eps = 1e-5
+
+    # check input gradient
+    numeric_x = np.zeros_like(x)
+    for b in range(x.shape[0]):
+        for c in range(x.shape[1]):
+            for i in range(x.shape[2]):
+                for j in range(x.shape[3]):
+                    x[b, c, i, j] += eps
+                    out_plus = layer.forward(x)
+                    x[b, c, i, j] -= 2 * eps
+                    out_minus = layer.forward(x)
+                    x[b, c, i, j] += eps
+                    numeric_x[b, c, i, j] = ((out_plus - out_minus) * dout).sum() / (2 * eps)
+    diff = np.abs(dx - numeric_x).max()
+    assert diff < 1e-5, f"conv input gradient check failed: max diff = {diff}"
+
+    # check weight gradient
+    numeric_w = np.zeros_like(layer.weights)
+    for f in range(layer.weights.shape[0]):
+        for c in range(layer.weights.shape[1]):
+            for i in range(layer.weights.shape[2]):
+                for j in range(layer.weights.shape[3]):
+                    layer.weights[f, c, i, j] += eps
+                    out_plus = layer.forward(x)
+                    layer.weights[f, c, i, j] -= 2 * eps
+                    out_minus = layer.forward(x)
+                    layer.weights[f, c, i, j] += eps
+                    numeric_w[f, c, i, j] = ((out_plus - out_minus) * dout).sum() / (2 * eps)
+    diff_w = np.abs(layer.d_weights - numeric_w).max()
+--- VTongTV-LeNet-5-scratch/tests/test_loss.py ---
+"""tests for loss function gradients."""
+
+import numpy as np
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from lenet.loss import RBFLoss, CrossEntropyLoss
+import config
+
+
+def numerical_gradient(loss_fn, f6_output, labels, eps=1e-5):
+    """compute numerical gradient with finite differences."""
+    grad = np.zeros_like(f6_output)
+    for i in range(f6_output.shape[0]):
+        for j in range(f6_output.shape[1]):
+            orig = f6_output[i, j]
+            f6_output[i, j] = orig + eps
+            loss_plus, _ = loss_fn.forward(f6_output, labels)
+            f6_output[i, j] = orig - eps
+            loss_minus, _ = loss_fn.forward(f6_output, labels)
+            f6_output[i, j] = orig
+            grad[i, j] = (loss_plus - loss_minus) / (2 * eps)
+    return grad
+
+
+def test_rbf_gradient():
+    """rbf loss analytical gradient matches numerical gradient within 1e-5."""
+    np.random.seed(42)
+    f6_output = np.random.randn(4, config.F6_UNITS)
+    labels = np.array([0, 3, 7, 9])
+    loss_fn = RBFLoss()
+    loss_fn.forward(f6_output.copy(), labels)
+    analytic = loss_fn.backward()
+    numeric = numerical_gradient(loss_fn, f6_output.copy(), labels)
+    diff = np.abs(analytic - numeric).max()
+    assert diff < 1e-5, f"rbf gradient check failed: max diff = {diff}"
+
+
+def test_cross_entropy_gradient():
+    """cross-entropy analytical gradient matches numerical within 1e-5."""
+    np.random.seed(42)
+    f6_output = np.random.randn(4, config.F6_UNITS)
+    labels = np.array([0, 3, 7, 9])
+    loss_fn = CrossEntropyLoss()
+    loss_fn.forward(f6_output.copy(), labels)
+    analytic = loss_fn.backward()
+    numeric = numerical_gradient(loss_fn, f6_output.copy(), labels)
+    diff = np.abs(analytic - numeric).max()
+    assert diff < 1e-5, f"cross-entropy gradient check failed: max diff = {diff}"
+--- VTongTV-LeNet-5-scratch/tests/test_network.py ---
+"""tests for the lenet-5 network."""
+
+import numpy as np
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from lenet.network import LeNet5
+import config
+
+
+def test_output_shape_each_layer():
+    """feeds random 32x32 input and checks shape after each layer."""
+    net = LeNet5()
+    x = np.random.randn(2, 32, 32)
+    x = x.reshape(2, 1, config.INPUT_SIZE, config.INPUT_SIZE)
+
+    x = net.c1.forward(x)
+    assert x.shape == (2, config.C1_MAPS, config.C1_OUTPUT_SIZE, config.C1_OUTPUT_SIZE)
+    x = net.tanh_c1.forward(x)
+    assert x.shape == (2, config.C1_MAPS, config.C1_OUTPUT_SIZE, config.C1_OUTPUT_SIZE)
+
+    x = net.s2.forward(x)
+    assert x.shape == (2, config.S2_MAPS, config.S2_OUTPUT_SIZE, config.S2_OUTPUT_SIZE)
+    x = net.tanh_s2.forward(x)
+    assert x.shape == (2, config.S2_MAPS, config.S2_OUTPUT_SIZE, config.S2_OUTPUT_SIZE)
+
+    x = net.c3.forward(x)
+    assert x.shape == (2, config.C3_MAPS, config.C3_OUTPUT_SIZE, config.C3_OUTPUT_SIZE)
+    x = net.tanh_c3.forward(x)
+    assert x.shape == (2, config.C3_MAPS, config.C3_OUTPUT_SIZE, config.C3_OUTPUT_SIZE)
+
+    x = net.s4.forward(x)
+    assert x.shape == (2, config.S4_MAPS, config.S4_OUTPUT_SIZE, config.S4_OUTPUT_SIZE)
+    x = net.tanh_s4.forward(x)
+    assert x.shape == (2, config.S4_MAPS, config.S4_OUTPUT_SIZE, config.S4_OUTPUT_SIZE)
+
+    x = net.c5.forward(x)
+    assert x.shape == (2, config.C5_UNITS, 1, 1)
+    x = net.tanh_c5.forward(x)
+    assert x.shape == (2, config.C5_UNITS, 1, 1)
+    x = x.reshape(2, -1)
+
+    x = net.f6.forward(x)
+    assert x.shape == (2, config.F6_UNITS)
+    x = net.tanh_f6.forward(x)
+    assert x.shape == (2, config.F6_UNITS)
+
+
+def test_forward_pass_random_input():
+    """end-to-end forward pass produces (batch, 84) output. no crashes, no nans."""
+    net = LeNet5()
+    x = np.random.randn(4, 32, 32)
+    out = net.forward(x)
+    assert out.shape == (4, config.F6_UNITS)
+    assert np.all(np.isfinite(out))
+
+
+def test_backward_pass():
+    """runs forward then backward on a small batch. checks gradients exist, are finite, and have right shapes."""
+    np.random.seed(42)
+    net = LeNet5()
+    x = np.random.randn(2, 32, 32)
+    out = net.forward(x)
+    dout = np.random.randn(*out.shape)
+    dx = net.backward(dout)
+    assert dx is not None
+    assert np.all(np.isfinite(dx))
+    assert dx.shape == (2, 1, config.INPUT_SIZE, config.INPUT_SIZE)
+    for layer in net.layers:
+        if hasattr(layer, 'd_weights') and layer.d_weights is not None:
+            assert np.all(np.isfinite(layer.d_weights))
+        if hasattr(layer, 'd_bias') and layer.d_bias is not None:
+            assert np.all(np.isfinite(layer.d_bias))
+--- VTongTV-LeNet-5-scratch/tests/test_train.py ---
+"""tests for the train pipeline."""
+
+import numpy as np
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from lenet.network import LeNet5
+from lenet.loss import RBFLoss
+from lenet.optimizer import SGD
+import config
+
+
+def test_train_small_subset():
+    """train on a small subset for 2 epochs. loss decreases, accuracy exceeds random."""
+    np.random.seed(42)
+    network = LeNet5()
+    loss_fn = RBFLoss()
+    optimizer = SGD(network)
+
+    # create tiny synthetic dataset
+    n = 100
+    images = np.random.randn(n, config.INPUT_SIZE, config.INPUT_SIZE)
+    labels = np.random.randint(0, config.OUTPUT_UNITS, n)
+
+    losses = []
+    for epoch in range(2):
+        optimizer.epoch = epoch
+        output = network.forward(images)
+        loss, _ = loss_fn.forward(output, labels)
+        grad = loss_fn.backward()
+        network.backward(grad)
+        optimizer.step()
+        losses.append(loss)
+
+    assert losses[1] < losses[0], f"loss did not decrease: {losses[0]} -> {losses[1]}"
+    assert losses[1] > 0, "loss should be positive"
+
+    # accuracy is at least as good as random (10%)
+    output = network.forward(images)
+    predictions = np.argmax(output, axis=1)
+    accuracy = (predictions == labels).mean()
+    assert accuracy > 0.0, "accuracy is above zero"
+--- VTongTV-LeNet-5-scratch/train.py ---
+"""train loop for lenet-5."""
+
+import logging
+import numpy as np
+
+import config
+from lenet.network import LeNet5
+from lenet.optimizer import SGD
+from lenet.loss import RBFLoss
+from data.loader import load_mnist
+from data.pipeline import preprocess, train_val_split, batch_iterator, one_hot, distort_batch
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def train(network=None, epochs=20, loss_fn=None):
+    """train lenet-5 on mnist.
+
+    iterates over epochs. each epoch: forward pass, loss, backward
+    pass, sgd update. logs loss every 100 batches.
+    """
+    if network is None:
+        network = LeNet5()
+    if loss_fn is None:
+        loss_fn = RBFLoss()
+
+    optimizer = SGD(network)
+    train_images, train_labels, test_images, test_labels = load_mnist()
+    train_images = preprocess(train_images)
+    test_images = preprocess(test_images)
+    train_img, train_lbl, val_img, val_lbl = train_val_split(train_images, train_labels)
+
+    for epoch in range(epochs):
+        optimizer.epoch = epoch
+        epoch_loss = 0.0
+        n_batches = 0
+        for batch_img, batch_lbl in batch_iterator(train_img, train_lbl):
+            batch_img_28 = batch_img[:, 2:30, 2:30]  # undo padding for distortion
+            batch_img_dist = distort_batch(batch_img_28)
+            batch_img_padded = np.zeros((batch_img_dist.shape[0], config.INPUT_SIZE, config.INPUT_SIZE))
+            batch_img_padded[:, 2:30, 2:30] = batch_img_dist
+            batch_img = batch_img_padded
+
+            output = network.forward(batch_img)
+            loss, rbf_out = loss_fn.forward(output, batch_lbl)
+            grad = loss_fn.backward()
+            network.backward(grad)
+            optimizer.step()
+
+            epoch_loss += loss
+            n_batches += 1
+            if n_batches % 100 == 0:
+                logger.info(f"epoch {epoch+1} batch {n_batches} loss: {loss:.4f}")
+
+        avg_loss = epoch_loss / n_batches
+        logger.info(f"epoch {epoch+1} done. avg loss: {avg_loss:.4f} lr: {optimizer.get_lr()}")
+
+    return network
+
+
+if __name__ == "__main__":
+    network = LeNet5()
+    network = train(network, epochs=20)
+    train_images, train_labels, test_images, test_labels = load_mnist()
+    test_images = preprocess(test_images)
+    from evaluate import evaluate, log_evaluation, most_confused_pairs
+    accuracy, confusion = evaluate(network, test_images, test_labels)
+    log_evaluation(accuracy, confusion)
+    most_confused_pairs(confusion)
+--- VTongTV-LeNet-5-scratch/utils/__init__.py ---
+--- VTongTV-LeNet-5-scratch/utils/tensor_ops.py ---
+"""tensor operation utilities for efficient convolution."""
+
+import numpy as np
+
+
+def im2col(x, kh, kw, stride=1):
+    """extract overlapping patches from x and stack as columns.
+
+    turns a convolution into a matrix multiply.
+    x shape: (batch, channels, height, width).
+    returns shape: (batch, channels * kh * kw, out_h * out_w).
+    """
+    n, c, h, w = x.shape
+    out_h = (h - kh) // stride + 1
+    out_w = (w - kw) // stride + 1
+    cols = np.zeros((n, c, kh, kw, out_h, out_w))
+    for i in range(kh):
+        i_max = i + stride * out_h
+        for j in range(kw):
+            j_max = j + stride * out_w
+            cols[:, :, i, j, :, :] = x[:, :, i:i_max:stride, j:j_max:stride]
+    cols = cols.reshape(n, c * kh * kw, out_h * out_w)
+    return cols
+
+
+def col2im(cols, x_shape, kh, kw, stride=1):
+    """reverse of im2col. accumulates values back into the original shape.
+
+    use for backprop through conv layers.
+    cols shape: (batch, channels * kh * kw, out_h * out_w).
+    returns shape: (batch, channels, height, width).
+    """
+    n, c, h, w = x_shape
+    out_h = (h - kh) // stride + 1
+    out_w = (w - kw) // stride + 1
+    cols = cols.reshape(n, c, kh, kw, out_h, out_w)
+    x = np.zeros(x_shape)
+    for i in range(kh):
+        i_max = i + stride * out_h
+        for j in range(kw):
+            j_max = j + stride * out_w
+            x[:, :, i:i_max:stride, j:j_max:stride] += cols[:, :, i, j, :, :]
+    return x
+FINISHED
+FINISHED rc=0
