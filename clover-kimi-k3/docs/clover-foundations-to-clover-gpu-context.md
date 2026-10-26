@@ -168,6 +168,38 @@ We do **not** force a paper into Clover where Clover already has a strictly stro
 - **Growth:**
   - Whenever Krizhevsky's LRN $x / (k + \alpha x^2)^\beta$ is applied with $\beta > 0.5$, the input range must stay strictly below the calculus turnover point $x^* = \sqrt{k / ((2\beta - 1)\alpha)}$; exceeding $x^*$ flips $f'(x) < 0$ and suppresses the strongest signal below weaker competitors.
 
+---
+
+### Cycle 7: Branch Reconciliation (`origin/main` `844f7aa`), Checkout-Relative Import Provenance, and Controlled 2-Arm End-to-End GPU Evaluation (`bench_foundations_e2e_ab.py`)
+
+- **Context (External Review Findings):**
+  1. **Branch divergence (`844f7aa`):** `origin/main` advanced by 1 commit (`844f7aa`, *Make Clover Kimi K3 + HybridAgent + NCM self-contained for both GPU and CPU servers and add Hugging Face dataset sync*, 99 files).
+  2. **Verification gap in `cycle1..cycle6` imports:** `cycle1_mp1943_mp1969_eval.py` through `cycle6_krizhevsky2012_vaswani2017_eval.py` originally called `sys.path.insert(0, "/home/usergpu/merge_lf")`, importing the deployed server directory rather than the git checkout directory `Path(__file__).resolve().parent`.
+  3. **Three-tier evidence distinction:** Standalone paper reproduction and isolated mechanism tests do not automatically prove end-to-end Clover benefit unless a controlled 2-arm evaluation (`Foundations Disabled` vs. `Foundations Enabled`) is run from the exact git checkout on `gpu`.
+- **Direction & Execution on `gpu` (`/home/usergpu/clover-framework-foundations` at `abb4bb482fc792ed33205b470a39a6de4695649f`):**
+  1. Merged `origin/main` (`844f7aa`) cleanly into `foundations-research` (`0` conflicts; `foundations-research` is now `0` commits behind `origin/main`).
+  2. Replaced `sys.path.insert(0, "/home/usergpu/merge_lf")` in all 6 cycle scripts (`cycle1..cycle6`) and in [bench_foundations_e2e_ab.py](../src/tools/hybrid-ncm-k3/bench_foundations_e2e_ab.py) with `_SCRIPT_DIR = Path(__file__).resolve().parent; sys.path.insert(0, str(_SCRIPT_DIR))`, and added `code_provenance` logging (`git_head_sha`, `k3_ontology_graph.__file__`, `k3_memory_graph.__file__`, `k3_generative_compiler.__file__`, and their SHA-256 digests).
+  3. Cloned `origin/foundations-research` directly onto `gpu` at `/home/usergpu/clover-framework-foundations` and ran `test_k3_memory_graph.py`, `cycle1..cycle6`, and `bench_foundations_e2e_ab.py` from that checkout.
+  4. *In-Situ Discovery Caught by `bench_foundations_e2e_ab.py` (`E2E_1..E2E_3`):*
+     - In `retrieve_context_package`, even after `multihead_lrn_subspace_retrieve` or `_apply_rosenblatt_gamma_normalization` selected the right 3 subspace/cross-branch seeds, Step 4 (`superseded_by` automatic pairing) immediately paired the #1 seed with its superseded hypothesis, consuming 2 of the 3 item slots (`max_entries = 3`) and pushing the 3rd subspace/minority-branch seed out of `selected_items` (`0/3` passed on `E2E_1..3` in the first run!).
+     - Protecting 1 slot per subspace head / $\gamma$-lifted minority-branch seed when `max_entries <= 3` (`protect_subspace_quotas` in `k3_memory_graph.py`) and including `trace_evolution_chain` outcomes in `multihead_lrn_subspace_retrieve` raised `E2E_1..E2E_6` pass rate from **`0 / 6` (`0.0%`, Arm A Disabled) to `6 / 6` (`100.0%`, Arm B Enabled)** while keeping `16 / 16` positive recall and `0 / 16` false positives.
+- **Outcome (Measured on `gpu`, `cuda:7`, Git SHA `abb4bb482fc792ed33205b470a39a6de4695649f`):**
+  - **Exact Code Provenance Verified on `gpu`:**
+    - `git_head_sha`: `abb4bb482fc792ed33205b470a39a6de4695649f` (`foundations-research`, merged with `origin/main` `844f7aa`)
+    - `k3_ontology_graph_file`: `/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_ontology_graph.py` (`sha256[:12] = e2841b158eb1`)
+    - `k3_memory_graph_file`: `/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_memory_graph.py` (`sha256[:12] = c6fc651ba909`)
+    - `k3_generative_compiler_file`: `/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_generative_compiler.py` (`sha256[:12] = ef043767b85a`)
+
+  | Metric (`bench_foundations_e2e_ab.py` on `cuda:7`) | Arm A: Foundations Disabled (Pre-Cycle-1..6 Baseline) | Arm B: Foundations Enabled (Cycles 1..6 Active) |
+  | :--- | :---: | :---: |
+  | **Out-of-Domain / One-in-a-Box Stress False Positives (`N=16`)** | `16 / 16` (`100.0%` FP) | **`0 / 16` (`0.0%` FP)** |
+  | **Polluted Irrelevant Context Tokens Injected** | `9,244` tokens | **`0` tokens (`-100.0%`)** |
+  | **Positive Ontology + Memory Recall (`N=16`)** | `16 / 16` (`100.0%`) | **`16 / 16` (`100.0%`)** |
+  | **Tight-Budget (`max_entries=3`) End-to-End Tasks (`E2E_1..E2E_6`)** | `0 / 6` (`0.0%`) | **`6 / 6` (`100.0%`)** |
+  | **Live 93-Layer GPU Server Queries (`2,576` experts, `93` trunks)** | — | **`2 / 2` (`100.0%`, `0` optics pollution)** |
+  | **`test_k3_memory_graph.py` Unit Suites (`N=11`)** | — | **`11 / 11` (`OK` in `6.32s`)** |
+
+
 
 
 
