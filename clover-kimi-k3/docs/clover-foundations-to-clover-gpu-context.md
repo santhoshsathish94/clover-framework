@@ -260,6 +260,67 @@ We do **not** force a paper into Clover where Clover already has a strictly stro
   - **Data Movement Ledger (`specmd_least_stale_r4`):** `95.22%` overall VRAM hit rate, `86.09%` dynamic `CardPool` hit rate, `14,050` `R4` clean drops, `30,802` cross-layer lookahead hits, Eyeriss cost/req = `8.998`.
   - **Mechanism-Level Foundations A/B Test (`bench_foundations_e2e_ab.py`):** Arm A (Disabled) = `16/16` stress FP (`9,244` polluted tokens) & `0/6` tight-budget E2E vs. Arm B (Enabled) = **`0/16` stress FP (`0` polluted tokens), `16/16` positive recall, & `6/6 (100.0%)` tight-budget E2E**.
 
+---
+
+### Cycle 10: Fair Head-to-Head Evaluation on the Exact 70 Prompts (`GPT-6 Astra`, `Claude Opus 5.5`, `Gemini 4 Argon`) and Controlled 3-Arm Clover-Specific Value Ablation
+
+- **Context & Methodological Distinction:**
+  - Clover's **`99.08%` mean canonical score (`70 / 70` pass rate)** across the 70 mixed tasks in `run_real_ai_benchmark_suite.py` is **not** directly comparable to a frontier model's published full-benchmark leaderboard score (e.g., full MMLU 14,042 questions, full GSM8K 1,319 questions, or full HumanEval 164 tasks), because:
+    1. Clover's 70-task suite samples small slices (`10` MMLU, `10` GSM8K, `10` HumanEval Python + `5` Live Rust) alongside `15` structured-output tasks, `6` ontology tasks, `6` persistent-memory tasks, and `8` multi-hop agent tasks.
+    2. Categories 5 and 6 include private organizational records (`Harbourside Council Mill Road`, `Payments Database Postmortem #209`, `Aurora Distributed Storage v4.2`) and recorded Clover session memory entries (`23.3% -> 48.0%`, `30,912 hits / 3.27x`, `3.326 vs 2.716 unmeasured`, `MEM-HYP-INSIDE-MIND-001` / `MEM-CORR-INSIDE-BOUNDARY-002`) that do not exist in public pretraining corpora.
+  - To compare fairly, we ran the **exact same 70 prompt strings** (`build_shared_70_task_matrix()`) through:
+    - **Three Standalone Reference Frontier Models** via isolated subagent calls (with zero tools, zero file access, and zero external memory/ontology): **`GPT-6 Astra (copilot)`**, **`Claude Opus 5.5 (copilot)`**, and **`Gemini 4 Argon (copilot)`** ([frontier_70_responses.json](../../benchmarks/results/1936d4eb0d53/gpu/frontier_70_responses.json), [frontier_70_scored_report.json](../../benchmarks/results/1936d4eb0d53/gpu/frontier_70_scored_report.json)).
+    - **Three Controlled Arms of Clover's Own Underlying Model on `gpu` (`8 × RTX 3090`)** ([clover_70_ablation_report.json](../../benchmarks/results/1936d4eb0d53/gpu/clover_70_ablation_report.json)):
+      - **Arm 0 — Underlying Model Alone (`No Memory, No Ontology, No Tools, No GC`):** `HybridAgent-8B / Qwen3-8B` + `93-Layer Kimi K3 MoE` + `11-Scale NCM` with all Clover mechanisms disabled.
+      - **Arm 1 — Underlying Model + Tool Orchestration & Generative Compilation Only (`No Memory, No Ontology`):** Enables `<python>`, `<search>`, and Python/Rust `Generative Compilation`, with `enable_memory_graph = False` and `enable_ontology = False`.
+      - **Arm 2 — Full 7-Layer Clover (`Memory + Ontology + Tools + Generative Compilation`):** All 7 Clover layers active.
+  - All outputs were scored by the **exact same frozen scoring harness** (`score_single_task(task, reply)` in `run_real_ai_benchmark_suite.py`, executing `python3` unit tests for HumanEval and `rustc --edition=2021` unit tests for Rust).
+
+#### 1. Accuracy: Task Pass Rate & Category Scores Across the Exact Same 70 Prompts
+
+| Category (`N=70` Total) | **Arm 0: Underlying Model Alone** *(No Mem / Onto / Tools / GC)* | **Arm 1: Underlying + Tools & GC** *(No Mem / Onto)* | **Arm 2: Full 7-Layer Clover** *(All Mechanisms)* | **GPT-6 Astra** *(Standalone, No Tools/Mem/Onto)* | **Claude Opus 5.5** *(Standalone, No Tools/Mem/Onto)* | **Gemini 4 Argon** *(Standalone, No Tools/Mem/Onto)* |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`1_general_knowledge_mmlu` (`N=10`)** | `6 / 10` (`60.0%`) | `7 / 10` (`70.0%`) | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** |
+| **`2_math_reasoning_gsm8k` (`N=10`)** | `2 / 10` (`20.0%`) | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** | `8 / 10` (`80.0%`)*<br>*(10/10 = 100% math)* | `4 / 10` (`40.0%`)*<br>*(10/10 = 100% math)* | **`10 / 10` (`100.0%`)** |
+| **`3_coding_executable_tests` (`N=15`)** | `12 / 15` (`80.0%`) | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** |
+| **`4_instruction_and_structured_output` (`N=15`)** | `6 / 15` (`40.0%`)<br>*(mean 52.81%)* | `11 / 15` (`73.3%`)<br>*(mean 84.09%)* | **`15 / 15` (`100.0%`)**<br>*(mean 97.92%)* | `13 / 15` (`86.7%`)<br>*(mean 91.99%)* | `14 / 15` (`93.3%`)<br>*(mean 94.56%)* | `7 / 15` (`46.7%`)†<br>*(mean 84.06%)* |
+| **`5_evidence_grounded_ontology` (`N=6`)** | `0 / 6` (`0.0%`)<br>*(mean 0.00%)* | `2 / 6` (`33.3%`)<br>*(mean 27.78%)* | **`6 / 6` (`100.0%`)**<br>*(mean 94.45%)* | `3 / 6` (`50.0%`)‡<br>*(mean 44.45%)* | `4 / 6` (`66.7%`)‡<br>*(mean 55.56%)* | `3 / 6` (`50.0%`)‡<br>*(mean 55.55%)* |
+| **`6_persistent_memory_and_distractors` (`N=6`)** | `3 / 6` (`50.0%`) | `4 / 6` (`66.7%`) | **`6 / 6` (`100.0%`)** | `4 / 6` (`66.7%`)‡ | `4 / 6` (`66.7%`)‡ | `4 / 6` (`66.7%`)‡ |
+| **`7_tool_use_and_agent_multihop` (`N=8`)** | `4 / 8` (`50.0%`) | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** |
+| **Public/General Subset (`58` tasks, Cats 1–4 & 7)** | `30 / 58` (`51.72%`) | `51 / 58` (`87.93%`) | **`58 / 58` (`100.00%`)** | `54 / 58` (`93.10%`)<br>*(56/58 = 96.55%)* | `51 / 58` (`87.93%`)<br>*(57/58 = 98.28%)* | `50 / 58` (`86.21%`) |
+| **Ontology + Memory Subset (`12` tasks, Cats 5–6)** | `3 / 12` (`25.00%`) | `6 / 12` (`50.00%`) | **`12 / 12` (`100.00%`)** | `7 / 12` (`58.33%`)‡ | `8 / 12` (`66.67%`)‡ | `7 / 12` (`58.33%`)‡ |
+| **ALL 70 TASKS (Unmodified Frozen Scorer)** | **`33 / 70` (`47.14%`)**<br>*(mean 49.89%)* | **`57 / 70` (`81.43%`)**<br>*(mean 83.26%)* | **`70 / 70` (`100.00%`)**<br>*(mean 99.08%)* | **`61 / 70` (`87.14%`)**<br>*(mean 87.81%)* | **`59 / 70` (`84.29%`)**<br>*(mean 83.60%)* | **`57 / 70` (`81.43%`)**<br>*(mean 89.92%)* |
+| **ALL 70 TASKS (`Answer:`-Normalized GSM8K)** | `33 / 70` (`47.14%`) | `57 / 70` (`81.43%`) | **`70 / 70` (`100.00%`)** | **`63 / 70` (`90.00%`)** | **`65 / 70` (`92.86%`)** | **`57 / 70` (`81.43%`)** |
+
+- **Three Instrument & Scoring Findings Exposed by This Head-to-Head Run:**
+  1. **\*GSM8K Regex Extraction (`bench_1_gsm8k.py`):** All three standalone frontier models (`GPT-6 Astra`, `Claude Opus 5.5`, `Gemini 4 Argon`) solved **`10 / 10` (`100.0%`)** of the GSM8K math problems correctly (`18, 3, 70000, 540, 20, 64, 260, 160, 45, 460`). Because the GSM8K prompt did not specify `#### <num>`, `Gemini 4 Argon` spontaneously emitted `\n#### <num>` (`10/10` extracted), whereas `Claude Opus 5.5` wrote `Answer: <num>` (`4/10` under the unmodified regex because `extract_predicted_number`'s second pattern `(?:...|has|takes|...)\s*<num>` matched intermediate numbers like `"has 16"` before `"Answer: 18"`) and `GPT-6 Astra` wrote `"totaling 260 sheep"` / `"160 minutes total"` (`8/10` under the unmodified regex). Both unmodified and normalized scores are reported above.
+  2. **†Sudoku 9×9 Constraint Solving (`sudoku_easy_0..4`):** `GPT-6 Astra` (`5/5`) and `Claude Opus 5.5` (`5/5`) solved all five 9×9 Sudoku grids purely in-weights, whereas `Gemini 4 Argon` (`0/5`, `55..78 / 81` cells correct) and Clover's raw underlying model (`Arm 0`, `0/5`, `0..53 / 81` cells) failed without a constraint solver; Clover's `<python>` solver (`Arm 1` & `Arm 2`) raised Clover from `0/5` to `5/5` (`81/81` cells).
+  3. **‡Private Ontology/Memory Abstention & Prompt-Term Echoing (`onto_qa_0..4`, `mem_qa_0..3`):** All three frontier models honestly abstained on private organizational records not present in the prompt (`onto_qa_2_harbourside_council`, `onto_qa_3_payments_outage_209`, `onto_qa_4_aurora_storage_v42`, `mem_qa_1_recurrent_kda_replay`, `mem_qa_2_hardware_scope_boundary`). Notice that on `mem_qa_0` and `mem_qa_3`, the prompt text itself contained the reference substrings (`23.3%`, `48.0%`, `partition`, and the three `MEM-*` IDs), allowing standalone models to pass those 2 substring checks by echoing the prompt's terms while stating that the underlying records were not provided. When `GPT-6 Astra` was run with VS Code's automatic `<userMemory>` attached, it additionally answered `mem_qa_1` (`30,912 hits / 3.27x`) for `62/70` (`88.57%` strict / `64/70 = 91.43%` normalized).
+
+#### 2. Performance: Latency, Throughput & Cost per Solved Task
+
+| System / Model Arm | Execution Environment | Total Wall Time (`70` tasks) | Mean Latency / Task | Tasks Solved (`Strict / Norm`) | Wall-Seconds / Solved Task | GPU-Seconds / Solved Task (`8 × RTX 3090`) |
+| :--- | :--- | ---: | ---: | :---: | ---: | ---: |
+| **Arm 0: Underlying Model Alone** *(No Clover mechanisms)* | Local `8 × RTX 3090` (`gpu`) | `965.41 s` | `13,791.5 ms` | `33 / 70` | `29.25 s` | `234.04 GPU-s` |
+| **Arm 1: Underlying Model + Tools & GC Only** | Local `8 × RTX 3090` (`gpu`) | `1,015.40 s` | `14,505.8 ms` | `57 / 70` | `17.81 s` | `142.51 GPU-s` |
+| **Arm 2: Full 7-Layer Clover (`1936d4eb0d53`)** | Local `8 × RTX 3090` (`gpu`) | `1,002.26 s` | `14,318.0 ms` | **`70 / 70`** | **`14.32 s`** | **`114.54 GPU-s`** (`0` API cost) |
+| **GPT-6 Astra (`copilot` subagent, 4 slices)** | Hosted Cloud API | `333.60 s` | `4,765.7 ms` | `61 / 70` (`63 / 70`) | `5.47 s` (`5.30 s`) | Hosted API (external) |
+| **Claude Opus 5.5 (`copilot` subagent, 4 slices)** | Hosted Cloud API | `263.21 s` | `3,760.1 ms` | `59 / 70` (`65 / 70`) | `4.46 s` (`4.05 s`) | Hosted API (external) |
+| **Gemini 4 Argon (`copilot` subagent, 4 slices)** | Hosted Cloud API | `206.42 s` | `2,948.9 ms` | `57 / 70` (`57 / 70`) | `3.62 s` (`3.62 s`) | Hosted API (external) |
+
+#### 3. Clover-Specific Value: Controlled 3-Arm Ablation Over the Same Underlying Model
+
+- **What Clover contributes beyond the raw capabilities of its underlying model (`Arm 0 -> Arm 1 -> Arm 2` on the exact same `8 × RTX 3090` hardware and 70 tasks):**
+  1. **Raw Underlying Model Alone (`Arm 0`): `33 / 70` (`47.14%` pass rate, `49.89%` mean score, `234.04 GPU-s / solved task`):**
+     - Without `<python>` tool execution, GSM8K drops from `10/10` to `2/10`, Sudoku drops from `5/5` to `0/5`, and Agent Multi-Hop QA drops from `8/8` to `4/8`.
+     - Without Python/Rust Generative Compilation (`k3_generative_compiler.py`), `HumanEval_0` (`SyntaxError: '(' was never closed`), `HumanEval_3` (`SyntaxError: '[' was never closed`), and `rust_gc_rust_live_2_is_palindrome` (`rustc error[E0277]: the type str cannot be indexed by usize`) fail compilation/execution (`12/15 = 80.0%`).
+     - Without Ontology GraphRAG and Persistent Memory Graph, Ontology QA scores `0/6` (`0.0%`), MMLU drops from `10/10` to `6/10` (`60.0%`), and XSum grounding drops from `5/5` to `1/5`.
+  2. **Adding Tool Orchestration (`<python>`, `<search>`) & Generative Compilation (`Arm 1`): `57 / 70` (`81.43%` pass rate, `+24` tasks / `+34.29 pp`):**
+     - Lifts GSM8K `2/10 -> 10/10`, Coding `12/15 -> 15/15`, Sudoku `0/5 -> 5/5`, and Agent Multi-Hop `4/8 -> 8/8`, cutting GPU cost per solved task from `234.04 GPU-s` to `142.51 GPU-s`.
+  3. **Adding Ontology GraphRAG (`k3_ontology_graph.py`) & Persistent Memory Graph (`k3_memory_graph.py`) with 11-Paper Foundations (`Arm 2`): `70 / 70` (`100.00%` pass rate, `+13` additional tasks / `+18.57 pp`, total `+37` tasks / `+52.86 pp` over `Arm 0`):**
+     - Lifts MMLU `7/10 -> 10/10` (via `ontology_verifier` + 93-layer K3 log-probability fusion), XSum source grounding `1/5 -> 5/5` (`73.3% -> 100.0%` Cat 4), Ontology GraphRAG `2/6 -> 6/6` (`100.0%`), and Persistent Memory Graph `4/6 -> 6/6` (`100.0%`), while reducing GPU cost per solved task by **`2.04x`** (`234.04 -> 114.54 GPU-s / solved task`) at roughly the same wall time (`965.4 s` vs `1,002.3 s`).
+
+
 
 
 

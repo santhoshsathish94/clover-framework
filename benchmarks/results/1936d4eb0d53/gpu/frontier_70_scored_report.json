@@ -1,0 +1,2462 @@
+{
+  "gpt_6_astra": {
+    "display_name": "GPT-6 Astra (copilot)",
+    "wall_s": 333.6,
+    "mean_wall_ms": 4765.7,
+    "total_passed": 61,
+    "total_tasks": 70,
+    "pass_rate_pct": 87.14,
+    "mean_canonical_score_pct": 87.81,
+    "categories": {
+      "1_general_knowledge_mmlu": {
+        "passed": 10,
+        "total": 10,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "2_math_reasoning_gsm8k": {
+        "passed": 8,
+        "total": 10,
+        "pass_rate_pct": 80.0,
+        "mean_score_pct": 80.0
+      },
+      "3_coding_executable_tests": {
+        "passed": 15,
+        "total": 15,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "4_instruction_and_structured_output": {
+        "passed": 13,
+        "total": 15,
+        "pass_rate_pct": 86.67,
+        "mean_score_pct": 91.99
+      },
+      "5_evidence_grounded_ontology": {
+        "passed": 3,
+        "total": 6,
+        "pass_rate_pct": 50.0,
+        "mean_score_pct": 44.45
+      },
+      "6_persistent_memory_and_distractors": {
+        "passed": 4,
+        "total": 6,
+        "pass_rate_pct": 66.67,
+        "mean_score_pct": 66.67
+      },
+      "7_tool_use_and_agent_multihop": {
+        "passed": 8,
+        "total": 8,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      }
+    },
+    "tasks": [
+      {
+        "task_id": "mmlu_college_computer_science_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "mmlu_college_computer_science_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_biology_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_biology_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_physics_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "B"
+      },
+      {
+        "task_id": "mmlu_college_physics_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_astronomy_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "mmlu_astronomy_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "D"
+      },
+      {
+        "task_id": "mmlu_high_school_us_history_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "D"
+      },
+      {
+        "task_id": "mmlu_high_school_us_history_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "gsm8k_test_0",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "18.0"
+      },
+      {
+        "task_id": "gsm8k_test_1",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "3.0"
+      },
+      {
+        "task_id": "gsm8k_test_2",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "70000.0"
+      },
+      {
+        "task_id": "gsm8k_test_3",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "540.0"
+      },
+      {
+        "task_id": "gsm8k_test_4",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "20.0"
+      },
+      {
+        "task_id": "gsm8k_test_5",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "64.0"
+      },
+      {
+        "task_id": "gsm8k_test_6",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "160.0"
+      },
+      {
+        "task_id": "gsm8k_test_7",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "100.0"
+      },
+      {
+        "task_id": "gsm8k_test_8",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "45.0"
+      },
+      {
+        "task_id": "gsm8k_test_9",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "460.0"
+      },
+      {
+        "task_id": "HumanEval_0",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_1",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_2",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_3",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_4",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_5",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_6",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_7",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_8",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_9",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_1_gcd",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_2_is_palindrome",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_3_fibonacci",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_4_fmt_msg_borrow",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_5_max_slice",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "sudoku_easy_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "wmt14_reconstruct_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": false,
+        "score": 0.6667,
+        "detail": "retention=66.7%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 0.9091,
+        "detail": "retention=90.9%"
+      },
+      {
+        "task_id": "xsum_summary_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": false,
+        "score": 0.6429,
+        "detail": "grounding=64.3%"
+      },
+      {
+        "task_id": "xsum_summary_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8571,
+        "detail": "grounding=85.7%"
+      },
+      {
+        "task_id": "xsum_summary_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8889,
+        "detail": "grounding=88.9%"
+      },
+      {
+        "task_id": "xsum_summary_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8333,
+        "detail": "grounding=83.3%"
+      },
+      {
+        "task_id": "xsum_summary_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 1.0,
+        "detail": "grounding=100.0%"
+      },
+      {
+        "task_id": "onto_qa_0_cve_2024_6387",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 0.6667,
+        "detail": "2/3 terms"
+      },
+      {
+        "task_id": "onto_qa_1_cve_2024_40711",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "3/3 terms"
+      },
+      {
+        "task_id": "onto_qa_2_harbourside_council",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_3_payments_outage_209",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_4_aurora_storage_v42",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_5_thin_film_600nm",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "1/1 terms"
+      },
+      {
+        "task_id": "mem_qa_0_flat_response_partition",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=3/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_1_recurrent_kda_replay",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": false,
+        "score": 0.0,
+        "detail": "req=0/2, forb=0"
+      },
+      {
+        "task_id": "mem_qa_2_hardware_scope_boundary",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": false,
+        "score": 0.0,
+        "detail": "req=0/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_3_inside_outside_contradiction",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=3/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_4_distractor_oil_buoyancy",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=2/2, forb=0"
+      },
+      {
+        "task_id": "mem_qa_5_distractor_baseball_curveball",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=1/1, forb=0"
+      },
+      {
+        "task_id": "agent_ha_q1",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q2",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q3",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q4",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q5",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q6",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q7",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q8",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      }
+    ]
+  },
+  "gpt_6_astra_with_ide_usermemory": {
+    "display_name": "GPT-6 Astra (with IDE <userMemory>)",
+    "wall_s": 333.6,
+    "mean_wall_ms": 4765.7,
+    "total_passed": 62,
+    "total_tasks": 70,
+    "pass_rate_pct": 88.57,
+    "mean_canonical_score_pct": 89.71,
+    "categories": {
+      "1_general_knowledge_mmlu": {
+        "passed": 10,
+        "total": 10,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "2_math_reasoning_gsm8k": {
+        "passed": 8,
+        "total": 10,
+        "pass_rate_pct": 80.0,
+        "mean_score_pct": 80.0
+      },
+      "3_coding_executable_tests": {
+        "passed": 15,
+        "total": 15,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "4_instruction_and_structured_output": {
+        "passed": 13,
+        "total": 15,
+        "pass_rate_pct": 86.67,
+        "mean_score_pct": 91.99
+      },
+      "5_evidence_grounded_ontology": {
+        "passed": 3,
+        "total": 6,
+        "pass_rate_pct": 50.0,
+        "mean_score_pct": 50.0
+      },
+      "6_persistent_memory_and_distractors": {
+        "passed": 5,
+        "total": 6,
+        "pass_rate_pct": 83.33,
+        "mean_score_pct": 83.33
+      },
+      "7_tool_use_and_agent_multihop": {
+        "passed": 8,
+        "total": 8,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      }
+    },
+    "tasks": [
+      {
+        "task_id": "mmlu_college_computer_science_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "mmlu_college_computer_science_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_biology_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_biology_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_physics_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "B"
+      },
+      {
+        "task_id": "mmlu_college_physics_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_astronomy_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "mmlu_astronomy_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "D"
+      },
+      {
+        "task_id": "mmlu_high_school_us_history_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "D"
+      },
+      {
+        "task_id": "mmlu_high_school_us_history_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "gsm8k_test_0",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "18.0"
+      },
+      {
+        "task_id": "gsm8k_test_1",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "3.0"
+      },
+      {
+        "task_id": "gsm8k_test_2",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "70000.0"
+      },
+      {
+        "task_id": "gsm8k_test_3",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "540.0"
+      },
+      {
+        "task_id": "gsm8k_test_4",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "20.0"
+      },
+      {
+        "task_id": "gsm8k_test_5",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "64.0"
+      },
+      {
+        "task_id": "gsm8k_test_6",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "160.0"
+      },
+      {
+        "task_id": "gsm8k_test_7",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "100.0"
+      },
+      {
+        "task_id": "gsm8k_test_8",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "45.0"
+      },
+      {
+        "task_id": "gsm8k_test_9",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "460.0"
+      },
+      {
+        "task_id": "HumanEval_0",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_1",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_2",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_3",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_4",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_5",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_6",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_7",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_8",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_9",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_1_gcd",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_2_is_palindrome",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_3_fibonacci",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_4_fmt_msg_borrow",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_5_max_slice",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "sudoku_easy_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "wmt14_reconstruct_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": false,
+        "score": 0.6667,
+        "detail": "retention=66.7%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 0.9091,
+        "detail": "retention=90.9%"
+      },
+      {
+        "task_id": "xsum_summary_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": false,
+        "score": 0.6429,
+        "detail": "grounding=64.3%"
+      },
+      {
+        "task_id": "xsum_summary_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8571,
+        "detail": "grounding=85.7%"
+      },
+      {
+        "task_id": "xsum_summary_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8889,
+        "detail": "grounding=88.9%"
+      },
+      {
+        "task_id": "xsum_summary_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8333,
+        "detail": "grounding=83.3%"
+      },
+      {
+        "task_id": "xsum_summary_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 1.0,
+        "detail": "grounding=100.0%"
+      },
+      {
+        "task_id": "onto_qa_0_cve_2024_6387",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 0.6667,
+        "detail": "2/3 terms"
+      },
+      {
+        "task_id": "onto_qa_1_cve_2024_40711",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "3/3 terms"
+      },
+      {
+        "task_id": "onto_qa_2_harbourside_council",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_3_payments_outage_209",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.3333,
+        "detail": "1/3 terms"
+      },
+      {
+        "task_id": "onto_qa_4_aurora_storage_v42",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_5_thin_film_600nm",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "1/1 terms"
+      },
+      {
+        "task_id": "mem_qa_0_flat_response_partition",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=3/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_1_recurrent_kda_replay",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=2/2, forb=0"
+      },
+      {
+        "task_id": "mem_qa_2_hardware_scope_boundary",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": false,
+        "score": 0.0,
+        "detail": "req=0/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_3_inside_outside_contradiction",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=3/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_4_distractor_oil_buoyancy",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=2/2, forb=0"
+      },
+      {
+        "task_id": "mem_qa_5_distractor_baseball_curveball",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=1/1, forb=0"
+      },
+      {
+        "task_id": "agent_ha_q1",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q2",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q3",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q4",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q5",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q6",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q7",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q8",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      }
+    ]
+  },
+  "claude_opus_5_5": {
+    "display_name": "Claude Opus 5.5 (copilot)",
+    "wall_s": 263.21,
+    "mean_wall_ms": 3760.1,
+    "total_passed": 59,
+    "total_tasks": 70,
+    "pass_rate_pct": 84.29,
+    "mean_canonical_score_pct": 83.6,
+    "categories": {
+      "1_general_knowledge_mmlu": {
+        "passed": 10,
+        "total": 10,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "2_math_reasoning_gsm8k": {
+        "passed": 4,
+        "total": 10,
+        "pass_rate_pct": 40.0,
+        "mean_score_pct": 40.0
+      },
+      "3_coding_executable_tests": {
+        "passed": 15,
+        "total": 15,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "4_instruction_and_structured_output": {
+        "passed": 14,
+        "total": 15,
+        "pass_rate_pct": 93.33,
+        "mean_score_pct": 94.56
+      },
+      "5_evidence_grounded_ontology": {
+        "passed": 4,
+        "total": 6,
+        "pass_rate_pct": 66.67,
+        "mean_score_pct": 55.56
+      },
+      "6_persistent_memory_and_distractors": {
+        "passed": 4,
+        "total": 6,
+        "pass_rate_pct": 66.67,
+        "mean_score_pct": 66.67
+      },
+      "7_tool_use_and_agent_multihop": {
+        "passed": 8,
+        "total": 8,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      }
+    },
+    "tasks": [
+      {
+        "task_id": "mmlu_college_computer_science_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "mmlu_college_computer_science_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_biology_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_biology_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_physics_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "B"
+      },
+      {
+        "task_id": "mmlu_college_physics_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_astronomy_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "mmlu_astronomy_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "D"
+      },
+      {
+        "task_id": "mmlu_high_school_us_history_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "D"
+      },
+      {
+        "task_id": "mmlu_high_school_us_history_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "gsm8k_test_0",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "16.0"
+      },
+      {
+        "task_id": "gsm8k_test_1",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "2.0"
+      },
+      {
+        "task_id": "gsm8k_test_2",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "70000.0"
+      },
+      {
+        "task_id": "gsm8k_test_3",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "540.0"
+      },
+      {
+        "task_id": "gsm8k_test_4",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "20.0"
+      },
+      {
+        "task_id": "gsm8k_test_5",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "40.0"
+      },
+      {
+        "task_id": "gsm8k_test_6",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "20.0"
+      },
+      {
+        "task_id": "gsm8k_test_7",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "40.0"
+      },
+      {
+        "task_id": "gsm8k_test_8",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "45.0"
+      },
+      {
+        "task_id": "gsm8k_test_9",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": false,
+        "score": 0.0,
+        "detail": "400.0"
+      },
+      {
+        "task_id": "HumanEval_0",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_1",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_2",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_3",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_4",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_5",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_6",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_7",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_8",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_9",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_1_gcd",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_2_is_palindrome",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_3_fibonacci",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_4_fmt_msg_borrow",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_5_max_slice",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "sudoku_easy_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": true,
+        "score": 1.0,
+        "detail": "81/81 cells"
+      },
+      {
+        "task_id": "wmt14_reconstruct_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 0.8333,
+        "detail": "retention=83.3%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "xsum_summary_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": false,
+        "score": 0.7222,
+        "detail": "grounding=72.2%"
+      },
+      {
+        "task_id": "xsum_summary_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.95,
+        "detail": "grounding=95.0%"
+      },
+      {
+        "task_id": "xsum_summary_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8889,
+        "detail": "grounding=88.9%"
+      },
+      {
+        "task_id": "xsum_summary_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.84,
+        "detail": "grounding=84.0%"
+      },
+      {
+        "task_id": "xsum_summary_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.95,
+        "detail": "grounding=95.0%"
+      },
+      {
+        "task_id": "onto_qa_0_cve_2024_6387",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 0.6667,
+        "detail": "2/3 terms"
+      },
+      {
+        "task_id": "onto_qa_1_cve_2024_40711",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "3/3 terms"
+      },
+      {
+        "task_id": "onto_qa_2_harbourside_council",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_3_payments_outage_209",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 0.6667,
+        "detail": "2/3 terms"
+      },
+      {
+        "task_id": "onto_qa_4_aurora_storage_v42",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_5_thin_film_600nm",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "1/1 terms"
+      },
+      {
+        "task_id": "mem_qa_0_flat_response_partition",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=3/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_1_recurrent_kda_replay",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": false,
+        "score": 0.0,
+        "detail": "req=0/2, forb=0"
+      },
+      {
+        "task_id": "mem_qa_2_hardware_scope_boundary",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": false,
+        "score": 0.0,
+        "detail": "req=1/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_3_inside_outside_contradiction",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=3/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_4_distractor_oil_buoyancy",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=2/2, forb=0"
+      },
+      {
+        "task_id": "mem_qa_5_distractor_baseball_curveball",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=1/1, forb=0"
+      },
+      {
+        "task_id": "agent_ha_q1",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q2",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q3",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q4",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q5",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q6",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q7",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q8",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      }
+    ]
+  },
+  "gemini_4_argon": {
+    "display_name": "Gemini 4 Argon (copilot)",
+    "wall_s": 206.42,
+    "mean_wall_ms": 2948.9,
+    "total_passed": 57,
+    "total_tasks": 70,
+    "pass_rate_pct": 81.43,
+    "mean_canonical_score_pct": 89.92,
+    "categories": {
+      "1_general_knowledge_mmlu": {
+        "passed": 10,
+        "total": 10,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "2_math_reasoning_gsm8k": {
+        "passed": 10,
+        "total": 10,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "3_coding_executable_tests": {
+        "passed": 15,
+        "total": 15,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      },
+      "4_instruction_and_structured_output": {
+        "passed": 7,
+        "total": 15,
+        "pass_rate_pct": 46.67,
+        "mean_score_pct": 84.06
+      },
+      "5_evidence_grounded_ontology": {
+        "passed": 3,
+        "total": 6,
+        "pass_rate_pct": 50.0,
+        "mean_score_pct": 55.55
+      },
+      "6_persistent_memory_and_distractors": {
+        "passed": 4,
+        "total": 6,
+        "pass_rate_pct": 66.67,
+        "mean_score_pct": 66.67
+      },
+      "7_tool_use_and_agent_multihop": {
+        "passed": 8,
+        "total": 8,
+        "pass_rate_pct": 100.0,
+        "mean_score_pct": 100.0
+      }
+    },
+    "tasks": [
+      {
+        "task_id": "mmlu_college_computer_science_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "mmlu_college_computer_science_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_biology_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_biology_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_college_physics_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "B"
+      },
+      {
+        "task_id": "mmlu_college_physics_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "C"
+      },
+      {
+        "task_id": "mmlu_astronomy_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "mmlu_astronomy_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "D"
+      },
+      {
+        "task_id": "mmlu_high_school_us_history_0",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "D"
+      },
+      {
+        "task_id": "mmlu_high_school_us_history_1",
+        "category": "1_general_knowledge_mmlu",
+        "benchmark": "MMLU",
+        "ok": true,
+        "score": 1.0,
+        "detail": "A"
+      },
+      {
+        "task_id": "gsm8k_test_0",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "18.0"
+      },
+      {
+        "task_id": "gsm8k_test_1",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "3.0"
+      },
+      {
+        "task_id": "gsm8k_test_2",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "70000.0"
+      },
+      {
+        "task_id": "gsm8k_test_3",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "540.0"
+      },
+      {
+        "task_id": "gsm8k_test_4",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "20.0"
+      },
+      {
+        "task_id": "gsm8k_test_5",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "64.0"
+      },
+      {
+        "task_id": "gsm8k_test_6",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "260.0"
+      },
+      {
+        "task_id": "gsm8k_test_7",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "160.0"
+      },
+      {
+        "task_id": "gsm8k_test_8",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "45.0"
+      },
+      {
+        "task_id": "gsm8k_test_9",
+        "category": "2_math_reasoning_gsm8k",
+        "benchmark": "GSM8K",
+        "ok": true,
+        "score": 1.0,
+        "detail": "460.0"
+      },
+      {
+        "task_id": "HumanEval_0",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_1",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_2",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_3",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_4",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_5",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_6",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_7",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_8",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "HumanEval_9",
+        "category": "3_coding_executable_tests",
+        "benchmark": "HumanEval_Python",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_1_gcd",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_2_is_palindrome",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_3_fibonacci",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_4_fmt_msg_borrow",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "rust_gc_rust_live_5_max_slice",
+        "category": "3_coding_executable_tests",
+        "benchmark": "Rust_Generative_Compilation",
+        "ok": true,
+        "score": 1.0,
+        "detail": "OK"
+      },
+      {
+        "task_id": "sudoku_easy_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": false,
+        "score": 0.9012,
+        "detail": "73/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": false,
+        "score": 0.679,
+        "detail": "55/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": false,
+        "score": 0.7531,
+        "detail": "61/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": false,
+        "score": 0.963,
+        "detail": "78/81 cells"
+      },
+      {
+        "task_id": "sudoku_easy_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "Sudoku_Easy_9x9",
+        "ok": false,
+        "score": 0.7901,
+        "detail": "64/81 cells"
+      },
+      {
+        "task_id": "wmt14_reconstruct_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": false,
+        "score": 0.6667,
+        "detail": "retention=66.7%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "wmt14_reconstruct_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "WMT14_Concept_Reconstruction",
+        "ok": true,
+        "score": 1.0,
+        "detail": "retention=100.0%"
+      },
+      {
+        "task_id": "xsum_summary_0",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": false,
+        "score": 0.6,
+        "detail": "grounding=60.0%"
+      },
+      {
+        "task_id": "xsum_summary_1",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8261,
+        "detail": "grounding=82.6%"
+      },
+      {
+        "task_id": "xsum_summary_2",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.9048,
+        "detail": "grounding=90.5%"
+      },
+      {
+        "task_id": "xsum_summary_3",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": false,
+        "score": 0.6923,
+        "detail": "grounding=69.2%"
+      },
+      {
+        "task_id": "xsum_summary_4",
+        "category": "4_instruction_and_structured_output",
+        "benchmark": "XSum_Single_Sentence_Summary",
+        "ok": true,
+        "score": 0.8333,
+        "detail": "grounding=83.3%"
+      },
+      {
+        "task_id": "onto_qa_0_cve_2024_6387",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "3/3 terms"
+      },
+      {
+        "task_id": "onto_qa_1_cve_2024_40711",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "3/3 terms"
+      },
+      {
+        "task_id": "onto_qa_2_harbourside_council",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_3_payments_outage_209",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.3333,
+        "detail": "1/3 terms"
+      },
+      {
+        "task_id": "onto_qa_4_aurora_storage_v42",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": false,
+        "score": 0.0,
+        "detail": "0/3 terms"
+      },
+      {
+        "task_id": "onto_qa_5_thin_film_600nm",
+        "category": "5_evidence_grounded_ontology",
+        "benchmark": "Ontology_GraphRAG_Grounded_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "1/1 terms"
+      },
+      {
+        "task_id": "mem_qa_0_flat_response_partition",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=3/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_1_recurrent_kda_replay",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": false,
+        "score": 0.0,
+        "detail": "req=0/2, forb=0"
+      },
+      {
+        "task_id": "mem_qa_2_hardware_scope_boundary",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": false,
+        "score": 0.0,
+        "detail": "req=1/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_3_inside_outside_contradiction",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=3/3, forb=0"
+      },
+      {
+        "task_id": "mem_qa_4_distractor_oil_buoyancy",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=2/2, forb=0"
+      },
+      {
+        "task_id": "mem_qa_5_distractor_baseball_curveball",
+        "category": "6_persistent_memory_and_distractors",
+        "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+        "ok": true,
+        "score": 1.0,
+        "detail": "req=1/1, forb=0"
+      },
+      {
+        "task_id": "agent_ha_q1",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q2",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q3",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q4",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_ha_q5",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q6",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q7",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      },
+      {
+        "task_id": "agent_mh_q8",
+        "category": "7_tool_use_and_agent_multihop",
+        "benchmark": "HybridAgent_MultiHop_Tool_QA",
+        "ok": true,
+        "score": 1.0,
+        "detail": "matched"
+      }
+    ]
+  }
+}

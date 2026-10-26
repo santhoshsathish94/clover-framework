@@ -401,6 +401,124 @@
         </table>
       </div>
 
+      <h3>Head-to-Head on the Exact 70 Prompts: Frontier Reference Models vs. Controlled Clover Ablation</h3>
+      <p class="note"><strong>Methodological boundary:</strong> Clover&rsquo;s <code>99.08%</code> mean canonical score (<code>70/70</code> pass rate) across these 70 mixed tasks is <strong>not</strong> directly comparable to a frontier model&rsquo;s published full-benchmark leaderboard score (e.g., full 14,042-question MMLU, 1,319-question GSM8K, or 164-task HumanEval), because this suite samples 10 tasks per standard benchmark alongside structured output, private organizational ontology records, persistent session memory, and live tool execution. To compare fairly on the <strong>exact same 70 prompts</strong> with the <strong>exact same frozen scoring harness</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py">run_real_ai_benchmark_suite.py</a>), we ran standalone <strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, and <strong>Gemini 4 Argon</strong> (zero tools, zero external memory/ontology) alongside three controlled arms of Clover&rsquo;s own underlying model on <code>8 &times; RTX 3090</code> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Three-part head-to-head comparison on the exact same 70 prompts: (1) Accuracy by category &amp; public/private split, (2) Performance &amp; GPU-seconds per solved task, and (3) Clover-specific value over the same underlying model without Clover&rsquo;s mechanisms.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Category / Metric (<code>N=70</code>)</th>
+              <th scope="col">Arm 0: Underlying Model Alone<br><small>(No Mem / Onto / Tools / GC)</small></th>
+              <th scope="col">Arm 1: Underlying + Tools &amp; GC<br><small>(No Mem / Onto)</small></th>
+              <th scope="col">Arm 2: Full 7-Layer Clover<br><small>(All Mechanisms)</small></th>
+              <th scope="col">GPT-6 Astra<br><small>(Standalone, No Tools/Mem)</small></th>
+              <th scope="col">Claude Opus 5.5<br><small>(Standalone, No Tools/Mem)</small></th>
+              <th scope="col">Gemini 4 Argon<br><small>(Standalone, No Tools/Mem)</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><strong>1. MMLU</strong> (<code>N=10</code>, 5 subjects)</th>
+              <td><code>6 / 10</code> (60.0%)</td>
+              <td><code>7 / 10</code> (70.0%)</td>
+              <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>2. GSM8K</strong> (<code>N=10</code>, test <code>0..9</code>)</th>
+              <td><code>2 / 10</code> (20.0%)</td>
+              <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              <td><code>8 / 10</code> (80.0%)*<br><small>(<code>10/10</code> math correct)</small></td>
+              <td><code>4 / 10</code> (40.0%)*<br><small>(<code>10/10</code> math correct)</small></td>
+              <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>3. Coding</strong> (<code>N=15</code>: HumanEval-10 + Live Rust-5)</th>
+              <td><code>12 / 15</code> (80.0%)</td>
+              <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+              <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+              <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+              <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+              <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>4. Structured Output</strong> (<code>N=15</code>: Sudoku-5, WMT14-5, XSum-5)</th>
+              <td><code>6 / 15</code> (40.0%)</td>
+              <td><code>11 / 15</code> (73.3%)</td>
+              <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+              <td><code>13 / 15</code> (86.7%)</td>
+              <td><code>14 / 15</code> (93.3%)</td>
+              <td><code>7 / 15</code> (46.7%)&dagger;</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>5. Ontology GraphRAG</strong> (<code>N=6</code>: CVEs, internal specs, physics)</th>
+              <td><code>0 / 6</code> (0.0%)</td>
+              <td><code>2 / 6</code> (33.3%)</td>
+              <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+              <td><code>3 / 6</code> (50.0%)&ddagger;</td>
+              <td><code>4 / 6</code> (66.7%)&ddagger;</td>
+              <td><code>3 / 6</code> (50.0%)&ddagger;</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>6. Persistent Memory &amp; Distractors</strong> (<code>N=6</code>)</th>
+              <td><code>3 / 6</code> (50.0%)</td>
+              <td><code>4 / 6</code> (66.7%)</td>
+              <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+              <td><code>4 / 6</code> (66.7%)&ddagger;</td>
+              <td><code>4 / 6</code> (66.7%)&ddagger;</td>
+              <td><code>4 / 6</code> (66.7%)&ddagger;</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>7. Agent Multi-Hop &amp; Tool QA</strong> (<code>N=8</code>)</th>
+              <td><code>4 / 8</code> (50.0%)</td>
+              <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+              <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+              <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+              <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+              <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Public / General Subset</strong> (<code>58</code> tasks: Cats 1&ndash;4 &amp; 7)</th>
+              <td><code>30 / 58</code> (51.72%)</td>
+              <td><code>51 / 58</code> (87.93%)</td>
+              <td><strong><code>58 / 58</code> (100.00%)</strong></td>
+              <td><code>54 / 58</code> (93.10%)<br><small>(<code>56/58 = 96.55%</code> norm)</small></td>
+              <td><code>51 / 58</code> (87.93%)<br><small>(<code>57/58 = 98.28%</code> norm)</small></td>
+              <td><code>50 / 58</code> (86.21%)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Overall Accuracy</strong> (All <code>70</code> tasks: Strict / GSM8K-Norm)</th>
+              <td><strong><code>33 / 70</code> (47.14%)</strong><br><small>mean score 49.89%</small></td>
+              <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 83.26%</small></td>
+              <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
+              <td><strong><code>61 / 70</code> (87.14%)</strong><br><small><code>63/70 (90.00%)</code> norm</small></td>
+              <td><strong><code>59 / 70</code> (84.29%)</strong><br><small><code>65/70 (92.86%)</code> norm</small></td>
+              <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 89.92%</small></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Performance &amp; Cost / Solved Task</strong></th>
+              <td><code>965.4 s</code> total<br>(<code>13.79 s/task</code>, <code>234.0 GPU-s/solved</code>)</td>
+              <td><code>1,015.4 s</code> total<br>(<code>14.51 s/task</code>, <code>142.5 GPU-s/solved</code>)</td>
+              <td><strong><code>1,002.3 s</code> total</strong><br>(<code>14.32 s/task</code>, <strong><code>114.5 GPU-s/solved</code></strong>)</td>
+              <td><code>333.6 s</code> (4 slices)<br>(<code>4.77 s/task</code>, Cloud API)</td>
+              <td><code>263.2 s</code> (4 slices)<br>(<code>3.76 s/task</code>, Cloud API)</td>
+              <td><code>206.4 s</code> (4 slices)<br>(<code>2.95 s/task</code>, Cloud API)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Clover-Specific Value Over Underlying Model</strong></th>
+              <td>Baseline (<code>0</code> mechanisms)</td>
+              <td><strong><code>+24 tasks</code> (<code>+34.29 pp</code>)</strong> from Tools &amp; Generative Compilation</td>
+              <td><strong><code>+37 tasks</code> (<code>+52.86 pp</code>)</strong> total (<code>+13 tasks</code> from Ontology &amp; Memory; <strong>2.04&times; lower GPU-s/solved</strong>)</td>
+              <td colspan="3"><small>*All three frontier models solved <code>10/10</code> GSM8K math correctly; unmodified regex matched intermediate <code>has/takes &lt;num&gt;</code> when <code>#### &lt;num&gt;</code> was omitted. &dagger;Gemini 4 Argon scored <code>0/5</code> on 9&times;9 Sudoku without a solver (<code>55..78/81</code> cells). &ddagger;Standalone models honestly abstained on private ontology/memory records not in the prompt.</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <h3>Direction B &mdash; Five Data-Movement Upgrades in Production Clover (<code>8 &times; RTX 3090</code>)</h3>
       <div class="table-wrap">
         <table class="data">
