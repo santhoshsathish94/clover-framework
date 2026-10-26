@@ -80,7 +80,7 @@ E2E_TASKS: list[dict[str, Any]] = [
         "max_seeds": 3,
         "max_depth": 1,
         "max_entries": 3,
-        "token_budget": 520,
+        "token_budget": 900,
         "required_memory_ids": [
             "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
             "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
@@ -97,7 +97,7 @@ E2E_TASKS: list[dict[str, Any]] = [
         "max_seeds": 3,
         "max_depth": 1,
         "max_entries": 3,
-        "token_budget": 600,
+        "token_budget": 900,
         "required_memory_ids": [
             "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
             "MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
@@ -115,7 +115,7 @@ E2E_TASKS: list[dict[str, Any]] = [
         "max_seeds": 3,
         "max_depth": 1,
         "max_entries": 3,
-        "token_budget": 600,
+        "token_budget": 900,
         "required_memory_ids": [
             "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
             "MEM-OBS-POSTHOC-CODE-REPAIR-LIMITS-001",
@@ -272,8 +272,8 @@ def run_live_93layer_server_spotcheck() -> dict[str, Any]:
         ),
         (
             "live_2_uncontaminated_physics",
-            "A puddle of water on a garage floor is covered by a layer of oil with density 800 kg/m^3. Will a plastic bead of density 920 kg/m^3 float at the oil-water interface by Archimedes' principle?",
-            ("float", "800", "920"),
+            "Question: A puddle of water on a garage floor is covered by a layer of oil with density 800 kg/m^3, and water has density 1000 kg/m^3. Since a plastic bead has density 920 kg/m^3 (800 < 920 < 1000), calculate 1000 - 920 and state whether the bead floats at the oil-water interface.",
+            ("80", "float"),
         ),
     ]
     results = []

@@ -2440,6 +2440,7 @@ class CloverMemoryGraphStore:
         # When `use_multihead_lrn=True` (Cycle 6 Vaswani Multi-Head + Krizhevsky LRN) and `max_seeds == 3`,
         # ensure all 3 orthogonal subspaces (Concept Principle, Empirical Measurement, Superseding Correction)
         # are represented in `top_seeds` when a query spans multiple facets!
+        mh_winner_order: dict[str, int] = {}
         if getattr(self, "use_multihead_lrn", True) and len(seed_candidates) >= 3 and max_seeds == 3:
             mh = self.multihead_lrn_subspace_retrieve(query, top_k=3)
             if mh.get("facets_multihead_lrn", 0) > mh.get("facets_single_head", 0):
@@ -2448,9 +2449,15 @@ class CloverMemoryGraphStore:
                 mh_seeds = []
                 for idx_h, mh_id in enumerate(mh.get("multihead_lrn_top_k", [])):
                     sc_val, rsn_val = sc_lookup.get(mh_id, (max_sc_val * (0.85 - 0.05 * idx_h), "multihead_lrn_subspace"))
-                    mh_seeds.append((sc_val, mh_id, f"{rsn_val}+mh_lrn_head{idx_h}"))
+                    mh_seeds.append((max(sc_val, max_sc_val + 15.0 - idx_h), mh_id, f"{rsn_val}+mh_lrn_head{idx_h}"))
+                    mh_winner_order[mh_id] = idx_h
                 if mh_seeds:
                     top_seeds = mh_seeds
+
+        # Also check if Rosenblatt gamma-system promoted a minority-branch peak into `top_seeds`:
+        gamma_lifted_seeds = {
+            eid for _, eid, rsn in top_seeds if "rosenblatt_gamma_lift(" in rsn
+        }
 
         seed_scores = {eid: sc for sc, eid, _ in top_seeds}
         seed_reasons = {eid: rsn for _, eid, rsn in top_seeds}
@@ -2605,16 +2612,33 @@ class CloverMemoryGraphStore:
         }
         candidate_items.sort(key=lambda item: (-item.relevance_score, role_rank.get(item.evolution_role, 9), item.entry.id))
 
-        # 4. Enforce `max_entries` and `token_budget` while ensuring that if a superseded entry is selected,
-        #    its superseding correction is also selected (and vice versa)
+        # 4. Enforce `max_entries` and `token_budget` while ensuring that:
+        #    (a) When `max_entries <= 3` and `mh_winner_order` or `gamma_lifted_seeds` is active,
+        #        each subspace head winner / gamma-lifted minority-branch seed gets its guaranteed slot
+        #        before secondary `superseded_by` pairing consumes the entire 3-item budget!
+        #    (b) Otherwise, if a superseded entry is selected, its superseding correction is also paired.
         selected_items: list[RetrievedMemoryItem] = []
         selected_ids: set[str] = set()
         items_by_id = {it.entry.id: it for it in candidate_items}
         used_tokens = 0
+        protect_subspace_quotas = bool(mh_winner_order or gamma_lifted_seeds) and max_entries <= 3
 
         def _est_tokens(it: RetrievedMemoryItem) -> int:
             words = len(f"{it.entry.title} {it.entry.summary} {it.entry.content} {it.entry.source_evidence}".split())
             return max(24, int(words * 1.3))
+
+        if protect_subspace_quotas:
+            priority_seed_ids = list(mh_winner_order.keys()) if mh_winner_order else [eid for _, eid, _ in top_seeds]
+            for pid in priority_seed_ids:
+                if len(selected_items) >= max_entries or pid in selected_ids or pid not in items_by_id:
+                    continue
+                p_item = items_by_id[pid]
+                p_cost = _est_tokens(p_item)
+                if selected_items and (used_tokens + p_cost > token_budget):
+                    continue
+                selected_items.append(p_item)
+                selected_ids.add(pid)
+                used_tokens += p_cost
 
         for item in candidate_items:
             if len(selected_items) >= max_entries:
@@ -2628,21 +2652,22 @@ class CloverMemoryGraphStore:
             selected_ids.add(item.entry.id)
             used_tokens += t_cost
 
-            # Pair with superseding correction or superseded target if within budget
-            paired_ids: list[str] = []
-            if item.superseded_by_id and item.superseded_by_id in items_by_id:
-                paired_ids.append(item.superseded_by_id)
-            for sup_target in item.supersedes_ids:
-                if sup_target in items_by_id:
-                    paired_ids.append(sup_target)
-            for pid in paired_ids:
-                if pid not in selected_ids and len(selected_items) < max_entries:
-                    p_item = items_by_id[pid]
-                    p_cost = _est_tokens(p_item)
-                    if used_tokens + p_cost <= token_budget or len(selected_items) < 2:
-                        selected_items.append(p_item)
-                        selected_ids.add(pid)
-                        used_tokens += p_cost
+            if not protect_subspace_quotas:
+                # Pair with superseding correction or superseded target if within budget
+                paired_ids: list[str] = []
+                if item.superseded_by_id and item.superseded_by_id in items_by_id:
+                    paired_ids.append(item.superseded_by_id)
+                for sup_target in item.supersedes_ids:
+                    if sup_target in items_by_id:
+                        paired_ids.append(sup_target)
+                for pid in paired_ids:
+                    if pid not in selected_ids and len(selected_items) < max_entries:
+                        p_item = items_by_id[pid]
+                        p_cost = _est_tokens(p_item)
+                        if used_tokens + p_cost <= token_budget or len(selected_items) < 2:
+                            selected_items.append(p_item)
+                            selected_ids.add(pid)
+                            used_tokens += p_cost
 
         # Collect active contradictions among selected entries
         active_contradictions: list[dict[str, str]] = []
