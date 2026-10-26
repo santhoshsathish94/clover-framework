@@ -1,0 +1,51 @@
+=== 1. Repair Python 2 syntax in Honghe/perceptron work copy and run ===
+iterations: 1
+Honghe/perceptron Python 3 repair: OK (rc=0)
+=== 2. Run E2, E3, and E4 (rosenblatt1958_models.py) ===
+=== E2.1: Predominant Phase Equations (1), (2), (3) vs Monte Carlo Simulation ===
+  (R=0.30, L=0.40, G=0.15, x=6, y=2, th= 2): Pa ana=0.3978 mc=0.3965 | Pc ana=0.5715 mc=0.5693 (corrupted=0.2843)
+  (R=0.20, L=0.50, G=0.12, x=8, y=0, th= 3): Pa ana=0.2031 mc=0.2026 | Pc ana=0.3987 mc=0.3970 (corrupted=0.1137)
+  (R=0.40, L=0.25, G=0.17, x=5, y=5, th= 2): Pa ana=0.1663 mc=0.1650 | Pc ana=0.4752 mc=0.4728 (corrupted=0.3118)
+  (R=0.50, L=0.30, G=0.30, x=4, y=0, th= 4): Pa ana=0.0625 mc=0.0615 | Pc ana=0.2401 mc=0.2382 (corrupted=0.2401)
+  Eq. (3) check at x=10, y=0, theta=10: Pc_eq2=0.02824752 vs Pc_min=(1-L)^10=0.02824752 (diff=0.00e+00)
+
+=== E2.2: Fig. 4c Flattening of P_a(R) When Excitation Equals Inhibition (p. 393) ===
+  R in [0.1, 0.2, 0.3, 0.4, 0.5]:
+    Excitatory only (x=10, y=0, theta=3): Pa = [0.0702, 0.3222, 0.6172, 0.8327, 0.9453] (spread R=0.1..0.5: 0.8751, R=0.2..0.5: 0.6231)
+    Balanced E == I (x=5,  y=5, theta=2): Pa = [0.0509, 0.1112, 0.1478, 0.1663, 0.1719] (spread R=0.1..0.5: 0.1209, R=0.2..0.5: 0.0607)
+
+=== E3.1: Table 1 Value Systems (alpha, beta, gamma) & Class-Frequency Imbalance (pp. 391, 398) ===
+  alpha  | Sigma (sum)  | net_V=( 6843.0,  2112.0) | Class0(3x freq)=100% | Class1(1x freq)=  0% | Balanced Pg= 50.0%
+  alpha  | mu (mean)    | net_V=( 6843.0,  2112.0) | Class0(3x freq)=100% | Class1(1x freq)=  0% | Balanced Pg= 50.0%
+  beta   | Sigma (sum)  | net_V=( 2000.0,  2000.0) | Class0(3x freq)= 78% | Class1(1x freq)= 57% | Balanced Pg= 67.5%
+  beta   | mu (mean)    | net_V=( 2000.0,  2000.0) | Class0(3x freq)= 96% | Class1(1x freq)= 44% | Balanced Pg= 70.0%
+  gamma  | Sigma (sum)  | net_V=(    0.0,    -0.0) | Class0(3x freq)= 97% | Class1(1x freq)= 44% | Balanced Pg= 70.5%
+  gamma  | mu (mean)    | net_V=(    0.0,    -0.0) | Class0(3x freq)= 98% | Class1(1x freq)= 43% | Balanced Pg= 70.5%
+
+  >>> Verification of Rosenblatt's p. 400 Inequality (Pc11 > Pa > Pc12):
+    Regime A (Centered Horiz vs Vert bars, cross in 3x3=9/36=25% > R=14.1%): Pc11=0.1700, Pa=0.1762, Pc12=0.1831 (VIOLATES Pa > Pc12!)
+    Regime B (Separated class pools, overlap < R):                           Pc11=0.2370, Pa=0.1585, Pc12=0.0939 (SATISFIES Pc11 > Pa > Pc12!)
+    Regime B (3:1 imbalance) alpha          : Class0=100% | Class1= 53% | Balanced Pg= 76.5%
+    Regime B (3:1 imbalance) gamma          : Class0=100% | Class1=100% | Balanced Pg=100.0%
+    Regime B (3:1 imbalance) bivalent_gamma : Class0=100% | Class1=100% | Balanced Pg=100.0%
+
+=== E3.2: Ideal Environment (Random Patterns) vs Differentiated Environment (Pr vs Pg, pp. 396-402) ===
+  >>> Ideal Environment (random uncorrelated patterns, c1=0):
+    n_sr =  10 per class: Recall Pr = 100.0% | Unseen Generalization Pg =  54.0%
+    n_sr =  50 per class: Recall Pr =  92.0% | Unseen Generalization Pg =  49.0%
+    n_sr = 150 per class: Recall Pr =  79.3% | Unseen Generalization Pg =  51.0%
+  >>> Differentiated Environment (Horiz vs Vert bars, Pc11 > Pa > Pc12):
+    n_sr =  10 per class: Recall Pr =  95.0% | Unseen Generalization Pg =  64.5%
+    n_sr =  50 per class: Recall Pr =  84.0% | Unseen Generalization Pg =  64.0%
+    n_sr = 150 per class: Recall Pr =  86.7% | Unseen Generalization Pg =  79.5%
+
+=== E4.1: Spontaneous Unsupervised Organization with Proportional Value Decay (p. 404) ===
+  With proportional decay (lambda=0.05) + gamma competition (p. 404)    : mean unsupervised separation accuracy = 100.0% (20 trials)
+  Negative control: uncompensated alpha gain without decay/competition  : mean unsupervised separation accuracy =  50.0% (20 trials)
+
+=== E4.2: Concrete Conjunction vs Relational Judgment Boundary (pp. 404-405) ===
+  Slot-local A-units (each A-unit sees only Left OR Right object)    | Concrete ('Left=Square AND Right=Circle') :  99.8%
+  Slot-local A-units (each A-unit sees only Left OR Right object)    | Relational ('Left shape == Right shape')  :  42.0%
+  Cross-slot A-units (each A-unit sees both Left AND Right objects)  | Concrete ('Left=Square AND Right=Circle') : 100.0%
+  Cross-slot A-units (each A-unit sees both Left AND Right objects)  | Relational ('Left shape == Right shape')  : 100.0%
+FINISHED rc=0

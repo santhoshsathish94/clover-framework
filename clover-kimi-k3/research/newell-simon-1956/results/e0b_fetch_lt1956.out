@@ -1,0 +1,282 @@
+Cloning into 'dmoews-logic-theorist'...
+Cloning into 'duplys-logic-theorist'...
+Cloning into 'jblattnernyc-logic-theorist-companion'...
+=== Check cloned repos for paper links or files ===
+>>> Repo: dmoews-logic-theorist (07fff3586ef2136a71515ef78e7a1c6609538bc0)
+   200 dmoews-logic-theorist/verify.py
+     6 dmoews-logic-theorist/analyze_output.test-input
+   138 dmoews-logic-theorist/pm-theorems.txt
+    16 dmoews-logic-theorist/logic.usage
+   484 dmoews-logic-theorist/orig-logic-routines.txt
+   701 dmoews-logic-theorist/transcription.txt
+     1 dmoews-logic-theorist/test-theorems-1.txt
+   302 dmoews-logic-theorist/test-source.txt
+    11 dmoews-logic-theorist/run_logic.usage
+  3447 dmoews-logic-theorist/run_logic.test
+   682 dmoews-logic-theorist/analyze_output.test
+    22 dmoews-logic-theorist/say-hi.py
+   214 dmoews-logic-theorist/logic.test
+   163 dmoews-logic-theorist/utils.py
+     2 dmoews-logic-theorist/test-theorems-2.txt
+    20 dmoews-logic-theorist/test-source-2.txt
+    85 dmoews-logic-theorist/grammar.py
+   853 dmoews-logic-theorist/logic.py
+     3 dmoews-logic-theorist/test-theorems-3.txt
+   224 dmoews-logic-theorist/analyze_output.py
+   120 dmoews-logic-theorist/test.py
+    64 dmoews-logic-theorist/run_logic.py
+   147 dmoews-logic-theorist/README.md
+    22 dmoews-logic-theorist/test-source-3.txt
+   596 dmoews-logic-theorist/logic-routines.txt
+    11 dmoews-logic-theorist/analyze_output.usage
+     4 dmoews-logic-theorist/test.sh
+    57 dmoews-logic-theorist/simple_parser.py
+    13 dmoews-logic-theorist/pm-axioms.txt
+  8608 total
+The aim of this code is to implement the first published version of the Logic Theory Machine
+(also called the Logic Theorist.)
+
+## The Logic Theory Machine
+
+The Logic Theory Machine was a program written by Allen Newell, J. C. Shaw, and Herbert A. Simon
+as part of their research into heuristic methods of problem-solving.  It was intended to
+prove theorems in propositional logic, using the logical system for this in
+_Principia Mathematica_.  [1]  Newell and Simon began writing the program around the end
+of 1955.  They initially simulated the program by hand, at one point using
+Simon's wife, children and some graduate students to help them.  [3]
+It was at first written in a pseudocode called IPL-I, which was never implemented.  [2], [3]
+The first version that was run on a computer was written in IPL-II and ran on the JOHNNIAC,
+producing its first proof in August 1956.  [1], [2], [3], [4]  It was later converted into IPL-V
+by Fred Tonge, and further developed by Einar Stefferud. [5]
+
+## The first published version of the Logic Theory Machine
+
+The source code for an early version of the Logic Theory Machine was published in 1956 in [6] and
+[7]; it was written in IPL-I, an assembler-like language for an abstract machine.
+The code is almost identical in both references.  The code unfortunately has some
+typos and problems and is not immediately runnable in its printed form.  I have tried
+to repair it as necessary, as explained in the source code files.
+
+## The logical system
+
+The propositional logic system in _Principia Mathematica_ [8] builds formulae up from propositional
+variables
+by means of unary negation (`~`) and binary or (`\/`).  Implication (`->`) is defined by
+letting `( p -> q )` equal `( ~ p \/ q )`, and these two expressions are treated as interchangeable
+(*1.01.) The five axioms are:
+
+*  `( ( p \/ p ) -> p )` (*1.2)
+* `( q -> ( p \/ q ) )` (*1.3)
+* `( ( p \/ q ) -> ( q \/ p ) )` (*1.4)
+* `( ( p \/ ( q \/ r ) ) -> ( q \/ ( p \/ r ) ) )` (*1.5) and
+* `( ( q -> r ) -> ( ( p \/ q ) -> ( p \/ r ) ) )` (*1.6.)
+
+The rules of inference are _detachment_ (*1.11), where `q` is inferred from `p` and
+`( p -> q )`, and _substitution_ of expressions into the propositional variables of a known
+axiom or theorem.  (Although substitution is not stated as an explicit deduction rule
+in _Principia Mathematica_, it is used extensively and admitted to be admissible at the beginning of *2.)
+
+Apart from substitution and detachment, the Logic Theory Machine also uses the proof method of
+_chaining_, where `( p -> r )` is inferred from `( p -> q )` and `( q -> r )`.  This can be justified
+by the theorems *2.05 or *2.06 in _Principia Mathematica_.
+
+## About the code
+
+The Python files meant to be run directly here are `logic.py`, `run_logic.py`, and `analyze_output.py`.
+They will all print basic usage information when invoked with the `--help` option.  `logic.py` is
+the interpreter for the IPL-I abstract machine.  `analyze_output.py` is intended to extract the
+proof found, if any, from the output printed by `logic.py`, since there was no provision to
+do that in the provided IPL-I source code.  It's best to use it with the `--info` option of
+`logic.py`.  `run_logic.py` is intended to imitate [1] by running the program successively on each of the
+theorems in *2 of _Principia Mathematica_, allowing it to use, in the proof of each theorem,
+all axioms and all previous theorems from *2, whether it managed to prove them or not.
+
+## File list
+
+>>> Repo: duplys-logic-theorist (cc75327fc941560902d734f5d89cc02c3a58b561)
+ 134 duplys-logic-theorist/logic_theorist.py
+  29 duplys-logic-theorist/README.md
+  29 duplys-logic-theorist/pyproject.toml
+  21 duplys-logic-theorist/LICENSE
+ 213 total
+# The Logic Theorist
+
+Python implementation of The Logic Theorist, the world's first AI system created by Allen Newell and Herbert Simon, with critical programming assistance from Cliff Shaw.
+
+## About
+
+The Logic Theorist was a groundbreaking artificial intelligence program developed in the 1950s that demonstrated the potential of computer-based reasoning. It was one of the first programs to prove mathematical theorems and laid the foundation for modern AI research.
+
+This Python implementation aims to recreate and explore the principles behind this historic AI system, providing insights into early AI reasoning techniques and theorem proving capabilities.
+
+## Features
+
+- Implements core theorem proving capabilities
+- Demonstrates early AI reasoning techniques
+- Provides educational insights into foundational AI concepts
+- Shows how symbolic AI approaches worked in the 1950s
+
+## Historical Significance
+
+The Logic Theorist was revolutionary because:
+- It was the first AI program to prove mathematical theorems
+- It demonstrated that computers could perform intelligent reasoning
+- It laid the groundwork for modern AI research
+- It showed that complex logical problems could be solved algorithmically
+
+## Installation
+
+To run this implementation, you'll need Python 3.6 or higher. Install the required dependencies:
+
+>>> Repo: jblattnernyc-logic-theorist-companion (e4e8415b287803ab52058f78a028ad135898f290)
+   195 jblattnernyc-logic-theorist-companion/PLANS.md
+   737 jblattnernyc-logic-theorist-companion/runs/20260512_141829/stdout.txt
+    27 jblattnernyc-logic-theorist-companion/runs/20260512_141829/generated_artifacts_listing.txt
+    16 jblattnernyc-logic-theorist-companion/runs/20260512_141829/capture_recovery_note.txt
+    73 jblattnernyc-logic-theorist-companion/runs/20260512_141829/stderr.txt
+     1 jblattnernyc-logic-theorist-companion/runs/20260512_141829/exit_status.txt
+   104 jblattnernyc-logic-theorist-companion/runs/20260512_141829/metadata.txt
+    30 jblattnernyc-logic-theorist-companion/runs/20260512_141829/post_run_metadata.txt
+     0 jblattnernyc-logic-theorist-companion/runs/20260512_141829/run_start.marker
+    36 jblattnernyc-logic-theorist-companion/runs/20260512_141829/manifest.sha256
+    11 jblattnernyc-logic-theorist-companion/runs/20260512_141829/summary.md
+    30 jblattnernyc-logic-theorist-companion/runs/README.md
+   737 jblattnernyc-logic-theorist-companion/runs/20260512_225541/stdout.txt
+    27 jblattnernyc-logic-theorist-companion/runs/20260512_225541/generated_artifacts_listing.txt
+    73 jblattnernyc-logic-theorist-companion/runs/20260512_225541/stderr.txt
+     1 jblattnernyc-logic-theorist-companion/runs/20260512_225541/exit_status.txt
+   104 jblattnernyc-logic-theorist-companion/runs/20260512_225541/metadata.txt
+    30 jblattnernyc-logic-theorist-companion/runs/20260512_225541/post_run_metadata.txt
+     0 jblattnernyc-logic-theorist-companion/runs/20260512_225541/run_start.marker
+    35 jblattnernyc-logic-theorist-companion/runs/20260512_225541/manifest.sha256
+     9 jblattnernyc-logic-theorist-companion/runs/20260512_225541/summary.md
+   737 jblattnernyc-logic-theorist-companion/runs/20260512_010918/stdout.txt
+    27 jblattnernyc-logic-theorist-companion/runs/20260512_010918/generated_artifacts_listing.txt
+     7 jblattnernyc-logic-theorist-companion/runs/20260512_010918/capture_recovery_note.txt
+    73 jblattnernyc-logic-theorist-companion/runs/20260512_010918/stderr.txt
+     1 jblattnernyc-logic-theorist-companion/runs/20260512_010918/exit_status.txt
+   104 jblattnernyc-logic-theorist-companion/runs/20260512_010918/metadata.txt
+    30 jblattnernyc-logic-theorist-companion/runs/20260512_010918/post_run_metadata.txt
+     0 jblattnernyc-logic-theorist-companion/runs/20260512_010918/run_start.marker
+    36 jblattnernyc-logic-theorist-companion/runs/20260512_010918/manifest.sha256
+    13 jblattnernyc-logic-theorist-companion/runs/20260512_010918/summary.md
+   298 jblattnernyc-logic-theorist-companion/scripts/run_logic_theorist_capture.sh
+   789 jblattnernyc-logic-theorist-companion/scripts/analyze_run.py
+   580 jblattnernyc-logic-theorist-companion/scripts/compare_runs.py
+    90 jblattnernyc-logic-theorist-companion/scripts/README.md
+   266 jblattnernyc-logic-theorist-companion/AGENTS.md
+     7 jblattnernyc-logic-theorist-companion/evidence/README.md
+   136 jblattnernyc-logic-theorist-companion/CHANGELOG.md
+    11 jblattnernyc-logic-theorist-companion/manifests/README.md
+    12 jblattnernyc-logic-theorist-companion/baseline/environment.txt
+     2 jblattnernyc-logic-theorist-companion/baseline/iplv_git_head.txt
+     4 jblattnernyc-logic-theorist-companion/baseline/iplv_git_remote.txt
+    37 jblattnernyc-logic-theorist-companion/baseline/initial_workspace_state.txt
+    92 jblattnernyc-logic-theorist-companion/baseline/20260821_fork_retirement_preflight.md
+    17 jblattnernyc-logic-theorist-companion/baseline/iplv_baseline_pending.txt
+    16 jblattnernyc-logic-theorist-companion/baseline/README.md
+    70 jblattnernyc-logic-theorist-companion/baseline/iplv_baseline_metadata.txt
+     3 jblattnernyc-logic-theorist-companion/baseline/iplv_git_status_short.txt
+   124 jblattnernyc-logic-theorist-companion/README.md
+     8 jblattnernyc-logic-theorist-companion/review-notes/README.md
+    56 jblattnernyc-logic-theorist-companion/docs/provenance.md
+   101 jblattnernyc-logic-theorist-companion/docs/evidence_policy.md
+   375 jblattnernyc-logic-theorist-companion/docs/user_guide.md
+   128 jblattnernyc-logic-theorist-companion/docs/workflow.md
+    24 jblattnernyc-logic-theorist-companion/reports/20260512_141829/theorem_summary.csv
+   157 jblattnernyc-logic-theorist-companion/reports/20260512_141829/run_report.md
+     3 jblattnernyc-logic-theorist-companion/reports/20260512_141829/analysis_manifest.sha256
+   817 jblattnernyc-logic-theorist-companion/reports/20260512_141829/analysis_summary.json
+    27 jblattnernyc-logic-theorist-companion/reports/README.md
+    24 jblattnernyc-logic-theorist-companion/reports/20260512_225541/theorem_summary.csv
+   157 jblattnernyc-logic-theorist-companion/reports/20260512_225541/run_report.md
+     3 jblattnernyc-logic-theorist-companion/reports/20260512_225541/analysis_manifest.sha256
+   817 jblattnernyc-logic-theorist-companion/reports/20260512_225541/analysis_summary.json
+    24 jblattnernyc-logic-theorist-companion/reports/20260512_010918/theorem_summary.csv
+   157 jblattnernyc-logic-theorist-companion/reports/20260512_010918/run_report.md
+     3 jblattnernyc-logic-theorist-companion/reports/20260512_010918/analysis_manifest.sha256
+   817 jblattnernyc-logic-theorist-companion/reports/20260512_010918/analysis_summary.json
+    22 jblattnernyc-logic-theorist-companion/LICENSE.md
+  9578 total
+# Logic Theorist Companion Repository
+
+This repository is the companion research apparatus for the Logic Theorist / IPL-V software archaeology, reproducibility, and evidence project.
+
+It is intentionally separate from the executable IPL-V specimen repository. The companion repository is for reproducibility workflow documentation, baseline metadata, evidence records, parser and audit scripts, reports, manifests, internal review notes, and publication-support materials.
+
+## Repository Model
+
+The intended local workspace is:
+
+```text
+~/Documents/PROGRAMMING/IPL/LOGIC THEORIST/
+  IPL-V/                         pinned executable specimen of upstream IPL-V
+  logic-theorist-companion/       companion research apparatus
+```
+
+The parent `LOGIC THEORIST/` directory is a workspace container and should not be treated as a monorepo.
+
+The public research project is `https://github.com/jblattnernyc/logic-theorist-companion`. The original upstream IPL-V repository remains an external provenance source rather than a project-owned public repository.
+
+## IPL-V Provenance
+
+The original upstream IPL-V source is:
+
+```text
+https://github.com/jeffshrager/IPL-V
+```
+
+The local `IPL-V/` directory is a pinned executable specimen of that upstream repository at commit `e35a705d57e99fe91d76d76b224b8af30f2fd632`. Its `origin` fetch URL is `https://github.com/jeffshrager/IPL-V.git`, and its `origin` push URL is `DISABLED`. Reproducers must use the exact documented commit rather than current upstream `master`.
+
+Existing preserved Logic Theorist runs in this companion repository were generated from commit `e35a705d`.
+
+## Separation of Materials
+
+This repository should contain companion materials only. It should not contain a copied full IPL-V source tree.
+
+The project distinguishes among:
+
+1. Original upstream IPL-V source.
+2. The local executable IPL-V specimen.
+3. Native generated Logic Theorist run artifacts.
+4. Companion analysis, reports, manifests, scripts, and interpretation.
+
+Future Logic Theorist runs may create native generated files under the executable specimen repository when faithful operation requires it. Organized copies, reports, parser outputs, manifests, and review notes belong in this companion repository or in explicitly documented external evidence storage.
+
+## Run Analysis
+
+Preserved Logic Theorist run bundles can be analyzed from the companion repository with:
+
+```sh
+python3 scripts/analyze_run.py runs/YYYYMMDD_HHMMSS
+```
+
+The analysis script reads an existing run bundle and writes derived companion records:
+
+```text
+reports/YYYYMMDD_HHMMSS/
+  run_report.md
+  theorem_summary.csv
+  analysis_summary.json
+=== Try downloading Newell & Simon (1956) RAND P-868 / IRE IT-2(3) PDF ===
+Trying https://www.rand.org/content/dam/rand/pubs/papers/2005/P868.pdf
+  size=919 head=<!DO
+Trying https://www.rand.org/content/dam/rand/pubs/papers/2006/P868.pdf
+  size=919 head=<!DO
+Trying https://www.rand.org/content/dam/rand/pubs/reports/2007/R366.pdf
+  size=919 head=<!DO
+Trying https://iiif.library.cmu.edu/file/Newell_box00057_fld04340_bdl0001_doc0001/Newell_box00057_fld04340_bdl0001_doc0001.pdf
+  size=196 head=<!DO
+Trying http://bitsavers.trailing-edge.com/pdf/rand/ipl/P-868_The_Logic_Theory_Machine_Jul56.pdf
+  size=3534001 head=%PDF
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+  Pages: 64
+  First 300 chars: ''
+Trying http://bitsavers.informatik.uni-stuttgart.de/pdf/rand/ipl/P-868_The_Logic_Theory_Machine_Jul56.pdf
+  size=3534001 head=%PDF
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+  Pages: 64
+  First 300 chars: ''
+FINISHED rc=0

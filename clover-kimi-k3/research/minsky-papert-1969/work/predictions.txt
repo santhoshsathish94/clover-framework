@@ -1,0 +1,37 @@
+# Predictions Log — Minsky & Papert (1969) Perceptrons Study
+
+## E1: Run reference repositories (`TaraAlcira/PerceptronsRevisited` spiral challenge and `vukrosic/rosenblatt-from-scratch` parity/order checks)
+Timestamp (before run): 2026-10-26 16:20 UTC
+Predictions:
+1. `TaraAlcira/PerceptronsRevisited` (`generate_spirals/one_spiral_function.py` and `two_spirals_function.py`) will generate connected 1-spiral and disconnected 2-spiral binary images (recreating the 1969 *Perceptrons* cover problem), and a diameter-limited or low-order linear perceptron on raw pixels will fail to separate 1-spiral vs 2-spiral images across random rotations/translations (~50% accuracy), whereas Minsky & Papert's serial connectivity algorithm (AIM-140 p. 208) will classify 100% of them using only 2 index registers `(i, j)`.
+
+## E2: Positive Normal Form (Mask Expansion), Group Invariance, Parity Order |R| & Weight Explosion, and Exact Counting Predicate (AIM-140 Sections I-III)
+Timestamp (before run): 2026-10-26 16:20 UTC
+Predictions:
+1. Positive Normal Form & Exact Order on n=3 (all 256 Boolean functions):
+   - Every Boolean function f: {0,1}^n -> {0,1} has a unique integer mask expansion f(x) = sum_{A subseteq R} c_A phi_A(x) (Theorem p. 181-182).
+   - Out of all 256 3-input Boolean functions: exactly 2 have order 0 (constants 0, 1), 102 have order 1 (total 104 linear threshold functions of order <= 1), 150 have order 2, and 2 have order 3 (3-bit parity and its negation).
+2. Exact Counting Function psi_M(X) = [|X| == M] (Example iii, p. 181):
+   - Minsky & Papert's order-2 formula `[(2M - 1) * sum(x_i) - 2 * sum_{i<j}(x_i * x_j) >= M^2]` will evaluate to 1 iff |X| == M with 100% accuracy across all 2^n subsets for n=8 and all M in 1..7.
+3. Parity Coefficient Explosion Theorem (p. 189-191):
+   - For the group-averaged mask representation of parity with margin > 2 (odd) vs < 0 (even), the alternating differences D_j = alpha_j - alpha_{j-1} satisfy sum_{j=1}^M C(M, j) |D_j| >= 2(2^M - 1) (with equality when alpha_j = 1 - (-2)^{j+1}, growing as 2^M).
+
+## E3: One-in-a-Box & Cutwise Connectivity (m=3, |A_i|=4 vs |A_i|=3, pp. 191-193, 201-202), Diameter-Limited Impossibility (p. 216), and Serial Connectivity (p. 208)
+Timestamp (before run): 2026-10-26 16:20 UTC
+Predictions:
+1. One-in-a-Box / Cutwise Connectivity (p. 201-202):
+   - For m=3 rows of |A_i|=4 squares, disconnected X1 with row counts (3, 3, 0) and connected X2 with row counts (4, 1, 1) have identical order-2 symmetric mask counts: N^1 = 6, N^{11} (same-row pairs) = 6, and N^{12} (different-row pairs) = 9, proving order > 2 when |A_i| >= 4.
+   - For m=3 rows of |A_i|=3 squares (512 subsets), Minsky & Papert's exact order-2 formula `[N^1(X) + N^{12}(X) - 2 * N^{11}(X) > 4]` on p. 202 will match one-in-a-box on all 512/512 subsets (100%).
+2. Diameter-Limited Connectivity (p. 216) & Serial Connectivity Algorithm (p. 208):
+   - On the four figures X_{00}, X_{01}, X_{10}, X_{11} (where left and right bridge caps are separated by distance > D), every predicate phi with diameter(S(phi)) <= D satisfies phi(X_{00}) + phi(X_{11}) == phi(X_{01}) + phi(X_{10}) identically, making linear threshold separation of connected {X_{01}, X_{10}} from disconnected {X_{00}, X_{11}} impossible.
+   - Minsky & Papert's 2-pointer serial boundary-tracing algorithm (p. 208) will accurately count connected components on 100% of test grid figures using only 2 integer pointers `(i, j)`.
+
+## E4: Chapter 12 (`AIM-167`) — Perceptron vs Naive Bayes Log-Odds (`w_{ij} = log(p_{ij}(1-q_j)/(q_j(1-p_{ij})))`) vs Nearest Neighbor on Parity
+Timestamp (before run): 2026-10-26 16:20 UTC
+Predictions:
+1. Figure 12.3(a) (Linearly separable correlated skew clouds, AIM-167 p. 195):
+   - Perceptron will achieve 100.0% training/test accuracy (0% error), whereas Naive Bayes (using exact class-conditional feature log-odds Eq. 4, p. 203) will make > 8% errors because within-class feature correlation tilts the line connecting the class means away from the separating hyperplane.
+2. Figure 12.3(b) (Non-separable conditionally independent noisy features, AIM-167 pp. 195, 200-204):
+   - Naive Bayes log-odds (Eq. 4) will match the Bayes-optimal minimum error rate, outperforming single-pass/multi-pass Perceptron which fluctuates on label noise.
+3. Section 12.3 Nearest Neighbor Pathology on Parity (AIM-167 pp. 198-199):
+   - On n-bit parity (n=8, 256 vectors), when a random fraction 1 - q of the hypercube is stored in memory, Nearest Neighbor on the remaining unseen fraction q has error probability >= 1 - q^n (near 100% error on unseen points!), so overall error across the whole space is >= q(1 - q^n) (e.g. at q=0.5, error on unseen points is ~99.6% vs 50% chance!).

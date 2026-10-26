@@ -1,0 +1,67 @@
+Trying https://web.archive.org/web/20220120042254id_/https://www.ling.upenn.edu/courses/cogs501/Rosenblatt1958.pdf
+  size=1631543 head=%PDF
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Pages: 23
+ 2006 62754 rosenblatt1958.txt
+=== PAGE 1 ===
+Psychological Review
+Vol. 65, No. 6, 19S8
+THE PERCEPTRON: A PROBABILISTIC MODEL FOR
+INFORMATION STORAGE AND ORGANIZATION
+IN THE BRAIN1
+F. ROSENBLATT
+Cornell Aeronautical Laboratory
+If we are eventually to understand
+the capability of higher organisms for
+perceptual recognition, generalization,
+recall, and thinking, we must first
+have answers to three fundamental
+questions:
+1. How is information about the
+physical world sensed, or detected, by
+the biological system?
+2. In what form is information
+stored, or remembered?
+3. How does information contained
+in storage, or in memory, influence
+recognition and behavior?
+The first of these questions is in the
+province of sensory physiology, and is
+the only one for which appreciable
+understanding has been achieved.
+This article will be concerned pri-
+marily with the second and third
+questions, which are still subject to a
+vast amount of speculation, and where
+the few relevant facts currently sup-
+plied by neurophysiology have not yet
+been integrated into an acceptable
+theory.
+With regard to the second question,
+two alternative positions have been
+maintained. The first suggests that
+storage of sensory information is in
+the form of coded representations or
+images, with some sort of one-to-one
+mapping between the sensory stimulus
+1 The development of this theory has been
+carried out at the Cornell Aeronautical Lab-
+oratory, Inc., under the sponsorship of the
+Office of Naval Research, Contract Nonr-
+2381(00). This article is primarily'an adap-
+tation of material reported in Ref. IS, which
+constitutes the first full report on the program.
+and the stored pattern. 
+According to
+this hypothesis, if one understood the
+code or "wiring diagram" of the nerv-
+ous system, one should, in principle,
+be able to discover exactly what an
+organism remembers by reconstruct-
+ing the original sensory patterns from
+the "memory traces" which they have
+left, much as we might develop a
+photographic negative, or translate
+the pattern of electrical charges in the
+FINISHED rc=0

@@ -1,0 +1,201 @@
+Found bitsavers archive.org ident: bitsavers_mitaiaimAI_1208423 mit :: ai :: aim :: AIM-167
+  Downloading: https://archive.org/download/bitsavers_mitaiaimAI_1208423/AIM-167_djvu.txt
+Found bitsavers archive.org ident: bitsavers_mitaiaimAI_669129 mit :: ai :: aim :: AIM-275
+  Downloading: https://archive.org/download/bitsavers_mitaiaimAI_669129/AIM-275_djvu.txt
+Found bitsavers archive.org ident: bitsavers_mitaiaimAI_621080 mit :: ai :: aim :: AIM-156
+  Downloading: https://archive.org/download/bitsavers_mitaiaimAI_621080/AIM-156_djvu.txt
+Found bitsavers archive.org ident: bitsavers_mitaiaimAI_2136438 mit :: ai :: aim :: AIM-140
+  Downloading: https://archive.org/download/bitsavers_mitaiaimAI_2136438/AIM-140_djvu.txt
+-rw-r--r-- 1 root root 82K Oct 26 11:14 AIM-140_djvu.txt
+-rw-r--r-- 1 root root 28K Oct 26 11:14 AIM-156_djvu.txt
+-rw-r--r-- 1 root root 61K Oct 26 11:14 AIM-167_djvu.txt
+-rw-r--r-- 1 root root 30K Oct 26 11:14 AIM-275_djvu.txt
+=== AIM-140_djvu.txt ===
+ 2568 83120 AIM-140_djvu.txt
+fr\M- WO 
+
+
+
+Marvin Miniky 
+SaymoLPf Pa pert 
+
+
+
+LINEARLY UNRECOGNIZABLE PATTERNS 
+
+
+
+Reprinted from 
+
+Proceedings «f Symposia in Applied fcterhemaiics, Volume | n 
+
+MATHEHATCCAL ASPECTS OF COMPUTER SCIENCE 
+
+
+
+Cop^rigfvri^Jbjr die Amrriran MiidiLmaLJcat Ki>cie£j- 1%? 
+Primed in the U.&A- 
+
+
+
+Marvin Miniky 
+Seymour Papert 
+
+
+
+LINEARLY UNRECOGNIZABLE PATTERNS" 
+
+
+
+InlrodiH'lion. The central theme of this study la the classification of 
+<:rrl.iLLCi nix>rru!trii:;il [jTii]it;r1its ;.i r.:nlin : -: I:. !.hi; lv|., ,:l fomputfttiOIl 
+necessary to determine whether S #iv«n ^un; h?*$ them, Consider* for 
+eiample, the following algorithm to determine whetiter a figure X u 
+cvruvx. For each pair of points, ip.q) we define the function 
+
+tpfiX} — 1 if ( p E X and q<E.X and midpoint ( p , q) {£ X ) 
+
+= OEh*|-w5H;, 
+
+=== AIM-156_djvu.txt ===
+ 1531 27861 AIM-156_djvu.txt
+MASSACHUSETTS INSTITUTE OF TECHNOLOGY 
+PROJECT MAC 
+
+
+
+Artificial Intelligence 
+
+ao. Wo, 156 Hatch 1968 
+
+
+
+Linear Decision and Learning Models 
+Marvin L. Minsky 
+
+
+
+This Memorandum Is a first draft of an essay on the simplest "learning" 
+processes. Comments arc invited* Subsequent sections will treat, among 
+other things: 
+
+The "stimulus-sampling" model of Estes 
+Relations between Pcrceptron-type error 
+reinforcement and Bayeslan-type correlation 
+reinforcement 
+
+and some other statistical methods viewed in the sane way. 
+
+
+
+1,0 Decisions based on fixed set of testa 
+
+The events to be classified lie in a set {F^ of classes- 
+
+
+
+
+.»QE2 
+
+
+
+xl£- 
+
+
+
+
+=== AIM-167_djvu.txt ===
+ 2682 62233 AIM-167_djvu.txt
+- 'J 
+
+
+
+MASSACHUSETTS INSTITUTE OF TECHNOLOGY 
+PROJECT MAC 
+
+
+
+Artificial Intelligence 
+
+Kno. No, 167 October 1966 
+
+
+
+Linear SepaMtiM and Learning 
+
+Marvin Mlnsky 
+
+and 
+
+Seymour Papert 
+
+
+
+This is a reprint of page proofs of Chapter 12 of Perceptrons , 
+H. Hlnsky and S. Papert, MIT Press 1968, (we hopt). Ic replace! 
+A,l. Memo. No- 156 dated March 1968. 
+
+
+
+Linear Separation and Learning 
+
+
+
+12 
+
+
+
+12.0Inlroducrioit 
+
+The pcrceptron and the convergence theorems or Chapter 1 1 are 
+related to many other procedures thai arc studied in an extensive 
+and diKordcrly literature under such titles as learning machines. 
+MOimSOF LEARNING, INFORMATION RETRIEVAL. STATISTICAL DE- 
+=== AIM-275_djvu.txt ===
+  996 30438 AIM-275_djvu.txt
+MASSACHUSETTS INSTITUTE OF TECHNOLOGY 
+A. I, LABORATORY 
+
+
+
+Artificial Intelligence 
+
+Memo No. 275 January 1973 
+
+
+
+DIFFERENTIAL PERCEPTIONS 
+
+Martin Brooks 
+Jerrold Ginsparg 
+
+
+
+Work reported herein was conducted at the Artificial Intelligence Lab- 
+oratory, a Massachusetts Institute of Technology research program sup- 
+ported in part by the Advanced Research Projects Agency of the Depart- 
+ment of Defense and monitored by the Office of Naval Research under 
+Contract Number NOO014-7O-A-0362-Q003, 
+
+
+
+Reproduction of this document in whole or in part, is permitted for 
+any purpose of the United States Government- 
+
+
+
+CONTENTS 
+
+INTRODUCTION 1 
+
+BASIC CONCEPTS 2 
+
+EXAMPLES 6 
+
+RESTRICTEO EQUIVALENCE OF DISCRETE AND DIFFERENTIAL PERCEPTR0NS.9 
+GEOMETRIC TRANSFORMATIONS 13 
+
+
+
+INTRODUCTION 
+FINISHED rc=0

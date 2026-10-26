@@ -1,0 +1,73 @@
+=== 1. Run pop123-ux/LeNet_5-from-scratch tests & inspect parameter count ===
+  pop123-ux passed: test_backward_reaches_trainable_parameters
+  pop123-ux passed: test_default_checkpoint_points_to_checkpoints_directory
+  pop123-ux passed: test_digit_bitmaps_have_expected_shape_and_values
+  pop123-ux passed: test_forward_shape_and_nonnegative_distances
+  pop123-ux passed: test_parameter_counter_matches_model_parameters
+  pop123-ux passed: test_predict_uses_minimum_distance_class
+  pop123-ux passed: test_rbf_centers_are_registered_as_buffer_not_parameter
+  pop123-ux LeNet_5.params(): 60856 total trainable parameters
+    conv1.weight             : (6, 1, 5, 5) (150)
+    conv1.bias               : (6,) (6)
+    conv2.weight             : (16, 6, 5, 5) (2400)
+    conv2.bias               : (16,) (16)
+    c5.weight                : (120, 16, 5, 5) (48000)
+    c5.bias                  : (120,) (120)
+    f6.weight                : (84, 120) (10080)
+    f6.bias                  : (84,) (84)
+=== 2. Run VTongTV/LeNet-5-scratch tests & inspect parameter count ===
+  Layer 0 (ConvLayer):w=True
+  Layer 1 (Tanh):w=False
+  Layer 2 (SubsampleLayer):w=True
+  Layer 3 (Tanh):w=False
+  Layer 4 (ConvLayer):w=True
+  Layer 5 (Tanh):w=False
+  Layer 6 (SubsampleLayer):w=True
+  Layer 7 (Tanh):w=False
+  Layer 8 (ConvLayer):w=True
+  Layer 9 (Tanh):w=False
+  Layer 10 (FCLayer):w=True
+  Layer 11 (Tanh):w=False
+=== 3. Run our verified lecun1998_experiments.py (E2, E3, E4) ===
+=== E2.1: Exact LeNet-5 Layer-by-Layer Parameter & Connection Accounting (Section II-B, pp. 7-9) ===
+  C1 (6@28x28, 5x5 conv)     | shape=(6, 28, 28)    | trainable_params=   156 | connections= 122304
+  S2 (6@14x14, 2x2 subs)     | shape=(6, 14, 14)    | trainable_params=    12 | connections=   5880
+  C3 (16@10x10, Table I)     | shape=(16, 10, 10)   | trainable_params=  1516 | connections= 151600
+  S4 (16@5x5, 2x2 subs)      | shape=(16, 5, 5)     | trainable_params=    32 | connections=   2000
+  C5 (120@1x1, 5x5 conv)     | shape=(120, 1, 1)    | trainable_params= 48120 | connections=  48120
+  F6 (84 units, full)        | shape=(84,)          | trainable_params= 10164 | connections=  10164
+  RBF (10 Euclidean units)   | shape=(10,)          | trainable_params=     0 | connections=    840
+  TOTAL LeNet-5 (Fig. 2, p. 7): trainable_params = 60000 (paper: 60,000), connections = 340908 (paper: 340,908)
+  Table I C3 savings: 1516 params / 151600 conns vs dense S2->C3 2416 params / 241600 conns (saves 37.3%!)
+
+=== E2.2: Appendix A Scaled Hyperbolic Tangent f(a) = 1.7159 tanh(2/3 a) (Eq. 6 & p. 41) ===
+  f(+1.0) = +0.999997, f(-1.0) = -0.999997 (|f(1) - 1| = 2.74e-06)
+  Slope at origin f'(0) = A*S = 1.1439, slope at +/-1 f'(+/-1) = 0.7554
+  Max curvature |f''(a)| occurs at a = +/-0.9877 (numerical grid max: +/-0.9877 ~ +/-1.0 RBF target!)
+
+=== E2.3: Appendix C Stochastic Diagonal Levenberg-Marquardt Gauss-Newton Hessian (Eq. 18-27, pp. 41-42) ===
+  Max |Eq. 23-27 backprop h_kk - sum_(i,j in V_k) (df_out/du_ij)^2|: 6.51e-19
+  Mean Gauss-Newton diagonal curvature: shared C1 weight h_kk = 1.6376e-03 vs unshared head weight = 1.3179e-01
+
+=== E3.1: Euclidean RBF Output Collapse under Adaptive RBF + MSE (Eq. 8) vs Competitive MAP (Eq. 9, pp. 8-9) ===
+  Adaptive RBF + Pure MSE (Eq. 8):        mean RBF penalty = 0.00001, center spread = 0.0017, class margin = 0.00000, acc = 12.5% (COLLAPSED!)
+  Adaptive RBF + Competitive MAP (Eq. 9): center spread = 7.4574, class margin = 26.86, acc = 100.0% (NO COLLAPSE!)
+
+=== E3.2: Space-Displacement Neural Network (SDNN) Exact Equivalence & MAC Speedup (Section VII, Fig. 23, p. 27) ===
+  Max |SDNN_single_pass - Sliding_16_crops| across 32x92 canvas: 1.53e-05
+  Spotted digit classes at window positions k=(1, 8, 15) [true=(2, 7, 4)]: [2, 7, 4]
+  C1..S4 connections evaluated: Sliding 16 crops = 4,508,544 vs SDNN shared feature maps = 1,017,264 (4.43x fewer MACs!)
+
+=== E4.1: GTN Forward Scorer Backward Recurrence (Eq. 15-16, p. 25) vs Central Finite Differences ===
+  Max |Eq. 15-16 analytical dC_forw/dc_i - finite_diff| across all 9 arcs: 8.66e-11
+
+=== E4.2: Parallel-Path Evidence Aggregation — Forward Scorer vs Viterbi (Section VI-C, p. 25) ===
+  Viterbi best path: label=(8,), penalty=1.8000 (picks wrong single path C_3=1.80 < 2.20!)
+  Forward Scorer penalties: label (3,4) = 1.5069 (= 2.20 - ln 2), label (8,) = 1.8000 -> selects (3,4)!
+
+=== E4.3: Unsegmented String-Level Discriminative Forward Training (Section VI-D, Fig. 21, pp. 25-26) ===
+  Non-Discriminative Viterbi (Eq. 11, p. 22): string acc = 90/90 (100.0%), mean arc penalty = 0.00032, conf = 0.044 (COLLAPSED to 0!)
+  Discriminative Viterbi     (Eq. 12, p. 24): string acc = 90/90 (100.0%), mean arc penalty = 0.3201, mean confidence = 0.063
+  Discriminative Forward     (Eq. 17, p. 26): string acc = 90/90 (100.0%), mean arc penalty = 9.0237, mean confidence = 1.000
+FINISHED
+FINISHED rc=0

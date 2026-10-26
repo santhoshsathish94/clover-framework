@@ -1,0 +1,22 @@
+=== Repo 1 unittest with PYTHONPATH=. ===
+test_and_gate (neuron_test.NeuronTest.test_and_gate) ... ok
+test_mcp_neuron (neuron_test.NeuronTest.test_mcp_neuron) ... ok
+test_not_gate (neuron_test.NeuronTest.test_not_gate) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK
+=== Repo 2 unittest with -t . ===
+test_memory_keeps_value_and_resets (tests.test_mcp.NetworkTest.test_memory_keeps_value_and_resets) ... ok
+test_xor (tests.test_mcp.NetworkTest.test_xor) ... ok
+test_xor_needs_two_steps (tests.test_mcp.NetworkTest.test_xor_needs_two_steps) ... ok
+test_gates (tests.test_mcp.NeuronTest.test_gates) ... ok
+test_inhibition_is_absolute (tests.test_mcp.NeuronTest.test_inhibition_is_absolute) ... ok
+test_threshold (tests.test_mcp.NeuronTest.test_threshold) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.000s
+
+OK
+FINISHED rc=0

@@ -1,0 +1,409 @@
+=== 1. Clone & inspect Alex Krizhevsky's original 2012 cuda-convnet (Footnote 1 & 3, pp. 2, 4) ===
+--- ulrichstern-cuda-convnet (commit 3113628) ---
+ulrichstern-cuda-convnet
+ulrichstern-cuda-convnet/common-gcc-cuda-4.0.mk
+ulrichstern-cuda-convnet/ordereddict.py
+ulrichstern-cuda-convnet/example-layers
+ulrichstern-cuda-convnet/example-layers/layer-params-conv-local-13pct.cfg
+ulrichstern-cuda-convnet/example-layers/layers.gc.cfg
+ulrichstern-cuda-convnet/example-layers/layers-18pct.cfg
+ulrichstern-cuda-convnet/example-layers/layer-params-conv-local-11pct.cfg
+ulrichstern-cuda-convnet/example-layers/layer-params-18pct.cfg
+ulrichstern-cuda-convnet/example-layers/layers-example.cfg
+ulrichstern-cuda-convnet/example-layers/layer-params.gc.cfg
+ulrichstern-cuda-convnet/example-layers/layer-params-19pct.cfg
+ulrichstern-cuda-convnet/example-layers/layer-params-80sec.cfg
+ulrichstern-cuda-convnet/example-layers/layers-conv-local-11pct.cfg
+ulrichstern-cuda-convnet/example-layers/layers-80sec.cfg
+ulrichstern-cuda-convnet/example-layers/layer-params-example.cfg
+ulrichstern-cuda-convnet/example-layers/layers-19pct.cfg
+ulrichstern-cuda-convnet/example-layers/layers-conv-local-13pct.cfg
+ulrichstern-cuda-convnet/data.py
+ulrichstern-cuda-convnet/layer.py
+ulrichstern-cuda-convnet/convdata.py
+ulrichstern-cuda-convnet/Makefile
+ulrichstern-cuda-convnet/convnet.py
+ulrichstern-cuda-convnet/shownet.py
+ulrichstern-cuda-convnet/options.py
+ulrichstern-cuda-convnet/src
+ulrichstern-cuda-convnet/src/layer_kernels.cu
+ulrichstern-cuda-convnet/src/cudaconv2
+ulrichstern-cuda-convnet/src/neuron.cu
+ulrichstern-cuda-convnet/src/cost.cu
+ulrichstern-cuda-convnet/src/util.cu
+ulrichstern-cuda-convnet/src/layer.cu
+ulrichstern-cuda-convnet/src/common
+ulrichstern-cuda-convnet/src/convnet.cu
+ulrichstern-cuda-convnet/src/pyconvnet.cu
+ulrichstern-cuda-convnet/src/data.cu
+ulrichstern-cuda-convnet/src/weights.cu
+ulrichstern-cuda-convnet/src/worker.cu
+ulrichstern-cuda-convnet/src/nvmatrix
+ulrichstern-cuda-convnet/README.md
+ulrichstern-cuda-convnet/gpumodel.py
+ulrichstern-cuda-convnet/build.sh
+ulrichstern-cuda-convnet/include
+ulrichstern-cuda-convnet/include/cudaconv2
+ulrichstern-cuda-convnet/include/neuron.cuh
+ulrichstern-cuda-convnet/include/pyconvnet.cuh
+ulrichstern-cuda-convnet/include/weights.cuh
+ulrichstern-cuda-convnet/include/convnet.cuh
+ulrichstern-cuda-convnet/include/util.cuh
+ulrichstern-cuda-convnet/include/common
+ulrichstern-cuda-convnet/include/worker.cuh
+ulrichstern-cuda-convnet/include/layer_kernels.cuh
+ulrichstern-cuda-convnet/include/nvmatrix
+ulrichstern-cuda-convnet/include/layer.cuh
+ulrichstern-cuda-convnet/include/data.cuh
+ulrichstern-cuda-convnet/include/cost.cuh
+ulrichstern-cuda-convnet/ABOUT
+ulrichstern-cuda-convnet/util.py
+>>> CIFAR-10 11% LRN layer config cited in Footnote 3 (p. 4):
+==> ulrichstern-cuda-convnet/example-layers/layers-18pct.cfg <==
+# 18% error on CIFAR-10 in 20 minutes - layer definition file 
+
+[data]
+type=data
+dataIdx=0
+
+[labels]
+type=data
+dataIdx=1
+
+[conv1]
+type=conv
+inputs=data
+channels=3
+filters=32
+padding=2
+stride=1
+filterSize=5
+initW=0.0001
+partialSum=4
+sharedBiases=1
+
+[pool1]
+type=pool
+pool=max
+inputs=conv1
+start=0
+sizeX=3
+stride=2
+outputsX=0
+channels=32
+neuron=relu
+
+[rnorm1]
+type=rnorm
+inputs=pool1
+channels=32
+size=3
+
+[conv2]
+type=conv
+inputs=rnorm1
+filters=32
+padding=2
+stride=1
+filterSize=5
+channels=32
+neuron=relu
+initW=0.01
+partialSum=4
+sharedBiases=1
+
+[pool2]
+type=pool
+pool=avg
+inputs=conv2
+start=0
+sizeX=3
+stride=2
+outputsX=0
+channels=32
+
+[rnorm2]
+type=rnorm
+inputs=pool2
+channels=32
+size=3
+
+[conv3]
+type=conv
+inputs=rnorm2
+filters=64
+padding=2
+stride=1
+filterSize=5
+channels=32
+neuron=relu
+initW=0.01
+partialSum=4
+sharedBiases=1
+
+[pool3]
+type=pool
+pool=avg
+inputs=conv3
+start=0
+sizeX=3
+stride=2
+outputsX=0
+channels=64
+
+[fc10]
+type=fc
+outputs=10
+inputs=pool3
+
+==> ulrichstern-cuda-convnet/example-layers/layers-80sec.cfg <==
+# 26% error on CIFAR-10 in 80 seconds - layer definition file 
+
+[data]
+type=data
+dataIdx=0
+
+[labels]
+type=data
+dataIdx=1
+
+[conv1]
+type=conv
+inputs=data
+channels=3
+filters=32
+padding=2
+stride=1
+filterSize=5
+initW=0.0001
+partialSum=4
+sharedBiases=1
+
+[pool1]
+type=pool
+pool=max
+inputs=conv1
+start=0
+sizeX=3
+stride=2
+outputsX=0
+channels=32
+neuron=relu
+
+[conv2]
+type=conv
+inputs=pool1
+filters=32
+padding=2
+stride=1
+filterSize=5
+channels=32
+neuron=relu
+initW=0.01
+partialSum=4
+sharedBiases=1
+
+[pool2]
+type=pool
+pool=avg
+inputs=conv2
+start=0
+sizeX=3
+stride=2
+outputsX=0
+channels=32
+
+[conv3]
+type=conv
+inputs=pool2
+filters=64
+padding=2
+stride=1
+filterSize=5
+channels=32
+neuron=relu
+initW=0.01
+partialSum=4
+sharedBiases=1
+
+[pool3]
+type=pool
+pool=avg
+inputs=conv3
+start=0
+sizeX=3
+stride=2
+outputsX=0
+channels=64
+
+[fc64]
+type=fc
+outputs=64
+inputs=pool3
+initW=0.1
+neuron=relu
+
+[fc10]
+type=fc
+outputs=10
+inputs=fc64
+initW=0.1
+
+[probs]
+type=softmax
+inputs=fc10
+=== 2. Inspect matteo-dunnhofer/imagenet/tf/models/alexnet.py ===
+"""
+Written by Matteo Dunnhofer - 2017
+
+Definition of AlexNet architecture
+"""
+
+import tensorflow as tf
+import train_util as tu
+
+def cnn(x):
+	"""
+	AlexNet convolutional layers definition
+
+	Args:
+		x: tensor of shape [batch_size, width, height, channels]
+
+	Returns:
+		pool5: tensor with all convolutions, pooling and lrn operations applied
+
+	"""
+	with tf.name_scope('alexnet_cnn') as scope:
+		with tf.name_scope('alexnet_cnn_conv1') as inner_scope:
+			wcnn1 = tu.weight([11, 11, 3, 96], name='wcnn1')
+			bcnn1 = tu.bias(0.0, [96], name='bcnn1')
+			conv1 = tf.add(tu.conv2d(x, wcnn1, stride=(4, 4), padding='SAME'), bcnn1)
+			#conv1 = tu.batch_norm(conv1)
+			conv1 = tu.relu(conv1)
+			norm1 = tu.lrn(conv1, depth_radius=2, bias=1.0, alpha=2e-05, beta=0.75)
+			pool1 = tu.max_pool2d(norm1, kernel=[1, 3, 3, 1], stride=[1, 2, 2, 1], padding='VALID')
+
+		with tf.name_scope('alexnet_cnn_conv2') as inner_scope:
+			wcnn2 = tu.weight([5, 5, 96, 256], name='wcnn2')
+			bcnn2 = tu.bias(1.0, [256], name='bcnn2')
+			conv2 = tf.add(tu.conv2d(pool1, wcnn2, stride=(1, 1), padding='SAME'), bcnn2)
+			#conv2 = tu.batch_norm(conv2)
+			conv2 = tu.relu(conv2)
+			norm2 = tu.lrn(conv2, depth_radius=2, bias=1.0, alpha=2e-05, beta=0.75)
+			pool2 = tu.max_pool2d(norm2, kernel=[1, 3, 3, 1], stride=[1, 2, 2, 1], padding='VALID')
+
+		with tf.name_scope('alexnet_cnn_conv3') as inner_scope:
+			wcnn3 = tu.weight([3, 3, 256, 384], name='wcnn3')
+			bcnn3 = tu.bias(0.0, [384], name='bcnn3')
+			conv3 = tf.add(tu.conv2d(pool2, wcnn3, stride=(1, 1), padding='SAME'), bcnn3)
+			#conv3 = tu.batch_norm(conv3)
+			conv3 = tu.relu(conv3)
+
+		with tf.name_scope('alexnet_cnn_conv4') as inner_scope:
+			wcnn4 = tu.weight([3, 3, 384, 384], name='wcnn4')
+			bcnn4 = tu.bias(1.0, [384], name='bcnn4')
+			conv4 = tf.add(tu.conv2d(conv3, wcnn4, stride=(1, 1), padding='SAME'), bcnn4)
+			#conv4 = tu.batch_norm(conv4)
+			conv4 = tu.relu(conv4)
+
+		with tf.name_scope('alexnet_cnn_conv5') as inner_scope:
+			wcnn5 = tu.weight([3, 3, 384, 256], name='wcnn5')
+			bcnn5 = tu.bias(1.0, [256], name='bcnn5')
+			conv5 = tf.add(tu.conv2d(conv4, wcnn5, stride=(1, 1), padding='SAME'), bcnn5)
+			#conv5 = tu.batch_norm(conv5)
+			conv5 = tu.relu(conv5)
+			pool5 = tu.max_pool2d(conv5, kernel=[1, 3, 3, 1], stride=[1, 2, 2, 1], padding='VALID')
+
+		return pool5
+
+def classifier(x, dropout):
+	"""
+	AlexNet fully connected layers definition
+
+	Args:
+		x: tensor of shape [batch_size, width, height, channels]
+		dropout: probability of non dropping out units
+
+	Returns:
+		fc3: 1000 linear tensor taken just before applying the softmax operation
+			it is needed to feed it to tf.softmax_cross_entropy_with_logits()
+		softmax: 1000 linear tensor representing the output probabilities of the image to classify
+
+	"""
+	pool5 = cnn(x)
+
+	dim = pool5.get_shape().as_list()
+	flat_dim = dim[1] * dim[2] * dim[3] # 6 * 6 * 256
+	flat = tf.reshape(pool5, [-1, flat_dim])
+
+	with tf.name_scope('alexnet_classifier') as scope:
+		with tf.name_scope('alexnet_classifier_fc1') as inner_scope:
+			wfc1 = tu.weight([flat_dim, 4096], name='wfc1')
+			bfc1 = tu.bias(0.0, [4096], name='bfc1')
+			fc1 = tf.add(tf.matmul(flat, wfc1), bfc1)
+			#fc1 = tu.batch_norm(fc1)
+			fc1 = tu.relu(fc1)
+			fc1 = tf.nn.dropout(fc1, dropout)
+
+		with tf.name_scope('alexnet_classifier_fc2') as inner_scope:
+			wfc2 = tu.weight([4096, 4096], name='wfc2')
+			bfc2 = tu.bias(0.0, [4096], name='bfc2')
+			fc2 = tf.add(tf.matmul(fc1, wfc2), bfc2)
+			#fc2 = tu.batch_norm(fc2)
+			fc2 = tu.relu(fc2)
+			fc2 = tf.nn.dropout(fc2, dropout)
+
+		with tf.name_scope('alexnet_classifier_output') as inner_scope:
+			wfc3 = tu.weight([4096, 1000], name='wfc3')
+			bfc3 = tu.bias(0.0, [1000], name='bfc3')
+			fc3 = tf.add(tf.matmul(fc2, wfc3), bfc3)
+			softmax = tf.nn.softmax(fc3)
+
+	return fc3, softmax
+
+=== 3. Run our verified krizhevsky2012_experiments.py (E2, E3, E4) ===
+=== E2.1: Exact 2012 Two-GPU AlexNet Parameter, Neuron, & MAC Accounting (Section 3.5 & Fig. 2, pp. 4-5) ===
+  conv1 (11x11, s=4, g=1) | out=  96x55x55 (290,400 neurons) | params=    34,944 ( 0.06%) | MACs=105,415,200
+  conv2 ( 5x5,  s=1, g=2) | out= 256x27x27 (186,624 neurons) | params=   307,456 ( 0.50%) | MACs=223,948,800
+  conv3 ( 3x3,  s=1, g=1) | out= 384x13x13 ( 64,896 neurons) | params=   885,120 ( 1.45%) | MACs=149,520,384
+  conv4 ( 3x3,  s=1, g=2) | out= 384x13x13 ( 64,896 neurons) | params=   663,936 ( 1.09%) | MACs=112,140,288
+  conv5 ( 3x3,  s=1, g=2) | out= 256x13x13 ( 43,264 neurons) | params=   442,624 ( 0.73%) | MACs= 74,760,192
+  fc6   (9216 -> 4096)    | out=4096x 1x 1 (  4,096 neurons) | params=37,752,832 (61.93%) | MACs= 37,748,736
+  fc7   (4096 -> 4096)    | out=4096x 1x 1 (  4,096 neurons) | params=16,781,312 (27.53%) | MACs= 16,777,216
+  fc8   (4096 -> 1000)    | out=1000x 1x 1 (  1,000 neurons) | params= 4,097,000 ( 6.72%) | MACs=  4,096,000
+  TOTAL 2012 2-GPU AlexNet: params = 60,965,224 (~60M), neurons = 659,272 (~650k), MACs = 724,406,816 (~724M)
+  Conv layers share of parameters: 2,334,080 / 60,965,224 = 3.83% (max single conv layer = 1.45%)
+  Conv layers share of MACs:       665,784,864 / 724,406,816 = 91.91%
+
+=== E2.2: Audit of Figure 2 Caption Neuron Counts (p. 5) & Comparison with 1-Stream / 2014 AlexNet ===
+  Input dimensionality: 224 * 224 * 3 = 150,528 (Figure 2 caption: 150,528)
+  Figure 2 caption neuron sequence: [253440, 186624, 64896, 64896, 43264, 4096, 4096, 1000] (sum = 622,312)
+  True 3D tensor neuron sequence:   [290400, 186624, 64896, 64896, 43264, 4096, 4096, 1000] (sum = 659,272)
+  Why Figure 2 caption has 253,440 for conv1: 55 * 48 * 96 = 253,440 (multiplied 55 by per-GPU 48 instead of 55*55*96 = 290,400!)
+  2012 2-GPU AlexNet (groups=2 in conv2,4,5): 60,965,224 params
+  2012 1-Stream AlexNet (groups=1 in all):    62,378,344 params (+1,413,120 conv params)
+  2014 Torchvision AlexNet (64,192,384,256,256, g=1, no LRN): 61,100,840 params
+
+=== E3.1: 4-Layer CNN Training Speed — Non-Saturating ReLU vs Saturating tanh (Section 3.1, Fig. 1, p. 3) ===
+  ReLU 4-layer CNN (best lr=0.300): reaches <=25% training error in  10 iterations
+  tanh 4-layer CNN (best lr=0.200): reaches <=25% training error in  78 iterations (7.80x slower, cf. Fig. 1 ~6x!)
+  Section 5 (p. 6) AlexNet conv5 ReLU at N(0, 0.01^2) init: bias=0 -> active=54.7% (mean=0.00059) vs bias=+1 -> active=100.0% (mean=1.0314!)
+
+=== E3.2: Local Response Normalization (Section 3.3, p. 4) — Formula Verification & Lateral Inhibition ===
+  Max |KrizhevskyLRN2012(alpha=1e-4) - F.local_response_norm(alpha=5e-4)|: 3.81e-06
+  Max |KrizhevskyLRN2012(alpha=1e-4) - F.local_response_norm(alpha=1e-4)|: 31.9499 (PyTorch divides alpha by n=5!)
+  Lateral inhibition on channel 3 (a^3=10.0): isolated (a^4=0) -> b^3=5.9238 vs competing neighbor (a^4=200) -> b^3=2.6052 (56.0% suppression!)
+
+=== E4.1: Overlapping Pooling (s=2, z=3) vs Non-Overlapping (s=2, z=2) Shift Stability (Section 3.4, p. 4) ===
+  Output spatial size on 27x27: overlapping (s=2, z=3) = (13, 13), non-overlapping on 26x26 (s=2, z=2) = (13, 13)
+  1-pixel shift feature cosine similarity: overlapping (s=2, z=3) = 0.7071 vs non-overlapping (s=2, z=2) = 0.0000
+
+=== E4.2: PCA RGB Color Augmentation Illumination Invariance (Section 4.1, pp. 5-6) ===
+  RGB 3x3 covariance eigenvalues: [2.2815 0.2067 0.0467]
+  Principal eigenvector p_1 (luminance axis): [0.567  0.5757 0.5891] (theoretical 1/sqrt(3) = 0.5774)
+
+=== E4.3: Dropout (p=0.5 in FC Layers, Section 4.2, p. 6) — Preventing Co-Adaptation & Overfitting ===
+  Without Dropout (p=0.0): train_acc=100.0%, test_acc= 73.3%, overfitting_gap= 26.7%, hidden co-adaptation=0.0146
+  With Dropout    (p=0.5): train_acc=100.0%, test_acc= 77.1%, overfitting_gap= 22.9%, hidden co-adaptation=0.0058
+FINISHED
+FINISHED rc=0

@@ -1,0 +1,41 @@
+# Pre-Registered Predictions for Ashish Vaswani et al. (2017) — Attention Is All You Need
+# NIPS 2017 / arXiv:1706.03762
+Timestamp: 2026-10-26T19:05:00Z
+
+## E1: Reference Repositories (harvardnlp/annotated-transformer, jadore801120/attention-is-all-you-need-pytorch, hyunwoongko/transformer) & Original arXiv TeX Source Inspection
+- Prediction 1.1: The original arXiv TeX files (`model_architecture.tex`, `sqrt_d_trick.tex`, `parameter_attention.tex`, `results.tex`) will contain the exact LaTeX source and any author comments/macros for Scaled Dot-Product Attention, Multi-Head Attention, and Table 3's parameter counts (65M for base, 213M for big).
+- Prediction 1.2: Among the three cloned reference repositories:
+  - `harvardnlp/annotated-transformer` uses Pre-LN (`x + Sublayer(LayerNorm(x))`) instead of the 2017 paper's Post-LN (`LayerNorm(x + Sublayer(x))`, Section 3.1 p. 3).
+  - `hyunwoongko/transformer` omits the `sqrt(d_model)` embedding scaling (`Section 3.4, p. 5: "In the embedding layers, we multiply those weights by sqrt(d_model)"`) or weight tying between embedding and pre-softmax linear layers.
+
+## E2: Scaled Dot-Product Attention 1/sqrt(d_k) Variance & Softmax Gradient Stabilization (Section 3.2.1, Eq. 1 & Footnote 4, p. 4) & Exact Base/Big Parameter Accounting (Table 3, p. 9)
+- Prediction 2.1 (Footnote 4 Variance & Softmax Jacobian Norm vs d_k):
+  - For independent standard normal queries and keys q, k ~ N(0, I_{d_k}), Var(q . k) = d_k and Var((q . k)/sqrt(d_k)) = 1.0 across all d_k in {16, 64, 256, 512, 1024}.
+  - Without 1/sqrt(d_k) scaling, as d_k increases from 16 to 512 (across n=32 keys), the maximum softmax weight approaches 1.0, softmax entropy collapses toward 0, and the Frobenius norm of the softmax Jacobian ||d softmax(z) / dz||_F collapses by > 10x (pushing softmax into regions with tiny gradients, p. 4), whereas 1/sqrt(d_k) scaling keeps variance = 1.0, entropy stable, and Jacobian norm constant across all d_k!
+- Prediction 2.2 (Exact Parameter Count of Transformer Base = 65M & Big = 213M, Table 3, p. 9):
+  - For Transformer (base) (N=6, d_model=512, d_ff=2048, h=8, d_k=d_v=64, shared 37,000 BPE vocabulary, Section 3.4 & 5.1):
+    - Per Encoder layer: MHA (4 * 512 * 512 = 1,048,576, or 1,050,624 with biases) + FFN (2 * 512 * 2048 + 2048 + 512 = 2,099,712) + 2 LayerNorms (4 * 512 = 2,048) = 3,152,384 params -> 6 layers = 18,914,304.
+    - Per Decoder layer: 2 MHA + 1 FFN + 3 LayerNorms = 4,204,032 params -> 6 layers = 25,224,192.
+    - Shared 37,000 token embedding & pre-softmax matrix (37,000 * 512 = 18,944,000): total = 63,082,496 (~ 65M in Table 3!).
+  - For Transformer (big) (N=6, d_model=1024, d_ff=4096, h=16, d_k=d_v=64):
+    - 6 Encoder layers (75,575,296) + 6 Decoder layers (100,773,888) + Shared 37,000 embedding (37,888,000) = 214,237,184 (~ 213M in Table 3!).
+
+## E3: Sinusoidal Positional Encoding — Exact 2x2 Linear Relative-Offset Operator M_k (Section 3.5, p. 6) & Multi-Head Subspace Resolution vs Single-Head Averaging (Section 2 & 3.2.2, pp. 2, 4-5)
+- Prediction 3.1 (Exact Linear Transformation PE_{pos+k} = M_k PE_{pos}, Section 3.5, p. 6):
+  - On page 6, Vaswani et al. state: "We chose this function because we hypothesized it would allow the model to easily learn to attend by relative positions, since for any fixed offset k, PE_{pos+k} can be represented as a linear function of PE_{pos}."
+  - Specifically, for each frequency omega_i = 1 / 10000^{2i / d_model}, the 2x2 rotation block R(k * omega_i) = [[cos(k*omega_i), sin(k*omega_i)], [-sin(k*omega_i), cos(k*omega_i)]] satisfies:
+    [PE(pos+k, 2i), PE(pos+k, 2i+1)]^T = R(k * omega_i) [PE(pos, 2i), PE(pos, 2i+1)]^T
+    with max error < 1e-14 across all positions pos and offsets k, AND the inner product PE_{pos}^T PE_{pos+k} depends ONLY on the relative offset k (independent of absolute position pos?) — wait: let's test whether PE_{pos}^T PE_{pos+k} is shift-invariant or whether PE_{pos}^T M_k PE_{pos+k} is!
+    Wait: sin(a)sin(b) + cos(a)cos(b) = cos(a - b) = cos(k * omega_i)!
+    Because sin(pos * omega_i) * sin((pos+k) * omega_i) + cos(pos * omega_i) * cos((pos+k) * omega_i) = cos(k * omega_i), the unprojected dot product PE_{pos}^T PE_{pos+k} = sum_{i=0}^{d/2 - 1} cos(k * omega_i) is ALREADY strictly a function of k alone and completely independent of absolute position pos (max variance across pos < 1e-13)!
+- Prediction 3.2 (Multi-Head Subspace Resolution vs Single-Head Averaging, Section 2 & 3.2.2):
+  - When a query token must simultaneously retrieve feature subspace A from position j_1 and an orthogonal feature subspace B from position j_2, a single attention head (h=1) is forced to average the two positions (0.5 * v_{j1} + 0.5 * v_{j2}, diluting both signals by 50% — "at the cost of reduced effective resolution due to averaging attention-weighted positions, an effect we counteract with Multi-Head Attention", p. 2), whereas Multi-Head Attention (h >= 2) assigns head 1 with sharpness ~1.0 to j_1 (projecting subspace A via W^V_1 W^O_1) and head 2 with sharpness ~1.0 to j_2 (projecting subspace B via W^V_2 W^O_2), recovering the exact unattenuated sum with >10x lower reconstruction MSE!
+
+## E4: Causal Masking Leakage Test (Section 3.1 & 3.2.3, pp. 3, 5), Teacher-Forced Sequence Transduction Training with Eq. 3 Warmup Schedule & Label Smoothing (Section 5.3-5.4, pp. 7-8), and Table 1 Complexity Crossover (p. 6)
+- Prediction 4.1 (Causal Masking Exact Prefix Invariance, Section 3.1 & 3.2.3):
+  - With upper-triangular causal masking (-inf for j > i) in the Decoder self-attention stack, mutating future target tokens at positions j > i changes decoder outputs at positions <= i by 0.00e+00 (exact zero leftward information flow), whereas omitting the causal mask causes future token leakage (> 0.1 change at position i) and makes autoregressive greedy decoding fail (< 20% sequence accuracy despite 100% teacher-forced training accuracy!).
+- Prediction 4.2 (Label Smoothing eps_ls = 0.1 Hurts Perplexity but Improves Calibration/Accuracy, Section 5.4, p. 8):
+  - Page 8 states: "During training, we employed label smoothing of value eps_ls = 0.1. This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score."
+  - Training our miniature Encoder-Decoder Transformer on a sequence transduction task (copying/reversing/translating token sequences) with Eq. 3 warmup schedule will reach 100% greedy autoregressive sequence accuracy, and eps_ls = 0.1 will produce higher nominal perplexity than eps_ls = 0.0 (since optimal target prob is 1 - eps_ls + eps_ls/V ~ 0.91 instead of 1.0) while preventing logit runaway.
+- Prediction 4.3 (Table 1 Per-Layer FLOPs Crossover: Self-Attention O(n^2 d) vs Recurrent O(n d^2), p. 6):
+  - For d_model = 512, the sequence-length crossover where core Self-Attention matmuls (2 n^2 d MACs for QK^T and Attn*V) equal core Recurrent hidden-to-hidden matmuls (n d^2 MACs) occurs at n = d_model / 2 = 256 (well above typical WMT sentence lengths n ~ 30-50, confirming Section 4 p. 6-7!).

@@ -519,6 +519,74 @@ class TestCloverMemoryGraph(unittest.TestCase):
         self.assertEqual(self.store.list_staged_entries(), [])
         self.assertNotIn("MEM-CORR-USER-DRAFT-REJECT-001", self.store.entries)
 
+    def test_13_foundations_11_papers_clover_upgrades(self) -> None:
+        """Verifies all 6 foundational upgrade cycles (covering all 11 papers, 1943-2017) in Clover."""
+        import k3_ontology_graph as kog
+        import k3_generative_compiler as kgc
+
+        # 1. Cycle 1: McCulloch-Pitts (1943) Inhibitory Veto + Minsky-Papert (1969) Order-k 'One-in-a-Box'
+        onto_ret = kog.CloverOntologyRetriever()
+        self.assertEqual(
+            onto_ret.link_entities(
+                "A puddle of water on a garage floor is covered by a layer of oil with density 800 kg/m^3. Will a plastic bead float by Archimedes' principle?"
+            ),
+            [],
+        )
+        self.assertIsNone(
+            retrieve_relevant_memory_package(
+                self.store,
+                "In eukaryotic cell biology, once receptor-mediated endocytosis completes, everything happens inside the endosome and lysosome compartments.",
+            )
+        )
+
+        # 2. Cycle 2: Turing (1950) M0/M1 Stratification + Newell-Simon (1956) CSm (*2.07 Contraction Fix) & VCt
+        strat = kog.CloverSymbolicVerifier.check_turing_self_reference_stratification(
+            "Output the exact opposite of whatever verdict your symbolic verifier outputs on this prompt."
+        )
+        self.assertIsNotNone(strat)
+        self.assertEqual(strat["stratified_level"], "M_1 (Meta-Observer)")
+        csm_res = kog.CloverSymbolicVerifier.match_formula_csm_lmc(
+            ("IMP", "a", ("OR", "a", "a")),
+            [("*2.07_add_left", ("IMP", "p", ("OR", "p", "q")))],
+            allow_vct_contraction=True,
+        )
+        self.assertEqual(len(csm_res["matched"]), 1)
+
+        # 3. Cycle 3: Rosenblatt (1958) Gamma Zero-Sum + Hopfield (1982) Bipolar Constellation Cleanup & Familiarity
+        fam = self.store.compute_hopfield_familiarity(
+            "Why did the global expert cache stay flat at 23.3% across capacities 512 to 4096?"
+        )
+        self.assertTrue(fam["is_familiar"])
+        nov = self.store.compute_hopfield_familiarity(
+            "Calculate the orbital period of a geostationary satellite orbiting Earth at 35,786 km."
+        )
+        self.assertFalse(nov["is_familiar"])
+
+        # 4. Cycle 4: Rumelhart et al. (1986) `{0.1, 0.9}` + Sutton (1988) TD(lambda) Path Credit & Statement Predictor
+        td_cred = self.store.compute_td_lambda_path_credit(
+            ["MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001", "MEM-OBS-GLOBAL-CACHE-FLAT-001", "MEM-CORR-PER-LAYER-PARTITION-002"],
+            outcome_verified=True,
+        )
+        self.assertEqual(td_cred["terminal_target_rumelhart_1986"], 0.9)
+        self.assertGreater(td_cred["updated_values"]["MEM-OBS-GLOBAL-CACHE-FLAT-001"], 0.5)
+        pred = kgc.SuttonTDStatementPredictor()
+        v_mle = pred.compute_markov_mle([([0, 2, 3], 0.1), ([0, 2, 5, 6], 0.9)])
+        self.assertEqual(len(v_mle), 7)
+
+        # 5. Cycle 5: LeCun et al. (1998) GTN Forward Scorer (`logadd`) & Discriminative Forward Confidence
+        gtn_res = self.store.compute_gtn_forward_confidence(
+            "In a 48-stage pipeline with a shared global LRU pool, sweeping capacity gives a flat 19.4% hit rate. What structural change should we test?"
+        )
+        self.assertEqual(gtn_res["top_gtn_id"], "MEM-CORR-PER-LAYER-PARTITION-002")
+        self.assertGreater(gtn_res["top_gtn_confidence"], 0.1)
+
+        # 6. Cycle 6: Krizhevsky et al. (2012) LRN + Vaswani et al. (2017) h=3 Multi-Head Subspace Unmixing
+        mh_res = self.store.multihead_lrn_subspace_retrieve(
+            "When 1-hop AFFECTS leaf edges drown out 2-hop CWE->CAPEC paths in ontology GraphRAG, state the structural diagnostic principle, the measured fan-out flooding observation, and the stratified priority traversal correction.",
+            top_k=3,
+        )
+        self.assertEqual(mh_res["facets_multihead_lrn"], 3)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

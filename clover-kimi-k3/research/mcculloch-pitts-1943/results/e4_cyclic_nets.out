@@ -1,0 +1,16 @@
+=== E4.1: Theorem 7 (Fig. 1i, p. 108) Alterable Synapse vs Fixed Circle ===
+Theorem 7 (Fig. 1i) alterable synapse == order-1 circle == p.105 formula across 4096/4096 6-step histories
+
+=== E4.2: Theorem 8 (Eq. 5-9, pp. 109-110) State-Transition Solution for Order p=2 Cyclic Net ===
+Theorem 8 Eq. (5)-(8) over 2^p=4 state conjunctions matched Eq. (1) simulation on 1024/1024 sequences
+Negative control (swapped transition predicate Psi_{i,2}): matched on 432/1024 sequences
+
+=== E4.3: Theorem 10 (pp. 112-113) Quantified & Modulo-n Cyclic Nets ===
+Theorem 10 Existential (Ez2 < z1) Pr_1(z2): verified on 64/64 6-step streams
+Theorem 10 Universal   (z2 < z1) Pr_1(z2): verified on 64/64 6-step streams
+Theorem 10 Modulo-3 ring firing times (t=1..9): c1=[1, 4, 7] (t==1 mod 3), c2=[2, 5, 8] (t==2 mod 3), c3=[3, 6, 9] (t==0 mod 3)
+
+=== E4.4: Section 4 (pp. 113-114) Irreciprocity of Causality ===
+Fig. 1e transition map: 64 predecessor configurations (c1,c2,ca,cb,c3,c4) -> 8/16 reachable next internal states
+Preimage sizes per reachable next state (backward ambiguity): [12, 12, 12, 12, 4, 4, 4, 4] (min=4, max=12)
+FINISHED rc=0

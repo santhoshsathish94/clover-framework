@@ -1,0 +1,281 @@
+=== 1. Read dmoews-logic-theorist/README.md and transcription.txt header ===
+The aim of this code is to implement the first published version of the Logic Theory Machine
+(also called the Logic Theorist.)
+
+## The Logic Theory Machine
+
+The Logic Theory Machine was a program written by Allen Newell, J. C. Shaw, and Herbert A. Simon
+as part of their research into heuristic methods of problem-solving.  It was intended to
+prove theorems in propositional logic, using the logical system for this in
+_Principia Mathematica_.  [1]  Newell and Simon began writing the program around the end
+of 1955.  They initially simulated the program by hand, at one point using
+Simon's wife, children and some graduate students to help them.  [3]
+It was at first written in a pseudocode called IPL-I, which was never implemented.  [2], [3]
+The first version that was run on a computer was written in IPL-II and ran on the JOHNNIAC,
+producing its first proof in August 1956.  [1], [2], [3], [4]  It was later converted into IPL-V
+by Fred Tonge, and further developed by Einar Stefferud. [5]
+
+## The first published version of the Logic Theory Machine
+
+The source code for an early version of the Logic Theory Machine was published in 1956 in [6] and
+[7]; it was written in IPL-I, an assembler-like language for an abstract machine.
+The code is almost identical in both references.  The code unfortunately has some
+typos and problems and is not immediately runnable in its printed form.  I have tried
+to repair it as necessary, as explained in the source code files.
+
+## The logical system
+
+The propositional logic system in _Principia Mathematica_ [8] builds formulae up from propositional
+variables
+by means of unary negation (`~`) and binary or (`\/`).  Implication (`->`) is defined by
+letting `( p -> q )` equal `( ~ p \/ q )`, and these two expressions are treated as interchangeable
+(*1.01.) The five axioms are:
+
+*  `( ( p \/ p ) -> p )` (*1.2)
+* `( q -> ( p \/ q ) )` (*1.3)
+* `( ( p \/ q ) -> ( q \/ p ) )` (*1.4)
+* `( ( p \/ ( q \/ r ) ) -> ( q \/ ( p \/ r ) ) )` (*1.5) and
+* `( ( q -> r ) -> ( ( p \/ q ) -> ( p \/ r ) ) )` (*1.6.)
+
+The rules of inference are _detachment_ (*1.11), where `q` is inferred from `p` and
+`( p -> q )`, and _substitution_ of expressions into the propositional variables of a known
+axiom or theorem.  (Although substitution is not stated as an explicit deduction rule
+in _Principia Mathematica_, it is used extensively and admitted to be admissible at the beginning of *2.)
+
+Apart from substitution and detachment, the Logic Theory Machine also uses the proof method of
+_chaining_, where `( p -> r )` is inferred from `( p -> q )` and `( q -> r )`.  This can be justified
+by the theorems *2.05 or *2.06 in _Principia Mathematica_.
+
+## About the code
+
+The Python files meant to be run directly here are `logic.py`, `run_logic.py`, and `analyze_output.py`.
+They will all print basic usage information when invoked with the `--help` option.  `logic.py` is
+the interpreter for the IPL-I abstract machine.  `analyze_output.py` is intended to extract the
+proof found, if any, from the output printed by `logic.py`, since there was no provision to
+do that in the provided IPL-I source code.  It's best to use it with the `--info` option of
+`logic.py`.  `run_logic.py` is intended to imitate [1] by running the program successively on each of the
+theorems in *2 of _Principia Mathematica_, allowing it to use, in the proof of each theorem,
+all axioms and all previous theorems from *2, whether it managed to prove them or not.
+
+## File list
+
+* `README.md` — this file
+* IPL-I source code:
+    * `logic-routines.txt` — IPL-I source code for the Logic Theory Machine, revised so as to be runnable
+    * `orig-logic-routines.txt` — Original IPL-I source code for the Logic Theory Machine as printed in [7]; labels, opcodes and operands only
+    * `transcription.txt` — transcription of all source code as printed in [7], including comments
+* _Principia Mathematica_:
+    * `pm-axioms.txt` — The five propositional logic axioms from *1 in _Principia Mathematica_
+    * `pm-theorems.txt` — The theorems from *2 in _Principia Mathematica_
+* IPL-I interpreter:
+    * `analyze_output.py` — Program to extract and check the proof found by the interpreter
+    * `grammar.py` — Module with CFG routines
+    * `logic.py` — Interpreter for the IPL-I abstract machine
+    * `run_logic.py` — Driver program
+    * `simple_parser.py` — Module with CFG parser
+    * `utils.py` — Module with grammar and substitution utility routines
+* Testing:
+    * `test.sh`, `test.py` — Testing framework
+    * `analyze_output.test`, `analyze_output.test-input`, `analyze_output.usage` — tests for `analyze_output.py`
+    * `logic.test`, `test-source.txt`, `test-source-2.txt`, `test-source-3.txt`, `test-theorems-1.txt`, `test-theorems-2.txt`, `test-theorems-3.txt`, `logic.usage` — tests for `logic.py`
+    * `run_logic.test`, `say-hi.py`, `run_logic.usage` — tests for `run_logic.py`
+    * `verify.py` — check consistency of the source code in `orig-logic-routines.txt` with that in `transcription.txt`
+
+## References
+
+There is a good deal of additional information about the Logic
+Theory Machine/Logic Theorist in the CMU Digital Collection archives, which
+contain special collections on Newell and Simon.  See the URL
+<https://digitalcollections.library.cmu.edu/>, and in particular
+<https://digitalcollections.library.cmu.edu/cmu-collection/allen-newell>
+and
+<https://digitalcollections.library.cmu.edu/cmu-collection/herbert-simon>.
+
+[1]: Empirical Explorations of the Logic Theory Machine: a Case Study in Heuristic,
+A. Newell, J. C. Shaw, H. A. Simon,
+IRE-AIEE-ACM '57 (Western): Papers presented at the February 26-28, 1957, Western joint computer conference: Techniques for reliability,
+Feb. 1957,
+pp. 218-230,
+DOI:
+[10.1145/1455567.1455605](https://dx.doi.org/10.1145/1455567.1455605).
+
+[2]: Introduction to the First Edition in:
+_Information Processing Language-V Manual_, second ed., Allen Newell et al., RAND Corporation,
+pub.  Englewood Cliffs, NJ : Prentice-Hall, Inc., 1964,
+<https://archive.org/details/bitsavers_randiplInfanguageVSecondEdition1964_15001417>.
+
+[3] Chapter 13, _Models of My Life_,
+Herbert A. Simon,
+Cambridge, Mass., etc.: MIT Press, 1996 (first pub. 1991, Basic Books.)
+
+[4]
+Programming the Logic Theory Machine,
+A. Newell, J. C. Shaw,
+IRE-AIEE-ACM '57 (Western): Papers presented at the February 26-28, 1957, Western joint computer conference: Techniques for reliability,
+Feb. 1957,
+pp. 230-240,
+DOI:
+[10.1145/1455567.1455606](https://dx.doi.org/10.1145/1455567.1455606).
+
+[5] Introduction in:
+_The Logic Theory Machine: A Model Heuristic Program_,
+Einar Stefferud,
+RAND Research Memorandum RM-3731-CC,
+June 1963,
+<https://www.rand.org/pubs/research_memoranda/RM3731.html>.
+
+[6]
+The Logic Theory Machine--A Complex Information Processing System,
+A. Newell, H. Simon,
+IRE Transactions on Information Theory **2**, #3 (September 1956), pp. 61-79,
+DOI:
+[10.1109/TIT.1956.1056797](https://dx.doi.org/10.1109/TIT.1956.1056797).
+
+[7]
+_The Logic Theory Machine: A Complex Information Processing System_,
+Allen Newell, Herbert A. Simon,
+RAND paper P-868,
+July 12, 1956,
+Revised,
+<https://archive.org/details/bitsavers_randiplP86ineJul56_3534001>.
+(This is extremely similar to [6].)
+
+[8]
+*1 and *2, _Principia Mathematica_,
+A. N. Whitehead and B. Russell,
+Volume I,
+Cambridge: Cambridge University Press, 1910.
+Available on HathiTrust; see <https://hdl.handle.net/2027/miun.aat3201.0001.001?urlappend=%3Bseq=117>.
+--- transcription.txt (first 120 lines) ---
+
+                                                P-868
+                                                -49-
+
+
+
+                        III
+
+                The Complete Program
+               for the Logic Theorist
+
+
+      This Section is divided into two parts.  The
+ first part constitutes the program as described in
+ the text, including the following routines: Ex;
+ MCh, MDt, MSb; LMc, LSb, LRp→v, LRpv→, VV, VCt; CX;
+ CSm, CD, D, NK, NH, NJ.  These routines are preceded
+ by a list of the most important primitive IP's —
+ those that are used in several routines.  Following
+ each routine is a supplementary list of primitive
+ IP's used in the definition of that routine.
+
+      The second part of this Section consists of
+ routines for five IP's — those Store instructions
+ that are marked with asterisks (*) — which up to
+ this point have been treated as primitives.
+
+ Principal Primitive Instructions
+
+   A  OPER  L C R B
+
+      B           b  Branch to b (→b).
+      BHB            In higher instruction, →b.
+      BHN            In higher instruction, →next.
+      FEF   x y   b  Find the first E in A(x) and
+                      put in y; if none, →b.
+      FEN   x y   b  Find the E in A(x) next after
+                      E(y), put in y; then →b. If
+                      none (end of list), →next.
+      FL    x y      Find EL(x) and put in y; if
+                      none, leave y blank.
+      FR    x y      Find ER(x) and put in y; if
+                      none, leave y blank.
+      PE    x y      Put E(x) in E(y); E(x) remains.
+      S     x        Store E(x) back in A(x) (match
+                      on P); if not there, store E(x)
+                      at end of A(x).
+      SEN   x y      Store E(x) as next E in A(y);
+                      E(x) now last item in A(y).
+     *SX    x y      Store a copy of X(x) at (new)
+                      A(y). E(x) = M.
+      TC    x     b  If C(x) = → (implies), →b.
+      TV    x     b  If E(x) = V, →b.
+
+                                                P-868
+                                                -50-
+
+
+
+    A  OPER  L C R B      Seg.
+
+       Ex                         Executive routine
+
+       (Read problem X)   R
+       (Put EM(X) in 1)
+      -MSb   1     G      MSb
+    A -MDt   1     G      MDt
+      -MCh   1     G      MCh
+       SEN   1 Q                  X(1) is finished.
+       CWG         H      CW
+    B  FEF   P 1   H      CK      Find problem with
+       NK    1                     lowest K.
+    C -FEN   P 2   D
+       NK    2
+       CKG   2 1   C
+       PE    2 1
+       PK    2 1
+       B           C
+
+    D  E     1 P          CX      Remove duplicates
+       FEF   Q 3   F               of previous problems.
+    E  CX    1 3   B
+       FEN   Q 3   E
+    F  B           A
+
+    G  (Write proof.)     WP      Succeeds in proving P.
+       (X(1) a theorem)   ST
+       (Stop)
+
+    H  (Write:no proof)   WNP     Fails to find proof.
+       (Stop)
+
+
+    Primitives
+
+       CKG   x y   b      If K(x)>K(y), →b.
+       CWG         b      If W(work done)> limit, →b.
+       E     x y          Erase E(x) in A(y).
+
+    Note: There are six IP's in the executive routine
+    that are not formally defined in LT.  These are
+    written in parentheses above: read problem, find
+    problem and put in working memory 1, write proof,
+    store expression as theorem, write "no proof",
+    and stop.
+
+                                                P-868
+                                                -51-
+
+
+
+
+    A  OPER  L C R B      Seg.
+                                  Chaining method
+                                   If can't prove X(x) by
+                                   chaining, →b; Store new
+       MCh   x     b               problems in P.
+
+      -TC→   L     D      T       C(x) must be →.
+       VV    L
+=== 2. Check if any pages of cand.pdf have text or if we can fetch IRE / CMU OCR PDF ===
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Pages with embedded text in cand.pdf: []
+Trying https://ColorsOfLogic.org/lt1956.pdf
+Trying http://shelf1.library.cmu.edu/IMLS/MindModels/logictheorymachine.pdf
+  size=2762197 head=%PDF
+Trying https://iiif.library.cmu.edu/file/Simon_box00063_fld04804_bdl0001_doc0001/Simon_box00063_fld04804_bdl0001_doc0001.pdf
+  size=1796422 head=%PDF
+Trying https://iiif.library.cmu.edu/file/Newell_box00057_fld04339_bdl0001_doc0001/Newell_box00057_fld04339_bdl0001_doc0001.pdf
+  size=196 head=<!DO
+FINISHED rc=0

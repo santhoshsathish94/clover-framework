@@ -1,0 +1,34 @@
+# Predictions Log — Rumelhart, Hinton & Williams (1986) Backpropagation Study
+
+## E1: Clone and run reference repositories (`CodeForge-00/rumelhart_backpropagation`, `karpathy/micrograd`, `Kushagra514/Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-`)
+Timestamp (before run): 2026-10-26 17:15 UTC
+Predictions:
+1. `CodeForge-00/rumelhart_backpropagation` will pass all unit tests in `tests/test_backprop.py` and `tests/test_live.py` (`rc=0`), and running `demo.py` will train and verify XOR, 6-bit Mirror Symmetry, 8-3-8 Encoder, and the 24-person / 12-relation English & Italian Family Trees from the 1986 *Nature* paper.
+2. `karpathy/micrograd` will pass `pytest test/test_engine.py` (`rc=0`), verifying scalar reverse-mode autodiff against PyTorch autograd to < 1e-6.
+3. `Kushagra514/Backpropagation-from-scratch-Rumelhart-Hinton-Williams-1986-` will run its standalone backpropagation scripts (`1neuron.py`, `2neuron_layer.py`, `hidden_neuron_layer.py`, `multiexample_back_prop.py`, `pytorch_comparison.py`) with `rc=0`.
+
+## E2: Generalized Delta Rule Verification (Eq. 9-16), Finite-Difference Check, Symmetry-Breaking Saddle Point (p. 10), and Momentum Speedup (pp. 9-12)
+Timestamp (before run): 2026-10-26 17:15 UTC
+Predictions:
+1. Analytical backpropagation gradients (Eq. 11, 13, 14) on a 3-layer logistic network will match central finite differences `(E(w+eps) - E(w-eps)) / (2*eps)` (eps=1e-6) with maximum relative/absolute discrepancy < 1e-9 across all weights and biases, whereas a negative control omitting the hidden-layer derivative `o_j * (1 - o_j)` will fail the finite-difference check by > 0.01.
+2. Symmetry breaking (p. 10): Initializing all weights to an identical constant `w = 0.0` (or `w = 0.5`) on a `2 -> 2 -> 1` XOR network will keep hidden units 0 and 1 identical across 100% of epochs (`|w_0 - w_1| == 0.0`) and fail to solve XOR (`accuracy = 50%`, `MSE >= 0.25`), whereas small random initialization solves XOR cleanly.
+3. Momentum `alpha = 0.9` vs `alpha = 0.0` (Eq. 16, pp. 9-10) & Chauvin's hidden-unit scaling (p. 12):
+   - Adding momentum `alpha = 0.9` will reduce the mean number of sweeps to solve XOR (to MSE <= 0.01) by > 3x compared to `alpha = 0.0` at matched learning rate.
+   - Increasing hidden units `H` from 2 to 4, 8, 16, 32 on XOR will monotonically reduce the mean sweeps required to reach error <= 0.01 per pattern.
+
+## E3: 4-Bit Parity Counter (Fig. 6 & Table 3, pp. 12-13), 8-3-8 Bottleneck Encoder (Fig. 7 & Table 5, pp. 14-15), and 6-Bit Mirror Symmetry (Nature Fig. 2 / ICS-8506 Fig. 9, p. 17)
+Timestamp (before run): 2026-10-26 17:15 UTC
+Predictions:
+1. 4-Bit Parity (`4 -> 4 -> 1`): Backprop with momentum `alpha=0.9` will converge to 16/16 (100%) accuracy on 4-bit parity, and inspecting the learned input-to-hidden weights will show that each hidden unit assigns nearly equal weights to all 4 input lines (`std(w_j) / |mean(w_j)| < 0.15`), so the hidden layer acts as a cardinality/Hamming-weight counter depending only on `|x| in {0,1,2,3,4}` (matching Fig. 6 & Table 3, pp. 12-13).
+2. 8-3-8 Encoder (`8 -> 3 -> 8`): Will achieve 8/8 (100%) identity reconstruction through the 3-unit bottleneck, assigning 8 distinct 3D activation vectors to the 8 one-hot inputs (using corners and midpoints ~0.5 as in Table 5, p. 15).
+3. 6-Bit Mirror Symmetry (`6 -> 2 -> 1`): Will achieve 64/64 (100%) accuracy on all 6-bit strings using only 2 hidden units, with mirror-symmetric input weights satisfying `w_{j,i} + w_{j,5-i} approx 0` (`|w_i + w_{5-i}| / (|w_i| + |w_{5-i}|) < 0.05`) and magnitude ratios close to `1 : 2 : 4` across the 3 symmetric pairs (matching Nature Fig. 2 / ICS-8506 Fig. 9, p. 17).
+
+## E4: 1986 Nature Family Trees Relational Generalization (Nature Figs. 3-5, pp. 534-536) and Order-3 T-C Problem with Weight Sharing (ICS-8506 Figs. 13-15, pp. 22-25)
+Timestamp (before run): 2026-10-26 17:15 UTC
+Predictions:
+1. Family Trees (24 people: 12 English + 12 Italian; 12 kinship relations; 104 valid triples):
+   - Training the bottleneck network (`24+12 -> 6+6 -> 12 -> 6 -> 24`) on 100 triples will achieve 100% training accuracy and >= 3/4 (75%–100%) held-out test accuracy on the 4 unseen relational triples by transferring the isomorphic kinship structure between the English and Italian family trees.
+   - Inspecting the learned 6-unit person embeddings will reveal dimensions that strongly correlate with Nationality (English vs Italian, correlation > 0.85) and Generation (correlation > 0.75).
+2. T-C Problem (5-square block T vs 5-square block C in 4 rotations, pp. 22-25):
+   - All 4 rotations of T and all 4 rotations of C will have the exact same pairwise Euclidean distance spectrum (`{1: 4, 2: 3, 4: 2, 5: 1}` in squared Euclidean distance), proving Minsky & Papert's claim (cited on p. 22) that T vs C is indistinguishable at order <= 2 under translation and rotation.
+   - A translation-invariant weight-shared 3x3 receptive field layer trained by backprop (Eq. on p. 23: summing weight gradients across all spatial positions) will solve all 8 rotated T and C patterns to 100% accuracy.

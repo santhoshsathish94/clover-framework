@@ -1,0 +1,70 @@
+=== Check simonbreiter universal.json on a halting 1-state encoded machine ===
+TERM environment variable not set.
+TERM environment variable not set.
+[X] None (Please wait for results...)
+========================================▼========================================
+ | | | | | | | | | | | | | | | | | | | |0|1|0|1|0|0|1|0|0|1|0|0|1|1|1|0| | | | | 
+========================================▲========================================
+Character Counter
+9x: 0
+7x: 1
+Steps Counter     285
+Current State     q82
+Tape Index         16 
+Render Mode
+[ ] Automatic
+[ ] Interactive  
+[X] None (Please wait for results...)
+========================================▼========================================
+ | | | | | | | | | | | | | | | | | | | |1| | | | | | | | | | | | | | | | | | | | 
+========================================▲========================================
+Character Counter
+1x: 1
+
+Input: 0101001001001110
+Output: 1
+=== Run E2: Stored-Program Digital Computer & Section 5 Universality ===
+=== E2.1: Section 4 Stored-Program Computer & 10-Digit Packet 6809430217 ===
+Decoded packet 6809430217: pos_A=6809, pos_B=4302, opcode=17
+After executing packet 6809430217: store[4302] = 105721 (true sum 34957+70764 = 105721, paper witness said 105621)
+Self-modifying loop result: store[4302]=150 (expected 150), mutated instruction at store[1000]=5005430217 (started 5000430217)
+
+=== E2.2: Section 5 Discrete-State Wheel Machine & Universal Mimicry ===
+Universal digital computer vs 3-state wheel across all 256 8-step input streams: 256/256 identical
+Negative control (corrupted transition entry (q1,i1)): 1/256 identical
+
+=== E2.3: Section 5 Storage Capacity Calculations (pp. 6-7) ===
+3-state wheel capacity: log2(3) = 1.58496 bits (Turing p. 7: 'about 1.6')
+100 sheets x 50 lines x 30 decimal digits (10^150,000 states): 498289.2 bits = 3.02x Manchester's 165,000 (Turing p. 7: 'about three Manchester machines')
+Manchester breakdown (p. 7): 64*2560 (163840) + 8*1280 (10240) + 300 = 174380 bits (Turing p. 7: 'making a total of 174,380')
+=== Run E3 & E4: Imitation Game, Mathematical Objection, Continuity & Learning Machines ===
+=== E3.1: Imitation Game — Arithmetic Speed & Error Spoofing (Sections 2 & 6.5, pp. 2, 13) ===
+  Honest Machine (0.001s, 0% error)                                   : Interrogator right ID = 100.0% (Turing 50-yr target <= 70.0%)
+  Turing Spoofing Machine (~30s pause, 18% carry slip, like 105621)   : Interrogator right ID =  48.4% (Turing 50-yr target <= 70.0%)
+  Unsuitable-Error Machine (~30s pause, non-carry mechanical mistakes): Interrogator right ID =  72.6% (Turing 50-yr target <= 70.0%)
+
+=== E3.2: Section 6.3 The Mathematical Objection (Diagonal Question Sequence, pp. 10-11) ===
+  Machine \ Critical Question |   Q_0 (for M_0)   |   Q_1 (for M_1)   |   Q_2 (for M_2)   |   Q_3 (for M_3)
+  M_0 (budget=10)            | TIMEOUT (FAIL) | TIMEOUT (FAIL) | TIMEOUT (FAIL) | TIMEOUT (FAIL)
+  M_1 (budget=20)            | YES     (OK  ) | TIMEOUT (FAIL) | TIMEOUT (FAIL) | TIMEOUT (FAIL)
+  M_2 (budget=30)            | YES     (OK  ) | YES     (OK  ) | TIMEOUT (FAIL) | TIMEOUT (FAIL)
+  M_3 (budget=40)            | YES     (OK  ) | YES     (OK  ) | YES     (OK  ) | TIMEOUT (FAIL)
+
+=== E3.3: Section 6.7 Continuity in the Nervous System (Differential Analyser on pi, p. 16) ===
+  Turing p. 16 discrete distribution: vals=[3.12, 3.13, 3.14, 3.15, 3.16], probs=[0.05, 0.15, 0.55, 0.19, 0.06], mean=3.14060, sd=0.00881
+  Rounded continuous analyser probs:  [0.0303, 0.1966, 0.4251, 0.2841, 0.064], TV distance = 0.1447
+
+=== E4.1: Section 7 Reward/Punishment Bound vs Unemotional Symbolic Channel (p. 20) ===
+  Word 'CASABIANCA' (L=10)                            : Pure R/P =    140.0 blows/rewards | Symbolic channel (after 202-signal language setup) = 1 signal
+  Line 1 'THE BOY STOOD ON THE BURNING DECK' (L=33)   : Pure R/P =    462.0 blows/rewards | Symbolic channel (after 202-signal language setup) = 1 signal
+  Full poem 'Casabianca' (~1,600 chars)               : Pure R/P =  22400.0 blows/rewards | Symbolic channel (after 202-signal language setup) = 1 signal
+
+=== E4.2: Section 7 Child Machine with Epistemic Statuses & Imperatives (pp. 20-21) ===
+  Status of 'Do your homework now' after inference: well_established -> executed_actions=['Do your homework now']
+  Steps to prove 'Socrates is mortal' among 10 axioms: without search imperative = 90 steps vs with Barbara imperative = 1 step
+
+=== E4.3: Section 7 Random vs Systematic Search on [50, 200] Digit-Sum Squared (p. 22) ===
+  Solutions to n == (sum of digits of n)^2 in [50, 200]: [81] (81 = (8+1)^2)
+  Single solution (n=81): Systematic from 51 = 31 steps | Systematic from 200 (dead block first) = 120 steps | Random mean = 153.0 steps
+  Dead-block-first with 31/151 solutions (Turing p. 22 regime): Systematic = 121 steps | Random mean = 4.87 steps (theoretical 151/31 = 4.87)
+FINISHED rc=0

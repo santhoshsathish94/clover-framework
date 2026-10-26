@@ -1,0 +1,33 @@
+# Predictions Log — Newell & Simon (1956) Logic Theory Machine Study
+
+## E1: Run reference repositories (`dmoews/logic-theorist`, `dmoews/ipl-v-logic-theorist`, `duplys/logic-theorist`) & inspect 1956 IPL-I errata
+Timestamp (before run): 2026-10-26 15:18 UTC
+Predictions:
+1. `dmoews/logic-theorist` will pass `verify.py` and `test.sh` (exit code 0), and diffing `orig-logic-routines.txt` (printed in 1956 RAND P-868 Section III, pp. 49-61) against `logic-routines.txt` will expose at least 10 concrete bugs/typos in the 1956 printed IPL-I code (including the missing branch target label `D` before `SX 1 2` in `MSb` on p. 52, missing `BHB` or inverted branch signs in `SXE`/`SXM`/`SXL`/`SXR` on pp. 60-61, and `AM` vs `AA` in `MCh` on p. 51).
+2. `dmoews/ipl-v-logic-theorist` will pass its `interpreter/test.sh` and `interpreter/test-stefferud.sh` (exit code 0), reproducing the 1963 Stefferud IPL-V Logic Theorist output.
+3. `duplys/logic-theorist` (`logic_theorist.py`, 134 lines) will be a lightweight educational script rather than a full IPL-I or Principia Mathematica `*2` prover.
+
+## E2: Run `dmoews/logic-theorist` on Principia Mathematica Chapter `*2` (`pm-theorems.txt`)
+Timestamp (before run): 2026-10-26 15:18 UTC
+Predictions:
+1. Across the 67 theorems in `pm-theorems.txt` (or the 52 theorems of `*2` tested by Newell, Shaw & Simon 1957), `MSb` (substitution + replacement alone) will prove roughly 21 of the 67 theorems (matching Newell & Simon p. 37: "On examination of the 67 propositions in Chapter 2 of Principia, it appears that some 21 can be proved by the method of substitution, including for example: 2.01, 2.02, 2.03, 2.04, 2.05, 2.10, 2.12, 2.21, 2.26, 2.27").
+2. Combining `MSb`, `MDt`, and `MCh` with one level of subproblems will prove roughly 35–45 of the 67 theorems (around 38 of the first 52), and `analyze_output.py` will verify the extracted proofs as valid deductions from `*1.2-*1.6` and prior theorems.
+
+## E3: Own 1956 Logic Theory Machine implementation (`lt1956_engine.py`) — Similarity Filter (`CSm`) and Contraction (`VCt`) ablations
+Timestamp (before run): 2026-10-26 15:18 UTC
+Predictions:
+1. Similarity Filter (`CSm`, comparing `DL=(KL,JL,HL)` and `DR=(KR,JR,HR)`):
+   - Across the Chapter `*2` sequence, `CSm` will pass roughly 15%–25% of candidate theorems in theorem memory `T` (matching Footnote 12 on p. 31: "about one theorem in five that is stored in the theorem memory turns out to be similar to the expression we are seeking to prove"), reducing `LMc` matching invocations by ~4x–6x.
+   - However, because `LMc` can substitute molecular expressions for free variables in an axiom/theorem (increasing `K` and `H`), requiring exact equality `DL(x) == DL(y)` and `DR(x) == DR(y)` under uncontracted variable units (`VV`) is a heuristic that can reject valid substitution/detachment matches! Turning `CSm` OFF (matching all theorems in `T`) will prove at least as many (and strictly more!) theorems by 1-step substitution/detachment than `CSm` ON, at the cost of ~4x–6x more `LMc` calls.
+2. Contraction (`VCt`, pp. 39-42) on `*2.06` (`(p -> q) -> ((q -> r) -> (p -> r))`):
+   - Under `VV` (variables as units), `*2.06` has `DL=(2,2,2), DR=(3,3,4)`, which matches the right-hand description of 0 theorems in `{*1.2..*1.6, *2.01..*2.05}`, so `MDt(SmV)` fails.
+   - Under `VCt` (binary subexpressions `p->q`, `q->r`, `p->r` viewed as units), `*2.06` has `DL=(1,1,1), DR=(2,2,2)`, which matches the right-hand side of `*2.04` (`(A -> (B -> C)) -> (B -> (A -> C))`), generating subproblem `(q -> r) -> ((p -> q) -> (p -> r))` which matches `*2.05` by substitution (`A=q, B=r, C=p`), proving `*2.06`.
+
+## E4: Theorem-Memory Accumulation ("Learning Processes", p. 48) and Subproblem Priority Rule (`Ex(CK)` minimal-K vs FIFO vs Max-K, p. 46)
+Timestamp (before run): 2026-10-26 15:18 UTC
+Predictions:
+1. Theorem-Memory Accumulation (p. 48):
+   - With all prior theorems available in `T` (or with previously proved theorems accumulated in `T`), LT will prove >= 35 of the first 52 theorems of `*2`.
+   - With `T` restricted to ONLY the five axioms `*1.2..*1.6` (no proved theorems stored in `T`), LT under the same work limit ($W \le 30$) will prove fewer than half as many theorems (confirming p. 48: `*2.06` and `*2.08` and most later theorems fail in bounded steps without stored intermediate theorems).
+2. Subproblem Priority Ordering (`Ex(CK)`, p. 46):
+   - Selecting the subproblem on `P` with minimal depth `K` (or FIFO) will reach multi-step proofs with fewer work units `W` than the anti-heuristic negative control (selecting maximum `K` first, which expands deeper expressions before simpler ones).

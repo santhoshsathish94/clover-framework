@@ -1,0 +1,74 @@
+=== 1. Fetch Sutton (1988) PDF ===
+Trying http://incompleteideas.net/papers/sutton-88-with-erratum.pdf
+  size=2139288 head=%PDF
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Pages: 37
+Extracted lines: 1869 chars: 96287
+--- PAGE 1 ---
+Machine Learning 3:9 44, 1988 
+@ 1988 Kluwer Academic Publishers, Boston 
+Manufactured in The Netherlands 
+Learning to Predict by the Methods 
+of Temporal Differences 
+RICHARD S. SUTTON 
+(RICH@GTE.COM) 
+(;TE Laboratories Incorporated, ~0 Sylvan Road, Waltham, MA 0225~, U.S.A. 
+(Received: April 22, 1987) 
+(Revised: February 4. 1988) 
+Keywords: Incremental learning, prediction, connectionism, credit assignment, 
+evaluation flmctions 
+Abstract. 
+This article introduces a class of incremental learning procedures spe- 
+cialized for prediction 
+that is, for using past experience with an incompletely known 
+system to predict its future behavior. 
+Whereas conventional prediction-learning 
+methods assign credit by means of the difference between predicted and actual out- 
+comes, tile new methods assign credit by means of the difference between temporally 
+successive predictions. Although such temporal-difference method~ have been used in 
+Samuel's checker player, Holland's bucket brigade, and the author's Adaptive Heuris- 
+tic Critic, they have remained poorly understood. Here we prove their convergence 
+and optimality for special cases and relate them to supervised-learning methods. For 
+most real-world prediction problems, telnporal-differenee methods require less mem- 
+ory and less peak computation than conventional methods and they produce more 
+accurate predictions. We argue that most problems to which supervised learning 
+is currently applied are really prediction problems of the sort to which temporal- 
+difference methods can be applied to advantage. 
+1. Introduction 
+This article concerns the woblem of learning to predict, that. is, of using past 
+experience with an incompletely known system to predict its future behavior. 
+For examt)le, through experience one might learn to predict for particular 
+chess positions whether they will lend to a win. for particular cloud formations 
+whether there will be rain. or fbr particular economic conditions how nmch 
+the stock market will rise or fall. 
+Learning to predict is one of the most 
+basic and prevalent kinds of learning. Most pattern recognition problems, for 
+examt)le, can be treated as prediction problems in which the classifier nmst 
+predict the correct classifications. Learning-to-predict problems also arise in 
+heuristic search, e.g., in learning an evahmtion function that predicts tile utility 
+of searching particular parts of tile search space, or in learning the underlying 
+model of a problem domain. An important advantage of prediction learning is 
+that. its training examples can be taken directly from the temporal sequence 
+of ordinary sensory input: no special supervisor or teacher is required. 
+
+--- PAGE 2 ---
+10 
+R, S. S(!TTON 
+=== 2. Search GitHub for Sutton 1988 TD(lambda) random walk repos ===
+Query sutton+1988+temporal+differences: total=10
+  MrShininnnnn/Temporal-Differences-Learning (stars=5): "Learning to Predict by the Methods of Temporal Differences" by Sutton, Richard S. (1988)
+  vjp23/TD_Lambda (stars=3): Replication of Richard Sutton's 1988 results exploring temporal difference learning and the TD(lambda) algorithm.
+  shashir/td-learning (stars=2): Demonstration of temporal difference learning on a simple random walk from Sutton 1988.
+  robosangli/sutton-1988-reproduction (stars=0): Reproduction of Sutton (1988): Learning to Predict by the Methods of Temporal Differences
+  dayuyang1999/Replicating-Sutton-1988 (stars=0): Recreating Sutton's 1988 Reinforcement Learning paper on Temporal Difference Learning
+  mlefkovitz/Replicating-Sutton-1988 (stars=1): Recreating Sutton's 1988 Reinforcement Learning paper on Temporal Difference Learning
+  TensorYue/Temporal-Difference-Method (stars=0): A replication for 'Sutton (1988) Learning to predict by the methods of temporal differences'
+  accraze/random-walk (stars=0):   Recreating Sutton's 1988 paper "Learning to Predict by the Methods of Temporal Differences"
+Query sutton+1988+random+walk+td: total=4
+  c15163/Analysis-of-TD-on-the-Random-Walk-Task-Reproducing-Sutton-1988- (stars=0): None
+  NouiliKh/TD-learning-in-random-walk-environment (stars=0): This project aims to replicate figure 3, 4 and 5 from the Richard Sutton’s 1988 paper “Learning to Predict by the Methods of Temporal Differences.”
+  bradsmith1996/td-lambda (stars=0): This repository investigates Richard Sutton’s 1988 paper on the bounded random walk dynamic problem in detail and is successful in backing up his claims regarding temporal difference learning.
+Query td+lambda+sutton+1988: total=2
+FINISHED
+FINISHED rc=0

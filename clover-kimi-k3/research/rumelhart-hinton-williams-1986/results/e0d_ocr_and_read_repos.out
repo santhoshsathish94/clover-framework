@@ -1,0 +1,7 @@
+=== 1. OCR rhw1986.pdf (4 pages) using /root/dm-study/eyeriss/pylib ===
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'rapidocr_onnxruntime'
+FINISHED rc=1

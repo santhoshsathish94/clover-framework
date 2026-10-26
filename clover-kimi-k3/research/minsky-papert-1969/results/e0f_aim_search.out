@@ -1,0 +1,121 @@
+AIM-2005-033
+Author[s]: Sanjoy Dasgupta, Adam Tauman Kalai, Claire Monteleoni
+
+Analysis of Perceptron-Based Active Learning
+
+November 17, 2005
+
+--
+
+ftp://publications.ai.mit.edu/ai-publications/2005/AIM-2005-033.pdf
+
+We start by showing that in an active learning setting, the Perceptron algorithm needs $\Omega(\frac{1}{\epsilon^2})$ labels to learn linear separators within generalization error $\epsilon$. We then present a simple selective sampling algorithm for this problem, which combines a modification of the perceptron update with an adaptive filtering rule for deciding which points to query. For data distributed uniformly over the unit sphere, we show that our algorithm reaches generalization error $\epsilon$ after asking for just $\tilde{O}(d \log \frac{1}{\epsilon})$ labels. This exponential improvement over the usual sample complexity of supervised learning has previously been demonstrated only for the computationally more complex query-by-committee algorithm.
+
+
+AIM-2005-032
+--
+
+ftp://publications.ai.mit.edu/ai-publications/2004/AITR-2004-004.pdf
+
+Most Artificial Intelligence (AI) work can be characterized as either ``high-level'' (e.g., logical, symbolic) or ``low-level'' (e.g., connectionist networks, behavior-based robotics). Each approach suffers from particular drawbacks. High-level AI uses abstractions that often have no relation to the way real, biological brains work. Low-level AI, on the other hand, tends to lack the powerful abstractions that are needed to express complex structures and relationships. I have tried to combine the best features of both approaches, by building a set of programming abstractions defined in terms of simple, biologically plausible components. At the ``ground level'', I define a primitive, perceptron-like computational unit. I then show how more abstract computational units may be implemented in terms of the primitive units, and show the utility of the abstract units in sample networks. The new units make it possible to build networks using concepts such as long-term memories, short-term memories, and frames. As a demonstration of these abstractions, I have implemented a simulator for ``creatures'' controlled by a network of abstract units. The creatures exist in a simple 2D world, and exhibit behaviors such as catching mobile prey and sorting colored blocks into matching boxes. This program demonstrates that it is possible to build systems that can interact effectively with a dynamic physical environment, yet use symbolic representations to control aspects of their behavior.
+
+
+AIM-2004-004
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-1602.pdf
+
+The Support Vector Machine (SVM) is a new and very promising classification technique developed by Vapnik and his group at AT&T Bell Labs. This new learning algorithm can be seen as an alternative training technique for Polynomial, Radial Basis Function and Multi- Layer Perceptron classifiers. An interesting property of this approach is that it is an approximate implementation of the Structural Risk Minimization (SRM) induction principle. The derivation of Support Vector Machines, its relationship with SRM, and its geometrical insight, are discussed in this paper. Training a SVM is equivalent to solve a quadratic programming problem with linear and box constraints in a number of variables equal to the number of data points. When the number of data points exceeds few thousands the problem is very challenging, because the quadratic form is completely dense, so the memory needed to store the problem grows with the square of the number of data points. Therefore, training problems arising in some real applications with large data sets are impossible to load into memory, and cannot be solved using standard non-linear constrained optimization algorithms. We present a decomposition algorithm that can be used to train SVM's over large data sets. The main idea behind the decomposition is the iterative solution of sub-problems and the evaluation of, and also establish the stopping criteria for the algorithm. We present previous approaches, as well as results and important details of our implementation of the algorithm using a second-order variant of the Reduced Gradient Method as the solver of the sub- problems. As an application of SVM's, we present preliminary results we obtained applying SVM to the problem of detecting frontal human faces in real images.
+
+
+AIM-1600
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-1471.pdf
+
+We propose a nonparametric method for estimating derivative financial asset pricing formulae using learning networks. To demonstrate feasibility, we first simulate Black-Scholes option prices and show that learning networks can recover the Black- Scholes formula from a two-year training set of daily options prices, and that the resulting network formula can be used successfully to both price and delta-hedge options out-of- sample. For comparison, we estimate models using four popular methods: ordinary least squares, radial basis functions, multilayer perceptrons, and projection pursuit. To illustrate practical relevance, we also apply our approach to S&P 500 futures options data from 1987 to 1991.
+
+
+AITR-1469
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-1447.pdf
+
+Global temperature variations between 1861 and 1984 are forecast usingsregularization networks, multilayer perceptrons and linearsautoregression. The regularization network, optimized by stochasticsgradient descent associated with colored noise, gives the bestsforecasts. For all the models, prediction errors noticeably increasesafter 1965. These results are consistent with the hypothesis that thesclimate dynamics is characterized by low-dimensional chaos and thatsthe it may have changed at some point after 1965, which is alsosconsistent with the recent idea of climate change.s
+
+
+AITR-1445
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-1291.pdf
+
+Both multilayer perceptrons (MLP) and Generalized Radial Basis Functions (GRBF) have good approximation properties, theoretically and experimentally. Are they related? The main point of this paper is to show that for normalized inputs, multilayer perceptron networks are radial function networks (albeit with a non-standard radial function). This provides an interpretation of the weights w as centers t of the radial function network, and therefore as equivalent to templates. This insight may be useful for practical applications, including better initialization procedures for MLP. In the remainder of the paper, we discuss the relation between the radial functions that correspond to the sigmoid for normalized inputs and well-behaved radial basis functions, such as the Gaussian. In particular, we observe that the radial function associated with the sigmoid is an activation function that is good approximation to Gaussian basis functions for a range of values of the bias parameter. The implication is that a MLP network can always simulate a Gaussian GRBF network (with the same number of units but less parameters); the converse is true only for certain values of the bias parameter. Numerical experiments indicate that this constraint is not always satisfied in practice by MLP networks trained with backpropagation. Multiscale GRBF networks, on the other hand, can approximate MLP networks with a similar number of parameters.
+
+
+AIM-1289
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-683.pdf
+
+Nonlinear, local and highly parallel algorithms can perform several simple but important visual computations. Specific classes of algorithms can be considered in an abstract way. I study here the class of polynomial algorithms to exemplify some of the important issues for visual processing like linear vs. nonlinear and local vs. global. Polynomial algorithms are a natural extension of Perceptrons to time dependent grey level images.. Although they share most of the limitations of Perceptrons, they are powerful parallel computational devices. Several of their properties are characterized and especially (a) their equivalence with Perceptrons for geometrical figures and (b) the synthesis of non-linear algorithms (mappings) via associative learning. Finally, the paper considers how algorithms of this type could be implemented in nervous hardware, in terms of synaptic interactions strategically located in a dendritic tree.
+
+
+AIM-681
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-590.pdf
+
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-570.pdf
+
+The work of the Cerebral Palsy project (members: Seymour Papert, Sylvia Weir, Jose Valente and Gary Drescher) over the past eighteen months is summarized, and the next phase of activity is outlined. The issues to be addressed by the proposed research are as follows: 1. An investigation of computer-based techniques to maximize the acquisition of spatial and linguistic skills in severely Cerebral Palsied children, to serve the educational and therapeutic needs of this population. 2. Developing a set of computer- based diagnostic tools for use with physically handicapped persons which could contribute to the provision of a functional specification of subcategories of Cerebral Palsy. 3. Investigating the ways in which findings on Cerebral Palsy subjects can inform our theories of cognitive development and the adult functioning of normal individuals.
+
+
+AIM-569A
+--
+
+
+AIM-546
+Author[s]: Seymour Papert, Daniel Watt, Andrea diSessa and Sylvia Weir
+
+Final Report of the Brookline LOGO Project. Part III: Profiles of Individual Student's Work
+
+--
+
+
+AIM-545
+Author[s]: Seymour Papert, Daniel Watt, Andrea diSessa and Sylvia Weir
+
+Final Report of the Brookline LOGO Project. Part II: Project Summary and Data
+
+--
+
+
+AIM-496
+Author[s]: Seymour A. Papert and Sylvia Weir
+
+Information Prosthetics for the Handicapped
+
+--
+
+
+AIM-460
+Author[s]: Seymour Papert and Daniel H. Watt
+
+Assessment and Documentation of a Children's Computer Laboratory
+
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-430.pdf
+
+--
+
+ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-376.pdf
+
+--
+
+
+AIM-375
+Author[s]: Cynthia J. Solomon and Seymour Papert
+FINISHED rc=0

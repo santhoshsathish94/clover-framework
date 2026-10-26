@@ -1,0 +1,114 @@
+=== 1. Check packages in /root/dm-study/*/pylib ===
+/root/dm-study/pebbling/pylib:
+bin
+fitz
+flatbuffers
+flatbuffers-25.12.19.dist-info
+google
+networkx
+networkx-3.7.dist-info
+numpy
+numpy-2.5.4.dist-info
+numpy.libs
+onnxruntime
+onnxruntime-1.31.0.dist-info
+packaging
+packaging-26.3.dist-info
+protobuf-7.36.2.dist-info
+psutil
+psutil-7.2.2.dist-info
+pymupdf
+pymupdf-2.0.dist-info
+pymupdf4llm
+pymupdf4llm-2.0.dist-info
+pymupdf_layout-2.0.dist-info
+pypdf
+pypdf-6.21.2.dist-info
+pyyaml-6.0.3.dist-info
+tabulate
+tabulate-0.10.0.dist-info
+_yaml
+yaml
+=== 2. Download DTIC_ADA164453_djvu.txt (Rumelhart, Hinton & Williams 1985/1986) from Archive.org ===
+  5623 140439 rhw_ada164453.txt
+OIK  FILE  COPT 
+
+
+LEARNING  INTERNAL  REPRESENTATIONS 
+BY  ERROR  PROPAGATION 
+
+David  E.  Romelhart,  Gcc^rey  E.  Hiotoo, 
+and  Ronald  J.  WilUams 
+
+September  1985  | 
+
+ICS  Report  8506  I 
+
+
+■  DTIC 
+
+
+INSTITUTE  FOR  COGNITIVE  SCIENCE 
+
+UNIVERSITY  OF  CALIFORNIA,  SAN  DIEGO  LA  JOLLA,  CALIFORNIA  92093 
+
+
+86  2  18  120 
+
+
+LEARNING  INTERNAL  REPRESENTATIONS 
+BY  ERROR  PROPAGATION 
+
+
+David  E.  Rnmelhart,  Get^rey  E. 
+and  Ronald  J.  Williams 
+
+September  1985 
+
+ICS  Report  8506 
+
+
+Hinton, 
+
+
+_DTIC 
+
+A^>-ecte 
+
+%  FE82  0l98ti 
+
+D 
+
+
+David  E.  Rumelhart 
+Institute  for  Cognitive  Science 
+University  of  California,  San  Diego 
+
+
+Geoffrey  E.  Hinton 
+Department  of  Computer  Science 
+Carnegie-Mellon  University 
+
+
+Ronald  J.  Williams 
+Institute  for  Cognitive  Science 
+University  cf  C^ifornia,  San  Diego 
+
+
+DiiTRmtmoM  grwgiiOjlJL  I 
+Apixovod  Ini  pubMe  lolnona  i 
+Dtetribotton 
+
+
+To  be  published  in  D.  E.  Rumelhart  A  J.  L.  McClelland  (Eds.),  Parallel  Distributed 
+Processir^:  Explorations  in  the  Microstructure  of  Cognition.  Vol.  1:  Foundations. 
+Cambridge,  MA:  Bradford  Books/MIT  Press. 
+
+
+llii*  rcMSfcb  WM  tnpported  by  Contract  ND0014-85-K-O4SO,  NR  667-548  iritb  tbe  Peitoond  haA  Trdnint  RcMucb  Pro- 
+pwum  of  tbe  Office  of  Naval  Rcaearcb  and  by  grant!  fron  tbe  Syitea  Developinent  Foundation.  Request!  for  le- 
+print!  diould  be  Knt  to  David  E.  Rumelbatt,  Institute  for  Cognitive  Science,  C-OIS;  Univcisity  of  California,  San 
+Diego;  La  Jolla,  CA  92093. 
+
+Copyright  O  1985  by  David  E.  Rnmelbart,  Geoffrey  E.  Hinton,  and  Ronald  J.  Williams 
+FINISHED rc=0

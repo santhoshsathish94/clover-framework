@@ -1,0 +1,36 @@
+# Pre-Registered Predictions for Alex Krizhevsky, Ilya Sutskever & Geoffrey E. Hinton (2012)
+# "ImageNet Classification with Deep Convolutional Neural Networks", NIPS 2012, pp. 1097-1105
+Timestamp: 2026-10-26T18:40:00Z
+
+## E1: Reference Repositories & torchvision.models.alexnet Inspection
+- Prediction 1.1: `torchvision.models.alexnet` does NOT implement the 2012 NIPS paper architecture (96->256->384->384->256 with groups=2 in conv2/conv4/conv5 and Local Response Normalization after conv1/conv2 = 60,965,224 parameters); instead, `torchvision` implements Krizhevsky's 2014 "One Weird Trick" single-stream variant (64->192->384->256->256 with groups=1 and no LRN = 61,100,840 parameters).
+- Prediction 1.2: Third-party GitHub implementations of 2012 AlexNet that call `nn.LocalResponseNorm(size=5, alpha=1e-4, beta=0.75, k=2)` unwittingly divide alpha by n=5 (because PyTorch's `F.local_response_norm` divides `alpha` by `size`, whereas Krizhevsky 2012's formula on p. 4 multiplies the sum directly by alpha = 10^-4 without dividing by n!).
+
+## E2: Exact 2012 Two-GPU Architecture Parameter, Neuron, & MAC Accounting (Figure 2 & Section 3.5, pp. 4-5)
+- Prediction 2.1 (Exact 60,965,224 Parameters & Per-Layer Breakdown):
+  - conv1 (3 -> 96, 11x11, stride 4, pad 2, groups=1): 96 * (3*11*11 + 1) = 34,944 params (55x55 output -> 105,415,200 MACs).
+  - conv2 (96 -> 256, 5x5, stride 1, pad 2, groups=2): 256 * (48*5*5 + 1) = 307,456 params (27x27 output -> 223,948,800 MACs).
+  - conv3 (256 -> 384, 3x3, stride 1, pad 1, groups=1): 384 * (256*3*3 + 1) = 885,120 params (13x13 output -> 149,520,384 MACs).
+  - conv4 (384 -> 384, 3x3, stride 1, pad 1, groups=2): 384 * (192*3*3 + 1) = 663,936 params (13x13 output -> 112,140,288 MACs).
+  - conv5 (384 -> 256, 3x3, stride 1, pad 1, groups=2): 256 * (192*3*3 + 1) = 442,624 params (13x13 output -> 74,760,192 MACs).
+  - fc6 (9216 -> 4096): (9216 + 1) * 4096 = 37,752,832 params (61.93% of all parameters!).
+  - fc7 (4096 -> 4096): (4096 + 1) * 4096 = 16,781,312 params (27.53%).
+  - fc8 (4096 -> 1000): (4096 + 1) * 1000 = 4,097,000 params (6.72%).
+  - Total parameters: 60,965,224 ("60 million parameters", p. 1), of which all 5 convolutional layers combined account for only 2,334,080 / 60,965,224 = 3.83%, yet account for 665,784,864 / 724,412,928 = 91.91% of all multiply-accumulates!
+- Prediction 2.2 (Figure 2 Caption Neuron Count Audit, p. 5):
+  - True neuron counts per layer are: conv1 = 96*55*55 = 290,400; conv2 = 256*27*27 = 186,624; conv3 = 384*13*13 = 64,896; conv4 = 384*13*13 = 64,896; conv5 = 256*13*13 = 43,264; fc6 = 4,096; fc7 = 4,096; fc8 = 1,000 -> total = 659,272 ("650,000 neurons" in the Abstract, p. 1).
+  - Figure 2's caption prints `253,440` for conv1 because 55 * 48 * 96 = 253,440 (multiplying one spatial dimension 55 by the per-GPU channel count 48 instead of 55*55*96 = 290,400).
+
+## E3: ReLU vs Saturating Tanh 6x Training Speedup (Section 3.1, Fig. 1, p. 3) & Local Response Normalization Lateral Inhibition (Section 3.3, p. 4)
+- Prediction 3.1 (ReLU vs Tanh 4-Layer CNN Training Speed, Fig. 1 p. 3):
+  - On a 4-layer CNN trained with SGD (no regularization, independently tuned optimal learning rate for each activation), ReLU will reach <= 25% training error at least 4x-6x faster (in epochs/iterations) than tanh, and initializing hidden biases to +1 (Section 5, p. 6) prevents dead ReLUs at initialization.
+- Prediction 3.2 (Local Response Normalization Eq. on p. 4 & PyTorch `alpha/size` discrepancy):
+  - Our exact implementation of Krizhevsky (2012) LRN b^i_{x,y} = a^i_{x,y} / (k + alpha * sum_{j=max(0,i-n/2)}^{min(N-1,i+n/2)} (a^j_{x,y})^2)^beta will match `F.local_response_norm(a, size=n, alpha=alpha * n, beta=beta, k=k)` to < 1e-7, whereas calling `F.local_response_norm(a, size=n, alpha=alpha, ...)` has discrepancy > 1e-2 on active feature maps because PyTorch divides alpha by n=5.
+
+## E4: Overlapping Pooling (s=2, z=3 vs s=2, z=2, Section 3.4 p. 4), PCA RGB Illumination Invariance (Section 4.1, pp. 5-6), Dropout Co-Adaptation Prevention (Section 4.2, p. 6), & Weight Decay Lowering Training Error (Section 5, p. 6)
+- Prediction 4.1 (PCA Color Augmentation Eigensystem & Illumination Invariance, Section 4.1 pp. 5-6):
+  - On natural/synthetic RGB images where pixel variation is dominated by overall luminance v_1 ~ (1,1,1)/sqrt(3), the largest eigenvalue lambda_1 of the 3x3 RGB covariance matrix captures luminance intensity while lambda_2, lambda_3 capture chromaticity shifts, and perturbing images by [p_1, p_2, p_3][alpha_1 lambda_1, alpha_2 lambda_2, alpha_3 lambda_3]^T preserves object contour geometry while shifting global illumination color/brightness.
+- Prediction 4.2 (Dropout p=0.5 Co-Adaptation & Test-Time 0.5 Scaling, Section 4.2 p. 6):
+  - Training the fully-connected classifier with Dropout p=0.5 (and multiplying hidden activations by 0.5 at test time) reduces the train-test generalization gap and decreases weight co-adaptation (measured by off-diagonal feature activation covariance) relative to p=0.0.
+- Prediction 4.3 (Overlapping Pooling s=2, z=3 Spatial Shift Robustness, Section 3.4 p. 4):
+  - Overlapping max-pooling (s=2, z=3) produces the exact same output spatial dimensions ((55-3)/2 + 1 = 27, (27-3)/2 + 1 = 13, (13-3)/2 + 1 = 6) as non-overlapping s=2, z=2 on 54->27, 26->13, 12->6, while maintaining higher cosine similarity under 1-pixel spatial shifts because adjacent pooling windows share a 1-pixel border.

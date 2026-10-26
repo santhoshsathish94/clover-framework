@@ -1,0 +1,24 @@
+=== 1. Search Archive.org for Minsky & Papert (1969) Perceptrons ===
+  {'identifier': 'perceptronsintro0000mins', 'title': 'Perceptrons : an introduction to computational geometry', 'year': 1988}
+  {'identifier': 'perceptronsintro00mins', 'title': 'Perceptrons : an introduction to computational geometry', 'year': 1988}
+=== 2. Check Archive.org files for any matching identifier ===
+>>> ident: perceptronsintro0000mins
+   perceptronsintro0000mins.lcpdf 13114039 None
+   perceptronsintro0000mins.pdf 12938624 true
+   perceptronsintro0000mins_djvu.txt 516313 true
+   perceptronsintro0000mins_djvu.xml 6975516 true
+   perceptronsintro0000mins_encrypted.pdf 12859869 None
+   perceptronsintro0000mins_hocr_searchtext.txt.gz 183109 true
+>>> ident: perceptronsintro00mins
+   perceptronsintro00mins.lcpdf 17742420 None
+   perceptronsintro00mins.pdf 17577320 true
+   perceptronsintro00mins_djvu.txt 592499 true
+   perceptronsintro00mins_djvu.xml 7055243 true
+   perceptronsintro00mins_encrypted.pdf 17525868 None
+   perceptronsintro00mins_hocr_searchtext.txt.gz 194439 true
+>>> ident: perceptrons00mins
+=== 3. Search GitHub for Minsky-Papert Perceptrons / Group Invariance / Predicate Order repos ===
+--- Query: Minsky+Papert+Perceptrons+language:python
+--- Query: Minsky+Papert+parity+connectedness
+--- Query: perceptron+xor+minsky+language:python
+FINISHED rc=0

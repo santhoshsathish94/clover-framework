@@ -1,0 +1,127 @@
+=== Download P-868 full text from archive.org ===
+ 4874 99608 p868_1956_full.txt
+THE  LOGIC  THEORY  MACHINE 
+A  COMPLEX  INFORMATION  PROCESSING  SYSTEM 
+
+
+by 
+Allen  Newell  and  Herbert  A.  Simon 
+P-868 
+July  12,  1956 
+
+REVISED 
+
+
+RMID 
+
+
+1700    MAIN    5T.     •    SANTA    MONICA    •    CALIFO*NIA 
+
+
+(64) 
+
+
+P-868 
+-1- 
+
+
+THE  LOGIC  THEORY  MACHINE 
+A  COMPLEX  INFORMATION  PROCESSING  SYSTEM 
+
+Allen  Newell  and  Herbert  A.  Simon 
+The  RAND  Corporation,  Santa  Monica,  Calif, 
+and  the  Carnegie  Institute  of  Technology, 
+Pittsburgh,  Pa. 
+
+
+SUMMARY 
+
+In  this  paper  we  describe  a  complex  information  processing 
+system,  which  we  call  the  logic  theory  machine,  that  is  capable 
+of  discovering  proofs  for  theorems  in  symbolic  logic.   This 
+system,  in  contrast  to  the  systematic  algorithms  that  are 
+ordinarily  employed  in  computation,  relies  heavily  on  heuristic 
+methods  similar  to  those  that  have  been  observed  in  human 
+problem  solving  activity.   The  specification  is  written  in  a 
+formal  language,  of  the  nature  of  a  pseudo-code,  that  is  suit- 
+able for  coding  for  digital  computers.   However,  the  present 
+paper  is  concerned  exclusively  with  specification  of  the  system, 
+and  not  with  its  realization  in  a  computer. 
+
+The  logic  theory  machine  is  part  of  a  program  of  research 
+to  understand  complex  Information  processing  systems  by  specify- 
+ing and  synthesizing  a  substantial  variety  of  such  systems  for 
+empirical  study. 
+
+
+1 
+
+Paper  presented  at  the  Symposium  on  Information  Theory,  sponsored 
+by  the  Professional  Group  on  Information  Theory  of  the  Institute 
+of  Radio  Engineers,  September  10,  1956,  Cambridge,  Massachusetts. 
+The  authors  are  indebted  to  Mr.  J.  C.  Shaw  of  The  RAND  Corporation, 
+who  has  been  their  partner  in  many  aspects  of  this  enterprise,  and 
+particularly  in  undertaking  to  realize  the  logic  theorist  in  a 
+computer  — work  that  will  be  reported  in  subsequent  papers. 
+
+
+r-ooe 
+-2- 
+
+
+INTRQDUCTION 
+
+In  this  paper  we  shall  report  some  results  of  a  research 
+program  directed  toward  the  analysis  and  understanding  of  com- 
+plex information  processing  systems.   The  concept  of  an  informa- 
+tion processing  system  is  already  fairly  clear  and  will  be  made 
+precise  in  Section  I,  below.  The  term  "complex"  is  not  so 
+easily  disposed  of;  but  it  is  the  crucial  distinguishing  character- 
+istic  of  the  class  of  systems  with  which  we  are  concerned. 
+
+We  may  identify  certain  characteristics  of  a  system  that 
+Cloning into 'dmoews-ipl-v-lt'...
+>>> dmoews-ipl-v-lt (89c6d79ac2a25d7566183b3136bfbe198c9f75dd)
+     74 dmoews-ipl-v-lt/logic-theorist-chapter-2-input.txt
+    849 dmoews-ipl-v-lt/logic-theorist-1963-stefferud-output.txt
+     87 dmoews-ipl-v-lt/logic-theorist-remember-all-theorems-patch.txt
+   2806 dmoews-ipl-v-lt/logic-theorist-1963-stefferud.iplv
+    234 dmoews-ipl-v-lt/README.md
+     34 dmoews-ipl-v-lt/logic-theorist-1963-stefferud-input.txt
+     53 dmoews-ipl-v-lt/interpreter/lib-shuffle-ws.iplv
+     54 dmoews-ipl-v-lt/interpreter/test-03.iplv
+    333 dmoews-ipl-v-lt/interpreter/lib-simon.iplv
+      4 dmoews-ipl-v-lt/interpreter/redefine-effort.iplv
+    304 dmoews-ipl-v-lt/interpreter/iplv.test
+      2 dmoews-ipl-v-lt/interpreter/run.sh
+      5 dmoews-ipl-v-lt/interpreter/lib-at.iplv
+    113 dmoews-ipl-v-lt/interpreter/iplv.py
+    220 dmoews-ipl-v-lt/interpreter/assembler.py
+    213 dmoews-ipl-v-lt/interpreter/lib-generators-new.iplv
+     22 dmoews-ipl-v-lt/interpreter/iplv.usage
+    166 dmoews-ipl-v-lt/interpreter/remove_ws.py
+      2 dmoews-ipl-v-lt/interpreter/test-stefferud.sh
+    798 dmoews-ipl-v-lt/interpreter/test-stefferud.out
+     99 dmoews-ipl-v-lt/interpreter/README-SUBSET.md
+     67 dmoews-ipl-v-lt/interpreter/iplparser.test
+    987 dmoews-ipl-v-lt/interpreter/machine.py
+     80 dmoews-ipl-v-lt/interpreter/remove_ws.test
+    120 dmoews-ipl-v-lt/interpreter/test.py
+     15 dmoews-ipl-v-lt/interpreter/lib-j100.iplv
+     92 dmoews-ipl-v-lt/interpreter/README.md
+    261 dmoews-ipl-v-lt/interpreter/iplparser.py
+   1019 dmoews-ipl-v-lt/interpreter/lib-misc.iplv
+     11 dmoews-ipl-v-lt/interpreter/lib-hs.iplv
+    168 dmoews-ipl-v-lt/interpreter/test-01.iplv
+     74 dmoews-ipl-v-lt/interpreter/util.py
+      4 dmoews-ipl-v-lt/interpreter/test.sh
+    196 dmoews-ipl-v-lt/interpreter/test-02.iplv
+     25 dmoews-ipl-v-lt/interpreter/lib-ws.iplv
+   3730 dmoews-ipl-v-lt/7094/patched-logic-theorist.iplv
+     71 dmoews-ipl-v-lt/7094/logic-theorist-patch.txt
+    133 dmoews-ipl-v-lt/7094/logictoiplv.py
+     87 dmoews-ipl-v-lt/7094/README.md
+      4 dmoews-ipl-v-lt/7094/make-changes.sh
+   4636 dmoews-ipl-v-lt/7094/patched-logic-theorist.out
+  18252 total
+FINISHED rc=0

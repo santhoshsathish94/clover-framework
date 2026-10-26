@@ -1,0 +1,33 @@
+# Predictions Log — John J. Hopfield (1982) Associative Memory Study
+
+## E1: Clone and run reference repositories (`pauljmello/Hopfield-Networks` and `1hubert/hopfield-network`)
+Timestamp (before run): 2026-10-26 16:48 UTC
+Predictions:
+1. Both `pauljmello/Hopfield-Networks` (`hopfield.py`) and `1hubert/hopfield-network` (`main.py`) will implement the bipolar `{-1, +1}` Hebbian outer-product rule `W = sum x_s x_s^T` with zero diagonal `W_{ii} = 0`, rather than Hopfield's `{0, 1}` formulation in Equations (1)-(4), and will recover noisy binary patterns on CPU (`rc=0`).
+
+## E2: Energy Monotonicity (Eq. 7-8, p. 2556) and `{0, 1}` vs Bipolar `{-1, +1}` Factor-of-2 Capacity Doubling (Eq. 2-4, Eq. 10, Fig. 2, pp. 2555-2557)
+Timestamp (before run): 2026-10-26 16:48 UTC
+Predictions:
+1. Energy monotonicity: On symmetric T_{ij} = T_{ji} with T_{ii} = 0, asynchronous updates will never increase E (0/500 trajectories increase E, 100% converge to fixed points), whereas synchronous parallel updates on the same matrices will exhibit 2-cycles A <-> B, and negative self-coupling T_{ii} < 0 will allow E to increase.
+2. `{0, 1}` vs Bipolar `{-1, +1}` factor-of-2 capacity:
+   - At N = 100, n = 10, Equation (10) for `{0, 1}` gives P = 1 - Phi(sqrt(100 / 18)) = 0.00921 (matching Hopfield's 0.0091 on p. 2556), and empirical 1-step bit error rate on `{0, 1}` at n = 10 will match bipolar `{-1, +1}` at n' = 2*10 - 1 = 19 (within < 0.002), confirming the exact factor-of-2 capacity doubling stated on page 2557.
+   - At N = 100, n = 5, nearly 100% of memories are retained with 0-1 errors; at n = 15 (0.15 N), roughly half of the memories in `{0, 1}` evolve to states with < 5 errors while the rest experience severe avalanche errors (reproducing Fig. 2, p. 2557).
+
+## E3: Basin of Attraction vs Hamming Distance (N=30, n=5, p. 2557) and Memory Merging vs Similarity (N=100, n=8, d in {30, 20, 10}, p. 2557)
+Timestamp (before run): 2026-10-26 16:48 UTC
+Predictions:
+1. Basin of attraction (N=30, n=5):
+   - Starting fromperturbed states at Hamming distance d from a stored memory, exact recovery of the nearest memory will exceed 90% for d <= 4..5 and fall smoothly to ~15%..30% at d = 12 (matching Hopfield p. 2557).
+   - Starting from completely random states (N=30, n=5, 10 signed attractors +/- mu^s), ~75%..90% of trials will land on one of the 10 nominal memories (or within 1 bit), and the remaining ~10%..25% will land on spurious attractors (mostly 3-pattern mixture states sign(+-mu^1 +- mu^2 +- mu^3)).
+2. Memory merging (N=100, n=8, 8th memory at distance d from memory #1, p. 2557):
+   - At d = 30, both memory #1 and memory #8 will remain distinct stable states (> 80% of trials); at d = 20, they will be displaced; at d = 10, they will fuse/merge into a single attractor in the majority of trials.
+
+## E4: Clipped Synapses (2/pi factor, p. 2557), Bounded +-3 Palimpsest Forgetting (p. 2557), Unidirectional 1/sqrt(2) Dilution (p. 2557), and 25x Overload Familiarity (N=100, n=500, p. 2558)
+Timestamp (before run): 2026-10-26 16:48 UTC
+Predictions:
+1. Clipped synapses T_{ij} = sign(T_{ij}) and Unidirectional synapses (T_{ij} != 0 => T_{ji} = 0):
+   - Empirical signal-to-noise ratio (mean / std of local field) for clipped synapses will be sqrt(2/pi) = 0.7979x the unclipped SNR (matching p. 2557), and for unidirectional synapses will be 1/sqrt(2) = 0.7071x the symmetric SNR (matching p. 2557).
+2. Bounded saturating synapses T_{ij} in {-3, -2, -1, 0, +1, +2, +3} (p. 2557):
+   - After sequentially storing 40 memories in N=100, unclipped Hebbian storage suffers catastrophic forgetting of all 40 memories (recall accuracy < 65% on both old #1..#5 and recent #36..#40), whereas saturating T_{ij} in [-3, +3] forgets old memories (#1..#5 near chance) while retaining recent memories (#38..#40 with > 92% bit accuracy).
+3. Overload familiarity recognition (N=100, n=500, p. 2558):
+   - Even at n = 500 (25x overload, where 0/500 memories are stable fixed points), the initial processing rate (fraction of neurons unstable at t=0) will be significantly lower for the 500 familiar stored states (~31%, 1 - Phi(1/sqrt(5)) = 32.7%) than for 500 unfamiliar random states (50.0%), allowing single-step familiarity discrimination with > 90% ROC AUC.

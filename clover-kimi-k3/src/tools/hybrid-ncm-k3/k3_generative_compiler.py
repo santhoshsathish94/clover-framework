@@ -1030,3 +1030,146 @@ class CloverRustGenerativeCompiler:
                 )
             )
         return diags
+
+
+# ---------------------------------------------------------------------------
+# 3. Cycle 4 Foundation Upgrade — Rumelhart, Hinton & Williams (1986) +
+#    Richard Sutton (1988) TD(lambda) Statement Trajectory Value Predictor
+# ---------------------------------------------------------------------------
+
+class SuttonTDStatementPredictor:
+    """Combines:
+      1. Rumelhart, Hinton & Williams (1986, p. 9 & Eq. 16): Non-saturating `{0.1, 0.9}` terminal
+         targets (preventing `y*(1-y) -> 0` sigmoid tail paralysis so previously failing code patterns
+         can rapidly adapt when repaired) and momentum `alpha_mom = 0.9`.
+      2. Richard Sutton (1988, Machine Learning 3:9-44, Theorems 1-3, p. 23 Backward Offline Replay,
+         & Section 5.1 Step-Cost Prediction):
+         Models statement-boundary compilation checkpoints `s_1 -> s_2 -> ... -> s_m -> z` as an
+         absorbing Markov chain on GPU (`cuda:7` when available), computing:
+           - Exact Absorbing Markov Maximum-Likelihood value `V_MLE = (I - Q_hat)^(-1) h_hat` (Theorem 3)
+           - Online `TD(lambda)` updates with eligibility traces `e_t = grad P_t + lambda * e_{t-1}`
+           - Backward offline `TD(0)` replay (`p. 23`, propagating multi-step credit in one pass per sweep)
+           - Transition cliff detection `Delta P_t = P(s_{t+1}) - P(s_t)` to identify the exact statement
+             step where a trajectory entered a doomed borrow/type/prefix-shadow state.
+    """
+
+    STATES: tuple[str, ...] = (
+        "S0_SIG_HEADER",          # Function signature & imports clean
+        "S1_NOVEL_CLEAN_INIT",    # Unseen/novel clean variable initialization
+        "S2_CLEAN_LOOP_GUARD",    # Loop header with monotonic state advance
+        "S3_BAD_PREFIX_SHADOW",   # 1-char prefix branch before 2-char prefix branch
+        "S4_BAD_BORROW_ALIAS",    # Simultaneous mutable & immutable borrow open (`E0502`)
+        "S5_REPAIRED_SPLIT_DISPATCH",  # Repaired longest-prefix-first or `.split()` dispatch
+        "S6_CLEAN_RETURN",        # Type-checked return statement
+    )
+
+    def __init__(self, device: str | None = None) -> None:
+        self.num_states = len(self.STATES)
+        self.state_to_idx = {s: i for i, s in enumerate(self.STATES)}
+        self.device = device
+
+    @staticmethod
+    def classify_statement_state(line_text: str, verdict_ok: bool = True, diag_code: str = "") -> str:
+        s = (line_text or "").strip()
+        if not verdict_ok or diag_code:
+            if "PREFIX_SHADOW" in diag_code:
+                return "S3_BAD_PREFIX_SHADOW"
+            return "S4_BAD_BORROW_ALIAS"
+        if s.startswith(("def ", "fn ", "pub fn ", "from ", "import ")):
+            return "S0_SIG_HEADER"
+        if ".split(" in s or "s[i:i+2]" in s or "music_string[i:i+2]" in s:
+            return "S5_REPAIRED_SPLIT_DISPATCH"
+        if ("if " in s or "elif " in s) and ("== 'o'" in s or "== '+'" in s):
+            return "S3_BAD_PREFIX_SHADOW"
+        if "&mut " in s and "push(" in s:
+            return "S4_BAD_BORROW_ALIAS"
+        if s.startswith(("for ", "while ", "loop")):
+            return "S2_CLEAN_LOOP_GUARD"
+        if s.startswith("return ") or s.endswith("Ok(())"):
+            return "S6_CLEAN_RETURN"
+        return "S1_NOVEL_CLEAN_INIT"
+
+    def compute_markov_mle(
+        self, episodes: Sequence[tuple[Sequence[int], float]]
+    ) -> list[float]:
+        """Sutton (1988, Theorem 3): Computes the exact empirical Absorbing Markov Model prediction
+        `V_MLE = (I - Q_hat + eps*I)^(-1) h_hat` on GPU (`cuda:7` when available)."""
+        import torch as _torch
+        dev = self.device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
+        n = self.num_states
+        trans_counts = _torch.zeros((n, n), dtype=_torch.float64, device=dev)
+        term_sums = _torch.zeros((n,), dtype=_torch.float64, device=dev)
+        visit_counts = _torch.zeros((n,), dtype=_torch.float64, device=dev)
+
+        for seq, z in episodes:
+            for idx, s in enumerate(seq):
+                visit_counts[s] += 1.0
+                if idx + 1 < len(seq):
+                    trans_counts[s, seq[idx + 1]] += 1.0
+                else:
+                    term_sums[s] += float(z)
+
+        q_hat = _torch.zeros((n, n), dtype=_torch.float64, device=dev)
+        h_hat = _torch.zeros((n,), dtype=_torch.float64, device=dev)
+        for i in range(n):
+            denom = float(visit_counts[i].item())
+            if denom > 0.0:
+                q_hat[i] = trans_counts[i] / denom
+                h_hat[i] = term_sums[i] / denom
+            else:
+                h_hat[i] = 0.5
+
+        eye = _torch.eye(n, dtype=_torch.float64, device=dev)
+        v_mle = _torch.linalg.solve(eye - q_hat + 1e-9 * eye, h_hat)
+        return [round(float(x), 4) for x in v_mle.tolist()]
+
+    def run_td_lambda(
+        self,
+        episodes: Sequence[tuple[Sequence[int], float]],
+        lam: float = 0.3,
+        lr: float = 0.25,
+        momentum: float = 0.0,
+        backward_offline_replay: bool = False,
+        sweeps: int = 1,
+    ) -> list[float]:
+        """Runs Sutton's (1988, Eq. 4 & Theorem 3) linear/tabular `TD(lambda)` with Rumelhart et al.
+        (1986, Eq. 16) momentum and optional p. 23 backward offline `TD(0)` replay on GPU (`cuda:7`).
+        When `sweeps > 1` (Theorem 3 repeated presentations), accumulates `dw` across the training set
+        normalized by state visit counts so the stationary point matches the exact Markov MLE `(I - Q_hat)^(-1) h_hat`."""
+        import torch as _torch
+        dev = self.device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
+        n = self.num_states
+        w = _torch.full((n,), 0.5, dtype=_torch.float64, device=dev)
+        vel = _torch.zeros((n,), dtype=_torch.float64, device=dev)
+
+        for _ in range(max(1, sweeps)):
+            if backward_offline_replay and sweeps > 1:
+                dw_batch = _torch.zeros((n,), dtype=_torch.float64, device=dev)
+                visits = _torch.zeros((n,), dtype=_torch.float64, device=dev)
+                for seq, z in episodes:
+                    for t in range(len(seq) - 1, -1, -1):
+                        s_t = seq[t]
+                        target = float(z) if (t == len(seq) - 1) else float(w[seq[t + 1]].item())
+                        dw_batch[s_t] += target - float(w[s_t].item())
+                        visits[s_t] += 1.0
+                step_vec = _torch.where(visits > 0.0, dw_batch / _torch.clamp(visits, min=1.0), _torch.zeros_like(dw_batch))
+                vel = momentum * vel + lr * step_vec
+                w = _torch.clamp(w + vel, 0.05, 0.95)
+            else:
+                for seq, z in episodes:
+                    if not seq:
+                        continue
+                    e_trace = _torch.zeros((n,), dtype=_torch.float64, device=dev)
+                    dw_ep = _torch.zeros((n,), dtype=_torch.float64, device=dev)
+                    for t in range(len(seq)):
+                        s_t = seq[t]
+                        e_trace *= lam
+                        e_trace[s_t] += 1.0
+                        p_t = float(w[s_t].item())
+                        p_next = float(z) if (t == len(seq) - 1) else float(w[seq[t + 1]].item())
+                        td_err = p_next - p_t
+                        dw_ep += lr * td_err * e_trace
+                    vel = momentum * vel + dw_ep
+                    w = _torch.clamp(w + vel, 0.05, 0.95)
+
+        return [round(float(x), 4) for x in w.tolist()]

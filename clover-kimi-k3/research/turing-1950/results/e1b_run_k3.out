@@ -1,0 +1,552 @@
+Cloning into 'vukrosic-turing'...
+Cloning into 'simonbreiter-utm'...
+=== Read vukrosic/turing-from-scratch files ===
+--- FILE: README.md ---
+# Learn everything Alan Turing knew — from scratch
+
+Code for the video course. Every file is one step, in the order the video teaches it. Plain Python; only `step10_patterns.py` needs numpy (and Pillow to save pictures).
+
+```bash
+python3 tests.py        # quick checks for every step
+./run_all.sh            # run every step, output as in demo-output.txt
+python3 step6_bombe.py  # break the Enigma message in intercept.txt (uses all CPU cores)
+```
+
+| Step | File | Turing's idea | Year |
+| --- | --- | --- | --- |
+| 1 | `step1_machine.py` | A Turing machine: tape, head, rule table. It adds 1 to a binary number | 1936 |
+| 2 | `step2_universal.py` | The rule table is data: text, then one 253-digit number, then a machine again | 1936 |
+| 2b | `step3_beaver.py` | Busy beavers: 2, 3, 4 and 5 states run 6, 21, 107 and 47,176,870 steps | 1962 (Radó) |
+| 3 | `step4_halting.py` | The halting problem: every judge is wrong about its own opposite | 1936 |
+| 4 | `step5_enigma.py` | A working Enigma: 3 of 5 rotors, reflector, plugboard | 1930s |
+| 5 | `step6_bombe.py` | The Bombe's test: guess one plug, follow the consequences, reject contradictions | 1939–40 |
+| 6 | `step7_evidence.py` | Weight of evidence in decibans; are two messages typed from the same start? | 1940–41 |
+| 7 | `step8_imitation.py` | The sum in the 1950 imitation-game paper | 1950 |
+| 8 | `step9_learning.py` | NAND "neurons", and a child machine taught Nim with rewards and punishments | 1948, 1950 |
+| 9 | `step10_patterns.py` | Two chemicals that react and spread make stripes and spots | 1952 |
+
+`make_intercept.py` writes the secret message, `make_frames.py` saves the growing pattern as pictures, `values.py` computes every number shown on screen (`values.json`). `english.txt` is Tiny Shakespeare (~1.1 M characters), used to measure how often English letters repeat.
+
+## Results
+
+- `1011 + 1 = 1100` in 8 machine steps.
+- The 5-state busy beaver halts after 47,176,870 steps with 4,098 ones on the tape.
+- Enigma settings in this model: 60 × 17,576 × 150,738,274,937,250 = 158,962,555,217,826,360,000.
+- Bombe: 1,054,560 rotor settings × 26 guesses, 1 survivor (`IV II V`, start `KDF`), all 10 plug pairs recovered, about 20 s on 10 cores. A wrong setting contradicts itself after 3.2 deductions on average.
+- Evidence: a matching letter is worth +2.18 decibans, a miss −0.115. The sign of the total is right for 71 % of pairs at 100 letters, 87 % at 400, 99.5 % at 1,600.
+- The child machine beats a perfect Nim opponent 0.2 % of the time before practice and 99.6 % after 10,000 practice games; it learned "leave a multiple of 4" for all 16 piles where that is possible.
+- Patterns: equal spreading speeds give no pattern (contrast 0.001). With the blocker 18× faster: 13 stripes, or 52 spots.
+
+## What is simplified
+
+- The Enigma has no ring settings and the message is English; real messages were German and keys included ring settings.
+- The Bombe search here is software that follows the same logic (guess, follow implications, reject contradictions). The real machine did it with wired rotor drums and electric current.
+- The pattern model is a modern textbook two-chemical system (FitzHugh–Nagumo type), not the exact equations in the 1952 paper.
+
+License: MIT.
+
+--- FILE: step1_machine.py ---
+"""Part 1. A Turing machine: a tape, a head, and a table of rules."""
+
+# (state, symbol read) -> (symbol to write, move, next state)
+ADD_ONE = {
+    ('right', '0'): ('0', 'R', 'right'),   # walk to the end of the number
+    ('right', '1'): ('1', 'R', 'right'),
+    ('right', '_'): ('_', 'L', 'carry'),   # blank: turn around
+    ('carry', '1'): ('0', 'L', 'carry'),   # 1 + 1 = 0, carry on
+    ('carry', '0'): ('1', 'L', 'halt'),    # 0 + 1 = 1, done
+    ('carry', '_'): ('1', 'L', 'halt'),    # ran off the left edge
+}
+
+
+def run(rules, tape, state, max_steps=10_000, show=False):
+    tape = dict(enumerate(tape))           # position -> symbol
+    head, steps = 0, 0
+    while state != 'halt' and steps < max_steps:
+        symbol = tape.get(head, '_')       # an empty cell reads as '_'
+        if show:
+            print(f'{steps:3}  {state:6} {picture(tape, head)}')
+        write, move, state = rules[state, symbol]
+        tape[head] = write
+        head += 1 if move == 'R' else -1
+        steps += 1
+    return text(tape), steps
+
+
+def text(tape):
+    cells = [tape.get(i, '_') for i in range(min(tape), max(tape) + 1)]
+    return ''.join(cells).strip('_')
+
+
+def picture(tape, head):
+    lo, hi = min(min(tape), head), max(max(tape), head)
+    cells = [tape.get(i, '_') for i in range(lo, hi + 1)]
+    cells[head - lo] = '[' + cells[head - lo] + ']'
+    return ' '.join(cells)
+
+
+if __name__ == '__main__':
+    result, steps = run(ADD_ONE, '1011', 'right', show=True)
+    print(f'1011 + 1 = {result}   ({steps} steps)')
+    for number in ('0', '111', '100111'):
+        result, steps = run(ADD_ONE, number, 'right')
+        print(f'{number} + 1 = {result}   ({steps} steps)')
+
+--- FILE: step2_universal.py ---
+"""Part 2. One machine runs every machine: the rule table is just data."""
+from step1_machine import run, ADD_ONE
+
+
+def to_text(rules):
+    """Write a rule table as plain text, one rule per line."""
+    return '\n'.join(' '.join(key + value) for key, value in rules.items())
+
+
+def from_text(text):
+    """Read the text back into a rule table."""
+    rules = {}
+    for line in text.split('\n'):
+        state, symbol, write, move, next_state = line.split()
+        rules[state, symbol] = (write, move, next_state)
+    return rules
+
+
+def to_number(text):
+    """Any text is a row of bytes, and a row of bytes is one number."""
+    return int.from_bytes(text.encode(), 'big')
+
+
+def from_number(number):
+    size = (number.bit_length() + 7) // 8
+    return number.to_bytes(size, 'big').decode()
+
+
+if __name__ == '__main__':
+    text = to_text(ADD_ONE)
+    print(text)
+    number = to_number(text)
+    print(f'\nas one number ({len(str(number))} digits):')
+    print(str(number)[:60] + '...')
+    rules = from_text(from_number(number))      # number -> machine
+    print('\nrebuilt from the number, then run on 1011:')
+    print(run(rules, '1011', 'right'))
+
+--- FILE: step4_halting.py ---
+"""Part 3. The halting problem: no program can judge every program."""
+
+
+def run(program, max_steps):
+    """Run a program step by step. True if it stopped within max_steps."""
+    steps = 0
+    for _ in program():
+        steps += 1
+        if steps >= max_steps:
+            return False, steps
+    return True, steps
+
+
+# Our programs are Python generators: every `yield` is one step of work.
+def collatz(n):
+    def program():
+        x = n
+        while x != 1:
+            x = x // 2 if x % 2 == 0 else 3 * x + 1
+            yield
+    return program
+
+
+def forever():
+    while True:
+        yield
+
+
+# Three attempts at a judge. A judge answers: will this program stop?
+def always_yes(program):
+    return True
+
+
+def always_no(program):
+    return False
+
+
+def wait_and_see(program):
+    global calls
+    calls += 1                    # count how often the judge is asked
+    stopped, _ = run(program, max_steps=1000)
+    return stopped
+
+
+calls = 0
+
+
+def make_opposite(judge):
+    """Ask the judge about yourself, then do the opposite."""
+    def opposite():
+        if judge(opposite):       # judge says "you will stop"...
+            while True:           # ...so loop forever
+                yield
+        # judge says "you will run forever"... so stop right now
+    return opposite
+
+
+if __name__ == '__main__':
+    for n in (6, 27, 97):
+        stopped, steps = run(collatz(n), 1_000_000)
+        print(f'collatz({n}): stopped={stopped} after {steps} steps')
+    print('forever:', run(forever, 1_000_000))
+    print()
+    for judge in (always_yes, always_no, wait_and_see):
+        opposite = make_opposite(judge)
+        try:
+            verdict = judge(opposite)
+        except RecursionError:    # judge runs program, program asks judge...
+            print(f'{judge.__name__:13} gave no answer: it asked itself'
+                  f' {calls} times and Python gave up')
+            continue
+        stopped, steps = run(opposite, 1_000_000)
+        said = 'stops' if verdict else 'runs forever'
+        did = f'stopped after {steps} steps' if stopped else \
+            f'is still running after {steps:,} steps'
+        print(f'{judge.__name__:13} said: {said:13} it {did}')
+
+--- FILE: step8_imitation.py ---
+"""Part 7. The imitation game: Turing's own sample questions from 1950."""
+
+# In the paper the machine is asked: "Add 34957 to 70764."
+# It waits about 30 seconds and answers 105621.
+turing_machine_said = 105621
+print('34957 + 70764 =', 34957 + 70764)
+print('the machine in the paper said', turing_machine_said)
+print('off by', 34957 + 70764 - turing_machine_said)
+
+# His forecast for the year 2000: a memory of about 10**9 bits
+print(f'10**9 bits = {10**9 / 8 / 1e6:.0f} megabytes')
+
+--- FILE: step9_learning.py ---
+"""Part 8. Machines that learn: 1948 neurons and the 1950 child machine."""
+import random
+
+
+def nand(a, b):
+    return 1 - (a & b)
+
+
+def xor(a, b):
+    """Four NAND units wired together answer 'are the inputs different?'"""
+    c = nand(a, b)
+    return nand(nand(a, c), nand(b, c))
+
+
+def random_machine(units, seed):
+    """Turing's unorganised machine: each unit hears two random units."""
+    rng = random.Random(seed)
+    wires = [(rng.randrange(units), rng.randrange(units))
+             for _ in range(units)]
+    state = tuple(rng.randrange(2) for _ in range(units))
+    return wires, state
+
+
+def tick(wires, state):
+    return tuple(nand(state[a], state[b]) for a, b in wires)
+
+
+def loop_length(wires, state):
+    seen = {}
+    while state not in seen:
+        seen[state] = len(seen)
+        state = tick(wires, state)
+    return len(seen) - seen[state], seen[state]
+
+
+# ---- the child machine: a game, rewards and punishments ------------------
+
+STICKS = 21                  # take 1, 2 or 3; whoever takes the last wins
+
+
+def new_child():
+    """For every pile size: a score for taking 1, 2 or 3 sticks."""
+    return {pile: {take: 10 for take in (1, 2, 3) if take <= pile}
+            for pile in range(1, STICKS + 1)}
+
+
+def choose(child, pile, rng):
+    takes = list(child[pile])
+    return rng.choices(takes, [child[pile][t] for t in takes])[0]
+
+
+def practise(child, rng):
+    """The child plays one game against itself, then gets taught."""
+    pile, used, player = STICKS, ([], []), 0
+    while True:
+        take = choose(child, pile, rng)
+        used[player].append((pile, take))
+        pile -= take
+        if pile == 0:
+            break                            # this player took the last
+        player = 1 - player
+    for pile, take in used[player]:
+        child[pile][take] += 1               # reward the winner's moves
+    for pile, take in used[1 - player]:
+        lower = child[pile][take] - 1        # punish the loser's moves
+        child[pile][take] = max(1, lower)
+
+
+def expert(pile, rng):
+    """Never makes a mistake: leaves a multiple of 4 whenever it can."""
+    return pile % 4 or rng.randint(1, min(3, pile))
+
+
+def exam(child, games=2000):
+    """The child moves first against the expert. How often does it win?"""
+    wins, rng = 0, random.Random(1)
+    for _ in range(games):
+        pile, childs_turn = STICKS, True
+        while True:
+            if childs_turn:
+                pile -= choose(child, pile, rng)
+            else:
+                pile -= expert(pile, rng)
+            if pile == 0:
+                wins += childs_turn
+                break
+            childs_turn = not childs_turn
+    return wins / games
+
+
+def favourite(child, pile):
+    return max(child[pile], key=child[pile].get)
+
+
+if __name__ == '__main__':
+    print('a b xor')
+    for a in (0, 1):
+        for b in (0, 1):
+            print(a, b, xor(a, b))
+
+    wires, state = random_machine(16, seed=3)
+    for t in range(6):
+        print(''.join(map(str, state)))
+        state = tick(wires, state)
+    wires, state = random_machine(16, seed=3)
+    loop, lead = loop_length(wires, state)
+    print(f'16 units: after {lead} steps it repeats every {loop} steps')
+
+    rng = random.Random(0)
+    child = new_child()
+    print(f'practice games      0: beats the expert {exam(child):.1%}')
+    done = 0
+    for upto in (10, 100, 1000, 10_000):
+        while done < upto:
+            practise(child, rng)
+            done += 1
+        print(f'practice games {upto:6,}: beats the expert '
+              f'{exam(child):.1%}')
+    print('pile -> sticks it takes')
+    print(' '.join(f'{pile}:{favourite(child, pile)}'
+                   for pile in range(1, STICKS + 1)))
+    right = sum(favourite(child, p) == p % 4
+                for p in range(1, STICKS + 1) if p % 4)
+    total = sum(1 for p in range(1, STICKS + 1) if p % 4)
+    print(f'{right} of {total} piles: it leaves a multiple of 4')
+
+--- FILE: tests.py ---
+"""Quick checks for every step. Run: python3 tests.py"""
+import random
+from step1_machine import run, ADD_ONE
+from step2_universal import to_text, from_text, to_number, from_number
+import step3_beaver
+from step4_halting import run as run_program, collatz, make_opposite
+from step4_halting import always_yes, always_no
+from step5_enigma import Enigma
+from step6_bombe import links_of, follow, CRIB, CIPHER
+from step7_evidence import decibans
+from step9_learning import xor, new_child, practise, favourite
+
+# 1: the machine adds one to any binary number
+for n in range(64):
+    assert int(run(ADD_ONE, format(n, 'b'), 'right')[0], 2) == n + 1
+
+# 2: table -> text -> number -> text -> table loses nothing
+assert from_text(from_number(to_number(to_text(ADD_ONE)))) == ADD_ONE
+
+# 3: the champions with 2, 3 and 4 states
+assert step3_beaver.run(step3_beaver.CHAMPIONS[2]) == (6, 4)
+assert step3_beaver.run(step3_beaver.CHAMPIONS[3]) == (21, 5)
+assert step3_beaver.run(step3_beaver.CHAMPIONS[4]) == (107, 13)
+
+# 4: both simple judges are wrong about their own opposite
+assert run_program(collatz(27), 1000) == (True, 111)
+assert run_program(make_opposite(always_yes), 5000)[0] is False
+assert run_program(make_opposite(always_no), 5000)[0] is True
+
+# 5: known Enigma output, and typing the cipher gives the message back
+assert Enigma('I II III', 'AAA').type('AAAAA') == 'BDZGO'
+key = ('III I IV', 'QEV', 'AB CD EF')
+secret = Enigma(*key).type('TURING')
+assert Enigma(*key).type(secret) == 'TURING' and 'T' != secret[0]
+
+# 6: the right setting survives the test, a neighbour does not
+links = links_of(CRIB, CIPHER)
+
+
+def wiring(start):
+    machine, out = Enigma('IV II V', start), []
+    for _ in CRIB:
+        machine.step()
+        out.append({a: machine.scramble(a) for a in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'})
+    return out
+
+
+assert follow(links, wiring('KDF'), 'R', 'X')['A'] == 'V'
+assert follow(links, wiring('KDG'), 'R', 'X') is None
+
+# 7: evidence adds: two clues of 10 decibans make 20
+assert round(decibans(10) + decibans(10), 6) == round(decibans(100), 6)
+
+# 9: XOR from NANDs, and the child learns to leave a multiple of 4
+assert [xor(a, b) for a in (0, 1) for b in (0, 1)] == [0, 1, 1, 0]
+rng, child = random.Random(0), new_child()
+for _ in range(5000):
+    practise(child, rng)
+assert all(favourite(child, pile) == pile % 4 for pile in (5, 6, 7, 21))
+
+print('all tests pass')
+
+=== Run vukrosic/turing-from-scratch in a work copy ===
+>>> Running step1_machine.py
+  0  right  [1] 0 1 1
+  1  right  1 [0] 1 1
+  2  right  1 0 [1] 1
+  3  right  1 0 1 [1]
+  4  right  1 0 1 1 [_]
+  5  carry  1 0 1 [1] _
+  6  carry  1 0 [1] 0 _
+  7  carry  1 [0] 0 0 _
+1011 + 1 = 1100   (8 steps)
+0 + 1 = 1   (3 steps)
+111 + 1 = 1000   (8 steps)
+100111 + 1 = 101000   (11 steps)
+>>> Running step2_universal.py
+right 0 0 R right
+right 1 1 R right
+right _ _ L carry
+carry 1 0 L carry
+carry 0 1 L halt
+carry _ 1 L halt
+
+as one number (253 digits):
+327662666092937084776959280676364684363494345772660259195051...
+
+rebuilt from the number, then run on 1011:
+('1100', 8)
+>>> Running step3_beaver.py
+2 states:            6 steps,     4 ones written   (0.0 s)
+3 states:           21 steps,     5 ones written   (0.0 s)
+4 states:          107 steps,    13 ones written   (0.0 s)
+5 states:   47,176,870 steps, 4,098 ones written   (2.8 s)
+>>> Running step4_halting.py
+collatz(6): stopped=True after 8 steps
+collatz(27): stopped=True after 111 steps
+collatz(97): stopped=True after 118 steps
+forever: (False, 1000000)
+
+always_yes    said: stops         it is still running after 1,000,000 steps
+always_no     said: runs forever  it stopped after 0 steps
+wait_and_see  gave no answer: it asked itself 333 times and Python gave up
+>>> Running step7_evidence.py
+English repeat rate 0.0636, chance 0.0385
+a match is worth +2.18 decibans, a miss -0.115
+same start : 23 matches in 400 letters, +6.9 decibans, odds 5 to 1
+other start: 15 matches in 400 letters, -11.5 decibans, odds 1 to 14
+how often does the sign of the score give the right answer?
+  100 letters: 71% of 400 pairs
+  400 letters: 87% of 400 pairs
+ 1600 letters: 100% of 400 pairs
+>>> Running step8_imitation.py
+34957 + 70764 = 105721
+the machine in the paper said 105621
+off by 100
+10**9 bits = 125 megabytes
+>>> Running step9_learning.py
+a b xor
+0 0 0
+0 1 1
+1 0 1
+1 1 0
+0010111111101010
+0111010010111101
+1010101110110010
+0101011011101101
+1110101111010011
+0000001011001101
+16 units: after 5 steps it repeats every 2 steps
+practice games      0: beats the expert 0.2%
+practice games     10: beats the expert 0.3%
+practice games    100: beats the expert 0.5%
+practice games  1,000: beats the expert 95.4%
+practice games 10,000: beats the expert 99.6%
+pile -> sticks it takes
+1:1 2:2 3:3 4:1 5:1 6:2 7:3 8:1 9:1 10:2 11:3 12:1 13:1 14:2 15:3 16:1 17:1 18:2 19:3 20:1 21:1
+16 of 16 piles: it leaves a multiple of 4
+>>> Running tests.py
+all tests pass
+=== Run simonbreiter/universal-turing-machine in a work copy ===
+TERM environment variable not set.
+TERM environment variable not set.
+Steps Counter       0
+Current State      q0
+Tape Index          0 
+Render Mode
+[ ] Automatic
+[ ] Interactive  
+[X] None (Please wait for results...)
+========================================▼========================================
+ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | 
+========================================▲========================================
+Character Counter
+Steps Counter       3
+Current State   qdone
+Tape Index         -1 
+Render Mode
+[ ] Automatic
+[ ] Interactive  
+[X] None (Please wait for results...)
+========================================▼========================================
+ | | | | | | | | | | | | | | | | | | | | |0|0| | | | | | | | | | | | | | | | | | 
+========================================▲========================================
+Character Counter
+2x: 0
+
+Input:  
+Output: 00
+TERM environment variable not set.
+TERM environment variable not set.
+Steps Counter       0
+Current State      q0
+Tape Index          0 
+Render Mode
+[ ] Automatic
+[ ] Interactive  
+[X] None (Please wait for results...)
+========================================▼========================================
+ | | | | | | | | | | | | | | | | | | | |0|0| |0|0|0| | | | | | | | | | | | | | | 
+========================================▲========================================
+Character Counter
+5x: 0
+Steps Counter      91
+Current State   qdone
+Tape Index          7 
+Render Mode
+[ ] Automatic
+[ ] Interactive  
+[X] None (Please wait for results...)
+========================================▼========================================
+ | | | | | | | | | | | | | | | | | | | |0|0|0|0|0|0| | | | | | | | | | | | | | | 
+========================================▲========================================
+Character Counter
+6x: 0
+
+Input: 00 000
+Output: 000000
+Something went wrong! Issue: Invalid config! State "q82" needs to be defined!
+FINISHED rc=0

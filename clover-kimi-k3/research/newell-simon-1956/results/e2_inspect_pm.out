@@ -1,0 +1,220 @@
+=== pm-axioms.txt ===
+#
+# Axioms from _Principia_Mathematica_, *1
+#
+# *1.2, Taut
+( ( p \/ p ) -> p )
+# *1.3, Add
+( q -> ( p \/ q ) )
+# *1.4, Perm
+( ( p \/ q ) -> ( q \/ p ) )
+# *1.5, Assoc
+( ( p \/ ( q \/ r ) ) -> ( q \/ ( p \/ r ) ) )
+# *1.6, Sum
+( ( q -> r ) -> ( ( p \/ q ) -> ( p \/ r ) ) )
+=== pm-theorems.txt (count and lines) ===
+138 pm-theorems.txt
+#
+# Theorems from _Principia_Mathematica_, *2
+#
+# *2.01
+( ( p -> ~ p ) -> ~ p )
+# *2.02
+( q -> ( p -> q ) )
+# *2.03
+( ( p -> ~ q ) -> ( q -> ~ p ) )
+# *2.04
+( ( p -> ( q -> r ) ) -> ( q -> ( p -> r ) ) )
+# *2.05
+( ( q -> r ) -> ( ( p -> q ) -> ( p -> r ) ) )
+# *2.06
+( ( p -> q ) -> ( ( q -> r ) -> ( p -> r ) ) )
+# *2.07
+( p -> ( p \/ p ) )
+# *2.08
+( p -> p )
+# *2.1
+( ~ p \/ p )
+# *2.11
+( p \/ ~ p )
+# *2.12
+( p -> ~ ~ p )
+# *2.13
+( p \/ ~ ~ ~ p )
+# *2.14
+( ~ ~ p -> p )
+# *2.15
+( ( ~ p -> q ) -> ( ~ q -> p ) )
+# *2.16
+( ( p -> q ) -> ( ~ q -> ~ p ) )
+# *2.17
+( ( ~ q -> ~ p ) -> ( p -> q ) )
+# *2.18
+( ( ~ p -> p ) -> p )
+# *2.2
+( p -> ( p \/ q ) )
+# *2.21
+( ~ p -> ( p -> q ) )
+# *2.24
+( p -> ( ~ p -> q ) )
+# *2.25
+( p \/ ( ( p \/ q ) -> q ) )
+# *2.26
+( ~ p \/ ( ( p -> q ) -> q ) )
+# *2.27
+( p -> ( ( p -> q ) -> q ) )
+# *2.3
+( ( p \/ ( q \/ r ) ) -> ( p \/ ( r \/ q ) ) )
+# *2.31
+( ( p \/ ( q \/ r ) ) -> ( ( p \/ q ) \/ r ) )
+# *2.32
+( ( ( p \/ q ) \/ r ) -> ( p \/ ( q \/ r ) ) )
+# *2.33 is a definition, and not a theorem.
+# *2.36
+( ( q -> r ) -> ( ( p \/ q ) -> ( r \/ p ) ) )
+# *2.37
+( ( q -> r ) -> ( ( q \/ p ) -> ( p \/ r ) ) )
+# *2.38
+( ( q -> r ) -> ( ( q \/ p ) -> ( r \/ p ) ) )
+# *2.4
+( ( p \/ ( p \/ q ) ) -> ( p \/ q ) )
+# *2.41
+( ( q \/ ( p \/ q ) ) -> ( p \/ q ) )
+# *2.42
+( ( ~ p \/ ( p -> q ) ) -> ( p -> q ) )
+# *2.43
+( ( p -> ( p -> q ) ) -> ( p -> q ) )
+# *2.45
+( ~ ( p \/ q ) -> ~ p )
+# *2.46
+( ~ ( p \/ q ) -> ~ q )
+# *2.47
+( ~ ( p \/ q ) -> ( ~ p \/ q ) )
+# *2.48
+( ~ ( p \/ q ) -> ( p \/ ~ q ) )
+# *2.49
+( ~ ( p \/ q ) -> ( ~ p \/ ~ q ) )
+# *2.5
+( ~ ( p -> q ) -> ( ~ p -> q ) )
+# *2.51
+( ~ ( p -> q ) -> ( p -> ~ q ) )
+# *2.52
+( ~ ( p -> q ) -> ( ~ p -> ~ q ) )
+# *2.521
+( ~ ( p -> q ) -> ( q -> p ) )
+# *2.53
+( ( p \/ q ) -> ( ~ p -> q ) )
+# *2.54
+( ( ~ p -> q ) -> ( p \/ q ) )
+# *2.55
+( ~ p -> ( ( p \/ q ) -> q ) )
+# *2.56
+( ~ q -> ( ( p \/ q ) -> p ) )
+# *2.6
+( ( ~ p -> q ) -> ( ( p -> q ) -> q ) )
+# *2.61
+( ( p -> q ) -> ( ( ~ p -> q ) -> q ) )
+# *2.62
+( ( p \/ q ) -> ( ( p -> q ) -> q ) )
+# *2.621
+( ( p -> q ) -> ( ( p \/ q ) -> q ) )
+# *2.63
+( ( p \/ q ) -> ( ( ~ p \/ q ) -> q ) )
+# *2.64
+( ( p \/ q ) -> ( ( p \/ ~ q ) -> p ) )
+# *2.65
+( ( p -> q ) -> ( ( p -> ~ q ) -> ~ p ) )
+# *2.67
+( ( ( p \/ q ) -> q ) -> ( p -> q ) )
+# *2.68
+( ( ( p -> q ) -> q ) -> ( p \/ q ) )
+# *2.69
+( ( ( p -> q ) -> q ) -> ( ( q -> p ) -> p ) )
+# *2.73
+( ( p -> q ) -> ( ( ( p \/ q ) \/ r ) -> ( q \/ r ) ) )
+# *2.74
+( ( q -> p ) -> ( ( ( p \/ q ) \/ r ) -> ( p \/ r ) ) )
+# *2.75
+( ( p \/ q ) -> ( ( p \/ ( q -> r ) ) -> ( p \/ r ) ) )
+# *2.76
+( ( p \/ ( q -> r ) ) -> ( ( p \/ q ) -> ( p \/ r ) ) )
+# *2.77
+( ( p -> ( q -> r ) ) -> ( ( p -> q ) -> ( p -> r ) ) )
+# *2.8
+( ( q \/ r ) -> ( ( ~ r \/ s ) -> ( q \/ s ) ) )
+# *2.81
+( ( q -> ( r -> s ) ) -> ( ( p \/ q ) -> ( ( p \/ r ) -> ( p \/ s ) ) ) )
+# *2.82
+( ( ( p \/ q ) \/ r ) -> ( ( ( p \/ ~ r ) \/ s ) -> ( ( p \/ q ) \/ s ) ) )
+# *2.83
+( ( p -> ( q -> r ) ) -> ( ( p -> ( r -> s ) ) -> ( p -> ( q -> s ) ) ) )
+# *2.85
+( ( ( p \/ q ) -> ( p \/ r ) ) -> ( p \/ ( q -> r ) ) )
+# *2.86
+( ( ( p -> q ) -> ( p -> r ) ) -> ( p -> ( q -> r ) ) )
+=== run_logic.py ===
+# Python 3
+
+#
+# Test logic.py by successively trying to deduce theorem #(i + 1) in
+# _Principia_Mathematica_, *2, given theorems #1, ..., #i.
+#
+
+# David Moews, Feb. 2026.  Released into the public domain, CC0.
+
+import argparse
+import subprocess
+import os
+import sys
+
+def run_test(exprn, interp, source_file, do_trace):
+    if interp is None:
+        interp = 'logic.py'
+    the_args = ['python3', interp, '--info', '--prove', exprn]
+    if source_file is not None:
+        the_args.extend(['--source', source_file])
+    if do_trace:
+        the_args.extend(['--trace'])
+    rv = subprocess.run(args = the_args)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    print()
+    print()
+
+argparser = argparse.ArgumentParser(epilog='''
+Run logic.py or some other program successively to try to prove each of the
+theorems in pm-theorems.txt, allowing it to use, for each theorem, all of the
+previous theorems in pm-theorems.txt, as well as the axioms in pm-axioms.txt.
+''')
+argparser.add_argument('--interp',
+          help = 'interpreter for source code (default: logic.py)')
+argparser.add_argument('--source',
+          help = 'input file for source code (default: logic-routines.txt)')
+argparser.add_argument('--trace', action = 'store_true',
+          help = 'Print out all instructions executed (very verbose)')
+
+args = argparser.parse_args()
+
+f = open('pm-axioms.txt', 'r')
+axioms = [l.strip() for l in f.readlines() if l[ : 1] != '#']
+f.close()
+
+tr_table = {ord('p') : 'A', ord('q') : 'B', ord('r') : 'C', ord('s') : 'D'}
+
+theorems = []
+f = open('pm-theorems.txt', 'r')
+for l in f.readlines():
+    l = l.strip()
+    if l[ : 1] == '#':
+        print(l)
+        continue
+    g = open('theorem-list.txt', 'w')
+    theorem_list = '\n'.join(axioms + theorems).translate(tr_table)
+    g.write(theorem_list)
+    g.write('\n')
+    g.close()
+    sys.stdout.flush()
+    run_test(l, args.interp, args.source, args.trace)
+    theorems.append(l)
+f.close()
+FINISHED rc=0

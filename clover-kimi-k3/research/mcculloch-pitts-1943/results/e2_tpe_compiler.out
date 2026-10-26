@@ -1,0 +1,33 @@
+/home/usergpu/foundations-study/mcculloch-pitts-1943/work/mp1943_calculus.py:1: SyntaxWarning: invalid escape sequence '\p'
+  """
+=== E2.1: Exhaustive Single-Neuron (1943 Eq. 1, theta >= 1) on 2 Inputs ===
+Total 2-input truth tables realized by 1 neuron: 7 / 16
+  tt=(0, 0, 0, 0) (FALSE (0)             ): REALIZED   | theta=1, exc={}, inh=[]
+  tt=(0, 0, 0, 1) (AND (x1 . x2)         ): REALIZED   | theta=2, exc={'x1': 1, 'x2': 1}, inh=[]
+  tt=(0, 0, 1, 0) (x1 . ~x2 (Fig 1d)     ): REALIZED   | theta=1, exc={'x1': 1}, inh=['x2']
+  tt=(0, 0, 1, 1) (PROJ x1 (Fig 1a)      ): REALIZED   | theta=1, exc={'x1': 1}, inh=[]
+  tt=(0, 1, 0, 0) (~x1 . x2              ): REALIZED   | theta=1, exc={'x2': 1}, inh=['x1']
+  tt=(0, 1, 0, 1) (PROJ x2               ): REALIZED   | theta=1, exc={'x2': 1}, inh=[]
+  tt=(0, 1, 1, 0) (XOR (x1 ^ x2)         ): IMPOSSIBLE | -
+  tt=(0, 1, 1, 1) (OR (x1 v x2, Fig 1b)  ): REALIZED   | theta=1, exc={'x1': 1, 'x2': 1}, inh=[]
+  tt=(1, 0, 0, 0) (f(0,0)=1 table #8     ): IMPOSSIBLE | -
+  tt=(1, 0, 0, 1) (f(0,0)=1 table #9     ): IMPOSSIBLE | -
+  tt=(1, 0, 1, 0) (f(0,0)=1 table #10    ): IMPOSSIBLE | -
+  tt=(1, 0, 1, 1) (f(0,0)=1 table #11    ): IMPOSSIBLE | -
+  tt=(1, 1, 0, 0) (f(0,0)=1 table #12    ): IMPOSSIBLE | -
+  tt=(1, 1, 0, 1) (f(0,0)=1 table #13    ): IMPOSSIBLE | -
+  tt=(1, 1, 1, 0) (f(0,0)=1 table #14    ): IMPOSSIBLE | -
+  tt=(1, 1, 1, 1) (f(0,0)=1 table #15    ): IMPOSSIBLE | -
+
+=== E2.2: Theorem 2 & 3 Compiler across all 16 2-input Boolean functions ===
+2-input functions compiled & verified: 8/16; rejected by Theorem 3 (f(0,0)=1): 8/16
+
+=== E2.3: Theorem 2 & 3 Compiler across all 256 3-input Boolean functions ===
+3-input functions compiled & 100% verified under Eq. (1): 128/256
+3-input functions rejected by Theorem 3 (f(0,0,0)=1):    128/256
+Constructed net sizes (non-afferent neurons): min=1, median=11, max=17
+
+=== E2.4: Negative Controls ===
+Negative Control 1 (1,000 random order-0 nets on all-zero input): 0/1000 ever fired (Theorem 3 necessity)
+Negative Control 2 (corrupted threshold on 3-input parity net): verify_compiled_net=False (expected False)
+FINISHED rc=0

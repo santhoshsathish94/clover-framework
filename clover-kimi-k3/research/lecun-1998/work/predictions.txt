@@ -1,0 +1,35 @@
+# Pre-Registered Predictions for Yann LeCun, Leon Bottou, Yoshua Bengio & Patrick Haffner (1998)
+# "Gradient-Based Learning Applied to Document Recognition", Proc. IEEE 86(11): 2278-2324
+Timestamp: 2026-10-26T18:10:00Z
+
+## E1: Reference Repositories (jmlee8939/LeNet-5_1998_pytorch, pop123-ux/LeNet_5-from-scratch, VTongTV/LeNet-5-scratch, SunnyHaze/LeNet5-MNIST-Pytorch)
+- Prediction 1.1: Most repos claiming to implement "LeNet-5 (1998)" (such as SunnyHaze/LeNet5-MNIST-Pytorch) actually implement a modernized variant (dense S2->C3 convolution with 2,416 params instead of Table I's 1,516 params, parameter-free AvgPool2d/MaxPool2d instead of S2/S4's 12 and 32 trainable weights+biases, and linear/CrossEntropy output instead of 84-dim Euclidean RBF units Eq. 7).
+- Prediction 1.2: Repositories specifically targeting historical fidelity (jmlee8939/LeNet-5_1998_pytorch, pop123-ux/LeNet_5-from-scratch) will include the Table I asymmetric S2->C3 connection table, the scaled tanh f(a) = 1.7159 * tanh(2/3 * a), and the 84-unit RBF output layer.
+
+## E2: Exact LeNet-5 Layer-by-Layer Parameter & Connection Accounting (Section II-B, pp. 7-9), Appendix A Scaled Tanh (p. 41), & Appendix C Gauss-Newton Diagonal Hessian Backprop (pp. 41-42)
+- Prediction 2.1 (Exact Parameter and Connection Counts, Section II-B pp. 7-8):
+  - C1 (6 @ 28x28, 5x5 kernels from 32x32 input): (5*5 + 1)*6 = 156 trainable parameters; 156 * 28 * 28 = 122,304 connections.
+  - S2 (6 @ 14x14, 2x2 subsampling with 1 weight + 1 bias per map): 2*6 = 12 trainable parameters; (4 + 1) * 6 * 14 * 14 = 5,880 connections.
+  - C3 (16 @ 10x10, 5x5 kernels connected via Table I: six 3-map, nine 4-map, one 6-map = 60 kernels): (6*(3*25+1) + 9*(4*25+1) + 1*(6*25+1)) = 456 + 909 + 151 = 1,516 trainable parameters; 1,516 * 10 * 10 = 151,600 connections.
+  - S4 (16 @ 5x5, 2x2 subsampling with 1 weight + 1 bias per map): 2*16 = 32 trainable parameters; (4 + 1) * 16 * 5 * 5 = 2,000 connections.
+  - C5 (120 @ 1x1, 5x5 kernels on all 16 S4 maps): 120 * (16*25 + 1) = 48,120 trainable parameters and 48,120 connections.
+  - F6 (84 units fully connected to 120 C5 units): 84 * (120 + 1) = 10,164 trainable parameters and 10,164 connections.
+  - Total through F6: 156 + 12 + 1,516 + 32 + 48,120 + 10,164 = 60,000 exact trainable parameters (and 340,068 connections through F6; plus 10*84 = 840 fixed RBF connections = 340,908 total connections, matching p. 7 "340,908 connections, but only 60,000 trainable free parameters" to the exact integer!).
+- Prediction 2.2 (Appendix A Scaled Hyperbolic Tangent, Eq. 6 & p. 41):
+  - For f(a) = A * tanh(S * a) with A = 1.7159 and S = 2/3, |f(1.0) - 1.0| < 1e-4, |f(-1.0) - (-1.0)| < 1e-4, and the second derivative |f''(a)| achieves its global maxima at a = +/- 0.988 (~ +/- 1.0), where sech^2(S*a) = 2/3 -> tanh(S*a) = +/- 1/sqrt(3) -> a = +/- (3/2) * arctanh(1/sqrt(3)) = +/- 0.988.
+- Prediction 2.3 (Translation Equivariance vs Subsampling): Shifting an input digit by (dx, dy) = (2, 2) pixels shifts C1 by (2, 2) and S2 by (1, 1) with zero interior distortion, whereas shifting by an odd offset (1, 0) changes the 2x2 phase alignment in S2, showing why S2 blurs high-frequency phase sensitivity while C3+S4 restores stability.
+
+## E3: Euclidean RBF Output Layer Collapse (Eq. 7-8) vs Competitive MAP Criterion (Eq. 9, pp. 8-9) & Space-Displacement Neural Network (SDNN, Section VII, p. 27)
+- Prediction 3.1 (RBF Collapse under Adaptive Centers + MSE Eq. 8 vs MAP Eq. 9, p. 9):
+  - When both the network weights W and the RBF centers M are trained jointly by minimizing pure MSE E(W) = sum_p y_{D_p}(Z^p, W) (Eq. 8), all class RBF centers collapse toward a single vector (mean pairwise center distance -> 0, classification accuracy -> 1/C random chance!), confirming LeCun et al.'s warning on p. 9.
+  - When trained with the competitive MAP criterion E(W) = sum_p [y_{D_p} + log(e^{-j} + sum_i e^{-y_i})] (Eq. 9) or fixed +/-1 ASCII bitmap centers, the centers stay separated and classification accuracy exceeds 95%.
+- Prediction 3.2 (Space-Displacement Neural Network SDNN Equivalence & Speedup, Section VII, Fig. 23, p. 27):
+  - Running LeNet-5 convolutional layers C1->S2->C3->S4->C5->F6->RBF directly on a wide 32 x W_wide multi-character image with stride-4 window alignment produces the EXACT same output penalty sequence (max diff < 1e-12) as cropping K = (W_wide - 32)/4 + 1 separate 32x32 windows and running LeNet-5 on each window independently, while reducing multiply-accumulates in C1..S4 by > 2.5x!
+
+## E4: Graph Transformer Networks (GTNs) — Viterbi vs Forward Scorer, Exact Backprop Through Graphs, and Unsegmented String-Level Discriminative Training (Sections V, VI, VIII, pp. 19-26, 31-34)
+- Prediction 4.1 (Forward Scorer Backprop Eq. 15-16 vs Central Finite Differences, p. 25):
+  - On any directed acyclic interpretation graph G_int with parallel segmentation paths and arc penalties c_i, the analytical backward recurrence dE/df_n = sum_{i in D_n} (dE/df_{d_i}) exp(f_{d_i} - c_i - f_n) (Eq. 15) and dE/dc_i (Eq. 16) will match central finite differences to < 1e-10, and the derivatives dC_forw / dc_i across all start-to-end paths pi will equal the exact path posterior probabilities P(i in pi) = sum_{pi ni i} exp(-C(pi)) / sum_{pi'} exp(-C(pi')).
+- Prediction 4.2 (Parallel-Path Evidence Aggregation, Section VI-C, p. 25):
+  - When two distinct segmentations yield the same label sequence with penalties C_1 = 2.2 and C_2 = 2.2 while a competing wrong label sequence has a single path with penalty C_3 = 1.8, Viterbi picks the wrong answer (1.8 < 2.2), whereas the Forward Scorer combines the two parallel paths via logadd(2.2, 2.2) = 2.2 - log(2) = 1.507 < 1.8 and selects the correct interpretation!
+- Prediction 4.3 (String-Level Discriminative Forward Training on Over-Segmented Multi-Digit Strings without Segmentation Labels, Section VI-D, Fig. 21, pp. 25-26):
+  - Given multi-character images over-segmented into candidate ink pieces (where true characters may consist of 1 or 2 pieces and no ground-truth segmentation is ever provided, only the target string label), training the recognizer end-to-end through the GTN using Discriminative Forward Loss E_dforw = C_cforw - C_forw (Eq. 17) will converge to >95% string recognition accuracy and assign high penalties to mis-segmented "half-character" arcs, whereas non-discriminative Viterbi training with adaptive outputs collapses!

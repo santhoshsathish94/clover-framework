@@ -1,0 +1,1190 @@
+=== 1. Read & Run CodeForge-00/rumelhart_backpropagation in a work copy ===
+--- FILE: README.md ---
+# rumelhart_backpropagation
+Retropropagacion tal como la presentaron Rumelhart, Hinton y Williams en 1986 (*Learning representations by back-propagating errors*, Nature 323), con los experimentos con los que la mostraron: XOR, deteccion de simetria, codificador y arboles familiares.
+
+Es el siguiente paso despues de la neurona de McCulloch-Pitts (1943) y el perceptron de Rosenblatt (1958): por fin se sabia **entrenar las capas ocultas**.
+
+## El problema que resolvia
+El perceptron aprendia sus pesos, pero solo los de una capa. Una red con capas ocultas puede representar XOR, circulos y fronteras arbitrarias, pero no se sabia entrenarla: no hay respuesta correcta para una neurona oculta (problema de asignacion de credito) y el escalon del perceptron no tiene gradiente. El articulo de 1986 junto dos piezas:
+
+1. **Activaciones suaves.** Cada unidad usa `y = 1 / (1 + e^-x)` en lugar del escalon, asi que existe la derivada.
+2. **Regla de la cadena hacia atras.** El error de la salida se reparte hacia las capas anteriores, hasta cada neurona oculta.
+
+Con eso, el descenso del gradiente sirve para redes de cualquier profundidad.
+
+## El algoritmo
+Error total sobre todos los ejemplos `p` y salidas `j`: `E = 1/2 * suma (y_pj - d_pj)^2`.
+
+**Hacia adelante**, grupo a grupo: `x_j = suma_i w_ji * y_i + b_j`, `y_j = sigmoide(x_j)`.
+
+**Hacia atras**, de la salida a la entrada:
+```
+dE/dy_j  =  y_j - d_j                         (si j es una salida)
+dE/dy_i  =  suma_j  w_ji * dE/dx_j            (si i es oculta: el error de las unidades a las que alimenta)
+dE/dx_j  =  dE/dy_j * y_j * (1 - y_j)         (derivada de la sigmoide)
+dE/dw_ji =  dE/dx_j * y_i                     (lo que hay que cambiar en cada peso)
+```
+
+**Actualizacion**, por lotes completos y con momento: `dw(t) = -epsilon * dE/dw + alfa * dw(t-1)`. El momento arrastra parte del paso anterior, lo que acelera los tramos llanos y amortigua las oscilaciones. El sesgo es un peso mas, de una unidad que siempre vale 1.
+
+## Archivos
+| Archivo | Contenido |
+| --- | --- |
+| `backprop.py` | El algoritmo: red como grupos de unidades y conexiones, pasada hacia adelante y hacia atras, entrenamiento con momento |
+| `tasks.py` | XOR, simetria y codificador, y los tres conjuntos de puntos 2D (circulos, XOR con ruido y lunas) |
+| `family.py` | Los dos arboles familiares, las tripletas y la red de siete grupos |
+| `experiments.py` | Hiperparametros de cada problema (incluidos los de `live.py`) y entrenamiento con varias semillas |
+| `demo.py` | Ejecuta los experimentos y muestra los resultados |
+| `plots.py` | Genera `docs/simetria.svg` y `docs/familia.svg` |
+| `live.py` | **Entrenamiento en tiempo real** en una ventana (matplotlib): la red se ajusta a los puntos del plano mientras se entrena, con teclas para pausar y cambiar la velocidad |
+| `tests/` | Pruebas unitarias: gradiente contra la derivada numerica, momento entre pasos, los experimentos y el bucle de `live.py` (sin ventana) |
+
+## Uso
+```bash
+pip install -r requirements.txt      # NumPy, y matplotlib para live.py
+python demo.py                       # xor, symmetry, encoder y family (unos 15 s)
+python demo.py family --seeds 8      # el experimento familiar con 8 semillas (unos 75 s)
+python plots.py                      # regenera docs/simetria.svg y docs/familia.svg
+python live.py --dataset moons       # entrenamiento en tiempo real en una ventana (circles, xor o moons)
+python -m unittest discover -s tests -t .
+```
+NumPy solo sirve para procesar todos los ejemplos a la vez; el algoritmo es el mismo que el del articulo. Matplotlib solo lo usa `live.py`.
+
+## Resultados
+Todos los numeros salen de `python demo.py`.
+
+### XOR (red 2-2-1)
+Converge en **19 de 20 semillas**, con una mediana de 280 barridos. La que falla se queda en `E = 0,25`: un **minimo local**, el riesgo del metodo, que el articulo ya reconocia (segun recuerdo, afirmaba que en la practica rara vez era un problema). Las dos unidades ocultas aprenden por si solas a detectar cada caso de entrada distinta ("a pero no b" y "b pero no a"), y la salida las combina.
+
+### Deteccion de simetria (red 6-2-1)
+Un patron de 6 bits es simetrico si se lee igual al reves: 8 de los 64 patrones. Converge en **16 de 20 semillas**, con una mediana de **1315 barridos** (el articulo, segun recuerdo, daba 1425 de media). Las 4 restantes se atascan en `E = 4,0`.
+
+![Pesos de las dos unidades ocultas de la red de simetria y curva de aprendizaje](docs/simetria.svg)
+
+Lo notable es **lo que aprende cada unidad oculta**: pesos opuestos para posiciones simetricas (`-2,5` y `+2,5`; `+5` y `-5`; `-9,9` y `+9,9`) con magnitudes en proporcion **1:2:4**. La suma de cada unidad se anula solo si el patron es simetrico, y el 1:2:4 hace que cada par de posiciones pese distinto y ninguna combinacion de entradas asimetricas se anule por casualidad. Es el resultado que el articulo destaca. Nadie le dijo a la red que buscara simetrias: la descubrio ella.
+
+### Codificador 4-2-4
+Cuatro entradas con un solo 1, un cuello de botella de 2 unidades y la misma entrada como salida. La red debe inventar un **codigo binario de 2 bits** para los 4 casos. Converge en **20 de 20 semillas** (mediana 140 barridos).
+
+### Arboles familiares
+Dos arboles familiares isomorfos, uno con nombres ingleses y otro italianos (24 personas, 12 relaciones). La red recibe una persona y una relacion y debe dar la otra persona (`Colin tiene-padre -> James`). Persona y relacion pasan primero por grupos de 6 unidades, un cuello de botella que obliga a inventar una representacion.
+
+Se entrena con 108 tripletas y se retienen 4 que la red **nunca ve**:
+
+| Semilla | E final | Entrenamiento | Retenidas |
+| --- | --- | --- | --- |
+| 0 | 13,90 | 94/108 | 1/4 |
+| 1 | 4,59 | 108/108 | 3/4 |
+| 2 | 5,34 | 106/108 | 2/4 |
+| 3 | 5,81 | 106/108 | 2/4 |
+| 4 | 14,42 | 93/108 | 1/4 |
+| 5 | 7,40 | 107/108 | 1/4 |
+| 6 | 6,23 | 105/108 | 4/4 |
+| 7 | 6,26 | 104/108 | 2/4 |
+
+De media acierta **2 de 4** tripletas retenidas; elegir al azar acertaria un 4% de cada una. El resultado varia mucho con la semilla y no siempre llega a 108/108. Acertar un hecho que nunca vio significa que la red no memorizo: aprendio algo sobre la estructura de las familias.
+
+![Diagramas de Hinton con las representaciones aprendidas de personas y relaciones](docs/familia.svg)
+
+Los diagramas muestran los pesos de entrada de las 6 unidades de codificacion (semilla 1). Lo que se ve en esta ejecucion concreta (cambia con la semilla):
+- Las unidades 4 y 5 dan pesos de signo opuesto a ingleses e italianos: distinguen la **nacionalidad**.
+- La unidad 2 se activa con fuerza para los de la generacion mas joven en los dos arboles (Colin, Charlotte, Alfonso, Sophia): codifica la **generacion**.
+- La correlacion entre los pesos de cada persona inglesa y su equivalente italiana va de 0,28 a 0,95 segun la unidad: las altas codifican estructura compartida por los dos arboles, y las bajas, nacionalidad.
+
+Nadie le dio estos rasgos: son **representaciones distribuidas** que emergen para predecir mejor. Esa fue la idea que mas impacto tuvo del articulo: las capas ocultas no solo ajustan una frontera, sino que **aprenden a representar** los datos.
+
+## Ver el proceso, no solo el resultado
+### En tiempo real: `live.py`
+```bash
+python live.py                       # circulos concentricos
+python live.py --dataset moons       # circles | xor | moons
+python live.py --hidden 4 --seed 3 --per-frame 2
+```
+Abre una ventana donde la red se entrena **mientras la miras**. A la izquierda, lo que predice en todo el plano (azul = clase 0, naranja = clase 1, blanco = indecisa), con los puntos encima y la recta de cada unidad oculta (`w1*x + w2*y + b = 0`, discontinuas). A la derecha, el error `E` y el acierto de cada barrido, que van creciendo. No escribe ningun fichero.
+
+Teclas: **espacio** pausa, **arriba/abajo** duplican o reducen los barridos por cuadro, **n** crea una red nueva con otra semilla, **q** cierra. Con `--snapshot imagen.png` entrena sin ventana y guarda solo el estado final (util en servidores sin pantalla).
+
+El entrenamiento se hace con `Network.step`, que da un barrido y conserva el momento entre llamadas, y entre cuadro y cuadro se dibuja.
+
+### `live.py` en detalle
+**Opciones**
+
+| Opcion | Por defecto | Que hace |
+| --- | --- | --- |
+| `--dataset` | `circles` | Puntos a cubrir: `circles` (un anillo rodea a la otra clase), `xor` (cuatro nubes en diagonal) o `moons` (dos medias lunas) |
+| `--hidden` | 8 | Unidades ocultas de la red 2-N-1. Con pocas la frontera es mas tosca y puede quedarse sin resolver el problema |
+| `--seed` | 1 | Semilla de los pesos iniciales: cambia el camino que sigue el entrenamiento, no los puntos |
+| `--lr` | segun el conjunto | Tasa de aprendizaje (epsilon). Mas alta acelera, pero puede hacer que la red se pase de largo y se atasque |
+| `--epochs` | segun el conjunto | Barridos totales: 2000 en circulos, 1500 en XOR y 3000 en lunas |
+| `--per-frame` | 4 | Barridos de entrenamiento entre un cuadro y el siguiente; tambien se cambia con las flechas |
+| `--snapshot PNG` | no | Entrena sin ventana y guarda solo el estado final |
+
+**Como leer la ventana**
+- **Fondo del plano:** la salida de la red en cada punto, entre 0 (azul) y 1 (naranja). El blanco es 0,5, donde la red no se decide. La frontera de decision es esa franja blanca.
+- **Rectas discontinuas:** una por unidad oculta, donde su suma ponderada vale 0. Cada unidad oculta ve el plano dividido por una recta, y la salida combina esas divisiones; asi nace una frontera curva a partir de rectas.
+- **Titulo:** barrido actual, error `E = 1/2 suma (y - d)^2` y porcentaje de puntos bien clasificados (salida mayor que 0,5).
+- **Curvas de la derecha:** el error baja y el acierto sube. Una zona plana en el error es una **meseta**: el gradiente es pequeno y la red parece atascada hasta que algo cambia (se ve en `moons`).
+- **Pie de la ventana:** estado (entrenando, en pausa o terminado), barridos por cuadro y semilla actual.
+
+**Como funciona por dentro**
+1. `LiveTraining` crea los puntos y la red `Network.layered([2, N, 1])` con pesos iniciales en [-1, 1].
+2. Cada cuadro llama a `advance(per_frame)`, que ejecuta `Network.step` ese numero de veces. Cada paso es un barrido de descenso del gradiente por lotes sobre todos los puntos, con momento 0,9, y devuelve el error.
+3. `draw()` calcula la salida de la red en una rejilla de 80 x 80 puntos, mueve las rectas ocultas y alarga las dos curvas.
+4. `run()` repite avanzar y dibujar, y cede el control a la ventana con `plt.pause` para que atienda las teclas. Termina al cerrar la ventana; cuando el entrenamiento acaba, la ventana sigue abierta mostrando el resultado.
+
+El momento se conserva entre pasos porque `Network.step` guarda la velocidad en la red. Hay un test que comprueba que dar 25 pasos sueltos da exactamente lo mismo que `train` con 25 barridos.
+
+**Si algo no funciona**
+- *No se abre ninguna ventana, o aparece un aviso de que el backend no es interactivo:* matplotlib esta usando un backend sin pantalla (por ejemplo `Agg`, tipico en un servidor). Usa `--snapshot` o instala un backend grafico (en macOS y Windows viene uno; en Linux, `python3-tk`).
+- *Va a trompicones:* sube `--per-frame` o pulsa la flecha arriba. Dibujar cada cuadro cuesta mas que entrenar un barrido.
+- *Va demasiado rapido para verlo:* baja `--per-frame` hasta 1 o usa la flecha abajo y la pausa.
+- *La red no termina de resolverlo:* prueba otra semilla (`n`) o mas unidades ocultas. Como en los demas experimentos, no todas las inicializaciones convergen igual.
+
+**Limites.** Los puntos son siempre los mismos de cada conjunto (cambia solo la inicializacion de la red). La tasa de aprendizaje se ajusto probando para que el proceso sea visible; con otros valores el comportamiento cambia. El entrenamiento es por lotes completos, como en el articulo, no por mini-lotes.
+
+### Que observar
+- **Circulos concentricos** (`--dataset circles`). Al principio la red dice casi 0,5 en todas partes (50% de acierto) y las rectas ocultas apuntan al azar. Primero aparece una frontera diagonal que separa algo (80% hacia el barrido 145), despues las rectas se organizan alrededor del centro y se cierra un poligono (100% hacia el 540), y el resto del entrenamiento solo afina los bordes y baja el error de 1,0 a 0,1.
+- **Dos medias lunas: una meseta** (`--dataset moons`). Es el caso mas instructivo. En unos 50 barridos la red traza **una sola recta** y llega a **84%**. Despues se queda ahi cientos de barridos con el error casi plano (4,6, 4,4, 4,4...): el gradiente es pequeno hasta que alguna unidad oculta encuentra una direccion util. Hacia el barrido 800 una unidad oculta empieza a curvar la frontera (88%, 91%), y hacia el 1750 ya separa las dos lunas (100%). Se ve en la curva de error: baja rapido, se aplana y vuelve a caer. La meseta aparece con todas las semillas y tamanos que probe (semillas 1 a 3, con 4 y 8 unidades ocultas), pero **dura distinto**: de unos 200 barridos con la semilla 3 a mas de 1000 con la semilla 1. Puedes probarlo: `python live.py --dataset moons --seed 3 --hidden 8`.
+- **XOR con ruido** (`--dataset xor`). Dos rectas ocultas se cruzan y dejan una franja diagonal; llega al 100% hacia el barrido 110.
+
+## Diferencias con el articulo
+- **Los arboles los reconstrui de memoria.** Los nombres son los de Hinton, pero la estructura exacta puede no coincidir: mi version tiene 112 tripletas (56 por arbol) y el articulo usaba 104. Las relaciones salen de reglas (incluyo tios y tias por matrimonio).
+- **Los hiperparametros los ajuste probando** (`epsilon = 0,005`, `alfa = 0,9`, pesos iniciales en [-0,5, 0,5], 40 000 barridos). Con otros valores la red se quedaba en una meseta con `E ~ 50`, sin aprender. No uso decaimiento de pesos.
+- **NumPy.** El articulo es de 1986; aqui se procesan todos los ejemplos a la vez con matrices. Es el mismo algoritmo, solo mas rapido.
+- **Los resultados concretos del articulo** (1425 barridos en simetria, proporcion 1:2:4, retenidas en familias) los cito de memoria, asi que conviene contrastarlos con el texto original.
+
+## Limites de la retropropagacion de 1986
+- **Minimos locales y mesetas:** como se ve en XOR, simetria y los arboles, no todas las ejecuciones aprenden.
+- **Sensible a la inicializacion y los hiperparametros:** `epsilon` y el rango inicial cambiaron por completo el resultado de la red familiar.
+- **Lenta en redes profundas:** con sigmoides, el gradiente se encoge capa tras capa, y por eso las redes de muchas capas tardaron anos en funcionar. Lo resolvieron despues cosas como ReLU, mejores inicializaciones, normalizacion y optimizadores como Adam.
+- **Antecedentes:** la idea ya se habia descrito antes (Linnainmaa 1970, Werbos 1974, Parker y LeCun en 1985). El aporte de 1986 fue mostrar, con ejemplos, que las capas ocultas aprenden representaciones utiles.
+
+## La serie
+1. [`mcculloch_pitts_neuron`](https://github.com/CodeForge-00/mcculloch_pitts_neuron): la neurona de 1943, con pesos fijados a mano.
+2. [`rosenblatt_perceptron`](https://github.com/CodeForge-00/rosenblatt_perceptron): el perceptron de 1958, que aprende una capa y no sabe entrenar capas ocultas.
+3. Este proyecto: la retropropagacion de 1986, que entrena las capas ocultas.
+
+--- FILE: backprop.py ---
+"""
+Retropropagacion como la presentaron Rumelhart, Hinton y Williams en 1986 ("Learning representations by back-propagating
+errors", Nature 323).
+
+  * Unidades con salida logistica  y = 1 / (1 + exp(-x))  (derivable, a diferencia del escalon del perceptron).
+  * Error total  E = 1/2 * suma sobre ejemplos y salidas de (y - d)^2.
+  * Fase hacia adelante: se calcula la salida de cada grupo de unidades en orden.
+  * Fase hacia atras: dE/dy de las salidas se convierte en dE/dx = dE/dy * y * (1 - y), y de ahi se reparte hacia las
+    unidades anteriores con la regla de la cadena: dE/dy_i = suma_j w_ji * dE/dx_j.
+  * Descenso del gradiente por lotes con momento:  dw(t) = -epsilon * dE/dw + alfa * dw(t - 1).
+  * El sesgo es un peso mas (de una unidad que siempre vale 1).
+
+La red se describe como grupos de unidades y conexiones entre grupos, asi que sirve igual para una red en capas que para la
+red de los arboles familiares, donde dos grupos de entrada se codifican por separado antes de juntarse. NumPy solo se usa para
+procesar todos los ejemplos a la vez; el algoritmo es el mismo que en el articulo.
+"""
+import numpy as np
+
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-np.clip(x, -60, 60)))
+
+
+def toBatch(patterns):
+    """[(entradas, objetivos), ...] -> ({grupo: matriz n x unidades}, {grupo: matriz n x unidades})."""
+    patterns = list(patterns)
+    inputs = {k: np.array([p[0][k] for p in patterns], dtype=float) for k in patterns[0][0]}
+    targets = {k: np.array([p[1][k] for p in patterns], dtype=float) for k in patterns[0][1]}
+    return inputs, targets
+
+
+class Network:
+    def __init__(self, groups, connections, inputs, outputs, seed=0, init_range=0.5):
+        """
+        groups: {nombre: numero de unidades}, en orden topologico (las entradas primero).
+        connections: lista de (origen, destino) entre grupos. inputs/outputs: nombres de los grupos de entrada y salida.
+        """
+        rng = np.random.default_rng(seed)
+        self.groups = dict(groups)
+        self.order = list(groups)
+        self.connections = list(connections)
+        self.inputs, self.outputs = list(inputs), list(outputs)
+        self.weights = {(s, d): rng.uniform(-init_range, init_range, (groups[d], groups[s])) for s, d in connections}
+        self.biases = {d: rng.uniform(-init_range, init_range, groups[d]) for d in groups if d not in self.inputs}
+        self.incoming = {d: [s for s, dd in connections if dd == d] for d in groups}
+        self.outgoing = {s: [d for ss, d in connections if ss == s] for s in groups}
+
+    @classmethod
+    def layered(cls, sizes, seed=0, init_range=0.5):
+        """Red totalmente conectada capa a capa, por ejemplo layered([2, 2, 1]) para XOR."""
+        names = ['input'] + [f'hidden{i}' for i in range(1, len(sizes) - 1)] + ['output']
+        return cls(dict(zip(names, sizes)), list(zip(names, names[1:])), ['input'], ['output'], seed, init_range)
+
+    def forward(self, inputs):
+        """inputs: {grupo de entrada: matriz n x unidades (o un vector)}. Devuelve las activaciones de todos los grupos."""
+        acts = {}
+        for name in self.order:
+            if name in self.inputs:
+                acts[name] = np.atleast_2d(np.asarray(inputs[name], dtype=float))
+                continue
+            net = self.biases[name] + sum(acts[s] @ self.weights[(s, name)].T for s in self.incoming[name])
+            acts[name] = sigmoid(net)
+        return acts
+
+    def predict(self, inputs):
+        """Salidas para un ejemplo (listas) o varios (matrices)."""
+        single = np.ndim(next(iter(inputs.values()))) == 1
+        acts = self.forward(inputs)
+        return {name: (acts[name][0] if single else acts[name]) for name in self.outputs}
+
+    def _error(self, X, T):
+        acts = self.forward(X)
+        return 0.5 * sum(np.sum((acts[name] - T[name]) ** 2) for name in self.outputs)
+
+    def _gradients(self, X, T):
+        acts = self.forward(X)
+        deltas = {}  # dE/dx de cada grupo, filas = ejemplos
+        for name in reversed(self.order):
+            if name in self.inputs:
+                continue
+            y = acts[name]
+            err = y - T[name] if name in self.outputs else np.zeros_like(y)  # dE/dy
+            for dest in self.outgoing[name]:
+                err = err + deltas[dest] @ self.weights[(name, dest)]
+            deltas[name] = err * y * (1 - y)
+        gw = {(s, d): deltas[d].T @ acts[s] for s, d in self.connections}
+        gb = {name: deltas[name].sum(axis=0) for name in self.biases}
+        return gw, gb
+
+    def _solved(self, X, T, margin):
+        acts = self.forward(X)
+        return all(np.all(np.abs(acts[name] - T[name]) < margin) for name in self.outputs)
+
+    def error(self, patterns):
+        """E = 1/2 * suma de (y - d)^2 sobre todos los ejemplos y salidas."""
+        return float(self._error(*toBatch(patterns)))
+
+    def gradients(self, patterns):
+        """dE/dw y dE/db acumulados sobre todos los ejemplos (propagacion hacia atras)."""
+        return self._gradients(*toBatch(patterns))
+
+    def solved(self, patterns, margin=0.1):
+        """True si todas las salidas estan a menos de `margin` de su objetivo."""
+        return bool(self._solved(*toBatch(patterns), margin))
+
+    def resetMomentum(self):
+        """Pone a cero la velocidad acumulada por el momento (se hace al empezar un entrenamiento)."""
+        self._velocity_w = {key: np.zeros_like(w) for key, w in self.weights.items()}
+        self._velocity_b = {name: np.zeros_like(b) for name, b in self.biases.items()}
+
+    def step(self, X, T, learning_rate=0.5, momentum=0.9):
+        """
+        Un barrido de descenso del gradiente por lotes con momento, sobre ejemplos ya convertidos con `toBatch`. La velocidad
+        se conserva entre llamadas, asi que se puede entrenar de a poco (por ejemplo, para dibujar entre barridos).
+        Devuelve el error E despues del paso.
+        """
+        if not hasattr(self, '_velocity_w'):
+            self.resetMomentum()
+        gw, gb = self._gradients(X, T)
+        for key, w in self.weights.items():
+            self._velocity_w[key] = momentum * self._velocity_w[key] - learning_rate * gw[key]
+            w += self._velocity_w[key]
+        for name, b in self.biases.items():
+            self._velocity_b[name] = momentum * self._velocity_b[name] - learning_rate * gb[name]
+            b += self._velocity_b[name]
+        return float(self._error(X, T))
+
+    def train(self, patterns, epochs=5000, learning_rate=0.5, momentum=0.9, margin=0.1, check_every=10, on_epoch=None):
+        """
+        Descenso del gradiente por lotes con momento. Para en cuanto todas las salidas quedan a menos de `margin`.
+        Devuelve la lista de E por epoca (la ultima epoca es el estado final).
+        """
+        X, T = toBatch(patterns)
+        self.resetMomentum()
+        history = []
+        for epoch in range(1, epochs + 1):
+            history.append(self.step(X, T, learning_rate, momentum))
+            if on_epoch:
+                on_epoch(epoch, history[-1], self)
+            if epoch % check_every == 0 and self._solved(X, T, margin):
+                break
+        return history
+
+--- FILE: tasks.py ---
+"""
+Problemas sencillos con los que se probo la retropropagacion: XOR, deteccion de simetria y codificador.
+Cada funcion devuelve una lista de ejemplos ({'input': [...]}, {'output': [...]}).
+"""
+import itertools
+
+
+def example(x, y):
+    return {'input': list(x)}, {'output': list(y)}
+
+
+def xorPatterns():
+    """XOR: el problema que un perceptron de una capa no puede aprender. Basta una red 2-2-1."""
+    return [example(x, [x[0] ^ x[1]]) for x in itertools.product([0, 1], repeat=2)]
+
+
+def isSymmetric(bits):
+    """True si el patron es simetrico respecto a su centro (el primer bit es igual al ultimo, el segundo al penultimo...)."""
+    return all(bits[i] == bits[-1 - i] for i in range(len(bits) // 2))
+
+
+def symmetryPatterns(n=6):
+    """Los 2^n patrones binarios de n bits; la salida es 1 si el patron es simetrico. En el articulo, n = 6 con 2 ocultas."""
+    return [example(x, [int(isSymmetric(x))]) for x in itertools.product([0, 1], repeat=n)]
+
+
+def encoderPatterns(n=4):
+    """Codificador n-k-n: la entrada es un vector con un solo 1 y la salida debe reproducirlo a traves de una capa estrecha."""
+    return [({'input': [int(i == j) for j in range(n)]}, {'output': [int(i == j) for j in range(n)]}) for i in range(n)]
+
+
+def circlePoints(n=40, seed=0):
+    """Una nube (clase 0) rodeada por un anillo (clase 1). Devuelve [([x, y], clase), ...]."""
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    points = []
+    for label, radius in ((0, 1.0), (1, 2.4)):
+        angle, r = rng.uniform(0, 2 * np.pi, n), radius + rng.normal(0, 0.12, n)
+        points += [([float(r[i] * np.cos(angle[i])), float(r[i] * np.sin(angle[i]))], label) for i in range(n)]
+    return points
+
+
+def xorPoints(n=15, seed=0):
+    """Cuatro nubes en las esquinas; la clase es 1 si las coordenadas tienen signo distinto."""
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    return [([float(rng.normal(1.5 * sx, 0.45)), float(rng.normal(1.5 * sy, 0.45))], int(sx != sy))
+            for sx, sy in ((-1, -1), (-1, 1), (1, -1), (1, 1)) for _ in range(n)]
+
+
+def moonPoints(n=40, seed=0):
+    """Dos medias lunas entrelazadas."""
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    t = rng.uniform(0, np.pi, n)
+    points = [([float(1.8 * np.cos(a) - 0.9 + rng.normal(0, 0.15)), float(1.8 * np.sin(a) - 0.6 + rng.normal(0, 0.15))], 0) for a in t]
+    t = rng.uniform(0, np.pi, n)
+    points += [([float(0.9 - 1.8 * np.cos(a) + rng.normal(0, 0.15)), float(-1.8 * np.sin(a) + 0.6 + rng.normal(0, 0.15))], 1) for a in t]
+    return points
+
+
+POINTS_2D = {'circles': circlePoints, 'xor': xorPoints, 'moons': moonPoints}
+
+--- FILE: family.py ---
+"""
+Los dos arboles familiares isomorfos del articulo (uno con nombres ingleses y otro con italianos).
+
+Se construye una tripleta (persona 1, relacion, persona 2) por cada hecho, como "Colin tiene-padre James". La red recibe
+persona 1 y relacion en codificacion local (una unidad por valor) y debe dar persona 2. Para predecir bien tiene que
+descubrir por si sola rasgos como la nacionalidad, la generacion o la rama de la familia, que no se le dan.
+
+OJO: la estructura de los arboles la reconstruyo de memoria, asi que puede no coincidir exactamente con los datos originales
+del articulo. Los nombres si son los de Hinton; las relaciones salen de reglas (padre, madre, esposo, esposa, hijo, hija,
+hermano, hermana, tio, tia, sobrino, sobrina).
+"""
+from backprop import Network
+
+ENGLISH = ['Christopher', 'Penelope', 'Andrew', 'Christine', 'Margaret', 'Arthur',
+           'Victoria', 'James', 'Jennifer', 'Charles', 'Colin', 'Charlotte']
+ITALIAN = ['Roberto', 'Maria', 'Pierino', 'Francesca', 'Gina', 'Emilio',
+           'Lucia', 'Marco', 'Angela', 'Tomaso', 'Alfonso', 'Sophia']
+FEMALE = {'Penelope', 'Christine', 'Margaret', 'Victoria', 'Jennifer', 'Charlotte',
+          'Maria', 'Francesca', 'Gina', 'Lucia', 'Angela', 'Sophia'}
+
+# En el orden de ENGLISH (indices): parejas y, para cada pareja, sus hijos
+COUPLES = [(0, 1), (2, 3), (5, 4), (7, 6), (9, 8)]  # (marido, mujer) por indice
+CHILDREN = {(0, 1): [5, 6], (2, 3): [7, 8], (7, 6): [10, 11]}
+
+RELATIONS = ['father', 'mother', 'husband', 'wife', 'son', 'daughter',
+             'uncle', 'aunt', 'brother', 'sister', 'nephew', 'niece']
+
+
+def facts(names):
+    """Todas las tripletas (persona1, relacion, persona2) de un arbol con esos nombres (12, en el orden de ENGLISH)."""
+    parents = {}
+    for (a, b), kids in CHILDREN.items():
+        for kid in kids:
+            parents[kid] = (a, b)
+    spouse = {}
+    for a, b in COUPLES:
+        spouse[a], spouse[b] = b, a
+    isFemale = lambda i: names[i] in FEMALE
+    siblings = lambda i: [j for j in parents if j != i and i in parents and parents[j] == parents[i]]
+    triples = set()
+    for kid, (father, mother) in parents.items():
+        triples.add((kid, 'father', father))
+        triples.add((kid, 'mother', mother))
+        triples.add((father, 'daughter' if isFemale(kid) else 'son', kid))
+        triples.add((mother, 'daughter' if isFemale(kid) else 'son', kid))
+        for sib in siblings(kid):
+            triples.add((kid, 'sister' if isFemale(sib) else 'brother', sib))
+        for parent in (father, mother):
+            for uncle in siblings(parent):
+                triples.add((kid, 'aunt' if isFemale(uncle) else 'uncle', uncle))
+                triples.add((uncle, 'niece' if isFemale(kid) else 'nephew', kid))
+                if uncle in spouse:  # tios por matrimonio
+                    inlaw = spouse[uncle]
+                    triples.add((kid, 'aunt' if isFemale(inlaw) else 'uncle', inlaw))
+                    triples.add((inlaw, 'niece' if isFemale(kid) else 'nephew', kid))
+    for a, b in spouse.items():
+        triples.add((a, 'wife' if isFemale(b) else 'husband', b))
+    return sorted((names[p], r, names[q]) for p, r, q in triples)
+
+
+def allFacts():
+    return facts(ENGLISH) + facts(ITALIAN)
+
+
+PEOPLE = ENGLISH + ITALIAN
+
+
+def oneHot(index, size):
+    return [int(i == index) for i in range(size)]
+
+
+def triplesToPatterns(triples):
+    return [({'person1': oneHot(PEOPLE.index(p), 24), 'relation': oneHot(RELATIONS.index(r), 12)},
+             {'person2': oneHot(PEOPLE.index(q), 24)}) for p, r, q in triples]
+
+
+def familyNetwork(seed=0, init_range=0.3):
+    """
+    Red del articulo: persona 1 (24) y relacion (12) pasan cada una por un grupo pequeno de 6 unidades, se juntan en 12
+    unidades centrales, y de ahi a otro grupo de 6 y a persona 2 (24).
+    """
+    groups = {'person1': 24, 'relation': 12, 'person1_code': 6, 'relation_code': 6,
+              'central': 12, 'person2_code': 6, 'person2': 24}
+    connections = [('person1', 'person1_code'), ('relation', 'relation_code'), ('person1_code', 'central'),
+                   ('relation_code', 'central'), ('central', 'person2_code'), ('person2_code', 'person2')]
+    return Network(groups, connections, ['person1', 'relation'], ['person2'], seed, init_range)
+
+
+def validAnswers(triples):
+    """{(persona1, relacion): conjunto de personas 2 correctas}. Hay pares con dos respuestas (por ejemplo dos tias)."""
+    answers = {}
+    for p, r, q in triples:
+        answers.setdefault((p, r), set()).add(q)
+    return answers
+
+
+def split(triples, held_out=4, seed=0):
+    """Reparte las tripletas en entrenamiento y retenidas (que la red nunca ve), como en el articulo."""
+    import random
+    shuffled = list(triples)
+    random.Random(seed).shuffle(shuffled)
+    return shuffled[held_out:], shuffled[:held_out]
+
+
+def evaluate(net, triples, answers):
+    """Cuantas tripletas acierta la red: la unidad de salida mas activa debe ser una persona 2 valida."""
+    ok = 0
+    for p, r, _ in triples:
+        out = net.predict({'person1': oneHot(PEOPLE.index(p), 24), 'relation': oneHot(RELATIONS.index(r), 12)})['person2']
+        ok += PEOPLE[int(out.argmax())] in answers[(p, r)]
+    return ok
+
+
+# Hiperparametros con los que la red aprende bien (se ajustaron probando; con otros valores se queda en una meseta de E ~ 50)
+FAMILY_TRAINING = dict(epochs=40000, learning_rate=0.005, momentum=0.9, margin=0.2, check_every=500)
+
+--- FILE: experiments.py ---
+"""
+Configuracion y funciones compartidas por demo.py, plots.py y los tests: los hiperparametros con los que cada problema
+aprende, y utilidades para repetir el entrenamiento con distintas semillas.
+"""
+import numpy as np
+
+import family
+import tasks
+from backprop import Network
+
+XOR = dict(sizes=[2, 2, 1], epochs=5000, learning_rate=0.5, momentum=0.9)
+SYMMETRY = dict(sizes=[6, 2, 1], epochs=20000, learning_rate=0.1, momentum=0.9)  # en el articulo: 1425 barridos de media
+ENCODER = dict(sizes=[4, 2, 4], epochs=5000, learning_rate=0.5, momentum=0.9)
+
+
+def trainLayered(patterns, config, seed):
+    """Entrena una red en capas y devuelve (red, E por epoca, True si resolvio el problema)."""
+    net = Network.layered(config['sizes'], seed=seed)
+    history = net.train(patterns, epochs=config['epochs'], learning_rate=config['learning_rate'], momentum=config['momentum'])
+    return net, history, net.solved(patterns)
+
+
+def sweepStats(patterns, config, seeds=range(20)):
+    """Entrena con varias semillas: cuantas convergen, mediana de barridos y E final de las que se atascan."""
+    solved, stuck = [], []
+    for seed in seeds:
+        net, history, ok = trainLayered(patterns, config, seed)
+        (solved if ok else stuck).append(len(history) if ok else history[-1])
+    return {'runs': len(list(seeds)), 'solved': len(solved), 'median_sweeps': int(np.median(solved)) if solved else None,
+            'stuck_errors': [round(float(e), 3) for e in stuck]}
+
+
+def trainFamily(seed=1, init_range=0.5, held_out=4, split_seed=0):
+    """Entrena la red de los arboles familiares con todas las tripletas menos `held_out`, que se reservan para probar."""
+    triples = family.allFacts()
+    answers = family.validAnswers(triples)
+    train, held = family.split(triples, held_out, split_seed)
+    net = family.familyNetwork(seed=seed, init_range=init_range)
+    history = net.train(family.triplesToPatterns(train), **family.FAMILY_TRAINING)
+    return {'net': net, 'history': history, 'train': train, 'held': held, 'answers': answers,
+            'train_correct': family.evaluate(net, train, answers), 'held_correct': family.evaluate(net, held, answers)}
+
+
+# Problemas en el plano 2D (live.py): tasa de aprendizaje y barridos con los que el proceso se ve bien
+PLANE = {
+    'circles': dict(learning_rate=0.003, epochs=2000, title='Circulos concentricos'),
+    'xor': dict(learning_rate=0.003, epochs=1500, title='XOR con ruido'),
+    'moons': dict(learning_rate=0.01, epochs=3000, title='Dos medias lunas'),
+}
+
+--- FILE: demo.py ---
+"""
+Los experimentos del articulo de 1986, con retropropagacion.
+
+  python demo.py              # todos menos el estudio por semillas de la red familiar
+  python demo.py xor | symmetry | encoder | family
+  python demo.py family --seeds 8   # repite el experimento familiar con 8 semillas (unos 9 s cada una)
+"""
+import argparse
+
+import numpy as np
+
+import experiments as ex
+import family
+import tasks
+
+np.set_printoptions(precision=2, suppress=True, linewidth=160)
+
+
+def showStats(name, stats):
+    print(f"  {name}: {stats['solved']}/{stats['runs']} semillas convergen"
+          + (f", mediana {stats['median_sweeps']} barridos" if stats['median_sweeps'] else '')
+          + (f"; las demas se atascan con E = {stats['stuck_errors']}" if stats['stuck_errors'] else ''))
+
+
+def xor():
+    print('\n== XOR (red 2-2-1) ==')
+    patterns = tasks.xorPatterns()
+    net, history, ok = ex.trainLayered(patterns, ex.XOR, seed=0)
+    print(f'Semilla 0: {len(history)} barridos, E final = {history[-1]:.4f}, resuelto = {ok}')
+    print('  a b | oculta1 oculta2 | salida')
+    for inp, tgt in patterns:
+        acts = net.forward(inp)
+        print(f"  {inp['input'][0]} {inp['input'][1]} | {acts['hidden1'][0][0]:7.2f} {acts['hidden1'][0][1]:7.2f} | {acts['output'][0][0]:6.3f}")
+    showStats('Con 20 semillas', ex.sweepStats(patterns, ex.XOR))
+    print('  Las que fallan se quedan en E = 0,25: un minimo local, el problema que el articulo ya reconocia.')
+
+
+def symmetry():
+    print('\n== Deteccion de simetria (red 6-2-1) ==')
+    patterns = tasks.symmetryPatterns(6)
+    print(f'{sum(t["output"][0] for _, t in patterns):.0f} de 64 patrones son simetricos.')
+    showStats('Con 20 semillas', ex.sweepStats(patterns, ex.SYMMETRY))
+    net, history, ok = ex.trainLayered(patterns, ex.SYMMETRY, seed=1)
+    print(f'Semilla 1: {len(history)} barridos. Pesos de las dos unidades ocultas (entradas 1..6):')
+    print(net.weights[('input', 'hidden1')])
+    print('  Pesos ocultas -> salida:', net.weights[('hidden1', 'output')][0], ' sesgo de salida:', net.biases['output'])
+    w = np.abs(net.weights[('input', 'hidden1')][0][:3])
+    print(f'  Magnitudes de un lado: {w} -> proporcion {w / w.min()} (el articulo reporta 1:2:4)')
+    print('  Cada unidad oculta da pesos opuestos a entradas simetricas, asi que su suma se anula solo si el patron es simetrico.')
+
+
+def encoder():
+    print('\n== Codificador 4-2-4 ==')
+    patterns = tasks.encoderPatterns(4)
+    net, history, ok = ex.trainLayered(patterns, ex.ENCODER, seed=0)
+    print(f'Semilla 0: {len(history)} barridos, resuelto = {ok}. La capa oculta (2 unidades) inventa un codigo binario:')
+    print('  entrada -> oculta (redondeada)')
+    for inp, _ in patterns:
+        hidden = net.forward(inp)['hidden1'][0]
+        print(f"  {inp['input']} -> {np.round(hidden).astype(int)}   ({hidden})")
+    showStats('Con 20 semillas', ex.sweepStats(patterns, ex.ENCODER))
+
+
+def familyTask(seeds=0):
+    print('\n== Arboles familiares (red de 7 grupos: 24 + 12 -> 6 + 6 -> 12 -> 6 -> 24) ==')
+    triples = family.allFacts()
+    print(f'{len(triples)} tripletas (mi reconstruccion de los arboles; el articulo usaba 104). Se retienen 4 para probar.')
+    result = ex.trainFamily(seed=1)
+    net, answers = result['net'], result['answers']
+    print(f"Semilla 1: E final = {result['history'][-1]:.2f}. "
+          f"Entrenamiento: {result['train_correct']}/{len(result['train'])}. Retenidas: {result['held_correct']}/{len(result['held'])}")
+    for p, r, q in result['held']:
+        out = net.predict({'person1': family.oneHot(family.PEOPLE.index(p), 24), 'relation': family.oneHot(family.RELATIONS.index(r), 12)})['person2']
+        guess = family.PEOPLE[int(out.argmax())]
+        print(f'  {p} {r} -> {guess} (correcto: {sorted(answers[(p, r)])}) {"OK" if guess in answers[(p, r)] else "FALLA"}')
+    W = net.weights[('person1', 'person1_code')]
+    print('Codificacion de la persona 1 (6 unidades). Correlacion entre los pesos de cada persona inglesa y su equivalente italiana')
+    print('(cerca de 1 = la unidad codifica estructura familiar compartida; baja o negativa = distingue nacionalidad):')
+    print(' ', np.round([np.corrcoef(W[u, :12], W[u, 12:])[0, 1] for u in range(6)], 2))
+    print('  Diferencia de media ingles - italiano por unidad:', np.round(W[:, :12].mean(1) - W[:, 12:].mean(1), 2))
+    if seeds:
+        print(f'\nRepitiendo con {seeds} semillas (mismas 4 tripletas retenidas):')
+        scores = []
+        for seed in range(seeds):
+            r = ex.trainFamily(seed=seed)
+            scores.append(r['held_correct'])
+            print(f"  semilla {seed}: E = {r['history'][-1]:.2f}, entrenamiento {r['train_correct']}/{len(r['train'])}, retenidas {r['held_correct']}/4")
+        print(f'  Retenidas, media: {np.mean(scores):.1f} de 4 (el azar acertaria ~4% de cada una)')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('experiment', nargs='?', default='all', choices=['all', 'xor', 'symmetry', 'encoder', 'family'])
+    parser.add_argument('--seeds', type=int, default=0, help='con family: repetir con este numero de semillas')
+    args = parser.parse_args()
+    if args.experiment in ('all', 'xor'):
+        xor()
+    if args.experiment in ('all', 'symmetry'):
+        symmetry()
+    if args.experiment in ('all', 'encoder'):
+        encoder()
+    if args.experiment in ('all', 'family'):
+        familyTask(args.seeds)
+
+
+if __name__ == '__main__':
+    main()
+
+--- FILE: tests/test_backprop.py ---
+import unittest
+
+import numpy as np
+
+import experiments as ex
+import family
+import tasks
+from backprop import Network, sigmoid
+
+
+def numericGradient(net, patterns, key, index, eps=1e-6):
+    w = net.weights[key]
+    original = w[index]
+    w[index] = original + eps
+    up = net.error(patterns)
+    w[index] = original - eps
+    down = net.error(patterns)
+    w[index] = original
+    return (up - down) / (2 * eps)
+
+
+class GradientTest(unittest.TestCase):
+    def check(self, net, patterns):
+        gw, gb = net.gradients(patterns)
+        for key in net.weights:
+            for index in [(0, 0), (net.weights[key].shape[0] - 1, net.weights[key].shape[1] - 1)]:
+                self.assertAlmostEqual(gw[key][index], numericGradient(net, patterns, key, index), places=5)
+
+    def test_layered_network(self):
+        self.check(Network.layered([2, 3, 2, 1], seed=1), tasks.xorPatterns())
+
+    def test_family_network_with_two_input_groups(self):
+        triples = family.allFacts()[:6]
+        self.check(family.familyNetwork(seed=2), family.triplesToPatterns(triples))
+
+    def test_bias_gradient(self):
+        net = Network.layered([2, 2, 1], seed=3)
+        patterns = tasks.xorPatterns()
+        gw, gb = net.gradients(patterns)
+        eps = 1e-6
+        net.biases['hidden1'][0] += eps
+        up = net.error(patterns)
+        net.biases['hidden1'][0] -= 2 * eps
+        down = net.error(patterns)
+        net.biases['hidden1'][0] += eps
+        self.assertAlmostEqual(gb['hidden1'][0], (up - down) / (2 * eps), places=5)
+
+
+class StepTest(unittest.TestCase):
+    def test_steps_one_by_one_equal_train_because_momentum_persists(self):
+        patterns = tasks.xorPatterns()
+        a, b = Network.layered([2, 3, 1], seed=4), Network.layered([2, 3, 1], seed=4)
+        a.train(patterns, epochs=25, margin=0.0)
+        a_history = a.error(patterns)
+        from backprop import toBatch
+        X, T = toBatch(patterns)
+        b.resetMomentum()
+        for _ in range(25):
+            b.step(X, T)
+        self.assertAlmostEqual(a_history, b.error(patterns), places=12)
+        for key in a.weights:
+            np.testing.assert_allclose(a.weights[key], b.weights[key])
+
+
+class NetworkTest(unittest.TestCase):
+    def test_sigmoid(self):
+        self.assertAlmostEqual(float(sigmoid(0)), 0.5)
+        self.assertGreater(float(sigmoid(100)), 0.999)
+        self.assertLess(float(sigmoid(-100)), 0.001)
+
+    def test_error_is_half_sum_of_squares(self):
+        net = Network.layered([1, 1], seed=0)
+        y = net.predict({'input': [1.0]})['output'][0]
+        self.assertAlmostEqual(net.error([({'input': [1.0]}, {'output': [0.0]})]), 0.5 * y ** 2)
+
+    def test_training_reduces_error(self):
+        net = Network.layered([2, 2, 1], seed=0)
+        history = net.train(tasks.xorPatterns(), epochs=100)
+        self.assertLess(history[-1], history[0])
+
+    def test_predict_single_and_batch(self):
+        net = Network.layered([2, 2, 1], seed=0)
+        single = net.predict({'input': [1, 0]})['output']
+        batch = net.predict({'input': [[1, 0], [0, 1]]})['output']
+        self.assertEqual(single.shape, (1,))
+        self.assertEqual(batch.shape, (2, 1))
+        self.assertAlmostEqual(float(single[0]), float(batch[0][0]))
+
+
+class TaskTest(unittest.TestCase):
+    def test_xor_solved(self):
+        net, history, ok = ex.trainLayered(tasks.xorPatterns(), ex.XOR, seed=0)
+        self.assertTrue(ok)
+
+    def test_symmetry_patterns(self):
+        patterns = tasks.symmetryPatterns(6)
+        self.assertEqual(len(patterns), 64)
+        self.assertEqual(sum(t['output'][0] for _, t in patterns), 8)
+        self.assertTrue(tasks.isSymmetric([1, 0, 1, 1, 0, 1]))
+        self.assertFalse(tasks.isSymmetric([1, 0, 0, 0, 0, 0]))
+
+    def test_symmetry_network_learns_antisymmetric_weights(self):
+        net, history, ok = ex.trainLayered(tasks.symmetryPatterns(6), ex.SYMMETRY, seed=1)
+        self.assertTrue(ok)
+        W = net.weights[('input', 'hidden1')]
+        for row in W:  # pesos de posiciones simetricas opuestos
+            np.testing.assert_allclose(row, -row[::-1], atol=0.3)
+        magnitudes = np.abs(W[0][:3])
+        np.testing.assert_allclose(magnitudes / magnitudes.min(), [1, 2, 4], atol=0.3)
+
+    def test_encoder_invents_distinct_codes(self):
+        patterns = tasks.encoderPatterns(4)
+        net, history, ok = ex.trainLayered(patterns, ex.ENCODER, seed=0)
+        self.assertTrue(ok)
+        codes = {tuple(np.round(net.forward(inp)['hidden1'][0]).astype(int)) for inp, _ in patterns}
+        self.assertEqual(len(codes), 4)
+
+
+class FamilyTest(unittest.TestCase):
+    def test_trees_are_isomorphic(self):
+        english, italian = family.facts(family.ENGLISH), family.facts(family.ITALIAN)
+        mapping = dict(zip(family.ENGLISH, family.ITALIAN))
+        self.assertEqual(len(english), len(italian))
+        self.assertEqual(sorted((mapping[p], r, mapping[q]) for p, r, q in english), italian)
+
+    def test_known_facts(self):
+        facts = set(family.facts(family.ENGLISH))
+        for fact in [('Colin', 'father', 'James'), ('Colin', 'mother', 'Victoria'), ('Charlotte', 'brother', 'Colin'),
+                     ('Colin', 'uncle', 'Arthur'), ('Colin', 'aunt', 'Jennifer'), ('James', 'wife', 'Victoria'),
+                     ('Arthur', 'father', 'Christopher'), ('Victoria', 'brother', 'Arthur')]:
+            self.assertIn(fact, facts)
+
+    def test_facts_are_consistent_pairs(self):
+        facts = set(family.facts(family.ENGLISH))
+        inverse = {'father': ('son', 'daughter'), 'mother': ('son', 'daughter'), 'uncle': ('nephew', 'niece'),
+                   'aunt': ('nephew', 'niece')}
+        for p, r, q in facts:
+            if r in inverse:
+                self.assertTrue((q, inverse[r][0], p) in facts or (q, inverse[r][1], p) in facts, (p, r, q))
+
+    def test_patterns_shape(self):
+        patterns = family.triplesToPatterns(family.allFacts())
+        inputs, targets = patterns[0]
+        self.assertEqual((len(inputs['person1']), len(inputs['relation']), len(targets['person2'])), (24, 12, 24))
+        self.assertEqual(sum(inputs['person1']) + sum(inputs['relation']) + sum(targets['person2']), 3)
+
+    def test_split_holds_out_unseen_triples(self):
+        train, held = family.split(family.allFacts())
+        self.assertEqual(len(held), 4)
+        self.assertFalse(set(train) & set(held))
+
+    def test_valid_answers_include_ambiguous_pairs(self):
+        answers = family.validAnswers(family.allFacts())
+        self.assertEqual(answers[('Colin', 'aunt')], {'Jennifer', 'Margaret'})
+
+    def test_short_training_lowers_error(self):
+        net = family.familyNetwork(seed=1)
+        patterns = family.triplesToPatterns(family.allFacts())
+        history = net.train(patterns, epochs=300, learning_rate=0.005, momentum=0.9)
+        self.assertLess(history[-1], history[0])
+
+
+if __name__ == '__main__':
+    unittest.main()
+
+test_facts_are_consistent_pairs (tests.test_backprop.FamilyTest.test_facts_are_consistent_pairs) ... ok
+test_known_facts (tests.test_backprop.FamilyTest.test_known_facts) ... ok
+test_patterns_shape (tests.test_backprop.FamilyTest.test_patterns_shape) ... ok
+test_short_training_lowers_error (tests.test_backprop.FamilyTest.test_short_training_lowers_error) ... ok
+test_split_holds_out_unseen_triples (tests.test_backprop.FamilyTest.test_split_holds_out_unseen_triples) ... ok
+test_trees_are_isomorphic (tests.test_backprop.FamilyTest.test_trees_are_isomorphic) ... ok
+test_valid_answers_include_ambiguous_pairs (tests.test_backprop.FamilyTest.test_valid_answers_include_ambiguous_pairs) ... ok
+test_bias_gradient (tests.test_backprop.GradientTest.test_bias_gradient) ... ok
+test_family_network_with_two_input_groups (tests.test_backprop.GradientTest.test_family_network_with_two_input_groups) ... ok
+test_layered_network (tests.test_backprop.GradientTest.test_layered_network) ... ok
+test_error_is_half_sum_of_squares (tests.test_backprop.NetworkTest.test_error_is_half_sum_of_squares) ... ok
+test_predict_single_and_batch (tests.test_backprop.NetworkTest.test_predict_single_and_batch) ... ok
+test_sigmoid (tests.test_backprop.NetworkTest.test_sigmoid) ... ok
+test_training_reduces_error (tests.test_backprop.NetworkTest.test_training_reduces_error) ... ok
+test_steps_one_by_one_equal_train_because_momentum_persists (tests.test_backprop.StepTest.test_steps_one_by_one_equal_train_because_momentum_persists) ... ok
+test_encoder_invents_distinct_codes (tests.test_backprop.TaskTest.test_encoder_invents_distinct_codes) ... ok
+test_symmetry_network_learns_antisymmetric_weights (tests.test_backprop.TaskTest.test_symmetry_network_learns_antisymmetric_weights) ... ok
+test_symmetry_patterns (tests.test_backprop.TaskTest.test_symmetry_patterns) ... ok
+test_xor_solved (tests.test_backprop.TaskTest.test_xor_solved) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.147s
+
+OK
+
+== XOR (red 2-2-1) ==
+Semilla 0: 670 barridos, E final = 0.0128, resuelto = True
+  a b | oculta1 oculta2 | salida
+  0 0 |    0.02    0.08 |  0.086
+  0 1 |    0.00    0.86 |  0.921
+  1 0 |    0.92    0.00 |  0.925
+  1 1 |    0.03    0.07 |  0.081
+  Con 20 semillas: 19/20 semillas convergen, mediana 280 barridos; las demas se atascan con E = [0.25]
+  Las que fallan se quedan en E = 0,25: un minimo local, el problema que el articulo ya reconocia.
+
+== Deteccion de simetria (red 6-2-1) ==
+8 de 64 patrones son simetricos.
+  Con 20 semillas: 16/20 semillas convergen, mediana 1315 barridos; las demas se atascan con E = [4.0, 4.0, 4.0, 4.0]
+Semilla 1: 570 barridos. Pesos de las dos unidades ocultas (entradas 1..6):
+[[-2.51  4.99 -9.93  9.93 -4.99  2.5 ]
+ [ 2.49 -4.97  9.88 -9.88  4.97 -2.5 ]]
+  Pesos ocultas -> salida: [-12.34 -12.36]  sesgo de salida: [5.41]
+  Magnitudes de un lado: [2.51 4.99 9.93] -> proporcion [1.   1.99 3.96] (el articulo reporta 1:2:4)
+  Cada unidad oculta da pesos opuestos a entradas simetricas, asi que su suma se anula solo si el patron es simetrico.
+
+== Codificador 4-2-4 ==
+Semilla 0: 190 barridos, resuelto = True. La capa oculta (2 unidades) inventa un codigo binario:
+  entrada -> oculta (redondeada)
+  [1, 0, 0, 0] -> [0 1]   ([0.3 1. ])
+  [0, 1, 0, 0] -> [1 1]   ([0.99 0.67])
+  [0, 0, 1, 0] -> [1 0]   ([0.55 0.01])
+  [0, 0, 0, 1] -> [0 0]   ([0.   0.31])
+  Con 20 semillas: 20/20 semillas convergen, mediana 140 barridos
+
+== Arboles familiares (red de 7 grupos: 24 + 12 -> 6 + 6 -> 12 -> 6 -> 24) ==
+112 tripletas (mi reconstruccion de los arboles; el articulo usaba 104). Se retienen 4 para probar.
+Semilla 1: E final = 4.59. Entrenamiento: 108/108. Retenidas: 3/4
+  Roberto wife -> Tomaso (correcto: ['Maria']) FALLA
+  Tomaso nephew -> Alfonso (correcto: ['Alfonso']) OK
+  Maria daughter -> Lucia (correcto: ['Lucia']) OK
+  Arthur father -> Christopher (correcto: ['Christopher']) OK
+Codificacion de la persona 1 (6 unidades). Correlacion entre los pesos de cada persona inglesa y su equivalente italiana
+(cerca de 1 = la unidad codifica estructura familiar compartida; baja o negativa = distingue nacionalidad):
+  [0.36 0.95 0.4  0.64 0.69 0.28]
+  Diferencia de media ingles - italiano por unidad: [ 0.87  0.86 -1.05  2.42  2.37 -2.29]
+=== 2. Read & Run karpathy/micrograd in a work copy ===
+--- FILE: README.md ---
+
+# micrograd
+
+![awww](puppy.jpg)
+
+A tiny Autograd engine (with a bite! :)). Implements backpropagation (reverse-mode autodiff) over a dynamically built DAG and a small neural networks library on top of it with a PyTorch-like API. Both are tiny, with about 100 and 50 lines of code respectively. The DAG only operates over scalar values, so e.g. we chop up each neuron into all of its individual tiny adds and multiplies. However, this is enough to build up entire deep neural nets doing binary classification, as the demo notebook shows. Potentially useful for educational purposes.
+
+### Installation
+
+```bash
+pip install micrograd
+```
+
+### Example usage
+
+Below is a slightly contrived example showing a number of possible supported operations:
+
+```python
+from micrograd.engine import Value
+
+a = Value(-4.0)
+b = Value(2.0)
+c = a + b
+d = a * b + b**3
+c += c + 1
+c += 1 + c + (-a)
+d += d * 2 + (b + a).relu()
+d += 3 * d + (b - a).relu()
+e = c - d
+f = e**2
+g = f / 2.0
+g += 10.0 / f
+print(f'{g.data:.4f}') # prints 24.7041, the outcome of this forward pass
+g.backward()
+print(f'{a.grad:.4f}') # prints 138.8338, i.e. the numerical value of dg/da
+print(f'{b.grad:.4f}') # prints 645.5773, i.e. the numerical value of dg/db
+```
+
+### Training a neural net
+
+The notebook `demo.ipynb` provides a full demo of training an 2-layer neural network (MLP) binary classifier. This is achieved by initializing a neural net from `micrograd.nn` module, implementing a simple svm "max-margin" binary classification loss and using SGD for optimization. As shown in the notebook, using a 2-layer neural net with two 16-node hidden layers we achieve the following decision boundary on the moon dataset:
+
+![2d neuron](moon_mlp.png)
+
+### Training a GPT
+
+For a more advanced example, see [microgpt](https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95), which trains and samples from a full GPT-2-like transformer in pure, dependency-free Python. It builds on a more efficient and better version of the autograd engine here (storing local gradients at forward time instead of per-op backward closures), and is the complete algorithm in a single file — everything else is just efficiency. See also the accompanying [explainer post](https://karpathy.github.io/2026/02/12/microgpt/) for a detailed walkthrough.
+
+### Tracing / visualization
+
+For added convenience, the notebook `trace_graph.ipynb` produces graphviz visualizations. E.g. this one below is of a simple 2D neuron, arrived at by calling `draw_dot` on the code below, and it shows both the data (left number in each node) and the gradient (right number in each node).
+
+```python
+from micrograd import nn
+n = nn.Neuron(2)
+x = [Value(1.0), Value(-2.0)]
+y = n(x)
+dot = draw_dot(y)
+```
+
+![2d neuron](gout.svg)
+
+### Running tests
+
+To run the unit tests you will have to install [PyTorch](https://pytorch.org/), which the tests use as a reference for verifying the correctness of the calculated gradients. Then simply:
+
+```bash
+python -m pytest
+```
+
+### License
+
+MIT
+
+--- FILE: micrograd/engine.py ---
+
+class Value:
+    """ stores a single scalar value and its gradient """
+
+    def __init__(self, data, _children=(), _op=''):
+        self.data = data
+        self.grad = 0
+        # internal variables used for autograd graph construction
+        self._backward = lambda: None
+        self._prev = set(_children)
+        self._op = _op # the op that produced this node, for graphviz / debugging / etc
+
+    def __add__(self, other):
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data + other.data, (self, other), '+')
+
+        def _backward():
+            self.grad += out.grad
+            other.grad += out.grad
+        out._backward = _backward
+
+        return out
+
+    def __mul__(self, other):
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data * other.data, (self, other), '*')
+
+        def _backward():
+            self.grad += other.data * out.grad
+            other.grad += self.data * out.grad
+        out._backward = _backward
+
+        return out
+
+    def __pow__(self, other):
+        assert isinstance(other, (int, float)), "only supporting int/float powers for now"
+        out = Value(self.data**other, (self,), f'**{other}')
+
+        def _backward():
+            self.grad += (other * self.data**(other-1)) * out.grad
+        out._backward = _backward
+
+        return out
+
+    def relu(self):
+        out = Value(0 if self.data < 0 else self.data, (self,), 'ReLU')
+
+        def _backward():
+            self.grad += (out.data > 0) * out.grad
+        out._backward = _backward
+
+        return out
+
+    def backward(self):
+
+        # topological order all of the children in the graph
+        topo = []
+        visited = set()
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                for child in v._prev:
+                    build_topo(child)
+                topo.append(v)
+        build_topo(self)
+
+        # go one variable at a time and apply the chain rule to get its gradient
+        self.grad = 1
+        for v in reversed(topo):
+            v._backward()
+
+    def __neg__(self): # -self
+        return self * -1
+
+    def __radd__(self, other): # other + self
+        return self + other
+
+    def __sub__(self, other): # self - other
+        return self + (-other)
+
+    def __rsub__(self, other): # other - self
+        return other + (-self)
+
+    def __rmul__(self, other): # other * self
+        return self * other
+
+    def __truediv__(self, other): # self / other
+        return self * other**-1
+
+    def __rtruediv__(self, other): # other / self
+        return other * self**-1
+
+    def __repr__(self):
+        return f"Value(data={self.data}, grad={self.grad})"
+
+--- FILE: micrograd/nn.py ---
+import random
+from micrograd.engine import Value
+
+class Module:
+
+    def zero_grad(self):
+        for p in self.parameters():
+            p.grad = 0
+
+    def parameters(self):
+        return []
+
+class Neuron(Module):
+
+    def __init__(self, nin, nonlin=True):
+        self.w = [Value(random.uniform(-1,1)) for _ in range(nin)]
+        self.b = Value(0)
+        self.nonlin = nonlin
+
+    def __call__(self, x):
+        act = sum((wi*xi for wi,xi in zip(self.w, x)), self.b)
+        return act.relu() if self.nonlin else act
+
+    def parameters(self):
+        return self.w + [self.b]
+
+    def __repr__(self):
+        return f"{'ReLU' if self.nonlin else 'Linear'}Neuron({len(self.w)})"
+
+class Layer(Module):
+
+    def __init__(self, nin, nout, **kwargs):
+        self.neurons = [Neuron(nin, **kwargs) for _ in range(nout)]
+
+    def __call__(self, x):
+        out = [n(x) for n in self.neurons]
+        return out[0] if len(out) == 1 else out
+
+    def parameters(self):
+        return [p for n in self.neurons for p in n.parameters()]
+
+    def __repr__(self):
+        return f"Layer of [{', '.join(str(n) for n in self.neurons)}]"
+
+class MLP(Module):
+
+    def __init__(self, nin, nouts):
+        sz = [nin] + nouts
+        self.layers = [Layer(sz[i], sz[i+1], nonlin=i!=len(nouts)-1) for i in range(len(nouts))]
+
+    def __call__(self, x):
+        for layer in self.layers:
+            x = layer(x)
+        return x
+
+    def parameters(self):
+        return [p for layer in self.layers for p in layer.parameters()]
+
+    def __repr__(self):
+        return f"MLP of [{', '.join(str(layer) for layer in self.layers)}]"
+
+--- FILE: test/test_engine.py ---
+import torch
+from micrograd.engine import Value
+
+def test_sanity_check():
+
+    x = Value(-4.0)
+    z = 2 * x + 2 + x
+    q = z.relu() + z * x
+    h = (z * z).relu()
+    y = h + q + q * x
+    y.backward()
+    xmg, ymg = x, y
+
+    x = torch.Tensor([-4.0]).double()
+    x.requires_grad = True
+    z = 2 * x + 2 + x
+    q = z.relu() + z * x
+    h = (z * z).relu()
+    y = h + q + q * x
+    y.backward()
+    xpt, ypt = x, y
+
+    # forward pass went well
+    assert ymg.data == ypt.data.item()
+    # backward pass went well
+    assert xmg.grad == xpt.grad.item()
+
+def test_more_ops():
+
+    a = Value(-4.0)
+    b = Value(2.0)
+    c = a + b
+    d = a * b + b**3
+    c += c + 1
+    c += 1 + c + (-a)
+    d += d * 2 + (b + a).relu()
+    d += 3 * d + (b - a).relu()
+    e = c - d
+    f = e**2
+    g = f / 2.0
+    g += 10.0 / f
+    g.backward()
+    amg, bmg, gmg = a, b, g
+
+    a = torch.Tensor([-4.0]).double()
+    b = torch.Tensor([2.0]).double()
+    a.requires_grad = True
+    b.requires_grad = True
+    c = a + b
+    d = a * b + b**3
+    c = c + c + 1
+    c = c + 1 + c + (-a)
+    d = d + d * 2 + (b + a).relu()
+    d = d + 3 * d + (b - a).relu()
+    e = c - d
+    f = e**2
+    g = f / 2.0
+    g = g + 10.0 / f
+    g.backward()
+    apt, bpt, gpt = a, b, g
+
+    tol = 1e-6
+    # forward pass went well
+    assert abs(gmg.data - gpt.data.item()) < tol
+    # backward pass went well
+    assert abs(amg.grad - apt.grad.item()) < tol
+    assert abs(bmg.grad - bpt.grad.item()) < tol
+
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+ModuleNotFoundError: No module named 'test.test_engine'
+FINISHED rc=1

@@ -1,0 +1,50 @@
+=== E1: TaraAlcira/PerceptronsRevisited Spiral Challenge (1-Spiral vs 2-Spiral) ===
+  generate_1double_spiral (sides 56..80): 4-conn components=[1, 1, 1, 1], 8-conn components=[1, 1, 1, 1], areas=[652, 972, 1356, 1804]
+  generate_2double_spiral (sides 56..80): 4-conn components=[2, 2, 2, 2], 8-conn components=[2, 2, 2, 2], areas=[804, 1156, 1572, 2052]
+  Fixed-side (side=54, area 612 vs 760) 64x64 spirals: Order-1 Perceptron =  96.0% (uses area cut |X|>A!) vs Serial = 100.0%
+  Variable-size shifted/rotated 96x96 spirals (sides 56..80): Order-1 Perceptron =  62.0% vs Serial Connectivity = 100.0%
+
+=== E2.1: Positive Normal Form Theorem & Exact Order Distribution on all 256 3-Input Functions ===
+  Positive Normal Form exact integer reconstruction verified on: 256/256 functions
+  Exact predicate order distribution across all 256 3-input Boolean functions:
+    Order 0 (constants):                     2
+    Order 1 (linear threshold functions):  102 (cumulative order <= 1: 104/256)
+    Order 2 (quadratic mask threshold):    150 (cumulative order <= 2: 254/256)
+    Order 3 (full |R|=3 mask required):      2 -> truth tables: [[1, 0, 0, 1, 0, 1, 1, 0], [0, 1, 1, 0, 1, 0, 0, 1]]
+
+=== E2.2: Example (iii) (AIM-140 p. 181) Exact Counting Predicate psi_M(X) = [|X| == M] Has Order 2 ===
+  Order-2 exact counting formula [(2M-1)*|X| - 2*C(|X|,2) >= M^2] verified across all 7x256=1792 cases: True
+
+=== E2.3: Parity Coefficient Explosion Theorem (AIM-140 pp. 189-191) ===
+   M | alpha_M = (-2)^M (exact mask weight) | sum_{j=0}^M C(M,j)|alpha_j| | M * 2^M bits vs 2^{M-1} patterns
+   2 |                                   -4 |                           8 |        8 bits vs      2 odd sets
+   4 |                                  -16 |                          80 |       64 bits vs      8 odd sets
+   6 |                                  -64 |                         728 |      384 bits vs     32 odd sets
+   8 |                                 -256 |                        6560 |     2048 bits vs    128 odd sets
+  10 |                                -1024 |                       59048 |    10240 bits vs    512 odd sets
+
+=== E3.1: One-in-a-Box & Cutwise Connectivity (m=3 rows: |A_i|=4 Counterexample vs |A_i|=3 Order-2 Formula, pp. 201-202) ===
+  X1 (disconnected, rows=(3,3,0)): N^1=6, N^11(same-row pairs)=6, N^12(diff-row pairs)=9, connected=False
+  X2 (connected,    rows=(4,1,1)): N^1=6, N^11(same-row pairs)=6, N^12(diff-row pairs)=9, connected=True
+  m=3, |A_i|=3 order-2 formula [N^1 + N^12 - 2*N^11 > 4] verified on: 512/512 subsets (100%)
+
+=== E3.2: Diameter-Limited Connectivity Counterexample (X_00, X_01, X_10, X_11, AIM-140 p. 216) ===
+  Diameter-limited masks (size<=4, diam<=6) violating phi(X00)+phi(X11)==phi(X01)+phi(X10): 0/308
+
+=== E3.3: Minsky & Papert's 2-Pointer Serial Connectivity Algorithm (SEARCH/SCAN/TRACE, AIM-140 p. 208) ===
+  Solid 5x5 square                              : connected=True  (components=1, expected=1)
+  Concave U-shape                               : connected=True  (components=1, expected=1)
+  Hollow ring (1 component with interior hole)  : connected=True  (components=1, expected=1)
+  Two disjoint squares                          : connected=False (components=2, expected=2)
+  Three disjoint squares                        : connected=False (components=3, expected=3)
+
+=== E4.1: AIM-167 Fig. 12.3(a) vs Fig. 12.3(b) — PERCEPTRON vs BAYES Log-Odds (pp. 195, 202-204) ===
+  Fig. 12.3(a) Linearly separable correlated skew clouds              : PERCEPTRON error =   0.0% | BAYES error =  12.8%
+  Fig. 12.3(b) Conditionally independent noisy features (non-separable): PERCEPTRON error =  19.3% | BAYES error =  10.3%
+
+=== E4.2: AIM-167 Section 12.3 (pp. 198-199) Nearest Neighbor Pathology on Parity ===
+  q=0.10 (seen   90% of 2^8): Unseen-query error = 100.0% (bound 1-q^n = 100.0%) | All-space error =  10.2% (bound q(1-q^n) =  10.0%)
+  q=0.25 (seen   75% of 2^8): Unseen-query error = 100.0% (bound 1-q^n = 100.0%) | All-space error =  25.0% (bound q(1-q^n) =  25.0%)
+  q=0.50 (seen   50% of 2^8): Unseen-query error =  99.6% (bound 1-q^n =  99.6%) | All-space error =  49.8% (bound q(1-q^n) =  49.8%)
+  q=0.70 (seen   30% of 2^8): Unseen-query error =  94.5% (bound 1-q^n =  94.2%) | All-space error =  66.1% (bound q(1-q^n) =  66.0%)
+FINISHED rc=0

@@ -1,0 +1,92 @@
+=== 1. Run karpathy/micrograd tests & Kushagra514 scripts ===
+karpathy/micrograd test_sanity_check & test_more_ops: OK (rc=0)
+>>> Running Kushagra514/1neuron.py
+Iteration109992: loss = 0.000005
+Iteration109993: loss = 0.000005
+Iteration109994: loss = 0.000005
+Iteration109995: loss = 0.000005
+Iteration109996: loss = 0.000005
+Iteration109997: loss = 0.000005
+Iteration109998: loss = 0.000005
+Iteration109999: loss = 0.000005
+>>> Running Kushagra514/2neuron_layer.py
+Iteration8: loss = 0.141828
+delta = [[-0.014802221730656668], [0.12895302096248076]]
+dW = [[-0.029604443461313336, -0.04440666519197001], [0.2579060419249615, 0.3868590628874423]]
+db = [[-0.014802221730656668], [0.12895302096248076]]
+Iteration9: loss = 0.119257
+delta = [[-0.014315885593484097], [0.1174282959622816]]
+dW = [[-0.028631771186968195, -0.042947656780452294], [0.2348565919245632, 0.3522848878868448]]
+db = [[-0.014315885593484097], [0.1174282959622816]]
+>>> Running Kushagra514/hidden_neuron_layer.py
+Iteration 2: loss =  0.042717
+Iteration 3: loss =  0.041798
+Iteration 4: loss =  0.040909
+Iteration 5: loss =  0.040049
+Iteration 6: loss =  0.039216
+Iteration 7: loss =  0.038409
+Iteration 8: loss =  0.037629
+Iteration 9: loss =  0.036872
+=== 2. Run E2, E3, and E4 (rhw1986_experiments.py) ===
+=== E2.1: Generalized Delta Rule (Eq. 9-14) vs Central Finite Differences ===
+  Max |analytical dE/dW - finite_diff| across 4-layer net [2,3,2,1]: 1.36e-10
+  Negative control (omitting hidden f'(net)=o(1-o) in Eq. 14):      1.90e-02
+
+=== E2.2: Symmetry-Breaking Saddle Point at Equal Initial Weights (p. 10) ===
+  Equal init w=0.00 after 500 sweeps: max |w_h0 - w_h1| = 0.00e+00, final E = 0.5000, accuracy = 2/4 (cannot solve XOR!)
+  Equal init w=0.25 after 500 sweeps: max |w_h0 - w_h1| = 0.00e+00, final E = 0.3419, accuracy = 3/4 (cannot solve XOR!)
+
+=== E2.3: Momentum (alpha=0.9 vs alpha=0.0, Eq. 16) & Chauvin's Hidden-Unit Scaling (p. 12) ===
+  XOR [2,4,1] eta=0.5, momentum alpha=0.0: solved=15/15, mean sweeps=1590.1, median=1421.0
+  XOR [2,4,1] eta=0.5, momentum alpha=0.9: solved=15/15, mean sweeps=201.2, median=183.0
+  Chauvin hidden-unit scaling on XOR (eta=0.25, alpha=0.9, target E <= 0.04):
+    H= 2 hidden units: solved=15/15 | mean sweeps= 593.3 | Chauvin p.12 formula (280 - 33 log2 H) = 247.0
+    H= 4 hidden units: solved=15/15 | mean sweeps= 434.5 | Chauvin p.12 formula (280 - 33 log2 H) = 214.0
+    H= 8 hidden units: solved=15/15 | mean sweeps= 296.9 | Chauvin p.12 formula (280 - 33 log2 H) = 181.0
+    H=16 hidden units: solved=15/15 | mean sweeps= 259.3 | Chauvin p.12 formula (280 - 33 log2 H) = 148.0
+    H=32 hidden units: solved=15/15 | mean sweeps= 224.7 | Chauvin p.12 formula (280 - 33 log2 H) = 115.0
+
+=== E3.1: 4-Bit Parity [4 -> 4 -> 1] Thermometer Counter Representation (Fig. 6 & Table 3, pp. 12-13) ===
+  4-bit Parity [4 -> 4 -> 1] solved in 5182 sweeps: accuracy = 16/16 (E = 0.01991)
+  Input-to-hidden weights W[0] (4 hidden units x 4 inputs):
+    Hidden unit 0: weights = [-7.61 -7.61 -7.6  -7.61] (bias = +16.90)
+    Hidden unit 1: weights = [-6.36 -6.37 -6.36 -6.36] (bias = +2.98)
+    Hidden unit 2: weights = [-2.3  -2.29 -2.3  -2.29] (bias = +7.75)
+    Hidden unit 3: weights = [-6.79 -6.79 -6.79 -6.79] (bias = +9.65)
+  Hidden unit binary patterns by number of ON input bits |x| in 0..4 (cf. Table 3, p. 13):
+    |x| = 0 (1 inputs): distinct rounded hidden patterns = {(1, 1, 1, 1)} -> mean output = 0.038
+    |x| = 1 (4 inputs): distinct rounded hidden patterns = {(1, 0, 1, 1)} -> mean output = 0.999
+    |x| = 2 (6 inputs): distinct rounded hidden patterns = {(1, 0, 1, 0)} -> mean output = 0.013
+    |x| = 3 (4 inputs): distinct rounded hidden patterns = {(0, 0, 1, 0)} -> mean output = 0.934
+    |x| = 4 (1 inputs): distinct rounded hidden patterns = {(0, 0, 0, 0)} -> mean output = 0.141
+
+=== E3.2: 8-3-8 Identity Bottleneck Encoder (Fig. 7 & Table 5, pp. 14-15, and p. 9 {0.1, 0.9} targets) ===
+  8-3-8 Encoder with raw {0.0, 1.0} targets (5000 sweeps): argmax reconstruction = 4/8 (E = 2.00041, logistic tail saturation!)
+  8-3-8 Encoder (with p.9 targets {0.1, 0.9}, eta=0.25) converged in 5000 sweeps: argmax reconstruction = 8/8 (E = 0.11494)
+    Input 0 ([1, 0, 0, 0, 0, 0, 0, 0]) -> Hidden 3-unit code: [0.01, 0.06, 0.56]
+    Input 1 ([0, 1, 0, 0, 0, 0, 0, 0]) -> Hidden 3-unit code: [0.99, 0.06, 0.71]
+    Input 2 ([0, 0, 1, 0, 0, 0, 0, 0]) -> Hidden 3-unit code: [0.17, 0.35, 0.01]
+    Input 3 ([0, 0, 0, 1, 0, 0, 0, 0]) -> Hidden 3-unit code: [0.85, 0.99, 0.75]
+    Input 4 ([0, 0, 0, 0, 1, 0, 0, 0]) -> Hidden 3-unit code: [0.38, 0.46, 1.0]
+    Input 5 ([0, 0, 0, 0, 0, 1, 0, 0]) -> Hidden 3-unit code: [0.73, 0.39, 0.01]
+    Input 6 ([0, 0, 0, 0, 0, 0, 1, 0]) -> Hidden 3-unit code: [0.45, 0.0, 0.18]
+    Input 7 ([0, 0, 0, 0, 0, 0, 0, 1]) -> Hidden 3-unit code: [0.01, 0.82, 0.62]
+
+=== E3.3: 6-Bit Mirror Symmetry [6 -> 2 -> 1] Geometric Ratios 1:-2:4 (Fig. 9 & Table 6, pp. 17-18) ===
+  6-bit Mirror Symmetry [6 -> 2 -> 1] (seed=2, eta=0.1) solved in 1084 sweeps: accuracy = 64/64 (E = 0.04990)
+    Hidden unit 0: W = [ -6.17   3.1   12.25 -12.25  -3.1    6.17], bias = -1.04 | mirror sums (w0+w5,w1+w4,w2+w3) = [0. 0. 0.] | |w0:w1:w2| ratio = [1.99 1.   3.95]
+    Hidden unit 1: W = [  6.    -3.01 -11.91  11.91   3.01  -6.  ], bias = -0.95 | mirror sums (w0+w5,w1+w4,w2+w3) = [0. 0. 0.] | |w0:w1:w2| ratio = [1.99 1.   3.96]
+    Output weights W[1] = [-9.67 -9.69], output bias = +7.08
+
+=== E4: The Order-3 T-C Problem with 3x3 Spatial Weight Sharing (ICS-8506 Figs. 13-15, pp. 22-25) ===
+  5-square T pairwise squared-distance spectrum (all 4 rotations): {1: 4, 2: 2, 4: 2, 5: 2}
+  5-square C pairwise squared-distance spectrum (all 4 rotations): {1: 4, 2: 2, 4: 2, 5: 2}
+  Verified Minsky & Papert order-3 property (p. 22): T and C have IDENTICAL pairwise distance spectra {1:4, 2:2, 4:2, 5:2}!
+  Number of 3x3 receptive fields overlapped (turned off in Fig. 15D): T rotations = [21, 21, 21, 21] (21), C rotations = [20, 20, 20, 20] (20)!
+  Weight-shared 3x3 T-C network (seed=1) converged in 3353 sweeps: accuracy = 8/8 (loss = 0.00996)
+  Learned 3x3 receptive field kernel (b_rf=-1.29, w_out=+3.77, b_out=-15.37):
+     +1.35  -4.35  -2.35
+     -4.35  +6.98  -4.35
+     -2.35  -4.35  +1.35
+  Mean summed hidden activation across the 25 RFs: T = 4.544 vs C = 3.622
+FINISHED rc=0

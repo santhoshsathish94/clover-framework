@@ -1,0 +1,13 @@
+=== 1. Check OpenAlex for Minsky & Papert ===
+=== 2. Download Block (1970) 22-page review of Minsky & Papert (1969) and Anthony (1992) AND/OR Theorem ===
+Trying block1970_review.pdf from https://www.sciencedirect.com/science/article/pii/S0019995870904092/pdf?md5=4ef320b9f6e5fb14c61bc9fc6e2505d9&pid=1-s2.0-S0019995870904092-main.pdf
+  block1970_review.pdf: size=832803 head=<!DO
+Trying and_or_theorem.pdf from https://www.cambridge.org/core/services/aop-cambridge-core/content/view/0097D818A6306FD3E6AE4C0AB263DAD5/S1446788700035333a.pdf/div-class-title-the-and-or-theorem-for-perceptrons-div.pdf
+  and_or_theorem.pdf: size=283782 head=%PDF
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+  Pages: 8
+  338 12435 and_or_theorem.txt
+Trying ext_group_invariance.pdf from https://repository.arizona.edu/bitstream/handle/10150/637027/azu_etd_mr_2019_0246_sip1_m.pdf
+  ext_group_invariance.pdf: size=827 head=<!DO
+FINISHED rc=0

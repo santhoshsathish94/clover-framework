@@ -1,0 +1,24 @@
+=== 1. Download Hopfield (1982) PNAS 79(8): 2554-2558 primary paper ===
+Trying https://www.pnas.org/doi/pdf/10.1073/pnas.79.8.2554
+  size=5482 head=<!DO
+Trying https://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC346238&blobtype=pdf
+  size=5624 head=<!DO
+Trying https://www.ncbi.nlm.nih.gov/pmc/articles/PMC346238/pdf/pnas00447-0135.pdf
+  size=21451 head=<!do
+Trying https://www.cs.toronto.edu/~hinton/csc321/readings/hopfield82.pdf
+  size=321 head=<!DO
+Trying https://web.archive.org/web/2022id_/https://www.pnas.org/doi/pdf/10.1073/pnas.79.8.2554
+  size=8509 head=<!DO
+=== 2. Search GitHub for Hopfield Network (1982) reference repos ===
+--- Query: hopfield+network+1982+language:python
+pauljmello/Hopfield-Networks | stars=4 | https://github.com/pauljmello/Hopfield-Networks | An implementation of Modern Hopfield Networks (https://arxiv.org/abs/2008.02217) and Traditional Hopfield Networks (https://github.com/in-c0/1982-hopfield-Neural-networks-paper/blob/main/pnas00447-0135.pdf)
+HuseyinUtkuASLAN/Hopfield-Network | stars=1 | https://github.com/HuseyinUtkuASLAN/Hopfield-Network | A Hopfield network is a form of recurrent artificial neural network popularized by John Hopfield in 1982, but described earlier by Little in 1974. Hopfield nets serve as content-addressable memory systems with binary threshold nodes.
+1hubert/hopfield-network | stars=0 | https://github.com/1hubert/hopfield-network | Python implementation of an Asynchronous Hopfield Network for associative memory, based on the 1982 paper by J. J. Hopfield
+--- Query: hopfield+network+associative+memory+language:python
+GasLom/BRaiNN-bioacoustics | stars=6 | https://github.com/GasLom/BRaiNN-bioacoustics | First-of-its-kind AI model for bioacoustic detection using a lightweight associative memory Hopfield neural network.
+164Imran/hopfield | stars=2 | https://github.com/164Imran/hopfield | Hopfield associative memory network
+GatikiML/Hopfield | stars=2 | https://github.com/GatikiML/Hopfield | Hopfield Associative Memory Neural Network Package Implementation 
+Developer2046/Convolutional-Restricted-Hopfield-Network | stars=1 | https://github.com/Developer2046/Convolutional-Restricted-Hopfield-Network | The source for Restricted Hopfield Network and Dense Associative Memory (Pytorch Version)
+Pedro3107dev/Associative_Neural_Networks | stars=1 | https://github.com/Pedro3107dev/Associative_Neural_Networks | Implementation of Associative Neural Networks for recognizing enchantment symbols in the video game Minecraft. Applied networks: [Hopfield , LAM (Linear Associative Memory), BAM (Bidirectional Associative Memory)]
+tirthkatkar17/hopfield_llm | stars=1 | https://github.com/tirthkatkar17/hopfield_llm | Document QA using Modern Hopfield Networks for associative memory retrieval + Groq/Anthropic/OpenAI LLM synthesis. Noise-robust, fully offline-capable, interpretable attention heatmaps.
+FINISHED rc=0

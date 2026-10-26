@@ -1,0 +1,80 @@
+=== 1. Fetch Vaswani et al. (2017) arXiv:1706.03762 PDF & TeX source ===
+total 128
+drwxr-xr-x 4 root root  4096 Oct 26 14:00 .
+drwxr-xr-x 3 root root  4096 Oct 26 14:00 ..
+-rw-rw-r-- 1 root root  8376 Dec  7  2017 background.tex
+drwxrwxr-x 2 root root  4096 Aug  2  2023 Figures
+-rw-rw-r-- 1 root root  5300 Dec  7  2017 introduction.tex
+-rw-rw-r-- 1 root root 17109 Dec  7  2017 model_architecture.tex
+-rw-rw-r-- 1 root root 17613 Aug  2  2023 ms.tex
+-rw-rw-r-- 1 root root 10347 Dec  7  2017 nips_2017.sty
+-rw-rw-r-- 1 root root  3489 Dec  7  2017 parameter_attention.tex
+-rw-rw-r-- 1 root root 11800 Dec  7  2017 results.tex
+-rw-rw-r-- 1 root root  2226 Dec  7  2017 sqrt_d_trick.tex
+-rw-rw-r-- 1 root root  4444 Dec  7  2017 training.tex
+drwxrwxr-x 2 root root  4096 Aug  2  2023 vis
+-rw-rw-r-- 1 root root  1543 Dec  7  2017 visualizations.tex
+-rw-rw-r-- 1 root root  7867 Dec  7  2017 why_self_attention.tex
+/root/dm-study/pebbling/pylib/fitz/__init__.py:17: FutureWarning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+  warnings.warn(
+Pages: 15
+Extracted lines: 1077 chars: 39743
+--- PAGE 1 ---
+Provided proper attribution is provided, Google hereby grants permission to
+reproduce the tables and figures in this paper solely for use in journalistic or
+scholarly works.
+Attention Is All You Need
+Ashish Vaswani∗
+Google Brain
+avaswani@google.com
+Noam Shazeer∗
+Google Brain
+noam@google.com
+Niki Parmar∗
+Google Research
+nikip@google.com
+Jakob Uszkoreit∗
+Google Research
+usz@google.com
+Llion Jones∗
+Google Research
+llion@google.com
+Aidan N. Gomez∗†
+University of Toronto
+aidan@cs.toronto.edu
+Łukasz Kaiser∗
+Google Brain
+lukaszkaiser@google.com
+Illia Polosukhin∗‡
+illia.polosukhin@gmail.com
+Abstract
+The dominant sequence transduction models are based on complex recurrent or
+convolutional neural networks that include an encoder and a decoder. The best
+performing models also connect the encoder and decoder through an attention
+mechanism. We propose a new simple network architecture, the Transformer,
+based solely on attention mechanisms, dispensing with recurrence and convolutions
+entirely. Experiments on two machine translation tasks show these models to
+be superior in quality while being more parallelizable and requiring significantly
+less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-
+to-German translation task, improving over the existing best results, including
+ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task,
+our model establishes a new single-model state-of-the-art BLEU score of 41.8 after
+training for 3.5 days on eight GPUs, a small fraction of the training costs of the
+best models from the literature. We show that the Transformer generalizes well to
+other tasks by applying it successfully to English constituency parsing both with
+large and limited training data.
+∗Equal contribution. Listing order is random. Jakob proposed replacing RNNs with self-attention and started
+the effort to evaluate this idea. Ashish, with Illia, designed and implemented the first Transformer models and
+has been crucially involved in every aspect of this work. Noam proposed scaled dot-product attention, multi-head
+attention and the parameter-free position representation and became the other person involved in nearly every
+detail. Niki designed, implemented, tuned and evaluated countless model variants in our original codebase and
+tensor2tensor. Llion also experimented with novel model variants, was responsible for our initial codebase, and
+=== 2. Clone reference repositories ===
+Cloning harvardnlp/annotated-transformer -> harvardnlp-annotated-transformer
+Cloning into 'harvardnlp-annotated-transformer'...
+Cloning jadore801120/attention-is-all-you-need-pytorch -> jadore801120-attention-is-all-you-need-pytorch
+Cloning into 'jadore801120-attention-is-all-you-need-pytorch'...
+Cloning hyunwoongko/transformer -> hyunwoongko-transformer
+Cloning into 'hyunwoongko-transformer'...
+FINISHED
+FINISHED rc=0
