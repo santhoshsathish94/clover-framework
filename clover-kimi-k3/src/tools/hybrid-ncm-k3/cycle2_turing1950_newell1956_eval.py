@@ -5,14 +5,35 @@ in Clover's Ontology GraphRAG (`k3_ontology_graph.py`).
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import subprocess
 import sys
 import time
+from pathlib import Path
 
-sys.path.insert(0, "/home/usergpu/merge_lf")
+_SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPT_DIR))
 
 import torch
 import k3_ontology_graph as kog
+
+
+def _get_code_provenance() -> dict:
+    try:
+        git_sha = subprocess.check_output(
+            ["git", "-C", str(_SCRIPT_DIR), "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        git_sha = "standalone_checkout"
+    return {
+        "script_path": str(Path(__file__).resolve()),
+        "git_head_sha": git_sha,
+        "k3_ontology_graph_file": str(Path(kog.__file__).resolve()),
+        "k3_ontology_graph_sha256_12": hashlib.sha256(Path(kog.__file__).read_bytes()).hexdigest()[:12],
+    }
 
 
 def build_large_cve_stress_graph() -> kog.CloverOntologyGraph:
@@ -113,6 +134,7 @@ def run_cycle2_eval() -> dict:
     desc_with_csm = [p.describe() for p in paths_with_csm]
 
     return {
+        "code_provenance": _get_code_provenance(),
         "device": device,
         "gpu_name": gpu_name,
         "csm_filtered_pct": round(100.0 * (total_checked - total_lmc_calls) / max(1, total_checked), 2),

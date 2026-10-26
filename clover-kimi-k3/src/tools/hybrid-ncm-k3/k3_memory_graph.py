@@ -1689,8 +1689,9 @@ class CloverMemoryGraphStore:
             "retro pixel art", "hdmi", "monitor refresh rate",
             "detective's alibi", "novel's second printing", "who was the culprit",
         )
+        use_mp_veto_and_box = getattr(self, "use_mp_veto_and_box", True)
         has_explicit_mem_id = any(eid.lower() in q_low for eid in self.entries)
-        if not has_explicit_mem_id and any(veto in q_low for veto in mp_global_inhibitory_vetoes):
+        if use_mp_veto_and_box and (not has_explicit_mem_id) and any(veto in q_low for veto in mp_global_inhibitory_vetoes):
             return []
 
         # 2. Required Computing/Systems/Graph/Code Anchor Box B_0 for structural diagnostic bridge rules
@@ -1705,7 +1706,7 @@ class CloverMemoryGraphStore:
             "microbenchmark", "decode", "trunk", "quantisation", "quantization", "expert", "experts",
             "nvme", "pcie", "slot", "slotcache", "memory entry", "memory entries", "recorded",
         )
-        has_computing_anchor = any(anchor in q_low for anchor in computing_anchor_box)
+        has_computing_anchor = (not use_mp_veto_and_box) or any(anchor in q_low for anchor in computing_anchor_box)
 
         # Structural diagnostic cue rules that map cross-domain problem patterns to concept bridge nodes
         structural_concept_rules: dict[str, tuple[tuple[str, ...], ...]] = {
@@ -2435,7 +2436,22 @@ class CloverMemoryGraphStore:
         returning a bounded, explainable `MemoryContextPackage` for Clover Kimi K3."""
         seed_candidates = self._score_seed_entries(query, concept_filter=concept_filter, entry_types=entry_types)
         total_considered = len(seed_candidates)
-        top_seeds = seed_candidates[:max_seeds]
+        top_seeds = list(seed_candidates[:max_seeds])
+        # When `use_multihead_lrn=True` (Cycle 6 Vaswani Multi-Head + Krizhevsky LRN) and `max_seeds == 3`,
+        # ensure all 3 orthogonal subspaces (Concept Principle, Empirical Measurement, Superseding Correction)
+        # are represented in `top_seeds` when a query spans multiple facets!
+        if getattr(self, "use_multihead_lrn", True) and len(seed_candidates) >= 3 and max_seeds == 3:
+            mh = self.multihead_lrn_subspace_retrieve(query, top_k=3)
+            if mh.get("facets_multihead_lrn", 0) > mh.get("facets_single_head", 0):
+                sc_lookup = {eid: (sc, rsn) for sc, eid, rsn in seed_candidates}
+                max_sc_val = seed_candidates[0][0]
+                mh_seeds = []
+                for idx_h, mh_id in enumerate(mh.get("multihead_lrn_top_k", [])):
+                    sc_val, rsn_val = sc_lookup.get(mh_id, (max_sc_val * (0.85 - 0.05 * idx_h), "multihead_lrn_subspace"))
+                    mh_seeds.append((sc_val, mh_id, f"{rsn_val}+mh_lrn_head{idx_h}"))
+                if mh_seeds:
+                    top_seeds = mh_seeds
+
         seed_scores = {eid: sc for sc, eid, _ in top_seeds}
         seed_reasons = {eid: rsn for _, eid, rsn in top_seeds}
         seed_ids = [eid for _, eid, _ in top_seeds]
@@ -2515,6 +2531,15 @@ class CloverMemoryGraphStore:
                         )
 
         # 3. Build ranked `RetrievedMemoryItem` candidates
+        gtn_bonus_map: dict[str, tuple[float, int]] = {}
+        if getattr(self, "use_gtn_forward_boost", True):
+            gtn_info = self.compute_gtn_forward_confidence(query, max_seeds=max_seeds, max_depth=max_depth)
+            for c_item in gtn_info.get("candidates", []):
+                gtn_bonus_map[c_item["id"]] = (
+                    float(c_item.get("gtn_confidence", 0.0)) * 20.0,
+                    int(c_item.get("num_parallel_paths", 1)),
+                )
+
         candidate_items: list[RetrievedMemoryItem] = []
         for eid, tnode in traversed_by_id.items():
             e = tnode.entry
@@ -2526,6 +2551,11 @@ class CloverMemoryGraphStore:
                     base_score = b_sc
                 if b_rsn not in reason:
                     reason = f"{reason}+{b_rsn}"
+            if eid in gtn_bonus_map:
+                gtn_b, n_paths = gtn_bonus_map[eid]
+                if n_paths >= 2 and e.status != "superseded":
+                    base_score += gtn_b
+                    reason = f"{reason}+gtn_logadd({n_paths}paths,+{gtn_b:.1f})"
 
             supersedes_ids = [r.target for r in self.outgoing.get(eid, []) if r.type == "corrects"]
             refines_ids = [r.target for r in self.outgoing.get(eid, []) if r.type == "refines"]

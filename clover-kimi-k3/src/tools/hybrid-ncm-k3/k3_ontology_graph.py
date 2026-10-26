@@ -1343,11 +1343,15 @@ class CloverOntologyRetriever:
       4. Priority-First Stratified 2-Hop Graph Traversal (`CloverGraphTraversal.paths` with Fix 1 & Fix 2).
     """
 
-    def __init__(self, graph: CloverOntologyGraph | None = None) -> None:
+    def __init__(self, graph: CloverOntologyGraph | None = None, use_mp_predicates: bool = True) -> None:
         self.graph = graph or build_default_clover_ontology_graph()
         self.traversal = CloverGraphTraversal(self.graph, PRIORITY_TRAVERSAL_EDGES)
+        self.use_mp_predicates = use_mp_predicates
 
-    def link_entities(self, question: str, top_k: int = 4) -> list[EntityRef]:
+    def link_entities(
+        self, question: str, top_k: int = 4, use_mp_predicates: bool | None = None
+    ) -> list[EntityRef]:
+        use_mp = self.use_mp_predicates if use_mp_predicates is None else use_mp_predicates
         norm_q = normalize_identifier_text(question)
         low_q = norm_q.lower()
         seeds: list[EntityRef] = []
@@ -1360,31 +1364,37 @@ class CloverOntologyRetriever:
 
         # 2. McCulloch & Pitts (1943) Inhibitory Veto + Minsky & Papert (1969) Order-k 'One-in-a-Box' Predicates
         vetoed_refs: set[str] = set()
-        for pred in _MP_ONTOLOGY_PREDICATES:
-            if any(v in low_q for v in pred.inhibitory_vetoes):
-                vetoed_refs.add(pred.target.canonical)
-                continue
-            if pred.evaluate(low_q):
-                if self.graph.get(pred.target) is not None and pred.target not in seeds:
-                    seeds.append(pred.target)
+        if use_mp:
+            for pred in _MP_ONTOLOGY_PREDICATES:
+                if any(v in low_q for v in pred.inhibitory_vetoes):
+                    vetoed_refs.add(pred.target.canonical)
+                    continue
+                if pred.evaluate(low_q):
+                    if self.graph.get(pred.target) is not None and pred.target not in seeds:
+                        seeds.append(pred.target)
+        else:
+            # Legacy Order-1 flat phrase tuple matching (for controlled A/B baseline evaluation)
+            for phrases, target_ref in _CONCEPT_TRIGGERS:
+                hits = sum(1 for p in phrases if p in low_q)
+                if hits >= 2 or (hits == 1 and len(phrases[0]) >= 14 and phrases[0] in low_q):
+                    if self.graph.get(target_ref) is not None and target_ref not in seeds:
+                        seeds.append(target_ref)
 
         if seeds:
             return seeds[:top_k]
 
         # 3. Lexical token-overlap ranking across graph vertices when no explicit ID or trigger matched
-        #    Enforces Minsky & Papert Order-2 'One-in-a-Box' conjunction:
-        #      Box 1 (Specific Entity/Anchor Box) >= 1 hit AND Box 2 (Domain Property Box) >= 3 hits,
-        #      plus McCulloch-Pitts inhibitory veto check!
         q_words = {w for w in re.findall(r"[a-z0-9]{4,}", low_q) if w not in _STOPWORDS}
         if not q_words:
             return []
         scored: list[tuple[float, EntityRef]] = []
         for ref, doc in self.graph.all_vertices():
-            if ref.canonical in vetoed_refs:
-                continue
-            anchor_box = _ENTITY_ANCHOR_BOX.get(ref.canonical)
-            if anchor_box is not None and not (q_words & anchor_box):
-                continue
+            if use_mp:
+                if ref.canonical in vetoed_refs:
+                    continue
+                anchor_box = _ENTITY_ANCHOR_BOX.get(ref.canonical)
+                if anchor_box is not None and not (q_words & anchor_box):
+                    continue
             rendered = render_entity_record(ref, doc).lower()
             d_words = {w for w in re.findall(r"[a-z0-9]{4,}", rendered) if w not in _STOPWORDS}
             overlap = len(q_words & d_words)
@@ -1395,8 +1405,10 @@ class CloverOntologyRetriever:
         scored.sort(key=lambda x: -x[0])
         return [ref for _, ref in scored[:top_k]]
 
-    def retrieve(self, question: str, max_entities: int = 4, max_paths: int = 8) -> list[Evidence]:
-        seeds = self.link_entities(question)
+    def retrieve(
+        self, question: str, max_entities: int = 4, max_paths: int = 8, use_mp_predicates: bool | None = None
+    ) -> list[Evidence]:
+        seeds = self.link_entities(question, use_mp_predicates=use_mp_predicates)
         if not seeds:
             return []
 

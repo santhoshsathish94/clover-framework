@@ -4,14 +4,37 @@ Order-k 'One-in-a-Box' Conjunctive Predicates on Clover's Ontology GraphRAG & Me
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "/home/usergpu/merge_lf")
+_SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPT_DIR))
 
 import torch
 import k3_ontology_graph as kog
 import k3_memory_graph as kmg
+
+
+def _get_code_provenance() -> dict:
+    try:
+        git_sha = subprocess.check_output(
+            ["git", "-C", str(_SCRIPT_DIR), "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        git_sha = "standalone_checkout"
+    return {
+        "script_path": str(Path(__file__).resolve()),
+        "git_head_sha": git_sha,
+        "k3_ontology_graph_file": str(Path(kog.__file__).resolve()),
+        "k3_ontology_graph_sha256_12": hashlib.sha256(Path(kog.__file__).read_bytes()).hexdigest()[:12],
+        "k3_memory_graph_file": str(Path(kmg.__file__).resolve()),
+        "k3_memory_graph_sha256_12": hashlib.sha256(Path(kmg.__file__).read_bytes()).hexdigest()[:12],
+    }
 
 
 ONTOLOGY_STRESS_QUERIES = [
@@ -151,6 +174,7 @@ def run_cycle1_eval() -> dict:
     )
 
     return {
+        "code_provenance": _get_code_provenance(),
         "device": device,
         "gpu_name": gpu_name,
         "onto_stress_fp": f"{onto_stress_fp}/{len(ONTOLOGY_STRESS_QUERIES)}",

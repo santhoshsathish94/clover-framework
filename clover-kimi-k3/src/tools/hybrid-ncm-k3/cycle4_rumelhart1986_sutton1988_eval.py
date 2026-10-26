@@ -5,15 +5,38 @@ Momentum + Richard Sutton (1988) TD(lambda) Eligibility-Trace Credit Assignment 
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
+import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "/home/usergpu/merge_lf")
+_SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPT_DIR))
 
 import torch
 import k3_generative_compiler as kgc
 import k3_memory_graph as kmg
+
+
+def _get_code_provenance() -> dict:
+    try:
+        git_sha = subprocess.check_output(
+            ["git", "-C", str(_SCRIPT_DIR), "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        git_sha = "standalone_checkout"
+    return {
+        "script_path": str(Path(__file__).resolve()),
+        "git_head_sha": git_sha,
+        "k3_generative_compiler_file": str(Path(kgc.__file__).resolve()),
+        "k3_generative_compiler_sha256_12": hashlib.sha256(Path(kgc.__file__).read_bytes()).hexdigest()[:12],
+        "k3_memory_graph_file": str(Path(kmg.__file__).resolve()),
+        "k3_memory_graph_sha256_12": hashlib.sha256(Path(kmg.__file__).read_bytes()).hexdigest()[:12],
+    }
 
 
 def run_cycle4_eval() -> dict:
@@ -98,6 +121,7 @@ def run_cycle4_eval() -> dict:
     mem_td_res = store.compute_td_lambda_path_credit(path_ids, outcome_verified=True, lam=0.3, lr=0.25)
 
     return {
+        "code_provenance": _get_code_provenance(),
         "device": device,
         "gpu_name": gpu_name,
         "sutton_1988_markov_vs_td": {

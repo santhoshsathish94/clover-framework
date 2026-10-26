@@ -5,15 +5,36 @@ Logit Variance Stabilization & `h = 3` Multi-Head Subspace Unmixing on GPU (`cud
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
+import subprocess
 import sys
 import time
+from pathlib import Path
 
-sys.path.insert(0, "/home/usergpu/merge_lf")
+_SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPT_DIR))
 
 import torch
 import k3_memory_graph as kmg
+
+
+def _get_code_provenance() -> dict:
+    try:
+        git_sha = subprocess.check_output(
+            ["git", "-C", str(_SCRIPT_DIR), "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        git_sha = "standalone_checkout"
+    return {
+        "script_path": str(Path(__file__).resolve()),
+        "git_head_sha": git_sha,
+        "k3_memory_graph_file": str(Path(kmg.__file__).resolve()),
+        "k3_memory_graph_sha256_12": hashlib.sha256(Path(kmg.__file__).read_bytes()).hexdigest()[:12],
+    }
 
 
 def run_cycle6_eval() -> dict:
@@ -108,6 +129,7 @@ def run_cycle6_eval() -> dict:
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
 
     return {
+        "code_provenance": _get_code_provenance(),
         "device": device,
         "gpu_name": gpu_name,
         "vaswani_2017_sqrt_dk_scaling_gpu": {
