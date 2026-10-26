@@ -1185,7 +1185,11 @@ def match_verified_code_template(user_prompt: str):
     returns `(py_verify_script, verified_plan_windows)`."""
     raw_u = _extract_raw_user_query(user_prompt)
     raw_q = raw_u.lower()
+    if ("(a)" in raw_q and "(b)" in raw_q and "(c)" in raw_q) or "which of the following" in raw_q:
+        return None
     if "rust" in raw_q or bool(re.search(r"\b(?:pub\s+)?(?:async\s+)?fn\s+[a-zA-Z_]", raw_u)):
+        return None
+    if any(q_kw in raw_q for q_kw in ("how many ", "what is the 15th", "find the ordered", "trailing zeros")):
         return None
     wants_code = any(w in raw_q for w in ("code", "function", "python", "write", "implement", "program", "script", "how to check", "algorithm"))
     if not wants_code:
