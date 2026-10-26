@@ -68,7 +68,7 @@ def main():
     print(f"[PASS 2/5] CloverK3AgentEngine initialized on {eng.dev} in {eng.setup_s}s (vocab={eng.k3_tok.vocab_size})", flush=True)
 
     # 3. Verify Collective Memory + Ontology + Generative Compiler
-    mem_nodes = len(eng.memory_graph.records)
+    mem_nodes = len(eng.memory_graph.entries)
     ont_ev = eng.ontology_retriever.retrieve("Does tying your belly reduce belly fat?", top_k=2)
     gc_res = eng.py_gc.check_partial("def is_prime(n: int) -> bool:\n    if n <= 1:\n        return False\n")
     assert mem_nodes >= 20, f"Expected >=20 memory nodes, got {mem_nodes}"

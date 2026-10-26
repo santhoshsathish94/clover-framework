@@ -95,14 +95,24 @@ static struct {
     unsigned long sc_acquire_calls;
     unsigned long sc_try_acquire_calls;
     unsigned long sc_find_calls;
+
+    /* Built-in C SpecMD Least-Stale + R4 Clean-Drop SlotCache fallback (when Rust libslotcache.so is not present) */
+    int c_pool_keys[1230];
+    unsigned long c_pool_use[1230];
+    float c_pool_heat[1230];
+    int c_host_keys[2912];
+    unsigned long c_host_use[2912];
+    unsigned long c_clock;
 } g_cpu = { PTHREAD_MUTEX_INITIALIZER, 0 };
 
 static void init_cpu_slotcache(void)
 {
-    if (g_cpu_sc.pool_cache) return;
+    if (g_cpu_sc.pool_cache || g_cpu.pool_slots > 0) return;
     g_cpu.policy_id = 3; /* SpecMD Least-Stale + R4 Clean-Drop */
     g_cpu.pool_slots = 1230;
     g_cpu.host_slots = 2912;
+    for (int i = 0; i < 1230; i++) { g_cpu.c_pool_keys[i] = -1; g_cpu.c_pool_use[i] = 0; g_cpu.c_pool_heat[i] = 0.0f; }
+    for (int i = 0; i < 2912; i++) { g_cpu.c_host_keys[i] = -1; g_cpu.c_host_use[i] = 0; }
 
     const char *lib_path = getenv("K3GPU_SLOTCACHE_LIB");
     if (!lib_path || !*lib_path) lib_path = "./libslotcache.so";
@@ -126,6 +136,52 @@ static void init_cpu_slotcache(void)
             fprintf(stderr, "[K3-CPU-Experts] Loaded Rust SlotCache (%s) with Policy 3 (specmd_least_stale_r4)\n", lib_path);
         }
     }
+}
+
+static int c_cache_contains(const int *keys, int cap, int key)
+{
+    for (int i = 0; i < cap; i++) if (keys[i] == key) return i;
+    return -1;
+}
+
+static int c_cache_acquire(int *keys, unsigned long *use_ts, float *heat, int cap, int key, const int *prot, int n_prot, float w, int *out_vk)
+{
+    int idx = c_cache_contains(keys, cap, key);
+    unsigned long now = ++g_cpu.c_clock;
+    if (idx >= 0) {
+        use_ts[idx] = now;
+        if (heat) heat[idx] = 0.75f * heat[idx] + w;
+        if (out_vk) *out_vk = -1;
+        return idx;
+    }
+    for (int i = 0; i < cap; i++) {
+        if (keys[i] < 0) {
+            keys[i] = key;
+            use_ts[i] = now;
+            if (heat) heat[i] = w;
+            if (out_vk) *out_vk = -1;
+            return i;
+        }
+    }
+    int best_v = 0;
+    double best_score = 1e30;
+    for (int i = 0; i < cap; i++) {
+        int k_i = keys[i];
+        int is_prot = 0;
+        for (int p = 0; p < n_prot; p++) if (prot[p] == k_i) { is_prot = 1; break; }
+        if (is_prot) continue;
+        unsigned long staleness = now > use_ts[i] ? (now - use_ts[i]) : 1UL;
+        double sc = (double)(heat ? heat[i] : 1.0f) / (double)(1UL + staleness);
+        if (sc < best_score) {
+            best_score = sc;
+            best_v = i;
+        }
+    }
+    if (out_vk) *out_vk = keys[best_v];
+    keys[best_v] = key;
+    use_ts[best_v] = now;
+    if (heat) heat[best_v] = w;
+    return best_v;
 }
 
 static void record_layer_dm_ledger(int L, const unsigned long *hits_896, int *out_uniq)
@@ -154,7 +210,10 @@ static void record_layer_dm_ledger(int L, const unsigned long *hits_896, int *ou
     for (int i = 0; i < n_dyn; i++) {
         const int e = dyn_list[i];
         const int key = L * EXPERTS + e;
-        if (g_cpu_sc.on && g_cpu_sc.contains(g_cpu_sc.pool_cache, key)) {
+        int in_pool = g_cpu_sc.on
+            ? g_cpu_sc.contains(g_cpu_sc.pool_cache, key)
+            : (c_cache_contains(g_cpu.c_pool_keys, 1230, key) >= 0);
+        if (in_pool) {
             hits_idx[nh++] = e;
         } else {
             miss_idx[nm++] = e;
@@ -168,6 +227,12 @@ static void record_layer_dm_ledger(int L, const unsigned long *hits_896, int *ou
         g_cpu.hit_card++;
         if (g_cpu_sc.on) {
             g_cpu_sc.touch(g_cpu_sc.pool_cache, key, (float)hits_896[e]);
+        } else {
+            int p_i = c_cache_contains(g_cpu.c_pool_keys, 1230, key);
+            if (p_i >= 0) {
+                g_cpu.c_pool_use[p_i] = ++g_cpu.c_clock;
+                g_cpu.c_pool_heat[p_i] = 0.75f * g_cpu.c_pool_heat[p_i] + (float)hits_896[e];
+            }
         }
     }
     for (int i = 0; i < nm; i++) {
@@ -191,11 +256,25 @@ static void record_layer_dm_ledger(int L, const unsigned long *hits_896, int *ou
                 g_cpu_sc.acquire(g_cpu_sc.host_cache, key, prot_keys, (size_t)n_dyn, (float)hits_896[e], &hvk, &hvh);
             }
             if (vk >= 0) {
-                /* R4 Clean Eviction: immutable expert weights are dropped with 0 writeback bytes */
                 g_cpu.r4_clean_drops++;
             }
         } else {
-            g_cpu.from_drive++;
+            g_cpu.sc_find_calls++;
+            int in_host = (c_cache_contains(g_cpu.c_host_keys, 2912, key) >= 0);
+            int vk = -1;
+            g_cpu.sc_acquire_calls++;
+            c_cache_acquire(g_cpu.c_pool_keys, g_cpu.c_pool_use, g_cpu.c_pool_heat, 1230, key, prot_keys, n_dyn, (float)hits_896[e], &vk);
+            if (in_host) {
+                g_cpu.hit_host++;
+                g_cpu.spec_lookahead_hits++;
+            } else {
+                g_cpu.from_drive++;
+                int hvk = -1;
+                c_cache_acquire(g_cpu.c_host_keys, g_cpu.c_host_use, NULL, 2912, key, prot_keys, n_dyn, (float)hits_896[e], &hvk);
+            }
+            if (vk >= 0) {
+                g_cpu.r4_clean_drops++;
+            }
         }
     }
 }
@@ -306,7 +385,10 @@ float k3_full93_forward(const float *in_embed, int n, float *out_hidden, float *
     for (int i = 0; i < g_cpu.n_active_layers; i++) {
         int L = g_cpu.active_layers[i];
         const float *sn_ptrs[9];
-        for (int s = 0; s < 8; s++) sn_ptrs[s] = g_cpu.snaps[s < nsnap ? s : (nsnap - 1)];
+        for (int s = 0; s < 8; s++) {
+            int idx_s = (s < nsnap) ? s : (nsnap > 0 ? nsnap - 1 : 0);
+            sn_ptrs[s] = g_cpu.snaps[idx_s];
+        }
 
         unsigned long hits[EXPERTS] = {0};
         if (is_mla_layer(L)) {
