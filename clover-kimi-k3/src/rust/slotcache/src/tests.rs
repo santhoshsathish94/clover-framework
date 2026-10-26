@@ -503,6 +503,24 @@ fn slab_reuse_after_many_evictions_keeps_the_list_consistent() {
 }
 
 #[test]
+fn policy3_specmd_least_stale_protects_upcoming_layers_and_skips_redundant_worth() {
+    let _e = Env::new(3);
+    let c = T::new();
+    c.spares(&[C, B, A]);
+    // Pass 0: insert Layer 1 (key 896*1 + 5 = 901), Layer 2 (key 896*2 + 5 = 1797), Layer 3 (key 896*3 + 5 = 2693)
+    // Even if Layer 1 has higher heat (10.0) than upcoming Layer 2 (1.0), when Pass 1 starts at Layer 1 (key 896*1 + 6 = 902),
+    // Layer 1's unused entry (901) from Pass 0 is Tier 0 (stale, layer <= cur_layer), whereas Layer 2 (1797) and Layer 3 (2693)
+    // are Tier 2 (upcoming in Pass 1, layer > cur_layer). So Policy 3 evicts 901 instead of upcoming 1797!
+    c.acq(901, &[], 10.0);
+    c.acq(1797, &[], 1.0);
+    c.acq(2693, &[], 1.0);
+    assert_eq!(c.worth(1797), 0); // already in cache -> R4 clean drop skips redundant writeback
+    assert_eq!(c.worth(9999), 1); // not in cache -> worth admitting
+    let r = c.acq(902, &[], 1.0); // Layer 1 in Pass 1 (layer wrapped 3 -> 1)
+    assert_eq!(r.vkey, 901);
+}
+
+#[test]
 fn struct_layout_matches_the_c_header() {
     use std::mem::{offset_of, size_of};
     let c = "#include <stdio.h>\n#include <stddef.h>\n#include \"slotcache.h\"\nint main(void){\n\

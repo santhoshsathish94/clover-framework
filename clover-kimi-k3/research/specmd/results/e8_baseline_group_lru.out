@@ -1,0 +1,18 @@
+slots per layer m (total C = 16*m); hit rate % under the baseline's group-LRU semantics
+== decode
+  m= 1 (C= 16): rank-order/high-init=  3.37   rank/low-init=  3.37   sorted-order/high-init=  4.73
+  m= 2 (C= 32): rank-order/high-init=  7.28   rank/low-init=  7.28   sorted-order/high-init=  9.32
+  m= 3 (C= 48): rank-order/high-init= 11.56   rank/low-init= 11.56   sorted-order/high-init= 13.91
+  m= 4 (C= 64): rank-order/high-init= 16.36   rank/low-init= 16.36   sorted-order/high-init= 18.51
+  m= 8 (C=128): rank-order/high-init= 39.14   rank/low-init= 39.13   sorted-order/high-init= 39.14
+  m=16 (C=256): rank-order/high-init= 54.28   rank/low-init= 54.28   sorted-order/high-init= 54.38
+  m=32 (C=512): rank-order/high-init= 76.50   rank/low-init= 76.50   sorted-order/high-init= 76.55
+== prompt
+  m= 1 (C= 16): rank-order/high-init=  3.37   rank/low-init=  3.37   sorted-order/high-init=  4.73
+  m= 2 (C= 32): rank-order/high-init=  7.29   rank/low-init=  7.29   sorted-order/high-init=  9.32
+  m= 3 (C= 48): rank-order/high-init= 11.56   rank/low-init= 11.56   sorted-order/high-init= 13.89
+  m= 4 (C= 64): rank-order/high-init= 16.36   rank/low-init= 16.36   sorted-order/high-init= 18.48
+  m= 8 (C=128): rank-order/high-init= 39.12   rank/low-init= 39.12   sorted-order/high-init= 39.12
+  m=16 (C=256): rank-order/high-init= 54.29   rank/low-init= 54.29   sorted-order/high-init= 54.38
+  m=32 (C=512): rank-order/high-init= 76.51   rank/low-init= 76.51   sorted-order/high-init= 76.57
+FINISHED rc=0

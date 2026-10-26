@@ -1,0 +1,51 @@
+=== 1. 4-POINT FFT BUTTERFLY (12 VERTICES: 4 INPUTS, 4 STAGE-1, 4 OUTPUTS) EXACT Q*(S) ===
+  FFT_4 S=1: Q*=None (infeasible, states_explored=5)
+  FFT_4 S=2: Q*=None (infeasible, states_explored=11)
+  FFT_4 S=3: Q*=14 (R1_in=4, R1_mid=3, R2_mid=3, R2_out=4 | verified=True, peak_red=3, states=22439)
+  FFT_4 S=4: Q*=11 (R1_in=5, R1_mid=1, R2_mid=1, R2_out=4 | verified=True, peak_red=4, states=89976)
+  FFT_4 S=5: Q*= 9 (R1_in=5, R1_mid=0, R2_mid=0, R2_out=4 | verified=True, peak_red=5, states=155889)
+  FFT_4 S=6: Q*= 8 (R1_in=4, R1_mid=0, R2_mid=0, R2_out=4 | verified=True, peak_red=6, states=227077)
+  FFT_4 S=7: Q*= 8 (R1_in=4, R1_mid=0, R2_mid=0, R2_out=4 | verified=True, peak_red=7, states=333200)
+
+=== 2. 8-POINT FFT BUTTERFLY (32 VERTICES): EXACT STATE-SPACE BOUND & CONSTRUCTIVE SCHEDULES ===
+  FFT_8 S= 1 exact 0-1 BFS: cost=None, states_explored=     9, hit_200k_cap=False
+  FFT_8 S= 2 exact 0-1 BFS: cost=None, states_explored=    37, hit_200k_cap=False
+  FFT_8 S= 3 exact 0-1 BFS: cost=None, states_explored=200000, hit_200k_cap=True
+  FFT_8 S= 4 exact 0-1 BFS: cost=None, states_explored=200003, hit_200k_cap=True
+  FFT_8 S= 6 exact 0-1 BFS: cost=None, states_explored=200006, hit_200k_cap=True
+
+  Constructive verified schedules on FFT_8 (32 vertices):
+    radix-2 pass-by-pass             (S= 3): verified=True, IO=48, peak_red= 3, total_moves=144
+    radix-4 + radix-2 pass-by-pass   (S= 6): verified=True, IO=32, peak_red= 6, total_moves=112
+    radix-8 full in-register         (S=10): verified=True, IO=16, peak_red=10, total_moves=80
+    radix-2 with 1-pebble handover   (S= 3): verified=True, IO=44, peak_red= 3, total_moves=136 (OK)
+    radix-4 with 4-pebble handover   (S= 6): verified=True, IO=24, peak_red= 6, total_moves=96 (OK)
+
+=== 3. RECURSIVE RADIX-B BLOCKED FFT SCHEDULES FOR n = 4..256 (VERIFIED BY PAPER ENGINE) ===
+   n N_verts   B m=log2B S_req Passes | IO_count PeakRed Verified | IO/(n*log2n/log2B) Naive/Blocked
+   4      12   2       1     3      2 |       16       3     True |              2.000         1.00x
+   4      12   4       2     6      1 |        8       6     True |              2.000         2.00x
+   8      32   2       1     3      3 |       48       3     True |              2.000         1.00x
+   8      32   4       2     6      2 |       32       6     True |              2.667         1.50x
+   8      32   8       3    10      1 |       16      10     True |              2.000         3.00x
+  16      80   2       1     3      4 |      128       3     True |              2.000         1.00x
+  16      80   4       2     6      2 |       64       6     True |              2.000         2.00x
+  16      80   8       3    10      2 |       64      10     True |              3.000         2.00x
+  16      80  16       4    18      1 |       32      18     True |              2.000         4.00x
+  32     192   2       1     3      5 |      320       3     True |              2.000         1.00x
+  32     192   4       2     6      3 |      192       6     True |              2.400         1.67x
+  32     192   8       3    10      2 |      128      10     True |              2.400         2.50x
+  32     192  16       4    18      2 |      128      18     True |              3.200         2.50x
+  64     448   2       1     3      6 |      768       3     True |              2.000         1.00x
+  64     448   4       2     6      3 |      384       6     True |              2.000         2.00x
+  64     448   8       3    10      2 |      256      10     True |              2.000         3.00x
+  64     448  16       4    18      2 |      256      18     True |              2.667         3.00x
+ 128    1024   2       1     3      7 |     1792       3     True |              2.000         1.00x
+ 128    1024   4       2     6      4 |     1024       6     True |              2.286         1.75x
+ 128    1024   8       3    10      3 |      768      10     True |              2.571         2.33x
+ 128    1024  16       4    18      2 |      512      18     True |              2.286         3.50x
+ 256    2304   2       1     3      8 |     4096       3     True |              2.000         1.00x
+ 256    2304   4       2     6      4 |     2048       6     True |              2.000         2.00x
+ 256    2304   8       3    10      3 |     1536      10     True |              2.250         2.67x
+ 256    2304  16       4    18      2 |     1024      18     True |              2.000         4.00x
+FINISHED rc=0

@@ -1,0 +1,53 @@
+=== topological_register_strategy on 10-node demo (seed=42) ===
+  step  1: {'action_type': 'place', 'node_id': 0, 'tier': 'register'} cost=1 total=1 is_sink=False
+  step  2: {'action_type': 'place', 'node_id': 1, 'tier': 'register'} cost=1 total=2 is_sink=False
+  step  3: {'action_type': 'place', 'node_id': 2, 'tier': 'register'} cost=1 total=3 is_sink=False
+  step  4: {'action_type': 'remove', 'node_id': 0, 'tier': None} cost=0 total=3 is_sink=False
+  step  5: {'action_type': 'place', 'node_id': 3, 'tier': 'register'} cost=1 total=4 is_sink=False
+  step  6: {'action_type': 'transfer', 'node_id': 2, 'tier': 'sram'} cost=5 total=9 is_sink=False
+  step  7: {'action_type': 'place', 'node_id': 4, 'tier': 'register'} cost=1 total=10 is_sink=True
+  step  8: {'action_type': 'remove', 'node_id': 4, 'tier': None} cost=0 total=10 is_sink=True
+  step  9: {'action_type': 'place', 'node_id': 5, 'tier': 'register'} cost=1 total=11 is_sink=True
+  step 10: {'action_type': 'remove', 'node_id': 5, 'tier': None} cost=0 total=11 is_sink=True
+  step 11: {'action_type': 'place', 'node_id': 6, 'tier': 'register'} cost=1 total=12 is_sink=True
+  step 12: {'action_type': 'remove', 'node_id': 2, 'tier': None} cost=0 total=12 is_sink=False
+  step 13: {'action_type': 'remove', 'node_id': 6, 'tier': None} cost=0 total=12 is_sink=True
+  step 14: {'action_type': 'place', 'node_id': 7, 'tier': 'register'} cost=1 total=13 is_sink=True
+  step 15: {'action_type': 'remove', 'node_id': 7, 'tier': None} cost=0 total=13 is_sink=True
+  step 16: {'action_type': 'place', 'node_id': 8, 'tier': 'register'} cost=1 total=14 is_sink=True
+  step 17: {'action_type': 'remove', 'node_id': 8, 'tier': None} cost=0 total=14 is_sink=True
+  step 18: {'action_type': 'place', 'node_id': 9, 'tier': 'register'} cost=1 total=15 is_sink=True
+Final pebbles: {0: None, 1: 'register', 2: None, 3: 'register', 4: None, 5: None, 6: None, 7: None, 8: None, 9: 'register'}
+Sinks remaining: [4, 5, 6, 7, 8] done: False
+
+=== greedy_cheapest_strategy on medium_preset (seed=42, h100) ===
+Total steps=500, total_cost=281, done=True, sinks_remaining=[5, 6, 7]
+First 12 steps:
+  step   1: {'action_type': 'place', 'node_id': 0, 'tier': 'register'} cost=1 total=1
+  step   2: {'action_type': 'place', 'node_id': 1, 'tier': 'register'} cost=1 total=2
+  step   3: {'action_type': 'place', 'node_id': 2, 'tier': 'register'} cost=1 total=3
+  step   4: {'action_type': 'place', 'node_id': 3, 'tier': 'sram'} cost=5 total=8
+  step   5: {'action_type': 'place', 'node_id': 4, 'tier': 'sram'} cost=5 total=13
+  step   6: {'action_type': 'place', 'node_id': 5, 'tier': 'sram'} cost=5 total=18
+  step   7: {'action_type': 'place', 'node_id': 6, 'tier': 'sram'} cost=5 total=23
+  step   8: {'action_type': 'remove', 'node_id': 0, 'tier': None} cost=0 total=23
+  step   9: {'action_type': 'place', 'node_id': 7, 'tier': 'register'} cost=1 total=24
+  step  10: {'action_type': 'remove', 'node_id': 1, 'tier': None} cost=0 total=24
+  step  11: {'action_type': 'place', 'node_id': 8, 'tier': 'register'} cost=1 total=25
+  step  12: {'action_type': 'remove', 'node_id': 2, 'tier': None} cost=0 total=25
+Last 6 steps:
+  step 495: {'action_type': 'place', 'node_id': 7, 'tier': 'register'} cost=1 total=279
+  step 496: {'action_type': 'remove', 'node_id': 7, 'tier': None} cost=0 total=279
+  step 497: {'action_type': 'place', 'node_id': 7, 'tier': 'register'} cost=1 total=280
+  step 498: {'action_type': 'remove', 'node_id': 7, 'tier': None} cost=0 total=280
+  step 499: {'action_type': 'place', 'node_id': 7, 'tier': 'register'} cost=1 total=281
+  step 500: {'action_type': 'remove', 'node_id': 7, 'tier': None} cost=0 total=281
+
+=== Patched topological_register_fixed across presets (seed=42, h100) ===
+  demo_10         : cost=  37 pJ, steps=16, done=True, all_sinks_pebbled=True
+  tutorial_preset : cost=  11 pJ, steps= 9, done=True, all_sinks_pebbled=True
+  easy_preset     : cost=  17 pJ, steps=12, done=True, all_sinks_pebbled=True
+  medium_preset   : cost= 233 pJ, steps=18, done=True, all_sinks_pebbled=True
+  hard_preset     : cost= 734 pJ, steps=25, done=True, all_sinks_pebbled=True
+  expert_preset   : cost= 846 pJ, steps=33, done=True, all_sinks_pebbled=True
+FINISHED rc=0

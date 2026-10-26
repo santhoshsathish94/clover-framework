@@ -1,0 +1,17 @@
+=== 1. RUN CASES 1, 1b, 2, 3, 4 ON UNMODIFIED SHIPPED PE.v ===
+[CASE 1: Dense 1D W=[3,2,5,4], I=[2,4,1,3]] psum_spad[0]=31 (expected=31) | w_wr=4 i_wr=4 w_rd=4 i_rd=4 dff_latch=4 mult_en=4 psum_rd=4 psum_wr_acc=4 psum_wr_all=8
+[CASE 1b: Negative Control W[0]=9] psum_spad[0]=43 (expected=43 != 31) | mismatch_detected=1
+[CASE 2: Zero Weight W=[3,2,0,4], I=[2,4,1,3]] psum_spad[0]=26 (expected=26) | w_wr=4 i_wr=4 w_rd=4 i_rd=4 dff_latch=3 mult_en=4 psum_rd=4 psum_wr_acc=3 psum_wr_all=7
+[CASE 3: Back-to-back rows] psum_spad[0]=31 (row0 expected=31), psum_spad[1]=110 (unmod expected=110, wrapped expected=35) | final_wread=4
+[CASE 4a: Mid-run before reset] psum_spad[0]=14 (expected=14), ifmap_spad[0]=2, filter_spad[0]=3, loc_en=1, mul_valid=1
+[CASE 4b: During rstn=0] psum_spad[0]=0 (expected=0), ifmap_spad[0]=0 (expected=0), filter_spad[0]=3 (SRAM retains=3), loc_en=1, mul_valid=1
+[CASE 4c: After reset & reload] psum_spad[0..3]=[0, 14, 17, 0] (expected psum_spad[0]=31 when reset is complete)
+
+=== 2. RUN CASES 3 & 4 ON WORK COPY WITH COUNTER WRAP + RESET FIXES ===
+[CASE 1: Dense 1D W=[3,2,5,4], I=[2,4,1,3]] psum_spad[0]=31 (expected=31) | w_wr=4 i_wr=4 w_rd=4 i_rd=4 dff_latch=4 mult_en=4 psum_rd=4 psum_wr_acc=4 psum_wr_all=8
+[CASE 2: Zero Weight W=[3,2,0,4], I=[2,4,1,3]] psum_spad[0]=26 (expected=26) | w_wr=4 i_wr=4 w_rd=4 i_rd=4 dff_latch=3 mult_en=4 psum_rd=4 psum_wr_acc=3 psum_wr_all=7
+[CASE 3: Back-to-back rows] psum_spad[0]=31 (row0 expected=31), psum_spad[1]=35 (unmod expected=110, wrapped expected=35) | final_wread=0
+[CASE 4a: Mid-run before reset] psum_spad[0]=14 (expected=14), ifmap_spad[0]=2, filter_spad[0]=3, loc_en=1, mul_valid=1
+[CASE 4b: During rstn=0] psum_spad[0]=0 (expected=0), ifmap_spad[0]=0 (expected=0), filter_spad[0]=3 (SRAM retains=3), loc_en=0, mul_valid=0
+[CASE 4c: After reset & reload] psum_spad[0..3]=[31, 0, 0, 0] (expected psum_spad[0]=31 when reset is complete)
+FINISHED rc=0

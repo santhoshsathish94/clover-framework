@@ -1,0 +1,33 @@
+== RS
+  R=3 H=5x5 C=1 M=1 [seen] PEs=9 MACs=81 w_wr=27 i_wr=45 vert_add=18
+  R=3 H=7x7 C=1 M=1 [seen] PEs=15 MACs=225 w_wr=45 i_wr=105 vert_add=50
+  R=3 H=8x8 C=1 M=1 [seen] PEs=18 MACs=324 w_wr=54 i_wr=144 vert_add=72
+  R=3 H=5x5 C=2 M=1 [seen] PEs=9 MACs=162 w_wr=54 i_wr=90 vert_add=18
+  R=3 H=5x5 C=1 M=2 [seen] PEs=9 MACs=162 w_wr=54 i_wr=45 vert_add=36
+  R=5 H=7x7 C=1 M=1 [seen] PEs=15 MACs=225 w_wr=75 i_wr=105 vert_add=36
+  R=3 H=6x6 C=2 M=2 [held-out] PEs=12 MACs=576 w_wr=144 i_wr=144 vert_add=64
+  R=4 H=7x7 C=1 M=1 [held-out] PEs=16 MACs=256 w_wr=64 i_wr=112 vert_add=48
+  R=3 H=6x5 C=1 M=1 [held-out] PEs=12 MACs=108 w_wr=36 i_wr=60 vert_add=24
+  R=2 H=5x5 C=1 M=1 [held-out] PEs=8 MACs=64 w_wr=16 i_wr=40 vert_add=16
+== WS
+  R=3 H=5x5 C=1 M=1 [seen] PEs=9 MACs=81 w_wr=9 i_wr=81 vert_add=72
+  R=3 H=7x7 C=1 M=1 [seen] PEs=9 MACs=225 w_wr=9 i_wr=225 vert_add=200
+  R=3 H=8x8 C=1 M=1 [seen] PEs=9 MACs=324 w_wr=9 i_wr=324 vert_add=288
+  R=3 H=5x5 C=2 M=1 [seen] PEs=9 MACs=162 w_wr=18 i_wr=162 vert_add=72
+  R=3 H=5x5 C=1 M=2 [seen] PEs=9 MACs=162 w_wr=18 i_wr=81 vert_add=144
+  R=5 H=7x7 C=1 M=1 [seen] PEs=25 MACs=225 w_wr=25 i_wr=225 vert_add=216
+  R=3 H=6x6 C=2 M=2 [held-out] PEs=9 MACs=576 w_wr=36 i_wr=288 vert_add=256
+  R=4 H=7x7 C=1 M=1 [held-out] PEs=16 MACs=256 w_wr=16 i_wr=256 vert_add=240
+  R=3 H=6x5 C=1 M=1 [held-out] PEs=9 MACs=108 w_wr=9 i_wr=108 vert_add=96
+  R=2 H=5x5 C=1 M=1 [held-out] PEs=4 MACs=64 w_wr=4 i_wr=64 vert_add=48
+== OS
+  R=3 H=5x5 C=1 M=1 [seen] PEs=9 MACs=81 w_wr=81 i_wr=81 vert_add=0
+  R=3 H=7x7 C=1 M=1 [seen] PEs=25 MACs=225 w_wr=225 i_wr=225 vert_add=0
+  R=3 H=8x8 C=1 M=1 [seen] PEs=36 MACs=324 w_wr=324 i_wr=324 vert_add=0
+  R=3 H=5x5 C=2 M=1 [seen] PEs=9 MACs=162 w_wr=162 i_wr=162 vert_add=0
+  R=3 H=5x5 C=1 M=2 [seen] PEs=9 MACs=162 w_wr=162 i_wr=81 vert_add=0
+  R=5 H=7x7 C=1 M=1 [seen] PEs=9 MACs=225 w_wr=225 i_wr=225 vert_add=0
+  R=3 H=6x6 C=2 M=2 [held-out] PEs=16 MACs=576 w_wr=576 i_wr=288 vert_add=0
+  R=4 H=7x7 C=1 M=1 [held-out] PEs=16 MACs=256 w_wr=256 i_wr=256 vert_add=0
+  R=3 H=6x5 C=1 M=1 [held-out] PEs=12 MACs=108 w_wr=108 i_wr=108 vert_add=0
+  R=2 H=5x5 C=1 M=1 [held-out] PEs=16 MACs=64 w_wr=64 i_wr=64 vert_add=0

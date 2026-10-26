@@ -1,0 +1,14 @@
+P=192 PEs; rigid array 12x16; flexible cap 144 words/cycle per data type
+
+layer                                | rigid util | flexible util (m x x)  src words/cycle (iact+weight) | flexible, capped util (m x x) | mode implied (iact / weight)
+CONV large (M=384, 13x13)            |    100.0% |  100.0% ( 12 x  16)       28 (16+12)        |  100.0% ( 12 x  16)        | multicast x12 / multicast x16
+CONV few channels (M=16, 55x55)      |    100.0% |  100.0% ( 12 x  16)       28 (16+12)        |  100.0% ( 12 x  16)        | multicast x12 / multicast x16
+pointwise 1x1 (M=64, 56x56)          |    100.0% |  100.0% ( 12 x  16)       28 (16+12)        |  100.0% ( 12 x  16)        | multicast x12 / multicast x16
+depth-wise 3x3 (M_avail=1, 56x56)    |      8.3% |  100.0% (  1 x 192)      193 (192+1)        |   75.0% (  1 x 144)        | unicast / broadcast
+FC batch 1 (M=4096, X=1)             |      8.3% |  100.0% (192 x   1)      193 (1+192)        |   75.0% (144 x   1)        | broadcast / unicast
+FC batch 4 (M=4096, X=4)             |     33.3% |  100.0% ( 48 x   4)       52 (4+48)        |  100.0% ( 48 x   4)        | multicast x48 / multicast x4
+
+cross-check with the RTL numbers of E3 (router_pe_4_clusters_tb, 3x3 kernel on 5x5 map, 4 clusters):
+  weights: injected 9 x fan-out 4 = delivered 36  (E3 observed 36)
+  iacts:   injected 100 x fan-out 1 = delivered 100  (E3 observed 100)
+  model: this is the depth-wise-like case (m=1, x=4): iact streams = x = 4 per cycle, weight streams = m = 1; E3: 4 iact words per cycle injected over 25 cycles = 100, 1 weight word per cycle over 9 cycles = 9

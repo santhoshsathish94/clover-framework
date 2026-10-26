@@ -1,0 +1,84 @@
+-rw-r--r-- 1 root root    3488 Oct 26 08:40 traces/e7_prediction_summary.json
+-rw-r--r-- 1 root root 6893320 Oct 26 08:40 traces/spec_predictions.npz
+2bc4fa79ef5a98af42a23b74eb8a6ea9  sim_e7_prefetch.py
+56f4b5424f9f3d58dfa7ea3f0d263114  sim_cache.py
+=== 1. DECODE-STYLE WITH PREFETCH (Algorithm 1: Demand l -> Prefetch l+1, Variant A) ===
+
+--- Capacity C=10 (1% of 1,024 experts) ---
+  Policy | PrefetchMode   | HitRate | CollPass | CollIntra | PrefLoad |  Useful |  Wasted
+  LS     | None           |   0.00% |    2.88% |     0.00% |        0 |       0 |       0
+  LRU    | None           |   0.00% |    2.88% |     0.00% |        0 |       0 |       0
+  SB     | None           |   0.69% |    0.23% |     0.00% |        0 |       0 |       0
+  LS     | TopK_8         |   9.75% |   69.57% |    69.35% |   245760 |   25562 |  220198
+  LRU    | TopK_8         |  78.89% |    0.42% |     0.21% |   245760 |  206804 |   38956
+  LFU    | TopK_8         |   5.12% |   74.38% |    74.34% |   232868 |     286 |  232582
+  SB     | TopK_8         |   0.72% |   78.47% |    78.44% |   243963 |     111 |  243852
+  FLD    | TopK_8         |   9.75% |   69.57% |    69.35% |   245760 |   25562 |  220198
+  LS     | Overfetch_12   |   1.49% |   86.63% |    86.59% |   368640 |    3906 |  364734
+  LRU    | Overfetch_12   |  18.76% |   69.35% |    69.32% |   368640 |   49187 |  319453
+  SB     | Overfetch_12   |   0.70% |   87.40% |    87.40% |   365909 |      73 |  365836
+  LS     | Score_Global80 |   1.78% |   86.70% |    86.64% |   401338 |    4678 |  396660
+  LRU    | Score_Global80 |  25.05% |   63.44% |    63.37% |   401338 |   65672 |  335666
+  SB     | Score_Global80 |   0.71% |   87.74% |    87.73% |   398343 |      75 |  398268
+
+--- Capacity C=51 (5% of 1,024 experts) ---
+  Policy | PrefetchMode   | HitRate | CollPass | CollIntra | PrefLoad |  Useful |  Wasted
+  LS     | None           |   0.00% |   14.89% |     0.00% |        0 |       0 |       0
+  LRU    | None           |   0.00% |   14.89% |     0.00% |        0 |       0 |       0
+  SB     | None           |   6.10% |    0.25% |     0.00% |        0 |       0 |       0
+  LS     | TopK_8         |  79.10% |    1.08% |     0.00% |   245760 |  207352 |   38408
+  LRU    | TopK_8         |  79.10% |    1.07% |     0.00% |   245760 |  207352 |   38408
+  LFU    | TopK_8         |  17.81% |   64.61% |    64.57% |   204375 |     449 |  203926
+  SB     | TopK_8         |   6.21% |   73.45% |    73.42% |   230068 |     370 |  229698
+  FLD    | TopK_8         |  79.10% |    1.07% |     0.00% |   245760 |  207352 |   38408
+  LS     | Overfetch_12   |  88.08% |    0.10% |     0.00% |   368640 |  230895 |  137745
+  LRU    | Overfetch_12   |  88.08% |    0.11% |     0.00% |   368640 |  230895 |  137745
+  SB     | Overfetch_12   |   6.16% |   82.07% |    82.06% |   346778 |     333 |  346445
+  LS     | Score_Global80 |  88.43% |    0.16% |     0.00% |   401338 |  231805 |  169533
+  LRU    | Score_Global80 |  88.43% |    0.16% |     0.00% |   401338 |  231805 |  169533
+  SB     | Score_Global80 |   6.13% |   82.47% |    82.46% |   378439 |     307 |  378132
+
+--- Capacity C=256 (25% of 1,024 experts) ---
+  Policy | PrefetchMode   | HitRate | CollPass | CollIntra | PrefLoad |  Useful |  Wasted
+  LS     | None           |  53.86% |    0.67% |     0.00% |        0 |       0 |       0
+  LRU    | None           |  51.04% |    3.88% |     0.00% |        0 |       0 |       0
+  SB     | None           |  31.99% |    0.26% |     0.00% |        0 |       0 |       0
+  LS     | TopK_8         |  87.65% |    0.15% |     0.00% |   112500 |   96243 |   16257
+  LRU    | TopK_8         |  87.94% |    0.67% |     0.00% |   119678 |  102882 |   16796
+  LFU    | TopK_8         |  50.07% |   38.16% |    38.13% |   127213 |    3013 |  124200
+  SB     | TopK_8         |  33.07% |   49.87% |    49.83% |   165095 |    2898 |  162197
+  FLD    | TopK_8         |  81.91% |    1.13% |     0.00% |   182991 |  152364 |   30627
+  LS     | Overfetch_12   |  92.11% |    0.04% |     0.00% |   183196 |  120995 |   62201
+  LRU    | Overfetch_12   |  92.03% |    0.21% |     0.00% |   198972 |  129471 |   69501
+  SB     | Overfetch_12   |  32.38% |   57.41% |    57.40% |   257217 |    1176 |  256041
+  LS     | Score_Global80 |  92.25% |    0.06% |     0.00% |   201061 |  124943 |   76118
+  LRU    | Score_Global80 |  92.16% |    0.21% |     0.00% |   211269 |  128911 |   82358
+  SB     | Score_Global80 |  32.44% |   57.69% |    57.68% |   282986 |    1352 |  281634
+
+=== 2. VARIANT B (Next-Layer RMSNorm) vs VARIANT A AT 5% (C=51) AND 25% (C=256) WITH LS ===
+  C= 51 LS TopK_8        : VarA Hit= 79.10% (useful=207352, wasted= 38408) vs VarB Hit= 79.21% (useful=207653, wasted= 38107)
+  C= 51 LS Overfetch_12  : VarA Hit= 88.08% (useful=230895, wasted=137745) vs VarB Hit= 88.19% (useful=231176, wasted=137464)
+  C= 51 LS Score_Global80: VarA Hit= 88.43% (useful=231805, wasted=169533) vs VarB Hit= 88.19% (useful=231172, wasted=160706)
+  C=256 LS TopK_8        : VarA Hit= 87.65% (useful= 96243, wasted= 16257) vs VarB Hit= 87.79% (useful= 96733, wasted= 16551)
+  C=256 LS Overfetch_12  : VarA Hit= 92.11% (useful=120995, wasted= 62201) vs VarB Hit= 92.20% (useful=121454, wasted= 62926)
+  C=256 LS Score_Global80: VarA Hit= 92.25% (useful=124943, wasted= 76118) vs VarB Hit= 92.15% (useful=124072, wasted= 73228)
+
+=== 3. CONCURRENT / INTERLEAVED PREFETCH (Prefetch l+1 before Layer l Demand Misses) AT 5% (C=51) ===
+  C=51 LS   TopK_8        : Hit= 79.10% | CollIntra=  0.00% | Useful=207352 | Wasted= 38408
+  C=51 LRU  TopK_8        : Hit= 79.10% | CollIntra=  0.00% | Useful=207352 | Wasted= 38408
+  C=51 LFU  TopK_8        : Hit= 17.76% | CollIntra= 64.62% | Useful=   299 | Wasted=204062
+  C=51 SB   TopK_8        : Hit=  6.17% | CollIntra= 73.45% | Useful=   267 | Wasted=229798
+  C=51 FLD  TopK_8        : Hit= 79.10% | CollIntra=  0.00% | Useful=207352 | Wasted= 38408
+  C=51 LS   Overfetch_12  : Hit= 88.08% | CollIntra=  0.00% | Useful=230895 | Wasted=137745
+  C=51 LRU  Overfetch_12  : Hit= 88.08% | CollIntra=  0.00% | Useful=230895 | Wasted=137745
+  C=51 LFU  Overfetch_12  : Hit= 17.77% | CollIntra= 72.25% | Useful=   352 | Wasted=314765
+  C=51 SB   Overfetch_12  : Hit=  6.13% | CollIntra= 82.09% | Useful=   263 | Wasted=346506
+  C=51 FLD  Overfetch_12  : Hit= 88.08% | CollIntra=  0.00% | Useful=230895 | Wasted=137745
+  C=51 LS   Score_Global80: Hit= 88.43% | CollIntra=  0.00% | Useful=231805 | Wasted=169533
+  C=51 LRU  Score_Global80: Hit= 88.42% | CollIntra=  0.01% | Useful=231780 | Wasted=169558
+  C=51 LFU  Score_Global80: Hit= 17.76% | CollIntra= 72.55% | Useful=   354 | Wasted=345418
+  C=51 SB   Score_Global80: Hit=  6.10% | CollIntra= 82.48% | Useful=   241 | Wasted=378192
+  C=51 FLD  Score_Global80: Hit= 88.43% | CollIntra=  0.00% | Useful=231805 | Wasted=169533
+
+Saved e7_prefetch_sim_summary.json
+FINISHED rc=0

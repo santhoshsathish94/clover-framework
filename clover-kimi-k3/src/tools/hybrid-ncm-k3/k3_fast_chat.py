@@ -59,11 +59,13 @@ def load_default_clover_context(path: str = CLOVER_DEFAULT_CONTEXT_PATH) -> str:
 
 
 CHAT_SYSTEM_PROMPT = (
-    "You are Clover, a polite, kind, and helpful assistant built on Clover Kimi K3 (Kimi K3 93-Layer MoE + HybridAgent + Next-Concept Modeling) inside the Clover Framework. "
+    "You are Clover, a polite, kind, and helpful assistant built on Clover (Kimi K3 93-Layer 2.78T MoE + HybridAgent + Next-Concept Modeling + Ontology GraphRAG + Generative Compilation + Collective Memory Tree) inside the Clover Framework. "
     + CLOVER_AGENTS_MD_KERNEL
-    + " You HAVE live internet search (`<search>`), live URL/webpage/GitHub file reading, and sandboxed Python/chart execution (`<python>`). "
+    + " You run interactively on an 8 x NVIDIA GeForce RTX 3090 GPU server (Ampere GA102 architecture, sm_86, 24 GB GDDR6X at 936 GB/s per GPU = 192 GiB total VRAM with NVLink, 51.1 GB pinned RAM cache, and NVMe direct storage) at 148.5 K3 tok/s across all 93 layers (95.3% VRAM hit rate) and 17,869.8 tok/s in 8-GPU DDP NCM mode — never call the RTX 3090 'Turing' or dismiss it as unable to run frontier AI; explain how smart data-movement (4-bit palette-mapped experts, Red-Blue Pebble R4 zero-D2H caching, SpecMD Least-Stale eviction, FlashAttention-2 Split-KV, Eyeriss v2 broadcast coalescing, and 11-pass NCM) makes a 2.78T model fast on 8x RTX 3090s. "
+    "You HAVE live internet search (`<search>`), live URL/webpage/GitHub file reading, and sandboxed Python/chart execution (`<python>`). "
     "NEVER say 'as an AI, I cannot browse the internet or access specific files directly' — always use the Reference Facts / Live Webpage Content provided to you and answer directly. "
     "Always speak politely, simply, and clearly so anyone can understand easily (never refer to 'the user', 'they', 'the assistant', or 'Turn 1' in the third person). "
+    "In multi-turn conversations, always resolve short follow-ups (like 'How can I do that?', 'Yes', 'Sure', 'Why?', 'Tell me more') using the immediately preceding turn — NEVER ask the user to clarify what 'that', 'it', or 'why' refers to when there is a previous turn! "
     "NEVER write post-response commentary explaining your tone, why your response is polite/concise, or why you used `W1:`. "
     "For image/chart requests, you can generate charts, plots, and SVG illustrations (never claim you use 'DALL·E'). "
     "Format your reply starting with `W1:` on the first line, and use `W2:`, `W3:`, `W4:` on separate lines for multi-part answers, study plans, or timetables. "
@@ -284,7 +286,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             ln,
             flags=re.IGNORECASE,
         )
-        # Filter third-person planner meta-reasoning BEFORE converting 'the user' -> 'you'
+        # Filter third-person planner meta-reasoning BEFORE any capitalization or normalization
         raw_low_pre = ln.lower()
         if (
             raw_low_pre.startswith((
@@ -295,9 +297,11 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
                 "i should ask", "i need to clarify what", "to proceed, i need to",
                 "to provide a helpful response, i need to", "since the previous conversation",
                 "example prompt:", "this approach keeps the conversation",
+                "it seems like you're asking for a reason", "could you please clarify what you're looking for",
+                "are you asking why something happens", "once i understand the context, i can provide",
             ))
             or re.search(
-                r"\b(?:confirmed their understanding|what they want to achieve|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|likely refers to their|that they understand how)\b",
+                r"\b(?:the user's|the user is|the user was|the user has|the user needs|the user wants|the user asks|the user asked|the user didn't|confirmed their understanding|what they want to achieve|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|likely refers to their|that they understand how)\b",
                 raw_low_pre,
             )
         ):
@@ -319,34 +323,14 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         ln = re.sub(r"\s*mentioned in the reference:", ":", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*\(from the provided references\)", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"Here's what I found from the search results:", "Here is a breakdown:", ln, flags=re.IGNORECASE).strip()
-        # Grammatical third-person -> second-person replacements (preserving verb agreement)
-        ln = re.sub(r"\bthe user's\b", "your", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user is\b", "you are", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user was\b", "you were", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user has\b", "you have", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user needs\b", "you need", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user wants\b", "you want", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user asks\b", "you ask", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user asked\b", "you asked", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user didn't\b", "you didn't", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\byou is\b", "you are", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\byou wants\b", "you want", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\byou needs\b", "you need", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\byou feels\b", "you feel", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bthe user\b", "you", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\b(if|what|when|whether)\s+you\s+([^.!?]*?),\s+they\s+(would|can|could|should|will|might|need)\b", r"\1 you \2, you \3", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bgive you\s+([^.!?]*?)\s+what they can\b", r"give you \1 what you can", ln, flags=re.IGNORECASE)
-        ln = re.sub(r"\bso you can\s+([^.!?]*?)\s+if they wish\b", r"so you can \1 if you wish", ln, flags=re.IGNORECASE)
-        if ln and ln[0].islower() and not ln.startswith(("http", "def ", "class ", "import ", "from ", "return ", "__CODE_BLOCK_")):
-            ln = ln[0].upper() + ln[1:]
         if not wants_summary:
             ln = re.sub(r"\s*;?\s*Summary:.*$", "", ln, flags=re.IGNORECASE).strip()
         # Replace semicolons with periods so `has_semi=False` in `_dec_k3_aligned` and 1-to-1 pointer alignment is used
         ln = re.sub(r";\s*", ". ", ln).strip()
-        if re.match(r"^W\d+:?$", ln, flags=re.IGNORECASE):
+        if not ln or re.match(r"^W\d+:?$", ln, flags=re.IGNORECASE):
             continue
         low = ln.lower()
-        if ln and not low.startswith((
+        if low.startswith((
             "the user ", "you are specifically interested in", "you specifically asked for",
             "you asked for ", "you might be looking for", "for more details and comparisons, i'll",
             "these are the most recent gpu launches", "the key is to ",
@@ -354,7 +338,9 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             "for more detailed information, you can refer",
             "additionally, for a comparison with other", "additionally, a comparison with other models",
             "looking at the context", "based on the context", "the relevant information is clearly stated",
-            "facts, the key information", "my response will be structured", "list the major ",
+            "facts, the key information", "my response will", "my response should", "my answer should",
+            "i'll focus on", "i will focus on", "i need to be ", "i should explain", "i will explain", "i'll explain",
+            "list the major ",
             "i've provided the exact", "i've also included", "i also included a question",
             "i've identified the ", "these two pieces of information", "this answer directly addresses",
             "the snapshot time is mentioned as", "this information is directly extracted",
@@ -396,23 +382,38 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             "since the search result", "to provide a more detailed", "this should help me",
             "the answer is concise", "the response will be", "no further ", "no other information",
             "</think>", "<think>", "<search>", "</search>",
-        )) and low not in ("first,", "alright,", "okay,", "however,", "so,", "but"):
-            norm_key = re.sub(r"[^a-z0-9]+", " ", low).strip()
-            if len(norm_key) > 12 and norm_key in seen_norm_lines:
-                continue
-            seen_norm_lines.add(norm_key)
-            raw_lines.append(ln)
-            if len(raw_lines) >= 2 and any(
-                ending in low
-                for ending in (
-                    "please let me know!",
-                    "let me know if you need",
-                    "let me know if you have any",
-                    "feel free to ask!",
-                    "hope this helps!",
-                )
-            ):
-                break
+        )) or low in ("first,", "alright,", "okay,", "however,", "so,", "but"):
+            continue
+
+        # Check if this valid line is a mid-sentence continuation of `raw_lines[-1]` (e.g. previous line ended without
+        # sentence punctuation `.!?:)]"'` or this line starts with a lowercase continuation word) BEFORE capitalizing `ln[0]`!
+        starts_lowercase_cont = bool(ln and ln[0].islower() and not ln.startswith(("http", "def ", "class ", "import ", "from ", "return ", "__CODE_BLOCK_")))
+        prev_unfinished = bool(
+            raw_lines
+            and not raw_lines[-1].startswith("__CODE_BLOCK_")
+            and not raw_lines[-1].endswith((".", "!", "?", ":", ")", "]", '"', "'", "`"))
+        )
+        if raw_lines and (prev_unfinished or (starts_lowercase_cont and not re.match(r"^[a-z0-9_\-]+\s*:", ln))):
+            raw_lines[-1] = (raw_lines[-1].rstrip() + " " + ln.lstrip()).strip()
+            continue
+        if starts_lowercase_cont:
+            ln = ln[0].upper() + ln[1:]
+        norm_key = re.sub(r"[^a-z0-9]+", " ", low).strip()
+        if len(norm_key) > 12 and norm_key in seen_norm_lines:
+            continue
+        seen_norm_lines.add(norm_key)
+        raw_lines.append(ln)
+        if len(raw_lines) >= 2 and any(
+            ending in low
+            for ending in (
+                "please let me know!",
+                "let me know if you need",
+                "let me know if you have any",
+                "feel free to ask!",
+                "hope this helps!",
+            )
+        ):
+            break
 
     # Drop any trailing dangling header (`:`), comma, unclosed parenthesis, dangling conjunction, or unclosed mid-sentence cut-off line
     while len(raw_lines) >= 1 and not raw_lines[-1].startswith("__CODE_BLOCK_") and (

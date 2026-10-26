@@ -1,0 +1,70 @@
+# Eyeriss v2 Round 2 — Predictions Log (written before each experiment runs)
+
+## E1 Prediction (2026-10-26 12:00 UTC)
+- Question: From a fresh copy of karthisugumar/CSE240D-Hierarchical_Mesh_NoC-Eyeriss_v2, which RTL modules and testbenches lint/compile unmodified under Verilator 5.020 and iverilog 12.0, what exact errors occur, what minimal fixes make them build/run in a copy, and do outputs match a Python golden convolution?
+- Prediction:
+  1. Unmodified Verilator lint: 15-16 of 23 unique RTL modules pass; 7-8 fail due to parameter shadowing in PE_cluster.sv (X_dim, Y_dim), mixed blocking/non-blocking assignments (BLKANDNBLK) in router_iact.sv and router_weight.sv, hierarchical input port wiring .port(inst.in) (ASSIGNIN) in router_network4.sv and HMNoC_*.sv, and typo pwest_data_o_wght in HMNoC_cluster_east.sv.
+  2. Unmodified testbenches in Verilator: 7 of 25 compile unmodified (adder_tb, MAC_tb, switch_tb, SPad_tb, glb_iact_tb, PE_tb, router_glb_tb). Under iverilog -g2012, PE.sv fails unmodified due to nested /* comment on line 134.
+  3. PE_tb prints 14, 44, 74 for iterations 1..3 (matching 1*a0 + 2*a1 + 3*a2 for rows 0..2) and then hangs on iteration 4 because PE.sv resets iter<=0 when iter==(act_size-kernel_size+1)=3 without asserting compute_done.
+  4. After minimal IEEE-1800 fixes in a fresh copy, PE_cluster_tb prints [501, 456, 411], [726, 681, 636], [951, 906, 861] (exact 2D convolution of 1..25 with 1..9 in reversed column order due to [0:2] vs [2:0] port binding); router_cluster_pe_cluster_tb prints [63, 72, 81, 108, 117, 126, 153, 162, 171] in 112 cycles; router_cluster_tb prints (44,44,44) and (20,27,27) in 115 cycles due to router_weight/iact skipping index 0 and act_5x5.txt having 20 lines instead of 25.
+
+## E2 Prediction (2026-10-26 12:20 UTC)
+- Question: How do PE.sv and router.sv behave cycle-by-cycle when driven by custom testbenches (tb_e2_pe_row.sv and tb_e2_router_modes.sv) with known inputs?
+- Prediction:
+  1. PE.sv (kernel_size=3, act_size=5, w_row0=[10,20,30], act rows [2,3,4,5,6], [7,8,9,10,11], [12,13,14,15,16]):
+     - LOAD_W takes 10 clock cycles; LOAD_A takes 26 clock cycles.
+     - Each 1D row conv (iter=0,1,2) takes 11 clock cycles (1 IDLE + 3*(READ_W+READ_A+COMPUTE) + 1 WRITE = 3*K + 2 cycles).
+     - Outputs on iter 0, 1, 2 are 200, 500, 800, written to SPad[500..502].
+     - With a 1-cycle start pulse on call #4 (iter==3), PE resets iter<=0 in IDLE in 1 cycle with compute_done=0 (no computation), and call #5 computes iter=0 (200) again.
+     - Negative control: corrupting w[1]=20->21 yields [203, 508, 813] != [200, 500, 800].
+  2. router.sv:
+     - Purely combinational (0-cycle latency).
+     - Enable masks (N,S,W,E) for modes 0..15: 0=1111, 1=1000, 2=0100, 3=0010, 4=0001, 5=1001, 6=0101, 7=0011, 8=1010, 9=0110, 10=0011 (modes 7 and 10 identical), 11..15=0000.
+     - Priority order when multiple enables are high: north > south > west > east.
+     - When all *_enable_i == 0, data_out = 10101 while *_enable_o stays 1 on selected destinations.
+
+## E3 Prediction (2026-10-26 12:35 UTC)
+- Question: How do 1-cluster and 4-cluster convolutions compare in cycles, words transferred, and MACs; does a corrupted weight fail the golden check; and how do cycles scale with problem size (K, H) and cluster count (1, 2, 4 clusters on 4-channel conv)?
+- Prediction:
+  1. Repo testbenches:
+     - 1-cluster 3x3 on 5x5 (router_cluster_pe_cluster_tb and HMNoC_cluster_west_tb): 112 cycles (35 GLB write + 38 SPad load + 39 compute/wait), 81 MACs.
+     - 4-cluster 3x3 on 5x5 (router_pe_4_clusters_tb): 98 cycles (no GLB write; 9-cycle weight broadcast + 25-cycle 4-stream iact unicast + 39 compute/wait + 25 idle), 324 MACs across 4 clusters.
+     - 1-cluster 5x5 on 7x7 (router_cluster_pe_cluster_5x5_tb): 251 cycles, 375 MACs.
+     - 4-cluster 5x5 on 7x7 (router_pe_4_clusters_5x5_tb): 197 cycles, 1500 MACs across 4 clusters.
+  2. Tight active-cycle scaling formula on 1 cluster (1-cycle gap between iterations, E = H - K + 1):
+     C_active(K, H) = (K^2 + 1) + (H^2 + 1) + E * (3*K + 3):
+     - (K=3, H=5, E=3): 10 + 26 + 36 = 72 cycles (81 MACs)
+     - (K=3, H=6, E=4): 10 + 37 + 48 = 95 cycles (144 MACs)
+     - (K=3, H=7, E=5): 10 + 50 + 60 = 120 cycles (225 MACs)
+     - (K=5, H=7, E=3): 26 + 50 + 54 = 130 cycles (375 MACs)
+  3. Cluster-count scaling for 4-channel 3x3x5x5 conv (weights broadcast once = 10 cycles, each pass = 26 load_a + 36 compute = 62 cycles):
+     - 1 cluster (4 passes): 10 + 4*62 = 258 cycles
+     - 2 clusters (2 passes): 10 + 2*62 = 134 cycles
+     - 4 clusters (1 pass): 10 + 1*62 = 72 cycles
+
+## E4 Prediction (2026-10-26 12:50 UTC)
+- Question: What does the RTL do about zeros (gating, skipping, compressed formats), and how many MACs (mac_en==1) and cycles are executed vs scheduled across 0%, ~50%, ~85%, and 100% zero weights/activations?
+- Prediction:
+  1. Static search of rtl/*.sv will show zero occurrences of CSC/count/address SPads, zero-skipping, or zero-gating on MAC operands.
+  2. In simulation of 3x3 PE_cluster (81 scheduled MACs across 9 PEs x 3 iters):
+     - R1 (0% zeros): 81 non-zero MACs, 81 mac_en pulses, 10 load_w + 26 load_a + 36 compute = 72 cycles.
+     - R2 (5/9 zero weights, 13/25 zero iacts): 16 non-zero MACs, 81 mac_en pulses, 72 cycles.
+     - R3 (8/9 zero weights, 20/25 zero iacts): 2 non-zero MACs, 81 mac_en pulses, 72 cycles.
+     - R4 (100% zero weights and iacts): 0 non-zero MACs, 81 mac_en pulses, 72 cycles.
+  3. Negative control: flipping 1 zero weight to 1 in R4 with non-zero activations changes output from [0]*9 to non-zero and fails the all-zero check.
+
+## E4 (as actually run) Prediction (2026-10-26, written by Claude before running tb_e4_pe_zero.sv)
+- The first-wave cluster-level E4 above was never run. What I ran instead is PE-level (tb_e4_pe_zero.sv): the cluster is made of these PEs, and PE.sv's FSM (IDLE/READ_W/READ_A/COMPUTE/WRITE) is the only place a zero could change timing.
+- Prediction (from reading PE.sv, before the run): for every data pattern (dense; w=[0,20,0]; w=[0,0,0]; every other activation zero; all activations zero; both) each 1-D row iteration takes 11 cycles, 3 posedges with mac_en=1, 6 posedges with read_en=1 in READ_W/READ_A, and pe_out equals the dot product of the first 3 weights with the activation window (so 0 when either operand set is all zero). The count of non-zero (weight, activation) pairs will differ across patterns (from 3 down to 0) while the three RTL counters do not change. grep over rtl/ will find no CSC / run-length / skip / SIMD code. PE.sv has 1 SPad and 1 MAC, 16-bit data.
+
+## E5 (as actually run) Prediction (composed by Claude 2026-10-26 BEFORE running work/e5_csc.py; written into this file AFTER the run because my first attempt to write it failed - so this file is not an independent timestamp for this entry)
+- Scope vs the first-wave plan: CSC encoder/decoder and a sparse-PE processing-order emulation, written from the paper text (Section IV); nothing is the authors' code; conventions the text leaves open are listed at the top of e5_csc.py.
+- Prediction: (1) 400 random segment sets round-trip exactly; changing one count changes the decode. (2) Compression ratio vs dense for a 32x15 weight matrix: formula (12*d*M0*K + 7*(K+1)) / (8*M0*K); crossing of ratio 1.0 at d* = (3840 - 112)/(12*480) = 0.647; empirical crossing within 0.02 of that (padding entries rare at these densities). (3) One non-zero at the end of a 256-long segment with 4-bit counts needs 15 padding entries + 1 data entry = 16 entries. (4) Sparse-PE emulation equals the dense reference in every cell of the sweep; MACs/dense within 0.03 of w_density*i_density (means over 5 seeds); simd2 cycles satisfy MACs/2 <= simd2 <= MACs/2 + (non-zero iact visits)/2; weight_reads/MAC slightly above 1 only at low weight density (padding entries are read). (5) Moving one non-zero weight by one row changes the emulation output.
+- Result vs prediction (added after the run): (1)(3)(5) and the exactness and simd2 bounds in (4) held; (2) the empirical crossing was 0.6474 vs 0.6472; (4) MACs/dense was within 0.03 in 11 of 12 cells (1.00/0.60 was 0.568 vs 0.600 = 0.032; 5 seeds only); "padding entries rare" was wrong below density 0.1 (3-5 padding entries per 32x15 matrix at densities 0.02-0.1), which is why the measured ratio there is above the no-padding formula.
+
+## E6 (as actually run) Prediction (2026-10-26, written by Claude BEFORE running work/e6_noc_model.py)
+- What this is: arithmetic of the paper's argument for a flexible network, in a toy model of mine with stated assumptions (see the script header). It is not the authors' analytical model.
+- Prediction (by hand): rigid 12x16 array utilisation (best orientation): CONV large 100%, CONV few channels 100%, pointwise 100%, depth-wise 16/192 = 8.3%, FC batch 1 16/192 = 8.3%, FC batch 4 64/192 = 33.3%. Flexible (uncapped): 100% everywhere (depth-wise as m=1 x x=192; FC batch 1 as m=192 x x=1). Flexible with a 144 words/cycle cap per data type: 75% for depth-wise and FC batch 1, 100% elsewhere (FC batch 4 as m=48 x x=4). Conservation check from E3: weights 9 injected x fan-out 4 = 36 delivered; iacts 100 x 1 = 100.
+
+
+

@@ -2077,6 +2077,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 "k3_moe_layers_resident": 92,
                 "k3_experts_resident": 92 * STATE.k3_experts.k_res,
                 "k3_expert_cards": STATE.k3_experts.cards,
+                "data_movement_ledger": STATE.k3_experts.get_data_movement_ledger() if hasattr(STATE.k3_experts, "get_data_movement_ledger") else {},
                 "multimodal_worker": True,
                 "batch_pause_s": STATE.batch_pause_s,
                 "default_context_file": CLOVER_DEFAULT_CONTEXT_PATH,

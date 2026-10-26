@@ -1,0 +1,13 @@
+layer   MACs(N=1)     ifmap  filter   ofmap | logical PE set RS(RxE)  WS(RxR)  OS(ExE) | per-PE words, TB mapping: filter rows (p=M,q=C) | ratio MAC/ifmap  MAC/filter  MAC/ofmap
+CONV1   105,415,200   154,587   34,848  290,400 |  11x55 =605         121     3025   | M*C*R = 3,168    |     681.9     3025.0      363.0
+CONV2   223,948,800    46,128  307,200  186,624 |   5x27 =135         25      729    | M*C*R = 61,440   |    4854.9      729.0     1200.0
+CONV3   149,520,384    57,600  884,736   64,896 |   3x13 =39          9       169    | M*C*R = 294,912  |    2595.8      169.0     2304.0
+CONV4   112,140,288    43,200  663,552   64,896 |   3x13 =39          9       169    | M*C*R = 221,184  |    2595.8      169.0     1728.0
+CONV5    74,760,192    43,200  442,368   43,264 |   3x13 =39          9       169    | M*C*R = 147,456  |    1730.6      169.0     1728.0
+
+Spad sizes from JSSC 2017 (words of 16 b): filter 224, ifmap 12, psum 24; array 12x14 = 168 PEs.
+CONV1: RS logical PE set 11x55 vs array 12x14 -> rows fit: True, columns fit: False; 1D primitive needs filter 11, ifmap window 11, psum 1 words (JSSC text); TB-style full-row ifmap needs C*W = 681 words (> 12: True)
+CONV2: RS logical PE set 5x27 vs array 12x14 -> rows fit: True, columns fit: False; 1D primitive needs filter 5, ifmap window 5, psum 1 words (JSSC text); TB-style full-row ifmap needs C*W = 1488 words (> 12: True)
+CONV3: RS logical PE set 3x13 vs array 12x14 -> rows fit: True, columns fit: True; 1D primitive needs filter 3, ifmap window 3, psum 1 words (JSSC text); TB-style full-row ifmap needs C*W = 3840 words (> 12: True)
+CONV4: RS logical PE set 3x13 vs array 12x14 -> rows fit: True, columns fit: True; 1D primitive needs filter 3, ifmap window 3, psum 1 words (JSSC text); TB-style full-row ifmap needs C*W = 2880 words (> 12: True)
+CONV5: RS logical PE set 3x13 vs array 12x14 -> rows fit: True, columns fit: True; 1D primitive needs filter 3, ifmap window 3, psum 1 words (JSSC text); TB-style full-row ifmap needs C*W = 2880 words (> 12: True)

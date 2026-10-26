@@ -1,0 +1,352 @@
+=== 1. REPO METADATA (COMMIT, URL, LICENSE, FILES, LINES) ===
+985320b55c8422667d9d571453e27ea1756888df
+985320b Update .DS_Store
+ee0432b Same files, preserving directory structure
+cc8e045 Package from Claude
+origin	https://github.com/michaelkeating/pebbling.git (fetch)
+origin	https://github.com/michaelkeating/pebbling.git (push)
+MIT License
+
+Copyright (c) 2026 Sutro Group
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+   215 README.md
+    33 pyproject.toml
+  1005 pebbling_engine.py
+   578 pebbling_agent.py
+  1672 pebbling-game.jsx
+  3503 total
+616K	.
+
+=== 2. PAPER TEXT VERIFICATION ===
+  943 35041 /root/dm-study/pebbling/work/paper/1981-stoc-hong-kung.txt
+1:=== PAGE 1 ===
+91:=== PAGE 2 ===
+200:=== PAGE 3 ===
+342:=== PAGE 4 ===
+508:=== PAGE 5 ===
+626:=== PAGE 6 ===
+779:=== PAGE 7 ===
+895:=== PAGE 8 ===
+
+=== 3. RUN BUILT-IN ENGINE DEMO (pebbling_engine.py) ===
+============================================================
+  PEBBLING GAME ENGINE — Demo
+============================================================
+
+Initial state:
+====================================================
+  PEBBLING GAME — Step 0  |  Cost: 0 pJ
+====================================================
+  [R] Register: 0/3  [S] SRAM: 0/4  [H] HBM: 0/∞
+----------------------------------------------------
+  INPUT  │ (*)N0  (*)N1
+         │   │      │  
+  L1     │ ( )N2
+         │   │  
+  L2     │ ( )N3
+         │   │  
+  OUTPUT │ ( )N4  ( )N5  ( )N6  ( )N7  ( )N8  ( )N9
+----------------------------------------------------
+  Sinks remaining: 6 / 6
+  Valid actions: 6
+====================================================
+
+────────────────────────────────────────────────────────────
+LLM AGENT PROMPT:
+────────────────────────────────────────────────────────────
+You are playing the Pebbling Game. Your goal is to place pebbles on all
+output (sink) nodes of a computation DAG while minimizing total energy cost.
+
+MEMORY TIERS (from cheapest to most expensive):
+  - register (R): 1 pJ to compute, 0 pJ to transfer in. LIMITED slots.
+  - sram (S): 5 pJ to compute, 5 pJ to transfer in. LIMITED slots.
+  - hbm (H): 100 pJ to compute, 100 pJ to transfer in. UNLIMITED slots.
+
+RULES:
+  1. Source nodes can be pebbled freely.
+  2. Other nodes require ALL predecessors to be currently pebbled.
+  3. You can remove pebbles to free capacity.
+  4. You can transfer pebbles between tiers (costs the destination tier's I/O cost).
+
+CURRENT STATE:
+Step 0 | Cost: 0 pJ | Done: False
+Registers: 0/3 | SRAM: 0/4 | HBM: 0/∞
+Sinks remaining: [4, 5, 6, 7, 8, 9]
+Pebbled: (none)
+Valid actions: 6
+
+VALID ACTIONS (6 available):
+  0: Action(PLACE, N0, register)
+  1: Action(PLACE, N0, sram)
+  2: Action(PLACE, N0, hbm)
+  3: Action(PLACE, N1, register)
+  4: Action(PLACE, N1, sram)
+  5: Action(PLACE, N1, hbm)
+
+Respond with a JSON action object:
+  {"action_type": "place"|"transfer"|"remove", "node_id": <int>, "tier": "<tier>"|null}
+
+Choose the action that minimizes total energy cost.
+
+────────────────────────────────────────────────────────────
+BASELINE BENCHMARK:
+────────────────────────────────────────────────────────────
+  greedy_cheapest           →    26 pJ  (13 steps, done=True)
+  topological_register      →    10 pJ  (17 steps, done=False)
+
+────────────────────────────────────────────────────────────
+INTERACTIVE DEMO (scripted):
+────────────────────────────────────────────────────────────
+  → Place N0 in register: cost=1 pJ
+  → Place N1 in register: cost=1 pJ
+====================================================
+  PEBBLING GAME — Step 2  |  Cost: 2 pJ
+====================================================
+  [R] Register: 2/3  [S] SRAM: 0/4  [H] HBM: 0/∞
+----------------------------------------------------
+  INPUT  │ [R]N0  [R]N1
+         │   │      │  
+  L1     │ (*)N2
+         │   │  
+  L2     │ ( )N3
+         │   │  
+  OUTPUT │ ( )N4  ( )N5  ( )N6  ( )N7  ( )N8  ( )N9
+----------------------------------------------------
+  Sinks remaining: 6 / 6
+  Valid actions: 9
+====================================================
+
+Game state as JSON (first 500 chars):
+{
+  "dag": {
+    "nodes": [
+      {
+        "id": 0,
+        "depth": 0,
+        "label": "N0",
+        "predecessors": [],
+        "successors": [
+          2
+        ],
+        "is_source": true,
+        "is_sink": false
+      },
+      {
+        "id": 1,
+        "depth": 0,
+        "label": "N1",
+        "predecessors": [],
+        "successors": [
+          4,
+          7
+        ],
+        "is_source": true,
+        "is_sink": false
+      },
+      {
+        "id": 2,
+        "depth": 1,
+      ...
+
+=== 4. RUN BUILT-IN CLI AGENTS (heuristic, random, tournament) ===
+
+Starting game: 10 nodes, depth 4, seed 42
+Registers: 3, SRAM: 4
+Sinks to pebble: [4, 5, 6, 7, 8, 9]
+====================================================
+  PEBBLING GAME — Step 0  |  Cost: 0 pJ
+====================================================
+  [R] Register: 0/3  [S] SRAM: 0/4  [H] HBM: 0/∞
+----------------------------------------------------
+  INPUT  │ (*)N0  (*)N1
+         │   │      │  
+  L1     │ ( )N2
+         │   │  
+  L2     │ ( )N3
+         │   │  
+  OUTPUT │ ( )N4  ( )N5  ( )N6  ( )N7  ( )N8  ( )N9
+----------------------------------------------------
+  Sinks remaining: 6 / 6
+  Valid actions: 6
+====================================================
+  Step 5: cost=4 pJ, sinks_left=6
+  Step 10: cost=21 pJ, sinks_left=4
+  Step 15: cost=32 pJ, sinks_left=1
+
+==================================================
+  FINAL: 37 pJ in 16 steps (0.0s)
+==================================================
+====================================================
+  PEBBLING GAME — Step 16  |  Cost: 37 pJ
+====================================================
+  [R] Register: 3/3  [S] SRAM: 4/4  [H] HBM: 0/∞
+----------------------------------------------------
+  INPUT  │ (*)N0  (*)N1
+         │   │      │  
+  L1     │ ( )N2
+         │   │  
+  L2     │ [S]N3
+         │   │  
+  OUTPUT │ [R]N4  [R]N5  [R]N6  [S]N7  [S]N8  [S]N9
+----------------------------------------------------
+  Sinks remaining: 0 / 6
+  Valid actions: 0
+====================================================
+
+Starting game: 10 nodes, depth 4, seed 42
+Registers: 3, SRAM: 4
+Sinks to pebble: [4, 5, 6, 7, 8, 9]
+====================================================
+  PEBBLING GAME — Step 0  |  Cost: 0 pJ
+====================================================
+  [R] Register: 0/3  [S] SRAM: 0/4  [H] HBM: 0/∞
+----------------------------------------------------
+  INPUT  │ (*)N0  (*)N1
+         │   │      │  
+  L1     │ ( )N2
+         │   │  
+  L2     │ ( )N3
+         │   │  
+  OUTPUT │ ( )N4  ( )N5  ( )N6  ( )N7  ( )N8  ( )N9
+----------------------------------------------------
+  Sinks remaining: 6 / 6
+  Valid actions: 6
+====================================================
+  Step 5: cost=111 pJ, sinks_left=6
+  Step 10: cost=217 pJ, sinks_left=6
+  Step 15: cost=328 pJ, sinks_left=5
+  Step 20: cost=438 pJ, sinks_left=3
+  Step 25: cost=449 pJ, sinks_left=2
+  Step 30: cost=654 pJ, sinks_left=3
+  Step 35: cost=864 pJ, sinks_left=3
+  Step 40: cost=875 pJ, sinks_left=2
+  Step 45: cost=1075 pJ, sinks_left=3
+  Step 50: cost=1276 pJ, sinks_left=4
+  Step 55: cost=1476 pJ, sinks_left=5
+  Step 60: cost=1491 pJ, sinks_left=4
+  Step 65: cost=1697 pJ, sinks_left=4
+  Step 70: cost=1707 pJ, sinks_left=4
+  Step 75: cost=2012 pJ, sinks_left=2
+  Step 80: cost=2112 pJ, sinks_left=2
+  Step 85: cost=2317 pJ, sinks_left=3
+  Step 90: cost=2417 pJ, sinks_left=5
+  Step 95: cost=2622 pJ, sinks_left=6
+  Step 100: cost=2628 pJ, sinks_left=6
+  Step 105: cost=2735 pJ, sinks_left=6
+  Step 110: cost=2846 pJ, sinks_left=4
+  Step 115: cost=3047 pJ, sinks_left=3
+  Step 120: cost=3257 pJ, sinks_left=2
+  Step 125: cost=3362 pJ, sinks_left=3
+  Step 130: cost=3567 pJ, sinks_left=3
+  Step 135: cost=3572 pJ, sinks_left=3
+  Step 140: cost=3772 pJ, sinks_left=4
+  Step 145: cost=3782 pJ, sinks_left=6
+  Step 150: cost=4088 pJ, sinks_left=6
+  Step 155: cost=4193 pJ, sinks_left=5
+  Step 160: cost=4293 pJ, sinks_left=6
+  Step 165: cost=4503 pJ, sinks_left=3
+  Step 170: cost=4808 pJ, sinks_left=3
+  Step 175: cost=4909 pJ, sinks_left=4
+  Step 180: cost=5020 pJ, sinks_left=3
+  Step 185: cost=5225 pJ, sinks_left=2
+  Step 190: cost=5335 pJ, sinks_left=3
+  Step 195: cost=5440 pJ, sinks_left=4
+  Step 200: cost=5640 pJ, sinks_left=5
+  Step 205: cost=5746 pJ, sinks_left=4
+  Step 210: cost=5851 pJ, sinks_left=4
+  Step 215: cost=6061 pJ, sinks_left=2
+  Step 220: cost=6076 pJ, sinks_left=1
+
+==================================================
+  FINAL: 6277 pJ in 223 steps (0.0s)
+==================================================
+====================================================
+  PEBBLING GAME — Step 223  |  Cost: 6277 pJ
+====================================================
+  [R] Register: 2/3  [S] SRAM: 3/4  [H] HBM: 4/∞
+----------------------------------------------------
+  INPUT  │ [R]N0  [S]N1
+         │   │      │  
+  L1     │ (*)N2
+         │   │  
+  L2     │ [R]N3
+         │   │  
+  OUTPUT │ [S]N4  [H]N5  [S]N6  [H]N7  [H]N8  [H]N9
+----------------------------------------------------
+  Sinks remaining: 0 / 6
+  Valid actions: 0
+====================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GAME 1/5  (seed=1000)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Agent: random
+    → 8079 pJ (295 steps)
+
+  Agent: heuristic
+    → 29 pJ (18 steps)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GAME 2/5  (seed=1001)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Agent: random
+    → 2921 pJ (95 steps)
+
+  Agent: heuristic
+    → 50 pJ (23 steps)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GAME 3/5  (seed=1002)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Agent: random
+    → 11089 pJ (359 steps)
+
+  Agent: heuristic
+    → 228 pJ (17 steps)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GAME 4/5  (seed=1003)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Agent: random
+    → 16388 pJ (565 steps)
+
+  Agent: heuristic
+    → 233 pJ (18 steps)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GAME 5/5  (seed=1004)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Agent: random
+    → 2906 pJ (78 steps)
+
+  Agent: heuristic
+    → 145 pJ (22 steps)
+
+════════════════════════════════════════════════════════════
+  TOURNAMENT RESULTS (5 games)
+════════════════════════════════════════════════════════════
+  random                     avg= 8276.6  best= 2906  worst=16388
+  heuristic                  avg=  137.0  best=   29  worst=  233
+
+=== 5. SWEEP PROFILES AND DIFFICULTY PRESETS ===
+Hardware profiles: {'h100': {'register': {'cost_per_step': 1, 'io_transfer_cost': 0}, 'sram': {'cost_per_step': 5, 'io_transfer_cost': 5}, 'hbm': {'cost_per_step': 100, 'io_transfer_cost': 100}}, 'tutorial': {'register': {'cost_per_step': 1, 'io_transfer_cost': 0}, 'sram': {'cost_per_step': 3, 'io_transfer_cost': 3}, 'hbm': {'cost_per_step': 10, 'io_transfer_cost': 10}}, 'extreme': {'register': {'cost_per_step': 1, 'io_transfer_cost': 0}, 'sram': {'cost_per_step': 10, 'io_transfer_cost': 10}, 'hbm': {'cost_per_step': 500, 'io_transfer_cost': 500}}}
+
+Preset sweep (seed=42, profile=h100):
+Preset           Nodes Reg SRAM | GreedyCost GreedyDone | TopoCost TopoDone | HeurCost HeurDone HeurSteps
+tutorial_preset      6   3    4 |         18       True |        6    False |       11     True         9
+easy_preset          8   3    5 |         28       True |        8    False |       17     True        12
+medium_preset       12   3    4 |        281       True |       17    False |      233     True        18
+hard_preset         16   2    3 |        264       True |       36    False |      734     True        25
+expert_preset       20   2    3 |        264       True |       45    False |      845     True        32
+
+Profile sweep on medium_preset (nodes=12, depth=5, fan_in=3, reg=3, sram=4, seed=42):
+  profile=h100      : greedy=281 pJ (steps=500), topo=17 pJ (steps=22), heuristic=233 pJ (steps=18)
+  profile=tutorial  : greedy=65 pJ (steps=12), topo=15 pJ (steps=22), heuristic=43 pJ (steps=18)
+  profile=extreme   : greedy=316 pJ (steps=500), topo=22 pJ (steps=22), heuristic=1058 pJ (steps=18)
+FINISHED rc=0
