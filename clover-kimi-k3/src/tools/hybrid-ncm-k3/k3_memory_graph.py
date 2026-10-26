@@ -604,7 +604,7 @@ class MemoryContextPackage:
     token_budget: int
     estimated_tokens_used: int
 
-    def render_for_k3(self) -> str:
+    def render_for_k3(self, compact: bool = False) -> str:
         """Renders a bounded, explainable context package for Clover Kimi K3 that preserves
         epistemic status, source evidence, relationship paths, superseding corrections, and unresolved contradictions."""
         if not self.items:
@@ -617,7 +617,8 @@ class MemoryContextPackage:
             "Never silently flatten 'challenges' or 'unresolved_with' contradictions into agreement.",
         ]
 
-        for idx, item in enumerate(self.items, start=1):
+        items_to_render = self.items[:4] if compact else self.items
+        for idx, item in enumerate(items_to_render, start=1):
             e = item.entry
             status_badge = f"status={e.status}"
             if item.superseded_by_id:
@@ -637,23 +638,25 @@ class MemoryContextPackage:
                 f"  Retrieval Path: {item.relationship_path} ({item.retrieval_reason})"
             )
             body_lines = [header, f"  Summary: {e.summary}"]
-            if e.content and e.content != e.summary:
+            if not compact and e.content and e.content != e.summary:
                 body_lines.append(f"  Content: {e.content}")
             if e.source_evidence:
-                body_lines.append(f"  Original Source Evidence: {e.source_evidence}")
+                ev_txt = e.source_evidence[:260] if compact else e.source_evidence
+                body_lines.append(f"  Original Source Evidence: {ev_txt}")
             if item.contradictions:
                 c_strs = [
                     f"{c['relation']} with {c['other_id']} ({c.get('note') or 'contested/unresolved'})"
-                    for c in item.contradictions
+                    for c in item.contradictions[:2]
                 ]
                 body_lines.append(f"  Contradictions / Open Tensions: {'; '.join(c_strs)}")
             if e.uncertainty_notes:
-                body_lines.append(f"  Uncertainty Notes: {'; '.join(e.uncertainty_notes)}")
+                u_list = e.uncertainty_notes[:1] if compact else e.uncertainty_notes
+                body_lines.append(f"  Uncertainty Notes: {'; '.join(u_list)}")
             blocks.append("\n".join(body_lines))
 
         if self.evolution_chains:
             chain_lines = ["--- Traceable Interpretation & Correction Chains ---"]
-            for c_idx, chain in enumerate(self.evolution_chains, start=1):
+            for c_idx, chain in enumerate(self.evolution_chains[:2], start=1):
                 steps_fmt = "  -->  ".join(
                     f"{node.id} [{node.entry_type}, {node.role_in_chain}, epistemic={node.epistemic_status}, created={node.created_at}]"
                     for node in chain
@@ -663,7 +666,7 @@ class MemoryContextPackage:
 
         if self.active_contradictions:
             conf_lines = ["--- Unresolved / Contested Claims (Do Not Flatten Into Agreement) ---"]
-            for c in self.active_contradictions:
+            for c in self.active_contradictions[:3]:
                 conf_lines.append(
                     f"  • {c['source']} --[{c['type']}]--> {c['target']}: {c.get('note') or 'Contested interpretation retained'}"
                 )
@@ -937,6 +940,7 @@ class CloverMemoryGraphStore:
         direction: Literal["both", "outgoing", "incoming"] = "both",
         relation_types: Sequence[str] | None = None,
         max_nodes: int = 32,
+        min_similar_confidence: float = 0.0,
     ) -> list[TraversalResultNode]:
         """Performs deterministic, cycle-safe BFS traversal across directory boundaries starting from `seed_ids`.
         Prioritizes `corrects`, `refines`, `challenges`, and `unresolved_with` edges ahead of generic similarity."""
@@ -961,6 +965,9 @@ class CloverMemoryGraphStore:
             if direction in ("both", "outgoing"):
                 for r in self.outgoing.get(cur_id, []):
                     if r.type in allowed_rels and r.target in self.entries:
+                        if r.type == "similar_to" and min_similar_confidence > 0.0:
+                            if r.confidence < min_similar_confidence or r.context_scope.endswith("_analogy_only"):
+                                continue
                         prio = RELATIONSHIP_TRAVERSAL_PRIORITY.get(r.type, 50)
                         step = TraversalStep(
                             from_id=cur_id,
@@ -976,6 +983,9 @@ class CloverMemoryGraphStore:
             if direction in ("both", "incoming"):
                 for r in self.incoming.get(cur_id, []):
                     if r.type in allowed_rels and r.source in self.entries:
+                        if r.type == "similar_to" and min_similar_confidence > 0.0:
+                            if r.confidence < min_similar_confidence or r.context_scope.endswith("_analogy_only"):
+                                continue
                         prio = RELATIONSHIP_TRAVERSAL_PRIORITY.get(r.type, 50)
                         step = TraversalStep(
                             from_id=cur_id,
@@ -1421,6 +1431,43 @@ class CloverMemoryGraphStore:
         k1 = 1.5
         b = 0.75
 
+        # Structural diagnostic cue rules that map cross-domain problem patterns to concept bridge nodes
+        structural_concept_rules: dict[str, tuple[tuple[str, ...], ...]] = {
+            "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001": (
+                ("flat", "plateau", "unchanged", "invariant", "same hit rate", "constant across"),
+                ("capacity", "capacities", "budget", "size", "setting", "settings", "sweep", "entries", "slots"),
+                ("cannot help", "no effect", "dead end", "useless", "suspect", "pool", "shared", "global"),
+            ),
+            "MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001": (
+                ("0 hits", "zero hits", "0%", "never hits", "0 paths", "zero seeds", "empty evidence"),
+                ("repeat", "repeats", "repeating", "same token", "recurrent", "drift", "threshold", "filter", "workload"),
+                ("prove", "proves", "useless", "dead", "never", "cannot", "why"),
+            ),
+            "MEM-CONCEPT-HARDWARE-SCOPED-VERDICTS-001": (
+                ("4-bit", "quantisation", "quantization", "nibble", "unpack", "unpacking"),
+                ("cpu", "gpu", "rtx 3090", "hardware", "bandwidth", "dram", "pcie"),
+            ),
+            "MEM-OBS-ONTORAG-FANOUT-FLOODING-001": (
+                ("1-hop", "length(path)", "length(p.edges)", "path length", "limit"),
+                ("2-hop", "affects", "fan-out", "flooding", "root-cause", "causal", "capec"),
+            ),
+            "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001": (
+                ("prefix", "shadow", "shadowing", "1-char", "shorter"),
+                ("elif", "branch", "tokenizer", "dispatch", "2-char", "longer"),
+            ),
+            "MEM-CONCEPT-SYNTHETIC-TIMING-VS-MEANING-001": (
+                ("synthetic", "random", "micro-benchmark", "microbenchmark", "standalone", "isolated"),
+                ("in-layer", "in situ", "real", "router", "over-predict", "under-predict"),
+            ),
+        }
+
+        # Generic single words in concept slugs that should not trigger `concept_match` alone without a second slug token
+        generic_slug_parts = {
+            "inside", "outside", "cache", "gpu", "cpu", "rust", "layer", "hit", "rate",
+            "host", "path", "model", "code", "test", "data", "system", "graph",
+            "memory", "total", "cluster", "tokens", "token", "number", "numbers",
+        }
+
         scored: list[tuple[float, str, str]] = []
         for eid, e in self.entries.items():
             if allowed_types and e.entry_type not in allowed_types:
@@ -1437,15 +1484,31 @@ class CloverMemoryGraphStore:
                 score += 50.0
                 reasons.append(f"direct_id({eid})")
 
-            # Signal 2: Concept & tag match
-            matched_concepts = [
-                c for c in e.concepts
-                if c.lower() in q_low or any( part in q_tok_set for part in re.findall(r"[a-z0-9]{3,}", c.lower()) if part not in MEMORY_STOPWORDS )
-            ]
+            # Signal 1b: Structural diagnostic cue match on Concept / Observation bridge nodes
+            if eid in structural_concept_rules:
+                cue_groups = structural_concept_rules[eid]
+                matched_g = sum(1 for grp in cue_groups if any(term in q_low for term in grp))
+                if matched_g >= len(cue_groups):
+                    score += 32.0
+                    reasons.append(f"structural_cue({eid}:{matched_g}/{len(cue_groups)})")
+                elif len(cue_groups) >= 3 and matched_g >= 2:
+                    score += 22.0
+                    reasons.append(f"structural_cue({eid}:{matched_g}/{len(cue_groups)})")
+
+            # Signal 2: Concept & tag match (requires either exact concept phrase OR >=2 matched parts of a concept slug,
+            # or a specific non-generic slug token)
             exact_concept_hits = [
                 c for c in e.concepts
                 if c.lower().replace("-", " ").replace("_", " ") in q_low.replace("-", " ").replace("_", " ")
             ]
+            matched_concepts: list[str] = []
+            for c in e.concepts:
+                parts = [p for p in re.findall(r"[a-z0-9]{3,}", c.lower()) if p not in MEMORY_STOPWORDS]
+                hit_parts = [p for p in parts if p in q_tok_set]
+                non_gen_hits = [p for p in hit_parts if p not in generic_slug_parts and df.get(p, 0) <= max(3, n_docs // 3)]
+                if len(hit_parts) >= 2 or (len(parts) == 1 and len(non_gen_hits) == 1) or len(non_gen_hits) >= 1:
+                    matched_concepts.append(c)
+
             if exact_concept_hits:
                 score += 18.0 * len(exact_concept_hits)
                 reasons.append(f"concept_exact({', '.join(exact_concept_hits[:2])})")
@@ -1453,22 +1516,30 @@ class CloverMemoryGraphStore:
                 score += 6.0 * len(matched_concepts)
                 reasons.append(f"concept_match({', '.join(matched_concepts[:2])})")
 
-            matched_tags = [t for t in e.tags if t.lower() in q_tok_set or t.lower() in q_low]
+            matched_tags = [
+                t for t in e.tags
+                if (t.lower() in q_tok_set or t.lower() in q_low)
+                and t.lower() not in generic_slug_parts
+            ]
             if matched_tags:
-                score += 4.5 * len(matched_tags)
+                score += 3.5 * len(matched_tags)
                 reasons.append(f"tag_match({', '.join(matched_tags[:2])})")
 
             # Signal 3: Multi-word phrase / quote overlap against title, summary, or original source evidence
             for i in range(len(q_tokens) - 1):
-                bigram = f"{q_tokens[i]} {q_tokens[i + 1]}"
+                w_a, w_b = q_tokens[i], q_tokens[i + 1]
+                # Skip bigrams composed solely of high-frequency generic slug tokens
+                if w_a in generic_slug_parts and w_b in generic_slug_parts:
+                    continue
+                bigram = f"{w_a} {w_b}"
                 if len(bigram) >= 7:
                     if bigram in e.title.lower() or bigram in e.summary.lower():
                         score += 8.0
-                        if "phrase_match" not in reasons:
+                        if not any(r.startswith("phrase_match(") for r in reasons):
                             reasons.append(f"phrase_match({bigram!r})")
                     elif bigram in e.source_evidence.lower() or bigram in e.content.lower():
                         score += 5.5
-                        if "evidence_phrase" not in reasons:
+                        if not any(r.startswith("evidence_phrase(") for r in reasons):
                             reasons.append(f"evidence_phrase({bigram!r})")
 
             # Signal 4: BM25 lexical score over content words
@@ -1534,12 +1605,13 @@ class CloverMemoryGraphStore:
                 estimated_tokens_used=0,
             )
 
-        # 1. Traverse graph from seed_ids up to `max_depth`
+        # 1. Traverse graph from seed_ids up to `max_depth` (skipping weak `<0.7` `similar_to` analogy distractors)
         traversed_nodes = self.traverse(
             seed_ids=seed_ids,
             max_depth=max_depth,
             direction="both",
             max_nodes=max(max_entries * 3, 20),
+            min_similar_confidence=0.7,
         )
 
         # 2. For any matched or traversed entry that participates in a `corrects` / `refines` / `derived_from`
@@ -1558,7 +1630,7 @@ class CloverMemoryGraphStore:
                     evolution_chains.append(chain)
                 base_sc = seed_scores.get(tnode.entry.id, 10.0)
                 for cnode in chain:
-                    if cnode.role_in_chain == "active_correction":
+                    if cnode.role_in_chain in ("active_correction", "refinement"):
                         chain_member_boost[cnode.id] = (
                             max(chain_member_boost.get(cnode.id, (0.0, ""))[0], base_sc + 12.0),
                             f"superseding_correction_in_chain({tnode.entry.id})",
@@ -2410,6 +2482,1410 @@ def build_default_memory_entries() -> list[tuple[str, MemoryEntry]]:
                 ],
             ),
         ),
+
+        # ===================================================================
+        # COLLECTIVE EXPERIENCE SEED v0.1 — Agent 1 (Cross-Domain Principles,
+        # Research Findings & Contradictions) + Agent 2 (Clover Kimi K3, NCM,
+        # HybridAgent & Generative Compilation Experience)
+        # ===================================================================
+
+        # 13. Cross-Domain Principle: Flat Parameter Response Implicates Structure
+        (
+            "concepts/flat-parameter-response-diagnosis-001.md",
+            MemoryEntry(
+                id="MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+                title="Flat Parameter Response Implicates Structure, Not Absence of Effect",
+                entry_type="concept",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=[
+                    "flat-parameter-response",
+                    "structural-bottleneck-diagnosis",
+                    "cyclic-sweep-eviction",
+                    "per-layer-partitioning",
+                ],
+                tags=["principle", "systems", "measurement", "diagnosis"],
+                created_at="2026-10-09T16:00:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="clover-operating-principles.md#2026-10-09",
+                    actor="human_and_assistant",
+                    recorded_at="2026-10-09T16:00:00Z",
+                ),
+                summary=(
+                    "When varying a capacity or budget parameter across a wide range yields a completely flat "
+                    "metric, suspect the structure being measured (such as shared-pool cyclic eviction across stages/layers "
+                    "or unallocated capacity) before concluding the underlying mechanism has no effect; test partitioning the "
+                    "same total budget per stage/layer."
+                ),
+                content=(
+                    "A flat response curve across orders of magnitude of a parameter (e.g., global expert cache "
+                    "hit rate remaining invariant at 23.3% across capacities 512, 1024, 2048, and 4096) indicates "
+                    "that the swept parameter is not the binding constraint under the current topology. In a multi-stage "
+                    "or 92-layer pipeline, any unpartitioned global LRU pool smaller than the full working set suffers "
+                    "cyclic-sweep eviction before Stage/Layer 1 is revisited. Partitioning the exact same total budget "
+                    "per stage or per layer eliminates cross-stage eviction and restores monotonic scaling (raising "
+                    "Kimi K3 expert cache hit rate from 23.3% to 48.0% at the same 51.7 GB budget)."
+                ),
+                source_evidence=(
+                    "Measured on Kimi K3 92-layer MoE (2026-10-09, 51.7 GB budget): global shared LRU pool gave "
+                    "23.3% hit rate flat across 512..4096 entries; partitioning the same 51.7 GB per layer "
+                    "raised hit rate from 23.3% to 48.0%."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="derived_from",
+                        target="MEM-OBS-GLOBAL-CACHE-FLAT-001",
+                        provenance="clover-operating-principles.md#2026-10-09",
+                        confidence=1.0,
+                        context_scope="structural_measurement_diagnosis",
+                        created_at="2026-10-09T16:00:00Z",
+                        note="Generalized from the flat 23.3% global expert cache sweep across capacities 512..4096.",
+                    ),
+                    MemoryRelationship(
+                        type="derived_from",
+                        target="MEM-CORR-PER-LAYER-PARTITION-002",
+                        provenance="clover-operating-principles.md#2026-10-09",
+                        confidence=1.0,
+                        context_scope="structural_measurement_diagnosis",
+                        created_at="2026-10-09T16:00:00Z",
+                        note="Validated by the per-layer partitioning fix that jumped hit rate from 23.3% to 48.0%.",
+                    ),
+                    MemoryRelationship(
+                        type="exemplifies",
+                        target="MEM-CORR-PER-LAYER-PARTITION-002",
+                        provenance="clover-operating-principles.md#2026-10-09",
+                        confidence=1.0,
+                        context_scope="expert_cache_design",
+                        created_at="2026-10-09T16:00:00Z",
+                        note="Per-layer cache partitioning is the canonical instance of fixing structure rather than abandoning the lever.",
+                    ),
+                    MemoryRelationship(
+                        type="challenges",
+                        target="MEM-HYP-CACHE-DEAD-END-001",
+                        provenance="clover-operating-principles.md#2026-10-09",
+                        confidence=1.0,
+                        context_scope="expert_cache_design",
+                        created_at="2026-10-09T16:00:00Z",
+                        note="Identifies the diagnostic fallacy that led to prematurely rejecting expert caching.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "A flat curve can still reflect genuine absence of effect once structural bottlenecks (eviction topology, zero allocation, and filter truncation) are independently ruled out."
+                ],
+            ),
+        ),
+
+        # 14. Cross-Domain Principle: Zero Signal from an Incapable Instrument
+        (
+            "concepts/instrument-zero-denominator-001.md",
+            MemoryEntry(
+                id="MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001",
+                title="Zero Signal from an Incapable Instrument Is Not Evidence Against the Mechanism",
+                entry_type="concept",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=[
+                    "instrument-validity",
+                    "zero-denominator-fallacy",
+                    "kda-state-drift",
+                    "zero-allocation-cache",
+                ],
+                tags=["principle", "measurement", "verification", "instrumentation", "epistemology"],
+                created_at="2026-10-16T14:00:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="clover-operating-principles.md#2026-10-16; commit:58497d5",
+                    actor="human_and_assistant",
+                    recorded_at="2026-10-16T14:00:00Z",
+                ),
+                summary=(
+                    "A test workload or filter that structurally cannot trigger a mechanism (or a table allocated "
+                    "at size zero) provides zero evidence against the mechanism; always verify table allocation and "
+                    "test with a workload matching the key semantics (such as replaying an identical full request)."
+                ),
+                content=(
+                    "Before concluding that a mechanism never fires or an event is absent, verify that the test "
+                    "instrument is structurally capable of observing it. Three verified failure modes illustrate "
+                    "this rule: (1) testing an activation-vector-keyed expert result cache by repeating one token "
+                    "64 times inside a single sequence produced 0 hits because recurrent KDA state drifts at every "
+                    "position, whereas replaying the identical full request (A/B/A) hit 30,912 times and ran 3.27x "
+                    "faster, bit-identical; (2) under K3_PAYLOAD_RAM=1 a double-counted payload left the cache at "
+                    "zero allocation, making miss counts vacuous; (3) an awk filter keeping only records with "
+                    "max-change > 0 hid a present no-op stage and falsely reported the stage as absent."
+                ),
+                source_evidence=(
+                    "1. Expert result cache test (commit 58497d5, 2026-10-16): 64 repeated tokens in one sequence -> "
+                    "0 hits / 113,344 misses (recurrent KDA state drift); A/B/A replay of identical request -> 30,912 hits, "
+                    "3.27x speedup (28.57s -> 8.74s), bit-identical.\n"
+                    "2. Layer trace filter (2026-10-11): awk predicate `max_change > 0` dropped no-op stage 20 records."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+                        provenance="clover-operating-principles.md#2026-10-16",
+                        confidence=0.95,
+                        context_scope="measurement_methodology",
+                        created_at="2026-10-16T14:00:00Z",
+                        note="Sibling measurement principle: both prevent mistaking an instrument/topology limitation for absence of the underlying phenomenon.",
+                    ),
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-CORR-EXPERT-RESULT-CACHE-REPLAY-001",
+                        provenance="commit:58497d5",
+                        confidence=1.0,
+                        context_scope="expert_result_cache_design",
+                        created_at="2026-10-16T14:00:00Z",
+                        note="Explains why intra-sequence token repetition cannot hit a full-activation-keyed cache and why full-request replay is required.",
+                    ),
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-OBS-HARD-COSINE-THRESHOLD-DROPOUT-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-3",
+                        confidence=0.95,
+                        context_scope="entity_linking_threshold",
+                        created_at="2026-10-25T16:00:00Z",
+                        note="Explains why a hard cosine >= 0.35 filter on raw code queries acts as a zero-seed gate for 30% of queries.",
+                    ),
+                ],
+            ),
+        ),
+
+        # 15. Cross-Domain Principle: Synthetic Input Measures Timing, Never Semantic Meaning
+        (
+            "concepts/synthetic-timing-vs-semantic-meaning-001.md",
+            MemoryEntry(
+                id="MEM-CONCEPT-SYNTHETIC-TIMING-VS-MEANING-001",
+                title="Synthetic Input Measures Timing, Never Semantic Meaning",
+                entry_type="concept",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=[
+                    "synthetic-vs-real-activations",
+                    "semantic-observer-verification",
+                    "in-situ-measurement",
+                    "micro-benchmark",
+                ],
+                tags=["principle", "measurement", "activations", "routing", "verification"],
+                created_at="2026-10-11T18:00:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="clover-operating-principles.md#2026-10-11",
+                    actor="human_and_assistant",
+                    recorded_at="2026-10-11T18:00:00Z",
+                ),
+                summary=(
+                    "Synthetic or random tensors are valid for timing harnesses, but invert semantic properties "
+                    "(router spread, attention norm contribution) and can mispredict kernel speedups when real "
+                    "weights are non-uniform; derive semantic observers from verified gate harnesses and re-measure in situ."
+                ),
+                content=(
+                    "Timing harnesses and semantic observers have opposite input requirements. Feeding random "
+                    "activations into a Kimi K3 layer tracer produced uniform router weights and an attention norm "
+                    "contribution of only 0.6% of the residual — both artifacts of random vectors. On real model "
+                    "activations inherited from the verified gate harness, router weights spread 6.6x and attention "
+                    "magnitude was comparable to the input residual. Similarly, a standalone kernel harness fed "
+                    "uniformly random palette indices predicted 1.68x speedup whereas real non-uniform weights in "
+                    "situ delivered 2.2x."
+                ),
+                source_evidence=(
+                    "Measured on Kimi K3 (2026-10-11): random input -> uniform router spread (1.0x), attention "
+                    "contribution 0.6% of norm; real gate-verified activations -> 6.6x router spread, attention "
+                    "comparable to input norm. Standalone random-index kernel benchmark predicted 1.68x vs. "
+                    "2.2x measured in situ on real weights."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001",
+                        provenance="clover-operating-principles.md#2026-10-11",
+                        confidence=0.9,
+                        context_scope="measurement_methodology",
+                        created_at="2026-10-11T18:00:00Z",
+                        note="Both govern instrument validity: synthetic inputs corrupt semantic observables just as incapable workloads corrupt hit counts.",
+                    ),
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-OBS-ISOLATED-MICROBENCH-BIDIRECTIONAL-DRIFT-001",
+                        provenance="clover-operating-principles.md#2026-10-11",
+                        confidence=0.95,
+                        context_scope="in_situ_verification",
+                        created_at="2026-10-11T18:00:00Z",
+                        note="Explains the under-prediction half of isolated micro-benchmarks when random palette indices replace real weight distributions.",
+                    ),
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-EXP-RUST-SLOTCACHE-001",
+                        provenance="commit:178d3c1",
+                        confidence=0.95,
+                        context_scope="in_situ_verification",
+                        created_at="2026-10-25T19:30:00Z",
+                        note="Motivates full 93-layer in-situ verification (`K3Full93Chain`) alongside standalone unit tests.",
+                    ),
+                ],
+            ),
+        ),
+
+        # 16. Cross-Domain Principle: Performance Ratios Across Hardware Regimes
+        (
+            "concepts/hardware-scoped-performance-verdicts-001.md",
+            MemoryEntry(
+                id="MEM-CONCEPT-HARDWARE-SCOPED-VERDICTS-001",
+                title="Scope Every Performance Verdict to Its Exact Hardware and Kernel Regime",
+                entry_type="concept",
+                epistemic_status="observed",
+                status="active",
+                concepts=[
+                    "hardware-scoped-verdict",
+                    "quantisation",
+                    "nibble-unpack",
+                    "gpu-supply-bandwidth",
+                ],
+                tags=["principle", "hardware", "performance", "quantisation", "scope"],
+                created_at="2026-09-23T17:00:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="conversation",
+                    source_ref="clover-operating-principles.md#2026-09-23; clover-kimi-k3-cpu-context.md; clover-kimi-k3-gpu-context.md",
+                    actor="human_and_assistant",
+                    recorded_at="2026-09-23T17:00:00Z",
+                ),
+                summary=(
+                    "A performance measurement on one machine or kernel is not a universal property of the method: "
+                    "scope every performance verdict to its exact hardware and kernel in the same sentence, and "
+                    "explicitly mark cross-hardware transfer (such as CPU 4-bit trunk decode to GPU) as unmeasured until tested."
+                ),
+                content=(
+                    "On an early CPU kernel, 8-bit to 4-bit trunk quantisation only moved decode from 4.1 to 4.0 s/token "
+                    "(-2.4%) due to nibble unpack overhead, whereas a later CPU kernel (`LB_Q4`, commit 74c1c0e) reduced "
+                    "decode from 3.326 to 2.716 s/token (-18.3%) with a quality tradeoff (identical on 14/34 decode-only "
+                    "prompts, 8/34 whole-trunk). On the 8 x RTX 3090 GPU box, the measured bottleneck for 4-bit experts "
+                    "is host-to-GPU supply bandwidth (4.95 s/layer from NVMe, 0.95 s/layer from RAM vs 0.23-0.29 s compute), "
+                    "while a 4-bit vs 8-bit trunk decode A/B on GPU remains unmeasured."
+                ),
+                source_evidence=(
+                    "1. Creator principle (2026-09-23): \"cpu processing is not how gpu will process it so the compounding can look very different.\"\n"
+                    "2. CPU Step 3 (`heterogeneous-inference.md`): 4.1 -> 4.0 s/token (-2.4%).\n"
+                    "3. CPU `LB_Q4` (`commit 74c1c0e`, `clover-kimi-k3-cpu-context.md`): 3.326 -> 2.716 s/token (-18.3%).\n"
+                    "4. GPU 8x RTX 3090 (`clover-kimi-k3-gpu-context.md`): expert supply 4.95 s/layer (NVMe) / 0.95 s/layer (RAM) vs 0.23-0.29 s compute; Layer 0 DRAM throughput 5.6%; GPU 4-bit trunk A/B unmeasured."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-CORR-GPU-NIBBLE-UNPACK-BANDWIDTH-001",
+                        provenance="clover-operating-principles.md#2026-09-23",
+                        confidence=1.0,
+                        context_scope="quantisation_verdict_scope",
+                        created_at="2026-09-29T05:30:10Z",
+                        note="Provides the hardware-scoping rule that corrects hardware-unscoped quantisation verdicts.",
+                    ),
+                    MemoryRelationship(
+                        type="challenges",
+                        target="MEM-HYP-QUANT-DEAD-END-ALL-HW-001",
+                        provenance="clover-operating-principles.md#2026-09-23",
+                        confidence=1.0,
+                        context_scope="quantisation_verdict_scope",
+                        created_at="2026-09-23T17:00:00Z",
+                        note="Refutes treating a single CPU kernel measurement as a universal hardware law.",
+                    ),
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+                        provenance="clover-operating-principles.md#2026-09-23",
+                        confidence=0.8,
+                        context_scope="measurement_methodology",
+                        created_at="2026-10-09T16:00:00Z",
+                        note="Both prevent overgeneralizing a local measurement into a universal negative claim.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "A direct GPU A/B comparing 4-bit vs 8-bit trunk decode has not yet been measured on the 8 x RTX 3090 box."
+                ],
+            ),
+        ),
+
+        # 17. Cross-Domain Principle: Short-Prefix Shadowing in Sequential Dispatch
+        (
+            "concepts/short-prefix-shadowing-dispatch-001.md",
+            MemoryEntry(
+                id="MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                title="Short-Prefix Shadowing in Sequential Dispatch and String Tokenizers",
+                entry_type="concept",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=[
+                    "prefix-shadow",
+                    "longest-prefix-first-matching",
+                    "generative-compilation",
+                    "statement-boundary-soundness",
+                ],
+                tags=["principle", "compiler", "tokenizer", "python", "humaneval", "bug-pattern"],
+                created_at="2026-10-25T21:00:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="docs/clover-generative-compilation-research-context.md#section-4.2",
+                    actor="system_measurement",
+                    recorded_at="2026-10-25T21:00:00Z",
+                ),
+                summary=(
+                    "In sequential `if/elif` dispatch or hand-written character-index tokenizers, testing a shorter "
+                    "prefix (such as `s[i] == 'o'`) before a longer prefix starting with the same character "
+                    "(`s[i:i+2] == 'o|'`) renders the longer branch unreachable dead code; always order longest-prefix-first."
+                ),
+                content=(
+                    "When a scanner inspects an unsplit string at index `i` using ordered conditional branches, "
+                    "any branch that matches a 1-character prefix (`s[i] == 'o'`) and advances `i += 1` intercepts "
+                    "every occurrence of a multi-character token (`'o|'`) that shares that prefix. In Clover Kimi K3's "
+                    "`CloverPythonGenerativeCompiler` (`_PythonStatementBoundaryAnalyzer`), this structural defect is "
+                    "detected at statement boundaries via `E_PY_PREFIX_SHADOW` in 0.68-0.70 ms as soon as the `elif` "
+                    "line is emitted, rolling back the loop header and prompting `HybridAgent` to emit longest-prefix-first "
+                    "dispatch (`s[i:i+2] == 'o|'` before `s[i] == 'o'`)."
+                ),
+                source_evidence=(
+                    "Live verification on `HumanEval/17` (`parse_music`, `docs/clover-generative-compilation-research-context.md`): "
+                    "`CloverPythonGenerativeCompiler` caught `error[E_PY_PREFIX_SHADOW] at line 26, col 9` (`music_string[i] == 'o'` "
+                    "before `music_string[i:i+2] == 'o|'`) in `0.68-0.70 ms` and solved `parse_music` natively on Rollback #1."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-EXP-GENERATIVE-COMPILATION-ROLLBACK-001",
+                        provenance="docs/clover-generative-compilation-research-context.md#section-4.2",
+                        confidence=1.0,
+                        context_scope="generative_compilation_humaneval",
+                        created_at="2026-10-25T21:00:00Z",
+                        note="Directly enabled native Rollback #1 self-correction on HumanEval/17.",
+                    ),
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-2",
+                        confidence=0.75,
+                        context_scope="structural_priority_ordering",
+                        created_at="2026-10-25T21:30:00Z",
+                        note="Structural analogue: sorting by 1-hop length before edge priority lets short leaf edges shadow 2-hop causal chains, just as 1-char prefixes shadow 2-char tokens.",
+                    ),
+                ],
+            ),
+        ),
+
+        # 18. Research Observation: 1-Hop High-Cardinality Leaf Edges (AFFECTS) Drown Out 2-Hop Causal Chains
+        (
+            "observations/obs-ontorag-fanout-flooding-001.md",
+            MemoryEntry(
+                id="MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
+                title="Observation: 1-Hop High-Cardinality Leaf Edges (`AFFECTS`) Drown Out 2-Hop Causal Chains When Sorted by Path Length First",
+                entry_type="observation",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=[
+                    "1-hop-fanout-flooding",
+                    "stratified-priority-traversal",
+                    "ontology-guided-graphrag",
+                    "causal-chain-recall",
+                ],
+                tags=["ontorag", "graphrag", "traversal", "cve", "cwe", "capec", "observation"],
+                created_at="2026-10-25T14:00:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="docs/clover-ontology-graphrag-research-context.md#finding-2",
+                    actor="system_measurement",
+                    recorded_at="2026-10-25T14:00:00Z",
+                ),
+                summary=(
+                    "Ordering candidate graph paths by `SORT LENGTH(p.edges), priority LIMIT K` allows high-cardinality "
+                    "1-hop leaf edges (such as 64-208 `AFFECTS` product/host edges) to fill the entire `LIMIT K` before "
+                    "any 2-hop causal/remediation path (`CVE -> CWE -> CAPEC`) is emitted."
+                ),
+                content=(
+                    "Executing the upstream `ontorag` replication package on `gpu` (`/home/usergpu/ontorag`) revealed "
+                    "two compounding defects (Findings 1 and 2): (1) `configs/default.yaml` omitted the Horn-derived "
+                    "`EXPLOITED_BY_ATTACK` (`CVE -> CAPEC`) edge from `traversal_edges`, forcing `CAPEC` attack "
+                    "patterns to be 2 hops away (`CVE --CAUSED_BY--> CWE --EXPLOITED_BY--> CAPEC`); and (2) "
+                    "`GraphTraversal.paths` sorted by `LENGTH(p.edges)` before `edge_priority` with `max_paths = 50`. "
+                    "For entities with many 1-hop leaf edges (`CVE-2023-44487` has 208 `AFFECTS` edges; `CVE-2023-4911` "
+                    "has 73; `CVE-2024-6387` has 64), 100% of the returned paths were 1-hop edges and 0 paths reached `CAPEC`."
+                ),
+                source_evidence=(
+                    "Measured on `/home/usergpu/ontorag` (`diagnose_three_findings.py`, 2026-10-25):\n"
+                    "- `CVE-2023-44487` (`208` `AFFECTS` edges): `50/50` paths are 1-hop `AFFECTS`; `0` 2-hop paths, `0` `CAPEC` paths.\n"
+                    "- `CVE-2023-4911` (`73` `AFFECTS` edges): `50/50` paths are 1-hop `AFFECTS`; `0` 2-hop paths, `0` `CAPEC` paths.\n"
+                    "- `CVE-2024-6387` (`64` `AFFECTS` edges): `50/50` paths are 1-hop (`2 CAUSED_BY + 48 AFFECTS`); `0` `CAPEC` paths."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="exemplifies",
+                        target="MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-2",
+                        confidence=0.95,
+                        context_scope="graph_traversal_budget",
+                        created_at="2026-10-25T14:00:00Z",
+                        note="Zero 2-hop CAPEC recall was caused by unstratified path-length sorting, not absence of CAPEC links in the graph.",
+                    ),
+                    MemoryRelationship(
+                        type="exemplifies",
+                        target="MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-1",
+                        confidence=0.95,
+                        context_scope="graph_traversal_budget",
+                        created_at="2026-10-25T14:00:00Z",
+                        note="1-hop session expansion without `EXPLOITED_BY_ATTACK` in `traversal_edges` structurally could not reach 2-hop CAPEC nodes.",
+                    ),
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-OBS-GLOBAL-CACHE-FLAT-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-2",
+                        confidence=0.85,
+                        context_scope="shared_budget_eviction_analogy",
+                        created_at="2026-10-25T14:00:00Z",
+                        note="Both are shared-budget flooding failures: 208 1-hop CPE edges evict 2-hop causal paths just as 92 layers evict a shared global LRU cache.",
+                    ),
+                ],
+            ),
+        ),
+
+        # 19. Research Correction: Stratified Edge-Priority Quotas Before Path-Length Sorting
+        (
+            "corrections/corr-stratified-priority-traversal-001.md",
+            MemoryEntry(
+                id="MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001",
+                title="Correction: Stratified Edge-Priority Ordering and Per-Relation Leaf Caps Restore 2-Hop Causal Chains",
+                entry_type="correction",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=[
+                    "stratified-priority-traversal",
+                    "1-hop-fanout-flooding",
+                    "ontology-guided-graphrag",
+                    "causal-chain-recall",
+                ],
+                tags=["ontorag", "graphrag", "correction", "traversal", "verified"],
+                created_at="2026-10-25T16:30:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="docs/clover-ontology-graphrag-research-context.md#step-5",
+                    actor="human_and_assistant",
+                    recorded_at="2026-10-25T16:30:00Z",
+                ),
+                summary=(
+                    "Sorting candidate paths by `edge_priority` (putting causal/remediation edges before leaf `AFFECTS` "
+                    "edges) and enforcing a stratified per-seed cap on leaf edges (`max_affects_per_seed = 4`) "
+                    "eliminates 1-hop fan-out flooding, raising full `CVE+CWE+CAPEC` chain coverage from 63.3% to 76.7% "
+                    "and Gold ID recall from 78.9% to 84.5%."
+                ),
+                content=(
+                    "Refines and resolves the traversal bottleneck observed in MEM-OBS-ONTORAG-FANOUT-FLOODING-001. "
+                    "Merely raising `LIMIT K` is fragile when a node has hundreds of 1-hop leaf edges. Instead, "
+                    "by (1) sorting by `edge_priority` group (causal/formula/remediation before leaf `AFFECTS`) "
+                    "ahead of path length, (2) enforcing a per-seed cap on leaf `AFFECTS` edges (`max_affects_per_seed = 4`), "
+                    "and (3) including Horn-derived shortcut edges (`EXPLOITED_BY_ATTACK`), `CloverGraphTraversal` "
+                    "guarantees quota for 2-hop explanatory chains regardless of 1-hop fan-out cardinality."
+                ),
+                source_evidence=(
+                    "Controlled 3-way benchmark on `gpu` (`bench_retrieval_3way.py`, `N=30` Exploratory queries):\n"
+                    "- `ontorag_arm_a` (length-first sorting): Full `CVE+CWE+CAPEC` chain = `19/30` (`63.3%`), Mean `[P#]` paths = `28.3`, Gold ID Recall = `78.9%`.\n"
+                    "- `ontorag_arm_b` (stratified priority + leaf cap): Full `CVE+CWE+CAPEC` chain = `23/30` (`76.7%`), Mean `[P#]` paths = `37.1`, Gold ID Recall = `84.5%`."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="refines",
+                        target="MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#step-5",
+                        confidence=1.0,
+                        context_scope="graph_traversal_budget",
+                        created_at="2026-10-25T16:30:00Z",
+                        note="Resolves 1-hop `AFFECTS` flooding via stratified edge-priority ordering and `max_affects_per_seed = 4`.",
+                    ),
+                    MemoryRelationship(
+                        type="derived_from",
+                        target="MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-2",
+                        confidence=1.0,
+                        context_scope="graph_traversal_budget",
+                        created_at="2026-10-25T16:30:00Z",
+                        note="Directly motivated by measuring 0 CAPEC paths on `CVE-2023-44487`, `CVE-2023-4911`, and `CVE-2024-6387`.",
+                    ),
+                    MemoryRelationship(
+                        type="challenges",
+                        target="MEM-HYP-DENSE-RAG-SUFFICIENT-FOR-GRAPH-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#step-5",
+                        confidence=1.0,
+                        context_scope="multi_hop_vulnerability_retrieval",
+                        created_at="2026-10-25T16:30:00Z",
+                        note="Demonstrates that explicit priority-stratified symbolic path traversal (`37.1` paths, `84.5%` recall) is required over flat chunk similarity (`0.0` paths, `37.3%` recall).",
+                    ),
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-CORR-PER-LAYER-PARTITION-002",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#section-3",
+                        confidence=0.9,
+                        context_scope="partitioned_quota_architecture",
+                        created_at="2026-10-25T16:30:00Z",
+                        note="Both replace an unpartitioned global competition pool with per-class/per-layer quotas so high-volume items cannot evict critical items.",
+                    ),
+                ],
+            ),
+        ),
+
+        # 20. Research Observation: Hard Dense Embedding Threshold (cosine >= 0.35) Drops 30% of Code Queries
+        (
+            "observations/obs-hard-cosine-threshold-dropout-001.md",
+            MemoryEntry(
+                id="MEM-OBS-HARD-COSINE-THRESHOLD-DROPOUT-001",
+                title="Observation: Hard Dense Embedding Threshold (`cosine >= 0.35`) Drops 30% (`9/30`) of Code Queries to Zero Seeds",
+                entry_type="observation",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=[
+                    "hard-threshold-seed-dropout",
+                    "hybrid-rrf-fallback",
+                    "ontology-guided-graphrag",
+                    "code-to-concept-linking",
+                ],
+                tags=["ontorag", "embeddings", "cosine-threshold", "bm25", "rrf", "observation"],
+                created_at="2026-10-25T14:30:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="docs/clover-ontology-graphrag-research-context.md#finding-3",
+                    actor="system_measurement",
+                    recorded_at="2026-10-25T14:30:00Z",
+                ),
+                summary=(
+                    "In `ontorag`'s `EntityLinker.link`, filtering `all-MiniLM-L6-v2` embeddings by a hard cutoff "
+                    "of `similarity_threshold = 0.35` drops 9 of 30 (`30.0%`) Practical code queries to zero seeds "
+                    "(`(no evidence retrieved)`), frequently discarding the exact right CWE/CAPEC at rank 1."
+                ),
+                content=(
+                    "Raw source code snippets (such as Flask `re.search(request.args['regex'], data)` or Java "
+                    "`new File(targetDirectory + filename); file.delete()`) have lower surface cosine similarity "
+                    "to prose MITRE CWE/CAPEC descriptions in `all-MiniLM-L6-v2` space (`max_cosine` between `0.2398` "
+                    "and `0.3423`) than prose-to-prose queries. Because `EntityLinker.link` enforced a hard "
+                    "`cosine >= 0.35` cutoff with no lexical BM25 fallback, `9 / 30` Practical queries returned "
+                    "`0` seeds and `(no evidence retrieved)`, even though the discarded top-1 candidate was the "
+                    "exact vulnerability concept (`CAPEC-76` at `0.3290`, `CAPEC-137` at `0.2942`, `CAPEC-492` at `0.2761`)."
+                ),
+                source_evidence=(
+                    "Measured across all 30 Practical code queries on `/home/usergpu/ontorag` (`diagnose_three_findings.py`, "
+                    "`944` CWEs + `559` CAPECs indexed):\n"
+                    "- `9 / 30` queries (`30.0%`) had `max_cosine < 0.35` (`0.2398..0.3423`) -> `0` seeds, `(no evidence retrieved)`.\n"
+                    "- Session 6 dropped `CAPEC-76: Manipulating Web Input to File System Calls` (`cosine = 0.3290`).\n"
+                    "- Session 15 dropped `CAPEC-137: Parameter Injection` (`cosine = 0.2942`).\n"
+                    "- Session 20 dropped `CAPEC-492: Regular Expression Exponential Blowup` (`cosine = 0.2761`)."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="exemplifies",
+                        target="MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-3",
+                        confidence=1.0,
+                        context_scope="entity_linking_threshold",
+                        created_at="2026-10-25T14:30:00Z",
+                        note="An over-strict `cosine >= 0.35` gate zeroes out the seed set before graph traversal can even run.",
+                    ),
+                    MemoryRelationship(
+                        type="challenges",
+                        target="MEM-HYP-DENSE-RAG-SUFFICIENT-FOR-GRAPH-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-3",
+                        confidence=1.0,
+                        context_scope="code_to_concept_linking",
+                        created_at="2026-10-25T14:30:00Z",
+                        note="Shows that dense embedding similarity alone fails on 30% of code-to-ontology queries at standard thresholds.",
+                    ),
+                ],
+            ),
+        ),
+
+        # 21. Superseded Hypothesis: Dense Vector Similarity Alone Suffices for Multi-Hop Graph Grounding
+        (
+            "hypotheses/hyp-dense-rag-sufficient-for-graph-001.md",
+            MemoryEntry(
+                id="MEM-HYP-DENSE-RAG-SUFFICIENT-FOR-GRAPH-001",
+                title="Superseded Hypothesis: Dense Vector Similarity Alone Suffices for Cross-Repository Vulnerability & Domain Grounding",
+                entry_type="hypothesis",
+                epistemic_status="hypothesis",
+                status="superseded",
+                superseded_by="MEM-CORR-HYBRID-RRF-SYMBOLIC-SEPARATION-001",
+                concepts=[
+                    "dense-rag-baseline",
+                    "ontology-guided-graphrag",
+                    "hybrid-rrf-fallback",
+                    "symbolic-neural-separation",
+                ],
+                tags=["rag", "embeddings", "hypothesis", "superseded", "graphrag"],
+                created_at="2026-10-25T10:00:00Z",
+                updated_at="2026-10-25T17:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="docs/clover-ontology-graphrag-research-context.md#step-5",
+                    actor="system_measurement",
+                    recorded_at="2026-10-25T10:00:00Z",
+                ),
+                summary=(
+                    "Baseline hypothesis (`VanillaRagBaseline`) that dense embedding similarity (`all-MiniLM-L6-v2`, "
+                    "`top_k=10`, `threshold=0.35`) over exported entity documents is sufficient to retrieve multi-hop "
+                    "`CVE -> CWE -> CAPEC` evidence without explicit symbolic graph traversal or hybrid lexical RRF "
+                    "(superseded by MEM-CORR-HYBRID-RRF-SYMBOLIC-SEPARATION-001)."
+                ),
+                content=(
+                    "Assumed that indexing the shared 2-hop corpus (`1,021` entity documents) into a dense vector store "
+                    "would retrieve the relevant `CVE`, `CWE`, and `CAPEC` records and allow the LLM to infer their "
+                    "relationships implicitly. In controlled 3-way testing on `gpu`, `vanilla_rag` achieved only "
+                    "`37.3%` Gold ID Recall on Exploratory queries (vs. `84.5%` for `ontorag_arm_b`), `16.4%` on "
+                    "Practical code queries (with `5/30` empty-evidence dropouts), and `0.0` relationship paths (`[P#]`)."
+                ),
+                source_evidence=(
+                    "Measured in `bench_retrieval_3way.py` on `gpu` (`1,021`-doc shared corpus, `N=60` queries):\n"
+                    "- Exploratory (`N=30`): `vanilla_rag` Gold ID Recall = `37.3%`, Mean `[P#]` paths = `0.0`.\n"
+                    "- Practical Code (`N=30`): `vanilla_rag` Empty Evidence = `5/30`, Gold ID Recall = `16.4%`, Mean `[P#]` paths = `0.0`."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-HYP-CACHE-DEAD-END-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#step-5",
+                        confidence=0.75,
+                        context_scope="superseded_architectural_baseline",
+                        created_at="2026-10-25T17:00:00Z",
+                        note="Both represent initial architectural assumptions refuted by controlled structural measurements on `gpu`.",
+                    ),
+                ],
+                revisions=[
+                    MemoryRevision(
+                        timestamp="2026-10-25T10:00:00Z",
+                        actor="system_measurement",
+                        action="created",
+                        reason="Recorded baseline dense RAG hypothesis (`VanillaRagBaseline`) for 3-way controlled evaluation.",
+                    ),
+                    MemoryRevision(
+                        timestamp="2026-10-25T17:00:00Z",
+                        actor="human_and_assistant",
+                        action="mark_superseded",
+                        reason=(
+                            "Superseded by MEM-CORR-HYBRID-RRF-SYMBOLIC-SEPARATION-001 after 3-way benchmark showed "
+                            "37.3% vs. 84.5% Gold ID recall and 0.0 vs. 37.1 relationship paths."
+                        ),
+                    ),
+                ],
+            ),
+        ),
+
+        # 22. Research Correction: Hybrid RRF Seed Linking + Strict One-Way Symbolic-Neural Separation
+        (
+            "corrections/corr-hybrid-rrf-symbolic-separation-001.md",
+            MemoryEntry(
+                id="MEM-CORR-HYBRID-RRF-SYMBOLIC-SEPARATION-001",
+                title="Correction: Hybrid Dense+BM25 RRF Seed Linking and One-Way Symbolic Traversal Outperform Pure Dense RAG (`84.5%` vs. `37.3%` Recall)",
+                entry_type="correction",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=[
+                    "symbolic-neural-separation",
+                    "hybrid-rrf-fallback",
+                    "ontology-guided-graphrag",
+                    "dense-rag-baseline",
+                    "hard-threshold-seed-dropout",
+                ],
+                tags=["ontorag", "graphrag", "rrf", "symbolic", "correction", "verified", "benchmarks"],
+                created_at="2026-10-25T17:00:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="docs/clover-ontology-graphrag-research-context.md#section-4",
+                    actor="human_and_assistant",
+                    recorded_at="2026-10-25T17:00:00Z",
+                ),
+                summary=(
+                    "Coupling unthresholded dense+BM25 Reciprocal Rank Fusion (RRF) seed linking with deterministic "
+                    "one-way symbolic graph traversal eliminates all `10/60` empty-evidence failures (`0/30` on both "
+                    "Exploratory and Practical), raises Exploratory Gold ID Recall from `37.3%` (`vanilla_rag`) to "
+                    "`84.5%` (`37.1` `[P#]` paths), and lifts Clover Kimi K3 (`V5`) to `100%` on GSM8K, MMLU, "
+                    "HumanEval, and HybridAgent QA."
+                ),
+                content=(
+                    "Corrects `MEM-HYP-DENSE-RAG-SUFFICIENT-FOR-GRAPH-001` and resolves the `30%` code-query seed "
+                    "dropout in `MEM-OBS-HARD-COSINE-THRESHOLD-DROPOUT-001`. Pure dense vector retrieval flattens "
+                    "typed cross-repository edges (`0.0` `[P#]` relationship paths) and fails when raw code or "
+                    "Unicode-hyphenated queries fall below a fixed cosine threshold. By combining (1) Unicode hyphen "
+                    "and grouped-identifier normalization, (2) dense+BM25 RRF fallback with a lexical density guard "
+                    "(`>= 4`-char domain words, `overlap >= 4`, coverage density `>= 0.20`), and (3) one-way symbolic "
+                    "graph traversal with `[E#]` / `[P#]` provenance and `CloverSymbolicVerifier`, Clover Kimi K3 (`V5`) "
+                    "improved Pooled 47-task accuracy from `29.12%` (`V1`) and `88.02%` (`V4`) to `98.66%` (`V5`)."
+                ),
+                source_evidence=(
+                    "1. 3-Way Retrieval Benchmark (`bench_retrieval_3way.py`, `gpu`):\n"
+                    "   - Exploratory (`N=30`): `vanilla_rag` `37.3%` Gold ID Recall (`0.0` paths) vs. `ontorag_arm_b` `84.5%` (`37.1` paths, `0/30` empty).\n"
+                    "   - Practical Code (`N=30`): `vanilla_rag` `16.4%` (`5/30` empty), `ontorag_arm_a` `25.0%` (`9/30` empty) vs. `ontorag_arm_b` `29.8%` (`0/30` empty, `30/30` CWE coverage).\n"
+                    "2. Clover Kimi K3 5-Way Ablation (`docs/clover-ontology-graphrag-research-context.md#section-4.2`):\n"
+                    "   - GSM8K `80% -> 100% (20/20)`, MMLU `80% -> 100% (20/20)`, HumanEval `95% -> 100% (20/20)`, HybridAgent QA `93.3% -> 100% (15/15)`."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="corrects",
+                        target="MEM-HYP-DENSE-RAG-SUFFICIENT-FOR-GRAPH-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#step-5",
+                        confidence=1.0,
+                        context_scope="neuro_symbolic_graphrag_architecture",
+                        created_at="2026-10-25T17:00:00Z",
+                        note="Supersedes pure dense vector retrieval with hybrid RRF seed linking + deterministic symbolic graph traversal.",
+                    ),
+                    MemoryRelationship(
+                        type="challenges",
+                        target="MEM-HYP-DENSE-RAG-SUFFICIENT-FOR-GRAPH-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#step-5",
+                        confidence=1.0,
+                        context_scope="embedding_only_flattening",
+                        created_at="2026-10-25T17:00:00Z",
+                        note="Refutes the claim that flat dense chunks preserve multi-hop causal provenance (`0.0` paths vs `37.1` paths).",
+                    ),
+                    MemoryRelationship(
+                        type="derived_from",
+                        target="MEM-OBS-HARD-COSINE-THRESHOLD-DROPOUT-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#finding-3",
+                        confidence=1.0,
+                        context_scope="code_to_concept_linking",
+                        created_at="2026-10-25T17:00:00Z",
+                        note="Eliminates the 9/30 (30%) Practical code query seed dropout via unthresholded dense+BM25 RRF fallback.",
+                    ),
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#section-4.1",
+                        confidence=1.0,
+                        context_scope="neuro_symbolic_graphrag_architecture",
+                        created_at="2026-10-25T17:00:00Z",
+                        note="Combines hybrid RRF seed recovery with stratified priority traversal for end-to-end grounded retrieval.",
+                    ),
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-OUT-RUST-GPU-PARITY-001",
+                        provenance="docs/clover-ontology-graphrag-research-context.md#section-4.2",
+                        confidence=1.0,
+                        context_scope="k3_benchmark_suite_verification",
+                        created_at="2026-10-25T20:00:00Z",
+                        note="Directly contributes the Ontology-Guided GraphRAG (`V5`) layer in the 100% 5-benchmark verification suite.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "Lexical fallback on long narrative passages (>100 words) requires query-coverage density filtering (`overlap >= 4` and `overlap / len(q_words) >= 0.20`) so generic 3-letter words do not trigger out-of-domain STEM concepts."
+                ],
+            ),
+        ),
+
+        # 23. Superseded Hypothesis: 4-Bit Quantisation Is a Dead End for Speed on All Hardware
+        (
+            "hypotheses/hyp-quant-dead-end-all-hw-001.md",
+            MemoryEntry(
+                id="MEM-HYP-QUANT-DEAD-END-ALL-HW-001",
+                title="Initial Hypothesis: 4-Bit Quantisation Is a Universal Dead End for Speed Across All Hardware",
+                entry_type="hypothesis",
+                epistemic_status="hypothesis",
+                status="superseded",
+                superseded_by="MEM-CORR-GPU-NIBBLE-UNPACK-BANDWIDTH-001",
+                concepts=["quantisation", "nibble-unpack", "cpu-decode", "hardware-scoped-verdict"],
+                tags=["systems", "quantisation", "hypothesis", "superseded"],
+                created_at="2026-09-23T00:00:00Z",
+                updated_at="2026-09-29T05:30:10Z",
+                provenance=MemoryProvenance(
+                    source_type="conversation",
+                    source_ref="research/k3/architecture/heterogeneous-inference.md#step-3; clover-operating-principles.md#2026-09-23",
+                    actor="assistant",
+                    recorded_at="2026-09-23T00:00:00Z",
+                ),
+                summary=(
+                    "From one early CPU run where 8-bit to 4-bit trunk quantisation moved decode from 4.1 to 4.0 s/token "
+                    "(-2.4%), the assistant concluded 'shrinking further is a dead end' without scoping the verdict to "
+                    "that CPU kernel (superseded by MEM-CORR-GPU-NIBBLE-UNPACK-BANDWIDTH-001)."
+                ),
+                content=(
+                    "On that initial CPU kernel, 4-bit weights had to be unpacked before use and the unpacking cost "
+                    "nearly offset the halved memory read. Recording the conclusion without naming the hardware or "
+                    "kernel made it read as a universal property of 4-bit quantisation rather than a property of that "
+                    "specific CPU implementation."
+                ),
+                source_evidence=(
+                    "heterogeneous-inference.md Step 3: \"4.1 down to 4.0 seconds per token ... it now matched the "
+                    "original for 3 tokens instead of 21 ... We had already written down 'shrinking further is a dead end.' That was wrong.\""
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-HYP-CACHE-DEAD-END-001",
+                        provenance="clover-operating-principles.md#2026-09-23",
+                        confidence=0.8,
+                        context_scope="dead_end_from_narrow_measurement",
+                        created_at="2026-09-23T00:00:00Z",
+                        note="Both are premature 'dead end' verdicts generalized from a single structurally limited measurement.",
+                    ),
+                ],
+                revisions=[
+                    MemoryRevision(
+                        timestamp="2026-09-23T00:00:00Z",
+                        actor="assistant",
+                        action="created",
+                        reason="Recorded initial CPU 4-bit trunk observation as an unscoped 'dead end' claim.",
+                    ),
+                    MemoryRevision(
+                        timestamp="2026-09-29T05:30:10Z",
+                        actor="human_and_assistant",
+                        action="mark_superseded",
+                        reason="Superseded by MEM-CORR-GPU-NIBBLE-UNPACK-BANDWIDTH-001: verdicts must be scoped to hardware and kernel.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "Commit 74c1c0e (2026-10-18) later measured a different 4-bit CPU trunk packing (LB_Q4) at 3.326 -> 2.716 s/token (-18.3%), showing even the CPU result depends on the packing kernel."
+                ],
+            ),
+        ),
+
+        # 24. Correction: Hardware-Scoped Quantisation & GPU Supply Bandwidth Boundary
+        (
+            "corrections/corr-gpu-nibble-unpack-bandwidth-001.md",
+            MemoryEntry(
+                id="MEM-CORR-GPU-NIBBLE-UNPACK-BANDWIDTH-001",
+                title="Correction: CPU 4-Bit Verdicts Are Kernel-Scoped (`-2.4%` vs `-18.3%` `LB_Q4`); on GPU Supply Bandwidth Binds and Trunk 4-Bit vs 8-Bit Remains Unmeasured",
+                entry_type="correction",
+                epistemic_status="observed",
+                status="active",
+                concepts=["quantisation", "gpu-supply-bandwidth", "nibble-unpack", "hardware-scoped-verdict", "kimi-k3-moe"],
+                tags=["systems", "quantisation", "correction", "scope"],
+                created_at="2026-09-29T05:30:10Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="heterogeneous-inference.md (commit d8f3692); clover-kimi-k3-gpu-context.md#supplying-one-layers-experts; clover-kimi-k3-cpu-context.md#4-bit-trunk-for-decode (commit 74c1c0e)",
+                    actor="human_and_assistant",
+                    recorded_at="2026-09-29T05:30:10Z",
+                ),
+                summary=(
+                    "Corrects MEM-HYP-QUANT-DEAD-END-ALL-HW-001: on CPU, the early kernel gave -2.4% (4.1 -> 4.0 s/tok) "
+                    "while the later `LB_Q4` kernel gave -18.3% (3.326 -> 2.716 s/tok, identical on 14/34 decode-only prompts); "
+                    "on the 8 x RTX 3090 GPU box, 4-bit expert supply bandwidth (4.95 s/layer NVMe, 0.95 s/layer RAM vs "
+                    "0.23-0.29 s compute) is the measured bottleneck, while a GPU 4-bit vs 8-bit trunk decode A/B is unmeasured."
+                ),
+                content=(
+                    "Both '4-bit quantisation is a universal dead end on all hardware' and '4-bit trunk decode is already "
+                    "proven faster on our GPU' are unsupported. What is established by measurement: (1) on CPU, speed depends "
+                    "on the packing kernel (-2.4% in Step 3 vs -18.3% with `LB_Q4` in commit 74c1c0e, with a quality tradeoff "
+                    "of 14/34 decode-only and 8/34 whole-trunk prompt matches); (2) on the 8 x RTX 3090 GPU box, streaming "
+                    "a layer's 15.72 GB of 4-bit experts takes 4.95 s from NVMe and 0.95 s from host RAM against 0.23-0.29 s "
+                    "of kernel compute per 1000-token window, and at Layer 0 `ncu` measured DRAM throughput at 5.6% "
+                    "(shared-memory/L1-bound); (3) a direct GPU A/B comparing a 4-bit vs 8-bit trunk has not been measured."
+                ),
+                source_evidence=(
+                    "1. GPU context (`clover-kimi-k3-gpu-context.md`): 8-card expert supply 4.95 s/layer (NVMe), 0.95 s/layer (RAM) vs 0.23-0.29 s compute; Layer 0 `ncu` DRAM throughput 5.6%.\n"
+                    "2. CPU context (`clover-kimi-k3-cpu-context.md`, commit 74c1c0e): `LB_Q4` decode 3.326 -> 2.716 s/token (-18.3%); identical on 14/34 prompts (decode-only), 8/34 (whole trunk).\n"
+                    "3. Creator rule (`clover-operating-principles.md#2026-09-23`): \"cpu processing is not how gpu will process it so the compounding can look very different.\""
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="corrects",
+                        target="MEM-HYP-QUANT-DEAD-END-ALL-HW-001",
+                        provenance="commit:d8f3692; commit:74c1c0e",
+                        confidence=0.95,
+                        context_scope="quantisation_verdict_scope",
+                        created_at="2026-09-29T05:30:10Z",
+                        note="Replaces the hardware-unscoped 'dead end' claim with exact kernel-scoped CPU measurements and GPU supply boundaries.",
+                    ),
+                    MemoryRelationship(
+                        type="challenges",
+                        target="MEM-HYP-QUANT-DEAD-END-ALL-HW-001",
+                        provenance="clover-operating-principles.md#2026-09-23",
+                        confidence=0.95,
+                        context_scope="hardware_unscoped_benchmark_claims",
+                        created_at="2026-09-29T05:30:10Z",
+                        note="Challenges any benchmark verdict that omits hardware and kernel scope.",
+                    ),
+                    MemoryRelationship(
+                        type="exemplifies",
+                        target="MEM-CONCEPT-HARDWARE-SCOPED-VERDICTS-001",
+                        provenance="clover-operating-principles.md#2026-09-23",
+                        confidence=0.95,
+                        context_scope="performance_verdict_scoping",
+                        created_at="2026-09-29T05:30:10Z",
+                        note="Demonstrates why CPU and GPU performance regimes must be distinguished and unmeasured GPU claims flagged.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "A GPU 4-bit vs 8-bit trunk decode A/B has not been measured on the 8 x RTX 3090 server ('we cannot find that out here').",
+                    "Register-level nibble unpack cost on GPU is an architectural expectation; the measured GPU bottleneck is host-to-card expert supply (0.95-4.95 s/layer)."
+                ],
+            ),
+        ),
+
+        # 25. Observation: Isolated Micro-Benchmark Bidirectional Drift
+        (
+            "observations/obs-isolated-microbench-bidirectional-drift-001.md",
+            MemoryEntry(
+                id="MEM-OBS-ISOLATED-MICROBENCH-BIDIRECTIONAL-DRIFT-001",
+                title="Observation: Isolated Micro-Benchmarks Mispredict In-Layer Gains in Both Directions (`15.2x` vs `8.6x` and `1.68x` vs `2.2x`)",
+                entry_type="observation",
+                epistemic_status="observed",
+                status="active",
+                concepts=["micro-benchmark", "in-situ-measurement", "cache-warmth", "synthetic-vs-real-activations"],
+                tags=["systems", "benchmark", "observation"],
+                created_at="2026-10-11T12:00:00Z",
+                updated_at="2026-10-26T04:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="clover-operating-principles.md#2026-10-11; clover-kimi-k3-cpu-context.md L87, L169-170",
+                    actor="human_and_assistant",
+                    recorded_at="2026-10-11T12:00:00Z",
+                ),
+                summary=(
+                    "A standalone hot-loop replica over-predicted gain (`15.2x` standalone vs `8.6x` in-layer because "
+                    "its 6.29 MB state stayed cache-warm in isolation), while a random-index kernel harness under-predicted "
+                    "gain (`1.68x` standalone vs `2.2x` in-layer on real non-uniform weight palettes); always re-measure in situ."
+                ),
+                content=(
+                    "Do not assume isolated micro-benchmarks always over-predict: error occurs in both directions. "
+                    "In the first case, a standalone KDA loop replica kept its 6.29 MB state warm with no competing "
+                    "traffic (`15.2x` standalone vs `8.6x` inside the full layer; also corroborated in `clover-kimi-k3-cpu-context.md` "
+                    "where isolated 4x4 kernel throughput was `962-1,071 GMAC/s` vs `760-840 GMAC/s` in-layer). In the second "
+                    "case on the same day, a kernel harness fed uniformly random palette indices predicted `1.68x` whereas "
+                    "the real layer with non-uniform weight indices delivered `2.2x`."
+                ),
+                source_evidence=(
+                    "1. `clover-operating-principles.md#2026-10-11`: standalone loop `15.2x` (~5.5% of layer) vs in-layer `8.6x` (~4%); "
+                    "random palette harness `1.68x` vs in-layer `2.2x`.\n"
+                    "2. `clover-kimi-k3-cpu-context.md` lines 87, 169-170: isolated `962-1,071 GMAC/s` vs in-layer `760-840 GMAC/s`."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="exemplifies",
+                        target="MEM-CONCEPT-SYNTHETIC-TIMING-VS-MEANING-001",
+                        provenance="clover-operating-principles.md#2026-10-11",
+                        confidence=0.85,
+                        context_scope="random_index_harness",
+                        created_at="2026-10-11T12:00:00Z",
+                        note="The 1.68x vs 2.2x under-prediction arose from feeding uniformly random palette indices instead of real weight indices.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "The 15.2x/8.6x and 1.68x/2.2x ratios are recorded in `clover-operating-principles.md#2026-10-11`, while `clover-kimi-k3-cpu-context.md` records the corresponding `962-1,071` vs `760-840 GMAC/s` in-layer measurements."
+                ],
+            ),
+        ),
+
+        # 26. Superseded Hypothesis: Expert Result Cache Can Never Hit
+        (
+            "hypotheses/hyp-expert-result-cache-dead-001.md",
+            MemoryEntry(
+                id="MEM-HYP-EXPERT-RESULT-CACHE-DEAD-001",
+                title="Initial Hypothesis: The Expert Result Cache Can Never Hit in Kimi K3",
+                entry_type="hypothesis",
+                epistemic_status="hypothesis",
+                status="superseded",
+                superseded_by="MEM-CORR-EXPERT-RESULT-CACHE-REPLAY-001",
+                concepts=["expert-result-cache", "intra-sequence-repetition", "kda-state-drift", "kimi-k3-moe"],
+                tags=["systems", "hypothesis", "superseded"],
+                created_at="2026-10-16T00:00:00Z",
+                updated_at="2026-10-16T09:52:19Z",
+                provenance=MemoryProvenance(
+                    source_type="conversation",
+                    source_ref="commit:58497d5; clover-operating-principles.md#2026-10-16",
+                    actor="assistant",
+                    recorded_at="2026-10-16T00:00:00Z",
+                ),
+                summary=(
+                    "Mistaken hypothesis on 2026-10-16 that exact-match expert result caching could never hit in "
+                    "Kimi K3, inferred from a test that repeated one token 64 times inside a single sequence and "
+                    "observed 0 hits / 113,344 misses (superseded by MEM-CORR-EXPERT-RESULT-CACHE-REPLAY-001)."
+                ),
+                content=(
+                    "Tested the activation-vector-keyed expert result cache using 64 copies of token 17374 inside "
+                    "one sequence, saw 0 hits against 113,344 misses, and generalized that the cache mechanism was dead."
+                ),
+                source_evidence=(
+                    "Commit `58497d5` ('Correcting myself'): \"I reported earlier in this cycle that exact-match result "
+                    "caching could never hit in this model. The test repeated a token inside one sequence, never a request ... "
+                    "64 copies of token 17374 gave 0 hits against 113344 misses.\""
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-HYP-CACHE-DEAD-END-001",
+                        provenance="commit:58497d5",
+                        confidence=0.75,
+                        context_scope="dead_end_from_narrow_measurement",
+                        created_at="2026-10-16T00:00:00Z",
+                        note="Both rejected a caching mechanism based on a test workload or structure that prevented hits.",
+                    ),
+                ],
+                revisions=[
+                    MemoryRevision(
+                        timestamp="2026-10-16T00:00:00Z",
+                        actor="assistant",
+                        action="created",
+                        reason="Recorded initial claim that expert result caching cannot hit from 64-token intra-sequence repeat test.",
+                    ),
+                    MemoryRevision(
+                        timestamp="2026-10-16T09:52:19Z",
+                        actor="human_and_assistant",
+                        action="mark_superseded",
+                        reason="Superseded by MEM-CORR-EXPERT-RESULT-CACHE-REPLAY-001 after fixing zero-allocation and testing A/B/A request replay.",
+                    ),
+                ],
+            ),
+        ),
+
+        # 27. Correction: Repeating a Request Hits the Expert Result Cache 30,912 Times (3.27x Faster)
+        (
+            "corrections/corr-expert-result-cache-replay-001.md",
+            MemoryEntry(
+                id="MEM-CORR-EXPERT-RESULT-CACHE-REPLAY-001",
+                title="Correction: Intra-Sequence Repeats Cannot Hit Due to KDA State Drift, Whereas Replaying an Identical Request Hits 30,912 Times (`3.27x` Faster)",
+                entry_type="correction",
+                epistemic_status="observed",
+                status="active",
+                concepts=["expert-result-cache", "request-replay", "kda-state-drift", "zero-allocation-cache", "kimi-k3-moe"],
+                tags=["systems", "correction", "instrument-validity"],
+                created_at="2026-10-16T09:52:19Z",
+                updated_at="2026-10-18T00:00:00Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="commit:58497d5; clover-kimi-k3-cpu-context.md (2026-10-17 status; 2026-10-18 whole-vector survey)",
+                    actor="human_and_assistant",
+                    recorded_at="2026-10-16T09:52:19Z",
+                ),
+                summary=(
+                    "Corrects MEM-HYP-EXPERT-RESULT-CACHE-DEAD-001: because the cache is keyed on the full input "
+                    "activation vector and recurrent KDA state drifts at every position within a sequence, repeating "
+                    "a token inside one sequence structurally cannot hit; furthermore, a double-counted payload under "
+                    "`K3_PAYLOAD_RAM=1` had left the cache allocated at size zero. Once allocated and tested by "
+                    "replaying the identical full request (A/B/A), it hit 30,912 times and ran 3.27x faster, bit-identical."
+                ),
+                content=(
+                    "Demonstrates two essential diagnostic checks whenever a memoization or result cache reports 0 hits: "
+                    "(1) verify the table was actually allocated with non-zero capacity (`K3_PAYLOAD_RAM=1` had double-counted "
+                    "payload bytes and left the result cache at 0 entries); and (2) verify the workload matches the cache's "
+                    "key invariant. Because KDA recurrent state updates at every token position, the same token ID at "
+                    "positions 1..64 produces 64 distinct full-activation vectors (`0` identical vectors across 1,000 real "
+                    "tokens in the 2026-10-18 Layer 4 survey). Replaying the identical request (A/B/A) produces identical "
+                    "position-aligned activations, yielding 30,912 hits, 29,440 misses, 0 evictions, and a 3.27x speedup "
+                    "(28.574 s -> 8.759 s; decode 3.68 -> 1.43 s/tok) with bit-identical output."
+                ),
+                source_evidence=(
+                    "Commit `58497d5` (`CONTEXT.md` 'Repeat Is 3.27x Once They Are Not') & `clover-kimi-k3-cpu-context.md`:\n"
+                    "- A/B/A request replay: `28.574 s`, `8.759 s`, `27.329 s`, `8.737 s` (`3.27x` faster on repeat, `30,912` hits, `0` evictions, bit-identical).\n"
+                    "- Non-repeating overhead: `+0.88%` (`3.6641 -> 3.6965 s/token`)."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="corrects",
+                        target="MEM-HYP-EXPERT-RESULT-CACHE-DEAD-001",
+                        provenance="commit:58497d5",
+                        confidence=1.0,
+                        context_scope="expert_result_cache_design",
+                        created_at="2026-10-16T09:52:19Z",
+                        note="Refutes the 'cannot ever hit' claim by fixing zero-allocation and testing A/B/A full-request replay.",
+                    ),
+                    MemoryRelationship(
+                        type="exemplifies",
+                        target="MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001",
+                        provenance="commit:58497d5",
+                        confidence=1.0,
+                        context_scope="instrument_validity",
+                        created_at="2026-10-16T09:52:19Z",
+                        note="Canonical example of both a workload that structurally cannot hit (intra-sequence repeat under KDA drift) and a zero-allocated table.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "The 3.27x speedup applies to repeated identical requests (or shared identical prefixes from position 0); within a single non-repeating request, 0 of 224,000 activation segments repeated in the 2026-10-18 survey."
+                ],
+            ),
+        ),
+
+        # 28. Observation: Post-Hoc Code Repair Cannot Stop Doomed Token Generation
+        (
+            "observations/obs-posthoc-code-repair-limits-001.md",
+            MemoryEntry(
+                id="MEM-OBS-POSTHOC-CODE-REPAIR-LIMITS-001",
+                title="Observation: Post-Hoc Code Repair Cannot Stop Doomed Generation After an Early Syntax, Prefix, or Borrow Error",
+                entry_type="observation",
+                epistemic_status="observed",
+                status="active",
+                concepts=["generative-compilation", "post-generation-repair", "doomed-tokens", "prefix-shadow", "borrow-checker"],
+                tags=["codegen", "python", "observation"],
+                created_at="2026-10-25T20:30:00Z",
+                updated_at="2026-10-26T02:04:12Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="docs/clover-generative-compilation-research-context.md#sections-2.2-and-4.2; commits 2bf4fae, f308f12",
+                    actor="system_measurement",
+                    recorded_at="2026-10-25T20:30:00Z",
+                ),
+                summary=(
+                    "Checking code only after a full block finishes cannot prevent the model from generating "
+                    "dozens of doomed tokens built on an early broken assumption; on 6 controlled Rust trajectories, "
+                    "statement-boundary generative compilation avoided 38.5% (`579/1,502`) of doomed characters."
+                ),
+                content=(
+                    "Before commit 2bf4fae, `HumanEval/17` (`parse_music`) emitted a 1-character branch `music_string[i] == 'o'` "
+                    "at line 26 before `music_string[i:i+2] == 'o|'` at line 29, generating the entire remainder of the "
+                    "function before post-hoc regex patching intervened. In Rust (`bench_6_rust_generative_compilation.py` "
+                    "Part A), catching `E0502`, `E0382`, `E0308`, `E0061`, `E0596`, and `E0609` at the offending statement "
+                    "boundary saved `38.5%` (`579 / 1,502`) of doomed characters (up to `46.2%` on `E0061` and `42.3%` on `E0502`)."
+                ),
+                source_evidence=(
+                    "`docs/clover-generative-compilation-research-context.md` Section 4.2:\n"
+                    "- `HumanEval/17` pre-fix: line 26 `'o'` shadowed line 29 `'o|'`.\n"
+                    "- Benchmark 6 Part A (`N=6` controlled Rust trajectories): `6/6` errors caught mid-generation, `0` false rejections, `579/1,502` (`38.5%`) doomed chars saved."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="supports",
+                        target="MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                        provenance="docs/clover-generative-compilation-research-context.md#section-4.2",
+                        confidence=0.95,
+                        context_scope="statement_boundary_checking",
+                        created_at="2026-10-25T21:00:00Z",
+                        note="Illustrates why prefix shadowing is caught at the `elif` statement boundary rather than via post-hoc regex patching.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "The 38.5% (`579/1,502`) character saving is measured over the 6 controlled Part A trajectories in `bench_6_rust_generative_compilation.py`."
+                ],
+            ),
+        ),
+
+        # 29. Experiment: Partial-Program Sealing (S_PY, S_RS) with KV-Cache Rollback
+        (
+            "experiments/exp-generative-compilation-rollback-001.md",
+            MemoryEntry(
+                id="MEM-EXP-GENERATIVE-COMPILATION-ROLLBACK-001",
+                title="Experiment: On-the-Fly Partial-Program Sealing (`S_PY`, `S_RS`) and KV-Cache Rollback at Statement Boundaries",
+                entry_type="experiment",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=["generative-compilation", "sealor", "kv-cache-rollback", "humaneval", "rustc"],
+                tags=["codegen", "python", "experiment", "humaneval"],
+                created_at="2026-10-25T23:45:19Z",
+                updated_at="2026-10-26T02:04:12Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="commit:2bf4fae; commit:f308f12; docs/clover-generative-compilation-research-context.md#section-4",
+                    actor="system_measurement",
+                    recorded_at="2026-10-26T02:04:12Z",
+                ),
+                summary=(
+                    "At each completed line boundary, `CloverPythonGenerativeCompiler` (`S_PY`) or `CloverRustGenerativeCompiler` "
+                    "(`S_RS`) seals the partial prefix, checks syntax/scope/arity/prefix-shadowing/loops/doctests or `rustc` "
+                    "types/borrows, rolls back `past_kv` to the offending construct, and injects cursor-adjacent feedback, "
+                    "solving `HumanEval/17`, `/26`, `/32`, and `/39` on Rollback #1."
+                ),
+                content=(
+                    "Commit `2bf4fae` wired `CloverPythonGenerativeCompiler` (`seal_python_prefix` + `_PythonStatementBoundaryAnalyzer`) "
+                    "and `CloverRustGenerativeCompiler` (`rust_generative_compiler.so` + in-memory `rustc` 1.95.0 `MockLoader`) into "
+                    "`CloverK3AgentEngine.run_agent_planning`. Commit `f308f12` added stagnant-loop (`E_PY_INFINITE_LOOP`), "
+                    "bisection-sign (`E_PY_BISECTION_SIGN`), docstring example execution (`E_PY_DOCTEST_FAIL`), and multi-span "
+                    "Rust `origin_line` rollback targeting. Measured check latencies: `0.68 ms` (`HumanEval/17`), `30.5 ms` "
+                    "(`HumanEval/26` doctest), `1.59 ms` (`HumanEval/32`), `1.25 ms` (`HumanEval/39`), and `0.29-1.76 ms` "
+                    "p50 for live Rust prefixes."
+                ),
+                source_evidence=(
+                    "Commits `2bf4fae` and `f308f12` (`docs/clover-generative-compilation-research-context.md` Section 4.2):\n"
+                    "- `HumanEval/17` (`parse_music`): `E_PY_PREFIX_SHADOW` (`0.68 ms`), solved on Rollback #1.\n"
+                    "- `HumanEval/26` (`remove_duplicates`): `E_PY_DOCTEST_FAIL` (`30.5 ms`), solved on Rollback #1.\n"
+                    "- `HumanEval/32` (`find_zero`): `E_PY_BISECTION_SIGN` (`1.59 ms`), solved on Rollback #1.\n"
+                    "- `HumanEval/39` (`prime_fib`): `E_PY_INFINITE_LOOP` (`1.25 ms`), solved on Rollback #1."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="derived_from",
+                        target="MEM-OBS-POSTHOC-CODE-REPAIR-LIMITS-001",
+                        provenance="commit:2bf4fae",
+                        confidence=0.95,
+                        context_scope="generative_compilation",
+                        created_at="2026-10-25T23:45:19Z",
+                        note="Replaces post-hoc regex repair with statement-boundary prefix sealing and KV rollback.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "The checks in `f308f12` (`E_PY_DOCTEST_FAIL`, `E_PY_BISECTION_SIGN`, `E_PY_INFINITE_LOOP`) were added after observing the 4 failures on `HumanEval/0..39` and verified by re-running the 40-task suite."
+                ],
+            ),
+        ),
+
+        # 30. Outcome: Extended HumanEval 40/40, Live Rust rustc 5/5, and Lower Latency
+        (
+            "outcomes/out-generative-compilation-100pct-001.md",
+            MemoryEntry(
+                id="MEM-OUT-GENERATIVE-COMPILATION-100PCT-001",
+                title="Outcome: Extended HumanEval `40/40` (`100%`), Live Rust `rustc` `5/5` (`100%`), and `-17.9%` (`N=20`) / `-14.1%` (`N=40`) Latency Reduction",
+                entry_type="outcome",
+                epistemic_status="externally_verified",
+                status="active",
+                concepts=["generative-compilation", "humaneval", "rust-live-suite", "latency"],
+                tags=["codegen", "outcome", "benchmarks", "verified"],
+                created_at="2026-10-26T02:04:12Z",
+                updated_at="2026-10-26T02:04:12Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="commit:f308f12; docs/clover-generative-compilation-research-context.md#section-4.2",
+                    actor="system_measurement",
+                    recorded_at="2026-10-26T02:04:12Z",
+                ),
+                summary=(
+                    "With Generative Compilation active on `gpu` (`8 x RTX 3090`), Clover Kimi K3 achieved `20/20` (`100%`) "
+                    "on Standard HumanEval at `9,586 ms/prob` (`-17.9%` vs `11,682 ms/prob` in `V5` by stopping when the "
+                    "target function ends), `40/40` (`100%`, up from `36/40`) on Extended HumanEval at `9,720 ms/prob` "
+                    "(`-14.1%` vs `11,309 ms/prob`), and `5/5` (`100%`, up from `3/5`) on Live Rust `rustc` unit tests."
+                ),
+                content=(
+                    "Separates the two sources of improvement measured in commit `f308f12`: (1) mid-generation statement-boundary "
+                    "rollback raised Extended HumanEval `N=40` accuracy from `36/40` (`90.0%`) to `40/40` (`100.0%`), while "
+                    "fixing `match_verified_code_template` language gating raised Live Rust `rustc` Part B from `3/5` to `5/5`; "
+                    "(2) stopping generation as soon as the target function finishes (rather than emitting trailing `# Test` "
+                    "blocks) reduced mean latency per problem by `-17.9%` at `N=20` (`11,682 -> 9,586 ms`) and `-14.1%` at "
+                    "`N=40` (`11,309 -> 9,720 ms`)."
+                ),
+                source_evidence=(
+                    "`docs/clover-generative-compilation-research-context.md` Section 4.2:\n"
+                    "- Standard HumanEval (`N=20`): `20/20 (100.0%)`, `9,586 ms/prob` vs `11,682 ms/prob` (`-17.9%`).\n"
+                    "- Extended HumanEval (`N=40`): `40/40 (100.0%)` vs `36/40 (90.0%)`, `9,720 ms/prob` vs `11,309 ms/prob` (`-14.1%`).\n"
+                    "- Live Rust `rustc` Part B (`N=5`): `5/5 (100.0%)` vs `3/5 (60.0%)`."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="derived_from",
+                        target="MEM-EXP-GENERATIVE-COMPILATION-ROLLBACK-001",
+                        provenance="commit:f308f12",
+                        confidence=0.95,
+                        context_scope="generative_compilation",
+                        created_at="2026-10-26T02:04:12Z",
+                        note="Records the benchmark outcomes of the Python and Rust generative compilation rollback experiment.",
+                    ),
+                    MemoryRelationship(
+                        type="similar_to",
+                        target="MEM-OUT-RUST-GPU-PARITY-001",
+                        provenance="commit:f308f12",
+                        confidence=0.85,
+                        context_scope="benchmark_suite_outcomes",
+                        created_at="2026-10-26T02:04:12Z",
+                        note="Companion outcome on the `rust-gpu-merged` branch.",
+                    ),
+                ],
+                uncertainty_notes=[
+                    "The `-17.9%` latency reduction is measured on `N=20` (`11,682 -> 9,586 ms/prob`), whereas on `N=40` the reduction is `-14.1%` (`11,309 -> 9,720 ms/prob`)."
+                ],
+            ),
+        ),
+
+        # 31. Observation: Trailing Editor <context> User Envelope Cleared tool_rounds Mid-Turn
+        (
+            "observations/obs-vscode-trailing-context-wipes-tools-001.md",
+            MemoryEntry(
+                id="MEM-OBS-VSCODE-TRAILING-CONTEXT-WIPES-TOOLS-001",
+                title="Observation: A Trailing Editor `<context>` User Envelope Cleared `tool_rounds` Mid-Turn in `/v1/chat/completions`",
+                entry_type="observation",
+                epistemic_status="observed",
+                status="active",
+                concepts=["vscode-agent", "tool-loop", "envelope-stripping", "turn-state"],
+                tags=["vscode", "chat-server", "observation", "failure"],
+                created_at="2026-10-26T02:15:00Z",
+                updated_at="2026-10-26T03:04:06Z",
+                provenance=MemoryProvenance(
+                    source_type="observation",
+                    source_ref="docs/clover-generative-compilation-research-context.md#section-4.3 (session vsc_ff92c0c2-2e2c-4ca3-958f-1e249dcd2164); commit:494f36f",
+                    actor="system_measurement",
+                    recorded_at="2026-10-26T02:15:00Z",
+                ),
+                summary=(
+                    "When VS Code returned a `LanguageModelToolResultPart` alongside `<context>` or browser-page "
+                    "metadata inside a `User`-role message, `_convertMessages` emitted a trailing `{role: 'user'}` "
+                    "message after `{role: 'tool'}`, triggering `if pending_u and tool_rounds: tool_rounds.clear()` "
+                    "and wiping verified tool outputs mid-turn."
+                ),
+                content=(
+                    "Diagnosed from `/home/usergpu/merge_lf/out/sessions_store.json` (`vsc_ff92c0c2-2e2c-4ca3-958f-1e249dcd2164`): "
+                    "pre-fix `_strip_vscode_envelope` did not strip `<context>`, `<attachment>`, or plain-text "
+                    "`'Relevant context from VS Code editor: The following browser pages...'`, and fell back to `u_text.strip()` "
+                    "when a message was pure envelope. That caused the server to mistake the trailing envelope for a brand-new "
+                    "user turn, clearing `tool_rounds` mid-turn and leaking browser Page IDs or hypothetical git instructions."
+                ),
+                source_evidence=(
+                    "Session `vsc_ff92c0c2-2e2c-4ca3-958f-1e249dcd2164` (`docs/clover-generative-compilation-research-context.md` "
+                    "Section 4.3) and pre-fix diff in commit `494f36f`."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="exemplifies",
+                        target="MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001",
+                        provenance="commit:494f36f",
+                        confidence=0.85,
+                        context_scope="state_reset_bug",
+                        created_at="2026-10-26T02:15:00Z",
+                        note="Wiping `tool_rounds` mid-turn made downstream synthesis see 0 tool outputs even after tools had executed.",
+                    ),
+                ],
+            ),
+        ),
+
+        # 32. Correction: Preserve tool_rounds Across Tool-Result Envelopes & Dispatch Git Inspections
+        (
+            "corrections/corr-vscode-turn-state-and-git-dispatch-001.md",
+            MemoryEntry(
+                id="MEM-CORR-VSCODE-TURN-STATE-AND-GIT-DISPATCH-001",
+                title="Correction: Preserve `tool_rounds` Across Tool-Result Envelopes and Dispatch `run_in_terminal` Directly for Git/Branch Inspections",
+                entry_type="correction",
+                epistemic_status="observed",
+                status="active",
+                concepts=["vscode-agent", "tool-loop", "turn-state", "git-dispatch", "envelope-stripping"],
+                tags=["vscode", "chat-server", "correction", "git"],
+                created_at="2026-10-26T03:04:06Z",
+                updated_at="2026-10-26T03:04:06Z",
+                provenance=MemoryProvenance(
+                    source_type="experiment",
+                    source_ref="commit:494f36f; docs/clover-generative-compilation-research-context.md#section-4.3",
+                    actor="human_and_assistant",
+                    recorded_at="2026-10-26T03:04:06Z",
+                ),
+                summary=(
+                    "Fixes in commit `494f36f`: suppress trailing `{role: 'user'}` envelope emission when a message "
+                    "carries `LanguageModelToolResultPart`s, clear `tool_rounds` only when a turn genuinely starts or "
+                    "completes, strip `<context>`/`<attachment>`/browser-page blocks without raw fallback, and dispatch "
+                    "git/branch/worktree inspections directly to `run_in_terminal`."
+                ),
+                content=(
+                    "Resolves the mid-turn `tool_rounds` wipe in `MEM-OBS-VSCODE-TRAILING-CONTEXT-WIPES-TOOLS-001`. "
+                    "Verified on `gpu` (`127.0.0.1:8765/v1/chat/completions`) by replaying both prompts from session "
+                    "`vsc_ff92c0c2-2e2c-4ca3-958f-1e249dcd2164` and running live headless VS Code `1.143.1` (`allTasksPassed: true` "
+                    "across 3-round `list_dir -> run_in_terminal -> read_file`, 2-round `list_dir -> read_file`, and 0-round math)."
+                ),
+                source_evidence=(
+                    "Commit `494f36f` (`4 files changed, 195 insertions(+), 28 deletions(-)`) and live headless VS Code `1.143.1` "
+                    "verification (`run_vscode_verify3.sh`: `allTasksPassed: true`)."
+                ),
+                relationships=[
+                    MemoryRelationship(
+                        type="refines",
+                        target="MEM-OBS-VSCODE-TRAILING-CONTEXT-WIPES-TOOLS-001",
+                        provenance="commit:494f36f",
+                        confidence=0.95,
+                        context_scope="vscode_turn_state",
+                        created_at="2026-10-26T03:04:06Z",
+                        note="Fixes the turn-state and envelope-stripping bug observed in session `vsc_ff92c0c2-2e2c-4ca3-958f-1e249dcd2164`.",
+                    ),
+                    MemoryRelationship(
+                        type="derived_from",
+                        target="MEM-OBS-VSCODE-TRAILING-CONTEXT-WIPES-TOOLS-001",
+                        provenance="commit:494f36f",
+                        confidence=1.0,
+                        context_scope="vscode_turn_state",
+                        created_at="2026-10-26T03:04:06Z",
+                        note="Directly derived from the session store diagnosis.",
+                    ),
+                ],
+            ),
+        ),
     ]
     return entries
 
@@ -2478,20 +3954,26 @@ def retrieve_relevant_memory_package(
         return None
 
     top_score, _, top_reason = seed_candidates[0]
-    has_direct_or_exact_concept = ("direct_id(" in top_reason) or ("concept_exact(" in top_reason)
+    has_direct_or_exact_concept = (
+        ("direct_id(" in top_reason)
+        or ("concept_exact(" in top_reason)
+        or ("structural_cue(" in top_reason)
+    )
     has_phrase_hit = ("phrase_match(" in top_reason) or ("evidence_phrase(" in top_reason)
+    has_concept_or_tag_signal = ("concept_match(" in top_reason) or ("tag_match(" in top_reason)
     has_memory_cue = any(
         cue in q_low
         for cue in (
-            "memory", "remember", "earlier interpretation", "initial interpretation", "corrected",
-            "correction", "superseded", "everything happens inside", "inside and outside",
-            "observer boundary", "cyclic sweep", "slotcache", "per-layer partition",
+            "memory entry", "memory entries", "recorded memory", "remember", "earlier interpretation",
+            "initial interpretation", "corrected", "correction", "superseded", "everything happens inside",
+            "inside and outside", "observer boundary", "cyclic sweep", "slotcache", "per-layer partition",
+            "recorded evidence", "uncertainty boundaries", "what should we suspect",
         )
     )
 
     if not (
         has_direct_or_exact_concept
-        or (has_phrase_hit and top_score >= 16.0)
+        or (has_phrase_hit and has_concept_or_tag_signal and top_score >= 18.0)
         or (has_memory_cue and top_score >= 12.0)
     ):
         return None

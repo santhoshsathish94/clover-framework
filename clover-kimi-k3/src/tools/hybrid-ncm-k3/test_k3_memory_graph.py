@@ -59,9 +59,9 @@ class TestCloverMemoryGraph(unittest.TestCase):
         self.assertIsNotNone(report)
         assert report is not None
         self.assertTrue(report.is_healthy, f"Expected healthy default corpus, got: {report.to_dict()}")
-        self.assertEqual(report.total_files, 12)
-        self.assertEqual(report.valid_entries, 12)
-        self.assertEqual(report.total_relationships, 20)
+        self.assertEqual(report.total_files, 32)
+        self.assertEqual(report.valid_entries, 32)
+        self.assertEqual(report.total_relationships, 65)
 
         # Verify every entry has a valid stable ID, entry_type, epistemic_status, timestamps, and provenance
         for eid, entry in self.entries_dict().items():
@@ -455,7 +455,7 @@ class TestCloverMemoryGraph(unittest.TestCase):
         out = subprocess.check_output([sys.executable, "-c", check_code], text=True).strip()
         parsed = json.loads(out)
         self.assertTrue(parsed["healthy"])
-        self.assertEqual(parsed["count"], 12)
+        self.assertEqual(parsed["count"], 32)
         self.assertEqual(set(parsed["ids"]), {"MEM-CORR-INSIDE-BOUNDARY-002", "MEM-HYP-INSIDE-MIND-001"})
 
 

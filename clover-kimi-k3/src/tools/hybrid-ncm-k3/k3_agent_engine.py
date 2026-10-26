@@ -2098,8 +2098,12 @@ class CloverK3AgentEngine:
         ont_enabled = self.enable_ontology if use_ontology is None else bool(use_ontology)
         tool_calls_log = []
         tool_obs_parts = []
+        no_mem_graph = "[NO_MEMORY_GRAPH]" in user_prompt
+        if no_mem_graph:
+            user_prompt = user_prompt.replace("[NO_MEMORY_GRAPH]", "").strip()
         raw_user_q = _extract_raw_user_query(user_prompt)
         has_verified_ws_tools = ("Verified Workspace Tool Outputs:" in user_prompt)
+        has_attached_mem_pkg = ("=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===" in user_prompt)
 
         # 00. Direct Concept-Plan-to-Text NCM routing: when the prompt supplies a dense concept skeleton
         #     ("Rewrite these notes into one clear, grammatical sentence using only these facts:\n<plan>"),
@@ -2133,12 +2137,18 @@ class CloverK3AgentEngine:
 
         # 0m. File-Based Persistent Memory Tree & Relational Knowledge Graph (`k3_memory_graph.py`)
         mem_pkg = None
-        if getattr(self, "enable_memory_graph", False) and getattr(self, "memory_graph", None) is not None and not has_verified_ws_tools:
+        if (
+            getattr(self, "enable_memory_graph", False)
+            and getattr(self, "memory_graph", None) is not None
+            and not has_verified_ws_tools
+            and not no_mem_graph
+            and not has_attached_mem_pkg
+        ):
             t_mem0 = time.perf_counter()
             mem_pkg = retrieve_relevant_memory_package(self.memory_graph, raw_user_q)
             if mem_pkg is not None and mem_pkg.items:
                 mem_ms = round((time.perf_counter() - t_mem0) * 1000.0, 1)
-                mem_str = mem_pkg.render_for_k3()
+                mem_str = mem_pkg.render_for_k3(compact=True)
                 tool_calls_log.append({
                     "tool": "memory_graph",
                     "input": raw_user_q[:160],
@@ -2225,6 +2235,12 @@ class CloverK3AgentEngine:
             and not is_mcq
             and py_code is None
             and search_q is None
+            and mem_pkg is None
+            and not has_attached_mem_pkg
+            and not any(
+                diag_kw in raw_low
+                for diag_kw in ("hit rate", "memoization", "lru", "retriever", "4-bit", "quantisation", "epistemic", "kv-cache", "prefix hash")
+            )
             and (
                 (
                     len(re.findall(r"\b\d+(?:\.\d+)?\b", raw_user_q)) >= 2
@@ -2318,11 +2334,20 @@ class CloverK3AgentEngine:
 
         if search_q is not None and search_q != raw_user_q:
             effective_user_prompt = f"{raw_user_q} (regarding: {search_q})"
+        elif has_attached_mem_pkg:
+            att_mem_hdr = user_prompt.split("Using the attached content / session context above, answer the user's request clearly and thoroughly:\n", 1)[0].strip()
+            tool_obs_parts.append(
+                f"{att_mem_hdr}\n"
+                f"Instruction: Use the persistent memory records [M#], their provenance, and their correction/evolution chains above."
+            )
+            tool_obs_str = "\n\n" + "\n\n".join(tool_obs_parts)
+            effective_user_prompt = raw_user_q
         else:
             effective_user_prompt = user_prompt.strip()
         prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=effective_user_prompt) + tool_obs_str
         msgs.append({"role": "user", "content": prompt_with_obs})
 
+        torch.cuda.empty_cache()
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
             prefix_str = base_chat + "Let me think carefully and reply directly to the user." + ENTRY_ANCHOR
@@ -2797,9 +2822,32 @@ class CloverK3AgentEngine:
                     mem_bullets.append(
                         f"• [{e.id}] ({e.entry_type}, epistemic={e.epistemic_status}, {role_lbl}, source={e.provenance.source_ref}): {e.summary}"
                     )
-                combined_mem_src = "\n".join(mem_bullets + plans[:6])
-                plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=24)
+                combined_mem_src = "\n".join(mem_bullets + plans[:4])
+                plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
+        elif has_attached_mem_pkg and not has_verified_ws_tools:
+            marker = "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n"
+            att_mem_block = user_prompt.split(marker, 1)[0]
+            joined_p_low = " ".join(plans).lower()
+            att_m_entries = list(re.finditer(
+                r"\[M\d+\]\s+(MEM-[A-Z0-9\-]+)\s+—\s+([^\r\n]+)\n\s+File:[^\r\n]+\|\s+Type:\s*([a-z_]+)\s*\|\s*Epistemic Status:\s*([a-z_]+)\s*\|\s*Lifecycle:\s*([^\r\n]+)\n\s+Provenance:\s*([^\r\n]+)\n\s+Retrieval Path:[^\r\n]+\n\s+Summary:\s*([^\r\n]+)(?:\n\s+Original Source Evidence:\s*([^\r\n]+))?",
+                att_mem_block,
+            ))
+            top_att_ids = [m.group(1) for m in att_m_entries[:2]]
+            if att_m_entries and not all(mid.lower() in joined_p_low for mid in top_att_ids):
+                mem_bullets = []
+                for m in att_m_entries[:3]:
+                    mid, _mtitle, mtype, mepist, mlifecycle, mprov, msum, m_ev = (
+                        m.group(1), m.group(2), m.group(3), m.group(4), m.group(5).strip(), m.group(6).strip(), m.group(7).strip(), (m.group(8) or "").strip()
+                    )
+                    ev_part = f" Evidence: {m_ev}" if m_ev else ""
+                    mem_bullets.append(
+                        f"• [{mid}] ({mtype}, epistemic={mepist}, {mlifecycle}, provenance={mprov}): {msum}{ev_part}"
+                    )
+                combined_mem_src = "\n".join(mem_bullets + plans[:4])
+                plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
 
+        del past_kv, out
+        torch.cuda.empty_cache()
         return plans, lat_steps, exit_reason, tool_calls_log
 
     @torch.no_grad()
@@ -2881,8 +2929,8 @@ class CloverK3AgentEngine:
         cands_t = [[] for _ in range(W)]
         cands_i = [[] for _ in range(W)]
         total_rows = cands * W
-        for r0 in range(0, total_rows, 16):
-            r1 = min(total_rows, r0 + 16)
+        for r0 in range(0, total_rows, 8):
+            r1 = min(total_rows, r0 + 8)
             lg_chunk = self.copy_dec(
                 self.vqvae.decoder, z_top[r0:r1], z_rh_k[r0:r1], msk_r_k[r0:r1], z_bpe_k[r0:r1], p_kpad_k[r0:r1]
             )
@@ -2899,6 +2947,7 @@ class CloverK3AgentEngine:
                         lg_row[:, win_masks[w_i]] -= 80.0
                     ts, is_ = self._dec_k3_aligned(lg_row, p_list)
                     cands_t[w_i].append(ts.strip()); cands_i[w_i].append(is_)
+            del lg_chunk
         out_txts, out_ids = [], []
         for w_i in range(W):
             if is_code_win[w_i]:
