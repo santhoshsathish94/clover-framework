@@ -2179,12 +2179,24 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         )
                     return core_q
                 cleaned = re.sub(
-                    r"<(?:environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory)>[\s\S]*?</(?:environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory)>",
+                    r"<(?:context|environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory|conversation-summary)>[\s\S]*?</(?:context|environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory|conversation-summary)>",
                     "",
                     u_text,
                     flags=re.IGNORECASE,
+                )
+                cleaned = re.sub(
+                    r"<attachment\b[^>]*>[\s\S]*?</attachment>",
+                    "",
+                    cleaned,
+                    flags=re.IGNORECASE,
+                )
+                cleaned = re.sub(
+                    r"Relevant context from VS Code editor:\s*(?:The following browser pages[^\r\n]*\s*(?:-\s*[^\r\n]*\s*)*)?",
+                    "",
+                    cleaned,
+                    flags=re.IGNORECASE,
                 ).strip()
-                return cleaned or u_text.strip()
+                return cleaned
 
             user_prompt = ""
             image_b64 = None
@@ -2203,11 +2215,15 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 if role == "user":
                     cleaned_u = _strip_vscode_envelope(txt_c)
                     if cleaned_u:
-                        if pending_u and tool_rounds:
-                            # If the user sent a new message in a subsequent turn, reset per-turn tool_rounds
+                        if not pending_u:
+                            # Starting a brand-new user turn after prior turn completed
                             tool_rounds.clear()
-                        pending_u = cleaned_u
-                        user_prompt = cleaned_u
+                            pending_u = cleaned_u
+                            user_prompt = cleaned_u
+                        elif not tool_rounds:
+                            # Consecutive user messages before any tool call in this turn
+                            pending_u = cleaned_u
+                            user_prompt = cleaned_u
                 elif role == "assistant":
                     t_calls = m.get("tool_calls") or []
                     if isinstance(t_calls, list) and t_calls:
@@ -2223,6 +2239,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                     elif pending_u and txt_c:
                         prior_turns.append({"user": pending_u, "reply": txt_c, "plans": []})
                         pending_u = ""
+                        tool_rounds.clear()
                 elif role == "tool":
                     tc_id = str(m.get("tool_call_id") or "")
                     meta_tc = call_id_to_meta.get(tc_id, {"name": str(m.get("name") or "tool"), "arguments": "{}"})
@@ -2360,7 +2377,13 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             else:
                 effective_user_prompt = user_prompt
 
+            if req_id_hdr == "vscode_default":
+                first_u = prior_turns[0]["user"] if prior_turns else user_prompt
+                session_id = "vsc_" + uuid.uuid5(uuid.NAMESPACE_DNS, first_u).hex[:16]
+
             with STATE.sess_lock:
+                if not prior_turns:
+                    STATE.session_meta.pop(session_id, None)
                 STATE.sessions[session_id] = prior_turns[-6:]
 
             if image_b64:

@@ -61,6 +61,7 @@ class CloverLanguageModelChatProvider {
 
       const contentParts = [];
       const assistantToolCalls = [];
+      let hasToolResults = false;
       const parts = Array.isArray(msg.content) ? msg.content : [msg.content];
       for (const part of parts) {
         if (!part) {
@@ -82,6 +83,7 @@ class CloverLanguageModelChatProvider {
           });
         } else if (part.callId && part.content !== undefined) {
           // LanguageModelToolResultPart
+          hasToolResults = true;
           const toolTxt = Array.isArray(part.content)
             ? part.content.map((p) => (typeof p.value === "string" ? p.value : JSON.stringify(p))).join("\n")
             : String(part.content);
@@ -106,9 +108,9 @@ class CloverLanguageModelChatProvider {
           content: contentParts.length === 1 ? contentParts[0].text : null,
           tool_calls: assistantToolCalls,
         });
-      } else if (contentParts.length === 1 && contentParts[0].type === "text") {
+      } else if (!hasToolResults && contentParts.length === 1 && contentParts[0].type === "text") {
         out.push({ role, content: contentParts[0].text });
-      } else if (contentParts.length > 0) {
+      } else if (!hasToolResults && contentParts.length > 0) {
         out.push({ role, content: contentParts });
       }
     }

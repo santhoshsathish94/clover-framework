@@ -238,3 +238,13 @@ We can integrate **Generative Compilation (`k3_generative_compiler.py`)** direct
    - **`Priority 3 (Reasoning, Guardrail & AA-LCR, N=15)`:** `15 / 15` (`100.00%`)
    - **`Section 4B (Held-Out WMT14 Concept-to-Text, N=10)`:** `10 / 10` (**`100.00%`**, up from `93.69%` in `V5`)
    - **`Pooled All Tasks (`N=47`)`:** **`47 / 47` (`100.00%`, `+70.88 pp` over `V1`, `95% CI [92.44, 100.00]`, up from `98.66%` in `V5`)**.
+
+### 4.3 VS Code Agent Tool-Calling Fix & Live Verification (`extension.js` + `k3_chat_server.py` + `k3_agent_engine.py`, 2026-10-26)
+
+1. **Diagnosed from `/home/usergpu/merge_lf/out/sessions_store.json` (`vsc_ff92c0c2-2e2c-4ca3-958f-1e249dcd2164`):**
+   - In VS Code Agent mode, when VS Code returned `LanguageModelToolResultPart` inside a `User`-role message alongside `<context>` / `<reminderInstructions>` or `"Relevant context from VS Code editor:\nThe following browser pages..."`, `_convertMessages` in `extension.js` emitted a trailing `{role: "user"}` message after `{role: "tool"}`.
+   - In `k3_chat_server.py`, `if pending_u and tool_rounds: tool_rounds.clear()` cleared `tool_rounds` mid-turn when that trailing `{role: "user"}` message arrived, and conversely failed to clear `tool_rounds` at the start of the next turn after an assistant text reply reset `pending_u = ""`.
+   - In `k3_agent_engine.py`, `decide_vscode_agent_step` now performs priority direct dispatch for git/branch/worktree inspections (`wants_git_inspect` + `_build_git_inspect_cmd()`), fuses multi-turn follow-up context (`effective_q`), handles empty tool descriptions safely, and `run_agent_planning` (`has_verified_ws_tools`) extracts the verified `[Step k — ...]` tool outputs while stripping hypothetical meta-instructions.
+2. **Live Verification on `gpu` (`127.0.0.1:8765/v1/chat/completions` + Headless VS Code `1.143.1`):**
+   - Exact replay of `vsc_ff92c0c2-2e2c-4ca3-958f-1e249dcd2164` prompts (`"Hi clover can you look at clover repo and see how many working trees are there"` and `"can you check the recent changes of this branch gpu-merged-optimised-layers and what have they done so far"`): Round 0 immediately dispatches `run_in_terminal` (`git -C ... worktree list` and `git -C ... log -n 8 --oneline origin/gpu-merged-optimised-layers; git -C ... show --stat ...`), and Round 1 synthesizes the verified git output (`1 active` worktree; commits `30a1abf`, `4d8d891`, `7cbb532`, `e48f49b`, etc.) with zero Page ID leakage or hypothetical prose plans.
+   - Live Headless VS Code `1.143.1` (`run_vscode_verify3.sh`): `allTasksPassed: true` across multi-step `list_dir` $\to$ `run_in_terminal` $\to$ `read_file` (`3 rounds`), `list_dir` $\to$ `read_file` (`2 rounds`), and direct math (`0 rounds`).

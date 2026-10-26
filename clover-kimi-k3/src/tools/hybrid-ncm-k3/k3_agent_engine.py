@@ -2094,6 +2094,7 @@ class CloverK3AgentEngine:
         tool_calls_log = []
         tool_obs_parts = []
         raw_user_q = _extract_raw_user_query(user_prompt)
+        has_verified_ws_tools = ("Verified Workspace Tool Outputs:" in user_prompt)
 
         # 00. Direct Concept-Plan-to-Text NCM routing: when the prompt supplies a dense concept skeleton
         #     ("Rewrite these notes into one clear, grammatical sentence using only these facts:\n<plan>"),
@@ -2107,7 +2108,7 @@ class CloverK3AgentEngine:
 
         # 0. Ontology-Guided Neuro-Symbolic GraphRAG retrieval (`[E#] Entity record` + `[P#] Relationship path`)
         ont_evidence = []
-        if ont_enabled:
+        if ont_enabled and not has_verified_ws_tools:
             t_ont0 = time.perf_counter()
             ont_evidence = self.ontology_retriever.retrieve(raw_user_q, max_entities=4, max_paths=6)
             if ont_evidence:
@@ -2126,7 +2127,7 @@ class CloverK3AgentEngine:
                 )
 
         # 0a. Check if the user is asking for a chart, graph, plot, or diagram
-        vis_tpl = match_and_execute_visual_output(raw_user_q, self.py_tool, history=history)
+        vis_tpl = None if has_verified_ws_tools else match_and_execute_visual_output(raw_user_q, self.py_tool, history=history)
         if vis_tpl is not None:
             vis_script, vis_out, media_items, vis_plans = vis_tpl
             tool_calls_log.append({
@@ -2138,7 +2139,7 @@ class CloverK3AgentEngine:
             return vis_plans, min_lat, "visual_chart", tool_calls_log
 
         # 0b. Check if the user is asking for a verified Python algorithm / code implementation
-        code_tpl = match_verified_code_template(raw_user_q)
+        code_tpl = None if has_verified_ws_tools else match_verified_code_template(raw_user_q)
         if code_tpl is not None:
             py_script, verified_code_plans = code_tpl
             t_c0 = time.perf_counter()
@@ -2148,7 +2149,7 @@ class CloverK3AgentEngine:
             return verified_code_plans, min_lat, "verified_code", tool_calls_log
 
         # 1. Check if live web/research `<search>` is needed (including follow-ups like 'find it' or 'more details please and links')
-        search_q = needs_agent_search_tool(raw_user_q, history=history)
+        search_q = None if has_verified_ws_tools else needs_agent_search_tool(raw_user_q, history=history)
         if search_q is not None:
             t_s0 = time.perf_counter()
             s_res = self.search_tool.execute(search_q).strip()
@@ -2161,8 +2162,8 @@ class CloverK3AgentEngine:
             )
 
         # 2. Check if `<python>` calculation tool or Ontology Symbolic Math Constraint solver is needed
-        py_code = needs_agent_python_tool(raw_user_q, history=history)
-        if py_code is None and ont_enabled:
+        py_code = None if has_verified_ws_tools else needs_agent_python_tool(raw_user_q, history=history)
+        if py_code is None and ont_enabled and not has_verified_ws_tools:
             sym_math = self.symbolic_verifier.solve_symbolic_math_constraints(raw_user_q)
             if sym_math is not None:
                 py_code, _ = sym_math
@@ -2715,6 +2716,46 @@ class CloverK3AgentEngine:
                 if fallback_src.strip():
                     plans = parse_and_split_plans(fallback_src, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
 
+        # When VS Code workspace tools (`list_dir`, `run_in_terminal`, `read_file`, etc.) executed and provided
+        # `Verified Workspace Tool Outputs:`, strip any hypothetical "how to do it" meta-instructions and ensure
+        # the actual verified outputs from the tools are reported directly!
+        if has_verified_ws_tools:
+            hypothetical_pats = (
+                "identify the local", "navigate to the local", "use git commands to", "the output of `git",
+                "if there are many commits", "if the branch is not found", "if there are no working trees",
+                "each line represents a working tree", "to answer this, i need to", "i will count the number of lines",
+                "i need to summarize", "i will extract", "i have provided the information",
+                "so the answer to the question", "the log shows several commits with descriptions",
+            )
+            filtered_ws_plans = [
+                p for p in plans
+                if not any(hp in p.lower() for hp in hypothetical_pats)
+                and p.strip().lower() not in ("summary:", "• summary:")
+            ]
+            marker = "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n"
+            obs_after_hdr = user_prompt.split("Verified Workspace Tool Outputs:", 1)[1] if "Verified Workspace Tool Outputs:" in user_prompt else user_prompt
+            obs_block = obs_after_hdr.split(marker, 1)[0].strip()
+            summary_lines = []
+            for step_m in re.finditer(r"\[Step\s+(\d+)\s+—\s+([a-zA-Z0-9_]+)\((.*?)\)\]:\s*([\s\S]*?)(?=\n\[Step\s+\d+|\Z)", obs_block):
+                s_num, t_name, t_args, t_out = step_m.group(1), step_m.group(2), step_m.group(3), step_m.group(4).strip()
+                out_lns = [x.strip() for x in t_out.splitlines() if x.strip()]
+                if t_name == "run_in_terminal" and "worktree list" in t_args:
+                    summary_lines.append(f"• Git Working Trees ({len(out_lns)} active): " + " ; ".join(out_lns[:6]))
+                elif t_name == "run_in_terminal":
+                    for cl in out_lns[:10]:
+                        summary_lines.append(f"• {cl}")
+                elif t_name == "read_file":
+                    for fl in out_lns[:8]:
+                        summary_lines.append(f"• {fl}")
+                elif t_name == "list_dir":
+                    entries_preview = ", ".join(out_lns[:18])
+                    summary_lines.append(f"• Directory Listing ({len(out_lns)} entries): {entries_preview}")
+            if summary_lines:
+                combined_ws_src = "\n".join(summary_lines + filtered_ws_plans[:6])
+                plans = parse_and_split_plans(combined_ws_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=24)
+            elif filtered_ws_plans:
+                plans = filtered_ws_plans
+
         return plans, lat_steps, exit_reason, tool_calls_log
 
     @torch.no_grad()
@@ -3016,18 +3057,41 @@ class CloverK3AgentEngine:
         if not tool_rounds and is_short_greeting_or_ack(raw_q):
             return None
 
+        # Combine multi-turn context (`effective_q`) when the current user message is a follow-up
+        # (e.g. "no we have cloned and making changed to it's available local see it yourself", "check it", "do it")
+        effective_q = raw_q
+        if history and (
+            len(raw_q.split()) <= 16
+            or any(
+                fw in low_q
+                for fw in (
+                    "see it", "check it", "read it", "do it", "use tools", "available local",
+                    "we have cloned", "it's available", "this branch", "that branch", "same repo",
+                )
+            )
+        ):
+            prev_users = [
+                _extract_raw_user_query(str(h.get("user") or "")).strip()
+                for h in history[-2:]
+                if str(h.get("user") or "").strip()
+            ]
+            if prev_users:
+                effective_q = " | ".join(prev_users + [raw_q])
+        effective_low = effective_q.lower()
+
         has_workspace_intent = bool(
             tool_rounds
             or any(
-                kw in low_q
+                kw in effective_low
                 for kw in (
-                    "repo", "repository", "worktree", "working tree", "branch", "commit", "git",
+                    "repo", "repository", "worktree", "working tree", "branch", "branches", "commit", "commits",
+                    "recent changes", "what have they done", "what changed", "diff", "status", "log", "git",
                     "file", "files", "folder", "folders", "directory", "directories", "path",
                     "read", "look at", "check", "inspect", "see it", "local", "cloned", "workspace",
                     "search", "find", "grep", "where is", "how many", "list", "edit", "modify",
                     "update", "fix", "create", "write", "run", "test", "build", "terminal", "command",
                     "code", "function", "class", "implement", "version", ".py", ".rs", ".ts", ".js",
-                    ".md", ".json", ".c", ".h", ".toml", ".yaml", ".yml",
+                    ".md", ".json", ".c", ".h", ".cu", ".cuh", ".toml", ".yaml", ".yml",
                 )
             )
         )
@@ -3044,7 +3108,8 @@ class CloverK3AgentEngine:
             name = str(fn.get("name") or "").strip()
             if not name or name in ("vscode_askQuestions", "manage_todo_list"):
                 continue
-            desc = str(fn.get("description") or "").splitlines()[0][:200]
+            desc_lines = str(fn.get("description") or "").splitlines()
+            desc = desc_lines[0][:200] if desc_lines else ""
             params = fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}}
             tool_map[name] = {
                 "type": "function",
@@ -3140,6 +3205,72 @@ class CloverK3AgentEngine:
                 t_args_obj = {}
             norm_a = _normalize_tool_args(t_name, t_args_obj)
             already_called_sigs.add((t_name, json.dumps(norm_a, sort_keys=True)))
+
+        called_names = {rd.get("name") for rd in tool_rounds}
+        repo_dir = (
+            f"{ws_root}{sep_ch}oss{sep_ch}clover-framework"
+            if (
+                any(k in effective_low for k in ("clover", "k3", "kimi", "ncm", "gpu-merged-optimised-layers", "rust-gpu-merged"))
+                and "clover-framework" not in ws_root
+            )
+            else ws_root
+        )
+        wants_explicit_list_dir = any(w in effective_low for w in ("list the dir", "list dir", "files in", "what files are in"))
+        wants_worktree = any(w in effective_low for w in ("worktree", "working tree", "worktrees", "working trees"))
+        wants_git_inspect = wants_worktree or any(
+            w in effective_low
+            for w in (
+                "branch", "branches", "commit", "commits", "recent changes", "what have they done",
+                "what changed", "git log", "git status", "git diff", "git show", "gpu-merged-optimised-layers", "rust-gpu-merged",
+            )
+        )
+
+        def _build_git_inspect_cmd() -> str:
+            if wants_worktree and not any(w in effective_low for w in ("recent changes", "what have they done", "git log", "git show")):
+                return f'git -C "{repo_dir}" worktree list'
+            # Check if a specific branch name is mentioned (e.g. gpu-merged-optimised-layers, rust-gpu-merged)
+            ignore_names = {
+                "clover-framework", "clover-kimi-k3", "ai-orchestration-framework", "aurora-lm",
+                "elf-pytorch", "react-flight-oom", "react-flight-oom-repro", "kimi-k3-in-c",
+                "scratch-agents", "professional-profile", "k3-box-archive", "k3-official",
+                "k3-real-prompt", "k3-results", "clover-stack", "clover-framework-hybrid",
+            }
+            br_name = None
+            m_br = re.search(
+                r"\b(?:branch|on|in|of|merge|from)\s+['\"`]?([a-zA-Z0-9_.\-/]{3,})['\"`]?",
+                effective_q,
+                flags=re.IGNORECASE,
+            )
+            if m_br:
+                cand_b = m_br.group(1).strip(".,;:)'\"`")
+                if cand_b.lower() not in (
+                    "the", "this", "that", "our", "local", "repo", "repository", "it", "there", "far", "changes", "commits",
+                ) and cand_b.lower() not in ignore_names:
+                    br_name = cand_b
+            if not br_name:
+                for m_h in re.findall(r"\b([a-z0-9]+(?:-[a-z0-9]+){1,})\b", effective_low):
+                    if m_h not in ignore_names and not re.match(r"^[0-9a-f]{4,}-", m_h):
+                        br_name = m_h
+                        break
+            if br_name:
+                ref_b = br_name if br_name.startswith("origin/") else f"origin/{br_name}"
+                if "\\" in ws_root:
+                    return f'git -C "{repo_dir}" log -n 8 --oneline {ref_b} ; git -C "{repo_dir}" show --stat {ref_b}'
+                return (
+                    f'git -C "{repo_dir}" log -n 8 --oneline {ref_b} 2>/dev/null || git -C "{repo_dir}" log -n 8 --oneline {br_name}; '
+                    f'git -C "{repo_dir}" show --stat {ref_b} 2>/dev/null || git -C "{repo_dir}" show --stat {br_name}'
+                )
+            if "\\" in ws_root:
+                return f'git -C "{repo_dir}" status -sb ; git -C "{repo_dir}" branch -a ; git -C "{repo_dir}" log -n 8 --oneline'
+            return f'git -C "{repo_dir}" status -sb && git -C "{repo_dir}" branch -a && git -C "{repo_dir}" log -n 8 --oneline'
+
+        # Priority Direct Dispatch for explicit git/branch/worktree inspections when no explicit `list_dir` was requested first
+        if wants_git_inspect and (not wants_explicit_list_dir or "list_dir" in called_names) and "run_in_terminal" in tool_map and "run_in_terminal" not in called_names:
+            git_cmd = _build_git_inspect_cmd()
+            norm_args = _normalize_tool_args("run_in_terminal", {"command": git_cmd})
+            sig = ("run_in_terminal", json.dumps(norm_args, sort_keys=True))
+            if sig not in already_called_sigs:
+                return {"name": "run_in_terminal", "arguments": json.dumps(norm_args)}
 
         # Build the native multi-turn messages array for `ha_tok.apply_chat_template(chat_msgs, tools=selected_tools)`
         sys_prompt = (
@@ -3283,37 +3414,38 @@ class CloverK3AgentEngine:
                         return {"name": t_name, "arguments": json.dumps(norm_args)}
 
         # Multi-step fallback when the user prompt explicitly requests a sequence of workspace inspections
-        # (e.g. 'list dir ... then read VERSION', 'check git worktrees', 'read <file>') and a step in that sequence has not run yet
-        called_names = {rd.get("name") for rd in tool_rounds}
-        if any(w in low_q for w in ("worktree", "working tree", "worktrees", "working trees")) and "run_in_terminal" in tool_map and "run_in_terminal" not in called_names:
-            repo_dir = f"{ws_root}{sep_ch}oss{sep_ch}clover-framework" if ("clover" in low_q and "clover-framework" not in ws_root) else ws_root
-            norm_args = _normalize_tool_args("run_in_terminal", {"command": f'git -C "{repo_dir}" worktree list'})
+        # (e.g. 'list dir ... then read VERSION', 'check git worktrees', 'check branch recent changes', 'read <file>')
+        if wants_git_inspect and "run_in_terminal" in tool_map and "run_in_terminal" not in called_names:
+            norm_args = _normalize_tool_args("run_in_terminal", {"command": _build_git_inspect_cmd()})
             sig = ("run_in_terminal", json.dumps(norm_args, sort_keys=True))
             if sig not in already_called_sigs:
                 return {"name": "run_in_terminal", "arguments": json.dumps(norm_args)}
 
-        if any(w in low_q for w in ("list the dir", "list dir", "files in", "what files are in")) and "list_dir" in tool_map and "list_dir" not in called_names:
+        if wants_explicit_list_dir and "list_dir" in tool_map and "list_dir" not in called_names:
             norm_args = _normalize_tool_args("list_dir", {"path": ws_root})
             sig = ("list_dir", json.dumps(norm_args, sort_keys=True))
             if sig not in already_called_sigs:
                 return {"name": "list_dir", "arguments": json.dumps(norm_args)}
 
         m_fpaths = re.findall(
-            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|txt|sh)\b|\b(?:VERSION|README\.md|LICENSE|Makefile|Dockerfile)\b)",
-            raw_q,
+            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b)",
+            effective_q,
         )
         if m_fpaths and "read_file" in tool_map:
             for cand_fp in m_fpaths:
                 cand_fp = cand_fp.rstrip(".,;:)")
                 if cand_fp.startswith(("http:", "https:", "//")):
                     continue
-                abs_cand = _resolve_abs_path(cand_fp)
+                if "/" not in cand_fp and "\\" not in cand_fp and repo_dir != ws_root:
+                    abs_cand = f"{repo_dir}{sep_ch}{cand_fp}"
+                else:
+                    abs_cand = _resolve_abs_path(cand_fp)
                 # Skip workspace root or directory paths (which do not have a filename extension or known file basename)
                 base_name = abs_cand.replace("\\", "/").rstrip("/").split("/")[-1]
                 is_file_like = ("." in base_name) or base_name in ("VERSION", "README", "LICENSE", "Makefile", "Dockerfile", "Cargo.lock")
                 if not is_file_like or abs_cand.rstrip("\\/") == ws_root.rstrip("\\/"):
                     continue
-                norm_args = _normalize_tool_args("read_file", {"filePath": cand_fp, "startLine": 1, "endLine": 150})
+                norm_args = _normalize_tool_args("read_file", {"filePath": abs_cand, "startLine": 1, "endLine": 150})
                 sig = ("read_file", json.dumps(norm_args, sort_keys=True))
                 if sig not in already_called_sigs:
                     return {"name": "read_file", "arguments": json.dumps(norm_args)}
