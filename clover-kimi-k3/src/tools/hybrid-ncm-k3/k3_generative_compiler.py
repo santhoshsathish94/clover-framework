@@ -1052,9 +1052,9 @@ class CloverRustGenerativeCompiler:
         if not end_marker and brace_stack:
             last_nonempty = next((ln.strip() for ln in reversed(raw_lines) if ln.strip() and not ln.strip().startswith("//")), "")
             in_fn = ("fn" in brace_stack)
-            if in_fn and last_nonempty.endswith((";", "{", "}")):
-                sealed_lines.append("    panic!()")
-            for _ in range(len(brace_stack)):
+            for idx_b, b_kind in enumerate(reversed(brace_stack)):
+                if in_fn and (idx_b > 0 or last_nonempty.endswith((";", "{", "}"))):
+                    sealed_lines.append("    panic!();" if b_kind != "fn" else "    panic!()")
                 sealed_lines.append("}")
         sealed_code = "\n".join(sealed_lines) + "\n"
 
