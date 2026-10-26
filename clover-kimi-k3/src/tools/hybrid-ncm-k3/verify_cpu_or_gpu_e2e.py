@@ -67,20 +67,22 @@ def main():
     eng = CloverK3AgentEngine(out_dir=ckpt_dir, dev_ncm=dev, dev_ha=dev, k3_experts_runner=k3_runner)
     print(f"[PASS 2/5] CloverK3AgentEngine initialized on {eng.dev} in {eng.setup_s}s (vocab={eng.k3_tok.vocab_size})", flush=True)
 
-    # 3. Verify Collective Memory + Ontology + Generative Compiler
+    # 3. Verify Collective Memory + Ontology + Generative Compiler + Knowledge Search
     mem_nodes = len(eng.memory_graph.entries)
-    ont_ev = eng.ontology_retriever.retrieve("Does tying your belly reduce belly fat?", top_k=2)
-    gc_res = eng.py_gc.check_partial("def is_prime(n: int) -> bool:\n    if n <= 1:\n        return False\n")
+    ont_ev = eng.ontology_retriever.retrieve("Does tying your belly reduce belly fat?", max_entities=4, max_paths=6)
+    gc_res = eng.py_gc.check_prefix("def is_prime(n: int) -> bool:\n    if n <= 1:\n        return False\n", end_marker=False)
+    kb_res = eng.search_tool.execute("how to use and adopt the clover framework in regular work")
     assert mem_nodes >= 20, f"Expected >=20 memory nodes, got {mem_nodes}"
     assert gc_res.ok, f"Expected partial Python code to seal cleanly, got {gc_res}"
-    print(f"[PASS 3/5] Subsystems verified: MemoryGraph={mem_nodes} nodes, Ontology={len(ont_ev)} hits, PythonGC=OK", flush=True)
+    assert "AGENTS.md" in kb_res and "CLOVER-CONTEXT.md" in kb_res, f"Unexpected KB result: {kb_res[:120]}"
+    print(f"[PASS 3/5] Subsystems verified: MemoryGraph={mem_nodes} nodes, Ontology={len(ont_ev)} hits, PythonGC=OK, CloverKB=OK", flush=True)
 
     # 4. Run Multi-Turn Natural Conversation & Tool Execution through all 7 layers
     cands = 2 if dev == "cpu" else 4
     turns = [
-        ("What is clover", lambda r: "Context" in r["reply"] and "Direction" in r["reply"]),
-        ("How can I do that", lambda r: "AGENTS.md" in r["reply"] or "Context" in r["reply"]),
+        ("hi clover how are you", lambda r: len(r["reply"]) > 10),
         ("can you generate a rocket in space image", lambda r: bool(r.get("tool_calls")) and "Rocket" in json.dumps(r.get("tool_calls", []))),
+        ("I never asked for a futuristic city", lambda r: "Sorry about that" in r["reply"]),
         ("What is 25 * 4?", lambda r: "100" in r["reply"]),
     ]
 
