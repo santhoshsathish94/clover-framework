@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Origin — Eleven Papers That Built Modern AI (1943–2017) — Clover</title>
-<meta name="description" content="A plain-language human guide to the eleven foundational papers of AI and neural computation from McCulloch &amp; Pitts (1943) to the Transformer (2017), written from reading the original papers and running their mechanisms firsthand.">
+<title>Origin — Eleven Stories &amp; Visuals That Built Modern AI (1943–2017) — Clover</title>
+<meta name="description" content="Step through the eleven foundational papers of AI from 1943 to 2017 — told through memorable human stories, visual diagrams, and firsthand experiments.">
 <link rel="canonical" href="https://cloverframework.com/origin/">
-<meta property="og:title" content="Origin — Eleven Papers That Built Modern AI (1943–2017) — Clover">
-<meta property="og:description" content="From binary threshold neurons (1943) and Turing's stored-program machine (1950) to backpropagation (1986), TD learning (1988), LeNet-5 (1998), AlexNet (2012), and the Transformer (2017) — explained clearly from firsthand code and experiments.">
+<meta property="og:title" content="Origin — Eleven Stories &amp; Visuals That Built Modern AI (1943–2017) — Clover">
+<meta property="og:description" content="Step through the 74-year story of AI one discovery at a time: from the 1943 cold-rod nerve illusion and Turing's 30-second arithmetic slip to backpropagation, LeNet-5, AlexNet, and the Transformer.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/origin/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
@@ -69,13 +69,1083 @@
   <section class="hero" id="overview">
     <div class="wrap">
       <h1>Where modern AI actually came from</h1>
-      <p class="hero__tagline">Eleven foundational papers from 1943 to 2017 — read in full, built from scratch, and explained for humans.</p>
-      <p class="lede">When people talk about AI today, it often sounds as if everything arrived all at once. It did not. Modern AI was built across seventy-four years by researchers who kept running into a concrete wall, understanding why the previous idea failed at that wall, and inventing the next mechanism to get past it.</p>
-      <p class="lede">To truly understand these eleven papers, we did not rely on summaries. We pulled the original monographs and papers (including 1950s assembly listings, 1969 page proofs, 1988 errata, and raw LaTeX source archives), audited open-source reproductions, and built and ran every core equation ourselves. This page is what each paper is really about, in plain human language.</p>
+      <p class="hero__tagline">Eleven human stories and visual diagrams from 1943 to 2017 — step through them one by one.</p>
+      <p class="lede">Humans remember stories and pictures far better than walls of equations. Behind every famous AI paper is a simple human story: a researcher who hit a real wall, pictured why the old idea broke at that wall, and built a new mechanism to get past it.</p>
+      <p class="lede">We read all eleven original papers in full, audited open-source code, and built and ran every mechanism from scratch. Use the <strong>Next</strong> button inside each chapter below to walk through the 74-year journey one story and one picture at a time.</p>
       <div class="actions">
-        <a class="btn btn--primary" href="#p1-1943">Start in 1943 →</a>
-        <a class="btn" href="#timeline">Jump to any paper</a>
+        <a class="btn btn--primary" href="#story-deck">Start Chapter 1 (1943) →</a>
+        <a class="btn" href="#timeline">See all 11 on one table</a>
         <a class="btn btn--plain" href="../start/">How Clover works with AI today →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INTERACTIVE STORY & VISUAL STEPPER ============ -->
+  <section class="band" id="story-deck" style="padding-top:1rem">
+    <div class="wrap">
+      <div class="origin-deck" data-origin-deck>
+
+        <!-- Sticky Stepper Bar -->
+        <div class="origin-bar" role="navigation" aria-label="Eleven foundational AI chapters">
+          <div class="origin-bar__top">
+            <span class="origin-bar__status" data-origin-status>Chapter 1 of 11 · 1943 · McCulloch &amp; Pitts</span>
+            <div class="origin-bar__controls">
+              <button type="button" class="btn" style="padding:0.36rem 0.75rem;font-size:0.82rem" data-origin-go="prev">← Prev</button>
+              <button type="button" class="btn btn--primary" style="padding:0.36rem 0.85rem;font-size:0.82rem" data-origin-go="next">Next →</button>
+              <button type="button" class="btn" style="padding:0.36rem 0.75rem;font-size:0.82rem" data-origin-all>Show all 11 chapters</button>
+            </div>
+          </div>
+          <div class="origin-steps" role="tablist" aria-label="Choose a chapter">
+            <button type="button" class="origin-step" role="tab" aria-selected="true" data-title="1943 · McCulloch &amp; Pitts">1 · 1943 Neuron Logic</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1950 · Alan Turing">2 · 1950 Imitation Game</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1956 · Newell &amp; Simon">3 · 1956 Logic Theorist</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1958 · Frank Rosenblatt">4 · 1958 The Perceptron</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1969 · Minsky &amp; Papert">5 · 1969 Geometry Limits</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1982 · John Hopfield">6 · 1982 Memory Valleys</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1986 · Rumelhart, Hinton &amp; Williams">7 · 1986 Backpropagation</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1988 · Richard Sutton">8 · 1988 TD(λ) Prediction</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1998 · LeCun, Bottou, Bengio &amp; Haffner">9 · 1998 LeNet-5 &amp; GTN</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="2012 · Krizhevsky, Sutskever &amp; Hinton">10 · 2012 AlexNet</button>
+            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="2017 · Vaswani et al.">11 · 2017 The Transformer</button>
+          </div>
+          <div class="origin-progress" aria-hidden="true">
+            <div class="origin-progress__fill" data-origin-fill></div>
+          </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 1: 1943 MCCULLOCH & PITTS -->
+        <!-- ================================================================ -->
+        <article class="origin-card is-active" id="p1-1943">
+          <div class="origin-card__badge">Chapter 1 of 11 · 1943 · Warren S. McCulloch &amp; Walter Pitts</div>
+          <h2>A Logical Calculus of the Ideas Immanent in Nervous Activity</h2>
+          <p class="lede"><strong>How a neurophysiologist and a nineteen-year-old runaway mathematician realized that a wet brain cell firing or staying silent is a binary logic gate.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · The Cold Rod That Felt Burning Hot</span>
+            <p>In 1942 in Chicago, Warren McCulloch—a doctor studying how the brain's wiring works—invited a homeless nineteen-year-old prodigy named Walter Pitts to live at his house. Late at night, they puzzled over a strange trick of human skin: if you press a cold metal rod against your arm and hold it there, it feels cold. But if you tap that same cold rod against your skin for just a split second and pull it away, you feel a sudden flash of <strong>burning heat</strong>!</p>
+            <p>Why would cold feel hot? Pitts and McCulloch realized you do not need chemistry equations to explain it—you only need <strong>timing and logic</strong>. Because a neuron either fires a full spark (<code>1</code>) or stays quiet (<code>0</code>), they drew a 4-neuron relay circuit (Figure 1e): when cold stops suddenly, a delayed 2-tick rebound signal reaches your heat neuron right after the cold-inhibition veto turns off. By treating neurons as clock-ticked logic gates, they proved that any logical thought can be wired out of simple threshold cells—and any circular loop of cells can hold a memory forever.</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of McCulloch and Pitts 1943 threshold logic neuron, Figure 1e cold-rod heat illusion, and circular memory loop.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1943 · ALL-OR-NONE NEURON LOGIC, SENSORY ILLUSION &amp; CIRCULAR MEMORY</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: Single Neuron Rule -->
+              <rect x="20" y="52" width="255" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · THE THRESHOLD GATE (EQ. 1)</text>
+              <line x1="50" y1="115" x2="122" y2="138" stroke="#0a6a5f" stroke-width="2.5"></line>
+              <line x1="50" y1="155" x2="122" y2="145" stroke="#0a6a5f" stroke-width="2.5"></line>
+              <line x1="50" y1="198" x2="122" y2="162" stroke="#b91c1c" stroke-width="2.2" stroke-dasharray="4 3"></line>
+              <circle cx="122" cy="162" r="5" fill="#ffffff" stroke="#b91c1c" stroke-width="2.2"></circle>
+              <circle cx="150" cy="148" r="26" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2.5"></circle>
+              <text x="150" y="153" text-anchor="middle" font-size="13" font-weight="700" fill="#14181d">θ = 2</text>
+              <line x1="176" y1="148" x2="232" y2="148" stroke="#0a6a5f" stroke-width="2.5"></line>
+              <text x="42" y="108" font-size="11" fill="#14181d">Excite (+1)</text>
+              <text x="42" y="150" font-size="11" fill="#14181d">Excite (+1)</text>
+              <text x="42" y="215" font-size="11" fill="#b91c1c">Inhibit (Veto)</text>
+              <text x="236" y="152" font-size="12" font-weight="700" fill="#0a6a5f">Fire!</text>
+              <text x="36" y="244" font-size="11.5" fill="#39424d">1 neuron = only <tspan font-weight="700" fill="#14181d">7 / 16</tspan> logic tables.</text>
+              <text x="36" y="263" font-size="11.5" fill="#39424d">Layered net = all <tspan font-weight="700" fill="#14181d">128 / 256</tspan> with f(0)=0.</text>
+
+              <!-- Panel 2: Cold-Rod Heat Illusion -->
+              <rect x="295" y="52" width="270" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="311" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · COLD-ROD ILLUSION (FIG. 1e)</text>
+              <rect x="312" y="96" width="236" height="66" rx="8" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+              <text x="324" y="116" font-size="11.5" font-weight="700" fill="#14181d">Brief 1-tick cold touch (t = 0 only):</text>
+              <text x="324" y="135" font-size="11.5" fill="#39424d">Inhibition stops early → relay</text>
+              <text x="324" y="151" font-size="11.5" fill="#b91c1c" font-weight="700">sparks HEAT + COLD = [1, 1]!</text>
+              <rect x="312" y="174" width="236" height="66" rx="8" fill="#ffffff" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="324" y="194" font-size="11.5" font-weight="700" fill="#14181d">Sustained cold hold (t = 0, 1, 2…):</text>
+              <text x="324" y="213" font-size="11.5" fill="#39424d">Veto blocks relay at tick t = 2 →</text>
+              <text x="324" y="229" font-size="11.5" fill="#0a6a5f" font-weight="700">sparks COLD only = [0, 1]</text>
+              <text x="311" y="263" font-size="11.5" fill="#39424d">Verified bit-exact on Fig. 1e circuit.</text>
+
+              <!-- Panel 3: Circular Memory Loop -->
+              <rect x="585" y="52" width="255" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="601" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · LOOP = MEMORY (THM. 7)</text>
+              <circle cx="712" cy="146" r="34" fill="#ffffff" stroke="#0a6a5f" stroke-width="2.5"></circle>
+              <path d="M736 122 C 778 95, 778 197, 736 170" fill="none" stroke="#0a6a5f" stroke-width="2.5"/>
+              <polygon points="736,170 746,173 742,162" fill="#0a6a5f"></polygon>
+              <text x="712" y="143" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14181d">Order-1</text>
+              <text x="712" y="158" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0a6a5f">Circle</text>
+              <line x1="615" y1="146" x2="678" y2="146" stroke="#0a6a5f" stroke-width="2.5"></line>
+              <text x="601" y="216" font-size="11.5" fill="#14181d" font-weight="700">4,096 / 4,096 histories match:</text>
+              <text x="601" y="236" font-size="11.5" fill="#39424d">A circulating loop without weight</text>
+              <text x="601" y="253" font-size="11.5" fill="#39424d">changes == a Hebbian synapse!</text>
+            </svg>
+            <figcaption>Visual summary of McCulloch &amp; Pitts (1943): (1) the threshold gate, (2) the Figure 1e cold-rod heat illusion, and (3) Theorem 7's proof that a circular feedback loop equals an alterable synapse across all 4,096 6-step histories.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · One neuron is weak (7/16), but a layered network builds all 128/256 silence-preserving logic rules</dt>
+              <dd>A single 2-input McCulloch–Pitts neuron can only compute <strong>7 of the 16</strong> possible truth tables (it cannot do <code>XOR</code>). By stacking neurons into a 2-layer network without loops, our Theorem 2 compiler built <strong>8/16</strong> two-input rules and <strong>128/256</strong> three-input rules—every rule where all-zero input produces zero output (<code>0/1,000</code> random nets ever fired on silence).</dd>
+            </div>
+            <div>
+              <dt>2 · Why brain states can predict the future but lose the past (Section 4)</dt>
+              <dd>In a 4-neuron circular net we traced, all 16 possible states collapse into just <strong>8 reachable states</strong>, and each reachable state has <strong>4 to 12 different past states</strong> that funnel into it. Present state determines what happens next, but erases *when* the memory began.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 2 (1950):</strong> McCulloch and Pitts proved that a specially wired circuit of threshold gates can compute any logical rule. Seven years later, Alan Turing asked: instead of soldering a new circuit for every task, can <em>one</em> machine store the wiring rules as numbers in memory and become <em>any</em> machine?
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" disabled>
+              <span class="origin-pager__dir">← Start of Journey</span>
+              <span class="origin-pager__title">Chapter 1 · 1943</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">2 · 1950 · Alan Turing</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 2: 1950 ALAN TURING -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p2-1950">
+          <div class="origin-card__badge">Chapter 2 of 11 · 1950 · Alan M. Turing</div>
+          <h2>Computing Machinery and Intelligence</h2>
+          <p class="lede"><strong>Why a machine that answers 34,957 + 70,764 correctly in a millisecond loses the Imitation Game immediately—and why teaching a "Child-Machine" with words beats 22,400 punishment blows.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · The Witness Who Took 30 Seconds to Make a Mistake</span>
+            <p>Imagine you are the judge in Turing's 1950 Imitation Game, typing questions into a teleprinter to two hidden rooms. You ask a trap question: <em>"Add 34957 to 70764."</em> Room A answers <code>105721</code> in 0.001 seconds. Room B goes silent for <strong>30 full seconds</strong>, and then types <strong><code>105621</code></strong>.</p>
+            <p>Look closely at Room B's number: <code>34957 + 70764</code> is <code>105721</code>, not <code>105621</code>! The witness in Turing's paper forgot to carry the <code>1</code> into the hundreds column. Turing slipped that arithmetic mistake into page 434 on purpose: a computer that shows off its raw speed and perfection gives itself away on the very first sum. Intelligence is not just fast arithmetic—it is being a <strong>universal stored-program machine</strong> that can rewrite its own instructions and learn from a teacher.</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Alan Turing 1950 Imitation Game carry slip, Manchester 10-digit stored instruction 6809430217, and Child-Machine symbolic vs punishment learning.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1950 · THE IMITATION GAME, STORED-PROGRAM UNIVERSALITY &amp; THE CHILD-MACHINE</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: The Carry Slip -->
+              <rect x="20" y="52" width="260" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · THE PAGE 434 ARITHMETIC TRAP</text>
+              <rect x="36" y="92" width="228" height="72" rx="8" fill="#ffffff" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="48" y="112" font-size="11.5" font-weight="700" fill="#14181d">Q: "Add 34957 to 70764"</text>
+              <text x="48" y="132" font-size="11.5" fill="#b91c1c">Honest Machine (1 ms): 105721</text>
+              <text x="48" y="150" font-size="11.5" fill="#0a6a5f" font-weight="700">Witness (30 s pause): 105621</text>
+              <text x="36" y="188" font-size="11.5" fill="#39424d">Bayesian Judge Unmasking Rate:</text>
+              <rect x="36" y="198" width="200" height="18" rx="4" fill="#b91c1c"></rect>
+              <text x="242" y="211" font-size="11" font-weight="700" fill="#b91c1c">100%</text>
+              <text x="36" y="229" font-size="10.5" fill="#66717e">Honest fast machine (unmasked every time)</text>
+              <rect x="36" y="238" width="97" height="18" rx="4" fill="#0a6a5f"></rect>
+              <text x="140" y="251" font-size="11" font-weight="700" fill="#0a6a5f">48.4% (chance!)</text>
+              <text x="36" y="269" font-size="10.5" fill="#66717e">Turing spoofing machine (30s + carry slip)</text>
+
+              <!-- Panel 2: Stored Program Packet -->
+              <rect x="298" y="52" width="264" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="314" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · CODE AS DATA (SECTION 4)</text>
+              <rect x="314" y="96" width="232" height="44" rx="8" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="430" y="123" text-anchor="middle" font-family="monospace" font-size="17" font-weight="700" fill="#14181d">6809 | 4302 | 17</text>
+              <text x="314" y="162" font-size="11.5" fill="#39424d">• Read number at store <tspan font-weight="700" fill="#14181d">6809</tspan> (34957)</text>
+              <text x="314" y="182" font-size="11.5" fill="#39424d">• Add number at store <tspan font-weight="700" fill="#14181d">4302</tspan> (70764)</text>
+              <text x="314" y="202" font-size="11.5" fill="#39424d">• Write sum <tspan font-weight="700" fill="#0a6a5f">105721</tspan> into store <tspan font-weight="700" fill="#14181d">17</tspan></text>
+              <text x="314" y="234" font-size="11.5" fill="#14181d" font-weight="700">Universal Mimicry (Section 5):</text>
+              <text x="314" y="254" font-size="11.5" fill="#39424d">1 Universal machine mimics <tspan font-weight="700" fill="#0a6a5f">256/256</tspan></text>
+              <text x="314" y="269" font-size="11.5" fill="#39424d">trajectories of the 3-state wheel machine.</text>
+
+              <!-- Panel 3: Child-Machine Education -->
+              <rect x="580" y="52" width="260" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="596" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · CHILD-MACHINE (SECTION 7)</text>
+              <text x="596" y="102" font-size="11.5" font-weight="700" fill="#14181d">How many signals to learn a 5-step task?</text>
+              <rect x="596" y="116" width="224" height="58" rx="8" fill="#ffffff" stroke="#b91c1c" stroke-width="1.2"></rect>
+              <text x="608" y="136" font-size="11.5" font-weight="700" fill="#b91c1c">Punishment / Reward Blows Only:</text>
+              <text x="608" y="158" font-size="15" font-weight="700" fill="#14181d">22,400 blows <tspan font-size="11" font-weight="400" fill="#66717e">(blind search)</tspan></text>
+              <rect x="596" y="186" width="224" height="76" rx="8" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="608" y="206" font-size="11.5" font-weight="700" fill="#0a6a5f">With Symbolic Language Channel:</text>
+              <text x="608" y="228" font-size="15" font-weight="700" fill="#0a6a5f">1 symbolic command</text>
+              <text x="608" y="248" font-size="11" fill="#39424d">(after 202 signals to teach the alphabet)</text>
+            </svg>
+            <figcaption>Visual summary of Turing (1950): (1) why spoofing human delay and carry slips fools the judge, (2) the Manchester 10-digit instruction word, and (3) why symbolic instruction beats reward/punishment alone by 22,400×.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Instructions and data live in the same memory—so programs can rewrite themselves</dt>
+              <dd>We built Turing's Section 4 stored-program machine (`Store + Executive + Control`): by adding `1000000` to its own instruction word on each pass of a loop, a 5-instruction program summed an array of numbers without unrolling the loop, and calculated the exact Manchester Ferranti Mark I storage capacity (`10` CRT pages + `8` magnetic drums = <strong><code>174,380</code> bits</strong>).</dd>
+            </div>
+            <div>
+              <dt>2 · Why Gödel's theorem only trips a machine when it is asked about itself (Section 6.1)</dt>
+              <dd>We built a sequence of diagonal machines <code>M_0, M_1, M_2, M_3</code>: while <code>M_0</code> cannot answer whether <em>it itself</em> will say "Yes" to its own code, <code>M_1</code> answers <code>M_0</code>'s question in one step—showing Gödel's limit is about self-reference, not a ceiling on machine intelligence.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 3 (1956):</strong> Turing argued that a stored-program computer could manipulate symbols, search through possibilities, and prove theorems—not just crunch numbers. Six years later, Allen Newell and Herbert Simon built the first program that actually did it.
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">1 · 1943 · McCulloch &amp; Pitts</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">3 · 1956 · Newell &amp; Simon</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 3: 1956 NEWELL & SIMON -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p3-1956">
+          <div class="origin-card__badge">Chapter 3 of 11 · 1956 · Allen Newell &amp; Herbert A. Simon</div>
+          <h2>The Logic Theory Machine: A Complex Information Processing System</h2>
+          <p class="lede"><strong>How the world's first working AI program proved 48 of 67 theorems in Principia Mathematica by glancing at a 3-number summary before doing hard work.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · Human Computers Holding Index Cards in a Living Room</span>
+            <p>In late 1955, before their JOHNNIAC computer interpreter was even finished, Allen Newell and Herbert Simon wanted to know if their new theorem-proving program—<strong>The Logic Theorist</strong>—would actually work. So Simon gathered his wife, his children, and several graduate students in a room, handed each person a stack of blank index cards, and assigned each person to be one subroutine or one "working memory" list!</p>
+            <p>Why didn't they drown in millions of useless logical combinations? Because a human mathematician does not test every axiom blindly: you take a quick glance at the <em>shape</em> of two formulas first. Newell and Simon gave their program a 3-number glance called <code>CSm</code> (left depth, right depth, and variable count). That glance threw away <strong>93.6%</strong> of dead ends instantly—though as we discovered when we ran it, that same shortcut also caused the machine to walk right past a 1-line proof of Theorem <code>*2.07</code>!</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Newell and Simon 1956 Logic Theorist methods, CSm 93.6% heuristic filter funnel, and Theorem 2.07 blind spot.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1956 · THE LOGIC THEORIST: HEURISTIC SEARCH, THE CSm FILTER &amp; THE *2.07 BLIND SPOT</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: The 3 Methods -->
+              <rect x="20" y="52" width="255" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · THREE PROOF METHODS</text>
+              <rect x="36" y="92" width="223" height="44" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+              <text x="46" y="111" font-size="11.5" font-weight="700" fill="#14181d">MSb · Substitution</text>
+              <text x="46" y="127" font-size="11" fill="#39424d">Match axiom directly by variable plug-in</text>
+              <rect x="36" y="144" width="223" height="44" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+              <text x="46" y="163" font-size="11.5" font-weight="700" fill="#14181d">MDt · Detachment (Modus Ponens)</text>
+              <text x="46" y="179" font-size="11" fill="#39424d">To prove B, find A ⊃ B and subgoal A</text>
+              <rect x="36" y="196" width="223" height="44" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+              <text x="46" y="215" font-size="11.5" font-weight="700" fill="#14181d">MCh · Chaining (Transitivity)</text>
+              <text x="46" y="231" font-size="11" fill="#39424d">To prove A ⊃ C, bridge via A ⊃ B</text>
+              <text x="36" y="263" font-size="11.5" fill="#0a6a5f" font-weight="700">48 / 67 Chapter 2 theorems proved!</text>
+
+              <!-- Panel 2: CSm Filter Funnel -->
+              <rect x="295" y="52" width="270" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="311" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · THE CSm SIMILARITY FUNNEL</text>
+              <polygon points="325,96 535,96 465,168 395,168" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.8"></polygon>
+              <text x="430" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#14181d">27,701 candidate pairs</text>
+              <text x="430" y="142" text-anchor="middle" font-size="11" fill="#0a6a5f">CSm checks (K_L, K_R, J_vars)</text>
+              <rect x="385" y="174" width="90" height="34" rx="6" fill="#0a6a5f"></rect>
+              <text x="430" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Only 6.4%</text>
+              <text x="311" y="232" font-size="11.5" fill="#14181d" font-weight="700">93.6% filtered out before unification!</text>
+              <text x="311" y="252" font-size="11.5" fill="#39424d">Cuts expensive LMc tree matches by <tspan font-weight="700" fill="#0a6a5f">13.1×</tspan>.</text>
+
+              <!-- Panel 3: The Blind Spot -->
+              <rect x="585" y="52" width="255" height="228" rx="10" fill="#fdf4e3" stroke="#e2c88a" stroke-width="1.5"></rect>
+              <text x="601" y="76" font-size="11" font-weight="700" fill="#8a5a00">3 · WHEN A HEURISTIC BLINDS YOU</text>
+              <text x="601" y="102" font-size="11.5" font-weight="700" fill="#14181d">Target *2.07: p ⊃ (p ∨ p)</text>
+              <text x="601" y="120" font-size="11" fill="#39424d">Right side (p ∨ p) has <tspan font-weight="700" fill="#b91c1c">J_R = 1</tspan> distinct var.</text>
+              <text x="601" y="146" font-size="11.5" font-weight="700" fill="#14181d">Axiom *1.3: q ⊃ (p ∨ q)</text>
+              <text x="601" y="164" font-size="11" fill="#39424d">Right side (p ∨ q) has <tspan font-weight="700" fill="#0a6a5f">J_R = 2</tspan> distinct vars.</text>
+              <rect x="601" y="180" width="223" height="82" rx="8" fill="#ffffff" stroke="#e2c88a" stroke-width="1.2"></rect>
+              <text x="613" y="202" font-size="11.5" font-weight="700" fill="#b91c1c">CSm says: 1 ≠ 2 → REJECT!</text>
+              <text x="613" y="222" font-size="11" fill="#39424d">Setting q = p proves *2.07 in 1 step,</text>
+              <text x="613" y="238" font-size="11" fill="#39424d">but CSm's variable-count check</text>
+              <text x="613" y="254" font-size="11" fill="#39424d">blocks it from ever trying!</text>
+            </svg>
+            <figcaption>Visual summary of Newell &amp; Simon (1956): (1) the three symbolic proof methods, (2) the 13.1× speedup from the CSm similarity funnel, and (3) how CSm falsely rejects Axiom *1.3 when proving *2.07.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Ten real bugs in the printed 1956 RAND P-868 assembly code</dt>
+              <dd>By reading all 701 lines of the 1956 IPL-I code and comparing against David Moews's interpreter, we cataloged <strong>10 concrete bugs</strong> in the original printed monograph (such as calling an undefined routine <code>R011</code> in <code>CXn</code> and inverted conditional branches in <code>CAr</code> and <code>CSb</code>) and traced a single instruction on page 50 (<code>CKG 2 1 - C</code>) that flips subproblem tie-breaking from FIFO to LIFO.</dd>
+            </div>
+            <div>
+              <dt>2 · Why cumulative memory matters: 12 → 22 → 48 proved theorems</dt>
+              <dd>With only the 5 axioms in memory, Logic Theorist proves just <strong>12/67</strong> theorems; remembering only the theorems it proves by itself reaches <strong>22/67</strong>; and keeping the full sequence of prior theorems proves <strong>48/67</strong>.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 4 (1958):</strong> Logic Theorist could prove theorems when handed clean symbolic formulas. Two years later, Frank Rosenblatt asked: how does a living brain learn to recognize messy visual shapes when nobody gives it symbols or hand-wired rules?
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">2 · 1950 · Alan Turing</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">4 · 1958 · Frank Rosenblatt</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 4: 1958 FRANK ROSENBLATT -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p4-1958">
+          <div class="origin-card__badge">Chapter 4 of 11 · 1958 · Frank Rosenblatt</div>
+          <h2>The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain</h2>
+          <p class="lede"><strong>How a randomly wired bundle of nerve fibers learns to recognize shapes from experience—and how a "parasitic" zero-sum rule keeps a rare class from being bullied by a common one.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · The Parasitic Pool That Refused to Be Bullied</span>
+            <p>Frank Rosenblatt knew that no baby is born with a blueprint soldering every eye cell to a tidy logic gate. Instead, a baby's visual cortex starts as a <strong>random tangle of nerve fibers</strong> (`S → A → R`), and the brain learns by turning up the volume (`V_i`) on fibers that fire when a shape appears.</p>
+            <p>But Rosenblatt hit a dangerous trap: what if a child sees <strong>3 times as many</strong> dogs as cats? In a naive learner (`α-system`), every dog adds +1 to the dog fibers, so after a thousand animals the dog weights are so huge they shout over everything else. Rosenblatt solved this with his <strong>parasitic zero-sum rule (`γ-system`)</strong>: whenever active fibers gain weight, they must steal that exact weight from the silent fibers in their pool so the total weight stays zero (`∑ V_i = 0`). As long as members of the same class share more fibers with each other than with strangers (`P_c11 > P_a > P_c12`), the minority class is never bullied!</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Rosenblatt 1958 S-A-R Perceptron architecture and the page 400 inequality Pc11 > Pa > Pc12 under 3:1 class imbalance.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1958 · THE PERCEPTRON (S → A → R) &amp; THE PAGE 400 ZERO-SUM INEQUALITY</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: S -> A -> R Architecture -->
+              <rect x="20" y="52" width="275" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · S → A → R ARCHITECTURE</text>
+              <rect x="36" y="102" width="46" height="110" rx="6" fill="#ffffff" stroke="#14181d" stroke-width="1.5"></rect>
+              <text x="59" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#14181d">S</text>
+              <text x="59" y="168" text-anchor="middle" font-size="9.5" fill="#66717e">Retina</text>
+              <line x1="82" y1="120" x2="132" y2="112" stroke="#66717e" stroke-width="1.2" stroke-dasharray="3 2"></line>
+              <line x1="82" y1="155" x2="132" y2="155" stroke="#66717e" stroke-width="1.2" stroke-dasharray="3 2"></line>
+              <line x1="82" y1="190" x2="132" y2="198" stroke="#66717e" stroke-width="1.2" stroke-dasharray="3 2"></line>
+              <circle cx="148" cy="112" r="15" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.8"></circle>
+              <circle cx="148" cy="155" r="15" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.8"></circle>
+              <circle cx="148" cy="198" r="15" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.8"></circle>
+              <text x="148" y="116" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14181d">A₁</text>
+              <text x="148" y="159" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14181d">A₂</text>
+              <text x="148" y="202" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14181d">A₃</text>
+              <line x1="163" y1="112" x2="225" y2="150" stroke="#0a6a5f" stroke-width="2.5"></line>
+              <line x1="163" y1="155" x2="225" y2="155" stroke="#0a6a5f" stroke-width="2.5"></line>
+              <line x1="163" y1="198" x2="225" y2="160" stroke="#0a6a5f" stroke-width="2.5"></line>
+              <text x="194" y="122" font-size="10" font-weight="700" fill="#0a6a5f">Vᵢ (learned)</text>
+              <circle cx="245" cy="155" r="20" fill="#0a6a5f"></circle>
+              <text x="245" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">R</text>
+              <text x="36" y="242" font-size="11.5" fill="#39424d">Random S→A wiring (Eq. 1–3) matches</text>
+              <text x="36" y="260" font-size="11.5" fill="#39424d">100,000-unit Monte Carlo to <tspan font-weight="700" fill="#14181d">&lt; 0.0024</tspan>.</text>
+
+              <!-- Panel 2: Page 400 Inequality -->
+              <rect x="312" y="52" width="265" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="328" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · THE PAGE 400 RULE (3:1 IMBALANCE)</text>
+              <text x="328" y="98" font-size="11.5" font-weight="700" fill="#14181d">Required: P_c11 (same) &gt; P_a &gt; P_c12 (cross)</text>
+              <rect x="328" y="110" width="233" height="68" rx="7" fill="#ffffff" stroke="#b91c1c" stroke-width="1.2"></rect>
+              <text x="338" y="129" font-size="11" font-weight="700" fill="#b91c1c">Crossing Bars (violates P_a &gt; P_c12):</text>
+              <text x="338" y="146" font-size="11" fill="#39424d">0.170 &lt; 0.176 &lt; 0.183 (shared center!)</text>
+              <text x="338" y="164" font-size="11" font-weight="700" fill="#b91c1c">→ γ-system drops to 50.0% accuracy</text>
+              <rect x="328" y="188" width="233" height="72" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="338" y="207" font-size="11" font-weight="700" fill="#0a6a5f">Separated Bars (satisfies inequality):</text>
+              <text x="338" y="224" font-size="11" fill="#39424d">0.237 &gt; 0.159 &gt; 0.094</text>
+              <text x="338" y="244" font-size="11.5" font-weight="700" fill="#0a6a5f">→ γ-system reaches 100.0% accuracy!</text>
+
+              <!-- Panel 3: Relational Wall -->
+              <rect x="594" y="52" width="246" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="610" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · CONCRETE VS RELATIONAL</text>
+              <text x="610" y="102" font-size="11.5" font-weight="700" fill="#14181d">With local slot-only A-units:</text>
+              <rect x="610" y="114" width="214" height="58" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+              <text x="622" y="134" font-size="11.5" fill="#39424d">"Is the top square big?"</text>
+              <text x="622" y="156" font-size="14" font-weight="700" fill="#0a6a5f">99.8% accuracy</text>
+              <rect x="610" y="182" width="214" height="78" rx="7" fill="#ffffff" stroke="#b91c1c" stroke-width="1.2"></rect>
+              <text x="622" y="202" font-size="11.5" fill="#39424d">"Is top bigger than bottom?"</text>
+              <text x="622" y="224" font-size="14" font-weight="700" fill="#b91c1c">42.0% (fails!)</text>
+              <text x="622" y="246" font-size="10.5" fill="#66717e">(Needs cross-slot A-units → 100%)</text>
+            </svg>
+            <figcaption>Visual summary of Rosenblatt (1958): (1) the S → A → R Perceptron, (2) experimental proof of the page 400 inequality under 3:1 class imbalance, and (3) the relational judgment boundary.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Spontaneous unsupervised learning without a teacher (page 404)</dt>
+              <dd>When we let the Perceptron reinforce whichever response happens to win on each trial—with zero teacher labels—adding proportional weight decay (<code>δ = 0.03</code>) kept one response from conquering both classes and spontaneously separated two disjoint pattern families with <strong><code>100.0%</code> accuracy</strong> (vs <code>50.0%</code> without decay).</dd>
+            </div>
+            <div>
+              <dt>2 · Why inhibition flattens flash-blindness by 10.3×</dt>
+              <dd>Reproducing Figure 4c showed that balancing excitatory and inhibitory retina wires (<code>x = 5, y = 5</code>) flattens the variation in <code>A</code>-unit activity across small and large shapes by <strong><code>10.3×</code></strong>.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 5 (1969):</strong> Rosenblatt showed that local random features can learn concrete shapes, but falter on relational questions. Eleven years later, Marvin Minsky and Seymour Papert proved the exact mathematical laws governing what a single layer of local features can and cannot see.
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">3 · 1956 · Newell &amp; Simon</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">5 · 1969 · Minsky &amp; Papert</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 5: 1969 MINSKY & PAPERT -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p5-1969">
+          <div class="origin-card__badge">Chapter 5 of 11 · 1969 · Marvin Minsky &amp; Seymour Papert</div>
+          <h2>Perceptrons: An Introduction to Computational Geometry</h2>
+          <p class="lede"><strong>Why a committee of observers looking through tiny pinholes can count exact pixel totals—yet can never tell if a maze is connected, or if the number of dots is odd or even.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · The Pinhole Committee vs the Ant with Two Pebbles</span>
+            <p>Imagine a giant black-and-white drawing of a spiral maze on a wall. You hire a thousand tiny observers to vote on whether the maze is <strong>one connected path</strong> or <strong>two separate paths</strong>. There is only one rule: each observer is only allowed to peek through a straw at <strong>2 or 3 pixels at a time</strong> (`order-2` or `order-3`), and then they all drop weighted votes into a ballot box.</p>
+            <p>Minsky and Papert proved mathematically that <strong>no matter how clever the weights are, the pinhole committee will always fail!</strong> Why? Because locally, a 1-spiral and a 2-spiral have the exact same pieces; connectivity is a global property. Meanwhile, a single ant walking along the wall with just <strong>two pebbles in its pocket</strong> (`2 pointers` in memory) can trace the loop and answer with 100% certainty. Even better: when we tested a modern GitHub repo that claimed a simple perceptron solved Minsky &amp; Papert's spirals, we caught the repo accidentally cheating—it had erased two outer legs of the 1-spiral (`652` vs `804` pixels), letting the perceptron guess by counting total ink!</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Minsky and Papert 1969 One-in-a-Box order-2 collision (3,3,0) vs (4,1,1), Parity weight explosion, and the spiral area shortcut.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1969 · COMPUTATIONAL GEOMETRY: THE ONE-IN-A-BOX COLLISION &amp; THE SPIRAL AREA TRAP</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: One-in-a-Box Collision -->
+              <rect x="20" y="52" width="285" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · ONE-IN-A-BOX ORDER-2 COLLISION</text>
+              <text x="36" y="98" font-size="11" fill="#39424d">3 boxes of 4 pixels: is every box non-empty?</text>
+              <rect x="36" y="108" width="253" height="62" rx="7" fill="#ffffff" stroke="#b91c1c" stroke-width="1.2"></rect>
+              <text x="46" y="127" font-size="11.5" font-weight="700" fill="#b91c1c">Pattern (3, 3, 0) → Box 3 is EMPTY (False)</text>
+              <text x="46" y="146" font-size="11" fill="#39424d">1-pixel masks: <tspan font-weight="700">6</tspan> | same-box pairs: <tspan font-weight="700">6</tspan> | cross: <tspan font-weight="700">9</tspan></text>
+              <rect x="36" y="178" width="253" height="62" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="46" y="197" font-size="11.5" font-weight="700" fill="#0a6a5f">Pattern (4, 1, 1) → All boxes hit (True)</text>
+              <text x="46" y="216" font-size="11" fill="#39424d">1-pixel masks: <tspan font-weight="700">6</tspan> | same-box pairs: <tspan font-weight="700">6</tspan> | cross: <tspan font-weight="700">9</tspan></text>
+              <text x="36" y="261" font-size="11" font-weight="700" fill="#14181d">Identical (6, 6, 9) spectrum → blind to order 2!</text>
+
+              <!-- Panel 2: The Spiral Area Shortcut -->
+              <rect x="322" y="52" width="268" height="228" rx="10" fill="#fdf4e3" stroke="#e2c88a" stroke-width="1.5"></rect>
+              <text x="338" y="76" font-size="11" font-weight="700" fill="#8a5a00">2 · THE SPIRAL AREA CONFOUND</text>
+              <text x="338" y="100" font-size="11.5" font-weight="700" fill="#14181d">Why did a GitHub order-1 net pass?</text>
+              <rect x="338" y="112" width="236" height="64" rx="7" fill="#ffffff" stroke="#e2c88a" stroke-width="1.2"></rect>
+              <text x="348" y="132" font-size="11" fill="#39424d">Fixed side=56 in repo:</text>
+              <text x="348" y="150" font-size="11.5" font-weight="700" fill="#8a5a00">1-spiral = 652 px vs 2-spiral = 804 px</text>
+              <text x="348" y="167" font-size="10.5" fill="#66717e">(Cheated via [|X| ≤ 728] — Corollary 3, p. 187!)</text>
+              <rect x="338" y="186" width="236" height="76" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="348" y="206" font-size="11" font-weight="700" fill="#14181d">When scale varies {56, 64, 72, 80}:</text>
+              <text x="348" y="226" font-size="11.5" fill="#b91c1c">Order-1 Perceptron: <tspan font-weight="700">62.0%</tspan> (fails)</text>
+              <text x="348" y="246" font-size="11.5" fill="#0a6a5f">2-Pointer Serial Tracer: <tspan font-weight="700">100.0%</tspan></text>
+
+              <!-- Panel 3: Parity & 1-NN Pathology -->
+              <rect x="607" y="52" width="233" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="623" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · PARITY &amp; CHAPTER 12</text>
+              <text x="623" y="102" font-size="11.5" font-weight="700" fill="#14181d">Parity needs order |R| (all pixels):</text>
+              <text x="623" y="122" font-size="11" fill="#39424d">Weights explode as <tspan font-family="monospace" font-weight="700">(−2)^|S|</tspan></text>
+              <text x="623" y="140" font-size="11" fill="#39424d">(up to ±1,024 by 10 pixels).</text>
+              <line x1="623" y1="156" x2="824" y2="156" stroke="#7fb8b0" stroke-width="1"></line>
+              <text x="623" y="178" font-size="11.5" font-weight="700" fill="#14181d">Ch. 12 Noisy Parity (n = 25):</text>
+              <text x="623" y="198" font-size="11" fill="#39424d">1-Nearest Neighbor error rate</text>
+              <text x="623" y="216" font-size="11" fill="#39424d">on unseen test points:</text>
+              <text x="623" y="244" font-size="17" font-weight="700" fill="#b91c1c">99.6% – 100.0% error</text>
+              <text x="623" y="263" font-size="10.5" fill="#66717e">Matches 1 − q^n = 99.62% (p. 239)</text>
+            </svg>
+            <figcaption>Visual summary of Minsky &amp; Papert (1969): (1) the (6, 6, 9) order-2 feature collision on One-in-a-Box, (2) the pixel-area confound on spirals (Corollary 3, p. 187), and (3) Parity explosion &amp; Chapter 12's 1-NN parity failure.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Exact counting has order 2 for every M (1,792/1,792 verified)</dt>
+              <dd>Even though Parity requires inspecting the whole retina, telling whether an image has <em>exactly</em> <code>M</code> active pixels (<code>[|X| = M]</code>) has <strong>order 2 for every <code>M</code></strong> because <code>M − (|X| − M)²</code> only uses 1-pixel and 2-pixel masks.</dd>
+            </div>
+            <div>
+              <dt>2 · Zero diameter-limited perceptrons can bridge a cut (0/308)</dt>
+              <dd>Across all 308 valid top/bottom bridge combinations on a bar graph, <code>0/308</code> can be represented by a sum of diameter-limited top-only and bottom-only features.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 6 (1982):</strong> Minsky and Papert proved that a single feed-forward layer of fixed local features hits a hard geometric wall. To go beyond that wall, networks needed either collective recurrent energy valleys (Hopfield, 1982) or a way to train multi-layer hidden features (Backpropagation, 1986).
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">4 · 1958 · Frank Rosenblatt</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">6 · 1982 · John Hopfield</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 6: 1982 JOHN HOPFIELD -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p6-1982">
+          <div class="origin-card__badge">Chapter 6 of 11 · 1982 · John J. Hopfield</div>
+          <h2>Neural networks and physical systems with emergent collective computational abilities</h2>
+          <p class="lede"><strong>How making synapses two-way and symmetric turns a recurrent network into a landscape of valleys—where a marble dropped on a noisy clue rolls straight into the clean memory.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · The Marble Rolling into the Memory Valley</span>
+            <p>In a standard computer, if you want to look up a file, you have to know its exact numerical address (`0x7F04`). Humans do not work like that: if you hear three notes of a childhood song or see a blurry half-shadow of a friend's face, the whole memory snaps back into focus. How does a messy web of neurons do that without oscillating out of control?</p>
+            <p>Physicist John Hopfield noticed that in magnetic materials, when two atoms pull on each other with <strong>equal symmetric strength</strong> (<code>T_ij = T_ji</code>), the system does not spin in circles—it settles downhill into a low-energy valley. By wiring symmetric synapses and letting neurons flip <strong>one at a time</strong>, every stored memory becomes a valley in an Energy landscape. Drop a corrupted clue on the hillside, and the marble rolls downhill (`0` uphill steps out of `7,162` flips) until the whole memory is restored—unless every neuron jumps at the exact same instant, which traps `98.5%` of runs on a seesaw!</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Hopfield 1982 Energy landscape valleys, asynchronous 0/7162 uphill steps vs synchronous 197/200 oscillations, and bipolar 2x capacity.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1982 · COLLECTIVE ASSOCIATIVE MEMORY: ENERGY VALLEYS, ASYNCHRONOUS FLIPS &amp; CAPACITY</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: Energy Landscape -->
+              <rect x="20" y="52" width="290" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · LYAPUNOV ENERGY VALLEYS (EQ. 7)</text>
+              <path d="M 38 115 Q 72 225, 108 225 Q 142 225, 165 135 Q 188 225, 222 225 Q 258 225, 292 115" fill="none" stroke="#0a6a5f" stroke-width="3"/>
+              <circle cx="62" cy="152" r="8" fill="#8a5a00"></circle>
+              <path d="M 70 162 Q 85 195, 100 212" fill="none" stroke="#8a5a00" stroke-width="2" stroke-dasharray="3 2"/>
+              <circle cx="108" cy="218" r="9" fill="#0a6a5f"></circle>
+              <circle cx="222" cy="218" r="9" fill="#0a6a5f"></circle>
+              <text x="58" y="138" font-size="10.5" font-weight="700" fill="#8a5a00">Noisy cue</text>
+              <text x="108" y="244" text-anchor="middle" font-size="11" font-weight="700" fill="#0a6a5f">Memory A</text>
+              <text x="222" y="244" text-anchor="middle" font-size="11" font-weight="700" fill="#0a6a5f">Memory B</text>
+              <text x="36" y="266" font-size="11" fill="#39424d">Symmetric T_ij = T_ji → E never rises!</text>
+
+              <!-- Panel 2: Async vs Sync -->
+              <rect x="326" y="52" width="258" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="342" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · ONE-BY-ONE VS ALL-AT-ONCE</text>
+              <rect x="342" y="94" width="226" height="74" rx="8" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="354" y="114" font-size="11.5" font-weight="700" fill="#0a6a5f">Asynchronous (1 neuron/tick):</text>
+              <text x="354" y="134" font-size="13" font-weight="700" fill="#14181d">0 / 7,162 uphill steps</text>
+              <text x="354" y="154" font-size="11" fill="#39424d">200 / 200 runs settle into a valley.</text>
+              <rect x="342" y="180" width="226" height="82" rx="8" fill="#ffffff" stroke="#b91c1c" stroke-width="1.2"></rect>
+              <text x="354" y="200" font-size="11.5" font-weight="700" fill="#b91c1c">Synchronous (all neurons at once):</text>
+              <text x="354" y="220" font-size="13" font-weight="700" fill="#b91c1c">197 / 200 (98.5%) oscillate!</text>
+              <text x="354" y="240" font-size="11" fill="#39424d">Everyone jumps across the valley at</text>
+              <text x="354" y="255" font-size="11" fill="#39424d">once and bounces on a 2-step seesaw.</text>
+
+              <!-- Panel 3: Capacity & Overload -->
+              <rect x="600" y="52" width="240" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="616" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · CAPACITY &amp; FAMILIARITY</text>
+              <text x="616" y="102" font-size="11.5" font-weight="700" fill="#14181d">{0, 1} vs Bipolar {−1, +1}:</text>
+              <text x="616" y="121" font-size="11" fill="#39424d">Bipolar doubles SNR (n_bip = 2n − 1):</text>
+              <text x="616" y="139" font-size="11" font-weight="700" fill="#0a6a5f">n=10 {0,1} err 0.0098 == n=19 {±1}!</text>
+              <line x1="616" y1="154" x2="824" y2="154" stroke="#7fb8b0" stroke-width="1"></line>
+              <text x="616" y="176" font-size="11.5" font-weight="700" fill="#14181d">25× Overload (250 in N=100):</text>
+              <text x="616" y="196" font-size="11" fill="#39424d">Exact recall fails, yet initial flip</text>
+              <text x="616" y="214" font-size="11" fill="#39424d">rate still spots familiar vs novel:</text>
+              <text x="616" y="242" font-size="15" font-weight="700" fill="#0a6a5f">92.8% acc (0.9828 AUC)</text>
+              <text x="616" y="262" font-size="10.5" fill="#66717e">1-bit clipped synapses keep √(2/π) = 79.7%</text>
+            </svg>
+            <figcaption>Visual summary of Hopfield (1982): (1) rolling downhill into Energy valleys, (2) why asynchronous updates never climb uphill while synchronous updates oscillate 98.5% of the time, and (3) bipolar 2× capacity &amp; 25× overload familiarity.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Attraction basins (N=30, n=5) and valley merging when memories are too close (N=100)</dt>
+              <dd>Starting from a cue with <code>12</code> flipped bits out of 30, the network still falls back into the exact memory <strong><code>20.8%</code></strong> of the time (matching Hopfield's reported <code>0.2</code>). When two 100-bit memories differ by only 10 bits, their two valleys fuse into a single combined valley (<code>47.5%</code> merged).</dd>
+            </div>
+            <div>
+              <dt>2 · Why `torch.sign(0.0) == 0.0` breaks naïve PyTorch Hopfield reproductions</dt>
+              <dd>Auditing `pauljmello/Hopfield-Networks` exposed a classic bug: `torch.sign(0.0)` returns `0.0` (a third non-binary state!) instead of keeping the previous state on zero-field ties.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 7 (1986):</strong> Hopfield showed how smooth energy landscapes guide collective networks. Four years later, Rumelhart, Hinton, and Williams used smooth derivatives to solve the problem that had been stuck since 1969: training deep hidden layers.
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">5 · 1969 · Minsky &amp; Papert</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">7 · 1986 · Backpropagation</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 7: 1986 RUMELHART, HINTON & WILLIAMS -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p7-1986">
+          <div class="origin-card__badge">Chapter 7 of 11 · 1986 · David E. Rumelhart, Geoffrey E. Hinton &amp; Ronald J. Williams</div>
+          <h2>Learning representations by back-propagating errors</h2>
+          <p class="lede"><strong>How smoothing hard 0/1 switches into gentle S-curves let error signals whisper backward through deep layers—so hidden neurons could invent their own abacus counters and mirror balances.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · Two Twin Detectives on a Seesaw and the Secret Abacus</span>
+            <p>Why couldn't anyone train a middle layer of "hidden" neurons in 1969? Because when a neuron is a hard on/off light switch, nudging a weight a tiny bit does nothing at all until it suddenly flips—so an interior neuron has no idea whether nudging its weight helps or hurts the final answer.</p>
+            <p>Rumelhart, Hinton, and Williams replaced the hard switch with a smooth, rounded S-curve (`sigmoid`). Now every neuron has a slope (`o(1 − o)`), so the output layer can whisper backward to each hidden neuron: <em>"Here is exactly how much your nudge changes my mistake."</em> Only one rule: <strong>never give twin hidden neurons the exact same starting weights</strong>, or they will hear the exact same whisper and march in lockstep forever like one neuron! Once started with tiny random weights, we watched 4 hidden neurons invent a <strong>4-bead thermometer abacus</strong> (`1111 → 1011 → 1010 → 0010 → 0000`) to solve Minsky &amp; Papert's Parity problem, and watched just <strong>2 hidden neurons</strong> solve 6-bit Mirror Symmetry by placing weights in a `1 : 2 : 4` balance beam!</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Rumelhart Hinton Williams 1986 Backpropagation 4-bit parity thermometer abacus, 6-bit mirror symmetry 1:2:4 balance, and Order-3 T-C receptive field.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1986 · BACKPROPAGATION: INVENTING THE PARITY ABACUS, THE 1:2:4 MIRROR &amp; THE T–C KERNEL</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: 4-Bit Parity Abacus (Table 3) -->
+              <rect x="20" y="52" width="275" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · 4-BIT PARITY ABACUS (TABLE 3)</text>
+              <text x="36" y="96" font-size="11" fill="#39424d">4 hidden units learn equal input weights</text>
+              <text x="36" y="112" font-size="11" fill="#39424d">and count ON bits |x| like a thermometer:</text>
+              <rect x="36" y="122" width="243" height="122" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+              <text x="48" y="141" font-family="monospace" font-size="11.5" fill="#14181d">|x|=0 (1 pat)  → <tspan font-weight="700" fill="#0a6a5f">1 1 1 1</tspan> → out 0</text>
+              <text x="48" y="161" font-family="monospace" font-size="11.5" fill="#14181d">|x|=1 (4 pats) → <tspan font-weight="700" fill="#0a6a5f">1 0 1 1</tspan> → out 1</text>
+              <text x="48" y="181" font-family="monospace" font-size="11.5" fill="#14181d">|x|=2 (6 pats) → <tspan font-weight="700" fill="#0a6a5f">1 0 1 0</tspan> → out 0</text>
+              <text x="48" y="201" font-family="monospace" font-size="11.5" fill="#14181d">|x|=3 (4 pats) → <tspan font-weight="700" fill="#0a6a5f">0 0 1 0</tspan> → out 1</text>
+              <text x="48" y="221" font-family="monospace" font-size="11.5" fill="#14181d">|x|=4 (1 pat)  → <tspan font-weight="700" fill="#0a6a5f">0 0 0 0</tspan> → out 0</text>
+              <text x="36" y="264" font-size="11" font-weight="700" fill="#0a6a5f">Exact bit-for-bit match to p. 13 Table 3!</text>
+
+              <!-- Panel 2: 6-Bit Mirror Symmetry 1:2:4 -->
+              <rect x="312" y="52" width="276" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="328" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · 6-BIT MIRROR BALANCE (FIG. 9)</text>
+              <text x="328" y="96" font-size="11" fill="#39424d">Solved 64/64 with only <tspan font-weight="700" fill="#14181d">2 hidden units</tspan>!</text>
+              <rect x="328" y="108" width="244" height="58" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="450" y="127" text-anchor="middle" font-size="11" font-weight="700" fill="#0a6a5f">Learned Hidden Unit 0 Weights:</text>
+              <text x="450" y="149" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#14181d">-6.2  +3.1  +12.3 | -12.3  -3.1  +6.2</text>
+              <text x="328" y="186" font-size="11" fill="#39424d">• Opposite signs across center → any</text>
+              <text x="328" y="203" font-size="11" fill="#39424d">  palindrome sums to <tspan font-weight="700" fill="#14181d">exactly 0.00</tspan>!</text>
+              <text x="328" y="222" font-size="11" fill="#39424d">• Exact <tspan font-weight="700" fill="#0a6a5f">1 : 2 : 4</tspan> ratio (3.1 : 6.2 : 12.3)</text>
+              <text x="328" y="239" font-size="11" fill="#39424d">  so no non-palindrome can ever cancel!</text>
+              <text x="328" y="263" font-size="11" font-weight="700" fill="#14181d">Momentum α=0.9 gives 7.90× speedup.</text>
+
+              <!-- Panel 3: Order-3 T-C Receptive Field -->
+              <rect x="605" y="52" width="235" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="621" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · SHARED 3×3 T–C KERNEL</text>
+              <text x="621" y="96" font-size="11" fill="#39424d">T and C have identical pair distances.</text>
+              <text x="621" y="112" font-size="11" fill="#39424d">Learned shared 3×3 kernel (Fig. 15A):</text>
+              <rect x="646" y="122" width="152" height="84" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="722" y="144" text-anchor="middle" font-family="monospace" font-size="12" fill="#39424d">+1.35  -4.35  -2.35</text>
+              <text x="722" y="167" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#0a6a5f">-4.35  +6.98  -4.35</text>
+              <text x="722" y="190" text-anchor="middle" font-family="monospace" font-size="12" fill="#39424d">-2.35  -4.35  +1.35</text>
+              <text x="621" y="226" font-size="11" font-weight="700" fill="#14181d">ON-center / OFF-surround</text>
+              <text x="621" y="244" font-size="11" fill="#39424d">protrusion detector → <tspan font-weight="700" fill="#0a6a5f">8/8 rotations</tspan>!</text>
+              <text x="621" y="263" font-size="10.5" fill="#66717e">Family Trees: 100/100 train, 4/4 test.</text>
+            </svg>
+            <figcaption>Visual summary of Rumelhart, Hinton &amp; Williams (1986): (1) the learned 4-bit Parity thermometer abacus, (2) the 2-unit 1:2:4 mirror balance beam, and (3) the shared 3×3 ON-center/OFF-surround T–C detector.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Equal-weight twins stay locked forever (`w = 0.00` or `w = 0.25`)</dt>
+              <dd>Initializing both hidden units of an <code>XOR</code> network to <code>w = 0.25</code> kept <code>max |w_h0 − w_h1| = 0.00e+00</code> across 500 sweeps: both hidden units moved, but moved in exact lockstep as a single threshold unit that stalled at <code>3/4</code> accuracy (`E = 0.3419`).</dd>
+            </div>
+            <div>
+              <dt>2 · Why `{0.1, 0.9}` targets beat `{0.0, 1.0}` on the 8–3–8 Bottleneck Encoder (page 9)</dt>
+              <dd>Because 7 of the 8 outputs are `0` for every one-hot input, training with literal `{0.0, 1.0}` targets pushes the sigmoids into their flat tails where `o(1 − o) → 0` and stalls at `4/8`; using the paper's page 9 `{0.1, 0.9}` targets immediately converged to <strong><code>8/8 (100%)</code></strong>.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 8 (1988):</strong> Backpropagation solved credit assignment across layers when a teacher gives you the answer immediately. Two years later, Richard Sutton asked: how do you assign credit across <em>time</em> when the outcome only arrives at the end of a long journey?
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">6 · 1982 · John Hopfield</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">8 · 1988 · Richard Sutton</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 8: 1988 RICHARD SUTTON -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p8-1988">
+          <div class="origin-card__badge">Chapter 8 of 11 · 1988 · Richard S. Sutton</div>
+          <h2>Learning to Predict by the Methods of Temporal Differences</h2>
+          <p class="lede"><strong>Why updating today's prediction toward tomorrow's prediction beats waiting for Saturday's weather—and how a lucky fluke fools supervised learning.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · The Lucky Fluke That Fooled the Teacher</span>
+            <p>Imagine you are learning to play backgammon. You already know from nine painful games that a certain board position—call it <strong>"Bad"</strong>—loses <strong>90% of the time</strong> (9 losses, 1 lucky win). Now, in game 10, you try a brand-new opening move (<strong>"Novel"</strong>), it immediately lands you straight into that same <strong>"Bad"</strong> position—and then by a 1-in-10 miracle roll of the dice, you end up winning the game!</p>
+            <p>How good is the <strong>"Novel"</strong> opening move? A traditional supervised learner (`TD(1)` / Widrow–Hoff) only pairs each state with the final game result (`Novel → Win`), so it concludes that <strong>`Novel` is a 100% winning move</strong> (an error of 90 percentage points!). Richard Sutton's <strong>Temporal-Difference learner (`TD(0)`)</strong> instead updates each state toward the <em>very next state it steps into</em> (`Novel → Bad`). Because it already knows `Bad` only wins 10% of the time, it immediately concludes `Novel` is a **10% move**—wiping out all the random dice noise that happened after `Bad`!</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Sutton 1988 Novel-to-Bad-to-Win game example, Theorem 3 maximum-likelihood random walk convergence, and Figure 3/5 TD(lambda) curves.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1988 · TEMPORAL-DIFFERENCE LEARNING: THE FLUKE GAME &amp; RANDOM-WALK OPTIMALITY</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: Novel -> Bad -> Win -->
+              <rect x="20" y="52" width="285" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · THE "NOVEL → BAD → WIN" GAME (FIG. 1)</text>
+              <circle cx="66" cy="128" r="24" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"></circle>
+              <text x="66" y="132" text-anchor="middle" font-size="11" font-weight="700" fill="#14181d">Novel</text>
+              <line x1="90" y1="128" x2="132" y2="128" stroke="#0a6a5f" stroke-width="2" stroke-dasharray="4 2"></line>
+              <circle cx="156" cy="128" r="24" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2"></circle>
+              <text x="156" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#14181d">Bad</text>
+              <text x="156" y="139" text-anchor="middle" font-size="9.5" fill="#0a6a5f">(10% win)</text>
+              <line x1="180" y1="118" x2="232" y2="100" stroke="#0a6a5f" stroke-width="2" stroke-dasharray="4 2"></line>
+              <line x1="180" y1="138" x2="232" y2="154" stroke="#66717e" stroke-width="2"></line>
+              <text x="238" y="103" font-size="11" font-weight="700" fill="#0a6a5f">Win (10%)</text>
+              <text x="238" y="158" font-size="11" fill="#66717e">Loss (90%)</text>
+              <rect x="36" y="176" width="253" height="88" rx="7" fill="#ffffff" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="46" y="196" font-size="11" font-weight="700" fill="#b91c1c">Supervised TD(1) (pairs Novel + Win):</text>
+              <text x="46" y="213" font-size="11" fill="#39424d">Predicts P(Novel) = <tspan font-weight="700" fill="#b91c1c">1.0000</tspan> (error = 0.90!)</text>
+              <text x="46" y="235" font-size="11" font-weight="700" fill="#0a6a5f">Bootstrap TD(0) (pairs Novel + Bad):</text>
+              <text x="46" y="252" font-size="11" fill="#39424d">Predicts P(Novel) = <tspan font-weight="700" fill="#0a6a5f">0.1000</tspan> (error = 0.00!)</text>
+
+              <!-- Panel 2: Theorem 3 Repeated Presentations -->
+              <rect x="322" y="52" width="268" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="338" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · REPEATED WALKS (FIG. 3 ERRATUM)</text>
+              <text x="338" y="96" font-size="11" fill="#39424d">100 sets of 10 random walks (A ← B C D E F → G):</text>
+              <rect x="338" y="108" width="236" height="96" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+              <text x="350" y="128" font-size="11" font-weight="700" fill="#0a6a5f">λ = 0.0 (TD(0))   → RMS = 0.1199 (Best!)</text>
+              <text x="350" y="146" font-size="11" fill="#39424d">λ = 0.3           → RMS = 0.1205</text>
+              <text x="350" y="164" font-size="11" fill="#39424d">λ = 0.7           → RMS = 0.1300</text>
+              <text x="350" y="182" font-size="11" font-weight="700" fill="#b91c1c">λ = 1.0 (Widrow)  → RMS = 0.1773 (Worst!)</text>
+              <text x="338" y="226" font-size="11" font-weight="700" fill="#14181d">Theorem 3 Verified to 3.50e-7:</text>
+              <text x="338" y="244" font-size="11" fill="#39424d">TD(0) converges to the exact Maximum-</text>
+              <text x="338" y="260" font-size="11" fill="#39424d">Likelihood Markov model (I − Q̂)⁻¹ ĥ!</text>
+
+              <!-- Panel 3: Single Pass & Theorem 1 -->
+              <rect x="607" y="52" width="233" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="623" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · SINGLE PASS (FIGS. 4–5)</text>
+              <text x="623" y="100" font-size="11.5" font-weight="700" fill="#14181d">When shown 10 walks only once:</text>
+              <text x="623" y="120" font-size="11" fill="#39424d">• TD(1) Widrow-Hoff: <tspan font-weight="700" fill="#b91c1c">0.1786</tspan></text>
+              <text x="623" y="138" font-size="11" fill="#39424d">• TD(0) forward:     <tspan font-weight="700">0.0887</tspan></text>
+              <text x="623" y="156" font-size="11" fill="#0a6a5f" font-weight="700">• TD(0.3) trace:     0.0864 (Best!)</text>
+              <text x="623" y="174" font-size="11" fill="#0a6a5f" font-weight="700">• Backward TD(0):    0.0882 (p. 23)</text>
+              <line x1="623" y1="190" x2="824" y2="190" stroke="#7fb8b0" stroke-width="1"></line>
+              <text x="623" y="210" font-size="11.5" font-weight="700" fill="#14181d">Theorem 1 Exact Identity:</text>
+              <text x="623" y="228" font-size="11" fill="#39424d">Per-walk TD(1) == Widrow-Hoff</text>
+              <text x="623" y="246" font-size="11" font-weight="700" fill="#0a6a5f">to 7.77e-16 in O(d) trace memory!</text>
+            </svg>
+            <figcaption>Visual summary of Sutton (1988): (1) the Figure 1 Novel → Bad → Win fluke game, (2) Theorem 3 maximum-likelihood convergence on repeated random walks, and (3) why λ = 0.3 wins on a single pass.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · The 1988 Figure 3 printing mix-up (and two bugs in modern GitHub reproductions)</dt>
+              <dd>Reading Sutton's PDF alongside its page 377 Erratum showed that in the original 1988 journal issue (p. 20), the publisher accidentally printed the Figure 5 graph as Figure 3! Auditing open-source reproductions also uncovered a classic Python list-aliasing bug (`training = num_sets * [seq_per_set * [None]]` in `vjp23/TD_Lambda`, which made all 100 training sets identical copies of the last set).</dd>
+            </div>
+            <div>
+              <dt>2 · Cumulative step-count prediction (Section 5.1, `[5, 8, 9, 8, 5]`)</dt>
+              <dd>By setting step cost `c_{t+1} = 1` and terminal value `P_{m+1} = 0` (page 34), cumulative `TD(0)` learned the exact expected number of steps to exit the random walk (`[4.91, 7.90, 8.92, 7.95, 4.76]` vs analytical `[5, 8, 9, 8, 5]`).</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 9 (1998):</strong> Sutton showed how credit can flow across steps of a sequence. Ten years later, Yann LeCun, Léon Bottou, Yoshua Bengio, and Patrick Haffner combined convolutional feature maps (`LeNet-5`) with dynamic-programming graphs (`GTNs`) to read millions of real bank checks end to end.
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">7 · 1986 · Backpropagation</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">9 · 1998 · LeCun et al.</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 9: 1998 LECUN, BOTTOU, BENGIO & HAFFNER -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p9-1998">
+          <div class="origin-card__badge">Chapter 9 of 11 · 1998 · Yann LeCun, Léon Bottou, Yoshua Bengio &amp; Patrick Haffner</div>
+          <h2>Gradient-Based Learning Applied to Document Recognition</h2>
+          <p class="lede"><strong>How LeNet-5 (60,000 shared weights driving 340,908 connections) and Graph Transformer Networks read millions of bank checks a day—without ever needing a human to label where one digit ends and the next begins.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · Reading Handwritten Bank Checks Without Trusting Scissors</span>
+            <p>Imagine trying to build a machine in the 1990s to read handwritten dollar amounts on bank checks. If a single digit sits neatly inside a box, a Convolutional Neural Network (<strong>LeNet-5</strong>) can read it with `99.2%` accuracy. But on a real check, people scribble digits that touch each other! If you try to cut a handwritten `"4"` or `"8"` in half with heuristic scissors before reading it, the right half of a `"4"` looks just like a `"1"`, and the right half of an `"8"` looks just like a `"3"`.</p>
+            <p>LeCun, Bottou, Bengio, and Haffner solved this in two ways. First, you can slide the convolutional network across the whole check without cutting at all (a <strong>Space-Displacement Neural Network</strong>, sharing intermediate feature maps to save `4.43×` compute). Second, if you do propose candidate scissor cuts, keep <em>every</em> possible cut inside a directed web of paths (a <strong>Graph Transformer Network</strong>) and train the entire check reader from the whole check amount using <strong>Discriminative Forward Loss</strong>—pushing down the cost of all valid paths that spell the right amount while pushing up every wrong path so half-digit fragments price themselves out!</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of LeCun et al 1998 LeNet-5 exact 60,000 parameter bi-pyramid, RBF collapse vs MAP loss, and GTN Discriminative Forward graph training.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1998 · LENET-5 (60,000 PARAMS / 340,908 CONNS), SDNN &amp; GRAPH TRANSFORMER NETWORKS</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: LeNet-5 Exact Accounting -->
+              <rect x="20" y="52" width="285" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · EXACT LENET-5 ACCOUNTING (FIG. 2)</text>
+              <rect x="36" y="88" width="253" height="148" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+              <text x="46" y="107" font-family="monospace" font-size="10.8" fill="#14181d">C1 (6@28x28)  :    156 p | 122,304 c</text>
+              <text x="46" y="124" font-family="monospace" font-size="10.8" fill="#14181d">S2 (6@14x14)  :     12 p |   5,880 c</text>
+              <text x="46" y="141" font-family="monospace" font-size="10.8" font-weight="700" fill="#0a6a5f">C3 (16@10x10) :  1,516 p | 151,600 c</text>
+              <text x="46" y="158" font-family="monospace" font-size="10.8" fill="#14181d">S4 (16@5x5)   :     32 p |   2,000 c</text>
+              <text x="46" y="175" font-family="monospace" font-size="10.8" fill="#14181d">C5 (120@1x1)  : 48,120 p |  48,120 c</text>
+              <text x="46" y="192" font-family="monospace" font-size="10.8" fill="#14181d">F6 (84 units) : 10,164 p |  10,164 c</text>
+              <text x="46" y="209" font-family="monospace" font-size="10.8" fill="#66717e">RBF (10x84)   :      0 p |     840 c</text>
+              <text x="46" y="228" font-family="monospace" font-size="11" font-weight="700" fill="#0a6a5f">TOTAL         : 60,000 p | 340,908 c</text>
+              <text x="36" y="258" font-size="11" fill="#39424d">Table I C3 saves <tspan font-weight="700" fill="#0a6a5f">37.3%</tspan>; SDNN saves <tspan font-weight="700" fill="#0a6a5f">4.43× MACs</tspan>!</text>
+
+              <!-- Panel 2: RBF Collapse vs MAP Loss -->
+              <rect x="322" y="52" width="260" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="338" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · WHY RBF NEEDS MAP LOSS (EQ. 9)</text>
+              <text x="338" y="96" font-size="11" fill="#39424d">f(a) = 1.7159 tanh(2/3 a) → f(±1) = ±1</text>
+              <rect x="338" y="108" width="228" height="72" rx="7" fill="#ffffff" stroke="#b91c1c" stroke-width="1.2"></rect>
+              <text x="348" y="127" font-size="11" font-weight="700" fill="#b91c1c">Adaptive RBF + Plain MSE (Eq. 8):</text>
+              <text x="348" y="145" font-size="11" fill="#39424d">All 10 class centers collapse to 1 point!</text>
+              <text x="348" y="164" font-size="11" font-weight="700" fill="#b91c1c">Spread = 0.0017 | Acc = 12.5%</text>
+              <rect x="338" y="190" width="228" height="74" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="348" y="209" font-size="11" font-weight="700" fill="#0a6a5f">Adaptive RBF + Competitive MAP (Eq. 9):</text>
+              <text x="348" y="227" font-size="11" fill="#39424d">Pushes wrong classes &amp; rubbish apart!</text>
+              <text x="348" y="246" font-size="11" font-weight="700" fill="#0a6a5f">Spread = 7.46 | Margin = 26.9 | Acc = 100%</text>
+
+              <!-- Panel 3: GTN Unsegmented String Training -->
+              <rect x="599" y="52" width="241" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="615" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · GTN STRING TRAINING (SEC. VI)</text>
+              <text x="615" y="98" font-size="11" font-weight="700" fill="#14181d">Over-segmented 3-piece ink DAG:</text>
+              <circle cx="635" cy="132" r="10" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"></circle>
+              <circle cx="695" cy="132" r="10" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"></circle>
+              <circle cx="755" cy="132" r="10" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"></circle>
+              <circle cx="815" cy="132" r="10" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"></circle>
+              <line x1="645" y1="132" x2="685" y2="132" stroke="#0a6a5f" stroke-width="2"></line>
+              <line x1="705" y1="132" x2="745" y2="132" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="3 2"></line>
+              <line x1="765" y1="132" x2="805" y2="132" stroke="#0a6a5f" stroke-width="2"></line>
+              <path d="M 642 124 Q 695 96, 748 124" fill="none" stroke="#0a6a5f" stroke-width="2"/>
+              <path d="M 702 140 Q 755 168, 808 140" fill="none" stroke="#0a6a5f" stroke-width="2"/>
+              <text x="615" y="186" font-size="11" fill="#39424d">• Non-Disc Viterbi: <tspan font-weight="700" fill="#b91c1c">conf = 0.044</tspan> (collapses)</text>
+              <text x="615" y="206" font-size="11" fill="#39424d">• Disc Viterbi:     <tspan font-weight="700">conf = 0.063</tspan> (no margin)</text>
+              <text x="615" y="226" font-size="11" font-weight="700" fill="#0a6a5f">• Disc Forward:     conf = 1.000 (90/90!)</text>
+              <text x="615" y="256" font-size="10.5" fill="#66717e">Forward Scorer bprop matches FD to 8.66e-11</text>
+            </svg>
+            <figcaption>Visual summary of LeCun et al. (1998): (1) exact layer-by-layer LeNet-5 accounting (60,000 params / 340,908 connections), (2) why adaptive RBF centers collapse without the Eq. 9 MAP criterion, and (3) unsegmented GTN string training.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Why all 4 GitHub LeNet-5 repos missed the paper's exact 60,000 parameter count</dt>
+              <dd>Every repository we inspected either omitted the trainable scale and bias in `S2`/`S4` (`44` params), used a dense `S2→C3` layer (`60,856` params in `pop123-ux`), multiplied `C3`'s bias by fan-in inside a channel loop (`jmlee8939`), or used a 30-kernel `C3` table (`VTongTV`). Building the exact 1998 spec landed on <strong><code>60,000</code> parameters and <code>340,908</code> connections</strong> on the first try.</dd>
+            </div>
+            <div>
+              <dt>2 · Combining parallel segmentations with `logadd` (Section VI-C, page 25)</dt>
+              <dd>When two different segmentations spell the same answer `(3, 4)` with penalty `2.20` each while a wrong path spells `(8,)` with penalty `1.80`, Viterbi picks the wrong single path (`1.80 < 2.20`), whereas the Forward Scorer combines the two `(3, 4)` paths via `2.20 − ln 2 = 1.5069 < 1.80` and selects the right answer.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 10 (2012):</strong> LeNet-5 had `60,000` parameters and read `32×32` grayscale digits. Fourteen years later, Krizhevsky, Sutskever, and Hinton scaled that exact convolutional blueprint by **1,000× in parameters** (`60.97M`) to classify 1.2 million high-resolution color photographs on two GPUs.
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">8 · 1988 · Richard Sutton</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">10 · 2012 · AlexNet</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 10: 2012 KRIZHEVSKY, SUTSKEVER & HINTON -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p10-2012">
+          <div class="origin-card__badge">Chapter 10 of 11 · 2012 · Alex Krizhevsky, Ilya Sutskever &amp; Geoffrey E. Hinton</div>
+          <h2>ImageNet Classification with Deep Convolutional Neural Networks</h2>
+          <p class="lede"><strong>How two 3GB gaming graphics cards, a simple one-way valve (`ReLU`), and `Dropout` turned deep convolutional networks into the engine of modern computer vision.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · Two Graphics Cards That Divided Up Shape and Color</span>
+            <p>In 2012, training a 60-million-parameter neural network on 1.2 million full-color ImageNet photographs was considered reckless: the model wouldn't even fit inside the 3 GB memory of a single NVIDIA GTX 580 graphics card! So Alex Krizhevsky split the network down the middle across <strong>two GPUs</strong>. To keep the two cards from spending all their time waiting on each other, he let them talk across the wire <em>only</em> at Layer 3 (`conv3`) and the final classifier (`fc6–fc8`). In Layers 2, 4, and 5, each GPU worked purely on its own half of the channels.</p>
+            <p>Something remarkable happened on every single training run (Figure 3): without anyone telling them to, <strong>GPU 1 spontaneously became a black-and-white edge and texture specialist</strong>, while <strong>GPU 2 became a color-blob specialist</strong>! Combined with swapping saturating `tanh` curves for a one-way valve (`ReLU(x) = max(0, x)`, which trained `6×–7.8×` faster) and randomly blanking out half the classifier neurons on every step (`Dropout`), AlexNet slashed the ImageNet error rate from `26.2%` to **`15.3%`** overnight.</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Krizhevsky Sutskever Hinton 2012 two-GPU split-stream AlexNet, 3.83% conv params doing 91.91% of MACs, ReLU 7.8x speedup, and Figure 2 caption audit.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">2012 · ALEXNET: TWO-GPU SPLIT STREAMS, THE CONV vs FC PARADOX &amp; 7.8× RELU SPEEDUP</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: 2-GPU Split Stream -->
+              <rect x="20" y="52" width="285" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · TWO-GPU SPLIT TOPOLOGY (FIG. 2)</text>
+              <rect x="36" y="92" width="253" height="38" rx="6" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="46" y="109" font-size="10.5" font-weight="700" fill="#0a6a5f">GPU 1 Stream (48→128→192→192→128)</text>
+              <text x="46" y="123" font-size="10" fill="#39424d">Specializes in color-agnostic edges &amp; gratings</text>
+              <line x1="145" y1="130" x2="175" y2="148" stroke="#8a5a00" stroke-width="2"></line>
+              <line x1="175" y1="130" x2="145" y2="148" stroke="#8a5a00" stroke-width="2"></line>
+              <text x="192" y="143" font-size="10" font-weight="700" fill="#8a5a00">Cross-GPU only at conv3 &amp; FC!</text>
+              <rect x="36" y="148" width="253" height="38" rx="6" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="46" y="165" font-size="10.5" font-weight="700" fill="#0a6a5f">GPU 2 Stream (48→128→192→192→128)</text>
+              <text x="46" y="179" font-size="10" fill="#39424d">Specializes in color-specific blobs</text>
+              <text x="36" y="210" font-size="11" font-weight="700" fill="#14181d">Where weights vs compute live (60,965,224 p):</text>
+              <text x="36" y="229" font-size="11" fill="#39424d">• Conv1–5: <tspan font-weight="700" fill="#0a6a5f">3.83% params</tspan> → <tspan font-weight="700" fill="#0a6a5f">91.91% of MACs</tspan></text>
+              <text x="36" y="247" font-size="11" fill="#39424d">• FC6–8:   <tspan font-weight="700" fill="#14181d">96.17% params</tspan> → <tspan font-weight="700" fill="#14181d">8.09% of MACs</tspan></text>
+              <text x="36" y="266" font-size="10.5" fill="#66717e">Fig. 2 caption 253,440 = 55×48×96 (vs 55²×96)!</text>
+
+              <!-- Panel 2: ReLU vs Tanh & +1 Bias -->
+              <rect x="322" y="52" width="260" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="338" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · RELU SPEEDUP &amp; +1 BIAS (SEC. 3.1, 5)</text>
+              <text x="338" y="98" font-size="11" font-weight="700" fill="#14181d">Iterations to reach ≤ 25% training error:</text>
+              <rect x="338" y="110" width="32" height="20" rx="4" fill="#0a6a5f"></rect>
+              <text x="378" y="125" font-size="11.5" font-weight="700" fill="#0a6a5f">ReLU: 10 steps (7.80× faster!)</text>
+              <rect x="338" y="138" width="210" height="20" rx="4" fill="#b91c1c"></rect>
+              <text x="348" y="152" font-size="11" font-weight="700" fill="#ffffff">Saturating tanh: 78 steps</text>
+              <line x1="338" y1="172" x2="566" y2="172" stroke="#cfd6de" stroke-width="1"></line>
+              <text x="338" y="192" font-size="11" font-weight="700" fill="#14181d">Why Section 5 sets conv2,4,5 bias = +1:</text>
+              <text x="338" y="211" font-size="11" fill="#39424d">At N(0, 0.01²) init, bias = 0 attenuates</text>
+              <text x="338" y="228" font-size="11" fill="#39424d">conv5 signal to <tspan font-weight="700" fill="#b91c1c">0.00059</tspan>; bias = +1 keeps</text>
+              <text x="338" y="245" font-size="11" fill="#39424d"><tspan font-weight="700" fill="#0a6a5f">100% of conv5 active (mean = 1.0314)</tspan></text>
+              <text x="338" y="263" font-size="10.5" fill="#66717e">(1,748× stronger initial forward signal!)</text>
+
+              <!-- Panel 3: LRN, Pool & Dropout -->
+              <rect x="599" y="52" width="241" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="615" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · LRN, POOLING &amp; DROPOUT</text>
+              <text x="615" y="100" font-size="11" font-weight="700" fill="#14181d">• Local Response Norm (p. 4):</text>
+              <text x="615" y="118" font-size="11" fill="#39424d">  Strong neighbor suppresses channel</text>
+              <text x="615" y="134" font-size="11" fill="#39424d">  by <tspan font-weight="700" fill="#0a6a5f">56.0%</tspan> (PyTorch divides α by 5!).</text>
+              <text x="615" y="158" font-size="11" font-weight="700" fill="#14181d">• Overlapping Pool (s=2, z=3):</text>
+              <text x="615" y="176" font-size="11" fill="#39424d">  1-px shift cosine = <tspan font-weight="700" fill="#0a6a5f">0.7071</tspan> vs <tspan font-weight="700" fill="#b91c1c">0.0000</tspan>.</text>
+              <text x="615" y="200" font-size="11" font-weight="700" fill="#14181d">• PCA RGB Color Aug (p. 5–6):</text>
+              <text x="615" y="218" font-size="11" fill="#39424d">  p₁ = [0.567, 0.576, 0.589] ≈ 1/√3.</text>
+              <text x="615" y="242" font-size="11" font-weight="700" fill="#14181d">• Dropout p=0.5 (Section 4.2):</text>
+              <text x="615" y="260" font-size="11" fill="#0a6a5f" font-weight="700">  2.52× lower co-adaptation, +3.8% acc.</text>
+            </svg>
+            <figcaption>Visual summary of Krizhevsky, Sutskever &amp; Hinton (2012): (1) the two-GPU split-stream topology and conv-vs-FC parameter/MAC inversion, (2) 7.80× ReLU speedup and +1 bias initialization, and (3) LRN, overlapping pooling, PCA color augmentation, and Dropout.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Why `torchvision.models.alexnet` is not the 2012 NIPS paper</dt>
+              <dd>`torchvision` implements Krizhevsky's 2014 single-stream variant (`64→192→384→256→256`, `61,100,840` params, no LRN). Building the authentic 2012 two-GPU architecture (`96→256→384→384→256`, `groups=2` in `conv2,4,5` + LRN) gives the exact **`60,965,224` parameters**, **`659,272` neurons**, and **`724,406,816` MACs**.</dd>
+            </div>
+            <div>
+              <dt>2 · How Krizhevsky's original `cuda-convnet` configs (`layers-19pct.cfg`) explain the ReLU speedup</dt>
+              <dd>Reading Krizhevsky's original 2012 `cuda-convnet` source code showed that `pool2` and `pool3` use spatial **average pooling**: odd-symmetric `tanh(−z) = −tanh(z)` cancels positive and negative half-cycles of oriented gratings and saturates in its tails, whereas `ReLU` rectifies every half-cycle cleanly.</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>How this led to Chapter 11 (2017):</strong> AlexNet proved that when a network can process an entire input in parallel on GPUs, scale unlocks extraordinary capability. Five years later, Vaswani and colleagues asked: why are language models still trudging through sentences one word after another like a 1990s bucket brigade?
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">9 · 1998 · LeCun et al.</span>
+            </button>
+            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
+              <span class="origin-pager__dir">Next Chapter →</span>
+              <span class="origin-pager__title">11 · 2017 · The Transformer</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ================================================================ -->
+        <!-- CHAPTER 11: 2017 VASWANI ET AL. -->
+        <!-- ================================================================ -->
+        <article class="origin-card" id="p11-2017">
+          <div class="origin-card__badge">Chapter 11 of 11 · 2017 · Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser &amp; Illia Polosukhin</div>
+          <h2>Attention Is All You Need</h2>
+          <p class="lede"><strong>How replacing the word-by-word telephone game of recurrent networks with an open round table (`Self-Attention`), 8 parallel spotlights (`Multi-Head`), and a `1/√d_k` dimmer switch created the modern Transformer.</strong></p>
+
+          <div class="origin-story-box">
+            <span class="origin-story-box__label">The Story to Remember · Replacing the Telephone Game with a Round Table and Eight Spotlights</span>
+            <p>Picture thirty people standing in a single-file line playing the telephone game. Person 1 whispers to Person 2, Person 2 whispers to Person 3, and so on down the line. That is how a Recurrent Neural Network (RNN) reads a 30-word sentence: Word 1 cannot talk to Word 30 without passing through 29 middlemen one step at a time (`O(n)` sequential steps), and nobody in the line can work in parallel.</p>
+            <p>In 2017, eight researchers at Google asked: <strong>what if we throw away the line altogether and seat every word around one open round table?</strong> Now any word (say, the pronoun <em>"its"</em> at position 9) can look straight across the table at <em>"The Law"</em> at position 2 in <strong>one step (`O(1)`)</strong>! To make the round table work, they needed three inventions: (1) a <strong>dimmer switch (`1/√d_k`)</strong> so high-dimensional dot products don't blind the softmax into a rigid 0-or-1 glare; (2) <strong>eight separate spotlights (`Multi-Head Attention`)</strong> so a word can look at grammar with one spotlight and meaning with another instead of averaging them into mud; and (3) a <strong>musical chord of sine and cosine waves (`Positional Encoding`)</strong> stamped onto each chair so everyone still knows who is sitting where!</p>
+          </div>
+
+          <figure class="origin-visual">
+            <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Vaswani et al 2017 Transformer O(1) self-attention vs O(n) recurrence, 1/sqrt(d_k) softmax gradient stabilization, 782x Multi-Head subspace resolution, and unpublished Attention over Parameters.">
+              <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">2017 · THE TRANSFORMER: O(1) ROUND-TABLE ATTENTION, 1/√d_k SCALING &amp; 8 SPOTLIGHTS</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+              <!-- Panel 1: Telephone Line vs Round Table -->
+              <rect x="20" y="52" width="275" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">1 · LINE (RNN) VS ROUND TABLE (TABLE 1)</text>
+              <text x="36" y="96" font-size="10.5" font-weight="700" fill="#b91c1c">Recurrent (O(n) steps, O(n·d²) MACs):</text>
+              <circle cx="52" cy="116" r="11" fill="#ffffff" stroke="#b91c1c" stroke-width="1.5"></circle>
+              <line x1="63" y1="116" x2="95" y2="116" stroke="#b91c1c" stroke-width="1.8"></line>
+              <circle cx="106" cy="116" r="11" fill="#ffffff" stroke="#b91c1c" stroke-width="1.5"></circle>
+              <line x1="117" y1="116" x2="149" y2="116" stroke="#b91c1c" stroke-width="1.8"></line>
+              <circle cx="160" cy="116" r="11" fill="#ffffff" stroke="#b91c1c" stroke-width="1.5"></circle>
+              <line x1="171" y1="116" x2="203" y2="116" stroke="#b91c1c" stroke-width="1.8"></line>
+              <circle cx="214" cy="116" r="11" fill="#ffffff" stroke="#b91c1c" stroke-width="1.5"></circle>
+              <text x="36" y="148" font-size="10.5" font-weight="700" fill="#0a6a5f">Self-Attention (O(1) path, O(n²·d) MACs):</text>
+              <circle cx="52" cy="186" r="12" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2"></circle>
+              <circle cx="106" cy="186" r="12" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2"></circle>
+              <circle cx="160" cy="186" r="12" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2"></circle>
+              <circle cx="214" cy="186" r="12" fill="#0a6a5f"></circle>
+              <path d="M 214 174 Q 133 142, 52 174" fill="none" stroke="#0a6a5f" stroke-width="2"/>
+              <path d="M 214 174 Q 160 154, 106 174" fill="none" stroke="#0a6a5f" stroke-width="2"/>
+              <text x="214" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffffff">"its"</text>
+              <text x="52" y="190" text-anchor="middle" font-size="9.5" font-weight="700" fill="#14181d">Law</text>
+              <text x="36" y="222" font-size="11" fill="#39424d">At n = 32, d = 512: Self-Attention uses</text>
+              <text x="36" y="240" font-size="11" font-weight="700" fill="#0a6a5f">8.0× fewer core MACs (1.05M vs 8.39M)!</text>
+              <text x="36" y="260" font-size="10.5" fill="#66717e">Crossover n = d/2 = 256. Causal leak = 0.00e+00.</text>
+
+              <!-- Panel 2: 1/sqrt(d_k) & Multi-Head -->
+              <rect x="312" y="52" width="276" height="228" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="328" y="76" font-size="11" font-weight="700" fill="#0a6a5f">2 · THE 1/√d_k DIMMER &amp; 8 SPOTLIGHTS</text>
+              <rect x="328" y="90" width="244" height="80" rx="7" fill="#ffffff" stroke="#cfd6de" stroke-width="1.2"></rect>
+              <text x="338" y="109" font-size="11" font-weight="700" fill="#14181d">At d_k = 1024 (Footnote 4 check):</text>
+              <text x="338" y="128" font-size="10.8" fill="#b91c1c">• Unscaled: Var = 1024, ‖J_soft‖ = <tspan font-weight="700">0.0575</tspan></text>
+              <text x="338" y="146" font-size="10.8" fill="#0a6a5f">• Scaled /√d_k: Var = 1.00, ‖J_soft‖ = <tspan font-weight="700">0.2412</tspan></text>
+              <text x="338" y="162" font-size="10" fill="#66717e">(4.2× stronger gradient norm — no saturation!)</text>
+              <rect x="328" y="180" width="244" height="84" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="338" y="199" font-size="11" font-weight="700" fill="#0a6a5f">Multi-Head vs Single-Head (same params):</text>
+              <text x="338" y="218" font-size="10.8" fill="#39424d">Retrieving 2 subspaces from 2 positions:</text>
+              <text x="338" y="236" font-size="10.8" fill="#b91c1c">• 1 Head (averages):  MSE = 0.37236</text>
+              <text x="338" y="253" font-size="10.8" font-weight="700" fill="#0a6a5f">• 2 Heads (unmixes): MSE = 0.00048 (782×!)</text>
+
+              <!-- Panel 3: Sinusoidal PE & Hidden TeX Gem -->
+              <rect x="605" y="52" width="235" height="228" rx="10" fill="#e6f2f0" stroke="#7fb8b0" stroke-width="1.5"></rect>
+              <text x="621" y="76" font-size="11" font-weight="700" fill="#0a6a5f">3 · SINUSOIDAL PE &amp; HIDDEN TeX</text>
+              <text x="621" y="98" font-size="11" font-weight="700" fill="#14181d">Exact Relative Offset Matrix M_k:</text>
+              <text x="621" y="116" font-size="10.8" fill="#39424d">‖PE_{pos+k} − M_k PE_pos‖ = <tspan font-weight="700" fill="#0a6a5f">2.05e-14</tspan></text>
+              <text x="621" y="134" font-size="10.8" fill="#39424d">PE_posᵀ PE_{pos+k} std = <tspan font-weight="700" fill="#0a6a5f">8.78e-14</tspan></text>
+              <line x1="621" y1="148" x2="824" y2="148" stroke="#7fb8b0" stroke-width="1"></line>
+              <text x="621" y="168" font-size="11" font-weight="700" fill="#14181d">Hidden in arXiv TeX tarball:</text>
+              <text x="621" y="186" font-size="10.8" fill="#39424d">Unpublished <tspan font-family="monospace" font-weight="700">parameter_attention.tex</tspan></text>
+              <text x="621" y="204" font-size="10.8" fill="#39424d">shows FFN(x) = ReLU(xW₁)W₂ is</text>
+              <text x="621" y="220" font-size="10.8" fill="#39424d">Attention over Parameters (AOP₂):</text>
+              <text x="621" y="242" font-size="12" font-weight="700" fill="#0a6a5f">4.86 PPL / 25.9 BLEU</text>
+              <text x="621" y="260" font-size="10.5" fill="#66717e">(Beat base 4.92 PPL / 25.8 BLEU!)</text>
+            </svg>
+            <figcaption>Visual summary of Vaswani et al. (2017): (1) O(1) round-table self-attention vs O(n) recurrence, (2) 1/√d_k softmax Jacobian stabilization &amp; 782× Multi-Head subspace resolution, and (3) Sinusoidal PE rotation M_k &amp; the unpublished parameter_attention.tex experiment.</figcaption>
+          </figure>
+
+          <h3>What we built and saw firsthand</h3>
+          <dl class="stack">
+            <div>
+              <dt>1 · Why omitting the causal mask passes training (100%) and fails in the real world (8.6%)</dt>
+              <dd>When we trained our Encoder-Decoder Transformer without the upper-triangular <code>−∞</code> causal mask in the decoder, it reached <strong><code>100.0%</code> accuracy during teacher-forced training</strong> (by secretly peeking at the next target token!) and then collapsed to <strong><code>8.6%</code></strong> when asked to generate sequences autoregressively on its own. With the causal mask in place, prefix leakage is <code>0.00e+00</code> and autoregressive accuracy is <strong><code>100.0%</code></strong>.</dd>
+            </div>
+            <div>
+              <dt>2 · Why `√d_model` embedding scaling is coupled to 3-way weight tying (Section 3.4)</dt>
+              <dd>Because the shared `V × d_model` weight matrix also acts as the pre-softmax linear layer, its weights must be initialized with fan-in `std = 1/√d_model`; multiplying token embedding lookups by `√d_model` brings their variance back to `1.0` so they match the `O(1)` sinusoidal positional encodings. When we used PyTorch's default `nn.Embedding` (`std = 1.0`) with `* √d_model`, the embeddings had variance `32` and drowned out word order (`14.6%`); fixing the fan-in std immediately jumped accuracy to **`100.0%`**!</dd>
+            </div>
+          </dl>
+
+          <div class="origin-bridge">
+            <strong>The Complete 74-Year Arc (1943 → 2017):</strong> From McCulloch &amp; Pitts's threshold gates and Turing's stored-program child-machine, through Newell &amp; Simon's heuristic trees, Rosenblatt's Perceptron, Minsky &amp; Papert's geometric invariants, Hopfield's energy valleys, Rumelhart–Hinton–Williams's backpropagation, Sutton's temporal differences, LeCun's LeNet-5 &amp; GTNs, and Krizhevsky's AlexNet, to Vaswani et al.'s Transformer—every breakthrough came from looking honestly at where the previous system broke in reality.
+          </div>
+
+          <div class="origin-pager">
+            <button type="button" class="origin-pager__btn" data-origin-go="prev">
+              <span class="origin-pager__dir">← Previous Chapter</span>
+              <span class="origin-pager__title">10 · 2012 · AlexNet</span>
+            </button>
+            <button type="button" class="origin-pager__btn" data-origin-all>
+              <span class="origin-pager__dir">Completed all 11 ✓</span>
+              <span class="origin-pager__title">View all 11 chapters together</span>
+            </button>
+          </div>
+        </article>
+
       </div>
     </div>
   </section>
@@ -83,86 +1153,86 @@
   <!-- ============ TIMELINE MAP ============ -->
   <section class="band" id="timeline">
     <div class="wrap">
-      <h2>The 74-year chain at a glance</h2>
-      <p class="lede"><strong>Each paper below solved a problem that the paper before it could not.</strong> Read them in order and you can watch the entire field take shape step by step.</p>
+      <h2>All eleven papers on one map</h2>
+      <p class="lede"><strong>Click any paper below to jump straight to its story and visual diagram above.</strong></p>
 
       <div class="table-wrap">
         <table class="data">
-          <caption>The eleven foundational papers, the question each one asked, and the core mechanism it introduced.</caption>
+          <caption>The eleven foundational papers (1943–2017), the memorable story behind each one, and the mechanism it introduced.</caption>
           <thead>
             <tr>
               <th scope="col">Year</th>
               <th scope="col">Paper &amp; Authors</th>
-              <th scope="col">The Question It Asked</th>
-              <th scope="col">What It Introduced</th>
+              <th scope="col">The Story to Remember</th>
+              <th scope="col">The Mechanism Introduced</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><strong>1943</strong></td>
               <td><a href="#p1-1943">McCulloch &amp; Pitts</a></td>
-              <td>Can binary all-or-none neurons compute logic and hold memory?</td>
-              <td>Threshold logic gates, excitation/inhibition, and circular feedback memory loops</td>
+              <td>The cold rod that felt burning hot</td>
+              <td>Binary threshold logic gates, inhibition veto, and circular feedback memory loops</td>
             </tr>
             <tr>
               <td><strong>1950</strong></td>
               <td><a href="#p2-1950">Alan M. Turing</a></td>
-              <td>How do we test machine intelligence, and how can a machine learn?</td>
-              <td>The Imitation Game, stored-program universality, and educating a "Child-Machine"</td>
+              <td>The witness who paused 30s to make a carry slip</td>
+              <td>The Imitation Game, stored-program universality (<code>6809430217</code>), and the Child-Machine</td>
             </tr>
             <tr>
               <td><strong>1956</strong></td>
               <td><a href="#p3-1956">Newell &amp; Simon</a></td>
-              <td>How can a computer prove theorems without drowning in brute-force search?</td>
-              <td>The Logic Theorist (<code>IPL-I</code>), list trees, subgoal queues, and similarity filters</td>
+              <td>Human "working memories" holding index cards</td>
+              <td>The Logic Theorist (<code>IPL-I</code>), subgoal trees, and the <code>CSm</code> 93.6% similarity filter</td>
             </tr>
             <tr>
               <td><strong>1958</strong></td>
               <td><a href="#p4-1958">Frank Rosenblatt</a></td>
-              <td>How can a randomly wired network learn visual categories from experience?</td>
-              <td>The Perceptron (<code>S → A → R</code>), random receptive fields, and zero-sum weight learning</td>
+              <td>The parasitic pool that refused to be bullied</td>
+              <td>The Perceptron (<code>S → A → R</code>) and zero-sum <code>γ</code> reinforcement (<code>P_c11 &gt; P_a &gt; P_c12</code>)</td>
             </tr>
             <tr>
               <td><strong>1969</strong></td>
               <td><a href="#p5-1969">Minsky &amp; Papert</a></td>
-              <td>What are the exact mathematical limits of single-layer perceptrons?</td>
-              <td>Predicate order <code>k</code>, Group Invariance Theorem, and why Parity &amp; Connectivity fail locally</td>
+              <td>The pinhole committee vs the ant with 2 pebbles</td>
+              <td>Predicate order <code>k</code>, Group Invariance, One-in-a-Box collision, and serial boundary tracing</td>
             </tr>
             <tr>
               <td><strong>1982</strong></td>
               <td><a href="#p6-1982">John J. Hopfield</a></td>
-              <td>How can a recurrent network recall a full memory from a noisy partial cue?</td>
-              <td>Symmetric synapses (<code>T_ij = T_ji</code>), Lyapunov Energy valleys, and <code>0.15 N</code> attractors</td>
+              <td>The marble rolling into the memory valley</td>
+              <td>Symmetric synapses (<code>T_ij = T_ji</code>), asynchronous Energy valleys, and <code>0.15 N</code> attractors</td>
             </tr>
             <tr>
               <td><strong>1986</strong></td>
               <td><a href="#p7-1986">Rumelhart, Hinton &amp; Williams</a></td>
-              <td>How do we train deep hidden layers so they invent their own internal features?</td>
-              <td>Backpropagation (the Generalized Delta Rule), momentum, and spatial weight sharing</td>
+              <td>Twin detectives on a seesaw &amp; the parity abacus</td>
+              <td>Backpropagation, symmetry breaking, momentum (<code>7.9×</code>), and <code>1:2:4</code> mirror weights</td>
             </tr>
             <tr>
               <td><strong>1988</strong></td>
               <td><a href="#p8-1988">Richard S. Sutton</a></td>
-              <td>How can a learner predict future outcomes step by step before the episode ends?</td>
-              <td>Temporal-Difference learning <code>TD(λ)</code>, eligibility traces, and maximum-likelihood Markov convergence</td>
+              <td>The lucky fluke game (<code>Novel → Bad → Win</code>)</td>
+              <td>Temporal-Difference learning <code>TD(λ)</code> and Maximum-Likelihood Markov convergence</td>
             </tr>
             <tr>
               <td><strong>1998</strong></td>
               <td><a href="#p9-1998">LeCun, Bottou, Bengio &amp; Haffner</a></td>
-              <td>How do we read 2D handwriting and whole multi-character documents end to end?</td>
+              <td>Reading bank checks without trusting scissors</td>
               <td><code>LeNet-5</code> (<code>60,000</code> params), Space-Displacement scanning, and Graph Transformer Networks</td>
             </tr>
             <tr>
               <td><strong>2012</strong></td>
               <td><a href="#p10-2012">Krizhevsky, Sutskever &amp; Hinton</a></td>
-              <td>How do we scale deep CNNs to 1.2M high-resolution photos without vanishing gradients?</td>
-              <td><code>AlexNet</code> (<code>60.97M</code> params): non-saturating <code>ReLU</code>, 2-GPU split streams, <code>LRN</code>, and <code>Dropout</code></td>
+              <td>Two GPUs that divided up shape and color</td>
+              <td><code>AlexNet</code> (<code>60.97M</code> params): non-saturating <code>ReLU</code> (<code>7.8×</code>), <code>LRN</code>, PCA color aug, and <code>Dropout</code></td>
             </tr>
             <tr>
               <td><strong>2017</strong></td>
               <td><a href="#p11-2017">Vaswani et al.</a></td>
-              <td>Can we drop recurrence and convolutions altogether and connect every token directly?</td>
-              <td><code>The Transformer</code>: Scaled Dot-Product Attention (<code>1/√d_k</code>), Multi-Head subspaces, and Sinusoidal <code>PE</code></td>
+              <td>The round table with 8 spotlights &amp; a dimmer</td>
+              <td><code>The Transformer</code>: <code>O(1)</code> Self-Attention, <code>1/√d_k</code> scaling, Multi-Head subspaces (<code>782×</code>), and Sinusoidal <code>PE</code></td>
             </tr>
           </tbody>
         </table>
@@ -170,436 +1240,14 @@
     </div>
   </section>
 
-  <!-- ============ 1. MCCULLOCH & PITTS 1943 ============ -->
-  <section class="band" id="p1-1943">
-    <div class="wrap">
-      <p class="note">Paper 1 · 1943 · Warren S. McCulloch &amp; Walter Pitts</p>
-      <h2>A Logical Calculus of the Ideas Immanent in Nervous Activity</h2>
-      <p class="lede"><strong>This is where neural computation begins: the moment someone realized that a biological neuron firing or staying quiet is performing a logical operation.</strong></p>
-
-      <p>In 1943, neurobiologists talked about cell membranes, chemical thresholds, and refractory periods, while logicians talked about truth tables and propositions. Warren McCulloch (a neurophysiologist) and Walter Pitts (a nineteen-year-old self-taught mathematician) asked a deceptively simple question: if a neuron obeys an "all-or-none" law—either firing a full impulse (<code>1</code>) or staying silent (<code>0</code>) at each tick of time—what happens when you wire many of them together?</p>
-
-      <h3>What the paper says</h3>
-      <p>McCulloch and Pitts define a simplified mathematical neuron (Equation 1). Each neuron has a fixed threshold <code>θ</code> (say, 1, 2, or 3), a set of excitatory incoming synapses that add +1 each, and inhibitory incoming synapses that act as an absolute veto. At time step <code>t</code>, a neuron fires if and only if <strong>no</strong> inhibitory input fired at step <code>t − 1</code>, and at least <code>θ</code> excitatory inputs fired at step <code>t − 1</code>.</p>
-      <p>They then split all neural networks into two worlds:</p>
-      <ul>
-        <li><strong>Networks without loops (Section 2):</strong> Signals flow strictly forward from sensory inputs to outputs. Every neuron's firing can be written as a logical formula over the inputs that arrived a few ticks earlier.</li>
-        <li><strong>Networks with circular loops (Section 3):</strong> Once a chain of neurons loops back on itself, a pulse can travel around the circle forever. That circulating pulse is a <strong>memory</strong> of an event that happened in the indefinite past—Detaching the brain's current thought from the immediate sensory moment.</li>
-      </ul>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · Why a single neuron can only do 7 of the 16 two-input logic operations</dt>
-          <dd>There are 16 possible truth tables for two binary inputs <code>(x1, x2)</code>. When we enumerated every possible threshold and synapse wiring, a single McCulloch–Pitts neuron can realize only <strong>7 of the 16</strong> (such as <code>AND</code>, <code>OR</code>, and <code>x1 AND NOT x2</code>). When you stack neurons into a multi-layer network without loops, you can build <strong>8 of the 16</strong> two-input functions (including <code>XOR</code>) and <strong>128 of the 256</strong> three-input functions—specifically, every single Boolean function that stays silent when all inputs are zero (<code>f(0, …, 0) = 0</code>). Across 1,000 randomly generated acyclic networks, <code>0/1,000</code> ever fired on an all-zero input.</dd>
-        </div>
-        <div>
-          <dt>2 · Why briefly touching cold metal to your skin feels hot (Figure 1e)</dt>
-          <dd>McCulloch and Pitts drew a tiny 4-neuron circuit (Figure 1e) to explain a strange human sensory illusion: if you touch a cold rod to your skin for a brief instant and pull it away, it feels <em>hot</em>, whereas holding it against your skin feels cold. When we simulated their circuit, a 1-tick cold input triggers a delayed 2-tick relay that excites the heat receptor just as the cold inhibition stops—lighting up both channels (<code>[1, 1]</code>). When the cold stimulus stays on for 2 or more ticks, the inhibitory synapse blocks the relay at the exact tick it arrives, so only the cold channel fires (<code>[0, 1]</code>).</dd>
-        </div>
-        <div>
-          <dt>3 · A changeable synapse is identical to a 1-neuron feedback loop (Theorem 7)</dt>
-          <dd>People often say McCulloch–Pitts networks "cannot learn" because their weights are fixed. In Theorem 7 (Figure 1i), the authors prove that if you take a plastic synapse that permanently switches on whenever two neurons fire together, you can replace it with a fixed 1-neuron circular loop (an order-1 circle) that latches on forever once triggered. Across all <code>4,096/4,096</code> possible 6-step input histories, the two circuits produced the exact same output at every tick.</dd>
-        </div>
-        <div>
-          <dt>4 · Why you can predict a brain's future from its state, but cannot read its past (Section 4)</dt>
-          <dd>In a 4-neuron cyclic network we tested, all 16 possible binary states funnel down into just <code>8</code> reachable states, and each reachable state has between <code>4</code> and <code>12</code> different predecessor states that collapse into it. Because many pasts produce the same present, inspecting the current state of a nervous system determines what it will do next, but can never uniquely tell you how or when a memory started.</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> McCulloch and Pitts showed that neural circuits can compute any logical rule, provided someone designs the wiring diagram in advance. That raised two immediate questions: can a single universal machine run <em>any</em> rule stored as data (Turing, 1950), and can a network wire its own weights from experience (Rosenblatt, 1958)?</p>
-    </div>
-  </section>
-
-  <!-- ============ 2. TURING 1950 ============ -->
-  <section class="band" id="p2-1950">
-    <div class="wrap">
-      <p class="note">Paper 2 · 1950 · Alan M. Turing</p>
-      <h2>Computing Machinery and Intelligence</h2>
-      <p class="lede"><strong>Instead of arguing over what the word "think" means, Turing defines an operational test, explains how a stored-program computer works, and asks how to educate a "Child-Machine."</strong></p>
-
-      <p>Seven years after McCulloch and Pitts, Alan Turing wrote a paper for a philosophy journal (<em>Mind</em>) that reads like a blueprint for the next seventy years of computer science. Rather than debating whether machines have souls or feelings, Turing proposes replacing "Can machines think?" with a blind teleprinter conversation: <strong>The Imitation Game</strong>.</p>
-
-      <h3>What the paper says</h3>
-      <p>An interrogator sits in one room and types questions to two hidden witnesses—one a human, one a digital computer programmed to play the part of a human—and tries to tell which is which. To explain why a digital computer is uniquely suited for this, Turing walks the reader through three big ideas:</p>
-      <ol>
-        <li><strong>Stored-program computers (Sections 3–4):</strong> A digital computer has a Store (memory), an Executive unit (calculator), and a Control table. Because instructions are stored in memory as ordinary numbers alongside data, a program can construct and modify its own instructions as it runs.</li>
-        <li><strong>Universality (Section 5):</strong> Every discrete-state machine (no matter how complex) is just a finite table mapping <code>(current state, input) → (next state, output)</code>. Therefore, a single <strong>Universal Digital Computer</strong> with enough storage can mimic any other discrete machine by looking up its table.</li>
-        <li><strong>The Learning Child-Machine (Section 7):</strong> Writing a complete adult mind by hand is too hard. Instead, we should program a simpler "child-machine" (its hereditary structure) and subject it to education—combining <strong>rewards and punishments</strong> with <strong>unemotional symbolic instruction</strong>.</li>
-      </ol>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · The intentional arithmetic mistake hidden on page 434</dt>
-          <dd>In Turing's opening sample dialogue, the interrogator asks: <em>"Add 34957 to 70764."</em> The witness waits <strong>30 seconds</strong> and answers <strong><code>105621</code></strong>. When we decoded Turing's Manchester computer instruction packet from Section 4 (<code>6809430217</code>, meaning "add address 6809 to address 4302 and store at address 17") and ran it on <code>34957 + 70764</code>, the true sum is <strong><code>105721</code></strong>! The witness in Turing's dialogue missed the carry into the hundreds column and answered <code>105621</code>. When we simulated a Bayesian interrogator over 500 games, a machine that answers <code>105721</code> in 1.2 milliseconds is unmasked as the computer <strong><code>100.0%</code> of the time</strong>; when the machine deliberately spoofs human thinking delays and occasional arithmetic slips (as Turing warns on page 448), the interrogator's accuracy drops to <strong><code>48.4%</code></strong> (coin-flip chance).</dd>
-        </div>
-        <div>
-          <dt>2 · Why Gödel's theorem does not prove humans are smarter than machines (Section 6.1)</dt>
-          <dd>Critics often argue that Gödel's incompleteness theorem (or the Halting Problem) proves machines are crippled because for any machine <code>M_0</code>, there is a question about <code>M_0</code> that <code>M_0</code> cannot answer correctly. We built a concrete diagonal sequence of machines <code>M_0, M_1, M_2, M_3</code>: while <code>M_0</code> is indeed trapped in a self-referential paradox when asked about its own code, the very next machine <code>M_1</code> answers <code>M_0</code>'s question immediately—and as Turing points out, nobody has ever shown that a human mind is immune to self-referential blind spots either.</dd>
-        </div>
-        <div>
-          <dt>3 · Why reward-and-punishment alone is 22,400× slower than symbolic language (Section 7)</dt>
-          <dd>In Section 7, Turing remarks that if a teacher can only communicate with a child-machine by administering "blows" (rewards and punishments), the amount of information transmitted is tiny compared to also having an unemotional symbolic channel where the teacher can state rules in words. On Turing's 5-step decision tree with 8 choices per step, blind punishment-only search required an average of <strong><code>22,400</code> blows</strong> to find the right sequence; once a 20-letter symbolic alphabet was taught (costing <code>202</code> setup signals), the symbolic command <code>"Do M"</code> solved the task in <strong><code>1</code> step</strong>.</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> Turing predicted that symbolic reasoning and machine learning would both be possible on stored-program computers. Six years later, Newell and Simon built the first symbolic reasoning program (1956), and eight years later Rosenblatt built the first statistical learning network (1958).</p>
-    </div>
-  </section>
-
-  <!-- ============ 3. NEWELL & SIMON 1956 ============ -->
-  <section class="band" id="p3-1956">
-    <div class="wrap">
-      <p class="note">Paper 3 · 1956 · Allen Newell &amp; Herbert A. Simon</p>
-      <h2>The Logic Theory Machine: A Complex Information Processing System</h2>
-      <p class="lede"><strong>The first working AI program in history—proving mathematical theorems from Principia Mathematica by using heuristics to prune an impossible search tree.</strong></p>
-
-      <p>In June 1956, just before the Dartmouth Summer Research Project on Artificial Intelligence, Allen Newell and Herbert Simon published RAND Report <code>P-868</code>. Instead of speculating about whether a computer could reason symbolically, they wrote out the complete specification and assembly-level source code (in <strong>IPL-I</strong>, Information Processing Language I) of a program that proved theorems from Chapter 2 of Whitehead and Russell's <em>Principia Mathematica</em>.</p>
-
-      <h3>What the paper says</h3>
-      <p>The Logic Theorist (<code>LT</code>) stores logical formulas—like <code>(p ∨ p) ⊃ p</code>—as binary trees of list elements inside dynamic "working memories." Given a theorem to prove and a list of five axioms, the Executive routine (<code>Ex</code>) tries three proof methods:</p>
-      <ul>
-        <li><strong>Substitution (<code>MSb</code>):</strong> Can one of the known axioms or theorems be turned directly into our goal by substituting formulas for variables (e.g., replacing <code>p</code> with <code>A ∨ B</code>) and expanding definitions (replacing <code>A ⊃ B</code> with <code>~A ∨ B</code>)?</li>
-        <li><strong>Detachment (<code>MDt</code>):</strong> If our goal is <code>B</code> and we know a theorem of the form <code>A ⊃ B</code>, then proving <code>A</code> will prove <code>B</code>. So <code>LT</code> posts <code>A</code> as a new subproblem.</li>
-        <li><strong>Chaining (<code>MCh</code>):</strong> If our goal is <code>A ⊃ C</code> and we know <code>A ⊃ B</code>, then proving <code>B ⊃ C</code> will bridge the gap (or vice versa).</li>
-      </ul>
-      <p>Whenever one-step substitution fails, <code>Ex</code> pulls the simplest unproven subproblem off its subproblem queue and tries again, building a backward search tree.</p>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · Ten real bugs in the printed 1956 IPL-I code (and 48/67 theorems proved once fixed)</dt>
-          <dd>Because RAND <code>P-868</code> was written in June 1956 while the JOHNNIAC interpreter (IPL-II) was still being coded with Cliff Shaw, the printed 701-line IPL-I listing had never been run through a compiler. By reading the listing instruction by instruction and running David Moews's faithful IPL-I interpreter (<code>dmoews/logic-theorist</code>), we cataloged <strong>10 concrete bugs</strong> in the printed 1956 code—including calling a non-existent routine <code>R011</code> inside <code>CXn</code>, reversed conditional branches in <code>CAr</code> and <code>CSb</code>, an uninitialized working memory in <code>FAl</code>, and a missing return statement <code>P 0 A</code> in <code>LSb</code>. With those ten clerical fixes, the exact 1956 program proves <strong><code>48 of the 67</code></strong> theorems in Chapter 2 (and <strong><code>40 of the first 52</code></strong>).</dd>
-        </div>
-        <div>
-          <dt>2 · How the <code>CSm</code> similarity filter cuts work by 13.1×—and why it misses Theorem *2.07</dt>
-          <dd>Before running expensive tree-by-tree unification (<code>LMc</code>), <code>MDt</code> and <code>MCh</code> run a quick 3-number structural check called <code>CSm</code> (comparing left depth, right depth, and number of distinct variables). Across all 67 theorems, <code>CSm</code> rejects <strong><code>93.6%</code></strong> of non-matching candidates, cutting expensive unifications by <strong><code>13.1×</code></strong>. However, requiring the count of distinct variables to be equal creates a fascinating blind spot: Theorem <code>*2.07</code> is <code>p ⊃ (p ∨ p)</code> (1 variable on the right), which is a trivial substitution instance of Axiom <code>*1.3</code> <code>q ⊃ (p ∨ q)</code> (2 variables on the right)—yet <code>CSm</code> rejects Axiom <code>*1.3</code> because <code>1 ≠ 2</code>! Turning off <code>CSm</code> proves <code>*2.07</code> in 1 step.</dd>
-        </div>
-        <div>
-          <dt>3 · Why remembering past theorems matters (46/67 vs 22/67 vs 12/67)</dt>
-          <dd>When <code>LT</code> is only allowed to use the 5 starting axioms, it proves just <strong><code>12/67</code></strong> theorems within its search budget. When it is allowed to keep and reuse the theorems it manages to prove along the way, it climbs to <strong><code>22/67</code></strong>. When given the full curriculum of prior theorems as a textbook provides, it proves <strong><code>46/67</code></strong> (<code>48/67</code> with deeper chaining)—showing that accumulating verified intermediate building blocks is what makes hard proofs reachable.</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> Logic Theorist showed how a machine can manipulate clean symbolic expressions using heuristics. But how does a brain recognize messy, noisy real-world images where nobody hands you symbolic formulas? That was Frank Rosenblatt's question two years later.</p>
-    </div>
-  </section>
-
-  <!-- ============ 4. ROSENBLATT 1958 ============ -->
-  <section class="band" id="p4-1958">
-    <div class="wrap">
-      <p class="note">Paper 4 · 1958 · Frank Rosenblatt</p>
-      <h2>The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain</h2>
-      <p class="lede"><strong>Instead of hand-wiring logic gates, Rosenblatt shows how a randomly connected network of neurons can learn to classify visual shapes by adjusting its weights.</strong></p>
-
-      <p>In 1958, psychologist Frank Rosenblatt pointed out that no biological genome could possibly contain a blueprint for every individual synapse in the human visual cortex. Initial wiring in the brain is probabilistic, and learning happens by strengthening or weakening connections after birth. He called his model <strong>The Perceptron</strong>.</p>
-
-      <h3>What the paper says</h3>
-      <p>A Perceptron has three layers (<code>S → A → R</code>):</p>
-      <ol>
-        <li><strong>Sensory retina (<code>S</code>):</strong> A grid of pixels that turn on when light hits them.</li>
-        <li><strong>Association layer (<code>A</code>):</strong> Thousands of feature units, each wired at random to <code>x</code> excitatory pixels and <code>y</code> inhibitory pixels on the retina, firing if their sum reaches threshold <code>θ</code>.</li>
-        <li><strong>Response units (<code>R</code>):</strong> Output units that sum the changeable weights <code>V_i</code> of all currently active <code>A</code>-units and decide Class 1 (<code>+1</code>) or Class 2 (<code>−1</code>).</li>
-      </ol>
-      <p>Rosenblatt divides his theory into the <strong>Predominant Phase</strong> (Equations 1–3: calculating the probability <code>P_a</code> that a random <code>A</code>-unit fires on a shape, and the probability <code>P_c</code> that the same <code>A</code>-unit fires again when the shape moves slightly) and the <strong>Postdominant Phase</strong> (comparing three weight-learning rules: <code>α</code> uncompensated, <code>β</code> constant-feed, and <code>γ</code> zero-sum parasitic).</p>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · Exact match between Rosenblatt's 1958 combinatorics and 100,000-unit Monte Carlo</dt>
-          <dd>When we simulated 100,000 random <code>A</code>-units across varying image sizes and shifts, Rosenblatt's analytical Equations (1)–(3) matched empirical firing rates to within <code>0.0024</code>. Even better, we verified Figure 4c: adding inhibitory connections (<code>x = 5, y = 5</code>) flattens the variation of <code>P_a</code> across small vs large objects by <strong><code>10.3×</code></strong>, preventing large bright shapes from saturating the association layer.</dd>
-        </div>
-        <div>
-          <dt>2 · Why the zero-sum <code>γ</code>-system survives 3:1 class imbalance—and the page 400 inequality</dt>
-          <dd>If horizontal bars are shown 3 times as often as vertical bars, the naive <code>α</code>-system adds +1 three times as often to horizontal-bar features and drowns out the minority class. Rosenblatt's <strong><code>γ</code>-system</strong> fixes this by making active <code>A</code>-units drain weight from inactive <code>A</code>-units so the total weight in each pool stays strictly zero (<code>∑ V_i = 0</code>). However, on page 400, Rosenblatt notes a mathematical condition for the <code>γ</code>-system to work: <strong>within-class overlap <code>P_c11</code> must be greater than average activity <code>P_a</code>, which must be greater than cross-class overlap <code>P_c12</code></strong> (<code>P_c11 &gt; P_a &gt; P_c12</code>). When we tested centered horizontal and vertical bars that cross in the middle, their shared center square violated <code>P_a &gt; P_c12</code> (<code>0.1700 &lt; 0.1762 &lt; 0.1831</code>) and accuracy dropped to <code>50%</code>! Once the bars occupied separated regions so <code>P_c11 &gt; P_a &gt; P_c12</code> held (<code>0.2370 &gt; 0.1585 &gt; 0.0939</code>), the <code>γ</code>-system achieved <strong><code>100.0%</code> balanced accuracy</strong> despite 3:1 class imbalance.</dd>
-        </div>
-        <div>
-          <dt>3 · Unsupervised clustering with weight decay (p. 404) and the relational wall (pp. 406–407)</dt>
-          <dd>When we let the Perceptron reinforce whatever response happens to win on each trial—with no teacher labels at all—proportional weight decay (<code>δ = 0.03</code>) prevented one response from taking over the whole world and spontaneously separated two disjoint pattern classes with <strong><code>100.0%</code> clustering accuracy</strong> (vs <code>50.0%</code> without decay). Yet on Rosenblatt's relational task (<em>"Is the top square larger than the bottom square?"</em>), local <code>A</code>-units that only look at one region got <code>99.8%</code> on absolute size, but failed at <strong><code>42.0%</code></strong> on the relative comparison unless given cross-region <code>A</code>-units (<code>100.0%</code>).</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> Rosenblatt's final pages hinted that single-layer perceptrons struggle with abstract relationships between parts of an image. Eleven years later, Marvin Minsky and Seymour Papert proved the exact mathematical theorems explaining why.</p>
-    </div>
-  </section>
-
-  <!-- ============ 5. MINSKY & PAPERT 1969 ============ -->
-  <section class="band" id="p5-1969">
-    <div class="wrap">
-      <p class="note">Paper 5 · 1969 · Marvin Minsky &amp; Seymour Papert</p>
-      <h2>Perceptrons: An Introduction to Computational Geometry</h2>
-      <p class="lede"><strong>A crystal-clear mathematical dissection of what a single-layer linear threshold classifier can compute locally—and why global properties like Parity and Connectivity break it.</strong></p>
-
-      <p>Minsky and Papert's 1969 book is often caricatured as a polemic that "killed neural networks" by pointing out <code>XOR</code>. When you actually read the book (and the original MIT AI Lab memos <code>AIM-140</code> and <code>AIM-167</code>), it is a masterpiece of computational geometry. They admired the Perceptron enough to prove exact theorems about what any linear threshold of local features can and cannot do.</p>
-
-      <h3>What the paper says</h3>
-      <p>Suppose a Perceptron computes <code>ψ(X) = [ ∑ α_φ φ(X) &gt; θ ]</code>, where each feature detector <code>φ(X)</code> is allowed to inspect at most <code>k</code> pixels on the retina <code>R</code>. Minsky and Papert define the <strong>order</strong> of a geometric property as the smallest <code>k</code> needed to compute it:</p>
-      <ul>
-        <li><strong>The Group Invariance Theorem (Chapter 2):</strong> If a geometric property is unchanged by a symmetry group (like shifting or rotating the image, or permuting pixels), then all masks of the same shape can have their weights averaged into a single shared weight! Using this, they prove that counting whether an image has <em>exactly</em> <code>M</code> active pixels (<code>[|X| = M]</code>) has <strong>order 2 for every <code>M</code></strong>, because <code>M − (|X| − M)²</code> is a degree-2 polynomial in the pixels.</li>
-        <li><strong>The Parity Theorem (Chapter 3):</strong> Telling whether the number of ON pixels is odd or even (<code>PARITY</code>, the N-bit generalization of <code>XOR</code>) has <strong>order <code>|R|</code></strong>—at least one feature detector must look at every single pixel on the entire retina at once, and the weights explode as <code>(−2)^M</code>.</li>
-        <li><strong>The Connectivity Theorem (Chapter 5):</strong> No diameter-limited perceptron and no bounded-order perceptron can tell whether a black silhouette is a single connected shape or two separate pieces. By contrast, a simple <strong>serial algorithm</strong> with just two pointers (<code>SEARCH/SCAN/TRACE</code>, Chapter 9) traces any boundary in linear time.</li>
-      </ul>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · How we caught a modern GitHub reproduction accidentally proving Corollary 3 (page 187)</dt>
-          <dd>When we cloned a recent reproduction of Minsky &amp; Papert's spiral connectivity cover (<code>TaraAlcira/PerceptronsRevisited</code>), we noticed its single-layer perceptron was getting high accuracy distinguishing 1-spiral (connected) from 2-spirals (disconnected)—which Minsky &amp; Papert proved impossible! Inspecting <code>one_spiral_function.py</code> revealed why: the script created a 1-spiral by erasing the two outer legs of a 2-spiral, leaving 1-spirals with <code>652</code> black pixels and 2-spirals with <code>804</code> black pixels. The order-1 perceptron was simply counting total pixels (<code>[|X| ≤ 728]</code>)—which is literally <strong>Corollary 3 on page 187 of Minsky &amp; Papert (1969)</strong>: <em>"If |X| is bounded (≤ K), then Ψ^CONNECTED(X) is of order 1."</em> When we varied spiral sizes across <code>{56, 64, 72, 80}</code> so pixel count no longer gave away the answer, the order-1 perceptron collapsed to <strong><code>62.0%</code></strong> while Minsky &amp; Papert's 2-pointer serial boundary tracer got <strong><code>100.0%</code></strong>.</dd>
-        </div>
-        <div>
-          <dt>2 · The One-in-a-Box collision: why (3, 3, 0) and (4, 1, 1) look identical to order-2 features</dt>
-          <dd>To prove why Connectivity fails, Minsky &amp; Papert introduce the <code>One-in-a-Box</code> predicate: given <code>m</code> disjoint boxes of 4 pixels each, is there at least 1 active pixel in every box? We verified that a pattern with <code>(3, 3, 0)</code> active pixels (which leaves Box 3 empty!) and a pattern with <code>(4, 1, 1)</code> active pixels (which has pixels in all 3 boxes!) produce the <strong>exact same order-1 and order-2 feature counts <code>(6, 6, 9)</code></strong>. No order-2 classifier can ever tell them apart.</dd>
-        </div>
-        <div>
-          <dt>3 · Chapter 12's surprise: where Nearest Neighbor fails worse than a Perceptron</dt>
-          <dd>In Chapter 12 (<code>AIM-167</code>), Minsky &amp; Papert compare the Perceptron against Bayes classifiers and 1-Nearest Neighbor. On correlated linearly separable data (Figure 12.3a), the Perceptron gets <strong><code>0.0%</code> error</strong> while Naive Bayes gets <strong><code>25.0%</code> error</strong>. And on a 25-bit Parity problem where only 4 bits carry the true parity and 21 bits are random coins, 1-Nearest Neighbor fails on <strong><code>99.6%–100.0%</code></strong> of test queries (matching their formula <code>1 − q^n = 99.62%</code>) because the nearest neighbor in 25D space almost always differs in an odd number of the 4 relevant bits!</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> Minsky and Papert proved that if your first layer of features is fixed by hand, a single layer of learned weights cannot solve global or high-order problems. To go further, networks needed either recurrent collective dynamics (Hopfield, 1982) or a way to learn multi-layer hidden representations (Rumelhart, Hinton &amp; Williams, 1986).</p>
-    </div>
-  </section>
-
-  <!-- ============ 6. HOPFIELD 1982 ============ -->
-  <section class="band" id="p6-1982">
-    <div class="wrap">
-      <p class="note">Paper 6 · 1982 · John J. Hopfield</p>
-      <h2>Neural networks and physical systems with emergent collective computational abilities</h2>
-      <p class="lede"><strong>By making synapses symmetric like magnetic spins in physics, Hopfield showed that a recurrent network rolls downhill on an Energy landscape to reconstruct whole memories from fragments.</strong></p>
-
-      <p>In 1982, physicist John Hopfield asked how a network of neurons with feedback loops could avoid chaotic oscillations and instead perform useful computation as a collective whole. Unlike a computer RAM where you fetch data by giving a numerical memory address (<code>0x7F04</code>), biological memory is <strong>content-addressable</strong>: hearing a few words of a song or seeing half a face brings back the entire memory.</p>
-
-      <h3>What the paper says</h3>
-      <p>Hopfield stores <code>n</code> binary patterns <code>V^s ∈ {0, 1}^N</code> in an <code>N</code>-neuron recurrent network using the symmetric outer-product rule:</p>
-      <p><code>T_ij = ∑ (2 V^s_i − 1)(2 V^s_j − 1)</code> for <code>i ≠ j</code>, with <code>T_ii = 0</code>.</p>
-      <p>Because the connection matrix is symmetric (<code>T_ij = T_ji</code>), Hopfield proves that when neurons update one at a time in random asynchronous order (setting <code>V_i = 1</code> if <code>∑ T_ij V_j &gt; 0</code>, else <code>0</code>), the physical <strong>Energy function</strong> <code>E = −½ ∑ T_ij V_i V_j</code> can <strong>only decrease or stay the same</strong>. Every stored memory sits at the bottom of an energy valley (attractor): drop a noisy or incomplete cue anywhere on the slope of that valley, and the network rolls downhill until the clean memory is restored, up to a storage capacity of about <strong><code>n ≈ 0.15 N</code> patterns</strong>.</p>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · Zero energy increases across 7,162 asynchronous flips vs 98.5% limit cycles under synchronous updates</dt>
-          <dd>When we ran 200 random starting states through asynchronous updates (7,162 total neuron flips), the energy <code>E</code> increased <strong><code>0</code> times</strong> and <code>200/200</code> trajectories settled into stable attractors. When we updated all neurons at the same instant (synchronously) as a negative control, <strong><code>197 of the 200</code> runs (<code>98.5%</code>)</strong> increased energy on the very first step and got trapped bouncing back and forth in 2-step oscillations!</dd>
-        </div>
-        <div>
-          <dt>2 · Why bipolar <code>{−1, +1}</code> neurons have exactly double the capacity of Hopfield's <code>{0, 1}</code> neurons</dt>
-          <dd>In his 1982 paper, Hopfield writes neuron states as <code>V_j ∈ {0, 1}</code> while writing synapses as bipolar <code>(2V − 1) ∈ {−1, +1}</code>. Because half of the <code>{0, 1}</code> neurons are <code>0</code>, they contribute zero signal during readout while all <code>N</code> synapses still contribute cross-talk variance—cutting the signal-to-noise variance ratio in half! We proved algebraically and verified in simulation that a <code>{0, 1}</code> Hopfield network storing <code>n = 10</code> patterns has the <strong>exact same bit error rate (<code>0.00977</code> vs <code>0.00983</code>)</strong> as a bipolar <code>{−1, +1}</code> Hopfield network storing <code>2n − 1 = 19</code> patterns.</dd>
-        </div>
-        <div>
-          <dt>3 · Clipped 1-bit synapses, palimpsest forgetting, and 25× overload familiarity</dt>
-          <dd>We tested all three biological extensions in Hopfield's paper: (a) clipping every synapse to just <code>+1</code> or <code>−1</code> retains <code>0.7966</code> of the signal (matching the theoretical <code>√(2/π) = 0.7979</code>); (b) bounding synapses to <code>±3</code> creates a "palimpsest" memory that recalls recently learned patterns at <strong><code>99.8%</code></strong> while older patterns fade to <code>55.8%</code>; and (c) even when you overload a 100-neuron network with <code>250</code> patterns (<code>25×</code> past its recall limit!), measuring how many neurons want to flip on step 1 still tells apart familiar vs novel patterns with <strong><code>92.8%</code> accuracy (<code>0.9828</code> AUC)</strong>.</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> Hopfield restored confidence in multi-neuron collective dynamics and energy landscapes, which directly inspired Boltzmann Machines—and four years later, backpropagation.</p>
-    </div>
-  </section>
-
-  <!-- ============ 7. RUMELHART, HINTON & WILLIAMS 1986 ============ -->
-  <section class="band" id="p7-1986">
-    <div class="wrap">
-      <p class="note">Paper 7 · 1986 · David E. Rumelhart, Geoffrey E. Hinton &amp; Ronald J. Williams</p>
-      <h2>Learning representations by back-propagating errors</h2>
-      <p class="lede"><strong>By replacing hard step thresholds with smooth differentiable sigmoids and propagating error derivatives backward layer by layer, deep networks learned to invent their own hidden features.</strong></p>
-
-      <p>For seventeen years after Minsky and Papert (1969), everyone knew that multi-layer networks <em>could</em> represent functions like <code>XOR</code> and <code>Parity</code>—the roadblock was that nobody had a simple, trusted rule for adjusting the weights of the interior "hidden" units. In their 1985 UCSD technical report (<code>ICS-8506</code> / <em>PDP</em> Chapter 8) and 1986 <em>Nature</em> paper, Rumelhart, Hinton, and Williams showed that the chain rule of calculus—<strong>backpropagation</strong>—solves this cleanly and discovers remarkably elegant internal representations.</p>
-
-      <h3>What the paper says</h3>
-      <p>Instead of a discontinuous 0/1 step, each unit computes a smooth logistic sigmoid <code>o_j = 1 / (1 + e^{−net_j})</code>, whose derivative is simply <code>o_j(1 − o_j)</code>. For any output unit, the error signal is <code>δ_j = (t_j − o_j) o_j(1 − o_j)</code>. For any hidden unit in an earlier layer, its error signal is computed by summing the error signals of the units it feeds into, weighted by the connections between them:</p>
-      <p><code>δ_j = o_j(1 − o_j) ∑ δ_k w_kj</code>, and each weight is updated with momentum <code>α</code>: <code>Δw_ji(n+1) = η δ_j o_i + α Δw_ji(n)</code>.</p>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · Exact gradient check (<code>1.36e-10</code>), the equal-weight saddle trap, and 7.9× momentum speedup</dt>
-          <dd>Across a 4-layer network <code>[2, 3, 2, 1]</code>, our analytical backpropagation matched central finite differences to <strong><code>1.36e-10</code></strong>. We also verified the symmetry saddle point on page 10: if all weights start equal at <code>w = 0.25</code>, both hidden units receive identical error gradients forever (<code>max |w_h0 − w_h1| = 0.00</code>), collapsing the 2-hidden-unit network into a single effective hidden unit that stalls at <code>3/4</code> on <code>XOR</code>! With random initialization, adding momentum <code>α = 0.9</code> (Equation 16) sped up <code>XOR</code> convergence across 15 seeds by <strong><code>7.90×</code></strong> (<code>201.2</code> vs <code>1,590.1</code> sweeps).</dd>
-        </div>
-        <div>
-          <dt>2 · Bit-for-bit reproduction of the 4-bit Parity thermometer counter and 6-bit Mirror Symmetry</dt>
-          <dd>Without being told how to solve the tasks, our from-scratch <code>MLP1986</code> discovered the exact hidden representations printed in the 1986 paper:
-            <ul>
-              <li><strong>4-Bit Parity (<code>4 → 4 → 1</code>, Table 3):</strong> Every hidden unit learned 4 identical weights from the 4 input bits with staggered biases, turning the hidden layer into a <strong>thermometer counter</strong> of the number of ON bits <code>|x| ∈ {0..4}</code>: <code>1111 → 1011 → 1010 → 0010 → 0000</code> (<code>16/16 = 100%</code>).</li>
-              <li><strong>6-Bit Mirror Symmetry (<code>6 → 2 → 1</code>, Fig. 9 / <em>Nature</em> Fig. 2):</strong> Classified all 64 6-bit strings for palindrome symmetry using <strong>only 2 hidden units</strong> in <code>1,084</code> sweeps (vs <code>1,206</code> in the paper) by discovering equal-and-opposite mirror weights in a <strong><code>1 : 2 : 4</code> geometric ratio</strong> (<code>[−6.17, +3.10, +12.25, −12.25, −3.10, +6.17]</code>), so every symmetric string sums to zero!</li>
-              <li><strong>8–3–8 Bottleneck Encoder (Table 5):</strong> Showed why the authors used <code>{0.1, 0.9}</code> targets on page 9: raw <code>{0.0, 1.0}</code> targets stall at <code>4/8</code> because 7 of the 8 outputs are zero and push the sigmoids into their flat tails, whereas <code>{0.1, 0.9}</code> targets converge to <strong><code>8/8</code></strong>.</li>
-            </ul>
-          </dd>
-        </div>
-        <div>
-          <dt>3 · Family Trees relational generalization (<code>4/4</code>) and the Order-3 <code>T–C</code> convolutional kernel</dt>
-          <dd>On the 1986 <em>Nature</em> Family Trees task (24 people across isomorphic English and Italian family trees, 12 relations, 100 train triples), the 5-layer network generalized to <strong><code>4/4</code> held-out test triples</strong> (such as <code>Christopher + has-wife → Penelope</code>) by dedicating one hidden unit in the 6-unit person embedding to <strong>Nationality</strong> (<code>English = 0.94 vs Italian = 0.06</code>) and another to <strong>Generation</strong>. And on Minsky &amp; Papert's order-3 <code>T–C</code> problem (where a 5-square <code>T</code> and 5-square <code>C</code> have identical pairwise distance spectra <code>{1:4, 2:2, 4:2, 5:2}</code> across all 4 rotations), sharing a <code>3×3</code> receptive field across the grid learned the exact 4-fold symmetric <strong>ON-center (<code>+6.98</code>) / OFF-surround (<code>−4.35</code>) protrusion detector</strong> of Figure 15A (<code>8/8 = 100%</code>).</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> Backpropagation solved structural credit assignment across layers when a teacher gives you the target right away. What if the outcome only arrives many steps in the future? That was Richard Sutton's question in 1988. And what if we scale spatial weight sharing (`T–C`) into a deep multi-layer vision hierarchy? That became LeCun et al. (1998).</p>
-    </div>
-  </section>
-
-  <!-- ============ 8. SUTTON 1988 ============ -->
-  <section class="band" id="p8-1988">
-    <div class="wrap">
-      <p class="note">Paper 8 · 1988 · Richard S. Sutton</p>
-      <h2>Learning to Predict by the Methods of Temporal Differences</h2>
-      <p class="lede"><strong>Why waiting for the final outcome is both wasteful and noisier than learning from the difference between each moment's prediction and the next.</strong></p>
-
-      <p>Suppose you predict on Monday, Tuesday, Wednesday, Thursday, and Friday whether it will rain on Saturday—or you evaluate board positions move by move during a game of checkers or chess. Conventional supervised learning waits until Saturday (or the end of the game), pairs every earlier state with the final outcome <code>z</code>, and adjusts weights toward <code>z</code>. In 1988, Richard Sutton proved that updating each step's prediction <code>P_t</code> toward the <strong>very next step's prediction <code>P_{t+1}</code></strong>—<strong>Temporal-Difference (<code>TD</code>) learning</strong>—is not just cheaper to compute, it actually produces <em>more accurate predictions</em> from finite experience.</p>
-
-      <h3>What the paper says</h3>
-      <p>First, Sutton writes the total prediction error as a telescoping sum of one-step prediction changes: <code>z − P_t = ∑ (P_{k+1} − P_k)</code>. Using this identity, he proves <strong>Theorem 1</strong>: if you maintain an exponentially decaying <strong>eligibility trace</strong> <code>e_t = ∇_w P_t + λ e_{t−1}</code> of past gradients and update weights at each step by <code>Δw_t = α (P_{t+1} − P_t) e_t</code>, then setting <code>λ = 1</code> (<strong><code>TD(1)</code></strong>) produces the <strong>exact same per-sequence weight change</strong> as offline Widrow–Hoff supervised learning—using only <code>O(d)</code> memory instead of storing the whole history.</p>
-      <p>Even more importantly, setting <code>λ &lt; 1</code>—all the way down to <strong><code>TD(0)</code></strong> (<code>Δw_t = α (P_{t+1} − P_t) ∇_w P_t</code>)—produces <em>different</em> weight updates that bootstrap off the next state's estimate, filtering out downstream randomness.</p>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · The "Novel → Bad → Win" game example (Figure 1, p. 17) vs the non-Markovian trap (p. 18)</dt>
-          <dd>Why can bootstrapping off an estimate beat using the true outcome? Imagine a <code>Bad</code> game position that loses 90% of the time (9 losses, 1 win). Now you visit a <code>Novel</code> position for the first time, it transitions immediately into <code>Bad</code>, and on that 1-in-10 fluke game you happen to win (<code>Novel → Bad → Win</code>). When we ran both algorithms to convergence on those 10 games:
-            <ul>
-              <li><strong>Supervised Widrow–Hoff (<code>TD(1)</code>)</strong> paired <code>Novel</code> with <code>Win</code> and concluded <code>P(Novel) = 1.0000</code>—an error of <strong><code>0.9000</code></strong>!</li>
-              <li><strong>Linear <code>TD(0)</code></strong> paired <code>Novel</code> with <code>Bad</code> and learned <code>P(Novel) = P(Bad) = 0.1000</code>—an error of <strong><code>0.0000</code></strong>!</li>
-            </ul>
-            We also ran Sutton's page 18 counterexample where the world is non-Markovian (<code>Bad</code> <em>always</em> wins if preceded by <code>Novel</code>, and <em>always</em> loses otherwise, but both share a single feature for <code>Bad</code>): there, state-aliased <code>TD(0)</code> is fooled (`error = 0.9000`) while Monte Carlo <code>TD(1)</code> gets `0.0000` error.
-          </dd>
-        </div>
-        <div>
-          <dt>2 · Theorems 2 &amp; 3 on the 5-State Random Walk—and the 1988 Figure 3 printing mix-up</dt>
-          <dd>Reading Sutton's PDF with its page 377 <strong>Erratum</strong> revealed a great piece of history: in the original 1988 issue of <em>Machine Learning</em> (p. 20), the printer accidentally duplicated the Figure 5 graph as Figure 3! On the 5-state random walk (<code>B, C, D, E, F</code> starting at <code>D</code>, true right-side termination probabilities <code>1/6, 2/6, 3/6, 4/6, 5/6</code>):
-            <ul>
-              <li><strong>Theorem 1 check:</strong> Across 1,000 random walks, per-sequence <code>TD(1)</code> matched Widrow–Hoff to <strong><code>8.88e-16</code></strong> on tabular features and <strong><code>7.77e-16</code></strong> on dense features.</li>
-              <li><strong>Theorem 3 &amp; True Figure 3 (Repeated Presentations):</strong> Across 100 training sets of 10 walks each, batch <code>TD(0)</code> converged to the <strong>exact Maximum-Likelihood Markov model</strong> <code>(I − Q̂)⁻¹ ĥ</code> to within <strong><code>3.50e-7</code></strong>, achieving mean <strong><code>RMS error = 0.1199</code></strong>, whereas Widrow–Hoff <code>TD(1)</code> converged to the noisy sample-mean outcomes with <strong><code>RMS error = 0.1773</code></strong> (32.4% worse).</li>
-              <li><strong>Figures 4 &amp; 5 (Single Presentation):</strong> When each 10-walk set is shown only once, intermediate <strong><code>λ = 0.3</code></strong> wins (<code>RMS = 0.0864</code> vs <code>0.0887</code> at <code>λ = 0</code> and <code>0.1786</code> at <code>λ = 1</code>) because <code>TD(0)</code> only steps credit back one state per walk—unless you sweep backward offline through each walk as Sutton suggests on page 23, which takes single-pass <code>TD(0)</code> to <code>0.0882</code>!</li>
-            </ul>
-          </dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> Sutton established how to propagate credit across time in dynamical systems. Meanwhile, in computer vision, researchers were taking the spatial weight sharing of Rumelhart, Hinton &amp; Williams (1986) and turning it into industrial-grade document recognition.</p>
-    </div>
-  </section>
-
-  <!-- ============ 9. LECUN ET AL. 1998 ============ -->
-  <section class="band" id="p9-1998">
-    <div class="wrap">
-      <p class="note">Paper 9 · 1998 · Yann LeCun, Léon Bottou, Yoshua Bengio &amp; Patrick Haffner</p>
-      <h2>Gradient-Based Learning Applied to Document Recognition</h2>
-      <p class="lede"><strong>From pixel-level Convolutional Neural Networks (<code>LeNet-5</code>) to Graph Transformer Networks (<code>GTNs</code>) that read millions of bank checks a day without hand-segmented characters.</strong></p>
-
-      <p>Most people know this 46-page <em>Proceedings of the IEEE</em> paper for introducing <strong>LeNet-5</strong> and the <strong>MNIST</strong> dataset. When you read the entire paper, LeNet-5 is only the first third! The overarching message of LeCun, Bottou, Bengio, and Haffner is that traditional pattern recognition—where humans hand-craft feature extractors and separately tune character segmenters, recognizers, and grammar post-processors—should be replaced by <strong>globally trained networks of differentiable modules</strong> that pass directed graphs from stage to stage.</p>
-
-      <h3>What the paper says</h3>
-      <ul>
-        <li><strong>LeNet-5 (Section II):</strong> A 7-layer Convolutional Neural Network taking a <code>32×32</code> image through alternating local <code>5×5</code> convolutions (<code>C1, C3, C5</code>) and <code>2×2</code> trainable subsampling layers (<code>S2, S4</code>), a fully connected 84-unit layer (<code>F6</code>), and an output layer of <strong>Euclidean Radial Basis Function (RBF)</strong> units that measure squared distance against fixed <code>7×12 = 84</code> stylized <code>±1</code> ASCII character bitmaps.</li>
-        <li><strong>Space-Displacement Neural Networks (<code>SDNN</code>, Section VII):</strong> Instead of cutting a word into characters and running a classifier on each crop, widen the convolutional feature maps across the whole word so overlapping window positions share all intermediate computations.</li>
-        <li><strong>Graph Transformer Networks (<code>GTNs</code>, Sections IV–VIII &amp; X):</strong> Represent candidate character cuts (Heuristic Over-Segmentation), character class scores, and check-amount grammars as <strong>directed acyclic graphs (DAGs)</strong> carrying penalties on their arcs. Train the entire multi-module pipeline from word/check labels alone by backpropagating through the <strong>Forward Scorer</strong> (<code>logadd</code> dynamic programming) using the <strong>Discriminative Forward Loss</strong> <code>E_dforw = C_cforw − C_forw</code>.</li>
-      </ul>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · Exact 60,000 trainable parameters and 340,908 connections—and why all 4 GitHub repos missed it</dt>
-          <dd>On page 7, LeCun et al. state: <em>"The network in figure 2 contains 340,908 connections, but only 60,000 trainable free parameters because of the weight sharing."</em> None of the four GitHub LeNet-5 repositories we audited got `60,000`: they either used a dense `S2→C3` convolution (`2,416` params instead of Table I's asymmetric 60-kernel `1,516` params), dropped the trainable weights/biases in `S2`/`S4` (`12 + 32 = 44` params), or had a loop bug that multiplied `C3`'s bias by its fan-in. When we built `AuthenticLeNet5_1998` following Section II-B to the letter (`C1 = 156/122,304`, `S2 = 12/5,880`, `C3 = 1,516/151,600`, `S4 = 32/2,000`, `C5 = 48,120/48,120`, `F6 = 10,164/10,164`, plus `10 × 84 = 840` fixed RBF connections), the totals came out to <strong><code>60,000</code> trainable parameters and <code>340,908</code> connections to the exact integer</strong>!</dd>
-        </div>
-        <div>
-          <dt>2 · Why <code>1.7159 tanh(2/3 a)</code>, <code>±1</code> RBF bitmaps, and the MAP loss (Eq. 9) are locked together</dt>
-          <dd>Appendix A sets the activation function to <code>f(a) = 1.7159 tanh(2/3 a)</code>. We verified that this makes <code>f(±1) = ±0.999997</code> and places the global maximum of its second derivative <code>|f''(a)|</code> at <code>a = ±0.9877 ≈ ±1</code>—so <code>F6</code> units stay unsaturated when targeting the <code>±1</code> ASCII bitmaps! And when RBF centers are allowed to adapt, training with plain MSE (Equation 8) caused all 10 class centers to <strong>collapse onto a single point</strong> (<code>spread = 0.0017</code>, <code>margin = 0.0000</code>, <code>12.5%</code> accuracy), whereas LeCun et al.'s competitive <strong>MAP loss</strong> (Equation 9) kept the centers separated (<code>spread = 7.4574</code>, <code>margin = 26.86</code>, <strong><code>100.0%</code> accuracy</strong>).</dd>
-        </div>
-        <div>
-          <dt>3 · SDNN 4.43× MAC savings and unsegmented GTN string training (<code>100%</code> accuracy)</dt>
-          <dd>Running `AuthenticLeNet5_1998` as an SDNN in a single pass over a wide `32×92` multi-digit canvas matched 16 separate `32×32` sliding-window crops to `1.53e-5` while cutting `C1..S4` multiply-accumulates by <strong><code>4.43×</code></strong> (`1.02M` vs `4.51M` MACs). And on our over-segmented multi-character string task (where no character segmentation labels are ever given), backpropagating through the GTN Forward Scorer (`8.66e-11` vs finite differences) with Discriminative Forward Loss achieved <strong><code>90/90 (100.0%)</code> string accuracy</strong> and check confidence <code>exp(−E_dforw) = 1.000</code>, whereas Non-Discriminative Viterbi collapsed all arc penalties to zero (`0.00032`, `confidence = 0.044`).</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> LeNet-5 proved that Convolutional Neural Networks could read <code>32×32</code> grayscale digits in commercial production. Fourteen years later, Krizhevsky, Sutskever, and Hinton asked: what happens if we scale a CNN by 1,000× in parameters and train it on 1.2 million high-resolution color photographs?</p>
-    </div>
-  </section>
-
-  <!-- ============ 10. KRIZHEVSKY, SUTSKEVER & HINTON 2012 ============ -->
-  <section class="band" id="p10-2012">
-    <div class="wrap">
-      <p class="note">Paper 10 · 2012 · Alex Krizhevsky, Ilya Sutskever &amp; Geoffrey E. Hinton</p>
-      <h2>ImageNet Classification with Deep Convolutional Neural Networks</h2>
-      <p class="lede"><strong>The paper that ignited modern deep learning—scaling an 8-layer CNN across two GPUs with non-saturating ReLUs and Dropout to cut ImageNet error from 26.2% to 15.3%.</strong></p>
-
-      <p>Up to 2012, mainstream computer vision relied on hand-designed feature pipelines (SIFT, HOG, Fisher Vectors), and neural networks were widely assumed to overfit or stall on large natural-image datasets. Krizhevsky, Sutskever, and Hinton trained a `60.97`-million-parameter, 8-layer convolutional network (<strong>AlexNet</strong>) on 1.2 million `256×256` RGB photographs across 1,000 categories in ILSVRC-2012, winning the competition by a 10.9-percentage-point margin.</p>
-
-      <h3>What the paper says</h3>
-      <ul>
-        <li><strong>Non-saturating ReLU neurons (Section 3.1, Figure 1):</strong> Replacing saturating <code>tanh(x)</code> or sigmoids with Rectified Linear Units <code>f(x) = max(0, x)</code> lets deep CNNs train <strong>six times faster</strong>.</li>
-        <li><strong>Two-GPU split-stream architecture (Sections 3.2 &amp; 3.5, Figure 2):</strong> Because a GTX 580 GPU had only 3 GB of VRAM, the network splits its filters in half across two GPUs, communicating across GPUs <em>only</em> in layer <code>conv3</code> and the fully connected layers <code>fc6–fc8</code>.</li>
-        <li><strong>Local Response Normalization (<code>LRN</code>) &amp; Overlapping Pooling (Sections 3.3–3.4):</strong> Normalizes each ReLU activity across <code>n = 5</code> adjacent filter channels at the same <code>(x, y)</code> position to create lateral inhibition, followed by overlapping <code>3×3</code> max-pooling with stride <code>2</code>.</li>
-        <li><strong>Fighting overfitting across 60M parameters (Section 4):</strong> Random `224×224` crops and horizontal reflections (with 10-crop averaging at test time), <strong>PCA RGB color augmentation</strong> (shifting pixel intensities along the 3×3 RGB covariance eigenvectors to simulate lighting changes), and <strong>Dropout (<code>p = 0.5</code>)</strong> in `fc6` and `fc7`.</li>
-      </ul>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · Where the 60,965,224 parameters and 724.4M MACs actually live—and the Figure 2 caption audit</dt>
-          <dd>Most people who call <code>torchvision.models.alexnet</code> do not realize it implements Krizhevsky's 2014 single-stream variant (<code>64→192→384→256→256</code> without LRN, <code>61,100,840</code> params), not the 2012 NIPS paper! When we built the exact 2012 two-GPU architecture (`AuthenticAlexNet2012`: `96→256→384→384→256→4096→4096→1000` with `groups=2` in `conv2, conv4, conv5`), the total is <strong><code>60,965,224</code> parameters</strong> and <strong><code>724,406,816</code> MACs</strong>:
-            <ul>
-              <li>All 5 convolutional layers combined hold only <strong><code>3.83%</code> of the parameters</strong> (<code>2,334,080</code>), yet perform <strong><code>91.91%</code> of the compute</strong> (<code>665,784,864</code> MACs)—which is why Krizhevsky wrote on page 2 that removing any conv layer (each ≤ 1.45% of the parameters) hurt accuracy!</li>
-              <li>We also solved a famous puzzle in the caption of Figure 2 (page 5), which lists the neuron counts as <code>253,440–186,624–64,896–64,896–43,264–4096–4096–1000</code>. Every layer matches <code>C × H × W</code> except `conv1` (`96 × 55 × 55 = 290,400`, not `253,440`). Why did the caption print `253,440`? Because <strong><code>55 × 48 × 96 = 253,440</code></strong>—multiplying one spatial dimension `55` by the per-GPU channel count `48` instead of `55 × 55 × 96`!</li>
-            </ul>
-          </dd>
-        </div>
-        <div>
-          <dt>2 · Why ReLU trained 7.80× faster than <code>tanh</code>, and why Section 5 sets hidden biases to +1</dt>
-          <dd>Inspecting Krizhevsky's original 2012 C++/CUDA repository (<code>cuda-convnet</code>, Footnotes 1 &amp; 3) showed that his CIFAR-10 4-layer CNNs use spatial <strong>average pooling</strong> in `pool2` and `pool3`: odd-symmetric <code>tanh(−z) = −tanh(z)</code> cancels positive and negative half-cycles of oriented textures and saturates in its tails. On our 4-layer CNN with independently tuned optimal learning rates, <code>ReLU</code> reached ≤ 25% training error in <strong><code>10</code> iterations</strong> vs <strong><code>78</code> iterations</strong> for <code>tanh</code> (<strong><code>7.80×</code> faster</strong>). Moreover, with Section 5's small <code>N(0, 0.01²)</code> weight initialization, zero biases attenuate the forward signal across 5 conv layers to <code>0.00059</code>, whereas Krizhevsky's <strong><code>+1</code> bias initialization</strong> keeps <code>100.0%</code> of `conv5` ReLUs active with mean <code>1.0314</code> (a <code>1,748×</code> stronger initial signal).</dd>
-        </div>
-        <div>
-          <dt>3 · The PyTorch <code>LRN</code> <code>α/5</code> trap, overlapping pooling shift stability, and Dropout co-adaptation</dt>
-          <dd>Krizhevsky's LRN equation on page 4 multiplies the sum of <code>n = 5</code> adjacent squared activities directly by <code>α = 10⁻⁴</code>, whereas PyTorch's <code>F.local_response_norm</code> divides <code>alpha</code> by <code>size = 5</code> internally (causing a max discrepancy of <code>31.95</code> unless you pass <code>alpha = 5e-4</code>!). We verified that LRN suppresses a channel by <strong><code>56.0%</code></strong> when a neighboring channel fires strongly; overlapping pooling (<code>s = 2, z = 3</code>) preserves 1-pixel shift cosine similarity (<strong><code>0.7071</code> vs <code>0.0000</code></strong> for non-overlapping <code>s = 2, z = 2</code>); and Dropout (<code>p = 0.5</code>) cuts hidden-unit co-adaptation by <strong><code>2.52×</code></strong> while boosting test accuracy by <code>+3.8%</code>.</dd>
-        </div>
-      </dl>
-
-      <p class="note" style="margin-top:1.4rem"><strong>Where it handed off:</strong> AlexNet proved that deep neural networks trained on GPUs scale dramatically with data and compute. Five years later, Vaswani and colleagues asked whether we could bring that same massive GPU parallelism to language and sequences by dropping recurrence and convolutions altogether.</p>
-    </div>
-  </section>
-
-  <!-- ============ 11. VASWANI ET AL. 2017 ============ -->
-  <section class="band" id="p11-2017">
-    <div class="wrap">
-      <p class="note">Paper 11 · 2017 · Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser &amp; Illia Polosukhin</p>
-      <h2>Attention Is All You Need</h2>
-      <p class="lede"><strong>By replacing sequential recurrence and local convolutions with Scaled Dot-Product Multi-Head Attention, the Transformer connected every token in a sequence in a single step.</strong></p>
-
-      <p>Before 2017, sequence-to-sequence models for translation and language were built around Recurrent Neural Networks (LSTMs and GRUs). Because an RNN computes hidden state <code>h_t</code> from <code>h_{t−1}</code> one word at a time, you cannot parallelize across the words of a sentence during training, and a signal travelling between two words <code>n</code> tokens apart has to survive <code>O(n)</code> sequential steps. Vaswani et al. asked: what if we throw away recurrence and convolutions completely, and let every position attend to every other position directly?</p>
-
-      <h3>What the paper says</h3>
-      <ul>
-        <li><strong>O(1) path length &amp; parallel training (Table 1):</strong> Self-attention connects any two tokens in <strong><code>O(1)</code> sequential operations</strong> and <strong><code>O(1)</code> path length</strong>, with per-layer complexity <code>O(n² · d)</code>—which is <em>smaller</em> than a recurrent layer's <code>O(n · d²)</code> whenever sequence length <code>n</code> is shorter than model dimension <code>d = 512</code>.</li>
-        <li><strong>Scaled Dot-Product Attention (Section 3.2.1, Equation 1):</strong> <code>Attention(Q, K, V) = softmax(Q Kᵀ / √d_k) V</code>. Dividing the dot products by <code>√d_k</code> prevents large dot products from pushing the softmax into flat saturation where gradients vanish (Footnote 4).</li>
-        <li><strong>Multi-Head Attention (Section 3.2.2):</strong> Instead of one attention head of dimension <code>d_model = 512</code> (which is forced to average positions together), project <code>Q, K, V</code> into <code>h = 8</code> parallel subspaces of size <code>d_k = d_v = 64</code> so each head can attend to a different relationship or position.</li>
-        <li><strong>Sinusoidal Positional Encoding (Section 3.5):</strong> Because pure attention is permutation-invariant, add <code>sin(pos / 10000^{2i/d_model})</code> and <code>cos(pos / 10000^{2i/d_model})</code> to the input embeddings so any relative offset <code>PE_{pos+k}</code> is a linear function of <code>PE_{pos}</code>.</li>
-      </ul>
-
-      <h3>What we saw when we ran it</h3>
-      <dl class="stack">
-        <div>
-          <dt>1 · The unpublished "Attention over Parameters (<code>AOP</code>)" section hidden inside the arXiv TeX source</dt>
-          <dd>When we downloaded and unpacked the raw LaTeX source archive of <code>arXiv:1706.03762</code>, we noticed a commented-out line in <code>ms.tex</code>: <code>%\input{parameter_attention}</code>. Reading <code>parameter_attention.tex</code> (titled <em>"Two Feed-Forward Layers = Attention over Parameters"</em>) revealed an unpublished section where the authors pointed out that <code>FFN(x) = ReLU(x W_1) W_2</code> has the exact same form as <code>Attention(q, K, V) = Softmax(q Kᵀ) V</code>—and reported two experiments replacing every FFN in the Transformer with Multi-Head Attention over trainable parameter keys and values! Their 16-head model (<code>AOP_2</code>, <code>65M</code> params) achieved <strong><code>4.86</code> perplexity and <code>25.9</code> BLEU</strong> on WMT14 English-German dev, beating the base Transformer's <code>4.92</code> perplexity and <code>25.8</code> BLEU.</dd>
-        </div>
-        <div>
-          <dt>2 · Quantitative proof of the <code>1/√d_k</code> scaling trick and 782× Multi-Head subspace resolution</dt>
-          <dd>Across 500 trials with <code>n = 32</code> keys and unit-variance normal queries/keys, as <code>d_k</code> grows from <code>16</code> to <code>1024</code>, unscaled dot-product variance jumps to <strong><code>1023.96</code></strong>, the largest softmax weight saturates to <strong><code>0.9574</code></strong>, and the Frobenius norm of the softmax Jacobian collapses by <strong><code>4.2×</code></strong> (<code>0.05750</code> vs <code>0.24115</code>). Dividing by <code>√d_k</code> locks the variance at <strong><code>1.0000</code></strong> and keeps the gradient norm steady at <strong><code>0.24115</code></strong> across every dimension. And when a query must retrieve two orthogonal feature subspaces from two different positions <code>j_A, j_B</code> at the same total parameter count, Single-Head Attention (<code>h = 1</code>) blurs them together (<code>MSE = 0.37236</code>), whereas 2-Head Attention (<code>h = 2</code>) achieves <strong><code>MSE = 0.00048</code> (<code>782.1×</code> lower error)</strong>.</dd>
-        </div>
-        <div>
-          <dt>3 · Exact Sinusoidal rotation operator <code>M_k</code> (<code>2.05e-14</code>) and shift-invariant dot products</dt>
-          <dd>We constructed the explicit block-diagonal <code>2×2</code> rotation matrix <code>M_k</code> for each frequency <code>ω_i = 1 / 10000^{2i/d_model}</code> and verified across offsets <code>k ∈ {−13..+29}</code> and positions <code>20..120</code> that <code>max ‖PE_{pos+k} − M_k PE_{pos}‖_∞ = 2.05e-14</code>. Even more simply, because <code>sin(a)sin(b) + cos(a)cos(b) = cos(a − b)</code>, the raw dot product <code>PE_{pos}ᵀ PE_{pos+k} = ∑ cos(k ω_i)</code> depends <strong>strictly on the relative distance <code>k</code> alone</strong> (standard deviation across positions <code>0..100</code> is <code>8.78e-14</code>).</dd>
-        </div>
-        <div>
-          <dt>4 · Causal masking leakage test and why <code>√d_model</code> embedding scaling requires fan-in initialization</dt>
-          <dd>With the upper-triangular <code>−∞</code> causal mask in the decoder, mutating future tokens changes prefix logits by <strong><code>0.00e+00</code></strong>; training without the causal mask gets <code>100.0%</code> teacher-forced accuracy during training (by peeking ahead) and collapses to <strong><code>8.6%</code></strong> at autoregressive greedy decoding! Finally, running our end-to-end transducer exposed why Section 3.4 multiplies embeddings by <code>√d_model</code>: because the 3-way shared weight matrix <code>W</code> is also the pre-softmax linear layer, its weights must be initialized with fan-in <code>std = 1/√d_model</code>; multiplying embedding lookups by <code>√d_model</code> restores their variance to <code>1.0</code> so they match the <code>O(1)</code> positional encodings. If you use PyTorch's default <code>nn.Embedding</code> (which initializes with <code>std = 1.0</code>) and multiply by <code>√d_model</code>, the embeddings have variance <code>d_model</code> and drown out the positional encodings!</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
-
   <!-- ============ CLOSING ============ -->
   <section class="band" id="closing">
     <div class="wrap">
-      <h2>What all eleven papers have in common</h2>
-      <p class="lede"><strong>None of these breakthroughs came from treating a model as magic.</strong> Every single one came from looking closely at where the current system failed in reality, understanding the mathematics and the hardware underneath that failure, and testing a clear direction against real evidence.</p>
-      <p>That is the same cycle Clover is built on: <strong>Context → Direction → Execution → Outcome → Growth</strong>. The tools have grown from 1943 threshold relays and 1956 JOHNNIAC drum lists to multi-terParameter attention models, and the cycle that produces real understanding has not changed at all.</p>
+      <h2>What all eleven stories have in common</h2>
+      <p class="lede"><strong>None of these breakthroughs came from treating a model as magic.</strong> Every single one came from looking closely at where the current system failed in reality, picturing the mechanism underneath that failure, and testing a clear direction against real evidence.</p>
+      <p>That is the same cycle Clover is built on: <strong>Context → Direction → Execution → Outcome → Growth</strong>. The tools have grown from 1943 threshold relays and 1956 index cards to multi-teraparameter attention models, and the human cycle that produces real understanding has not changed at all.</p>
       <div class="actions" style="margin-top:1.8rem">
-        <a class="btn btn--primary" href="../start/">Read AGENTS.md →</a>
+        <a class="btn btn--primary" href="../start/">Next Menu: Read AGENTS.md →</a>
         <a class="btn" href="../evidence/">See the evidence</a>
         <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/foundations-research/clover-kimi-k3/docs/foundations-11-papers-human-guide.md">View the research notes &amp; scripts in the repository →</a>
       </div>
@@ -659,3 +1307,4 @@
 <script src="../app.js?v=3.5.1" defer></script>
 </body>
 </html>
+

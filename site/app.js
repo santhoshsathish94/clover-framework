@@ -383,4 +383,89 @@
       }
     });
   }
+
+  /* Origin interactive 11-paper story & visual stepper. */
+  var originDeck = document.querySelector('[data-origin-deck]');
+  if (originDeck) {
+    var steps = Array.prototype.slice.call(originDeck.querySelectorAll('.origin-step'));
+    var cards = Array.prototype.slice.call(originDeck.querySelectorAll('.origin-card'));
+    var statusEl = originDeck.querySelector('[data-origin-status]');
+    var fillEl = originDeck.querySelector('[data-origin-fill]');
+    var allBtn = originDeck.querySelector('[data-origin-all]');
+    var currentIdx = 0;
+
+    var setChapter = function (idx, scrollIntoView) {
+      if (idx < 0 || idx >= cards.length) return;
+      currentIdx = idx;
+      originDeck.classList.remove('is-all-open');
+      if (allBtn) allBtn.textContent = 'Show all 11 chapters';
+      steps.forEach(function (btn, i) {
+        var active = i === idx;
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      cards.forEach(function (card, i) {
+        var active = i === idx;
+        card.classList.toggle('is-active', active);
+      });
+      if (statusEl) {
+        var title = steps[idx] ? steps[idx].getAttribute('data-title') || steps[idx].textContent : '';
+        statusEl.textContent = 'Chapter ' + (idx + 1) + ' of ' + cards.length + ' · ' + title;
+      }
+      if (fillEl) {
+        fillEl.style.width = (((idx + 1) / cards.length) * 100).toFixed(2) + '%';
+      }
+      if (steps[idx] && steps[idx].scrollIntoView) {
+        steps[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+      if (scrollIntoView) {
+        scrollToElement(originDeck, 'start');
+        var id = cards[idx].id;
+        if (id && history.replaceState) history.replaceState(null, '', '#' + id);
+      }
+    };
+
+    steps.forEach(function (btn, i) {
+      btn.addEventListener('click', function () { setChapter(i, true); });
+    });
+
+    originDeck.addEventListener('click', function (e) {
+      var goBtn = e.target.closest && e.target.closest('[data-origin-go]');
+      if (!goBtn) return;
+      var dir = goBtn.getAttribute('data-origin-go');
+      if (dir === 'next') setChapter(currentIdx + 1, true);
+      else if (dir === 'prev') setChapter(currentIdx - 1, true);
+    });
+
+    if (allBtn) {
+      allBtn.addEventListener('click', function () {
+        var allOpen = originDeck.classList.toggle('is-all-open');
+        allBtn.textContent = allOpen ? 'Step through one by one' : 'Show all 11 chapters';
+        if (statusEl) {
+          statusEl.textContent = allOpen
+            ? 'Showing all 11 chapters (1943–2017)'
+            : 'Chapter ' + (currentIdx + 1) + ' of ' + cards.length + ' · ' + (steps[currentIdx].getAttribute('data-title') || '');
+        }
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest && e.target.closest('a[href^="#p"]');
+      if (!link) return;
+      var targetId = (link.getAttribute('href') || '').slice(1);
+      var idx = cards.findIndex(function (c) { return c.id === targetId; });
+      if (idx !== -1) {
+        e.preventDefault();
+        setChapter(idx, true);
+      }
+    });
+
+    var checkOriginHash = function () {
+      var h = window.location.hash.slice(1);
+      var idx = cards.findIndex(function (c) { return c.id === h; });
+      if (idx !== -1) setChapter(idx, false);
+    };
+    setChapter(0, false);
+    checkOriginHash();
+    window.addEventListener('hashchange', checkOriginHash);
+  }
 })();
