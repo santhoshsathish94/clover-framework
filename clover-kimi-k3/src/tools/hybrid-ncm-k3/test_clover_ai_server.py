@@ -36,7 +36,11 @@ def main():
     print("  sess_alpha turn 2 (history_len=", r1_turn2["history_len"], "):", r1_turn2["reply"][:130], flush=True)
 
     # 3. Test image upload on sess_img
-    img_b64 = "data:image/png;base64," + base64.b64encode(open("/home/usergpu/merge_lf/test_images/img1_hospital_invoice.png", "rb").read()).decode("ascii")
+    import os
+    img_p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_images/img1_hospital_invoice.png")
+    if not os.path.exists(img_p):
+        img_p = "/home/usergpu/merge_lf/test_images/img1_hospital_invoice.png"
+    img_b64 = "data:image/png;base64," + base64.b64encode(open(img_p, "rb").read()).decode("ascii")
     r_img = post_chat("sess_img", "Write a news report of about 80 words using the facts shown in this hospital invoice image, and end with a Summary.", image_b64=img_b64)
     print("  sess_img (gpu_pair=", r_img.get("gpu_pair"), "):", r_img["reply"][:140], flush=True)
 

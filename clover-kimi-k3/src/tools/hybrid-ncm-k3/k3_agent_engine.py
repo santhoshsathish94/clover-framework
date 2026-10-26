@@ -24,16 +24,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from safetensors import safe_open
+from clover_paths import (
+    TOOLS_DIR, setup_clover_sys_path, find_dataset_dir, find_open_weights_shard94,
+    find_hybrid_ncm_ckpt_dir, resolve_device, cuda_sync, ensure_cpu_experts_lib
+)
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
-os.environ.setdefault("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-ROOT = os.environ["NCM_REPO"]
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, "/home/usergpu/plan2text")
-sys.path.insert(0, "/home/usergpu/hybridagent")
-sys.path.insert(0, ROOT)
-os.chdir(ROOT)
+ROOT = setup_clover_sys_path()
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 from k3_tokenizer import K3Tokenizer
 from train_k3_native_all import (
@@ -310,9 +308,9 @@ class K3GPUExpertsRunner:
 
     def __init__(
         self,
-        lib_path: str = "/home/usergpu/merge_lf/libk3_gpu_experts.so",
-        dataset_dir: str = "/opt/clover-k3/datasets/computed",
-        open_weights_path: str = "/opt/clover-k3/datasets/third-party/kimi-k3-open-weights/model-00094-of-000096.safetensors",
+        lib_path: str | None = None,
+        dataset_dir: str | None = None,
+        open_weights_path: str | None = None,
         layers=(1, 12, 48, 92),
         cards=(0, 1, 5, 4),
         max_n: int = 1024,
@@ -320,10 +318,28 @@ class K3GPUExpertsRunner:
         k_res: int = 28,
     ):
         t0 = time.perf_counter()
+        if dataset_dir is None or not os.path.isdir(dataset_dir):
+            dataset_dir = find_dataset_dir()
+        if open_weights_path is None or not os.path.exists(open_weights_path):
+            open_weights_path = find_open_weights_shard94()
+        use_cpu_lib = (not torch.cuda.is_available()) or (os.environ.get("CLOVER_FORCE_CPU", "0") == "1")
+        if lib_path is None:
+            gpu_cand = (
+                "/home/usergpu/merge_lf/libk3_gpu_experts.so"
+                if os.path.exists("/home/usergpu/merge_lf/libk3_gpu_experts.so")
+                else os.path.join(TOOLS_DIR, "libk3_gpu_experts.so")
+            )
+            if not use_cpu_lib and os.path.exists(gpu_cand):
+                lib_path = gpu_cand
+            else:
+                use_cpu_lib = True
+                lib_path = ensure_cpu_experts_lib()
+
+        self.is_cpu_backend = use_cpu_lib
         self.full_93_layers = bool(full_93_layers)
         self.k_res = int(k_res)
         self.layers = list(range(1, 93)) if self.full_93_layers else list(layers)
-        self.cards = [0, 1, 2, 3, 4, 5] if self.full_93_layers else list(cards)
+        self.cards = [0] if use_cpu_lib else ([0, 1, 2, 3, 4, 5] if self.full_93_layers else list(cards))
         self.n_stages = len(self.layers)
         self.max_n = max_n
 
@@ -1986,14 +2002,16 @@ class CloverK3AgentEngine:
     """
     def __init__(
         self,
-        out_dir: str = "/home/usergpu/merge_lf/out/e6_k3_native",
+        out_dir: str | None = None,
         dev_ncm: str = "cuda:0",
         dev_ha: str = "cuda:2",
         k3_experts_runner: K3GPUExpertsRunner | None = None,
     ):
         t0 = time.perf_counter()
-        self.dev = torch.device(dev_ncm)
-        self.dev_ha = torch.device(dev_ha)
+        if out_dir is None or not os.path.isdir(out_dir):
+            out_dir = find_hybrid_ncm_ckpt_dir()
+        self.dev = torch.device(resolve_device(dev_ncm))
+        self.dev_ha = torch.device(resolve_device(dev_ha))
         self.k3_tok = K3Tokenizer()
 
         # 1. Load Kimi K3 GPU MoE Experts (`libk3_gpu_experts.so` across `cuda:0, 1, 5, 4` BEFORE PyTorch fragments VRAM)
@@ -2484,7 +2502,8 @@ class CloverK3AgentEngine:
         prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=effective_user_prompt) + tool_obs_str
         msgs.append({"role": "user", "content": prompt_with_obs})
 
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
             prefix_str = base_chat + "Let me think carefully and reply directly to the user." + ENTRY_ANCHOR
@@ -3036,7 +3055,8 @@ class CloverK3AgentEngine:
                 plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
 
         del past_kv, out
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         return plans, lat_steps, exit_reason, tool_calls_log
 
     @torch.no_grad()
@@ -3239,7 +3259,7 @@ class CloverK3AgentEngine:
         return reply_txt, pred_ids, k3_meta, round(mean_p, 4)
 
     def agent_reply(self, user_prompt: str, cands: int = 8, remember: bool = True):
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
+        cuda_sync(self.dev, self.dev_ha)
         t0 = time.perf_counter()
         active_hist = self.history if remember else None
 
@@ -3247,7 +3267,7 @@ class CloverK3AgentEngine:
         direct_hit = self.try_direct_k3_ha_ncm_decode(user_prompt, history=active_hist)
         if direct_hit is not None:
             text_mbr, ids_mbr, k3_expert_meta, mean_conf = direct_hit
-            torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
+            cuda_sync(self.dev, self.dev_ha)
             t_ncm_k3_ms = (time.perf_counter() - t0) * 1000.0
             plans = [text_mbr]
             if remember:
@@ -3273,14 +3293,14 @@ class CloverK3AgentEngine:
             }
 
         plans, lat_steps, exit_reason, tool_calls = self.run_agent_planning(user_prompt, history=active_hist)
-        torch.cuda.synchronize(self.dev_ha)
+        cuda_sync(self.dev_ha)
         t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
         t1 = time.perf_counter()
         text_mbr, ids_mbr, k3_expert_meta = self.render_ncm_with_k3_experts(plans, cands=cands)
         if self.enable_ontology:
             text_mbr = self.symbolic_verifier.verify_source_grounding(_extract_raw_user_query(user_prompt), text_mbr)
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_ha)
+        cuda_sync(self.dev, self.dev_ha)
         t_ncm_k3_ms = (time.perf_counter() - t1) * 1000.0
 
         if remember:

@@ -12,16 +12,12 @@ Builds, trains, and evaluates the end-to-end factual bridge on the WMT14 NCM arc
        - Translates generated Qwen3 tokens directly into Kimi K3's 163,840-token vocabulary (tiktoken.model) and embeds them into Kimi K3's 7,168-d embedding space (model-00094-of-000096.safetensors) for multi-token Kimi K3 verification (stepk / forward_tokens).
 """
 import argparse, base64, collections, json, math, os, pickle, re, sys, time
+from clover_paths import setup_clover_sys_path, find_wmt14_art_dir
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
-os.environ.setdefault("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-ROOT = os.environ["NCM_REPO"]
-ART_WMT = "/home/usergpu/ncm/artifacts/wmt14"
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, "/home/usergpu/plan2text")
-sys.path.insert(0, ROOT)
-os.chdir(ROOT)
+ROOT = setup_clover_sys_path()
+ART_WMT = find_wmt14_art_dir()
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 import torch
 import torch.nn as nn

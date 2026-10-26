@@ -16,16 +16,11 @@ Implements:
        and saves the `[N_patches, 7168]` tensor ready for 1-pass 93-layer Kimi K3 multimodal verification (`stage1_lookup` at `163605`).
 """
 import argparse, collections, json, math, os, re, sys, time
+from clover_paths import VISION_DIR, setup_clover_sys_path, find_hybrid_ncm_ckpt_dir, resolve_device, cuda_sync
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
-os.environ.setdefault("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-ROOT = os.environ["NCM_REPO"]
-sys.path.insert(0, "/home/usergpu/merge_lf/k3_vision")
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, "/home/usergpu/plan2text")
-sys.path.insert(0, ROOT)
-os.chdir(ROOT)
+ROOT = setup_clover_sys_path()
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 import numpy as np
 import torch
@@ -58,9 +53,13 @@ VL_PLAN_PROMPT = (
 class K3OptionAMoonViT(nn.Module):
     """Option A: Kimi K3's native 27-layer MoonViT3d vision tower + PatchMergerMLPV2 (`1024 -> 7168`)
     plus `7168 -> 384` ridge projection into NCM's continuous prefix space."""
-    def __init__(self, vis_dir="/home/usergpu/merge_lf/k3_vision", graft_path="/home/usergpu/merge_lf/out/e6_k3_native/k3_vqvae_init.pt", dev="cuda:0"):
+    def __init__(self, vis_dir: str | None = None, graft_path: str | None = None, dev="cuda:0"):
         super().__init__()
-        self.dev = torch.device(dev)
+        if vis_dir is None or not os.path.isdir(vis_dir):
+            vis_dir = "/home/usergpu/merge_lf/k3_vision" if os.path.exists("/home/usergpu/merge_lf/k3_vision/model-00096-of-000096.safetensors") else VISION_DIR
+        if graft_path is None or not os.path.exists(graft_path):
+            graft_path = os.path.join(find_hybrid_ncm_ckpt_dir(), "k3_vqvae_init.pt")
+        self.dev = torch.device(resolve_device(dev))
         from configuration_kimi_k3 import KimiK3VisionConfig
         import k3_vis_standalone as k3v
 
@@ -126,15 +125,17 @@ class K3MultimodalChatEngine:
     """
     def __init__(
         self,
-        out_dir="/home/usergpu/merge_lf/out/e6_k3_native",
+        out_dir: str | None = None,
         dev_ncm="cuda:7",
         dev_vl="cuda:7",
         enable_option_a=True,
         k3_experts_runner: K3GPUExpertsRunner | None = None,
     ):
         t0 = time.perf_counter()
-        self.dev = torch.device(dev_ncm)
-        self.dev_vl = torch.device(dev_vl)
+        if out_dir is None or not os.path.isdir(out_dir):
+            out_dir = find_hybrid_ncm_ckpt_dir()
+        self.dev = torch.device(resolve_device(dev_ncm))
+        self.dev_vl = torch.device(resolve_device(dev_vl))
         self.k3_tok = K3Tokenizer()
         self.enable_option_a = enable_option_a
         self.k3_experts = k3_experts_runner or K3GPUExpertsRunner.get_instance(max_n=256, full_93_layers=True, k_res=36)
@@ -193,7 +194,10 @@ class K3MultimodalChatEngine:
         # 3. Option A: Kimi K3 MoonViT3d + PatchMergerMLPV2 (`d=7168`)
         self.option_a = None
         if enable_option_a:
-            self.option_a = K3OptionAMoonViT(dev=dev_ncm)
+            try:
+                self.option_a = K3OptionAMoonViT(dev=str(self.dev))
+            except Exception:
+                self.option_a = None
 
         levels = list(self.vqvae.vq.levels)
         self.sched = [1.0 - 0.6 * (k / (len(levels) - 1)) for k in range(len(levels))]
@@ -221,7 +225,8 @@ class K3MultimodalChatEngine:
         if max(pil_img.size) > 768:
             pil_img = pil_img.copy()
             pil_img.thumbnail((768, 768), Image.Resampling.LANCZOS)
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         msgs = [
             {
@@ -410,7 +415,7 @@ class K3MultimodalChatEngine:
         return join_rendered_windows(out_txts, plans), out_ids, k3_expert_meta
 
     def multimodal_reply(self, pil_img, user_prompt, use_option_a=True, cands=8):
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_vl)
+        cuda_sync(self.dev, self.dev_vl)
 
         t_opt_a_ms = 0.0
         vis_384 = None
@@ -419,20 +424,20 @@ class K3MultimodalChatEngine:
         if use_option_a and self.option_a is not None:
             ta0 = time.perf_counter()
             k3_vis_7168, vis_384 = self.option_a.encode_image(pil_img)
-            torch.cuda.synchronize(self.dev)
+            cuda_sync(self.dev)
             t_opt_a_ms = (time.perf_counter() - ta0) * 1000.0
             n_k3_vis_tokens = int(k3_vis_7168.size(0))
 
         t0 = time.perf_counter()
         plans, lat_steps = self.plan_visual_with_latent(pil_img, user_prompt)
-        torch.cuda.synchronize(self.dev_vl)
+        cuda_sync(self.dev_vl)
         t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
         t2 = time.perf_counter()
         text_mbr, ids_mbr, k3_expert_meta = self.render_ncm(
             plans, prompt_text=user_prompt, cands=cands, option_a_vis384=vis_384, k3_vis_7168=k3_vis_7168
         )
-        torch.cuda.synchronize(self.dev); torch.cuda.synchronize(self.dev_vl)
+        cuda_sync(self.dev, self.dev_vl)
         t_ncm_mbr_ms = (time.perf_counter() - t2) * 1000.0
 
         return {

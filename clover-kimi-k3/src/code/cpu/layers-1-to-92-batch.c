@@ -2170,6 +2170,7 @@ double LB_CAT(LB_PFX, _init)(unsigned max_n)
     if (getenv("LB_SPEC")) g_spec = atoi(getenv("LB_SPEC"));
     if (getenv("LB_GUESS")) g_guess_max = atoi(getenv("LB_GUESS"));
     g_disk = 3;
+    if (getenv("LB_DISK") && *getenv("LB_DISK")) g_disk = atoi(getenv("LB_DISK"));
     e_b = buf_make(max_n);
     return clk() - t0;
 }
@@ -2191,7 +2192,8 @@ void *LB_CAT(LB_PFX, _open)(const char *dataset, unsigned layer, unsigned k, uns
     snprintf(path, sizeof path, "%s/expert-%u/experts.direct", dataset, layer);
     h->plain_fd = open(path, O_RDONLY);
     h->direct_fd = open(path, O_RDONLY | O_DIRECT);
-    if (h->plain_fd < 0 || h->direct_fd < 0) bail("cannot open experts.direct");
+    if (h->direct_fd < 0) h->direct_fd = h->plain_fd;
+    if (h->plain_fd < 0) bail("cannot open experts.direct");
     touch_range(h->tr->qkv, h->tr->qkv_bytes);
     for (unsigned group = 0; group < 3; group++) touch_range(h->tr->group_map[group], h->tr->group_bytes[group]);
     if (use_4bit_trunk_requested()) h->packed_trunk = pack_layer_trunk_to_4bit(h->tr);

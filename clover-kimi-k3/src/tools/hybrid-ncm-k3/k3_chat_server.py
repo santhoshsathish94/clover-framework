@@ -20,16 +20,11 @@ Features:
 import argparse, base64, collections, concurrent.futures, io, json, os, re, subprocess, sys, tempfile, threading, time, urllib.parse, uuid, wave, xml.etree.ElementTree as ET, zipfile
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from clover_paths import TOOLS_DIR, setup_clover_sys_path, resolve_device, cuda_sync
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
-os.environ.setdefault("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-ROOT = os.environ["NCM_REPO"]
-sys.path.insert(0, "/home/usergpu/merge_lf/k3_vision")
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, "/home/usergpu/plan2text")
-sys.path.insert(0, ROOT)
-os.chdir(ROOT)
+ROOT = setup_clover_sys_path()
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 import torch
 from PIL import Image
@@ -41,7 +36,12 @@ from bench_batch_clubbing import plan_batch_with_latent, render_ncm_batched_mult
 
 BATCH_PAUSE_S = 1.0
 MAX_SESSION_CONTEXT_TOKENS = 262_144  # 256k Kimi K3 tokens (> 250k minimum context window per session)
-SESSIONS_STORE_PATH = "/home/usergpu/merge_lf/out/sessions_store.json"
+SESSIONS_STORE_PATH = os.environ.get(
+    "CLOVER_SESSIONS_STORE_PATH",
+    "/home/usergpu/merge_lf/out/sessions_store.json"
+    if os.path.isdir("/home/usergpu/merge_lf/out")
+    else os.path.join(TOOLS_DIR, "out/sessions_store.json"),
+)
 KID_VOICE_NAME = "en-US-AnaNeural"  # Microsoft Neural polite, friendly child voice
 _TTS_CACHE = collections.OrderedDict()
 _TTS_LOCK = threading.Lock()
@@ -1205,21 +1205,29 @@ class MultiGPUCloverCoordinator:
             flush=True,
         )
 
-        # 2. Load Agent Mode (`HybridAgent-8B-Agentic + LiveWebSearch + PythonTool + 93-Layer K3 + NCM`) on `cuda:6`
+        # 2. Load Agent Mode (`HybridAgent-8B-Agentic + LiveWebSearch + PythonTool + 93-Layer K3 + NCM`) on `cuda:6` (or `cpu` on CPU servers)
         self.text_workers = []
         self.worker_locks = []
-        eng = CloverK3AgentEngine(dev_ncm="cuda:6", dev_ha="cuda:6", k3_experts_runner=self.k3_experts)
+        txt_dev = resolve_device("cuda:6")
+        eng = CloverK3AgentEngine(dev_ncm=txt_dev, dev_ha=txt_dev, k3_experts_runner=self.k3_experts)
         self.text_workers.append(eng)
         self.worker_locks.append(threading.Lock())
         self.k3_tok = eng.k3_tok
-        print(f"[Clover AI] Loaded Agent+93LayerK3+NCM worker on cuda:6 in {eng.setup_s}s", flush=True)
+        print(f"[Clover AI] Loaded Agent+93LayerK3+NCM worker on {txt_dev} in {eng.setup_s}s", flush=True)
 
         # 3. Load Multimodal Vision Agent (`MoonViT3d + Qwen3-VL-8B-Instruct + HybridLink + 93-Layer K3 + NCM`) on `cuda:7`
+        #    (On CPU servers, skip eager loading of the second 8B model unless `CLOVER_ENABLE_MM_WORKER=1`)
         self.mm_lock = threading.Lock()
-        self.mm_worker = K3MultimodalChatEngine(
-            dev_ncm="cuda:7", dev_vl="cuda:7", enable_option_a=True, k3_experts_runner=self.k3_experts
+        self.mm_worker = None
+        enable_mm = (torch.cuda.is_available() and os.environ.get("CLOVER_DISABLE_MM_WORKER", "0") != "1") or (
+            os.environ.get("CLOVER_ENABLE_MM_WORKER", "0") == "1"
         )
-        print(f"[Clover AI] Loaded Multimodal Vision+93LayerK3+NCM worker on cuda:7 in {self.mm_worker.setup_s}s", flush=True)
+        if enable_mm:
+            mm_dev = resolve_device("cuda:7")
+            self.mm_worker = K3MultimodalChatEngine(
+                dev_ncm=mm_dev, dev_vl=mm_dev, enable_option_a=True, k3_experts_runner=self.k3_experts
+            )
+            print(f"[Clover AI] Loaded Multimodal Vision+93LayerK3+NCM worker on {mm_dev} in {self.mm_worker.setup_s}s", flush=True)
 
         self.setup_s = round(time.perf_counter() - t0, 2)
         self._load_sessions_from_disk()
@@ -1790,7 +1798,7 @@ class MultiGPUCloverCoordinator:
                 direct_hit = eng.try_direct_k3_ha_ncm_decode(req.prompt, history=req.hist_snapshot)
                 if direct_hit is not None:
                     text_mbr, ids_mbr, k3_expert_meta, mean_conf = direct_hit
-                    torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
+                    cuda_sync(eng.dev, eng.dev_ha)
                     t_plan_ms = 0.0
                     t_ncm_mbr_ms = (time.perf_counter() - t0) * 1000.0
                     plans = [text_mbr]
@@ -1799,14 +1807,14 @@ class MultiGPUCloverCoordinator:
                     tool_calls = []
                 else:
                     plans, lat_steps, exit_reason, tool_calls = eng.run_agent_planning(req.prompt, history=req.hist_snapshot)
-                    torch.cuda.synchronize(eng.dev_ha)
+                    cuda_sync(eng.dev_ha)
                     t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
                     t1 = time.perf_counter()
                     text_mbr, ids_mbr, k3_expert_meta = eng.render_ncm_with_k3_experts(plans, cands=req.cands)
                     if getattr(eng, "enable_ontology", False):
                         text_mbr = eng.symbolic_verifier.verify_source_grounding(req.display_prompt, text_mbr)
-                    torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
+                    cuda_sync(eng.dev, eng.dev_ha)
                     t_ncm_mbr_ms = (time.perf_counter() - t1) * 1000.0
 
                 h_len = len(req.hist_snapshot)
@@ -1858,7 +1866,7 @@ class MultiGPUCloverCoordinator:
                 outs, ids_list, b_plans, k3_expert_meta, batch_tool_logs = run_agent_batch_with_k3_experts(
                     eng, raw_prompts, histories=histories, cands=max_cands
                 )
-                torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
+                cuda_sync(eng.dev, eng.dev_ha)
                 t_tot_ms = (time.perf_counter() - t0) * 1000.0
 
                 for i, req in enumerate(batch):
@@ -2409,15 +2417,15 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             w_idx = STATE._acquire_text_worker()
             eng = STATE.text_workers[w_idx]
             try:
-                torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
+                cuda_sync(eng.dev, eng.dev_ha)
                 t0 = time.perf_counter()
                 b_plans = plan_batch_with_latent(eng, prompts, lat_steps=14, max_new=100)
-                torch.cuda.synchronize(eng.dev_ha)
+                cuda_sync(eng.dev_ha)
                 t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
                 t1 = time.perf_counter()
                 outs, ids_list = render_ncm_batched_multi_prompt(eng, b_plans, prompts, cands=cands)
-                torch.cuda.synchronize(eng.dev); torch.cuda.synchronize(eng.dev_ha)
+                cuda_sync(eng.dev, eng.dev_ha)
                 t_ncm_ms = (time.perf_counter() - t1) * 1000.0
             finally:
                 STATE.worker_locks[w_idx].release()
@@ -2593,7 +2601,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         tool_rounds=tool_rounds,
                         available_tools=available_tools,
                     )
-                    torch.cuda.synchronize(eng.dev_ha)
+                    cuda_sync(eng.dev_ha)
                 finally:
                     STATE.worker_locks[w_idx].release()
 

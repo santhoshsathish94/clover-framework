@@ -8,13 +8,12 @@ Subcommands:
             conditioned directly on continuous R(h) vectors instead of discrete BPE token IDs.
 """
 import argparse, json, math, os, re, sys, time
+from clover_paths import setup_clover_sys_path
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-ROOT = os.environ.get("NCM_REPO", "/home/usergpu/ncm")
-ART = os.environ.get("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, ROOT)
-os.chdir(ROOT)
+ROOT = setup_clover_sys_path()
+ART = os.environ.get("NCM_ART", ROOT)
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 import torch
 import torch.nn as nn
@@ -22,7 +21,6 @@ import torch.nn.functional as F
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-sys.path.insert(0, "/home/usergpu/plan2text")
 import ncm_stage2 as S
 from train_fluency import build_st_zhat
 

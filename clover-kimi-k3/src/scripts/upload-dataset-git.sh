@@ -20,15 +20,16 @@ mkdir -p "$PUSH_DIR"
 if [ ! -d "$REPO/.git" ]; then GIT_LFS_SKIP_SMUDGE=1 git clone -q "git@hf.co:datasets/$HF_REPO" "$REPO" || exit 1; fi
 cd "$REPO" || exit 1
 git config user.name "${GIT_AUTHOR_NAME:-Santhosh Narayanan}"; git config user.email "${GIT_AUTHOR_EMAIL:-santhoshsathish94@gmail.com}"
-git lfs install --local > /dev/null; git lfs track "*.direct" "*.f32" > /dev/null; git config lfs.customtransfer.multipart.path "$hf"; "$hf" lfs-enable-largefiles . > /dev/null
+git lfs install --local > /dev/null; git lfs track "*.direct" "*.f32" "*.pt" "*.pickle" "*.safetensors" > /dev/null; git config lfs.customtransfer.multipart.path "$hf"; "$hf" lfs-enable-largefiles . > /dev/null
 git config lfs.customtransfer.multipart.path "$hf"
-git add .gitattributes; git diff --cached --quiet || git commit -q -m "track *.direct and *.f32 with LFS"
+git add .gitattributes; git diff --cached --quiet || git commit -q -m "track *.direct, *.f32, *.pt, *.pickle, and *.safetensors with LFS"
 
-paths=$(awk -F'\t' '!/^#/ && NF>=3 {print $1}' "$LIST"; [ -d "$INPUTS_DIR/refs" ] && ls "$INPUTS_DIR/refs" | sed 's|^|engine-inputs/refs/|')
+paths=$(awk -F'\t' '!/^#/ && NF>=3 {print $1}' "$LIST"; [ -d "$INPUTS_DIR/refs" ] && ls "$INPUTS_DIR/refs" | sed 's|^|engine-inputs/refs/|'; [ -d "$HYBRID_NCM_DIR" ] && find "$HYBRID_NCM_DIR" -type f -printf 'hybrid-ncm-k3/%P\n')
 batch_files() {   # label -> the files of that batch
   case "$1" in
     expert-*) echo "$paths" | grep "^$1/";;
     refs) echo "$paths" | grep "^engine-inputs/";;
+    hybrid-ncm-k3) echo "$paths" | grep "^hybrid-ncm-k3/";;
     trunks-*) from=${1#trunks-}; for n in $(seq "$from" $((from + 9))); do echo "$paths" | grep "^trunk-$n/"; done;;
   esac
 }
@@ -40,7 +41,7 @@ push_pending() {
   done
 }
 done_batches=0
-for label in refs $(seq 1 92 | sed 's/^/expert-/') $(seq 0 10 90 | sed 's/^/trunks-/'); do
+for label in refs hybrid-ncm-k3 $(seq 1 92 | sed 's/^/expert-/') $(seq 0 10 90 | sed 's/^/trunks-/'); do
   [ $done_batches -ge "$MAX_BATCHES" ] && break
   git fetch -q origin main || { say "fetch failed"; exit 1; }
   push_pending || exit 1
@@ -52,7 +53,9 @@ for label in refs $(seq 1 92 | sed 's/^/expert-/') $(seq 0 10 90 | sed 's/^/trun
   bytes=0
   while IFS= read -r f; do
     mkdir -p "$(dirname "$f")"
-    src="$DATASET_DIR/$f"; [ -e "$src" ] || src="$INPUTS_DIR/${f#engine-inputs/}"
+    src="$DATASET_DIR/$f"
+    [ -e "$src" ] || src="$INPUTS_DIR/${f#engine-inputs/}"
+    [ -e "$src" ] || src="$HYBRID_NCM_DIR/${f#hybrid-ncm-k3/}"
     ln -f "$src" "$f" 2> /dev/null || cp "$src" "$f" || exit 1
     bytes=$((bytes + $(stat -L -c %s "$f")))
   done <<< "$todo"

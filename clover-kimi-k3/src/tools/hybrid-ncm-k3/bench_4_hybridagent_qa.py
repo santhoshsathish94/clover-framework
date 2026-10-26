@@ -118,8 +118,10 @@ def ask_clover(question: str, sid: str) -> dict:
 
 
 def main():
+    import os
+    here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", type=str, default="/home/usergpu/merge_lf/benchmarks/hybridagent_qa_baseline.json")
+    ap.add_argument("--out", type=str, default=os.path.join(here, "benchmarks/hybridagent_qa_baseline.json"))
     args = ap.parse_args()
 
     correct = 0

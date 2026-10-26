@@ -2,8 +2,13 @@
 Guarantees 100% bit-identical token IDs (0..163,839) to Clover Kimi K3's C/CUDA engine (`whole-model` / `whole-model-gpu`).
 """
 import ctypes, os, subprocess
+from clover_paths import TOOLS_DIR, ENGINE_DIR, find_open_weights_dir
 
-SO_PATH = "/home/usergpu/merge_lf/libk3tok.so"
+SO_PATH = os.environ.get("CLOVER_K3TOK_SO") or (
+    "/home/usergpu/merge_lf/libk3tok.so"
+    if os.path.exists("/home/usergpu/merge_lf/libk3tok.so")
+    else os.path.join(TOOLS_DIR, "libk3tok.so")
+)
 C_SRC = r"""
 #define _GNU_SOURCE
 #include "k3_tok.h"
@@ -37,27 +42,32 @@ int k3tok_decode(const int *ids, int n, char *out_buf, int cap) {
 """
 
 def ensure_lib():
-    c_file = "/home/usergpu/merge_lf/k3tok_wrap.c"
+    c_file = os.path.join(os.path.dirname(SO_PATH), "k3tok_wrap.c")
     need_build = not os.path.exists(SO_PATH)
     if not need_build and os.path.exists(c_file):
         with open(c_file, "r", encoding="utf-8") as f:
             if "k3tok_encode_plain" not in f.read():
                 need_build = True
-    elif not os.path.exists(c_file):
+    elif not os.path.exists(c_file) and need_build:
         need_build = True
     if not need_build:
         return SO_PATH
     with open(c_file, "w", encoding="utf-8") as f:
         f.write(C_SRC)
-    inc1 = "/opt/clover-k3/clover-kimi-k3/src/code/third-party/kimi-k3-in-c/src/tokenizer"
-    inc2 = "/opt/clover-k3/clover-kimi-k3/src/code/third-party/kimi-k3-in-c/third_party"
+    tok_base = os.path.join(ENGINE_DIR, "src/code/third-party/kimi-k3-in-c")
+    if not os.path.isdir(tok_base) and os.path.isdir("/opt/clover-k3/clover-kimi-k3/src/code/third-party/kimi-k3-in-c"):
+        tok_base = "/opt/clover-k3/clover-kimi-k3/src/code/third-party/kimi-k3-in-c"
+    inc1 = os.path.join(tok_base, "src/tokenizer")
+    inc2 = os.path.join(tok_base, "third_party")
     cmd = ["gcc", "-O3", "-shared", "-fPIC", f"-I{inc1}", f"-I{inc2}", c_file, "-o", SO_PATH]
     subprocess.run(cmd, check=True)
     return SO_PATH
 
 
 class K3Tokenizer:
-    def __init__(self, weights_dir="/opt/clover-k3/clover-kimi-k3/src/datasets/third-party/kimi-k3-open-weights"):
+    def __init__(self, weights_dir: str | None = None):
+        if weights_dir is None:
+            weights_dir = find_open_weights_dir()
         so = ensure_lib()
         self.lib = ctypes.CDLL(so)
         self.lib.k3tok_init.argtypes = [ctypes.c_char_p]

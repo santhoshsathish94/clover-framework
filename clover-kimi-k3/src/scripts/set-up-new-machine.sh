@@ -35,7 +35,8 @@ OPEN_WEIGHTS_REPO="${OPEN_WEIGHTS_REPO:-moonshotai/Kimi-K3}"
 OPEN_WEIGHTS_REVISION="${OPEN_WEIGHTS_REVISION:-f831ab66814297da540d832a5235f8e904f29d06}"
 export OPEN_WEIGHTS_DIR="${OPEN_WEIGHTS_DIR:-$INSTALL_DIR/datasets/third-party/kimi-k3-open-weights}"
 export DSPARK_DIR="${DSPARK_DIR:-$INSTALL_DIR/datasets/third-party/kimi-k3-dspark}"
-STEPS=("$@"); [ ${#STEPS[@]} -gt 0 ] || STEPS=(preflight packages clone download open-weights check-dataset inputs build dspark verify)
+export HYBRID_NCM_DIR="${HYBRID_NCM_DIR:-$INSTALL_DIR/datasets/hybrid-ncm-k3}"
+STEPS=("$@"); [ ${#STEPS[@]} -gt 0 ] || STEPS=(preflight packages clone download open-weights hybrid-ncm check-dataset inputs build dspark verify)
 REPORT="$INSTALL_DIR/set-up-new-machine.report"
 mkdir -p "$INSTALL_DIR"; echo "== $(date) set-up-new-machine.sh ${STEPS[*]}" >> "$REPORT"
 FAILED=0
@@ -116,8 +117,17 @@ step_clone() {
   link_data "$DATASET_DIR" "$CLONE/clover-kimi-k3/src/datasets/computed"
   link_data "$OPEN_WEIGHTS_DIR" "$CLONE/clover-kimi-k3/src/datasets/third-party/kimi-k3-open-weights"
   link_data "$DSPARK_DIR" "$CLONE/clover-kimi-k3/src/datasets/third-party/kimi-k3-dspark"
+  link_data "$HYBRID_NCM_DIR" "$CLONE/clover-kimi-k3/src/datasets/hybrid-ncm-k3"
   [ -f "$SRC/code/common/whole-model.c" ] && pass "engine folder $ENGINE_DIR" || fail "$ENGINE_DIR has no src/code/common/whole-model.c"
   chmod +x "$SRC"/scripts/*.sh 2>/dev/null
+}
+
+step_hybrid_ncm() {
+  say "== hybrid-ncm: $HF_REPO_TYPE $HF_REPO/hybrid-ncm-k3 @ $HF_REVISION -> $HYBRID_NCM_DIR"
+  if [ "${SKIP_DOWNLOAD:-0}" = 1 ]; then warn "skipped (SKIP_DOWNLOAD=1)"; return; fi
+  need_engine || return
+  HYBRID_NCM_DIR="$HYBRID_NCM_DIR" "$SRC/scripts/download-hybrid-ncm-datasets.sh" \
+    && pass "hybrid-ncm-k3 checkpoints downloaded to $HYBRID_NCM_DIR" || fail "hybrid-ncm-k3 download failed"
 }
 
 step_download() {
@@ -184,7 +194,7 @@ step_verify() {
 
 for s in "${STEPS[@]}"; do
   case "$s" in
-    preflight) step_preflight;; packages) step_packages;; clone) step_clone;; download) step_download;; open-weights) step_open_weights;; check-dataset) step_check_dataset;;
+    preflight) step_preflight;; packages) step_packages;; clone) step_clone;; download) step_download;; open-weights) step_open_weights;; hybrid-ncm) step_hybrid_ncm;; check-dataset) step_check_dataset;;
     inputs) step_inputs;; build) step_build;; dspark) step_dspark;; verify) step_verify;;
     *) fail "unknown step $s";;
   esac

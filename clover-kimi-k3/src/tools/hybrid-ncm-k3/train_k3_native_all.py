@@ -23,16 +23,12 @@ Subcommands:
                 exact Kimi K3 token ID files (`p1_ncm.ids..p5_ncm.ids`) for verification inside Clover Kimi K3's 93-layer C engine!
 """
 import argparse, collections, json, math, os, pickle, re, sys, time
+from clover_paths import setup_clover_sys_path, find_wmt14_art_dir, find_wmt14_config_yaml, find_hybrid_ncm_ckpt_dir
 
-os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
-os.environ.setdefault("NCM_REPO", "/home/usergpu/ncm/repo")
-os.environ.setdefault("NCM_ART", "/home/usergpu/ncm/artifacts/tinystories")
-ROOT = os.environ["NCM_REPO"]
-ART_WMT = "/home/usergpu/ncm/artifacts/wmt14"
-sys.path.insert(0, "/home/usergpu/merge_lf")
-sys.path.insert(0, "/home/usergpu/plan2text")
-sys.path.insert(0, ROOT)
-os.chdir(ROOT)
+ROOT = setup_clover_sys_path()
+ART_WMT = find_wmt14_art_dir()
+if os.path.isdir(ROOT):
+    os.chdir(ROOT)
 
 import torch
 import torch.nn as nn
@@ -125,10 +121,16 @@ class K3NativeHybridLink(nn.Module):
 
 
 def load_base_wmt_vqvae(dev):
-    cfg = OmegaConf.load("config/eval/wmt14.yaml")
-    cfg.tokenizer.vqvae.checkpoint_path = os.path.join(ART_WMT, "tokenizer.pt")
-    tk = VQVAETokenizer.from_config(cfg.tokenizer)
-    vqvae = tk.vqvae.to(dev)
+    cfg = OmegaConf.load(find_wmt14_config_yaml())
+    tok_pt = os.path.join(ART_WMT, "tokenizer.pt")
+    if os.path.exists(tok_pt):
+        cfg.tokenizer.vqvae.checkpoint_path = tok_pt
+        tk = VQVAETokenizer.from_config(cfg.tokenizer)
+        vqvae = tk.vqvae.to(dev)
+    else:
+        from models.vqvae import VQVAE
+        vqvae = VQVAE(**cfg.tokenizer.vqvae).to(dev)
+        tk = VQVAETokenizer(pre_tokenizer=None, vqvae=vqvae)
     return cfg, tk, vqvae
 
 
@@ -598,8 +600,16 @@ def load_k3_native_models(dev, vq_ckpt_path, ncm_ckpt_path=None):
     vqvae.in_vocab_size = V_K3
     vqvae.encoder.wte = nn.Embedding(V_K3, D_VQ, device=dev)
     vqvae.decoder.output_layer = nn.Linear(D_VQ, V_K3, bias=False, device=dev)
-    vq_sd = torch.load(vq_ckpt_path, map_location="cpu", weights_only=True)["vqvae"]
-    vqvae.load_state_dict(vq_sd)
+    if vq_ckpt_path and not os.path.exists(vq_ckpt_path):
+        ckpt_dir = os.path.dirname(vq_ckpt_path) or find_hybrid_ncm_ckpt_dir()
+        for alt in ("e12_clover_k3_true_ha_ncm.pt", "e11_clover_k3_native_ha_ncm.pt", "e8_k3_direct.pt"):
+            alt_p = os.path.join(ckpt_dir, alt)
+            if os.path.exists(alt_p):
+                vq_ckpt_path = alt_p
+                break
+    if vq_ckpt_path and os.path.exists(vq_ckpt_path):
+        vq_sd = torch.load(vq_ckpt_path, map_location="cpu", weights_only=True)["vqvae"]
+        vqvae.load_state_dict(vq_sd)
     vqvae.eval()
     for p in vqvae.parameters():
         p.requires_grad_(False)
@@ -609,10 +619,13 @@ def load_k3_native_models(dev, vq_ckpt_path, ncm_ckpt_path=None):
     mcfg.prefix_len = P_COMBO
     mcfg.predict_level0 = True
     net = NextConceptTransformer(vqvae_local=vqvae, config=mcfg).to(dev)
-    src = torch.load(ncm_ckpt_path or "/home/usergpu/merge_lf/out/e5_k3_v2/last.pt", map_location="cpu", weights_only=False)
-    own = net.state_dict()
-    keep = {k: v for k, v in src["model"].items() if k in own and own[k].shape == v.shape}
-    net.load_state_dict(keep, strict=False)
+    src = {}
+    if ncm_ckpt_path and os.path.exists(ncm_ckpt_path):
+        src = torch.load(ncm_ckpt_path, map_location="cpu", weights_only=False)
+        if "model" in src:
+            own = net.state_dict()
+            keep = {k: v for k, v in src["model"].items() if k in own and own[k].shape == v.shape}
+            net.load_state_dict(keep, strict=False)
     return cfg, tk, vqvae, net, src
 
 
