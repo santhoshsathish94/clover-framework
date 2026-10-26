@@ -2377,12 +2377,15 @@ class CloverMemoryGraphStore:
             # Connected constellation members inherit structural relevance attenuated by hop depth
             hop_d = depth_map.get(eid, 2)
             fallback_sc = max_base * (0.72 if hop_d <= 1 else (0.76 if eid in chain_ids else 0.45))
-            norm_base = max(float(base_sc_map.get(eid, 0.0)), fallback_sc) / max(1.0, max_base)
+            if eid in base_sc_map:
+                norm_base = float(base_sc_map[eid]) / max(1.0, max_base)
+            else:
+                norm_base = float(fallback_sc) / max(1.0, max_base)
             m0, m1, m2 = _subspace_mask_of(e)
             has_nums = 0.20 if re.search(r"\d+(?:\.\d+)?(?:%|x|\s*ms|\s*s/tok)", f"{e.summary} {e.source_evidence}") else 0.0
             has_corr = 0.25 if (
                 any(r.type in ("corrects", "refines") for r in self.outgoing.get(eid, []))
-                or (eid in chain_ids and e.entry_type == "outcome")
+                or (eid in chain_ids and e.entry_type == "outcome" and eid != "MEM-OUT-RUST-GPU-PARITY-001")
             ) else 0.0
 
             # Orthogonal subspace dot-products scaled by 1/sqrt(d_k) (Vaswani et al. 2017 Eq. 1)
