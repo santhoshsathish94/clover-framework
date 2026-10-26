@@ -695,7 +695,7 @@ class CloverMemoryGraphStore:
         self.last_validation: GraphValidationReport | None = None
 
         if auto_load and self.root_dir.exists():
-            self.rebuild_index()
+            self.rebuild_index(write_index_file=not self.index_file.exists())
 
     # ------------------------------------------------------------------
     # 4.1 Index Building, Persistence & Validation from Canonical Files

@@ -1052,7 +1052,7 @@ class CloverRustGenerativeCompiler:
         if not end_marker and brace_stack:
             last_nonempty = next((ln.strip() for ln in reversed(raw_lines) if ln.strip() and not ln.strip().startswith("//")), "")
             in_fn = ("fn" in brace_stack)
-            if in_fn and last_nonempty.endswith((";", "{")):
+            if in_fn and last_nonempty.endswith((";", "{", "}")):
                 sealed_lines.append("    panic!()")
             for _ in range(len(brace_stack)):
                 sealed_lines.append("}")
@@ -1087,16 +1087,29 @@ class CloverRustGenerativeCompiler:
                 pass
 
         diags = self._parse_rustc_errors(raw_errors)
-        # Filter out any synthetic-tail error beyond `kept_lines` when `end_marker=False`
+        # Filter out any synthetic-tail error beyond `kept_lines` or unconstrained inference (`E0282`) when `end_marker=False`
+        suppressed_cnt = 0
         if not end_marker:
-            diags = [d for d in diags if d.line <= kept_lines]
+            kept_diags: list[GCDiagnostic] = []
+            for d in diags:
+                if d.line > kept_lines or d.code in ("E0282", "E0283"):
+                    suppressed_cnt += 1
+                else:
+                    kept_diags.append(d)
+            diags = kept_diags
         # Normalize E0277 mixed-float arithmetic (`f64 * f32`) to E0308 so diagnostic codes match across rustc versions
         for d in diags:
             if d.code == "E0277" and ("f64" in d.message or "f32" in d.message):
                 d.code = "E0308"
 
         if not diags:
-            return GCVerdict(ok=True, language="rust", sealed_code=sealed_code, elapsed_ms=elapsed_ms)
+            return GCVerdict(
+                ok=True,
+                language="rust",
+                sealed_code=sealed_code,
+                suppressed_errors=suppressed_cnt,
+                elapsed_ms=elapsed_ms,
+            )
 
         first_ln = min((d.origin_line or d.line for d in diags), default=1)
         return GCVerdict(
