@@ -2437,11 +2437,17 @@ class CloverMemoryGraphStore:
         seed_candidates = self._score_seed_entries(query, concept_filter=concept_filter, entry_types=entry_types)
         total_considered = len(seed_candidates)
         top_seeds = list(seed_candidates[:max_seeds])
+        # Also check if Rosenblatt gamma-system promoted a minority-branch peak into `top_seeds`:
+        gamma_lifted_seeds = {
+            eid for _, eid, rsn in top_seeds if "rosenblatt_gamma_lift(" in rsn
+        }
+
         # When `use_multihead_lrn=True` (Cycle 6 Vaswani Multi-Head + Krizhevsky LRN) and `max_seeds == 3`,
         # ensure all 3 orthogonal subspaces (Concept Principle, Empirical Measurement, Superseding Correction)
-        # are represented in `top_seeds` when a query spans multiple facets!
+        # are represented in `top_seeds` when a query spans multiple facets (unless Rosenblatt gamma-system
+        # already selected a dual-branch cross-domain seed set)!
         mh_winner_order: dict[str, int] = {}
-        if getattr(self, "use_multihead_lrn", True) and len(seed_candidates) >= 3 and max_seeds == 3:
+        if getattr(self, "use_multihead_lrn", True) and len(seed_candidates) >= 3 and max_seeds == 3 and not gamma_lifted_seeds:
             mh = self.multihead_lrn_subspace_retrieve(query, top_k=3)
             if mh.get("facets_multihead_lrn", 0) > mh.get("facets_single_head", 0):
                 sc_lookup = {eid: (sc, rsn) for sc, eid, rsn in seed_candidates}
@@ -2453,11 +2459,6 @@ class CloverMemoryGraphStore:
                     mh_winner_order[mh_id] = idx_h
                 if mh_seeds:
                     top_seeds = mh_seeds
-
-        # Also check if Rosenblatt gamma-system promoted a minority-branch peak into `top_seeds`:
-        gamma_lifted_seeds = {
-            eid for _, eid, rsn in top_seeds if "rosenblatt_gamma_lift(" in rsn
-        }
 
         seed_scores = {eid: sc for sc, eid, _ in top_seeds}
         seed_reasons = {eid: rsn for _, eid, rsn in top_seeds}

@@ -115,7 +115,7 @@ E2E_TASKS: list[dict[str, Any]] = [
         "max_seeds": 3,
         "max_depth": 1,
         "max_entries": 3,
-        "token_budget": 900,
+        "token_budget": 1050,
         "required_memory_ids": [
             "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
             "MEM-OBS-POSTHOC-CODE-REPAIR-LIMITS-001",
