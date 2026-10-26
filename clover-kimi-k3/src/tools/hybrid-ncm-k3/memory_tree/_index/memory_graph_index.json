@@ -1,0 +1,591 @@
+{
+  "schema_version": "1.0",
+  "built_at": "2026-10-26T03:38:17Z",
+  "validation": {
+    "is_healthy": true,
+    "total_files": 12,
+    "valid_entries": 12,
+    "total_relationships": 20,
+    "duplicate_ids": [],
+    "broken_links": [],
+    "validation_errors": [],
+    "cycle_warnings": [],
+    "unresolved_conflicts": [
+      {
+        "source": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+        "target": "MEM-HYP-STRICT-EXTERNAL-REALISM-001",
+        "type": "unresolved_with",
+        "note": "Remains in unresolved philosophical tension with strict internal/external dualism.",
+        "provenance": "session:phil-inquiry-2026-10-20#turn-6"
+      },
+      {
+        "source": "MEM-HYP-STRICT-EXTERNAL-REALISM-001",
+        "target": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+        "type": "challenges",
+        "note": "Challenges the dissolution of the inside/outside boundary from a classical dualist perspective.",
+        "provenance": "session:phil-inquiry-2026-10-20#turn-6"
+      },
+      {
+        "source": "MEM-HYP-STRICT-EXTERNAL-REALISM-001",
+        "target": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+        "type": "unresolved_with",
+        "note": "Mutual philosophical tension retained intentionally (valid 2-cycle in the knowledge graph).",
+        "provenance": "session:phil-inquiry-2026-10-20#turn-6"
+      }
+    ],
+    "uncertain_duplicates": []
+  },
+  "nodes": {
+    "MEM-CONCEPT-OBSERVER-BOUNDARY-001": {
+      "id": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+      "title": "The Boundary of the Observer (Inside vs. Outside in Inquiry)",
+      "rel_path": "concepts/observer-boundary-inquiry.md",
+      "entry_type": "concept",
+      "epistemic_status": "unresolved",
+      "status": "contested",
+      "superseded_by": null,
+      "concepts": [
+        "observer-boundary",
+        "inside-outside-distinction",
+        "everything-happens-inside"
+      ],
+      "tags": [
+        "philosophy",
+        "concept",
+        "observer",
+        "boundary",
+        "agents-md-s22"
+      ],
+      "created_at": "2026-10-20T09:25:00Z",
+      "updated_at": "2026-10-20T09:30:00Z",
+      "provenance": {
+        "source_type": "document",
+        "source_ref": "AGENTS.md#section-22",
+        "conversation_id": "conv_phil_20261020_01",
+        "actor": "human_and_assistant",
+        "recorded_at": "2026-10-20T09:25:00Z"
+      }
+    },
+    "MEM-CONCEPT-OBSERVER-EFFECT-MEASUREMENT-001": {
+      "id": "MEM-CONCEPT-OBSERVER-EFFECT-MEASUREMENT-001",
+      "title": "In-Container vs. Host-Level GPU Telemetry Namespace Boundary",
+      "rel_path": "concepts/container-namespace-observation-001.md",
+      "entry_type": "concept",
+      "epistemic_status": "externally_verified",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "container-namespace-telemetry",
+        "gpu-profiling",
+        "pid-namespace"
+      ],
+      "tags": [
+        "systems",
+        "linux",
+        "gpu",
+        "telemetry",
+        "container"
+      ],
+      "created_at": "2026-10-21T14:00:00Z",
+      "updated_at": "2026-10-21T14:00:00Z",
+      "provenance": {
+        "source_type": "observation",
+        "source_ref": "docs/clover-kimi-k3-gpu-context.md",
+        "actor": "system_measurement",
+        "recorded_at": "2026-10-21T14:00:00Z"
+      }
+    },
+    "MEM-CONV-PHIL-INSIDE-001": {
+      "id": "MEM-CONV-PHIL-INSIDE-001",
+      "title": "Dialogue on Perception and the Meaning of 'Everything Happens Inside'",
+      "rel_path": "conversations/phil-inside-outside-dialogue-001.md",
+      "entry_type": "conversation",
+      "epistemic_status": "observed",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "everything-happens-inside",
+        "inside-outside-distinction",
+        "observer-boundary"
+      ],
+      "tags": [
+        "philosophy",
+        "dialogue",
+        "perception",
+        "epistemology"
+      ],
+      "created_at": "2026-10-20T09:00:00Z",
+      "updated_at": "2026-10-20T09:15:00Z",
+      "provenance": {
+        "source_type": "conversation",
+        "source_ref": "session:phil-inquiry-2026-10-20",
+        "conversation_id": "conv_phil_20261020_01",
+        "turn_range": "turns 1-6",
+        "actor": "human_and_assistant",
+        "recorded_at": "2026-10-20T09:15:00Z"
+      }
+    },
+    "MEM-CORR-INSIDE-BOUNDARY-002": {
+      "id": "MEM-CORR-INSIDE-BOUNDARY-002",
+      "title": "Correction: 'Everything Happens Inside' Questions the Fundamental Distinction Between Inside and Outside",
+      "rel_path": "philosophy/corrections/corr-inside-outside-distinction-002.md",
+      "entry_type": "correction",
+      "epistemic_status": "user_stated_belief",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "everything-happens-inside",
+        "inside-outside-distinction",
+        "observer-boundary"
+      ],
+      "tags": [
+        "philosophy",
+        "correction",
+        "inside",
+        "outside",
+        "non-duality"
+      ],
+      "created_at": "2026-10-20T09:18:00Z",
+      "updated_at": "2026-10-20T09:18:00Z",
+      "provenance": {
+        "source_type": "conversation",
+        "source_ref": "session:phil-inquiry-2026-10-20#turn-5",
+        "conversation_id": "conv_phil_20261020_01",
+        "turn_range": "turn 5",
+        "actor": "human",
+        "recorded_at": "2026-10-20T09:18:00Z"
+      }
+    },
+    "MEM-CORR-PER-LAYER-PARTITION-002": {
+      "id": "MEM-CORR-PER-LAYER-PARTITION-002",
+      "title": "Correction: Partitioning the Expert Cache Per Layer Raises Hit Rate from 23.3% to 48.0%",
+      "rel_path": "corrections/corr-per-layer-cache-partition-002.md",
+      "entry_type": "correction",
+      "epistemic_status": "externally_verified",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "expert-slot-cache",
+        "per-layer-partitioning",
+        "cyclic-sweep-eviction",
+        "kimi-k3-moe"
+      ],
+      "tags": [
+        "systems",
+        "cache",
+        "correction",
+        "verified"
+      ],
+      "created_at": "2026-10-09T15:00:00Z",
+      "updated_at": "2026-10-09T15:00:00Z",
+      "provenance": {
+        "source_type": "experiment",
+        "source_ref": "clover-operating-principles.md#2026-10-09",
+        "actor": "human_and_assistant",
+        "recorded_at": "2026-10-09T15:00:00Z"
+      }
+    },
+    "MEM-DEC-SLOTCACHE-PER-LAYER-001": {
+      "id": "MEM-DEC-SLOTCACHE-PER-LAYER-001",
+      "title": "Decision: Implement Per-Layer GPU Expert SlotCache in Rust (`libslotcache.so`)",
+      "rel_path": "decisions/dec-slotcache-per-layer-rust-001.md",
+      "entry_type": "decision",
+      "epistemic_status": "observed",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "expert-slot-cache",
+        "per-layer-partitioning",
+        "rust-host-path"
+      ],
+      "tags": [
+        "systems",
+        "rust",
+        "slotcache",
+        "decision"
+      ],
+      "created_at": "2026-10-24T10:00:00Z",
+      "updated_at": "2026-10-25T18:00:00Z",
+      "provenance": {
+        "source_type": "document",
+        "source_ref": "clover-kimi-k3/src/rust/slotcache/CONTRACT.md",
+        "actor": "human_and_assistant",
+        "recorded_at": "2026-10-24T10:00:00Z"
+      }
+    },
+    "MEM-EXP-RUST-SLOTCACHE-001": {
+      "id": "MEM-EXP-RUST-SLOTCACHE-001",
+      "title": "Experiment: Differential Verification of Rust Host-Path Libraries Across 93 GPU Layers",
+      "rel_path": "experiments/exp-rust-slotcache-parity-001.md",
+      "entry_type": "experiment",
+      "epistemic_status": "externally_verified",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "rust-host-path",
+        "expert-slot-cache",
+        "kimi-k3-moe"
+      ],
+      "tags": [
+        "systems",
+        "rust",
+        "experiment",
+        "verification"
+      ],
+      "created_at": "2026-10-25T19:00:00Z",
+      "updated_at": "2026-10-25T19:30:00Z",
+      "provenance": {
+        "source_type": "experiment",
+        "source_ref": "commit:178d3c1 (wire_test_merged + K3Full93Chain)",
+        "actor": "system_measurement",
+        "recorded_at": "2026-10-25T19:30:00Z"
+      }
+    },
+    "MEM-HYP-CACHE-DEAD-END-001": {
+      "id": "MEM-HYP-CACHE-DEAD-END-001",
+      "title": "Initial Hypothesis: Expert Caching Has No Effect on Kimi K3 Routing",
+      "rel_path": "hypotheses/hyp-caching-dead-end-001.md",
+      "entry_type": "hypothesis",
+      "epistemic_status": "hypothesis",
+      "status": "superseded",
+      "superseded_by": "MEM-CORR-PER-LAYER-PARTITION-002",
+      "concepts": [
+        "expert-slot-cache",
+        "cyclic-sweep-eviction",
+        "kimi-k3-moe"
+      ],
+      "tags": [
+        "systems",
+        "cache",
+        "hypothesis",
+        "superseded"
+      ],
+      "created_at": "2026-10-09T11:20:00Z",
+      "updated_at": "2026-10-09T15:00:00Z",
+      "provenance": {
+        "source_type": "conversation",
+        "source_ref": "clover-operating-principles.md#2026-10-09",
+        "actor": "assistant",
+        "recorded_at": "2026-10-09T11:20:00Z"
+      }
+    },
+    "MEM-HYP-INSIDE-MIND-001": {
+      "id": "MEM-HYP-INSIDE-MIND-001",
+      "title": "Initial Interpretation: 'Everything Happens Inside' Means Inside an Individual's Mind",
+      "rel_path": "philosophy/interpretations/hyp-inside-individual-mind-001.md",
+      "entry_type": "hypothesis",
+      "epistemic_status": "hypothesis",
+      "status": "superseded",
+      "superseded_by": "MEM-CORR-INSIDE-BOUNDARY-002",
+      "concepts": [
+        "everything-happens-inside",
+        "inside-outside-distinction",
+        "subjective-idealism"
+      ],
+      "tags": [
+        "philosophy",
+        "interpretation",
+        "mind",
+        "inside"
+      ],
+      "created_at": "2026-10-20T09:05:00Z",
+      "updated_at": "2026-10-20T09:18:00Z",
+      "provenance": {
+        "source_type": "conversation",
+        "source_ref": "session:phil-inquiry-2026-10-20#turn-2",
+        "conversation_id": "conv_phil_20261020_01",
+        "turn_range": "turn 2",
+        "actor": "assistant",
+        "recorded_at": "2026-10-20T09:05:00Z"
+      }
+    },
+    "MEM-HYP-STRICT-EXTERNAL-REALISM-001": {
+      "id": "MEM-HYP-STRICT-EXTERNAL-REALISM-001",
+      "title": "Competing Position: Strict Internal-Mind vs. External-World Dualism",
+      "rel_path": "philosophy/positions/hyp-strict-external-realism-001.md",
+      "entry_type": "hypothesis",
+      "epistemic_status": "user_stated_belief",
+      "status": "contested",
+      "superseded_by": null,
+      "concepts": [
+        "inside-outside-distinction",
+        "cartesian-dualism",
+        "observer-boundary"
+      ],
+      "tags": [
+        "philosophy",
+        "dualism",
+        "realism",
+        "contested"
+      ],
+      "created_at": "2026-10-20T09:28:00Z",
+      "updated_at": "2026-10-20T09:30:00Z",
+      "provenance": {
+        "source_type": "conversation",
+        "source_ref": "session:phil-inquiry-2026-10-20#turn-6",
+        "conversation_id": "conv_phil_20261020_01",
+        "turn_range": "turn 6",
+        "actor": "human",
+        "recorded_at": "2026-10-20T09:28:00Z"
+      }
+    },
+    "MEM-OBS-GLOBAL-CACHE-FLAT-001": {
+      "id": "MEM-OBS-GLOBAL-CACHE-FLAT-001",
+      "title": "Observation: Global Expert Cache Hit Rate Flat at 23.3% Across Capacities 512..4096",
+      "rel_path": "observations/obs-global-cache-flat-hitrate-001.md",
+      "entry_type": "observation",
+      "epistemic_status": "externally_verified",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "expert-slot-cache",
+        "cyclic-sweep-eviction",
+        "kimi-k3-moe"
+      ],
+      "tags": [
+        "systems",
+        "cache",
+        "measurement",
+        "k3-moe"
+      ],
+      "created_at": "2026-10-09T11:00:00Z",
+      "updated_at": "2026-10-09T11:00:00Z",
+      "provenance": {
+        "source_type": "experiment",
+        "source_ref": "clover-kimi-k3/docs/clover-kimi-k3-cpu-context.md",
+        "actor": "system_measurement",
+        "recorded_at": "2026-10-09T11:00:00Z"
+      }
+    },
+    "MEM-OUT-RUST-GPU-PARITY-001": {
+      "id": "MEM-OUT-RUST-GPU-PARITY-001",
+      "title": "Outcome: Bit-Identical 93-Layer GPU Execution (`max_abs_diff = 0.0`) and 100% 5-Benchmark Suite",
+      "rel_path": "outcomes/out-rust-gpu-merged-parity-001.md",
+      "entry_type": "outcome",
+      "epistemic_status": "externally_verified",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "rust-host-path",
+        "kimi-k3-moe",
+        "generative-compilation"
+      ],
+      "tags": [
+        "systems",
+        "outcome",
+        "verified",
+        "benchmarks"
+      ],
+      "created_at": "2026-10-25T20:00:00Z",
+      "updated_at": "2026-10-26T02:00:00Z",
+      "provenance": {
+        "source_type": "experiment",
+        "source_ref": "commit:178d3c1 & commit:f308f12",
+        "actor": "system_measurement",
+        "recorded_at": "2026-10-26T02:00:00Z"
+      }
+    }
+  },
+  "edges": [
+    {
+      "source": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+      "type": "exemplifies",
+      "target": "MEM-CORR-INSIDE-BOUNDARY-002",
+      "provenance": "AGENTS.md#section-22",
+      "confidence": 0.95,
+      "context_scope": "observer_boundary_inquiry",
+      "created_at": "2026-10-20T09:25:00Z",
+      "note": "Exemplifies questioning the assumed division between observer and observed."
+    },
+    {
+      "source": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+      "type": "unresolved_with",
+      "target": "MEM-HYP-STRICT-EXTERNAL-REALISM-001",
+      "provenance": "session:phil-inquiry-2026-10-20#turn-6",
+      "confidence": 1.0,
+      "context_scope": "ontology_of_inside_and_outside",
+      "created_at": "2026-10-20T09:30:00Z",
+      "note": "Remains in unresolved philosophical tension with strict internal/external dualism."
+    },
+    {
+      "source": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+      "type": "similar_to",
+      "target": "MEM-CONCEPT-OBSERVER-EFFECT-MEASUREMENT-001",
+      "provenance": "session:phil-inquiry-2026-10-20",
+      "confidence": 0.6,
+      "context_scope": "structural_analogy_only",
+      "created_at": "2026-10-20T09:30:00Z",
+      "note": "Analogical similarity only: both involve where an observation boundary is drawn, though in different domains."
+    },
+    {
+      "source": "MEM-CONCEPT-OBSERVER-EFFECT-MEASUREMENT-001",
+      "type": "similar_to",
+      "target": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+      "provenance": "docs/clover-kimi-k3-gpu-context.md",
+      "confidence": 0.5,
+      "context_scope": "terminology_analogy_only",
+      "created_at": "2026-10-21T14:00:00Z",
+      "note": "Shares the words 'inside' and 'outside' as a boundary metaphor, but refers to Linux PID namespaces."
+    },
+    {
+      "source": "MEM-CORR-INSIDE-BOUNDARY-002",
+      "type": "corrects",
+      "target": "MEM-HYP-INSIDE-MIND-001",
+      "provenance": "session:phil-inquiry-2026-10-20#turn-5",
+      "confidence": 1.0,
+      "context_scope": "philosophical_interpretation_of_inside",
+      "created_at": "2026-10-20T09:18:00Z",
+      "note": "Supersedes the individual-mind reading with the clarification questioning the inside/outside distinction."
+    },
+    {
+      "source": "MEM-CORR-INSIDE-BOUNDARY-002",
+      "type": "derived_from",
+      "target": "MEM-CONV-PHIL-INSIDE-001",
+      "provenance": "session:phil-inquiry-2026-10-20#turn-5",
+      "confidence": 1.0,
+      "context_scope": "philosophical_interpretation_of_inside",
+      "created_at": "2026-10-20T09:18:00Z",
+      "note": "Directly grounded in Turn 5 of the recorded philosophical dialogue."
+    },
+    {
+      "source": "MEM-CORR-INSIDE-BOUNDARY-002",
+      "type": "refines",
+      "target": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+      "provenance": "session:phil-inquiry-2026-10-20#turn-5",
+      "confidence": 0.95,
+      "context_scope": "observer_boundary_inquiry",
+      "created_at": "2026-10-20T09:18:00Z",
+      "note": "Refines the observer-boundary concept by showing how 'inside' dissolves without a contrasting 'outside'."
+    },
+    {
+      "source": "MEM-CORR-PER-LAYER-PARTITION-002",
+      "type": "corrects",
+      "target": "MEM-HYP-CACHE-DEAD-END-001",
+      "provenance": "clover-operating-principles.md#2026-10-09",
+      "confidence": 1.0,
+      "context_scope": "expert_cache_design",
+      "created_at": "2026-10-09T15:00:00Z",
+      "note": "Refutes the 'caching has no effect' hypothesis by eliminating cross-layer cyclic eviction."
+    },
+    {
+      "source": "MEM-CORR-PER-LAYER-PARTITION-002",
+      "type": "refines",
+      "target": "MEM-OBS-GLOBAL-CACHE-FLAT-001",
+      "provenance": "clover-operating-principles.md#2026-10-09",
+      "confidence": 1.0,
+      "context_scope": "expert_cache_design",
+      "created_at": "2026-10-09T15:00:00Z",
+      "note": "Explains why the global sweep was flat and how per-layer partitioning resolves it."
+    },
+    {
+      "source": "MEM-DEC-SLOTCACHE-PER-LAYER-001",
+      "type": "depends_on",
+      "target": "MEM-CORR-PER-LAYER-PARTITION-002",
+      "provenance": "clover-kimi-k3/src/rust/slotcache/CONTRACT.md",
+      "confidence": 1.0,
+      "context_scope": "expert_cache_design",
+      "created_at": "2026-10-24T10:00:00Z",
+      "note": "Per-layer slot partitioning directly implements the finding from MEM-CORR-PER-LAYER-PARTITION-002."
+    },
+    {
+      "source": "MEM-EXP-RUST-SLOTCACHE-001",
+      "type": "depends_on",
+      "target": "MEM-DEC-SLOTCACHE-PER-LAYER-001",
+      "provenance": "commit:5f11928",
+      "confidence": 1.0,
+      "context_scope": "rust_host_path_verification",
+      "created_at": "2026-10-25T19:00:00Z",
+      "note": "Tests the Rust slotcache, poolinit, and supply integration."
+    },
+    {
+      "source": "MEM-EXP-RUST-SLOTCACHE-001",
+      "type": "supports",
+      "target": "MEM-CORR-PER-LAYER-PARTITION-002",
+      "provenance": "commit:178d3c1",
+      "confidence": 1.0,
+      "context_scope": "expert_cache_design",
+      "created_at": "2026-10-25T19:30:00Z",
+      "note": "Confirms per-layer slotcache operation across all 92 MoE layers on GPU."
+    },
+    {
+      "source": "MEM-HYP-CACHE-DEAD-END-001",
+      "type": "derived_from",
+      "target": "MEM-OBS-GLOBAL-CACHE-FLAT-001",
+      "provenance": "clover-operating-principles.md#2026-10-09",
+      "confidence": 1.0,
+      "context_scope": "expert_cache_design",
+      "created_at": "2026-10-09T11:20:00Z",
+      "note": "Inferred from the flat global capacity sweep."
+    },
+    {
+      "source": "MEM-HYP-CACHE-DEAD-END-001",
+      "type": "caused_by",
+      "target": "MEM-OBS-GLOBAL-CACHE-FLAT-001",
+      "provenance": "clover-operating-principles.md#2026-10-09",
+      "confidence": 1.0,
+      "context_scope": "expert_cache_design",
+      "created_at": "2026-10-09T11:20:00Z",
+      "note": "Triggered by misinterpreting a flat parameter response as absence of the underlying effect."
+    },
+    {
+      "source": "MEM-HYP-INSIDE-MIND-001",
+      "type": "derived_from",
+      "target": "MEM-CONV-PHIL-INSIDE-001",
+      "provenance": "session:phil-inquiry-2026-10-20#turn-2",
+      "confidence": 1.0,
+      "context_scope": "philosophical_interpretation_of_inside",
+      "created_at": "2026-10-20T09:05:00Z",
+      "note": "Initial assistant reading of Turn 1 in MEM-CONV-PHIL-INSIDE-001."
+    },
+    {
+      "source": "MEM-HYP-STRICT-EXTERNAL-REALISM-001",
+      "type": "challenges",
+      "target": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+      "provenance": "session:phil-inquiry-2026-10-20#turn-6",
+      "confidence": 1.0,
+      "context_scope": "ontology_of_inside_and_outside",
+      "created_at": "2026-10-20T09:28:00Z",
+      "note": "Challenges the dissolution of the inside/outside boundary from a classical dualist perspective."
+    },
+    {
+      "source": "MEM-HYP-STRICT-EXTERNAL-REALISM-001",
+      "type": "unresolved_with",
+      "target": "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+      "provenance": "session:phil-inquiry-2026-10-20#turn-6",
+      "confidence": 1.0,
+      "context_scope": "ontology_of_inside_and_outside",
+      "created_at": "2026-10-20T09:30:00Z",
+      "note": "Mutual philosophical tension retained intentionally (valid 2-cycle in the knowledge graph)."
+    },
+    {
+      "source": "MEM-HYP-STRICT-EXTERNAL-REALISM-001",
+      "type": "supports",
+      "target": "MEM-HYP-INSIDE-MIND-001",
+      "provenance": "session:phil-inquiry-2026-10-20#turn-6",
+      "confidence": 0.8,
+      "context_scope": "ontology_of_inside_and_outside",
+      "created_at": "2026-10-20T09:28:00Z",
+      "note": "Provides the philosophical premise behind the earlier internal-mind interpretation."
+    },
+    {
+      "source": "MEM-OUT-RUST-GPU-PARITY-001",
+      "type": "derived_from",
+      "target": "MEM-EXP-RUST-SLOTCACHE-001",
+      "provenance": "commit:178d3c1",
+      "confidence": 1.0,
+      "context_scope": "rust_host_path_verification",
+      "created_at": "2026-10-25T20:00:00Z",
+      "note": "Outcome measured directly from the differential verification experiment."
+    },
+    {
+      "source": "MEM-OUT-RUST-GPU-PARITY-001",
+      "type": "supports",
+      "target": "MEM-DEC-SLOTCACHE-PER-LAYER-001",
+      "provenance": "commit:178d3c1",
+      "confidence": 1.0,
+      "context_scope": "rust_host_path_verification",
+      "created_at": "2026-10-25T20:00:00Z",
+      "note": "Validates the architectural decision in production service (`clover-k3-chat.service`)."
+    }
+  ]
+}

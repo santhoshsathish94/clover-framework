@@ -62,6 +62,9 @@ from k3_ontology_graph import (
 from k3_generative_compiler import (
     CloverPythonGenerativeCompiler, CloverRustGenerativeCompiler, HAS_RUST_GC, restore_spec_helpers
 )
+from k3_memory_graph import (
+    CloverMemoryGraphStore, ensure_default_memory_tree, retrieve_relevant_memory_package
+)
 
 SEARCH_OPEN, SEARCH_CLOSE = "<search>", "</search>"
 PYTHON_OPEN, PYTHON_CLOSE = "<python>", "</python>"
@@ -1913,6 +1916,8 @@ class CloverK3AgentEngine:
         self.ontology_retriever = CloverOntologyRetriever()
         self.symbolic_verifier = CloverSymbolicVerifier(self.ontology_retriever)
         self.enable_ontology = True
+        self.memory_graph = ensure_default_memory_tree()
+        self.enable_memory_graph = True
         self.py_gc = CloverPythonGenerativeCompiler(allow_undefined=True)
         self.rust_gc = None  # Lazily initialized when a Rust code specification is generated
 
@@ -2124,6 +2129,28 @@ class CloverK3AgentEngine:
                 tool_obs_parts.append(
                     f"Ontology-Guided Symbolic Evidence & Provenance Paths:\n{ev_str}\n"
                     f"Instruction: Ground your reasoning and answer strictly in the verified entity records [E#], relationship paths [P#], and mathematical/domain constraints above."
+                )
+
+        # 0m. File-Based Persistent Memory Tree & Relational Knowledge Graph (`k3_memory_graph.py`)
+        mem_pkg = None
+        if getattr(self, "enable_memory_graph", False) and getattr(self, "memory_graph", None) is not None and not has_verified_ws_tools:
+            t_mem0 = time.perf_counter()
+            mem_pkg = retrieve_relevant_memory_package(self.memory_graph, raw_user_q)
+            if mem_pkg is not None and mem_pkg.items:
+                mem_ms = round((time.perf_counter() - t_mem0) * 1000.0, 1)
+                mem_str = mem_pkg.render_for_k3()
+                tool_calls_log.append({
+                    "tool": "memory_graph",
+                    "input": raw_user_q[:160],
+                    "entries": [it.entry.id for it in mem_pkg.items],
+                    "chains": [[n.id for n in ch] for ch in mem_pkg.evolution_chains],
+                    "contradictions": len(mem_pkg.active_contradictions),
+                    "ms": mem_ms,
+                })
+                tool_obs_parts.append(
+                    f"{mem_str}\n"
+                    f"Instruction: Use the persistent memory records [M#], their provenance, and their correction/evolution chains above. "
+                    f"Explicitly present both any superseded initial interpretation and the superseding correction, distinguish user_stated_belief/hypothesis/unresolved from externally_verified facts, and preserve any unresolved contradictions."
                 )
 
         # 0a. Check if the user is asking for a chart, graph, plot, or diagram
@@ -2756,6 +2783,23 @@ class CloverK3AgentEngine:
             elif filtered_ws_plans:
                 plans = filtered_ws_plans
 
+        if mem_pkg is not None and mem_pkg.items and not has_verified_ws_tools:
+            joined_p_low = " ".join(plans).lower()
+            top_mem_ids = [it.entry.id for it in mem_pkg.items[:2]]
+            if not all(mid.lower() in joined_p_low for mid in top_mem_ids):
+                mem_bullets = []
+                for it in mem_pkg.items[:3]:
+                    e = it.entry
+                    role_lbl = (
+                        f"SUPERSEDED by {it.superseded_by_id}" if it.superseded_by_id
+                        else (f"ACTIVE CORRECTION superseding {', '.join(it.supersedes_ids)}" if it.supersedes_ids else f"status={e.status}")
+                    )
+                    mem_bullets.append(
+                        f"• [{e.id}] ({e.entry_type}, epistemic={e.epistemic_status}, {role_lbl}, source={e.provenance.source_ref}): {e.summary}"
+                    )
+                combined_mem_src = "\n".join(mem_bullets + plans[:6])
+                plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=24)
+
         return plans, lat_steps, exit_reason, tool_calls_log
 
     @torch.no_grad()
@@ -2901,6 +2945,7 @@ class CloverK3AgentEngine:
             or match_and_execute_visual_output(raw_q, self.py_tool, history=history) is not None
             or match_verified_code_template(raw_q) is not None
             or needs_agent_python_tool(raw_q, history=history) is not None
+            or (getattr(self, "enable_memory_graph", False) and getattr(self, "memory_graph", None) is not None and retrieve_relevant_memory_package(self.memory_graph, raw_q) is not None)
         ):
             return None
 

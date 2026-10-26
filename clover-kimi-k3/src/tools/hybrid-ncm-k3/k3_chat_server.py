@@ -18,6 +18,7 @@ Features:
      - Uses the 5-leaf Clover SVG mark as the animated loading symbol and hides internal technical telemetry/timings.
 """
 import argparse, base64, collections, concurrent.futures, io, json, os, re, subprocess, sys, tempfile, threading, time, urllib.parse, uuid, wave, xml.etree.ElementTree as ET, zipfile
+from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 os.environ.setdefault("HF_HOME", "/home/usergpu/plan2text/data/.cache")
@@ -1954,6 +1955,30 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             sid = (qs.get("session_id") or ["default"])[0]
             self._send_json(STATE.get_session_details(sid))
+        elif self.path.startswith("/api/memory/status"):
+            eng0 = STATE.text_workers[0]
+            mg = getattr(eng0, "memory_graph", None)
+            if mg is None:
+                self._send_json({"error": "Memory graph not initialized"}, code=500)
+            else:
+                val = mg.last_validation or mg.rebuild_index()
+                self._send_json({
+                    "root_dir": str(mg.root_dir),
+                    "index_file": str(mg.index_file),
+                    "validation": val.to_dict(),
+                    "entries": [
+                        {
+                            "id": e.id,
+                            "title": e.title,
+                            "rel_path": e.rel_path,
+                            "entry_type": e.entry_type,
+                            "epistemic_status": e.epistemic_status,
+                            "status": e.status,
+                            "superseded_by": e.superseded_by,
+                        }
+                        for e in mg.entries.values()
+                    ],
+                })
         elif self.path.startswith(("/v1/models", "/models")):
             created_ts = int(time.time())
             self._send_json({
@@ -2014,6 +2039,46 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
         if self.path.startswith("/api/reset"):
             STATE.reset_session(session_id)
             self._send_json({"ok": True, "session_id": session_id, "history_len": 0})
+            return
+
+        if self.path.startswith("/api/memory/rebuild"):
+            eng0 = STATE.text_workers[0]
+            mg = getattr(eng0, "memory_graph", None)
+            if mg is None:
+                self._send_json({"error": "Memory graph not initialized"}, code=500)
+                return
+            rep = mg.rebuild_index(write_index_file=True)
+            self._send_json({"ok": True, "validation": rep.to_dict()})
+            return
+
+        if self.path.startswith("/api/memory/query"):
+            eng0 = STATE.text_workers[0]
+            mg = getattr(eng0, "memory_graph", None)
+            if mg is None:
+                self._send_json({"error": "Memory graph not initialized"}, code=500)
+                return
+            q_str = str(payload.get("query") or payload.get("prompt") or "").strip()
+            max_depth = int(payload.get("max_depth", 2))
+            max_entries = int(payload.get("max_entries", 6))
+            token_budget = int(payload.get("token_budget", 1100))
+            pkg = mg.retrieve_context_package(
+                query=q_str,
+                max_depth=max_depth,
+                max_entries=max_entries,
+                token_budget=token_budget,
+            )
+            self._send_json({
+                "query": q_str,
+                "items": [it.to_dict() for it in pkg.items],
+                "evolution_chains": [
+                    [asdict(node) for node in ch]
+                    for ch in pkg.evolution_chains
+                ],
+                "active_contradictions": pkg.active_contradictions,
+                "estimated_tokens_used": pkg.estimated_tokens_used,
+                "token_budget": pkg.token_budget,
+                "rendered_context": pkg.render_for_k3(),
+            })
             return
 
         if self.path.startswith("/api/chat"):
