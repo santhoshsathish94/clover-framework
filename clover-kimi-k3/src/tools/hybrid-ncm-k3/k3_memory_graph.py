@@ -2449,7 +2449,7 @@ class CloverMemoryGraphStore:
         mh_winner_order: dict[str, int] = {}
         if getattr(self, "use_multihead_lrn", True) and len(seed_candidates) >= 3 and max_seeds == 3 and not gamma_lifted_seeds:
             mh = self.multihead_lrn_subspace_retrieve(query, top_k=3)
-            if mh.get("facets_multihead_lrn", 0) > mh.get("facets_single_head", 0):
+            if mh.get("facets_multihead_lrn", 0) == 3:
                 sc_lookup = {eid: (sc, rsn) for sc, eid, rsn in seed_candidates}
                 max_sc_val = seed_candidates[0][0]
                 mh_seeds = []
