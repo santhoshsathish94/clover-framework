@@ -2635,8 +2635,6 @@ class CloverMemoryGraphStore:
                     continue
                 p_item = items_by_id[pid]
                 p_cost = _est_tokens(p_item)
-                if selected_items and (used_tokens + p_cost > token_budget):
-                    continue
                 selected_items.append(p_item)
                 selected_ids.add(pid)
                 used_tokens += p_cost
