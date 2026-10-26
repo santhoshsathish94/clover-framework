@@ -100,6 +100,10 @@ step_packages() {
     python3 -m venv "$INSTALL_DIR/venv" && "$INSTALL_DIR/venv/bin/pip" -q install huggingface_hub hf_transfer \
       && pass "Hugging Face command line installed in $INSTALL_DIR/venv" || fail "could not install huggingface_hub (python3 -m venv and pip needed)"
   else pass "Hugging Face command line already in $INSTALL_DIR/venv"; fi
+  if ! "$INSTALL_DIR/venv/bin/python" -c "import torch, transformers, safetensors, omegaconf, hydra, PIL, edge_tts" 2>/dev/null; then
+    "$INSTALL_DIR/venv/bin/pip" -q install torch torchvision transformers safetensors numpy scipy pillow PyYAML omegaconf hydra-core edge-tts \
+      && pass "Clover HybridAgent + NCM Python runtime installed in $INSTALL_DIR/venv" || warn "could not install full Python runtime in $INSTALL_DIR/venv"
+  else pass "Clover HybridAgent + NCM Python runtime already in $INSTALL_DIR/venv"; fi
 }
 
 step_clone() {

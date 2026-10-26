@@ -19,14 +19,15 @@ if [ ! -x "$hf_bin" ] && [ -x "/opt/clover-k3/venv/bin/hf" ]; then
 fi
 
 echo "== Downloading hybrid-ncm-k3 checkpoints & datasets from Hugging Face ($HF_REPO) -> $DATASETS_DIR =="
-mkdir -p "$HYBRID_NCM_DIR"
+mkdir -p "$HYBRID_NCM_DIR" "$OPEN_WEIGHTS_DIR"
 
 if [ -x "$hf_bin" ]; then
   HF_HUB_ENABLE_HF_TRANSFER=1 "$hf_bin" download "$HF_REPO" \
     --repo-type dataset \
     --revision "$HF_REVISION" \
     --local-dir "$DATASETS_DIR" \
-    --include 'hybrid-ncm-k3/*'
+    --include 'hybrid-ncm-k3/*' \
+    --include 'open-weights/*'
 else
   python3 -c "
 from huggingface_hub import snapshot_download
@@ -35,9 +36,17 @@ snapshot_download(
     repo_type='dataset',
     revision='$HF_REVISION',
     local_dir='$DATASETS_DIR',
-    allow_patterns=['hybrid-ncm-k3/*'],
+    allow_patterns=['hybrid-ncm-k3/*', 'open-weights/*'],
 )
 "
+fi
+
+if [ -d "$DATASETS_DIR/open-weights" ]; then
+  for f in model-00094-of-000096.safetensors tiktoken.model tokenizer_config.json; do
+    if [ -f "$DATASETS_DIR/open-weights/$f" ] && [ ! -f "$OPEN_WEIGHTS_DIR/$f" ]; then
+      ln -f "$DATASETS_DIR/open-weights/$f" "$OPEN_WEIGHTS_DIR/$f" 2>/dev/null || cp -f "$DATASETS_DIR/open-weights/$f" "$OPEN_WEIGHTS_DIR/$f"
+    fi
+  done
 fi
 
 echo "== Verifying downloaded hybrid-ncm-k3 files in $HYBRID_NCM_DIR =="
