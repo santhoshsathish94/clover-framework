@@ -56,7 +56,7 @@ class K3OptionAMoonViT(nn.Module):
     def __init__(self, vis_dir: str | None = None, graft_path: str | None = None, dev="cuda:0"):
         super().__init__()
         if vis_dir is None or not os.path.isdir(vis_dir):
-            vis_dir = "/home/usergpu/merge_lf/k3_vision" if os.path.exists("/home/usergpu/merge_lf/k3_vision/model-00096-of-000096.safetensors") else VISION_DIR
+            vis_dir = VISION_DIR
         if graft_path is None or not os.path.exists(graft_path):
             graft_path = os.path.join(find_hybrid_ncm_ckpt_dir(), "k3_vqvae_init.pt")
         self.dev = torch.device(resolve_device(dev))
@@ -71,12 +71,24 @@ class K3OptionAMoonViT(nn.Module):
         self.vision_tower = k3v.MoonViT3dPretrainedModel(k3v.VisionTowerConfig(vcfg))
         self.mm_projector = k3v.PatchMergerMLPV2(k3v.ProjectorConfig(vcfg))
 
+        # Locate model-00095-of-000096.safetensors and model-00096-of-000096.safetensors across VISION_DIR,
+        # hybrid-ncm-k3/k3_vision, or open-weights dir
+        from clover_paths import find_open_weights_dir
+        ckpt_vis_dir = os.path.join(find_hybrid_ncm_ckpt_dir(), "k3_vision")
+        ow_dir = find_open_weights_dir()
+        def _find_vis_shard(fn: str) -> str:
+            for d_cand in (vis_dir, ckpt_vis_dir, ow_dir, "/home/usergpu/merge_lf/k3_vision"):
+                p_cand = os.path.join(d_cand, fn)
+                if os.path.exists(p_cand):
+                    return p_cand
+            return os.path.join(vis_dir, fn)
+
         sd_vt, sd_pr = {}, {}
-        with safe_open(os.path.join(vis_dir, "model-00096-of-000096.safetensors"), framework="pt", device="cpu") as f:
+        with safe_open(_find_vis_shard("model-00096-of-000096.safetensors"), framework="pt", device="cpu") as f:
             for k in f.keys():
                 if k.startswith("vision_tower."):
                     sd_vt[k[len("vision_tower."):]] = f.get_tensor(k)
-        with safe_open(os.path.join(vis_dir, "model-00095-of-000096.safetensors"), framework="pt", device="cpu") as f:
+        with safe_open(_find_vis_shard("model-00095-of-000096.safetensors"), framework="pt", device="cpu") as f:
             for k in f.keys():
                 if k.startswith("mm_projector."):
                     sd_pr[k[len("mm_projector."):]] = f.get_tensor(k)

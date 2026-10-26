@@ -26,7 +26,7 @@ import torch.nn.functional as F
 from safetensors import safe_open
 from clover_paths import (
     TOOLS_DIR, setup_clover_sys_path, find_dataset_dir, find_open_weights_shard94,
-    find_hybrid_ncm_ckpt_dir, resolve_device, cuda_sync, ensure_cpu_experts_lib
+    find_hybrid_ncm_ckpt_dir, resolve_device, cuda_sync, ensure_gpu_experts_lib, ensure_cpu_experts_lib
 )
 
 ROOT = setup_clover_sys_path()
@@ -324,17 +324,8 @@ class K3GPUExpertsRunner:
             open_weights_path = find_open_weights_shard94()
         use_cpu_lib = (not torch.cuda.is_available()) or (os.environ.get("CLOVER_FORCE_CPU", "0") == "1")
         if lib_path is None:
-            gpu_cand = (
-                os.path.join(TOOLS_DIR, "libk3_gpu_experts.so")
-                if os.path.exists(os.path.join(TOOLS_DIR, "libk3_gpu_experts.so"))
-                else (
-                    "/home/usergpu/merge_lf/libk3_gpu_experts.so"
-                    if os.path.exists("/home/usergpu/merge_lf/libk3_gpu_experts.so")
-                    else os.path.join(TOOLS_DIR, "libk3_gpu_experts.so")
-                )
-            )
-            if not use_cpu_lib and os.path.exists(gpu_cand):
-                lib_path = gpu_cand
+            if not use_cpu_lib:
+                lib_path = ensure_gpu_experts_lib()
             else:
                 use_cpu_lib = True
                 lib_path = ensure_cpu_experts_lib()
@@ -1192,7 +1183,11 @@ def match_verified_code_template(user_prompt: str):
     returns `(py_verify_script, verified_plan_windows)`."""
     raw_u = _extract_raw_user_query(user_prompt)
     raw_q = raw_u.lower()
+    if ("(a)" in raw_q and "(b)" in raw_q and "(c)" in raw_q) or "which of the following" in raw_q:
+        return None
     if "rust" in raw_q or bool(re.search(r"\b(?:pub\s+)?(?:async\s+)?fn\s+[a-zA-Z_]", raw_u)):
+        return None
+    if any(q_kw in raw_q for q_kw in ("how many ", "what is the 15th", "find the ordered", "trailing zeros")):
         return None
     wants_code = any(w in raw_q for w in ("code", "function", "python", "write", "implement", "program", "script", "how to check", "algorithm"))
     if not wants_code:

@@ -22,32 +22,35 @@ VISION_DIR = os.path.join(TOOLS_DIR, "k3_vision")
 
 def setup_clover_sys_path() -> str:
     """Configures `HF_HOME`, `NCM_REPO`, `NCM_ART`, and `sys.path` portably across `gpu`, `k3`, and fresh servers.
-    Guarantees that `TOOLS_DIR` (the active git checkout) and `VISION_DIR` are ALWAYS at the front of `sys.path`
-    ahead of any fallback deployment directory such as `/home/usergpu/merge_lf`."""
-    if "HF_HOME" not in os.environ:
-        if os.path.isdir("/home/usergpu/plan2text/data/.cache"):
-            os.environ["HF_HOME"] = "/home/usergpu/plan2text/data/.cache"
-        elif os.path.isdir("/root/hf"):
-            os.environ["HF_HOME"] = "/root/hf"
-    os.environ.setdefault("NCM_REPO", TOOLS_DIR)
-    if not os.path.isdir(os.environ["NCM_REPO"]):
-        os.environ["NCM_REPO"] = TOOLS_DIR
+    Guarantees that `TOOLS_DIR` (the active git checkout) and `VISION_DIR` are ALWAYS at the front of `sys.path`."""
+    if "HF_HOME" not in os.environ or not os.path.isdir(os.environ.get("HF_HOME", "")):
+        for hf_cand in (
+            "/opt/clover-k3/datasets/hf-cache",
+            "/home/usergpu/plan2text/data/.cache",
+            "/root/hf",
+        ):
+            if os.path.isdir(hf_cand):
+                os.environ["HF_HOME"] = hf_cand
+                break
+    os.environ["NCM_REPO"] = TOOLS_DIR
+    ckpt_ts = os.path.join(find_hybrid_ncm_ckpt_dir(), "tinystories")
     default_art = (
-        "/home/usergpu/ncm/artifacts/tinystories"
-        if os.path.isdir("/home/usergpu/ncm/artifacts/tinystories")
-        else ("/root/ncm-cpu/artifacts/tinystories" if os.path.isdir("/root/ncm-cpu/artifacts/tinystories") else TOOLS_DIR)
+        ckpt_ts
+        if os.path.isdir(ckpt_ts)
+        else (
+            "/home/usergpu/ncm/artifacts/tinystories"
+            if os.path.isdir("/home/usergpu/ncm/artifacts/tinystories")
+            else ("/root/ncm-cpu/artifacts/tinystories" if os.path.isdir("/root/ncm-cpu/artifacts/tinystories") else TOOLS_DIR)
+        )
     )
-    os.environ.setdefault("NCM_ART", default_art)
-    # Append legacy fallback directories only at the END of sys.path if not present
-    for fallback_p in ("/home/usergpu/ncm/repo", "/home/usergpu/plan2text", "/home/usergpu/merge_lf", "/home/usergpu/merge_lf/k3_vision"):
-        if os.path.isdir(fallback_p) and fallback_p not in sys.path:
-            sys.path.append(fallback_p)
-    # Strictly enforce that TOOLS_DIR and VISION_DIR from the current checkout are at sys.path[0] and sys.path[1]
-    for primary_p in (VISION_DIR, TOOLS_DIR):
-        if os.path.isdir(primary_p):
-            while primary_p in sys.path:
-                sys.path.remove(primary_p)
-            sys.path.insert(0, primary_p)
+    if "NCM_ART" not in os.environ or not os.path.isdir(os.environ.get("NCM_ART", "")):
+        os.environ["NCM_ART"] = default_art
+    # Keep TOOLS_DIR and VISION_DIR strictly at indices 0 and 1 of sys.path so imports always resolve to the checkout
+    for p in (VISION_DIR, TOOLS_DIR):
+        if os.path.isdir(p):
+            while p in sys.path:
+                sys.path.remove(p)
+            sys.path.insert(0, p)
     return TOOLS_DIR
 
 
@@ -193,15 +196,72 @@ def cuda_sync(*devs) -> None:
         pass
 
 
+def ensure_gpu_experts_lib() -> str:
+    """Compiles and returns the path to `libk3_gpu_experts.so` (and its Rust host-path libraries
+    `libslotcache.so`, `libpoolinit.so`, `libsupply.so`) directly from the git checkout (`ENGINE_DIR`/`TOOLS_DIR`)."""
+    import shutil
+    so_path = os.environ.get("CLOVER_GPU_EXPERTS_SO") or os.path.join(TOOLS_DIR, "libk3_gpu_experts.so")
+    cu_src = os.path.join(TOOLS_DIR, "k3_gpu_experts_lib.cu")
+
+    cargo_bin = "cargo"
+    for cb in ("/root/.cargo/bin/cargo", "/home/usergpu/.cargo/bin/cargo", os.path.expanduser("~/.cargo/bin/cargo")):
+        if os.path.exists(cb):
+            cargo_bin = cb
+            break
+
+    for crate_name, env_var in (
+        ("slotcache", "K3GPU_SLOTCACHE"),
+        ("poolinit", "K3GPU_POOLINIT"),
+        ("supply", "K3GPU_SUPPLY"),
+    ):
+        crate_dir = os.path.join(ENGINE_DIR, "src/rust", crate_name)
+        lib_so = os.path.join(TOOLS_DIR, f"lib{crate_name}.so")
+        if not os.path.exists(lib_so) and os.path.isdir(crate_dir):
+            try:
+                subprocess.run([cargo_bin, "build", "--release"], cwd=crate_dir, check=True)
+                built_so = os.path.join(crate_dir, "target/release", f"lib{crate_name}.so")
+                if os.path.exists(built_so):
+                    shutil.copy2(built_so, lib_so)
+            except Exception:
+                pass
+        if os.path.exists(lib_so):
+            os.environ.setdefault(env_var, "rust")
+            cur_lib_env = os.environ.get(f"{env_var}_LIB", "")
+            if not cur_lib_env or not os.path.exists(cur_lib_env):
+                os.environ[f"{env_var}_LIB"] = lib_so
+
+    if os.path.exists(so_path) and os.path.exists(cu_src):
+        if os.path.getmtime(so_path) >= os.path.getmtime(cu_src):
+            return so_path
+
+    nvcc_bin = "/usr/local/cuda-12.6/bin/nvcc"
+    if not os.path.exists(nvcc_bin):
+        nvcc_bin = shutil.which("nvcc") or "nvcc"
+
+    gpu_code_dir = os.path.join(ENGINE_DIR, "src/code/gpu")
+    inc_flags = [f"-I{gpu_code_dir}"]
+    for rc in ("copyq", "slotcache", "routetable", "planner", "supply", "poolinit", "loader", "engcfg"):
+        rc_inc = os.path.join(ENGINE_DIR, "src/rust", rc, "include")
+        if os.path.isdir(rc_inc):
+            inc_flags.append(f"-I{rc_inc}")
+
+    cmd = [
+        nvcc_bin, "-O3", "--fmad=false", "-arch=sm_86", "-std=c++17",
+        "-Xcompiler", "-fPIC", "-shared",
+        "-DFAST_ROUTER", "-DEXPERT_V2", "-DINT8_PLANES",
+        *inc_flags,
+        cu_src, "-lcublas", "-ldl", "-lpthread", "-o", so_path,
+    ]
+    subprocess.run(cmd, check=True)
+    return so_path
+
+
 def ensure_cpu_experts_lib() -> str:
     """Compiles and returns the path to `libk3_cpu_experts.so` for CPU servers (`k3`),
     linking `k3_cpu_experts_lib.c` with `layer0-batch.c`, `layers-1-to-92-batch.c` (`lbk_*`, `lbm_*`),
     `cpu-memory.c`, and optional Rust `libslotcache.so` / `libsupply.so`."""
     so_path = os.environ.get("CLOVER_CPU_EXPERTS_SO") or os.path.join(TOOLS_DIR, "libk3_cpu_experts.so")
     c_src = os.path.join(TOOLS_DIR, "k3_cpu_experts_lib.c")
-    if os.path.exists(so_path) and os.path.exists(c_src):
-        if os.path.getmtime(so_path) >= os.path.getmtime(c_src):
-            return so_path
 
     # Locate `src/code/common` and `src/code/cpu`
     code_dir = os.path.join(ENGINE_DIR, "src/code")
@@ -221,7 +281,7 @@ def ensure_cpu_experts_lib() -> str:
     sc_so = os.path.join(TOOLS_DIR, "libslotcache.so")
     if not os.path.exists(sc_so) and os.path.isdir(sc_crate):
         cargo_bin = "cargo"
-        for cb in ("/root/.cargo/bin/cargo", os.path.expanduser("~/.cargo/bin/cargo")):
+        for cb in ("/root/.cargo/bin/cargo", "/home/usergpu/.cargo/bin/cargo", os.path.expanduser("~/.cargo/bin/cargo")):
             if os.path.exists(cb):
                 cargo_bin = cb
                 break
@@ -233,6 +293,12 @@ def ensure_cpu_experts_lib() -> str:
                 shutil.copy2(built_sc, sc_so)
         except Exception:
             pass
+    if os.path.exists(sc_so):
+        os.environ.setdefault("K3GPU_SLOTCACHE_LIB", sc_so)
+
+    if os.path.exists(so_path) and os.path.exists(c_src):
+        if os.path.getmtime(so_path) >= os.path.getmtime(c_src):
+            return so_path
 
     build_script = f"""
 set -e

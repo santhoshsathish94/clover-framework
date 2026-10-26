@@ -42,24 +42,35 @@ from cycle1_mp1943_mp1969_eval import (
 
 
 def get_code_provenance() -> dict[str, Any]:
-    try:
-        git_sha = subprocess.check_output(
-            ["git", "-C", str(_SCRIPT_DIR), "rev-parse", "HEAD"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-        git_branch = subprocess.check_output(
-            ["git", "-C", str(_SCRIPT_DIR), "rev-parse", "--abbrev-ref", "HEAD"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-    except Exception:
-        git_sha = "unknown"
-        git_branch = "unknown"
+    git_sha = "unknown"
+    git_branch = "unknown"
+    git_status_short = ""
+    for git_dir in (str(_SCRIPT_DIR), "/opt/clover-k3/clover-framework", "/home/usergpu/clover-framework"):
+        try:
+            git_sha = subprocess.check_output(
+                ["git", "-C", git_dir, "rev-parse", "HEAD"],
+                stderr=subprocess.DEVNULL,
+                text=True,
+            ).strip()
+            git_branch = subprocess.check_output(
+                ["git", "-C", git_dir, "rev-parse", "--abbrev-ref", "HEAD"],
+                stderr=subprocess.DEVNULL,
+                text=True,
+            ).strip()
+            git_status_short = subprocess.check_output(
+                ["git", "-C", git_dir, "status", "--short"],
+                stderr=subprocess.DEVNULL,
+                text=True,
+            ).strip()
+            if git_sha:
+                break
+        except Exception:
+            pass
     return {
         "script_path": str(Path(__file__).resolve()),
         "git_branch": git_branch,
         "git_head_sha": git_sha,
+        "git_status_short": git_status_short,
         "k3_ontology_graph_file": str(Path(kog.__file__).resolve()),
         "k3_ontology_graph_sha256_12": hashlib.sha256(Path(kog.__file__).read_bytes()).hexdigest()[:12],
         "k3_memory_graph_file": str(Path(kmg.__file__).resolve()),
@@ -281,7 +292,7 @@ def run_live_93layer_server_spotcheck() -> dict[str, Any]:
         t0 = time.perf_counter()
         payload = json.dumps({"session_id": f"fnd_ab_{tag}_{int(time.time())}", "prompt": prompt, "cands": 4}).encode("utf-8")
         req = urllib.request.Request(f"{base}/api/chat", data=payload, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=180) as resp:
+        with urllib.request.urlopen(req, timeout=600) as resp:
             out = json.loads(resp.read().decode("utf-8"))
         dt = (time.perf_counter() - t0) * 1000.0
         reply = str(out.get("reply") or "")

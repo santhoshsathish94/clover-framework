@@ -38,9 +38,7 @@ BATCH_PAUSE_S = 1.0
 MAX_SESSION_CONTEXT_TOKENS = 262_144  # 256k Kimi K3 tokens (> 250k minimum context window per session)
 SESSIONS_STORE_PATH = os.environ.get(
     "CLOVER_SESSIONS_STORE_PATH",
-    "/home/usergpu/merge_lf/out/sessions_store.json"
-    if os.path.isdir("/home/usergpu/merge_lf/out")
-    else os.path.join(TOOLS_DIR, "out/sessions_store.json"),
+    os.path.join(TOOLS_DIR, "out/sessions_store.json"),
 )
 KID_VOICE_NAME = "en-US-AnaNeural"  # Microsoft Neural polite, friendly child voice
 _TTS_CACHE = collections.OrderedDict()
@@ -1966,6 +1964,11 @@ class MultiGPUCloverCoordinator:
 
         hist_snap = self.get_session_history(session_id) if remember else []
         with self.mm_lock:
+            if self.mm_worker is None:
+                mm_dev = resolve_device("cuda:7")
+                self.mm_worker = K3MultimodalChatEngine(
+                    dev_ncm=mm_dev, dev_vl=mm_dev, enable_option_a=True, k3_experts_runner=self.k3_experts
+                )
             r = self.mm_worker.multimodal_reply(pil_img, eff_prompt, use_option_a=True, cands=cands)
 
         reply_txt = r["reply_mbr8"] if cands > 1 else r["reply_1cand"]
@@ -2092,8 +2095,10 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 ).strip()
             except Exception:
                 _git_sha = "standalone_dir"
+            is_cpu_be = bool(getattr(STATE.k3_experts, "is_cpu_backend", False))
             self._send_json({
                 "status": "ready",
+                "backend": "cpu" if is_cpu_be else "gpu",
                 "mode": "agent_full93_k3_experts_ncm",
                 "setup_s": STATE.setup_s,
                 "active_sessions": len(STATE.sessions),
@@ -2121,11 +2126,15 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                     "k3_experts_lib_sha256_12": _fhash(getattr(STATE.k3_experts, "lib_path", "")),
                     "dataset_dir": getattr(STATE.k3_experts, "dataset_dir", "unknown"),
                 },
-                "multimodal_worker": True,
+                "multimodal_worker": STATE.mm_worker is not None,
                 "batch_pause_s": STATE.batch_pause_s,
                 "default_context_file": CLOVER_DEFAULT_CONTEXT_PATH,
                 "agents_md_rules_loaded": bool(STATE.default_clover_context),
-                "model": "clover-ai-agent (HybridAgent + All 93 K3 Trunks & 92 MoE Layers + MoonViT3d + NCM on 8x RTX 3090)",
+                "model": (
+                    "clover-ai-agent (HybridAgent + Kimi K3 MoE + NCM on CPU)"
+                    if is_cpu_be
+                    else "clover-ai-agent (HybridAgent + All 93 K3 Trunks & 92 MoE Layers + MoonViT3d + NCM on 8x RTX 3090)"
+                ),
             })
         elif self.path.startswith("/api/sessions"):
             self._send_json({

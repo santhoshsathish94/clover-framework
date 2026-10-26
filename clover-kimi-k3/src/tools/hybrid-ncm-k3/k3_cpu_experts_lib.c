@@ -49,12 +49,13 @@ static unsigned snapshots_in_for_layer(int L)
 typedef struct {
     int on;
     void (*set_policy)(int);
-    sc_cache *(*nw)(int, size_t, int);
+    sc_cache *(*nw)(void);
+    void (*add_spare)(sc_cache *, unsigned char *);
     int (*contains)(const sc_cache *, int);
-    unsigned char *(*find)(const sc_cache *, int);
+    unsigned char *(*find)(sc_cache *, int);
     void (*touch)(sc_cache *, int, float);
     unsigned char *(*acquire)(sc_cache *, int, const int *, size_t, float, int *, float *);
-    void (*release)(sc_cache *);
+    void (*release)(sc_cache *, unsigned char *);
     sc_cache *pool_cache;
     sc_cache *host_cache;
     unsigned char *dummy_pool_mem;
@@ -120,20 +121,28 @@ static void init_cpu_slotcache(void)
     if (!h) h = dlopen("libslotcache.so", RTLD_NOW | RTLD_LOCAL);
     if (h) {
         g_cpu_sc.set_policy = (void (*)(int))dlsym(h, "sc_set_policy");
-        g_cpu_sc.nw = (sc_cache *(*)(int, size_t, int))dlsym(h, "sc_new");
+        g_cpu_sc.nw = (sc_cache *(*)(void))dlsym(h, "sc_new");
+        g_cpu_sc.add_spare = (void (*)(sc_cache *, unsigned char *))dlsym(h, "sc_add_spare");
         g_cpu_sc.contains = (int (*)(const sc_cache *, int))dlsym(h, "sc_contains");
-        g_cpu_sc.find = (unsigned char *(*)(const sc_cache *, int))dlsym(h, "sc_find");
+        g_cpu_sc.find = (unsigned char *(*)(sc_cache *, int))dlsym(h, "sc_find");
         g_cpu_sc.touch = (void (*)(sc_cache *, int, float))dlsym(h, "sc_touch");
         g_cpu_sc.acquire = (unsigned char *(*)(sc_cache *, int, const int *, size_t, float, int *, float *))dlsym(h, "sc_acquire");
-        g_cpu_sc.release = (void (*)(sc_cache *))dlsym(h, "sc_release");
-        if (g_cpu_sc.set_policy && g_cpu_sc.nw && g_cpu_sc.contains && g_cpu_sc.touch && g_cpu_sc.acquire) {
+        g_cpu_sc.release = (void (*)(sc_cache *, unsigned char *))dlsym(h, "sc_release");
+        if (g_cpu_sc.set_policy && g_cpu_sc.nw && g_cpu_sc.add_spare && g_cpu_sc.contains && g_cpu_sc.touch && g_cpu_sc.acquire) {
             g_cpu_sc.on = 1;
             g_cpu_sc.set_policy(3);
             g_cpu_sc.dummy_pool_mem = (unsigned char *)calloc(g_cpu.pool_slots, 64);
             g_cpu_sc.dummy_host_mem = (unsigned char *)calloc(g_cpu.host_slots, 64);
-            g_cpu_sc.pool_cache = g_cpu_sc.nw((int)g_cpu.pool_slots, 64, 1);
-            g_cpu_sc.host_cache = g_cpu_sc.nw((int)g_cpu.host_slots, 64, 1);
-            fprintf(stderr, "[K3-CPU-Experts] Loaded Rust SlotCache (%s) with Policy 3 (specmd_least_stale_r4)\n", lib_path);
+            g_cpu_sc.pool_cache = g_cpu_sc.nw();
+            g_cpu_sc.host_cache = g_cpu_sc.nw();
+            for (unsigned long s = 0; s < g_cpu.pool_slots; s++) {
+                g_cpu_sc.add_spare(g_cpu_sc.pool_cache, g_cpu_sc.dummy_pool_mem + s * 64);
+            }
+            for (unsigned long s = 0; s < g_cpu.host_slots; s++) {
+                g_cpu_sc.add_spare(g_cpu_sc.host_cache, g_cpu_sc.dummy_host_mem + s * 64);
+            }
+            fprintf(stderr, "[K3-CPU-Experts] Loaded Rust SlotCache (%s) with Policy 3 (specmd_least_stale_r4, %lu pool + %lu host slots)\n",
+                    lib_path, g_cpu.pool_slots, g_cpu.host_slots);
         }
     }
 }

@@ -41,7 +41,8 @@ def ask_clover(question: str, sid: str) -> dict[str, Any]:
         headers={"Content-Type": "application/json", "Host": "127.0.0.1:8765"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=90) as resp:
+    timeout_s = int(os.environ.get("CLOVER_BENCH_TIMEOUT", "600"))
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
@@ -57,9 +58,11 @@ def run_rustc_unit_test(rust_code: str, test_harness: str) -> tuple[bool, str]:
     # Strip any `fn main` in `rust_code` if `test_harness` provides its own `fn main`
     cleaned = re.sub(r"\bfn\s+main\s*\(\s*\)\s*\{[\s\S]*$", "", rust_code).strip()
     full_src = f"{cleaned}\n\n{test_harness}\n"
-    rustc_bin = "/home/usergpu/.cargo/bin/rustc"
-    if not os.path.exists(rustc_bin):
-        rustc_bin = "rustc"
+    rustc_bin = "rustc"
+    for cand_r in ("/home/usergpu/.cargo/bin/rustc", "/root/.cargo/bin/rustc", os.path.expanduser("~/.cargo/bin/rustc")):
+        if os.path.exists(cand_r):
+            rustc_bin = cand_r
+            break
     with tempfile.TemporaryDirectory() as tmpd:
         src_p = os.path.join(tmpd, "solution.rs")
         bin_p = os.path.join(tmpd, "solution_bin")
@@ -320,8 +323,16 @@ LIVE_RUST_TASKS = [
 
 
 def main():
+    import argparse
+    here = os.path.dirname(os.path.abspath(__file__))
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--n-live", type=int, default=len(LIVE_RUST_TASKS))
+    ap.add_argument("--part-a-only", action="store_true")
+    ap.add_argument("--out", type=str, default=os.path.join(here, "benchmarks/generative_compilation_v6_report.json"))
+    args = ap.parse_args()
+
     print("=== BENCHMARK 6: GENERATIVE COMPILATION (RUST + PYTHON) ON CLOVER KIMI K3 ===", flush=True)
-    assert HAS_RUST_GC, "rust_generative_compiler must be available"
+    assert HAS_RUST_GC, "rust_generative_compiler or rustc must be available"
     rs_gc = CloverRustGenerativeCompiler()
 
     print("\n--- Part A: Rust Partial-Program Early Error Detection & Completeness (N=6) ---", flush=True)
@@ -394,10 +405,11 @@ def main():
         flush=True,
     )
 
-    print("\n--- Part B: Live End-to-End Rust Code Generation & `rustc` Execution (N=5) ---", flush=True)
+    print("\n--- Part B: Live End-to-End Rust Code Generation & `rustc` Execution ---", flush=True)
     part_b_results = []
     live_passed = 0
-    for idx, task in enumerate(LIVE_RUST_TASKS):
+    live_tasks = [] if args.part_a_only else LIVE_RUST_TASKS[: max(0, args.n_live)]
+    for idx, task in enumerate(live_tasks):
         t0 = time.perf_counter()
         r = ask_clover(task["prompt"], sid=f"bench6_rust_{idx}")
         wall_ms = (time.perf_counter() - t0) * 1000.0
@@ -410,7 +422,7 @@ def main():
             {},
         )
         print(
-            f"  [{idx+1}/{len(LIVE_RUST_TASKS)}] {'PASS' if ok else 'FAIL'} ({wall_ms:.0f} ms) {task['id']:26s} | "
+            f"  [{idx+1}/{len(live_tasks)}] {'PASS' if ok else 'FAIL'} ({wall_ms:.0f} ms) {task['id']:26s} | "
             f"rustc_test={detail} | gc_checks={gc_meta.get('prefix_checks', 0)} gc_ms={gc_meta.get('total_ms', 0)}",
             flush=True,
         )
@@ -423,13 +435,12 @@ def main():
             "code": rs_code,
         })
 
-    live_acc = 100.0 * live_passed / len(LIVE_RUST_TASKS)
-    print(f">>> Part B Summary: {live_passed}/{len(LIVE_RUST_TASKS)} ({live_acc:.1f}%) compiled & passed rustc unit tests", flush=True)
+    live_acc = 100.0 * live_passed / max(1, len(live_tasks)) if live_tasks else 0.0
+    if live_tasks:
+        print(f">>> Part B Summary: {live_passed}/{len(live_tasks)} ({live_acc:.1f}%) compiled & passed rustc unit tests", flush=True)
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    out_path = os.path.join(here, "benchmarks/generative_compilation_v6_report.json")
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
+    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+    with open(args.out, "w", encoding="utf-8") as f:
         json.dump(
             {
                 "part_a_rust_prefix_trajectories": part_a_results,

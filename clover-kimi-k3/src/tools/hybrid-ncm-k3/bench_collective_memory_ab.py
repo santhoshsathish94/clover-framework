@@ -497,7 +497,8 @@ def call_k3_chat_with_optional_memory(
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=180) as resp:
+    timeout_s = int(os.environ.get("CLOVER_BENCH_TIMEOUT", "600"))
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         data = json.loads(resp.read().decode("utf-8"))
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     return str(data.get("reply") or ""), round(elapsed_ms, 1)
