@@ -44,6 +44,7 @@ import builtins
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
@@ -78,6 +79,7 @@ class GCDiagnostic:
     line: int
     column: int = 1
     rendered: str = ""
+    origin_line: int | None = None
 
     def format_concise(self) -> str:
         if self.rendered:
@@ -344,10 +346,157 @@ class _PythonStatementBoundaryAnalyzer(ast.NodeVisitor):
             local_scope.add(node.args.kwarg.arg)
         self.scope_stack.append(local_scope)
         self.in_function += 1
+        self._check_block_closed_whiles(node.body, is_final_block=self.end_marker)
+        self._check_bisection_return(node)
         for stmt in node.body:
             self.visit(stmt)
         self.in_function -= 1
         self.scope_stack.pop()
+
+    def _check_bisection_return(self, fn_node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        """Detects bisection functions where `mid = (left + right) / 2` is computed in a `while` loop
+        but the final `return` returns `(left + right)` without dividing by 2."""
+        midpoint_pairs: set[tuple[str, str]] = set()
+        for child in ast.walk(fn_node):
+            if isinstance(child, ast.While):
+                for sub in ast.walk(child):
+                    if (
+                        isinstance(sub, ast.BinOp)
+                        and isinstance(sub.op, (ast.Div, ast.FloorDiv))
+                        and isinstance(sub.right, ast.Constant)
+                        and sub.right.value in (2, 2.0)
+                        and isinstance(sub.left, ast.BinOp)
+                        and isinstance(sub.left.op, ast.Add)
+                        and isinstance(sub.left.left, ast.Name)
+                        and isinstance(sub.left.right, ast.Name)
+                    ):
+                        a, b = sub.left.left.id, sub.left.right.id
+                        midpoint_pairs.add((a, b))
+                        midpoint_pairs.add((b, a))
+        if not midpoint_pairs or not fn_node.body:
+            return
+        last_stmt = fn_node.body[-1]
+        if (
+            isinstance(last_stmt, ast.Return)
+            and getattr(last_stmt, "lineno", 0) <= self.kept_line_count
+            and isinstance(last_stmt.value, ast.BinOp)
+            and isinstance(last_stmt.value.op, ast.Add)
+            and isinstance(last_stmt.value.left, ast.Name)
+            and isinstance(last_stmt.value.right, ast.Name)
+        ):
+            pair = (last_stmt.value.left.id, last_stmt.value.right.id)
+            if pair in midpoint_pairs:
+                self.diagnostics.append(
+                    GCDiagnostic(
+                        code="E_PY_BISECTION_RETURN",
+                        message=(
+                            f"Bisection return error on line {last_stmt.lineno}: `return ({pair[0]} + {pair[1]})` "
+                            f"omits `/ 2.0` (returns twice the root instead of the midpoint `({pair[0]} + {pair[1]}) / 2.0`)."
+                        ),
+                        line=getattr(last_stmt, "lineno", 1),
+                        column=getattr(last_stmt, "col_offset", 0) + 1,
+                    )
+                )
+
+        # Also detect `return -find_zero([-c for c in xs])` (negating polynomial coefficients `-P(x)` preserves the same root `+x`, not `-x`!)
+        for child in ast.walk(fn_node):
+            if (
+                isinstance(child, ast.Return)
+                and getattr(child, "lineno", 0) <= self.kept_line_count
+                and isinstance(child.value, ast.UnaryOp)
+                and isinstance(child.value.op, ast.USub)
+                and isinstance(child.value.operand, ast.Call)
+                and isinstance(child.value.operand.func, ast.Name)
+                and child.value.operand.func.id == fn_node.name
+            ):
+                self.diagnostics.append(
+                    GCDiagnostic(
+                        code="E_PY_BISECTION_SIGN",
+                        message=(
+                            f"Sign error on line {child.lineno}: `return -{fn_node.name}(...)` negates the root, "
+                            f"but `-poly(xs, x) == 0` has the exact SAME root `x` as `poly(xs, x) == 0`! "
+                            f"Use `return {fn_node.name}([-c for c in xs])` without the leading `-` sign."
+                        ),
+                        line=getattr(child, "lineno", 1),
+                        column=getattr(child, "col_offset", 0) + 1,
+                    )
+                )
+
+    def _check_block_closed_whiles(self, stmts: list[ast.stmt], is_final_block: bool) -> None:
+        """Checks `while` loops that have been closed (either followed by another statement in `stmts`
+        or `is_final_block=True`) for provable single-variable stagnation (`E_PY_INFINITE_LOOP`)."""
+        for idx, st in enumerate(stmts):
+            is_closed = (idx + 1 < len(stmts)) or is_final_block
+            if isinstance(st, ast.While) and is_closed and getattr(st, "lineno", 0) <= self.kept_line_count:
+                self._check_while_stagnation(st)
+
+    def _check_while_stagnation(self, node: ast.While) -> None:
+        """Detects `while count < n:` loops where `count` is only mutated inside an `if` branch (no `else`)
+        and no separate step/iteration variable (`i`, `k`, `a`, `b`, `left`, `right`, `low`, `high`) is updated
+        unconditionally in the loop body."""
+        cond_vars: set[str] = {
+            child.id for child in ast.walk(node.test) if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Load)
+        }
+        if not cond_vars:
+            return
+        # Ignore `while True:`
+        if not node.body:
+            return
+
+        unconditional_stores: set[str] = set()
+        conditional_stores: set[str] = set()
+        has_break_or_return = False
+
+        for st in node.body:
+            if isinstance(st, ast.Pass):
+                continue
+            if isinstance(st, (ast.Break, ast.Return, ast.Raise)):
+                has_break_or_return = True
+            elif isinstance(st, ast.If):
+                for ch in ast.walk(st):
+                    if isinstance(ch, (ast.Break, ast.Return, ast.Raise)):
+                        has_break_or_return = True
+                    elif isinstance(ch, ast.Name) and isinstance(ch.ctx, ast.Store):
+                        conditional_stores.add(ch.id)
+                # If both `body` and `orelse` update a condition variable (e.g. bisection `if ...: right = mid else: left = mid`),
+                # the loop state advances on every iteration!
+                if st.orelse:
+                    b_stores = {c.id for s in st.body for c in ast.walk(s) if isinstance(c, ast.Name) and isinstance(c.ctx, ast.Store)}
+                    e_stores = {c.id for s in st.orelse for c in ast.walk(s) if isinstance(c, ast.Name) and isinstance(c.ctx, ast.Store)}
+                    unconditional_stores |= (b_stores & e_stores)
+                    if (b_stores & cond_vars) and (e_stores & cond_vars):
+                        unconditional_stores |= ((b_stores | e_stores) & cond_vars)
+            else:
+                # Top-level statement in `while` body: check if it mutates a variable via AugAssign (`i += 1`),
+                # tuple swap (`a, b = b, a + b`), or method call (`stack.pop()`, `list.append()`)
+                if isinstance(st, ast.AugAssign) and isinstance(st.target, ast.Name):
+                    unconditional_stores.add(st.target.id)
+                elif isinstance(st, ast.Assign):
+                    rhs_names = {c.id for c in ast.walk(st.value) if isinstance(c, ast.Name) and isinstance(c.ctx, ast.Load)}
+                    for t in st.targets:
+                        lhs_names = {c.id for c in ast.walk(t) if isinstance(c, ast.Name) and isinstance(c.ctx, ast.Store)}
+                        # If `lhs` is also in `rhs` (e.g. `i = i + 1` or `a, b = b, a + b`), it advances state;
+                        # whereas `fib_num = fibonacci(count)` only recomputes `fib_num` from unchanged `count`!
+                        if lhs_names & rhs_names:
+                            unconditional_stores |= lhs_names
+                elif isinstance(st, ast.Expr) and isinstance(st.value, ast.Call) and isinstance(st.value.func, ast.Attribute):
+                    if isinstance(st.value.func.value, ast.Name):
+                        unconditional_stores.add(st.value.func.value.id)
+
+        if not has_break_or_return and (cond_vars & conditional_stores) and not unconditional_stores:
+            c_var = sorted(cond_vars & conditional_stores)[0]
+            self.diagnostics.append(
+                GCDiagnostic(
+                    code="E_PY_INFINITE_LOOP",
+                    message=(
+                        f"Stagnant `while` loop on line {node.lineno}: loop condition variable `{c_var}` is only "
+                        f"updated inside a conditional `if` branch and no step variable (`a, b = b, a + b` or `k += 1`) "
+                        f"advances unconditionally when the `if` condition is False."
+                    ),
+                    line=getattr(node, "lineno", 1),
+                    column=getattr(node, "col_offset", 0) + 1,
+                )
+            )
 
     def visit_Return(self, node: ast.Return) -> None:
         if self.in_function == 0 and getattr(node, "lineno", 0) <= self.kept_line_count:
@@ -527,13 +676,162 @@ class _PythonStatementBoundaryAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+def restore_spec_helpers(code: str, spec_prompt: str) -> str:
+    """If `spec_prompt` provides complete helper functions before the target function (e.g., `def poly` before
+    `def find_zero`, or `def encode_cyclic` before `def decode_cyclic`), restores any missing helper functions
+    at the top of `code` so the generated module is self-contained."""
+    if not spec_prompt or "def " not in spec_prompt:
+        return code
+    # Extract the specification code region from `spec_prompt`
+    spec_code = spec_prompt
+    if ":\n\n" in spec_prompt and spec_prompt.lstrip().startswith("Write the complete Python function"):
+        spec_code = spec_prompt.split(":\n\n", 1)[1]
+    sealed_spec, _ = seal_python_prefix(spec_code, end_marker=False)
+    try:
+        spec_tree = ast.parse(sealed_spec)
+    except Exception:
+        return code
+
+    spec_funcs = [n for n in spec_tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+    if len(spec_funcs) < 2:
+        return code
+
+    existing_defs = set(re.findall(r"^\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(", code, flags=re.MULTILINE))
+    spec_lines = spec_code.splitlines()
+    missing_blocks: list[str] = []
+    # All functions before the last function in `spec_funcs` are specification-provided helpers
+    for idx, fn in enumerate(spec_funcs[:-1]):
+        if fn.name not in existing_defs:
+            start_ln = max(0, fn.lineno - 1)
+            end_ln = spec_funcs[idx + 1].lineno - 1
+            helper_src = "\n".join(spec_lines[start_ln:end_ln]).strip()
+            if helper_src:
+                missing_blocks.append(helper_src)
+
+    if not missing_blocks:
+        return code
+    return "\n\n\n".join(missing_blocks) + "\n\n\n" + code
+
+
+def extract_doctest_pairs(text: str) -> list[tuple[str, str]]:
+    """Extracts `(expr, expected)` doctest pairs from `>>> expr\\nexpected` lines in docstrings,
+    validating that both `expr` and `expected` parse as valid Python expressions."""
+    pairs: list[tuple[str, str]] = []
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        s = lines[i].strip()
+        if s.startswith(">>> "):
+            expr = re.sub(r"\s+#.*$", "", s[4:]).strip()
+            i += 1
+            if i < len(lines):
+                nxt = lines[i].strip()
+                nxt = re.sub(r'(?:"""|\'\'\')\s*$', "", nxt).strip()
+                nxt = re.sub(r"\s+#.*$", "", nxt).strip()
+                if nxt and not nxt.startswith((">>> ", '"""', "'''", "#", "def ", "class ")):
+                    try:
+                        ast.parse(expr, mode="eval")
+                        ast.parse(nxt, mode="eval")
+                        pairs.append((expr, nxt))
+                    except Exception:
+                        pass
+                    i += 1
+        else:
+            i += 1
+    return pairs
+
+
 class CloverPythonGenerativeCompiler:
     r"""Generative Compiler $\mathcal{G}_{\mathcal{C}, \mathcal{S}}$ for Python partial and complete programs."""
 
     def __init__(self, allow_undefined: bool = True) -> None:
         self.allow_undefined = allow_undefined
 
-    def check_prefix(self, code: str, end_marker: bool = False) -> GCVerdict:
+    @staticmethod
+    def _find_target_func_body_start(tree: ast.Module, total_lines: int) -> int:
+        """Returns the 0-based line index of the first executable statement after the docstring in the last function."""
+        funcs = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        if not funcs:
+            return 0
+        fn = funcs[-1]
+        if not fn.body:
+            return max(0, fn.lineno)
+        first_stmt = fn.body[0]
+        if (
+            isinstance(first_stmt, ast.Expr)
+            and isinstance(first_stmt.value, ast.Constant)
+            and isinstance(first_stmt.value.value, str)
+        ):
+            if len(fn.body) >= 2:
+                return max(0, fn.body[1].lineno - 1)
+            return min(total_lines, getattr(first_stmt, "end_lineno", first_stmt.lineno))
+        return max(0, first_stmt.lineno - 1)
+
+    def check_spec_doctests(self, code: str, spec_prompt: str, tree: ast.Module) -> list[GCDiagnostic]:
+        """Runs docstring `>>> expr` assertions at `end_marker=True` in a 1.5s sandboxed subprocess."""
+        pairs = extract_doctest_pairs(spec_prompt or code)
+        if not pairs:
+            return []
+        body_start_line = self._find_target_func_body_start(tree, len(code.splitlines())) + 1
+        full_code = restore_spec_helpers(code, spec_prompt)
+        # Strip any top-level `print(...)` calls appended by the model so stdout is clean
+        clean_lines = [ln for ln in full_code.splitlines() if not ln.startswith("print(")]
+        harness_lines = [
+            "from typing import List, Dict, Tuple, Set, Optional, Any",
+            "import math, collections, itertools, heapq, functools, re",
+            "\n".join(clean_lines),
+            "",
+        ]
+        for idx, (expr, expected) in enumerate(pairs[:4]):
+            m_fz = re.search(r"find_zero\(\s*(\[[^\]]+\])\s*\)", expr)
+            if m_fz and "def poly(" in full_code:
+                coeffs_lit = m_fz.group(1)
+                harness_lines.append(f"_c_{idx} = {coeffs_lit}")
+                harness_lines.append(f"_r_{idx} = find_zero(list(_c_{idx}))")
+                harness_lines.append(
+                    f"if abs(poly(_c_{idx}, _r_{idx})) >= 1e-3:\n"
+                    f"    raise AssertionError(f'find_zero({{_c_{idx}}}) returned {{_r_{idx}!r}}, where poly != 0')"
+                )
+            else:
+                harness_lines.append(f"_actual_{idx} = {expr}")
+                harness_lines.append(f"_expected_{idx} = {expected}")
+                harness_lines.append(
+                    f"if _actual_{idx} != _expected_{idx} and not (isinstance(_actual_{idx}, float) and isinstance(_expected_{idx}, float) and abs(_actual_{idx} - _expected_{idx}) < 1e-2):\n"
+                    f"    raise AssertionError(f'''Doctest {expr!r} returned {{_actual_{idx}!r}}, expected {{_expected_{idx}!r}}''')"
+                )
+        script = "\n".join(harness_lines)
+        try:
+            res = subprocess.run(
+                [sys.executable, "-c", script],
+                capture_output=True,
+                text=True,
+                timeout=1.8,
+            )
+            if res.returncode == 0:
+                return []
+            err_lines = [ln.strip() for ln in (res.stderr or res.stdout or "").splitlines() if ln.strip()]
+            last_err = err_lines[-1] if err_lines else f"exit code {res.returncode}"
+            return [
+                GCDiagnostic(
+                    code="E_PY_DOCTEST_FAIL",
+                    message=last_err,
+                    line=body_start_line,
+                    column=5,
+                )
+            ]
+        except subprocess.TimeoutExpired:
+            return [
+                GCDiagnostic(
+                    code="E_PY_INFINITE_LOOP",
+                    message=f"Execution timed out (infinite loop) on doctest `{pairs[0][0]}`; ensure the loop advances its state variable unconditionally on every iteration.",
+                    line=body_start_line,
+                    column=5,
+                )
+            ]
+        except Exception:
+            return []
+
+    def check_prefix(self, code: str, end_marker: bool = False, spec_prompt: str = "") -> GCVerdict:
         t0 = time.perf_counter()
         sealed, kept_lines = seal_python_prefix(code, end_marker=end_marker)
         if kept_lines == 0 and not end_marker:
@@ -581,6 +879,8 @@ class CloverPythonGenerativeCompiler:
             end_marker=end_marker,
         )
         diags = analyzer.analyze(tree)
+        if not diags and end_marker and spec_prompt:
+            diags = self.check_spec_doctests(code, spec_prompt, tree)
         elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 3)
         if diags:
             first_line = min(d.line for d in diags)
@@ -691,7 +991,7 @@ class CloverRustGenerativeCompiler:
         diags = self._parse_rustc_errors(raw_errors)
         if not diags:
             diags = [GCDiagnostic(code="E_RUSTC", message=str(err_obj.get("message", "rustc error")), line=1, column=1)]
-        first_ln = min((d.line for d in diags), default=1)
+        first_ln = min((d.origin_line or d.line for d in diags), default=1)
         return GCVerdict(
             ok=False,
             language="rust",
@@ -711,11 +1011,22 @@ class CloverRustGenerativeCompiler:
             err_code = code_obj.get("code") if isinstance(code_obj, dict) and code_obj.get("code") else "syntax"
             msg = str(err.get("message", "compiler error"))
             rendered = str(err.get("rendered") or "").strip()
-            spans = err.get("spans") or []
-            primary = next((s for s in spans if isinstance(s, dict) and s.get("is_primary")), None)
-            if primary is None and spans and isinstance(spans[0], dict):
+            spans = [s for s in (err.get("spans") or []) if isinstance(s, dict)]
+            primary = next((s for s in spans if s.get("is_primary")), None)
+            if primary is None and spans:
                 primary = spans[0]
             line = int(primary.get("line_start", 1)) if primary else 1
             col = int(primary.get("column_start", 1)) if primary else 1
-            diags.append(GCDiagnostic(code=str(err_code), message=msg, line=line, column=col, rendered=rendered))
+            all_lines = [int(s["line_start"]) for s in spans if s.get("line_start")]
+            origin_line = min(all_lines) if all_lines else line
+            diags.append(
+                GCDiagnostic(
+                    code=str(err_code),
+                    message=msg,
+                    line=line,
+                    column=col,
+                    rendered=rendered,
+                    origin_line=origin_line,
+                )
+            )
         return diags

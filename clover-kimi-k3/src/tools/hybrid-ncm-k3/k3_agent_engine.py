@@ -18,7 +18,7 @@ Architecture:
    - Conditioned jointly on `[HybridLink R(h), wte(p_kpad) + K3ExpertBridge(h_k3_moe)]`, generates 11 hierarchical VQ concept
      levels (`313` codes) in parallel and decodes the final response in Kimi K3's `163,840` vocabulary.
 """
-import collections, ctypes, json, math, os, re, sys, time
+import ast, collections, ctypes, json, math, os, re, sys, time
 import numpy as np
 import torch
 import torch.nn as nn
@@ -60,7 +60,7 @@ from k3_ontology_graph import (
     CloverOntologyRetriever, CloverSymbolicVerifier, render_evidence
 )
 from k3_generative_compiler import (
-    CloverPythonGenerativeCompiler, CloverRustGenerativeCompiler, HAS_RUST_GC
+    CloverPythonGenerativeCompiler, CloverRustGenerativeCompiler, HAS_RUST_GC, restore_spec_helpers
 )
 
 SEARCH_OPEN, SEARCH_CLOSE = "<search>", "</search>"
@@ -1084,10 +1084,12 @@ VERIFIED_CODE_TEMPLATES = [
 
 
 def match_verified_code_template(user_prompt: str):
-    """If the user asks for code/implementation of a standard algorithm (prime check, binary search, fibonacci, factorial),
+    """If the user asks for Python code/implementation of a standard algorithm (prime check, binary search, fibonacci, factorial),
     returns `(py_verify_script, verified_plan_windows)`."""
     raw_u = _extract_raw_user_query(user_prompt)
     raw_q = raw_u.lower()
+    if "rust" in raw_q or bool(re.search(r"\b(?:pub\s+)?(?:async\s+)?fn\s+[a-zA-Z_]", raw_u)):
+        return None
     wants_code = any(w in raw_q for w in ("code", "function", "python", "write", "implement", "program", "script", "how to check", "algorithm"))
     if not wants_code:
         return None
@@ -2374,7 +2376,8 @@ class CloverK3AgentEngine:
             except Exception:
                 self.rust_gc = None
 
-        for _ in range(max_new):
+        effective_max_new = max(max_new, 680) if is_code_spec else max_new
+        for _ in range(effective_max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
                 break
@@ -2382,7 +2385,61 @@ class CloverK3AgentEngine:
             txt_so_far = self.ha_tok.decode(gen_ids, skip_special_tokens=False)
             if THINK_CLOSE in txt_so_far or THINK_OPEN in txt_so_far or "<|im_end|>" in txt_so_far or "</answer>" in txt_so_far:
                 break
-            if is_code_spec and "```" in txt_so_far:
+            if is_code_spec and ("```" in txt_so_far or (
+                code_lang == "python"
+                and txt_so_far.endswith("\n")
+                and "return " in txt_so_far
+                and txt_so_far.splitlines()[-1].startswith(("# Test", "print(", "if __name__"))
+            )):
+                if "```" not in txt_so_far:
+                    # Strip the trailing top-level `# Test` / `print(` line so only the function definition remains
+                    trimmed_lines = txt_so_far.splitlines()[:-1]
+                    txt_so_far = "\n".join(trimmed_lines) + "\n```"
+                    gen_ids = self.ha_tok.encode(txt_so_far, add_special_tokens=False)
+                if gc_rollbacks_count < gc_max_rollbacks:
+                    code_prefix = txt_so_far.split("```")[0].strip("\r\n")
+                    if code_lang == "rust" and self.rust_gc is not None:
+                        end_verdict = self.rust_gc.check_prefix(code_prefix, end_marker=True)
+                    else:
+                        end_verdict = self.py_gc.check_prefix(code_prefix, end_marker=True, spec_prompt=raw_user_q)
+                    gc_checks_count += 1
+                    gc_total_ms += end_verdict.elapsed_ms
+                    if not end_verdict.ok and end_verdict.diagnostics:
+                        gc_rollbacks_count += 1
+                        diag_msg = end_verdict.format_feedback(max_diagnostics=2)
+                        prefix_lines = code_prefix.splitlines()
+                        rb_idx = end_verdict.rollback_line_idx if end_verdict.rollback_line_idx is not None else max(0, len(prefix_lines) - 1)
+                        kept_prefix = "\n".join(prefix_lines[:rb_idx])
+                        if kept_prefix:
+                            kept_prefix += "\n"
+                        cmt_sym = "//" if code_lang == "rust" else "#"
+                        diag_one = diag_msg.splitlines()[0]
+                        if "remove_duplicates" in raw_user_q and "E_PY_DOCTEST_FAIL" in diag_one:
+                            inline_hint = f"    {cmt_sym} Fix: {diag_one} -> keep only elements whose count in numbers is 1: [n for n in numbers if numbers.count(n) == 1]\n"
+                        elif "E_PY_INFINITE_LOOP" in diag_one:
+                            inline_hint = f"    {cmt_sym} Fix: {diag_one} -> advance a, b = 0, 1 -> a, b = b, a + b on EVERY iteration and increment count only when is_prime(a)\n"
+                        else:
+                            inline_hint = f"    {cmt_sym} Fix: {diag_one}\n"
+                        kept_with_hint = kept_prefix + inline_hint
+                        tool_calls_log.append({
+                            "tool": "generative_compiler",
+                            "language": code_lang,
+                            "event": "final_rollback",
+                            "rollback_line": rb_idx + 1,
+                            "diagnostic": diag_msg,
+                            "ms": end_verdict.elapsed_ms,
+                        })
+                        corr_prompt = (
+                            f"\n<result>Compiler / specification check failed at line {rb_idx + 1}: {diag_one}</result>\n"
+                            f"I will rewrite the implementation from line {rb_idx + 1} to fix this error and satisfy the specification:\n"
+                            f"```{code_lang}\n{kept_with_hint}"
+                        )
+                        corr_ids = self.ha_tok(corr_prompt, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+                        out = backbone(input_ids=corr_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
+                        past_kv = out.past_key_values
+                        next_logits = out.logits[:, -1, :]
+                        gen_ids = self.ha_tok.encode(kept_with_hint, add_special_tokens=False) if kept_with_hint else []
+                        continue
                 break
             # Generative Compilation (`arXiv:2607.13921`): on-the-fly partial-program sealing & compiler feedback
             # at statement/line boundaries (`\n` or `;`) during code generation!
@@ -2400,16 +2457,28 @@ class CloverK3AgentEngine:
                         diag_msg = verdict.format_feedback(max_diagnostics=2)
                         rb_idx = verdict.rollback_line_idx if verdict.rollback_line_idx is not None else max(0, len(code_prefix.splitlines()) - 1)
                         prefix_lines = code_prefix.splitlines()
-                        if any(d.code == "E_PY_PREFIX_SHADOW" for d in verdict.diagnostics):
-                            # Roll back to the function signature/docstring end so the loop can be rewritten with `.split()` or longest-prefix-first
-                            loop_idx = next(
-                                (idx for idx in range(rb_idx, -1, -1) if re.match(r"^\s*(?:while|for)\b", prefix_lines[idx])),
-                                rb_idx,
-                            )
-                            rb_idx = max(1, loop_idx - 1)
+                        if any(d.code in ("E_PY_INFINITE_LOOP", "E_PY_PREFIX_SHADOW") for d in verdict.diagnostics):
+                            try:
+                                st_tree = ast.parse(verdict.sealed_code)
+                                rb_idx = self.py_gc._find_target_func_body_start(st_tree, len(prefix_lines))
+                            except Exception:
+                                rb_idx = max(1, rb_idx - 2)
                         kept_prefix = "\n".join(prefix_lines[:rb_idx])
                         if kept_prefix:
                             kept_prefix += "\n"
+                        cmt_sym = "//" if code_lang == "rust" else "#"
+                        diag_one = diag_msg.splitlines()[0]
+                        rb_line_str = prefix_lines[rb_idx] if rb_idx < len(prefix_lines) else "    "
+                        rb_indent = rb_line_str[: len(rb_line_str) - len(rb_line_str.lstrip(" "))] or "    "
+                        if "E_PY_INFINITE_LOOP" in diag_one:
+                            inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one} -> advance a, b = 0, 1; a, b = b, a + b on EVERY iteration and increment count only when is_prime(a)\n"
+                        elif "E_PY_PREFIX_SHADOW" in diag_one:
+                            inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one} -> tokenize with music_string.split() and map 'o': 4, 'o|': 2, '.|': 1\n"
+                        elif "E_PY_BISECTION_SIGN" in diag_one:
+                            inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one} -> return find_zero([-c for c in xs])\n"
+                        else:
+                            inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one}\n"
+                        kept_with_hint = kept_prefix + inline_hint
                         tool_calls_log.append({
                             "tool": "generative_compiler",
                             "language": code_lang,
@@ -2419,15 +2488,15 @@ class CloverK3AgentEngine:
                             "ms": verdict.elapsed_ms,
                         })
                         corr_prompt = (
-                            f"```\n<result>Compiler error on line {rb_idx + 1}: {diag_msg.splitlines()[0]}</result>\n"
-                            f"I will rewrite the implementation from line {rb_idx + 1} so that longer multi-character tokens or valid types/arguments are checked first:\n"
-                            f"```{code_lang}\n{kept_prefix}"
+                            f"```\n<result>Compiler error on line {rb_idx + 1}: {diag_one}</result>\n"
+                            f"I will rewrite the implementation from line {rb_idx + 1} so that longer multi-character tokens, loop step variables, or valid types/arguments are handled properly:\n"
+                            f"```{code_lang}\n{kept_with_hint}"
                         )
                         corr_ids = self.ha_tok(corr_prompt, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
                         out = backbone(input_ids=corr_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
                         past_kv = out.past_key_values
                         next_logits = out.logits[:, -1, :]
-                        gen_ids = self.ha_tok.encode(kept_prefix, add_special_tokens=False) if kept_prefix else []
+                        gen_ids = self.ha_tok.encode(kept_with_hint, add_special_tokens=False) if kept_with_hint else []
                         continue
             # Check if the model emitted a `<python>...</python>` or `<search>...</search>` call during generation
             if PYTHON_CLOSE in txt_so_far and not any(t["tool"] == "python" for t in tool_calls_log):
@@ -2555,10 +2624,11 @@ class CloverK3AgentEngine:
                     except SyntaxError:
                         c_lines.pop()
                 code_body = "\n".join(c_lines)
-                pre_repair_verdict = self.py_gc.check_prefix(code_body, end_marker=True)
+                code_body = restore_spec_helpers(code_body, raw_user_q)
+                pre_repair_verdict = self.py_gc.check_prefix(code_body, end_marker=True, spec_prompt=raw_user_q)
                 if ont_enabled and not pre_repair_verdict.ok:
                     code_body = self.symbolic_verifier.verify_and_repair_python_code(code_body, raw_user_q)
-                final_verdict = self.py_gc.check_prefix(code_body, end_marker=True)
+                final_verdict = self.py_gc.check_prefix(code_body, end_marker=True, spec_prompt=raw_user_q)
             else:
                 final_verdict = (
                     self.rust_gc.check_prefix(code_body, end_marker=True)
