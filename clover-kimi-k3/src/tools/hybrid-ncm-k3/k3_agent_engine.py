@@ -63,7 +63,7 @@ from k3_generative_compiler import (
     CloverPythonGenerativeCompiler, CloverRustGenerativeCompiler, HAS_RUST_GC, restore_spec_helpers
 )
 from k3_memory_graph import (
-    CloverMemoryGraphStore, ensure_default_memory_tree, retrieve_relevant_memory_package
+    CloverMemoryGraphStore, MemoryProvenance, ensure_default_memory_tree, retrieve_relevant_memory_package, utc_now_iso
 )
 
 SEARCH_OPEN, SEARCH_CLOSE = "<search>", "</search>"
@@ -1918,6 +1918,7 @@ class CloverK3AgentEngine:
         self.enable_ontology = True
         self.memory_graph = ensure_default_memory_tree()
         self.enable_memory_graph = True
+        self.enable_memory_auto_stage = False  # Off during read-only benchmarks; enabled explicitly for Growth-stage staging
         self.py_gc = CloverPythonGenerativeCompiler(allow_undefined=True)
         self.rust_gc = None  # Lazily initialized when a Rust code specification is generated
 
@@ -2701,6 +2702,34 @@ class CloverK3AgentEngine:
                 "final_ok": final_verdict.ok,
                 "total_ms": round(gc_total_ms, 2),
             })
+            if (
+                getattr(self, "enable_memory_auto_stage", False)
+                and getattr(self, "memory_graph", None) is not None
+                and gc_rollbacks_count > 0
+                and final_verdict.ok
+            ):
+                first_rb = next(
+                    (t for t in tool_calls_log if t.get("tool") == "generative_compiler" and t.get("event") in ("prefix_rollback", "final_rollback")),
+                    None,
+                )
+                if first_rb is not None:
+                    diag_str = str(first_rb.get("diagnostic") or "").splitlines()[0][:180]
+                    staged_e = self.memory_graph.propose_cycle_memory_update(
+                        cycle_kind="compiler_rollback_solved",
+                        title=f"Generative Compilation Rollback Solved {code_lang.capitalize()} Specification ({diag_str[:60]})",
+                        summary=f"Caught {diag_str} at line {first_rb.get('rollback_line')} and solved the {code_lang} specification after {gc_rollbacks_count} rollback(s).",
+                        content=f"Specification excerpt: {raw_user_q[:240]}\nDiagnostic caught: {diag_str}",
+                        source_evidence=f"Rollbacks={gc_rollbacks_count}, prefix_checks={gc_checks_count}, final_ok={final_verdict.ok}, total_ms={round(gc_total_ms, 2)}",
+                        provenance=MemoryProvenance(
+                            source_type="experiment",
+                            source_ref=f"generative_compiler:{code_lang}:line_{first_rb.get('rollback_line')}",
+                            actor="generative_compiler_oracle",
+                            recorded_at=utc_now_iso(),
+                        ),
+                        concepts=["generative-compilation", "statement-boundary-soundness"],
+                        tags=[code_lang, "rollback"],
+                    )
+                    tool_calls_log.append({"tool": "memory_staged", "staged_id": staged_e.id, "rel_path": staged_e.rel_path})
             raw = f"W1:\n```{code_lang}\n{code_body}\n```"
         elif is_mcq:
             raw = f"W1: The correct answer is ({mcq_chosen_l}) " + decoded_gen
@@ -2809,41 +2838,44 @@ class CloverK3AgentEngine:
                 plans = filtered_ws_plans
 
         if mem_pkg is not None and mem_pkg.items and not has_verified_ws_tools:
-            joined_p_low = " ".join(plans).lower()
-            top_mem_ids = [it.entry.id for it in mem_pkg.items[:2]]
-            if not all(mid.lower() in joined_p_low for mid in top_mem_ids):
-                mem_bullets = []
-                for it in mem_pkg.items[:3]:
-                    e = it.entry
-                    role_lbl = (
-                        f"SUPERSEDED by {it.superseded_by_id}" if it.superseded_by_id
-                        else (f"ACTIVE CORRECTION superseding {', '.join(it.supersedes_ids)}" if it.supersedes_ids else f"status={e.status}")
-                    )
-                    mem_bullets.append(
-                        f"• [{e.id}] ({e.entry_type}, epistemic={e.epistemic_status}, {role_lbl}, source={e.provenance.source_ref}): {e.summary}"
-                    )
-                combined_mem_src = "\n".join(mem_bullets + plans[:4])
-                plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
+            mem_bullets = []
+            for it in mem_pkg.items[:4]:
+                e = it.entry
+                role_lbl = (
+                    f"SUPERSEDED by {it.superseded_by_id}" if it.superseded_by_id
+                    else (f"ACTIVE CORRECTION superseding {', '.join(it.supersedes_ids)}" if it.supersedes_ids else f"status={e.status}")
+                )
+                mem_bullets.append(
+                    f"• [{e.id}] ({e.entry_type}, epistemic={e.epistemic_status}, {role_lbl}): {e.summary}"
+                )
+            for c in mem_pkg.active_contradictions[:2]:
+                mem_bullets.append(
+                    f"• Unresolved / Contested Tension: {c['source']} {c['type']} {c['target']} ({c.get('note') or 'contested'})"
+                )
+            combined_mem_src = "\n".join(mem_bullets + plans[:3])
+            plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
         elif has_attached_mem_pkg and not has_verified_ws_tools:
             marker = "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n"
             att_mem_block = user_prompt.split(marker, 1)[0]
-            joined_p_low = " ".join(plans).lower()
             att_m_entries = list(re.finditer(
                 r"\[M\d+\]\s+(MEM-[A-Z0-9\-]+)\s+—\s+([^\r\n]+)\n\s+File:[^\r\n]+\|\s+Type:\s*([a-z_]+)\s*\|\s*Epistemic Status:\s*([a-z_]+)\s*\|\s*Lifecycle:\s*([^\r\n]+)\n\s+Provenance:\s*([^\r\n]+)\n\s+Retrieval Path:[^\r\n]+\n\s+Summary:\s*([^\r\n]+)(?:\n\s+Original Source Evidence:\s*([^\r\n]+))?",
                 att_mem_block,
             ))
-            top_att_ids = [m.group(1) for m in att_m_entries[:2]]
-            if att_m_entries and not all(mid.lower() in joined_p_low for mid in top_att_ids):
+            if att_m_entries:
                 mem_bullets = []
-                for m in att_m_entries[:3]:
-                    mid, _mtitle, mtype, mepist, mlifecycle, mprov, msum, m_ev = (
+                for m in att_m_entries[:4]:
+                    mid, _mtitle, mtype, mepist, mlifecycle, _mprov, msum, m_ev = (
                         m.group(1), m.group(2), m.group(3), m.group(4), m.group(5).strip(), m.group(6).strip(), m.group(7).strip(), (m.group(8) or "").strip()
                     )
-                    ev_part = f" Evidence: {m_ev}" if m_ev else ""
+                    ev_part = f" Evidence: {m_ev[:160]}" if (m_ev and len(msum) < 160) else ""
                     mem_bullets.append(
-                        f"• [{mid}] ({mtype}, epistemic={mepist}, {mlifecycle}, provenance={mprov}): {msum}{ev_part}"
+                        f"• [{mid}] ({mtype}, epistemic={mepist}, {mlifecycle}): {msum}{ev_part}"
                     )
-                combined_mem_src = "\n".join(mem_bullets + plans[:4])
+                for cm in re.finditer(r"•\s+(MEM-[A-Z0-9\-]+)\s+--\[(challenges|unresolved_with)\]-->\s+(MEM-[A-Z0-9\-]+):\s+([^\r\n]+)", att_mem_block):
+                    mem_bullets.append(
+                        f"• Unresolved / Contested Tension: {cm.group(1)} {cm.group(2)} {cm.group(3)} ({cm.group(4).strip()})"
+                    )
+                combined_mem_src = "\n".join(mem_bullets + plans[:3])
                 plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
 
         del past_kv, out

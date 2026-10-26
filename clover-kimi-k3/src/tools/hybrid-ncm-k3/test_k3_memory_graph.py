@@ -458,6 +458,67 @@ class TestCloverMemoryGraph(unittest.TestCase):
         self.assertEqual(parsed["count"], 32)
         self.assertEqual(set(parsed["ids"]), {"MEM-CORR-INSIDE-BOUNDARY-002", "MEM-HYP-INSIDE-MIND-001"})
 
+    def test_12_closed_loop_growth_staging_and_promotion_gate(self) -> None:
+        # 1. Propose a cycle memory update into `staging/` (`auto_promote_if_verified=False`)
+        staged = self.store.propose_cycle_memory_update(
+            cycle_kind="compiler_rollback_solved",
+            entry_id="MEM-OBS-GC-CYCLE-TEST-001",
+            title="Staged Observation: Prefix Shadowing Caught in Custom Lexer",
+            summary="Caught 1-char token 'a' shadowing 2-char token 'a+' at statement boundary.",
+            content="Detailed staging test for Direction A.",
+            source_evidence="Unit test oracle: rollback_line=12, final_ok=True.",
+            provenance=MemoryProvenance(
+                source_type="experiment",
+                source_ref="test_12_staging",
+                actor="unit_test_oracle",
+            ),
+            concepts=["prefix-shadow", "generative-compilation"],
+            tags=["lexer", "staging-test"],
+            auto_promote_if_verified=False,
+        )
+        self.assertEqual(staged.status, "under_review")
+        self.assertTrue(staged.rel_path.startswith("staging/"))
+        # Must NOT pollute active index while in `staging/`
+        self.assertNotIn("MEM-OBS-GC-CYCLE-TEST-001", self.store.entries)
+        staged_list = self.store.list_staged_entries()
+        self.assertEqual([e.id for e in staged_list], ["MEM-OBS-GC-CYCLE-TEST-001"])
+        # Verify auto-linked concept bridge to `MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001`
+        self.assertIn(
+            "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+            [r.target for r in staged.relationships],
+        )
+
+        # 2. Promote the staged entry and verify it enters the active graph with `status='active'`
+        promoted = self.store.promote_staged_entry(
+            entry_id="MEM-OBS-GC-CYCLE-TEST-001",
+            actor="human_reviewer",
+            verification_note="Approved in test_12",
+        )
+        self.assertEqual(promoted.status, "active")
+        self.assertEqual(promoted.rel_path, "observations/mem-obs-gc-cycle-test-001.md")
+        self.assertIn("MEM-OBS-GC-CYCLE-TEST-001", self.store.entries)
+        self.assertEqual(self.store.list_staged_entries(), [])
+        assert self.store.last_validation is not None
+        self.assertTrue(self.store.last_validation.is_healthy)
+
+        # 3. Stage a second unverified draft and discard it
+        staged_bad = self.store.propose_cycle_memory_update(
+            cycle_kind="user_correction",
+            entry_id="MEM-CORR-USER-DRAFT-REJECT-001",
+            title="Unverified Draft to Discard",
+            summary="Draft summary.",
+            content="Draft content.",
+            source_evidence="None.",
+            provenance=MemoryProvenance(source_type="conversation", source_ref="test_12_discard"),
+            concepts=["observer-boundary"],
+            auto_promote_if_verified=False,
+        )
+        self.assertEqual(len(self.store.list_staged_entries()), 1)
+        discarded = self.store.discard_staged_entry(staged_bad.id)
+        self.assertTrue(discarded)
+        self.assertEqual(self.store.list_staged_entries(), [])
+        self.assertNotIn("MEM-CORR-USER-DRAFT-REJECT-001", self.store.entries)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

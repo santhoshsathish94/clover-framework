@@ -686,6 +686,7 @@ class CloverMemoryGraphStore:
         self.root_dir = Path(root_dir).resolve()
         self.index_dir = self.root_dir / "_index"
         self.index_file = self.index_dir / "memory_graph_index.json"
+        self.staging_dir = self.root_dir / "staging"
 
         self.entries: dict[str, MemoryEntry] = {}
         self.id_to_rel_path: dict[str, str] = {}
@@ -705,8 +706,8 @@ class CloverMemoryGraphStore:
             return []
         md_files: list[Path] = []
         for dirpath, dirnames, filenames in os.walk(self.root_dir):
-            # Skip hidden directories and `_index`
-            dirnames[:] = sorted(d for d in dirnames if not d.startswith(".") and d != "_index")
+            # Skip hidden directories, `_index`, and `staging` (unpromoted drafts)
+            dirnames[:] = sorted(d for d in dirnames if not d.startswith(".") and d not in ("_index", "staging"))
             for fn in sorted(filenames):
                 if fn.endswith(".md") and not fn.startswith("_") and fn.upper() != "README.MD":
                     md_files.append(Path(dirpath) / fn)
@@ -1381,6 +1382,249 @@ class CloverMemoryGraphStore:
         return self.entries[correction_id], self.entries[target_id]
 
     # ------------------------------------------------------------------
+    # 4.3b Closed-Loop Growth Staging Queue & Verified Promotion Gate
+    # ------------------------------------------------------------------
+
+    def stage_candidate_entry(
+        self,
+        entry: MemoryEntry,
+        auto_link_concepts: bool = True,
+    ) -> MemoryEntry:
+        """Writes a candidate memory entry into `memory_tree/staging/<slug>.md` with `status='under_review'`.
+        Staged entries remain isolated from the active graph index until promoted via `promote_staged_entry()`,
+        preventing unverified model conclusions from polluting the canonical memory graph."""
+        entry.status = "under_review"
+        if auto_link_concepts:
+            existing_targets = {r.target for r in entry.relationships}
+            entry_concepts_low = {c.lower() for c in entry.concepts}
+            for cid, c_entry in self.entries.items():
+                if c_entry.entry_type != "concept" or cid in existing_targets:
+                    continue
+                c_low = {c.lower() for c in c_entry.concepts}
+                if entry_concepts_low & c_low:
+                    rel_t = "exemplifies" if entry.entry_type in ("observation", "correction", "experiment", "outcome") else "similar_to"
+                    entry.relationships.append(
+                        MemoryRelationship(
+                            type=rel_t,
+                            target=cid,
+                            source=entry.id,
+                            provenance=entry.provenance.source_ref,
+                            confidence=0.9,
+                            context_scope="auto_linked_concept_bridge",
+                            created_at=entry.created_at,
+                            note=f"Shared concept bridge ({', '.join(sorted(entry_concepts_low & c_low))})",
+                        )
+                    )
+                    existing_targets.add(cid)
+
+        errs = entry.validate()
+        if errs:
+            raise ValueError(f"Invalid staged MemoryEntry {entry.id!r}: {'; '.join(errs)}")
+        if entry.id in self.entries:
+            raise ValueError(f"Entry {entry.id!r} already exists in the active memory tree at {self.id_to_rel_path[entry.id]!r}")
+
+        safe_slug = re.sub(r"[^a-zA-Z0-9_\-]+", "-", entry.id.lower()).strip("-")
+        rel_p = f"staging/{safe_slug}.md"
+        entry.rel_path = rel_p
+        if not entry.revisions:
+            entry.revisions.append(
+                MemoryRevision(
+                    timestamp=entry.created_at,
+                    actor=entry.provenance.actor or "system",
+                    action="staged",
+                    reason=f"Staged candidate {entry.entry_type} under_review from {entry.provenance.source_ref}",
+                )
+            )
+        self.staging_dir.mkdir(parents=True, exist_ok=True)
+        fp = self.staging_dir / f"{safe_slug}.md"
+        fp.write_text(render_memory_markdown(entry), encoding="utf-8")
+        return entry
+
+    def list_staged_entries(self) -> list[MemoryEntry]:
+        """Lists all candidate entries currently waiting in `memory_tree/staging/`."""
+        if not self.staging_dir.exists():
+            return []
+        staged: list[MemoryEntry] = []
+        for fp in sorted(self.staging_dir.glob("*.md")):
+            try:
+                rel_p = fp.relative_to(self.root_dir).as_posix()
+                staged.append(parse_memory_markdown(fp.read_text(encoding="utf-8"), rel_path=rel_p))
+            except Exception:
+                continue
+        return staged
+
+    def promote_staged_entry(
+        self,
+        entry_id: str,
+        actor: str = "human_reviewer",
+        verification_note: str = "Verified and promoted to active memory graph",
+        epistemic_status: str | None = None,
+        mark_corrected_targets_superseded: bool = True,
+    ) -> MemoryEntry:
+        """Promotes a staged entry from `memory_tree/staging/` into its canonical branch folder
+        (`observations/`, `corrections/`, `concepts/`, etc.), sets `status='active'`, updates any
+        `corrects` targets to `superseded`, removes the staging file, and rebuilds the graph index."""
+        staged_fp: Path | None = None
+        staged_entry: MemoryEntry | None = None
+        for fp in sorted(self.staging_dir.glob("*.md")) if self.staging_dir.exists() else []:
+            try:
+                cand = parse_memory_markdown(fp.read_text(encoding="utf-8"), rel_path=fp.relative_to(self.root_dir).as_posix())
+                if cand.id == entry_id:
+                    staged_fp = fp
+                    staged_entry = cand
+                    break
+            except Exception:
+                continue
+
+        if staged_entry is None or staged_fp is None:
+            raise KeyError(f"Staged entry {entry_id!r} not found in {self.staging_dir}")
+
+        now_ts = utc_now_iso()
+        staged_entry.status = "active"
+        if epistemic_status is not None:
+            staged_entry.epistemic_status = epistemic_status
+        staged_entry.updated_at = now_ts
+        staged_entry.revisions.append(
+            MemoryRevision(
+                timestamp=now_ts,
+                actor=actor,
+                action="promoted",
+                reason=verification_note,
+            )
+        )
+
+        folder_map = {
+            "conversation": "conversations",
+            "concept": "concepts",
+            "observation": "observations",
+            "correction": "corrections",
+            "hypothesis": "hypotheses",
+            "decision": "decisions",
+            "experiment": "experiments",
+            "outcome": "outcomes",
+        }
+        folder = folder_map.get(staged_entry.entry_type, f"{staged_entry.entry_type}s")
+        safe_slug = re.sub(r"[^a-zA-Z0-9_\-]+", "-", staged_entry.id.lower()).strip("-")
+        canonical_rel = f"{folder}/{safe_slug}.md"
+
+        promoted = self.create_entry(staged_entry, rel_path=canonical_rel, overwrite=False)
+        if staged_fp.exists():
+            staged_fp.unlink()
+
+        if mark_corrected_targets_superseded:
+            for rel in promoted.relationships:
+                if rel.type == "corrects" and rel.target in self.entries:
+                    self.mark_superseded(
+                        entry_id=rel.target,
+                        superseded_by_id=promoted.id,
+                        reason=verification_note,
+                        actor=actor,
+                    )
+        return self.entries[promoted.id]
+
+    def discard_staged_entry(self, entry_id: str) -> bool:
+        """Deletes a rejected candidate entry from `memory_tree/staging/`."""
+        if not self.staging_dir.exists():
+            return False
+        for fp in sorted(self.staging_dir.glob("*.md")):
+            try:
+                cand = parse_memory_markdown(fp.read_text(encoding="utf-8"), rel_path=fp.relative_to(self.root_dir).as_posix())
+                if cand.id == entry_id:
+                    fp.unlink()
+                    return True
+            except Exception:
+                continue
+        return False
+
+    def propose_cycle_memory_update(
+        self,
+        cycle_kind: Literal["compiler_rollback_solved", "user_correction", "verified_observation"],
+        title: str,
+        summary: str,
+        content: str,
+        source_evidence: str,
+        provenance: MemoryProvenance,
+        concepts: list[str],
+        tags: list[str] | None = None,
+        corrects_id: str | None = None,
+        refines_id: str | None = None,
+        entry_id: str | None = None,
+        auto_promote_if_verified: bool = False,
+    ) -> MemoryEntry:
+        """Growth-stage hook: drafts a structured `MemoryEntry` from a completed problem cycle
+        (e.g., a Generative Compilation rollback that subsequently passed verification, or a user correction),
+        links it to any target it `corrects` or `refines` as well as matching `MEM-CONCEPT-*` bridge nodes,
+        and stages it in `memory_tree/staging/` (or promotes it immediately when `auto_promote_if_verified=True`
+        and an independent oracle verified the outcome)."""
+        ts_compact = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S")
+        if cycle_kind == "compiler_rollback_solved":
+            e_type = "observation"
+            epist = "externally_verified"
+            prefix = "MEM-OBS-GC-CYCLE"
+        elif cycle_kind == "user_correction":
+            e_type = "correction"
+            epist = "user_stated_belief"
+            prefix = "MEM-CORR-USER-CYCLE"
+        else:
+            e_type = "correction" if (corrects_id or refines_id) else "observation"
+            epist = "externally_verified"
+            prefix = "MEM-CORR-VERIFIED" if e_type == "correction" else "MEM-OBS-VERIFIED"
+
+        final_id = entry_id or f"{prefix}-{ts_compact}"
+        rels: list[MemoryRelationship] = []
+        if corrects_id and corrects_id in self.entries:
+            rels.append(
+                MemoryRelationship(
+                    type="corrects",
+                    target=corrects_id,
+                    source=final_id,
+                    provenance=provenance.source_ref,
+                    confidence=1.0,
+                    context_scope=cycle_kind,
+                    created_at=provenance.recorded_at,
+                    note=f"Corrects {corrects_id}: {summary[:120]}",
+                )
+            )
+        if refines_id and refines_id in self.entries:
+            rels.append(
+                MemoryRelationship(
+                    type="refines",
+                    target=refines_id,
+                    source=final_id,
+                    provenance=provenance.source_ref,
+                    confidence=1.0,
+                    context_scope=cycle_kind,
+                    created_at=provenance.recorded_at,
+                    note=f"Refines {refines_id}: {summary[:120]}",
+                )
+            )
+
+        candidate = MemoryEntry(
+            id=final_id,
+            title=title,
+            entry_type=e_type,
+            epistemic_status=epist,
+            status="under_review",
+            concepts=list(dict.fromkeys(concepts)),
+            tags=list(dict.fromkeys((tags or []) + [cycle_kind, "growth-cycle"])),
+            created_at=provenance.recorded_at or utc_now_iso(),
+            updated_at=provenance.recorded_at or utc_now_iso(),
+            provenance=provenance,
+            summary=summary,
+            content=content,
+            source_evidence=source_evidence,
+            relationships=rels,
+        )
+        staged = self.stage_candidate_entry(candidate, auto_link_concepts=True)
+        if auto_promote_if_verified and epist in ("externally_verified", "observed"):
+            return self.promote_staged_entry(
+                entry_id=staged.id,
+                actor=provenance.actor or "verified_oracle",
+                verification_note=f"Auto-promoted after independent verification ({provenance.source_ref})",
+            )
+        return staged
+
+    # ------------------------------------------------------------------
     # 4.4 Hybrid Querying, Evolution Tracing & Bounded Context Packaging
     # ------------------------------------------------------------------
 
@@ -1644,6 +1888,11 @@ class CloverMemoryGraphStore:
                         chain_member_boost[cnode.id] = (
                             max(chain_member_boost.get(cnode.id, (0.0, ""))[0], base_sc + 6.0),
                             f"originating_source_for({tnode.entry.id})",
+                        )
+                    elif cnode.entry_type in ("outcome", "experiment"):
+                        chain_member_boost[cnode.id] = (
+                            max(chain_member_boost.get(cnode.id, (0.0, ""))[0], base_sc + 10.0),
+                            f"outcome_or_experiment_in_chain({tnode.entry.id})",
                         )
 
         # Map traversed nodes by ID, adding any evolution chain nodes not yet in `traversed_by_id`

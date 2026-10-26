@@ -424,6 +424,26 @@ HTML_UI = """<!DOCTYPE html>
     resize: none; min-height: 44px; max-height: 130px; line-height: 1.45;
   }
   textarea:focus { outline: none; border-color: var(--accent); background: var(--bg); }
+  .mem-drawer {
+    position: fixed; top: 56px; right: 0; bottom: 0; width: 420px; max-width: 92vw;
+    background: var(--bg); border-left: 1px solid var(--line-2); z-index: 50;
+    display: flex; flex-direction: column; box-shadow: -4px 0 18px rgba(20, 24, 29, 0.08);
+  }
+  .mem-drawer[hidden] { display: none !important; }
+  .mem-drawer__head {
+    padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); display: flex;
+    align-items: center; justify-content: space-between; font-weight: 700; font-size: 0.92rem;
+  }
+  .mem-drawer__body { flex: 1; overflow-y: auto; padding: 0.85rem 1rem; font-size: 0.83rem; }
+  .mem-card {
+    border: 1px solid var(--line); border-radius: 8px; padding: 0.65rem 0.75rem;
+    margin-bottom: 0.55rem; background: var(--soft);
+  }
+  .mem-card--staged { background: #fffbeb; border-color: #f59e0b; }
+  .mem-badge {
+    display: inline-block; padding: 0.1rem 0.42rem; border-radius: 5px; font-size: 0.72rem;
+    font-weight: 600; background: var(--accent-soft); color: var(--accent); margin-right: 0.3rem;
+  }
 </style>
 </head>
 <body>
@@ -445,7 +465,23 @@ HTML_UI = """<!DOCTYPE html>
     </svg>
     Clover
   </div>
+  <div>
+    <button type="button" class="btn" onclick="toggleMemoryDrawer()" id="mem-drawer-btn" title="Inspect File-Based Memory Tree & Relational Knowledge Graph">Memory Graph</button>
+  </div>
 </header>
+
+<aside class="mem-drawer" id="mem-drawer" hidden aria-label="Memory Graph Inspector">
+  <div class="mem-drawer__head">
+    <span id="mem-drawer-title">Collective Memory Graph</span>
+    <button type="button" class="btn" onclick="toggleMemoryDrawer()">Close</button>
+  </div>
+  <div style="padding:0.55rem 1rem;border-bottom:1px solid var(--line);display:flex;gap:0.4rem;">
+    <input type="text" id="mem-query-in" placeholder="Search concepts, IDs, or chains..." style="flex:1;padding:0.38rem 0.6rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;font-size:0.82rem;">
+    <button type="button" class="btn" onclick="queryMemoryDrawer()">Query</button>
+    <button type="button" class="btn" onclick="loadMemoryDrawer()">All</button>
+  </div>
+  <div class="mem-drawer__body" id="mem-drawer-body">Loading memory graph...</div>
+</aside>
 
 <div class="workspace">
   <aside class="sidebar" aria-label="Chat sessions">
@@ -1008,6 +1044,107 @@ async function sendPrompt() {
 loadSessions();
 renderSidebar();
 renderMessages();
+
+async function toggleMemoryDrawer() {
+  const dr = document.getElementById('mem-drawer');
+  if (!dr) return;
+  if (dr.hasAttribute('hidden')) {
+    dr.removeAttribute('hidden');
+    await loadMemoryDrawer();
+  } else {
+    dr.setAttribute('hidden', '');
+  }
+}
+
+async function loadMemoryDrawer() {
+  const bodyEl = document.getElementById('mem-drawer-body');
+  const titleEl = document.getElementById('mem-drawer-title');
+  if (!bodyEl) return;
+  bodyEl.innerHTML = 'Loading memory tree & graph index...';
+  try {
+    const r = await fetch('/api/memory/status');
+    const d = await r.json();
+    const v = d.validation || {};
+    const staged = d.staged_entries || [];
+    const entries = d.entries || [];
+    if (titleEl) titleEl.textContent = `Memory Graph (${entries.length} active, ${v.total_relationships || 0} edges)`;
+    let html = `<div style="margin-bottom:0.65rem;color:var(--ink-2);"><strong>Health:</strong> ${v.is_healthy ? 'Healthy' : 'Needs Review'} &bull; <strong>Files:</strong> ${v.total_files || entries.length} &bull; <strong>Edges:</strong> ${v.total_relationships || 0} &bull; <strong>Staged:</strong> ${staged.length}</div>`;
+    if (staged.length) {
+      html += `<div style="font-weight:700;margin:0.5rem 0 0.35rem;">Staged Candidates Under Review (${staged.length})</div>`;
+      staged.forEach(s => {
+        html += `<div class="mem-card mem-card--staged">
+          <div><strong>${escHtml(s.id)}</strong> <span class="mem-badge">${escHtml(s.entry_type)}</span><span class="mem-badge">${escHtml(s.epistemic_status)}</span></div>
+          <div style="font-weight:600;margin:0.2rem 0;">${escHtml(s.title)}</div>
+          <div style="color:var(--ink-2);margin-bottom:0.4rem;">${escHtml(s.summary || '')}</div>
+          <div style="display:flex;gap:0.4rem;">
+            <button type="button" class="btn" onclick="promoteStaged('${escHtml(s.id)}')">Approve &amp; Promote</button>
+            <button type="button" class="btn" onclick="discardStaged('${escHtml(s.id)}')">Discard</button>
+          </div>
+        </div>`;
+      });
+    }
+    html += `<div style="font-weight:700;margin:0.5rem 0 0.35rem;">Active Memory Tree (${entries.length})</div>`;
+    entries.forEach(e => {
+      const sup = e.superseded_by ? ` &rarr; superseded by ${escHtml(e.superseded_by)}` : '';
+      html += `<div class="mem-card">
+        <div><strong>${escHtml(e.id)}</strong> <span class="mem-badge">${escHtml(e.entry_type)}</span><span class="mem-badge">${escHtml(e.epistemic_status)}</span><span class="mem-badge">${escHtml(e.status)}${sup}</span></div>
+        <div style="font-weight:600;margin:0.18rem 0;">${escHtml(e.title)}</div>
+        <div style="color:var(--muted);font-size:0.75rem;">${escHtml(e.rel_path)}</div>
+      </div>`;
+    });
+    bodyEl.innerHTML = html;
+  } catch (err) {
+    bodyEl.innerHTML = '<p>Unable to load memory graph status.</p>';
+  }
+}
+
+async function queryMemoryDrawer() {
+  const qIn = document.getElementById('mem-query-in');
+  const bodyEl = document.getElementById('mem-drawer-body');
+  if (!qIn || !bodyEl) return;
+  const q = qIn.value.trim();
+  if (!q) return loadMemoryDrawer();
+  bodyEl.innerHTML = 'Traversing memory graph...';
+  try {
+    const r = await fetch('/api/memory/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: q, max_depth: 2, max_entries: 6 })
+    });
+    const d = await r.json();
+    const items = d.items || [];
+    let html = `<div style="margin-bottom:0.6rem;"><strong>Retrieved ${items.length} entries</strong> (${d.estimated_tokens_used || 0}/${d.token_budget || 1100} tokens)</div>`;
+    items.forEach(it => {
+      html += `<div class="mem-card">
+        <div><strong>${escHtml(it.id)}</strong> <span class="mem-badge">${escHtml(it.evolution_role)}</span><span class="mem-badge">${escHtml(it.epistemic_status)}</span></div>
+        <div style="font-weight:600;margin:0.2rem 0;">${escHtml(it.title)}</div>
+        <div style="color:var(--ink-2);margin-bottom:0.25rem;">${escHtml(it.summary)}</div>
+        <div style="color:var(--muted);font-size:0.74rem;">Path: ${escHtml(it.relationship_path)}</div>
+      </div>`;
+    });
+    bodyEl.innerHTML = html;
+  } catch (err) {
+    bodyEl.innerHTML = '<p>Query failed.</p>';
+  }
+}
+
+async function promoteStaged(entryId) {
+  await fetch('/api/memory/promote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entry_id: entryId, actor: 'web_ui_reviewer' })
+  });
+  await loadMemoryDrawer();
+}
+
+async function discardStaged(entryId) {
+  await fetch('/api/memory/discard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entry_id: entryId })
+  });
+  await loadMemoryDrawer();
+}
 </script>
 </body>
 </html>
@@ -1962,10 +2099,23 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": "Memory graph not initialized"}, code=500)
             else:
                 val = mg.last_validation or mg.rebuild_index()
+                staged = mg.list_staged_entries()
                 self._send_json({
                     "root_dir": str(mg.root_dir),
                     "index_file": str(mg.index_file),
                     "validation": val.to_dict(),
+                    "staged_entries": [
+                        {
+                            "id": s.id,
+                            "title": s.title,
+                            "rel_path": s.rel_path,
+                            "entry_type": s.entry_type,
+                            "epistemic_status": s.epistemic_status,
+                            "status": s.status,
+                            "summary": s.summary,
+                        }
+                        for s in staged
+                    ],
                     "entries": [
                         {
                             "id": e.id,
@@ -1977,6 +2127,32 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                             "superseded_by": e.superseded_by,
                         }
                         for e in mg.entries.values()
+                    ],
+                })
+        elif self.path.startswith("/api/memory/staged"):
+            eng0 = STATE.text_workers[0]
+            mg = getattr(eng0, "memory_graph", None)
+            if mg is None:
+                self._send_json({"error": "Memory graph not initialized"}, code=500)
+            else:
+                staged = mg.list_staged_entries()
+                self._send_json({
+                    "count": len(staged),
+                    "staged_entries": [
+                        {
+                            "id": s.id,
+                            "title": s.title,
+                            "rel_path": s.rel_path,
+                            "entry_type": s.entry_type,
+                            "epistemic_status": s.epistemic_status,
+                            "status": s.status,
+                            "summary": s.summary,
+                            "content": s.content,
+                            "source_evidence": s.source_evidence,
+                            "provenance": s.provenance.to_dict(),
+                            "relationships": [r.to_dict(include_source=True) for r in s.relationships],
+                        }
+                        for s in staged
                     ],
                 })
         elif self.path.startswith(("/v1/models", "/models")):
@@ -2049,6 +2225,86 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 return
             rep = mg.rebuild_index(write_index_file=True)
             self._send_json({"ok": True, "validation": rep.to_dict()})
+            return
+
+        if self.path.startswith("/api/memory/stage"):
+            eng0 = STATE.text_workers[0]
+            mg = getattr(eng0, "memory_graph", None)
+            if mg is None:
+                self._send_json({"error": "Memory graph not initialized"}, code=500)
+                return
+            try:
+                from k3_memory_graph import MemoryProvenance
+                prov_dict = payload.get("provenance") or {}
+                prov = MemoryProvenance(
+                    source_type=str(prov_dict.get("source_type") or "conversation"),
+                    source_ref=str(prov_dict.get("source_ref") or "api:memory:stage"),
+                    actor=str(prov_dict.get("actor") or "user"),
+                )
+                staged = mg.propose_cycle_memory_update(
+                    cycle_kind=payload.get("cycle_kind") or "verified_observation",
+                    entry_id=payload.get("id") or None,
+                    title=str(payload.get("title") or "").strip(),
+                    summary=str(payload.get("summary") or "").strip(),
+                    content=str(payload.get("content") or payload.get("summary") or "").strip(),
+                    source_evidence=str(payload.get("source_evidence") or "").strip(),
+                    provenance=prov,
+                    concepts=list(payload.get("concepts") or []),
+                    tags=list(payload.get("tags") or []),
+                    corrects_id=payload.get("corrects_id") or None,
+                    refines_id=payload.get("refines_id") or None,
+                    auto_promote_if_verified=bool(payload.get("auto_promote", False)),
+                )
+                self._send_json({
+                    "ok": True,
+                    "staged": {
+                        "id": staged.id,
+                        "title": staged.title,
+                        "rel_path": staged.rel_path,
+                        "status": staged.status,
+                        "epistemic_status": staged.epistemic_status,
+                        "relationships": [r.to_dict(include_source=True) for r in staged.relationships],
+                    },
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, code=400)
+            return
+
+        if self.path.startswith("/api/memory/promote"):
+            eng0 = STATE.text_workers[0]
+            mg = getattr(eng0, "memory_graph", None)
+            if mg is None:
+                self._send_json({"error": "Memory graph not initialized"}, code=500)
+                return
+            try:
+                eid = str(payload.get("entry_id") or payload.get("id") or "").strip()
+                actor = str(payload.get("actor") or "human_reviewer").strip()
+                note = str(payload.get("verification_note") or "Promoted via /api/memory/promote").strip()
+                promoted = mg.promote_staged_entry(entry_id=eid, actor=actor, verification_note=note)
+                self._send_json({
+                    "ok": True,
+                    "promoted": {
+                        "id": promoted.id,
+                        "title": promoted.title,
+                        "rel_path": promoted.rel_path,
+                        "status": promoted.status,
+                        "epistemic_status": promoted.epistemic_status,
+                    },
+                    "validation": mg.last_validation.to_dict() if mg.last_validation else {},
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, code=400)
+            return
+
+        if self.path.startswith("/api/memory/discard"):
+            eng0 = STATE.text_workers[0]
+            mg = getattr(eng0, "memory_graph", None)
+            if mg is None:
+                self._send_json({"error": "Memory graph not initialized"}, code=500)
+                return
+            eid = str(payload.get("entry_id") or payload.get("id") or "").strip()
+            removed = mg.discard_staged_entry(eid)
+            self._send_json({"ok": removed, "entry_id": eid})
             return
 
         if self.path.startswith("/api/memory/query"):
