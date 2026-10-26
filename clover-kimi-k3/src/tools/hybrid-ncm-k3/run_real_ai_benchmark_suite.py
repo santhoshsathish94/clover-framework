@@ -147,6 +147,10 @@ def collect_code_provenance(api_url: str = "http://127.0.0.1:8765") -> dict[str,
     _, git_branch = run_cmd(["git", "-C", str(repo_root), "rev-parse", "--abbrev-ref", "HEAD"])
     _, git_status = run_cmd(["git", "-C", str(repo_root), "status", "--short"])
     _, git_remote = run_cmd(["git", "-C", str(repo_root), "remote", "get-url", "origin"])
+    code_status_lines = [
+        ln for ln in git_status.splitlines()
+        if ln.strip() and not ln.strip().endswith("benchmarks/") and "benchmarks/results/" not in ln
+    ]
 
     modules = {
         "clover_paths": clover_paths,
@@ -184,8 +188,8 @@ def collect_code_provenance(api_url: str = "http://127.0.0.1:8765") -> dict[str,
         "tools_dir": str(_SCRIPT_DIR),
         "git_branch": git_branch,
         "git_head_sha": git_sha,
-        "git_status_short": git_status,
-        "working_tree_clean": (git_status == ""),
+        "git_status_short": "\n".join(code_status_lines),
+        "working_tree_clean": (len(code_status_lines) == 0),
         "sys_path_top5": sys.path[:5],
         "all_imports_resolve_to_frozen_checkout": all_in_checkout,
         "modules": mod_manifest,
