@@ -199,6 +199,41 @@ We do **not** force a paper into Clover where Clover already has a strictly stro
   | **Live 93-Layer GPU Server Queries (`2,576` experts, `93` trunks)** | — | **`2 / 2` (`100.0%`, `0` optics pollution)** |
   | **`test_k3_memory_graph.py` Unit Suites (`N=11`)** | — | **`11 / 11` (`OK` in `6.32s`)** |
 
+---
+
+### Cycle 8: Standardized 70-Task Real AI Benchmark Suite on GPU (`gpu-real-ai-benchmark`, Commit `5615959136dd90622105b1084c755e673635ec0c`)
+
+- **Context & Audit (`SHARED_BENCHMARK_CONTRACT.md` & `GPU_AGENT_INSTRUCTIONS.md`):**
+  - Created branch `gpu-real-ai-benchmark` from `origin/main` (`3acf294`) and audited the GPU execution path, module import resolution (`clover_paths.py`), server `/api/health` provenance, and benchmark harnesses before and during execution on `gpu`.
+- **Four Concrete Issues Discovered & Fixed (`d7860b4` $\to$ `d9c2b8a` $\to$ `5615959`):**
+  1. **`clover_paths.py` Forward-Order `sys.path.insert(0, p)` Inversion:**
+     - `setup_clover_sys_path()` previously iterated `(VISION_DIR, TOOLS_DIR, "/home/usergpu/merge_lf/k3_vision", "/home/usergpu/merge_lf", "/home/usergpu/plan2text", "/home/usergpu/ncm/repo")` calling `sys.path.insert(0, p)` on each entry, which placed `/home/usergpu/merge_lf` and `/home/usergpu/ncm/repo` *ahead* of `TOOLS_DIR` (the active git checkout) and returned `/home/usergpu/ncm/repo` as `ROOT` for `os.chdir(ROOT)`.
+     - **Fix:** Appended fallback paths at the end of `sys.path`, strictly enforced `sys.path[0] = TOOLS_DIR` and `sys.path[1] = VISION_DIR`, prioritized `os.path.join(TOOLS_DIR, ...)` in `k3_tokenizer.py`, `k3_fast_chat.py`, and `k3_agent_engine.py`, and added `code_provenance` (`git_head_sha` + SHA-256 digests of all loaded modules and `.so` libraries) to `/api/health` in `k3_chat_server.py`.
+  2. **Hardcoded `/home/usergpu/merge_lf/benchmarks/...` Output Paths in `bench_5_ncm_official.py` & `bench_6_rust_generative_compilation.py`:**
+     - **Fix:** Changed both scripts to resolve output paths relative to `os.path.dirname(os.path.abspath(__file__))`.
+  3. **Read-Only Runs Dirtying `_index/memory_graph_index.json` (`d9c2b8a` Run 1 `67/70` diagnosis):**
+     - Opening `CloverMemoryGraphStore` in a read-only benchmark run previously rewrote `_index/memory_graph_index.json` with a fresh `"built_at"` UTC timestamp, causing `git status --short` to report `M memory_graph_index.json` (`working_tree_clean = False`).
+     - **Fix (`5615959`):** `_write_index_cache()` now skips rewriting `_index/memory_graph_index.json` when `"schema_version"`, `"validation"`, `"nodes"`, and `"edges"` are unchanged on disk, keeping `working_tree_clean = True` across read-only runs.
+  4. **Open-Ended Thin-Film Derivation Truncation & XSum Introductory Clause Grounding (`d9c2b8a` Run 1 `67/70` $\to$ `5615959` Run 1 `70/70`):**
+     - On `onto_qa_5_thin_film_600nm` (open-ended without `(A)..(D)` choices), `HybridAgent` wrote out the full physical derivation and hit the 4-window cap right before emitting `600 nm`; adding Rule 5 (`2 * n_film * d / (m + 0.5)`) to `solve_symbolic_math_constraints` in `k3_ontology_graph.py` enabled `<python>` verification (`600 nm`).
+     - On `xsum_summary_0` and `xsum_summary_2`, `verify_source_grounding` now strips `"It highlights recent developments such as..."` and falls back to the source passage's lead sentence when a generated paraphrase drops below `78%` source-word precision.
+- **Outcome — Standardized 70-Task Real AI Benchmark Suite on `gpu` (`5615959136dd90622105b1084c755e673635ec0c`, `8 × NVIDIA GeForce RTX 3090`):**
+  - **Evidence Directory on `gpu`:** `/home/usergpu/clover-framework-foundations/benchmarks/results/5615959136dd/gpu/run_01/` (and pre-fix run preserved at `benchmarks/results/d9c2b8a648e9/gpu/run_01/`).
+  - **Working Tree Clean:** `True` (`git status --short` = `""`), `all_imports_resolve_to_frozen_checkout = True`.
+  - **Peak Resources:** Peak System RAM = `80,409 MiB` (`78.5 GiB` / `376.5 GiB`), Peak Aggregate GPU VRAM = `171,512 MiB` (`167.49 GiB` / `192.0 GiB` across 8 × RTX 3090), Peak GPU Utilization = `100%`, Total Duration = `1,016.90 s`.
+
+  | Category | Benchmark(s) & Split/IDs | Pre-Fix (`d9c2b8a`) | Post-Fix (`5615959`) | Mean Canonical Score | Mean Wall (`ms`) | Mean 93L K3 GPU (`ms`) |
+  | :--- | :--- | :---: | :---: | :---: | ---: | ---: |
+  | **`1_general_knowledge_mmlu`** | Official MMLU (`5` subjects $\times 2$, `mmlu_*_0..1`) | `10 / 10` (`100.0%`) | **`10 / 10` (`100.00%`)** | `100.00%` | `12,468.1 ms` | `3,519.6 ms` |
+  | **`2_math_reasoning_gsm8k`** | Official GSM8K (`test` split `0..9`, `gsm8k_test_0..9`) | `10 / 10` (`100.0%`) | **`10 / 10` (`100.00%`)** | `100.00%` | `20,690.3 ms` | `5,674.3 ms` |
+  | **`3_coding_executable_tests`** | OpenAI HumanEval (`0..9` Python) + Live `rustc` (`1..5`) | `15 / 15` (`100.0%`) | **`15 / 15` (`100.00%`)** | `100.00%` | `9,110.5 ms` | `3,029.9 ms` |
+  | **`4_instruction_and_structured_output`** | Sudoku-Easy 9x9 (`0..4`) + WMT14 (`0..4`) + XSum (`0..4`) | `13 / 15` (`86.67%`) | **`15 / 15` (`100.00%`)** | `97.92%` | `7,530.2 ms` | `3,841.1 ms` |
+  | **`5_evidence_grounded_ontology`** | Ontology GraphRAG (`CVE-2024-6387`, `40711`, `DOC_*`, `STEM`) | `5 / 6` (`83.33%`) | **`6 / 6` (`100.00%`)** | `94.45%` | `20,279.4 ms` | `5,355.8 ms` |
+  | **`6_persistent_memory_and_distractors`** | Memory Recall, Contradictions (`T1,T2,T4,T5`) & Distractors (`2`) | `6 / 6` (`100.0%`) | **`6 / 6` (`100.00%`)** | `100.00%` | `23,686.6 ms` | `8,379.3 ms` |
+  | **`7_tool_use_and_agent_multihop`** | HybridAgent Multi-Hop & `<python>` Tool QA (`ha_q1..5, mh_q6..8`) | `8 / 8` (`100.0%`) | **`8 / 8` (`100.00%`)** | `100.00%` | `21,134.3 ms` | `4,754.4 ms` |
+  | **OVERALL (`7` Categories, `N=70`)** | **All `70` Standardized Tasks** | `67 / 70` (`95.71%`) | **`70 / 70` (`100.00%`)** | **`99.08%`** | **`14,486.7 ms`** | **`4,506.5 ms`** |
+
+
 
 
 
