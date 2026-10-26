@@ -1,0 +1,2 @@
+[2026-10-26T19:17:32Z] CMD: run_real_ai_benchmark_suite.py --mode full --target gpu --run-id run_clean_v2 (cwd=/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3)
+[2026-10-26T19:34:15Z] Completed 70-task suite in 1005.5s (exit_code=0)

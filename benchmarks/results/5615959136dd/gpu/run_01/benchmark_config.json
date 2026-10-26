@@ -1,0 +1,137 @@
+{
+  "commit_sha": "5615959136dd90622105b1084c755e673635ec0c",
+  "target": "gpu",
+  "run_id": "run_01",
+  "api_url": "http://127.0.0.1:8765",
+  "decoding_parameters": {
+    "cands": 2,
+    "temperature_ha_plan": 0.0,
+    "ncm_scales": [
+      1,
+      4,
+      8,
+      14,
+      20,
+      26,
+      32,
+      40,
+      48,
+      56,
+      64
+    ],
+    "k3_moe_layers": 92,
+    "k3_trunks": 93,
+    "k3_permanent_vram_experts_per_layer": 28,
+    "slotcache_policy": "specmd_least_stale_r4 (policy 3)"
+  },
+  "total_tasks": 70,
+  "task_ids": [
+    "mmlu_college_computer_science_0",
+    "mmlu_college_computer_science_1",
+    "mmlu_college_biology_0",
+    "mmlu_college_biology_1",
+    "mmlu_college_physics_0",
+    "mmlu_college_physics_1",
+    "mmlu_astronomy_0",
+    "mmlu_astronomy_1",
+    "mmlu_high_school_us_history_0",
+    "mmlu_high_school_us_history_1",
+    "gsm8k_test_0",
+    "gsm8k_test_1",
+    "gsm8k_test_2",
+    "gsm8k_test_3",
+    "gsm8k_test_4",
+    "gsm8k_test_5",
+    "gsm8k_test_6",
+    "gsm8k_test_7",
+    "gsm8k_test_8",
+    "gsm8k_test_9",
+    "HumanEval_0",
+    "HumanEval_1",
+    "HumanEval_2",
+    "HumanEval_3",
+    "HumanEval_4",
+    "HumanEval_5",
+    "HumanEval_6",
+    "HumanEval_7",
+    "HumanEval_8",
+    "HumanEval_9",
+    "rust_gc_rust_live_1_gcd",
+    "rust_gc_rust_live_2_is_palindrome",
+    "rust_gc_rust_live_3_fibonacci",
+    "rust_gc_rust_live_4_fmt_msg_borrow",
+    "rust_gc_rust_live_5_max_slice",
+    "sudoku_easy_0",
+    "sudoku_easy_1",
+    "sudoku_easy_2",
+    "sudoku_easy_3",
+    "sudoku_easy_4",
+    "wmt14_reconstruct_0",
+    "wmt14_reconstruct_1",
+    "wmt14_reconstruct_2",
+    "wmt14_reconstruct_3",
+    "wmt14_reconstruct_4",
+    "xsum_summary_0",
+    "xsum_summary_1",
+    "xsum_summary_2",
+    "xsum_summary_3",
+    "xsum_summary_4",
+    "onto_qa_0_cve_2024_6387",
+    "onto_qa_1_cve_2024_40711",
+    "onto_qa_2_harbourside_council",
+    "onto_qa_3_payments_outage_209",
+    "onto_qa_4_aurora_storage_v42",
+    "onto_qa_5_thin_film_600nm",
+    "mem_qa_0_flat_response_partition",
+    "mem_qa_1_recurrent_kda_replay",
+    "mem_qa_2_hardware_scope_boundary",
+    "mem_qa_3_inside_outside_contradiction",
+    "mem_qa_4_distractor_oil_buoyancy",
+    "mem_qa_5_distractor_baseball_curveball",
+    "agent_ha_q1",
+    "agent_ha_q2",
+    "agent_ha_q3",
+    "agent_ha_q4",
+    "agent_ha_q5",
+    "agent_mh_q6",
+    "agent_mh_q7",
+    "agent_mh_q8"
+  ],
+  "scoring_self_test": {
+    "all_passed": true,
+    "checks": [
+      {
+        "name": "gsm8k_gold",
+        "passed": true
+      },
+      {
+        "name": "gsm8k_bad",
+        "passed": true
+      },
+      {
+        "name": "mmlu_gold",
+        "passed": true
+      },
+      {
+        "name": "mmlu_bad",
+        "passed": true
+      },
+      {
+        "name": "humaneval_gold",
+        "passed": true
+      },
+      {
+        "name": "humaneval_bad",
+        "passed": true
+      },
+      {
+        "name": "agent_qa_gold",
+        "passed": true
+      },
+      {
+        "name": "agent_qa_bad",
+        "passed": true
+      }
+    ]
+  }
+}

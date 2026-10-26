@@ -1,0 +1,114 @@
+{
+  "captured_at_utc": "2026-10-26T17:32:27Z",
+  "repo_url": "https://github.com/santhoshsathish94/clover-framework.git",
+  "checkout_root": "/home/usergpu/clover-framework-foundations",
+  "tools_dir": "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3",
+  "git_branch": "gpu-real-ai-benchmark",
+  "git_head_sha": "d9c2b8a648e985a6dde5853c893fe04ed9f2c58b",
+  "git_status_short": "M clover-kimi-k3/src/tools/hybrid-ncm-k3/memory_tree/_index/memory_graph_index.json",
+  "working_tree_clean": false,
+  "sys_path_top5": [
+    "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3",
+    "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3",
+    "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3",
+    "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_vision",
+    "/home/usergpu/generative-compilation/bindings/rust_generative_compiler"
+  ],
+  "all_imports_resolve_to_frozen_checkout": true,
+  "modules": {
+    "clover_paths": {
+      "resolved_path": "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/clover_paths.py",
+      "sha256": "676d237e1c9ef8675819f172c69e472ef0df43b9d4fdca9502a25bb5d5e6ba93",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_agent_engine": {
+      "resolved_path": "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_agent_engine.py",
+      "sha256": "a0e4b643066911a10ed3bf4cd37163e5f4fe03c2b629b1f2c6c822da1d35deea",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_fast_chat": {
+      "resolved_path": "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_fast_chat.py",
+      "sha256": "1f5ad6acbb4763a3a6f3b63e9bdb25a1436aecc3712b1ec1fecf493621aaba8a",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_memory_graph": {
+      "resolved_path": "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_memory_graph.py",
+      "sha256": "c6fc651ba909f31f646e30a1d88ef48599c78af0d44c652565134169bccf3723",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_ontology_graph": {
+      "resolved_path": "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_ontology_graph.py",
+      "sha256": "e2841b158eb1f95e56a7443816ed8956c959841200236bdca5dcef8888f276fd",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_generative_compiler": {
+      "resolved_path": "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_generative_compiler.py",
+      "sha256": "ef043767b85ab479849c813577be8ebe7f1fdcaa0351606da67ccdac43454c47",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_tokenizer": {
+      "resolved_path": "/home/usergpu/clover-framework-foundations/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_tokenizer.py",
+      "sha256": "dc5bc2bc5dba2c6878b1e38828fb63fbf44ab7f49bc41e9af08a761e8b8b20f3",
+      "resolves_to_frozen_checkout": true
+    }
+  },
+  "live_server_health": {
+    "status": "ready",
+    "mode": "agent_full93_k3_experts_ncm",
+    "setup_s": 59.53,
+    "active_sessions": 207,
+    "max_session_context_tokens": 262144,
+    "text_worker_pairs": 1,
+    "k3_trunks_resident": 93,
+    "k3_moe_layers_resident": 92,
+    "k3_experts_resident": 2576,
+    "k3_expert_cards": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "data_movement_ledger": {
+      "policy_id": 3,
+      "policy_name": "specmd_least_stale_r4",
+      "perm_vram_hits": 202541,
+      "dyn_needed": 105770,
+      "hit_card_R3": 91050,
+      "hit_host_R1": 3731,
+      "from_drive_R1": 10989,
+      "written_back_R2": 372,
+      "r4_clean_drops": 13119,
+      "spec_lookahead_hits": 29966,
+      "dyn_hit_rate_pct": 86.08,
+      "overall_vram_hit_rate_pct": 95.23,
+      "pcie_gb_moved": 264.823,
+      "eyeriss_cost_per_req": 9.113,
+      "card_pool_slots": 1229,
+      "host_cache_slots": 2912
+    },
+    "code_provenance": {
+      "tools_dir": "/home/usergpu/merge_lf",
+      "git_head_sha": "standalone_dir",
+      "k3_chat_server_file": "/home/usergpu/merge_lf/k3_chat_server.py",
+      "k3_chat_server_sha256_12": "7fe6e99341bb",
+      "k3_agent_engine_file": "/home/usergpu/merge_lf/k3_agent_engine.py",
+      "k3_agent_engine_sha256_12": "a0e4b6430669",
+      "k3_memory_graph_file": "/home/usergpu/merge_lf/k3_memory_graph.py",
+      "k3_memory_graph_sha256_12": "c6fc651ba909",
+      "k3_ontology_graph_file": "/home/usergpu/merge_lf/k3_ontology_graph.py",
+      "k3_ontology_graph_sha256_12": "e2841b158eb1",
+      "k3_generative_compiler_file": "/home/usergpu/merge_lf/k3_generative_compiler.py",
+      "k3_generative_compiler_sha256_12": "ef043767b85a",
+      "k3_experts_lib_path": "/home/usergpu/merge_lf/libk3_gpu_experts.so",
+      "k3_experts_lib_sha256_12": "e3adc69d8740",
+      "dataset_dir": "/opt/clover-k3/clover-kimi-k3/src/datasets/computed"
+    },
+    "multimodal_worker": true,
+    "batch_pause_s": 1.0,
+    "default_context_file": "/home/usergpu/merge_lf/CLOVER_DEFAULT_CONTEXT.md",
+    "agents_md_rules_loaded": true,
+    "model": "clover-ai-agent (HybridAgent + All 93 K3 Trunks & 92 MoE Layers + MoonViT3d + NCM on 8x RTX 3090)"
+  }
+}
