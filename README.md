@@ -38,6 +38,8 @@ This repository contains the documentation, practical guidance, case studies, an
 - [`case-studies/`](case-studies/) — real work and outcomes
 - [Research](research/README.md) — investigations, proposals and hypotheses, with their limits
 - [Research](research/README.md) — investigations, proposals and hypotheses, with their limits
+- [Clover AI v4 release notes](releases/v4.md) — the current seven-layer system
+- [Observe experiment](research/observe/README.md) — the next experiment: reciprocal observation, mutual change, and distributed learning
 - [Run Clover](clover-kimi-k3/README.md) — the 7-layer Clover system (CPU workstation engine &amp; 8 &times; RTX 3090 GPU neuro-symbolic, compiler-verified, memory-accumulating stack): set it up, tune it to your machine, run it
 - [Repository map](docs/repository-organization.md) — where each kind of material belongs
 
