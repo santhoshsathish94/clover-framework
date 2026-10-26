@@ -1081,7 +1081,7 @@ class CloverRustGenerativeCompiler:
                 continue
             try:
                 obj = json.loads(line)
-                if obj.get("level") == "error":
+                if obj.get("level") == "error" and not str(obj.get("message", "")).startswith("aborting due to"):
                     raw_errors.append(obj)
             except Exception:
                 pass
