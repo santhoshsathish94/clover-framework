@@ -392,6 +392,11 @@
               <td>88.0%<br>(<code>128.9 GPU-s</code>)</td>
               <td><strong>100.0%</strong> (<code>47/47</code> with Generative Compilation; <code>+70.9 pp</code> vs V1; Extended HumanEval <strong>40/40 = 100.0%</strong>; Live Rust <code>rustc</code> <strong>5/5 = 100.0%</strong>; Collective Memory Held-Out <strong>12/12 = 100.0%</strong>; Direction B Data-Movement: <strong>95.29%</strong> overall VRAM hit rate, <strong>86.51%</strong> dynamic <code>CardPool</code> hit rate, <strong>25,533</strong> <code>R4</code> clean drops)</td>
             </tr>
+            <tr>
+              <th scope="row"><strong>Standardized 70-Task Real AI Benchmark Suite (<code>N=70</code> across 7 Categories) &amp; Clean GitHub + HF Bootstrap (<code>1936d4eb0d53</code>)</strong></th>
+              <td colspan="4">Evaluated from a freshly bootstrapped <code>/opt/clover-k3/clover-framework</code> checkout and Hugging Face dataset sync (<a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>) after wiping <code>/home/usergpu</code>. Includes 11-Paper Foundations integration (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">docs/clover-foundations-to-clover-gpu-context.md</a>: stress FP <code>16/16 &rarr; 0/16</code>, tight-budget E2E <code>0/6 &rarr; 6/6</code>).</td>
+              <td><strong>70 / 70 = 100.00%</strong> (<strong>99.08%</strong> mean canonical score in <code>1,005.5 s</code>: MMLU <code>10/10</code>, GSM8K <code>10/10</code>, HumanEval + Live Rust <code>15/15</code>, Structured/WMT14/XSum <code>15/15</code>, Ontology <code>6/6</code>, Persistent Memory <code>6/6</code>, Agent Multi-Hop <code>8/8</code>)</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -481,8 +486,8 @@
             </tr>
             <tr>
               <th scope="row">4. <strong>Clover (7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System on 8 &times; RTX 3090 GPUs, now)</strong></th>
-              <td><strong>256K session context</strong> + <strong>File-Based Memory Tree &amp; Relational Knowledge Graph</strong> (32 seed entries, 65 edges, closed-loop <code>staging/</code> gate) + <strong>Ontology GraphRAG</strong> + <strong>Python &amp; Rust Generative Compilation</strong> + <strong>8 Rust host-path libraries</strong> (<code>max_abs_diff = 0.0</code>) + live tools &amp; VS Code Agent</td>
-              <td><strong>1.56 to 11.69 s end-to-end</strong> (<strong>100.0%</strong> across GSM8K-20, MMLU-20, HumanEval-40, Live Rust-5, HybridAgent QA-15, Pooled 47-task, and Held-Out 12-task Memory Suite; <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling)</td>
+              <td><strong>256K session context</strong> + <strong>File-Based Memory Tree &amp; Relational Knowledge Graph</strong> (32 seed entries, 65 edges, closed-loop <code>staging/</code> gate + 11-Paper Foundations upgrades) + <strong>Ontology GraphRAG</strong> + <strong>Python &amp; Rust Generative Compilation</strong> + <strong>8 Rust host-path libraries</strong> (<code>max_abs_diff = 0.0</code>) + live tools &amp; VS Code Agent</td>
+              <td><strong>1.56 to 11.69 s end-to-end</strong> (<strong>100.0%</strong> across the Standardized <strong>70/70 Real AI Benchmark Suite</strong> on a clean GitHub + Hugging Face bootstrap, GSM8K-20, MMLU-20, HumanEval-40, Live Rust-5, HybridAgent QA-15, Pooled 47-task, and Held-Out 12-task Memory Suite; <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling)</td>
             </tr>
           </tbody>
         </table>
@@ -551,14 +556,17 @@
           <dt>The dataset</dt>
           <dd><a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>
             on Hugging Face: <code>expert-1</code> to <code>expert-92</code> and <code>trunk-0</code> to
-            <code>trunk-92</code>, 809 files, 1,399.8 GiB, verified against
-            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/dataset-files.tsv">dataset-files.tsv</a>
+            <code>trunk-92</code> (809 files, 1,399.8 GiB) plus all 32 <code>hybrid-ncm-k3/</code> and <code>open-weights/</code>
+            checkpoints, vision safetensors, and benchmark datasets verified via
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/download-hybrid-ncm-datasets.sh">download-hybrid-ncm-datasets.sh</a>,
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/dataset-files.tsv">dataset-files.tsv</a>,
             and
             <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/open-weights-files.tsv">open-weights-files.tsv</a>.</dd>
         </div>
         <div>
           <dt>Every measurement, and every failure</dt>
-          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a>,
+          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">docs/clover-foundations-to-clover-gpu-context.md</a>,
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a>,
             <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
             <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-kimi-k3-gpu-context.md">docs/clover-kimi-k3-gpu-context.md</a>, and
             <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-kimi-k3-cpu-context.md">docs/clover-kimi-k3-cpu-context.md</a>.</dd>

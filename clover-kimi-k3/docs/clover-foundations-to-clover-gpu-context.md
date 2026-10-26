@@ -233,6 +233,34 @@ We do **not** force a paper into Clover where Clover already has a strictly stro
   | **`7_tool_use_and_agent_multihop`** | HybridAgent Multi-Hop & `<python>` Tool QA (`ha_q1..5, mh_q6..8`) | `8 / 8` (`100.0%`) | **`8 / 8` (`100.00%`)** | `100.00%` | `21,134.3 ms` | `4,754.4 ms` |
   | **OVERALL (`7` Categories, `N=70`)** | **All `70` Standardized Tasks** | `67 / 70` (`95.71%`) | **`70 / 70` (`100.00%`)** | **`99.08%`** | **`14,486.7 ms`** | **`4,506.5 ms`** |
 
+---
+
+### Cycle 9: Clean GitHub + Hugging Face Zero-State Bootstrap & Re-Verification on GPU (`1936d4eb0d531fee5802a71379423c06dd9cdaa7`)
+
+- **Context & Direction (Creator):**
+  - *"push all the dataset needed to setup and run this properly to hugging face and all code to github except the experts and trunk clear eveyrthing else from gpu box and do a new setup from github and hugging face and resrun so we know everything is properly pushed"*
+- **Execution on `gpu` (`8 × NVIDIA GeForce RTX 3090`):**
+  1. **Unified Code & Build Automation Pushed to GitHub (`1936d4eb0d53`):**
+     - Added `ensure_gpu_experts_lib()` and `ensure_cpu_experts_lib()` in [clover_paths.py](../src/tools/hybrid-ncm-k3/clover_paths.py) to compile `libslotcache.so`, `libpoolinit.so`, `libsupply.so` via `cargo build --release` and `libk3_gpu_experts.so` via `nvcc` directly from the GitHub checkout (`src/rust/` + `src/tools/hybrid-ncm-k3/k3_gpu_experts_lib.cu`) without relying on any pre-built `/home/usergpu/*` binaries.
+     - Updated [download-hybrid-ncm-datasets.sh](../src/scripts/download-hybrid-ncm-datasets.sh) and [set-up-new-machine.sh](../src/scripts/set-up-new-machine.sh) to download both `hybrid-ncm-k3/*` and `open-weights/*` from Hugging Face (`Santhoshsathish94/clover-kimi-k3`) and install the full Python runtime in `/opt/clover-k3/venv`.
+  2. **All 32 Required Non-Expert/Trunk Dataset & Checkpoint Artifacts Pushed to Hugging Face (`Santhoshsathish94/clover-kimi-k3`, commit `6168edd`):**
+     - **29 files under `hybrid-ncm-k3/`:** `e12_clover_k3_true_ha_ncm.pt` (`545 MB`), `e11_clover_k3_native_ha_ncm.pt`, `e10_k3_agent_experts.pt`, `e9_k3_multimodal.pt`, `e8_k3_direct.pt`, `e7_k3_clean.pt`, `e6_last.pt`, `k3_vqvae_adapted.pt` (`1.2 GB`), `k3_vqvae_init.pt`, `k3_hybrid_bridges.pt` (`1.2 GB`), `k3_copy_dec.pt`, `k3_native_pairs.pt` (`581 MB`), `staged_32win_inputs.pt`, `k3_vision/model-00095-of-000096.safetensors` (`3.5 GB`), `k3_vision/model-00096-of-000096.safetensors` (`3.8 GB`), `k3_vision/config.json`, `k3_vision/preprocessor_config.json`, `wmt14/*` (`4` files), `tinystories/*` (`3` files), `data/wmt14/*` (`2` files), `data/xsum/*` (`2` files), and `data/sudoku/easy/test.json`.
+     - **3 files under `open-weights/`:** `model-00094-of-000096.safetensors` (`4.7 GB`, embedding + final norm + LM head), `tiktoken.model`, and `tokenizer_config.json`.
+  3. **Wiped `/home/usergpu/*` & Old `/opt/clover-k3` Code/Checkpoints on `gpu`:**
+     - Deleted all 48 legacy project directories and files under `/home/usergpu/` (freeing `150 GB` of disk space) and removed `/opt/clover-k3/clover-kimi-k3`, `/opt/clover-k3/datasets/hybrid-ncm-k3`, and `/opt/clover-k3/datasets/third-party/kimi-k3-open-weights`, preserving **only** `/opt/clover-k3/datasets/computed/` (`expert-1..92` and `trunk-0..92`, `1.4 TB`).
+  4. **Fresh Bootstrap from GitHub + Hugging Face:**
+     - Cloned `https://github.com/santhoshsathish94/clover-framework.git` into `/opt/clover-k3/clover-framework` (symlinked at `/opt/clover-k3/clover-kimi-k3`), linked `/opt/clover-k3/datasets/computed`, downloaded all 32 files from `Santhoshsathish94/clover-kimi-k3` via `download-hybrid-ncm-datasets.sh`, compiled `libslotcache.so`, `libpoolinit.so`, `libsupply.so`, and `libk3_gpu_experts.so` from source, and started `clover-k3-chat.service` under `/opt/clover-k3/venv`.
+  5. **Real Bug Caught & Fixed by Clean Bootstrap (`6273eea` $\to$ `1936d4e`):**
+     - With `/home/usergpu/generative-compilation` wiped, `CloverRustGenerativeCompiler` ran its pure-`rustc` partial-program sealor (`_check_prefix_rustc_fallback`). On our first clean-setup 70-task run (`6273eea`), `68/70` (`97.14%`) passed, and the 2 failures (`rust_gc_rust_live_1_gcd`, `rust_gc_rust_live_2_is_palindrome`) were caused by `_check_prefix_rustc_fallback` closing an inner `while` loop (`brace_stack = ["fn", "block"]`) and then closing the outer `fn` brace without emitting `panic!()` before the outer `}`, causing `rustc` to report a false-positive `E0308: expected u64/bool, found ()` mid-loop.
+     - Emitting `panic!()` before closing the outer `"fn"` brace in `_check_prefix_rustc_fallback` (`1936d4eb0d53`) reduced Part A false rejections to `0` (`6/6` errors caught mid-generation, `32.8%` doomed chars saved) and raised Part B live `rustc` generation to `5/5 (100.0%)`.
+- **Outcome — Clean-Setup 70-Task Real AI Benchmark Suite (`1936d4eb0d531fee5802a71379423c06dd9cdaa7`, `/opt/clover-k3/clover-framework`):**
+  - **Evidence Directory:** [benchmarks/results/1936d4eb0d53/gpu/run_clean_v2/](../../benchmarks/results/1936d4eb0d53/gpu/run_clean_v2/summary.md)
+  - **`working_tree_clean`:** `True` | **`all_imports_resolve_to_frozen_checkout`:** `True` | **`/home/usergpu` project directories:** `0`
+  - **Overall Pass Rate:** **`70 / 70` (`100.00%`)**, **`99.08%` mean canonical score** in **`1,005.50 s`** (`14,318.0 ms` mean wall latency, `4,447.8 ms` mean 93-layer K3 GPU latency)
+  - **Data Movement Ledger (`specmd_least_stale_r4`):** `95.22%` overall VRAM hit rate, `86.09%` dynamic `CardPool` hit rate, `14,050` `R4` clean drops, `30,802` cross-layer lookahead hits, Eyeriss cost/req = `8.998`.
+  - **Mechanism-Level Foundations A/B Test (`bench_foundations_e2e_ab.py`):** Arm A (Disabled) = `16/16` stress FP (`9,244` polluted tokens) & `0/6` tight-budget E2E vs. Arm B (Enabled) = **`0/16` stress FP (`0` polluted tokens), `16/16` positive recall, & `6/6 (100.0%)` tight-budget E2E**.
+
+
 
 
 

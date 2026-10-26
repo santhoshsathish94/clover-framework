@@ -1294,6 +1294,12 @@
               <td>Adds <strong><code>h = 3</code> Orthogonal Subspace Heads</strong> (<em>Concept Principle</em>, <em>Empirical Measurement</em>, <em>Superseding Correction</em>) with <strong><code>1/√d_k</code> logit scaling</strong> and <strong>Krizhevsky Cross-Channel LRN</strong> (operating strictly below the calculus turnover point <code>x* = √(k / ((2β−1)α))</code>) in <code>k3_memory_graph.py</code> on GPU.</td>
               <td>Locks <code>d_k = 512</code> logit variance from <strong><code>520.64 → 1.017</code></strong> (<code>1.82×</code> larger softmax Jacobian norm) and lifts 3-facet subspace coverage at <code>top_k = 3</code> from <strong><code>4 / 6</code> (<code>2.67/3</code> facets, single-head) → <code>6 / 6</code> (<code>3.00/3</code> facets, <code>18/18</code> exact head winners)</strong> on <code>cuda:7</code>.</td>
             </tr>
+            <tr>
+              <td><strong>Cycles 7–9</strong></td>
+              <td><strong>2-Arm E2E Ablation, 70-Task Real AI Benchmark &amp; Clean GitHub + HF Bootstrap</strong></td>
+              <td>Reconciles all 11 paper mechanisms into the frozen GitHub checkout (<code>clover_paths.py</code> enforcing <code>sys.path[0] = TOOLS_DIR</code> + automatic Rust/CUDA compilation + pure-<code>rustc</code> partial-program sealor), syncs all 32 checkpoints &amp; datasets to Hugging Face (<a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>), wipes <code>/home/usergpu</code>, and runs the 70-task standardized AI suite from a zero-state bootstrap.</td>
+              <td><strong><code>bench_foundations_e2e_ab.py</code>:</strong> stress false positives <strong><code>16/16</code> (<code>9,244</code> polluted tokens) → <code>0/16</code> (<code>0</code> tokens)</strong>, tight-budget E2E <strong><code>0/6 → 6/6</code> (<code>100%</code>)</strong>.<br><strong>70-Task Standardized AI Suite (<code>1936d4eb0d53</code>):</strong> <strong><code>70 / 70</code> (<code>100.00%</code> pass rate, <code>99.08%</code> mean score)</strong> across all 7 categories in <code>1,005.5 s</code> on clean GPU bootstrap.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1309,7 +1315,7 @@
       <div class="actions" style="margin-top:1.8rem">
         <a class="btn btn--primary" href="../start/">Next Menu: Read AGENTS.md →</a>
         <a class="btn" href="../evidence/">See the evidence</a>
-        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/foundations-research/clover-kimi-k3/docs/foundations-11-papers-human-guide.md">View the research notes &amp; scripts in the repository →</a>
+        <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/foundations-11-papers-human-guide.md">View the research notes &amp; scripts in the repository →</a>
       </div>
     </div>
   </section>
