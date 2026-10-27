@@ -1234,9 +1234,10 @@ class MultiGPUCloverCoordinator:
         self.q_cond = threading.Condition(self.q_lock)
         self.pending_queue = []
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=len(self.text_workers))
-
-        self.batch_thread = threading.Thread(target=self._batch_scheduler_loop, daemon=True)
-        self.batch_thread.start()
+        self.run_scheduler_on_main = (len(self.text_workers) == 1)
+        if not self.run_scheduler_on_main:
+            self.batch_thread = threading.Thread(target=self._batch_scheduler_loop, daemon=True)
+            self.batch_thread.start()
 
     def _save_sessions_to_disk_unlocked(self):
         try:
@@ -1784,9 +1785,14 @@ class MultiGPUCloverCoordinator:
                 batch = self.pending_queue[:8]
                 self.pending_queue = self.pending_queue[8:]
 
-            self.executor.submit(self._execute_clubbed_batch, batch)
+            if len(self.text_workers) == 1:
+                self._execute_clubbed_batch(batch)
+            else:
+                self.executor.submit(self._execute_clubbed_batch, batch)
 
     def _execute_clubbed_batch(self, batch):
+        if not torch.cuda.is_available():
+            torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
         w_idx = self._acquire_text_worker()
         eng = self.text_workers[w_idx]
         try:
@@ -2658,19 +2664,24 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             # so Clover Kimi K3 can iteratively call `read_file`, `list_dir`, `file_search`, `grep_search`, `run_in_terminal`, etc.!
             next_tool_call = None
             if available_tools and tool_choice != "none" and not image_b64:
-                w_idx = STATE._acquire_text_worker()
-                eng = STATE.text_workers[w_idx]
-                try:
-                    next_tool_call = eng.decide_vscode_agent_step(
-                        user_prompt=user_prompt,
-                        workspace_info=workspace_info_str,
-                        history=prior_turns[-6:],
-                        tool_rounds=tool_rounds,
-                        available_tools=available_tools,
-                    )
-                    cuda_sync(eng.dev_ha)
-                finally:
-                    STATE.worker_locks[w_idx].release()
+                def _run_tool_step():
+                    if not torch.cuda.is_available():
+                        torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
+                    w_idx = STATE._acquire_text_worker()
+                    eng = STATE.text_workers[w_idx]
+                    try:
+                        res_tc = eng.decide_vscode_agent_step(
+                            user_prompt=user_prompt,
+                            workspace_info=workspace_info_str,
+                            history=prior_turns[-6:],
+                            tool_rounds=tool_rounds,
+                            available_tools=available_tools,
+                        )
+                        cuda_sync(eng.dev_ha)
+                        return res_tc
+                    finally:
+                        STATE.worker_locks[w_idx].release()
+                next_tool_call = STATE.executor.submit(_run_tool_step).result()
 
             cid = "chatcmpl-" + uuid.uuid4().hex[:12]
             created_ts = int(time.time())
@@ -2871,7 +2882,12 @@ def main():
     STATE = MultiGPUCloverCoordinator(batch_pause_s=a.batch_pause)
     srv = ThreadingHTTPServer((a.host, a.port), ChatRequestHandler)
     print(f"K3ChatServer (Clover AI 8-GPU Pool) listening on http://{a.host}:{a.port} (setup {STATE.setup_s}s; batch_pause={STATE.batch_pause_s}s)", flush=True)
-    srv.serve_forever()
+    if getattr(STATE, "run_scheduler_on_main", False):
+        http_thread = threading.Thread(target=srv.serve_forever, daemon=True)
+        http_thread.start()
+        STATE._batch_scheduler_loop()
+    else:
+        srv.serve_forever()
 
 
 if __name__ == "__main__":

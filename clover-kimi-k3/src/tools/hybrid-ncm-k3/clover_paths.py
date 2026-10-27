@@ -45,6 +45,20 @@ def setup_clover_sys_path() -> str:
     )
     if "NCM_ART" not in os.environ or not os.path.isdir(os.environ.get("NCM_ART", "")):
         os.environ["NCM_ART"] = default_art
+    # Prevent OpenMP thread spin-waiting across C/Rust K3 experts and PyTorch CPU workers, and cap CPU threads to 1 CCD (8 cores)
+    # CRITICAL: Must be set in os.environ BEFORE `import torch` so libgomp.so.1 reads them in its ELF .init_array constructor!
+    os.environ.setdefault("OMP_WAIT_POLICY", "PASSIVE")
+    os.environ.setdefault("GOMP_SPINCOUNT", "0")
+    if not os.path.exists("/dev/nvidia0") or os.environ.get("CLOVER_FORCE_CPU", "0") == "1":
+        os.environ.setdefault("OMP_NUM_THREADS", "8")
+        os.environ.setdefault("MKL_NUM_THREADS", "8")
+        os.environ.setdefault("OPENBLAS_NUM_THREADS", "8")
+    try:
+        import torch
+        if not torch.cuda.is_available() or os.environ.get("CLOVER_FORCE_CPU", "0") == "1":
+            torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
+    except Exception:
+        pass
     # Keep TOOLS_DIR and VISION_DIR strictly at indices 0 and 1 of sys.path so imports always resolve to the checkout
     for p in (VISION_DIR, TOOLS_DIR):
         if os.path.isdir(p):

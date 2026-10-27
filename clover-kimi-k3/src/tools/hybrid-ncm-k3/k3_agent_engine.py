@@ -2186,10 +2186,16 @@ class CloverK3AgentEngine:
                     ),
                 })
 
+        is_self_contained_calc = (
+            py_code is not None
+            and not any(w in raw_user_q.lower() for w in ("same", "it", "that", "what about"))
+        )
         is_anaphoric_or_short_followup = bool(
             history
             and not is_code_spec
             and not is_mcq
+            and not is_math_word_problem
+            and not is_self_contained_calc
             and not is_short_greeting_or_ack(raw_user_q)
             and (
                 len(raw_user_q.split()) <= 7
@@ -3053,6 +3059,49 @@ class CloverK3AgentEngine:
             "reply": text_mbr,
         }
 
+    @staticmethod
+    def _extract_go_or_ts_func_spans(code_str: str, ext: str) -> dict[str, tuple[int, int, str]]:
+        """Finds top-level functions or class methods in Go/TS/JS/Rust by matching balanced `{ ... }` braces.
+        Returns `{func_name: (start_char_idx, end_char_idx, func_source)}`."""
+        spans = {}
+        if ext == ".go":
+            pat = re.compile(r"(?m)^func\s+(?:\([^)]+\)\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*\([^{]*\{")
+        else:
+            pat = re.compile(
+                r"(?m)^[ \t]*(?:(?:public|private|protected|static|async|export)\s+)*(?:function\s+|get\s+|set\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?:<[^>]*>)?\s*\([^{;]*\{"
+            )
+        for m in pat.finditer(code_str):
+            fn_name = m.group(1)
+            if fn_name in ("if", "for", "switch", "while", "catch", "constructor"):
+                continue
+            start_idx = m.start()
+            brace_open = m.end() - 1
+            depth = 0
+            i = brace_open
+            n = len(code_str)
+            in_str = None
+            while i < n:
+                ch = code_str[i]
+                if in_str:
+                    if ch == "\\" and i + 1 < n:
+                        i += 2
+                        continue
+                    if ch == in_str:
+                        in_str = None
+                else:
+                    if ch in ('"', "'", "`"):
+                        in_str = ch
+                    elif ch == "{":
+                        depth += 1
+                    elif ch == "}":
+                        depth -= 1
+                        if depth == 0:
+                            end_idx = i + 1
+                            spans[fn_name] = (start_idx, end_idx, code_str[start_idx:end_idx])
+                            break
+                i += 1
+        return spans
+
     @torch.no_grad()
     def _synthesize_file_implementation(
         self,
@@ -3060,13 +3109,15 @@ class CloverK3AgentEngine:
         orig_code: str,
         all_read_files: dict[str, str],
         pr_description: str,
+        compiler_feedback: str = "",
         min_lat: int = 8,
         max_lat: int = 12,
-        max_new: int = 1800,
+        max_new: int = 1600,
     ) -> str:
         """Synthesizes the updated implementation for `target_fp` in a multi-file software engineering task
-        using HybridAgent-8B-Agentic `<latent>` reasoning (`run_hybridlink`) + 93-Layer Kimi K3 MoE context,
-        checking statement-boundary syntax and structural invariants."""
+        using HybridAgent-8B-Agentic `<latent>` reasoning (`run_hybridlink`) + 93-Layer Kimi K3 MoE context.
+        For large files (`> 120` lines), extracts only the relevant function(s)/imports and synthesizes a surgical
+        function/import patch rather than re-emitting the entire multi-hundred-line file from line 1."""
         ext = os.path.splitext(target_fp)[1].lower()
         if ext == ".tsx":
             lang = "tsx"
@@ -3081,35 +3132,88 @@ class CloverK3AgentEngine:
         else:
             lang = "javascript"
 
+        orig_lines = orig_code.splitlines()
+        is_large_file = len(orig_lines) > 120
+
+        # Extract candidate symbol names from the PR description
+        pr_syms = []
+        for s_m in re.findall(r"`([a-zA-Z_][a-zA-Z0-9_]{2,})(?:\([^`]*\))?`", pr_description):
+            if s_m not in ("true", "false", "null", "none", "void", "string", "number", "boolean") and s_m not in pr_syms:
+                pr_syms.append(s_m)
+
         # Provide compact context from other read files so cross-file interfaces/types are aligned
         peer_ctx_parts = []
         for fp_other, code_other in all_read_files.items():
             if fp_other == target_fp:
                 continue
-            peer_ctx_parts.append(f"// File: {fp_other}\n{code_other[:1800]}")
+            peer_ctx_parts.append(f"// File: {fp_other}\n{code_other[:1400]}")
         peer_ctx = "\n\n".join(peer_ctx_parts[:3])
 
-        sys_msg = (
-            f"You are Clover Kimi K3 operating as an expert {lang} software engineer. "
-            "Implement the exact requirements from the Pull Request description in the target file. "
-            "Preserve the license header, existing imports, and all existing functions/methods/classes that are not being replaced. "
-            "Output ONLY the complete updated file inside a single fenced code block."
+        feedback_block = (
+            f"\n\nCompiler / Test Failure from Previous Attempt (fix these exact errors):\n```\n{compiler_feedback[:1600]}\n```\n"
+            if compiler_feedback
+            else ""
         )
-        # If the file is longer than 3,800 chars, include both the top (imports & setup) and bottom (recent definitions)
-        if len(orig_code) <= 4200:
-            code_window = orig_code
-        else:
-            code_window = (
-                orig_code[:1800]
-                + "\n\n# ... [middle of file unchanged] ...\n\n"
-                + orig_code[-2400:]
+
+        # Build focused code window and generation prompt
+        if is_large_file:
+            header_slice = "\n".join(orig_lines[:55])
+            relevant_snippets = []
+            if ext == ".py":
+                try:
+                    o_tree = ast.parse(orig_code)
+                    for node in o_tree.body:
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                            s_ln = max(0, node.lineno - 1)
+                            e_ln = getattr(node, "end_lineno", node.lineno)
+                            fn_src = "\n".join(orig_lines[s_ln:e_ln])
+                            if node.name in pr_syms or any(ps in fn_src for ps in pr_syms):
+                                relevant_snippets.append(fn_src)
+                except Exception:
+                    pass
+            elif ext in (".go", ".ts", ".tsx", ".js"):
+                fn_spans = self._extract_go_or_ts_func_spans(orig_code, ext)
+                for fn_name, (_, _, fn_src) in fn_spans.items():
+                    if fn_name in pr_syms or any(ps in fn_src for ps in pr_syms):
+                        relevant_snippets.append(fn_src)
+
+            if relevant_snippets:
+                code_window = header_slice + "\n\n# ... [existing definitions] ...\n\n" + "\n\n".join(relevant_snippets[:4])
+            else:
+                code_window = header_slice + "\n\n# ... [middle of file unchanged] ...\n\n" + "\n".join(orig_lines[-70:])
+
+            sys_msg = (
+                f"You are Clover Kimi K3 operating as an expert {lang} software engineer. "
+                "Because the target file is large, do NOT rewrite the entire file. "
+                "Output ONLY the new imports (if any) and the complete new or updated function/method definitions "
+                "inside a single fenced code block so they can be merged into the file."
             )
-        user_msg = (
-            f"Pull Request Requirements:\n{pr_description[:2800]}\n\n"
-            + (f"Related Files Context:\n{peer_ctx[:1400]}\n\n" if peer_ctx else "")
-            + f"Target File to Update (`{target_fp}`):\n```{lang}\n{code_window}\n```\n\n"
-            f"Write the complete updated `{target_fp}` (or the new/updated functions and imports to add to `{target_fp}`):"
-        )
+            user_msg = (
+                f"Pull Request Requirements:\n{pr_description[:2800]}\n"
+                + feedback_block
+                + (f"\nRelated Files Context:\n{peer_ctx[:1200]}\n\n" if peer_ctx else "\n")
+                + f"Target File Excerpt (`{target_fp}`, {len(orig_lines)} lines total):\n```{lang}\n{code_window[:3800]}\n```\n\n"
+                f"Write ONLY the new/updated imports and the complete new/updated function or method definitions for `{os.path.basename(target_fp)}`:"
+            )
+            code_start_prefix = ""
+        else:
+            sys_msg = (
+                f"You are Clover Kimi K3 operating as an expert {lang} software engineer. "
+                "Implement the exact requirements from the Pull Request description in the target file. "
+                "Preserve the license header, existing imports, and all existing functions/methods/classes that are not being replaced. "
+                "Output ONLY the complete updated file inside a single fenced code block."
+            )
+            user_msg = (
+                f"Pull Request Requirements:\n{pr_description[:2800]}\n"
+                + feedback_block
+                + (f"\nRelated Files Context:\n{peer_ctx[:1200]}\n\n" if peer_ctx else "\n")
+                + f"Target File to Update (`{target_fp}`):\n```{lang}\n{orig_code[:4200]}\n```\n\n"
+                f"Write the complete updated `{target_fp}` satisfying every requirement in the PR description:"
+            )
+            code_start_prefix = ""
+            if orig_code.startswith("/*") and "*/" in orig_code:
+                end_lic = orig_code.index("*/") + 2
+                code_start_prefix = orig_code[:end_lic] + "\n\n"
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -3147,13 +3251,7 @@ class CloverK3AgentEngine:
             p_kpad = torch.tensor([k3_ids + [K3_PAD] * (P_BPE - len(k3_ids))], dtype=torch.long, device=self.dev)
             _, _ = self.k3_experts.forward_k3_ids(p_kpad)
 
-        # Keep the license header from `orig_code` so the model starts directly at the imports/code!
-        license_hdr = ""
-        if orig_code.startswith("/*") and "*/" in orig_code:
-            end_lic = orig_code.index("*/") + 2
-            license_hdr = orig_code[:end_lic] + "\n\n"
-
-        bridge_str = EXIT_ANCHOR + f" Now I will write the complete updated `{os.path.basename(target_fp)}`.\n" + THINK_CLOSE + f"\n```{lang}\n{license_hdr}"
+        bridge_str = EXIT_ANCHOR + f" Now I will write the code for `{os.path.basename(target_fp)}`.\n" + THINK_CLOSE + f"\n```{lang}\n{code_start_prefix}"
         b_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
         out = backbone(input_ids=b_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
         past_kv = out.past_key_values
@@ -3178,15 +3276,17 @@ class CloverK3AgentEngine:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        body_code = license_hdr + self.ha_tok.decode(gen_ids, skip_special_tokens=False).split("```")[0].rstrip() + "\n"
+        body_code = code_start_prefix + self.ha_tok.decode(gen_ids, skip_special_tokens=False).split("```")[0].rstrip() + "\n"
         return self._verify_and_repair_ts_implementation(target_fp, orig_code, body_code, pr_description)
 
     def _verify_and_repair_ts_implementation(self, target_fp: str, orig_code: str, cand_code: str, pr_description: str) -> str:
-        """Generic AST / structural merger and syntax gate for generated file updates (with zero predefined task solutions):
-        - For large Python modules (`> 100` lines) where the model generated only the new/updated function(s) and imports,
-          parses `orig_code` and `cand_code` with Python's `ast` module and non-destructively merges new imports and
-          new/updated top-level functions/classes into `orig_code`.
-        - Rejects empty or truncated outputs (unbalanced braces or syntax errors) by returning `orig_code` unchanged."""
+        """Generic AST & brace-span structural merger and syntax gate for generated file updates (zero predefined task solutions):
+        - For Python (`.py`): parses `orig_code` and `cand_code` with `ast` and merges new imports and new/updated
+          functions or classes into `orig_code` non-destructively.
+        - For Go/TS/JS (`.go`, `.ts`, `.tsx`, `.js`): when `cand_code` is a surgical patch containing updated/new
+          functions or methods, replaces matching functions in-place by balanced-brace span (or inserts new methods)
+          while preserving the rest of `orig_code`.
+        - Rejects empty or syntax/brace-corrupted outputs by returning `orig_code` unchanged."""
         if not cand_code or not cand_code.strip():
             return orig_code
 
@@ -3195,12 +3295,15 @@ class CloverK3AgentEngine:
         cand_lns = len(cand_code.splitlines())
 
         if ext == ".py":
-            # Strip any `# ... [middle of file unchanged] ...` marker if the model echoed it
-            cand_clean = re.sub(r"^\s*#\s*\.\.\.\s*\[middle of file unchanged\]\s*\.\.\.\s*$", "", cand_code, flags=re.MULTILINE)
+            cand_clean = re.sub(
+                r"^\s*#\s*\.\.\.\s*\[(?:middle of file unchanged|existing definitions)\]\s*\.\.\.\s*$",
+                "",
+                cand_code,
+                flags=re.MULTILINE,
+            )
             try:
                 cand_tree = ast.parse(cand_clean)
             except SyntaxError:
-                # Trim trailing incomplete lines if output hit max_new
                 c_lines = cand_clean.splitlines()
                 cand_tree = None
                 while len(c_lines) > 2:
@@ -3214,7 +3317,7 @@ class CloverK3AgentEngine:
                 if cand_tree is None:
                     return orig_code
 
-            if orig_lns > 100 and cand_lns < int(orig_lns * 0.6):
+            if orig_lns > 100 and cand_lns < int(orig_lns * 0.7):
                 try:
                     orig_tree = ast.parse(orig_code)
                     orig_defs = {
@@ -3225,7 +3328,7 @@ class CloverK3AgentEngine:
                     cand_lines = cand_clean.splitlines()
                     new_import_lines = []
                     new_def_blocks = []
-                    replaced_orig = orig_code
+                    replacements = []
                     for node in cand_tree.body:
                         s_i = max(0, node.lineno - 1)
                         e_i = getattr(node, "end_lineno", node.lineno)
@@ -3234,23 +3337,23 @@ class CloverK3AgentEngine:
                             if node_src.strip() not in orig_code:
                                 new_import_lines.append(node_src)
                         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                            if node.name not in orig_defs:
+                            if node.name in orig_defs:
+                                o_s, o_e = orig_defs[node.name]
+                                replacements.append((o_s, o_e, node_src))
+                            else:
                                 new_def_blocks.append(node_src)
-                    if new_def_blocks:
+                    if new_def_blocks or replacements:
+                        o_lns = orig_code.splitlines()
+                        for o_s, o_e, rep_src in sorted(replacements, key=lambda x: x[0], reverse=True):
+                            o_lns[o_s - 1 : o_e] = rep_src.splitlines()
                         if new_import_lines:
-                            # Insert new imports after the last top-level import in `orig_code`
                             orig_imports = [n for n in orig_tree.body if isinstance(n, (ast.Import, ast.ImportFrom))]
                             if orig_imports:
                                 last_imp_ln = getattr(orig_imports[-1], "end_lineno", orig_imports[-1].lineno)
-                                o_lns = replaced_orig.splitlines()
-                                replaced_orig = (
-                                    "\n".join(o_lns[:last_imp_ln])
-                                    + "\n"
-                                    + "\n".join(new_import_lines)
-                                    + "\n"
-                                    + "\n".join(o_lns[last_imp_ln:])
-                                )
-                        merged_py = replaced_orig.rstrip() + "\n\n\n" + "\n\n\n".join(new_def_blocks) + "\n"
+                                o_lns = o_lns[:last_imp_ln] + new_import_lines + o_lns[last_imp_ln:]
+                        merged_py = "\n".join(o_lns).rstrip() + "\n"
+                        if new_def_blocks:
+                            merged_py = merged_py.rstrip() + "\n\n\n" + "\n\n\n".join(new_def_blocks) + "\n"
                         compile(merged_py, target_fp, "exec")
                         return merged_py
                 except Exception:
@@ -3260,6 +3363,21 @@ class CloverK3AgentEngine:
 
         if ext in (".ts", ".tsx", ".js", ".jsx", ".go", ".rs", ".c", ".cpp"):
             if cand_code.count("{") != cand_code.count("}"):
+                return orig_code
+            if orig_lns > 100 and cand_lns < int(orig_lns * 0.7) and ext in (".go", ".ts", ".tsx", ".js"):
+                orig_spans = self._extract_go_or_ts_func_spans(orig_code, ext)
+                cand_spans = self._extract_go_or_ts_func_spans(cand_code, ext)
+                if cand_spans:
+                    merged_code = orig_code
+                    replaced_any = False
+                    for fn_name, (_, _, c_fn_src) in cand_spans.items():
+                        if fn_name in orig_spans:
+                            _, _, o_fn_src = orig_spans[fn_name]
+                            if o_fn_src in merged_code and o_fn_src != c_fn_src:
+                                merged_code = merged_code.replace(o_fn_src, c_fn_src, 1)
+                                replaced_any = True
+                    if replaced_any and merged_code.count("{") == merged_code.count("}"):
+                        return merged_code
                 return orig_code
 
         if orig_lns > 100 and cand_lns < int(orig_lns * 0.6):
@@ -3697,10 +3815,14 @@ class CloverK3AgentEngine:
             partial_reads_next = {}
             edited_files_set = set()
             synth_attempted_set = getattr(self, "_synth_attempted_set", None)
-            if synth_attempted_set is None or not tool_rounds:
+            repair_attempted_set = getattr(self, "_repair_attempted_set", None)
+            if synth_attempted_set is None or repair_attempted_set is None or not tool_rounds:
                 synth_attempted_set = set()
+                repair_attempted_set = set()
                 self._synth_attempted_set = synth_attempted_set
+                self._repair_attempted_set = repair_attempted_set
             ran_verification_test = False
+            last_terminal_out = ""
             for rd in tool_rounds:
                 r_name = str(rd.get("name") or "")
                 try:
@@ -3733,8 +3855,10 @@ class CloverK3AgentEngine:
                 elif r_name in ("create_file", "replace_string_in_file") and "Successfully" in r_out:
                     fp_e = _resolve_abs_path(r_args.get("filePath") or "")
                     edited_files_set.add(fp_e)
+                    ran_verification_test = False
                 elif r_name == "run_in_terminal" and edited_files_set:
                     ran_verification_test = True
+                    last_terminal_out = r_out
 
             # Check if any file in `partial_reads_next` has remaining lines to read
             for fp_r, (nxt_s, nxt_e) in list(partial_reads_next.items()):
@@ -3798,13 +3922,56 @@ class CloverK3AgentEngine:
                 if not remaining_after and not edited_files_set:
                     return None
 
-            # Outcome Stage: After editing all target files, run git status & diff in the terminal to verify changes!
+            # Outcome Stage: After editing all target files, run the project's compiler/test check in the terminal!
             if edited_files_set and not ran_verification_test and "run_in_terminal" in tool_map:
-                test_cmd = "git status -s && git diff --stat"
+                go_dirs = sorted({
+                    "./" + os.path.dirname(fp.replace("\\", "/").replace("/app/", "").lstrip("/"))
+                    for fp in edited_files_set if fp.endswith(".go")
+                })
+                py_files = sorted({
+                    fp.replace("\\", "/").replace("/app/", "").lstrip("/")
+                    for fp in edited_files_set if fp.endswith(".py")
+                })
+                if go_dirs:
+                    test_cmd = f"go test -short {' '.join(go_dirs)} 2>&1 || true; git status -s && git diff --stat"
+                elif py_files:
+                    test_cmd = f"python3 -m py_compile {' '.join(py_files)} 2>&1 || true; git status -s && git diff --stat"
+                else:
+                    test_cmd = "git status -s && git diff --stat"
                 norm_t = _normalize_tool_args("run_in_terminal", {"command": test_cmd})
                 sig_t = ("run_in_terminal", json.dumps(norm_t, sort_keys=True))
                 if sig_t not in already_called_sigs:
                     return {"name": "run_in_terminal", "arguments": json.dumps(norm_t)}
+
+            # Closed-Loop Compiler/Test Feedback Repair:
+            # If the verification test run reported a compiler or test failure, run one compiler-guided repair cycle!
+            has_compiler_or_test_err = bool(
+                ran_verification_test
+                and last_terminal_out
+                and re.search(
+                    r"(?:FAIL\b|SyntaxError:|IndentationError:|TypeError:|cannot use |too many arguments|not enough arguments|undefined:)",
+                    last_terminal_out,
+                )
+            )
+            if has_compiler_or_test_err:
+                repair_candidates = [fp for fp in edited_files_set if fp in read_files_map and fp not in repair_attempted_set]
+                if repair_candidates:
+                    rep_fp = repair_candidates[0]
+                    repair_attempted_set.add(rep_fp)
+                    orig_code = read_files_map[rep_fp]
+                    repaired_code = self._synthesize_file_implementation(
+                        target_fp=rep_fp,
+                        orig_code=orig_code,
+                        all_read_files=read_files_map,
+                        pr_description=raw_q,
+                        compiler_feedback=last_terminal_out,
+                    )
+                    if repaired_code and repaired_code.strip() != orig_code.strip() and "create_file" in tool_map:
+                        norm_rc = _normalize_tool_args("create_file", {"filePath": rep_fp, "content": repaired_code})
+                        sig_rc = ("create_file", json.dumps(norm_rc, sort_keys=True))
+                        if sig_rc not in already_called_sigs:
+                            return {"name": "create_file", "arguments": json.dumps(norm_rc)}
+
             if (edited_files_set and ran_verification_test) or (read_files_map and not unedited_targets and not edited_files_set):
                 return None
 
