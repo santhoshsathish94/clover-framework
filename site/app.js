@@ -398,7 +398,7 @@
       if (idx < 0 || idx >= cards.length) return;
       currentIdx = idx;
       originDeck.classList.remove('is-all-open');
-      if (allBtn) allBtn.textContent = 'Show all 11 chapters';
+      if (allBtn) allBtn.textContent = 'Show all ' + cards.length + ' chapters';
       steps.forEach(function (btn, i) {
         var active = i === idx;
         btn.setAttribute('aria-selected', active ? 'true' : 'false');
@@ -439,10 +439,10 @@
     if (allBtn) {
       allBtn.addEventListener('click', function () {
         var allOpen = originDeck.classList.toggle('is-all-open');
-        allBtn.textContent = allOpen ? 'Step through one by one' : 'Show all 11 chapters';
+        allBtn.textContent = allOpen ? 'Step through one by one' : 'Show all ' + cards.length + ' chapters';
         if (statusEl) {
           statusEl.textContent = allOpen
-            ? 'Showing all 11 chapters (1943–2017)'
+            ? 'Showing all ' + cards.length + ' chapters (1943–2026)'
             : 'Chapter ' + (currentIdx + 1) + ' of ' + cards.length + ' · ' + (steps[currentIdx].getAttribute('data-title') || '');
         }
       });

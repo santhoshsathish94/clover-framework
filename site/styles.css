@@ -1175,8 +1175,11 @@ body.clover-app-body .site-head {
   display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;
 }
 .origin-steps {
-  display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.2rem;
-  scrollbar-width: thin;
+  display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.origin-steps::-webkit-scrollbar {
+  display: none;
 }
 .origin-step {
   flex: 0 0 auto; font: inherit; font-size: 0.8rem; font-weight: 650;
@@ -1195,7 +1198,7 @@ body.clover-app-body .site-head {
   height: 4px; background: var(--soft-2); border-radius: 999px; overflow: hidden; margin-top: 0.55rem;
 }
 .origin-progress__fill {
-  height: 100%; background: var(--accent); width: 9.09%;
+  height: 100%; background: var(--accent); width: 8.33%;
   transition: width 0.25s ease;
 }
 .origin-card {
