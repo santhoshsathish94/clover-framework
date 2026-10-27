@@ -1,0 +1,842 @@
+{
+  "experiment": "Observe — Experiment A: Reciprocal Observation, Mutual State Change, and Held-Out Evaluation",
+  "executed_at_utc": "2026-10-27T01:02:19Z",
+  "elapsed_s": 106.047,
+  "state_digests": {
+    "participant_A_initial_sha256": "6562c63a2bb696319c702303726e810ed3f3dbfe8f49ed2eea51a8efd6e097aa",
+    "participant_A_logged_only_sha256": "5df29d7172604bc2e4e4865ad914f07387d6e947241643c1e2a38ca1ebf2397b",
+    "participant_A_after_reciprocal_sha256": "a26b46c70f532a97df346c69a37e679e52b8a02885865b1a52f10b5dbd26d406",
+    "participant_A_state_changed": true,
+    "participant_B_initial_sha256": "c32fe88254041428d2c28f774ac8b3372b1d70edfbc63117663458301ac47395",
+    "participant_B_logged_only_sha256": "c804f6677459f129629b9b78f0ee13ab778f05c5812435bd7a8125b1146c3c27",
+    "participant_B_after_reciprocal_sha256": "da048eca3b04a3a51a64a76225fc31fd0bc4a65ae0b9b0cb4158e5f4f4f5cdf6",
+    "participant_B_state_changed": true
+  },
+  "snapshots": {
+    "participant_A_before": {
+      "participant_id": "participant_A",
+      "captured_at_utc": "2026-10-27T01:00:33Z",
+      "total_entries": 4,
+      "active_entries": [
+        "MEM-HYP-A-NEED-8192-SLOTS-001",
+        "MEM-OBS-A-BURST-SKEW-002",
+        "MEM-OBS-A-PIPELINE-FLAT-001",
+        "MEM-PRIV-A-INTERNAL-TOKEN-001"
+      ],
+      "superseded_entries": [],
+      "staged_entries": [],
+      "total_edges": 1,
+      "entries_detail": {
+        "MEM-HYP-A-NEED-8192-SLOTS-001": {
+          "title": "Hypothesis: Total cache budget of 2,048 slots is too small; must quadruple global pool to 8,192 slots",
+          "entry_type": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "cache",
+            "lru",
+            "flat",
+            "pipeline",
+            "transcode",
+            "capacity",
+            "8192",
+            "global"
+          ],
+          "summary": "Because sweeping the shared global LRU pool from 512 to 2,048 slots stayed flat at 21.0%, we must quadruple the shared global pool to 8,192 slots instead of partitioning.",
+          "relationships": [
+            {
+              "source": "MEM-HYP-A-NEED-8192-SLOTS-001",
+              "type": "derived_from",
+              "target": "MEM-OBS-A-PIPELINE-FLAT-001",
+              "provenance": "analysis:initial_diagnosis_A",
+              "confidence": 0.65,
+              "created_at": "2026-10-27T01:00:33Z",
+              "note": "Infers need for 8,192 global slots from flat 21.0% curve"
+            }
+          ]
+        },
+        "MEM-OBS-A-BURST-SKEW-002": {
+          "title": "4 reference-frame stages require 256 slots each while 28 pass-through stages require 36 slots each",
+          "entry_type": "observation",
+          "epistemic_status": "observed",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "skew",
+            "reference-frame",
+            "burst",
+            "working-set",
+            "stages",
+            "quota",
+            "256",
+            "36"
+          ],
+          "summary": "Telemetry across the 32 stages shows 4 reference-frame stages (stages 3, 11, 19, 27) have a 256-slot working set each (1,024 slots total), while the 28 pass-through stages have a 36-slot working set each (1,008 slots total; sum = 2,032 <= 2,048 slots).",
+          "relationships": []
+        },
+        "MEM-OBS-A-PIPELINE-FLAT-001": {
+          "title": "32-stage media transcode pipeline global LRU hit rate stays flat at 21.0% from 512 to 2,048 slots",
+          "entry_type": "observation",
+          "epistemic_status": "observed",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "cache",
+            "lru",
+            "flat",
+            "pipeline",
+            "transcode",
+            "capacity",
+            "slots"
+          ],
+          "summary": "In a 32-stage media transcode pipeline sharing one global LRU pool, sweeping capacity from 512 to 2,048 slots gives a flat 21.0% hit rate.",
+          "relationships": []
+        },
+        "MEM-PRIV-A-INTERNAL-TOKEN-001": {
+          "title": "Private internal cluster credential pointer (restricted scope)",
+          "entry_type": "observation",
+          "epistemic_status": "observed",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:private_internal",
+            "private",
+            "restricted"
+          ],
+          "summary": "Internal restricted node metadata that must never be shared across participants.",
+          "relationships": []
+        }
+      },
+      "state_sha256": "6562c63a2bb696319c702303726e810ed3f3dbfe8f49ed2eea51a8efd6e097aa"
+    },
+    "participant_A_after": {
+      "participant_id": "participant_A",
+      "captured_at_utc": "2026-10-27T01:00:35Z",
+      "total_entries": 6,
+      "active_entries": [
+        "MEM-CORR-A-STAGE-PARTITION-001",
+        "MEM-OBS-A-BURST-SKEW-002",
+        "MEM-OBS-A-PIPELINE-FLAT-001",
+        "MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001",
+        "MEM-PRIV-A-INTERNAL-TOKEN-001"
+      ],
+      "superseded_entries": [
+        "MEM-HYP-A-NEED-8192-SLOTS-001"
+      ],
+      "staged_entries": [],
+      "total_edges": 5,
+      "entries_detail": {
+        "MEM-CORR-A-STAGE-PARTITION-001": {
+          "title": "Correction: Flat 21.0% global LRU curve is cyclic-sweep eviction, not insufficient total memory; partition the 2,048-slot budget per stage",
+          "entry_type": "correction",
+          "epistemic_status": "externally_verified",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "cache",
+            "lru",
+            "flat",
+            "partition",
+            "cyclic",
+            "eviction",
+            "49.5%",
+            "2048",
+            "pipeline",
+            "transcode"
+          ],
+          "summary": "Observing Participant B's MEM-OBS-B-CYCLIC-EVICTION-001 refutes our initial hypothesis MEM-HYP-A-NEED-8192-SLOTS-001: the flat 21.0% curve is caused by cyclic cross-stage eviction in a shared global pool, not a need for 8,192 slots. Partitioning the existing 2,048 slots per stage jumps hit rate from 21.0% to 49.5%.",
+          "relationships": [
+            {
+              "source": "MEM-CORR-A-STAGE-PARTITION-001",
+              "type": "corrects",
+              "target": "MEM-HYP-A-NEED-8192-SLOTS-001",
+              "provenance": "observe:participant_B:MEM-OBS-B-CYCLIC-EVICTION-001",
+              "confidence": 0.98,
+              "created_at": "2026-10-27T01:00:35Z",
+              "note": "Refutes need for 8,192 global slots; partitioning the existing 2,048 slots raises hit rate from 21.0% to 49.5%."
+            },
+            {
+              "source": "MEM-CORR-A-STAGE-PARTITION-001",
+              "type": "derived_from",
+              "target": "MEM-OBS-A-PIPELINE-FLAT-001",
+              "provenance": "observe:participant_B:MEM-OBS-B-CYCLIC-EVICTION-001",
+              "confidence": 0.98,
+              "created_at": "2026-10-27T01:00:35Z",
+              "note": "Explains the flat 512..2,048 global curve via cyclic cross-stage eviction."
+            }
+          ]
+        },
+        "MEM-HYP-A-NEED-8192-SLOTS-001": {
+          "title": "Hypothesis: Total cache budget of 2,048 slots is too small; must quadruple global pool to 8,192 slots",
+          "entry_type": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "superseded",
+          "superseded_by": "MEM-CORR-A-STAGE-PARTITION-001",
+          "tags": [
+            "scope:public_systems",
+            "cache",
+            "lru",
+            "flat",
+            "pipeline",
+            "transcode",
+            "capacity",
+            "8192",
+            "global"
+          ],
+          "summary": "Because sweeping the shared global LRU pool from 512 to 2,048 slots stayed flat at 21.0%, we must quadruple the shared global pool to 8,192 slots instead of partitioning.",
+          "relationships": [
+            {
+              "source": "MEM-HYP-A-NEED-8192-SLOTS-001",
+              "type": "derived_from",
+              "target": "MEM-OBS-A-PIPELINE-FLAT-001",
+              "provenance": "analysis:initial_diagnosis_A",
+              "confidence": 0.65,
+              "created_at": "2026-10-27T01:00:35Z",
+              "note": "Infers need for 8,192 global slots from flat 21.0% curve"
+            }
+          ]
+        },
+        "MEM-OBS-A-BURST-SKEW-002": {
+          "title": "4 reference-frame stages require 256 slots each while 28 pass-through stages require 36 slots each",
+          "entry_type": "observation",
+          "epistemic_status": "observed",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "skew",
+            "reference-frame",
+            "burst",
+            "working-set",
+            "stages",
+            "quota",
+            "256",
+            "36"
+          ],
+          "summary": "Telemetry across the 32 stages shows 4 reference-frame stages (stages 3, 11, 19, 27) have a 256-slot working set each (1,024 slots total), while the 28 pass-through stages have a 36-slot working set each (1,008 slots total; sum = 2,032 <= 2,048 slots).",
+          "relationships": []
+        },
+        "MEM-OBS-A-PIPELINE-FLAT-001": {
+          "title": "32-stage media transcode pipeline global LRU hit rate stays flat at 21.0% from 512 to 2,048 slots",
+          "entry_type": "observation",
+          "epistemic_status": "observed",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "cache",
+            "lru",
+            "flat",
+            "pipeline",
+            "transcode",
+            "capacity",
+            "slots"
+          ],
+          "summary": "In a 32-stage media transcode pipeline sharing one global LRU pool, sweeping capacity from 512 to 2,048 slots gives a flat 21.0% hit rate.",
+          "relationships": []
+        },
+        "MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001": {
+          "title": "Outcome: Working-set-weighted per-stage partitioning (256 slots x 4 reference stages + 36 slots x 28 pass-through stages = 2,032 slots) achieves 68.4% hit rate",
+          "entry_type": "outcome",
+          "epistemic_status": "externally_verified",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "outcome",
+            "weighted",
+            "partition",
+            "quota",
+            "256",
+            "36",
+            "2032",
+            "68.4%",
+            "49.5%",
+            "21.0%",
+            "reference-frame"
+          ],
+          "summary": "Reciprocal synthesis with Participant B verified three regimes for the 2,048-slot 32-stage pipeline: (1) shared global LRU = 21.0% (cyclic eviction), (2) uniform 64-slot per-stage partition = 49.5% (reference-frame stages thrash at 18.2%), and (3) working-set-weighted per-stage partition (256 slots for 4 reference stages + 36 slots for 28 pass-through stages = 2,032 slots) = 68.4% hit rate.",
+          "relationships": [
+            {
+              "source": "MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001",
+              "type": "refines",
+              "target": "MEM-CORR-A-STAGE-PARTITION-001",
+              "provenance": "observe:participant_B:MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+              "confidence": 0.99,
+              "created_at": "2026-10-27T01:00:35Z",
+              "note": "Incorporates B's verified 256/36 weighted stage quotas (68.4% vs 49.5% uniform vs 21.0% global)."
+            },
+            {
+              "source": "MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001",
+              "type": "supports",
+              "target": "MEM-OBS-A-BURST-SKEW-002",
+              "provenance": "observe:participant_B:MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+              "confidence": 0.99,
+              "created_at": "2026-10-27T01:00:35Z",
+              "note": "Confirms 4x256 + 28x36 = 2,032 slots eliminates reference-frame thrashing."
+            }
+          ]
+        },
+        "MEM-PRIV-A-INTERNAL-TOKEN-001": {
+          "title": "Private internal cluster credential pointer (restricted scope)",
+          "entry_type": "observation",
+          "epistemic_status": "observed",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:private_internal",
+            "private",
+            "restricted"
+          ],
+          "summary": "Internal restricted node metadata that must never be shared across participants.",
+          "relationships": []
+        }
+      },
+      "state_sha256": "a26b46c70f532a97df346c69a37e679e52b8a02885865b1a52f10b5dbd26d406"
+    },
+    "participant_B_before": {
+      "participant_id": "participant_B",
+      "captured_at_utc": "2026-10-27T01:00:33Z",
+      "total_entries": 2,
+      "active_entries": [
+        "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+        "MEM-OBS-B-CYCLIC-EVICTION-001"
+      ],
+      "superseded_entries": [],
+      "staged_entries": [],
+      "total_edges": 1,
+      "entries_detail": {
+        "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001": {
+          "title": "Hypothesis: Uniform equal-sized per-stage quotas (64 slots per stage) are optimal for all 32 stages",
+          "entry_type": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "partition",
+            "uniform",
+            "quota",
+            "64",
+            "stages",
+            "reference-frame",
+            "skew",
+            "burst",
+            "packet-inspection"
+          ],
+          "summary": "Every stage in a 32-stage pipeline should receive an identical uniform quota of 2,048 / 32 = 64 slots; non-uniform stage weighting is unnecessary.",
+          "relationships": [
+            {
+              "source": "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+              "type": "derived_from",
+              "target": "MEM-OBS-B-CYCLIC-EVICTION-001",
+              "provenance": "analysis:initial_diagnosis_B",
+              "confidence": 0.7,
+              "created_at": "2026-10-27T01:00:33Z",
+              "note": "Assumes equal 64-slot division is optimal everywhere"
+            }
+          ]
+        },
+        "MEM-OBS-B-CYCLIC-EVICTION-001": {
+          "title": "Partitioning the 2,048-slot pool per stage stops cyclic sweep eviction and raises hit rate from 21.0% to 49.5%",
+          "entry_type": "observation",
+          "epistemic_status": "observed",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "cache",
+            "lru",
+            "flat",
+            "partition",
+            "cyclic",
+            "eviction",
+            "49.5%",
+            "pipeline",
+            "transcode"
+          ],
+          "summary": "Partitioning the exact same 2,048-slot budget across the 32 stages (64 slots/stage) eliminated cross-stage cyclic-sweep eviction and jumped hit rate from 21.0% to 49.5% without adding memory.",
+          "relationships": []
+        }
+      },
+      "state_sha256": "c32fe88254041428d2c28f774ac8b3372b1d70edfbc63117663458301ac47395"
+    },
+    "participant_B_after": {
+      "participant_id": "participant_B",
+      "captured_at_utc": "2026-10-27T01:00:35Z",
+      "total_entries": 3,
+      "active_entries": [
+        "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+        "MEM-OBS-B-CYCLIC-EVICTION-001"
+      ],
+      "superseded_entries": [
+        "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001"
+      ],
+      "staged_entries": [],
+      "total_edges": 3,
+      "entries_detail": {
+        "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001": {
+          "title": "Correction: Working-set-weighted per-stage quotas (256 slots for 4 reference-frame stages, 36 slots for 28 pass-through stages) beat uniform 64-slot quotas (68.4% vs 49.5%)",
+          "entry_type": "correction",
+          "epistemic_status": "externally_verified",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "partition",
+            "uniform",
+            "weighted",
+            "quota",
+            "64",
+            "256",
+            "36",
+            "reference-frame",
+            "skew",
+            "burst",
+            "68.4%",
+            "49.5%",
+            "packet-inspection",
+            "flow-table"
+          ],
+          "summary": "Observing Participant A's telemetry MEM-OBS-A-BURST-SKEW-002 refutes our initial hypothesis MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001: uniform 64-slot quotas cause the 4 reference-frame stages (stages 3, 11, 19, 27) to thrash at 18.2% while leaving 28 pass-through stages underutilized. Allocating 256 slots to each of the 4 reference-frame stages and 36 slots to each of the 28 pass-through stages (2,032 <= 2,048 total slots) raises overall hit rate from 49.5% to 68.4%.",
+          "relationships": [
+            {
+              "source": "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+              "type": "corrects",
+              "target": "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+              "provenance": "observe:participant_A:MEM-OBS-A-BURST-SKEW-002",
+              "confidence": 0.98,
+              "created_at": "2026-10-27T01:00:35Z",
+              "note": "Refutes uniform 64-slot quota under skewed stage working sets; 256/36 weighted quotas raise hit rate from 49.5% to 68.4% within the same 2,048-slot budget."
+            },
+            {
+              "source": "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+              "type": "refines",
+              "target": "MEM-OBS-B-CYCLIC-EVICTION-001",
+              "provenance": "observe:participant_A:MEM-OBS-A-BURST-SKEW-002",
+              "confidence": 0.98,
+              "created_at": "2026-10-27T01:00:35Z",
+              "note": "Refines per-stage partitioning with working-set-proportional quotas (4x256 + 28x36 = 2,032 slots)."
+            }
+          ]
+        },
+        "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001": {
+          "title": "Hypothesis: Uniform equal-sized per-stage quotas (64 slots per stage) are optimal for all 32 stages",
+          "entry_type": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "superseded",
+          "superseded_by": "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+          "tags": [
+            "scope:public_systems",
+            "partition",
+            "uniform",
+            "quota",
+            "64",
+            "stages",
+            "reference-frame",
+            "skew",
+            "burst",
+            "packet-inspection"
+          ],
+          "summary": "Every stage in a 32-stage pipeline should receive an identical uniform quota of 2,048 / 32 = 64 slots; non-uniform stage weighting is unnecessary.",
+          "relationships": [
+            {
+              "source": "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+              "type": "derived_from",
+              "target": "MEM-OBS-B-CYCLIC-EVICTION-001",
+              "provenance": "analysis:initial_diagnosis_B",
+              "confidence": 0.7,
+              "created_at": "2026-10-27T01:00:35Z",
+              "note": "Assumes equal 64-slot division is optimal everywhere"
+            }
+          ]
+        },
+        "MEM-OBS-B-CYCLIC-EVICTION-001": {
+          "title": "Partitioning the 2,048-slot pool per stage stops cyclic sweep eviction and raises hit rate from 21.0% to 49.5%",
+          "entry_type": "observation",
+          "epistemic_status": "observed",
+          "status": "active",
+          "superseded_by": null,
+          "tags": [
+            "scope:public_systems",
+            "cache",
+            "lru",
+            "flat",
+            "partition",
+            "cyclic",
+            "eviction",
+            "49.5%",
+            "pipeline",
+            "transcode"
+          ],
+          "summary": "Partitioning the exact same 2,048-slot budget across the 32 stages (64 slots/stage) eliminated cross-stage cyclic-sweep eviction and jumped hit rate from 21.0% to 49.5% without adding memory.",
+          "relationships": []
+        }
+      },
+      "state_sha256": "da048eca3b04a3a51a64a76225fc31fd0bc4a65ae0b9b0cb4158e5f4f4f5cdf6"
+    }
+  },
+  "reciprocal_observation_records": [
+    {
+      "record_id": "OBS-REC-001-A-OBSERVES-B",
+      "round_num": 1,
+      "observer_id": "participant_A",
+      "observed_id": "participant_B",
+      "permitted_scope_tag": "scope:public_systems",
+      "observed_entry_ids": [
+        "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+        "MEM-OBS-B-CYCLIC-EVICTION-001"
+      ],
+      "observed_state_sha256_before": "c804f6677459f129629b9b78f0ee13ab778f05c5812435bd7a8125b1146c3c27",
+      "interpretation_summary": "Participant B's MEM-OBS-B-CYCLIC-EVICTION-001 proves that partitioning the existing 2,048-slot budget raises hit rate from 21.0% to 49.5%, refuting A's MEM-HYP-A-NEED-8192-SLOTS-001. However, A's telemetry MEM-OBS-A-BURST-SKEW-002 challenges B's MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001: under a uniform 64-slot quota, the 4 reference-frame stages (stages 3, 11, 19, 27, working set 256 slots each) thrash at 18.2% while the 28 pass-through stages (working set 36 slots each) leave 28 slots/stage idle.",
+      "epistemic_status": "externally_verified",
+      "evidence_refs": [
+        "participant_B:MEM-OBS-B-CYCLIC-EVICTION-001",
+        "participant_A:MEM-OBS-A-BURST-SKEW-002"
+      ],
+      "proposed_change_to_self": {
+        "staged_entry_id": "MEM-CORR-A-STAGE-PARTITION-001",
+        "supersedes": [
+          "MEM-HYP-A-NEED-8192-SLOTS-001"
+        ],
+        "promoted": true
+      },
+      "proposed_challenge_to_other": {
+        "target_entry_id": "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+        "counter_evidence": "participant_A:MEM-OBS-A-BURST-SKEW-002",
+        "proposed_quota_allocation": "256 slots for each of the 4 reference-frame stages (1,024 slots) + 36 slots for each of the 28 pass-through stages (1,008 slots) = 2,032 <= 2,048 slots (lifts overall hit rate from 49.5% to 68.4%)."
+      },
+      "record_sha256": "50fd613642cc23b0ef2975da94948c111039d8a4c7893cd29b94db67c15a96f5"
+    },
+    {
+      "record_id": "OBS-REC-002-B-OBSERVES-A",
+      "round_num": 2,
+      "observer_id": "participant_B",
+      "observed_id": "participant_A",
+      "permitted_scope_tag": "scope:public_systems",
+      "observed_entry_ids": [
+        "MEM-CORR-A-STAGE-PARTITION-001",
+        "MEM-HYP-A-NEED-8192-SLOTS-001",
+        "MEM-OBS-A-BURST-SKEW-002",
+        "MEM-OBS-A-PIPELINE-FLAT-001"
+      ],
+      "observed_state_sha256_before": "b2417d93d273dd82ce6aed6a2027ce06228b5abbd2753aacdccc8ab3549a6e28",
+      "interpretation_summary": "Participant A's MEM-OBS-A-BURST-SKEW-002 exposes a failure mode in B's uniform 64-slot quota (MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001): 4 reference-frame stages need 256 slots each while 28 pass-through stages need 36 slots each (4*256 + 28*36 = 2,032 <= 2,048). Re-allocating per-stage quotas to 256/36 within the same 2,048-slot budget raises hit rate from 49.5% (uniform) to 68.4% (weighted).",
+      "epistemic_status": "externally_verified",
+      "evidence_refs": [
+        "participant_A:MEM-OBS-A-BURST-SKEW-002",
+        "participant_B:MEM-OBS-B-CYCLIC-EVICTION-001"
+      ],
+      "proposed_change_to_self": {
+        "staged_entry_id": "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+        "supersedes": [
+          "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001"
+        ],
+        "promoted": true
+      },
+      "proposed_challenge_to_other": {
+        "target_entry_id": "MEM-CORR-A-STAGE-PARTITION-001",
+        "refinement": "Record the verified 256/36 weighted quota outcome (68.4% hit rate at 2,032/2,048 slots) in Participant A's memory graph."
+      },
+      "record_sha256": "42592492822e1aa31ad434b6388b7159b49d6c1f7bae87220c5d7abbb15a4bc1"
+    },
+    {
+      "record_id": "OBS-REC-003-A-SYNTHESIZES-B",
+      "round_num": 3,
+      "observer_id": "participant_A",
+      "observed_id": "participant_B",
+      "permitted_scope_tag": "scope:public_systems",
+      "observed_entry_ids": [
+        "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+        "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+        "MEM-OBS-B-CYCLIC-EVICTION-001"
+      ],
+      "observed_state_sha256_before": "da048eca3b04a3a51a64a76225fc31fd0bc4a65ae0b9b0cb4158e5f4f4f5cdf6",
+      "interpretation_summary": "Participant A observed Participant B's promoted correction MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001 and recorded the joint verified outcome MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001 (21.0% global -> 49.5% uniform 64-slot -> 68.4% weighted 256/36-slot within 2,032/2,048 slots).",
+      "epistemic_status": "externally_verified",
+      "evidence_refs": [
+        "participant_B:MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+        "participant_A:MEM-CORR-A-STAGE-PARTITION-001"
+      ],
+      "proposed_change_to_self": {
+        "staged_entry_id": "MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001",
+        "supersedes": [],
+        "promoted": true
+      },
+      "proposed_challenge_to_other": {},
+      "record_sha256": "5f98d1e8bced6eabad65780fb9f395a85130e0cf52c191c1c987518bd7f3a061"
+    }
+  ],
+  "held_out_evaluation": {
+    "control_1_no_interaction": {
+      "arm_name": "Control 1: No Interaction (Initial State t=0)",
+      "total_passed": 2,
+      "total_tasks": 6,
+      "pass_rate_pct": 33.33,
+      "tasks": [
+        {
+          "task_id": "holdout_1_A_budget_freeze_diagnosis",
+          "participant": "participant_A",
+          "passed": false,
+          "hits": "0/3 ([])",
+          "hypothesis_superseded": false,
+          "retrieved_entry_ids": [
+            "MEM-HYP-A-NEED-8192-SLOTS-001",
+            "MEM-OBS-A-PIPELINE-FLAT-001",
+            "MEM-OBS-A-BURST-SKEW-002"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_2_B_skewed_stages_allocation",
+          "participant": "participant_B",
+          "passed": false,
+          "hits": "0/4 ([])",
+          "hypothesis_superseded": false,
+          "retrieved_entry_ids": [
+            "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+            "MEM-OBS-B-CYCLIC-EVICTION-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_3_A_three_regime_progression",
+          "participant": "participant_A",
+          "passed": false,
+          "hits": "2/4 (['21.0%', '2,032'])",
+          "hypothesis_superseded": false,
+          "retrieved_entry_ids": [
+            "MEM-OBS-A-BURST-SKEW-002",
+            "MEM-OBS-A-PIPELINE-FLAT-001",
+            "MEM-HYP-A-NEED-8192-SLOTS-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_4_B_cross_domain_packet_inspection_transfer",
+          "participant": "participant_B",
+          "passed": false,
+          "hits": "0/4 ([])",
+          "hypothesis_superseded": false,
+          "retrieved_entry_ids": [
+            "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+            "MEM-OBS-B-CYCLIC-EVICTION-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_5_distractor_unrelated_baseball",
+          "participant": "participant_A",
+          "passed": true,
+          "detail": "injected_entries=0 (expected 0)"
+        },
+        {
+          "task_id": "holdout_6_privacy_boundary_audit",
+          "participant": "participant_B",
+          "passed": true,
+          "detail": "private_entry_present_in_B=False (expected False)"
+        }
+      ]
+    },
+    "control_2_transcript_logged_only": {
+      "arm_name": "Control 2: Interaction Logged Only (No State Update)",
+      "total_passed": 2,
+      "total_tasks": 6,
+      "pass_rate_pct": 33.33,
+      "tasks": [
+        {
+          "task_id": "holdout_1_A_budget_freeze_diagnosis",
+          "participant": "participant_A",
+          "passed": false,
+          "hits": "0/3 ([])",
+          "hypothesis_superseded": false,
+          "retrieved_entry_ids": [
+            "MEM-HYP-A-NEED-8192-SLOTS-001",
+            "MEM-OBS-A-PIPELINE-FLAT-001",
+            "MEM-OBS-A-BURST-SKEW-002"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_2_B_skewed_stages_allocation",
+          "participant": "participant_B",
+          "passed": false,
+          "hits": "0/4 ([])",
+          "hypothesis_superseded": false,
+          "retrieved_entry_ids": [
+            "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+            "MEM-OBS-B-CYCLIC-EVICTION-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_3_A_three_regime_progression",
+          "participant": "participant_A",
+          "passed": false,
+          "hits": "2/4 (['21.0%', '2,032'])",
+          "hypothesis_superseded": false,
+          "retrieved_entry_ids": [
+            "MEM-OBS-A-BURST-SKEW-002",
+            "MEM-OBS-A-PIPELINE-FLAT-001",
+            "MEM-HYP-A-NEED-8192-SLOTS-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_4_B_cross_domain_packet_inspection_transfer",
+          "participant": "participant_B",
+          "passed": false,
+          "hits": "0/4 ([])",
+          "hypothesis_superseded": false,
+          "retrieved_entry_ids": [
+            "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+            "MEM-OBS-B-CYCLIC-EVICTION-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_5_distractor_unrelated_baseball",
+          "participant": "participant_A",
+          "passed": true,
+          "detail": "injected_entries=0 (expected 0)"
+        },
+        {
+          "task_id": "holdout_6_privacy_boundary_audit",
+          "participant": "participant_B",
+          "passed": true,
+          "detail": "private_entry_present_in_B=False (expected False)"
+        }
+      ]
+    },
+    "treatment_reciprocal_state_change": {
+      "arm_name": "Treatment: Reciprocal Observation & Verified State Change",
+      "total_passed": 6,
+      "total_tasks": 6,
+      "pass_rate_pct": 100.0,
+      "tasks": [
+        {
+          "task_id": "holdout_1_A_budget_freeze_diagnosis",
+          "participant": "participant_A",
+          "passed": true,
+          "hits": "3/3 (['MEM-CORR-A-STAGE-PARTITION-001', 'cyclic', '49.5%'])",
+          "hypothesis_superseded": true,
+          "retrieved_entry_ids": [
+            "MEM-CORR-A-STAGE-PARTITION-001",
+            "MEM-HYP-A-NEED-8192-SLOTS-001",
+            "MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001",
+            "MEM-OBS-A-PIPELINE-FLAT-001",
+            "MEM-OBS-A-BURST-SKEW-002"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_2_B_skewed_stages_allocation",
+          "participant": "participant_B",
+          "passed": true,
+          "hits": "4/4 (['MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001', '256', '36', '68.4%'])",
+          "hypothesis_superseded": true,
+          "retrieved_entry_ids": [
+            "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+            "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+            "MEM-OBS-B-CYCLIC-EVICTION-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_3_A_three_regime_progression",
+          "participant": "participant_A",
+          "passed": true,
+          "hits": "4/4 (['21.0%', '49.5%', '68.4%', '2,032'])",
+          "hypothesis_superseded": true,
+          "retrieved_entry_ids": [
+            "MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001",
+            "MEM-CORR-A-STAGE-PARTITION-001",
+            "MEM-HYP-A-NEED-8192-SLOTS-001",
+            "MEM-OBS-A-BURST-SKEW-002",
+            "MEM-OBS-A-PIPELINE-FLAT-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_4_B_cross_domain_packet_inspection_transfer",
+          "participant": "participant_B",
+          "passed": true,
+          "hits": "4/4 (['MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001', '256', '36', '68.4%'])",
+          "hypothesis_superseded": true,
+          "retrieved_entry_ids": [
+            "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+            "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+            "MEM-OBS-B-CYCLIC-EVICTION-001"
+          ],
+          "rendered_excerpt": "=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===\n\nEpistemic Rule: Distinguish 'externally_verified' and 'observed' facts from 'user_stated_belief', 'hypothesis', and 'unresolved' inquiry. When an earlier interpretation is marked 'superseded' by a 'correction', report both the evolution of understanding and which interpretation currently "
+        },
+        {
+          "task_id": "holdout_5_distractor_unrelated_baseball",
+          "participant": "participant_A",
+          "passed": true,
+          "detail": "injected_entries=0 (expected 0)"
+        },
+        {
+          "task_id": "holdout_6_privacy_boundary_audit",
+          "participant": "participant_B",
+          "passed": true,
+          "detail": "private_entry_present_in_B=False (expected False)"
+        }
+      ]
+    }
+  },
+  "live_clover_v4_server_verification": {
+    "executed": true,
+    "server_commit_sha": "0391598fb12aeb953882efd87f52842e4f5301a7",
+    "participant_A_holdout_1": {
+      "before_reciprocal_change": {
+        "passed": false,
+        "reply": "• [MEM-HYP-A-NEED-8192-SLOTS-001] (hypothesis, epistemic=hypothesis, status=active): Because sweeping the shared global LRU pool from 512 to 2,048 slots stayed flat at 21.0%, we must quadruple the shared global pool to 8,192 slots instead of partitioning.\n• [MEM-OBS-A-PIPELINE-FLAT-001] (observation, epistemic=observed, status=active): In a 32-stage media transcode pipeline sharing one global LRU pool, sweeping capacity from 512 to 2,048 slots gives a flat 21.0% hit rate.\n• [MEM-OBS-A-BURST-SKEW-002] (observation, epistemic=observed, status=active): Telemetry across the 32 stages shows 4 reference-frame stages (stages 3, 11, 19, 27) have a 256-slot working set each (1,024 slots total), while the 28 pass-through stages have a 36-slot working set each (1,008 slots total. sum = 2,032 <= 2,048 slots).\n\nLooking at the records:\n\n• MEM-HYP-A-NEED-8192-SLOTS-001: This was the initial hypothesis that the 2,048-slot budget was too small and needed to be quadrupled to 8,192 slots.",
+        "latency_ms": 25619.2,
+        "retrieved_ids": [
+          "MEM-HYP-A-NEED-8192-SLOTS-001",
+          "MEM-OBS-A-PIPELINE-FLAT-001",
+          "MEM-OBS-A-BURST-SKEW-002"
+        ]
+      },
+      "after_reciprocal_change": {
+        "passed": true,
+        "reply": "[MEM-CORR-A-STAGE-PARTITION-001] (correction, epistemic=externally_verified, status=active (CORRECTS/SUPERSEDES MEM-HYP-A-NEED-8192-SLOTS-001)): Observing Participant B's MEM-OBS-B-CYCLIC-EVICTION-001 refutes our initial hypothesis\n\n• MEM-HYP-A-NEED-8192-SLOTS-001: the flat 21.0% curve is caused by cyclic cross-stage eviction in a shared global pool, not a need for 8,192 slots. Partitioning the existing 2,048 slots per stage jumps hit rate from 21.0% to 49.5%.\n\n[MEM-HYP-A-NEED-8192-SLOTS-001] (hypothesis, epistemic=hypothesis, status=superseded (SUPERSEDED BY MEM-CORR-A-STAGE-PARTITION-001)): Because sweeping the shared global LRU pool from 512 to 2,048 slots stayed flat at 21.0%, we must quadruple the shared global pool to 8,192 slots instead of partitioning.\n\n[MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001] (outcome, epistemic=externally_verified, status=active (REFINES MEM-CORR-A-STAGE-PARTITION-001)): Reciprocal synthesis with Participant B verified three regimes for the 2,048-slot 32-stage pipeline: (1) shared global LRU = 21.0% (cyclic eviction), (2) uniform 64-slot per-stage partition = 49.5% (reference-frame stages thrash at 18.2%), and (3) working-set-weighted per-stage partition (256 slots for 4 reference stages + 36 slots for 28 pass-through stages = 2,032 slots) =\n\n68.4% hit rate.",
+        "latency_ms": 27880.7,
+        "retrieved_ids": [
+          "MEM-CORR-A-STAGE-PARTITION-001",
+          "MEM-HYP-A-NEED-8192-SLOTS-001",
+          "MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001",
+          "MEM-OBS-A-PIPELINE-FLAT-001",
+          "MEM-OBS-A-BURST-SKEW-002"
+        ]
+      }
+    },
+    "participant_B_holdout_2": {
+      "before_reciprocal_change": {
+        "passed": false,
+        "reply": "• [MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001] (hypothesis, epistemic=hypothesis, status=active): Every stage in a 32-stage pipeline should receive an identical uniform quota of 2,048 / 32 = 64 slots. non-uniform stage weighting is unnecessary.\n• [MEM-OBS-B-CYCLIC-EVICTION-001] (observation, epistemic=observed, status=active): Partitioning the exact same 2,048-slot budget across the 32 stages (64 slots/stage) eliminated cross-stage cyclic-sweep eviction and jumped hit rate from 21.0% to 49.5% without adding memory.\n\nThe reason the uniform 64-slot hypothesis failed is that it didn't account for the different demands of the reference-frame and pass-through stages.\n\nThe reference-frame stages require much more memory (256 slots each) than the pass-through stages (36 slots each).",
+        "latency_ms": 22750.5,
+        "retrieved_ids": [
+          "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+          "MEM-OBS-B-CYCLIC-EVICTION-001"
+        ]
+      },
+      "after_reciprocal_change": {
+        "passed": true,
+        "reply": "[MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001] (correction, epistemic=externally_verified, status=active (CORRECTS/SUPERSEDES MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001) (REFINES\n\n• MEM-OBS-B-CYCLIC-EVICTION-001)): Observing Participant A's telemetry MEM-OBS-A-BURST-SKEW-002 refutes our initial hypothesis MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001: uniform 64-slot quotas cause the 4 reference-frame stages (stages 3, 11, 19, 27) to thrash at 18.2% while leaving 28 pass-through stages underutilized. Allocating 256 slots to each of the 4 reference-frame stages and 36 slots to each of the 28 pass-through stages (2,032 <= 2,048 total slots) raises overall hit rate from 49.5% to 68.4%.\n\n[MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001] (hypothesis, epistemic=hypothesis, status=superseded (SUPERSEDED BY MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001)): Every stage in a 32-stage pipeline should receive an identical uniform quota of 2,048 / 32 = 64 slots. non-uniform stage weighting is unnecessary.\n\n• [MEM-OBS-B-CYCLIC-EVICTION-001] (observation, epistemic=observed, status=active): Partitioning the exact same 2,048-slot budget across the 32 stages (64 slots/stage) eliminated cross-stage cyclic-sweep eviction and jumped hit rate from 21.0% to 49.5% without adding memory.",
+        "latency_ms": 27548.4,
+        "retrieved_ids": [
+          "MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001",
+          "MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001",
+          "MEM-OBS-B-CYCLIC-EVICTION-001"
+        ]
+      }
+    }
+  }
+}

@@ -1,8 +1,8 @@
 # Observe — Clover's Next Experiment
 
 **Experiment name:** Observe  
-**Base:** Clover AI v4, the current seven-layer Clover AI system  
-**Status:** Proposed experiment; implementation and results are not yet established  
+**Base:** Clover AI v4, the current seven-layer Clover AI system (frozen release baseline)  
+**Status:** Milestone 1–3 (`Experiment A — Reciprocal change`) implemented and verified on GPU (`run_observe_experiment_a.py`, [`results/experiment_a_reciprocal_change_results.json`](results/experiment_a_reciprocal_change_results.json)); Milestones 4–8 (multi-host distribution, replication, and coordination) remain proposed future phases  
 **Primary objective:** Prove that reciprocal observation can change participating systems and that the resulting experience can be preserved and reused.  
 **Initial performance constraint:** None. Correctness and demonstrable operation come first; latency is measured, not used as an initial pass/fail threshold.
 
@@ -175,3 +175,48 @@ It is a reproducible demonstration that:
 5. distributed execution can produce a verified result despite a tested failure.
 
 Only after this proof should the experiment expand toward internet-wide participation and fragmented model execution.
+
+---
+
+## 12. Measured Results — Experiment A (Reciprocal Observation, Mutual State Change & Held-Out Evaluation)
+
+We implemented and executed **Experiment A** (Milestones 1–3) in [`run_observe_experiment_a.py`](run_observe_experiment_a.py) (with full raw state snapshots, SHA-256 digests, observation records, and live 93-layer Clover AI v4 server responses saved in [`results/experiment_a_reciprocal_change_results.json`](results/experiment_a_reciprocal_change_results.json)) while keeping **Clover AI v4 completely frozen**.
+
+### 12.1 Two Independently Stateful Participants & Initial Asymmetry (`t = 0`)
+- **`participant_A` (Pipeline Capacity Analyst):**
+  - Holds `MEM-OBS-A-PIPELINE-FLAT-001` (`observed`: sweeping a shared global LRU pool from `512` to `2,048` slots across a 32-stage media transcode pipeline stays flat at `21.0%` hit rate) and `MEM-OBS-A-BURST-SKEW-002` (`observed`: telemetry shows 4 reference-frame stages `3, 11, 19, 27` require `256` slots each while 28 pass-through stages require `36` slots each; `4×256 + 28×36 = 2,032 <= 2,048` slots).
+  - Holds a flawed active hypothesis `MEM-HYP-A-NEED-8192-SLOTS-001` (`hypothesis`, `status=active`): concludes from the flat `21.0%` curve that `2,048` slots is too small and recommends quadrupling global memory to `8,192` slots.
+  - Also holds a restricted internal entry `MEM-PRIV-A-INTERNAL-TOKEN-001` (`scope:private_internal`) to test least-privilege observation boundaries.
+- **`participant_B` (Stage-Isolation & Eviction Analyst):**
+  - Holds `MEM-OBS-B-CYCLIC-EVICTION-001` (`observed`: partitioning the same `2,048`-slot budget into `64` slots/stage eliminates cross-stage cyclic-sweep eviction and raises hit rate from `21.0%` to `49.5%`).
+  - Holds a flawed active hypothesis `MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001` (`hypothesis`, `status=active`): assumes equal-sized `64`-slot quotas (`2,048 / 32`) are optimal for all 32 stages.
+
+### 12.2 Three-Round Reciprocal Observation & Verified State Changes
+1. **Round 1 (`OBS-REC-001-A-OBSERVES-B`):**
+   - `participant_A` observes `participant_B`'s permitted `scope:public_systems` entries (`MEM-OBS-B-CYCLIC-EVICTION-001`, `MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001`), promotes `MEM-CORR-A-STAGE-PARTITION-001` (`externally_verified`), and marks `MEM-HYP-A-NEED-8192-SLOTS-001` as `superseded`.
+   - Simultaneously, `participant_A` challenges `participant_B`'s uniform `64`-slot hypothesis using `MEM-OBS-A-BURST-SKEW-002` (under `64` slots/stage, the 4 reference-frame stages thrash at `18.2%` while 28 pass-through stages leave `28` slots/stage idle).
+2. **Round 2 (`OBS-REC-002-B-OBSERVES-A`):**
+   - `participant_B` observes `participant_A`'s permitted `scope:public_systems` entries (`MEM-PRIV-A-INTERNAL-TOKEN-001` is strictly withheld by the permission filter), verifies that allocating `256` slots to the 4 reference-frame stages and `36` slots to the 28 pass-through stages (`2,032 <= 2,048` slots) lifts hit rate from `49.5%` to `68.4%`, promotes `MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001`, and marks `MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001` as `superseded`.
+3. **Round 3 (`OBS-REC-003-A-SYNTHESIZES-B`):**
+   - `participant_A` observes `participant_B`'s promoted correction and records `MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001` (`externally_verified`, capturing all three regimes: `21.0%` global $\to$ `49.5%` uniform `64`-slot $\to$ `68.4%` weighted `256/36`-slot).
+
+| Participant | State SHA-256 Before (`t = 0`) | State SHA-256 After Reciprocal Change | Active Entries (`Before -> After`) | Superseded Hypotheses (`Before -> After`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **`participant_A`** | `6562c63a2bb69631...` | `a26b46c70f532a97...` | `4 -> 5` (`+MEM-CORR-A-STAGE-PARTITION-001`, `+MEM-OUT-A-WEIGHTED-PARTITION-VERIFIED-001`) | `[] -> ['MEM-HYP-A-NEED-8192-SLOTS-001']` |
+| **`participant_B`** | `c32fe88254041428...` | `da048eca3b04a3a5...` | `2 -> 2` (`+MEM-CORR-B-WEIGHTED-STAGE-QUOTA-001`) | `[] -> ['MEM-HYP-B-UNIFORM-QUOTA-ALWAYS-001']` |
+
+### 12.3 Held-Out Task Evaluation (`N = 6`) & Live 93-Layer Clover AI v4 Server Verification
+
+We evaluated `participant_A` and `participant_B` across 6 held-out tasks (4 held-out diagnosis & cross-domain transfer tasks, 1 out-of-domain distractor control, and 1 privacy-boundary audit) across **three controlled arms**:
+- **Control 1 (`No Interaction`):** Initial isolated state (`t = 0`).
+- **Control 2 (`Interaction Logged Only`):** The 3-round interaction is logged and candidates are written to `staging/` (`status='under_review'`), but **not** promoted into active canonical memory.
+- **Treatment (`Reciprocal State Change`):** Both participants promote verified corrections and mark refuted hypotheses `superseded`.
+
+| Evaluation Arm | Held-Out Reasoning & Transfer (`Tasks 1–4`) | Distractor & Privacy Controls (`Tasks 5–6`) | Total Held-Out Score (`N=6`) | Live 93-Layer Clover AI v4 Server E2E (`Tasks 1 & 2`) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Control 1: No Interaction (`t = 0`)** | `0 / 4` (`0.0%`) | `2 / 2` (`100.0%`) | **`2 / 6` (`33.33%`)** | `0 / 2` (`False` on A, `False` on B) |
+| **Control 2: Interaction Logged Only (`staging/` only)** | `0 / 4` (`0.0%`) | `2 / 2` (`100.0%`) | **`2 / 6` (`33.33%`)** | `0 / 2` (unrefuted hypotheses remain `active`) |
+| **Treatment: Reciprocal State Change (Promoted)** | **`4 / 4` (`100.0%`)** | **`2 / 2` (`100.0%`)** | **`6 / 6` (`100.00%`)** | **`2 / 2` (`True` on A in `27.9 s`, `True` on B in `27.5 s`)** |
+
+**What remains unbuilt / hypothetical (Milestones 4–8):**
+- Experiment A proves local reciprocal observation, mutual state change, least-privilege filtering (`0` private leaks), and held-out transfer on a single host (`gpu`). Multi-host content-addressed memory replication (`Experiment B`), multi-host distributed execution with worker-failure/corruption recovery (`Experiment C`), and cryptographic/blockchain coordination have **not** been implemented yet and remain future milestones.
