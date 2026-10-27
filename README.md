@@ -44,17 +44,57 @@ This repository contains the documentation, practical guidance, case studies, an
 
 ## Clover System &amp; Architecture (`Clover AI v4`)
 
-**Clover** is both the operating methodology (`Context → Direction → Execution → Outcome → Growth` in [`AGENTS.md`](AGENTS.md)) and the unified open-source AI system built under it ([`clover-kimi-k3/`](clover-kimi-k3/)) — designed to produce meaningful outcomes while remaining bounded, observable, verifiable, and accountable.
+**Clover** is both the operating methodology (`Context → Direction → Action → Success → Growth` in [`AGENTS.md`](AGENTS.md)) and the unified open-source AI system built under it ([`clover-kimi-k3/`](clover-kimi-k3/)) — designed to produce meaningful outcomes while remaining bounded, observable, verifiable, and accountable.
 
 It began on a single CPU host from the Clover equation of Kimi K3 and from Fareed Khan's `kimi-k3-in-c` (with its first snapshot [`clover-k3`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) in git history), and currently stands as a **7-layer neuro-symbolic, compiler-verified, memory-accumulating system** running on both a single CPU workstation (`Ryzen 9 7950X3D`, `124 GB` RAM) and an `8 × NVIDIA RTX 3090` GPU server (`192 GiB` VRAM), reproducibly bootstrapped from GitHub and Hugging Face ([`Santhoshsathish94/clover-kimi-k3`](https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3)):
 
-1. **Governance &amp; Discernment Kernel ([`AGENTS.md`](AGENTS.md)):** Operates under `Context ⇄ Direction ⇄ Execution ⇄ Outcome ⇄ Growth`, keeping epistemic states (`observed`, `externally_verified`, `hypothesis`, `user_stated_belief`, `unresolved`) distinct.
+1. **Governance &amp; Discernment Kernel ([`AGENTS.md`](AGENTS.md)):** Operates under `Context ⇄ Direction ⇄ Action ⇄ Success ⇄ Growth`, keeping epistemic states (`observed`, `externally_verified`, `hypothesis`, `user_stated_belief`, `unresolved`) distinct.
 2. **File-Based Memory Tree &amp; Relational Knowledge Graph ([`k3_memory_graph.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_memory_graph.py), [context](clover-kimi-k3/docs/clover-memory-graph-context.md)):** Human-readable Markdown memory files with YAML front matter (`32` canonical seed entries, `65` typed cross-branch relationships), a closed-loop `staging/` promotion gate, and six mechanisms from the 11 foundational AI papers ([`foundations-11-papers-human-guide.md`](clover-kimi-k3/docs/foundations-11-papers-human-guide.md) &amp; [`clover-foundations-to-clover-gpu-context.md`](clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md)).
 3. **Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier ([`k3_ontology_graph.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_ontology_graph.py), [context](clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md)):** Deterministic property graph + 4 Horn inference rules + Newell–Simon `CSm`/`VCt` signature pruning + `[E#]` / `[P#]` provenance + `CloverSymbolicVerifier`.
 4. **HybridAgent Continuous `<latent>` Reasoning &amp; Live Tools ([`k3_agent_engine.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_agent_engine.py), [context](clover-kimi-k3/docs/clover-hybridagent-research-context.md)):** 14-step continuous `<latent>` reasoning (`K3NativeHybridLink` `7,168 → 7,168`), live `<search>` (arXiv, Wikipedia, DuckDuckGo, URL fetch), sandboxed `<python>` (math, unit tests, charts), and `MoonViT3d` vision.
 5. **On-the-Fly Generative Compilation for Python &amp; Rust ([`k3_generative_compiler.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_generative_compiler.py), [context](clover-kimi-k3/docs/clover-generative-compilation-research-context.md)):** Statement-boundary partial-program sealors ($\mathcal{S}_{\text{PY}}, \mathcal{S}_{\text{RS}}$ via `rustc`) that catch syntax, arity, prefix-shadowing, stagnant loops, doctests, and Rust borrow/type errors mid-generation and roll back the KV cache.
 6. **93-Layer 2.78T MoE GPU/CPU Engine, Validated Rust Host Path &amp; Direction B Data Movement ([`k3_gpu_experts_lib.cu`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_gpu_experts_lib.cu), [`clover-kimi-k3/src/rust/`](clover-kimi-k3/src/rust/), [context](clover-kimi-k3/docs/clover-data-movement-direction-b-context.md)):** Full 93-layer Kimi K3 backbone + 8 validated Rust host-path crates (`slotcache`, `poolinit`, `supply`, `copyq`, `routetable`, `planner`, `loader`, `engcfg` — `213/213` unit tests, `max_abs_diff = 0.0` C++ vs. Rust parity) + five Direction B data-movement upgrades (`95.22%–95.29%` overall VRAM hit rate, `0` PCIe D2H writebacks on cold/warm reads, `148.5 K3 tok/s` across 93 GPU layers).
 7. **11-Pass Parallel Next-Concept Modeling (NCM) &amp; Native Web / VS Code Agent Surfaces ([`k3_chat_server.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_chat_server.py), [`extension.js`](clover-kimi-k3/vscode-extension/extension.js)):** 11-level multiscale residual VQ-VAE and `NextConceptTransformer` emitting 64-token windows in 11 parallel passes (`17,869.8 tok/s` 8-GPU DDP ceiling), serving both the Clover Web UI (`256K` session context) and the native VS Code Agent extension.
+
+## Core Research Thesis: The System Around the Model Matters
+
+Clover's central research question is whether **the system built around an AI model can substantially extend its effective problem-solving capability**. The model matters, but it is only one component of a complete system. Memory, ontology, tools, generative compilation, verification, governance, and agent coordination can help turn a model's proposals into grounded, executable, checked outcomes.
+
+Our current 70-task evaluation provides an initial demonstration:
+
+| Configuration | Tasks passed | Strict pass rate |
+| :--- | :---: | :---: |
+| Underlying model alone (Arm 0) | **33 / 70** | **47.14%** |
+| Model + tools and generative compilation (Arm 1) | **57 / 70** | **81.43%** |
+| Full Clover AI v4 system (Arm 2) | **70 / 70** | **100.0%** |
+
+These results are from Clover's custom evaluation suite, not a universal measure of intelligence. They support a focused claim: **on these tasks, the complete Clover system solved problems that its underlying model alone did not reliably solve.** They do not establish that Clover is universally better than frontier models, that every system component helps every task, or that the results will generalize without independent replication.
+
+The frontier-model comparison is a separate question. The current comparison tested **GPT-6 Astra, Claude Opus 5.5, and Gemini 4 Argon** as standalone models, without attaching Clover's surrounding layers. That is useful context, but it is not an apples-to-apples comparison between complete systems. We welcome independent reproduction, held-out evaluations, alternative scoring, and published failures as well as successes.
+
+This is the hypothesis Clover is built to investigate:
+
+> **AI capability is not only a property of the model. It also emerges from the system around it.**
+
+The goal is both scientific and practical: publish evidence that researchers can challenge and reproduce, while making the architecture usable and extensible by the open-source community.
+
+### The Clover cycle
+
+Clover organizes its operating methodology as five connected stages:
+
+```text
+Context → Direction → Action → Success → Growth
+```
+
+- **Context** — establish relevant information, memory, and constraints.
+- **Direction** — define the objective and choose a path.
+- **Action** — execute through the model, tools, and system capabilities.
+- **Success** — verify whether the intended outcome was achieved.
+- **Growth** — use validated experience to improve future work.
+
+Growth is part of the framework's cycle; claims of persistent learning or general improvement require their own evidence.
+
+---
 
 ### What the 70-Task Evaluation &amp; Head-to-Head Comparison Show
 
@@ -83,7 +123,7 @@ Its central principle is:
 The implementation follows the Clover cycle:
 
 ```text
-Context → Direction → Execution → Outcome → Growth
+Context → Direction → Action → Success → Growth
 ```
 
 **Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c) · [moonshotai/Kimi-K3](https://huggingface.co/moonshotai/Kimi-K3) · [togethercomputer/HybridAgent](https://github.com/togethercomputer/HybridAgent) · [HazyResearch/ncm](https://github.com/HazyResearch/ncm) · [CosmoIknosLab/ontology-guided-graphrag](https://github.com/CosmoIknosLab/ontology-guided-graphrag).
