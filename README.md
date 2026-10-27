@@ -58,23 +58,19 @@ It began on a single CPU host from the Clover equation of Kimi K3 and from Faree
 
 ### What the 70-Task Evaluation &amp; Head-to-Head Comparison Show
 
-To evaluate Clover without conflating a 70-task system suite with full-benchmark leaderboards, we ran the **exact same 70 prompts** ([`run_real_ai_benchmark_suite.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py)) through three standalone frontier reference models (**GPT-6 Astra**, **Claude Opus 5.5**, and **Gemini 4 Argon**, with zero tools and zero external memory/ontology) and through **three controlled arms of Clover's own underlying model** on our cleanly bootstrapped `8 × RTX 3090` server ([full report](clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md)):
+We ran the **exact same 70 prompts** ([`run_real_ai_benchmark_suite.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py)) through **Clover AI (`v4`)** on our `8 × RTX 3090` server and through **GPT-6 Astra**, **Claude Opus 5.5**, and **Gemini 4 Argon**. For the three frontier models, our benchmark harness called their raw models directly without attaching Clover's surrounding layers (tools, compiler, ontology, and memory graph). The full 3-arm ablation (`Arm 0: 33/70 → Arm 1: 57/70 → Arm 2: 70/70`) and per-category breakdown live in the [full evaluation report](clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md) and [`clover-kimi-k3/README.md`](clover-kimi-k3/README.md):
 
-| Model / Controlled Arm | Public Tasks (`N=58`: MMLU, GSM8K, Code, Structured, Multi-Hop) | Ontology + Memory Tasks (`N=12`) | All 70 Tasks (`Strict / Normalized`) | Compute / Latency |
-| :--- | :---: | :---: | :---: | :--- |
-| **Arm 0: Clover Underlying Model Alone** *(No Mem / Onto / Tools / GC)* | `30 / 58` (`51.72%`) | `3 / 12` (`25.00%`) | **`33 / 70` (`47.14%`)** | `965.4 s` (`234.0 GPU-s / solved`) |
-| **Arm 1: Clover Underlying + Tools &amp; Compiler** *(No Mem / Onto)* | `51 / 58` (`87.93%`) | `6 / 12` (`50.00%`) | **`57 / 70` (`81.43%`)** | `1,015.4 s` (`142.5 GPU-s / solved`) |
-| **Arm 2: Full 7-Layer Clover (`v4`)** *(All Mechanisms Active)* | **`58 / 58` (`100.00%`)** | **`12 / 12` (`100.00%`)** | **`70 / 70` (`100.00%`)** | `1,002.3 s` (**`114.5 GPU-s / solved`**) |
-| **GPT-6 Astra** *(Standalone, No Tools/Mem/Onto)* | `54 / 58` (`56 / 58 = 96.55%`*) | `7 / 12` (`58.33%`)‡ | `61 / 70` (**`63 / 70 = 90.00%`***) | `333.6 s` (`4.77 s/task`, Cloud API) |
-| **Claude Opus 5.5** *(Standalone, No Tools/Mem/Onto)* | `51 / 58` (`57 / 58 = 98.28%`*) | `8 / 12` (`66.67%`)‡ | `59 / 70` (**`65 / 70 = 92.86%`***) | `263.2 s` (`3.76 s/task`, Cloud API) |
-| **Gemini 4 Argon** *(Standalone, No Tools/Mem/Onto)* | `50 / 58` (`86.21%`)† | `7 / 12` (`58.33%`)‡ | **`57 / 70` (`81.43%`)** | `206.4 s` (`2.95 s/task`, Cloud API) |
+| System / Model | Public Tasks (`N=58`) | Organization Ontology + Memory (`N=12`) | All 70 Tasks | Total Time (`70` tasks) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Clover AI (`v4`)** *(Model + 6 Surrounding Layers)* | **`58 / 58` (`100.0%`)** | **`12 / 12` (`100.0%`)** | **`70 / 70` (`100.0%`)** | `1,002.3 s` (`8 × RTX 3090`) |
+| **Claude Opus 5.5** *(Clover layers not attached in harness)* | `57 / 58` (`98.3%`) | `8 / 12` (`66.7%`) | **`65 / 70` (`92.9%`)** | `263.2 s` (Cloud API) |
+| **GPT-6 Astra** *(Clover layers not attached in harness)* | `56 / 58` (`96.6%`) | `7 / 12` (`58.3%`) | **`63 / 70` (`90.0%`)** | `333.6 s` (Cloud API) |
+| **Gemini 4 Argon** *(Clover layers not attached in harness)* | `50 / 58` (`86.2%`) | `7 / 12` (`58.3%`) | **`57 / 70` (`81.4%`)** | `206.4 s` (Cloud API) |
 
-*\*All three frontier models solved `10/10` GSM8K math problems correctly; unmodified regex matched intermediate numbers when `#### <num>` was omitted. †Gemini 4 Argon scored `0/5` on 9×9 Sudoku without a solver (`55..78/81` cells). ‡Standalone models rightly abstained on private organizational ontology and memory records not present in the prompt.*
-
-**Three takeaways for readers and AI agents:**
-1. **On standard public tasks, standalone frontier models are already near-perfect (`96.6%–98.3%`), whereas Clover's raw underlying model is not (`51.7%`).**
-2. **Where standalone frontier models miss on this 70-task set (`7/12` to `8/12` on Ontology + Memory) is missing Context, not missing intelligence:** no model can know organization-specific records or prior session measurements that are not in its prompt.
-3. **Clover's measured contribution is the `+52.86 percentage point` system lift (`33/70 → 70/70`, `2.04×` lower GPU-seconds per solved task) it gives a local open-weights model** by combining verified tool execution, compiler-in-the-loop code generation, symbolic ontology, and persistent memory.
+**Three takeaways:**
+1. **On the 58 public tasks, frontier models are already near-perfect (`96.6%–98.3%`) from their weights alone.** When Clover's own local model is run the same way without its surrounding layers (`Arm 0`), it scores **`30 / 58` (`51.7%`)** on public tasks and **`33 / 70` (`47.1%`)** overall ([full 3-arm ablation](clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md)).
+2. **Why the 12 Ontology + Memory tasks require the surrounding layers:** Those 12 tasks test organization-specific records and prior session measurements stored in Clover's local ontology and memory files. Because our harness did not attach Clover's Ontology and Memory layers to the frontier model calls, they rightly abstained on records not present in the prompt (`7/12–8/12`).
+3. **What Clover adds (`33/70 → 57/70 → 70/70`):** Surrounding Clover's local open-weights model with Tools + Generative Compilation (`57/70 = 81.4%`) and Ontology + Persistent Memory (`70/70 = 100.0%`) lifts it by **`+52.9 percentage points`** while cutting GPU-seconds per solved task by **`2.04×`** ([details & raw JSON artifacts](clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md)).
 
 Its central principle is:
 

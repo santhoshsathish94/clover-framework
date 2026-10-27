@@ -180,8 +180,9 @@
         is a system-level test that combines 10-question slices of MMLU, GSM8K, and HumanEval with live Rust compilation,
         structured output, private organizational ontology records, persistent session memory, and multi-hop tool tasks.</p>
       <p>To make the comparison fair and unambiguous, we ran the <strong>exact same 70 prompt strings</strong> through
-        three standalone frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, and
-        <strong>Gemini 4 Argon</strong>, with zero tools and zero external memory/ontology) and through <strong>three
+        three frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, and
+        <strong>Gemini 4 Argon</strong>, where our harness called the raw model directly without attaching Clover&rsquo;s
+        tools, compiler, ontology, or memory layers) and through <strong>three
         controlled arms of Clover&rsquo;s own underlying model</strong> on our freshly bootstrapped
         <code>8 &times; NVIDIA RTX 3090</code> server, scoring every output with the <strong>exact same frozen scoring
         harness</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
@@ -192,12 +193,12 @@
           <thead>
             <tr>
               <th scope="col">Category / Metric (<code>N=70</code>)</th>
-              <th scope="col">Arm 0: Underlying Model Alone<br><small>(No Mem / Onto / Tools / GC)</small></th>
+              <th scope="col">Arm 0: Underlying Model Alone<br><small>(Clover Layers Off)</small></th>
               <th scope="col">Arm 1: Underlying + Tools &amp; GC<br><small>(No Mem / Onto)</small></th>
-              <th scope="col">Arm 2: Full 7-Layer Clover<br><small>(All Mechanisms)</small></th>
-              <th scope="col">GPT-6 Astra<br><small>(Standalone, No Tools/Mem)</small></th>
-              <th scope="col">Claude Opus 5.5<br><small>(Standalone, No Tools/Mem)</small></th>
-              <th scope="col">Gemini 4 Argon<br><small>(Standalone, No Tools/Mem)</small></th>
+              <th scope="col">Arm 2: Full 7-Layer Clover<br><small>(All 6 Surrounding Layers)</small></th>
+              <th scope="col">GPT-6 Astra<br><small>(Clover Layers Not Attached)</small></th>
+              <th scope="col">Claude Opus 5.5<br><small>(Clover Layers Not Attached)</small></th>
+              <th scope="col">Gemini 4 Argon<br><small>(Clover Layers Not Attached)</small></th>
             </tr>
           </thead>
           <tbody>
