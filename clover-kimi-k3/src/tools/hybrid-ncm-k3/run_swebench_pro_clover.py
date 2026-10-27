@@ -222,7 +222,7 @@ def execute_agent_tool(name: str, args_json: str) -> str:
                 "--unshare-net",
                 "--chdir", "/app",
                 "--", "bash", "-c",
-                f"export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; {cmd}",
+                f"export PATH=/usr/local/go/bin:/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; {cmd}",
             ]
             res = subprocess.run(bwrap_cmd, capture_output=True, text=True, timeout=120)
             combined = (res.stdout + "\n" + res.stderr).strip()
@@ -267,7 +267,7 @@ def run_fresh_sandbox_verifier(patch_path: str) -> dict:
         "--proc", "/proc",
         "--chdir", "/app",
         "--", "bash", "-c",
-        f"export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; git config --global --add safe.directory /app; {apply_cmd} && bash /tests/test.sh",
+        f"export PATH=/usr/local/go/bin:/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; git config --global --add safe.directory /app; {apply_cmd} && bash /tests/test.sh",
     ]
     t0 = time.perf_counter()
     res = subprocess.run(bwrap_verify, capture_output=True, text=True, timeout=600)

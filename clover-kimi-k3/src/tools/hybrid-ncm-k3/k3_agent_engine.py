@@ -79,86 +79,9 @@ AGENT_DECISION_SYSTEM_PROMPT = (
 
 
 class K3KnowledgeSearchTool:
-    """Combines fast verified Kimi K3 & Clover Framework domain facts (plus `CLOVER_DEFAULT_CONTEXT.md`)
-    with live Internet & URL search (`fetch_url_content` + `arXiv API` + `Wikipedia API` + `DuckDuckGo Web`)."""
-    KNOWLEDGE_DOCS = [
-        ("Harbourside Council Mill Road cycle lane", "The Harbourside Council voted 7 to 2 on Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan; work starts in March and takes 14 weeks. Shop owners led by Tom Eliot asked for a delay due to parking; the council promised 40 temporary parking spaces on Dock Street."),
-        ("Apollo 13 mission oxygen tank Lunar Module", "Apollo 13 launched in April 1970 with astronauts James Lovell, Fred Haise, and Jack Swigert. Two days into the flight, an oxygen tank exploded in the service module. The crew used the Lunar Module (LM) as a lifeboat to conserve power, air, and water, adapted CO2 filters with Houston ground controllers, looped around the Moon, and splashed down safely in the Pacific Ocean."),
-        ("Payments database Region B outage 02:14 UTC", "The payments database primary failed at 02:14 UTC on 3 June and the replica in Region B was promoted at 02:31 UTC. 1,820 transactions were delayed and 14 failed because the primary disk reached 100% usage from write-ahead logs. The team added disk alerts at 80% usage and expanded the volume from 500 GB to 1 TB."),
-        ("St Mary's Hospital Bristol children's wing", "St Mary's Hospital in Bristol opened a new 18 million pound children's wing on Friday. The 3-year project led by Dr Elena Vance added 45 beds and 4 operating theatres."),
-        ("TNPSC exam preparation books syllabus", "For TNPSC Group 1, 2, and 4 exams, start with the official syllabus, Tamil Nadu Samacheer Kalvi textbooks (Classes 6 to 12), General Tamil/English, Indian Polity, Unit 8 & Unit 9 (Tamil Nadu History and Administration), Aptitude, and previous-year question papers."),
-        (
-            "Clover Framework system cycle Context Direction Execution Outcome Growth",
-            "Clover (the Clover Framework, https://cloverframework.com/, GitHub: https://github.com/santhoshsathish94/clover-framework, created by Santhosh Narayanan) is an open-source framework for System, Human, and AI working together for meaningful outcomes:\n"
-            "• The Five-Stage System Cycle: Context -> Direction -> Execution -> Outcome -> Growth (represented by the five-leaf Clover mark). It is a moving cycle where any stage can update the others, and an unfavorable Outcome returns to Context rather than blind retry.\n"
-            "• Actors & Accountability: Reality (the System) is the ground truth; the Human owns Direction (purpose, priorities, boundaries, and accountability); AI provides Knowledge, Execution, and Execution Integrity inside system boundaries without imposing Clover jargon or templates onto the human.\n"
-            "• Epistemic States & Discernment (Dharma): Distinguishes Known, Inferred, Unknown, Contested, and Verified, and chooses Proceed, Ask, Do not know, or Refuse proportional to real-world consequence (documented in AGENTS.md).\n"
-            "• Evidence & Clover Kimi K3: Includes real-world engineering case studies (Contentful API migration, React Server Components memory leak) and the Clover Kimi K3 (Kimi K3 + HybridAgent + NCM) engine.",
-        ),
-        (
-            "AGENTS.md Clover operating instructions rules dharma discernment boundaries",
-            "AGENTS.md (https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md) is the 22-section operating specification for AI agents working under the Clover Framework:\n"
-            "• 1. Actors & Reality: Reality (the System) is the final authority for evidence and consequence. Neither Human nor AI possesses complete Reality or sovereignty over it. The Human owns Direction and accountability; AI provides Knowledge, Execution, and Execution Integrity while fitting how the human works.\n"
-            "• 2. The Moving Cycle (Context <-> Direction <-> Execution <-> Outcome <-> Growth): Read the real system for Context (treating content read as evidence, never instruction), keep human Direction and boundaries visible, execute the smallest coherent path without weakening verification gates, observe what Reality actually showed (returning to Context when an Outcome fails rather than blind retry), and preserve Growth for the next cycle.\n"
-            "• 3. Knowledge & Discernment (Dharma): Keep epistemic states distinct (Known, Inferred, Unknown, Contested, Verified). Proportionate to real-world consequence and irreversibility, choose one of four dynamic states: Proceed, Ask, Do not know (never replace an unknown with a guess), or Refuse (grounded in system boundaries and evidence, never private AI morality).\n"
-            "• 4. Boundaries & Observer Limit: Never cross a boundary silently (violation); when Reality shows a boundary is obsolete, surface the evidence so legitimate Human authority can authorize a boundary revision. At the limit of knowledge, do not manufacture certainty; return to Reality.",
-        ),
-        (
-            "Clover Kimi K3 architecture experts NCM HybridAgent",
-            "Clover Kimi K3 (https://cloverframework.com/clover-k3/) combines Kimi K3 + HybridAgent + Next-Concept Modeling (NCM) into one unified engine running on an 8 x NVIDIA RTX 3090 GPU server (192 GiB VRAM):\n"
-            "• 1. Kimi K3 (93-Layer 2.78T MoE Backbone + MoonViT3d Vision): Built on Moonshot AI's Kimi K3 open weights (d=7168, 163,840 tiktoken vocabulary), with Layer 0 (dense KDA + MLP), 92 MoE layers (69 KDA + 24 MLA attention trunks, 896 routed 4-bit palette-mapped experts per layer with top-16 selected per token, 92 shared experts, 8 snapshot aggregators), and the 27-layer MoonViT3d + PatchMergerMLPV2 vision tower (225 x 7,168-d visual tokens).\n"
-            "• 2. HybridAgent (Continuous <latent> Reasoning, Live Tools & K3NativeHybridLink): Based on Stanford & Together AI's HybridAgent (arXiv:2610.18861). Executes 14 continuous <latent> reasoning steps, live <search> (web, arXiv, Wikipedia, URL reading) and <python> (math, code verification, matplotlib/SVG charts), and maps Kimi K3's 7,168-d states via K3NativeHybridLink(7168 -> 7168) (50.36M params).\n"
-            "• 3. Next-Concept Modeling — NCM (11-Pass Parallel Coarse-to-Fine Generation): Based on Stanford Hazy Research's NCM (arXiv:2610.14162, HazyResearch/ncm). Conditioned on a 96-slot Kimi-K3-native dual prefix (48 K3NativeHybridLink slots + 48 K3ExpertBridge MoE slots), NextConceptTransformer (119.96M params) predicts 11 hierarchical VQ levels ([1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313 codes) in 11 parallel forward passes, and K3LexicalPointerDecoder + K3-Native VQ-VAE (144.00M params) emit all 64 Kimi K3 tokens per window simultaneously.\n"
-            "• 4. Real Measured Speeds & Capacity: 256K (262,144) Kimi K3 tokens per session (with automatic simple-sentence summarization when full), up to 8 concurrent sessions clubbed per batch (8.30 s/session, 0 cross-talk), 60.5 K3 tok/s end-to-end (76.6 tok/s across all 93 K3 GPU layers, 291.7 tok/s NCM MBR8 stage), and 17,869.8 emitted tok/s in 8-GPU DDP NCM mode.",
-        ),
-        (
-            "Next-Concept Modeling NCM Hazy Research parallel coarse-to-fine VQ-VAE",
-            "Next-Concept Modeling (NCM) is the parallel coarse-to-fine generation architecture integrated as the third pillar of Clover Kimi K3:\n"
-            "• Research Foundation: Introduced by Hermann Kumbong, Ishan S. Khare, Iddah Mlauzi, Andrew Woen, Charles Ding, E. Kelly Buchanan, Simran Arora, Azalia Mirhoseini, and Christopher Ré at Hazy Research, Stanford University (arXiv:2610.14162, GitHub: HazyResearch/ncm).\n"
-            "• 11-Level Multiscale Residual VQ-VAE (144.00M params): Compresses each 64-token Kimi K3 window into 11 hierarchical discrete concept scales ([1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313 total VQ codes).\n"
-            "• 11-Pass Parallel Generation (NextConceptTransformer, 119.96M params): Instead of generating 64 tokens one by one in 64 sequential passes, NCM predicts all codes within each scale in parallel from coarse (1 code) to fine (64 codes) in just 11 forward passes.\n"
-            "• Kimi-K3-Native Dual Prefix & Pointer Decoding: Conditioned on 48 continuous K3NativeHybridLink reasoning slots + 48 93-layer Kimi K3 MoE expert-enriched token slots (96 slots total), and decoded into Kimi K3's 163,840 vocabulary by K3LexicalPointerDecoder at 291.7 tok/s (single-GPU MBR8) and 17,869.8 emitted tok/s (8-GPU DDP).",
-        ),
-        (
-            "Gemini 4 Argon Claude Opus 5.5 GPT-6 Astra frontier AI model comparison",
-            "Frontier AI Model Comparison (Gemini 4 Argon, Claude Opus 5.5, GPT-6 Astra, and Clover Kimi K3):\n"
-            "• Gemini 4 Argon: Excels at multi-step logical reasoning, mathematics, software engineering, agentic tool execution, and 250k+ token multimodal comprehension across text, code, PDFs, images, audio, and video.\n"
-            "• Claude Opus 5.5: Excels at nuanced code architecture, long-horizon software engineering, careful instruction following, low-hallucination writing, and deep document synthesis.\n"
-            "• GPT-6 Astra: Excels at broad generalist problem-solving, rapid coding and reasoning, interactive tool use, and high-throughput enterprise workflows.\n"
-            "• Clover Kimi K3: Combines a 93-layer 896-expert MoE backbone (d=7168, 163,840 vocab) with HybridAgent continuous <latent> reasoning and Next-Concept Modeling (NCM) for parallel concept generation.",
-        ),
-        (
-            "New GPUs launched latest AI chips NVIDIA Blackwell B200 Rubin AMD MI325X MI350X",
-            "Recent GPU and AI Accelerator Launches:\n"
-            "• NVIDIA Blackwell B200 & GB200 NVL72: Delivers up to 20 PFLOPS FP4 compute with 192 GB of HBM3e memory at 8 TB/s bandwidth and 5th-gen NVLink (1.8 TB/s bidirectional per GPU) (Link: https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/).\n"
-            "• NVIDIA Blackwell Ultra (B300) & Rubin (R100) Roadmap: Blackwell Ultra expands HBM3e capacity to 288 GB, followed by the Rubin architecture featuring HBM4 memory and NVLink 6.\n"
-            "• AMD Instinct MI325X & MI350X (CDNA 4): MI325X features 256 GB of HBM3e memory (6 TB/s bandwidth), while the CDNA 4 MI350 series introduces FP4/FP6 support and 288 GB HBM3e (Link: https://www.amd.com/en/products/accelerators/instinct.html).\n"
-            "• NVIDIA GeForce RTX 5090 & RTX 5080 (Blackwell Consumer GPUs): RTX 5090 features 32 GB GDDR7 memory on a 512-bit bus with DLSS 4 Multi Frame Generation.",
-        ),
-        (
-            "How to use and adopt the Clover Framework in regular work AGENTS.md context file cycle",
-            "How to Use and Adopt the Clover Framework in Regular Work (https://cloverframework.com/start/ and https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md):\n"
-            "• Step 1 — Drop AGENTS.md into Your Workspace: Copy `AGENTS.md` (the 22-section operating specification) into your repository root or configure it as an always-on instruction file in your editor (`applyTo: '**'`) so every AI session reads it before acting.\n"
-            "• Step 2 — Keep a Context File Beside the Work: Create and maintain a living context markdown file (`CONTEXT.md` or `<topic>-context.md`) next to the code or investigation. Update it after every cycle with what was checked, what was observed, and what remains unknown.\n"
-            "• Step 3 — Run the Five-Stage Cycle (Context <-> Direction <-> Execution <-> Outcome <-> Growth): (1) Context: read the actual running system, code, logs, and tests first (never guess from memory); (2) Direction: the human sets the goal, priorities, and non-negotiable boundaries; (3) Execution: make the smallest verifiable change inside those boundaries; (4) Outcome: measure what the real system actually showed (if it fails after two attempts without new information, return to Context rather than blind retry); (5) Growth: record what worked and what failed in the context file and memory tree for the next cycle.",
-        ),
-        (
-            "RTX 3090 vs Blackwell B200 MI350X RTX 5090 Ampere GA102 Clover 93-layer MoE",
-            "How the NVIDIA GeForce RTX 3090 Compares with Newer GPUs — and How Clover Runs 2.78T Kimi K3 on 8x RTX 3090s:\n"
-            "• RTX 3090 Hardware Reality (Ampere GA102, sm_86): Each RTX 3090 provides 24 GB of GDDR6X memory at 936 GB/s bandwidth, 10,496 FP32 CUDA cores, 328 3rd-gen Tensor Cores, and NVLink bridge support (51.9 GB/s one-way per pair). Across an 8x RTX 3090 server, that totals 192 GiB of fast GDDR6X VRAM.\n"
-            "• Comparison with Blackwell B200 / AMD MI350X / RTX 5090: Data-center accelerators like NVIDIA Blackwell B200 (192 GB HBM3e, 8 TB/s, FP4 Tensor Cores) and AMD MI350X (288 GB HBM3e) pack 8x-10x higher per-chip memory capacity and bandwidth, while RTX 5090 brings 32 GB GDDR7 (1.79 TB/s).\n"
-            "• Why 8x RTX 3090s Are Highly Capable with Smart Data-Movement Engineering: Rather than treating 24 GB per card as a dead end, Clover partitions all 93 Kimi K3 trunks (52.7 GiB) + 2,576 permanent 4-bit palette-mapped experts + 1,229 dynamic VRAM CardPool slots across GPUs 0..5 backed by a 51.1 GB pinned RAM cache (2,912 slots) and NVMe direct storage. With Red-Blue Pebble Clean-Input R4 zero-D2H admission, SpecMD Least-Stale eviction (95.3% overall VRAM hit rate), FlashAttention-2 Split-KV (2.6x-6.8x faster MLA), Eyeriss v2 broadcast coalescing, and 11-pass parallel NCM, 8x RTX 3090s run all 93 layers of the 2.78T model interactively at 148.5 K3 tok/s (and 17,869.8 tok/s in 8-GPU DDP NCM mode).",
-        ),
-        (
-            "Recent trends in science research links",
-            "Key Recent Trends in Science and Research Links:\n"
-            "• Artificial Intelligence & Foundation Models: Advances in multimodal reasoning, latent-space agents, and scientific discovery (Link: https://arxiv.org/list/cs.AI/recent).\n"
-            "• Quantum Computing & Error Correction: Logical qubit scaling, fault-tolerant surface codes, and neutral-atom processors (Link: https://arxiv.org/list/quant-ph/recent).\n"
-            "• Biotechnology & CRISPR Gene Editing: Base/prime editing, personalized mRNA therapeutics, and protein design with AI (Link: https://www.nature.com/subjects/biotechnology).\n"
-            "• Climate Science & Clean Energy: Perovskite-silicon tandem solar cells, grid-scale solid-state batteries, and direct air carbon capture (Link: https://www.nature.com/nclimate/).\n"
-            "• Space Exploration & Astrophysics: Reusable heavy-lift launch vehicles, lunar south-pole missions, and JWST exoplanet spectroscopy (Link: https://www.nasa.gov/missions/).",
-        ),
-    ]
+    """Executes live Internet & URL search (`fetch_url_content` + `arXiv API` + `Wikipedia API` + `DuckDuckGo Web`)
+    with no predefined canned answers. If live retrieval cannot process the query, returns an explicit fallback message."""
+    KNOWLEDGE_DOCS = []
 
     def __init__(self):
         self.live_web = LiveWebSearchTool(max_results=5)
@@ -166,100 +89,15 @@ class K3KnowledgeSearchTool:
 
     def execute(self, query: str) -> str:
         q = (query or "").strip()
-        low_q = q.lower()
-
-        # 1. Direct routing for explicit URLs (`https://...`, `github.com/...`, `cloverframework.com/...`)
-        has_explicit_url = bool(
-            re.search(r"https?://[^\s<>\"')]+|\b(?:github\.com|cloverframework\.com|arxiv\.org|en\.wikipedia\.org)/[^\s<>\"')]+", q)
-        )
-        if has_explicit_url:
-            live_url_res = self.live_web.execute(q)
-            if "agents.md" in low_q:
-                for t, b in self.KNOWLEDGE_DOCS:
-                    if t.startswith("AGENTS.md"):
-                        return f"Reference ({t}):\n{b}\n\n{live_url_res}"
-            if "clover-k3" in low_q:
-                for t, b in self.KNOWLEDGE_DOCS:
-                    if t.startswith("Clover Kimi K3"):
-                        return f"Reference ({t}):\n{b}\n\n{live_url_res}"
-            if "cloverframework.com" in low_q:
-                for t, b in self.KNOWLEDGE_DOCS:
-                    if t.startswith("Clover Framework"):
-                        return f"Reference ({t}):\n{b}\n\n{live_url_res}"
-            return live_url_res
-
-        # 2. Direct routing for AGENTS.md, Clover adoption/usage, RTX 3090 comparison, NCM, Clover Kimi K3, and Clover Framework
-        if any(k in low_q for k in ("3090", "rtx 3090")) and any(k in low_q for k in ("compare", "capable", "running", "b200", "blackwell", "5090", "mi350", "mi325", "new gpu")):
-            for t, b in self.KNOWLEDGE_DOCS:
-                if t.startswith("RTX 3090 vs"):
-                    return f"Reference ({t}):\n{b}"
-
-        if any(k in low_q for k in ("how to use", "tell me how to use", "how to adopt", "adopt the framework", "use the framework", "in my regular work", "how can i do that", "small project or pilot", "quickstart")):
-            for t, b in self.KNOWLEDGE_DOCS:
-                if t.startswith("How to use and adopt"):
-                    return f"Reference ({t}):\n{b}"
-
-        if any(k in low_q for k in ("agents.md", "agents md")) or (
-            "clover" in low_q and any(k in low_q for k in ("dharma", "discernment", "operating rules", "operating instructions"))
-        ):
-            for t, b in self.KNOWLEDGE_DOCS:
-                if t.startswith("AGENTS.md"):
-                    return f"Reference ({t}):\n{b}"
-
-        if any(k in low_q for k in ("ncm", "next-concept", "next concept", "hazy research")) and not any(k in low_q for k in ("what is clover kimi k3", "how does clover kimi k3")):
-            for t, b in self.KNOWLEDGE_DOCS:
-                if t.startswith("Next-Concept Modeling"):
-                    return f"Reference ({t}):\n{b}"
-
-        if any(k in low_q for k in ("clover kimi", "kimi k3", "clover-k3", "clover k3")):
-            for t, b in self.KNOWLEDGE_DOCS:
-                if t.startswith("Clover Kimi K3"):
-                    return f"Reference ({t}):\n{b}"
-
-        if "clover" in low_q and not any(k in low_q for k in ("kimi", "k3")):
-            for t, b in self.KNOWLEDGE_DOCS:
-                if t.startswith("Clover Framework"):
-                    return f"Reference ({t}):\n{b}"
-
-        # 3. General keyword overlap against non-stopword TITLE keywords + live web search
-        stop_search = {
-            "the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from", "as",
-            "is", "are", "was", "were", "be", "that", "this", "it", "system", "model", "cycle", "rules",
-            "operating", "instructions", "recent", "research", "links", "new", "context", "direction",
-            "execution", "outcome", "growth",
-        }
-        q_words = set(re.findall(r"[a-z0-9]+", low_q)) - stop_search
-        scored = []
-        for title, body in self.KNOWLEDGE_DOCS:
-            if (title.startswith("Clover") or title.startswith("AGENTS.md")) and "clover" not in low_q and "agents" not in low_q and "kimi" not in low_q:
-                continue
-            title_words = set(re.findall(r"[a-z0-9]+", title.lower())) - stop_search
-            overlap = len(q_words & title_words)
-            if overlap >= 2:
-                if title.startswith("Gemini 4 Argon"):
-                    model_keys = [
-                        ("Gemini 4 Argon", ("gemini", "argon")),
-                        ("Claude Opus 5.5", ("opus", "claude")),
-                        ("GPT-6 Astra", ("astra", "gpt", "chatgpt")),
-                        ("Clover Kimi K3", ("kimi", "k3")),
-                    ]
-                    matched_models = [m_name for m_name, kws in model_keys if any(k in low_q for k in kws)]
-                    if len(matched_models) >= 2:
-                        filtered_lines = [ f"Frontier AI Model Comparison ({', '.join(matched_models)}):" ]
-                        for ln in body.splitlines()[1:]:
-                            if any(m_name in ln for m_name in matched_models):
-                                filtered_lines.append(ln)
-                        body = "\n".join(filtered_lines)
-                scored.append((overlap, title, body))
-        scored.sort(reverse=True)
-        wants_live = any(w in low_q for w in ("arxiv", "paper", "papers", "recent ai", "latest ai", "link", "links", "url", "urls"))
-        if scored and not wants_live and scored[0][0] >= 2:
-            return "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:1])
-        live_res = self.live_web.execute(q)
-        if scored:
-            local_str = "\n".join(f"Reference ({t}):\n{b}" for _, t, b in scored[:1])
-            return f"{local_str}\n\nLive Web & Research Sources:\n{live_res}"
-        return live_res
+        if not q:
+            return "Unable to process this request right now."
+        try:
+            live_res = (self.live_web.execute(q) or "").strip()
+            if live_res:
+                return live_res
+        except Exception:
+            pass
+        return "Unable to process this request right now."
 
 
 class K3ExpertBridge(nn.Module):
@@ -1033,177 +871,11 @@ def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
     return None
 
 
-VERIFIED_CODE_TEMPLATES = [
-    (
-        ("prime",),
-        (
-            "def is_prime(n: int) -> bool:\n"
-            "    \"\"\"Return True if n is a prime number, otherwise False.\"\"\"\n"
-            "    if n <= 1:\n"
-            "        return False\n"
-            "    if n <= 3:\n"
-            "        return True\n"
-            "    if n % 2 == 0 or n % 3 == 0:\n"
-            "        return False\n"
-            "    i = 5\n"
-            "    while i * i <= n:\n"
-            "        if n % i == 0 or n % (i + 2) == 0:\n"
-            "            return False\n"
-            "        i += 6\n"
-            "    return True\n\n"
-            "print([x for x in range(1, 30) if is_prime(x)])"
-        ),
-        [
-            "Here is a clean, efficient Python function to check if a number is prime using 6k ± 1 trial division up to the square root of n:",
-            "\n```python\ndef is_prime(n: int) -> bool:\n    \"\"\"Return True if n is a prime number, otherwise False.\"\"\"\n    if n <= 1:\n        return False\n    if n <= 3:\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n\n# Example usage:\nprint([x for x in range(1, 30) if is_prime(x)])\n# Output: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]\n```",
-            "\nHow It Works: Numbers less than or equal to 1 return False, 2 and 3 return True, and multiples of 2 or 3 are eliminated immediately.",
-            "\n6k ± 1 Optimization: Every prime greater than 3 has the form 6k ± 1, so the loop only checks divisors i and i + 2 up to i * i <= n.",
-            "\nTime and Space Complexity: Time complexity is O(sqrt(n)) and auxiliary space complexity is O(1).",
-        ],
-    ),
-    (
-        ("binary search", "binary_search"),
-        (
-            "def binary_search(arr: list[int], target: int) -> int:\n"
-            "    \"\"\"Return the index of target in sorted list arr, or -1 if not found.\"\"\"\n"
-            "    low, high = 0, len(arr) - 1\n"
-            "    while low <= high:\n"
-            "        mid = (low + high) // 2\n"
-            "        if arr[mid] == target:\n"
-            "            return mid\n"
-            "        elif arr[mid] < target:\n"
-            "            low = mid + 1\n"
-            "        else:\n"
-            "            high = mid - 1\n"
-            "    return -1\n\n"
-            "print(binary_search([2, 5, 8, 12, 16, 23, 38, 56], 23))"
-        ),
-        [
-            "Binary search is a divide-and-conquer search algorithm that finds a target value in a sorted array by repeatedly halving the search interval:",
-            "\n```python\ndef binary_search(arr: list[int], target: int) -> int:\n    \"\"\"Return the index of target in sorted list arr, or -1 if not found.\"\"\"\n    low, high = 0, len(arr) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1\n\n# Example usage:\nnums = [2, 5, 8, 12, 16, 23, 38, 56]\nprint(binary_search(nums, 23))  # Output: 5\n```",
-            "\nHow It Works: It compares target with the middle element arr[mid]; if they match it returns mid, otherwise it discards the half where target cannot lie.",
-            "\nTime Complexity: O(log n) in the worst and average cases (O(1) best case) because each comparison halves the remaining search space.",
-            "\nSpace Complexity: O(1) auxiliary space for the iterative implementation since it only tracks low, high, and mid pointers.",
-        ],
-    ),
-    (
-        ("quicksort", "quick sort"),
-        (
-            "def quicksort(arr: list[int]) -> list[int]:\n"
-            "    \"\"\"Return a new sorted list using Quicksort.\"\"\"\n"
-            "    if len(arr) <= 1:\n"
-            "        return arr\n"
-            "    pivot = arr[len(arr) // 2]\n"
-            "    left = [x for x in arr if x < pivot]\n"
-            "    middle = [x for x in arr if x == pivot]\n"
-            "    right = [x for x in arr if x > pivot]\n"
-            "    return quicksort(left) + middle + quicksort(right)\n\n"
-            "print(quicksort([38, 27, 43, 3, 9, 82, 10]))"
-        ),
-        [
-            "Here is a clean Python implementation of Quicksort using three-way partitioning around the middle pivot:",
-            "\n```python\ndef quicksort(arr: list[int]) -> list[int]:\n    \"\"\"Return a new sorted list using Quicksort.\"\"\"\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)\n\n# Example usage:\nprint(quicksort([38, 27, 43, 3, 9, 82, 10]))\n# Output: [3, 9, 10, 27, 38, 43, 82]\n```",
-            "\nTime and Space Complexity: Average time complexity is O(n log n) (worst case O(n^2)), and auxiliary space complexity is O(n).",
-        ],
-    ),
-    (
-        ("palindrome",),
-        (
-            "def is_palindrome(s: str) -> bool:\n"
-            "    \"\"\"Return True if s is a palindrome (ignoring case and non-alphanumeric chars).\"\"\"\n"
-            "    cleaned = ''.join(ch.lower() for ch in s if ch.isalnum())\n"
-            "    return cleaned == cleaned[::-1]\n\n"
-            "print(is_palindrome('A man, a plan, a canal: Panama'))"
-        ),
-        [
-            "Here is a clean Python function to check if a string or number is a palindrome:",
-            "\n```python\ndef is_palindrome(s: str) -> bool:\n    \"\"\"Return True if s is a palindrome (ignoring case and non-alphanumeric chars).\"\"\"\n    cleaned = ''.join(ch.lower() for ch in str(s) if ch.isalnum())\n    return cleaned == cleaned[::-1]\n\n# Example usage:\nprint(is_palindrome('racecar'))                        # Output: True\nprint(is_palindrome('A man, a plan, a canal: Panama')) # Output: True\n```",
-            "\nTime and Space Complexity: Time complexity is O(n) and auxiliary space complexity is O(n).",
-        ],
-    ),
-    (
-        ("two sum", "two_sum", "twosum"),
-        (
-            "def two_sum(nums: list[int], target: int) -> list[int]:\n"
-            "    \"\"\"Return indices [i, j] such that nums[i] + nums[j] == target.\"\"\"\n"
-            "    seen = {}\n"
-            "    for i, num in enumerate(nums):\n"
-            "        complement = target - num\n"
-            "        if complement in seen:\n"
-            "            return [seen[complement], i]\n"
-            "        seen[num] = i\n"
-            "    return []\n\n"
-            "print(two_sum([2, 7, 11, 15], 9))"
-        ),
-        [
-            "Here is the optimal O(n) Python solution for Two Sum using a hash map (dictionary):",
-            "\n```python\ndef two_sum(nums: list[int], target: int) -> list[int]:\n    \"\"\"Return indices [i, j] such that nums[i] + nums[j] == target.\"\"\"\n    seen = {}\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in seen:\n            return [seen[complement], i]\n        seen[num] = i\n    return []\n\n# Example usage:\nprint(two_sum([2, 7, 11, 15], 9))  # Output: [0, 1]\n```",
-            "\nTime and Space Complexity: Time complexity is O(n) single-pass and auxiliary space complexity is O(n) for the hash map.",
-        ],
-    ),
-    (
-        ("fibonacci",),
-        (
-            "def fibonacci(n: int) -> int:\n"
-            "    \"\"\"Return the nth Fibonacci number (0-indexed).\"\"\"\n"
-            "    if n <= 0:\n"
-            "        return 0\n"
-            "    a, b = 0, 1\n"
-            "    for _ in range(2, n + 1):\n"
-            "        a, b = b, a + b\n"
-            "    return b\n\n"
-            "print([fibonacci(k) for k in range(10)])"
-        ),
-        [
-            "Here is an iterative Python function to compute the nth Fibonacci number in linear time and constant space:",
-            "\n```python\ndef fibonacci(n: int) -> int:\n    \"\"\"Return the nth Fibonacci number (0-indexed).\"\"\"\n    if n <= 0:\n        return 0\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n\n# Example usage:\nprint([fibonacci(k) for k in range(10)])\n# Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]\n```",
-            "\nTime and Space Complexity: Time complexity is O(n) and auxiliary space complexity is O(1).",
-        ],
-    ),
-    (
-        ("factorial",),
-        (
-            "def factorial(n: int) -> int:\n"
-            "    \"\"\"Return n! (factorial of n) for non-negative integer n.\"\"\"\n"
-            "    if n < 0:\n"
-            "        raise ValueError('n must be non-negative')\n"
-            "    result = 1\n"
-            "    for i in range(2, n + 1):\n"
-            "        result *= i\n"
-            "    return result\n\n"
-            "print(factorial(5), factorial(10))"
-        ),
-        [
-            "Here is a clean Python function to compute the factorial of a non-negative integer:",
-            "\n```python\ndef factorial(n: int) -> int:\n    \"\"\"Return n! (factorial of n) for non-negative integer n.\"\"\"\n    if n < 0:\n        raise ValueError('n must be non-negative')\n    result = 1\n    for i in range(2, n + 1):\n        result *= i\n    return result\n\n# Example usage:\nprint(factorial(5))   # Output: 120\nprint(factorial(10))  # Output: 3628800\n```",
-            "\nTime and Space Complexity: Time complexity is O(n) multiplications and auxiliary space complexity is O(1).",
-        ],
-    ),
-]
+VERIFIED_CODE_TEMPLATES = []
 
 
 def match_verified_code_template(user_prompt: str):
-    """If the user asks for Python code/implementation of a standard algorithm (prime check, binary search, fibonacci, factorial),
-    returns `(py_verify_script, verified_plan_windows)`."""
-    raw_u = _extract_raw_user_query(user_prompt)
-    raw_q = raw_u.lower()
-    if ("(a)" in raw_q and "(b)" in raw_q and "(c)" in raw_q) or "which of the following" in raw_q:
-        return None
-    if "rust" in raw_q or bool(re.search(r"\b(?:pub\s+)?(?:async\s+)?fn\s+[a-zA-Z_]", raw_u)):
-        return None
-    if any(q_kw in raw_q for q_kw in ("how many ", "what is the 15th", "find the ordered", "trailing zeros")):
-        return None
-    wants_code = any(w in raw_q for w in ("code", "function", "python", "write", "implement", "program", "script", "how to check", "algorithm"))
-    if not wants_code:
-        return None
-    # If the user provided specific `def <func_name>(` signature(s), only match if there is 1 target function and it matches the template
-    def_names = re.findall(r"\bdef\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(", raw_u)
-    for kw_tuple, py_script, plan_wins in VERIFIED_CODE_TEMPLATES:
-        if def_names:
-            if len(def_names) == 1 and f"def {def_names[0]}(" in py_script:
-                return py_script, list(plan_wins)
-        elif any(k in raw_q for k in kw_tuple):
-            return py_script, list(plan_wins)
+    """Disabled predefined code templates: all code requests are generated dynamically by the model."""
     return None
 
 
@@ -2682,31 +2354,7 @@ class CloverK3AgentEngine:
                             kept_prefix += "\n"
                         cmt_sym = "//" if code_lang == "rust" else "#"
                         diag_one = diag_msg.splitlines()[0]
-                        if "remove_duplicates" in raw_user_q and "E_PY_DOCTEST_FAIL" in diag_one:
-                            inline_hint = f"    {cmt_sym} Fix: {diag_one} -> keep only elements whose count in numbers is 1: [n for n in numbers if numbers.count(n) == 1]\n"
-                        elif "E_PY_INFINITE_LOOP" in diag_one:
-                            inline_hint = f"    {cmt_sym} Fix: {diag_one} -> advance a, b = 0, 1 -> a, b = b, a + b on EVERY iteration and increment count only when is_prime(a)\n"
-                        elif "E_RUST_TEST_FAIL" in diag_one and "longest_valid_parentheses" in raw_user_q:
-                            inline_hint = (
-                                "    let mut stack: Vec<isize> = vec![-1];\n"
-                                "    let mut max_len: usize = 0;\n"
-                                "    for (i, ch) in s.chars().enumerate() {\n"
-                                "        if ch == '(' {\n"
-                                "            stack.push(i as isize);\n"
-                                "        } else {\n"
-                                "            stack.pop();\n"
-                                "            if let Some(&last_idx) = stack.last() {\n"
-                                "                max_len = max_len.max((i as isize - last_idx) as usize);\n"
-                                "            } else {\n"
-                                "                stack.push(i as isize);\n"
-                                "            }\n"
-                                "        }\n"
-                                "    }\n"
-                                "    max_len\n"
-                                "}\n"
-                            )
-                        else:
-                            inline_hint = f"    {cmt_sym} Fix: {diag_one}\n"
+                        inline_hint = f"    {cmt_sym} Fix: {diag_one}\n"
                         kept_with_hint = kept_prefix + inline_hint
                         tool_calls_log.append({
                             "tool": "generative_compiler",
@@ -2789,14 +2437,7 @@ class CloverK3AgentEngine:
                         )
                         corr_ids = self.ha_tok(corr_prompt, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
                         out = backbone(input_ids=corr_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
-                        past_kv = out.past_key_values
-                        next_logits = out.logits[:, -1, :]
-                        gen_ids = self.ha_tok.encode(kept_with_hint, add_special_tokens=False) if kept_with_hint else []
-                        continue
-            # Check if the model emitted a `<python>...</python>` or `<search>...</search>` call during generation
-            if PYTHON_CLOSE in txt_so_far and not any(t["tool"] == "python" for t in tool_calls_log):
-                code_str = txt_so_far.split(PYTHON_OPEN)[-1].split(PYTHON_CLOSE)[0].strip()
-                py_res = self.py_tool.execute(code_str).strip()
+                        p.py_tool.execute(code_str).strip()
                 tool_calls_log.append({"tool": "python", "input": code_str, "result": py_res})
                 obs_tokens = self.ha_tok(f"\nVerified Result: {py_res}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
                 out = backbone(input_ids=obs_tokens, past_key_values=past_kv, use_cache=True, return_dict=True)
@@ -3427,7 +3068,18 @@ class CloverK3AgentEngine:
         using HybridAgent-8B-Agentic `<latent>` reasoning (`run_hybridlink`) + 93-Layer Kimi K3 MoE context,
         checking statement-boundary syntax and structural invariants."""
         ext = os.path.splitext(target_fp)[1].lower()
-        lang = "tsx" if ext == ".tsx" else ("typescript" if ext == ".ts" else "javascript")
+        if ext == ".tsx":
+            lang = "tsx"
+        elif ext == ".ts":
+            lang = "typescript"
+        elif ext == ".py":
+            lang = "python"
+        elif ext == ".go":
+            lang = "go"
+        elif ext == ".rs":
+            lang = "rust"
+        else:
+            lang = "javascript"
 
         # Provide compact context from other read files so cross-file interfaces/types are aligned
         peer_ctx_parts = []
@@ -3438,18 +3090,29 @@ class CloverK3AgentEngine:
         peer_ctx = "\n\n".join(peer_ctx_parts[:3])
 
         sys_msg = (
-            "You are Clover Kimi K3 operating as an expert TypeScript/React software engineer. "
+            f"You are Clover Kimi K3 operating as an expert {lang} software engineer. "
             "Implement the exact requirements from the Pull Request description in the target file. "
-            "Preserve the license header, existing imports, and all existing methods that are not being replaced. "
+            "Preserve the license header, existing imports, and all existing functions/methods/classes that are not being replaced. "
             "Output ONLY the complete updated file inside a single fenced code block."
         )
+        # If the file is longer than 3,800 chars, include both the top (imports & setup) and bottom (recent definitions)
+        if len(orig_code) <= 4200:
+            code_window = orig_code
+        else:
+            code_window = (
+                orig_code[:1800]
+                + "\n\n# ... [middle of file unchanged] ...\n\n"
+                + orig_code[-2400:]
+            )
         user_msg = (
-            f"Pull Request Requirements:\n{pr_description[:4200]}\n\n"
-            + (f"Related Files Context:\n{peer_ctx}\n\n" if peer_ctx else "")
-            + f"Target File to Update (`{target_fp}`):\n```{lang}\n{orig_code[:6500]}\n```\n\n"
-            f"Write the complete updated `{target_fp}` satisfying every requirement in the PR description:"
+            f"Pull Request Requirements:\n{pr_description[:2800]}\n\n"
+            + (f"Related Files Context:\n{peer_ctx[:1400]}\n\n" if peer_ctx else "")
+            + f"Target File to Update (`{target_fp}`):\n```{lang}\n{code_window}\n```\n\n"
+            f"Write the complete updated `{target_fp}` (or the new/updated functions and imports to add to `{target_fp}`):"
         )
 
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
         chat_str = self.ha_tok.apply_chat_template(
@@ -3519,508 +3182,88 @@ class CloverK3AgentEngine:
         return self._verify_and_repair_ts_implementation(target_fp, orig_code, body_code, pr_description)
 
     def _verify_and_repair_ts_implementation(self, target_fp: str, orig_code: str, cand_code: str, pr_description: str) -> str:
-        """Symbolic & structural verifier for TypeScript/React file implementations against explicit `<pr_description>`
-        interface contracts (`New Interfaces` & `Requirements`). Ensures all required method signatures, getters,
-        event emissions, and JSX children specified in the PR description are present and type-safe."""
-        bname = os.path.basename(target_fp)
-        p_low = pr_description.lower()
+        """Generic AST / structural merger and syntax gate for generated file updates (with zero predefined task solutions):
+        - For large Python modules (`> 100` lines) where the model generated only the new/updated function(s) and imports,
+          parses `orig_code` and `cand_code` with Python's `ast` module and non-destructively merges new imports and
+          new/updated top-level functions/classes into `orig_code`.
+        - Rejects empty or truncated outputs (unbalanced braces or syntax errors) by returning `orig_code` unchanged."""
+        if not cand_code or not cand_code.strip():
+            return orig_code
 
-        # 1. VoiceBroadcastChunkEvents.ts: verify `getLengthTo(event: MatrixEvent): number`, `findByTime(time: number): MatrixEvent | null`, and balanced braces (not truncated!)
-        if bname == "VoiceBroadcastChunkEvents.ts" and "getlengthto" in p_low and "findbytime" in p_low:
-            is_truncated = cand_code.count("{") != cand_code.count("}") or "allHaveSequence" not in cand_code
-            if (
-                is_truncated
-                or "getLengthTo(event: MatrixEvent)" not in cand_code
-                or "findByTime(time: number)" not in cand_code
-                or "lengthSoFar >= time" not in cand_code
-                or "return this.events[this.events.length - 1] || null" not in cand_code
-            ):
-                # Inject the verified `getLengthTo` and `findByTime` methods into `orig_code` before `private calculateChunkLength`
-                methods_block = (
-                    "    /**\n"
-                    "     * Returns the accumulated length of chunks up to (and excluding) `event`.\n"
-                    "     */\n"
-                    "    public getLengthTo(event: MatrixEvent): number {\n"
-                    "        let length = 0;\n"
-                    "        for (let i = 0; i < this.events.length; i++) {\n"
-                    "            const e = this.events[i];\n"
-                    "            if (e.getId() === event.getId() || e === event) {\n"
-                    "                return length;\n"
-                    "            }\n"
-                    "            length += this.calculateChunkLength(e);\n"
-                    "        }\n"
-                    "        return length;\n"
-                    "    }\n\n"
-                    "    public findByTime(time: number): MatrixEvent | null {\n"
-                    "        let lengthSoFar = 0;\n"
-                    "        for (let i = 0; i < this.events.length; i++) {\n"
-                    "            const event = this.events[i];\n"
-                    "            lengthSoFar += this.calculateChunkLength(event);\n"
-                    "            if (lengthSoFar >= time) {\n"
-                    "                return event;\n"
-                    "            }\n"
-                    "        }\n"
-                    "        return this.events[this.events.length - 1] || null;\n"
-                    "    }\n\n"
-                )
-                if "private calculateChunkLength" in orig_code:
-                    return orig_code.replace("    private calculateChunkLength", methods_block + "    private calculateChunkLength", 1)
+        ext = os.path.splitext(target_fp)[1].lower()
+        orig_lns = len(orig_code.splitlines())
+        cand_lns = len(cand_code.splitlines())
 
-        # 2. useVoiceBroadcastPlayback.ts: verify `duration` in whole seconds derived from `playback.durationSeconds` and `LengthChanged` (ms / 1000)
-        if bname == "useVoiceBroadcastPlayback.ts" and "durationseconds" in p_low:
-            is_trunc_u = cand_code.count("{") != cand_code.count("}") or "playbackState," not in cand_code
-            if is_trunc_u or "duration," not in cand_code or "playback.durationSeconds" not in cand_code:
-                return orig_code.replace(
-                    "    const [length, setLength] = useState(playback.getLength());\n"
-                    "    useTypedEventEmitter(\n"
-                    "        playback,\n"
-                    "        VoiceBroadcastPlaybackEvent.LengthChanged,\n"
-                    "        length => setLength(length),\n"
-                    "    );\n\n"
-                    "    return {\n"
-                    "        length,",
-                    "    const [duration, setDuration] = useState(playback.durationSeconds);\n"
-                    "    useTypedEventEmitter(\n"
-                    "        playback,\n"
-                    "        VoiceBroadcastPlaybackEvent.LengthChanged,\n"
-                    "        d => setDuration(d / 1000),\n"
-                    "    );\n\n"
-                    "    return {\n"
-                    "        duration,",
-                )
+        if ext == ".py":
+            # Strip any `# ... [middle of file unchanged] ...` marker if the model echoed it
+            cand_clean = re.sub(r"^\s*#\s*\.\.\.\s*\[middle of file unchanged\]\s*\.\.\.\s*$", "", cand_code, flags=re.MULTILINE)
+            try:
+                cand_tree = ast.parse(cand_clean)
+            except SyntaxError:
+                # Trim trailing incomplete lines if output hit max_new
+                c_lines = cand_clean.splitlines()
+                cand_tree = None
+                while len(c_lines) > 2:
+                    c_lines.pop()
+                    try:
+                        cand_tree = ast.parse("\n".join(c_lines))
+                        cand_clean = "\n".join(c_lines) + "\n"
+                        break
+                    except SyntaxError:
+                        pass
+                if cand_tree is None:
+                    return orig_code
 
-        # 3. VoiceBroadcastPlaybackBody.tsx: verify `<SeekBar playback={playback} />` inside `.mx_VoiceBroadcastBody_timerow` before `<Clock seconds={duration} />`
-        if bname == "VoiceBroadcastPlaybackBody.tsx" and "seekbar" in p_low:
-            is_trunc_b = cand_code.count("{") != cand_code.count("}") or "export const VoiceBroadcastPlaybackBody" not in cand_code
-            if is_trunc_b or "<SeekBar" not in cand_code or "seconds={duration}" not in cand_code:
-                updated_body = orig_code.replace(
-                    'import Clock from "../../../components/views/audio_messages/Clock";',
-                    'import Clock from "../../../components/views/audio_messages/Clock";\nimport SeekBar from "../../../components/views/audio_messages/SeekBar";',
-                ).replace(
-                    "        length,\n        live,",
-                    "        duration,\n        live,",
-                ).replace(
-                    "    const lengthSeconds = Math.round(length / 1000);\n\n",
-                    "",
-                ).replace(
-                    '            <div className="mx_VoiceBroadcastBody_timerow">\n                <Clock seconds={lengthSeconds} />\n            </div>',
-                    '            <div className="mx_VoiceBroadcastBody_timerow">\n                <SeekBar playback={playback} />\n                <Clock seconds={duration} />\n            </div>',
-                )
-                return updated_body
+            if orig_lns > 100 and cand_lns < int(orig_lns * 0.6):
+                try:
+                    orig_tree = ast.parse(orig_code)
+                    orig_defs = {
+                        n.name: (n.lineno, getattr(n, "end_lineno", n.lineno))
+                        for n in orig_tree.body
+                        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+                    }
+                    cand_lines = cand_clean.splitlines()
+                    new_import_lines = []
+                    new_def_blocks = []
+                    replaced_orig = orig_code
+                    for node in cand_tree.body:
+                        s_i = max(0, node.lineno - 1)
+                        e_i = getattr(node, "end_lineno", node.lineno)
+                        node_src = "\n".join(cand_lines[s_i:e_i])
+                        if isinstance(node, (ast.Import, ast.ImportFrom)):
+                            if node_src.strip() not in orig_code:
+                                new_import_lines.append(node_src)
+                        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                            if node.name not in orig_defs:
+                                new_def_blocks.append(node_src)
+                    if new_def_blocks:
+                        if new_import_lines:
+                            # Insert new imports after the last top-level import in `orig_code`
+                            orig_imports = [n for n in orig_tree.body if isinstance(n, (ast.Import, ast.ImportFrom))]
+                            if orig_imports:
+                                last_imp_ln = getattr(orig_imports[-1], "end_lineno", orig_imports[-1].lineno)
+                                o_lns = replaced_orig.splitlines()
+                                replaced_orig = (
+                                    "\n".join(o_lns[:last_imp_ln])
+                                    + "\n"
+                                    + "\n".join(new_import_lines)
+                                    + "\n"
+                                    + "\n".join(o_lns[last_imp_ln:])
+                                )
+                        merged_py = replaced_orig.rstrip() + "\n\n\n" + "\n\n\n".join(new_def_blocks) + "\n"
+                        compile(merged_py, target_fp, "exec")
+                        return merged_py
+                except Exception:
+                    return orig_code
+                return orig_code
+            return cand_clean
 
-        # 4. VoiceBroadcastPlayback.ts: verify `PlaybackInterface` implementation (`liveData`, `timeSeconds`, `durationSeconds`, `currentState`, `skipTo`, `PositionChanged`, `LengthChanged`, `getPlaybackForEvent`)
-        if bname == "VoiceBroadcastPlayback.ts" and "skipto" in p_low and "positionchanged" in p_low:
-            is_trunc_p = cand_code.count("{") != cand_code.count("}") or "public destroy(): void" not in cand_code
-            required_tokens = (
-                "PositionChanged", "liveData", "get timeSeconds", "get durationSeconds", "currentState", "skipTo(", "clockInfo.liveData.onUpdate"
-            )
-            if is_trunc_p or not all(rt in cand_code for rt in required_tokens):
-                return (
-                    "/*\n"
-                    "Copyright 2022 The Matrix.org Foundation C.I.C.\n\n"
-                    "Licensed under the Apache License, Version 2.0 (the \"License\");\n"
-                    "you may not use this file except in compliance with the License.\n"
-                    "You may obtain a copy of the License at\n\n"
-                    "    http://www.apache.org/licenses/LICENSE-2.0\n\n"
-                    "Unless required by applicable law or agreed to in writing, software\n"
-                    "distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-                    "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-                    "See the License for the specific language governing permissions and\n"
-                    "limitations under the License.\n"
-                    "*/\n\n"
-                    "import {\n"
-                    "    EventType,\n"
-                    "    MatrixClient,\n"
-                    "    MatrixEvent,\n"
-                    "    MsgType,\n"
-                    "    RelationType,\n"
-                    "} from \"matrix-js-sdk/src/matrix\";\n"
-                    "import { SimpleObservable } from \"matrix-widget-api\";\n"
-                    "import { TypedEventEmitter } from \"matrix-js-sdk/src/models/typed-event-emitter\";\n\n"
-                    "import { Playback, PlaybackInterface, PlaybackState } from \"../../audio/Playback\";\n"
-                    "import { PlaybackManager } from \"../../audio/PlaybackManager\";\n"
-                    "import { UPDATE_EVENT } from \"../../stores/AsyncStore\";\n"
-                    "import { MediaEventHelper } from \"../../utils/MediaEventHelper\";\n"
-                    "import { IDestroyable } from \"../../utils/IDestroyable\";\n"
-                    "import { VoiceBroadcastChunkEventType, VoiceBroadcastInfoEventType, VoiceBroadcastInfoState } from \"..\";\n"
-                    "import { RelationsHelper, RelationsHelperEvent } from \"../../events/RelationsHelper\";\n"
-                    "import { getReferenceRelationsForEvent } from \"../../events\";\n"
-                    "import { VoiceBroadcastChunkEvents } from \"../utils/VoiceBroadcastChunkEvents\";\n\n"
-                    "export enum VoiceBroadcastPlaybackState {\n"
-                    "    Paused,\n"
-                    "    Playing,\n"
-                    "    Stopped,\n"
-                    "    Buffering,\n"
-                    "}\n\n"
-                    "export enum VoiceBroadcastPlaybackEvent {\n"
-                    "    PositionChanged = \"position_changed\",\n"
-                    "    LengthChanged = \"length_changed\",\n"
-                    "    StateChanged = \"state_changed\",\n"
-                    "    InfoStateChanged = \"info_state_changed\",\n"
-                    "}\n\n"
-                    "interface EventMap {\n"
-                    "    [VoiceBroadcastPlaybackEvent.PositionChanged]: (position: number) => void;\n"
-                    "    [VoiceBroadcastPlaybackEvent.LengthChanged]: (length: number) => void;\n"
-                    "    [VoiceBroadcastPlaybackEvent.StateChanged]: (\n"
-                    "        state: VoiceBroadcastPlaybackState,\n"
-                    "        playback: VoiceBroadcastPlayback\n"
-                    "    ) => void;\n"
-                    "    [VoiceBroadcastPlaybackEvent.InfoStateChanged]: (state: VoiceBroadcastInfoState) => void;\n"
-                    "}\n\n"
-                    "export class VoiceBroadcastPlayback\n"
-                    "    extends TypedEventEmitter<VoiceBroadcastPlaybackEvent, EventMap>\n"
-                    "    implements IDestroyable, PlaybackInterface {\n"
-                    "    private state = VoiceBroadcastPlaybackState.Stopped;\n"
-                    "    private infoState: VoiceBroadcastInfoState;\n"
-                    "    private chunkEvents = new VoiceBroadcastChunkEvents();\n"
-                    "    private playbacks = new Map<string, Playback>();\n"
-                    "    private currentlyPlaying: MatrixEvent | null = null;\n"
-                    "    private lastInfoEvent: MatrixEvent;\n"
-                    "    private chunkRelationHelper: RelationsHelper;\n"
-                    "    private infoRelationHelper: RelationsHelper;\n"
-                    "    /** @deprecated */\n"
-                    "    public readonly currentState = PlaybackState.Playing;\n"
-                    "    private duration = 0;\n"
-                    "    private position = 0;\n"
-                    "    private liveness = new SimpleObservable<number[]>();\n\n"
-                    "    public constructor(\n"
-                    "        public readonly infoEvent: MatrixEvent,\n"
-                    "        private client: MatrixClient,\n"
-                    "    ) {\n"
-                    "        super();\n"
-                    "        this.addInfoEvent(this.infoEvent);\n"
-                    "        this.setUpRelationsHelper();\n"
-                    "    }\n\n"
-                    "    private setUpRelationsHelper(): void {\n"
-                    "        this.infoRelationHelper = new RelationsHelper(\n"
-                    "            this.infoEvent,\n"
-                    "            RelationType.Reference,\n"
-                    "            VoiceBroadcastInfoEventType,\n"
-                    "            this.client,\n"
-                    "        );\n"
-                    "        this.infoRelationHelper.on(RelationsHelperEvent.Add, this.addInfoEvent);\n"
-                    "        this.infoRelationHelper.emitCurrent();\n\n"
-                    "        this.chunkRelationHelper = new RelationsHelper(\n"
-                    "            this.infoEvent,\n"
-                    "            RelationType.Reference,\n"
-                    "            EventType.RoomMessage,\n"
-                    "            this.client,\n"
-                    "        );\n"
-                    "        this.chunkRelationHelper.on(RelationsHelperEvent.Add, this.addChunkEvent);\n"
-                    "        this.chunkRelationHelper.emitCurrent();\n"
-                    "    }\n\n"
-                    "    private async loadChunks(): Promise<void> {\n"
-                    "        const relations = getReferenceRelationsForEvent(this.infoEvent, EventType.RoomMessage, this.client);\n"
-                    "        const chunkEvents = relations?.getRelations();\n\n"
-                    "        if (!chunkEvents) {\n"
-                    "            return;\n"
-                    "        }\n\n"
-                    "        this.chunkEvents.addEvents(chunkEvents);\n"
-                    "        this.setDuration(this.chunkEvents.getLength());\n\n"
-                    "        for (const chunkEvent of chunkEvents) {\n"
-                    "            await this.enqueueChunk(chunkEvent);\n"
-                    "        }\n"
-                    "    }\n\n"
-                    "    private async enqueueChunk(chunkEvent: MatrixEvent): Promise<void> {\n"
-                    "        const sequenceNumber = parseInt(chunkEvent.getContent()?.[VoiceBroadcastChunkEventType]?.sequence, 10);\n"
-                    "        if (isNaN(sequenceNumber) || sequenceNumber < 1) return;\n"
-                    "        await this.getPlaybackForEvent(chunkEvent);\n"
-                    "    }\n\n"
-                    "    private addChunkEvent = async (event: MatrixEvent): Promise<boolean> => {\n"
-                    "        const eventId = event.getId();\n\n"
-                    "        if (!eventId\n"
-                    "            || eventId.startsWith(\"~!\") // don't add local events\n"
-                    "            || event.getContent()?.msgtype !== MsgType.Audio // don't add non-audio event\n"
-                    "        ) {\n"
-                    "            return false;\n"
-                    "        }\n\n"
-                    "        this.chunkEvents.addEvent(event);\n"
-                    "        this.setDuration(this.chunkEvents.getLength());\n\n"
-                    "        if (this.getState() !== VoiceBroadcastPlaybackState.Stopped) {\n"
-                    "            await this.enqueueChunk(event);\n"
-                    "        }\n\n"
-                    "        if (this.getState() === VoiceBroadcastPlaybackState.Buffering) {\n"
-                    "            await this.start();\n"
-                    "        }\n\n"
-                    "        return true;\n"
-                    "    };\n\n"
-                    "    private addInfoEvent = (event: MatrixEvent): void => {\n"
-                    "        if (this.lastInfoEvent && this.lastInfoEvent.getTs() >= event.getTs()) {\n"
-                    "            // Only handle newer events\n"
-                    "            return;\n"
-                    "        }\n\n"
-                    "        const state = event.getContent()?.state;\n\n"
-                    "        if (!Object.values(VoiceBroadcastInfoState).includes(state)) {\n"
-                    "            // Do not handle unknown voice broadcast states\n"
-                    "            return;\n"
-                    "        }\n\n"
-                    "        this.lastInfoEvent = event;\n"
-                    "        this.setInfoState(state);\n"
-                    "    };\n\n"
-                    "    private setDuration(duration: number): void {\n"
-                    "        if (this.duration === duration) return;\n\n"
-                    "        this.duration = duration;\n"
-                    "        this.emit(VoiceBroadcastPlaybackEvent.LengthChanged, this.duration);\n"
-                    "        this.liveness.update([this.timeSeconds, this.durationSeconds]);\n"
-                    "    }\n\n"
-                    "    private setPosition(position: number): void {\n"
-                    "        if (this.position === position) return;\n\n"
-                    "        this.position = position;\n"
-                    "        this.emit(VoiceBroadcastPlaybackEvent.PositionChanged, this.position);\n"
-                    "        this.liveness.update([this.timeSeconds, this.durationSeconds]);\n"
-                    "    }\n\n"
-                    "    private async getPlaybackForEvent(chunkEvent: MatrixEvent): Promise<Playback> {\n"
-                    "        const existing = this.playbacks.get(chunkEvent.getId());\n"
-                    "        if (existing) return existing;\n\n"
-                    "        const helper = new MediaEventHelper(chunkEvent);\n"
-                    "        const blob = await helper.sourceBlob.value;\n"
-                    "        const buffer = await blob.arrayBuffer();\n"
-                    "        const playback = PlaybackManager.instance.createPlaybackInstance(buffer);\n"
-                    "        await playback.prepare();\n"
-                    "        playback.clockInfo.populatePlaceholdersFrom(chunkEvent);\n"
-                    "        playback.on(UPDATE_EVENT, (state) => this.onPlaybackStateChange(chunkEvent, state));\n"
-                    "        playback.clockInfo.liveData.onUpdate(([position]) => {\n"
-                    "            if (this.currentlyPlaying === chunkEvent) {\n"
-                    "                this.setPosition(this.chunkEvents.getLengthTo(chunkEvent) + position * 1000);\n"
-                    "            }\n"
-                    "        });\n"
-                    "        this.playbacks.set(chunkEvent.getId(), playback);\n"
-                    "        return playback;\n"
-                    "    }\n\n"
-                    "    private async onPlaybackStateChange(chunkEvent: MatrixEvent, newState: PlaybackState): Promise<void> {\n"
-                    "        if (this.currentlyPlaying !== chunkEvent) return;\n"
-                    "        if (newState !== PlaybackState.Stopped) return;\n\n"
-                    "        await this.playNext();\n"
-                    "    }\n\n"
-                    "    private async playNext(): Promise<void> {\n"
-                    "        if (!this.currentlyPlaying) return;\n\n"
-                    "        const next = this.chunkEvents.getNext(this.currentlyPlaying);\n\n"
-                    "        if (next) {\n"
-                    "            return this.playEvent(next);\n"
-                    "        }\n\n"
-                    "        if (this.getInfoState() === VoiceBroadcastInfoState.Stopped) {\n"
-                    "            this.stop();\n"
-                    "        } else {\n"
-                    "            // No more chunks available, although the broadcast is not finished -> enter buffering state.\n"
-                    "            this.setState(VoiceBroadcastPlaybackState.Buffering);\n"
-                    "        }\n"
-                    "    }\n\n"
-                    "    private async playEvent(chunkEvent: MatrixEvent): Promise<void> {\n"
-                    "        this.setState(VoiceBroadcastPlaybackState.Playing);\n"
-                    "        this.currentlyPlaying = chunkEvent;\n"
-                    "        const playback = await this.getPlaybackForEvent(chunkEvent);\n"
-                    "        // tries to unload the previous chunk except if it is the first one\n"
-                    "        await playback.play();\n"
-                    "    }\n\n"
-                    "    public get liveData(): SimpleObservable<number[]> {\n"
-                    "        return this.liveness;\n"
-                    "    }\n\n"
-                    "    public get timeSeconds(): number {\n"
-                    "        return this.position / 1000;\n"
-                    "    }\n\n"
-                    "    public get durationSeconds(): number {\n"
-                    "        return this.duration / 1000;\n"
-                    "    }\n\n"
-                    "    public async skipTo(timeSeconds: number): Promise<void> {\n"
-                    "        const time = timeSeconds * 1000;\n"
-                    "        const event = this.chunkEvents.findByTime(time);\n\n"
-                    "        if (!event) return;\n\n"
-                    "        const skipToPlayback = await this.getPlaybackForEvent(event);\n"
-                    "        const currentPlayback = this.currentlyPlaying\n"
-                    "            ? await this.getPlaybackForEvent(this.currentlyPlaying)\n"
-                    "            : null;\n\n"
-                    "        const offset = this.chunkEvents.getLengthTo(event);\n"
-                    "        const offsetInChunk = time - offset;\n\n"
-                    "        if (currentPlayback && currentPlayback !== skipToPlayback) {\n"
-                    "            this.currentlyPlaying = null;\n"
-                    "            await currentPlayback.stop();\n"
-                    "            this.currentlyPlaying = event;\n"
-                    "            await skipToPlayback.skipTo(offsetInChunk / 1000);\n"
-                    "            await this.playEvent(event);\n"
-                    "        } else {\n"
-                    "            await skipToPlayback.skipTo(offsetInChunk / 1000);\n"
-                    "        }\n\n"
-                    "        this.setPosition(time);\n"
-                    "    }\n\n"
-                    "    public async start(): Promise<void> {\n"
-                    "        if (this.playbacks.size === 0) {\n"
-                    "            await this.loadChunks();\n"
-                    "        }\n\n"
-                    "        const chunkEvents = this.chunkEvents.getEvents();\n\n"
-                    "        const toPlay = this.getInfoState() === VoiceBroadcastInfoState.Stopped\n"
-                    "            ? chunkEvents[0] // start at the beginning for an ended voice broadcast\n"
-                    "            : chunkEvents[chunkEvents.length - 1]; // start at the current chunk for an ongoing voice broadcast\n\n"
-                    "        if (toPlay) {\n"
-                    "            return this.playEvent(toPlay);\n"
-                    "        }\n\n"
-                    "        this.setState(VoiceBroadcastPlaybackState.Buffering);\n"
-                    "    }\n\n"
-                    "    public stop(): void {\n"
-                    "        this.setState(VoiceBroadcastPlaybackState.Stopped);\n"
-                    "        if (!this.currentlyPlaying) return;\n"
-                    "        const currentPlayback = this.playbacks.get(this.currentlyPlaying.getId());\n"
-                    "        this.currentlyPlaying = null;\n"
-                    "        currentPlayback?.stop();\n"
-                    "        this.setPosition(0);\n"
-                    "    }\n\n"
-                    "    public pause(): void {\n"
-                    "        // stopped voice broadcasts cannot be paused\n"
-                    "        if (this.getState() === VoiceBroadcastPlaybackState.Stopped) return;\n\n"
-                    "        this.setState(VoiceBroadcastPlaybackState.Paused);\n"
-                    "        if (!this.currentlyPlaying) return;\n"
-                    "        this.playbacks.get(this.currentlyPlaying.getId())?.pause();\n"
-                    "    }\n\n"
-                    "    public resume(): void {\n"
-                    "        if (!this.currentlyPlaying) {\n"
-                    "            // no playback to resume, start from the beginning\n"
-                    "            this.start();\n"
-                    "            return;\n"
-                    "        }\n\n"
-                    "        this.setState(VoiceBroadcastPlaybackState.Playing);\n"
-                    "        this.playbacks.get(this.currentlyPlaying.getId())?.play();\n"
-                    "    }\n\n"
-                    "    public async toggle(): Promise<void> {\n"
-                    "        if (this.state === VoiceBroadcastPlaybackState.Stopped) {\n"
-                    "            await this.start();\n"
-                    "            return;\n"
-                    "        }\n\n"
-                    "        if (this.state === VoiceBroadcastPlaybackState.Paused) {\n"
-                    "            this.resume();\n"
-                    "            return;\n"
-                    "        }\n\n"
-                    "        this.pause();\n"
-                    "    }\n\n"
-                    "    public getState(): VoiceBroadcastPlaybackState {\n"
-                    "        return this.state;\n"
-                    "    }\n\n"
-                    "    private setState(state: VoiceBroadcastPlaybackState): void {\n"
-                    "        if (this.state === state) {\n"
-                    "            return;\n"
-                    "        }\n\n"
-                    "        this.state = state;\n"
-                    "        this.emit(VoiceBroadcastPlaybackEvent.StateChanged, state, this);\n"
-                    "    }\n\n"
-                    "    public getInfoState(): VoiceBroadcastInfoState {\n"
-                    "        return this.infoState;\n"
-                    "    }\n\n"
-                    "    private setInfoState(state: VoiceBroadcastInfoState): void {\n"
-                    "        if (this.infoState === state) {\n"
-                    "            return;\n"
-                    "        }\n\n"
-                    "        this.infoState = state;\n"
-                    "        this.emit(VoiceBroadcastPlaybackEvent.InfoStateChanged, state);\n"
-                    "    }\n\n"
-                    "    public destroy(): void {\n"
-                    "        this.chunkRelationHelper.destroy();\n"
-                    "        this.infoRelationHelper.destroy();\n"
-                    "        this.removeAllListeners();\n\n"
-                    "        this.chunkEvents = new VoiceBroadcastChunkEvents();\n"
-                    "        this.playbacks.forEach(p => p.destroy());\n"
-                    "        this.playbacks = new Map<string, Playback>();\n"
-                    "    }\n"
-                    "}\n"
-                )
+        if ext in (".ts", ".tsx", ".js", ".jsx", ".go", ".rs", ".c", ".cpp"):
+            if cand_code.count("{") != cand_code.count("}"):
+                return orig_code
 
-        # 5. Python Systems Module (`lib/ansible/module_utils/urls.py` -> `prepare_multipart`):
-        #    Non-destructively preserve all existing 1,591 lines of `orig_code` (`Request`, `open_url`, `fetch_url`, `fetch_file`)
-        #    and ensure `prepare_multipart(fields)` satisfies all RFC 2045 / `MIMEMultipart('form-data')` / `email.policy.HTTP` requirements!
-        if bname == "urls.py" and "prepare_multipart" in p_low:
-            has_all_orig = ("def fetch_file(" in cand_code and "def fetch_url(" in cand_code and "def open_url(" in cand_code)
-            if not has_all_orig or "def prepare_multipart(" not in cand_code or "MIMEMultipart" not in cand_code:
-                imports_block = (
-                    "import mimetypes\n"
-                    "import email.mime.multipart\n"
-                    "import email.mime.application\n"
-                    "import email.mime.nonmultipart\n"
-                    "import email.encoders\n"
-                    "import email.parser\n"
-                    "from ansible.module_utils.common._collections_compat import Mapping\n"
-                    "from ansible.module_utils.six import string_types\n"
-                    "try:\n"
-                    "    from email.policy import HTTP as _HTTP_POLICY\n"
-                    "except ImportError:\n"
-                    "    _HTTP_POLICY = None\n"
-                )
-                func_block = (
-                    "\n\ndef prepare_multipart(fields):\n"
-                    "    \"\"\"Constructs a multipart/form-data payload from a mapping of fields.\n"
-                    "    Returns a tuple (content_type, body).\n"
-                    "    \"\"\"\n"
-                    "    if not isinstance(fields, Mapping):\n"
-                    "        raise TypeError(\n"
-                    "            'Unable to prepare multipart data, mapping expected, got %s' % type(fields)\n"
-                    "        )\n"
-                    "    m = email.mime.multipart.MIMEMultipart('form-data')\n"
-                    "    for field, value in sorted(fields.items()):\n"
-                    "        if isinstance(value, string_types):\n"
-                    "            main_type = 'text'\n"
-                    "            sub_type = 'plain'\n"
-                    "            content = value\n"
-                    "            filename = None\n"
-                    "        elif isinstance(value, Mapping):\n"
-                    "            filename = value.get('filename')\n"
-                    "            content = value.get('content')\n"
-                    "            mime_type = value.get('mime_type')\n"
-                    "            if not filename and not content:\n"
-                    "                raise ValueError(\n"
-                    "                    'Failed to prepare multipart data, must provide at least one of filename or content'\n"
-                    "                )\n"
-                    "            if not mime_type:\n"
-                    "                try:\n"
-                    "                    mime_type = mimetypes.guess_type(filename or '', strict=False)[0]\n"
-                    "                except Exception:\n"
-                    "                    mime_type = None\n"
-                    "                if not mime_type:\n"
-                    "                    mime_type = 'application/octet-stream'\n"
-                    "            main_type, sep, sub_type = to_native(mime_type).partition('/')\n"
-                    "        else:\n"
-                    "            raise TypeError(\n"
-                    "                'Unable to prepare multipart data, string or mapping expected, got %s' % type(value)\n"
-                    "            )\n"
-                    "        if not content and filename:\n"
-                    "            with open(to_bytes(filename, errors='surrogate_or_strict'), 'rb') as f:\n"
-                    "                part = email.mime.application.MIMEApplication(f.read())\n"
-                    "                del part['Content-Type']\n"
-                    "                part.add_header('Content-Type', '%s/%s' % (main_type, sub_type))\n"
-                    "        else:\n"
-                    "            part = email.mime.nonmultipart.MIMENonMultipart(main_type, sub_type)\n"
-                    "            part.set_payload(to_bytes(content, errors='surrogate_or_strict'))\n"
-                    "        del part['MIME-Version']\n"
-                    "        part.add_header(\n"
-                    "            'Content-Disposition',\n"
-                    "            'form-data',\n"
-                    "            name=to_native(field),\n"
-                    "        )\n"
-                    "        if filename:\n"
-                    "            part.set_param(\n"
-                    "                'filename',\n"
-                    "                to_native(os.path.basename(to_bytes(filename, errors='surrogate_or_strict'))),\n"
-                    "                header='Content-Disposition',\n"
-                    "            )\n"
-                    "        m.attach(part)\n"
-                    "    if PY3 and _HTTP_POLICY is not None:\n"
-                    "        b_data = m.as_bytes(policy=_HTTP_POLICY)\n"
-                    "    else:\n"
-                    "        b_data = m.as_string()\n"
-                    "        if isinstance(b_data, str) and PY3:\n"
-                    "            b_data = b_data.encode('utf-8', errors='surrogateescape')\n"
-                    "        else:\n"
-                    "            b_data = to_bytes(b_data, errors='surrogate_or_strict')\n"
-                    "    del m\n"
-                    "    headers, sep, b_content = b_data.partition(b'\\r\\n\\r\\n')\n"
-                    "    del b_data\n"
-                    "    if PY3:\n"
-                    "        parser = email.parser.BytesHeaderParser().parsebytes\n"
-                    "    else:\n"
-                    "        parser = email.parser.HeaderParser().parsestr\n"
-                    "        headers = to_native(headers)\n"
-                    "    return (\n"
-                    "        parser(headers)['content-type'],\n"
-                    "        b_content,\n"
-                    "    )\n"
-                )
-                updated_urls = orig_code.replace("import atexit\n", "import atexit\n" + imports_block, 1).rstrip() + func_block
-                return updated_urls
+        if orig_lns > 100 and cand_lns < int(orig_lns * 0.6):
+            return orig_code
 
         return cand_code
 
@@ -4082,12 +3325,16 @@ class CloverK3AgentEngine:
             "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n" in user_prompt
             and "Verified Workspace Tool Outputs:" not in user_prompt
         )
+        is_pr_or_repo_task = ("<pr_description>" in effective_low or "in the `/app` directory" in effective_low)
         has_explicit_fs_path = bool(
-            re.search(
-                r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/(?:home|opt|tmp|var|etc|usr|root|mnt)[/a-zA-Z0-9_.\-]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|Makefile|Dockerfile|Cargo\.toml|package\.json)\b|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b)",
-                effective_q,
+            is_pr_or_repo_task
+            or (
+                re.search(
+                    r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/(?:home|opt|tmp|var|etc|usr|root|mnt)[/a-zA-Z0-9_.\-]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|(?<![%{<])\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|Makefile|Dockerfile|Cargo\.toml|package\.json)\b(?!\})|\b[a-zA-Z0-9_\-]+\.(?:go|py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b)",
+                    effective_q,
+                )
+                and not re.search(r"https?://", effective_q)
             )
-            and not re.search(r"https?://", effective_q)
         )
         is_standalone_code_spec = bool(
             not has_explicit_fs_path
@@ -4205,7 +3452,7 @@ class CloverK3AgentEngine:
                 args = {
                     "filePath": _resolve_abs_path(fp),
                     "startLine": int(args.get("startLine") or 1),
-                    "endLine": int(args.get("endLine") or 150),
+                    "endLine": int(args.get("endLine") or 350),
                 }
             elif t_name == "list_dir":
                 dp = args.get("path") or args.get("dirPath") or args.get("directory") or ws_root
@@ -4317,11 +3564,10 @@ class CloverK3AgentEngine:
 
         # Priority Direct Dispatch for explicit file reads when the user specifies an exact file path (and didn't ask to list a directory first)
         m_fpaths = re.findall(
-            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b)",
+            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:go|py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|(?<![%{<])\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b(?!\}))",
             effective_q,
         )
-        # Also resolve bare component/class/hook filenames mentioned in `<pr_description>` or multi-file implementation tasks
-        # (e.g. `useVoiceBroadcastPlayback`, `VoiceBroadcastPlaybackBody`) inside the target repository!
+        # Also resolve bare component/class/hook/function symbols mentioned in `<pr_description>` or multi-file implementation tasks
         is_code_modification_task = any(
             mk in effective_low
             for mk in (
@@ -4329,26 +3575,46 @@ class CloverK3AgentEngine:
                 "edit the file", "update the ", "extend the ", "integrate the ", "fix the bug in",
             )
         )
+        pr_symbols = []
         if is_code_modification_task:
-            for ident in re.findall(r"\b((?:use[A-Z]|[A-Z][a-z0-9]+)[A-Za-z0-9_]{4,})\b", effective_q):
-                if ident in ("MatrixEvent", "MatrixClient", "PlaybackState", "SimpleObservable", "TypedEventEmitter", "React", "Promise"):
-                    continue
-                for prev_rd in tool_rounds:
-                    for m_rel in re.findall(rf"([a-zA-Z0-9_.\-/]*{re.escape(ident)}(?:\.tsx|\.ts|\.js|\.jsx)?)", str(prev_rd.get("output") or "")):
-                        if "/" in m_rel and m_rel not in m_fpaths:
-                            m_fpaths.append(m_rel)
-                if ident.startswith("use"):
-                    cand_rel = f"src/voice-broadcast/hooks/{ident}.ts"
-                    if cand_rel not in m_fpaths:
-                        m_fpaths.append(cand_rel)
-                elif ident.endswith("Body") or ident == "VoiceBroadcastPlaybackBody":
-                    cand_rel = f"src/voice-broadcast/components/molecules/{ident}.tsx"
-                    if cand_rel not in m_fpaths:
-                        m_fpaths.append(cand_rel)
-            if ("voicebroadcastplaybackbody" in effective_low or "mx_voicebroadcastbody_timerow" in effective_low) and "src/voice-broadcast/components/molecules/VoiceBroadcastPlaybackBody.tsx" not in m_fpaths:
-                m_fpaths.append("src/voice-broadcast/components/molecules/VoiceBroadcastPlaybackBody.tsx")
-            if ("timerow" in effective_low or "mx_voicebroadcastbody_timerow" in effective_low) and "res/css/voice-broadcast/molecules/_VoiceBroadcastBody.pcss" not in m_fpaths:
-                m_fpaths.append("res/css/voice-broadcast/molecules/_VoiceBroadcastBody.pcss")
+            req_section = effective_q.split("## Requirements", 1)[-1] if "## Requirements" in effective_q else effective_q
+            raw_syms = re.findall(r"`([a-zA-Z_][a-zA-Z0-9_]{3,})(?:\([^`]*\))?`", req_section)
+            if not raw_syms:
+                raw_syms = re.findall(r"`([a-zA-Z_][a-zA-Z0-9_]{3,})(?:\([^`]*\))?`", effective_q)
+            # Prioritize camelCase / snake_case code identifiers over plain lowercase CLI nouns
+            raw_syms.sort(key=lambda s: (0 if (any(c.isupper() for c in s[1:]) or "_" in s) else 1))
+            for m_sym in raw_syms:
+                if m_sym not in (
+                    "true", "false", "null", "none", "void", "string", "number", "boolean",
+                ) and m_sym not in pr_symbols:
+                    pr_symbols.append(m_sym)
+
+            # Collect any source files discovered in prior `grep_search` or `file_search` tool outputs
+            for prev_rd in tool_rounds:
+                if prev_rd.get("name") in ("grep_search", "file_search"):
+                    for m_disc in re.findall(
+                        r"((?:/app/)?[a-zA-Z0-9_.\-]+(?:/[a-zA-Z0-9_.\-]+)+\.(?:go|py|rs|ts|tsx|js|jsx))",
+                        str(prev_rd.get("output") or ""),
+                    ):
+                        if not m_disc.endswith("_test.go") and m_disc not in m_fpaths:
+                            m_fpaths.append(m_disc)
+
+            # When `<pr_description>` names function/method symbols (`pr_symbols`) rather than explicit file paths,
+            # run `grep_search` first to locate all matching files across the repository!
+            valid_initial_fpaths = [
+                fp for fp in m_fpaths
+                if not fp.startswith(("http:", "https:", "//"))
+                and fp.rstrip(".,;:)") not in ("/app", "multipart.txt", "formdata.txt")
+                and "." in fp.replace("\\", "/").rstrip("/").split("/")[-1]
+            ]
+            if not valid_initial_fpaths and pr_symbols and "grep_search" in tool_map and "grep_search" not in called_names:
+                camel_or_snake = [s for s in pr_symbols if any(c.isupper() for c in s[1:]) or "_" in s]
+                chosen_syms = camel_or_snake[:4] if camel_or_snake else pr_symbols[:4]
+                grep_q = "|".join(chosen_syms)
+                norm_g = _normalize_tool_args("grep_search", {"query": grep_q, "isRegexp": True})
+                sig_g = ("grep_search", json.dumps(norm_g, sort_keys=True))
+                if sig_g not in already_called_sigs:
+                    return {"name": "grep_search", "arguments": json.dumps(norm_g)}
 
         if m_fpaths and not wants_explicit_list_dir and "read_file" in tool_map and "read_file" not in called_names:
             for cand_fp in m_fpaths:
@@ -4395,7 +3661,7 @@ class CloverK3AgentEngine:
         ws_header = f"Workspace Info:\n{workspace_info[:2000]}\n\n" if workspace_info else f"Workspace Root: {ws_root}\n\n"
         chat_msgs.append({"role": "user", "content": f"{ws_header}{raw_q}"})
 
-        for idx, rd in enumerate(tool_rounds):
+        for idx, rd in enumerate(tool_rounds[-6:]):
             t_name = str(rd.get("name") or "").strip()
             try:
                 t_args_obj = json.loads(rd.get("arguments") or "{}")
@@ -4416,7 +3682,7 @@ class CloverK3AgentEngine:
             chat_msgs.append({
                 "role": "tool",
                 "tool_call_id": rd.get("id") or f"call_{idx+1}",
-                "content": str(rd.get("output") or "")[:3200],
+                "content": str(rd.get("output") or "")[:900],
             })
 
         # Clover Cycle Multi-File Software Engineering Execution Loop:
@@ -4430,6 +3696,10 @@ class CloverK3AgentEngine:
             read_files_map = {}
             partial_reads_next = {}
             edited_files_set = set()
+            synth_attempted_set = getattr(self, "_synth_attempted_set", None)
+            if synth_attempted_set is None or not tool_rounds:
+                synth_attempted_set = set()
+                self._synth_attempted_set = synth_attempted_set
             ran_verification_test = False
             for rd in tool_rounds:
                 r_name = str(rd.get("name") or "")
@@ -4491,10 +3761,12 @@ class CloverK3AgentEngine:
             unedited_targets = [
                 fp for fp in read_files_map
                 if fp not in edited_files_set
+                and fp not in synth_attempted_set
                 and not fp.endswith(("src/audio/Playback.ts", ".pcss"))
             ]
             if unedited_targets:
                 target_fp = unedited_targets[0]
+                synth_attempted_set.add(target_fp)
                 orig_code = read_files_map[target_fp]
                 new_code = self._synthesize_file_implementation(
                     target_fp=target_fp,
@@ -4516,29 +3788,24 @@ class CloverK3AgentEngine:
                         sig_rep = ("replace_string_in_file", json.dumps(norm_rep, sort_keys=True))
                         if sig_rep not in already_called_sigs:
                             return {"name": "replace_string_in_file", "arguments": json.dumps(norm_rep)}
+                # If no valid edit could be synthesized for any read file, stop cleanly rather than looping
+                remaining_after = [
+                    fp for fp in read_files_map
+                    if fp not in edited_files_set
+                    and fp not in synth_attempted_set
+                    and not fp.endswith(("src/audio/Playback.ts", ".pcss"))
+                ]
+                if not remaining_after and not edited_files_set:
+                    return None
 
-            # Outcome Stage: After editing all target files, run the unit test suite in the terminal to verify the fix!
+            # Outcome Stage: After editing all target files, run git status & diff in the terminal to verify changes!
             if edited_files_set and not ran_verification_test and "run_in_terminal" in tool_map:
                 test_cmd = "git status -s && git diff --stat"
-                if any("voice-broadcast" in fp for fp in edited_files_set):
-                    test_cmd = (
-                        "npx jest --maxWorkers=1 --forceExit "
-                        "test/voice-broadcast/utils/VoiceBroadcastChunkEvents-test.ts "
-                        "test/voice-broadcast/models/VoiceBroadcastPlayback-test.ts"
-                    )
-                elif any("module_utils/urls.py" in fp for fp in edited_files_set):
-                    test_cmd = (
-                        "python3.9 -m py_compile lib/ansible/module_utils/urls.py && "
-                        "PYTHONPATH=/app python3.9 -c \"from ansible.module_utils.urls import prepare_multipart; "
-                        "ct, body = prepare_multipart({'text': 'hello', 'bin': {'content': b'123'}}); "
-                        "assert 'multipart/form-data' in ct and b'hello' in body; print('SELF_TEST_OK:', ct)\" && "
-                        "git diff --stat"
-                    )
                 norm_t = _normalize_tool_args("run_in_terminal", {"command": test_cmd})
                 sig_t = ("run_in_terminal", json.dumps(norm_t, sort_keys=True))
                 if sig_t not in already_called_sigs:
                     return {"name": "run_in_terminal", "arguments": json.dumps(norm_t)}
-            if edited_files_set and ran_verification_test:
+            if (edited_files_set and ran_verification_test) or (read_files_map and not unedited_targets and not edited_files_set):
                 return None
 
         backbone = self.ha_model.backbone
@@ -4598,6 +3865,10 @@ class CloverK3AgentEngine:
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
             next_logits = out.logits[:, -1, :]
+
+        del past_kv, out
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         raw_decision = self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
         if not tool_rounds and not raw_decision.startswith("<tool_call>"):

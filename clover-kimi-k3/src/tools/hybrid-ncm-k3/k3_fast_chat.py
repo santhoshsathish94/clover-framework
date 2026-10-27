@@ -445,7 +445,9 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
                     cleaned_notes += "."
                 raw_lines = [cleaned_notes[0].upper() + cleaned_notes[1:]]
         if not raw_lines:
-            return ["Hello! How can I help you today?"]
+            if is_short_greeting_or_ack(user_prompt):
+                return ["Hello! How can I help you today?"]
+            return ["Unable to process this request right now."]
 
     plans = []
     for line_idx, ln in enumerate(raw_lines):
@@ -506,7 +508,11 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         if len(plans) >= max_windows:
             break
 
-    return plans if plans else ["Hello! How can I help you today?"]
+    if plans:
+        return plans
+    if is_short_greeting_or_ack(user_prompt):
+        return ["Hello! How can I help you today?"]
+    return ["Unable to process this request right now."]
 
 
 def format_readable_response(raw_joined: str) -> str:

