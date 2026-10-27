@@ -31,6 +31,30 @@ Direction → Execution → Outcome → Growth. Clover keeps the three responsib
 This boundary does not depend on which model is being used or on today's model capability. AI can become
 far more capable, but capability does not create authority over what should be pursued.
 
+## Break the basic myth: build with AI, deploy the validated code
+
+The most common governance mistake around AI is assuming that "using AI" means running an AI agent
+directly inside a live production system to do jobs that ordinary deterministic software can do.
+
+AI is extraordinarily good at **building things**: reading system Context, writing services, parsers,
+rule engines, and monitoring tools, and iterating until tests and compilers pass. Once AI has built
+that software and the human and system have validated the code, **deploy the validated code to the
+live system — not the live agent.**
+
+Take a **monitoring system** as a simple example. You can write a monitoring service and other pieces
+of operational software *with* AI, validate the code against real traces and unit tests, and deploy
+that verified code live. Why run a live agent continuously in production for a job that the code
+itself can execute deterministically?
+
+- **Pushing a live agent into production** for a deterministic job introduces permanent runtime
+  liability: probabilistic drift, prompt injection from untrusted log or ticket text, live credential
+  exposure, and recurring model latency and cost on every event.
+- **Pushing the validated code AI produced** gives you all of AI's speed during development
+  (`Context → Direction → Execution → Outcome → Growth`) while running a deterministic, diffable,
+  unit-tested, microsecond-fast artifact in production with zero runtime model risk.
+
+> **Why push AI into the live system when you can push just the validated code it produced?**
+
 ## What each layer owes beyond the immediate work
 
 Those three responsibilities describe who does what inside one cycle. Each also carries an obligation

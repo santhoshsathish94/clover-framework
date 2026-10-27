@@ -72,9 +72,89 @@
         what is actually happening, what has to be done about it, and what genuinely is not solved yet.
         Taken separately, each one is manageable.</p>
       <div class="actions">
-        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md#questions-your-security-team-will-ask">Every question, answered</a>
+        <a class="btn btn--primary" href="#build-not-run">Break the myth: build with AI, run the code →</a>
+        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md#questions-your-security-team-will-ask">Every question, answered</a>
         <a class="btn btn--plain" href="../start/">How the access is set up →</a>
       </div>
+    </div>
+  </section>
+
+  <section class="band" id="build-not-run">
+    <div class="wrap">
+      <h2>Break the basic myth around AI: build with it, don't run it live where code belongs.</h2>
+      <p class="lede"><strong>AI is extraordinarily good at building things—which means we should build software with AI, validate that code, and deploy the validated code to live systems, rather than running AI agents directly in production for jobs the code itself can do.</strong></p>
+      <p>The most expensive governance mistake in the industry today comes from a simple confusion: teams assume that "adopting AI" means wiring a live AI agent into production to perform everyday operational jobs continuously. They put an agent in the live loop to watch logs, enforce rules, transform payloads, route alerts, or check compliance—and then spend months trying to govern an unpredictable model holding live production credentials.</p>
+      <p>Ask a simpler question first: <strong>why push AI into the live system when you can push just the validated code it produced?</strong></p>
+      <p>Take a <strong>monitoring system</strong> as a concrete example. If you need to watch agent behavior, audit access logs, detect out-of-scope actions, or check invariants across services, you do not need a live LLM reading every production event at runtime. Instead, you use AI inside the Clover development cycle (<code>Context → Direction → Execution → Outcome → Growth</code>) to read the schemas, write the monitoring service and rule engine, generate the test suite, and verify the behavior against real traces. Once a human reviews and validates that code, <strong>you deploy the deterministic code to production—and the AI stays out of the live runtime path entirely.</strong></p>
+
+      <figure class="origin-visual" style="margin:1.8rem 0">
+        <svg viewBox="0 0 860 310" role="img" aria-label="Diagram comparing the myth of running live AI agents in production for deterministic jobs versus the Clover approach of building and validating code with AI and deploying only the validated code live.">
+          <rect x="0" y="0" width="860" height="310" rx="10" fill="#ffffff"></rect>
+          <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.2">GOVERNANCE FIRST PRINCIPLE: PUSH VALIDATED CODE TO PRODUCTION, NOT THE LIVE AGENT</text>
+          <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+          <!-- Top Lane: The Myth (Running Agents Live for Code Jobs) -->
+          <rect x="20" y="50" width="820" height="110" rx="10" fill="#fff5f5" stroke="#d9534f" stroke-width="1.4"></rect>
+          <text x="36" y="72" font-size="11" font-weight="700" fill="#b91c1c">✗ THE COMMON MYTH · RUNNING AN AI AGENT DIRECTLY IN THE LIVE SYSTEM FOR A CODE JOB</text>
+
+          <rect x="36" y="84" width="170" height="58" rx="7" fill="#ffffff" stroke="#d9534f" stroke-width="1.3"></rect>
+          <text x="121" y="106" text-anchor="middle" font-size="10.2" font-weight="700" fill="#14181d">Live Production Traffic</text>
+          <text x="121" y="123" text-anchor="middle" font-size="9.5" fill="#66717e">Logs, events, telemetry</text>
+
+          <line x1="206" y1="113" x2="246" y2="113" stroke="#b91c1c" stroke-width="2"></line>
+          <polygon points="246,109 254,113 246,117" fill="#b91c1c"></polygon>
+
+          <rect x="256" y="84" width="230" height="58" rx="7" fill="#ffffff" stroke="#b91c1c" stroke-width="1.8"></rect>
+          <text x="371" y="105" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">Live AI Agent in Production</text>
+          <text x="371" y="121" text-anchor="middle" font-size="9.3" fill="#39424d">Holds live credentials, re-reasons</text>
+          <text x="371" y="134" text-anchor="middle" font-size="9.3" fill="#39424d">every event probabilistically</text>
+
+          <line x1="486" y1="113" x2="526" y2="113" stroke="#b91c1c" stroke-width="2"></line>
+          <polygon points="526,109 534,113 526,117" fill="#b91c1c"></polygon>
+
+          <rect x="536" y="84" width="288" height="58" rx="7" fill="#ffffff" stroke="#d9534f" stroke-width="1.3"></rect>
+          <text x="550" y="103" font-size="9.8" font-weight="700" fill="#b91c1c">Permanent Governance &amp; Runtime Liability:</text>
+          <text x="550" y="118" font-size="9.3" fill="#39424d">• Prompt-injectable by hostile log/ticket text</text>
+          <text x="550" y="132" font-size="9.3" fill="#39424d">• Non-deterministic, slow, high GPU/API cost</text>
+
+          <!-- Bottom Lane: The Clover Way (Build with AI, Deploy the Validated Code) -->
+          <rect x="20" y="176" width="820" height="120" rx="10" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.8"></rect>
+          <text x="36" y="198" font-size="11" font-weight="700" fill="#0a6a5f">✓ THE CLOVER WAY · BUILD &amp; VALIDATE WITH AI IN DEVELOPMENT, DEPLOY ONLY THE VALIDATED CODE LIVE</text>
+
+          <rect x="36" y="210" width="215" height="68" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+          <text x="143" y="230" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">1 · Build with Human + AI</text>
+          <text x="143" y="246" text-anchor="middle" font-size="9.3" fill="#39424d">AI writes monitoring / service code</text>
+          <text x="143" y="260" text-anchor="middle" font-size="9.3" fill="#66717e">(Offline / Dev · No live prod access)</text>
+
+          <line x1="251" y1="244" x2="287" y2="244" stroke="#0a6a5f" stroke-width="2"></line>
+          <polygon points="287,240 295,244 287,248" fill="#0a6a5f"></polygon>
+
+          <rect x="297" y="210" width="215" height="68" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+          <text x="404" y="230" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">2 · Validate &amp; Review Outcome</text>
+          <text x="404" y="246" text-anchor="middle" font-size="9.3" fill="#39424d">Compiler, test suite, replay traces</text>
+          <text x="404" y="260" text-anchor="middle" font-size="9.3" fill="#66717e">&amp; named human sign-off</text>
+
+          <line x1="512" y1="244" x2="548" y2="244" stroke="#0a6a5f" stroke-width="2"></line>
+          <polygon points="548,240 556,244 548,248" fill="#0a6a5f"></polygon>
+
+          <rect x="558" y="210" width="266" height="68" rx="7" fill="#0a6a5f" stroke="#064f47" stroke-width="1.8"></rect>
+          <text x="691" y="230" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">3 · Validated Code Runs Live</text>
+          <text x="691" y="246" text-anchor="middle" font-size="9.4" fill="#e6f2f0">Deterministic, auditable, microseconds,</text>
+          <text x="691" y="261" text-anchor="middle" font-size="9.4" font-weight="700" fill="#ffd97d">0 prompt injection · 0 live model risk</text>
+        </svg>
+        <figcaption>Why push an AI agent into production when the validated code it built can do the job deterministically? Use AI where capability helps (building, analyzing, and testing), and let verified code run the live system.</figcaption>
+      </figure>
+
+      <dl class="stack stack--2" style="margin-top:1.4rem">
+        <div>
+          <dt>Why teams get trapped running agents live</dt>
+          <dd>Because an agent can prototype a check in five minutes from a prompt, teams leave the agent itself in the loop as the production implementation. Now every single check pays model latency, risks hallucination or prompt injection on untrusted input, and requires governing live agent credentials 24/7.</dd>
+        </div>
+        <div>
+          <dt>Why shipping the validated code wins</dt>
+          <dd>When AI writes the monitoring daemon, parser, policy check, or data pipeline—and you validate that code against real test cases before deploying—the artifact running in production is ordinary, deterministic software. You can diff it, git-blame it, unit-test it, run it in microseconds, and prove exactly what it will do on every input.</dd>
+        </div>
+      </dl>
     </div>
   </section>
 
@@ -180,11 +260,12 @@
             agent touched, compare what it did against what it was asked to do, and raise an alert when it
             reaches outside the scope of the task. A part of the system unrelated to the request. A record
             it had no reason to open. A change where it was granted only the right to read.</p>
-          <p class="note">Stated honestly: tooling for this barely exists yet, here or anywhere. Most teams
-            will have to assemble a first version from the access records and audit trails they already
-            keep. It is still the highest-value control to build, because it is the only one that operates
-            <em>while</em> the agent is working rather than before or after. Until it exists, this depends
-            on a human paying attention — and attention scales worse than access does.</p>
+          <p class="note">Stated honestly: off-the-shelf tooling for this barely exists yet, here or
+            anywhere. That is exactly where <a href="#build-not-run">building with AI instead of running AI live</a>
+            pays off immediately: use AI to write the monitoring service against the access records and
+            audit trails you already keep, validate the code against real traces, and deploy that
+            deterministic code to watch live activity—rather than putting another live agent in the loop
+            to do a job that validated code does faster and without runtime risk.</p>
         </div>
       </div>
 
