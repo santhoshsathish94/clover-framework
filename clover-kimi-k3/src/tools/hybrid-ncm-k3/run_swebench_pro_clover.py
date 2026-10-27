@@ -20,11 +20,15 @@ Protocol enforced:
 """
 import json, os, re, shutil, subprocess, sys, time, urllib.request
 
-TASK_ID = "instance_element-hq__element-web-66d0b318bc6fee0d17b54c1781d6ab5d5d323135-vnan"
+TASK_ID = os.environ.get(
+    "CLOVER_SWE_TASK_ID",
+    "instance_element-hq__element-web-66d0b318bc6fee0d17b54c1781d6ab5d5d323135-vnan",
+)
+SLUG = os.environ.get("CLOVER_SWE_SLUG", "66d0b318")
 TASK_DIR = f"/tmp/swebench_pro/SWE-bench_Pro-os/v2/tasks/{TASK_ID}"
-PRISTINE_APP = "/tmp/swebench_pro/app_pristine_66d0b318"
-VERIFIER_ROOTFS = "/tmp/swebench_pro/rootfs_66d0b318"
-AGENT_APP = "/tmp/swebench_pro/agent_app_66d0b318"
+PRISTINE_APP = f"/tmp/swebench_pro/app_pristine_{SLUG}"
+VERIFIER_ROOTFS = f"/tmp/swebench_pro/rootfs_{SLUG}"
+AGENT_APP = f"/tmp/swebench_pro/agent_app_{SLUG}"
 ENDPOINT = "http://127.0.0.1:8765/v1/chat/completions"
 
 VSCODE_TOOLS = [
@@ -163,11 +167,15 @@ def execute_agent_tool(name: str, args_json: str) -> str:
             if not os.path.isfile(host_p):
                 return f"Error: File {args.get('filePath')} does not exist"
             s_ln = max(1, int(args.get("startLine") or 1))
-            e_ln = max(s_ln, int(args.get("endLine") or 200))
+            e_ln = max(s_ln, int(args.get("endLine") or 350))
             with open(host_p, "r", encoding="utf-8", errors="ignore") as f:
                 lines = f.readlines()
-            numbered = [f"{i}: {lines[i-1]}" for i in range(s_ln, min(e_ln + 1, len(lines) + 1))]
-            return "".join(numbered) or "(empty file)"
+            actual_end = min(e_ln, len(lines))
+            numbered = [f"{i}: {lines[i-1]}" for i in range(s_ln, actual_end + 1)]
+            out_s = "".join(numbered) or "(empty file)"
+            if actual_end < len(lines):
+                out_s = out_s.rstrip("\n") + f"\n[Showing lines {s_ln}-{actual_end} of {len(lines)}]\n"
+            return out_s
         elif name == "file_search":
             q = str(args.get("query") or "*").strip()
             cmd = f"cd {AGENT_APP} && find . -maxdepth 5 -path '*{q.strip('*')}*' 2>/dev/null | head -n 40"
@@ -334,13 +342,14 @@ def main():
     agent_elapsed_s = round(time.perf_counter() - t_start, 2)
     diff_res = subprocess.run(["git", "-C", AGENT_APP, "diff"], capture_output=True, text=True, check=True)
     patch_str = diff_res.stdout
-    patch_file = f"/tmp/swebench_pro/clover_{attempt_tag}.patch"
+    patch_file = f"/tmp/swebench_pro/clover_{SLUG}_{attempt_tag}.patch"
     open(patch_file, "w", encoding="utf-8").write(patch_str)
     print(f"\nCaptured git diff ({len(patch_str)} bytes) -> {patch_file}", flush=True)
 
     verdict = run_fresh_sandbox_verifier(patch_file)
     report = {
         "task_id": TASK_ID,
+        "slug": SLUG,
         "attempt": attempt_tag,
         "agent_rounds": len(trajectory),
         "agent_elapsed_s": agent_elapsed_s,
@@ -350,7 +359,7 @@ def main():
         "final_reply": final_reply,
         "verifier": verdict,
     }
-    report_path = f"/tmp/swebench_pro/report_{attempt_tag}.json"
+    report_path = f"/tmp/swebench_pro/report_{SLUG}_{attempt_tag}.json"
     open(report_path, "w", encoding="utf-8").write(json.dumps(report, indent=2))
     print(f"Saved full report to {report_path}", flush=True)
 

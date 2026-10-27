@@ -2645,7 +2645,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                             "id": tc_id,
                             "name": meta_tc["name"],
                             "arguments": meta_tc["arguments"],
-                            "output": txt_c[:24000],
+                            "output": txt_c[:96000],
                         })
 
             if not user_prompt and messages:
