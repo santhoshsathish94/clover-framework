@@ -69,42 +69,52 @@
     <div class="wrap">
       <p class="note"><a href="../evidence/">Evidence</a> &rsaquo; Clover</p>
       <h1>Clover</h1>
-      <p class="note">(7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System)</p>
-      <p class="lede"><strong>Clover</strong> has grown beyond a single model or engine into a unified seven-layer system:
-        <strong>1. AGENTS.md Governance &amp; Discernment Kernel</strong> (<code>Context &harr; Direction &harr; Execution &harr; Outcome &harr; Growth</code>),
-        <strong>2. File-Based Memory Tree &amp; Relational Knowledge Graph</strong> (<code>k3_memory_graph.py</code> with 32 canonical Markdown entries, 65 typed cross-branch relationships, structural concept-bridge cues, and a closed-loop <code>staging/</code> promotion gate),
-        <strong>3. Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier</strong> (<code>k3_ontology_graph.py</code> with deterministic property graphs, 4 Horn inference rules, and <code>[E#]</code>/<code>[P#]</code> provenance),
-        <strong>4. HybridAgent Continuous Latent Reasoning &amp; Live Tools</strong> (14-step <code>&lt;latent&gt;</code> reasoning, <code>K3NativeHybridLink</code> <code>7,168 &rarr; 7,168</code>, live web/arXiv search, Python &amp; chart execution, and <code>MoonViT3d</code> vision),
-        <strong>5. On-the-Fly Generative Compilation</strong> (<code>k3_generative_compiler.py</code> sealing partial Python &amp; Rust prefixes at statement boundaries and rolling back the KV cache mid-generation),
-        <strong>6. 93-Layer 2.78T MoE GPU/CPU Engine + Validated Rust Host Path</strong> (<code>libk3_gpu_experts.so</code> + 8 Rust crates verified bit-identical with <code>max_abs_diff = 0.0</code>), and
-        <strong>7. 11-Pass Parallel Next-Concept Modeling (NCM) &amp; Native Web / VS Code Agent Surfaces</strong>.</p>
+      <p class="note">(7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System &mdash; Clover AI v4)</p>
+      <p class="lede"><strong>Clover</strong> is a local open-weights AI system built under the Clover cycle
+        (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>). Rather than relying on a raw
+        language model alone, it surrounds a 93-layer 2.78-trillion-parameter Mixture-of-Experts backbone and an 8B
+        reasoning planner with <strong>verified tools, statement-by-statement compiler checking, a deterministic symbolic
+        ontology, and a persistent file-based memory graph</strong>.</p>
+      <p><strong>What our head-to-head evaluation shows in plain terms:</strong> On a 70-task benchmark suite spanning
+        general knowledge (<code>MMLU</code>), math (<code>GSM8K</code>), executable Python &amp; Rust coding
+        (<code>HumanEval</code> + <code>rustc</code>), structured output (<code>Sudoku</code>, <code>WMT14</code>,
+        <code>XSum</code>), organization-specific ontology records, persistent memory, and multi-hop tool use,
+        <strong>Clover&rsquo;s underlying model on its own scores <code>33 / 70</code> (<code>47.14%</code>)</strong>.
+        Adding Clover&rsquo;s tool orchestration and compiler-in-the-loop code checking raises that same model to
+        <strong><code>57 / 70</code> (<code>81.43%</code>)</strong>, and adding Clover&rsquo;s symbolic ontology and
+        persistent memory graph brings it to <strong><code>70 / 70</code> (<code>100.00%</code> pass rate,
+        <code>99.08%</code> mean score)</strong> while cutting GPU compute per solved task in half
+        (<code>234.0 &rarr; 114.5 GPU-s</code>). Standalone frontier models (<strong>GPT-6 Astra</strong> and
+        <strong>Claude Opus 5.5</strong>) are already near-perfect on the 58 public tasks without tools
+        (<code>56/58 = 96.6%</code> and <code>57/58 = 98.3%</code>), and only miss the private ontology and memory tasks
+        whose records are not in their prompt. Clover&rsquo;s value is not a bigger raw model; it is the system around the model.</p>
 
       <div class="stat-grid" aria-label="Headline measured metrics">
         <div class="stat-card">
-          <div class="stat-card__num">256K Tokens</div>
-          <div class="stat-card__label">Context Limit per Session</div>
-          <div class="stat-card__note"><strong>262,144 Kimi K3 tokens</strong> per session across multi-turn history and uploaded PDFs, Word docs, images, video, audio, CSV, and code.</div>
+          <div class="stat-card__num">47.1% &rarr; 100.0%</div>
+          <div class="stat-card__label">Clover System Lift (70 Tasks)</div>
+          <div class="stat-card__note">Same underlying model on <code>8 &times; RTX 3090</code>: <strong>33/70 (47.1%)</strong> raw model alone &rarr; <strong>57/70 (81.4%)</strong> with Tools &amp; Compiler &rarr; <strong>70/70 (100.0%)</strong> with Ontology &amp; Memory (<strong>2.04&times;</strong> lower GPU-s/solved).</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card__num">8 Clubbed / Batch</div>
-          <div class="stat-card__label">Sessions &amp; Dynamic Clubbing</div>
-          <div class="stat-card__note">Unlimited persistent sessions; zero-wait (<code>25 ms</code>) when idle, or clubs up to <strong>8 concurrent sessions</strong> (<strong>8.30&ndash;8.86 s/session</strong> full 93-layer K3; <strong>0.92 s/prompt</strong> fast NCM; 0 cross-talk).</div>
+          <div class="stat-card__num">96.6% &ndash; 98.3%</div>
+          <div class="stat-card__label">Frontier Models on Public Tasks</div>
+          <div class="stat-card__note">On the <strong>58 public tasks</strong> (zero tools), standalone <strong>Claude Opus 5.5</strong> scores <strong>57/58 (98.3%)</strong> and <strong>GPT-6 Astra</strong> scores <strong>56/58 (96.6%)</strong> vs. <strong>30/58 (51.7%)</strong> for Clover&rsquo;s raw model alone.</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card__num">60.5 &ndash; 148.5 tok/s</div>
-          <div class="stat-card__label">Live 93-Layer K3 + NCM Speed</div>
-          <div class="stat-card__note"><strong>147.2&ndash;148.5 K3 tok/s</strong> across all 93 GPU layers (<code>112.1 ms/layer</code>, <strong>95.29%</strong> overall VRAM hit rate, <strong>0</strong> PCIe D2H writebacks via Direction B; <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling).</div>
+          <div class="stat-card__num">95.22% &ndash; 95.29%</div>
+          <div class="stat-card__label">93-Layer GPU VRAM Hit Rate</div>
+          <div class="stat-card__note"><strong>148.5 K3 tok/s</strong> across all 93 GPU layers (<code>112.1 ms/layer</code>), <strong>0</strong> PCIe D2H writebacks on cold/warm reads, and <strong>8 Rust host crates</strong> verified bit-identical (<code>max_abs_diff = 0.0</code>).</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card__num">2.34 &ndash; 11.69 s</div>
-          <div class="stat-card__label">Full 93-Layer K3 + NCM Latency</div>
-          <div class="stat-card__note"><strong>2.34 s</strong> factual Q&amp;A, <strong>1.56&ndash;2.37 s</strong> SVG scene art, <strong>4.06 s</strong> chart generation, <strong>4.87&ndash;5.11 s</strong> verified Python code, and <strong>11.69 s</strong> compound math (vs. 356.3 s on CPU).</div>
+          <div class="stat-card__num">256K Context</div>
+          <div class="stat-card__label">Session &amp; Batch Capacity</div>
+          <div class="stat-card__note"><strong>262,144 Kimi K3 tokens</strong> per session; clubs up to <strong>8 concurrent sessions</strong> per GPU batch with <strong>0 cross-session token leakage</strong> and <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling.</div>
         </div>
       </div>
 
       <p class="actions">
-        <a class="btn btn--plain" href="#how-it-works">What it is &amp; how it works</a>
-        <a class="btn btn--plain" href="#hybrid-ncm-k3">Machine, sessions &amp; benchmarks</a>
+        <a class="btn btn--plain" href="#how-it-works">The seven layers</a>
+        <a class="btn btn--plain" href="#hybrid-ncm-k3">70-task head-to-head &amp; hardware</a>
         <a class="btn btn--plain" href="#progress">Where we started &amp; now</a>
         <a class="btn btn--plain" href="#credit">Research credit</a>
       </p>
@@ -113,299 +123,72 @@
 
   <section class="band" id="how-it-works">
     <div class="wrap">
-      <h2>What is Clover?</h2>
-      <p>Running Kimi K3 (2.78 trillion parameters, 1.4 TB of weights) token by token from NVMe on one CPU workstation
-        takes <strong>356 seconds</strong> for a 120-token reply (3.1 to 3.5 s per token). <strong>Clover</strong> makes the full
-        93-layer architecture interactive in seconds while surrounding it with symbolic verification, on-the-fly compiler
-        sealing, and a persistent relational memory graph across seven integrated layers:</p>
+      <h2>The seven layers of Clover</h2>
+      <p>The model can propose; the system decides; the tools enforce; evidence verifies; humans remain accountable.
+        Clover implements that principle across seven layers that run on one CPU workstation or an
+        <code>8 &times; NVIDIA RTX 3090</code> GPU server:</p>
 
       <ol class="steps">
-        <li><strong>AGENTS.md Operating &amp; Discernment Kernel:</strong>
-          Operates under the five-stage cycle (<code>Context &harr; Direction &harr; Execution &harr; Outcome &harr; Growth</code>),
-          distinguishing <code>observed</code>, <code>externally_verified</code>, <code>hypothesis</code>,
-          <code>user_stated_belief</code>, and <code>unresolved</code> epistemic states.</li>
+        <li><strong>Governance &amp; Discernment Kernel (<code>AGENTS.md</code>):</strong>
+          Operates under the five-stage cycle (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>),
+          keeping <code>observed</code>, <code>externally_verified</code>, <code>hypothesis</code>,
+          <code>user_stated_belief</code>, and <code>unresolved</code> epistemic states distinct.</li>
         <li><strong>File-Based Memory Tree &amp; Relational Knowledge Graph (<code>k3_memory_graph.py</code>):</strong>
           Stores human-readable Markdown entries with YAML front matter across <code>memory_tree/</code> (32 canonical
-          seed entries, 65 typed cross-branch relationships: <code>corrects</code>, <code>refines</code>,
-          <code>challenges</code>, <code>unresolved_with</code>, <code>exemplifies</code>, <code>derived_from</code>,
-          <code>supports</code>, <code>depends_on</code>) with a rebuildable graph index, structural concept-bridge cues,
-          and a closed-loop <code>staging/</code> promotion gate.</li>
+          seed entries, 65 typed cross-branch relationships such as <code>corrects</code>, <code>refines</code>,
+          <code>challenges</code>, and <code>unresolved_with</code>) with a rebuildable graph index and a closed-loop
+          <code>staging/</code> promotion gate. Upgraded with six mechanisms from the 11 foundational AI papers
+          (<a href="../origin/">Origin</a>): McCulloch&ndash;Pitts inhibitory veto + Minsky&ndash;Papert Order-$k$
+          &ldquo;One-in-a-Box&rdquo; conjunctions, Rosenblatt zero-sum $\gamma$-branch balance, Hopfield bipolar cleanup,
+          Sutton $\text{TD}(\lambda)$ path credit, LeCun GTN <code>logadd</code> confidence, and Vaswani $h=3$ multi-head
+          subspace retrieval with Krizhevsky LRN.</li>
         <li><strong>Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier (<code>k3_ontology_graph.py</code>):</strong>
-          Keeps deterministic ontology graph materialisation, 4 Horn inference rule families, and edge provenance
-          (<code>100%</code> canonicalisation, traceability, and verifiability) strictly separate from neural weights,
-          passing structured <code>[E#] Entity record</code> and <code>[P#] Relationship path</code> evidence and
-          verifying formal mathematical, code, and source-grounding constraints before emission.</li>
-        <li><strong>HybridAgent (Continuous <code>&lt;latent&gt;</code> Reasoning, Tools &amp; <code>K3NativeHybridLink</code>):</strong>
-          Enters continuous <code>&lt;latent&gt;</code> mode for 14 steps, executes live <code>&lt;search&gt;</code>
-          (arXiv, Wikipedia, DuckDuckGo, URL fetch) and sandboxed <code>&lt;python&gt;</code> (exact math, code verification,
-          and <code>matplotlib</code> / SVG chart generation), and maps 93-layer <code>7,168</code>-d hidden states through
-          <code>K3NativeHybridLink(7168 &rarr; 7168)</code> (50.36M parameters) and <code>K3ComboBridge(7168 &rarr; 384)</code>.</li>
+          Keeps deterministic ontology graphs, 4 Horn inference rules, Newell&ndash;Simon <code>CSm</code>/<code>VCt</code>
+          structural signature pruning, and edge provenance strictly separate from neural weights, supplying structured
+          <code>[E#]</code> entity records and <code>[P#]</code> relationship paths and verifying formal mathematical,
+          multiple-choice, and source-grounding constraints.</li>
+        <li><strong>HybridAgent Continuous <code>&lt;latent&gt;</code> Reasoning &amp; Live Tools (<code>k3_agent_engine.py</code>):</strong>
+          Runs 14 continuous <code>&lt;latent&gt;</code> reasoning steps (<code>HybridAgent-8B-Agentic</code> +
+          <code>K3NativeHybridLink</code> <code>7,168 &rarr; 7,168</code>), executes live <code>&lt;search&gt;</code>
+          (arXiv, Wikipedia, DuckDuckGo, URL fetch) and sandboxed <code>&lt;python&gt;</code> (exact math, unit tests,
+          <code>matplotlib</code> / SVG charts), and processes images through Kimi K3&rsquo;s 27-layer
+          <code>MoonViT3d</code> vision tower.</li>
         <li><strong>On-the-Fly Generative Compilation for Python &amp; Rust (<code>k3_generative_compiler.py</code>):</strong>
-          Seals partial code prefixes at every completed line boundary (<code>S_PY</code> for Python, <code>S_RS</code>
-          via in-memory <code>rustc 1.95.0</code> for Rust), catches syntax, arity, token-prefix shadowing, stagnant
-          loops, bisection signs, doctests, and Rust borrow/type errors mid-generation, and rolls back <code>past_kv</code>
-          to the offending statement immediately.</li>
-        <li><strong>93-Layer 2.78T MoE GPU/CPU Engine + Validated Rust Host Path &amp; Direction B Data-Movement Kernel (<code>libk3_gpu_experts.so</code>):</strong>
-          Layer 0 (dense KDA attention + MLP) followed by 92 Mixture-of-Experts layers (69 KDA + 24 MLA attention trunks,
-          896 routed 4-bit palette-mapped experts per layer, 92 shared experts, and 8 block-boundary snapshot aggregators),
-          27-layer <code>MoonViT3d + PatchMergerMLPV2</code> vision (<code>225 &times; 7,168</code>-d visual tokens),
-          8 validated Rust host-path crates (<code>slotcache</code>, <code>poolinit</code>, <code>supply</code>,
-          <code>copyq</code>, <code>routetable</code>, <code>planner</code>, <code>loader</code>, <code>engcfg</code> &mdash;
-          213/213 unit tests, <code>max_abs_diff = 0.0</code> parity), and five Direction B data-movement upgrades:
-          <strong>(a) Red-Blue Pebble Clean-Input <code>R4</code> Host-Shadow Admission</strong> (<code>written_back_R2 = 0</code> on cold NVMe reads and warm H2D hits; <code>25,533</code> <code>R4</code> clean drops saving <strong>448.0 GB</strong> of PCIe D2H traffic across the benchmark run),
-          <strong>(b) SpecMD Policy 3 Least-Stale (<code>LS</code>) + <code>access_group</code> Hit-First + Cross-Layer Router Lookahead</strong> (cutting pass-collision misses by <strong>11.8&times;&ndash;26.7&times;</strong> and reaching <strong>86.51%</strong> dynamic <code>CardPool</code> hit rate and <strong>95.29%</strong> overall VRAM hit rate with <code>70,443</code> cross-layer lookahead hits),
-          <strong>(c) FlashAttention-2 Warp-Coalesced Register Online-Softmax + Split-KV MLA Kernel</strong> (<strong>2.57&times;&ndash;6.84&times;</strong> faster on RTX 3090 with <code>0 B</code> dynamic shared memory and <code>max_abs_diff &le; 1.12e-7</code>),
-          <strong>(d) Eyeriss v1 4-Tier Energy &amp; Movement Ledger</strong> (reducing Eyeriss cost/request from <code>54.21</code> to <strong>7.73</strong>, a <strong>7.01&times;</strong> reduction), and
-          <strong>(e) Eyeriss v2 Adaptive Multi-Token Broadcast Coalescing</strong> (cutting cold dynamic expert fetches per pass by <strong>80.0%</strong>, from <code>920</code> to <code>184</code>).</li>
-        <li><strong>11-Pass Parallel Next-Concept Modeling (NCM) &amp; Native Web / VS Code Agent Surfaces:</strong>
-          Conditioned on a 96-slot dual prefix (<code>z_rh</code> + <code>z_bpe = wte(p) + K3ExpertBridge(h_k3_moe)</code>),
-          <code>NextConceptTransformer</code> (119.96M parameters) predicts 11 hierarchical VQ levels (<code>313</code> codes)
-          in <strong>11 parallel forward passes</strong>, and <code>K3LexicalPointerDecoder</code> + <code>K3-Native VQ-VAE</code>
-          (144.00M parameters) emit all 64 tokens of each window simultaneously across the Clover Web UI and native VS Code Agent extension.</li>
+          Seals partial Python and Rust code prefixes at statement boundaries during generation, invokes Python AST/doctest
+          checks and <code>rustc --edition=2021</code>, and rolls back the KV cache to the offending statement whenever a
+          syntax, type, borrow, or specification error appears.</li>
+        <li><strong>93-Layer 2.78T MoE GPU/CPU Engine, Validated Rust Host Path &amp; Direction B Data Movement (<code>libk3_gpu_experts.so</code>):</strong>
+          Executes Layer 0 (dense KDA attention + MLP) and 92 Mixture-of-Experts layers (69 KDA + 24 MLA attention trunks,
+          896 routed 4-bit experts per layer, 92 shared experts) alongside 8 Rust host-path libraries
+          (<code>slotcache</code>, <code>poolinit</code>, <code>supply</code>, <code>copyq</code>, <code>routetable</code>,
+          <code>planner</code>, <code>loader</code>, <code>engcfg</code> &mdash; 213/213 unit tests,
+          <code>max_abs_diff = 0.0</code> C++ vs. Rust parity) and five Direction B data-movement upgrades.</li>
+        <li><strong>11-Pass Parallel Next-Concept Modeling (NCM) &amp; Native Web / VS Code Surfaces (<code>k3_chat_server.py</code>):</strong>
+          <code>NextConceptTransformer</code> (119.96M parameters) and <code>K3-Native VQ-VAE</code> (144.00M parameters)
+          emit 64-token windows in 11 parallel passes across the Clover Web UI and native VS Code Agent extension.</li>
       </ol>
     </div>
   </section>
 
   <section class="band" id="hybrid-ncm-k3">
     <div class="wrap">
-      <h2>The machine we use, session &amp; token capacity, and real benchmarks</h2>
-      <p>All interactive GPU benchmarks below are measured on our <strong>8 &times; NVIDIA RTX 3090 server</strong>
-        (<code>192 GiB</code> total VRAM across 8 cards of 24 GiB each, NVLink bridges on pairs
-        <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> at <strong>51.9 GB/s</strong> one-way,
-        <code>2 &times; Intel Xeon Gold 6248R</code> 96 threads, <code>376 GiB</code> system RAM, Ubuntu 24.04, CUDA 12.6)
-        running checkpoint <code>e12_clover_k3_true_ha_ncm.pt</code> + <code>k3_ontology_graph.py</code> (with full 896-expert MoE routing,
-        unfrozen NCM + VQ-VAE decoding, and Ontology-Guided Neuro-Symbolic GraphRAG).
-        For the full step-by-step research logs and all cycle measurements, see
-        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a>,
-        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
-        and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/README.md">clover-kimi-k3/README.md</a>.</p>
+      <h2>What the 70-task evaluation actually shows</h2>
+      <p>A <code>100.0%</code> (<code>70 / 70</code>) pass rate on a mixed 70-task suite can easily be misread if it is
+        placed next to published full-benchmark leaderboard scores without context. Published leaderboards evaluate
+        thousands of questions on a single benchmark family (such as all 14,042 MMLU questions or all 1,319 GSM8K
+        problems). Clover&rsquo;s 70-task suite ([run_real_ai_benchmark_suite.py](https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py))
+        is a system-level test that combines 10-question slices of MMLU, GSM8K, and HumanEval with live Rust compilation,
+        structured output, private organizational ontology records, persistent session memory, and multi-hop tool tasks.</p>
+      <p>To make the comparison fair and unambiguous, we ran the <strong>exact same 70 prompt strings</strong> through
+        three standalone frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, and
+        <strong>Gemini 4 Argon</strong>, with zero tools and zero external memory/ontology) and through <strong>three
+        controlled arms of Clover&rsquo;s own underlying model</strong> on our freshly bootstrapped
+        <code>8 &times; NVIDIA RTX 3090</code> server, scoring every output with the <strong>exact same frozen scoring
+        harness</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
 
-      <h3>How the 8 &times; RTX 3090 GPUs are partitioned</h3>
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">All 93 Kimi K3 trunks and 896 routed experts per MoE layer are accessible across GPUs 0..5 via permanent VRAM + dynamic CardPool + 51.1 GB pinned RAM cache.</caption>
-          <thead>
-            <tr>
-              <th scope="col">GPUs</th>
-              <th scope="col">VRAM used</th>
-              <th scope="col">What runs on them</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><code>cuda:0 .. cuda:5</code> (6 GPUs)</th>
-              <td><strong>124.9 GiB</strong> (20.8 GiB / card)</td>
-              <td><strong>All 93 Kimi K3 Trunks</strong> (<code>trunk-0..92</code>, 52.7 GiB: 69 KDA + 24 MLA attention layers, 92 routers, 92 shared experts, 8 snapshot aggregators) + <strong>all 92 MoE Expert Layers (896 experts/layer routable via <code>top16_smart_896</code>:</strong> <code>2,576</code> permanent VRAM experts + <code>1,229&ndash;1,586</code> dynamic VRAM <code>CardPool</code> slots + <code>2,912</code> pinned RAM slots = 51.1 GB) + Layer-93 Final Tail (<code>libk3_gpu_experts.so</code>).</td>
-            </tr>
-            <tr>
-              <th scope="row"><code>cuda:6</code> (1 GPU)</th>
-              <td><strong>19.5 GiB</strong> / 24 GiB</td>
-              <td><strong>CloverK3AgentEngine (<code>e12_clover_k3_true_ha_ncm.pt</code>):</strong> <code>HybridAgent-8B-Agentic</code> planner + <code>LiveWebSearchTool</code> + <code>PythonTool</code> + <code>K3NativeHybridLink(7168&rarr;7168)</code> + <code>K3ComboBridge</code> + <code>K3ExpertBridge</code> (<code>tanh(&alpha;) = 0.6543</code>) + <code>NextConceptTransformer (NCM)</code> + unfrozen <code>vqvae.decoder</code> &amp; <code>K3LexicalPointerDecoder</code> + Kimi K3 <code>lm_head.weight</code>.</td>
-            </tr>
-            <tr>
-              <th scope="row"><code>cuda:7</code> (1 GPU)</th>
-              <td><strong>19.3 GiB</strong> / 24 GiB</td>
-              <td><strong>K3MultimodalChatEngine:</strong> Kimi K3&rsquo;s 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> (<code>225 &times; 7,168</code>-d visual tokens in 42 ms) + <code>Qwen3-VL-8B-Instruct + HybridLink</code> + NCM decoder.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="note" style="margin-top:0.85rem"><strong>What bounds response speed and token capacity on this machine:</strong>
-        Parallel NCM generation is the fastest stage (<code>260&ndash;292 tok/s</code> with <code>MBR8</code> on 1 GPU;
-        <code>17,869.8 tok/s</code> across 8 GPUs). End-to-end latency on this server is bounded by
-        (1) autoregressive window-plan generation in <code>HybridAgent-8B-Agentic</code> on a single <code>cuda:6</code> card
-        (<code>~18 ms/token</code>), (2) sequential stage handoff of the 93 Kimi K3 layers across <code>cuda:0..5</code> over
-        PCIe Gen 3 x16 / NVLink (<code>~1.26 s</code> per pass), and (3) the <code>192 GiB</code> total VRAM budget, which
-        holds all 93 trunks (<code>52.7 GiB</code>) plus the top <code>3,312</code> 4-bit experts (<code>58.1 GB</code>) in
-        GPU memory with zero disk I/O.</p>
-
-      <h3>Sessions, context limit, clubbing, and token capacity</h3>
-      <div class="table-wrap">
-        <table class="data">
-          <thead>
-            <tr>
-              <th scope="col">Capability</th>
-              <th scope="col">Limit / capacity on this machine</th>
-              <th scope="col">How it works without mixing sessions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">Context limit per session</th>
-              <td><strong>262,144 Kimi K3 tokens (256K)</strong><br>(<code>&gt; 250k</code> minimum)</td>
-              <td>Every session indexes conversation turns and uploaded files (PDF, DOCX, Markdown, CSV, JSON, code, image/video vision analysis, audio) into <code>~240</code>-token chunks (tokenized via <code>libk3tok.so</code>). While under 262,144 tokens, chunks stay verbatim; <strong>only when a session reaches the full 262,144-token limit</strong> does the engine automatically summarize older multi-paragraph blocks into clear, smaller sentences in simple words so key facts, numbers, and identifiers are retained without dropping history.</td>
-            </tr>
-            <tr>
-              <th scope="row">Concurrent sessions</th>
-              <td><strong>Unlimited stored sessions</strong>;<br><strong>up to 8 active sessions clubbed per batch</strong></td>
-              <td>Each browser tab/user gets an isolated <code>session_id</code> persisted to disk. Requests arriving within the <strong>1.0-second dynamic batching window</strong> (<code>BATCH_PAUSE_S = 1.0</code>) are automatically clubbed into one GPU batch.</td>
-            </tr>
-            <tr>
-              <th scope="row">Clubbing prompts without mixing</th>
-              <td><strong>Up to 8 prompts / batch</strong><br>(<strong>24&ndash;32 windows</strong> = <strong>1,536&ndash;2,048 K3 output tokens</strong> per batch pass)</td>
-              <td>Prompts are stacked along the <strong>batch dimension</strong> (<code>[B, seq_len]</code> with left-padding and per-row <code>attention_mask</code> in planning, and <code>[W_tot, 96, 384]</code> with isolated per-window vocabulary masks in NCM), never concatenated in sequence. Verified across clubbed batches with <strong>0 leaked tokens</strong> between sessions.</td>
-            </tr>
-            <tr>
-              <th scope="row">Input &amp; output token capacity</th>
-              <td><strong>16,000 input tokens / GPU</strong> (<strong>128,000 across 8 GPUs</strong>);<br><strong>1,536 K3 output tokens / response</strong> (24 windows &times; 64 tokens)</td>
-              <td>A single NCM window emits up to 64 Kimi K3 tokens in 11 passes. In 8-GPU DDP mode (<code>256</code> windows = <code>16,384</code> token capacity), all 8 RTX 3090s emit <strong>11,464 Kimi K3 tokens in 641.5 ms (17,869.8 emitted tok/s; 25,539.0 capacity tok/s)</strong>.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>Real measured benchmarks on this version (<code>e11</code> Native K3 + 93-Layer MoE + NCM)</h3>
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Measured on the 8 &times; RTX 3090 server (<code>gpu</code>) with all 93 Kimi K3 trunks and 92 MoE layers active, 8-candidate <code>MBR8</code> NCM decoding.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Workload / prompt</th>
-              <th scope="col">Plan &amp; tool stage</th>
-              <th scope="col">93-Layer K3 MoE + NCM (<code>MBR8</code>)</th>
-              <th scope="col">Total wall time &amp; output</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>Short factual Q&amp;A:</strong> <code>"the capital of france is"</code></th>
-              <td>0.90 s (<code>&lt;latent&gt;</code> 14 steps)</td>
-              <td>1.45 s (1.26 s 93-layer K3 + 0.19 s NCM)</td>
-              <td><strong>2.34 s</strong> (1 window, 7 K3 tokens: <em>&ldquo;The capital of France is Paris.&rdquo;</em>)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>SVG scene illustration:</strong> <code>"Then create one you like"</code> / <code>"Draw a space galaxy scene"</code> / <code>"Draw a futuristic city"</code></th>
-              <td>0.01 s (vector scene synthesis)</td>
-              <td>1.56 &ndash; 2.37 s (1.18&ndash;1.76 s 93-layer K3 + 0.38&ndash;0.60 s NCM)</td>
-              <td><strong>1.56 &ndash; 2.37 s</strong> (2&ndash;3 windows, 30&ndash;56 K3 tokens + inline downloadable <code>760&times;420</code> SVG illustration)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Chart &amp; graph generation:</strong> <code>"Plot a graph of sine and cosine waves"</code></th>
-              <td>0.72 s (<code>&lt;python&gt;</code> <code>matplotlib</code> 150 DPI PNG)</td>
-              <td>3.35 s (2.65 s 93-layer K3 at <strong>40.0 tok/s</strong> + 0.70 s NCM at <strong>151.4 tok/s</strong>)</td>
-              <td><strong>4.06 s</strong> (3 windows, 106 K3 tokens, <strong>26.1 tok/s E2E</strong> + inline <code>1064&times;584</code> PNG chart)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Verified Python code:</strong> <code>"what is the code to check prime numbers"</code></th>
-              <td>0.02 s (<code>&lt;python&gt;</code> execution verified in 19.5 ms)</td>
-              <td>5.09 s (4.03 s 93-layer K3 at <strong>76.6 tok/s</strong> + 1.06 s NCM at <strong>291.7 tok/s</strong>)</td>
-              <td><strong>5.11 s</strong> (5 windows, 309 K3 tokens, <strong>60.5 tok/s E2E</strong>: complete <code>is_prime</code> function + complexity)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Algorithm + complexity:</strong> <code>"Explain binary search and write a Python function..."</code></th>
-              <td>0.02 s (<code>&lt;python&gt;</code> execution verified in 19.4 ms)</td>
-              <td>4.85 s (3.83 s 93-layer K3 at <strong>71.5 tok/s</strong> + 1.02 s NCM at <strong>268.6 tok/s</strong>)</td>
-              <td><strong>4.87 s</strong> (5 windows, 274 K3 tokens, <strong>56.3 tok/s E2E</strong>: <code>binary_search</code> + $O(\log n)$ time / $O(1)$ space)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Multimodal image analysis:</strong> Hospital invoice / outage chart / battery diagram</th>
-              <td>4.05 &ndash; 4.78 s (<code>MoonViT3d</code> 42.9 ms + <code>Qwen3-VL + HybridLink</code>)</td>
-              <td>0.45 &ndash; 1.48 s (NCM <code>MBR8</code>)</td>
-              <td><strong>4.55 &ndash; 5.29 s</strong> (92&ndash;120 K3 tokens, <strong>21.2&ndash;24.2 tok/s E2E</strong> + <code>225 &times; 7,168</code>-d visual tokens)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Multi-step financial math:</strong> <code>"$5,000 at 6% compounded monthly for 10 years"</code></th>
-              <td>7.48 s (<code>&lt;python&gt;</code> exact <code>$9,096.98</code> + <code>&lt;latent&gt;</code> plan)</td>
-              <td>4.33 s (2.72 s 93-layer K3 at <strong>40.1 tok/s</strong> + 1.61 s NCM at <strong>67.6 tok/s</strong>)</td>
-              <td><strong>11.81 s</strong> (9 windows, 109 K3 tokens: formula, steps, and <code>$9,096.98</code> total)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Deep 11-window synthesis:</strong> <code>"What is Clover Kimi K3 and how does it work?"</code></th>
-              <td>15.71 s (<code>&lt;search&gt;</code> + <code>&lt;latent&gt;</code> 11-window plan)</td>
-              <td>7.80 s (5.55 s 93-layer K3 at <strong>45.9 tok/s</strong> + 2.25 s NCM at <strong>113.3 tok/s</strong>)</td>
-              <td><strong>24.51 s</strong> (11 windows, 255 K3 tokens across 4 structured architecture bullets)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Clubbed 4-session concurrent batch (full 93-layer K3 + Tools + NCM):</strong> 4 distinct sessions (geography, two-train math, GPU search, biology)</th>
-              <td>24.75 s batched planning + tools across all 4 sessions</td>
-              <td>10.67 s for all <strong>29 windows</strong> through 93-layer K3 (<strong>368 ms/window</strong>) + NCM</td>
-              <td><strong>35.42 s total = 8.86 s / session</strong> (29 windows, 482 K3 tokens, <code>clubbed_batch_size = 4</code>, 0 cross-talk)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Clubbed 8-prompt fast NCM batch (<code>bench_throughput_proof.py</code>):</strong> 8 prompts (15 windows = 691 K3 tokens)</th>
-              <td>6.73 s batched <code>&lt;latent&gt;</code> + plan (0.84 s/prompt)</td>
-              <td>0.60 s (1-cand, <strong>1,156.1 tok/s</strong>) / 3.00 s (<code>MBR8</code>, 120 candidate windows)</td>
-              <td><strong>7.33 s total = 0.92 s / prompt</strong> (<strong>94.25 tok/s E2E</strong>, 5.30&times; faster than sequential 38.85 s)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>8-GPU Parallel DDP NCM Ceiling (<code>torchrun --nproc_per_node=8</code>):</strong> 256 pre-encoded windows (16,384 token capacity)</th>
-              <td>Pre-encoded prefix batch (32 windows / GPU &times; 8 GPUs)</td>
-              <td><strong>641.5 ms (0.642 s)</strong> synchronized with <code>torch.distributed.barrier()</code></td>
-              <td><strong>17,869.8 emitted Kimi K3 tok/s</strong> (11,464 tokens) / <strong>25,539.0 capacity tok/s</strong> (16,384 tokens)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>Controlled 5-Way Ablation &amp; Standard AI Benchmarks (<code>e12</code> + Ontology GraphRAG, 8 &times; RTX 3090)</h3>
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Measured on the same test splits and harnesses across 1. Original Kimi K3, 2. K3 + HybridAgent, 3. K3 + NCM, 4. K3 + HybridAgent + NCM, and 5. K3 + HybridAgent + NCM + Ontology GraphRAG. Full 95% confidence intervals and provenance audits are in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a> and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Benchmark / Evaluation</th>
-              <th scope="col">1. Original K3</th>
-              <th scope="col">2. K3 + HA</th>
-              <th scope="col">3. K3 + NCM</th>
-              <th scope="col">4. K3 + HA + NCM</th>
-              <th scope="col">5. K3 + HA + NCM + Ontology</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>Priority 1 &mdash; Agentic &amp; Multi-Step Workflows</strong> (<code>HybridAgent QA</code> + <code>GSM8K</code>)</th>
-              <td>0.0%</td>
-              <td>83.3%</td>
-              <td>0.0%</td>
-              <td>83.3% (<code>16/20</code> GSM8K; <code>14/15</code> HA-QA)</td>
-              <td><strong>100.0%</strong> (<code>12/12</code> in 5-way; <strong>20/20 = 100.0%</strong> GSM8K; <strong>15/15 = 100.0%</strong> HA-QA)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Priority 2 &mdash; Coding &amp; Unit-Test Execution</strong> (<code>OpenAI HumanEval pass@1</code>)</th>
-              <td>0.0%</td>
-              <td>100.0%</td>
-              <td>0.0%</td>
-              <td>100.0% (<code>19/20 = 95.0%</code> HumanEval-20)</td>
-              <td><strong>100.0%</strong> (<code>10/10</code> in 5-way; <strong>20/20 = 100.0% pass@1</strong> on HumanEval-20)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Priority 3 &mdash; Knowledge Guardrail &amp; Long-Context</strong> (<code>MMLU-STEM</code> + <code>AA-LCR</code>, <code>N=15</code>)</th>
-              <td>66.7% (<code>10/15</code>)</td>
-              <td>80.0% (<code>12/15</code>)</td>
-              <td>53.3% (<code>8/15</code>)</td>
-              <td>80.0% (<code>16/20 = 80.0%</code> MMLU-20)</td>
-              <td><strong>100.0%</strong> (<code>15/15</code> in 5-way; <strong>20/20 = 100.0%</strong> on MMLU-20; <code>+33.3 pp</code> vs V1)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Section 4 &mdash; Held-Out WMT14, XSum Grounding &amp; NCM 11-Scale Hierarchy</strong></th>
-              <td>36.9% retention<br>(<code>37.2 s</code>)</td>
-              <td>83.5% retention<br>(<code>9.2 s</code>)</td>
-              <td><strong>93.7% retention</strong><br>(<strong>3.9 s</strong>, <code>9.5&times;</code> faster)</td>
-              <td><strong>93.7% retention</strong> (<strong>3.7 s</strong>; XSum grounding 56.0%)</td>
-              <td><strong>93.7% retention</strong> (<strong>2.2 s</strong>; WMT14-15 <strong>100.0%</strong>; XSum grounding <strong>75.5%</strong>; Sudoku-Easy <strong>100.0%</strong>; RQ3 Provenance <strong>100.0%</strong>)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Pooled Downstream Accuracy (<code>N=47</code>) &amp; GPU-s / Solved Task</strong></th>
-              <td>29.1%<br>(<code>484.2 GPU-s</code>)</td>
-              <td>85.9%<br>(<code>134.8 GPU-s</code>)</td>
-              <td>37.0%<br>(<code>188.4 GPU-s</code>)</td>
-              <td>88.0%<br>(<code>128.9 GPU-s</code>)</td>
-              <td><strong>100.0%</strong> (<code>47/47</code> with Generative Compilation; <code>+70.9 pp</code> vs V1; Extended HumanEval <strong>40/40 = 100.0%</strong>; Live Rust <code>rustc</code> <strong>5/5 = 100.0%</strong>; Collective Memory Held-Out <strong>12/12 = 100.0%</strong>; Direction B Data-Movement: <strong>95.29%</strong> overall VRAM hit rate, <strong>86.51%</strong> dynamic <code>CardPool</code> hit rate, <strong>25,533</strong> <code>R4</code> clean drops)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Standardized 70-Task Real AI Benchmark Suite (<code>N=70</code> across 7 Categories) &amp; Clean GitHub + HF Bootstrap (<code>1936d4eb0d53</code>)</strong></th>
-              <td colspan="4">Evaluated from a freshly bootstrapped <code>/opt/clover-k3/clover-framework</code> checkout and Hugging Face dataset sync (<a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>) after wiping <code>/home/usergpu</code>. Includes 11-Paper Foundations integration (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">docs/clover-foundations-to-clover-gpu-context.md</a>: stress FP <code>16/16 &rarr; 0/16</code>, tight-budget E2E <code>0/6 &rarr; 6/6</code>).</td>
-              <td><strong>70 / 70 = 100.00%</strong> (<strong>99.08%</strong> mean canonical score in <code>1,005.5 s</code>: MMLU <code>10/10</code>, GSM8K <code>10/10</code>, HumanEval + Live Rust <code>15/15</code>, Structured/WMT14/XSum <code>15/15</code>, Ontology <code>6/6</code>, Persistent Memory <code>6/6</code>, Agent Multi-Hop <code>8/8</code>)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>Head-to-Head on the Exact 70 Prompts: Frontier Reference Models vs. Controlled Clover Ablation</h3>
-      <p class="note"><strong>Methodological boundary:</strong> Clover&rsquo;s <code>99.08%</code> mean canonical score (<code>70/70</code> pass rate) across these 70 mixed tasks is <strong>not</strong> directly comparable to a frontier model&rsquo;s published full-benchmark leaderboard score (e.g., full 14,042-question MMLU, 1,319-question GSM8K, or 164-task HumanEval), because this suite samples 10 tasks per standard benchmark alongside structured output, private organizational ontology records, persistent session memory, and live tool execution. To compare fairly on the <strong>exact same 70 prompts</strong> with the <strong>exact same frozen scoring harness</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py">run_real_ai_benchmark_suite.py</a>), we ran standalone <strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, and <strong>Gemini 4 Argon</strong> (zero tools, zero external memory/ontology) alongside three controlled arms of Clover&rsquo;s own underlying model on <code>8 &times; RTX 3090</code> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Three-part head-to-head comparison on the exact same 70 prompts: (1) Accuracy by category &amp; public/private split, (2) Performance &amp; GPU-seconds per solved task, and (3) Clover-specific value over the same underlying model without Clover&rsquo;s mechanisms.</caption>
+          <caption class="note">Head-to-head evaluation on the exact same 70 prompts under Clover&rsquo;s frozen scoring harness: (1) Accuracy by category &amp; public/private split, (2) Performance &amp; GPU-seconds per solved task, and (3) Clover-specific value over the same underlying model without Clover&rsquo;s mechanisms.</caption>
           <thead>
             <tr>
               <th scope="col">Category / Metric (<code>N=70</code>)</th>
@@ -491,6 +274,15 @@
               <td><code>50 / 58</code> (86.21%)</td>
             </tr>
             <tr>
+              <th scope="row"><strong>Ontology + Memory Subset</strong> (<code>12</code> tasks: Cats 5&ndash;6)</th>
+              <td><code>3 / 12</code> (25.00%)</td>
+              <td><code>6 / 12</code> (50.00%)</td>
+              <td><strong><code>12 / 12</code> (100.00%)</strong></td>
+              <td><code>7 / 12</code> (58.33%)&ddagger;</td>
+              <td><code>8 / 12</code> (66.67%)&ddagger;</td>
+              <td><code>7 / 12</code> (58.33%)&ddagger;</td>
+            </tr>
+            <tr>
               <th scope="row"><strong>Overall Accuracy</strong> (All <code>70</code> tasks: Strict / GSM8K-Norm)</th>
               <td><strong><code>33 / 70</code> (47.14%)</strong><br><small>mean score 49.89%</small></td>
               <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 83.26%</small></td>
@@ -519,10 +311,72 @@
         </table>
       </div>
 
+      <h3>Three clear conclusions for readers and AI agents</h3>
+      <dl class="kv kv--wide" style="margin-top:1rem">
+        <div>
+          <dt>1. Frontier models are stronger raw models on public tasks (<code>96.6%&ndash;98.3%</code> vs. <code>51.7%</code>)</dt>
+          <dd>On the 58 public tasks (MMLU, GSM8K, Python &amp; Rust coding, Sudoku, sentence reconstruction, summarization,
+            and multi-hop math), standalone <strong>Claude Opus 5.5</strong> (<code>57/58 = 98.28%</code>) and
+            <strong>GPT-6 Astra</strong> (<code>56/58 = 96.55%</code>) solve almost every problem purely in-weights with
+            zero tools. When Clover&rsquo;s own underlying model runs without Clover&rsquo;s layers (<strong>Arm 0</strong>),
+            it scores only <code>30/58</code> (<code>51.72%</code>).</dd>
+        </div>
+        <div>
+          <dt>2. Standalone frontier models miss private tasks because of missing Context, not missing intelligence</dt>
+          <dd>In Categories 5 and 6, five tasks ask about private organizational records (<code>Harbourside Council Mill Road</code>,
+            <code>Payments Database Postmortem #209</code>, <code>Aurora Distributed Storage v4.2</code>) and prior K3
+            engineering measurements that are not in the prompt text. All three frontier models rightly refused to invent
+            those figures. No model can answer questions about a system&rsquo;s private reality without Context.</dd>
+        </div>
+        <div>
+          <dt>3. Clover&rsquo;s value is the <code>+52.86 pp</code> system lift (<code>33/70 &rarr; 70/70</code>) on local open hardware</dt>
+          <dd>Adding <code>&lt;python&gt;</code>/<code>&lt;search&gt;</code> tool orchestration and statement-boundary
+            Python/Rust Generative Compilation (<strong>Arm 1</strong>) lifts Clover&rsquo;s local model from
+            <code>33/70</code> to <code>57/70</code> (<code>+24 tasks</code>: fixing GSM8K <code>2/10 &rarr; 10/10</code>,
+            Sudoku <code>0/5 &rarr; 5/5</code>, Agent QA <code>4/8 &rarr; 8/8</code>, and 3 broken Python/Rust programs
+            <code>12/15 &rarr; 15/15</code>). Adding Ontology GraphRAG and the Persistent Memory Graph
+            (<strong>Arm 2</strong>) adds the remaining <code>+13 tasks</code> (<code>57/70 &rarr; 70/70</code>: MMLU
+            <code>7/10 &rarr; 10/10</code>, XSum grounding <code>1/5 &rarr; 5/5</code>, Ontology <code>2/6 &rarr; 6/6</code>,
+            Memory <code>4/6 &rarr; 6/6</code>) while cutting GPU compute per solved task by <strong>2.04&times;</strong>
+            (<code>234.0 &rarr; 114.5 GPU-s</code>).</dd>
+        </div>
+      </dl>
+
+      <h3>How the 8 &times; RTX 3090 GPUs are partitioned</h3>
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Hardware layout on our 8 &times; NVIDIA RTX 3090 server (<code>192 GiB</code> total VRAM, NVLink pairs <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> at <code>51.9 GB/s</code>, <code>2 &times; Intel Xeon Gold 6248R</code>, <code>376 GiB</code> system RAM).</caption>
+          <thead>
+            <tr>
+              <th scope="col">GPUs</th>
+              <th scope="col">VRAM used</th>
+              <th scope="col">What runs on them</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><code>cuda:0 .. cuda:5</code> (6 GPUs)</th>
+              <td><strong>124.9 GiB</strong> (20.8 GiB / card)</td>
+              <td><strong>All 93 Kimi K3 Trunks</strong> (<code>trunk-0..92</code>, 52.7 GiB: 69 KDA + 24 MLA attention layers, 92 routers, 92 shared experts, 8 snapshot aggregators) + <strong>all 92 MoE Expert Layers (896 experts/layer routable:</strong> <code>2,576</code> permanent VRAM experts + <code>1,229</code> dynamic VRAM <code>CardPool</code> slots + <code>2,912</code> pinned RAM slots = 51.1 GB) + Layer-93 Final Tail (<code>libk3_gpu_experts.so</code>).</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>cuda:6</code> (1 GPU)</th>
+              <td><strong>19.5 GiB</strong> / 24 GiB</td>
+              <td><strong>CloverK3AgentEngine (<code>e12_clover_k3_true_ha_ncm.pt</code>):</strong> <code>HybridAgent-8B-Agentic</code> planner + <code>LiveWebSearchTool</code> + <code>PythonTool</code> + <code>K3NativeHybridLink(7168&rarr;7168)</code> + <code>NextConceptTransformer (NCM)</code> + <code>K3-Native VQ-VAE</code> &amp; <code>K3LexicalPointerDecoder</code>.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>cuda:7</code> (1 GPU)</th>
+              <td><strong>19.3 GiB</strong> / 24 GiB</td>
+              <td><strong>K3MultimodalChatEngine:</strong> Kimi K3&rsquo;s 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> (<code>225 &times; 7,168</code>-d visual tokens in 42 ms) + <code>Qwen3-VL-8B-Instruct + HybridLink</code> + NCM decoder.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <h3>Direction B &mdash; Five Data-Movement Upgrades in Production Clover (<code>8 &times; RTX 3090</code>)</h3>
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Measured on real 92-layer Kimi K3 traces (<code>43,240</code> layer calls = <code>470</code> passes), standalone RTX 3090 CUDA benchmarks (<code>bench_dm_cycles_gpu.cu</code>), and live 93-layer production server runs across all 6 benchmark suites (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-data-movement-direction-b-context.md">docs/clover-data-movement-direction-b-context.md</a>).</caption>
+          <caption class="note">Measured on real 92-layer Kimi K3 traces (<code>43,240</code> layer calls = <code>470</code> passes), standalone RTX 3090 CUDA benchmarks (<code>bench_dm_cycles_gpu.cu</code>), and live 93-layer production server runs (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-data-movement-direction-b-context.md">docs/clover-data-movement-direction-b-context.md</a>).</caption>
           <thead>
             <tr>
               <th scope="col">Study &amp; Mechanism</th>
@@ -542,7 +396,7 @@
               <th scope="row"><strong>2. SpecMD</strong> (Hoang et al., arXiv:2602.03921)<br><code>Policy 3 Least-Stale (LS) + Hit-First + Cross-Layer Lookahead</code></th>
               <td><code>Heat-48</code> pinned Pass-0 prefill experts and evicted upcoming layers ($l_e &gt; l_{\text{cur}}$), causing <code>9.35%&ndash;24.53%</code> pass-collision misses; <code>vram_mask==2</code> charged to cold budget.</td>
               <td>3-tier Least-Stale (<code>LS</code>) eviction in <code>libslotcache.so</code> + two-pass Hit-First in <code>libsupply.so</code> + free <code>vram_mask==2</code> + Layer $L+1$ lookahead &amp; async H2D prefetch.</td>
-              <td>Pass-collision misses cut by <strong><code>11.8&times;&ndash;26.7&times;</code></strong> (<code>24.53% &rarr; 0.92%</code>); live server dynamic <code>CardPool</code> hit rate reached <strong><code>86.51%</code></strong> and overall VRAM hit rate reached <strong><code>95.29%</code></strong> with <strong><code>70,443</code></strong> cross-layer lookahead hits.</td>
+              <td>Pass-collision misses cut by <strong><code>11.8&times;&ndash;26.7&times;</code></strong> (<code>24.53% &rarr; 0.92%</code>); live server dynamic <code>CardPool</code> hit rate reached <strong><code>86.09%&ndash;86.51%</code></strong> and overall VRAM hit rate reached <strong><code>95.22%&ndash;95.29%</code></strong>.</td>
             </tr>
             <tr>
               <th scope="row"><strong>3. FlashAttention-1 &amp; 2</strong> (Dao et al., 2022/2023)<br><code>Warp-Coalesced Register Online-Softmax + Split-KV MLA</code></th>
@@ -554,7 +408,7 @@
               <th scope="row"><strong>4. Eyeriss v1</strong> (Chen et al., ISCA 2016 / JSSC 2017)<br><code>4-Tier Storage &amp; Energy Movement Ledger</code></th>
               <td>No per-tier byte/energy accounting across GPU SRAM ($1\times$), VRAM ($2\times$), Pinned Host RAM ($6\times$), and NVMe ($200\times$).</td>
               <td>Live <code>k3_full93_dm_stats</code> ledger in <code>libk3_gpu_experts.so</code> exposed via <code>/api/health</code> and <code>k3_data_movement_ledger.py</code>.</td>
-              <td>Eyeriss weighted movement cost per expert request dropped from <code>54.205</code> to <strong><code>7.731</code></strong> across the full benchmark run (a <strong><code>7.01&times;</code></strong> reduction).</td>
+              <td>Eyeriss weighted movement cost per expert request dropped from <code>54.205</code> to <strong><code>7.731&ndash;8.998</code></strong> across the full benchmark runs (a <strong><code>6.0&times;&ndash;7.0&times;</code></strong> reduction).</td>
             </tr>
             <tr>
               <th scope="row"><strong>5. Eyeriss v2</strong> (Chen et al., IEEE JETCAS 2019)<br><code>Adaptive Multi-Token Broadcast Coalescing</code></th>

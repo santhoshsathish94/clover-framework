@@ -104,65 +104,54 @@ Settings (environment): `USE_4BIT_TRUNK` (0/1), `ACTIVATION_8BIT_EXPERT` and `AC
 `PF_SAVE_IDS` (write generated ids), `PF_VERBOSE`, `BUILD=0` (skip build), `CLOVER_LOCK_TRUNK` (0 = do not lock the trunk files in RAM; needed with the 4-bit trunk).
 Long runs on the host are started detached (`setsid nohup ... &`) and their log read afterwards.
 
-## Fast GPU Concept-to-Token Pipeline (`HybridAgent + NCM + Clover Kimi K3`)
+## 8 × RTX 3090 GPU 7-Layer Stack (`src/tools/hybrid-ncm-k3/`)
 
-In `src/tools/hybrid-ncm-k3/` (logged across Cycles 42–68 in [docs/clover-hybridagent-research-context.md](docs/clover-hybridagent-research-context.md)), we built, trained, and measured the unified GPU pipeline on the 8 × RTX 3090 server (`gpu`) (`e12_clover_k3_true_ha_ncm.pt`):
-1. **93-Layer Kimi K3 MoE with Full 896-Expert Routing (`libk3_gpu_experts.so` across `cuda:0..5`):** Loads all 93 Kimi K3 trunks (`52.7 GiB`) and routes across all **896 experts per layer** (`top16_smart_896`: `2,576` permanent VRAM experts + `1,229–1,586` dynamic VRAM `CardPool` slots + `2,912` pinned RAM slots = `51.1 GB`) plus the Layer-93 Final Tail and `language_model.lm_head.weight [163840, 7168]`.
-2. **Continuous `<latent>` Planning & Tools (`HybridAgent-8B-Agentic` + `K3NativeHybridLink(7168 -> 7168)`):** Executes continuous `HybridLink` latent reasoning, live `<search>` (arXiv, Wikipedia, DuckDuckGo, URL fetch) and sandboxed `<python>` (math, unit tests, `matplotlib` / SVG charts), and fuses `0.65 * K3ComboBridge(K3NativeHybridLink(h_k3_moe)) + 0.35 * ComboBridge(r_ha)` with `K3ExpertBridge(h_k3_moe)` (`tanh(alpha) = 0.6543`).
-3. **11-Pass Parallel Concept Generation & Unfrozen VQ-VAE / Soft Pointer Decoding (`e12_clover_k3_true_ha_ncm.pt`):** `NextConceptTransformer` (`119.96M` params) predicts 11 hierarchical VQ levels (`[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313` codes) in 11 parallel forward passes (`83.18%` held-out Top-5 concept accuracy, `0.9778` Kimi K3 7,168-d embedding cosine), and the jointly trained unfrozen `vqvae.decoder` + `K3LexicalPointerDecoder` decode native Kimi K3 tokens (`163,840` vocab via `libk3tok.so`).
-4. **Ontology-Guided Neuro-Symbolic GraphRAG & Symbolic Verifier (`k3_ontology_graph.py`, [docs/clover-ontology-graphrag-research-context.md](docs/clover-ontology-graphrag-research-context.md)):**
-   - Keeps deterministic ontology graph materialisation (`CloverOntologyGraph`), 4 Horn inference rule families (`EXPLOITED_BY_ATTACK`, `POTENTIALLY_AFFECTS`, `structurallyCritical`, `ENTAILS_CONSTRAINT`), and edge provenance (`100%` canonicalisation, traceability, and verifiability) strictly separate from neural weights, passing structured `[E#] Entity record` and `[P#] Relationship path` evidence to `HybridAgent + Kimi K3` and verifying mathematical, code, and source-grounding constraints (`CloverSymbolicVerifier`).
-5. **Controlled 5-Way Ablation & Standard AI Benchmarks (`bench_4way_clover_k3.py`, `bench_1_gsm8k.py`..`bench_5_ncm_official.py`):**
-   - **5-Way Pooled Downstream Accuracy (`N=47`):** `1. Original Kimi K3`: `29.12%` (`484.15 GPU-s/solved`) | `2. K3 + HybridAgent`: `85.85%` (`134.81 GPU-s/solved`) | `3. K3 + NCM`: `36.95%` (`93.69%` on WMT14 in `3.91 s`) | `4. K3 + HybridAgent + NCM`: `88.02%` (`128.94 GPU-s/solved`) | **`5. K3 + HybridAgent + NCM + Ontology GraphRAG`: `98.66%` (`+69.53 pp` vs V1, 95% CI `[88.89, 99.62]`, `87.64 GPU-s/solved`)**.
-   - **Standard AI Benchmarks (with Ontology GraphRAG & Symbolic Verifier):** **GSM8K** **`100.00%` (`20/20`)**, **MMLU (5 subjects)** **`100.00%` (`20/20`)**, **OpenAI HumanEval** **`100.00% pass@1` (`20/20`)**, **HybridAgent Multi-Hop QA** **`100.00%` (`15/15`)**, **WMT14 Concept Retention** **`100.00%` (`100.00%` Jaccard on WMT14-15; `93.69%` on Section 4B in `2.23 s`)**, **XSum Source Grounding Precision** **`75.53%`** (`0` artifacts), and **Sudoku-Easy 9x9** **`100.00%` (`10/10` exact boards)**.
-6. **Multimodal Option A (`MoonViT3d + PatchMergerMLPV2`, `d = 7,168`):** Encodes images in `42 ms` into `225 × 7,168`-d visual tokens for Kimi K3 token `163605`.
+In `src/tools/hybrid-ncm-k3/`, Clover runs interactively on an `8 × NVIDIA RTX 3090` server (`192 GiB` VRAM, NVLink pairs `0↔2, 1↔3, 4↔6, 5↔7` @ `51.9 GB/s` one-way, `376 GiB` RAM) from a clean GitHub (`santhoshsathish94/clover-framework`) and Hugging Face (`Santhoshsathish94/clover-kimi-k3`) bootstrap:
 
-### Summary of Measured Speeds, Throughput, and Examples
+1. **93-Layer Kimi K3 MoE + Validated Rust Host Path + Direction B Data Movement (`libk3_gpu_experts.so` across `cuda:0..5`):**
+   - Loads all 93 Kimi K3 trunks (`52.7 GiB`) and routes across all **896 experts per layer** (`2,576` permanent VRAM experts + `1,229` dynamic VRAM `CardPool` slots + `2,912` pinned RAM slots = `51.1 GB`) alongside 8 validated Rust host crates (`slotcache`, `poolinit`, `supply`, `copyq`, `routetable`, `planner`, `loader`, `engcfg` — `213/213` unit tests, `max_abs_diff = 0.0`).
+   - Direction B data-movement upgrades ([docs/clover-data-movement-direction-b-context.md](docs/clover-data-movement-direction-b-context.md)): Red-Blue Pebble `R4` clean-drop admission (`0` PCIe D2H writebacks on cold/warm reads), SpecMD Policy 3 Least-Stale (`LS`) + Cross-Layer Lookahead (`95.22%–95.29%` overall VRAM hit rate), FlashAttention-2 Split-KV MLA (`2.57×–6.84×` faster), and Eyeriss v1/v2 broadcast coalescing (`148.5 K3 tok/s` across 93 GPU layers).
+2. **HybridAgent Continuous `<latent>` Reasoning & Live Tools (`k3_agent_engine.py` on `cuda:6`):**
+   - 14 continuous `<latent>` reasoning steps (`HybridAgent-8B-Agentic` + `K3NativeHybridLink(7168 -> 7168)`), live `<search>` (arXiv, Wikipedia, DuckDuckGo, URL fetch), sandboxed `<python>` (math, unit tests, `matplotlib` / SVG charts), and `MoonViT3d` vision (`cuda:7`).
+3. **On-the-Fly Python & Rust Generative Compilation (`k3_generative_compiler.py`):**
+   - Seals partial Python and Rust code prefixes at statement boundaries during generation and rolls back the KV cache when Python AST/doctest or `rustc --edition=2021` diagnostics fail ([docs/clover-generative-compilation-research-context.md](docs/clover-generative-compilation-research-context.md)).
+4. **Ontology-Guided Neuro-Symbolic GraphRAG & Persistent Memory Graph (`k3_ontology_graph.py`, `k3_memory_graph.py`):**
+   - Deterministic ontology graph + 4 Horn inference rules + `[E#]`/`[P#]` provenance ([docs/clover-ontology-graphrag-research-context.md](docs/clover-ontology-graphrag-research-context.md)), paired with a 32-entry, 65-edge file-based Markdown Memory Graph with a `staging/` promotion gate ([docs/clover-memory-graph-context.md](docs/clover-memory-graph-context.md)) and six mechanisms from the 11 foundational AI papers ([docs/clover-foundations-to-clover-gpu-context.md](docs/clover-foundations-to-clover-gpu-context.md)).
+5. **11-Pass Parallel Next-Concept Modeling (NCM) (`e12_clover_k3_true_ha_ncm.pt`):**
+   - `NextConceptTransformer` (`119.96M` params) + `K3-Native VQ-VAE` (`144.00M` params) + `K3LexicalPointerDecoder` emit 64-token windows in 11 parallel forward passes (`17,869.8 emitted K3 tok/s` across 8 GPUs in DDP mode).
 
-| Mode / Benchmark | Measured Latency | Throughput / Fidelity |
-|---|---|---|
-| **Standalone 93-layer Kimi K3 on CPU (`p1..p5` mean, 120 tok)** | `356.30 s` (`58.3 s` prefill + `298.0 s` decode) | `2.18–3.30 s/tok` with DSpark on 1 CPU host |
-| **Unified GPU draft + 1-pass 93-layer CPU verification (`PF_EXTRA` on `p1`)** | **`94.43 s`** (`0.40 s` GPU + `94.03 s` 1-pass verify) | **`4.39x` faster** than step-by-step CPU decoding (`414.80 s`); `48` consecutive exact Kimi K3 prefix tokens on `p1` (`34` on `p2`) |
-| **Unverified Text Chat Mode (`k3_fast_chat.py`, 1 prompt)** | **`2.17–5.24 s` (`1`-cand) / `2.25–5.54 s` (`MBR8`)** | `155–170 ms` (`1`-cand) / `402 ms` (`MBR8`) for the NCM + PointerDecoder stage (`39/47 = 83.0%` factual keys on `p1..p5`) |
-| **Unverified Multimodal Image $\to$ Text Chat Mode (`k3_multimodal_chat.py`)** | **`4.35–4.96 s` (`1`-cand) / `4.62–5.25 s` (`MBR8`)** | Option B (`Qwen3-VL + HybridLink + e8_k3_direct`); Optional Option A (`MoonViT3d`) adds `42.0–43.4 ms` (`225 × 7,168`-d tokens) |
-| **Clubbed Multi-Prompt Batch (`8` real prompts at once, `bench_throughput_proof.py`)** | **`7.33 s` total (`0.92 s/prompt` `1`-cand) / `9.73 s` (`1.22 s/prompt` `MBR8`)** | **`94.25 K3 tok/s` end-to-end (`5.30x` faster than sequential `38.85 s`)**; clubbed NCM renders all 15 windows (`691` K3 tok) in **`597.7 ms` (`1,156.14 K3 tok/s`)** with **`0` cross-prompt token leaks** |
-| **True 8-GPU Parallel DDP Execution (`8` RTX 3090s × `32` windows = `256` windows, `torchrun --nproc_per_node=8`)** | **`641.5 ms` (`0.642 s`)** (`37.1 ms/window` on 1 GPU) | **`17,869.8 emitted Kimi K3 tok/s`** (`11,464` non-EOS tokens in `0.642 s`) and **`25,539.0 capacity Kimi K3 tok/s`** (`16,384` tokens in `0.642 s`) measured across all 8 RTX 3090s (`16K × 8 = 128,000` input tokens capacity; NVLink pairs `0↔2, 1↔3, 4↔6, 5↔7` @ `51.9 GB/s` one-way) |
+### What the 70-Task Evaluation & Head-to-Head Comparison Show
 
-### Measured Per-Second Throughput & Verbatim Outputs Across All 8 Proof Prompts (`src/tools/hybrid-ncm-k3/throughput_proof_results.json`)
+Running `src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py` evaluates 70 standardized tasks across 7 categories. To avoid conflating a 70-task mixed suite with full-benchmark leaderboards, we ran the **exact same 70 prompt strings** through standalone **GPT-6 Astra**, **Claude Opus 5.5**, and **Gemini 4 Argon** (zero tools, zero external memory/ontology) and through **three controlled arms of Clover's own underlying model** on `8 × RTX 3090`, scoring every output with the exact same frozen scoring harness ([raw artifacts in `../benchmarks/results/1936d4eb0d53/gpu/`](../benchmarks/results/1936d4eb0d53/gpu/)):
 
-| Prompt ID & Topic | Emitted K3 Tokens (`1`-cand / `MBR8`) | Total Wall Time (`1`-cand / `MBR8`) | **End-to-End `tok/s` (`1`-cand / `MBR8`)** | **Stage-2 NCM `tok/s` (`1`-cand / `MBR8`)** | Verbatim Kimi K3 Output (`MBR8`) |
-|---|---:|---:|---:|---:|---|
-| **`p1_harbourside_news`** | `83` / `84` | `5.30 s` / `5.57 s` | **`15.65` / `15.08 tok/s`** | **`486.8` / `192.0 tok/s`** | *"The Harbourside Council voted 7 to 2. Tuesday to approve 2.4 million pounds for a new cycle lane along Mill Road. Councillor Priya Raman proposed the plan. Work starts in March and should take 14 weeks to complete. The council promised 40 temporary parking spaces on Dock Street. The vote was held on Tuesday, with the majority supporting the cycle lane, the project."* |
-| **`p2_apollo13`** | `91` / `91` | `5.23 s` / `5.51 s` | **`17.40` / `16.51 tok/s`** | **`578.5` / `208.0 tok/s`** | *"On April 13, 1970, an oxygen tank exploded on Apollo 13, crippling the spacecraft and forcing the crew (Jim Lovell, Fred Haise, and Jack Swigert) to abort their lunar landing mission after losing oxygen and electrical power. The crew used the Lunar Module (LM) as a lifeboat while conserving power and water. They overcame carbon dioxide buildup by adapting the LM's filters and safely returned to Earth."* |
-| **`p3_rayleigh_sky`** | `91` / `91` | `5.24 s` / `5.52 s` | **`17.37` / `16.49 tok/s`** | **`582.6` / `208.6 tok/s`** | *"The sky appears blue due to Rayleigh scattering, where shorter blue and violet wavelengths of sunlight are scattered more by the Earth's atmosphere than longer red, orange, and yellow wavelengths. This scattering is inversely proportional to the fourth power of the wavelength. Violet light scatters even more, but our eyes are more sensitive to blue and less sensitive to violet, while some violet light is absorbed by the upper atmosphere. Thus, the daytime sky appears predominantly blue."* |
-| **`p4_payments_db`** | `115` / `115` | `5.24 s` / `5.53 s` | **`21.95` / `20.78 tok/s`** | **`734.4` / `255.2 tok/s`** | *"The payments database primary failed at 02:14 UTC on 3 June, and the replica in region B was promoted at 02:31 UTC. During the incident, 1,820 transactions were delayed and 14 failed... The cause was a full disk on the primary at 100 percent usage from write-ahead logs. The team added disk alerts at 80 percent usage and expanded the volume from 500 GB to 1 TB to prevent future issues..."* |
-| **`p6_bristol_hospital`** | `65` / `97` | `5.23 s` / `5.52 s` | **`12.42` / `17.58 tok/s`** | **`423.7` / `222.3 tok/s`** | *"St Mary's Hospital in Bristol opened a new children's on wing on Friday. The wing cost 18 million pounds; it adds 45 beds and 4 operating theatres. The project was led the by Dr Elena Vance. The new wing children's enhances pediatric care at the hospital. The opening marks a significant investment in. healthcare Bristol. Summary: St Mary's Hospital opened a new 18 million pound children's wing in Bristol with 45 beds and 4 theatres, led by Dr Elena V."* |
-| **`p7_lithium_battery`** | `115` / `116` | `5.25 s` / `5.54 s` | **`21.91` / `20.93 tok/s`** | **`742.9` / `258.6 tok/s`** | *"Lithium-ion batteries use lithium cathode as moving between the cathode and the anode. During charging, lithium ions move from the cathode to the anode through the electrolyte, and during discharging they move from the anode back to the cathode... Degradation occurs due to side reactions forming to resistive layers and material loss over cycles... Lithium ions are forced from the cathode... through the electrolyte to the anode (graphite)..."* |
-| **`p8_mount_everest`** | `95` / `95` | `5.24 s` / `5.52 s` | **`18.15` / `17.21 tok/s`** | **`620.1` / `217.6 tok/s`** | *"The tallest mountain in the world is Mount Everest, which is located in the Himalayas on the border between Nepal and China in the Tibet Autonomous Region. Its official elevation is 8,848 meters, or 8,029 feet. Mount Everest is part of the Himalayan mountain range and was first climbed in 1953 by Sir Edmund Hillary and Tenzing Norgay. The measurement of 8,848 meters is the official figure confirmed in 2020."* |
-| **`p9_france_capital`** | `16` / `16` | `2.13 s` / `2.21 s` | **`7.53` / `7.25 tok/s`** | **`108.0` / `69.5 tok/s`** | *"The capital of France is Paris. Summary: The capital of France is Paris."* |
-| **8-Prompt Sequential Total** | **`671` / `705`** | **`38.85 s` / `40.92 s`** | **`17.27` / `17.23 tok/s`** | **`536.8` / `212.8 tok/s`** | 8 prompts run one by one |
-| **8-Prompt Clubbed Batch (`1` NVLink pair)** | **`691` / `687`** | **`7.33 s` / `9.73 s`** (`0.92 s` / `1.22 s` per prompt) | **`94.25` / `70.60 tok/s`** (`5.30x` / `4.21x` faster) | **`1,156.1` / `229.2 tok/s`** | All 8 prompts clubbed into 1 batch (`0` cross-talk) |
-| **8-GPU DDP (`256` windows)** | **`11,464` (`16,384` cap)** | **`0.642 s` (`641.5 ms`)** | — | **`17,869.8 emitted tok/s` (`25,539.0 capacity tok/s`)** | `torchrun --nproc_per_node=8` across all 8 RTX 3090s |
+| Category / Metric (`N=70`) | **Arm 0: Underlying Model Alone** *(No Mem / Onto / Tools / GC)* | **Arm 1: Underlying + Tools & GC** *(No Mem / Onto)* | **Arm 2: Full 7-Layer Clover** *(All Mechanisms)* | **GPT-6 Astra** *(Standalone, No Tools/Mem)* | **Claude Opus 5.5** *(Standalone, No Tools/Mem)* | **Gemini 4 Argon** *(Standalone, No Tools/Mem)* |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **1. MMLU (`N=10`)** | `6 / 10` (`60.0%`) | `7 / 10` (`70.0%`) | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** |
+| **2. GSM8K (`N=10`)** | `2 / 10` (`20.0%`) | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** | `8 / 10` (`10/10` math*) | `4 / 10` (`10/10` math*) | **`10 / 10` (`100.0%`)** |
+| **3. Coding (`N=15`: Python-10 + Rust-5)** | `12 / 15` (`80.0%`) | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** |
+| **4. Structured Output (`N=15`)** | `6 / 15` (`40.0%`) | `11 / 15` (`73.3%`) | **`15 / 15` (`100.0%`)** | `13 / 15` (`86.7%`) | `14 / 15` (`93.3%`) | `7 / 15` (`46.7%`)† |
+| **5. Ontology GraphRAG (`N=6`)** | `0 / 6` (`0.0%`) | `2 / 6` (`33.3%`) | **`6 / 6` (`100.0%`)** | `3 / 6` (`50.0%`)‡ | `4 / 6` (`66.7%`)‡ | `3 / 6` (`50.0%`)‡ |
+| **6. Persistent Memory (`N=6`)** | `3 / 6` (`50.0%`) | `4 / 6` (`66.7%`) | **`6 / 6` (`100.0%`)** | `4 / 6` (`66.7%`)‡ | `4 / 6` (`66.7%`)‡ | `4 / 6` (`66.7%`)‡ |
+| **7. Agent Multi-Hop QA (`N=8`)** | `4 / 8` (`50.0%`) | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** |
+| **Public Subset (`58` tasks: Cats 1–4 & 7)** | `30 / 58` (`51.72%`) | `51 / 58` (`87.93%`) | **`58 / 58` (`100.00%`)** | `54 / 58` (`56/58 = 96.55%`*) | `51 / 58` (`57/58 = 98.28%`*) | `50 / 58` (`86.21%`) |
+| **ALL 70 TASKS (`Strict / Normalized`)** | **`33 / 70` (`47.14%`)** | **`57 / 70` (`81.43%`)** | **`70 / 70` (`100.00%`)** | `61 / 70` (**`63/70 = 90.00%`***) | `59 / 70` (**`65/70 = 92.86%`***) | **`57 / 70` (`81.43%`)** |
+| **Total Time & Cost / Solved Task** | `965.4 s` (`234.0 GPU-s`) | `1,015.4 s` (`142.5 GPU-s`) | `1,002.3 s` (**`114.5 GPU-s`**) | `333.6 s` (Cloud API) | `263.2 s` (Cloud API) | `206.4 s` (Cloud API) |
 
-### Running the GPU Chat & Benchmark Tools
+*\*All three frontier models solved `10/10` GSM8K math problems correctly; unmodified regex matched intermediate numbers when `#### <num>` was omitted. †Gemini 4 Argon scored `0/5` on 9×9 Sudoku without a solver. ‡Standalone models rightly abstained on private ontology and memory records not present in the prompt.*
+
+### Running the GPU Server & Standardized Benchmark Suite
 
 ```bash
-# Single text prompt or interactive REPL (93-layer verification OFF, DSpark OFF)
-python src/tools/hybrid-ncm-k3/k3_fast_chat.py --prompt "the captial of france is"
-python src/tools/hybrid-ncm-k3/k3_fast_chat.py --interactive
+# Download all 32 HybridAgent/NCM/Vision checkpoints & open-weights from Hugging Face
+bash src/scripts/download-hybrid-ncm-datasets.sh
 
-# Multimodal Image -> Text Chat Mode (Option B primary; add --use-option-a for MoonViT3d 7168-d)
-python src/tools/hybrid-ncm-k3/k3_multimodal_chat.py --image img1_hospital_invoice.png --prompt "Summarize this invoice." --use-option-a
-python src/tools/hybrid-ncm-k3/k3_multimodal_chat.py --bench
+# Start the persistent GPU Chat Server (Web UI at http://127.0.0.1:8765/ + /api/chat + /api/health)
+/opt/clover-k3/venv/bin/python src/tools/hybrid-ncm-k3/k3_chat_server.py --host 127.0.0.1 --port 8765
 
-# Clubbed 5-prompt batching + 1-to-32 window throughput scaling
-python src/tools/hybrid-ncm-k3/bench_batch_clubbing.py
-
-# Full empirical tok/s proof (8 single prompts + 8-prompt clubbed batch + 8-GPU DDP torchrun)
-python src/tools/hybrid-ncm-k3/bench_throughput_proof.py
-
-# Persistent GPU Chat Server (Web UI at http://127.0.0.1:8765/ + OpenAI /v1/chat/completions)
-python src/tools/hybrid-ncm-k3/k3_chat_server.py --port 8765
+# Run Phase A preflight & Phase B full 70-task benchmark suite
+cd src/tools/hybrid-ncm-k3
+/opt/clover-k3/venv/bin/python run_real_ai_benchmark_suite.py --mode preflight --target gpu
+/opt/clover-k3/venv/bin/python run_real_ai_benchmark_suite.py --mode full --target gpu --run-id run_01
 ```
 
 ## Not in this folder
