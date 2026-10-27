@@ -1176,10 +1176,10 @@ body.clover-app-body .site-head {
 }
 .origin-steps {
   display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0;
-  scrollbar-width: none; -ms-overflow-style: none;
+  scrollbar-width: none !important; -ms-overflow-style: none !important;
 }
 .origin-steps::-webkit-scrollbar {
-  display: none;
+  display: none !important; width: 0 !important; height: 0 !important;
 }
 .origin-step {
   flex: 0 0 auto; font: inherit; font-size: 0.8rem; font-weight: 650;
