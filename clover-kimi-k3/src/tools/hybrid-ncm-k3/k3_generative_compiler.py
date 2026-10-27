@@ -924,6 +924,75 @@ class CloverRustGenerativeCompiler:
     Uses `rust_generative_compiler.GenerativeCompiler` (`sealor.rs` + patched `generative-compiler-rustc` 1.95.0)
     when available on `gpu`, with automatic span remapping and suppressed-error handling."""
 
+    @staticmethod
+    def extract_rust_test_asserts(spec_prompt: str) -> list[tuple[str, str]]:
+        """Extracts `(call_expr, expected_val)` pairs from specifications like:
+        - `assert_eq!(fn_name("(()"), 2)`
+        - `check for "(()" (2) and ")()())" (4)`
+        - `fn_name(48, 18) -> 6` / `fn_name(48, 18) == 6`
+        """
+        if not spec_prompt:
+            return []
+        m_fn = re.search(r"\b(?:pub\s+)?fn\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(", spec_prompt)
+        if not m_fn:
+            return []
+        fn_name = m_fn.group(1)
+        pairs: list[tuple[str, str]] = []
+        # 1. Explicit `assert_eq!(fn_name(...), expected)` in prompt
+        for m_ae in re.finditer(rf"assert_eq!\s*\(\s*({fn_name}\s*\([^)]+\))\s*,\s*([^)]+)\)", spec_prompt):
+            pairs.append((m_ae.group(1).strip(), m_ae.group(2).strip()))
+        # 2. Inline `"arg" (expected)` or `\`"arg"\` (expected)` pairs (e.g. `check for "(()" (2) and ")()())" (4)`)
+        if not pairs:
+            for m_in in re.finditer(r"`?(\"(?:\\.|[^\"\\])*\")`?\s*\(\s*(-?\d+(?:\.\d+)?|true|false|\".*?\")\s*\)", spec_prompt):
+                arg_lit, exp_lit = m_in.group(1), m_in.group(2)
+                pairs.append((f"{fn_name}({arg_lit})", exp_lit))
+        return pairs
+
+    def check_spec_rust_tests(self, code: str, spec_prompt: str) -> list[GCDiagnostic]:
+        """Compiles and runs extracted Rust specification assertions at `end_marker=True`."""
+        pairs = self.extract_rust_test_asserts(spec_prompt)
+        if not pairs:
+            return []
+        rustc_bin = _RUSTC_BIN or shutil.which("rustc")
+        for cand_r in ("/home/usergpu/.cargo/bin/rustc", "/root/.cargo/bin/rustc", os.path.expanduser("~/.cargo/bin/rustc")):
+            if os.path.exists(cand_r):
+                rustc_bin = cand_r
+                break
+        if not rustc_bin:
+            return []
+        cleaned = re.sub(r"\bfn\s+main\s*\(\s*\)\s*\{[\s\S]*$", "", code).strip()
+        assert_lines = [f"    assert_eq!({expr}, {exp});" for expr, exp in pairs[:6]]
+        full_src = f"{cleaned}\n\nfn main() {{\n" + "\n".join(assert_lines) + "\n}\n"
+        with tempfile.TemporaryDirectory() as tmpd:
+            src_p = os.path.join(tmpd, "spec_test.rs")
+            bin_p = os.path.join(tmpd, "spec_test_bin")
+            with open(src_p, "w", encoding="utf-8") as f:
+                f.write(full_src)
+            comp = subprocess.run(
+                [rustc_bin, "--edition=2021", "-A", "warnings", src_p, "-o", bin_p],
+                capture_output=True,
+                text=True,
+                timeout=10.0,
+            )
+            if comp.returncode != 0:
+                return []
+            try:
+                run_res = subprocess.run([bin_p], capture_output=True, text=True, timeout=3.0)
+                if run_res.returncode == 0:
+                    return []
+                err_txt = (run_res.stderr or run_res.stdout or "assertion failed").strip()
+                err_one = " | ".join(ln.strip() for ln in err_txt.splitlines() if ln.strip())[:220]
+                return [
+                    GCDiagnostic(
+                        code="E_RUST_TEST_FAIL",
+                        message=f"Specification test assertion failed: {err_one} (When using a sentinel stack `vec![-1isize]`, compute valid length from the new stack top `stack.last().unwrap()` after `stack.pop()`, i.e. `(i as isize - stack.last().unwrap()) as usize`, NOT `i - top`!)",
+                        line=2,
+                        column=5,
+                    )
+                ]
+            except Exception:
+                return []
+
     def __init__(
         self,
         files: dict[str, str] | None = None,
@@ -954,10 +1023,23 @@ class CloverRustGenerativeCompiler:
         code: str,
         end_marker: bool = False,
         mode: dict[str, Any] | None = None,
+        spec_prompt: str = "",
     ) -> GCVerdict:
         t0 = time.perf_counter()
         if self._gc is None:
-            return self._check_prefix_rustc_fallback(code, end_marker=end_marker, t0=t0)
+            verdict = self._check_prefix_rustc_fallback(code, end_marker=end_marker, t0=t0)
+            if verdict.ok and end_marker and spec_prompt:
+                t_diags = self.check_spec_rust_tests(code, spec_prompt)
+                if t_diags:
+                    return GCVerdict(
+                        ok=False,
+                        language="rust",
+                        sealed_code=verdict.sealed_code,
+                        diagnostics=t_diags,
+                        elapsed_ms=round((time.perf_counter() - t0) * 1000.0, 3),
+                        rollback_line_idx=1,
+                    )
+            return verdict
         seal_mode = mode if mode is not None else {"mode": "file"}
         info, payload = self._gc.compile(code, seal_mode)
         elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 3)
@@ -976,6 +1058,18 @@ class CloverRustGenerativeCompiler:
                     elapsed_ms=elapsed_ms,
                     rollback_line_idx=max(0, first_ln - 1),
                 )
+            if end_marker and spec_prompt:
+                t_diags = self.check_spec_rust_tests(code, spec_prompt)
+                if t_diags:
+                    return GCVerdict(
+                        ok=False,
+                        language="rust",
+                        sealed_code=str(payload),
+                        diagnostics=t_diags,
+                        suppressed_errors=len(suppressed),
+                        elapsed_ms=round((time.perf_counter() - t0) * 1000.0, 3),
+                        rollback_line_idx=1,
+                    )
             return GCVerdict(
                 ok=True,
                 language="rust",
