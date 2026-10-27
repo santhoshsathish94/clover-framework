@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Origin — Twelve Stories &amp; Visuals from 1943 to 2026 Clover AI — Clover</title>
-<meta name="description" content="Step through the eleven foundational papers of AI (1943–2017) and the twelfth story (2026 Clover AI: why the model is only one part of AI, and what surrounds it makes it intelligent) — told through memorable human stories, visual diagrams, and firsthand experiments.">
+<title>Origin — Clover</title>
+<meta name="description" content="Step through the eleven foundational papers of AI (1943–2017) and the twelfth story (2026 Clover AI: why the model is only one part of AI, and what surrounds it makes it intelligent) — told through memorable stories, visual diagrams, and firsthand experiments.">
 <link rel="canonical" href="https://cloverframework.com/origin/">
-<meta property="og:title" content="Origin — Twelve Stories &amp; Visuals from 1943 to 2026 Clover AI — Clover">
+<meta property="og:title" content="Origin — Clover">
 <meta property="og:description" content="Step through the story of AI one discovery at a time: from the 1943 cold-rod nerve illusion and Turing's 30-second arithmetic slip to backpropagation, LeNet-5, AlexNet, the Transformer, and 2026 Clover AI.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/origin/">
@@ -69,10 +69,10 @@
   <!-- ============ HERO ============ -->
   <section class="hero" id="overview">
     <div class="wrap">
-      <h1>Where modern AI actually came from</h1>
-      <p class="hero__tagline">Twelve human stories and visual diagrams from 1943 to 2026 — step through them one by one.</p>
-      <p class="lede">Humans remember stories and pictures far better than walls of equations. Behind every famous AI paper is a simple human story: a researcher who hit a real wall, pictured why the old idea broke at that wall, and built a new mechanism to get past it.</p>
-      <p class="lede">We read the eleven foundational papers (1943–2017) in full, built and ran every mechanism from scratch, and then applied that same lesson in <strong>Chapter 12 (2026 · Clover AI)</strong>—showing why a neural model on its own is only one piece, and why the six layers surrounding the model are what make an AI system reliable and intelligent. Use the <strong>Next</strong> button inside each chapter below to walk through the journey one story and one picture at a time.</p>
+      <h1>Origin</h1>
+      <p class="hero__tagline">Twelve stories and visual diagrams from 1943 to 2026 — step through them one by one.</p>
+      <p class="lede">We remember stories and pictures far better than walls of equations. Behind every famous AI paper is a simple story: a researcher who hit a real wall, pictured why the old idea broke at that wall, and built a new mechanism to get past it.</p>
+      <p class="lede">We read the eleven foundational papers (1943–2017) in full, built and ran every mechanism from scratch, and then applied that same lesson in <strong>Chapter 12 (2026 · Clover AI)</strong>—showing why a neural model on its own is only one piece, and why the six layers surrounding the model are what make an AI system reliable and intelligent. We can use the <strong>Next</strong> button inside each chapter below to walk through the journey one story and one picture at a time.</p>
       <div class="actions">
         <a class="btn btn--primary" href="#story-deck">Start Chapter 1 (1943) →</a>
         <a class="btn" href="#p12-2026">Jump to Chapter 12 (2026 Clover AI) →</a>
@@ -125,8 +125,8 @@
 
           <div class="origin-story-box">
             <span class="origin-story-box__label">The Story to Remember · The Cold Rod That Felt Burning Hot</span>
-            <p>In 1942 in Chicago, Warren McCulloch—a doctor studying how the brain's wiring works—invited a homeless nineteen-year-old prodigy named Walter Pitts to live at his house. Late at night, they puzzled over a strange trick of human skin: if you press a cold metal rod against your arm and hold it there, it feels cold. But if you tap that same cold rod against your skin for just a split second and pull it away, you feel a sudden flash of <strong>burning heat</strong>!</p>
-            <p>Why would cold feel hot? Pitts and McCulloch realized you do not need chemistry equations to explain it—you only need <strong>timing and logic</strong>. Because a neuron either fires a full spark (<code>1</code>) or stays quiet (<code>0</code>), they drew a 4-neuron relay circuit (Figure 1e): when cold stops suddenly, a delayed 2-tick rebound signal reaches your heat neuron right after the cold-inhibition veto turns off. By treating neurons as clock-ticked logic gates, they proved that any logical thought can be wired out of simple threshold cells—and any circular loop of cells can hold a memory forever.</p>
+            <p>In 1942 in Chicago, Warren McCulloch—a doctor studying how the brain's wiring works—invited a homeless nineteen-year-old prodigy named Walter Pitts to live at his house. Late at night, they puzzled over a strange trick of our skin: if we press a cold metal rod against our arm and hold it there, it feels cold. But if we tap that same cold rod against our skin for just a split second and pull it away, we feel a sudden flash of <strong>burning heat</strong>!</p>
+            <p>Why would cold feel hot? Pitts and McCulloch realized we do not need chemistry equations to explain it—we only need <strong>timing and logic</strong>. Because a neuron either fires a full spark (<code>1</code>) or stays quiet (<code>0</code>), they drew a 4-neuron relay circuit (Figure 1e): when cold stops suddenly, a delayed 2-tick rebound signal reaches our heat neuron right after the cold-inhibition veto turns off. By treating neurons as clock-ticked logic gates, they proved that any logical thought can be wired out of simple threshold cells—and any circular loop of cells can hold a memory forever.</p>
           </div>
 
           <figure class="origin-visual">
@@ -219,7 +219,7 @@
 
           <div class="origin-story-box">
             <span class="origin-story-box__label">The Story to Remember · The Witness Who Took 30 Seconds to Make a Mistake</span>
-            <p>Imagine you are the judge in Turing's 1950 Imitation Game, typing questions into a teleprinter to two hidden rooms. You ask a trap question: <em>"Add 34957 to 70764."</em> Room A answers <code>105721</code> in 0.001 seconds. Room B goes silent for <strong>30 full seconds</strong>, and then types <strong><code>105621</code></strong>.</p>
+            <p>Imagine we are the judge in Turing's 1950 Imitation Game, typing questions into a teleprinter to two hidden rooms. We ask a trap question: <em>"Add 34957 to 70764."</em> Room A answers <code>105721</code> in 0.001 seconds. Room B goes silent for <strong>30 full seconds</strong>, and then types <strong><code>105621</code></strong>.</p>
             <p>Look closely at Room B's number: <code>34957 + 70764</code> is <code>105721</code>, not <code>105621</code>! The witness in Turing's paper forgot to carry the <code>1</code> into the hundreds column. Turing slipped that arithmetic mistake into page 434 on purpose: a computer that shows off its raw speed and perfection gives itself away on the very first sum. Intelligence is not just fast arithmetic—it is being a <strong>universal stored-program machine</strong> that can rewrite its own instructions and learn from a teacher.</p>
           </div>
 
@@ -268,7 +268,7 @@
               <text x="608" y="228" font-size="15" font-weight="700" fill="#0a6a5f">1 symbolic command</text>
               <text x="608" y="248" font-size="11" fill="#39424d">(after 202 signals to teach the alphabet)</text>
             </svg>
-            <figcaption>Visual summary of Turing (1950): (1) why spoofing human delay and carry slips fools the judge, (2) the Manchester 10-digit instruction word, and (3) why symbolic instruction beats reward/punishment alone by 22,400×.</figcaption>
+            <figcaption>Visual summary of Turing (1950): (1) why spoofing our delay and carry slips fools the judge, (2) the Manchester 10-digit instruction word, and (3) why symbolic instruction beats reward/punishment alone by 22,400×.</figcaption>
           </figure>
 
           <h3>What we built and saw firsthand</h3>
@@ -308,9 +308,9 @@
           <p class="lede"><strong>How the world's first working AI program proved 48 of 67 theorems in Principia Mathematica by glancing at a 3-number summary before doing hard work.</strong></p>
 
           <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · Human Computers Holding Index Cards in a Living Room</span>
+            <span class="origin-story-box__label">The Story to Remember · Holding Index Cards in a Living Room</span>
             <p>In late 1955, before their JOHNNIAC computer interpreter was even finished, Allen Newell and Herbert Simon wanted to know if their new theorem-proving program—<strong>The Logic Theorist</strong>—would actually work. So Simon gathered his wife, his children, and several graduate students in a room, handed each person a stack of blank index cards, and assigned each person to be one subroutine or one "working memory" list!</p>
-            <p>Why didn't they drown in millions of useless logical combinations? Because a human mathematician does not test every axiom blindly: you take a quick glance at the <em>shape</em> of two formulas first. Newell and Simon gave their program a 3-number glance called <code>CSm</code> (left depth, right depth, and variable count). That glance threw away <strong>93.6%</strong> of dead ends instantly—though as we discovered when we ran it, that same shortcut also caused the machine to walk right past a 1-line proof of Theorem <code>*2.07</code>!</p>
+            <p>Why didn't they drown in millions of useless logical combinations? Because we do not test every axiom blindly when proving a theorem: we take a quick glance at the <em>shape</em> of two formulas first. Newell and Simon gave their program a 3-number glance called <code>CSm</code> (left depth, right depth, and variable count). That glance threw away <strong>93.6%</strong> of dead ends instantly—though as we discovered when we ran it, that same shortcut also caused the machine to walk right past a 1-line proof of Theorem <code>*2.07</code>!</p>
           </div>
 
           <figure class="origin-visual">
@@ -346,7 +346,7 @@
 
               <!-- Panel 3: The Blind Spot -->
               <rect x="585" y="52" width="255" height="228" rx="10" fill="#fdf4e3" stroke="#e2c88a" stroke-width="1.5"></rect>
-              <text x="601" y="76" font-size="11" font-weight="700" fill="#8a5a00">3 · WHEN A HEURISTIC BLINDS YOU</text>
+              <text x="601" y="76" font-size="11" font-weight="700" fill="#8a5a00">3 · WHEN A HEURISTIC BLINDS US</text>
               <text x="601" y="102" font-size="11.5" font-weight="700" fill="#14181d">Target *2.07: p ⊃ (p ∨ p)</text>
               <text x="601" y="120" font-size="11" fill="#39424d">Right side (p ∨ p) has <tspan font-weight="700" fill="#b91c1c">J_R = 1</tspan> distinct var.</text>
               <text x="601" y="146" font-size="11.5" font-weight="700" fill="#14181d">Axiom *1.3: q ⊃ (p ∨ q)</text>
@@ -498,7 +498,7 @@
 
           <div class="origin-story-box">
             <span class="origin-story-box__label">The Story to Remember · The Pinhole Committee vs the Ant with Two Pebbles</span>
-            <p>Imagine a giant black-and-white drawing of a spiral maze on a wall. You hire a thousand tiny observers to vote on whether the maze is <strong>one connected path</strong> or <strong>two separate paths</strong>. There is only one rule: each observer is only allowed to peek through a straw at <strong>2 or 3 pixels at a time</strong> (`order-2` or `order-3`), and then they all drop weighted votes into a ballot box.</p>
+            <p>Imagine a giant black-and-white drawing of a spiral maze on a wall. We hire a thousand tiny observers to vote on whether the maze is <strong>one connected path</strong> or <strong>two separate paths</strong>. There is only one rule: each observer is only allowed to peek through a straw at <strong>2 or 3 pixels at a time</strong> (`order-2` or `order-3`), and then they all drop weighted votes into a ballot box.</p>
             <p>Minsky and Papert proved mathematically that <strong>no matter how clever the weights are, the pinhole committee will always fail!</strong> Why? Because locally, a 1-spiral and a 2-spiral have the exact same pieces; connectivity is a global property. Meanwhile, a single ant walking along the wall with just <strong>two pebbles in its pocket</strong> (`2 pointers` in memory) can trace the loop and answer with 100% certainty. Even better: when we tested a modern GitHub repo that claimed a simple perceptron solved Minsky &amp; Papert's spirals, we caught the repo accidentally cheating—it had erased two outer legs of the 1-spiral (`652` vs `804` pixels), letting the perceptron guess by counting total ink!</p>
           </div>
 
@@ -587,7 +587,7 @@
 
           <div class="origin-story-box">
             <span class="origin-story-box__label">The Story to Remember · The Marble Rolling into the Memory Valley</span>
-            <p>In a standard computer, if you want to look up a file, you have to know its exact numerical address (`0x7F04`). Humans do not work like that: if you hear three notes of a childhood song or see a blurry half-shadow of a friend's face, the whole memory snaps back into focus. How does a messy web of neurons do that without oscillating out of control?</p>
+            <p>In a standard computer, if we want to look up a file, we have to know its exact numerical address (`0x7F04`). Our own memory does not work like that: if we hear three notes of a childhood song or see a blurry half-shadow of a friend's face, the whole memory snaps back into focus. How does a messy web of neurons do that without oscillating out of control?</p>
             <p>Physicist John Hopfield noticed that in magnetic materials, when two atoms pull on each other with <strong>equal symmetric strength</strong> (<code>T_ij = T_ji</code>), the system does not spin in circles—it settles downhill into a low-energy valley. By wiring symmetric synapses and letting neurons flip <strong>one at a time</strong>, every stored memory becomes a valley in an Energy landscape. Drop a corrupted clue on the hillside, and the marble rolls downhill (`0` uphill steps out of `7,162` flips) until the whole memory is restored—unless every neuron jumps at the exact same instant, which traps `98.5%` of runs on a seesaw!</p>
           </div>
 
@@ -742,7 +742,7 @@
           </dl>
 
           <div class="origin-bridge">
-            <strong>How this led to Chapter 8 (1988):</strong> Backpropagation solved credit assignment across layers when a teacher gives you the answer immediately. Two years later, Richard Sutton asked: how do you assign credit across <em>time</em> when the outcome only arrives at the end of a long journey?
+            <strong>How this led to Chapter 8 (1988):</strong> Backpropagation solved credit assignment across layers when a teacher gives us the answer immediately. Two years later, Richard Sutton asked: how do we assign credit across <em>time</em> when the outcome only arrives at the end of a long journey?
           </div>
 
           <div class="origin-pager">
@@ -767,7 +767,7 @@
 
           <div class="origin-story-box">
             <span class="origin-story-box__label">The Story to Remember · The Lucky Fluke That Fooled the Teacher</span>
-            <p>Imagine you are learning to play backgammon. You already know from nine painful games that a certain board position—call it <strong>"Bad"</strong>—loses <strong>90% of the time</strong> (9 losses, 1 lucky win). Now, in game 10, you try a brand-new opening move (<strong>"Novel"</strong>), it immediately lands you straight into that same <strong>"Bad"</strong> position—and then by a 1-in-10 miracle roll of the dice, you end up winning the game!</p>
+            <p>Imagine we are learning to play backgammon. We already know from nine painful games that a certain board position—call it <strong>"Bad"</strong>—loses <strong>90% of the time</strong> (9 losses, 1 lucky win). Now, in game 10, we try a brand-new opening move (<strong>"Novel"</strong>), it immediately lands us straight into that same <strong>"Bad"</strong> position—and then by a 1-in-10 miracle roll of the dice, we end up winning the game!</p>
             <p>How good is the <strong>"Novel"</strong> opening move? A traditional supervised learner (`TD(1)` / Widrow–Hoff) only pairs each state with the final game result (`Novel → Win`), so it concludes that <strong>`Novel` is a 100% winning move</strong> (an error of 90 percentage points!). Richard Sutton's <strong>Temporal-Difference learner (`TD(0)`)</strong> instead updates each state toward the <em>very next state it steps into</em> (`Novel → Bad`). Because it already knows `Bad` only wins 10% of the time, it immediately concludes `Novel` is a **10% move**—wiping out all the random dice noise that happened after `Bad`!</p>
           </div>
 
@@ -859,12 +859,12 @@
         <article class="origin-card" id="p9-1998">
           <div class="origin-card__badge">Chapter 9 of 12 · 1998 · Yann LeCun, Léon Bottou, Yoshua Bengio &amp; Patrick Haffner</div>
           <h2>Gradient-Based Learning Applied to Document Recognition</h2>
-          <p class="lede"><strong>How LeNet-5 (60,000 shared weights driving 340,908 connections) and Graph Transformer Networks read millions of bank checks a day—without ever needing a human to label where one digit ends and the next begins.</strong></p>
+          <p class="lede"><strong>How LeNet-5 (60,000 shared weights driving 340,908 connections) and Graph Transformer Networks read millions of bank checks a day—without ever needing us to label where one digit ends and the next begins.</strong></p>
 
           <div class="origin-story-box">
             <span class="origin-story-box__label">The Story to Remember · Reading Handwritten Bank Checks Without Trusting Scissors</span>
-            <p>Imagine trying to build a machine in the 1990s to read handwritten dollar amounts on bank checks. If a single digit sits neatly inside a box, a Convolutional Neural Network (<strong>LeNet-5</strong>) can read it with `99.2%` accuracy. But on a real check, people scribble digits that touch each other! If you try to cut a handwritten `"4"` or `"8"` in half with heuristic scissors before reading it, the right half of a `"4"` looks just like a `"1"`, and the right half of an `"8"` looks just like a `"3"`.</p>
-            <p>LeCun, Bottou, Bengio, and Haffner solved this in two ways. First, you can slide the convolutional network across the whole check without cutting at all (a <strong>Space-Displacement Neural Network</strong>, sharing intermediate feature maps to save `4.43×` compute). Second, if you do propose candidate scissor cuts, keep <em>every</em> possible cut inside a directed web of paths (a <strong>Graph Transformer Network</strong>) and train the entire check reader from the whole check amount using <strong>Discriminative Forward Loss</strong>—pushing down the cost of all valid paths that spell the right amount while pushing up every wrong path so half-digit fragments price themselves out!</p>
+            <p>Imagine trying to build a machine in the 1990s to read handwritten dollar amounts on bank checks. If a single digit sits neatly inside a box, a Convolutional Neural Network (<strong>LeNet-5</strong>) can read it with `99.2%` accuracy. But on a real check, people scribble digits that touch each other! If we try to cut a handwritten `"4"` or `"8"` in half with heuristic scissors before reading it, the right half of a `"4"` looks just like a `"1"`, and the right half of an `"8"` looks just like a `"3"`.</p>
+            <p>LeCun, Bottou, Bengio, and Haffner solved this in two ways. First, we can slide the convolutional network across the whole check without cutting at all (a <strong>Space-Displacement Neural Network</strong>, sharing intermediate feature maps to save `4.43×` compute). Second, if we do propose candidate scissor cuts, we keep <em>every</em> possible cut inside a directed web of paths (a <strong>Graph Transformer Network</strong>) and train the entire check reader from the whole check amount using <strong>Discriminative Forward Loss</strong>—pushing down the cost of all valid paths that spell the right amount while pushing up every wrong path so half-digit fragments price themselves out!</p>
           </div>
 
           <figure class="origin-visual">
@@ -1264,7 +1264,7 @@
           </dl>
 
           <div class="origin-bridge">
-            <strong>The Complete 83-Year Arc (1943 → 2026):</strong> Seventy-four years of research (1943–2017) taught us how to build a powerful neural model. Clover AI (2026) shows what happens next: putting that model at the center of a governed, tool-verifying, compiler-checked, symbolically grounded, and memory-accumulating cycle (<code>Context → Direction → Execution → Outcome → Growth</code>) where humans remain accountable.
+            <strong>The Complete 83-Year Arc (1943 → 2026):</strong> Seventy-four years of research (1943–2017) taught us how to build a powerful neural model. Clover AI (2026) shows what happens next: putting that model at the center of a governed, tool-verifying, compiler-checked, symbolically grounded, and memory-accumulating cycle (<code>Context → Direction → Execution → Outcome → Growth</code>) where we remain accountable.
           </div>
 
           <div class="origin-pager">
@@ -1287,7 +1287,7 @@
   <section class="band" id="timeline">
     <div class="wrap">
       <h2>All twelve chapters on one map (1943–2026)</h2>
-      <p class="lede"><strong>Click any chapter below to jump straight to its story and visual diagram above.</strong></p>
+      <p class="lede"><strong>We can click any chapter below to jump straight to its story and visual diagram above.</strong></p>
 
       <div class="table-wrap">
         <table class="data">
@@ -1316,7 +1316,7 @@
             <tr>
               <td><strong>1956</strong></td>
               <td><a href="#p3-1956">Newell &amp; Simon</a></td>
-              <td>Human "working memories" holding index cards</td>
+              <td>Holding index cards as "working memories" in a living room</td>
               <td>The Logic Theorist (<code>IPL-I</code>), subgoal trees, and the <code>CSm</code> 93.6% similarity filter</td>
             </tr>
             <tr>
@@ -1450,7 +1450,7 @@
     <div class="wrap">
       <h2>What all twelve stories have in common</h2>
       <p class="lede"><strong>None of these breakthroughs came from treating a model as magic.</strong> Every single one came from looking closely at where the current system failed in reality, picturing the mechanism underneath that failure, and testing a clear direction against real evidence.</p>
-      <p>That is the same cycle Clover is built on: <strong>Context → Direction → Execution → Outcome → Growth</strong>. The tools have grown from 1943 threshold relays and 1956 index cards to multi-teraparameter attention models, and the human cycle that produces real understanding has not changed at all.</p>
+      <p>That is the same cycle we build on in Clover: <strong>Context → Direction → Execution → Outcome → Growth</strong>. The tools have grown from 1943 threshold relays and 1956 index cards to multi-teraparameter attention models, and the cycle that produces real understanding has not changed at all.</p>
       <div class="actions" style="margin-top:1.8rem">
         <a class="btn btn--primary" href="../start/">Next Menu: Read AGENTS.md →</a>
         <a class="btn" href="../evidence/">See the evidence</a>
