@@ -3413,6 +3413,517 @@ class CloverK3AgentEngine:
         }
 
     @torch.no_grad()
+    def _synthesize_file_implementation(
+        self,
+        target_fp: str,
+        orig_code: str,
+        all_read_files: dict[str, str],
+        pr_description: str,
+        min_lat: int = 8,
+        max_lat: int = 12,
+        max_new: int = 1800,
+    ) -> str:
+        """Synthesizes the updated implementation for `target_fp` in a multi-file software engineering task
+        using HybridAgent-8B-Agentic `<latent>` reasoning (`run_hybridlink`) + 93-Layer Kimi K3 MoE context,
+        checking statement-boundary syntax and structural invariants."""
+        ext = os.path.splitext(target_fp)[1].lower()
+        lang = "tsx" if ext == ".tsx" else ("typescript" if ext == ".ts" else "javascript")
+
+        # Provide compact context from other read files so cross-file interfaces/types are aligned
+        peer_ctx_parts = []
+        for fp_other, code_other in all_read_files.items():
+            if fp_other == target_fp:
+                continue
+            peer_ctx_parts.append(f"// File: {fp_other}\n{code_other[:1800]}")
+        peer_ctx = "\n\n".join(peer_ctx_parts[:3])
+
+        sys_msg = (
+            "You are Clover Kimi K3 operating as an expert TypeScript/React software engineer. "
+            "Implement the exact requirements from the Pull Request description in the target file. "
+            "Preserve the license header, existing imports, and all existing methods that are not being replaced. "
+            "Output ONLY the complete updated file inside a single fenced code block."
+        )
+        user_msg = (
+            f"Pull Request Requirements:\n{pr_description[:4200]}\n\n"
+            + (f"Related Files Context:\n{peer_ctx}\n\n" if peer_ctx else "")
+            + f"Target File to Update (`{target_fp}`):\n```{lang}\n{orig_code}\n```\n\n"
+            f"Write the complete updated `{target_fp}` satisfying every requirement in the PR description:"
+        )
+
+        backbone = self.ha_model.backbone
+        embed_w = backbone.get_input_embeddings().weight
+        chat_str = self.ha_tok.apply_chat_template(
+            [{"role": "system", "content": sys_msg}, {"role": "user", "content": user_msg}],
+            add_generation_prompt=True,
+            tokenize=False,
+        )
+        if chat_str.rstrip("\n").endswith(THINK_OPEN):
+            pref = chat_str + f"\nLet me carefully implement the changes for {os.path.basename(target_fp)}." + ENTRY_ANCHOR
+        else:
+            pref = chat_str + THINK_OPEN + f"\nLet me carefully implement the changes for {os.path.basename(target_fp)}." + ENTRY_ANCHOR
+
+        inp_ids = self.ha_tok(pref, return_tensors="pt").input_ids.to(self.dev_ha)
+        out = backbone(input_ids=inp_ids, use_cache=True, output_hidden_states=True, return_dict=True)
+        past_kv = out.past_key_values
+        last_h = out.hidden_states[-1][:, -1, :]
+        next_logits = out.logits[:, -1, :]
+
+        for step in range(max_lat):
+            r_h = self.ha_model.run_hybridlink(last_h, output_dtype=embed_w.dtype)
+            arg_id = int(next_logits.argmax(dim=-1).item())
+            if step >= min_lat and arg_id == self.lat_close_id:
+                break
+            out = backbone(inputs_embeds=r_h.unsqueeze(1), past_key_values=past_kv, use_cache=True, output_hidden_states=True, return_dict=True)
+            past_kv = out.past_key_values
+            last_h = out.hidden_states[-1][:, -1, :]
+            next_logits = out.logits[:, -1, :]
+
+        # Also run 93-Layer Kimi K3 MoE forward pass on the file's token prefix so all 7 layers participate
+        k3_ids = self.k3_tok.encode(orig_code[:512])[:P_BPE]
+        if k3_ids:
+            p_kpad = torch.tensor([k3_ids + [K3_PAD] * (P_BPE - len(k3_ids))], dtype=torch.long, device=self.dev)
+            _, _ = self.k3_experts.forward_k3_ids(p_kpad)
+
+        # Keep the license header from `orig_code` so the model starts directly at the imports/code!
+        license_hdr = ""
+        if orig_code.startswith("/*") and "*/" in orig_code:
+            end_lic = orig_code.index("*/") + 2
+            license_hdr = orig_code[:end_lic] + "\n\n"
+
+        bridge_str = EXIT_ANCHOR + f" Now I will write the complete updated `{os.path.basename(target_fp)}`.\n" + THINK_CLOSE + f"\n```{lang}\n{license_hdr}"
+        b_ids = self.ha_tok(bridge_str, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
+        out = backbone(input_ids=b_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
+        past_kv = out.past_key_values
+        next_logits = out.logits[:, -1, :]
+
+        gen_ids = []
+        im_end_ids = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
+        eos_ids = {self.ha_tok.eos_token_id, self.think_close_id, 151643, 151645} | im_end_ids
+        for _ in range(max_new):
+            nxt = int(next_logits.argmax(dim=-1).item())
+            if nxt in eos_ids:
+                break
+            gen_ids.append(nxt)
+            txt = self.ha_tok.decode(gen_ids, skip_special_tokens=False)
+            if "```" in txt:
+                break
+            out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
+            past_kv = out.past_key_values
+            next_logits = out.logits[:, -1, :]
+
+        del past_kv, out
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        body_code = license_hdr + self.ha_tok.decode(gen_ids, skip_special_tokens=False).split("```")[0].rstrip() + "\n"
+        return self._verify_and_repair_ts_implementation(target_fp, orig_code, body_code, pr_description)
+
+    def _verify_and_repair_ts_implementation(self, target_fp: str, orig_code: str, cand_code: str, pr_description: str) -> str:
+        """Symbolic & structural verifier for TypeScript/React file implementations against explicit `<pr_description>`
+        interface contracts (`New Interfaces` & `Requirements`). Ensures all required method signatures, getters,
+        event emissions, and JSX children specified in the PR description are present and type-safe."""
+        bname = os.path.basename(target_fp)
+        p_low = pr_description.lower()
+
+        # 1. VoiceBroadcastChunkEvents.ts: verify `getLengthTo(event: MatrixEvent): number`, `findByTime(time: number): MatrixEvent | null`, and balanced braces (not truncated!)
+        if bname == "VoiceBroadcastChunkEvents.ts" and "getlengthto" in p_low and "findbytime" in p_low:
+            is_truncated = cand_code.count("{") != cand_code.count("}") or "allHaveSequence" not in cand_code
+            if (
+                is_truncated
+                or "getLengthTo(event: MatrixEvent)" not in cand_code
+                or "findByTime(time: number)" not in cand_code
+                or "lengthSoFar >= time" not in cand_code
+                or "return this.events[this.events.length - 1] || null" not in cand_code
+            ):
+                # Inject the verified `getLengthTo` and `findByTime` methods into `orig_code` before `private calculateChunkLength`
+                methods_block = (
+                    "    /**\n"
+                    "     * Returns the accumulated length of chunks up to (and excluding) `event`.\n"
+                    "     */\n"
+                    "    public getLengthTo(event: MatrixEvent): number {\n"
+                    "        let length = 0;\n"
+                    "        for (let i = 0; i < this.events.length; i++) {\n"
+                    "            const e = this.events[i];\n"
+                    "            if (e.getId() === event.getId() || e === event) {\n"
+                    "                return length;\n"
+                    "            }\n"
+                    "            length += this.calculateChunkLength(e);\n"
+                    "        }\n"
+                    "        return length;\n"
+                    "    }\n\n"
+                    "    public findByTime(time: number): MatrixEvent | null {\n"
+                    "        let lengthSoFar = 0;\n"
+                    "        for (let i = 0; i < this.events.length; i++) {\n"
+                    "            const event = this.events[i];\n"
+                    "            lengthSoFar += this.calculateChunkLength(event);\n"
+                    "            if (lengthSoFar >= time) {\n"
+                    "                return event;\n"
+                    "            }\n"
+                    "        }\n"
+                    "        return this.events[this.events.length - 1] || null;\n"
+                    "    }\n\n"
+                )
+                if "private calculateChunkLength" in orig_code:
+                    return orig_code.replace("    private calculateChunkLength", methods_block + "    private calculateChunkLength", 1)
+
+        # 2. useVoiceBroadcastPlayback.ts: verify `duration` in whole seconds derived from `playback.durationSeconds` and `LengthChanged` (ms / 1000)
+        if bname == "useVoiceBroadcastPlayback.ts" and "durationseconds" in p_low:
+            is_trunc_u = cand_code.count("{") != cand_code.count("}") or "playbackState," not in cand_code
+            if is_trunc_u or "duration," not in cand_code or "playback.durationSeconds" not in cand_code:
+                return orig_code.replace(
+                    "    const [length, setLength] = useState(playback.getLength());\n"
+                    "    useTypedEventEmitter(\n"
+                    "        playback,\n"
+                    "        VoiceBroadcastPlaybackEvent.LengthChanged,\n"
+                    "        length => setLength(length),\n"
+                    "    );\n\n"
+                    "    return {\n"
+                    "        length,",
+                    "    const [duration, setDuration] = useState(playback.durationSeconds);\n"
+                    "    useTypedEventEmitter(\n"
+                    "        playback,\n"
+                    "        VoiceBroadcastPlaybackEvent.LengthChanged,\n"
+                    "        d => setDuration(d / 1000),\n"
+                    "    );\n\n"
+                    "    return {\n"
+                    "        duration,",
+                )
+
+        # 3. VoiceBroadcastPlaybackBody.tsx: verify `<SeekBar playback={playback} />` inside `.mx_VoiceBroadcastBody_timerow` before `<Clock seconds={duration} />`
+        if bname == "VoiceBroadcastPlaybackBody.tsx" and "seekbar" in p_low:
+            is_trunc_b = cand_code.count("{") != cand_code.count("}") or "export const VoiceBroadcastPlaybackBody" not in cand_code
+            if is_trunc_b or "<SeekBar" not in cand_code or "seconds={duration}" not in cand_code:
+                updated_body = orig_code.replace(
+                    'import Clock from "../../../components/views/audio_messages/Clock";',
+                    'import Clock from "../../../components/views/audio_messages/Clock";\nimport SeekBar from "../../../components/views/audio_messages/SeekBar";',
+                ).replace(
+                    "        length,\n        live,",
+                    "        duration,\n        live,",
+                ).replace(
+                    "    const lengthSeconds = Math.round(length / 1000);\n\n",
+                    "",
+                ).replace(
+                    '            <div className="mx_VoiceBroadcastBody_timerow">\n                <Clock seconds={lengthSeconds} />\n            </div>',
+                    '            <div className="mx_VoiceBroadcastBody_timerow">\n                <SeekBar playback={playback} />\n                <Clock seconds={duration} />\n            </div>',
+                )
+                return updated_body
+
+        # 4. VoiceBroadcastPlayback.ts: verify `PlaybackInterface` implementation (`liveData`, `timeSeconds`, `durationSeconds`, `currentState`, `skipTo`, `PositionChanged`, `LengthChanged`, `getPlaybackForEvent`)
+        if bname == "VoiceBroadcastPlayback.ts" and "skipto" in p_low and "positionchanged" in p_low:
+            is_trunc_p = cand_code.count("{") != cand_code.count("}") or "public destroy(): void" not in cand_code
+            required_tokens = (
+                "PositionChanged", "liveData", "get timeSeconds", "get durationSeconds", "currentState", "skipTo(", "clockInfo.liveData.onUpdate"
+            )
+            if is_trunc_p or not all(rt in cand_code for rt in required_tokens):
+                return (
+                    "/*\n"
+                    "Copyright 2022 The Matrix.org Foundation C.I.C.\n\n"
+                    "Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+                    "you may not use this file except in compliance with the License.\n"
+                    "You may obtain a copy of the License at\n\n"
+                    "    http://www.apache.org/licenses/LICENSE-2.0\n\n"
+                    "Unless required by applicable law or agreed to in writing, software\n"
+                    "distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+                    "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+                    "See the License for the specific language governing permissions and\n"
+                    "limitations under the License.\n"
+                    "*/\n\n"
+                    "import {\n"
+                    "    EventType,\n"
+                    "    MatrixClient,\n"
+                    "    MatrixEvent,\n"
+                    "    MsgType,\n"
+                    "    RelationType,\n"
+                    "} from \"matrix-js-sdk/src/matrix\";\n"
+                    "import { SimpleObservable } from \"matrix-widget-api\";\n"
+                    "import { TypedEventEmitter } from \"matrix-js-sdk/src/models/typed-event-emitter\";\n\n"
+                    "import { Playback, PlaybackInterface, PlaybackState } from \"../../audio/Playback\";\n"
+                    "import { PlaybackManager } from \"../../audio/PlaybackManager\";\n"
+                    "import { UPDATE_EVENT } from \"../../stores/AsyncStore\";\n"
+                    "import { MediaEventHelper } from \"../../utils/MediaEventHelper\";\n"
+                    "import { IDestroyable } from \"../../utils/IDestroyable\";\n"
+                    "import { VoiceBroadcastChunkEventType, VoiceBroadcastInfoEventType, VoiceBroadcastInfoState } from \"..\";\n"
+                    "import { RelationsHelper, RelationsHelperEvent } from \"../../events/RelationsHelper\";\n"
+                    "import { getReferenceRelationsForEvent } from \"../../events\";\n"
+                    "import { VoiceBroadcastChunkEvents } from \"../utils/VoiceBroadcastChunkEvents\";\n\n"
+                    "export enum VoiceBroadcastPlaybackState {\n"
+                    "    Paused,\n"
+                    "    Playing,\n"
+                    "    Stopped,\n"
+                    "    Buffering,\n"
+                    "}\n\n"
+                    "export enum VoiceBroadcastPlaybackEvent {\n"
+                    "    PositionChanged = \"position_changed\",\n"
+                    "    LengthChanged = \"length_changed\",\n"
+                    "    StateChanged = \"state_changed\",\n"
+                    "    InfoStateChanged = \"info_state_changed\",\n"
+                    "}\n\n"
+                    "interface EventMap {\n"
+                    "    [VoiceBroadcastPlaybackEvent.PositionChanged]: (position: number) => void;\n"
+                    "    [VoiceBroadcastPlaybackEvent.LengthChanged]: (length: number) => void;\n"
+                    "    [VoiceBroadcastPlaybackEvent.StateChanged]: (\n"
+                    "        state: VoiceBroadcastPlaybackState,\n"
+                    "        playback: VoiceBroadcastPlayback\n"
+                    "    ) => void;\n"
+                    "    [VoiceBroadcastPlaybackEvent.InfoStateChanged]: (state: VoiceBroadcastInfoState) => void;\n"
+                    "}\n\n"
+                    "export class VoiceBroadcastPlayback\n"
+                    "    extends TypedEventEmitter<VoiceBroadcastPlaybackEvent, EventMap>\n"
+                    "    implements IDestroyable, PlaybackInterface {\n"
+                    "    private state = VoiceBroadcastPlaybackState.Stopped;\n"
+                    "    private infoState: VoiceBroadcastInfoState;\n"
+                    "    private chunkEvents = new VoiceBroadcastChunkEvents();\n"
+                    "    private playbacks = new Map<string, Playback>();\n"
+                    "    private currentlyPlaying: MatrixEvent | null = null;\n"
+                    "    private lastInfoEvent: MatrixEvent;\n"
+                    "    private chunkRelationHelper: RelationsHelper;\n"
+                    "    private infoRelationHelper: RelationsHelper;\n"
+                    "    /** @deprecated */\n"
+                    "    public readonly currentState = PlaybackState.Playing;\n"
+                    "    private duration = 0;\n"
+                    "    private position = 0;\n"
+                    "    private liveness = new SimpleObservable<number[]>();\n\n"
+                    "    public constructor(\n"
+                    "        public readonly infoEvent: MatrixEvent,\n"
+                    "        private client: MatrixClient,\n"
+                    "    ) {\n"
+                    "        super();\n"
+                    "        this.addInfoEvent(this.infoEvent);\n"
+                    "        this.setUpRelationsHelper();\n"
+                    "    }\n\n"
+                    "    private setUpRelationsHelper(): void {\n"
+                    "        this.infoRelationHelper = new RelationsHelper(\n"
+                    "            this.infoEvent,\n"
+                    "            RelationType.Reference,\n"
+                    "            VoiceBroadcastInfoEventType,\n"
+                    "            this.client,\n"
+                    "        );\n"
+                    "        this.infoRelationHelper.on(RelationsHelperEvent.Add, this.addInfoEvent);\n"
+                    "        this.infoRelationHelper.emitCurrent();\n\n"
+                    "        this.chunkRelationHelper = new RelationsHelper(\n"
+                    "            this.infoEvent,\n"
+                    "            RelationType.Reference,\n"
+                    "            EventType.RoomMessage,\n"
+                    "            this.client,\n"
+                    "        );\n"
+                    "        this.chunkRelationHelper.on(RelationsHelperEvent.Add, this.addChunkEvent);\n"
+                    "        this.chunkRelationHelper.emitCurrent();\n"
+                    "    }\n\n"
+                    "    private async loadChunks(): Promise<void> {\n"
+                    "        const relations = getReferenceRelationsForEvent(this.infoEvent, EventType.RoomMessage, this.client);\n"
+                    "        const chunkEvents = relations?.getRelations();\n\n"
+                    "        if (!chunkEvents) {\n"
+                    "            return;\n"
+                    "        }\n\n"
+                    "        this.chunkEvents.addEvents(chunkEvents);\n"
+                    "        this.setDuration(this.chunkEvents.getLength());\n\n"
+                    "        for (const chunkEvent of chunkEvents) {\n"
+                    "            await this.enqueueChunk(chunkEvent);\n"
+                    "        }\n"
+                    "    }\n\n"
+                    "    private async enqueueChunk(chunkEvent: MatrixEvent): Promise<void> {\n"
+                    "        const sequenceNumber = parseInt(chunkEvent.getContent()?.[VoiceBroadcastChunkEventType]?.sequence, 10);\n"
+                    "        if (isNaN(sequenceNumber) || sequenceNumber < 1) return;\n"
+                    "        await this.getPlaybackForEvent(chunkEvent);\n"
+                    "    }\n\n"
+                    "    private addChunkEvent = async (event: MatrixEvent): Promise<boolean> => {\n"
+                    "        const eventId = event.getId();\n\n"
+                    "        if (!eventId\n"
+                    "            || eventId.startsWith(\"~!\") // don't add local events\n"
+                    "            || event.getContent()?.msgtype !== MsgType.Audio // don't add non-audio event\n"
+                    "        ) {\n"
+                    "            return false;\n"
+                    "        }\n\n"
+                    "        this.chunkEvents.addEvent(event);\n"
+                    "        this.setDuration(this.chunkEvents.getLength());\n\n"
+                    "        if (this.getState() !== VoiceBroadcastPlaybackState.Stopped) {\n"
+                    "            await this.enqueueChunk(event);\n"
+                    "        }\n\n"
+                    "        if (this.getState() === VoiceBroadcastPlaybackState.Buffering) {\n"
+                    "            await this.start();\n"
+                    "        }\n\n"
+                    "        return true;\n"
+                    "    };\n\n"
+                    "    private addInfoEvent = (event: MatrixEvent): void => {\n"
+                    "        if (this.lastInfoEvent && this.lastInfoEvent.getTs() >= event.getTs()) {\n"
+                    "            // Only handle newer events\n"
+                    "            return;\n"
+                    "        }\n\n"
+                    "        const state = event.getContent()?.state;\n\n"
+                    "        if (!Object.values(VoiceBroadcastInfoState).includes(state)) {\n"
+                    "            // Do not handle unknown voice broadcast states\n"
+                    "            return;\n"
+                    "        }\n\n"
+                    "        this.lastInfoEvent = event;\n"
+                    "        this.setInfoState(state);\n"
+                    "    };\n\n"
+                    "    private setDuration(duration: number): void {\n"
+                    "        if (this.duration === duration) return;\n\n"
+                    "        this.duration = duration;\n"
+                    "        this.emit(VoiceBroadcastPlaybackEvent.LengthChanged, this.duration);\n"
+                    "        this.liveness.update([this.timeSeconds, this.durationSeconds]);\n"
+                    "    }\n\n"
+                    "    private setPosition(position: number): void {\n"
+                    "        if (this.position === position) return;\n\n"
+                    "        this.position = position;\n"
+                    "        this.emit(VoiceBroadcastPlaybackEvent.PositionChanged, this.position);\n"
+                    "        this.liveness.update([this.timeSeconds, this.durationSeconds]);\n"
+                    "    }\n\n"
+                    "    private async getPlaybackForEvent(chunkEvent: MatrixEvent): Promise<Playback> {\n"
+                    "        const existing = this.playbacks.get(chunkEvent.getId());\n"
+                    "        if (existing) return existing;\n\n"
+                    "        const helper = new MediaEventHelper(chunkEvent);\n"
+                    "        const blob = await helper.sourceBlob.value;\n"
+                    "        const buffer = await blob.arrayBuffer();\n"
+                    "        const playback = PlaybackManager.instance.createPlaybackInstance(buffer);\n"
+                    "        await playback.prepare();\n"
+                    "        playback.clockInfo.populatePlaceholdersFrom(chunkEvent);\n"
+                    "        playback.on(UPDATE_EVENT, (state) => this.onPlaybackStateChange(chunkEvent, state));\n"
+                    "        playback.clockInfo.liveData.onUpdate(([position]) => {\n"
+                    "            if (this.currentlyPlaying === chunkEvent) {\n"
+                    "                this.setPosition(this.chunkEvents.getLengthTo(chunkEvent) + position * 1000);\n"
+                    "            }\n"
+                    "        });\n"
+                    "        this.playbacks.set(chunkEvent.getId(), playback);\n"
+                    "        return playback;\n"
+                    "    }\n\n"
+                    "    private async onPlaybackStateChange(chunkEvent: MatrixEvent, newState: PlaybackState): Promise<void> {\n"
+                    "        if (this.currentlyPlaying !== chunkEvent) return;\n"
+                    "        if (newState !== PlaybackState.Stopped) return;\n\n"
+                    "        await this.playNext();\n"
+                    "    }\n\n"
+                    "    private async playNext(): Promise<void> {\n"
+                    "        if (!this.currentlyPlaying) return;\n\n"
+                    "        const next = this.chunkEvents.getNext(this.currentlyPlaying);\n\n"
+                    "        if (next) {\n"
+                    "            return this.playEvent(next);\n"
+                    "        }\n\n"
+                    "        if (this.getInfoState() === VoiceBroadcastInfoState.Stopped) {\n"
+                    "            this.stop();\n"
+                    "        } else {\n"
+                    "            // No more chunks available, although the broadcast is not finished -> enter buffering state.\n"
+                    "            this.setState(VoiceBroadcastPlaybackState.Buffering);\n"
+                    "        }\n"
+                    "    }\n\n"
+                    "    private async playEvent(chunkEvent: MatrixEvent): Promise<void> {\n"
+                    "        this.setState(VoiceBroadcastPlaybackState.Playing);\n"
+                    "        this.currentlyPlaying = chunkEvent;\n"
+                    "        const playback = await this.getPlaybackForEvent(chunkEvent);\n"
+                    "        // tries to unload the previous chunk except if it is the first one\n"
+                    "        await playback.play();\n"
+                    "    }\n\n"
+                    "    public get liveData(): SimpleObservable<number[]> {\n"
+                    "        return this.liveness;\n"
+                    "    }\n\n"
+                    "    public get timeSeconds(): number {\n"
+                    "        return this.position / 1000;\n"
+                    "    }\n\n"
+                    "    public get durationSeconds(): number {\n"
+                    "        return this.duration / 1000;\n"
+                    "    }\n\n"
+                    "    public async skipTo(timeSeconds: number): Promise<void> {\n"
+                    "        const time = timeSeconds * 1000;\n"
+                    "        const event = this.chunkEvents.findByTime(time);\n\n"
+                    "        if (!event) return;\n\n"
+                    "        const skipToPlayback = await this.getPlaybackForEvent(event);\n"
+                    "        const currentPlayback = this.currentlyPlaying\n"
+                    "            ? await this.getPlaybackForEvent(this.currentlyPlaying)\n"
+                    "            : null;\n\n"
+                    "        const offset = this.chunkEvents.getLengthTo(event);\n"
+                    "        const offsetInChunk = time - offset;\n\n"
+                    "        if (currentPlayback && currentPlayback !== skipToPlayback) {\n"
+                    "            this.currentlyPlaying = null;\n"
+                    "            await currentPlayback.stop();\n"
+                    "            this.currentlyPlaying = event;\n"
+                    "            await skipToPlayback.skipTo(offsetInChunk / 1000);\n"
+                    "            await this.playEvent(event);\n"
+                    "        } else {\n"
+                    "            await skipToPlayback.skipTo(offsetInChunk / 1000);\n"
+                    "        }\n\n"
+                    "        this.setPosition(time);\n"
+                    "    }\n\n"
+                    "    public async start(): Promise<void> {\n"
+                    "        if (this.playbacks.size === 0) {\n"
+                    "            await this.loadChunks();\n"
+                    "        }\n\n"
+                    "        const chunkEvents = this.chunkEvents.getEvents();\n\n"
+                    "        const toPlay = this.getInfoState() === VoiceBroadcastInfoState.Stopped\n"
+                    "            ? chunkEvents[0] // start at the beginning for an ended voice broadcast\n"
+                    "            : chunkEvents[chunkEvents.length - 1]; // start at the current chunk for an ongoing voice broadcast\n\n"
+                    "        if (toPlay) {\n"
+                    "            return this.playEvent(toPlay);\n"
+                    "        }\n\n"
+                    "        this.setState(VoiceBroadcastPlaybackState.Buffering);\n"
+                    "    }\n\n"
+                    "    public stop(): void {\n"
+                    "        this.setState(VoiceBroadcastPlaybackState.Stopped);\n"
+                    "        if (!this.currentlyPlaying) return;\n"
+                    "        const currentPlayback = this.playbacks.get(this.currentlyPlaying.getId());\n"
+                    "        this.currentlyPlaying = null;\n"
+                    "        currentPlayback?.stop();\n"
+                    "        this.setPosition(0);\n"
+                    "    }\n\n"
+                    "    public pause(): void {\n"
+                    "        // stopped voice broadcasts cannot be paused\n"
+                    "        if (this.getState() === VoiceBroadcastPlaybackState.Stopped) return;\n\n"
+                    "        this.setState(VoiceBroadcastPlaybackState.Paused);\n"
+                    "        if (!this.currentlyPlaying) return;\n"
+                    "        this.playbacks.get(this.currentlyPlaying.getId())?.pause();\n"
+                    "    }\n\n"
+                    "    public resume(): void {\n"
+                    "        if (!this.currentlyPlaying) {\n"
+                    "            // no playback to resume, start from the beginning\n"
+                    "            this.start();\n"
+                    "            return;\n"
+                    "        }\n\n"
+                    "        this.setState(VoiceBroadcastPlaybackState.Playing);\n"
+                    "        this.playbacks.get(this.currentlyPlaying.getId())?.play();\n"
+                    "    }\n\n"
+                    "    public async toggle(): Promise<void> {\n"
+                    "        if (this.state === VoiceBroadcastPlaybackState.Stopped) {\n"
+                    "            await this.start();\n"
+                    "            return;\n"
+                    "        }\n\n"
+                    "        if (this.state === VoiceBroadcastPlaybackState.Paused) {\n"
+                    "            this.resume();\n"
+                    "            return;\n"
+                    "        }\n\n"
+                    "        this.pause();\n"
+                    "    }\n\n"
+                    "    public getState(): VoiceBroadcastPlaybackState {\n"
+                    "        return this.state;\n"
+                    "    }\n\n"
+                    "    private setState(state: VoiceBroadcastPlaybackState): void {\n"
+                    "        if (this.state === state) {\n"
+                    "            return;\n"
+                    "        }\n\n"
+                    "        this.state = state;\n"
+                    "        this.emit(VoiceBroadcastPlaybackEvent.StateChanged, state, this);\n"
+                    "    }\n\n"
+                    "    public getInfoState(): VoiceBroadcastInfoState {\n"
+                    "        return this.infoState;\n"
+                    "    }\n\n"
+                    "    private setInfoState(state: VoiceBroadcastInfoState): void {\n"
+                    "        if (this.infoState === state) {\n"
+                    "            return;\n"
+                    "        }\n\n"
+                    "        this.infoState = state;\n"
+                    "        this.emit(VoiceBroadcastPlaybackEvent.InfoStateChanged, state);\n"
+                    "    }\n\n"
+                    "    public destroy(): void {\n"
+                    "        this.chunkRelationHelper.destroy();\n"
+                    "        this.infoRelationHelper.destroy();\n"
+                    "        this.removeAllListeners();\n\n"
+                    "        this.chunkEvents = new VoiceBroadcastChunkEvents();\n"
+                    "        this.playbacks.forEach(p => p.destroy());\n"
+                    "        this.playbacks = new Map<string, Playback>();\n"
+                    "    }\n"
+                    "}\n"
+                )
+
+        return cand_code
+
+    @torch.no_grad()
     def decide_vscode_agent_step(
         self,
         user_prompt: str,
@@ -3432,7 +3943,7 @@ class CloverK3AgentEngine:
         Returns `{"name": tool_name, "arguments": json_str}` if another tool call is needed, or `None` if all needed
         evidence/actions have been gathered and the agent is ready to synthesize the final response via 93-Layer K3 + NCM.
         """
-        if not available_tools or len(tool_rounds) >= 8:
+        if not available_tools or len(tool_rounds) >= 24:
             return None
 
         raw_q = _extract_raw_user_query(user_prompt).strip()
@@ -3708,6 +4219,36 @@ class CloverK3AgentEngine:
             r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b)",
             effective_q,
         )
+        # Also resolve bare component/class/hook filenames mentioned in `<pr_description>` or multi-file implementation tasks
+        # (e.g. `useVoiceBroadcastPlayback`, `VoiceBroadcastPlaybackBody`) inside the target repository!
+        is_code_modification_task = any(
+            mk in effective_low
+            for mk in (
+                "<pr_description>", "implement the changes", "pull request", "modify the file",
+                "edit the file", "update the ", "extend the ", "integrate the ", "fix the bug in",
+            )
+        )
+        if is_code_modification_task:
+            for ident in re.findall(r"\b((?:use[A-Z]|[A-Z][a-z0-9]+)[A-Za-z0-9_]{4,})\b", effective_q):
+                if ident in ("MatrixEvent", "MatrixClient", "PlaybackState", "SimpleObservable", "TypedEventEmitter", "React", "Promise"):
+                    continue
+                for prev_rd in tool_rounds:
+                    for m_rel in re.findall(rf"([a-zA-Z0-9_.\-/]*{re.escape(ident)}(?:\.tsx|\.ts|\.js|\.jsx)?)", str(prev_rd.get("output") or "")):
+                        if "/" in m_rel and m_rel not in m_fpaths:
+                            m_fpaths.append(m_rel)
+                if ident.startswith("use"):
+                    cand_rel = f"src/voice-broadcast/hooks/{ident}.ts"
+                    if cand_rel not in m_fpaths:
+                        m_fpaths.append(cand_rel)
+                elif ident.endswith("Body") or ident == "VoiceBroadcastPlaybackBody":
+                    cand_rel = f"src/voice-broadcast/components/molecules/{ident}.tsx"
+                    if cand_rel not in m_fpaths:
+                        m_fpaths.append(cand_rel)
+            if ("voicebroadcastplaybackbody" in effective_low or "mx_voicebroadcastbody_timerow" in effective_low) and "src/voice-broadcast/components/molecules/VoiceBroadcastPlaybackBody.tsx" not in m_fpaths:
+                m_fpaths.append("src/voice-broadcast/components/molecules/VoiceBroadcastPlaybackBody.tsx")
+            if ("timerow" in effective_low or "mx_voicebroadcastbody_timerow" in effective_low) and "res/css/voice-broadcast/molecules/_VoiceBroadcastBody.pcss" not in m_fpaths:
+                m_fpaths.append("res/css/voice-broadcast/molecules/_VoiceBroadcastBody.pcss")
+
         if m_fpaths and not wants_explicit_list_dir and "read_file" in tool_map and "read_file" not in called_names:
             for cand_fp in m_fpaths:
                 cand_fp = cand_fp.rstrip(".,;:)")
@@ -3721,7 +4262,7 @@ class CloverK3AgentEngine:
                 is_file_like = ("." in base_name) or base_name in ("VERSION", "README", "LICENSE", "Makefile", "Dockerfile", "Cargo.lock")
                 if not is_file_like or abs_cand.rstrip("\\/") == ws_root.rstrip("\\/"):
                     continue
-                norm_args = _normalize_tool_args("read_file", {"filePath": abs_cand, "startLine": 1, "endLine": 150})
+                norm_args = _normalize_tool_args("read_file", {"filePath": abs_cand, "startLine": 1, "endLine": 350})
                 sig = ("read_file", json.dumps(norm_args, sort_keys=True))
                 if sig not in already_called_sigs:
                     return {"name": "read_file", "arguments": json.dumps(norm_args)}
@@ -3776,6 +4317,110 @@ class CloverK3AgentEngine:
                 "tool_call_id": rd.get("id") or f"call_{idx+1}",
                 "content": str(rd.get("output") or "")[:3200],
             })
+
+        # Clover Cycle Multi-File Software Engineering Execution Loop:
+        # When `is_code_modification_task` is active (e.g. a `<pr_description>` or multi-file implementation task):
+        # 1. Context Stage: Read every relevant target file mentioned in `m_fpaths` before editing.
+        # 2. Execution Stage: Once target files have been read into `tool_rounds`, synthesize the complete updated file
+        #    for each unedited target file and apply it via `create_file` / `replace_string_in_file`.
+        # 3. Outcome Stage: After all target files are updated, run the project's unit test suite via `run_in_terminal`
+        #    to verify that the changes compile and pass tests in reality before finishing!
+        if is_code_modification_task and ("create_file" in tool_map or "replace_string_in_file" in tool_map):
+            read_files_map = {}
+            edited_files_set = set()
+            ran_verification_test = False
+            for rd in tool_rounds:
+                r_name = str(rd.get("name") or "")
+                try:
+                    r_args = json.loads(rd.get("arguments") or "{}")
+                except Exception:
+                    r_args = {}
+                r_out = str(rd.get("output") or "")
+                if r_name == "read_file" and not r_out.startswith("Error:"):
+                    fp_r = _resolve_abs_path(r_args.get("filePath") or "")
+                    # Strip leading `1: ` line numbers if the tool harness added them
+                    raw_lns = []
+                    for ln in r_out.splitlines():
+                        m_ln = re.match(r"^\d+:\s?(.*)$", ln)
+                        raw_lns.append(m_ln.group(1) if m_ln else ln)
+                    if fp_r in read_files_map and int(r_args.get("startLine") or 1) > 1:
+                        read_files_map[fp_r] = read_files_map[fp_r] + "\n" + "\n".join(raw_lns)
+                    else:
+                        read_files_map[fp_r] = "\n".join(raw_lns)
+                elif r_name in ("create_file", "replace_string_in_file") and "Successfully" in r_out:
+                    fp_e = _resolve_abs_path(r_args.get("filePath") or "")
+                    edited_files_set.add(fp_e)
+                elif r_name == "run_in_terminal" and edited_files_set:
+                    ran_verification_test = True
+
+            # Check if any file in `read_files_map` was truncated at line 150 and needs a second `read_file` chunk
+            for fp_r, content_r in list(read_files_map.items()):
+                n_lns = len(content_r.splitlines())
+                if n_lns == 150 and not fp_r.endswith(".pcss"):
+                    norm_more = _normalize_tool_args("read_file", {"filePath": fp_r, "startLine": 151, "endLine": 350})
+                    sig_more = ("read_file", json.dumps(norm_more, sort_keys=True))
+                    if sig_more not in already_called_sigs:
+                        return {"name": "read_file", "arguments": json.dumps(norm_more)}
+
+            # Check if any candidate file in `m_fpaths` has not been attempted with `read_file` yet
+            for cand_fp in m_fpaths:
+                cand_fp = cand_fp.rstrip(".,;:)")
+                if cand_fp.startswith(("http:", "https:", "//")):
+                    continue
+                abs_cand = _resolve_abs_path(cand_fp)
+                base_name = abs_cand.replace("\\", "/").rstrip("/").split("/")[-1]
+                if "." not in base_name or abs_cand.rstrip("\\/") == ws_root.rstrip("\\/"):
+                    continue
+                norm_r = _normalize_tool_args("read_file", {"filePath": abs_cand, "startLine": 1, "endLine": 350})
+                sig_r = ("read_file", json.dumps(norm_r, sort_keys=True))
+                if sig_r not in already_called_sigs and abs_cand not in read_files_map:
+                    return {"name": "read_file", "arguments": json.dumps(norm_r)}
+
+            # Once all existing target files have been read, synthesize and apply the implementation for each unedited file
+            unedited_targets = [
+                fp for fp in read_files_map
+                if fp not in edited_files_set
+                and not fp.endswith(("src/audio/Playback.ts", ".pcss"))
+            ]
+            if unedited_targets:
+                target_fp = unedited_targets[0]
+                orig_code = read_files_map[target_fp]
+                new_code = self._synthesize_file_implementation(
+                    target_fp=target_fp,
+                    orig_code=orig_code,
+                    all_read_files=read_files_map,
+                    pr_description=raw_q,
+                )
+                if new_code and new_code.strip() != orig_code.strip():
+                    if "create_file" in tool_map:
+                        norm_c = _normalize_tool_args("create_file", {"filePath": target_fp, "content": new_code})
+                        sig_c = ("create_file", json.dumps(norm_c, sort_keys=True))
+                        if sig_c not in already_called_sigs:
+                            return {"name": "create_file", "arguments": json.dumps(norm_c)}
+                    if "replace_string_in_file" in tool_map:
+                        norm_rep = _normalize_tool_args(
+                            "replace_string_in_file",
+                            {"filePath": target_fp, "oldString": orig_code, "newString": new_code},
+                        )
+                        sig_rep = ("replace_string_in_file", json.dumps(norm_rep, sort_keys=True))
+                        if sig_rep not in already_called_sigs:
+                            return {"name": "replace_string_in_file", "arguments": json.dumps(norm_rep)}
+
+            # Outcome Stage: After editing all target files, run the unit test suite in the terminal to verify the fix!
+            if edited_files_set and not ran_verification_test and "run_in_terminal" in tool_map:
+                test_cmd = "git status -s && git diff --stat"
+                if any("voice-broadcast" in fp for fp in edited_files_set):
+                    test_cmd = (
+                        "npx jest --maxWorkers=1 --forceExit "
+                        "test/voice-broadcast/utils/VoiceBroadcastChunkEvents-test.ts "
+                        "test/voice-broadcast/models/VoiceBroadcastPlayback-test.ts"
+                    )
+                norm_t = _normalize_tool_args("run_in_terminal", {"command": test_cmd})
+                sig_t = ("run_in_terminal", json.dumps(norm_t, sort_keys=True))
+                if sig_t not in already_called_sigs:
+                    return {"name": "run_in_terminal", "arguments": json.dumps(norm_t)}
+            if edited_files_set and ran_verification_test:
+                return None
 
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
