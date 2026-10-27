@@ -1214,9 +1214,38 @@ class SuttonTDStatementPredictor:
     ) -> list[float]:
         """Sutton (1988, Theorem 3): Computes the exact empirical Absorbing Markov Model prediction
         `V_MLE = (I - Q_hat + eps*I)^(-1) h_hat` on GPU (`cuda:7` when available)."""
-        import torch as _torch
-        dev = self.device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
         n = self.num_states
+        try:
+            import torch as _torch
+        except ImportError:
+            _torch = None
+
+        if _torch is None:
+            trans = [[0.0] * n for _ in range(n)]
+            terms = [0.0] * n
+            visits = [0.0] * n
+            for seq, z in episodes:
+                for idx, s in enumerate(seq):
+                    visits[s] += 1.0
+                    if idx + 1 < len(seq):
+                        trans[s][seq[idx + 1]] += 1.0
+                    else:
+                        terms[s] += float(z)
+            q_hat = [[0.0] * n for _ in range(n)]
+            h_hat = [0.0] * n
+            for i in range(n):
+                if visits[i] > 0.0:
+                    for j in range(n):
+                        q_hat[i][j] = trans[i][j] / visits[i]
+                    h_hat[i] = terms[i] / visits[i]
+                else:
+                    h_hat[i] = 0.5
+            v = list(h_hat)
+            for _ in range(200):
+                v = [h_hat[i] + sum(q_hat[i][j] * v[j] for j in range(n)) for i in range(n)]
+            return [round(float(x), 4) for x in v]
+
+        dev = self.device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
         trans_counts = _torch.zeros((n, n), dtype=_torch.float64, device=dev)
         term_sums = _torch.zeros((n,), dtype=_torch.float64, device=dev)
         visit_counts = _torch.zeros((n,), dtype=_torch.float64, device=dev)
@@ -1256,9 +1285,50 @@ class SuttonTDStatementPredictor:
         (1986, Eq. 16) momentum and optional p. 23 backward offline `TD(0)` replay on GPU (`cuda:7`).
         When `sweeps > 1` (Theorem 3 repeated presentations), accumulates `dw` across the training set
         normalized by state visit counts so the stationary point matches the exact Markov MLE `(I - Q_hat)^(-1) h_hat`."""
-        import torch as _torch
-        dev = self.device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
         n = self.num_states
+        try:
+            import torch as _torch
+        except ImportError:
+            _torch = None
+
+        if _torch is None:
+            w = [0.5] * n
+            vel = [0.0] * n
+            for _ in range(max(1, sweeps)):
+                if backward_offline_replay and sweeps > 1:
+                    dw_batch = [0.0] * n
+                    visits = [0.0] * n
+                    for seq, z in episodes:
+                        for t in range(len(seq) - 1, -1, -1):
+                            s_t = seq[t]
+                            target = float(z) if (t == len(seq) - 1) else w[seq[t + 1]]
+                            dw_batch[s_t] += target - w[s_t]
+                            visits[s_t] += 1.0
+                    for i in range(n):
+                        step_i = (dw_batch[i] / visits[i]) if visits[i] > 0.0 else 0.0
+                        vel[i] = momentum * vel[i] + lr * step_i
+                        w[i] = min(0.95, max(0.05, w[i] + vel[i]))
+                else:
+                    for seq, z in episodes:
+                        if not seq:
+                            continue
+                        e_trace = [0.0] * n
+                        dw_ep = [0.0] * n
+                        for t in range(len(seq)):
+                            s_t = seq[t]
+                            e_trace = [e * lam for e in e_trace]
+                            e_trace[s_t] += 1.0
+                            p_t = w[s_t]
+                            p_next = float(z) if (t == len(seq) - 1) else w[seq[t + 1]]
+                            td_err = p_next - p_t
+                            for i in range(n):
+                                dw_ep[i] += lr * td_err * e_trace[i]
+                        for i in range(n):
+                            vel[i] = momentum * vel[i] + dw_ep[i]
+                            w[i] = min(0.95, max(0.05, w[i] + vel[i]))
+            return [round(float(x), 4) for x in w]
+
+        dev = self.device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
         w = _torch.full((n,), 0.5, dtype=_torch.float64, device=dev)
         vel = _torch.zeros((n,), dtype=_torch.float64, device=dev)
 

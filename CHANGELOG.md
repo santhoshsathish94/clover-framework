@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## v4.0.0 — 2026-10-27
+
+**Clover AI v4 (`v4.0.0`) — The 7-Layer Neuro-Symbolic, Compiler-Verified & Memory-Accumulating System.** `VERSION` is `4.0.0` and all site `?v=4.0.0` asset cache strings match it.
+
+- **Seven integrated layers verified on `8 × NVIDIA RTX 3090` (`gpu`) and `AMD Ryzen 9 7950X3D` (`k3`):**
+  1. **Governance & Discernment Kernel (`AGENTS.md`):** Operates under `Context → Direction → Execution → Outcome → Growth` with explicit epistemic state tracking (`observed`, `externally_verified`, `hypothesis`, `user_stated_belief`, `unresolved`).
+  2. **File-Based Memory Tree & Relational Knowledge Graph (`k3_memory_graph.py`):** 32 canonical Markdown entries, 65 typed cross-branch relationships, a closed-loop `staging/` promotion gate, and six mechanisms from the 11 foundational AI papers (`Origin` page at `site/origin/index.html` and `clover-foundations-to-clover-gpu-context.md`: stress false positives reduced from `16/16` (`9,244` polluted tokens) to `0/16` (`0` tokens) and tight-budget E2E raised from `0/6` to `6/6 = 100.0%`).
+  3. **Ontology-Guided Neuro-Symbolic GraphRAG & Symbolic Verifier (`k3_ontology_graph.py`):** Deterministic property graph, 4 Horn inference rules, Newell–Simon `CSm`/`VCt` structural signature pruning (`22.5×` fewer DFS steps), and `[E#]`/`[P#]` provenance.
+  4. **HybridAgent Continuous `<latent>` Reasoning & Live Tools (`k3_agent_engine.py`):** 14-step `<latent>` reasoning (`K3NativeHybridLink` `7,168 → 7,168`), live `<search>`, sandboxed `<python>`, and 27-layer `MoonViT3d` vision.
+  5. **On-the-Fly Python & Rust Generative Compilation (`k3_generative_compiler.py`):** Statement-boundary partial-program sealors (`S_PY`, `S_RS` via `rustc`) with mid-generation KV-cache rollback (`40/40 = 100%` Extended HumanEval, `5/5 = 100%` Live Rust).
+  6. **93-Layer 2.78T MoE GPU/CPU Engine, Validated Rust Host Path & Direction B Data Movement (`libk3_gpu_experts.so`, `src/rust/`):** 8 Rust crates (`slotcache`, `poolinit`, `supply`, `copyq`, `routetable`, `planner`, `loader`, `engcfg` — `213/213` unit tests, `max_abs_diff = 0.0` C++ vs. Rust parity) and five Direction B data-movement upgrades (`95.22%–95.29%` overall VRAM hit rate, `0` PCIe D2H writebacks on cold/warm reads, `148.5 K3 tok/s` across 93 GPU layers).
+  7. **11-Pass Parallel Next-Concept Modeling (NCM) & Native Web / VS Code Surfaces (`k3_chat_server.py`, `vscode-extension/`):** `17,869.8 tok/s` 8-GPU DDP ceiling, `256K` session context, and native VS Code Agent extension (`4.0.0`).
+- **Zero-state GitHub + Hugging Face bootstrap, 70-task head-to-head evaluation, and 3-arm ablation (`benchmarks/results/1936d4eb0d53/`):**
+  - Synced all 32 non-expert/trunk checkpoints, vision safetensors, and benchmark datasets to Hugging Face (`Santhoshsathish94/clover-kimi-k3`), wiped `/home/usergpu/*` on `gpu`, bootstrapped fresh into `/opt/clover-k3/clover-framework`, and ran `run_real_ai_benchmark_suite.py` (`70 / 70 = 100.00%` in `1,002.26 s` task latency / `1,005.50 s` suite envelope).
+  - Controlled 3-arm ablation of Clover's own underlying model on `8 × RTX 3090` (`clover_70_ablation_report.json`): **Arm 0 (Underlying Model Alone)** `33/70 = 47.14%` (`965.41 s`, `234.04 GPU-s/solved`) → **Arm 1 (+ Tools & Generative Compilation)** `57/70 = 81.43%` (`1,015.40 s`, `142.51 GPU-s/solved`) → **Arm 2 (Full 7-Layer Clover v4)** `70/70 = 100.00%` (`1,002.26 s`, `114.54 GPU-s/solved`, `2.04×` lower GPU cost per solved task).
+  - Head-to-head against standalone frontier reference models on the exact same 70 prompts (`frontier_70_scored_report.json`): on the 58 public tasks (zero tools), standalone **Claude Opus 5.5** (`57/58 = 98.28%`) and **GPT-6 Astra** (`56/58 = 96.55%`) are near-perfect in-weights and rightly abstain on private organizational ontology/memory records not in their prompt (`65/70 = 92.86%` and `63/70 = 90.00%` overall).
+  - Preserved CPU verification bundle (`benchmarks/results/1936d4eb0d53/cpu/run_cpu_v4_verified/`: `5/5` unified gates + `7/7 = 100.0%` 7-category representative battery + `0/16` stress FP on CPU).
+- **Observe Experiment A (`research/observe/`):** Implemented and verified local two-participant reciprocal observation, mutual state change (`state_sha256` before/after), least-privilege filtering (`0` private leaks), and held-out transfer (`2/6 = 33.33%` in No-Interaction and Logged-Only controls vs. `6/6 = 100.00%` after reciprocal state promotion, plus `2/2` live 93-layer Clover AI v4 server verification), tracked separately from the frozen v4 release.
+
 ## v3.5.1 — 2026-10-21
 
 **Clover Kimi K3 + HybridAgent + NCM (`e11`) live on `cloverframework.com/ai/`.** The unified

@@ -29,7 +29,7 @@ class CloverLanguageModelChatProvider {
         name: "Clover",
         vendor: "clover",
         family: "clover",
-        version: "3.5.1",
+        version: "4.0.0",
         maxInputTokens: 246144,
         maxOutputTokens: 16000,
         isUserSelectable: true,
