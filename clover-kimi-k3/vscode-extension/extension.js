@@ -345,12 +345,12 @@ function activate(context) {
       try {
         const inp = tcPart.input || {};
         if (tcPart.name === "list_dir") {
-          const dirPath = inp.path || "/home/usergpu/clover-framework";
+          const dirPath = inp.path || "/opt/clover-k3/clover-framework";
           const entries = fs.readdirSync(dirPath, { withFileTypes: true }).map((d) => (d.isDirectory() ? d.name + "/" : d.name));
           return entries.join("\n");
         }
         if (tcPart.name === "read_file") {
-          const fp = inp.filePath || "/home/usergpu/clover-framework/VERSION";
+          const fp = inp.filePath || "/opt/clover-k3/clover-framework/VERSION";
           if (!fs.existsSync(fp)) {
             return `Error: File ${fp} does not exist`;
           }
@@ -362,7 +362,7 @@ function activate(context) {
         }
         if (tcPart.name === "grep_search") {
           const q = inp.query || "Clover";
-          const out = cp.execSync(`grep -rn -i "${q}" /home/usergpu/clover-framework/VERSION /home/usergpu/clover-framework/README.md 2>/dev/null || true`, {
+          const out = cp.execSync(`grep -rn -i "${q}" /opt/clover-k3/clover-framework/VERSION /opt/clover-k3/clover-framework/README.md 2>/dev/null || true`, {
             encoding: "utf-8",
             timeout: 10000,
           }).trim();
@@ -385,7 +385,7 @@ function activate(context) {
 
     async function runAgentTask(taskId, userRequestText) {
       const prompt =
-        "<workspace_info>\nI am working in a workspace with the following folders:\n- /home/usergpu/clover-framework\n</workspace_info>\n" +
+        "<workspace_info>\nI am working in a workspace with the following folders:\n- /opt/clover-k3/clover-framework\n</workspace_info>\n" +
         `<userRequest>\n${userRequestText}\n</userRequest>`;
       const messages = [vscode.LanguageModelChatMessage.User(prompt)];
       const trajectory = [];
@@ -434,11 +434,11 @@ function activate(context) {
     const tasks = [
       await runAgentTask(
         "task1_multi_step_explore_and_git",
-        "First list the directory /home/usergpu/clover-framework, then read /home/usergpu/clover-framework/VERSION and check how many git working trees exist in /home/usergpu/clover-framework, and summarize what you found."
+        "First list the directory /opt/clover-k3/clover-framework, then read /opt/clover-k3/clover-framework/VERSION and check how many git working trees exist in /opt/clover-k3/clover-framework, and summarize what you found."
       ),
       await runAgentTask(
         "task2_read_file_and_analyze",
-        "Read the file /home/usergpu/clover-framework/VERSION and tell me the exact version number."
+        "Read the file /opt/clover-k3/clover-framework/VERSION and tell me the exact version number."
       ),
       await runAgentTask(
         "task3_direct_math_no_false_tool",
@@ -454,9 +454,9 @@ function activate(context) {
       maxInputTokens: model.maxInputTokens,
       allTasksPassed:
         tasks[0].roundsExecuted >= 2 &&
-        tasks[0].finalReply.includes("3.5.1") &&
+        tasks[0].finalReply.includes("4.0.0") &&
         tasks[1].roundsExecuted >= 1 &&
-        tasks[1].finalReply.includes("3.5.1") &&
+        tasks[1].finalReply.includes("4.0.0") &&
         tasks[2].roundsExecuted === 0 &&
         tasks[2].finalReply.includes("100"),
       tasks,

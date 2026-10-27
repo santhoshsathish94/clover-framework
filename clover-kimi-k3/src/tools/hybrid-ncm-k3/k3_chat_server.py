@@ -2280,6 +2280,29 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             self._send_json({"ok": True, "validation": rep.to_dict()})
             return
 
+        if self.path.startswith("/api/reload-code"):
+            try:
+                import importlib
+                import k3_fast_chat as _kfc
+                import k3_generative_compiler as _kgc
+                import k3_ontology_graph as _kog
+                import k3_memory_graph as _kmg
+                import k3_agent_engine as _kae
+                importlib.reload(_kfc)
+                importlib.reload(_kgc)
+                importlib.reload(_kog)
+                importlib.reload(_kmg)
+                importlib.reload(_kae)
+                for w_eng in STATE.text_workers:
+                    w_eng.__class__ = _kae.CloverK3AgentEngine
+                    w_eng.py_gc = _kgc.CloverPythonGenerativeCompiler(allow_undefined=True)
+                    if getattr(w_eng, "rust_gc", None) is not None and _kgc.HAS_RUST_GC:
+                        w_eng.rust_gc = _kgc.CloverRustGenerativeCompiler()
+                self._send_json({"ok": True, "reloaded": ["k3_fast_chat", "k3_generative_compiler", "k3_ontology_graph", "k3_memory_graph", "k3_agent_engine"]})
+            except Exception as e:
+                self._send_json({"error": str(e)}, code=500)
+            return
+
         if self.path.startswith("/api/memory/stage"):
             eng0 = STATE.text_workers[0]
             mg = getattr(eng0, "memory_graph", None)

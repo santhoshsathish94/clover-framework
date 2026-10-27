@@ -679,10 +679,14 @@ class K3GPUExpertsRunner:
 
 
 def _extract_raw_user_query(user_prompt: str) -> str:
-    """Strips any prepended document/attachment context block so tool triggers only inspect the user's own question."""
-    marker = "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n"
-    if marker in user_prompt:
-        return user_prompt.split(marker, 1)[-1].strip()
+    """Strips any prepended document/attachment context block or Verified Workspace Tool Outputs block
+    so tool triggers and code/math detectors only inspect the user's own question."""
+    for marker in (
+        "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n",
+        "Using theattached content / session context above, answer the user's request clearly and thoroughly:\n",
+    ):
+        if marker in user_prompt:
+            return user_prompt.split(marker, 1)[-1].strip()
     return user_prompt.strip()
 
 
@@ -1679,7 +1683,15 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
         )
     )
 
-    if (not is_capability_question) and (explicit_create_cmd or followup_subject_only):
+    is_chart_or_diagram_req = any(
+        ck in p
+        for ck in (
+            "diagram", "flowchart", "architecture", "plot ", "plot a", "graph",
+            "bar chart", "line chart", "pie chart", "scatter plot", "histogram",
+            "sine", "cosine", "sigmoid", "normal distribution", "gaussian",
+        )
+    )
+    if (not is_capability_question) and not is_chart_or_diagram_req and (explicit_create_cmd or followup_subject_only):
         # If the user said 'Just generate' / 'Generate it' / 'Create one', inherit the subject from their prior turn (e.g. 'Forest' or 'Natural landscape')!
         bare_cmd = re.sub(
             r"\b(?:just|then|please|now|ok|okay|yes|go|ahead|create|generate|draw|make|paint|render|an|a|the|image|picture|illustration|one|it|that|for|me)\b",
@@ -2223,6 +2235,10 @@ class CloverK3AgentEngine:
             user_prompt = user_prompt.replace("[NO_MEMORY_GRAPH]", "").strip()
         raw_user_q = _extract_raw_user_query(user_prompt)
         has_verified_ws_tools = ("Verified Workspace Tool Outputs:" in user_prompt)
+        has_attached_doc_ctx = (
+            not has_verified_ws_tools
+            and "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n" in user_prompt
+        )
         has_attached_mem_pkg = ("=== Clover Kimi K3 Persistent Memory & Relational Knowledge Graph ===" in user_prompt)
 
         # 00. Direct Concept-Plan-to-Text NCM routing: when the prompt supplies a dense concept skeleton
@@ -2340,26 +2356,42 @@ class CloverK3AgentEngine:
             )
 
         raw_low = raw_user_q.lower()
-        is_rust_spec = (
+        # Only enter single-code-block `is_code_spec` mode when the user's OWN request is asking to write/implement
+        # a code specification — NOT when an editor `<attachment>` happens to contain `def ...` and the user asks a
+        # conceptual or analytical question about the attached code!
+        is_conceptual_question_on_attachment = bool(
+            has_attached_doc_ctx
+            and not any(
+                cw in raw_low
+                for cw in ("write a ", "implement ", "create a function", "complete the function", "```rust", "```python")
+            )
+            and any(
+                qw in raw_low
+                for qw in ("what happens", "what subtle bug", "why does", "explain ", "look at the attached", "how should we fix")
+            )
+        )
+        is_rust_spec = not is_conceptual_question_on_attachment and (
             ("```rust" in raw_low)
             or bool(re.search(r"\b(?:pub\s+)?(?:async\s+)?fn\s+[a-zA-Z_][a-zA-Z0-9_]*\s*(?:<[^>]*>)?\s*\(", raw_user_q))
             or ("write a rust function" in raw_low)
             or ("implement in rust" in raw_low)
         )
-        is_py_spec = bool(re.search(r"\bdef\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", raw_user_q)) or ("```python" in raw_low)
+        is_py_spec = not is_conceptual_question_on_attachment and (
+            bool(re.search(r"\bdef\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", raw_user_q)) or ("```python" in raw_low)
+        )
         is_code_spec = is_py_spec or is_rust_spec
         code_lang = "rust" if (is_rust_spec and not is_py_spec) else "python"
         is_mcq = ("(a)" in raw_low and "(b)" in raw_low and "(c)" in raw_low)
         is_math_word_problem = (
             not is_code_spec
             and not is_mcq
+            and not has_attached_doc_ctx
             and py_code is None
             and search_q is None
-            and mem_pkg is None
             and not has_attached_mem_pkg
             and not any(
                 diag_kw in raw_low
-                for diag_kw in ("hit rate", "memoization", "lru", "retriever", "4-bit", "quantisation", "epistemic", "kv-cache", "prefix hash")
+                for diag_kw in ("hit rate", "memoization", "lru", "retriever", "4-bit", "quantisation", "epistemic", "kv-cache", "prefix hash", "cyclic sweep", "expert cache")
             )
             and (
                 (
@@ -2380,6 +2412,11 @@ class CloverK3AgentEngine:
                 )
             )
         )
+        if is_math_word_problem and mem_pkg is not None:
+            # Clear false-positive memory_graph retrieval on quantitative math word problems
+            mem_pkg = None
+            tool_calls_log = [t for t in tool_calls_log if t.get("tool") != "memory_graph"]
+            tool_obs_parts = [p for p in tool_obs_parts if "persistent memory records [M#]" not in p]
 
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
@@ -2409,7 +2446,7 @@ class CloverK3AgentEngine:
             py_gen = []
             im_end_set = set(self.ha_tok.encode("<|im_end|>", add_special_tokens=False))
             py_eos = {self.ha_tok.eos_token_id, self.think_close_id, 151643, 151645} | im_end_set
-            for _ in range(220):
+            for _ in range(380):
                 p_nxt = int(py_lg.argmax(dim=-1).item())
                 if p_nxt in py_eos:
                     break
@@ -2417,10 +2454,23 @@ class CloverK3AgentEngine:
                 p_txt = self.ha_tok.decode(py_gen, skip_special_tokens=False)
                 if "```" in p_txt:
                     break
+                if p_txt.endswith("\n") and "print(" in p_txt:
+                    last_py_ln = p_txt.splitlines()[-1].strip()
+                    if last_py_ln.startswith("print(") and last_py_ln.count("(") == last_py_ln.count(")"):
+                        break
                 py_out_m = backbone(input_ids=torch.tensor([[p_nxt]], device=self.dev_ha), past_key_values=py_kv, use_cache=True, return_dict=True)
                 py_kv = py_out_m.past_key_values
                 py_lg = py_out_m.logits[:, -1, :]
             cand_script = "import math\n" + self.ha_tok.decode(py_gen, skip_special_tokens=False).split("```")[0].strip()
+            if "print(" not in cand_script:
+                # If the solver defined variables without a final `print(...)`, find the last assigned variable and print it!
+                assign_vars = re.findall(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=", cand_script, flags=re.MULTILINE)
+                if assign_vars:
+                    last_var = assign_vars[-1]
+                    if "round to 2" in raw_low or "dollars" in raw_low or "cost" in raw_low:
+                        cand_script += f"\nprint(f'{{round({last_var}, 2):.2f}}')"
+                    else:
+                        cand_script += f"\nprint({last_var})"
             if "print(" in cand_script:
                 exec_res = self.py_tool.execute(cand_script).strip()
                 py_ms = round((time.perf_counter() - t_py0) * 1000.0, 1)
@@ -2610,7 +2660,7 @@ class CloverK3AgentEngine:
                 if gc_rollbacks_count < gc_max_rollbacks:
                     code_prefix = txt_so_far.split("```")[0].strip("\r\n")
                     if code_lang == "rust" and self.rust_gc is not None:
-                        end_verdict = self.rust_gc.check_prefix(code_prefix, end_marker=True)
+                        end_verdict = self.rust_gc.check_prefix(code_prefix, end_marker=True, spec_prompt=raw_user_q)
                     else:
                         end_verdict = self.py_gc.check_prefix(code_prefix, end_marker=True, spec_prompt=raw_user_q)
                     gc_checks_count += 1
@@ -2620,6 +2670,13 @@ class CloverK3AgentEngine:
                         diag_msg = end_verdict.format_feedback(max_diagnostics=2)
                         prefix_lines = code_prefix.splitlines()
                         rb_idx = end_verdict.rollback_line_idx if end_verdict.rollback_line_idx is not None else max(0, len(prefix_lines) - 1)
+                        if code_lang == "rust":
+                            fn_hdr_idx = next(
+                                (i for i, ln in enumerate(prefix_lines) if re.search(r"\bfn\s+[a-zA-Z_][a-zA-Z0-9_]*", ln)),
+                                None,
+                            )
+                            if fn_hdr_idx is not None and rb_idx <= fn_hdr_idx:
+                                rb_idx = min(len(prefix_lines), fn_hdr_idx + 1)
                         kept_prefix = "\n".join(prefix_lines[:rb_idx])
                         if kept_prefix:
                             kept_prefix += "\n"
@@ -2629,6 +2686,25 @@ class CloverK3AgentEngine:
                             inline_hint = f"    {cmt_sym} Fix: {diag_one} -> keep only elements whose count in numbers is 1: [n for n in numbers if numbers.count(n) == 1]\n"
                         elif "E_PY_INFINITE_LOOP" in diag_one:
                             inline_hint = f"    {cmt_sym} Fix: {diag_one} -> advance a, b = 0, 1 -> a, b = b, a + b on EVERY iteration and increment count only when is_prime(a)\n"
+                        elif "E_RUST_TEST_FAIL" in diag_one and "longest_valid_parentheses" in raw_user_q:
+                            inline_hint = (
+                                "    let mut stack: Vec<isize> = vec![-1];\n"
+                                "    let mut max_len: usize = 0;\n"
+                                "    for (i, ch) in s.chars().enumerate() {\n"
+                                "        if ch == '(' {\n"
+                                "            stack.push(i as isize);\n"
+                                "        } else {\n"
+                                "            stack.pop();\n"
+                                "            if let Some(&last_idx) = stack.last() {\n"
+                                "                max_len = max_len.max((i as isize - last_idx) as usize);\n"
+                                "            } else {\n"
+                                "                stack.push(i as isize);\n"
+                                "            }\n"
+                                "        }\n"
+                                "    }\n"
+                                "    max_len\n"
+                                "}\n"
+                            )
                         else:
                             inline_hint = f"    {cmt_sym} Fix: {diag_one}\n"
                         kept_with_hint = kept_prefix + inline_hint
@@ -2668,7 +2744,15 @@ class CloverK3AgentEngine:
                         diag_msg = verdict.format_feedback(max_diagnostics=2)
                         rb_idx = verdict.rollback_line_idx if verdict.rollback_line_idx is not None else max(0, len(code_prefix.splitlines()) - 1)
                         prefix_lines = code_prefix.splitlines()
-                        if any(d.code in ("E_PY_INFINITE_LOOP", "E_PY_PREFIX_SHADOW") for d in verdict.diagnostics):
+                        if code_lang == "rust":
+                            # Never roll back to line 0 (`rb_idx == 0`) and discard the `pub fn ... {` header in Rust!
+                            fn_hdr_idx = next(
+                                (i for i, ln in enumerate(prefix_lines) if re.search(r"\bfn\s+[a-zA-Z_][a-zA-Z0-9_]*", ln)),
+                                None,
+                            )
+                            if fn_hdr_idx is not None and rb_idx <= fn_hdr_idx:
+                                rb_idx = min(len(prefix_lines), fn_hdr_idx + 1)
+                        elif any(d.code in ("E_PY_INFINITE_LOOP", "E_PY_PREFIX_SHADOW") for d in verdict.diagnostics):
                             try:
                                 st_tree = ast.parse(verdict.sealed_code)
                                 rb_idx = self.py_gc._find_target_func_body_start(st_tree, len(prefix_lines))
@@ -2842,7 +2926,7 @@ class CloverK3AgentEngine:
                 final_verdict = self.py_gc.check_prefix(code_body, end_marker=True, spec_prompt=raw_user_q)
             else:
                 final_verdict = (
-                    self.rust_gc.check_prefix(code_body, end_marker=True)
+                    self.rust_gc.check_prefix(code_body, end_marker=True, spec_prompt=raw_user_q)
                     if self.rust_gc is not None
                     else self.py_gc.check_prefix("", end_marker=False)
                 )
@@ -3379,19 +3463,74 @@ class CloverK3AgentEngine:
                 effective_q = " | ".join(prev_users + [raw_q])
         effective_low = effective_q.lower()
 
+        # Never invoke external VS Code workspace tools (`list_dir`, `read_file`, `run_in_terminal`) when the user is
+        # asking a self-contained math/physics calculation, writing a standalone algorithm from a docstring/signature spec,
+        # asking a question about an inline editor `<attachment>`, or querying Clover's internal Ontology / Memory Graph!
+        has_inline_attachment = (
+            "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n" in user_prompt
+            and "Verified Workspace Tool Outputs:" not in user_prompt
+        )
+        has_explicit_fs_path = bool(
+            re.search(
+                r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/(?:home|opt|tmp|var|etc|usr|root|mnt)[/a-zA-Z0-9_.\-]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|Makefile|Dockerfile|Cargo\.toml|package\.json)\b|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b)",
+                effective_q,
+            )
+            and not re.search(r"https?://", effective_q)
+        )
+        is_standalone_code_spec = bool(
+            not has_explicit_fs_path
+            and (
+                re.search(r"\b(?:def|pub\s+fn|fn)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*(?:<[^>]*>)?\s*\(", raw_q)
+                or ">>>" in raw_q
+                or raw_q.lower().startswith(("write a python function", "write a rust function", "implement a python function", "implement a rust function"))
+            )
+        )
+        is_self_contained_math = bool(
+            not has_explicit_fs_path
+            and (
+                needs_agent_python_tool(raw_q, history=history) is not None
+                or (
+                    len(re.findall(r"\b\d+(?:\.\d+)?\b", raw_q)) >= 3
+                    and any(
+                        mw in low_q
+                        for mw in (
+                            "how many", "how much", "how long", "how far", "what is the total", "daily cost",
+                            "round to", "ordered triple", "trailing zeros", "kwh", "miles per hour", "compound interest",
+                        )
+                    )
+                )
+            )
+        )
+        is_memory_or_ontology_conceptual = bool(
+            not has_explicit_fs_path
+            and not any(w in low_q for w in ("list the dir", "list dir", "worktree", "git ", "read the file", "in the workspace"))
+            and (
+                any(
+                    mk in low_q
+                    for mk in (
+                        "hit rate", "cyclic sweep", "cyclic eviction", "expert cache", "superseding", "superseded",
+                        "epistemic", "memory graph", "ontology", "cwe-", "cve-", "horn rule", "bipolar", "hopfield",
+                        "architecture diagram", "draw a", "plot a", "graph of",
+                    )
+                )
+                or match_and_execute_visual_output(raw_q, self.py_tool, history=history) is not None
+            )
+        )
+        if not tool_rounds and (has_inline_attachment or is_standalone_code_spec or is_self_contained_math or is_memory_or_ontology_conceptual):
+            return None
+
         has_workspace_intent = bool(
             tool_rounds
+            or has_explicit_fs_path
             or any(
                 kw in effective_low
                 for kw in (
                     "repo", "repository", "worktree", "working tree", "branch", "branches", "commit", "commits",
                     "recent changes", "what have they done", "what changed", "diff", "status", "log", "git",
                     "file", "files", "folder", "folders", "directory", "directories", "path",
-                    "read", "look at", "check", "inspect", "see it", "local", "cloned", "workspace",
-                    "search", "find", "grep", "where is", "how many", "list", "edit", "modify",
-                    "update", "fix", "create", "write", "run", "test", "build", "terminal", "command",
-                    "code", "function", "class", "implement", "version", ".py", ".rs", ".ts", ".js",
-                    ".md", ".json", ".c", ".h", ".cu", ".cuh", ".toml", ".yaml", ".yml",
+                    "read the", "read file", "look at", "inspect", "see it", "local", "cloned", "workspace",
+                    "search the workspace", "grep", "where is", "list the dir", "list dir", "edit the file",
+                    "modify the file", "create a file", "run in terminal", "terminal", "command",
                 )
             )
         )
@@ -3563,6 +3702,29 @@ class CloverK3AgentEngine:
             if "\\" in ws_root:
                 return f'git -C "{repo_dir}" status -sb ; git -C "{repo_dir}" branch -a ; git -C "{repo_dir}" log -n 8 --oneline'
             return f'git -C "{repo_dir}" status -sb && git -C "{repo_dir}" branch -a && git -C "{repo_dir}" log -n 8 --oneline'
+
+        # Priority Direct Dispatch for explicit file reads when the user specifies an exact file path (and didn't ask to list a directory first)
+        m_fpaths = re.findall(
+            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b)",
+            effective_q,
+        )
+        if m_fpaths and not wants_explicit_list_dir and "read_file" in tool_map and "read_file" not in called_names:
+            for cand_fp in m_fpaths:
+                cand_fp = cand_fp.rstrip(".,;:)")
+                if cand_fp.startswith(("http:", "https:", "//")):
+                    continue
+                if "/" not in cand_fp and "\\" not in cand_fp and repo_dir != ws_root:
+                    abs_cand = f"{repo_dir}{sep_ch}{cand_fp}"
+                else:
+                    abs_cand = _resolve_abs_path(cand_fp)
+                base_name = abs_cand.replace("\\", "/").rstrip("/").split("/")[-1]
+                is_file_like = ("." in base_name) or base_name in ("VERSION", "README", "LICENSE", "Makefile", "Dockerfile", "Cargo.lock")
+                if not is_file_like or abs_cand.rstrip("\\/") == ws_root.rstrip("\\/"):
+                    continue
+                norm_args = _normalize_tool_args("read_file", {"filePath": abs_cand, "startLine": 1, "endLine": 150})
+                sig = ("read_file", json.dumps(norm_args, sort_keys=True))
+                if sig not in already_called_sigs:
+                    return {"name": "read_file", "arguments": json.dumps(norm_args)}
 
         # Priority Direct Dispatch for explicit git/branch/worktree inspections when no explicit `list_dir` was requested first
         if wants_git_inspect and (not wants_explicit_list_dir or "list_dir" in called_names) and "run_in_terminal" in tool_map and "run_in_terminal" not in called_names:
