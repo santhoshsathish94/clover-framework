@@ -58,25 +58,27 @@ It began on a single CPU host from the Clover equation of Kimi K3 and from Faree
 
 ## Core Research Thesis: The System Around the Model Matters
 
-Clover's central research question is whether **the system built around an AI model can substantially extend its effective problem-solving capability**. The model matters, but it is only one component of a complete system. Memory, ontology, tools, generative compilation, verification, governance, and agent coordination can help turn a model's proposals into grounded, executable, checked outcomes.
+**Clover is a systems-level experiment, not a model-selection contest.** We deliberately chose Kimi K3—a normal, open-weights model that scored **33 of 70 tasks (47.14%)** when evaluated on its own in our custom suite—instead of choosing the strongest available model and treating its raw score as the result. The question was not, “Which model scores highest?” It was, **“What can an AI system accomplish when a model is one component of a larger, structured system?”**
 
-Our current 70-task evaluation provides an initial demonstration:
+The model provides underlying capability. Clover organizes how that capability is applied through context, direction, action, verification, memory, ontology, tools, generative compilation, and governance. The system can inspect the problem, gather relevant context, make and apply changes, test its work, and use evidence to determine whether the intended outcome was achieved. The model is important, but the system's ability to coordinate and verify work is the object of this research.
+
+Our current 70-task evaluation provides an initial, concrete result:
 
 | Configuration | Tasks passed | Strict pass rate |
 | :--- | :---: | :---: |
-| Underlying model alone (Arm 0) | **33 / 70** | **47.14%** |
-| Model + tools and generative compilation (Arm 1) | **57 / 70** | **81.43%** |
+| Kimi K3 alone (Arm 0) | **33 / 70** | **47.14%** |
+| Kimi K3 + tools and generative compilation (Arm 1) | **57 / 70** | **81.43%** |
 | Full Clover AI v4 system (Arm 2) | **70 / 70** | **100.0%** |
 
-These results are from Clover's custom evaluation suite, not a universal measure of intelligence. They support a focused claim: **on these tasks, the complete Clover system solved problems that its underlying model alone did not reliably solve.** They do not establish that Clover is universally better than frontier models, that every system component helps every task, or that the results will generalize without independent replication.
+The point is not that Kimi K3 is the best model. **It wasn't selected because it was the best; it was selected to test what the system could do around a capable, ordinary model.** On this particular suite, the reported result rose from 33/70 for the model alone to 70/70 for the full Clover system. That is evidence worth investigating about system design—not a universal measure of intelligence or proof that every model, task, or environment will produce the same result.
 
-The frontier-model comparison is a separate question. The current comparison tested **GPT-6 Astra, Claude Opus 5.5, and Gemini 4 Argon** as standalone models, without attaching Clover's surrounding layers. That is useful context, but it is not an apples-to-apples comparison between complete systems. We welcome independent reproduction, held-out evaluations, alternative scoring, and published failures as well as successes.
+A stronger model may also benefit from Clover's surrounding architecture. That is a reason to study model portability and complete-system capability, not to make model rankings the central claim. Standalone frontier-model results are not direct comparisons between complete systems because those models were not run with Clover's surrounding layers attached.
 
-This is the hypothesis Clover is built to investigate:
+We welcome independent reproduction, held-out tasks, scrutiny of the evaluation protocol, alternative scoring, and published failures as well as successes. The broader claim must remain proportional to the evidence: these results are from a custom 70-task suite and need independent validation before they can support general conclusions.
 
-> **AI capability is not only a property of the model. It also emerges from the system around it.**
+> **The model provides a capability. The system organizes, extends, and verifies how that capability is used to solve problems.**
 
-The goal is both scientific and practical: publish evidence that researchers can challenge and reproduce, while making the architecture usable and extensible by the open-source community.
+Clover's research goal is to make AI systems more capable—not to prove that one model is the winner. The practical goal is to publish an architecture and evidence that researchers can challenge, reproduce, and extend.
 
 ### The Clover cycle
 
