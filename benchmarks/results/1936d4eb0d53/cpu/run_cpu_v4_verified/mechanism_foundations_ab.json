@@ -1,0 +1,180 @@
+{
+  "arm_A_foundations_disabled": {
+    "foundations_enabled": false,
+    "stress_false_positives": "16/16",
+    "polluted_irrelevant_tokens_injected": 9244,
+    "positive_recall": "16/16",
+    "e2e_task_pass_rate": "0/6 (0.0%)",
+    "total_eval_ms": 99.54,
+    "e2e_details": [
+      {
+        "id": "E2E_1_cross_branch_observer_and_cache",
+        "passed": false,
+        "retrieved_ids": [
+          "MEM-CORR-PER-LAYER-PARTITION-002",
+          "MEM-HYP-CACHE-DEAD-END-001",
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001"
+        ],
+        "required_ids": [
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-CONCEPT-OBSERVER-BOUNDARY-001"
+        ]
+      },
+      {
+        "id": "E2E_2_multi_facet_ontorag_3facets",
+        "passed": false,
+        "retrieved_ids": [
+          "MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001",
+          "MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
+          "MEM-CORR-HYBRID-RRF-SYMBOLIC-SEPARATION-001"
+        ],
+        "required_ids": [
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
+          "MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001"
+        ]
+      },
+      {
+        "id": "E2E_3_multi_facet_prefix_shadow_3facets",
+        "passed": false,
+        "retrieved_ids": [
+          "MEM-EXP-GENERATIVE-COMPILATION-ROLLBACK-001",
+          "MEM-OUT-GENERATIVE-COMPILATION-100PCT-001",
+          "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+        ],
+        "required_ids": [
+          "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+          "MEM-OBS-POSTHOC-CODE-REPAIR-LIMITS-001",
+          "MEM-OUT-GENERATIVE-COMPILATION-100PCT-001"
+        ]
+      },
+      {
+        "id": "E2E_4_contaminated_oil_buoyancy_physics",
+        "passed": false,
+        "retrieved_ids": [
+          "STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE",
+          "FORMULA:THIN-FILM-CONSTRUCTIVE-EQ",
+          "STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE",
+          "FORMULA:THIN-FILM-CONSTRUCTIVE-EQ"
+        ],
+        "forbidden_ids": [
+          "STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE",
+          "FORMULA:THIN-FILM-CONSTRUCTIVE-EQ"
+        ]
+      },
+      {
+        "id": "E2E_5_contaminated_cell_biology_endocytosis",
+        "passed": false,
+        "retrieved_ids": [
+          "MEM-CORR-INSIDE-BOUNDARY-002",
+          "MEM-HYP-INSIDE-MIND-001",
+          "MEM-CONV-PHIL-INSIDE-001",
+          "MEM-CONCEPT-OBSERVER-BOUNDARY-001",
+          "MEM-HYP-STRICT-EXTERNAL-REALISM-001"
+        ],
+        "forbidden_ids": [
+          "MEM-CORR-INSIDE-BOUNDARY-002",
+          "MEM-HYP-INSIDE-MIND-001",
+          "MEM-CONV-PHIL-INSIDE-001"
+        ]
+      },
+      {
+        "id": "E2E_6_contaminated_swimming_pool_heat",
+        "passed": false,
+        "retrieved_ids": [
+          "MEM-CORR-PER-LAYER-PARTITION-002",
+          "MEM-HYP-CACHE-DEAD-END-001",
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001",
+          "MEM-HYP-DENSE-RAG-SUFFICIENT-FOR-GRAPH-001",
+          "MEM-DEC-SLOTCACHE-PER-LAYER-001"
+        ],
+        "forbidden_ids": [
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-CORR-PER-LAYER-PARTITION-002",
+          "MEM-OBS-GLOBAL-CACHE-FLAT-001"
+        ]
+      }
+    ]
+  },
+  "arm_B_foundations_enabled": {
+    "foundations_enabled": true,
+    "stress_false_positives": "0/16",
+    "polluted_irrelevant_tokens_injected": 0,
+    "positive_recall": "16/16",
+    "e2e_task_pass_rate": "6/6 (100.0%)",
+    "total_eval_ms": 106.46,
+    "e2e_details": [
+      {
+        "id": "E2E_1_cross_branch_observer_and_cache",
+        "passed": true,
+        "retrieved_ids": [
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-CORR-PER-LAYER-PARTITION-002",
+          "MEM-CONCEPT-OBSERVER-BOUNDARY-001"
+        ],
+        "required_ids": [
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-CONCEPT-OBSERVER-BOUNDARY-001"
+        ]
+      },
+      {
+        "id": "E2E_2_multi_facet_ontorag_3facets",
+        "passed": true,
+        "retrieved_ids": [
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
+          "MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001"
+        ],
+        "required_ids": [
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
+          "MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001"
+        ]
+      },
+      {
+        "id": "E2E_3_multi_facet_prefix_shadow_3facets",
+        "passed": true,
+        "retrieved_ids": [
+          "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+          "MEM-OBS-POSTHOC-CODE-REPAIR-LIMITS-001",
+          "MEM-OUT-GENERATIVE-COMPILATION-100PCT-001"
+        ],
+        "required_ids": [
+          "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+          "MEM-OBS-POSTHOC-CODE-REPAIR-LIMITS-001",
+          "MEM-OUT-GENERATIVE-COMPILATION-100PCT-001"
+        ]
+      },
+      {
+        "id": "E2E_4_contaminated_oil_buoyancy_physics",
+        "passed": true,
+        "retrieved_ids": [],
+        "forbidden_ids": [
+          "STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE",
+          "FORMULA:THIN-FILM-CONSTRUCTIVE-EQ"
+        ]
+      },
+      {
+        "id": "E2E_5_contaminated_cell_biology_endocytosis",
+        "passed": true,
+        "retrieved_ids": [],
+        "forbidden_ids": [
+          "MEM-CORR-INSIDE-BOUNDARY-002",
+          "MEM-HYP-INSIDE-MIND-001",
+          "MEM-CONV-PHIL-INSIDE-001"
+        ]
+      },
+      {
+        "id": "E2E_6_contaminated_swimming_pool_heat",
+        "passed": true,
+        "retrieved_ids": [],
+        "forbidden_ids": [
+          "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+          "MEM-CORR-PER-LAYER-PARTITION-002",
+          "MEM-OBS-GLOBAL-CACHE-FLAT-001"
+        ]
+      }
+    ]
+  }
+}

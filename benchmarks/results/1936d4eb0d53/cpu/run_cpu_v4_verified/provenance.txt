@@ -1,0 +1,58 @@
+{
+  "captured_at_utc": "2026-10-27T00:30:31Z",
+  "repo_url": "https://github.com/santhoshsathish94/clover-framework.git",
+  "checkout_root": "/opt/clover-k3/clover-framework",
+  "tools_dir": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3",
+  "git_branch": "cpu-k3-benchmark",
+  "git_head_sha": "0391598fb12aeb953882efd87f52842e4f5301a7",
+  "git_status_short": "?? clover-kimi-k3/src/tools/hybrid-ncm-k3/run_cpu_v4_verification.py",
+  "working_tree_clean": false,
+  "sys_path_top5": [
+    "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3",
+    "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3",
+    "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3",
+    "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_vision",
+    "/usr/lib/python312.zip"
+  ],
+  "all_imports_resolve_to_frozen_checkout": true,
+  "modules": {
+    "clover_paths": {
+      "resolved_path": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/clover_paths.py",
+      "sha256": "885c003c7a404d2ba660df0eff9287d5ef49b02b987d9fe8fb503750759b88c2",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_agent_engine": {
+      "resolved_path": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_agent_engine.py",
+      "sha256": "ae1ee6320724a88f45f928bb2d50844adc97fa56593333f7c6dbe1c329b276fb",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_fast_chat": {
+      "resolved_path": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_fast_chat.py",
+      "sha256": "1f5ad6acbb4763a3a6f3b63e9bdb25a1436aecc3712b1ec1fecf493621aaba8a",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_memory_graph": {
+      "resolved_path": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_memory_graph.py",
+      "sha256": "bf9f0414279f8284ee5463c619e26d2e7acd049fa3e0c172e5331a637d3fef54",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_ontology_graph": {
+      "resolved_path": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_ontology_graph.py",
+      "sha256": "aaa363d0eb969c1db207c62a4cb1597f7d278dc287ad8fa57b835da53eab07f3",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_generative_compiler": {
+      "resolved_path": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_generative_compiler.py",
+      "sha256": "938aa6a02269f0a226aa88037fc17d83d688d3f6340aeb6bc4b8c050c67fb691",
+      "resolves_to_frozen_checkout": true
+    },
+    "k3_tokenizer": {
+      "resolved_path": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_tokenizer.py",
+      "sha256": "de4b365615cfbbc780632ed22143fb93113da00f0b3d06a1030d2f2d4d85c717",
+      "resolves_to_frozen_checkout": true
+    }
+  },
+  "live_server_health": {
+    "error": "<urlopen error [Errno 111] Connection refused>"
+  }
+}

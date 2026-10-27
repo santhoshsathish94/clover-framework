@@ -1,0 +1,67 @@
+{
+  "suite_name": "Clover AI v4 CPU 7-Category Representative Verification + Foundations A/B",
+  "target": "cpu",
+  "tested_commit_sha": "0391598fb12aeb953882efd87f52842e4f5301a7",
+  "scorer_file": "/opt/clover-k3/clover-framework/clover-kimi-k3/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py",
+  "scorer_sha256": "3736b986a27ca35861319d1351fab42a06a0a3d0401f16157307ec813ae4b05b",
+  "scorer_self_test": {
+    "all_passed": true,
+    "checks": [
+      {
+        "name": "gsm8k_gold",
+        "passed": true
+      },
+      {
+        "name": "gsm8k_bad",
+        "passed": true
+      },
+      {
+        "name": "mmlu_gold",
+        "passed": true
+      },
+      {
+        "name": "mmlu_bad",
+        "passed": true
+      },
+      {
+        "name": "humaneval_gold",
+        "passed": true
+      },
+      {
+        "name": "humaneval_bad",
+        "passed": true
+      },
+      {
+        "name": "agent_qa_gold",
+        "passed": true
+      },
+      {
+        "name": "agent_qa_bad",
+        "passed": true
+      }
+    ]
+  },
+  "total_tasks": 7,
+  "total_passed": 7,
+  "pass_rate_pct": 100.0,
+  "sum_task_latency_s": 971.38,
+  "suite_envelope_wall_s": 978.59,
+  "data_movement_ledger": {
+    "policy_id": 3,
+    "policy_name": "specmd_least_stale_r4",
+    "perm_vram_hits": 359,
+    "dyn_needed": 11883,
+    "hit_card_R3": 6467,
+    "hit_host_R1": 3000,
+    "from_drive_R1": 2416,
+    "written_back_R2": 0,
+    "r4_clean_drops": 4186,
+    "spec_lookahead_hits": 3000,
+    "dyn_hit_rate_pct": 54.42,
+    "overall_vram_hit_rate_pct": 55.76,
+    "pcie_gb_moved": 95.036,
+    "eyeriss_cost_per_req": 42.056,
+    "card_pool_slots": 1230,
+    "host_cache_slots": 2912
+  }
+}

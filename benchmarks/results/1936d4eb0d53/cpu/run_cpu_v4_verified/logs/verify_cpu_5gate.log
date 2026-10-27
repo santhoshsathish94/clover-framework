@@ -1,0 +1,34 @@
+================================================================================
+CLOVER KIMI K3 UNIFIED CPU/GPU VERIFICATION (device=cpu, cuda=False)
+  DATASET_DIR      : /opt/clover-k3/clover-kimi-k3/src/datasets/computed
+  OPEN_WEIGHTS_DIR : /opt/clover-k3/clover-kimi-k3/src/datasets/third-party/kimi-k3-open-weights
+  HYBRID_NCM_CKPTS : /opt/clover-k3/clover-kimi-k3/src/datasets/hybrid-ncm-k3
+================================================================================
+[K3-CPU-Experts] Ready: Layer 0 + 4 MoE Layers (896 experts/layer routable from /opt/clover-k3/clover-kimi-k3/src/datasets/computed) initialized on CPU (16 OpenMP threads) in 0.46s
+[PASS 1/5] K3MoE Runner initialized (is_cpu_backend=True, setup=0.75s)
+[TOK] 163584 ranks (max id 163583) + 16 added tokens | kimi=1 rankbpe=1
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 3503.72it/s]
+
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 399/399 [00:00<00:00, 14540.15it/s]
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+[PASS 2/5] CloverK3AgentEngine initialized on cpu in 4.79s (vocab=163840)
+[PASS 3/5] Subsystems verified: MemoryGraph=33 nodes, Ontology=0 hits, PythonGC=OK, CloverKB=OK
+  [Turn 1] (45612.7 ms, k3_toks=9) U: 'hi clover how are you'
+           A: Hello! How can I help you today?
+  [Turn 2] ( 5316.3 ms, k3_toks=46) U: 'can you generate a rocket in space image'
+           A: Here is an SVG cosmic illustration of rocket in space: |  | • Scene Elements: A sleek spacecraft rocket with twin booster fins, illuminated viewport, and exhaust plume soaring past
+  [Turn 3] ( 2856.9 ms, k3_toks=26) U: 'I never asked for a futuristic city'
+           A: Sorry about that! Please tell me what scene or topic you would like instead, and I will create it for you right away.
+  [Turn 4] (96649.2 ms, k3_toks=45) U: 'What is 25 * 4?'
+           A: Here is the result of 25 * 4: |  | • 25 * 4 = 100 The calculation is straightforward: 25 multiplied by 4 equals 100. | • Final Answer: #### 25 * 4 = 100
+[PASS 4/5] Multi-turn natural conversation, <python> tool, and SVG rocket generation verified
+[PASS 5/5] Direction B Data-Movement Ledger: {"policy_id": 3, "policy_name": "specmd_least_stale_r4", "perm_vram_hits": 77, "dyn_needed": 2807, "hit_card_R3": 1266, "hit_host_R1": 50, "from_drive_R1": 1491, "written_back_R2": 0, "r4_clean_drops": 311, "spec_lookahead_hits": 50, "dyn_hit_rate_pct": 45.1, "overall_vram_hit_rate_pct": 46.57, "pcie_gb_moved": 27.04, "eyeriss_cost_per_req": 104.433, "card_pool_slots": 1230, "host_cache_slots": 2912}
+================================================================================
+ALL 5 UNIFIED VERIFICATION GATES PASSED IN 156.02s!
+================================================================================
