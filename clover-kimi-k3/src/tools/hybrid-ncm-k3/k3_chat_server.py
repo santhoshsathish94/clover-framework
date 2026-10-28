@@ -2800,14 +2800,15 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             # Step 2: All needed tool rounds have completed (or no tool call needed) -> synthesize final response via 93-Layer K3 + NCM!
             if tool_rounds:
                 obs_text = "\n\n".join(
-                    f"[Step {idx} — {rd['name']}({str(rd['arguments'])[:240]})]:\n{str(rd['output'])[:1200]}"
+                    f"[Step {idx} — {rd['name']}({str(rd['arguments'])[:200]})]:\n{str(rd['output'])[:600]}"
                     for idx, rd in enumerate(tool_rounds[-4:], 1)
                 )
+                u_cap = 600 if "<pr_description>" in user_prompt else 2400
                 effective_user_prompt = (
                     "Verified Workspace Tool Outputs:\n"
                     + obs_text
                     + "\n\nUsing the attached content / session context above, answer the user's request clearly and thoroughly:\n"
-                    + user_prompt[:3200]
+                    + user_prompt[:u_cap]
                 )
             else:
                 effective_user_prompt = user_prompt

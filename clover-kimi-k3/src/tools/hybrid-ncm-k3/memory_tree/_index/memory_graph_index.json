@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
-  "built_at": "2026-10-26T13:31:02Z",
+  "built_at": "2026-10-28T10:00:11Z",
   "validation": {
     "is_healthy": true,
-    "total_files": 33,
-    "valid_entries": 33,
-    "total_relationships": 67,
+    "total_files": 35,
+    "valid_entries": 35,
+    "total_relationships": 72,
     "duplicate_ids": [],
     "broken_links": [],
     "validation_errors": [],
@@ -438,6 +438,37 @@
         "turn_range": "turn 5",
         "actor": "human",
         "recorded_at": "2026-10-20T09:18:00Z"
+      }
+    },
+    "MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001": {
+      "id": "MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001",
+      "title": "Correction: Centralized Local Cover & Avatar Path Resolution and Glob Profile Cleanup in NodeBB",
+      "rel_path": "corrections/mem-corr-nodebb-image-cleanup-cycle2-001.md",
+      "entry_type": "correction",
+      "epistemic_status": "externally_verified",
+      "status": "active",
+      "superseded_by": null,
+      "concepts": [
+        "nodebb-profile-image-cleanup",
+        "timestamped-upload-filenames",
+        "local-upload-path-resolution",
+        "statement-boundary-soundness"
+      ],
+      "tags": [
+        "nodebb",
+        "javascript",
+        "swebench-pro-v2",
+        "8168c6c4",
+        "cycle-2",
+        "correction"
+      ],
+      "created_at": "2026-10-28T10:00:00Z",
+      "updated_at": "2026-10-28T10:00:11Z",
+      "provenance": {
+        "source_type": "experiment",
+        "source_ref": "swebench-pro-v2:NodeBB-8168c6c4:clover_cycle_v2",
+        "actor": "human_and_assistant",
+        "recorded_at": "2026-10-28T10:00:00Z"
       }
     },
     "MEM-CORR-PER-LAYER-PARTITION-002": {
@@ -875,6 +906,36 @@
         "source_ref": "clover-operating-principles.md#2026-10-11; clover-kimi-k3-cpu-context.md L87, L169-170",
         "actor": "human_and_assistant",
         "recorded_at": "2026-10-11T12:00:00Z"
+      }
+    },
+    "MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001": {
+      "id": "MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001",
+      "title": "Observation: Cycle 1 NodeBB Profile & Group Image Cleanup Failures (307/311 Passed, 4 Failed)",
+      "rel_path": "observations/mem-obs-nodebb-image-cleanup-cycle1-001.md",
+      "entry_type": "observation",
+      "epistemic_status": "observed",
+      "status": "superseded",
+      "superseded_by": "MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001",
+      "concepts": [
+        "nodebb-profile-image-cleanup",
+        "timestamped-upload-filenames",
+        "local-upload-path-resolution",
+        "statement-boundary-soundness"
+      ],
+      "tags": [
+        "nodebb",
+        "javascript",
+        "swebench-pro-v2",
+        "8168c6c4",
+        "cycle-1"
+      ],
+      "created_at": "2026-10-28T09:55:00Z",
+      "updated_at": "2026-10-28T10:00:11Z",
+      "provenance": {
+        "source_type": "experiment",
+        "source_ref": "swebench-pro-v2:NodeBB-8168c6c4:report_8168c6c4_clover_cycle_v1.json",
+        "actor": "system_measurement",
+        "recorded_at": "2026-10-28T09:55:00Z"
       }
     },
     "MEM-OBS-ONTORAG-FANOUT-FLOODING-001": {
@@ -1379,6 +1440,36 @@
       "note": "Refines the observer-boundary concept by showing how 'inside' dissolves without a contrasting 'outside'."
     },
     {
+      "source": "MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001",
+      "type": "corrects",
+      "target": "MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001",
+      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:clover_cycle_v2",
+      "confidence": 1.0,
+      "context_scope": "nodebb_image_cleanup",
+      "created_at": "2026-10-28T10:00:00Z",
+      "note": "Fixes all 4 Mocha test failures observed in Cycle 1."
+    },
+    {
+      "source": "MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001",
+      "type": "derived_from",
+      "target": "MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001",
+      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:clover_cycle_v1",
+      "confidence": 1.0,
+      "context_scope": "nodebb_image_cleanup",
+      "created_at": "2026-10-28T10:00:00Z",
+      "note": "Derived directly from Cycle 1 Outcome stack traces."
+    },
+    {
+      "source": "MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001",
+      "type": "exemplifies",
+      "target": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:clover_cycle_v2",
+      "confidence": 0.9,
+      "context_scope": "auto_linked_concept_bridge",
+      "created_at": "2026-10-28T10:00:00Z",
+      "note": "Shared concept bridge (statement-boundary-soundness)"
+    },
+    {
       "source": "MEM-CORR-PER-LAYER-PARTITION-002",
       "type": "corrects",
       "target": "MEM-HYP-CACHE-DEAD-END-001",
@@ -1617,6 +1708,26 @@
       "context_scope": "random_index_harness",
       "created_at": "2026-10-11T12:00:00Z",
       "note": "The 1.68x vs 2.2x under-prediction arose from feeding uniformly random palette indices instead of real weight indices."
+    },
+    {
+      "source": "MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001",
+      "type": "exemplifies",
+      "target": "MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001",
+      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:cycle1",
+      "confidence": 0.95,
+      "context_scope": "surgical_function_synthesis",
+      "created_at": "2026-10-28T09:55:00Z",
+      "note": "Pre-opening `{` in code_start_prefix caused duplicate function headers to fail brace balance."
+    },
+    {
+      "source": "MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001",
+      "type": "exemplifies",
+      "target": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:report_8168c6c4_clover_cycle_v1.json",
+      "confidence": 0.9,
+      "context_scope": "auto_linked_concept_bridge",
+      "created_at": "2026-10-28T09:55:00Z",
+      "note": "Shared concept bridge (statement-boundary-soundness)"
     },
     {
       "source": "MEM-OBS-ONTORAG-FANOUT-FLOODING-001",
