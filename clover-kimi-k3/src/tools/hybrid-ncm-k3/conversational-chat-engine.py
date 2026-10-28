@@ -35,13 +35,15 @@ CLOVER_DEFAULT_CONTEXT_PATH = os.environ.get(
 
 
 def _load_memory_tree_rules() -> dict:
-    rules_fp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory_tree", "_rules", "memory_retrieval_rules.json")
-    if os.path.exists(rules_fp):
-        try:
-            with open(rules_fp, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+    base_rules = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory_tree", "_rules")
+    for fname in ("dataset-memory-retrieval-rules.json", "memory_retrieval_rules.json"):
+        rules_fp = os.path.join(base_rules, fname)
+        if os.path.exists(rules_fp):
+            try:
+                with open(rules_fp, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
     return {}
 
 

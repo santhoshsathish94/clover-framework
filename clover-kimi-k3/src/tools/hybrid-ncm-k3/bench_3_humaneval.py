@@ -73,7 +73,9 @@ def main():
     ap.add_argument("--out", type=str, default=os.path.join(here, "benchmarks/humaneval_baseline_20.json"))
     args = ap.parse_args()
 
-    in_path = os.path.join(here, "benchmarks/HumanEval.jsonl")
+    in_path = os.path.join(here, "benchmarks/dataset-human-eval-python-coding.jsonl")
+    if not os.path.exists(in_path):
+        in_path = os.path.join(here, "benchmarks/HumanEval.jsonl")
     if not os.path.exists(in_path):
         in_path = "/home/usergpu/merge_lf/benchmarks/HumanEval.jsonl"
     with open(in_path, "r", encoding="utf-8") as f:

@@ -64,7 +64,9 @@ def main():
     ap.add_argument("--out", type=str, default=os.path.join(here, "benchmarks/gsm8k_results.json"))
     args = ap.parse_args()
 
-    in_path = os.path.join(here, "benchmarks/gsm8k_test.jsonl")
+    in_path = os.path.join(here, "benchmarks/dataset-grade-school-math-test.jsonl")
+    if not os.path.exists(in_path):
+        in_path = os.path.join(here, "benchmarks/gsm8k_test.jsonl")
     if not os.path.exists(in_path):
         in_path = "/home/usergpu/merge_lf/benchmarks/gsm8k_test.jsonl"
     with open(in_path, "r", encoding="utf-8") as f:

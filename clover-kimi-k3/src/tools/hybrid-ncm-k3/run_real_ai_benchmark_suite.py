@@ -307,7 +307,10 @@ def build_shared_70_task_matrix() -> list[dict[str, Any]]:
     # Category 1: MMLU (5 subjects x 2 = 10 tasks)
     mmlu_dir = _SCRIPT_DIR / "benchmarks" / "data" / "test"
     for subj in MMLU_SUBJECTS:
-        csv_p = mmlu_dir / f"{subj}_test.csv"
+        hyphen_subj = subj.replace("_", "-")
+        csv_p = mmlu_dir / f"dataset-mmlu-{hyphen_subj}-test.csv"
+        if not csv_p.exists():
+            csv_p = mmlu_dir / f"{subj}_test.csv"
         with open(csv_p, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             for idx, row in zip(range(2), reader):
@@ -328,7 +331,9 @@ def build_shared_70_task_matrix() -> list[dict[str, Any]]:
                 })
 
     # Category 2: GSM8K (test split indices 0..9 = 10 tasks)
-    gsm_p = _SCRIPT_DIR / "benchmarks" / "gsm8k_test.jsonl"
+    gsm_p = _SCRIPT_DIR / "benchmarks" / "dataset-grade-school-math-test.jsonl"
+    if not gsm_p.exists():
+        gsm_p = _SCRIPT_DIR / "benchmarks" / "gsm8k_test.jsonl"
     with open(gsm_p, "r", encoding="utf-8") as f:
         for idx, line in zip(range(10), f):
             obj = json.loads(line)
@@ -341,7 +346,9 @@ def build_shared_70_task_matrix() -> list[dict[str, Any]]:
             })
 
     # Category 3A: OpenAI HumanEval Python (HumanEval/0..9 = 10 tasks)
-    he_p = _SCRIPT_DIR / "benchmarks" / "HumanEval.jsonl"
+    he_p = _SCRIPT_DIR / "benchmarks" / "dataset-human-eval-python-coding.jsonl"
+    if not he_p.exists():
+        he_p = _SCRIPT_DIR / "benchmarks" / "HumanEval.jsonl"
     with open(he_p, "r", encoding="utf-8") as f:
         for idx, line in zip(range(10), f):
             obj = json.loads(line)
@@ -375,8 +382,14 @@ def build_shared_70_task_matrix() -> list[dict[str, Any]]:
 
     # Category 4: Instruction Following & Structured Output (Sudoku-Easy N=5 + WMT14 N=5 + XSum N=5 = 15 tasks)
     data_root = Path(clover_paths.find_ncm_eval_data_dir())
-    puzzles = pickle.load(open(data_root / "sudoku" / "easy" / "puzzles.pickle", "rb"))
-    solutions = pickle.load(open(data_root / "sudoku" / "easy" / "solutions.pickle", "rb"))
+    sud_puz_p = data_root / "sudoku" / "easy" / "dataset-sudoku-easy-puzzles.pickle"
+    if not sud_puz_p.exists():
+        sud_puz_p = data_root / "sudoku" / "easy" / "puzzles.pickle"
+    sud_sol_p = data_root / "sudoku" / "easy" / "dataset-sudoku-easy-solutions.pickle"
+    if not sud_sol_p.exists():
+        sud_sol_p = data_root / "sudoku" / "easy" / "solutions.pickle"
+    puzzles = pickle.load(open(sud_puz_p, "rb"))
+    solutions = pickle.load(open(sud_sol_p, "rb"))
     for idx in range(5):
         p_grid = decode_sudoku_board(puzzles[idx])
         s_grid = decode_sudoku_board(solutions[idx])
@@ -389,7 +402,10 @@ def build_shared_70_task_matrix() -> list[dict[str, Any]]:
             "reference": s_grid,
         })
 
-    wmt_refs = pickle.load(open(data_root / "wmt14" / "reference_translations.pickle", "rb"))
+    wmt_p = data_root / "wmt14" / "dataset-wmt14-reference-translations.pickle"
+    if not wmt_p.exists():
+        wmt_p = data_root / "wmt14" / "reference_translations.pickle"
+    wmt_refs = pickle.load(open(wmt_p, "rb"))
     wmt_slice = [s for s in wmt_refs[1000:1060] if 35 <= len(s) <= 180][:5]
     for idx, ref_s in enumerate(wmt_slice):
         words_list = [w for w in ref_s.split() if w.lower().strip(".,;:") not in ("the", "a", "an")]
@@ -405,8 +421,14 @@ def build_shared_70_task_matrix() -> list[dict[str, Any]]:
 
     from transformers import AutoTokenizer
     gpt2_tok = AutoTokenizer.from_pretrained("gpt2")
-    passages = pickle.load(open(data_root / "xsum" / "passages.pickle", "rb"))
-    summaries = pickle.load(open(data_root / "xsum" / "reference_summaries.pickle", "rb"))
+    xsum_pass_p = data_root / "xsum" / "dataset-xsum-news-passages.pickle"
+    if not xsum_pass_p.exists():
+        xsum_pass_p = data_root / "xsum" / "passages.pickle"
+    xsum_sum_p = data_root / "xsum" / "dataset-xsum-reference-summaries.pickle"
+    if not xsum_sum_p.exists():
+        xsum_sum_p = data_root / "xsum" / "reference_summaries.pickle"
+    passages = pickle.load(open(xsum_pass_p, "rb"))
+    summaries = pickle.load(open(xsum_sum_p, "rb"))
     for idx in range(5):
         p_txt = " ".join(gpt2_tok.decode(passages[5000 + idx], skip_special_tokens=True).split())[:900]
         ref_sum = summaries[5000 + idx].strip()

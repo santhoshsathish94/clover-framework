@@ -52,7 +52,10 @@ def main():
     print("=== BENCHMARK 5: OFFICIAL NCM SUITE (WMT14 + XSUM + SUDOKU-EASY) ===", flush=True)
 
     # 1. WMT14 Held-Out Concept-to-Text Retention (indices 1000..1019, unseen in training)
-    wmt_refs = pickle.load(open(os.path.join(data_root, "wmt14/reference_translations.pickle"), "rb"))
+    wmt_fp = os.path.join(data_root, "wmt14/dataset-wmt14-reference-translations.pickle")
+    if not os.path.exists(wmt_fp):
+        wmt_fp = os.path.join(data_root, "wmt14/reference_translations.pickle")
+    wmt_refs = pickle.load(open(wmt_fp, "rb"))
     wmt_slice = [s for s in wmt_refs[1000:1060] if 35 <= len(s) <= 180][: args.n_wmt]
     wmt_retentions = []
     wmt_jaccards = []
@@ -81,8 +84,14 @@ def main():
     # 2. XSum Held-Out Factual Summarization (10 unseen passages from indices 5000..5009)
     from transformers import AutoTokenizer
     gpt2_tok = AutoTokenizer.from_pretrained("gpt2")
-    passages = pickle.load(open(os.path.join(data_root, "xsum/passages.pickle"), "rb"))
-    summaries = pickle.load(open(os.path.join(data_root, "xsum/reference_summaries.pickle"), "rb"))
+    xsum_pass_fp = os.path.join(data_root, "xsum/dataset-xsum-news-passages.pickle")
+    if not os.path.exists(xsum_pass_fp):
+        xsum_pass_fp = os.path.join(data_root, "xsum/passages.pickle")
+    xsum_sum_fp = os.path.join(data_root, "xsum/dataset-xsum-reference-summaries.pickle")
+    if not os.path.exists(xsum_sum_fp):
+        xsum_sum_fp = os.path.join(data_root, "xsum/reference_summaries.pickle")
+    passages = pickle.load(open(xsum_pass_fp, "rb"))
+    summaries = pickle.load(open(xsum_sum_fp, "rb"))
     xsum_recalls = []
     artifact_hits = 0
     print(f"\n--- 5B. XSum Held-Out Factual Summarization (N={args.n_xsum}) ---", flush=True)
@@ -105,8 +114,14 @@ def main():
     print(f">>> XSum Source Grounding Precision: {mean_xsum_ground:.2f}% | Artifact Leakage: {artifact_hits}/{args.n_xsum}", flush=True)
 
     # 3. Official Sudoku-Easy 9x9 Solving (10 puzzles)
-    puzzles = pickle.load(open(os.path.join(data_root, "sudoku/easy/puzzles.pickle"), "rb"))
-    solutions = pickle.load(open(os.path.join(data_root, "sudoku/easy/solutions.pickle"), "rb"))
+    sud_puz_fp = os.path.join(data_root, "sudoku/easy/dataset-sudoku-easy-puzzles.pickle")
+    if not os.path.exists(sud_puz_fp):
+        sud_puz_fp = os.path.join(data_root, "sudoku/easy/puzzles.pickle")
+    sud_sol_fp = os.path.join(data_root, "sudoku/easy/dataset-sudoku-easy-solutions.pickle")
+    if not os.path.exists(sud_sol_fp):
+        sud_sol_fp = os.path.join(data_root, "sudoku/easy/solutions.pickle")
+    puzzles = pickle.load(open(sud_puz_fp, "rb"))
+    solutions = pickle.load(open(sud_sol_fp, "rb"))
     sudoku_board_solved = 0
     sudoku_cell_acc = []
     print(f"\n--- 5C. Official Sudoku-Easy 9x9 Benchmark (N={args.n_sudoku}) ---", flush=True)

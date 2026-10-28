@@ -11,7 +11,7 @@
     "nodebb-profile-image-cleanup",
     "timestamped-upload-filenames",
     "local-upload-path-resolution",
-    "statement-boundary-soundness"
+    "surgical-commonjs-function-merge"
   ],
   "tags": [
     "nodebb",
@@ -37,15 +37,6 @@
       "context_scope": "surgical_function_synthesis",
       "created_at": "2026-10-28T09:55:00Z",
       "note": "Pre-opening `{` in code_start_prefix caused duplicate function headers to fail brace balance."
-    },
-    {
-      "type": "exemplifies",
-      "target": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:report_8168c6c4_clover_cycle_v1.json",
-      "confidence": 0.9,
-      "context_scope": "auto_linked_concept_bridge",
-      "created_at": "2026-10-28T09:55:00Z",
-      "note": "Shared concept bridge (statement-boundary-soundness)"
     }
   ],
   "revisions": [

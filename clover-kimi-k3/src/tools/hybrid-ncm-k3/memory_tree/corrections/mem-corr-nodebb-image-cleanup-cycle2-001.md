@@ -10,7 +10,7 @@
     "nodebb-profile-image-cleanup",
     "timestamped-upload-filenames",
     "local-upload-path-resolution",
-    "statement-boundary-soundness"
+    "surgical-commonjs-function-merge"
   ],
   "tags": [
     "nodebb",
@@ -46,15 +46,6 @@
       "context_scope": "nodebb_image_cleanup",
       "created_at": "2026-10-28T10:00:00Z",
       "note": "Derived directly from Cycle 1 Outcome stack traces."
-    },
-    {
-      "type": "exemplifies",
-      "target": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:clover_cycle_v2",
-      "confidence": 0.9,
-      "context_scope": "auto_linked_concept_bridge",
-      "created_at": "2026-10-28T10:00:00Z",
-      "note": "Shared concept bridge (statement-boundary-soundness)"
     }
   ],
   "revisions": [

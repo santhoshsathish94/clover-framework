@@ -49,5 +49,31 @@ if [ -d "$DATASETS_DIR/open-weights" ]; then
   done
 fi
 
+# Create standardized hyphenated complete-English `checkpoint-*` and `dataset-*` hardlinks
+for pair in \
+  "e12_clover_k3_true_ha_ncm.pt:checkpoint-clover-true-hybrid-agent-ncm.pt" \
+  "e11_clover_k3_native_ha_ncm.pt:checkpoint-clover-native-hybrid-agent-ncm.pt" \
+  "e8_k3_direct.pt:checkpoint-next-concept-direct-decoder.pt" \
+  "e6_last.pt:checkpoint-next-concept-generator-base.pt" \
+  "ha_8b_int8_cpu.pt:checkpoint-hybrid-agent-8b-int8-cpu.pt" \
+  "k3_vqvae_adapted.pt:checkpoint-concept-vector-quantizer-adapted.pt" \
+  "k3_vqvae_init.pt:checkpoint-concept-vector-quantizer-initial.pt" \
+  "k3_hybrid_bridges.pt:checkpoint-latent-representation-bridges.pt" \
+  "staged_32win_inputs.pt:dataset-staged-32-window-inputs.pt" \
+  "wmt14/tokenizer.pt:wmt14/checkpoint-wmt14-concept-tokenizer.pt" \
+  "wmt14/config.yaml:wmt14/config-wmt14-concept-model.yaml" \
+  "data/wmt14/reference_translations.pickle:data/wmt14/dataset-wmt14-reference-translations.pickle" \
+  "data/xsum/passages.pickle:data/xsum/dataset-xsum-news-passages.pickle" \
+  "data/xsum/reference_summaries.pickle:data/xsum/dataset-xsum-reference-summaries.pickle" \
+  "data/sudoku/easy/puzzles.pickle:data/sudoku/easy/dataset-sudoku-easy-puzzles.pickle" \
+  "data/sudoku/easy/solutions.pickle:data/sudoku/easy/dataset-sudoku-easy-solutions.pickle"
+do
+  src_rel="${pair%%:*}"
+  dst_rel="${pair##*:}"
+  if [ -f "$HYBRID_NCM_DIR/$src_rel" ] && [ ! -f "$HYBRID_NCM_DIR/$dst_rel" ]; then
+    ln -f "$HYBRID_NCM_DIR/$src_rel" "$HYBRID_NCM_DIR/$dst_rel" 2>/dev/null || cp -f "$HYBRID_NCM_DIR/$src_rel" "$HYBRID_NCM_DIR/$dst_rel"
+  fi
+done
+
 echo "== Verifying downloaded hybrid-ncm-k3 files in $HYBRID_NCM_DIR =="
 ls -lh "$HYBRID_NCM_DIR"

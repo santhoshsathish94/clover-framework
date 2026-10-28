@@ -72,7 +72,10 @@ def main():
         base_dir = "/home/usergpu/merge_lf/benchmarks/data/test"
     items = []
     for subj in SUBJECTS:
-        p = os.path.join(base_dir, f"{subj}_test.csv")
+        hyphen_subj = subj.replace("_", "-")
+        p = os.path.join(base_dir, f"dataset-mmlu-{hyphen_subj}-test.csv")
+        if not os.path.exists(p):
+            p = os.path.join(base_dir, f"{subj}_test.csv")
         with open(p, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             for row, _ in zip(reader, range(args.per_subject)):

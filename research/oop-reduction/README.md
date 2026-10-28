@@ -35,6 +35,38 @@ All cryptic `k3_*.py` module names in `clover-kimi-k3/src/tools/hybrid-ncm-k3/` 
 | `clover_paths.py` | [`workspace-path-resolver.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/workspace-path-resolver.py) | Portable CPU/GPU dataset, checkpoint, and `sys.path` discovery |
 | `test_k3_memory_graph.py` | [`test-memory-knowledge-graph.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/test-memory-knowledge-graph.py) | 11-test verification suite for the file-backed memory & ontology graph |
 
+## Hyphenated Complete-English Dataset & Checkpoint Names (`dataset-*` & `checkpoint-*`)
+
+All benchmark datasets, memory-graph JSON stores, and trained model checkpoints follow the same `dataset-*` and `checkpoint-*` naming convention:
+
+| Old Name | New Hyphenated Complete-English Name | Category |
+|---|---|---|
+| `benchmarks/gsm8k_test.jsonl` | [`benchmarks/dataset-grade-school-math-test.jsonl`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/benchmarks/dataset-grade-school-math-test.jsonl) | Benchmark 1 (`GSM8K` test split) |
+| `benchmarks/HumanEval.jsonl` | [`benchmarks/dataset-human-eval-python-coding.jsonl`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/benchmarks/dataset-human-eval-python-coding.jsonl) | Benchmark 3 (`OpenAI HumanEval`) |
+| `benchmarks/data/test/astronomy_test.csv` | [`benchmarks/data/test/dataset-mmlu-astronomy-test.csv`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/benchmarks/data/test/dataset-mmlu-astronomy-test.csv) | Benchmark 2 (`MMLU` Astronomy) |
+| `benchmarks/data/test/college_biology_test.csv` | [`benchmarks/data/test/dataset-mmlu-college-biology-test.csv`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/benchmarks/data/test/dataset-mmlu-college-biology-test.csv) | Benchmark 2 (`MMLU` College Biology) |
+| `benchmarks/data/test/college_computer_science_test.csv` | [`benchmarks/data/test/dataset-mmlu-college-computer-science-test.csv`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/benchmarks/data/test/dataset-mmlu-college-computer-science-test.csv) | Benchmark 2 (`MMLU` College CS) |
+| `benchmarks/data/test/college_physics_test.csv` | [`benchmarks/data/test/dataset-mmlu-college-physics-test.csv`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/benchmarks/data/test/dataset-mmlu-college-physics-test.csv) | Benchmark 2 (`MMLU` College Physics) |
+| `benchmarks/data/test/high_school_us_history_test.csv` | [`benchmarks/data/test/dataset-mmlu-high-school-us-history-test.csv`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/benchmarks/data/test/dataset-mmlu-high-school-us-history-test.csv) | Benchmark 2 (`MMLU` US History) |
+| `memory_tree/_index/memory_graph_index.json` | [`memory_tree/_index/dataset-memory-graph-index.json`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/memory_tree/_index/dataset-memory-graph-index.json) | Rebuildable Memory Graph Index |
+| `memory_tree/_ontology/ontology_graph.json` | [`memory_tree/_ontology/dataset-symbolic-ontology-graph.json`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/memory_tree/_ontology/dataset-symbolic-ontology-graph.json) | Deterministic Symbolic Ontology Graph |
+| `memory_tree/_rules/memory_retrieval_rules.json` | [`memory_tree/_rules/dataset-memory-retrieval-rules.json`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/memory_tree/_rules/dataset-memory-retrieval-rules.json) | Retrieval & Symbolic Rules |
+| `memory_tree/_rules/visual_templates.json` | [`memory_tree/_rules/dataset-visual-scene-templates.json`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/memory_tree/_rules/dataset-visual-scene-templates.json) | SVG Scene & Chart Templates |
+| `e12_clover_k3_true_ha_ncm.pt` | `checkpoint-clover-true-hybrid-agent-ncm.pt` | Trained Clover K3 + HybridAgent + NCM Checkpoint |
+| `e11_clover_k3_native_ha_ncm.pt` | `checkpoint-clover-native-hybrid-agent-ncm.pt` | Trained Native HybridAgent + NCM Checkpoint |
+| `e8_k3_direct.pt` | `checkpoint-next-concept-direct-decoder.pt` | Direct Next-Concept Decoder Checkpoint |
+| `e6_last.pt` | `checkpoint-next-concept-generator-base.pt` | Base 11-Pass Next-Concept Generator Checkpoint |
+| `ha_8b_int8_cpu.pt` | `checkpoint-hybrid-agent-8b-int8-cpu.pt` | `fbgemm` Int8 CPU-Quantized HybridAgent-8B Checkpoint |
+| `k3_vqvae_adapted.pt` | `checkpoint-concept-vector-quantizer-adapted.pt` | Adapted Multi-Scale Residual VQ-VAE Checkpoint |
+| `k3_vqvae_init.pt` | `checkpoint-concept-vector-quantizer-initial.pt` | Initial Multi-Scale Residual VQ-VAE Checkpoint |
+| `k3_hybrid_bridges.pt` | `checkpoint-latent-representation-bridges.pt` | Cross-Model Latent Bridge Projections |
+| `staged_32win_inputs.pt` | `dataset-staged-32-window-inputs.pt` | Staged 32-Window Evaluation Tensor Dataset |
+| `data/wmt14/reference_translations.pickle` | `data/wmt14/dataset-wmt14-reference-translations.pickle` | Benchmark 5A (`WMT14` Reference Sentences) |
+| `data/xsum/passages.pickle` | `data/xsum/dataset-xsum-news-passages.pickle` | Benchmark 5B (`XSum` News Passages) |
+| `data/xsum/reference_summaries.pickle` | `data/xsum/dataset-xsum-reference-summaries.pickle` | Benchmark 5B (`XSum` Reference Summaries) |
+| `data/sudoku/easy/puzzles.pickle` | `data/sudoku/easy/dataset-sudoku-easy-puzzles.pickle` | Benchmark 5C (`Sudoku-Easy` 9x9 Puzzles) |
+| `data/sudoku/easy/solutions.pickle` | `data/sudoku/easy/dataset-sudoku-easy-solutions.pickle` | Benchmark 5C (`Sudoku-Easy` 9x9 Solutions) |
+
 ## Step-by-Step Reduction Files
 
 | Step | Document | Reduction | Core Question Answered |

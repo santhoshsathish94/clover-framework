@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
-  "built_at": "2026-10-28T10:00:11Z",
+  "built_at": "2026-10-28T13:25:12Z",
   "validation": {
     "is_healthy": true,
     "total_files": 35,
     "valid_entries": 35,
-    "total_relationships": 72,
+    "total_relationships": 70,
     "duplicate_ids": [],
     "broken_links": [],
     "validation_errors": [],
@@ -452,7 +452,7 @@
         "nodebb-profile-image-cleanup",
         "timestamped-upload-filenames",
         "local-upload-path-resolution",
-        "statement-boundary-soundness"
+        "surgical-commonjs-function-merge"
       ],
       "tags": [
         "nodebb",
@@ -920,7 +920,7 @@
         "nodebb-profile-image-cleanup",
         "timestamped-upload-filenames",
         "local-upload-path-resolution",
-        "statement-boundary-soundness"
+        "surgical-commonjs-function-merge"
       ],
       "tags": [
         "nodebb",
@@ -1460,16 +1460,6 @@
       "note": "Derived directly from Cycle 1 Outcome stack traces."
     },
     {
-      "source": "MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001",
-      "type": "exemplifies",
-      "target": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:clover_cycle_v2",
-      "confidence": 0.9,
-      "context_scope": "auto_linked_concept_bridge",
-      "created_at": "2026-10-28T10:00:00Z",
-      "note": "Shared concept bridge (statement-boundary-soundness)"
-    },
-    {
       "source": "MEM-CORR-PER-LAYER-PARTITION-002",
       "type": "corrects",
       "target": "MEM-HYP-CACHE-DEAD-END-001",
@@ -1718,16 +1708,6 @@
       "context_scope": "surgical_function_synthesis",
       "created_at": "2026-10-28T09:55:00Z",
       "note": "Pre-opening `{` in code_start_prefix caused duplicate function headers to fail brace balance."
-    },
-    {
-      "source": "MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001",
-      "type": "exemplifies",
-      "target": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-      "provenance": "swebench-pro-v2:NodeBB-8168c6c4:report_8168c6c4_clover_cycle_v1.json",
-      "confidence": 0.9,
-      "context_scope": "auto_linked_concept_bridge",
-      "created_at": "2026-10-28T09:55:00Z",
-      "note": "Shared concept bridge (statement-boundary-soundness)"
     },
     {
       "source": "MEM-OBS-ONTORAG-FANOUT-FLOODING-001",

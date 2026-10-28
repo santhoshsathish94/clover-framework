@@ -91,13 +91,15 @@ class K3KnowledgeSearchTool:
 
     @staticmethod
     def _load_url_routes() -> list[dict]:
-        rules_fp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory_tree", "_rules", "memory_retrieval_rules.json")
-        if os.path.exists(rules_fp):
-            try:
-                with open(rules_fp, "r", encoding="utf-8") as f:
-                    return list(json.load(f).get("search_url_routes") or [])
-            except Exception:
-                pass
+        base_rules = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory_tree", "_rules")
+        for fname in ("dataset-memory-retrieval-rules.json", "memory_retrieval_rules.json"):
+            rules_fp = os.path.join(base_rules, fname)
+            if os.path.exists(rules_fp):
+                try:
+                    with open(rules_fp, "r", encoding="utf-8") as f:
+                        return list(json.load(f).get("search_url_routes") or [])
+                except Exception:
+                    pass
         return []
 
     def execute(self, query: str) -> str:
@@ -836,13 +838,15 @@ def match_verified_code_template(user_prompt: str):
 
 
 def _load_visual_templates() -> dict:
-    vt_fp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory_tree", "_rules", "visual_templates.json")
-    if os.path.exists(vt_fp):
-        try:
-            with open(vt_fp, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+    base_rules = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory_tree", "_rules")
+    for fname in ("dataset-visual-scene-templates.json", "visual_templates.json"):
+        vt_fp = os.path.join(base_rules, fname)
+        if os.path.exists(vt_fp):
+            try:
+                with open(vt_fp, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
     return {}
 
 
@@ -1715,7 +1719,18 @@ class CloverK3AgentEngine:
             )
             and (
                 (
-                    len(re.findall(r"\b\d+(?:\.\d+)?\b", raw_user_q)) >= 2
+                    (
+                        len(re.findall(r"\b\d+(?:\.\d+)?\b", raw_user_q)) >= 2
+                        or (
+                            len(re.findall(r"\b\d+(?:\.\d+)?\b", raw_user_q)) >= 1
+                            and bool(
+                                re.search(
+                                    r"\b(?:half|twice|double|triple|third|quarter|one|two|three|four|five|six|seven|eight|nine|ten|dozen)\b",
+                                    raw_low,
+                                )
+                            )
+                        )
+                    )
                     and any(
                         qw in raw_low
                         for qw in (

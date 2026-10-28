@@ -713,15 +713,16 @@ class CloverMemoryGraphStore:
 
     def _load_retrieval_rules(self) -> dict[str, Any]:
         """Loads McCulloch-Pitts inhibitory vetoes and Minsky-Papert structural concept rules
-        from `memory_tree/_rules/memory_retrieval_rules.json` (falling back to the canonical
-        `DEFAULT_MEMORY_TREE_DIR/_rules/memory_retrieval_rules.json` when using a temporary store dir)."""
+        from `memory_tree/_rules/dataset-memory-retrieval-rules.json` (falling back to
+        `memory_retrieval_rules.json` when using a temporary store dir)."""
         for base_dir in (self.root_dir, Path(__file__).resolve().parent / "memory_tree"):
-            rules_fp = base_dir / "_rules" / "memory_retrieval_rules.json"
-            if rules_fp.exists():
-                try:
-                    return json.loads(rules_fp.read_text(encoding="utf-8"))
-                except Exception:
-                    pass
+            for fname in ("dataset-memory-retrieval-rules.json", "memory_retrieval_rules.json"):
+                rules_fp = base_dir / "_rules" / fname
+                if rules_fp.exists():
+                    try:
+                        return json.loads(rules_fp.read_text(encoding="utf-8"))
+                    except Exception:
+                        pass
         return {}
 
     # ------------------------------------------------------------------
@@ -1007,7 +1008,9 @@ class CloverMemoryGraphStore:
                     return
             except Exception:
                 pass
-        self.index_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        serialized_json = json.dumps(payload, indent=2, ensure_ascii=False)
+        self.index_file.write_text(serialized_json, encoding="utf-8")
+        (self.index_dir / "dataset-memory-graph-index.json").write_text(serialized_json, encoding="utf-8")
 
     def _find_uncertain_concept_duplicates(self) -> list[dict[str, Any]]:
         """Detects pairs of active entries that share a high fraction of title/concept tokens

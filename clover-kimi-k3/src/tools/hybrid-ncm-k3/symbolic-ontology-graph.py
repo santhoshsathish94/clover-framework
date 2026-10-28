@@ -231,7 +231,12 @@ class Relation:
     description: str
 
 
-DEFAULT_ONTOLOGY_GRAPH_PATH = Path(__file__).resolve().parent / "memory_tree" / "_ontology" / "ontology_graph.json"
+_ONTOLOGY_DIR = Path(__file__).resolve().parent / "memory_tree" / "_ontology"
+DEFAULT_ONTOLOGY_GRAPH_PATH = (
+    _ONTOLOGY_DIR / "dataset-symbolic-ontology-graph.json"
+    if (_ONTOLOGY_DIR / "dataset-symbolic-ontology-graph.json").exists()
+    else _ONTOLOGY_DIR / "ontology_graph.json"
+)
 
 
 def _load_ontology_graph_spec(spec_path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
@@ -896,7 +901,11 @@ class CloverGraphTraversal:
 # 6. File-Backed Ontology Graph & Predicate Loader (`memory_tree/_ontology/`)
 # ---------------------------------------------------------------------------
 
-DEFAULT_ONTOLOGY_GRAPH_PATH = Path(__file__).resolve().parent / "memory_tree" / "_ontology" / "ontology_graph.json"
+DEFAULT_ONTOLOGY_GRAPH_PATH = (
+    _ONTOLOGY_DIR / "dataset-symbolic-ontology-graph.json"
+    if (_ONTOLOGY_DIR / "dataset-symbolic-ontology-graph.json").exists()
+    else _ONTOLOGY_DIR / "ontology_graph.json"
+)
 
 
 @dataclass(frozen=True)

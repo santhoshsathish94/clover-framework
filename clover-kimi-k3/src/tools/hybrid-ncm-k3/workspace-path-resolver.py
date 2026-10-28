@@ -127,6 +127,10 @@ def find_hybrid_ncm_ckpt_dir() -> str:
         if cand and os.path.isdir(cand) and any(
             os.path.exists(os.path.join(cand, fn))
             for fn in (
+                "checkpoint-clover-true-hybrid-agent-ncm.pt",
+                "checkpoint-clover-native-hybrid-agent-ncm.pt",
+                "checkpoint-concept-vector-quantizer-adapted.pt",
+                "checkpoint-next-concept-direct-decoder.pt",
                 "e12_clover_k3_true_ha_ncm.pt",
                 "e11_clover_k3_native_ha_ncm.pt",
                 "k3_vqvae_adapted.pt",
@@ -138,7 +142,7 @@ def find_hybrid_ncm_ckpt_dir() -> str:
 
 
 def find_wmt14_art_dir() -> str:
-    """Finds the directory containing `wmt14/tokenizer.pt` and `wmt14/config.yaml`."""
+    """Finds the directory containing `wmt14/checkpoint-wmt14-concept-tokenizer.pt` (or `wmt14/tokenizer.pt`)."""
     ckpt_dir = find_hybrid_ncm_ckpt_dir()
     for cand in (
         os.environ.get("CLOVER_WMT14_DIR"),
@@ -148,7 +152,10 @@ def find_wmt14_art_dir() -> str:
         "/root/ncm-cpu/artifacts/wmt14",
         "/home/usergpu/ncm/artifacts/wmt14",
     ):
-        if cand and os.path.isdir(cand) and os.path.exists(os.path.join(cand, "tokenizer.pt")):
+        if cand and os.path.isdir(cand) and (
+            os.path.exists(os.path.join(cand, "checkpoint-wmt14-concept-tokenizer.pt"))
+            or os.path.exists(os.path.join(cand, "tokenizer.pt"))
+        ):
             return cand
     return os.path.join(ckpt_dir, "wmt14")
 
