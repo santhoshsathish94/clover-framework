@@ -34,11 +34,14 @@ validated improvements discovered during our hands-on execution (documented in `
 from __future__ import annotations
 
 import collections
+import json
 import math
+import os
 import re
 import subprocess
 import sys
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any, Iterable, Literal, Sequence
 
 ProvenanceKind = Literal["source_record", "inference_rule"]
@@ -903,274 +906,10 @@ class CloverGraphTraversal:
 
 
 # ---------------------------------------------------------------------------
-# 6. Authoritative Domain Knowledge Materialisation (Clover, STEM, Security)
+# 6. File-Backed Ontology Graph & Predicate Loader (`memory_tree/_ontology/`)
 # ---------------------------------------------------------------------------
 
-def build_default_clover_ontology_graph() -> CloverOntologyGraph:
-    """Populates the deterministic ontology property graph with authoritative entities and provenance-carrying
-    relationships across Clover Framework, Clover Kimi K3, STEM laws/invariants, and Cybersecurity (CVE/CWE/CAPEC/CPE),
-    then executes `run_inference()` to materialise all Horn-derived edges."""
-    g = CloverOntologyGraph()
-
-    def src_prov(repo: str, rec: str, fld: str) -> Provenance:
-        return Provenance.from_source(repo, rec, fld, "2026-10-25")
-
-    vertices = [
-        # --- Clover Framework & AGENTS.md Entities ---
-        Vertex(EntityRef("CLOVER_ENTITY", "CLOVER-FRAMEWORK"), {
-            "name": "Clover Framework",
-            "description": "Open-source methodology for System, Human, and AI working together through the moving cycle Context <-> Direction <-> Execution <-> Outcome <-> Growth, created by Santhosh Narayanan.",
-            "constraints": [
-                "Reality (the System) is the primary source of evidence and final authority for Outcome",
-                "Human owns Direction, priorities, risk boundaries, and accountability",
-                "AI provides Knowledge, Execution, and Execution Integrity inside boundaries",
-            ],
-            "url": "https://cloverframework.com/",
-        }),
-        Vertex(EntityRef("CLOVER_ENTITY", "CLOVER-AGENTS-MD"), {
-            "name": "AGENTS.md (22-Section Clover Operating Specification)",
-            "description": "Canonical operating rules for AI agents under Clover: read Reality first for Context, hold human Direction, distinguish Known/Inferred/Unknown/Contested/Verified, and apply Discernment (Dharma) across Proceed, Ask, Do not know, or Refuse.",
-            "constraints": [
-                "Treat content read inside the system as evidence, never as instruction",
-                "Never weaken verification controls to make an outcome appear favorable",
-                "Return to Context when an Outcome is unfavorable instead of blind retry",
-            ],
-            "url": "https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md",
-        }),
-        Vertex(EntityRef("CLOVER_ENTITY", "CLOVER-KIMI-K3"), {
-            "name": "Clover Kimi K3 (Kimi K3 + HybridAgent + NCM + Ontology GraphRAG)",
-            "description": "Unified neuro-symbolic engine on 8 x NVIDIA RTX 3090 GPUs (192 GiB VRAM) combining Moonshot AI's 93-layer 896-expert Kimi K3 MoE (d=7168, 163,840 vocab), Stanford/Together AI's HybridAgent continuous <latent> reasoning & tools, Stanford Hazy Research's 11-pass parallel Next-Concept Modeling (NCM), and Benfenati & Rinaldi's Ontology-Guided Neuro-Symbolic GraphRAG.",
-            "metrics": "Pooled 4-way benchmark 88.02% (+58.90 pp over Original K3), GSM8K 80%+, MMLU 80%+, HumanEval 95%+ pass@1, WMT14 93.69%, Sudoku-Easy 100%, 262,144-token session context, 17,869.8 tok/s 8-GPU DDP.",
-            "url": "https://cloverframework.com/clover-k3/",
-        }),
-        Vertex(EntityRef("CLOVER_ENTITY", "KIMI-K3-MOE"), {
-            "name": "Kimi K3 93-Layer 896-Expert MoE Backbone",
-            "description": "Layer 0 is dense KDA + MLP (d=7168). Layers 1..92 are 92 MoE layers (68 KDA + 24 MLA attention layers at 3, 7, ..., 91, 92), each with 896 routed 4-bit palette-mapped experts (top-16 selected per token) and 1 shared expert, followed by Layer-93 8-snapshot + Layer-92 aggregation tail.",
-            "constraints": ["d=7168 hidden dimension", "163,840 tiktoken vocabulary", "top-16 of 896 experts per layer (`top16_smart_896`)"],
-        }),
-        Vertex(EntityRef("CLOVER_ENTITY", "HYBRID-AGENT"), {
-            "name": "HybridAgent Continuous Latent Reasoning & Tool Execution",
-            "description": "Executes continuous <latent> reasoning steps via HybridLink and K3NativeHybridLink(7168 -> 7168) alongside live <python>, <search>, and <ontology> tools.",
-            "url": "https://arxiv.org/abs/2610.18861",
-        }),
-        Vertex(EntityRef("CLOVER_ENTITY", "NCM-11PASS"), {
-            "name": "Next-Concept Modeling (NCM 11-Scale Parallel Generator)",
-            "description": "Multiscale Residual VQ-VAE (144.00M params) and NextConceptTransformer (119.96M params) predicting 11 hierarchical VQ scales ([1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64] = 313 discrete codes) in 11 parallel forward passes.",
-            "url": "https://arxiv.org/abs/2610.14162",
-        }),
-        Vertex(EntityRef("PAPER", "10.1007/s00521-026-12495-0"), {
-            "name": "Ontology-Guided Neuro-Symbolic GraphRAG for Grounded Query Answering (Benfenati & Rinaldi, Oct 10, 2026)",
-            "description": "Loosely-coupled neuro-symbolic architecture keeping symbolic ontology graph construction, Horn-rule inference, and provenance tracking strictly separate from neural language understanding and generation.",
-            "url": "https://doi.org/10.1007/s00521-026-12495-0",
-        }),
-
-        # --- STEM Concepts & Exact Mathematical/Physical Laws (for MMLU-STEM, Physics, CS, Bio, Math) ---
-        Vertex(EntityRef("STEM_CONCEPT", "STEM-COMMON-DIVISORS"), {
-            "name": "Set of Common Divisors of Two Integers (Number Theory)",
-            "description": "An integer c is a common divisor of two integers x and y iff c divides gcd(x, y). Therefore, the set of ALL common divisors of x and y is the complete set of all positive and negative divisors of gcd(x, y) = g (never containing 0, and containing every divisor d of g along with -d).",
-            "constraints": [
-                "0 is NEVER a divisor of any integer (any set containing 0 is invalid)",
-                "If 6 is in the set of all common divisors, then gcd(x, y) is a multiple of 6, so EVERY divisor of 6 ({-6, -3, -2, -1, 1, 2, 3, 6}) MUST be in the set; a set like {-6, -2, -1, 1, 2, 6} that omits 3 and -3 is IMPOSSIBLE.",
-            ],
-        }),
-        Vertex(EntityRef("FORMULA", "DIVISOR-CLOSURE-LAW"), {
-            "name": "Common Divisor Transitivity & Closure Law",
-            "equation": "CommonDivisors(x, y) = Divisors(gcd(x, y)) = {d in Z \\ {0} : d | gcd(x, y)}. If 6 in S, then +-1, +-2, +-3, +-6 in S -> {-6, -3, -2, -1, 1, 2, 3, 6}.",
-        }),
-        Vertex(EntityRef("STEM_CONCEPT", "STEM-LOGISTIC-CARRYING-CAPACITY"), {
-            "name": "Logistic Population Growth & Carrying Capacity Control (Ecology)",
-            "description": "In logistic population dynamics dN/dt = r*N*(1 - N/K), rapidly reproducing r-selected pest species (such as mosquitoes) quickly rebound from temporary mortality spikes back to the environment's carrying capacity K. The most effective long-term means of controlling the population is to reduce the carrying capacity K of the environment (e.g., eliminating standing water breeding sites) to lower the K value.",
-            "constraints": [
-                "Reducing the carrying capacity (K) of the environment permanently lowers the equilibrium ceiling K",
-                "Increasing mortality rate alone causes temporary reduction followed by rapid exponential recovery when N < K",
-            ],
-        }),
-        Vertex(EntityRef("FORMULA", "LOGISTIC-GROWTH-EQ"), {
-            "name": "Verhulst Logistic Population Equation",
-            "equation": "dN/dt = r * N * (1 - N / K); equilibrium population N* = K (reduce K to permanently lower population).",
-        }),
-        Vertex(EntityRef("STEM_CONCEPT", "STEM-PHOTON-BINOMIAL-DETECTOR"), {
-            "name": "Quantum Efficiency & Binomial Photon Counting Statistics (Quantum Optics)",
-            "description": "When N independent photons are incident on a detector with quantum efficiency eta (probability p = eta of detecting each photon), the number of detected photons follows a binomial distribution B(N, eta) with mean mu = N * eta and rms deviation (standard deviation) sigma = sqrt(N * eta * (1 - eta)).",
-            "constraints": [
-                "For N = 100 photons and quantum efficiency eta = 0.1: mean = 100 * 0.1 = 10 detections",
-                "rms deviation = sqrt(100 * 0.1 * 0.9) = sqrt(9) = 3 (an average of 10 times, with an rms deviation of about 3)",
-            ],
-        }),
-        Vertex(EntityRef("FORMULA", "BINOMIAL-RMS-LAW"), {
-            "name": "Binomial Detector Mean and RMS Deviation",
-            "equation": "mean = N * p = 100 * 0.1 = 10; rms_deviation = sqrt(N * p * (1 - p)) = sqrt(100 * 0.1 * 0.9) = 3.",
-        }),
-        Vertex(EntityRef("STEM_CONCEPT", "STEM-THIN-FILM-INTERFERENCE"), {
-            "name": "Thin-Film Interference with Single Phase Inversion (Optics)",
-            "description": "When light in air (n_air = 1.00) reflects normally off a thin film of oil (n_film = 1.50, thickness d = 500 nm) floating on water (n_water = 1.33), reflection at the top air->oil interface (n1 < n2) undergoes a 180-degree (pi, lambda/2) phase shift, while reflection at the bottom oil->water interface (n2 > n3, 1.50 > 1.33) has NO phase shift. Constructive interference (strongest reflection) therefore satisfies 2 * n_film * d = (m + 1/2) * lambda_air.",
-            "constraints": [
-                "Since n_air (1.0) < n_oil (1.5) > n_water (1.33), only ONE reflection inverts phase",
-                "Constructive reflection condition: lambda_air = 2 * n_oil * d / (m + 0.5) = 1500 nm / (m + 0.5)",
-                "For m = 0: 3000 nm; m = 1: 1500 / 1.5 = 1000 nm; m = 2: 1500 / 2.5 = 600 nm (visible!). Thus 600 nm is most strongly reflected.",
-            ],
-        }),
-        Vertex(EntityRef("FORMULA", "THIN-FILM-CONSTRUCTIVE-EQ"), {
-            "name": "Single-Inversion Thin-Film Constructive Interference",
-            "equation": "2 * n_film * d = (m + 1/2) * lambda_air => for n=1.5, d=500 nm, m=2: lambda_air = 1500 / 2.5 = 600 nm.",
-        }),
-        Vertex(EntityRef("STEM_CONCEPT", "STEM-CIRCLE-POINT-REFLECTION"), {
-            "name": "Point Reflection of a Circle in the Plane (Analytic Geometry)",
-            "description": "Reflecting every point (x, y) of a circle (x - x0)^2 + (y - y0)^2 = r^2 across a point P = (p, q) maps (x, y) -> (x', y') = (2p - x, 2q - y), which maps the center (x0, y0) to (2p - x0, 2q - y0) while preserving radius r.",
-            "constraints": [
-                "For x^2 + y^2 = 16 reflected across (3, 2): new center is (6, 4) with r^2 = 16",
-                "(x - 6)^2 + (y - 4)^2 = 16 <=> x^2 + y^2 - 12x - 8y + 36 = 0, so (b, c, d) = (-12, -8, 36).",
-            ],
-        }),
-        Vertex(EntityRef("FORMULA", "CIRCLE-REFLECTION-EQ"), {
-            "name": "Circle Reflection Expansion Formula",
-            "equation": "(2p - x)^2 + (2q - y)^2 = r^2 <=> x^2 + y^2 - 4p*x - 4q*y + (4p^2 + 4q^2 - r^2) = 0; for (p,q)=(3,2), r^2=16: (b, c, d) = (-12, -8, 36).",
-        }),
-        Vertex(EntityRef("STEM_CONCEPT", "STEM-PROFIT-BREAKEVEN"), {
-            "name": "Strict Profit / Earning Money Threshold vs. Break-Even Point (Quantitative Economics)",
-            "description": "Break-even occurs at n_0 = FixedCost / (AnnualRevenue - AnnualCost) where net profit is $0. To START EARNING MONEY (strictly positive net profit > 0) when cashflows occur in discrete years, the required number of years is floor(n_0) + 1 = int(FixedCost // NetAnnualGain) + 1.",
-            "constraints": [
-                "At break-even (Revenue == Cost), cumulative net profit is 0 (not yet earning money)",
-                "To start earning money (Revenue > Cost), if FixedCost / NetAnnualGain is an exact integer k (e.g., $90 / $7.50 = 12 years to break even), the person starts earning money in year k + 1 = 13.",
-            ],
-        }),
-        Vertex(EntityRef("FORMULA", "STRICT-PROFIT-YEARS-EQ"), {
-            "name": "Discrete Year Strict Profit Inequality",
-            "equation": "NetProfit(n) = n * (Rev - Cost) - InitialCost > 0 <=> n > InitialCost / (Rev - Cost) => n_min = floor(InitialCost / (Rev - Cost)) + 1.",
-        }),
-
-        # --- Key Cybersecurity Ontology Entities (CVE / CWE / CAPEC / CPE) ---
-        Vertex(EntityRef("CVE", "2024-6387"), {
-            "name": "RegreSSHion OpenSSH Signal Handler Race Condition",
-            "published": "2024-07-01",
-            "cvssMetric": {"data": {"version": "3.1", "baseScore": 8.1, "baseSeverity": "HIGH", "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"}},
-            "description": "A signal handler race condition in OpenSSH's server (sshd) on glibc-based Linux systems allows unauthenticated remote code execution as root when LoginGraceTime expires.",
-            "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-6387",
-        }),
-        Vertex(EntityRef("CVE", "2024-40711"), {
-            "name": "Veeam Backup & Replication Unauthenticated Deserialization RCE",
-            "published": "2024-09-07",
-            "cvssMetric": {"data": {"version": "3.1", "baseScore": 9.8, "baseSeverity": "CRITICAL", "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}},
-            "description": "Deserialization of untrusted data in Veeam Backup & Replication (12.0.0.1420 through 12.1.2.172) allows unauthenticated remote code execution via Backup.MountService on TCP port 6170.",
-            "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-40711",
-        }),
-        Vertex(EntityRef("CWE", "362"), {
-            "name": "Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')",
-            "abstraction": "Class",
-            "description": "The program executes concurrent code paths that access a shared resource without proper synchronization.",
-            "mitigations": ["Use atomic operations and reentrant-safe functions in signal handlers", "Eliminate non-async-signal-safe calls such as syslog()/malloc()/free() inside SIGALRM handlers"],
-        }),
-        Vertex(EntityRef("CWE", "364"), {
-            "name": "Signal Handler Race Condition",
-            "abstraction": "Base",
-            "description": "A race condition occurs inside a signal handler that invokes non-reentrant or non-async-signal-safe functions.",
-        }),
-        Vertex(EntityRef("CWE", "502"), {
-            "name": "Deserialization of Untrusted Data",
-            "abstraction": "Base",
-            "description": "The application deserializes untrusted data without sufficiently verifying that the resulting data will be valid and safe.",
-            "mitigations": ["Use safe serialization formats like JSON with strict schema validation", "Enforce cryptographic signing and type allowlisting before deserializing"],
-        }),
-        Vertex(EntityRef("CAPEC", "29"), {
-            "name": "Leveraging Time-of-Check and Time-of-Use (TOCTOU) Race Conditions",
-            "abstraction": "Standard",
-            "description": "An adversary exploits a race window between checking a resource state and using it.",
-        }),
-        Vertex(EntityRef("CAPEC", "586"), {
-            "name": "Object Injection",
-            "abstraction": "Standard",
-            "description": "An adversary crafts serialized objects containing gadget chains to execute arbitrary code during deserialization.",
-        }),
-        Vertex(EntityRef("CPE", "a:openbsd:openssh:9.7"), {
-            "name": "OpenBSD OpenSSH 9.7",
-            "part": "a", "vendor": "openbsd", "product": "openssh", "version": "9.7",
-        }),
-        Vertex(EntityRef("CPE", "a:openbsd:openssh:*"), {
-            "name": "OpenBSD OpenSSH (All Versions / Product Line)",
-            "part": "a", "vendor": "openbsd", "product": "openssh", "version": "*",
-        }),
-        Vertex(EntityRef("CPE", "a:veeam:backup_and_replication:12.1.2.172"), {
-            "name": "Veeam Backup & Replication 12.1.2.172",
-            "part": "a", "vendor": "veeam", "product": "backup_and_replication", "version": "12.1.2.172",
-        }),
-        Vertex(EntityRef("CPE", "a:veeam:backup_and_replication:*"), {
-            "name": "Veeam Backup & Replication (Product Line)",
-            "part": "a", "vendor": "veeam", "product": "backup_and_replication", "version": "*",
-        }),
-
-        # --- Multi-Section Document Records (AA-LCR & Domain Docs) ---
-        Vertex(EntityRef("DOC_RECORD", "DOC-HARBOURSIDE-CYCLE"), {
-            "name": "Harbourside Council Mill Road Cycle Lane & Dock Street Parking",
-            "description": "On Tuesday, the Harbourside Council voted 7 to 2 to approve 2.4 million pounds for a new cycle lane along Mill Road proposed by Councillor Priya Raman (starting in March, taking 14 weeks). Following feedback from shop owners led by Tom Eliot, the council allocated 40 temporary parking spaces on Dock Street.",
-            "constraints": ["Vote: 7 to 2", "Budget: 2.4 million pounds", "Duration: 14 weeks starting March", "Parking: 40 temporary parking spaces on Dock Street"],
-        }),
-        Vertex(EntityRef("DOC_RECORD", "DOC-PAYMENTS-OUTAGE-209"), {
-            "name": "Payments Database Region A/B Failover Postmortem #209",
-            "description": "At 02:14 UTC on 3 June, the Region A payments primary database halted when write-ahead logs filled 100% of the 500 GB volume. Automated failover promoted the Region B replica at 02:31 UTC (17 minutes elapsed). 1,820 transactions were delayed and 14 transactions failed permanently. The volume was expanded to 1 TB with an 80% alert threshold.",
-            "constraints": ["Outage start: 02:14 UTC", "Failover complete: 02:31 UTC (17 minutes elapsed)", "Delayed: 1,820 transactions", "Failed permanently: 14 transactions", "New disk size: 1 TB (80% alert)"],
-        }),
-        Vertex(EntityRef("DOC_RECORD", "DOC-AURORA-STORAGE-V42"), {
-            "name": "Aurora Distributed Storage v4.2 Specification",
-            "description": "The primary metadata cluster runs on PostgreSQL 16 across 3 availability zones with synchronous WAL replication. Read replicas refresh within 12 ms P99 latency, cold archival snapshots export every 6 hours, and the Kotlin coordinator enforces a maximum batch size of 4,096 records per transaction.",
-            "constraints": ["Database: PostgreSQL 16", "Coordinator language: Kotlin", "Max batch size: 4,096 records per transaction", "Replica P99 latency: 12 ms"],
-        }),
-    ]
-    g.write_vertices(vertices)
-
-    edges = [
-        # Clover relationships
-        Edge("GOVERNED_BY", EntityRef("CLOVER_ENTITY", "CLOVER-KIMI-K3"), EntityRef("CLOVER_ENTITY", "CLOVER-AGENTS-MD"), src_prov("CLOVER_SPEC", "AGENTS.md", "operating_rules")),
-        Edge("DEPENDS_ON", EntityRef("CLOVER_ENTITY", "CLOVER-KIMI-K3"), EntityRef("CLOVER_ENTITY", "KIMI-K3-MOE"), src_prov("CLOVER_SPEC", "clover-k3/README.md", "pillar_1")),
-        Edge("DEPENDS_ON", EntityRef("CLOVER_ENTITY", "CLOVER-KIMI-K3"), EntityRef("CLOVER_ENTITY", "HYBRID-AGENT"), src_prov("CLOVER_SPEC", "clover-k3/README.md", "pillar_2")),
-        Edge("DEPENDS_ON", EntityRef("CLOVER_ENTITY", "CLOVER-KIMI-K3"), EntityRef("CLOVER_ENTITY", "NCM-11PASS"), src_prov("CLOVER_SPEC", "clover-k3/README.md", "pillar_3")),
-        Edge("DEPENDS_ON", EntityRef("CLOVER_ENTITY", "CLOVER-KIMI-K3"), EntityRef("PAPER", "10.1007/s00521-026-12495-0"), src_prov("RESEARCH_CORPUS", "doi:10.1007/s00521-026-12495-0", "neuro_symbolic_graphrag")),
-        Edge("RELATED_TO", EntityRef("CLOVER_ENTITY", "CLOVER-AGENTS-MD"), EntityRef("CLOVER_ENTITY", "CLOVER-FRAMEWORK"), src_prov("CLOVER_SPEC", "AGENTS.md", "section_1"), {"nature": "SpecOf"}),
-
-        # STEM Concept -> Formula edges
-        Edge("HAS_FORMULA", EntityRef("STEM_CONCEPT", "STEM-COMMON-DIVISORS"), EntityRef("FORMULA", "DIVISOR-CLOSURE-LAW"), src_prov("STEM_ONTOLOGY", "NumberTheory:gcd_divisors", "closure_theorem")),
-        Edge("HAS_FORMULA", EntityRef("STEM_CONCEPT", "STEM-LOGISTIC-CARRYING-CAPACITY"), EntityRef("FORMULA", "LOGISTIC-GROWTH-EQ"), src_prov("STEM_ONTOLOGY", "Ecology:logistic_growth", "carrying_capacity_K")),
-        Edge("HAS_FORMULA", EntityRef("STEM_CONCEPT", "STEM-PHOTON-BINOMIAL-DETECTOR"), EntityRef("FORMULA", "BINOMIAL-RMS-LAW"), src_prov("STEM_ONTOLOGY", "QuantumOptics:photon_counting", "binomial_variance")),
-        Edge("HAS_FORMULA", EntityRef("STEM_CONCEPT", "STEM-THIN-FILM-INTERFERENCE"), EntityRef("FORMULA", "THIN-FILM-CONSTRUCTIVE-EQ"), src_prov("STEM_ONTOLOGY", "Optics:thin_film", "phase_inversion_condition")),
-        Edge("HAS_FORMULA", EntityRef("STEM_CONCEPT", "STEM-CIRCLE-POINT-REFLECTION"), EntityRef("FORMULA", "CIRCLE-REFLECTION-EQ"), src_prov("STEM_ONTOLOGY", "AnalyticGeometry:reflection", "midpoint_inversion")),
-        Edge("HAS_FORMULA", EntityRef("STEM_CONCEPT", "STEM-PROFIT-BREAKEVEN"), EntityRef("FORMULA", "STRICT-PROFIT-YEARS-EQ"), src_prov("STEM_ONTOLOGY", "Economics:discrete_cashflow", "strict_profit_threshold")),
-
-        # Cybersecurity CVE -> CWE -> CAPEC & CPE edges
-        Edge("CAUSED_BY", EntityRef("CVE", "2024-6387"), EntityRef("CWE", "364"), src_prov("NVD", "https://nvd.nist.gov/vuln/detail/CVE-2024-6387", "weaknesses")),
-        Edge("CAUSED_BY", EntityRef("CVE", "2024-6387"), EntityRef("CWE", "362"), src_prov("NVD", "https://nvd.nist.gov/vuln/detail/CVE-2024-6387", "weaknesses")),
-        Edge("RELATED_TO", EntityRef("CWE", "364"), EntityRef("CWE", "362"), src_prov("MITRE_CWE", "https://cwe.mitre.org/data/definitions/364.html", "RelatedWeaknesses"), {"nature": "ChildOf"}),
-        Edge("EXPLOITED_BY", EntityRef("CWE", "362"), EntityRef("CAPEC", "29"), src_prov("MITRE_CWE", "https://cwe.mitre.org/data/definitions/362.html", "RelatedAttackPatterns")),
-        Edge("AFFECTS", EntityRef("CVE", "2024-6387"), EntityRef("CPE", "a:openbsd:openssh:9.7"), src_prov("NVD", "https://nvd.nist.gov/vuln/detail/CVE-2024-6387", "configurations")),
-        Edge("RELATED_TO", EntityRef("CPE", "a:openbsd:openssh:9.7"), EntityRef("CPE", "a:openbsd:openssh:*"), src_prov("NIST_CPE", "cpe:2.3:a:openbsd:openssh:9.7", "vendor:product"), {"nature": "VersionOf"}),
-
-        Edge("CAUSED_BY", EntityRef("CVE", "2024-40711"), EntityRef("CWE", "502"), src_prov("NVD", "https://nvd.nist.gov/vuln/detail/CVE-2024-40711", "weaknesses")),
-        Edge("EXPLOITED_BY", EntityRef("CWE", "502"), EntityRef("CAPEC", "586"), src_prov("MITRE_CWE", "https://cwe.mitre.org/data/definitions/502.html", "RelatedAttackPatterns")),
-        Edge("AFFECTS", EntityRef("CVE", "2024-40711"), EntityRef("CPE", "a:veeam:backup_and_replication:12.1.2.172"), src_prov("NVD", "https://nvd.nist.gov/vuln/detail/CVE-2024-40711", "configurations")),
-        Edge("RELATED_TO", EntityRef("CPE", "a:veeam:backup_and_replication:12.1.2.172"), EntityRef("CPE", "a:veeam:backup_and_replication:*"), src_prov("NIST_CPE", "cpe:2.3:a:veeam:backup_and_replication:12.1.2.172", "vendor:product"), {"nature": "VersionOf"}),
-    ]
-    g.write_edges(edges)
-    g.run_inference()
-    return g
-
-
-# ---------------------------------------------------------------------------
-# 7. Dual-Index Neuro-Symbolic Retriever (`k3_ontology_retriever`)
-# ---------------------------------------------------------------------------
-
-_CONCEPT_TRIGGERS: list[tuple[tuple[str, ...], EntityRef]] = [
-    (("common divisor", "common divisors"), EntityRef("STEM_CONCEPT", "STEM-COMMON-DIVISORS")),
-    (("population", "mosquito", "logistic", "carrying capacity"), EntityRef("STEM_CONCEPT", "STEM-LOGISTIC-CARRYING-CAPACITY")),
-    (("quantum efficiency", "photon detector", "rms deviation"), EntityRef("STEM_CONCEPT", "STEM-PHOTON-BINOMIAL-DETECTOR")),
-    (("puddle of water", "layer of oil", "index of refraction", "strongly reflected wavelength", "thin-film", "thin film"), EntityRef("STEM_CONCEPT", "STEM-THIN-FILM-INTERFERENCE")),
-    (("reflected in the point", "x^2 + y^2", "ordered triple"), EntityRef("STEM_CONCEPT", "STEM-CIRCLE-POINT-REFLECTION")),
-    (("lemon tree", "starts earning money", "start earning money"), EntityRef("STEM_CONCEPT", "STEM-PROFIT-BREAKEVEN")),
-    (("harbourside", "mill road", "dock street"), EntityRef("DOC_RECORD", "DOC-HARBOURSIDE-CYCLE")),
-    (("payments", "02:14 utc", "02:31 utc", "region b"), EntityRef("DOC_RECORD", "DOC-PAYMENTS-OUTAGE-209")),
-    (("postgresql 16", "4,096 records", "aurora distributed storage"), EntityRef("DOC_RECORD", "DOC-AURORA-STORAGE-V42")),
-    (("clover kimi", "kimi k3", "896 routed", "896 experts"), EntityRef("CLOVER_ENTITY", "CLOVER-KIMI-K3")),
-    (("agents.md", "dharma", "discernment"), EntityRef("CLOVER_ENTITY", "CLOVER-AGENTS-MD")),
-    (("next-concept", "ncm", "313 discrete", "11 hierarchical"), EntityRef("CLOVER_ENTITY", "NCM-11PASS")),
-    (("ontology-guided", "graphrag", "benfenati", "rinaldi"), EntityRef("PAPER", "10.1007/s00521-026-12495-0")),
-]
+DEFAULT_ONTOLOGY_GRAPH_PATH = Path(__file__).resolve().parent / "memory_tree" / "_ontology" / "ontology_graph.json"
 
 
 @dataclass(frozen=True)
@@ -1195,138 +934,80 @@ class MPOntologyPredicate:
         return boxes_hit >= self.min_boxes_hit
 
 
-_MP_ONTOLOGY_PREDICATES: tuple[MPOntologyPredicate, ...] = (
-    MPOntologyPredicate(
-        target=EntityRef("STEM_CONCEPT", "STEM-COMMON-DIVISORS"),
-        boxes=(
-            ("common divisor", "common divisors"),
-            ("integer", "integers", "complete set", "gcd", "greatest common"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=("polynomial", "q[x]", "ring of polynomials", "long division"),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("STEM_CONCEPT", "STEM-LOGISTIC-CARRYING-CAPACITY"),
-        boxes=(
-            ("population", "mosquito", "mosquitoes", "species", "pest"),
-            ("carrying capacity", "environment", "controlling", "breeding", "equilibrium"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=("logistic regression", "classification model", "cross-entropy", "l2 regularization", "hospital patients"),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("STEM_CONCEPT", "STEM-PHOTON-BINOMIAL-DETECTOR"),
-        boxes=(
-            ("photon", "photons", "photon detector"),
-            ("quantum efficiency", "rms deviation", "detected", "average"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=(),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("STEM_CONCEPT", "STEM-THIN-FILM-INTERFERENCE"),
-        boxes=(
-            ("puddle of water", "layer of oil", "thin-film", "thin film", "oil film"),
-            ("index of refraction", "reflected wavelength", "wavelength", "interference", "nm", "phase"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=("archimedes", "buoyancy", "kg/m^3", "plastic bead", "mosfet", "transistor", "drain current", "gate oxide"),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("STEM_CONCEPT", "STEM-CIRCLE-POINT-REFLECTION"),
-        boxes=(
-            ("x^2 + y^2", "circle"),
-            ("reflected in the point", "ordered triple", "bx + cy"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=("curved mirror", "laser beam", "focal point"),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("STEM_CONCEPT", "STEM-PROFIT-BREAKEVEN"),
-        boxes=(
-            ("lemon tree", "plant a", "cost $", "costs $"),
-            ("starts earning money", "start earning money", "earning money"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=(),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("DOC_RECORD", "DOC-HARBOURSIDE-CYCLE"),
-        boxes=(
-            ("harbourside", "mill road", "dock street", "priya raman", "tom eliot"),
-            ("council", "cycle lane", "parking", "2.4 million", "40 temporary", "14 weeks", "voted"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=(),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("DOC_RECORD", "DOC-PAYMENTS-OUTAGE-209"),
-        boxes=(
-            ("02:14 utc", "02:31 utc", "region a", "region b", "postmortem #209", "1,820"),
-            ("payments", "database", "failover", "transactions", "500 gb", "1 tb"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=(),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("DOC_RECORD", "DOC-AURORA-STORAGE-V42"),
-        boxes=(
-            ("aurora distributed storage", "aurora", "postgresql 16", "4,096 records", "kotlin"),
-            ("storage", "cluster", "replicas", "replication", "12 ms", "batch size"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=(),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("CLOVER_ENTITY", "CLOVER-KIMI-K3"),
-        boxes=(
-            ("clover kimi", "kimi k3", "clover-k3"),
-            ("896 routed", "896 experts", "93-layer", "moe", "hybridagent", "ncm"),
-        ),
-        min_boxes_hit=1,
-        inhibitory_vetoes=(),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("CLOVER_ENTITY", "CLOVER-AGENTS-MD"),
-        boxes=(
-            ("agents.md",),
-            ("dharma", "discernment", "clover"),
-        ),
-        min_boxes_hit=1,
-        inhibitory_vetoes=(),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("CLOVER_ENTITY", "NCM-11PASS"),
-        boxes=(
-            ("next-concept", "ncm", "313 discrete"),
-            ("11 hierarchical", "11-pass", "vq-vae", "scales"),
-        ),
-        min_boxes_hit=1,
-        inhibitory_vetoes=(),
-    ),
-    MPOntologyPredicate(
-        target=EntityRef("PAPER", "10.1007/s00521-026-12495-0"),
-        boxes=(
-            ("ontology-guided", "benfenati", "rinaldi"),
-            ("graphrag", "neuro-symbolic", "provenance"),
-        ),
-        min_boxes_hit=2,
-        inhibitory_vetoes=(),
-    ),
-)
+def _load_ontology_graph_spec(spec_path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
+    target = Path(spec_path) if spec_path is not None else DEFAULT_ONTOLOGY_GRAPH_PATH
+    if target.exists():
+        return json.loads(target.read_text(encoding="utf-8"))
+    return {}
 
-# Entity-specific anchor tokens (Box 1) required for Order-2 lexical fallback so generic domain words alone never trigger
-_ENTITY_ANCHOR_BOX: dict[str, frozenset[str]] = {
-    "DOC_RECORD:DOC-HARBOURSIDE-CYCLE": frozenset({"harbourside", "mill", "dock", "priya", "raman", "eliot"}),
-    "DOC_RECORD:DOC-PAYMENTS-OUTAGE-209": frozenset({"postmortem", "1820", "0214", "0231", "june"}),
-    "DOC_RECORD:DOC-AURORA-STORAGE-V42": frozenset({"aurora", "postgresql", "kotlin", "4096"}),
-    "STEM_CONCEPT:STEM-COMMON-DIVISORS": frozenset({"divisor", "divisors", "gcd"}),
-    "STEM_CONCEPT:STEM-LOGISTIC-CARRYING-CAPACITY": frozenset({"mosquito", "mosquitoes", "carrying", "verhulst"}),
-    "STEM_CONCEPT:STEM-PHOTON-BINOMIAL-DETECTOR": frozenset({"photon", "photons", "quantum", "binomial"}),
-    "STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE": frozenset({"refraction", "wavelength", "interference", "puddle"}),
-    "STEM_CONCEPT:STEM-CIRCLE-POINT-REFLECTION": frozenset({"triple", "circle", "origin"}),
-    "STEM_CONCEPT:STEM-PROFIT-BREAKEVEN": frozenset({"lemon", "lemons", "breakeven", "earning"}),
-}
+
+def build_default_clover_ontology_graph(
+    spec_path: str | os.PathLike[str] | None = None,
+) -> CloverOntologyGraph:
+    """Populates the deterministic ontology property graph directly from `memory_tree/_ontology/ontology_graph.json`
+    (zero hardcoded vertices or edges in Python code), then executes `run_inference()` to materialise all Horn-derived edges."""
+    g = CloverOntologyGraph()
+    spec = _load_ontology_graph_spec(spec_path)
+    ret_at = str(spec.get("retrieved_at") or "2026-10-25")
+
+    vertices = [
+        Vertex(EntityRef(str(v["collection"]), str(v["key"])), dict(v.get("attributes") or {}))
+        for v in (spec.get("vertices") or [])
+    ]
+    g.write_vertices(vertices)
+
+    edges = []
+    for e in spec.get("edges") or []:
+        src_col, src_key = e["source"]
+        tgt_col, tgt_key = e["target"]
+        p_repo, p_rec, p_fld = e["provenance"]
+        edges.append(
+            Edge(
+                str(e["relation"]),
+                EntityRef(str(src_col), str(src_key)),
+                EntityRef(str(tgt_col), str(tgt_key)),
+                Provenance.from_source(str(p_repo), str(p_rec), str(p_fld), ret_at),
+                dict(e.get("attributes") or {}),
+            )
+        )
+    g.write_edges(edges)
+    g.run_inference()
+    return g
+
+
+# ---------------------------------------------------------------------------
+# 7. Dual-Index Neuro-Symbolic Retriever (`k3_ontology_retriever`)
+# ---------------------------------------------------------------------------
+
+def _load_ontology_predicates_and_triggers(
+    spec_path: str | os.PathLike[str] | None = None,
+) -> tuple[
+    list[tuple[tuple[str, ...], EntityRef]],
+    tuple[MPOntologyPredicate, ...],
+    dict[str, frozenset[str]],
+]:
+    spec = _load_ontology_graph_spec(spec_path)
+    triggers: list[tuple[tuple[str, ...], EntityRef]] = [
+        (tuple(str(p) for p in item["phrases"]), EntityRef(str(item["target"][0]), str(item["target"][1])))
+        for item in (spec.get("concept_triggers") or [])
+    ]
+    predicates: list[MPOntologyPredicate] = [
+        MPOntologyPredicate(
+            target=EntityRef(str(item["target"][0]), str(item["target"][1])),
+            boxes=tuple(tuple(str(p) for p in box) for box in (item.get("boxes") or [])),
+            min_boxes_hit=int(item.get("min_boxes_hit", 2)),
+            inhibitory_vetoes=tuple(str(v) for v in (item.get("inhibitory_vetoes") or [])),
+        )
+        for item in (spec.get("mp_ontology_predicates") or [])
+    ]
+    anchor_box: dict[str, frozenset[str]] = {
+        str(k): frozenset(str(w) for w in words)
+        for k, words in (spec.get("entity_anchor_box") or {}).items()
+    }
+    return triggers, tuple(predicates), anchor_box
+
+
+_CONCEPT_TRIGGERS, _MP_ONTOLOGY_PREDICATES, _ENTITY_ANCHOR_BOX = _load_ontology_predicates_and_triggers()
 
 _STOPWORDS = {
     "the", "a", "an", "in", "on", "at", "to", "for", "of", "and", "or", "by", "with", "from", "as",
@@ -1366,7 +1047,7 @@ class CloverOntologyRetriever:
         vetoed_refs: set[str] = set()
         if use_mp:
             for pred in _MP_ONTOLOGY_PREDICATES:
-                if any(v in low_q for v in pred.inhibitory_vetoes):
+                if any(veto in low_q for veto in pred.inhibitory_vetoes):
                     vetoed_refs.add(pred.target.canonical)
                     continue
                 if pred.evaluate(low_q):

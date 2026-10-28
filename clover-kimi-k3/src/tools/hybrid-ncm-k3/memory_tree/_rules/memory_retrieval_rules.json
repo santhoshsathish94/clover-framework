@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0",
+  "description": "Clover Memory Graph McCulloch-Pitts (1943) inhibitory vetoes and Minsky-Papert (1969) Order-(k+1) structural diagnostic rules",
+  "mp_global_inhibitory_vetoes": [
+    "swimming pool",
+    "water temperature",
+    "night air",
+    "eukaryotic",
+    "endocytosis",
+    "endosome",
+    "lysosome",
+    "extracellular matrix",
+    "cytoplasm",
+    "baseball",
+    "batter",
+    "curveball",
+    "batting practice",
+    "forklift",
+    "loading dock",
+    "warehouse",
+    "commuter highway",
+    "traffic light",
+    "arterial route",
+    "exit ramp",
+    "woodworking",
+    "stencil label",
+    "sorting jars",
+    "retro pixel art",
+    "hdmi",
+    "monitor refresh rate",
+    "detective's alibi",
+    "novel's second printing",
+    "who was the culprit"
+  ],
+  "computing_anchor_box": [
+    "cache",
+    "caching",
+    "lru",
+    "pipeline",
+    "stage",
+    "stages",
+    "layer",
+    "layers",
+    "cdn",
+    "pop",
+    "buffer",
+    "metadata",
+    "vram",
+    "memoization",
+    "ssa",
+    "compiler",
+    "token",
+    "tokens",
+    "sequence",
+    "recurrent",
+    "kda",
+    "activation",
+    "graph",
+    "query",
+    "edge",
+    "edges",
+    "path",
+    "paths",
+    "router",
+    "bgp",
+    "cve",
+    "cwe",
+    "capec",
+    "affects",
+    "lexer",
+    "scanner",
+    "tokenizer",
+    "elif",
+    "ast",
+    "code",
+    "function",
+    "rust",
+    "python",
+    "simd",
+    "kernel",
+    "harness",
+    "benchmark",
+    "micro-benchmark",
+    "microbenchmark",
+    "decode",
+    "trunk",
+    "quantisation",
+    "quantization",
+    "expert",
+    "experts",
+    "nvme",
+    "pcie",
+    "slot",
+    "slotcache",
+    "memory entry",
+    "memory entries",
+    "recorded"
+  ],
+  "structural_concept_rules": {
+    "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001": [
+      ["flat", "plateau", "unchanged", "invariant", "same hit rate", "constant across"],
+      ["capacity", "capacities", "budget", "size", "setting", "settings", "sweep", "entries", "slots"],
+      ["cannot help", "no effect", "dead end", "useless", "suspect", "pool", "shared", "global"]
+    ],
+    "MEM-CONCEPT-INSTRUMENT-ZERO-DENOMINATOR-001": [
+      ["0 hits", "zero hits", "0%", "never hits", "0 paths", "zero seeds", "empty evidence"],
+      ["repeat", "repeats", "repeating", "same token", "recurrent", "drift", "threshold", "filter", "workload"],
+      ["prove", "proves", "useless", "dead", "never", "cannot", "why"]
+    ],
+    "MEM-CONCEPT-HARDWARE-SCOPED-VERDICTS-001": [
+      ["4-bit", "quantisation", "quantization", "nibble", "unpack", "unpacking"],
+      ["cpu", "gpu", "rtx 3090", "hardware", "bandwidth", "dram", "pcie"],
+      ["decode", "trunk", "kernel", "s/tok", "s/layer", "supply", "dead end", "unmeasured", "speed"]
+    ],
+    "MEM-OBS-ONTORAG-FANOUT-FLOODING-001": [
+      ["1-hop", "length(path)", "length(p.edges)", "path length", "limit"],
+      ["2-hop", "affects", "fan-out", "flooding", "root-cause", "causal", "capec"]
+    ],
+    "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001": [
+      ["prefix", "shadow", "shadowing", "1-char", "shorter"],
+      ["elif", "branch", "tokenizer", "dispatch", "2-char", "longer", "lexer", "scanner"]
+    ],
+    "MEM-CONCEPT-SYNTHETIC-TIMING-VS-MEANING-001": [
+      ["synthetic", "random", "micro-benchmark", "microbenchmark", "standalone", "isolated"],
+      ["in-layer", "in situ", "real", "router", "over-predict", "under-predict"]
+    ]
+  },
+  "search_url_routes": [
+    {
+      "keywords": ["agents.md", "agents md"],
+      "url": "https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md"
+    },
+    {
+      "keywords": ["clover k3", "clover-k3", "kimi k3", "ncm", "next-concept", "hybridagent", "3090"],
+      "url": "https://cloverframework.com/clover-k3/"
+    },
+    {
+      "keywords": ["adopt", "use the framework", "start with clover", "how can i"],
+      "requires_any": ["clover", "framework"],
+      "url": "https://cloverframework.com/start/"
+    },
+    {
+      "keywords": ["clover", "clover framework"],
+      "url": "https://cloverframework.com/"
+    }
+  ]
+}

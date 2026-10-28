@@ -101,8 +101,24 @@ def is_short_greeting_or_ack(user_prompt: str) -> bool:
     return False
 
 
+def is_conversational_meta_or_confirmation(user_prompt: str) -> bool:
+    """True for short conversational confirmations or capability check-ins ('really', 'are you sure',
+    'can you really help me', 'is it working', 'you there') that should be answered in 1-2 natural sentences."""
+    p = re.sub(r"[^a-z0-9\s]", " ", user_prompt.lower())
+    p_clean = " ".join(w for w in p.split() if w != "clover").strip()
+    if p_clean in (
+        "really", "oh really", "for real", "seriously", "are you sure", "you sure",
+        "can you really", "can you really help", "can you really help me",
+        "can you help", "can you help me", "are you there", "you there",
+        "is this working", "is it working", "does this work", "test", "testing",
+        "nice", "cool", "awesome", "great", "good", "wow",
+    ):
+        return True
+    return False
+
+
 def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
-    if is_short_greeting_or_ack(user_prompt):
+    if is_short_greeting_or_ack(user_prompt) or is_conversational_meta_or_confirmation(user_prompt):
         return False
     p = user_prompt.lower().strip()
     # Short single-fact lookup or simple arithmetic questions ('what is the capital of...', 'what is 25 * 4?') are NOT multi-part
@@ -224,6 +240,10 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
     raw_text = re.sub(r"(?:^|\n)\s*W\d+\s*$", "", raw_text, flags=re.IGNORECASE).strip()
     # Join lines where an equation ends with `=` and the number is on the next line
     raw_text = re.sub(r"=\s*\n+\s*(?=[$\d\-])", "= ", raw_text)
+    wants_one_sent = any(
+        bs in user_prompt.lower()
+        for bs in ("one sentence", "1 sentence", "one clear sentence", "one clear, grammatical sentence", "single sentence")
+    )
 
     # Also detect unfenced Python function/class blocks (`def foo(...):` followed by indented lines or docstrings)
     if not code_blocks and re.search(r"(?:^|\n)\s*def\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", raw_text):
@@ -301,7 +321,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
                 "are you asking why something happens", "once i understand the context, i can provide",
             ))
             or re.search(
-                r"\b(?:the user's|the user is|the user was|the user has|the user needs|the user wants|the user asks|the user asked|the user didn't|confirmed their understanding|what they want to achieve|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|likely refers to their|that they understand how)\b",
+                r"\b(?:the user's|the user is|the user was|the user has|the user needs|the user wants|the user asks|the user asked|the user didn't|confirmed their understanding|what they want to achieve|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|likely refers to their|that they understand how|i should highlight|i should focus on|i should mention|i should provide|i will formulate|i'll formulate)\b",
                 raw_low_pre,
             )
         ):
@@ -317,7 +337,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             flags=re.IGNORECASE,
         ).strip()
         ln = re.sub(r"^From the previous (?:turn|analysis)[^,]*,\s*(?:I know that\s*|the key points were:\s*)?", "", ln, flags=re.IGNORECASE).strip()
-        ln = re.sub(r"^(?:Based on|Looking at|According to|From) the (?:search results|provided reference|reference information|provided references|reference facts)(?:\s+provided)?[,:\s]*", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"^(?:Based on|Looking at|According to|From) the (?:search results|provided reference|reference information|provided references|reference facts|information provided|information given|context provided)(?:\s+provided)?[,:\s]*", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*based on the provided (?:reference(?:\s+facts|s)?|information):", ":", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*based on the provided references:", ":", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*mentioned in the reference:", ":", ln, flags=re.IGNORECASE).strip()
@@ -339,7 +359,8 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             "additionally, for a comparison with other", "additionally, a comparison with other models",
             "looking at the context", "based on the context", "the relevant information is clearly stated",
             "facts, the key information", "my response will", "my response should", "my answer should",
-            "i'll focus on", "i will focus on", "i need to be ", "i should explain", "i will explain", "i'll explain",
+            "my approach will", "my approach is", "my plan is", "my goal is",
+            "i'll focus on", "i will focus on", "i need to ", "i should explain", "i will explain", "i'll explain",
             "list the major ",
             "i've provided the exact", "i've also included", "i also included a question",
             "i've identified the ", "these two pieces of information", "this answer directly addresses",
@@ -359,7 +380,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             "i will start by explaining", "then maybe touch on", "what images are (", "what videos are (",
             "however, as an ai", "as an ai, i cannot", "i cannot browse the internet",
             "i can only work with the information", "since i cannot access", "however, without access to",
-            "upon reflection, i believe", "there's no mention of", "given the information available, i'll assume",
+            "upon reflection, i believe", "there's no mention of", "given the information",
             "to be thorough, i'll re-read", "upon re-reading, i still", "the most likely interpretation is that",
             "you have provided a link to", "you have asked me to read", "i understand that you want me to read",
             "i understand that you are clarifying", "to be precise and avoid any confusion, i'll restate",
@@ -382,6 +403,11 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             "the search results ", "however, the search results", "however, since",
             "since the search result", "to provide a more detailed", "this should help me",
             "the answer is concise", "the response will be", "no further ", "no other information",
+            "it sounds like you're asking", "it looks like you're asking",
+            "could you please provide more context", "once i have a clearer understanding",
+            "let me start by understanding what you need", "let me make sure i understand what you need",
+            "another important aspect is the mention of", "also, mentions like",
+            "stated by clover_spec", "relationship path (",
             "</think>", "<think>", "<search>", "</search>",
         )) or low in ("first,", "alright,", "okay,", "however,", "so,", "but"):
             continue
@@ -403,6 +429,11 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         if len(norm_key) > 12 and norm_key in seen_norm_lines:
             continue
         seen_norm_lines.add(norm_key)
+        if wants_one_sent and not ln.startswith("__CODE_BLOCK_"):
+            first_sent = re.split(r"(?<=[.!?])\s+(?=[A-Z])", ln)[0].strip()
+            if first_sent.endswith((".", "!", "?")) and len(first_sent) >= 12:
+                raw_lines.append(first_sent)
+                break
         raw_lines.append(ln)
         if len(raw_lines) >= 2 and any(
             ending in low
@@ -419,6 +450,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
     # Drop any trailing dangling header (`:`), comma, unclosed parenthesis, dangling conjunction, or unclosed mid-sentence cut-off line
     while len(raw_lines) >= 1 and not raw_lines[-1].startswith("__CODE_BLOCK_") and (
         raw_lines[-1].endswith((":", ","))
+        or bool(re.match(r"^\d+[.)]?$", raw_lines[-1].strip()))
         or (raw_lines[-1].count("(") > raw_lines[-1].count(")"))
         or re.search(
             r"\b(?:and|or|to|for|of|in|with|by|from|that|which|since|because|however|so|but|the|a|an|assume|assuming|clarify|whether|if|when|while|as)$",
@@ -432,7 +464,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
     ):
         if len(raw_lines) == 1:
             # Never leave a single truncated fragment without sentence-ending punctuation
-            if not raw_lines[0].endswith((".", "!", "?", ")", '"', "'", "`")):
+            if not raw_lines[0].endswith((".", "!", "?", ")", '"', "'", "`")) or bool(re.match(r"^\d+[.)]?$", raw_lines[0].strip())):
                 raw_lines.pop()
             break
         raw_lines.pop()
@@ -446,7 +478,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
                     cleaned_notes += "."
                 raw_lines = [cleaned_notes[0].upper() + cleaned_notes[1:]]
         if not raw_lines:
-            if is_short_greeting_or_ack(user_prompt):
+            if is_short_greeting_or_ack(user_prompt) or is_conversational_meta_or_confirmation(user_prompt):
                 return ["Hello! How can I help you today?"]
             return ["Unable to process this request right now."]
 
@@ -511,7 +543,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
 
     if plans:
         return plans
-    if is_short_greeting_or_ack(user_prompt):
+    if is_short_greeting_or_ack(user_prompt) or is_conversational_meta_or_confirmation(user_prompt):
         return ["Hello! How can I help you today?"]
     return ["Unable to process this request right now."]
 

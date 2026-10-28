@@ -297,7 +297,9 @@ def main():
     print(f"=== PREPARING ISOLATED AGENT WORKSPACE ({attempt_tag}) ===", flush=True)
     subprocess.run(["sudo", "rm", "-rf", AGENT_APP], check=True)
     subprocess.run(["sudo", "cp", "-a", PRISTINE_APP, AGENT_APP], check=True)
-    subprocess.run(["sudo", "chown", "-R", "usergpu:usergpu", AGENT_APP], check=True)
+    cur_uid = os.getuid() if hasattr(os, "getuid") else 0
+    cur_gid = os.getgid() if hasattr(os, "getgid") else 0
+    subprocess.run(["sudo", "chown", "-R", f"{cur_uid}:{cur_gid}", AGENT_APP], check=True)
 
     instruction_text = open(os.path.join(TASK_DIR, "instruction.md"), "r", encoding="utf-8").read()
     vscode_prompt = (
@@ -313,7 +315,7 @@ def main():
 
     for r_idx in range(max_rounds):
         t_r0 = time.perf_counter()
-        resp = call_clover_v1(messages, session_id=f"swe_66d0b318_{attempt_tag}")
+        resp = call_clover_v1(messages, session_id=f"swe_{SLUG}_{attempt_tag}")
         r_dt = round(time.perf_counter() - t_r0, 2)
         msg = (resp.get("choices") or [{}])[0].get("message") or {}
         t_calls = msg.get("tool_calls") or []

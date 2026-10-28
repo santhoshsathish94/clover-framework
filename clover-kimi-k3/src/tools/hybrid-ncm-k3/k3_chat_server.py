@@ -1150,7 +1150,7 @@ async function discardStaged(entryId) {
 
 
 class PendingTextRequest:
-    def __init__(self, session_id, prompt, hist_snapshot, cands, remember, display_prompt=None, attachments_meta=None):
+    def __init__(self, session_id, prompt, hist_snapshot, cands, remember, display_prompt=None, attachments_meta=None, callable_fn=None):
         self.session_id = session_id
         self.prompt = prompt
         self.display_prompt = display_prompt if display_prompt is not None else prompt
@@ -1158,6 +1158,7 @@ class PendingTextRequest:
         self.hist_snapshot = hist_snapshot
         self.cands = cands
         self.remember = remember
+        self.callable_fn = callable_fn
         self.event = threading.Event()
         self.result = None
         self.error = None
@@ -1775,15 +1776,22 @@ class MultiGPUCloverCoordinator:
                 #   saving a flat ~1.0 second on every interactive turn!
                 # - If all GPU text workers are currently busy executing a batch, accumulate incoming requests for up to
                 #   `self.batch_pause_s` (`1.0 s`) so queued sessions are clubbed into the next GPU pass.
-                wait_window = 0.025 if self._any_text_worker_free() else self.batch_pause_s
-                t_deadline = time.perf_counter() + wait_window
-                while True:
-                    rem = t_deadline - time.perf_counter()
-                    if rem <= 0 or len(self.pending_queue) >= 8:
-                        break
-                    self.q_cond.wait(timeout=rem)
-                batch = self.pending_queue[:8]
-                self.pending_queue = self.pending_queue[8:]
+                if self.pending_queue and getattr(self.pending_queue[0], "callable_fn", None) is not None:
+                    batch = [self.pending_queue.pop(0)]
+                else:
+                    wait_window = 0.025 if self._any_text_worker_free() else self.batch_pause_s
+                    t_deadline = time.perf_counter() + wait_window
+                    while True:
+                        rem = t_deadline - time.perf_counter()
+                        if rem <= 0 or len(self.pending_queue) >= 8 or any(getattr(x, "callable_fn", None) is not None for x in self.pending_queue):
+                            break
+                        self.q_cond.wait(timeout=rem)
+                    if self.pending_queue and getattr(self.pending_queue[0], "callable_fn", None) is not None:
+                        batch = [self.pending_queue.pop(0)]
+                    else:
+                        batch = []
+                        while self.pending_queue and len(batch) < 8 and getattr(self.pending_queue[0], "callable_fn", None) is None:
+                            batch.append(self.pending_queue.pop(0))
 
             if len(self.text_workers) == 1:
                 self._execute_clubbed_batch(batch)
@@ -1796,6 +1804,12 @@ class MultiGPUCloverCoordinator:
         w_idx = self._acquire_text_worker()
         eng = self.text_workers[w_idx]
         try:
+            if len(batch) == 1 and getattr(batch[0], "callable_fn", None) is not None:
+                req = batch[0]
+                req.result = req.callable_fn(eng)
+                cuda_sync(eng.dev_ha)
+                req.event.set()
+                return
             if len(batch) == 1:
                 req = batch[0]
                 t0 = time.perf_counter()
@@ -2289,11 +2303,13 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
         if self.path.startswith("/api/reload-code"):
             try:
                 import importlib
+                import live_web_search as _lws
                 import k3_fast_chat as _kfc
                 import k3_generative_compiler as _kgc
                 import k3_ontology_graph as _kog
                 import k3_memory_graph as _kmg
                 import k3_agent_engine as _kae
+                importlib.reload(_lws)
                 importlib.reload(_kfc)
                 importlib.reload(_kgc)
                 importlib.reload(_kog)
@@ -2301,10 +2317,14 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 importlib.reload(_kae)
                 for w_eng in STATE.text_workers:
                     w_eng.__class__ = _kae.CloverK3AgentEngine
+                    w_eng.search_tool = _kae.K3KnowledgeSearchTool()
+                    w_eng.ontology_retriever = _kog.CloverOntologyRetriever()
+                    w_eng.symbolic_verifier = _kog.CloverSymbolicVerifier(w_eng.ontology_retriever)
+                    w_eng.memory_graph = _kmg.ensure_default_memory_tree()
                     w_eng.py_gc = _kgc.CloverPythonGenerativeCompiler(allow_undefined=True)
                     if getattr(w_eng, "rust_gc", None) is not None and _kgc.HAS_RUST_GC:
                         w_eng.rust_gc = _kgc.CloverRustGenerativeCompiler()
-                self._send_json({"ok": True, "reloaded": ["k3_fast_chat", "k3_generative_compiler", "k3_ontology_graph", "k3_memory_graph", "k3_agent_engine"]})
+                self._send_json({"ok": True, "reloaded": ["live_web_search", "k3_fast_chat", "k3_generative_compiler", "k3_ontology_graph", "k3_memory_graph", "k3_agent_engine"]})
             except Exception as e:
                 self._send_json({"error": str(e)}, code=500)
             return
@@ -2666,24 +2686,29 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             # so Clover Kimi K3 can iteratively call `read_file`, `list_dir`, `file_search`, `grep_search`, `run_in_terminal`, etc.!
             next_tool_call = None
             if available_tools and tool_choice != "none" and not image_b64:
-                def _run_tool_step():
-                    if not torch.cuda.is_available():
-                        torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
-                    w_idx = STATE._acquire_text_worker()
-                    eng = STATE.text_workers[w_idx]
-                    try:
-                        res_tc = eng.decide_vscode_agent_step(
-                            user_prompt=user_prompt,
-                            workspace_info=workspace_info_str,
-                            history=prior_turns[-6:],
-                            tool_rounds=tool_rounds,
-                            available_tools=available_tools,
-                        )
-                        cuda_sync(eng.dev_ha)
-                        return res_tc
-                    finally:
-                        STATE.worker_locks[w_idx].release()
-                next_tool_call = STATE.executor.submit(_run_tool_step).result()
+                def _run_tool_step_on_eng(eng):
+                    return eng.decide_vscode_agent_step(
+                        user_prompt=user_prompt,
+                        workspace_info=workspace_info_str,
+                        history=prior_turns[-6:],
+                        tool_rounds=tool_rounds,
+                        available_tools=available_tools,
+                    )
+                tc_req = PendingTextRequest(
+                    session_id,
+                    user_prompt,
+                    prior_turns[-6:],
+                    cands,
+                    False,
+                    callable_fn=_run_tool_step_on_eng,
+                )
+                with STATE.q_cond:
+                    STATE.pending_queue.insert(0, tc_req)
+                    STATE.q_cond.notify_all()
+                tc_req.event.wait()
+                if tc_req.error:
+                    raise RuntimeError(tc_req.error)
+                next_tool_call = tc_req.result
 
             cid = "chatcmpl-" + uuid.uuid4().hex[:12]
             created_ts = int(time.time())

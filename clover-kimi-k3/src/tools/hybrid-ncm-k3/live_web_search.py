@@ -18,7 +18,7 @@ class LiveWebSearchTool:
     def trigger_tag(self) -> str:
         return "search"
 
-    def fetch_url_content(self, url: str, max_chars: int = 3600) -> str:
+    def fetch_url_content(self, url: str, max_chars: int = 1600) -> str:
         """Fetches and extracts readable text from a live HTTP/HTTPS URL (including automatic conversion
         of GitHub `/blob/` links to `raw.githubusercontent.com` and clean HTML-to-text extraction for web pages)."""
         u = (url or "").strip().rstrip(".,;)>\"'")

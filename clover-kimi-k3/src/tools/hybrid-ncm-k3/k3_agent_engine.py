@@ -51,8 +51,8 @@ from live_web_search import LiveWebSearchTool
 from train_latent_bridge import encode_batch_rh
 from k3_fast_chat import (
     CHAT_SYSTEM_PROMPT, CHAT_PLAN_PROMPT, GRAMMAR_CONNECTOR_WORDS, CLOVER_AGENTS_MD_KERNEL,
-    load_default_clover_context, is_short_greeting_or_ack, is_structured_or_multi_part_prompt,
-    parse_and_split_plans, join_rendered_windows
+    load_default_clover_context, is_short_greeting_or_ack, is_conversational_meta_or_confirmation,
+    is_structured_or_multi_part_prompt, parse_and_split_plans, join_rendered_windows
 )
 from k3_ontology_graph import (
     CloverOntologyRetriever, CloverSymbolicVerifier, render_evidence
@@ -80,20 +80,42 @@ AGENT_DECISION_SYSTEM_PROMPT = (
 
 class K3KnowledgeSearchTool:
     """Executes live Internet & URL search (`fetch_url_content` + `arXiv API` + `Wikipedia API` + `DuckDuckGo Web`)
-    with no predefined canned answers. If live retrieval cannot process the query, returns an explicit fallback message."""
+    with no predefined canned answers. Resolves canonical entity URLs from the Memory & Ontology Graph
+    (`memory_tree/_rules/memory_retrieval_rules.json`)."""
     KNOWLEDGE_DOCS = []
 
     def __init__(self):
         self.live_web = LiveWebSearchTool(max_results=5)
         self.default_context_text = load_default_clover_context()
+        self.url_routes = self._load_url_routes()
+
+    @staticmethod
+    def _load_url_routes() -> list[dict]:
+        rules_fp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory_tree", "_rules", "memory_retrieval_rules.json")
+        if os.path.exists(rules_fp):
+            try:
+                with open(rules_fp, "r", encoding="utf-8") as f:
+                    return list(json.load(f).get("search_url_routes") or [])
+            except Exception:
+                pass
+        return []
 
     def execute(self, query: str) -> str:
         q = (query or "").strip()
         if not q:
             return "Unable to process this request right now."
+        q_low = q.lower()
         try:
+            if "http://" not in q_low and "https://" not in q_low:
+                for route in self.url_routes:
+                    kws = route.get("keywords") or []
+                    req_any = route.get("requires_any") or []
+                    target_url = route.get("url") or ""
+                    if target_url and any(k in q_low for k in kws) and (not req_any or any(r in q_low for r in req_any)):
+                        q = f"{q} {target_url}"
+                        break
             live_res = (self.live_web.execute(q) or "").strip()
-            if live_res:
+            if live_res and not live_res.startswith("No live external results"):
                 return live_res
         except Exception:
             pass
@@ -1941,7 +1963,7 @@ class CloverK3AgentEngine:
 
         # 0. Ontology-Guided Neuro-Symbolic GraphRAG retrieval (`[E#] Entity record` + `[P#] Relationship path`)
         ont_evidence = []
-        if ont_enabled and not has_verified_ws_tools and not is_short_greeting_or_ack(raw_user_q):
+        if ont_enabled and not has_verified_ws_tools and not is_short_greeting_or_ack(raw_user_q) and not is_conversational_meta_or_confirmation(raw_user_q):
             t_ont0 = time.perf_counter()
             ont_evidence = self.ontology_retriever.retrieve(raw_user_q, max_entities=4, max_paths=6)
             if ont_evidence:
@@ -1968,6 +1990,7 @@ class CloverK3AgentEngine:
             and not no_mem_graph
             and not has_attached_mem_pkg
             and not is_short_greeting_or_ack(raw_user_q)
+            and not is_conversational_meta_or_confirmation(raw_user_q)
         ):
             t_mem0 = time.perf_counter()
             mem_pkg = retrieve_relevant_memory_package(self.memory_graph, raw_user_q)
@@ -2017,11 +2040,22 @@ class CloverK3AgentEngine:
             s_res = self.search_tool.execute(search_q).strip()
             s_ms = round((time.perf_counter() - t_s0) * 1000.0, 1)
             tool_calls_log.append({"tool": "search", "input": search_q, "result": s_res, "ms": s_ms})
-            tool_obs_parts.append(
-                f"Authoritative Reference Facts & Live Sources:\n{s_res}\n\n"
-                f"Instruction: Present the facts, details, and any reference URLs ('https://...') from the reference above directly to the user using clear bullet points ('• Name: details') across W1:, W2:, W3:, W4:. "
-                f"Do NOT write meta-commentary — write ONLY the direct answer to the user."
+            asks_brief_s = any(
+                bs in raw_user_q.lower()
+                for bs in ("one sentence", "1 sentence", "one clear sentence", "single sentence", "two sentences", "2 sentences", "briefly")
             )
+            if asks_brief_s:
+                tool_obs_parts.append(
+                    f"Authoritative Reference Facts & Live Sources:\n{s_res}\n\n"
+                    f"Instruction: Answer the user's question directly and concisely in 1 or 2 complete sentences on `W1:` using the facts above. "
+                    f"Do NOT write meta-commentary — write ONLY the direct answer to the user."
+                )
+            else:
+                tool_obs_parts.append(
+                    f"Authoritative Reference Facts & Live Sources:\n{s_res}\n\n"
+                    f"Instruction: Present the facts, details, and any reference URLs ('https://...') from the reference above directly to the user using clear bullet points ('• Name: details') across W1:, W2:, W3:, W4:. "
+                    f"Do NOT write meta-commentary — write ONLY the direct answer to the user."
+                )
 
         # 2. Check if `<python>` calculation tool or Ontology Symbolic Math Constraint solver is needed
         py_code = None if has_verified_ws_tools else needs_agent_python_tool(raw_user_q, history=history)
@@ -2193,19 +2227,20 @@ class CloverK3AgentEngine:
         else:
             msgs.append({"role": "user", "content": "hi"})
             msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
-            if not is_short_greeting_or_ack(raw_user_q) and raw_user_q.lower().rstrip("?!.") != "can you really help me":
-                msgs.append({"role": "user", "content": "can you really help me"})
-                msgs.append({
-                    "role": "assistant",
-                    "content": (
-                        "W1: Of course! I'm here to help you with any questions or tasks you need assistance with.\n"
-                        "W2: Whether it's answering a question, providing information, or guiding you through a process, I'm ready to assist."
-                    ),
-                })
 
         is_self_contained_calc = (
             py_code is not None
             and not any(w in raw_user_q.lower() for w in ("same", "it", "that", "what about"))
+        )
+        is_self_contained_question = bool(
+            re.match(
+                r"^(?:what|who|where|when|which|how\s+many|how\s+much|how\s+old|how\s+far|how\s+long|calculate|compute|solve|define|translate|write|create|generate|list)\b",
+                raw_user_q.lower().strip(),
+            )
+            and not re.search(
+                r"\b(?:it|that|this|they|them|those|these|he|she|his|her|its|their|there|do\s+that|use\s+it|about\s+that|about\s+it)\b",
+                raw_user_q.lower(),
+            )
         )
         is_anaphoric_or_short_followup = bool(
             history
@@ -2213,7 +2248,9 @@ class CloverK3AgentEngine:
             and not is_mcq
             and not is_math_word_problem
             and not is_self_contained_calc
+            and not is_self_contained_question
             and not is_short_greeting_or_ack(raw_user_q)
+            and not is_conversational_meta_or_confirmation(raw_user_q)
             and (
                 len(raw_user_q.split()) <= 7
                 or bool(
@@ -2336,7 +2373,15 @@ class CloverK3AgentEngine:
             except Exception:
                 self.rust_gc = None
 
-        effective_max_new = max(max_new, 680) if is_code_spec else max_new
+        is_short_conv = is_short_greeting_or_ack(raw_user_q) or is_conversational_meta_or_confirmation(raw_user_q)
+        asks_brief_sentences_top = any(
+            bs in raw_user_q.lower()
+            for bs in (
+                "one sentence", "1 sentence", "one clear sentence", "one clear, grammatical sentence",
+                "two sentences", "two clear sentences", "2 sentences", "briefly",
+            )
+        )
+        effective_max_new = max(max_new, 680) if is_code_spec else (64 if is_short_conv else (96 if asks_brief_sentences_top else (180 if self.dev_ha.type == "cpu" else max_new)))
         for _ in range(effective_max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
@@ -2490,7 +2535,14 @@ class CloverK3AgentEngine:
                 gen_ids.clear()
                 continue
 
-            if not is_code_spec and txt_so_far.endswith("\n"):
+            if not is_code_spec and (
+                txt_so_far.endswith("\n")
+                or (
+                    not is_struct
+                    and len(gen_ids) >= 8
+                    and txt_so_far.rstrip().endswith((".", "!", "?"))
+                )
+            ):
                 lines = [ln.strip() for ln in txt_so_far.splitlines() if ln.strip()]
                 if lines:
                     last_ln = lines[-1].lower()
@@ -2547,6 +2599,11 @@ class CloverK3AgentEngine:
                         ["Hello! How can I help you today?"],
                         ["Unable to process this request right now."],
                     )
+                    if is_short_conv and valid_lines_so_far == ["Hello! How can I help you today?"] and any(
+                        any(gw in ln.lower() for gw in ("hello", "hi", "help", "assist", "yes", "sure", "of course", "welcome", "glad"))
+                        for ln in lines
+                    ):
+                        has_real_content = True
 
                     has_list_items = any(
                         ln.startswith(("•", "-", "*")) or bool(re.match(r"^[A-Za-z0-9 ]{2,25}:\s+\S", ln))
@@ -2571,7 +2628,7 @@ class CloverK3AgentEngine:
                                 last_valid.lower(),
                             )
                         )
-                        if len(valid_lines_so_far) == 1 and ends_clean_sentence and "two" not in raw_user_q.lower():
+                        if (asks_brief_sentences or len(valid_lines_so_far) == 1) and ends_clean_sentence and "two" not in raw_user_q.lower():
                             break
                         if len(valid_lines_so_far) >= (3 if "two" in raw_user_q.lower() else 2) and len(last_valid) > 15 and ends_clean_sentence:
                             break
@@ -2675,58 +2732,6 @@ class CloverK3AgentEngine:
                     # Strip any unverified `#### ...` tag emitted by the LLM and append the verified `<python>` result
                     plans = [re.sub(r"####\s*[^\n]+", "", p).rstrip() for p in plans if re.sub(r"####\s*[^\n]+", "", p).strip()]
                     plans.append(f"\nFinal Answer: #### {clean_num}")
-
-        # Ensure complete, non-truncated coverage when a search / URL tool returned structured reference facts
-        if tool_calls_log and any(t.get("tool") == "search" for t in tool_calls_log):
-            last_s_res = next((t.get("result", "") for t in reversed(tool_calls_log) if t.get("tool") == "search"), "")
-            joined_p_low = " ".join(plans).lower()
-            is_authoritative_clover_ref = any(
-                hdr in last_s_res
-                for hdr in (
-                    "Reference (Clover Framework",
-                    "Reference (AGENTS.md",
-                    "Reference (Clover Kimi K3",
-                    "Reference (Next-Concept Modeling",
-                    "Reference (How to use and adopt",
-                    "Reference (RTX 3090 vs",
-                )
-            )
-            missing_key_pillar = (
-                ("Reference (Clover Kimi K3" in last_s_res and ("ncm" not in joined_p_low or "hybridagent" not in joined_p_low))
-                or ("Reference (Clover Framework" in last_s_res and ("direction" not in joined_p_low or "growth" not in joined_p_low))
-                or ("Reference (AGENTS.md" in last_s_res and ("discernment" not in joined_p_low and "refuse" not in joined_p_low))
-                or ("Reference (Next-Concept Modeling" in last_s_res and ("11" not in joined_p_low or "vq" not in joined_p_low))
-                or ("Reference (How to use and adopt" in last_s_res and ("agents.md" not in joined_p_low or "context" not in joined_p_low))
-                or ("Reference (RTX 3090 vs" in last_s_res and ("ampere" not in joined_p_low or "148.5" not in joined_p_low))
-            )
-            too_short_for_url = (
-                ("[Live Content from " in last_s_res or "[Live Webpage: " in last_s_res)
-                and (plans == ["Hello! How can I help you today?"] or len(plans) <= 2)
-            )
-            low_user_q = raw_user_q.lower().strip("?!.")
-            is_followup_search_cmd = low_user_q in (
-                "do google search", "search google", "google it", "search on google",
-                "search the web", "search online", "find it", "search it", "look it up",
-            )
-            missing_live_links = (
-                is_followup_search_cmd
-                and "https://" in last_s_res
-                and "https://" not in joined_p_low
-            )
-            if (
-                plans == ["Hello! How can I help you today?"]
-                or (is_authoritative_clover_ref and (missing_key_pillar or len(plans) <= 3))
-                or too_short_for_url
-                or missing_live_links
-            ):
-                ref_block = last_s_res.split("\n\n[Live ")[0] if is_authoritative_clover_ref else last_s_res
-                fallback_src = "\n".join(
-                    re.sub(r"^Page\s+\d+:\s*", "• ", ln.strip())
-                    for ln in ref_block.splitlines()
-                    if ln.strip() and not ln.strip().startswith(("Reference (", "[Live Content from", "[Live Webpage:"))
-                )
-                if fallback_src.strip():
-                    plans = parse_and_split_plans(fallback_src, user_prompt, self.k3_tok, max_bpe=32, max_windows=24)
 
         # When VS Code workspace tools (`list_dir`, `run_in_terminal`, `read_file`, etc.) executed and provided
         # `Verified Workspace Tool Outputs:`, strip any hypothetical "how to do it" meta-instructions and ensure
@@ -2860,9 +2865,12 @@ class CloverK3AgentEngine:
         if self.use_k3_native_ha:
             r_k3 = self.k3_hybridlink(h_k3_moe)
             z_k3 = self.k3_cbridge(r_k3).float()
-            rh_p, _ = encode_batch_rh(self.ha_model, self.ha_tok, clean_plans, P_RH, self.dev_ha)
-            z_ha = self.cbridge(rh_p.to(self.dev, dtype=torch.float32)).float()
-            z_rh = (0.65 * z_k3 + 0.35 * z_ha).masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
+            if self.dev_ha.type == "cpu":
+                z_rh = z_k3.masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
+            else:
+                rh_p, _ = encode_batch_rh(self.ha_model, self.ha_tok, clean_plans, P_RH, self.dev_ha)
+                z_ha = self.cbridge(rh_p.to(self.dev, dtype=torch.float32)).float()
+                z_rh = (0.65 * z_k3 + 0.35 * z_ha).masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
             msk_r = pad_mask_bpe
         else:
             rh_p, msk_p = encode_batch_rh(self.ha_model, self.ha_tok, clean_plans, P_RH, self.dev_ha)
@@ -3107,10 +3115,10 @@ class CloverK3AgentEngine:
             pat = re.compile(r"(?m)^func\s+(?:\([^)]+\)\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*\([^{]*\{")
         else:
             pat = re.compile(
-                r"(?m)^[ \t]*(?:(?:public|private|protected|static|async|export)\s+)*(?:function\s+|get\s+|set\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?:<[^>]*>)?\s*\([^{;]*\{"
+                r"(?m)^[ \t]*(?:(?:[A-Za-z_$][A-Za-z0-9_$]*\.)+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*(?:async\s*)?(?:function\s*\([^{]*|\([^)]*\)\s*=>\s*)\{|(?:(?:public|private|protected|static|async|export)\s+)*(?:function\s+|get\s+|set\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?:<[^>]*>)?\s*\([^{;]*\{)"
             )
         for m in pat.finditer(code_str):
-            fn_name = m.group(1)
+            fn_name = m.group(1) if ext == ".go" else (m.group(1) or m.group(2))
             if fn_name in ("if", "for", "switch", "while", "catch", "constructor"):
                 continue
             start_idx = m.start()
@@ -3174,9 +3182,9 @@ class CloverK3AgentEngine:
         orig_lines = orig_code.splitlines()
         is_large_file = len(orig_lines) > 120
 
-        # Extract candidate symbol names from the PR description
+        # Extract candidate symbol names from the PR description (including dotted `Class.method` identifiers)
         pr_syms = []
-        for s_m in re.findall(r"`([a-zA-Z_][a-zA-Z0-9_]{2,})(?:\([^`]*\))?`", pr_description):
+        for s_m in re.findall(r"`(?:[a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]{2,})(?:\([^`]*\))?`", pr_description):
             if s_m not in ("true", "false", "null", "none", "void", "string", "number", "boolean") and s_m not in pr_syms:
                 pr_syms.append(s_m)
 
@@ -3256,6 +3264,10 @@ class CloverK3AgentEngine:
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        elif self.dev_ha.type == "cpu":
+            min_lat = min(min_lat, 4)
+            max_lat = min(max_lat, 4)
+            max_new = min(max_new, 240)
         backbone = self.ha_model.backbone
         embed_w = backbone.get_input_embeddings().weight
         chat_str = self.ha_tok.apply_chat_template(
@@ -3721,7 +3733,7 @@ class CloverK3AgentEngine:
 
         # Priority Direct Dispatch for explicit file reads when the user specifies an exact file path (and didn't ask to list a directory first)
         m_fpaths = re.findall(
-            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:go|py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|(?<![%{<])\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b(?!\}))",
+            r"(?:[A-Za-z]:[\\/][^\s\"'`<>]+|/[a-zA-Z0-9_.\-/]+|\b(?:[a-zA-Z0-9_.\-]+/)+[a-zA-Z0-9_.\-]+|\b[a-zA-Z0-9_\-]+\.(?:go|py|rs|ts|tsx|js|json|md|toml|yaml|yml|c|cpp|h|cu|cuh|txt|sh)\b|(?<![%{<])\b(?:VERSION|README\.md|AGENTS\.md|CLOVER-CONTEXT\.md|LICENSE|Makefile|Dockerfile)\b(?!\}))",
             effective_q,
         )
         # Also resolve bare component/class/hook/function symbols mentioned in `<pr_description>` or multi-file implementation tasks
@@ -3951,14 +3963,44 @@ class CloverK3AgentEngine:
                         sig_rep = ("replace_string_in_file", json.dumps(norm_rep, sort_keys=True))
                         if sig_rep not in already_called_sigs:
                             return {"name": "replace_string_in_file", "arguments": json.dumps(norm_rep)}
-                # If no valid edit could be synthesized for any read file, stop cleanly rather than looping
-                remaining_after = [
-                    fp for fp in read_files_map
-                    if fp not in edited_files_set
-                    and fp not in synth_attempted_set
-                    and not fp.endswith(("src/audio/Playback.ts", ".pcss"))
-                ]
-                if not remaining_after and not edited_files_set:
+                # If this file's synthesis produced no diff and we are on GPU, try the next unedited file immediately
+                if self.dev_ha.type != "cpu":
+                    while True:
+                        remaining_after = [
+                            fp for fp in read_files_map
+                            if fp not in edited_files_set
+                            and fp not in synth_attempted_set
+                            and not fp.endswith(("src/audio/Playback.ts", ".pcss"))
+                        ]
+                        if not remaining_after:
+                            break
+                        nxt_fp = remaining_after[0]
+                        synth_attempted_set.add(nxt_fp)
+                        orig_c2 = read_files_map[nxt_fp]
+                        new_c2 = self._synthesize_file_implementation(
+                            target_fp=nxt_fp,
+                            orig_code=orig_c2,
+                            all_read_files=read_files_map,
+                            pr_description=raw_q,
+                        )
+                        if new_c2 and new_c2.strip() != orig_c2.strip() and "create_file" in tool_map:
+                            norm_c2 = _normalize_tool_args("create_file", {"filePath": nxt_fp, "content": new_c2})
+                            sig_c2 = ("create_file", json.dumps(norm_c2, sort_keys=True))
+                            if sig_c2 not in already_called_sigs:
+                                return {"name": "create_file", "arguments": json.dumps(norm_c2)}
+                else:
+                    # On CPU, return a quick `git status -s` check between files so each HTTP round finishes in ~75s
+                    remaining_after = [
+                        fp for fp in read_files_map
+                        if fp not in edited_files_set
+                        and fp not in synth_attempted_set
+                        and not fp.endswith(("src/audio/Playback.ts", ".pcss"))
+                    ]
+                    if remaining_after and "run_in_terminal" in tool_map:
+                        chk_cmd = f"git status -s # checked {os.path.basename(target_fp)}"
+                        norm_chk = _normalize_tool_args("run_in_terminal", {"command": chk_cmd})
+                        return {"name": "run_in_terminal", "arguments": json.dumps(norm_chk)}
+                if not edited_files_set:
                     return None
 
             # Outcome Stage: After editing all target files, run the project's compiler/test check in the terminal!
