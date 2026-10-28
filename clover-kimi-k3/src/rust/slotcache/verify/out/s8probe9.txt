@@ -1,4 +1,0 @@
- 694787     939 00:00:00  0.0 ./diff_driver /home/usergpu/ru
- 694791     939 00:15:39  100 ./diff_driver /home/usergpu/ru
-reference: /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so
-candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so

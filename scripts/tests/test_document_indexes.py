@@ -1,43 +1,12 @@
+"""Unittest discovery bridge for `test-document-indexes.py`."""
+import importlib.util
 from pathlib import Path
-import re
 import unittest
 
-
-ROOT = Path(__file__).resolve().parents[2]
-
-
-class DocumentIndexes(unittest.TestCase):
-    def assert_index_covers(self, directory):
-        folder = ROOT / directory
-        index = folder / "README.md"
-        destinations = {
-            (folder / target.split("#", 1)[0]).resolve()
-            for target in re.findall(r"\[[^\]]*\]\(([^\s)]+)\)", index.read_text(encoding="utf-8"))
-            if not target.startswith(("https:", "http:", "#"))
-        }
-        missing = [path.relative_to(ROOT).as_posix() for path in folder.rglob("*.md")
-                   if path != index and path.resolve() not in destinations]
-        self.assertEqual(missing, [], "Documents missing from their maintained index")
-
-    def test_k3_research_index_is_complete(self):
-        self.assert_index_covers("research/k3")
-
-    def test_legacy_forwarding_locations_are_removed(self):
-        for relative in ("why-clover-is-important.md", "k3-analysis", "hypothesis",
-                         "clover-k3", "clover-intelegence"):
-            with self.subTest(path=relative):
-                self.assertFalse((ROOT / relative).exists())
-
-    def test_k3_research_root_contains_only_its_index(self):
-        self.assertEqual(sorted(path.name for path in (ROOT / "research/k3").glob("*.md")),
-                         ["README.md"])
-
-    def test_core_documents_have_purpose_folders(self):
-        for relative in ("docs/framework", "docs/guides", "docs/governance",
-                         "docs/reference"):
-            with self.subTest(path=relative):
-                self.assertTrue((ROOT / relative / "README.md").is_file())
-
+_SPEC = importlib.util.spec_from_file_location("test_document_indexes_impl", Path(__file__).with_name("test-document-indexes.py"))
+_MOD = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(_MOD)
+DocumentIndexes = _MOD.DocumentIndexes
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,3 +1,0 @@
-   3426 00:00:00 ./diff_driver ref-asan/libslotcac
-   3426 00:57:05 ./diff_driver ref-asan/libslotcac
-471

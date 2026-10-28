@@ -122,7 +122,7 @@ establishes is written down and becomes context for subsequent work.
 ## Where the evidence comes from
 
 Software engineering is where Clover was built and where all of its evidence comes from, and the
-[case studies](../../case-studies/README.md) are engineering ones. The problem underneath is not a
+[case studies](../case-studies/README.md) are engineering ones. The problem underneath is not a
 software problem. Any work where human intent has to reach a capable system, and where somebody has
 to know afterward whether it worked, runs into the same gap.
 

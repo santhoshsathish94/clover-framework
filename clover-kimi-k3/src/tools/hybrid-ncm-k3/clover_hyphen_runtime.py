@@ -146,14 +146,14 @@ class CloverHyphenMetaPathFinder(importlib.abc.MetaPathFinder):
         search_directories: Iterable[str] = path if path is not None else sys.path
         for directory_entry in search_directories:
             base_dir = Path(directory_entry or ".")
-            for candidate_name in (hyphenated_filename, underscore_filename):
+            for candidate_name in (underscore_filename, hyphenated_filename):
                 candidate_path = base_dir / candidate_name
                 if candidate_path.is_file():
                     try:
                         header_Sample = candidate_path.read_bytes()[:512].decode("utf-8", errors="ignore")
                     except Exception:
                         header_Sample = ""
-                    if candidate_name == hyphenated_filename or "clover-hyphen" in header_Sample or "class-" in header_Sample:
+                    if (candidate_name == hyphenated_filename and not (base_dir / underscore_filename).is_file()) or "clover-hyphen" in header_Sample or "class-" in header_Sample:
                         loader = CloverHyphenSourceFileLoader(fullname, str(candidate_path))
                         return importlib.util.spec_from_loader(fullname, loader, origin=str(candidate_path))
         return None

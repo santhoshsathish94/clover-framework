@@ -1,6 +1,0 @@
---- ref/copyq_ref.cu
-+++ mutants/copyq_ref_M1.cu
-@@ -107,0 +108 @@
-+                jb.arr->state.store(1, std::memory_order_release);
-@@ -110 +110,0 @@
--                jb.arr->state.store(1, std::memory_order_release);

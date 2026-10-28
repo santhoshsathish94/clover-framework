@@ -26,7 +26,7 @@ divided three ways, the Context behind each task stayed shallow and the Directio
 vague, so the output was shallow too.
 
 Dropping the parallelism and working one stream at a time finally resolved the hardest issue at its
-root (see [the React memory leak case study](../../case-studies/02-react-rsc-memory-leak.md)).
+root (see [the React memory leak case study](../case-studies/02-react-rsc-memory-leak.md)).
 
 ### The practice
 

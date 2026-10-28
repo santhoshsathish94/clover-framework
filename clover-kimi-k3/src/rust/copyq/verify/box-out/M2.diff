@@ -1,7 +1,0 @@
---- ref/copyq_ref.cu
-+++ mutants/copyq_ref_M2.cu
-@@ -106,2 +106,2 @@
--                    CHECK(cudaMemcpyAsync(jb.dst, src, EXPERT_RAW, cudaMemcpyHostToDevice, s));
--                } else { act_gate(); CHECK(cudaMemcpyAsync(jb.dst, g_prefill ? g_slab[jb.layer] + (size_t)((jb.off / EXPERT_RAW) & 3) * EXPERT_RAW : jb.host_src, EXPERT_RAW, cudaMemcpyHostToDevice, s)); }
-+                    CHECK(cudaMemcpyAsync(jb.dst, src, EXPERT_RAW - 1, cudaMemcpyHostToDevice, s));
-+                } else { act_gate(); CHECK(cudaMemcpyAsync(jb.dst, g_prefill ? g_slab[jb.layer] + (size_t)((jb.off / EXPERT_RAW) & 3) * EXPERT_RAW : jb.host_src, EXPERT_RAW - 1, cudaMemcpyHostToDevice, s)); }

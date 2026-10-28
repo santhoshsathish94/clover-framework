@@ -1,8 +1,0 @@
---- ref/copyq_ref.cu
-+++ mutants/copyq_ref_M4.cu
-@@ -78 +78 @@
--                        const ssize_t r = pread(jb.fd, jb.slot + got, EXPERT_RAW - got, jb.off + (off_t)got);
-+                        const ssize_t r = pread(jb.fd, jb.slot + got, EXPERT_RAW - got, jb.off + 1 + (off_t)got);
-@@ -100 +100 @@
--                        const ssize_t r = pread(jb.fd, bounce + got, EXPERT_RAW - got, jb.off + (off_t)got);
-+                        const ssize_t r = pread(jb.fd, bounce + got, EXPERT_RAW - got, jb.off + 1 + (off_t)got);

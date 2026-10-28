@@ -153,7 +153,7 @@ Agent instructions are not an enforcement mechanism. A capable model can ignore 
 
 ### Implementation
 
-The [runtime-enforcement reference](../../reference/runtime-enforcement/) demonstrates three narrow implementation patterns:
+The [runtime-enforcement reference](../runtime-enforcement/) demonstrates three narrow implementation patterns:
 
 - **Docker filesystem isolation:** established verification artifacts are mounted read-only while implementation files remain writable.
 - **Real-path resolution:** parent traversal and symbolic-link paths are resolved before authorization, so the policy evaluates the physical target rather than the path spelling.

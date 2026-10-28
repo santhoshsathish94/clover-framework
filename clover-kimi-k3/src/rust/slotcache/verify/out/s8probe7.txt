@@ -1,7 +1,0 @@
- 694787     603 00:00:00  0.0 ./diff_driver /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so 
- 694791     603 00:10:03  100 ./diff_driver /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so 
-UNIT S8 S8b-p2-plan 107 887995 PASS 176370 58130 118240 118240 0 0 0 0
-UNIT S8 S8b-p2-vq 108 15868923 PASS 177626 53312 219491 124314 0 0 135
-UNIT S8 S8c-p2-plan-mismatch@2000 109 829759 PASS 168816 79638 89178 5
-reference: /home/usergpu/rustmig/slotcache/ref/libslotcache_ref.so
-candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so

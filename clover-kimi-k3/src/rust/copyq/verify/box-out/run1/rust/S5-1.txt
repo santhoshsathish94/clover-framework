@@ -1,8 +1,0 @@
-S5 k0_badfd exit=1 stderr=[read-ahead: pread failed: Bad file descriptor\n]
-S5 k1_badfd exit=1 stderr=[card read-ahead: pread failed: Bad file descriptor\n]
-S5 k0_eof exit=1 stderr=[read-ahead: pread failed: end of file\n]
-S5 k1_eof exit=1 stderr=[card read-ahead: pread failed: end of file\n]
-S5 k2_baddst exit=1 stderr=[src/engine.rs:214: DriverError(CUDA_ERROR_INVALID_VALUE, "invalid argument")\n]
-S5 init_badraw exit=0 stderr=[S5child: cq_init returned\n]
-SUMMARY S5 cases_not_exit_1=1
-RESULT FAIL

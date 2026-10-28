@@ -1,3 +1,0 @@
-     29 ref-asan/routetable_ref.cpp:12:57: runtime error: signed integer overflow: -2147483648 * 896 cannot be represented in type 'int'
-     22 ref-asan/routetable_ref.cpp:12:57: runtime error: signed integer overflow: 2147483647 * 896 cannot be represented in type 'int'
-     17 ref-asan/routetable_ref.cpp:12:57: runtime error: signed integer overflow: -2147483647 * 896 cannot be represented in type 'int'

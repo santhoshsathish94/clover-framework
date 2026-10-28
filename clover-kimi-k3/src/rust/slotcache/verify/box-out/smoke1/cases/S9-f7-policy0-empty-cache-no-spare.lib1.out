@@ -1,3 +1,0 @@
-set_policy 0
-set_next_use NULL
-acquire key=1 prot={} heat0=1

@@ -10,6 +10,9 @@ Added after the discovery that every measurement in `clover-intelegence` was of
 - [Official repository and tech report](moonshot-kimi-k3-official.md) — architecture,
   the chunkwise KDA form, KCP, and the decode regime the authors describe the way
   we measured it
+- [Kimi K3.1 Pro release and comparison](moonshot-kimi-k3-1-pro.md) — October 24, 2026
+  post-trained K3.1 Pro / K3.1 Pro Highspeed release, published changes vs. Kimi K3,
+  and architectural comparison with Clover Kimi K3
 - [vLLM execution](vllm-kimi-k3-execution.md) — how it is actually served:
   pipeline, tensor, sequence, expert and context parallelism
 

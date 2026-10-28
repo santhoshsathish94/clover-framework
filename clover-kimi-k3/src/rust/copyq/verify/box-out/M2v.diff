@@ -1,5 +1,0 @@
---- ref/copyq_ref.cu
-+++ mutants/copyq_ref_M2v.cu
-@@ -89 +89 @@
--                    CHECK(cudaMemcpyAsync(jb.victim_host, jb.dst, EXPERT_RAW, cudaMemcpyDeviceToHost, s)); CHECK(cudaStreamSynchronize(s));
-+                    CHECK(cudaMemcpyAsync(jb.victim_host, jb.dst, EXPERT_RAW - 1, cudaMemcpyDeviceToHost, s)); CHECK(cudaStreamSynchronize(s));

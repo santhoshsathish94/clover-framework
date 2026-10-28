@@ -76,7 +76,7 @@
         strong evidence, so "validated in the test environment, not yet observed in production" is
         written out in full rather than rounded up.</p>
       <p><strong>Also under Evidence: <a href="../clover-k3/">Clover</a> (7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System &mdash; Clover AI v4).</strong>
-        Built under the Clover cycle on a single CPU workstation and on an <code>8 &times; NVIDIA RTX 3090</code> GPU server, Clover surrounds a local open-weights 93-layer 2.78T MoE backbone and 8B reasoning planner with verified tools, statement-boundary Python &amp; Rust Generative Compilation, a deterministic symbolic ontology, and a persistent file-based memory graph. On our 70-task evaluation suite (bootstrapped cleanly from GitHub and Hugging Face), <strong>Clover&rsquo;s underlying model alone scores <code>33 / 70</code> (<code>47.1%</code>)</strong>; adding Clover&rsquo;s tool orchestration and compiler checking raises it to <strong><code>57 / 70</code> (<code>81.4%</code>)</strong>; and adding Ontology GraphRAG and the Persistent Memory Graph brings it to <strong><code>70 / 70</code> (<code>100.0%</code>, <code>2.04&times;</code> lower GPU-s/solved)</strong>. Head-to-head on the exact same 70 prompts, standalone frontier models (<strong>GPT-6 Astra</strong> and <strong>Claude Opus 5.5</strong>) are already near-perfect on the 58 public tasks without tools (<code>96.6%&ndash;98.3%</code> vs. <code>51.7%</code> for Clover&rsquo;s raw model) and only abstain on the private ontology/memory records not in their prompt &mdash; showing that Clover&rsquo;s gain comes from the system around the model rather than a stronger raw model. See <a href="../clover-k3/">Clover architecture &amp; head-to-head results</a> and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw artifacts</a>.</p>
+        Built under the Clover cycle on a single CPU workstation and on an <code>8 &times; NVIDIA RTX 3090</code> GPU server, Clover surrounds a local open-weights 93-layer 2.78T MoE backbone and 8B reasoning planner with verified tools, statement-boundary Python &amp; Rust Generative Compilation, a deterministic symbolic ontology, and a persistent file-based memory graph. On our 70-task evaluation suite (bootstrapped cleanly from GitHub and Hugging Face), <strong>Clover&rsquo;s underlying model alone scores <code>33 / 70</code> (<code>47.1%</code>)</strong>; adding Clover&rsquo;s tool orchestration and compiler checking raises it to <strong><code>57 / 70</code> (<code>81.4%</code>)</strong>; and adding Ontology GraphRAG and the Persistent Memory Graph brings it to <strong><code>70 / 70</code> (<code>100.0%</code>, <code>2.04&times;</code> lower GPU-s/solved)</strong>. Head-to-head on the exact same 70 prompts, standalone frontier models (<strong>GPT-6 Astra</strong> and <strong>Claude Opus 5.5</strong>) are already near-perfect on the 58 public tasks without tools (<code>96.6%&ndash;98.3%</code> vs. <code>51.7%</code> for Clover&rsquo;s raw model) and only abstain on the private ontology/memory records not in their prompt &mdash; showing that Clover&rsquo;s gain comes from the system around the model rather than a stronger raw model. See <a href="../clover-k3/">Clover architecture &amp; head-to-head results</a> and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw artifacts</a>.</p>
       <p><strong>Everything on this page is software work.</strong> That is where the author works, so
         that is the evidence that exists. The cycle is not limited to software, and the rest of the
         site does not describe it that way — but no cycle outside software has been run and recorded
@@ -109,7 +109,7 @@
                 signed-off deviations, alongside 239 tests. Both versions ran in the test environment with
                 the API gateway pointing at the new one, so <strong>QA validated the real site and signed
                 off</strong>. The production cutover has not run.</p>
-              <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/case-studies/01-contentful-migration.md">Read the case study →</a></p>
+              <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/01-contentful-migration.md">Read the case study →</a></p>
             </div>
             <div>
               <p class="note">That day is implementation only. Testing and parity validation took roughly
@@ -141,7 +141,7 @@
                 React's <code>react-server</code> renderer, and produced a one-file fix contributed
                 upstream so other applications need not carry the same workaround.</p>
               <p class="case__status">Status: a CI-green pull request, <strong>not merged</strong>.</p>
-              <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/case-studies/02-react-rsc-memory-leak.md">Read the case study →</a></p>
+              <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/02-react-rsc-memory-leak.md">Read the case study →</a></p>
             </div>
           </div>
           <figure class="diagram">
@@ -179,7 +179,7 @@
 
       <div class="actions" style="margin-top:2rem">
         <a class="btn btn--primary" href="../start/">Try it on your own work</a>
-        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/tree/main/case-studies">All case studies</a>
+        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/tree/main/docs/case-studies">All case studies</a>
       </div>
     </div>
   </section>
@@ -257,9 +257,9 @@
     <div>
       <h4>Evidence</h4>
       <ul>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/case-studies">All case studies</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/case-studies/01-contentful-migration.md">Contentful API migration</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/case-studies/02-react-rsc-memory-leak.md">React RSC memory leak</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/docs/case-studies">All case studies</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/01-contentful-migration.md">Contentful API migration</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/02-react-rsc-memory-leak.md">React RSC memory leak</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/reference-implementations.md">Reference implementations</a></li>
       </ul>
     </div>
@@ -267,7 +267,7 @@
       <h4>Practical</h4>
       <ul>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md">Quickstart</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/templates/orchestration-brief.md">Orchestration brief</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/templates/orchestration-brief.md">Orchestration brief</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/how-ai-fails.md">How AI fails</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/field-practices.md">Field lessons</a></li>
       </ul>

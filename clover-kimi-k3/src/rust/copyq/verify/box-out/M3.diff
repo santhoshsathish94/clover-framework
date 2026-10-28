@@ -1,5 +1,0 @@
---- ref/copyq_ref.cu
-+++ mutants/copyq_ref_M3.cu
-@@ -48 +48 @@
--static inline void act_gate() { while (g_act_hold.load(std::memory_order_acquire)) std::this_thread::yield(); }
-+static inline void act_gate() { }

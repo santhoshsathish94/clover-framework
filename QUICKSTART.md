@@ -52,7 +52,7 @@ more than a longer description of the task.
 
 ## 4. Copy the orchestration brief (1 min)
 
-Take [`templates/orchestration-brief.md`](templates/orchestration-brief.md), copy it, and rename it
+Take [`templates/orchestration-brief.md`](docs/templates/orchestration-brief.md), copy it, and rename it
 for the task. That one page is the working artifact for the whole cycle, and it lives beside the
 work rather than in a chat window.
 
@@ -89,7 +89,7 @@ next agent or the next human can pick the work up without redoing the investigat
 
 ## See a full example
 
-[`examples/production-exception-remediation/`](examples/production-exception-remediation/) runs a
+[`examples/production-exception-remediation/`](docs/examples/production-exception-remediation/) runs a
 recurring production `500` through the five stages, with the prompts used at each one. It is a
 software scenario because that is the one most readers will recognize. Swap in another scenario,
 from any kind of system, and follow the same path.

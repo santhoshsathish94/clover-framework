@@ -47,15 +47,20 @@ shifting up, because renumbering would break every link that already points at t
 | [Why responsibility for AI was sidelined](governance/evidence/why-responsibility-was-sidelined.md) | The master claim behind the site's closing section: the risks were known and flagged, and responsibility lost to the pursuit of dominance |
 | [AI responsibility evidence](governance/evidence/README.md) | Nine sourced papers, including why known incidents still fail to become binding accountability |
 
-## Reference
+## Reference & Applied Material
 
 | | |
 |---|---|
 | [Repository organization](repository-organization.md) | Document roles, reader paths, migration map, and maintenance checks |
+| [Case studies](case-studies/README.md) | Observed outcomes from real production migrations and incident remediations |
+| [Examples](examples/README.md) | End-to-end walkthrough scenarios (`production-exception-remediation`) |
+| [Templates](templates/README.md) | Reusable orchestration brief template (`orchestration-brief.md`) |
+| [Runtime enforcement](runtime-enforcement/README.md) | Executable container write-guard verification policy (`write_guard.py`) |
+| [Runtime context & ledgers](runtime-context/README.md) | Engine architecture, 11 foundational paper studies, and hardware data-movement ledgers |
+| [Clover AI v4 release](reference/release-v4.md) | Seven-layer Clover AI v4 architecture and multi-domain benchmark summary |
 | [Research index](../research/README.md) | Proposals, hypotheses and measured investigations, separate from framework guidance |
 | [Glossary](reference/glossary.md) | Plain-language definitions for every term used here |
 | [The name and the mark](reference/clover-origin.md) | Why a clover, why accountability had to come back, and the canonical rules |
 
 Outside this directory: [`AGENTS.md`](../AGENTS.md) is the whole way of working as instructions for
-an agent, [`QUICKSTART.md`](../QUICKSTART.md) runs a first cycle by hand, and
-[`case-studies/`](../case-studies/) holds the delivered work.
+an agent, and [`QUICKSTART.md`](../QUICKSTART.md) runs a first cycle by hand.

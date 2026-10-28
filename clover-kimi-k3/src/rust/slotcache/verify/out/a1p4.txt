@@ -1,4 +1,0 @@
-6
-424
-reference: /home/usergpu/rustmig/slotcache/verify/ref-asan/libslotcache_ref_asan.so
-candidate: /home/usergpu/rustmig/slotcache/target/release/libslotcache.so

@@ -185,7 +185,7 @@
         tools, compiler, ontology, or memory layers) and through <strong>three
         controlled arms of Clover&rsquo;s own underlying model</strong> on our freshly bootstrapped
         <code>8 &times; NVIDIA RTX 3090</code> server, scoring every output with the <strong>exact same frozen scoring
-        harness</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
+        harness</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
 
       <div class="table-wrap">
         <table class="data">
@@ -377,7 +377,7 @@
       <h3>Direction B &mdash; Five Data-Movement Upgrades in Production Clover (<code>8 &times; RTX 3090</code>)</h3>
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Measured on real 92-layer Kimi K3 traces (<code>43,240</code> layer calls = <code>470</code> passes), standalone RTX 3090 CUDA benchmarks (<code>bench_dm_cycles_gpu.cu</code>), and live 93-layer production server runs (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-data-movement-direction-b-context.md">docs/clover-data-movement-direction-b-context.md</a>).</caption>
+          <caption class="note">Measured on real 92-layer Kimi K3 traces (<code>43,240</code> layer calls = <code>470</code> passes), standalone RTX 3090 CUDA benchmarks (<code>bench_dm_cycles_gpu.cu</code>), and live 93-layer production server runs (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-data-movement-direction-b-context.md">docs/clover-data-movement-direction-b-context.md</a>).</caption>
           <thead>
             <tr>
               <th scope="col">Study &amp; Mechanism</th>
@@ -499,7 +499,7 @@
           <em>Ontology-Guided Neuro-Symbolic GraphRAG for Grounded Query Answering (Neural Computing and Applications, 2026).</em>
           We build on their loosely-coupled neuro-symbolic design keeping deterministic ontology graph materialisation,
           Horn-rule inference, and edge provenance separate from neural generation, along with the six retrieval and
-          verifier enhancements documented in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">clover-ontology-graphrag-research-context.md</a>.</li>
+          verifier enhancements documented in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ontology-graphrag-research-context.md">clover-ontology-graphrag-research-context.md</a>.</li>
         <li><strong>Fareed Khan &mdash; <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Apache-2.0).</strong>
           The C engine that showed Kimi K3 could be run from C on one workstation, where our CPU measurements started.
           Five of its tokenizer headers are included unmodified at commit <code>a2ad8e5</code> with its licence and notice.</li>
@@ -538,11 +538,11 @@
         </div>
         <div>
           <dt>Every measurement, and every failure</dt>
-          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-foundations-to-clover-gpu-context.md">docs/clover-foundations-to-clover-gpu-context.md</a>,
-            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a>,
-            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
-            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-kimi-k3-gpu-context.md">docs/clover-kimi-k3-gpu-context.md</a>, and
-            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/docs/clover-kimi-k3-cpu-context.md">docs/clover-kimi-k3-cpu-context.md</a>.</dd>
+          <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md">docs/clover-foundations-to-clover-gpu-context.md</a>,
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a>,
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-kimi-k3-gpu-context.md">docs/clover-kimi-k3-gpu-context.md</a>, and
+            <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-kimi-k3-cpu-context.md">docs/clover-kimi-k3-cpu-context.md</a>.</dd>
         </div>
         <div>
           <dt>Upstream papers &amp; repositories</dt>
@@ -588,7 +588,7 @@
       <h4>Practical</h4>
       <ul>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md">Quickstart</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/templates/orchestration-brief.md">Orchestration brief</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/templates/orchestration-brief.md">Orchestration brief</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/how-ai-fails.md">How AI fails</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/field-practices.md">Field lessons</a></li>
       </ul>

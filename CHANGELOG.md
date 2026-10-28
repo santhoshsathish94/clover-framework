@@ -390,7 +390,7 @@ the old path now takes a client-side hop. The stage names `Action` and `Success`
   framework on the second page. The problem to start with no longer has to be software, setup step
   one is read-only access to whatever the system keeps rather than an MCP server in front of a
   repository, and step three is to start where a mistake is cheap rather than in development. MCP is
-  kept and named as the software route. The [orchestration brief](templates/orchestration-brief.md)
+  kept and named as the software route. The [orchestration brief](docs/templates/orchestration-brief.md)
   says in its header that nothing in it assumes software.
 - **Security is now [Governance](https://cloverframework.com/governance/).** The page was always
   about access, attribution, approvals and delegated execution; security was the narrower name. It

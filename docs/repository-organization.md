@@ -5,13 +5,13 @@
 | Need | Maintained entry point |
 |---|---|
 | Understand Clover | [Framework](framework/04-framework.md), [philosophy](framework/02-philosophy.md), [principles](framework/03-principles.md) |
-| Apply it | [Quickstart](../QUICKSTART.md), [guidance index](README.md), [templates](../templates/) |
+| Apply it | [Quickstart](../QUICKSTART.md), [guidance index](README.md), [templates](templates/) |
 | Operate an agent | [AGENTS.md](../AGENTS.md), the self-contained operating specification |
-| Inspect real outcomes | [Case studies](../case-studies/README.md) |
-| Read an illustrative scenario | [Examples](../examples/) |
-| Inspect executable controls | [Runtime enforcement reference](../reference/runtime-enforcement/README.md) |
+| Inspect real outcomes | [Case studies](case-studies/README.md) |
+| Read an illustrative scenario | [Examples](examples/) |
+| Inspect executable controls | [Runtime enforcement reference](runtime-enforcement/README.md) |
 | Run the K3 engine | [Set up, tune and run](../clover-kimi-k3/README.md) |
-| Inspect K3 measurements | [Status log](../clover-kimi-k3/docs/clover-kimi-k3-cpu-context.md) |
+| Inspect K3 measurements | [Status log](runtime-context/engine-and-architecture/clover-kimi-k3-cpu-context.md) |
 | Follow investigations | [Research](../research/README.md) |
 | Maintain public presentation | [Website](../site/README.md) |
 
@@ -39,26 +39,32 @@ GitHub file URLs are not redirected. Chapter numbers remain, including the inten
 
 ```text
 docs/
-	framework/              conceptual core
-	guides/                 adoption and practical work
+	framework/              conceptual core (01-problem .. 07-outcome)
+	guides/                 adoption and practical work (09-adoption, 10-roadmap, field-practices)
 	governance/evidence/    controls, responsibility and sourced dossier
-	reference/              glossary and name/mark
+	case-studies/           observed production migrations and incident remediations
+	examples/               illustrative end-to-end walkthroughs
+	templates/              reusable orchestration brief template
+	runtime-enforcement/    executable container write-guard verification policy
+	runtime-context/        engine architecture, 11 foundational paper studies, and hardware data-movement ledgers
+	reference/              glossary, clover-origin, release-v4, and repository organization
 research/
-	ai-fire/                dependency and concentration argument
-	ai-future/              explicit hypothesis
-	clover-ai/              broader implementation direction
-	k3/
-		model/                specification and derivations
-		experiments/          computation and data investigations
-		architecture/         placement proposals and measurement journals
-		context/              historical handoffs
-		upstream/             independent engine, evidence and campaign script
-		measurements/
-			flow/               instrumented flow observations
-			prompts/            individual prompt cases
+	ai-fire/                               dependency and concentration argument
+	ai-future/                             explicit hypothesis
+	clover-ai/                             broader implementation direction
+	foundational-papers-1943-to-2017/      11 classic paper replications and mathematical verifiers
+	hardware-data-movement/                red-blue pebbling, eyeriss v1/v2, flashattention, and specmd studies
+	object-oriented-reduction/             398 -> 88 -> 24 -> 12 -> 5 complete-English OOP reduction
+	observe/                               reciprocal observation experiment
+	k3/                                    model derivation, experiments, measurements, and upstream records
+benchmarks/
+	swebench-pro-v2/        multi-domain HARD-51 software engineering verification suite (Problems 1..4)
+	verified-runs/          70-task standardized AI benchmark runs (baseline, 8x RTX 3090 GPU, Ryzen 7950X3D CPU)
 clover-kimi-k3/
-	docs/                   dated status log and layer 0 verdict
-	src/                    code, scripts, tools, prompts; datasets and work are host only
+	src/                    code, rust host-path crates, scripts, tools, and prompts; datasets and work are host only
+	vscode-extension/       standalone VS Code language model provider
+site/
+	index.html, ai/, ...    public website (cloverframework.com)
 assets/
 	branding/               project identity and previews
 	evidence/               canonical evidence diagrams

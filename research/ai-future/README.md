@@ -12,7 +12,7 @@ The engineering layer is the system cycle: five stages — Context, Direction, E
 
 Hold that apart from what this page is about. Frontier AI providers hold volumes of interaction data and decide what to train on. Where that leads is a much larger question, and it is the question here. Growth as a stage depends on none of it.
 
-This document is the other layer, and **it is not part of the framework**. No stage depends on it. A team can run every cycle the repository describes, get the outcomes in the [case studies](../../case-studies/), and disagree with every word here. The engineering material loses nothing if this document turns out to be wrong.
+This document is the other layer, and **it is not part of the framework**. No stage depends on it. A team can run every cycle the repository describes, get the outcomes in the [case studies](../../docs/case-studies/), and disagree with every word here. The engineering material loses nothing if this document turns out to be wrong.
 
 What follows is a question about Growth, increasing capability, and the unknown boundary of what AI may eventually become capable of. Nothing here says that current systems have reached general intelligence, that future AI capabilities are inevitable, or that harm is inevitable. Growth is useful today. A system that keeps what its outcomes taught it can start the next cycle with better information than the last. The open part is how far that growth can go.
 
