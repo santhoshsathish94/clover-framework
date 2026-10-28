@@ -220,3 +220,40 @@ Following the Clover rule (*"before describing how another codebase works, clone
 - **Removed ~450 lines of hardcoded `Vertex`, `Edge`, `_CONCEPT_TRIGGERS`, `_MP_ONTOLOGY_PREDICATES`, and `_ENTITY_ANCHOR_BOX` definitions** from `k3_ontology_graph.py`:
   - `k3_ontology_graph.py` now loads all 28 ontology vertices, 22 provenance-carrying edges, 13 concept triggers, 13 McCulloch-Pitts / Minsky-Papert predicates, and 9 entity anchor boxes directly from `memory_tree/_ontology/ontology_graph.json` and runs deterministic Horn inference (`run_inference()`).
 - **Removed hardcoded domain URL routing** from `K3KnowledgeSearchTool` in `k3_agent_engine.py`, loading `search_url_routes` from `memory_tree/_rules/memory_retrieval_rules.json`.
+
+---
+
+## 8. Held-Out SWE-Bench Pro V2 `HARD-51` Evaluation Through Clover Cycles (`NodeBB-8168c6c4` & `flipt-2ca5dfb3`)
+
+### 8.1 Test 4: `NodeBB/NodeBB` (`instance_NodeBB__NodeBB-8168c6c48cd2fc5f96bfbdb7bfdaae0fc5daab9c-vnan`, JavaScript)
+- **Cycle 1 (`clover_cycle_v1`):** Preserved all `307 / 307` `pass_to_pass` tests, while the verifier exposed 4 `fail_to_pass` failures in profile/group image cleanup (`307 / 311` passed, `REWARD = 0`).
+- **Growth Stage:** Staged and promoted `MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001` (`status: superseded`) and `MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001` (`status: active`, `corrects: MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001`).
+- **Cycle 2 (`clover_cycle_v2`):** Re-ran in a clean sandbox and achieved **`311 / 311` passed (`REWARD = 1`)** in `27.31s` (`190.29s` agent + verifier).
+
+### 8.2 Test 5 (Held-Out Generalization with NodeBB Correction Withheld): `flipt-io/flipt` (`instance_flipt-io__flipt-2ca5dfb3513e4e786d2b037075617cccc286d5c3`, Go)
+- **Initial State (`initial_memory_state_2ca5dfb3.json`):** Withheld both NodeBB entries (`MEM-OBS-NODEBB-IMAGE-CLEANUP-CYCLE1-001` and `MEM-CORR-NODEBB-IMAGE-CLEANUP-CYCLE2-001`), leaving **`33` general-purpose entries** and **`67` relationships** (`is_healthy = True`, `read_epoch = 2`).
+- **Cycle 1 (`cycle1`, `report_2ca5dfb3_cycle1.json`):**
+  - Clover read `/app/internal/metrics/metrics.go` (`5,636` chars) and attempted to read `/app/internal/config/metrics.go`, which returned `Error: File /app/internal/config/metrics.go does not exist`.
+  - Because `decide_vscode_agent_step` only queued existing files for synthesis, `internal/config/metrics.go` was not created and `internal/config/config.go` was not read (`0` bytes patch, `178.92s`).
+  - Fresh-sandbox verifier (`/tests/test.sh`) graded Cycle 1 at **`0 / 2` required tests passed (`REWARD = 0`)**, exposing exact compiler diagnostics in `/logs/verifier/run-script-stderr.txt`:
+    - `internal/metrics/metrics_test.go:16:13: undefined: config.MetricsConfig`
+    - `internal/config/config_test.go:331:9: cfg.Metrics undefined (type *Config has no field or method Metrics)`
+    - `internal/config/config_test.go:341:28: undefined: MetricsOTLP`
+- **Growth Stage (Evidence-Backed Promotion & Engine Fix):**
+  - Updated `decide_vscode_agent_step` in `clover-agent-engine.py` so non-existent target files (`Error: File ... does not exist`) are added to `read_files_map` with empty initial content (`""`) and sibling `internal/config/config.go` aggregate config files are automatically read during the Context stage.
+  - Staged and promoted `MEM-OBS-FLIPT-METRICS-EXPORTERS-CYCLE1-001` (`observations/flipt-metrics-exporters-cycle1-observation.md`, `status: superseded`) and `MEM-CORR-FLIPT-METRICS-EXPORTERS-CYCLE2-001` (`corrections/flipt-metrics-exporters-cycle2-correction.md`, `status: active`, `epistemic_status: externally_verified`, `corrects: MEM-OBS-FLIPT-METRICS-EXPORTERS-CYCLE1-001`).
+- **Cycle 2 (`cycle2`, `report_2ca5dfb3_cycle2.json`):**
+  - Executed `8` tool rounds (`150.62s` total agent time):
+    1. `read_file("/app/internal/metrics/metrics.go", 1, 350)` (`0.01s`)
+    2. `read_file("/app/internal/config/metrics.go", 1, 350)` $\to$ `does not exist` (`0.0s`)
+    3. `read_file("/app/internal/config/config.go", 1, 350)` (`0.0s`)
+    4. `read_file("/app/internal/config/config.go", 351, 621)` (`0.0s`)
+    5. `create_file("/app/internal/metrics/metrics.go", 8425 bytes)` (`1.57s`)
+    6. `create_file("/app/internal/config/metrics.go", 2208 bytes)` (`0.01s`)
+    7. `create_file("/app/internal/config/config.go", 16648 bytes)` (`1.52s`)
+    8. `run_in_terminal("GOPROXY=file:///root/go/pkg/mod/cache/download go get ...; go test -short ./internal/config ./internal/metrics ...")` (`0.0s`)
+  - **Fresh-Sandbox Regrading (`clover_2ca5dfb3_cycle2.patch`, `19,626` bytes):**
+    - **`REWARD = 1` (`Exit = 0` in `1.98s`)**
+    - **Required `fail_to_pass` tests:** **`2 / 2` passed** (`TestLoad`, `TestGetxporter`)
+    - **Total selected tests:** **`14 / 14` passed** (`TestAnalyticsClickhouseConfiguration`, `TestJSONSchema`, `TestScheme`, `TestCacheBackend`, `TestTracingExporter`, `TestDatabaseProtocol`, `TestLogEncoding`, `TestLoad`, `TestServeHTTP`, `TestMarshalYAML`, `Test_mustBindEnv`, `TestGetConfigFile`, `TestDefaultDatabaseRoot`, `TestGetxporter`).
+

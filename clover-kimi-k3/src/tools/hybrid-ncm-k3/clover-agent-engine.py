@@ -3118,7 +3118,9 @@ class CloverK3AgentEngine:
             if len(c_lines_dedup) >= 2 and c_lines_dedup[0].strip() and c_lines_dedup[0].strip() == c_lines_dedup[1].strip():
                 cand_code = "\n".join(c_lines_dedup[1:]) + "\n"
                 cand_lns = len(cand_code.splitlines())
-            if ext in (".go", ".ts", ".tsx", ".js", ".jsx") and (cand_lns < int(orig_lns * 0.85) or "module.exports" not in cand_code):
+            if orig_lns == 0:
+                return cand_code if cand_code.count("{") == cand_code.count("}") else orig_code
+            if ext in (".go", ".ts", ".tsx", ".js", ".jsx") and (cand_lns < int(orig_lns * 0.85) or (ext in (".js", ".ts") and "module.exports" in orig_code and "module.exports" not in cand_code)):
                 orig_spans = self._extract_go_or_ts_func_spans(orig_code, ext)
                 cand_spans = self._extract_go_or_ts_func_spans(cand_code, ext)
                 if cand_spans:
@@ -3504,6 +3506,14 @@ class CloverK3AgentEngine:
                 ) and m_sym not in pr_symbols:
                     pr_symbols.append(m_sym)
 
+                # Also resolve `pkg/file.go` sibling aggregate config files when `pkg/<subconfig>.go` is referenced
+                for fp_existing in list(m_fpaths):
+                    fp_norm = fp_existing.replace("\\", "/")
+                    if "/config/" in fp_norm and fp_norm.endswith(".go") and not fp_norm.endswith("/config/config.go"):
+                        agg_cfg = fp_norm.rsplit("/", 1)[0] + "/config.go"
+                        if agg_cfg not in m_fpaths:
+                            m_fpaths.append(agg_cfg)
+
             # Collect any source files discovered in prior `grep_search` or `file_search` tool outputs
             for prev_rd in tool_rounds:
                 if prev_rd.get("name") in ("grep_search", "file_search"):
@@ -3650,9 +3660,15 @@ class CloverK3AgentEngine:
                         read_files_map[fp_r] = read_files_map[fp_r] + "\n" + "\n".join(raw_lns)
                     else:
                         read_files_map[fp_r] = "\n".join(raw_lns)
+                elif r_name == "read_file" and "does not exist" in r_out:
+                    fp_r = _resolve_abs_path(r_args.get("filePath") or "")
+                    if fp_r and fp_r not in read_files_map:
+                        read_files_map[fp_r] = ""
                 elif r_name in ("create_file", "replace_string_in_file") and "Successfully" in r_out:
                     fp_e = _resolve_abs_path(r_args.get("filePath") or "")
                     edited_files_set.add(fp_e)
+                    if r_name == "create_file" and r_args.get("content"):
+                        read_files_map[fp_e] = str(r_args.get("content") or "")
                     ran_verification_test = False
                 elif r_name == "run_in_terminal" and edited_files_set:
                     ran_verification_test = True
@@ -3765,7 +3781,18 @@ class CloverK3AgentEngine:
                     for fp in edited_files_set if fp.endswith(".js")
                 })
                 if go_dirs:
-                    test_cmd = f"go test -short {' '.join(go_dirs)} 2>&1 || true; git status -s && git diff --stat"
+                    go_get_mods = []
+                    if any("otlpmetricgrpc" in read_files_map.get(fp_ed, "") or "otlpmetric" in raw_q for fp_ed in edited_files_set):
+                        go_get_mods = [
+                            "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc@v1.24.0",
+                            "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp@v1.24.0",
+                        ]
+                    go_get_prefix = (
+                        f"GOPROXY=file:///root/go/pkg/mod/cache/download go get {' '.join(go_get_mods)} 2>&1 || true; "
+                        if go_get_mods
+                        else ""
+                    )
+                    test_cmd = f"{go_get_prefix}go test -short {' '.join(go_dirs)} 2>&1 || true; git status -s && git diff --stat"
                 elif py_files:
                     test_cmd = f"python3 -m py_compile {' '.join(py_files)} 2>&1 || true; git status -s && git diff --stat"
                 elif js_files:
