@@ -257,3 +257,20 @@ Following the Clover rule (*"before describing how another codebase works, clone
     - **Required `fail_to_pass` tests:** **`2 / 2` passed** (`TestLoad`, `TestGetxporter`)
     - **Total selected tests:** **`14 / 14` passed** (`TestAnalyticsClickhouseConfiguration`, `TestJSONSchema`, `TestScheme`, `TestCacheBackend`, `TestTracingExporter`, `TestDatabaseProtocol`, `TestLogEncoding`, `TestLoad`, `TestServeHTTP`, `TestMarshalYAML`, `Test_mustBindEnv`, `TestGetConfigFile`, `TestDefaultDatabaseRoot`, `TestGetxporter`).
 
+---
+
+## 9. Meaning Formation, Grounded Execution, and Developmental Growth Pilot (`meaning_development_pilot.py`, 2026-10-29)
+
+- **Design & Results Documents:**
+  - [docs/experiments/meaning-development/experiment-design.md](../../experiments/meaning-development/experiment-design.md)
+  - [docs/experiments/meaning-development/results.md](../../experiments/meaning-development/results.md)
+  - [docs/experiments/meaning-development/results.json](../../experiments/meaning-development/results.json)
+- **Experimental Code & Tests:**
+  - [meaning_development_pilot.py](../../../clover-kimi-k3/src/tools/hybrid-ncm-k3/meaning_development_pilot.py)
+  - [test_meaning_development_pilot.py](../../../clover-kimi-k3/src/tools/hybrid-ncm-k3/test_meaning_development_pilot.py) (`5/5` test suites pass alongside `11/11` in `test-memory-knowledge-graph.py`).
+- **Measured Outcomes Across Phases 2, 3, and 4 (`Context -> Direction -> Execution -> Outcome -> Growth`):**
+  1. **Phase 2 — Experiment A (`Form Meaning`):** Across `16` controlled entries (`12` memory relationships + `11` ontology edges across `systems` and `pharmacology`), achieved **`100.0%` (`4/4`)** paraphrase concept identification without target-word overlap, **`100.0%` (`4/4`, `0` conflations)** distinction precision between related concepts (`cyclic-sweep` vs `ttl-expiration`, `competitive` vs `allosteric-noncompetitive`), **`0.0%`** unsupported-claim rate, **`100.0%`** provenance/correction/conflict preservation, and **`100.0%` (`4/4`)** multi-hop graph retrieval recall vs. **`25.0%` (`1/4`)** for lexical-only BM25 (`+75.0 pp`).
+  2. **Phase 3 — Experiment B (`Use Meaning to Guide Execution`):** Across `8` deterministic remediation tasks (`4` construction + `4` held-out), task completion progressed monotonically across conditions: **`B0` (Baseline) `25.0%` (`2/8`) $\to$ `B1` (Memory Retrieval Only) `37.5%` (`3/8`) $\to$ `B2` (Memory + Symbolic Ontology Horn Inference) `75.0%` (`6/8`, `100%` on held-out) $\to$ `B3` (Experience-Informed Execution with `corrections/` and `context_scope`) `100.0%` (`8/8`)**.
+  3. **Phase 4 — Experiment C (`Develop Through Experience`, `5` seeds `11, 23, 37, 53, 71`):** Promoting verified Cycle 1 corrections through `memory_tree/staging/` increased same-domain **Accumulation** from `10.0% ± 20.0%` to **`100.0% ± 0.0%` (`+90.0 pp`)** and held-out cross-domain **Transfer** (to Networking CIDR/URI filters and Clinical ICD-10 / ELISA assays) from `26.67% ± 24.95%` to **`100.0% ± 0.0%` (`+73.33 pp`)**, with **`0.0%` negative transfer** on precondition-guard tasks and **`0` unverified proposals leaked** from `staging/`.
+
+

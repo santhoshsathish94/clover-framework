@@ -44,6 +44,7 @@ docs/
 	governance/evidence/    controls, responsibility and sourced dossier
 	case-studies/           observed production migrations and incident remediations
 	examples/               illustrative end-to-end walkthroughs
+	experiments/            meaning formation, grounded execution, and developmental growth pilot
 	templates/              reusable orchestration brief template
 	runtime-enforcement/    executable container write-guard verification policy
 	runtime-context/        engine architecture, 11 foundational paper studies, and hardware data-movement ledgers
@@ -51,14 +52,13 @@ docs/
 research/
 	ai-fire/                               dependency and concentration argument
 	ai-future/                             explicit hypothesis
-	clover-ai/                             broader implementation direction
 	foundational-papers-1943-to-2017/      11 classic paper replications and mathematical verifiers
 	hardware-data-movement/                red-blue pebbling, eyeriss v1/v2, flashattention, and specmd studies
 	object-oriented-reduction/             398 -> 88 -> 24 -> 12 -> 5 complete-English OOP reduction
 	observe/                               reciprocal observation experiment
 	k3/                                    model derivation, experiments, measurements, and upstream records
 benchmarks/
-	swebench-pro-v2/        multi-domain HARD-51 software engineering verification suite (Problems 1..4)
+	swebench-pro-v2/        multi-domain HARD-51 software engineering verification suite (Problems 1..5)
 	verified-runs/          70-task standardized AI benchmark runs (baseline, 8x RTX 3090 GPU, Ryzen 7950X3D CPU)
 clover-kimi-k3/
 	src/                    code, rust host-path crates, scripts, tools, and prompts; datasets and work are host only
@@ -76,7 +76,7 @@ assets/
 |---|---|
 | `why-clover-is-important.md` | [AI-Fire research](../research/ai-fire/README.md) |
 | `hypothesis/ai-future.md` | [AI future hypothesis](../research/ai-future/README.md) |
-| `k3-analysis/clover-ai.md` | [Clover AI direction](../research/clover-ai/README.md) |
+| `k3-analysis/clover-ai.md` | [Meaning development experiment](experiments/meaning-development/experiment-design.md) |
 | Other `k3-analysis/**/*.md` | Purpose-based folders under [research/k3](../research/k3/README.md) |
 | `clover-k3/clover-k3-equation.md` | [Implementation equation](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/reference/implementation-equation.md) |
 | `clover-k3/clover-k3-proof.md` | [Results](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/results.md) |

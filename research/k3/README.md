@@ -37,7 +37,7 @@ Folder guides: [model](model/README.md), [experiments](experiments/README.md),
 | Prompt cases | [Short factual](measurements/prompts/v1-factual-short.md), [multi-factual](measurements/prompts/v2-factual-multi.md), [repetitive](measurements/prompts/v3-repetitive.md), [code](measurements/prompts/v4-code.md), [French](measurements/prompts/v5-french.md), [long context](measurements/prompts/v6-long-context.md), [nonsense](measurements/prompts/v7-nonsense.md), [control](measurements/prompts/v8-control.md) | Individual experiment records |
 | Flow synthesis | [France walkthrough](measurements/flow/w-walkthrough-france.md), [routing predictability](measurements/flow/x-routing-predictability.md) | Explanation and tested routing-cache behavior |
 
-Broader [Clover AI direction](../clover-ai/README.md) is separate from this model investigation.
+Broader [Meaning Development experiment](../../docs/experiments/meaning-development/experiment-design.md) is separate from this model investigation.
 
 The investigation into running Kimi K3 — a 2.78-trillion-parameter model — on
 ordinary hardware, and what it took to establish that the model's equation was
@@ -59,7 +59,7 @@ The working implementation this analysis produced lives in
 
 | Document | Subject | State |
 |---|---|---|
-| [clover-ai.md](../clover-ai/README.md) | Implementation direction for Clover AI — bounded tools, enforced permissions, deterministic verification | Direction, not implemented |
+| [experiment-design.md](../../docs/experiments/meaning-development/experiment-design.md) | Meaning formation, grounded execution, and developmental growth pilot | Pilot executed and verified |
 | [heterogeneous-inference.md](architecture/heterogeneous-inference.md) | Three experiments on running a very large model on machines you can actually get, and where they point next | Direction, measured on one CPU, nothing on a GPU |
 | [clover-scaling-architecture.md](architecture/clover-scaling-architecture.md) | The measurement record, step by step, including every wrong turn | Measured, one box |
 | [k3-client-server-architecture.md](architecture/k3-client-server-architecture.md) | The client-server shape: what a client holds, what a pod holds, what crosses between them | Sizes measured, topology not built |

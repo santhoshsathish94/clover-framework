@@ -1,0 +1,2766 @@
+{
+  "experiment": "Meaning Formation, Grounded Execution, and Developmental Growth in Clover",
+  "dataset_version": "1.0.0-pilot",
+  "canonical_cycle": [
+    "Context",
+    "Direction",
+    "Execution",
+    "Outcome",
+    "Growth"
+  ],
+  "elapsed_seconds": 2.88,
+  "phase_2_experiment_a": {
+    "metrics": {
+      "total_controlled_entries": 16,
+      "total_memory_relationships": 12,
+      "memory_graph_healthy": true,
+      "ontology_inferred_edges": {
+        "exploited_by_attack": 0,
+        "potentially_affects": 0,
+        "entails_constraint": 2,
+        "critical_vulnerabilities": 0
+      },
+      "ontology_rq3_audit": {
+        "total_edges": 11,
+        "explicit_edges": 9,
+        "derived_edges": 2,
+        "canonicalisation_pct": 100.0,
+        "traceability_pct": 100.0,
+        "verifiability_pct": 100.0
+      },
+      "paraphrase_concept_accuracy_pct": 100.0,
+      "related_concept_distinction_precision_pct": 100.0,
+      "conflation_error_count": 0,
+      "claim_verification_accuracy_pct": 100.0,
+      "unsupported_claim_rate_pct": 0.0,
+      "provenance_completeness_pct": 100.0,
+      "correction_history_preserved": true,
+      "conflict_and_uncertainty_preserved": true,
+      "context_scope_disambiguation_passed": true,
+      "lexical_only_multihop_recall_pct": 25.0,
+      "graph_relational_multihop_recall_pct": 100.0
+    },
+    "paraphrase_traces": [
+      {
+        "id": "A_PARA_1",
+        "domain": "systems",
+        "query": "In our 48-stage pipeline, doubling the shared ring buffer from 512 to 1024 and 2048 slots left reuse stuck at 18.5% because each worker overwrites the prior worker's entries.",
+        "expected_concept": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "forbidden_conflation": "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+        "predicted_top_concept": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "candidates": [
+          {
+            "concept_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "title": "Concept: Capacity-Invariant Cyclic Sweep Eviction in Shared Pools",
+            "score": 100.4548,
+            "epistemic_status": "observed",
+            "reasons": [
+              "via_exemplifies(MEM-OBS-SYS-RING-OVERWRITE-001):phrase_match('ring buffer')",
+              "direct_concept:structural_cue(MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001:3/3)+evidence_phrase('2048 slots')",
+              "via_exemplifies(MEM-OBS-SYS-TABLE-PLATEAU-002):bm25_lexical(2048, 48, 512)",
+              "via_supports(MEM-OBS-SYS-TABLE-PLATEAU-002):bm25_lexical(2048, 48, 512)"
+            ]
+          },
+          {
+            "concept_id": "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "title": "Concept: Time-to-Live (TTL) Staleness Expiration Independent of Pool Partitioning",
+            "score": 17.5064,
+            "epistemic_status": "observed",
+            "reasons": [
+              "direct_concept:bm25_lexical(because, entries, reuse)"
+            ]
+          }
+        ],
+        "passed": true
+      },
+      {
+        "id": "A_PARA_2",
+        "domain": "systems",
+        "query": "Quadrupling the unified lookup table capacity across 64 sequential operators produced the exact same 21% hit ratio because every pass flushes the shared table.",
+        "expected_concept": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "forbidden_conflation": "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+        "predicted_top_concept": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "candidates": [
+          {
+            "concept_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "title": "Concept: Capacity-Invariant Cyclic Sweep Eviction in Shared Pools",
+            "score": 128.1532,
+            "epistemic_status": "observed",
+            "reasons": [
+              "via_exemplifies(MEM-OBS-SYS-TABLE-PLATEAU-002):phrase_match('unified lookup')",
+              "via_supports(MEM-OBS-SYS-TABLE-PLATEAU-002):phrase_match('unified lookup')",
+              "direct_concept:structural_cue(MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001:3/3)",
+              "via_exemplifies(MEM-OBS-SYS-RING-OVERWRITE-001):bm25_lexical(across, every, pass)"
+            ]
+          },
+          {
+            "concept_id": "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "title": "Concept: Time-to-Live (TTL) Staleness Expiration Independent of Pool Partitioning",
+            "score": 8.9837,
+            "epistemic_status": "observed",
+            "reasons": [
+              "direct_concept:bm25_lexical(across, because, capacity)"
+            ]
+          }
+        ],
+        "passed": true
+      },
+      {
+        "id": "A_PARA_3",
+        "domain": "pharmacology",
+        "query": "When hepatic catalytic pockets reached 99% occupancy, doubling the intravenous bolus caused the elimination half-life to quadruple.",
+        "expected_concept": "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+        "forbidden_conflation": "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+        "predicted_top_concept": "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+        "candidates": [
+          {
+            "concept_id": "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "title": "Concept: Michaelis-Menten Zero-Order Enzymatic Saturation (V_max Ceiling)",
+            "score": 117.6679,
+            "epistemic_status": "externally_verified",
+            "reasons": [
+              "via_exemplifies(MEM-OBS-BIO-CYP2D6-OCCUPANCY-001):tag_match(hepatic)+phrase_match('hepatic catalytic')",
+              "direct_concept:structural_cue(MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001:3/3)",
+              "via_exemplifies(MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002):bm25_lexical(reached)"
+            ]
+          },
+          {
+            "concept_id": "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+            "title": "Concept: Orthosteric Competitive Antagonism (Apparent K_m Shift, Unchanged V_max)",
+            "score": 1.2726,
+            "epistemic_status": "externally_verified",
+            "reasons": [
+              "direct_concept:bm25_lexical(99)"
+            ]
+          }
+        ],
+        "passed": true
+      },
+      {
+        "id": "A_PARA_4",
+        "domain": "pharmacology",
+        "query": "Escalating perfusate substrate concentration five-fold yielded a constant metabolite flux plateau of 14.5 umol/min.",
+        "expected_concept": "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+        "forbidden_conflation": "MEM-CONCEPT-ALLOSTERIC-NONCOMPETITIVE-BLOCKADE-001",
+        "predicted_top_concept": "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+        "candidates": [
+          {
+            "concept_id": "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "title": "Concept: Michaelis-Menten Zero-Order Enzymatic Saturation (V_max Ceiling)",
+            "score": 67.9075,
+            "epistemic_status": "externally_verified",
+            "reasons": [
+              "via_exemplifies(MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002):tag_match(metabolite)+evidence_phrase('metabolite flux')",
+              "direct_concept:structural_cue(MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001:3/3)+phrase_match('substrate concentration')",
+              "via_exemplifies(MEM-OBS-BIO-CYP2D6-OCCUPANCY-001):bm25_lexical(flux)"
+            ]
+          },
+          {
+            "concept_id": "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+            "title": "Concept: Orthosteric Competitive Antagonism (Apparent K_m Shift, Unchanged V_max)",
+            "score": 23.6802,
+            "epistemic_status": "externally_verified",
+            "reasons": [
+              "direct_concept:bm25_lexical(concentration, escalating, plateau)"
+            ]
+          }
+        ],
+        "passed": true
+      }
+    ],
+    "distinction_traces": [
+      {
+        "id": "A_DIST_1_TTL",
+        "domain": "systems",
+        "query": "Cache occupancy is only 8% with zero capacity evictions, but 94% of lookups miss because the inter-arrival time is 90 seconds while the TTL clock expires entries after 30 seconds.",
+        "expected_concept": "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+        "must_not_match_top1": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "predicted_top_concept": "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+        "passed": true
+      },
+      {
+        "id": "A_DIST_2_CYCLIC",
+        "domain": "systems",
+        "query": "Cache occupancy is 100% with zero TTL expirations, and hit rate stays flat across capacities 512, 1024, and 2048 because 32 sequential stages cycle through the shared pool.",
+        "expected_concept": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "must_not_match_top1": "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+        "predicted_top_concept": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "passed": true
+      },
+      {
+        "id": "A_DIST_3_COMPETITIVE",
+        "domain": "pharmacology",
+        "query": "An orthosteric antagonist competes for the same receptor pocket and shifts apparent Km 4x to the right, but escalating agonist concentration restores 100% Emax with unchanged Vmax.",
+        "expected_concept": "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+        "must_not_match_top1": "MEM-CONCEPT-ALLOSTERIC-NONCOMPETITIVE-BLOCKADE-001",
+        "predicted_top_concept": "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+        "passed": true
+      },
+      {
+        "id": "A_DIST_4_NONCOMPETITIVE",
+        "domain": "pharmacology",
+        "query": "An allosteric blocker binds a distinct regulatory site and depresses the Vmax ceiling to 32% Emax; escalating agonist concentration 200-fold fails to restore the response.",
+        "expected_concept": "MEM-CONCEPT-ALLOSTERIC-NONCOMPETITIVE-BLOCKADE-001",
+        "must_not_match_top1": "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+        "predicted_top_concept": "MEM-CONCEPT-ALLOSTERIC-NONCOMPETITIVE-BLOCKADE-001",
+        "passed": true
+      }
+    ],
+    "claim_traces": [
+      {
+        "subject_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "claim_key": "partition_per_stage_resolves_flat_hit_rate",
+        "supported": true,
+        "epistemic_status": "externally_verified",
+        "provenance": "exp:pilot-meaning-systems:kv-table-sweep + FORMULA/PARTITIONED-CACHE-INVARIANT",
+        "expected_supported": true,
+        "passed": true
+      },
+      {
+        "subject_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+        "claim_key": "dram_clock_frequency_4800_increases_cache_hit_rate",
+        "supported": false,
+        "epistemic_status": "unsupported_claim",
+        "provenance": "none (DRAM bandwidth affects transfer latency, not cache hit ratio)",
+        "expected_supported": false,
+        "passed": true
+      },
+      {
+        "subject_id": "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+        "claim_key": "escalating_agonist_surmounts_competitive_block",
+        "supported": true,
+        "epistemic_status": "externally_verified",
+        "provenance": "pharmacology:receptor-kinetics-ch3 + FORMULA/COMPETITIVE-SURMOUNT-LAW",
+        "expected_supported": true,
+        "passed": true
+      },
+      {
+        "subject_id": "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+        "claim_key": "competitive_antagonist_destroys_ribosomal_protein_synthesis",
+        "supported": false,
+        "epistemic_status": "unsupported_claim",
+        "provenance": "none (orthosteric competition is reversible pocket binding, not ribosomal destruction)",
+        "expected_supported": false,
+        "passed": true
+      },
+      {
+        "subject_id": "MEM-HYP-PRODRUG-POLYMORPHISM-001",
+        "claim_key": "direct_m1_bolus_is_clinically_safe_and_verified",
+        "supported": false,
+        "epistemic_status": "unresolved",
+        "provenance": "review:pharmacogenetics-board-2026-10 (explicit uncertainty_note: hERG safety unmeasured)",
+        "expected_supported": false,
+        "passed": true
+      }
+    ],
+    "retrieval_comparison": [
+      {
+        "id": "A_GRAPH_1",
+        "required_target": "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+        "lexical_top2": [
+          "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+          "MEM-CORR-ZERO-HITS-STATE-DRIFT-002"
+        ],
+        "graph_retrieved": [
+          "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+          "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001"
+        ],
+        "lexical_hit": true,
+        "graph_hit": true
+      },
+      {
+        "id": "A_GRAPH_2",
+        "required_target": "MEM-OBS-BIO-CONFLICT-NULL-002",
+        "lexical_top2": [
+          "MEM-OBS-BIO-CONFLICT-FAST-001",
+          "MEM-CORR-ZERO-HITS-STATE-DRIFT-002"
+        ],
+        "graph_retrieved": [
+          "MEM-OBS-BIO-CONFLICT-FAST-001",
+          "MEM-HYP-PRODRUG-POLYMORPHISM-001",
+          "MEM-OBS-BIO-CONFLICT-NULL-002"
+        ],
+        "lexical_hit": false,
+        "graph_hit": true
+      },
+      {
+        "id": "A_GRAPH_3",
+        "required_target": "MEM-OBS-PREFETCH-4LANE-LOSS-002",
+        "lexical_top2": [
+          "MEM-OBS-PREFETCH-1LANE-WIN-001",
+          "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+        ],
+        "graph_retrieved": [
+          "MEM-OBS-PREFETCH-4LANE-LOSS-002",
+          "MEM-OBS-PREFETCH-1LANE-WIN-001"
+        ],
+        "lexical_hit": false,
+        "graph_hit": true
+      },
+      {
+        "id": "A_GRAPH_4",
+        "required_target": "MEM-OBS-SYS-TABLE-PLATEAU-002",
+        "lexical_top2": [
+          "MEM-OBS-SYS-RING-OVERWRITE-001",
+          "MEM-CORR-ZERO-HITS-STATE-DRIFT-002"
+        ],
+        "graph_retrieved": [
+          "MEM-OBS-SYS-RING-OVERWRITE-001",
+          "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+          "MEM-OBS-SYS-TABLE-PLATEAU-002"
+        ],
+        "lexical_hit": false,
+        "graph_hit": true
+      }
+    ]
+  },
+  "phase_3_experiment_b": {
+    "conditions": {
+      "B0": {
+        "total_tasks": 8,
+        "tasks_passed": 2,
+        "task_pass_rate_pct": 25.0,
+        "prediction_accuracy_pct": 62.5,
+        "held_out_tasks": 4,
+        "held_out_passed": 1,
+        "held_out_pass_rate_pct": 25.0,
+        "unsupported_inferences": 0,
+        "unsupported_inference_rate_pct": 0.0,
+        "mean_execution_attempts": 1.0
+      },
+      "B1": {
+        "total_tasks": 8,
+        "tasks_passed": 3,
+        "task_pass_rate_pct": 37.5,
+        "prediction_accuracy_pct": 37.5,
+        "held_out_tasks": 4,
+        "held_out_passed": 2,
+        "held_out_pass_rate_pct": 50.0,
+        "unsupported_inferences": 1,
+        "unsupported_inference_rate_pct": 12.5,
+        "mean_execution_attempts": 1.0
+      },
+      "B2": {
+        "total_tasks": 8,
+        "tasks_passed": 6,
+        "task_pass_rate_pct": 75.0,
+        "prediction_accuracy_pct": 75.0,
+        "held_out_tasks": 4,
+        "held_out_passed": 4,
+        "held_out_pass_rate_pct": 100.0,
+        "unsupported_inferences": 0,
+        "unsupported_inference_rate_pct": 0.0,
+        "mean_execution_attempts": 1.0
+      },
+      "B3": {
+        "total_tasks": 8,
+        "tasks_passed": 8,
+        "task_pass_rate_pct": 100.0,
+        "prediction_accuracy_pct": 100.0,
+        "held_out_tasks": 4,
+        "held_out_passed": 4,
+        "held_out_pass_rate_pct": 100.0,
+        "unsupported_inferences": 0,
+        "unsupported_inference_rate_pct": 0.0,
+        "mean_execution_attempts": 1.0
+      }
+    },
+    "traces": {
+      "B0": [
+        {
+          "condition": "B0",
+          "task_id": "B_T1_SYS_CYCLIC_CACHE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "increase_global_capacity_to_4096",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": false,
+          "ground_truth_action": "partition_per_stage",
+          "ground_truth_consequence": "hit_rate_rises_to_48_pct",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_increase_global_capacity_to_4096",
+            "diagnostic": "VERIFIED FAIL: Action 'increase_global_capacity_to_4096' did not resolve B_T1_SYS_CYCLIC_CACHE. Environment telemetry requires 'partition_per_stage' -> 'hit_rate_rises_to_48_pct'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B0",
+          "task_id": "B_T2_SYS_TTL_STALENESS",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "extend_ttl",
+          "predicted_consequence": "ttl_misses_eliminated",
+          "is_held_out": false,
+          "ground_truth_action": "extend_ttl",
+          "ground_truth_consequence": "ttl_misses_eliminated",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "ttl_misses_eliminated",
+            "diagnostic": "VERIFIED PASS: Action 'extend_ttl' produced expected outcome 'ttl_misses_eliminated'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B0",
+          "task_id": "B_T3_SYS_4LANE_PREFETCH",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "enable_sync_prefetch",
+          "predicted_consequence": "restores_56_8s_batched_overlap",
+          "is_held_out": false,
+          "ground_truth_action": "disable_sync_prefetch_use_async_overlap",
+          "ground_truth_consequence": "restores_56_8s_batched_overlap",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_enable_sync_prefetch",
+            "diagnostic": "VERIFIED FAIL: Action 'enable_sync_prefetch' did not resolve B_T3_SYS_4LANE_PREFETCH. Environment telemetry requires 'disable_sync_prefetch_use_async_overlap' -> 'restores_56_8s_batched_overlap'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B0",
+          "task_id": "B_T4_SYS_RECURRENT_MEMOIZER",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "delete_memoizer_as_dead",
+          "predicted_consequence": "removes_dead_code",
+          "is_held_out": false,
+          "ground_truth_action": "verify_via_request_replay_with_state_reset",
+          "ground_truth_consequence": "replayed_request_hits_100_pct_3_27x_faster",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_delete_memoizer_as_dead",
+            "diagnostic": "VERIFIED FAIL: Action 'delete_memoizer_as_dead' did not resolve B_T4_SYS_RECURRENT_MEMOIZER. Environment telemetry requires 'verify_via_request_replay_with_state_reset' -> 'replayed_request_hits_100_pct_3_27x_faster'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B0",
+          "task_id": "B_T5_HELDOUT_CDN_POP_SWEEP",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "increase_global_capacity_to_4096",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": true,
+          "ground_truth_action": "partition_per_stage",
+          "ground_truth_consequence": "hit_rate_rises_to_48_pct",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_increase_global_capacity_to_4096",
+            "diagnostic": "VERIFIED FAIL: Action 'increase_global_capacity_to_4096' did not resolve B_T5_HELDOUT_CDN_POP_SWEEP. Environment telemetry requires 'partition_per_stage' -> 'hit_rate_rises_to_48_pct'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B0",
+          "task_id": "B_T6_HELDOUT_BIO_SATURATION",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "escalate_agonist_concentration",
+          "predicted_consequence": "unknown_consequence",
+          "is_held_out": true,
+          "ground_truth_action": "reduce_infusion_below_vmax",
+          "ground_truth_consequence": "prevents_zero_order_accumulation_spike",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_escalate_agonist_concentration",
+            "diagnostic": "VERIFIED FAIL: Action 'escalate_agonist_concentration' did not resolve B_T6_HELDOUT_BIO_SATURATION. Environment telemetry requires 'reduce_infusion_below_vmax' -> 'prevents_zero_order_accumulation_spike'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B0",
+          "task_id": "B_T7_HELDOUT_BIO_COMPETITIVE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "escalate_agonist_concentration",
+          "predicted_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "is_held_out": true,
+          "ground_truth_action": "escalate_agonist_concentration",
+          "ground_truth_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "surmounts_orthosteric_shift_restores_emax",
+            "diagnostic": "VERIFIED PASS: Action 'escalate_agonist_concentration' produced expected outcome 'surmounts_orthosteric_shift_restores_emax'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B0",
+          "task_id": "B_T8_HELDOUT_BIO_NONCOMPETITIVE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "escalate_agonist_concentration",
+          "predicted_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "is_held_out": true,
+          "ground_truth_action": "administer_allosteric_reversal_agent",
+          "ground_truth_consequence": "restores_active_catalytic_complex_vmax",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_escalate_agonist_concentration",
+            "diagnostic": "VERIFIED FAIL: Action 'escalate_agonist_concentration' did not resolve B_T8_HELDOUT_BIO_NONCOMPETITIVE. Environment telemetry requires 'administer_allosteric_reversal_agent' -> 'restores_active_catalytic_complex_vmax'."
+          },
+          "attempts_used": 1
+        }
+      ],
+      "B1": [
+        {
+          "condition": "B1",
+          "task_id": "B_T1_SYS_CYCLIC_CACHE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
+          ],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": false,
+          "ground_truth_action": "partition_per_stage",
+          "ground_truth_consequence": "hit_rate_rises_to_48_pct",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "hit_rate_rises_to_48_pct",
+            "diagnostic": "VERIFIED PASS: Action 'partition_per_stage' produced expected outcome 'hit_rate_rises_to_48_pct'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B1",
+          "task_id": "B_T2_SYS_TTL_STALENESS",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001"
+          ],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": false,
+          "ground_truth_action": "extend_ttl",
+          "ground_truth_consequence": "ttl_misses_eliminated",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_partition_per_stage",
+            "diagnostic": "VERIFIED FAIL: Action 'partition_per_stage' did not resolve B_T2_SYS_TTL_STALENESS. Environment telemetry requires 'extend_ttl' -> 'ttl_misses_eliminated'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B1",
+          "task_id": "B_T3_SYS_4LANE_PREFETCH",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-PREFETCH-1LANE-WIN-001",
+            "MEM-OBS-BIO-CONFLICT-NULL-002",
+            "MEM-OBS-BIO-CONFLICT-FAST-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+          ],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 1,
+          "chosen_action": "enable_sync_prefetch",
+          "predicted_consequence": "1_lane_speedup_assumed_on_4_lanes",
+          "is_held_out": false,
+          "ground_truth_action": "disable_sync_prefetch_use_async_overlap",
+          "ground_truth_consequence": "restores_56_8s_batched_overlap",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_enable_sync_prefetch",
+            "diagnostic": "VERIFIED FAIL: Action 'enable_sync_prefetch' did not resolve B_T3_SYS_4LANE_PREFETCH. Environment telemetry requires 'disable_sync_prefetch_use_async_overlap' -> 'restores_56_8s_batched_overlap'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B1",
+          "task_id": "B_T4_SYS_RECURRENT_MEMOIZER",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-OBS-PREFETCH-1LANE-WIN-001"
+          ],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": false,
+          "ground_truth_action": "verify_via_request_replay_with_state_reset",
+          "ground_truth_consequence": "replayed_request_hits_100_pct_3_27x_faster",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_partition_per_stage",
+            "diagnostic": "VERIFIED FAIL: Action 'partition_per_stage' did not resolve B_T4_SYS_RECURRENT_MEMOIZER. Environment telemetry requires 'verify_via_request_replay_with_state_reset' -> 'replayed_request_hits_100_pct_3_27x_faster'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B1",
+          "task_id": "B_T5_HELDOUT_CDN_POP_SWEEP",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+            "MEM-OBS-SYS-TABLE-PLATEAU-002"
+          ],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": true,
+          "ground_truth_action": "partition_per_stage",
+          "ground_truth_consequence": "hit_rate_rises_to_48_pct",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "hit_rate_rises_to_48_pct",
+            "diagnostic": "VERIFIED PASS: Action 'partition_per_stage' produced expected outcome 'hit_rate_rises_to_48_pct'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B1",
+          "task_id": "B_T6_HELDOUT_BIO_SATURATION",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-OBS-SYS-RING-OVERWRITE-001"
+          ],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": true,
+          "ground_truth_action": "reduce_infusion_below_vmax",
+          "ground_truth_consequence": "prevents_zero_order_accumulation_spike",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_partition_per_stage",
+            "diagnostic": "VERIFIED FAIL: Action 'partition_per_stage' did not resolve B_T6_HELDOUT_BIO_SATURATION. Environment telemetry requires 'reduce_infusion_below_vmax' -> 'prevents_zero_order_accumulation_spike'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B1",
+          "task_id": "B_T7_HELDOUT_BIO_COMPETITIVE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001",
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
+          ],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "escalate_agonist_concentration",
+          "predicted_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "is_held_out": true,
+          "ground_truth_action": "escalate_agonist_concentration",
+          "ground_truth_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "surmounts_orthosteric_shift_restores_emax",
+            "diagnostic": "VERIFIED PASS: Action 'escalate_agonist_concentration' produced expected outcome 'surmounts_orthosteric_shift_restores_emax'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B1",
+          "task_id": "B_T8_HELDOUT_BIO_NONCOMPETITIVE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-ALLOSTERIC-NONCOMPETITIVE-BLOCKADE-001",
+            "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+          ],
+          "ontology_paths": [],
+          "inferred_constraints": [],
+          "unsupported_inferences": 0,
+          "chosen_action": "escalate_agonist_concentration",
+          "predicted_consequence": "unverified_heuristic_guess",
+          "is_held_out": true,
+          "ground_truth_action": "administer_allosteric_reversal_agent",
+          "ground_truth_consequence": "restores_active_catalytic_complex_vmax",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_escalate_agonist_concentration",
+            "diagnostic": "VERIFIED FAIL: Action 'escalate_agonist_concentration' did not resolve B_T8_HELDOUT_BIO_NONCOMPETITIVE. Environment telemetry requires 'administer_allosteric_reversal_agent' -> 'restores_active_catalytic_complex_vmax'."
+          },
+          "attempts_used": 1
+        }
+      ],
+      "B2": [
+        {
+          "condition": "B2",
+          "task_id": "B_T1_SYS_CYCLIC_CACHE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
+          ],
+          "ontology_paths": [
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--HAS_FORMULA-- STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
+          ],
+          "inferred_constraints": [
+            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
+            "Requires C_global > 0 (allocated) and TTL_expired == 0",
+            "Action: partition_per_stage",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
+            "Global capacity sweeps remain flat until C_total >= S * w_stage",
+            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": false,
+          "ground_truth_action": "partition_per_stage",
+          "ground_truth_consequence": "hit_rate_rises_to_48_pct",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "hit_rate_rises_to_48_pct",
+            "diagnostic": "VERIFIED PASS: Action 'partition_per_stage' produced expected outcome 'hit_rate_rises_to_48_pct'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B2",
+          "task_id": "B_T2_SYS_TTL_STALENESS",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-TTL-EXPIRATION (Time-to-Live (TTL) Staleness Expiration) --HAS_FORMULA--> FORMULA:TTL-REFRESH-LAW (TTL Horizon Condition)"
+          ],
+          "inferred_constraints": [
+            "Partitioning per stage has 0% effect when Delta_t > tau",
+            "Action: extend_ttl",
+            "If TTL_expired > 0.5 * misses and occupancy < 0.5 and Delta_t > TTL, then action = EXTEND_TTL_AND_REFRESH (never partition_per_stage)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "extend_ttl",
+          "predicted_consequence": "ttl_misses_eliminated",
+          "is_held_out": false,
+          "ground_truth_action": "extend_ttl",
+          "ground_truth_consequence": "ttl_misses_eliminated",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "ttl_misses_eliminated",
+            "diagnostic": "VERIFIED PASS: Action 'extend_ttl' produced expected outcome 'ttl_misses_eliminated'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B2",
+          "task_id": "B_T3_SYS_4LANE_PREFETCH",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-PREFETCH-4LANE-LOSS-002",
+            "MEM-OBS-PREFETCH-1LANE-WIN-001",
+            "MEM-OBS-BIO-CONFLICT-NULL-002",
+            "MEM-OBS-BIO-CONFLICT-FAST-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+          ],
+          "ontology_paths": [
+            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --ENTAILS_CONSTRAINT--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule)",
+            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --DEPENDS_ON--> STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap)",
+            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --ENTAILS_CONSTRAINT--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule) <--HAS_FORMULA-- STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap)",
+            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --DEPENDS_ON--> STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap) --HAS_FORMULA--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule)"
+          ],
+          "inferred_constraints": [
+            "single_lane_serial_io -> enable_sync_prefetch",
+            "multi_lane_batched_overlap -> disable_sync_prefetch_use_async_overlap",
+            "If lanes == 1: enable_sync_prefetch (+10.2% speedup); if lanes >= 4: disable_sync_prefetch_use_async_overlap (avoids -4.2% barrier stall).",
+            "If lanes == 1: enable_sync_prefetch (+10.2% speedup); if lanes >= 4: disable_sync_prefetch_use_async_overlap (avoids -4.2% barrier stall).",
+            "If lanes == 1: enable_sync_prefetch (+10.2% speedup); if lanes >= 4: disable_sync_prefetch_use_async_overlap (avoids -4.2% barrier stall)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "enable_sync_prefetch",
+          "predicted_consequence": "unscoped_prefetch_selection",
+          "is_held_out": false,
+          "ground_truth_action": "disable_sync_prefetch_use_async_overlap",
+          "ground_truth_consequence": "restores_56_8s_batched_overlap",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_enable_sync_prefetch",
+            "diagnostic": "VERIFIED FAIL: Action 'enable_sync_prefetch' did not resolve B_T3_SYS_4LANE_PREFETCH. Environment telemetry requires 'disable_sync_prefetch_use_async_overlap' -> 'restores_56_8s_batched_overlap'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B2",
+          "task_id": "B_T4_SYS_RECURRENT_MEMOIZER",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+            "MEM-OBS-PREFETCH-4LANE-LOSS-002",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-OBS-PREFETCH-1LANE-WIN-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-RECURRENT-STATE-MEMOIZATION (Recurrent State Drift vs. Request-Boundary Memoization) --HAS_FORMULA--> FORMULA:STATE-RESET-REPLAY-LAW (Recurrent Memoization Key & Replay Invariant)"
+          ],
+          "inferred_constraints": [
+            "Action: verify_via_request_replay_with_state_reset",
+            "Key(t) = Hash(Layer, Expert, Input_t(S_t)); intra-sequence repeats have S_t != S_{t'}, so test memoizer via full-request A/B/A replay after state reset (or key on prefix-aligned state checkpoints)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "delete_memoizer_as_dead",
+          "predicted_consequence": "memoizer_assumed_dead",
+          "is_held_out": false,
+          "ground_truth_action": "verify_via_request_replay_with_state_reset",
+          "ground_truth_consequence": "replayed_request_hits_100_pct_3_27x_faster",
+          "prediction_accurate": false,
+          "verification": {
+            "passed": false,
+            "observed_consequence": "failed_action_delete_memoizer_as_dead",
+            "diagnostic": "VERIFIED FAIL: Action 'delete_memoizer_as_dead' did not resolve B_T4_SYS_RECURRENT_MEMOIZER. Environment telemetry requires 'verify_via_request_replay_with_state_reset' -> 'replayed_request_hits_100_pct_3_27x_faster'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B2",
+          "task_id": "B_T5_HELDOUT_CDN_POP_SWEEP",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+            "MEM-OBS-SYS-TABLE-PLATEAU-002"
+          ],
+          "ontology_paths": [
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--HAS_FORMULA-- STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
+          ],
+          "inferred_constraints": [
+            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
+            "Requires C_global > 0 (allocated) and TTL_expired == 0",
+            "Action: partition_per_stage",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
+            "Global capacity sweeps remain flat until C_total >= S * w_stage",
+            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": true,
+          "ground_truth_action": "partition_per_stage",
+          "ground_truth_consequence": "hit_rate_rises_to_48_pct",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "hit_rate_rises_to_48_pct",
+            "diagnostic": "VERIFIED PASS: Action 'partition_per_stage' produced expected outcome 'hit_rate_rises_to_48_pct'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B2",
+          "task_id": "B_T6_HELDOUT_BIO_SATURATION",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-OBS-SYS-RING-OVERWRITE-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-ENZYMATIC-SATURATION (Michaelis-Menten Zero-Order Enzymatic Saturation) --HAS_FORMULA--> FORMULA:MICHAELIS-MENTEN-SATURATION-LAW (Zero-Order Clearance Scaling & Nonlinear Dose Adjustment)"
+          ],
+          "inferred_constraints": [
+            "Action: reduce_infusion_below_vmax",
+            "v = V_max * [S] / (K_m + [S]); when [S] >> K_m (occupancy > 95%), escalating bolus dose causes superlinear half-life expansion -> action = REDUCE_INFUSION_RATE_BELOW_VMAX_AND_INDUCE_COFACTOR."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "reduce_infusion_below_vmax",
+          "predicted_consequence": "prevents_zero_order_accumulation_spike",
+          "is_held_out": true,
+          "ground_truth_action": "reduce_infusion_below_vmax",
+          "ground_truth_consequence": "prevents_zero_order_accumulation_spike",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "prevents_zero_order_accumulation_spike",
+            "diagnostic": "VERIFIED PASS: Action 'reduce_infusion_below_vmax' produced expected outcome 'prevents_zero_order_accumulation_spike'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B2",
+          "task_id": "B_T7_HELDOUT_BIO_COMPETITIVE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001",
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-COMPETITIVE-INHIBITION (Orthosteric Competitive Receptor Inhibition) --HAS_FORMULA--> FORMULA:COMPETITIVE-SURMOUNT-LAW (Competitive Antagonism Surmountability Equation)"
+          ],
+          "inferred_constraints": [
+            "Action: escalate_agonist_concentration",
+            "v = V_max * [S] / (K_m * (1 + [I]/K_i) + [S]); since V_max is unchanged, escalating agonist [S] >> K_m*(1+[I]/K_i) restores 100% E_max -> action = ESCALATE_AGONIST_CONCENTRATION."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "escalate_agonist_concentration",
+          "predicted_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "is_held_out": true,
+          "ground_truth_action": "escalate_agonist_concentration",
+          "ground_truth_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "surmounts_orthosteric_shift_restores_emax",
+            "diagnostic": "VERIFIED PASS: Action 'escalate_agonist_concentration' produced expected outcome 'surmounts_orthosteric_shift_restores_emax'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B2",
+          "task_id": "B_T8_HELDOUT_BIO_NONCOMPETITIVE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-ALLOSTERIC-NONCOMPETITIVE-BLOCKADE-001",
+            "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-NONCOMPETITIVE-BLOCKADE (Allosteric Non-Competitive Receptor Blockade) --HAS_FORMULA--> FORMULA:NONCOMPETITIVE-CEILING-LAW (Non-Competitive V_max Depression Law)"
+          ],
+          "inferred_constraints": [
+            "Action: administer_allosteric_reversal_agent",
+            "v = (V_max / (1 + [I]/K_i)) * [S] / (K_m + [S]); escalating [S] CANNOT restore V_max -> action = ADMINISTER_ALLOSTERIC_REVERSAL_AGENT (never escalate_agonist_concentration)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "administer_allosteric_reversal_agent",
+          "predicted_consequence": "restores_active_catalytic_complex_vmax",
+          "is_held_out": true,
+          "ground_truth_action": "administer_allosteric_reversal_agent",
+          "ground_truth_consequence": "restores_active_catalytic_complex_vmax",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "restores_active_catalytic_complex_vmax",
+            "diagnostic": "VERIFIED PASS: Action 'administer_allosteric_reversal_agent' produced expected outcome 'restores_active_catalytic_complex_vmax'."
+          },
+          "attempts_used": 1
+        }
+      ],
+      "B3": [
+        {
+          "condition": "B3",
+          "task_id": "B_T1_SYS_CYCLIC_CACHE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
+          ],
+          "ontology_paths": [
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--HAS_FORMULA-- STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
+          ],
+          "inferred_constraints": [
+            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
+            "Requires C_global > 0 (allocated) and TTL_expired == 0",
+            "Action: partition_per_stage",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
+            "Global capacity sweeps remain flat until C_total >= S * w_stage",
+            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": false,
+          "ground_truth_action": "partition_per_stage",
+          "ground_truth_consequence": "hit_rate_rises_to_48_pct",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "hit_rate_rises_to_48_pct",
+            "diagnostic": "VERIFIED PASS: Action 'partition_per_stage' produced expected outcome 'hit_rate_rises_to_48_pct'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B3",
+          "task_id": "B_T2_SYS_TTL_STALENESS",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-TTL-EXPIRATION (Time-to-Live (TTL) Staleness Expiration) --HAS_FORMULA--> FORMULA:TTL-REFRESH-LAW (TTL Horizon Condition)"
+          ],
+          "inferred_constraints": [
+            "Partitioning per stage has 0% effect when Delta_t > tau",
+            "Action: extend_ttl",
+            "If TTL_expired > 0.5 * misses and occupancy < 0.5 and Delta_t > TTL, then action = EXTEND_TTL_AND_REFRESH (never partition_per_stage)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "extend_ttl",
+          "predicted_consequence": "ttl_misses_eliminated",
+          "is_held_out": false,
+          "ground_truth_action": "extend_ttl",
+          "ground_truth_consequence": "ttl_misses_eliminated",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "ttl_misses_eliminated",
+            "diagnostic": "VERIFIED PASS: Action 'extend_ttl' produced expected outcome 'ttl_misses_eliminated'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B3",
+          "task_id": "B_T3_SYS_4LANE_PREFETCH",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-PREFETCH-4LANE-LOSS-002",
+            "MEM-OBS-PREFETCH-1LANE-WIN-001",
+            "MEM-OBS-BIO-CONFLICT-NULL-002",
+            "MEM-OBS-BIO-CONFLICT-FAST-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+          ],
+          "ontology_paths": [
+            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --ENTAILS_CONSTRAINT--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule)",
+            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --DEPENDS_ON--> STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap)",
+            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --ENTAILS_CONSTRAINT--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule) <--HAS_FORMULA-- STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap)",
+            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --DEPENDS_ON--> STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap) --HAS_FORMULA--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule)"
+          ],
+          "inferred_constraints": [
+            "single_lane_serial_io -> enable_sync_prefetch",
+            "multi_lane_batched_overlap -> disable_sync_prefetch_use_async_overlap",
+            "If lanes == 1: enable_sync_prefetch (+10.2% speedup); if lanes >= 4: disable_sync_prefetch_use_async_overlap (avoids -4.2% barrier stall).",
+            "If lanes == 1: enable_sync_prefetch (+10.2% speedup); if lanes >= 4: disable_sync_prefetch_use_async_overlap (avoids -4.2% barrier stall).",
+            "If lanes == 1: enable_sync_prefetch (+10.2% speedup); if lanes >= 4: disable_sync_prefetch_use_async_overlap (avoids -4.2% barrier stall)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "disable_sync_prefetch_use_async_overlap",
+          "predicted_consequence": "restores_56_8s_batched_overlap",
+          "is_held_out": false,
+          "ground_truth_action": "disable_sync_prefetch_use_async_overlap",
+          "ground_truth_consequence": "restores_56_8s_batched_overlap",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "restores_56_8s_batched_overlap",
+            "diagnostic": "VERIFIED PASS: Action 'disable_sync_prefetch_use_async_overlap' produced expected outcome 'restores_56_8s_batched_overlap'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B3",
+          "task_id": "B_T4_SYS_RECURRENT_MEMOIZER",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+            "MEM-OBS-PREFETCH-4LANE-LOSS-002",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-OBS-PREFETCH-1LANE-WIN-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-RECURRENT-STATE-MEMOIZATION (Recurrent State Drift vs. Request-Boundary Memoization) --HAS_FORMULA--> FORMULA:STATE-RESET-REPLAY-LAW (Recurrent Memoization Key & Replay Invariant)"
+          ],
+          "inferred_constraints": [
+            "Action: verify_via_request_replay_with_state_reset",
+            "Key(t) = Hash(Layer, Expert, Input_t(S_t)); intra-sequence repeats have S_t != S_{t'}, so test memoizer via full-request A/B/A replay after state reset (or key on prefix-aligned state checkpoints)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "verify_via_request_replay_with_state_reset",
+          "predicted_consequence": "replayed_request_hits_100_pct_3_27x_faster",
+          "is_held_out": false,
+          "ground_truth_action": "verify_via_request_replay_with_state_reset",
+          "ground_truth_consequence": "replayed_request_hits_100_pct_3_27x_faster",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "replayed_request_hits_100_pct_3_27x_faster",
+            "diagnostic": "VERIFIED PASS: Action 'verify_via_request_replay_with_state_reset' produced expected outcome 'replayed_request_hits_100_pct_3_27x_faster'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B3",
+          "task_id": "B_T5_HELDOUT_CDN_POP_SWEEP",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+            "MEM-OBS-SYS-RING-OVERWRITE-001",
+            "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+            "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001"
+          ],
+          "ontology_paths": [
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--HAS_FORMULA-- STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
+            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
+          ],
+          "inferred_constraints": [
+            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
+            "Requires C_global > 0 (allocated) and TTL_expired == 0",
+            "Action: partition_per_stage",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
+            "Global capacity sweeps remain flat until C_total >= S * w_stage",
+            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
+            "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "partition_per_stage",
+          "predicted_consequence": "hit_rate_rises_to_48_pct",
+          "is_held_out": true,
+          "ground_truth_action": "partition_per_stage",
+          "ground_truth_consequence": "hit_rate_rises_to_48_pct",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "hit_rate_rises_to_48_pct",
+            "diagnostic": "VERIFIED PASS: Action 'partition_per_stage' produced expected outcome 'hit_rate_rises_to_48_pct'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B3",
+          "task_id": "B_T6_HELDOUT_BIO_SATURATION",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001",
+            "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+            "MEM-OBS-SYS-TABLE-PLATEAU-002",
+            "MEM-OBS-SYS-RING-OVERWRITE-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-ENZYMATIC-SATURATION (Michaelis-Menten Zero-Order Enzymatic Saturation) --HAS_FORMULA--> FORMULA:MICHAELIS-MENTEN-SATURATION-LAW (Zero-Order Clearance Scaling & Nonlinear Dose Adjustment)"
+          ],
+          "inferred_constraints": [
+            "Action: reduce_infusion_below_vmax",
+            "v = V_max * [S] / (K_m + [S]); when [S] >> K_m (occupancy > 95%), escalating bolus dose causes superlinear half-life expansion -> action = REDUCE_INFUSION_RATE_BELOW_VMAX_AND_INDUCE_COFACTOR."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "reduce_infusion_below_vmax",
+          "predicted_consequence": "prevents_zero_order_accumulation_spike",
+          "is_held_out": true,
+          "ground_truth_action": "reduce_infusion_below_vmax",
+          "ground_truth_consequence": "prevents_zero_order_accumulation_spike",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "prevents_zero_order_accumulation_spike",
+            "diagnostic": "VERIFIED PASS: Action 'reduce_infusion_below_vmax' produced expected outcome 'prevents_zero_order_accumulation_spike'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B3",
+          "task_id": "B_T7_HELDOUT_BIO_COMPETITIVE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001",
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-COMPETITIVE-INHIBITION (Orthosteric Competitive Receptor Inhibition) --HAS_FORMULA--> FORMULA:COMPETITIVE-SURMOUNT-LAW (Competitive Antagonism Surmountability Equation)"
+          ],
+          "inferred_constraints": [
+            "Action: escalate_agonist_concentration",
+            "v = V_max * [S] / (K_m * (1 + [I]/K_i) + [S]); since V_max is unchanged, escalating agonist [S] >> K_m*(1+[I]/K_i) restores 100% E_max -> action = ESCALATE_AGONIST_CONCENTRATION."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "escalate_agonist_concentration",
+          "predicted_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "is_held_out": true,
+          "ground_truth_action": "escalate_agonist_concentration",
+          "ground_truth_consequence": "surmounts_orthosteric_shift_restores_emax",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "surmounts_orthosteric_shift_restores_emax",
+            "diagnostic": "VERIFIED PASS: Action 'escalate_agonist_concentration' produced expected outcome 'surmounts_orthosteric_shift_restores_emax'."
+          },
+          "attempts_used": 1
+        },
+        {
+          "condition": "B3",
+          "task_id": "B_T8_HELDOUT_BIO_NONCOMPETITIVE",
+          "cycle_stages": [
+            "Context",
+            "Direction",
+            "Execution",
+            "Outcome",
+            "Growth"
+          ],
+          "retrieved_memory_ids": [
+            "MEM-CONCEPT-ALLOSTERIC-NONCOMPETITIVE-BLOCKADE-001",
+            "MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001",
+            "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+            "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+            "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+          ],
+          "ontology_paths": [
+            "STEM_CONCEPT:STEM-NONCOMPETITIVE-BLOCKADE (Allosteric Non-Competitive Receptor Blockade) --HAS_FORMULA--> FORMULA:NONCOMPETITIVE-CEILING-LAW (Non-Competitive V_max Depression Law)"
+          ],
+          "inferred_constraints": [
+            "Action: administer_allosteric_reversal_agent",
+            "v = (V_max / (1 + [I]/K_i)) * [S] / (K_m + [S]); escalating [S] CANNOT restore V_max -> action = ADMINISTER_ALLOSTERIC_REVERSAL_AGENT (never escalate_agonist_concentration)."
+          ],
+          "unsupported_inferences": 0,
+          "chosen_action": "administer_allosteric_reversal_agent",
+          "predicted_consequence": "restores_active_catalytic_complex_vmax",
+          "is_held_out": true,
+          "ground_truth_action": "administer_allosteric_reversal_agent",
+          "ground_truth_consequence": "restores_active_catalytic_complex_vmax",
+          "prediction_accurate": true,
+          "verification": {
+            "passed": true,
+            "observed_consequence": "restores_active_catalytic_complex_vmax",
+            "diagnostic": "VERIFIED PASS: Action 'administer_allosteric_reversal_agent' produced expected outcome 'restores_active_catalytic_complex_vmax'."
+          },
+          "attempts_used": 1
+        }
+      ]
+    }
+  },
+  "phase_4_experiment_c": {
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "num_seeds": 5,
+    "accumulation_pre_growth": {
+      "mean": 10.0,
+      "std": 20.0
+    },
+    "accumulation_post_growth": {
+      "mean": 100.0,
+      "std": 0.0
+    },
+    "accumulation_gain_pp": 90.0,
+    "held_out_transfer_pre_growth": {
+      "mean": 26.67,
+      "std": 24.95
+    },
+    "held_out_transfer_post_growth": {
+      "mean": 100.0,
+      "std": 0.0
+    },
+    "held_out_transfer_gain_pp": 73.33,
+    "negative_transfer_rate_pct": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "unverified_leakage_count": 0,
+    "per_seed_runs": [
+      {
+        "seed": 11,
+        "pre_growth_accumulation_pct": 0.0,
+        "post_growth_accumulation_pct": 100.0,
+        "pre_growth_transfer_pct": 33.33,
+        "post_growth_transfer_pct": 100.0,
+        "negative_transfer_guard_pass_pct": 100.0,
+        "negative_transfer_rate_pct": 0.0,
+        "unverified_staged_isolated": true,
+        "promoted_ids": [
+          "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+          "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+        ],
+        "pre_growth_traces": [
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+              "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ]
+      },
+      {
+        "seed": 23,
+        "pre_growth_accumulation_pct": 50.0,
+        "post_growth_accumulation_pct": 100.0,
+        "pre_growth_transfer_pct": 66.67,
+        "post_growth_transfer_pct": 100.0,
+        "negative_transfer_guard_pass_pct": 100.0,
+        "negative_transfer_rate_pct": 0.0,
+        "unverified_staged_isolated": true,
+        "promoted_ids": [
+          "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+          "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+        ],
+        "pre_growth_traces": [
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+              "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ]
+      },
+      {
+        "seed": 37,
+        "pre_growth_accumulation_pct": 0.0,
+        "post_growth_accumulation_pct": 100.0,
+        "pre_growth_transfer_pct": 0.0,
+        "post_growth_transfer_pct": 100.0,
+        "negative_transfer_guard_pass_pct": 100.0,
+        "negative_transfer_rate_pct": 0.0,
+        "unverified_staged_isolated": true,
+        "promoted_ids": [
+          "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+          "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+        ],
+        "pre_growth_traces": [
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+              "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ]
+      },
+      {
+        "seed": 53,
+        "pre_growth_accumulation_pct": 0.0,
+        "post_growth_accumulation_pct": 100.0,
+        "pre_growth_transfer_pct": 33.33,
+        "post_growth_transfer_pct": 100.0,
+        "negative_transfer_guard_pass_pct": 100.0,
+        "negative_transfer_rate_pct": 0.0,
+        "unverified_staged_isolated": true,
+        "promoted_ids": [
+          "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+          "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+        ],
+        "pre_growth_traces": [
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+              "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ]
+      },
+      {
+        "seed": 71,
+        "pre_growth_accumulation_pct": 0.0,
+        "post_growth_accumulation_pct": 100.0,
+        "pre_growth_transfer_pct": 0.0,
+        "post_growth_transfer_pct": 100.0,
+        "negative_transfer_guard_pass_pct": 100.0,
+        "negative_transfer_rate_pct": 0.0,
+        "unverified_staged_isolated": true,
+        "promoted_ids": [
+          "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+          "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+        ],
+        "pre_growth_traces": [
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "keep_shortest_first_order",
+            "expected_action": "order_longest_prefix_first",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "conclude_workload_has_zero_locality",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": false,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
+              "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "pre_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+            ],
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+            ],
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ]
+      }
+    ]
+  },
+  "success_criteria_evaluation": {
+    "A_meaning_beyond_surface_words": true,
+    "B_relationships_and_experience_improve_execution": true,
+    "C_experience_transfers_to_held_out_tasks_without_negative_transfer": true
+  }
+}

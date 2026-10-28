@@ -1,7 +1,7 @@
-# Clover AI v4 (`v4.0.0`)
+# Clover AI v4 (`v4.1.2`)
 
-**Status:** Ready for `v4.0.0` release (`VERSION` = `4.0.0`).  
-**Scope:** The verified seven-layer Clover AI system; the next research experiment is tracked separately as [Observe](../../research/observe/README.md).
+**Status:** Released (`VERSION` = `4.1.2`).  
+**Scope:** The verified seven-layer Clover AI system; the next research experiment is tracked separately as [Observe](../../research/observe/README.md) and [Meaning Development](../experiments/meaning-development/experiment-design.md).
 
 ## What v4 represents
 

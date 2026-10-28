@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## v4.1.2 — 2026-10-29
+
+**Meaning Formation, Grounded Execution & Developmental Growth Pilot, Held-Out SWE-Bench Pro V2 `HARD-51` Verification (`NodeBB-8168c6c4` & `flipt-2ca5dfb3`), Complete-English OOP Reduction (`398 → 5`), and 6-Directory Repository Architecture.** `VERSION` is `4.1.2` and all site `?v=4.1.2` asset cache strings match it.
+
+- **Meaning Formation, Grounded Execution & Developmental Growth Pilot (`docs/experiments/meaning-development/`, `meaning_development_pilot.py`, `test_meaning_development_pilot.py`):**
+  - **Phase 1 (Capability Map):** Audited `CloverMemoryGraphStore`, `CloverOntologyGraph`, `CloverPythonGenerativeCompiler`, and `CloverK3AgentEngine` call paths and documented exact boundaries in `docs/experiments/meaning-development/experiment-design.md`.
+  - **Phase 2 (Experiment A — Form Meaning):** Across a controlled 16-entry multi-domain dataset (`systems` and `pharmacology`) and 11 ontology edges (`9` explicit, `2` Horn-derived `ENTAILS_CONSTRAINT`), achieved `100.0%` (`4/4`) paraphrase concept identification without target-word overlap, `100.0%` (`4/4`, `0` conflations) distinction precision between related concepts (`cyclic-sweep` vs `ttl-expiration`; `competitive` vs `allosteric-noncompetitive`), `0.0%` unsupported-claim rate, `100.0%` provenance/correction/conflict preservation, and `100.0%` (`4/4`) multi-hop graph retrieval recall vs. `25.0%` (`1/4`) for lexical-only BM25 (`+75.0 pp`).
+  - **Phase 3 (Experiment B — Use Meaning to Guide Execution):** Across 8 deterministic remediation tasks (`4` construction-linked + `4` held-out), task completion progressed monotonically across conditions: `B0` (Baseline) `25.0%` (`2/8`) → `B1` (Memory Retrieval Only) `37.5%` (`3/8`) → `B2` (Memory + Symbolic Ontology Horn Inference) `75.0%` (`6/8`, `100.0%` on held-out) → `B3` (Experience-Informed Execution with `corrections/` and `context_scope`) `100.0%` (`8/8`).
+  - **Phase 4 (Experiment C — Develop Through Experience, `5` seeds `11, 23, 37, 53, 71`):** Promoting verified Cycle 1 corrections through `memory_tree/staging/` increased same-domain **Accumulation** from `10.0% ± 20.0%` to `100.0% ± 0.0%` (`+90.0 pp`) and held-out cross-domain **Transfer** (to Networking CIDR/URI filters and Clinical ICD-10 / ELISA assays) from `26.67% ± 24.95%` to `100.0% ± 0.0%` (`+73.33 pp`), with `0.0%` negative transfer on precondition-guard tasks and `0` unverified proposals leaked from `staging/`.
+- **Held-Out SWE-Bench Pro V2 `HARD-51` Multi-Cycle Verification (`NodeBB-8168c6c4` & `flipt-2ca5dfb3`):**
+  - Solved Problem 4 (`NodeBB/NodeBB` `8168c6c4`, JavaScript, `311/311` passed, `REWARD = 1`) and held-out Problem 5 (`flipt-io/flipt` `2ca5dfb3`, Go, `14/14` selected tests and `2/2` `fail_to_pass` tests `TestLoad` & `TestGetxporter` passed in a fresh sandbox, `REWARD = 1`) with NodeBB-specific memory withheld.
+- **Pure File-Backed Memory & Ontology Graph + Complete-English OOP Reduction (`398 → 88 → 24 → 12 → 5`) & 6-Directory Repository Organization:**
+  - Moved all hardcoded `MemoryEntry` objects, ontology vertices/edges, McCulloch–Pitts / Minsky–Papert rules, and SVG templates out of Python into `memory_tree/`, adopted snapshot-pinned `read_epoch`, compiled `CSC/CSR` topology generations, and `ms_paths` with reverse-target pruning.
+  - Completed the 4-stage Object-Oriented reduction (`research/object-oriented-reduction/`), standardized `dataset-*` and `checkpoint-*` hyphenated names, pruned 819 scratch/duplicate files, and organized the repository into 6 clean top-level directories (`assets/`, `benchmarks/`, `clover-kimi-k3/`, `docs/`, `research/`, `scripts/`, `site/`).
+
 ## v4.0.0 — 2026-10-27
 
 **Clover AI v4 (`v4.0.0`) — The 7-Layer Neuro-Symbolic, Compiler-Verified & Memory-Accumulating System.** `VERSION` is `4.0.0` and all site `?v=4.0.0` asset cache strings match it.

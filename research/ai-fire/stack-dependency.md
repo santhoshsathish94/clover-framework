@@ -2,7 +2,7 @@
 
 **Role: architectural risk argument, not a measured deployment result.** Extracted
 from the introductory problem chapter on 2026-09-29. It informs the proposed
-[Clover AI direction](../clover-ai/README.md); it does not describe a completed runtime.
+[Meaning Development experiment](../../docs/experiments/meaning-development/experiment-design.md); it does not describe a completed runtime.
 
 AI monoculture is not only about many organizations using the same model. The more important
 question is how much of the surrounding software stack becomes common.

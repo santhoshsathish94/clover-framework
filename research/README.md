@@ -8,7 +8,7 @@ later conclusions. A document's status describes its role, not whether its outco
 |---|---|---|
 | AI-Fire | [Research summary](ai-fire/README.md) | Dependency and concentration argument; source-ledger work remains open |
 | AI future | [The hypothesis](ai-future/README.md) | Speculation with explicit limits; independent of adopting the framework |
-| Clover AI | [Implementation direction](clover-ai/README.md) | Proposed bounded engineering system, not a completed runtime |
+| Meaning Development | [Experiment design](../docs/experiments/meaning-development/experiment-design.md) & [results](../docs/experiments/meaning-development/results.md) | Controlled pilot testing meaning formation, grounded execution (`B0..B3`), and developmental growth across cycles |
 | Observe | [Experiment brief](observe/README.md) | Reciprocal observation and change; distributed access and learning; hypothesis to test, not a completed system |
 | Kimi K3 | [Investigation index](k3/README.md) | Model derivation, hardware measurements, experiments, and handoff records |
 | Foundational Papers (1943–2017) | [11-paper study guide](../docs/runtime-context/foundational-papers-1943-to-2017/foundations-11-papers-human-guide.md) | Executable replications and mathematical verifiers across `foundational-papers-1943-to-2017/` |
