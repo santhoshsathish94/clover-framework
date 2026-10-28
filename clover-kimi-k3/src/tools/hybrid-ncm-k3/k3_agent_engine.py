@@ -1703,10 +1703,26 @@ class CloverK3AgentEngine:
         # 1. Load Kimi K3 GPU MoE Experts (`libk3_gpu_experts.so` across `cuda:0, 1, 5, 4` BEFORE PyTorch fragments VRAM)
         self.k3_experts = k3_experts_runner or K3GPUExpertsRunner.get_instance(max_n=512)
 
-        # 2. Load HybridAgent-8B-Agentic on `dev_ha` (`cuda:2`, `cuda:3`, or `cuda:6`)
+        # 2. Load HybridAgent-8B-Agentic on `dev_ha` (`cuda:2`, `cuda:3`, `cuda:6`, or `cpu` with fbgemm int8 on MLP blocks)
+        is_cpu_ha = (self.dev_ha.type == "cpu")
+        ha_load_dtype = torch.float32 if is_cpu_ha else torch.bfloat16
         self.ha_model, self.ha_tok = load_hybrid_agent(
-            "togethercomputer/HybridAgent-8B-Agentic", dtype=torch.bfloat16, device=self.dev_ha, require_hybridlink=True
+            "togethercomputer/HybridAgent-8B-Agentic", dtype=ha_load_dtype, device=self.dev_ha, require_hybridlink=True
         )
+        if is_cpu_ha and os.environ.get("CLOVER_DISABLE_CPU_INT8", "0") != "1":
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                torch.backends.quantized.engine = "fbgemm"
+                # Quantize the 36 SwiGLU MLP blocks (`layer.mlp`, ~70% of parameters) to int8 while keeping
+                # `self_attn` (RoPE Q/K/V), `lm_head`, and `hybridlink` in full float32 precision.
+                layers_mod = getattr(getattr(self.ha_model.backbone, "model", None), "layers", [])
+                for dec_layer in layers_mod:
+                    mlp_mod = getattr(dec_layer, "mlp", None)
+                    if mlp_mod is not None:
+                        torch.ao.quantization.quantize_dynamic(
+                            mlp_mod, {nn.Linear}, dtype=torch.qint8, inplace=True
+                        )
         self.ha_tok.padding_side = "right"
         self.lat_open_id = special_token_id(self.ha_tok, ENTRY_ANCHOR)
         self.lat_close_id = special_token_id(self.ha_tok, EXIT_ANCHOR)
@@ -1925,7 +1941,7 @@ class CloverK3AgentEngine:
 
         # 0. Ontology-Guided Neuro-Symbolic GraphRAG retrieval (`[E#] Entity record` + `[P#] Relationship path`)
         ont_evidence = []
-        if ont_enabled and not has_verified_ws_tools:
+        if ont_enabled and not has_verified_ws_tools and not is_short_greeting_or_ack(raw_user_q):
             t_ont0 = time.perf_counter()
             ont_evidence = self.ontology_retriever.retrieve(raw_user_q, max_entities=4, max_paths=6)
             if ont_evidence:
@@ -1951,6 +1967,7 @@ class CloverK3AgentEngine:
             and not has_verified_ws_tools
             and not no_mem_graph
             and not has_attached_mem_pkg
+            and not is_short_greeting_or_ack(raw_user_q)
         ):
             t_mem0 = time.perf_counter()
             mem_pkg = retrieve_relevant_memory_package(self.memory_graph, raw_user_q)
@@ -2023,8 +2040,8 @@ class CloverK3AgentEngine:
                 ]
                 return sudoku_plans, min_lat, "sudoku_solved", tool_calls_log
             tool_obs_parts.append(
-                f"Verified Python Calculation Result:\n{py_res}\n"
-                f"Instruction: State these exact verified numbers and final amounts clearly in your response across W1:, W2: and end with '#### {py_res}'."
+                f"Verified Python Calculation Result (already executed by `<python>`): {py_res}\n"
+                f"Instruction: Do NOT say 'I will use the Python interpreter' or 'Let me calculate'. State the verified calculation result ({py_res}) directly in one concise sentence on `W1:` and end with '#### {py_res}'."
             )
 
         raw_low = raw_user_q.lower()
@@ -2176,7 +2193,7 @@ class CloverK3AgentEngine:
         else:
             msgs.append({"role": "user", "content": "hi"})
             msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
-            if raw_user_q.lower().rstrip("?!.") != "can you really help me":
+            if not is_short_greeting_or_ack(raw_user_q) and raw_user_q.lower().rstrip("?!.") != "can you really help me":
                 msgs.append({"role": "user", "content": "can you really help me"})
                 msgs.append({
                     "role": "assistant",
@@ -2234,6 +2251,10 @@ class CloverK3AgentEngine:
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        elif self.dev_ha.type == "cpu":
+            # On CPU servers, use 4-6 continuous <latent> reasoning steps for interactive responsiveness
+            min_lat = min(min_lat, 4)
+            max_lat = min(max_lat, 6)
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
             prefix_str = base_chat + "Let me think carefully and reply directly to the user." + ENTRY_ANCHOR
@@ -2443,7 +2464,14 @@ class CloverK3AgentEngine:
                         )
                         corr_ids = self.ha_tok(corr_prompt, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
                         out = backbone(input_ids=corr_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
-                        p.py_tool.execute(code_str).strip()
+                        past_kv = out.past_key_values
+                        next_logits = out.logits[:, -1, :]
+                        gen_ids = self.ha_tok.encode(kept_with_hint, add_special_tokens=False) if kept_with_hint else []
+                        continue
+
+            if PYTHON_CLOSE in txt_so_far and not any(t["tool"] == "python" for t in tool_calls_log):
+                code_str = txt_so_far.split(PYTHON_OPEN)[-1].split(PYTHON_CLOSE)[0].strip()
+                py_res = self.py_tool.execute(code_str).strip()
                 tool_calls_log.append({"tool": "python", "input": code_str, "result": py_res})
                 obs_tokens = self.ha_tok(f"\nVerified Result: {py_res}\nW1:", add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
                 out = backbone(input_ids=obs_tokens, past_key_values=past_kv, use_cache=True, return_dict=True)
@@ -2515,7 +2543,10 @@ class CloverK3AgentEngine:
                     valid_lines_so_far = parse_and_split_plans(
                         "W1: " + "\n".join(lines), user_prompt, self.k3_tok, max_bpe=32, max_windows=24
                     )
-                    has_real_content = bool(valid_lines_so_far) and valid_lines_so_far != ["Hello! How can I help you today?"]
+                    has_real_content = bool(valid_lines_so_far) and valid_lines_so_far not in (
+                        ["Hello! How can I help you today?"],
+                        ["Unable to process this request right now."],
+                    )
 
                     has_list_items = any(
                         ln.startswith(("•", "-", "*")) or bool(re.match(r"^[A-Za-z0-9 ]{2,25}:\s+\S", ln))
@@ -2544,7 +2575,15 @@ class CloverK3AgentEngine:
                             break
                         if len(valid_lines_so_far) >= (3 if "two" in raw_user_q.lower() else 2) and len(last_valid) > 15 and ends_clean_sentence:
                             break
-                    elif is_math_word_problem and has_real_content and ("####" in last_ln or "final answer" in last_ln):
+                    elif (is_math_word_problem or py_code is not None) and has_real_content and (
+                        "####" in last_ln
+                        or "final answer" in last_ln
+                        or (
+                            not is_struct
+                            and valid_lines_so_far[-1].strip().endswith((".", "!"))
+                            and any(ch.isdigit() for ch in valid_lines_so_far[-1])
+                        )
+                    ):
                         break
                     elif is_mcq and len(valid_lines_so_far) >= 2 and valid_lines_so_far[-1].endswith((".", "!", "?")):
                         break

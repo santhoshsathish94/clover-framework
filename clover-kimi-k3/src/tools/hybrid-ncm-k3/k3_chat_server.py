@@ -2450,10 +2450,11 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 else:
                     non_img_attachments.append(att)
 
+            default_cands = 1 if getattr(STATE.k3_experts, "is_cpu_backend", False) else 8
             try:
-                cands = max(1, min(16, int(payload.get("cands", 8))))
+                cands = max(1, min(16, int(payload.get("cands", default_cands))))
             except Exception:
-                cands = 8
+                cands = default_cands
             remember = bool(payload.get("remember", True))
             if not prompt and not image_b64 and not non_img_attachments:
                 self._send_json({"error": "Empty prompt"}, code=400)
@@ -2526,7 +2527,8 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             messages = payload.get("messages", [])
             stream = bool(payload.get("stream", False))
             req_model = str(payload.get("model") or "clover-kimi-k3")
-            cands = int(payload.get("cands", 8))
+            default_cands_v1 = 1 if getattr(STATE.k3_experts, "is_cpu_backend", False) else 8
+            cands = int(payload.get("cands", default_cands_v1))
             available_tools = payload.get("tools") or []
             tool_choice = payload.get("tool_choice")
             req_id_hdr = (
