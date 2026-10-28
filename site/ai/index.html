@@ -15,6 +15,59 @@
 <meta name="theme-color" content="#0a6a5f">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="stylesheet" href="../styles.css?v=4.0.0">
+<style>
+  [hidden] { display: none !important; }
+  .clover-sidebar { transform: none; transition: margin-left 0.2s ease; }
+  .clover-topbar__right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+  .clover-cpu-pill {
+    display: inline-flex; align-items: center; gap: 0.38rem;
+    font-size: 0.76rem; font-weight: 650; line-height: 1.2;
+    padding: 0.28rem 0.62rem; border-radius: 999px;
+    background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;
+    white-space: nowrap;
+  }
+  .clover-cpu-pill::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: #d97706; flex-shrink: 0;
+  }
+  .clover-cpu-disclaimer {
+    flex: 0 0 auto; width: 100%;
+    background: #fffbeb; border-bottom: 1px solid #fcd34d; color: #78350f;
+    padding: 0.52rem 1.25rem; font-size: 0.84rem; line-height: 1.45;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .clover-cpu-disclaimer__inner {
+    display: block; width: min(820px, 100%); max-width: min(820px, 100%); margin: 0;
+  }
+  .clover-cpu-disclaimer strong { color: #92400e; font-weight: 700; }
+  .clover-composer-note {
+    display: block; width: min(820px, 100%); max-width: min(820px, 100%); margin: 0.38rem 0 0; padding: 0 0.25rem;
+    font-size: 0.76rem; line-height: 1.35; color: var(--muted); text-align: center;
+  }
+  .clover-loader-note {
+    margin: 0.25rem 0 0; font-size: 0.8rem; line-height: 1.38; color: var(--muted);
+  }
+  @media (max-width: 760px) {
+    .clover-sidebar {
+      position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
+      width: min(272px, 80vw); flex: 0 0 auto;
+      margin-left: 0 !important; transform: translateX(-105%) !important;
+      box-shadow: none !important; pointer-events: none;
+    }
+    .clover-sidebar.is-mobile-open {
+      margin-left: 0 !important; transform: translateX(0) !important;
+      box-shadow: 0 12px 34px rgba(20, 24, 29, 0.18) !important; pointer-events: auto !important;
+    }
+    .clover-cpu-pill { font-size: 0.71rem; padding: 0.22rem 0.5rem; }
+    .clover-cpu-disclaimer { padding: 0.45rem 0.85rem; font-size: 0.78rem; line-height: 1.38; }
+    .clover-composer-note { font-size: 0.71rem; margin-top: 0.3rem; }
+  }
+  @media (max-width: 480px) {
+    .clover-cpu-pill { font-size: 0.68rem; padding: 0.2rem 0.45rem; }
+    .clover-cpu-disclaimer { padding: 0.38rem 0.7rem; font-size: 0.74rem; line-height: 1.34; }
+    .clover-composer-note { font-size: 0.68rem; }
+  }
+</style>
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body class="clover-app-body">
@@ -26,7 +79,6 @@
   </defs>
 </svg>
 
-<div id="clover-live-shell">
 <main id="main" class="clover-app" tabindex="-1">
   <div class="clover-sidebar-backdrop" id="clover-sidebar-backdrop" onclick="k3CloseMobileSidebar()"></div>
   <aside class="clover-sidebar" id="clover-sidebar" aria-label="Chat sessions">
@@ -61,6 +113,15 @@
           Clover
         </a>
       </div>
+      <div class="clover-topbar__right">
+        <span class="clover-cpu-pill" id="clover-cpu-pill" title="Clover is running on a CPU server, so responses take longer">CPU Server &middot; Slow Response</span>
+      </div>
+    </div>
+
+    <div class="clover-cpu-disclaimer" id="clover-cpu-disclaimer" role="note" aria-label="CPU server latency disclaimer">
+      <p class="clover-cpu-disclaimer__inner">
+        <strong>CPU Server Disclaimer:</strong> Clover is currently running on a <strong>CPU server</strong> rather than the 8&times; RTX 3090 GPU cluster, so you need <strong>very long patience</strong> while waiting for it to answer (typically <strong>20&ndash;60+ seconds</strong> per response).
+      </p>
     </div>
 
     <div class="clover-stream" id="clover-stream-scroller">
@@ -111,101 +172,15 @@
           </button>
         </div>
       </div>
+      <p class="clover-composer-note">Running on a CPU server &mdash; please have long patience while Clover computes your answer (20&ndash;60+ seconds).</p>
     </div>
   </section>
 </main>
-</div>
-
-<div id="clover-offline-shell" hidden>
-<header class="site-head">
-  <div class="wrap">
-    <a class="brand-icon" href="../ai/" aria-label="Clover" aria-current="page">
-      <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-        <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
-        <use class="clover__leaf is-filled" href="#clover-leaf"/>
-        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>
-        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>
-        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>
-        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
-      </svg>
-    </a>
-    <a class="brand" href="../">Clover <span>Framework</span></a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
-      <span class="nav-toggle__box" aria-hidden="true"><span></span></span>Menu
-    </button>
-    <nav class="site-nav" id="site-nav" aria-label="Primary">
-      <a href="../origin/">Origin</a>
-      <a href="../start/">AGENTS.md</a>
-      <a href="../governance/">Governance</a>
-      <div class="nav-item has-sub">
-        <a href="../evidence/">Evidence</a>
-        <ul class="subnav" aria-label="Evidence">
-          <li><a href="../clover-k3/">Clover</a></li>
-          <li><a href="../evidence/#ev-t1">Contentful API migration</a></li>
-          <li><a href="../evidence/#ev-t2">React memory leak</a></li>
-          <li><a href="../evidence/#ev-t3">Reference implementations</a></li>
-          <li><a href="../evidence/#lessons">Field lessons</a></li>
-        </ul>
-      </div>
-      <a href="../glossary/">Glossary</a>
-      <a href="../author/">Author</a>
-      <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>
-    </nav>
-  </div>
-</header>
-
-<div id="offline-main" class="narrow" style="padding-block: clamp(2.5rem,6vw,4rem) clamp(4.5rem,11vw,8rem)">
-  <p class="note">Status &middot; Maintenance</p>
-  <h1 style="font-size:clamp(1.85rem,4vw,2.5rem)">Clover AI live server is currently offline</h1>
-  <p class="lede"><strong>The live Clover AI server endpoint is currently offline for maintenance. As soon as a Clover AI server (<code>https://api.cloverframework.com</code> or local <code>http://127.0.0.1:8765</code>) is online, this page automatically switches to the interactive Clover AI interface.</strong></p>
-
-  <p>Keeping a dedicated multi-GPU / high-memory machine running 24/7 for a free public web endpoint costs more than an independent,
-    self-funded open-source project can carry continuously. Rather than leaving a broken chat box up when the server
-    is powered down, this page checks server availability automatically and displays this notice while offline.</p>
-
-  <h2>Everything built on the server is open and reproducible</h2>
-  <p>We verified the complete 7-layer <strong>Clover AI v4</strong> stack across the 70-task evaluation
-    suite (<code>33/70 &rarr; 57/70 &rarr; 70/70</code>) and SWE-Bench Pro V2 multi-domain repositories. You can inspect every measurement or spin up the exact same
-    server on your own hardware:</p>
-
-  <dl class="kv kv--wide" style="margin-top:1.4rem">
-    <div>
-      <dt>Architecture &amp; 70-task head-to-head results</dt>
-      <dd><a href="../clover-k3/">Read the Clover AI v4 architecture &amp; benchmark breakdown &rarr;</a></dd>
-    </div>
-    <div>
-      <dt>Source code &amp; one-script machine bootstrap</dt>
-      <dd><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-kimi-k3">clover-kimi-k3/ on GitHub</a>
-        and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/set-up-new-machine.sh">set-up-new-machine.sh</a>.</dd>
-    </div>
-    <div>
-      <dt>All weights, checkpoints &amp; datasets (1.4 TB)</dt>
-      <dd><a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3 on Hugging Face</a>
-        (<code>expert-1..92</code>, <code>trunk-0..92</code>, and all 32 <code>hybrid-ncm-k3/</code> &amp; <code>open-weights/</code> files).</dd>
-    </div>
-    <div>
-      <dt>Raw benchmark logs &amp; v4.0.0 release notes</dt>
-      <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/releases/v4.md">releases/v4.md</a> and
-        <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks/results/1936d4eb0d53">benchmarks/results/1936d4eb0d53/</a>.</dd>
-    </div>
-  </dl>
-
-  <div class="actions" style="margin-top:2rem">
-    <button type="button" class="btn btn--primary" onclick="k3RetryConnection()">Retry server connection</button>
-    <a class="btn" href="../clover-k3/">See Clover AI v4 architecture &amp; evidence &rarr;</a>
-    <a class="btn" href="../">Back to Clover Framework</a>
-    <a class="btn btn--plain" href="../author/">Contact / About the author &rarr;</a>
-  </div>
-</div>
-</div>
 
 <script>
 (function () {
-  var API_CANDIDATES = ['https://api.cloverframework.com', 'https://cloverframework.com', 'http://127.0.0.1:8765'];
+  var API_CANDIDATES = ['https://api.cloverframework.com', 'http://127.0.0.1:8765', 'https://cloverframework.com'];
   var activeBase = 'https://api.cloverframework.com';
-  var serverOnline = true;
-  var liveShellEl = document.getElementById('clover-live-shell');
-  var offlineShellEl = document.getElementById('clover-offline-shell');
   var logEl = document.getElementById('k3-chat-log');
   var streamScroller = document.getElementById('clover-stream-scroller');
   var inputEl = document.getElementById('k3-prompt-in');
@@ -231,7 +206,8 @@
   var CLOVER_LOADER_HTML =
     '<div class="clover-dots-loader" role="status" aria-label="Loading">' +
       '<span>.</span><span>.</span><span>.</span><span>.</span>' +
-    '</div>';
+    '</div>' +
+    '<p class="clover-loader-note">Running on CPU server &mdash; please have long patience while Clover computes your answer (20&ndash;60+ seconds)&hellip;</p>';
 
   var BELOW_ACTIONS_HTML =
     '<div class="k3-below-actions">' +
@@ -259,26 +235,6 @@
       '</button>' +
     '</div>';
 
-  function setLiveMode(isOnline) {
-    serverOnline = !!isOnline;
-    if (serverOnline) {
-      document.body.classList.add('clover-app-body');
-      document.title = 'Clover';
-      if (offlineShellEl) offlineShellEl.hidden = true;
-      if (liveShellEl) liveShellEl.hidden = false;
-      if (window.visualViewport) {
-        document.body.style.height = window.visualViewport.height + 'px';
-      }
-      scrollToBottom();
-    } else {
-      document.body.classList.remove('clover-app-body');
-      document.body.style.height = '';
-      document.title = 'Clover AI — Server Offline for Maintenance — Clover';
-      if (liveShellEl) liveShellEl.hidden = true;
-      if (offlineShellEl) offlineShellEl.hidden = false;
-    }
-  }
-
   function isMobileViewport() {
     return (window.innerWidth || document.documentElement.clientWidth || 1024) <= 760;
   }
@@ -286,33 +242,40 @@
   function syncSidebarBackdrop() {
     if (!sidebarEl || !backdropEl) return;
     var isMobile = isMobileViewport();
-    var isOpen = !sidebarEl.classList.contains('is-collapsed');
-    backdropEl.classList.toggle('is-open', isMobile && isOpen);
+    var isOpen = isMobile && sidebarEl.classList.contains('is-mobile-open');
+    backdropEl.classList.toggle('is-open', isOpen);
   }
 
   window.k3CloseMobileSidebar = function () {
-    if (sidebarEl && isMobileViewport()) {
-      sidebarEl.classList.add('is-collapsed');
+    if (sidebarEl) {
+      sidebarEl.classList.remove('is-mobile-open');
       syncSidebarBackdrop();
     }
   };
 
   window.k3ToggleSidebar = function (ev) {
     if (ev && ev.stopPropagation) ev.stopPropagation();
-    if (sidebarEl) {
+    if (!sidebarEl) return;
+    if (isMobileViewport()) {
+      sidebarEl.classList.toggle('is-mobile-open');
+    } else {
       sidebarEl.classList.toggle('is-collapsed');
-      syncSidebarBackdrop();
     }
+    syncSidebarBackdrop();
   };
 
-  if (isMobileViewport() && sidebarEl) {
-    sidebarEl.classList.add('is-collapsed');
-  }
   syncSidebarBackdrop();
-  window.addEventListener('resize', syncSidebarBackdrop);
+
+  function onViewportChange() {
+    if (!isMobileViewport() && sidebarEl) {
+      sidebarEl.classList.remove('is-mobile-open');
+    }
+    syncSidebarBackdrop();
+  }
+  window.addEventListener('resize', onViewportChange);
 
   document.addEventListener('click', function (ev) {
-    if (!isMobileViewport() || !sidebarEl || sidebarEl.classList.contains('is-collapsed')) return;
+    if (!isMobileViewport() || !sidebarEl || !sidebarEl.classList.contains('is-mobile-open')) return;
     var t = ev.target;
     if (!t) return;
     if (sidebarEl.contains(t)) return;
@@ -320,16 +283,6 @@
     if (toggleBtn && toggleBtn.contains(t)) return;
     window.k3CloseMobileSidebar();
   });
-
-  if (window.visualViewport) {
-    var applyViewportHeight = function () {
-      if (serverOnline) {
-        document.body.style.height = window.visualViewport.height + 'px';
-      }
-    };
-    window.visualViewport.addEventListener('resize', applyViewportHeight);
-    applyViewportHeight();
-  }
 
   function makeSessionId() {
     return 'sess_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
@@ -495,29 +448,17 @@
       }
       try {
         var ctrl = new AbortController();
-        var tid = setTimeout(function () { ctrl.abort(); }, 2500);
+        var tid = setTimeout(function () { ctrl.abort(); }, 8000);
         var r = await fetch(base + '/api/health', { signal: ctrl.signal });
         clearTimeout(tid);
         if (r.ok) {
           activeBase = base;
-          setLiveMode(true);
           return true;
         }
       } catch (e) {}
     }
-    setLiveMode(false);
     return false;
   }
-
-  window.k3RetryConnection = function () {
-    probeBackend();
-  };
-
-  setInterval(function () {
-    if (!serverOnline) {
-      probeBackend();
-    }
-  }, 15000);
 
   function appendMsg(role, html, isPending) {
     if (role === 'bot') {

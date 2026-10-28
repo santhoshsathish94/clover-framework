@@ -978,7 +978,7 @@ body.clover-app-body .site-head {
 }
 .clover-sidebar {
   width: 268px; flex: 0 0 268px; background: var(--soft); border-right: 1px solid var(--line);
-  display: flex; flex-direction: column; min-height: 0; transition: margin-left 0.22s ease, transform 0.22s ease;
+  display: flex; flex-direction: column; min-height: 0; transform: none; transition: margin-left 0.2s ease;
 }
 .clover-sidebar.is-collapsed {
   margin-left: -268px;
@@ -1062,6 +1062,39 @@ body.clover-app-body .site-head {
   display: inline-flex; align-items: center; gap: 0.48rem; font-weight: 700; font-size: 1.02rem; color: var(--ink);
 }
 .clover-topbar__brand svg { width: 22px; height: 22px; }
+.clover-topbar__right {
+  display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
+}
+.clover-cpu-pill {
+  display: inline-flex; align-items: center; gap: 0.38rem;
+  font-size: 0.76rem; font-weight: 650; line-height: 1.2;
+  padding: 0.28rem 0.62rem; border-radius: 999px;
+  background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;
+  white-space: nowrap;
+}
+.clover-cpu-pill::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: #d97706; flex-shrink: 0;
+}
+.clover-cpu-disclaimer {
+  flex: 0 0 auto; width: 100%;
+  background: #fffbeb; border-bottom: 1px solid #fcd34d; color: #78350f;
+  padding: 0.52rem 1.25rem; font-size: 0.84rem; line-height: 1.45;
+  display: flex; align-items: center; justify-content: center;
+}
+.clover-cpu-disclaimer__inner {
+  display: block; width: min(820px, 100%); max-width: min(820px, 100%); margin: 0;
+}
+.clover-cpu-disclaimer strong {
+  color: #92400e; font-weight: 700;
+}
+.clover-composer-note {
+  display: block; width: min(820px, 100%); max-width: min(820px, 100%); margin: 0.38rem 0 0; padding: 0 0.25rem;
+  font-size: 0.76rem; line-height: 1.35; color: var(--muted); text-align: center;
+}
+.clover-loader-note {
+  margin: 0.25rem 0 0; font-size: 0.8rem; line-height: 1.38; color: var(--muted);
+}
 .clover-stream {
   flex: 1; min-height: 0; overflow-y: auto; padding: 1.5rem 1.25rem 1rem;
   display: flex; flex-direction: column; align-items: center;
@@ -1126,8 +1159,12 @@ body.clover-app-body .site-head {
   .clover-sidebar {
     position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
     width: min(272px, 80vw); flex: 0 0 auto;
-    margin-left: 0; transform: translateX(0);
-    box-shadow: 0 12px 34px rgba(20, 24, 29, 0.18);
+    margin-left: 0 !important; transform: translateX(-105%);
+    box-shadow: none; pointer-events: none;
+  }
+  .clover-sidebar.is-mobile-open {
+    margin-left: 0 !important; transform: translateX(0) !important;
+    box-shadow: 0 12px 34px rgba(20, 24, 29, 0.18) !important; pointer-events: auto !important;
   }
   .clover-sidebar.is-collapsed {
     margin-left: 0 !important; transform: translateX(-105%) !important;
@@ -1138,18 +1175,24 @@ body.clover-app-body .site-head {
     background: rgba(20, 24, 29, 0.35); backdrop-filter: blur(2px);
   }
   .clover-topbar { flex: 0 0 auto; padding: 0.55rem 0.85rem; }
+  .clover-cpu-pill { font-size: 0.71rem; padding: 0.22rem 0.5rem; }
+  .clover-cpu-disclaimer { padding: 0.45rem 0.85rem; font-size: 0.78rem; line-height: 1.38; }
   .clover-stream { flex: 1 1 auto; min-height: 0; padding: 0.85rem 0.75rem 0.65rem; }
   .clover-composer-wrap {
     flex: 0 0 auto; width: 100%;
-    padding: 0.45rem 0.65rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.45rem 0.65rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--line); background: var(--bg);
   }
   .clover-composer-card { padding: 0.42rem 0.52rem; border-radius: 14px; }
+  .clover-composer-note { font-size: 0.71rem; margin-top: 0.3rem; }
   .k3-msg, .k3-bot-turn { max-width: 92%; }
 }
 @media (max-width: 480px) {
   .clover-send-btn span { display: none; }
   .clover-send-btn { padding: 0 0.65rem; }
+  .clover-cpu-pill { font-size: 0.68rem; padding: 0.2rem 0.45rem; }
+  .clover-cpu-disclaimer { padding: 0.38rem 0.7rem; font-size: 0.74rem; line-height: 1.34; }
+  .clover-composer-note { font-size: 0.68rem; }
   .k3-msg, .k3-bot-turn { max-width: 95%; font-size: 0.93rem; }
 }
 
