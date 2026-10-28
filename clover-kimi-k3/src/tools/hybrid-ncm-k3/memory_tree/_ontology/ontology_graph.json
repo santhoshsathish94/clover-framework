@@ -700,5 +700,136 @@
     "STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE": ["refraction", "wavelength", "interference", "puddle"],
     "STEM_CONCEPT:STEM-CIRCLE-POINT-REFLECTION": ["triple", "circle", "origin"],
     "STEM_CONCEPT:STEM-PROFIT-BREAKEVEN": ["lemon", "lemons", "breakeven", "earning"]
-  }
+  },
+  "entity_classes": [
+    ["CVE", "Vulnerability", "NVD", "Publicly disclosed vulnerability with CVSS metrics."],
+    ["CWE", "Weakness", "MITRE_CWE", "Software or hardware weakness type."],
+    ["CWE_CATEGORY", "WeaknessCategory", "MITRE_CWE", "Organisational grouping of weaknesses."],
+    ["CAPEC", "AttackPattern", "MITRE_CAPEC", "Common attack pattern exploiting weaknesses."],
+    ["CPE", "Product", "NIST_CPE", "Platform or product (part:vendor:product:version)."],
+    ["CLOVER_ENTITY", "CloverComponent", "CLOVER_SPEC", "Clover Framework & Clover Kimi K3 architecture, stages, and operating boundaries."],
+    ["PAPER", "ResearchPaper", "RESEARCH_CORPUS", "Authoritative research paper or specification."],
+    ["STEM_CONCEPT", "ScientificConcept", "STEM_ONTOLOGY", "Authoritative scientific/mathematical concept, law, or domain invariant."],
+    ["FORMULA", "MathematicalLaw", "STEM_ONTOLOGY", "Exact mathematical/physical formula, constraint, or conservation law."],
+    ["DOC_RECORD", "DocumentEntity", "SESSION_STORE", "Structured factual entity extracted from authoritative or session documents."]
+  ],
+  "explicit_relations": [
+    ["CAUSED_BY", "hasWeakness", ["CVE", "DOC_RECORD"], ["CWE", "STEM_CONCEPT", "DOC_RECORD"], false, "Vulnerability or incident is caused by weakness/root cause."],
+    ["HAS_CATEGORY", "hasWeaknessCategory", ["CVE"], ["CWE_CATEGORY"], false, "Vulnerability mapped to weakness category."],
+    ["AFFECTS", "affects", ["CVE", "DOC_RECORD"], ["CPE", "DOC_RECORD"], false, "Vulnerability or event affects product/system."],
+    ["EXPLOITED_BY", "exploitedBy", ["CWE"], ["CAPEC"], false, "Weakness is exploited by attack pattern."],
+    ["RELATED_TO", "relatedTo", ["CWE", "CPE", "STEM_CONCEPT", "CLOVER_ENTITY", "DOC_RECORD"], ["CWE", "CPE", "STEM_CONCEPT", "CLOVER_ENTITY", "DOC_RECORD"], false, "Hierarchical or associative relation (ChildOf, VersionOf, PartOf)."],
+    ["RELATED_TO_CAPEC", "relatedToAttack", ["CAPEC"], ["CAPEC"], false, "Relation between attack patterns."],
+    ["DEPENDS_ON", "dependsOn", ["CLOVER_ENTITY", "STEM_CONCEPT", "DOC_RECORD"], ["CLOVER_ENTITY", "PAPER", "STEM_CONCEPT", "FORMULA", "DOC_RECORD"], false, "Architectural or conceptual dependency."],
+    ["HAS_FORMULA", "hasFormula", ["STEM_CONCEPT", "CLOVER_ENTITY"], ["FORMULA"], false, "Concept is governed by exact mathematical formula or invariant."],
+    ["GOVERNED_BY", "governedBy", ["CLOVER_ENTITY", "STEM_CONCEPT", "DOC_RECORD"], ["CLOVER_ENTITY", "FORMULA", "PAPER"], false, "Entity is governed by operating rule, law, or specification."]
+  ],
+  "derived_relations": [
+    ["EXPLOITED_BY_ATTACK", "exploitedByAttack", ["CVE"], ["CAPEC"], true, "Rule (i) transitive chaining: CAUSED_BY(v, w) AND EXPLOITED_BY(w, a)."],
+    ["POTENTIALLY_AFFECTS", "potentiallyAffects", ["CVE"], ["CPE"], true, "Rule (ii) multi-hop product impact: AFFECTS(v, p1) AND RELATED_TO:VersionOf(p1, p2)."],
+    ["ENTAILS_CONSTRAINT", "entailsConstraint", ["STEM_CONCEPT", "CLOVER_ENTITY", "CVE", "DOC_RECORD"], ["FORMULA", "CLOVER_ENTITY", "STEM_CONCEPT"], true, "Rule (iv) transitive constraint entailment: DEPENDS_ON/CAUSED_BY(x, y) AND (HAS_FORMULA|GOVERNED_BY)(y, z)."]
+  ],
+  "priority_traversal_edges": [
+    "HAS_FORMULA",
+    "ENTAILS_CONSTRAINT",
+    "GOVERNED_BY",
+    "CAUSED_BY",
+    "EXPLOITED_BY",
+    "EXPLOITED_BY_ATTACK",
+    "DEPENDS_ON",
+    "RELATED_TO",
+    "RELATED_TO_CAPEC",
+    "POTENTIALLY_AFFECTS",
+    "AFFECTS",
+    "HAS_CATEGORY"
+  ],
+  "mcq_verification_rules": [
+    {
+      "id": "DIVISOR-CLOSURE-LAW",
+      "required_entities": ["STEM_CONCEPT:STEM-COMMON-DIVISORS", "FORMULA:DIVISOR-CLOSURE-LAW"],
+      "kind": "divisor_closure_non_zero",
+      "explanation_template": "Verified by [FORMULA:DIVISOR-CLOSURE-LAW]: CommonDivisors(x, y) = Divisors(gcd(x, y)) cannot contain 0 and must contain all positive and negative divisors of {abs_max}: {choice}."
+    },
+    {
+      "id": "LOGISTIC-GROWTH-EQ",
+      "required_entities": ["STEM_CONCEPT:STEM-LOGISTIC-CARRYING-CAPACITY"],
+      "kind": "choice_phrase_conjunction",
+      "must_contain_all": ["carrying capacity"],
+      "must_contain_any": ["reduce", "lower"],
+      "explanation_template": "Verified by [STEM_CONCEPT:STEM-LOGISTIC-CARRYING-CAPACITY] & [FORMULA:LOGISTIC-GROWTH-EQ]: Permanently controlling a logistic population requires reducing the environment's carrying capacity K ({choice})."
+    },
+    {
+      "id": "BINOMIAL-RMS-LAW",
+      "required_entities": ["STEM_CONCEPT:STEM-PHOTON-BINOMIAL-DETECTOR"],
+      "kind": "choice_phrase_conjunction",
+      "must_contain_all": ["10", "deviation of about 3"],
+      "must_contain_any": ["10"],
+      "explanation_template": "Verified by [FORMULA:BINOMIAL-RMS-LAW]: For N=100, p=0.1, mean = Np = 10 and rms deviation = sqrt(100 * 0.1 * 0.9) = 3 ({choice})."
+    },
+    {
+      "id": "THIN-FILM-CONSTRUCTIVE-EQ",
+      "required_entities": ["STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE"],
+      "kind": "choice_phrase_conjunction",
+      "must_contain_all": ["600 nm"],
+      "must_contain_any": ["600 nm"],
+      "explanation_template": "Verified by [FORMULA:THIN-FILM-CONSTRUCTIVE-EQ]: Because n_air (1.0) < n_oil (1.5) > n_water (1.33), only the top interface inverts phase, giving lambda = 2*n*d / (m + 0.5) = 1500 nm / 2.5 = 600 nm ({choice})."
+    }
+  ],
+  "symbolic_math_constraint_rules": [
+    {
+      "id": "CIRCLE-REFLECTION-EQ",
+      "pattern": "x\\^2\\s*\\+\\s*y\\^2\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s+is\\s+reflected\\s+in\\s+the\\s+point\\s*\\(\\s*([\\-0-9.]+)\\s*,\\s*([\\-0-9.]+)\\s*\\)",
+      "vars": ["r2", "p", "q"],
+      "code_template": "r2, p, q = {r2:g}, {p:g}, {q:g}\nb, c, d = int(-4 * p), int(-4 * q), int(4 * p**2 + 4 * q**2 - r2)\nprint(f'({b}, {c}, {d})')\n",
+      "eval_expr": "f'({int(round(-4*p))}, {int(round(-4*q))}, {int(round(4*p*p + 4*q*q - r2))})'"
+    },
+    {
+      "id": "STRICT-PROFIT-YEARS-EQ",
+      "requires_any": ["starts earning money", "start earning money"],
+      "sub_patterns": {
+        "init_cost": "cost\\s*\\$\\s*(\\d+(?:\\.\\d+)?)\\s*to\\s*plant",
+        "grow": "grow\\s*(\\d+(?:\\.\\d+)?)\\s+\\w+,\\s*which\\s+\\w+\\s+can\\s+sell\\s+for\\s*\\$?\\s*(\\d+(?:\\.\\d+)?)",
+        "upkeep": "costs\\s*\\$\\s*(\\d+(?:\\.\\d+)?)\\s*a\\s*year"
+      },
+      "code_template": "init_cost, net_annual = {init_cost:g}, {units:g} * {price:g} - {upkeep:g}\nyears = int(init_cost // net_annual) + 1\nprint(years)\n",
+      "eval_expr": "str(int(math.floor(init_cost / (units * price - upkeep))) + 1)"
+    },
+    {
+      "id": "HOUSE-FLIP-PROFIT-EQ",
+      "pattern": "buys\\s+a\\s+house\\s+for\\s+\\$([\\d,]+).*?puts\\s+in\\s+\\$([\\d,]+)\\s+in\\s+repairs.*?increased\\s+the\\s+value\\s+of\\s+the\\s+house\\s+by\\s+(\\d+(?:\\.\\d+)?)%",
+      "vars": ["buy", "rep", "inc_pct"],
+      "code_template": "buy, rep, inc = {buy:g}, {rep:g}, {inc_pct:g} / 100.0\nprofit = int(round(buy * (1.0 + inc) - (buy + rep)))\nprint(profit)\n",
+      "eval_expr": "str(int(round(buy * (1.0 + inc_pct / 100.0) - (buy + rep))))"
+    },
+    {
+      "id": "PIECEWISE-ROUNDTRIP-DIST-EQ",
+      "requires_all": ["turns around", "how far is he from home"],
+      "sub_patterns": {
+        "out": "drives\\s+for\\s+(\\d+(?:\\.\\d+)?)\\s+hours\\s+at\\s+a\\s+speed\\s+of\\s+(\\d+(?:\\.\\d+)?)\\s*mph",
+        "tot": "get\\s+home\\s+in\\s+(\\d+(?:\\.\\d+)?)\\s+hours",
+        "wait": "first\\s+(\\d+(?:\\.\\d+)?)\\s+hours\\s+in\\s+standstill",
+        "mid": "half-hour\\s+driving\\s+at\\s+a\\s+speed\\s+of\\s+(\\d+(?:\\.\\d+)?)\\s*mph",
+        "last": "going\\s+at\\s+(\\d+(?:\\.\\d+)?)\\s*mph"
+      },
+      "code_template": "d_out = {t1:g} * {v1:g}\nd_back = 0.5 * {v2:g} + ({t_tot:g} - {t_wait:g} - 0.5) * {v3:g}\nprint(int(round(abs(d_out - d_back))))\n",
+      "eval_expr": "str(int(round(abs(t1 * v1 - (0.5 * v2 + (t_tot - t_wait - 0.5) * v3)))))"
+    },
+    {
+      "id": "THIN-FILM-CONSTRUCTIVE-WAVELENGTH-EQ",
+      "requires_any": ["layer of oil", "thin-film", "thin film"],
+      "sub_patterns": {
+        "d_nm": "thickness\\s*(?:of\\s*)?(\\d+(?:\\.\\d+)?)\\s*nm",
+        "n_film": "oil\\s*\\([^)]*?(?:index of refraction|n)\\s*=?\\s*(\\d+\\.\\d+)"
+      },
+      "code_template": "n_film, d_nm = {n_film:g}, {d_nm:g}\nlam = int(round(2.0 * n_film * d_nm / 2.5))\nprint(f'{lam} nm')\n",
+      "eval_expr": "f'{int(round(next(2.0 * n_film * d_nm / (m + 0.5) for m in range(10) if 380.0 <= (2.0 * n_film * d_nm / (m + 0.5)) <= 750.0)))} nm'"
+    }
+  ],
+  "turing_diagonal_cues": [
+    ["opposite of whatever", "verifier"],
+    ["invert your", "verdict on this prompt"],
+    ["if your verifier accepts", "reject it"],
+    ["predict your own", "and do the opposite"],
+    ["contradict the output of", "this exact turn"]
+  ]
 }

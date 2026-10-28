@@ -51,7 +51,7 @@ from live_web_search import LiveWebSearchTool
 from train_latent_bridge import encode_batch_rh
 from k3_fast_chat import (
     CHAT_SYSTEM_PROMPT, CHAT_PLAN_PROMPT, GRAMMAR_CONNECTOR_WORDS, CLOVER_AGENTS_MD_KERNEL,
-    load_default_clover_context, is_short_greeting_or_ack, is_conversational_meta_or_confirmation,
+    _MEMORY_TREE_RULES, load_default_clover_context, is_short_greeting_or_ack, is_conversational_meta_or_confirmation,
     is_structured_or_multi_part_prompt, parse_and_split_plans, join_rendered_windows
 )
 from k3_ontology_graph import (
@@ -681,66 +681,7 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
     )
     if not is_local_workspace_inspection and any(
         kw in low
-        for kw in (
-            "find relevant research",
-            "find research",
-            "recent ai",
-            "latest ai",
-            "recent development",
-            "latest research",
-            "recent trends",
-            "latest trends",
-            "trends in science",
-            "gemini 4",
-            "opus 5",
-            "gpt-6",
-            "gpt 6",
-            "astra",
-            "what is clover",
-            "who is clover",
-            "explain clover",
-            "tell me about clover",
-            "how does clover",
-            "clover framework",
-            "clover kimi",
-            "clover k3",
-            "clover-k3",
-            "agents.md",
-            "agents md",
-            "kimi k3",
-            "ncm",
-            "next-concept",
-            "next concept",
-            "hybridagent",
-            "hybrid agent",
-            "hazy research",
-            "new gpu",
-            "gpus launched",
-            "gpu launched",
-            "latest gpu",
-            "ai chip",
-            "ai chips",
-            "blackwell",
-            "rubin",
-            "mi300",
-            "mi325",
-            "mi350",
-            "arxiv",
-            "wikipedia",
-            "google",
-            "search ",
-            "search for",
-            "search the web",
-            "browse",
-            "look up",
-            "recent papers",
-            "find papers",
-            "what is new in",
-            "news about",
-            "give links",
-            "with links",
-            "and links",
-        )
+        for kw in (_MEMORY_TREE_RULES.get("search_trigger_keywords") or ())
     ):
         return p
     return None
@@ -752,18 +693,11 @@ def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
     raw_q = _extract_raw_user_query(user_prompt)
     p = raw_q.lower()
 
-    # 1. Two-train Leeds-London problem
-    if "leeds" in p and "london" in p and "84" in p and "70" in p:
-        return (
-            "d_total = 168\n"
-            "v1, v2 = 84, 70\n"
-            "d_headstart = v1 * 0.5\n"
-            "gap = d_total - d_headstart\n"
-            "t_meet_hr = gap / (v1 + v2)\n"
-            "t_meet_min = round(t_meet_hr * 60)\n"
-            "dist_london = round(v2 * t_meet_hr)\n"
-            "print(f'Headstart distance: {d_headstart:.0f} miles; Remaining gap at 09:40: {gap:.0f} miles; Combined speed: {v1+v2} mph; Time to meet: {t_meet_min} minutes (at 10:{40+t_meet_min-60:02d}); Distance from London: {dist_london} miles')"
-        )
+    # 1. Domain calculation rules loaded from `memory_tree/_rules/memory_retrieval_rules.json`
+    for py_rule in (_MEMORY_TREE_RULES.get("python_tool_rules") or ()):
+        req_all = [str(w).lower() for w in (py_rule.get("requires_all") or ())]
+        if req_all and all(w in p for w in req_all) and py_rule.get("script"):
+            return str(py_rule["script"])
 
     # 2. Compound interest (including follow-ups like 'Now do the same for 8 years')
     is_compound = ("compound" in p) or (
@@ -901,10 +835,23 @@ def match_verified_code_template(user_prompt: str):
     return None
 
 
+def _load_visual_templates() -> dict:
+    vt_fp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory_tree", "_rules", "visual_templates.json")
+    if os.path.exists(vt_fp):
+        try:
+            with open(vt_fp, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+_VISUAL_TEMPLATES = _load_visual_templates()
+
+
 def render_creative_scene_svg(subject: str):
-    """Generates a rich, distinct SVG scene illustration (`760x420`) tailored to the requested subject
-    (snake/serpent, forest/woods, desert/dunes, space/galaxy, ocean/beach, futuristic cityscape, or Clover mountain sunrise).
-    Returns `None` if the requested subject is not one of the supported SVG scene families so Clover never fakes an unrelated picture."""
+    """Loads SVG scene templates from `memory_tree/_rules/visual_templates.json` and renders the requested scene.
+    Returns `None` if the requested subject is not one of the supported SVG scene families."""
     clean_subj = re.sub(
         r"^(?:just\s+|then\s+|please\s+|now\s+|ok\s+|okay\s+|can\s+you\s+|could\s+you\s+)*(?:create|generate|draw|make|show|paint|render|design)\s*"
         r"(?:me\s+)?(?:an?\s+|one\s+(?:of\s+)?|something\s+|anything\s+|another\s+)?(?:image|picture|illustration|art|scene|drawing|svg|it|one|that)?\s*(?:of\s+|for\s+|with\s+)?",
@@ -915,7 +862,6 @@ def render_creative_scene_svg(subject: str):
     clean_subj = re.sub(r"\s+(?:image|picture|illustration|drawing|photo|please)$", "", clean_subj, flags=re.IGNORECASE).strip(" .!?")
     clean_subj = re.sub(r"^(?:an?|the)\s+", "", clean_subj, flags=re.IGNORECASE).strip(" .!?")
 
-    # Deterministic variation seed from the prompt text so different prompts shift palette/stars/elements
     h_seed = sum((idx + 1) * ord(ch) for idx, ch in enumerate(subject.lower())) % 997
 
     if not clean_subj or clean_subj.lower() in (
@@ -925,345 +871,31 @@ def render_creative_scene_svg(subject: str):
         clean_subj = "Emerald Clover Meadow at Sunrise"
 
     s_low = clean_subj.lower()
-
-    # 0. Snake / Cobra / Serpent / Viper / Python (animal)
-    if any(k in s_low for k in ("snake", "cobra", "serpent", "viper", "boa", "anaconda", "rattlesnake")):
-        title_str = f"Emerald Viper Snake — {clean_subj.title()}"
-        svg_markup = (
-            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Emerald Snake Illustration">'
-            '<defs>'
-            '<linearGradient id="snBg" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#042f2e"/><stop offset="60%" stop-color="#064e3b"/><stop offset="100%" stop-color="#022c22"/>'
-            '</linearGradient>'
-            '<linearGradient id="snBody" x1="0" y1="0" x2="1" y2="1">'
-            '<stop offset="0%" stop-color="#34d399"/><stop offset="50%" stop-color="#10b981"/><stop offset="100%" stop-color="#047857"/>'
-            '</linearGradient>'
-            '<linearGradient id="snBelly" x1="0" y1="0" x2="1" y2="0">'
-            '<stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#a7f3d0"/>'
-            '</linearGradient>'
-            '</defs>'
-            '<rect width="760" height="420" rx="12" fill="url(#snBg)"/>'
-            '<circle cx="620" cy="85" r="46" fill="#fef08a" opacity="0.22"/>'
-            '<path d="M 0 355 Q 190 330 380 350 T 760 345 L 760 420 L 0 420 Z" fill="#021f18"/>'
-            '<path d="M 135 340 C 85 335, 95 270, 175 272 C 265 274, 295 338, 390 332 C 485 326, 515 250, 435 235 C 355 220, 325 170, 415 145 C 480 128, 535 140, 560 150" '
-            'fill="none" stroke="#064e3b" stroke-width="44" stroke-linecap="round"/>'
-            '<path d="M 135 340 C 85 335, 95 270, 175 272 C 265 274, 295 338, 390 332 C 485 326, 515 250, 435 235 C 355 220, 325 170, 415 145 C 480 128, 535 140, 560 150" '
-            'fill="none" stroke="url(#snBody)" stroke-width="34" stroke-linecap="round"/>'
-            '<path d="M 135 340 C 85 335, 95 270, 175 272 C 265 274, 295 338, 390 332 C 485 326, 515 250, 435 235 C 355 220, 325 170, 415 145 C 480 128, 535 140, 560 150" '
-            'fill="none" stroke="url(#snBelly)" stroke-width="10" stroke-dasharray="6 14" stroke-linecap="round" opacity="0.75"/>'
-            '<path d="M 135 340 Q 95 352 68 332" fill="none" stroke="#10b981" stroke-width="14" stroke-linecap="round"/>'
-            '<polygon points="545,126 608,144 598,168 542,172 526,148" fill="#10b981" stroke="#047857" stroke-width="2.5"/>'
-            '<circle cx="576" cy="144" r="5.5" fill="#fef08a"/><ellipse cx="577" cy="144" rx="1.8" ry="4.5" fill="#030712"/>'
-            '<path d="M 606 155 L 642 152 L 656 144 M 642 152 L 656 162" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>'
-            f'<text x="380" y="396" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#d1fae5">{title_str}</text>'
-            '</svg>'
-        )
-        cap_str = f"Generated SVG illustration: {title_str} (coiled emerald serpent with patterned scales, golden vertical-slit eye, and forked tongue)."
-        plans = [
-            f"Here is an SVG illustration of a {clean_subj.lower()}:",
-            "\nScene Elements: A coiled emerald viper snake with patterned scales, a raised head, a golden vertical-slit eye, and a forked red tongue.",
-        ]
-        return "svg_scene", title_str, [{"type": "svg", "title": title_str, "svg": svg_markup, "caption": cap_str}], plans
-
-    # 1. Forest / Woods / Trees / Jungle / Pine / Woodland / Natural Landscape
-    if any(k in s_low for k in ("forest", "tree", "trees", "woods", "woodland", "jungle", "pine", "rainforest", "redwood", "grove", "natural landscape", "nature")):
-        title_str = f"Misty Pine Forest — {clean_subj.title()}"
-        sun_cx = 360 + (h_seed % 60)
-        svg_markup = (
-            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Forest Landscape Illustration">'
-            '<defs>'
-            '<linearGradient id="forSky" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#064e3b"/><stop offset="50%" stop-color="#0d9488"/><stop offset="100%" stop-color="#fef08a"/>'
-            '</linearGradient>'
-            '<linearGradient id="mistGrad" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#ccfbf1" stop-opacity="0.45"/><stop offset="100%" stop-color="#065f46" stop-opacity="0.05"/>'
-            '</linearGradient>'
-            '<linearGradient id="riverGrad" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#5eead4"/><stop offset="100%" stop-color="#0f766e"/>'
-            '</linearGradient>'
-            '</defs>'
-            '<rect width="760" height="420" rx="12" fill="url(#forSky)"/>'
-            f'<circle cx="{sun_cx}" cy="135" r="56" fill="#fef9c3" opacity="0.92"/>'
-            '<polygon points="0,290 140,165 290,290" fill="#0f766e" opacity="0.55"/>'
-            '<polygon points="220,290 390,145 560,290" fill="#115e59" opacity="0.6"/>'
-            '<polygon points="470,290 630,170 760,290" fill="#0f766e" opacity="0.55"/>'
-            '<rect x="0" y="235" width="760" height="70" fill="url(#mistGrad)"/>'
-            '<g fill="#065f46" opacity="0.85">'
-            '<polygon points="45,320 75,185 105,320"/><polygon points="52,250 75,160 98,250"/>'
-            '<polygon points="125,325 160,170 195,325"/><polygon points="132,245 160,142 188,245"/>'
-            '<polygon points="215,320 245,195 275,320"/>'
-            '<polygon points="485,320 518,185 551,320"/><polygon points="492,248 518,155 544,248"/>'
-            '<polygon points="575,325 612,165 649,325"/><polygon points="584,240 612,138 640,240"/>'
-            '<polygon points="665,320 700,180 735,320"/>'
-            '</g>'
-            '<rect x="0" y="310" width="760" height="110" fill="#022c22"/>'
-            '<polygon points="345,310 415,310 485,420 275,420" fill="url(#riverGrad)" opacity="0.88"/>'
-            '<g fill="#042f2e">'
-            '<polygon points="10,365 48,195 86,365"/><polygon points="18,275 48,162 78,275"/><rect x="43" y="360" width="10" height="28" fill="#1e293b"/>'
-            '<polygon points="90,375 132,175 174,375"/><polygon points="98,270 132,140 166,270"/><rect x="127" y="370" width="10" height="28" fill="#1e293b"/>'
-            '<polygon points="185,360 222,205 259,360"/><polygon points="192,282 222,175 252,282"/>'
-            '<polygon points="505,360 542,200 579,360"/><polygon points="512,280 542,170 572,280"/>'
-            '<polygon points="590,375 634,172 678,375"/><polygon points="600,268 634,136 668,268"/><rect x="629" y="370" width="10" height="28" fill="#1e293b"/>'
-            '<polygon points="680,365 720,190 760,365"/><polygon points="688,275 720,158 752,275"/>'
-            '</g>'
-            f'<text x="380" y="398" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#d1fae5">{clean_subj.title()}</text>'
-            '</svg>'
-        )
-        cap_str = f"Generated SVG forest landscape illustration: {title_str}."
-        plans = [
-            f"Here is an SVG forest landscape illustration of {clean_subj.lower()}:",
-            "\nScene Elements: Layered evergreen pine trees, morning valley mist, sunlit mountain ridges, and a winding forest stream.",
-        ]
-
-    # 2. Desert / Dunes / Canyon / Cactus / Sahara
-    elif any(k in s_low for k in ("desert", "dune", "dunes", "canyon", "cactus", "sahara", "oasis", "arid")):
-        title_str = f"Golden Desert Dunes — {clean_subj.title()}"
-        svg_markup = (
-            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Desert Landscape Illustration">'
-            '<defs>'
-            '<linearGradient id="desSky" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#7c2d12"/><stop offset="55%" stop-color="#ea580c"/><stop offset="100%" stop-color="#fde047"/>'
-            '</linearGradient>'
-            '</defs>'
-            '<rect width="760" height="420" rx="12" fill="url(#desSky)"/>'
-            '<circle cx="520" cy="135" r="62" fill="#fef9c3" opacity="0.92"/>'
-            '<path d="M 0 285 Q 190 215 410 275 T 760 250 L 760 420 L 0 420 Z" fill="#d97706" opacity="0.88"/>'
-            '<path d="M 0 325 Q 260 260 520 320 T 760 295 L 760 420 L 0 420 Z" fill="#b45309"/>'
-            '<path d="M 0 365 Q 180 325 390 365 T 760 345 L 760 420 L 0 420 Z" fill="#78350f"/>'
-            '<g fill="#064e3b">'
-            '<rect x="165" y="235" width="12" height="75" rx="6"/>'
-            '<path d="M 145 265 Q 145 280 165 280 L 165 272 Q 153 272 153 260 L 153 248 L 145 248 Z"/>'
-            '<path d="M 197 255 Q 197 272 177 272 L 177 264 Q 189 264 189 252 L 189 240 L 197 240 Z"/>'
-            '</g>'
-            f'<text x="380" y="398" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#fef3c7">{clean_subj.title()}</text>'
-            '</svg>'
-        )
-        cap_str = f"Generated SVG desert landscape illustration: {title_str}."
-        plans = [
-            f"Here is an SVG desert landscape illustration of {clean_subj.lower()}:",
-            "\nScene Elements: Sweeping golden sand dunes, a warm desert sunset sky, and a silhouetted saguaro cactus.",
-        ]
-
-    # 3. Space / Galaxy / Nebula / Planet / Cosmos / Rocket / Night Sky
-    elif any(k in s_low for k in ("space", "galaxy", "nebula", "planet", "cosmos", "astronaut", "rocket", "spaceship", "star", "moon", "universe", "sci-fi", "scifi")):
+    for tpl in (_VISUAL_TEMPLATES.get("scene_templates") or []):
+        kws = [str(k).lower() for k in (tpl.get("keywords") or [])]
+        if not any(k in s_low for k in kws):
+            continue
         has_rocket = any(rk in s_low for rk in ("rocket", "spaceship", "shuttle", "launch", "astronaut"))
-        title_str = f"Rocket in Deep Space — {clean_subj.title()}" if has_rocket else f"Cosmic Scene — {clean_subj.title()}"
-        ring_angle = -18 + (h_seed % 15)
-        rocket_svg = (
-            '<g transform="translate(235, 225) rotate(-32)">'
-            '<path d="M -14 48 Q 0 92 14 48 Z" fill="#f97316" opacity="0.92"/>'
-            '<path d="M -8 48 Q 0 76 8 48 Z" fill="#fef08a"/>'
-            '<polygon points="-18,28 -34,52 -14,44" fill="#ef4444"/>'
-            '<polygon points="18,28 34,52 14,44" fill="#ef4444"/>'
-            '<path d="M 0 -52 C 18 -24 20 18 18 44 L -18 44 C -20 18 -18 -24 0 -52 Z" fill="#f8fafc" stroke="#0d9488" stroke-width="2.5"/>'
-            '<path d="M 0 -52 C 9 -36 12 -22 13 -14 L -13 -14 C -12 -22 -9 -36 0 -52 Z" fill="#ef4444"/>'
-            '<circle cx="0" cy="4" r="9" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5"/>'
-            '<circle cx="-3" cy="1" r="2.5" fill="#e0f2fe"/>'
-            '</g>'
-        ) if has_rocket else ""
-        svg_markup = (
-            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Space and Galaxy Illustration">'
-            '<defs>'
-            '<linearGradient id="spBg" x1="0" y1="0" x2="1" y2="1">'
-            '<stop offset="0%" stop-color="#030712"/><stop offset="50%" stop-color="#0f172a"/><stop offset="100%" stop-color="#064e3b"/>'
-            '</linearGradient>'
-            '<radialGradient id="nebGlow" cx="0.65" cy="0.4" r="0.45">'
-            '<stop offset="0%" stop-color="#14b8a6" stop-opacity="0.45"/>'
-            '<stop offset="55%" stop-color="#6366f1" stop-opacity="0.22"/>'
-            '<stop offset="100%" stop-color="#030712" stop-opacity="0"/>'
-            '</radialGradient>'
-            '<linearGradient id="planetGrad" x1="0" y1="0" x2="1" y2="1">'
-            '<stop offset="0%" stop-color="#5eead4"/><stop offset="55%" stop-color="#0d9488"/><stop offset="100%" stop-color="#042f2e"/>'
-            '</linearGradient>'
-            '</defs>'
-            '<rect width="760" height="420" rx="12" fill="url(#spBg)"/>'
-            '<rect width="760" height="420" rx="12" fill="url(#nebGlow)"/>'
-            '<g fill="#ffffff">'
-            '<circle cx="70" cy="55" r="1.5" opacity="0.9"/><circle cx="145" cy="95" r="1.1" opacity="0.7"/>'
-            '<circle cx="220" cy="42" r="2.0" opacity="0.95"/><circle cx="310" cy="78" r="1.3" opacity="0.8"/>'
-            '<circle cx="460" cy="48" r="1.6" opacity="0.85"/><circle cx="540" cy="92" r="1.2" opacity="0.75"/>'
-            '<circle cx="660" cy="52" r="2.1" opacity="0.9"/><circle cx="710" cy="140" r="1.4" opacity="0.8"/>'
-            '<circle cx="95" cy="240" r="1.5" opacity="0.75"/><circle cx="185" cy="310" r="1.8" opacity="0.85"/>'
-            '<circle cx="620" cy="295" r="1.6" opacity="0.8"/><circle cx="690" cy="350" r="1.3" opacity="0.7"/>'
-            '</g>'
-            '<circle cx="160" cy="115" r="26" fill="#fef08a" opacity="0.92"/>'
-            f'<g transform="translate(510, 215) rotate({ring_angle})">'
-            '<ellipse cx="0" cy="0" rx="155" ry="36" fill="none" stroke="#5eead4" stroke-width="6" opacity="0.55"/>'
-            '<ellipse cx="0" cy="0" rx="132" ry="28" fill="none" stroke="#f59e0b" stroke-width="2.5" opacity="0.65"/>'
-            '</g>'
-            '<circle cx="510" cy="215" r="76" fill="url(#planetGrad)"/>'
-            '<circle cx="625" cy="115" r="18" fill="#cbd5e1"/>'
-            '<circle cx="620" cy="111" r="4" fill="#94a3b8"/><circle cx="632" cy="121" r="3" fill="#94a3b8"/>'
-            f'{rocket_svg}'
-            f'<text x="380" y="392" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#ccfbf1">{clean_subj.title()}</text>'
-            '</svg>'
-        )
-        cap_str = f"Generated SVG cosmic illustration: {title_str}."
-        plans = [
-            f"Here is an SVG cosmic illustration of {clean_subj}:",
-            (
-                "\nScene Elements: A sleek spacecraft rocket with twin booster fins, illuminated viewport, and exhaust plume soaring past a ringed teal exoplanet and deep-space nebula."
-                if has_rocket
-                else "\nScene Elements: A ringed teal exoplanet, companion moon, and binary star glow set against a deep-space nebula."
-            ),
-        ]
+        title_tmpl = str(tpl.get("rocket_title_template" if has_rocket and tpl.get("rocket_title_template") else "title_template") or "{subj_title}")
+        title_str = title_tmpl.format(subj_title=clean_subj.title(), clean_subj=clean_subj)
+        fmt_vars = {
+            "title_str": title_str,
+            "subj_title": clean_subj.title(),
+            "subj_low": clean_subj.lower(),
+            "clean_subj": clean_subj,
+            "sun_cx": 360 + (h_seed % 60),
+            "sun_x": 560 + (h_seed % 80),
+            "ring_angle": -18 + (h_seed % 15),
+            "rocket_svg": str(tpl.get("rocket_svg") or "") if has_rocket else "",
+        }
+        svg_markup = str(tpl.get("svg_template") or "").format(**fmt_vars)
+        cap_str = str(tpl.get("caption_template") or "{title_str}").format(**fmt_vars)
+        raw_plans = tpl.get("rocket_plans_template") if (has_rocket and tpl.get("rocket_plans_template")) else (tpl.get("plans_template") or [])
+        plans = [str(p).format(**fmt_vars) for p in raw_plans]
+        media = [{"type": "svg", "title": title_str, "svg": svg_markup, "caption": cap_str}]
+        return "svg_scene", title_str, media, plans
 
-    # 2. Ocean / Sea / Beach / Waves / Island
-    elif any(k in s_low for k in ("ocean", "sea", "beach", "wave", "island", "coast", "harbor", "lake", "water", "sailboat")):
-        title_str = f"Coastal Horizon — {clean_subj.title()}"
-        svg_markup = (
-            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coastal Ocean Illustration">'
-            '<defs>'
-            '<linearGradient id="ocSky" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#0f766e"/><stop offset="55%" stop-color="#5eead4"/><stop offset="100%" stop-color="#fef08a"/>'
-            '</linearGradient>'
-            '<linearGradient id="ocSea" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#0d9488"/><stop offset="50%" stop-color="#0f766e"/><stop offset="100%" stop-color="#042f2e"/>'
-            '</linearGradient>'
-            '</defs>'
-            '<rect width="760" height="245" fill="url(#ocSky)"/>'
-            '<circle cx="380" cy="195" r="58" fill="#fde047" opacity="0.95"/>'
-            '<polygon points="40,245 145,175 265,245" fill="#065f46" opacity="0.85"/>'
-            '<polygon points="520,245 615,185 725,245" fill="#065f46" opacity="0.8"/>'
-            '<rect x="0" y="245" width="760" height="175" fill="url(#ocSea)"/>'
-            '<path d="M 0 275 Q 95 262 190 275 T 380 275 T 570 275 T 760 275" fill="none" stroke="#99f6e4" stroke-width="3" opacity="0.75"/>'
-            '<path d="M 0 315 Q 120 300 240 315 T 480 315 T 760 315" fill="none" stroke="#5eead4" stroke-width="2.5" opacity="0.65"/>'
-            '<path d="M 0 358 Q 140 344 280 358 T 560 358 T 760 358" fill="none" stroke="#ccfbf1" stroke-width="2" opacity="0.55"/>'
-            '<g opacity="0.55" stroke="#fef08a" stroke-width="2.5" stroke-linecap="round">'
-            '<line x1="335" y1="258" x2="425" y2="258"/><line x1="348" y1="272" x2="412" y2="272"/>'
-            '<line x1="360" y1="286" x2="400" y2="286"/><line x1="370" y1="300" x2="390" y2="300"/>'
-            '</g>'
-            f'<text x="380" y="396" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="600" fill="#e6f2f0">{clean_subj.title()}</text>'
-            '</svg>'
-        )
-        cap_str = f"Generated SVG coastal illustration: {title_str}."
-        plans = [
-            f"Here is an SVG coastal ocean illustration of {clean_subj}:",
-            "\nScene Elements: Golden horizon sun, twin coastal headlands, and layered turquoise ocean waves.",
-        ]
-
-    # 3. City / Futuristic / Skyline / Metropolis
-    elif any(k in s_low for k in ("city", "futuristic", "cyberpunk", "skyline", "metropolis", "tower", "building")):
-        title_str = f"Futuristic Cityscape — {clean_subj.title()}"
-        svg_markup = (
-            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Futuristic Cityscape Illustration">'
-            '<defs>'
-            '<linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#071a24"/>'
-            '<stop offset="45%" stop-color="#0a4f48"/>'
-            '<stop offset="78%" stop-color="#17907f"/>'
-            '<stop offset="100%" stop-color="#f59e0b"/>'
-            '</linearGradient>'
-            '<linearGradient id="sunGrad" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#fef08a"/>'
-            '<stop offset="55%" stop-color="#f59e0b"/>'
-            '<stop offset="100%" stop-color="#ea580c"/>'
-            '</linearGradient>'
-            '<linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#083b36"/>'
-            '<stop offset="100%" stop-color="#04151b"/>'
-            '</linearGradient>'
-            '</defs>'
-            '<rect width="760" height="310" fill="url(#skyGrad)"/>'
-            '<circle cx="110" cy="48" r="1.4" fill="#e6f2f0" opacity="0.8"/>'
-            '<circle cx="230" cy="32" r="1.8" fill="#ffffff" opacity="0.9"/>'
-            '<circle cx="420" cy="40" r="1.3" fill="#e6f2f0" opacity="0.75"/>'
-            '<circle cx="590" cy="28" r="1.7" fill="#ffffff" opacity="0.85"/>'
-            '<circle cx="685" cy="60" r="1.5" fill="#e6f2f0" opacity="0.8"/>'
-            '<circle cx="380" cy="220" r="78" fill="url(#sunGrad)" opacity="0.92"/>'
-            '<g fill="#0c2d33" opacity="0.65">'
-            '<rect x="30" y="150" width="46" height="160"/>'
-            '<rect x="85" y="120" width="52" height="190"/>'
-            '<rect x="155" y="165" width="40" height="145"/>'
-            '<rect x="545" y="135" width="50" height="175"/>'
-            '<rect x="610" y="115" width="58" height="195"/>'
-            '<rect x="680" y="155" width="48" height="155"/>'
-            '</g>'
-            '<g fill="#071f24" stroke="#17907f" stroke-width="1.2">'
-            '<polygon points="60,310 60,110 82,82 104,110 104,310"/>'
-            '<rect x="122" y="135" width="54" height="175" rx="3"/>'
-            '<polygon points="195,310 195,78 225,42 255,78 255,310"/>'
-            '<line x1="225" y1="42" x2="225" y2="16" stroke="#5eead4" stroke-width="2.2"/>'
-            '<circle cx="225" cy="15" r="3.5" fill="#fef08a"/>'
-            '<rect x="272" y="128" width="58" height="182" rx="4"/>'
-            '<polygon points="348,310 356,64 380,34 404,64 412,310"/>'
-            '<line x1="380" y1="34" x2="380" y2="10" stroke="#fef08a" stroke-width="2.5"/>'
-            '<rect x="430" y="118" width="60" height="192" rx="4"/>'
-            '<polygon points="508,310 508,88 536,56 564,88 564,310"/>'
-            '<rect x="582" y="140" width="56" height="170" rx="3"/>'
-            '<polygon points="654,310 654,104 680,76 706,104 706,310"/>'
-            '</g>'
-            '<g fill="#5eead4" opacity="0.82">'
-            '<rect x="208" y="95" width="34" height="4"/><rect x="208" y="110" width="34" height="4"/><rect x="208" y="125" width="34" height="4"/><rect x="208" y="140" width="34" height="4"/><rect x="208" y="155" width="34" height="4"/>'
-            '<rect x="364" y="80" width="32" height="4" fill="#fef08a"/><rect x="364" y="96" width="32" height="4"/><rect x="364" y="112" width="32" height="4"/><rect x="364" y="128" width="32" height="4"/><rect x="364" y="144" width="32" height="4"/>'
-            '<rect x="442" y="134" width="36" height="4"/><rect x="442" y="150" width="36" height="4"/><rect x="442" y="166" width="36" height="4"/><rect x="442" y="182" width="36" height="4"/>'
-            '<rect x="520" y="102" width="32" height="4"/><rect x="520" y="118" width="32" height="4"/><rect x="520" y="134" width="32" height="4"/><rect x="520" y="150" width="32" height="4"/>'
-            '</g>'
-            '<path d="M 0 262 Q 190 232 380 260 T 760 254" fill="none" stroke="#5eead4" stroke-width="2.5" opacity="0.85"/>'
-            '<path d="M 0 270 Q 190 240 380 268 T 760 262" fill="none" stroke="#f59e0b" stroke-width="1.6" opacity="0.75"/>'
-            '<rect x="290" y="247" width="28" height="7" rx="3.5" fill="#fef08a"/>'
-            '<rect x="510" y="253" width="24" height="6" rx="3" fill="#5eead4"/>'
-            '<rect x="0" y="310" width="760" height="110" fill="url(#waterGrad)"/>'
-            '<line x1="0" y1="310" x2="760" y2="310" stroke="#5eead4" stroke-width="2"/>'
-            '<g opacity="0.45" stroke="#f59e0b" stroke-width="2" stroke-linecap="round">'
-            '<line x1="330" y1="324" x2="430" y2="324"/><line x1="342" y1="338" x2="418" y2="338"/>'
-            '<line x1="354" y1="352" x2="406" y2="352"/><line x1="365" y1="366" x2="395" y2="366"/>'
-            '</g>'
-            '<g opacity="0.35" stroke="#5eead4" stroke-width="1.6">'
-            '<line x1="180" y1="330" x2="265" y2="330"/><line x1="490" y1="334" x2="575" y2="334"/>'
-            '<line x1="120" y1="358" x2="220" y2="358"/><line x1="530" y1="362" x2="640" y2="362"/>'
-            '</g>'
-            '</svg>'
-        )
-        cap_str = f"Generated SVG illustration: {title_str} (neon skybridges, solar spire towers, and waterfront reflections)."
-        plans = [
-            f"Here is a custom illustration of {clean_subj.lower()}:",
-            "\nSkyline & Architecture: Spire towers with illuminated skybridges, elevated maglev transit tracks, and a central solar-core tower against a sunset sky.",
-            "\nWaterfront Reflection: Teal and amber city lights reflected across the harbor below.",
-        ]
-
-    # 4. Mountain / Sunrise / Sunset / Meadow / Clover Botanical Scene
-    elif any(k in s_low for k in ("mountain", "mountains", "peak", "peaks", "hill", "hills", "sunrise", "sunset", "meadow", "clover", "landscape", "valley")):
-        title_str = f"Illustrated Scene — {clean_subj.title()}"
-        sun_x = 560 + (h_seed % 80)
-        svg_markup = (
-            '<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustrated Scene">'
-            '<defs>'
-            '<linearGradient id="bgSky" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#063732"/><stop offset="58%" stop-color="#0a6a5f"/><stop offset="100%" stop-color="#d1fae5"/>'
-            '</linearGradient>'
-            '<path id="cLeaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z" fill="#10b981" stroke="#ecfdf5" stroke-width="1.5"/>'
-            '</defs>'
-            '<rect width="760" height="420" rx="12" fill="url(#bgSky)"/>'
-            f'<circle cx="{sun_x}" cy="105" r="52" fill="#fef08a" opacity="0.92"/>'
-            '<polygon points="0,335 165,175 340,335" fill="#065f46" opacity="0.82"/>'
-            '<polygon points="210,335 415,142 615,335" fill="#064e3b" opacity="0.92"/>'
-            '<polygon points="465,335 635,190 760,335" fill="#065f46" opacity="0.86"/>'
-            '<rect x="0" y="330" width="760" height="90" fill="#022c22"/>'
-            '<path d="M 380 265 C 380 295 380 315 380 342" fill="none" stroke="#6ee7b7" stroke-width="4" stroke-linecap="round"/>'
-            '<g transform="translate(310,132) scale(1.4)">'
-            '<use href="#cLeaf"/><use href="#cLeaf" transform="rotate(72 50 44)"/><use href="#cLeaf" transform="rotate(144 50 44)"/>'
-            '<use href="#cLeaf" transform="rotate(216 50 44)"/><use href="#cLeaf" transform="rotate(288 50 44)"/>'
-            '</g>'
-            f'<text x="380" y="390" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="700" fill="#ecfdf5">{clean_subj.title()}</text>'
-            '</svg>'
-        )
-        cap_str = f"Generated SVG illustration: {title_str}."
-        plans = [
-            f"Here is an SVG illustration of {clean_subj.lower()}:",
-            "\nVisual Composition: Mountain peaks at sunrise with the five-leaf Clover emblem rendered as a scalable vector illustration.",
-        ]
-    else:
-        # Honest fallback when the user asks to draw a subject outside our vector scene templates: never fake a mountain/clover picture!
-        return None
-
-    media = [{
-        "type": "svg",
-        "title": title_str,
-        "svg": svg_markup,
-        "caption": cap_str,
-    }]
-    return "svg_scene", title_str, media, plans
+    return None
 
 
 def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, history=None):
@@ -1434,53 +1066,18 @@ def match_and_execute_visual_output(user_prompt: str, py_tool: PythonTool, histo
         "print('__CLOVER_IMG_B64__:' + b64)\n"
     )
 
-    # 1. Architecture / Pipeline / Flowchart SVG diagram
+    # 1. Architecture / Pipeline / Flowchart SVG diagram (loaded from `memory_tree/_rules/visual_templates.json`)
     if any(k in p for k in ("diagram", "flowchart", "architecture")) and not any(k in p for k in ("plot", "bar chart", "pie chart", "line chart", "sine", "cosine")):
-        svg_markup = (
-            '<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Clover Kimi K3 Architecture Diagram">'
-            '<defs><marker id="k3arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">'
-            '<path d="M 0 1 L 10 5 L 0 9 z" fill="#0a6a5f"/></marker></defs>'
-            '<rect width="760" height="210" rx="12" fill="#f6f8fa" stroke="#cfd6de"/>'
-            '<text x="380" y="28" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#14181d">Clover Kimi K3 — Native HybridAgent + 93-Layer MoE + NCM Pipeline</text>'
-            '<rect x="20" y="55" width="150" height="95" rx="9" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"/>'
-            '<text x="95" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0a6a5f">1. Input &amp; Tools</text>'
-            '<text x="95" y="104" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">Text / MoonViT3d</text>'
-            '<text x="95" y="120" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">&lt;search&gt; &amp; &lt;python&gt;</text>'
-            '<text x="95" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#66717e">256k Session Context</text>'
-            '<line x1="170" y1="102" x2="205" y2="102" stroke="#0a6a5f" stroke-width="2" marker-end="url(#k3arr)"/>'
-            '<rect x="210" y="55" width="165" height="95" rx="9" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"/>'
-            '<text x="292" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0a6a5f">2. 93-Layer Kimi K3</text>'
-            '<text x="292" y="104" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">69 KDA + 24 MLA Trunks</text>'
-            '<text x="292" y="120" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">92 MoE Layers (d=7168)</text>'
-            '<text x="292" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#66717e">GPUs 0..5 (3,312 Experts)</text>'
-            '<line x1="375" y1="102" x2="410" y2="102" stroke="#0a6a5f" stroke-width="2" marker-end="url(#k3arr)"/>'
-            '<rect x="415" y="55" width="155" height="95" rx="9" fill="#ffffff" stroke="#0a6a5f" stroke-width="2"/>'
-            '<text x="492" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0a6a5f">3. K3 HybridLink</text>'
-            '<text x="492" y="104" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">R_K3(h): 7168 &rarr; 7168</text>'
-            '<text x="492" y="120" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#39424d">Combo + Expert Bridge</text>'
-            '<text x="492" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#66717e">96-Slot Dual Prefix (d=384)</text>'
-            '<line x1="570" y1="102" x2="605" y2="102" stroke="#0a6a5f" stroke-width="2" marker-end="url(#k3arr)"/>'
-            '<rect x="610" y="55" width="130" height="95" rx="9" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2"/>'
-            '<text x="675" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0a6a5f">4. Parallel NCM</text>'
-            '<text x="675" y="104" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#14181d">11-Level VQ-VAE</text>'
-            '<text x="675" y="120" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#14181d">Pointer Decoder</text>'
-            '<text x="675" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#0a6a5f">163,840 K3 Vocab</text>'
-            '<text x="380" y="184" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#39424d">8 &times; RTX 3090 GPUs &bull; 17,869.8 Emitted Kimi K3 Tokens/s (8-GPU DDP) &bull; Text, Code, Charts &amp; Vision</text>'
-            '</svg>'
-        )
-        media = [{
-            "type": "svg",
-            "title": "Clover Kimi K3 Architecture Diagram",
-            "svg": svg_markup,
-            "caption": "End-to-end signal flow across Clover Kimi K3's 93-layer MoE trunk/expert pool, K3NativeHybridLink (d=7168), and 11-level parallel NCM decoder.",
-        }]
-        plans = [
-            "Here is the architecture diagram showing how Clover Kimi K3 processes multimodal inputs, executes tools, and generates responses in parallel:",
-            "\nStage 1 (Input & Agent Tools): Accepts text, documents, and images via MoonViT3d and runs live search and Python tools in a 256k context.",
-            "\nStage 2 (93-Layer Kimi K3 MoE): Runs all 93 Kimi K3 trunks (69 KDA + 24 MLA) and 92 MoE expert layers (d=7168) across GPUs 0 to 5.",
-            "\nStage 3 & 4 (K3NativeHybridLink + NCM): Maps 7,168-d states through K3NativeHybridLink and decodes 163,840-vocab Kimi K3 tokens in 11 parallel passes.",
-        ]
-        return "svg_diagram", "Generated SVG architecture diagram", media, plans
+        arch_tpl = _VISUAL_TEMPLATES.get("architecture_diagram") or {}
+        if arch_tpl:
+            media = [{
+                "type": "svg",
+                "title": str(arch_tpl.get("title") or "Clover Kimi K3 Architecture Diagram"),
+                "svg": str(arch_tpl.get("svg") or ""),
+                "caption": str(arch_tpl.get("caption") or ""),
+            }]
+            plans = [str(x) for x in (arch_tpl.get("plans") or [])]
+            return "svg_diagram", "Generated SVG architecture diagram", media, plans
 
     # 2. Compound interest / investment growth chart
     if "compound" in p or "investment" in p or ("interest" in p and any(w in p for w in ("plot", "graph", "chart"))):
@@ -2485,12 +2082,10 @@ class CloverK3AgentEngine:
                         diag_one = diag_msg.splitlines()[0]
                         rb_line_str = prefix_lines[rb_idx] if rb_idx < len(prefix_lines) else "    "
                         rb_indent = rb_line_str[: len(rb_line_str) - len(rb_line_str.lstrip(" "))] or "    "
-                        if "E_PY_INFINITE_LOOP" in diag_one:
-                            inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one} -> advance a, b = 0, 1; a, b = b, a + b on EVERY iteration and increment count only when is_prime(a)\n"
-                        elif "E_PY_PREFIX_SHADOW" in diag_one:
-                            inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one} -> tokenize with music_string.split() and map 'o': 4, 'o|': 2, '.|': 1\n"
-                        elif "E_PY_BISECTION_SIGN" in diag_one:
-                            inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one} -> return find_zero([-c for c in xs])\n"
+                        rb_hints = _MEMORY_TREE_RULES.get("compiler_rollback_hints") or {}
+                        matched_rb_hint = next((h_val for h_code, h_val in rb_hints.items() if h_code in diag_one), None)
+                        if matched_rb_hint:
+                            inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one} -> {matched_rb_hint}\n"
                         else:
                             inline_hint = f"{rb_indent}{cmt_sym} Fix: {diag_one}\n"
                         kept_with_hint = kept_prefix + inline_hint

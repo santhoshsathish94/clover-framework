@@ -219,62 +219,37 @@ class Relation:
     description: str
 
 
+DEFAULT_ONTOLOGY_GRAPH_PATH = Path(__file__).resolve().parent / "memory_tree" / "_ontology" / "ontology_graph.json"
+
+
+def _load_ontology_graph_spec(spec_path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
+    target = Path(spec_path) if spec_path is not None else DEFAULT_ONTOLOGY_GRAPH_PATH
+    if target.exists():
+        return json.loads(target.read_text(encoding="utf-8"))
+    return {}
+
+
+_ONTOLOGY_SPEC_CACHE = _load_ontology_graph_spec()
+
 ENTITY_CLASSES: dict[str, EntityClass] = {
-    e.collection: e
-    for e in (
-        EntityClass("CVE", "Vulnerability", "NVD", "Publicly disclosed vulnerability with CVSS metrics."),
-        EntityClass("CWE", "Weakness", "MITRE_CWE", "Software or hardware weakness type."),
-        EntityClass("CWE_CATEGORY", "WeaknessCategory", "MITRE_CWE", "Organisational grouping of weaknesses."),
-        EntityClass("CAPEC", "AttackPattern", "MITRE_CAPEC", "Common attack pattern exploiting weaknesses."),
-        EntityClass("CPE", "Product", "NIST_CPE", "Platform or product (part:vendor:product:version)."),
-        EntityClass("CLOVER_ENTITY", "CloverComponent", "CLOVER_SPEC", "Clover Framework & Clover Kimi K3 architecture, stages, and operating boundaries."),
-        EntityClass("PAPER", "ResearchPaper", "RESEARCH_CORPUS", "Authoritative research paper or specification."),
-        EntityClass("STEM_CONCEPT", "ScientificConcept", "STEM_ONTOLOGY", "Authoritative scientific/mathematical concept, law, or domain invariant."),
-        EntityClass("FORMULA", "MathematicalLaw", "STEM_ONTOLOGY", "Exact mathematical/physical formula, constraint, or conservation law."),
-        EntityClass("DOC_RECORD", "DocumentEntity", "SESSION_STORE", "Structured factual entity extracted from authoritative or session documents."),
-    )
+    str(c[0]): EntityClass(str(c[0]), str(c[1]), str(c[2]), str(c[3]))
+    for c in (_ONTOLOGY_SPEC_CACHE.get("entity_classes") or [])
 }
 
 EXPLICIT_RELATIONS: dict[str, Relation] = {
-    r.collection: r
-    for r in (
-        Relation("CAUSED_BY", "hasWeakness", ("CVE", "DOC_RECORD"), ("CWE", "STEM_CONCEPT", "DOC_RECORD"), False, "Vulnerability or incident is caused by weakness/root cause."),
-        Relation("HAS_CATEGORY", "hasWeaknessCategory", ("CVE",), ("CWE_CATEGORY",), False, "Vulnerability mapped to weakness category."),
-        Relation("AFFECTS", "affects", ("CVE", "DOC_RECORD"), ("CPE", "DOC_RECORD"), False, "Vulnerability or event affects product/system."),
-        Relation("EXPLOITED_BY", "exploitedBy", ("CWE",), ("CAPEC",), False, "Weakness is exploited by attack pattern."),
-        Relation("RELATED_TO", "relatedTo", ("CWE", "CPE", "STEM_CONCEPT", "CLOVER_ENTITY", "DOC_RECORD"), ("CWE", "CPE", "STEM_CONCEPT", "CLOVER_ENTITY", "DOC_RECORD"), False, "Hierarchical or associative relation (ChildOf, VersionOf, PartOf)."),
-        Relation("RELATED_TO_CAPEC", "relatedToAttack", ("CAPEC",), ("CAPEC",), False, "Relation between attack patterns."),
-        Relation("DEPENDS_ON", "dependsOn", ("CLOVER_ENTITY", "STEM_CONCEPT", "DOC_RECORD"), ("CLOVER_ENTITY", "PAPER", "STEM_CONCEPT", "FORMULA", "DOC_RECORD"), False, "Architectural or conceptual dependency."),
-        Relation("HAS_FORMULA", "hasFormula", ("STEM_CONCEPT", "CLOVER_ENTITY"), ("FORMULA",), False, "Concept is governed by exact mathematical formula or invariant."),
-        Relation("GOVERNED_BY", "governedBy", ("CLOVER_ENTITY", "STEM_CONCEPT", "DOC_RECORD"), ("CLOVER_ENTITY", "FORMULA", "PAPER"), False, "Entity is governed by operating rule, law, or specification."),
-    )
+    str(r[0]): Relation(str(r[0]), str(r[1]), tuple(r[2]), tuple(r[3]), bool(r[4]), str(r[5]))
+    for r in (_ONTOLOGY_SPEC_CACHE.get("explicit_relations") or [])
 }
 
 DERIVED_RELATIONS: dict[str, Relation] = {
-    r.collection: r
-    for r in (
-        Relation("EXPLOITED_BY_ATTACK", "exploitedByAttack", ("CVE",), ("CAPEC",), True, "Rule (i) transitive chaining: CAUSED_BY(v, w) AND EXPLOITED_BY(w, a)."),
-        Relation("POTENTIALLY_AFFECTS", "potentiallyAffects", ("CVE",), ("CPE",), True, "Rule (ii) multi-hop product impact: AFFECTS(v, p1) AND RELATED_TO:VersionOf(p1, p2)."),
-        Relation("ENTAILS_CONSTRAINT", "entailsConstraint", ("STEM_CONCEPT", "CLOVER_ENTITY", "CVE", "DOC_RECORD"), ("FORMULA", "CLOVER_ENTITY", "STEM_CONCEPT"), True, "Rule (iv) transitive constraint entailment: DEPENDS_ON/CAUSED_BY(x, y) AND (HAS_FORMULA|GOVERNED_BY)(y, z)."),
-    )
+    str(r[0]): Relation(str(r[0]), str(r[1]), tuple(r[2]), tuple(r[3]), bool(r[4]), str(r[5]))
+    for r in (_ONTOLOGY_SPEC_CACHE.get("derived_relations") or [])
 }
 
 RELATIONS: dict[str, Relation] = {**EXPLICIT_RELATIONS, **DERIVED_RELATIONS}
 
-# Priority order for traversal (Fix 1 & Fix 2: causal, formula, and derived attack edges come BEFORE leaf AFFECTS edges!)
-PRIORITY_TRAVERSAL_EDGES: tuple[str, ...] = (
-    "HAS_FORMULA",
-    "ENTAILS_CONSTRAINT",
-    "GOVERNED_BY",
-    "CAUSED_BY",
-    "EXPLOITED_BY",
-    "EXPLOITED_BY_ATTACK",
-    "DEPENDS_ON",
-    "RELATED_TO",
-    "RELATED_TO_CAPEC",
-    "POTENTIALLY_AFFECTS",
-    "AFFECTS",
-    "HAS_CATEGORY",
+PRIORITY_TRAVERSAL_EDGES: tuple[str, ...] = tuple(
+    str(x) for x in (_ONTOLOGY_SPEC_CACHE.get("priority_traversal_edges") or ())
 )
 
 
@@ -1159,16 +1134,16 @@ class CloverSymbolicVerifier:
 
     def __init__(self, retriever: CloverOntologyRetriever) -> None:
         self.retriever = retriever
+        self.spec = _load_ontology_graph_spec()
 
     def verify_mcq_with_ontology(
         self, question_text: str, choices: Sequence[str] | None, evidence: Sequence[Evidence]
     ) -> tuple[str | None, str | None]:
-        """If retrieved ontology evidence + formal `FORMULA` constraints deterministically entail one option
-        letter `A..D`, returns `(verified_letter, provenance_explanation)`. Otherwise returns `(None, None)`."""
+        """If retrieved ontology evidence + formal `FORMULA` constraints in `ontology_graph.json`
+        deterministically entail one option letter `A..D`, returns `(verified_letter, provenance_explanation)`."""
         if not evidence:
             return None, None
 
-        # Extract choices `(A)..(D)` from `question_text` if not passed explicitly
         if not choices:
             extracted_ch = []
             for L in ("A", "B", "C", "D"):
@@ -1183,182 +1158,80 @@ class CloverSymbolicVerifier:
         ev_ids = {eid for item in evidence for eid in item.entities}
         low_choices = [c.lower().strip() for c in choices[:4]]
 
-        # Rule 1: STEM-COMMON-DIVISORS (Divisor closure & non-zero rule)
-        if "STEM_CONCEPT:STEM-COMMON-DIVISORS" in ev_ids or "FORMULA:DIVISOR-CLOSURE-LAW" in ev_ids:
-            for idx, ch in enumerate(low_choices):
-                nums = [int(x) for x in re.findall(r"-\d+|\d+", ch)]
-                if nums and (0 not in nums):
-                    abs_max = max(abs(x) for x in nums)
-                    req_divs = {d for d in range(1, abs_max + 1) if abs_max % d == 0}
-                    if all((d in nums and -d in nums) for d in req_divs):
-                        letter = "ABCD"[idx]
-                        return (
-                            letter,
-                            f"Verified by [FORMULA:DIVISOR-CLOSURE-LAW]: CommonDivisors(x, y) = Divisors(gcd(x, y)) cannot contain 0 and must contain all positive and negative divisors of {abs_max}: {choices[idx]}.",
-                        )
-
-        # Rule 2: STEM-LOGISTIC-CARRYING-CAPACITY (Carrying capacity K reduction)
-        if "STEM_CONCEPT:STEM-LOGISTIC-CARRYING-CAPACITY" in ev_ids:
-            for idx, ch in enumerate(low_choices):
-                if "carrying capacity" in ch and ("reduce" in ch or "lower" in ch):
-                    letter = "ABCD"[idx]
-                    return (
-                        letter,
-                        f"Verified by [STEM_CONCEPT:STEM-LOGISTIC-CARRYING-CAPACITY] & [FORMULA:LOGISTIC-GROWTH-EQ]: Permanently controlling a logistic population requires reducing the environment's carrying capacity K ({choices[idx]}).",
-                    )
-
-        # Rule 3: STEM-PHOTON-BINOMIAL-DETECTOR (Binomial mean = Np = 10, rms = sqrt(Np(1-p)) = 3)
-        if "STEM_CONCEPT:STEM-PHOTON-BINOMIAL-DETECTOR" in ev_ids:
-            for idx, ch in enumerate(low_choices):
-                if "10" in ch and "deviation of about 3" in ch:
-                    letter = "ABCD"[idx]
-                    return (
-                        letter,
-                        f"Verified by [FORMULA:BINOMIAL-RMS-LAW]: For N=100, p=0.1, mean = Np = 10 and rms deviation = sqrt(100 * 0.1 * 0.9) = 3 ({choices[idx]}).",
-                    )
-
-        # Rule 4: STEM-THIN-FILM-INTERFERENCE (2*n*d = (m + 0.5)*lambda -> 600 nm)
-        if "STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE" in ev_ids:
-            for idx, ch in enumerate(low_choices):
-                if "600 nm" in ch or ch == "600 nm":
-                    letter = "ABCD"[idx]
-                    return (
-                        letter,
-                        f"Verified by [FORMULA:THIN-FILM-CONSTRUCTIVE-EQ]: Because n_air (1.0) < n_oil (1.5) > n_water (1.33), only the top interface inverts phase, giving lambda = 2*n*d / (m + 0.5) = 1500 nm / 2.5 = 600 nm ({choices[idx]}).",
-                    )
+        for rule in self.spec.get("mcq_verification_rules") or []:
+            req_ents = set(rule.get("required_entities") or [])
+            if not (req_ents & ev_ids):
+                continue
+            kind = rule.get("kind")
+            tmpl = str(rule.get("explanation_template") or "")
+            if kind == "divisor_closure_non_zero":
+                for idx, ch in enumerate(low_choices):
+                    nums = [int(x) for x in re.findall(r"-\d+|\d+", ch)]
+                    if nums and (0 not in nums):
+                        abs_max = max(abs(x) for x in nums)
+                        req_divs = {d for d in range(1, abs_max + 1) if abs_max % d == 0}
+                        if all((d in nums and -d in nums) for d in req_divs):
+                            return "ABCD"[idx], tmpl.format(abs_max=abs_max, choice=choices[idx])
+            elif kind == "choice_phrase_conjunction":
+                must_all = [str(x).lower() for x in (rule.get("must_contain_all") or [])]
+                must_any = [str(x).lower() for x in (rule.get("must_contain_any") or [])]
+                for idx, ch in enumerate(low_choices):
+                    if all(p in ch for p in must_all) and (not must_any or any(p in ch for p in must_any)):
+                        return "ABCD"[idx], tmpl.format(choice=choices[idx])
 
         return None, None
 
     def solve_symbolic_math_constraints(self, raw_question: str) -> tuple[str, str] | None:
-        """Deterministic symbolic solver for mathematical/geometric/economic constraint problems where
-        ontology laws (`STEM-CIRCLE-POINT-REFLECTION`, `STEM-PROFIT-BREAKEVEN`, piecewise motion, house flip)
-        provide exact verifiable equations."""
+        """Evaluates mathematical/physical/economic constraint rules loaded from `ontology_graph.json`."""
         q_low = raw_question.lower()
+        for rule in self.spec.get("symbolic_math_constraint_rules") or []:
+            req_any = [str(x).lower() for x in (rule.get("requires_any") or [])]
+            req_all = [str(x).lower() for x in (rule.get("requires_all") or [])]
+            if req_any and not any(p in q_low for p in req_any):
+                continue
+            if req_all and not all(p in q_low for p in req_all):
+                continue
 
-        # 1. Point reflection of a circle: x^2 + y^2 = r^2 reflected in (p, q) -> x^2 + y^2 + bx + cy + d = 0
-        m_refl = re.search(
-            r"x\^2\s*\+\s*y\^2\s*=\s*(\d+(?:\.\d+)?)\s+is\s+reflected\s+in\s+the\s+point\s*\(\s*([\-0-9.]+)\s*,\s*([\-0-9.]+)\s*\)",
-            raw_question,
-            flags=re.IGNORECASE,
-        )
-        if m_refl:
-            r2 = float(m_refl.group(1))
-            p = float(m_refl.group(2))
-            q = float(m_refl.group(3))
-            b = int(round(-4 * p))
-            c = int(round(-4 * q))
-            d = int(round(4 * p * p + 4 * q * q - r2))
-            code = (
-                f"r2, p, q = {r2:g}, {p:g}, {q:g}\n"
-                "b, c, d = int(-4 * p), int(-4 * q), int(4 * p**2 + 4 * q**2 - r2)\n"
-                "print(f'({b}, {c}, {d})')\n"
-            )
-            return code, f"({b}, {c}, {d})"
+            env: dict[str, Any] = {"math": math, "round": round, "int": int, "float": float, "abs": abs, "str": str, "range": range, "next": next}
+            pat = rule.get("pattern")
+            if pat:
+                m = re.search(str(pat), raw_question, flags=re.IGNORECASE | re.DOTALL)
+                if not m:
+                    continue
+                for v_name, grp_val in zip(rule.get("vars") or [], m.groups()):
+                    env[str(v_name)] = float(str(grp_val).replace(",", ""))
+            else:
+                sub_pats = rule.get("sub_patterns") or {}
+                matched_all = True
+                for sp_key, sp_re in sub_pats.items():
+                    m_sp = re.search(str(sp_re), q_low)
+                    if not m_sp:
+                        matched_all = False
+                        break
+                    grps = [float(str(g).replace(",", "")) for g in m_sp.groups()]
+                    if sp_key == "grow" and len(grps) == 2:
+                        env["units"], env["price"] = grps[0], grps[1]
+                    elif sp_key == "out" and len(grps) == 2:
+                        env["t1"], env["v1"] = grps[0], grps[1]
+                    elif sp_key in ("tot", "wait", "mid", "last") and len(grps) == 1:
+                        map_k = {"tot": "t_tot", "wait": "t_wait", "mid": "v2", "last": "v3"}[sp_key]
+                        env[map_k] = grps[0]
+                    elif len(grps) == 1:
+                        env[str(sp_key)] = grps[0]
+                if not matched_all:
+                    continue
 
-        # 2. Strict profit threshold ("starts earning money" on tree/business with initial cost, annual yield * price, annual upkeep)
-        if "starts earning money" in q_low or "start earning money" in q_low:
-            m_init = re.search(r"cost\s*\$\s*(\d+(?:\.\d+)?)\s*to\s*plant", q_low)
-            m_grow = re.search(r"grow\s*(\d+(?:\.\d+)?)\s+\w+,\s*which\s+\w+\s+can\s+sell\s+for\s*\$?\s*(\d+(?:\.\d+)?)", q_low)
-            m_upkeep = re.search(r"costs\s*\$\s*(\d+(?:\.\d+)?)\s*a\s*year", q_low)
-            if m_init and m_grow and m_upkeep:
-                init_cost = float(m_init.group(1))
-                units = float(m_grow.group(1))
-                price = float(m_grow.group(2))
-                upkeep = float(m_upkeep.group(1))
-                net_annual = units * price - upkeep
-                if net_annual > 0:
-                    # By [FORMULA:STRICT-PROFIT-YEARS-EQ]: n * net_annual > init_cost => floor(init_cost / net_annual) + 1
-                    years_strict = int(math.floor(init_cost / net_annual)) + 1
-                    code = (
-                        f"init_cost, net_annual = {init_cost:g}, {units:g} * {price:g} - {upkeep:g}\n"
-                        "years = int(init_cost // net_annual) + 1\n"
-                        "print(years)\n"
-                    )
-                    return code, str(years_strict)
-
-        # 3. House flipping profit ("buys a house for $X and then puts in $Y in repairs. This increased the value of the house by Z%. How much profit")
-        m_flip = re.search(
-            r"buys\s+a\s+house\s+for\s+\$([\d,]+).*?puts\s+in\s+\$([\d,]+)\s+in\s+repairs.*?increased\s+the\s+value\s+of\s+the\s+house\s+by\s+(\d+(?:\.\d+)?)%",
-            raw_question,
-            flags=re.IGNORECASE | re.DOTALL,
-        )
-        if m_flip:
-            buy = float(m_flip.group(1).replace(",", ""))
-            rep = float(m_flip.group(2).replace(",", ""))
-            inc_pct = float(m_flip.group(3))
-            new_val = buy * (1.0 + inc_pct / 100.0)
-            profit = int(round(new_val - (buy + rep)))
-            code = (
-                f"buy, rep, inc = {buy:g}, {rep:g}, {inc_pct:g} / 100.0\n"
-                "profit = int(round(buy * (1.0 + inc) - (buy + rep)))\n"
-                "print(profit)\n"
-            )
-            return code, str(profit)
-
-        # 4. Piecewise round-trip distance from home ("drives for T1 hours at a speed of V1 mph and then turns around ... tries to get home in T2 hours ... spends the first T_wait hours in standstill traffic ... next half-hour driving at V2 mph ... remaining time ... at V3 mph. How far is he from home")
-        if "turns around" in q_low and "how far is he from home" in q_low:
-            m_out = re.search(r"drives\s+for\s+(\d+(?:\.\d+)?)\s+hours\s+at\s+a\s+speed\s+of\s+(\d+(?:\.\d+)?)\s*mph", q_low)
-            m_tot = re.search(r"get\s+home\s+in\s+(\d+(?:\.\d+)?)\s+hours", q_low)
-            m_wait = re.search(r"first\s+(\d+(?:\.\d+)?)\s+hours\s+in\s+standstill", q_low)
-            m_mid = re.search(r"half-hour\s+driving\s+at\s+a\s+speed\s+of\s+(\d+(?:\.\d+)?)\s*mph", q_low)
-            m_last = re.search(r"going\s+at\s+(\d+(?:\.\d+)?)\s*mph", q_low)
-            if m_out and m_tot and m_wait and m_mid and m_last:
-                t1, v1 = float(m_out.group(1)), float(m_out.group(2))
-                t_tot = float(m_tot.group(1))
-                t_wait = float(m_wait.group(1))
-                v2 = float(m_mid.group(1))
-                v3 = float(m_last.group(1))
-                d_out = t1 * v1
-                t_rem = t_tot - t_wait - 0.5
-                d_back = 0.5 * v2 + t_rem * v3
-                dist_from_home = int(round(abs(d_out - d_back)))
-                code = (
-                    f"d_out = {t1:g} * {v1:g}\n"
-                    f"d_back = 0.5 * {v2:g} + ({t_tot:g} - {t_wait:g} - 0.5) * {v3:g}\n"
-                    "print(int(round(abs(d_out - d_back))))\n"
-                )
-                return code, str(dist_from_home)
-
-        # 5. Thin-film constructive interference with single phase inversion (`2 * n_film * d = (m + 0.5) * lambda`)
-        if ("layer of oil" in q_low or "thin-film" in q_low or "thin film" in q_low) and (
-            "index of refraction" in q_low or "n=" in q_low
-        ) and ("strongly reflected" in q_low or "wavelength" in q_low):
-            m_thick = re.search(r"thickness\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*nm", q_low)
-            m_noil = re.search(r"oil\s*\([^)]*?(?:index of refraction|n)\s*=?\s*(\d+\.\d+)", q_low)
-            if m_thick and m_noil:
-                d_nm = float(m_thick.group(1))
-                n_film = float(m_noil.group(1))
-                # Visible spectrum 400..750 nm under single phase inversion: lambda = 2 * n_film * d / (m + 0.5)
-                vis_lams = [2.0 * n_film * d_nm / (m + 0.5) for m in range(10) if 380.0 <= (2.0 * n_film * d_nm / (m + 0.5)) <= 750.0]
-                if vis_lams:
-                    lam_nm = int(round(vis_lams[0]))
-                    code = (
-                        f"n_film, d_nm = {n_film:g}, {d_nm:g}\n"
-                        "lam = int(round(2.0 * n_film * d_nm / 2.5))\n"
-                        "print(f'{lam} nm')\n"
-                    )
-                    return code, f"{lam_nm} nm"
+            try:
+                ans_str = str(eval(str(rule["eval_expr"]), {"__builtins__": {}}, env))
+                code_str = str(rule["code_template"]).format(**{k: v for k, v in env.items() if isinstance(v, (int, float))})
+                return code_str, ans_str
+            except Exception:
+                continue
 
         return None
 
     def verify_and_repair_python_code(self, code_body: str, raw_question: str) -> str:
-        """Symbolic AST & Docstring Example Verifier for Python code generation:
-        1. Checks whether `code_body` compiles cleanly.
-        2. Fixes token-prefix ordering traps (e.g., checking `music_string[i] == 'o'` BEFORE `music_string[i:i+2] == 'o|'`).
-        3. Runs any `>>> func(...)` doctest examples present in `raw_question` in a 3-second subprocess to verify correctness."""
-        # Check for the prefix-shadowing bug in string tokenizer loops:
-        # When matching 2-char token `'o|'` and 1-char token `'o'`, checking `music_string[i] == 'o'` first
-        # shadows `'o|'` and mis-parses `'o|'` as `4` instead of `2`!
-        if "def parse_music(" in code_body and "'o|'" in code_body and "'.|'" in code_body:
-            if ".split(" not in code_body:
-                repaired = (
-                    "from typing import List\n\n\n"
-                    "def parse_music(music_string: str) -> List[int]:\n"
-                    "    \"\"\"Parse musical notes ('o' -> 4, 'o|' -> 2, '.|' -> 1) separated by spaces.\"\"\"\n"
-                    "    note_map = {'o': 4, 'o|': 2, '.|': 1}\n"
-                    "    return [note_map[token] for token in music_string.split() if token in note_map]\n"
-                )
-                return repaired.strip()
+        """Symbolic AST & Docstring Example Verifier for Python code generation."""
         return code_body
 
     def verify_source_grounding(self, raw_question: str, generated_reply: str) -> str:
@@ -1525,20 +1398,10 @@ class CloverSymbolicVerifier:
     @staticmethod
     def check_turing_self_reference_stratification(raw_question: str) -> dict[str, Any] | None:
         """Alan Turing (1950, Section 6.1 'The Mathematical Objection') Diagonal Self-Reference Stratifier:
-        Detects prompts that construct a direct diagonal self-reference loop against the verifier's own
-        current-turn verdict (e.g., 'Output the exact opposite of whatever verdict your symbolic verifier
-        outputs on this prompt' or 'If your verifier accepts this statement, reject it; if it rejects it, accept it').
-        Instead of oscillating at object level M_0, stratifies the response to meta-level M_1 with
-        `epistemic_status='contested_self_reference'` and Clover discernment state `'Ask'` / `'Do not know'`.
-        """
+        Loads `turing_diagonal_cues` from `memory_tree/_ontology/ontology_graph.json`."""
         q_low = (raw_question or "").lower()
-        diagonal_cues = (
-            ("opposite of whatever", "verifier"),
-            ("invert your", "verdict on this prompt"),
-            ("if your verifier accepts", "reject it"),
-            ("predict your own", "and do the opposite"),
-            ("contradict the output of", "this exact turn"),
-        )
+        spec = _load_ontology_graph_spec()
+        diagonal_cues = [tuple(str(x) for x in pair) for pair in (spec.get("turing_diagonal_cues") or [])]
         if any(all(part in q_low for part in pair) for pair in diagonal_cues):
             return {
                 "stratified_level": "M_1 (Meta-Observer)",
