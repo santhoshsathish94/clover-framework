@@ -46,8 +46,15 @@ from transformers.models.llava.modeling_llava import \
     LlavaCausalLMOutputWithPast
 from transformers.utils import is_flash_attn_2_available
 
-from .configuration_kimi_k3 import KimiK3Config
-from .modeling_kimi_linear import KimiLinearForCausalLM
+try:
+    from .configuration_kimi_k3 import KimiK3Config, KimiK3VisionConfig
+except ImportError:
+    from configuration_kimi_k3 import KimiK3Config, KimiK3VisionConfig
+
+try:
+    from .modeling_kimi_linear import KimiLinearForCausalLM
+except ImportError:
+    KimiLinearForCausalLM = None
 
 # Flash attention imports
 if is_flash_attn_2_available():

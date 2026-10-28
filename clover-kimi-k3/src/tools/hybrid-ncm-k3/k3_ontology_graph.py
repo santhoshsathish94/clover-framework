@@ -44,6 +44,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Literal, Sequence
 
+from clover_object_model import SourceProvenance
+
 ProvenanceKind = Literal["source_record", "inference_rule"]
 
 
@@ -186,6 +188,16 @@ class Provenance:
             rule=rule,
             premises=tuple(premises),
             support=support,
+        )
+
+    def to_source_provenance(self) -> SourceProvenance:
+        reference_uri = f"{self.repository or 'rule'}:{self.record or self.rule or ''}"
+        return SourceProvenance(
+            source_kind=self.kind,
+            source_reference_uri=reference_uri,
+            recorded_by_actor=self.repository or "ontology_inference",
+            recorded_timestamp_utc=self.retrieved_at or "2026-10-25T00:00:00Z",
+            is_externally_verified=(self.kind == "source_record"),
         )
 
     def to_dict(self) -> dict[str, Any]:

@@ -49,6 +49,8 @@ try:
 except ImportError:
     _pyyaml = None
 
+from clover_object_model import SourceProvenance
+
 
 SCHEMA_VERSION = "1.0"
 
@@ -157,6 +159,15 @@ class MemoryProvenance:
         if self.recorded_at:
             out["recorded_at"] = self.recorded_at
         return out
+
+    def to_source_provenance(self, is_externally_verified: bool = True) -> SourceProvenance:
+        return SourceProvenance(
+            source_kind=self.source_type,
+            source_reference_uri=self.source_ref,
+            recorded_by_actor=self.actor or "system",
+            recorded_timestamp_utc=self.recorded_at,
+            is_externally_verified=is_externally_verified,
+        )
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> "MemoryProvenance":
