@@ -48,7 +48,7 @@ This repository contains the documentation, practical guidance, case studies, an
 
 It began on a single CPU host from the Clover equation of Kimi K3 and from Fareed Khan's `kimi-k3-in-c` (with its first snapshot [`clover-k3`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) in git history), and currently stands as a **7-layer neuro-symbolic, compiler-verified, memory-accumulating system** running on both a single CPU workstation (`Ryzen 9 7950X3D`, `124 GB` RAM) and an `8 × NVIDIA RTX 3090` GPU server (`192 GiB` VRAM), reproducibly bootstrapped from GitHub and Hugging Face ([`Santhoshsathish94/clover-kimi-k3`](https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3)):
 
-1. **Governance &amp; Discernment Kernel ([`AGENTS.md`](AGENTS.md)):** Operates under `Context ⇄ Direction ⇄ Action ⇄ Success ⇄ Growth`, keeping epistemic states (`observed`, `externally_verified`, `hypothesis`, `user_stated_belief`, `unresolved`) distinct.
+1. **Governance &amp; Discernment Kernel ([`AGENTS.md`](AGENTS.md)):** Operates under `Context → Direction → Execution → Outcome → Growth`, keeping epistemic states (`observed`, `externally_verified`, `hypothesis`, `user_stated_belief`, `unresolved`) distinct.
 2. **File-Based Memory Tree &amp; Relational Knowledge Graph ([`k3_memory_graph.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_memory_graph.py), [context](docs/runtime-context/engine-and-architecture/clover-memory-graph-context.md)):** Human-readable Markdown memory files with YAML front matter (`32` canonical seed entries, `65` typed cross-branch relationships), a closed-loop `staging/` promotion gate, and six mechanisms from the 11 foundational AI papers ([`foundations-11-papers-human-guide.md`](docs/runtime-context/foundational-papers-1943-to-2017/foundations-11-papers-human-guide.md) &amp; [`clover-foundations-to-clover-gpu-context.md`](docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md)).
 3. **Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier ([`k3_ontology_graph.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_ontology_graph.py), [context](docs/runtime-context/engine-and-architecture/clover-ontology-graphrag-research-context.md)):** Deterministic property graph + 4 Horn inference rules + Newell–Simon `CSm`/`VCt` signature pruning + `[E#]` / `[P#]` provenance + `CloverSymbolicVerifier`.
 4. **HybridAgent Continuous `<latent>` Reasoning &amp; Live Tools ([`k3_agent_engine.py`](clover-kimi-k3/src/tools/hybrid-ncm-k3/k3_agent_engine.py), [context](docs/runtime-context/engine-and-architecture/clover-hybridagent-research-context.md)):** 14-step continuous `<latent>` reasoning (`K3NativeHybridLink` `7,168 → 7,168`), live `<search>` (arXiv, Wikipedia, DuckDuckGo, URL fetch), sandboxed `<python>` (math, unit tests, charts), and `MoonViT3d` vision.
@@ -90,8 +90,8 @@ Context → Direction → Execution → Outcome → Growth
 
 - **Context** — establish relevant information, memory, and constraints.
 - **Direction** — define the objective and choose a path.
-- **Action** — execute through the model, tools, and system capabilities.
-- **Success** — verify whether the intended outcome was achieved.
+- **Execution** — determine and carry out the means within Direction and system boundaries.
+- **Outcome** — establish what actually happened through evidence from the System.
 - **Growth** — use validated experience to improve future work.
 
 Growth is part of the framework's cycle; claims of persistent learning or general improvement require their own evidence.
