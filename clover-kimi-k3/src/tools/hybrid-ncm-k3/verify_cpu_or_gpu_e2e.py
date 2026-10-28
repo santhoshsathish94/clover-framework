@@ -55,9 +55,15 @@ def main():
     assert os.path.isdir(os.path.join(ds_dir, "trunk-0")), f"Missing trunk-0 in {ds_dir}"
     assert os.path.isdir(os.path.join(ds_dir, "expert-1")), f"Missing expert-1 in {ds_dir}"
     assert os.path.exists(os.path.join(ow_dir, "model-00094-of-000096.safetensors")), f"Missing shard 94 in {ow_dir}"
-    assert os.path.exists(os.path.join(ckpt_dir, "e12_clover_k3_true_ha_ncm.pt")) or os.path.exists(
-        os.path.join(ckpt_dir, "e11_clover_k3_native_ha_ncm.pt")
-    ), f"Missing e12/e11 checkpoint in {ckpt_dir}"
+    assert any(
+        os.path.exists(os.path.join(ckpt_dir, fn))
+        for fn in (
+            "checkpoint-clover-true-hybrid-agent-ncm.pt",
+            "checkpoint-clover-native-hybrid-agent-ncm.pt",
+            "e12_clover_k3_true_ha_ncm.pt",
+            "e11_clover_k3_native_ha_ncm.pt",
+        )
+    ), f"Missing Clover K3 + HybridAgent + NCM checkpoint in {ckpt_dir}"
 
     # 1. Initialize K3GPUExpertsRunner (automatically compiles & loads libk3_cpu_experts.so on CPU or libk3_gpu_experts.so on GPU)
     k3_runner = K3GPUExpertsRunner.get_instance(max_n=256, full_93_layers=True, k_res=28)

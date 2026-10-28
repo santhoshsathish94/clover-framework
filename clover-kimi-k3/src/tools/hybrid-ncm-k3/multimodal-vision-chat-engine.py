@@ -58,7 +58,9 @@ class K3OptionAMoonViT(nn.Module):
         if vis_dir is None or not os.path.isdir(vis_dir):
             vis_dir = VISION_DIR
         if graft_path is None or not os.path.exists(graft_path):
-            graft_path = os.path.join(find_hybrid_ncm_ckpt_dir(), "k3_vqvae_init.pt")
+            graft_path = os.path.join(find_hybrid_ncm_ckpt_dir(), "checkpoint-concept-vector-quantizer-initial.pt")
+            if not os.path.exists(graft_path):
+                graft_path = os.path.join(find_hybrid_ncm_ckpt_dir(), "k3_vqvae_init.pt")
         self.dev = torch.device(resolve_device(dev))
         from configuration_kimi_k3 import KimiK3VisionConfig
         import k3_vis_standalone as k3v
@@ -166,14 +168,26 @@ class K3MultimodalChatEngine:
             "Qwen/Qwen3-VL-8B-Instruct", dtype=torch.bfloat16, trust_remote_code=True
         ).to(self.dev_vl).eval()
 
-        # 2. Load K3-Native VQ-VAE + NextConceptTransformer + K3ExpertBridge + K3LexicalPointerDecoder (`e10_k3_agent_experts.pt`)
-        vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
-        ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
+        # 2. Load K3-Native VQ-VAE + NextConceptTransformer + K3ExpertBridge + K3LexicalPointerDecoder
+        vq_ckpt = os.path.join(out_dir, "checkpoint-concept-vector-quantizer-adapted.pt")
+        if not os.path.exists(vq_ckpt):
+            vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
+        ncm_ckpt = os.path.join(out_dir, "checkpoint-next-concept-generator-base.pt")
+        if not os.path.exists(ncm_ckpt):
+            ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
         _, self.tk, self.vqvae, self.net, src = load_k3_native_models(self.dev, vq_ckpt, ncm_ckpt)
 
-        e10_ckpt = os.path.join(out_dir, "e10_k3_agent_experts.pt")
-        e8_ckpt = os.path.join(out_dir, "e8_k3_direct.pt")
-        ckpt_path = e10_ckpt if os.path.exists(e10_ckpt) else e8_ckpt
+        ckpt_path = os.path.join(out_dir, "e8_k3_direct.pt")
+        for cand_ckpt in (
+            "checkpoint-clover-agent-experts.pt",
+            "e10_k3_agent_experts.pt",
+            "checkpoint-next-concept-direct-decoder.pt",
+            "e8_k3_direct.pt",
+        ):
+            p_cand = os.path.join(out_dir, cand_ckpt)
+            if os.path.exists(p_cand):
+                ckpt_path = p_cand
+                break
         e8_sd = torch.load(ckpt_path, map_location="cpu", weights_only=True)
         self.vqvae.load_state_dict(e8_sd["vqvae"])
         self.net.load_state_dict(e8_sd["net"])

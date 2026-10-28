@@ -696,7 +696,7 @@ class CloverMemoryGraphStore:
     def __init__(self, root_dir: str | os.PathLike[str], auto_load: bool = True) -> None:
         self.root_dir = Path(root_dir).resolve()
         self.index_dir = self.root_dir / "_index"
-        self.index_file = self.index_dir / "memory_graph_index.json"
+        self.index_file = self.index_dir / "dataset-memory-graph-index.json"
         self.staging_dir = self.root_dir / "staging"
 
         self.entries: dict[str, MemoryEntry] = {}
@@ -1010,7 +1010,6 @@ class CloverMemoryGraphStore:
                 pass
         serialized_json = json.dumps(payload, indent=2, ensure_ascii=False)
         self.index_file.write_text(serialized_json, encoding="utf-8")
-        (self.index_dir / "dataset-memory-graph-index.json").write_text(serialized_json, encoding="utf-8")
 
     def _find_uncertain_concept_duplicates(self) -> list[dict[str, Any]]:
         """Detects pairs of active entries that share a high fraction of title/concept tokens

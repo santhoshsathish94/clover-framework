@@ -122,7 +122,9 @@ class K3NativeHybridLink(nn.Module):
 
 def load_base_wmt_vqvae(dev):
     cfg = OmegaConf.load(find_wmt14_config_yaml())
-    tok_pt = os.path.join(ART_WMT, "tokenizer.pt")
+    tok_pt = os.path.join(ART_WMT, "checkpoint-wmt14-concept-tokenizer.pt")
+    if not os.path.exists(tok_pt):
+        tok_pt = os.path.join(ART_WMT, "tokenizer.pt")
     if os.path.exists(tok_pt):
         cfg.tokenizer.vqvae.checkpoint_path = tok_pt
         tk = VQVAETokenizer.from_config(cfg.tokenizer)
@@ -602,7 +604,16 @@ def load_k3_native_models(dev, vq_ckpt_path, ncm_ckpt_path=None):
     vqvae.decoder.output_layer = nn.Linear(D_VQ, V_K3, bias=False, device=dev)
     if vq_ckpt_path and not os.path.exists(vq_ckpt_path):
         ckpt_dir = os.path.dirname(vq_ckpt_path) or find_hybrid_ncm_ckpt_dir()
-        for alt in ("e12_clover_k3_true_ha_ncm.pt", "e11_clover_k3_native_ha_ncm.pt", "e8_k3_direct.pt"):
+        for alt in (
+            "checkpoint-concept-vector-quantizer-adapted.pt",
+            "checkpoint-clover-true-hybrid-agent-ncm.pt",
+            "checkpoint-clover-native-hybrid-agent-ncm.pt",
+            "checkpoint-next-concept-direct-decoder.pt",
+            "k3_vqvae_adapted.pt",
+            "e12_clover_k3_true_ha_ncm.pt",
+            "e11_clover_k3_native_ha_ncm.pt",
+            "e8_k3_direct.pt",
+        ):
             alt_p = os.path.join(ckpt_dir, alt)
             if os.path.exists(alt_p):
                 vq_ckpt_path = alt_p

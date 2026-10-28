@@ -1,8 +1,8 @@
 #!/bin/bash
-# Downloads the Clover Kimi K3 + HybridAgent + NCM checkpoints and evaluation datasets
-# (`hybrid-ncm-k3/*`) from Hugging Face (`Santhoshsathish94/clover-kimi-k3`, dataset repo)
-# into `$HYBRID_NCM_DIR` (`$ENGINE_DIR/src/datasets/hybrid-ncm-k3` by default),
-# leaving existing `computed/` (`expert-1..92`, `trunk-0..92`) and `third-party/` untouched.
+# Downloads ONLY the required Clover Kimi K3 + HybridAgent + NCM checkpoints and evaluation datasets
+# listed in `src/scripts/hybrid-ncm-dataset-files.tsv` from Hugging Face (`Santhoshsathish94/clover-kimi-k3`,
+# dataset repo) into `$HYBRID_NCM_DIR` (`$ENGINE_DIR/src/datasets/hybrid-ncm-k3` by default),
+# leaving existing `computed/` (`expert-1..92`, `trunk-0..92`) and any unused/archived HF files untouched.
 #
 # Usage:
 #   [HF_REPO=Santhoshsathish94/clover-kimi-k3] [HYBRID_NCM_DIR=/path/to/dir] ./download-hybrid-ncm-datasets.sh
@@ -12,33 +12,59 @@ set -euo pipefail
 HF_REPO="${HF_REPO:-Santhoshsathish94/clover-kimi-k3}"
 HF_REVISION="${HF_REVISION:-main}"
 HYBRID_NCM_DIR="${HYBRID_NCM_DIR:-$DATASETS_DIR/hybrid-ncm-k3}"
+MANIFEST_TSV="${HYBRID_NCM_MANIFEST:-$SCRIPTS_DIR/hybrid-ncm-dataset-files.tsv}"
+
+if [ ! -f "$MANIFEST_TSV" ]; then
+  echo "ERROR: Required dataset manifest $MANIFEST_TSV not found." >&2
+  exit 1
+fi
 
 hf_bin=$(command -v hf || command -v huggingface-cli || echo /root/.local/bin/hf)
 if [ ! -x "$hf_bin" ] && [ -x "/opt/clover-k3/venv/bin/hf" ]; then
   hf_bin="/opt/clover-k3/venv/bin/hf"
 fi
 
-echo "== Downloading hybrid-ncm-k3 checkpoints & datasets from Hugging Face ($HF_REPO) -> $DATASETS_DIR =="
+mapfile -t REQUIRED_REL_PATHS < <(awk -F'\t' '!/^#/ && NF>=1 && $1!="" {gsub(/\r/, "", $1); print $1}' "$MANIFEST_TSV")
+
+echo "== Downloading ${#REQUIRED_REL_PATHS[@]} required hybrid-ncm-k3 files (from $(basename "$MANIFEST_TSV")) -> $DATASETS_DIR =="
 mkdir -p "$HYBRID_NCM_DIR" "$OPEN_WEIGHTS_DIR"
+
+INCLUDE_ARGS=()
+for rel_p in "${REQUIRED_REL_PATHS[@]}"; do
+  INCLUDE_ARGS+=(--include "hybrid-ncm-k3/$rel_p")
+done
+INCLUDE_ARGS+=(--include "open-weights/*")
 
 if [ -x "$hf_bin" ]; then
   HF_HUB_ENABLE_HF_TRANSFER=1 "$hf_bin" download "$HF_REPO" \
     --repo-type dataset \
     --revision "$HF_REVISION" \
     --local-dir "$DATASETS_DIR" \
-    --include 'hybrid-ncm-k3/*' \
-    --include 'open-weights/*'
+    "${INCLUDE_ARGS[@]}"
 else
-  python3 -c "
+  MANIFEST_TSV="$MANIFEST_TSV" HF_REPO="$HF_REPO" HF_REVISION="$HF_REVISION" DATASETS_DIR="$DATASETS_DIR" python3 - <<'PY'
+import os
 from huggingface_hub import snapshot_download
+
+manifest = os.environ["MANIFEST_TSV"]
+allow = ["open-weights/*"]
+with open(manifest, "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        rel_p = line.split("\t")[0].strip()
+        if rel_p:
+            allow.append(f"hybrid-ncm-k3/{rel_p}")
+
 snapshot_download(
-    repo_id='$HF_REPO',
-    repo_type='dataset',
-    revision='$HF_REVISION',
-    local_dir='$DATASETS_DIR',
-    allow_patterns=['hybrid-ncm-k3/*', 'open-weights/*'],
+    repo_id=os.environ["HF_REPO"],
+    repo_type="dataset",
+    revision=os.environ["HF_REVISION"],
+    local_dir=os.environ["DATASETS_DIR"],
+    allow_patterns=allow,
 )
-"
+PY
 fi
 
 if [ -d "$DATASETS_DIR/open-weights" ]; then
@@ -49,31 +75,13 @@ if [ -d "$DATASETS_DIR/open-weights" ]; then
   done
 fi
 
-# Create standardized hyphenated complete-English `checkpoint-*` and `dataset-*` hardlinks
-for pair in \
-  "e12_clover_k3_true_ha_ncm.pt:checkpoint-clover-true-hybrid-agent-ncm.pt" \
-  "e11_clover_k3_native_ha_ncm.pt:checkpoint-clover-native-hybrid-agent-ncm.pt" \
-  "e8_k3_direct.pt:checkpoint-next-concept-direct-decoder.pt" \
-  "e6_last.pt:checkpoint-next-concept-generator-base.pt" \
-  "ha_8b_int8_cpu.pt:checkpoint-hybrid-agent-8b-int8-cpu.pt" \
-  "k3_vqvae_adapted.pt:checkpoint-concept-vector-quantizer-adapted.pt" \
-  "k3_vqvae_init.pt:checkpoint-concept-vector-quantizer-initial.pt" \
-  "k3_hybrid_bridges.pt:checkpoint-latent-representation-bridges.pt" \
-  "staged_32win_inputs.pt:dataset-staged-32-window-inputs.pt" \
-  "wmt14/tokenizer.pt:wmt14/checkpoint-wmt14-concept-tokenizer.pt" \
-  "wmt14/config.yaml:wmt14/config-wmt14-concept-model.yaml" \
-  "data/wmt14/reference_translations.pickle:data/wmt14/dataset-wmt14-reference-translations.pickle" \
-  "data/xsum/passages.pickle:data/xsum/dataset-xsum-news-passages.pickle" \
-  "data/xsum/reference_summaries.pickle:data/xsum/dataset-xsum-reference-summaries.pickle" \
-  "data/sudoku/easy/puzzles.pickle:data/sudoku/easy/dataset-sudoku-easy-puzzles.pickle" \
-  "data/sudoku/easy/solutions.pickle:data/sudoku/easy/dataset-sudoku-easy-solutions.pickle"
-do
-  src_rel="${pair%%:*}"
-  dst_rel="${pair##*:}"
-  if [ -f "$HYBRID_NCM_DIR/$src_rel" ] && [ ! -f "$HYBRID_NCM_DIR/$dst_rel" ]; then
-    ln -f "$HYBRID_NCM_DIR/$src_rel" "$HYBRID_NCM_DIR/$dst_rel" 2>/dev/null || cp -f "$HYBRID_NCM_DIR/$src_rel" "$HYBRID_NCM_DIR/$dst_rel"
+echo "== Verifying downloaded hybrid-ncm-k3 files against $MANIFEST_TSV =="
+missing=0
+for rel_p in "${REQUIRED_REL_PATHS[@]}"; do
+  if [ ! -f "$HYBRID_NCM_DIR/$rel_p" ]; then
+    echo "MISSING: $HYBRID_NCM_DIR/$rel_p" >&2
+    missing=$((missing + 1))
   fi
 done
-
-echo "== Verifying downloaded hybrid-ncm-k3 files in $HYBRID_NCM_DIR =="
+[ "$missing" -eq 0 ] || { echo "FAIL: $missing required files missing in $HYBRID_NCM_DIR" >&2; exit 1; }
 ls -lh "$HYBRID_NCM_DIR"

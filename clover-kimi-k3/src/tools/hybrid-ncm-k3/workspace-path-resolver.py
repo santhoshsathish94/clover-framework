@@ -177,14 +177,43 @@ def find_ncm_eval_data_dir() -> str:
 
 
 def find_wmt14_config_yaml() -> str:
-    """Finds `config/eval/wmt14.yaml` relative to `TOOLS_DIR` or `/home/usergpu/ncm/repo`."""
+    """Finds `config/eval/config-wmt14-concept-model.yaml` (or `wmt14.yaml`) relative to `TOOLS_DIR`."""
     for cand in (
+        os.path.join(TOOLS_DIR, "config/eval/config-wmt14-concept-model.yaml"),
         os.path.join(TOOLS_DIR, "config/eval/wmt14.yaml"),
         "/home/usergpu/ncm/repo/config/eval/wmt14.yaml",
     ):
         if os.path.exists(cand):
             return cand
-    return os.path.join(TOOLS_DIR, "config/eval/wmt14.yaml")
+    return os.path.join(TOOLS_DIR, "config/eval/config-wmt14-concept-model.yaml")
+
+
+REQUIRED_HYBRID_NCM_DATASET_MANIFEST_PATH = os.path.join(
+    ENGINE_DIR, "src/scripts/hybrid-ncm-dataset-files.tsv"
+)
+
+
+def get_required_hybrid_ncm_datasets_manifest(manifest_path: str | None = None) -> list[dict[str, str | int]]:
+    """Reads `src/scripts/hybrid-ncm-dataset-files.tsv` and returns the list of required
+    `checkpoint-*`, `dataset-*`, and `config-*` files (`path`, `bytes`, `sha256`) used by the
+    Clover Kimi K3 + HybridAgent + NCM runtime and benchmark suite."""
+    target_tsv = manifest_path or REQUIRED_HYBRID_NCM_DATASET_MANIFEST_PATH
+    entries: list[dict[str, str | int]] = []
+    if not os.path.exists(target_tsv):
+        return entries
+    with open(target_tsv, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split("\t")
+            if len(parts) >= 3:
+                entries.append({
+                    "path": parts[0].strip(),
+                    "bytes": int(parts[1].strip()),
+                    "sha256": parts[2].strip(),
+                })
+    return entries
 
 
 def resolve_device(requested_dev: str = "cuda:0") -> str:

@@ -1365,18 +1365,29 @@ class CloverK3AgentEngine:
         self.rust_gc = None  # Lazily initialized when a Rust code specification is generated
 
         # 3. Load K3-Native VQ-VAE + NextConceptTransformer + K3NativeHybridLink + K3ComboBridge + K3ExpertBridge + K3LexicalPointerDecoder
-        vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
-        ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
+        vq_ckpt = os.path.join(out_dir, "checkpoint-concept-vector-quantizer-adapted.pt")
+        if not os.path.exists(vq_ckpt):
+            vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
+        ncm_ckpt = os.path.join(out_dir, "checkpoint-next-concept-generator-base.pt")
+        if not os.path.exists(ncm_ckpt):
+            ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
         _, self.tk, self.vqvae, self.net, src = load_k3_native_models(self.dev, vq_ckpt, ncm_ckpt)
 
-        e12_path = os.path.join(out_dir, "e12_clover_k3_true_ha_ncm.pt")
-        e11_path = os.path.join(out_dir, "e11_clover_k3_native_ha_ncm.pt")
-        e10_path = os.path.join(out_dir, "e10_k3_agent_experts.pt")
-        e8_path = os.path.join(out_dir, "e8_k3_direct.pt")
-        ckpt_path = (
-            e12_path if os.path.exists(e12_path)
-            else (e11_path if os.path.exists(e11_path) else (e10_path if os.path.exists(e10_path) else e8_path))
-        )
+        ckpt_path = os.path.join(out_dir, "e12_clover_k3_true_ha_ncm.pt")
+        for cand_ckpt in (
+            "checkpoint-clover-true-hybrid-agent-ncm.pt",
+            "e12_clover_k3_true_ha_ncm.pt",
+            "checkpoint-clover-native-hybrid-agent-ncm.pt",
+            "e11_clover_k3_native_ha_ncm.pt",
+            "checkpoint-clover-agent-experts.pt",
+            "e10_k3_agent_experts.pt",
+            "checkpoint-next-concept-direct-decoder.pt",
+            "e8_k3_direct.pt",
+        ):
+            p_cand = os.path.join(out_dir, cand_ckpt)
+            if os.path.exists(p_cand):
+                ckpt_path = p_cand
+                break
         sd = torch.load(ckpt_path, map_location="cpu", weights_only=True)
 
         self.vqvae.load_state_dict(sd["vqvae"])

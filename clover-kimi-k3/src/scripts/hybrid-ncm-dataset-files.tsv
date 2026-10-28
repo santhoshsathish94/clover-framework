@@ -1,0 +1,17 @@
+# path (relative to HYBRID_NCM_DIR, i.e. src/datasets/hybrid-ncm-k3), bytes, sha256: the 15 required checkpoint-*, dataset-*, and config-* files that the Clover Kimi K3 + HybridAgent + NCM runtime and evaluation suite read.
+# Anyone running set-up-new-machine.sh or download-hybrid-ncm-datasets.sh downloads ONLY the files listed in this manifest from Santhoshsathish94/clover-kimi-k3 (leaving older/experimental checkpoints on Hugging Face untouched).
+checkpoint-clover-true-hybrid-agent-ncm.pt	1359957499	711b8deb9fbf770e31d0a9b17a361e7eaa63fa21aacc50ad5bd641a7bb4cb04d
+checkpoint-clover-native-hybrid-agent-ncm.pt	1359958377	7908e0ea13ee00516287c0ffe8aa1dc91e7bfdaf7697bcb481a377bd77f9dc21
+checkpoint-next-concept-direct-decoder.pt	1193776987	a848cf8cbd7da12eec5de5fbbbf17e7d4834e105f83ba66a7161547d5f9a7e2e
+checkpoint-next-concept-generator-base.pt	1177550774	8d3f9d9071631757c34bb4b2bfe7d8dee0b60645e7d9863f78270f6f2691e7a5
+checkpoint-concept-vector-quantizer-adapted.pt	683150105	f52b24d1799eb62a3a671ff03242b1b263e5bdb2efcaab87bdb07a9bd5caca3b
+checkpoint-concept-vector-quantizer-initial.pt	525339033	ff03e054dc62322339efc6a91d0cf6f1ea37c4a3328a7207426b4df2adbc3d25
+checkpoint-latent-representation-bridges.pt	327383702	5a9a02c8c581f4e5fd59cc5dbd5478f137b06054190e683d594d5882540d965d
+dataset-staged-32-window-inputs.pt	9457317	96ea4dc8ecf3e2e9e57ddd896bdf70b0650ac146e12273f0fddb83eba4415e5a
+wmt14/checkpoint-wmt14-concept-tokenizer.pt	645790351	74f04176a3cd985e4142761bd7464ea6edb44dc0025c40302b5e45ea0d865702
+wmt14/config-wmt14-concept-model.yaml	2177	6401af2a14d41c6582c3181a0b683e8970c1eeefe8cf7afaf74f1597da3fcd72
+data/wmt14/dataset-wmt14-reference-translations.pickle	366263	3dcef81d8aeded13f79917cd6b794d2ca9f33223bf35c1fff1c5643eae0df52b
+data/xsum/dataset-xsum-news-passages.pickle	18506302	39b820f0a71ddd6ad178b2700eeae6d035729053b1b2f115d3a92810c6ebf4f8
+data/xsum/dataset-xsum-reference-summaries.pickle	1456199	db624e065b6685dfea25db9106752e837f06f26b799763593759efd150fe554a
+data/sudoku/easy/dataset-sudoku-easy-puzzles.pickle	372063	403353dd5d11e49d42627aee84c7b1ceb399fda03d01f6210ce78d0e61f2b29d
+data/sudoku/easy/dataset-sudoku-easy-solutions.pickle	364063	b52de75f5e4642adca58b18967bcd4bbcafa699c61b21ac33ee0fd7389e0d576

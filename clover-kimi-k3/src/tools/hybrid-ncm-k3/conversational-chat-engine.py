@@ -597,11 +597,18 @@ class K3FastChatEngine:
         self.ha_tok.padding_side = "right"
         self.lat_close_id = special_token_id(self.ha_tok, EXIT_ANCHOR)
 
-        vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
-        ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
+        vq_ckpt = os.path.join(out_dir, "checkpoint-concept-vector-quantizer-adapted.pt")
+        if not os.path.exists(vq_ckpt):
+            vq_ckpt = os.path.join(out_dir, "k3_vqvae_adapted.pt")
+        ncm_ckpt = os.path.join(out_dir, "checkpoint-next-concept-generator-base.pt")
+        if not os.path.exists(ncm_ckpt):
+            ncm_ckpt = os.path.join(out_dir, "e6_last.pt")
         _, self.tk, self.vqvae, self.net, src = load_k3_native_models(self.dev, vq_ckpt, ncm_ckpt)
 
-        e8_sd = torch.load(os.path.join(out_dir, "e8_k3_direct.pt"), map_location="cpu", weights_only=True)
+        direct_ckpt = os.path.join(out_dir, "checkpoint-next-concept-direct-decoder.pt")
+        if not os.path.exists(direct_ckpt):
+            direct_ckpt = os.path.join(out_dir, "e8_k3_direct.pt")
+        e8_sd = torch.load(direct_ckpt, map_location="cpu", weights_only=True)
         self.vqvae.load_state_dict(e8_sd["vqvae"])
         self.net.load_state_dict(e8_sd["net"])
         self.vqvae.eval(); self.net.eval()

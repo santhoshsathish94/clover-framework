@@ -36,4 +36,7 @@ check() {
 
 check "${DATASET_LIST:-$SCRIPTS_DIR/dataset-files.tsv}" "$DATASET_DIR" "dataset"
 check "$SCRIPTS_DIR/open-weights-files.tsv" "$OPEN_WEIGHTS_DIR" "open weights"
+if [ -d "$HYBRID_NCM_DIR" ] && [ -f "$SCRIPTS_DIR/hybrid-ncm-dataset-files.tsv" ]; then
+  check "$SCRIPTS_DIR/hybrid-ncm-dataset-files.tsv" "$HYBRID_NCM_DIR" "hybrid-ncm-k3 checkpoints and datasets"
+fi
 exit $rc
