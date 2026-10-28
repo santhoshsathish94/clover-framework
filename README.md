@@ -44,7 +44,7 @@ This repository contains the documentation, practical guidance, case studies, an
 
 ## Clover System &amp; Architecture (`Clover AI v4`)
 
-**Clover** is both the operating methodology (`Context → Direction → Action → Success → Growth` in [`AGENTS.md`](AGENTS.md)) and the unified open-source AI system built under it ([`clover-kimi-k3/`](clover-kimi-k3/)) — designed to produce meaningful outcomes while remaining bounded, observable, verifiable, and accountable.
+**Clover** is both the operating methodology (`Context → Direction → Execution → Outcome → Growth` in [`AGENTS.md`](AGENTS.md)) and the unified open-source AI system built under it ([`clover-kimi-k3/`](clover-kimi-k3/)) — designed to produce meaningful outcomes while remaining bounded, observable, verifiable, and accountable.
 
 It began on a single CPU host from the Clover equation of Kimi K3 and from Fareed Khan's `kimi-k3-in-c` (with its first snapshot [`clover-k3`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) in git history), and currently stands as a **7-layer neuro-symbolic, compiler-verified, memory-accumulating system** running on both a single CPU workstation (`Ryzen 9 7950X3D`, `124 GB` RAM) and an `8 × NVIDIA RTX 3090` GPU server (`192 GiB` VRAM), reproducibly bootstrapped from GitHub and Hugging Face ([`Santhoshsathish94/clover-kimi-k3`](https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3)):
 
@@ -85,7 +85,7 @@ Clover's research goal is to make AI systems more capable—not to prove that on
 Clover organizes its operating methodology as five connected stages:
 
 ```text
-Context → Direction → Action → Success → Growth
+Context → Direction → Execution → Outcome → Growth
 ```
 
 - **Context** — establish relevant information, memory, and constraints.
@@ -125,7 +125,7 @@ Its central principle is:
 The implementation follows the Clover cycle:
 
 ```text
-Context → Direction → Action → Success → Growth
+Context → Direction → Execution → Outcome → Growth
 ```
 
 **Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c) · [moonshotai/Kimi-K3](https://huggingface.co/moonshotai/Kimi-K3) · [togethercomputer/HybridAgent](https://github.com/togethercomputer/HybridAgent) · [HazyResearch/ncm](https://github.com/HazyResearch/ncm) · [CosmoIknosLab/ontology-guided-graphrag](https://github.com/CosmoIknosLab/ontology-guided-graphrag).
