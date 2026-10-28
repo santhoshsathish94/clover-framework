@@ -7,10 +7,10 @@
   - **[Step 1](01-reduction-1-eliminate-clones-and-mirrors.md):** 88 technical classes after removing copy-paste clones, FFI mirrors, and file-scoped aliases (including deduplicating `k3_vis_standalone.py`, `models/vae.py`, and shared `SourceProvenance`).
   - **[Step 2](02-reduction-2-domain-archetypes-and-polymorphism.md):** 24 polymorphic domain archetypes after replacing layer-index/variant classes with composition and interfaces.
   - **[Step 3](03-reduction-3-real-world-objects.md):** 12 complete-English core domain objects using explicit Decorators and GoF Design Patterns while preserving strict Single Responsibility (`ConversationSession` distinct from `ForwardPassWorkspace`; `QuantizedTensorRecord`, `NeuralStagePipeline`, and `ExternalTool` distinct; `ArtifactVerifier` **producing** `VerificationVerdict`).
-- **Direction:** Perform the final OOP synthesis: show how the **12 Core Domain Objects** map onto the **5 Irreducible Stages of the Clover Cycle (`Context`, `Direction`, `Execution`, `Outcome`, `Growth`)** orchestrated by `CloverCycleCoordinator` (Template Method + Observer + Fluent Builder) in [`clover_object_model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover_object_model.py).
+- **Direction:** Perform the final OOP synthesis: show how the **12 Core Domain Objects (`class-*`)** map onto the **5 Irreducible Stages of the Clover Cycle (`Context`, `Direction`, `Execution`, `Outcome`, `Growth`)** orchestrated by `class-clover-cycle-coordinator` (Template Method + Observer + Fluent Builder) in [`clover-object-model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover-object-model.py).
 - **Execution:** Group the 12 domain objects into the 5 Clover cycle responsibilities without forcing unrelated classes into false inheritance (`is-a`) or dummy methods.
-- **Outcome:** All **398 types** in the Clover repository trace cleanly through `398 → 88 → 24 → 12 → 5`, implemented in [`clover_object_model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover_object_model.py) and verified by [`test_clover_object_model.py`](../../scripts/tests/test_clover_object_model.py) (`25 / 25` repository unit tests passing).
-- **Growth:** The 5 stages of the Clover Framework (`AGENTS.md`) and the object-oriented architecture of the Clover K3 runtime are unified: each stage of `CloverCycleCoordinator.execute_complete_clover_cycle()` is guarded by `@emit_clover_cycle_stage(...)`, `@enforce_direction_boundary`, and `@record_execution_telemetry`.
+- **Outcome:** All **398 types** in the Clover repository trace cleanly through `398 → 88 → 24 → 12 → 5`, implemented in [`clover-object-model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover-object-model.py) and verified by [`test-clover-object-model.py`](../../scripts/tests/test-clover-object-model.py) (`25 / 25` repository unit tests passing).
+- **Growth:** The 5 stages of the Clover Framework (`AGENTS.md`) and the object-oriented architecture of the Clover K3 runtime are unified: each stage of `class-clover-cycle-coordinator.function-execute-complete-clover-cycle()` is guarded by `@decorator-emit-clover-cycle-stage(...)`, `@decorator-enforce-direction-boundary`, and `@decorator-record-execution-telemetry`.
 
 ---
 
@@ -111,83 +111,94 @@ Every single struct, class, trait, and enum in the repository has a permanent, u
 
 ---
 
-## 3. Executable Complete-English Implementation (`clover_object_model.py`)
+## 3. Executable Hyphenated Complete-English Implementation (`clover-object-model.py`)
 
-The complete, runnable implementation lives in [`clover-kimi-k3/src/tools/hybrid-ncm-k3/clover_object_model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover_object_model.py) and is verified on every test run by [`scripts/tests/test_clover_object_model.py`](../../scripts/tests/test_clover_object_model.py). Below is an excerpt showing how the **Decorators**, **Design Patterns**, and **Complete-English Naming** read like natural English sentences:
+The complete, runnable implementation lives in [`clover-kimi-k3/src/tools/hybrid-ncm-k3/clover-object-model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover-object-model.py) (loaded via [`clover_hyphen_runtime.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover_hyphen_runtime.py)) and is verified on every test run by [`scripts/tests/test-clover-object-model.py`](../../scripts/tests/test-clover-object-model.py). Below is an excerpt showing how the **Hyphenated Role Prefixes (`class-*`, `function-*`, `variable-*`, `flag-*`, `constant-*`, `decorator-*`)**, **Decorators**, and **Design Patterns** read like natural English sentences:
 
 ```python
-class CloverCycleCoordinator:
+# coding: clover-hyphen
+
+class class-clover-cycle-coordinator:
     """Unifies MultiGPUCloverCoordinator, CloverK3AgentEngine, and K3FastChatEngine using the Template Method Pattern."""
 
-    @emit_clover_cycle_stage("Context")
-    def establish_cycle_context(self, task_direction: TaskDirection) -> List[KnowledgeGraphNode]:
-        return self.knowledge_graph.retrieve_grounded_nodes_for_query(task_direction.goal_description)
+    @decorator-emit-clover-cycle-stage("Context")
+    def function-establish-cycle-context(
+        self,
+        variable-task-direction: class-task-direction,
+    ) -> List[class-knowledge-graph-node]:
+        return self.variable-knowledge-graph.function-retrieve-grounded-nodes-for-query(
+            variable-task-direction.variable-goal-description
+        )
 
-    @emit_clover_cycle_stage("Direction")
-    def validate_cycle_direction(self, task_direction: TaskDirection) -> bool:
-        if not task_direction.has_non_empty_goal:
-            raise ValueError("TaskDirection requires a non-empty goal_description.")
+    @decorator-emit-clover-cycle-stage("Direction")
+    def function-validate-cycle-direction(self, variable-task-direction: class-task-direction) -> bool:
+        if not variable-task-direction.flag-has-non-empty-goal:
+            raise ValueError("class-task-direction requires a non-empty goal description.")
         return True
 
-    @emit_clover_cycle_stage("Execution")
-    def execute_cycle_transformation(
+    @decorator-emit-clover-cycle-stage("Execution")
+    def function-execute-cycle-transformation(
         self,
-        task_direction: TaskDirection,
-        forward_pass_workspace: ForwardPassWorkspace,
-        current_pass_number: int = 1,
+        variable-task-direction: class-task-direction,
+        variable-forward-pass-workspace: class-forward-pass-workspace,
+        variable-current-pass-number: int = 1,
     ) -> str:
-        return self.neural_pipeline.execute_forward_pipeline(
-            task_direction=task_direction,
-            forward_pass_workspace=forward_pass_workspace,
-            current_pass_number=current_pass_number,
+        return self.variable-neural-pipeline.function-execute-forward-pipeline(
+            variable-task-direction=variable-task-direction,
+            variable-forward-pass-workspace=variable-forward-pass-workspace,
+            variable-current-pass-number=variable-current-pass-number,
         )
 
-    @emit_clover_cycle_stage("Outcome")
-    def verify_cycle_outcome(self, candidate_artifact_text: str, task_direction: TaskDirection) -> VerificationVerdict:
-        return self.artifact_verifier.verify_candidate_artifact_against_context(
-            candidate_artifact_text=candidate_artifact_text,
-            task_direction=task_direction,
-            knowledge_graph=self.knowledge_graph,
-        )
-
-    @emit_clover_cycle_stage("Growth")
-    def preserve_cycle_growth(
+    @decorator-emit-clover-cycle-stage("Outcome")
+    def function-verify-cycle-outcome(
         self,
-        task_direction: TaskDirection,
-        verification_verdict: VerificationVerdict,
-        conversation_session: ConversationSession,
-    ) -> Optional[KnowledgeGraphNode]:
-        return self.growth_recorder.record_verified_outcome_into_context(
-            task_direction=task_direction,
-            verification_verdict=verification_verdict,
-            knowledge_graph=self.knowledge_graph,
-            conversation_session=conversation_session,
+        variable-candidate-artifact-text: str,
+        variable-task-direction: class-task-direction,
+    ) -> class-verification-verdict:
+        return self.variable-artifact-verifier.function-verify-candidate-artifact-against-context(
+            variable-candidate-artifact-text=variable-candidate-artifact-text,
+            variable-task-direction=variable-task-direction,
+            variable-knowledge-graph=self.variable-knowledge-graph,
         )
 
-    @record_execution_telemetry
-    def execute_complete_clover_cycle(
+    @decorator-emit-clover-cycle-stage("Growth")
+    def function-preserve-cycle-growth(
         self,
-        task_direction: TaskDirection,
-        conversation_session: ConversationSession,
-        forward_pass_workspace: Optional[ForwardPassWorkspace] = None,
-        current_pass_number: int = 1,
-    ) -> VerificationVerdict:
-        active_workspace = forward_pass_workspace or ForwardPassWorkspace()
-        self.establish_cycle_context(task_direction)
-        self.validate_cycle_direction(task_direction)
-        candidate_artifact_text = self.execute_cycle_transformation(
-            task_direction=task_direction,
-            forward_pass_workspace=active_workspace,
-            current_pass_number=current_pass_number,
+        variable-task-direction: class-task-direction,
+        variable-verification-verdict: class-verification-verdict,
+        variable-conversation-session: class-conversation-session,
+    ) -> Optional[class-knowledge-graph-node]:
+        return self.variable-growth-recorder.function-record-verified-outcome-into-context(
+            variable-task-direction=variable-task-direction,
+            variable-verification-verdict=variable-verification-verdict,
+            variable-knowledge-graph=self.variable-knowledge-graph,
+            variable-conversation-session=variable-conversation-session,
         )
-        verification_verdict = self.verify_cycle_outcome(
-            candidate_artifact_text=candidate_artifact_text,
-            task_direction=task_direction,
+
+    @decorator-record-execution-telemetry
+    def function-execute-complete-clover-cycle(
+        self,
+        variable-task-direction: class-task-direction,
+        variable-conversation-session: class-conversation-session,
+        variable-forward-pass-workspace: Optional[class-forward-pass-workspace] = None,
+        variable-current-pass-number: int = 1,
+    ) -> class-verification-verdict:
+        variable-active-workspace = variable-forward-pass-workspace or class-forward-pass-workspace()
+        self.function-establish-cycle-context(variable-task-direction)
+        self.function-validate-cycle-direction(variable-task-direction)
+        variable-candidate-artifact-text = self.function-execute-cycle-transformation(
+            variable-task-direction=variable-task-direction,
+            variable-forward-pass-workspace=variable-active-workspace,
+            variable-current-pass-number=variable-current-pass-number,
         )
-        self.preserve_cycle_growth(
-            task_direction=task_direction,
-            verification_verdict=verification_verdict,
-            conversation_session=conversation_session,
+        variable-verification-verdict = self.function-verify-cycle-outcome(
+            variable-candidate-artifact-text=variable-candidate-artifact-text,
+            variable-task-direction=variable-task-direction,
         )
-        return verification_verdict
+        self.function-preserve-cycle-growth(
+            variable-task-direction=variable-task-direction,
+            variable-verification-verdict=variable-verification-verdict,
+            variable-conversation-session=variable-conversation-session,
+        )
+        return variable-verification-verdict
 ```

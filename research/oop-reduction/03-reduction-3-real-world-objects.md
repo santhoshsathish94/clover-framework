@@ -11,24 +11,24 @@
 - **Direction:**
   1. Organize the 24 domain classes into **12 Complete-English Core Domain Objects** where every class, method, variable, boolean property, and constant is written in full, unabbreviated English so a human reader can immediately tell what every identifier is.
   2. Apply explicit **Decorators** (`@register_component_in_catalog`, `@enforce_direction_boundary`, `@record_execution_telemetry`, `@emit_clover_cycle_stage`, `@abstractmethod`, `@property`, `@classmethod`, `@dataclass(frozen=True)`) and **8 classic OOP Design Patterns** (`Strategy`, `Chain of Responsibility`, `Composite Pipeline`, `Decorator Wrapper`, `Factory & Registry`, `Memento`, `Fluent Builder`, and `Template Method + Observer`).
-- **Execution:** Define the Complete-English Naming Grammar, the 12 Core Domain Objects, their real-world meaning, and their exact relationships in [`clover_object_model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover_object_model.py).
+- **Execution:** Define the Hyphenated Complete-English Role-Prefix Grammar (`class-*`, `function-*`, `variable-*`, `flag-*`, `constant-*`, `decorator-*`), the 12 Core Domain Objects, their real-world meaning, and their exact relationships in [`clover-object-model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover-object-model.py).
 - **Outcome:** 24 domain classes organize cleanly into **12 Core Domain Objects** (**97.0% reduction** from the 398 raw types) with zero violation of Single Responsibility (`SRP`) or Liskov Substitution (`LSP`).
-- **Growth:** Writing every class, method, and variable as complete English words and sentence-like clauses makes both architectural invariants (such as SpecMD Least-Stale eviction + R4 Clean Drop across the 3-tier `MemoryStorageTier` chain) and boundary checks self-evident in code.
+- **Growth:** Writing every class, function, variable, flag, constant, and decorator with literal ASCII hyphens `-` (`class-task-direction`, `class-conversation-session`, `function-ensure-expert-tensor-resident`, `variable-resident-entries-by-identifier`, `flag-has-passed-all-checks`) makes both architectural invariants and code roles self-evident at a glance.
 
 ---
 
-## 1. Complete-English Naming Grammar (Tell Every Symbol Type at a Glance)
+## 1. Hyphenated Complete-English Naming Grammar (Tell Every Symbol Type at a Glance)
 
-Except for language reserved words (`class`, `def`, `if`, `else`, `for`, `while`, `return`, `try`, `except`, `with`), every symbol follows strict, unabbreviated English grammar:
+Except for language reserved words (`class`, `def`, `if`, `else`, `for`, `while`, `return`, `try`, `except`, `with`), every symbol uses literal ASCII hyphens `-` and an explicit role prefix:
 
-| Symbol Kind | Casing & English Grammar Rule | How It Reads in Code |
+| Symbol Kind | Role Prefix & Hyphenated English Rule | How It Reads in [`clover-object-model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover-object-model.py) |
 |---|---|---|
-| **1. Class / Interface** | `UpperCamelCase` **Complete Noun Phrase** (*what the object is*; zero abbreviations like `Cfg`, `Buf`, `Mat`, `Ent`, `Prov`) | `TaskDirection`, `ConversationSession`, `ForwardPassWorkspace`, `VerifiedKnowledgeGraph`, `MemoryStorageTier`, `QuantizedTensorRecord`, `NeuralStagePipeline`, `ArtifactVerifier`, `VerificationVerdict` |
-| **2. Method / Function** | `snake_case` **Complete Verb-Phrase Sentence** (*starts with an action verb + direct object + preposition*) | `encode_input_into_activation_vector()`, `ensure_expert_tensor_resident()`, `compact_oldest_turns_into_summary_when_full()`, `verify_candidate_artifact_against_context()`, `record_verified_outcome_into_context()` |
-| **3. Variable / Attribute** | `snake_case` **Complete Descriptive Noun Phrase** (*plural for collections, explicit key/unit in name*) | `resident_entries_by_identifier`, `carbon_copy_snapshots`, `protected_file_paths`, `capacity_in_slots`, `maximum_token_budget`, `backing_storage_tier`, `current_activation_vector` |
-| **4. Boolean Property / Predicate** | `@property` `snake_case` **Auxiliary-Verb Question Clause** (`is_*`, `has_*`, `can_*`, `allows_*`) | `if conversation_session.has_exceeded_maximum_token_budget:`, `if slot_cache.is_cache_currently_full:`, `if verification_verdict.has_passed_all_checks:`, `if task_direction.allows_modification_of_path(path):` |
-| **5. Constant** | `UPPER_SNAKE_CASE` **Complete Quantified Noun Phrase** | `MAXIMUM_SESSION_CONTEXT_TOKENS = 262_144`, `DEFAULT_SNAPSHOT_INTERVAL_IN_STAGES = 12`, `TOTAL_ROUTED_EXPERTS_PER_STAGE = 896` |
-| **6. Decorator** | `@snake_case` **Declarative Verb Phrase** | `@register_component_in_catalog`, `@enforce_direction_boundary`, `@record_execution_telemetry`, `@emit_clover_cycle_stage` |
+| **1. Class / Interface** | `class-*` **Complete Noun Phrase** (*what the object is*; zero abbreviations like `Cfg`, `Buf`, `Mat`, `Ent`, `Prov`) | `class-task-direction`, `class-conversation-session`, `class-forward-pass-workspace`, `class-verified-knowledge-graph`, `class-memory-storage-tier`, `class-quantized-tensor-record`, `class-neural-stage-pipeline`, `class-artifact-verifier`, `class-verification-verdict` |
+| **2. Method / Function** | `function-*` **Complete Verb-Phrase Sentence** (*starts with an action verb + direct object + preposition*) | `function-encode-input-into-activation-vector()`, `function-ensure-expert-tensor-resident()`, `function-compact-oldest-turns-into-summary-when-full()`, `function-verify-candidate-artifact-against-context()`, `function-record-verified-outcome-into-context()` |
+| **3. Variable / Attribute** | `variable-*` **Complete Descriptive Noun Phrase** (*plural for collections, explicit key/unit in name*) | `variable-resident-entries-by-identifier`, `variable-carbon-copy-snapshots`, `variable-protected-file-paths`, `variable-capacity-in-slots`, `variable-maximum-token-budget`, `variable-backing-storage-tier`, `variable-current-activation-vector` |
+| **4. Boolean Flag / Predicate** | `@property` `flag-*` **Auxiliary-Verb Question Clause** (`flag-is-*`, `flag-has-*`, `flag-can-*`, `flag-allows-*`) | `if variable-session.flag-has-exceeded-maximum-token-budget:`, `if self.flag-is-cache-currently-full:`, `if variable-verdict.flag-has-passed-all-checks:`, `if variable-direction.flag-has-non-empty-goal:` |
+| **5. Constant** | `constant-*` **Complete Quantified Noun Phrase** | `constant-maximum-session-context-tokens = 262_144`, `constant-default-snapshot-interval-in-stages = 12`, `constant-total-routed-experts-per-stage = 896` |
+| **6. Decorator** | `@decorator-*` **Declarative Verb Phrase** | `@decorator-register-component-in-catalog`, `@decorator-enforce-direction-boundary`, `@decorator-record-execution-telemetry`, `@decorator-emit-clover-cycle-stage` |
 
 ---
 
