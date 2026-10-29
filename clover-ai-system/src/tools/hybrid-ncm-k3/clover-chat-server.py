@@ -50,21 +50,33 @@ MODEL_CAPABILITIES_CATALOG = {
     "nemotron-3.5-super-vl": {
         "model_key": "nemotron-3.5-super-vl",
         "label": "Nemotron 3.5 Super VL",
-        "modalities": ["text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation"],
+        "modalities": ["text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation", "audio-generation"],
         "vision_encoder": "C-RADIO 32-Layer ViT-Huge + PixelShuffle(0.5) + ReLU^2 Projector",
         "video_engine": "Temporal Patching (T=2) + Efficient Video Sampling (EVS q=0.5)",
         "audio_voice_engine": "80-Band Mel -> 4096-d Mamba-2 SSM Audio Bridge + Neural Voice (en-US-AriaNeural)",
-        "media_generation": ["svg", "png", "animated-video"],
+        "supported_input_formats": {
+            "image": ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "gif"],
+            "video": ["mp4", "webm", "mov", "mkv", "avi", "gif", "webp"],
+            "audio": ["wav", "mp3", "ogg", "flac", "m4a", "aac", "webm"],
+            "document": ["pdf", "docx", "txt", "md", "csv", "json", "py", "rs", "c", "cpp", "js", "ts"],
+        },
+        "media_generation": ["png", "jpg", "webp", "bmp", "mp4", "webm", "gif", "mp3", "wav", "ogg", "flac"],
         "voice_profile": "en-US-AriaNeural",
     },
     "lfm3-1.7b": {
         "model_key": "lfm3-1.7b",
         "label": "Liquid LFM3-1.7B",
-        "modalities": ["text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation"],
+        "modalities": ["text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation", "audio-generation"],
         "vision_encoder": "2048-d Spatial Patch + Width-7 Gated ShortConv Vision Bridge",
         "video_engine": "Temporal Width-7 Lfm3ShortConv State Mixer (312 KB O(1) State)",
         "audio_voice_engine": "80-Band Mel -> 2048-d ShortConv Acoustic Duplex Voice Engine (en-US-JennyNeural)",
-        "media_generation": ["svg", "png", "animated-video"],
+        "supported_input_formats": {
+            "image": ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "gif"],
+            "video": ["mp4", "webm", "mov", "mkv", "avi", "gif", "webp"],
+            "audio": ["wav", "mp3", "ogg", "flac", "m4a", "aac", "webm"],
+            "document": ["pdf", "docx", "txt", "md", "csv", "json", "py", "rs", "c", "cpp", "js", "ts"],
+        },
+        "media_generation": ["png", "jpg", "webp", "bmp", "mp4", "webm", "gif", "mp3", "wav", "ogg", "flac"],
         "voice_profile": "en-US-JennyNeural",
     },
     "kimi-k3": {
@@ -74,7 +86,13 @@ MODEL_CAPABILITIES_CATALOG = {
         "vision_encoder": "27-Layer MoonViT3d + PatchMergerMLPV2 (7168-d)",
         "video_engine": "3D Spatio-Temporal MoonViT3d Patch Grid",
         "audio_voice_engine": "Waveform Inspection + Neural Voice Synthesis (en-US-AnaNeural)",
-        "media_generation": ["svg", "png"],
+        "supported_input_formats": {
+            "image": ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "gif"],
+            "video": ["mp4", "webm", "mov", "mkv", "avi", "gif"],
+            "audio": ["wav", "mp3", "ogg", "flac", "m4a"],
+            "document": ["pdf", "docx", "txt", "md", "csv", "json", "py", "rs", "c", "cpp", "js", "ts"],
+        },
+        "media_generation": ["png", "jpg", "webp", "bmp", "svg"],
         "voice_profile": "en-US-AnaNeural",
     },
 }
@@ -1024,9 +1042,25 @@ function renderMediaItemsHtml(mediaList) {
     const title = escHtml(m.title || 'Generated Media');
     const cap = escHtml(m.caption || m.title || '');
     if (m.type === 'video') {
-      const dlGif = m.data_url ? `<a class="k3-dl-link" href="${m.data_url}" download="clover-animation.gif">Download Video GIF</a>` : '';
-      const dlSvg = m.svg ? ` <a class="k3-dl-link" href="${'data:image/svg+xml;utf8,' + encodeURIComponent(m.svg)}" download="clover-video.svg">Download Animated SVG</a>` : '';
-      return `<figure class="k3-figure">${m.svg || `<img src="${m.data_url || ''}" alt="${title}">`}<figcaption class="k3-figcaption"><span>${cap}</span><span>${dlGif}${dlSvg}</span></figcaption></figure>`;
+      const dlLinks = [];
+      if (m.mp4_url) dlLinks.push(`<a class="k3-dl-link" href="${m.mp4_url}" download="clover-video.mp4">Download MP4</a>`);
+      if (m.webm_url) dlLinks.push(`<a class="k3-dl-link" href="${m.webm_url}" download="clover-video.webm">Download WebM</a>`);
+      const gifHref = m.gif_url || m.data_url;
+      if (gifHref && gifHref.startsWith('data:image/gif')) dlLinks.push(`<a class="k3-dl-link" href="${gifHref}" download="clover-video.gif">Download GIF</a>`);
+      if (m.webp_url) dlLinks.push(`<a class="k3-dl-link" href="${m.webp_url}" download="clover-video.webp">Download WebP</a>`);
+      const vidBody = (m.mp4_url || m.webm_url)
+        ? `<video controls autoplay loop muted playsinline style="display:block;width:100%;max-width:100%;border-radius:7px;background:#0f172a;"${m.poster_url ? ` poster="${m.poster_url}"` : ''}>${m.mp4_url ? `<source src="${m.mp4_url}" type="video/mp4">` : ''}${m.webm_url ? `<source src="${m.webm_url}" type="video/webm">` : ''}</video>`
+        : (m.svg || `<img src="${m.data_url || ''}" alt="${title}">`);
+      return `<figure class="k3-figure">${vidBody}<figcaption class="k3-figcaption"><span>${cap}</span><span>${dlLinks.join(' ')}</span></figcaption></figure>`;
+    }
+    if (m.type === 'audio') {
+      const audSrc = m.mp3_url || m.wav_url || m.data_url || '';
+      const dlLinks = [];
+      if (m.mp3_url) dlLinks.push(`<a class="k3-dl-link" href="${m.mp3_url}" download="clover-audio.mp3">Download MP3</a>`);
+      if (m.wav_url) dlLinks.push(`<a class="k3-dl-link" href="${m.wav_url}" download="clover-audio.wav">Download WAV</a>`);
+      if (m.ogg_url) dlLinks.push(`<a class="k3-dl-link" href="${m.ogg_url}" download="clover-audio.ogg">Download OGG</a>`);
+      if (m.flac_url) dlLinks.push(`<a class="k3-dl-link" href="${m.flac_url}" download="clover-audio.flac">Download FLAC</a>`);
+      return `<figure class="k3-figure"><audio controls src="${audSrc}" style="display:block;width:100%;max-width:340px;margin:0.25rem auto;"></audio><figcaption class="k3-figcaption"><span>${cap}</span><span>${dlLinks.join(' ')}</span></figcaption></figure>`;
     }
     if (m.type === 'svg' && m.svg) {
       const svgUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(m.svg);
@@ -1034,7 +1068,13 @@ function renderMediaItemsHtml(mediaList) {
       return `<figure class="k3-figure">${m.svg}<figcaption class="k3-figcaption"><span>${cap}</span><span><a class="k3-dl-link" href="${svgUrl}" download="clover-diagram.svg">Download SVG</a>${extraPng}</span></figcaption></figure>`;
     }
     if (m.data_url) {
-      return `<figure class="k3-figure"><img src="${m.data_url}" alt="${title}"><figcaption class="k3-figcaption"><span>${cap}</span><a class="k3-dl-link" href="${m.data_url}" download="clover-chart.png">Download PNG</a></figcaption></figure>`;
+      const dlLinks = [];
+      const pngHref = m.png_url || m.data_url;
+      if (pngHref) dlLinks.push(`<a class="k3-dl-link" href="${pngHref}" download="clover-image.png">Download PNG</a>`);
+      if (m.jpg_url) dlLinks.push(`<a class="k3-dl-link" href="${m.jpg_url}" download="clover-image.jpg">Download JPG</a>`);
+      if (m.webp_url) dlLinks.push(`<a class="k3-dl-link" href="${m.webp_url}" download="clover-image.webp">Download WebP</a>`);
+      if (m.bmp_url) dlLinks.push(`<a class="k3-dl-link" href="${m.bmp_url}" download="clover-image.bmp">Download BMP</a>`);
+      return `<figure class="k3-figure"><img src="${m.data_url}" alt="${title}"><figcaption class="k3-figcaption"><span>${cap}</span><span>${dlLinks.join(' ')}</span></figcaption></figure>`;
     }
     return '';
   }).join('');
@@ -2164,7 +2204,7 @@ class MultiGPUCloverCoordinator:
 
     def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl"):
         p_low = (prompt or "").strip().lower()
-        # 1. Check if `nemotron-3.5-super-vl` or `lfm3-1.7b` has an audio attachment or an explicit video/image generation prompt
+        # 1. Check if `nemotron-3.5-super-vl` or `lfm3-1.7b` has an audio/video attachment or an explicit image/video/audio generation prompt
         if model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b"):
             mm_eng = (
                 self._get_or_load_nemotron_multimodal()
@@ -2173,20 +2213,23 @@ class MultiGPUCloverCoordinator:
             )
             alt_renderer = self._get_or_load_model_renderer(model_key)
             if mm_eng is not None:
-                # Check for audio attachment first
+                # Check for audio or raw video container attachment first
                 for att in (attachments or []):
                     if not isinstance(att, dict):
                         continue
                     m_t = str(att.get("type") or "").lower()
-                    f_n = str(att.get("name") or "audio.wav")
+                    f_n = str(att.get("name") or "attachment")
+                    f_low = f_n.lower()
                     b64_d = str(att.get("data_b64") or "")
-                    if (m_t.startswith("audio/") or f_n.lower().endswith((".wav", ".mp3", ".m4a", ".ogg", ".flac"))) and b64_d:
-                        raw_b64 = b64_d.split(",", 1)[1] if "," in b64_d else b64_d
-                        try:
-                            raw_audio = base64.b64decode(raw_b64)
-                        except Exception:
-                            raw_audio = b""
-                        r_aud = mm_eng.process_audio_or_voice(raw_audio, f_n, prompt or "Analyze this audio.", renderer=alt_renderer)
+                    if not b64_d:
+                        continue
+                    raw_b64 = b64_d.split(",", 1)[1] if "," in b64_d else b64_d
+                    try:
+                        raw_bytes = base64.b64decode(raw_b64)
+                    except Exception:
+                        raw_bytes = b""
+                    if m_t.startswith("audio/") or f_low.endswith((".wav", ".mp3", ".m4a", ".ogg", ".flac", ".aac")):
+                        r_aud = mm_eng.process_audio_or_voice(raw_bytes, f_n, prompt or "Analyze this audio.", renderer=alt_renderer)
                         h_len = self.append_session_turn(session_id, prompt or f"Attached audio {f_n}", r_aud["reply"], r_aud["plans"], attachments_meta=[{"name": f_n, "type": m_t or "audio/wav"}]) if remember else 0
                         sess_info = self.get_session_details(session_id)
                         r_aud.update({
@@ -2197,18 +2240,48 @@ class MultiGPUCloverCoordinator:
                             "history_len": h_len,
                         })
                         return r_aud
+                    if m_t.startswith("video/") or f_low.endswith((".mp4", ".webm", ".mov", ".mkv", ".avi", ".gif")):
+                        from nemotron_multimodal import extract_video_frames_from_bytes
+                        frames = extract_video_frames_from_bytes(raw_bytes, file_name=f_n, max_frames=6)
+                        if model_key == "nemotron-3.5-super-vl":
+                            r_vid = mm_eng.process_image_or_video(frames, prompt or "Analyze this video.", renderer=alt_renderer, use_real_weights_if_present=False)
+                        else:
+                            r_vid = mm_eng.process_image_or_video(frames, prompt or "Analyze this video.", renderer=alt_renderer)
+                        h_len = self.append_session_turn(session_id, prompt or f"Attached video {f_n}", r_vid["reply"], r_vid["plans"], attachments_meta=[{"name": f_n, "type": m_t or "video/mp4"}]) if remember else 0
+                        sess_info = self.get_session_details(session_id)
+                        r_vid.update({
+                            "session_id": session_id,
+                            "session_title": sess_info["title"],
+                            "context_tokens": sess_info["context_tokens"],
+                            "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                            "history_len": h_len,
+                        })
+                        return r_vid
 
-                # Check for explicit video generation or custom image generation prompt
-                wants_gen_video = bool(
-                    re.search(r"\b(?:generate|create|make|render|animate|show\s+me)\s+(?:an?\s+)?(?:animated\s+)?(?:video|animation|motion\s+clip|clip)\b", p_low)
+                # Check for explicit audio/voice, video, or image generation prompt
+                wants_gen_audio = bool(
+                    re.search(
+                        r"\b(?:generate|create|synthesize|make|record|play)\s+(?:me\s+)?(?:an?\s+)?(?:mp3\s+|wav\s+|ogg\s+|flac\s+)?(?:audio|voice|speech|sound|soundscape|recording|clip\s+saying)\b",
+                        p_low,
+                    )
                 )
-                wants_gen_image = bool(
-                    re.search(r"\b(?:generate|create|make|render|draw|paint)\s+(?:me\s+)?(?:an?\s+)?(?:image|picture|illustration|visual|scene|artwork)\s+(?:of|for|showing)\b", p_low)
+                wants_gen_video = (not wants_gen_audio) and bool(
+                    re.search(
+                        r"\b(?:generate|create|make|render|animate|show\s+me)\s+(?:me\s+)?(?:an?\s+)?(?:animated\s+|hd\s+|mp4\s+|webm\s+|gif\s+)?(?:video|animation|motion\s+clip|clip|movie)\b",
+                        p_low,
+                    )
                 )
-                if wants_gen_video or wants_gen_image:
+                wants_gen_image = (not wants_gen_audio and not wants_gen_video) and bool(
+                    re.search(
+                        r"\b(?:generate|create|make|render|draw|paint|show\s+me)\s+(?:me\s+)?(?:an?\s+)?(?:high[\s\-]*res(?:olution)?\s+|hd\s+|1080p\s+|4k\s+)?(?:png\s+|jpg\s+|jpeg\s+|webp\s+|bmp\s+)?(?:image|picture|illustration|photo|visual|scene|artwork)\b",
+                        p_low,
+                    )
+                )
+                if wants_gen_audio or wants_gen_video or wants_gen_image:
+                    m_kind = "audio" if wants_gen_audio else ("video" if wants_gen_video else "image")
                     r_gen = mm_eng.generate_media(
                         prompt,
-                        media_kind="video" if wants_gen_video else "image",
+                        media_kind=m_kind,
                         renderer=alt_renderer,
                     )
                     h_len = self.append_session_turn(session_id, prompt, r_gen["reply"], r_gen["plans"], attachments_meta=[]) if remember else 0

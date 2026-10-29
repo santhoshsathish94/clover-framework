@@ -874,6 +874,17 @@ def render_creative_scene_svg(subject: str):
     ):
         clean_subj = "Emerald Clover Meadow at Sunrise"
 
+    if "svg" not in subject.lower():
+        try:
+            nemo_dir = os.path.abspath(os.path.join(TOOLS_DIR, "../../models/nemotron-3.5-super-vl"))
+            if os.path.isdir(nemo_dir) and nemo_dir not in sys.path:
+                sys.path.insert(0, nemo_dir)
+            from nemotron_multimodal import NemotronMediaGenerator
+            gen = NemotronMediaGenerator.generate_image_media(clean_subj, model_label="Kimi K3 2.78T MoE")
+            return "raster_image_1280x720", gen["title"], gen["media"], gen["plans"]
+        except Exception:
+            pass
+
     s_low = clean_subj.lower()
     for tpl in (_VISUAL_TEMPLATES.get("scene_templates") or []):
         kws = [str(k).lower() for k in (tpl.get("keywords") or [])]

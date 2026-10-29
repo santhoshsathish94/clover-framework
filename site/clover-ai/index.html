@@ -205,7 +205,13 @@
     font-size: 0.69rem; font-weight: 600; color: var(--muted); white-space: nowrap;
   }
   .k3-audio-player {
-    display: block; width: 100%; max-width: 280px; height: 34px; margin-bottom: 0.4rem;
+    display: block; width: 100%; max-width: 340px; height: 38px; margin: 0.25rem auto 0.4rem;
+  }
+  .k3-video-player {
+    display: block; width: 100%; max-width: 100%; height: auto; margin: 0 auto; border-radius: 7px; background: #0f172a;
+  }
+  .k3-dl-group {
+    display: inline-flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;
   }
   @media (max-width: 760px) {
     .clover-sidebar {
@@ -335,11 +341,14 @@
             <button type="button" class="clover-modality-pill" id="k3-voice-conv-pill" onclick="k3ToggleVoiceConversation()" title="Toggle hands-free duplex voice conversation">
               <span id="k3-voice-conv-label">🎙️ Voice Chat: Off</span>
             </button>
-            <button type="button" class="clover-modality-pill" id="k3-gen-image-pill" onclick="k3TriggerMediaPrompt('image')" title="Generate an SVG/PNG illustration with the selected model">
+            <button type="button" class="clover-modality-pill" id="k3-gen-image-pill" onclick="k3TriggerMediaPrompt('image')" title="Generate a 1280x720 HD image (PNG, JPG, WebP, BMP)">
               <span>🖼️ Create Image</span>
             </button>
-            <button type="button" class="clover-modality-pill" id="k3-gen-video-pill" onclick="k3TriggerMediaPrompt('video')" title="Generate an animated video sequence with the selected model">
+            <button type="button" class="clover-modality-pill" id="k3-gen-video-pill" onclick="k3TriggerMediaPrompt('video')" title="Generate an HD video clip (MP4, WebM, GIF, WebP)">
               <span>🎬 Create Video</span>
+            </button>
+            <button type="button" class="clover-modality-pill" id="k3-gen-audio-pill" onclick="k3TriggerMediaPrompt('audio')" title="Synthesize neural voice &amp; audio (MP3, WAV, OGG, FLAC)">
+              <span>🔊 Create Audio</span>
             </button>
           </div>
           <span class="clover-modality-status" id="clover-modality-status">C-RADIO Vision &bull; EVS Video &bull; Mamba-2 Voice</span>
@@ -1117,34 +1126,115 @@
           variable_media_item.caption || variable_media_item.title || ''
         );
         if (variable_media_item.type === 'video') {
-          var variable_vid_svg_html = variable_media_item.svg || '';
-          var variable_vid_dl_links = '';
-          if (variable_media_item.data_url) {
-            variable_vid_dl_links +=
+          var variable_vid_dl_links = [];
+          if (variable_media_item.mp4_url) {
+            variable_vid_dl_links.push(
               '<a class="k3-dl-link" href="' +
-              variable_media_item.data_url +
-              '" download="clover-animation.gif">Download Video GIF</a>';
+                variable_media_item.mp4_url +
+                '" download="clover-video.mp4">Download MP4</a>'
+            );
           }
-          if (variable_media_item.svg) {
-            var variable_vid_svg_uri =
-              'data:image/svg+xml;utf8,' + encodeURIComponent(variable_media_item.svg);
-            variable_vid_dl_links +=
-              ' <a class="k3-dl-link" href="' +
-              variable_vid_svg_uri +
-              '" download="clover-video.svg">Download Animated SVG</a>';
+          if (variable_media_item.webm_url) {
+            variable_vid_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.webm_url +
+                '" download="clover-video.webm">Download WebM</a>'
+            );
+          }
+          var variable_gif_href = variable_media_item.gif_url || variable_media_item.data_url;
+          if (variable_gif_href && variable_gif_href.indexOf('data:image/gif') === 0) {
+            variable_vid_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_gif_href +
+                '" download="clover-video.gif">Download GIF</a>'
+            );
+          }
+          if (variable_media_item.webp_url) {
+            variable_vid_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.webp_url +
+                '" download="clover-video.webp">Download WebP</a>'
+            );
+          }
+          var variable_video_body_html = '';
+          if (variable_media_item.mp4_url || variable_media_item.webm_url) {
+            var variable_poster_attr = variable_media_item.poster_url
+              ? ' poster="' + variable_media_item.poster_url + '"'
+              : '';
+            variable_video_body_html =
+              '<video class="k3-video-player" controls autoplay loop muted playsinline' +
+              variable_poster_attr +
+              '>' +
+              (variable_media_item.mp4_url
+                ? '<source src="' + variable_media_item.mp4_url + '" type="video/mp4">'
+                : '') +
+              (variable_media_item.webm_url
+                ? '<source src="' + variable_media_item.webm_url + '" type="video/webm">'
+                : '') +
+              '</video>';
+          } else {
+            variable_video_body_html =
+              variable_media_item.svg ||
+              '<img src="' +
+                (variable_media_item.data_url || '') +
+                '" alt="' +
+                variable_escaped_title +
+                '">';
           }
           variable_rendered_figures.push(
             '<figure class="k3-figure">' +
-              (variable_vid_svg_html ||
-                '<img src="' +
-                  (variable_media_item.data_url || '') +
-                  '" alt="' +
-                  variable_escaped_title +
-                  '">') +
+              variable_video_body_html +
               '<figcaption class="k3-figcaption"><span>' +
               variable_escaped_caption +
-              '</span><span>' +
-              variable_vid_dl_links +
+              '</span><span class="k3-dl-group">' +
+              variable_vid_dl_links.join(' ') +
+              '</span></figcaption>' +
+            '</figure>'
+          );
+        } else if (variable_media_item.type === 'audio') {
+          var variable_aud_src =
+            variable_media_item.mp3_url ||
+            variable_media_item.wav_url ||
+            variable_media_item.data_url ||
+            '';
+          var variable_aud_dl_links = [];
+          if (variable_media_item.mp3_url) {
+            variable_aud_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.mp3_url +
+                '" download="clover-audio.mp3">Download MP3</a>'
+            );
+          }
+          if (variable_media_item.wav_url) {
+            variable_aud_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.wav_url +
+                '" download="clover-audio.wav">Download WAV</a>'
+            );
+          }
+          if (variable_media_item.ogg_url) {
+            variable_aud_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.ogg_url +
+                '" download="clover-audio.ogg">Download OGG</a>'
+            );
+          }
+          if (variable_media_item.flac_url) {
+            variable_aud_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.flac_url +
+                '" download="clover-audio.flac">Download FLAC</a>'
+            );
+          }
+          variable_rendered_figures.push(
+            '<figure class="k3-figure">' +
+              '<audio class="k3-audio-player" controls src="' +
+              variable_aud_src +
+              '"></audio>' +
+              '<figcaption class="k3-figcaption"><span>' +
+              variable_escaped_caption +
+              '</span><span class="k3-dl-group">' +
+              variable_aud_dl_links.join(' ') +
               '</span></figcaption>' +
             '</figure>'
           );
@@ -1161,7 +1251,7 @@
               variable_media_item.svg +
               '<figcaption class="k3-figcaption"><span>' +
               variable_escaped_caption +
-              '</span><span>' +
+              '</span><span class="k3-dl-group">' +
               '<a class="k3-dl-link" href="' +
               variable_svg_data_uri +
               '" download="clover-diagram.svg">Download SVG</a>' +
@@ -1170,6 +1260,36 @@
             '</figure>'
           );
         } else if (variable_media_item.data_url) {
+          var variable_img_dl_links = [];
+          var variable_png_href = variable_media_item.png_url || variable_media_item.data_url;
+          if (variable_png_href) {
+            variable_img_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_png_href +
+                '" download="clover-image.png">Download PNG</a>'
+            );
+          }
+          if (variable_media_item.jpg_url) {
+            variable_img_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.jpg_url +
+                '" download="clover-image.jpg">Download JPG</a>'
+            );
+          }
+          if (variable_media_item.webp_url) {
+            variable_img_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.webp_url +
+                '" download="clover-image.webp">Download WebP</a>'
+            );
+          }
+          if (variable_media_item.bmp_url) {
+            variable_img_dl_links.push(
+              '<a class="k3-dl-link" href="' +
+                variable_media_item.bmp_url +
+                '" download="clover-image.bmp">Download BMP</a>'
+            );
+          }
           variable_rendered_figures.push(
             '<figure class="k3-figure">' +
               '<img src="' +
@@ -1179,10 +1299,9 @@
               '">' +
               '<figcaption class="k3-figcaption"><span>' +
               variable_escaped_caption +
-              '</span>' +
-              '<a class="k3-dl-link" href="' +
-              variable_media_item.data_url +
-              '" download="clover-chart.png">Download PNG</a></figcaption>' +
+              '</span><span class="k3-dl-group">' +
+              variable_img_dl_links.join(' ') +
+              '</span></figcaption>' +
             '</figure>'
           );
         }
@@ -1497,6 +1616,10 @@
       var variable_gen_video_pill = document.getElementById('k3-gen-video-pill');
       if (variable_gen_video_pill && variable_desc) {
         variable_gen_video_pill.hidden = !variable_desc.supportsVideoGen;
+      }
+      var variable_gen_audio_pill = document.getElementById('k3-gen-audio-pill');
+      if (variable_gen_audio_pill && variable_desc) {
+        variable_gen_audio_pill.hidden = !variable_desc.supportsVideoGen;
       }
       var variable_gen_image_pill = document.getElementById('k3-gen-image-pill');
       if (variable_gen_image_pill && variable_desc) {
@@ -2166,13 +2289,19 @@
         }
         var variable_cur = (variable_input.value || '').trim();
         var variable_prefix =
-          variable_media_kind === 'video' ? 'Generate a video of ' : 'Generate an image of ';
+          variable_media_kind === 'video'
+            ? 'Generate a video of '
+            : variable_media_kind === 'audio'
+              ? 'Generate an audio recording saying '
+              : 'Generate an image of ';
         if (!variable_cur) {
           variable_input.value =
             variable_media_kind === 'video'
-              ? 'Generate a video of orbital wave propagation'
-              : 'Generate an image of an emerald Clover horizon';
-        } else if (!/^(?:generate|create|draw|render|make|animate)\b/i.test(variable_cur)) {
+              ? 'Generate a video of the cosmos and orbital wave propagation'
+              : variable_media_kind === 'audio'
+                ? 'Generate an audio clip saying Welcome to Clover Multimodal Studio'
+                : 'Generate an image of the cosmos';
+        } else if (!/^(?:generate|create|draw|render|make|animate|synthesize|record)\b/i.test(variable_cur)) {
           variable_input.value = variable_prefix + variable_cur;
         }
         variable_input.focus();

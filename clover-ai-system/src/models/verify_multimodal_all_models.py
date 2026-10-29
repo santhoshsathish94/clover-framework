@@ -167,7 +167,7 @@ def main() -> None:
             {
                 "session_id": "e2e_nemo",
                 "model": "nemotron-3.5-super-vl",
-                "prompt": "Generate an image of an emerald Clover horizon",
+                "prompt": "Generate an image of the cosmos",
             },
             "nemotron_super_vl_image_generation",
         ),
@@ -179,6 +179,15 @@ def main() -> None:
                 "prompt": "Generate a video of orbital wave propagation",
             },
             "nemotron_super_vl_video_generation",
+        ),
+        (
+            "NEMO_GEN_AUD",
+            {
+                "session_id": "e2e_nemo",
+                "model": "nemotron-3.5-super-vl",
+                "prompt": "Generate an audio clip saying Welcome to Clover Multimodal Studio",
+            },
+            "nemotron_super_vl_audio_generation",
         ),
         (
             "NEMO_TEXT",
@@ -237,6 +246,15 @@ def main() -> None:
                 "prompt": "Generate a video of gated short convolution waves",
             },
             "lfm3_1_7b_video_generation",
+        ),
+        (
+            "LFM3_GEN_AUD",
+            {
+                "session_id": "e2e_lfm3",
+                "model": "lfm3-1.7b",
+                "prompt": "Generate an audio clip saying Liquid LFM3 duplex voice ready",
+            },
+            "lfm3_1_7b_audio_generation",
         ),
         (
             "LFM3_TEXT",
@@ -300,6 +318,25 @@ def main() -> None:
         media_list = res.get("media") or []
         if "GEN_" in label:
             assert len(media_list) >= 1, f"{label} expected media items, got {media_list}"
+            m0 = media_list[0]
+            if "GEN_IMG" in label:
+                assert m0.get("type") == "image", f"{label} expected raster type=image, got {m0.get('type')}"
+                assert m0.get("png_url", "").startswith("data:image/png;base64,"), f"{label} missing png_url"
+                assert m0.get("jpg_url", "").startswith("data:image/jpeg;base64,"), f"{label} missing jpg_url"
+                assert m0.get("webp_url", "").startswith("data:image/webp;base64,"), f"{label} missing webp_url"
+                assert m0.get("bmp_url", "").startswith("data:image/bmp;base64,"), f"{label} missing bmp_url"
+            elif "GEN_VID" in label:
+                assert m0.get("type") == "video", f"{label} expected type=video, got {m0.get('type')}"
+                assert m0.get("mp4_url", "").startswith("data:video/mp4;base64,"), f"{label} missing mp4_url"
+                assert m0.get("webm_url", "").startswith("data:video/webm;base64,"), f"{label} missing webm_url"
+                assert m0.get("gif_url", "").startswith("data:image/gif;base64,"), f"{label} missing gif_url"
+                assert m0.get("webp_url", "").startswith("data:image/webp;base64,"), f"{label} missing webp_url"
+            elif "GEN_AUD" in label:
+                assert m0.get("type") == "audio", f"{label} expected type=audio, got {m0.get('type')}"
+                assert m0.get("mp3_url", "").startswith("data:audio/mpeg;base64,"), f"{label} missing mp3_url"
+                assert m0.get("wav_url", "").startswith("data:audio/wav;base64,"), f"{label} missing wav_url"
+                assert m0.get("ogg_url", "").startswith("data:audio/ogg;base64,"), f"{label} missing ogg_url"
+                assert m0.get("flac_url", "").startswith("data:audio/flac;base64,"), f"{label} missing flac_url"
         print(f"5. {label:13s} OK in {dt:5.2f}s | mode={mode:38s} | media={len(media_list)} | reply={reply[:68]!r}")
         report["checks"].append({
             "check": label,

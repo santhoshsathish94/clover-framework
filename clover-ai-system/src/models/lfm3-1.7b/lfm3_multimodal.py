@@ -350,14 +350,29 @@ class Lfm3MultimodalEngine:
 
     def generate_media(self, prompt: str, media_kind: str = "auto", renderer=None) -> dict[str, Any]:
         p_low = prompt.lower()
-        is_vid = media_kind == "video" or (
+        is_aud = media_kind == "audio" or (
             media_kind == "auto"
-            and any(w in p_low for w in ("video", "animate", "animation", "motion", "clip", "movie"))
+            and any(w in p_low for w in ("audio", "voice", "speech", "sound", "mp3", "wav", "ogg", "flac", "speak", "say "))
+            and not any(w in p_low for w in ("image", "picture", "video", "animation"))
         )
-        if is_vid:
+        is_vid = (not is_aud) and (
+            media_kind == "video"
+            or (
+                media_kind == "auto"
+                and any(w in p_low for w in ("video", "animate", "animation", "motion", "clip", "movie", "mp4", "webm"))
+            )
+        )
+        if is_aud:
+            gen = NemotronMediaGenerator.generate_audio_media(
+                prompt, model_label="Liquid LFM3-1.7B", voice_profile=self.VOICE_PROFILE
+            )
+            mode_tag = "audio"
+        elif is_vid:
             gen = NemotronMediaGenerator.generate_video_media(prompt, model_label="Liquid LFM3-1.7B")
+            mode_tag = "video"
         else:
             gen = NemotronMediaGenerator.generate_image_media(prompt, model_label="Liquid LFM3-1.7B")
+            mode_tag = "image"
 
         plans = gen["plans"]
         if renderer is not None:
@@ -367,7 +382,7 @@ class Lfm3MultimodalEngine:
             ids_out = []
 
         return {
-            "mode": f"lfm3_1_7b_{'video' if is_vid else 'image'}_generation",
+            "mode": f"lfm3_1_7b_{mode_tag}_generation",
             "model": self.model_key,
             "reply": reply_txt,
             "reply_1cand": reply_txt,
