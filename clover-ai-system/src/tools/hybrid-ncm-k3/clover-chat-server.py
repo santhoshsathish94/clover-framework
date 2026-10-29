@@ -35,7 +35,12 @@ from bench_batch_clubbing import plan_batch_with_latent, render_ncm_batched_mult
 
 
 BATCH_PAUSE_S = 1.0
-MAX_SESSION_CONTEXT_TOKENS = 262_144  # 256k Kimi K3 tokens (> 250k minimum context window per session)
+MAX_SESSION_CONTEXT_TOKENS = 1_048_576  # 1M (1,048,576) tokens per session (native 1M on Nemotron 3.5 Super VL; 1M hierarchical session store across all 3 models)
+MODEL_NATIVE_BACKBONE_CONTEXT_TOKENS = {
+    "nemotron-3.5-super-vl": 1_048_576,
+    "lfm3-1.7b": 262_144,
+    "kimi-k3": 262_144,
+}
 SESSIONS_STORE_PATH = os.environ.get(
     "CLOVER_SESSIONS_STORE_PATH",
     os.path.join(TOOLS_DIR, "out/sessions_store.json"),
@@ -466,11 +471,11 @@ HTML_UI = """<!DOCTYPE html>
   <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
     <label for="clover-model-select" style="font-size:0.75rem;font-weight:700;color:var(--muted);">MODEL</label>
     <select id="clover-model-select" onchange="onModelSelectChange(this.value)" style="padding:0.28rem 0.55rem;border:1px solid var(--line-2);border-radius:999px;background:var(--soft);font:inherit;font-size:0.78rem;font-weight:600;color:var(--ink);">
-      <option value="nemotron-3.5-super-vl" selected>Nemotron 3.5 Super VL (Default &middot; ~2.1s C / ~4.6s CPU)</option>
-      <option value="lfm3-1.7b">Liquid LFM3-1.7B (Compact &middot; ~3.5s C / ~6.0s CPU)</option>
-      <option value="kimi-k3">Kimi K3 2.78T MoE (Deep &middot; ~9.1s Stage / ~138s CPU)</option>
+      <option value="nemotron-3.5-super-vl" selected>Nemotron 3.5 Super VL (Default &middot; 1M Ctx &middot; ~1.1s Clubbed / ~2.1s CPU)</option>
+      <option value="lfm3-1.7b">Liquid LFM3-1.7B (Compact &middot; 1M Ctx &middot; ~3.5s 24L CPU)</option>
+      <option value="kimi-k3">Kimi K3 2.78T MoE (Deep &middot; 1M Ctx &middot; ~9.1s Stage / ~138s CPU)</option>
     </select>
-    <span id="clover-cpu-pill" style="font-size:0.75rem;font-weight:600;padding:0.25rem 0.6rem;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;" title="NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab): ~2.1s native C engine, ~4.6s with 11-level NCM, ~15-35s full CPU turn">CPU &middot; ~2.1s C / ~4.6s Stage (~15&ndash;35s Turn)</span>
+    <span id="clover-cpu-pill" style="font-size:0.75rem;font-weight:600;padding:0.25rem 0.6rem;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;" title="NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15-35s full CPU turn">CPU &middot; 1M Ctx &middot; ~1.1s Clubbed / ~4.3s Stage</span>
     <button type="button" class="btn" onclick="toggleMemoryDrawer()" id="mem-drawer-btn" title="Inspect File-Based Memory Tree & Relational Knowledge Graph">Memory Graph</button>
   </div>
 </header>
@@ -545,16 +550,16 @@ const STORAGE_KEY = 'clover_k3_sessions_v2';
 const MODEL_STORAGE_KEY = 'clover_selected_model_v1';
 const MODEL_CPU_INFO = {
   'nemotron-3.5-super-vl': {
-    pill: 'CPU · ~2.1s C / ~4.6s Stage (~15–35s Turn)',
-    tip: 'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Default): ~2.1s native C engine, ~4.6s with 11-level NCM, ~15–35s full CPU turn (1.74x faster than Kimi K3 on CPU)'
+    pill: 'CPU · 1M Ctx · ~1.1s Clubbed / ~4.3s Stage',
+    tip: 'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context, Default): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15–35s full CPU turn'
   },
   'lfm3-1.7b': {
-    pill: 'CPU · ~3.5s C / ~6.0s Stage (~15–35s Turn)',
-    tip: 'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn (1.31x faster than Kimi K3 on CPU)'
+    pill: 'CPU · 1M Ctx · ~3.5s 24L C / ~6.0s Stage',
+    tip: 'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab, 1M Clover Session / 256K Native RoPE): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn'
   },
   'kimi-k3': {
-    pill: 'CPU · ~9.1s Stage (~60–140s Turn on CPU)',
-    tip: 'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
+    pill: 'CPU · 1M Ctx · ~9.1s Stage (~60–140s Turn)',
+    tip: 'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab, 1M Clover Session / 256K Native): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
   }
 };
 let selectedModelKey = 'nemotron-3.5-super-vl';
@@ -1927,9 +1932,24 @@ class MultiGPUCloverCoordinator:
                 raw_prompts = [req.prompt for req in batch]
                 histories = [req.hist_snapshot for req in batch]
                 max_cands = max(req.cands for req in batch)
-                outs, ids_list, b_plans, k3_expert_meta, batch_tool_logs = run_agent_batch_with_k3_experts(
-                    eng, raw_prompts, histories=histories, cands=max_cands
+                batch_model_key = getattr(batch[0], "model_key", "nemotron-3.5-super-vl") or "nemotron-3.5-super-vl"
+                alt_renderer = (
+                    self._get_or_load_model_renderer(batch_model_key)
+                    if batch_model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b")
+                    else None
                 )
+                if alt_renderer is not None:
+                    b_plans = plan_batch_with_latent(eng, raw_prompts, lat_steps=6 if eng.dev_ha.type == "cpu" else 14, max_new=180, histories=histories)
+                    outs, ids_list, b_meta = alt_renderer.render_plans_clubbed_batch_in_model_vocab(b_plans)
+                    k3_expert_meta = {
+                        "k3_moe_ms": float(b_meta.get("c_engine_batch_ms", 0.0)),
+                        "clubbed_batch_meta": b_meta,
+                    }
+                    batch_tool_logs = [[] for _ in batch]
+                else:
+                    outs, ids_list, b_plans, k3_expert_meta, batch_tool_logs = run_agent_batch_with_k3_experts(
+                        eng, raw_prompts, histories=histories, cands=max_cands
+                    )
                 cuda_sync(eng.dev, eng.dev_ha)
                 t_tot_ms = (time.perf_counter() - t0) * 1000.0
 
@@ -1945,7 +1965,8 @@ class MultiGPUCloverCoordinator:
                         if isinstance(tc, dict) and tc.get("media"):
                             media_items_i.extend(tc["media"])
                     req.result = {
-                        "mode": "agent_k3_experts_ncm",
+                        "mode": f"agent_{batch_model_key}_clubbed_ncm",
+                        "model": batch_model_key,
                         "session_id": req.session_id,
                         "session_title": sess_info["title"],
                         "context_tokens": sess_info["context_tokens"],

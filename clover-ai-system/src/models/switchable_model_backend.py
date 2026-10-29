@@ -38,6 +38,7 @@ class CloverModelSpec:
     active_experts_per_token: int
     moe_latent_size: int
     max_context_tokens: int
+    native_backbone_context_tokens: int
     has_native_vision: bool
     speculative_drafter_kind: str
     model_subdir: str
@@ -53,7 +54,8 @@ CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
         routed_experts_per_moe_layer=896,
         active_experts_per_token=16,
         moe_latent_size=3584,
-        max_context_tokens=262144,
+        max_context_tokens=1048576,
+        native_backbone_context_tokens=262144,
         has_native_vision=True,
         speculative_drafter_kind="dspark-5-layer",
         model_subdir="kimi-k3",
@@ -68,6 +70,7 @@ CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
         active_experts_per_token=22,
         moe_latent_size=1024,
         max_context_tokens=1048576,
+        native_backbone_context_tokens=1048576,
         has_native_vision=True,
         speculative_drafter_kind="native-mtp-2-layer",
         model_subdir="nemotron-3.5-super-vl",
@@ -81,7 +84,8 @@ CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
         routed_experts_per_moe_layer=0,
         active_experts_per_token=0,
         moe_latent_size=2048,
-        max_context_tokens=262144,
+        max_context_tokens=1048576,
+        native_backbone_context_tokens=262144,
         has_native_vision=False,
         speculative_drafter_kind="prompt-lookup",
         model_subdir="lfm3-1.7b",

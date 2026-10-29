@@ -85,11 +85,20 @@ class Lfm3NativeCPUEngine:
         ]
         self.lib.lfm3_forward_24_layers.restype = ctypes.c_float
 
+        if hasattr(self.lib, "lfm3_forward_24_layers_clubbed"):
+            self.lib.lfm3_forward_24_layers_clubbed.argtypes = [
+                ctypes.POINTER(ctypes.c_int),
+                ctypes.POINTER(ctypes.c_int),
+                ctypes.c_int,
+                ctypes.POINTER(ctypes.c_float),
+            ]
+            self.lib.lfm3_forward_24_layers_clubbed.restype = ctypes.c_float
+
         rc = self.lib.lfm3_engine_init(str(self.pruned_dataset_dir).encode("utf-8"))
         if rc != 0:
             raise RuntimeError(f"lfm3_engine_init({self.pruned_dataset_dir}) failed with rc={rc}")
 
-    def forward_ids(self, token_ids: list[int] | torch.Tensor) -> tuple[torch.Tensor, float]:
+    def forward_ids(self, token_ids: list[int] | torch.Tensor, seg_starts: list[int] | None = None) -> tuple[torch.Tensor, float]:
         if isinstance(token_ids, torch.Tensor):
             ids_list = [int(x) for x in token_ids.view(-1).tolist()]
         else:
@@ -98,7 +107,11 @@ class Lfm3NativeCPUEngine:
         c_ids = (ctypes.c_int * T)(*ids_list)
         out_arr = np.zeros((T, D_LFM3), dtype=np.float32)
         out_ptr = out_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
-        ms = float(self.lib.lfm3_forward_24_layers(c_ids, T, out_ptr))
+        if seg_starts is not None and hasattr(self.lib, "lfm3_forward_24_layers_clubbed"):
+            c_seg = (ctypes.c_int * T)(*[int(x) for x in seg_starts])
+            ms = float(self.lib.lfm3_forward_24_layers_clubbed(c_ids, c_seg, T, out_ptr))
+        else:
+            ms = float(self.lib.lfm3_forward_24_layers(c_ids, T, out_ptr))
         return torch.from_numpy(out_arr), ms
 
 

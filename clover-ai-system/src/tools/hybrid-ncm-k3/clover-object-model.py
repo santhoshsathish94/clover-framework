@@ -37,7 +37,7 @@ from typing import Any, Callable, ClassVar, Dict, List, Optional, Sequence, Set,
 # CONSTANTS — `constant-*`
 # ============================================================================
 
-constant-maximum-session-context-tokens: int = 262_144
+constant-maximum-session-context-tokens: int = 1_048_576
 constant-default-snapshot-interval-in-stages: int = 12
 constant-maximum-carbon-copy-snapshots: int = 8
 constant-total-routed-experts-per-stage: int = 896
@@ -1476,6 +1476,16 @@ class class-switchable-foundation-model-backend(ABC):
     def variable-total-layer-count(self) -> int:
         """Number of backbone layers (`93` for Kimi K3, `88` for Nemotron 3.5 Super VL, `24` for LFM3-1.7B)."""
 
+    @property
+    def variable-maximum-session-context-tokens(self) -> int:
+        """Clover 7-layer hierarchical session context capacity (`1,048,576` tokens across all models)."""
+        return constant-maximum-session-context-tokens
+
+    @property
+    @abstractmethod
+    def variable-native-backbone-context-tokens(self) -> int:
+        """Single-pass native backbone context window (`1,048,576` for Nemotron 3.5 Super VL; `262,144` for Kimi K3 & LFM3-1.7B)."""
+
     @abstractmethod
     def function-build-neural-stage-pipeline(
         self,
@@ -1499,6 +1509,10 @@ class class-kimi-k3-foundation-model-backend(class-switchable-foundation-model-b
     @property
     def variable-total-layer-count(self) -> int:
         return 93
+
+    @property
+    def variable-native-backbone-context-tokens(self) -> int:
+        return 262_144
 
     def function-build-neural-stage-pipeline(
         self,
@@ -1541,6 +1555,10 @@ class class-nemotron-super-vl-foundation-model-backend(class-switchable-foundati
     @property
     def variable-total-layer-count(self) -> int:
         return 88
+
+    @property
+    def variable-native-backbone-context-tokens(self) -> int:
+        return 1_048_576
 
     def function-build-neural-stage-pipeline(
         self,
@@ -1591,6 +1609,10 @@ class class-lfm3-compact-foundation-model-backend(class-switchable-foundation-mo
     @property
     def variable-total-layer-count(self) -> int:
         return 24
+
+    @property
+    def variable-native-backbone-context-tokens(self) -> int:
+        return 262_144
 
     def function-build-neural-stage-pipeline(
         self,

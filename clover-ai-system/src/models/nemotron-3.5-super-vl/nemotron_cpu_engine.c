@@ -355,6 +355,7 @@ static void rms_norm_bf16(
     float eps
 )
 {
+    #pragma omp parallel for schedule(static)
     for (int t = 0; t < T; t++) {
         const float *xr = x + (size_t)t * dim;
         float *yr = y + (size_t)t * dim;
@@ -395,8 +396,8 @@ int nemo_engine_init(const char *pruned_dataset_dir)
     return 0;
 }
 
-/* Executes Stage L1: Pruned `trunk-0` + `operator.bin` (Mamba-2) */
-void nemo_mamba_layer_forward(const float *h_in, float *h_out, int T)
+/* Executes Stage L1: Pruned `trunk-0` + `operator.bin` (Mamba-2) with optional clubbed segment boundaries `seg_starts` */
+void nemo_mamba_layer_forward_seg(const float *h_in, float *h_out, int T, const int *seg_starts)
 {
     const uint8_t *op = (const uint8_t *)g_nemo.trunk0_mamba.operator_mf.ptr;
     uint32_t len_norm, len_in, len_cw, len_cb, len_dtb, len_A, len_D;
@@ -430,7 +431,7 @@ void nemo_mamba_layer_forward(const float *h_in, float *h_out, int T)
     rms_norm_bf16(h_in, norm_w, u, T, NEMO_D, 1e-5f);
     linear_bf16_omp(u, in_proj_w, proj, T, NEMO_MAMBA_IN, NEMO_D);
 
-    /* Causal depthwise conv1d (width 4) + SiLU on channels [8192 .. 8192+10240) */
+    /* Causal depthwise conv1d (width 4) + SiLU on channels [8192 .. 8192+10240), isolated per segment `seg_starts[t]` */
     #pragma omp parallel for schedule(static)
     for (int c = 0; c < NEMO_MAMBA_CONV; c++) {
         float w0 = bf16_to_f32(conv_w[c * 4 + 0]);
@@ -439,9 +440,10 @@ void nemo_mamba_layer_forward(const float *h_in, float *h_out, int T)
         float w3 = bf16_to_f32(conv_w[c * 4 + 3]);
         float bias = bf16_to_f32(conv_b[c]);
         for (int t = 0; t < T; t++) {
-            float x0 = (t - 3 >= 0) ? proj[(size_t)(t - 3) * NEMO_MAMBA_IN + 8192 + c] : 0.0f;
-            float x1 = (t - 2 >= 0) ? proj[(size_t)(t - 2) * NEMO_MAMBA_IN + 8192 + c] : 0.0f;
-            float x2 = (t - 1 >= 0) ? proj[(size_t)(t - 1) * NEMO_MAMBA_IN + 8192 + c] : 0.0f;
+            int s0 = seg_starts ? seg_starts[t] : 0;
+            float x0 = (t - 3 >= s0) ? proj[(size_t)(t - 3) * NEMO_MAMBA_IN + 8192 + c] : 0.0f;
+            float x1 = (t - 2 >= s0) ? proj[(size_t)(t - 2) * NEMO_MAMBA_IN + 8192 + c] : 0.0f;
+            float x2 = (t - 1 >= s0) ? proj[(size_t)(t - 1) * NEMO_MAMBA_IN + 8192 + c] : 0.0f;
             float x3 = proj[(size_t)t * NEMO_MAMBA_IN + 8192 + c];
             float v = bf16_round_f32(x0 * w0 + x1 * w1 + x2 * w2 + x3 * w3 + bias);
             float silu = v / (1.0f + expf(-v));
@@ -449,7 +451,7 @@ void nemo_mamba_layer_forward(const float *h_in, float *h_out, int T)
         }
     }
 
-    /* Selective State Space recurrence across 128 heads (64 head_dim, 128 ssm_state_size, 8 groups) */
+    /* Selective State Space recurrence across 128 heads, resetting state at each clubbed segment start */
     #pragma omp parallel for schedule(static)
     for (int h = 0; h < NEMO_MAMBA_HEADS; h++) {
         int grp = h / 16;
@@ -460,6 +462,9 @@ void nemo_mamba_layer_forward(const float *h_in, float *h_out, int T)
         memset(state, 0, sizeof(state));
 
         for (int t = 0; t < T; t++) {
+            if (seg_starts && t == seg_starts[t]) {
+                memset(state, 0, sizeof(state));
+            }
             float dt_raw = proj[(size_t)t * NEMO_MAMBA_IN + 18432 + h] + dt_b;
             float dt_val = log1pf(expf(dt_raw));
             if (dt_val < 0.001f) dt_val = 0.001f;
@@ -485,6 +490,7 @@ void nemo_mamba_layer_forward(const float *h_in, float *h_out, int T)
     }
 
     /* Group-RMSNormGated (8 groups of 1024 channels) */
+    #pragma omp parallel for schedule(static)
     for (int t = 0; t < T; t++) {
         const float *gate_row = proj + (size_t)t * NEMO_MAMBA_IN;
         const float *y_row = y_ssm + (size_t)t * NEMO_MAMBA_INNER;
@@ -592,50 +598,58 @@ void nemo_latent_moe_layer_forward(const float *h_in, float *h_out, int T)
         if (!in_pool) nemo_slotcache_acquire(e, active_mask, expert_weight_sum[e]);
     }
 
-    /* Execute only the active routed experts on-demand from `experts.direct` */
+    /* Execute only the active routed experts on-demand from `experts.direct`.
+     * Clubbed-batch optimization: gather all `n_m` tokens routed to expert `e` and call
+     * `linear_bf16_omp` ONCE per active expert `e` (streaming `up_w` and `down_w` once across
+     * all `n_m` tokens with 8-token register blocking instead of re-reading `up_w`/`down_w` per token!). */
     const size_t up_elems = (size_t)NEMO_MOE_INTER * NEMO_LATENT;
     const size_t stride_bytes = (size_t)11010048;
     const uint8_t *direct_base = (const uint8_t *)g_nemo.expert1_direct_mf.ptr;
 
+    int *m_toks = (int *)malloc((size_t)T * sizeof(int));
+    float *m_rw = (float *)malloc((size_t)T * sizeof(float));
+    float *g_in = (float *)malloc((size_t)T * NEMO_LATENT * sizeof(float));
+    float *g_inter = (float *)malloc((size_t)T * NEMO_MOE_INTER * sizeof(float));
+    float *g_out = (float *)malloc((size_t)T * NEMO_LATENT * sizeof(float));
+
     for (int e = 0; e < NEMO_EXPERTS; e++) {
         if (!active_mask[e]) continue;
-        const uint16_t *up_w = (const uint16_t *)(direct_base + (size_t)e * stride_bytes);
-        const uint16_t *down_w = up_w + up_elems;
-
+        int n_m = 0;
         for (int t = 0; t < T; t++) {
-            float rw = 0.0f;
-            int matched = 0;
             for (int k = 0; k < NEMO_TOP_K; k++) {
                 if (topk_idx[t * NEMO_TOP_K + k] == e) {
-                    rw = topk_w[t * NEMO_TOP_K + k];
-                    matched = 1;
+                    m_toks[n_m] = t;
+                    m_rw[n_m] = topk_w[t * NEMO_TOP_K + k];
+                    memcpy(g_in + (size_t)n_m * NEMO_LATENT, latent_in + (size_t)t * NEMO_LATENT, NEMO_LATENT * sizeof(float));
+                    n_m++;
                     break;
                 }
             }
-            if (!matched) continue;
+        }
+        if (n_m == 0) continue;
 
-            const float *xin = latent_in + (size_t)t * NEMO_LATENT;
-            float inter[NEMO_MOE_INTER];
-            #pragma omp parallel for schedule(static)
-            for (int m = 0; m < NEMO_MOE_INTER; m++) {
-                const uint16_t *ur = up_w + (size_t)m * NEMO_LATENT;
-                float s = 0.0f;
-                for (int d = 0; d < NEMO_LATENT; d++) s += xin[d] * bf16_to_f32(ur[d]);
-                float sb = bf16_round_f32(s);
-                float r = sb > 0.0f ? sb : 0.0f;
-                inter[m] = bf16_round_f32(r * r);
-            }
+        const uint16_t *up_w = (const uint16_t *)(direct_base + (size_t)e * stride_bytes);
+        const uint16_t *down_w = up_w + up_elems;
+
+        linear_bf16_omp(g_in, up_w, g_inter, n_m, NEMO_MOE_INTER, NEMO_LATENT);
+        for (int i = 0; i < n_m * NEMO_MOE_INTER; i++) {
+            float r = g_inter[i] > 0.0f ? g_inter[i] : 0.0f;
+            g_inter[i] = bf16_round_f32(r * r);
+        }
+        linear_bf16_omp(g_inter, down_w, g_out, n_m, NEMO_LATENT, NEMO_MOE_INTER);
+
+        for (int idx_m = 0; idx_m < n_m; idx_m++) {
+            int t = m_toks[idx_m];
+            float rw = m_rw[idx_m];
             float *lacc = latent_acc + (size_t)t * NEMO_LATENT;
-            #pragma omp parallel for schedule(static)
+            const float *go = g_out + (size_t)idx_m * NEMO_LATENT;
             for (int d = 0; d < NEMO_LATENT; d++) {
-                const uint16_t *dr = down_w + (size_t)d * NEMO_MOE_INTER;
-                float s = 0.0f;
-                for (int m = 0; m < NEMO_MOE_INTER; m++) s += inter[m] * bf16_to_f32(dr[m]);
-                float out_d = bf16_round_f32(s) * rw;
-                lacc[d] += out_d;
+                lacc[d] += go[d] * rw;
             }
         }
     }
+
+    free(m_toks); free(m_rw); free(g_in); free(g_inter); free(g_out);
 
     for (int i = 0; i < T * NEMO_LATENT; i++) latent_acc[i] = bf16_round_f32(latent_acc[i]);
     linear_bf16_omp(latent_acc, fc2_w, routed_4096, T, NEMO_D, NEMO_LATENT);
@@ -657,8 +671,8 @@ void nemo_latent_moe_layer_forward(const float *h_in, float *h_out, int T)
     free(sh_inter); free(shared_4096); free(topk_idx); free(topk_w);
 }
 
-/* Executes Stage L3: Pruned `trunk-7` + `operator.bin` (NoPE 16:1 GQA Attention) */
-void nemo_gqa_layer_forward(const float *h_in, float *h_out, int T)
+/* Executes Stage L3: Pruned `trunk-7` + `operator.bin` (NoPE 16:1 GQA Attention) with segment isolation */
+void nemo_gqa_layer_forward_seg(const float *h_in, float *h_out, int T, const int *seg_starts)
 {
     const uint8_t *op = (const uint8_t *)g_nemo.trunk7_gqa.operator_mf.ptr;
     uint32_t len_norm, len_q, len_k, len_v;
@@ -690,11 +704,12 @@ void nemo_gqa_layer_forward(const float *h_in, float *h_out, int T)
     #pragma omp parallel for schedule(static)
     for (int h = 0; h < NEMO_GQA_HEADS; h++) {
         int kv_h = h / 16;
+        float *scores = (float *)malloc((size_t)T * sizeof(float));
         for (int t = 0; t < T; t++) {
+            int j_start = seg_starts ? seg_starts[t] : 0;
             const float *qh = q + (size_t)t * NEMO_GQA_Q + h * NEMO_GQA_HDIM;
-            float scores[1024];
             float max_s = -1e30f;
-            for (int j = 0; j <= t; j++) {
+            for (int j = j_start; j <= t; j++) {
                 const float *kh = k + (size_t)j * NEMO_GQA_KV + kv_h * NEMO_GQA_HDIM;
                 float dot = 0.0f;
                 for (int d = 0; d < NEMO_GQA_HDIM; d++) dot += qh[d] * kh[d];
@@ -702,23 +717,24 @@ void nemo_gqa_layer_forward(const float *h_in, float *h_out, int T)
                 if (scores[j] > max_s) max_s = scores[j];
             }
             float sum_exp = 0.0f;
-            for (int j = 0; j <= t; j++) {
+            for (int j = j_start; j <= t; j++) {
                 scores[j] = expf(scores[j] - max_s);
                 sum_exp += scores[j];
             }
-            for (int j = 0; j <= t; j++) {
+            for (int j = j_start; j <= t; j++) {
                 scores[j] = bf16_round_f32(scores[j] / sum_exp);
             }
             float *out_h = attn_out + (size_t)t * NEMO_GQA_Q + h * NEMO_GQA_HDIM;
             for (int d = 0; d < NEMO_GQA_HDIM; d++) {
                 float acc = 0.0f;
-                for (int j = 0; j <= t; j++) {
+                for (int j = j_start; j <= t; j++) {
                     const float *vh = v + (size_t)j * NEMO_GQA_KV + kv_h * NEMO_GQA_HDIM;
                     acc += scores[j] * vh[d];
                 }
                 out_h[d] = bf16_round_f32(acc);
             }
         }
+        free(scores);
     }
 
     linear_bf16_omp(attn_out, o_w, branch_out, T, NEMO_D, NEMO_GQA_Q);
@@ -729,8 +745,8 @@ void nemo_gqa_layer_forward(const float *h_in, float *h_out, int T)
     free(u); free(q); free(k); free(v); free(attn_out); free(branch_out);
 }
 
-/* Executes full Nemotron C/OpenMP pipeline (`Embedding -> Mamba-2 -> Latent MoE -> NoPE GQA -> Final RMSNorm`) */
-float nemo_forward_pipeline(const int *token_ids, int T, float *out_final_hidden)
+/* Executes full Nemotron C/OpenMP pipeline with optional clubbed segment isolation `seg_starts` */
+float nemo_forward_pipeline_clubbed(const int *token_ids, const int *seg_starts, int T, float *out_final_hidden)
 {
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
@@ -750,15 +766,20 @@ float nemo_forward_pipeline(const int *token_ids, int T, float *out_final_hidden
         for (int d = 0; d < NEMO_D; d++) dst[d] = bf16_to_f32(erow[d]);
     }
 
-    nemo_mamba_layer_forward(h0, h1, T);
+    nemo_mamba_layer_forward_seg(h0, h1, T, seg_starts);
     nemo_latent_moe_layer_forward(h1, h2, T);
-    nemo_gqa_layer_forward(h2, h3, T);
+    nemo_gqa_layer_forward_seg(h2, h3, T, seg_starts);
     rms_norm_bf16(h3, norm_f_w, out_final_hidden, T, NEMO_D, 1e-5f);
 
     free(h0); free(h1); free(h2); free(h3);
 
     clock_gettime(CLOCK_MONOTONIC, &t1);
     return (float)((t1.tv_sec - t0.tv_sec) * 1000.0 + (t1.tv_nsec - t0.tv_nsec) / 1e6);
+}
+
+float nemo_forward_pipeline(const int *token_ids, int T, float *out_final_hidden)
+{
+    return nemo_forward_pipeline_clubbed(token_ids, NULL, T, out_final_hidden);
 }
 
 void nemo_dm_stats(unsigned long *out6)

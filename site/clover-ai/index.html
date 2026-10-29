@@ -113,12 +113,12 @@
         <div class="clover-model-picker" title="Switch Layer-1 Foundation Model Backbone inside Clover's 7-layer architecture">
           <label for="clover-model-select" class="clover-model-label">Model</label>
           <select id="clover-model-select" class="clover-model-select" aria-label="Select Layer-1 Foundation Model" onchange="k3OnModelChanged(this.value)">
-            <option value="nemotron-3.5-super-vl" selected>Nemotron 3.5 Super VL (Default &middot; ~2.1s C / ~4.6s CPU)</option>
-            <option value="lfm3-1.7b">Liquid LFM3-1.7B (Compact &middot; ~3.5s C / ~6.0s CPU)</option>
-            <option value="kimi-k3">Kimi K3 2.78T MoE (Deep &middot; ~9.1s Stage / ~138s CPU)</option>
+            <option value="nemotron-3.5-super-vl" selected>Nemotron 3.5 Super VL (Default &middot; 1M Ctx &middot; ~1.1s Clubbed / ~2.1s CPU)</option>
+            <option value="lfm3-1.7b">Liquid LFM3-1.7B (Compact &middot; 1M Ctx &middot; ~3.5s 24L CPU)</option>
+            <option value="kimi-k3">Kimi K3 2.78T MoE (Deep &middot; 1M Ctx &middot; ~9.1s Stage / ~138s CPU)</option>
           </select>
         </div>
-        <span class="clover-cpu-pill" id="clover-cpu-pill" title="NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab): ~2.1s native C engine, ~4.6s with 11-level NCM, ~15-35s full CPU turn (1.74x faster than Kimi K3 on CPU)">CPU &middot; ~2.1s C / ~4.6s Stage (~15&ndash;35s Turn)</span>
+        <span class="clover-cpu-pill" id="clover-cpu-pill" title="NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context, Default): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15-35s full CPU turn">CPU &middot; 1M Ctx &middot; ~1.1s Clubbed / ~4.3s Stage</span>
       </div>
     </div>
 
@@ -192,19 +192,19 @@
   var constant_default_model_key = 'nemotron-3.5-super-vl';
   var constant_model_cpu_response_descriptions = {
     'nemotron-3.5-super-vl': {
-      pillText: 'CPU · ~2.1s C / ~4.6s Stage (~15–35s Turn)',
+      pillText: 'CPU · 1M Ctx · ~1.1s Clubbed / ~4.3s Stage',
       tooltip:
-        'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Default): ~2.1s native C engine, ~4.6s with 11-level NCM, ~15–35s full CPU turn (1.74x faster than Kimi K3 on CPU)'
+        'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context, Default): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15–35s full CPU turn'
     },
     'lfm3-1.7b': {
-      pillText: 'CPU · ~3.5s C / ~6.0s Stage (~15–35s Turn)',
+      pillText: 'CPU · 1M Ctx · ~3.5s 24L C / ~6.0s Stage',
       tooltip:
-        'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn (1.31x faster than Kimi K3 on CPU)'
+        'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab, 1M Clover Session / 256K Native RoPE): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn'
     },
     'kimi-k3': {
-      pillText: 'CPU · ~9.1s Stage (~60–140s Turn on CPU)',
+      pillText: 'CPU · 1M Ctx · ~9.1s Stage (~60–140s Turn)',
       tooltip:
-        'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
+        'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab, 1M Clover Session / 256K Native): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
     }
   };
   var constant_mobile_sidebar_breakpoint_pixels = 760;

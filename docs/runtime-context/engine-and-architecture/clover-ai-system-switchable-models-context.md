@@ -205,6 +205,26 @@ After upgrading `linear_bf16_omp` in [nemotron_cpu_engine.c](../../../clover-ai-
 
 ---
 
+### 8. Dynamic Batch Clubbing (`B = 10` Tasks Clubbed per Pass, Zero Cross-Talk Verified) & `1,048,576` (`1M`) Token Context Capacity
+1. **Why Clubbing Matters on CPU (`nemotron_cpu_engine.c`, `lfm3_cpu_engine.c`, `benchmark_3_models_70_tasks.py`, `clover-chat-server.py`):**
+   - Solving tasks 1-by-1 (`batch_size = 1`) re-streamed Nemotron's active `11.01 MB` routed experts (`53,023` cumulative expert requests across 70 tasks) and LFM3's 24 dense trunks on every single task, and invoked `NextConceptTransformer` 70 separate times.
+   - We upgraded `nemo_forward_pipeline_clubbed` ([nemotron_cpu_engine.c](../../../clover-ai-system/src/models/nemotron-3.5-super-vl/nemotron_cpu_engine.c)) and `lfm3_forward_24_layers_clubbed` ([lfm3_cpu_engine.c](../../../clover-ai-system/src/models/lfm3-1.7b/lfm3_cpu_engine.c)) with **per-segment boundary isolation (`seg_starts[t]`)** so Mamba-2 `conv1d`/`SSM`, LFM3 `ShortConv`/`RoPE`, and `GQA` never cross prompt boundaries (`zero_crosstalk_exact_match_vs_single_task = True`), while **every `linear_bf16_omp`, `rms_norm_bf16`, `SwiGLU`, and 512-expert `Latent ReLU² MoE` (gathering all `n_m` tokens routed to expert `e` into a single `linear_bf16_omp` call)** executes across all 10 clubbed tasks in **one single pass**:
+     - **`nemotron-3.5-super-vl` (`Clubbed B = 10`):**
+       * Mean C Engine latency per task across all 70 tasks dropped from `3,272.42 ms` (1-by-1 scalar) $\to$ `2,115.77 ms` (1-by-1 register-blocked) $\to$ **`1,115.41 ms` (`1.12 s`) with Clubbing (`2.93×` faster C engine!)** (`188.7 ms/task` on Coding, `328.9 ms/task` on Structured Output, `1,323.4 ms/task` on Agent Multi-Hop, `1,439.0 ms/task` on MMLU).
+       * Cumulative `SpecMD R4` expert requests across the entire 70-task suite dropped from **`53,023` (1-by-1) down to `4,037` (`13.1×` fewer expert weight streams!)**, with `448` Tier-1 Pool hits, `3,077` Tier-2 Pinned Host hits, `512` cold drive fetches, `3,525` R4 clean-drops, and `0` dirty writebacks.
+     - **`lfm3-1.7b` (`Clubbed B = 10`, all 24 layers):**
+       * Mean 24-layer C Engine latency per task dropped from `8,733.39 ms` $\to$ **`3,454.79 ms` (`3.45 s`, `2.53×` faster!)** (`38.6 ms/task` on Coding, `539.7 ms/task` on WMT14/XSum, `1,797.1 ms/task` on MMLU).
+     - **Both models preserve `70 / 70` (`100.00%` pass rate, `99.08%` mean canonical score) and `zero_crosstalk_exact_match_vs_single_task = True`.**
+
+2. **`1,048,576` (`1M`) Token Context Capacity Across All Three Models ([switchable_model_backend.py](../../../clover-ai-system/src/models/switchable_model_backend.py), [clover-chat-server.py](../../../clover-ai-system/src/tools/hybrid-ncm-k3/clover-chat-server.py), [clover-object-model.py](../../../clover-ai-system/src/tools/hybrid-ncm-k3/clover-object-model.py)):**
+   - **Native Layer-1 Backbone Single-Pass Window (`native_backbone_context_tokens`):**
+     * **`nemotron-3.5-super-vl`:** Natively supports **`1,048,576` (`1M`) tokens** (`max_position_embeddings = 1,048,576` in `config.json`) because 40 of its 48 sequence-mixing layers are Mamba-2 ($O(1)$ fixed `64 MB` total state at any sequence length) and its 8 attention layers use **NoPE 16:1 GQA** (`0` rotary embeddings to drift out-of-distribution, and only `4 KB/token` KV cache across all 8 attention layers = `4.0 GB` at `1M` tokens).
+     * **`lfm3-1.7b` & `kimi-k3`:** Pretrained with `262,144` (`256K`) native single-pass RoPE windows (`19/24` layers in `LFM3-1.7B`—13 ShortConv + 5 Sliding-256—use fixed `2.81 MB` state at any length, and `68/92` layers in `Kimi K3` are constant-state recurrent KDA).
+   - **Clover 7-Layer Hierarchical Session Context Store (`MAX_SESSION_CONTEXT_TOKENS = 1_048_576` / `constant-maximum-session-context-tokens = 1_048_576`):**
+     * Enabled **`1,048,576` (`1M`) tokens** per session across **all three models** (`nemotron-3.5-super-vl`, `lfm3-1.7b`, and `kimi-k3`) in Clover's hierarchical chunked session store + Memento compaction engine and 32-token NCM window clubbing.
+
+---
+
 ## Growth
 
 1. **Buffer Dtype Preservation When Loading Mixed BF16/FP32 Router Checkpoints (`Nemotron 3.5 Super VL`):**

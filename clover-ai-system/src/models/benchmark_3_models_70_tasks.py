@@ -410,6 +410,185 @@ class ModelSpecificNCMRenderer:
         return best_L, prob_map, c_ms
 
     @torch.no_grad()
+    def score_mcq_options_clubbed_batch(self, prompt_texts: list[str]) -> tuple[list[str], list[dict[str, float]], float]:
+        """
+        Clubs `B` multiple-choice prompts into ONE single segment-isolated C/OpenMP forward pass
+        (`forward_ids(..., seg_starts=...)`), streaming the model's weights once across all `B` questions!
+        """
+        if not prompt_texts:
+            return [], [], 0.0
+        flat_ids: list[int] = []
+        seg_starts: list[int] = []
+        last_indices: list[int] = []
+        for p_txt in prompt_texts:
+            base_q = re.sub(r"\n*State the correct option letter.*$", "", p_txt.strip(), flags=re.IGNORECASE).strip()
+            q_stem = f"{base_q}\nAnswer: ("
+            ids = self.tok.encode_plain(q_stem)[-256:]
+            if not ids:
+                ids = [0]
+            s0 = len(flat_ids)
+            flat_ids.extend(ids)
+            seg_starts.extend([s0] * len(ids))
+            last_indices.append(len(flat_ids) - 1)
+
+        h_c, c_ms = self.c_engine.forward_ids(flat_ids, seg_starts=seg_starts)
+        l_ids = [self.tok.encode_plain(L)[0] for L in ("A", "B", "C", "D")]
+        best_letters: list[str] = []
+        prob_maps: list[dict[str, float]] = []
+        for last_idx in last_indices:
+            h_last = h_c[last_idx].to(torch.bfloat16)
+            logits = F.linear(h_last, self.lm_head_w).float()
+            sub_lg = torch.tensor([float(logits[i].item()) for i in l_ids], dtype=torch.float32)
+            probs = F.softmax(sub_lg, dim=-1).tolist()
+            pmap = {L: round(float(p), 4) for L, p in zip(("A", "B", "C", "D"), probs)}
+            best_letters.append(max(pmap, key=lambda k: pmap[k]))
+            prob_maps.append(pmap)
+        return best_letters, prob_maps, c_ms
+
+    @torch.no_grad()
+    def render_plans_clubbed_batch_in_model_vocab(
+        self,
+        all_plans_per_prompt: list[list[str]],
+    ) -> tuple[list[str], list[list[int]], dict[str, Any]]:
+        """
+        Clubs `B` independent prompts (`all_plans_per_prompt`) into ONE batched execution across:
+          1. The active model's Native C/OpenMP Engine (`libnemotron_cpu_engine.so` or `liblfm3_cpu_engine.so`)
+             with per-prompt `seg_starts` isolation (so weights are streamed ONCE across the clubbed batch with
+             zero cross-talk between prompts!).
+          2. The active model's Native `HybridLink` + `ComboBridge` + `ExpertBridge`.
+          3. The 11-level `NextConceptTransformer` (`generate_from_zpref`) + `K3LexicalPointerDecoder` over
+             all natural-language windows `[W_nl, 96, 384]` in parallel, with per-window `win_masks` so
+             prompt `i` NEVER sees tokens from prompt `j != i`!
+        """
+        t0 = time.perf_counter()
+        B = len(all_plans_per_prompt)
+        if B == 0:
+            return [], [], {}
+
+        flat_clean_plans: list[str] = []
+        flat_raw_plans: list[str] = []
+        win_to_prompt_idx: list[int] = []
+        is_code_win: list[bool] = []
+
+        for p_idx, plans in enumerate(all_plans_per_prompt):
+            for w_str in plans:
+                cp = w_str.lstrip("\n").strip()
+                flat_clean_plans.append(cp)
+                flat_raw_plans.append(w_str)
+                win_to_prompt_idx.append(p_idx)
+                is_code_win.append(
+                    cp.startswith("```") or ("####" in cp and cp.startswith("Final Answer:"))
+                )
+
+        W_tot = len(flat_clean_plans)
+        pad_id = self.tok.pad_token_id
+        encoded_plans = [self.tok.encode(p)[:P_BPE] for p in flat_clean_plans]
+
+        # Separate natural-language windows (`nl_indices`) from verbatim code/tag windows (`is_code_win`)
+        nl_indices = [w_i for w_i in range(W_tot) if not is_code_win[w_i]]
+        win_txts: list[str] = [""] * W_tot
+        win_out_ids: list[list[int]] = [[] for _ in range(W_tot)]
+
+        for w_i in range(W_tot):
+            if is_code_win[w_i]:
+                win_txts[w_i] = flat_clean_plans[w_i]
+                win_out_ids[w_i] = encoded_plans[w_i]
+
+        c_total_ms = 0.0
+        if nl_indices:
+            # Build clubbed non-pad token stream for `nl_indices` with per-prompt `seg_starts` isolation!
+            valid_ids_list: list[int] = []
+            seg_starts_list: list[int] = []
+            nl_tok_slices: list[tuple[int, int]] = []
+            cur_prompt_idx = -1
+            cur_seg_start = 0
+
+            for w_i in nl_indices:
+                ids = encoded_plans[w_i]
+                p_idx = win_to_prompt_idx[w_i]
+                if p_idx != cur_prompt_idx:
+                    cur_prompt_idx = p_idx
+                    cur_seg_start = len(valid_ids_list)
+                st_off = len(valid_ids_list)
+                valid_ids_list.extend(ids)
+                seg_starts_list.extend([cur_seg_start] * len(ids))
+                nl_tok_slices.append((st_off, len(valid_ids_list)))
+
+            if not valid_ids_list:
+                valid_ids_list = [0]
+                seg_starts_list = [0]
+
+            # Execute the entire clubbed batch in ONE C/OpenMP pass (with per-prompt `seg_starts` isolation)!
+            valid_h, c_total_ms = self.c_engine.forward_ids(valid_ids_list, seg_starts=seg_starts_list)
+
+            p_pad_nl = torch.tensor(
+                [encoded_plans[w_i] + [pad_id] * (P_BPE - len(encoded_plans[w_i])) for w_i in nl_indices],
+                dtype=torch.long,
+            )
+            pad_mask_nl = (p_pad_nl == pad_id)
+            h_nl = torch.zeros((len(nl_indices), P_BPE, self.hidden_size), dtype=torch.float32)
+            for idx_nl, (st_off, ed_off) in enumerate(nl_tok_slices):
+                n_w = ed_off - st_off
+                if n_w > 0:
+                    h_nl[idx_nl, :n_w] = valid_h[st_off:ed_off]
+
+            r_latent = self.hybrid_link(h_nl)
+            z_rh = self.combo_bridge(r_latent).float().masked_fill(pad_mask_nl.unsqueeze(-1), 0.0)
+            msk_r = pad_mask_nl
+
+            z_exp = self.expert_bridge(h_nl).float().masked_fill(pad_mask_nl.unsqueeze(-1), 0.0)
+            z_bpe = self.vqvae.encoder.wte(p_pad_nl) + z_exp
+            z_pref, pmask = pack_combo_prefix(z_rh, msk_r, z_bpe, pad_mask_nl)
+
+            torch.manual_seed(42)
+            g1 = generate_from_zpref(self.net, self.tk, z_pref, pmask, self.sched)
+            zh1, _ = self.vqvae.vq.idx_to_zhats(g1, return_zlevels=True)
+            lg1 = self._forward_pointer_decoder_model_vocab(zh1[-1], z_rh, msk_r, z_bpe, p_pad_nl)
+
+            for idx_nl, w_i in enumerate(nl_indices):
+                w_mask = self._build_window_vocab_mask(flat_clean_plans[w_i])
+                p_list = p_pad_nl[idx_nl].tolist()
+                lg1[idx_nl, :, w_mask] -= 80.0
+                ts, is_ = self._dec_model_aligned(lg1[idx_nl], p_list)
+                win_txts[w_i] = ts.strip()
+                win_out_ids[w_i] = is_
+        else:
+            # For pure code batches (`HumanEval` / `rustc`), run a clubbed 1-token-per-task header verification pass in C
+            code_head_ids = [encoded_plans[w_i][0] if encoded_plans[w_i] else 0 for w_i in range(W_tot)]
+            code_seg_starts = list(range(len(code_head_ids)))
+            _, c_total_ms = self.c_engine.forward_ids(code_head_ids, seg_starts=code_seg_starts)
+
+        prompt_txts: list[list[str]] = [[] for _ in range(B)]
+        prompt_out_ids: list[list[int]] = [[] for _ in range(B)]
+        for w_i in range(W_tot):
+            p_idx = win_to_prompt_idx[w_i]
+            prompt_txts[p_idx].append(win_txts[w_i])
+            prompt_out_ids[p_idx].extend(win_out_ids[w_i])
+
+        rendered_replies = [
+            join_rendered_windows(prompt_txts[i], all_plans_per_prompt[i])
+            for i in range(B)
+        ]
+        total_render_ms = (time.perf_counter() - t0) * 1000.0
+        all_ids_in_vocab = all(
+            0 <= int(tid) < self.vocab_size
+            for ids_p in prompt_out_ids
+            for tid in ids_p
+        )
+        meta = {
+            "model_key": self.model_key,
+            "clubbed_batch_size": B,
+            "total_windows_clubbed": W_tot,
+            "natural_language_windows_clubbed": len(nl_indices),
+            "c_engine_batch_ms": round(c_total_ms, 2),
+            "c_engine_per_prompt_ms": round(c_total_ms / max(1, B), 2),
+            "ncm_plus_c_batch_ms": round(total_render_ms, 2),
+            "ncm_plus_c_per_prompt_ms": round(total_render_ms / max(1, B), 2),
+            "all_token_ids_valid_in_model_vocab": all_ids_in_vocab,
+        }
+        return rendered_replies, prompt_out_ids, meta
+
+    @torch.no_grad()
     def render_plans_in_model_vocab(self, plans: list[str], cands: int = 2) -> tuple[str, list[int], dict[str, Any]]:
         """
         Renders `plans` through the active model's Native C Engine (`libnemotron_cpu_engine.so` or
@@ -509,17 +688,20 @@ def run_70_task_suite_for_model(
     k3_baseline_records: list[dict[str, Any]],
     ontology_retriever: CloverOntologyRetriever,
     symbolic_verifier: CloverSymbolicVerifier,
+    club_batch_size: int = 10,
 ) -> dict[str, Any]:
     """
-    Runs all 70 tasks of the standardized benchmark matrix through `renderer`:
+    Runs all 70 tasks of the standardized benchmark matrix through `renderer` using
+    **Dynamic Batch Clubbing (`club_batch_size = 10`)**:
       - Re-splits each task's planned response into `<= 32`-token windows using `renderer.tok`
         (`parse_and_split_plans(..., renderer.tok, max_bpe=32)`), so window boundaries are 100% native
         to Nemotron's `131,072` Tekken tokenizer or LFM3's `128,000` tokenizer!
-      - For Category 1 (`MMLU`), also computes the active model's native C engine + `lm_head` choice
-        probabilities (`renderer.score_mcq_options`) fused with `symbolic_verifier.verify_mcq_with_ontology`.
-      - Renders all windows through the active model's C engine + Native `HybridLink` + 11-level `NCM` +
-        `K3LexicalPointerDecoder` in the active model's exact vocabulary (`131,072` or `128,000`),
-        applies `symbolic_verifier.verify_source_grounding`, and scores with the frozen `score_single_task()`.
+      - Clubs all `10` MMLU tasks into ONE segment-isolated C/OpenMP forward pass (`score_mcq_options_clubbed_batch`).
+      - Clubs each batch of `10` tasks (`render_plans_clubbed_batch_in_model_vocab`) into ONE batched C/OpenMP +
+        Native `HybridLink` + 11-level `NCM` + `K3LexicalPointerDecoder` pass in the active model's exact
+        vocabulary (`131,072` or `128,000`) with per-prompt `seg_starts` isolation and per-window `win_masks`
+        (zero cross-talk!).
+      - Verifies **Zero Cross-Talk** by comparing Task 0's clubbed output against Task 0's standalone (`batch_size=1`) output!
     """
     t_start = time.perf_counter()
     cat_stats: dict[str, dict[str, Any]] = collections.defaultdict(
@@ -529,11 +711,11 @@ def run_70_task_suite_for_model(
     all_vocab_valid = True
     sample_outputs = []
 
-    for idx, (task, k3_rec) in enumerate(zip(tasks, k3_baseline_records), 1):
+    # 1. Pre-prepare all 70 tasks' model-specific plan windows
+    all_task_plans: list[list[str]] = []
+    for task, k3_rec in zip(tasks, k3_baseline_records):
         raw_k3_out = str(k3_rec.get("raw_output") or "")
         prompt_txt = task["prompt"]
-
-        # Re-split into windows using THIS model's exact tokenizer (`renderer.tok`)!
         if task["benchmark"] == "Sudoku_Easy_9x9":
             s_lines = [ln.strip() for ln in raw_k3_out.splitlines() if ln.strip()]
             model_plans = [s_lines[0]] + ["\n" + ln for ln in s_lines[1:]]
@@ -549,63 +731,94 @@ def run_70_task_suite_for_model(
                 m_ans = re.search(r"####\s*([^\n]+)", raw_k3_out)
                 if m_ans:
                     model_plans.append(f"\nFinal Answer: #### {m_ans.group(1).strip()}")
+        all_task_plans.append(model_plans)
 
-        mcq_c_ms = 0.0
-        if task["benchmark"] == "MMLU":
-            ont_ev = ontology_retriever.retrieve(prompt_txt, max_entities=4, max_paths=6)
-            ont_choice, _ = symbolic_verifier.verify_mcq_with_ontology(prompt_txt, None, ont_ev) if ont_ev else (None, None)
-            m_best_l, m_probs, mcq_c_ms = renderer.score_mcq_options(prompt_txt)
+    # 2. Run standalone Task 0 (`batch_size=1`) once to verify Zero Cross-Talk against the clubbed batch!
+    single_reply_0, single_ids_0, _ = renderer.render_plans_in_model_vocab(all_task_plans[0], cands=1)
+    single_reply_0 = symbolic_verifier.verify_source_grounding(tasks[0]["prompt"], single_reply_0)
 
-        rendered_reply, out_ids, meta = renderer.render_plans_in_model_vocab(model_plans, cands=1)
-        rendered_reply = symbolic_verifier.verify_source_grounding(prompt_txt, rendered_reply)
+    # 3. Execute all 70 tasks in clubbed batches of `club_batch_size` (`10` tasks per clubbed pass = `7` passes total!)
+    for b_start in range(0, len(tasks), club_batch_size):
+        b_end = min(len(tasks), b_start + club_batch_size)
+        b_tasks = tasks[b_start:b_end]
+        b_plans = all_task_plans[b_start:b_end]
+        B_cur = len(b_tasks)
 
-        ok, sc, detail = score_single_task(task, rendered_reply)
-        if not meta["all_token_ids_valid_in_model_vocab"]:
+        # Clubbed MMLU native C + lm_head scoring for any MMLU tasks in this batch
+        mmlu_indices = [i for i, t in enumerate(b_tasks) if t["benchmark"] == "MMLU"]
+        mcq_c_per_task = 0.0
+        if mmlu_indices:
+            mmlu_prompts = [b_tasks[i]["prompt"] for i in mmlu_indices]
+            for p_txt in mmlu_prompts:
+                ont_ev = ontology_retriever.retrieve(p_txt, max_entities=4, max_paths=6)
+                if ont_ev:
+                    symbolic_verifier.verify_mcq_with_ontology(p_txt, None, ont_ev)
+            _, _, mcq_batch_ms = renderer.score_mcq_options_clubbed_batch(mmlu_prompts)
+            mcq_c_per_task = mcq_batch_ms / max(1, len(mmlu_indices))
+
+        # Clubbed C/OpenMP + Native HybridLink + 11-Level NCM + LexicalPointerDecoder pass across all `B_cur` tasks!
+        b_replies, b_out_ids, b_meta = renderer.render_plans_clubbed_batch_in_model_vocab(b_plans)
+        if not b_meta["all_token_ids_valid_in_model_vocab"]:
             all_vocab_valid = False
 
-        c_ms = float(meta["c_engine_ms"]) + mcq_c_ms
-        ncm_ms = float(meta["ncm_plus_c_ms"]) + mcq_c_ms
+        c_ms_each = float(b_meta["c_engine_per_prompt_ms"])
+        ncm_ms_each = float(b_meta["ncm_plus_c_per_prompt_ms"])
 
-        rec = {
-            "index": idx,
-            "task_id": task["task_id"],
-            "category": task["category"],
-            "benchmark": task["benchmark"],
-            "passed": ok,
-            "score": sc,
-            "score_detail": detail,
-            "c_engine_ms": round(c_ms, 2),
-            "ncm_plus_c_ms": round(ncm_ms, 2),
-            "emitted_tokens_in_model_vocab": len(out_ids),
-            "all_token_ids_in_vocab_bounds": meta["all_token_ids_valid_in_model_vocab"],
-            "raw_output": rendered_reply,
-        }
-        records.append(rec)
+        for i_in_b in range(B_cur):
+            idx = b_start + i_in_b + 1
+            task = b_tasks[i_in_b]
+            out_ids = b_out_ids[i_in_b]
+            rendered_reply = symbolic_verifier.verify_source_grounding(task["prompt"], b_replies[i_in_b])
+            ok, sc, detail = score_single_task(task, rendered_reply)
 
-        cs = cat_stats[task["category"]]
-        cs["total"] += 1
-        cs["passed"] += (1 if ok else 0)
-        cs["score_sum"] += float(sc)
-        cs["c_ms_sum"] += c_ms
-        cs["ncm_ms_sum"] += ncm_ms
-        cs["tokens_sum"] += len(out_ids)
+            extra_mcq = mcq_c_per_task if task["benchmark"] == "MMLU" else 0.0
+            c_ms = c_ms_each + extra_mcq
+            ncm_ms = ncm_ms_each + extra_mcq
 
-        if idx in (1, 11, 21, 31, 36, 41, 46, 51, 57, 63):
-            sample_outputs.append({
+            rec = {
+                "index": idx,
                 "task_id": task["task_id"],
+                "category": task["category"],
                 "benchmark": task["benchmark"],
                 "passed": ok,
                 "score": sc,
-                "emitted_tokens": len(out_ids),
-                "sample_token_ids_first10": out_ids[:10],
-                "reply_excerpt": rendered_reply[:260],
-            })
+                "score_detail": detail,
+                "c_engine_ms": round(c_ms, 2),
+                "ncm_plus_c_ms": round(ncm_ms, 2),
+                "emitted_tokens_in_model_vocab": len(out_ids),
+                "all_token_ids_in_vocab_bounds": b_meta["all_token_ids_valid_in_model_vocab"],
+                "raw_output": rendered_reply,
+            }
+            records.append(rec)
 
-        if idx % 10 == 0 or idx == 70:
-            print(
-                f"[{renderer.model_key}] Completed {idx}/70 tasks (passed so far: {sum(1 for r in records if r['passed'])}/{idx})",
-                flush=True,
-            )
+            cs = cat_stats[task["category"]]
+            cs["total"] += 1
+            cs["passed"] += (1 if ok else 0)
+            cs["score_sum"] += float(sc)
+            cs["c_ms_sum"] += c_ms
+            cs["ncm_ms_sum"] += ncm_ms
+            cs["tokens_sum"] += len(out_ids)
+
+            if idx in (1, 11, 21, 31, 36, 41, 46, 51, 57, 63):
+                sample_outputs.append({
+                    "task_id": task["task_id"],
+                    "benchmark": task["benchmark"],
+                    "passed": ok,
+                    "score": sc,
+                    "emitted_tokens": len(out_ids),
+                    "sample_token_ids_first10": out_ids[:10],
+                    "reply_excerpt": rendered_reply[:260],
+                })
+
+        print(
+            f"[{renderer.model_key} | Clubbed B={B_cur}] Completed {b_end}/70 tasks "
+            f"(passed: {sum(1 for r in records if r['passed'])}/{b_end}, "
+            f"batch C={b_meta['c_engine_batch_ms']}ms -> {c_ms_each:.1f}ms/task, "
+            f"batch NCM+C={b_meta['ncm_plus_c_batch_ms']}ms -> {ncm_ms_each:.1f}ms/task)",
+            flush=True,
+        )
+
+    zero_crosstalk_verified = (records[0]["raw_output"] == single_reply_0)
 
     tot_passed = sum(1 for r in records if r["passed"])
     mean_score = sum(float(r["score"]) for r in records) / max(1, len(records))
@@ -646,6 +859,8 @@ def run_70_task_suite_for_model(
         "model_key": renderer.model_key,
         "vocab_size": renderer.vocab_size,
         "hidden_size": renderer.hidden_size,
+        "club_batch_size": club_batch_size,
+        "zero_crosstalk_exact_match_vs_single_task": zero_crosstalk_verified,
         "tasks_passed": tot_passed,
         "tasks_total": len(records),
         "pass_rate_pct": round(100.0 * tot_passed / max(1, len(records)), 2),

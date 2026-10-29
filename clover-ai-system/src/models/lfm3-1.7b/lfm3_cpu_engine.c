@@ -244,6 +244,7 @@ static void rms_norm_bf16(
     float eps
 )
 {
+    #pragma omp parallel for num_threads(8) schedule(static)
     for (int r = 0; r < n_rows; r++) {
         const float *xr = x + (size_t)r * dim;
         float *yr = y + (size_t)r * dim;
@@ -286,7 +287,8 @@ static void execute_single_lfm3_layer_c(
     const Lfm3TrunkMapped *trk,
     const float *h_in,
     float *h_out,
-    int T
+    int T,
+    const int *seg_starts
 )
 {
     const uint8_t *op = (const uint8_t *)trk->operator_mf.ptr;
@@ -298,7 +300,7 @@ static void execute_single_lfm3_layer_c(
     float *h_mid = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
 
     if (kind == 0) {
-        /* Gated ShortConv (`kind = 0`, width K=7) */
+        /* Gated ShortConv (`kind = 0`, width K=7) isolated per segment `seg_starts[t]` */
         uint32_t len_op_norm, len_in_proj, len_conv_w;
         memcpy(&len_op_norm, op + 16, 4);
         memcpy(&len_in_proj, op + 20, 4);
@@ -316,15 +318,16 @@ static void execute_single_lfm3_layer_c(
         float *post_gated = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
         linear_bf16_omp(op_in, in_proj_w, bcx, T, 6144, LFM3_D);
 
-        #pragma omp parallel for schedule(static)
+        #pragma omp parallel for num_threads(8) schedule(static)
         for (int c = 0; c < LFM3_D; c++) {
             float w_k[7];
             for (int k = 0; k < 7; k++) w_k[k] = bf16_to_f32(conv_w[c * 7 + k]);
             for (int t = 0; t < T; t++) {
+                int s0 = seg_starts ? seg_starts[t] : 0;
                 float acc = 0.0f;
                 for (int k = 0; k < 7; k++) {
                     int ts = t - 6 + k;
-                    if (ts >= 0) {
+                    if (ts >= s0) {
                         float B_val = bcx[(size_t)ts * 6144 + c];
                         float x_val = bcx[(size_t)ts * 6144 + 4096 + c];
                         float pre = bf16_round_f32(B_val * x_val);
@@ -340,7 +343,7 @@ static void execute_single_lfm3_layer_c(
         free(bcx);
         free(post_gated);
     } else {
-        /* Sliding (`kind = 1`) or Full (`kind = 2`) GQA Attention with per-head Sigmoid Gate */
+        /* Sliding (`kind = 1`) or Full (`kind = 2`) GQA Attention with per-head Sigmoid Gate & segment isolation */
         uint32_t len_op_norm, len_q, len_k, len_v, len_gate, len_qn, len_kn;
         memcpy(&len_op_norm, op + 16, 4);
         memcpy(&len_q, op + 20, 4);
@@ -377,12 +380,14 @@ static void execute_single_lfm3_layer_c(
         rms_norm_bf16(q, qn_w, q, T * 16, 128, 1e-5f);
         rms_norm_bf16(k, kn_w, k, T * 4, 128, 1e-5f);
 
-        /* Apply RoPE in float32, round to BF16 */
+        /* Apply RoPE in float32 using segment-relative position `pos_t = t - seg_starts[t]` */
         const float *inv_freq = (kind == 1) ? g_lfm3.inv_freq_sliding : g_lfm3.inv_freq_full;
+        #pragma omp parallel for num_threads(8) schedule(static)
         for (int t = 0; t < T; t++) {
+            int pos_t = t - (seg_starts ? seg_starts[t] : 0);
             float cos_t[64], sin_t[64];
             for (int d = 0; d < 64; d++) {
-                float angle = (float)t * inv_freq[d];
+                float angle = (float)pos_t * inv_freq[d];
                 cos_t[d] = bf16_round_f32(cosf(angle));
                 sin_t[d] = bf16_round_f32(sinf(angle));
             }
@@ -407,13 +412,17 @@ static void execute_single_lfm3_layer_c(
         }
 
         const float scale = 1.0f / sqrtf(128.0f);
-        #pragma omp parallel for schedule(static)
+        #pragma omp parallel for num_threads(8) schedule(static)
         for (int h = 0; h < 16; h++) {
             int kv_h = h / 4;
+            float *scores = (float *)malloc((size_t)T * sizeof(float));
             for (int t = 0; t < T; t++) {
                 const float *qh = q + (size_t)t * 2048 + h * 128;
-                int j_start = (kind == 1 && t - LFM3_SLIDING_W + 1 > 0) ? (t - LFM3_SLIDING_W + 1) : 0;
-                float scores[1024];
+                int s0 = seg_starts ? seg_starts[t] : 0;
+                int j_start = s0;
+                if (kind == 1 && t - LFM3_SLIDING_W + 1 > j_start) {
+                    j_start = t - LFM3_SLIDING_W + 1;
+                }
                 float max_s = -1e30f;
                 for (int j = j_start; j <= t; j++) {
                     const float *kh = k + (size_t)j * 512 + kv_h * 128;
@@ -442,6 +451,7 @@ static void execute_single_lfm3_layer_c(
                     out_qh[d] = bf16_round_f32(bf16_round_f32(acc) * head_gate);
                 }
             }
+            free(scores);
         }
         linear_bf16_omp(gated_attn, o_proj_w, op_out_raw, T, LFM3_D, 2048);
         free(q); free(k); free(v); free(gate_raw); free(gated_attn);
@@ -471,6 +481,7 @@ static void execute_single_lfm3_layer_c(
     linear_bf16_omp(ffn_in, w1_w, w1_out, T, LFM3_FFN, LFM3_D);
     linear_bf16_omp(ffn_in, w3_w, w3_out, T, LFM3_FFN, LFM3_D);
 
+    #pragma omp parallel for num_threads(8) schedule(static)
     for (int i = 0; i < T * LFM3_FFN; i++) {
         float v1 = w1_out[i];
         float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
@@ -487,8 +498,8 @@ static void execute_single_lfm3_layer_c(
     free(ffn_in); free(w1_out); free(w3_out); free(ffn_raw); free(ffn_normed);
 }
 
-/* Executes all 24 tri-hybrid LFM3-1.7B layers + final `embedding_norm` in C/OpenMP */
-float lfm3_forward_24_layers(const int *token_ids, int T, float *out_final_hidden)
+/* Executes all 24 tri-hybrid LFM3-1.7B layers + final `embedding_norm` with optional clubbed segment isolation `seg_starts` */
+float lfm3_forward_24_layers_clubbed(const int *token_ids, const int *seg_starts, int T, float *out_final_hidden)
 {
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
@@ -507,7 +518,7 @@ float lfm3_forward_24_layers(const int *token_ids, int T, float *out_final_hidde
     }
 
     for (int l = 0; l < LFM3_LAYERS; l++) {
-        execute_single_lfm3_layer_c(&g_lfm3.trunks[l], cur, nxt, T);
+        execute_single_lfm3_layer_c(&g_lfm3.trunks[l], cur, nxt, T, seg_starts);
         float *tmp = cur;
         cur = nxt;
         nxt = tmp;
@@ -519,4 +530,9 @@ float lfm3_forward_24_layers(const int *token_ids, int T, float *out_final_hidde
     free(nxt);
     clock_gettime(CLOCK_MONOTONIC, &t1);
     return (float)((t1.tv_sec - t0.tv_sec) * 1000.0 + (t1.tv_nsec - t0.tv_nsec) / 1e6);
+}
+
+float lfm3_forward_24_layers(const int *token_ids, int T, float *out_final_hidden)
+{
+    return lfm3_forward_24_layers_clubbed(token_ids, NULL, T, out_final_hidden);
 }

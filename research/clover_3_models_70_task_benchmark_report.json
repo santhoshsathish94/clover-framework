@@ -100,66 +100,68 @@
       "model_key": "nemotron-3.5-super-vl",
       "vocab_size": 131072,
       "hidden_size": 4096,
+      "club_batch_size": 10,
+      "zero_crosstalk_exact_match_vs_single_task": true,
       "tasks_passed": 70,
       "tasks_total": 70,
       "pass_rate_pct": 100.0,
       "mean_canonical_score_pct": 99.08,
       "all_emitted_token_ids_valid_in_model_vocab": true,
-      "mean_c_engine_ms": 2115.77,
-      "mean_ncm_plus_c_ms": 4613.25,
-      "cpu_v4_7_task_subset_mean_c_engine_ms": 2342.1,
-      "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 5232.45,
+      "mean_c_engine_ms": 1115.41,
+      "mean_ncm_plus_c_ms": 4271.4,
+      "cpu_v4_7_task_subset_mean_c_engine_ms": 1452.85,
+      "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 5551.19,
       "cpu_v4_7_task_breakdown": [
         {
           "task_id": "mmlu_college_physics_1",
           "passed": true,
-          "c_engine_ms": 2211.94,
-          "ncm_plus_c_ms": 3715.58
+          "c_engine_ms": 1438.97,
+          "ncm_plus_c_ms": 3322.95
         },
         {
           "task_id": "gsm8k_test_1",
           "passed": true,
-          "c_engine_ms": 2835.32,
-          "ncm_plus_c_ms": 7596.24
+          "c_engine_ms": 1686.61,
+          "ncm_plus_c_ms": 7622.28
         },
         {
           "task_id": "HumanEval_2",
           "passed": true,
-          "c_engine_ms": 656.68,
-          "ncm_plus_c_ms": 1177.5
+          "c_engine_ms": 10.08,
+          "ncm_plus_c_ms": 10.35
         },
         {
           "task_id": "sudoku_easy_0",
           "passed": true,
-          "c_engine_ms": 2267.24,
-          "ncm_plus_c_ms": 5958.06
+          "c_engine_ms": 546.02,
+          "ncm_plus_c_ms": 2888.97
         },
         {
           "task_id": "onto_qa_2_harbourside_council",
           "passed": true,
-          "c_engine_ms": 1230.92,
-          "ncm_plus_c_ms": 3129.89
+          "c_engine_ms": 2582.45,
+          "ncm_plus_c_ms": 9622.33
         },
         {
           "task_id": "mem_qa_0_flat_response_partition",
           "passed": true,
-          "c_engine_ms": 5429.44,
-          "ncm_plus_c_ms": 11009.06
+          "c_engine_ms": 2582.45,
+          "ncm_plus_c_ms": 9622.33
         },
         {
           "task_id": "agent_ha_q2",
           "passed": true,
-          "c_engine_ms": 1763.16,
-          "ncm_plus_c_ms": 4040.83
+          "c_engine_ms": 1323.4,
+          "ncm_plus_c_ms": 5769.09
         }
       ],
-      "total_suite_wall_seconds": 324.76,
+      "total_suite_wall_seconds": 304.33,
       "specmd_r4_dm_stats_cumulative": {
-        "total_expert_requests": 53023,
-        "tier1_pool_hits": 7083,
-        "tier2_host_hits": 45428,
+        "total_expert_requests": 4037,
+        "tier1_pool_hits": 448,
+        "tier2_host_hits": 3077,
         "tier3_drive_fetches": 512,
-        "r4_clean_drops": 45876,
+        "r4_clean_drops": 3525,
         "dirty_writebacks": 0
       },
       "by_category": {
@@ -168,8 +170,8 @@
           "total": 10,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 2883.66,
-          "mean_ncm_plus_c_ms": 4512.11,
+          "mean_c_engine_ms": 1438.97,
+          "mean_ncm_plus_c_ms": 3322.95,
           "mean_tokens_emitted": 81.0
         },
         "2_math_reasoning_gsm8k": {
@@ -177,8 +179,8 @@
           "total": 10,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 2981.26,
-          "mean_ncm_plus_c_ms": 7311.28,
+          "mean_c_engine_ms": 1686.61,
+          "mean_ncm_plus_c_ms": 7622.28,
           "mean_tokens_emitted": 219.0
         },
         "3_coding_executable_tests": {
@@ -186,17 +188,17 @@
           "total": 15,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 635.67,
-          "mean_ncm_plus_c_ms": 1157.37,
-          "mean_tokens_emitted": 135.0
+          "mean_c_engine_ms": 188.73,
+          "mean_ncm_plus_c_ms": 969.89,
+          "mean_tokens_emitted": 46.9
         },
         "4_instruction_and_structured_output": {
           "passed": 15,
           "total": 15,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 97.92,
-          "mean_c_engine_ms": 1001.52,
-          "mean_ncm_plus_c_ms": 2618.28,
+          "mean_c_engine_ms": 328.89,
+          "mean_ncm_plus_c_ms": 1405.56,
           "mean_tokens_emitted": 71.9
         },
         "5_evidence_grounded_ontology": {
@@ -204,8 +206,8 @@
           "total": 6,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 94.45,
-          "mean_c_engine_ms": 2742.23,
-          "mean_ncm_plus_c_ms": 6628.75,
+          "mean_c_engine_ms": 2582.45,
+          "mean_ncm_plus_c_ms": 9622.33,
           "mean_tokens_emitted": 200.7
         },
         "6_persistent_memory_and_distractors": {
@@ -213,8 +215,8 @@
           "total": 6,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 4918.41,
-          "mean_ncm_plus_c_ms": 10593.84,
+          "mean_c_engine_ms": 2162.77,
+          "mean_ncm_plus_c_ms": 8337.92,
           "mean_tokens_emitted": 363.7
         },
         "7_tool_use_and_agent_multihop": {
@@ -222,8 +224,8 @@
           "total": 8,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 2366.59,
-          "mean_ncm_plus_c_ms": 5590.44,
+          "mean_c_engine_ms": 1323.4,
+          "mean_ncm_plus_c_ms": 5769.09,
           "mean_tokens_emitted": 174.4
         }
       },
@@ -273,7 +275,7 @@
           "benchmark": "HumanEval_Python",
           "passed": true,
           "score": 1.0,
-          "emitted_tokens": 206,
+          "emitted_tokens": 48,
           "sample_token_ids_first10": [
             1975,
             29896,
@@ -293,7 +295,7 @@
           "benchmark": "Rust_Generative_Compilation",
           "passed": true,
           "score": 1.0,
-          "emitted_tokens": 59,
+          "emitted_tokens": 48,
           "sample_token_ids_first10": [
             1975,
             40455,
@@ -434,60 +436,62 @@
       "model_key": "lfm3-1.7b",
       "vocab_size": 128000,
       "hidden_size": 2048,
+      "club_batch_size": 10,
+      "zero_crosstalk_exact_match_vs_single_task": true,
       "tasks_passed": 70,
       "tasks_total": 70,
       "pass_rate_pct": 100.0,
       "mean_canonical_score_pct": 99.08,
       "all_emitted_token_ids_valid_in_model_vocab": true,
-      "mean_c_engine_ms": 3544.01,
-      "mean_ncm_plus_c_ms": 5959.31,
-      "cpu_v4_7_task_subset_mean_c_engine_ms": 3980.47,
-      "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 6932.13,
+      "mean_c_engine_ms": 3454.79,
+      "mean_ncm_plus_c_ms": 6216.06,
+      "cpu_v4_7_task_subset_mean_c_engine_ms": 4456.54,
+      "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 8073.13,
       "cpu_v4_7_task_breakdown": [
         {
           "task_id": "mmlu_college_physics_1",
           "passed": true,
-          "c_engine_ms": 4303.54,
-          "ncm_plus_c_ms": 6198.22
+          "c_engine_ms": 5024.43,
+          "ncm_plus_c_ms": 6823.35
         },
         {
           "task_id": "gsm8k_test_1",
           "passed": true,
-          "c_engine_ms": 4844.74,
-          "ncm_plus_c_ms": 9612.89
+          "c_engine_ms": 4997.3,
+          "ncm_plus_c_ms": 10011.86
         },
         {
           "task_id": "HumanEval_2",
           "passed": true,
-          "c_engine_ms": 1036.73,
-          "ncm_plus_c_ms": 1569.04
+          "c_engine_ms": 38.58,
+          "ncm_plus_c_ms": 38.87
         },
         {
           "task_id": "sudoku_easy_0",
           "passed": true,
-          "c_engine_ms": 4090.59,
-          "ncm_plus_c_ms": 7802.16
+          "c_engine_ms": 1847.43,
+          "ncm_plus_c_ms": 3983.71
         },
         {
           "task_id": "onto_qa_2_harbourside_council",
           "passed": true,
-          "c_engine_ms": 2021.13,
-          "ncm_plus_c_ms": 3952.28
+          "c_engine_ms": 7551.94,
+          "ncm_plus_c_ms": 13981.48
         },
         {
           "task_id": "mem_qa_0_flat_response_partition",
           "passed": true,
-          "c_engine_ms": 8449.52,
-          "ncm_plus_c_ms": 14010.59
+          "c_engine_ms": 7551.94,
+          "ncm_plus_c_ms": 13981.48
         },
         {
           "task_id": "agent_ha_q2",
           "passed": true,
-          "c_engine_ms": 3117.05,
-          "ncm_plus_c_ms": 5379.75
+          "c_engine_ms": 4184.14,
+          "ncm_plus_c_ms": 7691.14
         }
       ],
-      "total_suite_wall_seconds": 418.88,
+      "total_suite_wall_seconds": 442.11,
       "specmd_r4_dm_stats_cumulative": null,
       "by_category": {
         "1_general_knowledge_mmlu": {
@@ -495,8 +499,8 @@
           "total": 10,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 5290.6,
-          "mean_ncm_plus_c_ms": 6971.24,
+          "mean_c_engine_ms": 5024.43,
+          "mean_ncm_plus_c_ms": 6823.35,
           "mean_tokens_emitted": 80.4
         },
         "2_math_reasoning_gsm8k": {
@@ -504,8 +508,8 @@
           "total": 10,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 4609.43,
-          "mean_ncm_plus_c_ms": 8756.57,
+          "mean_c_engine_ms": 4997.3,
+          "mean_ncm_plus_c_ms": 10011.86,
           "mean_tokens_emitted": 197.4
         },
         "3_coding_executable_tests": {
@@ -513,17 +517,17 @@
           "total": 15,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 1046.42,
-          "mean_ncm_plus_c_ms": 1577.92,
-          "mean_tokens_emitted": 129.0
+          "mean_c_engine_ms": 641.53,
+          "mean_ncm_plus_c_ms": 1353.82,
+          "mean_tokens_emitted": 46.8
         },
         "4_instruction_and_structured_output": {
           "passed": 15,
           "total": 15,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 97.92,
-          "mean_c_engine_ms": 1961.73,
-          "mean_ncm_plus_c_ms": 3588.74,
+          "mean_c_engine_ms": 975.6,
+          "mean_ncm_plus_c_ms": 1982.56,
           "mean_tokens_emitted": 72.1
         },
         "5_evidence_grounded_ontology": {
@@ -531,8 +535,8 @@
           "total": 6,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 94.45,
-          "mean_c_engine_ms": 4531.32,
-          "mean_ncm_plus_c_ms": 8347.94,
+          "mean_c_engine_ms": 7551.94,
+          "mean_ncm_plus_c_ms": 13981.48,
           "mean_tokens_emitted": 192.7
         },
         "6_persistent_memory_and_distractors": {
@@ -540,8 +544,8 @@
           "total": 6,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 7906.44,
-          "mean_ncm_plus_c_ms": 13364.7,
+          "mean_c_engine_ms": 6429.34,
+          "mean_ncm_plus_c_ms": 11884.7,
           "mean_tokens_emitted": 348.2
         },
         "7_tool_use_and_agent_multihop": {
@@ -549,8 +553,8 @@
           "total": 8,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 3666.47,
-          "mean_ncm_plus_c_ms": 6512.22,
+          "mean_c_engine_ms": 4184.14,
+          "mean_ncm_plus_c_ms": 7691.14,
           "mean_tokens_emitted": 155.0
         }
       },
@@ -600,7 +604,7 @@
           "benchmark": "HumanEval_Python",
           "passed": true,
           "score": 1.0,
-          "emitted_tokens": 198,
+          "emitted_tokens": 48,
           "sample_token_ids_first10": [
             25797,
             63513,
@@ -620,7 +624,7 @@
           "benchmark": "Rust_Generative_Compilation",
           "passed": true,
           "score": 1.0,
-          "emitted_tokens": 55,
+          "emitted_tokens": 48,
           "sample_token_ids_first10": [
             25797,
             4151,

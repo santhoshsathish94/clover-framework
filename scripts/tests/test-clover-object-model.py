@@ -229,8 +229,11 @@ class TestCloverObjectModel(unittest.TestCase):
         self.assertEqual(variable-coordinator.variable-active-model-key, "nemotron-3.5-super-vl")
         self.assertEqual(variable-nemo-backend.variable-total-layer-count, 88)
         self.assertEqual(variable-nemo-backend.variable-hidden-dimension, 4096)
+        self.assertEqual(variable-nemo-backend.variable-maximum-session-context-tokens, 1_048_576)
+        self.assertEqual(variable-nemo-backend.variable-native-backbone-context-tokens, 1_048_576)
 
         variable-session = class-conversation-session(variable-session-identifier="session-switch-models")
+        self.assertEqual(variable-session.variable-maximum-token-budget, 1_048_576)
         variable-nemo-direction = class-task-direction(
             variable-request-identifier="nemo-turn-01",
             variable-goal-description="Verify Nemotron 3.5 Super VL Layer-1 switching in the 7-layer Clover stack.",
@@ -253,6 +256,8 @@ class TestCloverObjectModel(unittest.TestCase):
         self.assertEqual(variable-coordinator.variable-active-model-key, "lfm3-1.7b")
         self.assertEqual(variable-lfm3-backend.variable-total-layer-count, 24)
         self.assertEqual(variable-lfm3-backend.variable-hidden-dimension, 2048)
+        self.assertEqual(variable-lfm3-backend.variable-maximum-session-context-tokens, 1_048_576)
+        self.assertEqual(variable-lfm3-backend.variable-native-backbone-context-tokens, 262_144)
 
         variable-lfm3-direction = class-task-direction(
             variable-request-identifier="lfm3-turn-01",
