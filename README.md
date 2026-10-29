@@ -62,15 +62,15 @@ It began on a single CPU host from the Clover equation of Kimi K3 and from Faree
 
 The model provides underlying capability. Clover organizes how that capability is applied through context, direction, action, verification, memory, ontology, tools, generative compilation, and governance. The system can inspect the problem, gather relevant context, make and apply changes, test its work, and use evidence to determine whether the intended outcome was achieved. The model is important, but the system's ability to coordinate and verify work is the object of this research.
 
-Our current 70-task evaluation provides an initial, concrete result:
+Our current 70-task evaluation across all three switchable foundation models in [`clover-ai-system/`](clover-ai-system/README.md) (`kimi-k3`, `nemotron-3.5-super-vl`, and `lfm3-1.7b`, spanning `1.73B` to `2.78T` parameters) provides a concrete result ([`clover_3_models_without_vs_with_clover_70_task_report.json`](research/clover_3_models_without_vs_with_clover_70_task_report.json)):
 
-| Configuration | Tasks passed | Strict pass rate |
-| :--- | :---: | :---: |
-| Kimi K3 alone (Arm 0) | **33 / 70** | **47.14%** |
-| Kimi K3 + tools and generative compilation (Arm 1) | **57 / 70** | **81.43%** |
-| Full Clover AI v4 system (Arm 2) | **70 / 70** | **100.0%** |
+| Foundation Model &amp; Configuration | Without Clover (`Arm 0`, Model Alone) | With Full 7-Layer Clover Cycle (`Arm 2`) | Clover Cycle Lift |
+| :--- | :---: | :---: | :---: |
+| **`kimi-k3`** (`MoonshotAI Kimi K3` — `2.78T` MoE, 93 layers) | **`33 / 70` (`47.14%`)** *(57/70 = 81.43% in Arm 1)* | **`70 / 70` (`100.00%`)** | **`+37 tasks` (`+52.86 pp`)** |
+| **`nemotron-3.5-super-vl`** (`NVIDIA Nemotron 3.5 Super VL` — `124.45B-A12B`, 88 layers, Default) | **`16 / 70` (`22.86%`)** | **`70 / 70` (`100.00%`)** | **`+54 tasks` (`+77.14 pp`)** |
+| **`lfm3-1.7b`** (`Liquid AI LFM3-1.7B` — `1.73B` dense tri-hybrid, 24 layers) | **`19 / 70` (`27.14%`)** | **`70 / 70` (`100.00%`)** | **`+51 tasks` (`+72.86 pp`)** |
 
-The point is not that Kimi K3 is the best model. **It wasn't selected because it was the best; it was selected to test what the system could do around a capable, ordinary model.** On this particular suite, the reported result rose from 33/70 for the model alone to 70/70 for the full Clover system. That is evidence worth investigating about system design—not a universal measure of intelligence or proof that every model, task, or environment will produce the same result.
+The point is not that any single model is the best model. **All three models fail over half the suite when run on their own (`22.86%–47.14%`), and all three solve all 70 tasks (`70 / 70 = 100.00%`) when governed by the Clover cycle.** That is evidence worth investigating about system design—not a universal measure of intelligence or proof that every model, task, or environment will produce the same result.
 
 A stronger model may also benefit from Clover's surrounding architecture. That is a reason to study model portability and complete-system capability, not to make model rankings the central claim. Standalone frontier-model results are not direct comparisons between complete systems because those models were not run with Clover's surrounding layers attached.
 

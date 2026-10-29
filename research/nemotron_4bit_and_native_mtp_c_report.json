@@ -1,0 +1,42 @@
+{
+  "expert_4bit_containers": {
+    "expert_1": {
+      "expert_dir": "/opt/clover-k3/nemotron-computed/pruned/expert-1",
+      "bf16_bytes": 5637144576,
+      "fourbit_bytes": 1460928512,
+      "compression_ratio": 3.8586,
+      "build_seconds": 11.2,
+      "cached": false
+    },
+    "expert_mtp_1": {
+      "expert_dir": "/opt/clover-k3/nemotron-computed/pruned/expert-mtp-1",
+      "bf16_bytes": 5637144576,
+      "fourbit_bytes": 1460928512,
+      "compression_ratio": 3.8586,
+      "build_seconds": 14.12,
+      "cached": false
+    },
+    "expert_bf16_stride_bytes": 11010048,
+    "expert_4bit_stride_bytes": 2853376,
+    "bandwidth_reduction_factor": 3.8586
+  },
+  "backbone_c_engine_4bit_vs_bf16": {
+    "prompt_tokens": 31,
+    "bf16_ms": 525.11,
+    "fourbit_ms": 450.59,
+    "speedup_ratio": 1.165,
+    "cosine_similarity_4bit_vs_bf16": 0.99878
+  },
+  "native_2_layer_mtp_speculative_drafter_c_engine": {
+    "python_reference_ms": 1964.4,
+    "c_bf16_mtp_ms": 363.8,
+    "c_4bit_mtp_ms": 295.66,
+    "c_4bit_speedup_vs_bf16": 1.23,
+    "c_bf16_vs_python_logits_cosine": 0.999989,
+    "c_4bit_vs_python_logits_cosine": 0.999953,
+    "top1_token_id_python": 1032,
+    "top1_token_id_c_bf16": 1032,
+    "top1_token_id_c_4bit": 1032,
+    "top1_exact_match": true
+  }
+}

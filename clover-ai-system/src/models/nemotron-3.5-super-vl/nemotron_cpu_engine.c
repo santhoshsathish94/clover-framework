@@ -198,12 +198,18 @@ static const void *get_nemo_record_ptr(const NemoTrunkMapped *t, uint32_t rec_id
 /* SpecMD Policy 3 (Least-Stale + R4 Clean-Drop) Slot Cache + Data-Movement Ledger */
 static struct {
     int initialized;
+    int use_4bit_experts;
     MmapFile emb_mf;
     MmapFile norm_f_mf;
     NemoTrunkMapped trunk0_mamba;
     NemoTrunkMapped trunk1_moe;
     MmapFile expert1_direct_mf;
+    MmapFile expert1_4bit_mf;
     NemoTrunkMapped trunk7_gqa;
+    NemoTrunkMapped trunk_mtp0_gqa;
+    NemoTrunkMapped trunk_mtp1_moe;
+    MmapFile expert_mtp1_direct_mf;
+    MmapFile expert_mtp1_4bit_mf;
 
     unsigned long clock;
     int pool_keys[64];
@@ -218,6 +224,11 @@ static struct {
     unsigned long r4_clean_drops;
     unsigned long dirty_writebacks;
 } g_nemo = { 0 };
+
+void nemo_set_use_4bit_experts(int enable)
+{
+    g_nemo.use_4bit_experts = enable ? 1 : 0;
+}
 
 static void nemo_slotcache_reset(void)
 {
@@ -346,6 +357,86 @@ static void linear_bf16_omp(
     }
 }
 
+/* OpenMP 4-Bit Planar Group-64 Linear with 8-Token Register Blocking:
+ * Unpacks low/high 4-bit nibbles `(nib & 0xF) - 8` and `(nib >> 4) - 8` per 64-col group,
+ * multiplies by `step * row_scale`, and accumulates across up to 8 tokens simultaneously! */
+static void linear_4bit_group64_omp(
+    const float *x,
+    const uint8_t *nibbles_base,
+    const uint8_t *steps_base,
+    const float *scales_base,
+    float *y,
+    int T,
+    int out_dim,
+    int in_dim
+)
+{
+    const int groups = in_dim / 64;
+    #pragma omp parallel for schedule(static)
+    for (int o = 0; o < out_dim; o++) {
+        const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
+        const uint8_t *stp_row = steps_base + (size_t)o * (size_t)groups;
+        const float row_scale = scales_base[o];
+        int t = 0;
+        for (; t + 8 <= T; t += 8) {
+            const float *x0 = x + (size_t)(t + 0) * in_dim;
+            const float *x1 = x + (size_t)(t + 1) * in_dim;
+            const float *x2 = x + (size_t)(t + 2) * in_dim;
+            const float *x3 = x + (size_t)(t + 3) * in_dim;
+            const float *x4 = x + (size_t)(t + 4) * in_dim;
+            const float *x5 = x + (size_t)(t + 5) * in_dim;
+            const float *x6 = x + (size_t)(t + 6) * in_dim;
+            const float *x7 = x + (size_t)(t + 7) * in_dim;
+            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+            float s4 = 0.0f, s5 = 0.0f, s6 = 0.0f, s7 = 0.0f;
+            for (int g = 0; g < groups; g++) {
+                const uint8_t *nb = nib_row + g * 32;
+                const float g_sc = (float)stp_row[g] * row_scale;
+                const int col0 = g * 64;
+                for (int j = 0; j < 32; j++) {
+                    uint8_t pk = nb[j];
+                    float wl = (float)((int)(pk & 0x0F) - 8) * g_sc;
+                    float wh = (float)((int)(pk >> 4) - 8) * g_sc;
+                    int c_lo = col0 + j;
+                    int c_hi = col0 + 32 + j;
+                    s0 += x0[c_lo] * wl + x0[c_hi] * wh;
+                    s1 += x1[c_lo] * wl + x1[c_hi] * wh;
+                    s2 += x2[c_lo] * wl + x2[c_hi] * wh;
+                    s3 += x3[c_lo] * wl + x3[c_hi] * wh;
+                    s4 += x4[c_lo] * wl + x4[c_hi] * wh;
+                    s5 += x5[c_lo] * wl + x5[c_hi] * wh;
+                    s6 += x6[c_lo] * wl + x6[c_hi] * wh;
+                    s7 += x7[c_lo] * wl + x7[c_hi] * wh;
+                }
+            }
+            y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
+            y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
+            y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
+            y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
+            y[(size_t)(t + 4) * out_dim + o] = bf16_round_f32(s4);
+            y[(size_t)(t + 5) * out_dim + o] = bf16_round_f32(s5);
+            y[(size_t)(t + 6) * out_dim + o] = bf16_round_f32(s6);
+            y[(size_t)(t + 7) * out_dim + o] = bf16_round_f32(s7);
+        }
+        for (; t < T; t++) {
+            const float *xt = x + (size_t)t * in_dim;
+            float sum = 0.0f;
+            for (int g = 0; g < groups; g++) {
+                const uint8_t *nb = nib_row + g * 32;
+                const float g_sc = (float)stp_row[g] * row_scale;
+                const int col0 = g * 64;
+                for (int j = 0; j < 32; j++) {
+                    uint8_t pk = nb[j];
+                    float wl = (float)((int)(pk & 0x0F) - 8) * g_sc;
+                    float wh = (float)((int)(pk >> 4) - 8) * g_sc;
+                    sum += xt[col0 + j] * wl + xt[col0 + 32 + j] * wh;
+                }
+            }
+            y[(size_t)t * out_dim + o] = bf16_round_f32(sum);
+        }
+    }
+}
+
 static void rms_norm_bf16(
     const float *x,
     const uint16_t *w_bf16,
@@ -388,8 +479,33 @@ int nemo_engine_init(const char *pruned_dataset_dir)
     snprintf(path, sizeof(path), "%s/expert-1/experts.direct", pruned_dataset_dir);
     if (mmap_readonly(path, &g_nemo.expert1_direct_mf) != 0) return -5;
 
+    snprintf(path, sizeof(path), "%s/expert-1/experts.4bit.direct", pruned_dataset_dir);
+    if (access(path, R_OK) == 0) {
+        mmap_readonly(path, &g_nemo.expert1_4bit_mf);
+    }
+
     snprintf(path, sizeof(path), "%s/trunk-7", pruned_dataset_dir);
     if (load_nemo_trunk(path, &g_nemo.trunk7_gqa) != 0) return -6;
+
+    snprintf(path, sizeof(path), "%s/trunk-mtp-0", pruned_dataset_dir);
+    if (access(path, R_OK) == 0) {
+        load_nemo_trunk(path, &g_nemo.trunk_mtp0_gqa);
+    }
+
+    snprintf(path, sizeof(path), "%s/trunk-mtp-1", pruned_dataset_dir);
+    if (access(path, R_OK) == 0) {
+        load_nemo_trunk(path, &g_nemo.trunk_mtp1_moe);
+    }
+
+    snprintf(path, sizeof(path), "%s/expert-mtp-1/experts.direct", pruned_dataset_dir);
+    if (access(path, R_OK) == 0) {
+        mmap_readonly(path, &g_nemo.expert_mtp1_direct_mf);
+    }
+
+    snprintf(path, sizeof(path), "%s/expert-mtp-1/experts.4bit.direct", pruned_dataset_dir);
+    if (access(path, R_OK) == 0) {
+        mmap_readonly(path, &g_nemo.expert_mtp1_4bit_mf);
+    }
 
     nemo_slotcache_reset();
     g_nemo.initialized = 1;
@@ -521,16 +637,23 @@ void nemo_mamba_layer_forward_seg(const float *h_in, float *h_out, int T, const 
     free(u); free(proj); free(conv_act); free(y_ssm); free(scan_out); free(branch_out);
 }
 
-/* Executes Stage L2: Pruned `trunk-1` + `expert-1/experts.direct` (Latent ReLU^2 MoE with SpecMD R4 SlotCache) */
-void nemo_latent_moe_layer_forward(const float *h_in, float *h_out, int T)
+/* Executes a Latent ReLU^2 MoE layer (`trunk_moe` + `bf16_mf` / `q4_mf`) with SpecMD R4 SlotCache */
+static void nemo_latent_moe_generic_forward(
+    const NemoTrunkMapped *trunk_moe,
+    const MmapFile *bf16_mf,
+    const MmapFile *q4_mf,
+    const float *h_in,
+    float *h_out,
+    int T
+)
 {
-    const uint16_t *norm_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk1_moe, 0);
-    const float *gate_w_fp32 = (const float *)get_nemo_record_ptr(&g_nemo.trunk1_moe, 29);
-    const float *gate_bias_fp32 = (const float *)get_nemo_record_ptr(&g_nemo.trunk1_moe, 30);
-    const uint16_t *fc1_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk1_moe, 31);
-    const uint16_t *fc2_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk1_moe, 32);
-    const uint16_t *sh_up_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk1_moe, 34);
-    const uint16_t *sh_down_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk1_moe, 36);
+    const uint16_t *norm_w = (const uint16_t *)get_nemo_record_ptr(trunk_moe, 0);
+    const float *gate_w_fp32 = (const float *)get_nemo_record_ptr(trunk_moe, 29);
+    const float *gate_bias_fp32 = (const float *)get_nemo_record_ptr(trunk_moe, 30);
+    const uint16_t *fc1_w = (const uint16_t *)get_nemo_record_ptr(trunk_moe, 31);
+    const uint16_t *fc2_w = (const uint16_t *)get_nemo_record_ptr(trunk_moe, 32);
+    const uint16_t *sh_up_w = (const uint16_t *)get_nemo_record_ptr(trunk_moe, 34);
+    const uint16_t *sh_down_w = (const uint16_t *)get_nemo_record_ptr(trunk_moe, 36);
 
     float *u = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
     float *latent_in = (float *)malloc((size_t)T * NEMO_LATENT * sizeof(float));
@@ -598,13 +721,11 @@ void nemo_latent_moe_layer_forward(const float *h_in, float *h_out, int T)
         if (!in_pool) nemo_slotcache_acquire(e, active_mask, expert_weight_sum[e]);
     }
 
-    /* Execute only the active routed experts on-demand from `experts.direct`.
-     * Clubbed-batch optimization: gather all `n_m` tokens routed to expert `e` and call
-     * `linear_bf16_omp` ONCE per active expert `e` (streaming `up_w` and `down_w` once across
-     * all `n_m` tokens with 8-token register blocking instead of re-reading `up_w`/`down_w` per token!). */
+    const int use_q4 = (g_nemo.use_4bit_experts && q4_mf && q4_mf->ptr != NULL);
     const size_t up_elems = (size_t)NEMO_MOE_INTER * NEMO_LATENT;
-    const size_t stride_bytes = (size_t)11010048;
-    const uint8_t *direct_base = (const uint8_t *)g_nemo.expert1_direct_mf.ptr;
+    const size_t stride_bf16 = (size_t)11010048;
+    const size_t stride_q4 = (size_t)2853376;
+    const uint8_t *direct_base = (const uint8_t *)(use_q4 ? q4_mf->ptr : bf16_mf->ptr);
 
     int *m_toks = (int *)malloc((size_t)T * sizeof(int));
     float *m_rw = (float *)malloc((size_t)T * sizeof(float));
@@ -628,15 +749,32 @@ void nemo_latent_moe_layer_forward(const float *h_in, float *h_out, int T)
         }
         if (n_m == 0) continue;
 
-        const uint16_t *up_w = (const uint16_t *)(direct_base + (size_t)e * stride_bytes);
-        const uint16_t *down_w = up_w + up_elems;
+        if (use_q4) {
+            const uint8_t *exp_p = direct_base + (size_t)e * stride_q4;
+            const uint8_t *u_nib = exp_p;
+            const uint8_t *u_stp = u_nib + (size_t)(2688 * 16 * 32);
+            const float *u_scl = (const float *)(u_stp + (size_t)(2688 * 16));
+            const uint8_t *d_nib = (const uint8_t *)u_scl + (size_t)(2688 * 4);
+            const uint8_t *d_stp = d_nib + (size_t)(1024 * 42 * 32);
+            const float *d_scl = (const float *)(d_stp + (size_t)(1024 * 42));
 
-        linear_bf16_omp(g_in, up_w, g_inter, n_m, NEMO_MOE_INTER, NEMO_LATENT);
-        for (int i = 0; i < n_m * NEMO_MOE_INTER; i++) {
-            float r = g_inter[i] > 0.0f ? g_inter[i] : 0.0f;
-            g_inter[i] = bf16_round_f32(r * r);
+            linear_4bit_group64_omp(g_in, u_nib, u_stp, u_scl, g_inter, n_m, NEMO_MOE_INTER, NEMO_LATENT);
+            for (int i = 0; i < n_m * NEMO_MOE_INTER; i++) {
+                float r = g_inter[i] > 0.0f ? g_inter[i] : 0.0f;
+                g_inter[i] = bf16_round_f32(r * r);
+            }
+            linear_4bit_group64_omp(g_inter, d_nib, d_stp, d_scl, g_out, n_m, NEMO_LATENT, NEMO_MOE_INTER);
+        } else {
+            const uint16_t *up_w = (const uint16_t *)(direct_base + (size_t)e * stride_bf16);
+            const uint16_t *down_w = up_w + up_elems;
+
+            linear_bf16_omp(g_in, up_w, g_inter, n_m, NEMO_MOE_INTER, NEMO_LATENT);
+            for (int i = 0; i < n_m * NEMO_MOE_INTER; i++) {
+                float r = g_inter[i] > 0.0f ? g_inter[i] : 0.0f;
+                g_inter[i] = bf16_round_f32(r * r);
+            }
+            linear_bf16_omp(g_inter, down_w, g_out, n_m, NEMO_LATENT, NEMO_MOE_INTER);
         }
-        linear_bf16_omp(g_inter, down_w, g_out, n_m, NEMO_LATENT, NEMO_MOE_INTER);
 
         for (int idx_m = 0; idx_m < n_m; idx_m++) {
             int t = m_toks[idx_m];
@@ -671,10 +809,28 @@ void nemo_latent_moe_layer_forward(const float *h_in, float *h_out, int T)
     free(sh_inter); free(shared_4096); free(topk_idx); free(topk_w);
 }
 
-/* Executes Stage L3: Pruned `trunk-7` + `operator.bin` (NoPE 16:1 GQA Attention) with segment isolation */
-void nemo_gqa_layer_forward_seg(const float *h_in, float *h_out, int T, const int *seg_starts)
+void nemo_latent_moe_layer_forward(const float *h_in, float *h_out, int T)
 {
-    const uint8_t *op = (const uint8_t *)g_nemo.trunk7_gqa.operator_mf.ptr;
+    nemo_latent_moe_generic_forward(
+        &g_nemo.trunk1_moe,
+        &g_nemo.expert1_direct_mf,
+        &g_nemo.expert1_4bit_mf,
+        h_in,
+        h_out,
+        T
+    );
+}
+
+/* Executes a NoPE 16:1 GQA Attention layer (`trunk_gqa` + `operator.bin`) with segment isolation */
+static void nemo_gqa_generic_forward_seg(
+    const NemoTrunkMapped *trunk_gqa,
+    const float *h_in,
+    float *h_out,
+    int T,
+    const int *seg_starts
+)
+{
+    const uint8_t *op = (const uint8_t *)trunk_gqa->operator_mf.ptr;
     uint32_t len_norm, len_q, len_k, len_v;
     memcpy(&len_norm, op + 16, 4);
     memcpy(&len_q, op + 20, 4);
@@ -686,7 +842,7 @@ void nemo_gqa_layer_forward_seg(const float *h_in, float *h_out, int T, const in
     const uint16_t *q_w = (const uint16_t *)(op + cur); cur += len_q;
     const uint16_t *k_w = (const uint16_t *)(op + cur); cur += len_k;
     const uint16_t *v_w = (const uint16_t *)(op + cur); cur += len_v;
-    const uint16_t *o_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk7_gqa, 1);
+    const uint16_t *o_w = (const uint16_t *)get_nemo_record_ptr(trunk_gqa, 1);
 
     float *u = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
     float *q = (float *)malloc((size_t)T * NEMO_GQA_Q * sizeof(float));
@@ -743,6 +899,71 @@ void nemo_gqa_layer_forward_seg(const float *h_in, float *h_out, int T, const in
     }
 
     free(u); free(q); free(k); free(v); free(attn_out); free(branch_out);
+}
+
+void nemo_gqa_layer_forward_seg(const float *h_in, float *h_out, int T, const int *seg_starts)
+{
+    nemo_gqa_generic_forward_seg(&g_nemo.trunk7_gqa, h_in, h_out, T, seg_starts);
+}
+
+/* Executes Nemotron 3.5 Super VL's 2-Layer Native Multi-Token Prediction (MTP) Speculative Drafter in C/OpenMP:
+ *   `enorm(e_{t+1}) || hnorm(h_t) -> eh_proj(8192->4096) -> mtp.layers.0 [NoPE 16:1 GQA] -> mtp.layers.1 [512-Expert Latent ReLU^2 MoE] -> final_layernorm` */
+float nemo_mtp_draft_forward(
+    const int *next_token_ids,
+    const float *backbone_hidden,
+    int T,
+    float *out_mtp_final_hidden
+)
+{
+    struct timespec t0, t1;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+
+    const uint16_t *emb_w = (const uint16_t *)g_nemo.emb_mf.ptr;
+    const uint16_t *enorm_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk_mtp0_gqa, 10);
+    const uint16_t *hnorm_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk_mtp0_gqa, 11);
+    const uint16_t *eh_proj_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk_mtp0_gqa, 12);
+    const uint16_t *final_ln_w = (const uint16_t *)get_nemo_record_ptr(&g_nemo.trunk_mtp1_moe, 1);
+
+    float *e_raw = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *e_normed = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *h_normed = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *eh_cat = (float *)malloc((size_t)T * (2 * NEMO_D) * sizeof(float));
+    float *mtp_in = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *mtp_h0 = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *mtp_h1 = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+
+    for (int t = 0; t < T; t++) {
+        int tid = next_token_ids[t];
+        const uint16_t *erow = emb_w + (size_t)tid * NEMO_D;
+        float *dst = e_raw + (size_t)t * NEMO_D;
+        for (int d = 0; d < NEMO_D; d++) dst[d] = bf16_to_f32(erow[d]);
+    }
+
+    rms_norm_bf16(e_raw, enorm_w, e_normed, T, NEMO_D, 1e-5f);
+    rms_norm_bf16(backbone_hidden, hnorm_w, h_normed, T, NEMO_D, 1e-5f);
+
+    for (int t = 0; t < T; t++) {
+        memcpy(eh_cat + (size_t)t * (2 * NEMO_D), e_normed + (size_t)t * NEMO_D, NEMO_D * sizeof(float));
+        memcpy(eh_cat + (size_t)t * (2 * NEMO_D) + NEMO_D, h_normed + (size_t)t * NEMO_D, NEMO_D * sizeof(float));
+    }
+
+    linear_bf16_omp(eh_cat, eh_proj_w, mtp_in, T, NEMO_D, 2 * NEMO_D);
+    nemo_gqa_generic_forward_seg(&g_nemo.trunk_mtp0_gqa, mtp_in, mtp_h0, T, NULL);
+    nemo_latent_moe_generic_forward(
+        &g_nemo.trunk_mtp1_moe,
+        &g_nemo.expert_mtp1_direct_mf,
+        &g_nemo.expert_mtp1_4bit_mf,
+        mtp_h0,
+        mtp_h1,
+        T
+    );
+    rms_norm_bf16(mtp_h1, final_ln_w, out_mtp_final_hidden, T, NEMO_D, 1e-5f);
+
+    free(e_raw); free(e_normed); free(h_normed); free(eh_cat);
+    free(mtp_in); free(mtp_h0); free(mtp_h1);
+
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    return (float)((t1.tv_sec - t0.tv_sec) * 1000.0 + (t1.tv_nsec - t0.tv_nsec) / 1e6);
 }
 
 /* Executes full Nemotron C/OpenMP pipeline with optional clubbed segment isolation `seg_starts` */

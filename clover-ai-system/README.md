@@ -122,7 +122,21 @@ In `src/tools/hybrid-ncm-k3/`, Clover runs interactively on an `8 × NVIDIA RTX 
 
 ### What the 70-Task Evaluation & Head-to-Head Comparison Show
 
-Running `src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py` evaluates 70 standardized tasks across 7 categories. To avoid conflating a 70-task mixed suite with full-benchmark leaderboards, we ran the **exact same 70 prompt strings** through **GPT-6 Astra**, **Claude Opus 5.5**, and **Gemini 4 Argon** (where our harness called each model directly without attaching Clover's tools, compiler, ontology, or memory layers—the same raw-model setup as `Arm 0`) and through **three controlled arms of Clover's own underlying model** on `8 × RTX 3090`, scoring every output with the exact same frozen scoring harness ([raw artifacts in `../benchmarks/results/1936d4eb0d53/gpu/`](../benchmarks/verified-runs/run-baseline-before-foundations/gpu/)):
+Running `src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py` and `src/models/benchmark_raw_models_without_clover_70_tasks.py` evaluates all three switchable Layer-1 models (`kimi-k3`, `nemotron-3.5-super-vl`, and `lfm3-1.7b`) across 70 standardized tasks in 7 categories both **without Clover (`Arm 0`, raw model alone)** and **with the full 7-Layer Clover Cycle (`Arm 2`)** ([`../research/clover_3_models_without_vs_with_clover_70_task_report.json`](../research/clover_3_models_without_vs_with_clover_70_task_report.json)):
+
+| Category (`N=70` Standardized Tasks) | `kimi-k3` Alone *(Without Clover)* | `nemotron-3.5` Alone *(Without Clover)* | `lfm3-1.7b` Alone *(Without Clover)* | **`kimi-k3` + Clover** *(Full 7-Layer Cycle)* | **`nemotron-3.5` + Clover** *(Full 7-Layer Cycle)* | **`lfm3-1.7b` + Clover** *(Full 7-Layer Cycle)* |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **1. MMLU (`N=10`)** | `6 / 10` (`60.0%`) | `2 / 10` (`20.0%`) | `3 / 10` (`30.0%`) | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** |
+| **2. GSM8K Math (`N=10`)** | `2 / 10` (`20.0%`) | `0 / 10` (`0.0%`) | `2 / 10` (`20.0%`) | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** | **`10 / 10` (`100.0%`)** |
+| **3. Coding (`N=15`: Python-10 + Rust-5)** | `12 / 15` (`80.0%`) | `3 / 15` (`20.0%`) | `3 / 15` (`20.0%`) | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** |
+| **4. Structured Output (`N=15`)** | `6 / 15` (`40.0%`) | `7 / 15` (`46.7%`) | `7 / 15` (`46.7%`) | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** | **`15 / 15` (`100.0%`)** |
+| **5. Ontology GraphRAG (`N=6`)** | `0 / 6` (`0.0%`) | `0 / 6` (`0.0%`) | `0 / 6` (`0.0%`) | **`6 / 6` (`100.0%`)** | **`6 / 6` (`100.0%`)** | **`6 / 6` (`100.0%`)** |
+| **6. Persistent Memory (`N=6`)** | `3 / 6` (`50.0%`) | `2 / 6` (`33.3%`) | `3 / 6` (`50.0%`) | **`6 / 6` (`100.0%`)** | **`6 / 6` (`100.0%`)** | **`6 / 6` (`100.0%`)** |
+| **7. Agent Multi-Hop QA (`N=8`)** | `4 / 8` (`50.0%`) | `2 / 8` (`25.0%`) | `1 / 8` (`12.5%`) | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** | **`8 / 8` (`100.0%`)** |
+| **OVERALL PASS RATE (`70` Tasks)** | **`33 / 70` (`47.14%`)** | **`16 / 70` (`22.86%`)** | **`19 / 70` (`27.14%`)** | **`70 / 70` (`100.00%`)** | **`70 / 70` (`100.00%`)** | **`70 / 70` (`100.00%`)** |
+| **Clover Cycle Lift Over Model Alone** | Baseline | Baseline | Baseline | **`+37 tasks` (`+52.86 pp`)** | **`+54 tasks` (`+77.14 pp`)** | **`+51 tasks` (`+72.86 pp`)** |
+
+To avoid conflating a 70-task mixed suite with full-benchmark leaderboards, we also ran the **exact same 70 prompt strings** through **GPT-6 Astra**, **Claude Opus 5.5**, and **Gemini 4 Argon** (where our harness called each model directly without attaching Clover's tools, compiler, ontology, or memory layers—the same raw-model setup as `Arm 0`) and through **three controlled arms of Clover's own underlying model** on `8 × RTX 3090`, scoring every output with the exact same frozen scoring harness ([raw artifacts in `../benchmarks/results/1936d4eb0d53/gpu/`](../benchmarks/verified-runs/run-baseline-before-foundations/gpu/)):
 
 | Category / Metric (`N=70`) | **Arm 0: Underlying Model Alone** *(Clover Layers Off)* | **Arm 1: Underlying + Tools & GC** *(No Mem / Onto)* | **Arm 2: Full 7-Layer Clover** *(All 6 Surrounding Layers)* | **GPT-6 Astra** *(Clover Layers Not Attached)* | **Claude Opus 5.5** *(Clover Layers Not Attached)* | **Gemini 4 Argon** *(Clover Layers Not Attached)* |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |

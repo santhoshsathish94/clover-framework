@@ -99,9 +99,47 @@ class NemotronNativeCPUEngine:
         self.lib.nemo_dm_stats.argtypes = [ctypes.POINTER(ctypes.c_ulong)]
         self.lib.nemo_dm_stats.restype = None
 
+        if hasattr(self.lib, "nemo_set_use_4bit_experts"):
+            self.lib.nemo_set_use_4bit_experts.argtypes = [ctypes.c_int]
+            self.lib.nemo_set_use_4bit_experts.restype = None
+
+        if hasattr(self.lib, "nemo_mtp_draft_forward"):
+            self.lib.nemo_mtp_draft_forward.argtypes = [
+                ctypes.POINTER(ctypes.c_int),
+                ctypes.POINTER(ctypes.c_float),
+                ctypes.c_int,
+                ctypes.POINTER(ctypes.c_float),
+            ]
+            self.lib.nemo_mtp_draft_forward.restype = ctypes.c_float
+
         rc = self.lib.nemo_engine_init(str(self.pruned_dataset_dir).encode("utf-8"))
         if rc != 0:
             raise RuntimeError(f"nemo_engine_init({self.pruned_dataset_dir}) failed with rc={rc}")
+
+    def set_use_4bit_experts(self, enable: bool) -> None:
+        if hasattr(self.lib, "nemo_set_use_4bit_experts"):
+            self.lib.nemo_set_use_4bit_experts(1 if enable else 0)
+
+    def forward_mtp_draft(
+        self, next_token_ids: list[int] | torch.Tensor, backbone_hidden: torch.Tensor
+    ) -> tuple[torch.Tensor, float]:
+        if isinstance(next_token_ids, torch.Tensor):
+            ids_list = [int(x) for x in next_token_ids.view(-1).tolist()]
+        else:
+            ids_list = [int(x) for x in next_token_ids]
+        T = len(ids_list)
+        c_ids = (ctypes.c_int * T)(*ids_list)
+        h_in_np = backbone_hidden.detach().cpu().float().contiguous().view(T, D_NEMO).numpy()
+        out_arr = np.zeros((T, D_NEMO), dtype=np.float32)
+        ms = float(
+            self.lib.nemo_mtp_draft_forward(
+                c_ids,
+                h_in_np.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                T,
+                out_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+            )
+        )
+        return torch.from_numpy(out_arr), ms
 
     def forward_ids(self, token_ids: list[int] | torch.Tensor, seg_starts: list[int] | None = None) -> tuple[torch.Tensor, float]:
         if isinstance(token_ids, torch.Tensor):
