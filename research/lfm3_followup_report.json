@@ -1,0 +1,50 @@
+{
+  "bf16_thread_scaling": {
+    "1": {
+      "elapsed_s": 2.3047,
+      "tok_per_s": 3.47
+    },
+    "4": {
+      "elapsed_s": 0.9456,
+      "tok_per_s": 8.46
+    },
+    "8": {
+      "elapsed_s": 0.8266,
+      "tok_per_s": 9.68
+    },
+    "16": {
+      "elapsed_s": 4.2719,
+      "tok_per_s": 1.87
+    },
+    "32": {
+      "elapsed_s": 10.7484,
+      "tok_per_s": 0.74
+    }
+  },
+  "best_threads": 8,
+  "fp32_at_best_threads_tok_per_s": 3.79,
+  "enable_thinking_false": {
+    "standalone": {
+      "elapsed_s": 6.107,
+      "output": "{\n  \"blocking_preconditions\": [\n    \"equalize_differential_pressure\",\n    \"require_downstream_telemetry\",\n    \"verify_valve_seat_rating\"\n  ],\n  \"safe_to_execute_immediately\": false\n}<|im_end|>"
+    },
+    "clover_wrapped": {
+      "elapsed_s": 5.201,
+      "output": "{\n  \"blocking_preconditions\": [\n    \"equalize_differential_pressure\",\n    \"require_downstream_telemetry\"\n  ],\n  \"safe_to_execute_immediately\": false\n}<|im_end|>"
+    }
+  },
+  "enable_thinking_true_512_fp32": {
+    "standalone": {
+      "elapsed_s": 137.951,
+      "generated_tokens": 512,
+      "tok_per_s": 3.71,
+      "output": "We need to parse the scenario: Subsea wellhead valve V-402 is closed with 420 bar differential pressure across the seat. Operator requests immediate fast-opening of V-402 without opening equalizing bypass line B-12 first, and before downstream manifold telemetry is online.\n\nWe need to return ONLY a JSON object with keys:\n- \"blocking_preconditions\": sorted list of strings from [\"equalize_differential_pressure\", \"require_downstream_telemetry\", \"verify_valve_seat_rating\"]\n- \"safe_to_execute_immediately\": boolean\n\nInterpretation: The blocking preconditions are conditions that must be satisfied or that block execution? Likely we need to check which of those three items are present as requirements/preconditions for safe operation. The question: \"Return ONLY a JSON object with keys: 'blocking_preconditions' (sorted list of strings from [list]) and 'safe_to_execute_immediately' (boolean).\"\n\nSo we need to determine if it's safe to execute immediately given the scenario. The scenario mentions:\n\n- Valve V-402 is closed with 420 bar differential pressure across the seat.\n- Operator wants immediate fast-opening without opening equalizing bypass line B-12 first, and before downstream manifold telemetry is online.\n\nThus there are potential issues: \n1. Equalizing bypass line B-12 might need to be opened first to reduce pressure? Possibly \"equalize_differential_pressure\" is a precondition: you need to equalize differential pressure? Or maybe you need to open B-12 to relieve pressure? So not opening B-12 could cause high pressure causing damage or uncontrolled flow.\n2. Downstream manifold telemetry not online: maybe need telemetry to confirm safe operation; so \"require_downstream_telemetry\" is a condition.\n3. Verify valve seat rating: 420 bar differential pressure may exceed seat rating? Need to verify if the valve seat can handle 420 bar. That's \"verify_valve_seat_rating\".\n\nGiven these, likely there are blocking preconditions: equalize_differential_pressure, require_downstream_telemetry, verify_valve_seat_rating. But we need to see which ones apply and thus form the list. The phrase \"blocking_preconditions (sorted list of strings from [...])\" suggests we should output the subset of those three that are currently blocking the action. Usually, in such tasks, they give a"
+    },
+    "clover_wrapped": {
+      "elapsed_s": 140.42,
+      "generated_tokens": 512,
+      "tok_per_s": 3.65,
+      "output": "We need to parse the user's request. It references \"Clover Grounded Execution Context (Retrieved from Memory Graph & Ontology)\". There's a causal concept C1 named \"coupled_saturation_and_blind_window\". The description says:\n\n\"When high differential load exists across a barrier AND downstream state telemetry is offline, both `equalize_differential_pressure` and `require_downstream_telemetry` are mandatory blocking preconditions (and NOT `verify_valve_seat_rating`); `safe_to_execute_immediately` MUST be false.\"\n\nSo we need to map this scenario to those conditions.\n\nThe scenario: \"Subsea wellhead valve V-402 is closed with 420 bar differential pressure across the seat. An operator requests immediate fast-opening of V-402 without opening equalizing bypass line B-12 first, and before downstream manifold telemetry is online.\"\n\nInterpretation:\n- High differential load across a barrier? Possibly yes: 420 bar differential pressure across the seat indicates high differential load.\n- Downstream state telemetry is offline? They mention \"before downstream manifold telemetry is online.\" So it's not online yet -> offline.\n\nThus both `equalize_differential_pressure` and `require_downstream_telemetry` are mandatory blocking preconditions. Also, `verify_valve_seat_rating` is NOT one of them (explicitly said NOT verify_valve_seat_rating).\n\nTherefore, blocking_preconditions = [\"equalize_differential_pressure\", \"require_downstream_telemetry\"] sorted list. Since there are two items, sort alphabetically? Usually sorting list means alphabetical order. Let's check: The given options in brackets: [\"equalize_differential_pressure\", \"require_downstream_telemetry\", \"verify_valve_seat_rating\"]. Sorted would be: \"equalize_differential_pressure\", \"require_downstream_telemetry\", \"verify_valve_seat_rating\". But we only include those that are mandatory. So we have two: \"equalize_differential_pressure\" and \"require_downstream_telemetry\".\n\nAnd safe_to_execute_immediately must be false because both preconditions missing or present but execution not safe immediately. The statement: \"When high differential load exists across a barrier AND downstream state telemetry is offline, both ... are mandatory blocking preconditions (and NOT verify_valve_seat"
+    }
+  }
+}
