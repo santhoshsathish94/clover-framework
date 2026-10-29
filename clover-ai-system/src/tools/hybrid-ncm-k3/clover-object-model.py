@@ -913,6 +913,60 @@ class class-kimi-k3-text-modality-codec(class-modality-codec):
         )
 
 
+@decorator-register-component-in-catalog("modality-codec", "nemotron-3.5-super-vl-codec")
+class class-nemotron-super-vl-modality-codec(class-modality-codec):
+    """Multimodal text + C-RADIO vision/video codec for NVIDIA Nemotron 3.5 Super VL (`131,072` vocab, `4096` hidden)."""
+
+    def function-encode-input-into-activation-vector(self, variable-raw-input-text: str) -> List[float]:
+        variable-words = variable-raw-input-text.strip().split()
+        variable-word-count = float(max(1, len(variable-words)))
+        variable-character-count = float(max(1, len(variable-raw-input-text)))
+        return [
+            variable-word-count,
+            variable-character-count,
+            round(variable-character-count / variable-word-count, 4),
+            4.096,
+        ]
+
+    def function-decode-activation-vector-into-text(
+        self,
+        variable-activation-vector: Sequence[float],
+        variable-task-direction: class-task-direction,
+    ) -> str:
+        variable-checksum-value = round(sum(variable-activation-vector), 4)
+        return (
+            f"[Nemotron-3.5-Super-VL] Verified response for '{variable-task-direction.variable-goal-description}' "
+            f"(activation checksum {variable-checksum-value})."
+        )
+
+
+@decorator-register-component-in-catalog("modality-codec", "lfm3-1.7b-codec")
+class class-lfm3-compact-modality-codec(class-modality-codec):
+    """Compact ChatML + XML tool-call text codec for Liquid AI LFM3-1.7B (`128,000` tied vocab, `2048` hidden)."""
+
+    def function-encode-input-into-activation-vector(self, variable-raw-input-text: str) -> List[float]:
+        variable-words = variable-raw-input-text.strip().split()
+        variable-word-count = float(max(1, len(variable-words)))
+        variable-character-count = float(max(1, len(variable-raw-input-text)))
+        return [
+            variable-word-count,
+            variable-character-count,
+            round(variable-character-count / variable-word-count, 4),
+            2.048,
+        ]
+
+    def function-decode-activation-vector-into-text(
+        self,
+        variable-activation-vector: Sequence[float],
+        variable-task-direction: class-task-direction,
+    ) -> str:
+        variable-checksum-value = round(sum(variable-activation-vector), 4)
+        return (
+            f"[LFM3-1.7B] Verified response for '{variable-task-direction.variable-goal-description}' "
+            f"(activation checksum {variable-checksum-value})."
+        )
+
+
 class class-sequence-mixing-operator(ABC):
     """Polymorphic sequence operator interface unifying `KdaOperator`, `MlaOperator`, and `SelfAttentionOperator`."""
 
@@ -964,6 +1018,67 @@ class class-multi-head-latent-attention-operator(class-sequence-mixing-operator)
         ]
         variable-forward-pass-workspace.variable-recurrent-state-by-stage-index[variable-stage-index] = variable-mixed-vector
         return variable-mixed-vector
+
+
+@decorator-register-component-in-catalog("sequence-operator", "nemotron-mamba2-ssd")
+class class-nemotron-mamba2-ssd-operator(class-sequence-mixing-operator):
+    """Mamba-2 Selective State Space (SSD) operator used in 40 of the 88 layers of Nemotron 3.5 Super VL."""
+
+    def function-mix-sequence-activations(
+        self,
+        variable-stage-index: int,
+        variable-input-activation-vector: Sequence[float],
+        variable-forward-pass-workspace: class-forward-pass-workspace,
+    ) -> List[float]:
+        variable-previous-state = variable-forward-pass-workspace.variable-recurrent-state-by-stage-index.get(
+            variable-stage-index, [0.0 for _ in variable-input-activation-vector]
+        )
+        variable-updated-state = [
+            round(0.88 * variable-current-val + 0.12 * variable-prev-val, 6)
+            for variable-current-val, variable-prev-val in zip(variable-input-activation-vector, variable-previous-state)
+        ]
+        variable-forward-pass-workspace.variable-recurrent-state-by-stage-index[variable-stage-index] = variable-updated-state
+        return variable-updated-state
+
+
+@decorator-register-component-in-catalog("sequence-operator", "nemotron-nope-gqa-attention")
+class class-nemotron-nope-gqa-attention-operator(class-sequence-mixing-operator):
+    """NoPE 16:1 Grouped-Query Attention (32 Q : 2 KV heads, zero RoPE) used in 8 of the 88 layers of Nemotron 3.5 Super VL."""
+
+    def function-mix-sequence-activations(
+        self,
+        variable-stage-index: int,
+        variable-input-activation-vector: Sequence[float],
+        variable-forward-pass-workspace: class-forward-pass-workspace,
+    ) -> List[float]:
+        variable-mean-activation = sum(variable-input-activation-vector) / max(1, len(variable-input-activation-vector))
+        variable-mixed-vector = [
+            round(variable-value + 0.04 * variable-mean-activation, 6)
+            for variable-value in variable-input-activation-vector
+        ]
+        variable-forward-pass-workspace.variable-recurrent-state-by-stage-index[variable-stage-index] = variable-mixed-vector
+        return variable-mixed-vector
+
+
+@decorator-register-component-in-catalog("sequence-operator", "lfm3-gated-short-conv")
+class class-lfm3-gated-short-convolution-operator(class-sequence-mixing-operator):
+    """Width-7 Gated Short Convolution (`B * x -> conv1d(K=7) -> C * conv`) used in 13 of the 24 layers of LFM3-1.7B."""
+
+    def function-mix-sequence-activations(
+        self,
+        variable-stage-index: int,
+        variable-input-activation-vector: Sequence[float],
+        variable-forward-pass-workspace: class-forward-pass-workspace,
+    ) -> List[float]:
+        variable-previous-state = variable-forward-pass-workspace.variable-recurrent-state-by-stage-index.get(
+            variable-stage-index, [0.0 for _ in variable-input-activation-vector]
+        )
+        variable-updated-state = [
+            round(0.92 * variable-current-val + 0.08 * variable-prev-val, 6)
+            for variable-current-val, variable-prev-val in zip(variable-input-activation-vector, variable-previous-state)
+        ]
+        variable-forward-pass-workspace.variable-recurrent-state-by-stage-index[variable-stage-index] = variable-updated-state
+        return variable-updated-state
 
 
 class class-feed-forward-network(ABC):
@@ -1334,6 +1449,174 @@ class class-growth-ledger-recorder:
 # TEMPLATE METHOD & FLUENT BUILDER — `class-clover-cycle-coordinator`
 # ============================================================================
 
+class class-switchable-foundation-model-backend(ABC):
+    """
+    Strategy & Factory interface for Layer 1 (the Foundation Model Backbone) of Clover's 7-layer architecture.
+    Allows hot-switching Layer 1 between:
+      - `"kimi-k3"` (`MoonshotAI/Kimi-K3` — 93 layers, 7168 hidden, 896 MXFP4 experts/layer, KDA+MLA)
+      - `"nemotron-3.5-super-vl"` (`nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B` — 88 layers, 4096 hidden,
+        40 Mamba-2 + 40 Latent ReLU^2 MoE [512 experts] + 8 NoPE 16:1 GQA + C-RADIO Vision + 2-layer Native MTP)
+      - `"lfm3-1.7b"` (`LiquidAI/LFM3-1.7B` — 24 layers, 2048 hidden, 13 ShortConv + 5 Sliding GQA + 6 Full GQA)
+    while keeping Layers 2..7 (`HybridAgent`, `NCM`, `MemoryGraph`, `OntologyGraphRAG`, `GenerativeCompiler`,
+    and `SpecMD R4 SlotCache`) invariant!
+    """
+
+    @property
+    @abstractmethod
+    def variable-model-key(self) -> str:
+        """Canonical model key (`"kimi-k3"`, `"nemotron-3.5-super-vl"`, or `"lfm3-1.7b"`)."""
+
+    @property
+    @abstractmethod
+    def variable-hidden-dimension(self) -> int:
+        """Backbone hidden dimension (`7168` for Kimi K3, `4096` for Nemotron 3.5 Super VL, `2048` for LFM3-1.7B)."""
+
+    @property
+    @abstractmethod
+    def variable-total-layer-count(self) -> int:
+        """Number of backbone layers (`93` for Kimi K3, `88` for Nemotron 3.5 Super VL, `24` for LFM3-1.7B)."""
+
+    @abstractmethod
+    def function-build-neural-stage-pipeline(
+        self,
+        variable-primary-storage-tier: class-memory-storage-tier,
+    ) -> class-neural-stage-pipeline:
+        """Constructs the `class-neural-stage-pipeline` wired to `variable-primary-storage-tier`."""
+
+
+@decorator-register-component-in-catalog("foundation-model-backend", "kimi-k3")
+class class-kimi-k3-foundation-model-backend(class-switchable-foundation-model-backend):
+    """Layer-1 backend for MoonshotAI Kimi K3 (93 layers, 7168 hidden, KDA + MLA + 896 routed experts)."""
+
+    @property
+    def variable-model-key(self) -> str:
+        return "kimi-k3"
+
+    @property
+    def variable-hidden-dimension(self) -> int:
+        return 7168
+
+    @property
+    def variable-total-layer-count(self) -> int:
+        return 93
+
+    def function-build-neural-stage-pipeline(
+        self,
+        variable-primary-storage-tier: class-memory-storage-tier,
+    ) -> class-neural-stage-pipeline:
+        variable-stages = [
+            class-transformer-stage.function-create-dense-initial-stage(variable-stage-index=0),
+            class-transformer-stage.function-create-routed-mixture-of-experts-stage(
+                variable-stage-index=1,
+                variable-storage-tier=variable-primary-storage-tier,
+                variable-routed-expert-identifiers=[1, 2],
+                flag-use-latent-attention=False,
+            ),
+            class-transformer-stage.function-create-routed-mixture-of-experts-stage(
+                variable-stage-index=2,
+                variable-storage-tier=variable-primary-storage-tier,
+                variable-routed-expert-identifiers=[3, 4],
+                flag-use-latent-attention=True,
+            ),
+        ]
+        return class-neural-stage-pipeline(
+            variable-modality-codec=class-kimi-k3-text-modality-codec(),
+            variable-ordered-stages=variable-stages,
+            variable-snapshot-interval-in-stages=2,
+        )
+
+
+@decorator-register-component-in-catalog("foundation-model-backend", "nemotron-3.5-super-vl")
+class class-nemotron-super-vl-foundation-model-backend(class-switchable-foundation-model-backend):
+    """Layer-1 backend for NVIDIA Nemotron 3.5 Super VL (88 single-mixer layers, 4096 hidden, Mamba-2 + Latent ReLU^2 MoE + NoPE GQA)."""
+
+    @property
+    def variable-model-key(self) -> str:
+        return "nemotron-3.5-super-vl"
+
+    @property
+    def variable-hidden-dimension(self) -> int:
+        return 4096
+
+    @property
+    def variable-total-layer-count(self) -> int:
+        return 88
+
+    def function-build-neural-stage-pipeline(
+        self,
+        variable-primary-storage-tier: class-memory-storage-tier,
+    ) -> class-neural-stage-pipeline:
+        variable-mamba-stage = class-transformer-stage(
+            variable-stage-index=0,
+            variable-sequence-operator=class-nemotron-mamba2-ssd-operator(),
+            variable-feed-forward-network=class-dense-swiglu-feed-forward-network(
+                class-quantized-tensor-record("nemotron-layer0-mamba-out-proj", 4, 4, [1.0, 1.02, 0.98, 1.0])
+            ),
+        )
+        variable-latent-moe-stage = class-transformer-stage(
+            variable-stage-index=1,
+            variable-sequence-operator=class-nemotron-mamba2-ssd-operator(),
+            variable-feed-forward-network=class-routed-mixture-of-experts-feed-forward-network(
+                variable-storage-tier=variable-primary-storage-tier,
+                variable-routed-expert-identifiers=[1, 2, 3],
+            ),
+        )
+        variable-nope-gqa-stage = class-transformer-stage(
+            variable-stage-index=7,
+            variable-sequence-operator=class-nemotron-nope-gqa-attention-operator(),
+            variable-feed-forward-network=class-routed-mixture-of-experts-feed-forward-network(
+                variable-storage-tier=variable-primary-storage-tier,
+                variable-routed-expert-identifiers=[4, 5],
+            ),
+        )
+        return class-neural-stage-pipeline(
+            variable-modality-codec=class-nemotron-super-vl-modality-codec(),
+            variable-ordered-stages=[variable-mamba-stage, variable-latent-moe-stage, variable-nope-gqa-stage],
+            variable-snapshot-interval-in-stages=2,
+        )
+
+
+@decorator-register-component-in-catalog("foundation-model-backend", "lfm3-1.7b")
+class class-lfm3-compact-foundation-model-backend(class-switchable-foundation-model-backend):
+    """Layer-1 backend for Liquid AI LFM3-1.7B (24 tri-hybrid layers, 2048 hidden, ShortConv + Sliding GQA + Full GQA)."""
+
+    @property
+    def variable-model-key(self) -> str:
+        return "lfm3-1.7b"
+
+    @property
+    def variable-hidden-dimension(self) -> int:
+        return 2048
+
+    @property
+    def variable-total-layer-count(self) -> int:
+        return 24
+
+    def function-build-neural-stage-pipeline(
+        self,
+        variable-primary-storage-tier: class-memory-storage-tier,
+    ) -> class-neural-stage-pipeline:
+        variable-conv-stage = class-transformer-stage(
+            variable-stage-index=0,
+            variable-sequence-operator=class-lfm3-gated-short-convolution-operator(),
+            variable-feed-forward-network=class-dense-swiglu-feed-forward-network(
+                class-quantized-tensor-record("lfm3-layer0-swiglu", 4, 4, [1.0, 1.0, 1.0, 1.0])
+            ),
+        )
+        variable-attn-stage = class-transformer-stage(
+            variable-stage-index=2,
+            variable-sequence-operator=class-nemotron-nope-gqa-attention-operator(),
+            variable-feed-forward-network=class-dense-swiglu-feed-forward-network(
+                class-quantized-tensor-record("lfm3-layer2-swiglu", 4, 4, [1.0, 1.01, 0.99, 1.0])
+            ),
+        )
+        return class-neural-stage-pipeline(
+            variable-modality-codec=class-lfm3-compact-modality-codec(),
+            variable-ordered-stages=[variable-conv-stage, variable-attn-stage],
+            variable-snapshot-interval-in-stages=2,
+        )
+
+
 class class-clover-cycle-coordinator:
     """Unifies `MultiGPUCloverCoordinator`, `CloverK3AgentEngine`, and `K3FastChatEngine` using the Template Method Pattern."""
 
@@ -1345,6 +1628,7 @@ class class-clover-cycle-coordinator:
         variable-artifact-verifier: class-artifact-verifier,
         variable-growth-recorder: class-growth-ledger-recorder,
         variable-cycle-observers: Optional[Sequence[class-cycle-phase-observer]] = None,
+        variable-active-model-key: str = "kimi-k3",
     ) -> None:
         self.variable-knowledge-graph = variable-knowledge-graph
         self.variable-primary-storage-tier = variable-primary-storage-tier
@@ -1353,6 +1637,21 @@ class class-clover-cycle-coordinator:
         self.variable-growth-recorder = variable-growth-recorder
         self.variable-cycle-observers: List[class-cycle-phase-observer] = list(variable-cycle-observers or [])
         self.variable-telemetry-ledger = class-execution-telemetry-ledger()
+        self.variable-active-model-key: str = variable-active-model-key
+
+    def function-switch-foundation-model-backend(self, variable-target-model-key: str) -> class-switchable-foundation-model-backend:
+        """Hot-switches Layer 1 (the Foundation Model Backbone) between `"kimi-k3"`, `"nemotron-3.5-super-vl"`, and `"lfm3-1.7b"`."""
+        variable-backend: class-switchable-foundation-model-backend = (
+            class-component-catalog-registry.function-create-component-instance(
+                "foundation-model-backend",
+                variable-target-model-key,
+            )
+        )
+        self.variable-neural-pipeline = variable-backend.function-build-neural-stage-pipeline(
+            self.variable-primary-storage-tier
+        )
+        self.variable-active-model-key = variable-backend.variable-model-key
+        return variable-backend
 
     @decorator-emit-clover-cycle-stage("Context")
     def function-establish-cycle-context(
@@ -1446,6 +1745,14 @@ class class-clover-cycle-coordinator-builder:
         self.variable-artifact-verifier: Optional[class-artifact-verifier] = None
         self.variable-growth-recorder: Optional[class-growth-ledger-recorder] = None
         self.variable-cycle-observers: List[class-cycle-phase-observer] = []
+        self.variable-selected-model-key: str = "kimi-k3"
+
+    def function-with-foundation-model-key(
+        self,
+        variable-model-key: str,
+    ) -> class-clover-cycle-coordinator-builder:
+        self.variable-selected-model-key = variable-model-key
+        return self
 
     def function-with-knowledge-graph(
         self,
@@ -1501,25 +1808,14 @@ class class-clover-cycle-coordinator-builder:
                 )
             self.variable-primary-storage-tier = variable-vram-tier
         if self.variable-neural-pipeline is None:
-            variable-stages = [
-                class-transformer-stage.function-create-dense-initial-stage(variable-stage-index=0),
-                class-transformer-stage.function-create-routed-mixture-of-experts-stage(
-                    variable-stage-index=1,
-                    variable-storage-tier=self.variable-primary-storage-tier,
-                    variable-routed-expert-identifiers=[1, 2],
-                    flag-use-latent-attention=False,
-                ),
-                class-transformer-stage.function-create-routed-mixture-of-experts-stage(
-                    variable-stage-index=2,
-                    variable-storage-tier=self.variable-primary-storage-tier,
-                    variable-routed-expert-identifiers=[3, 4],
-                    flag-use-latent-attention=True,
-                ),
-            ]
-            self.variable-neural-pipeline = class-neural-stage-pipeline(
-                variable-modality-codec=class-kimi-k3-text-modality-codec(),
-                variable-ordered-stages=variable-stages,
-                variable-snapshot-interval-in-stages=2,
+            variable-backend: class-switchable-foundation-model-backend = (
+                class-component-catalog-registry.function-create-component-instance(
+                    "foundation-model-backend",
+                    self.variable-selected-model-key,
+                )
+            )
+            self.variable-neural-pipeline = variable-backend.function-build-neural-stage-pipeline(
+                self.variable-primary-storage-tier
             )
         return class-clover-cycle-coordinator(
             variable-knowledge-graph=variable-knowledge-graph,
@@ -1528,6 +1824,7 @@ class class-clover-cycle-coordinator-builder:
             variable-artifact-verifier=self.variable-artifact-verifier or class-symbolic-and-syntax-artifact-verifier(),
             variable-growth-recorder=self.variable-growth-recorder or class-growth-ledger-recorder(),
             variable-cycle-observers=self.variable-cycle-observers,
+            variable-active-model-key=self.variable-selected-model-key,
         )
 
 

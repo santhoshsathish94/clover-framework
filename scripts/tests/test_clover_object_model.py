@@ -5,7 +5,7 @@ import sys
 import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TOOLS_DIR = REPO_ROOT / "clover-kimi-k3" / "src" / "tools" / "hybrid-ncm-k3"
+TOOLS_DIR = REPO_ROOT / "clover-ai-system" / "src" / "tools" / "hybrid-ncm-k3"
 if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 

@@ -83,7 +83,7 @@ Following Clover's operating principles, we first download the model's exact cod
 ### 1. Exact 43,079-Tensor / 124.45B-Parameter Census (`NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16`)
 We downloaded the non-weight metadata, custom modeling code (`configuration_nemotron_h_omni.py`, `modeling_nemotron_h_omni.py`, `configuration_radio.py`, `modeling_radio.py`), and the 6 stage-bearing BF16 shards (`model-00001`, `00002`, `00005`, `00061`, `00062`, `00063` + `model-summary-idxs.safetensors`, `20.9 GiB` total) to `/opt/clover-k3/models/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16` on `k3` (`37.27.114.74`, AMD Ryzen 9 7950X3D) in `189.43 s`.
 
-Using [research/nemotron_super_vl_stage_study.py](research/nemotron_super_vl_stage_study.py) and recorded in [research/nemotron_super_vl_stage_study_report.json](research/nemotron_super_vl_stage_study_report.json), our stage-by-stage parameter sum across all `43,079` tensors matched the checkpoint metadata to the single parameter (**`124,453,395,976` total parameters**, **`12,770,237,440` active backbone parameters per text token**):
+Using [research/nemotron_super_vl_stage_study.py](../../../research/nemotron_super_vl_stage_study.py) and recorded in [research/nemotron_super_vl_stage_study_report.json](../../../research/nemotron_super_vl_stage_study_report.json), our stage-by-stage parameter sum across all `43,079` tensors matched the checkpoint metadata to the single parameter (**`124,453,395,976` total parameters**, **`12,770,237,440` active backbone parameters per text token**):
 
 | Stage / Component | Tensors | Parameters | Share | Per-Layer / Active Structure |
 | :--- | ---: | ---: | ---: | :--- |

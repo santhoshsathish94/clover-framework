@@ -1,0 +1,385 @@
+{
+  "prepare_summary": {
+    "total_prepare_seconds": 19.03,
+    "computed_dir": "/opt/clover-k3/nemotron-computed/raw",
+    "global_0": {
+      "embeddings_bytes": 1073741824,
+      "norm_f_bytes": 8192,
+      "lm_head_bytes": 1073741824
+    },
+    "trunk_0_mamba": {
+      "layer_id": 0,
+      "layer_kind": 0,
+      "record_count": 9,
+      "group_lengths": [
+        67133440,
+        152146688,
+        0
+      ],
+      "total_group_bytes": 219280128,
+      "operator_bytes": 152155200
+    },
+    "layer_1_moe": {
+      "trunk": {
+        "layer_id": 1,
+        "layer_kind": 2,
+        "record_count": 7,
+        "group_lengths": [
+          8192,
+          0,
+          113248256
+        ],
+        "total_group_bytes": 113256448,
+        "operator_bytes": 0
+      },
+      "expert": {
+        "format": "NEMO_EXPERTS_DIRECT_V1",
+        "layer_id": 1,
+        "num_experts": 512,
+        "up_proj_shape": [
+          2688,
+          1024
+        ],
+        "down_proj_shape": [
+          1024,
+          2688
+        ],
+        "activation": "relu2",
+        "has_gate": false,
+        "expert_stride_bytes": 11010048,
+        "total_direct_bytes": 5637144576,
+        "build_seconds": 6.252,
+        "sample_crc32": [
+          {
+            "expert_id": 0,
+            "up_crc32": 3125734905,
+            "down_crc32": 2802577749
+          },
+          {
+            "expert_id": 1,
+            "up_crc32": 3945853330,
+            "down_crc32": 1795251031
+          },
+          {
+            "expert_id": 2,
+            "up_crc32": 4063550657,
+            "down_crc32": 2440713448
+          },
+          {
+            "expert_id": 3,
+            "up_crc32": 1761449173,
+            "down_crc32": 3515317734
+          },
+          {
+            "expert_id": 4,
+            "up_crc32": 3913508486,
+            "down_crc32": 4178696612
+          },
+          {
+            "expert_id": 5,
+            "up_crc32": 3032886244,
+            "down_crc32": 2937917819
+          },
+          {
+            "expert_id": 6,
+            "up_crc32": 1031308898,
+            "down_crc32": 2801105212
+          },
+          {
+            "expert_id": 7,
+            "up_crc32": 355411046,
+            "down_crc32": 3891952477
+          },
+          {
+            "expert_id": 511,
+            "up_crc32": 2778506433,
+            "down_crc32": 630439716
+          }
+        ]
+      }
+    },
+    "trunk_7_attention": {
+      "layer_id": 7,
+      "layer_kind": 1,
+      "record_count": 5,
+      "group_lengths": [
+        33562624,
+        37748736,
+        0
+      ],
+      "total_group_bytes": 71311360,
+      "operator_bytes": 37756992
+    },
+    "mtp_0_attention": {
+      "layer_id": 100,
+      "layer_kind": 1,
+      "record_count": 8,
+      "group_lengths": [
+        100687872,
+        37748736,
+        0
+      ],
+      "total_group_bytes": 138436608,
+      "operator_bytes": 37756992
+    },
+    "mtp_1_moe": {
+      "trunk": {
+        "layer_id": 101,
+        "layer_kind": 2,
+        "record_count": 8,
+        "group_lengths": [
+          16384,
+          0,
+          113248256
+        ],
+        "total_group_bytes": 113264640,
+        "operator_bytes": 0
+      },
+      "expert": {
+        "format": "NEMO_EXPERTS_DIRECT_V1",
+        "layer_id": 101,
+        "num_experts": 512,
+        "up_proj_shape": [
+          2688,
+          1024
+        ],
+        "down_proj_shape": [
+          1024,
+          2688
+        ],
+        "activation": "relu2",
+        "has_gate": false,
+        "expert_stride_bytes": 11010048,
+        "total_direct_bytes": 5637144576,
+        "build_seconds": 6.335,
+        "sample_crc32": [
+          {
+            "expert_id": 0,
+            "up_crc32": 3293647187,
+            "down_crc32": 2696417142
+          },
+          {
+            "expert_id": 1,
+            "up_crc32": 3886555997,
+            "down_crc32": 3044453560
+          },
+          {
+            "expert_id": 2,
+            "up_crc32": 2432875814,
+            "down_crc32": 2016750096
+          },
+          {
+            "expert_id": 3,
+            "up_crc32": 434986485,
+            "down_crc32": 3266741210
+          },
+          {
+            "expert_id": 4,
+            "up_crc32": 1663238829,
+            "down_crc32": 1718457029
+          },
+          {
+            "expert_id": 5,
+            "up_crc32": 1110354770,
+            "down_crc32": 2331916145
+          },
+          {
+            "expert_id": 6,
+            "up_crc32": 2473732257,
+            "down_crc32": 2038482271
+          },
+          {
+            "expert_id": 7,
+            "up_crc32": 2650688094,
+            "down_crc32": 2495865113
+          },
+          {
+            "expert_id": 511,
+            "up_crc32": 505995682,
+            "down_crc32": 2523288031
+          }
+        ]
+      }
+    }
+  },
+  "prune_summary": {
+    "trunks_pruned": [
+      {
+        "trunk_name": "trunk-0",
+        "layer_id": 0,
+        "layer_kind": 0,
+        "old_group_bytes": 219280128,
+        "new_group_bytes": 67125248,
+        "dropped_group_bytes": 152154880,
+        "reduction_pct": 69.39,
+        "operator_bytes": 152155200
+      },
+      {
+        "trunk_name": "trunk-1",
+        "layer_id": 1,
+        "layer_kind": 2,
+        "old_group_bytes": 113256448,
+        "new_group_bytes": 113256448,
+        "dropped_group_bytes": 0,
+        "reduction_pct": 0.0,
+        "operator_bytes": 0
+      },
+      {
+        "trunk_name": "trunk-7",
+        "layer_id": 7,
+        "layer_kind": 1,
+        "old_group_bytes": 71311360,
+        "new_group_bytes": 33554432,
+        "dropped_group_bytes": 37756928,
+        "reduction_pct": 52.95,
+        "operator_bytes": 37756992
+      },
+      {
+        "trunk_name": "trunk-mtp-0",
+        "layer_id": 100,
+        "layer_kind": 1,
+        "old_group_bytes": 138436608,
+        "new_group_bytes": 100679680,
+        "dropped_group_bytes": 37756928,
+        "reduction_pct": 27.27,
+        "operator_bytes": 37756992
+      },
+      {
+        "trunk_name": "trunk-mtp-1",
+        "layer_id": 101,
+        "layer_kind": 2,
+        "old_group_bytes": 113264640,
+        "new_group_bytes": 113264640,
+        "dropped_group_bytes": 0,
+        "reduction_pct": 0.0,
+        "operator_bytes": 0
+      }
+    ],
+    "sampled_total_old_bytes": 655549184,
+    "sampled_total_new_bytes": 427880448,
+    "sampled_total_dropped_bytes": 227668736,
+    "full_88_layer_projection": {
+      "full_88_layers_old_trunk_gib": 12.919,
+      "full_88_layers_pruned_trunk_gib": 6.97,
+      "full_88_layers_dropped_gib": 5.95,
+      "mamba_40_layers_reduction_pct": 69.39,
+      "attention_8_layers_reduction_pct": 52.95,
+      "overall_88_trunk_reduction_pct": 46.05
+    }
+  },
+  "pruned_precomputed_verification": {
+    "prompt": "Clover AI System switches seamlessly between Kimi K3, NVIDIA Nemotron 3.5 Super VL, and Liquid LFM3.",
+    "seq_len": 31,
+    "mamba_attention_bin_removed_after_prune": true,
+    "gqa_attention_bin_removed_after_prune": true,
+    "layer0_mamba_precomputed_vs_official_max_diff": 0.0,
+    "layer0_mamba_precomputed_vs_official_cos_sim": 0.99999899,
+    "layer1_latent_moe_precomputed_vs_official_max_diff": 0.0,
+    "layer1_latent_moe_precomputed_vs_official_cos_sim": 0.9999975,
+    "layer1_latent_moe_4bit_group64_cos_sim": 0.998189,
+    "layer7_nope_gqa_precomputed_vs_official_max_diff": 0.0,
+    "specmd_r4_expert_slot_cache_pass1": {
+      "layer_id": 1,
+      "total_expert_requests": 355,
+      "tier1_pool_hits": 0,
+      "tier2_host_hits": 0,
+      "tier3_drive_fetches": 355,
+      "r4_clean_drops": 291,
+      "dirty_writebacks": 0,
+      "bytes_read_from_drive_mb": 3727.5,
+      "full_512_experts_layer_mb": 5376.0,
+      "io_saving_pct_vs_dense_load": 30.66
+    },
+    "specmd_r4_expert_slot_cache_pass2_warm": {
+      "layer_id": 1,
+      "total_expert_requests": 710,
+      "tier1_pool_hits": 64,
+      "tier2_host_hits": 291,
+      "tier3_drive_fetches": 355,
+      "r4_clean_drops": 582,
+      "dirty_writebacks": 0,
+      "bytes_read_from_drive_mb": 3727.5,
+      "full_512_experts_layer_mb": 5376.0,
+      "io_saving_pct_vs_dense_load": 30.66
+    },
+    "native_mtp_draft_expert_stats": {
+      "layer_id": 101,
+      "total_expert_requests": 219,
+      "tier1_pool_hits": 0,
+      "tier2_host_hits": 0,
+      "tier3_drive_fetches": 219,
+      "r4_clean_drops": 155,
+      "dirty_writebacks": 0,
+      "bytes_read_from_drive_mb": 2299.5,
+      "full_512_experts_layer_mb": 5376.0,
+      "io_saving_pct_vs_dense_load": 57.23
+    },
+    "native_mtp_logits_shape": [
+      1,
+      31,
+      131072
+    ]
+  },
+  "switchable_7_layer_clover_bridges": {
+    "nemotron-3.5-super-vl": {
+      "model_key": "nemotron-3.5-super-vl",
+      "backbone_shape": [
+        1,
+        31,
+        4096
+      ],
+      "ncm_concept_384_shape": [
+        1,
+        31,
+        384
+      ],
+      "ncm_concept_384_rms": 0.46204,
+      "hybrid_agent_4096_shape": [
+        1,
+        31,
+        4096
+      ],
+      "hybrid_agent_4096_rms": 2.10103
+    },
+    "kimi-k3": {
+      "model_key": "kimi-k3",
+      "backbone_shape": [
+        1,
+        31,
+        7168
+      ],
+      "ncm_concept_384_shape": [
+        1,
+        31,
+        384
+      ],
+      "ncm_concept_384_rms": 0.46206,
+      "hybrid_agent_4096_shape": [
+        1,
+        31,
+        4096
+      ],
+      "hybrid_agent_4096_rms": 0.57336
+    },
+    "lfm3-1.7b": {
+      "model_key": "lfm3-1.7b",
+      "backbone_shape": [
+        1,
+        31,
+        2048
+      ],
+      "ncm_concept_384_shape": [
+        1,
+        31,
+        384
+      ],
+      "ncm_concept_384_rms": 0.46197,
+      "hybrid_agent_4096_shape": [
+        1,
+        31,
+        4096
+      ],
+      "hybrid_agent_4096_rms": 0.57408
+    }
+  }
+}

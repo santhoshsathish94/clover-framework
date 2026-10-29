@@ -6,7 +6,7 @@ import sys
 import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TOOLS_DIR = REPO_ROOT / "clover-kimi-k3" / "src" / "tools" / "hybrid-ncm-k3"
+TOOLS_DIR = REPO_ROOT / "clover-ai-system" / "src" / "tools" / "hybrid-ncm-k3"
 if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
@@ -212,3 +212,61 @@ class TestCloverObjectModel(unittest.TestCase):
         )
         self.assertIn("MEM-OUTCOME-CYCLE-TEST-01", variable-graph.variable-nodes-by-identifier)
         self.assertGreaterEqual(variable-coordinator.variable-telemetry-ledger.variable-total-recorded-invocations, 1)
+
+    def test_06_switchable_foundation_model_backends_across_kimi_nemotron_and_lfm3(self) -> None:
+        """Verifies hot-switching Layer 1 (the Foundation Model Backbone) across Kimi K3, Nemotron 3.5 Super VL, and LFM3-1.7B."""
+        variable-coordinator = (
+            class-clover-cycle-coordinator-builder()
+            .function-with-foundation-model-key("kimi-k3")
+            .function-build-coordinator()
+        )
+        self.assertEqual(variable-coordinator.variable-active-model-key, "kimi-k3")
+
+        # Switch Layer 1 to NVIDIA Nemotron 3.5 Super VL (`120B-A12B`, 88 layers, Mamba-2 + Latent ReLU^2 MoE + NoPE GQA)
+        variable-nemo-backend = variable-coordinator.function-switch-foundation-model-backend(
+            "nemotron-3.5-super-vl"
+        )
+        self.assertEqual(variable-coordinator.variable-active-model-key, "nemotron-3.5-super-vl")
+        self.assertEqual(variable-nemo-backend.variable-total-layer-count, 88)
+        self.assertEqual(variable-nemo-backend.variable-hidden-dimension, 4096)
+
+        variable-session = class-conversation-session(variable-session-identifier="session-switch-models")
+        variable-nemo-direction = class-task-direction(
+            variable-request-identifier="nemo-turn-01",
+            variable-goal-description="Verify Nemotron 3.5 Super VL Layer-1 switching in the 7-layer Clover stack.",
+        )
+        variable-nemo-decoded = variable-coordinator.function-execute-cycle-transformation(
+            variable-task-direction=variable-nemo-direction,
+            variable-forward-pass-workspace=class-forward-pass-workspace(),
+        )
+        self.assertIn("[Nemotron-3.5-Super-VL]", variable-nemo-decoded)
+        variable-nemo-verdict = variable-coordinator.function-execute-complete-clover-cycle(
+            variable-task-direction=variable-nemo-direction,
+            variable-conversation-session=variable-session,
+        )
+        self.assertTrue(variable-nemo-verdict.flag-has-passed-all-checks)
+
+        # Switch Layer 1 to Liquid AI LFM3-1.7B (`1.73B`, 24 layers, ShortConv + Sliding/Full GQA)
+        variable-lfm3-backend = variable-coordinator.function-switch-foundation-model-backend(
+            "lfm3-1.7b"
+        )
+        self.assertEqual(variable-coordinator.variable-active-model-key, "lfm3-1.7b")
+        self.assertEqual(variable-lfm3-backend.variable-total-layer-count, 24)
+        self.assertEqual(variable-lfm3-backend.variable-hidden-dimension, 2048)
+
+        variable-lfm3-direction = class-task-direction(
+            variable-request-identifier="lfm3-turn-01",
+            variable-goal-description="Verify LFM3-1.7B Layer-1 switching in the 7-layer Clover stack.",
+        )
+        variable-lfm3-decoded = variable-coordinator.function-execute-cycle-transformation(
+            variable-task-direction=variable-lfm3-direction,
+            variable-forward-pass-workspace=class-forward-pass-workspace(),
+        )
+        self.assertIn("[LFM3-1.7B]", variable-lfm3-decoded)
+        variable-lfm3-verdict = variable-coordinator.function-execute-complete-clover-cycle(
+            variable-task-direction=variable-lfm3-direction,
+            variable-conversation-session=variable-session,
+        )
+        self.assertTrue(variable-lfm3-verdict.flag-has-passed-all-checks)
+
+

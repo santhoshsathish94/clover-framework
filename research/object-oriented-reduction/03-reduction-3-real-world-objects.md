@@ -11,7 +11,7 @@
 - **Direction:**
   1. Organize the 24 domain classes into **12 Complete-English Core Domain Objects** where every class, method, variable, boolean property, and constant is written in full, unabbreviated English so a human reader can immediately tell what every identifier is.
   2. Apply explicit **Decorators** (`@register_component_in_catalog`, `@enforce_direction_boundary`, `@record_execution_telemetry`, `@emit_clover_cycle_stage`, `@abstractmethod`, `@property`, `@classmethod`, `@dataclass(frozen=True)`) and **8 classic OOP Design Patterns** (`Strategy`, `Chain of Responsibility`, `Composite Pipeline`, `Decorator Wrapper`, `Factory & Registry`, `Memento`, `Fluent Builder`, and `Template Method + Observer`).
-- **Execution:** Define the Hyphenated Complete-English Role-Prefix Grammar (`class-*`, `function-*`, `variable-*`, `flag-*`, `constant-*`, `decorator-*`), the 12 Core Domain Objects, their real-world meaning, and their exact relationships in [`clover-object-model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover-object-model.py).
+- **Execution:** Define the Hyphenated Complete-English Role-Prefix Grammar (`class-*`, `function-*`, `variable-*`, `flag-*`, `constant-*`, `decorator-*`), the 12 Core Domain Objects, their real-world meaning, and their exact relationships in [`clover-object-model.py`](../../clover-ai-system/src/tools/hybrid-ncm-k3/clover-object-model.py).
 - **Outcome:** 24 domain classes organize cleanly into **12 Core Domain Objects** (**97.0% reduction** from the 398 raw types) with zero violation of Single Responsibility (`SRP`) or Liskov Substitution (`LSP`).
 - **Growth:** Writing every class, function, variable, flag, constant, and decorator with literal ASCII hyphens `-` (`class-task-direction`, `class-conversation-session`, `function-ensure-expert-tensor-resident`, `variable-resident-entries-by-identifier`, `flag-has-passed-all-checks`) makes both architectural invariants and code roles self-evident at a glance.
 
@@ -21,7 +21,7 @@
 
 Except for language reserved words (`class`, `def`, `if`, `else`, `for`, `while`, `return`, `try`, `except`, `with`), every symbol uses literal ASCII hyphens `-` and an explicit role prefix:
 
-| Symbol Kind | Role Prefix & Hyphenated English Rule | How It Reads in [`clover-object-model.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/clover-object-model.py) |
+| Symbol Kind | Role Prefix & Hyphenated English Rule | How It Reads in [`clover-object-model.py`](../../clover-ai-system/src/tools/hybrid-ncm-k3/clover-object-model.py) |
 |---|---|---|
 | **1. Class / Interface** | `class-*` **Complete Noun Phrase** (*what the object is*; zero abbreviations like `Cfg`, `Buf`, `Mat`, `Ent`, `Prov`) | `class-task-direction`, `class-conversation-session`, `class-forward-pass-workspace`, `class-verified-knowledge-graph`, `class-memory-storage-tier`, `class-quantized-tensor-record`, `class-neural-stage-pipeline`, `class-artifact-verifier`, `class-verification-verdict` |
 | **2. Method / Function** | `function-*` **Complete Verb-Phrase Sentence** (*starts with an action verb + direct object + preposition*) | `function-encode-input-into-activation-vector()`, `function-ensure-expert-tensor-resident()`, `function-compact-oldest-turns-into-summary-when-full()`, `function-verify-candidate-artifact-against-context()`, `function-record-verified-outcome-into-context()` |

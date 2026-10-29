@@ -15,6 +15,9 @@ This directory organizes all 27 engineering context documents and measurement le
 | [clover-vscode-agent-loop-context.md](engine-and-architecture/clover-vscode-agent-loop-context.md) | Autonomous multi-turn VS Code agent loop (`decide_vscode_agent_step`) and tool dispatch |
 | [clover-foundations-to-clover-gpu-context.md](engine-and-architecture/clover-foundations-to-clover-gpu-context.md) | 70-task standardized AI benchmark ablation (`33/70 -> 57/70 -> 70/70`) and SWE-Bench Pro V2 |
 | [clover-data-movement-direction-b-context.md](engine-and-architecture/clover-data-movement-direction-b-context.md) | Direction B data-movement synthesis (`SpecMD Least-Stale + R4 Clean Drop`, `148.5 tok/s`) |
+| [clover-lfm3-1.7b-stage-study-context.md](engine-and-architecture/clover-lfm3-1.7b-stage-study-context.md) | Liquid AI `LFM3-1.7B` 24-layer tri-hybrid stage-by-stage verification and Clover K3 comparison |
+| [clover-nemotron-3.5-super-vl-stage-study-context.md](engine-and-architecture/clover-nemotron-3.5-super-vl-stage-study-context.md) | NVIDIA `Nemotron 3.5 Super VL (120B-A12B)` 88-layer Mamba-2 + Latent `ReLU²` MoE + NoPE GQA + C-RADIO + MTP stage study |
+| [clover-ai-system-switchable-models-context.md](engine-and-architecture/clover-ai-system-switchable-models-context.md) | `clover-ai-system/` switchable Layer-1 model architecture (`kimi-k3`, `nemotron-3.5-super-vl`, `lfm3-1.7b`) and Nemotron precomputed trunk/operator/expert engine |
 | [layer0-verdict.md](engine-and-architecture/layer0-verdict.md) | Layer 0 input-to-embedding and dense KDA stage measurements |
 
 ## 2. Foundational Papers 1943–2017 (`foundational-papers-1943-to-2017/`)

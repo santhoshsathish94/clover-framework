@@ -79,6 +79,7 @@ def find_dataset_dir() -> str:
         os.environ.get("CLOVER_DATASET_DIR"),
         os.environ.get("DATASET_DIR"),
         os.path.join(ENGINE_DIR, "src/datasets/computed"),
+        "/opt/clover-k3/clover-ai-system/src/datasets/computed",
         "/opt/clover-k3/clover-kimi-k3/src/datasets/computed",
         "/opt/clover-k3/datasets/computed",
     ):
@@ -95,6 +96,7 @@ def find_open_weights_dir() -> str:
         os.environ.get("CLOVER_OPEN_WEIGHTS_DIR"),
         os.environ.get("OPEN_WEIGHTS_DIR"),
         os.path.join(ENGINE_DIR, "src/datasets/third-party/kimi-k3-open-weights"),
+        "/opt/clover-k3/clover-ai-system/src/datasets/third-party/kimi-k3-open-weights",
         "/opt/clover-k3/clover-kimi-k3/src/datasets/third-party/kimi-k3-open-weights",
         "/opt/clover-k3/datasets/third-party/kimi-k3-open-weights",
     ):

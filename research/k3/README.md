@@ -6,7 +6,7 @@ statements apply to their campaign, not automatically to the current implementat
 
 ## Current reading path
 
-1. [Run the single-machine engine](../../clover-kimi-k3/README.md).
+1. [Run the single-machine engine](../../clover-ai-system/README.md).
 2. [Read the model specification](model/k3-model-equation.md) and the separate
 	[implementation equation](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/reference/implementation-equation.md).
 3. [Inspect evidence methods and limits](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/evidence-methods.md).
