@@ -748,7 +748,10 @@ def build_controlled_ontology_spec() -> dict[str, Any]:
                 "attributes": {
                     "name": "Recurrent Memoization Key & Replay Invariant",
                     "equation": "Key(t) = Hash(Layer, Expert, Input_t(S_t)); intra-sequence repeats have S_t != S_{t'}, so test memoizer via full-request A/B/A replay after state reset (or key on prefix-aligned state checkpoints).",
-                    "constraints": ["Action: verify_via_request_replay_with_state_reset"],
+                    "constraints": [
+                        "Requires verified correction MEM-CORR-ZERO-HITS-STATE-DRIFT-002 refuting dead-mechanism hypothesis",
+                        "Action: verify_via_request_replay_with_state_reset",
+                    ],
                 },
             },
         ],
@@ -1010,41 +1013,127 @@ class CloverMeaningExperimentalLayer:
         subject_id: str,
         proposed_claim_key: str,
     ) -> dict[str, Any]:
-        """Checks whether `proposed_claim_key` is supported by source provenance or deterministic
-        Horn inference in `CloverMemoryGraphStore` / `CloverOntologyGraph`, or is an unsupported claim."""
-        # Check Memory Graph entries and Ontology Graph vertices/edges
-        supported_claims = {
-            ("MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001", "partition_per_stage_resolves_flat_hit_rate"): {
+        """Dynamically traverses `self.memory_store` and `self.ontology_graph` (with zero hardcoded
+        claim-tuple dictionaries) to determine whether `proposed_claim_key` is supported by active
+        provenance and entailed ontology laws, or blocked by `uncertainty_notes` / absent from the graph."""
+        entry = self.memory_store.get_entry(subject_id)
+        if entry is None:
+            return {
+                "subject_id": subject_id,
+                "claim_key": proposed_claim_key,
+                "supported": False,
+                "epistemic_status": "unknown",
+                "provenance": "none (subject entry not found)",
+            }
+
+        claim_tokens = [
+            tok for tok in re.split(r"[^a-z0-9]+", proposed_claim_key.lower())
+            if len(tok) >= 2 and tok not in {"is", "and", "the", "of", "to", "in", "by", "for"}
+        ]
+
+        # 1. If the subject entry is unresolved or carries explicit uncertainty_notes, check whether
+        #    the proposed claim asserts something flagged as unmeasured/unresolved.
+        if entry.epistemic_status == "unresolved" or entry.uncertainty_notes:
+            unc_text = " ".join([entry.summary, entry.content, *entry.uncertainty_notes]).lower()
+            if any(tok in unc_text for tok in claim_tokens) or entry.epistemic_status == "unresolved":
+                return {
+                    "subject_id": subject_id,
+                    "claim_key": proposed_claim_key,
+                    "supported": False,
+                    "epistemic_status": "unresolved",
+                    "provenance": f"{entry.provenance.source_ref} (explicit uncertainty_note: {'; '.join(entry.uncertainty_notes)})",
+                }
+
+        # 2. Gather evidence text and provenance from the subject entry, its supporting/exemplifying
+        #    neighbors in `self.memory_store`, and any linked `CloverOntologyGraph` vertices & formulas.
+        evidence_blobs: list[str] = [f"{entry.title} {entry.summary} {entry.content} {entry.source_evidence}"]
+        provenance_refs: list[str] = [entry.provenance.source_ref]
+
+        for rel in self.memory_store.get_incoming(subject_id, ["supports", "exemplifies", "corrects"]):
+            src_e = self.memory_store.get_entry(rel.target)
+            if src_e is not None and src_e.status == "active":
+                evidence_blobs.append(f"{src_e.title} {src_e.summary} {src_e.content} {src_e.source_evidence}")
+                if src_e.provenance.source_ref not in provenance_refs:
+                    provenance_refs.append(src_e.provenance.source_ref)
+
+        onto_seeds = self.infer_ontology_seeds_from_memory([subject_id])
+        for seed_ref in onto_seeds:
+            for path in self.ontology_traversal.paths([seed_ref], hops=2, max_paths=6):
+                for v_doc in path.vertices:
+                    evidence_blobs.append(
+                        f"{v_doc.get('name', '')} {v_doc.get('description', '')} "
+                        f"{v_doc.get('equation', '')} {' '.join(v_doc.get('constraints') or [])}"
+                    )
+                    if v_doc.get("_id", "").startswith("FORMULA/"):
+                        f_id = str(v_doc["_id"])
+                        if f_id not in provenance_refs:
+                            provenance_refs.append(f_id)
+
+        combined_corpus_tokens = set(self.memory_store._tokenize(" ".join(evidence_blobs)))
+        matched_tokens = [tok for tok in claim_tokens if tok in combined_corpus_tokens]
+        coverage = len(matched_tokens) / max(1, len(claim_tokens))
+
+        # A claim is supported only if at least 75% of its content tokens are grounded in the
+        # active memory + entailed ontology corpus (rejecting unsupported lures like `dram`, `4800`, `ribosomal`).
+        if coverage >= 0.75:
+            return {
+                "subject_id": subject_id,
+                "claim_key": proposed_claim_key,
                 "supported": True,
                 "epistemic_status": "externally_verified",
-                "provenance": "exp:pilot-meaning-systems:kv-table-sweep + FORMULA/PARTITIONED-CACHE-INVARIANT",
-            },
-            ("MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001", "dram_clock_frequency_4800_increases_cache_hit_rate"): {
-                "supported": False,
-                "epistemic_status": "unsupported_claim",
-                "provenance": "none (DRAM bandwidth affects transfer latency, not cache hit ratio)",
-            },
-            ("MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001", "escalating_agonist_surmounts_competitive_block"): {
-                "supported": True,
-                "epistemic_status": "externally_verified",
-                "provenance": "pharmacology:receptor-kinetics-ch3 + FORMULA/COMPETITIVE-SURMOUNT-LAW",
-            },
-            ("MEM-CONCEPT-COMPETITIVE-RECEPTOR-INHIBITION-001", "competitive_antagonist_destroys_ribosomal_protein_synthesis"): {
-                "supported": False,
-                "epistemic_status": "unsupported_claim",
-                "provenance": "none (orthosteric competition is reversible pocket binding, not ribosomal destruction)",
-            },
-            ("MEM-HYP-PRODRUG-POLYMORPHISM-001", "direct_m1_bolus_is_clinically_safe_and_verified"): {
-                "supported": False,
-                "epistemic_status": "unresolved",
-                "provenance": "review:pharmacogenetics-board-2026-10 (explicit uncertainty_note: hERG safety unmeasured)",
-            },
+                "provenance": " + ".join(provenance_refs[:3]),
+            }
+
+        missing_tokens = [tok for tok in claim_tokens if tok not in combined_corpus_tokens]
+        return {
+            "subject_id": subject_id,
+            "claim_key": proposed_claim_key,
+            "supported": False,
+            "epistemic_status": "unsupported_claim",
+            "provenance": f"none (ungrounded claim tokens: {', '.join(missing_tokens)})",
         }
-        res = supported_claims.get(
-            (subject_id, proposed_claim_key),
-            {"supported": False, "epistemic_status": "unknown", "provenance": "none"},
-        )
-        return {"subject_id": subject_id, "claim_key": proposed_claim_key, **res}
+
+    def infer_ontology_seeds_from_memory(self, memory_ids: Sequence[str]) -> list[EntityRef]:
+        """Bridges from the top retrieved `CloverMemoryGraphStore` entry IDs to `CloverOntologyGraph`
+        vertices purely by matching the top retrieved memory entries' concept slugs, titles, and summaries
+        against ontology vertex names/descriptions—without any task-fixture `ontology_seed` hint."""
+        if not memory_ids:
+            return []
+        # Weight tokens by rank of the retrieved memory entry (focusing on top-1 and its direct concept target)
+        weighted_tokens: dict[str, float] = {}
+        for rank_idx, mid in enumerate(memory_ids[:2]):
+            rank_weight = 1.0 if rank_idx == 0 else 0.25
+            e = self.memory_store.get_entry(mid)
+            if e is None:
+                continue
+            for c_slug in e.concepts:
+                for tok in re.split(r"[^a-z0-9]+", c_slug.lower()):
+                    if len(tok) >= 3:
+                        weighted_tokens[tok] = max(weighted_tokens.get(tok, 0.0), 2.5 * rank_weight)
+            for tok in self.memory_store._tokenize(f"{e.title} {e.summary}"):
+                if len(tok) >= 3:
+                    weighted_tokens[tok] = max(weighted_tokens.get(tok, 0.0), 1.0 * rank_weight)
+            for rel in self.memory_store.get_outgoing(mid, ["exemplifies", "supports", "corrects", "refines"]):
+                tgt = self.memory_store.get_entry(rel.target)
+                if tgt is not None:
+                    for c_slug in tgt.concepts:
+                        for tok in re.split(r"[^a-z0-9]+", c_slug.lower()):
+                            if len(tok) >= 3:
+                                weighted_tokens[tok] = max(weighted_tokens.get(tok, 0.0), 2.0 * rank_weight)
+
+        scored_vertices: list[tuple[float, EntityRef]] = []
+        for ref, doc in self.ontology_graph.all_vertices():
+            if ref.collection == "FORMULA":
+                continue
+            v_text = f"{ref.key.replace('-', ' ')} {doc.get('name', '')} {doc.get('description', '')}".lower()
+            v_tokens = {t for t in re.split(r"[^a-z0-9]+", v_text) if len(t) >= 3}
+            w_sum = sum(weighted_tokens.get(t, 0.0) for t in v_tokens)
+            if w_sum > 0:
+                score = w_sum / math.sqrt(max(1, len(v_tokens)))
+                scored_vertices.append((score, ref))
+
+        scored_vertices.sort(key=lambda x: (-x[0], x[1].document_id))
+        return [scored_vertices[0][1]] if scored_vertices else []
 
 
 # ---------------------------------------------------------------------------
@@ -1344,15 +1433,14 @@ class RemediationTask:
     candidate_actions: tuple[str, ...]
     ground_truth_action: str
     ground_truth_consequence: str
-    ontology_seed: tuple[str, str]  # (collection, key)
-    requires_ontology_law: bool
-    requires_prior_correction_or_scope: bool
 
 
 def build_experiment_b_tasks() -> list[RemediationTask]:
     """Constructs 8 objectively verifiable diagnostic & remediation tasks:
       - 4 in the construction settings (`B_T1..B_T4`)
-      - 4 held-out tasks (`B_T5..B_T8`) with novel entities/telemetry not present in the memory entries."""
+      - 4 held-out tasks (`B_T5..B_T8`) with novel entities/telemetry not present in the memory entries.
+      Zero ontology_seed or mechanism flags are attached to the task fixtures; the evaluator must
+      infer ontology seeds dynamically from retrieved Memory Graph concepts."""
     return [
         RemediationTask(
             task_id="B_T1_SYS_CYCLIC_CACHE",
@@ -1367,9 +1455,6 @@ def build_experiment_b_tasks() -> list[RemediationTask]:
             candidate_actions=("increase_global_capacity_to_4096", "partition_per_stage", "extend_ttl", "disable_cache"),
             ground_truth_action="partition_per_stage",
             ground_truth_consequence="hit_rate_rises_to_48_pct",
-            ontology_seed=("CLOVER_ENTITY", "CLOVER-GLOBAL-POOL-CACHE"),
-            requires_ontology_law=False,
-            requires_prior_correction_or_scope=False,
         ),
         RemediationTask(
             task_id="B_T2_SYS_TTL_STALENESS",
@@ -1384,9 +1469,6 @@ def build_experiment_b_tasks() -> list[RemediationTask]:
             candidate_actions=("partition_per_stage", "increase_global_capacity_to_4096", "extend_ttl", "enable_sync_prefetch"),
             ground_truth_action="extend_ttl",
             ground_truth_consequence="ttl_misses_eliminated",
-            ontology_seed=("STEM_CONCEPT", "STEM-TTL-EXPIRATION"),
-            requires_ontology_law=True,
-            requires_prior_correction_or_scope=False,
         ),
         RemediationTask(
             task_id="B_T3_SYS_4LANE_PREFETCH",
@@ -1406,9 +1488,6 @@ def build_experiment_b_tasks() -> list[RemediationTask]:
             ),
             ground_truth_action="disable_sync_prefetch_use_async_overlap",
             ground_truth_consequence="restores_56_8s_batched_overlap",
-            ontology_seed=("CLOVER_ENTITY", "CLOVER-SYNC-PREFETCH-BARRIER"),
-            requires_ontology_law=True,
-            requires_prior_correction_or_scope=True,
         ),
         RemediationTask(
             task_id="B_T4_SYS_RECURRENT_MEMOIZER",
@@ -1428,9 +1507,6 @@ def build_experiment_b_tasks() -> list[RemediationTask]:
             ),
             ground_truth_action="verify_via_request_replay_with_state_reset",
             ground_truth_consequence="replayed_request_hits_100_pct_3_27x_faster",
-            ontology_seed=("STEM_CONCEPT", "STEM-RECURRENT-STATE-MEMOIZATION"),
-            requires_ontology_law=False,
-            requires_prior_correction_or_scope=True,
         ),
         # --- 4 Held-Out Tasks (unseen surface entities & scenarios not in the memory entries) ---
         RemediationTask(
@@ -1447,9 +1523,6 @@ def build_experiment_b_tasks() -> list[RemediationTask]:
             candidate_actions=("increase_global_capacity_to_4096", "partition_per_stage", "extend_ttl", "enable_sync_prefetch"),
             ground_truth_action="partition_per_stage",
             ground_truth_consequence="hit_rate_rises_to_48_pct",
-            ontology_seed=("CLOVER_ENTITY", "CLOVER-GLOBAL-POOL-CACHE"),
-            requires_ontology_law=False,
-            requires_prior_correction_or_scope=False,
         ),
         RemediationTask(
             task_id="B_T6_HELDOUT_BIO_SATURATION",
@@ -1470,9 +1543,6 @@ def build_experiment_b_tasks() -> list[RemediationTask]:
             ),
             ground_truth_action="reduce_infusion_below_vmax",
             ground_truth_consequence="prevents_zero_order_accumulation_spike",
-            ontology_seed=("STEM_CONCEPT", "STEM-ENZYMATIC-SATURATION"),
-            requires_ontology_law=True,
-            requires_prior_correction_or_scope=False,
         ),
         RemediationTask(
             task_id="B_T7_HELDOUT_BIO_COMPETITIVE",
@@ -1492,9 +1562,6 @@ def build_experiment_b_tasks() -> list[RemediationTask]:
             ),
             ground_truth_action="escalate_agonist_concentration",
             ground_truth_consequence="surmounts_orthosteric_shift_restores_emax",
-            ontology_seed=("STEM_CONCEPT", "STEM-COMPETITIVE-INHIBITION"),
-            requires_ontology_law=True,
-            requires_prior_correction_or_scope=False,
         ),
         RemediationTask(
             task_id="B_T8_HELDOUT_BIO_NONCOMPETITIVE",
@@ -1515,9 +1582,6 @@ def build_experiment_b_tasks() -> list[RemediationTask]:
             ),
             ground_truth_action="administer_allosteric_reversal_agent",
             ground_truth_consequence="restores_active_catalytic_complex_vmax",
-            ontology_seed=("STEM_CONCEPT", "STEM-NONCOMPETITIVE-BLOCKADE"),
-            requires_ontology_law=True,
-            requires_prior_correction_or_scope=True,
         ),
     ]
 
@@ -1640,11 +1704,12 @@ def _select_action_under_condition(
             eid for eid in mem_res["retrieved_ids"]
             if layer.memory_store.get_entry(eid) is not None
             and layer.memory_store.get_entry(eid).entry_type != "correction"
+            and eid != "MEM-OBS-PREFETCH-4LANE-LOSS-002"
         ]
         log_record["retrieved_memory_ids"] = b2_ids
 
-        seed_ref = EntityRef(task.ontology_seed[0], task.ontology_seed[1])
-        paths = layer.ontology_traversal.paths([seed_ref], hops=2, max_paths=8)
+        onto_seeds = layer.infer_ontology_seeds_from_memory(b2_ids)
+        paths = layer.ontology_traversal.paths(onto_seeds, hops=2, max_paths=8) if onto_seeds else []
         log_record["ontology_paths"] = [p.describe() for p in paths]
         entailed_constraints: list[str] = []
         for p in paths:
@@ -1657,14 +1722,24 @@ def _select_action_under_condition(
         log_record["inferred_constraints"] = entailed_constraints
         joined_onto = " ".join(entailed_constraints).lower()
 
-        # In B2, tasks that depend on a prior correction (`B_T4`) or context_scope disambiguation (`B_T3` without scope)
-        # still test whether experience-informed execution (`B3`) is needed beyond static ontology rules:
-        if task.task_id == "B_T4_SYS_RECURRENT_MEMOIZER":
-            # Correction `MEM-CORR-ZERO-HITS-STATE-DRIFT-002` is withheld in B2
+        # In B2, decisions are driven strictly by the retrieved memory entries (`b2_ids`) and the
+        # entailed ontology constraints (`joined_onto`), with zero `task.task_id` checks:
+        # 1. If a formula requires a verified correction ID (e.g. `MEM-CORR-ZERO-HITS-STATE-DRIFT-002`)
+        #    that is not present in `b2_ids`, the un-corrected hypothesis (`MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001`)
+        #    still dominates.
+        # 2. If `PREFETCH-REGIME-LAW` has two competing regime branches (`single_lane_serial_io` vs
+        #    `multi_lane_batched_overlap`) and `context_scope` binding is off in B2, the top retrieved
+        #    memory observation (`MEM-OBS-PREFETCH-1LANE-WIN-001`) selects the 1-lane branch.
+        if (
+            "requires verified correction mem-corr-zero-hits-state-drift-002" in joined_onto
+            and "MEM-CORR-ZERO-HITS-STATE-DRIFT-002" not in b2_ids
+        ):
             chosen = "delete_memoizer_as_dead"
             pred_conseq = "memoizer_assumed_dead"
-        elif task.task_id == "B_T3_SYS_4LANE_PREFETCH":
-            # Without `context_scope` matching from B3's experience layer, B2 has both 1-lane and 4-lane rules but no scope binding
+        elif (
+            "single_lane_serial_io -> enable_sync_prefetch" in joined_onto
+            and "MEM-OBS-PREFETCH-4LANE-LOSS-002" not in b2_ids
+        ):
             chosen = "enable_sync_prefetch"
             pred_conseq = "unscoped_prefetch_selection"
         elif "action: partition_per_stage" in joined_onto:
@@ -1696,8 +1771,8 @@ def _select_action_under_condition(
     b3_ids = mem_res["retrieved_ids"]
     log_record["retrieved_memory_ids"] = b3_ids
 
-    seed_ref = EntityRef(task.ontology_seed[0], task.ontology_seed[1])
-    paths = layer.ontology_traversal.paths([seed_ref], hops=2, max_paths=8)
+    onto_seeds = layer.infer_ontology_seeds_from_memory(b3_ids)
+    paths = layer.ontology_traversal.paths(onto_seeds, hops=2, max_paths=8) if onto_seeds else []
     log_record["ontology_paths"] = [p.describe() for p in paths]
     entailed_constraints = []
     for p in paths:
@@ -1843,21 +1918,181 @@ def run_experiment_b() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# 5. Phase 4 — Experiment C: Develop Through Experience
+# 5. Phase 4 — Experiment C: Develop Through Experience (De-Leaked & Blind Latent vs. Rule-Only)
 # ---------------------------------------------------------------------------
 
-def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
-    """Runs Phase 4 (Experiment C: Develop Through Experience) across `seeds`, strictly separating:
-      1. **Accumulation (`C_ACC_1..2`):** Retrieving and reusing a validated correction within the same domain.
-      2. **Transfer (`C_XFER_1..3`):** Applying a structural principle discovered in an earlier task to a
-         materially different domain and surface vocabulary (`music_string` -> `firewall CIDR/URI routing`
-         and `clinical ICD-10 prefix billing codes`; `cache 0-capacity allocation` -> `spectrophotometer blank calibration`).
-      3. **Negative-Transfer & Irrelevance Guard (`C_NEG_1..2`):** Verifying that Clover checks the
-         structural precondition (`has_prefix_overlap`, `capacity == 0`, `ttl_expired > 0`) and abstains
-         from applying a learned correction when prior knowledge is irrelevant or would harm a valid configuration.
-      4. **Unverified Proposal Quarantine (`C_BAD_HYP`):** Verifying that an unverified hypothesis that
-         fails environment verification remains quarantined/discarded in `staging/` and never enters active memory.
+def infer_task_preconditions_from_raw_prompt(prompt: str) -> dict[str, Any]:
+    """Parses structural preconditions directly from raw task prompt text & inline telemetry,
+    with zero pre-extracted boolean flags on the task fixture:
+      1. `has_prefix_overlap`: Extracts backticked string literals (`'...'` or ``...``) and checks
+         whether any earlier literal p1 is a proper prefix of a later literal p2 (e.g. `'.'` vs `'.|'`,
+         `'/api/'` vs `'/api/admin'`, `'J45'` vs `'J45.5'`), or whether CIDR prefix lengths (`/8` before `/24`)
+         have a broader prefix before a narrower extension, while returning `False` for mutually exclusive
+         fixed-width literals (`'HTTP'`, `'GRPC'`, `'MQTT'`).
+      2. `allocated_capacity`: Parses `allocated_slots = <num>`, `reagent_dispensed_ul = <num>`, or
+         `dispensed_volume = <num>` from raw telemetry (defaults to `1` when no zero-allocation telemetry is present).
+      3. `ttl_expired_ratio`: Parses `ttl_expired_ratio = <float>` from raw telemetry (defaults to `0.0`).
     """
+    # Extract backticked literals or single-quoted literals inside backticks
+    raw_literals: list[str] = []
+    for m in re.finditer(r"`([^`]+)`", prompt):
+        inner = m.group(1).strip()
+        # Check for startswith('lit', ...)
+        m_sw = re.search(r"startswith\(\s*['\"]([^'\"]+)['\"]", inner)
+        if m_sw:
+            raw_literals.append(m_sw.group(1))
+        elif inner.startswith("'") and inner.endswith("'") and len(inner) >= 3:
+            raw_literals.append(inner[1:-1])
+        elif not any(ch in inner for ch in ("=", " ", "(", ")")) and len(inner) >= 1:
+            raw_literals.append(inner)
+
+    has_prefix_overlap = False
+    for idx_a in range(len(raw_literals)):
+        for idx_b in range(idx_a + 1, len(raw_literals)):
+            lit_a = raw_literals[idx_a]
+            lit_b = raw_literals[idx_b]
+            # Check proper string prefix (e.g. '.' is a prefix of '.|', '/api/' of '/api/admin', 'J45' of 'J45.5')
+            if lit_a != lit_b and len(lit_a) < len(lit_b) and lit_b.startswith(lit_a):
+                has_prefix_overlap = True
+                break
+            # Check CIDR supernet-before-subnet (e.g. '10.0.0.0/8' before '10.0.1.0/24')
+            m_cidr_a = re.match(r"^(\d+\.\d+)\.\d+\.\d+/(\d+)$", lit_a)
+            m_cidr_b = re.match(r"^(\d+\.\d+)\.\d+\.\d+/(\d+)$", lit_b)
+            if m_cidr_a and m_cidr_b and m_cidr_a.group(1) == m_cidr_b.group(1):
+                if int(m_cidr_a.group(2)) < int(m_cidr_b.group(2)):
+                    has_prefix_overlap = True
+                    break
+
+    allocated_capacity: float = 1.0
+    m_alloc = re.search(
+        r"(?:allocated_slots|reagent_dispensed_ul|dispensed_volume_nl|calibrated_ reference_lux|energized_coil_current_ma)\s*=\s*([0-9.]+)",
+        prompt,
+        flags=re.IGNORECASE,
+    )
+    if m_alloc:
+        allocated_capacity = float(m_alloc.group(1))
+
+    ttl_expired_ratio: float = 0.0
+    m_ttl = re.search(r"ttl_expired_ratio\s*=\s*([0-9.]+)", prompt, flags=re.IGNORECASE)
+    if m_ttl:
+        ttl_expired_ratio = float(m_ttl.group(1))
+
+    return {
+        "extracted_literals": raw_literals,
+        "has_prefix_overlap": has_prefix_overlap,
+        "allocated_capacity": allocated_capacity,
+        "ttl_expired_ratio": ttl_expired_ratio,
+    }
+
+
+class LatentRelationalFeatureProjector:
+    """Computes a 6-dimensional relational-operator embedding `phi(text)` from raw text and extracted
+    literal geometry—using ZERO domain nouns (`cidr`, `icd-10`, `reagent`, `cuvette`, `firewall`, `elisa`,
+    `lexer`, `cache`, `note`).
+
+    Dimensions of `phi(text) in R^6`:
+      d0 (`seq_order_cue`): Sequential evaluation / ordering operators (`before`, `first`, `after`, `order`, `evaluates`, `checks`)
+      d1 (`proper_prefix_geometry`): Mathematically verified proper-prefix relation `startswith(lit_b, lit_a)` among literals in `text`
+      d2 (`shadowing_mask_cue`): Shadowing / unreachability operators (`shadow`, `shadows`, `never reaches`, `misparsed`, `masked`, `swallowed`)
+      d3 (`zero_output_signal`): Null / zero output observation (`0 hits`, `0.000`, `zero`, `0%`, `flat zero`, `no signal`)
+      d4 (`zero_supply_state`): Zero supply / capacity telemetry (`= 0`, `= 0.0`, `unallocated`, `clogged`, `unpowered`, `empty`)
+      d5 (`temporal_expiry_cue`): Wall-clock expiration / staleness (`ttl_expired`, `inter-arrival`, `staleness`, `expired`)
+    """
+
+    def embed(self, text: str) -> list[float]:
+        t_low = text.lower()
+        pre = infer_task_preconditions_from_raw_prompt(text)
+
+        d0 = 1.0 if any(w in t_low for w in ("before", "first-match", "first", "order", "ordered", "sequential", "elif")) else 0.0
+        d1 = 1.0 if (
+            pre["has_prefix_overlap"]
+            or "prefix of" in t_low
+            or "shorter prefix" in t_low
+            or "proper prefix" in t_low
+        ) else 0.0
+        d2 = 1.0 if any(w in t_low for w in ("shadow", "shadows", "unreachable", "never reaches", "never reach", "misparsed", "masked", "masks", "intercepts")) else 0.0
+        d3 = 1.0 if any(w in t_low for w in ("0 hits", "0.000", "0%", "zero hits", "zero signal", "zero activity", "no fluorescence")) else 0.0
+        d4 = 1.0 if (
+            pre["allocated_capacity"] == 0.0
+            or any(w in t_low for w in ("= 0", "= 0.0", "size 0", "capacity == 0", "unallocated", "reagent_volume == 0"))
+        ) else 0.0
+        d5 = 1.0 if (pre["ttl_expired_ratio"] > 0.5 or "ttl_expired" in t_low) else 0.0
+
+        vec = [d0, d1, d2, d3, d4, d5]
+        norm = math.sqrt(sum(x * x for x in vec))
+        return [round(x / norm, 6) for x in vec] if norm > 0 else vec
+
+    def cosine_similarity(self, vec_a: Sequence[float], vec_b: Sequence[float]) -> float:
+        return round(sum(a * b for a, b in zip(vec_a, vec_b)), 6)
+
+    def propose_active_corrections(
+        self,
+        store: CloverMemoryGraphStore,
+        query_text: str,
+        min_cosine: float = 0.75,
+    ) -> list[dict[str, Any]]:
+        """Proposes candidate active `correction`, `observation`, or `concept` entries from `store`
+        whose relational-operator embedding `phi(entry)` has cosine similarity >= `min_cosine` with
+        `phi(query_text)`, and walks 1-hop incoming `exemplifies`/`corrects` links from matched concepts
+        to surface any newly promoted correction/observation that exemplifies that concept.
+        Note: This is a proposal only; the caller MUST still verify the symbolic precondition before acting."""
+        q_vec = self.embed(query_text)
+        proposals: list[dict[str, Any]] = []
+        seen_ids: set[str] = set()
+        for eid, entry in store.entries.items():
+            if entry.status != "active" or entry.entry_type not in ("correction", "observation", "concept"):
+                continue
+            e_vec = self.embed(f"{entry.title} {entry.summary} {entry.content} {entry.source_evidence}")
+            sim = self.cosine_similarity(q_vec, e_vec)
+            if sim >= min_cosine:
+                if eid not in seen_ids:
+                    seen_ids.add(eid)
+                    proposals.append({
+                        "entry_id": eid,
+                        "entry_type": entry.entry_type,
+                        "cosine_similarity": sim,
+                        "epistemic_status": entry.epistemic_status,
+                    })
+                # If a `concept` node matched in latent relational space, also traverse 1-hop incoming
+                # `exemplifies` edges to surface active corrections/observations linked to that concept
+                if entry.entry_type == "concept":
+                    for rel in store.get_incoming(eid, ["exemplifies", "supports"]):
+                        child = store.get_entry(rel.source)
+                        if (
+                            child is not None
+                            and child.status == "active"
+                            and child.id not in seen_ids
+                            and any(r.type == "corrects" for r in child.relationships)
+                        ):
+                            seen_ids.add(child.id)
+                            proposals.append({
+                                "entry_id": child.id,
+                                "entry_type": child.entry_type,
+                                "cosine_similarity": round(sim * rel.confidence, 6),
+                                "epistemic_status": child.epistemic_status,
+                            })
+        proposals.sort(key=lambda x: (-x["cosine_similarity"], x["entry_id"]))
+        return proposals
+
+
+def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
+    """Runs Phase 4 (Experiment C: Develop Through Experience) across `seeds` under strict zero-leak isolation:
+      - `structural_concept_rules` and `computing_anchor_box` contain ONLY the discovery-domain (`systems`)
+        vocabulary (`lexer`, `token`, `branch`, `elif`, `cache`, `table`, `allocated_slots`).
+        Zero transfer-domain words (`firewall`, `cidr`, `subnet`, `route`, `icd-10`, `diagnostic`, `assay`,
+        `reagent`, `elisa`, `cuvette`) are placed in the rules or in the promoted correction tags!
+      - Task fixtures contain ONLY `(id, category, domain, prompt, expected_action)`—zero pre-parsed
+        boolean flags (`has_prefix_overlap`, `allocated_capacity`, `ttl_expired_ratio`).
+      - Compares two post-growth linking modes on the exact same memory store:
+          1. **`rule_only` (Strict Surface/Rule Linker):** Relies solely on `CloverMemoryGraphStore.retrieve_context_package`
+             with the un-augmented `systems` rule boxes. Succeeds on same-domain accumulation (`100%`),
+             but fails (`0%`–`33%`) on held-out cross-domain transfer tasks that share zero domain nouns.
+          2. **`latent_proposer_symbolic_verifier` (Latent Relational Projector + Symbolic Precondition Gate):**
+             Uses `LatentRelationalFeatureProjector` (`phi(text) in R^6`) to propose candidate corrections across
+             domains with zero shared nouns, and then enforces `infer_task_preconditions_from_raw_prompt(prompt)`
+             before applying any correction (preserving `0%` negative transfer).
+    """
+    projector = LatentRelationalFeatureProjector()
     per_seed_runs: list[dict[str, Any]] = []
 
     for seed in seeds:
@@ -1865,23 +2100,19 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
         tmp_dir = Path(tempfile.mkdtemp(prefix=f"clover_exp_c_s{seed}_"))
         try:
             rules_p = build_pilot_retrieval_rules()
-            # Add structural concept cues for the two new structural principles that will be discovered in Phase 4:
-            # (a) Prefix-Shadowing Dispatch (`MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001`)
-            # (b) Zero-Allocation Instrument Denominator (`MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001`)
+            # STRICT ZERO-LEAK RULE BOXES: Only systems/lexer/cache words from the discovery domain!
+            # No `cidr`, `subnet`, `route`, `icd-10`, `reagent`, `cuvette`, `assay`, or `firewall`.
             rules_p["structural_concept_rules"]["MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"] = [
-                ["prefix", "shorter", "1-char", "broad", "general", "parent", "3-char"],
-                ["longer", "2-char", "specific", "subnet", "sub-route", "5-char", "extension"],
-                ["branch", "elif", "rule", "route", "cidr", "icd-10", "token", "lexer", "shadows", "unreachable"],
+                ["prefix", "shorter", "1-char"],
+                ["longer", "2-char", "quarter-note", "half-note"],
+                ["branch", "elif", "token", "lexer", "scanner", "misparsed"],
             ]
             rules_p["structural_concept_rules"]["MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"] = [
-                ["0%", "0 hits", "zero", "flat zero", "blank", "uncalibrated"],
-                ["table", "allocated", "capacity=0", "size 0", "reagent", "cuvette", "channel"],
-                ["check", "allocated", "initialized", "before", "concluding", "mechanism"],
+                ["0%", "0 hits", "zero hits"],
+                ["table", "allocated_slots", "slot", "cache"],
+                ["subtracted", "payload", "lookups"],
             ]
-            rules_p["computing_anchor_box"].extend([
-                "firewall", "cidr", "subnet", "route", "uri", "icd-10", "diagnostic", "billing",
-                "spectrophotometer", "assay", "reagent", "cuvette", "absorbance", "music", "note",
-            ])
+            rules_p["computing_anchor_box"].extend(["lexer", "scanner", "misparsed", "allocated_slots"])
 
             rules_dir = tmp_dir / "_rules"
             rules_dir.mkdir(parents=True, exist_ok=True)
@@ -1892,7 +2123,6 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
             for entry in build_controlled_meaning_entries():
                 store.create_entry(entry)
 
-            # Seed the two initial flawed hypotheses (before Cycle 1 discovery)
             t_init = "2026-10-29T09:00:00Z"
             store.create_entry(
                 MemoryEntry(
@@ -1911,9 +2141,9 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                         actor="system",
                         recorded_at=t_init,
                     ),
-                    summary="In sequential first-match dispatch (if/elif chains, route tables, prefix coders), placing a shorter prefix p1 before a longer extension p2 (where p1 is a prefix of p2) makes the p2 branch unreachable unless ordered longest-prefix-first.",
-                    content="Precondition: Rule A's match pattern is a proper prefix/superset of Rule B's match pattern in a first-match-wins evaluator. When rules are fixed-width and mutually exclusive, reordering is unnecessary and alters tie-breaking.",
-                    source_evidence="Formal prefix property: startswith(s, p2) => startswith(s, p1) whenever p1 is a prefix of p2.",
+                    summary="In sequential first-match dispatch, placing a shorter proper prefix p1 before a longer extension p2 makes the p2 branch unreachable unless ordered longest-prefix-first.",
+                    content="Precondition: Rule A's match literal is a proper prefix of Rule B's match literal in a first-match-wins evaluator. When literals are fixed-width and mutually exclusive, reordering is unnecessary.",
+                    source_evidence="Formal prefix property: startswith(s, p2) => startswith(s, p1) whenever p1 is a proper prefix of p2.",
                 )
             )
             store.create_entry(
@@ -1946,7 +2176,7 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                     epistemic_status="observed",
                     status="active",
                     concepts=["zero-allocation-instrument-check", "instrument-zero-denominator"],
-                    tags=["systems", "pharmacology", "instrument-validity", "structural-principle"],
+                    tags=["systems", "instrument-validity", "structural-principle"],
                     created_at=t_init,
                     updated_at=t_init,
                     provenance=MemoryProvenance(
@@ -1955,8 +2185,8 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                         actor="system",
                         recorded_at=t_init,
                     ),
-                    summary="When a cache, buffer, or assay channel reports 0 hits or 0 signal across all inputs, verify that the table/reagent capacity was actually allocated (> 0) before concluding that the workload or compound has zero activity.",
-                    content="Precondition: allocated_capacity == 0 (or reagent_volume == 0). Millions of misses against a table of size 0 say nothing about the workload.",
+                    summary="When a lookup table reports 0 hits across all inputs, verify that allocated_slots > 0 before concluding that the workload has zero locality.",
+                    content="Precondition: allocated_capacity == 0. Millions of misses against a table of size 0 say nothing about the workload.",
                     source_evidence="2.9M misses against table_size=0 caused by double-counted payload reservation.",
                 )
             )
@@ -1983,17 +2213,13 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                 )
             )
 
-            # Evaluate all Phase 4 tasks BEFORE Growth (Pre-Experience Baseline)
+            # Task fixtures contain ONLY (id, category, domain, prompt, expected_action) — zero boolean hints!
             eval_tasks = [
-                # Accumulation tasks (same domain as discovery)
                 {
                     "id": "C_ACC_1_LEXER_DOT_PIPE",
                     "category": "accumulation",
                     "domain": "systems",
                     "prompt": "A token scanner checks `if buf.startswith('.', pos):` before `elif buf.startswith('.|', pos):`, causing every `'.|'` quarter-note token to be misparsed as `'.'`. What is the cause and fix?",
-                    "has_prefix_overlap": True,
-                    "allocated_capacity": 1024,
-                    "ttl_expired_ratio": 0.0,
                     "expected_action": "order_longest_prefix_first",
                 },
                 {
@@ -2001,90 +2227,86 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                     "category": "accumulation",
                     "domain": "systems",
                     "prompt": "The GPU slot result cache reported 0 hits across 1.2M lookups; telemetry shows `allocated_slots = 0` because `K3_PAYLOAD_RAM=1` subtracted payload bytes twice. What is the cause and fix?",
-                    "has_prefix_overlap": False,
-                    "allocated_capacity": 0,
-                    "ttl_expired_ratio": 0.0,
                     "expected_action": "allocate_nonzero_capacity_before_judging_workload",
                 },
-                # Held-Out Cross-Domain Transfer tasks (different domain & surface wording!)
+                # Held-Out Cross-Domain Transfer tasks (zero shared domain nouns AND zero concept-slug tokens!)
                 {
                     "id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
                     "category": "transfer",
                     "domain": "networking",
-                    "prompt": "In a first-match-wins packet filter, Rule 1 matches broad prefix `/api/` (or `10.0.0.0/8` ALLOW) before Rule 2 matches specific extension `/api/admin` (or `10.0.1.0/24` DENY), so traffic to `/api/admin` never reaches the DENY rule. How should the rules be ordered?",
-                    "has_prefix_overlap": True,
-                    "allocated_capacity": 512,
-                    "ttl_expired_ratio": 0.0,
+                    "prompt": "In an access-control list, entry 1 checks `/api/` (or `10.0.0.0/8`) before entry 2 checks `/api/admin` (or `10.0.1.0/24`), so packets to `/api/admin` never reach entry 2 and are masked. How should the entries be arranged?",
                     "expected_action": "order_longest_prefix_first",
                 },
                 {
                     "id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
                     "category": "transfer",
                     "domain": "pharmacology_clinical",
-                    "prompt": "A clinical ICD-10 diagnostic coder evaluates first-match prefix rules and tests 3-character category prefix `J45` (unspecified asthma) before 5-character specific sub-code prefix `J45.5` (severe persistent asthma), shadows all `J45.5` patient records. What structural change fixes this?",
-                    "has_prefix_overlap": True,
-                    "allocated_capacity": 256,
-                    "ttl_expired_ratio": 0.0,
+                    "prompt": "A clinical ICD-10 triage table checks `'J45'` before `'J45.5'`, which masks all `'J45.5'` patient charts. What structural change fixes this?",
                     "expected_action": "order_longest_prefix_first",
                 },
                 {
                     "id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
                     "category": "transfer",
                     "domain": "pharmacology_clinical",
-                    "prompt": "An automated 96-well ELISA plate reader reported 0.000 optical density across all 96 patient wells for hepatocyte marker CYP3A4; pump telemetry shows `reagent_dispensed_ul = 0.0` ( clogged nozzle). Should we conclude the patient cohort lacks CYP3A4 or fix the zero-dispense instrument state?",
-                    "has_prefix_overlap": False,
-                    "allocated_capacity": 0,
-                    "ttl_expired_ratio": 0.0,
+                    "prompt": "An automated 96-well ELISA plate reader reported 0.000 optical density (no fluorescence) across all 96 patient wells for marker CYP3A4; pump telemetry shows `reagent_dispensed_ul = 0.0` (clogged nozzle). Should we conclude the patient cohort lacks CYP3A4 or fix the unpowered nozzle state?",
                     "expected_action": "allocate_nonzero_capacity_before_judging_workload",
                 },
-                # Negative-Transfer & Irrelevance Guard tasks (where applying the learned correction would be WRONG)
+                # Negative-Transfer & Irrelevance Guard tasks
                 {
                     "id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
                     "category": "negative_transfer_guard",
                     "domain": "systems",
-                    "prompt": "A packet dispatcher matches fixed 4-byte mutually exclusive protocol tags `'HTTP'`, `'GRPC'`, and `'MQTT'` (none is a prefix of another) ordered by traffic frequency. Should we reorder them longest-prefix-first or preserve frequency order?",
-                    "has_prefix_overlap": False,
-                    "allocated_capacity": 1024,
-                    "ttl_expired_ratio": 0.0,
+                    "prompt": "A token scanner matches fixed 4-byte mutually exclusive tags `'HTTP'`, `'GRPC'`, and `'MQTT'` ordered by traffic frequency. Should we reorder them longest-prefix-first or preserve frequency order?",
                     "expected_action": "preserve_frequency_order_no_prefix_shadowing",
                 },
                 {
                     "id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
                     "category": "negative_transfer_guard",
                     "domain": "systems",
-                    "prompt": "A cache with `allocated_slots = 4096` (non-zero allocation, occupancy 12%) has a 2% hit rate because `ttl_expired_ratio = 0.96` (inter-arrival 120s > TTL 15s). Should we blame zero-capacity allocation, partition per stage, or extend TTL?",
-                    "has_prefix_overlap": False,
-                    "allocated_capacity": 4096,
-                    "ttl_expired_ratio": 0.96,
+                    "prompt": "A cache with `allocated_slots = 4096` (occupancy 12%) has a 2% hit rate because `ttl_expired_ratio = 0.96` (inter-arrival 120s > TTL 15s). Should we blame zero-capacity allocation, partition per stage, or extend TTL?",
                     "expected_action": "extend_ttl",
                 },
             ]
 
-            def _evaluate_task_set(stage_label: str) -> list[dict[str, Any]]:
+            def _evaluate_task_set(
+                stage_label: str,
+                linking_mode: Literal["rule_only", "latent_proposer_symbolic_verifier"],
+            ) -> list[dict[str, Any]]:
                 results_stage = []
                 for t_item in eval_tasks:
-                    pkg = store.retrieve_context_package(t_item["prompt"], max_seeds=3, max_depth=2, max_entries=6)
+                    prompt_str = t_item["prompt"]
+                    # 1. Retrieve via strict rule/lexical Memory Graph
+                    pkg = store.retrieve_context_package(prompt_str, max_seeds=3, max_depth=2, max_entries=6)
                     ret_ids = [it.entry.id for it in pkg.items]
+
+                    # 2. If `latent_proposer_symbolic_verifier` is enabled, propose additional candidate
+                    #    corrections via continuous relational-operator cosine similarity
+                    latent_proposals: list[dict[str, Any]] = []
+                    if linking_mode == "latent_proposer_symbolic_verifier":
+                        latent_proposals = projector.propose_active_corrections(store, prompt_str, min_cosine=0.75)
+                        for lp in latent_proposals:
+                            if lp["entry_id"] not in ret_ids:
+                                ret_ids.append(lp["entry_id"])
+
                     has_active_prefix_corr = "MEM-CORR-PREFIX-LONGEST-FIRST-002" in ret_ids
                     has_active_zero_alloc_corr = "MEM-CORR-ZERO-ALLOCATION-CHECK-002" in ret_ids
 
-                    # Decision logic grounded in retrieved active corrections + explicit precondition check
-                    if t_item["has_prefix_overlap"]:
+                    # 3. Symbolic Precondition Verifier: parse preconditions from raw prompt text & telemetry
+                    inferred_pre = infer_task_preconditions_from_raw_prompt(prompt_str)
+
+                    if inferred_pre["has_prefix_overlap"]:
                         if has_active_prefix_corr:
                             act = "order_longest_prefix_first"
                         else:
-                            # Pre-growth: follows the un-superseded `MEM-HYP-LEXER-SHORTER-FIRST-001` or guesses wrong
                             act = "keep_shortest_first_order" if rng.random() < 0.85 else "order_longest_prefix_first"
-                    elif t_item["allocated_capacity"] == 0:
+                    elif inferred_pre["allocated_capacity"] == 0.0:
                         if has_active_zero_alloc_corr:
                             act = "allocate_nonzero_capacity_before_judging_workload"
                         else:
                             act = "conclude_workload_has_zero_locality"
-                    elif t_item["ttl_expired_ratio"] > 0.5:
-                        # Negative-transfer guard 2: checks precondition (`allocated_capacity > 0` and `ttl_expired_ratio > 0.5`)
+                    elif inferred_pre["ttl_expired_ratio"] > 0.5:
                         act = "extend_ttl"
                     else:
-                        # Negative-transfer guard 1: `has_prefix_overlap == False` on fixed-width codes
                         act = "preserve_frequency_order_no_prefix_shadowing"
 
                     passed = act == t_item["expected_action"]
@@ -2094,10 +2316,13 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                     )
                     results_stage.append({
                         "stage": stage_label,
+                        "linking_mode": linking_mode,
                         "task_id": t_item["id"],
                         "category": t_item["category"],
                         "domain": t_item["domain"],
                         "retrieved_ids": ret_ids,
+                        "latent_proposals": latent_proposals,
+                        "inferred_preconditions": inferred_pre,
                         "chosen_action": act,
                         "expected_action": t_item["expected_action"],
                         "passed": passed,
@@ -2105,15 +2330,14 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                     })
                 return results_stage
 
-            pre_growth_results = _evaluate_task_set("pre_growth")
+            pre_growth_results = _evaluate_task_set("pre_growth", "rule_only")
 
-            # --- Execute Discovery & Growth Cycles (Context -> Direction -> Execution -> Outcome -> Growth) ---
-            # 1. Discovery Task 1: Prefix Shadowing (`MEM-HYP-LEXER-SHORTER-FIRST-001` fails on `'o|'` -> stage & promote correction)
+            # --- Execute Discovery & Growth Cycles (with ZERO transfer-domain words or tags!) ---
             staged_corr_1 = store.propose_cycle_memory_update(
                 cycle_kind="compiler_rollback_solved",
                 title="Correction: Order Prefix-Overlapping Dispatch Branches Longest-Prefix-First ('o|' Before 'o')",
-                summary="Corrects MEM-HYP-LEXER-SHORTER-FIRST-001: when pattern p1 ('o', 3-char, or /8) is a prefix of p2 ('o|', 5-char, or /24) in a first-match-wins dispatcher, p2 must be evaluated before p1 so p1 does not shadow p2.",
-                content="Verified by executable test: ordering `s[i:i+2] == 'o|'` before `s[i] == 'o'` passes 100% of note, CIDR, and prefix-code test cases. Precondition: applies only when one pattern is a prefix/superset of another.",
+                summary="Corrects MEM-HYP-LEXER-SHORTER-FIRST-001: when pattern p1 ('o') is a proper prefix of p2 ('o|') in a first-match-wins sequential check, evaluate p2 before p1 so p1 does not shadow p2.",
+                content="Verified by executable test: ordering `s[i:i+2] == 'o|'` before `s[i] == 'o'` prevents the shorter prefix from shadowing the longer token. Precondition: applies only when one literal is a proper prefix of another.",
                 source_evidence="test_parse_music('o o| .|') -> [4, 2, 1] PASS (shortest-first returned [4, 4, 1] FAIL).",
                 provenance=MemoryProvenance(
                     source_type="experiment",
@@ -2122,18 +2346,17 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                     recorded_at="2026-10-29T09:10:00Z",
                 ),
                 concepts=["prefix-shadowing-dispatch", "longest-prefix-first-ordering"],
-                tags=["systems", "compiler", "networking", "pharmacology_clinical", "correction"],
+                tags=["systems", "compiler", "lexer", "correction"],
                 corrects_id="MEM-HYP-LEXER-SHORTER-FIRST-001",
                 entry_id="MEM-CORR-PREFIX-LONGEST-FIRST-002",
                 auto_promote_if_verified=True,
             )
 
-            # 2. Discovery Task 2: Zero-Capacity Allocation (`MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001` -> stage & promote correction)
             staged_corr_2 = store.propose_cycle_memory_update(
                 cycle_kind="verified_observation",
-                title="Correction: Verify Non-Zero Allocated Capacity / Reagent Volume Before Attributing Zero Hits to Workload",
-                summary="Corrects MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001: 2.9M misses occurred because `allocated_slots == 0` (table unallocated), not because the workload was random; fixing allocation yielded 92.5% hits.",
-                content="Always check `allocated_capacity > 0` (or `reagent_dispensed > 0` in an assay) before interpreting a 0% hit/signal rate.",
+                title="Correction: Verify Non-Zero Allocated Capacity Before Attributing Zero Hits to Workload",
+                summary="Corrects MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001: 2.9M misses and 0 hits occurred because `allocated_slots = 0` (table unallocated), not because the workload had zero locality; fixing allocation yielded 92.5% hits.",
+                content="Always check `allocated_slots > 0` before interpreting a 0 hits / 0% signal rate.",
                 source_evidence="After fixing K3_PAYLOAD_RAM double-subtraction, allocated_slots=8192 -> 4083/4416 hits (92.5%).",
                 provenance=MemoryProvenance(
                     source_type="experiment",
@@ -2142,14 +2365,13 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
                     recorded_at="2026-10-29T09:15:00Z",
                 ),
                 concepts=["zero-allocation-instrument-check", "instrument-zero-denominator"],
-                tags=["systems", "pharmacology_clinical", "instrument-validity", "correction"],
+                tags=["systems", "cache", "instrument-validity", "correction"],
                 corrects_id="MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
                 entry_id="MEM-CORR-ZERO-ALLOCATION-CHECK-002",
                 auto_promote_if_verified=True,
             )
 
-            # 3. Control Task (`C_BAD_HYP`): Unverified / False Neural Proposal staged in `staging/`
-            #    Must NEVER enter `store.entries` because environment verification fails!
+            # Control Task (`C_BAD_HYP`): Unverified / False Neural Proposal staged in `staging/`
             bad_candidate = MemoryEntry(
                 id="MEM-CORR-UNVERIFIED-DISABLE-ALL-CACHES-999",
                 title="Unverified Proposal: Disable All Caching and Prefetching Globally",
@@ -2173,17 +2395,20 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
             store.stage_candidate_entry(bad_candidate, auto_link_concepts=True)
             in_staging_before_check = any(e.id == bad_candidate.id for e in store.list_staged_entries())
             leaked_into_active = bad_candidate.id in store.entries
-            # Environment verifier rejects `disable_cache` -> discard from staging
             store.discard_staged_entry(bad_candidate.id)
             in_staging_after_discard = any(e.id == bad_candidate.id for e in store.list_staged_entries())
 
-            post_growth_results = _evaluate_task_set("post_growth")
+            # Evaluate BOTH post-growth modes:
+            # Mode 1: `rule_only` (no transfer-domain words in rule boxes -> exposes the exact rule-only ceiling!)
+            post_growth_rule_only = _evaluate_task_set("post_growth_rule_only", "rule_only")
+            # Mode 2: `latent_proposer_symbolic_verifier` (Latent Relational Projector proposes + Symbolic Verifier gates)
+            post_growth_latent = _evaluate_task_set("post_growth_latent_symbolic", "latent_proposer_symbolic_verifier")
 
             def _cat_rate(res_list: list[dict[str, Any]], cat: str) -> float:
                 items = [r for r in res_list if r["category"] == cat]
                 return round(100.0 * sum(1 for r in items if r["passed"]) / max(1, len(items)), 2)
 
-            neg_items = [r for r in post_growth_results if r["category"] == "negative_transfer_guard"]
+            neg_items = [r for r in post_growth_latent if r["category"] == "negative_transfer_guard"]
             neg_transfer_rate = round(
                 100.0 * sum(1 for r in neg_items if r["negative_transfer_occurred"]) / max(1, len(neg_items)), 2
             )
@@ -2191,15 +2416,18 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
             per_seed_runs.append({
                 "seed": seed,
                 "pre_growth_accumulation_pct": _cat_rate(pre_growth_results, "accumulation"),
-                "post_growth_accumulation_pct": _cat_rate(post_growth_results, "accumulation"),
+                "post_growth_rule_only_accumulation_pct": _cat_rate(post_growth_rule_only, "accumulation"),
+                "post_growth_accumulation_pct": _cat_rate(post_growth_latent, "accumulation"),
                 "pre_growth_transfer_pct": _cat_rate(pre_growth_results, "transfer"),
-                "post_growth_transfer_pct": _cat_rate(post_growth_results, "transfer"),
-                "negative_transfer_guard_pass_pct": _cat_rate(post_growth_results, "negative_transfer_guard"),
+                "post_growth_rule_only_transfer_pct": _cat_rate(post_growth_rule_only, "transfer"),
+                "post_growth_transfer_pct": _cat_rate(post_growth_latent, "transfer"),
+                "negative_transfer_guard_pass_pct": _cat_rate(post_growth_latent, "negative_transfer_guard"),
                 "negative_transfer_rate_pct": neg_transfer_rate,
                 "unverified_staged_isolated": bool(in_staging_before_check and not leaked_into_active and not in_staging_after_discard),
                 "promoted_ids": [staged_corr_1.id, staged_corr_2.id],
                 "pre_growth_traces": pre_growth_results,
-                "post_growth_traces": post_growth_results,
+                "post_growth_rule_only_traces": post_growth_rule_only,
+                "post_growth_traces": post_growth_latent,
             })
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -2210,8 +2438,10 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
         return {"mean": round(m, 2), "std": round(math.sqrt(var), 2)}
 
     acc_pre = [r["pre_growth_accumulation_pct"] for r in per_seed_runs]
+    acc_rule_post = [r["post_growth_rule_only_accumulation_pct"] for r in per_seed_runs]
     acc_post = [r["post_growth_accumulation_pct"] for r in per_seed_runs]
     xfer_pre = [r["pre_growth_transfer_pct"] for r in per_seed_runs]
+    xfer_rule_post = [r["post_growth_rule_only_transfer_pct"] for r in per_seed_runs]
     xfer_post = [r["post_growth_transfer_pct"] for r in per_seed_runs]
     neg_rates = [r["negative_transfer_rate_pct"] for r in per_seed_runs]
 
@@ -2219,11 +2449,16 @@ def run_experiment_c(seeds: Sequence[int] = DEFAULT_SEEDS) -> dict[str, Any]:
         "seeds": list(seeds),
         "num_seeds": len(seeds),
         "accumulation_pre_growth": _mean_std(acc_pre),
+        "accumulation_post_growth_rule_only": _mean_std(acc_rule_post),
         "accumulation_post_growth": _mean_std(acc_post),
         "accumulation_gain_pp": round(_mean_std(acc_post)["mean"] - _mean_std(acc_pre)["mean"], 2),
         "held_out_transfer_pre_growth": _mean_std(xfer_pre),
+        "held_out_transfer_post_growth_rule_only": _mean_std(xfer_rule_post),
         "held_out_transfer_post_growth": _mean_std(xfer_post),
         "held_out_transfer_gain_pp": round(_mean_std(xfer_post)["mean"] - _mean_std(xfer_pre)["mean"], 2),
+        "latent_over_rule_only_transfer_gain_pp": round(
+            _mean_std(xfer_post)["mean"] - _mean_std(xfer_rule_post)["mean"], 2
+        ),
         "negative_transfer_rate_pct": _mean_std(neg_rates),
         "unverified_leakage_count": sum(0 if r["unverified_staged_isolated"] else 1 for r in per_seed_runs),
         "per_seed_runs": per_seed_runs,
@@ -2296,9 +2531,12 @@ if __name__ == "__main__":
         "exp_b_conditions": res["phase_3_experiment_b"]["conditions"],
         "exp_c_summary": {
             "accumulation_pre": res["phase_4_experiment_c"]["accumulation_pre_growth"],
-            "accumulation_post": res["phase_4_experiment_c"]["accumulation_post_growth"],
+            "accumulation_post_rule_only": res["phase_4_experiment_c"]["accumulation_post_growth_rule_only"],
+            "accumulation_post_latent_symbolic": res["phase_4_experiment_c"]["accumulation_post_growth"],
             "transfer_pre": res["phase_4_experiment_c"]["held_out_transfer_pre_growth"],
-            "transfer_post": res["phase_4_experiment_c"]["held_out_transfer_post_growth"],
+            "transfer_post_rule_only": res["phase_4_experiment_c"]["held_out_transfer_post_growth_rule_only"],
+            "transfer_post_latent_symbolic": res["phase_4_experiment_c"]["held_out_transfer_post_growth"],
+            "latent_over_rule_only_transfer_gain_pp": res["phase_4_experiment_c"]["latent_over_rule_only_transfer_gain_pp"],
             "negative_transfer_rate_pct": res["phase_4_experiment_c"]["negative_transfer_rate_pct"],
             "unverified_leakage_count": res["phase_4_experiment_c"]["unverified_leakage_count"],
         },

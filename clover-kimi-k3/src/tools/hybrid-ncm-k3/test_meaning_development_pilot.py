@@ -31,6 +31,9 @@ if str(_THIS_DIR) not in sys.path:
 from meaning_development_pilot import (
     CANONICAL_CYCLE_STAGES,
     DEFAULT_SEEDS,
+    RemediationTask,
+    build_experiment_b_tasks,
+    infer_task_preconditions_from_raw_prompt,
     run_experiment_a,
     run_experiment_b,
     run_experiment_c,
@@ -81,8 +84,13 @@ class TestMeaningDevelopmentPilot(unittest.TestCase):
     def test_04_experiment_c_experience_transfer_and_negative_transfer_guard(self) -> None:
         exp_c = run_experiment_c(seeds=DEFAULT_SEEDS)
         self.assertEqual(exp_c["num_seeds"], 5)
+        self.assertEqual(exp_c["accumulation_post_growth_rule_only"]["mean"], 100.0)
         self.assertEqual(exp_c["accumulation_post_growth"]["mean"], 100.0)
+        # Without transfer-domain nouns in the rule boxes, rule_only transfer fails (< 40%),
+        # whereas latent_proposer + symbolic_verifier succeeds (100%):
+        self.assertLess(exp_c["held_out_transfer_post_growth_rule_only"]["mean"], 40.0)
         self.assertEqual(exp_c["held_out_transfer_post_growth"]["mean"], 100.0)
+        self.assertGreaterEqual(exp_c["latent_over_rule_only_transfer_gain_pp"], 60.0)
         self.assertGreaterEqual(exp_c["accumulation_gain_pp"], 50.0)
         self.assertGreaterEqual(exp_c["held_out_transfer_gain_pp"], 50.0)
         self.assertEqual(exp_c["negative_transfer_rate_pct"]["mean"], 0.0)
@@ -97,6 +105,29 @@ class TestMeaningDevelopmentPilot(unittest.TestCase):
             self.assertTrue(all(res["success_criteria_evaluation"].values()))
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    def test_06_zero_fixture_leaks_and_raw_precondition_inference(self) -> None:
+        """Verifies that `RemediationTask` has no `ontology_seed` field and that `infer_task_preconditions_from_raw_prompt`
+        infers prefix overlap, zero-capacity allocation, and TTL expiration purely from raw text."""
+        for task in build_experiment_b_tasks():
+            self.assertFalse(hasattr(task, "ontology_seed"))
+            self.assertFalse(hasattr(task, "requires_ontology_law"))
+            self.assertFalse(hasattr(task, "requires_prior_correction_or_scope"))
+
+        p_prefix = infer_task_preconditions_from_raw_prompt(
+            "A classifier checks `'J45'` before `'J45.5'`, which shadows `'J45.5'`."
+        )
+        self.assertTrue(p_prefix["has_prefix_overlap"])
+
+        p_fixed = infer_task_preconditions_from_raw_prompt(
+            "A dispatcher matches fixed 4-byte tags `'HTTP'`, `'GRPC'`, and `'MQTT'`."
+        )
+        self.assertFalse(p_fixed["has_prefix_overlap"])
+
+        p_zero = infer_task_preconditions_from_raw_prompt(
+            "ELISA reader reported 0.000 OD; telemetry shows `reagent_dispensed_ul = 0.0`."
+        )
+        self.assertEqual(p_zero["allocated_capacity"], 0.0)
 
 
 if __name__ == "__main__":

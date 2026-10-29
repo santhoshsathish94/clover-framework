@@ -8,7 +8,7 @@
     "Outcome",
     "Growth"
   ],
-  "elapsed_seconds": 2.88,
+  "elapsed_seconds": 5.423,
   "phase_2_experiment_a": {
     "metrics": {
       "total_controlled_entries": 16,
@@ -212,7 +212,7 @@
         "claim_key": "partition_per_stage_resolves_flat_hit_rate",
         "supported": true,
         "epistemic_status": "externally_verified",
-        "provenance": "exp:pilot-meaning-systems:kv-table-sweep + FORMULA/PARTITIONED-CACHE-INVARIANT",
+        "provenance": "exp:pilot-meaning-systems:cyclic-sweep + FORMULA/PARTITIONED-CACHE-INVARIANT",
         "expected_supported": true,
         "passed": true
       },
@@ -221,7 +221,7 @@
         "claim_key": "dram_clock_frequency_4800_increases_cache_hit_rate",
         "supported": false,
         "epistemic_status": "unsupported_claim",
-        "provenance": "none (DRAM bandwidth affects transfer latency, not cache hit ratio)",
+        "provenance": "none (ungrounded claim tokens: dram, clock, frequency, 4800, increases)",
         "expected_supported": false,
         "passed": true
       },
@@ -239,7 +239,7 @@
         "claim_key": "competitive_antagonist_destroys_ribosomal_protein_synthesis",
         "supported": false,
         "epistemic_status": "unsupported_claim",
-        "provenance": "none (orthosteric competition is reversible pocket binding, not ribosomal destruction)",
+        "provenance": "none (ungrounded claim tokens: destroys, ribosomal, protein, synthesis)",
         "expected_supported": false,
         "passed": true
       },
@@ -248,7 +248,7 @@
         "claim_key": "direct_m1_bolus_is_clinically_safe_and_verified",
         "supported": false,
         "epistemic_status": "unresolved",
-        "provenance": "review:pharmacogenetics-board-2026-10 (explicit uncertainty_note: hERG safety unmeasured)",
+        "provenance": "review:pharmacogenetics-board-2026-10 (explicit uncertainty_note: Direct M1 C_max hERG safety margin in humans is unmeasured; do not claim direct M1 dosing is clinically validated.)",
         "expected_supported": false,
         "passed": true
       }
@@ -867,18 +867,18 @@
             "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
           ],
           "ontology_paths": [
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--HAS_FORMULA-- STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) <--CAUSED_BY-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--ENTAILS_CONSTRAINT-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) <--CAUSED_BY-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
           ],
           "inferred_constraints": [
-            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
+            "Global capacity sweeps remain flat until C_total >= S * w_stage",
+            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
             "Requires C_global > 0 (allocated) and TTL_expired == 0",
             "Action: partition_per_stage",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
-            "Global capacity sweeps remain flat until C_total >= S * w_stage",
-            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
+            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S)."
           ],
@@ -946,7 +946,6 @@
             "Growth"
           ],
           "retrieved_memory_ids": [
-            "MEM-OBS-PREFETCH-4LANE-LOSS-002",
             "MEM-OBS-PREFETCH-1LANE-WIN-001",
             "MEM-OBS-BIO-CONFLICT-NULL-002",
             "MEM-OBS-BIO-CONFLICT-FAST-001",
@@ -992,7 +991,6 @@
           ],
           "retrieved_memory_ids": [
             "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-            "MEM-OBS-PREFETCH-4LANE-LOSS-002",
             "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
             "MEM-OBS-SYS-TABLE-PLATEAU-002",
             "MEM-OBS-PREFETCH-1LANE-WIN-001"
@@ -1001,6 +999,7 @@
             "STEM_CONCEPT:STEM-RECURRENT-STATE-MEMOIZATION (Recurrent State Drift vs. Request-Boundary Memoization) --HAS_FORMULA--> FORMULA:STATE-RESET-REPLAY-LAW (Recurrent Memoization Key & Replay Invariant)"
           ],
           "inferred_constraints": [
+            "Requires verified correction MEM-CORR-ZERO-HITS-STATE-DRIFT-002 refuting dead-mechanism hypothesis",
             "Action: verify_via_request_replay_with_state_reset",
             "Key(t) = Hash(Layer, Expert, Input_t(S_t)); intra-sequence repeats have S_t != S_{t'}, so test memoizer via full-request A/B/A replay after state reset (or key on prefix-aligned state checkpoints)."
           ],
@@ -1036,18 +1035,18 @@
             "MEM-OBS-SYS-TABLE-PLATEAU-002"
           ],
           "ontology_paths": [
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--HAS_FORMULA-- STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) <--CAUSED_BY-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--ENTAILS_CONSTRAINT-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) <--CAUSED_BY-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
           ],
           "inferred_constraints": [
-            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
+            "Global capacity sweeps remain flat until C_total >= S * w_stage",
+            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
             "Requires C_global > 0 (allocated) and TTL_expired == 0",
             "Action: partition_per_stage",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
-            "Global capacity sweeps remain flat until C_total >= S * w_stage",
-            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
+            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S)."
           ],
@@ -1199,18 +1198,18 @@
             "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
           ],
           "ontology_paths": [
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--HAS_FORMULA-- STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) <--CAUSED_BY-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--ENTAILS_CONSTRAINT-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) <--CAUSED_BY-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
           ],
           "inferred_constraints": [
-            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
+            "Global capacity sweeps remain flat until C_total >= S * w_stage",
+            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
             "Requires C_global > 0 (allocated) and TTL_expired == 0",
             "Action: partition_per_stage",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
-            "Global capacity sweeps remain flat until C_total >= S * w_stage",
-            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
+            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S)."
           ],
@@ -1287,10 +1286,10 @@
             "MEM-HYP-PRODRUG-POLYMORPHISM-001"
           ],
           "ontology_paths": [
-            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --ENTAILS_CONSTRAINT--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule)",
-            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --DEPENDS_ON--> STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap)",
-            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --ENTAILS_CONSTRAINT--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule) <--HAS_FORMULA-- STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap)",
-            "CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --DEPENDS_ON--> STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap) --HAS_FORMULA--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule)"
+            "STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap) --HAS_FORMULA--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule)",
+            "STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap) <--DEPENDS_ON-- CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait)",
+            "STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap) --HAS_FORMULA--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule) <--ENTAILS_CONSTRAINT-- CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait)",
+            "STEM_CONCEPT:STEM-REGIME-DEPENDENT-OVERLAP (Regime-Dependent I/O vs. Compute Overlap) <--DEPENDS_ON-- CLOVER_ENTITY:CLOVER-SYNC-PREFETCH-BARRIER (Synchronous Page-Touch Prefetch with Barrier Wait) --ENTAILS_CONSTRAINT--> FORMULA:PREFETCH-REGIME-LAW (Concurrency-Scoped Prefetch Selection Rule)"
           ],
           "inferred_constraints": [
             "single_lane_serial_io -> enable_sync_prefetch",
@@ -1335,6 +1334,7 @@
             "STEM_CONCEPT:STEM-RECURRENT-STATE-MEMOIZATION (Recurrent State Drift vs. Request-Boundary Memoization) --HAS_FORMULA--> FORMULA:STATE-RESET-REPLAY-LAW (Recurrent Memoization Key & Replay Invariant)"
           ],
           "inferred_constraints": [
+            "Requires verified correction MEM-CORR-ZERO-HITS-STATE-DRIFT-002 refuting dead-mechanism hypothesis",
             "Action: verify_via_request_replay_with_state_reset",
             "Key(t) = Hash(Layer, Expert, Input_t(S_t)); intra-sequence repeats have S_t != S_{t'}, so test memoizer via full-request A/B/A replay after state reset (or key on prefix-aligned state checkpoints)."
           ],
@@ -1371,18 +1371,18 @@
             "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001"
           ],
           "ontology_paths": [
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--HAS_FORMULA-- STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave)",
-            "CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --CAUSED_BY--> STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) <--CAUSED_BY-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) --HAS_FORMULA--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant) <--ENTAILS_CONSTRAINT-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool)",
+            "STEM_CONCEPT:STEM-CYCLIC-SWEEP-EVICTION (Cyclic Sweep Eviction Wave) <--CAUSED_BY-- CLOVER_ENTITY:CLOVER-GLOBAL-POOL-CACHE (Multi-Stage Shared Global LRU Cache Pool) --ENTAILS_CONSTRAINT--> FORMULA:PARTITIONED-CACHE-INVARIANT (Per-Stage Partitioned Cache Hit Invariant)"
           ],
           "inferred_constraints": [
-            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
+            "Global capacity sweeps remain flat until C_total >= S * w_stage",
+            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
             "Requires C_global > 0 (allocated) and TTL_expired == 0",
             "Action: partition_per_stage",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
-            "Global capacity sweeps remain flat until C_total >= S * w_stage",
-            "Per-stage partitioning (C_stage = C_total / S) isolates reuse and breaks cyclic eviction",
+            "Suffers cyclic sweep eviction whenever S * w_stage > C_total",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S).",
             "If HitRate(C_global) == const across C_global < S*W and TTL_expired == 0 and C_global > 0, then action = PARTITION_PER_STAGE(S)."
           ],
@@ -1531,6 +1531,10 @@
       "mean": 10.0,
       "std": 20.0
     },
+    "accumulation_post_growth_rule_only": {
+      "mean": 100.0,
+      "std": 0.0
+    },
     "accumulation_post_growth": {
       "mean": 100.0,
       "std": 0.0
@@ -1540,11 +1544,16 @@
       "mean": 26.67,
       "std": 24.95
     },
+    "held_out_transfer_post_growth_rule_only": {
+      "mean": 13.33,
+      "std": 16.33
+    },
     "held_out_transfer_post_growth": {
       "mean": 100.0,
       "std": 0.0
     },
     "held_out_transfer_gain_pp": 73.33,
+    "latent_over_rule_only_transfer_gain_pp": 86.67,
     "negative_transfer_rate_pct": {
       "mean": 0.0,
       "std": 0.0
@@ -1554,8 +1563,10 @@
       {
         "seed": 11,
         "pre_growth_accumulation_pct": 0.0,
+        "post_growth_rule_only_accumulation_pct": 100.0,
         "post_growth_accumulation_pct": 100.0,
         "pre_growth_transfer_pct": 33.33,
+        "post_growth_rule_only_transfer_pct": 0.0,
         "post_growth_transfer_pct": 100.0,
         "negative_transfer_guard_pass_pct": 100.0,
         "negative_transfer_rate_pct": 0.0,
@@ -1567,16 +1578,29 @@
         "pre_growth_traces": [
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
               "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -1584,6 +1608,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -1592,6 +1617,13 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -1599,16 +1631,31 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-OBS-BIO-CONFLICT-NULL-002",
               "MEM-OBS-BIO-CONFLICT-FAST-001",
-              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -1616,14 +1663,28 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
@@ -1631,14 +1692,22 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -1646,6 +1715,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -1656,6 +1726,17 @@
               "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
               "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
@@ -1663,40 +1744,65 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
               "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
             "negative_transfer_occurred": false
           }
         ],
-        "post_growth_traces": [
+        "post_growth_rule_only_traces": [
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -1707,60 +1813,103 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
-            "chosen_action": "order_longest_prefix_first",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
-            "chosen_action": "order_longest_prefix_first",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
-              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
-              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
-            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -1769,22 +1918,329 @@
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
               "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-OBS-PREFETCH-1LANE-WIN-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-PREFETCH-1LANE-WIN-001",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
@@ -1795,8 +2251,10 @@
       {
         "seed": 23,
         "pre_growth_accumulation_pct": 50.0,
+        "post_growth_rule_only_accumulation_pct": 100.0,
         "post_growth_accumulation_pct": 100.0,
         "pre_growth_transfer_pct": 66.67,
+        "post_growth_rule_only_transfer_pct": 0.0,
         "post_growth_transfer_pct": 100.0,
         "negative_transfer_guard_pass_pct": 100.0,
         "negative_transfer_rate_pct": 0.0,
@@ -1808,16 +2266,29 @@
         "pre_growth_traces": [
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
               "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
@@ -1825,6 +2296,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -1833,6 +2305,13 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -1840,16 +2319,31 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-OBS-BIO-CONFLICT-NULL-002",
               "MEM-OBS-BIO-CONFLICT-FAST-001",
-              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
@@ -1857,14 +2351,28 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
@@ -1872,14 +2380,22 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -1887,6 +2403,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -1897,6 +2414,17 @@
               "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
               "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
@@ -1904,40 +2432,65 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
               "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
             "negative_transfer_occurred": false
           }
         ],
-        "post_growth_traces": [
+        "post_growth_rule_only_traces": [
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -1948,60 +2501,103 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
-            "chosen_action": "order_longest_prefix_first",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
-            "chosen_action": "order_longest_prefix_first",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
-              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
-              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
-            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -2010,22 +2606,329 @@
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
               "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-OBS-PREFETCH-1LANE-WIN-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-PREFETCH-1LANE-WIN-001",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
@@ -2036,8 +2939,10 @@
       {
         "seed": 37,
         "pre_growth_accumulation_pct": 0.0,
+        "post_growth_rule_only_accumulation_pct": 100.0,
         "post_growth_accumulation_pct": 100.0,
         "pre_growth_transfer_pct": 0.0,
+        "post_growth_rule_only_transfer_pct": 0.0,
         "post_growth_transfer_pct": 100.0,
         "negative_transfer_guard_pass_pct": 100.0,
         "negative_transfer_rate_pct": 0.0,
@@ -2049,16 +2954,29 @@
         "pre_growth_traces": [
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
               "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -2066,6 +2984,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -2074,6 +2993,13 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -2081,16 +3007,31 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-OBS-BIO-CONFLICT-NULL-002",
               "MEM-OBS-BIO-CONFLICT-FAST-001",
-              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -2098,14 +3039,28 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -2113,14 +3068,22 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -2128,6 +3091,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -2138,6 +3102,17 @@
               "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
               "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
@@ -2145,40 +3120,65 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
               "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
             "negative_transfer_occurred": false
           }
         ],
-        "post_growth_traces": [
+        "post_growth_rule_only_traces": [
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -2189,60 +3189,103 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
-            "chosen_action": "order_longest_prefix_first",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
-            "chosen_action": "order_longest_prefix_first",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
-              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
-              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
-            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -2251,22 +3294,329 @@
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
               "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-OBS-PREFETCH-1LANE-WIN-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-PREFETCH-1LANE-WIN-001",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
@@ -2277,8 +3627,10 @@
       {
         "seed": 53,
         "pre_growth_accumulation_pct": 0.0,
+        "post_growth_rule_only_accumulation_pct": 100.0,
         "post_growth_accumulation_pct": 100.0,
         "pre_growth_transfer_pct": 33.33,
+        "post_growth_rule_only_transfer_pct": 33.33,
         "post_growth_transfer_pct": 100.0,
         "negative_transfer_guard_pass_pct": 100.0,
         "negative_transfer_rate_pct": 0.0,
@@ -2290,16 +3642,29 @@
         "pre_growth_traces": [
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
               "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -2307,6 +3672,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -2315,6 +3681,13 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -2322,16 +3695,31 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-OBS-BIO-CONFLICT-NULL-002",
               "MEM-OBS-BIO-CONFLICT-FAST-001",
-              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
@@ -2339,14 +3727,28 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -2354,14 +3756,22 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -2369,6 +3779,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -2379,6 +3790,17 @@
               "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
               "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
@@ -2386,40 +3808,65 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
               "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
             "negative_transfer_occurred": false
           }
         ],
-        "post_growth_traces": [
+        "post_growth_rule_only_traces": [
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -2430,60 +3877,103 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
-            "chosen_action": "order_longest_prefix_first",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
-              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
-              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
-            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -2492,22 +3982,329 @@
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
               "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-OBS-PREFETCH-1LANE-WIN-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-PREFETCH-1LANE-WIN-001",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
@@ -2518,8 +4315,10 @@
       {
         "seed": 71,
         "pre_growth_accumulation_pct": 0.0,
+        "post_growth_rule_only_accumulation_pct": 100.0,
         "post_growth_accumulation_pct": 100.0,
         "pre_growth_transfer_pct": 0.0,
+        "post_growth_rule_only_transfer_pct": 33.33,
         "post_growth_transfer_pct": 100.0,
         "negative_transfer_guard_pass_pct": 100.0,
         "negative_transfer_rate_pct": 0.0,
@@ -2531,16 +4330,29 @@
         "pre_growth_traces": [
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
               "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -2548,6 +4360,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -2556,6 +4369,13 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -2563,16 +4383,31 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-OBS-BIO-CONFLICT-NULL-002",
               "MEM-OBS-BIO-CONFLICT-FAST-001",
-              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -2580,14 +4415,28 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
             "passed": false,
@@ -2595,14 +4444,22 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": false,
@@ -2610,6 +4467,7 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -2620,6 +4478,17 @@
               "MEM-CONCEPT-CAPACITY-SATURATION-KINETICS-001",
               "MEM-OBS-BIO-CYP2D6-OCCUPANCY-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
@@ -2627,40 +4496,65 @@
           },
           {
             "stage": "pre_growth",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
               "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
               "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-OBS-SYS-RING-OVERWRITE-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
             "negative_transfer_occurred": false
           }
         ],
-        "post_growth_traces": [
+        "post_growth_rule_only_traces": [
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_1_LEXER_DOT_PIPE",
             "category": "accumulation",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001",
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001"
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
             "category": "accumulation",
             "domain": "systems",
@@ -2671,60 +4565,103 @@
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
             "category": "transfer",
             "domain": "networking",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "order_longest_prefix_first",
             "expected_action": "order_longest_prefix_first",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
-              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
-              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
-              "MEM-HYP-LEXER-SHORTER-FIRST-001"
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
-            "chosen_action": "order_longest_prefix_first",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "keep_shortest_first_order",
             "expected_action": "order_longest_prefix_first",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
             "category": "transfer",
             "domain": "pharmacology_clinical",
             "retrieved_ids": [
               "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
               "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
-              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
-              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
-              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001"
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001"
             ],
-            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "conclude_workload_has_zero_locality",
             "expected_action": "allocate_nonzero_capacity_before_judging_workload",
-            "passed": true,
+            "passed": false,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
             "category": "negative_transfer_guard",
             "domain": "systems",
@@ -2733,22 +4670,329 @@
               "MEM-CORR-PREFIX-LONGEST-FIRST-002",
               "MEM-HYP-LEXER-SHORTER-FIRST-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
             "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
             "expected_action": "preserve_frequency_order_no_prefix_shadowing",
             "passed": true,
             "negative_transfer_occurred": false
           },
           {
-            "stage": "post_growth",
+            "stage": "post_growth_rule_only",
+            "linking_mode": "rule_only",
             "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
             "category": "negative_transfer_guard",
             "domain": "systems",
             "retrieved_ids": [
               "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
               "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
               "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
               "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
             ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
+            "chosen_action": "extend_ttl",
+            "expected_action": "extend_ttl",
+            "passed": true,
+            "negative_transfer_occurred": false
+          }
+        ],
+        "post_growth_traces": [
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_1_LEXER_DOT_PIPE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-SYS-RING-OVERWRITE-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                ".",
+                ".|",
+                ".|",
+                "."
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_ACC_2_RESULT_TABLE_ZERO_SIZE",
+            "category": "accumulation",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_1_FIREWALL_CIDR_SUBNET",
+            "category": "transfer",
+            "domain": "networking",
+            "retrieved_ids": [
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-CONFLICT-NULL-002",
+              "MEM-OBS-BIO-CONFLICT-FAST-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-HYP-PRODRUG-POLYMORPHISM-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "/api/",
+                "10.0.0.0/8",
+                "/api/admin",
+                "10.0.1.0/24",
+                "/api/admin"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_2_CLINICAL_ICD10_PREFIX",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.999999,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+                "entry_type": "observation",
+                "cosine_similarity": 0.899999,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "J45",
+                "J45.5",
+                "J45.5"
+              ],
+              "has_prefix_overlap": true,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "order_longest_prefix_first",
+            "expected_action": "order_longest_prefix_first",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_XFER_3_ASSAY_REAGENT_ZERO_DISPENSE",
+            "category": "transfer",
+            "domain": "pharmacology_clinical",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-HITS-STATE-DRIFT-002",
+              "MEM-HYP-ZERO-HITS-MECHANISM-DEAD-001",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 0.816496,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+                "entry_type": "correction",
+                "cosine_similarity": 0.734846,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 0.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "allocate_nonzero_capacity_before_judging_workload",
+            "expected_action": "allocate_nonzero_capacity_before_judging_workload",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_1_MUTUALLY_EXCLUSIVE_FIXED_CODES",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CONCEPT-PREFIX-SHADOWING-DISPATCH-001",
+              "MEM-CORR-PREFIX-LONGEST-FIRST-002",
+              "MEM-HYP-LEXER-SHORTER-FIRST-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+              "MEM-OBS-PREFETCH-1LANE-WIN-001"
+            ],
+            "latent_proposals": [
+              {
+                "entry_id": "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+                "entry_type": "concept",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-BIO-ZERO-ORDER-PLATEAU-002",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "observed"
+              },
+              {
+                "entry_id": "MEM-OBS-PREFETCH-1LANE-WIN-001",
+                "entry_type": "observation",
+                "cosine_similarity": 1.0,
+                "epistemic_status": "externally_verified"
+              }
+            ],
+            "inferred_preconditions": {
+              "extracted_literals": [
+                "HTTP",
+                "GRPC",
+                "MQTT"
+              ],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 1.0,
+              "ttl_expired_ratio": 0.0
+            },
+            "chosen_action": "preserve_frequency_order_no_prefix_shadowing",
+            "expected_action": "preserve_frequency_order_no_prefix_shadowing",
+            "passed": true,
+            "negative_transfer_occurred": false
+          },
+          {
+            "stage": "post_growth_latent_symbolic",
+            "linking_mode": "latent_proposer_symbolic_verifier",
+            "task_id": "C_NEG_2_TTL_EXPIRATION_WITH_NONZERO_ALLOC",
+            "category": "negative_transfer_guard",
+            "domain": "systems",
+            "retrieved_ids": [
+              "MEM-CORR-ZERO-ALLOCATION-CHECK-002",
+              "MEM-HYP-ZERO-HITS-WORKLOAD-RANDOM-001",
+              "MEM-OBS-SYS-TABLE-PLATEAU-002",
+              "MEM-CONCEPT-TTL-EXPIRATION-EVICTION-001",
+              "MEM-CONCEPT-CYCLIC-SWEEP-EVICTION-001",
+              "MEM-CONCEPT-ZERO-CAPACITY-ALLOCATION-001"
+            ],
+            "latent_proposals": [],
+            "inferred_preconditions": {
+              "extracted_literals": [],
+              "has_prefix_overlap": false,
+              "allocated_capacity": 4096.0,
+              "ttl_expired_ratio": 0.96
+            },
             "chosen_action": "extend_ttl",
             "expected_action": "extend_ttl",
             "passed": true,
