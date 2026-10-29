@@ -1498,7 +1498,7 @@ class CloverK3AgentEngine:
         emitted_counts = collections.Counter()
 
         T = row_logits.size(0)
-        max_len = min(T, len(valid_p))
+        max_len = min(T, len(valid_p) + 10)
         clean_ids = []
         prev_tid = -1
         prev_word = ""
@@ -1541,7 +1541,21 @@ class CloverK3AgentEngine:
                     raw_piece = self.k3_tok.decode([tid], skip_special_tokens=False).rstrip()
                     if raw_piece.endswith((".", "!", "?")) and t >= len(valid_p) - 1:
                         break
-        return self.k3_tok.decode(clean_ids), clean_ids
+
+        decoded_str = self.k3_tok.decode(clean_ids).strip()
+        all_content_emitted = all(
+            emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set
+        )
+        has_dangling_tail = bool(
+            re.search(
+                r"(?:\b(?:and|or|to|for|of|in|with|by|from|the|a|an|as|at|on)\s*$|,\s*$|\d+,\d{1,2}$)",
+                decoded_str,
+                flags=re.IGNORECASE,
+            )
+        )
+        if not decoded_str or not all_content_emitted or has_dangling_tail:
+            return self.k3_tok.decode(valid_p), list(valid_p)
+        return decoded_str, clean_ids
 
     @torch.no_grad()
     def run_agent_planning(
@@ -2238,11 +2252,13 @@ class CloverK3AgentEngine:
                         has_real_content = True
 
                     has_list_items = any(
-                        ln.startswith(("•", "-", "*")) or bool(re.match(r"^[A-Za-z0-9 ]{2,25}:\s+\S", ln))
+                        ln.startswith(("•", "-", "*"))
+                        or bool(re.match(r"^(?:W\d+:\s*)?(?:[•\-*]|\d+[.)])\s+\S", ln))
+                        or bool(re.match(r"^(?:W\d+:\s*)?(?:\d+[.)]\s*)?\*{0,2}[A-Za-z0-9 ()\-/]{2,45}\*{0,2}:\s+\S", ln))
                         for ln in lines
                     )
                     introduces_list = has_list_items or last_ln.endswith(":") or any(
-                        kw in last_ln for kw in ("here's", "here is", "here are", "sample timetable", "sample study", "schedule", "below", "following")
+                        kw in last_ln for kw in ("here's", "here is", "here are", "sample timetable", "sample study", "schedule", "below", "following", "key principles", "overview", "breakdown")
                     )
                     asks_brief_sentences = any(
                         bs in raw_user_q.lower()
@@ -2260,7 +2276,7 @@ class CloverK3AgentEngine:
                                 last_valid.lower(),
                             )
                         )
-                        if (asks_brief_sentences or len(valid_lines_so_far) == 1) and ends_clean_sentence and "two" not in raw_user_q.lower():
+                        if (asks_brief_sentences or is_short_conv) and ends_clean_sentence and "two" not in raw_user_q.lower():
                             break
                         if len(valid_lines_so_far) >= (3 if "two" in raw_user_q.lower() else 2) and len(last_valid) > 15 and ends_clean_sentence:
                             break
@@ -2276,7 +2292,7 @@ class CloverK3AgentEngine:
                         break
                     elif is_mcq and len(valid_lines_so_far) >= 2 and valid_lines_so_far[-1].endswith((".", "!", "?")):
                         break
-                    elif len(valid_lines_so_far) >= (8 if not is_struct else 18) and not last_ln.endswith(":"):
+                    elif len(valid_lines_so_far) >= (6 if self.dev_ha.type == "cpu" else (8 if not is_struct else 18)) and not last_ln.endswith(":"):
                         break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
@@ -2478,6 +2494,8 @@ class CloverK3AgentEngine:
         3. `K3ExpertBridge`: fuses `z_bpe = vqvae.encoder.wte(p_kpad) + k3_bridge(h_k3_moe)`.
         4. `NextConceptTransformer (NCM)` (11-pass hierarchical VQ generation) + `K3LexicalPointerDecoder`.
         """
+        from clover_request_pipeline import CloverPlanWindowSplitter
+        plans = CloverPlanWindowSplitter.split_overlong_windows(plans, self.k3_tok, max_bpe=38)
         clean_plans = [p.lstrip("\n").strip() for p in plans]
         is_code_win = [
             cp.startswith("```") or ("####" in cp and cp.startswith("Final Answer:"))

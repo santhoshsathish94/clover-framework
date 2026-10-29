@@ -1235,6 +1235,10 @@ async function sendPrompt() {
 
   if (sessionId === activeSid) addMsg('user', userHtml);
   const pending = (sessionId === activeSid) ? addMsg('bot', CLOVER_LOADER_HTML) : null;
+  const reqOutputType = selectedOutputType || 'text';
+  if (reqOutputType !== 'text' && typeof selectOutputType === 'function') {
+    selectOutputType('text');
+  }
 
   try {
     const res = await fetch('/api/chat', {
@@ -1243,7 +1247,7 @@ async function sendPrompt() {
       body: JSON.stringify({
         session_id: activeSid,
         model: selectedModelKey,
-        output_type: selectedOutputType || 'text',
+        output_type: reqOutputType,
         prompt: effectivePrompt,
         image_base64: imgData,
         attachments: filesPayload,
@@ -2255,8 +2259,10 @@ class MultiGPUCloverCoordinator:
         return self._lfm3_mm_engine
 
     def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl", output_type="text"):
+        from clover_request_pipeline import CloverModelBackendFactory, CloverRequestValidator
+        model_key = CloverModelBackendFactory.resolve_canonical_model_key(model_key)
         p_low = (prompt or "").strip().lower()
-        out_kind = str(output_type or "text").strip().lower()
+        out_kind = CloverRequestValidator.resolve_effective_output_type(output_type, prompt or "")
         # 1. Check if `nemotron-3.5-super-vl` or `lfm3-1.7b` has an audio/video attachment or an explicit/selected image/video/audio output
         if model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b"):
             mm_eng = (
@@ -2747,55 +2753,15 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 "models": MODEL_CAPABILITIES_CATALOG,
             })
         elif self.path.startswith(("/v1/models", "/models")):
+            from clover_request_pipeline import CloverModelBackendFactory
             created_ts = int(time.time())
             self._send_json({
                 "object": "list",
-                "data": [
-                    {
-                        "id": "nemotron-3.5-super-vl",
-                        "name": "Nemotron 3.5 Super VL",
-                        "object": "model",
-                        "created": created_ts,
-                        "owned_by": "clover-framework",
-                        "context_length": MAX_SESSION_CONTEXT_TOKENS,
-                        "max_input_tokens": 1032576,
-                        "max_output_tokens": 16000,
-                        "capabilities": MODEL_CAPABILITIES_CATALOG["nemotron-3.5-super-vl"],
-                    },
-                    {
-                        "id": "lfm3-1.7b",
-                        "name": "Liquid LFM3-1.7B",
-                        "object": "model",
-                        "created": created_ts,
-                        "owned_by": "clover-framework",
-                        "context_length": MAX_SESSION_CONTEXT_TOKENS,
-                        "max_input_tokens": 246144,
-                        "max_output_tokens": 16000,
-                        "capabilities": MODEL_CAPABILITIES_CATALOG["lfm3-1.7b"],
-                    },
-                    {
-                        "id": "clover-kimi-k3",
-                        "name": "Clover",
-                        "object": "model",
-                        "created": created_ts,
-                        "owned_by": "clover-framework",
-                        "context_length": MAX_SESSION_CONTEXT_TOKENS,
-                        "max_input_tokens": 246144,
-                        "max_output_tokens": 16000,
-                        "capabilities": {"toolCalling": True, "vision": True, "streaming": True},
-                    },
-                    {
-                        "id": "clover-ai",
-                        "name": "Clover",
-                        "object": "model",
-                        "created": created_ts,
-                        "owned_by": "clover-framework",
-                        "context_length": MAX_SESSION_CONTEXT_TOKENS,
-                        "max_input_tokens": 246144,
-                        "max_output_tokens": 16000,
-                        "capabilities": {"toolCalling": True, "vision": True, "streaming": True},
-                    },
-                ],
+                "data": CloverModelBackendFactory.build_openai_models_list(
+                    created_ts,
+                    MAX_SESSION_CONTEXT_TOKENS,
+                    MODEL_CAPABILITIES_CATALOG,
+                ),
             })
         else:
             self._send_json({"error": "Not found"}, code=404)
@@ -2845,18 +2811,32 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
         if self.path.startswith("/api/reload-code"):
             try:
                 import importlib
+                import clover_request_pipeline as _crp
                 import live_web_search as _lws
                 import k3_fast_chat as _kfc
                 import k3_generative_compiler as _kgc
                 import k3_ontology_graph as _kog
                 import k3_memory_graph as _kmg
                 import k3_agent_engine as _kae
+                importlib.reload(_crp)
                 importlib.reload(_lws)
                 importlib.reload(_kfc)
                 importlib.reload(_kgc)
                 importlib.reload(_kog)
                 importlib.reload(_kmg)
                 importlib.reload(_kae)
+                if "benchmark_3_models_70_tasks" in sys.modules:
+                    _b3m = importlib.reload(sys.modules["benchmark_3_models_70_tasks"])
+                    if hasattr(STATE, "_alt_model_renderers") and isinstance(STATE._alt_model_renderers, dict):
+                        for _mk, _rend in list(STATE._alt_model_renderers.items()):
+                            if _rend is not None:
+                                _rend.__class__ = _b3m.ModelSpecificNCMRenderer
+                if "nemotron_multimodal" in sys.modules:
+                    importlib.reload(sys.modules["nemotron_multimodal"])
+                    STATE._nemo_mm_engine = None
+                if "lfm3_multimodal" in sys.modules:
+                    importlib.reload(sys.modules["lfm3_multimodal"])
+                    STATE._lfm3_mm_engine = None
                 for w_eng in STATE.text_workers:
                     w_eng.__class__ = _kae.CloverK3AgentEngine
                     w_eng.search_tool = _kae.K3KnowledgeSearchTool()
@@ -2866,7 +2846,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                     w_eng.py_gc = _kgc.CloverPythonGenerativeCompiler(allow_undefined=True)
                     if getattr(w_eng, "rust_gc", None) is not None and _kgc.HAS_RUST_GC:
                         w_eng.rust_gc = _kgc.CloverRustGenerativeCompiler()
-                self._send_json({"ok": True, "reloaded": ["live_web_search", "k3_fast_chat", "k3_generative_compiler", "k3_ontology_graph", "k3_memory_graph", "k3_agent_engine"]})
+                self._send_json({"ok": True, "reloaded": ["clover_request_pipeline", "live_web_search", "k3_fast_chat", "k3_generative_compiler", "k3_ontology_graph", "k3_memory_graph", "k3_agent_engine", "benchmark_3_models_70_tasks", "nemotron_multimodal"]})
             except Exception as e:
                 self._send_json({"error": str(e)}, code=500)
             return
@@ -2982,73 +2962,49 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             return
 
         if self.path.startswith("/api/chat"):
-            prompt = str(payload.get("prompt", "")).strip()
-            image_b64 = payload.get("image_base64")
-            attachments = payload.get("attachments") or []
-            custom_max_ctx = payload.get("max_context_tokens")
-            if custom_max_ctx is not None:
+            from clover_request_pipeline import CloverRequestValidator
+            default_cands = 1 if getattr(STATE.k3_experts, "is_cpu_backend", False) else 8
+            val_req = CloverRequestValidator.validate_chat_payload(
+                payload,
+                default_cands=default_cands,
+                max_session_context_tokens=MAX_SESSION_CONTEXT_TOKENS,
+            )
+            session_id = val_req.session_id
+            if val_req.custom_max_context_tokens is not None:
                 try:
                     with STATE.sess_lock:
                         meta_c = STATE._ensure_session_meta(session_id)
-                        meta_c["max_context_tokens"] = max(256, min(MAX_SESSION_CONTEXT_TOKENS, int(custom_max_ctx)))
+                        meta_c["max_context_tokens"] = val_req.custom_max_context_tokens
                         if meta_c["context_tokens"] > meta_c["max_context_tokens"]:
                             STATE._compact_session_when_full(meta_c)
                 except Exception:
                     pass
-            client_history = payload.get("history") or payload.get("supplied_history")
-            if client_history and isinstance(client_history, list):
-                STATE.hydrate_session_history_if_needed(session_id, client_history)
-            if not isinstance(attachments, list):
-                attachments = []
-            # If any attachment is an image/video with data_b64 and image_b64 wasn't set separately, promote it
-            non_img_attachments = []
-            for att in attachments:
-                if not isinstance(att, dict):
-                    continue
-                m_type = str(att.get("type") or "").lower()
-                d_b64 = str(att.get("data_b64") or "")
-                if not image_b64 and d_b64 and (m_type.startswith("image/") or (m_type.startswith("video/") and d_b64.startswith("data:image/"))):
-                    image_b64 = d_b64
-                    if m_type.startswith("video/"):
-                        non_img_attachments.append(att)
-                else:
-                    non_img_attachments.append(att)
+            if val_req.client_history:
+                STATE.hydrate_session_history_if_needed(session_id, val_req.client_history)
 
-            default_cands = 1 if getattr(STATE.k3_experts, "is_cpu_backend", False) else 8
-            try:
-                cands = max(1, min(16, int(payload.get("cands", default_cands))))
-            except Exception:
-                cands = default_cands
-            remember = bool(payload.get("remember", True))
-            selected_model = str(payload.get("model") or "nemotron-3.5-super-vl").strip()
-            if selected_model not in ("nemotron-3.5-super-vl", "lfm3-1.7b", "kimi-k3"):
-                selected_model = "nemotron-3.5-super-vl"
-            requested_output_type = str(payload.get("output_type") or "text").strip().lower()
-            if requested_output_type not in ("text", "image", "video", "audio"):
-                requested_output_type = "text"
-            if not prompt and not image_b64 and not non_img_attachments:
+            if not val_req.prompt and not val_req.image_base64 and not val_req.non_image_attachments:
                 self._send_json({"error": "Empty prompt"}, code=400)
                 return
             try:
-                if image_b64:
+                if val_req.image_base64:
                     r = STATE.submit_image_request(
                         session_id,
-                        prompt or "Describe this image clearly.",
-                        image_b64,
-                        cands=cands,
-                        remember=remember,
-                        attachments=non_img_attachments,
-                        model_key=selected_model,
+                        val_req.prompt or "Describe this image clearly.",
+                        val_req.image_base64,
+                        cands=val_req.cands,
+                        remember=val_req.remember,
+                        attachments=val_req.non_image_attachments,
+                        model_key=val_req.model_key,
                     )
                 else:
                     r = STATE.submit_text_request(
                         session_id,
-                        prompt,
-                        cands=cands,
-                        remember=remember,
-                        attachments=non_img_attachments,
-                        model_key=selected_model,
-                        output_type=requested_output_type,
+                        val_req.prompt,
+                        cands=val_req.cands,
+                        remember=val_req.remember,
+                        attachments=val_req.non_image_attachments,
+                        model_key=val_req.model_key,
+                        output_type=val_req.output_type,
                     )
                 self._send_json(r)
             except Exception as e:
@@ -3375,10 +3331,26 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                     STATE.session_meta.pop(session_id, None)
                 STATE.sessions[session_id] = prior_turns[-6:]
 
+            from clover_request_pipeline import CloverModelBackendFactory
+            resolved_v1_model = CloverModelBackendFactory.resolve_canonical_model_key(req_model)
+
             if image_b64:
-                r = STATE.submit_image_request(session_id, effective_user_prompt or "Describe this image.", image_b64, cands=cands, remember=True)
+                r = STATE.submit_image_request(
+                    session_id,
+                    effective_user_prompt or "Describe this image.",
+                    image_b64,
+                    cands=cands,
+                    remember=True,
+                    model_key=resolved_v1_model,
+                )
             else:
-                r = STATE.submit_text_request(session_id, effective_user_prompt, cands=cands, remember=True)
+                r = STATE.submit_text_request(
+                    session_id,
+                    effective_user_prompt,
+                    cands=cands,
+                    remember=True,
+                    model_key=resolved_v1_model,
+                )
 
             reply_text = r.get("reply") or r.get("reply_mbr8") or ""
             # Append inline markdown image if Clover generated a chart or SVG illustration

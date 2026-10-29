@@ -263,6 +263,47 @@ class ModelSpecificNCMRenderer:
         levels = list(self.vqvae.vq.levels)
         self.sched = [1.0 - 0.6 * (k / (len(levels) - 1)) for k in range(len(levels))]
 
+    def _split_overlong_plans_for_model_tok(self, plans: list[str], max_bpe: int = 38) -> list[str]:
+        """
+        Ensures every natural-language window in `plans` encodes to `<= max_bpe` (`< P_BPE = 48`) tokens
+        in `self.tok` BEFORE `[W, P_BPE]` tensor packing, so `self.tok.encode(p)[:P_BPE]` NEVER truncates
+        the tail of a sentence (e.g. `available in PNG, JPG, WebP, and BMP formats.` or `2,800 spectral stars`).
+        """
+        if not plans:
+            return []
+        expanded: list[str] = []
+        for raw_w in plans:
+            if not raw_w or not str(raw_w).strip():
+                continue
+            has_leading_nl = str(raw_w).startswith("\n")
+            cp = str(raw_w).lstrip("\n").strip()
+            if cp.startswith("```") or ("####" in cp and cp.startswith("Final Answer:")):
+                expanded.append(("\n" + cp) if has_leading_nl else cp)
+                continue
+            tok_ids = self.tok.encode(cp)
+            if len(tok_ids) <= max_bpe:
+                expanded.append(("\n" + cp) if has_leading_nl else cp)
+                continue
+            # Split along clause/comma/word boundaries so every sub-window fits in `<= max_bpe` tokens
+            words = cp.split()
+            chunks: list[str] = []
+            cur_words: list[str] = []
+            for w in words:
+                cand = " ".join(cur_words + [w])
+                if cur_words and len(self.tok.encode(cand)) > max_bpe:
+                    chunks.append(" ".join(cur_words))
+                    cur_words = [w]
+                else:
+                    cur_words.append(w)
+            if cur_words:
+                chunks.append(" ".join(cur_words))
+            for c_idx, ch in enumerate(chunks):
+                if c_idx == 0 and has_leading_nl:
+                    expanded.append("\n" + ch)
+                else:
+                    expanded.append(ch)
+        return expanded if expanded else plans
+
     def _build_window_vocab_mask(self, plan_str: str) -> torch.Tensor:
         allowed = set(self.grammar_ids)
         allowed.update(self.tok.encode(plan_str))
@@ -348,7 +389,7 @@ class ModelSpecificNCMRenderer:
         emitted_counts: collections.Counter[int] = collections.Counter()
 
         T = row_logits.size(0)
-        max_len = min(T, len(valid_p))
+        max_len = min(T, len(valid_p) + 10)
         clean_ids: list[int] = []
         prev_tid = -1
         prev_word = ""
@@ -391,7 +432,23 @@ class ModelSpecificNCMRenderer:
                     raw_piece = self.tok.decode([tid], skip_special_tokens=False).rstrip()
                     if raw_piece.endswith((".", "!", "?")) and t >= len(valid_p) - 1:
                         break
-        return self.tok.decode(clean_ids), clean_ids
+
+        # Completeness Guard: if any content token from `valid_p` was missed or the decoded string
+        # ends on a dangling conjunction/subword, use `valid_p` directly (100% valid in `self.vocab_size`)
+        decoded_str = self.tok.decode(clean_ids).strip()
+        all_content_emitted = all(
+            emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set
+        )
+        has_dangling_tail = bool(
+            re.search(
+                r"(?:\b(?:and|or|to|for|of|in|with|by|from|the|a|an|as|at|on)\s*$|,\s*$|\d+,\d{1,2}$)",
+                decoded_str,
+                flags=re.IGNORECASE,
+            )
+        )
+        if not decoded_str or not all_content_emitted or has_dangling_tail:
+            return self.tok.decode(valid_p), list(valid_p)
+        return decoded_str, clean_ids
 
     @torch.no_grad()
     def score_mcq_options(self, prompt_text: str) -> tuple[str, dict[str, float], float]:
@@ -469,8 +526,12 @@ class ModelSpecificNCMRenderer:
         flat_raw_plans: list[str] = []
         win_to_prompt_idx: list[int] = []
         is_code_win: list[bool] = []
+        split_plans_per_prompt: list[list[str]] = [
+            self._split_overlong_plans_for_model_tok(p_list, max_bpe=38)
+            for p_list in all_plans_per_prompt
+        ]
 
-        for p_idx, plans in enumerate(all_plans_per_prompt):
+        for p_idx, plans in enumerate(split_plans_per_prompt):
             for w_str in plans:
                 cp = w_str.lstrip("\n").strip()
                 flat_clean_plans.append(cp)
@@ -566,7 +627,7 @@ class ModelSpecificNCMRenderer:
             prompt_out_ids[p_idx].extend(win_out_ids[w_i])
 
         rendered_replies = [
-            join_rendered_windows(prompt_txts[i], all_plans_per_prompt[i])
+            join_rendered_windows(prompt_txts[i], split_plans_per_prompt[i])
             for i in range(B)
         ]
         total_render_ms = (time.perf_counter() - t0) * 1000.0
@@ -596,6 +657,7 @@ class ModelSpecificNCMRenderer:
         `K3LexicalPointerDecoder` in the active model's exact vocabulary (`131,072` or `128,000`).
         """
         t0 = time.perf_counter()
+        plans = self._split_overlong_plans_for_model_tok(plans, max_bpe=38)
         clean_plans = [p.lstrip("\n").strip() for p in plans]
         is_code_win = [
             cp.startswith("```") or ("####" in cp and cp.startswith("Final Answer:"))

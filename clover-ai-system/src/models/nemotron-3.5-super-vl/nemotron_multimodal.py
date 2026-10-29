@@ -686,12 +686,99 @@ def render_high_res_raster_scene(
     is_desert = any(
         k in p_low for k in ("desert", "dune", "dunes", "canyon", "sahara", "arid", "oasis", "mesa")
     )
+    is_clover = any(
+        k in p_low
+        for k in ("clover", "shamrock", "botanical", "leaf", "leaves", "petals", "herb", "sprout", "meadow", "flora")
+    )
+    is_anime_energy = any(
+        k in p_low
+        for k in ("dbz", "dragon ball", "goku", "saiyan", "vegeta", "anime", "kamehameha", "aura", "super saiyan", "ki ", "plasma", "lightning")
+    )
     is_tech = any(
         k in p_low
         for k in ("quantum", "processor", "neural", "network", "circuit", "chip", "liquid", "ai", "cyber", "matrix", "fractal")
-    ) and not is_city
+    ) and not is_city and not is_clover
 
-    if is_cosmos:
+    if is_clover:
+        # Luminous Five-Leaf Emerald Botanical Clover with Radial Heart-Petal Geometry, Veins & Dewdrops
+        n1 = _fbm_2d(height, width, rng, octaves=5, base_h=8, base_w=14)
+        n2 = _fbm_2d(height, width, rng, octaves=4, base_h=12, base_w=20)
+        cx_c = (x_lin - 0.50) * aspect
+        cy_c = y_lin - 0.46
+        r_c = np.sqrt(cx_c ** 2 + cy_c ** 2) + 1e-6
+        theta_c = np.arctan2(cy_c, cx_c) - (math.pi / 2.0) + frame_phase * 0.25
+
+        # Soft sunlit botanical meadow bokeh background
+        bg_glow = np.exp(-((r_c / 0.55) ** 2))
+        canvas = np.zeros((height, width, 3), dtype=np.float32)
+        canvas[..., 0] = 0.03 + 0.08 * (1.0 - y_lin) + 0.14 * bg_glow + 0.06 * n1
+        canvas[..., 1] = 0.11 + 0.22 * (1.0 - y_lin) + 0.36 * bg_glow + 0.12 * n1
+        canvas[..., 2] = 0.09 + 0.16 * (1.0 - y_lin) + 0.28 * bg_glow + 0.08 * n2
+
+        # Curved botanical stem below center
+        stem_x = 0.035 * ((np.maximum(0.0, cy_c) / 0.45) ** 1.6)
+        stem_dist = np.abs(cx_c - stem_x)
+        stem_w = 0.011 + 0.008 * np.clip(cy_c / 0.48, 0.0, 1.0)
+        in_stem = (cy_c > 0.02) & (cy_c < 0.48) & (stem_dist < stem_w)
+        stem_shade = np.clip(1.0 - (stem_dist / np.maximum(stem_w, 1e-4)) ** 2, 0.0, 1.0)
+        stem_col = np.stack([
+            0.08 + 0.22 * stem_shade,
+            0.42 + 0.38 * stem_shade,
+            0.26 + 0.24 * stem_shade,
+        ], axis=-1)
+        canvas = np.where(in_stem[..., None], stem_col, canvas)
+
+        # Five radial heart-shaped clover leaves (k = 0..4, 72 deg apart)
+        for k_leaf in range(5):
+            ang_k = k_leaf * (2.0 * math.pi / 5.0)
+            d_ang = (theta_c - ang_k + math.pi) % (2.0 * math.pi) - math.pi
+            in_sector = np.abs(d_ang) < 0.64
+            # Heart-lobed petal envelope r_max(d_ang) with central apical notch
+            cos_l = np.cos(d_ang * 2.35)
+            notch = 0.055 * np.exp(-((d_ang / 0.14) ** 2))
+            r_max = np.where(in_sector, 0.055 + 0.245 * np.clip(cos_l, 0.0, 1.0) ** 0.72 - notch, 0.0)
+            in_petal = (r_c >= 0.018) & (r_c <= r_max) & in_sector
+            edge_t = np.clip((r_max - r_c) / np.maximum(r_max, 1e-4), 0.0, 1.0)
+            midrib = np.exp(-((d_ang / 0.045) ** 2)) * np.clip(1.0 - r_c / 0.28, 0.0, 1.0)
+            veins = np.exp(-((np.sin((r_c - 0.08 * np.abs(d_ang)) * 75.0)) ** 2) * 8.0) * 0.18
+            sun_dir = 0.65 + 0.35 * math.cos(ang_k - 0.6)
+            leaf_r = (0.04 + 0.24 * (1.0 - edge_t) + 0.34 * midrib + 0.18 * veins + 0.06 * n1) * sun_dir
+            leaf_g = (0.38 + 0.46 * (edge_t ** 0.45) + 0.32 * midrib + 0.22 * veins + 0.08 * n2) * sun_dir
+            leaf_b = (0.26 + 0.30 * (edge_t ** 0.55) + 0.18 * midrib + 0.12 * veins) * sun_dir
+            rim_gold = np.exp(-((r_max - r_c) / 0.008) ** 2) * in_sector.astype(np.float32) * 0.45
+            petal_col = np.stack([leaf_r + rim_gold * 0.85, leaf_g + rim_gold * 0.95, leaf_b + rim_gold * 0.45], axis=-1)
+            canvas = np.where(in_petal[..., None], petal_col, canvas)
+
+        # Central botanical calyx glow
+        calyx = np.exp(-((r_c / 0.026) ** 2))
+        canvas[..., 0] += calyx * 0.55
+        canvas[..., 1] += calyx * 0.75
+        canvas[..., 2] += calyx * 0.42
+        scene_desc = "five-leaf emerald botanical Clover emblem, heart-lobed radial petals, golden-emerald vein lighting, and sunlit meadow bokeh"
+
+    elif is_anime_energy:
+        # Radiant Golden-Azure Anime Plasma Energy Aura, Shockwave Rings & Lightning Filaments
+        n1 = _fbm_2d(height, width, rng, octaves=5, base_h=8, base_w=14)
+        n2 = _fbm_2d(height, width, rng, octaves=5, base_h=12, base_w=20)
+        cx_a = (x_lin - 0.50) * aspect
+        cy_a = y_lin - 0.52
+        r_a = np.sqrt(cx_a ** 2 + cy_a ** 2) + 1e-5
+        theta_a = np.arctan2(cy_a, cx_a)
+
+        # Radial energy rays + rising golden-cyan plasma flames
+        rays = (0.5 + 0.5 * np.cos(18.0 * theta_a + 6.0 * n1 - frame_phase * 3.0)) ** 2.4
+        aura_env = np.exp(-((r_a / 0.38) ** 1.6)) * (0.55 + 0.75 * n2)
+        inner_core = np.exp(-((r_a / 0.13) ** 2)) * 1.45
+        shock_ring = np.exp(-(((r_a - 0.29) / 0.022) ** 2)) * (0.7 + 0.6 * rays)
+        lightning = np.exp(-np.abs(np.sin(theta_a * 9.0 + r_a * 24.0 + n1 * 7.0)) * 16.0) * np.exp(-r_a / 0.42)
+
+        canvas = np.zeros((height, width, 3), dtype=np.float32)
+        canvas[..., 0] = 0.04 + 0.95 * aura_env + 1.00 * inner_core + 0.45 * shock_ring + 0.65 * lightning
+        canvas[..., 1] = 0.05 + 0.72 * aura_env + 0.96 * inner_core + 0.88 * shock_ring + 0.92 * lightning
+        canvas[..., 2] = 0.14 + 0.22 * aura_env + 0.75 * inner_core + 1.00 * shock_ring + 1.00 * lightning
+        scene_desc = "radiant golden-azure plasma energy aura, concentric shockwave rings, and high-voltage lightning filaments"
+
+    elif is_cosmos:
         # 1. Deep-space background + domain-warped multi-octave volumetric nebula
         n1 = _fbm_2d(height, width, rng, octaves=5, base_h=6, base_w=10)
         n2 = _fbm_2d(height, width, rng, octaves=5, base_h=8, base_w=14)

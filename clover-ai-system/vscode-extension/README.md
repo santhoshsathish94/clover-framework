@@ -1,6 +1,6 @@
-# Clover Kimi K3 for VS Code (Option A & Option B)
+# Clover AI System for VS Code (Option A & Option B)
 
-This folder provides both ways to use **Clover Kimi K3** (`93-Layer Kimi K3 MoE + HybridAgent-8B + 11-Pass Next-Concept Modeling + Ontology-Guided Neuro-Symbolic GraphRAG`) directly inside the **VS Code Chat & Agent Model Picker**:
+This folder provides both ways to use the **Clover AI System (`clover-ai-system`)** and all three switchable Layer-1 Foundation Model Backbones (`nemotron-3.5-super-vl`, `lfm3-1.7b`, and `clover-kimi-k3`, each governed by Clover's 7-layer stack with `1,048,576`-token session context) directly inside the **VS Code Chat & Agent Model Picker**:
 
 ---
 
@@ -18,13 +18,35 @@ VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` pro
     "apiType": "chat-completions",
     "models": [
       {
-        "id": "clover-kimi-k3",
-        "name": "Clover Kimi K3 (93L MoE + HybridAgent + NCM)",
+        "id": "nemotron-3.5-super-vl",
+        "name": "Clover — Nemotron 3.5 Super VL (120B-A12B)",
         "url": "https://api.cloverframework.com/v1/chat/completions",
         "apiType": "chat-completions",
         "toolCalling": true,
         "vision": true,
-        "contextWindow": 262144,
+        "contextWindow": 1048576,
+        "maxOutputTokens": 16000,
+        "streaming": true
+      },
+      {
+        "id": "lfm3-1.7b",
+        "name": "Clover — Liquid LFM3-1.7B (24L Tri-Hybrid)",
+        "url": "https://api.cloverframework.com/v1/chat/completions",
+        "apiType": "chat-completions",
+        "toolCalling": true,
+        "vision": true,
+        "contextWindow": 1048576,
+        "maxOutputTokens": 16000,
+        "streaming": true
+      },
+      {
+        "id": "clover-kimi-k3",
+        "name": "Clover — Kimi K3 (2.78T MoE)",
+        "url": "https://api.cloverframework.com/v1/chat/completions",
+        "apiType": "chat-completions",
+        "toolCalling": true,
+        "vision": true,
+        "contextWindow": 1048576,
         "maxOutputTokens": 16000,
         "streaming": true
       }
@@ -33,7 +55,7 @@ VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` pro
 ]
 ```
 
-2. Open the model picker in the VS Code Chat view and select **`Clover Kimi K3 (93L MoE + HybridAgent + NCM)`**.
+2. Open the model picker in the VS Code Chat view and select **`Clover — Nemotron 3.5 Super VL (120B-A12B)`**, **`Clover — Liquid LFM3-1.7B (24L Tri-Hybrid)`**, or **`Clover — Kimi K3 (2.78T MoE)`**.
 
 ---
 
@@ -44,6 +66,6 @@ For users who want a one-click install (or whose GitHub Enterprise organization 
 ### Install Locally
 ```bash
 # Symlink or copy into ~/.vscode/extensions/
-cp -r vscode-extension ~/.vscode/extensions/clover-framework.clover-vscode-provider-1.0.0
+cp -r vscode-extension ~/.vscode/extensions/clover-framework.clover-vscode-provider-4.1.2
 ```
-Reload VS Code (`Developer: Reload Window`), open the Chat model picker, and select **`Clover Kimi K3 (93L MoE + HybridAgent + NCM)`** under the **Clover** provider.
+Reload VS Code (`Developer: Reload Window`), open the Chat model picker, and select any of the three Clover models under the **Clover** provider.

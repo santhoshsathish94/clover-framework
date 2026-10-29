@@ -113,19 +113,25 @@ def is_conversational_meta_or_confirmation(user_prompt: str) -> bool:
 
 
 def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
+    if not user_prompt or not isinstance(user_prompt, str):
+        return False
     if is_short_greeting_or_ack(user_prompt) or is_conversational_meta_or_confirmation(user_prompt):
         return False
     p = user_prompt.lower().strip()
+    # Explicit one-sentence requests should NOT force multi-window expansion
+    if any(
+        bs in p
+        for bs in (
+            "one sentence", "1 sentence", "one clear sentence", "one clear, grammatical sentence",
+            "single sentence", "rewrite these notes into one clear",
+        )
+    ):
+        return False
     # Short single-fact lookup or simple arithmetic questions ('what is the capital of...', 'what is 25 * 4?') are NOT multi-part
     if len(p.split()) <= 9 and re.search(r"\b\d+\s*[\+\-\*/]\s*\d+\b", p) and "step" not in p:
         return False
-    if len(p.split()) <= 9 and p.startswith(("what is the ", "what is our ", "what is my ", "who is the ", "when is the ", "where is the ")) and not any(
-        w in p for w in (
-            "and", "difference", "compare", "trends", "steps", "how",
-            "code", "function", "program", "algorithm", "script", "prime", "binary", "sort", "fibonacci",
-            "schedule", "timetable", "plan", "list", "guide", "design", "architecture", "clover", "kimi", "ncm", "hybrid",
-            "sum", "product", "divisor", "gcd", "lcm", "molar", "distance", "speed", "time", "balance", "interest",
-        )
+    if len(p.split()) <= 8 and p.startswith(("what is the capital", "who wrote ", "when was ", "where is the ")) and not any(
+        w in p for w in ("and", "difference", "compare", "how", "why", "explain", "dive", "perspective")
     ):
         return False
     # Quantitative word problems, multiple-choice questions, code specs, or Sudoku puzzles are always multi-step
@@ -134,6 +140,9 @@ def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
     if len(re.findall(r"\b\d+(?:\.\d+)?\b", p)) >= 2 and any(
         qw in p for qw in ("how many", "how much", "how long", "how far", "what is", "find the", "round to", "total", "left", "profit", "cost", "earn", "spend", "take", "takes")
     ):
+        return True
+    # Any open-ended conceptual topic, deep dive, perspective, or multi-word inquiry (>= 4 words) benefits from a full multi-point response
+    if len(p.split()) >= 4:
         return True
     return any(
         kw in p
@@ -153,6 +162,7 @@ def is_structured_or_multi_part_prompt(user_prompt: str) -> bool:
             "suggest", "recommend", "type", "types", "kind", "kinds", "way", "ways", "reason", "reasons",
             "tip", "tips", "benefit", "benefits", "feature", "features", "google", "baby",
             "how many", "how much", "how long", "how far", "solve",
+            "dive", "quantum", "cosmos", "universe", "physics", "dbz", "anime", "history", "science",
         )
     )
 
@@ -305,9 +315,9 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         raw_low_pre = ln.lower()
         if (
             raw_low_pre.startswith((
-                "the user ", "since the user", "because the user", "if the user", "when the user",
-                "what the user", "given the context of the previous", "given the previous conversation",
-                "for example, they might", "for example, the user",
+                "the user is asking", "the user asked", "the user wants me", "the user wants to know",
+                "since the user asked", "because the user asked", "given the context of the previous",
+                "given the previous conversation", "for example, they might", "for example, the user might",
                 "they might want to", "they are ready to", "it's likely they", "it is likely they",
                 "i should ask", "i need to clarify what", "to proceed, i need to",
                 "to provide a helpful response, i need to", "since the previous conversation",
@@ -316,7 +326,7 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
                 "are you asking why something happens", "once i understand the context, i can provide",
             ))
             or re.search(
-                r"\b(?:the user's|the user is|the user was|the user has|the user needs|the user wants|the user asks|the user asked|the user didn't|confirmed their understanding|what they want to achieve|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|likely refers to their|that they understand how|i should highlight|i should focus on|i should mention|i should provide|i will formulate|i'll formulate)\b",
+                r"\b(?:the user is asking|the user asked|the user wants me to|the user didn't specify|confirmed their understanding|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|i should highlight|i should focus on|i should mention|i should provide|i will formulate|i'll formulate)\b",
                 raw_low_pre,
             )
         ):
@@ -351,11 +361,15 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         # Check if this valid line is a mid-sentence continuation of `raw_lines[-1]` (e.g. previous line ended without
         # sentence punctuation `.!?:)]"'` or this line starts with a lowercase continuation word) BEFORE capitalizing `ln[0]`!
         starts_lowercase_cont = bool(ln and ln[0].islower() and not ln.startswith(("http", "def ", "class ", "import ", "from ", "return ", "__CODE_BLOCK_")))
+        starts_new_structured_item = bool(re.match(r"^[A-Z][A-Za-z0-9 ()\-/]{1,42}:\s+\S", ln))
         prev_unfinished = bool(
             raw_lines
             and not raw_lines[-1].startswith("__CODE_BLOCK_")
             and not raw_lines[-1].endswith((".", "!", "?", ":", ")", "]", '"', "'", "`"))
         )
+        if prev_unfinished and starts_new_structured_item:
+            raw_lines[-1] = raw_lines[-1].rstrip(" ,;-") + "."
+            prev_unfinished = False
         if raw_lines and (prev_unfinished or (starts_lowercase_cont and not re.match(r"^[a-z0-9_\-]+\s*:", ln))):
             raw_lines[-1] = (raw_lines[-1].rstrip() + " " + ln.lstrip()).strip()
             continue
@@ -398,6 +412,20 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
             and not re.search(r"https?://\S+$", raw_lines[-1])
         )
     ):
+        # Before dropping `raw_lines[-1]`, check if it contains earlier complete sentences followed by a cut-off tail
+        last_sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", raw_lines[-1]) if s.strip()]
+        complete_sents = [
+            s for s in last_sents
+            if s.endswith((".", "!", "?"))
+            and (s.count("(") == s.count(")"))
+            and not re.search(
+                r"\b(?:and|or|to|for|of|in|with|by|from|that|which|since|because|however|so|but|the|a|an)\s*[.!?]$",
+                s.lower(),
+            )
+        ]
+        if complete_sents:
+            raw_lines[-1] = " ".join(complete_sents)
+            break
         if len(raw_lines) == 1:
             # Never leave a single truncated fragment without sentence-ending punctuation
             if not raw_lines[0].endswith((".", "!", "?", ")", '"', "'", "`")) or bool(re.match(r"^\d+[.)]?$", raw_lines[0].strip())):

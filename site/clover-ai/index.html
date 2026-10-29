@@ -1971,6 +1971,10 @@
         this.variable_session_store.variable_active_session_identifier === variable_submitted_session_id
           ? this.function_append_message_bubble_to_DOM('bot', constant_clover_loader_html, true)
           : null;
+      var variable_requested_output_type = this.variable_selected_output_type || 'text';
+      if (variable_requested_output_type !== 'text') {
+        this.function_select_output_type('text');
+      }
 
       try {
         var variable_chat_response = await fetch(this.variable_active_backend_base_url + '/api/chat', {
@@ -1979,7 +1983,7 @@
           body: JSON.stringify({
             session_id: variable_submitted_session_id,
             model: this.variable_selected_model_key,
-            output_type: this.variable_selected_output_type || 'text',
+            output_type: variable_requested_output_type,
             prompt: variable_effective_prompt_text,
             image_base64: variable_image_data_url,
             attachments: variable_attached_files,

@@ -31,17 +31,32 @@
       }
     ],
     "configuration": {
-      "title": "Clover Kimi K3",
+      "title": "Clover AI System",
       "properties": {
         "clover.endpointUrl": {
           "type": "string",
           "default": "https://api.cloverframework.com/v1/chat/completions",
-          "description": "Endpoint URL for the Clover Kimi K3 OpenAI-compatible Chat Completions server."
+          "description": "Endpoint URL for the Clover AI System OpenAI-compatible Chat Completions server."
+        },
+        "clover.defaultModel": {
+          "type": "string",
+          "default": "nemotron-3.5-super-vl",
+          "enum": [
+            "nemotron-3.5-super-vl",
+            "lfm3-1.7b",
+            "clover-kimi-k3"
+          ],
+          "enumDescriptions": [
+            "NVIDIA Nemotron 3.5 Super VL (120B-A12B Hybrid Mamba-2 + Latent ReLU² MoE + NoPE GQA + C-RADIO + 2-Layer Native MTP, 1M context)",
+            "Liquid AI LFM3-1.7B (24-Layer Tri-Hybrid Width-7 Gated ShortConv + Sliding/Full GQA, 1M session context)",
+            "MoonshotAI Kimi K3 (93-Layer 2.78T MoE + MoonViT3d + DSpark, 1M session context)"
+          ],
+          "description": "Default Layer-1 foundation model backbone used when a generic Clover model ID is requested."
         },
         "clover.apiKey": {
           "type": "string",
           "default": "",
-          "description": "Optional API key for private Clover Kimi K3 deployments."
+          "description": "Optional API key for private Clover AI System deployments."
         },
         "clover.candidates": {
           "type": "number",
@@ -49,6 +64,13 @@
           "minimum": 1,
           "maximum": 16,
           "description": "Number of parallel NCM Minimum Bayes Risk (MBR) candidates to decode per window."
+        },
+        "clover.requestTimeoutMs": {
+          "type": "number",
+          "default": 120000,
+          "minimum": 5000,
+          "maximum": 600000,
+          "description": "HTTP request timeout in milliseconds for Clover chat and agent tool-calling turns."
         }
       }
     }
