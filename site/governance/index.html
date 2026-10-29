@@ -13,8 +13,8 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
-<link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link rel="stylesheet" href="../styles.css?v=4.1.2">
+<link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
+<link rel="stylesheet" href="../botanical-design-system.css?v=4.1.2">
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body>
@@ -28,7 +28,7 @@
 
 <header class="site-head">
   <div class="wrap">
-    <a class="brand-icon" href="../ai/" aria-label="Clover">
+    <a class="brand-icon" href="../clover-ai/" aria-label="Clover">
       <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
         <use class="clover__leaf is-filled" href="#clover-leaf"/>
@@ -44,18 +44,9 @@
     </button>
     <nav class="site-nav" id="site-nav" aria-label="Primary">
       <a href="../origin/">Origin</a>
-      <a href="../start/">AGENTS.md</a>
+      <a href="../getting-started/">AGENTS.md</a>
       <a href="../governance/" aria-current="page">Governance</a>
-      <div class="nav-item has-sub">
-        <a href="../evidence/">Evidence</a>
-        <ul class="subnav" aria-label="Evidence">
-          <li><a href="../clover-k3/">Clover</a></li>
-          <li><a href="../evidence/#ev-t1">Contentful API migration</a></li>
-          <li><a href="../evidence/#ev-t2">React memory leak</a></li>
-          <li><a href="../evidence/#ev-t3">Reference implementations</a></li>
-          <li><a href="../evidence/#lessons">Field lessons</a></li>
-        </ul>
-      </div>
+      <a href="../evidence/">Evidence</a>
       <a href="../glossary/">Glossary</a>
       <a href="../author/">Author</a>
       <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>
@@ -72,286 +63,292 @@
         what is actually happening, what has to be done about it, and what genuinely is not solved yet.
         Taken separately, each one is manageable.</p>
       <div class="actions">
-        <a class="btn btn--primary" href="#build-not-run">Break the myth: build with AI, run the code →</a>
+        <a class="btn btn--primary" href="#build-not-run">Break the myth: build with AI, run the code ↓</a>
         <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md#questions-your-security-team-will-ask">Every question, answered</a>
-        <a class="btn btn--plain" href="../start/">How the access is set up →</a>
+        <a class="btn btn--plain" href="../getting-started/">How the access is set up →</a>
       </div>
     </div>
   </section>
 
-  <section class="band" id="build-not-run">
+  <section class="band" style="padding-top:1rem">
     <div class="wrap">
-      <h2>Break the basic myth around AI: build with it, don't run it live where code belongs.</h2>
-      <p class="lede"><strong>AI is extraordinarily good at building things—which means we should build software with AI, validate that code, and deploy the validated code to live systems, rather than running AI agents directly in production for jobs the code itself can do.</strong></p>
-      <p>The most expensive governance mistake in the industry today comes from a simple confusion: teams assume that "adopting AI" means wiring a live AI agent into production to perform everyday operational jobs continuously. They put an agent in the live loop to watch logs, enforce rules, transform payloads, route alerts, or check compliance—and then spend months trying to govern an unpredictable model holding live production credentials.</p>
-      <p>Ask a simpler question first: <strong>why push AI into the live system when you can push just the validated code it produced?</strong></p>
-      <p>Take a <strong>monitoring system</strong> as a concrete example. If you need to watch agent behavior, audit access logs, detect out-of-scope actions, or check invariants across services, you do not need a live LLM reading every production event at runtime. Instead, you use AI inside the Clover development cycle (<code>Context → Direction → Execution → Outcome → Growth</code>) to read the schemas, write the monitoring service and rule engine, generate the test suite, and verify the behavior against real traces. Once a human reviews and validates that code, <strong>you deploy the deterministic code to production—and the AI stays out of the live runtime path entirely.</strong></p>
+      <div class="storyline">
 
-      <figure class="origin-visual" style="margin:1.8rem 0">
-        <svg viewBox="0 0 860 310" role="img" aria-label="Diagram comparing the myth of running live AI agents in production for deterministic jobs versus the Clover approach of building and validating code with AI and deploying only the validated code live.">
-          <rect x="0" y="0" width="860" height="310" rx="10" fill="#ffffff"></rect>
-          <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.2">GOVERNANCE FIRST PRINCIPLE: PUSH VALIDATED CODE TO PRODUCTION, NOT THE LIVE AGENT</text>
-          <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+        <article class="origin-card storyline__item" id="build-not-run">
+          <div class="origin-card__badge">Chapter 1 of 6 · First Principle · Build vs. Run</div>
+          <h2>Break the basic myth around AI: build with it, don't run it live where code belongs.</h2>
+          <p class="lede"><strong>AI is extraordinarily good at building things—which means we should build software with AI, validate that code, and deploy the validated code to live systems, rather than running AI agents directly in production for jobs the code itself can do.</strong></p>
+          <p>The most expensive governance mistake in the industry today comes from a simple confusion: teams assume that "adopting AI" means wiring a live AI agent into production to perform everyday operational jobs continuously. They put an agent in the live loop to watch logs, enforce rules, transform payloads, route alerts, or check compliance—and then spend months trying to govern an unpredictable model holding live production credentials.</p>
+          <p>Ask a simpler question first: <strong>why push AI into the live system when you can push just the validated code it produced?</strong></p>
+          <p>Take a <strong>monitoring system</strong> as a concrete example. If you need to watch agent behavior, audit access logs, detect out-of-scope actions, or check invariants across services, you do not need a live LLM reading every production event at runtime. Instead, you use AI inside the Clover development cycle (<code>Context → Direction → Execution → Outcome → Growth</code>) to read the schemas, write the monitoring service and rule engine, generate the test suite, and verify the behavior against real traces. Once a human reviews and validates that code, <strong>you deploy the deterministic code to production—and the AI stays out of the live runtime path entirely.</strong></p>
 
-          <!-- Top Lane: The Myth (Running Agents Live for Code Jobs) -->
-          <rect x="20" y="50" width="820" height="110" rx="10" fill="#fff5f5" stroke="#d9534f" stroke-width="1.4"></rect>
-          <text x="36" y="72" font-size="11" font-weight="700" fill="#b91c1c">✗ THE COMMON MYTH · RUNNING AN AI AGENT DIRECTLY IN THE LIVE SYSTEM FOR A CODE JOB</text>
+          <figure class="origin-visual" style="margin:1.8rem 0">
+            <svg viewBox="0 0 860 310" role="img" aria-label="Diagram comparing the myth of running live AI agents in production for deterministic jobs versus the Clover approach of building and validating code with AI and deploying only the validated code live.">
+              <rect x="0" y="0" width="860" height="310" rx="10" fill="#ffffff"></rect>
+              <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.2">GOVERNANCE FIRST PRINCIPLE: PUSH VALIDATED CODE TO PRODUCTION, NOT THE LIVE AGENT</text>
+              <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
 
-          <rect x="36" y="84" width="170" height="58" rx="7" fill="#ffffff" stroke="#d9534f" stroke-width="1.3"></rect>
-          <text x="121" y="106" text-anchor="middle" font-size="10.2" font-weight="700" fill="#14181d">Live Production Traffic</text>
-          <text x="121" y="123" text-anchor="middle" font-size="9.5" fill="#66717e">Logs, events, telemetry</text>
+              <!-- Top Lane: The Myth (Running Agents Live for Code Jobs) -->
+              <rect x="20" y="50" width="820" height="110" rx="10" fill="#fff5f5" stroke="#d9534f" stroke-width="1.4"></rect>
+              <text x="36" y="72" font-size="11" font-weight="700" fill="#b91c1c">✗ THE COMMON MYTH · RUNNING AN AI AGENT DIRECTLY IN THE LIVE SYSTEM FOR A CODE JOB</text>
 
-          <line x1="206" y1="113" x2="246" y2="113" stroke="#b91c1c" stroke-width="2"></line>
-          <polygon points="246,109 254,113 246,117" fill="#b91c1c"></polygon>
+              <rect x="36" y="84" width="170" height="58" rx="7" fill="#ffffff" stroke="#d9534f" stroke-width="1.3"></rect>
+              <text x="121" y="106" text-anchor="middle" font-size="10.2" font-weight="700" fill="#14181d">Live Production Traffic</text>
+              <text x="121" y="123" text-anchor="middle" font-size="9.5" fill="#66717e">Logs, events, telemetry</text>
 
-          <rect x="256" y="84" width="230" height="58" rx="7" fill="#ffffff" stroke="#b91c1c" stroke-width="1.8"></rect>
-          <text x="371" y="105" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">Live AI Agent in Production</text>
-          <text x="371" y="121" text-anchor="middle" font-size="9.3" fill="#39424d">Holds live credentials, re-reasons</text>
-          <text x="371" y="134" text-anchor="middle" font-size="9.3" fill="#39424d">every event probabilistically</text>
+              <line x1="206" y1="113" x2="246" y2="113" stroke="#b91c1c" stroke-width="2"></line>
+              <polygon points="246,109 254,113 246,117" fill="#b91c1c"></polygon>
 
-          <line x1="486" y1="113" x2="526" y2="113" stroke="#b91c1c" stroke-width="2"></line>
-          <polygon points="526,109 534,113 526,117" fill="#b91c1c"></polygon>
+              <rect x="256" y="84" width="230" height="58" rx="7" fill="#ffffff" stroke="#b91c1c" stroke-width="1.8"></rect>
+              <text x="371" y="105" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">Live AI Agent in Production</text>
+              <text x="371" y="121" text-anchor="middle" font-size="9.3" fill="#39424d">Holds live credentials, re-reasons</text>
+              <text x="371" y="134" text-anchor="middle" font-size="9.3" fill="#39424d">every event probabilistically</text>
 
-          <rect x="536" y="84" width="288" height="58" rx="7" fill="#ffffff" stroke="#d9534f" stroke-width="1.3"></rect>
-          <text x="550" y="103" font-size="9.8" font-weight="700" fill="#b91c1c">Permanent Governance &amp; Runtime Liability:</text>
-          <text x="550" y="118" font-size="9.3" fill="#39424d">• Prompt-injectable by hostile log/ticket text</text>
-          <text x="550" y="132" font-size="9.3" fill="#39424d">• Non-deterministic, slow, high GPU/API cost</text>
+              <line x1="486" y1="113" x2="526" y2="113" stroke="#b91c1c" stroke-width="2"></line>
+              <polygon points="526,109 534,113 526,117" fill="#b91c1c"></polygon>
 
-          <!-- Bottom Lane: The Clover Way (Build with AI, Deploy the Validated Code) -->
-          <rect x="20" y="176" width="820" height="120" rx="10" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.8"></rect>
-          <text x="36" y="198" font-size="11" font-weight="700" fill="#0a6a5f">✓ THE CLOVER WAY · BUILD &amp; VALIDATE WITH AI IN DEVELOPMENT, DEPLOY ONLY THE VALIDATED CODE LIVE</text>
+              <rect x="536" y="84" width="288" height="58" rx="7" fill="#ffffff" stroke="#d9534f" stroke-width="1.3"></rect>
+              <text x="550" y="103" font-size="9.8" font-weight="700" fill="#b91c1c">Permanent Governance &amp; Runtime Liability:</text>
+              <text x="550" y="118" font-size="9.3" fill="#39424d">• Prompt-injectable by hostile log/ticket text</text>
+              <text x="550" y="132" font-size="9.3" fill="#39424d">• Non-deterministic, slow, high GPU/API cost</text>
 
-          <rect x="36" y="210" width="215" height="68" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
-          <text x="143" y="230" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">1 · Build with Human + AI</text>
-          <text x="143" y="246" text-anchor="middle" font-size="9.3" fill="#39424d">AI writes monitoring / service code</text>
-          <text x="143" y="260" text-anchor="middle" font-size="9.3" fill="#66717e">(Offline / Dev · No live prod access)</text>
+              <!-- Bottom Lane: The Clover Way (Build with AI, Deploy the Validated Code) -->
+              <rect x="20" y="176" width="820" height="120" rx="10" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.8"></rect>
+              <text x="36" y="198" font-size="11" font-weight="700" fill="#0a6a5f">✓ THE CLOVER WAY · BUILD &amp; VALIDATE WITH AI IN DEVELOPMENT, DEPLOY ONLY THE VALIDATED CODE LIVE</text>
 
-          <line x1="251" y1="244" x2="287" y2="244" stroke="#0a6a5f" stroke-width="2"></line>
-          <polygon points="287,240 295,244 287,248" fill="#0a6a5f"></polygon>
+              <rect x="36" y="210" width="215" height="68" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="143" y="230" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">1 · Build with Human + AI</text>
+              <text x="143" y="246" text-anchor="middle" font-size="9.3" fill="#39424d">AI writes monitoring / service code</text>
+              <text x="143" y="260" text-anchor="middle" font-size="9.3" fill="#66717e">(Offline / Dev · No live prod access)</text>
 
-          <rect x="297" y="210" width="215" height="68" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
-          <text x="404" y="230" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">2 · Validate &amp; Review Outcome</text>
-          <text x="404" y="246" text-anchor="middle" font-size="9.3" fill="#39424d">Compiler, test suite, replay traces</text>
-          <text x="404" y="260" text-anchor="middle" font-size="9.3" fill="#66717e">&amp; named human sign-off</text>
+              <line x1="251" y1="244" x2="287" y2="244" stroke="#0a6a5f" stroke-width="2"></line>
+              <polygon points="287,240 295,244 287,248" fill="#0a6a5f"></polygon>
 
-          <line x1="512" y1="244" x2="548" y2="244" stroke="#0a6a5f" stroke-width="2"></line>
-          <polygon points="548,240 556,244 548,248" fill="#0a6a5f"></polygon>
+              <rect x="297" y="210" width="215" height="68" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.5"></rect>
+              <text x="404" y="230" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">2 · Validate &amp; Review Outcome</text>
+              <text x="404" y="246" text-anchor="middle" font-size="9.3" fill="#39424d">Compiler, test suite, replay traces</text>
+              <text x="404" y="260" text-anchor="middle" font-size="9.3" fill="#66717e">&amp; named human sign-off</text>
 
-          <rect x="558" y="210" width="266" height="68" rx="7" fill="#0a6a5f" stroke="#064f47" stroke-width="1.8"></rect>
-          <text x="691" y="230" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">3 · Validated Code Runs Live</text>
-          <text x="691" y="246" text-anchor="middle" font-size="9.4" fill="#e6f2f0">Deterministic, auditable, microseconds,</text>
-          <text x="691" y="261" text-anchor="middle" font-size="9.4" font-weight="700" fill="#ffd97d">0 prompt injection · 0 live model risk</text>
-        </svg>
-        <figcaption>Why push an AI agent into production when the validated code it built can do the job deterministically? Use AI where capability helps (building, analyzing, and testing), and let verified code run the live system.</figcaption>
-      </figure>
+              <line x1="512" y1="244" x2="548" y2="244" stroke="#0a6a5f" stroke-width="2"></line>
+              <polygon points="548,240 556,244 548,248" fill="#0a6a5f"></polygon>
 
-      <dl class="stack stack--2" style="margin-top:1.4rem">
-        <div>
-          <dt>Why teams get trapped running agents live</dt>
-          <dd>Because an agent can prototype a check in five minutes from a prompt, teams leave the agent itself in the loop as the production implementation. Now every single check pays model latency, risks hallucination or prompt injection on untrusted input, and requires governing live agent credentials 24/7.</dd>
-        </div>
-        <div>
-          <dt>Why shipping the validated code wins</dt>
-          <dd>When AI writes the monitoring daemon, parser, policy check, or data pipeline—and you validate that code against real test cases before deploying—the artifact running in production is ordinary, deterministic software. You can diff it, git-blame it, unit-test it, run it in microseconds, and prove exactly what it will do on every input.</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
+              <rect x="558" y="210" width="266" height="68" rx="7" fill="#0a6a5f" stroke="#064f47" stroke-width="1.8"></rect>
+              <text x="691" y="230" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">3 · Validated Code Runs Live</text>
+              <text x="691" y="246" text-anchor="middle" font-size="9.4" fill="#e6f2f0">Deterministic, auditable, microseconds,</text>
+              <text x="691" y="261" text-anchor="middle" font-size="9.4" font-weight="700" fill="#ffd97d">0 prompt injection · 0 live model risk</text>
+            </svg>
+            <figcaption>Why push an AI agent into production when the validated code it built can do the job deterministically? Use AI where capability helps (building, analyzing, and testing), and let verified code run the live system.</figcaption>
+          </figure>
 
-  <section class="band" id="policy">
-    <div class="wrap">
-      <h2>Capability is not authority.</h2>
-      <p class="lede">Clover keeps one distinction fixed regardless of model capability or competitive
-        pressure: <strong>capability may scale. Direction remains human.</strong></p>
-      <p>Every system that worked in the past has worked this way. Somebody understood the situation,
-        somebody decided what mattered and answered for it, the work got done, and reality showed what
-        happened. What AI did was move execution to something that cannot be accountable, and
-        accountability went out of scope with it. A model can perform the work, report that it worked,
-        and hold nothing when it did not.</p>
-      <p>Clover establishes accountability back into the system, through the human actor who can truly
-        take up the role. That human is named, before the work starts, and they stay answerable for the
-        outcome after the work is delegated. Everything below is how a review checks that the naming is
-        real: whose access was used, who approved, and who answers when it goes wrong. AI takes its
-        place as an actor inside the cycle rather than as a replacement for it.</p>
-      <p>This is accountability for the task or work under that human's Direction. It does not move
-        accountability for an AI model or its model-level consequences away from the company that
-        builds and releases it.</p>
-      <p>The system is the existing reality that can validate the outcome. The human is accountable
-        for that outcome, against the purpose they chose to pursue. AI can help reach it sooner, by
-        respecting the cycle. A more capable model can change the speed or quality of the work; it does
-        not acquire authority over purpose, acceptable risk, priorities, boundaries, or accountability.</p>
-      <p><strong>Direction is not delegated by competition.</strong> An organization may choose more
-        delegated execution inside Execution as evidence supports it. That is a decision by the accountable
-        human or organization, not a consequence that AI has earned an independent right to.</p>
-      <p>This is deliberately independent of model generation, vendor, architecture, or AI availability.
-        Critical operations must still have accountable human responders and established mechanisms when
-        an AI service is unavailable, delayed, rate-limited, or unsuitable.</p>
-    </div>
-  </section>
+          <dl class="stack" style="margin-top:1.4rem">
+            <div>
+              <dt>Why teams get trapped running agents live</dt>
+              <dd>Because an agent can prototype a check in five minutes from a prompt, teams leave the agent itself in the loop as the production implementation. Now every single check pays model latency, risks hallucination or prompt injection on untrusted input, and requires governing live agent credentials 24/7.</dd>
+            </div>
+            <div>
+              <dt>Why shipping the validated code wins</dt>
+              <dd>When AI writes the monitoring daemon, parser, policy check, or data pipeline—and you validate that code against real test cases before deploying—the artifact running in production is ordinary, deterministic software. You can diff it, git-blame it, unit-test it, run it in microseconds, and prove exactly what it will do on every input.</dd>
+            </div>
+          </dl>
+        </article>
 
-  <section class="band" id="happening">
-    <div class="wrap">
-      <h2>What is actually happening</h2>
-      <dl class="kv" style="margin-top:1.2rem">
-        <div><dt>No new access</dt><dd>AI acts inside the access a named human already holds. If they cannot reach a system, neither can AI acting for them. There is no new credential, no new path into your systems, and no new access to approve.</dd></div>
-        <div><dt>No new controls</dt><dd>Data classification, credential policy, retention rules and regulatory constraints all apply exactly as they did. Your own review decides, and if the answer is no, it is no.</dd></div>
-        <div><dt>One real change</dt><dd>The layer can read across every part of the system <em>at once</em> — the records, the history, the measurements, the work itself — which no one human practically could. Every individual read was already permitted; the aggregation is what is new. Treat the layer itself as a sensitive asset.</dd></div>
-      </dl>
-    </div>
-  </section>
+        <article class="origin-card storyline__item" id="policy">
+          <div class="origin-card__badge">Chapter 2 of 6 · Direction &amp; Accountability</div>
+          <h2>Capability is not authority.</h2>
+          <p class="lede">Clover keeps one distinction fixed regardless of model capability or competitive
+            pressure: <strong>capability may scale. Direction remains human.</strong></p>
+          <p>Every system that worked in the past has worked this way. Somebody understood the situation,
+            somebody decided what mattered and answered for it, the work got done, and reality showed what
+            happened. What AI did was move execution to something that cannot be accountable, and
+            accountability went out of scope with it. A model can perform the work, report that it worked,
+            and hold nothing when it did not.</p>
+          <p>Clover establishes accountability back into the system, through the human actor who can truly
+            take up the role. That human is named, before the work starts, and they stay answerable for the
+            outcome after the work is delegated. Everything below is how a review checks that the naming is
+            real: whose access was used, who approved, and who answers when it goes wrong. AI takes its
+            place as an actor inside the cycle rather than as a replacement for it.</p>
+          <p>This is accountability for the task or work under that human's Direction. It does not move
+            accountability for an AI model or its model-level consequences away from the company that
+            builds and releases it.</p>
+          <p>The system is the existing reality that can validate the outcome. The human is accountable
+            for that outcome, against the purpose they chose to pursue. AI can help reach it sooner, by
+            respecting the cycle. A more capable model can change the speed or quality of the work; it does
+            not acquire authority over purpose, acceptable risk, priorities, boundaries, or accountability.</p>
+          <p><strong>Direction is not delegated by competition.</strong> An organization may choose more
+            delegated execution inside Execution as evidence supports it. That is a decision by the accountable
+            human or organization, not a consequence that AI has earned an independent right to.</p>
+          <p>This is deliberately independent of model generation, vendor, architecture, or AI availability.
+            Critical operations must still have accountable human responders and established mechanisms when
+            an AI service is unavailable, delayed, rate-limited, or unsuitable.</p>
+        </article>
 
-  <section class="band" id="needs">
-    <div class="wrap">
-      <h2>What needs to happen</h2>
-      <dl class="stack stack--2" style="margin-top:1.2rem">
-        <div>
-          <dt>Inherit access, never expand it</dt>
-          <dd>Read-only by default, one connection at a time, never wider than the accountable human
-            can explain to someone who will ask.</dd>
-        </div>
-        <div>
-          <dt>Give every action a named owner</dt>
-          <dd>No shared or anonymous identity. A dedicated identity scoped to the task and owned by a
-            named human keeps accountability without carrying that human's entire access footprint.</dd>
-        </div>
-        <div>
-          <dt>Treat what it reads as data, not instruction</dt>
-          <dd>A record can be written by anyone, including someone outside your organization. An agent
-            must never act on instructions embedded in content it reads. Keep write access small enough
-            that a misled agent cannot do much damage with it.</dd>
-        </div>
-        <div>
-          <dt>Fix what it finds</dt>
-          <dd>Credentials and personal data sitting where they should not be get rotated, redacted or
-            removed, rather than noted somewhere and left there.</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
+        <article class="origin-card storyline__item" id="happening">
+          <div class="origin-card__badge">Chapter 3 of 6 · Access Reality</div>
+          <h2>What is actually happening</h2>
+          <dl class="stack" style="margin-top:1.2rem">
+            <div><dt>No new access</dt><dd>AI acts inside the access a named human already holds. If they cannot reach a system, neither can AI acting for them. There is no new credential, no new path into your systems, and no new access to approve.</dd></div>
+            <div><dt>No new controls</dt><dd>Data classification, credential policy, retention rules and regulatory constraints all apply exactly as they did. Your own review decides, and if the answer is no, it is no.</dd></div>
+            <div><dt>One real change</dt><dd>The layer can read across every part of the system <em>at once</em> — the records, the history, the measurements, the work itself — which no one human practically could. Every individual read was already permitted; the aggregation is what is new. Treat the layer itself as a sensitive asset.</dd></div>
+          </dl>
+        </article>
 
-  <section class="band" id="objections">
-    <div class="wrap">
-      <h2>The objection, and the gap</h2>
+        <article class="origin-card storyline__item" id="needs">
+          <div class="origin-card__badge">Chapter 4 of 6 · Operating Rules</div>
+          <h2>What needs to happen</h2>
+          <dl class="stack" style="margin-top:1.2rem">
+            <div>
+              <dt>Inherit access, never expand it</dt>
+              <dd>Read-only by default, one connection at a time, never wider than the accountable human
+                can explain to someone who will ask.</dd>
+            </div>
+            <div>
+              <dt>Give every action a named owner</dt>
+              <dd>No shared or anonymous identity. A dedicated identity scoped to the task and owned by a
+                named human keeps accountability without carrying that human's entire access footprint.</dd>
+            </div>
+            <div>
+              <dt>Treat what it reads as data, not instruction</dt>
+              <dd>A record can be written by anyone, including someone outside your organization. An agent
+                must never act on instructions embedded in content it reads. Keep write access small enough
+                that a misled agent cannot do much damage with it.</dd>
+            </div>
+            <div>
+              <dt>Fix what it finds</dt>
+              <dd>Credentials and personal data sitting where they should not be get rotated, redacted or
+                removed, rather than noted somewhere and left there.</dd>
+            </div>
+          </dl>
+        </article>
 
-      <div class="grid grid--2" style="margin-top:1.6rem">
-        <div>
-          <h3 style="margin-top:0">"But there are things in there we would rather nobody read"</h3>
-          <p>This is the most common objection, and usually the most revealing one. A credential written
-            into the work. Personal data in a record that was never meant to keep it. An access path
-            nobody has reviewed since whoever built it left.</p>
-          <p>Every one of those is a true statement about <strong>the systems</strong>, rather than about
-            AI. That credential is already readable by everyone with access, everyone who ever took a
-            copy, and anyone who finds an old machine. The exposure existed before the agent
-            and survives the decision not to use one.</p>
-          <p>Declining to use AI does not remove the risk. It removes the thing most likely to find it. An
-            agent reading across a whole system surfaces exposed credentials, unredacted records and
-            forgotten access paths considerably faster than the audit that keeps getting rescheduled.
-            Rotate the credential, redact the record, close the path, and the objection has disappeared
-            while the system has genuinely got safer.</p>
-        </div>
+        <article class="origin-card storyline__item" id="objections">
+          <div class="origin-card__badge">Chapter 5 of 6 · Objections, Monitoring &amp; Delegated Execution</div>
+          <h2>The objection, and the gap</h2>
 
-        <div>
-          <h3 style="margin-top:0">Monitor the agents, not just the gate</h3>
-          <p>This is the fifth thing on that list, and the one most teams have not built. Approval gates
-            stop the largest mistakes before they happen. Attribution explains them afterwards. Neither
-            notices an agent doing something unintended <em>inside access it legitimately holds</em> — and
-            that is where the real risk sits.</p>
-          <p>So the primary recommendation is monitoring built for agent behavior: record every system an
-            agent touched, compare what it did against what it was asked to do, and raise an alert when it
-            reaches outside the scope of the task. A part of the system unrelated to the request. A record
-            it had no reason to open. A change where it was granted only the right to read.</p>
-          <p class="note">Stated honestly: off-the-shelf tooling for this barely exists yet, here or
-            anywhere. That is exactly where <a href="#build-not-run">building with AI instead of running AI live</a>
-            pays off immediately: use AI to write the monitoring service against the access records and
-            audit trails you already keep, validate the code against real traces, and deploy that
-            deterministic code to watch live activity—rather than putting another live agent in the loop
-            to do a job that validated code does faster and without runtime risk.</p>
-        </div>
-      </div>
+          <dl class="stack" style="margin-top:1.4rem">
+            <div>
+              <dt>"But there are things in there we would rather nobody read"</dt>
+              <dd>
+                <p style="margin-top:0.35rem">This is the most common objection, and usually the most revealing one. A credential written
+                  into the work. Personal data in a record that was never meant to keep it. An access path
+                  nobody has reviewed since whoever built it left.</p>
+                <p>Every one of those is a true statement about <strong>the systems</strong>, rather than about
+                  AI. That credential is already readable by everyone with access, everyone who ever took a
+                  copy, and anyone who finds an old machine. The exposure existed before the agent
+                  and survives the decision not to use one.</p>
+                <p style="margin-bottom:0">Declining to use AI does not remove the risk. It removes the thing most likely to find it. An
+                  agent reading across a whole system surfaces exposed credentials, unredacted records and
+                  forgotten access paths considerably faster than the audit that keeps getting rescheduled.
+                  Rotate the credential, redact the record, close the path, and the objection has disappeared
+                  while the system has genuinely got safer.</p>
+              </dd>
+            </div>
 
-      <h2 style="margin-top:2.6rem">How much execution to delegate</h2>
-      <p>Access is one question and authority is another. Once Direction is set by a human, a team can
-        decide how much of the operational path AI performs. That is delegated execution, not AI acquiring
-        ownership.</p>
+            <div>
+              <dt>Monitor the agents, not just the gate</dt>
+              <dd>
+                <p style="margin-top:0.35rem">This is the fifth thing on that list, and the one most teams have not built. Approval gates
+                  stop the largest mistakes before they happen. Attribution explains them afterwards. Neither
+                  notices an agent doing something unintended <em>inside access it legitimately holds</em> — and
+                  that is where the real risk sits.</p>
+                <p>So the primary recommendation is monitoring built for agent behavior: record every system an
+                  agent touched, compare what it did against what it was asked to do, and raise an alert when it
+                  reaches outside the scope of the task. A part of the system unrelated to the request. A record
+                  it had no reason to open. A change where it was granted only the right to read.</p>
+                <p class="note" style="margin-bottom:0">Stated honestly: off-the-shelf tooling for this barely exists yet, here or
+                  anywhere. That is exactly where <a href="#build-not-run">building with AI instead of running AI live</a>
+                  pays off immediately: use AI to write the monitoring service against the access records and
+                  audit trails you already keep, validate the code against real traces, and deploy that
+                  deterministic code to watch live activity—rather than putting another live agent in the loop
+                  to do a job that validated code does faster and without runtime risk.</p>
+              </dd>
+            </div>
+          </dl>
 
-      <dl class="kv kv--wide" style="margin-top:1.2rem">
-        <div>
-          <dt>Evidence</dt>
-          <dd>Delegate a particular execution pattern where comparable outcomes have repeatedly held up
-            without unexplained rework or intervention. Confidence is not evidence.</dd>
-        </div>
-        <div>
-          <dt>Blast radius</dt>
-          <dd>Where a mistake is expensive or hard to reverse, human approval stays regardless of how
-            well things have been going.</dd>
-        </div>
-        <div>
-          <dt>Observability</dt>
-          <dd>The team should be able to tell quickly if execution diverges from the task or causes harm.
-            A delegated action nobody can observe is not safely delegated.</dd>
-        </div>
-        <div>
-          <dt>Reversibility</dt>
-          <dd>The action should be containable, reversible, or correctable within a window the organization
-            accepts for that context.</dd>
-        </div>
-        <div>
-          <dt>Approval boundary</dt>
-          <dd>Some decisions stay human-approved even when surrounding execution is delegated. Delegation
-            is per context, not one global setting.</dd>
-        </div>
-      </dl>
+          <h3 style="margin-top:2.2rem">How much execution to delegate</h3>
+          <p>Access is one question and authority is another. Once Direction is set by a human, a team can
+            decide how much of the operational path AI performs. That is delegated execution, not AI acquiring
+            ownership.</p>
 
-      <p style="margin-top:1.2rem"><strong>Delegate execution where evidence supports it, keep approval where
-        blast radius demands it, and narrow delegation again when reality stops supporting it.</strong></p>
-      <p>What changes is the amount of execution work AI performs. What does not change is who owns the
-        objective, the destination, the acceptable risk, the boundaries, and the outcome.</p>
+          <dl class="kv kv--wide" style="margin-top:1.2rem">
+            <div>
+              <dt>Evidence</dt>
+              <dd>Delegate a particular execution pattern where comparable outcomes have repeatedly held up
+                without unexplained rework or intervention. Confidence is not evidence.</dd>
+            </div>
+            <div>
+              <dt>Blast radius</dt>
+              <dd>Where a mistake is expensive or hard to reverse, human approval stays regardless of how
+                well things have been going.</dd>
+            </div>
+            <div>
+              <dt>Observability</dt>
+              <dd>The team should be able to tell quickly if execution diverges from the task or causes harm.
+                A delegated action nobody can observe is not safely delegated.</dd>
+            </div>
+            <div>
+              <dt>Reversibility</dt>
+              <dd>The action should be containable, reversible, or correctable within a window the organization
+                accepts for that context.</dd>
+            </div>
+            <div>
+              <dt>Approval boundary</dt>
+              <dd>Some decisions stay human-approved even when surrounding execution is delegated. Delegation
+                is per context, not one global setting.</dd>
+            </div>
+          </dl>
 
-      <div class="actions" style="margin-top:2rem">
-        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md">Governance in full</a>
-        <a class="btn" href="../evidence/">See the evidence</a>
-      </div>
-    </div>
-  </section>
+          <p style="margin-top:1.2rem"><strong>Delegate execution where evidence supports it, keep approval where
+            blast radius demands it, and narrow delegation again when reality stops supporting it.</strong></p>
+          <p>What changes is the amount of execution work AI performs. What does not change is who owns the
+            objective, the destination, the acceptable risk, the boundaries, and the outcome.</p>
 
-  <section class="band" id="obligations">
-    <div class="wrap">
-      <h2>The rules each actor works inside</h2>
-      <p class="lede">Clover's boundaries sit inside the law, never above it. Legal, regulatory and
-        organizational obligations are set elsewhere, and where one of them disagrees with a Clover
-        boundary, the obligation wins.</p>
-      <p>Clover is a way of working. Adopting it certifies nothing, and a completed cycle says nothing
-        about whether an organization has met its obligations. What Clover does is keep the cycle
-        arranged so those obligations stay satisfiable. Several of them assume a named human is
-        answerable, and that assumption is what gets lost when execution moves to AI.</p>
+          <div class="actions" style="margin-top:1.6rem">
+            <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md">Governance in full</a>
+            <a class="btn" href="../evidence/">See the evidence</a>
+          </div>
+        </article>
 
-      <dl class="kv kv--wide" style="margin-top:1.2rem">
-        <div>
-          <dt>The system must be able to show what happened</dt>
-          <dd>Evidence that no longer exists cannot be produced later, so the records get kept while
-            the work runs. The Outcome stage has nothing to judge with if the system kept no trace
-            either.</dd>
-        </div>
-        <div>
-          <dt>The Human actor must be reachable, and able to intervene</dt>
-          <dd>Name the human before the work starts, and make sure they can be reached and can step in
-            while it still matters. An oversight step nobody performs does not count. Neither does an
-            approval nobody reads.</dd>
-        </div>
-        <div>
-          <dt>The AI actor must be disclosed</dt>
-          <dd>Tell people when they are dealing with AI, and keep the work out of uses that are
-            prohibited outright. An AI actor inherits whatever obligations attach to the system it is
-            part of.</dd>
-        </div>
-      </dl>
+        <article class="origin-card storyline__item" id="obligations">
+          <div class="origin-card__badge">Chapter 6 of 6 · Legal &amp; Organizational Obligations</div>
+          <h2>The rules each actor works inside</h2>
+          <p class="lede">Clover's boundaries sit inside the law, never above it. Legal, regulatory and
+            organizational obligations are set elsewhere, and where one of them disagrees with a Clover
+            boundary, the obligation wins.</p>
+          <p>Clover is a way of working. Adopting it certifies nothing, and a completed cycle says nothing
+            about whether an organization has met its obligations. What Clover does is keep the cycle
+            arranged so those obligations stay satisfiable. Several of them assume a named human is
+            answerable, and that assumption is what gets lost when execution moves to AI.</p>
 
-      <p style="margin-top:1.2rem">Sector rules stack on top of all of it, and they do not relax
-        because AI performed the work. Your own legal and compliance teams decide what applies to your
-        organization. Clover does not change that answer, and does not stand in for it.</p>
+          <dl class="kv kv--wide" style="margin-top:1.2rem">
+            <div>
+              <dt>The system must be able to show what happened</dt>
+              <dd>Evidence that no longer exists cannot be produced later, so the records get kept while
+                the work runs. The Outcome stage has nothing to judge with if the system kept no trace
+                either.</dd>
+            </div>
+            <div>
+              <dt>The Human actor must be reachable, and able to intervene</dt>
+              <dd>Name the human before the work starts, and make sure they can be reached and can step in
+                while it still matters. An oversight step nobody performs does not count. Neither does an
+                approval nobody reads.</dd>
+            </div>
+            <div>
+              <dt>The AI actor must be disclosed</dt>
+              <dd>Tell people when they are dealing with AI, and keep the work out of uses that are
+                prohibited outright. An AI actor inherits whatever obligations attach to the system it is
+                part of.</dd>
+            </div>
+          </dl>
 
-      <div class="actions" style="margin-top:2rem">
-        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md#the-rules-each-actor-works-inside">The rules each actor works inside</a>
+          <p style="margin-top:1.2rem">Sector rules stack on top of all of it, and they do not relax
+            because AI performed the work. Your own legal and compliance teams decide what applies to your
+            organization. Clover does not change that answer, and does not stand in for it.</p>
+
+          <div class="actions" style="margin-top:1.6rem">
+            <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md#the-rules-each-actor-works-inside">The rules each actor works inside</a>
+          </div>
+        </article>
+
       </div>
     </div>
   </section>
@@ -364,7 +361,7 @@
       <h4>Read</h4>
       <ul>
         <li><a href="../">The framework</a></li>
-        <li><a href="../start/">AGENTS.md</a></li>
+        <li><a href="../getting-started/">AGENTS.md</a></li>
         <li><a href="./">Governance</a></li>
         <li><a href="../evidence/">Evidence</a></li>
         <li><a href="../glossary/">Glossary</a></li>
@@ -405,6 +402,6 @@
   </div>
 </footer>
 
-<script src="../app.js?v=4.1.2" defer></script>
+<script src="../website-interaction-controllers.js?v=4.1.2" defer></script>
 </body>
 </html>

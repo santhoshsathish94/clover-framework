@@ -13,9 +13,8 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
-<link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link rel="stylesheet" href="../styles.css?v=4.1.2&amp;r=2">
-<style>.origin-steps{scrollbar-width:none!important;-ms-overflow-style:none!important;padding-bottom:0!important}.origin-steps::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}</style>
+<link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
+<link rel="stylesheet" href="../botanical-design-system.css?v=4.1.2&amp;r=2">
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body>
@@ -29,7 +28,7 @@
 
 <header class="site-head">
   <div class="wrap">
-    <a class="brand-icon" href="../ai/" aria-label="Clover">
+    <a class="brand-icon" href="../clover-ai/" aria-label="Clover">
       <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
         <use class="clover__leaf is-filled" href="#clover-leaf"/>
@@ -45,18 +44,9 @@
     </button>
     <nav class="site-nav" id="site-nav" aria-label="Primary">
       <a href="../origin/" aria-current="page">Origin</a>
-      <a href="../start/">AGENTS.md</a>
+      <a href="../getting-started/">AGENTS.md</a>
       <a href="../governance/">Governance</a>
-      <div class="nav-item has-sub">
-        <a href="../evidence/">Evidence</a>
-        <ul class="subnav" aria-label="Evidence">
-          <li><a href="../clover-k3/">Clover</a></li>
-          <li><a href="../evidence/#ev-t1">Contentful API migration</a></li>
-          <li><a href="../evidence/#ev-t2">React memory leak</a></li>
-          <li><a href="../evidence/#ev-t3">Reference implementations</a></li>
-          <li><a href="../evidence/#lessons">Field lessons</a></li>
-        </ul>
-      </div>
+      <a href="../evidence/">Evidence</a>
       <a href="../glossary/">Glossary</a>
       <a href="../author/">Author</a>
       <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>
@@ -70,55 +60,26 @@
   <section class="hero" id="overview">
     <div class="wrap">
       <h1>Origin</h1>
-      <p class="hero__tagline">Twelve stories and visual diagrams from 1943 to 2026 — step through them one by one.</p>
+      <p class="hero__tagline">Twelve stories and visual diagrams from 1943 to 2026 — read the journey from top to bottom.</p>
       <p class="lede">We remember stories and pictures far better than walls of equations. Behind every famous AI paper is a simple story: a researcher who hit a real wall, pictured why the old idea broke at that wall, and built a new mechanism to get past it.</p>
-      <p class="lede">We read the eleven foundational papers (1943–2017) in full, built and ran every mechanism from scratch, and then applied that same lesson in <strong>Chapter 12 (2026 · Clover AI)</strong>—showing why a neural model on its own is only one piece, and why the six layers surrounding the model are what make an AI system reliable and intelligent. We can use the <strong>Next</strong> button inside each chapter below to walk through the journey one story and one picture at a time.</p>
+      <p class="lede">We read the eleven foundational papers (1943–2017) in full, built and ran every mechanism from scratch, and then applied that same lesson in <strong>Chapter 12 (2026 · Clover AI)</strong>—showing why a neural model on its own is only one piece, and why the six layers surrounding the model are what make an AI system reliable and intelligent. Follow the vertical storyline below from 1943 to 2026.</p>
       <div class="actions">
-        <a class="btn btn--primary" href="#story-deck">Start Chapter 1 (1943) →</a>
-        <a class="btn" href="#p12-2026">Jump to Chapter 12 (2026 Clover AI) →</a>
-        <a class="btn" href="#timeline">See all 12 on one table</a>
+        <a class="btn btn--primary" href="#p1-1943">Start Chapter 1 (1943) ↓</a>
+        <a class="btn" href="#p12-2026">Jump to Chapter 12 (2026 Clover AI) ↓</a>
+        <a class="btn" href="#timeline">See all 12 on one table ↓</a>
       </div>
     </div>
   </section>
 
-  <!-- ============ INTERACTIVE STORY & VISUAL STEPPER ============ -->
+  <!-- ============ VERTICAL STORYLINE (1943 TO 2026) ============ -->
   <section class="band" id="story-deck" style="padding-top:1rem">
     <div class="wrap">
-      <div class="origin-deck" data-origin-deck>
-
-        <!-- Sticky Stepper Bar -->
-        <div class="origin-bar" role="navigation" aria-label="Twelve AI chapters from 1943 to 2026">
-          <div class="origin-bar__top">
-            <span class="origin-bar__status" data-origin-status>Chapter 1 of 12 · 1943 · McCulloch &amp; Pitts</span>
-            <div class="origin-bar__controls">
-              <button type="button" class="btn" style="padding:0.36rem 0.75rem;font-size:0.82rem" data-origin-go="prev">← Prev</button>
-              <button type="button" class="btn btn--primary" style="padding:0.36rem 0.85rem;font-size:0.82rem" data-origin-go="next">Next →</button>
-              <button type="button" class="btn" style="padding:0.36rem 0.75rem;font-size:0.82rem" data-origin-all>Show all 12 chapters</button>
-            </div>
-          </div>
-          <div class="origin-steps" role="tablist" aria-label="Choose a chapter">
-            <button type="button" class="origin-step" role="tab" aria-selected="true" data-title="1943 · McCulloch &amp; Pitts">1 · 1943 Neuron Logic</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1950 · Alan Turing">2 · 1950 Imitation Game</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1956 · Newell &amp; Simon">3 · 1956 Logic Theorist</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1958 · Frank Rosenblatt">4 · 1958 The Perceptron</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1969 · Minsky &amp; Papert">5 · 1969 Geometry Limits</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1982 · John Hopfield">6 · 1982 Memory Valleys</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1986 · Rumelhart, Hinton &amp; Williams">7 · 1986 Backpropagation</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1988 · Richard Sutton">8 · 1988 TD(λ) Prediction</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="1998 · LeCun, Bottou, Bengio &amp; Haffner">9 · 1998 LeNet-5 &amp; GTN</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="2012 · Krizhevsky, Sutskever &amp; Hinton">10 · 2012 AlexNet</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="2017 · Vaswani et al.">11 · 2017 The Transformer</button>
-            <button type="button" class="origin-step" role="tab" aria-selected="false" data-title="2026 · Clover AI">12 · 2026 Clover AI</button>
-          </div>
-          <div class="origin-progress" aria-hidden="true">
-            <div class="origin-progress__fill" data-origin-fill></div>
-          </div>
-        </div>
+      <div class="storyline">
 
         <!-- ================================================================ -->
         <!-- CHAPTER 1: 1943 MCCULLOCH & PITTS -->
         <!-- ================================================================ -->
-        <article class="origin-card is-active" id="p1-1943">
+        <article class="origin-card storyline__item" id="p1-1943">
           <div class="origin-card__badge">Chapter 1 of 12 · 1943 · Warren S. McCulloch &amp; Walter Pitts</div>
           <h2>A Logical Calculus of the Ideas Immanent in Nervous Activity</h2>
           <p class="lede"><strong>How a neurophysiologist and a nineteen-year-old runaway mathematician realized that a wet brain cell firing or staying silent is a binary logic gate.</strong></p>
@@ -196,23 +157,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 2 (1950):</strong> McCulloch and Pitts proved that a specially wired circuit of threshold gates can compute any logical rule. Seven years later, Alan Turing asked: instead of soldering a new circuit for every task, can <em>one</em> machine store the wiring rules as numbers in memory and become <em>any</em> machine?
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" disabled>
-              <span class="origin-pager__dir">← Start of Journey</span>
-              <span class="origin-pager__title">Chapter 1 · 1943</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">2 · 1950 · Alan Turing</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 2: 1950 ALAN TURING -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p2-1950">
+        <article class="origin-card storyline__item" id="p2-1950">
           <div class="origin-card__badge">Chapter 2 of 12 · 1950 · Alan M. Turing</div>
           <h2>Computing Machinery and Intelligence</h2>
           <p class="lede"><strong>Why a machine that answers 34,957 + 70,764 correctly in a millisecond loses the Imitation Game immediately—and why teaching a "Child-Machine" with words beats 22,400 punishment blows.</strong></p>
@@ -286,23 +236,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 3 (1956):</strong> Turing argued that a stored-program computer could manipulate symbols, search through possibilities, and prove theorems—not just crunch numbers. Six years later, Allen Newell and Herbert Simon built the first program that actually did it.
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">1 · 1943 · McCulloch &amp; Pitts</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">3 · 1956 · Newell &amp; Simon</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 3: 1956 NEWELL & SIMON -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p3-1956">
+        <article class="origin-card storyline__item" id="p3-1956">
           <div class="origin-card__badge">Chapter 3 of 12 · 1956 · Allen Newell &amp; Herbert A. Simon</div>
           <h2>The Logic Theory Machine: A Complex Information Processing System</h2>
           <p class="lede"><strong>How the world's first working AI program proved 48 of 67 theorems in Principia Mathematica by glancing at a 3-number summary before doing hard work.</strong></p>
@@ -375,23 +314,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 4 (1958):</strong> Logic Theorist could prove theorems when handed clean symbolic formulas. Two years later, Frank Rosenblatt asked: how does a living brain learn to recognize messy visual shapes when nobody gives it symbols or hand-wired rules?
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">2 · 1950 · Alan Turing</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">4 · 1958 · Frank Rosenblatt</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 4: 1958 FRANK ROSENBLATT -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p4-1958">
+        <article class="origin-card storyline__item" id="p4-1958">
           <div class="origin-card__badge">Chapter 4 of 12 · 1958 · Frank Rosenblatt</div>
           <h2>The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain</h2>
           <p class="lede"><strong>How a randomly wired bundle of nerve fibers learns to recognize shapes from experience—and how a "parasitic" zero-sum rule keeps a rare class from being bullied by a common one.</strong></p>
@@ -475,23 +403,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 5 (1969):</strong> Rosenblatt showed that local random features can learn concrete shapes, but falter on relational questions. Eleven years later, Marvin Minsky and Seymour Papert proved the exact mathematical laws governing what a single layer of local features can and cannot see.
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">3 · 1956 · Newell &amp; Simon</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">5 · 1969 · Minsky &amp; Papert</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 5: 1969 MINSKY & PAPERT -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p5-1969">
+        <article class="origin-card storyline__item" id="p5-1969">
           <div class="origin-card__badge">Chapter 5 of 12 · 1969 · Marvin Minsky &amp; Seymour Papert</div>
           <h2>Perceptrons: An Introduction to Computational Geometry</h2>
           <p class="lede"><strong>Why a committee of observers looking through tiny pinholes can count exact pixel totals—yet can never tell if a maze is connected, or if the number of dots is odd or even.</strong></p>
@@ -564,23 +481,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 6 (1982):</strong> Minsky and Papert proved that a single feed-forward layer of fixed local features hits a hard geometric wall. To go beyond that wall, networks needed either collective recurrent energy valleys (Hopfield, 1982) or a way to train multi-layer hidden features (Backpropagation, 1986).
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">4 · 1958 · Frank Rosenblatt</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">6 · 1982 · John Hopfield</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 6: 1982 JOHN HOPFIELD -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p6-1982">
+        <article class="origin-card storyline__item" id="p6-1982">
           <div class="origin-card__badge">Chapter 6 of 12 · 1982 · John J. Hopfield</div>
           <h2>Neural networks and physical systems with emergent collective computational abilities</h2>
           <p class="lede"><strong>How making synapses two-way and symmetric turns a recurrent network into a landscape of valleys—where a marble dropped on a noisy clue rolls straight into the clean memory.</strong></p>
@@ -654,23 +560,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 7 (1986):</strong> Hopfield showed how smooth energy landscapes guide collective networks. Four years later, Rumelhart, Hinton, and Williams used smooth derivatives to solve the problem that had been stuck since 1969: training deep hidden layers.
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">5 · 1969 · Minsky &amp; Papert</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">7 · 1986 · Backpropagation</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 7: 1986 RUMELHART, HINTON & WILLIAMS -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p7-1986">
+        <article class="origin-card storyline__item" id="p7-1986">
           <div class="origin-card__badge">Chapter 7 of 12 · 1986 · David E. Rumelhart, Geoffrey E. Hinton &amp; Ronald J. Williams</div>
           <h2>Learning representations by back-propagating errors</h2>
           <p class="lede"><strong>How smoothing hard 0/1 switches into gentle S-curves let error signals whisper backward through deep layers—so hidden neurons could invent their own abacus counters and mirror balances.</strong></p>
@@ -744,23 +639,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 8 (1988):</strong> Backpropagation solved credit assignment across layers when a teacher gives us the answer immediately. Two years later, Richard Sutton asked: how do we assign credit across <em>time</em> when the outcome only arrives at the end of a long journey?
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">6 · 1982 · John Hopfield</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">8 · 1988 · Richard Sutton</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 8: 1988 RICHARD SUTTON -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p8-1988">
+        <article class="origin-card storyline__item" id="p8-1988">
           <div class="origin-card__badge">Chapter 8 of 12 · 1988 · Richard S. Sutton</div>
           <h2>Learning to Predict by the Methods of Temporal Differences</h2>
           <p class="lede"><strong>Why updating today's prediction toward tomorrow's prediction beats waiting for Saturday's weather—and how a lucky fluke fools supervised learning.</strong></p>
@@ -840,23 +724,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 9 (1998):</strong> Sutton showed how credit can flow across steps of a sequence. Ten years later, Yann LeCun, Léon Bottou, Yoshua Bengio, and Patrick Haffner combined convolutional feature maps (`LeNet-5`) with dynamic-programming graphs (`GTNs`) to read millions of real bank checks end to end.
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">7 · 1986 · Backpropagation</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">9 · 1998 · LeCun et al.</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 9: 1998 LECUN, BOTTOU, BENGIO & HAFFNER -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p9-1998">
+        <article class="origin-card storyline__item" id="p9-1998">
           <div class="origin-card__badge">Chapter 9 of 12 · 1998 · Yann LeCun, Léon Bottou, Yoshua Bengio &amp; Patrick Haffner</div>
           <h2>Gradient-Based Learning Applied to Document Recognition</h2>
           <p class="lede"><strong>How LeNet-5 (60,000 shared weights driving 340,908 connections) and Graph Transformer Networks read millions of bank checks a day—without ever needing us to label where one digit ends and the next begins.</strong></p>
@@ -936,23 +809,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 10 (2012):</strong> LeNet-5 had `60,000` parameters and read `32×32` grayscale digits. Fourteen years later, Krizhevsky, Sutskever, and Hinton scaled that exact convolutional blueprint by **1,000× in parameters** (`60.97M`) to classify 1.2 million high-resolution color photographs on two GPUs.
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">8 · 1988 · Richard Sutton</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">10 · 2012 · AlexNet</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 10: 2012 KRIZHEVSKY, SUTSKEVER & HINTON -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p10-2012">
+        <article class="origin-card storyline__item" id="p10-2012">
           <div class="origin-card__badge">Chapter 10 of 12 · 2012 · Alex Krizhevsky, Ilya Sutskever &amp; Geoffrey E. Hinton</div>
           <h2>ImageNet Classification with Deep Convolutional Neural Networks</h2>
           <p class="lede"><strong>How two 3GB gaming graphics cards, a simple one-way valve (`ReLU`), and `Dropout` turned deep convolutional networks into the engine of modern computer vision.</strong></p>
@@ -1032,23 +894,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 11 (2017):</strong> AlexNet proved that when a network can process an entire input in parallel on GPUs, scale unlocks extraordinary capability. Five years later, Vaswani and colleagues asked: why are language models still trudging through sentences one word after another like a 1990s bucket brigade?
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">9 · 1998 · LeCun et al.</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">11 · 2017 · The Transformer</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 11: 2017 VASWANI ET AL. -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p11-2017">
+        <article class="origin-card storyline__item" id="p11-2017">
           <div class="origin-card__badge">Chapter 11 of 12 · 2017 · Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser &amp; Illia Polosukhin</div>
           <h2>Attention Is All You Need</h2>
           <p class="lede"><strong>How replacing the word-by-word telephone game of recurrent networks with an open round table (`Self-Attention`), 8 parallel spotlights (`Multi-Head`), and a `1/√d_k` dimmer switch created the modern Transformer.</strong></p>
@@ -1135,23 +986,12 @@
           <div class="origin-bridge">
             <strong>How this led to Chapter 12 (2026 · Clover AI):</strong> From 1943 to 2017, seventy-four years of invention built an extraordinary neural engine. Yet when we ran a modern multi-teraparameter model on its own—without tools, without a compiler, without an ontology, and without persistent memory—it solved less than half of our 70-task real-world suite (<code>33 / 70 = 47.1%</code>). The model is only one part of AI; what surrounds the model is what makes it intelligent.
           </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">10 · 2012 · AlexNet</span>
-            </button>
-            <button type="button" class="origin-pager__btn origin-pager__btn--next" data-origin-go="next">
-              <span class="origin-pager__dir">Next Chapter →</span>
-              <span class="origin-pager__title">12 · 2026 · Clover AI</span>
-            </button>
-          </div>
         </article>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 12: 2026 CLOVER AI -->
         <!-- ================================================================ -->
-        <article class="origin-card" id="p12-2026">
+        <article class="origin-card storyline__item" id="p12-2026">
           <div class="origin-card__badge">Chapter 12 of 12 · 2026 · Clover AI (v4)</div>
           <h2>The Model Is One Part of AI — What Surrounds It Makes It Intelligent</h2>
           <p class="lede"><strong>Why a raw neural model on its own solves only 47.1% (33 / 70) of our real-world benchmark suite—and how surrounding that exact same model with six governing, verifying, and remembering layers takes it to 100.0% (70 / 70).</strong></p>
@@ -1265,17 +1105,6 @@
 
           <div class="origin-bridge">
             <strong>The Complete 83-Year Arc (1943 → 2026):</strong> Seventy-four years of research (1943–2017) taught us how to build a powerful neural model. Clover AI (2026) shows what happens next: putting that model at the center of a governed, tool-verifying, compiler-checked, symbolically grounded, and memory-accumulating cycle (<code>Context → Direction → Execution → Outcome → Growth</code>) where we remain accountable.
-          </div>
-
-          <div class="origin-pager">
-            <button type="button" class="origin-pager__btn" data-origin-go="prev">
-              <span class="origin-pager__dir">← Previous Chapter</span>
-              <span class="origin-pager__title">11 · 2017 · The Transformer</span>
-            </button>
-            <button type="button" class="origin-pager__btn" data-origin-all>
-              <span class="origin-pager__dir">Completed all 12 ✓</span>
-              <span class="origin-pager__title">View all 12 chapters together</span>
-            </button>
           </div>
         </article>
 
@@ -1436,7 +1265,7 @@
             <tr>
               <td><strong>Cycles 7–10</strong></td>
               <td><strong>2-Arm Foundations Ablation, Clean GitHub + HF Bootstrap &amp; 70-Task Head-to-Head Comparison</strong></td>
-              <td>Reconciles all 11 paper mechanisms into the frozen GitHub checkout, syncs all 32 checkpoints &amp; datasets to Hugging Face (<a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>), wipes <code>/home/usergpu</code>, and runs the 70-task suite across three controlled arms of Clover&rsquo;s own underlying model and three standalone frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, <strong>Gemini 4 Argon</strong>) under the same frozen scorer (<a href="../clover-k3/#hybrid-ncm-k3">full table</a>).</td>
+              <td>Reconciles all 11 paper mechanisms into the frozen GitHub checkout, syncs all 32 checkpoints &amp; datasets to Hugging Face (<a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>), wipes <code>/home/usergpu</code>, and runs the 70-task suite across three controlled arms of Clover&rsquo;s own underlying model and three standalone frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, <strong>Gemini 4 Argon</strong>) under the same frozen scorer (<a href="../evidence/#hybrid-ncm-k3">full table</a>).</td>
               <td><strong><code>bench_foundations_e2e_ab.py</code>:</strong> stress false positives <strong><code>16/16</code> (<code>9,244</code> polluted tokens) → <code>0/16</code> (<code>0</code> tokens)</strong>, tight-budget E2E <strong><code>0/6 → 6/6</code> (<code>100%</code>)</strong>.<br><strong>70-Task Ablation:</strong> Clover&rsquo;s raw model alone scores <strong><code>33/70</code> (<code>47.1%</code>)</strong> → <strong><code>57/70</code> (<code>81.4%</code>)</strong> with Tools &amp; Compiler → <strong><code>70/70</code> (<code>100.0%</code>)</strong> with Ontology &amp; Memory (vs. standalone <strong>Claude Opus 5.5</strong> <code>57/58 = 98.3%</code> and <strong>GPT-6 Astra</strong> <code>56/58 = 96.6%</code> on the 58 public tasks).</td>
             </tr>
           </tbody>
@@ -1452,7 +1281,7 @@
       <p class="lede"><strong>None of these breakthroughs came from treating a model as magic.</strong> Every single one came from looking closely at where the current system failed in reality, picturing the mechanism underneath that failure, and testing a clear direction against real evidence.</p>
       <p>That is the same cycle we build on in Clover: <strong>Context → Direction → Execution → Outcome → Growth</strong>. The tools have grown from 1943 threshold relays and 1956 index cards to multi-teraparameter attention models, and the cycle that produces real understanding has not changed at all.</p>
       <div class="actions" style="margin-top:1.8rem">
-        <a class="btn btn--primary" href="../start/">Next Menu: Read AGENTS.md →</a>
+        <a class="btn btn--primary" href="../getting-started/">Next Menu: Read AGENTS.md →</a>
         <a class="btn" href="../evidence/">See the evidence</a>
         <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/foundational-papers-1943-to-2017/foundations-11-papers-human-guide.md">View the research notes &amp; scripts in the repository →</a>
       </div>
@@ -1468,7 +1297,7 @@
       <ul>
         <li><a href="../">The framework</a></li>
         <li><a href="./">Origin</a></li>
-        <li><a href="../start/">AGENTS.md</a></li>
+        <li><a href="../getting-started/">AGENTS.md</a></li>
         <li><a href="../governance/">Governance</a></li>
         <li><a href="../evidence/">Evidence</a></li>
         <li><a href="../glossary/">Glossary</a></li>
@@ -1509,7 +1338,7 @@
   </div>
 </footer>
 
-<script src="../app.js?v=4.1.2&amp;r=2" defer></script>
+<script src="../website-interaction-controllers.js?v=4.1.2&amp;r=2" defer></script>
 </body>
 </html>
 

@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clover</title>
+<meta name="description" content="Clover — unified 7-layer neuro-symbolic, compiler-verified, memory-accumulating system (93-layer 2.78T MoE, Rust host path, HybridAgent, 11-level parallel NCM, Ontology GraphRAG, Generative Compilation, and Relational Memory Graph).">
+<link rel="canonical" href="https://cloverframework.com/clover-ai/">
+<meta property="og:title" content="Clover">
+<meta property="og:description" content="Interactive Clover system with 256k session context, persistent relational memory graph, ontology-guided reasoning, generative compilation, live web/arXiv search, Python/Rust execution, and multimodal vision.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cloverframework.com/clover-ai/">
+<meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a6a5f">
+<link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
+<link rel="stylesheet" href="../botanical-design-system.css?v=4.1.2">
+<style>
+  [hidden] { display: none !important; }
+  .clover-sidebar { transform: none; transition: margin-left 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+  .clover-topbar__right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+  .clover-cpu-pill {
+    display: inline-flex; align-items: center; gap: 0.38rem;
+    font-size: 0.76rem; font-weight: 650; line-height: 1.2;
+    padding: 0.28rem 0.65rem; border-radius: 999px;
+    background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-line);
+    white-space: nowrap;
+  }
+  .clover-cpu-pill::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: #c48f3b; flex-shrink: 0;
+  }
+  @media (max-width: 760px) {
+    .clover-sidebar {
+      position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
+      width: min(272px, 80vw); flex: 0 0 auto;
+      margin-left: 0 !important; transform: translateX(-105%) !important;
+      box-shadow: none !important; pointer-events: none;
+    }
+    .clover-sidebar.is-mobile-open {
+      margin-left: 0 !important; transform: translateX(0) !important;
+      box-shadow: 0 12px 34px rgba(19, 32, 24, 0.18) !important; pointer-events: auto !important;
+    }
+    .clover-cpu-pill { font-size: 0.71rem; padding: 0.22rem 0.5rem; }
+  }
+  @media (max-width: 480px) {
+    .clover-cpu-pill { font-size: 0.68rem; padding: 0.2rem 0.45rem; }
+  }
+</style>
+<script>document.documentElement.className = 'js';</script>
+</head>
+<body class="clover-app-body">
+<a class="skip" href="#main">Skip to content</a>
+
+<svg class="clover-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="clover-leaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z"/>
+  </defs>
+</svg>
+
+<main id="main" class="clover-app" tabindex="-1">
+  <div class="clover-sidebar-backdrop" id="clover-sidebar-backdrop" onclick="k3CloseMobileSidebar()"></div>
+  <aside class="clover-sidebar" id="clover-sidebar" aria-label="Chat sessions">
+    <div class="clover-sidebar__top">
+      <button type="button" class="clover-new-chat-btn" id="k3-new-sess-btn" onclick="k3ResetChat()" title="Start a new session">
+        <span>New chat</span>
+        <span class="clover-new-chat-btn__plus" aria-hidden="true">+</span>
+      </button>
+    </div>
+    <div class="clover-sidebar__label">Sessions</div>
+    <div class="clover-session-list" id="k3-session-list"></div>
+  </aside>
+
+  <section class="clover-main" aria-label="Clover conversation">
+    <div class="clover-topbar">
+      <div class="clover-topbar__left">
+        <button type="button" class="clover-sidebar-toggle" id="clover-sidebar-toggle" onclick="k3ToggleSidebar()" title="Toggle sidebar" aria-label="Toggle sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+        </button>
+        <a class="clover-topbar__brand k3-chat-title" href="../" style="text-decoration:none" title="Clover Framework">
+          <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>
+            <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
+          </svg>
+          Clover
+        </a>
+      </div>
+      <div class="clover-topbar__right">
+        <span class="clover-cpu-pill" id="clover-cpu-pill" title="Clover is running on a CPU server, so responses take longer">CPU Server &middot; Slow Response</span>
+      </div>
+    </div>
+
+    <div class="clover-stream" id="clover-stream-scroller">
+      <div class="clover-stream__inner" id="k3-chat-log" aria-live="polite">
+        <div class="k3-msg k3-msg--bot">
+          <p>Hi I am Clover, How can I help you today?</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="clover-composer-wrap">
+      <div class="clover-composer-card">
+        <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
+          <div class="k3-preview-bar__info">
+            <img id="k3-img-preview-thumb" src="../assets/case-study-01-contentful-migration.svg" alt="Attachment preview" hidden>
+            <span id="k3-img-preview-name">Attachment ready</span>
+          </div>
+          <button type="button" onclick="k3ClearAttachments()">Remove</button>
+        </div>
+        <div class="clover-composer-row">
+          <input type="file" id="k3-file-input" multiple hidden onchange="k3OnFilesSelected(event)">
+          <button type="button" class="clover-composer-btn" id="k3-attach-btn" onclick="document.getElementById('k3-file-input').click()" title="Attach files (images, video, audio, PDF, documents, text)" aria-label="Attach files">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+            </svg>
+          </button>
+          <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover..."></textarea>
+          <button type="button" class="clover-composer-btn" id="k3-voice-btn" onclick="k3ToggleVoice()" title="Voice input" aria-label="Voice input">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+          <button type="button" class="clover-send-btn" id="k3-send-btn" onclick="k3SendPrompt()" aria-label="Send">
+            <svg class="clover-send-icon" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+              <path class="clover-send-icon__stem" d="M50 48C50 68 50 80 50 95"/>
+              <g class="clover-send-icon__wheel">
+                <use class="clover-send-icon__leaf" href="#clover-leaf"/>
+                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(72 50 44)"/>
+                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(144 50 44)"/>
+                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(216 50 44)"/>
+                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(288 50 44)"/>
+              </g>
+            </svg>
+            <span>Send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  // ==========================================================================
+  // CONSTANTS — `constant_*` (Complete Quantified Noun Phrases)
+  // ==========================================================================
+
+  var constant_backend_api_candidates = [
+    'https://api.cloverframework.com',
+    'http://127.0.0.1:8765',
+    'https://cloverframework.com'
+  ];
+  var constant_session_storage_key = 'clover_k3_sessions_v2';
+  var constant_mobile_sidebar_breakpoint_pixels = 760;
+  var constant_health_probe_timeout_milliseconds = 8000;
+  var constant_greeting_message_html =
+    '<div class="k3-msg k3-msg--bot"><p>Hi I am Clover, How can I help you today?</p></div>';
+  var constant_clover_loader_html =
+    '<div class="clover-dots-loader" role="status" aria-label="Loading">' +
+      '<span>.</span><span>.</span><span>.</span><span>.</span>' +
+    '</div>';
+  var constant_below_reply_actions_html =
+    '<div class="k3-below-actions">' +
+      '<button type="button" class="k3-icon-action" onclick="k3RegenerateLast(this)" title="Regenerate" aria-label="Regenerate">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<polyline points="23 4 23 10 17 10"></polyline>' +
+          '<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>' +
+        '</svg>' +
+      '</button>' +
+      '<button type="button" class="k3-icon-action" onclick="k3CopyReply(this)" title="Copy" aria-label="Copy">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+          '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+        '</svg>' +
+      '</button>' +
+      '<button type="button" class="k3-icon-action" onclick="this.classList.toggle(\'is-active\')" title="Good response" aria-label="Good response">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>' +
+        '</svg>' +
+      '</button>' +
+      '<button type="button" class="k3-icon-action" onclick="this.classList.toggle(\'is-active\')" title="Bad response" aria-label="Bad response">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>' +
+        '</svg>' +
+      '</button>' +
+    '</div>';
+
+  // ==========================================================================
+  // 1. `class_browser_conversation_session_store` (`ConversationSession` -> `Stage1_Context`)
+  // ==========================================================================
+
+  class class_browser_conversation_session_store {
+    constructor(variable_storage_key) {
+      this.variable_storage_key = variable_storage_key;
+      this.variable_sessions_by_identifier = {};
+      this.variable_ordered_session_identifiers = [];
+      this.variable_active_session_identifier = '';
+    }
+
+    function_generate_unique_session_identifier() {
+      return 'sess_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+    }
+
+    function_save_sessions_to_browser_storage() {
+      try {
+        var variable_serialized_payload = {
+          currentId: this.variable_active_session_identifier,
+          order: this.variable_ordered_session_identifiers,
+          map: {}
+        };
+        for (var variable_index = 0; variable_index < this.variable_ordered_session_identifiers.length; variable_index++) {
+          var variable_session_id = this.variable_ordered_session_identifiers[variable_index];
+          var variable_session_record = this.variable_sessions_by_identifier[variable_session_id];
+          if (variable_session_record) {
+            variable_serialized_payload.map[variable_session_id] = {
+              id: variable_session_id,
+              title: variable_session_record.title || 'New chat',
+              messages: variable_session_record.messages || []
+            };
+          }
+        }
+        localStorage.setItem(this.variable_storage_key, JSON.stringify(variable_serialized_payload));
+      } catch (variable_ignored_error) {}
+    }
+
+    function_load_sessions_from_browser_storage() {
+      try {
+        var variable_raw_json_string = localStorage.getItem(this.variable_storage_key);
+        if (variable_raw_json_string) {
+          var variable_parsed_data = JSON.parse(variable_raw_json_string);
+          if (variable_parsed_data && Array.isArray(variable_parsed_data.order) && variable_parsed_data.map) {
+            this.variable_sessions_by_identifier = variable_parsed_data.map;
+            var variable_self_store = this;
+            this.variable_ordered_session_identifiers = variable_parsed_data.order.filter(function (variable_id) {
+              return !!variable_self_store.variable_sessions_by_identifier[variable_id];
+            });
+            this.variable_active_session_identifier =
+              variable_parsed_data.currentId && this.variable_sessions_by_identifier[variable_parsed_data.currentId]
+                ? variable_parsed_data.currentId
+                : this.variable_ordered_session_identifiers[0] || '';
+          }
+        }
+      } catch (variable_ignored_error) {}
+
+      if (
+        !this.variable_active_session_identifier ||
+        !this.variable_sessions_by_identifier[this.variable_active_session_identifier]
+      ) {
+        var variable_initial_session_id = this.function_generate_unique_session_identifier();
+        this.variable_sessions_by_identifier[variable_initial_session_id] = {
+          id: variable_initial_session_id,
+          title: 'New chat',
+          messages: []
+        };
+        this.variable_ordered_session_identifiers = [variable_initial_session_id];
+        this.variable_active_session_identifier = variable_initial_session_id;
+        this.function_save_sessions_to_browser_storage();
+      }
+    }
+
+    function_get_active_session_record() {
+      return this.variable_sessions_by_identifier[this.variable_active_session_identifier] || null;
+    }
+
+    function_create_and_activate_new_session() {
+      var variable_new_session_id = this.function_generate_unique_session_identifier();
+      this.variable_sessions_by_identifier[variable_new_session_id] = {
+        id: variable_new_session_id,
+        title: 'New chat',
+        messages: []
+      };
+      this.variable_ordered_session_identifiers.unshift(variable_new_session_id);
+      this.variable_active_session_identifier = variable_new_session_id;
+      this.function_save_sessions_to_browser_storage();
+      return variable_new_session_id;
+    }
+
+    function_delete_session_by_identifier(variable_target_session_id) {
+      if (!variable_target_session_id || !this.variable_sessions_by_identifier[variable_target_session_id]) {
+        return false;
+      }
+      delete this.variable_sessions_by_identifier[variable_target_session_id];
+      this.variable_ordered_session_identifiers = this.variable_ordered_session_identifiers.filter(function (
+        variable_existing_id
+      ) {
+        return variable_existing_id !== variable_target_session_id;
+      });
+      if (!this.variable_ordered_session_identifiers.length) {
+        var variable_fallback_session_id = this.function_generate_unique_session_identifier();
+        this.variable_sessions_by_identifier[variable_fallback_session_id] = {
+          id: variable_fallback_session_id,
+          title: 'New chat',
+          messages: []
+        };
+        this.variable_ordered_session_identifiers = [variable_fallback_session_id];
+        this.variable_active_session_identifier = variable_fallback_session_id;
+      } else if (this.variable_active_session_identifier === variable_target_session_id) {
+        this.variable_active_session_identifier = this.variable_ordered_session_identifiers[0];
+      }
+      this.function_save_sessions_to_browser_storage();
+      return true;
+    }
+
+    function_extract_prior_conversation_turns(variable_target_session_id, function_convert_html_to_plain_text) {
+      var variable_session_record = this.variable_sessions_by_identifier[variable_target_session_id];
+      if (!variable_session_record || !Array.isArray(variable_session_record.messages)) {
+        return [];
+      }
+      var variable_completed_turns = [];
+      var variable_pending_user_prompt = '';
+      for (var variable_index = 0; variable_index < variable_session_record.messages.length; variable_index++) {
+        var variable_message_entry = variable_session_record.messages[variable_index];
+        var variable_plain_text =
+          variable_message_entry.text !== undefined && variable_message_entry.text !== null
+            ? String(variable_message_entry.text).trim()
+            : function_convert_html_to_plain_text(variable_message_entry.html);
+        if (variable_message_entry.role === 'user') {
+          variable_pending_user_prompt = variable_plain_text;
+        } else if (variable_message_entry.role === 'bot' && variable_pending_user_prompt && variable_plain_text) {
+          variable_completed_turns.push({
+            user: variable_pending_user_prompt,
+            reply: variable_plain_text
+          });
+          variable_pending_user_prompt = '';
+        }
+      }
+      return variable_completed_turns;
+    }
+  }
+
+  // ==========================================================================
+  // 2. `class_multimodal_attachment_and_speech_codec` (`ModalityCodec` -> `Stage3_Execution`)
+  // ==========================================================================
+
+  class class_multimodal_attachment_and_speech_codec {
+    constructor(variable_dom_elements) {
+      this.variable_file_input_element = variable_dom_elements.variable_file_input_element;
+      this.variable_preview_bar_element = variable_dom_elements.variable_preview_bar_element;
+      this.variable_preview_thumbnail_element = variable_dom_elements.variable_preview_thumbnail_element;
+      this.variable_preview_name_element = variable_dom_elements.variable_preview_name_element;
+      this.variable_voice_button_element = variable_dom_elements.variable_voice_button_element;
+      this.variable_prompt_input_element = variable_dom_elements.variable_prompt_input_element;
+
+      this.variable_attached_image_data_url = null;
+      this.variable_attached_files_list = [];
+      this.variable_speech_recognition_instance = null;
+      this.flag_is_listening_for_voice = false;
+      this.flag_was_last_input_from_voice = false;
+      this.variable_active_tts_audio_element = null;
+      this.variable_active_tts_button_element = null;
+      this.variable_tts_audio_cache_by_text = {};
+    }
+
+    function_update_attachment_preview_bar() {
+      if (!this.variable_preview_bar_element) {
+        return;
+      }
+      var flag_has_no_attachments =
+        !this.variable_attached_image_data_url &&
+        (!this.variable_attached_files_list || !this.variable_attached_files_list.length);
+      if (flag_has_no_attachments) {
+        this.variable_preview_bar_element.hidden = true;
+        return;
+      }
+      this.variable_preview_bar_element.hidden = false;
+      if (this.variable_preview_thumbnail_element) {
+        if (this.variable_attached_image_data_url) {
+          this.variable_preview_thumbnail_element.src = this.variable_attached_image_data_url;
+          this.variable_preview_thumbnail_element.hidden = false;
+        } else {
+          this.variable_preview_thumbnail_element.hidden = true;
+        }
+      }
+      if (this.variable_preview_name_element) {
+        var variable_attachment_names = [];
+        for (var variable_index = 0; variable_index < this.variable_attached_files_list.length; variable_index++) {
+          variable_attachment_names.push(this.variable_attached_files_list[variable_index].name);
+        }
+        this.variable_preview_name_element.textContent = variable_attachment_names.length
+          ? variable_attachment_names.join(', ')
+          : 'Image attached';
+      }
+    }
+
+    function_clear_all_attachments() {
+      this.variable_attached_image_data_url = null;
+      this.variable_attached_files_list = [];
+      if (this.variable_file_input_element) {
+        this.variable_file_input_element.value = '';
+      }
+      if (this.variable_preview_bar_element) {
+        this.variable_preview_bar_element.hidden = true;
+      }
+    }
+
+    function_check_if_file_is_text_like(variable_file_object) {
+      var variable_mime_type = (variable_file_object.type || '').toLowerCase();
+      var variable_file_name = (variable_file_object.name || '').toLowerCase();
+      if (
+        variable_mime_type.indexOf('text/') === 0 ||
+        variable_mime_type.indexOf('json') !== -1 ||
+        variable_mime_type.indexOf('xml') !== -1 ||
+        variable_mime_type.indexOf('javascript') !== -1
+      ) {
+        return true;
+      }
+      return /\.(txt|md|markdown|csv|tsv|json|jsonl|py|js|ts|tsx|jsx|c|cpp|h|hpp|rs|go|java|html|css|xml|yaml|yml|toml|ini|sh|ps1|sql|log|tex)$/i.test(
+        variable_file_name
+      );
+    }
+
+    function_extract_video_frames_to_data_url(variable_video_file, function_on_frames_ready) {
+      var variable_video_element = document.createElement('video');
+      variable_video_element.preload = 'metadata';
+      variable_video_element.muted = true;
+      variable_video_element.playsInline = true;
+      var variable_object_url = URL.createObjectURL(variable_video_file);
+      variable_video_element.src = variable_object_url;
+      variable_video_element.onloadedmetadata = function () {
+        var variable_duration_seconds = Math.max(0.5, variable_video_element.duration || 1.0);
+        var variable_sample_timestamps = [
+          variable_duration_seconds * 0.15,
+          variable_duration_seconds * 0.5,
+          variable_duration_seconds * 0.85
+        ];
+        var variable_canvas_element = document.createElement('canvas');
+        variable_canvas_element.width = 720;
+        variable_canvas_element.height = 420;
+        var variable_canvas_context = variable_canvas_element.getContext('2d');
+        variable_canvas_context.fillStyle = '#14181d';
+        variable_canvas_context.fillRect(0, 0, 720, 420);
+        var variable_frame_index = 0;
+        function function_capture_next_frame() {
+          if (variable_frame_index >= variable_sample_timestamps.length) {
+            URL.revokeObjectURL(variable_object_url);
+            function_on_frames_ready(variable_canvas_element.toDataURL('image/png'));
+            return;
+          }
+          variable_video_element.currentTime = variable_sample_timestamps[variable_frame_index];
+        }
+        variable_video_element.onseeked = function () {
+          var variable_x_offset = (variable_frame_index % 3) * 240;
+          variable_canvas_context.drawImage(variable_video_element, variable_x_offset + 4, 24, 232, 372);
+          variable_canvas_context.fillStyle = '#1b5e46';
+          variable_canvas_context.font = 'bold 14px sans-serif';
+          variable_canvas_context.fillText(
+            'Frame ' + (variable_frame_index + 1) + ' (' + variable_sample_timestamps[variable_frame_index].toFixed(1) + 's)',
+            variable_x_offset + 12,
+            18
+          );
+          variable_frame_index++;
+          function_capture_next_frame();
+        };
+        function_capture_next_frame();
+      };
+    }
+
+    function_ingest_selected_files(variable_file_list) {
+      if (!variable_file_list || !variable_file_list.length) {
+        return;
+      }
+      var variable_self_codec = this;
+      for (var variable_index = 0; variable_index < variable_file_list.length; variable_index++) {
+        (function (variable_single_file) {
+          var variable_lower_mime = (variable_single_file.type || '').toLowerCase();
+          if (variable_lower_mime.indexOf('image/') === 0) {
+            var variable_image_reader = new FileReader();
+            variable_image_reader.onload = function (variable_load_event) {
+              variable_self_codec.variable_attached_image_data_url = variable_load_event.target.result;
+              variable_self_codec.variable_attached_files_list.push({
+                name: variable_single_file.name,
+                type: variable_single_file.type || 'image/png',
+                content_text: '',
+                data_b64: variable_load_event.target.result
+              });
+              variable_self_codec.function_update_attachment_preview_bar();
+            };
+            variable_image_reader.readAsDataURL(variable_single_file);
+          } else if (variable_lower_mime.indexOf('video/') === 0) {
+            variable_self_codec.function_extract_video_frames_to_data_url(
+              variable_single_file,
+              function (variable_contact_sheet_url) {
+                variable_self_codec.variable_attached_image_data_url = variable_contact_sheet_url;
+                variable_self_codec.variable_attached_files_list.push({
+                  name: variable_single_file.name,
+                  type: variable_single_file.type || 'video/mp4',
+                  content_text: 'Video file: ' + variable_single_file.name,
+                  data_b64: variable_contact_sheet_url
+                });
+                variable_self_codec.function_update_attachment_preview_bar();
+              }
+            );
+          } else if (variable_self_codec.function_check_if_file_is_text_like(variable_single_file)) {
+            var variable_text_reader = new FileReader();
+            variable_text_reader.onload = function (variable_load_event) {
+              variable_self_codec.variable_attached_files_list.push({
+                name: variable_single_file.name,
+                type: variable_single_file.type || 'text/plain',
+                content_text: String(variable_load_event.target.result || ''),
+                data_b64: ''
+              });
+              variable_self_codec.function_update_attachment_preview_bar();
+            };
+            variable_text_reader.readAsText(variable_single_file);
+          } else {
+            var variable_binary_reader = new FileReader();
+            variable_binary_reader.onload = function (variable_load_event) {
+              variable_self_codec.variable_attached_files_list.push({
+                name: variable_single_file.name,
+                type: variable_single_file.type || 'application/octet-stream',
+                content_text: '',
+                data_b64: String(variable_load_event.target.result || '')
+              });
+              variable_self_codec.function_update_attachment_preview_bar();
+            };
+            variable_binary_reader.readAsDataURL(variable_single_file);
+          }
+        })(variable_file_list[variable_index]);
+      }
+    }
+
+    function_toggle_voice_recognition() {
+      var variable_speech_recognition_class =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!variable_speech_recognition_class) {
+        if (this.variable_prompt_input_element) {
+          this.variable_prompt_input_element.focus();
+        }
+        return;
+      }
+      if (this.flag_is_listening_for_voice && this.variable_speech_recognition_instance) {
+        this.variable_speech_recognition_instance.stop();
+        return;
+      }
+      var variable_self_codec = this;
+      this.variable_speech_recognition_instance = new variable_speech_recognition_class();
+      this.variable_speech_recognition_instance.lang = 'en-US';
+      this.variable_speech_recognition_instance.interimResults = false;
+      this.flag_is_listening_for_voice = true;
+      if (this.variable_voice_button_element) {
+        this.variable_voice_button_element.classList.add('is-listening');
+      }
+      this.variable_speech_recognition_instance.onresult = function (variable_speech_event) {
+        var variable_spoken_transcript = variable_speech_event.results[0][0].transcript;
+        if (variable_self_codec.variable_prompt_input_element) {
+          var variable_current_text = variable_self_codec.variable_prompt_input_element.value;
+          variable_self_codec.variable_prompt_input_element.value =
+            (variable_current_text ? variable_current_text + ' ' : '') + variable_spoken_transcript;
+          variable_self_codec.flag_was_last_input_from_voice = true;
+          variable_self_codec.variable_prompt_input_element.focus();
+        }
+      };
+      this.variable_speech_recognition_instance.onend = function () {
+        variable_self_codec.flag_is_listening_for_voice = false;
+        if (variable_self_codec.variable_voice_button_element) {
+          variable_self_codec.variable_voice_button_element.classList.remove('is-listening');
+        }
+      };
+      this.variable_speech_recognition_instance.onerror = function () {
+        variable_self_codec.flag_is_listening_for_voice = false;
+        if (variable_self_codec.variable_voice_button_element) {
+          variable_self_codec.variable_voice_button_element.classList.remove('is-listening');
+        }
+      };
+      this.variable_speech_recognition_instance.start();
+    }
+
+    function_stop_current_speech_playback() {
+      if (this.variable_active_tts_audio_element) {
+        try {
+          this.variable_active_tts_audio_element.pause();
+          this.variable_active_tts_audio_element.currentTime = 0;
+        } catch (variable_ignored_error) {}
+        this.variable_active_tts_audio_element = null;
+      }
+      if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (variable_ignored_error) {}
+      }
+      if (this.variable_active_tts_button_element) {
+        this.variable_active_tts_button_element.textContent = '🔊 Listen';
+        this.variable_active_tts_button_element = null;
+      }
+    }
+
+    function_speak_via_browser_synthesis_fallback(variable_spoken_text, variable_trigger_button) {
+      if (!window.speechSynthesis) {
+        if (variable_trigger_button) {
+          variable_trigger_button.textContent = '🔊 Listen';
+        }
+        return;
+      }
+      var variable_self_codec = this;
+      var variable_utterance = new SpeechSynthesisUtterance(variable_spoken_text);
+      variable_utterance.lang = 'en-US';
+      variable_utterance.pitch = 1.38;
+      variable_utterance.rate = 0.96;
+      var variable_available_voices = window.speechSynthesis.getVoices
+        ? window.speechSynthesis.getVoices()
+        : [];
+      var variable_selected_voice = null;
+      for (var variable_i = 0; variable_i < variable_available_voices.length; variable_i++) {
+        var variable_voice_name = (variable_available_voices[variable_i].name || '').toLowerCase();
+        if (
+          variable_voice_name.indexOf('ana') !== -1 ||
+          variable_voice_name.indexOf('child') !== -1 ||
+          variable_voice_name.indexOf('kid') !== -1
+        ) {
+          variable_selected_voice = variable_available_voices[variable_i];
+          break;
+        }
+      }
+      if (!variable_selected_voice) {
+        for (var variable_j = 0; variable_j < variable_available_voices.length; variable_j++) {
+          var variable_fallback_name = (variable_available_voices[variable_j].name || '').toLowerCase();
+          if (
+            variable_fallback_name.indexOf('aria') !== -1 ||
+            variable_fallback_name.indexOf('jenny') !== -1 ||
+            variable_fallback_name.indexOf('zira') !== -1 ||
+            variable_fallback_name.indexOf('samantha') !== -1 ||
+            variable_fallback_name.indexOf('google us english') !== -1
+          ) {
+            variable_selected_voice = variable_available_voices[variable_j];
+            break;
+          }
+        }
+      }
+      if (variable_selected_voice) {
+        variable_utterance.voice = variable_selected_voice;
+      }
+      if (variable_trigger_button) {
+        variable_trigger_button.textContent = '⏹ Stop';
+        this.variable_active_tts_button_element = variable_trigger_button;
+      }
+      variable_utterance.onend = function () {
+        if (variable_trigger_button) {
+          variable_trigger_button.textContent = '🔊 Listen';
+        }
+        variable_self_codec.variable_active_tts_button_element = null;
+      };
+      variable_utterance.onerror = function () {
+        if (variable_trigger_button) {
+          variable_trigger_button.textContent = '🔊 Listen';
+        }
+        variable_self_codec.variable_active_tts_button_element = null;
+      };
+      window.speechSynthesis.speak(variable_utterance);
+    }
+
+    async function_speak_assistant_reply(variable_trigger_button, variable_active_backend_base_url) {
+      var flag_is_same_button_playing =
+        this.variable_active_tts_button_element === variable_trigger_button &&
+        (this.variable_active_tts_audio_element ||
+          (window.speechSynthesis && window.speechSynthesis.speaking));
+      if (flag_is_same_button_playing) {
+        this.function_stop_current_speech_playback();
+        return;
+      }
+      this.function_stop_current_speech_playback();
+      var variable_message_element =
+        variable_trigger_button && variable_trigger_button.closest
+          ? variable_trigger_button.closest('.k3-msg')
+          : variable_trigger_button
+            ? variable_trigger_button.parentNode.parentNode
+            : null;
+      if (!variable_message_element) {
+        return;
+      }
+      var variable_cloned_node = variable_message_element.cloneNode(true);
+      var variable_stripped_nodes = variable_cloned_node.querySelectorAll(
+        '.k3-msg-actions, .k3-copy-code-btn, .k3-figcaption, svg, pre'
+      );
+      for (var variable_index = 0; variable_index < variable_stripped_nodes.length; variable_index++) {
+        variable_stripped_nodes[variable_index].remove();
+      }
+      var variable_spoken_text = (variable_cloned_node.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!variable_spoken_text) {
+        return;
+      }
+
+      if (variable_trigger_button) {
+        variable_trigger_button.textContent = '⏳ Voice...';
+        this.variable_active_tts_button_element = variable_trigger_button;
+      }
+      var variable_self_codec = this;
+      try {
+        var variable_cached_audio_url = this.variable_tts_audio_cache_by_text[variable_spoken_text];
+        if (!variable_cached_audio_url) {
+          var variable_tts_response = await fetch(variable_active_backend_base_url + '/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: variable_spoken_text })
+          });
+          if (!variable_tts_response.ok) {
+            throw new Error('TTS HTTP ' + variable_tts_response.status);
+          }
+          var variable_tts_json = await variable_tts_response.json();
+          if (!variable_tts_json || !variable_tts_json.audio_base64) {
+            throw new Error('No audio');
+          }
+          variable_cached_audio_url = variable_tts_json.audio_base64;
+          this.variable_tts_audio_cache_by_text[variable_spoken_text] = variable_cached_audio_url;
+        }
+        if (this.variable_active_tts_button_element !== variable_trigger_button) {
+          return;
+        }
+        var variable_audio_player = new Audio(variable_cached_audio_url);
+        this.variable_active_tts_audio_element = variable_audio_player;
+        if (variable_trigger_button) {
+          variable_trigger_button.textContent = '⏹ Stop';
+        }
+        variable_audio_player.onended = function () {
+          if (variable_self_codec.variable_active_tts_button_element === variable_trigger_button) {
+            variable_trigger_button.textContent = '🔊 Listen';
+          }
+          variable_self_codec.variable_active_tts_audio_element = null;
+          variable_self_codec.variable_active_tts_button_element = null;
+        };
+        variable_audio_player.onerror = function () {
+          variable_self_codec.variable_active_tts_audio_element = null;
+          variable_self_codec.function_speak_via_browser_synthesis_fallback(
+            variable_spoken_text,
+            variable_trigger_button
+          );
+        };
+        await variable_audio_player.play();
+      } catch (variable_tts_error) {
+        this.variable_active_tts_audio_element = null;
+        this.function_speak_via_browser_synthesis_fallback(variable_spoken_text, variable_trigger_button);
+      }
+    }
+  }
+
+  // ==========================================================================
+  // 3. `class_markdown_and_media_reply_renderer` (`ModalityCodec` -> `Stage3_Execution`)
+  // ==========================================================================
+
+  class class_markdown_and_media_reply_renderer {
+    function_escape_html_entities(variable_raw_string) {
+      return String(variable_raw_string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function_escape_and_linkify_urls(variable_raw_string) {
+      var variable_escaped_text = this.function_escape_html_entities(variable_raw_string);
+      variable_escaped_text = variable_escaped_text.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        function (variable_full_match, variable_link_label, variable_target_url) {
+          return (
+            '<a href="' +
+            variable_target_url +
+            '" target="_blank" rel="noopener noreferrer">' +
+            variable_link_label +
+            '</a>'
+          );
+        }
+      );
+      variable_escaped_text = variable_escaped_text.replace(
+        /(^|[\s(])((https?:\/\/[^\s)<]+))/g,
+        function (variable_full_match, variable_prefix_char, variable_raw_url) {
+          var variable_trimmed_url = variable_raw_url.replace(/[.,;!?]+$/, '');
+          var variable_trailing_punctuation = variable_raw_url.slice(variable_trimmed_url.length);
+          return (
+            variable_prefix_char +
+            '<a href="' +
+            variable_trimmed_url +
+            '" target="_blank" rel="noopener noreferrer">' +
+            variable_trimmed_url +
+            '</a>' +
+            variable_trailing_punctuation
+          );
+        }
+      );
+      return variable_escaped_text;
+    }
+
+    function_convert_html_fragment_to_plain_text(variable_html_string) {
+      var variable_cleaned_html = String(variable_html_string || '')
+        .replace(/<div[^>]*class="[^"]*attach-chip[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+        .replace(/<\/(p|li|ul|div|h[1-6])>/gi, '\n')
+        .replace(/<br\s*\/?>/gi, '\n');
+      var variable_temp_container = document.createElement('div');
+      variable_temp_container.innerHTML = variable_cleaned_html;
+      return (variable_temp_container.textContent || variable_temp_container.innerText || '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    function_render_media_items_to_html(variable_media_items_list) {
+      if (!Array.isArray(variable_media_items_list) || !variable_media_items_list.length) {
+        return '';
+      }
+      var variable_rendered_figures = [];
+      for (var variable_index = 0; variable_index < variable_media_items_list.length; variable_index++) {
+        var variable_media_item = variable_media_items_list[variable_index];
+        if (!variable_media_item) {
+          continue;
+        }
+        var variable_escaped_title = this.function_escape_html_entities(
+          variable_media_item.title || 'Generated Chart'
+        );
+        var variable_escaped_caption = this.function_escape_html_entities(
+          variable_media_item.caption || variable_media_item.title || ''
+        );
+        if (variable_media_item.type === 'svg' && variable_media_item.svg) {
+          var variable_svg_data_uri =
+            'data:image/svg+xml;utf8,' + encodeURIComponent(variable_media_item.svg);
+          variable_rendered_figures.push(
+            '<figure class="k3-figure">' +
+              variable_media_item.svg +
+              '<figcaption class="k3-figcaption"><span>' +
+              variable_escaped_caption +
+              '</span>' +
+              '<a class="k3-dl-link" href="' +
+              variable_svg_data_uri +
+              '" download="clover-diagram.svg">Download SVG</a></figcaption>' +
+            '</figure>'
+          );
+        } else if (variable_media_item.data_url) {
+          variable_rendered_figures.push(
+            '<figure class="k3-figure">' +
+              '<img src="' +
+              variable_media_item.data_url +
+              '" alt="' +
+              variable_escaped_title +
+              '">' +
+              '<figcaption class="k3-figcaption"><span>' +
+              variable_escaped_caption +
+              '</span>' +
+              '<a class="k3-dl-link" href="' +
+              variable_media_item.data_url +
+              '" download="clover-chart.png">Download PNG</a></figcaption>' +
+            '</figure>'
+          );
+        }
+      }
+      return variable_rendered_figures.join('');
+    }
+
+    function_format_assistant_reply_to_html(variable_reply_text, variable_media_items_list) {
+      var variable_self_renderer = this;
+      var variable_extracted_code_blocks = [];
+      var variable_tokenized_text = String(variable_reply_text || '').replace(
+        /```([a-zA-Z0-9_+-]*)\s*\n([\s\S]*?)```/g,
+        function (variable_full_match, variable_language_tag, variable_code_body) {
+          var variable_block_index = variable_extracted_code_blocks.length;
+          var variable_lower_language = String(variable_language_tag || '').toLowerCase();
+          if (
+            variable_lower_language === 'svg' &&
+            String(variable_code_body || '').trim().indexOf('<svg') === 0
+          ) {
+            variable_extracted_code_blocks.push(
+              '<figure class="k3-figure">' + String(variable_code_body || '').trim() + '</figure>'
+            );
+          } else {
+            variable_extracted_code_blocks.push(
+              '<div class="k3-code-wrap">' +
+                '<button type="button" class="k3-copy-code-btn" onclick="k3CopyCode(this)">Copy</button>' +
+                '<pre class="k3-code"><code>' +
+                variable_self_renderer.function_escape_html_entities(
+                  String(variable_code_body || '').replace(/\s+$/, '')
+                ) +
+                '</code></pre>' +
+              '</div>'
+            );
+          }
+          return '\n__K3_CODE_BLOCK_' + variable_block_index + '__\n';
+        }
+      );
+
+      var variable_raw_lines = variable_tokenized_text.split(/\n+/);
+      var variable_non_empty_lines = [];
+      for (var variable_i = 0; variable_i < variable_raw_lines.length; variable_i++) {
+        var variable_trimmed_line = variable_raw_lines[variable_i].trim();
+        if (variable_trimmed_line) {
+          variable_non_empty_lines.push(variable_trimmed_line);
+        }
+      }
+      var variable_rendered_media_html = this.function_render_media_items_to_html(
+        variable_media_items_list
+      );
+      if (!variable_non_empty_lines.length && !variable_rendered_media_html) {
+        return '<p>Sorry, no response was generated.</p>';
+      }
+
+      var variable_html_parts = [];
+      var flag_is_inside_unordered_list = false;
+      var variable_pending_table_rows = [];
+
+      function function_close_open_list() {
+        if (flag_is_inside_unordered_list) {
+          variable_html_parts.push('</ul>');
+          flag_is_inside_unordered_list = false;
+        }
+      }
+
+      function function_flush_pending_table() {
+        if (!variable_pending_table_rows.length) {
+          return;
+        }
+        var variable_table_html = ['<table class="k3-table">'];
+        var flag_has_opened_tbody = false;
+        for (
+          var variable_row_index = 0;
+          variable_row_index < variable_pending_table_rows.length;
+          variable_row_index++
+        ) {
+          var variable_row_cells = variable_pending_table_rows[variable_row_index]
+            .replace(/^\||\|$/g, '')
+            .split('|')
+            .map(function (variable_cell_text) {
+              return variable_cell_text.trim();
+            });
+          if (
+            variable_row_index === 1 &&
+            variable_row_cells.every(function (variable_cell_text) {
+              return /^[:\-]+$/.test(variable_cell_text);
+            })
+          ) {
+            continue;
+          }
+          if (variable_row_index === 0) {
+            variable_table_html.push(
+              '<thead><tr>' +
+                variable_row_cells
+                  .map(function (variable_cell_text) {
+                    return (
+                      '<th>' +
+                      variable_self_renderer.function_escape_and_linkify_urls(variable_cell_text) +
+                      '</th>'
+                    );
+                  })
+                  .join('') +
+                '</tr></thead>'
+            );
+          } else {
+            if (!flag_has_opened_tbody) {
+              variable_table_html.push('<tbody>');
+              flag_has_opened_tbody = true;
+            }
+            variable_table_html.push(
+              '<tr>' +
+                variable_row_cells
+                  .map(function (variable_cell_text) {
+                    return (
+                      '<td>' +
+                      variable_self_renderer.function_escape_and_linkify_urls(variable_cell_text) +
+                      '</td>'
+                    );
+                  })
+                  .join('') +
+                '</tr>'
+            );
+          }
+        }
+        if (flag_has_opened_tbody) {
+          variable_table_html.push('</tbody>');
+        }
+        variable_table_html.push('</table>');
+        variable_html_parts.push(variable_table_html.join(''));
+        variable_pending_table_rows = [];
+      }
+
+      function function_format_bold_lead_in(variable_line_string) {
+        var variable_lead_match = variable_line_string.match(/^([^:]{2,75}):\s+(.+)$/);
+        if (
+          variable_lead_match &&
+          variable_lead_match[1].split(/\s+/).length <= 12 &&
+          !/^(https?|here is|here's|note)/i.test(variable_lead_match[1])
+        ) {
+          return (
+            '<strong>' +
+            variable_self_renderer.function_escape_html_entities(variable_lead_match[1]) +
+            ':</strong> ' +
+            variable_self_renderer.function_escape_and_linkify_urls(variable_lead_match[2])
+          );
+        }
+        return variable_self_renderer.function_escape_and_linkify_urls(variable_line_string);
+      }
+
+      for (var variable_line_idx = 0; variable_line_idx < variable_non_empty_lines.length; variable_line_idx++) {
+        var variable_current_line = variable_non_empty_lines[variable_line_idx];
+        if (/^\|.+\|$/.test(variable_current_line)) {
+          function_close_open_list();
+          variable_pending_table_rows.push(variable_current_line);
+          continue;
+        }
+        function_flush_pending_table();
+        var variable_code_token_match = variable_current_line.match(/^__K3_CODE_BLOCK_(\d+)__$/);
+        if (variable_code_token_match) {
+          function_close_open_list();
+          var variable_code_index = parseInt(variable_code_token_match[1], 10);
+          if (variable_extracted_code_blocks[variable_code_index]) {
+            variable_html_parts.push(variable_extracted_code_blocks[variable_code_index]);
+          }
+          continue;
+        }
+        var flag_is_bullet_line = /^[•\-*]\s+/.test(variable_current_line);
+        var variable_stripped_bullet_line = variable_current_line.replace(/^[•\-*]\s+/, '').trim();
+        var flag_has_colon_lead_in =
+          /^([^:]{2,75}):\s+(.+)$/.test(variable_stripped_bullet_line) &&
+          (variable_line_idx > 0 || variable_non_empty_lines.length > 1) &&
+          !/^https?:/i.test(variable_stripped_bullet_line);
+
+        if (flag_is_bullet_line || flag_has_colon_lead_in) {
+          if (!flag_is_inside_unordered_list) {
+            variable_html_parts.push('<ul>');
+            flag_is_inside_unordered_list = true;
+          }
+          variable_html_parts.push('<li>' + function_format_bold_lead_in(variable_stripped_bullet_line) + '</li>');
+        } else {
+          function_close_open_list();
+          if (
+            variable_stripped_bullet_line.slice(-1) === ':' &&
+            variable_stripped_bullet_line.split(/\s+/).length <= 10 &&
+            variable_line_idx > 0
+          ) {
+            variable_html_parts.push(
+              '<p><strong>' +
+                this.function_escape_html_entities(variable_stripped_bullet_line) +
+                '</strong></p>'
+            );
+          } else {
+            var variable_sentences = variable_stripped_bullet_line.split(/(?<=[.!?])\s+(?=[A-Z0-9])/);
+            if (variable_sentences.length >= 3) {
+              for (var variable_s_idx = 0; variable_s_idx < variable_sentences.length; variable_s_idx += 2) {
+                var variable_sentence_pair = variable_sentences.slice(variable_s_idx, variable_s_idx + 2).join(' ');
+                variable_html_parts.push(
+                  '<p>' + this.function_escape_and_linkify_urls(variable_sentence_pair) + '</p>'
+                );
+              }
+            } else {
+              variable_html_parts.push(
+                '<p>' + this.function_escape_and_linkify_urls(variable_stripped_bullet_line) + '</p>'
+              );
+            }
+          }
+        }
+      }
+      function_close_open_list();
+      function_flush_pending_table();
+      if (variable_rendered_media_html) {
+        if (variable_html_parts.length > 0) {
+          variable_html_parts.splice(1, 0, variable_rendered_media_html);
+        } else {
+          variable_html_parts.push(variable_rendered_media_html);
+        }
+      }
+      return variable_html_parts.join('');
+    }
+  }
+
+  // ==========================================================================
+  // 4. `class_clover_interactive_studio_coordinator` (`CloverCycleCoordinator` -> 5-Stage Cycle)
+  // ==========================================================================
+
+  class class_clover_interactive_studio_coordinator {
+    constructor() {
+      this.variable_active_backend_base_url = constant_backend_api_candidates[0];
+      this.variable_chat_log_element = document.getElementById('k3-chat-log');
+      this.variable_stream_scroller_element = document.getElementById('clover-stream-scroller');
+      this.variable_prompt_input_element = document.getElementById('k3-prompt-in');
+      this.variable_send_button_element = document.getElementById('k3-send-btn');
+      this.variable_session_list_element = document.getElementById('k3-session-list');
+      this.variable_sidebar_element = document.getElementById('clover-sidebar');
+      this.variable_backdrop_element = document.getElementById('clover-sidebar-backdrop');
+      this.flag_is_request_in_flight = false;
+
+      this.variable_session_store = new class_browser_conversation_session_store(
+        constant_session_storage_key
+      );
+      this.variable_reply_renderer = new class_markdown_and_media_reply_renderer();
+      this.variable_attachment_and_speech_codec = new class_multimodal_attachment_and_speech_codec({
+        variable_file_input_element: document.getElementById('k3-file-input'),
+        variable_preview_bar_element: document.getElementById('k3-img-preview-bar'),
+        variable_preview_thumbnail_element: document.getElementById('k3-img-preview-thumb'),
+        variable_preview_name_element: document.getElementById('k3-img-preview-name'),
+        variable_voice_button_element: document.getElementById('k3-voice-btn'),
+        variable_prompt_input_element: this.variable_prompt_input_element
+      });
+    }
+
+    function_check_if_mobile_viewport() {
+      return (
+        (window.innerWidth || document.documentElement.clientWidth || 1024) <=
+        constant_mobile_sidebar_breakpoint_pixels
+      );
+    }
+
+    function_synchronize_sidebar_backdrop() {
+      if (!this.variable_sidebar_element || !this.variable_backdrop_element) {
+        return;
+      }
+      var flag_is_mobile = this.function_check_if_mobile_viewport();
+      var flag_is_mobile_drawer_open =
+        flag_is_mobile && this.variable_sidebar_element.classList.contains('is-mobile-open');
+      this.variable_backdrop_element.classList.toggle('is-open', flag_is_mobile_drawer_open);
+    }
+
+    function_close_mobile_sidebar() {
+      if (this.variable_sidebar_element) {
+        this.variable_sidebar_element.classList.remove('is-mobile-open');
+        this.function_synchronize_sidebar_backdrop();
+      }
+    }
+
+    function_toggle_sidebar_drawer(variable_click_event) {
+      if (variable_click_event && variable_click_event.stopPropagation) {
+        variable_click_event.stopPropagation();
+      }
+      if (!this.variable_sidebar_element) {
+        return;
+      }
+      if (this.function_check_if_mobile_viewport()) {
+        this.variable_sidebar_element.classList.toggle('is-mobile-open');
+      } else {
+        this.variable_sidebar_element.classList.toggle('is-collapsed');
+      }
+      this.function_synchronize_sidebar_backdrop();
+    }
+
+    function_scroll_stream_to_bottom() {
+      if (this.variable_stream_scroller_element) {
+        this.variable_stream_scroller_element.scrollTop =
+          this.variable_stream_scroller_element.scrollHeight;
+      }
+    }
+
+    function_strip_legacy_inline_actions(variable_html_string) {
+      return String(variable_html_string || '').replace(
+        /<div class="k3-msg-actions">[\s\S]*?<\/div>/gi,
+        ''
+      );
+    }
+
+    function_append_message_bubble_to_DOM(variable_role_name, variable_message_html, flag_is_pending) {
+      if (variable_role_name === 'bot') {
+        var variable_turn_wrapper = document.createElement('div');
+        variable_turn_wrapper.className = 'k3-bot-turn';
+        var variable_bot_bubble = document.createElement('div');
+        variable_bot_bubble.className = 'k3-msg k3-msg--bot';
+        variable_bot_bubble.innerHTML = variable_message_html;
+        variable_turn_wrapper.appendChild(variable_bot_bubble);
+        if (!flag_is_pending) {
+          variable_turn_wrapper.insertAdjacentHTML('beforeend', constant_below_reply_actions_html);
+        }
+        this.variable_chat_log_element.appendChild(variable_turn_wrapper);
+        this.function_scroll_stream_to_bottom();
+        return variable_bot_bubble;
+      }
+      var variable_user_bubble = document.createElement('div');
+      variable_user_bubble.className = 'k3-msg k3-msg--' + variable_role_name;
+      variable_user_bubble.innerHTML = variable_message_html;
+      this.variable_chat_log_element.appendChild(variable_user_bubble);
+      this.function_scroll_stream_to_bottom();
+      return variable_user_bubble;
+    }
+
+    function_render_session_sidebar_list() {
+      if (!this.variable_session_list_element) {
+        return;
+      }
+      this.variable_session_list_element.innerHTML = '';
+      var variable_self_coordinator = this;
+      var variable_order = this.variable_session_store.variable_ordered_session_identifiers;
+      var variable_map = this.variable_session_store.variable_sessions_by_identifier;
+      var variable_active_id = this.variable_session_store.variable_active_session_identifier;
+
+      for (var variable_index = 0; variable_index < variable_order.length; variable_index++) {
+        var variable_session_id = variable_order[variable_index];
+        var variable_session_record = variable_map[variable_session_id];
+        if (!variable_session_record) {
+          continue;
+        }
+
+        var variable_row_element = document.createElement('div');
+        variable_row_element.className =
+          'clover-session-row k3-session-item' +
+          (variable_session_id === variable_active_id ? ' is-active' : '');
+        variable_row_element.setAttribute('data-session-id', variable_session_id);
+
+        var variable_select_button = document.createElement('button');
+        variable_select_button.type = 'button';
+        variable_select_button.className = 'clover-session-select';
+        variable_select_button.textContent = variable_session_record.title || 'New chat';
+        variable_select_button.title = variable_session_record.title || 'New chat';
+        (function (variable_bound_session_id) {
+          variable_select_button.onclick = function () {
+            variable_self_coordinator.function_select_session_by_identifier(variable_bound_session_id);
+          };
+        })(variable_session_id);
+
+        var variable_delete_button = document.createElement('button');
+        variable_delete_button.type = 'button';
+        variable_delete_button.className = 'clover-session-del';
+        variable_delete_button.setAttribute('aria-label', 'Delete session');
+        variable_delete_button.title = 'Remove session';
+        variable_delete_button.textContent = '×';
+        (function (variable_bound_session_id) {
+          variable_delete_button.onclick = function (variable_click_event) {
+            if (variable_click_event && variable_click_event.stopPropagation) {
+              variable_click_event.stopPropagation();
+            }
+            variable_self_coordinator.function_delete_session_and_reset_backend(
+              variable_bound_session_id
+            );
+          };
+        })(variable_session_id);
+
+        variable_row_element.appendChild(variable_select_button);
+        variable_row_element.appendChild(variable_delete_button);
+        this.variable_session_list_element.appendChild(variable_row_element);
+      }
+    }
+
+    function_render_active_session_messages() {
+      if (!this.variable_chat_log_element) {
+        return;
+      }
+      this.variable_chat_log_element.innerHTML = constant_greeting_message_html;
+      var variable_active_session = this.variable_session_store.function_get_active_session_record();
+      if (!variable_active_session || !Array.isArray(variable_active_session.messages)) {
+        return;
+      }
+      for (var variable_index = 0; variable_index < variable_active_session.messages.length; variable_index++) {
+        var variable_message_entry = variable_active_session.messages[variable_index];
+        this.function_append_message_bubble_to_DOM(
+          variable_message_entry.role,
+          this.function_strip_legacy_inline_actions(variable_message_entry.html),
+          false
+        );
+      }
+    }
+
+    function_select_session_by_identifier(variable_target_session_id) {
+      if (!this.variable_session_store.variable_sessions_by_identifier[variable_target_session_id]) {
+        return;
+      }
+      this.variable_session_store.variable_active_session_identifier = variable_target_session_id;
+      this.variable_attachment_and_speech_codec.function_clear_all_attachments();
+      this.function_render_session_sidebar_list();
+      this.function_render_active_session_messages();
+      this.variable_session_store.function_save_sessions_to_browser_storage();
+      this.function_close_mobile_sidebar();
+    }
+
+    function_delete_session_and_reset_backend(variable_target_session_id) {
+      var flag_was_deleted =
+        this.variable_session_store.function_delete_session_by_identifier(variable_target_session_id);
+      if (!flag_was_deleted) {
+        return;
+      }
+      try {
+        fetch(this.variable_active_backend_base_url + '/api/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: variable_target_session_id })
+        }).catch(function () {});
+      } catch (variable_ignored_error) {}
+      this.variable_attachment_and_speech_codec.function_clear_all_attachments();
+      this.function_render_session_sidebar_list();
+      this.function_render_active_session_messages();
+    }
+
+    function_start_or_reset_chat_session() {
+      var variable_active_session = this.variable_session_store.function_get_active_session_record();
+      if (
+        variable_active_session &&
+        (!variable_active_session.messages || variable_active_session.messages.length === 0)
+      ) {
+        this.variable_attachment_and_speech_codec.function_clear_all_attachments();
+        this.function_render_active_session_messages();
+        this.function_render_session_sidebar_list();
+        this.function_close_mobile_sidebar();
+        return;
+      }
+      this.variable_session_store.function_create_and_activate_new_session();
+      this.variable_attachment_and_speech_codec.function_clear_all_attachments();
+      this.function_render_session_sidebar_list();
+      this.function_render_active_session_messages();
+      this.function_close_mobile_sidebar();
+    }
+
+    async function_probe_healthy_backend_endpoint() {
+      for (var variable_index = 0; variable_index < constant_backend_api_candidates.length; variable_index++) {
+        var variable_candidate_base_url = constant_backend_api_candidates[variable_index];
+        if (
+          window.location.protocol === 'https:' &&
+          variable_candidate_base_url.indexOf('http://127.0.0.1') !== 0 &&
+          variable_candidate_base_url.indexOf('https://') !== 0
+        ) {
+          continue;
+        }
+        try {
+          var variable_abort_controller = new AbortController();
+          var variable_timeout_handle = setTimeout(function () {
+            variable_abort_controller.abort();
+          }, constant_health_probe_timeout_milliseconds);
+          var variable_health_response = await fetch(variable_candidate_base_url + '/api/health', {
+            signal: variable_abort_controller.signal
+          });
+          clearTimeout(variable_timeout_handle);
+          if (variable_health_response.ok) {
+            this.variable_active_backend_base_url = variable_candidate_base_url;
+            return true;
+          }
+        } catch (variable_ignored_error) {}
+      }
+      return false;
+    }
+
+    async function_send_user_prompt_and_render_outcome() {
+      if (this.flag_is_request_in_flight) {
+        return;
+      }
+      var variable_prompt_text = (this.variable_prompt_input_element.value || '').trim();
+      var variable_image_data_url =
+        this.variable_attachment_and_speech_codec.variable_attached_image_data_url;
+      var variable_attached_files =
+        this.variable_attachment_and_speech_codec.variable_attached_files_list.slice();
+      if (!variable_prompt_text && !variable_image_data_url && !variable_attached_files.length) {
+        return;
+      }
+
+      this.flag_is_request_in_flight = true;
+      var variable_submitted_session_id =
+        this.variable_session_store.variable_active_session_identifier;
+      var variable_self_coordinator = this;
+      var variable_prior_turns = this.variable_session_store.function_extract_prior_conversation_turns(
+        variable_submitted_session_id,
+        function (variable_html) {
+          return variable_self_coordinator.variable_reply_renderer.function_convert_html_fragment_to_plain_text(
+            variable_html
+          );
+        }
+      );
+
+      this.variable_prompt_input_element.value = '';
+      this.variable_attachment_and_speech_codec.function_clear_all_attachments();
+      if (this.variable_send_button_element) {
+        this.variable_send_button_element.disabled = true;
+      }
+
+      var variable_user_bubble_html = '';
+      if (variable_image_data_url) {
+        variable_user_bubble_html +=
+          '<img class="k3-chat-thumb" src="' + variable_image_data_url + '" alt="Uploaded media">';
+      }
+      for (var variable_file_idx = 0; variable_file_idx < variable_attached_files.length; variable_file_idx++) {
+        if ((variable_attached_files[variable_file_idx].type || '').indexOf('image/') !== 0) {
+          variable_user_bubble_html +=
+            '<div class="k3-attach-chip">📎 ' +
+            this.variable_reply_renderer.function_escape_html_entities(
+              variable_attached_files[variable_file_idx].name
+            ) +
+            '</div>';
+        }
+      }
+      if (variable_prompt_text) {
+        variable_user_bubble_html +=
+          '<p>' +
+          this.variable_reply_renderer
+            .function_escape_html_entities(variable_prompt_text)
+            .replace(/\n/g, '<br>') +
+          '</p>';
+      }
+
+      var variable_effective_prompt_text =
+        variable_prompt_text ||
+        (variable_image_data_url
+          ? 'Describe this image clearly.'
+          : 'Summarize and explain the attached file.');
+      var variable_session_record =
+        this.variable_session_store.variable_sessions_by_identifier[variable_submitted_session_id];
+      if (variable_session_record) {
+        if (
+          !variable_session_record.messages ||
+          variable_session_record.messages.length === 0 ||
+          variable_session_record.title === 'New chat'
+        ) {
+          var variable_title_candidate =
+            variable_prompt_text ||
+            (variable_attached_files.length ? variable_attached_files[0].name : 'Image analysis');
+          variable_session_record.title = variable_title_candidate.slice(0, 38);
+        }
+        variable_session_record.messages.push({
+          role: 'user',
+          html: variable_user_bubble_html,
+          text: variable_effective_prompt_text
+        });
+        this.function_render_session_sidebar_list();
+        this.variable_session_store.function_save_sessions_to_browser_storage();
+      }
+
+      if (
+        this.variable_session_store.variable_active_session_identifier === variable_submitted_session_id
+      ) {
+        this.function_append_message_bubble_to_DOM('user', variable_user_bubble_html, false);
+      }
+      var variable_pending_bot_bubble =
+        this.variable_session_store.variable_active_session_identifier === variable_submitted_session_id
+          ? this.function_append_message_bubble_to_DOM('bot', constant_clover_loader_html, true)
+          : null;
+
+      try {
+        var variable_chat_response = await fetch(this.variable_active_backend_base_url + '/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: variable_submitted_session_id,
+            prompt: variable_effective_prompt_text,
+            image_base64: variable_image_data_url,
+            attachments: variable_attached_files,
+            history: variable_prior_turns,
+            remember: true
+          })
+        });
+        if (!variable_chat_response.ok) {
+          throw new Error('HTTP ' + variable_chat_response.status);
+        }
+        var variable_response_json = await variable_chat_response.json();
+        var variable_assistant_reply_text =
+          variable_response_json.reply ||
+          variable_response_json.reply_mbr8 ||
+          variable_response_json.reply_1cand ||
+          'Sorry, no response was generated.';
+        var variable_formatted_bot_html =
+          this.variable_reply_renderer.function_format_assistant_reply_to_html(
+            variable_assistant_reply_text,
+            variable_response_json.media || []
+          );
+
+        if (this.variable_session_store.variable_sessions_by_identifier[variable_submitted_session_id]) {
+          this.variable_session_store.variable_sessions_by_identifier[
+            variable_submitted_session_id
+          ].messages.push({
+            role: 'bot',
+            html: variable_formatted_bot_html,
+            text: variable_assistant_reply_text
+          });
+          this.variable_session_store.function_save_sessions_to_browser_storage();
+        }
+
+        if (
+          this.variable_session_store.variable_active_session_identifier === variable_submitted_session_id
+        ) {
+          if (
+            variable_pending_bot_bubble &&
+            variable_pending_bot_bubble.parentNode &&
+            variable_pending_bot_bubble.parentNode.parentNode === this.variable_chat_log_element
+          ) {
+            variable_pending_bot_bubble.innerHTML = variable_formatted_bot_html;
+            variable_pending_bot_bubble.parentNode.insertAdjacentHTML(
+              'beforeend',
+              constant_below_reply_actions_html
+            );
+            this.function_scroll_stream_to_bottom();
+            if (this.variable_attachment_and_speech_codec.flag_was_last_input_from_voice) {
+              this.variable_attachment_and_speech_codec.flag_was_last_input_from_voice = false;
+              this.variable_attachment_and_speech_codec.function_speak_assistant_reply(
+                variable_pending_bot_bubble,
+                this.variable_active_backend_base_url
+              );
+            }
+          } else {
+            this.function_render_active_session_messages();
+          }
+        }
+      } catch (variable_network_error) {
+        var variable_error_fallback_html =
+          '<p>Unable to reach Clover right now. Please try again.</p>';
+        if (
+          variable_pending_bot_bubble &&
+          this.variable_session_store.variable_active_session_identifier ===
+            variable_submitted_session_id &&
+          variable_pending_bot_bubble.parentNode &&
+          variable_pending_bot_bubble.parentNode.parentNode === this.variable_chat_log_element
+        ) {
+          variable_pending_bot_bubble.innerHTML = variable_error_fallback_html;
+        }
+        this.function_probe_healthy_backend_endpoint();
+      } finally {
+        this.flag_is_request_in_flight = false;
+        if (this.variable_send_button_element) {
+          this.variable_send_button_element.disabled = false;
+        }
+        if (this.variable_prompt_input_element) {
+          this.variable_prompt_input_element.focus();
+        }
+      }
+    }
+
+    function_regenerate_last_assistant_reply() {
+      if (this.flag_is_request_in_flight) {
+        return;
+      }
+      var variable_active_session = this.variable_session_store.function_get_active_session_record();
+      if (
+        !variable_active_session ||
+        !Array.isArray(variable_active_session.messages) ||
+        !variable_active_session.messages.length
+      ) {
+        return;
+      }
+      var variable_last_user_prompt = '';
+      for (
+        var variable_index = variable_active_session.messages.length - 1;
+        variable_index >= 0;
+        variable_index--
+      ) {
+        if (variable_active_session.messages[variable_index].role === 'user') {
+          variable_last_user_prompt =
+            variable_active_session.messages[variable_index].text ||
+            this.variable_reply_renderer.function_convert_html_fragment_to_plain_text(
+              variable_active_session.messages[variable_index].html
+            );
+          break;
+        }
+      }
+      if (!variable_last_user_prompt) {
+        return;
+      }
+      if (
+        variable_active_session.messages[variable_active_session.messages.length - 1].role === 'bot'
+      ) {
+        variable_active_session.messages.pop();
+      }
+      if (
+        variable_active_session.messages.length &&
+        variable_active_session.messages[variable_active_session.messages.length - 1].role === 'user'
+      ) {
+        variable_active_session.messages.pop();
+      }
+      this.function_render_active_session_messages();
+      this.variable_prompt_input_element.value = variable_last_user_prompt;
+      this.function_send_user_prompt_and_render_outcome();
+    }
+
+    function_copy_code_block_to_clipboard(variable_copy_button) {
+      var variable_code_element =
+        variable_copy_button && variable_copy_button.parentNode
+          ? variable_copy_button.parentNode.querySelector('code')
+          : null;
+      if (!variable_code_element) {
+        return;
+      }
+      var variable_code_text =
+        variable_code_element.textContent || variable_code_element.innerText || '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(variable_code_text).then(function () {
+          variable_copy_button.textContent = 'Copied!';
+          setTimeout(function () {
+            variable_copy_button.textContent = 'Copy';
+          }, 1400);
+        });
+      }
+    }
+
+    function_copy_reply_to_clipboard(variable_copy_button) {
+      var variable_turn_element =
+        variable_copy_button && variable_copy_button.closest
+          ? variable_copy_button.closest('.k3-bot-turn')
+          : null;
+      var variable_message_element = variable_turn_element
+        ? variable_turn_element.querySelector('.k3-msg')
+        : variable_copy_button && variable_copy_button.closest
+          ? variable_copy_button.closest('.k3-msg')
+          : null;
+      if (!variable_message_element) {
+        return;
+      }
+      var variable_cloned_message = variable_message_element.cloneNode(true);
+      var variable_stripped_elements = variable_cloned_message.querySelectorAll(
+        '.k3-msg-actions, .k3-copy-code-btn, svg'
+      );
+      for (var variable_index = 0; variable_index < variable_stripped_elements.length; variable_index++) {
+        variable_stripped_elements[variable_index].remove();
+      }
+      var variable_reply_plain_text = (variable_cloned_message.textContent || '').trim();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(variable_reply_plain_text).then(function () {
+          variable_copy_button.classList.add('is-active');
+          setTimeout(function () {
+            variable_copy_button.classList.remove('is-active');
+          }, 1200);
+        });
+      }
+    }
+
+    function_bind_events_and_initialize_studio() {
+      var variable_self_coordinator = this;
+      this.function_synchronize_sidebar_backdrop();
+
+      window.addEventListener('resize', function () {
+        if (
+          !variable_self_coordinator.function_check_if_mobile_viewport() &&
+          variable_self_coordinator.variable_sidebar_element
+        ) {
+          variable_self_coordinator.variable_sidebar_element.classList.remove('is-mobile-open');
+        }
+        variable_self_coordinator.function_synchronize_sidebar_backdrop();
+      });
+
+      document.addEventListener('click', function (variable_click_event) {
+        if (
+          !variable_self_coordinator.function_check_if_mobile_viewport() ||
+          !variable_self_coordinator.variable_sidebar_element ||
+          !variable_self_coordinator.variable_sidebar_element.classList.contains('is-mobile-open')
+        ) {
+          return;
+        }
+        var variable_clicked_target = variable_click_event.target;
+        if (!variable_clicked_target) {
+          return;
+        }
+        if (variable_self_coordinator.variable_sidebar_element.contains(variable_clicked_target)) {
+          return;
+        }
+        var variable_toggle_button = document.getElementById('clover-sidebar-toggle');
+        if (variable_toggle_button && variable_toggle_button.contains(variable_clicked_target)) {
+          return;
+        }
+        variable_self_coordinator.function_close_mobile_sidebar();
+      });
+
+      document.addEventListener('paste', function (variable_paste_event) {
+        var variable_clipboard_items =
+          (variable_paste_event.clipboardData && variable_paste_event.clipboardData.items) || [];
+        for (var variable_index = 0; variable_index < variable_clipboard_items.length; variable_index++) {
+          if (
+            variable_clipboard_items[variable_index].type &&
+            variable_clipboard_items[variable_index].type.indexOf('image/') === 0
+          ) {
+            var variable_pasted_file = variable_clipboard_items[variable_index].getAsFile();
+            if (variable_pasted_file) {
+              variable_self_coordinator.variable_attachment_and_speech_codec.function_ingest_selected_files([
+                variable_pasted_file
+              ]);
+            }
+          }
+        }
+      });
+
+      if (this.variable_prompt_input_element) {
+        this.variable_prompt_input_element.addEventListener('keydown', function (variable_key_event) {
+          if (variable_key_event.key === 'Enter' && !variable_key_event.shiftKey) {
+            variable_key_event.preventDefault();
+            variable_self_coordinator.function_send_user_prompt_and_render_outcome();
+          }
+        });
+      }
+
+      // Expose HTML inline handler hooks delegating directly to the domain classes
+      window.k3CloseMobileSidebar = function () {
+        variable_self_coordinator.function_close_mobile_sidebar();
+      };
+      window.k3ToggleSidebar = function (variable_event) {
+        variable_self_coordinator.function_toggle_sidebar_drawer(variable_event);
+      };
+      window.k3SelectSession = function (variable_session_id) {
+        variable_self_coordinator.function_select_session_by_identifier(variable_session_id);
+      };
+      window.k3DeleteSession = function (variable_session_id) {
+        variable_self_coordinator.function_delete_session_and_reset_backend(variable_session_id);
+      };
+      window.k3ResetChat = function () {
+        variable_self_coordinator.function_start_or_reset_chat_session();
+      };
+      window.k3OnFilesSelected = function (variable_change_event) {
+        var variable_files =
+          variable_change_event && variable_change_event.target && variable_change_event.target.files
+            ? variable_change_event.target.files
+            : [];
+        variable_self_coordinator.variable_attachment_and_speech_codec.function_ingest_selected_files(
+          variable_files
+        );
+      };
+      window.k3ClearAttachments = function () {
+        variable_self_coordinator.variable_attachment_and_speech_codec.function_clear_all_attachments();
+      };
+      window.k3ClearImage = window.k3ClearAttachments;
+      window.k3ToggleVoice = function () {
+        variable_self_coordinator.variable_attachment_and_speech_codec.function_toggle_voice_recognition();
+      };
+      window.k3CopyCode = function (variable_button) {
+        variable_self_coordinator.function_copy_code_block_to_clipboard(variable_button);
+      };
+      window.k3SpeakReply = function (variable_button) {
+        return variable_self_coordinator.variable_attachment_and_speech_codec.function_speak_assistant_reply(
+          variable_button,
+          variable_self_coordinator.variable_active_backend_base_url
+        );
+      };
+      window.k3CopyReply = function (variable_button) {
+        variable_self_coordinator.function_copy_reply_to_clipboard(variable_button);
+      };
+      window.k3RegenerateLast = function () {
+        variable_self_coordinator.function_regenerate_last_assistant_reply();
+      };
+      window.k3SendPrompt = function () {
+        return variable_self_coordinator.function_send_user_prompt_and_render_outcome();
+      };
+
+      this.variable_session_store.function_load_sessions_from_browser_storage();
+      this.function_render_session_sidebar_list();
+      this.function_render_active_session_messages();
+      this.function_probe_healthy_backend_endpoint();
+    }
+  }
+
+  var variable_studio_coordinator = new class_clover_interactive_studio_coordinator();
+  variable_studio_coordinator.function_bind_events_and_initialize_studio();
+})();
+</script>
+<script src="../website-interaction-controllers.js?v=4.1.2" defer></script>
+</body>
+</html>

@@ -27,11 +27,11 @@ Accountability follows the same scale boundary. Within a task or piece of work, 
 ## Pages
 
 - [The framework](https://cloverframework.com/): the full argument, the actors, the system cycle, and the closing claim that responsibility for AI was sidelined.
-- [Origin](https://cloverframework.com/origin/): eleven foundational papers that built modern AI (1943–2017), explained in plain language from reading the primary papers and running their mechanisms firsthand.
-- [AGENTS.md](https://cloverframework.com/start/): read-only system access, AGENTS.md, and a first cycle.
+- [Origin](https://cloverframework.com/origin/): twelve chapters from 1943 to 2026 in a vertical storyline, explained in plain language from reading the primary papers and running their mechanisms firsthand.
+- [AGENTS.md](https://cloverframework.com/getting-started/): read-only system access, AGENTS.md, and a first cycle.
 - [Governance](https://cloverframework.com/governance/): access, attribution, approvals, agent behavior, delegated execution, and the named human who is accountable.
-- [Evidence](https://cloverframework.com/evidence/): case studies and reference implementations, each stating where it stopped.
-- [Clover, under Evidence](https://cloverframework.com/clover-k3/): the unified 7-layer Clover system (AGENTS.md governance, File-Based Memory Tree & Relational Knowledge Graph, Ontology-Guided GraphRAG, HybridAgent, Python & Rust Generative Compilation, 93-layer 2.78T MoE GPU/CPU engine with Rust host libraries, and 11-pass NCM): where we started, measured speeds, set-up, credit and references.
+- [Evidence](https://cloverframework.com/evidence/): vertical storyline from production case studies, reference implementations, and field lessons through to `clover-kimi-k3` (the unified 7-layer Clover system).
+- [Clover AI](https://cloverframework.com/clover-ai/): interactive Clover AI studio.
 - [Glossary](https://cloverframework.com/glossary/): plain-language definitions.
 - [The author](https://cloverframework.com/author/): who wrote it.
 

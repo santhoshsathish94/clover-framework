@@ -1,0 +1,3296 @@
+/* ==========================================================================
+   Clover — Minimalist Botanical & Nature-Embodied Design System
+   Warm sunlit parchment, deep forest-bark ink, living clover moss & weathered stone.
+   Pure hand-crafted CSS · Zero external dependencies.
+   ========================================================================== */
+
+:root {
+  /* --- Complete-English Hyphenated Botanical Design Constants (`--constant-*`) --- */
+  --constant-sunlit-parchment-background: #faf8f2;
+  --constant-soft-moss-linen-surface:     #f2eee4;
+  --constant-deep-moss-linen-surface:     #e7e1d3;
+  --constant-elevated-card-paper-surface: #fffefb;
+  --constant-tinted-herbarium-surface:    #f6f3ea;
+  --constant-frosted-parchment-glass:     rgba(250, 248, 242, 0.86);
+  --constant-frosted-card-glass:          rgba(255, 254, 251, 0.92);
+
+  --constant-forest-bark-primary-ink:     #132018;
+  --constant-pine-needle-secondary-ink:   #2d3e34;
+  --constant-lichen-muted-ink:            #596a5f;
+  --constant-weathered-subtle-ink:        #7c8c81;
+
+  --constant-pressed-stem-border-line:    #dfd8c8;
+  --constant-strong-stem-border-line:     #c9c0ad;
+  --constant-hairline-divider-tint:       rgba(19, 32, 24, 0.08);
+
+  --constant-clover-leaf-primary-accent:  #1b5e46;
+  --constant-clover-leaf-hover-accent:    #124331;
+  --constant-clover-leaf-medium-accent:   #297a5d;
+  --constant-clover-leaf-soft-wash:       #e3efe8;
+  --constant-clover-leaf-subtle-tint:     #eef6f1;
+  --constant-clover-leaf-border-accent:   #8bb7a4;
+
+  --constant-amber-sunlight-warning-ink:  #7d5312;
+  --constant-amber-sunlight-warning-wash: #fbf3e2;
+  --constant-amber-sunlight-warning-line: #dfc48d;
+
+  --constant-living-leaf-gradient-start:  #32946f;
+  --constant-living-leaf-gradient-middle: #1b5e46;
+  --constant-living-leaf-gradient-end:    #0e3929;
+  --constant-living-leaf-ambient-glow:    rgba(27, 94, 70, 0.14);
+
+  --constant-herbarium-serif-font-stack:  "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, "ITC Charter", Georgia, serif;
+  --constant-humanist-sans-font-stack:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --constant-monospace-code-font-stack:   "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --constant-maximum-prose-measure:       65ch;
+  --constant-horizontal-page-padding:     clamp(1.35rem, 4.2vw, 2.75rem);
+  --constant-natural-motion-easing:       cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* --- Sunlit Botanical Surfaces (Linen, Warm Parchment & Morning Dew) --- */
+  --bg:           var(--constant-sunlit-parchment-background);
+  --soft:         var(--constant-soft-moss-linen-surface);
+  --soft-2:       var(--constant-deep-moss-linen-surface);
+  --surface:      var(--constant-elevated-card-paper-surface);
+  --surface-tint: var(--constant-tinted-herbarium-surface);
+  --glass:        var(--constant-frosted-parchment-glass);
+  --card-glass:   var(--constant-frosted-card-glass);
+
+  /* --- Forest Bark, Pine & Lichen Ink --- */
+  --ink:          var(--constant-forest-bark-primary-ink);
+  --ink-2:        var(--constant-pine-needle-secondary-ink);
+  --muted:        var(--constant-lichen-muted-ink);
+  --subtle:       var(--constant-weathered-subtle-ink);
+
+  /* --- Organic Hairlines & Pressed-Stem Borders --- */
+  --line:         var(--constant-pressed-stem-border-line);
+  --line-2:       var(--constant-strong-stem-border-line);
+  --line-soft:    var(--constant-hairline-divider-tint);
+
+  /* --- Living Clover Greens & Warm Amber Sunlight --- */
+  --accent:       var(--constant-clover-leaf-primary-accent);
+  --accent-hover: var(--constant-clover-leaf-hover-accent);
+  --accent-mid:   var(--constant-clover-leaf-medium-accent);
+  --accent-soft:  var(--constant-clover-leaf-soft-wash);
+  --accent-tint:  var(--constant-clover-leaf-subtle-tint);
+  --accent-line:  var(--constant-clover-leaf-border-accent);
+
+  --warn:         var(--constant-amber-sunlight-warning-ink);
+  --warn-soft:    var(--constant-amber-sunlight-warning-wash);
+  --warn-line:    var(--constant-amber-sunlight-warning-line);
+
+  /* --- Five-Leaf Clover Botanical Gradient --- */
+  --leaf-1:       var(--constant-living-leaf-gradient-start);
+  --leaf-2:       var(--constant-living-leaf-gradient-middle);
+  --leaf-3:       var(--constant-living-leaf-gradient-end);
+  --leaf-glow:    var(--constant-living-leaf-ambient-glow);
+
+  /* --- Typography: Literary Herbarium Serif + Clean Humanist Sans --- */
+  --serif:        var(--constant-herbarium-serif-font-stack);
+  --font:         var(--constant-humanist-sans-font-stack);
+  --mono:         var(--constant-monospace-code-font-stack);
+
+  /* --- Rhythm, Geometry & Elevation --- */
+  --radius-xs:    8px;
+  --radius-sm:    12px;
+  --radius:       16px;
+  --radius-lg:    24px;
+  --radius-pill:  999px;
+  --measure:      var(--constant-maximum-prose-measure);
+  --pad:          var(--constant-horizontal-page-padding);
+
+  --shadow-xs:    0 1px 3px rgba(18, 32, 24, 0.04);
+  --shadow-sm:    0 6px 20px -4px rgba(18, 32, 24, 0.055), 0 2px 6px -1px rgba(18, 32, 24, 0.03);
+  --shadow-md:    0 14px 36px -8px rgba(18, 32, 24, 0.08), 0 4px 12px -2px rgba(18, 32, 24, 0.04);
+  --shadow-lg:    0 24px 56px -12px rgba(18, 32, 24, 0.12), 0 8px 20px -4px rgba(18, 32, 24, 0.05);
+
+  --ease-nature:  var(--constant-natural-motion-easing);
+}
+
+/* Weathered River-Stone State (when scrolling into the real-world misuse sections) */
+:root.is-real-world {
+  --leaf-1:       #878274;
+  --leaf-2:       #696458;
+  --leaf-3:       #4d4940;
+  --leaf-glow:    rgba(105, 100, 88, 0.10);
+}
+
+/* ==========================================================================
+   1. Base Reset, View Transitions & Sunlit Meadow Canvas
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.2rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+
+  ::view-transition-old(root) {
+    animation: clover-fade-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+  ::view-transition-new(root) {
+    animation: clover-fade-in 280ms var(--ease-nature) both;
+  }
+}
+
+@keyframes clover-fade-out { to { opacity: 0; } }
+@keyframes clover-fade-in  { from { opacity: 0; transform: translateY(6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 88% 52% at 50% -8%, rgba(41, 122, 93, 0.075), transparent 70%),
+    radial-gradient(ellipse 60% 42% at 92% 16%, rgba(196, 143, 59, 0.045), transparent 65%),
+    radial-gradient(ellipse 68% 48% at 6% 68%, rgba(27, 94, 70, 0.04), transparent 70%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.72;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+/* ==========================================================================
+   2. Botanical Editorial Typography & Links
+   ========================================================================== */
+
+h1, h2, h3, h4 {
+  color: var(--ink);
+  line-height: 1.18;
+  letter-spacing: -0.018em;
+  margin: 0 0 0.55em;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.15rem, 4.8vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.55rem, 3.2vw, 2.15rem);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+}
+
+h3 {
+  font-family: var(--serif);
+  font-size: 1.24rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h4 {
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+
+p {
+  margin: 0 0 1.08rem;
+  max-width: var(--measure);
+  color: var(--ink-2);
+}
+
+ul, ol {
+  max-width: var(--measure);
+  color: var(--ink-2);
+  margin: 0 0 1.1rem;
+  padding-left: 1.35rem;
+}
+
+li {
+  margin-bottom: 0.38rem;
+}
+
+li::marker {
+  color: var(--accent);
+}
+
+strong {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* The opening lead of each band section carries the botanical clover accent */
+main section.band > .wrap > p:first-of-type strong {
+  color: var(--accent);
+}
+
+/* Source evidence links below sections */
+main section.band > .wrap > p.evidence-link {
+  font-size: 0.94rem;
+  color: var(--muted);
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--line);
+}
+
+.evidence-link a {
+  color: var(--ink-2);
+  text-decoration-color: var(--line-2);
+  font-weight: 550;
+}
+
+.evidence-link a:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: rgba(27, 94, 70, 0.36);
+  overflow-wrap: anywhere;
+  transition: color 0.18s var(--ease-nature), text-decoration-color 0.18s var(--ease-nature);
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration-color: var(--accent-hover);
+  text-decoration-thickness: 1.5px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+code, .mono {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  overflow-wrap: anywhere;
+}
+
+p code, li code, td code, dd code, caption code {
+  background: var(--soft);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 0.1rem 0.36rem;
+  border-radius: 5px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0.6rem;
+  z-index: 100;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+}
+
+.skip:focus {
+  left: 1rem;
+}
+
+/* ==========================================================================
+   3. Layout Containers, Section Bands & Editorial Scale
+   ========================================================================== */
+
+.wrap {
+  width: min(1140px, 100%);
+  margin-inline: auto;
+  padding-inline: var(--pad);
+}
+
+.narrow {
+  width: min(760px, 100%);
+  margin-inline: auto;
+  padding-inline: var(--pad);
+}
+
+section[id] { scroll-margin-top: 5rem; }
+.kv[id], .wrong[id] { scroll-margin-top: 6rem; }
+
+.band {
+  padding-block: clamp(3.2rem, 7vw, 5.2rem);
+  border-bottom: 1px solid rgba(201, 192, 173, 0.48);
+  position: relative;
+}
+
+.band:last-of-type {
+  border-bottom: 0;
+}
+
+.lede {
+  font-family: var(--serif);
+  font-size: clamp(1.14rem, 2vw, 1.32rem);
+  line-height: 1.62;
+  color: var(--ink-2);
+}
+
+.note {
+  font-size: 0.91rem;
+  color: var(--muted);
+}
+
+/* Section-level prose carries generous editorial scale */
+main section.band > .wrap > p,
+main section.band > .wrap > .scale-dimensions > div > p,
+main.narrow > p {
+  font-size: clamp(1.08rem, 1.9vw, 1.22rem);
+  line-height: 1.72;
+}
+
+main section.band > .wrap > h3,
+main.narrow > h3 {
+  font-family: var(--serif);
+  font-size: clamp(1.32rem, 2.4vw, 1.56rem);
+  margin-top: 1.8rem;
+}
+
+/* ==========================================================================
+   4. Author Page & Sanskrit Verse
+   ========================================================================== */
+
+.author-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.6rem;
+  align-items: center;
+  padding: 1.5rem 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2.2rem;
+}
+
+.author-head h1 {
+  margin-top: 0;
+}
+
+.author-head .lede {
+  margin-bottom: 0;
+}
+
+@media (max-width: 560px) {
+  .author-head {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    text-align: center;
+  }
+  .author-head .feather {
+    margin-inline: auto;
+  }
+}
+
+.feather {
+  display: block;
+  width: auto;
+  filter: drop-shadow(0 8px 16px rgba(19, 32, 24, 0.10));
+}
+
+.feather--lg { height: 122px; }
+.feather--sm { height: 76px; margin: 0 auto 1rem; }
+
+.verse {
+  margin: 3rem 0 0;
+  padding: 2rem 1.75rem;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-tint) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.verse p[lang="sa"] {
+  font-family: "Nirmala UI", "Noto Sans Devanagari", "Mangal", var(--serif);
+  font-size: 1.2rem;
+  line-height: 1.95;
+  color: var(--ink);
+  margin: 0 auto 0.85rem;
+}
+
+.verse__meaning {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.02rem;
+  color: var(--ink-2);
+  margin: 0 auto;
+  max-width: 46ch;
+}
+
+main section.band > .wrap > p.verse__line {
+  margin: 2.6rem auto 0;
+  max-width: 44ch;
+  font-family: var(--serif);
+  font-size: clamp(1.18rem, 2.6vw, 1.52rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  color: var(--accent);
+}
+
+.closing .wrap { text-align: center; }
+.closing { padding-block: clamp(3.5rem, 9vw, 7rem); }
+
+:root.is-closing .pinned__mark {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 600ms ease, visibility 0s 600ms;
+}
+
+.pinned__mark {
+  transition: opacity 600ms ease, visibility 0s;
+}
+
+/* ==========================================================================
+   5. The Five-Leaf Botanical Clover Mark & Pinned Story Rail
+   ========================================================================== */
+
+.clover-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.clover {
+  display: block;
+  flex: none;
+  width: clamp(72px, 12vw, 112px);
+  height: auto;
+  overflow: visible;
+}
+
+.clover__leaf {
+  fill: none;
+  stroke: var(--accent-line);
+  stroke-width: 2.8;
+  stroke-linejoin: round;
+}
+
+.clover__leaf.is-filled {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+
+.clover__stem {
+  fill: none;
+  stroke: var(--accent-line);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+
+.clover--hero {
+  width: clamp(260px, 35vw, 390px);
+  justify-self: center;
+  margin-inline: auto;
+  filter: drop-shadow(0 18px 36px var(--leaf-glow));
+}
+
+.clover--close {
+  display: block;
+  width: clamp(150px, 24vw, 236px);
+  margin: 2.2rem auto 0;
+  filter: drop-shadow(0 14px 28px rgba(27, 94, 70, 0.16));
+}
+
+.clover--close .clover__leaf.is-filled {
+  fill: url(#leaf-revive);
+  stroke: none;
+}
+
+.clover--close .clover__vein {
+  stroke: #d9ece4;
+}
+
+.clover--brand {
+  width: 26px;
+}
+
+.clover--mark {
+  width: clamp(200px, 40vw, 420px);
+}
+
+.clover__leaf.is-soft {
+  fill: var(--accent-soft);
+  stroke: var(--accent-line);
+  stroke-width: 2.4;
+}
+
+.clover__leaf.is-new {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+
+.clover__leaf.is-next {
+  fill: none;
+  stroke: var(--accent-line);
+  stroke-width: 2.4;
+  stroke-dasharray: 5 4.5;
+  stroke-linecap: round;
+}
+
+.clover__label {
+  font-family: var(--serif);
+  font-size: 5.9px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  fill: var(--ink-2);
+}
+
+.clover__leaf-hit {
+  cursor: pointer;
+  outline: none;
+}
+
+.clover__leaf-hit .clover__leaf,
+.clover__leaf-hit .clover__label {
+  transition: fill 200ms var(--ease-nature), stroke 200ms var(--ease-nature);
+}
+
+.clover__leaf-hit:focus-visible .clover__label {
+  fill: var(--ink);
+  font-weight: 800;
+}
+
+.clover--hero .clover__leaf.is-filled {
+  fill: url(#leaf-fade);
+  stroke: none;
+}
+
+#leaf-fade stop {
+  transition: stop-color 700ms var(--ease-nature);
+}
+
+#leaf-fade stop:nth-of-type(1) { stop-color: var(--leaf-1); }
+#leaf-fade stop:nth-of-type(2) { stop-color: var(--leaf-2); }
+#leaf-fade stop:nth-of-type(3) { stop-color: var(--leaf-3); }
+
+.clover__vein {
+  fill: none;
+  stroke: #fffefb;
+  stroke-opacity: 0.55;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.clover__label--now  { fill: var(--accent); font-weight: 700; }
+.clover__label--next { fill: var(--muted); }
+
+.clover--ink .clover__leaf {
+  fill: var(--ink);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.clover--ink .clover__stem {
+  stroke: var(--ink);
+}
+
+.ask__q {
+  margin-top: 2rem;
+  font-family: var(--serif);
+  font-size: clamp(1.2rem, 2.6vw, 1.55rem);
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 44rem;
+  text-wrap: balance;
+}
+
+/* Narrative Arc & Leaf Sections */
+.arc {
+  display: grid;
+  gap: 1.5rem 2.4rem;
+  align-items: center;
+  margin-top: 1.7rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 860px) {
+  .arc { grid-template-columns: minmax(0, 1fr); }
+}
+
+.arc__mark {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+}
+
+.arc__mark figcaption {
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-align: center;
+  max-width: 34ch;
+}
+
+.arc__body > :last-child { margin-bottom: 0; }
+.arc__body h3 { margin-bottom: 0.5rem; }
+.arc__body ul { margin: 0 0 1rem; padding-left: 1.15rem; }
+.arc__body li { margin-bottom: 0.2rem; }
+
+.holds dt { flex: 0 0 5.5rem; }
+.holds dd { padding-top: 0.1rem; }
+
+.wrong {
+  margin-top: 1.8rem;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  border-left: 3px solid var(--accent-line);
+}
+
+.wrong h3 {
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0.5rem 0;
+}
+
+.wrong p {
+  font-size: 0.97rem;
+  color: var(--ink-2);
+}
+
+.wrong p:last-child { margin-bottom: 0.6rem; }
+
+.wrong__flow, .wrong__cols p { max-width: none; }
+
+@media (min-width: 900px) {
+  .wrong__flow, .wrong__cols { columns: 2; column-gap: 3rem; }
+  .wrong__cols p { break-inside: avoid; }
+  .wrong__cols p:last-child { margin-bottom: 0.6rem; }
+}
+
+.split {
+  display: grid;
+  gap: 1.1rem 2.8rem;
+  align-items: start;
+}
+
+.split h3 { margin-top: 0; }
+.split__lead > :last-child, .split__body > :last-child { margin-bottom: 0; }
+.split > .split__body { margin-top: 0; }
+
+@media (min-width: 860px) {
+  .split { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+}
+
+/* ==========================================================================
+   6. Botanical Header & Navigation
+   ========================================================================== */
+
+.site-head {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--glass);
+  backdrop-filter: saturate(150%) blur(14px);
+  -webkit-backdrop-filter: saturate(150%) blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+.site-head .wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 4rem;
+  flex-wrap: wrap;
+}
+
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--accent-tint);
+  border: 1px solid rgba(27, 94, 70, 0.18);
+  text-decoration: none;
+  margin-right: -0.25rem;
+  transition: transform 0.35s var(--ease-nature), background-color 0.2s var(--ease-nature), border-color 0.2s var(--ease-nature);
+}
+
+.brand-icon:hover {
+  transform: rotate(36deg) scale(1.05);
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.42rem;
+  font-family: var(--serif);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  text-decoration: none;
+  margin-right: auto;
+  font-size: 1.14rem;
+}
+
+.brand:hover {
+  color: var(--accent);
+}
+
+.brand span {
+  font-family: var(--font);
+  color: var(--accent);
+  font-weight: 550;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+}
+
+.site-nav {
+  display: flex;
+  gap: 0.22rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.site-nav > a,
+.site-nav > .nav-item > a {
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 0.94rem;
+  font-weight: 550;
+  padding: 0.4rem 0.78rem;
+  border-radius: var(--radius-pill);
+  border-bottom: 0;
+  transition: background-color 0.18s var(--ease-nature), color 0.18s var(--ease-nature);
+}
+
+.site-nav > a:hover,
+.site-nav > .nav-item > a:hover {
+  color: var(--accent-hover);
+  background: var(--soft);
+}
+
+.site-nav > a[aria-current="page"],
+.site-nav > a[aria-current="true"],
+.site-nav > .nav-item > a[aria-current="page"],
+.site-nav > .nav-item > a[aria-current="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  font-weight: 650;
+}
+
+/* Evidence Submenu */
+.nav-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-item.has-sub > a::after {
+  content: '';
+  display: inline-block;
+  width: 0.34em;
+  height: 0.34em;
+  margin-left: 0.4em;
+  border-right: 1.8px solid currentColor;
+  border-bottom: 1.8px solid currentColor;
+  transform: translateY(-0.14em) rotate(45deg);
+  opacity: 0.7;
+}
+
+.subnav {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: -0.4rem;
+  z-index: 30;
+  min-width: 15.5rem;
+  margin: 0;
+  padding: 0.45rem;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.subnav::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.45rem;
+  height: 0.45rem;
+}
+
+.nav-item:hover > .subnav,
+.nav-item:focus-within > .subnav {
+  display: block;
+}
+
+.subnav li {
+  margin: 0;
+}
+
+.subnav a {
+  display: block;
+  padding: 0.48rem 0.78rem;
+  border-bottom: 0;
+  border-radius: var(--radius-xs);
+  font-size: 0.91rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: background-color 0.15s var(--ease-nature), color 0.15s var(--ease-nature);
+}
+
+.subnav a:hover {
+  background: var(--accent-tint);
+  color: var(--accent-hover);
+}
+
+.subnav a[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  font-weight: 650;
+}
+
+/* Mobile Menu Toggle */
+.nav-toggle {
+  display: none;
+  align-items: center;
+  gap: 0.52rem;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-pill);
+  padding: 0.4rem 0.85rem;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+}
+
+.nav-toggle:hover {
+  border-color: var(--accent-line);
+  color: var(--accent-hover);
+  background: var(--accent-tint);
+}
+
+.nav-toggle__box {
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 11px;
+}
+
+.nav-toggle__box span,
+.nav-toggle__box::before,
+.nav-toggle__box::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.8px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform 0.18s var(--ease-nature), opacity 0.18s var(--ease-nature);
+}
+
+.nav-toggle__box::before { top: 0; }
+.nav-toggle__box span    { top: 4.5px; }
+.nav-toggle__box::after  { bottom: 0; }
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__box::before { transform: translateY(4.5px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] .nav-toggle__box span    { opacity: 0; }
+.nav-toggle[aria-expanded="true"] .nav-toggle__box::after  { transform: translateY(-4.5px) rotate(-45deg); }
+
+@media (max-width: 1023px) {
+  .site-head .wrap { min-height: 3.5rem; gap: 0.6rem; }
+  .nav-toggle { display: inline-flex; }
+  .site-nav {
+    display: none;
+    flex-basis: 100%;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-top: 0.25rem;
+    padding: 0.5rem 0 0.65rem;
+    align-items: stretch;
+    border-top: 1px solid var(--line);
+  }
+  .site-nav.is-open {
+    display: flex;
+    max-height: calc(100dvh - 4rem);
+    overflow-y: auto;
+  }
+  .site-nav > a,
+  .nav-item > a {
+    display: block;
+    font-size: 0.98rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--radius-xs);
+  }
+  .nav-item { display: block; }
+  .nav-item.has-sub > a::after { display: none; }
+  .subnav {
+    display: block;
+    position: static;
+    min-width: 0;
+    padding: 0.15rem 0 0.25rem 0.9rem;
+    margin: 0.15rem 0 0.25rem 0.85rem;
+    border: 0;
+    border-left: 1.5px solid var(--line-2);
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+  }
+  .subnav::before { display: none; }
+  .subnav a {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.92rem;
+    font-weight: 550;
+  }
+}
+
+.no-js .nav-toggle { display: none; }
+.no-js .site-nav   { display: flex; }
+
+/* ==========================================================================
+   7. Hero, Pinned Five-Stage Layout & Botanical Buttons
+   ========================================================================== */
+
+.hero {
+  padding-block: clamp(3rem, 7.5vw, 5.2rem) clamp(2.4rem, 5.5vw, 3.6rem);
+  border-bottom: 1px solid var(--line);
+}
+
+.hero h1 {
+  max-width: 24ch;
+  margin-bottom: 0.32em;
+}
+
+.hero__tagline {
+  max-width: 48ch;
+  margin: 0 0 1rem;
+  font-family: var(--serif);
+  font-size: clamp(1.14rem, 2.3vw, 1.42rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.38;
+  color: var(--accent);
+}
+
+.hero .lede {
+  max-width: 64ch;
+  font-size: clamp(1.12rem, 2vw, 1.28rem);
+}
+
+.hero__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.2rem 2rem;
+  align-items: center;
+}
+
+@media (max-width: 620px) {
+  .hero__top { grid-template-columns: 1fr; }
+}
+
+/* Pinned 5-Leaf Story Rail on Home Page */
+.story__leaf  { transition: fill 0.3s var(--ease-nature); }
+.story__label { transition: fill 0.3s var(--ease-nature), font-weight 0.3s var(--ease-nature); }
+
+.pinned.is-ink .story__leaf  { fill: var(--ink); }
+.pinned.is-ink .story__label { fill: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .story__leaf, .story__label { transition: none; }
+}
+
+.pinned {
+  position: relative;
+  --mark-w: clamp(255px, 34vw, 385px);
+  --mark-gap: 3rem;
+}
+
+.pinned .wrap {
+  padding-right: calc(var(--pad) + var(--mark-w) + var(--mark-gap));
+}
+
+.pinned__mark {
+  position: sticky;
+  top: 50vh;
+  z-index: 2;
+  height: 0;
+  width: min(1140px, 100%);
+  margin-inline: auto;
+  padding-inline: var(--pad);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.pinned__mark > svg {
+  margin-inline: 0;
+  width: var(--mark-w);
+  transform: translateY(-50%);
+}
+
+.clover__spin {
+  will-change: transform;
+}
+
+.pinned__mark .story__leaf {
+  transition: fill 0.3s var(--ease-nature);
+}
+
+.pinned__mark .story__leaf.is-active {
+  fill: var(--ink);
+}
+
+.pinned__mark .story__label.is-active {
+  fill: var(--ink);
+  font-weight: 800;
+}
+
+/* Subtle organic highlight on the currently active stage section */
+.stage.is-current {
+  background: linear-gradient(90deg, rgba(227, 239, 232, 0.42) 0%, transparent 62%);
+}
+
+:root .clover--hero .clover__leaf-hit:hover .clover__leaf {
+  stroke: var(--ink-2);
+  stroke-width: 2.25;
+  stroke-dasharray: none;
+}
+
+:root .clover--hero .clover__leaf-hit:focus-visible .clover__leaf {
+  stroke: var(--ink);
+  stroke-width: 3.25;
+  stroke-dasharray: none;
+}
+
+@media (max-width: 860px) {
+  .pinned .wrap { padding-right: var(--pad); }
+  .pinned { --mark-w: clamp(115px, 30vw, 160px); }
+  .pinned__mark {
+    height: auto;
+    top: 3.5rem;
+    z-index: 5;
+    justify-content: center;
+    padding-block: 0.85rem 0.65rem;
+    background: var(--glass);
+    backdrop-filter: saturate(150%) blur(12px);
+    -webkit-backdrop-filter: saturate(150%) blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .pinned__mark > svg { transform: none; }
+  section.responsibility-band { scroll-margin-top: 12rem; }
+}
+
+.no-js .pinned__mark { position: static; height: auto; justify-content: center; }
+.no-js .pinned__mark > svg { transform: none; }
+.no-js .pinned .wrap { padding-right: var(--pad); }
+
+/* Botanical Buttons */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 0.85rem;
+  margin-top: 1.7rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.68rem 1.25rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.93rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition:
+    background-color 0.2s var(--ease-nature),
+    border-color 0.2s var(--ease-nature),
+    color 0.2s var(--ease-nature),
+    transform 0.2s var(--ease-nature),
+    box-shadow 0.2s var(--ease-nature);
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent-hover);
+  background: var(--accent-tint);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 18px -4px rgba(27, 94, 70, 0.36);
+}
+
+.btn--primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #fff;
+  box-shadow: 0 10px 24px -4px rgba(18, 67, 49, 0.44);
+}
+
+.btn--plain {
+  border-color: transparent;
+  background: none;
+  color: var(--accent);
+  padding-inline: 0.35rem;
+  box-shadow: none;
+}
+
+.btn--plain:hover {
+  border-color: transparent;
+  background: none;
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  .actions { gap: 0.6rem; }
+  .actions .btn { width: 100%; }
+  .actions .btn--plain { width: auto; }
+}
+
+/* ==========================================================================
+   8. Grids, Botanical Cards, Key-Value Lists & Diagrams
+   ========================================================================== */
+
+.grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.grid--2 { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+.grid--3 { grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.45rem 1.55rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.22s var(--ease-nature), box-shadow 0.22s var(--ease-nature), transform 0.22s var(--ease-nature);
+}
+
+.card:hover {
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-md);
+}
+
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 0.45rem;
+}
+
+.card p {
+  font-size: 0.96rem;
+  color: var(--ink-2);
+  margin-bottom: 0.65rem;
+  max-width: none;
+}
+
+.card p:last-child {
+  margin-bottom: 0;
+}
+
+/* Key-Value Lists */
+.kv {
+  margin: 0;
+}
+
+.kv div {
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.68rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.95rem;
+}
+
+.kv div:first-child {
+  border-top: 0;
+}
+
+.kv dt {
+  flex: 0 0 9.5rem;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: var(--ink);
+}
+
+.kv dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.kv--wide dt {
+  flex-basis: 14.5rem;
+}
+
+@media (max-width: 620px) {
+  .kv div { flex-direction: column; gap: 0.18rem; }
+  .kv dt  { flex: none; }
+}
+
+/* Evidence Diagrams */
+.diagram {
+  margin: 1.65rem 0 0;
+}
+
+.diagram img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-xs);
+}
+
+.diagram figcaption {
+  margin-top: 0.55rem;
+  font-size: 0.86rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.diagram + .diagram {
+  margin-top: 1.35rem;
+}
+
+/* ==========================================================================
+   9. Botanical Tabs, Stacked Definition Lists & Status Chips
+   ========================================================================== */
+
+.tabs {
+  margin-top: 1.75rem;
+}
+
+.tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.35rem;
+  margin: 0 0 1.35rem;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tab {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 0.48rem 1.05rem;
+  transition: background-color 0.18s var(--ease-nature), color 0.18s var(--ease-nature), box-shadow 0.18s var(--ease-nature);
+}
+
+.tab:hover {
+  color: var(--accent-hover);
+  background: rgba(255, 254, 251, 0.65);
+}
+
+.tab[aria-selected="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(27, 94, 70, 0.32);
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.65rem 1.8rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel > :last-child { margin-bottom: 0; }
+.panel h3 { margin-top: 0; margin-bottom: 0.55rem; }
+
+.panel__sub {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 1.25rem 0 0.45rem;
+}
+
+.panel ul { margin: 0 0 0.9rem; padding-left: 1.15rem; }
+.panel li { margin-bottom: 0.28rem; font-size: 0.95rem; color: var(--ink-2); }
+
+.js .panel[data-panel]:not(.is-active) { display: none; }
+.no-js .tablist { display: none; }
+.no-js .panel   { margin-bottom: 1rem; }
+
+.panel__cols {
+  display: grid;
+  gap: 0.85rem 2.2rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+
+.panel__cols > div { min-width: 0; }
+.panel__cols p { max-width: none; }
+.panel__cols > div > :last-child { margin-bottom: 0; }
+
+.owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.65rem;
+  border: 1px solid var(--line-2);
+  color: var(--ink-2);
+  background: var(--soft);
+}
+
+.owner--human { border-color: #c9b8d8; background: #f6f1fa; color: #5b3f75; }
+.owner--ai    { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-hover); }
+
+/* Stacked Definition Lists */
+.stack {
+  margin: 1.4rem 0 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.stack > * {
+  min-width: 0;
+}
+
+.stack div {
+  min-width: 0;
+  padding: 1.15rem 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.2s var(--ease-nature), box-shadow 0.2s var(--ease-nature);
+}
+
+.stack div:hover {
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-sm);
+}
+
+.stack dt {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.08rem;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+  overflow-wrap: anywhere;
+}
+
+.stack dd {
+  margin: 0;
+  color: var(--ink-2);
+  max-width: var(--measure);
+  font-size: 0.97rem;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 760px) {
+  .stack--2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem 1.35rem;
+  }
+}
+
+.chip {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 620;
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.68rem;
+  background: var(--soft);
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+
+.case__status {
+  display: inline-block;
+  font-size: 0.84rem;
+  color: var(--warn);
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-line);
+  border-radius: var(--radius-xs);
+  padding: 0.42rem 0.75rem;
+}
+
+/* ==========================================================================
+   10. Footer, Glossary Filter, Data Tables & Code Blocks
+   ========================================================================== */
+
+.site-foot {
+  border-top: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--soft) 0%, var(--soft-2) 100%);
+  padding-block: 3rem 3.4rem;
+  margin-top: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.site-foot .wrap {
+  display: grid;
+  gap: 1.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.site-foot h4 {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+  margin-bottom: 0.6rem;
+}
+
+.site-foot ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.38rem;
+}
+
+.site-foot li {
+  margin: 0;
+}
+
+.site-foot a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.site-foot a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.site-foot__end {
+  border-top: 1px solid var(--line);
+  margin-top: 2rem;
+  padding-top: 1.2rem;
+}
+
+/* Glossary Filter & Terms */
+.filter {
+  font: inherit;
+  width: min(30rem, 100%);
+  padding: 0.65rem 1.05rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-pill);
+  margin-bottom: 1.6rem;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.2s var(--ease-nature), box-shadow 0.2s var(--ease-nature);
+}
+
+.filter:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(27, 94, 70, 0.14);
+  outline: none;
+}
+
+.terms {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.terms > div {
+  padding: 1.05rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.terms dt {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--ink);
+  margin-bottom: 0.2rem;
+}
+
+.terms dd {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.96rem;
+  max-width: var(--measure);
+}
+
+.terms > div[hidden] {
+  display: none;
+}
+
+/* Data Tables & Code Blocks */
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0 1.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+table.data {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 38rem;
+  font-size: 0.94rem;
+}
+
+table.data caption {
+  text-align: left;
+  padding: 0.85rem 1.1rem 0.6rem;
+  background: var(--surface-tint);
+  border-bottom: 1px solid var(--line);
+}
+
+table.data th,
+table.data td {
+  padding: 0.82rem 1.05rem;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid var(--line);
+}
+
+table.data thead th {
+  background: var(--soft);
+  border-top: 0;
+  font-weight: 650;
+  color: var(--ink);
+  font-size: 0.84rem;
+}
+
+table.data tbody th {
+  font-weight: 650;
+  color: var(--ink);
+  width: 22%;
+}
+
+table.data td {
+  color: var(--ink-2);
+}
+
+table.data tbody tr:hover {
+  background: rgba(227, 239, 232, 0.28);
+}
+
+table.data tbody tr:last-child th,
+table.data tbody tr:last-child td {
+  background: var(--accent-soft);
+}
+
+pre.code {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  overflow-x: auto;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  max-width: none;
+  box-shadow: var(--shadow-xs);
+}
+
+pre.code code {
+  font-size: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+ol.steps {
+  padding-left: 1.35rem;
+  margin: 1.25rem 0 1.65rem;
+}
+
+ol.steps > li {
+  margin: 0 0 1.1rem;
+  padding-left: 0.35rem;
+}
+
+ol.steps > li > pre.code {
+  margin: 0.65rem 0;
+}
+
+@media (max-width: 800px) {
+  .tab { padding-block: 0.58rem; }
+}
+
+/* ==========================================================================
+   11. Stat Cards (Clover K3 Architecture & Benchmark Metrics)
+   ========================================================================== */
+
+.stat-grid {
+  display: grid;
+  gap: 1.1rem;
+  margin: 1.75rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(205px, 100%), 1fr));
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.35rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card__num {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 2.8vw, 2.02rem);
+  font-weight: 700;
+  color: var(--accent-hover);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.3rem;
+}
+
+.stat-card__label {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+}
+
+.stat-card__note {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.48;
+}
+
+/* ==========================================================================
+   12. Clover AI Interactive Chat & Full-Page Studio (/ai/)
+   ========================================================================== */
+
+.k3-chat-shell {
+  margin-top: 1.4rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.k3-chat-head {
+  padding: 0.85rem 1.2rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.k3-chat-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.06rem;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.k3-chat-title span { color: var(--accent); font-weight: 600; }
+
+.k3-agent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  padding: 0.16rem 0.58rem;
+  border-radius: var(--radius-pill);
+}
+
+.k3-agent-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.k3-agent-trace {
+  margin-bottom: 0.55rem;
+  padding: 0.48rem 0.75rem;
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-xs);
+  font-size: 0.81rem;
+  color: var(--ink-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  align-items: center;
+}
+
+.k3-agent-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 650;
+  color: var(--accent-hover);
+}
+
+.k3-mm-bar {
+  padding: 0.55rem 1.2rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  font-size: 0.81rem;
+  color: var(--muted);
+}
+
+.k3-mm-bar__label {
+  font-weight: 650;
+  color: var(--ink-2);
+  margin-right: 0.2rem;
+}
+
+.k3-mm-chip {
+  background: var(--soft);
+  color: var(--ink-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-pill);
+  padding: 0.26rem 0.68rem;
+  font: inherit;
+  font-size: 0.79rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  transition: border-color 0.15s var(--ease-nature), color 0.15s var(--ease-nature), background-color 0.15s var(--ease-nature);
+}
+
+.k3-mm-chip:hover {
+  border-color: var(--accent-line);
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+}
+
+.k3-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.k3-controls button,
+.k3-foot button,
+.k3-preview-bar button {
+  background: var(--surface);
+  color: var(--ink-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-xs);
+  padding: 0.42rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  transition: border-color 0.15s var(--ease-nature), color 0.15s var(--ease-nature), background-color 0.15s var(--ease-nature);
+}
+
+.k3-controls button:hover,
+.k3-foot button:hover,
+.k3-preview-bar button:hover {
+  border-color: var(--accent-line);
+  color: var(--accent-hover);
+}
+
+.k3-chat-body {
+  display: flex;
+  height: 480px;
+  max-height: 480px;
+  background: var(--soft);
+}
+
+.k3-sidebar {
+  width: 225px;
+  flex: 0 0 225px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.k3-sidebar__head {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.k3-add-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.k3-add-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+.k3-session-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.k3-session-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  font-size: 0.86rem;
+  color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.k3-session-item:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.k3-session-item.is-active {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent-hover);
+  font-weight: 650;
+}
+
+.k3-chat-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.k3-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: var(--soft);
+}
+
+@media (max-width: 720px) {
+  .k3-chat-body { flex-direction: column; height: 560px; max-height: 560px; }
+  .k3-sidebar { width: 100%; flex: none; border-right: 0; border-bottom: 1px solid var(--line); }
+  .k3-session-list { flex-direction: row; overflow-x: auto; max-height: none; }
+  .k3-session-item { width: auto; max-width: 180px; }
+}
+
+.k3-attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.6rem;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  margin-bottom: 0.45rem;
+}
+
+.k3-icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  justify-content: center;
+  flex: 0 0 40px;
+  border-radius: 9px !important;
+}
+
+.k3-icon-btn.is-listening {
+  border-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+  color: var(--accent-hover) !important;
+}
+
+.k3-msg {
+  max-width: 82%;
+  padding: 0.9rem 1.15rem;
+  border-radius: var(--radius);
+  line-height: 1.65;
+  font-size: 0.96rem;
+  word-wrap: break-word;
+}
+
+.k3-msg p {
+  max-width: none;
+  margin: 0 0 0.65rem 0;
+  white-space: normal;
+}
+
+.k3-msg p:last-child { margin-bottom: 0; }
+
+.k3-msg ul {
+  margin: 0.35rem 0 0.65rem 1.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.k3-msg ul:last-child { margin-bottom: 0; }
+.k3-msg li { line-height: 1.56; }
+.k3-msg strong { font-weight: 650; color: var(--ink); }
+
+.k3-msg pre.k3-code {
+  margin: 0.55rem 0 0.75rem 0;
+  padding: 0.9rem 1.05rem;
+  border-radius: var(--radius-xs);
+  background: #142019;
+  color: #f2eee4;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.87rem;
+  line-height: 1.54;
+  white-space: pre;
+  position: relative;
+}
+
+.k3-msg pre.k3-code:last-child { margin-bottom: 0; }
+.k3-msg pre.k3-code code { background: none; color: inherit; padding: 0; font: inherit; border: 0; }
+
+.k3-code-wrap {
+  position: relative;
+  margin: 0.55rem 0 0.75rem 0;
+}
+
+.k3-code-wrap pre.k3-code { margin: 0; padding-top: 2rem; }
+
+.k3-copy-code-btn {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.12);
+  color: #e7e1d3;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.k3-copy-code-btn:hover { background: rgba(255, 255, 255, 0.24); color: #fff; }
+
+.k3-figure {
+  margin: 0.65rem 0 0.8rem 0;
+  padding: 0.65rem;
+  background: var(--soft);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.k3-figure img, .k3-figure svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 7px;
+  background: var(--surface);
+}
+
+.k3-figcaption {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.k3-dl-link {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--accent-hover);
+  text-decoration: none;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--accent-line);
+  border-radius: 6px;
+  background: var(--accent-soft);
+}
+
+.k3-dl-link:hover { background: var(--accent); color: #fff; }
+
+.k3-msg table.k3-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.55rem 0 0.75rem 0;
+  font-size: 0.88rem;
+}
+
+.k3-msg table.k3-table th,
+.k3-msg table.k3-table td {
+  border: 1px solid var(--line-2);
+  padding: 0.42rem 0.65rem;
+  text-align: left;
+}
+
+.k3-msg table.k3-table th {
+  background: var(--soft);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.k3-math-inline, .k3-math-block {
+  font-family: "Cambria Math", "STIX Two Math", Georgia, serif;
+  color: var(--ink);
+}
+
+.k3-math-block {
+  display: block;
+  text-align: center;
+  margin: 0.5rem 0;
+  padding: 0.45rem 0.75rem;
+  background: var(--soft);
+  border-radius: 7px;
+  font-size: 1.02rem;
+}
+
+.k3-msg-actions {
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.k3-action-btn {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.16rem 0.48rem;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+}
+
+.k3-action-btn:hover { color: var(--accent-hover); border-color: var(--line-2); background: var(--soft); }
+
+.k3-msg--user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: var(--shadow-xs);
+}
+
+.k3-msg--user p,
+.k3-msg--user strong {
+  color: #fff;
+}
+
+.k3-msg--bot {
+  align-self: flex-start;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow-xs);
+}
+
+.k3-msg img.k3-chat-thumb {
+  display: block;
+  max-width: 240px;
+  max-height: 180px;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+@keyframes clover-leaf-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.k3-clover-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--ink-2);
+  font-size: 0.93rem;
+}
+
+.k3-clover-loader svg { width: 28px; height: 28px; display: block; }
+
+.k3-clover-loader__wheel {
+  transform-origin: 50px 44px;
+  animation: clover-leaf-spin 2.2s linear infinite;
+}
+
+.k3-preview-bar {
+  padding: 0.5rem 1.2rem;
+  background: var(--accent-soft);
+  border-top: 1px solid var(--accent-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.k3-preview-bar[hidden] { display: none !important; }
+.k3-preview-bar__info { display: flex; align-items: center; gap: 0.6rem; }
+
+.k3-preview-bar img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+}
+
+.k3-foot {
+  padding: 0.85rem 1.2rem;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+}
+
+.k3-foot textarea {
+  flex: 1;
+  background: var(--soft);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  padding: 0.62rem 0.85rem;
+  font: inherit;
+  font-size: 0.95rem;
+  resize: none;
+  min-height: 44px;
+  max-height: 130px;
+  line-height: 1.45;
+}
+
+.k3-foot textarea:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+
+.k3-foot button.k3-send {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 650;
+  padding: 0.62rem 1.15rem;
+  font-size: 0.9rem;
+}
+
+.k3-foot button.k3-send:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+.k3-foot button.k3-send:disabled { opacity: 0.55; cursor: default; }
+
+.k3-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(19, 32, 24, 0.52);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.k3-modal-backdrop[hidden] { display: none !important; pointer-events: none; }
+
+.k3-modal-dialog {
+  width: min(860px, 100%);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.k3-modal-dialog .k3-chat-shell { margin-top: 0; box-shadow: var(--shadow-lg); }
+.k3-modal-dialog .k3-log { height: min(58vh, 520px); }
+
+.k3-bot-turn {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 82%;
+  width: auto;
+}
+
+.k3-bot-turn > .k3-msg { max-width: 100%; }
+
+.k3-below-actions {
+  margin-top: 0.28rem;
+  padding-left: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--muted);
+}
+
+.k3-icon-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.15s var(--ease-nature), background-color 0.15s var(--ease-nature);
+}
+
+.k3-icon-action:hover { color: var(--ink); background: var(--soft-2); }
+.k3-icon-action.is-active { color: var(--accent); }
+.k3-icon-action svg { width: 15px; height: 15px; display: block; }
+
+@keyframes clover-dot-slow {
+  0%, 20%  { opacity: 0.22; transform: translateY(0); }
+  50%      { opacity: 1; transform: translateY(-1.5px); }
+  80%, 100%{ opacity: 0.22; transform: translateY(0); }
+}
+
+.clover-dots-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink-2);
+  padding: 0.1rem 0.25rem;
+  letter-spacing: 0.08em;
+}
+
+.clover-dots-loader span {
+  display: inline-block;
+  animation: clover-dot-slow 3.6s ease-in-out infinite;
+}
+
+.clover-dots-loader span:nth-child(2) { animation-delay: 0.6s; }
+.clover-dots-loader span:nth-child(3) { animation-delay: 1.2s; }
+.clover-dots-loader span:nth-child(4) { animation-delay: 1.8s; }
+
+/* Dedicated Full-Page Clover Interface (/ai/) */
+html:has(body.clover-app-body) {
+  height: 100%;
+  overflow: hidden;
+}
+
+body.clover-app-body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+body.clover-app-body .site-head {
+  flex: 0 0 auto;
+}
+
+.clover-app {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  position: relative;
+}
+
+.clover-sidebar-backdrop {
+  display: none;
+}
+
+.clover-sidebar {
+  width: 268px;
+  flex: 0 0 268px;
+  background: var(--soft);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transform: none;
+  transition: margin-left 0.22s var(--ease-nature);
+}
+
+.clover-sidebar.is-collapsed {
+  margin-left: -268px;
+}
+
+.clover-sidebar__top {
+  padding: 0.85rem 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.clover-new-chat-btn {
+  flex: 1;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-pill);
+  padding: 0.52rem 0.85rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 650;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.18s var(--ease-nature), color 0.18s var(--ease-nature), background-color 0.18s var(--ease-nature);
+}
+
+.clover-new-chat-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent-hover);
+  background: var(--accent-tint);
+}
+
+.clover-new-chat-btn__plus {
+  font-size: 1.15rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.clover-sidebar__label {
+  padding: 0.65rem 1rem 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.clover-session-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.35rem 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.clover-session-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  padding: 0.12rem 0.25rem 0.12rem 0.35rem;
+  transition: background-color 0.15s var(--ease-nature), border-color 0.15s var(--ease-nature);
+}
+
+.clover-session-row:hover {
+  background: rgba(255, 254, 251, 0.72);
+}
+
+.clover-session-row.is-active {
+  background: var(--surface);
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-xs);
+}
+
+.clover-session-select {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0.42rem 0.35rem;
+  font: inherit;
+  font-size: 0.87rem;
+  color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clover-session-row.is-active .clover-session-select {
+  color: var(--accent-hover);
+  font-weight: 650;
+}
+
+.clover-session-del {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.98rem;
+  font-weight: 650;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.65;
+  transition: opacity 0.15s var(--ease-nature), background-color 0.15s var(--ease-nature), color 0.15s var(--ease-nature);
+}
+
+.clover-session-row:hover .clover-session-del,
+.clover-session-row.is-active .clover-session-del {
+  opacity: 1;
+}
+
+.clover-session-del:hover {
+  background: rgba(190, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+.clover-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.clover-topbar {
+  padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.clover-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.clover-sidebar-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clover-sidebar-toggle:hover {
+  border-color: var(--accent-line);
+  color: var(--accent-hover);
+  background: var(--accent-tint);
+}
+
+.clover-topbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.06rem;
+  color: var(--ink);
+}
+
+.clover-topbar__brand svg { width: 22px; height: 22px; }
+
+.clover-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.clover-cpu-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.2;
+  padding: 0.28rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: var(--warn-soft);
+  color: var(--warn);
+  border: 1px solid var(--warn-line);
+  white-space: nowrap;
+}
+
+.clover-cpu-pill::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c48f3b;
+  flex-shrink: 0;
+}
+
+.clover-cpu-disclaimer {
+  flex: 0 0 auto;
+  width: 100%;
+  background: var(--warn-soft);
+  border-bottom: 1px solid var(--warn-line);
+  color: var(--warn);
+  padding: 0.52rem 1.25rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clover-cpu-disclaimer__inner {
+  display: block;
+  width: min(820px, 100%);
+  max-width: min(820px, 100%);
+  margin: 0;
+}
+
+.clover-cpu-disclaimer strong {
+  color: #69430b;
+  font-weight: 700;
+}
+
+.clover-composer-note {
+  display: block;
+  width: min(820px, 100%);
+  max-width: min(820px, 100%);
+  margin: 0.38rem 0 0;
+  padding: 0 0.25rem;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--muted);
+  text-align: center;
+}
+
+.clover-loader-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.38;
+  color: var(--muted);
+}
+
+.clover-stream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.5rem 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.clover-stream__inner {
+  width: min(820px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.clover-composer-wrap {
+  flex: 0 0 auto;
+  padding: 0.5rem 1.25rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.clover-composer-card {
+  width: min(820px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  padding: 0.55rem 0.7rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.18s var(--ease-nature), background-color 0.18s var(--ease-nature), box-shadow 0.18s var(--ease-nature);
+}
+
+.clover-composer-card:focus-within {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 8px 26px -4px rgba(27, 94, 70, 0.15);
+}
+
+.clover-composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.clover-composer-row textarea {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  padding: 0.45rem 0.35rem;
+  font: inherit;
+  font-size: 1rem;
+  resize: none;
+  min-height: 38px;
+  max-height: 150px;
+  line-height: 1.48;
+}
+
+.clover-composer-row textarea:focus { outline: none; }
+
+.clover-composer-btn {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--soft);
+  color: var(--ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s var(--ease-nature), color 0.15s var(--ease-nature), background-color 0.15s var(--ease-nature);
+}
+
+.clover-composer-btn:hover {
+  border-color: var(--accent-line);
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+}
+
+.clover-composer-btn.is-listening {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+.clover-send-btn {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 650;
+  padding: 0 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  transition: background-color 0.15s var(--ease-nature), border-color 0.15s var(--ease-nature);
+}
+
+.clover-send-btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.clover-send-btn:disabled { opacity: 0.55; cursor: default; }
+
+.clover-send-icon {
+  width: 19px;
+  height: 19px;
+  display: block;
+  flex: none;
+}
+
+.clover-send-icon__stem {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.78);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.clover-send-icon__leaf {
+  fill: #ffffff;
+  stroke: #ffffff;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.clover-send-icon__wheel {
+  transform-origin: 50px 44px;
+  animation: clover-leaf-spin 9s linear infinite;
+}
+
+@media (max-width: 760px) {
+  .clover-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    width: min(272px, 80vw);
+    flex: 0 0 auto;
+    margin-left: 0 !important;
+    transform: translateX(-105%);
+    box-shadow: none;
+    pointer-events: none;
+  }
+  .clover-sidebar.is-mobile-open {
+    margin-left: 0 !important;
+    transform: translateX(0) !important;
+    box-shadow: var(--shadow-lg) !important;
+    pointer-events: auto !important;
+  }
+  .clover-sidebar.is-collapsed {
+    margin-left: 0 !important;
+    transform: translateX(-105%) !important;
+    box-shadow: none !important;
+    pointer-events: none;
+  }
+  .clover-sidebar-backdrop.is-open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 95;
+    background: rgba(19, 32, 24, 0.35);
+    backdrop-filter: blur(2px);
+  }
+  .clover-topbar { flex: 0 0 auto; padding: 0.55rem 0.85rem; }
+  .clover-cpu-pill { font-size: 0.71rem; padding: 0.22rem 0.5rem; }
+  .clover-cpu-disclaimer { padding: 0.45rem 0.85rem; font-size: 0.78rem; line-height: 1.38; }
+  .clover-stream { flex: 1 1 auto; min-height: 0; padding: 0.85rem 0.75rem 0.65rem; }
+  .clover-composer-wrap {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 0.45rem 0.65rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .clover-composer-card { padding: 0.42rem 0.52rem; border-radius: 14px; }
+  .clover-composer-note { font-size: 0.71rem; margin-top: 0.3rem; }
+  .k3-msg, .k3-bot-turn { max-width: 92%; }
+}
+
+@media (max-width: 480px) {
+  .clover-send-btn span { display: none; }
+  .clover-send-btn { padding: 0 0.65rem; }
+  .clover-cpu-pill { font-size: 0.68rem; padding: 0.2rem 0.45rem; }
+  .clover-cpu-disclaimer { padding: 0.38rem 0.7rem; font-size: 0.74rem; line-height: 1.34; }
+  .clover-composer-note { font-size: 0.68rem; }
+  .k3-msg, .k3-bot-turn { max-width: 95%; font-size: 0.93rem; }
+}
+
+/* ==========================================================================
+   13. Vertical Botanical Storyline & Chapter Cards (Origin, Governance, Evidence)
+   ========================================================================== */
+
+.storyline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 4.5vw, 3rem);
+  padding-left: clamp(1.5rem, 3.5vw, 2.75rem);
+  margin-top: 0.75rem;
+}
+
+/* Living botanical stem connecting every chapter vertically */
+.storyline::before {
+  content: "";
+  position: absolute;
+  top: 1.6rem;
+  bottom: 1.6rem;
+  left: clamp(0.45rem, 1.2vw, 0.85rem);
+  width: 2.5px;
+  background: linear-gradient(
+    180deg,
+    var(--leaf-1) 0%,
+    var(--accent) 45%,
+    var(--leaf-3) 85%,
+    transparent 100%
+  );
+  border-radius: var(--radius-pill);
+  opacity: 0.65;
+}
+
+.storyline__item {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  scroll-margin-top: 5.2rem;
+  transition: border-color 0.25s var(--ease-nature), box-shadow 0.25s var(--ease-nature), transform 0.25s var(--ease-nature);
+}
+
+.storyline__item:hover {
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Botanical bud node along the vertical stem */
+.storyline__item::before {
+  content: "";
+  position: absolute;
+  top: 2.05rem;
+  left: calc(-1 * clamp(1.5rem, 3.5vw, 2.75rem) + clamp(0.45rem, 1.2vw, 0.85rem) - 6px);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 0 4px var(--bg);
+  z-index: 2;
+  transition: transform 0.25s var(--ease-nature), background-color 0.25s var(--ease-nature);
+}
+
+.storyline__item:hover::before {
+  background: var(--leaf-1);
+  transform: scale(1.18);
+}
+
+/* Subtle horizontal petiole connecting stem node to chapter card */
+.storyline__item::after {
+  content: "";
+  position: absolute;
+  top: calc(2.05rem + 6px);
+  left: calc(-1 * clamp(1.5rem, 3.5vw, 2.75rem) + clamp(0.45rem, 1.2vw, 0.85rem) + 7px);
+  width: calc(clamp(1.5rem, 3.5vw, 2.75rem) - clamp(0.45rem, 1.2vw, 0.85rem) - 7px);
+  height: 1.5px;
+  background: var(--accent-line);
+  opacity: 0.7;
+}
+
+@media (max-width: 640px) {
+  .storyline {
+    padding-left: 1.15rem;
+    gap: 1.65rem;
+  }
+  .storyline::before {
+    left: 0.25rem;
+  }
+  .storyline__item::before {
+    left: calc(-1.15rem + 0.25rem - 5px);
+    width: 12px;
+    height: 12px;
+    top: 1.65rem;
+  }
+  .storyline__item::after {
+    display: none;
+  }
+}
+
+.origin-deck {
+  margin-top: 1.5rem;
+}
+
+.origin-bar {
+  position: sticky;
+  top: 4.1rem;
+  z-index: 35;
+  background: var(--glass);
+  backdrop-filter: saturate(150%) blur(14px);
+  -webkit-backdrop-filter: saturate(150%) blur(14px);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.65rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.origin-bar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.65rem;
+}
+
+.origin-bar__status {
+  font-family: var(--serif);
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--accent-hover);
+  letter-spacing: 0.01em;
+}
+
+.origin-bar__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.origin-steps {
+  display: flex;
+  gap: 0.38rem;
+  overflow-x: auto;
+  padding-bottom: 0;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.origin-steps::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.origin-step {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.78rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.18s var(--ease-nature), color 0.18s var(--ease-nature), border-color 0.18s var(--ease-nature), box-shadow 0.18s var(--ease-nature);
+}
+
+.origin-step:hover {
+  border-color: var(--accent-line);
+  color: var(--accent-hover);
+  background: var(--accent-tint);
+}
+
+.origin-step[aria-selected="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(27, 94, 70, 0.32);
+}
+
+.origin-progress {
+  height: 4px;
+  background: var(--soft-2);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-top: 0.6rem;
+}
+
+.origin-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--leaf-1), var(--accent));
+  width: 8.33%;
+  transition: width 0.3s var(--ease-nature);
+}
+
+.origin-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  box-shadow: var(--shadow-md);
+}
+
+.js .origin-deck:not(.is-all-open) .origin-card:not(.is-active) {
+  display: none;
+}
+
+.no-js .origin-card,
+.origin-deck.is-all-open .origin-card {
+  display: block;
+  margin-bottom: 2rem;
+}
+
+.origin-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  margin-bottom: 0.85rem;
+}
+
+.origin-story-box {
+  background: linear-gradient(135deg, var(--accent-tint) 0%, var(--surface-tint) 100%);
+  border-left: 4px solid var(--accent);
+  border-top: 1px solid rgba(27, 94, 70, 0.12);
+  border-right: 1px solid rgba(27, 94, 70, 0.12);
+  border-bottom: 1px solid rgba(27, 94, 70, 0.12);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1.25rem 1.45rem;
+  margin: 1.3rem 0 1.65rem;
+}
+
+.origin-story-box__label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-hover);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.origin-story-box p {
+  font-size: 1.03rem;
+  color: var(--ink);
+  margin-bottom: 0.65rem;
+  max-width: none;
+}
+
+.origin-story-box p:last-child { margin-bottom: 0; }
+
+.origin-visual {
+  margin: 1.65rem 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  overflow-x: auto;
+  box-shadow: var(--shadow-xs);
+}
+
+.origin-visual svg {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--radius-xs);
+}
+
+.origin-visual figcaption {
+  margin-top: 0.7rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.origin-bridge {
+  margin-top: 1.65rem;
+  padding: 1.05rem 1.3rem;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-sm);
+  font-size: 0.96rem;
+  color: var(--ink);
+}
+
+.origin-bridge strong { color: var(--accent-hover); }
+
+.origin-pager {
+  margin-top: 1.65rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.origin-pager__btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.75rem 1.2rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  min-width: 210px;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.18s var(--ease-nature), background-color 0.18s var(--ease-nature), color 0.18s var(--ease-nature), transform 0.18s var(--ease-nature);
+}
+
+.origin-pager__btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  transform: translateY(-1px);
+}
+
+.origin-pager__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.origin-pager__btn--next {
+  align-items: flex-end;
+  text-align: right;
+  margin-left: auto;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.origin-pager__btn--next:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #fff;
+}
+
+.origin-pager__dir {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.82;
+  margin-bottom: 0.15rem;
+}
+
+.origin-pager__title {
+  font-family: var(--serif);
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .origin-pager__btn { width: 100%; min-width: 0; }
+}

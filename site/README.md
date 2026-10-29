@@ -33,22 +33,32 @@ python -m http.server 8000 --directory site
 
 ```
 site/
-  index.html        the framework: one cycle, at any scale
-  origin/           the Origin page: 11 foundational AI papers (1943–2017) explained from firsthand code and experiments
-  start/            the AGENTS.md menu page: read-only access, the agent file, a first cycle
-  governance/       governance: access, attribution, approvals, delegated execution
-  security/         a redirect stub, kept so the old URL still resolves
-  evidence/         case studies and reference implementations
-  clover-k3/        run Kimi K3 on a workstation: requirements, set-up, running, tuning, measured speeds, credit
-  glossary/         searchable terms
-  author/           who wrote this, in the first person
-  assets/           the peacock feather, and the four evidence diagrams (SVG)
-  styles.css
-  app.js            tabs, the mobile menu, the scrolling story, the glossary filter
-  check.ps1         run before committing: nav consistency, versions, every link
-  llms.txt          the repository map for agents
+  index.html                             the framework: one cycle, at any scale
+  origin/                                the Origin page: 12 foundational AI chapters (1943–2026) in a vertical storyline
+  getting-started/                       the AGENTS.md menu page: read-only access, the agent file, a first cycle
+  governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution
+  evidence/                              unified vertical storyline from the first production case study to clover-kimi-k3
+  clover-ai/                             full-viewport interactive Clover AI studio
+  glossary/                              searchable terms
+  author/                                who wrote this, in the first person
+  assets/                                the peacock feather, and the four evidence diagrams (SVG)
+  botanical-design-system.css            minimalist botanical & nature-embodied design system (--constant-* tokens & .storyline)
+  website-interaction-controllers.js     OOP domain controllers using class_*, function_*, variable_*, flag_*, constant_*
+  clover-leaf-favicon.svg                5-leaf Clover favicon
+  validate-website-pages.ps1             run before committing: nav consistency, versions, every link
+  llms.txt                               the repository map for agents
   .nojekyll
 ```
+
+## Website Object-Oriented Reduction & Role-Prefix Naming (`site/website-interaction-controllers.js`, `site/clover-ai/index.html`, `site/botanical-design-system.css`)
+
+Following the repository-wide [Object-Oriented Reduction (`398 → 88 → 24 → 12 → 5`)](../research/object-oriented-reduction/README.md), all files, folders, JavaScript, and CSS in `site/` use explicit complete-English hyphenated names and role prefixes that map directly onto the 5 stages of the Clover Cycle (`Context → Direction → Execution → Outcome → Growth`):
+
+| Website File | OOP Domain Classes (`class_*`) | Role-Prefix Convention | Maps to Canonical 12 Objects & 5 Stages |
+|---|---|---|---|
+| `site/website-interaction-controllers.js` | `class_viewport_scroll_navigator`, `class_five_stage_clover_mark_controller`, `class_site_navigation_drawer_controller`, `class_accessible_tab_and_glossary_controller` | `class_*`, `function_*`, `variable_*`, `flag_*`, `constant_*` | `TaskDirection` (`Direction`), `ModalityCodec` (`Execution`), `VerifiedKnowledgeGraph` (`Context`), `CloverCycleCoordinator` (`Context → Growth`) |
+| `site/clover-ai/index.html` | `class_browser_conversation_session_store`, `class_multimodal_attachment_and_speech_codec`, `class_markdown_and_media_reply_renderer`, `class_clover_interactive_studio_coordinator` | `class_*`, `function_*`, `variable_*`, `flag_*`, `constant_*` | `ConversationSession` (`Context`), `ModalityCodec` (`Execution`), `CloverCycleCoordinator` (`Context → Direction → Execution → Outcome → Growth`) |
+| `site/botanical-design-system.css` | Botanical design tokens & `.storyline` / `.storyline__item` vertical stem components | `--constant-*` complete-English CSS custom properties | Visualizes the 5-leaf Clover cycle (`.pinned__mark`) and the vertical chronological storyline (`Origin`, `Governance`, `Evidence`) |
 
 The page is one continuous argument rather than one section per stage.
 
