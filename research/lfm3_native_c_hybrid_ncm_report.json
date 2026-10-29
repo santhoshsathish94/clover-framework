@@ -1,0 +1,47 @@
+{
+  "native_c_openmp_engine": {
+    "library_path": "/tmp/clover-models/lfm3-1.7b/liblfm3_cpu_engine.so",
+    "c_24_layer_vs_python_precomputed_cosine_sim": 0.9992055,
+    "c_24_layer_vs_python_precomputed_max_abs_diff": 0.570312,
+    "c_24_layer_top1_reaches_exact_bf16_max_logit": true,
+    "c_24_layer_top1_logit_value": 17.125,
+    "python_24_layer_top1_logit_value": 17.125,
+    "c_24_layer_forward_ms": 3608.59
+  },
+  "native_hybrid_agent_layer2": {
+    "module": "Lfm3NativeHybridLink(d=2048, bottleneck=512)",
+    "shared_vocab_tokens_matched": 64835,
+    "raw_hidden_to_next_embed_cos": 0.2112,
+    "trained_hybridlink_train_cos": 0.9996,
+    "trained_hybridlink_test_cos": 0.9994,
+    "latent_128k_vocab_readout_mean_cos": 0.9998,
+    "latent_128k_vocab_readout_sample": "over AI System switches seamlessly between Kimi K3,"
+  },
+  "native_ncm_layer3": {
+    "vocab_size": 128000,
+    "vq_code_levels": [
+      1,
+      4,
+      8,
+      14,
+      20,
+      26,
+      32,
+      40,
+      48,
+      56,
+      64
+    ],
+    "vq_total_codes_per_window": 313,
+    "vqvae_128k_token_acc_before_finetune": 0.8385,
+    "vqvae_128k_token_acc_after_finetune": 0.9983,
+    "vqvae_reconstructed_prompt": "Clover AI System switches seamlessly between Kimi K3, NVIDIA Nemotron 3.5 Super VL, and Liquid LFM3.",
+    "ncm_11_level_logits_shape": [
+      1,
+      313,
+      4096
+    ],
+    "ncm_11_level_code_cross_entropy": 4.7094,
+    "saved_checkpoint": "/opt/clover-k3/lfm3-computed/hybrid-ncm/lfm3_hybrid_ncm_bridges.pt"
+  }
+}

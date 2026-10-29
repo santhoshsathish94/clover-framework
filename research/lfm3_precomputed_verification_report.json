@@ -1,0 +1,222 @@
+{
+  "prepare_summary": {
+    "total_prepare_seconds": 6.737,
+    "computed_dir": "/opt/clover-k3/lfm3-computed/raw",
+    "global_0": {
+      "embed_tokens_bytes": 524288000,
+      "embedding_norm_bytes": 4096,
+      "rope_inv_freq_bytes": 532
+    },
+    "num_trunks_built": 24,
+    "sample_trunks": [
+      {
+        "layer_id": 0,
+        "layer_kind": 0,
+        "record_count": 10,
+        "group_lengths": [
+          8404992,
+          25194496,
+          94371840
+        ],
+        "total_group_bytes": 127971328,
+        "operator_bytes": 25198656
+      },
+      {
+        "layer_id": 2,
+        "layer_kind": 2,
+        "record_count": 14,
+        "group_lengths": [
+          8404992,
+          12648960,
+          94371840
+        ],
+        "total_group_bytes": 115425792,
+        "operator_bytes": 12653120
+      },
+      {
+        "layer_id": 4,
+        "layer_kind": 1,
+        "record_count": 14,
+        "group_lengths": [
+          8404992,
+          12648960,
+          94371840
+        ],
+        "total_group_bytes": 115425792,
+        "operator_bytes": 12653120
+      }
+    ]
+  },
+  "prune_summary": {
+    "num_trunks_pruned": 24,
+    "all_24_old_trunk_bytes": 2933310976,
+    "all_24_pruned_trunk_bytes": 2466545664,
+    "all_24_dropped_trunk_bytes": 466765312,
+    "all_24_dropped_trunk_mib": 445.14,
+    "conv_13_layers_trunk_reduction_pct": 19.69,
+    "attn_11_layers_trunk_reduction_pct": 10.96,
+    "overall_24_trunk_reduction_pct": 15.91,
+    "sample_pruned_trunks": [
+      {
+        "trunk_name": "trunk-0",
+        "layer_id": 0,
+        "layer_kind": 0,
+        "old_group_bytes": 127971328,
+        "new_group_bytes": 102772736,
+        "dropped_group_bytes": 25198592,
+        "reduction_pct": 19.69,
+        "operator_bytes": 25198656
+      },
+      {
+        "trunk_name": "trunk-2",
+        "layer_id": 2,
+        "layer_kind": 2,
+        "old_group_bytes": 115425792,
+        "new_group_bytes": 102772736,
+        "dropped_group_bytes": 12653056,
+        "reduction_pct": 10.96,
+        "operator_bytes": 12653120
+      },
+      {
+        "trunk_name": "trunk-4",
+        "layer_id": 4,
+        "layer_kind": 1,
+        "old_group_bytes": 115425792,
+        "new_group_bytes": 102772736,
+        "dropped_group_bytes": 12653056,
+        "reduction_pct": 10.96,
+        "operator_bytes": 12653120
+      }
+    ]
+  },
+  "pruned_precomputed_24_layer_verification": {
+    "prompt": "Clover AI System switches seamlessly between Kimi K3, NVIDIA Nemotron 3.5 Super VL, and Liquid LFM3.",
+    "seq_len": 33,
+    "attention_bin_files_remaining_across_24_trunks": 0,
+    "precomputed_24_layer_forward_ms": 1791.51,
+    "max_abs_diff_across_all_24_layers": 0.0,
+    "final_logits_max_abs_diff_vs_official": 0.0,
+    "top1_next_token_id_precomputed": 358,
+    "top1_next_token_id_official": 358,
+    "top1_next_token_str": " I",
+    "layer0_4bit_group64_swiglu_cos_sim": 0.993288,
+    "per_layer_diffs": [
+      {
+        "layer_id": 0,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 1,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 2,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 3,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 4,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 5,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 6,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 7,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 8,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 9,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 10,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 11,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 12,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 13,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 14,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 15,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 16,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 17,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 18,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 19,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 20,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 21,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 22,
+        "max_abs_diff": 0.0
+      },
+      {
+        "layer_id": 23,
+        "max_abs_diff": 0.0
+      }
+    ]
+  },
+  "lfm3_7_layer_clover_bridge": {
+    "model_key": "lfm3-1.7b",
+    "backbone_shape": [
+      1,
+      33,
+      2048
+    ],
+    "ncm_concept_384_shape": [
+      1,
+      33,
+      384
+    ],
+    "ncm_concept_384_rms": 0.46196,
+    "hybrid_agent_4096_shape": [
+      1,
+      33,
+      4096
+    ],
+    "hybrid_agent_4096_rms": 1.00066
+  }
+}

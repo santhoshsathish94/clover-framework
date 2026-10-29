@@ -15,14 +15,14 @@ Clover AI v4 is the current seven-layer system described in the repository. Its 
 6. The Kimi K3 CPU/GPU engine and validated Rust host path.
 7. Parallel Next-Concept Modeling and web/VS Code agent surfaces.
 
-The authoritative implementation details, supported claims, evidence, and limitations remain in the root [README](../../README.md), [Clover-Kimi-K3 documentation](../../clover-kimi-k3/README.md), [Foundations-to-Clover & 70-Task Evaluation Context](../runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md), and the committed benchmark bundles under [`benchmarks/results/1936d4eb0d53/gpu/`](../../benchmarks/verified-runs/run-baseline-before-foundations/gpu/). A version label does not replace those evidence records.
+The authoritative implementation details, supported claims, evidence, and limitations remain in the root [README](../../README.md), [Clover-Kimi-K3 documentation](../../clover-ai-system/README.md), [Foundations-to-Clover & 70-Task Evaluation Context](../runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md), and the committed benchmark bundles under [`benchmarks/results/1936d4eb0d53/gpu/`](../../benchmarks/verified-runs/run-baseline-before-foundations/gpu/). A version label does not replace those evidence records.
 
 ## Verified v4 baseline and boundaries
 
 1. **Zero-state reproducible setup (`1936d4eb0d53`):**
    - Verified on the `8 × NVIDIA RTX 3090` server (`gpu`) after wiping all legacy directories under `/home/usergpu/` and bootstrapping fresh from GitHub (`santhoshsathish94/clover-framework`) and Hugging Face (`Santhoshsathish94/clover-kimi-k3`).
 2. **What the 70-task head-to-head and 3-arm ablation prove ([`clover_70_ablation_report.json`](../../benchmarks/verified-runs/run-baseline-before-foundations/gpu/clover_70_ablation_report.json), [`frontier_70_scored_report.json`](../../benchmarks/verified-runs/run-baseline-before-foundations/gpu/frontier_70_scored_report.json)):**
-   - **Scorer version & SHA-256:** [`run_real_ai_benchmark_suite.py`](../../clover-kimi-k3/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py) (`sha256: 3736b986a27ca358...`, recorded in `provenance` inside `clover_70_ablation_report.json`).
+   - **Scorer version & SHA-256:** [`run_real_ai_benchmark_suite.py`](../../clover-ai-system/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py) (`sha256: 3736b986a27ca358...`, recorded in `provenance` inside `clover_70_ablation_report.json`).
    - **Clover's underlying model alone (`Arm 0`, no Clover mechanisms):** `33 / 70` (`47.14%` pass rate, `965.41 s` sum of task latencies, `234.04 GPU-s / solved task`).
    - **Adding Tool Orchestration (`<python>`, `<search>`) & Generative Compilation (`Arm 1`):** `57 / 70` (`81.43%` pass rate, `+24 tasks`, `1,015.40 s` sum of task latencies, `142.51 GPU-s / solved task`).
    - **Adding Ontology GraphRAG & Persistent Memory Graph (`Arm 2`, Full Clover v4):** `70 / 70` (`100.00%` pass rate, `99.08%` mean score, `+37 tasks` total over `Arm 0`, `1,002.26 s` sum of per-task latencies in `results.jsonl` / `1,005.50 s` suite wall envelope, `114.54 GPU-s / solved task`).

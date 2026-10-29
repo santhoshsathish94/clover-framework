@@ -3,8 +3,8 @@
 - **Date:** 2026-10-29
 - **Experiment Design:** [experiment-design.md](experiment-design.md)
 - **Machine-Readable Traces & Metrics:** [results.json](results.json)
-- **Experimental Code:** [meaning_development_pilot.py](../../../clover-kimi-k3/src/tools/hybrid-ncm-k3/meaning_development_pilot.py)
-- **Automated Test Suite:** [test_meaning_development_pilot.py](../../../clover-kimi-k3/src/tools/hybrid-ncm-k3/test_meaning_development_pilot.py)
+- **Experimental Code:** [meaning_development_pilot.py](../../../clover-ai-system/src/tools/hybrid-ncm-k3/meaning_development_pilot.py)
+- **Automated Test Suite:** [test_meaning_development_pilot.py](../../../clover-ai-system/src/tools/hybrid-ncm-k3/test_meaning_development_pilot.py)
 - **Canonical Cycle Preserved:** **Context → Direction → Execution → Outcome → Growth**
 
 ---
