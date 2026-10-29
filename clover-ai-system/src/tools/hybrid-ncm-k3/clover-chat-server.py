@@ -610,13 +610,19 @@ HTML_UI = """<!DOCTYPE html>
 
     <footer>
       <input type="file" id="file-input" multiple hidden onchange="onFilesSelected(event)">
-      <button type="button" class="btn icon-btn" onclick="document.getElementById('file-input').click()" title="Attach files (images, video, audio, PDF, documents, text)" aria-label="Attach files">
+      <button type="button" class="btn icon-btn" onclick="document.getElementById('file-input').click()" title="Attach any file (images, video, audio, PDF, documents, code, text)" aria-label="Attach files">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
         </svg>
       </button>
+      <select id="output-type-select" onchange="onOutputTypeChange(this.value)" title="Select output type" aria-label="Select output type" style="height:40px;padding:0 0.7rem;border:1px solid var(--line-2);border-radius:9px;background:var(--soft);font:inherit;font-size:0.84rem;font-weight:600;color:var(--ink-2);cursor:pointer;">
+        <option value="text" selected>Text</option>
+        <option value="image">Image</option>
+        <option value="video" id="opt-video">Video</option>
+        <option value="audio" id="opt-audio">Audio</option>
+      </select>
       <textarea id="prompt-in" rows="1" placeholder="Message Clover..."></textarea>
-      <button type="button" class="btn icon-btn" id="voice-btn" onclick="toggleVoice()" title="Voice input" aria-label="Voice input">
+      <button type="button" class="btn icon-btn" id="voice-btn" onclick="toggleVoice()" title="Voice conversation" aria-label="Voice conversation">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -657,6 +663,16 @@ const MODEL_CPU_INFO = {
   }
 };
 let selectedModelKey = 'nemotron-3.5-super-vl';
+let selectedOutputType = 'text';
+function onOutputTypeChange(val) {
+  selectedOutputType = (val === 'image' || val === 'video' || val === 'audio') ? val : 'text';
+  if (inputEl) {
+    inputEl.placeholder = selectedOutputType === 'image' ? 'Describe the image to generate...'
+      : selectedOutputType === 'video' ? 'Describe the video to generate...'
+      : selectedOutputType === 'audio' ? 'Enter text or sound to synthesize as audio...'
+      : 'Message Clover...';
+  }
+}
 function toggleModelMenu(ev) {
   if (ev) ev.stopPropagation();
   const menu = document.getElementById('clover-model-menu');
@@ -685,6 +701,16 @@ function onModelSelectChange(val) {
   const pillEl = document.getElementById('clover-cpu-pill');
   if (pillEl && MODEL_CPU_INFO[selectedModelKey]) {
     pillEl.title = MODEL_CPU_INFO[selectedModelKey].tip;
+  }
+  const isK3 = (selectedModelKey === 'kimi-k3');
+  const optVid = document.getElementById('opt-video');
+  const optAud = document.getElementById('opt-audio');
+  if (optVid) { optVid.hidden = isK3; optVid.disabled = isK3; }
+  if (optAud) { optAud.hidden = isK3; optAud.disabled = isK3; }
+  if (isK3 && (selectedOutputType === 'video' || selectedOutputType === 'audio')) {
+    const selEl = document.getElementById('output-type-select');
+    if (selEl) selEl.value = 'text';
+    onOutputTypeChange('text');
   }
   try { localStorage.setItem(MODEL_STORAGE_KEY, selectedModelKey); } catch (e) {}
 }
@@ -1192,6 +1218,7 @@ async function sendPrompt() {
       body: JSON.stringify({
         session_id: activeSid,
         model: selectedModelKey,
+        output_type: selectedOutputType || 'text',
         prompt: effectivePrompt,
         image_base64: imgData,
         attachments: filesPayload,
@@ -2202,9 +2229,10 @@ class MultiGPUCloverCoordinator:
             self._lfm3_mm_engine = None
         return self._lfm3_mm_engine
 
-    def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl"):
+    def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl", output_type="text"):
         p_low = (prompt or "").strip().lower()
-        # 1. Check if `nemotron-3.5-super-vl` or `lfm3-1.7b` has an audio/video attachment or an explicit image/video/audio generation prompt
+        out_kind = str(output_type or "text").strip().lower()
+        # 1. Check if `nemotron-3.5-super-vl` or `lfm3-1.7b` has an audio/video attachment or an explicit/selected image/video/audio output
         if model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b"):
             mm_eng = (
                 self._get_or_load_nemotron_multimodal()
@@ -2258,23 +2286,29 @@ class MultiGPUCloverCoordinator:
                         })
                         return r_vid
 
-                # Check for explicit audio/voice, video, or image generation prompt
-                wants_gen_audio = bool(
+                # Check for selected output_type dropdown ("image", "video", "audio") or explicit prompt keywords
+                wants_gen_audio = (out_kind == "audio") or bool(
                     re.search(
                         r"\b(?:generate|create|synthesize|make|record|play)\s+(?:me\s+)?(?:an?\s+)?(?:mp3\s+|wav\s+|ogg\s+|flac\s+)?(?:audio|voice|speech|sound|soundscape|recording|clip\s+saying)\b",
                         p_low,
                     )
                 )
-                wants_gen_video = (not wants_gen_audio) and bool(
-                    re.search(
-                        r"\b(?:generate|create|make|render|animate|show\s+me)\s+(?:me\s+)?(?:an?\s+)?(?:animated\s+|hd\s+|mp4\s+|webm\s+|gif\s+)?(?:video|animation|motion\s+clip|clip|movie)\b",
-                        p_low,
+                wants_gen_video = (not wants_gen_audio) and (
+                    (out_kind == "video")
+                    or bool(
+                        re.search(
+                            r"\b(?:generate|create|make|render|animate|show\s+me)\s+(?:me\s+)?(?:an?\s+)?(?:animated\s+|hd\s+|mp4\s+|webm\s+|gif\s+)?(?:video|animation|motion\s+clip|clip|movie)\b",
+                            p_low,
+                        )
                     )
                 )
-                wants_gen_image = (not wants_gen_audio and not wants_gen_video) and bool(
-                    re.search(
-                        r"\b(?:generate|create|make|render|draw|paint|show\s+me)\s+(?:me\s+)?(?:an?\s+)?(?:high[\s\-]*res(?:olution)?\s+|hd\s+|1080p\s+|4k\s+)?(?:png\s+|jpg\s+|jpeg\s+|webp\s+|bmp\s+)?(?:image|picture|illustration|photo|visual|scene|artwork)\b",
-                        p_low,
+                wants_gen_image = (not wants_gen_audio and not wants_gen_video) and (
+                    (out_kind == "image")
+                    or bool(
+                        re.search(
+                            r"\b(?:generate|create|make|render|draw|paint|show\s+me)\s+(?:me\s+)?(?:an?\s+)?(?:high[\s\-]*res(?:olution)?\s+|hd\s+|1080p\s+|4k\s+)?(?:png\s+|jpg\s+|jpeg\s+|webp\s+|bmp\s+)?(?:image|picture|illustration|photo|visual|scene|artwork)\b",
+                            p_low,
+                        )
                     )
                 )
                 if wants_gen_audio or wants_gen_video or wants_gen_image:
@@ -2294,6 +2328,8 @@ class MultiGPUCloverCoordinator:
                         "history_len": h_len,
                     })
                     return r_gen
+        elif model_key == "kimi-k3" and out_kind == "image" and prompt and not prompt.lower().startswith(("generate ", "create ", "draw ")):
+            prompt = f"Generate an image of {prompt}"
 
         att_blocks = self.ingest_attachments(session_id, attachments) if attachments else []
         att_meta = [
@@ -2948,6 +2984,9 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             selected_model = str(payload.get("model") or "nemotron-3.5-super-vl").strip()
             if selected_model not in ("nemotron-3.5-super-vl", "lfm3-1.7b", "kimi-k3"):
                 selected_model = "nemotron-3.5-super-vl"
+            requested_output_type = str(payload.get("output_type") or "text").strip().lower()
+            if requested_output_type not in ("text", "image", "video", "audio"):
+                requested_output_type = "text"
             if not prompt and not image_b64 and not non_img_attachments:
                 self._send_json({"error": "Empty prompt"}, code=400)
                 return
@@ -2970,6 +3009,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         remember=remember,
                         attachments=non_img_attachments,
                         model_key=selected_model,
+                        output_type=requested_output_type,
                     )
                 self._send_json(r)
             except Exception as e:
