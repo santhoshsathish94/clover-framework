@@ -180,6 +180,33 @@
     content: ""; width: 7px; height: 7px; border-radius: 50%;
     background: #c48f3b; flex-shrink: 0;
   }
+  .clover-modality-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;
+    flex-wrap: wrap; padding: 0.12rem 0.25rem 0.42rem; border-bottom: 1px solid var(--rule);
+    margin-bottom: 0.2rem;
+  }
+  .clover-modality-actions {
+    display: flex; align-items: center; gap: 0.32rem; flex-wrap: wrap;
+  }
+  .clover-modality-pill {
+    display: inline-flex; align-items: center; gap: 0.28rem;
+    padding: 0.2rem 0.54rem; border-radius: 999px; border: 1px solid var(--rule);
+    background: var(--bg-soft); color: var(--ink-2); font: inherit; font-size: 0.72rem;
+    font-weight: 600; cursor: pointer; transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  }
+  .clover-modality-pill:hover {
+    border-color: var(--accent); background: var(--accent-tint); color: var(--accent-hover);
+  }
+  .clover-modality-pill.is-active {
+    border-color: var(--accent); background: var(--accent-tint); color: var(--accent-hover);
+  }
+  .clover-modality-pill[hidden] { display: none !important; }
+  .clover-modality-status {
+    font-size: 0.69rem; font-weight: 600; color: var(--muted); white-space: nowrap;
+  }
+  .k3-audio-player {
+    display: block; width: 100%; max-width: 280px; height: 34px; margin-bottom: 0.4rem;
+  }
   @media (max-width: 760px) {
     .clover-sidebar {
       position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
@@ -225,6 +252,7 @@
             </div>
             <div class="clover-model-option__meta">120B-A12B MoE &bull; 131K Vocab</div>
             <div class="clover-model-option__meta">Context: 1M Native Tokens</div>
+            <div class="clover-model-option__meta">Modalities: Text, C-RADIO Vision, EVS Video, Audio/Voice &amp; Image/Video Gen</div>
             <div class="clover-model-option__speed">CPU Stage: ~1.1s Clubbed (~2.1s Single)</div>
             <div class="clover-model-option__speed">CPU Response: ~15&ndash;35s Full Turn</div>
           </button>
@@ -235,6 +263,7 @@
             </div>
             <div class="clover-model-option__meta">24-Layer Tri-Hybrid &bull; 128K Vocab</div>
             <div class="clover-model-option__meta">Context: 1M Session (256K Native)</div>
+            <div class="clover-model-option__meta">Modalities: Text, Duplex Voice/Audio, ShortConv Vision/Video &amp; Image/Video Gen</div>
             <div class="clover-model-option__speed">CPU Stage: ~3.5s 24-Layer C / ~6.0s NCM</div>
             <div class="clover-model-option__speed">CPU Response: ~15&ndash;35s Full Turn</div>
           </button>
@@ -245,6 +274,7 @@
             </div>
             <div class="clover-model-option__meta">93-Layer 2.78T MoE &bull; 163.8K Vocab</div>
             <div class="clover-model-option__meta">Context: 1M Session (256K Native)</div>
+            <div class="clover-model-option__meta">Modalities: Text, MoonViT3d Vision/Video, Voice &amp; Image Gen</div>
             <div class="clover-model-option__speed">CPU Stage: ~9.1s Stage (~4.4s on GPU)</div>
             <div class="clover-model-option__speed">CPU Response: ~60&ndash;140s Full Turn</div>
           </button>
@@ -294,6 +324,26 @@
 
     <div class="clover-composer-wrap">
       <div class="clover-composer-card">
+        <div class="clover-modality-bar" id="clover-modality-bar" aria-label="Model multimodal capabilities">
+          <div class="clover-modality-actions">
+            <button type="button" class="clover-modality-pill" id="k3-mod-vision-btn" onclick="k3PickModalityFile('image/*,video/*')" title="Attach an image or video for visual/temporal analysis">
+              <span>📷 Image / Video</span>
+            </button>
+            <button type="button" class="clover-modality-pill" id="k3-mod-audio-btn" onclick="k3PickModalityFile('audio/*,.wav,.mp3,.m4a,.ogg,.flac')" title="Attach an audio or voice recording">
+              <span>🎵 Audio</span>
+            </button>
+            <button type="button" class="clover-modality-pill" id="k3-voice-conv-pill" onclick="k3ToggleVoiceConversation()" title="Toggle hands-free duplex voice conversation">
+              <span id="k3-voice-conv-label">🎙️ Voice Chat: Off</span>
+            </button>
+            <button type="button" class="clover-modality-pill" id="k3-gen-image-pill" onclick="k3TriggerMediaPrompt('image')" title="Generate an SVG/PNG illustration with the selected model">
+              <span>🖼️ Create Image</span>
+            </button>
+            <button type="button" class="clover-modality-pill" id="k3-gen-video-pill" onclick="k3TriggerMediaPrompt('video')" title="Generate an animated video sequence with the selected model">
+              <span>🎬 Create Video</span>
+            </button>
+          </div>
+          <span class="clover-modality-status" id="clover-modality-status">C-RADIO Vision &bull; EVS Video &bull; Mamba-2 Voice</span>
+        </div>
         <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
           <div class="k3-preview-bar__info">
             <img id="k3-img-preview-thumb" src="../assets/case-study-01-contentful-migration.svg" alt="Attachment preview" hidden>
@@ -356,18 +406,33 @@
     'nemotron-3.5-super-vl': {
       shortLabel: 'Nemotron 3.5 Super VL',
       pillText: 'CPU · 1M Ctx · ~1.1s Clubbed / ~4.3s Stage',
+      modalitySummary: 'C-RADIO Vision • EVS Video • Mamba-2 Voice • Image/Video Gen',
+      supportsVideoGen: true,
+      supportsImageGen: true,
+      supportsAudioVoice: true,
+      voiceProfile: 'en-US-AriaNeural',
       tooltip:
         'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context, Default): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15–35s full CPU turn'
     },
     'lfm3-1.7b': {
       shortLabel: 'Liquid LFM3-1.7B',
       pillText: 'CPU · 1M Ctx · ~3.5s 24L C / ~6.0s Stage',
+      modalitySummary: 'Duplex Voice/Audio • ShortConv Vision/Video • Image/Video Gen',
+      supportsVideoGen: true,
+      supportsImageGen: true,
+      supportsAudioVoice: true,
+      voiceProfile: 'en-US-JennyNeural',
       tooltip:
         'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab, 1M Clover Session / 256K Native RoPE): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn'
     },
     'kimi-k3': {
       shortLabel: 'Kimi K3 2.78T MoE',
       pillText: 'CPU · 1M Ctx · ~9.1s Stage (~60–140s Turn)',
+      modalitySummary: 'MoonViT3d Vision/Video • Neural Voice • Image Gen',
+      supportsVideoGen: false,
+      supportsImageGen: true,
+      supportsAudioVoice: true,
+      voiceProfile: 'en-US-AnaNeural',
       tooltip:
         'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab, 1M Clover Session / 256K Native): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
     }
@@ -382,6 +447,13 @@
     '</div>';
   var constant_below_reply_actions_html =
     '<div class="k3-below-actions">' +
+      '<button type="button" class="k3-icon-action" onclick="k3SpeakReply(this)" title="Listen (Voice playback)" aria-label="Listen">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>' +
+          '<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>' +
+          '<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>' +
+        '</svg>' +
+      '</button>' +
       '<button type="button" class="k3-icon-action" onclick="k3RegenerateLast(this)" title="Regenerate" aria-label="Regenerate">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
           '<polyline points="23 4 23 10 17 10"></polyline>' +
@@ -567,6 +639,8 @@
       this.variable_speech_recognition_instance = null;
       this.flag_is_listening_for_voice = false;
       this.flag_was_last_input_from_voice = false;
+      this.flag_is_voice_conversation_mode_enabled = false;
+      this.function_on_voice_transcript_ready = null;
       this.variable_active_tts_audio_element = null;
       this.variable_active_tts_button_element = null;
       this.variable_tts_audio_cache_by_text = {};
@@ -769,6 +843,12 @@
             (variable_current_text ? variable_current_text + ' ' : '') + variable_spoken_transcript;
           variable_self_codec.flag_was_last_input_from_voice = true;
           variable_self_codec.variable_prompt_input_element.focus();
+          if (
+            variable_self_codec.flag_is_voice_conversation_mode_enabled &&
+            typeof variable_self_codec.function_on_voice_transcript_ready === 'function'
+          ) {
+            variable_self_codec.function_on_voice_transcript_ready();
+          }
         }
       };
       this.variable_speech_recognition_instance.onend = function () {
@@ -869,7 +949,11 @@
       window.speechSynthesis.speak(variable_utterance);
     }
 
-    async function_speak_assistant_reply(variable_trigger_button, variable_active_backend_base_url) {
+    async function_speak_assistant_reply(
+      variable_trigger_button,
+      variable_active_backend_base_url,
+      variable_selected_model_key
+    ) {
       var flag_is_same_button_playing =
         this.variable_active_tts_button_element === variable_trigger_button &&
         (this.variable_active_tts_audio_element ||
@@ -879,8 +963,13 @@
         return;
       }
       this.function_stop_current_speech_playback();
-      var variable_message_element =
+      var variable_turn_element =
         variable_trigger_button && variable_trigger_button.closest
+          ? variable_trigger_button.closest('.k3-bot-turn')
+          : null;
+      var variable_message_element = variable_turn_element
+        ? variable_turn_element.querySelector('.k3-msg')
+        : variable_trigger_button && variable_trigger_button.closest
           ? variable_trigger_button.closest('.k3-msg')
           : variable_trigger_button
             ? variable_trigger_button.parentNode.parentNode
@@ -900,18 +989,22 @@
         return;
       }
 
-      if (variable_trigger_button) {
-        variable_trigger_button.textContent = '⏳ Voice...';
+      if (variable_trigger_button && variable_trigger_button.classList) {
+        variable_trigger_button.classList.add('is-active');
         this.variable_active_tts_button_element = variable_trigger_button;
       }
       var variable_self_codec = this;
+      var variable_cache_key = (variable_selected_model_key || 'default') + '::' + variable_spoken_text;
       try {
-        var variable_cached_audio_url = this.variable_tts_audio_cache_by_text[variable_spoken_text];
+        var variable_cached_audio_url = this.variable_tts_audio_cache_by_text[variable_cache_key];
         if (!variable_cached_audio_url) {
           var variable_tts_response = await fetch(variable_active_backend_base_url + '/api/tts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: variable_spoken_text })
+            body: JSON.stringify({
+              text: variable_spoken_text,
+              model: variable_selected_model_key || 'nemotron-3.5-super-vl'
+            })
           });
           if (!variable_tts_response.ok) {
             throw new Error('TTS HTTP ' + variable_tts_response.status);
@@ -921,19 +1014,16 @@
             throw new Error('No audio');
           }
           variable_cached_audio_url = variable_tts_json.audio_base64;
-          this.variable_tts_audio_cache_by_text[variable_spoken_text] = variable_cached_audio_url;
+          this.variable_tts_audio_cache_by_text[variable_cache_key] = variable_cached_audio_url;
         }
         if (this.variable_active_tts_button_element !== variable_trigger_button) {
           return;
         }
         var variable_audio_player = new Audio(variable_cached_audio_url);
         this.variable_active_tts_audio_element = variable_audio_player;
-        if (variable_trigger_button) {
-          variable_trigger_button.textContent = '⏹ Stop';
-        }
         variable_audio_player.onended = function () {
-          if (variable_self_codec.variable_active_tts_button_element === variable_trigger_button) {
-            variable_trigger_button.textContent = '🔊 Listen';
+          if (variable_trigger_button && variable_trigger_button.classList) {
+            variable_trigger_button.classList.remove('is-active');
           }
           variable_self_codec.variable_active_tts_audio_element = null;
           variable_self_codec.variable_active_tts_button_element = null;
@@ -1021,23 +1111,62 @@
           continue;
         }
         var variable_escaped_title = this.function_escape_html_entities(
-          variable_media_item.title || 'Generated Chart'
+          variable_media_item.title || 'Generated Media'
         );
         var variable_escaped_caption = this.function_escape_html_entities(
           variable_media_item.caption || variable_media_item.title || ''
         );
-        if (variable_media_item.type === 'svg' && variable_media_item.svg) {
+        if (variable_media_item.type === 'video') {
+          var variable_vid_svg_html = variable_media_item.svg || '';
+          var variable_vid_dl_links = '';
+          if (variable_media_item.data_url) {
+            variable_vid_dl_links +=
+              '<a class="k3-dl-link" href="' +
+              variable_media_item.data_url +
+              '" download="clover-animation.gif">Download Video GIF</a>';
+          }
+          if (variable_media_item.svg) {
+            var variable_vid_svg_uri =
+              'data:image/svg+xml;utf8,' + encodeURIComponent(variable_media_item.svg);
+            variable_vid_dl_links +=
+              ' <a class="k3-dl-link" href="' +
+              variable_vid_svg_uri +
+              '" download="clover-video.svg">Download Animated SVG</a>';
+          }
+          variable_rendered_figures.push(
+            '<figure class="k3-figure">' +
+              (variable_vid_svg_html ||
+                '<img src="' +
+                  (variable_media_item.data_url || '') +
+                  '" alt="' +
+                  variable_escaped_title +
+                  '">') +
+              '<figcaption class="k3-figcaption"><span>' +
+              variable_escaped_caption +
+              '</span><span>' +
+              variable_vid_dl_links +
+              '</span></figcaption>' +
+            '</figure>'
+          );
+        } else if (variable_media_item.type === 'svg' && variable_media_item.svg) {
           var variable_svg_data_uri =
             'data:image/svg+xml;utf8,' + encodeURIComponent(variable_media_item.svg);
+          var variable_extra_png_link = variable_media_item.data_url
+            ? ' <a class="k3-dl-link" href="' +
+              variable_media_item.data_url +
+              '" download="clover-image.png">Download PNG</a>'
+            : '';
           variable_rendered_figures.push(
             '<figure class="k3-figure">' +
               variable_media_item.svg +
               '<figcaption class="k3-figcaption"><span>' +
               variable_escaped_caption +
-              '</span>' +
+              '</span><span>' +
               '<a class="k3-dl-link" href="' +
               variable_svg_data_uri +
-              '" download="clover-diagram.svg">Download SVG</a></figcaption>' +
+              '" download="clover-diagram.svg">Download SVG</a>' +
+              variable_extra_png_link +
+              '</span></figcaption>' +
             '</figure>'
           );
         } else if (variable_media_item.data_url) {
@@ -1361,6 +1490,18 @@
       if (this.variable_cpu_pill_element && variable_desc) {
         this.variable_cpu_pill_element.title = variable_desc.tooltip;
       }
+      var variable_modality_status_el = document.getElementById('clover-modality-status');
+      if (variable_modality_status_el && variable_desc && variable_desc.modalitySummary) {
+        variable_modality_status_el.textContent = variable_desc.modalitySummary;
+      }
+      var variable_gen_video_pill = document.getElementById('k3-gen-video-pill');
+      if (variable_gen_video_pill && variable_desc) {
+        variable_gen_video_pill.hidden = !variable_desc.supportsVideoGen;
+      }
+      var variable_gen_image_pill = document.getElementById('k3-gen-image-pill');
+      if (variable_gen_image_pill && variable_desc) {
+        variable_gen_image_pill.hidden = !variable_desc.supportsImageGen;
+      }
       this.function_close_model_menu();
       try {
         localStorage.setItem(constant_model_storage_key, variable_valid_key);
@@ -1634,11 +1775,19 @@
           '<img class="k3-chat-thumb" src="' + variable_image_data_url + '" alt="Uploaded media">';
       }
       for (var variable_file_idx = 0; variable_file_idx < variable_attached_files.length; variable_file_idx++) {
-        if ((variable_attached_files[variable_file_idx].type || '').indexOf('image/') !== 0) {
+        var variable_att_item = variable_attached_files[variable_file_idx];
+        var variable_att_mime = (variable_att_item.type || '').toLowerCase();
+        if (variable_att_mime.indexOf('image/') !== 0) {
+          if (variable_att_mime.indexOf('audio/') === 0 && variable_att_item.data_b64) {
+            variable_user_bubble_html +=
+              '<audio class="k3-audio-player" controls src="' +
+              variable_att_item.data_b64 +
+              '"></audio>';
+          }
           variable_user_bubble_html +=
             '<div class="k3-attach-chip">📎 ' +
             this.variable_reply_renderer.function_escape_html_entities(
-              variable_attached_files[variable_file_idx].name
+              variable_att_item.name
             ) +
             '</div>';
         }
@@ -1743,11 +1892,15 @@
               constant_below_reply_actions_html
             );
             this.function_scroll_stream_to_bottom();
-            if (this.variable_attachment_and_speech_codec.flag_was_last_input_from_voice) {
+            if (
+              this.variable_attachment_and_speech_codec.flag_was_last_input_from_voice ||
+              this.variable_attachment_and_speech_codec.flag_is_voice_conversation_mode_enabled
+            ) {
               this.variable_attachment_and_speech_codec.flag_was_last_input_from_voice = false;
               this.variable_attachment_and_speech_codec.function_speak_assistant_reply(
                 variable_pending_bot_bubble,
-                this.variable_active_backend_base_url
+                this.variable_active_backend_base_url,
+                this.variable_selected_model_key
               );
             }
           } else {
@@ -1945,6 +2098,10 @@
         });
       }
 
+      this.variable_attachment_and_speech_codec.function_on_voice_transcript_ready = function () {
+        variable_self_coordinator.function_send_user_prompt_and_render_outcome();
+      };
+
       // Expose HTML inline handler hooks delegating directly to the domain classes
       window.k3CloseMobileSidebar = function () {
         variable_self_coordinator.function_close_mobile_sidebar();
@@ -1970,6 +2127,56 @@
           variable_files
         );
       };
+      window.k3PickModalityFile = function (variable_accept_filter) {
+        var variable_file_el = document.getElementById('k3-file-input');
+        if (!variable_file_el) {
+          return;
+        }
+        variable_file_el.setAttribute('accept', variable_accept_filter || '*/*');
+        variable_file_el.click();
+      };
+      window.k3ToggleVoiceConversation = function () {
+        var variable_codec = variable_self_coordinator.variable_attachment_and_speech_codec;
+        variable_codec.flag_is_voice_conversation_mode_enabled =
+          !variable_codec.flag_is_voice_conversation_mode_enabled;
+        var variable_pill = document.getElementById('k3-voice-conv-pill');
+        var variable_lbl = document.getElementById('k3-voice-conv-label');
+        if (variable_pill) {
+          variable_pill.classList.toggle(
+            'is-active',
+            variable_codec.flag_is_voice_conversation_mode_enabled
+          );
+        }
+        if (variable_lbl) {
+          variable_lbl.textContent = variable_codec.flag_is_voice_conversation_mode_enabled
+            ? '🎙️ Voice Chat: On'
+            : '🎙️ Voice Chat: Off';
+        }
+        if (
+          variable_codec.flag_is_voice_conversation_mode_enabled &&
+          !variable_codec.flag_is_listening_for_voice
+        ) {
+          variable_codec.function_toggle_voice_recognition();
+        }
+      };
+      window.k3TriggerMediaPrompt = function (variable_media_kind) {
+        var variable_input = variable_self_coordinator.variable_prompt_input_element;
+        if (!variable_input) {
+          return;
+        }
+        var variable_cur = (variable_input.value || '').trim();
+        var variable_prefix =
+          variable_media_kind === 'video' ? 'Generate a video of ' : 'Generate an image of ';
+        if (!variable_cur) {
+          variable_input.value =
+            variable_media_kind === 'video'
+              ? 'Generate a video of orbital wave propagation'
+              : 'Generate an image of an emerald Clover horizon';
+        } else if (!/^(?:generate|create|draw|render|make|animate)\b/i.test(variable_cur)) {
+          variable_input.value = variable_prefix + variable_cur;
+        }
+        variable_input.focus();
+      };
       window.k3ClearAttachments = function () {
         variable_self_coordinator.variable_attachment_and_speech_codec.function_clear_all_attachments();
       };
@@ -1983,7 +2190,8 @@
       window.k3SpeakReply = function (variable_button) {
         return variable_self_coordinator.variable_attachment_and_speech_codec.function_speak_assistant_reply(
           variable_button,
-          variable_self_coordinator.variable_active_backend_base_url
+          variable_self_coordinator.variable_active_backend_base_url,
+          variable_self_coordinator.variable_selected_model_key
         );
       };
       window.k3CopyReply = function (variable_button) {

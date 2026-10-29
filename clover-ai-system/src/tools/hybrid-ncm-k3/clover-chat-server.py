@@ -549,6 +549,7 @@ HTML_UI = """<!DOCTYPE html>
           <div style="display:flex;justify-content:space-between;width:100%;font-size:0.8rem;font-weight:700;color:var(--ink);"><span>Nemotron 3.5 Super VL</span><span style="font-size:0.64rem;color:var(--accent);text-transform:uppercase;">Default</span></div>
           <div style="font-size:0.7rem;color:var(--muted);">120B-A12B MoE &bull; 131K Vocab</div>
           <div style="font-size:0.7rem;color:var(--muted);">Context: 1M Native Tokens</div>
+          <div style="font-size:0.7rem;color:var(--muted);">Modalities: Text, C-RADIO Vision, EVS Video, Audio/Voice &amp; Image/Video Gen</div>
           <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Stage: ~1.1s Clubbed (~2.1s Single)</div>
           <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Response: ~15&ndash;35s Full Turn</div>
         </button>
@@ -556,6 +557,7 @@ HTML_UI = """<!DOCTYPE html>
           <div style="display:flex;justify-content:space-between;width:100%;font-size:0.8rem;font-weight:700;color:var(--ink);"><span>Liquid LFM3-1.7B</span><span style="font-size:0.64rem;color:var(--accent);text-transform:uppercase;">Compact</span></div>
           <div style="font-size:0.7rem;color:var(--muted);">24-Layer Tri-Hybrid &bull; 128K Vocab</div>
           <div style="font-size:0.7rem;color:var(--muted);">Context: 1M Session (256K Native)</div>
+          <div style="font-size:0.7rem;color:var(--muted);">Modalities: Text, Duplex Voice/Audio, ShortConv Vision/Video &amp; Image/Video Gen</div>
           <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Stage: ~3.5s 24-Layer C / ~6.0s NCM</div>
           <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Response: ~15&ndash;35s Full Turn</div>
         </button>
@@ -563,6 +565,7 @@ HTML_UI = """<!DOCTYPE html>
           <div style="display:flex;justify-content:space-between;width:100%;font-size:0.8rem;font-weight:700;color:var(--ink);"><span>Kimi K3 2.78T MoE</span><span style="font-size:0.64rem;color:var(--accent);text-transform:uppercase;">Deep</span></div>
           <div style="font-size:0.7rem;color:var(--muted);">93-Layer 2.78T MoE &bull; 163.8K Vocab</div>
           <div style="font-size:0.7rem;color:var(--muted);">Context: 1M Session (256K Native)</div>
+          <div style="font-size:0.7rem;color:var(--muted);">Modalities: Text, MoonViT3d Vision/Video, Voice &amp; Image Gen</div>
           <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Stage: ~9.1s Stage (~4.4s on GPU)</div>
           <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Response: ~60&ndash;140s Full Turn</div>
         </button>
@@ -989,16 +992,17 @@ async function speakReply(btn) {
   btn.textContent = '⏳ Voice...';
   activeTtsBtn = btn;
   try {
-    let audioDataUrl = ttsAudioCache[speakTxt];
+    const cacheKey = selectedModelKey + '::' + speakTxt;
+    let audioDataUrl = ttsAudioCache[cacheKey];
     if (!audioDataUrl) {
       const r = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: speakTxt })
+        body: JSON.stringify({ text: speakTxt, model: selectedModelKey })
       });
       const d = await r.json();
       audioDataUrl = d.audio_base64;
-      ttsAudioCache[speakTxt] = audioDataUrl;
+      ttsAudioCache[cacheKey] = audioDataUrl;
     }
     if (activeTtsBtn !== btn) return;
     const audio = new Audio(audioDataUrl);
@@ -1017,11 +1021,17 @@ function renderMediaItemsHtml(mediaList) {
   if (!Array.isArray(mediaList) || !mediaList.length) return '';
   return mediaList.map(m => {
     if (!m) return '';
-    const title = escHtml(m.title || 'Generated Chart');
+    const title = escHtml(m.title || 'Generated Media');
     const cap = escHtml(m.caption || m.title || '');
+    if (m.type === 'video') {
+      const dlGif = m.data_url ? `<a class="k3-dl-link" href="${m.data_url}" download="clover-animation.gif">Download Video GIF</a>` : '';
+      const dlSvg = m.svg ? ` <a class="k3-dl-link" href="${'data:image/svg+xml;utf8,' + encodeURIComponent(m.svg)}" download="clover-video.svg">Download Animated SVG</a>` : '';
+      return `<figure class="k3-figure">${m.svg || `<img src="${m.data_url || ''}" alt="${title}">`}<figcaption class="k3-figcaption"><span>${cap}</span><span>${dlGif}${dlSvg}</span></figcaption></figure>`;
+    }
     if (m.type === 'svg' && m.svg) {
       const svgUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(m.svg);
-      return `<figure class="k3-figure">${m.svg}<figcaption class="k3-figcaption"><span>${cap}</span><a class="k3-dl-link" href="${svgUrl}" download="clover-diagram.svg">Download SVG</a></figcaption></figure>`;
+      const extraPng = m.data_url ? ` <a class="k3-dl-link" href="${m.data_url}" download="clover-image.png">Download PNG</a>` : '';
+      return `<figure class="k3-figure">${m.svg}<figcaption class="k3-figcaption"><span>${cap}</span><span><a class="k3-dl-link" href="${svgUrl}" download="clover-diagram.svg">Download SVG</a>${extraPng}</span></figcaption></figure>`;
     }
     if (m.data_url) {
       return `<figure class="k3-figure"><img src="${m.data_url}" alt="${title}"><figcaption class="k3-figcaption"><span>${cap}</span><a class="k3-dl-link" href="${m.data_url}" download="clover-chart.png">Download PNG</a></figcaption></figure>`;
