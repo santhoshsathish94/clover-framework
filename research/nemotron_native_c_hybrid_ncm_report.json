@@ -1,0 +1,61 @@
+{
+  "native_c_openmp_engine": {
+    "library_path": "/tmp/clover-models/nemotron-3.5-super-vl/libnemotron_cpu_engine.so",
+    "c_vs_python_precomputed_cosine_sim": 0.999974,
+    "c_vs_python_precomputed_max_abs_diff": 0.1875,
+    "c_forward_pass1_cold_ms": 819.05,
+    "c_forward_pass2_warm_ms": 200.97,
+    "specmd_r4_dm_ledger_pass1": {
+      "total_expert_requests": 356,
+      "tier1_pool_hits": 0,
+      "tier2_host_hits": 0,
+      "tier3_drive_fetches": 356,
+      "r4_clean_drops": 292,
+      "dirty_writebacks": 0
+    },
+    "specmd_r4_dm_ledger_pass2_warm": {
+      "total_expert_requests": 509,
+      "tier1_pool_hits": 32,
+      "tier2_host_hits": 121,
+      "tier3_drive_fetches": 356,
+      "r4_clean_drops": 413,
+      "dirty_writebacks": 0
+    }
+  },
+  "native_hybrid_agent_layer2": {
+    "module": "NemotronNativeHybridLink(d=4096, bottleneck=1024)",
+    "shared_vocab_tokens_matched": 67869,
+    "raw_hidden_to_next_embed_cos": 0.0246,
+    "trained_hybridlink_train_cos": 0.9985,
+    "trained_hybridlink_test_cos": 0.9985,
+    "latent_131k_vocab_readout_mean_cos": 0.9401,
+    "latent_131k_vocab_readout_sample": " lover AI System switches seamlessly between Kimi K3,"
+  },
+  "native_ncm_layer3": {
+    "vocab_size": 131072,
+    "vq_code_levels": [
+      1,
+      4,
+      8,
+      14,
+      20,
+      26,
+      32,
+      40,
+      48,
+      56,
+      64
+    ],
+    "vq_total_codes_per_window": 313,
+    "vqvae_131k_token_acc_before_finetune": 0.1215,
+    "vqvae_131k_token_acc_after_finetune": 0.9983,
+    "vqvae_reconstructed_prompt": "Clover AI System switches seamlessly between Kimi K3, NVIDIA Nemotron 3.5 Super VL, and Liquid LFM3.",
+    "ncm_11_level_logits_shape": [
+      1,
+      313,
+      4096
+    ],
+    "ncm_11_level_code_cross_entropy": 5.2436,
+    "saved_checkpoint": "/opt/clover-k3/nemotron-computed/hybrid-ncm/nemotron_hybrid_ncm_bridges.pt"
+  }
+}

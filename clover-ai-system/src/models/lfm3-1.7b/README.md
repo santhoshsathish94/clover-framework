@@ -10,6 +10,8 @@ This folder registers **Liquid AI's `LFM3-1.7B`** (`LiquidAI/LFM3-1.7B`, `1.73B`
 - **Precomputed Dataset & Composed Operator Builder (`LFM3TRK1`, `LFM3_OP1`, `LFM3ROP1`):** [prepare_lfm3_datasets.py](prepare_lfm3_datasets.py)
 - **Trunk Pruner (deletes `attention.bin` from all 24 / 24 trunks, saving `445.14 MiB`):** [prune_lfm3_trunk.py](prune_lfm3_trunk.py)
 - **Precomputed 24-Layer Runtime Engine & 4-Bit SwiGLU:** [lfm3_precomputed_engine.py](lfm3_precomputed_engine.py)
+- **Native 24-Layer C/OpenMP Engine (`liblfm3_cpu_engine.so`):** [lfm3_cpu_engine.c](lfm3_cpu_engine.c)
+- **Native `HybridAgent` (`Lfm3NativeHybridLink` $d=2048$) & Native 11-Level `NCM` (`128,000`-Vocab VQ-VAE + Bridges):** [lfm3_hybrid_ncm.py](lfm3_hybrid_ncm.py)
 - **End-to-End 24-Layer Verification & 7-Layer Clover Switching Suite:** [verify_lfm3_clover_integration.py](verify_lfm3_clover_integration.py)
 - **Stage-by-Stage Verification & Study:** [../../../../research/lfm3_stage_study.py](../../../../research/lfm3_stage_study.py) and [../../../../docs/runtime-context/engine-and-architecture/clover-lfm3-1.7b-stage-study-context.md](../../../../docs/runtime-context/engine-and-architecture/clover-lfm3-1.7b-stage-study-context.md)
 - **Switchable Layer-1 Registration:** `"lfm3-1.7b"` in [../switchable_model_backend.py](../switchable_model_backend.py) and `class-lfm3-compact-foundation-model-backend` in [../../tools/hybrid-ncm-k3/clover-object-model.py](../../tools/hybrid-ncm-k3/clover-object-model.py).

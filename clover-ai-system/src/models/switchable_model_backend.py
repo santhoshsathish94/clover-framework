@@ -197,3 +197,102 @@ class CloverSwitchableModelLayer1:
             "hybrid_agent_4096_shape": list(r_ha_4096.shape),
             "hybrid_agent_4096_rms": round(float(r_ha_4096.float().pow(2).mean().sqrt()), 5),
         }
+
+    def execute_native_c_engine_and_trained_hybrid_ncm(
+        self,
+        token_ids: list[int] | torch.Tensor,
+        nemo_pruned_dir: Path = Path("/opt/clover-k3/nemotron-computed/pruned"),
+        nemo_ckpt_path: Path = Path("/opt/clover-k3/nemotron-computed/hybrid-ncm/nemotron_hybrid_ncm_bridges.pt"),
+        lfm3_pruned_dir: Path = Path("/opt/clover-k3/lfm3-computed/pruned"),
+        lfm3_ckpt_path: Path = Path("/opt/clover-k3/lfm3-computed/hybrid-ncm/lfm3_hybrid_ncm_bridges.pt"),
+    ) -> dict[str, Any]:
+        """
+        Executes the active Layer-1 model's compiled Native C/OpenMP Engine (`libnemotron_cpu_engine.so` or
+        `liblfm3_cpu_engine.so`), its trained Native `HybridLink` (`NemotronNativeHybridLink` d=4096 or
+        `Lfm3NativeHybridLink` d=2048), and its trained NCM `ComboBridge` + `ExpertBridge` (`D_model -> 384`).
+        """
+        import sys
+
+        base_dir = Path(__file__).resolve().parent
+        key = self.active_spec.model_key
+
+        if key == "nemotron-3.5-super-vl":
+            nemo_dir = base_dir / "nemotron-3.5-super-vl"
+            if str(nemo_dir) not in sys.path:
+                sys.path.insert(0, str(nemo_dir))
+            from nemotron_hybrid_ncm import (
+                NemotronComboBridge,
+                NemotronExpertBridge,
+                NemotronNativeCPUEngine,
+                NemotronNativeHybridLink,
+            )
+
+            c_eng = NemotronNativeCPUEngine(nemo_pruned_dir)
+            h_c, c_ms = c_eng.forward_ids(token_ids)
+            dm_stats = c_eng.get_dm_stats()
+
+            link = NemotronNativeHybridLink(d=4096, bottleneck=1024)
+            c_bridge = NemotronComboBridge(4096, 384)
+            e_bridge = NemotronExpertBridge(4096, 384)
+            if nemo_ckpt_path.exists():
+                sd = torch.load(str(nemo_ckpt_path), map_location="cpu", weights_only=False)
+                link.load_state_dict(sd["nemo_native_hybrid_link"])
+                c_bridge.load_state_dict(sd["nemo_combo_bridge"])
+                e_bridge.load_state_dict(sd["nemo_expert_bridge"])
+
+            with torch.no_grad():
+                r_latent = link(h_c).unsqueeze(0)          # [1, T, 4096]
+                z_combo = c_bridge(r_latent)               # [1, T, 384]
+                z_exp = e_bridge(h_c.unsqueeze(0))         # [1, T, 384]
+
+            return {
+                "model_key": key,
+                "native_c_so": str(c_eng.so_path),
+                "c_forward_ms": round(c_ms, 2),
+                "backbone_hidden_shape": list(h_c.unsqueeze(0).shape),
+                "native_hybridlink_latent_shape": list(r_latent.shape),
+                "ncm_combo_bridge_384_shape": list(z_combo.shape),
+                "ncm_expert_bridge_384_shape": list(z_exp.shape),
+                "specmd_r4_dm_stats": dm_stats,
+            }
+
+        if key == "lfm3-1.7b":
+            lfm3_dir = base_dir / "lfm3-1.7b"
+            if str(lfm3_dir) not in sys.path:
+                sys.path.insert(0, str(lfm3_dir))
+            from lfm3_hybrid_ncm import (
+                Lfm3ComboBridge,
+                Lfm3ExpertBridge,
+                Lfm3NativeCPUEngine,
+                Lfm3NativeHybridLink,
+            )
+
+            c_eng = Lfm3NativeCPUEngine(lfm3_pruned_dir)
+            h_c, c_ms = c_eng.forward_ids(token_ids)
+
+            link = Lfm3NativeHybridLink(d=2048, bottleneck=512)
+            c_bridge = Lfm3ComboBridge(2048, 384)
+            e_bridge = Lfm3ExpertBridge(2048, 384)
+            if lfm3_ckpt_path.exists():
+                sd = torch.load(str(lfm3_ckpt_path), map_location="cpu", weights_only=False)
+                link.load_state_dict(sd["lfm3_native_hybrid_link"])
+                c_bridge.load_state_dict(sd["lfm3_combo_bridge"])
+                e_bridge.load_state_dict(sd["lfm3_expert_bridge"])
+
+            with torch.no_grad():
+                r_latent = link(h_c).unsqueeze(0)          # [1, T, 2048]
+                z_combo = c_bridge(r_latent)               # [1, T, 384]
+                z_exp = e_bridge(h_c.unsqueeze(0))         # [1, T, 384]
+
+            return {
+                "model_key": key,
+                "native_c_so": str(c_eng.so_path),
+                "c_forward_ms": round(c_ms, 2),
+                "backbone_hidden_shape": list(h_c.unsqueeze(0).shape),
+                "native_hybridlink_latent_shape": list(r_latent.shape),
+                "ncm_combo_bridge_384_shape": list(z_combo.shape),
+                "ncm_expert_bridge_384_shape": list(z_exp.shape),
+            }
+
+        raise ValueError(f"Unsupported native C engine dispatch for model_key={key}")
+
