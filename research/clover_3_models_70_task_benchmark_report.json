@@ -1,0 +1,651 @@
+{
+  "benchmark_suite": "Clover 7-Category, 70-Task Standardized Real AI Benchmark Matrix",
+  "models_compared": {
+    "kimi-k3": {
+      "model_key": "kimi-k3",
+      "vocab_size": 163840,
+      "hidden_size": 7168,
+      "tasks_passed": 70,
+      "tasks_total": 70,
+      "pass_rate_pct": 100.0,
+      "mean_canonical_score_pct": 99.08,
+      "all_emitted_token_ids_valid_in_model_vocab": true,
+      "mean_c_engine_ms": 4447.8,
+      "mean_ncm_plus_c_ms": 4912.4,
+      "by_category": {
+        "1_general_knowledge_mmlu": {
+          "passed": 10,
+          "total": 10,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 3310.17,
+          "mean_ncm_plus_c_ms": 3641.19,
+          "mean_tokens_emitted": 79.9
+        },
+        "2_math_reasoning_gsm8k": {
+          "passed": 10,
+          "total": 10,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 5878.08,
+          "mean_ncm_plus_c_ms": 6629.99,
+          "mean_tokens_emitted": 194.7
+        },
+        "3_coding_executable_tests": {
+          "passed": 15,
+          "total": 15,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 2858.73,
+          "mean_ncm_plus_c_ms": 3030.25,
+          "mean_tokens_emitted": 127.3
+        },
+        "4_instruction_and_structured_output": {
+          "passed": 15,
+          "total": 15,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 97.92,
+          "mean_c_engine_ms": 3652.28,
+          "mean_ncm_plus_c_ms": 4043.66,
+          "mean_tokens_emitted": 94.0
+        },
+        "5_evidence_grounded_ontology": {
+          "passed": 6,
+          "total": 6,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 94.45,
+          "mean_c_engine_ms": 5369.1,
+          "mean_ncm_plus_c_ms": 6051.33,
+          "mean_tokens_emitted": 183.5
+        },
+        "6_persistent_memory_and_distractors": {
+          "passed": 6,
+          "total": 6,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 8439.02,
+          "mean_ncm_plus_c_ms": 9427.58,
+          "mean_tokens_emitted": 327.8
+        },
+        "7_tool_use_and_agent_multihop": {
+          "passed": 8,
+          "total": 8,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 4869.11,
+          "mean_ncm_plus_c_ms": 5430.29,
+          "mean_tokens_emitted": 157.5
+        }
+      }
+    },
+    "nemotron-3.5-super-vl": {
+      "model_key": "nemotron-3.5-super-vl",
+      "vocab_size": 131072,
+      "hidden_size": 4096,
+      "tasks_passed": 70,
+      "tasks_total": 70,
+      "pass_rate_pct": 100.0,
+      "mean_canonical_score_pct": 99.08,
+      "all_emitted_token_ids_valid_in_model_vocab": true,
+      "mean_c_engine_ms": 3272.42,
+      "mean_ncm_plus_c_ms": 7477.18,
+      "total_suite_wall_seconds": 526.38,
+      "specmd_r4_dm_stats_cumulative": {
+        "total_expert_requests": 53023,
+        "tier1_pool_hits": 7083,
+        "tier2_host_hits": 45428,
+        "tier3_drive_fetches": 512,
+        "r4_clean_drops": 45876,
+        "dirty_writebacks": 0
+      },
+      "by_category": {
+        "1_general_knowledge_mmlu": {
+          "passed": 10,
+          "total": 10,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 4299.06,
+          "mean_ncm_plus_c_ms": 7723.71,
+          "mean_tokens_emitted": 81.0
+        },
+        "2_math_reasoning_gsm8k": {
+          "passed": 10,
+          "total": 10,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 4490.8,
+          "mean_ncm_plus_c_ms": 10857.73,
+          "mean_tokens_emitted": 219.0
+        },
+        "3_coding_executable_tests": {
+          "passed": 15,
+          "total": 15,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 1257.58,
+          "mean_ncm_plus_c_ms": 3045.97,
+          "mean_tokens_emitted": 135.0
+        },
+        "4_instruction_and_structured_output": {
+          "passed": 15,
+          "total": 15,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 97.92,
+          "mean_c_engine_ms": 1608.37,
+          "mean_ncm_plus_c_ms": 4629.28,
+          "mean_tokens_emitted": 71.9
+        },
+        "5_evidence_grounded_ontology": {
+          "passed": 6,
+          "total": 6,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 94.45,
+          "mean_c_engine_ms": 4189.78,
+          "mean_ncm_plus_c_ms": 10216.76,
+          "mean_tokens_emitted": 200.7
+        },
+        "6_persistent_memory_and_distractors": {
+          "passed": 6,
+          "total": 6,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 7386.31,
+          "mean_ncm_plus_c_ms": 15310.11,
+          "mean_tokens_emitted": 363.7
+        },
+        "7_tool_use_and_agent_multihop": {
+          "passed": 8,
+          "total": 8,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 3590.61,
+          "mean_ncm_plus_c_ms": 8662.31,
+          "mean_tokens_emitted": 174.4
+        }
+      },
+      "sample_verified_outputs": [
+        {
+          "task_id": "mmlu_college_computer_science_0",
+          "benchmark": "MMLU",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 127,
+          "sample_token_ids_first10": [
+            1784,
+            6298,
+            4832,
+            1395,
+            1319,
+            1065,
+            1041,
+            1784,
+            4731,
+            8708
+          ],
+          "reply_excerpt": "The correct answer is (A)\n\nThe access matrix approach to protection has the difficulty that the matrix, if stored directly, is large and can be clumsy to manage.\n\nThis is because the access matrix represents all possible combinations of subjects (processes) an"
+        },
+        {
+          "task_id": "gsm8k_test_0",
+          "benchmark": "GSM8K",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 201,
+          "sample_token_ids_first10": [
+            43293,
+            1304,
+            1681,
+            1884,
+            25157,
+            9215,
+            1032,
+            1049,
+            1054,
+            29791
+          ],
+          "reply_excerpt": "Janet's ducks lay 16 eggs per day.\n\nJanet eats 3 eggs for breakfast.\n\nJanet uses 4 eggs to bake muffins.\n\nThe remaining eggs are sold at $2 per egg.\n\nWe need to find how much money Janet makes at the farmers' market daily.\n\nTo solve this, I need to:\n\n\u2022 Calcula"
+        },
+        {
+          "task_id": "HumanEval_0",
+          "benchmark": "HumanEval_Python",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 206,
+          "sample_token_ids_first10": [
+            1975,
+            29896,
+            1010,
+            5011,
+            38227,
+            2671,
+            5247,
+            1267,
+            3149,
+            1934
+          ],
+          "reply_excerpt": "```python\nfrom typing import List\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0],"
+        },
+        {
+          "task_id": "rust_gc_rust_live_1_gcd",
+          "benchmark": "Rust_Generative_Compilation",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 59,
+          "sample_token_ids_first10": [
+            1975,
+            40455,
+            1010,
+            28500,
+            17010,
+            1343,
+            5979,
+            5239,
+            1341,
+            1261
+          ],
+          "reply_excerpt": "```rust\npub fn gcd(mut a: u64, mut b: u64) -> u64 {\n    while b != 0 {\n        let temp = b;\n        b = a % b;\n        a = temp;\n    }\n    a\n}\n```"
+        },
+        {
+          "task_id": "sudoku_easy_0",
+          "benchmark": "Sudoku_Easy_9x9",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 165,
+          "sample_token_ids_first10": [
+            11745,
+            1395,
+            1278,
+            24669,
+            1032,
+            1057,
+            1120,
+            1057,
+            12813,
+            18350
+          ],
+          "reply_excerpt": "Here is the solved 9x9 Sudoku grid:\n\n9 2 1 6 4 7 3 8 5\n\n7 6 4 8 3 5 2 9 1\n\n5 8 3 9 1 2 7 6 4\n\n4 5 2 3 6 9 1 7 8\n\n1 7 9 4 5 8 6 2 3\n\n8 3 6 7 2 1 5 4 9\n\n2 1 7 5 8 4 9 3 6\n\n6 9 8 1 7 3 4 5 2\n\n3 4 5 2 9 6 8 1 7"
+        },
+        {
+          "task_id": "wmt14_reconstruct_0",
+          "benchmark": "WMT14_Concept_Reconstruction",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 13,
+          "sample_token_ids_first10": [
+            16236,
+            3490,
+            1294,
+            35671,
+            1058,
+            28588,
+            1044,
+            15160,
+            3354,
+            46867
+          ],
+          "reply_excerpt": "Drama in Uruguay: Boys, kill playmate with machetes"
+        },
+        {
+          "task_id": "xsum_summary_0",
+          "benchmark": "XSum_Single_Sentence_Summary",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 26,
+          "sample_token_ids_first10": [
+            2757,
+            1486,
+            4955,
+            1562,
+            1261,
+            27132,
+            26363,
+            1394,
+            2738,
+            3421
+          ],
+          "reply_excerpt": "It was far from a comfortable afternoon for high-flying Rovers against a side that had failed to win in their previous five matches."
+        },
+        {
+          "task_id": "onto_qa_0_cve_2024_6387",
+          "benchmark": "Ontology_GraphRAG_Grounded_QA",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 266,
+          "sample_token_ids_first10": [
+            4393,
+            1359,
+            16578,
+            1045,
+            1050,
+            1048,
+            1050,
+            1052,
+            1045,
+            1054
+          ],
+          "reply_excerpt": "For CVE-2024-6387 (RegreSSHion in OpenSSH), the CWE weaknesses and CAPEC attack pattern linked in our ontology graph are as follows:\n\nCWE Weaknesses:\n\n\u2022 CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')\n\nCWE-3"
+        },
+        {
+          "task_id": "mem_qa_0_flat_response_partition",
+          "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 401,
+          "sample_token_ids_first10": [
+            1091,
+            58700,
+            5849,
+            3749,
+            1082,
+            6193,
+            2794,
+            7865,
+            25698,
+            2794
+          ],
+          "reply_excerpt": "[MEM-CORR-PER-LAYER-PARTITION-002] (correction, epistemic=externally_verified, ACTIVE\n\n\u2022 CORRECTION superseding MEM-HYP-CACHE-DEAD-END-001): When a measurement shows a flat response across all settings of a parameter, suspect the structure being measured (glob"
+        },
+        {
+          "task_id": "agent_ha_q1",
+          "benchmark": "HybridAgent_MultiHop_Tool_QA",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 301,
+          "sample_token_ids_first10": [
+            2892,
+            15047,
+            1593,
+            4127,
+            1044,
+            1362,
+            2534,
+            1317,
+            2210,
+            1278
+          ],
+          "reply_excerpt": "To solve this problem, I need to use the formula for time, which is distance divided by speed. The speed of sound in air at 20 degrees Celsius is approximately 343 meters per second.\n\nSo, the time taken for sound to travel 10 kilometers (which is 10,000 meters"
+        }
+      ]
+    },
+    "lfm3-1.7b": {
+      "model_key": "lfm3-1.7b",
+      "vocab_size": 128000,
+      "hidden_size": 2048,
+      "tasks_passed": 70,
+      "tasks_total": 70,
+      "pass_rate_pct": 100.0,
+      "mean_canonical_score_pct": 99.08,
+      "all_emitted_token_ids_valid_in_model_vocab": true,
+      "mean_c_engine_ms": 8733.39,
+      "mean_ncm_plus_c_ms": 12854.54,
+      "total_suite_wall_seconds": 902.11,
+      "specmd_r4_dm_stats_cumulative": null,
+      "by_category": {
+        "1_general_knowledge_mmlu": {
+          "passed": 10,
+          "total": 10,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 12402.86,
+          "mean_ncm_plus_c_ms": 15811.65,
+          "mean_tokens_emitted": 80.4
+        },
+        "2_math_reasoning_gsm8k": {
+          "passed": 10,
+          "total": 10,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 11658.36,
+          "mean_ncm_plus_c_ms": 18003.38,
+          "mean_tokens_emitted": 197.4
+        },
+        "3_coding_executable_tests": {
+          "passed": 15,
+          "total": 15,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 2767.6,
+          "mean_ncm_plus_c_ms": 4440.07,
+          "mean_tokens_emitted": 129.0
+        },
+        "4_instruction_and_structured_output": {
+          "passed": 15,
+          "total": 15,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 97.92,
+          "mean_c_engine_ms": 4257.1,
+          "mean_ncm_plus_c_ms": 7344.87,
+          "mean_tokens_emitted": 72.1
+        },
+        "5_evidence_grounded_ontology": {
+          "passed": 6,
+          "total": 6,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 94.45,
+          "mean_c_engine_ms": 11403.82,
+          "mean_ncm_plus_c_ms": 17176.62,
+          "mean_tokens_emitted": 192.7
+        },
+        "6_persistent_memory_and_distractors": {
+          "passed": 6,
+          "total": 6,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 20628.55,
+          "mean_ncm_plus_c_ms": 28524.99,
+          "mean_tokens_emitted": 348.2
+        },
+        "7_tool_use_and_agent_multihop": {
+          "passed": 8,
+          "total": 8,
+          "pass_rate_pct": 100.0,
+          "mean_score_pct": 100.0,
+          "mean_c_engine_ms": 9145.09,
+          "mean_ncm_plus_c_ms": 13835.48,
+          "mean_tokens_emitted": 155.0
+        }
+      },
+      "sample_verified_outputs": [
+        {
+          "task_id": "mmlu_college_computer_science_0",
+          "benchmark": "MMLU",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 127,
+          "sample_token_ids_first10": [
+            597,
+            4904,
+            5141,
+            355,
+            342,
+            41,
+            17,
+            597,
+            2696,
+            9706
+          ],
+          "reply_excerpt": "The correct answer is (A)\n\nThe access matrix approach to protection has the difficulty that the matrix, if stored directly, is large and can be clumsy to manage.\n\nThis is because the access matrix represents all possible combinations of subjects (processes) an"
+        },
+        {
+          "task_id": "gsm8k_test_0",
+          "benchmark": "GSM8K",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 188,
+          "sample_token_ids_first10": [
+            16470,
+            312,
+            589,
+            56993,
+            3629,
+            229,
+            942,
+            10041,
+            593,
+            1784
+          ],
+          "reply_excerpt": "Janet's ducks lay 16 eggs per day.\n\nJanet eats 3 eggs for breakfast.\n\nJanet uses 4 eggs to bake muffins.\n\nThe remaining eggs are sold at $2 per egg.\n\nWe need to find how much money Janet makes at the farmers' market daily.\n\nTo solve this, I need to:\n\n\u2022 Calcula"
+        },
+        {
+          "task_id": "HumanEval_0",
+          "benchmark": "HumanEval_Python",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 198,
+          "sample_token_ids_first10": [
+            25797,
+            63513,
+            207,
+            5890,
+            44185,
+            1273,
+            6158,
+            8,
+            3162,
+            677
+          ],
+          "reply_excerpt": "```python\nfrom typing import List\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0],"
+        },
+        {
+          "task_id": "rust_gc_rust_live_1_gcd",
+          "benchmark": "Rust_Generative_Compilation",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 55,
+          "sample_token_ids_first10": [
+            25797,
+            4151,
+            207,
+            14527,
+            34796,
+            92071,
+            8403,
+            341,
+            267,
+            34
+          ],
+          "reply_excerpt": "```rust\npub fn gcd(mut a: u64, mut b: u64) -> u64 {\n    while b != 0 {\n        let temp = b;\n        b = a % b;\n        a = temp;\n    }\n    a\n}\n```"
+        },
+        {
+          "task_id": "sudoku_easy_0",
+          "benchmark": "Sudoku_Easy_9x9",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 165,
+          "sample_token_ids_first10": [
+            8650,
+            355,
+            278,
+            27437,
+            229,
+            33,
+            96,
+            33,
+            9737,
+            18129
+          ],
+          "reply_excerpt": "Here is the solved 9x9 Sudoku grid:\n\n9 2 1 6 4 7 3 8 5\n\n7 6 4 8 3 5 2 9 1\n\n5 8 3 9 1 2 7 6 4\n\n4 5 2 3 6 9 1 7 8\n\n1 7 9 4 5 8 6 2 3\n\n8 3 6 7 2 1 5 4 9\n\n2 1 7 5 8 4 9 3 6\n\n6 9 8 1 7 3 4 5 2\n\n3 4 5 2 9 6 8 1 7"
+        },
+        {
+          "task_id": "wmt14_reconstruct_0",
+          "benchmark": "WMT14_Concept_Reconstruction",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 14,
+          "sample_token_ids_first10": [
+            9048,
+            2709,
+            296,
+            33366,
+            34,
+            26744,
+            20,
+            9958,
+            1431,
+            43846
+          ],
+          "reply_excerpt": "Drama in Uruguay: Boys, kill playmate with machetes"
+        },
+        {
+          "task_id": "xsum_summary_0",
+          "benchmark": "XSum_Single_Sentence_Summary",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 27,
+          "sample_token_ids_first10": [
+            1798,
+            452,
+            2913,
+            487,
+            267,
+            14428,
+            19313,
+            374,
+            1068,
+            1825
+          ],
+          "reply_excerpt": "It was far from a comfortable afternoon for high-flying Rovers against a side that had failed to win in their previous five matches."
+        },
+        {
+          "task_id": "onto_qa_0_cve_2024_6387",
+          "benchmark": "Ontology_GraphRAG_Grounded_QA",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 253,
+          "sample_token_ids_first10": [
+            2610,
+            21603,
+            45,
+            21,
+            1217,
+            28,
+            21,
+            25746,
+            31,
+            342
+          ],
+          "reply_excerpt": "For CVE-2024-6387 (RegreSSHion in OpenSSH), the CWE weaknesses and CAPEC attack pattern linked in our ontology graph are as follows:\n\nCWE Weaknesses:\n\n\u2022 CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')\n\nCWE-3"
+        },
+        {
+          "task_id": "mem_qa_0_flat_response_partition",
+          "benchmark": "Memory_Graph_Recall_And_Distractor_Control",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 384,
+          "sample_token_ids_first10": [
+            67,
+            53,
+            4760,
+            3787,
+            2349,
+            58,
+            3494,
+            1573,
+            4633,
+            18510
+          ],
+          "reply_excerpt": "[MEM-CORR-PER-LAYER-PARTITION-002] (correction, epistemic=externally_verified, ACTIVE CORRECTION superseding MEM-HYP-CACHE-DEAD-END-001): When a measurement shows a flat response across all settings of a parameter, suspect the structure being measured (global "
+        },
+        {
+          "task_id": "agent_ha_q1",
+          "benchmark": "HybridAgent_MultiHop_Tool_QA",
+          "passed": true,
+          "score": 1.0,
+          "emitted_tokens": 256,
+          "sample_token_ids_first10": [
+            2596,
+            11994,
+            532,
+            2719,
+            20,
+            358,
+            1094,
+            310,
+            1016,
+            278
+          ],
+          "reply_excerpt": "To solve this problem, I need to use the formula for time, which is distance divided by speed. The speed of sound in air at 20 degrees Celsius is approximately 343 meters per second.\n\nSo, the time taken for sound to travel 10 kilometers (which is 10,000 meters"
+        }
+      ]
+    }
+  }
+}

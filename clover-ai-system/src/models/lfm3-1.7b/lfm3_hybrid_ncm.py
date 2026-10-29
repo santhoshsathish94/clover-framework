@@ -395,6 +395,7 @@ def train_and_verify_lfm3_native_hybrid_and_ncm(
             "lfm3_native_hybrid_link": lfm3_link.state_dict(),
             "lfm3_combo_bridge": combo_bridge.state_dict(),
             "lfm3_expert_bridge": expert_bridge.state_dict(),
+            "vqvae": vqvae.state_dict(),
             "W_lfm3_to_enc": W_lfm3_to_enc,
             "W_lfm3_to_dec": W_lfm3_to_dec,
         },

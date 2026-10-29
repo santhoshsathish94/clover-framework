@@ -435,6 +435,7 @@ def train_and_verify_nemotron_native_hybrid_and_ncm(
             "nemo_native_hybrid_link": nemo_link.state_dict(),
             "nemo_combo_bridge": combo_bridge.state_dict(),
             "nemo_expert_bridge": expert_bridge.state_dict(),
+            "vqvae": vqvae.state_dict(),
             "W_nemo_to_enc": W_nemo_to_enc,
             "W_nemo_to_dec": W_nemo_to_dec,
         },
