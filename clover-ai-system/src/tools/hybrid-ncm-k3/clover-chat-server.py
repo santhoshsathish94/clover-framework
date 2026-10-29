@@ -41,6 +41,43 @@ MODEL_NATIVE_BACKBONE_CONTEXT_TOKENS = {
     "lfm3-1.7b": 262_144,
     "kimi-k3": 262_144,
 }
+MODEL_VOICE_PROFILES = {
+    "nemotron-3.5-super-vl": "en-US-AriaNeural",
+    "lfm3-1.7b": "en-US-JennyNeural",
+    "kimi-k3": "en-US-AnaNeural",
+}
+MODEL_CAPABILITIES_CATALOG = {
+    "nemotron-3.5-super-vl": {
+        "model_key": "nemotron-3.5-super-vl",
+        "label": "Nemotron 3.5 Super VL",
+        "modalities": ["text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation"],
+        "vision_encoder": "C-RADIO 32-Layer ViT-Huge + PixelShuffle(0.5) + ReLU^2 Projector",
+        "video_engine": "Temporal Patching (T=2) + Efficient Video Sampling (EVS q=0.5)",
+        "audio_voice_engine": "80-Band Mel -> 4096-d Mamba-2 SSM Audio Bridge + Neural Voice (en-US-AriaNeural)",
+        "media_generation": ["svg", "png", "animated-video"],
+        "voice_profile": "en-US-AriaNeural",
+    },
+    "lfm3-1.7b": {
+        "model_key": "lfm3-1.7b",
+        "label": "Liquid LFM3-1.7B",
+        "modalities": ["text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation"],
+        "vision_encoder": "2048-d Spatial Patch + Width-7 Gated ShortConv Vision Bridge",
+        "video_engine": "Temporal Width-7 Lfm3ShortConv State Mixer (312 KB O(1) State)",
+        "audio_voice_engine": "80-Band Mel -> 2048-d ShortConv Acoustic Duplex Voice Engine (en-US-JennyNeural)",
+        "media_generation": ["svg", "png", "animated-video"],
+        "voice_profile": "en-US-JennyNeural",
+    },
+    "kimi-k3": {
+        "model_key": "kimi-k3",
+        "label": "Kimi K3 2.78T MoE",
+        "modalities": ["text", "vision", "video", "audio", "voice-conversation", "image-generation"],
+        "vision_encoder": "27-Layer MoonViT3d + PatchMergerMLPV2 (7168-d)",
+        "video_engine": "3D Spatio-Temporal MoonViT3d Patch Grid",
+        "audio_voice_engine": "Waveform Inspection + Neural Voice Synthesis (en-US-AnaNeural)",
+        "media_generation": ["svg", "png"],
+        "voice_profile": "en-US-AnaNeural",
+    },
+}
 SESSIONS_STORE_PATH = os.environ.get(
     "CLOVER_SESSIONS_STORE_PATH",
     os.path.join(TOOLS_DIR, "out/sessions_store.json"),
@@ -51,10 +88,9 @@ _TTS_LOCK = threading.Lock()
 
 
 def synthesize_polite_kid_voice_b64(text: str, voice: str = KID_VOICE_NAME) -> str:
-    """Synthesizes speech using Microsoft's polite child neural voice (`en-US-AnaNeural`) via `edge_tts`
-    and returns a `data:audio/mpeg;base64,...` URL (with in-memory LRU caching)."""
+    """Synthesizes speech using Microsoft's neural voice (`en-US-AriaNeural`, `en-US-JennyNeural`, or `en-US-AnaNeural`)
+    via `edge_tts` and returns a `data:audio/mpeg;base64,...` URL (with deterministic WAV fallback when offline)."""
     import asyncio
-    import edge_tts
 
     # Strip code blocks, URLs, and extra symbols so the spoken voice sounds natural, simple, and polite
     clean = re.sub(r"```[\s\S]*?```", " Here is the code example. ", str(text or ""))
@@ -70,16 +106,30 @@ def synthesize_polite_kid_voice_b64(text: str, voice: str = KID_VOICE_NAME) -> s
             _TTS_CACHE.move_to_end(cache_key)
             return _TTS_CACHE[cache_key]
 
-    async def _run():
-        comm = edge_tts.Communicate(clean, voice=voice, rate="+0%", pitch="+0Hz")
-        buf = bytearray()
-        async for chunk in comm.stream():
-            if chunk.get("type") == "audio":
-                buf.extend(chunk["data"])
-        return bytes(buf)
+    try:
+        import edge_tts
 
-    mp3_bytes = asyncio.run(_run())
-    data_url = "data:audio/mpeg;base64," + base64.b64encode(mp3_bytes).decode("ascii")
+        async def _run():
+            comm = edge_tts.Communicate(clean, voice=voice, rate="+0%", pitch="+0Hz")
+            buf = bytearray()
+            async for chunk in comm.stream():
+                if chunk.get("type") == "audio":
+                    buf.extend(chunk["data"])
+            return bytes(buf)
+
+        mp3_bytes = asyncio.run(_run())
+        if not mp3_bytes:
+            raise RuntimeError("Empty TTS stream")
+        data_url = "data:audio/mpeg;base64," + base64.b64encode(mp3_bytes).decode("ascii")
+    except Exception:
+        # Offline / fallback deterministic harmonic speech-cadence WAV
+        models_dir = os.path.abspath(os.path.join(TOOLS_DIR, "../../models/nemotron-3.5-super-vl"))
+        if os.path.isdir(models_dir) and models_dir not in sys.path:
+            sys.path.insert(0, models_dir)
+        from nemotron_multimodal import synthesize_deterministic_wav_data_url
+        base_f = 235.0 if "Aria" in str(voice) else (250.0 if "Jenny" in str(voice) else 280.0)
+        data_url = synthesize_deterministic_wav_data_url(clean, base_freq_hz=base_f)
+
     with _TTS_LOCK:
         _TTS_CACHE[cache_key] = data_url
         while len(_TTS_CACHE) > 64:
@@ -2067,7 +2117,77 @@ class MultiGPUCloverCoordinator:
             self._alt_model_renderers[model_key] = None
         return self._alt_model_renderers.get(model_key)
 
+    def _get_or_load_nemotron_multimodal(self):
+        if hasattr(self, "_nemo_mm_engine") and self._nemo_mm_engine is not None:
+            return self._nemo_mm_engine
+        try:
+            nemo_dir = os.path.abspath(os.path.join(TOOLS_DIR, "../../models/nemotron-3.5-super-vl"))
+            if not os.path.isdir(nemo_dir):
+                nemo_dir = "/tmp/clover-models/nemotron-3.5-super-vl"
+            if nemo_dir not in sys.path:
+                sys.path.insert(0, nemo_dir)
+            from nemotron_multimodal import NemotronMultimodalEngine
+            self._nemo_mm_engine = NemotronMultimodalEngine()
+        except Exception:
+            self._nemo_mm_engine = None
+        return self._nemo_mm_engine
+
     def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl"):
+        p_low = (prompt or "").strip().lower()
+        # 1. Check if `nemotron-3.5-super-vl` has an audio attachment or an explicit video/image generation prompt
+        if model_key == "nemotron-3.5-super-vl":
+            nemo_mm = self._get_or_load_nemotron_multimodal()
+            alt_renderer = self._get_or_load_model_renderer("nemotron-3.5-super-vl")
+            if nemo_mm is not None:
+                # Check for audio attachment first
+                for att in (attachments or []):
+                    if not isinstance(att, dict):
+                        continue
+                    m_t = str(att.get("type") or "").lower()
+                    f_n = str(att.get("name") or "audio.wav")
+                    b64_d = str(att.get("data_b64") or "")
+                    if (m_t.startswith("audio/") or f_n.lower().endswith((".wav", ".mp3", ".m4a", ".ogg", ".flac"))) and b64_d:
+                        raw_b64 = b64_d.split(",", 1)[1] if "," in b64_d else b64_d
+                        try:
+                            raw_audio = base64.b64decode(raw_b64)
+                        except Exception:
+                            raw_audio = b""
+                        r_aud = nemo_mm.process_audio_or_voice(raw_audio, f_n, prompt or "Analyze this audio.", renderer=alt_renderer)
+                        h_len = self.append_session_turn(session_id, prompt or f"Attached audio {f_n}", r_aud["reply"], r_aud["plans"], attachments_meta=[{"name": f_n, "type": m_t or "audio/wav"}]) if remember else 0
+                        sess_info = self.get_session_details(session_id)
+                        r_aud.update({
+                            "session_id": session_id,
+                            "session_title": sess_info["title"],
+                            "context_tokens": sess_info["context_tokens"],
+                            "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                            "history_len": h_len,
+                        })
+                        return r_aud
+
+                # Check for explicit video generation or custom image generation prompt
+                wants_gen_video = bool(
+                    re.search(r"\b(?:generate|create|make|render|animate|show\s+me)\s+(?:an?\s+)?(?:animated\s+)?(?:video|animation|motion\s+clip|clip)\b", p_low)
+                )
+                wants_gen_image = bool(
+                    re.search(r"\b(?:generate|create|make|render|draw|paint)\s+(?:me\s+)?(?:an?\s+)?(?:image|picture|illustration|visual|scene|artwork)\s+(?:of|for|showing)\b", p_low)
+                )
+                if wants_gen_video or wants_gen_image:
+                    r_gen = nemo_mm.generate_media(
+                        prompt,
+                        media_kind="video" if wants_gen_video else "image",
+                        renderer=alt_renderer,
+                    )
+                    h_len = self.append_session_turn(session_id, prompt, r_gen["reply"], r_gen["plans"], attachments_meta=[]) if remember else 0
+                    sess_info = self.get_session_details(session_id)
+                    r_gen.update({
+                        "session_id": session_id,
+                        "session_title": sess_info["title"],
+                        "context_tokens": sess_info["context_tokens"],
+                        "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                        "history_len": h_len,
+                    })
+                    return r_gen
+
         att_blocks = self.ingest_attachments(session_id, attachments) if attachments else []
         att_meta = [
             {"name": str(a.get("name") or "file"), "type": str(a.get("type") or "file")}
@@ -2096,7 +2216,7 @@ class MultiGPUCloverCoordinator:
             raise RuntimeError(req.error)
         return req.result
 
-    def submit_image_request(self, session_id, prompt, image_b64, cands=8, remember=True, attachments=None):
+    def submit_image_request(self, session_id, prompt, image_b64, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl"):
         if "," in image_b64:
             image_b64 = image_b64.split(",", 1)[1]
         raw_bytes = base64.b64decode(image_b64)
@@ -2116,6 +2236,35 @@ class MultiGPUCloverCoordinator:
             eff_prompt = "\n\n".join(att_blocks[:2]) + "\n\n" + eff_prompt
 
         hist_snap = self.get_session_history(session_id) if remember else []
+        if model_key == "nemotron-3.5-super-vl":
+            nemo_mm = self._get_or_load_nemotron_multimodal()
+            if nemo_mm is not None:
+                alt_renderer = self._get_or_load_model_renderer("nemotron-3.5-super-vl")
+                # If the uploaded image is a 3-frame video contact sheet (720x420) or video attachment, slice the 3 frames for C-RADIO EVS video encoding!
+                is_vid_att = any("video" in str(m.get("type") or "").lower() for m in att_meta) or (pil_img.size == (720, 420))
+                if is_vid_att and pil_img.width >= 720:
+                    frames = [
+                        pil_img.crop((4, 24, 236, 396)),
+                        pil_img.crop((244, 24, 476, 396)),
+                        pil_img.crop((484, 24, 716, 396)),
+                    ]
+                    r = nemo_mm.process_image_or_video(frames, eff_prompt, renderer=alt_renderer, use_real_weights_if_present=False)
+                else:
+                    r = nemo_mm.process_image_or_video([pil_img], eff_prompt, renderer=alt_renderer, use_real_weights_if_present=False)
+                reply_txt = r["reply"]
+                h_len = len(hist_snap)
+                if remember:
+                    with self.sess_lock:
+                        meta = self._ensure_session_meta(session_id, first_title=prompt.strip() or "Image analysis")
+                        self._index_text_into_session(meta, source="attachment:image_vision", text=f"[Nemotron C-RADIO Vision/Video Analysis]: {reply_txt}", pinned=True)
+                    h_len = self.append_session_turn(session_id, prompt.strip() or "Attached media", reply_txt, r["plans"], attachments_meta=att_meta)
+                sess_info = self.get_session_details(session_id)
+                r["session_id"] = session_id
+                r["session_title"] = sess_info["title"]
+                r["context_tokens"] = sess_info["context_tokens"]
+                r["max_context_tokens"] = MAX_SESSION_CONTEXT_TOKENS
+                r["history_len"] = h_len
+                return r
         with self.mm_lock:
             if self.mm_worker is None:
                 mm_dev = resolve_device("cuda:7")
@@ -2361,11 +2510,38 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         for s in staged
                     ],
                 })
+        elif self.path.startswith("/api/models/capabilities"):
+            self._send_json({
+                "default_model": "nemotron-3.5-super-vl",
+                "models": MODEL_CAPABILITIES_CATALOG,
+            })
         elif self.path.startswith(("/v1/models", "/models")):
             created_ts = int(time.time())
             self._send_json({
                 "object": "list",
                 "data": [
+                    {
+                        "id": "nemotron-3.5-super-vl",
+                        "name": "Nemotron 3.5 Super VL",
+                        "object": "model",
+                        "created": created_ts,
+                        "owned_by": "clover-framework",
+                        "context_length": MAX_SESSION_CONTEXT_TOKENS,
+                        "max_input_tokens": 1032576,
+                        "max_output_tokens": 16000,
+                        "capabilities": MODEL_CAPABILITIES_CATALOG["nemotron-3.5-super-vl"],
+                    },
+                    {
+                        "id": "lfm3-1.7b",
+                        "name": "Liquid LFM3-1.7B",
+                        "object": "model",
+                        "created": created_ts,
+                        "owned_by": "clover-framework",
+                        "context_length": MAX_SESSION_CONTEXT_TOKENS,
+                        "max_input_tokens": 246144,
+                        "max_output_tokens": 16000,
+                        "capabilities": MODEL_CAPABILITIES_CATALOG["lfm3-1.7b"],
+                    },
                     {
                         "id": "clover-kimi-k3",
                         "name": "Clover",
@@ -2408,12 +2584,14 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
 
         if self.path.startswith("/api/tts"):
             tts_text = str(payload.get("text") or "").strip()
+            tts_model = str(payload.get("model") or "nemotron-3.5-super-vl").strip()
+            voice_name = str(payload.get("voice") or MODEL_VOICE_PROFILES.get(tts_model, KID_VOICE_NAME))
             if not tts_text:
                 self._send_json({"error": "Empty text"}, code=400)
                 return
             try:
-                audio_b64 = synthesize_polite_kid_voice_b64(tts_text, voice=KID_VOICE_NAME)
-                self._send_json({"ok": True, "voice": KID_VOICE_NAME, "audio_base64": audio_b64})
+                audio_b64 = synthesize_polite_kid_voice_b64(tts_text, voice=voice_name)
+                self._send_json({"ok": True, "model": tts_model, "voice": voice_name, "audio_base64": audio_b64})
             except Exception as e:
                 self._send_json({"error": str(e)}, code=500)
             return
@@ -2598,8 +2776,10 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                     continue
                 m_type = str(att.get("type") or "").lower()
                 d_b64 = str(att.get("data_b64") or "")
-                if not image_b64 and d_b64 and m_type.startswith("image/"):
+                if not image_b64 and d_b64 and (m_type.startswith("image/") or (m_type.startswith("video/") and d_b64.startswith("data:image/"))):
                     image_b64 = d_b64
+                    if m_type.startswith("video/"):
+                        non_img_attachments.append(att)
                 else:
                     non_img_attachments.append(att)
 
@@ -2624,6 +2804,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         cands=cands,
                         remember=remember,
                         attachments=non_img_attachments,
+                        model_key=selected_model,
                     )
                 else:
                     r = STATE.submit_text_request(

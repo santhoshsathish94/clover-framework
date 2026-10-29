@@ -42,6 +42,12 @@ class CloverModelSpec:
     has_native_vision: bool
     speculative_drafter_kind: str
     model_subdir: str
+    supports_audio_voice: bool = True
+    supports_video: bool = True
+    supports_image_generation: bool = True
+    supports_video_generation: bool = True
+    voice_profile: str = "en-US-AnaNeural"
+    supported_modalities: tuple[str, ...] = ("text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation")
 
 
 CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
@@ -59,6 +65,12 @@ CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
         has_native_vision=True,
         speculative_drafter_kind="dspark-5-layer",
         model_subdir="kimi-k3",
+        supports_audio_voice=True,
+        supports_video=True,
+        supports_image_generation=True,
+        supports_video_generation=False,
+        voice_profile="en-US-AnaNeural",
+        supported_modalities=("text", "vision", "video", "audio", "voice-conversation", "image-generation"),
     ),
     "nemotron-3.5-super-vl": CloverModelSpec(
         model_key="nemotron-3.5-super-vl",
@@ -74,6 +86,12 @@ CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
         has_native_vision=True,
         speculative_drafter_kind="native-mtp-2-layer",
         model_subdir="nemotron-3.5-super-vl",
+        supports_audio_voice=True,
+        supports_video=True,
+        supports_image_generation=True,
+        supports_video_generation=True,
+        voice_profile="en-US-AriaNeural",
+        supported_modalities=("text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation"),
     ),
     "lfm3-1.7b": CloverModelSpec(
         model_key="lfm3-1.7b",
@@ -299,4 +317,23 @@ class CloverSwitchableModelLayer1:
             }
 
         raise ValueError(f"Unsupported native C engine dispatch for model_key={key}")
+
+    def get_active_model_capabilities(self) -> dict[str, Any]:
+        """Returns the modality and context profile for the currently active Layer-1 foundation model."""
+        sp = self.active_spec
+        return {
+            "model_key": sp.model_key,
+            "hf_repo_id": sp.hf_repo_id,
+            "hidden_size": sp.hidden_size,
+            "vocab_size": sp.vocab_size,
+            "max_context_tokens": sp.max_context_tokens,
+            "native_backbone_context_tokens": sp.native_backbone_context_tokens,
+            "has_native_vision": sp.has_native_vision,
+            "supports_audio_voice": sp.supports_audio_voice,
+            "supports_video": sp.supports_video,
+            "supports_image_generation": sp.supports_image_generation,
+            "supports_video_generation": sp.supports_video_generation,
+            "voice_profile": sp.voice_profile,
+            "supported_modalities": list(sp.supported_modalities),
+        }
 
