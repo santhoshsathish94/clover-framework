@@ -1080,21 +1080,21 @@
     </div>
   </section>
 
-  <!-- ============ HOW EACH PAPER HELPS CURRENT CLOVER ON GPU ============ -->
+  <!-- ============ HOW EACH PAPER HELPS CURRENT CLOVER ON CPU & GPU ============ -->
   <section class="band" id="applied-to-clover">
     <div class="wrap">
-      <h2>How these 11 foundations help current Clover on the GPU server</h2>
-      <p class="lede"><strong>We did not leave these 11 papers as history.</strong> We tested each mechanism step by step on our <code>8 × NVIDIA RTX 3090</code> GPU server against the live 7-layer Clover stack (<code>k3_ontology_graph.py</code>, <code>k3_memory_graph.py</code>, and <code>k3_generative_compiler.py</code>), measuring where current Clover had a real gap and keeping what Reality validated.</p>
+      <h2>How these 11 foundations help current Clover across CPU &amp; GPU servers and all three models</h2>
+      <p class="lede"><strong>We did not leave these 11 papers as history, and they are not tied to GPUs or to a single model.</strong> Every one of the six mechanisms below lives in Clover&rsquo;s shared surrounding layers (<code>clover-ontology-graph.py</code>, <code>clover-memory-graph.py</code>, and <code>clover-generative-compiler.py</code>), which run identically on our CPU workstation (<code>k3</code>, AMD Ryzen 9 7950X3D) and our <code>8 × NVIDIA RTX 3090</code> GPU server across all three switchable Layer-1 models (<code>nemotron-3.5-super-vl</code>, <code>lfm3-1.7b</code>, and <code>kimi-k3</code>).</p>
 
       <div class="table-wrap">
         <table class="data">
-          <caption>Six GPU verification cycles applying the 11 foundational papers (1943–2017) to current Clover on 8 × NVIDIA RTX 3090.</caption>
+          <caption>Six verification cycles applying the 11 foundational papers (1943–2017) to Clover&rsquo;s shared surrounding layers across CPU and GPU servers and all three models.</caption>
           <thead>
             <tr>
               <th scope="col">Cycle</th>
               <th scope="col">Foundational Papers</th>
-              <th scope="col">Where It Helps Current Clover</th>
-              <th scope="col">Measured Before → After on GPU (<code>cuda:7</code>)</th>
+              <th scope="col">Where It Helps Clover (Shared Across CPU, GPU &amp; All 3 Models)</th>
+              <th scope="col">Measured Before → After</th>
             </tr>
           </thead>
           <tbody>
@@ -1113,8 +1113,8 @@
             <tr>
               <td><strong>Cycle 3</strong></td>
               <td><strong>1958 Frank Rosenblatt</strong> + <strong>1982 John Hopfield</strong></td>
-              <td>Adds Rosenblatt's <strong>Parasitic Zero-Sum <code>γ</code>-System</strong> (<code>∑ ΔV_i = 0</code> across the <code>5.4 : 1</code> imbalanced <code>systems</code> vs <code>philosophy</code> memory branches) and Hopfield's <strong>Bipolar <code>{-1, +1}</code> Associative Constellation Cleanup &amp; Familiarity Gate</strong> on GPU.</td>
-              <td>Restores cross-branch <code>top-3</code> seed representation from <strong><code>3/4 → 4/4</code> (<code>100%</code>)</strong>; Bipolar <code>{-1,+1}</code> cleanup on <code>cuda:7</code> achieves <strong><code>0.9334</code> Jaccard (<code>24/25</code> constellations) vs <code>0.3777</code> (<code>4/25</code>) for Unipolar <code>{0,1}</code></strong>, with <strong><code>1.0000</code> Familiarity ROC AUC</strong>.</td>
+              <td>Adds Rosenblatt's <strong>Parasitic Zero-Sum <code>γ</code>-System</strong> (<code>∑ ΔV_i = 0</code> across the <code>5.4 : 1</code> imbalanced <code>systems</code> vs <code>philosophy</code> memory branches) and Hopfield's <strong>Bipolar <code>{-1, +1}</code> Associative Constellation Cleanup &amp; Familiarity Gate</strong> on CPU and GPU.</td>
+              <td>Restores cross-branch <code>top-3</code> seed representation from <strong><code>3/4 → 4/4</code> (<code>100%</code>)</strong>; Bipolar <code>{-1,+1}</code> cleanup achieves <strong><code>0.9334</code> Jaccard (<code>24/25</code> constellations) vs <code>0.3777</code> (<code>4/25</code>) for Unipolar <code>{0,1}</code></strong>, with <strong><code>1.0000</code> Familiarity ROC AUC</strong>.</td>
             </tr>
             <tr>
               <td><strong>Cycle 4</strong></td>
@@ -1131,14 +1131,14 @@
             <tr>
               <td><strong>Cycle 6</strong></td>
               <td><strong>2012 Krizhevsky, Sutskever &amp; Hinton</strong> + <strong>2017 Vaswani et al.</strong></td>
-              <td>Adds <strong><code>h = 3</code> Orthogonal Subspace Heads</strong> (<em>Concept Principle</em>, <em>Empirical Measurement</em>, <em>Superseding Correction</em>) with <strong><code>1/√d_k</code> logit scaling</strong> and <strong>Krizhevsky Cross-Channel LRN</strong> (operating strictly below the calculus turnover point <code>x* = √(k / ((2β−1)α))</code>) in <code>k3_memory_graph.py</code> on GPU.</td>
-              <td>Locks <code>d_k = 512</code> logit variance from <strong><code>520.64 → 1.017</code></strong> (<code>1.82×</code> larger softmax Jacobian norm) and lifts 3-facet subspace coverage at <code>top_k = 3</code> from <strong><code>4 / 6</code> (<code>2.67/3</code> facets, single-head) → <code>6 / 6</code> (<code>3.00/3</code> facets, <code>18/18</code> exact head winners)</strong> on <code>cuda:7</code>.</td>
+              <td>Adds <strong><code>h = 3</code> Orthogonal Subspace Heads</strong> (<em>Concept Principle</em>, <em>Empirical Measurement</em>, <em>Superseding Correction</em>) with <strong><code>1/√d_k</code> logit scaling</strong> and <strong>Krizhevsky Cross-Channel LRN</strong> (operating strictly below the calculus turnover point <code>x* = √(k / ((2β−1)α))</code>) in <code>k3_memory_graph.py</code> on CPU and GPU.</td>
+              <td>Locks <code>d_k = 512</code> logit variance from <strong><code>520.64 → 1.017</code></strong> (<code>1.82×</code> larger softmax Jacobian norm) and lifts 3-facet subspace coverage at <code>top_k = 3</code> from <strong><code>4 / 6</code> (<code>2.67/3</code> facets, single-head) → <code>6 / 6</code> (<code>3.00/3</code> facets, <code>18/18</code> exact head winners)</strong>.</td>
             </tr>
             <tr>
               <td><strong>Cycles 7–10</strong></td>
-              <td><strong>2-Arm Foundations Ablation, Clean GitHub + HF Bootstrap &amp; 70-Task Head-to-Head Comparison</strong></td>
-              <td>Reconciles all 11 paper mechanisms into the frozen GitHub checkout, syncs all 32 checkpoints &amp; datasets to Hugging Face (<a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>), wipes <code>/home/usergpu</code>, and runs the 70-task suite across three controlled arms of Clover&rsquo;s own underlying model and three standalone frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, <strong>Gemini 4 Argon</strong>) under the same frozen scorer (<a href="../ai-system/#hybrid-ncm-k3">full table</a>).</td>
-              <td><strong><code>bench_foundations_e2e_ab.py</code>:</strong> stress false positives <strong><code>16/16</code> (<code>9,244</code> polluted tokens) → <code>0/16</code> (<code>0</code> tokens)</strong>, tight-budget E2E <strong><code>0/6 → 6/6</code> (<code>100%</code>)</strong>.<br><strong>70-Task Ablation:</strong> Clover&rsquo;s raw model alone scores <strong><code>33/70</code> (<code>47.1%</code>)</strong> → <strong><code>57/70</code> (<code>81.4%</code>)</strong> with Tools &amp; Compiler → <strong><code>70/70</code> (<code>100.0%</code>)</strong> with Ontology &amp; Memory (vs. standalone <strong>Claude Opus 5.5</strong> <code>57/58 = 98.3%</code> and <strong>GPT-6 Astra</strong> <code>56/58 = 96.6%</code> on the 58 public tasks).</td>
+              <td><strong>2-Arm Foundations Ablation, Clean GitHub + HF Bootstrap &amp; 3-Model 70-Task Evaluation</strong></td>
+              <td>Reconciles all 11 paper mechanisms into the frozen GitHub checkout, syncs all 32 checkpoints &amp; datasets to Hugging Face (<a href="https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3">Santhoshsathish94/clover-kimi-k3</a>), and runs the 70-task suite across all three switchable models (<code>kimi-k3</code>, <code>nemotron-3.5-super-vl</code>, <code>lfm3-1.7b</code>) on both CPU (<code>k3</code>) and GPU (<code>8 × RTX 3090</code>) under the same frozen scorer (<a href="../ai-system/#hybrid-ncm-k3">full table</a>).</td>
+              <td><strong><code>bench_foundations_e2e_ab.py</code>:</strong> stress false positives <strong><code>16/16</code> (<code>9,244</code> polluted tokens) → <code>0/16</code> (<code>0</code> tokens)</strong>, tight-budget E2E <strong><code>0/6 → 6/6</code> (<code>100%</code>)</strong>.<br><strong>3-Model 70-Task Suite:</strong> Lifts <code>kimi-k3</code> (<code>33/70 → 70/70</code>), <code>nemotron-3.5-super-vl</code> (<code>16/70 → 70/70</code> on CPU), and <code>lfm3-1.7b</code> (<code>19/70 → 70/70</code> on CPU) to <strong><code>100.0%</code></strong>.</td>
             </tr>
           </tbody>
         </table>

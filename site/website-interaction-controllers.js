@@ -601,6 +601,65 @@
         variable_self_controller.function_bind_accessible_tab_group(variable_tab_root);
       });
       this.function_bind_glossary_live_filter();
+      this.function_annotate_responsive_data_table_labels();
+    }
+
+    function_annotate_responsive_data_table_labels() {
+      var variable_data_tables = Array.prototype.slice.call(
+        document.querySelectorAll('table.data')
+      );
+      variable_data_tables.forEach(function (variable_table) {
+        var variable_header_cells = Array.prototype.slice.call(
+          variable_table.querySelectorAll('thead th')
+        );
+        if (!variable_header_cells.length) {
+          return;
+        }
+        var variable_header_labels = variable_header_cells.map(function (variable_th) {
+          var variable_clone = variable_th.cloneNode(true);
+          Array.prototype.slice
+            .call(variable_clone.querySelectorAll('br'))
+            .forEach(function (variable_br) {
+              variable_br.parentNode.replaceChild(document.createTextNode(' '), variable_br);
+            });
+          return (variable_clone.textContent || '').replace(/\s+/g, ' ').trim();
+        });
+        var variable_body_rows = Array.prototype.slice.call(
+          variable_table.querySelectorAll('tbody tr')
+        );
+        variable_body_rows.forEach(function (variable_row) {
+          var variable_cells = Array.prototype.slice.call(variable_row.children);
+          variable_cells.forEach(function (variable_cell, variable_col_index) {
+            if (
+              variable_col_index > 0 &&
+              variable_header_labels[variable_col_index] &&
+              !variable_cell.hasAttribute('data-label')
+            ) {
+              variable_cell.setAttribute('data-label', variable_header_labels[variable_col_index]);
+            }
+          });
+        });
+      });
+
+      function function_sync_stacked_tables() {
+        variable_data_tables.forEach(function (variable_table) {
+          var variable_wrap = variable_table.closest('.table-wrap');
+          if (!variable_wrap) {
+            return;
+          }
+          if (window.innerWidth <= 960) {
+            variable_wrap.classList.add('is-stacked');
+            return;
+          }
+          variable_wrap.classList.remove('is-stacked');
+          if (variable_wrap.scrollWidth > variable_wrap.clientWidth + 4) {
+            variable_wrap.classList.add('is-stacked');
+          }
+        });
+      }
+
+      function_sync_stacked_tables();
+      window.addEventListener('resize', function_sync_stacked_tables);
     }
 
     function_select_active_tab_panel(

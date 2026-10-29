@@ -476,48 +476,49 @@
               </table>
             </div>
 
-            <h3>Direction B &mdash; Five Data-Movement Upgrades in Production clover-kimi-k3 (<code>8 &times; RTX 3090</code>)</h3>
+            <h3>Direction B &mdash; Five Data-Movement Upgrades Across CPU (<code>k3</code>), GPU (<code>8 &times; RTX 3090</code>) &amp; All Three Models</h3>
+            <p>All five Direction B data-movement upgrades and all six mechanisms from the 11 foundational papers (<a href="../origin/#applied-to-clover">Origin</a>) run across <strong>both CPU and GPU servers and all three switchable models</strong> (<code>libk3_gpu_experts.so</code> &amp; <code>libk3_cpu_experts.so</code> for <code>kimi-k3</code>, <code>libnemotron_cpu_engine.so</code> for <code>nemotron-3.5-super-vl</code>, and <code>liblfm3_cpu_engine.so</code> for <code>lfm3-1.7b</code>):</p>
             <div class="table-wrap">
               <table class="data">
-                <caption class="note">Measured on real 92-layer Kimi K3 traces (<code>43,240</code> layer calls = <code>470</code> passes), standalone RTX 3090 CUDA benchmarks (<code>bench_dm_cycles_gpu.cu</code>), and live 93-layer production server runs (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-data-movement-direction-b-context.md">docs/clover-data-movement-direction-b-context.md</a>).</caption>
+                <caption class="note">Measured across real 92-layer Kimi K3 traces, live <code>8 &times; RTX 3090</code> GPU runs (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-data-movement-direction-b-context.md">clover-data-movement-direction-b-context.md</a>), and live <code>k3</code> CPU runs for <code>nemotron-3.5-super-vl</code> and <code>lfm3-1.7b</code> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ai-system-switchable-models-context.md">clover-ai-system-switchable-models-context.md</a>).</caption>
                 <thead>
                   <tr>
                     <th scope="col">Study &amp; Mechanism</th>
-                    <th scope="col">Before (Baseline Policy 1 / Shipped Kernel)</th>
-                    <th scope="col">After (Production Clover Direction B)</th>
-                    <th scope="col">Measured Impact on 8 &times; RTX 3090</th>
+                    <th scope="col">Before (Unoptimized Baseline)</th>
+                    <th scope="col">After (Clover Direction B across CPU, GPU &amp; All 3 Models)</th>
+                    <th scope="col">Measured Impact on GPU (<code>8 &times; RTX 3090</code>) &amp; CPU (<code>k3</code> Ryzen 9 7950X3D)</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <th scope="row"><strong>1. Red-Blue Pebble Game</strong> (Hong &amp; Kung, STOC 1981)<br><code>Clean-Input R4 Host-Shadow Admission</code></th>
-                    <td>Exclusive swap: <code>HostCache</code> hits removed on H2D; every <code>CardPool</code> eviction copied <code>17.55 MB</code> back over PCIe D2H (<code>R2_WB = 54,132..200,717</code>).</td>
-                    <td>Parallel NVMe <code>pread</code> directly into <code>HostCache</code> shadow slots in <code>libsupply.so</code> + <code>sc_worth = 0</code> when resident in <code>HostCache</code>.</td>
-                    <td><strong><code>written_back_R2 = 0</code></strong> on cold NVMe reads and warm H2D hits; <strong><code>25,533</code> <code>R4</code> clean drops</strong> saving <strong><code>448.0 GB</code></strong> of redundant PCIe D2H traffic (<strong><code>1.95&times;</code></strong> faster PCIe wall-clock).</td>
+                    <td>Exclusive swap removed <code>HostCache</code> hits and wrote evicted immutable expert weights back (<code>R2_WB = 54,132..200,717</code>).</td>
+                    <td>Host-Shadow admission in Rust <code>libsupply.so</code>, <code>libk3_cpu_experts.so</code>, and <code>libnemotron_cpu_engine.so</code> (<code>r4_clean_drops++</code>, <code>dirty_writebacks = 0</code>).</td>
+                    <td><strong>GPU (<code>kimi-k3</code>):</strong> <code>written_back_R2 = 0</code> on cold/warm reads, <code>25,533</code> <code>R4</code> clean drops saving <code>448.0 GB</code> PCIe D2H (<code>1.95&times;</code> faster).<br><strong>CPU (<code>nemotron-3.5</code>):</strong> <code>45,876</code> <code>R4</code> clean drops (1-by-1) / <code>3,525</code> (clubbed) with <strong><code>0</code> dirty writebacks</strong>.</td>
                   </tr>
                   <tr>
-                    <th scope="row"><strong>2. SpecMD</strong> (Hoang et al., arXiv:2602.03921)<br><code>Policy 3 Least-Stale (LS) + Hit-First + Cross-Layer Lookahead</code></th>
-                    <td><code>Heat-48</code> pinned Pass-0 prefill experts and evicted upcoming layers ($l_e &gt; l_{\text{cur}}$), causing <code>9.35%&ndash;24.53%</code> pass-collision misses; <code>vram_mask==2</code> charged to cold budget.</td>
-                    <td>3-tier Least-Stale (<code>LS</code>) eviction in <code>libslotcache.so</code> + two-pass Hit-First in <code>libsupply.so</code> + free <code>vram_mask==2</code> + Layer $L+1$ lookahead &amp; async H2D prefetch.</td>
-                    <td>Pass-collision misses cut by <strong><code>11.8&times;&ndash;26.7&times;</code></strong> (<code>24.53% &rarr; 0.92%</code>); live server dynamic <code>CardPool</code> hit rate reached <strong><code>86.09%&ndash;86.51%</code></strong> and overall VRAM hit rate reached <strong><code>95.22%&ndash;95.29%</code></strong>.</td>
+                    <th scope="row"><strong>2. SpecMD</strong> (Hoang et al., arXiv:2602.03921)<br><code>Policy 3 Least-Stale (LS) + Hit-First + Lookahead</code></th>
+                    <td><code>Heat-48</code> pinned Pass-0 prefill experts and evicted upcoming layers ($l_e &gt; l_{\text{cur}}$), causing <code>9.35%&ndash;24.53%</code> pass-collision misses.</td>
+                    <td>3-tier Least-Stale (<code>LS</code>) eviction + two-pass Hit-First ordering in Rust <code>libslotcache.so</code>, <code>libk3_cpu_experts.so</code>, and <code>libnemotron_cpu_engine.so</code>.</td>
+                    <td><strong>GPU (<code>kimi-k3</code>):</strong> Collisions cut <code>11.8&times;&ndash;26.7&times;</code>; <code>95.22%&ndash;95.29%</code> overall VRAM hit rate.<br><strong>CPU (<code>nemotron-3.5</code>):</strong> <strong><code>99.03%</code> cache hit rate</strong> (<code>52,511 / 53,023</code> expert hits, <code>0</code> new NVMe drive fetches after Pass 1).</td>
                   </tr>
                   <tr>
-                    <th scope="row"><strong>3. FlashAttention-1 &amp; 2</strong> (Dao et al., 2022/2023)<br><code>Warp-Coalesced Register Online-Softmax + Split-KV MLA</code></th>
-                    <td><code>mla_attention_pos</code> materialized <code>sc[count]</code> in dynamic shared memory with 3 block-wide barriers and 1 thread/feature for <code>V</code> accumulation.</td>
-                    <td><code>mla_attention_pos_fa2_part</code> + <code>mla_splitkv_combine</code>: 1 key/warp coalesced <code>float4</code> loads, register <code>o0..o3</code>, <code>0 B</code> dynamic smem, Split-KV logsumexp combine.</td>
-                    <td><strong><code>2.57&times;&ndash;3.40&times;</code> faster</strong> at <code>N_q = 1</code> and <strong><code>3.81&times;&ndash;6.84&times;</code> faster</strong> at <code>N_q = 4</code> (<code>4,295.4 &rarr; 646.8 &mu;s</code> at <code>KV = 4,096</code>), <code>max_abs_diff &le; 1.12e-7</code>.</td>
+                    <th scope="row"><strong>3. FlashAttention-1 &amp; 2</strong> (Dao et al., 2022/2023) &amp; <strong>Register-Blocked Tiling</strong><br><code>Online-Softmax + 8-Token Register Blocking</code></th>
+                    <td>Materialized <code>sc[count]</code> in dynamic shared memory on GPU; 1-token-per-pass scalar weight streaming on CPU.</td>
+                    <td><code>mla_attention_pos_fa2_part</code> + Split-KV on GPU; 8-token register-blocked <code>linear_bf16_omp</code> &amp; <code>linear_4bit_group64_omp</code> in <code>nemotron_cpu_engine.c</code> &amp; <code>lfm3_cpu_engine.c</code>.</td>
+                    <td><strong>GPU (<code>kimi-k3</code>):</strong> <code>2.57&times;&ndash;6.84&times;</code> faster MLA attention, <code>max_abs_diff &le; 1.12e-7</code>.<br><strong>CPU (<code>nemotron-3.5</code> &amp; <code>lfm3-1.7b</code>):</strong> Cuts DDR5 weight traffic up to <code>8&times;</code> (<code>3.27 s &rarr; 1.12 s</code> C engine on Nemotron; <code>8.73 s &rarr; 3.45 s</code> on 24-layer LFM3).</td>
                   </tr>
                   <tr>
-                    <th scope="row"><strong>4. Eyeriss v1</strong> (Chen et al., ISCA 2016 / JSSC 2017)<br><code>4-Tier Storage &amp; Energy Movement Ledger</code></th>
-                    <td>No per-tier byte/energy accounting across GPU SRAM ($1\times$), VRAM ($2\times$), Pinned Host RAM ($6\times$), and NVMe ($200\times$).</td>
-                    <td>Live <code>k3_full93_dm_stats</code> ledger in <code>libk3_gpu_experts.so</code> exposed via <code>/api/health</code> and <code>k3_data_movement_ledger.py</code>.</td>
-                    <td>Eyeriss weighted movement cost per expert request dropped from <code>54.205</code> to <strong><code>7.731&ndash;8.998</code></strong> across the full benchmark runs (a <strong><code>6.0&times;&ndash;7.0&times;</code></strong> reduction).</td>
+                    <th scope="row"><strong>4. Eyeriss v1</strong> (Chen et al., ISCA 2016 / JSSC 2017)<br><code>4-Tier Storage &amp; Pruned Operator / Trunk Hierarchy</code></th>
+                    <td>No per-tier movement accounting; unpruned trunks duplicated weights already packed in <code>operator.bin</code>.</td>
+                    <td>Live 4-tier movement ledger (<code>k3_full93_dm_stats</code> &amp; <code>nemo_dm_stats</code>) + trunk pruning (<code>prune_nemotron_trunk.py</code>, <code>prune_lfm3_trunk.py</code>) &amp; 4-bit planar group-64 <code>experts.4bit.direct</code>.</td>
+                    <td><strong>GPU (<code>kimi-k3</code>):</strong> Eyeriss cost/req dropped <code>54.205 &rarr; 7.731</code> (<code>7.0&times;</code>).<br><strong>CPU:</strong> Prunes <strong><code>-46.05%</code></strong> (<code>5.95 GiB</code>) from Nemotron trunks, <strong><code>-15.91%</code></strong> (<code>0</code> <code>attention.bin</code> left) from all 24 LFM3 trunks, and <strong><code>3.86&times;</code></strong> (<code>5.25 &rarr; 1.36 GiB</code>) on 4-bit Nemotron experts.</td>
                   </tr>
                   <tr>
-                    <th scope="row"><strong>5. Eyeriss v2</strong> (Chen et al., IEEE JETCAS 2019)<br><code>Adaptive Multi-Token Broadcast Coalescing</code></th>
-                    <td>Independent per-token cold expert selection in multi-token windows fetched <code>920</code> dynamic experts/pass (<code>1.42&times;</code> token reuse/expert).</td>
-                    <td><code>coalesce_cold_broadcast</code> prioritizes shared cold experts demanded by $\ge 2$ frontier tokens (<code>vram_mask = 3</code>) within <code>k_dyn_max</code>.</td>
-                    <td>Cold dynamic expert fetches per 93-layer pass dropped by <strong><code>80.0%</code></strong> (<code>920 &rarr; 184</code>), token reuse per cold expert rose <strong><code>1.42&times; &rarr; 3.38&times;</code></strong>, and 93-layer GPU speed reached <strong><code>148.5 tok/s</code></strong> (<code>112.1 ms/layer</code>).</td>
+                    <th scope="row"><strong>5. Eyeriss v2</strong> (Chen et al., IEEE JETCAS 2019)<br><code>Multi-Token Broadcast Coalescing &amp; Dynamic Batch Clubbing</code></th>
+                    <td>Unicast per-token expert execution fetched <code>920</code> cold experts/pass on GPU and <code>53,023</code> expert streams across 70 tasks on CPU.</td>
+                    <td><code>coalesce_cold_broadcast</code> on GPU + <strong>Dynamic Batch Clubbing (<code>B = 10</code> prompts/pass with <code>seg_starts[t]</code> isolation)</strong> in <code>nemo_forward_pipeline_clubbed</code> and <code>lfm3_forward_24_layers_clubbed</code> on CPU.</td>
+                    <td><strong>GPU (<code>kimi-k3</code>):</strong> Cold expert fetches dropped <code>80.0%</code> (<code>920 &rarr; 184</code>), <code>148.5 tok/s</code>.<br><strong>CPU (<code>nemotron-3.5</code> &amp; <code>lfm3-1.7b</code>):</strong> Cuts Nemotron expert streams by <strong><code>13.1&times;</code></strong> (<code>53,023 &rarr; 4,037</code>), speeding up Nemotron C by <strong><code>2.93&times;</code></strong> (<code>1.12 s/task</code>) and LFM3 C by <strong><code>2.53&times;</code></strong> (<code>3.45 s/task</code>) with <code>0</code> cross-talk.</td>
                   </tr>
                 </tbody>
               </table>
@@ -530,12 +531,12 @@
       <h2>Where we started, and where it is now</h2>
             <p>We started from Fareed Khan&rsquo;s <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a>
               (Apache-2.0) on a single CPU workstation (AMD Ryzen 9 7950X3D, 124 GB RAM, dual NVMe RAID1), optimized the
-              93-layer CPU reference chain bit-identically, and then built the unified 7-layer <strong><code>clover-kimi-k3</code></strong>
-              architecture on 8 &times; RTX 3090 GPUs.</p>
+              93-layer CPU reference chain bit-identically, and then built the unified 7-layer <strong><code>clover-ai-system</code></strong>
+              architecture running across both our <code>k3</code> CPU workstation and our <code>8 &times; RTX 3090</code> GPU server across all three switchable models.</p>
 
             <div class="table-wrap">
               <table class="data">
-                <caption class="note">Progression from the initial single-CPU C baseline to the current 7-layer <code>clover-kimi-k3</code> system on 8 &times; RTX 3090 GPUs.</caption>
+                <caption class="note">Progression from the initial single-CPU C baseline to the current 7-layer <code>clover-ai-system</code> across CPU (<code>k3</code>) and GPU (<code>8 &times; RTX 3090</code>).</caption>
                 <thead>
                   <tr>
                     <th scope="col">Version &amp; hardware</th>
@@ -560,9 +561,9 @@
                     <td><strong>3.1 to 3.5 s per token</strong> plain (<strong>356.3 s</strong> for 120 tokens); <strong>2.7 s/tok</strong> with DSpark speculative decoding</td>
                   </tr>
                   <tr>
-                    <th scope="row">4. <strong><code>clover-kimi-k3</code> (7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System on 8 &times; RTX 3090 GPUs, now)</strong></th>
-                    <td><strong>256K session context</strong> + <strong>File-Based Memory Tree &amp; Relational Knowledge Graph</strong> (32 seed entries, 65 edges, closed-loop <code>staging/</code> gate + 11-Paper Foundations upgrades) + <strong>Ontology GraphRAG</strong> + <strong>Python &amp; Rust Generative Compilation</strong> + <strong>8 Rust host-path libraries</strong> (<code>max_abs_diff = 0.0</code>) + live tools &amp; VS Code Agent</td>
-                    <td><strong>1.56 to 11.69 s end-to-end</strong> (<strong>100.0%</strong> across the Standardized <strong>70/70 Real AI Benchmark Suite</strong> on a clean GitHub + Hugging Face bootstrap, GSM8K-20, MMLU-20, HumanEval-40, Live Rust-5, HybridAgent QA-15, Pooled 47-task, and Held-Out 12-task Memory Suite; <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling)</td>
+                    <th scope="row">4. <strong><code>clover-ai-system</code> (7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System on CPU <code>k3</code> &amp; <code>8 &times; RTX 3090</code> GPUs, now)</strong></th>
+                    <td><strong>3 Switchable Layer-1 Engines</strong> (<code>nemotron-3.5-super-vl</code> C/OpenMP + 4-bit experts + Native MTP, <code>lfm3-1.7b</code> 24-layer C/OpenMP, <code>kimi-k3</code> 93-layer GPU &amp; CPU) + <strong>256K session context</strong> + <strong>File-Based Memory Tree &amp; Knowledge Graph</strong> (11-Paper Foundations + 5 Direction B Data-Movement Upgrades) + <strong>Ontology GraphRAG</strong> + <strong>Python &amp; Rust Generative Compilation</strong></td>
+                    <td><strong><code>70 / 70 = 100.0%</code> across all three models</strong> (lifting raw <code>nemotron-3.5-super-vl</code> from <code>16/70</code>, <code>lfm3-1.7b</code> from <code>19/70</code>, and <code>kimi-k3</code> from <code>33/70</code> to <strong><code>70/70</code></strong>; <strong>1.12 s/task</strong> Nemotron C engine &amp; <strong>3.45 s/task</strong> LFM3 C engine on CPU; <strong>1.56 to 11.69 s</strong> on GPU)</td>
                   </tr>
                 </tbody>
               </table>

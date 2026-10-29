@@ -1652,6 +1652,146 @@ table.data tbody tr:last-child td {
   background: var(--accent-soft);
 }
 
+.table-wrap.is-stacked {
+  overflow-x: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.table-wrap.is-stacked table.data {
+  min-width: 0;
+  width: 100%;
+  display: block;
+}
+
+.table-wrap.is-stacked table.data caption {
+  display: block;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0.95rem;
+}
+
+.table-wrap.is-stacked table.data thead {
+  display: none;
+}
+
+.table-wrap.is-stacked table.data tbody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.table-wrap.is-stacked table.data tbody tr {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0;
+  box-shadow: var(--shadow-xs);
+}
+
+.table-wrap.is-stacked table.data tbody th,
+.table-wrap.is-stacked table.data tbody td {
+  display: block;
+  width: 100%;
+  padding: 0.52rem 0.95rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.table-wrap.is-stacked table.data tbody tr > :first-child {
+  border-top: 0;
+  padding-top: 0.6rem;
+  padding-bottom: 0.55rem;
+  background: var(--soft);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.table-wrap.is-stacked table.data tbody td[data-label]::before,
+.table-wrap.is-stacked table.data tbody tr > th:not(:first-child)[data-label]::before {
+  content: attr(data-label);
+  display: block;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.18rem;
+}
+
+@media (max-width: 960px) {
+  .table-wrap {
+    overflow-x: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  table.data {
+    min-width: 0;
+    width: 100%;
+    display: block;
+  }
+
+  table.data caption {
+    display: block;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    margin-bottom: 0.85rem;
+    padding: 0.75rem 0.95rem;
+  }
+
+  table.data thead {
+    display: none;
+  }
+
+  table.data tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  table.data tbody tr {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 0.35rem 0;
+    box-shadow: var(--shadow-xs);
+  }
+
+  table.data tbody th,
+  table.data tbody td {
+    display: block;
+    width: 100%;
+    padding: 0.52rem 0.95rem;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  table.data tbody tr > :first-child {
+    border-top: 0;
+    padding-top: 0.6rem;
+    padding-bottom: 0.55rem;
+    background: var(--soft);
+    font-weight: 650;
+    color: var(--ink);
+  }
+
+  table.data tbody td[data-label]::before,
+  table.data tbody tr > th:not(:first-child)[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 0.18rem;
+  }
+}
+
 pre.code {
   background: var(--surface);
   border: 1px solid var(--line);
