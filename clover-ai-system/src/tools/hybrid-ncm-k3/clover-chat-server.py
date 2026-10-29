@@ -486,8 +486,24 @@ HTML_UI = """<!DOCTYPE html>
   .preview-bar__info { display: flex; align-items: center; gap: 0.6rem; }
   .preview-bar img { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line-2); }
   footer {
-    padding: 0.85rem 1.25rem; background: var(--bg); border-top: 1px solid var(--line);
-    display: flex; gap: 0.6rem; align-items: flex-end;
+    padding: 0.7rem 1.25rem 0.85rem; background: var(--bg); border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 0.45rem;
+  }
+  .output-tabs {
+    display: inline-flex; align-items: center; gap: 0.28rem; align-self: flex-start;
+    padding: 0.2rem; background: var(--soft); border: 1px solid var(--line-2); border-radius: 999px;
+  }
+  .output-tab {
+    background: transparent; color: var(--ink-2); border: 1px solid transparent;
+    border-radius: 999px; padding: 0.25rem 0.72rem; font: inherit; font-size: 0.78rem;
+    font-weight: 650; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .output-tab:hover { color: var(--accent); }
+  .output-tab.is-active, .output-tab[aria-selected="true"] {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+  .footer-row {
+    display: flex; gap: 0.6rem; align-items: flex-end; width: 100%;
   }
   textarea {
     flex: 1; background: var(--soft); color: var(--ink); border: 1px solid var(--line-2);
@@ -609,28 +625,30 @@ HTML_UI = """<!DOCTYPE html>
     </div>
 
     <footer>
-      <input type="file" id="file-input" multiple hidden onchange="onFilesSelected(event)">
-      <button type="button" class="btn icon-btn" onclick="document.getElementById('file-input').click()" title="Attach any file (images, video, audio, PDF, documents, code, text)" aria-label="Attach files">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-        </svg>
-      </button>
-      <select id="output-type-select" onchange="onOutputTypeChange(this.value)" title="Select output type" aria-label="Select output type" style="height:40px;padding:0 0.7rem;border:1px solid var(--line-2);border-radius:9px;background:var(--soft);font:inherit;font-size:0.84rem;font-weight:600;color:var(--ink-2);cursor:pointer;">
-        <option value="text" selected>Text</option>
-        <option value="image">Image</option>
-        <option value="video" id="opt-video">Video</option>
-        <option value="audio" id="opt-audio">Audio</option>
-      </select>
-      <textarea id="prompt-in" rows="1" placeholder="Message Clover..."></textarea>
-      <button type="button" class="btn icon-btn" id="voice-btn" onclick="toggleVoice()" title="Voice conversation" aria-label="Voice conversation">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-          <line x1="12" y1="19" x2="12" y2="23"></line>
-          <line x1="8" y1="23" x2="16" y2="23"></line>
-        </svg>
-      </button>
-      <button type="button" class="btn btn--primary" id="send-btn" onclick="sendPrompt()">Send</button>
+      <div class="output-tabs" id="output-type-tabs" role="tablist" aria-label="Select output type">
+        <button type="button" class="output-tab is-active" role="tab" aria-selected="true" data-output-type="text" id="opt-text" onclick="onOutputTypeChange('text')">Text</button>
+        <button type="button" class="output-tab" role="tab" aria-selected="false" data-output-type="image" id="opt-image" onclick="onOutputTypeChange('image')">Image</button>
+        <button type="button" class="output-tab" role="tab" aria-selected="false" data-output-type="video" id="opt-video" onclick="onOutputTypeChange('video')">Video</button>
+        <button type="button" class="output-tab" role="tab" aria-selected="false" data-output-type="audio" id="opt-audio" onclick="onOutputTypeChange('audio')">Audio</button>
+      </div>
+      <div class="footer-row">
+        <input type="file" id="file-input" multiple hidden onchange="onFilesSelected(event)">
+        <button type="button" class="btn icon-btn" onclick="document.getElementById('file-input').click()" title="Attach any file (images, video, audio, PDF, documents, code, text)" aria-label="Attach files">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+          </svg>
+        </button>
+        <textarea id="prompt-in" rows="1" placeholder="Message Clover..."></textarea>
+        <button type="button" class="btn icon-btn" id="voice-btn" onclick="toggleVoice()" title="Voice conversation" aria-label="Voice conversation">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+        <button type="button" class="btn btn--primary" id="send-btn" onclick="sendPrompt()">Send</button>
+      </div>
     </footer>
   </div>
 </div>
@@ -666,6 +684,15 @@ let selectedModelKey = 'nemotron-3.5-super-vl';
 let selectedOutputType = 'text';
 function onOutputTypeChange(val) {
   selectedOutputType = (val === 'image' || val === 'video' || val === 'audio') ? val : 'text';
+  const tabsWrap = document.getElementById('output-type-tabs');
+  if (tabsWrap) {
+    const tabs = tabsWrap.querySelectorAll('.output-tab');
+    tabs.forEach(function(t) {
+      const match = t.getAttribute('data-output-type') === selectedOutputType;
+      t.classList.toggle('is-active', match);
+      t.setAttribute('aria-selected', match ? 'true' : 'false');
+    });
+  }
   if (inputEl) {
     inputEl.placeholder = selectedOutputType === 'image' ? 'Describe the image to generate...'
       : selectedOutputType === 'video' ? 'Describe the video to generate...'
@@ -708,8 +735,6 @@ function onModelSelectChange(val) {
   if (optVid) { optVid.hidden = isK3; optVid.disabled = isK3; }
   if (optAud) { optAud.hidden = isK3; optAud.disabled = isK3; }
   if (isK3 && (selectedOutputType === 'video' || selectedOutputType === 'audio')) {
-    const selEl = document.getElementById('output-type-select');
-    if (selEl) selEl.value = 'text';
     onOutputTypeChange('text');
   }
   try { localStorage.setItem(MODEL_STORAGE_KEY, selectedModelKey); } catch (e) {}
@@ -2491,6 +2516,8 @@ ALLOWED_ORIGINS = {
     "https://cloverframework.com",
     "https://www.cloverframework.com",
     "https://api.cloverframework.com",
+    "https://37-27-114-74.sslip.io",
+    "https://37.27.114.74.nip.io",
     "http://127.0.0.1:8765",
     "http://localhost:8765",
     "null",
@@ -2499,6 +2526,8 @@ ALLOWED_HOSTS = {
     "api.cloverframework.com",
     "cloverframework.com",
     "www.cloverframework.com",
+    "37-27-114-74.sslip.io",
+    "37.27.114.74.nip.io",
     "127.0.0.1",
     "127.0.0.1:8765",
     "localhost",

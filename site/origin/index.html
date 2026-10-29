@@ -14,7 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
 <link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
-<link rel="stylesheet" href="../botanical-design-system.css?v=4.1.2&amp;r=2">
+<link rel="stylesheet" href="../botanical-design-system.css?v=4.1.2">
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body>
@@ -71,26 +71,21 @@
     </div>
   </section>
 
-  <!-- ============ VERTICAL STORYLINE (1943 TO 2026) ============ -->
-  <section class="band" id="story-deck" style="padding-top:1rem">
-    <div class="wrap">
-      <div class="storyline">
-
-        <!-- ================================================================ -->
+  <div id="story-deck"></div>
+<!-- ================================================================ -->
         <!-- CHAPTER 1: 1943 MCCULLOCH & PITTS -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p1-1943">
-          <div class="origin-card__badge">Chapter 1 of 12 · 1943 · Warren S. McCulloch &amp; Walter Pitts</div>
+        <section class="band" id="p1-1943">
+    <div class="wrap">
+      <p class="note">Chapter 1 of 12 · 1943 · Warren S. McCulloch &amp; Walter Pitts</p>
           <h2>A Logical Calculus of the Ideas Immanent in Nervous Activity</h2>
           <p class="lede"><strong>How a neurophysiologist and a nineteen-year-old runaway mathematician realized that a wet brain cell firing or staying silent is a binary logic gate.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · The Cold Rod That Felt Burning Hot</span>
-            <p>In 1942 in Chicago, Warren McCulloch—a doctor studying how the brain's wiring works—invited a homeless nineteen-year-old prodigy named Walter Pitts to live at his house. Late at night, they puzzled over a strange trick of our skin: if we press a cold metal rod against our arm and hold it there, it feels cold. But if we tap that same cold rod against our skin for just a split second and pull it away, we feel a sudden flash of <strong>burning heat</strong>!</p>
+          <h3>The Story to Remember · The Cold Rod That Felt Burning Hot</h3>
+      <p>In 1942 in Chicago, Warren McCulloch—a doctor studying how the brain's wiring works—invited a homeless nineteen-year-old prodigy named Walter Pitts to live at his house. Late at night, they puzzled over a strange trick of our skin: if we press a cold metal rod against our arm and hold it there, it feels cold. But if we tap that same cold rod against our skin for just a split second and pull it away, we feel a sudden flash of <strong>burning heat</strong>!</p>
             <p>Why would cold feel hot? Pitts and McCulloch realized we do not need chemistry equations to explain it—we only need <strong>timing and logic</strong>. Because a neuron either fires a full spark (<code>1</code>) or stays quiet (<code>0</code>), they drew a 4-neuron relay circuit (Figure 1e): when cold stops suddenly, a delayed 2-tick rebound signal reaches our heat neuron right after the cold-inhibition veto turns off. By treating neurons as clock-ticked logic gates, they proved that any logical thought can be wired out of simple threshold cells—and any circular loop of cells can hold a memory forever.</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of McCulloch and Pitts 1943 threshold logic neuron, Figure 1e cold-rod heat illusion, and circular memory loop.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1943 · ALL-OR-NONE NEURON LOGIC, SENSORY ILLUSION &amp; CIRCULAR MEMORY</text>
@@ -143,37 +138,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · One neuron is weak (7/16), but a layered network builds all 128/256 silence-preserving logic rules</dt>
-              <dd>A single 2-input McCulloch–Pitts neuron can only compute <strong>7 of the 16</strong> possible truth tables (it cannot do <code>XOR</code>). By stacking neurons into a 2-layer network without loops, our Theorem 2 compiler built <strong>8/16</strong> two-input rules and <strong>128/256</strong> three-input rules—every rule where all-zero input produces zero output (<code>0/1,000</code> random nets ever fired on silence).</dd>
-            </div>
-            <div>
-              <dt>2 · Why brain states can predict the future but lose the past (Section 4)</dt>
-              <dd>In a 4-neuron circular net we traced, all 16 possible states collapse into just <strong>8 reachable states</strong>, and each reachable state has <strong>4 to 12 different past states</strong> that funnel into it. Present state determines what happens next, but erases *when* the memory began.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · One neuron is weak (7/16), but a layered network builds all 128/256 silence-preserving logic rules.</strong> A single 2-input McCulloch–Pitts neuron can only compute <strong>7 of the 16</strong> possible truth tables (it cannot do <code>XOR</code>). By stacking neurons into a 2-layer network without loops, our Theorem 2 compiler built <strong>8/16</strong> two-input rules and <strong>128/256</strong> three-input rules—every rule where all-zero input produces zero output (<code>0/1,000</code> random nets ever fired on silence).</p>
+      <p><strong>2 · Why brain states can predict the future but lose the past (Section 4).</strong> In a 4-neuron circular net we traced, all 16 possible states collapse into just <strong>8 reachable states</strong>, and each reachable state has <strong>4 to 12 different past states</strong> that funnel into it. Present state determines what happens next, but erases *when* the memory began.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 2 (1950):</strong> McCulloch and Pitts proved that a specially wired circuit of threshold gates can compute any logical rule. Seven years later, Alan Turing asked: instead of soldering a new circuit for every task, can <em>one</em> machine store the wiring rules as numbers in memory and become <em>any</em> machine?
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 2 (1950):</strong> McCulloch and Pitts proved that a specially wired circuit of threshold gates can compute any logical rule. Seven years later, Alan Turing asked: instead of soldering a new circuit for every task, can <em>one</em> machine store the wiring rules as numbers in memory and become <em>any</em> machine?</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 2: 1950 ALAN TURING -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p2-1950">
-          <div class="origin-card__badge">Chapter 2 of 12 · 1950 · Alan M. Turing</div>
+        <section class="band" id="p2-1950">
+    <div class="wrap">
+      <p class="note">Chapter 2 of 12 · 1950 · Alan M. Turing</p>
           <h2>Computing Machinery and Intelligence</h2>
           <p class="lede"><strong>Why a machine that answers 34,957 + 70,764 correctly in a millisecond loses the Imitation Game immediately—and why teaching a "Child-Machine" with words beats 22,400 punishment blows.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · The Witness Who Took 30 Seconds to Make a Mistake</span>
-            <p>Imagine we are the judge in Turing's 1950 Imitation Game, typing questions into a teleprinter to two hidden rooms. We ask a trap question: <em>"Add 34957 to 70764."</em> Room A answers <code>105721</code> in 0.001 seconds. Room B goes silent for <strong>30 full seconds</strong>, and then types <strong><code>105621</code></strong>.</p>
+          <h3>The Story to Remember · The Witness Who Took 30 Seconds to Make a Mistake</h3>
+      <p>Imagine we are the judge in Turing's 1950 Imitation Game, typing questions into a teleprinter to two hidden rooms. We ask a trap question: <em>"Add 34957 to 70764."</em> Room A answers <code>105721</code> in 0.001 seconds. Room B goes silent for <strong>30 full seconds</strong>, and then types <strong><code>105621</code></strong>.</p>
             <p>Look closely at Room B's number: <code>34957 + 70764</code> is <code>105721</code>, not <code>105621</code>! The witness in Turing's paper forgot to carry the <code>1</code> into the hundreds column. Turing slipped that arithmetic mistake into page 434 on purpose: a computer that shows off its raw speed and perfection gives itself away on the very first sum. Intelligence is not just fast arithmetic—it is being a <strong>universal stored-program machine</strong> that can rewrite its own instructions and learn from a teacher.</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Alan Turing 1950 Imitation Game carry slip, Manchester 10-digit stored instruction 6809430217, and Child-Machine symbolic vs punishment learning.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1950 · THE IMITATION GAME, STORED-PROGRAM UNIVERSALITY &amp; THE CHILD-MACHINE</text>
@@ -222,37 +207,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Instructions and data live in the same memory—so programs can rewrite themselves</dt>
-              <dd>We built Turing's Section 4 stored-program machine (`Store + Executive + Control`): by adding `1000000` to its own instruction word on each pass of a loop, a 5-instruction program summed an array of numbers without unrolling the loop, and calculated the exact Manchester Ferranti Mark I storage capacity (`10` CRT pages + `8` magnetic drums = <strong><code>174,380</code> bits</strong>).</dd>
-            </div>
-            <div>
-              <dt>2 · Why Gödel's theorem only trips a machine when it is asked about itself (Section 6.1)</dt>
-              <dd>We built a sequence of diagonal machines <code>M_0, M_1, M_2, M_3</code>: while <code>M_0</code> cannot answer whether <em>it itself</em> will say "Yes" to its own code, <code>M_1</code> answers <code>M_0</code>'s question in one step—showing Gödel's limit is about self-reference, not a ceiling on machine intelligence.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Instructions and data live in the same memory—so programs can rewrite themselves.</strong> We built Turing's Section 4 stored-program machine (`Store + Executive + Control`): by adding `1000000` to its own instruction word on each pass of a loop, a 5-instruction program summed an array of numbers without unrolling the loop, and calculated the exact Manchester Ferranti Mark I storage capacity (`10` CRT pages + `8` magnetic drums = <strong><code>174,380</code> bits</strong>).</p>
+      <p><strong>2 · Why Gödel's theorem only trips a machine when it is asked about itself (Section 6.1).</strong> We built a sequence of diagonal machines <code>M_0, M_1, M_2, M_3</code>: while <code>M_0</code> cannot answer whether <em>it itself</em> will say "Yes" to its own code, <code>M_1</code> answers <code>M_0</code>'s question in one step—showing Gödel's limit is about self-reference, not a ceiling on machine intelligence.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 3 (1956):</strong> Turing argued that a stored-program computer could manipulate symbols, search through possibilities, and prove theorems—not just crunch numbers. Six years later, Allen Newell and Herbert Simon built the first program that actually did it.
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 3 (1956):</strong> Turing argued that a stored-program computer could manipulate symbols, search through possibilities, and prove theorems—not just crunch numbers. Six years later, Allen Newell and Herbert Simon built the first program that actually did it.</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 3: 1956 NEWELL & SIMON -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p3-1956">
-          <div class="origin-card__badge">Chapter 3 of 12 · 1956 · Allen Newell &amp; Herbert A. Simon</div>
+        <section class="band" id="p3-1956">
+    <div class="wrap">
+      <p class="note">Chapter 3 of 12 · 1956 · Allen Newell &amp; Herbert A. Simon</p>
           <h2>The Logic Theory Machine: A Complex Information Processing System</h2>
           <p class="lede"><strong>How the world's first working AI program proved 48 of 67 theorems in Principia Mathematica by glancing at a 3-number summary before doing hard work.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · Holding Index Cards in a Living Room</span>
-            <p>In late 1955, before their JOHNNIAC computer interpreter was even finished, Allen Newell and Herbert Simon wanted to know if their new theorem-proving program—<strong>The Logic Theorist</strong>—would actually work. So Simon gathered his wife, his children, and several graduate students in a room, handed each person a stack of blank index cards, and assigned each person to be one subroutine or one "working memory" list!</p>
+          <h3>The Story to Remember · Holding Index Cards in a Living Room</h3>
+      <p>In late 1955, before their JOHNNIAC computer interpreter was even finished, Allen Newell and Herbert Simon wanted to know if their new theorem-proving program—<strong>The Logic Theorist</strong>—would actually work. So Simon gathered his wife, his children, and several graduate students in a room, handed each person a stack of blank index cards, and assigned each person to be one subroutine or one "working memory" list!</p>
             <p>Why didn't they drown in millions of useless logical combinations? Because we do not test every axiom blindly when proving a theorem: we take a quick glance at the <em>shape</em> of two formulas first. Newell and Simon gave their program a 3-number glance called <code>CSm</code> (left depth, right depth, and variable count). That glance threw away <strong>93.6%</strong> of dead ends instantly—though as we discovered when we ran it, that same shortcut also caused the machine to walk right past a 1-line proof of Theorem <code>*2.07</code>!</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Newell and Simon 1956 Logic Theorist methods, CSm 93.6% heuristic filter funnel, and Theorem 2.07 blind spot.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1956 · THE LOGIC THEORIST: HEURISTIC SEARCH, THE CSm FILTER &amp; THE *2.07 BLIND SPOT</text>
@@ -300,37 +275,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Ten real bugs in the printed 1956 RAND P-868 assembly code</dt>
-              <dd>By reading all 701 lines of the 1956 IPL-I code and comparing against David Moews's interpreter, we cataloged <strong>10 concrete bugs</strong> in the original printed monograph (such as calling an undefined routine <code>R011</code> in <code>CXn</code> and inverted conditional branches in <code>CAr</code> and <code>CSb</code>) and traced a single instruction on page 50 (<code>CKG 2 1 - C</code>) that flips subproblem tie-breaking from FIFO to LIFO.</dd>
-            </div>
-            <div>
-              <dt>2 · Why cumulative memory matters: 12 → 22 → 48 proved theorems</dt>
-              <dd>With only the 5 axioms in memory, Logic Theorist proves just <strong>12/67</strong> theorems; remembering only the theorems it proves by itself reaches <strong>22/67</strong>; and keeping the full sequence of prior theorems proves <strong>48/67</strong>.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Ten real bugs in the printed 1956 RAND P-868 assembly code.</strong> By reading all 701 lines of the 1956 IPL-I code and comparing against David Moews's interpreter, we cataloged <strong>10 concrete bugs</strong> in the original printed monograph (such as calling an undefined routine <code>R011</code> in <code>CXn</code> and inverted conditional branches in <code>CAr</code> and <code>CSb</code>) and traced a single instruction on page 50 (<code>CKG 2 1 - C</code>) that flips subproblem tie-breaking from FIFO to LIFO.</p>
+      <p><strong>2 · Why cumulative memory matters: 12 → 22 → 48 proved theorems.</strong> With only the 5 axioms in memory, Logic Theorist proves just <strong>12/67</strong> theorems; remembering only the theorems it proves by itself reaches <strong>22/67</strong>; and keeping the full sequence of prior theorems proves <strong>48/67</strong>.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 4 (1958):</strong> Logic Theorist could prove theorems when handed clean symbolic formulas. Two years later, Frank Rosenblatt asked: how does a living brain learn to recognize messy visual shapes when nobody gives it symbols or hand-wired rules?
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 4 (1958):</strong> Logic Theorist could prove theorems when handed clean symbolic formulas. Two years later, Frank Rosenblatt asked: how does a living brain learn to recognize messy visual shapes when nobody gives it symbols or hand-wired rules?</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 4: 1958 FRANK ROSENBLATT -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p4-1958">
-          <div class="origin-card__badge">Chapter 4 of 12 · 1958 · Frank Rosenblatt</div>
+        <section class="band" id="p4-1958">
+    <div class="wrap">
+      <p class="note">Chapter 4 of 12 · 1958 · Frank Rosenblatt</p>
           <h2>The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain</h2>
           <p class="lede"><strong>How a randomly wired bundle of nerve fibers learns to recognize shapes from experience—and how a "parasitic" zero-sum rule keeps a rare class from being bullied by a common one.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · The Parasitic Pool That Refused to Be Bullied</span>
-            <p>Frank Rosenblatt knew that no baby is born with a blueprint soldering every eye cell to a tidy logic gate. Instead, a baby's visual cortex starts as a <strong>random tangle of nerve fibers</strong> (`S → A → R`), and the brain learns by turning up the volume (`V_i`) on fibers that fire when a shape appears.</p>
+          <h3>The Story to Remember · The Parasitic Pool That Refused to Be Bullied</h3>
+      <p>Frank Rosenblatt knew that no baby is born with a blueprint soldering every eye cell to a tidy logic gate. Instead, a baby's visual cortex starts as a <strong>random tangle of nerve fibers</strong> (`S → A → R`), and the brain learns by turning up the volume (`V_i`) on fibers that fire when a shape appears.</p>
             <p>But Rosenblatt hit a dangerous trap: what if a child sees <strong>3 times as many</strong> dogs as cats? In a naive learner (`α-system`), every dog adds +1 to the dog fibers, so after a thousand animals the dog weights are so huge they shout over everything else. Rosenblatt solved this with his <strong>parasitic zero-sum rule (`γ-system`)</strong>: whenever active fibers gain weight, they must steal that exact weight from the silent fibers in their pool so the total weight stays zero (`∑ V_i = 0`). As long as members of the same class share more fibers with each other than with strangers (`P_c11 > P_a > P_c12`), the minority class is never bullied!</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Rosenblatt 1958 S-A-R Perceptron architecture and the page 400 inequality Pc11 > Pa > Pc12 under 3:1 class imbalance.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1958 · THE PERCEPTRON (S → A → R) &amp; THE PAGE 400 ZERO-SUM INEQUALITY</text>
@@ -389,37 +354,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Spontaneous unsupervised learning without a teacher (page 404)</dt>
-              <dd>When we let the Perceptron reinforce whichever response happens to win on each trial—with zero teacher labels—adding proportional weight decay (<code>δ = 0.03</code>) kept one response from conquering both classes and spontaneously separated two disjoint pattern families with <strong><code>100.0%</code> accuracy</strong> (vs <code>50.0%</code> without decay).</dd>
-            </div>
-            <div>
-              <dt>2 · Why inhibition flattens flash-blindness by 10.3×</dt>
-              <dd>Reproducing Figure 4c showed that balancing excitatory and inhibitory retina wires (<code>x = 5, y = 5</code>) flattens the variation in <code>A</code>-unit activity across small and large shapes by <strong><code>10.3×</code></strong>.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Spontaneous unsupervised learning without a teacher (page 404).</strong> When we let the Perceptron reinforce whichever response happens to win on each trial—with zero teacher labels—adding proportional weight decay (<code>δ = 0.03</code>) kept one response from conquering both classes and spontaneously separated two disjoint pattern families with <strong><code>100.0%</code> accuracy</strong> (vs <code>50.0%</code> without decay).</p>
+      <p><strong>2 · Why inhibition flattens flash-blindness by 10.3×.</strong> Reproducing Figure 4c showed that balancing excitatory and inhibitory retina wires (<code>x = 5, y = 5</code>) flattens the variation in <code>A</code>-unit activity across small and large shapes by <strong><code>10.3×</code></strong>.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 5 (1969):</strong> Rosenblatt showed that local random features can learn concrete shapes, but falter on relational questions. Eleven years later, Marvin Minsky and Seymour Papert proved the exact mathematical laws governing what a single layer of local features can and cannot see.
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 5 (1969):</strong> Rosenblatt showed that local random features can learn concrete shapes, but falter on relational questions. Eleven years later, Marvin Minsky and Seymour Papert proved the exact mathematical laws governing what a single layer of local features can and cannot see.</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 5: 1969 MINSKY & PAPERT -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p5-1969">
-          <div class="origin-card__badge">Chapter 5 of 12 · 1969 · Marvin Minsky &amp; Seymour Papert</div>
+        <section class="band" id="p5-1969">
+    <div class="wrap">
+      <p class="note">Chapter 5 of 12 · 1969 · Marvin Minsky &amp; Seymour Papert</p>
           <h2>Perceptrons: An Introduction to Computational Geometry</h2>
           <p class="lede"><strong>Why a committee of observers looking through tiny pinholes can count exact pixel totals—yet can never tell if a maze is connected, or if the number of dots is odd or even.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · The Pinhole Committee vs the Ant with Two Pebbles</span>
-            <p>Imagine a giant black-and-white drawing of a spiral maze on a wall. We hire a thousand tiny observers to vote on whether the maze is <strong>one connected path</strong> or <strong>two separate paths</strong>. There is only one rule: each observer is only allowed to peek through a straw at <strong>2 or 3 pixels at a time</strong> (`order-2` or `order-3`), and then they all drop weighted votes into a ballot box.</p>
+          <h3>The Story to Remember · The Pinhole Committee vs the Ant with Two Pebbles</h3>
+      <p>Imagine a giant black-and-white drawing of a spiral maze on a wall. We hire a thousand tiny observers to vote on whether the maze is <strong>one connected path</strong> or <strong>two separate paths</strong>. There is only one rule: each observer is only allowed to peek through a straw at <strong>2 or 3 pixels at a time</strong> (`order-2` or `order-3`), and then they all drop weighted votes into a ballot box.</p>
             <p>Minsky and Papert proved mathematically that <strong>no matter how clever the weights are, the pinhole committee will always fail!</strong> Why? Because locally, a 1-spiral and a 2-spiral have the exact same pieces; connectivity is a global property. Meanwhile, a single ant walking along the wall with just <strong>two pebbles in its pocket</strong> (`2 pointers` in memory) can trace the loop and answer with 100% certainty. Even better: when we tested a modern GitHub repo that claimed a simple perceptron solved Minsky &amp; Papert's spirals, we caught the repo accidentally cheating—it had erased two outer legs of the 1-spiral (`652` vs `804` pixels), letting the perceptron guess by counting total ink!</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Minsky and Papert 1969 One-in-a-Box order-2 collision (3,3,0) vs (4,1,1), Parity weight explosion, and the spiral area shortcut.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1969 · COMPUTATIONAL GEOMETRY: THE ONE-IN-A-BOX COLLISION &amp; THE SPIRAL AREA TRAP</text>
@@ -467,37 +422,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Exact counting has order 2 for every M (1,792/1,792 verified)</dt>
-              <dd>Even though Parity requires inspecting the whole retina, telling whether an image has <em>exactly</em> <code>M</code> active pixels (<code>[|X| = M]</code>) has <strong>order 2 for every <code>M</code></strong> because <code>M − (|X| − M)²</code> only uses 1-pixel and 2-pixel masks.</dd>
-            </div>
-            <div>
-              <dt>2 · Zero diameter-limited perceptrons can bridge a cut (0/308)</dt>
-              <dd>Across all 308 valid top/bottom bridge combinations on a bar graph, <code>0/308</code> can be represented by a sum of diameter-limited top-only and bottom-only features.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Exact counting has order 2 for every M (1,792/1,792 verified).</strong> Even though Parity requires inspecting the whole retina, telling whether an image has <em>exactly</em> <code>M</code> active pixels (<code>[|X| = M]</code>) has <strong>order 2 for every <code>M</code></strong> because <code>M − (|X| − M)²</code> only uses 1-pixel and 2-pixel masks.</p>
+      <p><strong>2 · Zero diameter-limited perceptrons can bridge a cut (0/308).</strong> Across all 308 valid top/bottom bridge combinations on a bar graph, <code>0/308</code> can be represented by a sum of diameter-limited top-only and bottom-only features.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 6 (1982):</strong> Minsky and Papert proved that a single feed-forward layer of fixed local features hits a hard geometric wall. To go beyond that wall, networks needed either collective recurrent energy valleys (Hopfield, 1982) or a way to train multi-layer hidden features (Backpropagation, 1986).
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 6 (1982):</strong> Minsky and Papert proved that a single feed-forward layer of fixed local features hits a hard geometric wall. To go beyond that wall, networks needed either collective recurrent energy valleys (Hopfield, 1982) or a way to train multi-layer hidden features (Backpropagation, 1986).</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 6: 1982 JOHN HOPFIELD -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p6-1982">
-          <div class="origin-card__badge">Chapter 6 of 12 · 1982 · John J. Hopfield</div>
+        <section class="band" id="p6-1982">
+    <div class="wrap">
+      <p class="note">Chapter 6 of 12 · 1982 · John J. Hopfield</p>
           <h2>Neural networks and physical systems with emergent collective computational abilities</h2>
           <p class="lede"><strong>How making synapses two-way and symmetric turns a recurrent network into a landscape of valleys—where a marble dropped on a noisy clue rolls straight into the clean memory.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · The Marble Rolling into the Memory Valley</span>
-            <p>In a standard computer, if we want to look up a file, we have to know its exact numerical address (`0x7F04`). Our own memory does not work like that: if we hear three notes of a childhood song or see a blurry half-shadow of a friend's face, the whole memory snaps back into focus. How does a messy web of neurons do that without oscillating out of control?</p>
+          <h3>The Story to Remember · The Marble Rolling into the Memory Valley</h3>
+      <p>In a standard computer, if we want to look up a file, we have to know its exact numerical address (`0x7F04`). Our own memory does not work like that: if we hear three notes of a childhood song or see a blurry half-shadow of a friend's face, the whole memory snaps back into focus. How does a messy web of neurons do that without oscillating out of control?</p>
             <p>Physicist John Hopfield noticed that in magnetic materials, when two atoms pull on each other with <strong>equal symmetric strength</strong> (<code>T_ij = T_ji</code>), the system does not spin in circles—it settles downhill into a low-energy valley. By wiring symmetric synapses and letting neurons flip <strong>one at a time</strong>, every stored memory becomes a valley in an Energy landscape. Drop a corrupted clue on the hillside, and the marble rolls downhill (`0` uphill steps out of `7,162` flips) until the whole memory is restored—unless every neuron jumps at the exact same instant, which traps `98.5%` of runs on a seesaw!</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Hopfield 1982 Energy landscape valleys, asynchronous 0/7162 uphill steps vs synchronous 197/200 oscillations, and bipolar 2x capacity.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1982 · COLLECTIVE ASSOCIATIVE MEMORY: ENERGY VALLEYS, ASYNCHRONOUS FLIPS &amp; CAPACITY</text>
@@ -546,37 +491,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Attraction basins (N=30, n=5) and valley merging when memories are too close (N=100)</dt>
-              <dd>Starting from a cue with <code>12</code> flipped bits out of 30, the network still falls back into the exact memory <strong><code>20.8%</code></strong> of the time (matching Hopfield's reported <code>0.2</code>). When two 100-bit memories differ by only 10 bits, their two valleys fuse into a single combined valley (<code>47.5%</code> merged).</dd>
-            </div>
-            <div>
-              <dt>2 · Why `torch.sign(0.0) == 0.0` breaks naïve PyTorch Hopfield reproductions</dt>
-              <dd>Auditing `pauljmello/Hopfield-Networks` exposed a classic bug: `torch.sign(0.0)` returns `0.0` (a third non-binary state!) instead of keeping the previous state on zero-field ties.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Attraction basins (N=30, n=5) and valley merging when memories are too close (N=100).</strong> Starting from a cue with <code>12</code> flipped bits out of 30, the network still falls back into the exact memory <strong><code>20.8%</code></strong> of the time (matching Hopfield's reported <code>0.2</code>). When two 100-bit memories differ by only 10 bits, their two valleys fuse into a single combined valley (<code>47.5%</code> merged).</p>
+      <p><strong>2 · Why `torch.sign(0.0) == 0.0` breaks naïve PyTorch Hopfield reproductions.</strong> Auditing `pauljmello/Hopfield-Networks` exposed a classic bug: `torch.sign(0.0)` returns `0.0` (a third non-binary state!) instead of keeping the previous state on zero-field ties.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 7 (1986):</strong> Hopfield showed how smooth energy landscapes guide collective networks. Four years later, Rumelhart, Hinton, and Williams used smooth derivatives to solve the problem that had been stuck since 1969: training deep hidden layers.
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 7 (1986):</strong> Hopfield showed how smooth energy landscapes guide collective networks. Four years later, Rumelhart, Hinton, and Williams used smooth derivatives to solve the problem that had been stuck since 1969: training deep hidden layers.</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 7: 1986 RUMELHART, HINTON & WILLIAMS -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p7-1986">
-          <div class="origin-card__badge">Chapter 7 of 12 · 1986 · David E. Rumelhart, Geoffrey E. Hinton &amp; Ronald J. Williams</div>
+        <section class="band" id="p7-1986">
+    <div class="wrap">
+      <p class="note">Chapter 7 of 12 · 1986 · David E. Rumelhart, Geoffrey E. Hinton &amp; Ronald J. Williams</p>
           <h2>Learning representations by back-propagating errors</h2>
           <p class="lede"><strong>How smoothing hard 0/1 switches into gentle S-curves let error signals whisper backward through deep layers—so hidden neurons could invent their own abacus counters and mirror balances.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · Two Twin Detectives on a Seesaw and the Secret Abacus</span>
-            <p>Why couldn't anyone train a middle layer of "hidden" neurons in 1969? Because when a neuron is a hard on/off light switch, nudging a weight a tiny bit does nothing at all until it suddenly flips—so an interior neuron has no idea whether nudging its weight helps or hurts the final answer.</p>
+          <h3>The Story to Remember · Two Twin Detectives on a Seesaw and the Secret Abacus</h3>
+      <p>Why couldn't anyone train a middle layer of "hidden" neurons in 1969? Because when a neuron is a hard on/off light switch, nudging a weight a tiny bit does nothing at all until it suddenly flips—so an interior neuron has no idea whether nudging its weight helps or hurts the final answer.</p>
             <p>Rumelhart, Hinton, and Williams replaced the hard switch with a smooth, rounded S-curve (`sigmoid`). Now every neuron has a slope (`o(1 − o)`), so the output layer can whisper backward to each hidden neuron: <em>"Here is exactly how much your nudge changes my mistake."</em> Only one rule: <strong>never give twin hidden neurons the exact same starting weights</strong>, or they will hear the exact same whisper and march in lockstep forever like one neuron! Once started with tiny random weights, we watched 4 hidden neurons invent a <strong>4-bead thermometer abacus</strong> (`1111 → 1011 → 1010 → 0010 → 0000`) to solve Minsky &amp; Papert's Parity problem, and watched just <strong>2 hidden neurons</strong> solve 6-bit Mirror Symmetry by placing weights in a `1 : 2 : 4` balance beam!</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Rumelhart Hinton Williams 1986 Backpropagation 4-bit parity thermometer abacus, 6-bit mirror symmetry 1:2:4 balance, and Order-3 T-C receptive field.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1986 · BACKPROPAGATION: INVENTING THE PARITY ABACUS, THE 1:2:4 MIRROR &amp; THE T–C KERNEL</text>
@@ -625,37 +560,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Equal-weight twins stay locked forever (`w = 0.00` or `w = 0.25`)</dt>
-              <dd>Initializing both hidden units of an <code>XOR</code> network to <code>w = 0.25</code> kept <code>max |w_h0 − w_h1| = 0.00e+00</code> across 500 sweeps: both hidden units moved, but moved in exact lockstep as a single threshold unit that stalled at <code>3/4</code> accuracy (`E = 0.3419`).</dd>
-            </div>
-            <div>
-              <dt>2 · Why `{0.1, 0.9}` targets beat `{0.0, 1.0}` on the 8–3–8 Bottleneck Encoder (page 9)</dt>
-              <dd>Because 7 of the 8 outputs are `0` for every one-hot input, training with literal `{0.0, 1.0}` targets pushes the sigmoids into their flat tails where `o(1 − o) → 0` and stalls at `4/8`; using the paper's page 9 `{0.1, 0.9}` targets immediately converged to <strong><code>8/8 (100%)</code></strong>.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Equal-weight twins stay locked forever (`w = 0.00` or `w = 0.25`).</strong> Initializing both hidden units of an <code>XOR</code> network to <code>w = 0.25</code> kept <code>max |w_h0 − w_h1| = 0.00e+00</code> across 500 sweeps: both hidden units moved, but moved in exact lockstep as a single threshold unit that stalled at <code>3/4</code> accuracy (`E = 0.3419`).</p>
+      <p><strong>2 · Why `{0.1, 0.9}` targets beat `{0.0, 1.0}` on the 8–3–8 Bottleneck Encoder (page 9).</strong> Because 7 of the 8 outputs are `0` for every one-hot input, training with literal `{0.0, 1.0}` targets pushes the sigmoids into their flat tails where `o(1 − o) → 0` and stalls at `4/8`; using the paper's page 9 `{0.1, 0.9}` targets immediately converged to <strong><code>8/8 (100%)</code></strong>.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 8 (1988):</strong> Backpropagation solved credit assignment across layers when a teacher gives us the answer immediately. Two years later, Richard Sutton asked: how do we assign credit across <em>time</em> when the outcome only arrives at the end of a long journey?
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 8 (1988):</strong> Backpropagation solved credit assignment across layers when a teacher gives us the answer immediately. Two years later, Richard Sutton asked: how do we assign credit across <em>time</em> when the outcome only arrives at the end of a long journey?</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 8: 1988 RICHARD SUTTON -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p8-1988">
-          <div class="origin-card__badge">Chapter 8 of 12 · 1988 · Richard S. Sutton</div>
+        <section class="band" id="p8-1988">
+    <div class="wrap">
+      <p class="note">Chapter 8 of 12 · 1988 · Richard S. Sutton</p>
           <h2>Learning to Predict by the Methods of Temporal Differences</h2>
           <p class="lede"><strong>Why updating today's prediction toward tomorrow's prediction beats waiting for Saturday's weather—and how a lucky fluke fools supervised learning.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · The Lucky Fluke That Fooled the Teacher</span>
-            <p>Imagine we are learning to play backgammon. We already know from nine painful games that a certain board position—call it <strong>"Bad"</strong>—loses <strong>90% of the time</strong> (9 losses, 1 lucky win). Now, in game 10, we try a brand-new opening move (<strong>"Novel"</strong>), it immediately lands us straight into that same <strong>"Bad"</strong> position—and then by a 1-in-10 miracle roll of the dice, we end up winning the game!</p>
+          <h3>The Story to Remember · The Lucky Fluke That Fooled the Teacher</h3>
+      <p>Imagine we are learning to play backgammon. We already know from nine painful games that a certain board position—call it <strong>"Bad"</strong>—loses <strong>90% of the time</strong> (9 losses, 1 lucky win). Now, in game 10, we try a brand-new opening move (<strong>"Novel"</strong>), it immediately lands us straight into that same <strong>"Bad"</strong> position—and then by a 1-in-10 miracle roll of the dice, we end up winning the game!</p>
             <p>How good is the <strong>"Novel"</strong> opening move? A traditional supervised learner (`TD(1)` / Widrow–Hoff) only pairs each state with the final game result (`Novel → Win`), so it concludes that <strong>`Novel` is a 100% winning move</strong> (an error of 90 percentage points!). Richard Sutton's <strong>Temporal-Difference learner (`TD(0)`)</strong> instead updates each state toward the <em>very next state it steps into</em> (`Novel → Bad`). Because it already knows `Bad` only wins 10% of the time, it immediately concludes `Novel` is a **10% move**—wiping out all the random dice noise that happened after `Bad`!</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Sutton 1988 Novel-to-Bad-to-Win game example, Theorem 3 maximum-likelihood random walk convergence, and Figure 3/5 TD(lambda) curves.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1988 · TEMPORAL-DIFFERENCE LEARNING: THE FLUKE GAME &amp; RANDOM-WALK OPTIMALITY</text>
@@ -710,37 +635,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · The 1988 Figure 3 printing mix-up (and two bugs in modern GitHub reproductions)</dt>
-              <dd>Reading Sutton's PDF alongside its page 377 Erratum showed that in the original 1988 journal issue (p. 20), the publisher accidentally printed the Figure 5 graph as Figure 3! Auditing open-source reproductions also uncovered a classic Python list-aliasing bug (`training = num_sets * [seq_per_set * [None]]` in `vjp23/TD_Lambda`, which made all 100 training sets identical copies of the last set).</dd>
-            </div>
-            <div>
-              <dt>2 · Cumulative step-count prediction (Section 5.1, `[5, 8, 9, 8, 5]`)</dt>
-              <dd>By setting step cost `c_{t+1} = 1` and terminal value `P_{m+1} = 0` (page 34), cumulative `TD(0)` learned the exact expected number of steps to exit the random walk (`[4.91, 7.90, 8.92, 7.95, 4.76]` vs analytical `[5, 8, 9, 8, 5]`).</dd>
-            </div>
-          </dl>
+          <p><strong>1 · The 1988 Figure 3 printing mix-up (and two bugs in modern GitHub reproductions).</strong> Reading Sutton's PDF alongside its page 377 Erratum showed that in the original 1988 journal issue (p. 20), the publisher accidentally printed the Figure 5 graph as Figure 3! Auditing open-source reproductions also uncovered a classic Python list-aliasing bug (`training = num_sets * [seq_per_set * [None]]` in `vjp23/TD_Lambda`, which made all 100 training sets identical copies of the last set).</p>
+      <p><strong>2 · Cumulative step-count prediction (Section 5.1, `[5, 8, 9, 8, 5]`).</strong> By setting step cost `c_{t+1} = 1` and terminal value `P_{m+1} = 0` (page 34), cumulative `TD(0)` learned the exact expected number of steps to exit the random walk (`[4.91, 7.90, 8.92, 7.95, 4.76]` vs analytical `[5, 8, 9, 8, 5]`).</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 9 (1998):</strong> Sutton showed how credit can flow across steps of a sequence. Ten years later, Yann LeCun, Léon Bottou, Yoshua Bengio, and Patrick Haffner combined convolutional feature maps (`LeNet-5`) with dynamic-programming graphs (`GTNs`) to read millions of real bank checks end to end.
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 9 (1998):</strong> Sutton showed how credit can flow across steps of a sequence. Ten years later, Yann LeCun, Léon Bottou, Yoshua Bengio, and Patrick Haffner combined convolutional feature maps (`LeNet-5`) with dynamic-programming graphs (`GTNs`) to read millions of real bank checks end to end.</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 9: 1998 LECUN, BOTTOU, BENGIO & HAFFNER -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p9-1998">
-          <div class="origin-card__badge">Chapter 9 of 12 · 1998 · Yann LeCun, Léon Bottou, Yoshua Bengio &amp; Patrick Haffner</div>
+        <section class="band" id="p9-1998">
+    <div class="wrap">
+      <p class="note">Chapter 9 of 12 · 1998 · Yann LeCun, Léon Bottou, Yoshua Bengio &amp; Patrick Haffner</p>
           <h2>Gradient-Based Learning Applied to Document Recognition</h2>
           <p class="lede"><strong>How LeNet-5 (60,000 shared weights driving 340,908 connections) and Graph Transformer Networks read millions of bank checks a day—without ever needing us to label where one digit ends and the next begins.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · Reading Handwritten Bank Checks Without Trusting Scissors</span>
-            <p>Imagine trying to build a machine in the 1990s to read handwritten dollar amounts on bank checks. If a single digit sits neatly inside a box, a Convolutional Neural Network (<strong>LeNet-5</strong>) can read it with `99.2%` accuracy. But on a real check, people scribble digits that touch each other! If we try to cut a handwritten `"4"` or `"8"` in half with heuristic scissors before reading it, the right half of a `"4"` looks just like a `"1"`, and the right half of an `"8"` looks just like a `"3"`.</p>
+          <h3>The Story to Remember · Reading Handwritten Bank Checks Without Trusting Scissors</h3>
+      <p>Imagine trying to build a machine in the 1990s to read handwritten dollar amounts on bank checks. If a single digit sits neatly inside a box, a Convolutional Neural Network (<strong>LeNet-5</strong>) can read it with `99.2%` accuracy. But on a real check, people scribble digits that touch each other! If we try to cut a handwritten `"4"` or `"8"` in half with heuristic scissors before reading it, the right half of a `"4"` looks just like a `"1"`, and the right half of an `"8"` looks just like a `"3"`.</p>
             <p>LeCun, Bottou, Bengio, and Haffner solved this in two ways. First, we can slide the convolutional network across the whole check without cutting at all (a <strong>Space-Displacement Neural Network</strong>, sharing intermediate feature maps to save `4.43×` compute). Second, if we do propose candidate scissor cuts, we keep <em>every</em> possible cut inside a directed web of paths (a <strong>Graph Transformer Network</strong>) and train the entire check reader from the whole check amount using <strong>Discriminative Forward Loss</strong>—pushing down the cost of all valid paths that spell the right amount while pushing up every wrong path so half-digit fragments price themselves out!</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of LeCun et al 1998 LeNet-5 exact 60,000 parameter bi-pyramid, RBF collapse vs MAP loss, and GTN Discriminative Forward graph training.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">1998 · LENET-5 (60,000 PARAMS / 340,908 CONNS), SDNN &amp; GRAPH TRANSFORMER NETWORKS</text>
@@ -795,37 +710,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Why all 4 GitHub LeNet-5 repos missed the paper's exact 60,000 parameter count</dt>
-              <dd>Every repository we inspected either omitted the trainable scale and bias in `S2`/`S4` (`44` params), used a dense `S2→C3` layer (`60,856` params in `pop123-ux`), multiplied `C3`'s bias by fan-in inside a channel loop (`jmlee8939`), or used a 30-kernel `C3` table (`VTongTV`). Building the exact 1998 spec landed on <strong><code>60,000</code> parameters and <code>340,908</code> connections</strong> on the first try.</dd>
-            </div>
-            <div>
-              <dt>2 · Combining parallel segmentations with `logadd` (Section VI-C, page 25)</dt>
-              <dd>When two different segmentations spell the same answer `(3, 4)` with penalty `2.20` each while a wrong path spells `(8,)` with penalty `1.80`, Viterbi picks the wrong single path (`1.80 < 2.20`), whereas the Forward Scorer combines the two `(3, 4)` paths via `2.20 − ln 2 = 1.5069 < 1.80` and selects the right answer.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Why all 4 GitHub LeNet-5 repos missed the paper's exact 60,000 parameter count.</strong> Every repository we inspected either omitted the trainable scale and bias in `S2`/`S4` (`44` params), used a dense `S2→C3` layer (`60,856` params in `pop123-ux`), multiplied `C3`'s bias by fan-in inside a channel loop (`jmlee8939`), or used a 30-kernel `C3` table (`VTongTV`). Building the exact 1998 spec landed on <strong><code>60,000</code> parameters and <code>340,908</code> connections</strong> on the first try.</p>
+      <p><strong>2 · Combining parallel segmentations with `logadd` (Section VI-C, page 25).</strong> When two different segmentations spell the same answer `(3, 4)` with penalty `2.20` each while a wrong path spells `(8,)` with penalty `1.80`, Viterbi picks the wrong single path (`1.80 < 2.20`), whereas the Forward Scorer combines the two `(3, 4)` paths via `2.20 − ln 2 = 1.5069 < 1.80` and selects the right answer.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 10 (2012):</strong> LeNet-5 had `60,000` parameters and read `32×32` grayscale digits. Fourteen years later, Krizhevsky, Sutskever, and Hinton scaled that exact convolutional blueprint by **1,000× in parameters** (`60.97M`) to classify 1.2 million high-resolution color photographs on two GPUs.
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 10 (2012):</strong> LeNet-5 had `60,000` parameters and read `32×32` grayscale digits. Fourteen years later, Krizhevsky, Sutskever, and Hinton scaled that exact convolutional blueprint by **1,000× in parameters** (`60.97M`) to classify 1.2 million high-resolution color photographs on two GPUs.</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 10: 2012 KRIZHEVSKY, SUTSKEVER & HINTON -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p10-2012">
-          <div class="origin-card__badge">Chapter 10 of 12 · 2012 · Alex Krizhevsky, Ilya Sutskever &amp; Geoffrey E. Hinton</div>
+        <section class="band" id="p10-2012">
+    <div class="wrap">
+      <p class="note">Chapter 10 of 12 · 2012 · Alex Krizhevsky, Ilya Sutskever &amp; Geoffrey E. Hinton</p>
           <h2>ImageNet Classification with Deep Convolutional Neural Networks</h2>
           <p class="lede"><strong>How two 3GB gaming graphics cards, a simple one-way valve (`ReLU`), and `Dropout` turned deep convolutional networks into the engine of modern computer vision.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · Two Graphics Cards That Divided Up Shape and Color</span>
-            <p>In 2012, training a 60-million-parameter neural network on 1.2 million full-color ImageNet photographs was considered reckless: the model wouldn't even fit inside the 3 GB memory of a single NVIDIA GTX 580 graphics card! So Alex Krizhevsky split the network down the middle across <strong>two GPUs</strong>. To keep the two cards from spending all their time waiting on each other, he let them talk across the wire <em>only</em> at Layer 3 (`conv3`) and the final classifier (`fc6–fc8`). In Layers 2, 4, and 5, each GPU worked purely on its own half of the channels.</p>
+          <h3>The Story to Remember · Two Graphics Cards That Divided Up Shape and Color</h3>
+      <p>In 2012, training a 60-million-parameter neural network on 1.2 million full-color ImageNet photographs was considered reckless: the model wouldn't even fit inside the 3 GB memory of a single NVIDIA GTX 580 graphics card! So Alex Krizhevsky split the network down the middle across <strong>two GPUs</strong>. To keep the two cards from spending all their time waiting on each other, he let them talk across the wire <em>only</em> at Layer 3 (`conv3`) and the final classifier (`fc6–fc8`). In Layers 2, 4, and 5, each GPU worked purely on its own half of the channels.</p>
             <p>Something remarkable happened on every single training run (Figure 3): without anyone telling them to, <strong>GPU 1 spontaneously became a black-and-white edge and texture specialist</strong>, while <strong>GPU 2 became a color-blob specialist</strong>! Combined with swapping saturating `tanh` curves for a one-way valve (`ReLU(x) = max(0, x)`, which trained `6×–7.8×` faster) and randomly blanking out half the classifier neurons on every step (`Dropout`), AlexNet slashed the ImageNet error rate from `26.2%` to **`15.3%`** overnight.</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Krizhevsky Sutskever Hinton 2012 two-GPU split-stream AlexNet, 3.83% conv params doing 91.91% of MACs, ReLU 7.8x speedup, and Figure 2 caption audit.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">2012 · ALEXNET: TWO-GPU SPLIT STREAMS, THE CONV vs FC PARADOX &amp; 7.8× RELU SPEEDUP</text>
@@ -880,37 +785,27 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Why `torchvision.models.alexnet` is not the 2012 NIPS paper</dt>
-              <dd>`torchvision` implements Krizhevsky's 2014 single-stream variant (`64→192→384→256→256`, `61,100,840` params, no LRN). Building the authentic 2012 two-GPU architecture (`96→256→384→384→256`, `groups=2` in `conv2,4,5` + LRN) gives the exact **`60,965,224` parameters**, **`659,272` neurons**, and **`724,406,816` MACs**.</dd>
-            </div>
-            <div>
-              <dt>2 · How Krizhevsky's original `cuda-convnet` configs (`layers-19pct.cfg`) explain the ReLU speedup</dt>
-              <dd>Reading Krizhevsky's original 2012 `cuda-convnet` source code showed that `pool2` and `pool3` use spatial **average pooling**: odd-symmetric `tanh(−z) = −tanh(z)` cancels positive and negative half-cycles of oriented gratings and saturates in its tails, whereas `ReLU` rectifies every half-cycle cleanly.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Why `torchvision.models.alexnet` is not the 2012 NIPS paper.</strong> `torchvision` implements Krizhevsky's 2014 single-stream variant (`64→192→384→256→256`, `61,100,840` params, no LRN). Building the authentic 2012 two-GPU architecture (`96→256→384→384→256`, `groups=2` in `conv2,4,5` + LRN) gives the exact **`60,965,224` parameters**, **`659,272` neurons**, and **`724,406,816` MACs**.</p>
+      <p><strong>2 · How Krizhevsky's original `cuda-convnet` configs (`layers-19pct.cfg`) explain the ReLU speedup.</strong> Reading Krizhevsky's original 2012 `cuda-convnet` source code showed that `pool2` and `pool3` use spatial **average pooling**: odd-symmetric `tanh(−z) = −tanh(z)` cancels positive and negative half-cycles of oriented gratings and saturates in its tails, whereas `ReLU` rectifies every half-cycle cleanly.</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 11 (2017):</strong> AlexNet proved that when a network can process an entire input in parallel on GPUs, scale unlocks extraordinary capability. Five years later, Vaswani and colleagues asked: why are language models still trudging through sentences one word after another like a 1990s bucket brigade?
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 11 (2017):</strong> AlexNet proved that when a network can process an entire input in parallel on GPUs, scale unlocks extraordinary capability. Five years later, Vaswani and colleagues asked: why are language models still trudging through sentences one word after another like a 1990s bucket brigade?</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 11: 2017 VASWANI ET AL. -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p11-2017">
-          <div class="origin-card__badge">Chapter 11 of 12 · 2017 · Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser &amp; Illia Polosukhin</div>
+        <section class="band" id="p11-2017">
+    <div class="wrap">
+      <p class="note">Chapter 11 of 12 · 2017 · Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser &amp; Illia Polosukhin</p>
           <h2>Attention Is All You Need</h2>
           <p class="lede"><strong>How replacing the word-by-word telephone game of recurrent networks with an open round table (`Self-Attention`), 8 parallel spotlights (`Multi-Head`), and a `1/√d_k` dimmer switch created the modern Transformer.</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · Replacing the Telephone Game with a Round Table and Eight Spotlights</span>
-            <p>Picture thirty people standing in a single-file line playing the telephone game. Person 1 whispers to Person 2, Person 2 whispers to Person 3, and so on down the line. That is how a Recurrent Neural Network (RNN) reads a 30-word sentence: Word 1 cannot talk to Word 30 without passing through 29 middlemen one step at a time (`O(n)` sequential steps), and nobody in the line can work in parallel.</p>
+          <h3>The Story to Remember · Replacing the Telephone Game with a Round Table and Eight Spotlights</h3>
+      <p>Picture thirty people standing in a single-file line playing the telephone game. Person 1 whispers to Person 2, Person 2 whispers to Person 3, and so on down the line. That is how a Recurrent Neural Network (RNN) reads a 30-word sentence: Word 1 cannot talk to Word 30 without passing through 29 middlemen one step at a time (`O(n)` sequential steps), and nobody in the line can work in parallel.</p>
             <p>In 2017, eight researchers at Google asked: <strong>what if we throw away the line altogether and seat every word around one open round table?</strong> Now any word (say, the pronoun <em>"its"</em> at position 9) can look straight across the table at <em>"The Law"</em> at position 2 in <strong>one step (`O(1)`)</strong>! To make the round table work, they needed three inventions: (1) a <strong>dimmer switch (`1/√d_k`)</strong> so high-dimensional dot products don't blind the softmax into a rigid 0-or-1 glare; (2) <strong>eight separate spotlights (`Multi-Head Attention`)</strong> so a word can look at grammar with one spotlight and meaning with another instead of averaging them into mud; and (3) a <strong>musical chord of sine and cosine waves (`Positional Encoding`)</strong> stamped onto each chair so everyone still knows who is sitting where!</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 300" role="img" aria-label="Diagram of Vaswani et al 2017 Transformer O(1) self-attention vs O(n) recurrence, 1/sqrt(d_k) softmax gradient stabilization, 782x Multi-Head subspace resolution, and unpublished Attention over Parameters.">
               <rect x="0" y="0" width="860" height="300" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.4">2017 · THE TRANSFORMER: O(1) ROUND-TABLE ATTENTION, 1/√d_k SCALING &amp; 8 SPOTLIGHTS</text>
@@ -972,38 +867,28 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Why omitting the causal mask passes training (100%) and fails in the real world (8.6%)</dt>
-              <dd>When we trained our Encoder-Decoder Transformer without the upper-triangular <code>−∞</code> causal mask in the decoder, it reached <strong><code>100.0%</code> accuracy during teacher-forced training</strong> (by secretly peeking at the next target token!) and then collapsed to <strong><code>8.6%</code></strong> when asked to generate sequences autoregressively on its own. With the causal mask in place, prefix leakage is <code>0.00e+00</code> and autoregressive accuracy is <strong><code>100.0%</code></strong>.</dd>
-            </div>
-            <div>
-              <dt>2 · Why `√d_model` embedding scaling is coupled to 3-way weight tying (Section 3.4)</dt>
-              <dd>Because the shared `V × d_model` weight matrix also acts as the pre-softmax linear layer, its weights must be initialized with fan-in `std = 1/√d_model`; multiplying token embedding lookups by `√d_model` brings their variance back to `1.0` so they match the `O(1)` sinusoidal positional encodings. When we used PyTorch's default `nn.Embedding` (`std = 1.0`) with `* √d_model`, the embeddings had variance `32` and drowned out word order (`14.6%`); fixing the fan-in std immediately jumped accuracy to **`100.0%`**!</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Why omitting the causal mask passes training (100%) and fails in the real world (8.6%).</strong> When we trained our Encoder-Decoder Transformer without the upper-triangular <code>−∞</code> causal mask in the decoder, it reached <strong><code>100.0%</code> accuracy during teacher-forced training</strong> (by secretly peeking at the next target token!) and then collapsed to <strong><code>8.6%</code></strong> when asked to generate sequences autoregressively on its own. With the causal mask in place, prefix leakage is <code>0.00e+00</code> and autoregressive accuracy is <strong><code>100.0%</code></strong>.</p>
+      <p><strong>2 · Why `√d_model` embedding scaling is coupled to 3-way weight tying (Section 3.4).</strong> Because the shared `V × d_model` weight matrix also acts as the pre-softmax linear layer, its weights must be initialized with fan-in `std = 1/√d_model`; multiplying token embedding lookups by `√d_model` brings their variance back to `1.0` so they match the `O(1)` sinusoidal positional encodings. When we used PyTorch's default `nn.Embedding` (`std = 1.0`) with `* √d_model`, the embeddings had variance `32` and drowned out word order (`14.6%`); fixing the fan-in std immediately jumped accuracy to **`100.0%`**!</p>
 
-          <div class="origin-bridge">
-            <strong>How this led to Chapter 12 (2026 · Clover AI):</strong> From 1943 to 2017, seventy-four years of invention built an extraordinary neural engine. Yet when we ran a modern multi-teraparameter model on its own—without tools, without a compiler, without an ontology, and without persistent memory—it solved less than half of our 70-task real-world suite (<code>33 / 70 = 47.1%</code>). The model is only one part of AI; what surrounds the model is what makes it intelligent.
-          </div>
-        </article>
+          <p><strong>How this led to Chapter 12 (2026 · Clover AI):</strong> From 1943 to 2017, seventy-four years of invention built an extraordinary neural engine. Yet when we ran a modern multi-teraparameter model on its own—without tools, without a compiler, without an ontology, and without persistent memory—it solved less than half of our 70-task real-world suite (<code>33 / 70 = 47.1%</code>). The model is only one part of AI; what surrounds the model is what makes it intelligent.</p>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- CHAPTER 12: 2026 CLOVER AI -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="p12-2026">
-          <div class="origin-card__badge">Chapter 12 of 12 · 2026 · Clover AI (v4)</div>
+        <section class="band" id="p12-2026">
+    <div class="wrap">
+      <p class="note">Chapter 12 of 12 · 2026 · Clover AI (v4)</p>
           <h2>The Model Is One Part of AI — What Surrounds It Makes It Intelligent</h2>
           <p class="lede"><strong>Why a raw neural model on its own solves only 47.1% (33 / 70) of our real-world benchmark suite—and how surrounding that exact same model with six governing, verifying, and remembering layers takes it to 100.0% (70 / 70).</strong></p>
 
-          <div class="origin-story-box">
-            <span class="origin-story-box__label">The Story to Remember · The Bare Engine Block Sitting on a Garage Floor</span>
-            <p>Every chapter from 1943 to 2017 worked to build a stronger <strong>neural engine</strong>: from threshold relays and Perceptrons to Backpropagation, Convolutional Networks, and the Transformer. By the 2020s, that engine had grown into multi-teraparameter Mixture-of-Experts models that speak so fluently the world mistook the <strong>model</strong> for the whole <strong>intelligence</strong>.</p>
+          <h3>The Story to Remember · The Bare Engine Block Sitting on a Garage Floor</h3>
+      <p>Every chapter from 1943 to 2017 worked to build a stronger <strong>neural engine</strong>: from threshold relays and Perceptrons to Backpropagation, Convolutional Networks, and the Transformer. By the 2020s, that engine had grown into multi-teraparameter Mixture-of-Experts models that speak so fluently the world mistook the <strong>model</strong> for the whole <strong>intelligence</strong>.</p>
             <p>Mistaking a raw model for intelligence is like mistaking a bare V12 engine block sitting on a garage floor for a roadworthy car. Run that bare engine on its own—with no steering wheel or brakes (<strong>Governance &amp; Boundaries</strong>), no road map of the domain's laws (<strong>Symbolic Ontology</strong>), no logbook of which bridges were washed out yesterday (<strong>Persistent Memory Graph</strong>), no calculator or search instrument (<strong>Live Tools</strong>), and no compiler checking whether the bolts fit before the wheels turn (<strong>Generative Compilation</strong>)—and it spins its wheels in place. It guesses arithmetic, writes code with unclosed brackets or invalid types, and states facts it never read as confidently as facts it did.</p>
             <p>We tested this directly on our <code>8 × NVIDIA RTX 3090</code> server across 70 standardized tasks. When we ran <strong>Clover's underlying model alone</strong> with its surrounding layers switched off, it passed only <strong><code>33 of 70</code> tasks (<code>47.14%</code>)</strong>. When we placed that <strong>exact same model in the middle</strong> and surrounded it with Clover's six outer layers, it passed <strong><code>70 of 70</code> tasks (<code>100.00%</code>)</strong> while cutting GPU compute per solved task in half (<code>234.0 → 114.5 GPU-seconds</code>).</p>
-          </div>
 
-          <figure class="origin-visual">
+          <figure class="diagram">
             <svg viewBox="0 0 860 360" role="img" aria-label="Diagram of 2026 Clover AI showing the Neural Model in the center surrounded by the 6 outer layers of intelligence, alongside the measured 33/70 to 57/70 to 70/70 benchmark progression.">
               <rect x="0" y="0" width="860" height="360" rx="10" fill="#ffffff"></rect>
               <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.3">2026 · CLOVER AI (v4): THE MODEL IN THE MIDDLE, SURROUNDED BY THE 6 LAYERS THAT MAKE IT INTELLIGENT</text>
@@ -1092,24 +977,11 @@
           </figure>
 
           <h3>What we built and saw firsthand</h3>
-          <dl class="stack">
-            <div>
-              <dt>1 · Isolating the model from its surrounding system proves where the intelligence lives</dt>
-              <dd>When we ran standalone frontier models (<strong>Claude Opus 5.5</strong> and <strong>GPT-6 Astra</strong>) on the 58 public tasks in our suite, they scored <code>98.3%</code> and <code>96.6%</code> in-weights, whereas Clover's local open-weights model on its own scored only <strong><code>51.7%</code> (<code>30/58</code>)</strong> on public tasks and <strong><code>47.1%</code> (<code>33/70</code>)</strong> overall. Yet on the 12 organization-specific Ontology and Memory tasks, even the largest frontier models could only score <code>58.3%–66.7%</code> because those records do not exist inside public pretraining weights. Surrounding Clover's local model with Layers 1–5 and 7 lifted it by <strong><code>+52.86 percentage points</code> (<code>33/70 → 70/70</code>)</strong> on the exact same hardware.</dd>
-            </div>
-            <div>
-              <dt>2 · Every one of the 11 foundational papers (1943–2017) lives inside the six surrounding layers</dt>
-              <dd>McCulloch &amp; Pitts's (1943) inhibitory veto and Minsky &amp; Papert's (1969) Order-<code>k</code> "One-in-a-Box" predicates eliminate all <code>16/16</code> out-of-domain retrieval false positives; Turing's (1950) symbolic stratification and Newell &amp; Simon's (1956) <code>CSm</code>/<code>VCt</code> filters prune 2-hop ontology search by <code>22.5×</code>; Rosenblatt's (1958) zero-sum <code>γ</code>-rule and Hopfield's (1982) bipolar attractors balance uneven memory branches; Rumelhart's (1986) non-saturated targets and Sutton's (1988) <code>TD(λ)</code> localize failing compiler statements; LeCun's (1998) GTN <code>logadd</code> aggregates parallel provenance paths; and Krizhevsky's (2012) LRN + Vaswani's (2017) multi-head subspaces unmix concept, measurement, and correction facets.</dd>
-            </div>
-          </dl>
+          <p><strong>1 · Isolating the model from its surrounding system proves where the intelligence lives.</strong> When we ran standalone frontier models (<strong>Claude Opus 5.5</strong> and <strong>GPT-6 Astra</strong>) on the 58 public tasks in our suite, they scored <code>98.3%</code> and <code>96.6%</code> in-weights, whereas Clover's local open-weights model on its own scored only <strong><code>51.7%</code> (<code>30/58</code>)</strong> on public tasks and <strong><code>47.1%</code> (<code>33/70</code>)</strong> overall. Yet on the 12 organization-specific Ontology and Memory tasks, even the largest frontier models could only score <code>58.3%–66.7%</code> because those records do not exist inside public pretraining weights. Surrounding Clover's local model with Layers 1–5 and 7 lifted it by <strong><code>+52.86 percentage points</code> (<code>33/70 → 70/70</code>)</strong> on the exact same hardware.</p>
+      <p><strong>2 · Every one of the 11 foundational papers (1943–2017) lives inside the six surrounding layers.</strong> McCulloch &amp; Pitts's (1943) inhibitory veto and Minsky &amp; Papert's (1969) Order-<code>k</code> "One-in-a-Box" predicates eliminate all <code>16/16</code> out-of-domain retrieval false positives; Turing's (1950) symbolic stratification and Newell &amp; Simon's (1956) <code>CSm</code>/<code>VCt</code> filters prune 2-hop ontology search by <code>22.5×</code>; Rosenblatt's (1958) zero-sum <code>γ</code>-rule and Hopfield's (1982) bipolar attractors balance uneven memory branches; Rumelhart's (1986) non-saturated targets and Sutton's (1988) <code>TD(λ)</code> localize failing compiler statements; LeCun's (1998) GTN <code>logadd</code> aggregates parallel provenance paths; and Krizhevsky's (2012) LRN + Vaswani's (2017) multi-head subspaces unmix concept, measurement, and correction facets.</p>
 
-          <div class="origin-bridge">
-            <strong>The Complete 83-Year Arc (1943 → 2026):</strong> Seventy-four years of research (1943–2017) taught us how to build a powerful neural model. Clover AI (2026) shows what happens next: putting that model at the center of a governed, tool-verifying, compiler-checked, symbolically grounded, and memory-accumulating cycle (<code>Context → Direction → Execution → Outcome → Growth</code>) where we remain accountable.
-          </div>
-        </article>
-
-      </div>
-    </div>
+          <p><strong>The Complete 83-Year Arc (1943 → 2026):</strong> Seventy-four years of research (1943–2017) taught us how to build a powerful neural model. Clover AI (2026) shows what happens next: putting that model at the center of a governed, tool-verifying, compiler-checked, symbolically grounded, and memory-accumulating cycle (<code>Context → Direction → Execution → Outcome → Growth</code>) where we remain accountable.</p>
+            </div>
   </section>
 
   <!-- ============ TIMELINE MAP ============ -->
@@ -1338,7 +1210,7 @@
   </div>
 </footer>
 
-<script src="../website-interaction-controllers.js?v=4.1.2&amp;r=2" defer></script>
+<script src="../website-interaction-controllers.js?v=4.1.2" defer></script>
 </body>
 </html>
 

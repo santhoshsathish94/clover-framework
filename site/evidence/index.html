@@ -71,21 +71,16 @@
     </div>
   </section>
 
-  <!-- ============ VERTICAL EVIDENCE STORYLINE (FIRST EVIDENCE TO CLOVER KIMI K3) ============ -->
-  <section class="band" id="cases" style="padding-top:1rem">
-    <div class="wrap">
-      <div class="storyline">
-
-        <!-- ================================================================ -->
+  <div id="cases"></div>
+<!-- ================================================================ -->
         <!-- EVIDENCE 1: CONTENTFUL API MIGRATION -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="ev-t1">
-          <div id="ev-p1"></div>
-          <div class="origin-card__badge">Evidence 1 of 5 · Production Case Study · API Migration</div>
+        <section class="band" id="ev-t1">
+    <div class="wrap">
+      <div id="ev-p1"></div>
+      <p class="note">Evidence 1 of 5 · Production Case Study · API Migration</p>
           <h2>Contentful API migration</h2>
-          <div class="panel__cols">
-            <div>
-              <p>A CMS content API rewritten from a GraphQL integration to REST, and from .NET 9 MVC to
+          <p>A CMS content API rewritten from a GraphQL integration to REST, and from .NET 9 MVC to
                 .NET 10 Minimal APIs, with every route, JSON shape, and response envelope preserved so no
                 consumer had to change.</p>
               <p>A manual rewrite was estimated at 8–10 weeks of team effort. With AI carrying most of the
@@ -95,9 +90,7 @@
                 the API gateway pointing at the new one, so <strong>QA validated the real site and signed
                 off</strong>. The production cutover has not run.</p>
               <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/01-contentful-migration.md">Read the case study →</a></p>
-            </div>
-            <div>
-              <p class="note">That day is implementation only. Testing and parity validation took roughly
+      <p class="note">That day is implementation only. Testing and parity validation took roughly
                 another day, and stakeholder agreement longer still, and the work was not continuous.
                 Comparing one day against a ten-week estimate that included analysis and coordination
                 would overstate it.</p>
@@ -105,62 +98,52 @@
                 deployed infrastructure. The gains came from the architecture rather than from AI.</p>
               <p class="note">What matters here is how much AI lowered the barrier to attempting the work
                 at all, rather than who wrote the code.</p>
-            </div>
-          </div>
           <figure class="diagram">
             <img src="../assets/case-study-01-contentful-migration.svg?v=4.1.2" alt="The migration as one Clover cycle. Context: 89 GraphQL files and 99 mappers. Direction: preserve every route and JSON shape. Execution: one generic mapper and 15 verifiable tasks gated by a live parity differ. Outcome: 36 of 36 endpoint cases and 239 tests, with QA signing off. Growth: the parity harness is what made byte-for-byte compatibility provable, and decoupling the wire contract from Contentful turns the next content-model change into a small edit. Implementation took about a day against an 8 to 10 week estimate, performance was measured locally only, and the production cutover has not run." loading="lazy" width="960" height="380">
           </figure>
-        </article>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- EVIDENCE 2: REACT SERVER COMPONENTS MEMORY LEAK -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="ev-t2">
-          <div id="ev-p2"></div>
-          <div class="origin-card__badge">Evidence 2 of 5 · Production Case Study · Upstream Root Cause</div>
+        <section class="band" id="ev-t2">
+    <div class="wrap">
+      <div id="ev-p2"></div>
+      <p class="note">Evidence 2 of 5 · Production Case Study · Upstream Root Cause</p>
           <h2>A React Server Components memory leak, traced upstream</h2>
-          <div class="panel__cols">
-            <div>
-              <p>A production application was crashing with out-of-memory errors. A blunt Node flag stopped
+          <p>A production application was crashing with out-of-memory errors. A blunt Node flag stopped
                 the growth and stabilized production, and it also stripped error-stack detail everywhere.
                 The mitigation was validated on a fleet running the same image: 113 restarts without the
                 flag, zero with it, over about six and a half hours.</p>
-            </div>
-            <div>
-              <p>The investigation continued past the workaround, traced the retention mechanism into
+      <p>The investigation continued past the workaround, traced the retention mechanism into
                 React's <code>react-server</code> renderer, and produced a one-file fix contributed
                 upstream so other applications need not carry the same workaround.</p>
-              <p class="case__status">Status: a CI-green pull request, <strong>not merged</strong>.</p>
+              <p>Status: a CI-green pull request, <strong>not merged</strong>.</p>
               <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/02-react-rsc-memory-leak.md">Read the case study →</a></p>
-            </div>
-          </div>
           <figure class="diagram">
             <img src="../assets/case-study-02-react-rsc-memory-leak.svg?v=4.1.2" alt="Five stages. Context: server memory grew without bound under sustained load. Direction: stabilize the incident with a Node stack-trace flag, then keep investigating past the workaround. Execution: find the cause in React's react-server renderer, where a cleanup Error retains the completed render's cache scope, and contribute a one-file fix upstream. Outcome: the fleet soak validated the mitigation rather than the patch, and the pull request is CI-green and not merged. Growth: a repeatable retained-heap harness turned it leaks into a provable before and after, and the layer where the symptom appeared was not the layer that owned it." loading="lazy" width="960" height="380">
           </figure>
-        </article>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- EVIDENCE 3: REFERENCE IMPLEMENTATIONS -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="ev-t3">
-          <div id="ev-p3"></div>
-          <div class="origin-card__badge">Evidence 3 of 5 · Reference Implementations · Organizational Systems</div>
+        <section class="band" id="ev-t3">
+    <div class="wrap">
+      <div id="ev-p3"></div>
+      <p class="note">Evidence 3 of 5 · Reference Implementations · Organizational Systems</p>
           <h2>Built and used against real organizational data</h2>
-          <div class="panel__cols">
-            <div>
-              <p>Cross-team knowledge access, production exception remediation, and multi-repository
+          <p>Cross-team knowledge access, production exception remediation, and multi-repository
                 defect remediation.</p>
               <p>Knowledge access has answered <strong>real production and support incidents</strong>,
                 including a data-synchronization failure that had survived an overnight investigation after
                 the owning team had gone.</p>
-            </div>
-            <div>
-              <p>The remediation patterns have run on real work through existing review and deployment
+      <p>The remediation patterns have run on real work through existing review and deployment
                 approvals. None is an always-on capability or adopted organization-wide, and each still
                 depends on a human providing the map and holding the approvals.</p>
               <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/reference-implementations.md">Read the reference implementations →</a></p>
-            </div>
-          </div>
           <figure class="diagram">
             <img src="../assets/reference-cross-team-knowledge-access.svg?v=4.1.2" alt="Cross-team knowledge access. Read-only access to repositories and documentation, logs and telemetry, datasources, and job definitions feeds an orchestration layer that reads across all of it at the asker's own privileges. A human asks what happened and why, and points at where to look first. The answer comes back with the files and logs it was drawn from. Growth: what each question establishes about where the knowledge actually lived goes back into Context, so the next question starts nearer the answer." loading="lazy" width="960" height="372">
             <figcaption>Cross-team knowledge access</figcaption>
@@ -169,13 +152,15 @@
             <img src="../assets/reference-production-exception-remediation.svg?v=4.1.2" alt="Production exception remediation. A recurring production exception, then reading the code across every repository plus the logs and the running application, then a proposal carrying the root cause, the exact scope, the tests and the signal to expect. A human approves before anything reaches production, and the ticket closes when the original signal is shown resolved. Growth: what the cycle established outlives the ticket, so a recurring exception is recognized rather than investigated again from nothing." loading="lazy" width="960" height="372">
             <figcaption>Production exception remediation</figcaption>
           </figure>
-        </article>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- EVIDENCE 4: FIVE FIELD LESSONS -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="lessons">
-          <div class="origin-card__badge">Evidence 4 of 5 · Field Lessons · What the Early Cycles Taught</div>
+        <section class="band" id="lessons">
+    <div class="wrap">
+      <p class="note">Evidence 4 of 5 · Field Lessons · What the Early Cycles Taught</p>
           <h2>Five lessons from running this on real work</h2>
           <p class="lede">These came out of the work above, including the parts that went badly. The
             evidence behind each one is software; the lesson is not.</p>
@@ -226,14 +211,16 @@
 
           <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/field-practices.md">Read the practices in full →</a>
             · <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/how-ai-fails.md">How AI fails, and which stage catches it →</a></p>
-        </article>
+            </div>
+  </section>
 
         <!-- ================================================================ -->
         <!-- EVIDENCE 5: CLOVER-KIMI-K3 (7-LAYER NEURO-SYMBOLIC SYSTEM) -->
         <!-- ================================================================ -->
-        <article class="origin-card storyline__item" id="clover-kimi-k3">
-          <div id="clover-k3"></div>
-          <div class="origin-card__badge">Evidence 5 of 5 · clover-kimi-k3 · 7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System (v4)</div>
+        <section class="band" id="clover-kimi-k3">
+    <div class="wrap">
+      <div id="clover-k3"></div>
+      <p class="note">Evidence 5 of 5 · clover-kimi-k3 · 7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System (v4)</p>
           <h2>clover-kimi-k3</h2>
           <p class="note">(7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System &mdash; Clover AI v4)</p>
           <p class="lede"><strong><code>clover-kimi-k3</code></strong> is a local open-weights AI system built under the Clover cycle
@@ -255,30 +242,10 @@
             (<code>56/58 = 96.6%</code> and <code>57/58 = 98.3%</code>), and only miss the private ontology and memory tasks
             whose records are not in their prompt. <code>clover-kimi-k3</code>&rsquo;s value is not a bigger raw model; it is the system around the model.</p>
 
-          <div class="stat-grid" aria-label="Headline measured metrics">
-            <div class="stat-card">
-              <div class="stat-card__num">47.1% &rarr; 100.0%</div>
-              <div class="stat-card__label">clover-kimi-k3 System Lift (70 Tasks)</div>
-              <div class="stat-card__note">Same underlying model on <code>8 &times; RTX 3090</code>: <strong>33/70 (47.1%)</strong> raw model alone &rarr; <strong>57/70 (81.4%)</strong> with Tools &amp; Compiler &rarr; <strong>70/70 (100.0%)</strong> with Ontology &amp; Memory (<strong>2.04&times;</strong> lower GPU-s/solved).</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card__num">96.6% &ndash; 98.3%</div>
-              <div class="stat-card__label">Frontier Models on Public Tasks</div>
-              <div class="stat-card__note">On the <strong>58 public tasks</strong> (zero tools), standalone <strong>Claude Opus 5.5</strong> scores <strong>57/58 (98.3%)</strong> and <strong>GPT-6 Astra</strong> scores <strong>56/58 (96.6%)</strong> vs. <strong>30/58 (51.7%)</strong> for <code>clover-kimi-k3</code>&rsquo;s raw model alone.</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card__num">95.22% &ndash; 95.29%</div>
-              <div class="stat-card__label">93-Layer GPU VRAM Hit Rate</div>
-              <div class="stat-card__note"><strong>148.5 K3 tok/s</strong> across all 93 GPU layers (<code>112.1 ms/layer</code>), <strong>0</strong> PCIe D2H writebacks on cold/warm reads, and <strong>8 Rust host crates</strong> verified bit-identical (<code>max_abs_diff = 0.0</code>).</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card__num">256K Context</div>
-              <div class="stat-card__label">Session &amp; Batch Capacity</div>
-              <div class="stat-card__note"><strong>262,144 Kimi K3 tokens</strong> per session; clubs up to <strong>8 concurrent sessions</strong> per GPU batch with <strong>0 cross-session token leakage</strong> and <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling.</div>
-            </div>
-          </div>
-
-          <div id="how-it-works" style="margin-top:2rem">
+          <p><strong>clover-kimi-k3 System Lift (70 Tasks) (47.1% &rarr; 100.0%):</strong> Same underlying model on <code>8 &times; RTX 3090</code>: <strong>33/70 (47.1%)</strong> raw model alone &rarr; <strong>57/70 (81.4%)</strong> with Tools &amp; Compiler &rarr; <strong>70/70 (100.0%)</strong> with Ontology &amp; Memory (<strong>2.04&times;</strong> lower GPU-s/solved).</p>
+      <p><strong>Frontier Models on Public Tasks (96.6% &ndash; 98.3%):</strong> On the <strong>58 public tasks</strong> (zero tools), standalone <strong>Claude Opus 5.5</strong> scores <strong>57/58 (98.3%)</strong> and <strong>GPT-6 Astra</strong> scores <strong>56/58 (96.6%)</strong> vs. <strong>30/58 (51.7%)</strong> for <code>clover-kimi-k3</code>&rsquo;s raw model alone.</p>
+      <p><strong>93-Layer GPU VRAM Hit Rate (95.22% &ndash; 95.29%):</strong> <strong>148.5 K3 tok/s</strong> across all 93 GPU layers (<code>112.1 ms/layer</code>), <strong>0</strong> PCIe D2H writebacks on cold/warm reads, and <strong>8 Rust host crates</strong> verified bit-identical (<code>max_abs_diff = 0.0</code>).</p>
+      <p><strong>Session &amp; Batch Capacity (256K Context):</strong> <strong>262,144 Kimi K3 tokens</strong> per session; clubs up to <strong>8 concurrent sessions</strong> per GPU batch with <strong>0 cross-session token leakage</strong> and <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling.</p><div id="how-it-works" style="margin-top:2rem">
             <h3>The seven layers of clover-kimi-k3</h3>
             <p>The model can propose; the system decides; the tools enforce; evidence verifies; humans remain accountable.
               <code>clover-kimi-k3</code> implements that principle across seven layers that run on one CPU workstation or an
@@ -622,7 +589,7 @@
           <div id="credit" style="margin-top:2.2rem">
             <h3>Credit</h3>
             <p><code>clover-kimi-k3</code> builds directly on the open weights, architectures, and published research of the teams below:</p>
-            <ul class="stack">
+            <ul>
               <li><strong>Moonshot AI &mdash; Kimi K3 (<a href="https://huggingface.co/moonshotai/Kimi-K3">moonshotai/Kimi-K3</a>).</strong>
                 The 2.78-trillion-parameter 93-layer Mixture-of-Experts model (69 KDA + 24 MLA attention layers, 896 routed
                 experts per layer, <code>d = 7,168</code>), the 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> vision tower,
@@ -706,11 +673,12 @@
               </div>
             </dl>
           </div>
-        </article>
+            </div>
+  </section>
 
-      </div>
-
-      <div class="actions" style="margin-top:2rem">
+  <section class="band">
+    <div class="wrap">
+      <div class="actions">
         <a class="btn btn--primary" href="../getting-started/">Try it on your own work</a>
         <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/tree/main/docs/case-studies">All case studies</a>
       </div>
