@@ -463,7 +463,14 @@ HTML_UI = """<!DOCTYPE html>
     </svg>
     Clover
   </div>
-  <div>
+  <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+    <label for="clover-model-select" style="font-size:0.75rem;font-weight:700;color:var(--muted);">MODEL</label>
+    <select id="clover-model-select" onchange="onModelSelectChange(this.value)" style="padding:0.28rem 0.55rem;border:1px solid var(--line-2);border-radius:999px;background:var(--soft);font:inherit;font-size:0.78rem;font-weight:600;color:var(--ink);">
+      <option value="nemotron-3.5-super-vl" selected>Nemotron 3.5 Super VL (Default &middot; ~2.1s C / ~4.6s CPU)</option>
+      <option value="lfm3-1.7b">Liquid LFM3-1.7B (Compact &middot; ~3.5s C / ~6.0s CPU)</option>
+      <option value="kimi-k3">Kimi K3 2.78T MoE (Deep &middot; ~9.1s Stage / ~138s CPU)</option>
+    </select>
+    <span id="clover-cpu-pill" style="font-size:0.75rem;font-weight:600;padding:0.25rem 0.6rem;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;" title="NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab): ~2.1s native C engine, ~4.6s with 11-level NCM, ~15-35s full CPU turn">CPU &middot; ~2.1s C / ~4.6s Stage (~15&ndash;35s Turn)</span>
     <button type="button" class="btn" onclick="toggleMemoryDrawer()" id="mem-drawer-btn" title="Inspect File-Based Memory Tree & Relational Knowledge Graph">Memory Graph</button>
   </div>
 </header>
@@ -535,6 +542,37 @@ const sessionListEl = document.getElementById('session-list');
 const voiceBtn = document.getElementById('voice-btn');
 
 const STORAGE_KEY = 'clover_k3_sessions_v2';
+const MODEL_STORAGE_KEY = 'clover_selected_model_v1';
+const MODEL_CPU_INFO = {
+  'nemotron-3.5-super-vl': {
+    pill: 'CPU · ~2.1s C / ~4.6s Stage (~15–35s Turn)',
+    tip: 'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Default): ~2.1s native C engine, ~4.6s with 11-level NCM, ~15–35s full CPU turn (1.74x faster than Kimi K3 on CPU)'
+  },
+  'lfm3-1.7b': {
+    pill: 'CPU · ~3.5s C / ~6.0s Stage (~15–35s Turn)',
+    tip: 'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn (1.31x faster than Kimi K3 on CPU)'
+  },
+  'kimi-k3': {
+    pill: 'CPU · ~9.1s Stage (~60–140s Turn on CPU)',
+    tip: 'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
+  }
+};
+let selectedModelKey = 'nemotron-3.5-super-vl';
+function onModelSelectChange(val) {
+  selectedModelKey = MODEL_CPU_INFO[val] ? val : 'nemotron-3.5-super-vl';
+  const selEl = document.getElementById('clover-model-select');
+  if (selEl && selEl.value !== selectedModelKey) selEl.value = selectedModelKey;
+  const pillEl = document.getElementById('clover-cpu-pill');
+  if (pillEl && MODEL_CPU_INFO[selectedModelKey]) {
+    pillEl.textContent = MODEL_CPU_INFO[selectedModelKey].pill;
+    pillEl.title = MODEL_CPU_INFO[selectedModelKey].tip;
+  }
+  try { localStorage.setItem(MODEL_STORAGE_KEY, selectedModelKey); } catch (e) {}
+}
+try {
+  const savedM = localStorage.getItem(MODEL_STORAGE_KEY);
+  if (savedM && MODEL_CPU_INFO[savedM]) onModelSelectChange(savedM);
+} catch (e) {}
 let sessionsMap = {};
 let sessionOrder = [];
 let sessionId = '';
@@ -1005,6 +1043,7 @@ async function sendPrompt() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         session_id: activeSid,
+        model: selectedModelKey,
         prompt: effectivePrompt,
         image_base64: imgData,
         attachments: filesPayload,
@@ -1150,7 +1189,7 @@ async function discardStaged(entryId) {
 
 
 class PendingTextRequest:
-    def __init__(self, session_id, prompt, hist_snapshot, cands, remember, display_prompt=None, attachments_meta=None, callable_fn=None):
+    def __init__(self, session_id, prompt, hist_snapshot, cands, remember, display_prompt=None, attachments_meta=None, callable_fn=None, model_key="nemotron-3.5-super-vl"):
         self.session_id = session_id
         self.prompt = prompt
         self.display_prompt = display_prompt if display_prompt is not None else prompt
@@ -1159,6 +1198,7 @@ class PendingTextRequest:
         self.cands = cands
         self.remember = remember
         self.callable_fn = callable_fn
+        self.model_key = model_key or "nemotron-3.5-super-vl"
         self.event = threading.Event()
         self.result = None
         self.error = None
@@ -1829,7 +1869,12 @@ class MultiGPUCloverCoordinator:
                     t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
                     t1 = time.perf_counter()
-                    text_mbr, ids_mbr, k3_expert_meta = eng.render_ncm_with_k3_experts(plans, cands=req.cands)
+                    req_model_key = getattr(req, "model_key", "nemotron-3.5-super-vl") or "nemotron-3.5-super-vl"
+                    alt_renderer = self._get_or_load_model_renderer(req_model_key) if req_model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b") else None
+                    if alt_renderer is not None:
+                        text_mbr, ids_mbr, k3_expert_meta = alt_renderer.render_plans_in_model_vocab(plans, cands=1)
+                    else:
+                        text_mbr, ids_mbr, k3_expert_meta = eng.render_ncm_with_k3_experts(plans, cands=req.cands)
                     if getattr(eng, "enable_ontology", False):
                         text_mbr = eng.symbolic_verifier.verify_source_grounding(req.display_prompt, text_mbr)
                     cuda_sync(eng.dev, eng.dev_ha)
@@ -1847,7 +1892,8 @@ class MultiGPUCloverCoordinator:
                         media_items.extend(tc["media"])
 
                 req.result = {
-                    "mode": "agent_k3_experts_ncm",
+                    "mode": f"agent_{getattr(req, 'model_key', 'nemotron-3.5-super-vl')}_ncm",
+                    "model": getattr(req, "model_key", "nemotron-3.5-super-vl"),
                     "session_id": req.session_id,
                     "session_title": sess_info["title"],
                     "context_tokens": sess_info["context_tokens"],
@@ -1935,7 +1981,29 @@ class MultiGPUCloverCoordinator:
         finally:
             self.worker_locks[w_idx].release()
 
-    def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None):
+    def _get_or_load_model_renderer(self, model_key: str):
+        if not hasattr(self, "_alt_model_renderers"):
+            self._alt_model_renderers = {}
+        if model_key in self._alt_model_renderers:
+            return self._alt_model_renderers[model_key]
+        try:
+            models_dir = os.path.abspath(os.path.join(TOOLS_DIR, "../../models"))
+            if not os.path.isdir(models_dir):
+                models_dir = "/tmp/clover-models"
+            if models_dir not in sys.path:
+                sys.path.insert(0, models_dir)
+            from benchmark_3_models_70_tasks import ModelSpecificNCMRenderer
+            if model_key == "nemotron-3.5-super-vl" and os.path.isdir("/opt/clover-k3/nemotron-computed/pruned"):
+                self._alt_model_renderers[model_key] = ModelSpecificNCMRenderer("nemotron-3.5-super-vl")
+            elif model_key == "lfm3-1.7b" and os.path.isdir("/opt/clover-k3/lfm3-computed/pruned"):
+                self._alt_model_renderers[model_key] = ModelSpecificNCMRenderer("lfm3-1.7b")
+            else:
+                self._alt_model_renderers[model_key] = None
+        except Exception:
+            self._alt_model_renderers[model_key] = None
+        return self._alt_model_renderers.get(model_key)
+
+    def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl"):
         att_blocks = self.ingest_attachments(session_id, attachments) if attachments else []
         att_meta = [
             {"name": str(a.get("name") or "file"), "type": str(a.get("type") or "file")}
@@ -1954,6 +2022,7 @@ class MultiGPUCloverCoordinator:
             remember,
             display_prompt=prompt or (f"Attached {', '.join(m['name'] for m in att_meta)}" if att_meta else ""),
             attachments_meta=att_meta,
+            model_key=model_key or "nemotron-3.5-super-vl",
         )
         with self.q_cond:
             self.pending_queue.append(req)
@@ -2476,6 +2545,9 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             except Exception:
                 cands = default_cands
             remember = bool(payload.get("remember", True))
+            selected_model = str(payload.get("model") or "nemotron-3.5-super-vl").strip()
+            if selected_model not in ("nemotron-3.5-super-vl", "lfm3-1.7b", "kimi-k3"):
+                selected_model = "nemotron-3.5-super-vl"
             if not prompt and not image_b64 and not non_img_attachments:
                 self._send_json({"error": "Empty prompt"}, code=400)
                 return
@@ -2496,6 +2568,7 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         cands=cands,
                         remember=remember,
                         attachments=non_img_attachments,
+                        model_key=selected_model,
                     )
                 self._send_json(r)
             except Exception as e:

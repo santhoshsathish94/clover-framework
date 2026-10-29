@@ -18,10 +18,23 @@
 <style>
   [hidden] { display: none !important; }
   .clover-sidebar { transform: none; transition: margin-left 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
-  .clover-topbar__right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+  .clover-topbar__right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .clover-model-picker {
+    display: inline-flex; align-items: center; gap: 0.38rem;
+    background: var(--soft); border: 1px solid var(--line-2); border-radius: 999px;
+    padding: 0.18rem 0.55rem 0.18rem 0.65rem; font-size: 0.76rem; color: var(--ink);
+  }
+  .clover-model-label {
+    font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .clover-model-select {
+    appearance: auto; border: none; background: transparent; color: var(--ink);
+    font-family: inherit; font-size: 0.77rem; font-weight: 650; line-height: 1.25;
+    padding: 0.1rem 0.15rem; cursor: pointer; outline: none;
+  }
   .clover-cpu-pill {
     display: inline-flex; align-items: center; gap: 0.38rem;
-    font-size: 0.76rem; font-weight: 650; line-height: 1.2;
+    font-size: 0.75rem; font-weight: 650; line-height: 1.2;
     padding: 0.28rem 0.65rem; border-radius: 999px;
     background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-line);
     white-space: nowrap;
@@ -41,9 +54,13 @@
       margin-left: 0 !important; transform: translateX(0) !important;
       box-shadow: 0 12px 34px rgba(19, 32, 24, 0.18) !important; pointer-events: auto !important;
     }
+    .clover-model-picker { padding: 0.14rem 0.45rem; }
+    .clover-model-select { font-size: 0.72rem; max-width: 190px; }
     .clover-cpu-pill { font-size: 0.71rem; padding: 0.22rem 0.5rem; }
   }
   @media (max-width: 480px) {
+    .clover-model-label { display: none; }
+    .clover-model-select { font-size: 0.69rem; max-width: 155px; }
     .clover-cpu-pill { font-size: 0.68rem; padding: 0.2rem 0.45rem; }
   }
 </style>
@@ -93,7 +110,15 @@
         </a>
       </div>
       <div class="clover-topbar__right">
-        <span class="clover-cpu-pill" id="clover-cpu-pill" title="Clover is running on a CPU server, so responses take longer">CPU Server &middot; Slow Response</span>
+        <div class="clover-model-picker" title="Switch Layer-1 Foundation Model Backbone inside Clover's 7-layer architecture">
+          <label for="clover-model-select" class="clover-model-label">Model</label>
+          <select id="clover-model-select" class="clover-model-select" aria-label="Select Layer-1 Foundation Model" onchange="k3OnModelChanged(this.value)">
+            <option value="nemotron-3.5-super-vl" selected>Nemotron 3.5 Super VL (Default &middot; ~2.1s C / ~4.6s CPU)</option>
+            <option value="lfm3-1.7b">Liquid LFM3-1.7B (Compact &middot; ~3.5s C / ~6.0s CPU)</option>
+            <option value="kimi-k3">Kimi K3 2.78T MoE (Deep &middot; ~9.1s Stage / ~138s CPU)</option>
+          </select>
+        </div>
+        <span class="clover-cpu-pill" id="clover-cpu-pill" title="NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab): ~2.1s native C engine, ~4.6s with 11-level NCM, ~15-35s full CPU turn (1.74x faster than Kimi K3 on CPU)">CPU &middot; ~2.1s C / ~4.6s Stage (~15&ndash;35s Turn)</span>
       </div>
     </div>
 
@@ -163,6 +188,25 @@
     'https://cloverframework.com'
   ];
   var constant_session_storage_key = 'clover_k3_sessions_v2';
+  var constant_model_storage_key = 'clover_selected_model_v1';
+  var constant_default_model_key = 'nemotron-3.5-super-vl';
+  var constant_model_cpu_response_descriptions = {
+    'nemotron-3.5-super-vl': {
+      pillText: 'CPU · ~2.1s C / ~4.6s Stage (~15–35s Turn)',
+      tooltip:
+        'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Default): ~2.1s native C engine, ~4.6s with 11-level NCM, ~15–35s full CPU turn (1.74x faster than Kimi K3 on CPU)'
+    },
+    'lfm3-1.7b': {
+      pillText: 'CPU · ~3.5s C / ~6.0s Stage (~15–35s Turn)',
+      tooltip:
+        'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn (1.31x faster than Kimi K3 on CPU)'
+    },
+    'kimi-k3': {
+      pillText: 'CPU · ~9.1s Stage (~60–140s Turn on CPU)',
+      tooltip:
+        'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
+    }
+  };
   var constant_mobile_sidebar_breakpoint_pixels = 760;
   var constant_health_probe_timeout_milliseconds = 8000;
   var constant_greeting_message_html =
@@ -1079,6 +1123,9 @@
       this.variable_session_list_element = document.getElementById('k3-session-list');
       this.variable_sidebar_element = document.getElementById('clover-sidebar');
       this.variable_backdrop_element = document.getElementById('clover-sidebar-backdrop');
+      this.variable_model_select_element = document.getElementById('clover-model-select');
+      this.variable_cpu_pill_element = document.getElementById('clover-cpu-pill');
+      this.variable_selected_model_key = constant_default_model_key;
       this.flag_is_request_in_flight = false;
 
       this.variable_session_store = new class_browser_conversation_session_store(
@@ -1093,6 +1140,25 @@
         variable_voice_button_element: document.getElementById('k3-voice-btn'),
         variable_prompt_input_element: this.variable_prompt_input_element
       });
+    }
+
+    function_select_foundation_model_key(variable_model_key) {
+      var variable_valid_key =
+        constant_model_cpu_response_descriptions[variable_model_key]
+          ? variable_model_key
+          : constant_default_model_key;
+      this.variable_selected_model_key = variable_valid_key;
+      if (this.variable_model_select_element && this.variable_model_select_element.value !== variable_valid_key) {
+        this.variable_model_select_element.value = variable_valid_key;
+      }
+      var variable_desc = constant_model_cpu_response_descriptions[variable_valid_key];
+      if (this.variable_cpu_pill_element && variable_desc) {
+        this.variable_cpu_pill_element.textContent = variable_desc.pillText;
+        this.variable_cpu_pill_element.title = variable_desc.tooltip;
+      }
+      try {
+        localStorage.setItem(constant_model_storage_key, variable_valid_key);
+      } catch (variable_ignored_error) {}
     }
 
     function_check_if_mobile_viewport() {
@@ -1423,6 +1489,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             session_id: variable_submitted_session_id,
+            model: this.variable_selected_model_key,
             prompt: variable_effective_prompt_text,
             image_base64: variable_image_data_url,
             attachments: variable_attached_files,
@@ -1715,6 +1782,18 @@
       window.k3SendPrompt = function () {
         return variable_self_coordinator.function_send_user_prompt_and_render_outcome();
       };
+      window.k3OnModelChanged = function (variable_new_model_key) {
+        variable_self_coordinator.function_select_foundation_model_key(variable_new_model_key);
+      };
+
+      var variable_saved_model_key = constant_default_model_key;
+      try {
+        var variable_stored_model = localStorage.getItem(constant_model_storage_key);
+        if (variable_stored_model && constant_model_cpu_response_descriptions[variable_stored_model]) {
+          variable_saved_model_key = variable_stored_model;
+        }
+      } catch (variable_ignored_error) {}
+      this.function_select_foundation_model_key(variable_saved_model_key);
 
       this.variable_session_store.function_load_sessions_from_browser_storage();
       this.function_render_session_sidebar_list();

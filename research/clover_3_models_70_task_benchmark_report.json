@@ -1,5 +1,22 @@
 {
   "benchmark_suite": "Clover 7-Category, 70-Task Standardized Real AI Benchmark Matrix",
+  "kimi_k3_cpu_v4_verified_baseline_on_k3": {
+    "hardware": "k3 (AMD Ryzen 9 7950X3D CPU)",
+    "tasks_passed": 7,
+    "tasks_total": 7,
+    "pass_rate_pct": 100.0,
+    "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 9105.07,
+    "cpu_v4_7_task_subset_mean_wall_ms": 138768.33,
+    "per_task_ncm_plus_c_ms": {
+      "mmlu_college_physics_1": 4777.5,
+      "gsm8k_test_1": 13216.7,
+      "HumanEval_2": 2761.9,
+      "sudoku_easy_0": 10628.6,
+      "onto_qa_2_harbourside_council": 6199.3,
+      "mem_qa_0_flat_response_partition": 18937.5,
+      "agent_ha_q2": 7214.0
+    }
+  },
   "models_compared": {
     "kimi-k3": {
       "model_key": "kimi-k3",
@@ -10,8 +27,9 @@
       "pass_rate_pct": 100.0,
       "mean_canonical_score_pct": 99.08,
       "all_emitted_token_ids_valid_in_model_vocab": true,
-      "mean_c_engine_ms": 4447.8,
-      "mean_ncm_plus_c_ms": 4912.4,
+      "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 9105.07,
+      "gpu_8x3090_mean_c_engine_ms": 4447.8,
+      "gpu_8x3090_mean_ncm_plus_c_ms": 4912.4,
       "by_category": {
         "1_general_knowledge_mmlu": {
           "passed": 10,
@@ -87,9 +105,55 @@
       "pass_rate_pct": 100.0,
       "mean_canonical_score_pct": 99.08,
       "all_emitted_token_ids_valid_in_model_vocab": true,
-      "mean_c_engine_ms": 3272.42,
-      "mean_ncm_plus_c_ms": 7477.18,
-      "total_suite_wall_seconds": 526.38,
+      "mean_c_engine_ms": 2115.77,
+      "mean_ncm_plus_c_ms": 4613.25,
+      "cpu_v4_7_task_subset_mean_c_engine_ms": 2342.1,
+      "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 5232.45,
+      "cpu_v4_7_task_breakdown": [
+        {
+          "task_id": "mmlu_college_physics_1",
+          "passed": true,
+          "c_engine_ms": 2211.94,
+          "ncm_plus_c_ms": 3715.58
+        },
+        {
+          "task_id": "gsm8k_test_1",
+          "passed": true,
+          "c_engine_ms": 2835.32,
+          "ncm_plus_c_ms": 7596.24
+        },
+        {
+          "task_id": "HumanEval_2",
+          "passed": true,
+          "c_engine_ms": 656.68,
+          "ncm_plus_c_ms": 1177.5
+        },
+        {
+          "task_id": "sudoku_easy_0",
+          "passed": true,
+          "c_engine_ms": 2267.24,
+          "ncm_plus_c_ms": 5958.06
+        },
+        {
+          "task_id": "onto_qa_2_harbourside_council",
+          "passed": true,
+          "c_engine_ms": 1230.92,
+          "ncm_plus_c_ms": 3129.89
+        },
+        {
+          "task_id": "mem_qa_0_flat_response_partition",
+          "passed": true,
+          "c_engine_ms": 5429.44,
+          "ncm_plus_c_ms": 11009.06
+        },
+        {
+          "task_id": "agent_ha_q2",
+          "passed": true,
+          "c_engine_ms": 1763.16,
+          "ncm_plus_c_ms": 4040.83
+        }
+      ],
+      "total_suite_wall_seconds": 324.76,
       "specmd_r4_dm_stats_cumulative": {
         "total_expert_requests": 53023,
         "tier1_pool_hits": 7083,
@@ -104,8 +168,8 @@
           "total": 10,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 4299.06,
-          "mean_ncm_plus_c_ms": 7723.71,
+          "mean_c_engine_ms": 2883.66,
+          "mean_ncm_plus_c_ms": 4512.11,
           "mean_tokens_emitted": 81.0
         },
         "2_math_reasoning_gsm8k": {
@@ -113,8 +177,8 @@
           "total": 10,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 4490.8,
-          "mean_ncm_plus_c_ms": 10857.73,
+          "mean_c_engine_ms": 2981.26,
+          "mean_ncm_plus_c_ms": 7311.28,
           "mean_tokens_emitted": 219.0
         },
         "3_coding_executable_tests": {
@@ -122,8 +186,8 @@
           "total": 15,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 1257.58,
-          "mean_ncm_plus_c_ms": 3045.97,
+          "mean_c_engine_ms": 635.67,
+          "mean_ncm_plus_c_ms": 1157.37,
           "mean_tokens_emitted": 135.0
         },
         "4_instruction_and_structured_output": {
@@ -131,8 +195,8 @@
           "total": 15,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 97.92,
-          "mean_c_engine_ms": 1608.37,
-          "mean_ncm_plus_c_ms": 4629.28,
+          "mean_c_engine_ms": 1001.52,
+          "mean_ncm_plus_c_ms": 2618.28,
           "mean_tokens_emitted": 71.9
         },
         "5_evidence_grounded_ontology": {
@@ -140,8 +204,8 @@
           "total": 6,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 94.45,
-          "mean_c_engine_ms": 4189.78,
-          "mean_ncm_plus_c_ms": 10216.76,
+          "mean_c_engine_ms": 2742.23,
+          "mean_ncm_plus_c_ms": 6628.75,
           "mean_tokens_emitted": 200.7
         },
         "6_persistent_memory_and_distractors": {
@@ -149,8 +213,8 @@
           "total": 6,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 7386.31,
-          "mean_ncm_plus_c_ms": 15310.11,
+          "mean_c_engine_ms": 4918.41,
+          "mean_ncm_plus_c_ms": 10593.84,
           "mean_tokens_emitted": 363.7
         },
         "7_tool_use_and_agent_multihop": {
@@ -158,8 +222,8 @@
           "total": 8,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 3590.61,
-          "mean_ncm_plus_c_ms": 8662.31,
+          "mean_c_engine_ms": 2366.59,
+          "mean_ncm_plus_c_ms": 5590.44,
           "mean_tokens_emitted": 174.4
         }
       },
@@ -375,9 +439,55 @@
       "pass_rate_pct": 100.0,
       "mean_canonical_score_pct": 99.08,
       "all_emitted_token_ids_valid_in_model_vocab": true,
-      "mean_c_engine_ms": 8733.39,
-      "mean_ncm_plus_c_ms": 12854.54,
-      "total_suite_wall_seconds": 902.11,
+      "mean_c_engine_ms": 3544.01,
+      "mean_ncm_plus_c_ms": 5959.31,
+      "cpu_v4_7_task_subset_mean_c_engine_ms": 3980.47,
+      "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 6932.13,
+      "cpu_v4_7_task_breakdown": [
+        {
+          "task_id": "mmlu_college_physics_1",
+          "passed": true,
+          "c_engine_ms": 4303.54,
+          "ncm_plus_c_ms": 6198.22
+        },
+        {
+          "task_id": "gsm8k_test_1",
+          "passed": true,
+          "c_engine_ms": 4844.74,
+          "ncm_plus_c_ms": 9612.89
+        },
+        {
+          "task_id": "HumanEval_2",
+          "passed": true,
+          "c_engine_ms": 1036.73,
+          "ncm_plus_c_ms": 1569.04
+        },
+        {
+          "task_id": "sudoku_easy_0",
+          "passed": true,
+          "c_engine_ms": 4090.59,
+          "ncm_plus_c_ms": 7802.16
+        },
+        {
+          "task_id": "onto_qa_2_harbourside_council",
+          "passed": true,
+          "c_engine_ms": 2021.13,
+          "ncm_plus_c_ms": 3952.28
+        },
+        {
+          "task_id": "mem_qa_0_flat_response_partition",
+          "passed": true,
+          "c_engine_ms": 8449.52,
+          "ncm_plus_c_ms": 14010.59
+        },
+        {
+          "task_id": "agent_ha_q2",
+          "passed": true,
+          "c_engine_ms": 3117.05,
+          "ncm_plus_c_ms": 5379.75
+        }
+      ],
+      "total_suite_wall_seconds": 418.88,
       "specmd_r4_dm_stats_cumulative": null,
       "by_category": {
         "1_general_knowledge_mmlu": {
@@ -385,8 +495,8 @@
           "total": 10,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 12402.86,
-          "mean_ncm_plus_c_ms": 15811.65,
+          "mean_c_engine_ms": 5290.6,
+          "mean_ncm_plus_c_ms": 6971.24,
           "mean_tokens_emitted": 80.4
         },
         "2_math_reasoning_gsm8k": {
@@ -394,8 +504,8 @@
           "total": 10,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 11658.36,
-          "mean_ncm_plus_c_ms": 18003.38,
+          "mean_c_engine_ms": 4609.43,
+          "mean_ncm_plus_c_ms": 8756.57,
           "mean_tokens_emitted": 197.4
         },
         "3_coding_executable_tests": {
@@ -403,8 +513,8 @@
           "total": 15,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 2767.6,
-          "mean_ncm_plus_c_ms": 4440.07,
+          "mean_c_engine_ms": 1046.42,
+          "mean_ncm_plus_c_ms": 1577.92,
           "mean_tokens_emitted": 129.0
         },
         "4_instruction_and_structured_output": {
@@ -412,8 +522,8 @@
           "total": 15,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 97.92,
-          "mean_c_engine_ms": 4257.1,
-          "mean_ncm_plus_c_ms": 7344.87,
+          "mean_c_engine_ms": 1961.73,
+          "mean_ncm_plus_c_ms": 3588.74,
           "mean_tokens_emitted": 72.1
         },
         "5_evidence_grounded_ontology": {
@@ -421,8 +531,8 @@
           "total": 6,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 94.45,
-          "mean_c_engine_ms": 11403.82,
-          "mean_ncm_plus_c_ms": 17176.62,
+          "mean_c_engine_ms": 4531.32,
+          "mean_ncm_plus_c_ms": 8347.94,
           "mean_tokens_emitted": 192.7
         },
         "6_persistent_memory_and_distractors": {
@@ -430,8 +540,8 @@
           "total": 6,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 20628.55,
-          "mean_ncm_plus_c_ms": 28524.99,
+          "mean_c_engine_ms": 7906.44,
+          "mean_ncm_plus_c_ms": 13364.7,
           "mean_tokens_emitted": 348.2
         },
         "7_tool_use_and_agent_multihop": {
@@ -439,8 +549,8 @@
           "total": 8,
           "pass_rate_pct": 100.0,
           "mean_score_pct": 100.0,
-          "mean_c_engine_ms": 9145.09,
-          "mean_ncm_plus_c_ms": 13835.48,
+          "mean_c_engine_ms": 3666.47,
+          "mean_ncm_plus_c_ms": 6512.22,
           "mean_tokens_emitted": 155.0
         }
       },

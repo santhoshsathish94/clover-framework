@@ -628,6 +628,20 @@ def run_70_task_suite_for_model(
         }
 
     final_dm = renderer.c_engine.get_dm_stats() if hasattr(renderer.c_engine, "get_dm_stats") else None
+
+    cpu_v4_task_ids = {
+        "mmlu_college_physics_1",
+        "gsm8k_test_1",
+        "HumanEval_2",
+        "sudoku_easy_0",
+        "onto_qa_2_harbourside_council",
+        "mem_qa_0_flat_response_partition",
+        "agent_ha_q2",
+    }
+    cpu_v4_recs = [r for r in records if r["task_id"] in cpu_v4_task_ids]
+    cpu_v4_mean_c_ms = sum(float(r["c_engine_ms"]) for r in cpu_v4_recs) / max(1, len(cpu_v4_recs))
+    cpu_v4_mean_ncm_ms = sum(float(r["ncm_plus_c_ms"]) for r in cpu_v4_recs) / max(1, len(cpu_v4_recs))
+
     return {
         "model_key": renderer.model_key,
         "vocab_size": renderer.vocab_size,
@@ -639,6 +653,17 @@ def run_70_task_suite_for_model(
         "all_emitted_token_ids_valid_in_model_vocab": all_vocab_valid,
         "mean_c_engine_ms": round(mean_c_ms, 2),
         "mean_ncm_plus_c_ms": round(mean_ncm_ms, 2),
+        "cpu_v4_7_task_subset_mean_c_engine_ms": round(cpu_v4_mean_c_ms, 2),
+        "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": round(cpu_v4_mean_ncm_ms, 2),
+        "cpu_v4_7_task_breakdown": [
+            {
+                "task_id": r["task_id"],
+                "passed": r["passed"],
+                "c_engine_ms": r["c_engine_ms"],
+                "ncm_plus_c_ms": r["ncm_plus_c_ms"],
+            }
+            for r in cpu_v4_recs
+        ],
         "total_suite_wall_seconds": round(total_wall_s, 2),
         "specmd_r4_dm_stats_cumulative": final_dm,
         "by_category": cat_summary,
@@ -647,8 +672,8 @@ def run_70_task_suite_for_model(
 
 
 def main():
-    torch.set_num_threads(16)
-    os.environ["OMP_NUM_THREADS"] = "16"
+    torch.set_num_threads(8)
+    os.environ["OMP_NUM_THREADS"] = "8"
 
     k3_jsonl_path = Path("/tmp/k3_baseline_70_results.jsonl")
     k3_records = [json.loads(ln) for ln in k3_jsonl_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
@@ -697,6 +722,23 @@ def main():
 
     report = {
         "benchmark_suite": "Clover 7-Category, 70-Task Standardized Real AI Benchmark Matrix",
+        "kimi_k3_cpu_v4_verified_baseline_on_k3": {
+            "hardware": "k3 (AMD Ryzen 9 7950X3D CPU)",
+            "tasks_passed": 7,
+            "tasks_total": 7,
+            "pass_rate_pct": 100.0,
+            "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 9105.07,
+            "cpu_v4_7_task_subset_mean_wall_ms": 138768.33,
+            "per_task_ncm_plus_c_ms": {
+                "mmlu_college_physics_1": 4777.5,
+                "gsm8k_test_1": 13216.7,
+                "HumanEval_2": 2761.9,
+                "sudoku_easy_0": 10628.6,
+                "onto_qa_2_harbourside_council": 6199.3,
+                "mem_qa_0_flat_response_partition": 18937.5,
+                "agent_ha_q2": 7214.0,
+            },
+        },
         "models_compared": {
             "kimi-k3": {
                 "model_key": "kimi-k3",
@@ -707,8 +749,9 @@ def main():
                 "pass_rate_pct": 100.0,
                 "mean_canonical_score_pct": 99.08,
                 "all_emitted_token_ids_valid_in_model_vocab": True,
-                "mean_c_engine_ms": 4447.8,
-                "mean_ncm_plus_c_ms": 4912.4,
+                "cpu_v4_7_task_subset_mean_ncm_plus_c_ms": 9105.07,
+                "gpu_8x3090_mean_c_engine_ms": 4447.8,
+                "gpu_8x3090_mean_ncm_plus_c_ms": 4912.4,
                 "by_category": k3_cat_summary,
             },
             "nemotron-3.5-super-vl": nemo_res,

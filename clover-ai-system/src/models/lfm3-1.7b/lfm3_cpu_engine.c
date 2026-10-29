@@ -187,10 +187,44 @@ static void linear_bf16_omp(
     int in_dim
 )
 {
-    #pragma omp parallel for schedule(static)
+    /* Use 8 threads (1 physical CCD on Ryzen 9 7950X3D) + 8-token register blocking
+       so each weight row is streamed once per 8 tokens without cross-CCD stalls! */
+    #pragma omp parallel for num_threads(8) schedule(static)
     for (int o = 0; o < out_dim; o++) {
         const uint16_t *w_row = W_bf16 + (size_t)o * (size_t)in_dim;
-        for (int t = 0; t < T; t++) {
+        int t = 0;
+        for (; t + 8 <= T; t += 8) {
+            const float *x0 = x + (size_t)(t + 0) * in_dim;
+            const float *x1 = x + (size_t)(t + 1) * in_dim;
+            const float *x2 = x + (size_t)(t + 2) * in_dim;
+            const float *x3 = x + (size_t)(t + 3) * in_dim;
+            const float *x4 = x + (size_t)(t + 4) * in_dim;
+            const float *x5 = x + (size_t)(t + 5) * in_dim;
+            const float *x6 = x + (size_t)(t + 6) * in_dim;
+            const float *x7 = x + (size_t)(t + 7) * in_dim;
+            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+            float s4 = 0.0f, s5 = 0.0f, s6 = 0.0f, s7 = 0.0f;
+            for (int k = 0; k < in_dim; k++) {
+                float w = bf16_to_f32(w_row[k]);
+                s0 += x0[k] * w;
+                s1 += x1[k] * w;
+                s2 += x2[k] * w;
+                s3 += x3[k] * w;
+                s4 += x4[k] * w;
+                s5 += x5[k] * w;
+                s6 += x6[k] * w;
+                s7 += x7[k] * w;
+            }
+            y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
+            y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
+            y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
+            y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
+            y[(size_t)(t + 4) * out_dim + o] = bf16_round_f32(s4);
+            y[(size_t)(t + 5) * out_dim + o] = bf16_round_f32(s5);
+            y[(size_t)(t + 6) * out_dim + o] = bf16_round_f32(s6);
+            y[(size_t)(t + 7) * out_dim + o] = bf16_round_f32(s7);
+        }
+        for (; t < T; t++) {
             const float *x_row = x + (size_t)t * (size_t)in_dim;
             float sum = 0.0f;
             for (int k = 0; k < in_dim; k++) {
