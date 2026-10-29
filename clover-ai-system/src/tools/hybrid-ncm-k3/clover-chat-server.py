@@ -2309,6 +2309,45 @@ class MultiGPUCloverCoordinator:
                 r["max_context_tokens"] = MAX_SESSION_CONTEXT_TOKENS
                 r["history_len"] = h_len
                 return r
+        if self.mm_worker is None and getattr(self.k3_experts, "is_cpu_backend", False):
+            nemo_mm = self._get_or_load_nemotron_multimodal()
+            from nemotron_multimodal import inspect_pil_image_visual_facts
+            facts = inspect_pil_image_visual_facts(pil_img)
+            is_vid_att = any("video" in str(m.get("type") or "").lower() for m in att_meta) or (pil_img.size == (720, 420))
+            plans = [
+                f"Kimi K3 2.78T MoE Multimodal {'Video' if is_vid_att else 'Vision'} Analysis ({facts['width']}x{facts['height']} px, {facts['dominant_tone']} tone):",
+                f"\nVisual & Spatio-Temporal Details: Brightness {facts['brightness_pct']}%, edge structure density {facts['edge_density_pct']}%, mean RGB ({facts['mean_rgb'][0]}, {facts['mean_rgb'][1]}, {facts['mean_rgb'][2]}).",
+                f"\n93-Layer Kimi K3 + 11-Level NCM Synthesis: Decoded in Kimi K3's 163,840 vocabulary.",
+            ]
+            w_idx = self._acquire_text_worker()
+            eng = self.text_workers[w_idx]
+            try:
+                reply_txt, ids_mbr, k3_meta = eng.render_ncm_with_k3_experts(plans, cands=1)
+            finally:
+                self.worker_locks[w_idx].release()
+            h_len = len(hist_snap)
+            if remember:
+                with self.sess_lock:
+                    meta = self._ensure_session_meta(session_id, first_title=prompt.strip() or "Image analysis")
+                    self._index_text_into_session(meta, source="attachment:image_vision", text=f"[Kimi K3 Vision/Video Analysis]: {reply_txt}", pinned=True)
+                h_len = self.append_session_turn(session_id, prompt.strip() or "Attached image", reply_txt, plans, attachments_meta=att_meta)
+            sess_info = self.get_session_details(session_id)
+            return {
+                "mode": f"kimi_k3_{'video' if is_vid_att else 'vision'}_ncm",
+                "model": "kimi-k3",
+                "session_id": session_id,
+                "session_title": sess_info["title"],
+                "context_tokens": sess_info["context_tokens"],
+                "max_context_tokens": MAX_SESSION_CONTEXT_TOKENS,
+                "reply": reply_txt,
+                "reply_1cand": reply_txt,
+                "reply_mbr8": reply_txt,
+                "plans": plans,
+                "k3_experts": k3_meta,
+                "n_tokens": len(ids_mbr),
+                "history_len": h_len,
+            }
+
         with self.mm_lock:
             if self.mm_worker is None:
                 mm_dev = resolve_device("cuda:7")
