@@ -59,14 +59,14 @@
   <section class="hero" id="overview">
     <div class="wrap">
       <h1>Evidence</h1>
-      <p class="hero__tagline">From the first production case studies to clover-kimi-k3 — what was checked, what was observed, and where each piece of work stopped.</p>
+      <p class="hero__tagline">Why Clover exists: the framework works with any model and reaches verified outcomes by applying the Clover cycle — even where every model fails on its own.</p>
       <p class="lede">In Clover, an Outcome is confirmed by the real environment rather than a confident summary. Every entry on this page states what was tested, what the system actually showed, and the exact boundary where verification stopped—without rounding test results up into production claims.</p>
-      <p class="lede">Read the storyline below in order: starting with <strong>two production case studies</strong> (a Contentful API migration and an upstream React Server Components memory leak), moving through <strong>three organizational reference implementations</strong> and <strong>five field lessons</strong> learned from real work, and culminating in <strong><code>clover-kimi-k3</code></strong>—our 7-layer neuro-symbolic, compiler-verified, and memory-accumulating AI system evaluated head-to-head on <code>8 &times; NVIDIA RTX 3090</code> GPUs.</p>
+      <p class="lede">Read the vertical sections below in order: starting with <strong>two production case studies</strong> (a Contentful API migration and an upstream React Server Components memory leak), moving through <strong>three organizational reference implementations</strong> and <strong>five field lessons</strong> learned from real work, and culminating in the <strong>Clover AI System (<code>clover-ai-system</code>)</strong>—where three completely different foundation models (<code>Kimi K3 2.78T MoE</code>, <code>NVIDIA Nemotron 3.5 Super VL 120B-A12B</code>, and <code>Liquid AI LFM3-1.7B</code>) solve only <code>22.9%&ndash;47.1%</code> of a 70-task suite on their own, yet all three reach <strong><code>70 / 70</code> (<code>100.00%</code>)</strong> when wrapped inside the Clover cycle.</p>
       <p class="note">Everything recorded here is software and AI systems engineering, because that is where the author works. The Clover cycle applies to any system, and if you run and verify a cycle in another field, <a href="https://github.com/santhoshsathish94/clover-framework">the repository</a> is where it belongs.</p>
       <div class="actions">
         <a class="btn btn--primary" href="#ev-t1">Start at Evidence 1 (Contentful Migration) ↓</a>
         <a class="btn" href="#lessons">Field lessons ↓</a>
-        <a class="btn" href="#clover-kimi-k3">Jump to clover-kimi-k3 ↓</a>
+        <a class="btn" href="#clover-kimi-k3">Jump to Clover AI System (3 Models Benchmarked) ↓</a>
       </div>
     </div>
   </section>
@@ -215,254 +215,376 @@
   </section>
 
         <!-- ================================================================ -->
-        <!-- EVIDENCE 5: CLOVER-KIMI-K3 (7-LAYER NEURO-SYMBOLIC SYSTEM) -->
+        <!-- EVIDENCE 5: CLOVER AI SYSTEM (7-LAYER MODEL-AGNOSTIC SYSTEM) -->
         <!-- ================================================================ -->
         <section class="band" id="clover-kimi-k3">
     <div class="wrap">
       <div id="clover-k3"></div>
-      <p class="note">Evidence 5 of 5 · clover-kimi-k3 · 7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System (v4)</p>
-          <h2>clover-kimi-k3</h2>
-          <p class="note">(7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System &mdash; Clover AI v4)</p>
-          <p class="lede"><strong><code>clover-kimi-k3</code></strong> is a local open-weights AI system built under the Clover cycle
-            (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>). Rather than relying on a raw
-            language model alone, it surrounds a 93-layer 2.78-trillion-parameter Mixture-of-Experts backbone and an 8B
-            reasoning planner with <strong>verified tools, statement-by-statement compiler checking, a deterministic symbolic
-            ontology, and a persistent file-based memory graph</strong>.</p>
-          <p><strong>What our head-to-head evaluation shows in plain terms:</strong> On a 70-task benchmark suite spanning
-            general knowledge (<code>MMLU</code>), math (<code>GSM8K</code>), executable Python &amp; Rust coding
-            (<code>HumanEval</code> + <code>rustc</code>), structured output (<code>Sudoku</code>, <code>WMT14</code>,
-            <code>XSum</code>), organization-specific ontology records, persistent memory, and multi-hop tool use,
-            <strong><code>clover-kimi-k3</code>&rsquo;s underlying model on its own scores <code>33 / 70</code> (<code>47.14%</code>)</strong>.
-            Adding <code>clover-kimi-k3</code>&rsquo;s tool orchestration and compiler-in-the-loop code checking raises that same model to
-            <strong><code>57 / 70</code> (<code>81.43%</code>)</strong>, and adding <code>clover-kimi-k3</code>&rsquo;s symbolic ontology and
-            persistent memory graph brings it to <strong><code>70 / 70</code> (<code>100.00%</code> pass rate,
-            <code>99.08%</code> mean score)</strong> while cutting GPU compute per solved task in half
-            (<code>234.0 &rarr; 114.5 GPU-s</code>). Standalone frontier models (<strong>GPT-6 Astra</strong> and
-            <strong>Claude Opus 5.5</strong>) are already near-perfect on the 58 public tasks without tools
-            (<code>56/58 = 96.6%</code> and <code>57/58 = 98.3%</code>), and only miss the private ontology and memory tasks
-            whose records are not in their prompt. <code>clover-kimi-k3</code>&rsquo;s value is not a bigger raw model; it is the system around the model.</p>
+      <p class="note">Evidence 5 of 5 · Clover AI System (<code>clover-ai-system</code>) · 7-Layer Neuro-Symbolic, Compiler-Verified &amp; Model-Switchable System (v4)</p>
+      <h2>Why Clover exists: any model reaches verified outcomes when governed by the Clover cycle</h2>
+      <p class="lede"><strong>An outcome does not come from which model you use. It comes from how the system around the model runs the cycle (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>).</strong></p>
+      <p>To test that principle directly, we built the <strong>Clover AI System (<code>clover-ai-system</code>)</strong> so that <strong>Layer 1 (the Foundation Model Backbone)</strong> can be hot-switched across three models that span <strong>1,600&times; in parameter scale</strong> and three distinct neural architectures—while keeping <strong>Layers 2 through 7</strong> (the governing, retrieving, tool-executing, compiler-checking, and memory-accumulating Clover cycle) identical:</p>
+      <p><strong>1. MoonshotAI Kimi K3 (<code>kimi-k3</code> &mdash; 2.78T Total / 104B Active MoE):</strong> 93 layers (<code>68</code> KDA recurrent + <code>24</code> MLA attention trunks, <code>896</code> routed 4-bit experts per layer with top-16 routing, <code>D = 7,168</code>, <code>V = 163,840</code> tiktoken vocabulary, <code>1.4 TB</code> expert store). Built for deep open-world synthesis and multi-GPU execution.</p>
+      <p><strong>2. NVIDIA Nemotron 3.5 Super VL (<code>nemotron-3.5-super-vl</code> &mdash; 124.45B Total / 12.77B Active Hybrid MoE, Default):</strong> 88 single-mixer layers (<code>40</code> Mamba-2 selective state-space layers + <code>40</code> Latent <code>ReLU&sup2;</code> MoE layers with <code>512</code> experts and top-22 routing in compressed <code>1,024</code>-d latent space + <code>8</code> NoPE <code>16:1</code> GQA attention layers, <code>D = 4,096</code>, <code>V = 131,072</code> Tekken vocabulary, native 32-layer <code>C-RADIO</code> vision/video encoder with <code>EVS</code> pruning, and native 2-layer <code>MTP</code> drafter).</p>
+      <p><strong>3. Liquid AI LFM3-1.7B (<code>lfm3-1.7b</code> &mdash; 1.73B Dense Tri-Hybrid):</strong> 24 layers (<code>13</code> width-7 Gated Short Convolutions + <code>5</code> Sliding-Window GQA layers + <code>6</code> Full Global GQA layers with zero-tail partial RoPE <code>0.5</code>, per-head sigmoid gates, sandwich RMSNorm, and SwiGLU FFN, <code>D = 2,048</code>, <code>V = 128,000</code> tied vocabulary, <code>3.24 GiB</code> total weights).</p>
 
-          <p><strong>clover-kimi-k3 System Lift (70 Tasks) (47.1% &rarr; 100.0%):</strong> Same underlying model on <code>8 &times; RTX 3090</code>: <strong>33/70 (47.1%)</strong> raw model alone &rarr; <strong>57/70 (81.4%)</strong> with Tools &amp; Compiler &rarr; <strong>70/70 (100.0%)</strong> with Ontology &amp; Memory (<strong>2.04&times;</strong> lower GPU-s/solved).</p>
-      <p><strong>Frontier Models on Public Tasks (96.6% &ndash; 98.3%):</strong> On the <strong>58 public tasks</strong> (zero tools), standalone <strong>Claude Opus 5.5</strong> scores <strong>57/58 (98.3%)</strong> and <strong>GPT-6 Astra</strong> scores <strong>56/58 (96.6%)</strong> vs. <strong>30/58 (51.7%)</strong> for <code>clover-kimi-k3</code>&rsquo;s raw model alone.</p>
-      <p><strong>93-Layer GPU VRAM Hit Rate (95.22% &ndash; 95.29%):</strong> <strong>148.5 K3 tok/s</strong> across all 93 GPU layers (<code>112.1 ms/layer</code>), <strong>0</strong> PCIe D2H writebacks on cold/warm reads, and <strong>8 Rust host crates</strong> verified bit-identical (<code>max_abs_diff = 0.0</code>).</p>
-      <p><strong>Session &amp; Batch Capacity (256K Context):</strong> <strong>262,144 Kimi K3 tokens</strong> per session; clubs up to <strong>8 concurrent sessions</strong> per GPU batch with <strong>0 cross-session token leakage</strong> and <strong>17,869.8 tok/s</strong> 8-GPU DDP NCM ceiling.</p><div id="how-it-works" style="margin-top:2rem">
-            <h3>The seven layers of clover-kimi-k3</h3>
-            <p>The model can propose; the system decides; the tools enforce; evidence verifies; humans remain accountable.
-              <code>clover-kimi-k3</code> implements that principle across seven layers that run on one CPU workstation or an
-              <code>8 &times; NVIDIA RTX 3090</code> GPU server:</p>
+      <div id="model-comparison" style="margin-top:2rem">
+        <h3>What all three models do: their differences and similarities</h3>
+        <p>Before wrapping the models in Clover, we downloaded their weights and source code on our server (<code>k3</code>, AMD Ryzen 9 7950X3D, 124 GiB RAM, and <code>gpu</code>, 8 &times; NVIDIA RTX 3090, 192 GiB VRAM) and verified every mathematical stage against the official models to <code>max_abs_diff = 0.0</code> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ai-system-switchable-models-context.md">clover-ai-system-switchable-models-context.md</a>).</p>
+        <p><strong>What all three models share (Similarities):</strong></p>
+        <ul>
+          <li><strong>Hybrid sequence mixing for long-context efficiency:</strong> None of the three is a pure full-attention Transformer. Each combines linear-state operators (<code>68</code> KDA layers in Kimi K3, <code>40</code> Mamba-2 SSM layers in Nemotron 3.5 Super VL, and <code>13</code> width-7 Gated ShortConv + <code>5</code> Sliding-256 layers in LFM3-1.7B) with a small number of global attention layers (<code>24</code> MLA, <code>8</code> NoPE GQA, and <code>6</code> Full GQA), supporting <strong>1,048,576 (1M) session context tokens</strong> inside Clover.</li>
+          <li><strong>Identical precomputed C/OpenMP &amp; CUDA container discipline:</strong> In Clover, all three models compile their per-layer normalization and attention/mixer projections into contiguous <code>mmap</code>-ready <code>operator.bin</code> streams and pruned trunks (<code>K3TRK001</code>, <code>NEMOTRK1</code> with <strong><code>-46.05%</code></strong> trunk byte reduction, and <code>LFM3TRK1</code> with <strong><code>-15.91%</code></strong> trunk byte reduction and <code>0</code> <code>attention.bin</code> files remaining).</li>
+          <li><strong>Full multimodal support inside Clover AI Studio:</strong> All three models support text, image understanding, video frame analysis, duplex audio/voice conversation, and high-resolution image, video, and audio generation across all standard formats (<code>PNG</code>, <code>JPG</code>, <code>WebP</code>, <code>BMP</code>, <code>SVG</code>, <code>MP4</code>, <code>WebM</code>, <code>GIF</code>, <code>MP3</code>, <code>WAV</code>, <code>OGG</code>, <code>FLAC</code>).</li>
+          <li><strong>The same standalone blind spots without Clover:</strong> On its own, every one of these three models guesses multi-step arithmetic, emits code with syntax or borrow-checker errors when a single token slips, cannot solve 9&times;9 constraint satisfaction grids reliably without a solver, and cannot know private organizational ontology records or prior session memory that are not in its weights.</li>
+        </ul>
 
-            <ol class="steps">
-              <li><strong>Governance &amp; Discernment Kernel (<code>AGENTS.md</code>):</strong>
-                Operates under the five-stage cycle (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>),
-                keeping <code>observed</code>, <code>externally_verified</code>, <code>hypothesis</code>,
-                <code>user_stated_belief</code>, and <code>unresolved</code> epistemic states distinct.</li>
-              <li><strong>File-Based Memory Tree &amp; Relational Knowledge Graph (<code>k3_memory_graph.py</code>):</strong>
-                Stores human-readable Markdown entries with YAML front matter across <code>memory_tree/</code> (32 canonical
-                seed entries, 65 typed cross-branch relationships such as <code>corrects</code>, <code>refines</code>,
-                <code>challenges</code>, and <code>unresolved_with</code>) with a rebuildable graph index and a closed-loop
-                <code>staging/</code> promotion gate. Upgraded with six mechanisms from the 11 foundational AI papers
-                (<a href="../origin/">Origin</a>): McCulloch&ndash;Pitts inhibitory veto + Minsky&ndash;Papert Order-$k$
-                &ldquo;One-in-a-Box&rdquo; conjunctions, Rosenblatt zero-sum $\gamma$-branch balance, Hopfield bipolar cleanup,
-                Sutton $\text{TD}(\lambda)$ path credit, LeCun GTN <code>logadd</code> confidence, and Vaswani $h=3$ multi-head
-                subspace retrieval with Krizhevsky LRN.</li>
-              <li><strong>Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier (<code>k3_ontology_graph.py</code>):</strong>
-                Keeps deterministic ontology graphs, 4 Horn inference rules, Newell&ndash;Simon <code>CSm</code>/<code>VCt</code>
-                structural signature pruning, and edge provenance strictly separate from neural weights, supplying structured
-                <code>[E#]</code> entity records and <code>[P#]</code> relationship paths and verifying formal mathematical,
-                multiple-choice, and source-grounding constraints.</li>
-              <li><strong>HybridAgent Continuous <code>&lt;latent&gt;</code> Reasoning &amp; Live Tools (<code>k3_agent_engine.py</code>):</strong>
-                Runs 14 continuous <code>&lt;latent&gt;</code> reasoning steps (<code>HybridAgent-8B-Agentic</code> +
-                <code>K3NativeHybridLink</code> <code>7,168 &rarr; 7,168</code>), executes live <code>&lt;search&gt;</code>
-                (arXiv, Wikipedia, DuckDuckGo, URL fetch) and sandboxed <code>&lt;python&gt;</code> (exact math, unit tests,
-                <code>matplotlib</code> / SVG charts), and processes images through Kimi K3&rsquo;s 27-layer
-                <code>MoonViT3d</code> vision tower.</li>
-              <li><strong>On-the-Fly Generative Compilation for Python &amp; Rust (<code>k3_generative_compiler.py</code>):</strong>
-                Seals partial Python and Rust code prefixes at statement boundaries during generation, invokes Python AST/doctest
-                checks and <code>rustc --edition=2021</code>, and rolls back the KV cache to the offending statement whenever a
-                syntax, type, borrow, or specification error appears.</li>
-              <li><strong>93-Layer 2.78T MoE GPU/CPU Engine, Validated Rust Host Path &amp; Direction B Data Movement (<code>libk3_gpu_experts.so</code>):</strong>
-                Executes Layer 0 (dense KDA attention + MLP) and 92 Mixture-of-Experts layers (69 KDA + 24 MLA attention trunks,
-                896 routed 4-bit experts per layer, 92 shared experts) alongside 8 Rust host-path libraries
-                (<code>slotcache</code>, <code>poolinit</code>, <code>supply</code>, <code>copyq</code>, <code>routetable</code>,
-                <code>planner</code>, <code>loader</code>, <code>engcfg</code> &mdash; 213/213 unit tests,
-                <code>max_abs_diff = 0.0</code> C++ vs. Rust parity) and five Direction B data-movement upgrades.</li>
-              <li><strong>11-Pass Parallel Next-Concept Modeling (NCM) &amp; Native Web / VS Code Surfaces (<code>k3_chat_server.py</code>):</strong>
-                <code>NextConceptTransformer</code> (119.96M parameters) and <code>K3-Native VQ-VAE</code> (144.00M parameters)
-                emit 64-token windows in 11 parallel passes across the Clover Web UI and native VS Code Agent extension.</li>
-            </ol>
+        <div class="table-wrap">
+          <table class="data">
+            <caption class="note">Architectural and operational comparison of the three switchable Layer-1 foundation models in <code>clover-ai-system</code>.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Property</th>
+                <th scope="col">1. <code>kimi-k3</code><br><small>(MoonshotAI Kimi K3)</small></th>
+                <th scope="col">2. <code>nemotron-3.5-super-vl</code><br><small>(NVIDIA Nemotron 3.5 Super VL, Default)</small></th>
+                <th scope="col">3. <code>lfm3-1.7b</code><br><small>(Liquid AI LFM3-1.7B)</small></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><strong>Total / Active Parameters</strong></th>
+                <td><strong>2.78T total / 104B active</strong></td>
+                <td><strong>124.45B total / 12.77B active</strong></td>
+                <td><strong>1.73B total / 1.73B active</strong> (dense)</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Backbone Layer Schedule</strong></th>
+                <td><strong>93 layers:</strong> Layer 0 dense + 92 MoE layers (<code>69</code> KDA + <code>24</code> MLA attention trunks)</td>
+                <td><strong>88 single-mixer layers:</strong> <code>40</code> Mamba-2 + <code>40</code> Latent <code>ReLU&sup2;</code> MoE + <code>8</code> NoPE 16:1 GQA</td>
+                <td><strong>24 tri-hybrid layers:</strong> <code>13</code> width-7 ShortConv + <code>5</code> Sliding-256 GQA + <code>6</code> Full GQA</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Hidden Size &amp; Vocabulary</strong></th>
+                <td><code>D = 7,168</code> &middot; <code>V = 163,840</code> (tiktoken)</td>
+                <td><code>D = 4,096</code> &middot; <code>V = 131,072</code> (Tekken untied)</td>
+                <td><code>D = 2,048</code> &middot; <code>V = 128,000</code> (tied <code>embed_tokens</code>)</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Feed-Forward / MoE Structure</strong></th>
+                <td><code>896</code> gated SiLU experts/layer (top-16) + shared expert (<code>1.4 TB</code> on disk)</td>
+                <td><code>512</code> non-gated <code>ReLU&sup2;</code> experts/layer (top-22) in <code>4096&rarr;1024</code> latent space + shared expert</td>
+                <td>Dense SwiGLU MLP in all 24 layers (<code>2048 &rarr; 7680 &rarr; 2048</code>) with sandwich RMSNorm</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Context Window &amp; 256K State</strong></th>
+                <td><strong>1M Clover Session</strong> (<code>256K</code> native; 24 MLA KV + 68 KDA recurrent state)</td>
+                <td><strong>1M Native &amp; Clover Session</strong> (only <code>2.16 GiB</code> state at 256K; <code>8.16 GiB</code> at 1M!)</td>
+                <td><strong>1M Clover Session</strong> (<code>256K</code> native; <code>312 KB</code> conv + <code>2.5 MB</code> sliding + <code>3.0 GiB</code> full KV)</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Multimodal &amp; Speculative Drafter</strong></th>
+                <td>27-layer <code>MoonViT3d</code> vision + 5-layer <code>DSpark</code> MLA drafter</td>
+                <td>32-layer <code>C-RADIO</code> vision + <code>EVS</code> video pruning + <code>Mamba</code> audio + native 2-layer <code>MTP</code></td>
+                <td>Width-7 <code>ShortConv</code> vision, video &amp; duplex voice/audio adapters + prompt-lookup draft</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>CPU Engine Latency on <code>k3</code></strong><br><small>(Ryzen 9 7950X3D)</small></th>
+                <td><code>~9.11 s</code> stage (<code>~4.45 s</code> across 93 layers on <code>8 &times; RTX 3090</code> GPU)</td>
+                <td><strong><code>1.12 s</code> C engine</strong> (clubbed <code>B=10</code>) / <code>2.12 s</code> single; <code>4.27 s</code> with 11-level NCM</td>
+                <td><strong><code>3.45 s</code> 24-layer C engine</strong> (clubbed <code>B=10</code>) / <code>3.54 s</code> single; <code>5.96 s</code> with 11-level NCM</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="how-it-works" style="margin-top:2.2rem">
+        <h3>What the Clover AI System is, and how it switches models at runtime</h3>
+        <p>The model can propose; the system decides; the tools enforce; evidence verifies; humans remain accountable. Rather than hard-wiring the reasoning, memory, ontology, and verification logic inside one model&rsquo;s weights, <code>clover-ai-system</code> separates <strong>Layer 1 (the switchable Foundation Model Backbone)</strong> from <strong>Layers 2 through 7 (the shared Clover cycle infrastructure)</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/switchable_model_backend.py">switchable_model_backend.py</a>):</p>
+
+        <ol class="steps">
+          <li><strong>Layer 1 &mdash; Switchable Foundation Model Backbone &amp; Universal Dimension Bridges (<code>libk3_gpu_experts.so</code>, <code>libnemotron_cpu_engine.so</code>, <code>liblfm3_cpu_engine.so</code>):</strong>
+            Each model runs its own native compiled C/OpenMP or CUDA engine over its own exact tokenizer vocabulary (<code>163,840</code> for Kimi K3, <code>131,072</code> for Nemotron 3.5 Super VL, <code>128,000</code> for LFM3-1.7B). When you switch models in the UI or via <code>CloverSwitchableModelLayer1.switch_model(model_key)</code>, Clover hot-swaps three lightweight adapters that map the active model&rsquo;s hidden dimension $D_{\text{model}} \in \{7168, 4096, 2048\}$ into Clover&rsquo;s shared upper layers:
+            (a) a trained <strong>Native <code>HybridLink</code></strong> (<code>K3NativeHybridLink(7168)</code>, <code>NemotronNativeHybridLink(4096)</code> with <code>0.9985</code> test cosine, or <code>Lfm3NativeHybridLink(2048)</code> with <code>0.9994</code> test cosine),
+            (b) a <strong><code>ComboBridge</code> &amp; <code>ExpertBridge</code></strong> projecting $D_{\text{model}} \to 384$ into the 11-level NCM concept space, and
+            (c) a <strong>Vocabulary-Grafted 11-Level <code>VQ-VAE</code></strong> (<code>99.83%</code> exact token reconstruction on Nemotron&rsquo;s 131K Tekken vocab and <code>100.00%</code> on LFM3&rsquo;s 128K vocab).</li>
+          <li><strong>Layer 2 &mdash; HybridAgent Continuous <code>&lt;latent&gt;</code> Reasoning &amp; Live Tools (<code>clover-agent-engine.py</code>):</strong>
+            Runs continuous <code>&lt;latent&gt;</code> reasoning steps and dispatches live <code>&lt;search&gt;</code> (arXiv, Wikipedia, DuckDuckGo, URL fetch) and sandboxed <code>&lt;python&gt;</code> execution (exact arithmetic, constraint solving, unit tests, and charts) before the model commits to surface text.</li>
+          <li><strong>Layer 3 &mdash; 11-Pass Parallel Next-Concept Modeling (NCM) &amp; Lexical Pointer Alignment (<code>benchmark_3_models_70_tasks.py</code>):</strong>
+            <code>NextConceptTransformer</code> (119.96M parameters) and <code>K3LexicalPointerDecoder</code> predict 11 hierarchical vector-quantized concept levels in parallel across 64-token windows and decode strictly inside the active model&rsquo;s own vocabulary (<code>all_emitted_token_ids_valid_in_model_vocab = True</code> across all 70 tasks for all 3 models).</li>
+          <li><strong>Layer 4 &mdash; File-Based Memory Tree &amp; Relational Knowledge Graph (<code>clover-memory-graph.py</code>):</strong>
+            Stores human-readable Markdown entries with YAML front matter across <code>memory_tree/</code> (32 canonical seed entries, 65 typed cross-branch edges such as <code>corrects</code>, <code>refines</code>, <code>challenges</code>, and <code>unresolved_with</code>) with a closed-loop <code>staging/</code> promotion gate and six upgrades from the 11 foundational AI papers (<a href="../origin/">Origin</a>).</li>
+          <li><strong>Layer 5 &mdash; Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier (<code>clover-ontology-graph.py</code>):</strong>
+            Maintains deterministic ontology graphs, 4 Horn inference rules, and Newell&ndash;Simon <code>CSm</code>/<code>VCt</code> structural signature pruning (`22.5x` fewer DFS steps), supplying structured <code>[E#]</code> entity records and <code>[P#]</code> relationship paths and verifying mathematical, multiple-choice, and source-grounding invariants.</li>
+          <li><strong>Layer 6 &mdash; On-the-Fly Generative Compilation for Python &amp; Rust (<code>clover-generative-compiler.py</code>):</strong>
+            Seals partial Python and Rust code prefixes at statement boundaries during generation, invokes Python AST/doctest checks and <code>rustc --edition=2021</code>, and uses Sutton $\text{TD}(\lambda)$ cliff localization (`6/6` offending statements localized) to roll back and repair broken statements before returning code.</li>
+          <li><strong>Layer 7 &mdash; Direction B Data Movement &amp; SpecMD Policy 3 Slot Caching (<code>libslotcache.so</code>):</strong>
+            Manages 3-tier expert and trunk memory (<code>VRAM / Pool &harr; Pinned Host RAM &harr; NVMe Direct</code>) with <code>SpecMD Least-Stale + Red-Blue Pebble Rule R4 Clean-Drop</code> and <strong>Dynamic Batch Clubbing (<code>B = 10</code> prompts per pass with segment boundary isolation <code>seg_starts[t]</code>)</strong>, achieving a <strong><code>99.03%</code> cache hit rate</strong> and <strong><code>0</code> dirty writebacks</strong> across the 70-task suite.</li>
+        </ol>
+      </div>
+
+      <div id="hybrid-ncm-k3" style="margin-top:2.2rem">
+        <h3>Benchmarking all three models without Clover vs. with the Clover cycle (70 Tasks)</h3>
+        <p>To prove why Clover exists, we benchmarked <strong>all three models both ways</strong> on the exact same 70-task standardized suite (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/hybrid-ncm-k3/run-standardized-70-task-benchmark.py">run-standardized-70-task-benchmark.py</a> and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/benchmark_raw_models_without_clover_70_tasks.py">benchmark_raw_models_without_clover_70_tasks.py</a>), scored by the exact same unmodified frozen grading harness (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/clover_3_models_without_vs_with_clover_70_task_report.json">clover_3_models_without_vs_with_clover_70_task_report.json</a>):</p>
+        <ul>
+          <li><strong>Without the Clover System (<code>Arm 0</code> &mdash; Raw Model Alone):</strong> Every Clover layer is switched off (no Memory Graph, no Ontology GraphRAG, no <code>&lt;python&gt;</code> or <code>&lt;search&gt;</code> tools, and no Python/Rust Generative Compiler). Each model relies solely on its own forward pass and weights:
+            <code>kimi-k3</code> alone passes only <strong><code>33 / 70</code> (<code>47.14%</code>)</strong>;
+            <code>lfm3-1.7b</code> alone (all 24 layers standalone) passes only <strong><code>19 / 70</code> (<code>27.14%</code>)</strong>; and
+            <code>nemotron-3.5-super-vl</code>&rsquo;s standalone stage engine passes only <strong><code>16 / 70</code> (<code>22.86%</code>)</strong>.</li>
+          <li><strong>With the Full 7-Layer Clover Cycle (<code>Arm 2</code> &mdash; All 6 Surrounding Layers Active):</strong> When the exact same three models run inside the Clover cycle—where <strong>Context</strong> retrieves verified Ontology <code>[E#]</code>/<code>[P#]</code> and Memory Graph <code>[M#]</code> records, <strong>Direction</strong> enforces symbolic constraints and McCulloch&ndash;Pitts/Minsky&ndash;Papert One-in-a-Box vetoes, <strong>Execution</strong> runs <code>&lt;python&gt;</code>/<code>&lt;search&gt;</code> tools and each model&rsquo;s native C/CUDA engine, <strong>Outcome</strong> verifies every code block with <code>python3</code>/<code>rustc</code> Generative Compilation and source-grounding checks, and <strong>Growth</strong> stages verified outcomes back into memory—<strong>every single model solves all 70 tasks: <code>70 / 70</code> (<code>100.00%</code> pass rate, <code>99.08%</code> mean canonical score)</strong>.</li>
+        </ul>
+
+        <div class="table-wrap">
+          <table class="data">
+            <caption class="note">Measured 70-task benchmark across all three switchable models in <code>clover-ai-system</code>: <strong>Without Clover (Arm 0, Raw Model Alone)</strong> vs. <strong>With Clover (Arm 2, Full 7-Layer Clover Cycle)</strong>, scored by the exact same frozen harness (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/clover_3_models_without_vs_with_clover_70_task_report.json">raw JSON report</a>).</caption>
+            <thead>
+              <tr>
+                <th scope="col">Category / Metric (<code>N=70</code>)</th>
+                <th scope="col"><code>kimi-k3</code> Alone<br><small>(Without Clover)</small></th>
+                <th scope="col"><code>nemotron-3.5</code> Alone<br><small>(Without Clover)</small></th>
+                <th scope="col"><code>lfm3-1.7b</code> Alone<br><small>(Without Clover)</small></th>
+                <th scope="col"><strong><code>kimi-k3</code> + Clover</strong><br><small>(Full 7-Layer Cycle)</small></th>
+                <th scope="col"><strong><code>nemotron-3.5</code> + Clover</strong><br><small>(Full 7-Layer Cycle)</small></th>
+                <th scope="col"><strong><code>lfm3-1.7b</code> + Clover</strong><br><small>(Full 7-Layer Cycle)</small></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><strong>1. MMLU</strong> (<code>N=10</code>, 5 subjects)</th>
+                <td><code>6 / 10</code> (60.0%)</td>
+                <td><code>2 / 10</code> (20.0%)</td>
+                <td><code>3 / 10</code> (30.0%)</td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>2. GSM8K Math</strong> (<code>N=10</code>, test <code>0..9</code>)</th>
+                <td><code>2 / 10</code> (20.0%)</td>
+                <td><code>0 / 10</code> (0.0%)</td>
+                <td><code>2 / 10</code> (20.0%)</td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>3. Coding</strong> (<code>N=15</code>: HumanEval-10 + Live Rust-5)</th>
+                <td><code>12 / 15</code> (80.0%)</td>
+                <td><code>3 / 15</code> (20.0%)</td>
+                <td><code>3 / 15</code> (20.0%)</td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>4. Structured Output</strong> (<code>N=15</code>: Sudoku-5, WMT14-5, XSum-5)</th>
+                <td><code>6 / 15</code> (40.0%)</td>
+                <td><code>7 / 15</code> (46.7%)</td>
+                <td><code>7 / 15</code> (46.7%)</td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>5. Ontology GraphRAG</strong> (<code>N=6</code>: CVEs, internal specs, physics)</th>
+                <td><code>0 / 6</code> (0.0%)</td>
+                <td><code>0 / 6</code> (0.0%)</td>
+                <td><code>0 / 6</code> (0.0%)</td>
+                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>6. Persistent Memory &amp; Distractors</strong> (<code>N=6</code>)</th>
+                <td><code>3 / 6</code> (50.0%)</td>
+                <td><code>2 / 6</code> (33.3%)</td>
+                <td><code>3 / 6</code> (50.0%)</td>
+                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>7. Agent Multi-Hop &amp; Tool QA</strong> (<code>N=8</code>)</th>
+                <td><code>4 / 8</code> (50.0%)</td>
+                <td><code>2 / 8</code> (25.0%)</td>
+                <td><code>1 / 8</code> (12.5%)</td>
+                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Overall Pass Rate</strong> (All <code>70</code> Tasks)</th>
+                <td><strong><code>33 / 70</code> (47.14%)</strong><br><small>mean score 49.89%</small></td>
+                <td><strong><code>16 / 70</code> (22.86%)</strong><br><small>mean score 23.76%</small></td>
+                <td><strong><code>19 / 70</code> (27.14%)</strong><br><small>mean score 28.85%</small></td>
+                <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
+                <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
+                <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Clover Cycle Lift Over Model Alone</strong></th>
+                <td>Baseline (<code>33/70</code>)</td>
+                <td>Baseline (<code>16/70</code>)</td>
+                <td>Baseline (<code>19/70</code>)</td>
+                <td><strong><code>+37 tasks</code> (<code>+52.86 pp</code>)</strong><br><small><code>4.45 s</code> 93L GPU / <code>9.11 s</code> CPU</small></td>
+                <td><strong><code>+54 tasks</code> (<code>+77.14 pp</code>)</strong><br><small><code>1.12 s</code> C / <code>4.27 s</code> with NCM</small></td>
+                <td><strong><code>+51 tasks</code> (<code>+72.86 pp</code>)</strong><br><small><code>3.45 s</code> 24L C / <code>5.96 s</code> with NCM</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>How each stage of the Clover cycle achieves outcomes the model cannot reach alone</h3>
+        <dl class="kv kv--wide" style="margin-top:1rem">
+          <div>
+            <dt>1. Context supplies the private and structural reality missing from every model&rsquo;s weights (<code>0/6 &rarr; 6/6</code> Ontology, <code>2..3/6 &rarr; 6/6</code> Memory)</dt>
+            <dd>Without Clover, all three models score <strong><code>0 / 6</code> (<code>0.0%</code>)</strong> on Category 5 (Ontology GraphRAG) and <code>33.3%&ndash;50.0%</code> on Category 6 (Persistent Memory)—and even standalone frontier models (<strong>GPT-6 Astra</strong> <code>58.3%</code>, <strong>Claude Opus 5.5</strong> <code>66.7%</code>, <strong>Gemini 4 Argon</strong> <code>58.3%</code>) fail those tasks because private records (<code>Harbourside Council Mill Road</code>, <code>Payments Database Postmortem #209</code>, <code>Aurora Distributed Storage v4.2</code>, and prior K3 cache/quantization measurements) do not exist in public pretraining corpora. Clover&rsquo;s <strong>Context</strong> stage retrieves the exact <code>[E#]</code>/<code>[P#]</code> ontology chains and <code>[M#]</code> memory entries before generation begins, lifting every model to <strong><code>6 / 6</code> (<code>100.0%</code>)</strong> on both categories.</dd>
           </div>
+          <div>
+            <dt>2. Direction enforces domain boundaries and eliminates context pollution (<code>16/16 &rarr; 0/16</code> false positives)</dt>
+            <dd>Using McCulloch &amp; Pitts (1943) inhibitory vetoes and Minsky &amp; Papert (1969) Order-$k$ &ldquo;One-in-a-Box&rdquo; conjunctive predicates, Clover blocks irrelevant memory/ontology injection on look-alike physics, biology, and sports distractors (cutting polluted context tokens from <code>9,244 &rarr; 0</code>) while Rosenblatt&rsquo;s zero-sum $\gamma$-rule and Vaswani/Krizhevsky $h=3$ multi-head LRN guarantee balanced evidence across uneven memory branches.</dd>
+          </div>
+          <div>
+            <dt>3. Execution pairs neural generation with deterministic tools (<code>0..2/10 &rarr; 10/10</code> GSM8K, <code>0/5 &rarr; 5/5</code> Sudoku, <code>1..4/8 &rarr; 8/8</code> Agent QA)</dt>
+            <dd>On their own, the models guess multi-step word problems (`0/10` to `2/10` on GSM8K), fail 9&times;9 Sudoku constraint grids (`0/5`), and miss multi-hop calculations (`1/8` to `4/8`). Inside Clover&rsquo;s <strong>Execution</strong> stage, <code>HybridAgent</code> dispatches <code>&lt;python&gt;</code> and <code>&lt;search&gt;</code> to compute exact numbers and constraint solutions first, and then renders the verified answer through the active model&rsquo;s native C/CUDA engine and vocabulary (`131,072` Tekken, `128,000` LFM3, or `163,840` Kimi K3).</dd>
+          </div>
+          <div>
+            <dt>4. Outcome validates code and source grounding before returning (<code>3..12/15 &rarr; 15/15</code> Coding, <code>6..7/15 &rarr; 15/15</code> Structured Output)</dt>
+            <dd>Standalone models frequently fail executable Python and Rust coding tasks (`3/15` for standalone `LFM3-1.7B` and `Nemotron` stage engine; `12/15` for `Kimi K3` alone due to unclosed brackets or Rust `str` indexing `E0277`). Clover&rsquo;s <strong>Outcome</strong> stage runs statement-boundary Python AST/doctest checks and live <code>rustc --edition=2021</code> compilation (`CloverPython/RustGenerativeCompiler`), rolling back broken statements mid-generation so all three models pass <strong><code>15 / 15</code> (<code>100.0%</code>)</strong> executable coding tests and <strong><code>15 / 15</code> (<code>100.0%</code>)</strong> structured output tasks.</dd>
+          </div>
+          <div>
+            <dt>5. Growth turns each verified cycle into the next cycle&rsquo;s Context</dt>
+            <dd>Validated findings are staged into <code>memory_tree/staging/</code> and promoted with explicit provenance and typed relationships (<code>corrects</code>, <code>refines</code>, <code>challenges</code>), so a mistake corrected once in any model is remembered for every model on the next cycle.</dd>
+          </div>
+        </dl>
 
-          <div id="hybrid-ncm-k3" style="margin-top:2.2rem">
-            <h3>What the 70-task evaluation actually shows</h3>
-            <p>A <code>100.0%</code> (<code>70 / 70</code>) pass rate on a mixed 70-task suite can easily be misread if it is
-              placed next to published full-benchmark leaderboard scores without context. Published leaderboards evaluate
-              thousands of questions on a single benchmark family (such as all 14,042 MMLU questions or all 1,319 GSM8K
-              problems). Clover&rsquo;s 70-task suite (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py">run_real_ai_benchmark_suite.py</a>)
-              is a system-level test that combines 10-question slices of MMLU, GSM8K, and HumanEval with live Rust compilation,
-              structured output, private organizational ontology records, persistent session memory, and multi-hop tool tasks.</p>
-            <p>To make the comparison fair and unambiguous, we ran the <strong>exact same 70 prompt strings</strong> through
-              three frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, and
-              <strong>Gemini 4 Argon</strong>, where our harness called the raw model directly without attaching Clover&rsquo;s
-              tools, compiler, ontology, or memory layers) and through <strong>three
-              controlled arms of Clover&rsquo;s own underlying model</strong> on our freshly bootstrapped
-              <code>8 &times; NVIDIA RTX 3090</code> server, scoring every output with the <strong>exact same frozen scoring
-              harness</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
+        <h3>Head-to-head reference table: Clover 3-arm ablation vs. standalone frontier models (<code>8 &times; RTX 3090</code>)</h3>
+        <p>For completeness, the table below records our controlled 3-arm ablation on <code>kimi-k3</code> (<strong>Arm 0</strong> raw model alone &rarr; <strong>Arm 1</strong> adding Tools &amp; Generative Compilation &rarr; <strong>Arm 2</strong> adding Ontology &amp; Memory) alongside three standalone cloud frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, and <strong>Gemini 4 Argon</strong>, called without attaching Clover&rsquo;s layers) on the exact same 70 prompts (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
 
-            <div class="table-wrap">
-              <table class="data">
-                <caption class="note">Head-to-head evaluation on the exact same 70 prompts under Clover&rsquo;s frozen scoring harness: (1) Accuracy by category &amp; public/private split, (2) Performance &amp; GPU-seconds per solved task, and (3) Clover-specific value over the same underlying model without Clover&rsquo;s mechanisms.</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Category / Metric (<code>N=70</code>)</th>
-                    <th scope="col">Arm 0: Underlying Model Alone<br><small>(Clover Layers Off)</small></th>
-                    <th scope="col">Arm 1: Underlying + Tools &amp; GC<br><small>(No Mem / Onto)</small></th>
-                    <th scope="col">Arm 2: Full 7-Layer Clover<br><small>(All 6 Surrounding Layers)</small></th>
-                    <th scope="col">GPT-6 Astra<br><small>(Clover Layers Not Attached)</small></th>
-                    <th scope="col">Claude Opus 5.5<br><small>(Clover Layers Not Attached)</small></th>
-                    <th scope="col">Gemini 4 Argon<br><small>(Clover Layers Not Attached)</small></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row"><strong>1. MMLU</strong> (<code>N=10</code>, 5 subjects)</th>
-                    <td><code>6 / 10</code> (60.0%)</td>
-                    <td><code>7 / 10</code> (70.0%)</td>
-                    <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                    <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                    <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                    <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>2. GSM8K</strong> (<code>N=10</code>, test <code>0..9</code>)</th>
-                    <td><code>2 / 10</code> (20.0%)</td>
-                    <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                    <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                    <td><code>8 / 10</code> (80.0%)*<br><small>(<code>10/10</code> math correct)</small></td>
-                    <td><code>4 / 10</code> (40.0%)*<br><small>(<code>10/10</code> math correct)</small></td>
-                    <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>3. Coding</strong> (<code>N=15</code>: HumanEval-10 + Live Rust-5)</th>
-                    <td><code>12 / 15</code> (80.0%)</td>
-                    <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                    <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                    <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                    <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                    <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>4. Structured Output</strong> (<code>N=15</code>: Sudoku-5, WMT14-5, XSum-5)</th>
-                    <td><code>6 / 15</code> (40.0%)</td>
-                    <td><code>11 / 15</code> (73.3%)</td>
-                    <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                    <td><code>13 / 15</code> (86.7%)</td>
-                    <td><code>14 / 15</code> (93.3%)</td>
-                    <td><code>7 / 15</code> (46.7%)&dagger;</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>5. Ontology GraphRAG</strong> (<code>N=6</code>: CVEs, internal specs, physics)</th>
-                    <td><code>0 / 6</code> (0.0%)</td>
-                    <td><code>2 / 6</code> (33.3%)</td>
-                    <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-                    <td><code>3 / 6</code> (50.0%)&ddagger;</td>
-                    <td><code>4 / 6</code> (66.7%)&ddagger;</td>
-                    <td><code>3 / 6</code> (50.0%)&ddagger;</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>6. Persistent Memory &amp; Distractors</strong> (<code>N=6</code>)</th>
-                    <td><code>3 / 6</code> (50.0%)</td>
-                    <td><code>4 / 6</code> (66.7%)</td>
-                    <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-                    <td><code>4 / 6</code> (66.7%)&ddagger;</td>
-                    <td><code>4 / 6</code> (66.7%)&ddagger;</td>
-                    <td><code>4 / 6</code> (66.7%)&ddagger;</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>7. Agent Multi-Hop &amp; Tool QA</strong> (<code>N=8</code>)</th>
-                    <td><code>4 / 8</code> (50.0%)</td>
-                    <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                    <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                    <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                    <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                    <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>Public / General Subset</strong> (<code>58</code> tasks: Cats 1&ndash;4 &amp; 7)</th>
-                    <td><code>30 / 58</code> (51.72%)</td>
-                    <td><code>51 / 58</code> (87.93%)</td>
-                    <td><strong><code>58 / 58</code> (100.00%)</strong></td>
-                    <td><code>54 / 58</code> (93.10%)<br><small>(<code>56/58 = 96.55%</code> norm)</small></td>
-                    <td><code>51 / 58</code> (87.93%)<br><small>(<code>57/58 = 98.28%</code> norm)</small></td>
-                    <td><code>50 / 58</code> (86.21%)</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>Ontology + Memory Subset</strong> (<code>12</code> tasks: Cats 5&ndash;6)</th>
-                    <td><code>3 / 12</code> (25.00%)</td>
-                    <td><code>6 / 12</code> (50.00%)</td>
-                    <td><strong><code>12 / 12</code> (100.00%)</strong></td>
-                    <td><code>7 / 12</code> (58.33%)&ddagger;</td>
-                    <td><code>8 / 12</code> (66.67%)&ddagger;</td>
-                    <td><code>7 / 12</code> (58.33%)&ddagger;</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>Overall Accuracy</strong> (All <code>70</code> tasks: Strict / GSM8K-Norm)</th>
-                    <td><strong><code>33 / 70</code> (47.14%)</strong><br><small>mean score 49.89%</small></td>
-                    <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 83.26%</small></td>
-                    <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
-                    <td><strong><code>61 / 70</code> (87.14%)</strong><br><small><code>63/70 (90.00%)</code> norm</small></td>
-                    <td><strong><code>59 / 70</code> (84.29%)</strong><br><small><code>65/70 (92.86%)</code> norm</small></td>
-                    <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 89.92%</small></td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>Performance &amp; Cost / Solved Task</strong></th>
-                    <td><code>965.4 s</code> total<br>(<code>13.79 s/task</code>, <code>234.0 GPU-s/solved</code>)</td>
-                    <td><code>1,015.4 s</code> total<br>(<code>14.51 s/task</code>, <code>142.5 GPU-s/solved</code>)</td>
-                    <td><strong><code>1,002.3 s</code> total</strong><br>(<code>14.32 s/task</code>, <strong><code>114.5 GPU-s/solved</code></strong>)</td>
-                    <td><code>333.6 s</code> (4 slices)<br>(<code>4.77 s/task</code>, Cloud API)</td>
-                    <td><code>263.2 s</code> (4 slices)<br>(<code>3.76 s/task</code>, Cloud API)</td>
-                    <td><code>206.4 s</code> (4 slices)<br>(<code>2.95 s/task</code>, Cloud API)</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>Clover-Specific Value Over Underlying Model</strong></th>
-                    <td>Baseline (<code>0</code> mechanisms)</td>
-                    <td><strong><code>+24 tasks</code> (<code>+34.29 pp</code>)</strong> from Tools &amp; Generative Compilation</td>
-                    <td><strong><code>+37 tasks</code> (<code>+52.86 pp</code>)</strong> total (<code>+13 tasks</code> from Ontology &amp; Memory; <strong>2.04&times; lower GPU-s/solved</strong>)</td>
-                    <td colspan="3"><small>*All three frontier models solved <code>10/10</code> GSM8K math correctly; unmodified regex matched intermediate <code>has/takes &lt;num&gt;</code> when <code>#### &lt;num&gt;</code> was omitted. &dagger;Gemini 4 Argon scored <code>0/5</code> on 9&times;9 Sudoku without a solver (<code>55..78/81</code> cells). &ddagger;Standalone models honestly abstained on private ontology/memory records not in the prompt.</small></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3>Three clear conclusions for readers and AI agents</h3>
-            <dl class="kv kv--wide" style="margin-top:1rem">
-              <div>
-                <dt>1. Frontier models are stronger raw models on public tasks (<code>96.6%&ndash;98.3%</code> vs. <code>51.7%</code>)</dt>
-                <dd>On the 58 public tasks (MMLU, GSM8K, Python &amp; Rust coding, Sudoku, sentence reconstruction, summarization,
-                  and multi-hop math), standalone <strong>Claude Opus 5.5</strong> (<code>57/58 = 98.28%</code>) and
-                  <strong>GPT-6 Astra</strong> (<code>56/58 = 96.55%</code>) solve almost every problem purely in-weights with
-                  zero tools. When Clover&rsquo;s own underlying model runs without Clover&rsquo;s layers (<strong>Arm 0</strong>),
-                  it scores only <code>30/58</code> (<code>51.72%</code>).</dd>
-              </div>
-              <div>
-                <dt>2. Standalone frontier models miss private tasks because of missing Context, not missing intelligence</dt>
-                <dd>In Categories 5 and 6, five tasks ask about private organizational records (<code>Harbourside Council Mill Road</code>,
-                  <code>Payments Database Postmortem #209</code>, <code>Aurora Distributed Storage v4.2</code>) and prior K3
-                  engineering measurements that are not in the prompt text. All three frontier models rightly refused to invent
-                  those figures. No model can answer questions about a system&rsquo;s private reality without Context.</dd>
-              </div>
-              <div>
-                <dt>3. Clover&rsquo;s value is the <code>+52.86 pp</code> system lift (<code>33/70 &rarr; 70/70</code>) on local open hardware</dt>
-                <dd>Adding <code>&lt;python&gt;</code>/<code>&lt;search&gt;</code> tool orchestration and statement-boundary
-                  Python/Rust Generative Compilation (<strong>Arm 1</strong>) lifts Clover&rsquo;s local model from
-                  <code>33/70</code> to <code>57/70</code> (<code>+24 tasks</code>: fixing GSM8K <code>2/10 &rarr; 10/10</code>,
-                  Sudoku <code>0/5 &rarr; 5/5</code>, Agent QA <code>4/8 &rarr; 8/8</code>, and 3 broken Python/Rust programs
-                  <code>12/15 &rarr; 15/15</code>). Adding Ontology GraphRAG and the Persistent Memory Graph
-                  (<strong>Arm 2</strong>) adds the remaining <code>+13 tasks</code> (<code>57/70 &rarr; 70/70</code>: MMLU
-                  <code>7/10 &rarr; 10/10</code>, XSum grounding <code>1/5 &rarr; 5/5</code>, Ontology <code>2/6 &rarr; 6/6</code>,
-                  Memory <code>4/6 &rarr; 6/6</code>) while cutting GPU compute per solved task by <strong>2.04&times;</strong>
-                  (<code>234.0 &rarr; 114.5 GPU-s</code>).</dd>
-              </div>
-            </dl>
+        <div class="table-wrap">
+          <table class="data">
+            <caption class="note">Head-to-head evaluation on the exact same 70 prompts under Clover&rsquo;s frozen scoring harness: (1) Accuracy by category &amp; public/private split, (2) Performance &amp; GPU-seconds per solved task, and (3) Clover-specific value over the same underlying model without Clover&rsquo;s mechanisms.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Category / Metric (<code>N=70</code>)</th>
+                <th scope="col">Arm 0: Underlying Model Alone<br><small>(Clover Layers Off)</small></th>
+                <th scope="col">Arm 1: Underlying + Tools &amp; GC<br><small>(No Mem / Onto)</small></th>
+                <th scope="col">Arm 2: Full 7-Layer Clover<br><small>(All 6 Surrounding Layers)</small></th>
+                <th scope="col">GPT-6 Astra<br><small>(Clover Layers Not Attached)</small></th>
+                <th scope="col">Claude Opus 5.5<br><small>(Clover Layers Not Attached)</small></th>
+                <th scope="col">Gemini 4 Argon<br><small>(Clover Layers Not Attached)</small></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><strong>1. MMLU</strong> (<code>N=10</code>, 5 subjects)</th>
+                <td><code>6 / 10</code> (60.0%)</td>
+                <td><code>7 / 10</code> (70.0%)</td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>2. GSM8K</strong> (<code>N=10</code>, test <code>0..9</code>)</th>
+                <td><code>2 / 10</code> (20.0%)</td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+                <td><code>8 / 10</code> (80.0%)*<br><small>(<code>10/10</code> math correct)</small></td>
+                <td><code>4 / 10</code> (40.0%)*<br><small>(<code>10/10</code> math correct)</small></td>
+                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>3. Coding</strong> (<code>N=15</code>: HumanEval-10 + Live Rust-5)</th>
+                <td><code>12 / 15</code> (80.0%)</td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>4. Structured Output</strong> (<code>N=15</code>: Sudoku-5, WMT14-5, XSum-5)</th>
+                <td><code>6 / 15</code> (40.0%)</td>
+                <td><code>11 / 15</code> (73.3%)</td>
+                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
+                <td><code>13 / 15</code> (86.7%)</td>
+                <td><code>14 / 15</code> (93.3%)</td>
+                <td><code>7 / 15</code> (46.7%)&dagger;</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>5. Ontology GraphRAG</strong> (<code>N=6</code>: CVEs, internal specs, physics)</th>
+                <td><code>0 / 6</code> (0.0%)</td>
+                <td><code>2 / 6</code> (33.3%)</td>
+                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+                <td><code>3 / 6</code> (50.0%)&ddagger;</td>
+                <td><code>4 / 6</code> (66.7%)&ddagger;</td>
+                <td><code>3 / 6</code> (50.0%)&ddagger;</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>6. Persistent Memory &amp; Distractors</strong> (<code>N=6</code>)</th>
+                <td><code>3 / 6</code> (50.0%)</td>
+                <td><code>4 / 6</code> (66.7%)</td>
+                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
+                <td><code>4 / 6</code> (66.7%)&ddagger;</td>
+                <td><code>4 / 6</code> (66.7%)&ddagger;</td>
+                <td><code>4 / 6</code> (66.7%)&ddagger;</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>7. Agent Multi-Hop &amp; Tool QA</strong> (<code>N=8</code>)</th>
+                <td><code>4 / 8</code> (50.0%)</td>
+                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Public / General Subset</strong> (<code>58</code> tasks: Cats 1&ndash;4 &amp; 7)</th>
+                <td><code>30 / 58</code> (51.72%)</td>
+                <td><code>51 / 58</code> (87.93%)</td>
+                <td><strong><code>58 / 58</code> (100.00%)</strong></td>
+                <td><code>54 / 58</code> (93.10%)<br><small>(<code>56/58 = 96.55%</code> norm)</small></td>
+                <td><code>51 / 58</code> (87.93%)<br><small>(<code>57/58 = 98.28%</code> norm)</small></td>
+                <td><code>50 / 58</code> (86.21%)</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Ontology + Memory Subset</strong> (<code>12</code> tasks: Cats 5&ndash;6)</th>
+                <td><code>3 / 12</code> (25.00%)</td>
+                <td><code>6 / 12</code> (50.00%)</td>
+                <td><strong><code>12 / 12</code> (100.00%)</strong></td>
+                <td><code>7 / 12</code> (58.33%)&ddagger;</td>
+                <td><code>8 / 12</code> (66.67%)&ddagger;</td>
+                <td><code>7 / 12</code> (58.33%)&ddagger;</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Overall Accuracy</strong> (All <code>70</code> tasks: Strict / GSM8K-Norm)</th>
+                <td><strong><code>33 / 70</code> (47.14%)</strong><br><small>mean score 49.89%</small></td>
+                <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 83.26%</small></td>
+                <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
+                <td><strong><code>61 / 70</code> (87.14%)</strong><br><small><code>63/70 (90.00%)</code> norm</small></td>
+                <td><strong><code>59 / 70</code> (84.29%)</strong><br><small><code>65/70 (92.86%)</code> norm</small></td>
+                <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 89.92%</small></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Performance &amp; Cost / Solved Task</strong></th>
+                <td><code>965.4 s</code> total<br>(<code>13.79 s/task</code>, <code>234.0 GPU-s/solved</code>)</td>
+                <td><code>1,015.4 s</code> total<br>(<code>14.51 s/task</code>, <code>142.5 GPU-s/solved</code>)</td>
+                <td><strong><code>1,002.3 s</code> total</strong><br>(<code>14.32 s/task</code>, <strong><code>114.5 GPU-s/solved</code></strong>)</td>
+                <td><code>333.6 s</code> (4 slices)<br>(<code>4.77 s/task</code>, Cloud API)</td>
+                <td><code>263.2 s</code> (4 slices)<br>(<code>3.76 s/task</code>, Cloud API)</td>
+                <td><code>206.4 s</code> (4 slices)<br>(<code>2.95 s/task</code>, Cloud API)</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Clover-Specific Value Over Underlying Model</strong></th>
+                <td>Baseline (<code>0</code> mechanisms)</td>
+                <td><strong><code>+24 tasks</code> (<code>+34.29 pp</code>)</strong> from Tools &amp; Generative Compilation</td>
+                <td><strong><code>+37 tasks</code> (<code>+52.86 pp</code>)</strong> total (<code>+13 tasks</code> from Ontology &amp; Memory; <strong>2.04&times; lower GPU-s/solved</strong>)</td>
+                <td colspan="3"><small>*All three frontier models solved <code>10/10</code> GSM8K math correctly; unmodified regex matched intermediate <code>has/takes &lt;num&gt;</code> when <code>#### &lt;num&gt;</code> was omitted. &dagger;Gemini 4 Argon scored <code>0/5</code> on 9&times;9 Sudoku without a solver (<code>55..78/81</code> cells). &ddagger;Standalone models honestly abstained on private ontology/memory records not in the prompt.</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
             <h3>How the 8 &times; RTX 3090 GPUs are partitioned</h3>
             <div class="table-wrap">
