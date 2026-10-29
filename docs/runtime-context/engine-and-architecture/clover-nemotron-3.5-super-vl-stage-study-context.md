@@ -156,3 +156,24 @@ Using [research/nemotron_super_vl_stage_study.py](../../../research/nemotron_sup
 3. **Released Native MTP Weights (`language_model.mtp`):**
    - Unlike `Kimi K3`'s open checkpoint (`num_nextn_predict_layers: 0`), `Nemotron 3.5 Super VL` ships the complete trained 2-layer MTP weights (`1,040` tensors, `2.94B` total / `~211M` active parameters), enabling 3–5 token speculative drafting in 2 layers instead of 88.
 
+---
+
+### 5. Model-Specific Multimodal Enablement (`Vision`, `Video`, `Audio / Voice Conversation`, and `Image / Video Generation`)
+
+Following Clover's one-model-at-a-time cycle, we enabled and verified model-specific multimodal pipelines for each switchable Layer-1 model on `k3` (`37.27.114.74`) and in the Clover AI Studio UI ([site/clover-ai/index.html](../../../site/clover-ai/index.html) and [clover-ai-system/src/tools/hybrid-ncm-k3/clover-chat-server.py](../../../clover-ai-system/src/tools/hybrid-ncm-k3/clover-chat-server.py)):
+
+1. **`nemotron-3.5-super-vl` ([clover-ai-system/src/models/nemotron-3.5-super-vl/nemotron_multimodal.py](../../../clover-ai-system/src/models/nemotron-3.5-super-vl/nemotron_multimodal.py)):**
+   - **Image Understanding (`nemotron_super_vl_vision_cradio_ncm`):** Uses the real 32-layer `C-RADIO` (`RadioModel`, 391 BF16 tensors) + `PixelShuffle(0.5)` + `ReLU²` `mlp1` projector (`5120 -> 20480 -> 4096`) to compress $512 \times 512$ images (`1,024` patches) into `[1, 256, 4096]` (`output_rms = 0.19391` on `k3`), projects through `NemotronNativeHybridLink(d=4096)` and `NemotronExpertBridge(4096 -> 384)`, and decodes in Nemotron's `131,072` Tekken vocabulary (`ModelSpecificNCMRenderer("nemotron-3.5-super-vl")`).
+   - **Video Understanding (`nemotron_super_vl_video_evs_ncm`):** Uses `video_patch_projection` ($T=2$ frames per temporal patch) + **Efficient Video Sampling (`EVS`)** `compute_evs_retention_mask` (`512 -> 256` retained motion/anchor tokens at $q = 0.5$) projected into `4096`-d space and NCM.
+   - **Audio & Duplex Voice Conversation (`nemotron_super_vl_audio_voice_ncm`):** Extracts 80-band log-Mel spectral frames from uploaded audio (`.wav`, `.mp3`, `.m4a`, `.ogg`, `.flac`), projects them through `NemotronAudioMambaBridge` (`[1, 64, 4096]`, width-4 causal `conv1d` + `SiLU`) into `NemotronNativeHybridLink` and `NemotronComboBridge(4096 -> 384)`, and synthesizes voice replies using `en-US-AriaNeural` (with deterministic harmonic WAV fallback when offline).
+   - **Image & Video Generation (`nemotron_super_vl_image_generation`, `nemotron_super_vl_video_generation`):** Synthesizes downloadable $800 \times 450$ SVG + PNG images and 12-frame animated GIF + SMIL keyframe SVG video clips grounded in Nemotron's `131,072` vocabulary.
+
+2. **`lfm3-1.7b` ([clover-ai-system/src/models/lfm3-1.7b/lfm3_multimodal.py](../../../clover-ai-system/src/models/lfm3-1.7b/lfm3_multimodal.py)):**
+   - **Duplex Audio & Voice Conversation (`lfm3_1_7b_audio_voice_ncm`):** Projects 80-band log-Mel acoustic frames through `Lfm3ShortConvAudioVoiceAdapter` (`80 -> 2048` + exact width-7 `Lfm3GatedShortConvBlock` with sandwich `operator_norm` and `post_operator_norm`, `[1, 64, 2048]`, fixed `O(1)` conv state) into `Lfm3NativeHybridLink(d=2048)` and `Lfm3ComboBridge(2048 -> 384)` (`128,000` vocabulary), paired with `en-US-JennyNeural` voice synthesis.
+   - **Vision & Video Understanding (`lfm3_1_7b_vision_shortconv_ncm`, `lfm3_1_7b_video_shortconv_ncm`):** Encodes `256` merged spatial super-patches (`output_rms = 0.024`) and multi-frame video clips (`512 -> 256` retained motion tokens) through width-7 `Lfm3GatedShortConvBlock` into `[1, N, 2048]` and `128,000`-vocab NCM.
+   - **Image & Video Generation (`lfm3_1_7b_image_generation`, `lfm3_1_7b_video_generation`):** Synthesizes SVG/PNG illustrations and 12-frame animated video clips rendered with LFM3's `128,000`-vocab NCM descriptions.
+
+3. **Model-Aware Studio UI ([site/clover-ai/index.html](../../../site/clover-ai/index.html)):**
+   - Vertical model dropdown cards display each model's architecture, `1M` context capacity, enabled modalities, CPU stage time, and full turn latency.
+   - Switching models dynamically updates the composer's multimodal capability bar (`📷 Image / Video`, `🎵 Audio`, `🎙️ Voice Chat: Off/On`, `🖼️ Create Image`, `🎬 Create Video`), voice synthesis profile (`AriaNeural` / `JennyNeural` / `AnaNeural`), and `/api/models/capabilities`.
+
