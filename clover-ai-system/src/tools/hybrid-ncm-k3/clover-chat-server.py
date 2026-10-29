@@ -2579,6 +2579,16 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             return
         self._send_json({"ok": True})
 
+    def do_HEAD(self):
+        if not self._is_authorized_request():
+            self.send_response(403)
+            self.end_headers()
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Access-Control-Allow-Origin", self._cors_origin())
+        self.end_headers()
+
     def do_GET(self):
         if not self._is_authorized_request():
             self._send_json({"error": "Forbidden"}, code=403)
