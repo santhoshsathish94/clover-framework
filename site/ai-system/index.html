@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Evidence — Clover</title>
-<meta name="description" content="Two delivered outcomes and three patterns in use, all of them software work. Each one says what was checked, what was observed, and where the work stopped.">
-<link rel="canonical" href="https://cloverframework.com/evidence/">
-<meta property="og:title" content="Evidence — Clover">
-<meta property="og:description" content="Production case studies and reference implementations, each stating where it stopped. One cutover has not run and one upstream fix is not merged, and both say so.">
+<title>AI System — Clover</title>
+<meta name="description" content="The Clover AI System (clover-ai-system): a 7-layer neuro-symbolic, compiler-verified, memory-accumulating system that switches across Kimi K3 2.78T MoE, NVIDIA Nemotron 3.5 Super VL 120B-A12B, and Liquid AI LFM3-1.7B to reach 70/70 (100%) verified outcomes.">
+<link rel="canonical" href="https://cloverframework.com/ai-system/">
+<meta property="og:title" content="AI System — Clover">
+<meta property="og:description" content="Why Clover exists: Kimi K3, Nemotron 3.5 Super VL, and Liquid LFM3-1.7B solve only 22.9%–47.1% of our 70-task suite on their own, and all three reach 70/70 (100.0%) when governed by the Clover cycle.">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://cloverframework.com/evidence/">
+<meta property="og:url" content="https://cloverframework.com/ai-system/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
@@ -44,9 +44,9 @@
     </button>
     <nav class="site-nav" id="site-nav" aria-label="Primary">
       <a href="../origin/">Origin</a>
+      <a href="../ai-system/" aria-current="page">AI System</a>
       <a href="../getting-started/">AGENTS.md</a>
       <a href="../governance/">Governance</a>
-      <a href="../evidence/" aria-current="page">Evidence</a>
       <a href="../glossary/">Glossary</a>
       <a href="../author/">Author</a>
       <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>
@@ -58,178 +58,33 @@
 
   <section class="hero" id="overview">
     <div class="wrap">
-      <h1>Evidence</h1>
+      <h1>AI System</h1>
       <p class="hero__tagline">Why Clover exists: the framework works with any model and reaches verified outcomes by applying the Clover cycle — even where every model fails on its own.</p>
-      <p class="lede">In Clover, an Outcome is confirmed by the real environment rather than a confident summary. Every entry on this page states what was tested, what the system actually showed, and the exact boundary where verification stopped—without rounding test results up into production claims.</p>
-      <p class="lede">Read the vertical sections below in order: starting with <strong>two production case studies</strong> (a Contentful API migration and an upstream React Server Components memory leak), moving through <strong>three organizational reference implementations</strong> and <strong>five field lessons</strong> learned from real work, and culminating in the <strong>Clover AI System (<code>clover-ai-system</code>)</strong>—where three completely different foundation models (<code>Kimi K3 2.78T MoE</code>, <code>NVIDIA Nemotron 3.5 Super VL 120B-A12B</code>, and <code>Liquid AI LFM3-1.7B</code>) solve only <code>22.9%&ndash;47.1%</code> of a 70-task suite on their own, yet all three reach <strong><code>70 / 70</code> (<code>100.00%</code>)</strong> when wrapped inside the Clover cycle.</p>
-      <p class="note">Everything recorded here is software and AI systems engineering, because that is where the author works. The Clover cycle applies to any system, and if you run and verify a cycle in another field, <a href="https://github.com/santhoshsathish94/clover-framework">the repository</a> is where it belongs.</p>
+      <p class="lede">An outcome does not come from which model you use. It comes from how the system around the model runs the five-stage cycle (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>).</p>
+      <p class="lede">The <strong>Clover AI System (<code>clover-ai-system</code>)</strong> puts that principle into running code: it surrounds a switchable foundation model backbone (<code>NVIDIA Nemotron 3.5 Super VL 120B-A12B</code>, <code>Liquid AI LFM3-1.7B</code>, or <code>MoonshotAI Kimi K3 2.78T MoE</code>) with six governing, retrieving, tool-executing, compiler-verifying, and memory-accumulating layers. On our standardized 70-task suite, those three models solve only <code>22.9%&ndash;47.1%</code> of the tasks on their own—and all three reach <strong><code>70 / 70</code> (<code>100.00%</code>)</strong> when governed by the Clover cycle.</p>
       <div class="actions">
-        <a class="btn btn--primary" href="#ev-t1">Start at Evidence 1 (Contentful Migration) ↓</a>
-        <a class="btn" href="#lessons">Field lessons ↓</a>
-        <a class="btn" href="#clover-kimi-k3">Jump to Clover AI System (3 Models Benchmarked) ↓</a>
+        <a class="btn btn--primary" href="#model-comparison">Compare the 3 switchable models ↓</a>
+        <a class="btn" href="#how-it-works">How the 7-layer system switches models ↓</a>
+        <a class="btn" href="#hybrid-ncm-k3">70-task benchmark (Without vs. With Clover) ↓</a>
       </div>
     </div>
   </section>
 
-  <div id="cases"></div>
-<!-- ================================================================ -->
-        <!-- EVIDENCE 1: CONTENTFUL API MIGRATION -->
-        <!-- ================================================================ -->
-        <section class="band" id="ev-t1">
-    <div class="wrap">
-      <div id="ev-p1"></div>
-      <p class="note">Evidence 1 of 5 · Production Case Study · API Migration</p>
-          <h2>Contentful API migration</h2>
-          <p>A CMS content API rewritten from a GraphQL integration to REST, and from .NET 9 MVC to
-                .NET 10 Minimal APIs, with every route, JSON shape, and response envelope preserved so no
-                consumer had to change.</p>
-              <p>A manual rewrite was estimated at 8–10 weeks of team effort. With AI carrying most of the
-                implementation under close human direction, the <strong>implementation took about a
-                day</strong>. Parity was checked across 36 endpoint cases: 34 matched exactly and 2 were
-                signed-off deviations, alongside 239 tests. Both versions ran in the test environment with
-                the API gateway pointing at the new one, so <strong>QA validated the real site and signed
-                off</strong>. The production cutover has not run.</p>
-              <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/01-contentful-migration.md">Read the case study →</a></p>
-      <p class="note">That day is implementation only. Testing and parity validation took roughly
-                another day, and stakeholder agreement longer still, and the work was not continuous.
-                Comparing one day against a ten-week estimate that included analysis and coordination
-                would overstate it.</p>
-              <p class="note">Performance was measured locally, two processes on one machine, and never on
-                deployed infrastructure. The gains came from the architecture rather than from AI.</p>
-              <p class="note">What matters here is how much AI lowered the barrier to attempting the work
-                at all, rather than who wrote the code.</p>
-          <figure class="diagram">
-            <img src="../assets/case-study-01-contentful-migration.svg?v=4.1.2" alt="The migration as one Clover cycle. Context: 89 GraphQL files and 99 mappers. Direction: preserve every route and JSON shape. Execution: one generic mapper and 15 verifiable tasks gated by a live parity differ. Outcome: 36 of 36 endpoint cases and 239 tests, with QA signing off. Growth: the parity harness is what made byte-for-byte compatibility provable, and decoupling the wire contract from Contentful turns the next content-model change into a small edit. Implementation took about a day against an 8 to 10 week estimate, performance was measured locally only, and the production cutover has not run." loading="lazy" width="960" height="380">
-          </figure>
-            </div>
-  </section>
-
-        <!-- ================================================================ -->
-        <!-- EVIDENCE 2: REACT SERVER COMPONENTS MEMORY LEAK -->
-        <!-- ================================================================ -->
-        <section class="band" id="ev-t2">
-    <div class="wrap">
-      <div id="ev-p2"></div>
-      <p class="note">Evidence 2 of 5 · Production Case Study · Upstream Root Cause</p>
-          <h2>A React Server Components memory leak, traced upstream</h2>
-          <p>A production application was crashing with out-of-memory errors. A blunt Node flag stopped
-                the growth and stabilized production, and it also stripped error-stack detail everywhere.
-                The mitigation was validated on a fleet running the same image: 113 restarts without the
-                flag, zero with it, over about six and a half hours.</p>
-      <p>The investigation continued past the workaround, traced the retention mechanism into
-                React's <code>react-server</code> renderer, and produced a one-file fix contributed
-                upstream so other applications need not carry the same workaround.</p>
-              <p>Status: a CI-green pull request, <strong>not merged</strong>.</p>
-              <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/02-react-rsc-memory-leak.md">Read the case study →</a></p>
-          <figure class="diagram">
-            <img src="../assets/case-study-02-react-rsc-memory-leak.svg?v=4.1.2" alt="Five stages. Context: server memory grew without bound under sustained load. Direction: stabilize the incident with a Node stack-trace flag, then keep investigating past the workaround. Execution: find the cause in React's react-server renderer, where a cleanup Error retains the completed render's cache scope, and contribute a one-file fix upstream. Outcome: the fleet soak validated the mitigation rather than the patch, and the pull request is CI-green and not merged. Growth: a repeatable retained-heap harness turned it leaks into a provable before and after, and the layer where the symptom appeared was not the layer that owned it." loading="lazy" width="960" height="380">
-          </figure>
-            </div>
-  </section>
-
-        <!-- ================================================================ -->
-        <!-- EVIDENCE 3: REFERENCE IMPLEMENTATIONS -->
-        <!-- ================================================================ -->
-        <section class="band" id="ev-t3">
-    <div class="wrap">
-      <div id="ev-p3"></div>
-      <p class="note">Evidence 3 of 5 · Reference Implementations · Organizational Systems</p>
-          <h2>Built and used against real organizational data</h2>
-          <p>Cross-team knowledge access, production exception remediation, and multi-repository
-                defect remediation.</p>
-              <p>Knowledge access has answered <strong>real production and support incidents</strong>,
-                including a data-synchronization failure that had survived an overnight investigation after
-                the owning team had gone.</p>
-      <p>The remediation patterns have run on real work through existing review and deployment
-                approvals. None is an always-on capability or adopted organization-wide, and each still
-                depends on a human providing the map and holding the approvals.</p>
-              <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/reference-implementations.md">Read the reference implementations →</a></p>
-          <figure class="diagram">
-            <img src="../assets/reference-cross-team-knowledge-access.svg?v=4.1.2" alt="Cross-team knowledge access. Read-only access to repositories and documentation, logs and telemetry, datasources, and job definitions feeds an orchestration layer that reads across all of it at the asker's own privileges. A human asks what happened and why, and points at where to look first. The answer comes back with the files and logs it was drawn from. Growth: what each question establishes about where the knowledge actually lived goes back into Context, so the next question starts nearer the answer." loading="lazy" width="960" height="372">
-            <figcaption>Cross-team knowledge access</figcaption>
-          </figure>
-          <figure class="diagram">
-            <img src="../assets/reference-production-exception-remediation.svg?v=4.1.2" alt="Production exception remediation. A recurring production exception, then reading the code across every repository plus the logs and the running application, then a proposal carrying the root cause, the exact scope, the tests and the signal to expect. A human approves before anything reaches production, and the ticket closes when the original signal is shown resolved. Growth: what the cycle established outlives the ticket, so a recurring exception is recognized rather than investigated again from nothing." loading="lazy" width="960" height="372">
-            <figcaption>Production exception remediation</figcaption>
-          </figure>
-            </div>
-  </section>
-
-        <!-- ================================================================ -->
-        <!-- EVIDENCE 4: FIVE FIELD LESSONS -->
-        <!-- ================================================================ -->
-        <section class="band" id="lessons">
-    <div class="wrap">
-      <p class="note">Evidence 4 of 5 · Field Lessons · What the Early Cycles Taught</p>
-          <h2>Five lessons from running this on real work</h2>
-          <p class="lede">These came out of the work above, including the parts that went badly. The
-            evidence behind each one is software; the lesson is not.</p>
-
-          <dl class="kv kv--wide" style="margin-top:1.4rem">
-            <div>
-              <dt>Focus beats parallelism</dt>
-              <dd>Agents made it easy to run three initiatives at once, and context and human direction
-                spread too thin across all of them. Dropping the parallelism and working one stream at a
-                time is what finally resolved the hardest issue at its root. Human attention is the scarce
-                resource, rather than AI throughput.</dd>
-            </div>
-            <div>
-              <dt>Read the system before fixing it</dt>
-              <dd>AI jumped straight to attempted fixes and repeatedly failed, because each attempt was a
-                guess. Gathering what the system was really doing end to end, and adding logging where the
-                picture had holes, found the root cause far faster than the fix-first thrashing that came
-                before it. Thrashing is the signal to stop fixing and go back for the information.</dd>
-            </div>
-            <div>
-              <dt>A workaround is not the destination</dt>
-              <dd>Disabling stack-trace capture stopped the production memory growth, and that was the
-                right immediate mitigation. Continuing past it found the retention mechanism underneath and
-                produced an upstream fix instead of a workaround carried forever. Ask what a workaround is
-                hiding or disabling, rather than only whether the incident stopped.</dd>
-            </div>
-            <div>
-              <dt>You do not have to hold the context to be accountable for it</dt>
-              <dd>A defect arrived in a flow the responsible human had never worked on. The orchestration
-                layer read across the repositories, reproduced the behavior in the running application, and
-                showed where it happened. The knowledge was in the system the whole time. Treat "I am not
-                current on this area" as a question about access. Accountability stayed with the named human
-                throughout.</dd>
-            </div>
-            <div>
-              <dt>Write the context down, or pay for it again</dt>
-              <dd>Two investigations, the same human, the same tools, the same period. The one that kept
-                findings written down beside the work converged. The one where nothing persisted between
-                passes degenerated into repeated attempts at a fix. A file maintained during the work is
-                memory; a write-up produced afterwards is a report. That write is Growth, the fifth stage
-                of the system cycle, and what it keeps becomes the next cycle's Context.</dd>
-            </div>
-          </dl>
-
-          <p style="margin-top:1.4rem">These share a root. AI multiplies whatever Context and Direction it
-            is given. Teams that read the system first and then say what they want get outcomes that hold
-            up, and teams that skip the reading get a lot of output and few outcomes.</p>
-
-          <p><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/field-practices.md">Read the practices in full →</a>
-            · <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/how-ai-fails.md">How AI fails, and which stage catches it →</a></p>
-            </div>
-  </section>
-
-        <!-- ================================================================ -->
-        <!-- EVIDENCE 5: CLOVER AI SYSTEM (7-LAYER MODEL-AGNOSTIC SYSTEM) -->
-        <!-- ================================================================ -->
-        <section class="band" id="clover-kimi-k3">
+  <section class="band" id="clover-kimi-k3">
     <div class="wrap">
       <div id="clover-k3"></div>
-      <p class="note">Evidence 5 of 5 · Clover AI System (<code>clover-ai-system</code>) · 7-Layer Neuro-Symbolic, Compiler-Verified &amp; Model-Switchable System (v4)</p>
       <h2>Why Clover exists: any model reaches verified outcomes when governed by the Clover cycle</h2>
       <p class="lede"><strong>An outcome does not come from which model you use. It comes from how the system around the model runs the cycle (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>).</strong></p>
       <p>To test that principle directly, we built the <strong>Clover AI System (<code>clover-ai-system</code>)</strong> so that <strong>Layer 1 (the Foundation Model Backbone)</strong> can be hot-switched across three models that span <strong>1,600&times; in parameter scale</strong> and three distinct neural architectures—while keeping <strong>Layers 2 through 7</strong> (the governing, retrieving, tool-executing, compiler-checking, and memory-accumulating Clover cycle) identical:</p>
       <p><strong>1. MoonshotAI Kimi K3 (<code>kimi-k3</code> &mdash; 2.78T Total / 104B Active MoE):</strong> 93 layers (<code>68</code> KDA recurrent + <code>24</code> MLA attention trunks, <code>896</code> routed 4-bit experts per layer with top-16 routing, <code>D = 7,168</code>, <code>V = 163,840</code> tiktoken vocabulary, <code>1.4 TB</code> expert store). Built for deep open-world synthesis and multi-GPU execution.</p>
       <p><strong>2. NVIDIA Nemotron 3.5 Super VL (<code>nemotron-3.5-super-vl</code> &mdash; 124.45B Total / 12.77B Active Hybrid MoE, Default):</strong> 88 single-mixer layers (<code>40</code> Mamba-2 selective state-space layers + <code>40</code> Latent <code>ReLU&sup2;</code> MoE layers with <code>512</code> experts and top-22 routing in compressed <code>1,024</code>-d latent space + <code>8</code> NoPE <code>16:1</code> GQA attention layers, <code>D = 4,096</code>, <code>V = 131,072</code> Tekken vocabulary, native 32-layer <code>C-RADIO</code> vision/video encoder with <code>EVS</code> pruning, and native 2-layer <code>MTP</code> drafter).</p>
       <p><strong>3. Liquid AI LFM3-1.7B (<code>lfm3-1.7b</code> &mdash; 1.73B Dense Tri-Hybrid):</strong> 24 layers (<code>13</code> width-7 Gated Short Convolutions + <code>5</code> Sliding-Window GQA layers + <code>6</code> Full Global GQA layers with zero-tail partial RoPE <code>0.5</code>, per-head sigmoid gates, sandwich RMSNorm, and SwiGLU FFN, <code>D = 2,048</code>, <code>V = 128,000</code> tied vocabulary, <code>3.24 GiB</code> total weights).</p>
+    </div>
+  </section>
 
-      <div id="model-comparison" style="margin-top:2rem">
-        <h3>What all three models do: their differences and similarities</h3>
+  <section class="band" id="model-comparison">
+    <div class="wrap">
+      <h2>What all three models do: their differences and similarities</h2>
         <p>Before wrapping the models in Clover, we downloaded their weights and source code on our server (<code>k3</code>, AMD Ryzen 9 7950X3D, 124 GiB RAM, and <code>gpu</code>, 8 &times; NVIDIA RTX 3090, 192 GiB VRAM) and verified every mathematical stage against the official models to <code>max_abs_diff = 0.0</code> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ai-system-switchable-models-context.md">clover-ai-system-switchable-models-context.md</a>).</p>
         <p><strong>What all three models share (Similarities):</strong></p>
         <ul>
@@ -296,10 +151,12 @@
             </tbody>
           </table>
         </div>
-      </div>
+    </div>
+  </section>
 
-      <div id="how-it-works" style="margin-top:2.2rem">
-        <h3>What the Clover AI System is, and how it switches models at runtime</h3>
+  <section class="band" id="how-it-works">
+    <div class="wrap">
+      <h2>What the Clover AI System is, and how it switches models at runtime</h2>
         <p>The model can propose; the system decides; the tools enforce; evidence verifies; humans remain accountable. Rather than hard-wiring the reasoning, memory, ontology, and verification logic inside one model&rsquo;s weights, <code>clover-ai-system</code> separates <strong>Layer 1 (the switchable Foundation Model Backbone)</strong> from <strong>Layers 2 through 7 (the shared Clover cycle infrastructure)</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/switchable_model_backend.py">switchable_model_backend.py</a>):</p>
 
         <ol class="steps">
@@ -321,10 +178,12 @@
           <li><strong>Layer 7 &mdash; Direction B Data Movement &amp; SpecMD Policy 3 Slot Caching (<code>libslotcache.so</code>):</strong>
             Manages 3-tier expert and trunk memory (<code>VRAM / Pool &harr; Pinned Host RAM &harr; NVMe Direct</code>) with <code>SpecMD Least-Stale + Red-Blue Pebble Rule R4 Clean-Drop</code> and <strong>Dynamic Batch Clubbing (<code>B = 10</code> prompts per pass with segment boundary isolation <code>seg_starts[t]</code>)</strong>, achieving a <strong><code>99.03%</code> cache hit rate</strong> and <strong><code>0</code> dirty writebacks</strong> across the 70-task suite.</li>
         </ol>
-      </div>
+    </div>
+  </section>
 
-      <div id="hybrid-ncm-k3" style="margin-top:2.2rem">
-        <h3>Benchmarking all three models without Clover vs. with the Clover cycle (70 Tasks)</h3>
+  <section class="band" id="hybrid-ncm-k3">
+    <div class="wrap">
+      <h2>Benchmarking all three models without Clover vs. with the Clover cycle (70 Tasks)</h2>
         <p>To prove why Clover exists, we benchmarked <strong>all three models both ways</strong> on the exact same 70-task standardized suite (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/hybrid-ncm-k3/run-standardized-70-task-benchmark.py">run-standardized-70-task-benchmark.py</a> and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/benchmark_raw_models_without_clover_70_tasks.py">benchmark_raw_models_without_clover_70_tasks.py</a>), scored by the exact same unmodified frozen grading harness (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/clover_3_models_without_vs_with_clover_70_task_report.json">clover_3_models_without_vs_with_clover_70_task_report.json</a>):</p>
         <ul>
           <li><strong>Without the Clover System (<code>Arm 0</code> &mdash; Raw Model Alone):</strong> Every Clover layer is switched off (no Memory Graph, no Ontology GraphRAG, no <code>&lt;python&gt;</code> or <code>&lt;search&gt;</code> tools, and no Python/Rust Generative Compiler). Each model relies solely on its own forward pass and weights:
@@ -663,10 +522,12 @@
                 </tbody>
               </table>
             </div>
-          </div>
+    </div>
+  </section>
 
-          <div id="progress" style="margin-top:2.2rem">
-            <h3>Where we started, and where it is now</h3>
+  <section class="band" id="progress">
+    <div class="wrap">
+      <h2>Where we started, and where it is now</h2>
             <p>We started from Fareed Khan&rsquo;s <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a>
               (Apache-2.0) on a single CPU workstation (AMD Ryzen 9 7950X3D, 124 GB RAM, dual NVMe RAID1), optimized the
               93-layer CPU reference chain bit-identically, and then built the unified 7-layer <strong><code>clover-kimi-k3</code></strong>
@@ -706,13 +567,19 @@
                 </tbody>
               </table>
             </div>
-          </div>
+    </div>
+  </section>
 
-          <div id="credit" style="margin-top:2.2rem">
-            <h3>Credit</h3>
-            <p><code>clover-kimi-k3</code> builds directly on the open weights, architectures, and published research of the teams below:</p>
-            <ul>
-              <li><strong>Moonshot AI &mdash; Kimi K3 (<a href="https://huggingface.co/moonshotai/Kimi-K3">moonshotai/Kimi-K3</a>).</strong>
+  <section class="band" id="credit">
+    <div class="wrap">
+      <h2>Credit</h2>
+      <p>The Clover AI System (<code>clover-ai-system</code>) builds directly on the open weights, architectures, and published research of the teams below:</p>
+      <ul>
+        <li><strong>NVIDIA &mdash; Nemotron 3.5 Super VL (<a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16">nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16</a>).</strong>
+          The 124.45-billion-parameter (12.77B active) 88-layer hybrid Mamba-2 + 512-expert Latent <code>ReLU&sup2;</code> MoE + NoPE 16:1 GQA backbone (<code>D = 4,096</code>, <code>V = 131,072</code> Tekken vocabulary, 1M native context), the 32-layer <code>C-RADIO</code> vision/video encoder with <code>PixelShuffle</code> and <code>EVS</code> video token pruning, and the 2-layer Native Multi-Token Prediction (<code>MTP</code>) head.</li>
+        <li><strong>Liquid AI &mdash; LFM3-1.7B (<a href="https://huggingface.co/LiquidAI/LFM3-1.7B">LiquidAI/LFM3-1.7B</a>).</strong>
+          The 1.73-billion-parameter 24-layer tri-hybrid model combining 13 width-7 Gated Short Convolutions (<code>Lfm3ShortConv</code>), 5 Sliding-Window GQA layers, and 6 Full Global GQA layers with zero-tail partial RoPE <code>0.5</code>, per-head sigmoid gates, sandwich RMSNorm, and SwiGLU FFN (<code>D = 2,048</code>, <code>V = 128,000</code> tied vocabulary).</li>
+        <li><strong>Moonshot AI &mdash; Kimi K3 (<a href="https://huggingface.co/moonshotai/Kimi-K3">moonshotai/Kimi-K3</a>).</strong>
                 The 2.78-trillion-parameter 93-layer Mixture-of-Experts model (69 KDA + 24 MLA attention layers, 896 routed
                 experts per layer, <code>d = 7,168</code>), the 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> vision tower,
                 and the 163,840-token <code>tiktoken.model</code> vocabulary. The embedding table, output head, final
@@ -745,7 +612,6 @@
               <li><strong>Inferact &mdash; <a href="https://huggingface.co/Inferact/Kimi-K3-DSpark">Kimi-K3-DSpark</a>.</strong>
                 The 5-layer dense MLA draft model used for speculative decoding on the CPU workstation.</li>
             </ul>
-          </div>
 
           <div id="references" style="margin-top:2.2rem">
             <h3>References</h3>
@@ -801,8 +667,8 @@
   <section class="band">
     <div class="wrap">
       <div class="actions">
-        <a class="btn btn--primary" href="../getting-started/">Try it on your own work</a>
-        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/tree/main/docs/case-studies">All case studies</a>
+        <a class="btn btn--primary" href="../getting-started/">Next Menu: Read AGENTS.md &rarr;</a>
+        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system">Explore clover-ai-system in the repository</a>
       </div>
     </div>
   </section>
@@ -815,19 +681,20 @@
       <h4>Read</h4>
       <ul>
         <li><a href="../">The framework</a></li>
+        <li><a href="../origin/">Origin</a></li>
+        <li><a href="./">AI System</a></li>
         <li><a href="../getting-started/">AGENTS.md</a></li>
         <li><a href="../governance/">Governance</a></li>
-        <li><a href="./">Evidence</a></li>
         <li><a href="../glossary/">Glossary</a></li>
       </ul>
     </div>
     <div>
-      <h4>Evidence</h4>
+      <h4>AI System</h4>
       <ul>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/docs/case-studies">All case studies</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/01-contentful-migration.md">Contentful API migration</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/case-studies/02-react-rsc-memory-leak.md">React RSC memory leak</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/reference-implementations.md">Reference implementations</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/README.md">Clover AI System README</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ai-system-switchable-models-context.md">Switchable 3-Model Architecture</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md">70-Task Benchmark Report</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/docs/case-studies">Case studies in docs</a></li>
       </ul>
     </div>
     <div>

@@ -34,10 +34,10 @@ python -m http.server 8000 --directory site
 ```
 site/
   index.html                             the framework: one cycle, at any scale
-  origin/                                the Origin page: 12 foundational AI chapters (1943–2026) in a vertical storyline
+  origin/                                the Origin page: 12 foundational AI chapters (1943–2026) in vertical sections
+  ai-system/                             the AI System page: 7-layer Clover AI System across Kimi K3, Nemotron 3.5 Super VL, and LFM3-1.7B
   getting-started/                       the AGENTS.md menu page: read-only access, the agent file, a first cycle
   governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution
-  evidence/                              unified vertical storyline from the first production case study to clover-kimi-k3
   clover-ai/                             full-viewport interactive Clover AI studio
   glossary/                              searchable terms
   author/                                who wrote this, in the first person
