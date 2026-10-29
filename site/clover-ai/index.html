@@ -18,19 +18,156 @@
 <style>
   [hidden] { display: none !important; }
   .clover-sidebar { transform: none; transition: margin-left 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
-  .clover-topbar__right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
-  .clover-model-picker {
-    display: inline-flex; align-items: center; gap: 0.38rem;
-    background: var(--soft); border: 1px solid var(--line-2); border-radius: 999px;
-    padding: 0.18rem 0.55rem 0.18rem 0.65rem; font-size: 0.76rem; color: var(--ink);
+  .clover-topbar__right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+  .clover-sidebar__top { position: relative; }
+  .clover-model-dropdown { position: relative; width: 100%; }
+  .clover-model-trigger {
+    width: 100%;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius-pill);
+    padding: 0.52rem 0.85rem;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 650;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    box-shadow: var(--shadow-xs);
+    text-align: left;
+    transition: border-color 0.18s cubic-bezier(0.22, 1, 0.36, 1), color 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .clover-model-label {
-    font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em;
+  .clover-model-trigger:hover,
+  .clover-model-dropdown.is-open .clover-model-trigger {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    background: var(--accent-tint);
   }
-  .clover-model-select {
-    appearance: auto; border: none; background: transparent; color: var(--ink);
-    font-family: inherit; font-size: 0.77rem; font-weight: 650; line-height: 1.25;
-    padding: 0.1rem 0.15rem; cursor: pointer; outline: none;
+  .clover-model-trigger__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .clover-model-trigger__chev {
+    font-size: 0.78rem;
+    color: var(--accent);
+    flex-shrink: 0;
+    transition: transform 0.18s ease;
+  }
+  .clover-model-dropdown.is-open .clover-model-trigger__chev {
+    transform: rotate(180deg);
+  }
+  .clover-model-menu {
+    position: absolute;
+    top: calc(100% + 0.42rem);
+    left: 0;
+    right: 0;
+    z-index: 120;
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(19, 32, 24, 0.14);
+    padding: 0.38rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+  }
+  .clover-model-option {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 9px;
+    padding: 0.55rem 0.68rem;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .clover-model-option:hover {
+    background: var(--soft);
+  }
+  .clover-model-option.is-selected {
+    background: var(--accent-tint);
+    border-color: var(--accent-line);
+  }
+  .clover-model-option__head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .clover-model-option.is-selected .clover-model-option__head {
+    color: var(--accent-hover);
+  }
+  .clover-model-option__badge {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.1rem 0.42rem;
+    border-radius: 999px;
+    background: var(--soft);
+    color: var(--accent);
+    border: 1px solid var(--accent-line);
+  }
+  .clover-model-option__meta {
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    line-height: 1.35;
+  }
+  .clover-model-option__speed {
+    font-size: 0.72rem;
+    font-weight: 650;
+    color: var(--warn);
+    line-height: 1.35;
+  }
+  .clover-sidebar__label-row {
+    padding: 0.65rem 0.9rem 0.3rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .clover-sidebar__label-text {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .clover-sessions-plus-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid var(--line-2);
+    background: var(--surface);
+    color: var(--accent);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-xs);
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  }
+  .clover-sessions-plus-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-tint);
+    color: var(--accent-hover);
   }
   .clover-cpu-pill {
     display: inline-flex; align-items: center; gap: 0.38rem;
@@ -54,13 +191,9 @@
       margin-left: 0 !important; transform: translateX(0) !important;
       box-shadow: 0 12px 34px rgba(19, 32, 24, 0.18) !important; pointer-events: auto !important;
     }
-    .clover-model-picker { padding: 0.14rem 0.45rem; }
-    .clover-model-select { font-size: 0.72rem; max-width: 190px; }
     .clover-cpu-pill { font-size: 0.71rem; padding: 0.22rem 0.5rem; }
   }
   @media (max-width: 480px) {
-    .clover-model-label { display: none; }
-    .clover-model-select { font-size: 0.69rem; max-width: 155px; }
     .clover-cpu-pill { font-size: 0.68rem; padding: 0.2rem 0.45rem; }
   }
 </style>
@@ -79,12 +212,49 @@
   <div class="clover-sidebar-backdrop" id="clover-sidebar-backdrop" onclick="k3CloseMobileSidebar()"></div>
   <aside class="clover-sidebar" id="clover-sidebar" aria-label="Chat sessions">
     <div class="clover-sidebar__top">
-      <button type="button" class="clover-new-chat-btn" id="k3-new-sess-btn" onclick="k3ResetChat()" title="Start a new session">
-        <span>New chat</span>
-        <span class="clover-new-chat-btn__plus" aria-hidden="true">+</span>
-      </button>
+      <div class="clover-model-dropdown" id="clover-model-dropdown">
+        <button type="button" class="clover-model-trigger" id="clover-model-trigger" onclick="k3ToggleModelMenu(event)" aria-haspopup="listbox" aria-expanded="false" title="Select foundation model">
+          <span class="clover-model-trigger__name" id="clover-model-trigger-label">Nemotron 3.5 Super VL</span>
+          <span class="clover-model-trigger__chev" aria-hidden="true">&#9662;</span>
+        </button>
+        <div class="clover-model-menu" id="clover-model-menu" role="listbox" aria-label="Foundation models" hidden>
+          <button type="button" class="clover-model-option is-selected" role="option" aria-selected="true" data-model-key="nemotron-3.5-super-vl" onclick="k3OnModelChanged('nemotron-3.5-super-vl')">
+            <div class="clover-model-option__head">
+              <span>Nemotron 3.5 Super VL</span>
+              <span class="clover-model-option__badge">Default</span>
+            </div>
+            <div class="clover-model-option__meta">120B-A12B MoE &bull; 131K Vocab</div>
+            <div class="clover-model-option__meta">Context: 1M Native Tokens</div>
+            <div class="clover-model-option__speed">CPU Stage: ~1.1s Clubbed (~2.1s Single)</div>
+            <div class="clover-model-option__speed">CPU Response: ~15&ndash;35s Full Turn</div>
+          </button>
+          <button type="button" class="clover-model-option" role="option" aria-selected="false" data-model-key="lfm3-1.7b" onclick="k3OnModelChanged('lfm3-1.7b')">
+            <div class="clover-model-option__head">
+              <span>Liquid LFM3-1.7B</span>
+              <span class="clover-model-option__badge">Compact</span>
+            </div>
+            <div class="clover-model-option__meta">24-Layer Tri-Hybrid &bull; 128K Vocab</div>
+            <div class="clover-model-option__meta">Context: 1M Session (256K Native)</div>
+            <div class="clover-model-option__speed">CPU Stage: ~3.5s 24-Layer C / ~6.0s NCM</div>
+            <div class="clover-model-option__speed">CPU Response: ~15&ndash;35s Full Turn</div>
+          </button>
+          <button type="button" class="clover-model-option" role="option" aria-selected="false" data-model-key="kimi-k3" onclick="k3OnModelChanged('kimi-k3')">
+            <div class="clover-model-option__head">
+              <span>Kimi K3 2.78T MoE</span>
+              <span class="clover-model-option__badge">Deep</span>
+            </div>
+            <div class="clover-model-option__meta">93-Layer 2.78T MoE &bull; 163.8K Vocab</div>
+            <div class="clover-model-option__meta">Context: 1M Session (256K Native)</div>
+            <div class="clover-model-option__speed">CPU Stage: ~9.1s Stage (~4.4s on GPU)</div>
+            <div class="clover-model-option__speed">CPU Response: ~60&ndash;140s Full Turn</div>
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="clover-sidebar__label">Sessions</div>
+    <div class="clover-sidebar__label-row">
+      <span class="clover-sidebar__label-text">Sessions</span>
+      <button type="button" class="clover-sessions-plus-btn" id="k3-new-sess-btn" onclick="k3ResetChat()" title="Start a new session" aria-label="Start a new session">+</button>
+    </div>
     <div class="clover-session-list" id="k3-session-list"></div>
   </aside>
 
@@ -110,15 +280,7 @@
         </a>
       </div>
       <div class="clover-topbar__right">
-        <div class="clover-model-picker" title="Switch Layer-1 Foundation Model Backbone inside Clover's 7-layer architecture">
-          <label for="clover-model-select" class="clover-model-label">Model</label>
-          <select id="clover-model-select" class="clover-model-select" aria-label="Select Layer-1 Foundation Model" onchange="k3OnModelChanged(this.value)">
-            <option value="nemotron-3.5-super-vl" selected>Nemotron 3.5 Super VL (Default &middot; 1M Ctx &middot; ~1.1s Clubbed / ~2.1s CPU)</option>
-            <option value="lfm3-1.7b">Liquid LFM3-1.7B (Compact &middot; 1M Ctx &middot; ~3.5s 24L CPU)</option>
-            <option value="kimi-k3">Kimi K3 2.78T MoE (Deep &middot; 1M Ctx &middot; ~9.1s Stage / ~138s CPU)</option>
-          </select>
-        </div>
-        <span class="clover-cpu-pill" id="clover-cpu-pill" title="NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context, Default): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15-35s full CPU turn">CPU &middot; 1M Ctx &middot; ~1.1s Clubbed / ~4.3s Stage</span>
+        <span class="clover-cpu-pill" id="clover-cpu-pill" title="Clover is running on a CPU server, so responses take longer">CPU Server &middot; Slow Response</span>
       </div>
     </div>
 
@@ -192,16 +354,19 @@
   var constant_default_model_key = 'nemotron-3.5-super-vl';
   var constant_model_cpu_response_descriptions = {
     'nemotron-3.5-super-vl': {
+      shortLabel: 'Nemotron 3.5 Super VL',
       pillText: 'CPU · 1M Ctx · ~1.1s Clubbed / ~4.3s Stage',
       tooltip:
         'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context, Default): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15–35s full CPU turn'
     },
     'lfm3-1.7b': {
+      shortLabel: 'Liquid LFM3-1.7B',
       pillText: 'CPU · 1M Ctx · ~3.5s 24L C / ~6.0s Stage',
       tooltip:
         'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab, 1M Clover Session / 256K Native RoPE): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn'
     },
     'kimi-k3': {
+      shortLabel: 'Kimi K3 2.78T MoE',
       pillText: 'CPU · 1M Ctx · ~9.1s Stage (~60–140s Turn)',
       tooltip:
         'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab, 1M Clover Session / 256K Native): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
@@ -1123,7 +1288,10 @@
       this.variable_session_list_element = document.getElementById('k3-session-list');
       this.variable_sidebar_element = document.getElementById('clover-sidebar');
       this.variable_backdrop_element = document.getElementById('clover-sidebar-backdrop');
-      this.variable_model_select_element = document.getElementById('clover-model-select');
+      this.variable_model_dropdown_element = document.getElementById('clover-model-dropdown');
+      this.variable_model_trigger_element = document.getElementById('clover-model-trigger');
+      this.variable_model_trigger_label_element = document.getElementById('clover-model-trigger-label');
+      this.variable_model_menu_element = document.getElementById('clover-model-menu');
       this.variable_cpu_pill_element = document.getElementById('clover-cpu-pill');
       this.variable_selected_model_key = constant_default_model_key;
       this.flag_is_request_in_flight = false;
@@ -1142,20 +1310,58 @@
       });
     }
 
+    function_close_model_menu() {
+      if (this.variable_model_menu_element) {
+        this.variable_model_menu_element.hidden = true;
+      }
+      if (this.variable_model_dropdown_element) {
+        this.variable_model_dropdown_element.classList.remove('is-open');
+      }
+      if (this.variable_model_trigger_element) {
+        this.variable_model_trigger_element.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    function_toggle_model_menu(variable_click_event) {
+      if (variable_click_event && variable_click_event.stopPropagation) {
+        variable_click_event.stopPropagation();
+      }
+      if (!this.variable_model_menu_element) {
+        return;
+      }
+      var flag_will_open = !!this.variable_model_menu_element.hidden;
+      this.variable_model_menu_element.hidden = !flag_will_open;
+      if (this.variable_model_dropdown_element) {
+        this.variable_model_dropdown_element.classList.toggle('is-open', flag_will_open);
+      }
+      if (this.variable_model_trigger_element) {
+        this.variable_model_trigger_element.setAttribute('aria-expanded', flag_will_open ? 'true' : 'false');
+      }
+    }
+
     function_select_foundation_model_key(variable_model_key) {
       var variable_valid_key =
         constant_model_cpu_response_descriptions[variable_model_key]
           ? variable_model_key
           : constant_default_model_key;
       this.variable_selected_model_key = variable_valid_key;
-      if (this.variable_model_select_element && this.variable_model_select_element.value !== variable_valid_key) {
-        this.variable_model_select_element.value = variable_valid_key;
-      }
       var variable_desc = constant_model_cpu_response_descriptions[variable_valid_key];
+      if (this.variable_model_trigger_label_element && variable_desc) {
+        this.variable_model_trigger_label_element.textContent = variable_desc.shortLabel;
+      }
+      if (this.variable_model_menu_element) {
+        var variable_options = this.variable_model_menu_element.querySelectorAll('.clover-model-option');
+        for (var variable_idx = 0; variable_idx < variable_options.length; variable_idx++) {
+          var variable_opt = variable_options[variable_idx];
+          var flag_is_match = variable_opt.getAttribute('data-model-key') === variable_valid_key;
+          variable_opt.classList.toggle('is-selected', flag_is_match);
+          variable_opt.setAttribute('aria-selected', flag_is_match ? 'true' : 'false');
+        }
+      }
       if (this.variable_cpu_pill_element && variable_desc) {
-        this.variable_cpu_pill_element.textContent = variable_desc.pillText;
         this.variable_cpu_pill_element.title = variable_desc.tooltip;
       }
+      this.function_close_model_menu();
       try {
         localStorage.setItem(constant_model_storage_key, variable_valid_key);
       } catch (variable_ignored_error) {}
@@ -1684,6 +1890,14 @@
       });
 
       document.addEventListener('click', function (variable_click_event) {
+        var variable_clicked_target = variable_click_event.target;
+        if (
+          variable_self_coordinator.variable_model_dropdown_element &&
+          variable_clicked_target &&
+          !variable_self_coordinator.variable_model_dropdown_element.contains(variable_clicked_target)
+        ) {
+          variable_self_coordinator.function_close_model_menu();
+        }
         if (
           !variable_self_coordinator.function_check_if_mobile_viewport() ||
           !variable_self_coordinator.variable_sidebar_element ||
@@ -1691,7 +1905,6 @@
         ) {
           return;
         }
-        var variable_clicked_target = variable_click_event.target;
         if (!variable_clicked_target) {
           return;
         }
@@ -1781,6 +1994,9 @@
       };
       window.k3SendPrompt = function () {
         return variable_self_coordinator.function_send_user_prompt_and_render_outcome();
+      };
+      window.k3ToggleModelMenu = function (variable_event) {
+        variable_self_coordinator.function_toggle_model_menu(variable_event);
       };
       window.k3OnModelChanged = function (variable_new_model_key) {
         variable_self_coordinator.function_select_foundation_model_key(variable_new_model_key);

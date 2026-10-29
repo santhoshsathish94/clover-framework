@@ -469,13 +469,7 @@ HTML_UI = """<!DOCTYPE html>
     Clover
   </div>
   <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-    <label for="clover-model-select" style="font-size:0.75rem;font-weight:700;color:var(--muted);">MODEL</label>
-    <select id="clover-model-select" onchange="onModelSelectChange(this.value)" style="padding:0.28rem 0.55rem;border:1px solid var(--line-2);border-radius:999px;background:var(--soft);font:inherit;font-size:0.78rem;font-weight:600;color:var(--ink);">
-      <option value="nemotron-3.5-super-vl" selected>Nemotron 3.5 Super VL (Default &middot; 1M Ctx &middot; ~1.1s Clubbed / ~2.1s CPU)</option>
-      <option value="lfm3-1.7b">Liquid LFM3-1.7B (Compact &middot; 1M Ctx &middot; ~3.5s 24L CPU)</option>
-      <option value="kimi-k3">Kimi K3 2.78T MoE (Deep &middot; 1M Ctx &middot; ~9.1s Stage / ~138s CPU)</option>
-    </select>
-    <span id="clover-cpu-pill" style="font-size:0.75rem;font-weight:600;padding:0.25rem 0.6rem;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;" title="NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15-35s full CPU turn">CPU &middot; 1M Ctx &middot; ~1.1s Clubbed / ~4.3s Stage</span>
+    <span id="clover-cpu-pill" style="font-size:0.75rem;font-weight:600;padding:0.25rem 0.6rem;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;" title="Clover is running on a CPU server, so responses take longer">CPU Server &middot; Slow Response</span>
     <button type="button" class="btn" onclick="toggleMemoryDrawer()" id="mem-drawer-btn" title="Inspect File-Based Memory Tree & Relational Knowledge Graph">Memory Graph</button>
   </div>
 </header>
@@ -495,6 +489,35 @@ HTML_UI = """<!DOCTYPE html>
 
 <div class="workspace">
   <aside class="sidebar" aria-label="Chat sessions">
+    <div style="padding:0.65rem 0.75rem;border-bottom:1px solid var(--line);position:relative;">
+      <button type="button" id="clover-model-trigger" onclick="toggleModelMenu(event)" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.45rem 0.7rem;border:1px solid var(--line-2);border-radius:8px;background:var(--bg);font:inherit;font-size:0.82rem;font-weight:600;color:var(--ink);cursor:pointer;">
+        <span id="clover-model-trigger-name">Nemotron 3.5 Super VL</span>
+        <span style="color:var(--muted);font-size:0.75rem;">&#9662;</span>
+      </button>
+      <div id="clover-model-menu" hidden style="position:absolute;top:calc(100% - 0.25rem);left:0.5rem;right:0.5rem;background:var(--bg);border:1px solid var(--line-2);border-radius:10px;box-shadow:0 10px 26px rgba(17,19,21,0.14);padding:0.35rem;z-index:50;display:flex;flex-direction:column;gap:0.25rem;">
+        <button type="button" data-model-key="nemotron-3.5-super-vl" onclick="onModelSelectChange('nemotron-3.5-super-vl')" style="display:flex;flex-direction:column;align-items:flex-start;gap:0.15rem;width:100%;padding:0.5rem 0.6rem;border:1px solid var(--accent);border-radius:8px;background:var(--accent-soft);text-align:left;cursor:pointer;font:inherit;">
+          <div style="display:flex;justify-content:space-between;width:100%;font-size:0.8rem;font-weight:700;color:var(--ink);"><span>Nemotron 3.5 Super VL</span><span style="font-size:0.64rem;color:var(--accent);text-transform:uppercase;">Default</span></div>
+          <div style="font-size:0.7rem;color:var(--muted);">120B-A12B MoE &bull; 131K Vocab</div>
+          <div style="font-size:0.7rem;color:var(--muted);">Context: 1M Native Tokens</div>
+          <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Stage: ~1.1s Clubbed (~2.1s Single)</div>
+          <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Response: ~15&ndash;35s Full Turn</div>
+        </button>
+        <button type="button" data-model-key="lfm3-1.7b" onclick="onModelSelectChange('lfm3-1.7b')" style="display:flex;flex-direction:column;align-items:flex-start;gap:0.15rem;width:100%;padding:0.5rem 0.6rem;border:1px solid transparent;border-radius:8px;background:transparent;text-align:left;cursor:pointer;font:inherit;">
+          <div style="display:flex;justify-content:space-between;width:100%;font-size:0.8rem;font-weight:700;color:var(--ink);"><span>Liquid LFM3-1.7B</span><span style="font-size:0.64rem;color:var(--accent);text-transform:uppercase;">Compact</span></div>
+          <div style="font-size:0.7rem;color:var(--muted);">24-Layer Tri-Hybrid &bull; 128K Vocab</div>
+          <div style="font-size:0.7rem;color:var(--muted);">Context: 1M Session (256K Native)</div>
+          <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Stage: ~3.5s 24-Layer C / ~6.0s NCM</div>
+          <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Response: ~15&ndash;35s Full Turn</div>
+        </button>
+        <button type="button" data-model-key="kimi-k3" onclick="onModelSelectChange('kimi-k3')" style="display:flex;flex-direction:column;align-items:flex-start;gap:0.15rem;width:100%;padding:0.5rem 0.6rem;border:1px solid transparent;border-radius:8px;background:transparent;text-align:left;cursor:pointer;font:inherit;">
+          <div style="display:flex;justify-content:space-between;width:100%;font-size:0.8rem;font-weight:700;color:var(--ink);"><span>Kimi K3 2.78T MoE</span><span style="font-size:0.64rem;color:var(--accent);text-transform:uppercase;">Deep</span></div>
+          <div style="font-size:0.7rem;color:var(--muted);">93-Layer 2.78T MoE &bull; 163.8K Vocab</div>
+          <div style="font-size:0.7rem;color:var(--muted);">Context: 1M Session (256K Native)</div>
+          <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Stage: ~9.1s Stage (~4.4s on GPU)</div>
+          <div style="font-size:0.68rem;font-weight:600;color:#92400e;">CPU Response: ~60&ndash;140s Full Turn</div>
+        </button>
+      </div>
+    </div>
     <div class="sidebar__head">
       <span>Sessions</span>
       <button type="button" class="add-btn" onclick="newSession()" title="New session" aria-label="New session">+</button>
@@ -550,26 +573,46 @@ const STORAGE_KEY = 'clover_k3_sessions_v2';
 const MODEL_STORAGE_KEY = 'clover_selected_model_v1';
 const MODEL_CPU_INFO = {
   'nemotron-3.5-super-vl': {
-    pill: 'CPU · 1M Ctx · ~1.1s Clubbed / ~4.3s Stage',
+    label: 'Nemotron 3.5 Super VL',
     tip: 'NVIDIA Nemotron 3.5 Super VL (120B-A12B, 131K Tekken vocab, Native 1M Context, Default): ~1.1s clubbed C (~2.1s single), ~4.3s with 11-level NCM, ~15–35s full CPU turn'
   },
   'lfm3-1.7b': {
-    pill: 'CPU · 1M Ctx · ~3.5s 24L C / ~6.0s Stage',
+    label: 'Liquid LFM3-1.7B',
     tip: 'Liquid AI LFM3-1.7B (24-layer Tri-Hybrid, 128K vocab, 1M Clover Session / 256K Native RoPE): ~3.5s 24-layer C engine, ~6.0s with 11-level NCM, ~15–35s full CPU turn'
   },
   'kimi-k3': {
-    pill: 'CPU · 1M Ctx · ~9.1s Stage (~60–140s Turn)',
+    label: 'Kimi K3 2.78T MoE',
     tip: 'MoonshotAI Kimi K3 (93-layer 2.78T MoE, 163.8K vocab, 1M Clover Session / 256K Native): ~9.1s stage, ~60–140s full turn on CPU (~4.4s on 8x RTX 3090 GPU)'
   }
 };
 let selectedModelKey = 'nemotron-3.5-super-vl';
+function toggleModelMenu(ev) {
+  if (ev) ev.stopPropagation();
+  const menu = document.getElementById('clover-model-menu');
+  if (menu) menu.hidden = !menu.hidden;
+}
+document.addEventListener('click', function() {
+  const menu = document.getElementById('clover-model-menu');
+  if (menu && !menu.hidden) menu.hidden = true;
+});
 function onModelSelectChange(val) {
   selectedModelKey = MODEL_CPU_INFO[val] ? val : 'nemotron-3.5-super-vl';
-  const selEl = document.getElementById('clover-model-select');
-  if (selEl && selEl.value !== selectedModelKey) selEl.value = selectedModelKey;
+  const nameEl = document.getElementById('clover-model-trigger-name');
+  if (nameEl && MODEL_CPU_INFO[selectedModelKey]) {
+    nameEl.textContent = MODEL_CPU_INFO[selectedModelKey].label;
+  }
+  const menu = document.getElementById('clover-model-menu');
+  if (menu) {
+    menu.hidden = true;
+    const btns = menu.querySelectorAll('[data-model-key]');
+    btns.forEach(function(b) {
+      const active = b.getAttribute('data-model-key') === selectedModelKey;
+      b.style.borderColor = active ? 'var(--accent)' : 'transparent';
+      b.style.background = active ? 'var(--accent-soft)' : 'transparent';
+    });
+  }
   const pillEl = document.getElementById('clover-cpu-pill');
   if (pillEl && MODEL_CPU_INFO[selectedModelKey]) {
-    pillEl.textContent = MODEL_CPU_INFO[selectedModelKey].pill;
     pillEl.title = MODEL_CPU_INFO[selectedModelKey].tip;
   }
   try { localStorage.setItem(MODEL_STORAGE_KEY, selectedModelKey); } catch (e) {}
