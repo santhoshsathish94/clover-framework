@@ -36,6 +36,7 @@ This repository contains the documentation, practical guidance, case studies, an
 - [`AGENTS.md`](AGENTS.md) — AI agent operating guidance
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`case-studies/`](docs/case-studies/) — real work and outcomes
+- **[Clover AI System Research Paper](research/clover-ai-system-paper/README.md)** — step-by-step model optimization (`Kimi K3`, `Nemotron 3.5 Super VL`, `LFM3-1.7B`), the 7 layers, the 11 foundational papers (`1943–2017`), the 5 data-movement studies across CPU &amp; GPU, and why standalone models (`22.86%–47.14%`) reach `70 / 70` (`100.00%`) under Clover
 - [Research](research/README.md) — investigations, proposals and hypotheses, with their limits
 - [Clover AI v4 release notes](docs/reference/release-v4.md) — the current seven-layer system
 - [Observe experiment](research/observe/README.md) — the next experiment: reciprocal observation, mutual change, and distributed learning

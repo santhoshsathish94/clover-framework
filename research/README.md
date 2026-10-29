@@ -6,6 +6,7 @@ later conclusions. A document's status describes its role, not whether its outco
 
 | Topic | Start here | Role and limit |
 |---|---|---|
+| **Clover AI System Paper** | **[Full research paper](clover-ai-system-paper/README.md)** | **End-to-end paper on step-by-step model optimization (`Kimi K3`, `Nemotron 3.5 Super VL`, `LFM3-1.7B`), the 7-layer Clover stack, the 11 foundational papers (1943–2017), the 5 Direction B data-movement upgrades across CPU & GPU, and the 70-task standalone-vs-Clover benchmark** |
 | AI-Fire | [Research summary](ai-fire/README.md) | Dependency and concentration argument; source-ledger work remains open |
 | AI future | [The hypothesis](ai-future/README.md) | Speculation with explicit limits; independent of adopting the framework |
 | Meaning Development | [Experiment design](../docs/experiments/meaning-development/experiment-design.md) & [results](../docs/experiments/meaning-development/results.md) | Controlled pilot testing meaning formation, grounded execution (`B0..B3`), and developmental growth across cycles |
