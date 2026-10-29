@@ -143,10 +143,27 @@ Executed [verify_nemotron_clover_integration.py](../../../clover-ai-system/src/m
 
 ---
 
+### 5. Liquid AI `LFM3-1.7B` Complete 24-Layer Precomputed Trunk (`LFM3TRK1`), Composed Operator (`LFM3_OP1`), Trunk Pruning & Verification on `k3`
+Following the completion of `nemotron-3.5-super-vl`, we built and verified the complete 24-layer precomputed engine for **`lfm3-1.7b`** (`LiquidAI/LFM3-1.7B`, `D_model = 2048`, `V = 128,000` tied) inside [clover-ai-system/src/models/lfm3-1.7b/](../../../clover-ai-system/src/models/lfm3-1.7b/):
+- [prepare_lfm3_datasets.py](../../../clover-ai-system/src/models/lfm3-1.7b/prepare_lfm3_datasets.py) — Builds `global-0/` (`embed_tokens.bf16.bin` serving both input embeddings and tied `lm_head`, `embedding_norm.bf16.bin`, and `rope_inv_freq.bin` precomputing zero-tail partial RoPE `0.5` for `full_attention` and full RoPE `1.0` for `sliding_attention`) plus all 24 `LFM3TRK1` trunks (`trunk-0..23`) and composed `operator.bin` streams (`LFM3_OP1`) in **`6.737 s`** on `k3`.
+- [prune_lfm3_trunk.py](../../../clover-ai-system/src/models/lfm3-1.7b/prune_lfm3_trunk.py) — Drops all records covered by `operator.bin` (`operator_norm`, `conv.in_proj`, `conv.conv` in the 13 ShortConv layers; `operator_norm`, `q_proj`, `k_proj`, `v_proj`, `gate_proj`, `q_norm`, `k_norm` in the 11 Sliding/Full GQA layers) and **deletes `attention.bin` from all `24 / 24` trunks** (`0` `attention.bin` files remaining!).
+- [lfm3_precomputed_engine.py](../../../clover-ai-system/src/models/lfm3-1.7b/lfm3_precomputed_engine.py) & [verify_lfm3_clover_integration.py](../../../clover-ai-system/src/models/lfm3-1.7b/verify_lfm3_clover_integration.py) — Executes all 24 layers from the **pruned** `trunk-0..23` + `operator.bin` + `global-0/` and compares every layer and final logits against `Lfm3ForCausalLM` ([research/lfm3_precomputed_verification_report.json](../../../research/lfm3_precomputed_verification_report.json)):
+
+| LFM3-1.7B Precomputed Container | Count | Raw Trunk Bytes | Pruned Trunk Bytes (`common.bin` + `ffn.bin`) | Composed `operator.bin` | Trunk Reduction % | Max Abs Diff vs Official `Lfm3ForCausalLM` |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Gated ShortConv Trunks (`kind = 0`, $K=7$)** | `13` layers (`0,1,3,5..23`) | `127,971,328 B` (`122.04 MiB`)/layer | **`102,772,736 B` (`98.01 MiB`)**/layer (`attention.bin` deleted!) | `25,198,656 B`/layer | **`-19.69%`** | **`0.0` across all 13 ShortConv layers!** |
+| **Sliding GQA Trunks (`kind = 1`, $W=256$)** | `5` layers (`4,8,12,16,20`) | `115,425,792 B` (`110.08 MiB`)/layer | **`102,772,736 B` (`98.01 MiB`)**/layer (`attention.bin` deleted!) | `12,653,120 B`/layer | **`-10.96%`** | **`0.0` across all 5 Sliding GQA layers!** |
+| **Full GQA Trunks (`kind = 2`, zero-tail RoPE `0.5`)** | `6` layers (`2,6,10,14,18,22`) | `115,425,792 B` (`110.08 MiB`)/layer | **`102,772,736 B` (`98.01 MiB`)**/layer (`attention.bin` deleted!) | `12,653,120 B`/layer | **`-10.96%`** | **`0.0` across all 6 Full GQA layers!** |
+| **All 24 Pruned Trunks (`trunk-0..23`)** | **`24` layers** | `2,933,310,976 B` (`2.732 GiB`) | **`2,466,545,664 B` (`2.297 GiB`)** | **`-445.14 MiB` (`466,765,312 B`) dropped!** | **`-15.91%`** | **`0.0` at every single layer `0..23` & final `128,000`-vocab tied `lm_head` logits!** (`4-bit group-64` SwiGLU $\cos = 0.993288$) |
+
+---
+
 ## Growth
 
-1. **Buffer Dtype Preservation When Loading Mixed BF16/FP32 Router Checkpoints:**
+1. **Buffer Dtype Preservation When Loading Mixed BF16/FP32 Router Checkpoints (`Nemotron 3.5 Super VL`):**
    - In `NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16`, every weight tensor is `BF16` **except** `mixer.gate.e_score_correction_bias`, which is stored as `FP32` in the safetensors shards. Calling `NemotronHBlock(cfg, 1).to(torch.bfloat16)` before `load_state_dict()` truncates the registered buffer `e_score_correction_bias` to `BF16`, shifting top-22 border expert selection on 1 token and causing a `0.009765625` diff. Keeping `e_score_correction_bias` in `FP32` (as our precomputed `routed-shared.bin` Record 30 does natively) produces **`max_abs_diff = 0.0` (exact bit-identity)** across the entire 512-expert Latent `ReLU²` MoE block!
-2. **Next Model in Queue (`lfm3-1.7b`):**
-   - With `clover-ai-system/` established, Layer 1 switchable across all three models, and `nemotron-3.5-super-vl`'s precomputed trunk/operator/direct-expert engine verified at `max_abs_diff = 0.0`, the next step in the sequence is building the dedicated precomputed `LFM3TRK1` trunk + composed `ShortConv`/`GQA` operator + 4-bit SwiGLU engine inside [clover-ai-system/src/models/lfm3-1.7b/](../../../clover-ai-system/src/models/lfm3-1.7b/).
+2. **Struct Header Alignment in Composed `operator.bin` Files (`LFM3-1.7B`):**
+   - In `prepare_lfm3_datasets.py`, `<8sIIIII` is `8 + 5*4 = 28` bytes, so padding to a 64-byte header requires `36x` (not `32x`), and `<8sIIIIIIIII` (`8 + 9*4 = 44` bytes) requires `20x` (not `16x`). Making the 64-byte offset invariant explicit immediately yielded `max_abs_diff = 0.0` across all 24 layers and final logits.
+3. **Complete 3-Model Switchable Layer 1 Verified:**
+   - All three models (`"kimi-k3"`, `"nemotron-3.5-super-vl"`, and `"lfm3-1.7b"`) now have their precomputed trunk (`K3TRK001`, `NEMOTRK1`, `LFM3TRK1`), composed `operator.bin`, trunk pruner, and stage/expert engines verified inside [clover-ai-system/](../../../clover-ai-system/) and integrated behind the switchable Layer-1 interface of Clover's 7-layer architecture.
 
