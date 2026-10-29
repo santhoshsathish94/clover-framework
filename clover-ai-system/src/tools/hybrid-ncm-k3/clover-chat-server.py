@@ -2132,13 +2132,37 @@ class MultiGPUCloverCoordinator:
             self._nemo_mm_engine = None
         return self._nemo_mm_engine
 
+    def _get_or_load_lfm3_multimodal(self):
+        if hasattr(self, "_lfm3_mm_engine") and self._lfm3_mm_engine is not None:
+            return self._lfm3_mm_engine
+        try:
+            lfm3_dir = os.path.abspath(os.path.join(TOOLS_DIR, "../../models/lfm3-1.7b"))
+            if not os.path.isdir(lfm3_dir):
+                lfm3_dir = "/tmp/clover-models/lfm3-1.7b"
+            if lfm3_dir not in sys.path:
+                sys.path.insert(0, lfm3_dir)
+            nemo_dir = os.path.abspath(os.path.join(TOOLS_DIR, "../../models/nemotron-3.5-super-vl"))
+            if not os.path.isdir(nemo_dir):
+                nemo_dir = "/tmp/clover-models/nemotron-3.5-super-vl"
+            if nemo_dir not in sys.path:
+                sys.path.insert(0, nemo_dir)
+            from lfm3_multimodal import Lfm3MultimodalEngine
+            self._lfm3_mm_engine = Lfm3MultimodalEngine()
+        except Exception:
+            self._lfm3_mm_engine = None
+        return self._lfm3_mm_engine
+
     def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl"):
         p_low = (prompt or "").strip().lower()
-        # 1. Check if `nemotron-3.5-super-vl` has an audio attachment or an explicit video/image generation prompt
-        if model_key == "nemotron-3.5-super-vl":
-            nemo_mm = self._get_or_load_nemotron_multimodal()
-            alt_renderer = self._get_or_load_model_renderer("nemotron-3.5-super-vl")
-            if nemo_mm is not None:
+        # 1. Check if `nemotron-3.5-super-vl` or `lfm3-1.7b` has an audio attachment or an explicit video/image generation prompt
+        if model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b"):
+            mm_eng = (
+                self._get_or_load_nemotron_multimodal()
+                if model_key == "nemotron-3.5-super-vl"
+                else self._get_or_load_lfm3_multimodal()
+            )
+            alt_renderer = self._get_or_load_model_renderer(model_key)
+            if mm_eng is not None:
                 # Check for audio attachment first
                 for att in (attachments or []):
                     if not isinstance(att, dict):
@@ -2152,7 +2176,7 @@ class MultiGPUCloverCoordinator:
                             raw_audio = base64.b64decode(raw_b64)
                         except Exception:
                             raw_audio = b""
-                        r_aud = nemo_mm.process_audio_or_voice(raw_audio, f_n, prompt or "Analyze this audio.", renderer=alt_renderer)
+                        r_aud = mm_eng.process_audio_or_voice(raw_audio, f_n, prompt or "Analyze this audio.", renderer=alt_renderer)
                         h_len = self.append_session_turn(session_id, prompt or f"Attached audio {f_n}", r_aud["reply"], r_aud["plans"], attachments_meta=[{"name": f_n, "type": m_t or "audio/wav"}]) if remember else 0
                         sess_info = self.get_session_details(session_id)
                         r_aud.update({
@@ -2172,7 +2196,7 @@ class MultiGPUCloverCoordinator:
                     re.search(r"\b(?:generate|create|make|render|draw|paint)\s+(?:me\s+)?(?:an?\s+)?(?:image|picture|illustration|visual|scene|artwork)\s+(?:of|for|showing)\b", p_low)
                 )
                 if wants_gen_video or wants_gen_image:
-                    r_gen = nemo_mm.generate_media(
+                    r_gen = mm_eng.generate_media(
                         prompt,
                         media_kind="video" if wants_gen_video else "image",
                         renderer=alt_renderer,
@@ -2236,11 +2260,15 @@ class MultiGPUCloverCoordinator:
             eff_prompt = "\n\n".join(att_blocks[:2]) + "\n\n" + eff_prompt
 
         hist_snap = self.get_session_history(session_id) if remember else []
-        if model_key == "nemotron-3.5-super-vl":
-            nemo_mm = self._get_or_load_nemotron_multimodal()
-            if nemo_mm is not None:
-                alt_renderer = self._get_or_load_model_renderer("nemotron-3.5-super-vl")
-                # If the uploaded image is a 3-frame video contact sheet (720x420) or video attachment, slice the 3 frames for C-RADIO EVS video encoding!
+        if model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b"):
+            mm_eng = (
+                self._get_or_load_nemotron_multimodal()
+                if model_key == "nemotron-3.5-super-vl"
+                else self._get_or_load_lfm3_multimodal()
+            )
+            if mm_eng is not None:
+                alt_renderer = self._get_or_load_model_renderer(model_key)
+                # If the uploaded image is a 3-frame video contact sheet (720x420) or video attachment, slice the 3 frames
                 is_vid_att = any("video" in str(m.get("type") or "").lower() for m in att_meta) or (pil_img.size == (720, 420))
                 if is_vid_att and pil_img.width >= 720:
                     frames = [
@@ -2248,15 +2276,21 @@ class MultiGPUCloverCoordinator:
                         pil_img.crop((244, 24, 476, 396)),
                         pil_img.crop((484, 24, 716, 396)),
                     ]
-                    r = nemo_mm.process_image_or_video(frames, eff_prompt, renderer=alt_renderer, use_real_weights_if_present=False)
+                    if model_key == "nemotron-3.5-super-vl":
+                        r = mm_eng.process_image_or_video(frames, eff_prompt, renderer=alt_renderer, use_real_weights_if_present=False)
+                    else:
+                        r = mm_eng.process_image_or_video(frames, eff_prompt, renderer=alt_renderer)
                 else:
-                    r = nemo_mm.process_image_or_video([pil_img], eff_prompt, renderer=alt_renderer, use_real_weights_if_present=False)
+                    if model_key == "nemotron-3.5-super-vl":
+                        r = mm_eng.process_image_or_video([pil_img], eff_prompt, renderer=alt_renderer, use_real_weights_if_present=False)
+                    else:
+                        r = mm_eng.process_image_or_video([pil_img], eff_prompt, renderer=alt_renderer)
                 reply_txt = r["reply"]
                 h_len = len(hist_snap)
                 if remember:
                     with self.sess_lock:
                         meta = self._ensure_session_meta(session_id, first_title=prompt.strip() or "Image analysis")
-                        self._index_text_into_session(meta, source="attachment:image_vision", text=f"[Nemotron C-RADIO Vision/Video Analysis]: {reply_txt}", pinned=True)
+                        self._index_text_into_session(meta, source="attachment:image_vision", text=f"[{model_key} Vision/Video Analysis]: {reply_txt}", pinned=True)
                     h_len = self.append_session_turn(session_id, prompt.strip() or "Attached media", reply_txt, r["plans"], attachments_meta=att_meta)
                 sess_info = self.get_session_details(session_id)
                 r["session_id"] = session_id

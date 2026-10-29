@@ -104,9 +104,15 @@ CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
         moe_latent_size=2048,
         max_context_tokens=1048576,
         native_backbone_context_tokens=262144,
-        has_native_vision=False,
+        has_native_vision=True,
         speculative_drafter_kind="prompt-lookup",
         model_subdir="lfm3-1.7b",
+        supports_audio_voice=True,
+        supports_video=True,
+        supports_image_generation=True,
+        supports_video_generation=True,
+        voice_profile="en-US-JennyNeural",
+        supported_modalities=("text", "vision", "video", "audio", "voice-conversation", "image-generation", "video-generation"),
     ),
 }
 

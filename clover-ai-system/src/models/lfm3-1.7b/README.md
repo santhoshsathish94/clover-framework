@@ -12,6 +12,7 @@ This folder registers **Liquid AI's `LFM3-1.7B`** (`LiquidAI/LFM3-1.7B`, `1.73B`
 - **Precomputed 24-Layer Runtime Engine & 4-Bit SwiGLU:** [lfm3_precomputed_engine.py](lfm3_precomputed_engine.py)
 - **Native 24-Layer C/OpenMP Engine (`liblfm3_cpu_engine.so`):** [lfm3_cpu_engine.c](lfm3_cpu_engine.c)
 - **Native `HybridAgent` (`Lfm3NativeHybridLink` $d=2048$) & Native 11-Level `NCM` (`128,000`-Vocab VQ-VAE + Bridges):** [lfm3_hybrid_ncm.py](lfm3_hybrid_ncm.py)
+- **Multimodal Vision, Video (`Lfm3ShortConv`), Duplex Audio/Voice Conversation & Image/Video Generation Engine:** [lfm3_multimodal.py](lfm3_multimodal.py)
 - **End-to-End 24-Layer Verification & 7-Layer Clover Switching Suite:** [verify_lfm3_clover_integration.py](verify_lfm3_clover_integration.py)
 - **Stage-by-Stage Verification & Study:** [../../../../research/lfm3_stage_study.py](../../../../research/lfm3_stage_study.py) and [../../../../docs/runtime-context/engine-and-architecture/clover-lfm3-1.7b-stage-study-context.md](../../../../docs/runtime-context/engine-and-architecture/clover-lfm3-1.7b-stage-study-context.md)
 - **Switchable Layer-1 Registration:** `"lfm3-1.7b"` in [../switchable_model_backend.py](../switchable_model_backend.py) and `class-lfm3-compact-foundation-model-backend` in [../../tools/hybrid-ncm-k3/clover-object-model.py](../../tools/hybrid-ncm-k3/clover-object-model.py).
