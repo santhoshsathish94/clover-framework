@@ -119,7 +119,12 @@ class K3KnowledgeSearchTool:
                 "nemotron", "lfm3", "slotcache", "eyeriss", "specmd", "pebble",
             )
         ):
-            out_sections.append(self.default_context_text[:2800])
+            ctx_slice = self.default_context_text
+            if any(sk in q_low for sk in ("cycle", "5-stage", "five-stage", "five stage", "stages")) and "2. **THE CYCLE:" in ctx_slice:
+                ctx_slice = ctx_slice[ctx_slice.index("2. **THE CYCLE:") :]
+            elif any(lk in q_low for lk in ("7-layer", "seven-layer", "architecture", "system", "layer")) and "## 3. What is the Clover System" in ctx_slice:
+                ctx_slice = ctx_slice[ctx_slice.index("## 3. What is the Clover System") :]
+            out_sections.append(ctx_slice[:2800])
 
         try:
             search_q = q
@@ -708,19 +713,20 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
     ):
         return p
 
-    # 3. Short named-entity or encyclopedic topic prompts (e.g. 'Dbz', 'the cosmos')
+    # 3. Short named-entity or encyclopedic/scientific topic prompts (e.g. 'Dbz', 'the cosmos', 'A deeper dive into the quantum realm...')
     if (
         not has_local_filepath
         and not is_local_workspace_inspection
         and not is_short_greeting_or_ack(p)
         and not is_conversational_meta_or_confirmation(p)
         and not re.search(r"[\d\+\-\*/=]", low)
-        and 1 <= len(low.split()) <= 4
-        and not low.startswith(("hi", "hello", "hey", "thanks", "thank", "yes", "no", "ok", "sure", "why", "how"))
     ):
-        if low == "dbz":
+        if low == "dbz" or "dragon ball" in low:
             return "Dragon Ball Z"
-        return p
+        if "quantum" in low and ("cosmos" in low or "universe" in low or "cosmology" in low):
+            return "quantum mechanics and cosmology"
+        if 1 <= len(low.split()) <= 4 and not low.startswith(("hi", "hello", "hey", "thanks", "thank", "yes", "no", "ok", "sure", "why", "how")):
+            return p
     return None
 
 
@@ -1908,23 +1914,8 @@ class CloverK3AgentEngine:
                 elif not last_substantive_r and r_h:
                     last_substantive_r = " ".join(r_lines[:3])[:360]
         else:
-            if is_short_greeting_or_ack(raw_user_q) or is_conversational_meta_or_confirmation(raw_user_q):
-                msgs.append({"role": "user", "content": "hi"})
-                msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
-            else:
-                msgs.append({
-                    "role": "user",
-                    "content": "Write your direct response to the user starting with `W1:` (and `W2:`, `W3:`, `W4:` on new lines).\n\nUser message:\nExplain how photosynthesis works.",
-                })
-                msgs.append({
-                    "role": "assistant",
-                    "content": (
-                        "W1: Photosynthesis is the biological process by which green plants, algae, and cyanobacteria convert light energy into chemical energy.\n"
-                        "W2: Light-Dependent Reactions: Chlorophyll in the thylakoid membranes absorbs sunlight, splitting water molecules to release oxygen and generate ATP and NADPH.\n"
-                        "W3: Calvin Cycle (Carbon Fixation): In the chloroplast stroma, ATP and NADPH drive the conversion of atmospheric carbon dioxide into glucose.\n"
-                        "W4: Ecological Importance: Photosynthesis sustains Earth's oxygen atmosphere and forms the primary energy foundation for nearly all food webs."
-                    ),
-                })
+            msgs.append({"role": "user", "content": "hi"})
+            msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
 
         is_self_contained_calc = (
             py_code is not None
@@ -2078,7 +2069,7 @@ class CloverK3AgentEngine:
                 "two sentences", "two clear sentences", "2 sentences", "briefly",
             )
         )
-        effective_max_new = max(max_new, 680) if is_code_spec else (64 if is_short_conv else (96 if asks_brief_sentences_top else (260 if self.dev_ha.type == "cpu" else max_new)))
+        effective_max_new = max(max_new, 680) if is_code_spec else (64 if is_short_conv else (96 if asks_brief_sentences_top else (160 if self.dev_ha.type == "cpu" else max_new)))
         for _ in range(effective_max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
@@ -2341,7 +2332,7 @@ class CloverK3AgentEngine:
                         break
                     elif is_mcq and len(valid_lines_so_far) >= 2 and valid_lines_so_far[-1].endswith((".", "!", "?")):
                         break
-                    elif len(valid_lines_so_far) >= (14 if self.dev_ha.type == "cpu" else (8 if not is_struct else 18)) and not last_ln.endswith(":"):
+                    elif len(valid_lines_so_far) >= (9 if self.dev_ha.type == "cpu" else (8 if not is_struct else 18)) and not last_ln.endswith(":"):
                         break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
@@ -2530,7 +2521,7 @@ class CloverK3AgentEngine:
                 plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
 
         # Fallback / enrichment grounding from verified `<search>` results if `plans` is empty/fallback,
-        # omits Clover facts, or has <= 2 short outline lines when rich `<search>` facts were retrieved
+        # omits Clover facts, or has <= 3 short outline lines when rich `<search>` facts were retrieved
         if (
             not is_code_spec
             and not is_mcq
@@ -2541,10 +2532,10 @@ class CloverK3AgentEngine:
                 or (
                     any(t.get("tool") == "search" for t in tool_calls_log)
                     and (
-                        len(plans) <= 2
+                        len(plans) <= 3
                         or (
                             "clover" in raw_user_q.lower()
-                            and not any("context" in p.lower() or "clover" in p.lower() for p in plans)
+                            and not any("direction" in p.lower() and "outcome" in p.lower() for p in plans)
                         )
                     )
                 )
@@ -2561,19 +2552,27 @@ class CloverK3AgentEngine:
                     if not s_ln or s_ln.startswith(("#", "---")):
                         continue
                     s_ln = re.sub(r"^(?:•\s*Reference Source\s*\d+:\s*|Page\s*\d+:\s*)", "", s_ln).strip()
+                    # Convert `[Web: Title — Link: URL] Body` into `Title (URL): Body`
+                    s_ln = re.sub(
+                        r"^\[(?:Wikipedia|Web|arXiv)[^:\]]*:\s*([^—\]]+?)\s*—\s*Link:\s*(https?://[^\s\]]+)\]\s*(.+)$",
+                        r"\1 (\2): \3",
+                        s_ln,
+                    ).strip()
+                    if s_ln.endswith("..."):
+                        s_ln = s_ln[:-3].rstrip(" ,;(") + "."
                     if len(s_ln) >= 25:
                         ref_lines.append(s_ln)
-                    if len(ref_lines) >= 5:
+                    if len(ref_lines) >= 6:
                         break
                 if ref_lines:
                     valid_existing = [
-                        p for p in (plans or [])
+                        p.lstrip("\n").strip() for p in (plans or [])
                         if p not in ("Unable to process this request right now.", "Hello! How can I help you today?")
                     ]
-                    if "clover" in raw_user_q.lower() and not any("context" in p.lower() or "clover" in p.lower() for p in valid_existing):
-                        combined_search_src = "\n".join(ref_lines[:4])
+                    if "clover" in raw_user_q.lower():
+                        combined_search_src = "\n".join(valid_existing[:2] + ref_lines[:5])
                     else:
-                        combined_search_src = "\n".join(valid_existing[:3] + ref_lines[:3])
+                        combined_search_src = "\n".join(valid_existing[:2] + ref_lines[:3])
                     plans = parse_and_split_plans(combined_search_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
 
         del past_kv, out

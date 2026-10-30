@@ -152,12 +152,31 @@ class LiveWebSearchTool:
                         s_data = json.loads(rs.read().decode("utf-8", errors="ignore"))
                     extract_txt = " ".join((s_data.get("extract") or "").split()).strip()
                     if len(extract_txt) >= 30:
-                        if len(extract_txt) > 260:
-                            extract_txt = extract_txt[:257].rsplit(" ", 1)[0] + "..."
-                        snip = extract_txt
+                        sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", extract_txt) if s.strip()]
+                        kept_sents = []
+                        cur_chars = 0
+                        for s_item in sents:
+                            if s_item.count("(") != s_item.count(")"):
+                                s_item = re.sub(r"\([^)]*$", "", s_item).strip()
+                                if s_item and not s_item.endswith((".", "!", "?")):
+                                    s_item += "."
+                            if not s_item:
+                                continue
+                            if kept_sents and cur_chars + len(s_item) > 420:
+                                break
+                            kept_sents.append(s_item)
+                            cur_chars += len(s_item)
+                            if len(kept_sents) >= 3:
+                                break
+                        if kept_sents:
+                            snip = " ".join(kept_sents)
+                        elif len(extract_txt) > 320:
+                            snip = extract_txt[:317].rsplit(" ", 1)[0].rstrip(" ,;(") + "."
+                        else:
+                            snip = extract_txt
                 except Exception:
                     pass
-                out.append(f"[Wikipedia: {title} — Link: {wiki_url}] {snip}")
+                out.append(f"{title} ({wiki_url}): {snip}")
         except Exception:
             pass
         return out
