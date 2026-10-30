@@ -223,15 +223,16 @@ class LiveWebSearchTool:
             self.cache[q] = formatted_url
             return formatted_url
 
-        # If query asks about research, papers, AI, science, physics, math, or algorithms, prioritize arXiv + Wikipedia
-        if any(k in low for k in ("research", "paper", "arxiv", "ai", "artificial intelligence", "llm", "model", "agent", "quantum", "science", "development", "developments", "recent", "latest")):
+        # Only query arXiv when the prompt explicitly asks for research papers, studies, or arXiv;
+        # otherwise use Wikipedia + DuckDuckGo so general science/topic queries get encyclopedic facts!
+        if any(k in low for k in ("research", "paper", "papers", "arxiv", "study", "studies", "publication", "preprint")):
             results.extend(self._search_arxiv(q, max_items=3))
             results.extend(self._search_wikipedia(q, max_items=2))
             if len(results) < 3:
                 results.extend(self._search_ddg(q, max_items=2))
         else:
-            results.extend(self._search_ddg(q, max_items=3))
             results.extend(self._search_wikipedia(q, max_items=3))
+            results.extend(self._search_ddg(q, max_items=3))
 
         if not results:
             return f"No live external results returned for '{q}'."

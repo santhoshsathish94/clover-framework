@@ -708,26 +708,18 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
     ):
         return p
 
-    # 3. Short named-entity or encyclopedic/scientific topic prompts (e.g. 'Dbz', 'the cosmos', 'A deeper dive into the quantum realm...')
+    # 3. Short named-entity or encyclopedic topic prompts (e.g. 'Dbz', 'the cosmos')
     if (
         not has_local_filepath
         and not is_local_workspace_inspection
         and not is_short_greeting_or_ack(p)
         and not is_conversational_meta_or_confirmation(p)
         and not re.search(r"[\d\+\-\*/=]", low)
-        and (
-            (
-                1 <= len(low.split()) <= 4
-                and not low.startswith(("hi", "hello", "hey", "thanks", "thank", "yes", "no", "ok", "sure", "why", "how"))
-            )
-            or any(
-                sci_k in low
-                for sci_k in ("quantum", "cosmos", "cosmology", "astrophysics", "deeper dive", "dragon ball", "dbz")
-            )
-        )
+        and 1 <= len(low.split()) <= 4
+        and not low.startswith(("hi", "hello", "hey", "thanks", "thank", "yes", "no", "ok", "sure", "why", "how"))
     ):
         if low == "dbz":
-            return "Dragon Ball Z anime series overview Akira Toriyama Goku"
+            return "Dragon Ball Z"
         return p
     return None
 
@@ -1915,6 +1907,24 @@ class CloverK3AgentEngine:
                     last_substantive_r = " ".join(r_lines[:3])[:360]
                 elif not last_substantive_r and r_h:
                     last_substantive_r = " ".join(r_lines[:3])[:360]
+        else:
+            if is_short_greeting_or_ack(raw_user_q) or is_conversational_meta_or_confirmation(raw_user_q):
+                msgs.append({"role": "user", "content": "hi"})
+                msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
+            else:
+                msgs.append({
+                    "role": "user",
+                    "content": "Write your direct response to the user starting with `W1:` (and `W2:`, `W3:`, `W4:` on new lines).\n\nUser message:\nExplain how photosynthesis works.",
+                })
+                msgs.append({
+                    "role": "assistant",
+                    "content": (
+                        "W1: Photosynthesis is the biological process by which green plants, algae, and cyanobacteria convert light energy into chemical energy.\n"
+                        "W2: Light-Dependent Reactions: Chlorophyll in the thylakoid membranes absorbs sunlight, splitting water molecules to release oxygen and generate ATP and NADPH.\n"
+                        "W3: Calvin Cycle (Carbon Fixation): In the chloroplast stroma, ATP and NADPH drive the conversion of atmospheric carbon dioxide into glucose.\n"
+                        "W4: Ecological Importance: Photosynthesis sustains Earth's oxygen atmosphere and forms the primary energy foundation for nearly all food webs."
+                    ),
+                })
 
         is_self_contained_calc = (
             py_code is not None
@@ -2068,7 +2078,7 @@ class CloverK3AgentEngine:
                 "two sentences", "two clear sentences", "2 sentences", "briefly",
             )
         )
-        effective_max_new = max(max_new, 680) if is_code_spec else (64 if is_short_conv else (96 if asks_brief_sentences_top else (180 if self.dev_ha.type == "cpu" else max_new)))
+        effective_max_new = max(max_new, 680) if is_code_spec else (64 if is_short_conv else (96 if asks_brief_sentences_top else (260 if self.dev_ha.type == "cpu" else max_new)))
         for _ in range(effective_max_new):
             nxt = int(next_logits.argmax(dim=-1).item())
             if nxt in eos_ids:
@@ -2331,7 +2341,7 @@ class CloverK3AgentEngine:
                         break
                     elif is_mcq and len(valid_lines_so_far) >= 2 and valid_lines_so_far[-1].endswith((".", "!", "?")):
                         break
-                    elif len(valid_lines_so_far) >= (6 if self.dev_ha.type == "cpu" else (8 if not is_struct else 18)) and not last_ln.endswith(":"):
+                    elif len(valid_lines_so_far) >= (14 if self.dev_ha.type == "cpu" else (8 if not is_struct else 18)) and not last_ln.endswith(":"):
                         break
             out = backbone(input_ids=torch.tensor([[nxt]], device=self.dev_ha), past_key_values=past_kv, use_cache=True, return_dict=True)
             past_kv = out.past_key_values
