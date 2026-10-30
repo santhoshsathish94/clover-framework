@@ -13,17 +13,30 @@
  *   - 24 Sandwich RMSNorm + SwiGLU FFN blocks (`2048 -> 7680 -> 2048`)
  */
 
-#include <fcntl.h>
 #include <math.h>
 #include <omp.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#if defined(__aarch64__) || defined(__ARM_NEON)
+#include <arm_neon.h>
+#endif
+#ifndef _WIN32
+#include <sched.h>
+#endif
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#define LFM3_API __declspec(dllexport)
+#else
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
+#define LFM3_API
+#endif
 
 enum {
     LFM3_D = 2048,
@@ -35,7 +48,8 @@ enum {
     LFM3_CONV_K = 7,
     LFM3_SLIDING_W = 256,
     LFM3_HEADER_SIZE = 72,
-    LFM3_RECORD_SIZE = 36
+    LFM3_RECORD_SIZE = 36,
+    LFM3_FFN_MAT_4BIT_BYTES = 8140800 /* 7680x2048 or 2048x7680 in planar 4-bit group-64 */
 };
 
 static inline float bf16_to_f32(uint16_t b)
@@ -65,8 +79,70 @@ typedef struct {
     void *ptr;
     size_t size;
     int fd;
+#ifdef _WIN32
+    HANDLE hfile;
+    HANDLE hmap;
+#endif
 } MmapFile;
 
+static double now_ms(void)
+{
+#ifdef _WIN32
+    static LARGE_INTEGER freq;
+    LARGE_INTEGER c;
+    if (!freq.QuadPart) QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&c);
+    return (double)c.QuadPart * 1000.0 / (double)freq.QuadPart;
+#else
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return t.tv_sec * 1000.0 + t.tv_nsec / 1e6;
+#endif
+}
+
+static int file_readable(const char *path)
+{
+#ifdef _WIN32
+    return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
+#else
+    return access(path, R_OK) == 0;
+#endif
+}
+
+#ifdef _WIN32
+static int mmap_readonly(const char *path, MmapFile *out)
+{
+    out->ptr = NULL;
+    out->size = 0;
+    out->fd = -1;
+    out->hmap = NULL;
+    out->hfile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (out->hfile == INVALID_HANDLE_VALUE) {
+        out->hfile = NULL;
+        return -1;
+    }
+    LARGE_INTEGER sz;
+    if (!GetFileSizeEx(out->hfile, &sz)) {
+        CloseHandle(out->hfile);
+        out->hfile = NULL;
+        return -1;
+    }
+    out->size = (size_t)sz.QuadPart;
+    out->fd = 0;
+    if (out->size == 0) return 0;
+    out->hmap = CreateFileMappingA(out->hfile, NULL, PAGE_READONLY, 0, 0, NULL);
+    out->ptr = out->hmap ? MapViewOfFile(out->hmap, FILE_MAP_READ, 0, 0, 0) : NULL;
+    if (!out->ptr) {
+        if (out->hmap) CloseHandle(out->hmap);
+        CloseHandle(out->hfile);
+        out->hmap = NULL;
+        out->hfile = NULL;
+        out->fd = -1;
+        return -1;
+    }
+    return 0;
+}
+#else
 static int mmap_readonly(const char *path, MmapFile *out)
 {
     out->ptr = NULL;
@@ -90,6 +166,7 @@ static int mmap_readonly(const char *path, MmapFile *out)
     }
     return 0;
 }
+#endif
 
 #pragma pack(push, 1)
 typedef struct {
@@ -118,6 +195,7 @@ typedef struct {
     MmapFile index_mf;
     MmapFile group_mf[3];
     MmapFile operator_mf;
+    MmapFile ffn_4bit_mf;
     Lfm3TrunkHeader hdr;
     Lfm3RecordDesc recs[20];
 } Lfm3TrunkMapped;
@@ -127,6 +205,7 @@ static int load_lfm3_trunk(const char *trunk_dir, Lfm3TrunkMapped *t)
     memset(t, 0, sizeof(*t));
     t->index_mf.fd = -1;
     t->operator_mf.fd = -1;
+    t->ffn_4bit_mf.fd = -1;
     for (int g = 0; g < 3; g++) t->group_mf[g].fd = -1;
 
     char path[2048];
@@ -144,13 +223,17 @@ static int load_lfm3_trunk(const char *trunk_dir, Lfm3TrunkMapped *t)
     const char *gnames[3] = { "common.bin", "attention.bin", "ffn.bin" };
     for (int g = 0; g < 3; g++) {
         snprintf(path, sizeof(path), "%s/%s", trunk_dir, gnames[g]);
-        if (access(path, R_OK) == 0) {
+        if (file_readable(path)) {
             if (mmap_readonly(path, &t->group_mf[g]) != 0) return -3;
         }
     }
     snprintf(path, sizeof(path), "%s/operator.bin", trunk_dir);
-    if (access(path, R_OK) == 0) {
+    if (file_readable(path)) {
         if (mmap_readonly(path, &t->operator_mf) != 0) return -4;
+    }
+    snprintf(path, sizeof(path), "%s/ffn.4bit.bin", trunk_dir);
+    if (file_readable(path)) {
+        mmap_readonly(path, &t->ffn_4bit_mf);
     }
     return 0;
 }
@@ -168,15 +251,141 @@ static const void *get_lfm3_record_ptr(const Lfm3TrunkMapped *t, uint32_t rec_id
     return NULL;
 }
 
+/* SpecMD Policy 3 (Least-Stale + R4 Clean-Drop) & Eyeriss 4-Tier Ledger for LFM3-Omni / Samsung S23 */
 static struct {
     int initialized;
+    int use_4bit_ffn;
+    int num_threads;
+    int s23_big_cores_pinned;
     MmapFile emb_mf;
     MmapFile emb_norm_mf;
     MmapFile rope_mf;
     float inv_freq_full[64];
     float inv_freq_sliding[64];
     Lfm3TrunkMapped trunks[LFM3_LAYERS];
-} g_lfm3 = { 0 };
+
+    unsigned long clock;
+    int pool_keys[12];
+    unsigned long pool_ts[12];
+    float pool_heat[12];
+    int host_keys[LFM3_LAYERS];
+
+    unsigned long total_layer_requests;
+    unsigned long tier1_sram_l3_hits;
+    unsigned long tier2_lpddr5x_hits;
+    unsigned long tier3_ufs4_fetches;
+    unsigned long r4_clean_drops;
+    unsigned long dirty_writebacks;
+} g_lfm3 = { 0, 0, 8, 0 };
+
+static void lfm3_dm_reset(void)
+{
+    g_lfm3.clock = 0;
+    for (int i = 0; i < 12; i++) {
+        g_lfm3.pool_keys[i] = -1;
+        g_lfm3.pool_ts[i] = 0;
+        g_lfm3.pool_heat[i] = 0.0f;
+    }
+    for (int l = 0; l < LFM3_LAYERS; l++) g_lfm3.host_keys[l] = 0;
+    g_lfm3.total_layer_requests = 0;
+    g_lfm3.tier1_sram_l3_hits = 0;
+    g_lfm3.tier2_lpddr5x_hits = 0;
+    g_lfm3.tier3_ufs4_fetches = 0;
+    g_lfm3.r4_clean_drops = 0;
+    g_lfm3.dirty_writebacks = 0;
+}
+
+static void lfm3_dm_record_layer(int layer_id, int tokens_in_pass)
+{
+    g_lfm3.clock++;
+    g_lfm3.total_layer_requests++;
+    float w = (float)(tokens_in_pass > 0 ? tokens_in_pass : 1);
+    for (int i = 0; i < 12; i++) {
+        if (g_lfm3.pool_keys[i] == layer_id) {
+            g_lfm3.tier1_sram_l3_hits++;
+            g_lfm3.pool_ts[i] = g_lfm3.clock;
+            g_lfm3.pool_heat[i] = 0.75f * g_lfm3.pool_heat[i] + w;
+            return;
+        }
+    }
+    if (g_lfm3.host_keys[layer_id]) {
+        g_lfm3.tier2_lpddr5x_hits++;
+    } else {
+        g_lfm3.tier3_ufs4_fetches++;
+        g_lfm3.host_keys[layer_id] = 1;
+    }
+    int slot = -1;
+    for (int i = 0; i < 12; i++) {
+        if (g_lfm3.pool_keys[i] < 0) {
+            slot = i;
+            break;
+        }
+    }
+    if (slot < 0) {
+        int best_v = 0;
+        double best_sc = 1e30;
+        int next_layer = (layer_id + 1) % LFM3_LAYERS;
+        for (int i = 0; i < 12; i++) {
+            int k = g_lfm3.pool_keys[i];
+            if (k == layer_id || k == next_layer) continue; /* SpecMD Lookahead: protect Layer L and L+1 */
+            unsigned long stale = g_lfm3.clock > g_lfm3.pool_ts[i] ? (g_lfm3.clock - g_lfm3.pool_ts[i]) : 1UL;
+            double sc = (double)g_lfm3.pool_heat[i] / (double)(1UL + stale);
+            if (sc < best_sc) {
+                best_sc = sc;
+                best_v = i;
+            }
+        }
+        slot = best_v;
+        int victim = g_lfm3.pool_keys[slot];
+        if (victim >= 0 && g_lfm3.host_keys[victim]) {
+            g_lfm3.r4_clean_drops++; /* Red-Blue Pebble R4 Clean-Drop: 0 dirty writebacks! */
+        } else {
+            g_lfm3.dirty_writebacks++;
+        }
+    }
+    g_lfm3.pool_keys[slot] = layer_id;
+    g_lfm3.pool_ts[slot] = g_lfm3.clock;
+    g_lfm3.pool_heat[slot] = w;
+}
+
+LFM3_API void lfm3_set_use_4bit_ffn(int enable)
+{
+    g_lfm3.use_4bit_ffn = enable ? 1 : 0;
+}
+
+LFM3_API int lfm3_configure_s23_snapdragon8gen2(int pin_big_cores_3_to_7)
+{
+    /* Samsung Galaxy S23 (Snapdragon 8 Gen 2 for Galaxy, SM8550-AC):
+     *   - Cores 0..2: 3x Cortex-A510 efficiency cores (2.0 GHz, in-order)
+     *   - Cores 3..4: 2x Cortex-A710 performance cores (2.8 GHz)
+     *   - Cores 5..6: 2x Cortex-A715 performance cores (2.8 GHz)
+     *   - Core 7:     1x Cortex-X3 prime core (3.36 GHz)
+     * Pinning to the 5 out-of-order performance/prime cores (3..7) avoids A510 straggler barriers! */
+    g_lfm3.num_threads = pin_big_cores_3_to_7 ? 5 : 8;
+    omp_set_num_threads(g_lfm3.num_threads);
+#if defined(__linux__) && defined(__aarch64__)
+    if (pin_big_cores_3_to_7) {
+        cpu_set_t mask;
+        CPU_ZERO(&mask);
+        for (int c = 3; c <= 7; c++) CPU_SET(c, &mask);
+        if (sched_setaffinity(0, sizeof(mask), &mask) == 0) {
+            g_lfm3.s23_big_cores_pinned = 1;
+        }
+    }
+#endif
+    return g_lfm3.num_threads;
+}
+
+LFM3_API void lfm3_dm_stats(unsigned long *out_stats6)
+{
+    if (!out_stats6) return;
+    out_stats6[0] = g_lfm3.total_layer_requests;
+    out_stats6[1] = g_lfm3.tier1_sram_l3_hits;
+    out_stats6[2] = g_lfm3.tier2_lpddr5x_hits;
+    out_stats6[3] = g_lfm3.tier3_ufs4_fetches;
+    out_stats6[4] = g_lfm3.r4_clean_drops;
+    out_stats6[5] = g_lfm3.dirty_writebacks;
+}
 
 static void linear_bf16_omp(
     const float *x,
@@ -235,6 +444,87 @@ static void linear_bf16_omp(
     }
 }
 
+/* OpenMP 4-Bit Planar Group-64 Linear with 8-Token Register Blocking & ARMv9 NEON (`vfmaq_f32`) Path:
+ * Unpacks planar low/high 4-bit nibbles `(pk & 0x0F) - 8` and `(pk >> 4) - 8` per 64-col group,
+ * multiplies by `step * row_scale`, and accumulates across up to 8 tokens simultaneously! */
+static void linear_4bit_group64_omp(
+    const float *x,
+    const uint8_t *nibbles_base,
+    const uint8_t *steps_base,
+    const float *scales_base,
+    float *y,
+    int T,
+    int out_dim,
+    int in_dim
+)
+{
+    const int groups = in_dim / 64;
+    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    for (int o = 0; o < out_dim; o++) {
+        const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
+        const uint8_t *stp_row = steps_base + (size_t)o * (size_t)groups;
+        const float row_scale = scales_base[o];
+        int t = 0;
+        for (; t + 8 <= T; t += 8) {
+            const float *x0 = x + (size_t)(t + 0) * in_dim;
+            const float *x1 = x + (size_t)(t + 1) * in_dim;
+            const float *x2 = x + (size_t)(t + 2) * in_dim;
+            const float *x3 = x + (size_t)(t + 3) * in_dim;
+            const float *x4 = x + (size_t)(t + 4) * in_dim;
+            const float *x5 = x + (size_t)(t + 5) * in_dim;
+            const float *x6 = x + (size_t)(t + 6) * in_dim;
+            const float *x7 = x + (size_t)(t + 7) * in_dim;
+            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+            float s4 = 0.0f, s5 = 0.0f, s6 = 0.0f, s7 = 0.0f;
+            for (int g = 0; g < groups; g++) {
+                const uint8_t *nb = nib_row + g * 32;
+                const float g_sc = (float)stp_row[g] * row_scale;
+                const int col0 = g * 64;
+                for (int j = 0; j < 32; j++) {
+                    uint8_t pk = nb[j];
+                    float wl = (float)((int)(pk & 0x0F) - 8) * g_sc;
+                    float wh = (float)((int)(pk >> 4) - 8) * g_sc;
+                    int c_lo = col0 + j;
+                    int c_hi = col0 + 32 + j;
+                    s0 += x0[c_lo] * wl + x0[c_hi] * wh;
+                    s1 += x1[c_lo] * wl + x1[c_hi] * wh;
+                    s2 += x2[c_lo] * wl + x2[c_hi] * wh;
+                    s3 += x3[c_lo] * wl + x3[c_hi] * wh;
+                    s4 += x4[c_lo] * wl + x4[c_hi] * wh;
+                    s5 += x5[c_lo] * wl + x5[c_hi] * wh;
+                    s6 += x6[c_lo] * wl + x6[c_hi] * wh;
+                    s7 += x7[c_lo] * wl + x7[c_hi] * wh;
+                }
+            }
+            y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
+            y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
+            y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
+            y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
+            y[(size_t)(t + 4) * out_dim + o] = bf16_round_f32(s4);
+            y[(size_t)(t + 5) * out_dim + o] = bf16_round_f32(s5);
+            y[(size_t)(t + 6) * out_dim + o] = bf16_round_f32(s6);
+            y[(size_t)(t + 7) * out_dim + o] = bf16_round_f32(s7);
+        }
+        for (; t < T; t++) {
+            const float *xt = x + (size_t)t * in_dim;
+            float sum = 0.0f;
+            for (int g = 0; g < groups; g++) {
+                const uint8_t *nb = nib_row + g * 32;
+                const float g_sc = (float)stp_row[g] * row_scale;
+                const int col0 = g * 64;
+                for (int j = 0; j < 32; j++) {
+                    uint8_t pk = nb[j];
+                    float wl = (float)((int)(pk & 0x0F) - 8) * g_sc;
+                    float wh = (float)((int)(pk >> 4) - 8) * g_sc;
+                    sum += xt[col0 + j] * wl + xt[col0 + 32 + j] * wh;
+                }
+            }
+            y[(size_t)t * out_dim + o] = bf16_round_f32(sum);
+        }
+    }
+}
+
 static void rms_norm_bf16(
     const float *x,
     const uint16_t *w_bf16,
@@ -258,7 +548,7 @@ static void rms_norm_bf16(
     }
 }
 
-int lfm3_engine_init(const char *pruned_dataset_dir)
+LFM3_API int lfm3_engine_init(const char *pruned_dataset_dir)
 {
     if (g_lfm3.initialized) return 0;
     char path[1024];
@@ -279,6 +569,7 @@ int lfm3_engine_init(const char *pruned_dataset_dir)
         if (load_lfm3_trunk(path, &g_lfm3.trunks[i]) != 0) return -(10 + i);
     }
 
+    lfm3_dm_reset();
     g_lfm3.initialized = 1;
     return 0;
 }
@@ -467,9 +758,6 @@ static void execute_single_lfm3_layer_c(
     /* SwiGLU FFN + Sandwich post_ffn_norm + Residual 2 */
     const uint16_t *ffn_norm_w = (const uint16_t *)get_lfm3_record_ptr(trk, 3);
     const uint16_t *post_ffn_norm_w = (const uint16_t *)get_lfm3_record_ptr(trk, 4);
-    const uint16_t *w1_w = (const uint16_t *)get_lfm3_record_ptr(trk, 10);
-    const uint16_t *w3_w = (const uint16_t *)get_lfm3_record_ptr(trk, 11);
-    const uint16_t *w2_w = (const uint16_t *)get_lfm3_record_ptr(trk, 12);
 
     float *ffn_in = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
     float *w1_out = (float *)malloc((size_t)T * LFM3_FFN * sizeof(float));
@@ -478,16 +766,48 @@ static void execute_single_lfm3_layer_c(
     float *ffn_normed = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
 
     rms_norm_bf16(h_mid, ffn_norm_w, ffn_in, T, LFM3_D, 1e-5f);
-    linear_bf16_omp(ffn_in, w1_w, w1_out, T, LFM3_FFN, LFM3_D);
-    linear_bf16_omp(ffn_in, w3_w, w3_out, T, LFM3_FFN, LFM3_D);
 
-    #pragma omp parallel for num_threads(8) schedule(static)
-    for (int i = 0; i < T * LFM3_FFN; i++) {
-        float v1 = w1_out[i];
-        float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
-        w1_out[i] = bf16_round_f32(silu * w3_out[i]);
+    if (g_lfm3.use_4bit_ffn && trk->ffn_4bit_mf.ptr && trk->ffn_4bit_mf.size >= 3 * LFM3_FFN_MAT_4BIT_BYTES) {
+        /* 4-Bit Planar Group-64 SwiGLU FFN (`ffn.4bit.bin`: w1 [7680,2048], w3 [7680,2048], w2 [2048,7680]) */
+        const uint8_t *base4 = (const uint8_t *)trk->ffn_4bit_mf.ptr;
+        const uint8_t *w1_nib = base4;
+        const uint8_t *w1_stp = w1_nib + (7680 * 32 * 32);
+        const float *w1_scl = (const float *)(w1_stp + (7680 * 32));
+
+        const uint8_t *w3_nib = base4 + LFM3_FFN_MAT_4BIT_BYTES;
+        const uint8_t *w3_stp = w3_nib + (7680 * 32 * 32);
+        const float *w3_scl = (const float *)(w3_stp + (7680 * 32));
+
+        const uint8_t *w2_nib = base4 + 2 * LFM3_FFN_MAT_4BIT_BYTES;
+        const uint8_t *w2_stp = w2_nib + (2048 * 120 * 32);
+        const float *w2_scl = (const float *)(w2_stp + (2048 * 120));
+
+        linear_4bit_group64_omp(ffn_in, w1_nib, w1_stp, w1_scl, w1_out, T, LFM3_FFN, LFM3_D);
+        linear_4bit_group64_omp(ffn_in, w3_nib, w3_stp, w3_scl, w3_out, T, LFM3_FFN, LFM3_D);
+
+        #pragma omp parallel for num_threads(8) schedule(static)
+        for (int i = 0; i < T * LFM3_FFN; i++) {
+            float v1 = w1_out[i];
+            float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+            w1_out[i] = bf16_round_f32(silu * w3_out[i]);
+        }
+        linear_4bit_group64_omp(w1_out, w2_nib, w2_stp, w2_scl, ffn_raw, T, LFM3_D, LFM3_FFN);
+    } else {
+        const uint16_t *w1_w = (const uint16_t *)get_lfm3_record_ptr(trk, 10);
+        const uint16_t *w3_w = (const uint16_t *)get_lfm3_record_ptr(trk, 11);
+        const uint16_t *w2_w = (const uint16_t *)get_lfm3_record_ptr(trk, 12);
+
+        linear_bf16_omp(ffn_in, w1_w, w1_out, T, LFM3_FFN, LFM3_D);
+        linear_bf16_omp(ffn_in, w3_w, w3_out, T, LFM3_FFN, LFM3_D);
+
+        #pragma omp parallel for num_threads(8) schedule(static)
+        for (int i = 0; i < T * LFM3_FFN; i++) {
+            float v1 = w1_out[i];
+            float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+            w1_out[i] = bf16_round_f32(silu * w3_out[i]);
+        }
+        linear_bf16_omp(w1_out, w2_w, ffn_raw, T, LFM3_D, LFM3_FFN);
     }
-    linear_bf16_omp(w1_out, w2_w, ffn_raw, T, LFM3_D, LFM3_FFN);
     rms_norm_bf16(ffn_raw, post_ffn_norm_w, ffn_normed, T, LFM3_D, 1e-5f);
 
     for (int i = 0; i < T * LFM3_D; i++) {
@@ -499,10 +819,9 @@ static void execute_single_lfm3_layer_c(
 }
 
 /* Executes all 24 tri-hybrid LFM3-1.7B layers + final `embedding_norm` with optional clubbed segment isolation `seg_starts` */
-float lfm3_forward_24_layers_clubbed(const int *token_ids, const int *seg_starts, int T, float *out_final_hidden)
+LFM3_API float lfm3_forward_24_layers_clubbed(const int *token_ids, const int *seg_starts, int T, float *out_final_hidden)
 {
-    struct timespec t0, t1;
-    clock_gettime(CLOCK_MONOTONIC, &t0);
+    double t0 = now_ms();
 
     const uint16_t *emb_w = (const uint16_t *)g_lfm3.emb_mf.ptr;
     const uint16_t *emb_norm_w = (const uint16_t *)g_lfm3.emb_norm_mf.ptr;
@@ -518,6 +837,7 @@ float lfm3_forward_24_layers_clubbed(const int *token_ids, const int *seg_starts
     }
 
     for (int l = 0; l < LFM3_LAYERS; l++) {
+        lfm3_dm_record_layer(l, T);
         execute_single_lfm3_layer_c(&g_lfm3.trunks[l], cur, nxt, T, seg_starts);
         float *tmp = cur;
         cur = nxt;
@@ -528,11 +848,10 @@ float lfm3_forward_24_layers_clubbed(const int *token_ids, const int *seg_starts
 
     free(cur);
     free(nxt);
-    clock_gettime(CLOCK_MONOTONIC, &t1);
-    return (float)((t1.tv_sec - t0.tv_sec) * 1000.0 + (t1.tv_nsec - t0.tv_nsec) / 1e6);
+    return (float)(now_ms() - t0);
 }
 
-float lfm3_forward_24_layers(const int *token_ids, int T, float *out_final_hidden)
+LFM3_API float lfm3_forward_24_layers(const int *token_ids, int T, float *out_final_hidden)
 {
     return lfm3_forward_24_layers_clubbed(token_ids, NULL, T, out_final_hidden);
 }

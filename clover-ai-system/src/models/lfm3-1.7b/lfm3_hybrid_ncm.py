@@ -48,12 +48,12 @@ D_LFM3 = 2048
 D_VQ = 384
 
 
-def ensure_lfm3_cpu_engine_so(src_dir: Path | None = None) -> Path:
+def ensure_lfm3_cpu_engine_so(src_dir: Path | None = None, force_rebuild: bool = False) -> Path:
     """Compiles `lfm3_cpu_engine.c` into `liblfm3_cpu_engine.so` with `-O3 -march=native -fopenmp`."""
     base_dir = src_dir or SCRIPT_DIR
     c_src = base_dir / "lfm3_cpu_engine.c"
     so_path = base_dir / "liblfm3_cpu_engine.so"
-    if so_path.exists() and c_src.exists() and so_path.stat().st_mtime >= c_src.stat().st_mtime:
+    if not force_rebuild and so_path.exists() and c_src.exists() and so_path.stat().st_mtime >= c_src.stat().st_mtime:
         return so_path
     cmd = [
         "gcc", "-O3", "-march=native", "-fopenmp", "-fPIC", "-shared",
@@ -64,12 +64,14 @@ def ensure_lfm3_cpu_engine_so(src_dir: Path | None = None) -> Path:
 
 
 class Lfm3NativeCPUEngine:
-    """Python `ctypes` wrapper around `liblfm3_cpu_engine.so`."""
+    """Python `ctypes` wrapper around `liblfm3_cpu_engine.so` (BF16 and 4-Bit Planar Group-64 SwiGLU FFN)."""
 
     def __init__(
         self,
         pruned_dataset_dir: str | Path = "/opt/clover-k3/lfm3-computed/pruned",
         so_path: Path | None = None,
+        use_4bit_ffn: bool = False,
+        s23_big_cores_only: bool = False,
     ):
         self.pruned_dataset_dir = Path(pruned_dataset_dir)
         self.so_path = ensure_lfm3_cpu_engine_so() if so_path is None else so_path
@@ -94,9 +96,47 @@ class Lfm3NativeCPUEngine:
             ]
             self.lib.lfm3_forward_24_layers_clubbed.restype = ctypes.c_float
 
+        if hasattr(self.lib, "lfm3_set_use_4bit_ffn"):
+            self.lib.lfm3_set_use_4bit_ffn.argtypes = [ctypes.c_int]
+            self.lib.lfm3_set_use_4bit_ffn.restype = None
+
+        if hasattr(self.lib, "lfm3_configure_s23_snapdragon8gen2"):
+            self.lib.lfm3_configure_s23_snapdragon8gen2.argtypes = [ctypes.c_int]
+            self.lib.lfm3_configure_s23_snapdragon8gen2.restype = ctypes.c_int
+
+        if hasattr(self.lib, "lfm3_dm_stats"):
+            self.lib.lfm3_dm_stats.argtypes = [ctypes.POINTER(ctypes.c_ulong)]
+            self.lib.lfm3_dm_stats.restype = None
+
         rc = self.lib.lfm3_engine_init(str(self.pruned_dataset_dir).encode("utf-8"))
         if rc != 0:
             raise RuntimeError(f"lfm3_engine_init({self.pruned_dataset_dir}) failed with rc={rc}")
+        self.set_use_4bit_ffn(use_4bit_ffn)
+        if s23_big_cores_only:
+            self.configure_s23_snapdragon8gen2(True)
+
+    def set_use_4bit_ffn(self, enable: bool) -> None:
+        if hasattr(self.lib, "lfm3_set_use_4bit_ffn"):
+            self.lib.lfm3_set_use_4bit_ffn(1 if enable else 0)
+
+    def configure_s23_snapdragon8gen2(self, pin_big_cores: bool = True) -> int:
+        if hasattr(self.lib, "lfm3_configure_s23_snapdragon8gen2"):
+            return int(self.lib.lfm3_configure_s23_snapdragon8gen2(1 if pin_big_cores else 0))
+        return 8
+
+    def get_dm_stats(self) -> dict[str, int]:
+        if not hasattr(self.lib, "lfm3_dm_stats"):
+            return {}
+        buf = (ctypes.c_ulong * 6)()
+        self.lib.lfm3_dm_stats(buf)
+        return {
+            "total_layer_requests": int(buf[0]),
+            "tier1_sram_l3_hits": int(buf[1]),
+            "tier2_lpddr5x_hits": int(buf[2]),
+            "tier3_ufs4_fetches": int(buf[3]),
+            "r4_clean_drops": int(buf[4]),
+            "dirty_writebacks": int(buf[5]),
+        }
 
     def forward_ids(self, token_ids: list[int] | torch.Tensor, seg_starts: list[int] | None = None) -> tuple[torch.Tensor, float]:
         if isinstance(token_ids, torch.Tensor):

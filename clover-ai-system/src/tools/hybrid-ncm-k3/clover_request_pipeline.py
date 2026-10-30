@@ -49,7 +49,7 @@ class CloverModelBackendFactory:
 
         if "nemotron" in raw or "super-vl" in raw or "120b" in raw:
             return "nemotron-3.5-super-vl"
-        if "lfm3" in raw or "liquid" in raw or "1.7b" in raw:
+        if "lfm3" in raw or "lmf3" in raw or "liquid" in raw or "1.7b" in raw or "s23" in raw or "omni" in raw:
             return "lfm3-1.7b"
         if "kimi" in raw or "k3" in raw:
             return "kimi-k3"

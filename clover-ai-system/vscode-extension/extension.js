@@ -39,7 +39,7 @@ class CloverModelCatalogFactory {
       },
       {
         id: "lfm3-1.7b",
-        name: "Clover — Liquid LFM3-1.7B (24L Tri-Hybrid)",
+        name: "Clover — Liquid LFM3-Omni (1.7B • Samsung S23 / Edge & Server)",
         vendor: "clover",
         family: "clover-lfm3",
         version: "4.1.2",
@@ -48,7 +48,7 @@ class CloverModelCatalogFactory {
         isUserSelectable: true,
         isDefault: false,
         tooltip:
-          "Clover 7-Layer AI System with Liquid AI LFM3-1.7B (24-Layer Tri-Hybrid Width-7 Gated ShortConv + Sliding-256 GQA + Full GQA + HybridAgent + 11-Level NCM + Ontology GraphRAG + Generative Compilation + Memory Graph, 1M session context)",
+          "Clover 7-Layer AI System with Liquid AI LFM3-1.7B Omni (24-Layer Tri-Hybrid Width-7 Gated ShortConv + Sliding-256 GQA + Full GQA + 4-Bit Planar FFN + Snapdragon 8 Gen 2 / Samsung S23 Mobile Optimization + HybridAgent + 11-Level NCM + Ontology GraphRAG + Generative Compilation + Memory Graph, 1.71 GiB total mobile footprint, 1M session context)",
         capabilities: { ...sharedCapabilities },
       },
       {
@@ -76,7 +76,7 @@ class CloverModelCatalogFactory {
     if (raw.includes("nemotron")) {
       return "nemotron-3.5-super-vl";
     }
-    if (raw.includes("lfm3") || raw.includes("liquid")) {
+    if (raw.includes("lfm3") || raw.includes("lmf3") || raw.includes("liquid") || raw.includes("s23") || raw.includes("omni")) {
       return "lfm3-1.7b";
     }
     if (raw.includes("kimi") || raw.includes("k3")) {

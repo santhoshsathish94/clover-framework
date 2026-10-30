@@ -226,6 +226,10 @@ class ModelSpecificNCMRenderer:
             if semi_ids:
                 self.tok.semicolon_id = semi_ids[0]
             self.c_engine = Lfm3NativeCPUEngine(pruned_dir)
+            if os.path.exists(str(pruned_dir / "trunk-0" / "ffn.4bit.bin")) and os.environ.get("CLOVER_LFM3_USE_4BIT_FFN", "1") == "1":
+                self.c_engine.set_use_4bit_ffn(True)
+            if os.environ.get("CLOVER_S23_PIN_BIG_CORES", "0") == "1":
+                self.c_engine.configure_s23_snapdragon8gen2(True)
             self.lm_head_w = lfm3_bytes_to_tensor(
                 (pruned_dir / "global-0" / "embed_tokens.bf16.bin").read_bytes(), LFM3_BF16, (V_LFM3, D_LFM3)
             )
