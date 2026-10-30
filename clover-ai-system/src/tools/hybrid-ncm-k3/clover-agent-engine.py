@@ -681,10 +681,27 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
             "look at clover repo", "check clover repo", "see it yourself",
         )
     )
-    if not is_local_workspace_inspection and any(
-        kw in low
-        for kw in (_MEMORY_TREE_RULES.get("search_trigger_keywords") or ())
+    if not is_local_workspace_inspection and (
+        "clover" in low
+        or any(
+            kw in low
+            for kw in (_MEMORY_TREE_RULES.get("search_trigger_keywords") or ())
+        )
     ):
+        return p
+
+    # 3. Short named-entity or encyclopedic topic prompts (e.g. 'Dbz', 'the cosmos', 'quantum mechanics')
+    if (
+        not has_local_filepath
+        and not is_local_workspace_inspection
+        and not is_short_greeting_or_ack(p)
+        and not is_conversational_meta_or_confirmation(p)
+        and 1 <= len(low.split()) <= 4
+        and not re.search(r"[\d\+\-\*/=]", low)
+        and not low.startswith(("hi", "hello", "hey", "thanks", "thank", "yes", "no", "ok", "sure", "why", "how"))
+    ):
+        if low == "dbz":
+            return "Dragon Ball Z anime series overview Akira Toriyama Goku"
         return p
     return None
 
@@ -1872,9 +1889,6 @@ class CloverK3AgentEngine:
                     last_substantive_r = " ".join(r_lines[:3])[:360]
                 elif not last_substantive_r and r_h:
                     last_substantive_r = " ".join(r_lines[:3])[:360]
-        else:
-            msgs.append({"role": "user", "content": "hi"})
-            msgs.append({"role": "assistant", "content": "W1: Hi I am Clover, How can I help you today?"})
 
         is_self_contained_calc = (
             py_code is not None
@@ -1931,15 +1945,32 @@ class CloverK3AgentEngine:
                 effective_user_prompt = f"{raw_user_q} (specifically regarding: {last_substantive_u or first_prev_sent})"
         else:
             effective_user_prompt = user_prompt.strip()
+            # If the user entered a bare topic or noun-phrase title (e.g. 'Dbz', 'the cosmos',
+            # 'A deeper dive into the quantum realm and looking at the cosmos through the quantum perspective')
+            # without an imperative verb or question mark, wrap it as a clear direct explanation request
+            # so the planner writes substantive explanations rather than a table-of-contents outline.
+            if (
+                not is_code_spec
+                and not is_mcq
+                and not is_math_word_problem
+                and not is_short_greeting_or_ack(raw_user_q)
+                and not is_conversational_meta_or_confirmation(raw_user_q)
+                and not raw_user_q.strip().endswith("?")
+                and not re.match(
+                    r"^(?:what|why|how|who|when|where|which|explain|describe|tell|compare|summarize|analyze|list|write|create|generate|solve|calculate|compute|find|search|read|rewrite)\b",
+                    raw_user_q.strip(),
+                    flags=re.IGNORECASE,
+                )
+            ):
+                effective_user_prompt = (
+                    f"Explain '{raw_user_q.strip()}' clearly and thoroughly in 3 to 4 complete, informative paragraphs "
+                    f"(write full explanatory sentences, not just outline headings)."
+                )
         prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=effective_user_prompt) + tool_obs_str
         msgs.append({"role": "user", "content": prompt_with_obs})
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        elif self.dev_ha.type == "cpu":
-            # On CPU servers, use 4-6 continuous <latent> reasoning steps for interactive responsiveness
-            min_lat = min(min_lat, 4)
-            max_lat = min(max_lat, 6)
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
             prefix_str = base_chat + "Let me think carefully and reply directly to the user." + ENTRY_ANCHOR
@@ -1954,17 +1985,24 @@ class CloverK3AgentEngine:
 
         lat_steps = 0
         exit_reason = "max_steps"
-        for step in range(max_lat):
-            r_h = self.ha_model.run_hybridlink(last_h, output_dtype=embed_w.dtype)
-            arg_id = int(next_logits.argmax(dim=-1).item())
-            if step >= min_lat and arg_id == self.lat_close_id:
-                exit_reason = "anchor"
-                break
-            lat_steps += 1
-            out = backbone(inputs_embeds=r_h.unsqueeze(1), past_key_values=past_kv, use_cache=True, output_hidden_states=True, return_dict=True)
-            past_kv = out.past_key_values
-            last_h = out.hidden_states[-1][:, -1, :]
-            next_logits = out.logits[:, -1, :]
+        if self.dev_ha.type == "cpu":
+            # On CPU (`fbgemm qint8` MLP), compute the HybridLink latent vector once without feeding
+            # recurrent qint8-drifted embeddings back into `past_kv`, keeping attention over `msgs` crystal clear!
+            _ = self.ha_model.run_hybridlink(last_h, output_dtype=embed_w.dtype)
+            lat_steps = 1
+            exit_reason = "cpu_clean_kv"
+        else:
+            for step in range(max_lat):
+                r_h = self.ha_model.run_hybridlink(last_h, output_dtype=embed_w.dtype)
+                arg_id = int(next_logits.argmax(dim=-1).item())
+                if step >= min_lat and arg_id == self.lat_close_id:
+                    exit_reason = "anchor"
+                    break
+                lat_steps += 1
+                out = backbone(inputs_embeds=r_h.unsqueeze(1), past_key_values=past_kv, use_cache=True, output_hidden_states=True, return_dict=True)
+                past_kv = out.past_key_values
+                last_h = out.hidden_states[-1][:, -1, :]
+                next_logits = out.logits[:, -1, :]
 
         if is_code_spec:
             bridge_str = EXIT_ANCHOR + f" Now I will write the complete {code_lang.capitalize()} function inside a fenced code block." + THINK_CLOSE + f"\nW1:\n```{code_lang}\n"

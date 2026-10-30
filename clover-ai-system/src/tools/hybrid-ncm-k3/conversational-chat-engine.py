@@ -324,9 +324,12 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
                 "example prompt:", "this approach keeps the conversation",
                 "it seems like you're asking for a reason", "could you please clarify what you're looking for",
                 "are you asking why something happens", "once i understand the context, i can provide",
+                "looking back at the ", "that sounds like it could be", "but i need to confirm if",
+                "hello! it seems like you're asking me to start", "oh, and just to clarify, i'm not actually",
+                "but i'll act as if i were a friendly",
             ))
             or re.search(
-                r"\b(?:the user is asking|the user asked|the user wants me to|the user didn't specify|confirmed their understanding|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|i should highlight|i should focus on|i should mention|i should provide|i will formulate|i'll formulate)\b",
+                r"\b(?:the user is asking|the user asked|the user wants me to|the user didn't specify|confirmed their understanding|ensures the user gets|ensures you gets|likely they are ready|ask for more specific guidance|i should highlight|i should focus on|i should mention|i should provide|i will formulate|i'll formulate|that sounds like it could be the|but i need to confirm if that's indeed)\b",
                 raw_low_pre,
             )
         ):
