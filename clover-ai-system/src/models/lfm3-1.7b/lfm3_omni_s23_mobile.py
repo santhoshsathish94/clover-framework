@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 Clover LFM3-Omni Mobile 7-Layer Stack & 4-Bit Planar Group-64 Builder for Samsung Galaxy S23
 (`clover-ai-system/src/models/lfm3-1.7b/lfm3_omni_s23_mobile.py`).
 
@@ -311,7 +311,7 @@ class CloverLfm3OmniS23System:
         pil_images: list[ Any ] | None = None,
         audio_bytes: bytes | None = None,
     ) -> dict[str, Any]:
-        """
+        r"""
         Executes the full 5-Stage Clover Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`)
         across all 7 layers of `CloverLfm3OmniS23System`:
           1. **Context (Layers 4 & 5):** Queries `CloverOntologyRetriever` (Minsky-Papert Order-$k$ boxes,
