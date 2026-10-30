@@ -1,0 +1,248 @@
+{
+  "target_hardware": {
+    "device_model": "Samsung Galaxy S23 (SM-S911B / SM-S911U)",
+    "soc": "Qualcomm Snapdragon 8 Gen 2 for Galaxy (SM8550-AC, 4nm TSMC)",
+    "cpu_clusters": {
+      "prime_core_7": "1x ARM Cortex-X3 @ 3.36 GHz (1 MB L2)",
+      "gold_cores_5_6": "2x ARM Cortex-A715 @ 2.80 GHz (512 KB L2/core)",
+      "gold_cores_3_4": "2x ARM Cortex-A710 @ 2.80 GHz (512 KB L2/core)",
+      "silver_cores_0_2": "3x ARM Cortex-A510 @ 2.02 GHz (in-order, excluded from OpenMP pool)"
+    },
+    "caches": "8 MB DynamIQ L3 + 6 MB System Level Cache (SLC)",
+    "memory": "8 GB LPDDR5X @ 4200 MHz (67.2 GB/s peak bandwidth)",
+    "storage": "UFS 4.0 (up to 4,200 MB/s sequential read via mmap)",
+    "pinned_performance_threads": 5
+  },
+  "memory_budget_s23_8gb": {
+    "target_device": "Samsung Galaxy S23 (SM-S911B / SM-S911U)",
+    "soc": "Qualcomm Snapdragon 8 Gen 2 for Galaxy (SM8550-AC, 4nm TSMC)",
+    "total_device_ram_mb": 8192.0,
+    "layer1_lfm3_omni_bf16_mb": 3297.42,
+    "layer1_lfm3_omni_4bit_mb": 1696.41,
+    "layer1_kv_and_shortconv_state_at_4k_ctx_mb": 50.8,
+    "layer2_native_hybridlink_2048d_mb": 8.04,
+    "layer3_11level_ncm_and_pointer_decoder_mb": 493.75,
+    "layer4_memory_graph_and_11_papers_mb": 2.1,
+    "layer5_ontology_graphrag_and_verifier_mb": 1.8,
+    "layer6_python_and_rust_generative_compiler_mb": 0.5,
+    "layer7_specmd_r4_and_eyeriss_ledger_mb": 0.4,
+    "all_6_surrounding_clover_layers_total_mb": 506.59,
+    "complete_7_layer_clover_s23_total_mb": 2203.0,
+    "complete_7_layer_clover_s23_total_gib": 2.151,
+    "fits_in_8gb_s23_ram_with_os_headroom": true
+  },
+  "ffn_4bit_quantization": {
+    "layers_quantized": 24,
+    "newly_built_layers": 0,
+    "cached_layers": 24,
+    "ffn_bf16_total_bytes": 2264924160,
+    "ffn_bf16_total_gib": 2.1094,
+    "ffn_4bit_total_bytes": 586137600,
+    "ffn_4bit_total_gib": 0.5459,
+    "ffn_compression_ratio": 3.8642,
+    "build_seconds": 0.0
+  },
+  "engine_24_layer_benchmark": {
+    "prompt_tokens": 25,
+    "bf16_24_layer_ms": 597.64,
+    "fourbit_24_layer_8thread_ms": 638.31,
+    "fourbit_24_layer_s23_5thread_big_cores_ms": 974.47,
+    "speedup_4bit_vs_bf16": 0.9363,
+    "hidden_state_cosine_4bit_vs_bf16": 0.85722,
+    "final_logits_cosine_4bit_vs_bf16": 0.976653,
+    "top1_token_bf16": 124900,
+    "top1_token_4bit": 124900,
+    "s23_5thread_bit_identical_to_8thread": true
+  },
+  "omni_modalities_verified": {
+    "text_ontology_memory_math": {
+      "reply_preview": "[E1] Entity record STEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE: Thin-Film Interference with Single Phase Inversion (Optics)\n\n\u2022 Description: When light in air (n_air = 1.00) reflects normally off a thin film of oil (n_film = 1.50, thickness d =",
+      "tools_used": [
+        "layer5_ontology_graphrag",
+        "layer4_memory_graph"
+      ],
+      "emitted_tokens": 451,
+      "all_ids_in_128k_vocab": true,
+      "cycle_ms": 24856.84
+    },
+    "image_vision_shortconv_2048d": {
+      "mode": "lfm3_1_7b_vision_shortconv_ncm",
+      "vision_telemetry": {
+        "mode": "lfm3_shortconv_k7_vision_2048d",
+        "patch_tokens": 256,
+        "hidden_dim": 2048,
+        "output_rms": 0.024,
+        "encode_ms": 38.53,
+        "visual_facts": {
+          "width": 512,
+          "height": 512,
+          "mean_rgb": [
+            142.3,
+            238.5,
+            207.0
+          ],
+          "std_rgb": [
+            24.2,
+            25.9,
+            31.2
+          ],
+          "brightness_pct": 80.8,
+          "edge_density_pct": 1.2,
+          "dominant_tone": "emerald/forest green"
+        },
+        "hybridlink_2048_shape": [
+          1,
+          256,
+          2048
+        ],
+        "ncm_combo_384_shape": [
+          1,
+          256,
+          384
+        ],
+        "ncm_expert_384_shape": [
+          1,
+          256,
+          384
+        ],
+        "render_meta": {
+          "model_key": "lfm3-1.7b",
+          "vocab_size": 128000,
+          "hidden_size": 2048,
+          "c_engine_ms": 4525.33,
+          "ncm_plus_c_ms": 7495.8,
+          "emitted_token_count": 111,
+          "all_token_ids_valid_in_model_vocab": true,
+          "specmd_r4_dm_stats": {
+            "total_layer_requests": 240,
+            "tier1_sram_l3_hits": 0,
+            "tier2_lpddr5x_hits": 216,
+            "tier3_ufs4_fetches": 24,
+            "r4_clean_drops": 228,
+            "dirty_writebacks": 0
+          }
+        }
+      },
+      "reply_preview": "Liquid LFM3-1.7B Tri-Hybrid Vision Analysis (512x512 px, emerald/forest green tone):\n\n\u2022 Width-7 Gated ShortConv + Sandwich Norm Encoding: Encoded 256 spatial super-patches into 2,048-d representations"
+    },
+    "video_evs_pruning_2048d": {
+      "mode": "lfm3_1_7b_video_shortconv_ncm",
+      "vision_telemetry": {
+        "mode": "lfm3_shortconv_k7_video_2048d",
+        "input_frames": 4,
+        "temporal_groups": 2,
+        "total_tokens_before_pruning": 512,
+        "retained_tokens_after_pruning": 256,
+        "output_rms": 0.024,
+        "encode_ms": 61.6,
+        "visual_facts": {
+          "width": 512,
+          "height": 512,
+          "mean_rgb": [
+            178.1,
+            189.3,
+            228.8
+          ],
+          "std_rgb": [
+            58.3,
+            50.6,
+            37.3
+          ],
+          "brightness_pct": 74.7,
+          "edge_density_pct": 2.1,
+          "dominant_tone": "deep cobalt/ocean blue"
+        },
+        "hybridlink_2048_shape": [
+          1,
+          256,
+          2048
+        ],
+        "ncm_combo_384_shape": [
+          1,
+          256,
+          384
+        ],
+        "ncm_expert_384_shape": [
+          1,
+          256,
+          384
+        ],
+        "render_meta": {
+          "model_key": "lfm3-1.7b",
+          "vocab_size": 128000,
+          "hidden_size": 2048,
+          "c_engine_ms": 5124.71,
+          "ncm_plus_c_ms": 8590.44,
+          "emitted_token_count": 127,
+          "all_token_ids_valid_in_model_vocab": true,
+          "specmd_r4_dm_stats": {
+            "total_layer_requests": 264,
+            "tier1_sram_l3_hits": 0,
+            "tier2_lpddr5x_hits": 240,
+            "tier3_ufs4_fetches": 24,
+            "r4_clean_drops": 252,
+            "dirty_writebacks": 0
+          }
+        }
+      },
+      "reply_preview": "Liquid LFM3-1.7B Tri-Hybrid Video Analysis (4 frames, 512x512 px, deep cobalt/ocean blue palette):\n\n\u2022 Width-7 Gated ShortConv Temporal Encoding: Processed 512 patch tokens with O(1) conv state and ret"
+    },
+    "audio_duplex_voice_shortconv_2048d": {
+      "mode": "lfm3_1_7b_audio_voice_ncm",
+      "audio_telemetry": {
+        "file_name": "voice_input.wav",
+        "duration_seconds": 0.84,
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "rms_energy": 0.078,
+        "dbfs": -22.2,
+        "dominant_frequency_hz": 375.0,
+        "estimated_cadence_hz": 233.3,
+        "mel_frames_shape": [
+          1,
+          64,
+          80
+        ],
+        "shortconv_audio_2048_shape": [
+          1,
+          64,
+          2048
+        ],
+        "ncm_combo_384_shape": [
+          1,
+          64,
+          384
+        ],
+        "voice_profile": "en-US-JennyNeural",
+        "render_meta": {
+          "model_key": "lfm3-1.7b",
+          "vocab_size": 128000,
+          "hidden_size": 2048,
+          "c_engine_ms": 4798.88,
+          "ncm_plus_c_ms": 7748.82,
+          "emitted_token_count": 119,
+          "all_token_ids_valid_in_model_vocab": true,
+          "specmd_r4_dm_stats": {
+            "total_layer_requests": 288,
+            "tier1_sram_l3_hits": 0,
+            "tier2_lpddr5x_hits": 264,
+            "tier3_ufs4_fetches": 24,
+            "r4_clean_drops": 276,
+            "dirty_writebacks": 0
+          }
+        }
+      },
+      "voice_profile": "en-US-JennyNeural",
+      "reply_preview": "Liquid LFM3-1.7B Duplex Audio & Voice Analysis for voice_input.wav (0.84s at 16000 Hz):\n\n\u2022 Acoustic & Spectral Profile: RMS level -22.2 dBFS, dominant spectral peak 375.0 Hz, cadence 233.3 Hz across 6"
+    },
+    "generative_compiler_layer6_ok": true
+  },
+  "data_movement_ledger_specmd_r4": {
+    "total_layer_requests": 288,
+    "tier1_sram_l3_hits": 0,
+    "tier2_lpddr5x_hits": 264,
+    "tier3_ufs4_fetches": 24,
+    "r4_clean_drops": 276,
+    "dirty_writebacks": 0
+  }
+}
