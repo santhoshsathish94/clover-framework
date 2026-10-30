@@ -518,18 +518,18 @@ def verify_lfm3_omni_s23_complete_stack() -> dict[str, Any]:
             },
             "image_vision_shortconv_2048d": {
                 "mode": r_img["mode"],
-                "vision_telemetry": r_img["vision_telemetry"],
+                "vision_telemetry": r_img.get("vision_video_meta") or r_img.get("vision_telemetry"),
                 "reply_preview": r_img["reply"][:200],
             },
             "video_evs_pruning_2048d": {
                 "mode": r_vid["mode"],
-                "vision_telemetry": r_vid["vision_telemetry"],
+                "vision_telemetry": r_vid.get("vision_video_meta") or r_vid.get("vision_telemetry"),
                 "reply_preview": r_vid["reply"][:200],
             },
             "audio_duplex_voice_shortconv_2048d": {
                 "mode": r_aud["mode"],
-                "audio_telemetry": r_aud["audio_telemetry"],
-                "has_tts_audio_output": bool(r_aud.get("tts_audio_base64")),
+                "audio_telemetry": r_aud.get("audio_meta") or r_aud.get("audio_telemetry"),
+                "voice_profile": (r_aud.get("audio_meta") or {}).get("voice_profile", "en-US-JennyNeural"),
                 "reply_preview": r_aud["reply"][:200],
             },
             "generative_compiler_layer6_ok": py_verdict.ok,
