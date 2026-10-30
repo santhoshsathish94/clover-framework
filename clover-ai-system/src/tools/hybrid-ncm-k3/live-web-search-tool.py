@@ -236,6 +236,6 @@ class LiveWebSearchTool:
         if not results:
             return f"No live external results returned for '{q}'."
 
-        formatted = "\n".join(f"Page {i+1}: {line}" for i, line in enumerate(results[: self.max_results]))
+        formatted = "\n".join(f"• Reference Source {i+1}: {line}" for i, line in enumerate(results[: self.max_results]))
         self.cache[q] = formatted
         return formatted

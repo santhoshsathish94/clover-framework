@@ -389,7 +389,7 @@ class ModelSpecificNCMRenderer:
         emitted_counts: collections.Counter[int] = collections.Counter()
 
         T = row_logits.size(0)
-        max_len = min(T, len(valid_p) + 10)
+        max_len = min(T, len(valid_p))
         clean_ids: list[int] = []
         prev_tid = -1
         prev_word = ""

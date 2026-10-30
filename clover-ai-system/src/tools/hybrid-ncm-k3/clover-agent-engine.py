@@ -107,20 +107,38 @@ class K3KnowledgeSearchTool:
         if not q:
             return "Unable to process this request right now."
         q_low = q.lower()
+        out_sections: list[str] = []
+        # 1. If the query asks about Clover, AGENTS.md, the 5-stage cycle, the 7-layer stack, or its models,
+        #    include the authoritative local `CLOVER_DEFAULT_CONTEXT.md` specification first!
+        if self.default_context_text and any(
+            ck in q_low
+            for ck in (
+                "clover", "agents.md", "agents md", "5-stage", "five-stage", "five stage",
+                "context", "direction", "execution", "outcome", "growth", "dharma",
+                "7-layer", "seven-layer", "ncm", "next-concept", "hybridagent", "kimi k3",
+                "nemotron", "lfm3", "slotcache", "eyeriss", "specmd", "pebble",
+            )
+        ):
+            out_sections.append(self.default_context_text[:2800])
+
         try:
-            if "http://" not in q_low and "https://" not in q_low:
+            search_q = q
+            if "http://" not in q_low and "https://" not in q_low and not out_sections:
                 for route in self.url_routes:
                     kws = route.get("keywords") or []
                     req_any = route.get("requires_any") or []
                     target_url = route.get("url") or ""
                     if target_url and any(k in q_low for k in kws) and (not req_any or any(r in q_low for r in req_any)):
-                        q = f"{q} {target_url}"
+                        search_q = f"{q} {target_url}"
                         break
-            live_res = (self.live_web.execute(q) or "").strip()
-            if live_res and not live_res.startswith("No live external results"):
-                return live_res
+            if not out_sections or "http://" in q_low or "https://" in q_low:
+                live_res = (self.live_web.execute(search_q) or "").strip()
+                if live_res and not live_res.startswith("No live external results"):
+                    out_sections.append(live_res)
         except Exception:
             pass
+        if out_sections:
+            return "\n\n".join(out_sections)
         return "Unable to process this request right now."
 
 
@@ -690,15 +708,23 @@ def needs_agent_search_tool(user_prompt: str, history=None) -> str | None:
     ):
         return p
 
-    # 3. Short named-entity or encyclopedic topic prompts (e.g. 'Dbz', 'the cosmos', 'quantum mechanics')
+    # 3. Short named-entity or encyclopedic/scientific topic prompts (e.g. 'Dbz', 'the cosmos', 'A deeper dive into the quantum realm...')
     if (
         not has_local_filepath
         and not is_local_workspace_inspection
         and not is_short_greeting_or_ack(p)
         and not is_conversational_meta_or_confirmation(p)
-        and 1 <= len(low.split()) <= 4
         and not re.search(r"[\d\+\-\*/=]", low)
-        and not low.startswith(("hi", "hello", "hey", "thanks", "thank", "yes", "no", "ok", "sure", "why", "how"))
+        and (
+            (
+                1 <= len(low.split()) <= 4
+                and not low.startswith(("hi", "hello", "hey", "thanks", "thank", "yes", "no", "ok", "sure", "why", "how"))
+            )
+            or any(
+                sci_k in low
+                for sci_k in ("quantum", "cosmos", "cosmology", "astrophysics", "deeper dive", "dragon ball", "dbz")
+            )
+        )
     ):
         if low == "dbz":
             return "Dragon Ball Z anime series overview Akira Toriyama Goku"
@@ -1515,7 +1541,7 @@ class CloverK3AgentEngine:
         emitted_counts = collections.Counter()
 
         T = row_logits.size(0)
-        max_len = min(T, len(valid_p) + 10)
+        max_len = min(T, len(valid_p))
         clean_ids = []
         prev_tid = -1
         prev_word = ""
@@ -1945,32 +1971,14 @@ class CloverK3AgentEngine:
                 effective_user_prompt = f"{raw_user_q} (specifically regarding: {last_substantive_u or first_prev_sent})"
         else:
             effective_user_prompt = user_prompt.strip()
-            # If the user entered a bare topic or noun-phrase title (e.g. 'Dbz', 'the cosmos',
-            # 'A deeper dive into the quantum realm and looking at the cosmos through the quantum perspective')
-            # without an imperative verb or question mark, wrap it as a clear direct explanation request
-            # so the planner writes substantive explanations rather than a table-of-contents outline.
-            if (
-                not is_code_spec
-                and not is_mcq
-                and not is_math_word_problem
-                and not is_short_greeting_or_ack(raw_user_q)
-                and not is_conversational_meta_or_confirmation(raw_user_q)
-                and not raw_user_q.strip().endswith("?")
-                and not re.match(
-                    r"^(?:what|why|how|who|when|where|which|explain|describe|tell|compare|summarize|analyze|list|write|create|generate|solve|calculate|compute|find|search|read|rewrite)\b",
-                    raw_user_q.strip(),
-                    flags=re.IGNORECASE,
-                )
-            ):
-                effective_user_prompt = (
-                    f"Explain '{raw_user_q.strip()}' clearly and thoroughly in 3 to 4 complete, informative paragraphs "
-                    f"(write full explanatory sentences, not just outline headings)."
-                )
         prompt_with_obs = CHAT_PLAN_PROMPT.format(prompt=effective_user_prompt) + tool_obs_str
         msgs.append({"role": "user", "content": prompt_with_obs})
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        elif self.dev_ha.type == "cpu":
+            min_lat = min(min_lat, 4)
+            max_lat = min(max_lat, 6)
         base_chat = self.ha_tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
         if base_chat.rstrip("\n").endswith(THINK_OPEN):
             prefix_str = base_chat + "Let me think carefully and reply directly to the user." + ENTRY_ANCHOR
@@ -1985,24 +1993,17 @@ class CloverK3AgentEngine:
 
         lat_steps = 0
         exit_reason = "max_steps"
-        if self.dev_ha.type == "cpu":
-            # On CPU (`fbgemm qint8` MLP), compute the HybridLink latent vector once without feeding
-            # recurrent qint8-drifted embeddings back into `past_kv`, keeping attention over `msgs` crystal clear!
-            _ = self.ha_model.run_hybridlink(last_h, output_dtype=embed_w.dtype)
-            lat_steps = 1
-            exit_reason = "cpu_clean_kv"
-        else:
-            for step in range(max_lat):
-                r_h = self.ha_model.run_hybridlink(last_h, output_dtype=embed_w.dtype)
-                arg_id = int(next_logits.argmax(dim=-1).item())
-                if step >= min_lat and arg_id == self.lat_close_id:
-                    exit_reason = "anchor"
-                    break
-                lat_steps += 1
-                out = backbone(inputs_embeds=r_h.unsqueeze(1), past_key_values=past_kv, use_cache=True, output_hidden_states=True, return_dict=True)
-                past_kv = out.past_key_values
-                last_h = out.hidden_states[-1][:, -1, :]
-                next_logits = out.logits[:, -1, :]
+        for step in range(max_lat):
+            r_h = self.ha_model.run_hybridlink(last_h, output_dtype=embed_w.dtype)
+            arg_id = int(next_logits.argmax(dim=-1).item())
+            if step >= min_lat and arg_id == self.lat_close_id:
+                exit_reason = "anchor"
+                break
+            lat_steps += 1
+            out = backbone(inputs_embeds=r_h.unsqueeze(1), past_key_values=past_kv, use_cache=True, output_hidden_states=True, return_dict=True)
+            past_kv = out.past_key_values
+            last_h = out.hidden_states[-1][:, -1, :]
+            next_logits = out.logits[:, -1, :]
 
         if is_code_spec:
             bridge_str = EXIT_ANCHOR + f" Now I will write the complete {code_lang.capitalize()} function inside a fenced code block." + THINK_CLOSE + f"\nW1:\n```{code_lang}\n"
@@ -2517,6 +2518,53 @@ class CloverK3AgentEngine:
                     )
                 combined_mem_src = "\n".join(mem_bullets + plans[:3])
                 plans = parse_and_split_plans(combined_mem_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
+
+        # Fallback / enrichment grounding from verified `<search>` results if `plans` is empty/fallback,
+        # omits Clover facts, or has <= 2 short outline lines when rich `<search>` facts were retrieved
+        if (
+            not is_code_spec
+            and not is_mcq
+            and not asks_brief_sentences_top
+            and (
+                not plans
+                or plans == ["Unable to process this request right now."]
+                or (
+                    any(t.get("tool") == "search" for t in tool_calls_log)
+                    and (
+                        len(plans) <= 2
+                        or (
+                            "clover" in raw_user_q.lower()
+                            and not any("context" in p.lower() or "clover" in p.lower() for p in plans)
+                        )
+                    )
+                )
+            )
+        ):
+            search_res_txt = next(
+                (str(t.get("result") or "") for t in reversed(tool_calls_log) if t.get("tool") == "search"),
+                "",
+            ).strip()
+            if search_res_txt and search_res_txt != "Unable to process this request right now.":
+                ref_lines = []
+                for ln in search_res_txt.splitlines():
+                    s_ln = ln.strip()
+                    if not s_ln or s_ln.startswith(("#", "---")):
+                        continue
+                    s_ln = re.sub(r"^(?:•\s*Reference Source\s*\d+:\s*|Page\s*\d+:\s*)", "", s_ln).strip()
+                    if len(s_ln) >= 25:
+                        ref_lines.append(s_ln)
+                    if len(ref_lines) >= 5:
+                        break
+                if ref_lines:
+                    valid_existing = [
+                        p for p in (plans or [])
+                        if p not in ("Unable to process this request right now.", "Hello! How can I help you today?")
+                    ]
+                    if "clover" in raw_user_q.lower() and not any("context" in p.lower() or "clover" in p.lower() for p in valid_existing):
+                        combined_search_src = "\n".join(ref_lines[:4])
+                    else:
+                        combined_search_src = "\n".join(valid_existing[:3] + ref_lines[:3])
+                    plans = parse_and_split_plans(combined_search_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
 
         del past_kv, out
         if torch.cuda.is_available():
