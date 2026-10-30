@@ -22,6 +22,9 @@
 #include <time.h>
 #if defined(__aarch64__) || defined(__ARM_NEON)
 #include <arm_neon.h>
+#if defined(__ARM_FEATURE_BF16_VECTOR_ARITHMETIC)
+#include <arm_bf16.h>
+#endif
 #endif
 #ifndef _WIN32
 #include <sched.h>
@@ -417,122 +420,131 @@ static void linear_bf16_omp(
 )
 {
     const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+#if defined(__ARM_FEATURE_BF16_VECTOR_ARITHMETIC)
+    /* Snapdragon 8 Gen 2 Hardware BF16 Dot Product (`vbfdotq_f32` / `BFDOT`):
+     * Converts `x` once into `bfloat16_t` (`2x` smaller in L1D cache) and executes
+     * 8 BF16 multiply-accumulates per single `vbfdotq_f32` instruction! */
+    bfloat16_t *x_bf16 = (bfloat16_t *)malloc((size_t)T * (size_t)in_dim * sizeof(bfloat16_t));
+    const size_t total_x = (size_t)T * (size_t)in_dim;
+    size_t idx = 0;
+    for (; idx + 8 <= total_x; idx += 8) {
+        bfloat16x4_t lo = vcvt_bf16_f32(vld1q_f32(x + idx));
+        bfloat16x4_t hi = vcvt_bf16_f32(vld1q_f32(x + idx + 4));
+        vst1q_bf16(x_bf16 + idx, vcombine_bf16(lo, hi));
+    }
+    for (; idx < total_x; idx++) {
+        uint16_t b = f32_to_bf16_rne(x[idx]);
+        memcpy(&x_bf16[idx], &b, sizeof(uint16_t));
+    }
+
     #pragma omp parallel for num_threads(n_thr) schedule(static)
     for (int o = 0; o < out_dim; o++) {
-        const uint16_t *w_row = W_bf16 + (size_t)o * (size_t)in_dim;
+        const bfloat16_t *w_row = (const bfloat16_t *)(W_bf16 + (size_t)o * (size_t)in_dim);
         int t = 0;
-        for (; t + 8 <= T; t += 8) {
-            const float *x0 = x + (size_t)(t + 0) * in_dim;
-            const float *x1 = x + (size_t)(t + 1) * in_dim;
-            const float *x2 = x + (size_t)(t + 2) * in_dim;
-            const float *x3 = x + (size_t)(t + 3) * in_dim;
-            const float *x4 = x + (size_t)(t + 4) * in_dim;
-            const float *x5 = x + (size_t)(t + 5) * in_dim;
-            const float *x6 = x + (size_t)(t + 6) * in_dim;
-            const float *x7 = x + (size_t)(t + 7) * in_dim;
-#if defined(__aarch64__) || defined(__ARM_NEON)
-            float32x4_t acc0 = vdupq_n_f32(0.0f), acc1 = vdupq_n_f32(0.0f);
-            float32x4_t acc2 = vdupq_n_f32(0.0f), acc3 = vdupq_n_f32(0.0f);
-            float32x4_t acc4 = vdupq_n_f32(0.0f), acc5 = vdupq_n_f32(0.0f);
-            float32x4_t acc6 = vdupq_n_f32(0.0f), acc7 = vdupq_n_f32(0.0f);
-            int k = 0;
-            for (; k + 4 <= in_dim; k += 4) {
-                uint16x4_t w_u16 = vld1_u16(w_row + k);
-                float32x4_t wv = vreinterpretq_f32_u32(vshll_n_u16(w_u16, 16));
-                acc0 = vfmaq_f32(acc0, vld1q_f32(x0 + k), wv);
-                acc1 = vfmaq_f32(acc1, vld1q_f32(x1 + k), wv);
-                acc2 = vfmaq_f32(acc2, vld1q_f32(x2 + k), wv);
-                acc3 = vfmaq_f32(acc3, vld1q_f32(x3 + k), wv);
-                acc4 = vfmaq_f32(acc4, vld1q_f32(x4 + k), wv);
-                acc5 = vfmaq_f32(acc5, vld1q_f32(x5 + k), wv);
-                acc6 = vfmaq_f32(acc6, vld1q_f32(x6 + k), wv);
-                acc7 = vfmaq_f32(acc7, vld1q_f32(x7 + k), wv);
-            }
-            float s0 = vaddvq_f32(acc0), s1 = vaddvq_f32(acc1);
-            float s2 = vaddvq_f32(acc2), s3 = vaddvq_f32(acc3);
-            float s4 = vaddvq_f32(acc4), s5 = vaddvq_f32(acc5);
-            float s6 = vaddvq_f32(acc6), s7 = vaddvq_f32(acc7);
-            for (; k < in_dim; k++) {
-                float w = bf16_to_f32(w_row[k]);
-                s0 += x0[k] * w; s1 += x1[k] * w; s2 += x2[k] * w; s3 += x3[k] * w;
-                s4 += x4[k] * w; s5 += x5[k] * w; s6 += x6[k] * w; s7 += x7[k] * w;
-            }
-#else
-            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
-            float s4 = 0.0f, s5 = 0.0f, s6 = 0.0f, s7 = 0.0f;
-            for (int k = 0; k < in_dim; k++) {
-                float w = bf16_to_f32(w_row[k]);
-                s0 += x0[k] * w; s1 += x1[k] * w; s2 += x2[k] * w; s3 += x3[k] * w;
-                s4 += x4[k] * w; s5 += x5[k] * w; s6 += x6[k] * w; s7 += x7[k] * w;
-            }
-#endif
-            y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
-            y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
-            y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
-            y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
-            y[(size_t)(t + 4) * out_dim + o] = bf16_round_f32(s4);
-            y[(size_t)(t + 5) * out_dim + o] = bf16_round_f32(s5);
-            y[(size_t)(t + 6) * out_dim + o] = bf16_round_f32(s6);
-            y[(size_t)(t + 7) * out_dim + o] = bf16_round_f32(s7);
-        }
         for (; t + 4 <= T; t += 4) {
-            const float *x0 = x + (size_t)(t + 0) * in_dim;
-            const float *x1 = x + (size_t)(t + 1) * in_dim;
-            const float *x2 = x + (size_t)(t + 2) * in_dim;
-            const float *x3 = x + (size_t)(t + 3) * in_dim;
-#if defined(__aarch64__) || defined(__ARM_NEON)
-            float32x4_t acc0 = vdupq_n_f32(0.0f), acc1 = vdupq_n_f32(0.0f);
-            float32x4_t acc2 = vdupq_n_f32(0.0f), acc3 = vdupq_n_f32(0.0f);
+            const bfloat16_t *xb0 = x_bf16 + (size_t)(t + 0) * in_dim;
+            const bfloat16_t *xb1 = x_bf16 + (size_t)(t + 1) * in_dim;
+            const bfloat16_t *xb2 = x_bf16 + (size_t)(t + 2) * in_dim;
+            const bfloat16_t *xb3 = x_bf16 + (size_t)(t + 3) * in_dim;
+            float32x4_t a0 = vdupq_n_f32(0.0f), a1 = vdupq_n_f32(0.0f);
+            float32x4_t a2 = vdupq_n_f32(0.0f), a3 = vdupq_n_f32(0.0f);
             int k = 0;
-            for (; k + 4 <= in_dim; k += 4) {
-                float32x4_t wv = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(w_row + k), 16));
-                acc0 = vfmaq_f32(acc0, vld1q_f32(x0 + k), wv);
-                acc1 = vfmaq_f32(acc1, vld1q_f32(x1 + k), wv);
-                acc2 = vfmaq_f32(acc2, vld1q_f32(x2 + k), wv);
-                acc3 = vfmaq_f32(acc3, vld1q_f32(x3 + k), wv);
+            for (; k + 16 <= in_dim; k += 16) {
+                bfloat16x8_t w0 = vld1q_bf16(w_row + k);
+                bfloat16x8_t w1 = vld1q_bf16(w_row + k + 8);
+                a0 = vbfdotq_f32(vbfdotq_f32(a0, w0, vld1q_bf16(xb0 + k)), w1, vld1q_bf16(xb0 + k + 8));
+                a1 = vbfdotq_f32(vbfdotq_f32(a1, w0, vld1q_bf16(xb1 + k)), w1, vld1q_bf16(xb1 + k + 8));
+                a2 = vbfdotq_f32(vbfdotq_f32(a2, w0, vld1q_bf16(xb2 + k)), w1, vld1q_bf16(xb2 + k + 8));
+                a3 = vbfdotq_f32(vbfdotq_f32(a3, w0, vld1q_bf16(xb3 + k)), w1, vld1q_bf16(xb3 + k + 8));
             }
-            float s0 = vaddvq_f32(acc0), s1 = vaddvq_f32(acc1);
-            float s2 = vaddvq_f32(acc2), s3 = vaddvq_f32(acc3);
+            float s0 = vaddvq_f32(a0), s1 = vaddvq_f32(a1);
+            float s2 = vaddvq_f32(a2), s3 = vaddvq_f32(a3);
             for (; k < in_dim; k++) {
-                float w = bf16_to_f32(w_row[k]);
-                s0 += x0[k] * w; s1 += x1[k] * w; s2 += x2[k] * w; s3 += x3[k] * w;
+                float w = bf16_to_f32(W_bf16[(size_t)o * in_dim + k]);
+                s0 += x[(size_t)(t + 0) * in_dim + k] * w;
+                s1 += x[(size_t)(t + 1) * in_dim + k] * w;
+                s2 += x[(size_t)(t + 2) * in_dim + k] * w;
+                s3 += x[(size_t)(t + 3) * in_dim + k] * w;
             }
-#else
-            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
-            for (int k = 0; k < in_dim; k++) {
-                float w = bf16_to_f32(w_row[k]);
-                s0 += x0[k] * w; s1 += x1[k] * w; s2 += x2[k] * w; s3 += x3[k] * w;
-            }
-#endif
             y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
             y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
             y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
             y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
         }
         for (; t < T; t++) {
-            const float *x_row = x + (size_t)t * (size_t)in_dim;
-#if defined(__aarch64__) || defined(__ARM_NEON)
-            float32x4_t acc = vdupq_n_f32(0.0f);
+            const bfloat16_t *xb = x_bf16 + (size_t)t * (size_t)in_dim;
+            float32x4_t acc0 = vdupq_n_f32(0.0f), acc1 = vdupq_n_f32(0.0f);
             int k = 0;
-            for (; k + 4 <= in_dim; k += 4) {
-                float32x4_t wv = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(w_row + k), 16));
-                acc = vfmaq_f32(acc, vld1q_f32(x_row + k), wv);
+            for (; k + 16 <= in_dim; k += 16) {
+                acc0 = vbfdotq_f32(acc0, vld1q_bf16(w_row + k), vld1q_bf16(xb + k));
+                acc1 = vbfdotq_f32(acc1, vld1q_bf16(w_row + k + 8), vld1q_bf16(xb + k + 8));
             }
-            float sum = vaddvq_f32(acc);
-            for (; k < in_dim; k++) sum += x_row[k] * bf16_to_f32(w_row[k]);
+            float sum = vaddvq_f32(vaddq_f32(acc0, acc1));
+            for (; k < in_dim; k++) {
+                sum += x[(size_t)t * in_dim + k] * bf16_to_f32(W_bf16[(size_t)o * in_dim + k]);
+            }
+            y[(size_t)t * (size_t)out_dim + (size_t)o] = bf16_round_f32(sum);
+        }
+    }
+    free(x_bf16);
 #else
+    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    for (int o = 0; o < out_dim; o++) {
+        const uint16_t *w_row = W_bf16 + (size_t)o * (size_t)in_dim;
+        for (int t = 0; t < T; t++) {
+            const float *x_row = x + (size_t)t * (size_t)in_dim;
             float sum = 0.0f;
             for (int k = 0; k < in_dim; k++) {
                 sum += x_row[k] * bf16_to_f32(w_row[k]);
             }
-#endif
             y[(size_t)t * (size_t)out_dim + (size_t)o] = bf16_round_f32(sum);
         }
     }
+#endif
 }
 
-/* OpenMP 4-Bit Planar Group-64 Linear with In-Register 8-Token + 4-Token + 1-Token ARMv9 NEON (`vfmaq_f32`) Blocking:
- * Zero stack buffer (`w_f32`) so `x` stays 100% resident in the 32 KB L1D cache across all output rows! */
+#if defined(__ARM_FEATURE_DOTPROD)
+static void quantize_f32_to_s8_group64(const float *x, int T, int in_dim, int8_t *out_xq, float *out_xscale)
+{
+    const int groups = in_dim / 64;
+    for (int t = 0; t < T; t++) {
+        const float *xt = x + (size_t)t * in_dim;
+        int8_t *xqt = out_xq + (size_t)t * in_dim;
+        float *xsct = out_xscale + (size_t)t * groups;
+        for (int g = 0; g < groups; g++) {
+            const float *xg = xt + g * 64;
+            int8_t *qdst = xqt + g * 64;
+            float32x4_t vmax = vdupq_n_f32(0.0f);
+            for (int j = 0; j < 64; j += 4) {
+                vmax = vmaxq_f32(vmax, vabsq_f32(vld1q_f32(xg + j)));
+            }
+            float max_abs = vmaxvq_f32(vmax);
+            if (max_abs < 1e-12f) {
+                xsct[g] = 0.0f;
+                memset(qdst, 0, 64);
+            } else {
+                float sc = max_abs / 127.0f;
+                float inv = 127.0f / max_abs;
+                xsct[g] = sc;
+                float32x4_t vinv = vdupq_n_f32(inv);
+                for (int j = 0; j < 64; j += 16) {
+                    int32x4_t i0 = vcvtnq_s32_f32(vmulq_f32(vld1q_f32(xg + j + 0), vinv));
+                    int32x4_t i1 = vcvtnq_s32_f32(vmulq_f32(vld1q_f32(xg + j + 4), vinv));
+                    int32x4_t i2 = vcvtnq_s32_f32(vmulq_f32(vld1q_f32(xg + j + 8), vinv));
+                    int32x4_t i3 = vcvtnq_s32_f32(vmulq_f32(vld1q_f32(xg + j + 12), vinv));
+                    int16x8_t s01 = vcombine_s16(vqmovn_s32(i0), vqmovn_s32(i1));
+                    int16x8_t s23 = vcombine_s16(vqmovn_s32(i2), vqmovn_s32(i3));
+                    vst1q_s8(qdst + j, vcombine_s8(vqmovn_s16(s01), vqmovn_s16(s23)));
+                }
+            }
+        }
+    }
+}
+#endif
+
+/* OpenMP 4-Bit Planar Group-64 Linear with Hardware ARMv8.2-A `vdotq_s32` (`SDOT`) Acceleration:
+ * Quantizes `x` per 64-element group into `int8` (`4x` smaller in L1D cache) and executes
+ * 4 hardware `SDOT` instructions per 64-weight group (`5.3x` fewer instructions than FP32 widen)! */
 static void linear_4bit_group64_omp(
     const float *x,
     const uint8_t *nibbles_base,
@@ -546,175 +558,93 @@ static void linear_4bit_group64_omp(
 {
     const int groups = in_dim / 64;
     const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+#if defined(__ARM_FEATURE_DOTPROD)
+    int8_t *x_q = (int8_t *)malloc((size_t)T * (size_t)in_dim);
+    float *x_sc = (float *)malloc((size_t)T * (size_t)groups * sizeof(float));
+    quantize_f32_to_s8_group64(x, T, in_dim, x_q, x_sc);
+
     #pragma omp parallel for num_threads(n_thr) schedule(static)
     for (int o = 0; o < out_dim; o++) {
         const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
         const uint8_t *stp_row = steps_base + (size_t)o * (size_t)groups;
         const float row_scale = scales_base[o];
+        const int8x16_t eight_s8 = vdupq_n_s8(8);
+        const uint8x16_t mask_0f = vdupq_n_u8(0x0F);
+
         int t = 0;
-        for (; t + 8 <= T; t += 8) {
-            const float *x0 = x + (size_t)(t + 0) * in_dim;
-            const float *x1 = x + (size_t)(t + 1) * in_dim;
-            const float *x2 = x + (size_t)(t + 2) * in_dim;
-            const float *x3 = x + (size_t)(t + 3) * in_dim;
-            const float *x4 = x + (size_t)(t + 4) * in_dim;
-            const float *x5 = x + (size_t)(t + 5) * in_dim;
-            const float *x6 = x + (size_t)(t + 6) * in_dim;
-            const float *x7 = x + (size_t)(t + 7) * in_dim;
-#if defined(__aarch64__) || defined(__ARM_NEON)
-            float32x4_t a0 = vdupq_n_f32(0.0f), a1 = vdupq_n_f32(0.0f);
-            float32x4_t a2 = vdupq_n_f32(0.0f), a3 = vdupq_n_f32(0.0f);
-            float32x4_t a4 = vdupq_n_f32(0.0f), a5 = vdupq_n_f32(0.0f);
-            float32x4_t a6 = vdupq_n_f32(0.0f), a7 = vdupq_n_f32(0.0f);
-            const int16x8_t eight_s16 = vdupq_n_s16(8);
-            const uint8x8_t mask_lo8 = vdup_n_u8(0x0F);
-            for (int g = 0; g < groups; g++) {
-                const uint8_t *nb = nib_row + g * 32;
-                const float32x4_t gsc_v = vdupq_n_f32((float)stp_row[g] * row_scale);
-                const int col0 = g * 64;
-                for (int j = 0; j < 32; j += 8) {
-                    uint8x8_t pk8 = vld1_u8(nb + j);
-                    int16x8_t qlo = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(vand_u8(pk8, mask_lo8))), eight_s16);
-                    int16x8_t qhi = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(vshr_n_u8(pk8, 4))), eight_s16);
-                    float32x4_t wlo0 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_low_s16(qlo))), gsc_v);
-                    float32x4_t wlo1 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_high_s16(qlo))), gsc_v);
-                    float32x4_t whi0 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_low_s16(qhi))), gsc_v);
-                    float32x4_t whi1 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_high_s16(qhi))), gsc_v);
-                    int clo = col0 + j;
-                    int chi = col0 + 32 + j;
-                    a0 = vfmaq_f32(vfmaq_f32(a0, vld1q_f32(x0 + clo), wlo0), vld1q_f32(x0 + clo + 4), wlo1);
-                    a0 = vfmaq_f32(vfmaq_f32(a0, vld1q_f32(x0 + chi), whi0), vld1q_f32(x0 + chi + 4), whi1);
-                    a1 = vfmaq_f32(vfmaq_f32(a1, vld1q_f32(x1 + clo), wlo0), vld1q_f32(x1 + clo + 4), wlo1);
-                    a1 = vfmaq_f32(vfmaq_f32(a1, vld1q_f32(x1 + chi), whi0), vld1q_f32(x1 + chi + 4), whi1);
-                    a2 = vfmaq_f32(vfmaq_f32(a2, vld1q_f32(x2 + clo), wlo0), vld1q_f32(x2 + clo + 4), wlo1);
-                    a2 = vfmaq_f32(vfmaq_f32(a2, vld1q_f32(x2 + chi), whi0), vld1q_f32(x2 + chi + 4), whi1);
-                    a3 = vfmaq_f32(vfmaq_f32(a3, vld1q_f32(x3 + clo), wlo0), vld1q_f32(x3 + clo + 4), wlo1);
-                    a3 = vfmaq_f32(vfmaq_f32(a3, vld1q_f32(x3 + chi), whi0), vld1q_f32(x3 + chi + 4), whi1);
-                    a4 = vfmaq_f32(vfmaq_f32(a4, vld1q_f32(x4 + clo), wlo0), vld1q_f32(x4 + clo + 4), wlo1);
-                    a4 = vfmaq_f32(vfmaq_f32(a4, vld1q_f32(x4 + chi), whi0), vld1q_f32(x4 + chi + 4), whi1);
-                    a5 = vfmaq_f32(vfmaq_f32(a5, vld1q_f32(x5 + clo), wlo0), vld1q_f32(x5 + clo + 4), wlo1);
-                    a5 = vfmaq_f32(vfmaq_f32(a5, vld1q_f32(x5 + chi), whi0), vld1q_f32(x5 + chi + 4), whi1);
-                    a6 = vfmaq_f32(vfmaq_f32(a6, vld1q_f32(x6 + clo), wlo0), vld1q_f32(x6 + clo + 4), wlo1);
-                    a6 = vfmaq_f32(vfmaq_f32(a6, vld1q_f32(x6 + chi), whi0), vld1q_f32(x6 + chi + 4), whi1);
-                    a7 = vfmaq_f32(vfmaq_f32(a7, vld1q_f32(x7 + clo), wlo0), vld1q_f32(x7 + clo + 4), wlo1);
-                    a7 = vfmaq_f32(vfmaq_f32(a7, vld1q_f32(x7 + chi), whi0), vld1q_f32(x7 + chi + 4), whi1);
-                }
-            }
-            float s0 = vaddvq_f32(a0), s1 = vaddvq_f32(a1);
-            float s2 = vaddvq_f32(a2), s3 = vaddvq_f32(a3);
-            float s4 = vaddvq_f32(a4), s5 = vaddvq_f32(a5);
-            float s6 = vaddvq_f32(a6), s7 = vaddvq_f32(a7);
-#else
-            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
-            float s4 = 0.0f, s5 = 0.0f, s6 = 0.0f, s7 = 0.0f;
-            for (int g = 0; g < groups; g++) {
-                const uint8_t *nb = nib_row + g * 32;
-                const float g_sc = (float)stp_row[g] * row_scale;
-                const int col0 = g * 64;
-                for (int j = 0; j < 32; j++) {
-                    uint8_t pk = nb[j];
-                    float wl = (float)((int)(pk & 0x0F) - 8) * g_sc;
-                    float wh = (float)((int)(pk >> 4) - 8) * g_sc;
-                    int c_lo = col0 + j, c_hi = col0 + 32 + j;
-                    s0 += x0[c_lo] * wl + x0[c_hi] * wh; s1 += x1[c_lo] * wl + x1[c_hi] * wh;
-                    s2 += x2[c_lo] * wl + x2[c_hi] * wh; s3 += x3[c_lo] * wl + x3[c_hi] * wh;
-                    s4 += x4[c_lo] * wl + x4[c_hi] * wh; s5 += x5[c_lo] * wl + x5[c_hi] * wh;
-                    s6 += x6[c_lo] * wl + x6[c_hi] * wh; s7 += x7[c_lo] * wl + x7[c_hi] * wh;
-                }
-            }
-#endif
-            y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
-            y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
-            y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
-            y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
-            y[(size_t)(t + 4) * out_dim + o] = bf16_round_f32(s4);
-            y[(size_t)(t + 5) * out_dim + o] = bf16_round_f32(s5);
-            y[(size_t)(t + 6) * out_dim + o] = bf16_round_f32(s6);
-            y[(size_t)(t + 7) * out_dim + o] = bf16_round_f32(s7);
-        }
         for (; t + 4 <= T; t += 4) {
-            const float *x0 = x + (size_t)(t + 0) * in_dim;
-            const float *x1 = x + (size_t)(t + 1) * in_dim;
-            const float *x2 = x + (size_t)(t + 2) * in_dim;
-            const float *x3 = x + (size_t)(t + 3) * in_dim;
-#if defined(__aarch64__) || defined(__ARM_NEON)
-            float32x4_t a0 = vdupq_n_f32(0.0f), a1 = vdupq_n_f32(0.0f);
-            float32x4_t a2 = vdupq_n_f32(0.0f), a3 = vdupq_n_f32(0.0f);
-            const int16x8_t eight_s16 = vdupq_n_s16(8);
-            const uint8x8_t mask_lo8 = vdup_n_u8(0x0F);
-            for (int g = 0; g < groups; g++) {
-                const uint8_t *nb = nib_row + g * 32;
-                const float32x4_t gsc_v = vdupq_n_f32((float)stp_row[g] * row_scale);
-                const int col0 = g * 64;
-                for (int j = 0; j < 32; j += 8) {
-                    uint8x8_t pk8 = vld1_u8(nb + j);
-                    int16x8_t qlo = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(vand_u8(pk8, mask_lo8))), eight_s16);
-                    int16x8_t qhi = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(vshr_n_u8(pk8, 4))), eight_s16);
-                    float32x4_t wlo0 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_low_s16(qlo))), gsc_v);
-                    float32x4_t wlo1 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_high_s16(qlo))), gsc_v);
-                    float32x4_t whi0 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_low_s16(qhi))), gsc_v);
-                    float32x4_t whi1 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_high_s16(qhi))), gsc_v);
-                    int clo = col0 + j;
-                    int chi = col0 + 32 + j;
-                    a0 = vfmaq_f32(vfmaq_f32(a0, vld1q_f32(x0 + clo), wlo0), vld1q_f32(x0 + clo + 4), wlo1);
-                    a0 = vfmaq_f32(vfmaq_f32(a0, vld1q_f32(x0 + chi), whi0), vld1q_f32(x0 + chi + 4), whi1);
-                    a1 = vfmaq_f32(vfmaq_f32(a1, vld1q_f32(x1 + clo), wlo0), vld1q_f32(x1 + clo + 4), wlo1);
-                    a1 = vfmaq_f32(vfmaq_f32(a1, vld1q_f32(x1 + chi), whi0), vld1q_f32(x1 + chi + 4), whi1);
-                    a2 = vfmaq_f32(vfmaq_f32(a2, vld1q_f32(x2 + clo), wlo0), vld1q_f32(x2 + clo + 4), wlo1);
-                    a2 = vfmaq_f32(vfmaq_f32(a2, vld1q_f32(x2 + chi), whi0), vld1q_f32(x2 + chi + 4), whi1);
-                    a3 = vfmaq_f32(vfmaq_f32(a3, vld1q_f32(x3 + clo), wlo0), vld1q_f32(x3 + clo + 4), wlo1);
-                    a3 = vfmaq_f32(vfmaq_f32(a3, vld1q_f32(x3 + chi), whi0), vld1q_f32(x3 + chi + 4), whi1);
-                }
-            }
-            float s0 = vaddvq_f32(a0), s1 = vaddvq_f32(a1);
-            float s2 = vaddvq_f32(a2), s3 = vaddvq_f32(a3);
-#else
+            const int8_t *xq0 = x_q + (size_t)(t + 0) * in_dim;
+            const int8_t *xq1 = x_q + (size_t)(t + 1) * in_dim;
+            const int8_t *xq2 = x_q + (size_t)(t + 2) * in_dim;
+            const int8_t *xq3 = x_q + (size_t)(t + 3) * in_dim;
+            const float *xs0 = x_sc + (size_t)(t + 0) * groups;
+            const float *xs1 = x_sc + (size_t)(t + 1) * groups;
+            const float *xs2 = x_sc + (size_t)(t + 2) * groups;
+            const float *xs3 = x_sc + (size_t)(t + 3) * groups;
             float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
             for (int g = 0; g < groups; g++) {
                 const uint8_t *nb = nib_row + g * 32;
-                const float g_sc = (float)stp_row[g] * row_scale;
-                const int col0 = g * 64;
-                for (int j = 0; j < 32; j++) {
-                    uint8_t pk = nb[j];
-                    float wl = (float)((int)(pk & 0x0F) - 8) * g_sc;
-                    float wh = (float)((int)(pk >> 4) - 8) * g_sc;
-                    int c_lo = col0 + j, c_hi = col0 + 32 + j;
-                    s0 += x0[c_lo] * wl + x0[c_hi] * wh; s1 += x1[c_lo] * wl + x1[c_hi] * wh;
-                    s2 += x2[c_lo] * wl + x2[c_hi] * wh; s3 += x3[c_lo] * wl + x3[c_hi] * wh;
-                }
+                uint8x16_t pk0 = vld1q_u8(nb);
+                uint8x16_t pk1 = vld1q_u8(nb + 16);
+                int8x16_t wlo0 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(pk0, mask_0f)), eight_s8);
+                int8x16_t wlo1 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(pk1, mask_0f)), eight_s8);
+                int8x16_t whi0 = vsubq_s8(vreinterpretq_s8_u8(vshrq_n_u8(pk0, 4)), eight_s8);
+                int8x16_t whi1 = vsubq_s8(vreinterpretq_s8_u8(vshrq_n_u8(pk1, 4)), eight_s8);
+
+                int c = g * 64;
+                int32x4_t d0 = vdupq_n_s32(0), d1 = vdupq_n_s32(0), d2 = vdupq_n_s32(0), d3 = vdupq_n_s32(0);
+                d0 = vdotq_s32(vdotq_s32(d0, wlo0, vld1q_s8(xq0 + c)), wlo1, vld1q_s8(xq0 + c + 16));
+                d0 = vdotq_s32(vdotq_s32(d0, whi0, vld1q_s8(xq0 + c + 32)), whi1, vld1q_s8(xq0 + c + 48));
+                d1 = vdotq_s32(vdotq_s32(d1, wlo0, vld1q_s8(xq1 + c)), wlo1, vld1q_s8(xq1 + c + 16));
+                d1 = vdotq_s32(vdotq_s32(d1, whi0, vld1q_s8(xq1 + c + 32)), whi1, vld1q_s8(xq1 + c + 48));
+                d2 = vdotq_s32(vdotq_s32(d2, wlo0, vld1q_s8(xq2 + c)), wlo1, vld1q_s8(xq2 + c + 16));
+                d2 = vdotq_s32(vdotq_s32(d2, whi0, vld1q_s8(xq2 + c + 32)), whi1, vld1q_s8(xq2 + c + 48));
+                d3 = vdotq_s32(vdotq_s32(d3, wlo0, vld1q_s8(xq3 + c)), wlo1, vld1q_s8(xq3 + c + 16));
+                d3 = vdotq_s32(vdotq_s32(d3, whi0, vld1q_s8(xq3 + c + 32)), whi1, vld1q_s8(xq3 + c + 48));
+
+                float stp = (float)stp_row[g];
+                s0 += (float)vaddvq_s32(d0) * (stp * xs0[g]);
+                s1 += (float)vaddvq_s32(d1) * (stp * xs1[g]);
+                s2 += (float)vaddvq_s32(d2) * (stp * xs2[g]);
+                s3 += (float)vaddvq_s32(d3) * (stp * xs3[g]);
             }
-#endif
-            y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
-            y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
-            y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
-            y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
+            y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0 * row_scale);
+            y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1 * row_scale);
+            y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2 * row_scale);
+            y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3 * row_scale);
         }
         for (; t < T; t++) {
-            const float *xt = x + (size_t)t * in_dim;
-#if defined(__aarch64__) || defined(__ARM_NEON)
-            float32x4_t acc_v = vdupq_n_f32(0.0f);
-            const int16x8_t eight_s16 = vdupq_n_s16(8);
-            const uint8x8_t mask_lo8 = vdup_n_u8(0x0F);
+            const int8_t *xqt = x_q + (size_t)t * in_dim;
+            const float *xst = x_sc + (size_t)t * groups;
+            float sum = 0.0f;
             for (int g = 0; g < groups; g++) {
                 const uint8_t *nb = nib_row + g * 32;
-                const float32x4_t gsc_v = vdupq_n_f32((float)stp_row[g] * row_scale);
-                const int col0 = g * 64;
-                for (int j = 0; j < 32; j += 8) {
-                    uint8x8_t pk8 = vld1_u8(nb + j);
-                    int16x8_t qlo = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(vand_u8(pk8, mask_lo8))), eight_s16);
-                    int16x8_t qhi = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(vshr_n_u8(pk8, 4))), eight_s16);
-                    float32x4_t wlo0 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_low_s16(qlo))), gsc_v);
-                    float32x4_t wlo1 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_high_s16(qlo))), gsc_v);
-                    float32x4_t whi0 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_low_s16(qhi))), gsc_v);
-                    float32x4_t whi1 = vmulq_f32(vcvtq_f32_s32(vmovl_s16(vget_high_s16(qhi))), gsc_v);
-                    acc_v = vfmaq_f32(acc_v, vld1q_f32(xt + col0 + j), wlo0);
-                    acc_v = vfmaq_f32(acc_v, vld1q_f32(xt + col0 + j + 4), wlo1);
-                    acc_v = vfmaq_f32(acc_v, vld1q_f32(xt + col0 + 32 + j), whi0);
-                    acc_v = vfmaq_f32(acc_v, vld1q_f32(xt + col0 + 32 + j + 4), whi1);
-                }
+                uint8x16_t pk0 = vld1q_u8(nb);
+                uint8x16_t pk1 = vld1q_u8(nb + 16);
+                int8x16_t wlo0 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(pk0, mask_0f)), eight_s8);
+                int8x16_t wlo1 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(pk1, mask_0f)), eight_s8);
+                int8x16_t whi0 = vsubq_s8(vreinterpretq_s8_u8(vshrq_n_u8(pk0, 4)), eight_s8);
+                int8x16_t whi1 = vsubq_s8(vreinterpretq_s8_u8(vshrq_n_u8(pk1, 4)), eight_s8);
+
+                int c = g * 64;
+                int32x4_t d0 = vdupq_n_s32(0), d1 = vdupq_n_s32(0);
+                d0 = vdotq_s32(vdotq_s32(d0, wlo0, vld1q_s8(xqt + c)), wlo1, vld1q_s8(xqt + c + 16));
+                d1 = vdotq_s32(vdotq_s32(d1, whi0, vld1q_s8(xqt + c + 32)), whi1, vld1q_s8(xqt + c + 48));
+                sum += (float)vaddvq_s32(vaddq_s32(d0, d1)) * ((float)stp_row[g] * xst[g]);
             }
-            float sum = vaddvq_f32(acc_v);
+            y[(size_t)t * out_dim + o] = bf16_round_f32(sum * row_scale);
+        }
+    }
+    free(x_q);
+    free(x_sc);
 #else
+    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    for (int o = 0; o < out_dim; o++) {
+        const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
+        const uint8_t *stp_row = steps_base + (size_t)o * (size_t)groups;
+        const float row_scale = scales_base[o];
+        for (int t = 0; t < T; t++) {
+            const float *xt = x + (size_t)t * in_dim;
             float sum = 0.0f;
             for (int g = 0; g < groups; g++) {
                 const uint8_t *nb = nib_row + g * 32;
@@ -726,10 +656,10 @@ static void linear_4bit_group64_omp(
                          + xt[col0 + 32 + j] * ((float)((int)(pk >> 4) - 8) * g_sc);
                 }
             }
-#endif
             y[(size_t)t * out_dim + o] = bf16_round_f32(sum);
         }
     }
+#endif
 }
 
 static void rms_norm_bf16(
@@ -1091,4 +1021,547 @@ LFM3_API int lfm3_lm_head_logits(const float *h_last_2048, float *out_logits_128
     if (out_max_logit) *out_max_logit = best_v;
     if (!out_logits_128k) free(lg);
     return best_id;
+}
+
+/* ============================================================================
+ * Fast Cached Autoregressive Generation (`lfm3_generate_cached`)
+ * Uses a 24-layer KV Cache (`k_cache`, `v_cache` for the 11 GQA layers) and
+ * ShortConv rolling state (`conv_pre` for the 13 width-7 ShortConv layers)
+ * so prefill runs in parallel (8-token NEON blocking) and every generated
+ * token runs as an O(1) `T = 1` step without recomputing the prompt!
+ * ============================================================================ */
+#define LFM3_MAX_GEN_SEQ 512
+
+static float *g_conv_pre_cache[LFM3_LAYERS] = { NULL };
+static float *g_k_cache[LFM3_LAYERS] = { NULL };
+static float *g_v_cache[LFM3_LAYERS] = { NULL };
+static int g_cached_seq_ids[LFM3_MAX_GEN_SEQ];
+static int g_cached_seq_len = 0;
+static uint8_t g_stop_mask[128000] = { 0 };
+
+LFM3_API void lfm3_set_stop_mask(const uint8_t *mask_128k)
+{
+    if (mask_128k) {
+        memcpy(g_stop_mask, mask_128k, 128000);
+    }
+}
+
+/* Pre-allocated scratch buffers for zero-malloc cached prefill/decode (`T <= LFM3_MAX_GEN_SEQ`) */
+static float *g_scr_op_in = NULL;
+static float *g_scr_op_out_raw = NULL;
+static float *g_scr_op_normed = NULL;
+static float *g_scr_h_mid = NULL;
+static float *g_scr_bcx = NULL;
+static float *g_scr_post_gated = NULL;
+static float *g_scr_q = NULL;
+static float *g_scr_k = NULL;
+static float *g_scr_v = NULL;
+static float *g_scr_gate = NULL;
+static float *g_scr_gated_attn = NULL;
+static float *g_scr_ffn_in = NULL;
+static float *g_scr_w1_out = NULL;
+static float *g_scr_w3_out = NULL;
+static float *g_scr_ffn_raw = NULL;
+static float *g_scr_ffn_normed = NULL;
+
+static void ensure_lfm3_kv_buffers(void)
+{
+    for (int l = 0; l < LFM3_LAYERS; l++) {
+        uint32_t kind = g_lfm3.trunks[l].hdr.layer_kind;
+        if (kind == 0) {
+            if (!g_conv_pre_cache[l]) {
+                g_conv_pre_cache[l] = (float *)calloc((size_t)LFM3_MAX_GEN_SEQ * LFM3_D, sizeof(float));
+            }
+        } else {
+            if (!g_k_cache[l]) {
+                g_k_cache[l] = (float *)calloc((size_t)LFM3_MAX_GEN_SEQ * 512, sizeof(float));
+            }
+            if (!g_v_cache[l]) {
+                g_v_cache[l] = (float *)calloc((size_t)LFM3_MAX_GEN_SEQ * 512, sizeof(float));
+            }
+        }
+    }
+    if (!g_scr_op_in) {
+        size_t max_t = 128;
+        g_scr_op_in = (float *)malloc(max_t * LFM3_D * sizeof(float));
+        g_scr_op_out_raw = (float *)malloc(max_t * LFM3_D * sizeof(float));
+        g_scr_op_normed = (float *)malloc(max_t * LFM3_D * sizeof(float));
+        g_scr_h_mid = (float *)malloc(max_t * LFM3_D * sizeof(float));
+        g_scr_bcx = (float *)malloc(max_t * 6144 * sizeof(float));
+        g_scr_post_gated = (float *)malloc(max_t * LFM3_D * sizeof(float));
+        g_scr_q = (float *)malloc(max_t * 2048 * sizeof(float));
+        g_scr_k = (float *)malloc(max_t * 512 * sizeof(float));
+        g_scr_v = (float *)malloc(max_t * 512 * sizeof(float));
+        g_scr_gate = (float *)malloc(max_t * 16 * sizeof(float));
+        g_scr_gated_attn = (float *)malloc(max_t * 2048 * sizeof(float));
+        g_scr_ffn_in = (float *)malloc(max_t * LFM3_D * sizeof(float));
+        g_scr_w1_out = (float *)malloc(max_t * LFM3_FFN * sizeof(float));
+        g_scr_w3_out = (float *)malloc(max_t * LFM3_FFN * sizeof(float));
+        g_scr_ffn_raw = (float *)malloc(max_t * LFM3_D * sizeof(float));
+        g_scr_ffn_normed = (float *)malloc(max_t * LFM3_D * sizeof(float));
+    }
+}
+
+/* Fused `w1 + w3 + SwiGLU` 4-Bit Group-64 NEON Kernel for `T = 1`:
+ * Reads `x[2048]` (`8 KB` in L1D) ONCE and computes both `w1[o] · x` and `w3[o] · x`
+ * in parallel NEON accumulators, then immediately applies `silu(v1) * v3`! */
+static void fused_swiglu_w1_w3_4bit_T1(
+    const float *x,
+    const uint8_t *w1_nib,
+    const uint8_t *w1_stp,
+    const float *w1_scl,
+    const uint8_t *w3_nib,
+    const uint8_t *w3_stp,
+    const float *w3_scl,
+    float *out_swiglu
+)
+{
+    const int groups = LFM3_D / 64; /* 32 groups */
+    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+#if defined(__ARM_FEATURE_DOTPROD)
+    int8_t x_q[LFM3_D];
+    float x_sc[32];
+    quantize_f32_to_s8_group64(x, 1, LFM3_D, x_q, x_sc);
+
+    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    for (int o = 0; o < LFM3_FFN; o++) {
+        const uint8_t *n1_row = w1_nib + (size_t)o * (size_t)(groups * 32);
+        const uint8_t *s1_row = w1_stp + (size_t)o * (size_t)groups;
+        const float r1_scl = w1_scl[o];
+
+        const uint8_t *n3_row = w3_nib + (size_t)o * (size_t)(groups * 32);
+        const uint8_t *s3_row = w3_stp + (size_t)o * (size_t)groups;
+        const float r3_scl = w3_scl[o];
+
+        const int8x16_t eight_s8 = vdupq_n_s8(8);
+        const uint8x16_t mask_0f = vdupq_n_u8(0x0F);
+        float s1 = 0.0f, s3 = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            const int c = g * 64;
+            int8x16_t x0 = vld1q_s8(x_q + c);
+            int8x16_t x1 = vld1q_s8(x_q + c + 16);
+            int8x16_t x2 = vld1q_s8(x_q + c + 32);
+            int8x16_t x3 = vld1q_s8(x_q + c + 48);
+
+            const uint8_t *nb1 = n1_row + g * 32;
+            uint8x16_t pk1_0 = vld1q_u8(nb1), pk1_1 = vld1q_u8(nb1 + 16);
+            int32x4_t d1 = vdupq_n_s32(0);
+            d1 = vdotq_s32(d1, vsubq_s8(vreinterpretq_s8_u8(vandq_u8(pk1_0, mask_0f)), eight_s8), x0);
+            d1 = vdotq_s32(d1, vsubq_s8(vreinterpretq_s8_u8(vandq_u8(pk1_1, mask_0f)), eight_s8), x1);
+            d1 = vdotq_s32(d1, vsubq_s8(vreinterpretq_s8_u8(vshrq_n_u8(pk1_0, 4)), eight_s8), x2);
+            d1 = vdotq_s32(d1, vsubq_s8(vreinterpretq_s8_u8(vshrq_n_u8(pk1_1, 4)), eight_s8), x3);
+            s1 += (float)vaddvq_s32(d1) * ((float)s1_row[g] * x_sc[g]);
+
+            const uint8_t *nb3 = n3_row + g * 32;
+            uint8x16_t pk3_0 = vld1q_u8(nb3), pk3_1 = vld1q_u8(nb3 + 16);
+            int32x4_t d3 = vdupq_n_s32(0);
+            d3 = vdotq_s32(d3, vsubq_s8(vreinterpretq_s8_u8(vandq_u8(pk3_0, mask_0f)), eight_s8), x0);
+            d3 = vdotq_s32(d3, vsubq_s8(vreinterpretq_s8_u8(vandq_u8(pk3_1, mask_0f)), eight_s8), x1);
+            d3 = vdotq_s32(d3, vsubq_s8(vreinterpretq_s8_u8(vshrq_n_u8(pk3_0, 4)), eight_s8), x2);
+            d3 = vdotq_s32(d3, vsubq_s8(vreinterpretq_s8_u8(vshrq_n_u8(pk3_1, 4)), eight_s8), x3);
+            s3 += (float)vaddvq_s32(d3) * ((float)s3_row[g] * x_sc[g]);
+        }
+        float v1 = bf16_round_f32(s1 * r1_scl);
+        float v3 = bf16_round_f32(s3 * r3_scl);
+        float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+        out_swiglu[o] = bf16_round_f32(silu * v3);
+    }
+#else
+    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    for (int o = 0; o < LFM3_FFN; o++) {
+        const uint8_t *n1_row = w1_nib + (size_t)o * (size_t)(groups * 32);
+        const uint8_t *s1_row = w1_stp + (size_t)o * (size_t)groups;
+        const float r1_scl = w1_scl[o];
+        const uint8_t *n3_row = w3_nib + (size_t)o * (size_t)(groups * 32);
+        const uint8_t *s3_row = w3_stp + (size_t)o * (size_t)groups;
+        const float r3_scl = w3_scl[o];
+        float s1 = 0.0f, s3 = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            const uint8_t *nb1 = n1_row + g * 32;
+            const uint8_t *nb3 = n3_row + g * 32;
+            const float gsc1 = (float)s1_row[g] * r1_scl;
+            const float gsc3 = (float)s3_row[g] * r3_scl;
+            const int col0 = g * 64;
+            for (int j = 0; j < 32; j++) {
+                uint8_t pk1 = nb1[j], pk3 = nb3[j];
+                float xlo = x[col0 + j], xhi = x[col0 + 32 + j];
+                s1 += xlo * ((float)((int)(pk1 & 0x0F) - 8) * gsc1) + xhi * ((float)((int)(pk1 >> 4) - 8) * gsc1);
+                s3 += xlo * ((float)((int)(pk3 & 0x0F) - 8) * gsc3) + xhi * ((float)((int)(pk3 >> 4) - 8) * gsc3);
+            }
+        }
+        float v1 = bf16_round_f32(s1);
+        float v3 = bf16_round_f32(s3);
+        float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+        out_swiglu[o] = bf16_round_f32(silu * v3);
+    }
+#endif
+}
+
+static void execute_lfm3_layer_cached_step(
+    int layer_id,
+    const Lfm3TrunkMapped *trk,
+    const float *h_in,
+    float *h_out,
+    int pos_offset,
+    int T
+)
+{
+    const uint8_t *op = (const uint8_t *)trk->operator_mf.ptr;
+    uint32_t kind = trk->hdr.layer_kind;
+    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+
+    float *op_in = g_scr_op_in;
+    float *op_out_raw = g_scr_op_out_raw;
+    float *op_normed = g_scr_op_normed;
+    float *h_mid = g_scr_h_mid;
+
+    if (kind == 0) {
+        uint32_t len_op_norm, len_in_proj, len_conv_w;
+        memcpy(&len_op_norm, op + 16, 4);
+        memcpy(&len_in_proj, op + 20, 4);
+        memcpy(&len_conv_w, op + 24, 4);
+
+        size_t cur = 64;
+        const uint16_t *op_norm_w = (const uint16_t *)(op + cur); cur += len_op_norm;
+        const uint16_t *in_proj_w = (const uint16_t *)(op + cur); cur += len_in_proj;
+        const uint16_t *conv_w = (const uint16_t *)(op + cur); cur += len_conv_w;
+        const uint16_t *out_proj_w = (const uint16_t *)get_lfm3_record_ptr(trk, 2);
+
+        rms_norm_bf16(h_in, op_norm_w, op_in, T, LFM3_D, 1e-5f);
+
+        float *bcx = g_scr_bcx;
+        float *post_gated = g_scr_post_gated;
+        linear_bf16_omp(op_in, in_proj_w, bcx, T, 6144, LFM3_D);
+
+        float *c_cache = g_conv_pre_cache[layer_id];
+        for (int t = 0; t < T; t++) {
+            int p = pos_offset + t;
+            if (p < LFM3_MAX_GEN_SEQ) {
+                float *dst_pre = c_cache + (size_t)p * LFM3_D;
+                const float *bcx_t = bcx + (size_t)t * 6144;
+                for (int c = 0; c < LFM3_D; c++) {
+                    dst_pre[c] = bf16_round_f32(bcx_t[c] * bcx_t[4096 + c]);
+                }
+            }
+        }
+
+        for (int c = 0; c < LFM3_D; c++) {
+            float w_k[7];
+            for (int k = 0; k < 7; k++) w_k[k] = bf16_to_f32(conv_w[c * 7 + k]);
+            for (int t = 0; t < T; t++) {
+                int p = pos_offset + t;
+                float acc = 0.0f;
+                for (int k = 0; k < 7; k++) {
+                    int ts = p - 6 + k;
+                    if (ts >= 0 && ts < LFM3_MAX_GEN_SEQ) {
+                        acc += c_cache[(size_t)ts * LFM3_D + c] * w_k[k];
+                    }
+                }
+                float conv_c = bf16_round_f32(acc);
+                float C_val = bcx[(size_t)t * 6144 + 2048 + c];
+                post_gated[(size_t)t * LFM3_D + c] = bf16_round_f32(C_val * conv_c);
+            }
+        }
+        linear_bf16_omp(post_gated, out_proj_w, op_out_raw, T, LFM3_D, LFM3_D);
+    } else {
+        uint32_t len_op_norm, len_q, len_k, len_v, len_gate, len_qn, len_kn;
+        memcpy(&len_op_norm, op + 16, 4);
+        memcpy(&len_q, op + 20, 4);
+        memcpy(&len_k, op + 24, 4);
+        memcpy(&len_v, op + 28, 4);
+        memcpy(&len_gate, op + 32, 4);
+        memcpy(&len_qn, op + 36, 4);
+        memcpy(&len_kn, op + 40, 4);
+
+        size_t cur = 64;
+        const uint16_t *op_norm_w = (const uint16_t *)(op + cur); cur += len_op_norm;
+        const uint16_t *q_w = (const uint16_t *)(op + cur); cur += len_q;
+        const uint16_t *k_w = (const uint16_t *)(op + cur); cur += len_k;
+        const uint16_t *v_w = (const uint16_t *)(op + cur); cur += len_v;
+        const uint16_t *gate_w = (const uint16_t *)(op + cur); cur += len_gate;
+        const uint16_t *qn_w = (const uint16_t *)(op + cur); cur += len_qn;
+        const uint16_t *kn_w = (const uint16_t *)(op + cur); cur += len_kn;
+        const uint16_t *o_proj_w = (const uint16_t *)get_lfm3_record_ptr(trk, 2);
+
+        rms_norm_bf16(h_in, op_norm_w, op_in, T, LFM3_D, 1e-5f);
+
+        float *q = g_scr_q;
+        float *k = g_scr_k;
+        float *v = g_scr_v;
+        float *gate_raw = g_scr_gate;
+        float *gated_attn = g_scr_gated_attn;
+
+        linear_bf16_omp(op_in, q_w, q, T, 2048, LFM3_D);
+        linear_bf16_omp(op_in, k_w, k, T, 512, LFM3_D);
+        linear_bf16_omp(op_in, v_w, v, T, 512, LFM3_D);
+        linear_bf16_omp(op_in, gate_w, gate_raw, T, 16, LFM3_D);
+
+        rms_norm_bf16(q, qn_w, q, T * 16, 128, 1e-5f);
+        rms_norm_bf16(k, kn_w, k, T * 4, 128, 1e-5f);
+
+        const float *inv_freq = (kind == 1) ? g_lfm3.inv_freq_sliding : g_lfm3.inv_freq_full;
+        float *kc_base = g_k_cache[layer_id];
+        float *vc_base = g_v_cache[layer_id];
+
+        for (int t = 0; t < T; t++) {
+            int pos_t = pos_offset + t;
+            float cos_t[64], sin_t[64];
+            for (int d = 0; d < 64; d++) {
+                float angle = (float)pos_t * inv_freq[d];
+                cos_t[d] = bf16_round_f32(cosf(angle));
+                sin_t[d] = bf16_round_f32(sinf(angle));
+            }
+            for (int h = 0; h < 16; h++) {
+                float *qh = q + (size_t)t * 2048 + h * 128;
+                for (int d = 0; d < 64; d++) {
+                    float x1 = qh[d], x2 = qh[d + 64];
+                    qh[d] = bf16_round_f32(x1 * cos_t[d] - x2 * sin_t[d]);
+                    qh[d + 64] = bf16_round_f32(x2 * cos_t[d] + x1 * sin_t[d]);
+                }
+            }
+            for (int h = 0; h < 4; h++) {
+                float *kh = k + (size_t)t * 512 + h * 128;
+                for (int d = 0; d < 64; d++) {
+                    float x1 = kh[d], x2 = kh[d + 64];
+                    kh[d] = bf16_round_f32(x1 * cos_t[d] - x2 * sin_t[d]);
+                    kh[d + 64] = bf16_round_f32(x2 * cos_t[d] + x1 * sin_t[d]);
+                }
+            }
+            if (pos_t < LFM3_MAX_GEN_SEQ) {
+                memcpy(kc_base + (size_t)pos_t * 512, k + (size_t)t * 512, 512 * sizeof(float));
+                memcpy(vc_base + (size_t)pos_t * 512, v + (size_t)t * 512, 512 * sizeof(float));
+            }
+        }
+
+        const float scale = 1.0f / sqrtf(128.0f);
+        for (int h = 0; h < 16; h++) {
+            int kv_h = h / 4;
+            float scores[LFM3_MAX_GEN_SEQ];
+            for (int t = 0; t < T; t++) {
+                int p = pos_offset + t;
+                if (p >= LFM3_MAX_GEN_SEQ) p = LFM3_MAX_GEN_SEQ - 1;
+                const float *qh = q + (size_t)t * 2048 + h * 128;
+                int j_start = 0;
+                if (kind == 1 && p - LFM3_SLIDING_W + 1 > 0) {
+                    j_start = p - LFM3_SLIDING_W + 1;
+                }
+                float max_s = -1e30f;
+                for (int j = j_start; j <= p; j++) {
+                    const float *kh = kc_base + (size_t)j * 512 + kv_h * 128;
+                    float dot = 0.0f;
+                    for (int d = 0; d < 128; d++) dot += qh[d] * kh[d];
+                    scores[j] = bf16_round_f32(dot * scale);
+                    if (scores[j] > max_s) max_s = scores[j];
+                }
+                float sum_exp = 0.0f;
+                for (int j = j_start; j <= p; j++) {
+                    scores[j] = expf(scores[j] - max_s);
+                    sum_exp += scores[j];
+                }
+                for (int j = j_start; j <= p; j++) {
+                    scores[j] = bf16_round_f32(scores[j] / sum_exp);
+                }
+                float g_val = gate_raw[(size_t)t * 16 + h];
+                float head_gate = bf16_round_f32(1.0f / (1.0f + expf(-g_val)));
+                float *out_qh = gated_attn + (size_t)t * 2048 + h * 128;
+                for (int d = 0; d < 128; d++) {
+                    float acc = 0.0f;
+                    for (int j = j_start; j <= p; j++) {
+                        const float *vh = vc_base + (size_t)j * 512 + kv_h * 128;
+                        acc += scores[j] * vh[d];
+                    }
+                    out_qh[d] = bf16_round_f32(bf16_round_f32(acc) * head_gate);
+                }
+            }
+        }
+        linear_bf16_omp(gated_attn, o_proj_w, op_out_raw, T, LFM3_D, 2048);
+    }
+
+    const uint16_t *post_op_norm_w = (const uint16_t *)get_lfm3_record_ptr(trk, 1);
+    rms_norm_bf16(op_out_raw, post_op_norm_w, op_normed, T, LFM3_D, 1e-5f);
+    for (int i = 0; i < T * LFM3_D; i++) {
+        h_mid[i] = bf16_round_f32(h_in[i] + op_normed[i]);
+    }
+
+    const uint16_t *ffn_norm_w = (const uint16_t *)get_lfm3_record_ptr(trk, 3);
+    const uint16_t *post_ffn_norm_w = (const uint16_t *)get_lfm3_record_ptr(trk, 4);
+
+    float *ffn_in = g_scr_ffn_in;
+    float *w1_out = g_scr_w1_out;
+    float *w3_out = g_scr_w3_out;
+    float *ffn_raw = g_scr_ffn_raw;
+    float *ffn_normed = g_scr_ffn_normed;
+
+    rms_norm_bf16(h_mid, ffn_norm_w, ffn_in, T, LFM3_D, 1e-5f);
+
+    if (g_lfm3.use_4bit_ffn && trk->ffn_4bit_mf.ptr && trk->ffn_4bit_mf.size >= 3 * LFM3_FFN_MAT_4BIT_BYTES) {
+        const uint8_t *base4 = (const uint8_t *)trk->ffn_4bit_mf.ptr;
+        const uint8_t *w1_nib = base4;
+        const uint8_t *w1_stp = w1_nib + (7680 * 32 * 32);
+        const float *w1_scl = (const float *)(w1_stp + (7680 * 32));
+
+        const uint8_t *w3_nib = base4 + LFM3_FFN_MAT_4BIT_BYTES;
+        const uint8_t *w3_stp = w3_nib + (7680 * 32 * 32);
+        const float *w3_scl = (const float *)(w3_stp + (7680 * 32));
+
+        const uint8_t *w2_nib = base4 + 2 * LFM3_FFN_MAT_4BIT_BYTES;
+        const uint8_t *w2_stp = w2_nib + (2048 * 120 * 32);
+        const float *w2_scl = (const float *)(w2_stp + (2048 * 120));
+
+        if (T == 1) {
+            fused_swiglu_w1_w3_4bit_T1(ffn_in, w1_nib, w1_stp, w1_scl, w3_nib, w3_stp, w3_scl, w1_out);
+        } else {
+            linear_4bit_group64_omp(ffn_in, w1_nib, w1_stp, w1_scl, w1_out, T, LFM3_FFN, LFM3_D);
+            linear_4bit_group64_omp(ffn_in, w3_nib, w3_stp, w3_scl, w3_out, T, LFM3_FFN, LFM3_D);
+            #pragma omp parallel for num_threads(n_thr) schedule(static)
+            for (int i = 0; i < T * LFM3_FFN; i++) {
+                float v1 = w1_out[i];
+                float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+                w1_out[i] = bf16_round_f32(silu * w3_out[i]);
+            }
+        }
+        linear_4bit_group64_omp(w1_out, w2_nib, w2_stp, w2_scl, ffn_raw, T, LFM3_D, LFM3_FFN);
+    } else {
+        const uint16_t *w1_w = (const uint16_t *)get_lfm3_record_ptr(trk, 10);
+        const uint16_t *w3_w = (const uint16_t *)get_lfm3_record_ptr(trk, 11);
+        const uint16_t *w2_w = (const uint16_t *)get_lfm3_record_ptr(trk, 12);
+
+        linear_bf16_omp(ffn_in, w1_w, w1_out, T, LFM3_FFN, LFM3_D);
+        linear_bf16_omp(ffn_in, w3_w, w3_out, T, LFM3_FFN, LFM3_D);
+
+        #pragma omp parallel for num_threads(n_thr) schedule(static)
+        for (int i = 0; i < T * LFM3_FFN; i++) {
+            float v1 = w1_out[i];
+            float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+            w1_out[i] = bf16_round_f32(silu * w3_out[i]);
+        }
+        linear_bf16_omp(w1_out, w2_w, ffn_raw, T, LFM3_D, LFM3_FFN);
+    }
+    rms_norm_bf16(ffn_raw, post_ffn_norm_w, ffn_normed, T, LFM3_D, 1e-5f);
+
+    for (int i = 0; i < T * LFM3_D; i++) {
+        h_out[i] = bf16_round_f32(h_mid[i] + ffn_normed[i]);
+    }
+}
+
+LFM3_API int lfm3_generate_cached(
+    const int *prompt_ids,
+    int prompt_len,
+    int max_new_tokens,
+    int *out_gen_ids,
+    float *out_last_hidden_2048,
+    float *out_total_ms
+)
+{
+    if (!g_lfm3.initialized || prompt_len <= 0 || max_new_tokens <= 0) return 0;
+    double t0 = now_ms();
+    if (g_lfm3.s23_pin_requested) {
+        lfm3_configure_s23_snapdragon8gen2(1);
+    }
+    ensure_lfm3_kv_buffers();
+
+    if (prompt_len > 120) {
+        prompt_len = 120;
+    }
+
+    const uint16_t *emb_w = (const uint16_t *)g_lfm3.emb_mf.ptr;
+    const uint16_t *emb_norm_w = (const uint16_t *)g_lfm3.emb_norm_mf.ptr;
+
+    /* Find longest common prefix `lcp` with `g_cached_seq_ids` so we skip redundant prefix prefill! */
+    int lcp = 0;
+    while (lcp < prompt_len - 1 && lcp < g_cached_seq_len && prompt_ids[lcp] == g_cached_seq_ids[lcp]) {
+        lcp++;
+    }
+    int new_prefill_len = prompt_len - lcp;
+
+    float *cur = (float *)malloc((size_t)new_prefill_len * LFM3_D * sizeof(float));
+    float *nxt = (float *)malloc((size_t)new_prefill_len * LFM3_D * sizeof(float));
+    for (int t = 0; t < new_prefill_len; t++) {
+        int tid = prompt_ids[lcp + t];
+        if (tid < 0 || tid >= 128000) tid = 0;
+        g_cached_seq_ids[lcp + t] = tid;
+        const uint16_t *erow = emb_w + (size_t)tid * LFM3_D;
+        float *dst = cur + (size_t)t * LFM3_D;
+        for (int d = 0; d < LFM3_D; d++) dst[d] = bf16_to_f32(erow[d]);
+    }
+    for (int l = 0; l < LFM3_LAYERS; l++) {
+        lfm3_dm_record_layer(l, new_prefill_len);
+        execute_lfm3_layer_cached_step(l, &g_lfm3.trunks[l], cur, nxt, lcp, new_prefill_len);
+        float *tmp = cur; cur = nxt; nxt = tmp;
+    }
+    g_cached_seq_len = prompt_len;
+
+    float h_last[LFM3_D];
+    rms_norm_bf16(cur + (size_t)(new_prefill_len - 1) * LFM3_D, emb_norm_w, h_last, 1, LFM3_D, 1e-5f);
+    free(cur);
+    free(nxt);
+
+    float *logits = (float *)malloc(128000 * sizeof(float));
+    float cur_1tok[LFM3_D], nxt_1tok[LFM3_D];
+    int gen_count = 0;
+    int cur_pos = prompt_len;
+
+    for (int step = 0; step < max_new_tokens && cur_pos < LFM3_MAX_GEN_SEQ; step++) {
+        linear_bf16_omp(h_last, emb_w, logits, 1, 128000, LFM3_D);
+        for (int g = 0; g < gen_count; g++) {
+            int prev_id = out_gen_ids[g];
+            if (prev_id >= 0 && prev_id < 128000) {
+                if (logits[prev_id] > 0.0f) logits[prev_id] /= 1.12f;
+                else logits[prev_id] *= 1.12f;
+            }
+        }
+        logits[124901] = -1e30f; /* Suppress <think> */
+
+        int best_id = 0;
+        float best_v = logits[0];
+        for (int v = 1; v < 128000; v++) {
+            if (logits[v] > best_v) {
+                best_v = logits[v];
+                best_id = v;
+            }
+        }
+        out_gen_ids[gen_count++] = best_id;
+        if (best_id == 124900 || best_id == 124895) {
+            break;
+        }
+        int prev_tok = (gen_count >= 2) ? out_gen_ids[gen_count - 2] : -1;
+        int prev_is_digit = (prev_tok >= 0 && prev_tok < 128000 && g_stop_mask[prev_tok] == 3);
+        if (gen_count >= 6 && g_stop_mask[best_id] == 2 && !prev_is_digit) {
+            break;
+        }
+        if (gen_count >= 6 && (best_id == 8 || best_id == 207) && prev_tok >= 0 && g_stop_mask[prev_tok] == 1) {
+            gen_count--;
+            break;
+        }
+        if (gen_count >= 16 && g_stop_mask[best_id] == 1 && !prev_is_digit) {
+            break;
+        }
+        if (step + 1 >= max_new_tokens) {
+            break;
+        }
+
+        g_cached_seq_ids[cur_pos] = best_id;
+        const uint16_t *erow = emb_w + (size_t)best_id * LFM3_D;
+        for (int d = 0; d < LFM3_D; d++) cur_1tok[d] = bf16_to_f32(erow[d]);
+
+        float *c_ptr = cur_1tok;
+        float *n_ptr = nxt_1tok;
+        for (int l = 0; l < LFM3_LAYERS; l++) {
+            lfm3_dm_record_layer(l, 1);
+            execute_lfm3_layer_cached_step(l, &g_lfm3.trunks[l], c_ptr, n_ptr, cur_pos, 1);
+            float *tmp = c_ptr; c_ptr = n_ptr; n_ptr = tmp;
+        }
+        rms_norm_bf16(c_ptr, emb_norm_w, h_last, 1, LFM3_D, 1e-5f);
+        cur_pos++;
+        g_cached_seq_len = cur_pos;
+    }
+
+    if (out_last_hidden_2048) {
+        memcpy(out_last_hidden_2048, h_last, LFM3_D * sizeof(float));
+    }
+    if (out_total_ms) {
+        *out_total_ms = (float)(now_ms() - t0);
+    }
+    free(logits);
+    return gen_count;
 }

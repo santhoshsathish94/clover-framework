@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Clover AI Studio</title>
+<title>Clover</title>
 <meta name="theme-color" content="#faf8f2">
 <style>
 :root {
@@ -11,30 +11,23 @@
   --soft:         #f2eee4;
   --soft-2:       #e7e1d3;
   --surface:      #fffefb;
-  --surface-tint: #f6f3ea;
-  --glass:        rgba(250, 248, 242, 0.90);
+  --glass:        rgba(250, 248, 242, 0.92);
   --ink:          #132018;
   --ink-2:        #2d3e34;
   --muted:        #596a5f;
-  --subtle:       #7c8c81;
   --line:         #dfd8c8;
   --line-2:       #c9c0ad;
   --accent:       #1b5e46;
   --accent-hover: #124331;
-  --accent-mid:   #297a5d;
   --accent-soft:  #e3efe8;
   --accent-tint:  #eef6f1;
   --accent-line:  #8bb7a4;
-  --warn:         #7d5312;
-  --warn-soft:    #fbf3e2;
-  --warn-line:    #dfc48d;
   --serif:        "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
   --font:         "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono:         "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --radius-xs:    8px;
   --radius-sm:    12px;
   --radius:       16px;
-  --radius-lg:    22px;
   --radius-pill:  999px;
   --shadow-xs:    0 1px 3px rgba(18, 32, 24, 0.05);
   --shadow-sm:    0 6px 20px -4px rgba(18, 32, 24, 0.07);
@@ -79,7 +72,7 @@ body.clover-app-body {
 }
 .clover-sidebar {
   position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
-  width: min(286px, 84vw);
+  width: min(272px, 82vw);
   background: var(--soft);
   border-right: 1px solid var(--line);
   display: flex; flex-direction: column; min-height: 0;
@@ -93,50 +86,27 @@ body.clover-app-body {
   pointer-events: auto;
 }
 .clover-sidebar__top {
-  padding: 0.8rem 0.85rem;
+  padding: 0.85rem 0.9rem;
   border-bottom: 1px solid var(--line);
-  position: relative;
 }
-.clover-model-dropdown { position: relative; width: 100%; }
-.clover-model-trigger {
+.clover-model-badge {
   width: 100%; background: var(--surface); color: var(--ink);
   border: 1px solid var(--line-2); border-radius: var(--radius-pill);
-  padding: 0.52rem 0.85rem; font: inherit; font-size: 0.85rem; font-weight: 650;
-  cursor: pointer; display: inline-flex; align-items: center; justify-content: space-between;
-  gap: 0.5rem; box-shadow: var(--shadow-xs); text-align: left;
+  padding: 0.5rem 0.85rem; font-size: 0.86rem; font-weight: 650;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: var(--shadow-xs);
 }
-.clover-model-trigger__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.clover-model-trigger__chev { font-size: 0.78rem; color: var(--accent); }
-.clover-model-menu {
-  position: absolute; top: calc(100% + 0.4rem); left: 0; right: 0; z-index: 120;
-  background: var(--surface); border: 1px solid var(--line-2); border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(19, 32, 24, 0.16); padding: 0.38rem;
-  display: flex; flex-direction: column; gap: 0.28rem;
+.clover-model-badge span:last-child {
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+  padding: 0.1rem 0.45rem; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line);
 }
-.clover-model-option {
-  width: 100%; border: 1px solid transparent; background: transparent;
-  border-radius: 9px; padding: 0.52rem 0.65rem; text-align: left; font: inherit;
-  cursor: pointer; display: flex; flex-direction: column; gap: 0.18rem;
-}
-.clover-model-option.is-selected { background: var(--accent-tint); border-color: var(--accent-line); }
-.clover-model-option__head {
-  width: 100%; display: flex; align-items: center; justify-content: space-between;
-  font-size: 0.82rem; font-weight: 700; color: var(--ink);
-}
-.clover-model-option__badge {
-  font-size: 0.64rem; font-weight: 700; text-transform: uppercase;
-  padding: 0.1rem 0.4rem; border-radius: 999px;
-  background: var(--soft); color: var(--accent); border: 1px solid var(--accent-line);
-}
-.clover-model-option__meta { font-size: 0.72rem; color: var(--ink-2); line-height: 1.32; }
-.clover-model-option__speed { font-size: 0.7rem; font-weight: 650; color: var(--warn); line-height: 1.32; }
-
 .clover-sidebar__label-row {
   padding: 0.65rem 0.85rem 0.3rem 0.95rem;
   display: flex; align-items: center; justify-content: space-between;
 }
 .clover-sidebar__label-text {
-  font-size: 0.71rem; font-weight: 700; color: var(--muted);
+  font-size: 0.72rem; font-weight: 700; color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.08em;
 }
 .clover-sessions-plus-btn {
@@ -155,7 +125,7 @@ body.clover-app-body {
 .clover-session-row.is-active { background: var(--surface); border-color: var(--accent-line); box-shadow: var(--shadow-xs); }
 .clover-session-select {
   flex: 1; min-width: 0; text-align: left; background: transparent; border: 0;
-  padding: 0.42rem 0.35rem; font: inherit; font-size: 0.86rem; color: var(--ink-2);
+  padding: 0.42rem 0.35rem; font: inherit; font-size: 0.87rem; color: var(--ink-2);
   cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .clover-session-row.is-active .clover-session-select { color: var(--accent-hover); font-weight: 650; }
@@ -164,79 +134,48 @@ body.clover-app-body {
   color: var(--muted); font-size: 0.98rem; font-weight: 650; cursor: pointer;
 }
 
-.clover-sidebar__footer {
-  padding: 0.65rem 0.8rem; border-top: 1px solid var(--line);
-  background: var(--surface-tint); font-size: 0.74rem; color: var(--ink-2);
-}
-.clover-lock-badge {
-  display: flex; align-items: center; gap: 0.4rem;
-  font-weight: 650; color: var(--accent-hover); margin-bottom: 0.2rem;
-}
-
 /* Main Area */
 .clover-main {
   flex: 1; min-width: 0; min-height: 0;
   display: flex; flex-direction: column; background: var(--bg);
 }
 .clover-topbar {
-  padding: 0.52rem 0.78rem; border-bottom: 1px solid var(--line);
+  padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line);
   background: var(--glass); backdrop-filter: blur(12px);
-  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  display: flex; align-items: center; justify-content: space-between;
 }
-.clover-topbar__left { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.clover-topbar__left { display: flex; align-items: center; gap: 0.58rem; }
 .clover-sidebar-toggle {
   width: 34px; height: 34px; border-radius: var(--radius-xs);
   border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2);
-  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .clover-topbar__brand {
-  display: inline-flex; align-items: center; gap: 0.42rem;
-  font-family: var(--serif); font-weight: 600; font-size: 1.02rem; color: var(--ink);
-  text-decoration: none; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-family: var(--serif); font-weight: 600; font-size: 1.06rem; color: var(--ink);
 }
-.clover-topbar__brand svg { width: 22px; height: 22px; flex-shrink: 0; }
-.clover-topbar__right { display: flex; align-items: center; gap: 0.38rem; flex-shrink: 0; }
-
-.clover-perm-btn {
-  display: inline-flex; align-items: center; gap: 0.3rem;
-  padding: 0.26rem 0.58rem; border-radius: var(--radius-pill);
-  border: 1px solid var(--accent-line); background: var(--accent-soft);
-  color: var(--accent-hover); font: inherit; font-size: 0.72rem; font-weight: 650;
-  cursor: pointer; white-space: nowrap;
-}
-.clover-cpu-pill {
-  display: inline-flex; align-items: center; gap: 0.32rem;
-  font-size: 0.69rem; font-weight: 650; line-height: 1.2;
-  padding: 0.24rem 0.52rem; border-radius: var(--radius-pill);
-  background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-line);
-  white-space: nowrap;
-}
-.clover-cpu-pill::before {
-  content: ""; width: 6px; height: 6px; border-radius: 50%;
-  background: #1b5e46; flex-shrink: 0;
-}
-.clover-cpu-pill.is-online {
-  background: var(--accent-soft); color: var(--accent-hover); border-color: var(--accent-line);
-}
+.clover-topbar__brand svg { width: 22px; height: 22px; }
 
 /* Stream */
 .clover-stream {
   flex: 1 1 auto; min-height: 0; overflow-y: auto;
-  padding: 0.85rem 0.72rem 0.65rem;
+  padding: 1rem 0.85rem 0.75rem;
   display: flex; flex-direction: column; align-items: center;
 }
 .clover-stream__inner {
-  width: min(820px, 100%);
-  display: flex; flex-direction: column; gap: 0.95rem;
+  width: min(780px, 100%);
+  display: flex; flex-direction: column; gap: 1rem;
 }
 .k3-msg {
-  max-width: 94%; padding: 0.82rem 1.0rem; border-radius: var(--radius);
-  line-height: 1.58; font-size: 0.94rem; word-wrap: break-word;
+  max-width: 92%; padding: 0.85rem 1.05rem; border-radius: var(--radius);
+  line-height: 1.6; font-size: 0.95rem; word-wrap: break-word;
 }
 .k3-msg p { margin: 0 0 0.55rem 0; color: inherit; }
 .k3-msg p:last-child { margin-bottom: 0; }
-.k3-msg ul { margin: 0.3rem 0 0.55rem 1.15rem; padding: 0; }
-.k3-msg li { margin-bottom: 0.3rem; }
+.k3-msg code {
+  font-family: var(--mono); font-size: 0.86em;
+  background: var(--soft); padding: 0.1rem 0.32rem; border-radius: 5px;
+}
 .k3-msg--user {
   align-self: flex-end; background: var(--accent); color: #fff;
   border-bottom-right-radius: 4px; box-shadow: var(--shadow-xs);
@@ -248,91 +187,90 @@ body.clover-app-body {
 }
 .k3-bot-turn {
   align-self: flex-start; display: flex; flex-direction: column;
-  align-items: flex-start; max-width: 95%; width: auto;
+  align-items: flex-start; max-width: 92%; width: auto;
 }
 .k3-bot-turn > .k3-msg { max-width: 100%; }
 
-.k3-agent-trace {
-  margin-bottom: 0.5rem; padding: 0.38rem 0.6rem;
-  background: var(--accent-tint); border: 1px solid var(--accent-line);
-  border-radius: var(--radius-xs); font-size: 0.74rem; color: var(--ink-2);
-  display: flex; flex-wrap: wrap; gap: 0.3rem 0.55rem; align-items: center;
-}
-.k3-agent-pill { font-weight: 700; color: var(--accent-hover); }
-
-.k3-perm-prompt-card {
-  margin-top: 0.55rem; padding: 0.6rem 0.75rem;
-  background: var(--warn-soft); border: 1px solid var(--warn-line);
-  border-radius: var(--radius-xs); font-size: 0.82rem; color: var(--ink);
-  display: flex; flex-direction: column; gap: 0.45rem;
-}
-.k3-perm-allow-btn {
-  align-self: flex-start; background: var(--accent); color: #fff;
-  border: 1px solid var(--accent); border-radius: var(--radius-pill);
-  padding: 0.34rem 0.85rem; font: inherit; font-size: 0.78rem; font-weight: 650;
-  cursor: pointer;
-}
-
 .k3-figure {
-  margin: 0.55rem 0; padding: 0.5rem; background: var(--soft);
+  margin: 0.55rem 0 0.2rem; padding: 0.45rem; background: var(--soft);
   border: 1px solid var(--line-2); border-radius: var(--radius-sm); text-align: center;
 }
 .k3-figure svg, .k3-figure img { max-width: 100%; height: auto; border-radius: 7px; display: block; margin: 0 auto; }
-.k3-audio-player { display: block; width: 100%; max-width: 310px; height: 38px; margin: 0.35rem auto; }
+.k3-audio-player { display: block; width: 100%; max-width: 300px; height: 38px; margin: 0.4rem auto 0.1rem; }
 
 .k3-below-actions {
-  margin-top: 0.25rem; padding-left: 0.2rem;
-  display: flex; align-items: center; gap: 0.25rem; color: var(--muted);
+  margin-top: 0.24rem; padding-left: 0.18rem;
+  display: flex; align-items: center; gap: 0.22rem; color: var(--muted);
 }
 .k3-icon-action {
   width: 28px; height: 28px; border-radius: 6px; border: 0;
   background: transparent; color: var(--muted); cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; padding: 0;
 }
-.k3-icon-action.is-active { color: var(--accent); }
 .k3-icon-action svg { width: 15px; height: 15px; }
 
-/* Composer */
+@keyframes clover-dot-slow {
+  0%, 20%  { opacity: 0.22; transform: translateY(0); }
+  50%      { opacity: 1; transform: translateY(-1.5px); }
+  80%, 100%{ opacity: 0.22; transform: translateY(0); }
+}
+.clover-dots-loader {
+  display: inline-flex; align-items: center; gap: 0.18rem;
+  font-size: 1.3rem; font-weight: 700; line-height: 1; color: var(--ink-2);
+  padding: 0.05rem 0.2rem; letter-spacing: 0.08em;
+}
+.clover-dots-loader span { display: inline-block; animation: clover-dot-slow 1.8s ease-in-out infinite; }
+.clover-dots-loader span:nth-child(2) { animation-delay: 0.3s; }
+.clover-dots-loader span:nth-child(3) { animation-delay: 0.6s; }
+.clover-dots-loader span:nth-child(4) { animation-delay: 0.9s; }
+
+/* Composer with Output Type Tabs Directly Above the Message Box */
 .clover-composer-wrap {
   flex: 0 0 auto; width: 100%;
-  padding: 0.45rem 0.65rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.45rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line); background: var(--bg);
   display: flex; flex-direction: column; align-items: center;
 }
+.clover-composer-outer {
+  width: min(780px, 100%);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.38rem;
+}
+.clover-output-tabs {
+  display: inline-flex; align-items: center; gap: 0.22rem;
+  padding: 0.18rem; border-radius: 999px;
+  background: var(--soft); border: 1px solid var(--line);
+}
+.clover-output-tab {
+  background: transparent; color: var(--ink-2); border: 1px solid transparent;
+  border-radius: 999px; padding: 0.24rem 0.72rem; font: inherit; font-size: 0.78rem;
+  font-weight: 650; cursor: pointer; line-height: 1.2;
+}
+.clover-output-tab.is-active {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+
 .clover-composer-card {
-  width: min(820px, 100%); background: var(--surface);
-  border: 1px solid var(--line-2); border-radius: 15px;
+  width: 100%; background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: 16px;
   padding: 0.42rem 0.55rem; box-shadow: var(--shadow-sm);
 }
 .k3-preview-bar {
-  padding: 0.38rem 0.6rem; margin-bottom: 0.38rem;
+  padding: 0.36rem 0.55rem; margin-bottom: 0.35rem;
   background: var(--accent-soft); border: 1px solid var(--accent-line);
   border-radius: 9px; display: flex; align-items: center; justify-content: space-between;
   gap: 0.5rem; font-size: 0.78rem; color: var(--ink);
 }
 .k3-preview-bar__info { display: flex; align-items: center; gap: 0.45rem; overflow: hidden; }
-.k3-preview-bar img { width: 30px; height: 30px; object-fit: cover; border-radius: 5px; }
+.k3-preview-bar img { width: 28px; height: 28px; object-fit: cover; border-radius: 5px; }
 .k3-preview-bar button {
   background: var(--surface); border: 1px solid var(--line-2); border-radius: 6px;
-  padding: 0.2rem 0.5rem; font-size: 0.74rem; font-weight: 600; cursor: pointer;
+  padding: 0.18rem 0.48rem; font-size: 0.74rem; font-weight: 600; cursor: pointer;
 }
-
-.clover-output-tabs {
-  display: inline-flex; align-items: center; gap: 0.22rem; flex-wrap: wrap;
-  padding: 0.18rem; margin-bottom: 0.38rem; border-radius: 999px;
-  background: var(--soft); border: 1px solid var(--line);
-}
-.clover-output-tab {
-  background: transparent; color: var(--ink-2); border: 1px solid transparent;
-  border-radius: 999px; padding: 0.22rem 0.65rem; font: inherit; font-size: 0.75rem;
-  font-weight: 650; cursor: pointer; line-height: 1.2;
-}
-.clover-output-tab.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 .clover-composer-row { display: flex; align-items: flex-end; gap: 0.42rem; }
 .clover-composer-row textarea {
   flex: 1; min-width: 0; background: transparent; color: var(--ink); border: 0;
-  padding: 0.4rem 0.3rem; font: inherit; font-size: 0.96rem; resize: none;
+  padding: 0.42rem 0.32rem; font: inherit; font-size: 0.96rem; resize: none;
   min-height: 36px; max-height: 120px; line-height: 1.42;
 }
 .clover-composer-row textarea:focus { outline: none; }
@@ -341,13 +279,10 @@ body.clover-app-body {
   border: 1px solid var(--line-2); background: var(--soft); color: var(--ink-2);
   cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
 }
-.clover-composer-btn.is-listening {
-  border-color: var(--accent); background: var(--accent-soft); color: var(--accent-hover);
-}
 .clover-send-btn {
   height: 36px; border-radius: 10px; border: 1px solid var(--accent);
-  background: var(--accent); color: #fff; font: inherit; font-size: 0.84rem;
-  font-weight: 650; padding: 0 0.78rem; cursor: pointer;
+  background: var(--accent); color: #fff; font: inherit; font-size: 0.85rem;
+  font-weight: 650; padding: 0 0.82rem; cursor: pointer;
   display: inline-flex; align-items: center; gap: 0.35rem;
 }
 .clover-send-icon { width: 18px; height: 18px; display: block; }
@@ -355,61 +290,6 @@ body.clover-app-body {
 .clover-send-icon__leaf { fill: #fff; stroke: #fff; stroke-width: 1.8; }
 @keyframes clover-leaf-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .clover-send-icon__wheel { transform-origin: 50px 44px; animation: clover-leaf-spin 9s linear infinite; }
-
-/* Permissions & Tools Modal */
-.clover-perm-modal-backdrop {
-  position: fixed; inset: 0; z-index: 220;
-  background: rgba(19, 32, 24, 0.48); backdrop-filter: blur(3px);
-  display: flex; align-items: flex-end; justify-content: center;
-}
-.clover-perm-sheet {
-  width: min(620px, 100%); max-height: 88vh; overflow-y: auto;
-  background: var(--surface); border-top: 1px solid var(--line-2);
-  border-radius: 20px 20px 0 0; padding: 1.1rem 1.05rem 1.35rem;
-  box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 0.75rem;
-}
-.clover-perm-sheet__head {
-  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
-  border-bottom: 1px solid var(--line); padding-bottom: 0.6rem;
-}
-.clover-perm-sheet__title {
-  font-family: var(--serif); font-size: 1.12rem; font-weight: 650; color: var(--ink);
-}
-.clover-perm-close {
-  border: 1px solid var(--line-2); background: var(--soft); color: var(--ink-2);
-  border-radius: 8px; padding: 0.25rem 0.6rem; font-size: 0.8rem; font-weight: 650; cursor: pointer;
-}
-.clover-perm-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-  padding: 0.62rem 0.75rem; background: var(--soft); border: 1px solid var(--line);
-  border-radius: 12px;
-}
-.clover-perm-row__info { flex: 1; min-width: 0; }
-.clover-perm-row__name { font-size: 0.88rem; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 0.4rem; }
-.clover-perm-row__desc { font-size: 0.75rem; color: var(--ink-2); line-height: 1.35; margin-top: 0.12rem; }
-.clover-perm-os-chip {
-  font-size: 0.64rem; font-weight: 700; padding: 0.08rem 0.38rem; border-radius: 999px;
-  background: var(--accent-soft); color: var(--accent-hover); border: 1px solid var(--accent-line);
-}
-.clover-perm-toggle {
-  position: relative; width: 46px; height: 26px; flex: 0 0 46px;
-  border-radius: 999px; border: 1px solid var(--line-2); background: #cbd5cb;
-  cursor: pointer; transition: background-color 0.18s ease; padding: 0;
-}
-.clover-perm-toggle::after {
-  content: ""; position: absolute; top: 2px; left: 2px;
-  width: 20px; height: 20px; border-radius: 50%; background: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.18s ease;
-}
-.clover-perm-toggle.is-on { background: var(--accent); border-color: var(--accent); }
-.clover-perm-toggle.is-on::after { transform: translateX(20px); }
-
-.clover-perm-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; }
-.clover-perm-grant-all {
-  flex: 1; background: var(--accent); color: #fff; border: 1px solid var(--accent);
-  border-radius: var(--radius-pill); padding: 0.55rem 0.9rem; font: inherit;
-  font-size: 0.84rem; font-weight: 650; cursor: pointer; text-align: center;
-}
 </style>
 </head>
 <body class="clover-app-body">
@@ -424,49 +304,16 @@ body.clover-app-body {
   <div class="clover-sidebar-backdrop" id="clover-sidebar-backdrop" onclick="k3CloseMobileSidebar()"></div>
   <aside class="clover-sidebar" id="clover-sidebar" aria-label="Chat sessions">
     <div class="clover-sidebar__top">
-      <div class="clover-model-dropdown" id="clover-model-dropdown">
-        <button type="button" class="clover-model-trigger" id="clover-model-trigger" onclick="k3ToggleModelMenu(event)">
-          <span class="clover-model-trigger__name" id="clover-model-trigger-label">Liquid LFM3-Omni 1.7B</span>
-          <span class="clover-model-trigger__chev">&#9662;</span>
-        </button>
-        <div class="clover-model-menu" id="clover-model-menu" hidden>
-          <button type="button" class="clover-model-option is-selected" data-model-key="lfm3-1.7b" onclick="k3OnModelChanged('lfm3-1.7b')">
-            <div class="clover-model-option__head">
-              <span>Liquid LFM3-Omni 1.7B</span>
-              <span class="clover-model-option__badge">S23 Exclusive &bull; Local</span>
-            </div>
-            <div class="clover-model-option__meta">24-Layer Tri-Hybrid &bull; 128K Vocab &bull; 1.66 GiB 4-Bit On-Device</div>
-            <div class="clover-model-option__meta">Snapdragon 8 Gen 2 NEON &bull; 7-Layer Clover Stack</div>
-            <div class="clover-model-option__speed">Locked Exclusively to Clover AI Studio App</div>
-          </button>
-          <button type="button" class="clover-model-option" data-model-key="nemotron-3.5-super-vl" onclick="k3OnModelChanged('nemotron-3.5-super-vl')">
-            <div class="clover-model-option__head">
-              <span>Nemotron 3.5 Super VL</span>
-              <span class="clover-model-option__badge">Cloud API</span>
-            </div>
-            <div class="clover-model-option__meta">120B-A12B MoE &bull; 131K Vocab &bull; 1M Context</div>
-            <div class="clover-model-option__speed">Requires Internet Permission</div>
-          </button>
-          <button type="button" class="clover-model-option" data-model-key="kimi-k3" onclick="k3OnModelChanged('kimi-k3')">
-            <div class="clover-model-option__head">
-              <span>Kimi K3 2.78T MoE</span>
-              <span class="clover-model-option__badge">Cloud Deep</span>
-            </div>
-            <div class="clover-model-option__meta">93-Layer 2.78T MoE &bull; 163.8K Vocab</div>
-            <div class="clover-model-option__speed">Requires Internet Permission</div>
-          </button>
-        </div>
+      <div class="clover-model-badge">
+        <span>Liquid LFM3-Omni</span>
+        <span>On-Device</span>
       </div>
     </div>
     <div class="clover-sidebar__label-row">
       <span class="clover-sidebar__label-text">Sessions</span>
-      <button type="button" class="clover-sessions-plus-btn" onclick="k3ResetChat()" title="New session">+</button>
+      <button type="button" class="clover-sessions-plus-btn" onclick="k3ResetChat()" title="New chat">+</button>
     </div>
     <div class="clover-session-list" id="k3-session-list"></div>
-    <div class="clover-sidebar__footer">
-      <div class="clover-lock-badge">🔒 App-Exclusive S23 AI Engine</div>
-      <div>Local LFM3-Omni 7-Layer stack only responds to <code>ai.clover.studio</code>.</div>
-    </div>
   </aside>
 
   <section class="clover-main">
@@ -487,246 +334,81 @@ body.clover-app-body {
             <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>
             <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
           </svg>
-          Clover AI Studio
+          Clover
         </span>
-      </div>
-      <div class="clover-topbar__right">
-        <button type="button" class="clover-perm-btn" onclick="k3OpenPermissionsSheet()">
-          <span>🛡️ Permissions</span>
-        </button>
-        <span class="clover-cpu-pill is-online" id="clover-cpu-pill">S23 On-Device &middot; 7L</span>
       </div>
     </div>
 
     <div class="clover-stream" id="clover-stream-scroller">
       <div class="clover-stream__inner" id="k3-chat-log" aria-live="polite">
         <div class="k3-msg k3-msg--bot">
-          <p>Hi I am Clover running natively on your <strong>Samsung Galaxy S23</strong> (Snapdragon 8 Gen 2 &bull; 24-Layer 4-Bit LFM3-Omni + all 6 Clover layers). How can I help you today?</p>
+          <p>Hi I am Clover, How can I help you today?</p>
         </div>
       </div>
     </div>
 
     <div class="clover-composer-wrap">
-      <div class="clover-composer-card">
-        <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
-          <div class="k3-preview-bar__info">
-            <img id="k3-img-preview-thumb" src="" alt="Preview" hidden>
-            <span id="k3-img-preview-name">Attachment ready</span>
-          </div>
-          <button type="button" onclick="k3ClearAttachments()">Remove</button>
-        </div>
-        <div class="clover-output-tabs" id="k3-output-tabs" role="tablist">
+      <div class="clover-composer-outer">
+        <div class="clover-output-tabs" id="k3-output-tabs" role="tablist" aria-label="Output type">
           <button type="button" class="clover-output-tab is-active" data-output-type="text" onclick="k3OnOutputTypeChanged('text')">Text</button>
           <button type="button" class="clover-output-tab" data-output-type="image" onclick="k3OnOutputTypeChanged('image')">Image</button>
           <button type="button" class="clover-output-tab" data-output-type="video" onclick="k3OnOutputTypeChanged('video')">Video</button>
           <button type="button" class="clover-output-tab" data-output-type="audio" onclick="k3OnOutputTypeChanged('audio')">Audio</button>
         </div>
-        <div class="clover-composer-row">
-          <input type="file" id="k3-file-input" multiple hidden onchange="k3OnFilesSelected(event)">
-          <button type="button" class="clover-composer-btn" id="k3-attach-btn" onclick="k3TriggerFileAttach()" title="Attach files, images, video, audio, code">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-            </svg>
-          </button>
-          <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover on S23..."></textarea>
-          <button type="button" class="clover-composer-btn" id="k3-voice-btn" onclick="k3ToggleVoice()" title="Voice conversation">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-              <line x1="12" y1="19" x2="12" y2="23"></line>
-              <line x1="8" y1="23" x2="16" y2="23"></line>
-            </svg>
-          </button>
-          <button type="button" class="clover-send-btn" id="k3-send-btn" onclick="k3SendPrompt()">
-            <svg class="clover-send-icon" viewBox="0 0 100 100" aria-hidden="true">
-              <path class="clover-send-icon__stem" d="M50 48C50 68 50 80 50 95"/>
-              <g class="clover-send-icon__wheel">
-                <use class="clover-send-icon__leaf" href="#clover-leaf"/>
-                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(72 50 44)"/>
-                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(144 50 44)"/>
-                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(216 50 44)"/>
-                <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(288 50 44)"/>
-              </g>
-            </svg>
-            <span>Send</span>
-          </button>
+        <div class="clover-composer-card">
+          <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
+            <div class="k3-preview-bar__info">
+              <img id="k3-img-preview-thumb" src="" alt="Preview" hidden>
+              <span id="k3-img-preview-name">Attachment ready</span>
+            </div>
+            <button type="button" onclick="k3ClearAttachments()">Remove</button>
+          </div>
+          <div class="clover-composer-row">
+            <input type="file" id="k3-file-input" multiple hidden onchange="k3OnFilesSelected(event)">
+            <button type="button" class="clover-composer-btn" id="k3-attach-btn" onclick="k3TriggerFileAttach()" title="Attach files">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+              </svg>
+            </button>
+            <textarea id="k3-prompt-in" rows="1" placeholder="Message Clover..."></textarea>
+            <button type="button" class="clover-composer-btn" id="k3-voice-btn" onclick="k3ToggleVoice()" title="Voice input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+            <button type="button" class="clover-send-btn" id="k3-send-btn" onclick="k3SendPrompt()">
+              <svg class="clover-send-icon" viewBox="0 0 100 100" aria-hidden="true">
+                <path class="clover-send-icon__stem" d="M50 48C50 68 50 80 50 95"/>
+                <g class="clover-send-icon__wheel">
+                  <use class="clover-send-icon__leaf" href="#clover-leaf"/>
+                  <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(72 50 44)"/>
+                  <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(144 50 44)"/>
+                  <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(216 50 44)"/>
+                  <use class="clover-send-icon__leaf" href="#clover-leaf" transform="rotate(288 50 44)"/>
+                </g>
+              </svg>
+              <span>Send</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </section>
 </main>
 
-<!-- Interactive Permissions & Tools Access Control Sheet -->
-<div class="clover-perm-modal-backdrop" id="clover-perm-modal" hidden onclick="if(event.target===this)k3ClosePermissionsSheet()">
-  <div class="clover-perm-sheet" role="dialog" aria-label="Permissions and Tools Access">
-    <div class="clover-perm-sheet__head">
-      <span class="clover-perm-sheet__title">🛡️ Permissions &amp; Tools Access</span>
-      <button type="button" class="clover-perm-close" onclick="k3ClosePermissionsSheet()">Done</button>
-    </div>
-    <div style="font-size:0.78rem;color:var(--ink-2);">
-      Grant or revoke access to device capabilities and Clover 7-layer tools whenever a task needs them. The on-device S23 engine is cryptographically locked to <strong>Clover AI Studio (<code>ai.clover.studio</code>)</strong>.
-    </div>
-
-    <div class="clover-perm-row">
-      <div class="clover-perm-row__info">
-        <div class="clover-perm-row__name">🌐 Internet &amp; Live Web Search <span class="clover-perm-os-chip" id="os-chip-internet">Allowed</span></div>
-        <div class="clover-perm-row__desc">Allow Layer 2 live web, Wikipedia, and arXiv retrieval &amp; cloud model fallback.</div>
-      </div>
-      <button type="button" class="clover-perm-toggle is-on" id="perm-btn-internet" onclick="k3TogglePermission('internet')"></button>
-    </div>
-
-    <div class="clover-perm-row">
-      <div class="clover-perm-row__info">
-        <div class="clover-perm-row__name">🎙️ Microphone &amp; Duplex Voice <span class="clover-perm-os-chip" id="os-chip-microphone">OS Check</span></div>
-        <div class="clover-perm-row__desc">Allow microphone speech recognition, LFM3-Omni Mel-80 audio analysis &amp; voice synthesis.</div>
-      </div>
-      <button type="button" class="clover-perm-toggle is-on" id="perm-btn-microphone" onclick="k3TogglePermission('microphone')"></button>
-    </div>
-
-    <div class="clover-perm-row">
-      <div class="clover-perm-row__info">
-        <div class="clover-perm-row__name">📁 Files &amp; Device Storage <span class="clover-perm-os-chip" id="os-chip-files">OS Check</span></div>
-        <div class="clover-perm-row__desc">Allow attaching documents, code, audio, video, and reading files on your phone.</div>
-      </div>
-      <button type="button" class="clover-perm-toggle is-on" id="perm-btn-files" onclick="k3TogglePermission('files')"></button>
-    </div>
-
-    <div class="clover-perm-row">
-      <div class="clover-perm-row__info">
-        <div class="clover-perm-row__name">📷 Camera, Vision &amp; Video EVS <span class="clover-perm-os-chip" id="os-chip-camera_vision">OS Check</span></div>
-        <div class="clover-perm-row__desc">Allow LFM3-Omni 512&times;512 ShortConv Vision, 50% EVS Video pruning &amp; visual synthesis.</div>
-      </div>
-      <button type="button" class="clover-perm-toggle is-on" id="perm-btn-camera_vision" onclick="k3TogglePermission('camera_vision')"></button>
-    </div>
-
-    <div class="clover-perm-row">
-      <div class="clover-perm-row__info">
-        <div class="clover-perm-row__name">⚙️ Python &amp; Tool Execution <span class="clover-perm-os-chip">On-Device</span></div>
-        <div class="clover-perm-row__desc">Allow Layer 2 symbolic math solver &amp; Layer 6 Generative Code Compiler (TD(0)).</div>
-      </div>
-      <button type="button" class="clover-perm-toggle is-on" id="perm-btn-code_execution" onclick="k3TogglePermission('code_execution')"></button>
-    </div>
-
-    <div class="clover-perm-row">
-      <div class="clover-perm-row__info">
-        <div class="clover-perm-row__name">🧠 Memory &amp; Ontology Graphs <span class="clover-perm-os-chip">On-Device</span></div>
-        <div class="clover-perm-row__desc">Allow Layer 4 Relational Memory Graph &amp; Layer 5 Symbolic Ontology GraphRAG.</div>
-      </div>
-      <button type="button" class="clover-perm-toggle is-on" id="perm-btn-memory_ontology" onclick="k3TogglePermission('memory_ontology')"></button>
-    </div>
-
-    <div class="clover-perm-actions">
-      <button type="button" class="clover-perm-grant-all" onclick="k3GrantAllPermissions()">Allow All OS &amp; Tool Permissions</button>
-    </div>
-  </div>
-</div>
-
 <script>
 (function () {
   'use strict';
 
-  var STORAGE_SESSIONS_KEY = 'clover_s23_studio_sessions_v1';
-  var STORAGE_PERMS_KEY = 'clover_s23_studio_permissions_v1';
-  var selectedModel = 'lfm3-1.7b';
+  var STORAGE_SESSIONS_KEY = 'clover_s23_omni_sessions_v2';
   var selectedOutputType = 'text';
   var attachedImageB64 = null;
   var attachedFiles = [];
-  var lastPromptText = '';
   var wasVoiceInput = false;
 
-  var permissionsState = {
-    internet: true,
-    microphone: true,
-    files: true,
-    camera_vision: true,
-    code_execution: true,
-    memory_ontology: true
-  };
-
-  try {
-    var savedPerms = localStorage.getItem(STORAGE_PERMS_KEY);
-    if (savedPerms) {
-      var parsedPerms = JSON.parse(savedPerms);
-      for (var k in permissionsState) {
-        if (typeof parsedPerms[k] === 'boolean') permissionsState[k] = parsedPerms[k];
-      }
-    }
-  } catch (e) {}
-
-  function savePermissionsState() {
-    try { localStorage.setItem(STORAGE_PERMS_KEY, JSON.stringify(permissionsState)); } catch (e) {}
-    for (var k in permissionsState) {
-      var btn = document.getElementById('perm-btn-' + k);
-      if (btn) {
-        if (permissionsState[k]) btn.classList.add('is-on');
-        else btn.classList.remove('is-on');
-      }
-    }
-    if (window.CloverAndroidBridge && window.CloverAndroidBridge.callLocalS23Api) {
-      setTimeout(function () {
-        try {
-          window.CloverAndroidBridge.callLocalS23Api('POST', '/api/permissions', JSON.stringify({ permissions: permissionsState }));
-        } catch (e) {}
-      }, 10);
-    }
-  }
-
-  window.k3RefreshOsPermissionBadges = function () {
-    if (!window.CloverAndroidBridge || !window.CloverAndroidBridge.getOsPermissionsStatus) return;
-    try {
-      var st = JSON.parse(window.CloverAndroidBridge.getOsPermissionsStatus());
-      var map = { microphone: st.microphone, camera_vision: st.camera_vision, files: st.files };
-      for (var k in map) {
-        var chip = document.getElementById('os-chip-' + k);
-        if (chip) {
-          chip.textContent = map[k] ? 'OS Granted' : 'Tap to Allow OS';
-        }
-      }
-    } catch (e) {}
-  };
-
-  window.k3OpenPermissionsSheet = function () {
-    savePermissionsState();
-    window.k3RefreshOsPermissionBadges();
-    document.getElementById('clover-perm-modal').hidden = false;
-  };
-
-  window.k3ClosePermissionsSheet = function () {
-    document.getElementById('clover-perm-modal').hidden = true;
-  };
-
-  window.k3TogglePermission = function (permKey) {
-    permissionsState[permKey] = !permissionsState[permKey];
-    if (permissionsState[permKey] && window.CloverAndroidBridge && window.CloverAndroidBridge.requestOsPermission) {
-      if (permKey === 'microphone' || permKey === 'camera_vision' || permKey === 'files') {
-        window.CloverAndroidBridge.requestOsPermission(permKey);
-      }
-    }
-    savePermissionsState();
-  };
-
-  window.k3GrantAllPermissions = function () {
-    for (var k in permissionsState) permissionsState[k] = true;
-    if (window.CloverAndroidBridge && window.CloverAndroidBridge.requestOsPermission) {
-      window.CloverAndroidBridge.requestOsPermission('all');
-    }
-    savePermissionsState();
-    window.k3RefreshOsPermissionBadges();
-  };
-
-  window.k3AllowPermissionAndRetry = function (permKey) {
-    permissionsState[permKey] = true;
-    if (window.CloverAndroidBridge && window.CloverAndroidBridge.requestOsPermission) {
-      window.CloverAndroidBridge.requestOsPermission(permKey);
-    }
-    savePermissionsState();
-    if (lastPromptText) {
-      document.getElementById('k3-prompt-in').value = lastPromptText;
-      window.k3SendPrompt();
-    }
-  };
-
-  // Sessions Store
   var sessions = { currentId: '', order: [], map: {} };
   function loadSessions() {
     try {
@@ -736,7 +418,7 @@ body.clover-app-body {
     if (!sessions.currentId || !sessions.map[sessions.currentId]) {
       var id = 'sess_' + Date.now();
       sessions = { currentId: id, order: [id], map: {} };
-      sessions.map[id] = { id: id, title: 'New S23 Chat', messages: [] };
+      sessions.map[id] = { id: id, title: 'New chat', messages: [] };
       saveSessions();
     }
     renderSessionList();
@@ -756,7 +438,7 @@ body.clover-app-body {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'clover-session-select';
-      btn.textContent = s.title || 'New S23 Chat';
+      btn.textContent = s.title || 'New chat';
       btn.onclick = function () {
         sessions.currentId = id;
         saveSessions();
@@ -774,7 +456,7 @@ body.clover-app-body {
         sessions.order = sessions.order.filter(function (x) { return x !== id; });
         if (!sessions.order.length) {
           var nid = 'sess_' + Date.now();
-          sessions.map[nid] = { id: nid, title: 'New S23 Chat', messages: [] };
+          sessions.map[nid] = { id: nid, title: 'New chat', messages: [] };
           sessions.order = [nid];
           sessions.currentId = nid;
         } else if (sessions.currentId === id) {
@@ -793,8 +475,7 @@ body.clover-app-body {
     var logEl = document.getElementById('k3-chat-log');
     var cur = sessions.map[sessions.currentId];
     if (!cur || !cur.messages || !cur.messages.length) {
-      logEl.innerHTML =
-        '<div class="k3-msg k3-msg--bot"><p>Hi I am Clover running natively on your <strong>Samsung Galaxy S23</strong> (Snapdragon 8 Gen 2 &bull; 24-Layer 4-Bit LFM3-Omni + all 6 Clover layers). How can I help you today?</p></div>';
+      logEl.innerHTML = '<div class="k3-msg k3-msg--bot"><p>Hi I am Clover, How can I help you today?</p></div>';
       return;
     }
     logEl.innerHTML = '';
@@ -810,7 +491,7 @@ body.clover-app-body {
 
   window.k3ResetChat = function () {
     var id = 'sess_' + Date.now();
-    sessions.map[id] = { id: id, title: 'New S23 Chat', messages: [] };
+    sessions.map[id] = { id: id, title: 'New chat', messages: [] };
     sessions.order.unshift(id);
     sessions.currentId = id;
     saveSessions();
@@ -835,27 +516,6 @@ body.clover-app-body {
     document.getElementById('clover-sidebar-backdrop').classList.remove('is-open');
   };
 
-  window.k3ToggleModelMenu = function (ev) {
-    ev.stopPropagation();
-    var menu = document.getElementById('clover-model-menu');
-    menu.hidden = !menu.hidden;
-  };
-  window.k3OnModelChanged = function (modelKey) {
-    selectedModel = modelKey;
-    var labels = {
-      'lfm3-1.7b': 'Liquid LFM3-Omni 1.7B',
-      'nemotron-3.5-super-vl': 'Nemotron 3.5 Super VL',
-      'kimi-k3': 'Kimi K3 2.78T MoE'
-    };
-    document.getElementById('clover-model-trigger-label').textContent = labels[modelKey] || modelKey;
-    var opts = document.querySelectorAll('.clover-model-option');
-    opts.forEach(function (o) {
-      if (o.getAttribute('data-model-key') === modelKey) o.classList.add('is-selected');
-      else o.classList.remove('is-selected');
-    });
-    document.getElementById('clover-model-menu').hidden = true;
-  };
-
   window.k3OnOutputTypeChanged = function (outType) {
     selectedOutputType = outType;
     var tabs = document.querySelectorAll('.clover-output-tab');
@@ -866,10 +526,6 @@ body.clover-app-body {
   };
 
   window.k3TriggerFileAttach = function () {
-    if (!permissionsState.files) {
-      k3OpenPermissionsSheet();
-      return;
-    }
     if (window.CloverAndroidBridge && window.CloverAndroidBridge.requestOsPermission) {
       window.CloverAndroidBridge.requestOsPermission('files');
     }
@@ -931,10 +587,6 @@ body.clover-app-body {
   };
 
   window.k3ToggleVoice = function () {
-    if (!permissionsState.microphone) {
-      k3OpenPermissionsSheet();
-      return;
-    }
     if (window.CloverAndroidBridge && window.CloverAndroidBridge.startNativeVoiceRecognition) {
       window.CloverAndroidBridge.startNativeVoiceRecognition();
       return;
@@ -944,8 +596,7 @@ body.clover-app-body {
       var rec = new SR();
       rec.lang = 'en-US';
       rec.onresult = function (e) {
-        var txt = e.results[0][0].transcript;
-        window.k3OnNativeVoiceResult(txt);
+        window.k3OnNativeVoiceResult(e.results[0][0].transcript);
       };
       rec.start();
     }
@@ -1027,8 +678,7 @@ body.clover-app-body {
     var inp = document.getElementById('k3-prompt-in');
     var prompt = String(inp.value || '').trim();
     if (!prompt && !attachedImageB64 && !attachedFiles.length) return;
-    if (!prompt) prompt = 'Analyze the attached file on Samsung Galaxy S23.';
-    lastPromptText = prompt;
+    if (!prompt) prompt = 'Describe the attached file.';
     inp.value = '';
 
     var reqOutType = selectedOutputType;
@@ -1049,16 +699,15 @@ body.clover-app-body {
     var loaderDiv = document.createElement('div');
     loaderDiv.className = 'k3-bot-turn';
     loaderDiv.innerHTML =
-      '<div class="k3-msg k3-msg--bot"><p>Running 7-Layer Clover LFM3-Omni on Samsung S23...</p></div>';
+      '<div class="k3-msg k3-msg--bot"><div class="clover-dots-loader" role="status" aria-label="Loading"><span>.</span><span>.</span><span>.</span><span>.</span></div></div>';
     logEl.appendChild(loaderDiv);
     var scroller = document.getElementById('clover-stream-scroller');
     scroller.scrollTop = scroller.scrollHeight;
 
     var payload = {
       prompt: prompt,
-      model: selectedModel,
+      model: 'lfm3-1.7b',
       output_type: reqOutType,
-      permissions: permissionsState,
       image_b64: attachedImageB64,
       attached_files: attachedFiles,
       voice_input: wasVoiceInput
@@ -1069,20 +718,9 @@ body.clover-app-body {
 
     callS23EngineAsync('POST', '/api/chat', payload, function (err, res) {
       if (err || !res || res.error) {
-        var errMsg = (res && res.message) ? res.message : 'Local S23 engine busy or unreachable. Ensure s23_on_device_clover.py --serve is running.';
-        loaderDiv.innerHTML = '<div class="k3-msg k3-msg--bot"><p>' + errMsg + '</p></div>';
+        loaderDiv.innerHTML = '<div class="k3-msg k3-msg--bot"><p>Please wait a moment while the local LFM3-Omni model finishes starting up.</p></div>';
         return;
       }
-
-      var tools = (res.tools_used && res.tools_used.length) ? res.tools_used.join(' • ') : 'layer1_lfm3_4bit_c_neon';
-      var dm = res.dm_stats || {};
-      var traceHtml =
-        '<div class="k3-agent-trace">' +
-          '<span class="k3-agent-pill">Clover S23 7-Layer</span>' +
-          '<span>24L 4-Bit C: ' + (res.c_24_layer_4bit_ms || 0) + ' ms</span>' +
-          '<span>Tools: ' + tools + '</span>' +
-          '<span>LPDDR5X Hits: ' + (dm.tier2_lpddr5x_hits || 0) + ' • R4 Clean Drops: ' + (dm.r4_clean_drops || 0) + '</span>' +
-        '</div>';
 
       var bodyHtml = formatMarkdownReply(res.reply);
       if (res.visual_svg) {
@@ -1090,15 +728,6 @@ body.clover-app-body {
       }
       if (res.audio_wav_b64) {
         bodyHtml += '<audio class="k3-audio-player" controls autoplay src="' + res.audio_wav_b64 + '"></audio>';
-      }
-      if (res.permission_prompts && res.permission_prompts.length) {
-        res.permission_prompts.forEach(function (pp) {
-          bodyHtml +=
-            '<div class="k3-perm-prompt-card">' +
-              '<div><strong>🔒 ' + pp.label + ':</strong> ' + pp.reason + '</div>' +
-              '<button type="button" class="k3-perm-allow-btn" onclick="k3AllowPermissionAndRetry(\'' + pp.permission + '\')">Allow ' + pp.label + ' &amp; Run</button>' +
-            '</div>';
-        });
       }
 
       var actionsHtml =
@@ -1111,7 +740,7 @@ body.clover-app-body {
           '</button>' +
         '</div>';
 
-      var finalBotHtml = '<div class="k3-msg k3-msg--bot">' + traceHtml + bodyHtml + '</div>' + actionsHtml;
+      var finalBotHtml = '<div class="k3-msg k3-msg--bot">' + bodyHtml + '</div>' + actionsHtml;
       loaderDiv.innerHTML = finalBotHtml;
       curSess.messages.push({ role: 'bot', text: res.reply, html: finalBotHtml });
       saveSessions();
@@ -1123,18 +752,6 @@ body.clover-app-body {
     });
   };
 
-  function probeHealth() {
-    callS23EngineAsync('GET', '/api/health', null, function (err, data) {
-      var pill = document.getElementById('clover-cpu-pill');
-      if (!err && data && data.status === 'ready') {
-        pill.textContent = 'S23 Exclusive \u00b7 ' + (data.pinned_threads || 4) + 'T NEON Ready';
-        pill.classList.add('is-online');
-      } else {
-        pill.textContent = 'S23 Engine Starting...';
-      }
-    });
-  }
-
   document.getElementById('k3-prompt-in').addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -1143,8 +760,6 @@ body.clover-app-body {
   });
 
   loadSessions();
-  savePermissionsState();
-  probeHealth();
 })();
 </script>
 </body>
