@@ -2110,6 +2110,7 @@ class MultiGPUCloverCoordinator:
                     "reply_mbr8": text_mbr,
                     "media": media_items,
                     "plans": plans,
+                    "raw_decoded_gen": getattr(eng, "_last_decoded_gen", ""),
                     "tool_calls": tool_calls,
                     "k3_experts": k3_expert_meta,
                     "latent_steps": lat_steps,

@@ -2299,6 +2299,7 @@ class CloverK3AgentEngine:
             next_logits = out.logits[:, -1, :]
 
         decoded_gen = self.ha_tok.decode(gen_ids, skip_special_tokens=False).strip()
+        self._last_decoded_gen = decoded_gen
         if is_code_spec:
             code_body = decoded_gen.split("```")[0].strip("\r\n")
             if code_lang == "python":
