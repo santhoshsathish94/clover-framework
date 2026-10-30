@@ -11,7 +11,16 @@ ALIGNED_APK="$BUILD_DIR/CloverAIStudio-aligned.apk"
 FINAL_APK="$APP_DIR/CloverAIStudio.apk"
 
 rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR/gen" "$BUILD_DIR/classes" "$BUILD_DIR/dex"
+mkdir -p "$BUILD_DIR/gen" "$BUILD_DIR/classes" "$BUILD_DIR/dex" "$BUILD_DIR/src/ai/clover/studio"
+
+SECRET_FILE="$(dirname "$APP_DIR")/.app_secret"
+if [ ! -f "$SECRET_FILE" ]; then
+  python3 -c "import secrets; from pathlib import Path; p=Path('$SECRET_FILE'); p.write_text('s23-'+secrets.token_hex(32)+'\n'); p.chmod(0o600)"
+fi
+DEVICE_SECRET="$(tr -d '\r\n' < "$SECRET_FILE")"
+sed "s/__CLOVER_S23_DEVICE_SECRET__/$DEVICE_SECRET/g" \
+  "$APP_DIR/src/ai/clover/studio/MainActivity.java" \
+  > "$BUILD_DIR/src/ai/clover/studio/MainActivity.java"
 
 echo "[1/6] Compiling and linking Android resources with aapt2 + framework-res.apk..."
 aapt2 compile --dir "$APP_DIR/res" -o "$BUILD_DIR/res.zip"
@@ -23,13 +32,13 @@ aapt2 link \
   -o "$UNSIGNED_APK" \
   "$BUILD_DIR/res.zip"
 
-echo "[2/6] Compiling ai.clover.studio.MainActivity with javac (target 1.8)..."
+echo "[2/6] Compiling ai.clover.studio.MainActivity with javac (target 1.8) and per-device secret..."
 javac -source 1.8 -target 1.8 \
   -bootclasspath "$ANDROID_JAR" \
   -classpath "$ANDROID_JAR" \
   -d "$BUILD_DIR/classes" \
   "$BUILD_DIR/gen/ai/clover/studio/R.java" \
-  "$APP_DIR/src/ai/clover/studio/MainActivity.java"
+  "$BUILD_DIR/src/ai/clover/studio/MainActivity.java"
 
 echo "[3/6] Compiling classes to Dalvik bytecode (classes.dex) with d8..."
 CLASS_FILES=$(find "$BUILD_DIR/classes" -name "*.class")

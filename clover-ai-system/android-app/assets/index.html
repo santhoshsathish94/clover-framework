@@ -655,18 +655,7 @@ body.clover-app-body {
           );
           cb(null, JSON.parse(raw));
         } else {
-          fetch('http://127.0.0.1:8765' + endpoint, {
-            method: method,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Clover-App-Package': 'ai.clover.studio',
-              'X-Clover-App-Token': 'clover-ai-studio-s23-exclusive-v1-9f4e2a7c8b1d6035e4a9c2f7b8d1e604'
-            },
-            body: payloadObj ? JSON.stringify(payloadObj) : undefined
-          })
-            .then(function (r) { return r.json(); })
-            .then(function (d) { cb(null, d); })
-            .catch(function (err) { cb(err, null); });
+          cb(new Error('CloverAndroidBridge required'), null);
         }
       } catch (ex) {
         cb(ex, null);
@@ -723,12 +712,6 @@ body.clover-app-body {
       }
 
       var bodyHtml = formatMarkdownReply(res.reply);
-      if (res.visual_svg) {
-        bodyHtml += '<div class="k3-figure">' + res.visual_svg + '</div>';
-      }
-      if (res.audio_wav_b64) {
-        bodyHtml += '<audio class="k3-audio-player" controls autoplay src="' + res.audio_wav_b64 + '"></audio>';
-      }
 
       var actionsHtml =
         '<div class="k3-below-actions">' +

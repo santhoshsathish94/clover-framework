@@ -7,135 +7,129 @@
     "aarch64",
     ""
   ],
-  "pinned_s23_performance_threads": 3,
-  "setup_ms": 3700.69,
-  "measured_process_vm_rss_mb": 1793.81,
-  "single_token_decode_24_layers_on_s23": {
-    "decode_24_layer_4bit_ms": 1810.61,
-    "lm_head_128k_ms": 57.66,
-    "total_step_ms": 1868.27,
-    "trunk_24_layer_tokens_per_sec": 0.55,
-    "full_step_tokens_per_sec": 0.54,
-    "top1_token_id": 273,
-    "top1_max_logit": 9.4375
+  "active_threads": 3,
+  "setup_ms": 6577.17,
+  "measured_process_vm_rss_mb": 1872.07,
+  "honest_layer_audit_on_s23": {
+    "layer1_lfm3_24layer_4bit_c_neon_bfdot_sdot": "real_on_device (up to 512 prompt tokens, 72 generated tokens)",
+    "layer2_tools": "real_on_device (symbolic Python math solver + live web search; no PyTorch HybridAgent planner on phone)",
+    "layer3_decoder": "direct_lfm3_128k_bpe_lm_head (no PyTorch VQVAE/NCM renderer on phone)",
+    "layer4_memory_graph": "real_on_device (k3_memory_graph.py over memory_tree)",
+    "layer5_ontology_and_verifier": "real_on_device (CloverOntologyRetriever + CloverSymbolicVerifier.verify_source_grounding)",
+    "layer6_generative_compiler": "real_on_device (CloverPythonGenerativeCompiler compiling real user/model Python code blocks)",
+    "layer7_data_movement": "real_on_device (SpecMD Policy 3 + R4 Clean-Drop issuing OS madvise MADV_WILLNEED / MADV_DONTNEED)",
+    "fake_projections_or_templates": "none (all random matrices, fake video frames, and static SVG/WAV templates removed)"
   },
-  "layer1_to_7_text_ontology_memory_cycle": {
+  "chat_test": {
     "device": "localhost",
     "arch": "aarch64",
-    "model": "lfm3-omni-s23",
+    "model": "lfm3-1.7b-4bit-s23",
+    "exclusive_app_package": "ai.clover.studio",
+    "prompt": "What is the capital of Japan?",
+    "reply": "The capital of Japan is **Tokyo**.",
+    "output_type": "text",
+    "speak_with_android_tts": false,
+    "tools_used": [],
+    "layer6_compiler_report": null,
+    "input_tokens": 7,
+    "generated_tokens": 9,
+    "emitted_tokens": 9,
+    "all_token_ids_valid_in_128k_vocab": true,
+    "c_24_layer_4bit_ms": 5235.07,
+    "total_cycle_ms": 5282.45,
+    "dm_stats": {
+      "policy_id": 3,
+      "policy_name": "specmd_least_stale_r4_madvise",
+      "madvise_os_page_control": true,
+      "total_layer_requests": 240,
+      "tier1_sram_l3_hits": 78,
+      "tier2_lpddr5x_hits": 138,
+      "tier3_ufs4_fetches": 24,
+      "r4_clean_drops": 150,
+      "dirty_writebacks": 0
+    }
+  },
+  "grounded_ontology_memory_math_test": {
+    "device": "localhost",
+    "arch": "aarch64",
+    "model": "lfm3-1.7b-4bit-s23",
+    "exclusive_app_package": "ai.clover.studio",
     "prompt": "What is the wavelength for constructive interference in a thin film of refractive index 1.5 and thickness 100 nm at m=0, and how does Clover's per-layer cache partition fix flat hit rates?",
-    "reply": "[E1] Entity record\nSTEM_CONCEPT:STEM-THIN-FILM-INTERFERENCE: Thin-Film Interference with Single Phase Inversion (Optics)\nDescription: When light in air (n_air = 1.00) reflects normally off a thin film of oil (n_film = 1.50, thickness d = 500 nm) floating on water (n_water = 1.33), reflection at the top air->oil interface (n1 < n2) undergoes a 180-degree (pi, lambda/2) phase shift, while reflection at the bottom oil->water interface (n2 > n3, 1.50 > 1.33) has NO phase shift. Constructive interference (strongest reflection) therefore satisfies 2 * n_film * d = (m + 1/2) * lambda_air.\n\u2022 [MEM-CORR-PER-LAYER-PARTITION-002] (correction, epistemic=externally_verified): When a measurement shows a flat response across all settings of a parameter, suspect the structure being measured (global eviction across layers), not the effect: partitioning the same 51.7 GB cache per layer increased the hit rate from 23.3% to 48.0%.\n\u2022 [MEM-HYP-CACHE-DEAD-END-001] (hypothesis, epistemic=hypothesis): Mistaken initial hypothesis that expert caching is ineffective for Kimi K3 because varying cache capacity from 512 to 4096 produced a flat 23.3% hit rate (superseded by MEM-CORR-PER-LAYER-PARTITION-002).\n\u2022 [MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001] (concept, epistemic=externally_verified): When varying a capacity or budget parameter across a wide range yields a completely flat metric, suspect the structure being measured (such as shared-pool cyclic eviction across stages/layers or unallocated capacity) before concluding the underlying mechanism has no effect; test partitioning the same total budget per stage/layer.",
+    "reply": "When light in air (n_air = 1.00) reflects normally off a thin film of oil (n_film = 1.50, thickness d = 500 nm) floating on water (n_water = 1.33), reflection at the top air->oil interface (n1 < n2) undergoes a 180-degree (pi, lambda/2) phase shift, while reflection at the bottom oil->water interface (n2 > n3, 1.50 > 1.33) has NO phase shift. Constructive interference (strongest reflection) therefore satisfies 2 * n_film * d = (m + 1/2) * lambda_air.\n\nWhen a measurement shows a flat response across all settings of a parameter, suspect the structure being measured (global eviction across layers), not the effect: partitioning the same 51.7 GB cache per layer increased the hit rate from 23.3% to 48.0%.",
+    "output_type": "text",
+    "speak_with_android_tts": false,
     "tools_used": [
       "layer5_ontology_graphrag",
       "layer4_memory_graph"
     ],
+    "layer6_compiler_report": null,
     "input_tokens": 44,
-    "emitted_tokens": 466,
+    "generated_tokens": 28,
+    "emitted_tokens": 205,
     "all_token_ids_valid_in_128k_vocab": true,
-    "c_24_layer_4bit_ms": 30420.82,
-    "top1_next_token_id": 124900,
-    "top1_next_token_str": "<|im_end|>",
-    "top1_max_logit": 16.75,
-    "ncm_11_level_rms": [
-      4.2293,
-      3.60554,
-      3.07315,
-      2.60891,
-      2.22021,
-      1.8868,
-      1.60463,
-      1.36364,
-      1.15893,
-      0.98499,
-      0.83738
-    ],
-    "total_cycle_ms": 31690.75,
+    "c_24_layer_4bit_ms": 14281.17,
+    "total_cycle_ms": 14512.75,
     "dm_stats": {
       "policy_id": 3,
-      "policy_name": "specmd_least_stale_r4",
-      "total_layer_requests": 24,
-      "tier1_sram_l3_hits": 0,
-      "tier2_lpddr5x_hits": 0,
+      "policy_name": "specmd_least_stale_r4_madvise",
+      "madvise_os_page_control": true,
+      "total_layer_requests": 912,
+      "tier1_sram_l3_hits": 311,
+      "tier2_lpddr5x_hits": 577,
       "tier3_ufs4_fetches": 24,
-      "r4_clean_drops": 12,
+      "r4_clean_drops": 589,
       "dirty_writebacks": 0
     }
   },
-  "layer7_clubbed_batch_b4": {
-    "clubbed_prompts": 4,
-    "total_clubbed_tokens": 8,
-    "total_24_layer_4bit_ms": 3724.53,
-    "per_prompt_24_layer_4bit_ms": 931.13
-  },
-  "omni_vision_on_s23": {
-    "mode": "lfm3_omni_s23_shortconv_k7_vision_2048d",
-    "patch_tokens": 256,
-    "encode_ms": 307.25,
-    "ncm_11_level_rms_head": [
-      4.24226,
-      3.60716,
-      3.06627,
-      2.60639
-    ]
-  },
-  "omni_video_evs_on_s23": {
-    "mode": "lfm3_omni_s23_shortconv_k7_video_evs_2048d",
-    "input_frames": 4,
-    "tokens_before_evs": 1024,
-    "tokens_after_evs": 512,
-    "encode_ms": 933.75,
-    "ncm_11_level_rms_head": [
-      4.248,
-      3.61235,
-      3.07088,
-      2.61039
-    ]
-  },
-  "omni_audio_voice_on_s23": {
-    "mode": "lfm3_omni_s23_shortconv_k7_audio_2048d",
-    "duration_s": 0.8,
-    "mel_frames": 64,
-    "encode_ms": 65.96,
-    "ncm_11_level_rms_head": [
-      4.24073,
-      3.60671,
-      3.066,
-      2.6062
-    ]
-  },
-  "layer6_generative_compiler_ok": true,
-  "layer7_specmd_r4_dm_stats": {
-    "policy_id": 3,
-    "policy_name": "specmd_least_stale_r4",
-    "total_layer_requests": 72,
-    "tier1_sram_l3_hits": 18,
-    "tier2_lpddr5x_hits": 30,
-    "tier3_ufs4_fetches": 24,
-    "r4_clean_drops": 42,
-    "dirty_writebacks": 0
-  },
-  "measured_s23_cpuset_profiles": {
-    "foreground_performance_cores_3_to_6_a710_a715": {
-      "active_threads": 4,
-      "cores": "2x Cortex-A710 (2.80 GHz) + 2x Cortex-A715 (2.80 GHz)",
-      "single_token_decode_24_layer_ms": 198.22,
-      "lm_head_128k_ms": 17.59,
-      "total_step_ms": 215.81,
-      "trunk_tokens_per_sec": 5.04,
-      "full_step_tokens_per_sec": 4.63,
-      "prefill_44_tokens_24_layer_ms": 3497.71,
-      "omni_vision_256_patches_ms": 132.99,
-      "omni_video_4_frames_evs_ms": 238.22,
-      "omni_audio_64_mel_frames_ms": 14.74
+  "layer6_real_code_compile_test": {
+    "device": "localhost",
+    "arch": "aarch64",
+    "model": "lfm3-1.7b-4bit-s23",
+    "exclusive_app_package": "ai.clover.studio",
+    "prompt": "Verify this Python function:\n```python\ndef fib(n: int) -> int:\n    return n if n <= 1 else fib(n - 1) + fib(n - 2)\n```",
+    "reply": "The function `fib` is a recursive implementation of the Fibonacci sequence.  \n- For `n <= 1`, it returns `n`.",
+    "output_type": "text",
+    "speak_with_android_tts": false,
+    "tools_used": [
+      "layer6_generative_compiler"
+    ],
+    "layer6_compiler_report": {
+      "checked_blocks": 1,
+      "all_ok": true,
+      "results": [
+        {
+          "ok": true,
+          "error": null
+        }
+      ]
     },
-    "background_moderate_cpuset_0_to_2_a510": {
-      "active_threads": 3,
-      "cores": "3x Cortex-A510 (2.02 GHz in-order efficiency cluster)",
-      "single_token_decode_24_layer_ms": 431.74,
-      "lm_head_128k_ms": 53.04,
-      "total_step_ms": 484.78,
-      "trunk_tokens_per_sec": 2.32,
-      "full_step_tokens_per_sec": 2.06
+    "input_tokens": 47,
+    "generated_tokens": 28,
+    "emitted_tokens": 29,
+    "all_token_ids_valid_in_128k_vocab": true,
+    "c_24_layer_4bit_ms": 14291.87,
+    "total_cycle_ms": 14302.18,
+    "dm_stats": {
+      "policy_id": 3,
+      "policy_name": "specmd_least_stale_r4_madvise",
+      "madvise_os_page_control": true,
+      "total_layer_requests": 1584,
+      "tier1_sram_l3_hits": 545,
+      "tier2_lpddr5x_hits": 1015,
+      "tier3_ufs4_fetches": 24,
+      "r4_clean_drops": 1027,
+      "dirty_writebacks": 0
     }
+  },
+  "layer7_specmd_r4_madvise_dm_stats": {
+    "policy_id": 3,
+    "policy_name": "specmd_least_stale_r4_madvise",
+    "madvise_os_page_control": true,
+    "total_layer_requests": 1584,
+    "tier1_sram_l3_hits": 545,
+    "tier2_lpddr5x_hits": 1015,
+    "tier3_ufs4_fetches": 24,
+    "r4_clean_drops": 1027,
+    "dirty_writebacks": 0
   }
 }

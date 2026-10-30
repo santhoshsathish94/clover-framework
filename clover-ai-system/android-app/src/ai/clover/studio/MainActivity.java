@@ -39,8 +39,7 @@ import java.util.Locale;
 public class MainActivity extends Activity {
 
     private static final String EXCLUSIVE_APP_PACKAGE = "ai.clover.studio";
-    private static final String EXCLUSIVE_APP_TOKEN =
-            "clover-ai-studio-s23-exclusive-v1-9f4e2a7c8b1d6035e4a9c2f7b8d1e604";
+    private static final String EXCLUSIVE_APP_TOKEN = "__CLOVER_S23_DEVICE_SECRET__";
     private static final String LOCAL_S23_BASE_URL = "http://127.0.0.1:8765";
 
     private static final int REQ_FILE_CHOOSER = 1001;

@@ -280,7 +280,33 @@ static struct {
     unsigned long tier3_ufs4_fetches;
     unsigned long r4_clean_drops;
     unsigned long dirty_writebacks;
+    int madvise_active;
 } g_lfm3 = { 0, 0, 8, 0 };
+
+static void lfm3_advise_trunk_pages(int layer_id, int advise_willneed)
+{
+    if (!g_lfm3.madvise_active || layer_id < 0 || layer_id >= LFM3_LAYERS) return;
+#ifndef _WIN32
+    const Lfm3TrunkMapped *t = &g_lfm3.trunks[layer_id];
+    int adv = advise_willneed ? MADV_WILLNEED : MADV_DONTNEED;
+    if (t->ffn_4bit_mf.ptr && t->ffn_4bit_mf.size > 0) {
+        madvise(t->ffn_4bit_mf.ptr, t->ffn_4bit_mf.size, adv);
+    }
+    if (t->operator_mf.ptr && t->operator_mf.size > 0) {
+        madvise(t->operator_mf.ptr, t->operator_mf.size, adv);
+    }
+    if (t->group_mf[0].ptr && t->group_mf[0].size > 0) {
+        madvise(t->group_mf[0].ptr, t->group_mf[0].size, adv);
+    }
+#else
+    (void)advise_willneed;
+#endif
+}
+
+LFM3_API void lfm3_set_madvise_active(int enable)
+{
+    g_lfm3.madvise_active = enable ? 1 : 0;
+}
 
 static void lfm3_dm_reset(void)
 {
@@ -304,6 +330,11 @@ static void lfm3_dm_record_layer(int layer_id, int tokens_in_pass)
     g_lfm3.clock++;
     g_lfm3.total_layer_requests++;
     float w = (float)(tokens_in_pass > 0 ? tokens_in_pass : 1);
+    int next_layer = (layer_id + 1) % LFM3_LAYERS;
+
+    /* SpecMD Lookahead: asynchronously prefetch Layer L+1 into OS page cache */
+    lfm3_advise_trunk_pages(next_layer, 1);
+
     for (int i = 0; i < 12; i++) {
         if (g_lfm3.pool_keys[i] == layer_id) {
             g_lfm3.tier1_sram_l3_hits++;
@@ -328,7 +359,6 @@ static void lfm3_dm_record_layer(int layer_id, int tokens_in_pass)
     if (slot < 0) {
         int best_v = 0;
         double best_sc = 1e30;
-        int next_layer = (layer_id + 1) % LFM3_LAYERS;
         for (int i = 0; i < 12; i++) {
             int k = g_lfm3.pool_keys[i];
             if (k == layer_id || k == next_layer) continue; /* SpecMD Lookahead: protect Layer L and L+1 */
@@ -350,6 +380,26 @@ static void lfm3_dm_record_layer(int layer_id, int tokens_in_pass)
     g_lfm3.pool_keys[slot] = layer_id;
     g_lfm3.pool_ts[slot] = g_lfm3.clock;
     g_lfm3.pool_heat[slot] = w;
+}
+
+/* Explicit OS page-cache release for inactive trunks under memory pressure (`MADV_DONTNEED`) */
+LFM3_API int lfm3_release_inactive_trunk_pages(void)
+{
+    int dropped = 0;
+    for (int l = 0; l < LFM3_LAYERS; l++) {
+        int in_pool = 0;
+        for (int i = 0; i < 12; i++) {
+            if (g_lfm3.pool_keys[i] == l) {
+                in_pool = 1;
+                break;
+            }
+        }
+        if (!in_pool) {
+            lfm3_advise_trunk_pages(l, 0);
+            dropped++;
+        }
+    }
+    return dropped;
 }
 
 LFM3_API void lfm3_set_use_4bit_ffn(int enable)
@@ -1030,7 +1080,7 @@ LFM3_API int lfm3_lm_head_logits(const float *h_last_2048, float *out_logits_128
  * so prefill runs in parallel (8-token NEON blocking) and every generated
  * token runs as an O(1) `T = 1` step without recomputing the prompt!
  * ============================================================================ */
-#define LFM3_MAX_GEN_SEQ 512
+#define LFM3_MAX_GEN_SEQ 1024
 
 static float *g_conv_pre_cache[LFM3_LAYERS] = { NULL };
 static float *g_k_cache[LFM3_LAYERS] = { NULL };
@@ -1082,7 +1132,7 @@ static void ensure_lfm3_kv_buffers(void)
         }
     }
     if (!g_scr_op_in) {
-        size_t max_t = 128;
+        size_t max_t = 512;
         g_scr_op_in = (float *)malloc(max_t * LFM3_D * sizeof(float));
         g_scr_op_out_raw = (float *)malloc(max_t * LFM3_D * sizeof(float));
         g_scr_op_normed = (float *)malloc(max_t * LFM3_D * sizeof(float));
@@ -1460,8 +1510,8 @@ LFM3_API int lfm3_generate_cached(
     }
     ensure_lfm3_kv_buffers();
 
-    if (prompt_len > 120) {
-        prompt_len = 120;
+    if (prompt_len > 512) {
+        prompt_len = 512;
     }
 
     const uint16_t *emb_w = (const uint16_t *)g_lfm3.emb_mf.ptr;
