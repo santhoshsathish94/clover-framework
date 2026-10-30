@@ -347,6 +347,8 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         ).strip()
         ln = re.sub(r"^From the previous (?:turn|analysis)[^,]*,\s*(?:I know that\s*|the key points were:\s*)?", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"^(?:Based on|Looking at|According to|From) the (?:search results|provided reference|reference information|provided references|reference facts|reference sources|references|information provided|information given|context provided)(?:\s+provided)?[,:\s]*", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"^(?:•\s*)?Reference Source\s*\d+\s*:\s*", "", ln, flags=re.IGNORECASE).strip()
+        ln = re.sub(r"\s*This seems like the foundation here\.?", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*\((?:From )?Reference Source[^)]*\)", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"^Let me break this down for you[^.]*\.\s*", "", ln, flags=re.IGNORECASE).strip()
         ln = re.sub(r"\s*based on the provided (?:reference(?:\s+facts|s)?|information):", ":", ln, flags=re.IGNORECASE).strip()
