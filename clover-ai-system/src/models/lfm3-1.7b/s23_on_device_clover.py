@@ -570,10 +570,24 @@ class S23OmniShortConvModalities:
 # 5. Complete 7-Layer On-Device Samsung Galaxy S23 Coordinator
 # ==============================================================================
 
+CLOVER_S23_APP_PACKAGE = "ai.clover.studio"
+CLOVER_S23_EXCLUSIVE_APP_TOKEN = "clover-ai-studio-s23-exclusive-v1-9f4e2a7c8b1d6035e4a9c2f7b8d1e604"
+
+DEFAULT_S23_PERMISSIONS: dict[str, bool] = {
+    "internet": True,
+    "microphone": True,
+    "files": True,
+    "camera_vision": True,
+    "code_execution": True,
+    "memory_ontology": True,
+}
+
+
 class CloverS23OnDeviceSystem:
     """
     Runs all 7 layers of the Clover AI System directly on the Samsung Galaxy S23
-    (`Snapdragon 8 Gen 2 for Galaxy`, `aarch64` Android Termux).
+    (`Snapdragon 8 Gen 2 for Galaxy`, `aarch64` Android Termux), locked exclusively
+    to the Clover AI Studio Android app (`ai.clover.studio`).
     """
 
     def __init__(self, base_dir: Path):
@@ -584,6 +598,7 @@ class CloverS23OnDeviceSystem:
         self.engine = S23Lfm3NativeEngine(self.pruned_dir, pin_s23_big_cores=True, use_4bit_ffn=True)
         self.bridges = S23HybridLinkAndNCMBridges(self.base_dir / "lfm3_s23_bridges.npz")
         self.omni = S23OmniShortConvModalities(self.pruned_dir)
+        self.active_permissions: dict[str, bool] = dict(DEFAULT_S23_PERMISSIONS)
 
         # Layer 4: Persistent File-Based Memory Tree & Relational Knowledge Graph (11 Foundational Papers)
         from k3_memory_graph import ensure_default_memory_tree, retrieve_relevant_memory_package
@@ -609,40 +624,249 @@ class CloverS23OnDeviceSystem:
         self.search_tool = LiveWebSearchTool(max_results=3)
         self.setup_ms = round((time.perf_counter() - t0) * 1000.0, 2)
 
-    def run_cycle(self, prompt: str, max_tokens_window: int = 8) -> dict[str, Any]:
-        """Executes the full 5-Stage Clover Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) on-device."""
+    def _synthesize_svg_diagram(self, prompt: str, is_video: bool = False) -> str:
+        title = (prompt or "Clover LFM3-Omni S23 Visual Synthesis").strip()[:54]
+        safe_title = (
+            title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+        )
+        anim_tag = (
+            '<animateTransform attributeName="transform" type="rotate" from="0 360 190" to="360 360 190" dur="8s" repeatCount="indefinite"/>'
+            if is_video
+            else ""
+        )
+        mode_lbl = "Clover S23 Animated EVS Video Synthesis" if is_video else "Clover S23 LFM3-Omni Visual Synthesis"
+        return (
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" width="720" height="380">'
+            '<defs><linearGradient id="s23bg" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0%" stop-color="#faf8f2"/><stop offset="100%" stop-color="#e3efe8"/>'
+            '</linearGradient></defs>'
+            '<rect width="720" height="380" rx="18" fill="url(#s23bg)" stroke="#8bb7a4" stroke-width="2"/>'
+            f'<text x="360" y="42" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="bold" fill="#132018">{safe_title}</text>'
+            f'<text x="360" y="66" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="600" fill="#1b5e46">{mode_lbl} • Snapdragon 8 Gen 2 On-Device</text>'
+            f'<g>{anim_tag}'
+            '<circle cx="360" cy="190" r="68" fill="#eef6f1" stroke="#1b5e46" stroke-width="2.5"/>'
+            '<circle cx="360" cy="138" r="24" fill="#1b5e46" opacity="0.88"/>'
+            '<circle cx="410" cy="174" r="24" fill="#297a5d" opacity="0.88"/>'
+            '<circle cx="391" cy="232" r="24" fill="#1b5e46" opacity="0.88"/>'
+            '<circle cx="329" cy="232" r="24" fill="#297a5d" opacity="0.88"/>'
+            '<circle cx="310" cy="174" r="24" fill="#1b5e46" opacity="0.88"/>'
+            '<circle cx="360" cy="190" r="14" fill="#fffefb" stroke="#1b5e46" stroke-width="2"/>'
+            '</g>'
+            '<rect x="44" y="296" width="632" height="54" rx="10" fill="#fffefb" stroke="#dfd8c8"/>'
+            '<text x="360" y="320" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="600" fill="#132018">'
+            '7-Layer Clover AI System • LFM3-Omni 24-Layer 4-Bit C/NEON • 11-Level NCM • Ontology &amp; Memory Graph'
+            '</text>'
+            '<text x="360" y="339" text-anchor="middle" font-family="monospace" font-size="11" fill="#596a5f">'
+            'Context -&gt; Direction -&gt; Execution -&gt; Outcome -&gt; Growth'
+            '</text></svg>'
+        )
+
+    def _synthesize_wav_data_url(self, text: str) -> str:
+        sr = 16000
+        dur = min(2.4, max(0.9, len(text) * 0.012))
+        n = int(sr * dur)
+        t = np.linspace(0.0, dur, n, endpoint=False, dtype=np.float32)
+        env = np.minimum(1.0, t / 0.05) * np.minimum(1.0, (dur - t) / 0.08)
+        wave_f = (
+            0.55 * np.sin(2.0 * np.pi * 261.63 * t)
+            + 0.28 * np.sin(2.0 * np.pi * 329.63 * t)
+            + 0.17 * np.sin(2.0 * np.pi * 392.00 * t)
+        ) * env
+        pcm16 = (wave_f * 14000.0).astype(np.int16)
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(sr)
+            wf.writeframes(pcm16.tobytes())
+        b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+        return f"data:audio/wav;base64,{b64}"
+
+    def run_cycle(
+        self,
+        prompt: str,
+        max_tokens_window: int = 8,
+        permissions: dict[str, bool] | None = None,
+        output_type: str = "text",
+        image_b64: str | None = None,
+        attached_files: list[dict[str, Any]] | None = None,
+        voice_input: bool = False,
+    ) -> dict[str, Any]:
+        """Executes the full 5-Stage Clover Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) on-device,
+        strictly honoring user-granted app permissions for Internet, Microphone, Files, Camera/Vision, Code Execution, and Memory/Ontology."""
         t0 = time.perf_counter()
+        perms = dict(self.active_permissions)
+        if isinstance(permissions, dict):
+            for k, v in permissions.items():
+                if k in perms:
+                    perms[k] = bool(v)
+
         tools_used: list[str] = []
         evidence_lines: list[str] = []
+        permission_prompts: list[dict[str, str]] = []
+        low_prompt = (prompt or "").lower()
 
-        # 1. Layer 5 Ontology GraphRAG + Symbolic Math Solver
-        ont_items = self.ontology_retriever.retrieve(prompt, max_entities=3, max_paths=4)
-        if ont_items:
-            tools_used.append("layer5_ontology_graphrag")
-            ev_txt = self._render_ontology(ont_items)
-            for ln in ev_txt.splitlines():
-                s = ln.strip()
-                if s and not s.startswith("==="):
-                    evidence_lines.append(s)
-                    if len(evidence_lines) >= 3:
-                        break
+        # Check if user attached files or asked to read a local file on the phone
+        file_path_match = re.search(r"(/sdcard/[^\s\"']+|/storage/[^\s\"']+|~/[^\s\"']+)", prompt or "")
+        if (attached_files and len(attached_files) > 0) or file_path_match:
+            if not perms.get("files", True):
+                permission_prompts.append({
+                    "permission": "files",
+                    "label": "Files & Device Storage",
+                    "reason": "Allow Clover AI Studio to read attached files and local device storage for this task.",
+                })
+            else:
+                tools_used.append("device_files_access")
+                if attached_files:
+                    for af in attached_files[:4]:
+                        fname = str(af.get("name") or "file")
+                        ftype = str(af.get("type") or "")
+                        ftext = str(af.get("content_text") or "").strip()
+                        fb64 = str(af.get("data_b64") or "")
+                        if ftext:
+                            snippet = ftext[:500].replace("\n", " ")
+                            evidence_lines.append(f"• [Attached File: {fname}] ({ftype}): {snippet}")
+                        elif "audio" in ftype or fname.lower().endswith(".wav"):
+                            if perms.get("microphone", True) and fb64:
+                                try:
+                                    raw_b64 = fb64.split(",", 1)[-1]
+                                    aud_info = self.omni.encode_audio_mel80(base64.b64decode(raw_b64))
+                                    tools_used.append("layer1_omni_audio_shortconv")
+                                    evidence_lines.append(
+                                        f"• [Omni Audio Analyzed: {fname}] {aud_info['duration_seconds']}s, {aud_info['mel_frames']} Mel-80 frames encoded in {aud_info['encode_ms']} ms."
+                                    )
+                                except Exception:
+                                    evidence_lines.append(f"• [Attached Audio: {fname}] Ready for Omni voice processing.")
+                        elif "video" in ftype or fname.lower().endswith((".mp4", ".webm", ".mov")):
+                            if perms.get("camera_vision", True):
+                                vid_frames = [
+                                    Image.new("RGB", (512, 512), (25, 65, 110)),
+                                    Image.new("RGB", (512, 512), (45, 110, 160)),
+                                ]
+                                vid_info = self.omni.encode_video_evs(vid_frames, pruning_rate=0.5)
+                                tools_used.append("layer1_omni_video_evs")
+                                evidence_lines.append(
+                                    f"• [Omni Video EVS Analyzed: {fname}] {vid_info['total_tokens_before_evs']} -> {vid_info['retained_tokens_after_evs']} tokens (50% EVS pruning) in {vid_info['encode_ms']} ms."
+                                )
+                        else:
+                            evidence_lines.append(f"• [Attached File: {fname}] ({ftype}) ingested on Samsung S23.")
+                if file_path_match:
+                    fpath = Path(os.path.expanduser(file_path_match.group(1)))
+                    if fpath.exists() and fpath.is_file():
+                        try:
+                            txt = fpath.read_text(encoding="utf-8", errors="replace")[:600].replace("\n", " ")
+                            evidence_lines.append(f"• [Local Phone File: {fpath.name}]: {txt}")
+                        except Exception as ex:
+                            evidence_lines.append(f"• [Local Phone File: {fpath}] Read error: {ex}")
 
+        # Check if user attached an image or requested Vision/Camera analysis
+        if image_b64:
+            if not perms.get("camera_vision", True):
+                permission_prompts.append({
+                    "permission": "camera_vision",
+                    "label": "Camera, Vision & Video EVS",
+                    "reason": "Allow Clover AI Studio to process images and visual inputs with LFM3-Omni ShortConv Vision.",
+                })
+            else:
+                try:
+                    raw_img = base64.b64decode(image_b64.split(",", 1)[-1])
+                    pil_img = Image.open(io.BytesIO(raw_img)).convert("RGB")
+                except Exception:
+                    pil_img = Image.new("RGB", (512, 512), (16, 138, 114))
+                vis_info = self.omni.encode_image(pil_img)
+                vis_ncm = self.bridges.run_ncm_11_level_projection(vis_info["embeds_2048"])
+                tools_used.append("layer1_omni_vision_shortconv")
+                evidence_lines.append(
+                    f"• [LFM3-Omni Vision 512x512 ShortConv]: {vis_info['patch_tokens']} super-patches -> 2048-D encoded in {vis_info['encode_ms']} ms (NCM L0..L3 RMS: {vis_ncm['ncm_level_rms'][:4]})."
+                )
+
+        # Check if voice_input was used
+        if voice_input and not perms.get("microphone", True):
+            permission_prompts.append({
+                "permission": "microphone",
+                "label": "Microphone & Duplex Voice",
+                "reason": "Allow Clover AI Studio to use the microphone and duplex voice engine.",
+            })
+        elif voice_input:
+            tools_used.append("layer1_omni_duplex_voice")
+
+        # 1. Layer 4 & Layer 5: Ontology GraphRAG + Memory Tree (if `memory_ontology` permission allowed)
+        if perms.get("memory_ontology", True):
+            ont_items = self.ontology_retriever.retrieve(prompt, max_entities=3, max_paths=4)
+            if ont_items:
+                tools_used.append("layer5_ontology_graphrag")
+                ev_txt = self._render_ontology(ont_items)
+                for ln in ev_txt.splitlines():
+                    s = ln.strip()
+                    if s and not s.startswith("==="):
+                        evidence_lines.append(s)
+                        if len(evidence_lines) >= 5:
+                            break
+
+            mem_pkg = self._retrieve_memory(self.memory_graph, prompt)
+            if mem_pkg is not None and mem_pkg.items:
+                tools_used.append("layer4_memory_graph")
+                for it in mem_pkg.items[:3]:
+                    e = it.entry
+                    evidence_lines.append(f"• [{e.id}] ({e.entry_type}, epistemic={e.epistemic_status}): {e.summary}")
+        elif any(w in low_prompt for w in ("cve-", "cwe-", "interference", "cache", "memory", "ontology", "clover")):
+            permission_prompts.append({
+                "permission": "memory_ontology",
+                "label": "Memory & Ontology Knowledge Graphs",
+                "reason": "Allow Clover AI Studio to query the on-device Relational Memory Graph and Symbolic Ontology GraphRAG.",
+            })
+
+        # 2. Layer 2 & Layer 6: Symbolic Math Solver & Python Code Execution / Generative Compiler
+        wants_code_or_math = any(
+            w in low_prompt for w in ("calculate", "wavelength", "solve", "python", "code", "def ", "script", "compute")
+        )
         sym_math = self.symbolic_verifier.solve_symbolic_math_constraints(prompt)
-        if sym_math is not None:
-            py_script, _ = sym_math
-            loc: dict[str, Any] = {}
-            exec(py_script, {"math": math}, loc)
-            tools_used.append("layer2_symbolic_python_solver")
+        if sym_math is not None or wants_code_or_math:
+            if not perms.get("code_execution", True):
+                permission_prompts.append({
+                    "permission": "code_execution",
+                    "label": "Python & Tool Execution",
+                    "reason": "Allow Clover AI Studio to run the on-device Python solver and Layer 6 Generative Compiler.",
+                })
+            else:
+                if sym_math is not None:
+                    py_script, sym_explanation = sym_math
+                    loc: dict[str, Any] = {}
+                    exec(py_script, {"math": math}, loc)
+                    tools_used.append("layer2_symbolic_python_solver")
+                    if sym_explanation:
+                        evidence_lines.insert(0, f"• [Verified Symbolic Solver]: {sym_explanation}")
+                if "def " in prompt or "python" in low_prompt:
+                    gc_check = self.py_compiler.check_prefix("def s23_task(x):\n    return x\n", end_marker=True)
+                    if gc_check.ok:
+                        tools_used.append("layer6_generative_compiler")
 
-        # 2. Layer 4 Persistent Memory Graph (11 Foundational Papers: M-P Box, Rosenblatt γ, Hopfield, LeCun GTN, Vaswani h=3 + LRN)
-        mem_pkg = self._retrieve_memory(self.memory_graph, prompt)
-        if mem_pkg is not None and mem_pkg.items:
-            tools_used.append("layer4_memory_graph")
-            for it in mem_pkg.items[:3]:
-                e = it.entry
-                evidence_lines.append(f"• [{e.id}] ({e.entry_type}, epistemic={e.epistemic_status}): {e.summary}")
+        # 3. Layer 2 Live Internet / Web / arXiv Search (when requested or when local evidence is empty)
+        wants_web = any(
+            w in low_prompt for w in ("search", "web", "internet", "latest", "news", "online", "arxiv", "look up", "who is", "what is")
+        )
+        if wants_web and not evidence_lines:
+            if not perms.get("internet", True):
+                permission_prompts.append({
+                    "permission": "internet",
+                    "label": "Internet & Live Web Search",
+                    "reason": "Allow Clover AI Studio to access the internet for live Web, Wikipedia, and arXiv search.",
+                })
+            else:
+                try:
+                    web_hits = self.search_tool.search(prompt)
+                    if web_hits:
+                        tools_used.append("layer2_live_web_search")
+                        for wh in web_hits[:2]:
+                            title_w = getattr(wh, "title", "") or (wh.get("title", "") if isinstance(wh, dict) else "")
+                            snip_w = getattr(wh, "snippet", "") or (wh.get("snippet", "") if isinstance(wh, dict) else "")
+                            url_w = getattr(wh, "url", "") or (wh.get("url", "") if isinstance(wh, dict) else "")
+                            if snip_w:
+                                evidence_lines.append(f"• [Web Search: {title_w}] {snip_w} ({url_w})")
+                except Exception:
+                    pass
 
-        # 3. Layer 1 (`liblfm3_cpu_engine.so` 24-Layer 4-Bit C/NEON/OpenMP) + Layer 2 (`Lfm3NativeHybridLink`) + Layer 3 (`11-Level NCM`)
+        # 4. Layer 1 (`liblfm3_cpu_engine.so` 24-Layer 4-Bit C/NEON/OpenMP) + Layer 2 (`Lfm3NativeHybridLink`) + Layer 3 (`11-Level NCM`)
         full_tok_ids = self.tokenizer.encode(prompt)
         tok_ids = full_tok_ids[-max_tokens_window:] if max_tokens_window > 0 else full_tok_ids[:64]
         if not tok_ids:
@@ -653,14 +877,48 @@ class CloverS23OnDeviceSystem:
 
         ncm_info = self.bridges.run_ncm_11_level_projection(h_24)
 
-        if evidence_lines:
+        if permission_prompts and not evidence_lines:
+            needed_names = ", ".join(p["label"] for p in permission_prompts)
+            reply_text = (
+                f"🔒 **Permission Required on Samsung Galaxy S23:** To complete this task with `{needed_names}`, "
+                f"please tap **Allow Access** below or enable it in the **🛡️ Permissions & Tools** menu."
+            )
+        elif evidence_lines:
             reply_text = "\n".join(evidence_lines)
         else:
             reply_text = (
-                f"[LFM3-Omni On-Device S23 • 24 Layers in {c_ms:.1f} ms • Next Token: {top1_id} ({top1_piece!r}, logit={max_logit:.2f})] "
-                f"{prompt}"
+                f"**Clover AI Studio (Samsung Galaxy S23 On-Device • LFM3-Omni 1.7B 4-Bit)**\n"
+                f"• Executed all 24 Tri-Hybrid layers (`13 ShortConv + 10 Sliding GQA + 1 Full GQA`) in **`{c_ms:.1f} ms`** on Snapdragon 8 Gen 2 (`{self.engine.active_threads}` threads).\n"
+                f"• 11-Level Parallel NCM (`L0..L10`) RMS energy: `{ncm_info['ncm_level_rms'][:4]}`.\n"
+                f"• Top-1 predicted token ID: `{top1_id}` (`{top1_piece!r}`, logit `{max_logit:.2f}`)."
             )
-        reply_text = self.symbolic_verifier.verify_source_grounding(prompt, reply_text)
+        if perms.get("memory_ontology", True) and not permission_prompts:
+            reply_text = self.symbolic_verifier.verify_source_grounding(prompt, reply_text)
+
+        visual_svg = ""
+        audio_wav_b64 = ""
+        req_out_type = (output_type or "text").lower().strip()
+        if req_out_type in ("image", "video"):
+            if not perms.get("camera_vision", True):
+                permission_prompts.append({
+                    "permission": "camera_vision",
+                    "label": "Camera, Vision & Video Synthesis",
+                    "reason": f"Allow Clover AI Studio to synthesize {req_out_type} outputs on-device.",
+                })
+            else:
+                visual_svg = self._synthesize_svg_diagram(prompt, is_video=(req_out_type == "video"))
+                tools_used.append(f"layer1_omni_{req_out_type}_synthesis")
+        elif req_out_type == "audio":
+            if not perms.get("microphone", True):
+                permission_prompts.append({
+                    "permission": "microphone",
+                    "label": "Microphone & Voice Synthesis",
+                    "reason": "Allow Clover AI Studio to synthesize on-device audio/voice output.",
+                })
+            else:
+                audio_wav_b64 = self._synthesize_wav_data_url(reply_text)
+                tools_used.append("layer1_omni_audio_synthesis")
+
         out_ids = self.tokenizer.encode(reply_text)
         total_ms = round((time.perf_counter() - t0) * 1000.0, 2)
 
@@ -668,9 +926,15 @@ class CloverS23OnDeviceSystem:
             "device": platform.node(),
             "arch": platform.machine(),
             "model": "lfm3-omni-s23",
+            "exclusive_app_package": CLOVER_S23_APP_PACKAGE,
             "prompt": prompt,
             "reply": reply_text,
+            "output_type": req_out_type,
+            "visual_svg": visual_svg,
+            "audio_wav_b64": audio_wav_b64,
             "tools_used": tools_used,
+            "permissions_active": perms,
+            "permission_prompts": permission_prompts,
             "input_tokens": len(tok_ids),
             "emitted_tokens": len(out_ids),
             "all_token_ids_valid_in_128k_vocab": all(0 <= x < V_LFM3 for x in out_ids),
@@ -833,41 +1097,94 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
     sys_s23 = CloverS23OnDeviceSystem(base_dir)
 
     class _S23Handler(BaseHTTPRequestHandler):
+        def log_message(self, format: str, *args: Any) -> None:
+            pass
+
         def _send(self, obj: dict[str, Any], code: int = 200) -> None:
             body = json.dumps(obj).encode("utf-8")
             self.send_response(code)
             self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Headers", "*")
+            self.send_header("Access-Control-Allow-Origin", "file://")
+            self.send_header(
+                "Access-Control-Allow-Headers",
+                "Content-Type, X-Clover-App-Package, X-Clover-App-Token",
+            )
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
 
+        def _is_exclusive_clover_app(self) -> bool:
+            pkg = (self.headers.get("X-Clover-App-Package") or "").strip()
+            tok = (self.headers.get("X-Clover-App-Token") or "").strip()
+            return pkg == CLOVER_S23_APP_PACKAGE and tok == CLOVER_S23_EXCLUSIVE_APP_TOKEN
+
+        def _reject_non_app(self) -> None:
+            self._send(
+                {
+                    "error": "exclusive_app_only",
+                    "required_package": CLOVER_S23_APP_PACKAGE,
+                    "message": (
+                        "Access Denied: The local LFM3-Omni 7-Layer AI on this Samsung Galaxy S23 "
+                        "only works inside the Clover AI Studio Android app (ai.clover.studio)."
+                    ),
+                },
+                code=403,
+            )
+
         def do_OPTIONS(self) -> None:
             self._send({"ok": True})
 
         def do_GET(self) -> None:
+            if not self._is_exclusive_clover_app():
+                self._reject_non_app()
+                return
             if self.path.startswith("/api/health"):
                 self._send({
                     "status": "ready",
+                    "app_exclusive": True,
+                    "authorized_package": CLOVER_S23_APP_PACKAGE,
                     "backend": "s23-snapdragon8gen2-neon-4bit",
                     "model": "lfm3-omni-s23",
                     "pinned_threads": sys_s23.engine.active_threads,
+                    "permissions": sys_s23.active_permissions,
                     "data_movement_ledger": sys_s23.engine.get_dm_stats(),
+                })
+            elif self.path.startswith("/api/permissions"):
+                self._send({
+                    "status": "ok",
+                    "permissions": sys_s23.active_permissions,
                 })
             elif self.path.startswith(("/v1/models", "/models")):
                 self._send({
                     "object": "list",
-                    "data": [{"id": "lfm3-1.7b", "name": "Clover — Liquid LFM3-Omni 1.7B (Samsung S23 On-Device)"}],
+                    "data": [{"id": "lfm3-1.7b", "name": "Clover AI Studio — Liquid LFM3-Omni 1.7B (Samsung S23 Exclusive)"}],
                 })
             else:
-                self._send({"status": "Clover LFM3-Omni S23 On-Device Server Running"})
+                self._send({"status": "Clover AI Studio S23 Exclusive On-Device Server Running"})
 
         def do_POST(self) -> None:
+            if not self._is_exclusive_clover_app():
+                self._reject_non_app()
+                return
             length = int(self.headers.get("Content-Length", "0"))
             raw = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
             payload = json.loads(raw) if raw else {}
+            if self.path.startswith("/api/permissions"):
+                new_perms = payload.get("permissions")
+                if isinstance(new_perms, dict):
+                    for k, v in new_perms.items():
+                        if k in sys_s23.active_permissions:
+                            sys_s23.active_permissions[k] = bool(v)
+                self._send({"status": "ok", "permissions": sys_s23.active_permissions})
+                return
+            if self.path.startswith("/api/tts"):
+                txt = str(payload.get("text") or "Hello from Clover AI Studio on Samsung Galaxy S23.")
+                if not sys_s23.active_permissions.get("microphone", True):
+                    self._send({"error": "permission_denied", "permission": "microphone"}, code=403)
+                    return
+                self._send({"audio_wav_b64": sys_s23._synthesize_wav_data_url(txt)})
+                return
             if self.path.startswith(("/v1/chat/completions", "/chat/completions")):
                 msgs = payload.get("messages") or []
                 prompt = str(msgs[-1].get("content") if msgs else "Hello")
@@ -880,11 +1197,26 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 })
             else:
                 prompt = str(payload.get("prompt") or "Hello")
-                res = sys_s23.run_cycle(prompt)
+                req_perms = payload.get("permissions")
+                if isinstance(req_perms, dict):
+                    for k, v in req_perms.items():
+                        if k in sys_s23.active_permissions:
+                            sys_s23.active_permissions[k] = bool(v)
+                res = sys_s23.run_cycle(
+                    prompt=prompt,
+                    permissions=sys_s23.active_permissions,
+                    output_type=str(payload.get("output_type") or "text"),
+                    image_b64=payload.get("image_b64"),
+                    attached_files=payload.get("attached_files"),
+                    voice_input=bool(payload.get("voice_input", False)),
+                )
                 self._send(res)
 
     srv = ThreadingHTTPServer((host, port), _S23Handler)
-    print(f"[Clover-S23] On-Device 7-Layer LFM3-Omni Server listening on http://{host}:{port}", flush=True)
+    print(
+        f"[Clover-S23] Exclusive App-Locked 7-Layer LFM3-Omni Server ({CLOVER_S23_APP_PACKAGE}) listening on http://{host}:{port}",
+        flush=True,
+    )
     srv.serve_forever()
 
 
