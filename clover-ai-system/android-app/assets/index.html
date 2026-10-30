@@ -192,11 +192,13 @@ body.clover-app-body {
 .k3-bot-turn > .k3-msg { max-width: 100%; }
 
 .k3-figure {
-  margin: 0.55rem 0 0.2rem; padding: 0.45rem; background: var(--soft);
+  margin: 0.6rem 0 0.25rem; padding: 0.4rem; background: var(--soft);
   border: 1px solid var(--line-2); border-radius: var(--radius-sm); text-align: center;
 }
-.k3-figure svg, .k3-figure img { max-width: 100%; height: auto; border-radius: 7px; display: block; margin: 0 auto; }
-.k3-audio-player { display: block; width: 100%; max-width: 300px; height: 38px; margin: 0.4rem auto 0.1rem; }
+.k3-figure img, .k3-figure video {
+  max-width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto;
+}
+.k3-audio-player { display: block; width: 100%; max-width: 310px; height: 40px; margin: 0.45rem auto 0.15rem; }
 
 .k3-below-actions {
   margin-top: 0.24rem; padding-left: 0.18rem;
@@ -224,29 +226,16 @@ body.clover-app-body {
 .clover-dots-loader span:nth-child(3) { animation-delay: 0.6s; }
 .clover-dots-loader span:nth-child(4) { animation-delay: 0.9s; }
 
-/* Composer with Output Type Tabs Directly Above the Message Box */
+/* Simple Clean Composer (No Output Tabs — Prompt Automatically Drives Text, Image, Video, or Audio) */
 .clover-composer-wrap {
   flex: 0 0 auto; width: 100%;
-  padding: 0.45rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.5rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line); background: var(--bg);
   display: flex; flex-direction: column; align-items: center;
 }
 .clover-composer-outer {
   width: min(780px, 100%);
-  display: flex; flex-direction: column; align-items: flex-start; gap: 0.38rem;
-}
-.clover-output-tabs {
-  display: inline-flex; align-items: center; gap: 0.22rem;
-  padding: 0.18rem; border-radius: 999px;
-  background: var(--soft); border: 1px solid var(--line);
-}
-.clover-output-tab {
-  background: transparent; color: var(--ink-2); border: 1px solid transparent;
-  border-radius: 999px; padding: 0.24rem 0.72rem; font: inherit; font-size: 0.78rem;
-  font-weight: 650; cursor: pointer; line-height: 1.2;
-}
-.clover-output-tab.is-active {
-  background: var(--accent); border-color: var(--accent); color: #fff;
+  display: flex; flex-direction: column; align-items: flex-start;
 }
 
 .clover-composer-card {
@@ -349,12 +338,6 @@ body.clover-app-body {
 
     <div class="clover-composer-wrap">
       <div class="clover-composer-outer">
-        <div class="clover-output-tabs" id="k3-output-tabs" role="tablist" aria-label="Output type">
-          <button type="button" class="clover-output-tab is-active" data-output-type="text" onclick="k3OnOutputTypeChanged('text')">Text</button>
-          <button type="button" class="clover-output-tab" data-output-type="image" onclick="k3OnOutputTypeChanged('image')">Image</button>
-          <button type="button" class="clover-output-tab" data-output-type="video" onclick="k3OnOutputTypeChanged('video')">Video</button>
-          <button type="button" class="clover-output-tab" data-output-type="audio" onclick="k3OnOutputTypeChanged('audio')">Audio</button>
-        </div>
         <div class="clover-composer-card">
           <div class="k3-preview-bar" id="k3-img-preview-bar" hidden>
             <div class="k3-preview-bar__info">
@@ -403,8 +386,7 @@ body.clover-app-body {
 (function () {
   'use strict';
 
-  var STORAGE_SESSIONS_KEY = 'clover_s23_omni_sessions_v2';
-  var selectedOutputType = 'text';
+  var STORAGE_SESSIONS_KEY = 'clover_s23_omni_sessions_v3';
   var attachedImageB64 = null;
   var attachedFiles = [];
   var wasVoiceInput = false;
@@ -514,15 +496,6 @@ body.clover-app-body {
   window.k3CloseMobileSidebar = function () {
     document.getElementById('clover-sidebar').classList.remove('is-mobile-open');
     document.getElementById('clover-sidebar-backdrop').classList.remove('is-open');
-  };
-
-  window.k3OnOutputTypeChanged = function (outType) {
-    selectedOutputType = outType;
-    var tabs = document.querySelectorAll('.clover-output-tab');
-    tabs.forEach(function (t) {
-      if (t.getAttribute('data-output-type') === outType) t.classList.add('is-active');
-      else t.classList.remove('is-active');
-    });
   };
 
   window.k3TriggerFileAttach = function () {
@@ -670,9 +643,6 @@ body.clover-app-body {
     if (!prompt) prompt = 'Describe the attached file.';
     inp.value = '';
 
-    var reqOutType = selectedOutputType;
-    window.k3OnOutputTypeChanged('text');
-
     var curSess = sessions.map[sessions.currentId];
     if (curSess && (!curSess.messages || !curSess.messages.length)) {
       curSess.title = prompt.slice(0, 34);
@@ -696,12 +666,10 @@ body.clover-app-body {
     var payload = {
       prompt: prompt,
       model: 'lfm3-1.7b',
-      output_type: reqOutType,
       image_b64: attachedImageB64,
       attached_files: attachedFiles,
       voice_input: wasVoiceInput
     };
-    var speakAfter = wasVoiceInput || reqOutType === 'audio';
     wasVoiceInput = false;
     window.k3ClearAttachments();
 
@@ -712,6 +680,15 @@ body.clover-app-body {
       }
 
       var bodyHtml = formatMarkdownReply(res.reply);
+      if (res.image_png_b64) {
+        bodyHtml += '<div class="k3-figure"><img src="' + res.image_png_b64 + '" alt="Generated image"></div>';
+      }
+      if (res.video_mp4_b64) {
+        bodyHtml += '<div class="k3-figure"><video controls autoplay loop muted playsinline src="' + res.video_mp4_b64 + '"></video></div>';
+      }
+      if (res.audio_wav_b64) {
+        bodyHtml += '<audio class="k3-audio-player" controls autoplay src="' + res.audio_wav_b64 + '"></audio>';
+      }
 
       var actionsHtml =
         '<div class="k3-below-actions">' +
@@ -729,7 +706,7 @@ body.clover-app-body {
       saveSessions();
       scroller.scrollTop = scroller.scrollHeight;
 
-      if (speakAfter && res.reply && window.CloverAndroidBridge && window.CloverAndroidBridge.speakText) {
+      if (res.speak_with_android_tts && !res.audio_wav_b64 && res.reply && window.CloverAndroidBridge && window.CloverAndroidBridge.speakText) {
         window.CloverAndroidBridge.speakText(res.reply);
       }
     });

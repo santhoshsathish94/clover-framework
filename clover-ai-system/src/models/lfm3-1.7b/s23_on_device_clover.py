@@ -378,6 +378,216 @@ def inspect_attached_wav_real(wav_bytes: bytes, fname: str) -> str:
 
 
 # ==============================================================================
+# 3b. Real Prompt-Driven Image (PNG), Video (MP4 via FFmpeg), and Speech Audio (WAV via eSpeak NG)
+# ==============================================================================
+
+_RE_VIDEO_PROMPT = re.compile(
+    r"\b(?:(?:generate|create|make|render|produce|show|build|animate)\b[^.?!]{0,40}\b(?:video|animation|clip|movie|motion)\b|\b(?:video|animation)\s+(?:of|about|showing|for)\b)",
+    re.IGNORECASE,
+)
+_RE_IMAGE_PROMPT = re.compile(
+    r"\b(?:(?:generate|create|make|draw|paint|render|sketch|illustrate|design|show)\b[^.?!]{0,40}\b(?:image|picture|photo|illustration|drawing|artwork|poster|diagram|scene|portrait|landscape|icon)\b|\b(?:draw|paint|sketch|illustrate)\s+(?:a|an|the|me)\b|\b(?:image|picture|photo|illustration|diagram)\s+(?:of|showing|for)\b)",
+    re.IGNORECASE,
+)
+_RE_AUDIO_PROMPT = re.compile(
+    r"\b(?:(?:generate|create|make|synthesize|record|speak|read|say|play)\b[^.?!]{0,40}\b(?:audio|voice|speech|sound|aloud|out\s+loud|spoken)\b|\b(?:read\s+this|say\s+this|speak\s+this)\b|\b(?:audio|voice|speech)\s+(?:of|for|version|output)\b)",
+    re.IGNORECASE,
+)
+
+
+def detect_requested_media_from_prompt(prompt: str) -> str:
+    """Detects from the user's natural language prompt whether they asked to generate a video, image, or audio."""
+    p = (prompt or "").strip()
+    if _RE_VIDEO_PROMPT.search(p):
+        return "video"
+    if _RE_IMAGE_PROMPT.search(p):
+        return "image"
+    if _RE_AUDIO_PROMPT.search(p):
+        return "audio"
+    return "text"
+
+
+def _render_scene_frame_pil(prompt: str, width: int = 640, height: int = 400, phase: float = 0.0) -> Image.Image:
+    """Renders a high-resolution procedural scene frame in Pillow driven by the prompt subject and animation `phase` `[0..1]`."""
+    from PIL import ImageDraw
+
+    low = (prompt or "").lower()
+    y_norm = np.linspace(0.0, 1.0, height, dtype=np.float32)[:, None]
+    x_norm = np.linspace(0.0, 1.0, width, dtype=np.float32)[None, :]
+
+    if any(w in low for w in ("sunset", "sunrise", "beach", "ocean", "sea", "horizon", "island", "Golden")):
+        top_c = np.array([28.0, 36.0, 88.0], dtype=np.float32)
+        mid_c = np.array([238.0, 112.0, 58.0], dtype=np.float32)
+        bot_c = np.array([252.0, 204.0, 96.0], dtype=np.float32)
+        sky = np.where(
+            y_norm < 0.55,
+            top_c + (mid_c - top_c) * (y_norm / 0.55),
+            mid_c + (bot_c - mid_c) * np.clip((y_norm - 0.55) / 0.45, 0.0, 1.0),
+        )
+        rgb = np.broadcast_to(sky[:, None, :], (height, width, 3)).copy()
+        # Sun with animated elevation & shimmer
+        sun_cx = width * (0.5 + 0.12 * math.sin(2.0 * math.pi * phase))
+        sun_cy = height * (0.48 - 0.08 * math.cos(2.0 * math.pi * phase))
+        yy, xx = np.ogrid[:height, :width]
+        dist = np.sqrt((xx - sun_cx) ** 2 + (yy - sun_cy) ** 2)
+        glow = np.exp(-dist / 58.0)[:, :, None]
+        rgb = np.clip(rgb * (1.0 - 0.55 * glow) + np.array([255.0, 244.0, 188.0]) * glow, 0.0, 255.0)
+        sun_mask = dist <= 36.0
+        rgb[sun_mask] = [255.0, 250.0, 218.0]
+        # Animated ocean waves in bottom 36%
+        sea_y0 = int(height * 0.64)
+        for y in range(sea_y0, height):
+            wy = (y - sea_y0) / float(max(1, height - sea_y0))
+            wave_v = math.sin(wy * 26.0 - phase * 2.0 * math.pi * 2.0) * 14.0
+            base_sea = np.array([18.0 + 30.0 * (1.0 - wy), 74.0 + 48.0 * (1.0 - wy), 124.0 + 55.0 * (1.0 - wy)])
+            shimmer = np.exp(-((np.arange(width) - sun_cx) ** 2) / (1800.0 + 2400.0 * wy))
+            row = base_sea[None, :] + shimmer[:, None] * np.array([210.0, 145.0, 65.0]) * (0.55 + 0.35 * math.sin(y * 0.4 + phase * 6.28)) + wave_v
+            rgb[y] = np.clip(row, 0.0, 255.0)
+    elif any(w in low for w in ("space", "galaxy", "nebula", "star", "planet", "cosmos", "moon", "night", "cyber", "neon")):
+        yy, xx = np.mgrid[0:height, 0:width].astype(np.float32)
+        cx = width * (0.5 + 0.08 * math.cos(2.0 * math.pi * phase))
+        cy = height * (0.46 + 0.06 * math.sin(2.0 * math.pi * phase))
+        dx = (xx - cx) / (width * 0.45)
+        dy = (yy - cy) / (height * 0.45)
+        r = np.sqrt(dx * dx + dy * dy)
+        ang = np.arctan2(dy, dx) + phase * 2.0 * math.pi
+        swirl = 0.5 + 0.5 * np.sin(3.0 * ang - 4.5 * r)
+        neb = np.exp(-1.6 * r) * swirl
+        rgb = np.zeros((height, width, 3), dtype=np.float32)
+        rgb[:, :, 0] = 14.0 + 175.0 * neb + 65.0 * np.exp(-3.2 * r)
+        rgb[:, :, 1] = 18.0 + 95.0 * np.exp(-2.0 * r) + 80.0 * neb * (1.0 - x_norm)
+        rgb[:, :, 2] = 42.0 + 210.0 * np.exp(-1.3 * r)
+        rng = np.random.default_rng(107)
+        for _ in range(90):
+            sx = int(rng.integers(4, width - 4))
+            sy = int(rng.integers(4, height - 4))
+            tw = 175.0 + 80.0 * math.sin(phase * 6.28 + sx * 0.1)
+            rgb[sy - 1 : sy + 2, sx - 1 : sx + 2] = np.clip(rgb[sy - 1 : sy + 2, sx - 1 : sx + 2] + tw, 0.0, 255.0)
+        rgb = np.clip(rgb, 0.0, 255.0)
+    else:
+        # Mountain / Forest / Botanical Nature Scene
+        top_c = np.array([218.0, 236.0, 228.0], dtype=np.float32)
+        bot_c = np.array([250.0, 246.0, 232.0], dtype=np.float32)
+        sky = top_c + (bot_c - top_c) * y_norm
+        rgb = np.broadcast_to(sky[:, None, :], (height, width, 3)).copy()
+        sun_cx = int(width * (0.76 + 0.06 * math.sin(2.0 * math.pi * phase)))
+        sun_cy = int(height * (0.24 - 0.04 * math.cos(2.0 * math.pi * phase)))
+        yy, xx = np.ogrid[:height, :width]
+        dist = np.sqrt((xx - sun_cx) ** 2 + (yy - sun_cy) ** 2)
+        glow = np.exp(-dist / 52.0)[:, :, None]
+        rgb = np.clip(rgb * (1.0 - 0.45 * glow) + np.array([255.0, 232.0, 168.0]) * glow, 0.0, 255.0)
+        rgb[dist <= 30.0] = [255.0, 242.0, 192.0]
+        # Layered rolling mountain ridges
+        xs = np.arange(width, dtype=np.float32)
+        layers_cfg = [
+            (0.54, 28.0, 0.011, 0.8, [132.0, 168.0, 152.0]),
+            (0.66, 24.0, 0.016, 2.1, [68.0, 118.0, 96.0]),
+            (0.78, 18.0, 0.022, 3.7, [27.0, 94.0, 70.0]),
+        ]
+        for base_h, amp, freq, ph0, col in layers_cfg:
+            ridge = (height * base_h) + amp * np.sin(xs * freq + ph0 + phase * 2.0 * math.pi) + (amp * 0.45) * np.cos(xs * freq * 2.1 - ph0)
+            mask = yy >= ridge[None, :]
+            rgb[mask] = col
+
+    img = Image.fromarray(rgb.astype(np.uint8), mode="RGB")
+    draw = ImageDraw.Draw(img)
+    # Clean caption bar at bottom
+    clean_title = re.sub(
+        r"^(?:please\s+)?(?:can\s+you\s+)?(?:generate|create|make|draw|paint|render|show)\s+(?:me\s+)?(?:an?\s+|the\s+)?(?:image|picture|photo|video|animation|clip|illustration|diagram)\s+(?:of\s+|for\s+|showing\s+)?",
+        "",
+        (prompt or "").strip(),
+        flags=re.IGNORECASE,
+    ).strip()
+    if not clean_title:
+        clean_title = (prompt or "Clover Visual Scene").strip()
+    clean_title = clean_title[:58]
+    draw.rectangle([(14, height - 42), (width - 14, height - 12)], fill=(19, 32, 24), outline=(139, 183, 164), width=1)
+    draw.text((26, height - 33), f"Clover • {clean_title}", fill=(250, 248, 242))
+    return img
+
+
+def generate_image_png_data_url(prompt: str) -> str:
+    """Generates a real `640x400` PNG image in Pillow for `prompt` and returns a `data:image/png;base64,...` URI."""
+    img = _render_scene_frame_pil(prompt, width=640, height=400, phase=0.15)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def generate_video_mp4_data_url(prompt: str, base_dir: Path) -> str:
+    """Generates a real 24-frame `H.264` (`libx264` / `mpeg4`, `yuv420p`) MP4 video using Pillow + `ffmpeg` on S23."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory(dir=str(base_dir)) as tmpd:
+        tmp_path = Path(tmpd)
+        n_frames = 24
+        for i in range(n_frames):
+            frame_img = _render_scene_frame_pil(prompt, width=480, height=300, phase=i / float(n_frames))
+            frame_img.save(tmp_path / f"f_{i:03d}.png", format="PNG")
+        out_mp4 = tmp_path / "out.mp4"
+        ffmpeg_bin = shutil.which("ffmpeg") or "/data/data/com.termux/files/usr/bin/ffmpeg"
+        cmd = [
+            ffmpeg_bin,
+            "-y",
+            "-framerate",
+            "12",
+            "-i",
+            str(tmp_path / "f_%03d.png"),
+            "-c:v",
+            "libx264",
+            "-preset",
+            "ultrafast",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            str(out_mp4),
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if res.returncode != 0 or not out_mp4.exists():
+            cmd_fallback = [
+                ffmpeg_bin,
+                "-y",
+                "-framerate",
+                "12",
+                "-i",
+                str(tmp_path / "f_%03d.png"),
+                "-c:v",
+                "mpeg4",
+                "-q:v",
+                "5",
+                "-pix_fmt",
+                "yuv420p",
+                str(out_mp4),
+            ]
+            subprocess.run(cmd_fallback, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        mp4_bytes = out_mp4.read_bytes()
+    return "data:video/mp4;base64," + base64.b64encode(mp4_bytes).decode("ascii")
+
+
+def generate_spoken_wav_data_url(text: str, base_dir: Path) -> str:
+    """Synthesizes real spoken English voice WAV audio from `text` using `espeak` on the Samsung Galaxy S23."""
+    import tempfile
+
+    clean_speech = re.sub(r"[*`#_~\[\]()<>]", " ", text or "Hello from Clover on your Samsung Galaxy S23.")
+    clean_speech = re.sub(r"\s+", " ", clean_speech).strip()[:360]
+    if not clean_speech:
+        clean_speech = "Here is your audio response from Clover."
+
+    espeak_bin = shutil.which("espeak") or "/data/data/com.termux/files/usr/bin/espeak"
+    with tempfile.TemporaryDirectory(dir=str(base_dir)) as tmpd:
+        out_wav = Path(tmpd) / "speech.wav"
+        subprocess.run(
+            [espeak_bin, "-v", "en-us", "-s", "158", "-p", "52", "-w", str(out_wav), clean_speech],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        wav_bytes = out_wav.read_bytes()
+    return "data:audio/wav;base64," + base64.b64encode(wav_bytes).decode("ascii")
+
+
+# ==============================================================================
 # 4. On-Device Samsung Galaxy S23 Clover Coordinator
 # ==============================================================================
 
@@ -582,9 +792,35 @@ class CloverS23OnDeviceSystem:
             except Exception:
                 pass
 
-        # 6. Layer 1 (`LiquidAI/LFM3-1.7B` 24-Layer 4-Bit C/NEON/BFDOT/SDOT Engine)
+        # 6. Detect whether the user's prompt asks to generate an Image, Video, or Audio
+        detected_media = detect_requested_media_from_prompt(prompt)
+        req_out = (output_type or "").lower().strip()
+        if req_out in ("image", "video", "audio"):
+            active_media = req_out
+        else:
+            active_media = detected_media
+
+        # 7. Layer 1 (`LiquidAI/LFM3-1.7B` 24-Layer 4-Bit C/NEON/BFDOT/SDOT Engine)
         user_body = (prompt or "Hello!").strip()
-        if context_notes and not direct_notes:
+        if active_media in ("image", "video"):
+            # Ask LFM3 for a concise 1-sentence visual description rather than refusing to draw
+            clean_subj = re.sub(
+                r"^(?:please\s+)?(?:can\s+you\s+)?(?:generate|create|make|draw|paint|render|show|animate)\s+(?:me\s+)?(?:an?\s+|the\s+)?(?:image|picture|photo|video|animation|clip|illustration|diagram)\s+(?:of\s+|for\s+|showing\s+)?",
+                "",
+                user_body,
+                flags=re.IGNORECASE,
+            ).strip()
+            user_body = f"Write one vivid sentence describing {clean_subj or user_body}."
+        elif active_media == "audio":
+            clean_speech_req = re.sub(
+                r"^(?:please\s+)?(?:can\s+you\s+)?(?:generate|create|make|synthesize|record|speak|read|say|play)\s+(?:me\s+)?(?:an?\s+|the\s+)?(?:audio|voice|speech|sound)\s+(?:of\s+|for\s+|about\s+|saying\s+)?",
+                "",
+                user_body,
+                flags=re.IGNORECASE,
+            ).strip()
+            if clean_speech_req:
+                user_body = clean_speech_req
+        elif context_notes and not direct_notes:
             short_ctx = " ".join(c[:180] for c in context_notes[:2])
             user_body = f"Context: {short_ctx}\nQuestion: {user_body}"
 
@@ -596,7 +832,6 @@ class CloverS23OnDeviceSystem:
         generated_reply = self._clean_complete_sentences(self.tokenizer.decode(gen_ids, skip_special_tokens=True))
 
         if direct_notes and generated_reply:
-            # If the model started a meta-preamble ("We need to answer..."), lead directly with the verified notes
             if re.match(r"^(?:We need to|The user asks|Let's|To answer)", generated_reply, flags=re.IGNORECASE):
                 reply_text = "\n\n".join(direct_notes[:2])
             else:
@@ -607,15 +842,29 @@ class CloverS23OnDeviceSystem:
         elif direct_notes:
             reply_text = "\n\n".join(direct_notes[:2])
         else:
-            reply_text = "Hello! How can I help you today?"
+            reply_text = "Here is what you requested."
 
-        # 7. Layer 5 Post-Generation Symbolic Grounding Verifier (`verify_source_grounding`)
+        # 8. Layer 5 Post-Generation Symbolic Grounding Verifier (`verify_source_grounding`)
         reply_text = self.symbolic_verifier.verify_source_grounding(prompt, reply_text)
 
-        # 8. Layer 6 Real Python Generative Compilation (`CloverPythonGenerativeCompiler` on actual user or model code)
+        # 9. Layer 6 Real Python Generative Compilation (`CloverPythonGenerativeCompiler` on actual user or model code)
         compiler_report = self._compile_verify_python_blocks(prompt + "\n" + reply_text)
         if compiler_report is not None:
             tools_used.append("layer6_generative_compiler")
+
+        # 10. Generate Real Media When Requested in the Prompt (Image PNG, Video MP4 via FFmpeg, or Spoken Audio WAV via eSpeak)
+        image_png_b64 = ""
+        video_mp4_b64 = ""
+        audio_wav_b64 = ""
+        if active_media == "image":
+            image_png_b64 = generate_image_png_data_url(prompt)
+            tools_used.append("pillow_png_image_generator")
+        elif active_media == "video":
+            video_mp4_b64 = generate_video_mp4_data_url(prompt, self.base_dir)
+            tools_used.append("ffmpeg_mp4_video_generator")
+        elif active_media == "audio" or voice_input:
+            audio_wav_b64 = generate_spoken_wav_data_url(reply_text, self.base_dir)
+            tools_used.append("espeak_spoken_wav_synthesizer")
 
         out_ids = self.tokenizer.encode(reply_text)
         total_ms = round((time.perf_counter() - t0) * 1000.0, 2)
@@ -627,8 +876,11 @@ class CloverS23OnDeviceSystem:
             "exclusive_app_package": CLOVER_S23_APP_PACKAGE,
             "prompt": prompt,
             "reply": reply_text,
-            "output_type": "audio" if (output_type or "").lower() == "audio" else "text",
-            "speak_with_android_tts": (output_type or "").lower() == "audio" or voice_input,
+            "output_type": active_media,
+            "image_png_b64": image_png_b64,
+            "video_mp4_b64": video_mp4_b64,
+            "audio_wav_b64": audio_wav_b64,
+            "speak_with_android_tts": active_media == "audio" or voice_input,
             "tools_used": tools_used,
             "layer6_compiler_report": compiler_report,
             "input_tokens": len(user_toks),
@@ -650,6 +902,9 @@ def run_on_device_s23_verification(base_dir: Path) -> dict[str, Any]:
         "What is the wavelength for constructive interference in a thin film of refractive index 1.5 and thickness 100 nm at m=0, and how does Clover's per-layer cache partition fix flat hit rates?"
     )
     r_code = sys_s23.run_cycle("Verify this Python function:\n```python\ndef fib(n: int) -> int:\n    return n if n <= 1 else fib(n - 1) + fib(n - 2)\n```")
+    r_image = sys_s23.run_cycle("Generate an image of a sunset over the ocean")
+    r_video = sys_s23.run_cycle("Generate a video of a cosmic galaxy nebula")
+    r_audio = sys_s23.run_cycle("Generate audio explaining why the sky is blue")
 
     vm_rss_mb = 0.0
     if os.path.exists("/proc/self/status"):
@@ -658,6 +913,15 @@ def run_on_device_s23_verification(base_dir: Path) -> dict[str, Any]:
                 kb = int(re.findall(r"\d+", ln)[0])
                 vm_rss_mb = round(kb / 1024.0, 2)
                 break
+
+    def _strip_b64_summary(r: dict[str, Any]) -> dict[str, Any]:
+        out = dict(r)
+        for k in ("image_png_b64", "video_mp4_b64", "audio_wav_b64"):
+            val = str(out.get(k) or "")
+            out[k + "_len"] = len(val)
+            out[k + "_prefix"] = val[:32] if val else ""
+            out.pop(k, None)
+        return out
 
     report = {
         "device_uname": list(platform.uname()),
@@ -672,11 +936,14 @@ def run_on_device_s23_verification(base_dir: Path) -> dict[str, Any]:
             "layer5_ontology_and_verifier": "real_on_device (CloverOntologyRetriever + CloverSymbolicVerifier.verify_source_grounding)",
             "layer6_generative_compiler": "real_on_device (CloverPythonGenerativeCompiler compiling real user/model Python code blocks)",
             "layer7_data_movement": "real_on_device (SpecMD Policy 3 + R4 Clean-Drop issuing OS madvise MADV_WILLNEED / MADV_DONTNEED)",
-            "fake_projections_or_templates": "none (all random matrices, fake video frames, and static SVG/WAV templates removed)",
+            "prompt_driven_media_generators": "real_on_device (Pillow 640x400 PNG image, FFmpeg 24-frame H.264 MP4 video, eSpeak NG spoken English WAV audio)",
         },
-        "chat_test": r_chat,
-        "grounded_ontology_memory_math_test": r_grounded,
-        "layer6_real_code_compile_test": r_code,
+        "chat_test": _strip_b64_summary(r_chat),
+        "grounded_ontology_memory_math_test": _strip_b64_summary(r_grounded),
+        "layer6_real_code_compile_test": _strip_b64_summary(r_code),
+        "prompt_driven_image_test": _strip_b64_summary(r_image),
+        "prompt_driven_video_test": _strip_b64_summary(r_video),
+        "prompt_driven_audio_test": _strip_b64_summary(r_audio),
         "layer7_specmd_r4_madvise_dm_stats": sys_s23.engine.get_dm_stats(),
     }
     out_json = base_dir / "lfm3_omni_s23_live_phone_report.json"
