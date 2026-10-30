@@ -1136,6 +1136,45 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             self._send({"ok": True})
 
         def do_GET(self) -> None:
+            if self.path.startswith("/CloverAIStudio.apk"):
+                apk_path = base_dir / "android-app" / "CloverAIStudio.apk"
+                if apk_path.exists():
+                    data = apk_path.read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/vnd.android.package-archive")
+                    self.send_header("Content-Disposition", 'attachment; filename="CloverAIStudio.apk"')
+                    self.send_header("Content-Length", str(len(data)))
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
+            if self.path.startswith("/install"):
+                html = (
+                    "<!DOCTYPE html><html><head><meta charset='utf-8'>"
+                    "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+                    "<title>Install Clover AI Studio</title>"
+                    "<style>"
+                    "body{margin:0;padding:24px;background:#faf8f2;color:#132018;font-family:sans-serif;text-align:center}"
+                    ".card{max-width:420px;margin:28px auto;padding:26px 22px;background:#fffefb;border:1px solid #dfd8c8;border-radius:20px;box-shadow:0 12px 30px rgba(19,32,24,0.08)}"
+                    "h1{font-family:Georgia,serif;font-size:1.55rem;margin:0 0 10px;color:#132018}"
+                    "p{font-size:0.95rem;line-height:1.55;color:#2d3e34;margin:0 0 18px}"
+                    "a.btn{display:block;padding:15px 20px;background:#1b5e46;color:#fff;text-decoration:none;border-radius:999px;font-weight:700;font-size:1.05rem;box-shadow:0 6px 18px rgba(27,94,70,0.32)}"
+                    ".note{margin-top:16px;font-size:0.82rem;color:#596a5f}"
+                    "</style></head><body>"
+                    "<div class='card'>"
+                    "<h1>Clover AI Studio</h1>"
+                    "<p><strong>Samsung Galaxy S23 On-Device Edition</strong><br>24-Layer 4-Bit LFM3-Omni + All 6 Clover Layers<br>App-Exclusive Engine (<code>ai.clover.studio</code>)</p>"
+                    "<a class='btn' id='dl' href='/CloverAIStudio.apk'>Tap to Install Clover AI Studio APK</a>"
+                    "<div class='note'>After download completes, tap <strong>Open</strong> &rarr; <strong>Install</strong>, then open <strong>Clover AI Studio</strong> from your app drawer.</div>"
+                    "</div>"
+                    "<script>setTimeout(function(){window.location.href='/CloverAIStudio.apk';},400);</script>"
+                    "</body></html>"
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(html)))
+                self.end_headers()
+                self.wfile.write(html)
+                return
             if not self._is_exclusive_clover_app():
                 self._reject_non_app()
                 return
