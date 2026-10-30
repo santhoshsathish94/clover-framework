@@ -2549,9 +2549,10 @@ class CloverK3AgentEngine:
                 ref_lines = []
                 for ln in search_res_txt.splitlines():
                     s_ln = ln.strip()
-                    if not s_ln or s_ln.startswith(("#", "---")):
+                    if not s_ln or s_ln.startswith(("#", "---", "1. **", "2. **", "3. **")):
                         continue
-                    s_ln = re.sub(r"^(?:•\s*Reference Source\s*\d+:\s*|Page\s*\d+:\s*)", "", s_ln).strip()
+                    s_ln = re.sub(r"^(?:•\s*Reference Source\s*\d+:\s*|Page\s*\d+:\s*|(?:[-*•]+)\s*)", "", s_ln).strip()
+                    s_ln = re.sub(r"\*\*([^*]+)\*\*", r"\1", s_ln).strip()
                     # Convert `[Web: Title — Link: URL] Body` into `Title (URL): Body`
                     s_ln = re.sub(
                         r"^\[(?:Wikipedia|Web|arXiv)[^:\]]*:\s*([^—\]]+?)\s*—\s*Link:\s*(https?://[^\s\]]+)\]\s*(.+)$",
@@ -2562,18 +2563,23 @@ class CloverK3AgentEngine:
                         s_ln = s_ln[:-3].rstrip(" ,;(") + "."
                     if len(s_ln) >= 25:
                         ref_lines.append(s_ln)
-                    if len(ref_lines) >= 6:
+                    if len(ref_lines) >= 7:
                         break
                 if ref_lines:
                     valid_existing = [
                         p.lstrip("\n").strip() for p in (plans or [])
                         if p not in ("Unable to process this request right now.", "Hello! How can I help you today?")
+                        and p.strip().endswith((".", "!", "?", ":"))
+                        and not any(
+                            mp in p.lower()
+                            for mp in ("mentioned here", "from what i remember", "based on the reference", "from the references", "let me break this down")
+                        )
                     ]
                     if "clover" in raw_user_q.lower():
-                        combined_search_src = "\n".join(valid_existing[:2] + ref_lines[:5])
+                        combined_search_src = "\n".join(ref_lines[:6])
                     else:
-                        combined_search_src = "\n".join(valid_existing[:2] + ref_lines[:3])
-                    plans = parse_and_split_plans(combined_search_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=16)
+                        combined_search_src = "\n".join(ref_lines[:4] + valid_existing[:2])
+                    plans = parse_and_split_plans(combined_search_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=18)
 
         del past_kv, out
         if torch.cuda.is_available():
