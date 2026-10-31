@@ -1075,9 +1075,14 @@ class CloverMemoryGitRepo:
 
         seen_rels: set[str] = set()
         for sroot in search_roots:
+            is_default_mem_repo = (sroot.resolve() == self.default_repo_dir.resolve())
             for item in self.list_files(target_dir=sroot):
                 rel = item["path"]
-                if rel in ("AGENTS.md", "AGENTS_FULL_SPEC.md") or rel.startswith(("lessons/", "sessions/", "execution/", "outcomes/")):
+                if rel in ("AGENTS.md", "AGENTS_FULL_SPEC.md") or rel.startswith(("lessons/", "sessions/", "execution/", "outcomes/", "config/")):
+                    continue
+                if is_default_mem_repo and (rel == "CONTEXT.md" or rel.endswith("-context-index.md")) and not any(
+                    k in q_low for k in ("context.md", "memory repo", "clover repo", "workspace")
+                ):
                     continue
                 if SECRETISH.search(Path(rel).name):
                     continue
