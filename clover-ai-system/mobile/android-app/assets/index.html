@@ -427,8 +427,8 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       </div>
     </div>
     <div class="set">
-      <div class="set__t">Clover layers (L2 &ndash; L7) &amp; 11 Foundational Papers</div>
-      <div class="set__d">Progressive 7-layer stack trained on 8&times; RTX 3090 and verified live on this Samsung Galaxy S23.</div>
+      <div class="set__t">3 Core Pipeline &amp; 3 Supporting Components</div>
+      <div class="set__d"><b>3 Core Components</b> (<code>Inference &rarr; Plan &rarr; Decode</code>, with Direction B SoC hardware execution built into Core 1 Inference) supported by <b>3 Supporting Components</b> (<code>Memory &middot; Relationships &middot; Tools</code>).</div>
       <div id="layers"></div>
     </div>
     <div class="set">
@@ -576,12 +576,12 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
   };
 
   var LAYERS = [
-    ['L2', 'hybridlink', 'HybridAgent & HybridLink2048', 'Continuous <latent> reasoning steps in 2,048-d space (Stage-3 Self-Conditioned) + live Web Search & Python tool loop.'],
-    ['L3', 'ncm', 'Concept renderer (11-Level NCM)', 'Renders through Lfm3ComboBridge + Lfm3ExpertBridge + 11-level VQVAE (313 codes) + LexicalPointerDecoder.'],
-    ['L4', 'memory', 'Local Git Memory Repo (AGENTS.md) + 9 Papers', 'Version-controlled local Git repo (clover-memory-repo/) tracking AGENTS.md, session logs (.md), task files & reusable scripts (.py) with on-demand tool fetch (zero context bloat) + Private GitHub sync + 9 Foundational Papers.'],
-    ['L5', 'ontology', 'Ontology GraphRAG + Verifier', 'Symbolic CVE/CWE/CAPEC inference, Turing (1950) M0/M1 diagonal stratifier, Newell-Simon (1956) CSm (*2.07 fix) & VCt, and source grounding audit.'],
-    ['L6', 'compiler', 'Generative Compiler + Sutton TD(0)', 'Verifies model-written Python code + prompt asserts and computes Sutton (1988) Absorbing Markov V_MLE statement survival.'],
-    ['L7', 'specmd_madvise', 'Direction B SoC Data-Movement', 'SpecMD Policy 3 OS madvise(MADV_WILLNEED) lookahead (254.7x fewer major page faults) + Eyeriss 4-Tier Mobile SoC byte ledger.']
+    ['C1', null, 'Core 1 · Inference (LFM3-Omni-2B + Direction B SoC Engine)', '24 Tri-Hybrid layers with built-in Direction B hardware execution: Adreno 740 OpenCL dot_acc_sat + Kryo ARMv9 i8mm SMMLA + 1-pass FlashAttention-2 + LFM3-SoC-Q4 + SpecMD Policy 3 madvise lookahead + LCP cache reuse.'],
+    ['C2', 'hybridlink', 'Core 2 · Plan (HybridAgent & HybridLink2048)', 'Runs after inference on h_t -> r_t = R(h_t): continuous <latent> reasoning steps in 2,048-d space + multi-turn tool planning + Clover Retry Cycle (3-way independent majority vote).'],
+    ['C3', 'ncm', 'Core 3 · Decode (11-Level NCM Concept Renderer)', 'Decodes (h_t, r_t) through Lfm3ComboBridge + Lfm3ExpertBridge + 11-level multiscale VQVAE (313 concept codes) + NextConceptTransformer + LexicalPointerDecoder.'],
+    ['S1', 'memory', 'Support 1 · Memory (Local Git Repo & Workspaces)', 'Version-controlled local Git repo (clover-memory-repo/ + user project repos) with AGENTS.md, per-folder <folder>-context.md, root <repo>-context-index.md, sessions/, tasks/, scripts/, staged lessons/, and Private GitHub sync.'],
+    ['S2', 'ontology', 'Support 2 · Relationships (Ontology Graph + 11 Papers)', 'Multi-hop causal/entity GraphRAG (CVE -> CWE -> CAPEC), Horn-rule inference, source grounding audit, and all 11 Foundational Papers (McCulloch-Pitts, Turing, Newell-Simon, Rosenblatt, Minsky-Papert, Hopfield, Rumelhart, Sutton, LeCun, Krizhevsky, Vaswani).'],
+    ['S3', 'compiler', 'Support 3 · Tools (Syntax Validator, MCP, Terminal/Python, Web & Media)', 'All external capabilities & validation: Python/Rust Generative Compiler & syntax checker (AST, doctests, asserts, Sutton TD(0) survival), MCP connections, Python/terminal runner, self-hosted web search & URL reader, and PNG/MP4/WAV media generators.']
   ];
 
   var SUGGEST = [
@@ -915,28 +915,29 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     $('s-think').checked = !!s.thinking;
     $('s-autospeak').checked = !!s.autospeak;
 
-    var activeCnt = Object.keys(s.layers).filter(function (k) { return s.layers[k]; }).length + 1;
-    $('mode-text').textContent = 'Omni · ' + (s.engine === 'adreno' ? 'Adreno 740 + Kryo' : 'Kryo CPU') + ' · ' + activeCnt + '/7 Layers' + (s.thinking ? ' · Latent on' : '');
-    $('soc-badge').textContent = (s.q4_operators ? 'Full LFM3-SoC-Q4 (894 MB)' : '4-Bit FFN + 4-Bit LM-Head') + ' · 11 Papers';
+    $('mode-text').textContent = '3 Core (Inference · Plan · Decode) + 3 Support (Memory · Relationships · Tools)';
+    $('soc-badge').textContent = (s.q4_operators ? 'Full LFM3-SoC-Q4 (894 MB)' : '4-Bit FFN + 4-Bit LM-Head') + ' · Direction B Built-In';
 
     var box = $('layers'); box.innerHTML = '';
     LAYERS.forEach(function (L) {
-      var key = L[1], on = !!s.layers[key];
+      var key = L[1], on = key ? !!s.layers[key] : true;
       var row = el('div', 'layer' + (on ? ' on' : ''),
         '<div class="layer__tag"></div><div><div class="layer__name"></div><div class="layer__d"></div></div>');
       row.querySelector('.layer__tag').textContent = L[0];
       row.querySelector('.layer__name').textContent = L[2];
       row.querySelector('.layer__d').textContent = L[3];
       var sw = el('label', 'switch', '<input type="checkbox"><span></span>');
-      var inp = sw.querySelector('input'); inp.checked = on; inp.setAttribute('aria-label', L[2]);
-      inp.addEventListener('change', function () {
-        state.settings.layers[key] = this.checked;
-        if (key === 'ncm') state.settings.use_ncm_renderer = this.checked;
-        saveSettings();
-        var ch = { layers: {} }; ch.layers[key] = this.checked;
-        api('POST', '/api/settings', ch).catch(function () {});
-        renderSettings();
-      });
+      var inp = sw.querySelector('input'); inp.checked = on; inp.disabled = !key; inp.setAttribute('aria-label', L[2]);
+      if (key) {
+        inp.addEventListener('change', function () {
+          state.settings.layers[key] = this.checked;
+          if (key === 'ncm') state.settings.use_ncm_renderer = this.checked;
+          saveSettings();
+          var ch = { layers: {} }; ch.layers[key] = this.checked;
+          api('POST', '/api/settings', ch).catch(function () {});
+          renderSettings();
+        });
+      }
       row.appendChild(sw);
       if (key === 'memory') {
         var les = el('div', 'mem'); les.id = 'lesson-list'; row.children[1].appendChild(les);
