@@ -163,7 +163,7 @@ class CloverMemoryGitRepo:
 
     def _ensure_initialized(self) -> None:
         self.repo_dir.mkdir(parents=True, exist_ok=True)
-        for sub in ("sessions", "tasks", "scripts", "notes"):
+        for sub in ("sessions", "tasks", "scripts", "notes", "lessons"):
             (self.repo_dir / sub).mkdir(parents=True, exist_ok=True)
 
         if not (self.repo_dir / ".git").exists():
@@ -379,7 +379,7 @@ class CloverMemoryGitRepo:
         scored: list[tuple[float, str, str, str]] = []
         for item in self.list_files():
             rel = item["path"]
-            if rel in ("AGENTS.md", "AGENTS_FULL_SPEC.md"):
+            if rel in ("AGENTS.md", "AGENTS_FULL_SPEC.md") or rel.startswith("lessons/"):
                 continue
             fp = self.repo_dir / rel
             try:
@@ -485,6 +485,93 @@ class CloverMemoryGitRepo:
         self._run_git(["commit", "-m", f"Record session turn ({sid_clean}) in Layer 4 Git memory repo"])
         _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"])
         return {"saved_files": saved_files, "commit": head_sha or "HEAD"}
+
+    # ------------------------------------------------------------------
+    # 4b. Clover Cycle Staged Lessons (`lessons/MEM-LESSON-*.md` -> `notes/`)
+    #     Offered to the human to Keep or Discard (AGENTS.md Growth boundary)
+    # ------------------------------------------------------------------
+    def stage_lesson(self, lesson_text: str, conversation_id: str | None = None, kind: str = "user") -> dict[str, Any]:
+        import hashlib
+        clean = " ".join(str(lesson_text or "").split()).strip()
+        if not clean:
+            raise ValueError("Empty lesson text")
+        now_s = _utc_now()
+        ts_slug = now_s.replace("-", "").replace(":", "").replace("T", "-").replace("Z", "")
+        short_hash = hashlib.sha1(clean.encode("utf-8")).hexdigest()[:6]
+        lid = f"MEM-LESSON-{ts_slug}-{short_hash}"
+        rel_p = f"lessons/{lid}.md"
+        fp = self.repo_dir / rel_p
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        ev_note = (
+            "Clover Outcome checks: the earlier answer failed deterministic checks and the corrected answer passed."
+            if kind == "verified"
+            else "The user indicated Clover's earlier answer was not right during a Clover retry cycle."
+        )
+        md_body = (
+            f"# {lid}: Staged Clover Cycle Lesson ({kind})\n\n"
+            f"- **Created**: {now_s}\n"
+            f"- **Conversation**: `{conversation_id or 's23-studio'}`\n"
+            f"- **Provenance**: {ev_note}\n"
+            f"- **Status**: `staged_waiting_for_human`\n\n"
+            f"## Lesson Summary\n{clean}\n"
+        )
+        fp.write_text(md_body, encoding="utf-8")
+        self._run_git(["add", rel_p])
+        self._run_git(["commit", "-m", f"Stage Clover cycle lesson {lid} in lessons/"])
+        return {"id": lid, "path": rel_p, "summary": clean, "created_at": now_s, "kind": kind}
+
+    def list_staged_lessons(self) -> list[dict[str, Any]]:
+        lessons_dir = self.repo_dir / "lessons"
+        if not lessons_dir.exists():
+            return []
+        out: list[dict[str, Any]] = []
+        for fp in sorted(lessons_dir.glob("*.md"), reverse=True):
+            try:
+                txt = fp.read_text(encoding="utf-8", errors="replace")
+                lid = fp.stem
+                created = ""
+                m_c = re.search(r"-\s*\*\*Created\*\*:\s*(\S+)", txt)
+                if m_c:
+                    created = m_c.group(1).strip()
+                summary = ""
+                if "## Lesson Summary" in txt:
+                    summary = txt.split("## Lesson Summary", 1)[1].strip()
+                else:
+                    summary = txt.strip()[:300]
+                out.append({
+                    "id": lid,
+                    "path": f"lessons/{fp.name}",
+                    "summary": summary,
+                    "created_at": created,
+                })
+            except Exception:
+                pass
+        return out
+
+    def keep_staged_lesson(self, lesson_id: str) -> dict[str, Any]:
+        lid = Path(str(lesson_id or "").strip()).stem
+        src_fp = self.repo_dir / "lessons" / f"{lid}.md"
+        if not src_fp.exists():
+            raise FileNotFoundError(f"Staged lesson not found: {lid}")
+        txt = src_fp.read_text(encoding="utf-8", errors="replace")
+        promoted_txt = txt.replace("`staged_waiting_for_human`", f"`kept_by_human ({_utc_now()})`")
+        dst_rel = f"notes/{lid}.md"
+        dst_fp = self.repo_dir / dst_rel
+        dst_fp.parent.mkdir(parents=True, exist_ok=True)
+        dst_fp.write_text(promoted_txt, encoding="utf-8")
+        src_fp.unlink()
+        self._run_git(["add", "-A"])
+        self._run_git(["commit", "-m", f"Keep & promote Clover lesson {lid} to notes/{lid}.md"])
+        return {"ok": True, "promoted_path": dst_rel, "lessons": self.list_staged_lessons()}
+
+    def discard_staged_lesson(self, lesson_id: str) -> dict[str, Any]:
+        lid = Path(str(lesson_id or "").strip()).stem
+        src_fp = self.repo_dir / "lessons" / f"{lid}.md"
+        if src_fp.exists():
+            src_fp.unlink()
+            self._run_git(["add", "-A"])
+            self._run_git(["commit", "-m", f"Discard staged Clover lesson {lid}"])
+        return {"ok": True, "discarded": lid, "lessons": self.list_staged_lessons()}
 
     # ------------------------------------------------------------------
     # 5. Private Personal GitHub Repository Sync (`private: true` Enforced)

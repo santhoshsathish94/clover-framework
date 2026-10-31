@@ -418,6 +418,14 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       <div class="set__t">Think &amp; step in latent space <label class="switch"><input type="checkbox" id="s-think"><span></span></label></div>
       <div class="set__d">Enables HybridAgent <code>&lt;think&gt;&lt;latent&gt;...&lt;/latent&gt;&lt;/think&gt;</code> continuous reasoning via Stage-3 <code>HybridLink2048</code> before answering.</div>
     </div>
+    <div class="set" id="tools-set">
+      <div class="set__t">Tools</div>
+      <div class="set__d">With <b>When I ask</b>, Clover searches the web or runs Python only when your message asks for it ("search the web for…", "use Python to…"). With <b>Always</b>, it decides by itself.</div>
+      <div class="seg" id="s-tools">
+        <button type="button" data-v="ask">When I ask</button>
+        <button type="button" data-v="always" class="on">Always</button>
+      </div>
+    </div>
     <div class="set">
       <div class="set__t">Clover layers (L2 &ndash; L7) &amp; 11 Foundational Papers</div>
       <div class="set__d">Progressive 7-layer stack trained on 8&times; RTX 3090 and verified live on this Samsung Galaxy S23.</div>
@@ -459,6 +467,12 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
         <button type="button" class="btn danger" id="repo-del-btn"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg> Delete</button>
         <button type="button" class="btn" id="repo-cancel-btn">Close Editor</button>
       </div>
+    </div>
+
+    <div class="set" id="repo-lessons-set" hidden>
+      <div class="set__t">Lessons waiting for you (Clover Cycle Growth)</div>
+      <div class="set__d">When you tell Clover an answer was not right, what the correction taught waits here in <code>lessons/</code> until you keep (promote to <code>notes/</code>) or discard it.</div>
+      <div id="repo-lessons-list" class="mem"></div>
     </div>
 
     <div class="set">
@@ -783,11 +797,17 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     acts.appendChild(sv);
 
     if (!m.isNotice && m.promptOrig) {
-      var rd = btn('', ic('redo') + '<span>Try again</span>', 'Not right? Run Clover Cycle verification & retry');
+      var rd = btn('', ic('redo') + '<span>Try again</span>', 'Not right? Clover checks this answer again (Clover Cycle)');
       rd.addEventListener('click', function () {
         if (state.busy || !state.ready) return;
-        $('prompt').value = m.promptOrig;
-        send({ retryCycle: true });
+        var draft = $('prompt').value.trim();
+        $('prompt').value = draft || 'Try again';
+        send({
+          retryCycle: true,
+          previousQuestion: m.promptOrig,
+          previousAnswer: m.text || '',
+          feedback: draft || 'Try again'
+        });
       });
       acts.appendChild(rd);
     }
@@ -850,6 +870,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       if (s.output_type) state.settings.output_type = s.output_type;
       if (typeof s.thinking === 'boolean') state.settings.thinking = s.thinking;
       if (typeof s.autospeak === 'boolean') state.settings.autospeak = s.autospeak;
+      if (s.tools === 'ask' || s.tools === 'always') state.settings.tools = s.tools;
       if (s.layers && typeof s.layers === 'object') {
         Object.keys(s.layers).forEach(function (k) { state.settings.layers[k] = !!s.layers[k]; });
       }
@@ -874,6 +895,9 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     var s = state.settings;
     Array.prototype.forEach.call($('s-engine').children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === s.engine); });
     Array.prototype.forEach.call($('s-outtype').children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === s.output_type); });
+    if ($('s-tools')) {
+      Array.prototype.forEach.call($('s-tools').children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === (s.tools || 'always')); });
+    }
     $('s-q4op').checked = !!s.q4_operators;
     $('s-think').checked = !!s.thinking;
     $('s-autospeak').checked = !!s.autospeak;
@@ -902,6 +926,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       });
       row.appendChild(sw);
       if (key === 'memory') {
+        var les = el('div', 'mem'); les.id = 'lesson-list'; row.children[1].appendChild(les);
         var mem = el('div', 'mem'); mem.id = 'mem-list'; row.children[1].appendChild(mem);
       }
       box.appendChild(row);
@@ -909,8 +934,53 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     loadMemories();
   }
 
+  function renderLessonsInto(box, list) {
+    if (!box) return;
+    box.innerHTML = '';
+    if (!list || !list.length) return;
+    var h = el('div', 'layer__d');
+    h.textContent = 'Lessons waiting for you (kept lessons are promoted to notes/ in your Git memory repo):';
+    box.appendChild(h);
+    list.slice(0, 20).forEach(function (m) {
+      var it = el('div', 'mem__item', '<span></span>');
+      var sp = it.querySelector('span');
+      sp.textContent = m.summary;
+      var sm = el('small');
+      sm.textContent = (m.created_at || '').replace('T', ' ').replace('Z', ' UTC') + ' · ' + (m.id || '');
+      sp.appendChild(sm);
+      var keep = btn('', ic('check'), 'Keep this lesson (promote to notes/)');
+      var drop = btn('', ic('trash'), 'Discard this lesson');
+      keep.addEventListener('click', function () {
+        api('POST', '/api/lessons/keep', { id: m.id }).then(function (r) {
+          renderLessons(r.lessons || []);
+          loadMemories();
+          loadRepoManager();
+        }).catch(function () {});
+      });
+      drop.addEventListener('click', function () {
+        api('POST', '/api/lessons/discard', { id: m.id }).then(function (r) {
+          renderLessons(r.lessons || []);
+          loadRepoManager();
+        }).catch(function () {});
+      });
+      it.appendChild(keep);
+      it.appendChild(drop);
+      box.appendChild(it);
+    });
+  }
+
+  function renderLessons(list) {
+    renderLessonsInto($('lesson-list'), list);
+    var repoSet = $('repo-lessons-set');
+    if (repoSet) repoSet.hidden = !list || !list.length;
+    renderLessonsInto($('repo-lessons-list'), list);
+  }
+
   function loadMemories() {
     var box = $('mem-list');
+    if ($('lesson-list') || $('repo-lessons-list')) {
+      api('GET', '/api/lessons').then(function (r) { renderLessons(r.lessons || []); }).catch(function () {});
+    }
     if (!box) return;
     api('GET', '/api/memory').then(function (r) {
       var list = r.memories || [];
@@ -967,6 +1037,14 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
   });
   $('s-think').addEventListener('change', function () { state.settings.thinking = this.checked; saveSettings(); });
   $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
+  if ($('s-tools')) {
+    $('s-tools').addEventListener('click', function (ev) {
+      var b = ev.target.closest('button'); if (!b) return;
+      var v = b.getAttribute('data-v');
+      state.settings.tools = v; saveSettings();
+      api('POST', '/api/settings', { tools: v }).catch(function () {});
+    });
+  }
   $('clear-chats').addEventListener('click', function () {
     if (state.busy || !confirm('Delete all chats from this phone?')) return;
     state.sessions = { current: '', order: [], map: {} }; newChat(true); renderChats(); renderLog(); closeSheets();
@@ -1110,6 +1188,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     var commits = (r && r.commits) || [];
     var gh = (r && r.github_sync) || {};
     var onb = (r && r.onboarding) || {};
+    if (r && r.lessons) renderLessons(r.lessons);
 
     if (onb.agents_md_accepted) {
       $('repo-status-title').textContent = 'AGENTS.md Accepted · Local Git Repo';
@@ -1359,6 +1438,29 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       used.push('L7 SpecMD madvise');
     }
 
+    var cyc = r.clover_cycle_info || lt.clover_retry_cycle;
+    if (cyc) {
+      var cycBadge = {
+        overturned: 'Checked again · changed',
+        answered: 'Checked again',
+        kept: 'Checked again · same result',
+        corrected: 'Checked again · corrected',
+        rewritten: 'Answered again',
+        unconfirmed: 'Answered again · not confirmed',
+        redone: 'Answered again with tools'
+      }[cyc.action] || 'Checked again · Clover Cycle';
+      used.unshift(cycBadge);
+      traceLines.push('=== Clover Retry Cycle (Context -> Direction -> Execution -> Outcome -> Growth) ===');
+      traceLines.push('Action: ' + (cyc.action || 'checked') + ' | First findings: ' + JSON.stringify(cyc.first_findings || []) + ' | Independent solutions: ' + JSON.stringify(cyc.solutions || []));
+      if (cyc.overturned) {
+        traceLines.push('Overturned: ' + JSON.stringify(cyc.overturned.from) + ' -> ' + JSON.stringify(cyc.overturned.to));
+      }
+    }
+    if (r.lesson_staged) {
+      used.push('lesson waiting in Settings · Memory');
+      traceLines.push('Growth Stage: Staged lesson ' + r.lesson_staged + ' in lessons/ (waiting for you to Keep or Discard)');
+    }
+
     traceLines.push('=== Snapdragon 8 Gen 2 Unified SoC & 7-Layer Trace ===');
     traceLines.push('Input tokens: ' + (r.input_tokens || 0) + ' | Generated tokens: ' + (r.generated_tokens || 0) + ' | Total cycle: ' + (r.total_cycle_ms || 0) + ' ms');
     traceLines.push('L1 24-Layer C Engine: prefill=' + (l1.turn1_prefill_ms || 0) + ' ms, decode=' + (l1.turn1_decode_ms || 0) + ' ms');
@@ -1393,12 +1495,22 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     };
   }
 
+  function historyFor(c) {
+    var h = [], pend = null, pendRetry = false;
+    (c && c.messages || []).forEach(function (m) {
+      if (m.role === 'user') { pend = m.text; pendRetry = !!m.retry; }
+      else if (pend && m.text && !m.isNotice) { h.push({ user: pend, reply: m.text, retry: pendRetry }); pend = null; pendRetry = false; }
+    });
+    return h.slice(-6);
+  }
+
   function send(opts) {
     opts = opts || {};
     var c = cur(), prompt = $('prompt').value.trim(), files = state.files.slice(), imgB64 = state.imageB64, vIn = state.voiceInput;
     if (!prompt && (files.length || imgB64)) prompt = 'Analyze the attached file and answer clearly.';
-    if (!prompt || !state.ready || state.busy) return;
+    if (!prompt || !state.ready || !c || state.busy) return;
 
+    var hist = historyFor(c);
     $('prompt').value = ''; autosize();
     if (!c.messages.length) c.title = prompt.slice(0, 46);
     if (!opts.retryCycle) {
@@ -1410,19 +1522,26 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     var turn = el('div', 'b', botMarkHtml());
     var body = el('div', 'b__body'); turn.appendChild(body);
     var tStart = Date.now();
-    var wait = el('div', 'typing', '<span></span><span></span><span></span><em>running on S23 Unified SoC (0:00)</em>');
+    var wait = el('div', 'typing', '<span></span><span></span><span></span><em>' + (opts.retryCycle ? 'Clover Cycle checking earlier answer (0:00)' : 'running on S23 Unified SoC (0:00)') + '</em>');
     body.appendChild(wait);
     $('log').appendChild(turn); scrollDown();
 
     state.busy = true; setStatus('busy', 'Running · Adreno 740 + Kryo'); updateSend();
     var timer = setInterval(function () {
       var em = wait.querySelector('em');
-      if (em) em.textContent = (opts.retryCycle ? 'Clover Cycle verifying & retrying · ' : 'running on S23 Unified SoC · ') + fmtSecs((Date.now() - tStart) / 1000);
+      if (em) em.textContent = (opts.retryCycle ? 'Clover Cycle verifying & solving independently · ' : 'running on S23 Unified SoC · ') + fmtSecs((Date.now() - tStart) / 1000);
     }, 1000);
 
     var maxLayer = computeMaxLayerCap();
     var payload = {
       prompt: prompt,
+      session_id: c.id,
+      history: hist,
+      retry_cycle: !!opts.retryCycle,
+      previous_question: opts.previousQuestion || '',
+      previous_answer: opts.previousAnswer || '',
+      feedback: opts.feedback || '',
+      tools_mode: state.settings.tools || 'always',
       output_type: state.settings.output_type || 'text',
       image_b64: imgB64,
       attached_files: files,
@@ -1445,12 +1564,11 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       if (speed > 0) state.lastSpeed = speed;
 
       var info = buildTraceAndBadges(r);
-      if (opts.retryCycle) info.used.unshift('Checked again · Clover Cycle');
 
       var m = {
         role: 'bot',
         text: r.reply || '(empty reply)',
-        promptOrig: prompt,
+        promptOrig: opts.previousQuestion || r.prompt || prompt,
         image_png_b64: r.image_png_b64 || '',
         video_mp4_b64: r.video_mp4_b64 || '',
         audio_wav_b64: r.audio_wav_b64 || '',
@@ -1463,6 +1581,10 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       };
       c.messages.push(m); save();
       $('log').appendChild(botEl(m)); scrollDown();
+      if (r.lesson_staged) {
+        loadMemories();
+        loadRepoManager();
+      }
       if ((vIn || state.settings.output_type === 'audio') && state.settings.autospeak) {
         if (m.audio_wav_b64) { var a = new Audio(m.audio_wav_b64); a.play(); }
         else speakText(m.text);

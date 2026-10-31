@@ -1804,6 +1804,46 @@ class CloverS23OnDeviceSystem:
             "source_grounding_verified": (len(ungrounded_nums) == 0 and len(ungrounded_ids) == 0),
         }
 
+    _PY_HINT = re.compile(
+        r"^\s*(?:def|class|import|from|for|while|if|elif|try|with|return|print\(|[A-Za-z_]\w*\s*=(?!=))",
+        re.M,
+    )
+    _TOOL_ASKS = (
+        (
+            "web_search",
+            r"\b(?:search|google|look\s+(?:it\s+|that\s+|this\s+)?up|browse|web|internet|online|website|web\s*page|url|arxiv|wikipedia)\b|https?://|www\.",
+        ),
+        (
+            "python_interpreter",
+            r"\b(?:use|using)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
+            r"\b(?:run|execute|test)\s+(?:this|the|my|that|it|some)?\s*(?:code|script|program|python)\b|"
+            r"\b(?:compute|calculate)\s+\d",
+        ),
+    )
+
+    @classmethod
+    def asked_tools(cls, text: str) -> list[str]:
+        """Returns the tool names explicitly requested by `text` (used when `settings['tools'] == 'ask'`)."""
+        return [name for name, pat in cls._TOOL_ASKS if re.search(pat, text or "", re.I)]
+
+    @classmethod
+    def extract_python_from_reply(cls, reply: str) -> list[str]:
+        """
+        Extracts Python code blocks from `reply`: `python`/`py` fenced blocks or bare fences matching `_PY_HINT`.
+        Prevents non-Python fenced blocks (such as Sudoku grids or ASCII tables) from being compiled as Python.
+        """
+        fenced = re.findall(r"```(python|py)?[ \t]*\n([\s\S]*?)```", reply or "", flags=re.IGNORECASE)
+        py_blocks = [b for tag, b in fenced if (tag and tag.lower() in ("python", "py")) or cls._PY_HINT.search(b)]
+        if py_blocks:
+            return py_blocks
+        if fenced:
+            return []
+        unclosed = re.findall(r"```(?:python|py)\s*\n([\s\S]+)$", reply or "", flags=re.IGNORECASE)
+        if unclosed:
+            return unclosed
+        m = re.search(r"((?:^(?:def|class|import|from)\s+[^\n]+\n(?:\s+[^\n]+\n?)*)+)", reply or "", flags=re.MULTILINE)
+        return [m.group(1)] if m else []
+
     def _compile_verify_model_code_only(
         self,
         model_reply_text: str,
@@ -1814,16 +1854,10 @@ class CloverS23OnDeviceSystem:
         """
         Layer 6 (`CloverPythonGenerativeCompiler`):
         Checks ONLY code written by the model (`model_reply_text` fenced blocks / functions or `model_tool_code`),
-        never the user's prompt text. If the user prompt includes `assert` test cases, runs them against
-        the model's function when `allow_python=True`.
+        never the user's prompt text. If the user prompt includes `assert` test cases or `>>>` doctests, runs them
+        against the model's function when `allow_python=True`.
         """
-        blocks = re.findall(r"```(?:python|py)?\s*\n(.*?)```", model_reply_text or "", flags=re.DOTALL | re.IGNORECASE)
-        if not blocks:
-            blocks = re.findall(r"```(?:python|py)\s*\n([\s\S]+)$", model_reply_text or "", flags=re.IGNORECASE)
-        if not blocks:
-            m = re.search(r"((?:^(?:def|class|import|from)\s+[^\n]+\n(?:\s+[^\n]+\n?)*)+)", model_reply_text or "", flags=re.MULTILINE)
-            if m:
-                blocks = [m.group(1)]
+        blocks = self.extract_python_from_reply(model_reply_text or "")
         if not blocks and model_tool_code:
             blocks = [model_tool_code]
         if not blocks:
@@ -1833,7 +1867,10 @@ class CloverS23OnDeviceSystem:
         results = []
         all_ok = True
         for b in blocks[:3]:
-            st = self.py_compiler.check_prefix(b, end_marker=True)
+            try:
+                st = self.py_compiler.check_prefix(b, end_marker=True, spec_prompt=user_prompt)
+            except TypeError:
+                st = self.py_compiler.check_prefix(b, end_marker=True)
             ok = bool(st.ok)
             diags = [
                 {"code": getattr(d, "code", ""), "message": getattr(d, "message", ""), "line": getattr(d, "line", None)}
@@ -2445,6 +2482,199 @@ class CloverS23OnDeviceSystem:
             "dm_stats": dm_stats,
         }
 
+    def run_retry_cycle(
+        self,
+        question: str,
+        previous_answer: str,
+        feedback: str = "",
+        session_id: str = "s23-studio",
+        max_active_layer: int = 7,
+        allow_internet: bool = True,
+        allow_python: bool = True,
+    ) -> dict[str, Any]:
+        """
+        Executes the Laptop Agent's full Clover Retry Cycle (`clover_cycle.retry_cycle`) on the Samsung Galaxy S23
+        when the user says the earlier answer was not right ("try again", "that's wrong", "not what I expected",
+        the Try again button, or asking the same question again):
+          1. Deterministic Outcome checks (`arithmetic_findings` + `format_findings` + Layer 6 `CloverPythonGenerativeCompiler`).
+          2. Missing Context web search (`needs_web` -> `web_query`), passed to `solve(2)` and `rewrite` only so a
+             single misleading page moves at most 1 vote.
+          3. Independent multi-solution majority vote for single-value questions (`solve(1)`, `solve(2)` with `<latent>`
+             step, and `python_solve` verified via `clover_cycle.computes(code)`).
+          4. Open-ended / creative / code rewrite (`_redo` + `_keep_code`) directed by the user's feedback.
+          5. Growth stage: stages any learned lesson in `clover-memory-repo/lessons/` (`lesson_staged`) so the user
+             can Keep (promote to `notes/`) or Discard it.
+        """
+        import clover_cycle as C
+
+        t0 = time.perf_counter()
+        active_layer_cap = max(1, min(7, int(max_active_layer)))
+        madvise_on = active_layer_cap >= 7
+        self.engine.set_madvise_active(madvise_on)
+        self.engine.reset_dm_stats()
+
+        tools_used: list[str] = ["clover_retry_cycle"]
+        used_names: list[str] = []
+        layer_trace: dict[str, Any] = {}
+        c_total_ms = 0.0
+        total_gen_tokens = 0
+
+        # 1. Re-gather Layer 4 (Git Memory Repo) & Layer 5 (Ontology GraphRAG) Context for `question`
+        blocks: list[str] = []
+        if active_layer_cap >= 4:
+            git_hits = self.git_memory_repo.search_repo_relevant(question, max_files=2, max_chars_per_file=550)
+            for gh in git_hits:
+                blocks.append(f"[Git Memory Repo '{gh['path']}']: {gh['snippet']}")
+            if git_hits:
+                tools_used.append("layer4_git_memory_repo")
+        if active_layer_cap >= 5:
+            ont_items = self.ontology_retriever.retrieve(question, max_entities=3, max_paths=4)
+            if ont_items:
+                paths_first = sorted(ont_items, key=lambda x: 0 if getattr(x, "kind", "") == "path" else 1)
+                blocks.append(f"[Ontology GraphRAG Evidence]:\n{self._render_ontology(paths_first)}")
+                tools_used.append("layer5_ontology_graphrag")
+
+        notes = ("\n\n" + "\n\n".join(blocks)) if blocks else ""
+        web_ctx = ""
+        if not blocks and allow_internet and C.needs_web(question):
+            q_web = C.web_query(question)
+            if q_web:
+                obs = self.search_tool.execute(q_web)
+                if obs and not obs.startswith("Error"):
+                    web_ctx = (
+                        "\n\nClover searched the web for this question. Use these results only where they answer it; "
+                        "they can be incomplete or wrong:\n" + obs[:650]
+                    )
+                    tools_used.append("layer2_live_web_search")
+                    used_names.append("a web search")
+
+        sys_txt = self._build_system_prompt(allow_internet=False, allow_python=False, use_hybrid_agent_format=False)
+        convo_turns: list[tuple[str, str]] = [(question, previous_answer)]
+
+        def _run_c_prompt(user_msg: str, use_latent: bool = False, max_tok: int = 160) -> str:
+            nonlocal c_total_ms, total_gen_tokens
+            open_tag = "<|im_start|>assistant\n<think><latent>" if (use_latent and self.hybrid_ncm is not None) else "<|im_start|>assistant\n<think></think><answer>"
+            full_p = f"{sys_txt}<|im_start|>user\n{user_msg}<|im_end|>\n{open_tag}"
+            pids = self.tokenizer.encode(full_p, allow_special=True)[:1024]
+            h_p, ms_p = self.engine.prefill_cached(pids)
+            c_total_ms += ms_p
+            h_dec = h_p
+            if use_latent and self.hybrid_ncm is not None:
+                lat = self.hybrid_ncm.run_continuous_latent_step(h_p)
+                h_lat, ms_l = self.engine.step_embedding_cached(lat["r_np"])
+                close_ids = self.tokenizer.encode("</latent></think><answer>", allow_special=True)
+                h_dec, ms_c = self.engine.append_cached(close_ids)
+                c_total_ms += ms_l + ms_c
+                tools_used.append("layer2_lfm3_native_hybridlink")
+            g_ids, _, ms_d = self.engine.decode_from_cache(h_dec, max_new_tokens=max_tok, allow_thinking=0)
+            c_total_ms += ms_d
+            total_gen_tokens += len(g_ids)
+            return self._clean_model_text(self.tokenizer.decode(g_ids, skip_special_tokens=False))
+
+        def rewrite(instruction: str) -> str:
+            ctx_tail = (notes + web_ctx) if len(convo_turns) == 1 else ""
+            prev_q, prev_a = convo_turns[-1]
+            u_msg = (
+                f"Original Question:\n{prev_q}{ctx_tail}\n\n"
+                f"Your Earlier Answer:\n{prev_a}\n\n"
+                f"{instruction}"
+            )
+            new_ans = _run_c_prompt(u_msg, use_latent=True, max_tok=160) or previous_answer
+            convo_turns.append((instruction, new_ans))
+            return new_ans
+
+        def solve(k: int, note: str | None = None) -> str:
+            ctx = notes + (web_ctx if k == 2 else "")
+            s_prompt = C.second_solve_prompt(question + ctx, question, k=k, note=note)
+            return _run_c_prompt(s_prompt, use_latent=(k == 2), max_tok=160)
+
+        def python_solve(note: str | None = None) -> str:
+            if not allow_python:
+                return ""
+            p_prompt = C.python_solve_prompt(question + notes, note=note)
+            raw_py = _run_c_prompt(p_prompt, use_latent=False, max_tok=160)
+            py_blocks = self.extract_python_from_reply(raw_py)
+            code = py_blocks[0] if py_blocks else raw_py
+            if not code or not C.computes(code):
+                return ""
+            out = self._execute_python_subprocess(code)
+            val = C.python_answer(out)
+            if val is None:
+                return ""
+            tools_used.append("layer2_python_interpreter")
+            used_names.append("a Python calculation")
+            shown = f"{int(val)}" if float(val).is_integer() else f"{val:g}"
+            return f"Clover ran this Python program:\n```python\n{code.strip()}\n```\nIt printed: {out.strip()[-300:]}\n\nANSWER: {shown}"
+
+        def code_check(ans: str) -> str | None:
+            if active_layer_cap < 6:
+                return None
+            rep = self._compile_verify_model_code_only(ans, "", question, allow_python=allow_python)
+            layer_trace["layer6_generative_compiler"] = {"enabled": True, "checked_only_model_code": True, "report": rep}
+            if not rep or rep.get("all_ok"):
+                return None
+            tools_used.append("layer6_generative_compiler")
+            diags = []
+            for r_item in rep.get("results", []):
+                for d in r_item.get("diagnostics", []):
+                    diags.append(f"{d.get('code', 'Error')}: {d.get('message', '')}")
+            return "; ".join(diags)[:500] if diags else "Code check failed."
+
+        final_reply, cyc_info = C.retry_cycle(
+            question=question,
+            previous=previous_answer,
+            feedback=feedback,
+            rewrite=rewrite,
+            solve=solve,
+            code_check=code_check if active_layer_cap >= 6 else None,
+            used=used_names,
+            program=python_solve if allow_python else None,
+        )
+        cyc_info["tools"] = list(dict.fromkeys(used_names))
+        layer_trace["clover_retry_cycle"] = cyc_info
+
+        lesson_staged = None
+        if cyc_info.get("lesson") and active_layer_cap >= 4 and self.perm_modes.get("memory", "allow") != "deny":
+            try:
+                staged = self.git_memory_repo.stage_lesson(
+                    cyc_info["lesson"],
+                    conversation_id=session_id,
+                    kind=cyc_info.get("lesson_kind", "user"),
+                )
+                lesson_staged = staged["id"]
+                layer_trace["clover_retry_cycle"]["lesson_staged"] = staged
+            except Exception:
+                pass
+
+        dm_stats = self.engine.get_dm_stats(madvise_enabled=madvise_on)
+        layer_trace["layer7_specmd_r4_madvise"] = dm_stats
+        total_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+
+        return {
+            "device": platform.node(),
+            "arch": platform.machine(),
+            "model": "lfm3-omni-2b-4bit-s23",
+            "max_active_layer": active_layer_cap,
+            "exclusive_app_package": CLOVER_S23_APP_PACKAGE,
+            "prompt": question,
+            "reply": final_reply,
+            "output_type": "text",
+            "image_png_b64": "",
+            "video_mp4_b64": "",
+            "audio_wav_b64": "",
+            "speak_with_android_tts": False,
+            "tools_used": list(dict.fromkeys(tools_used)),
+            "layer_trace": layer_trace,
+            "clover_cycle_info": cyc_info,
+            "lesson_staged": lesson_staged,
+            "input_tokens": len(self.tokenizer.encode(question, allow_special=False)),
+            "generated_tokens": total_gen_tokens,
+            "emitted_tokens": len(self.tokenizer.encode(final_reply, allow_special=False)),
+            "c_24_layer_4bit_ms": round(c_total_ms, 2),
+            "total_cycle_ms": total_ms,
+            "dm_stats": dm_stats,
+        }
+
 
 def run_on_device_s23_verification(base_dir: Path) -> dict[str, Any]:
     """
@@ -2721,6 +2951,10 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 self._send({
                     "memories": sys_s23.list_memories(),
                 })
+            elif self.path.startswith("/api/lessons"):
+                self._send({
+                    "lessons": sys_s23.git_memory_repo.list_staged_lessons(),
+                })
             elif self.path.startswith("/api/repo/onboarding"):
                 self._send(sys_s23.git_memory_repo.get_onboarding_state())
             elif self.path.startswith("/api/repo/files"):
@@ -2728,6 +2962,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "repo_path": str(sys_s23.git_memory_repo.repo_dir),
                     "onboarding": sys_s23.git_memory_repo.get_onboarding_state(),
                     "files": sys_s23.git_memory_repo.list_files(),
+                    "lessons": sys_s23.git_memory_repo.list_staged_lessons(),
                     "commits": sys_s23.git_memory_repo.git_log(max_count=15),
                     "github_sync": sys_s23.git_memory_repo.get_github_sync_config(),
                 })
@@ -2857,6 +3092,31 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             if self.path.startswith("/api/session/forget"):
                 self._send({"ok": True})
                 return
+            if self.path.startswith("/api/lessons/keep"):
+                try:
+                    lid = str(payload.get("id") or "").strip()
+                    kres = sys_s23.git_memory_repo.keep_staged_lesson(lid)
+                    self._send({
+                        **kres,
+                        "memories": sys_s23.list_memories(),
+                        "files": sys_s23.git_memory_repo.list_files(),
+                        "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                    })
+                except Exception as ex:
+                    self._send({"error": "keep_lesson_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/lessons/discard"):
+                try:
+                    lid = str(payload.get("id") or "").strip()
+                    dres = sys_s23.git_memory_repo.discard_staged_lesson(lid)
+                    self._send({
+                        **dres,
+                        "files": sys_s23.git_memory_repo.list_files(),
+                        "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                    })
+                except Exception as ex:
+                    self._send({"error": "discard_lesson_failed", "message": str(ex)}, code=400)
+                return
 
             prompt = str(payload.get("prompt") or "Hello")
             if "q4_operators" in payload and isinstance(payload["q4_operators"], bool):
@@ -2870,6 +3130,43 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             allow_net = bool(payload.get("allow_internet", pm.get("internet", "allow") != "deny"))
             allow_py = bool(payload.get("allow_python", pm.get("code", "allow") != "deny"))
             allow_fl = bool(payload.get("allow_files", pm.get("files", "allow") != "deny"))
+
+            # Detect Clover Retry Cycle ("Try again" button, "that's wrong" / "try again" message, or repeating the question)
+            import clover_cycle as C
+
+            hist_in = payload.get("history") or []
+            hist_msgs = []
+            for h in hist_in[-6:]:
+                if isinstance(h, dict) and h.get("user") and h.get("reply"):
+                    hist_msgs.append({"role": "user", "content": str(h["user"]), "retry": bool(h.get("retry", False))})
+                    hist_msgs.append({"role": "assistant", "content": str(h["reply"])})
+            last_ex = C.last_exchange(hist_msgs) if hist_msgs else None
+
+            explicit_retry = bool(payload.get("retry_cycle", False))
+            prev_q = str(payload.get("previous_question") or (last_ex[0].get("content") if last_ex else "") or "").strip()
+            prev_a = str(payload.get("previous_answer") or (last_ex[1] if last_ex else "") or "").strip()
+            how_retry = "said" if explicit_retry else (C.retry_requested(prompt, prev_q) if prev_q and prev_a else None)
+
+            if how_retry and prev_q and prev_a and not payload.get("image_b64") and not payload.get("attached_files"):
+                fb_text = str(payload.get("feedback") or (prompt if how_retry == "said" else "") or "").strip()
+                res = sys_s23.run_retry_cycle(
+                    question=prev_q if how_retry == "said" else prompt,
+                    previous_answer=prev_a,
+                    feedback=fb_text,
+                    session_id=str(payload.get("session_id") or "s23-studio"),
+                    max_active_layer=max_layer,
+                    allow_internet=allow_net,
+                    allow_python=allow_py,
+                )
+                self._send(res)
+                return
+
+            # Apply Laptop Agent's `asked_tools` gating when `settings["tools"] == "ask"` ("When I ask")
+            tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "always")
+            if tools_mode == "ask":
+                requested_tools = sys_s23.asked_tools(prompt)
+                allow_net = allow_net and ("web_search" in requested_tools)
+                allow_py = allow_py and ("python_interpreter" in requested_tools)
 
             res = sys_s23.run_cycle(
                 prompt=prompt,
