@@ -2919,7 +2919,42 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             self._send({"ok": True})
 
         def do_GET(self) -> None:
-            # All GET endpoints require the per-device secret token (no unauthenticated APK download)
+            # Direct APK download endpoints so the user can download and install CloverAIStudio.apk in a mobile browser
+            if self.path.startswith(("/download/CloverAIStudio.apk", "/CloverAIStudio.apk", "/api/download/apk")):
+                apk_candidates = [
+                    sys_s23.base_dir / "android-app" / "CloverAIStudio.apk",
+                    SCRIPT_DIR / "android-app" / "CloverAIStudio.apk",
+                    Path("/sdcard/Download/CloverAIStudio.apk"),
+                ]
+                apk_fp = next((p for p in apk_candidates if p.exists() and p.is_file()), None)
+                if apk_fp is not None:
+                    apk_bytes = apk_fp.read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/vnd.android.package-archive")
+                    self.send_header("Content-Disposition", 'attachment; filename="CloverAIStudio.apk"')
+                    self.send_header("Content-Length", str(len(apk_bytes)))
+                    self.end_headers()
+                    self.wfile.write(apk_bytes)
+                    return
+            if self.path in ("/download", "/download/"):
+                html_dl = (
+                    "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+                    "<title>Download Clover AI Studio APK</title>"
+                    "<style>body{font-family:system-ui,sans-serif;background:#faf8f2;color:#132018;padding:2rem;text-align:center}"
+                    ".card{max-width:460px;margin:2rem auto;background:#fffefb;border:1px solid #dfd8c8;border-radius:18px;padding:1.8rem;box-shadow:0 8px 24px rgba(18,32,24,.08)}"
+                    "a.btn{display:inline-block;margin-top:1rem;background:#1b5e46;color:#fff;text-decoration:none;padding:.75rem 1.4rem;border-radius:12px;font-weight:600}</style></head>"
+                    "<body><div class='card'><h2>Clover AI Studio (Samsung Galaxy S23)</h2>"
+                    "<p>Signed Android Package (<code>ai.clover.studio</code>) with LFM3-Omni-2B, Adreno 740 OpenCL + Kryo ARMv9 SMMLA, Layer 4 Local Git Memory Repo, and Clover Retry Cycle.</p>"
+                    "<a class='btn' href='/download/CloverAIStudio.apk'>Download CloverAIStudio.apk</a></div></body></html>"
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(html_dl)))
+                self.end_headers()
+                self.wfile.write(html_dl)
+                return
+
+            # All API GET endpoints require the per-device secret token
             if not self._is_exclusive_clover_app():
                 self._reject_non_app()
                 return
@@ -2957,9 +2992,13 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 })
             elif self.path.startswith("/api/repo/onboarding"):
                 self._send(sys_s23.git_memory_repo.get_onboarding_state())
+            elif self.path.startswith("/api/repo/workspaces"):
+                self._send(sys_s23.git_memory_repo.list_workspace_repos())
             elif self.path.startswith("/api/repo/files"):
                 self._send({
                     "repo_path": str(sys_s23.git_memory_repo.repo_dir),
+                    "active_repo": sys_s23.git_memory_repo.active_repo_name,
+                    "workspaces": sys_s23.git_memory_repo.list_workspace_repos(),
                     "onboarding": sys_s23.git_memory_repo.get_onboarding_state(),
                     "files": sys_s23.git_memory_repo.list_files(),
                     "lessons": sys_s23.git_memory_repo.list_staged_lessons(),
@@ -3033,6 +3072,41 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 custom_md = payload.get("content")
                 st = sys_s23.git_memory_repo.accept_agents_md(custom_content=custom_md if isinstance(custom_md, str) else None)
                 self._send({"ok": True, **st})
+                return
+            if self.path.startswith("/api/repo/workspaces"):
+                try:
+                    target_p = str(payload.get("path_or_url") or payload.get("repo") or "").strip()
+                    w_name = payload.get("name")
+                    gh_tok = payload.get("token")
+                    wres = sys_s23.git_memory_repo.add_or_switch_workspace_repo(
+                        path_or_url=target_p,
+                        name=str(w_name).strip() if w_name else None,
+                        github_token=str(gh_tok).strip() if gh_tok else None,
+                    )
+                    self._send({
+                        "ok": True,
+                        **wres,
+                        "repo_path": str(sys_s23.git_memory_repo.repo_dir),
+                        "onboarding": sys_s23.git_memory_repo.get_onboarding_state(),
+                        "files": sys_s23.git_memory_repo.list_files(),
+                        "lessons": sys_s23.git_memory_repo.list_staged_lessons(),
+                        "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                        "github_sync": sys_s23.git_memory_repo.get_github_sync_config(),
+                    })
+                except Exception as ex:
+                    self._send({"error": "workspace_switch_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/repo/refresh-context"):
+                try:
+                    idx_res = sys_s23.git_memory_repo.refresh_context_hierarchy(commit=True)
+                    self._send({
+                        "ok": True,
+                        **idx_res,
+                        "files": sys_s23.git_memory_repo.list_files(),
+                        "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                    })
+                except Exception as ex:
+                    self._send({"error": "refresh_context_failed", "message": str(ex)}, code=400)
                 return
             if self.path.startswith("/api/repo/read"):
                 try:

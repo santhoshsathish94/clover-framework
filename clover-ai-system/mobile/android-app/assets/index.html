@@ -455,6 +455,19 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     <div class="ask__b" style="margin-bottom:.85rem">
       <button type="button" class="btn pri" id="open-agents-modal-btn"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg> Review / Accept AGENTS.md</button>
       <button type="button" class="btn" id="new-repo-file-btn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> New File (.md / .py)</button>
+      <button type="button" class="btn" id="refresh-ctx-idx-btn"><svg class="ic" aria-hidden="true"><use href="#i-redo"/></svg> Rebuild Folder &amp; Root Context Index</button>
+    </div>
+
+    <div class="set">
+      <div class="set__t">Working Repositories (Memory &amp; Your Own Projects)</div>
+      <div class="set__d">Switch between <code>clover-memory-repo</code> and any local project folder or GitHub repository you are working on. Clover automatically maintains <code>&lt;folder&gt;/&lt;folder&gt;-context.md</code> in each folder and an overall <code>&lt;repo&gt;-context-index.md</code> at the root.</div>
+      <div id="workspace-repos-list" class="seg" style="margin-bottom:.55rem"></div>
+      <input type="text" class="repo-inp" id="ws-add-path-inp" placeholder="Local path (/sdcard/my-project) or GitHub (owner/repo)">
+      <input type="text" class="repo-inp" id="ws-add-name-inp" placeholder="Display name (optional, e.g. my-project)">
+      <div class="ask__b">
+        <button type="button" class="btn pri" id="ws-add-btn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> Add / Switch Working Repo</button>
+      </div>
+      <div id="ws-add-status" class="set__d" style="margin-top:.35rem"></div>
     </div>
 
     <div class="set" id="repo-editor-box" hidden>
@@ -1188,12 +1201,29 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     var commits = (r && r.commits) || [];
     var gh = (r && r.github_sync) || {};
     var onb = (r && r.onboarding) || {};
+    var ws = (r && r.workspaces) || {};
     if (r && r.lessons) renderLessons(r.lessons);
 
+    var activeRepoName = (r && r.active_repo) || ws.active_repo || 'clover-memory-repo';
     if (onb.agents_md_accepted) {
-      $('repo-status-title').textContent = 'AGENTS.md Accepted · Local Git Repo';
-      $('repo-status-sub').textContent = files.length + ' tracked files · commit ' + (onb.accepted_commit || 'HEAD');
-      $('repo-chip').textContent = 'AGENTS.md · ' + files.length + ' files';
+      $('repo-status-title').textContent = activeRepoName + ' · AGENTS.md Accepted';
+      $('repo-status-sub').textContent = files.length + ' tracked files (incl. per-folder context & root index) · commit ' + (onb.accepted_commit || 'HEAD');
+      $('repo-chip').textContent = activeRepoName + ' · ' + files.length;
+    }
+
+    var wsBox = $('workspace-repos-list');
+    if (wsBox && ws.repos) {
+      wsBox.innerHTML = '';
+      ws.repos.forEach(function (wr) {
+        var wb = btn(wr.name === activeRepoName ? 'on' : '', esc(wr.name));
+        wb.addEventListener('click', function () {
+          api('POST', '/api/repo/workspaces', { path_or_url: wr.name }).then(function (res) {
+            renderRepoFilesAndCommits(res);
+            loadMemories();
+          }).catch(function (e) { alert('Switch repo failed: ' + e.message); });
+        });
+        wsBox.appendChild(wb);
+      });
     }
 
     if (gh.repo && !$('gh-repo-inp').value) $('gh-repo-inp').value = gh.repo;
@@ -1225,6 +1255,35 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     return api('GET', '/api/repo/files').then(function (r) {
       renderRepoFilesAndCommits(r);
     }).catch(function () {});
+  }
+
+  if ($('refresh-ctx-idx-btn')) {
+    $('refresh-ctx-idx-btn').addEventListener('click', function () {
+      api('POST', '/api/repo/refresh-context', {}).then(function (r) {
+        loadRepoManager();
+        loadMemories();
+      }).catch(function (e) { alert('Context index refresh failed: ' + e.message); });
+    });
+  }
+
+  if ($('ws-add-btn')) {
+    $('ws-add-btn').addEventListener('click', function () {
+      var p = $('ws-add-path-inp').value.trim();
+      var n = $('ws-add-name-inp').value.trim();
+      var tok = $('gh-token-inp').value.trim();
+      if (!p) { alert('Enter a local folder path or GitHub repo (owner/repo).'); return; }
+      $('ws-add-status').textContent = 'Adding / switching repository & building folder context index…';
+      api('POST', '/api/repo/workspaces', { path_or_url: p, name: n || undefined, token: tok || undefined }).then(function (r) {
+        $('ws-add-path-inp').value = '';
+        $('ws-add-name-inp').value = '';
+        var idxInfo = r.context_index || {};
+        $('ws-add-status').textContent = 'Active repo: ' + r.active_repo + ' (root index: ' + (idxInfo.root_index_file || 'updated') + ', ' + ((idxInfo.folder_context_files || []).length) + ' folder context files)';
+        renderRepoFilesAndCommits(r);
+        loadMemories();
+      }).catch(function (e) {
+        $('ws-add-status').textContent = 'Error: ' + e.message;
+      });
+    });
   }
 
   $('new-repo-file-btn').addEventListener('click', function () {

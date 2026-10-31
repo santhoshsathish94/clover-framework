@@ -135,11 +135,14 @@ class CloverMemoryGitRepo:
 
     def __init__(self, base_dir: Path, canonical_agents_md_path: Path | None = None):
         self.base_dir = Path(base_dir)
-        self.repo_dir = self.base_dir / "clover-memory-repo"
+        self.default_repo_dir = self.base_dir / "clover-memory-repo"
+        self.repo_dir = self.default_repo_dir
         self.state_file = self.base_dir / ".memory_repo_state.json"
         self.github_cfg_file = self.base_dir / ".github_private_sync.json"
+        self.workspaces_cfg_file = self.base_dir / ".clover_workspace_repos.json"
         self.canonical_agents_md_path = canonical_agents_md_path
         self._ensure_initialized()
+        self._load_workspace_registry()
 
     def _run_git(self, args: list[str], timeout_s: float = 25.0) -> tuple[int, str, str]:
         env = os.environ.copy()
@@ -203,6 +206,302 @@ class CloverMemoryGitRepo:
         if rc_st == 0 and out_st:
             self._run_git(["add", "-A"])
             self._run_git(["commit", "-m", "Initialize Clover Layer 4 local Git memory repository with AGENTS.md and seed notes"])
+        self.refresh_context_hierarchy(commit=True)
+
+    # ------------------------------------------------------------------
+    # 0. Multi-Repo Workspace Manager & Hierarchical Per-Folder Context Index
+    # ------------------------------------------------------------------
+    def _load_workspace_registry(self) -> None:
+        default_entry = {
+            "name": "clover-memory-repo",
+            "path": str(self.default_repo_dir),
+            "kind": "memory",
+            "added_at": _utc_now(),
+        }
+        self.workspace_repos: list[dict[str, Any]] = [default_entry]
+        self.active_repo_name = "clover-memory-repo"
+        if self.workspaces_cfg_file.exists():
+            try:
+                raw = json.loads(self.workspaces_cfg_file.read_text(encoding="utf-8"))
+                if isinstance(raw, dict):
+                    repos = raw.get("repos") or []
+                    valid = [default_entry]
+                    seen = {str(self.default_repo_dir.resolve())}
+                    for r in repos:
+                        if not isinstance(r, dict):
+                            continue
+                        rp = Path(str(r.get("path") or ""))
+                        if rp.exists() and rp.is_dir() and str(rp.resolve()) not in seen:
+                            seen.add(str(rp.resolve()))
+                            valid.append({
+                                "name": str(r.get("name") or rp.name),
+                                "path": str(rp.resolve()),
+                                "kind": str(r.get("kind") or "project"),
+                                "added_at": str(r.get("added_at") or _utc_now()),
+                            })
+                    self.workspace_repos = valid
+                    act_name = str(raw.get("active_repo") or "clover-memory-repo")
+                    for r in self.workspace_repos:
+                        if r["name"] == act_name or r["path"] == act_name:
+                            self.active_repo_name = r["name"]
+                            self.repo_dir = Path(r["path"])
+                            break
+            except Exception:
+                pass
+
+    def _save_workspace_registry(self) -> None:
+        try:
+            self.workspaces_cfg_file.write_text(
+                json.dumps({"active_repo": self.active_repo_name, "repos": self.workspace_repos}, indent=2),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
+
+    def list_workspace_repos(self) -> dict[str, Any]:
+        return {
+            "active_repo": self.active_repo_name,
+            "active_repo_path": str(self.repo_dir),
+            "repos": self.workspace_repos,
+        }
+
+    def add_or_switch_workspace_repo(
+        self,
+        path_or_url: str,
+        name: str | None = None,
+        github_token: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Adds or switches to a local working repository path or clones a GitHub repository (`owner/repo` or URL)
+        into `~/clover-s23/workspaces/<repo_name>`, then generates meaningful `<folder>-context.md` files
+        in each folder and `<repo>-context-index.md` at the root.
+        """
+        target = (path_or_url or "").strip()
+        if not target:
+            raise ValueError("Provide a repository name, local folder path, or GitHub repo ('owner/repo' or URL).")
+
+        # Check if switching to an already-registered repo by name or path
+        for r in self.workspace_repos:
+            if target in (r["name"], r["path"]):
+                self.active_repo_name = r["name"]
+                self.repo_dir = Path(r["path"])
+                self._save_workspace_registry()
+                idx_info = self.refresh_context_hierarchy(commit=True)
+                return {**self.list_workspace_repos(), "context_index": idx_info}
+
+        # Check if `target` is a GitHub URL or `owner/repo` shorthand to clone
+        is_github = target.startswith(("https://github.com/", "http://github.com/", "git@github.com:")) or bool(
+            re.match(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", target) and not os.path.exists(os.path.expanduser(target))
+        )
+        if is_github:
+            clean = target
+            if clean.startswith("https://github.com/"):
+                clean = clean[len("https://github.com/") :].strip("/")
+            elif clean.startswith("http://github.com/"):
+                clean = clean[len("http://github.com/") :].strip("/")
+            if clean.endswith(".git"):
+                clean = clean[:-4]
+            repo_slug = _slugify(name or clean.split("/")[-1], max_len=40)
+            ws_root = self.base_dir / "workspaces"
+            ws_root.mkdir(parents=True, exist_ok=True)
+            dest_dir = ws_root / repo_slug
+            if not dest_dir.exists():
+                tok = (github_token or "").strip()
+                clone_url = f"https://x-access-token:{tok}@github.com/{clean}.git" if tok else f"https://github.com/{clean}.git"
+                res = subprocess.run(
+                    ["git", "clone", "--depth", "20", clone_url, str(dest_dir)],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=90,
+                )
+                if res.returncode != 0:
+                    err_safe = (res.stderr or res.stdout or "").replace(tok, "***") if tok else (res.stderr or res.stdout or "")
+                    raise RuntimeError(f"git clone failed: {err_safe.strip()[:300]}")
+                if tok:
+                    subprocess.run(
+                        ["git", "-C", str(dest_dir), "remote", "set-url", "origin", f"https://github.com/{clean}.git"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
+            repo_path = dest_dir.resolve()
+            repo_name = name or repo_slug
+        else:
+            expanded = Path(os.path.expandvars(os.path.expanduser(target))).resolve()
+            expanded.mkdir(parents=True, exist_ok=True)
+            repo_path = expanded
+            repo_name = (name or expanded.name or "workspace-repo").strip()
+
+        if not (repo_path / ".git").exists():
+            subprocess.run(["git", "-C", str(repo_path), "init", "-b", "main"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(["git", "-C", str(repo_path), "config", "user.name", "Clover AI Studio"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(["git", "-C", str(repo_path), "config", "user.email", "clover@local.device"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        agents_p = repo_path / "AGENTS.md"
+        if not agents_p.exists():
+            agents_p.write_text(DEFAULT_AGENTS_MD, encoding="utf-8")
+
+        if not any(r["path"] == str(repo_path) for r in self.workspace_repos):
+            self.workspace_repos.append({
+                "name": repo_name,
+                "path": str(repo_path),
+                "kind": "project",
+                "added_at": _utc_now(),
+            })
+        self.active_repo_name = repo_name
+        self.repo_dir = repo_path
+        self._save_workspace_registry()
+        idx_info = self.refresh_context_hierarchy(commit=True)
+        return {**self.list_workspace_repos(), "context_index": idx_info}
+
+    def refresh_context_hierarchy(self, commit: bool = True) -> dict[str, Any]:
+        """
+        Maintains meaningfully named per-folder context files (`<folder>/<folder>-context.md`)
+        inside every non-empty subfolder of `self.repo_dir`, plus the overall repository index
+        context file (`<repo_slug>-context-index.md` and `CONTEXT.md`) at the root of `self.repo_dir`.
+        """
+        repo_slug = _slugify(self.repo_dir.name, max_len=36)
+        root_index_name = f"{repo_slug}-context-index.md"
+        folder_contexts_written: list[str] = []
+        folder_summaries: list[tuple[str, str, int, list[tuple[str, str, int]]]] = []
+
+        # Walk top-level and nested directories (up to depth 2) to build `<folder>-context.md`
+        for root, dirs, files in os.walk(self.repo_dir):
+            dirs[:] = [
+                d for d in sorted(dirs)
+                if not d.startswith(".") and d not in ("__pycache__", "node_modules", "venv", ".venv", "target", "build", "dist")
+            ]
+            cur_dir = Path(root)
+            rel_dir = cur_dir.relative_to(self.repo_dir).as_posix()
+            if rel_dir == ".":
+                continue
+            if len(rel_dir.split("/")) > 2:
+                continue
+
+            folder_slug = _slugify(cur_dir.name, max_len=32)
+            ctx_filename = f"{folder_slug}-context.md"
+            entries_info: list[tuple[str, str, int]] = []
+
+            for fname in sorted(files):
+                if fname.startswith(".") or fname == ctx_filename:
+                    continue
+                fpath = cur_dir / fname
+                if not fpath.is_file():
+                    continue
+                try:
+                    sz = fpath.stat().st_size
+                    raw_b = fpath.read_bytes()[:4096]
+                    if b"\x00" in raw_b:
+                        desc = f"Binary artifact ({sz} B)"
+                    else:
+                        txt = raw_b.decode("utf-8", errors="replace")
+                        desc = ""
+                        for ln in txt.splitlines():
+                            s = ln.strip().lstrip("#/*\"'- ").strip()
+                            if s and not s.startswith("!"):
+                                desc = s[:120]
+                                break
+                        if not desc:
+                            desc = f"Source/text file ({sz} B)"
+                    entries_info.append((fname, desc, sz))
+                except Exception:
+                    pass
+
+            if not entries_info:
+                continue
+
+            ctx_rel_path = f"{rel_dir}/{ctx_filename}"
+            ctx_fp = cur_dir / ctx_filename
+
+            # Preserve any `## User & Agent Notes` block the human or agent previously wrote in `<folder>-context.md`
+            preserved_notes = ""
+            if ctx_fp.exists():
+                try:
+                    old_txt = ctx_fp.read_text(encoding="utf-8", errors="replace")
+                    if "## User & Agent Notes" in old_txt:
+                        preserved_notes = old_txt.split("## User & Agent Notes", 1)[1].strip()
+                except Exception:
+                    pass
+            if not preserved_notes:
+                preserved_notes = f"Add folder-specific architecture notes, invariants, or decisions for `{rel_dir}/` here."
+
+            lines = [
+                f"# `{rel_dir}/` — Folder Context (`{ctx_filename}`)",
+                "",
+                f"- **Repository**: `{self.repo_dir.name}`",
+                f"- **Folder Path**: `{rel_dir}/`",
+                f"- **Files Indexed**: `{len(entries_info)}`",
+                "",
+                "## Files in This Folder",
+            ]
+            for fname, desc, sz in entries_info[:60]:
+                lines.append(f"- [`{fname}`]({fname}) (`{sz}` B): {desc}")
+            lines.extend([
+                "",
+                "## User & Agent Notes",
+                preserved_notes,
+                "",
+            ])
+            new_ctx_body = "\n".join(lines)
+            old_ctx_body = ctx_fp.read_text(encoding="utf-8", errors="replace") if ctx_fp.exists() else ""
+            if new_ctx_body != old_ctx_body:
+                ctx_fp.write_text(new_ctx_body, encoding="utf-8")
+            folder_contexts_written.append(ctx_rel_path)
+            folder_summaries.append((rel_dir, ctx_rel_path, len(entries_info), entries_info[:5]))
+
+        # Build overall `<repo_slug>-context-index.md` at the root of the repository
+        root_files_info: list[tuple[str, str, int]] = []
+        for fpath in sorted(self.repo_dir.iterdir()):
+            if not fpath.is_file() or fpath.name.startswith(".") or fpath.name == root_index_name:
+                continue
+            try:
+                sz = fpath.stat().st_size
+                txt = fpath.read_text(encoding="utf-8", errors="replace")[:2048]
+                desc = next((ln.strip().lstrip("#").strip()[:120] for ln in txt.splitlines() if ln.strip()), f"Root file ({sz} B)")
+                root_files_info.append((fpath.name, desc, sz))
+            except Exception:
+                pass
+
+        idx_lines = [
+            f"# `{self.repo_dir.name}` — Overall Repository Context Index (`{root_index_name}`)",
+            "",
+            "This overall index maps every folder's dedicated `<folder>-context.md` file and root specification in this repository so Clover and the human can navigate and fetch only relevant context without bloating the prompt window.",
+            "",
+            "## 1. Root Documents & Specifications",
+        ]
+        for fname, desc, sz in root_files_info:
+            idx_lines.append(f"- [`{fname}`]({fname}) (`{sz}` B): {desc}")
+
+        idx_lines.extend([
+            "",
+            "## 2. Per-Folder Meaningful Context Files (`<folder>/<folder>-context.md`)",
+        ])
+        if folder_summaries:
+            for rel_dir, ctx_rel, count, sample_files in folder_summaries:
+                sample_names = ", ".join(f"`{fn}`" for fn, _, _ in sample_files)
+                idx_lines.append(
+                    f"- **`{rel_dir}/`** $\\to$ [`{ctx_rel}`]({ctx_rel}) (`{count}` files: {sample_names})"
+                )
+        else:
+            idx_lines.append("- *(No subfolders with files yet)*")
+        idx_lines.append("")
+
+        idx_fp = self.repo_dir / root_index_name
+        new_idx_body = "\n".join(idx_lines)
+        old_idx_body = idx_fp.read_text(encoding="utf-8", errors="replace") if idx_fp.exists() else ""
+        if new_idx_body != old_idx_body:
+            idx_fp.write_text(new_idx_body, encoding="utf-8")
+
+        if commit:
+            rc_st, out_st, _ = self._run_git(["status", "--porcelain"])
+            if rc_st == 0 and out_st:
+                self._run_git(["add", root_index_name, *folder_contexts_written])
+                self._run_git(["commit", "-m", f"Update {root_index_name} and per-folder context files"])
+
+        return {
+            "root_index_file": root_index_name,
+            "folder_context_files": folder_contexts_written,
+        }
 
     # ------------------------------------------------------------------
     # 1. `AGENTS.md` First-Run Onboarding & Acceptance State
@@ -279,14 +578,18 @@ class CloverMemoryGitRepo:
                     })
                 except Exception:
                     pass
-        # Sort so AGENTS.md and CONTEXT.md appear first
+        # Sort so AGENTS.md, *-context-index.md, and CONTEXT.md appear first
         def _sort_key(item: dict[str, Any]) -> tuple[int, str]:
             p = item["path"]
             if p == "AGENTS.md":
                 return (0, p)
-            if p == "CONTEXT.md":
+            if p.endswith("-context-index.md"):
                 return (1, p)
-            return (2, p)
+            if p == "CONTEXT.md":
+                return (2, p)
+            if p.endswith("-context.md"):
+                return (3, p)
+            return (4, p)
         out.sort(key=_sort_key)
         return out
 
@@ -316,6 +619,7 @@ class CloverMemoryGitRepo:
         msg = (commit_message or "").strip() or f"{'Update' if existed else 'Create'} {rel} in Layer 4 memory repo"
         self._run_git(["add", rel])
         self._run_git(["commit", "-m", msg])
+        self.refresh_context_hierarchy(commit=True)
         _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"])
         return {
             "ok": True,
@@ -335,6 +639,7 @@ class CloverMemoryGitRepo:
             msg = (commit_message or "").strip() or f"Delete {rel} from Layer 4 memory repo"
             self._run_git(["add", "-A"])
             self._run_git(["commit", "-m", msg])
+            self.refresh_context_hierarchy(commit=True)
         return {"ok": True, "deleted": rel}
 
     def git_log(self, max_count: int = 20) -> list[dict[str, str]]:
@@ -483,6 +788,7 @@ class CloverMemoryGitRepo:
 
         self._run_git(["add", *saved_files])
         self._run_git(["commit", "-m", f"Record session turn ({sid_clean}) in Layer 4 Git memory repo"])
+        self.refresh_context_hierarchy(commit=True)
         _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"])
         return {"saved_files": saved_files, "commit": head_sha or "HEAD"}
 
