@@ -32,7 +32,7 @@ if command -v pkg >/dev/null 2>&1; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Choose compiler flags tailored for Snapdragon 8 Gen 2 (Cortex-X3 / A715 / A710) on aarch64
 CC_BIN="${CC:-gcc}"
@@ -41,7 +41,7 @@ if command -v clang >/dev/null 2>&1 && ! command -v gcc >/dev/null 2>&1; then
 fi
 
 if [[ "${ARCH}" == "aarch64" || "${ARCH}" == "arm64" ]]; then
-    MARCH_FLAGS="-O3 -march=armv8.2-a+fp16+dotprod -fopenmp -fPIC -shared"
+    MARCH_FLAGS="-O3 -march=armv8.6-a+bf16+i8mm+dotprod -fopenmp -fPIC -shared"
     echo "[Clover-S23] Compiling liblfm3_cpu_engine.so with ARMv9/NEON flags: ${MARCH_FLAGS}"
 else
     MARCH_FLAGS="-O3 -march=native -fopenmp -fPIC -shared"
@@ -62,4 +62,4 @@ if [[ "${1:-}" == "--verify-only" ]]; then
 fi
 
 echo "[Clover-S23] Starting 7-Layer Clover LFM3-Omni Mobile Server on http://127.0.0.1:8765 ..."
-exec python3 "${REPO_ROOT}/clover-ai-system/src/tools/hybrid-ncm-k3/clover-chat-server.py" --host 127.0.0.1 --port 8765
+exec python3 "${SCRIPT_DIR}/s23_on_device_clover.py" --serve --host 127.0.0.1 --port 8765

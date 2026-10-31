@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="color-scheme" content="light dark">
+<title>Clover</title>
+<link rel="icon" href="icon-light.png">
+<style>
+:root {
+  /* Clover AI botanical palette (matching Laptop Clover AI Studio & site/botanical-design-system.css) */
+  --bg: #faf8f2; --panel: #f2eee4; --surface: #fffefb; --ink: #132018; --ink-2: #2d3e34; --muted: #596a5f; --faint: #7c8c81;
+  --line: #dfd8c8; --line-2: #c9c0ad; --accent: #1b5e46; --accent-2: #124331; --accent-soft: #e3efe8; --accent-ink: #124331;
+  --warn: #7d5312; --warn-soft: #fbf3e2; --warn-line: #dfc48d; --danger: #9f3a2c; --danger-soft: #fbece8;
+  --code-bg: #132018; --code-ink: #ece7da;
+  --shadow: 0 1px 3px rgba(18, 32, 24, .04), 0 6px 20px -6px rgba(18, 32, 24, .07);
+  --shadow-lg: 0 24px 56px -12px rgba(18, 32, 24, .14), 0 8px 20px -4px rgba(18, 32, 24, .05);
+  --font: "Inter", "Segoe UI Variable Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1511; --panel: #141b16; --surface: #19211b; --ink: #ece7da; --ink-2: #d2cbbb; --muted: #9aa597; --faint: #6f7b70;
+    --line: #243027; --line-2: #2f3b32; --accent: #4a9f7e; --accent-2: #5fb592; --accent-soft: #17281f; --accent-ink: #a9dcc4;
+    --warn: #e0b45e; --warn-soft: #2a2416; --warn-line: #5c4a22; --danger: #e58a7c; --danger-soft: #2d1a16;
+    --code-bg: #0b100d; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -14px rgba(0, 0, 0, .6); --shadow-lg: 0 24px 64px -16px rgba(0, 0, 0, .75);
+  }
+}
+*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink);
+  font: 15px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mark-img { width: 32px; height: 32px; flex: none; display: block; border-radius: 9px; object-fit: contain; }
+.mark-img.mark-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  .mark-img.mark-light { display: none; }
+  .mark-img.mark-dark { display: block; }
+}
+.app { display: grid; grid-template-columns: 264px 1fr; height: 100%; }
+
+/* rail */
+.rail { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.rail__head { display: flex; align-items: center; gap: .65rem; padding: 1.05rem 1rem .8rem; }
+.word { font-weight: 650; font-size: 1.06rem; letter-spacing: -.01em; line-height: 1.2; }
+.word small { display: block; font-weight: 500; font-size: .72rem; color: var(--muted); letter-spacing: 0; }
+.newchat { margin: .2rem .75rem .4rem; display: flex; align-items: center; gap: .55rem; padding: .55rem .8rem; border-radius: 11px;
+  border: 1px solid var(--line-2); background: var(--surface); cursor: pointer; font-weight: 600; font-size: .9rem; box-shadow: var(--shadow); }
+.newchat:hover { border-color: var(--accent); }
+.chats__label { font-size: .68rem; font-weight: 650; color: var(--faint); text-transform: uppercase; letter-spacing: .09em; padding: .8rem 1.1rem .35rem; }
+.chats { flex: 1; min-height: 0; overflow-y: auto; padding: 0 .55rem 1rem; display: flex; flex-direction: column; gap: 2px; }
+.chat { display: flex; align-items: center; border-radius: 9px; }
+.chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .48rem .6rem; cursor: pointer; color: var(--ink-2);
+  font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.chat.on { background: var(--surface); box-shadow: var(--shadow); }
+.chat.on .open { color: var(--ink); font-weight: 600; }
+.chat .del { opacity: .75; border: 0; background: none; cursor: pointer; color: var(--faint); padding: .35rem; margin-right: .2rem; border-radius: 7px; display: flex; }
+.chat .del:hover { color: var(--danger); opacity: 1; }
+.chat .del .ic { width: 15px; height: 15px; }
+.rail__foot { padding: .8rem 1.1rem; border-top: 1px solid var(--line); font-size: .76rem; color: var(--muted); display: flex; align-items: center; gap: .55rem; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+.dot.ok { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.dot.busy { background: var(--warn); animation: pulse 1.4s ease-in-out infinite; }
+.dot.err { background: var(--danger); }
+@keyframes pulse { 50% { opacity: .35; } }
+
+/* main */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
+.bar { display: flex; align-items: center; gap: .45rem; padding: .55rem .9rem; min-height: 54px; border-bottom: 1px solid var(--line); background: var(--bg); }
+.bar__title { flex: 1; min-width: 0; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .95rem; }
+.pbtn { display: inline-flex; align-items: center; gap: .42rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
+  padding: .34rem .74rem .34rem .58rem; cursor: pointer; font-size: .78rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow); }
+.pbtn:hover { border-color: var(--accent); }
+.pbtn .ic { width: 16px; height: 16px; }
+.pbtn.ok { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 45%, var(--line-2)); background: var(--accent-soft); }
+.pbtn.warn { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }
+.ibtn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid transparent;
+  background: none; cursor: pointer; color: var(--ink-2); flex: none; }
+.ibtn:hover { background: var(--panel); border-color: var(--line); }
+.menu { display: none; }
+
+.stream { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.col { width: min(780px, 100%); margin: 0 auto; padding: .95rem .95rem 1.6rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.hero { text-align: center; padding: 4vh .4rem .4rem; max-width: 600px; margin: 0 auto; animation: rise .45s ease both; }
+.hero .hero-icon { width: 72px; height: 72px; margin: 0 auto 1rem; border-radius: 18px; box-shadow: 0 14px 28px rgba(27, 94, 70, .2); }
+.hero h1 { font-size: 1.6rem; margin: 0 0 .35rem; letter-spacing: -.025em; font-weight: 650; }
+.hero p { margin: 0 auto 1.35rem; color: var(--muted); max-width: 440px; font-size: .9rem; }
+.sugg { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; text-align: left; }
+.sugg button { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: .7rem .8rem; cursor: pointer; display: flex; text-align: left;
+  gap: .6rem; align-items: flex-start; box-shadow: var(--shadow); color: var(--ink-2); font-size: .83rem; line-height: 1.4; transition: transform .15s, border-color .15s; }
+.sugg button:hover { border-color: var(--accent); transform: translateY(-1px); }
+.sugg button b { display: block; color: var(--ink); font-weight: 600; margin-bottom: .1rem; }
+.sugg .ic { color: var(--accent); margin-top: .1rem; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+.u { align-self: flex-end; max-width: 85%; background: var(--accent-soft); color: var(--ink); border-radius: 18px 18px 5px 18px; padding: .6rem .95rem;
+  white-space: pre-wrap; word-wrap: break-word; animation: rise .22s ease both; }
+.u .files { font-size: .75rem; color: var(--muted); margin-top: .3rem; display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+.u .files .ic { width: 13px; height: 13px; }
+.u .media { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
+.u .media img { width: 72px; height: 72px; object-fit: cover; border-radius: 9px; border: 1px solid var(--line); }
+
+.b { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: .7rem; align-items: start; animation: rise .22s ease both; }
+.b > .bot-mark { width: 28px; height: 28px; margin-top: .12rem; border-radius: 7px; object-fit: contain; }
+.md { word-wrap: break-word; overflow-wrap: anywhere; }
+.md p { margin: 0 0 .6rem; } .md p:last-child { margin-bottom: 0; }
+.md ul, .md ol { margin: .2rem 0 .6rem 1.25rem; padding: 0; } .md li { margin: .15rem 0; }
+.md h4 { margin: .8rem 0 .3rem; font-size: .98rem; }
+.md code { font-family: var(--mono); font-size: .85em; background: var(--panel); border: 1px solid var(--line); padding: .04rem .3rem; border-radius: 6px; }
+.code { position: relative; margin: .5rem 0 .75rem; border-radius: 12px; overflow: hidden; }
+.code pre { margin: 0; padding: .85rem .95rem; overflow: auto; background: var(--code-bg); color: var(--code-ink); font: .8rem/1.55 var(--mono); }
+.code pre code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+.code button { position: absolute; top: .42rem; right: .42rem; border: 1px solid #2d3e34; background: #1b2a21; color: #e3efe8; border-radius: 7px;
+  font-size: .7rem; padding: .12rem .5rem; cursor: pointer; opacity: .9; }
+
+.figure { margin: .6rem 0 .25rem; }
+.figure img, .figure video { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.figure audio { width: 100%; margin-top: .35rem; }
+.figure figcaption { font-size: .74rem; color: var(--muted); margin-top: .25rem; }
+
+.acts { display: flex; align-items: center; gap: .15rem; margin-top: .42rem; color: var(--faint); font-size: .73rem; min-height: 26px; flex-wrap: wrap; }
+.acts button { border: 0; background: none; color: inherit; cursor: pointer; border-radius: 7px; padding: .28rem .38rem; display: inline-flex; align-items: center; gap: .25rem; font-size: .73rem; }
+.acts button:hover { color: var(--ink); background: var(--panel); }
+.acts button.busy { color: var(--accent); }
+.acts .ic { width: 15px; height: 15px; }
+.acts .meta { margin-left: .25rem; color: var(--muted); }
+.tags { display: inline-flex; gap: .25rem; flex-wrap: wrap; margin-left: .25rem; }
+.tags span { background: var(--accent-soft); color: var(--accent-ink); border-radius: 999px; padding: .04rem .46rem; font-size: .67rem; font-weight: 650; }
+
+pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .6rem .7rem;
+  font: .72rem/1.5 var(--mono); color: var(--muted); max-height: 280px; overflow: auto; margin: .4rem 0 0; }
+.think { display: inline-flex; align-items: center; gap: .38rem; border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+  padding: .18rem .68rem .18rem .52rem; font-size: .76rem; color: var(--muted); cursor: pointer; margin-bottom: .5rem; }
+.think:hover { color: var(--ink-2); border-color: var(--line-2); }
+.think .ic { width: 14px; height: 14px; color: var(--accent); }
+.think.live .ic { animation: spin 2.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.thinkbox { font-size: .8rem; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: .55rem .75rem;
+  margin: -.1rem 0 .6rem; max-height: 240px; overflow: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+
+.tool { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; margin: 0 0 .5rem; overflow: hidden; box-shadow: var(--shadow); }
+.tool__head { display: flex; align-items: center; gap: .5rem; padding: .46rem .68rem; cursor: pointer; font-size: .82rem; }
+.tool__head > .ic { color: var(--accent); width: 16px; height: 16px; }
+.tool__name { font-weight: 600; white-space: nowrap; }
+.tool__arg { flex: 1; min-width: 0; color: var(--muted); font: .74rem var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.state { font-size: .68rem; font-weight: 650; border-radius: 999px; padding: .05rem .48rem; background: var(--panel); color: var(--muted); white-space: nowrap; }
+.state.run { color: var(--warn); background: var(--warn-soft); }
+.state.ok { color: var(--accent-ink); background: var(--accent-soft); }
+.state.no { color: var(--danger); background: var(--danger-soft); }
+.tool__body { border-top: 1px solid var(--line); padding: .5rem .68rem .2rem; }
+.tool__body pre { margin: 0 0 .45rem; white-space: pre-wrap; word-break: break-word; font: .74rem/1.48 var(--mono); background: var(--panel); border-radius: 8px;
+  padding: .48rem .58rem; max-height: 220px; overflow: auto; }
+.tool__body .lbl { font-size: .66rem; font-weight: 650; color: var(--faint); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .18rem; }
+
+.ask { border: 1px solid var(--warn-line); background: var(--warn-soft); border-radius: 14px; padding: .72rem .82rem; margin: 0 0 .55rem; animation: rise .2s ease both; }
+.ask__t { display: flex; align-items: center; gap: .48rem; font-weight: 650; color: var(--warn); font-size: .88rem; }
+.ask pre { white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow: auto; background: var(--surface); border: 1px solid var(--warn-line);
+  border-radius: 9px; padding: .48rem .58rem; font: .74rem/1.48 var(--mono); margin: .45rem 0 0; color: var(--ink-2); }
+.ask__b { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; margin-top: .55rem; }
+.btn { border: 1px solid var(--line-2); background: var(--surface); border-radius: 10px; padding: .38rem .8rem; font-size: .82rem; font-weight: 600; cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.warn { background: var(--warn); border-color: var(--warn); color: #fff; }
+.btn.danger { color: var(--danger); }
+
+.typing { display: flex; align-items: center; gap: .3rem; color: var(--muted); font-size: .83rem; min-height: 26px; }
+.typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 1.2s ease-in-out infinite; }
+.typing span:nth-child(2) { animation-delay: .2s; } .typing span:nth-child(3) { animation-delay: .4s; }
+.typing em { font-style: normal; margin-left: .4rem; }
+@keyframes blink { 0%, 80%, 100% { opacity: .2; transform: scale(.8); } 40% { opacity: 1; transform: none; } }
+
+/* composer */
+.dock { padding: .3rem .85rem .8rem; background: var(--bg); border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+.attachments { width: min(780px, 100%); margin: 0 auto .4rem; display: flex; gap: .35rem; flex-wrap: wrap; }
+.att { display: inline-flex; align-items: center; gap: .35rem; background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px;
+  padding: .15rem .3rem .15rem .6rem; font-size: .76rem; box-shadow: var(--shadow); }
+.att img { width: 22px; height: 22px; object-fit: cover; border-radius: 6px; margin-left: -.35rem; }
+.att button { border: 0; background: none; cursor: pointer; color: var(--muted); display: flex; padding: .1rem; border-radius: 50%; }
+.att .ic { width: 14px; height: 14px; }
+.composer { width: min(780px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px; box-shadow: var(--shadow);
+  padding: .36rem .42rem; display: flex; align-items: flex-end; gap: .26rem; transition: border-color .15s, box-shadow .15s; }
+.composer:focus-within { border-color: color-mix(in srgb, var(--accent) 60%, var(--line-2));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent), var(--shadow); }
+.composer textarea { flex: 1; min-width: 0; border: 0; background: none; resize: none; font: inherit; color: var(--ink); padding: .48rem .28rem;
+  max-height: 160px; min-height: 38px; line-height: 1.48; }
+.composer textarea:focus { outline: none; }
+.composer textarea::placeholder { color: var(--faint); }
+.round { width: 38px; height: 38px; border-radius: 12px; border: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+.attach { background: none; color: var(--muted); } .attach:hover { background: var(--panel); color: var(--ink); }
+.send { background: var(--accent); color: #fff; transition: background .15s, transform .1s; }
+.send:hover { background: var(--accent-2); } .send:active { transform: scale(.96); }
+.send:disabled { opacity: .35; cursor: default; }
+.mic.rec { background: var(--danger); color: #fff; animation: pulse 1.3s ease-in-out infinite; }
+.under { width: min(780px, 100%); margin: .42rem auto 0; display: flex; justify-content: space-between; align-items: center; gap: .4rem;
+  font-size: .72rem; color: var(--faint); padding: 0 .35rem; flex-wrap: wrap; }
+.under button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: .72rem; padding: .15rem .42rem; border-radius: 7px;
+  display: inline-flex; align-items: center; gap: .32rem; }
+.under button:hover { color: var(--ink); background: var(--panel); }
+.under .ic { width: 14px; height: 14px; color: var(--accent); }
+
+/* sheets */
+.scrim { position: fixed; inset: 0; background: rgba(19, 32, 24, .32); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(410px, 100%); background: var(--surface); border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-lg); transform: translateX(104%); transition: transform .26s cubic-bezier(.2, .8, .2, 1); z-index: 50; display: flex; flex-direction: column; }
+.sheet.on { transform: none; }
+.sheet__head { display: flex; align-items: center; gap: .65rem; padding: 1.05rem 1.1rem .25rem; }
+.sheet__head h2 { flex: 1; margin: 0; font-size: 1.12rem; letter-spacing: -.015em; font-weight: 650; }
+.sheet__sub { padding: 0 1.1rem .8rem; color: var(--muted); font-size: .82rem; margin: 0; }
+.sheet__body { flex: 1; min-height: 0; overflow-y: auto; padding: 0 1.1rem 1.5rem; -webkit-overflow-scrolling: touch; }
+.summary { display: flex; align-items: center; gap: .75rem; background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: .8rem .9rem; margin-bottom: .75rem; }
+.summary .big { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; background: var(--surface); color: var(--ink-2); flex: none; }
+.summary.ok .big { background: var(--accent-soft); color: var(--accent-ink); }
+.summary.warn { background: var(--warn-soft); border-color: var(--warn-line); } .summary.warn .big { background: var(--surface); color: var(--warn); }
+.summary b { display: block; font-size: .9rem; } .summary span { font-size: .76rem; color: var(--muted); }
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin-bottom: .85rem; }
+.quick button { border: 1px solid var(--line-2); background: var(--surface); border-radius: 11px; padding: .48rem .25rem; font-size: .78rem; font-weight: 600;
+  cursor: pointer; color: var(--ink-2); display: flex; flex-direction: column; align-items: center; gap: .2rem; }
+.quick button.all { color: var(--accent-ink); }
+.perm { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: .7rem; padding: .8rem 0; border-top: 1px solid var(--line); }
+.perm:first-child { border-top: 0; }
+.perm__ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--panel); color: var(--ink-2); }
+.perm.allow .perm__ic { background: var(--accent-soft); color: var(--accent-ink); }
+.perm.deny .perm__ic { color: var(--faint); }
+.perm__t { display: flex; align-items: center; justify-content: space-between; gap: .45rem; flex-wrap: wrap; }
+.perm__name { font-weight: 600; font-size: .88rem; }
+.perm__d { font-size: .74rem; color: var(--muted); line-height: 1.45; margin-top: .18rem; }
+.seg { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 2px; flex: none; flex-wrap: wrap; }
+.seg button { border: 0; background: none; border-radius: 999px; padding: .2rem .62rem; font-size: .74rem; font-weight: 650; color: var(--muted); cursor: pointer; }
+.seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.seg button.on[data-v="allow"] { background: var(--accent); color: #fff; }
+.seg button.on[data-v="deny"] { background: var(--ink-2); color: var(--surface); }
+.legend { font-size: .74rem; color: var(--faint); margin-top: .75rem; line-height: 1.5; }
+.set { padding: .88rem 0; border-top: 1px solid var(--line); }
+.set:first-child { border-top: 0; padding-top: .15rem; }
+.set__t { font-weight: 600; font-size: .88rem; display: flex; justify-content: space-between; align-items: center; gap: .55rem; }
+.set__d { font-size: .75rem; color: var(--muted); margin: .14rem 0 .5rem; line-height: 1.45; }
+.switch { position: relative; width: 42px; height: 24px; flex: none; display: inline-block; }
+.switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+.switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--line-2); transition: background .15s; }
+.switch span::after { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .15s; }
+.switch input:checked + span { background: var(--accent); }
+.switch input:checked + span::after { transform: translateX(18px); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: .28rem .8rem; font-size: .76rem; color: var(--muted); margin: .25rem 0 .7rem; }
+.kv b { color: var(--ink-2); font-weight: 600; word-break: break-word; }
+.layer { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: .6rem; align-items: start; padding: .65rem 0; border-top: 1px solid var(--line); }
+.layer:first-child { border-top: 0; }
+.layer__tag { width: 32px; height: 23px; border-radius: 7px; background: var(--panel); border: 1px solid var(--line); font: 700 .68rem var(--font);
+  color: var(--muted); display: flex; align-items: center; justify-content: center; margin-top: .1rem; }
+.layer.on .layer__tag { background: var(--accent-soft); color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.layer__name { font-weight: 600; font-size: .85rem; }
+.layer__d { font-size: .73rem; color: var(--muted); line-height: 1.42; margin-top: .1rem; }
+.mem { margin-top: .42rem; display: flex; flex-direction: column; gap: .28rem; }
+.mem__item { display: flex; gap: .45rem; align-items: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .42rem .52rem; font-size: .74rem; }
+.mem__item span { flex: 1; min-width: 0; color: var(--ink-2); }
+.mem__item small { display: block; color: var(--faint); font-size: .68rem; margin-top: .12rem; }
+.mem__item button { border: 0; background: none; color: var(--faint); cursor: pointer; padding: .1rem; border-radius: 6px; display: flex; }
+
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { position: fixed; inset: 0 auto 0 0; width: min(284px, 84vw); z-index: 45; transform: translateX(-104%); transition: transform .22s ease; }
+  .rail.on { transform: none; box-shadow: var(--shadow-lg); }
+  .menu { display: inline-flex; }
+  .sugg { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M8.5 7.5L4 12l4.5 4.5M15.5 7.5L20 12l-4.5 4.5M13.5 5l-3 14"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20l1-4.2L15.6 5.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.2 19 4 20z"/><path d="M14 7l3 3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><path d="M20 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4.2h-4.2"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.8a9 9 0 0 1 0 12.4"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4V16h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M10 8.6a2 2 0 1 1 3 1.7c-.6.4-1 .8-1 1.4M12 13.6h.01"/></symbol>
+    <symbol id="i-off" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v15.5L12 17l-6.5 3.5V5A1.5 1.5 0 0 1 7 3.5z"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10.5l5-3v9l-5-3"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 12h1.5M8 8.5v7M12 5v14M16 8.5v7M19.5 12H20"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="rail" id="rail" aria-label="Chats">
+    <div class="rail__head">
+      <img class="mark-img mark-light" src="icon-light.png" alt="Clover">
+      <img class="mark-img mark-dark" src="icon-dark.png" alt="Clover">
+      <div class="word">Clover<small id="rail-model">LFM3-Omni · on this S23</small></div>
+    </div>
+    <button type="button" class="newchat" id="new-chat"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>New chat</button>
+    <div class="chats__label">Recent</div>
+    <nav class="chats" id="chats"></nav>
+    <div class="rail__foot"><span class="dot" id="status-dot"></span><span id="status-text">Connecting to S23 SoC…</span></div>
+  </aside>
+
+  <section class="main">
+    <header class="bar">
+      <button type="button" class="ibtn menu" id="menu" aria-label="Show chats"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
+      <div class="bar__title" id="chat-title">New chat</div>
+      <button type="button" class="pbtn" id="perm-btn" title="Permissions"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><span id="perm-chip">Permissions</span></button>
+      <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></button>
+    </header>
+
+    <div class="stream" id="stream">
+      <div class="col">
+        <div class="hero" id="hero" hidden>
+          <img class="hero-icon mark-img mark-light" src="icon-light.png" alt="Clover">
+          <img class="hero-icon mark-img mark-dark" src="icon-dark.png" alt="Clover">
+          <h1 id="greet">Hello.</h1>
+          <p id="hero-p">Clover runs LFM3-Omni-2B right here on your Samsung Galaxy S23 (Adreno 740 GPU + Kryo ARMv9 CPU). Nothing leaves it unless you allow it.</p>
+          <div class="sugg" id="sugg"></div>
+        </div>
+        <div id="log" aria-live="polite" style="display:flex;flex-direction:column;gap:1.25rem"></div>
+      </div>
+    </div>
+
+    <div class="dock">
+      <div class="attachments" id="attachments" hidden></div>
+      <div class="composer">
+        <input type="file" id="file-input" multiple accept="image/*,audio/*,video/*,.txt,.md,.py,.json,.csv,.log" hidden>
+        <button type="button" class="round attach" id="attach" title="Attach photo, audio or file" aria-label="Attach files"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></button>
+        <button type="button" class="round attach mic" id="mic" title="Talk to Clover" aria-label="Record a voice message"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
+        <textarea id="prompt" rows="1" placeholder="Message Clover, or attach a photo, audio or file"></textarea>
+        <button type="button" class="round send" id="send" aria-label="Send" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+      </div>
+      <div class="under">
+        <button type="button" id="mode-line" title="Answer &amp; SoC settings"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span id="mode-text">Omni · Adreno 740 + Kryo · 7 Layers</span></button>
+        <span id="soc-badge">LFM3-SoC-Q4 · 11 Papers Active</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="sheet" id="sheet-perms" role="dialog" aria-modal="true" aria-labelledby="perms-h" inert>
+  <div class="sheet__head"><h2 id="perms-h">Permissions</h2>
+    <button type="button" class="ibtn x" data-close aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <p class="sheet__sub">What Clover may do on this Samsung Galaxy S23, without asking.</p>
+  <div class="sheet__body">
+    <div class="summary" id="perm-summary"></div>
+    <div class="quick">
+      <button type="button" class="all" id="q-allow"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Allow all</button>
+      <button type="button" id="q-ask"><svg class="ic" aria-hidden="true"><use href="#i-hand"/></svg>Ask for all</button>
+      <button type="button" id="q-off"><svg class="ic" aria-hidden="true"><use href="#i-off"/></svg>All off</button>
+    </div>
+    <div id="perm-list"></div>
+    <p class="legend"><b>Allow</b> runs without asking. <b>Ask</b> pauses and asks you in the chat. <b>Off</b> means Clover answers without that tool.</p>
+  </div>
+</aside>
+
+<aside class="sheet" id="sheet-settings" role="dialog" aria-modal="true" aria-labelledby="set-h" inert>
+  <div class="sheet__head"><h2 id="set-h">Settings</h2>
+    <button type="button" class="ibtn x" data-close aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <p class="sheet__sub">How Clover answers on this Samsung Galaxy S23 (Snapdragon 8 Gen 2).</p>
+  <div class="sheet__body">
+    <div class="set">
+      <div class="set__t">Mobile SoC Engine</div>
+      <div class="set__d">Co-executes zero-copy OpenCL 3.0 <code>dot_acc_sat</code> on the Adreno 740 GPU alongside ARMv8.6 <code>i8mm SMMLA</code> &amp; <code>SDOT</code> on the Kryo CPU cores (bit-exact parity, <code>max_abs_diff = 0.0</code>).</div>
+      <div class="seg" id="s-engine">
+        <button type="button" data-v="adreno" class="on">Adreno 740 GPU + Kryo CPU</button>
+        <button type="button" data-v="cpu">Kryo CPU Only</button>
+      </div>
+    </div>
+    <div class="set">
+      <div class="set__t">LFM3-SoC-Q4 4-Bit Operators (894 MB Working Set) <label class="switch"><input type="checkbox" id="s-q4op"><span></span></label></div>
+      <div class="set__d">Uses 4-bit planar group-64 operators (<code>operator.4bit.bin</code>, <code>164.6 MiB</code> vs <code>636 MiB</code> BF16) + 4-bit LM-Head (<code>129.4 MiB</code>) to cut LPDDR5X DRAM traffic by 49.4% and reach up to 5.5–6.4 tok/s.</div>
+    </div>
+    <div class="set">
+      <div class="set__t">Output modality</div>
+      <div class="set__d">LFM3-Omni-2B answers in text, speaks aloud, or generates on-device PNG images, H.264 MP4 videos and WAV speech.</div>
+      <div class="seg" id="s-outtype">
+        <button type="button" data-v="text" class="on">Text</button>
+        <button type="button" data-v="audio">Audio WAV</button>
+        <button type="button" data-v="image">Image PNG</button>
+        <button type="button" data-v="video">Video MP4</button>
+      </div>
+      <div class="set__t" style="margin-top:.65rem">Speak replies to voice messages <label class="switch"><input type="checkbox" id="s-autospeak" checked><span></span></label></div>
+    </div>
+    <div class="set">
+      <div class="set__t">Think &amp; step in latent space <label class="switch"><input type="checkbox" id="s-think"><span></span></label></div>
+      <div class="set__d">Enables HybridAgent <code>&lt;think&gt;&lt;latent&gt;...&lt;/latent&gt;&lt;/think&gt;</code> continuous reasoning via Stage-3 <code>HybridLink2048</code> before answering.</div>
+    </div>
+    <div class="set">
+      <div class="set__t">Clover layers (L2 &ndash; L7) &amp; 11 Foundational Papers</div>
+      <div class="set__d">Progressive 7-layer stack trained on 8&times; RTX 3090 and verified live on this Samsung Galaxy S23.</div>
+      <div id="layers"></div>
+    </div>
+    <div class="set">
+      <div class="set__t">Snapdragon 8 Gen 2 Hardware &amp; Direction B Ledger</div>
+      <div class="kv" id="engine-kv"></div>
+    </div>
+    <div class="set">
+      <div class="set__t">Chats</div>
+      <div class="set__d">Chats are kept on this phone only.</div>
+      <div class="row-btns"><button type="button" class="btn danger" id="clear-chats"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg>Delete all chats</button></div>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'clover_s23_studio_sessions_v2', SKEY = 'clover_s23_studio_settings_v2';
+  var $ = function (id) { return document.getElementById(id); };
+  var state = {
+    sessions: { current: '', order: [], map: {} },
+    files: [],
+    imageB64: null,
+    voiceInput: false,
+    ready: false,
+    busy: false,
+    perms: {},
+    settings: {
+      engine: 'adreno',
+      q4_operators: false,
+      output_type: 'text',
+      thinking: false,
+      autospeak: true,
+      max_active_layer: 7,
+      use_ncm_renderer: false,
+      layers: { hybridlink: true, ncm: false, memory: true, ontology: true, compiler: true, specmd_madvise: true }
+    },
+    health: null,
+    lastSpeed: 0,
+    waitEl: null
+  };
+
+  var PERM_UI = {
+    internet: { name: 'Internet', icon: 'globe', verb: 'search the live web (Wikipedia, arXiv, DuckDuckGo)' },
+    code: { name: 'Run code', icon: 'code', verb: 'run Python code on this S23' },
+    files: { name: 'Read files', icon: 'folder', verb: 'read phone files and attachments' },
+    voice_camera: { name: 'Voice & Media', icon: 'mic', verb: 'use microphone, camera and media synthesis' },
+    memory: { name: 'Memory Graph', icon: 'note', verb: 'retrieve and store persistent memories' }
+  };
+
+  var LAYERS = [
+    ['L2', 'hybridlink', 'HybridAgent & HybridLink2048', 'Continuous <latent> reasoning steps in 2,048-d space (Stage-3 Self-Conditioned) + live Web Search & Python tool loop.'],
+    ['L3', 'ncm', 'Concept renderer (11-Level NCM)', 'Renders through Lfm3ComboBridge + Lfm3ExpertBridge + 11-level VQVAE (313 codes) + LexicalPointerDecoder.'],
+    ['L4', 'memory', 'Memory Graph + 9 Papers', 'Persistent relational memory tree with McCulloch-Pitts veto, Rosenblatt gamma, Minsky-Papert Order-k, Hopfield cleanup, Rumelhart-Sutton TD(lambda), LeCun GTN logadd, Krizhevsky LRN & Vaswani Multi-Head.'],
+    ['L5', 'ontology', 'Ontology GraphRAG + Verifier', 'Symbolic CVE/CWE/CAPEC inference, Turing (1950) M0/M1 diagonal stratifier, Newell-Simon (1956) CSm (*2.07 fix) & VCt, and source grounding audit.'],
+    ['L6', 'compiler', 'Generative Compiler + Sutton TD(0)', 'Verifies model-written Python code + prompt asserts and computes Sutton (1988) Absorbing Markov V_MLE statement survival.'],
+    ['L7', 'specmd_madvise', 'Direction B SoC Data-Movement', 'SpecMD Policy 3 OS madvise(MADV_WILLNEED) lookahead (254.7x fewer major page faults) + Eyeriss 4-Tier Mobile SoC byte ledger.']
+  ];
+
+  var SUGGEST = [
+    ['code', 'Calculate with Python', 'Compute 17**4 + 29*13 using Python.'],
+    ['globe', 'Search arXiv & Web', 'Search the web for recent research papers on foundation models.'],
+    ['shield', 'Ontology GraphRAG (L5)', 'What is CVE-2024-6387 (RegreSSHion), which CWE weakness causes it, and which CAPEC attack pattern exploits it?'],
+    ['note', 'Memory Graph (L4)', 'How does Clover\'s per-layer cache partition fix flat hit rates?']
+  ];
+
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function ic(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
+  function botMarkHtml() {
+    return '<img class="bot-mark mark-img mark-light" src="clover-mark-128.png" alt="Clover">' +
+           '<img class="bot-mark mark-img mark-dark" src="clover-mark-128.png" alt="Clover">';
+  }
+  function fmtSecs(s) { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function newId() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function btn(cls, html, title) { var b = el('button', cls, html); b.type = 'button'; if (title) { b.title = title; b.setAttribute('aria-label', title); } return b; }
+
+  /* ---------- Bridge / Fetch API ---------- */
+  var _bridgeCbs = {};
+  window.__cloverOnBridgeReply = function (cbId, b64) {
+    var fn = _bridgeCbs[cbId];
+    if (!fn) return;
+    delete _bridgeCbs[cbId];
+    try {
+      var bin = atob(b64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      var txt = new TextDecoder('utf-8').decode(bytes);
+      fn(null, JSON.parse(txt));
+    } catch (e) {
+      fn(e, null);
+    }
+  };
+
+  function api(method, path, body) {
+    var jsonStr = body !== undefined ? JSON.stringify(body) : null;
+    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.callLocalS23ApiAsync === 'function') {
+      return new Promise(function (resolve, reject) {
+        var cbId = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        _bridgeCbs[cbId] = function (err, res) {
+          if (err) reject(err);
+          else if (res && res.error) reject(new Error(res.message || res.error));
+          else resolve(res || {});
+        };
+        window.CloverAndroidBridge.callLocalS23ApiAsync(cbId, method, path, jsonStr);
+      });
+    }
+    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.callLocalS23Api === 'function') {
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          try {
+            var raw = window.CloverAndroidBridge.callLocalS23Api(method, path, jsonStr);
+            var j = JSON.parse(raw || '{}');
+            if (j.error) reject(new Error(j.message || j.error));
+            else resolve(j);
+          } catch (e) { reject(e); }
+        }, 10);
+      });
+    }
+    var opt = { method: method, headers: { 'X-Clover-App-Package': 'ai.clover.studio' } };
+    if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = jsonStr; }
+    var url = path.indexOf('http') === 0 ? path : ('http://127.0.0.1:8765' + path);
+    return fetch(url, opt).then(function (r) { return r.json(); });
+  }
+
+  /* ---------- Chats ---------- */
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) state.sessions = JSON.parse(raw); } catch (e) {}
+    var s = state.sessions;
+    if (!s || !s.map || !s.order) state.sessions = s = { current: '', order: [], map: {} };
+    if (!s.current || !s.map[s.current]) newChat(true);
+    renderChats(); renderLog();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state.sessions)); } catch (e) {} }
+  function cur() { return state.sessions.map[state.sessions.current]; }
+  function newChat(silent) {
+    var c = cur();
+    if (c && !c.messages.length && !silent) { renderLog(); $('prompt').focus(); return; }
+    var id = newId();
+    state.sessions.map[id] = { id: id, title: 'New chat', messages: [] };
+    state.sessions.order.unshift(id);
+    state.sessions.current = id;
+    save();
+    if (!silent) { renderChats(); renderLog(); }
+  }
+  function renderChats() {
+    var box = $('chats'); box.innerHTML = '';
+    state.sessions.order.forEach(function (id) {
+      var s = state.sessions.map[id]; if (!s) return;
+      var row = el('div', 'chat' + (id === state.sessions.current ? ' on' : ''));
+      var open = btn('open'); open.textContent = s.title || 'New chat';
+      open.addEventListener('click', function () { if (state.busy) return; state.sessions.current = id; save(); renderChats(); renderLog(); closeRail(); });
+      var del = btn('del', ic('trash'), 'Delete chat');
+      del.addEventListener('click', function (ev) {
+        ev.stopPropagation(); if (state.busy) return;
+        delete state.sessions.map[id];
+        state.sessions.order = state.sessions.order.filter(function (x) { return x !== id; });
+        if (!state.sessions.order.length) newChat(true);
+        else if (state.sessions.current === id) state.sessions.current = state.sessions.order[0];
+        save(); renderChats(); renderLog();
+      });
+      row.appendChild(open); row.appendChild(del); box.appendChild(row);
+    });
+    $('chat-title').textContent = (cur() && cur().title) || 'New chat';
+  }
+
+  /* ---------- Markdown & Message Rendering ---------- */
+  function inline(t) { return t.replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); }
+  function markdown(text) {
+    var out = [];
+    String(text || '').split(/```/).forEach(function (part, i) {
+      if (i % 2 === 1) {
+        var nl = part.indexOf('\n'); var code = nl >= 0 ? part.slice(nl + 1) : part;
+        out.push('<div class="code"><button type="button" data-copy="code">Copy</button><pre><code>' + esc(code.replace(/\n$/, '')) + '</code></pre></div>');
+        return;
+      }
+      var list = [], ordered = false;
+      function flush() { if (list.length) { out.push((ordered ? '<ol>' : '<ul>') + list.join('') + (ordered ? '</ol>' : '</ul>')); list = []; } }
+      esc(part).split('\n').forEach(function (ln) {
+        var t = ln.trim();
+        var h = t.match(/^#{1,4}\s+(.*)$/);
+        var m = t.match(/^([-*•]|\d+[.)])\s+(.*)$/);
+        if (m) { var o = /\d/.test(m[1]); if (list.length && o !== ordered) flush(); ordered = o; list.push('<li>' + inline(m[2]) + '</li>'); return; }
+        flush();
+        if (h) out.push('<h4>' + inline(h[1]) + '</h4>');
+        else if (t) out.push('<p>' + inline(t) + '</p>');
+      });
+      flush();
+    });
+    return out.join('') || '<p>(empty reply)</p>';
+  }
+
+  function userEl(m) {
+    var u = el('div', 'u'); u.textContent = m.text;
+    if (m.files && m.files.length) { var f = el('div', 'files', ic('clip')); f.appendChild(document.createTextNode(m.files.join(', '))); u.appendChild(f); }
+    if (m.imageB64) {
+      var box = el('div', 'media');
+      var im = document.createElement('img'); im.src = m.imageB64; im.alt = 'Attached image';
+      box.appendChild(im); u.appendChild(box);
+    }
+    return u;
+  }
+
+  function toolEl(t) {
+    var box = el('div', 'tool');
+    var head = el('div', 'tool__head', ic(t.icon || 'code') + '<span class="tool__name"></span><span class="tool__arg"></span><span class="state ok">done</span>');
+    head.querySelector('.tool__name').textContent = t.name || 'Tool';
+    head.querySelector('.tool__arg').textContent = String(t.arg || '').split('\n')[0];
+    var body = el('div', 'tool__body'); body.hidden = true;
+    if (t.arg) {
+      body.appendChild(el('div', 'lbl', 'Input'));
+      var pa = el('pre'); pa.textContent = t.arg; body.appendChild(pa);
+    }
+    if (t.result) {
+      body.appendChild(el('div', 'lbl', 'Result'));
+      var pr = el('pre'); pr.textContent = t.result; body.appendChild(pr);
+    }
+    head.addEventListener('click', function () { body.hidden = !body.hidden; });
+    box.appendChild(head); box.appendChild(body);
+    return box;
+  }
+
+  function thinkEl(m) {
+    var pill = btn('think', ic('spark') + '<span></span>');
+    var box = el('div', 'thinkbox'); box.hidden = true; box.textContent = m.thinking || '';
+    pill.querySelector('span').textContent = m.thinkLabel || 'Latent & reasoning trace';
+    pill.addEventListener('click', function () { box.hidden = !box.hidden; });
+    return { pill: pill, box: box };
+  }
+
+  function speakText(text) {
+    var clean = String(text || '').replace(/```[\s\S]*?```/g, ' code block ').slice(0, 2000);
+    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.speakText === 'function') {
+      window.CloverAndroidBridge.speakText(clean);
+    } else if (window.speechSynthesis) {
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(clean));
+    }
+  }
+
+  function copyText(text, b) {
+    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.copyToClipboard === 'function') {
+      window.CloverAndroidBridge.copyToClipboard(text);
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    }
+    if (b) { var old = b.innerHTML; b.innerHTML = ic('check'); setTimeout(function () { b.innerHTML = old; }, 1100); }
+  }
+
+  function botEl(m) {
+    var wrap = el('div', 'b', botMarkHtml());
+    var body = el('div', 'b__body');
+    if (m.thinking) { var t = thinkEl(m); body.appendChild(t.pill); body.appendChild(t.box); }
+    (m.tools || []).forEach(function (tl) { body.appendChild(toolEl(tl)); });
+    body.appendChild(el('div', 'md', markdown(m.text)));
+
+    if (m.image_png_b64) {
+      var figI = el('figure', 'figure');
+      var img = document.createElement('img'); img.src = m.image_png_b64; img.alt = 'Clover visual';
+      figI.appendChild(img); body.appendChild(figI);
+    }
+    if (m.video_mp4_b64) {
+      var figV = el('figure', 'figure');
+      var vid = document.createElement('video'); vid.src = m.video_mp4_b64; vid.controls = true; vid.playsInline = true;
+      figV.appendChild(vid); body.appendChild(figV);
+    }
+    if (m.audio_wav_b64) {
+      var figA = el('figure', 'figure');
+      var aud = document.createElement('audio'); aud.src = m.audio_wav_b64; aud.controls = true;
+      figA.appendChild(aud); body.appendChild(figA);
+    }
+
+    var acts = el('div', 'acts');
+    var cp = btn('', ic('copy'), 'Copy');
+    cp.addEventListener('click', function () { copyText(m.text || '', cp); });
+    acts.appendChild(cp);
+
+    var sv = btn('', ic('speaker'), 'Listen (Clover\'s voice)');
+    sv.addEventListener('click', function () {
+      if (m.audio_wav_b64) { var a = new Audio(m.audio_wav_b64); a.play(); }
+      else speakText(m.text);
+    });
+    acts.appendChild(sv);
+
+    if (!m.isNotice && m.promptOrig) {
+      var rd = btn('', ic('redo') + '<span>Try again</span>', 'Not right? Run Clover Cycle verification & retry');
+      rd.addEventListener('click', function () {
+        if (state.busy || !state.ready) return;
+        $('prompt').value = m.promptOrig;
+        send({ retryCycle: true });
+      });
+      acts.appendChild(rd);
+    }
+
+    var trace;
+    if (m.trace) {
+      var db = btn('', 'Details'); acts.appendChild(db);
+      trace = el('pre', 'trace'); trace.textContent = m.trace; trace.hidden = true;
+      db.addEventListener('click', function () { trace.hidden = !trace.hidden; });
+    }
+    if (m.meta) { var mt = el('span', 'meta'); mt.textContent = m.meta; acts.appendChild(mt); }
+    if (m.used && m.used.length) {
+      var tg = el('span', 'tags');
+      m.used.forEach(function (u) { var s = el('span'); s.textContent = u; tg.appendChild(s); });
+      acts.appendChild(tg);
+    }
+    body.appendChild(acts);
+    if (trace) body.appendChild(trace);
+    wrap.appendChild(body);
+    return wrap;
+  }
+
+  function renderLog() {
+    var log = $('log'); log.innerHTML = '';
+    var c = cur();
+    var empty = !c || !c.messages.length;
+    $('hero').hidden = !empty;
+    if (!empty) c.messages.forEach(function (m) { log.appendChild(m.role === 'user' ? userEl(m) : botEl(m)); });
+    $('chat-title').textContent = (c && c.title) || 'New chat';
+    scrollDown();
+  }
+  function scrollDown() { var s = $('stream'); s.scrollTop = s.scrollHeight; }
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('button[data-copy="code"]');
+    if (!b) return;
+    var code = b.parentNode.querySelector('code');
+    if (code) copyText(code.textContent);
+    b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1100);
+  });
+
+  function renderHero() {
+    var h = new Date().getHours();
+    $('greet').textContent = (h < 5 ? 'Up late?' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.');
+    var box = $('sugg'); box.innerHTML = '';
+    SUGGEST.forEach(function (s) {
+      var b = btn('', ic(s[0]) + '<span><b></b><span></span></span>');
+      b.querySelector('b').textContent = s[1]; b.querySelector('span span').textContent = s[2];
+      b.addEventListener('click', function () { $('prompt').value = s[2]; autosize(); $('prompt').focus(); updateSend(); });
+      box.appendChild(b);
+    });
+  }
+
+  /* ---------- Settings & Hardware Controls ---------- */
+  function loadSettings() {
+    try {
+      var s = JSON.parse(localStorage.getItem(SKEY) || '{}');
+      if (s.engine === 'adreno' || s.engine === 'cpu') state.settings.engine = s.engine;
+      if (typeof s.q4_operators === 'boolean') state.settings.q4_operators = s.q4_operators;
+      if (s.output_type) state.settings.output_type = s.output_type;
+      if (typeof s.thinking === 'boolean') state.settings.thinking = s.thinking;
+      if (typeof s.autospeak === 'boolean') state.settings.autospeak = s.autospeak;
+      if (s.layers && typeof s.layers === 'object') {
+        Object.keys(s.layers).forEach(function (k) { state.settings.layers[k] = !!s.layers[k]; });
+      }
+    } catch (e) {}
+  }
+  function saveSettings() {
+    try { localStorage.setItem(SKEY, JSON.stringify(state.settings)); } catch (e) {}
+    renderSettings();
+  }
+  function computeMaxLayerCap() {
+    var l = state.settings.layers;
+    if (l.specmd_madvise) return 7;
+    if (l.compiler) return 6;
+    if (l.ontology) return 5;
+    if (l.memory) return 4;
+    if (l.ncm) return 3;
+    if (l.hybridlink) return 2;
+    return 1;
+  }
+
+  function renderSettings() {
+    var s = state.settings;
+    Array.prototype.forEach.call($('s-engine').children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === s.engine); });
+    Array.prototype.forEach.call($('s-outtype').children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === s.output_type); });
+    $('s-q4op').checked = !!s.q4_operators;
+    $('s-think').checked = !!s.thinking;
+    $('s-autospeak').checked = !!s.autospeak;
+
+    var activeCnt = Object.keys(s.layers).filter(function (k) { return s.layers[k]; }).length + 1;
+    $('mode-text').textContent = 'Omni · ' + (s.engine === 'adreno' ? 'Adreno 740 + Kryo' : 'Kryo CPU') + ' · ' + activeCnt + '/7 Layers' + (s.thinking ? ' · Latent on' : '');
+    $('soc-badge').textContent = (s.q4_operators ? 'Full LFM3-SoC-Q4 (894 MB)' : '4-Bit FFN + 4-Bit LM-Head') + ' · 11 Papers';
+
+    var box = $('layers'); box.innerHTML = '';
+    LAYERS.forEach(function (L) {
+      var key = L[1], on = !!s.layers[key];
+      var row = el('div', 'layer' + (on ? ' on' : ''),
+        '<div class="layer__tag"></div><div><div class="layer__name"></div><div class="layer__d"></div></div>');
+      row.querySelector('.layer__tag').textContent = L[0];
+      row.querySelector('.layer__name').textContent = L[2];
+      row.querySelector('.layer__d').textContent = L[3];
+      var sw = el('label', 'switch', '<input type="checkbox"><span></span>');
+      var inp = sw.querySelector('input'); inp.checked = on; inp.setAttribute('aria-label', L[2]);
+      inp.addEventListener('change', function () {
+        state.settings.layers[key] = this.checked;
+        if (key === 'ncm') state.settings.use_ncm_renderer = this.checked;
+        saveSettings();
+        var ch = { layers: {} }; ch.layers[key] = this.checked;
+        api('POST', '/api/settings', ch).catch(function () {});
+        renderSettings();
+      });
+      row.appendChild(sw);
+      if (key === 'memory') {
+        var mem = el('div', 'mem'); mem.id = 'mem-list'; row.children[1].appendChild(mem);
+      }
+      box.appendChild(row);
+    });
+    loadMemories();
+  }
+
+  function loadMemories() {
+    var box = $('mem-list');
+    if (!box) return;
+    api('GET', '/api/memory').then(function (r) {
+      var list = r.memories || [];
+      box.innerHTML = '';
+      list.slice(0, 12).forEach(function (m) {
+        var it = el('div', 'mem__item', '<span></span>');
+        var sp = it.querySelector('span');
+        sp.textContent = (m.id ? '[' + m.id + '] ' : '') + (m.summary || m.title);
+        var sm = el('small');
+        sm.textContent = (m.epistemic || 'observed').replace(/_/g, ' ') + ' · ' + (m.status || 'active');
+        sp.appendChild(sm);
+        box.appendChild(it);
+      });
+    }).catch(function () {});
+  }
+
+  function renderEngine() {
+    var h = state.health || {}, dm = h.data_movement_ledger || {}, db = dm.direction_b_mobile_soc_4tier_ledger || {};
+    var rows = [
+      ['Model', 'LiquidAI/LFM3-Omni-2B (HybridSFT Stage-3 + 11-Level NCM)'],
+      ['SoC Hardware', (db.adreno740_zero_copy_opencl_active ? 'Adreno 740 OpenCL 3.0 (dot_acc_sat) + ' : '') + 'Kryo ARMv9 i8mm SMMLA (' + (h.pinned_threads || 5) + ' threads)'],
+      ['Weight Format', db.use_4bit_operators ? 'Full LFM3-SoC-Q4 (894.4 MB total)' : '4-Bit FFN + 4-Bit LM-Head (Top-64 BF16 Refine)'],
+      ['Tier-0 Register / MACs', db.tier0_kryo_neon_smmla_reg_mb != null ? db.tier0_kryo_neon_smmla_reg_mb + ' MB' : '—'],
+      ['Tier-1 SLC (4 MB) & GMEM', db.tier1_slc_4mb_and_adreno_gmem_mb != null ? db.tier1_slc_4mb_and_adreno_gmem_mb + ' MB' : '—'],
+      ['Tier-2 Unified LPDDR5X', db.tier2_unified_lpddr5x_dram_mb != null ? db.tier2_unified_lpddr5x_dram_mb + ' MB' : '—'],
+      ['Bytes Saved (Q4 + Tile)', db.bytes_saved_q4_and_broadcast_mb != null ? db.bytes_saved_q4_and_broadcast_mb + ' MB' : '—'],
+      ['ARMv8.6 SMMLA 2x2 Tiles', db.armv86_i8mm_smmla_2x2_tiles != null ? Number(db.armv86_i8mm_smmla_2x2_tiles).toLocaleString() : '—'],
+      ['FlashAttention-2 Calls', db.flashattention2_online_softmax_calls != null ? Number(db.flashattention2_online_softmax_calls).toLocaleString() : '—'],
+      ['Adreno 740 GPU Launches', db.adreno740_opencl_dot_acc_sat_launches != null ? Number(db.adreno740_opencl_dot_acc_sat_launches).toLocaleString() : '—'],
+      ['OS Page Faults (min/maj)', db.linux_proc_self_stat_minflt_delta != null ? db.linux_proc_self_stat_minflt_delta + ' / ' + db.linux_proc_self_stat_majflt_delta : '—'],
+      ['Last Decode Speed', state.lastSpeed ? state.lastSpeed.toFixed(2) + ' tok/s' : '—']
+    ];
+    $('engine-kv').innerHTML = rows.map(function (r) { return '<span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b>'; }).join('');
+  }
+
+  $('s-engine').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    var v = b.getAttribute('data-v');
+    state.settings.engine = v; saveSettings();
+    api('POST', '/api/settings', { engine: v }).then(loadHealth).catch(function () {});
+  });
+  $('s-q4op').addEventListener('change', function () {
+    state.settings.q4_operators = this.checked; saveSettings();
+    api('POST', '/api/settings', { q4_operators: this.checked }).then(loadHealth).catch(function () {});
+  });
+  $('s-outtype').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    state.settings.output_type = b.getAttribute('data-v'); saveSettings();
+  });
+  $('s-think').addEventListener('change', function () { state.settings.thinking = this.checked; saveSettings(); });
+  $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
+  $('clear-chats').addEventListener('click', function () {
+    if (state.busy || !confirm('Delete all chats from this phone?')) return;
+    state.sessions = { current: '', order: [], map: {} }; newChat(true); renderChats(); renderLog(); closeSheets();
+  });
+
+  /* ---------- Permissions ---------- */
+  function loadPerms() {
+    return api('GET', '/api/permissions').then(function (r) {
+      state.perms = r.permissions || {}; renderPerms();
+    }).catch(function () {});
+  }
+  function setPerms(changes) {
+    return api('POST', '/api/permissions', { permissions: changes }).then(function (r) {
+      state.perms = r.permissions || state.perms; renderPerms();
+    }).catch(function () {});
+  }
+  function setAllPerms(mode) {
+    var ch = {}; Object.keys(state.perms).forEach(function (k) { ch[k] = mode; });
+    if (mode === 'allow' && window.CloverAndroidBridge && typeof window.CloverAndroidBridge.requestOsPermission === 'function') {
+      window.CloverAndroidBridge.requestOsPermission('all');
+    }
+    return setPerms(ch);
+  }
+  function permSummary() {
+    var keys = Object.keys(state.perms), n = { allow: 0, ask: 0, deny: 0 };
+    keys.forEach(function (k) { n[state.perms[k].mode] = (n[state.perms[k].mode] || 0) + 1; });
+    if (!keys.length) return { chip: 'Permissions', cls: 'ok', title: 'On-Device Protected', sub: 'Per-device X-Clover-App-Token active.', icon: 'shield' };
+    if (n.allow === keys.length) return { chip: 'All allowed', cls: 'ok', icon: 'shield', title: 'All tools enabled on S23', sub: 'Web search, Python, files & voice active.' };
+    if (n.deny === keys.length) return { chip: 'Tools off', cls: '', icon: 'off', title: 'All tools are off', sub: 'Clover answers from weights only.' };
+    if (n.ask === keys.length) return { chip: 'Asks first', cls: '', icon: 'hand', title: 'Clover asks before every tool', sub: 'You decide each time in the chat.' };
+    return { chip: n.allow + ' allowed', cls: 'ok', icon: 'shield', title: n.allow + ' allowed · ' + n.ask + ' ask · ' + n.deny + ' off', sub: 'Configured for this Samsung Galaxy S23.' };
+  }
+  function renderPerms() {
+    var s = permSummary();
+    $('perm-chip').textContent = s.chip;
+    $('perm-btn').className = 'pbtn' + (s.cls ? ' ' + s.cls : '');
+    var sum = $('perm-summary');
+    sum.className = 'summary' + (s.cls ? ' ' + s.cls : '');
+    sum.innerHTML = '<div class="big">' + ic(s.icon) + '</div><div><b></b><span></span></div>';
+    sum.querySelector('b').textContent = s.title; sum.querySelector('span').textContent = s.sub;
+    var list = $('perm-list'); list.innerHTML = '';
+    Object.keys(state.perms).forEach(function (k) {
+      var p = state.perms[k], ui = PERM_UI[k] || { name: p.label, icon: 'shield' };
+      var row = el('div', 'perm ' + p.mode, '<div class="perm__ic">' + ic(ui.icon) + '</div><div><div class="perm__t"><span class="perm__name"></span></div><div class="perm__d"></div></div>');
+      row.querySelector('.perm__name').textContent = ui.name;
+      row.querySelector('.perm__d').textContent = p.detail || p.label || '';
+      var seg = el('div', 'seg');
+      [['allow', 'Allow'], ['ask', 'Ask'], ['deny', 'Off']].forEach(function (mm) {
+        var b = btn(p.mode === mm[0] ? 'on' : '', mm[1]); b.setAttribute('data-v', mm[0]);
+        b.addEventListener('click', function () { var ch = {}; ch[k] = mm[0]; setPerms(ch); });
+        seg.appendChild(b);
+      });
+      row.querySelector('.perm__t').appendChild(seg);
+      list.appendChild(row);
+    });
+  }
+  $('q-allow').addEventListener('click', function () { setAllPerms('allow'); });
+  $('q-ask').addEventListener('click', function () { setAllPerms('ask'); });
+  $('q-off').addEventListener('click', function () { setAllPerms('deny'); });
+
+  /* ---------- Status & Health Polling ---------- */
+  function setStatus(cls, text) { $('status-dot').className = 'dot ' + cls; $('status-text').textContent = text; }
+  function updateSend() {
+    $('send').disabled = !state.ready || state.busy || (!$('prompt').value.trim() && !state.files.length && !state.imageB64);
+  }
+  function loadHealth() {
+    return api('GET', '/api/health').then(function (h) {
+      state.ready = h.status === 'ready';
+      state.health = h;
+      var db = (h.data_movement_ledger || {}).direction_b_mobile_soc_4tier_ledger || {};
+      setStatus('ok', 'Ready · ' + (db.adreno740_zero_copy_opencl_active ? 'Adreno 740 + Kryo' : 'Kryo ARMv9') + ' · on this S23');
+      renderEngine();
+      updateSend();
+    }).catch(function () {
+      state.ready = false;
+      setStatus('err', 'S23 Engine offline');
+      updateSend();
+    });
+  }
+
+  /* ---------- Sheets & Rail ---------- */
+  function openSheet(name) {
+    closeRail();
+    ['perms', 'settings'].forEach(function (n) { var sh = $('sheet-' + n), on = n === name; sh.classList.toggle('on', on); sh.inert = !on; });
+    $('scrim').classList.add('on');
+    if (name === 'settings') { renderEngine(); renderSettings(); }
+    if (name === 'perms') loadPerms();
+  }
+  function closeSheets() {
+    ['perms', 'settings'].forEach(function (n) { var sh = $('sheet-' + n); sh.classList.remove('on'); sh.inert = true; });
+    $('scrim').classList.remove('on');
+  }
+  function closeRail() { $('rail').classList.remove('on'); }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (b) { b.addEventListener('click', closeSheets); });
+  $('scrim').addEventListener('click', function () { closeSheets(); closeRail(); });
+  $('perm-btn').addEventListener('click', function () { openSheet('perms'); });
+  $('set-btn').addEventListener('click', function () { openSheet('settings'); });
+  $('mode-line').addEventListener('click', function () { openSheet('settings'); });
+  $('menu').addEventListener('click', function () { $('rail').classList.toggle('on'); $('scrim').classList.toggle('on', $('rail').classList.contains('on')); });
+
+  /* ---------- Attachments & Voice Input ---------- */
+  $('attach').addEventListener('click', function () { $('file-input').click(); });
+  $('file-input').addEventListener('change', function (ev) {
+    Array.prototype.forEach.call(ev.target.files || [], function (f) {
+      if (/^image\//.test(f.type || '')) {
+        var rd = new FileReader();
+        rd.onload = function (e) { state.imageB64 = String(e.target.result || ''); renderAtt(); updateSend(); };
+        rd.readAsDataURL(f);
+      } else if (/^audio\//.test(f.type || '') || /\.wav$/i.test(f.name || '')) {
+        var rda = new FileReader();
+        rda.onload = function (e) { state.files.push({ name: f.name, type: f.type || 'audio/wav', data_b64: String(e.target.result || '') }); renderAtt(); updateSend(); };
+        rda.readAsDataURL(f);
+      } else {
+        var rdt = new FileReader();
+        rdt.onload = function (e) { state.files.push({ name: f.name, type: f.type || 'text/plain', content_text: String(e.target.result || '').slice(0, 2400) }); renderAtt(); updateSend(); };
+        rdt.readAsText(f);
+      }
+    });
+    ev.target.value = '';
+  });
+
+  function renderAtt() {
+    var box = $('attachments'); box.innerHTML = '';
+    box.hidden = !state.files.length && !state.imageB64;
+    if (state.imageB64) {
+      var ci = el('span', 'att');
+      var im = document.createElement('img'); im.src = state.imageB64; im.alt = ''; ci.appendChild(im);
+      ci.appendChild(el('span', '', 'Attached image'));
+      var xi = btn('', ic('x'), 'Remove image');
+      xi.addEventListener('click', function () { state.imageB64 = null; renderAtt(); updateSend(); });
+      ci.appendChild(xi); box.appendChild(ci);
+    }
+    state.files.forEach(function (f, i) {
+      var c = el('span', 'att');
+      var t = el('span'); t.textContent = f.name; c.appendChild(t);
+      var x = btn('', ic('x'), 'Remove ' + f.name);
+      x.addEventListener('click', function () { state.files.splice(i, 1); renderAtt(); updateSend(); });
+      c.appendChild(x); box.appendChild(c);
+    });
+  }
+
+  $('mic').addEventListener('click', function () {
+    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.startNativeVoiceRecognition === 'function') {
+      window.CloverAndroidBridge.startNativeVoiceRecognition();
+    } else {
+      alert('Native Android SpeechRecognizer is active inside the Clover AI Studio S23 APK.');
+    }
+  });
+  window.k3OnNativeVoiceResult = function (spokenText) {
+    if (!spokenText) return;
+    $('prompt').value = spokenText;
+    state.voiceInput = true;
+    autosize(); updateSend();
+    send();
+  };
+
+  /* ---------- Sending & 7-Layer Trace Formatting ---------- */
+  function buildTraceAndBadges(r) {
+    var lt = r.layer_trace || {}, dm = r.dm_stats || {}, db = dm.direction_b_mobile_soc_4tier_ledger || {};
+    var used = [], tools = [], thinkParts = [], traceLines = [];
+
+    var l1 = lt.layer1_lfm3_omni || {};
+    var l2 = lt.layer2_hybrid_agent || {};
+    var l3 = lt.layer3_11level_ncm || {};
+    var l4 = lt.layer4_memory_graph || {};
+    var l5 = lt.layer5_ontology_and_verifier || {};
+    var l6 = lt.layer6_generative_compiler || {};
+
+    if (l2.enabled) {
+      used.push('L2 HybridLink');
+      if (l2.latent_steps_total) {
+        used.push(l2.latent_steps_total + ' latent steps');
+        thinkParts.push('[Stage-3 HybridLink2048] ' + l2.latent_steps_total + ' continuous <latent> steps (cos=' + (l2.stage3_hybridlink_2048_cos || l2.hybridlink_latent_to_next_embed_cos || 0) + ')');
+      }
+      if (l2.tool_executed === 'web_search') {
+        tools.push({ name: 'Web search', icon: 'globe', arg: l2.search_query || '', result: l2.observation_preview || '' });
+      } else if (l2.tool_executed === 'python_interpreter') {
+        tools.push({ name: 'Python', icon: 'code', arg: l2.python_code || '', result: l2.python_output || '' });
+      }
+    }
+    if (l1.turn1_raw_output && l1.turn1_raw_output.indexOf('</think>') >= 0) {
+      var rawThink = l1.turn1_raw_output.split('</think>')[0].replace(/<think>/g, '').trim();
+      if (rawThink) thinkParts.push(rawThink);
+    }
+    if (l3.ncm_active) used.push('L3 11-Level NCM');
+    if (l4.injected_into_model_prompt) used.push('L4 memory · ' + (l4.retrieved_count || 1));
+    if (l5.injected_into_model_prompt) used.push('L5 ontology · ' + (l5.ontology_hits || 1));
+    if (l5.source_grounding_verified) used.push('L5 grounded');
+    if (l6.report && l6.report.checked_blocks) {
+      used.push(l6.report.all_ok ? 'L6 code checked' : 'L6 repaired');
+    }
+    if (db.adreno740_opencl_dot_acc_sat_launches > 0) {
+      used.push('L7 Adreno 740 (' + db.adreno740_opencl_dot_acc_sat_launches + ')');
+    } else if (dm.os_madvise_willneed_active) {
+      used.push('L7 SpecMD madvise');
+    }
+
+    traceLines.push('=== Snapdragon 8 Gen 2 Unified SoC & 7-Layer Trace ===');
+    traceLines.push('Input tokens: ' + (r.input_tokens || 0) + ' | Generated tokens: ' + (r.generated_tokens || 0) + ' | Total cycle: ' + (r.total_cycle_ms || 0) + ' ms');
+    traceLines.push('L1 24-Layer C Engine: prefill=' + (l1.turn1_prefill_ms || 0) + ' ms, decode=' + (l1.turn1_decode_ms || 0) + ' ms');
+    if (l2.enabled) {
+      traceLines.push('L2 HybridLink2048: norm=' + (l2.latent_vector_norm || 0) + ', top1=' + JSON.stringify(l2.top1_predicted_token_str || '') + ', cos=' + (l2.hybridlink_latent_to_next_embed_cos || 0));
+    }
+    if (l4.eleven_foundational_papers) {
+      var fp4 = l4.eleven_foundational_papers;
+      traceLines.push('L4 Foundational Papers: Hopfield familiar=' + ((fp4.hopfield_1982_constellation_cleanup || {}).is_familiar) +
+        ', LeCun GTN top=' + ((fp4.lecun_1998_gtn_forward_logadd || {}).top_gtn_id || '-') +
+        ', Vaswani+LRN facets=' + ((fp4.krizhevsky_2012_lrn_and_vaswani_2017_multihead || {}).facets_multihead_lrn || 3));
+    }
+    if (l5.eleven_foundational_papers) {
+      var fp5 = l5.eleven_foundational_papers;
+      traceLines.push('L5 Foundational Papers: Turing level=' + ((fp5.turing_1950_m0_m1_diagonal_stratifier || {}).stratified_level || 'M_0') +
+        ', Newell-Simon CSm *2.07 matched=' + ((fp5.newell_simon_1956_csm_and_vct || {}).csm_2_07_contraction_matched || 1));
+    }
+    if (l6.report && l6.report.results && l6.report.results[0] && l6.report.results[0].sutton_1988_and_rumelhart_1986) {
+      var sut = l6.report.results[0].sutton_1988_and_rumelhart_1986;
+      traceLines.push('L6 Sutton (1988) Absorbing Markov V_MLE: ' + JSON.stringify(sut.absorbing_markov_v_mle));
+    }
+    traceLines.push('L7 Direction B SoC Ledger: LPDDR5X=' + (db.tier2_unified_lpddr5x_dram_mb || 0) + ' MB, Saved=' + (db.bytes_saved_q4_and_broadcast_mb || 0) +
+      ' MB, SMMLA=' + (db.armv86_i8mm_smmla_2x2_tiles || 0) + ', FA2=' + (db.flashattention2_online_softmax_calls || 0) +
+      ', Adreno=' + (db.adreno740_opencl_dot_acc_sat_launches || 0) + ', minflt/majflt=' + (db.linux_proc_self_stat_minflt_delta || 0) + '/' + (db.linux_proc_self_stat_majflt_delta || 0));
+
+    return {
+      used: used,
+      tools: tools,
+      thinking: thinkParts.join('\n\n'),
+      thinkLabel: l2.latent_steps_total ? ('Latent reasoning · ' + l2.latent_steps_total + ' steps') : 'Reasoning trace',
+      trace: traceLines.join('\n')
+    };
+  }
+
+  function send(opts) {
+    opts = opts || {};
+    var c = cur(), prompt = $('prompt').value.trim(), files = state.files.slice(), imgB64 = state.imageB64, vIn = state.voiceInput;
+    if (!prompt && (files.length || imgB64)) prompt = 'Analyze the attached file and answer clearly.';
+    if (!prompt || !state.ready || state.busy) return;
+
+    $('prompt').value = ''; autosize();
+    if (!c.messages.length) c.title = prompt.slice(0, 46);
+    if (!opts.retryCycle) {
+      c.messages.push({ role: 'user', text: prompt, files: files.map(function (f) { return f.name; }), imageB64: imgB64 });
+    }
+    state.files = []; state.imageB64 = null; state.voiceInput = false;
+    renderAtt(); save(); renderChats(); renderLog();
+
+    var turn = el('div', 'b', botMarkHtml());
+    var body = el('div', 'b__body'); turn.appendChild(body);
+    var tStart = Date.now();
+    var wait = el('div', 'typing', '<span></span><span></span><span></span><em>running on S23 Unified SoC (0:00)</em>');
+    body.appendChild(wait);
+    $('log').appendChild(turn); scrollDown();
+
+    state.busy = true; setStatus('busy', 'Running · Adreno 740 + Kryo'); updateSend();
+    var timer = setInterval(function () {
+      var em = wait.querySelector('em');
+      if (em) em.textContent = (opts.retryCycle ? 'Clover Cycle verifying & retrying · ' : 'running on S23 Unified SoC · ') + fmtSecs((Date.now() - tStart) / 1000);
+    }, 1000);
+
+    var maxLayer = computeMaxLayerCap();
+    var payload = {
+      prompt: prompt,
+      output_type: state.settings.output_type || 'text',
+      image_b64: imgB64,
+      attached_files: files,
+      voice_input: vIn,
+      max_active_layer: maxLayer,
+      use_ncm_renderer: !!state.settings.layers.ncm,
+      enable_thinking: !!state.settings.thinking || !!opts.retryCycle,
+      inject_latent_step_before_decode: !!opts.retryCycle,
+      q4_operators: !!state.settings.q4_operators,
+      adreno_active: state.settings.engine === 'adreno'
+    };
+
+    api('POST', '/api/chat', payload).then(function (r) {
+      clearInterval(timer);
+      turn.remove();
+      var secs = Math.max(1, Math.round((r.total_cycle_ms || (Date.now() - tStart)) / 1000));
+      var genTok = r.generated_tokens || r.emitted_tokens || 0;
+      var decMs = ((r.layer_trace || {}).layer1_lfm3_omni || {}).turn1_decode_ms || r.c_24_layer_4bit_ms || r.total_cycle_ms || 1000;
+      var speed = genTok > 0 && decMs > 0 ? (genTok / (decMs / 1000.0)) : 0;
+      if (speed > 0) state.lastSpeed = speed;
+
+      var info = buildTraceAndBadges(r);
+      if (opts.retryCycle) info.used.unshift('Checked again · Clover Cycle');
+
+      var m = {
+        role: 'bot',
+        text: r.reply || '(empty reply)',
+        promptOrig: prompt,
+        image_png_b64: r.image_png_b64 || '',
+        video_mp4_b64: r.video_mp4_b64 || '',
+        audio_wav_b64: r.audio_wav_b64 || '',
+        meta: secs + ' s' + (genTok ? ' · ' + genTok + ' tokens' : '') + (speed ? ' · ' + speed.toFixed(1) + ' tok/s' : ''),
+        thinking: info.thinking,
+        thinkLabel: info.thinkLabel,
+        tools: info.tools,
+        used: info.used,
+        trace: info.trace
+      };
+      c.messages.push(m); save();
+      $('log').appendChild(botEl(m)); scrollDown();
+      if ((vIn || state.settings.output_type === 'audio') && state.settings.autospeak) {
+        if (m.audio_wav_b64) { var a = new Audio(m.audio_wav_b64); a.play(); }
+        else speakText(m.text);
+      }
+      loadHealth();
+    }).catch(function (e) {
+      clearInterval(timer);
+      turn.remove();
+      var m = { role: 'bot', text: 'Clover could not answer: ' + e.message, isNotice: true };
+      c.messages.push(m); save();
+      $('log').appendChild(botEl(m)); scrollDown();
+    }).then(function () {
+      state.busy = false; updateSend(); loadHealth();
+    });
+  }
+
+  function autosize() { var t = $('prompt'); t.style.height = 'auto'; t.style.height = Math.min(160, t.scrollHeight) + 'px'; }
+  $('prompt').addEventListener('input', function () { autosize(); updateSend(); });
+  $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+  $('send').addEventListener('click', function () { send(); });
+  $('new-chat').addEventListener('click', function () { if (!state.busy) { newChat(); closeRail(); $('scrim').classList.remove('on'); } });
+
+  loadSettings(); renderHero(); load(); renderSettings(); loadPerms(); loadHealth();
+  setInterval(function () { if (!state.busy) loadHealth(); }, 12000);
+})();
+</script>
+</body>
+</html>

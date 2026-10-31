@@ -69,10 +69,11 @@ import torch
 import torch.nn.functional as F
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODELS_DIR = SCRIPT_DIR.parent
+LFM3_DIR = SCRIPT_DIR.parent / "src" / "models" / "lfm3-1.7b"
+MODELS_DIR = SCRIPT_DIR.parent / "src" / "models"
 NEMO_DIR = MODELS_DIR / "nemotron-3.5-super-vl"
-TOOLS_DIR = MODELS_DIR.parent / "tools" / "hybrid-ncm-k3"
-for _p in (SCRIPT_DIR, MODELS_DIR, NEMO_DIR, TOOLS_DIR):
+TOOLS_DIR = SCRIPT_DIR.parent / "src" / "tools" / "hybrid-ncm-k3"
+for _p in (SCRIPT_DIR, LFM3_DIR, MODELS_DIR, NEMO_DIR, TOOLS_DIR):
     if _p.exists() and str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 

@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -74,6 +75,28 @@ public class MainActivity extends Activity {
                 if (status == TextToSpeech.SUCCESS) {
                     tts.setLanguage(Locale.US);
                     tts.setSpeechRate(0.98f);
+                    tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                        @Override
+                        public void onStart(String utteranceId) {}
+
+                        @Override
+                        public void onDone(String utteranceId) {
+                            if (webView != null) {
+                                webView.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        webView.evaluateJavascript(
+                                                "if(window.k3OnTtsFinished){window.k3OnTtsFinished();}",
+                                                null
+                                        );
+                                    }
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onError(String utteranceId) {}
+                    });
                     ttsReady = true;
                 }
             }
@@ -169,7 +192,7 @@ public class MainActivity extends Activity {
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod(method != null ? method.toUpperCase(Locale.US) : "GET");
                 conn.setConnectTimeout(6000);
-                conn.setReadTimeout(120000);
+                conn.setReadTimeout(240000);
                 conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
                 conn.setRequestProperty("X-Clover-App-Package", EXCLUSIVE_APP_PACKAGE);
                 conn.setRequestProperty("X-Clover-App-Token", EXCLUSIVE_APP_TOKEN);
@@ -209,6 +232,31 @@ public class MainActivity extends Activity {
                     conn.disconnect();
                 }
             }
+        }
+
+        @JavascriptInterface
+        public void callLocalS23ApiAsync(final String cbId, final String method, final String endpoint, final String jsonBody) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    final String resp = callLocalS23Api(method, endpoint, jsonBody);
+                    if (webView != null) {
+                        webView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                String b64 = android.util.Base64.encodeToString(
+                                        resp.getBytes(StandardCharsets.UTF_8),
+                                        android.util.Base64.NO_WRAP
+                                );
+                                webView.evaluateJavascript(
+                                        "if(window.__cloverOnBridgeReply){window.__cloverOnBridgeReply('" + cbId + "','" + b64 + "');}",
+                                        null
+                                );
+                            }
+                        });
+                    }
+                }
+            }).start();
         }
 
         @JavascriptInterface
