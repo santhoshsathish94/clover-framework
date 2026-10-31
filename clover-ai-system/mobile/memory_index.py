@@ -37,7 +37,7 @@ import numpy as np
 EMBED_MODEL, EMBED_REV = "BAAI/bge-small-en-v1.5", "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
 QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 HEAD = "From your earlier conversations with this user, dated (they may not be relevant to the current message):"
-BUDGET, PER_UNIT = 1000, 700
+BUDGET, PER_UNIT = 160, 120
 IDLE_NOTE_S = 8
 NOTE_PROMPT = (
     "Conversation from {date}:\n{text}\n\n"
@@ -364,7 +364,9 @@ class MemoryIndex:
         """
         if self.state != "ready" or not self.want_recall:
             return None, {"layer": "recall", "skipped": self.state}
-        qt = toks(query)
+        qt_raw = toks(query)
+        trivial_greetings = {"hi", "hello", "hey", "yo", "thanks", "thank", "ok", "okay", "yes", "no", "please", "good", "morning", "evening"}
+        qt = [w for w in qt_raw if w not in trivial_greetings and len(w) >= 2]
         if not qt:
             return None, None
         t0 = time.perf_counter()
@@ -372,7 +374,7 @@ class MemoryIndex:
         with self.lock:
             cands = [
                 u for u in self.units
-                if not (u["sid"] == sid and u["n"] >= n - history_turns)
+                if u["sid"] != sid
                 and not (u["role"] == "clover" and (u["sid"], u["n"]) in self.negative)
             ]
             notes = [
@@ -387,13 +389,30 @@ class MemoryIndex:
         with self.lock:
             texts = [u["text"] for u in cands]
             e = np.stack([self.vec[key(t)] for t in texts])
-            lists = [bm25([toks(t) for t in texts], qt), e @ qv]
+            bm25_text = bm25([toks(t) for t in texts], qt)
+            cos_text = e @ qv
+            lists = [bm25_text, cos_text]
             noted = all(x is not None for x in notes)
+            bm25_note_max = 0.0
             if noted:
+                bm25_notes = bm25([toks(x) for x in notes], qt)
+                bm25_note_max = float(bm25_notes.max()) if len(bm25_notes) else 0.0
                 lists += [
-                    bm25([toks(x) for x in notes], qt),
+                    bm25_notes,
                     np.stack([self.vec[key(x or "(nothing)")] for x in notes]) @ qv,
                 ]
+            best_cos = float(cos_text.max()) if len(cos_text) else 0.0
+            best_bm25 = max(float(bm25_text.max()) if len(bm25_text) else 0.0, bm25_note_max)
+            ql = query.lower()
+            past_cue = any(k in ql for k in ("my ", "remember", "earlier", "previous", "before", "last time", "did i", "we talked", "told you"))
+            if not past_cue and best_bm25 < 2.2:
+                return None, {
+                    "layer": "recall",
+                    "skipped": "no_relevant_match",
+                    "candidates": len(cands),
+                    "best_cosine": round(best_cos, 4),
+                    "ms": round((time.perf_counter() - t0) * 1000, 1),
+                }
             text, picked = block_lines(cands, list(np.argsort(-rrf(*lists), kind="stable")), budget=budget)
             refs = [cands[i]["ref"] for i in picked]
         info = {
@@ -402,7 +421,7 @@ class MemoryIndex:
             "chats": len({r.split("#")[0] for r in refs}),
             "candidates": len(cands),
             "with_notes": noted,
-            "best_cosine": round(float((e @ qv).max()), 4),
+            "best_cosine": round(best_cos, 4),
             "ms": round((time.perf_counter() - t0) * 1000, 1),
         }
         return HEAD + "\n" + text, info

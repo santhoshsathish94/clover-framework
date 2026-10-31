@@ -2392,12 +2392,13 @@ LFM3_API float lfm3_step_token_cached(
     return (float)(now_ms() - t0);
 }
 
-LFM3_API int lfm3_decode_from_cache(
+LFM3_API int lfm3_decode_from_cache_with_hidden(
     const float *initial_h_last_2048,
     int max_new_tokens,
     int allow_thinking,
     int *out_gen_ids,
     float *out_last_hidden_2048,
+    float *out_hidden_seq,
     float *out_total_ms
 )
 {
@@ -2421,6 +2422,9 @@ LFM3_API int lfm3_decode_from_cache(
         out_gen_ids[gen_count++] = best_id;
         if (best_id == 124900 || best_id == 124895 || best_id == 124906 || best_id == 125020 || best_id == 125028) {
             /* 124900 = <|im_end|>, 124895 = <|endoftext|>, 124906 = <|tool_call_end|>, 125020 = </tool_call>, 125028 = </additional_tools> */
+            if (out_hidden_seq) {
+                memcpy(out_hidden_seq + (size_t)(gen_count - 1) * LFM3_D, h_last, LFM3_D * sizeof(float));
+            }
             break;
         }
         if (best_id == 38 && gen_count >= 3) {
@@ -2429,10 +2433,13 @@ LFM3_API int lfm3_decode_from_cache(
             /* Stop immediately on closing </search> (13981), </python> (63513/12326), or </answer> (44244)
              * where prev2_id is NOT opening '<' (36) and NOT '</think>' (124902) */
             if ((prev_id == 13981 || prev_id == 63513 || prev_id == 12326 || prev_id == 44244) && prev2_id != 36 && prev2_id != 124902) {
+                if (out_hidden_seq) {
+                    memcpy(out_hidden_seq + (size_t)(gen_count - 1) * LFM3_D, h_last, LFM3_D * sizeof(float));
+                }
                 break;
             }
         }
-        if (step + 1 >= max_new_tokens && best_id != 125033) {
+        if (step + 1 >= max_new_tokens && best_id != 125033 && !out_hidden_seq) {
             break;
         }
 
@@ -2448,11 +2455,17 @@ LFM3_API int lfm3_decode_from_cache(
             float *tmp = c_ptr; c_ptr = n_ptr; n_ptr = tmp;
         }
         rms_norm_bf16(c_ptr, emb_norm_w, h_last, 1, LFM3_D, 1e-5f);
+        if (out_hidden_seq) {
+            memcpy(out_hidden_seq + (size_t)(gen_count - 1) * LFM3_D, h_last, LFM3_D * sizeof(float));
+        }
         cur_pos++;
         g_cached_seq_len = cur_pos;
 
         if (best_id == 125033) {
             /* Entered <latent> span: return to HybridAgent controller with h_last at <latent> */
+            break;
+        }
+        if (step + 1 >= max_new_tokens) {
             break;
         }
     }
@@ -2465,4 +2478,24 @@ LFM3_API int lfm3_decode_from_cache(
     }
     free(logits);
     return gen_count;
+}
+
+LFM3_API int lfm3_decode_from_cache(
+    const float *initial_h_last_2048,
+    int max_new_tokens,
+    int allow_thinking,
+    int *out_gen_ids,
+    float *out_last_hidden_2048,
+    float *out_total_ms
+)
+{
+    return lfm3_decode_from_cache_with_hidden(
+        initial_h_last_2048,
+        max_new_tokens,
+        allow_thinking,
+        out_gen_ids,
+        out_last_hidden_2048,
+        NULL,
+        out_total_ms
+    );
 }

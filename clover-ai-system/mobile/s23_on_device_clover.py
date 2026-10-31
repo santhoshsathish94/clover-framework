@@ -372,6 +372,18 @@ class S23Lfm3NativeEngine:
         ]
         self.lib.lfm3_decode_from_cache.restype = ctypes.c_int
 
+        if hasattr(self.lib, "lfm3_decode_from_cache_with_hidden"):
+            self.lib.lfm3_decode_from_cache_with_hidden.argtypes = [
+                ctypes.POINTER(ctypes.c_float),
+                ctypes.c_int,
+                ctypes.c_int,
+                ctypes.POINTER(ctypes.c_int),
+                ctypes.POINTER(ctypes.c_float),
+                ctypes.POINTER(ctypes.c_float),
+                ctypes.POINTER(ctypes.c_float),
+            ]
+            self.lib.lfm3_decode_from_cache_with_hidden.restype = ctypes.c_int
+
         self.lib.lfm3_dm_stats.argtypes = [ctypes.POINTER(ctypes.c_ulong)]
         self.lib.lfm3_dm_stats.restype = None
 
@@ -497,6 +509,37 @@ class S23Lfm3NativeEngine:
         gen_ids = [int(c_out[i]) for i in range(max(0, n_gen))]
         return gen_ids, out_h, float(c_ms.value)
 
+    def decode_from_cache_with_hidden(
+        self,
+        initial_h_2048: np.ndarray,
+        max_new_tokens: int = 48,
+        allow_thinking: bool | int = False,
+    ) -> tuple[list[int], np.ndarray, np.ndarray, float]:
+        if not hasattr(self.lib, "lfm3_decode_from_cache_with_hidden"):
+            gids, out_h, ms = self.decode_from_cache(initial_h_2048, max_new_tokens=max_new_tokens, allow_thinking=allow_thinking)
+            return gids, out_h, np.zeros((0, D_LFM3), dtype=np.float32), ms
+        in_h = np.ascontiguousarray(initial_h_2048.reshape(D_LFM3), dtype=np.float32)
+        cap = max(1, int(max_new_tokens))
+        c_out = (ctypes.c_int * cap)()
+        out_h = np.zeros(D_LFM3, dtype=np.float32)
+        out_seq = np.zeros((cap, D_LFM3), dtype=np.float32)
+        c_ms = ctypes.c_float(0.0)
+        think_mode = int(allow_thinking) if isinstance(allow_thinking, int) and not isinstance(allow_thinking, bool) else (1 if allow_thinking else 0)
+        n_gen = int(
+            self.lib.lfm3_decode_from_cache_with_hidden(
+                in_h.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                cap,
+                think_mode,
+                c_out,
+                out_h.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                out_seq.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                ctypes.byref(c_ms),
+            )
+        )
+        n_valid = max(0, min(cap, n_gen))
+        gen_ids = [int(c_out[i]) for i in range(n_valid)]
+        return gen_ids, out_h, out_seq[:n_valid].copy(), float(c_ms.value)
+
     def generate_chat(
         self,
         prompt_ids: list[int],
@@ -608,12 +651,13 @@ class S23HybridAgentAndNCM:
         self.vocab_size = V_LFM3
         self.hidden_size = D_LFM3
 
-        # Set PyTorch to 1 thread with OPENBLAS_NUM_THREADS=1 for fast, 100% deterministic execution on S23
+        # Keep PyTorch at 1 thread so PyTorch's OpenMP pool never contends with liblfm3_cpu_engine.so's OpenMP threads
         torch.set_num_threads(1)
 
         if str(self.ncm_dir) not in sys.path:
             sys.path.insert(0, str(self.ncm_dir))
 
+        from models.common import apply_rotary_emb
         from models.next_concept import NextConceptTransformer
         from models.vqvae import VQVAE
         from ncm_runtime import (
@@ -625,6 +669,7 @@ class S23HybridAgentAndNCM:
             pack_combo_prefix,
         )
 
+        self._apply_rotary_emb = apply_rotary_emb
         self.P_BPE = P_BPE
         self.P_RH = P_RH
         self._join_rendered_windows = join_rendered_windows
@@ -951,11 +996,18 @@ class S23HybridAgentAndNCM:
         levels = list(self.vqvae.vq.levels)
         self.sched = [1.0 - 0.6 * (k / (len(levels) - 1)) for k in range(len(levels))]
 
-    def run_continuous_latent_step(self, h_last_2048: np.ndarray) -> dict[str, Any]:
+    def run_continuous_latent_step(
+        self,
+        h_last_2048: np.ndarray,
+        known_top1_id: int | None = None,
+        compute_lm_head: bool = True,
+    ) -> dict[str, Any]:
         """
         Layer 2 (`HybridLink2048` + `Lfm3NativeHybridLink(d=2048, bottleneck=512)`):
         Projects `h_t` into continuous `<latent>` space `r_t = R_Lfm3(h_t)` and measures
         its cosine alignment with LFM3-Omni-2B's next-token embedding in `128,000`-vocab space.
+        When `known_top1_id` is supplied from the unified C1 decode pass, avoids a redundant
+        128,000-vocab LM-head GEMV (`~450 ms` saved on S23).
         """
         torch = self.torch
         F = self.F
@@ -967,7 +1019,12 @@ class S23HybridAgentAndNCM:
                 r_s3 = self.hybridlink_2048(h_t) * 0.024
             else:
                 r_s3 = r_native
-            top1_id = self.c_engine.lm_head_top1(h_last_2048)
+            if known_top1_id is not None and 0 <= int(known_top1_id) < V_LFM3:
+                top1_id = int(known_top1_id)
+            elif compute_lm_head:
+                top1_id = self.c_engine.lm_head_top1(h_last_2048)
+            else:
+                top1_id = 0
             e_top1 = self.lfm3_emb_bf16[top1_id].float().unsqueeze(0)
             raw_cos = float(F.cosine_similarity(h_t, e_top1, dim=-1).item())
             latent_cos = float(F.cosine_similarity(r_native, e_top1, dim=-1).item())
@@ -999,7 +1056,8 @@ class S23HybridAgentAndNCM:
     ) -> tuple[list[int], np.ndarray, float, dict[str, Any]]:
         """
         Executes a full `HybridAgent` generation turn on `liblfm3_cpu_engine.so`:
-          - Decodes discrete tokens until `<latent>` (`125033`), `</search>`, `</python>`, `</answer>`, or `<|im_end|>`.
+          - Decodes discrete tokens until `<latent>` (`125033`), `</search>`, `</python>`, `</answer>`, or `<|im_end|>`,
+            capturing the in-situ 24-layer hidden state `h_t` at every step so C2/C3 never re-run C1!
           - Whenever `<latent>` (`125033`) is emitted, transitions to continuous `LATENT` mode and steps
             `r_t = R_Lfm3(h_t)` directly into the 24-layer C engine (`step_embedding_cached`) for `min_latent_steps .. max_latent_steps`,
             then closes the span with `</latent>` (`125034`) via `step_token_cached` and resumes decoding!
@@ -1007,6 +1065,7 @@ class S23HybridAgentAndNCM:
         torch = self.torch
         F = self.F
         all_gen_ids: list[int] = []
+        hidden_chunks: list[np.ndarray] = []
         h_cur = initial_h_2048
         total_c_ms = 0.0
         latent_spans_opened = 0
@@ -1016,13 +1075,15 @@ class S23HybridAgentAndNCM:
         while len(all_gen_ids) < max_new_tokens:
             rem = max(1, max_new_tokens - len(all_gen_ids))
             think_mode = 1 if latent_spans_opened == 0 else 2
-            chunk_ids, h_cur, ms_chunk = self.c_engine.decode_from_cache(
+            chunk_ids, h_cur, chunk_h_seq, ms_chunk = self.c_engine.decode_from_cache_with_hidden(
                 h_cur, max_new_tokens=rem, allow_thinking=think_mode
             )
             total_c_ms += ms_chunk
             if not chunk_ids:
                 break
             all_gen_ids.extend(chunk_ids)
+            if chunk_h_seq is not None and chunk_h_seq.shape[0] > 0:
+                hidden_chunks.append(chunk_h_seq)
             last_id = chunk_ids[-1]
 
             if last_id == 125033 and latent_spans_opened < 1:
@@ -1045,11 +1106,13 @@ class S23HybridAgentAndNCM:
                 h_cur, close_ms = self.c_engine.step_token_cached(125034)
                 total_c_ms += close_ms
                 all_gen_ids.append(125034)
+                hidden_chunks.append(h_cur.reshape(1, D_LFM3).copy())
                 continue
 
             # Otherwise decode_from_cache stopped on </search>, </python>, </answer>, </tool_call>, or <|im_end|>
             break
 
+        full_h_seq = np.concatenate(hidden_chunks, axis=0) if hidden_chunks else np.zeros((0, D_LFM3), dtype=np.float32)
         return (
             all_gen_ids,
             h_cur,
@@ -1058,6 +1121,7 @@ class S23HybridAgentAndNCM:
                 "latent_spans_opened": latent_spans_opened,
                 "latent_steps_total": latent_steps_total,
                 "latent_span_readouts": latent_span_readouts,
+                "_in_situ_hidden_seq": full_h_seq,
             },
         )
 
@@ -1273,17 +1337,27 @@ class S23HybridAgentAndNCM:
             return self.tok.decode(valid_p), list(valid_p), decoded_str, True
         return decoded_str, clean_ids, decoded_str, False
 
-    def render_plan_through_11level_ncm(self, plan_text: str) -> tuple[str, list[int], dict[str, Any]]:
+    def render_plan_through_11level_ncm(
+        self,
+        plan_text: str,
+        precomputed_h_seq: np.ndarray | None = None,
+        precomputed_gen_ids: list[int] | None = None,
+    ) -> tuple[str, list[int], dict[str, Any]]:
         """
-        Layer 3 (`Lfm3NCMRenderer`):
-        Runs `plan_text` through:
-          1. 24-layer LFM3 C engine (`h_backbone [1, P_BPE, 2048]`)
-          2. `Lfm3NativeHybridLink` -> `Lfm3ComboBridge(2048 -> 384)` (`z_rh [1, P_BPE, 384]`)
-          3. `vqvae.encoder.wte(p_pad) + Lfm3ExpertBridge(2048 -> 384)` (`z_bpe [1, P_BPE, 384]`)
-          4. `pack_combo_prefix` -> 11-level `NextConceptTransformer` (`313` concept codes)
-          5. `vqvae.vq.idx_to_zhats` -> `LexicalPointerDecoder` -> `128,000`-vocab LFM3 token IDs.
+        Unified C1 (Inference) -> C2 (Plan) -> C3 (Decode) NCM Pipeline:
+          1. Uses the in-situ 24-layer C1 hidden states `precomputed_h_seq` directly (`c_backbone_ms = 0.0 ms`,
+             zero redundant `forward_24_layers` re-execution!). Falls back to `forward_24_layers` only if
+             called standalone without `precomputed_h_seq`.
+          2. Projects `h_valid -> r_valid` once through precomputed `plan-trunk-0` (`Lfm3NativeHybridLink`).
+          3. Projects `(r_valid, h_valid)` through precomputed `bridge-trunk-0` (`Lfm3ComboBridge` + `Lfm3ExpertBridge`)
+             on the exact unpadded length `L_val = len(pids)` (`[1, 2*L_val, 384]`, zero dead padding tokens).
+          4. Runs `NextConceptTransformer` (`ncm-trunk-0..11` + `ncm-global-0`) + `vqvae-expert-0..10` up to the
+             multiscale level resolution covering `L_val`, accumulating `z_hat` in situ in a single pass.
+          5. Decodes `[1, L_val, 384]` through `ptr-trunk-0..2` (`LexicalPointerDecoder`) + `vqvae-trunk-0` in parallel.
         """
         torch = self.torch
+        F = self.F
+        apply_rotary_emb = self._apply_rotary_emb
         t0 = time.perf_counter()
         clean_plan = (plan_text or "").strip()
         if not clean_plan:
@@ -1293,31 +1367,168 @@ class S23HybridAgentAndNCM:
         first_para = paragraphs[0]
         rest_paras = paragraphs[1:]
 
-        pad_id = self.tok.pad_token_id
         pids = self.tok.encode(first_para, allow_special=False)[: self.P_BPE]
         if not pids:
             return clean_plan, self.tok.encode(clean_plan, allow_special=False), {}
+        L_val = len(pids)
 
-        h_c, c_ms = self.c_engine.forward_24_layers(pids)
-        h_backbone = torch.zeros((1, self.P_BPE, D_LFM3), dtype=torch.float32)
-        h_backbone[0, : len(pids)] = torch.from_numpy(h_c)
-
-        p_pad = torch.tensor([pids + [pad_id] * (self.P_BPE - len(pids))], dtype=torch.long)
-        pad_mask_bpe = p_pad == pad_id
+        # 1. C1 Hidden States: reuse in-situ hidden states from the unified C1 pass (`0.00 ms` extra C1 cost!)
+        c_ms = 0.0
+        reused_c1_hidden = False
+        if precomputed_h_seq is not None and isinstance(precomputed_h_seq, np.ndarray) and precomputed_h_seq.shape[0] > 0:
+            start_idx = 0
+            if precomputed_gen_ids and len(precomputed_gen_ids) >= 1:
+                for idx_s in range(0, len(precomputed_gen_ids)):
+                    if precomputed_gen_ids[idx_s] == pids[0]:
+                        start_idx = idx_s
+                        break
+            h_slice = precomputed_h_seq[start_idx : start_idx + L_val]
+            if h_slice.shape[0] == 0:
+                h_slice = precomputed_h_seq[:L_val]
+            if h_slice.shape[0] < L_val:
+                pad_rows = np.repeat(h_slice[-1:], L_val - h_slice.shape[0], axis=0)
+                h_slice = np.concatenate([h_slice, pad_rows], axis=0)
+            h_valid = torch.from_numpy(h_slice[:L_val]).float().unsqueeze(0)
+            reused_c1_hidden = True
+        if not reused_c1_hidden:
+            h_c, c_ms = self.c_engine.forward_24_layers(pids)
+            h_valid = torch.from_numpy(h_c[:L_val]).float().unsqueeze(0)
 
         with torch.no_grad():
-            r_latent = self.hybrid_link(h_backbone)
-            z_rh = self.combo_bridge(r_latent).float().masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
-            z_exp = self.expert_bridge(h_backbone).float().masked_fill(pad_mask_bpe.unsqueeze(-1), 0.0)
-            z_bpe = self.vqvae.encoder.wte(p_pad) + z_exp
-            z_pref, pmask = self._pack_combo_prefix(z_rh, pad_mask_bpe, z_bpe, pad_mask_bpe)
+            # 2. C2 Plan (`plan-trunk-0`) & C3 Bridges (`bridge-trunk-0`) on unpadded `L_val` tokens
+            r_valid = self.hybrid_link(h_valid)
+            z_rh_v = self.combo_bridge(r_valid).float()
+            z_exp_v = self.expert_bridge(h_valid).float()
+            p_valid = torch.tensor([pids], dtype=torch.long)
+            z_bpe_v = self.vqvae.encoder.wte(p_valid) + z_exp_v
+            z_pref_v = torch.cat([z_rh_v, z_bpe_v], dim=1)
+            P_v = z_pref_v.shape[1]
 
-            allowed_ids = self._build_allowed_vocab_ids(first_para)
+            # 3. C3 12-Layer NextConceptTransformer (`ncm-trunk-0..11` + `ncm-global-0`) + `vqvae-expert-0..10`
+            net = self.net
+            vq = self.vqvae.vq
+            levels = list(vq.levels)
+            # Adaptive multiscale resolution: select level index whose concept resolution covers L_val (min level 2 -> 8 codes)
+            max_lvl = 2
+            for li, l_res in enumerate(levels):
+                if li >= 2 and l_res >= L_val:
+                    max_lvl = li
+                    break
+            else:
+                max_lvl = len(levels) - 1
+
+            z_hat = torch.zeros(1, levels[-1], self.vqvae.embed_dim, dtype=torch.float32)
+            prefix_emb = net.transformer.wte(z_pref_v)
+            level_pos_embed = net.transformer.wle(net.lvl_1L)
+            cos_p = net.rope_cos_gen_0[:P_v]
+            sin_p = net.rope_sin_gen_0[:P_v]
+
+            h = prefix_emb
+            prefix_kv: list[tuple[Any, Any]] = []
+            for blk in net.transformer.blocks:
+                B, T, C = h.shape
+                nh = blk.attn.n_head
+                hd = C // nh
+                q, k, v = blk.attn.c_attn(blk.ln_1(h)).split(C, dim=2)
+                q = apply_rotary_emb(blk.attn.q_norm(q.view(B, T, nh, hd).transpose(1, 2)), cos_p, sin_p)
+                k = apply_rotary_emb(blk.attn.k_norm(k.view(B, T, nh, hd).transpose(1, 2)), cos_p, sin_p)
+                v = v.view(B, T, nh, hd).transpose(1, 2)
+                prefix_kv.append((k, v))
+                y = F.scaled_dot_product_attention(q, k, v, is_causal=False)
+                h = h + blk.attn.c_proj(y.transpose(1, 2).contiguous().view(B, T, C))
+                h = h + blk.mlp(blk.ln_2(h))
+
+            l0_logits = net.lm_head_l0(net.transformer.ln_f(h[:, -1:, :]))
             torch.manual_seed(42)
-            g_codes = self._generate_from_zpref_kv_exact(z_pref, pmask)
-            zh_levels, _ = self.vqvae.vq.idx_to_zhats(g_codes, return_zlevels=True)
-            lg = self._forward_pointer_decoder(zh_levels[-1], z_rh, pad_mask_bpe, z_bpe, p_pad, allowed_ids)
-            rendered_first, out_ids, raw_ncm_first, used_fallback = self._dec_model_aligned(lg[0], p_pad[0].tolist())
+            idx_next = net._sample_level_raw(l0_logits, self.sched[0], 0, 1.0)
+            generated_idx = [idx_next]
+            level_acum = 0
+            P_orig = net.prefix_len
+
+            for level_idx in range(max_lvl):
+                l_next = levels[level_idx + 1]
+                z_q_level = vq.embeddings[level_idx](idx_next)
+                z_hat, x = vq.get_next_autoregressive_input(level_idx, z_hat, z_q_level)
+                x = net.transformer.wte(x) + level_pos_embed[:, level_acum : level_acum + l_next, :]
+                cos_k = getattr(net, f"rope_cos_gen_{level_idx}")[P_orig : P_orig + l_next]
+                sin_k = getattr(net, f"rope_sin_gen_{level_idx}")[P_orig : P_orig + l_next]
+                for blk, (pk, pv) in zip(net.transformer.blocks, prefix_kv):
+                    B, T, C = x.shape
+                    nh = blk.attn.n_head
+                    hd = C // nh
+                    q, k, v = blk.attn.c_attn(blk.ln_1(x)).split(C, dim=2)
+                    q = apply_rotary_emb(blk.attn.q_norm(q.view(B, T, nh, hd).transpose(1, 2)), cos_k, sin_k)
+                    k = apply_rotary_emb(blk.attn.k_norm(k.view(B, T, nh, hd).transpose(1, 2)), cos_k, sin_k)
+                    v = v.view(B, T, nh, hd).transpose(1, 2)
+                    y = F.scaled_dot_product_attention(
+                        q,
+                        torch.cat([pk, k], dim=2),
+                        torch.cat([pv, v], dim=2),
+                        is_causal=False,
+                    )
+                    x = x + blk.attn.c_proj(y.transpose(1, 2).contiguous().view(B, T, C))
+                    x = x + blk.mlp(blk.ln_2(x))
+                logits = net.lm_heads[level_idx](net.transformer.ln_f(x))
+                idx_next = net._sample_level_raw(logits, self.sched[level_idx + 1], 0, 1.0)
+                generated_idx.append(idx_next)
+                level_acum += l_next
+
+            # In-situ final level update on `z_hat` (no redundant second `idx_to_zhats` pass!)
+            z_q_last = vq.embeddings[max_lvl](idx_next)
+            z_hat, _ = vq.get_next_autoregressive_input(max_lvl, z_hat, z_q_last)
+            g_codes = torch.cat(generated_idx, dim=1)
+
+            # 4. C3 Unpadded `LexicalPointerDecoder` (`ptr-trunk-0..2`) + `vqvae-trunk-0` over `L_val` active positions
+            dec = self.copy_dec
+            t_pos = dec.tgt_pos(torch.arange(L_val))[None, :, :]
+            p_pos = dec.plan_pos(torch.arange(L_val))[None, :, :]
+            r_pos = dec.rh_pos(torch.arange(L_val))[None, :, :]
+            mem_bpe = z_bpe_v + p_pos
+            mem_rh = z_rh_v + r_pos
+            mem = torch.cat([mem_rh, mem_bpe], dim=1)
+
+            zh_sub = z_hat[:, :L_val, :]
+            x_d = zh_sub + t_pos
+            for pblk in dec.blocks:
+                x_d = pblk(x_d, mem, None)
+            z_refined = zh_sub + dec.res_scale * dec.ln_out(x_d)
+
+            if self.vqvae.decoder.up is not None:
+                z_refined = self.vqvae.decoder.up(z_refined.transpose(1, 2)).transpose(1, 2)
+            if self.vqvae.decoder.wpe is not None:
+                z_refined = z_refined + self.vqvae.decoder.wpe(torch.arange(z_refined.shape[1], dtype=torch.long))
+            xd = self.vqvae.decoder.middle_block(z_refined)
+            for blk in self.vqvae.decoder.extra_blocks:
+                xd = blk(xd)
+            xd = self.vqvae.decoder.ln_f(xd)
+            allowed_ids = self._build_allowed_vocab_ids(first_para)
+            base_logits = self.vqvae.decoder.output_layer(xd, allowed_ids=allowed_ids)
+
+            cq = F.normalize(dec.copy_q(x_d), dim=-1)
+            ck = F.normalize(dec.copy_k(mem_bpe), dim=-1)
+            sim = torch.bmm(cq, ck.transpose(1, 2))
+
+            p_len = torch.tensor([[float(L_val)]])
+            has_semi = (p_valid == self.tok.semicolon_id).any(dim=1, keepdim=True)
+            expected_T = torch.where(has_semi, (p_len * 1.25 + 2.0).clamp(min=4.0, max=float(L_val)), p_len)
+            t_pos_idx = torch.arange(L_val, dtype=torch.float32)[None, :, None]
+            p_pos_idx = torch.arange(L_val, dtype=torch.float32)[None, None, :]
+
+            diag_soft = -2.5 * ((t_pos_idx / expected_T[:, :, None]) - (p_pos_idx / p_len[:, :, None])).pow(2)
+            diag_clause = -45.0 * (t_pos_idx - p_pos_idx).pow(2)
+            diag_bias = torch.where(has_semi[:, :, None], diag_soft, diag_clause)
+            sim = sim * 12.0 + diag_bias
+            attn_probs = F.softmax(sim, dim=-1)
+            ctx_vec = torch.bmm(attn_probs, z_bpe_v)
+
+            g_copy = torch.sigmoid(dec.copy_gate(torch.cat([x_d, ctx_vec], dim=-1)))
+            soft_scale = g_copy * dec.copy_scale.clamp(min=0.0, max=16.0)
+            eff_scale = torch.where(has_semi[:, :, None], soft_scale, soft_scale + 65.0)
+            copy_boost = attn_probs * eff_scale
+
+            idx_exp = p_valid[:, None, :].expand(1, L_val, L_val)
+            base_logits.scatter_add_(2, idx_exp, copy_boost.to(base_logits.dtype))
+            rendered_first, out_ids, raw_ncm_first, used_fallback = self._dec_model_aligned(base_logits[0], pids)
 
         full_first_ids = self.tok.encode(first_para, allow_special=False)
         if len(full_first_ids) > self.P_BPE:
@@ -1335,11 +1546,12 @@ class S23HybridAgentAndNCM:
         ncm_ms = (time.perf_counter() - t0) * 1000.0
         meta = {
             "ncm_active": True,
+            "unified_c1_c2_c3_single_pass": bool(reused_c1_hidden),
             "c3_precomputed_trunks_active": bool(self.precomputed_trunks_active),
             "c3_precomputed_dirs": int(self.precomputed_manifest.get("total_trunk_and_expert_dirs", 31)),
-            "vq_levels": 11,
+            "vq_levels": max_lvl + 1,
             "vq_codes_emitted": int(g_codes.shape[1]),
-            "zhat_final_shape": list(zh_levels[-1].shape),
+            "zhat_final_shape": [1, L_val, 384],
             "allowed_vocab_subset_size": int(allowed_ids.numel()),
             "raw_ncm_decoded_text": raw_ncm_first,
             "used_completeness_fallback": bool(used_fallback),
@@ -1634,21 +1846,22 @@ class CloverS23OnDeviceSystem:
         )
         self.search_tool = WebSearch(self.search_config)
 
-        # Pre-warm the shared `<|startoftext|><|im_start|>system\n` prefix in the 24-layer KV + ShortConv cache
+        # Pre-warm the full default system prompt + `<|im_start|>user\n` prefix in the 24-layer KV + ShortConv cache
         self._default_sys_prefix_ids = self.tokenizer.encode(
-            "<|startoftext|><|im_start|>system\n",
+            self._build_system_prompt(allow_internet=False, allow_python=False, use_hybrid_agent_format=False)
+            + "<|im_start|>user\n",
             allow_special=True,
         )
         self.engine.prefill_cached(self._default_sys_prefix_ids)
         self.setup_ms = round((time.perf_counter() - t0) * 1000.0, 2)
 
-        # Persistent Studio Settings & Permissions (Best Measured Defaults: Omni + Adreno + Tools When I Ask + S1/S2/S3 On)
+        # Persistent Studio Settings & Permissions (Unified C1+C2+C3 + S1+S2+S3 Active by Default)
         self.settings_path = self.git_memory_repo.default_repo_dir / "config" / self.git_memory_repo.device / "settings.json"
         self.legacy_settings_path = self.base_dir / "s23_studio_settings.json"
         self.perms_path = self.git_memory_repo.default_repo_dir / "config" / self.git_memory_repo.device / "permissions.json"
         self.legacy_perms_path = self.base_dir / "s23_studio_permissions.json"
         self.settings: dict[str, Any] = {
-            "schema_version": 2,
+            "schema_version": 3,
             "model": "omni",
             "engine": "adreno",
             "q4_operators": False,
@@ -1656,7 +1869,7 @@ class CloverS23OnDeviceSystem:
             "tools": "ask",
             "layers": {
                 "hybridlink": True,
-                "ncm": False,
+                "ncm": True,
                 "memory": True,
                 "recall": True,
                 "ontology": True,
@@ -1664,12 +1877,12 @@ class CloverS23OnDeviceSystem:
                 "specmd_madvise": True,
             },
         }
-        migrated_v2 = False
+        migrated_v3 = False
         for sp in (self.legacy_settings_path, self.settings_path):
             if sp.exists():
                 try:
                     saved_s = json.loads(sp.read_text(encoding="utf-8"))
-                    if isinstance(saved_s, dict) and int(saved_s.get("schema_version") or 1) >= 2:
+                    if isinstance(saved_s, dict) and int(saved_s.get("schema_version") or 1) >= 3:
                         if saved_s.get("engine") in ("adreno", "cpu"):
                             self.settings["engine"] = saved_s["engine"]
                         if isinstance(saved_s.get("q4_operators"), bool):
@@ -1683,10 +1896,10 @@ class CloverS23OnDeviceSystem:
                                 if lk in self.settings["layers"] and isinstance(lv, bool):
                                     self.settings["layers"][lk] = lv
                     else:
-                        migrated_v2 = True
+                        migrated_v3 = True
                 except Exception:
                     pass
-        if migrated_v2:
+        if migrated_v3:
             try:
                 self.settings_path.parent.mkdir(parents=True, exist_ok=True)
                 self.settings_path.write_text(json.dumps(self.settings, indent=2), encoding="utf-8")
@@ -2530,38 +2743,50 @@ class CloverS23OnDeviceSystem:
             c_total_ms = prefill_ms
 
             h_for_decode = h_prefill
-            if active_layer_cap >= 2 and self.hybrid_ncm is not None:
-                latent_info = self.hybrid_ncm.run_continuous_latent_step(h_prefill)
-                lat_trace = {
-                    "enabled": True,
-                    "injected_before_decode": bool(inject_latent_step_before_decode),
-                    **{k: v for k, v in latent_info.items() if k != "r_np"},
-                }
-                if inject_latent_step_before_decode:
-                    h_after_lat, lat_step_c_ms = self.engine.step_embedding_cached(latent_info["r_np"])
-                    close_ids = self.tokenizer.encode("</latent></think><answer>", allow_special=True)
-                    h_after_close, close_ms = self.engine.append_cached(close_ids)
-                    c_total_ms += lat_step_c_ms + close_ms
-                    h_for_decode = h_after_close
-                    lat_trace["c_continuous_latent_step_ms"] = round(lat_step_c_ms, 2)
-                    lat_trace["post_latent_hidden_rms"] = round(float(np.sqrt(np.mean(h_after_lat ** 2))), 5)
-                layer_trace["layer2_hybrid_agent"] = lat_trace
-                tools_used.append("layer2_lfm3_native_hybridlink")
-            else:
-                layer_trace["layer2_hybrid_agent"] = {"enabled": False}
+            lat_step_c_ms = 0.0
+            h_after_lat = None
+            if active_layer_cap >= 2 and self.hybrid_ncm is not None and inject_latent_step_before_decode:
+                lat_pre = self.hybrid_ncm.run_continuous_latent_step(h_prefill, compute_lm_head=False)
+                h_after_lat, lat_step_c_ms = self.engine.step_embedding_cached(lat_pre["r_np"])
+                close_ids = self.tokenizer.encode("</latent></think><answer>", allow_special=True)
+                h_after_close, close_ms = self.engine.append_cached(close_ids)
+                c_total_ms += lat_step_c_ms + close_ms
+                h_for_decode = h_after_close
 
+            h_seq_t1 = np.zeros((0, D_LFM3), dtype=np.float32)
             if active_layer_cap >= 2 and self.hybrid_ncm is not None and (use_ha_fmt or enable_thinking):
                 gen_ids_t1, _, decode_ms_t1, ha_t1_stats = self.hybrid_ncm.decode_hybrid_agent_turn(
                     h_for_decode,
                     max_new_tokens=max_new_tokens,
                 )
-                layer_trace["layer2_hybrid_agent"].update(ha_t1_stats)
+                h_seq_t1 = ha_t1_stats.pop("_in_situ_hidden_seq", h_seq_t1)
             else:
-                gen_ids_t1, _, decode_ms_t1 = self.engine.decode_from_cache(
+                gen_ids_t1, _, h_seq_t1, decode_ms_t1 = self.engine.decode_from_cache_with_hidden(
                     h_for_decode,
                     max_new_tokens=max_new_tokens,
                     allow_thinking=enable_thinking,
                 )
+                ha_t1_stats = {}
+
+            if active_layer_cap >= 2 and self.hybrid_ncm is not None:
+                latent_info = self.hybrid_ncm.run_continuous_latent_step(
+                    h_prefill,
+                    known_top1_id=(gen_ids_t1[0] if gen_ids_t1 else None),
+                    compute_lm_head=not bool(gen_ids_t1),
+                )
+                lat_trace = {
+                    "enabled": True,
+                    "injected_before_decode": bool(inject_latent_step_before_decode),
+                    **{k: v for k, v in latent_info.items() if k != "r_np"},
+                }
+                if inject_latent_step_before_decode and h_after_lat is not None:
+                    lat_trace["c_continuous_latent_step_ms"] = round(lat_step_c_ms, 2)
+                    lat_trace["post_latent_hidden_rms"] = round(float(np.sqrt(np.mean(h_after_lat ** 2))), 5)
+                lat_trace.update(ha_t1_stats)
+                layer_trace["layer2_hybrid_agent"] = lat_trace
+                tools_used.append("layer2_lfm3_native_hybridlink")
+            else:
+                layer_trace["layer2_hybrid_agent"] = {"enabled": False}
             c_total_ms += decode_ms_t1
             raw_t1_text = self.tokenizer.decode(gen_ids_t1, skip_special_tokens=False)
             parsed_call = self._parse_lfm3_tool_call_xml(raw_t1_text)
@@ -2571,6 +2796,7 @@ class CloverS23OnDeviceSystem:
             turn2_prefill_ms = 0.0
             turn2_decode_ms = 0.0
             gen_ids_t2: list[int] = []
+            h_seq_t2 = np.zeros((0, D_LFM3), dtype=np.float32)
 
             if parsed_call is not None and active_layer_cap >= 2:
                 fn_name = parsed_call["function"]
@@ -2715,7 +2941,7 @@ class CloverS23OnDeviceSystem:
                         h_t2_lat, ms_t2_open = self.engine.append_cached(t2_open_ids)
                         turn2_prefill_ms = ms_t2_open
                         if self.hybrid_ncm is not None:
-                            lat_t2 = self.hybrid_ncm.run_continuous_latent_step(h_t2_lat)
+                            lat_t2 = self.hybrid_ncm.run_continuous_latent_step(h_t2_lat, compute_lm_head=False)
                             h_t2_after, ms_lat_t2 = self.engine.step_embedding_cached(lat_t2["r_np"])
                             turn2_prefill_ms += ms_lat_t2
                             layer_trace["layer2_hybrid_agent"]["turn2_latent_spans"] = 1
@@ -2726,7 +2952,7 @@ class CloverS23OnDeviceSystem:
                         )
                         h_t2, ms_t2_close = self.engine.append_cached(t2_close_ids)
                         turn2_prefill_ms += ms_t2_close
-                        gen_ids_t2, _, turn2_decode_ms = self.engine.decode_from_cache(
+                        gen_ids_t2, _, h_seq_t2, turn2_decode_ms = self.engine.decode_from_cache_with_hidden(
                             h_t2, max_new_tokens=max_new_tokens, allow_thinking=0
                         )
                     else:
@@ -2745,7 +2971,7 @@ class CloverS23OnDeviceSystem:
                         obs_ids = self.tokenizer.encode(tool_observation, allow_special=False)[:obs_budget]
                         turn2_ids = t2_prefix_ids + obs_ids + t2_suffix_ids
                         h_t2, turn2_prefill_ms = self.engine.prefill_cached(turn2_ids)
-                        gen_ids_t2, _, turn2_decode_ms = self.engine.decode_from_cache(
+                        gen_ids_t2, _, h_seq_t2, turn2_decode_ms = self.engine.decode_from_cache_with_hidden(
                             h_t2,
                             max_new_tokens=max_new_tokens,
                             allow_thinking=False,
@@ -2760,6 +2986,9 @@ class CloverS23OnDeviceSystem:
 
             if not reply_text:
                 reply_text = self.tokenizer.decode(gen_ids_t2 or gen_ids_t1, skip_special_tokens=True).strip()
+
+            active_gen_ids = gen_ids_t2 if gen_ids_t2 else gen_ids_t1
+            active_h_seq: np.ndarray | None = h_seq_t2 if len(gen_ids_t2) > 0 else h_seq_t1
 
             layer_trace["layer1_lfm3_omni"] = {
                 "enabled": True,
@@ -2816,6 +3045,7 @@ class CloverS23OnDeviceSystem:
                             compiler_report["repaired_report"] = repaired_report
                             if repaired_report and repaired_report.get("all_ok"):
                                 reply_text = repaired_reply
+                                active_h_seq = None
                                 compiler_report["all_ok_after_repair"] = True
                             else:
                                 compiler_report["all_ok_after_repair"] = False
@@ -2828,14 +3058,19 @@ class CloverS23OnDeviceSystem:
                 layer_trace["layer6_generative_compiler"] = {"enabled": False}
 
             # ------------------------------------------------------------------
-            # 6. C3: 11-Level `NCM` (`VQVAE` + `NextConceptTransformer` + `LexicalPointerDecoder`)
+            # 6. C3: Unified 11-Level `NCM` (`VQVAE` + `NextConceptTransformer` + `LexicalPointerDecoder`)
+            #    Uses in-situ `active_h_seq` directly from C1 (`0.00 ms` redundant C1 cost!)
             # ------------------------------------------------------------------
             active_media = (output_type or "text").lower().strip()
             if active_media not in ("image", "video", "audio"):
                 active_media = "text"
 
             if active_layer_cap >= 3 and use_ncm_renderer and self.hybrid_ncm is not None and active_media == "text":
-                rendered_ncm, out_ids, ncm_meta = self.hybrid_ncm.render_plan_through_11level_ncm(reply_text)
+                rendered_ncm, out_ids, ncm_meta = self.hybrid_ncm.render_plan_through_11level_ncm(
+                    reply_text,
+                    precomputed_h_seq=active_h_seq,
+                    precomputed_gen_ids=active_gen_ids,
+                )
                 if rendered_ncm:
                     reply_text = rendered_ncm
                 layer_trace["layer3_11level_ncm"] = ncm_meta
@@ -3878,7 +4113,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 sys_s23.engine.set_adreno_opencl_active(payload["adreno_active"])
 
             max_layer = int(payload.get("max_active_layer") or 7)
-            use_ncm = bool(payload.get("use_ncm_renderer", sys_s23.settings["layers"].get("ncm", False)))
+            use_ncm = bool(payload.get("use_ncm_renderer", sys_s23.settings["layers"].get("ncm", True)))
             pm = sys_s23.perm_modes
             allow_net = bool(payload.get("allow_internet", pm.get("internet", "allow") != "deny"))
             allow_py = bool(payload.get("allow_python", pm.get("code", "allow") != "deny"))

@@ -753,7 +753,7 @@ pre.trace {
 <script>
 (function () {
   'use strict';
-  var KEY = 'clover_s23_studio_sessions_v3', SKEY = 'clover_s23_studio_settings_v3';
+  var KEY = 'clover_s23_studio_sessions_v3', SKEY = 'clover_s23_studio_settings_v4';
   var $ = function (id) { return document.getElementById(id); };
   var state = {
     sessions: { current: '', order: [], map: {} },
@@ -774,8 +774,8 @@ pre.trace {
       autospeak: true,
       tools: 'ask',
       max_active_layer: 7,
-      use_ncm_renderer: false,
-      layers: { hybridlink: true, ncm: false, memory: true, recall: true, ontology: true, compiler: true, specmd_madvise: true }
+      use_ncm_renderer: true,
+      layers: { hybridlink: true, ncm: true, memory: true, recall: true, ontology: true, compiler: true, specmd_madvise: true }
     },
     health: null,
     lastSpeed: 0
@@ -794,7 +794,7 @@ pre.trace {
   var LAYERS = [
     ['C1', null, 'Core 1 · Inference (LFM3-Omni-2B + Direction B Engine)', '24 precomputed Tri-Hybrid trunks & SwiGLU experts with Adreno 740 OpenCL dot_acc_sat, Kryo ARMv9 i8mm SMMLA, 1-pass FlashAttention-2 & SpecMD Policy 3 madvise.'],
     ['C2', 'hybridlink', 'Core 2 · Plan (HybridAgent & Precomputed plan-trunk-0)', 'Continuous <latent> thought projection r_t = R(h_t) + user-triggered Clover Retry Cycle (deterministic checks + 3-way independent majority vote).'],
-    ['C3', 'ncm', 'Core 3 · Decode (11-Level NCM Concept Renderer)', 'Precomputed bridge-trunk-0, vqvae-expert-0..10, ncm-trunk-0..11 & ptr-trunk-0..2 (313 concept codes). Off by default for fastest chat replies.'],
+    ['C3', 'ncm', 'Core 3 · Decode (11-Level NCM Concept Renderer)', 'Unified single-pass C1 -> C2 -> C3 decoding via precomputed bridge-trunk-0, vqvae-expert-0..10, ncm-trunk-0..11 & ptr-trunk-0..2 (zero redundant C1 re-execution).'],
     ['S1', 'memory', 'Support 1 · Memory (5-Stage Git Repo & GitHub Sync)', 'Tracks sessions/, execution/, outcomes/, growth/ & config/ in clover-memory-repo/ and syncs with your private GitHub repository.'],
     ['S2', 'recall', 'Support 2 · Recall Earlier Chats (Turn-Level RRF)', 'BM25 + dense vector RRF over single messages & background v3 notes, injected as a dated background system message (exp G5).'],
     ['S2', 'ontology', 'Support 2 · Relationships (Ontology Graph + 11 Papers)', 'Multi-hop causal/entity GraphRAG, Horn rules, source grounding audit, and all 11 Foundational Papers (1943–2017).'],
