@@ -41,24 +41,24 @@ Across **`C1 · Inference`**, **`C2 · Plan`**, and **`C3 · Decode`**, Clover p
 
 ### Unified 5-Subfolder Hugging Face Repository Layout (`Santhoshsathish94/clover-ai-studio`)
 
-Every model family (`kimi/`, `nemotron/`, and `liquid-lfm3/`) in [`Santhoshsathish94/clover-ai-studio`](https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio) shares the **identical 5-folder structure** (`1,902` files total):
+Every model family (`kimi/`, `nemotron/`, and `liquid-lfm3/`) in [`Santhoshsathish94/clover-ai-studio`](https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio) shares the **identical 5-folder structure** (`3,266` files, `1,528.08 GiB` total):
 
 ```text
 <model>/
 ├── experts/       # Precomputed routed MoE experts, dense SwiGLU FFN experts & 11-level VQ codebook experts
-├── trunks/        # Precomputed per-layer trunks (index.bin, common.bin, operator.bin, operator.4bit.bin) & global-0/
-├── hybridagent/   # Core 2 (Plan): precomputed plan-trunk-0/ + Stage-3 HybridLink / HybridAgent checkpoints
-├── ncm/           # Core 3 (Decode): precomputed vqvae-trunk-0/, ncm-trunk-0..11/, ptr-trunk-0..2/ & NCM core weights
-└── bridges/       # Core 3 Bridges: precomputed bridge-trunk-0/ (ComboBridge + ExpertBridge) & latent bridge weights
+├── trunks/        # Precomputed per-layer trunks (index.bin, common.bin, operator.bin, operator.4bit.bin), vision trunks & global-0/
+├── hybridagent/   # Core 2 (Plan): precomputed plan-trunk-0/ + Stage-1..3 HybridLink / HybridAgent trunks & checkpoints
+├── ncm/           # Core 3 (Decode): precomputed vqvae-trunk-0/, ncm-trunk-0..11/, ptr-trunk-0..2/, mmap vocab bins & NCM weights
+└── bridges/       # Core 3 Bridges: precomputed bridge-trunk-0/ (ComboBridge + ExpertBridge) & cross-model latent bridge trunks
 ```
 
-| Subfolder | `kimi/` (`1,131` files) | `nemotron/` (`301` files) | `liquid-lfm3/` (`468` files) |
+| Subfolder | `kimi/` (`1,712` files, `1,434.34 GiB`) | `nemotron/` (`1,084` files, `89.58 GiB`) | `liquid-lfm3/` (`468` files, `4.16 GiB`) |
 | --- | --- | --- | --- |
-| **`experts/`** | `expert-1..92/` (`constants.bin`, `experts.bin`, `experts.direct`, `maps.json`) + `vqvae-expert-0..10/` | `expert-1/`, `expert-mtp-1/` (`constants.bin`, `experts.direct`, `experts.4bit.direct`, `maps.json`) + `vqvae-expert-0..10/` | `expert-0..23/` (`constants.bin`, `maps.json`, `ffn.4bit.bin`) + `vqvae-expert-0..10/` |
-| **`trunks/`** | `trunk-0..92/` (`index.bin`, `common.bin`, `operator.bin`, `routed-shared.bin`), `open-weights/`, `engine-inputs/` | `global-0/`, `trunk-0`, `trunk-1`, `trunk-2`, `trunk-6`, `trunk-7`, `trunk-mtp-0`, `trunk-mtp-1`, `prepare-manifest.json`, `tokenizer.json` | `global-0/` (`embed_tokens.bf16.bin`, `lm_head.4bit.bin`), `trunk-0..23/` (`index.bin`, `common.bin`, `operator.bin`, `operator.4bit.bin`, `ffn.4bit.bin`), `tokenizer.json` |
-| **`hybridagent/`** | `plan-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `checkpoint-clover-true-hybrid-agent-ncm.pt`, `checkpoint-clover-agent-experts.pt` | `plan-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `nemotron_hybridagent_final.pt`, `stage1..3/` | `plan-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `hybridlink_adapter_2048.pt` |
-| **`ncm/`** | `vqvae-trunk-0/`, `vqvae-expert-0..10/`, `ncm-trunk-0..11/`, `ncm-global-0/`, `ptr-trunk-0..2/`, `ptr-global-0/`, `manifest.json`, VQ-VAE/NCM/Vision checkpoints | `vqvae-trunk-0/`, `vqvae-expert-0..10/`, `ncm-trunk-0..11/`, `ncm-global-0/`, `ptr-trunk-0..2/`, `ptr-global-0/`, `manifest.json`, `nemotron_ncm_core_bf16.pt` | `vqvae-trunk-0/`, `vqvae-expert-0..10/`, `ncm-trunk-0..11/`, `ncm-global-0/`, `ptr-trunk-0..2/`, `ptr-global-0/`, `manifest.json`, `lfm3_ncm_core_bf16.pt`, `vqvae_wte.bf16.bin`, `vqvae_dec.bf16.bin` |
-| **`bridges/`** | `bridge-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `checkpoint-latent-representation-bridges.pt`, `k3_hybrid_bridges.pt` | `bridge-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `nemotron_hybrid_ncm_bridges.pt` | `bridge-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `lfm3_hybrid_ncm_bridges.pt`, `lfm3_s23_bridges_fp16.npz` |
+| **`experts/`** | `expert-1..92/` (`constants.bin`, `experts.bin`, `experts.direct`, `maps.json`) + `vqvae-expert-0..10/` (`434` files, `1,347.30 GiB`) | All `40` backbone MoE layers (`expert-1, 3, 5, ..., 87/`) + `expert-mtp-1/` (`constants.bin`, `experts.4bit.direct`, `maps.json`, plus `experts.direct` on `expert-1` & `expert-mtp-1`) + `vqvae-expert-0..10/` (`191` files, `66.37 GiB`) | `expert-0..23/` (`constants.bin`, `maps.json`, `ffn.4bit.bin`) + `vqvae-expert-0..10/` (`138` files, `0.63 GiB`) |
+| **`trunks/`** | `global-0/` (`embed_tokens.bf16.bin`, `embedding_norm.bf16.bin`, `lm_head.bf16.bin`, `lm_head.4bit.bin`, `output_attn_res_norm.bf16.bin`, `output_attn_res_proj.bf16.bin`) + `trunk-0..92/` + `vision-trunk-0..26/` + `vision-global-0/` + `open-weights/` + `engine-inputs/` (`621` files, `63.28 GiB`) | `global-0/` (`embeddings.bf16.bin`, `lm_head.bf16.bin`, `lm_head.4bit.bin`, `norm_f.bf16.bin`) + all `88` backbone trunks (`trunk-0..87/`) + `trunk-mtp-0..1/` + `vision-trunk-0..31/` + `vision-global-0/` + `prepare-manifest.json` + `tokenizer.json` (`476` files, `17.41 GiB`) | `global-0/` (`embed_tokens.bf16.bin`, `embedding_norm.bf16.bin`, `lm_head.4bit.bin`, `rope_inv_freq.bin`) + `trunk-0..23/` (`index.bin`, `common.bin`, `operator.bin`, `operator.4bit.bin`, `ffn.4bit.bin`) + `tokenizer.json` (`126` files, `1.96 GiB`) |
+| **`hybridagent/`** | `plan-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `checkpoint-clover-true-hybrid-agent-ncm.pt`, `checkpoint-clover-agent-experts.pt` (`12` files, `7.51 GiB`) | `plan-trunk-0/` + `plan-stage-1..3/` (`CLVRTRK1` + `CLVR4B01`), `nemotron_hybridagent_final.pt`, `stage1..3/` (`35` files, `1.41 GiB`) | `plan-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `hybridlink_adapter_2048.pt` (`7` files, `0.04 GiB`) |
+| **`ncm/`** | `vqvae_wte.bf16.bin`, `vqvae_dec.bf16.bin`, `vqvae-trunk-0/`, `vqvae-expert-0..10/`, `ncm-trunk-0..11/`, `ncm-global-0/`, `ptr-trunk-0..2/`, `ptr-global-0/`, `vision-trunk-0..26/`, `vision-global-0/`, `tinystories/precomputed/`, `wmt14/precomputed/`, `manifest.json` (`627` files, `15.37 GiB`) | `vqvae_wte.bf16.bin`, `vqvae_dec.bf16.bin`, `vqvae-trunk-0/`, `vqvae-expert-0..10/`, `ncm-trunk-0..11/`, `ncm-global-0/`, `ptr-trunk-0..2/`, `ptr-global-0/`, `vision-trunk-0..31/`, `vision-global-0/`, `manifest.json`, `nemotron_ncm_core_bf16.pt` (`374` files, `3.17 GiB`) | `vqvae_wte.bf16.bin`, `vqvae_dec.bf16.bin`, `vqvae-trunk-0/`, `vqvae-expert-0..10/`, `ncm-trunk-0..11/`, `ncm-global-0/`, `ptr-trunk-0..2/`, `ptr-global-0/`, `manifest.json`, `lfm3_ncm_core_bf16.pt` (`188` files, `0.93 GiB`) |
+| **`bridges/`** | `bridge-trunk-0/` + `q2k3-bridge-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `checkpoint-latent-representation-bridges.pt`, `k3_hybrid_bridges.pt` (`18` files, `0.89 GiB`) | `bridge-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `nemotron_hybrid_ncm_bridges.pt` (`8` files, `1.22 GiB`) | `bridge-trunk-0/` (`CLVRTRK1` + `CLVR4B01`), `lfm3_hybrid_ncm_bridges.pt`, `lfm3_s23_bridges_fp16.npz` (`9` files, `0.60 GiB`) |
 
 ---
 
