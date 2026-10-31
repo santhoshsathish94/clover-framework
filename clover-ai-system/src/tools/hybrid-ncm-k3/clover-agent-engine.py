@@ -828,15 +828,15 @@ def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
             f"print(f'{pct1:g}% of {base_val:g} = {{res:g}}')"
         )
 
-    # 5. Direct arithmetic expression (e.g. 'What is 25 * 4?', '144 / 12 + 7')
-    #    Require whitespace around '-' or '/' (or explicit arithmetic operator '*', '+') and ensure the match
+    # 5. Direct arithmetic expression (e.g. 'What is 25 * 4?', '17**4 + 29*13', '144 / 12 + 7')
+    #    Require whitespace around '-' or '/' (or explicit arithmetic operator '**', '^', '*', '+') and ensure the match
     #    is not embedded inside a UUID/hex/date/hyphenated token (e.g. '39b9643d-b772-4239-8652-ee538247ee4f' or '2026-10-25')
     m_arith = re.search(
-        r"(?<![a-zA-Z0-9_\-])(\d+(?:\.\d+)?(?:\s*[\+\*]\s*\d+(?:\.\d+)?|\s+[\-\/]\s+\d+(?:\.\d+)?)+)(?![a-zA-Z0-9_\-])",
+        r"(?<![a-zA-Z0-9_\-])(\d+(?:\.\d+)?(?:\s*(?:\*\*|\^|\+|\*)\s*\d+(?:\.\d+)?|\s+[\-\/]\s+\d+(?:\.\d+)?)+)(?![a-zA-Z0-9_\-])",
         p,
     )
     if m_arith and not any(w in p for w in ("http", "year", "years", "version", "group")) and "def " not in p and ">>>" not in p:
-        expr_s = m_arith.group(1).strip()
+        expr_s = m_arith.group(1).strip().replace("^", "**")
         return f"res = {expr_s}\nprint(f'{expr_s} = {{res:g}}')"
 
     # 6. 9x9 Sudoku puzzle solver (extracts the last 81 grid digits 0..9 from the prompt and solves via backtracking)
@@ -1607,6 +1607,7 @@ class CloverK3AgentEngine:
         max_lat: int = 14,
         max_new: int = 360,
         use_ontology: bool | None = None,
+        mcq_scorer=None,
     ):
         """Runs `HybridAgent-8B-Agentic` in Agent Mode:
         1. Executes `<ontology>` (Ontology-Guided Neuro-Symbolic GraphRAG & Symbolic Constraint Verifier),
@@ -2016,7 +2017,11 @@ class CloverK3AgentEngine:
             ont_mcq_l, ont_mcq_reason = (None, None)
             if ont_enabled and ont_evidence:
                 ont_mcq_l, ont_mcq_reason = self.symbolic_verifier.verify_mcq_with_ontology(raw_user_q, None, ont_evidence)
-            k3_best_l, k3_probs = self.k3_experts.score_mcq_options(raw_user_q, self.k3_tok)
+            if mcq_scorer is not None:
+                mcq_res_tuple = mcq_scorer(raw_user_q)
+                k3_best_l, k3_probs = mcq_res_tuple[0], mcq_res_tuple[1]
+            else:
+                k3_best_l, k3_probs = self.k3_experts.score_mcq_options(raw_user_q, self.k3_tok)
             bridge_pre = EXIT_ANCHOR + " Now I will state the correct option letter (A), (B), (C), or (D) first and explain briefly." + THINK_CLOSE + "\nW1: The correct answer is ("
             b_ids = self.ha_tok(bridge_pre, add_special_tokens=False, return_tensors="pt").input_ids.to(self.dev_ha)
             out = backbone(input_ids=b_ids, past_key_values=past_kv, use_cache=True, return_dict=True)
@@ -2580,6 +2585,38 @@ class CloverK3AgentEngine:
                     else:
                         combined_search_src = "\n".join(ref_lines[:4] + valid_existing[:2])
                     plans = parse_and_split_plans(combined_search_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=18)
+
+        # Fallback / enrichment grounding from verified Layer-5 Ontology GraphRAG (`ont_evidence`) when `ont_evidence`
+        # was retrieved and `plans` is empty, fallback, or missing the retrieved canonical entity/relationship records!
+        if (
+            not is_code_spec
+            and not is_mcq
+            and ont_evidence
+            and (
+                not plans
+                or plans == ["Unable to process this request right now."]
+                or plans == ["Hello! How can I help you today?"]
+                or not any(
+                    any(eid.lower() in p.lower() for eid in item.entities)
+                    for item in ont_evidence[:3]
+                    for p in plans
+                )
+            )
+        ):
+            ont_bullets = []
+            paths_first_ont = sorted(ont_evidence, key=lambda x: 0 if getattr(x, "kind", "") == "path" else 1)
+            for item in paths_first_ont[:4]:
+                if item.kind == "path":
+                    ont_bullets.append(f"• {item.text}")
+                else:
+                    first_lns = [ln.strip() for ln in item.text.splitlines() if ln.strip()][:3]
+                    ont_bullets.append("• " + " — ".join(first_lns))
+            valid_existing_ont = [
+                p.lstrip("\n").strip() for p in (plans or [])
+                if p not in ("Unable to process this request right now.", "Hello! How can I help you today?")
+            ]
+            combined_ont_src = "\n".join(ont_bullets + valid_existing_ont[:2])
+            plans = parse_and_split_plans(combined_ont_src, raw_user_q, self.k3_tok, max_bpe=32, max_windows=18)
 
         del past_kv, out
         if torch.cuda.is_available():

@@ -195,11 +195,13 @@ static const void *get_nemo_record_ptr(const NemoTrunkMapped *t, uint32_t rec_id
     return NULL;
 }
 
-/* SpecMD Policy 3 (Least-Stale + R4 Clean-Drop) Slot Cache + Data-Movement Ledger */
+/* SpecMD Policy 3 (Least-Stale + R4 Clean-Drop) Slot Cache + 4-Tier Workstation Data-Movement Ledger */
 static struct {
     int initialized;
     int use_4bit_experts;
+    int madvise_active;
     MmapFile emb_mf;
+    MmapFile lm_head_mf;
     MmapFile norm_f_mf;
     NemoTrunkMapped trunk0_mamba;
     NemoTrunkMapped trunk1_moe;
@@ -223,14 +225,75 @@ static struct {
     unsigned long tier3_drive_fetches;
     unsigned long r4_clean_drops;
     unsigned long dirty_writebacks;
-} g_nemo = { 0 };
+
+    /* 4-Tier Workstation Hierarchy Ledger (AVX-512 Reg / 3D V-Cache L3 / DDR5 / NVMe) */
+    unsigned long long bytes_tier0_reg;
+    unsigned long long bytes_tier1_l3_vcache;
+    unsigned long long bytes_tier2_ddr5;
+    unsigned long long bytes_saved_q4_and_broadcast;
+    unsigned long madvise_willneed_calls;
+    unsigned long madvise_dontneed_calls;
+    unsigned long minflt_at_reset;
+    unsigned long majflt_at_reset;
+} g_nemo = { 0, 0, 1 };
+
+static void nemo_read_os_page_faults(unsigned long *out_minflt, unsigned long *out_majflt)
+{
+    *out_minflt = 0;
+    *out_majflt = 0;
+#if defined(__linux__)
+    FILE *f = fopen("/proc/self/stat", "r");
+    if (f) {
+        char buf[1024];
+        if (fgets(buf, sizeof(buf), f)) {
+            char *rp = strrchr(buf, ')');
+            if (rp && rp[1] == ' ') {
+                unsigned long minflt = 0, cminflt = 0, majflt = 0;
+                char state = 0;
+                int ppid = 0, pgrp = 0, session = 0, tty = 0, tpgid = 0;
+                unsigned int flags = 0;
+                if (sscanf(rp + 2, "%c %d %d %d %d %d %u %lu %lu %lu",
+                           &state, &ppid, &pgrp, &session, &tty, &tpgid, &flags,
+                           &minflt, &cminflt, &majflt) == 10) {
+                    *out_minflt = minflt;
+                    *out_majflt = majflt;
+                }
+            }
+        }
+        fclose(f);
+    }
+#endif
+}
+
+static void nemo_advise_expert_slice(int exp_id, int advise_willneed)
+{
+    if (!g_nemo.madvise_active || exp_id < 0 || exp_id >= NEMO_EXPERTS) return;
+#if defined(__linux__)
+    const int use_q4 = (g_nemo.use_4bit_experts && g_nemo.expert1_4bit_mf.ptr != NULL);
+    const size_t stride = use_q4 ? (size_t)2853376 : (size_t)11010048;
+    uint8_t *base = (uint8_t *)(use_q4 ? g_nemo.expert1_4bit_mf.ptr : g_nemo.expert1_direct_mf.ptr);
+    if (!base) return;
+    size_t off = ((size_t)exp_id * stride) & ~(size_t)4095;
+    size_t len = (stride + 4095) & ~(size_t)4095;
+    madvise(base + off, len, advise_willneed ? MADV_WILLNEED : MADV_DONTNEED);
+    if (advise_willneed) g_nemo.madvise_willneed_calls++;
+    else g_nemo.madvise_dontneed_calls++;
+#else
+    (void)advise_willneed;
+#endif
+}
 
 void nemo_set_use_4bit_experts(int enable)
 {
     g_nemo.use_4bit_experts = enable ? 1 : 0;
 }
 
-static void nemo_slotcache_reset(void)
+void nemo_set_madvise_active(int enable)
+{
+    g_nemo.madvise_active = enable ? 1 : 0;
+}
+
+void nemo_dm_reset(void)
 {
     g_nemo.clock = 0;
     for (int i = 0; i < 64; i++) {
@@ -245,6 +308,18 @@ static void nemo_slotcache_reset(void)
     g_nemo.tier3_drive_fetches = 0;
     g_nemo.r4_clean_drops = 0;
     g_nemo.dirty_writebacks = 0;
+    g_nemo.bytes_tier0_reg = 0;
+    g_nemo.bytes_tier1_l3_vcache = 0;
+    g_nemo.bytes_tier2_ddr5 = 0;
+    g_nemo.bytes_saved_q4_and_broadcast = 0;
+    g_nemo.madvise_willneed_calls = 0;
+    g_nemo.madvise_dontneed_calls = 0;
+    nemo_read_os_page_faults(&g_nemo.minflt_at_reset, &g_nemo.majflt_at_reset);
+}
+
+static void nemo_slotcache_reset(void)
+{
+    nemo_dm_reset();
 }
 
 static void nemo_slotcache_acquire(int exp_id, const uint8_t *protected_mask, float weight)
@@ -264,6 +339,7 @@ static void nemo_slotcache_acquire(int exp_id, const uint8_t *protected_mask, fl
     } else {
         g_nemo.tier3_drive_fetches++;
         g_nemo.host_keys[exp_id] = 1;
+        nemo_advise_expert_slice(exp_id, 1);
     }
     /* Find free slot or Least-Stale victim */
     int slot = -1;
@@ -311,6 +387,13 @@ static void linear_bf16_omp(
     int in_dim
 )
 {
+    size_t w_bytes = (size_t)out_dim * (size_t)in_dim * 2ULL;
+    g_nemo.bytes_tier2_ddr5 += (unsigned long long)w_bytes;
+    g_nemo.bytes_tier1_l3_vcache += (unsigned long long)((size_t)T * (size_t)(in_dim + out_dim) * 4ULL);
+    g_nemo.bytes_tier0_reg += (unsigned long long)((size_t)T * (size_t)out_dim * (size_t)in_dim * 2ULL);
+    if (T > 1) {
+        g_nemo.bytes_saved_q4_and_broadcast += (unsigned long long)((size_t)(T - 1) * w_bytes);
+    }
     #pragma omp parallel for schedule(static)
     for (int o = 0; o < out_dim; o++) {
         const uint16_t *w_row = W_bf16 + (size_t)o * (size_t)in_dim;
@@ -372,6 +455,12 @@ static void linear_4bit_group64_omp(
 )
 {
     const int groups = in_dim / 64;
+    size_t q4_bytes = (size_t)out_dim * (size_t)(groups * 33 + 4);
+    size_t bf16_equiv = (size_t)out_dim * (size_t)in_dim * 2ULL;
+    g_nemo.bytes_tier2_ddr5 += (unsigned long long)q4_bytes;
+    g_nemo.bytes_tier1_l3_vcache += (unsigned long long)((size_t)T * (size_t)(in_dim + out_dim) * 4ULL);
+    g_nemo.bytes_tier0_reg += (unsigned long long)((size_t)T * (size_t)out_dim * (size_t)in_dim);
+    g_nemo.bytes_saved_q4_and_broadcast += (unsigned long long)((bf16_equiv - q4_bytes) + (size_t)(T > 1 ? (T - 1) : 0) * q4_bytes);
     #pragma omp parallel for schedule(static)
     for (int o = 0; o < out_dim; o++) {
         const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
@@ -466,6 +555,11 @@ int nemo_engine_init(const char *pruned_dataset_dir)
     char path[1024];
     snprintf(path, sizeof(path), "%s/global-0/embeddings.bf16.bin", pruned_dataset_dir);
     if (mmap_readonly(path, &g_nemo.emb_mf) != 0) return -1;
+
+    snprintf(path, sizeof(path), "%s/global-0/lm_head.bf16.bin", pruned_dataset_dir);
+    if (access(path, R_OK) == 0) {
+        mmap_readonly(path, &g_nemo.lm_head_mf);
+    }
 
     snprintf(path, sizeof(path), "%s/global-0/norm_f.bf16.bin", pruned_dataset_dir);
     if (mmap_readonly(path, &g_nemo.norm_f_mf) != 0) return -2;
@@ -1003,6 +1097,53 @@ float nemo_forward_pipeline(const int *token_ids, int T, float *out_final_hidden
     return nemo_forward_pipeline_clubbed(token_ids, NULL, T, out_final_hidden);
 }
 
+/* Executes full Nemotron C/OpenMP pipeline directly on continuous 4096-d embeddings `in_embeds`
+ * (for HybridAgent `<latent>` step injection `r_t = R_Nemo(h_t)`). */
+float nemo_forward_embeddings(const float *in_embeds, int T, float *out_final_hidden)
+{
+    struct timespec t0, t1;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+
+    const uint16_t *norm_f_w = (const uint16_t *)g_nemo.norm_f_mf.ptr;
+
+    float *h1 = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *h2 = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *h3 = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+
+    nemo_mamba_layer_forward_seg(in_embeds, h1, T, NULL);
+    nemo_latent_moe_layer_forward(h1, h2, T);
+    nemo_gqa_layer_forward_seg(h2, h3, T, NULL);
+    rms_norm_bf16(h3, norm_f_w, out_final_hidden, T, NEMO_D, 1e-5f);
+
+    free(h1); free(h2); free(h3);
+
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    return (float)((t1.tv_sec - t0.tv_sec) * 1000.0 + (t1.tv_nsec - t0.tv_nsec) / 1e6);
+}
+
+/* Computes untied `131,072`-vocab `lm_head` logits and returns `top1_id` */
+int nemo_lm_head_logits(const float *h_last_4096, float *out_logits_131k, float *out_max_logit)
+{
+    if (!g_nemo.initialized || !g_nemo.lm_head_mf.ptr || !h_last_4096) return -1;
+    const int vocab_sz = 131072;
+    const uint16_t *lm_w = (const uint16_t *)g_nemo.lm_head_mf.ptr;
+    float *lg = out_logits_131k ? out_logits_131k : (float *)malloc((size_t)vocab_sz * sizeof(float));
+
+    linear_bf16_omp(h_last_4096, lm_w, lg, 1, vocab_sz, NEMO_D);
+
+    int best_id = 0;
+    float best_v = lg[0];
+    for (int v = 1; v < vocab_sz; v++) {
+        if (lg[v] > best_v) {
+            best_v = lg[v];
+            best_id = v;
+        }
+    }
+    if (out_max_logit) *out_max_logit = best_v;
+    if (!out_logits_131k) free(lg);
+    return best_id;
+}
+
 void nemo_dm_stats(unsigned long *out6)
 {
     out6[0] = g_nemo.total_requests;
@@ -1011,4 +1152,21 @@ void nemo_dm_stats(unsigned long *out6)
     out6[3] = g_nemo.tier3_drive_fetches;
     out6[4] = g_nemo.r4_clean_drops;
     out6[5] = g_nemo.dirty_writebacks;
+}
+
+void nemo_dm_extended_stats(unsigned long long *out_ext10)
+{
+    if (!out_ext10) return;
+    unsigned long cur_minflt = 0, cur_majflt = 0;
+    nemo_read_os_page_faults(&cur_minflt, &cur_majflt);
+    out_ext10[0] = g_nemo.bytes_tier0_reg;
+    out_ext10[1] = g_nemo.bytes_tier1_l3_vcache;
+    out_ext10[2] = g_nemo.bytes_tier2_ddr5;
+    out_ext10[3] = g_nemo.bytes_saved_q4_and_broadcast;
+    out_ext10[4] = (unsigned long long)g_nemo.madvise_willneed_calls;
+    out_ext10[5] = (unsigned long long)g_nemo.madvise_dontneed_calls;
+    out_ext10[6] = (unsigned long long)(cur_minflt >= g_nemo.minflt_at_reset ? (cur_minflt - g_nemo.minflt_at_reset) : 0UL);
+    out_ext10[7] = (unsigned long long)(cur_majflt >= g_nemo.majflt_at_reset ? (cur_majflt - g_nemo.majflt_at_reset) : 0UL);
+    out_ext10[8] = (unsigned long long)g_nemo.use_4bit_experts;
+    out_ext10[9] = (unsigned long long)g_nemo.madvise_active;
 }

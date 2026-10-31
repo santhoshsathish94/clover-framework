@@ -1,0 +1,1190 @@
+{
+  "device_uname": [
+    "Linux",
+    "Ubuntu-noble-latest-amd64-base.zst",
+    "6.8.0-139-generic",
+    "#139-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 03:52:05 UTC 2026",
+    "x86_64",
+    "x86_64"
+  ],
+  "setup_ms": 5874.21,
+  "before_vs_after_8gpu_training": {
+    "before_gpu_training_checkpoint": "/opt/clover-k3/nemotron-computed/hybrid-ncm/nemotron_hybrid_ncm_bridges.before-gpu-train.pt",
+    "after_gpu_training_checkpoint": "/opt/clover-k3/nemotron-computed/hybrid-ncm/nemotron_hybrid_ncm_bridges.pt",
+    "hybridlink_next_embed_cosine": {
+      "before_gpu_train": 0.2891,
+      "after_gpu_train": 0.7767,
+      "improvement_ratio": 2.69
+    },
+    "vqvae_131k_tekken_reconstruction_acc_nonpad": {
+      "before_gpu_train": 0.4633,
+      "after_gpu_train": 0.9492,
+      "improvement_pp": 48.59
+    },
+    "vqvae_131k_tekken_reconstruction_acc_all": {
+      "before_gpu_train": 0.3203,
+      "after_gpu_train": 0.9609
+    },
+    "before_gpu_sample_reconstructions": [
+      "boursing hierarchical and differential per slot lane, for a new new pressure voted along valve decoding pressure to021.",
+      "l3 202 -207 to2  an of hierarchical-B. along, inotron"
+    ],
+    "after_gpu_ncm_pointer_decoded_windows": [
+      "Partitioning the expert cache per layer instead of using a single global table raised the cache hit rate from 23.3% to 48.0% inside the same",
+      "51.7 GB host RAM budget."
+    ],
+    "after_gpu_used_completeness_fallback": true
+  },
+  "progressive_7_layer_ablation": {
+    "layer1_mcq_native_lm_head": {
+      "device": "Ubuntu-noble-latest-amd64-base.zst",
+      "arch": "x86_64",
+      "model": "nemotron-3.5-super-vl",
+      "max_active_layer": 1,
+      "prompt": "Which gas makes up approximately 78% of Earth's dry atmosphere by volume?\n(A) Oxygen\n(B) Nitrogen\n(C) Argon\n(D) Carbon dioxide",
+      "reply": "The correct answer is (D).",
+      "plans": [
+        "The correct answer is (D)."
+      ],
+      "tools_used": [],
+      "layer_trace": {
+        "layer4_memory_graph": {
+          "enabled": false
+        },
+        "layer5_ontology_and_verifier": {
+          "enabled": false
+        },
+        "layer2_hybrid_agent": {
+          "enabled": false
+        },
+        "layer1_nemotron_super_vl": {
+          "enabled": true,
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "prompt_tokens": 35,
+          "c_prefill_ms": 378.46,
+          "mcq_scoring": {
+            "chosen_letter": "D",
+            "probs": {
+              "A": 0.1614,
+              "B": 0.1124,
+              "C": 0.0769,
+              "D": 0.6492
+            }
+          },
+          "planned_windows_count": 1
+        },
+        "layer6_generative_compiler": {
+          "enabled": false
+        },
+        "layer3_11level_ncm": {
+          "enabled": false
+        },
+        "layer7_specmd_r4_madvise": {
+          "total_expert_requests": 760,
+          "tier1_pool_hits": 64,
+          "tier2_host_hits": 311,
+          "tier3_drive_fetches": 385,
+          "r4_clean_drops": 632,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 36445.0,
+            "tier1_3d_vcache_l3_mb": 71.29,
+            "tier2_ddr5_ram_mb": 2819.38,
+            "bytes_saved_q4_and_broadcast_mb": 35412.83,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 55,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "input_tokens": 35,
+      "emitted_tokens": 7,
+      "all_token_ids_valid_in_131k_vocab": true,
+      "c_engine_total_ms": 846.85,
+      "total_cycle_ms": 872.31,
+      "dm_stats": {
+        "total_expert_requests": 760,
+        "tier1_pool_hits": 64,
+        "tier2_host_hits": 311,
+        "tier3_drive_fetches": 385,
+        "r4_clean_drops": 632,
+        "dirty_writebacks": 0,
+        "workstation_4tier_ledger": {
+          "tier0_avx512_reg_mb": 36445.0,
+          "tier1_3d_vcache_l3_mb": 71.29,
+          "tier2_ddr5_ram_mb": 2819.38,
+          "bytes_saved_q4_and_broadcast_mb": 35412.83,
+          "madvise_willneed_calls": 0,
+          "madvise_dontneed_calls": 0,
+          "linux_proc_self_stat_minflt_delta": 55,
+          "linux_proc_self_stat_majflt_delta": 0,
+          "use_4bit_experts": true,
+          "os_madvise_willneed_active": false
+        }
+      }
+    },
+    "layer1_memory_unwrapped": {
+      "device": "Ubuntu-noble-latest-amd64-base.zst",
+      "arch": "x86_64",
+      "model": "nemotron-3.5-super-vl",
+      "max_active_layer": 1,
+      "prompt": "How does Clover's per-layer cache partition fix flat hit rates?",
+      "reply": "How does Clover's per-layer cache partition fix flat hit rates? RD",
+      "plans": [
+        "How does Clover's per-layer cache partition fix flat hit rates? RD"
+      ],
+      "tools_used": [],
+      "layer_trace": {
+        "layer4_memory_graph": {
+          "enabled": false
+        },
+        "layer5_ontology_and_verifier": {
+          "enabled": false
+        },
+        "layer2_hybrid_agent": {
+          "enabled": false
+        },
+        "layer1_nemotron_super_vl": {
+          "enabled": true,
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "prompt_tokens": 14,
+          "c_prefill_ms": 210.56,
+          "mcq_scoring": null,
+          "planned_windows_count": 1
+        },
+        "layer6_generative_compiler": {
+          "enabled": false
+        },
+        "layer3_11level_ncm": {
+          "enabled": false
+        },
+        "layer7_specmd_r4_madvise": {
+          "total_expert_requests": 258,
+          "tier1_pool_hits": 1,
+          "tier2_host_hits": 6,
+          "tier3_drive_fetches": 251,
+          "r4_clean_drops": 193,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 7242.5,
+            "tier1_3d_vcache_l3_mb": 14.36,
+            "tier2_ddr5_ram_mb": 1311.07,
+            "bytes_saved_q4_and_broadcast_mb": 7103.86,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 5183,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "input_tokens": 14,
+      "emitted_tokens": 15,
+      "all_token_ids_valid_in_131k_vocab": true,
+      "c_engine_total_ms": 230.93,
+      "total_cycle_ms": 278.73,
+      "dm_stats": {
+        "total_expert_requests": 258,
+        "tier1_pool_hits": 1,
+        "tier2_host_hits": 6,
+        "tier3_drive_fetches": 251,
+        "r4_clean_drops": 193,
+        "dirty_writebacks": 0,
+        "workstation_4tier_ledger": {
+          "tier0_avx512_reg_mb": 7242.5,
+          "tier1_3d_vcache_l3_mb": 14.36,
+          "tier2_ddr5_ram_mb": 1311.07,
+          "bytes_saved_q4_and_broadcast_mb": 7103.86,
+          "madvise_willneed_calls": 0,
+          "madvise_dontneed_calls": 0,
+          "linux_proc_self_stat_minflt_delta": 5183,
+          "linux_proc_self_stat_majflt_delta": 0,
+          "use_4bit_experts": true,
+          "os_madvise_willneed_active": false
+        }
+      }
+    },
+    "layer1_ontology_unwrapped": {
+      "device": "Ubuntu-noble-latest-amd64-base.zst",
+      "arch": "x86_64",
+      "model": "nemotron-3.5-super-vl",
+      "max_active_layer": 1,
+      "prompt": "What is CVE-2024-6387 (RegreSSHion), which CWE weakness causes it, and which CAPEC attack pattern exploits it?",
+      "reply": "What is CVE-2024-6387 (RegreSSHion), which CWE weakness causes it, and which CAPEC attack pattern exploits it? illet",
+      "plans": [
+        "What is CVE-2024-6387 (RegreSSHion), which CWE weakness causes it, and which CAPEC attack pattern exploits it? illet"
+      ],
+      "tools_used": [],
+      "layer_trace": {
+        "layer4_memory_graph": {
+          "enabled": false
+        },
+        "layer5_ontology_and_verifier": {
+          "enabled": false
+        },
+        "layer2_hybrid_agent": {
+          "enabled": false
+        },
+        "layer1_nemotron_super_vl": {
+          "enabled": true,
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "prompt_tokens": 37,
+          "c_prefill_ms": 426.46,
+          "mcq_scoring": null,
+          "planned_windows_count": 1
+        },
+        "layer6_generative_compiler": {
+          "enabled": false
+        },
+        "layer3_11level_ncm": {
+          "enabled": false
+        },
+        "layer7_specmd_r4_madvise": {
+          "total_expert_requests": 400,
+          "tier1_pool_hits": 1,
+          "tier2_host_hits": 12,
+          "tier3_drive_fetches": 387,
+          "r4_clean_drops": 335,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 18570.0,
+            "tier1_3d_vcache_l3_mb": 36.52,
+            "tier2_ddr5_ram_mb": 1697.48,
+            "bytes_saved_q4_and_broadcast_mb": 17869.96,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 1081,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "input_tokens": 37,
+      "emitted_tokens": 38,
+      "all_token_ids_valid_in_131k_vocab": true,
+      "c_engine_total_ms": 444.09,
+      "total_cycle_ms": 491.9,
+      "dm_stats": {
+        "total_expert_requests": 400,
+        "tier1_pool_hits": 1,
+        "tier2_host_hits": 12,
+        "tier3_drive_fetches": 387,
+        "r4_clean_drops": 335,
+        "dirty_writebacks": 0,
+        "workstation_4tier_ledger": {
+          "tier0_avx512_reg_mb": 18570.0,
+          "tier1_3d_vcache_l3_mb": 36.52,
+          "tier2_ddr5_ram_mb": 1697.48,
+          "bytes_saved_q4_and_broadcast_mb": 17869.96,
+          "madvise_willneed_calls": 0,
+          "madvise_dontneed_calls": 0,
+          "linux_proc_self_stat_minflt_delta": 1081,
+          "linux_proc_self_stat_majflt_delta": 0,
+          "use_4bit_experts": true,
+          "os_madvise_willneed_active": false
+        }
+      }
+    },
+    "layer2_python_tool_and_hybridlink_mtp": {
+      "device": "Ubuntu-noble-latest-amd64-base.zst",
+      "arch": "x86_64",
+      "model": "nemotron-3.5-super-vl",
+      "max_active_layer": 2,
+      "prompt": "Compute 17**4 + 29*13 using Python.",
+      "reply": "Using Python, the computed result is 17**4 + 29*13 = 83898. #### 17**4 + 29*13 = 83898",
+      "plans": [
+        "Using Python, the computed result is 17**4 + 29*13 = 83898. #### 17**4 + 29*13 = 83898"
+      ],
+      "tools_used": [
+        "layer2_nemotron_hybridlink_4096",
+        "layer2_python_interpreter"
+      ],
+      "layer_trace": {
+        "layer4_memory_graph": {
+          "enabled": false
+        },
+        "layer5_ontology_and_verifier": {
+          "enabled": false
+        },
+        "layer2_hybrid_agent": {
+          "enabled": true,
+          "module": "8-GPU Trained HybridLink4096 + NemotronNativeHybridLink(d=4096, bottleneck=1024) + 2-Layer Native MTP",
+          "special_token_ids": {
+            "<think>": 12,
+            "</think>": 13,
+            "<latent>": 30,
+            "</latent>": 31
+          },
+          "latent_vector_norm": 0.3948,
+          "top1_token_id": 51390,
+          "top1_token_str": "inom",
+          "mtp_speculative_draft_token_id": 1438,
+          "mtp_speculative_draft_token_str": "**",
+          "mtp_draft_c_ms": 17.51,
+          "raw_hidden_to_top1_embed_cos": -0.0112,
+          "native_hybridlink_to_top1_embed_cos": -0.0297,
+          "stage3_hybridlink4096_to_top1_embed_cos": -0.0153,
+          "nearest_131k_tekken_vocab_cos": 0.8084,
+          "nearest_131k_tekken_vocab_token": "",
+          "hybridlink_ms": 201.15,
+          "c_continuous_latent_step_ms": 22.38,
+          "post_latent_hidden_rms": 2.10901,
+          "tool_executed": "python_interpreter",
+          "python_code": "res = 17**4 + 29*13\nprint(f'17**4 + 29*13 = {res:g}')",
+          "python_output": "17**4 + 29*13 = 83898"
+        },
+        "layer1_nemotron_super_vl": {
+          "enabled": true,
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "prompt_tokens": 16,
+          "c_prefill_ms": 165.22,
+          "mcq_scoring": null,
+          "planned_windows_count": 1
+        },
+        "layer6_generative_compiler": {
+          "enabled": false
+        },
+        "layer3_11level_ncm": {
+          "enabled": false
+        },
+        "layer7_specmd_r4_madvise": {
+          "total_expert_requests": 295,
+          "tier1_pool_hits": 3,
+          "tier2_host_hits": 14,
+          "tier3_drive_fetches": 278,
+          "r4_clean_drops": 228,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 8720.0,
+            "tier1_3d_vcache_l3_mb": 17.25,
+            "tier2_ddr5_ram_mb": 1788.75,
+            "bytes_saved_q4_and_broadcast_mb": 8224.59,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 262979,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "input_tokens": 16,
+      "emitted_tokens": 47,
+      "all_token_ids_valid_in_131k_vocab": true,
+      "c_engine_total_ms": 187.6,
+      "total_cycle_ms": 429.43,
+      "dm_stats": {
+        "total_expert_requests": 295,
+        "tier1_pool_hits": 3,
+        "tier2_host_hits": 14,
+        "tier3_drive_fetches": 278,
+        "r4_clean_drops": 228,
+        "dirty_writebacks": 0,
+        "workstation_4tier_ledger": {
+          "tier0_avx512_reg_mb": 8720.0,
+          "tier1_3d_vcache_l3_mb": 17.25,
+          "tier2_ddr5_ram_mb": 1788.75,
+          "bytes_saved_q4_and_broadcast_mb": 8224.59,
+          "madvise_willneed_calls": 0,
+          "madvise_dontneed_calls": 0,
+          "linux_proc_self_stat_minflt_delta": 262979,
+          "linux_proc_self_stat_majflt_delta": 0,
+          "use_4bit_experts": true,
+          "os_madvise_willneed_active": false
+        }
+      }
+    },
+    "layer2_live_web_search": {
+      "device": "Ubuntu-noble-latest-amd64-base.zst",
+      "arch": "x86_64",
+      "model": "nemotron-3.5-super-vl",
+      "max_active_layer": 2,
+      "prompt": "Search the web for recent research papers on mixture of experts language models.",
+      "reply": "Reference Source 1: [arXiv 2026-10-29] Elucidating the Design Space of LM Data Attribution \u2014 Link: https://arxiv.org/abs/2610.40655v1 \u2014 Summary: Data attribution methods for Language Models (LMs) are typically evaluated using downstream tasks like fact retrieval. However, existing evaluations vary multiple dataset properties simultaneously, making it impossible to isolate exactly why an attribution...\nReference Source 2: [arXiv 2026-10-29] Rethinking Neural Thickets Without Weight Perturbations \u2014 Link: https://arxiv.org/abs/2610.40649v1 \u2014 Summary: The Neural Thickets hypothesis posits that pretrained language models lie in dense neighborhoods of task-specific experts in weight space, which random Gaussian perturbations can uncover. We reproduce the reported gains, but show that they do not require...\nReference Source 3: [arXiv 2026-10-29] Read, Allocate, Route: Role-Coupled Tokenization for Pixel-Space Generative Transformers \u2014 Link: https://arxiv.org/abs/2610.40647v1 \u2014 Summary: Pixel-space generative Transformers typically use one token per image patch, so capturing finer detail requires more tokens and makes global attention increasingly expensive. We observe that finer detail does not necessarily require more global...",
+      "plans": [
+        "Reference Source 1: [arXiv 2026-10-29] Elucidating the Design Space of LM Data Attribution \u2014 Link: https://arxiv.org/abs/2610.40655v1 \u2014 Summary: Data attribution methods for Language Models (LMs) are typically evaluated using downstream tasks like fact retrieval. However, existing evaluations vary multiple dataset properties simultaneously, making it impossible to isolate exactly why an attribution...",
+        "Reference Source 2: [arXiv 2026-10-29] Rethinking Neural Thickets Without Weight Perturbations \u2014 Link: https://arxiv.org/abs/2610.40649v1 \u2014 Summary: The Neural Thickets hypothesis posits that pretrained language models lie in dense neighborhoods of task-specific experts in weight space, which random Gaussian perturbations can uncover. We reproduce the reported gains, but show that they do not require...",
+        "Reference Source 3: [arXiv 2026-10-29] Read, Allocate, Route: Role-Coupled Tokenization for Pixel-Space Generative Transformers \u2014 Link: https://arxiv.org/abs/2610.40647v1 \u2014 Summary: Pixel-space generative Transformers typically use one token per image patch, so capturing finer detail requires more tokens and makes global attention increasingly expensive. We observe that finer detail does not necessarily require more global..."
+      ],
+      "tools_used": [
+        "layer2_nemotron_hybridlink_4096",
+        "layer2_live_web_search"
+      ],
+      "layer_trace": {
+        "layer4_memory_graph": {
+          "enabled": false
+        },
+        "layer5_ontology_and_verifier": {
+          "enabled": false
+        },
+        "layer2_hybrid_agent": {
+          "enabled": true,
+          "module": "8-GPU Trained HybridLink4096 + NemotronNativeHybridLink(d=4096, bottleneck=1024) + 2-Layer Native MTP",
+          "special_token_ids": {
+            "<think>": 12,
+            "</think>": 13,
+            "<latent>": 30,
+            "</latent>": 31
+          },
+          "latent_vector_norm": 0.3886,
+          "top1_token_id": 45738,
+          "top1_token_str": "orit",
+          "mtp_speculative_draft_token_id": 3997,
+          "mtp_speculative_draft_token_str": "\u00a0",
+          "mtp_draft_c_ms": 17.39,
+          "raw_hidden_to_top1_embed_cos": 0.0088,
+          "native_hybridlink_to_top1_embed_cos": 0.0057,
+          "stage3_hybridlink4096_to_top1_embed_cos": 0.0133,
+          "nearest_131k_tekken_vocab_cos": 0.9501,
+          "nearest_131k_tekken_vocab_token": "",
+          "hybridlink_ms": 202.3,
+          "c_continuous_latent_step_ms": 22.29,
+          "post_latent_hidden_rms": 2.10415,
+          "tool_executed": "web_search",
+          "search_query": "Search the web for recent research papers on mixture of experts language models.",
+          "observation_preview": "\u2022 Reference Source 1: [arXiv 2026-10-29] Elucidating the Design Space of LM Data Attribution \u2014 Link: https://arxiv.org/abs/2610.40655v1 \u2014 Summary: Data attribution methods for Language Models (LMs) are typically evaluated using downstream tasks like fact retrieval. However, existing evaluations vary multiple dataset properties simultaneously, making it impossible to isolate exactly why an attribut"
+        },
+        "layer1_nemotron_super_vl": {
+          "enabled": true,
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "prompt_tokens": 14,
+          "c_prefill_ms": 211.12,
+          "mcq_scoring": null,
+          "planned_windows_count": 3
+        },
+        "layer6_generative_compiler": {
+          "enabled": false
+        },
+        "layer3_11level_ncm": {
+          "enabled": false
+        },
+        "layer7_specmd_r4_madvise": {
+          "total_expert_requests": 276,
+          "tier1_pool_hits": 4,
+          "tier2_host_hits": 24,
+          "tier3_drive_fetches": 248,
+          "r4_clean_drops": 208,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 7735.0,
+            "tier1_3d_vcache_l3_mb": 15.33,
+            "tier2_ddr5_ram_mb": 1737.05,
+            "bytes_saved_q4_and_broadcast_mb": 7254.76,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 262813,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "input_tokens": 14,
+      "emitted_tokens": 312,
+      "all_token_ids_valid_in_131k_vocab": true,
+      "c_engine_total_ms": 233.41,
+      "total_cycle_ms": 1207.78,
+      "dm_stats": {
+        "total_expert_requests": 276,
+        "tier1_pool_hits": 4,
+        "tier2_host_hits": 24,
+        "tier3_drive_fetches": 248,
+        "r4_clean_drops": 208,
+        "dirty_writebacks": 0,
+        "workstation_4tier_ledger": {
+          "tier0_avx512_reg_mb": 7735.0,
+          "tier1_3d_vcache_l3_mb": 15.33,
+          "tier2_ddr5_ram_mb": 1737.05,
+          "bytes_saved_q4_and_broadcast_mb": 7254.76,
+          "madvise_willneed_calls": 0,
+          "madvise_dontneed_calls": 0,
+          "linux_proc_self_stat_minflt_delta": 262813,
+          "linux_proc_self_stat_majflt_delta": 0,
+          "use_4bit_experts": true,
+          "os_madvise_willneed_active": false
+        }
+      }
+    },
+    "layer3_11level_ncm_131k_tekken": {
+      "device": "Ubuntu-noble-latest-amd64-base.zst",
+      "arch": "x86_64",
+      "model": "nemotron-3.5-super-vl",
+      "max_active_layer": 3,
+      "prompt": "Compute 17**4 + 29*13 using Python.",
+      "reply": "Using Python, the computed result is 17**4 + 29*13 = 83898. #### 17**4 + 29*13 = 83898",
+      "plans": [
+        "Using Python, the computed result is 17**4 + 29*13 = 83898. #### 17**4 + 29*13 = 83898"
+      ],
+      "tools_used": [
+        "layer2_nemotron_hybridlink_4096",
+        "layer2_python_interpreter",
+        "layer3_nemotron_131k_ncm_pointer_decoder"
+      ],
+      "layer_trace": {
+        "layer4_memory_graph": {
+          "enabled": false
+        },
+        "layer5_ontology_and_verifier": {
+          "enabled": false
+        },
+        "layer2_hybrid_agent": {
+          "enabled": true,
+          "module": "8-GPU Trained HybridLink4096 + NemotronNativeHybridLink(d=4096, bottleneck=1024) + 2-Layer Native MTP",
+          "special_token_ids": {
+            "<think>": 12,
+            "</think>": 13,
+            "<latent>": 30,
+            "</latent>": 31
+          },
+          "latent_vector_norm": 0.3948,
+          "top1_token_id": 51390,
+          "top1_token_str": "inom",
+          "mtp_speculative_draft_token_id": 1438,
+          "mtp_speculative_draft_token_str": "**",
+          "mtp_draft_c_ms": 16.56,
+          "raw_hidden_to_top1_embed_cos": -0.0112,
+          "native_hybridlink_to_top1_embed_cos": -0.0297,
+          "stage3_hybridlink4096_to_top1_embed_cos": -0.0153,
+          "nearest_131k_tekken_vocab_cos": 0.8084,
+          "nearest_131k_tekken_vocab_token": "",
+          "hybridlink_ms": 201.36,
+          "c_continuous_latent_step_ms": 22.35,
+          "post_latent_hidden_rms": 2.10901,
+          "tool_executed": "python_interpreter",
+          "python_code": "res = 17**4 + 29*13\nprint(f'17**4 + 29*13 = {res:g}')",
+          "python_output": "17**4 + 29*13 = 83898"
+        },
+        "layer1_nemotron_super_vl": {
+          "enabled": true,
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "prompt_tokens": 16,
+          "c_prefill_ms": 163.63,
+          "mcq_scoring": null,
+          "planned_windows_count": 1
+        },
+        "layer6_generative_compiler": {
+          "enabled": false
+        },
+        "layer3_11level_ncm": {
+          "enabled": true,
+          "model_key": "nemotron-3.5-super-vl",
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "vq_levels": 11,
+          "vq_codes_per_window": 313,
+          "raw_ncm_decoded_windows": [
+            "Using Python, the computed result is 17**4 + 29*13 = 83898. #### 17**4 +",
+            "29*13 = 83898"
+          ],
+          "used_completeness_fallback": false,
+          "c_engine_ms": 508.13,
+          "ncm_plus_c_ms": 1340.77,
+          "emitted_token_count": 46,
+          "all_token_ids_valid_in_model_vocab": true,
+          "specmd_r4_dm_stats": {
+            "total_expert_requests": 645,
+            "tier1_pool_hits": 51,
+            "tier2_host_hits": 208,
+            "tier3_drive_fetches": 386,
+            "r4_clean_drops": 530,
+            "dirty_writebacks": 0,
+            "workstation_4tier_ledger": {
+              "tier0_avx512_reg_mb": 31375.0,
+              "tier1_3d_vcache_l3_mb": 61.57,
+              "tier2_ddr5_ram_mb": 3115.45,
+              "bytes_saved_q4_and_broadcast_mb": 29708.54,
+              "madvise_willneed_calls": 0,
+              "madvise_dontneed_calls": 0,
+              "linux_proc_self_stat_minflt_delta": 262192,
+              "linux_proc_self_stat_majflt_delta": 0,
+              "use_4bit_experts": true,
+              "os_madvise_willneed_active": false
+            }
+          }
+        },
+        "layer7_specmd_r4_madvise": {
+          "total_expert_requests": 645,
+          "tier1_pool_hits": 51,
+          "tier2_host_hits": 208,
+          "tier3_drive_fetches": 386,
+          "r4_clean_drops": 530,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 31375.0,
+            "tier1_3d_vcache_l3_mb": 61.57,
+            "tier2_ddr5_ram_mb": 3115.45,
+            "bytes_saved_q4_and_broadcast_mb": 29708.54,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 262192,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "input_tokens": 16,
+      "emitted_tokens": 46,
+      "all_token_ids_valid_in_131k_vocab": true,
+      "c_engine_total_ms": 694.11,
+      "total_cycle_ms": 1769.12,
+      "dm_stats": {
+        "total_expert_requests": 645,
+        "tier1_pool_hits": 51,
+        "tier2_host_hits": 208,
+        "tier3_drive_fetches": 386,
+        "r4_clean_drops": 530,
+        "dirty_writebacks": 0,
+        "workstation_4tier_ledger": {
+          "tier0_avx512_reg_mb": 31375.0,
+          "tier1_3d_vcache_l3_mb": 61.57,
+          "tier2_ddr5_ram_mb": 3115.45,
+          "bytes_saved_q4_and_broadcast_mb": 29708.54,
+          "madvise_willneed_calls": 0,
+          "madvise_dontneed_calls": 0,
+          "linux_proc_self_stat_minflt_delta": 262192,
+          "linux_proc_self_stat_majflt_delta": 0,
+          "use_4bit_experts": true,
+          "os_madvise_willneed_active": false
+        }
+      }
+    },
+    "layer4_memory_graph_injected": {
+      "device": "Ubuntu-noble-latest-amd64-base.zst",
+      "arch": "x86_64",
+      "model": "nemotron-3.5-super-vl",
+      "max_active_layer": 4,
+      "prompt": "How does Clover's per-layer cache partition fix flat hit rates?",
+      "reply": "[Memory Graph MEM-CORR-PER-LAYER-PARTITION-002]: When a measurement shows a flat response across all settings of a parameter, suspect the structure being measured (global eviction across layers), not the effect: partitioning the same 51.7 GB cache per layer increased the hit rate",
+      "plans": [
+        "[Memory Graph MEM-CORR-PER-LAYER-PARTITION-002]: When a measurement shows a flat response across all settings of a parameter, suspect the structure being measured (global eviction across layers), not the effect: partitioning the same 51.7 GB cache per layer increased the hit rate"
+      ],
+      "tools_used": [
+        "layer4_memory_graph",
+        "layer2_nemotron_hybridlink_4096",
+        "layer3_nemotron_131k_ncm_pointer_decoder"
+      ],
+      "layer_trace": {
+        "layer4_memory_graph": {
+          "enabled": true,
+          "injected_into_prompt": true,
+          "retrieved_count": 3,
+          "entries": [
+            {
+              "id": "MEM-CORR-PER-LAYER-PARTITION-002",
+              "type": "correction",
+              "epistemic_status": "externally_verified",
+              "summary": "When a measurement shows a flat response across all settings of a parameter, suspect the structure being measured (global eviction across layers), not the effect: partitioning the same 51.7 GB cache per layer increased the hit rate from 23.3% to 48.0%.",
+              "reason": ""
+            },
+            {
+              "id": "MEM-HYP-CACHE-DEAD-END-001",
+              "type": "hypothesis",
+              "epistemic_status": "hypothesis",
+              "summary": "Mistaken initial hypothesis that expert caching is ineffective for Kimi K3 because varying cache capacity from 512 to 4096 produced a flat 23.3% hit rate (superseded by MEM-CORR-PER-LAYER-PARTITION-002).",
+              "reason": ""
+            },
+            {
+              "id": "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
+              "type": "concept",
+              "epistemic_status": "externally_verified",
+              "summary": "When varying a capacity or budget parameter across a wide range yields a completely flat metric, suspect the structure being measured (such as shared-pool cyclic eviction across stages/layers or unallocated capacity) before concluding the underlying mechanism has no effect; test partitioning the same total budget per stage/layer.",
+              "reason": ""
+            }
+          ],
+          "eleven_foundational_papers": {
+            "mcculloch_pitts_1943_and_minsky_papert_1969": {
+              "veto_evaluated": true,
+              "order_k_predicates_matched": false,
+              "rosenblatt_1958_gamma_zero_sum_applied": true
+            },
+            "hopfield_1982_constellation_cleanup": {
+              "is_familiar": true,
+              "energy_drop": null
+            },
+            "rumelhart_1986_and_sutton_1988_td_lambda": {
+              "terminal_target_rumelhart_1986": 0.9,
+              "updated_values": {
+                "MEM-CORR-PER-LAYER-PARTITION-002": 0.9,
+                "MEM-HYP-CACHE-DEAD-END-001": 0.9,
+                "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001": 0.9
+              }
+            },
+            "lecun_1998_gtn_forward_logadd": {
+              "top_gtn_id": "MEM-CORR-PER-LAYER-PARTITION-002",
+              "top_gtn_confidence": 0.1671
+            },
+            "krizhevsky_2012_lrn_and_vaswani_2017_multihead": {
+              "selected_ids": []
+            }
+          },
+          "ms": 26.24
+        },
+        "layer5_ontology_and_verifier": {
+          "enabled": false
+        },
+        "layer2_hybrid_agent": {
+          "enabled": true,
+          "module": "8-GPU Trained HybridLink4096 + NemotronNativeHybridLink(d=4096, bottleneck=1024) + 2-Layer Native MTP",
+          "special_token_ids": {
+            "<think>": 12,
+            "</think>": 13,
+            "<latent>": 30,
+            "</latent>": 31
+          },
+          "latent_vector_norm": 0.3973,
+          "top1_token_id": 50289,
+          "top1_token_str": "RD",
+          "mtp_speculative_draft_token_id": 3997,
+          "mtp_speculative_draft_token_str": "\u00a0",
+          "mtp_draft_c_ms": 16.75,
+          "raw_hidden_to_top1_embed_cos": 0.0124,
+          "native_hybridlink_to_top1_embed_cos": 0.0373,
+          "stage3_hybridlink4096_to_top1_embed_cos": 0.0177,
+          "nearest_131k_tekken_vocab_cos": 0.8306,
+          "nearest_131k_tekken_vocab_token": "",
+          "hybridlink_ms": 198.86,
+          "c_continuous_latent_step_ms": 22.36,
+          "post_latent_hidden_rms": 2.1119
+        },
+        "layer1_nemotron_super_vl": {
+          "enabled": true,
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "prompt_tokens": 14,
+          "c_prefill_ms": 214.86,
+          "mcq_scoring": null,
+          "planned_windows_count": 1
+        },
+        "layer6_generative_compiler": {
+          "enabled": false
+        },
+        "layer3_11level_ncm": {
+          "enabled": true,
+          "model_key": "nemotron-3.5-super-vl",
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "vq_levels": 11,
+          "vq_codes_per_window": 313,
+          "raw_ncm_decoded_windows": [
+            "[Memory Graph MEM-CORR-PER-LAYER-PARTITION-002]: When a measurement shows a flat response across all settings of a parameter, suspect the structure being",
+            "measured (global eviction across layers), not the effect: partitioning the same 51.7 GB cache per layer increased the hit rate"
+          ],
+          "used_completeness_fallback": false,
+          "c_engine_ms": 666.5,
+          "ncm_plus_c_ms": 1504.21,
+          "emitted_token_count": 66,
+          "all_token_ids_valid_in_model_vocab": true,
+          "specmd_r4_dm_stats": {
+            "total_expert_requests": 742,
+            "tier1_pool_hits": 64,
+            "tier2_host_hits": 202,
+            "tier3_drive_fetches": 476,
+            "r4_clean_drops": 614,
+            "dirty_writebacks": 0,
+            "workstation_4tier_ledger": {
+              "tier0_avx512_reg_mb": 40240.0,
+              "tier1_3d_vcache_l3_mb": 78.91,
+              "tier2_ddr5_ram_mb": 3379.4,
+              "bytes_saved_q4_and_broadcast_mb": 38062.72,
+              "madvise_willneed_calls": 0,
+              "madvise_dontneed_calls": 0,
+              "linux_proc_self_stat_minflt_delta": 262185,
+              "linux_proc_self_stat_majflt_delta": 0,
+              "use_4bit_experts": true,
+              "os_madvise_willneed_active": false
+            }
+          }
+        },
+        "layer7_specmd_r4_madvise": {
+          "total_expert_requests": 742,
+          "tier1_pool_hits": 64,
+          "tier2_host_hits": 202,
+          "tier3_drive_fetches": 476,
+          "r4_clean_drops": 614,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 40240.0,
+            "tier1_3d_vcache_l3_mb": 78.91,
+            "tier2_ddr5_ram_mb": 3379.4,
+            "bytes_saved_q4_and_broadcast_mb": 38062.72,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 262185,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "input_tokens": 14,
+      "emitted_tokens": 66,
+      "all_token_ids_valid_in_131k_vocab": true,
+      "c_engine_total_ms": 903.73,
+      "total_cycle_ms": 1996.63,
+      "dm_stats": {
+        "total_expert_requests": 742,
+        "tier1_pool_hits": 64,
+        "tier2_host_hits": 202,
+        "tier3_drive_fetches": 476,
+        "r4_clean_drops": 614,
+        "dirty_writebacks": 0,
+        "workstation_4tier_ledger": {
+          "tier0_avx512_reg_mb": 40240.0,
+          "tier1_3d_vcache_l3_mb": 78.91,
+          "tier2_ddr5_ram_mb": 3379.4,
+          "bytes_saved_q4_and_broadcast_mb": 38062.72,
+          "madvise_willneed_calls": 0,
+          "madvise_dontneed_calls": 0,
+          "linux_proc_self_stat_minflt_delta": 262185,
+          "linux_proc_self_stat_majflt_delta": 0,
+          "use_4bit_experts": true,
+          "os_madvise_willneed_active": false
+        }
+      }
+    },
+    "layer5_ontology_graphrag_injected": {
+      "device": "Ubuntu-noble-latest-amd64-base.zst",
+      "arch": "x86_64",
+      "model": "nemotron-3.5-super-vl",
+      "max_active_layer": 5,
+      "prompt": "What is CVE-2024-6387 (RegreSSHion), which CWE weakness causes it, and which CAPEC attack pattern exploits it?",
+      "reply": "CVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-362 (Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')) CVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-364 (Signal Handler Race Condition) [P3] Relationship path (inferred by rule transitive_chaining from CAUSED_BY/2024-6387_362, EXPLOITED_BY/362_29)",
+      "plans": [
+        "CVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-362 (Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'))",
+        "CVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-364 (Signal Handler Race Condition)",
+        "[P3] Relationship path (inferred by rule transitive_chaining from CAUSED_BY/2024-6387_362, EXPLOITED_BY/362_29)"
+      ],
+      "tools_used": [
+        "layer4_memory_graph",
+        "layer5_ontology_graphrag",
+        "layer2_nemotron_hybridlink_4096",
+        "layer3_nemotron_131k_ncm_pointer_decoder"
+      ],
+      "layer_trace": {
+        "layer4_memory_graph": {
+          "enabled": true,
+          "injected_into_prompt": true,
+          "retrieved_count": 3,
+          "entries": [
+            {
+              "id": "MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001",
+              "type": "correction",
+              "epistemic_status": "externally_verified",
+              "summary": "Sorting candidate paths by `edge_priority` (putting causal/remediation edges before leaf `AFFECTS` edges) and enforcing a stratified per-seed cap on leaf edges (`max_affects_per_seed = 4`) eliminates 1-hop fan-out flooding, raising full `CVE+CWE+CAPEC` chain coverage from 63.3% to 76.7% and Gold ID recall from 78.9% to 84.5%.",
+              "reason": ""
+            },
+            {
+              "id": "MEM-CORR-PER-LAYER-PARTITION-002",
+              "type": "correction",
+              "epistemic_status": "externally_verified",
+              "summary": "When a measurement shows a flat response across all settings of a parameter, suspect the structure being measured (global eviction across layers), not the effect: partitioning the same 51.7 GB cache per layer increased the hit rate from 23.3% to 48.0%.",
+              "reason": ""
+            },
+            {
+              "id": "MEM-HYP-CACHE-DEAD-END-001",
+              "type": "hypothesis",
+              "epistemic_status": "hypothesis",
+              "summary": "Mistaken initial hypothesis that expert caching is ineffective for Kimi K3 because varying cache capacity from 512 to 4096 produced a flat 23.3% hit rate (superseded by MEM-CORR-PER-LAYER-PARTITION-002).",
+              "reason": ""
+            }
+          ],
+          "eleven_foundational_papers": {
+            "mcculloch_pitts_1943_and_minsky_papert_1969": {
+              "veto_evaluated": true,
+              "order_k_predicates_matched": false,
+              "rosenblatt_1958_gamma_zero_sum_applied": true
+            },
+            "hopfield_1982_constellation_cleanup": {
+              "is_familiar": true,
+              "energy_drop": null
+            },
+            "rumelhart_1986_and_sutton_1988_td_lambda": {
+              "terminal_target_rumelhart_1986": 0.9,
+              "updated_values": {
+                "MEM-CORR-STRATIFIED-PRIORITY-TRAVERSAL-001": 0.9,
+                "MEM-CORR-PER-LAYER-PARTITION-002": 0.9,
+                "MEM-HYP-CACHE-DEAD-END-001": 0.9
+              }
+            },
+            "lecun_1998_gtn_forward_logadd": {
+              "top_gtn_id": "MEM-CORR-HYBRID-RRF-SYMBOLIC-SEPARATION-001",
+              "top_gtn_confidence": 0.1296
+            },
+            "krizhevsky_2012_lrn_and_vaswani_2017_multihead": {
+              "selected_ids": []
+            }
+          },
+          "ms": 26.58
+        },
+        "layer5_ontology_and_verifier": {
+          "enabled": true,
+          "injected_into_prompt": true,
+          "ontology_hits": 7,
+          "rendered_evidence": [
+            "[P1] Relationship path (stated by NVD (weaknesses))\nCVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-362 (Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'))\n\n[P2] Relationship path (stated by NVD (weaknesses))\nCVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-364 (Signal Handler Race Condition)\n\n[P3] Relationship path (inferred by rule transitive_chaining from CAUSED_BY/2024-6387_362, EXPLOITED_BY/362_29)\nCVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --EXPLOITED_BY_ATTACK--> CAPEC-29 (Leveraging Time-of-Check and Time-of-Use (TOCTOU) Race Conditions)\n\n[P4] Relationship path (stated by NVD (weaknesses); stated by MITRE_CWE (RelatedAttackPatterns))\nCVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-362 (Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')) --EXPLOITED_BY--> CAPEC-29 (Leveraging Time-of-Check and Time-of-Use (TOCTOU) Race Conditions)\n\n[E5] Entity record\nCVE-2024-6387: RegreSSHion OpenSSH Signal Handler Race Condition\nPublished: 2024-07-01\nCVSS 3.1: base score 8.1 (HIGH), vector CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H\nDescription: A signal handler race condition in OpenSSH's server (sshd) on glibc-based Linux systems allows unauthenticated remote code execution as root when LoginGraceTime expires.\nSource URL: https://nvd.nist.gov/vuln/detail/CVE-2024-6387\nSymbolic Inference: structurallyCritical=True (rule: severity_aggregation)\n\n[E6] Entity record\nCWE-362: Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')\nAbstraction: Class\nDescription: The program executes concurrent code paths that access a shared resource without proper synchronization.\nMitigations: Use atomic operations and reentrant-safe functions in signal handlers; Eliminate non-async-signal-safe calls such as syslog()/malloc()/free() inside SIGALRM handlers\nSymbolic Inference: vulnerabilityCount=1, criticalCount=1, maxCVSS=8.1\n\n[E7] Entity record\nCWE-364: Signal Handler Race Condition\nAbstraction: Base\nDescription: A race condition occurs inside a signal handler that invokes non-reentrant or non-async-signal-safe functions.\nSymbolic Inference: vulnerabilityCount=1, criticalCount=1, maxCVSS=8.1"
+          ],
+          "symbolic_math_constraint_solved": false,
+          "eleven_foundational_papers": {
+            "turing_1950_m0_m1_diagonal_stratifier": {
+              "self_reference_detected": false,
+              "stratified_level": "M_0 (Object-Level)"
+            },
+            "newell_simon_1956_csm_and_vct": {
+              "graph_traversal_stats": {},
+              "csm_2_07_contraction_matched": 1
+            }
+          },
+          "ms": 0.87,
+          "grounding_audit": {
+            "checked_numbers": [
+              "2024",
+              "6387",
+              "362",
+              "364"
+            ],
+            "grounded_numbers": [
+              "2024",
+              "6387",
+              "362",
+              "364"
+            ],
+            "ungrounded_numbers": [],
+            "checked_identifiers": [
+              "CVE-2024-6387",
+              "CWE-362",
+              "CVE-2024-6387",
+              "CWE-364"
+            ],
+            "ungrounded_identifiers": [],
+            "source_grounding_verified": true
+          },
+          "source_grounding_verified": true
+        },
+        "layer2_hybrid_agent": {
+          "enabled": true,
+          "module": "8-GPU Trained HybridLink4096 + NemotronNativeHybridLink(d=4096, bottleneck=1024) + 2-Layer Native MTP",
+          "special_token_ids": {
+            "<think>": 12,
+            "</think>": 13,
+            "<latent>": 30,
+            "</latent>": 31
+          },
+          "latent_vector_norm": 0.3881,
+          "top1_token_id": 11273,
+          "top1_token_str": "illet",
+          "mtp_speculative_draft_token_id": 1032,
+          "mtp_speculative_draft_token_str": " ",
+          "mtp_draft_c_ms": 16.66,
+          "raw_hidden_to_top1_embed_cos": 0.0269,
+          "native_hybridlink_to_top1_embed_cos": -0.0064,
+          "stage3_hybridlink4096_to_top1_embed_cos": -0.0096,
+          "nearest_131k_tekken_vocab_cos": 0.947,
+          "nearest_131k_tekken_vocab_token": "",
+          "hybridlink_ms": 199.79,
+          "c_continuous_latent_step_ms": 22.47,
+          "post_latent_hidden_rms": 2.10676
+        },
+        "layer1_nemotron_super_vl": {
+          "enabled": true,
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "prompt_tokens": 37,
+          "c_prefill_ms": 428.58,
+          "mcq_scoring": null,
+          "planned_windows_count": 3
+        },
+        "layer6_generative_compiler": {
+          "enabled": false
+        },
+        "layer3_11level_ncm": {
+          "enabled": true,
+          "model_key": "nemotron-3.5-super-vl",
+          "vocab_size": 131072,
+          "hidden_size": 4096,
+          "vq_levels": 11,
+          "vq_codes_per_window": 313,
+          "raw_ncm_decoded_windows": [
+            "CVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-362",
+            "(Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'))",
+            "CVE-2024-6387 (RegreSSHion OpenSSH Signal Handler Race Condition) --CAUSED_BY--> CWE-364",
+            "(Signal Handler Race Condition)",
+            "[P3] Relationship path (inferred by rule transitive_chaining from CAUSED_BY/2024-6387_362,",
+            "EXPLOITED_BY/362_29)"
+          ],
+          "used_completeness_fallback": true,
+          "c_engine_ms": 1311.01,
+          "ncm_plus_c_ms": 3570.1,
+          "emitted_token_count": 143,
+          "all_token_ids_valid_in_model_vocab": true,
+          "specmd_r4_dm_stats": {
+            "total_expert_requests": 1131,
+            "tier1_pool_hits": 95,
+            "tier2_host_hits": 538,
+            "tier3_drive_fetches": 498,
+            "r4_clean_drops": 972,
+            "dirty_writebacks": 0,
+            "workstation_4tier_ledger": {
+              "tier0_avx512_reg_mb": 89490.0,
+              "tier1_3d_vcache_l3_mb": 175.25,
+              "tier2_ddr5_ram_mb": 4814.95,
+              "bytes_saved_q4_and_broadcast_mb": 83339.76,
+              "madvise_willneed_calls": 0,
+              "madvise_dontneed_calls": 0,
+              "linux_proc_self_stat_minflt_delta": 262220,
+              "linux_proc_self_stat_majflt_delta": 0,
+              "use_4bit_experts": true,
+              "os_madvise_willneed_active": false
+            }
+          }
+        },
+        "layer7_specmd_r4_madvise": {
+          "total_expert_requests": 1131,
+          "tier1_pool_hits": 95,
+          "tier2_host_hits": 538,
+          "tier3_drive_fetches": 498,
+          "r4_clean_drops": 972,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 89490.0,
+            "tier1_3d_vcache_l3_mb": 175.25,
+            "tier2_ddr5_ram_mb": 4814.95,
+            "bytes_saved_q4_and_broadcast_mb": 83339.76,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 262220,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "input_tokens": 37,
+      "emitted_tokens": 143,
+      "all_token_ids_valid_in_131k_vocab": true,
+      "c_engine_total_ms": 1762.06,
+      "total_cycle_ms": 4278.41,
+      "dm_stats": {
+        "total_expert_requests": 1131,
+        "tier1_pool_hits": 95,
+        "tier2_host_hits": 538,
+        "tier3_drive_fetches": 498,
+        "r4_clean_drops": 972,
+        "dirty_writebacks": 0,
+        "workstation_4tier_ledger": {
+          "tier0_avx512_reg_mb": 89490.0,
+          "tier1_3d_vcache_l3_mb": 175.25,
+          "tier2_ddr5_ram_mb": 4814.95,
+          "bytes_saved_q4_and_broadcast_mb": 83339.76,
+          "madvise_willneed_calls": 0,
+          "madvise_dontneed_calls": 0,
+          "linux_proc_self_stat_minflt_delta": 262220,
+          "linux_proc_self_stat_majflt_delta": 0,
+          "use_4bit_experts": true,
+          "os_madvise_willneed_active": false
+        }
+      }
+    },
+    "layer6_generative_compiler_and_asserts": {
+      "checked_blocks": 1,
+      "all_ok": true,
+      "results": [
+        {
+          "code_checked": "def sum_csv_ints(line: str) -> int:\n    return sum(int(p.strip()) for p in line.split(',') if p.strip())\n",
+          "ok": true,
+          "diagnostics": [],
+          "rollback_line_idx": null,
+          "elapsed_ms": 0.29,
+          "prompt_asserts_output": "ALL_ASSERTS_PASSED",
+          "sutton_1988_and_rumelhart_1986": {
+            "trajectory_states": [
+              "S0_SIG_HEADER",
+              "S5_REPAIRED_SPLIT_DISPATCH"
+            ],
+            "terminal_target_rumelhart_1986": 0.9,
+            "absorbing_markov_v_mle": [
+              0.6333,
+              0.5,
+              0.5,
+              0.1,
+              0.5,
+              0.9,
+              0.9
+            ]
+          }
+        }
+      ]
+    },
+    "layer7_bf16_vs_4bit_specmd_madvise": {
+      "bf16_experts_madvise_off": {
+        "forward_32tok_ms": 456.97,
+        "dm_stats": {
+          "total_expert_requests": 352,
+          "tier1_pool_hits": 0,
+          "tier2_host_hits": 0,
+          "tier3_drive_fetches": 352,
+          "r4_clean_drops": 288,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 19456.0,
+            "tier1_3d_vcache_l3_mb": 30.83,
+            "tier2_ddr5_ram_mb": 4073.0,
+            "bytes_saved_q4_and_broadcast_mb": 15383.0,
+            "madvise_willneed_calls": 0,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 59136,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": false,
+            "os_madvise_willneed_active": false
+          }
+        }
+      },
+      "q4_experts_madvise_willneed_on": {
+        "forward_32tok_pass1_ms": 320.31,
+        "forward_32tok_pass2_warm_ms": 319.59,
+        "speedup_vs_bf16": 1.43,
+        "dm_stats": {
+          "total_expert_requests": 705,
+          "tier1_pool_hits": 64,
+          "tier2_host_hits": 289,
+          "tier3_drive_fetches": 352,
+          "r4_clean_drops": 577,
+          "dirty_writebacks": 0,
+          "workstation_4tier_ledger": {
+            "tier0_avx512_reg_mb": 31520.0,
+            "tier1_3d_vcache_l3_mb": 61.66,
+            "tier2_ddr5_ram_mb": 2669.72,
+            "bytes_saved_q4_and_broadcast_mb": 30766.0,
+            "madvise_willneed_calls": 352,
+            "madvise_dontneed_calls": 0,
+            "linux_proc_self_stat_minflt_delta": 0,
+            "linux_proc_self_stat_majflt_delta": 0,
+            "use_4bit_experts": true,
+            "os_madvise_willneed_active": true
+          }
+        }
+      }
+    },
+    "clover_cycle_user_triggered_retry": {
+      "triggered_by": "That's wrong, try again.",
+      "action": "corrected_from_external_findings",
+      "pre_retry_findings": [
+        "Arithmetic mismatch: wrote '17**4 + 29*13 = 80000', but 17**4 + 29*13 = 83898."
+      ],
+      "post_retry_findings": [],
+      "staged_memory_lesson_id": "MEM-OBS-VERIFIED-20261030-234704",
+      "retry_wall_ms": 2531.21
+    }
+  }
+}

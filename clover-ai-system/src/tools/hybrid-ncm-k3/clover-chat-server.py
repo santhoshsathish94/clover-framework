@@ -2057,7 +2057,49 @@ class MultiGPUCloverCoordinator:
             if len(batch) == 1:
                 req = batch[0]
                 t0 = time.perf_counter()
-                direct_hit = eng.try_direct_k3_ha_ncm_decode(req.prompt, history=req.hist_snapshot)
+                req_model_key = getattr(req, "model_key", "nemotron-3.5-super-vl") or "nemotron-3.5-super-vl"
+                alt_renderer = self._get_or_load_model_renderer(req_model_key) if req_model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b") else None
+
+                # Clover Cycle User-Triggered Retry Check:
+                # If the user says the previous answer in this session was wrong ("try again", "that's wrong", or re-asks),
+                # run deterministic Outcome checks (`check_outcome_findings` + Layer-6 compiler check) and inject findings into Context!
+                effective_req_prompt = req.prompt
+                retry_cycle_meta = None
+                if req.hist_snapshot:
+                    try:
+                        for rel_d in ("../../cpu-server", "../../models/nemotron-3.5-super-vl"):
+                            cand_d = os.path.abspath(os.path.join(TOOLS_DIR, rel_d))
+                            if os.path.isdir(cand_d) and cand_d not in sys.path:
+                                sys.path.insert(0, cand_d)
+                        from nemotron_workstation_clover import check_outcome_findings, is_user_retry_request
+                        last_turn = req.hist_snapshot[-1]
+                        prev_q = str(last_turn.get("user") or "").strip()
+                        prev_a = str(last_turn.get("reply") or "").strip()
+                        retry_trig = is_user_retry_request(req.display_prompt, previous_question=prev_q)
+                        if retry_trig and prev_q and prev_a:
+                            found = check_outcome_findings(prev_q, prev_a)
+                            if found:
+                                effective_req_prompt = (
+                                    f"{prev_q}\n\n"
+                                    f"[Clover Outcome Verification Findings on Previous Attempt ({req.display_prompt})]:\n"
+                                    + "\n".join(f"- {f}" for f in found)
+                                    + "\nFix every finding above and provide the complete corrected response."
+                                )
+                            else:
+                                effective_req_prompt = (
+                                    f"{prev_q}\n\n"
+                                    f"[User Feedback on Previous Answer: {req.display_prompt}]\n"
+                                    f"Re-read the question carefully, verify every step, number, and fact, and provide the complete corrected response."
+                                )
+                            retry_cycle_meta = {
+                                "triggered": retry_trig,
+                                "previous_question": prev_q,
+                                "pre_retry_findings": found,
+                            }
+                    except Exception:
+                        pass
+
+                direct_hit = None if retry_cycle_meta is not None else eng.try_direct_k3_ha_ncm_decode(effective_req_prompt, history=req.hist_snapshot)
                 if direct_hit is not None:
                     text_mbr, ids_mbr, k3_expert_meta, mean_conf = direct_hit
                     cuda_sync(eng.dev, eng.dev_ha)
@@ -2068,19 +2110,27 @@ class MultiGPUCloverCoordinator:
                     exit_reason = f"direct_ncm_vq_conf_{mean_conf}"
                     tool_calls = []
                 else:
-                    plans, lat_steps, exit_reason, tool_calls = eng.run_agent_planning(req.prompt, history=req.hist_snapshot)
+                    mcq_fn = alt_renderer.score_mcq_options if alt_renderer is not None and hasattr(alt_renderer, "score_mcq_options") else None
+                    plans, lat_steps, exit_reason, tool_calls = eng.run_agent_planning(
+                        effective_req_prompt,
+                        history=req.hist_snapshot,
+                        mcq_scorer=mcq_fn,
+                    )
                     cuda_sync(eng.dev_ha)
                     t_plan_ms = (time.perf_counter() - t0) * 1000.0
 
                     t1 = time.perf_counter()
-                    req_model_key = getattr(req, "model_key", "nemotron-3.5-super-vl") or "nemotron-3.5-super-vl"
-                    alt_renderer = self._get_or_load_model_renderer(req_model_key) if req_model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b") else None
                     if alt_renderer is not None:
+                        if hasattr(alt_renderer, "c_engine") and hasattr(alt_renderer.c_engine, "set_madvise_active"):
+                            alt_renderer.c_engine.set_madvise_active(True)
+                            alt_renderer.c_engine.reset_dm_stats()
                         text_mbr, ids_mbr, k3_expert_meta = alt_renderer.render_plans_in_model_vocab(plans, cands=1)
                     else:
                         text_mbr, ids_mbr, k3_expert_meta = eng.render_ncm_with_k3_experts(plans, cands=req.cands)
                     if getattr(eng, "enable_ontology", False):
                         text_mbr = eng.symbolic_verifier.verify_source_grounding(req.display_prompt, text_mbr)
+                    if retry_cycle_meta is not None:
+                        tool_calls = list(tool_calls or []) + [{"tool": "clover_retry_cycle", **retry_cycle_meta}]
                     cuda_sync(eng.dev, eng.dev_ha)
                     t_ncm_mbr_ms = (time.perf_counter() - t1) * 1000.0
 
@@ -2826,12 +2876,14 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                 importlib.reload(_kog)
                 importlib.reload(_kmg)
                 importlib.reload(_kae)
+                if "nemotron_hybrid_ncm" in sys.modules:
+                    importlib.reload(sys.modules["nemotron_hybrid_ncm"])
+                if "nemotron_workstation_clover" in sys.modules:
+                    importlib.reload(sys.modules["nemotron_workstation_clover"])
                 if "benchmark_3_models_70_tasks" in sys.modules:
                     _b3m = importlib.reload(sys.modules["benchmark_3_models_70_tasks"])
                     if hasattr(STATE, "_alt_model_renderers") and isinstance(STATE._alt_model_renderers, dict):
-                        for _mk, _rend in list(STATE._alt_model_renderers.items()):
-                            if _rend is not None:
-                                _rend.__class__ = _b3m.ModelSpecificNCMRenderer
+                        STATE._alt_model_renderers.clear()
                 if "nemotron_multimodal" in sys.modules:
                     importlib.reload(sys.modules["nemotron_multimodal"])
                     STATE._nemo_mm_engine = None
@@ -2847,7 +2899,8 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                     w_eng.py_gc = _kgc.CloverPythonGenerativeCompiler(allow_undefined=True)
                     if getattr(w_eng, "rust_gc", None) is not None and _kgc.HAS_RUST_GC:
                         w_eng.rust_gc = _kgc.CloverRustGenerativeCompiler()
-                self._send_json({"ok": True, "reloaded": ["clover_request_pipeline", "live_web_search", "k3_fast_chat", "k3_generative_compiler", "k3_ontology_graph", "k3_memory_graph", "k3_agent_engine", "benchmark_3_models_70_tasks", "nemotron_multimodal"]})
+                STATE.__class__ = MultiGPUCloverCoordinator
+                self._send_json({"ok": True, "reloaded": ["clover_request_pipeline", "live_web_search", "k3_fast_chat", "k3_generative_compiler", "k3_ontology_graph", "k3_memory_graph", "k3_agent_engine", "nemotron_hybrid_ncm", "nemotron_workstation_clover", "benchmark_3_models_70_tasks", "nemotron_multimodal"]})
             except Exception as e:
                 self._send_json({"error": str(e)}, code=500)
             return

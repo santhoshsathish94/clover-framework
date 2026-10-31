@@ -1,0 +1,183 @@
+{
+  "model_id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+  "hidden_size": 4096,
+  "vocab_size": 131072,
+  "vq_dim": 384,
+  "num_windows_trained": 1024,
+  "hybridagent_3stage_summary": {
+    "pre_train_eval": {
+      "eval_loss": 14.4648,
+      "eval_ntp": 14.4182,
+      "eval_ppl": 1826954.36,
+      "eval_align": 0.9328,
+      "eval_cos_std": 0.0186,
+      "eval_cos_nat": 0.116,
+      "eval_special_acc": 0.0
+    },
+    "stage1_format_activation": {
+      "stage": "stage1_format_activation",
+      "steps": 40,
+      "world_size_gpus": 8,
+      "effective_batch_size": 32,
+      "elapsed_s": 380.13,
+      "first_step": {
+        "step": 1,
+        "alpha": 0.0,
+        "loss": 14.5013,
+        "l_ntp": 14.4546,
+        "l_align": 0.9334,
+        "cos_std": 0.0181,
+        "cos_nat": 0.1153,
+        "special_acc": 0.0,
+        "grad_norm": 11.0395,
+        "lr": 0.0003
+      },
+      "last_step": {
+        "step": 40,
+        "alpha": 0.0,
+        "loss": 9.146,
+        "l_ntp": 9.1213,
+        "l_align": 0.4943,
+        "cos_std": 0.5987,
+        "cos_nat": 0.4128,
+        "special_acc": 0.7047,
+        "grad_norm": 8.7561,
+        "lr": 3e-05
+      },
+      "eval": {
+        "eval_loss": 9.1351,
+        "eval_ntp": 9.1102,
+        "eval_ppl": 9046.96,
+        "eval_align": 0.4989,
+        "eval_cos_std": 0.5922,
+        "eval_cos_nat": 0.4101,
+        "eval_special_acc": 0.7056
+      },
+      "hybrid_link_proj2_norm": 37.5357,
+      "out_scale_nemo_native": 0.0143
+    },
+    "stage2_hybridlink_activation": {
+      "stage": "stage2_hybridlink_activation",
+      "steps": 60,
+      "world_size_gpus": 8,
+      "effective_batch_size": 32,
+      "elapsed_s": 565.0,
+      "first_step": {
+        "step": 1,
+        "alpha": 0.1,
+        "loss": 9.3749,
+        "l_ntp": 9.303,
+        "l_align": 0.4787,
+        "cos_std": 0.622,
+        "cos_nat": 0.4207,
+        "special_acc": 0.0776,
+        "grad_norm": 12.3006,
+        "lr": 0.00024
+      },
+      "last_step": {
+        "step": 60,
+        "alpha": 1.0,
+        "loss": 7.185,
+        "l_ntp": 7.0848,
+        "l_align": 0.6678,
+        "cos_std": 0.1102,
+        "cos_nat": 0.5543,
+        "special_acc": 1.0,
+        "grad_norm": 3.2069,
+        "lr": 2.4e-05
+      },
+      "eval": {
+        "eval_loss": 7.1685,
+        "eval_ntp": 7.069,
+        "eval_ppl": 1174.94,
+        "eval_align": 0.6636,
+        "eval_cos_std": 0.1116,
+        "eval_cos_nat": 0.5613,
+        "eval_special_acc": 1.0
+      },
+      "hybrid_link_proj2_norm": 38.012,
+      "out_scale_nemo_native": 0.0136
+    },
+    "stage3_self_conditioned": {
+      "stage": "stage3_self_conditioned",
+      "steps": 60,
+      "world_size_gpus": 8,
+      "effective_batch_size": 32,
+      "elapsed_s": 565.06,
+      "first_step": {
+        "step": 1,
+        "alpha": 1.0,
+        "loss": 7.1685,
+        "l_ntp": 7.1037,
+        "l_align": 0.6476,
+        "cos_std": 0.1163,
+        "cos_nat": 0.5886,
+        "special_acc": 1.0,
+        "grad_norm": 4.5231,
+        "lr": 0.00015
+      },
+      "last_step": {
+        "step": 60,
+        "alpha": 1.0,
+        "loss": 6.8237,
+        "l_ntp": 6.7594,
+        "l_align": 0.6437,
+        "cos_std": 0.0911,
+        "cos_nat": 0.6216,
+        "special_acc": 1.0,
+        "grad_norm": 2.4017,
+        "lr": 1.5e-05
+      },
+      "eval": {
+        "eval_loss": 6.8239,
+        "eval_ntp": 6.76,
+        "eval_ppl": 862.62,
+        "eval_align": 0.6391,
+        "eval_cos_std": 0.0926,
+        "eval_cos_nat": 0.6293,
+        "eval_special_acc": 1.0
+      },
+      "hybrid_link_proj2_norm": 38.1078,
+      "out_scale_nemo_native": 0.0113
+    }
+  },
+  "phase1_hybridlink": {
+    "before": {
+      "eval_cos_native": 0.1406,
+      "eval_cos_std": 0.0637
+    },
+    "after": {
+      "eval_cos_native": 0.4894,
+      "eval_cos_std": 0.5202
+    }
+  },
+  "phase2_vqvae": {
+    "before": {
+      "vq_eval_ce": 1.1927,
+      "vq_eval_acc_nonpad": 0.6675,
+      "vq_eval_acc_all": 0.8372
+    },
+    "after": {
+      "vq_eval_ce": 1.2584,
+      "vq_eval_acc_nonpad": 0.7182,
+      "vq_eval_acc_all": 0.8621
+    }
+  },
+  "phase3_ncm_bridges_pointer": {
+    "before": {
+      "ncm_eval_code_ce": 6.0497,
+      "ncm_eval_level0_acc": 0.1406,
+      "ncm_eval_all_levels_acc": 0.1983,
+      "ncm_eval_tok_ce": 11.4306,
+      "ncm_eval_tok_acc_nonpad": 0.8819
+    },
+    "after": {
+      "ncm_eval_code_ce": 1.1052,
+      "ncm_eval_level0_acc": 0.375,
+      "ncm_eval_all_levels_acc": 0.7196,
+      "ncm_eval_tok_ce": 0.2034,
+      "ncm_eval_tok_acc_nonpad": 0.9456
+    }
+  },
+  "elapsed_seconds": 337.8
+}

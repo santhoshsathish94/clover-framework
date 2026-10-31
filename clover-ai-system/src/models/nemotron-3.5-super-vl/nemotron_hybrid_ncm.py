@@ -103,6 +103,34 @@ class NemotronNativeCPUEngine:
             self.lib.nemo_set_use_4bit_experts.argtypes = [ctypes.c_int]
             self.lib.nemo_set_use_4bit_experts.restype = None
 
+        if hasattr(self.lib, "nemo_set_madvise_active"):
+            self.lib.nemo_set_madvise_active.argtypes = [ctypes.c_int]
+            self.lib.nemo_set_madvise_active.restype = None
+
+        if hasattr(self.lib, "nemo_dm_reset"):
+            self.lib.nemo_dm_reset.argtypes = []
+            self.lib.nemo_dm_reset.restype = None
+
+        if hasattr(self.lib, "nemo_dm_extended_stats"):
+            self.lib.nemo_dm_extended_stats.argtypes = [ctypes.POINTER(ctypes.c_ulonglong)]
+            self.lib.nemo_dm_extended_stats.restype = None
+
+        if hasattr(self.lib, "nemo_forward_embeddings"):
+            self.lib.nemo_forward_embeddings.argtypes = [
+                ctypes.POINTER(ctypes.c_float),
+                ctypes.c_int,
+                ctypes.POINTER(ctypes.c_float),
+            ]
+            self.lib.nemo_forward_embeddings.restype = ctypes.c_float
+
+        if hasattr(self.lib, "nemo_lm_head_logits"):
+            self.lib.nemo_lm_head_logits.argtypes = [
+                ctypes.POINTER(ctypes.c_float),
+                ctypes.POINTER(ctypes.c_float),
+                ctypes.POINTER(ctypes.c_float),
+            ]
+            self.lib.nemo_lm_head_logits.restype = ctypes.c_int
+
         if hasattr(self.lib, "nemo_mtp_draft_forward"):
             self.lib.nemo_mtp_draft_forward.argtypes = [
                 ctypes.POINTER(ctypes.c_int),
@@ -119,6 +147,45 @@ class NemotronNativeCPUEngine:
     def set_use_4bit_experts(self, enable: bool) -> None:
         if hasattr(self.lib, "nemo_set_use_4bit_experts"):
             self.lib.nemo_set_use_4bit_experts(1 if enable else 0)
+
+    def set_madvise_active(self, enable: bool) -> None:
+        if hasattr(self.lib, "nemo_set_madvise_active"):
+            self.lib.nemo_set_madvise_active(1 if enable else 0)
+
+    def reset_dm_stats(self) -> None:
+        if hasattr(self.lib, "nemo_dm_reset"):
+            self.lib.nemo_dm_reset()
+
+    def forward_embeddings(self, embeds_2d: torch.Tensor | np.ndarray) -> tuple[torch.Tensor, float]:
+        if isinstance(embeds_2d, torch.Tensor):
+            emb_np = embeds_2d.detach().cpu().float().contiguous().view(-1, D_NEMO).numpy()
+        else:
+            emb_np = np.ascontiguousarray(embeds_2d.reshape(-1, D_NEMO), dtype=np.float32)
+        T = int(emb_np.shape[0])
+        out_arr = np.zeros((T, D_NEMO), dtype=np.float32)
+        ms = float(
+            self.lib.nemo_forward_embeddings(
+                emb_np.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                T,
+                out_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+            )
+        )
+        return torch.from_numpy(out_arr), ms
+
+    def lm_head_top1(self, h_4096: torch.Tensor | np.ndarray) -> tuple[int, float]:
+        if isinstance(h_4096, torch.Tensor):
+            h_np = h_4096.detach().cpu().float().contiguous().view(D_NEMO).numpy()
+        else:
+            h_np = np.ascontiguousarray(h_4096.reshape(D_NEMO), dtype=np.float32)
+        max_lg = ctypes.c_float(0.0)
+        top1_id = int(
+            self.lib.nemo_lm_head_logits(
+                h_np.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                None,
+                ctypes.byref(max_lg),
+            )
+        )
+        return top1_id, float(max_lg.value)
 
     def forward_mtp_draft(
         self, next_token_ids: list[int] | torch.Tensor, backbone_hidden: torch.Tensor
@@ -157,9 +224,12 @@ class NemotronNativeCPUEngine:
             ms = float(self.lib.nemo_forward_pipeline(c_ids, T, out_ptr))
         return torch.from_numpy(out_arr), ms
 
-    def get_dm_stats(self) -> dict[str, int]:
+    def get_dm_stats(self) -> dict[str, Any]:
         dm = (ctypes.c_ulong * 6)()
         self.lib.nemo_dm_stats(dm)
+        ext = (ctypes.c_ulonglong * 10)()
+        if hasattr(self.lib, "nemo_dm_extended_stats"):
+            self.lib.nemo_dm_extended_stats(ext)
         return {
             "total_expert_requests": int(dm[0]),
             "tier1_pool_hits": int(dm[1]),
@@ -167,6 +237,18 @@ class NemotronNativeCPUEngine:
             "tier3_drive_fetches": int(dm[3]),
             "r4_clean_drops": int(dm[4]),
             "dirty_writebacks": int(dm[5]),
+            "workstation_4tier_ledger": {
+                "tier0_avx512_reg_mb": round(int(ext[0]) / (1024.0 * 1024.0), 2),
+                "tier1_3d_vcache_l3_mb": round(int(ext[1]) / (1024.0 * 1024.0), 2),
+                "tier2_ddr5_ram_mb": round(int(ext[2]) / (1024.0 * 1024.0), 2),
+                "bytes_saved_q4_and_broadcast_mb": round(int(ext[3]) / (1024.0 * 1024.0), 2),
+                "madvise_willneed_calls": int(ext[4]),
+                "madvise_dontneed_calls": int(ext[5]),
+                "linux_proc_self_stat_minflt_delta": int(ext[6]),
+                "linux_proc_self_stat_majflt_delta": int(ext[7]),
+                "use_4bit_experts": bool(ext[8]),
+                "os_madvise_willneed_active": bool(ext[9]),
+            },
         }
 
 

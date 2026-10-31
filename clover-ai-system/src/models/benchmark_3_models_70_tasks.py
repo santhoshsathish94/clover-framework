@@ -195,6 +195,8 @@ class ModelSpecificNCMRenderer:
             if semi_ids:
                 self.tok.semicolon_id = semi_ids[0]
             self.c_engine = NemotronNativeCPUEngine(pruned_dir)
+            if os.path.exists(str(pruned_dir / "expert-1" / "experts.4bit.direct")) and os.environ.get("CLOVER_NEMO_USE_4BIT_EXPERTS", "1") == "1":
+                self.c_engine.set_use_4bit_experts(True)
             self.lm_head_w = nemo_bytes_to_tensor(
                 (pruned_dir / "global-0" / "lm_head.bf16.bin").read_bytes(), NEMO_BF16, (V_NEMO, D_NEMO)
             )
@@ -213,6 +215,16 @@ class ModelSpecificNCMRenderer:
             self.hybrid_link.load_state_dict(sd_m["nemo_native_hybrid_link"])
             self.combo_bridge.load_state_dict(sd_m["nemo_combo_bridge"])
             self.expert_bridge.load_state_dict(sd_m["nemo_expert_bridge"])
+            if "net" in sd_m:
+                own_net_m = self.net.state_dict()
+                keep_net_m = {
+                    k: v for k, v in sd_m["net"].items() if k in own_net_m and own_net_m[k].shape == v.shape
+                }
+                self.net.load_state_dict(keep_net_m, strict=False)
+                self.net.eval()
+            if "ptr_dec" in sd_m:
+                self.copy_dec.load_state_dict(sd_m["ptr_dec"], strict=False)
+                self.copy_dec.eval()
 
         elif model_key == "lfm3-1.7b":
             self.vocab_size = V_LFM3
@@ -374,13 +386,16 @@ class ModelSpecificNCMRenderer:
         base_logits.scatter_add_(2, idx_exp, copy_boost.to(base_logits.dtype))
         return base_logits
 
-    def _dec_model_aligned(self, row_logits: torch.Tensor, plan_ids: list[int]) -> tuple[str, list[int]]:
-        """Decodes `row_logits [64, V_model]` strictly in the active model's vocabulary with 1-to-1 pointer alignment."""
+    def _dec_model_aligned_with_trace(
+        self, row_logits: torch.Tensor, plan_ids: list[int]
+    ) -> tuple[str, list[int], str, bool]:
+        """Decodes `row_logits [64, V_model]` strictly in the active model's vocabulary with 1-to-1 pointer alignment,
+        returning `(final_str, final_ids, raw_ncm_decoded_str, used_completeness_fallback)`."""
         pad_id = self.tok.pad_token_id
         eos_id = self.tok.eos_token_id
         valid_p = [int(x) for x in plan_ids if 0 <= int(x) < self.vocab_size and int(x) not in (pad_id, eos_id)]
         if not valid_p:
-            return "", []
+            return "", [], "", False
 
         cont_map: dict[int, set[int]] = {}
         for a, b in zip(valid_p[:-1], valid_p[1:]):
@@ -437,8 +452,6 @@ class ModelSpecificNCMRenderer:
                     if raw_piece.endswith((".", "!", "?")) and t >= len(valid_p) - 1:
                         break
 
-        # Completeness Guard: if any content token from `valid_p` was missed or the decoded string
-        # ends on a dangling conjunction/subword, use `valid_p` directly (100% valid in `self.vocab_size`)
         decoded_str = self.tok.decode(clean_ids).strip()
         all_content_emitted = all(
             emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set
@@ -451,8 +464,12 @@ class ModelSpecificNCMRenderer:
             )
         )
         if not decoded_str or not all_content_emitted or has_dangling_tail:
-            return self.tok.decode(valid_p), list(valid_p)
-        return decoded_str, clean_ids
+            return self.tok.decode(valid_p), list(valid_p), decoded_str, True
+        return decoded_str, clean_ids, decoded_str, False
+
+    def _dec_model_aligned(self, row_logits: torch.Tensor, plan_ids: list[int]) -> tuple[str, list[int]]:
+        final_s, final_ids, _, _ = self._dec_model_aligned_with_trace(row_logits, plan_ids)
+        return final_s, final_ids
 
     @torch.no_grad()
     def score_mcq_options(self, prompt_text: str) -> tuple[str, dict[str, float], float]:
@@ -716,17 +733,23 @@ class ModelSpecificNCMRenderer:
         lg1 = self._forward_pointer_decoder_model_vocab(zh1[-1], z_rh, msk_r, z_bpe, p_pad)
 
         txts: list[str] = []
+        raw_ncm_txts: list[str] = []
+        fallback_flags: list[bool] = []
         out_ids: list[int] = []
         for w_i in range(W):
             if is_code_win[w_i]:
                 c_ids = self.tok.encode(clean_plans[w_i])
                 txts.append(clean_plans[w_i])
+                raw_ncm_txts.append(clean_plans[w_i])
+                fallback_flags.append(False)
                 out_ids.extend(c_ids)
             else:
                 p_list = p_pad[w_i].tolist()
                 lg1[w_i, :, win_masks[w_i]] -= 80.0
-                ts, is_ = self._dec_model_aligned(lg1[w_i], p_list)
+                ts, is_, raw_s, fb_flag = self._dec_model_aligned_with_trace(lg1[w_i], p_list)
                 txts.append(ts.strip())
+                raw_ncm_txts.append(raw_s.strip())
+                fallback_flags.append(bool(fb_flag))
                 out_ids.extend(is_)
 
         rendered_text = join_rendered_windows(txts, plans)
@@ -738,6 +761,10 @@ class ModelSpecificNCMRenderer:
             "model_key": self.model_key,
             "vocab_size": self.vocab_size,
             "hidden_size": self.hidden_size,
+            "vq_levels": 11,
+            "vq_codes_per_window": int(g1.shape[1]),
+            "raw_ncm_decoded_windows": raw_ncm_txts,
+            "used_completeness_fallback": any(fallback_flags),
             "c_engine_ms": round(c_total_ms, 2),
             "ncm_plus_c_ms": round(total_render_ms, 2),
             "emitted_token_count": len(out_ids),
