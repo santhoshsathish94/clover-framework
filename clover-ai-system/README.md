@@ -1,6 +1,15 @@
-# Clover (`clover-kimi-k3/`)
+# Clover AI System (`clover-ai-system/`)
 
-**Clover** is a unified 7-layer neuro-symbolic, compiler-verified, and memory-accumulating system that runs both as a bit-identical C engine on one CPU host (Ryzen 9 7950X3D, 124 GB RAM, NVMe RAID1) and as an interactive multi-GPU system on an `8 × NVIDIA RTX 3090` server (`192 GiB` VRAM) uniting Kimi K3's 93-layer 2.78T MoE backbone, 8 validated Rust host-path libraries, HybridAgent continuous `<latent>` reasoning, 11-pass Next-Concept Modeling (NCM), Ontology-Guided Neuro-Symbolic GraphRAG, Python & Rust Generative Compilation, and a File-Based Memory Tree & Relational Knowledge Graph.
+**Clover AI System** is organized around **3 Core Pipeline Components (`Inference → Plan → Decode`)** supported by **3 Shared Supporting Components (`Memory · Relationships · Tools`)** — see [CLOVER_FRAMEWORK_ARCHITECTURE.md](CLOVER_FRAMEWORK_ARCHITECTURE.md) for the complete architectural specification:
+
+- **3 Core Pipeline Components (`Inference → Plan → Decode`)**:
+  1. **`C1` · Inference (`Base Model` + Built-In Direction B Hardware Engine)**: Switchable across `Kimi K3` (`93` layers, `2.78T` MoE), `Nemotron 3.5 Super VL` (`52` layers, `36B-A3.6B`), and `LFM3-Omni-2B` / `LFM3-1.7B` (`24` Tri-Hybrid layers), executing precomputed `trunk-L/` + `expert-L/` (or `ffn.4bit.bin`) with Direction B hardware acceleration (`Adreno 740 OpenCL dot_acc_sat`, `Kryo ARMv9 i8mm SMMLA`, `FlashAttention-2`, `LFM3-SoC-Q4`, `SpecMD Policy 3 madvise`, and `LCP` cache reuse) built directly into the engine.
+  2. **`C2` · Plan (`HybridAgent` & `HybridLink` Post-Inference Planner)**: Operates on post-inference hidden states $h_t \to r_t = R(h_t)$ using direct resident weights, stepping continuous `<latent>` vectors into `C1`'s cache and running the user-triggered Clover Retry Cycle (`clover_cycle.py`).
+  3. **`C3` · Decode (`11-Level NCM` Concept Renderer)**: Maps `(h_t, r_t)` through `ComboBridge` + `ExpertBridge` into `313` hierarchical VQ concept codes across 11 levels and decodes via `LexicalPointerDecoder` using direct resident weights + active-vocabulary `mmap` slicing.
+- **3 Shared Supporting Components (`Memory · Relationships · Tools`)**:
+  4. **`S1` · Memory (`Local Git Repository & Multi-Repo Workspaces` — `clover_git_memory_repo.py`)**: Root `AGENTS.md` onboarding gate, per-folder `<folder>-context.md`, root `<repo>-context-index.md`, `sessions/`, `tasks/`, `scripts/`, `notes/`, staged `lessons/` (Keep/Discard), selective low-token retrieval (`<= 420` tokens), and private personal GitHub sync.
+  5. **`S2` · Relationships (`Knowledge & Ontology Graph` + 11 Foundational Papers — `k3_ontology_graph.py`)**: Multi-hop causal/entity GraphRAG, Horn-rule inference, source grounding audit, and all 11 Foundational Papers (`1943–2017`).
+  6. **`S3` · Tools (`External Capabilities, Execution & Validation`)**: Syntax & Generative Compiler Validator (`k3_generative_compiler.py` + Sutton `TD(0)`), MCP connections & VS Code bridge, terminal/Python runner, self-hosted web search & URL reader (`live-web-search-tool.py`), and PNG/MP4/WAV media generators.
 
 ## The final version
 
