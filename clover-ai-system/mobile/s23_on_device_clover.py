@@ -1479,9 +1479,16 @@ class CloverS23OnDeviceSystem:
                 c_engine=self.engine,
             )
 
-        # Layer 4: Persistent File-Based Memory Tree & Relational Knowledge Graph
+        # Layer 4: Local Git Repository Memory Engine (`clover-memory-repo/` with `AGENTS.md`, `.md`, `.py`, scripts & Private GitHub Sync)
+        #          + Foundational Relational Memory Graph (`k3_memory_graph.py`)
+        from clover_git_memory_repo import CloverMemoryGitRepo
         from k3_memory_graph import ensure_default_memory_tree, retrieve_relevant_memory_package
 
+        canonical_agents = SCRIPT_DIR.parent.parent / "AGENTS.md"
+        self.git_memory_repo = CloverMemoryGitRepo(
+            self.base_dir,
+            canonical_agents_md_path=canonical_agents if canonical_agents.exists() else None,
+        )
         self.memory_graph = ensure_default_memory_tree()
         self._retrieve_memory = retrieve_relevant_memory_package
 
@@ -1626,14 +1633,17 @@ class CloverS23OnDeviceSystem:
 
     def list_memories(self) -> list[dict[str, Any]]:
         out = []
-        for eid, entry in sorted(self.memory_graph.entries.items()):
+        for f_item in self.git_memory_repo.list_files():
             out.append({
-                "id": eid,
-                "title": getattr(entry, "title", eid),
-                "summary": getattr(entry, "summary", ""),
-                "created_at": getattr(entry, "created_at", ""),
-                "epistemic": getattr(entry, "epistemic_status", "observed"),
-                "status": getattr(entry, "status", "active"),
+                "id": f_item["path"],
+                "path": f_item["path"],
+                "category": f_item.get("category", "root"),
+                "title": f_item["path"],
+                "summary": f_item.get("summary") or f_item["path"],
+                "created_at": f_item.get("updated_at", ""),
+                "size_bytes": f_item.get("size_bytes", 0),
+                "epistemic": "git_tracked",
+                "status": "active",
             })
         return out
 
@@ -1696,7 +1706,7 @@ class CloverS23OnDeviceSystem:
 
     @staticmethod
     def _parse_lfm3_tool_call_xml(raw_text: str) -> dict[str, Any] | None:
-        """Parses HybridAgent's `<search>...</search>` and `<python>...</python>` tags as well as `<tool_call><function=NAME>...`."""
+        """Parses HybridAgent's `<search>...</search>`, `<python>...</python>`, and Layer 4 Git Repo tags (`<repo_search>`, `<repo_read>`, `<repo_write>`) as well as `<tool_call><function=NAME>...`."""
         txt = raw_text or ""
         m_srch = re.search(r"<search>\s*([\s\S]*?)\s*</search>", txt)
         if m_srch:
@@ -1704,6 +1714,15 @@ class CloverS23OnDeviceSystem:
         m_py = re.search(r"<python>\s*([\s\S]*?)\s*</python>", txt)
         if m_py:
             return {"function": "python_interpreter", "parameters": {"code": m_py.group(1).strip()}, "raw_xml": txt, "format": "hybrid_agent_python"}
+        m_rsrch = re.search(r"<repo_search>\s*([\s\S]*?)\s*</repo_search>", txt)
+        if m_rsrch:
+            return {"function": "repo_search", "parameters": {"query": m_rsrch.group(1).strip()}, "raw_xml": txt, "format": "hybrid_agent_search"}
+        m_rread = re.search(r"<repo_read>\s*([\s\S]*?)\s*</repo_read>", txt)
+        if m_rread:
+            return {"function": "repo_read", "parameters": {"path": m_rread.group(1).strip()}, "raw_xml": txt, "format": "hybrid_agent_search"}
+        m_rwrite = re.search(r"<repo_write\s+path=[\"']([^\"']+)[\"']\s*>\s*([\s\S]*?)\s*</repo_write>", txt)
+        if m_rwrite:
+            return {"function": "repo_write", "parameters": {"path": m_rwrite.group(1).strip(), "content": m_rwrite.group(2).strip()}, "raw_xml": txt, "format": "hybrid_agent_search"}
         if "<tool_call>" not in txt and "<function=" not in txt:
             return None
         m_fn = re.search(r"<function=([^\n>]+)>", txt)
@@ -1945,33 +1964,47 @@ class CloverS23OnDeviceSystem:
             tools_used.append("android_speech_recognizer")
 
         # ------------------------------------------------------------------
-        # 2. Layer 4: Persistent File-Based Memory Tree (`k3_memory_graph.py`)
-        #    + Foundational Papers: McCulloch-Pitts (1943), Rosenblatt (1958),
-        #      Minsky-Papert (1969), Hopfield (1982), Rumelhart et al. (1986),
-        #      Sutton (1988), LeCun et al. (1998), Krizhevsky et al. (2012),
-        #      Vaswani et al. (2017).
+        # 2. Layer 4: Local Git Repository Memory Engine (`clover-memory-repo/`)
+        #    Selective On-Demand Snippet Fetch (Zero Context Bloating) +
+        #    Foundational Papers: McCulloch-Pitts (1943), Rosenblatt (1958),
+        #    Minsky-Papert (1969), Hopfield (1982), Rumelhart et al. (1986),
+        #    Sutton (1988), LeCun et al. (1998), Krizhevsky et al. (2012),
+        #    Vaswani et al. (2017).
         # ------------------------------------------------------------------
         if active_layer_cap >= 4:
             t_l4 = time.perf_counter()
+            git_hits = self.git_memory_repo.search_repo_relevant(prompt, max_files=2, max_chars_per_file=550)
             mem_pkg = self._retrieve_memory(self.memory_graph, prompt)
             l4_items = []
             l4_reasons = []
+            seen_snippets: set[str] = set()
+            for gh in git_hits:
+                snip = str(gh.get("snippet") or "").strip()
+                if snip and snip not in seen_snippets:
+                    seen_snippets.add(snip)
+                    l4_items.append({"id": gh["path"], "type": "git_repo_file", "summary": snip, "reason": f"git_repo_match(score={gh['score']})"})
+                    retrieved_context_blocks.append(f"[Git Memory Repo '{gh['path']}']: {snip}")
             if mem_pkg is not None and mem_pkg.items:
-                tools_used.append("layer4_memory_graph")
                 for it in mem_pkg.items[:2]:
                     summary_clean = str(it.entry.summary or "").strip()
                     rsn_str = str(getattr(it, "reason", "") or "")
                     l4_reasons.append(rsn_str)
-                    l4_items.append({"id": it.entry.id, "type": it.entry.entry_type, "summary": summary_clean, "reason": rsn_str})
-                    if summary_clean:
+                    if summary_clean and summary_clean not in seen_snippets:
+                        seen_snippets.add(summary_clean)
+                        l4_items.append({"id": it.entry.id, "type": it.entry.entry_type, "summary": summary_clean, "reason": rsn_str})
                         retrieved_context_blocks.append(f"[Memory Graph {it.entry.id}]: {summary_clean}")
+            if l4_items:
+                tools_used.append("layer4_git_memory_repo")
             hopfield_fam = self.memory_graph.compute_hopfield_familiarity(prompt)
             gtn_conf = self.memory_graph.compute_gtn_forward_confidence(prompt)
             mh_lrn = self.memory_graph.multihead_lrn_subspace_retrieve(prompt, top_k=3)
-            td_path_ids = [it["id"] for it in l4_items] or ["MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001", "MEM-CORR-PER-LAYER-PARTITION-002"]
+            td_path_ids = [it["id"] for it in l4_items if str(it["id"]).startswith("MEM-")] or ["MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001", "MEM-CORR-PER-LAYER-PARTITION-002"]
             td_credit = self.memory_graph.compute_td_lambda_path_credit(td_path_ids, outcome_verified=True)
             layer_trace["layer4_memory_graph"] = {
                 "enabled": True,
+                "storage_engine": "local_git_repository_with_selective_on_demand_fetch",
+                "repo_path": str(self.git_memory_repo.repo_dir),
+                "agents_md_accepted": bool(self.git_memory_repo.get_onboarding_state().get("agents_md_accepted")),
                 "injected_into_model_prompt": len(l4_items) > 0,
                 "retrieved_count": len(l4_items),
                 "entries": l4_items,
@@ -2161,6 +2194,37 @@ class CloverS23OnDeviceSystem:
                     layer_trace["layer2_hybrid_agent"]["python_code"] = executed_py_code
                     layer_trace["layer2_hybrid_agent"]["python_output"] = tool_observation
 
+            elif fn_name == "repo_search" and active_layer_cap >= 4:
+                rq = params.get("query") or user_clean
+                tools_used.append("layer4_git_repo_search")
+                hits = self.git_memory_repo.search_repo_relevant(rq, max_files=3, max_chars_per_file=600)
+                tool_observation = "\n".join(f"[{h['path']}]: {h['snippet']}" for h in hits) or "No matching files in memory repo."
+                layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_search"
+                layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+
+            elif fn_name == "repo_read" and active_layer_cap >= 4:
+                rpath = params.get("path") or "CONTEXT.md"
+                tools_used.append("layer4_git_repo_read")
+                try:
+                    rdata = self.git_memory_repo.read_file(rpath)
+                    tool_observation = str(rdata.get("content") or "")[:1200]
+                except Exception as ex:
+                    tool_observation = f"repo_read error: {ex}"
+                layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_read"
+                layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+
+            elif fn_name == "repo_write" and active_layer_cap >= 4:
+                rpath = params.get("path") or "tasks/note.md"
+                rcontent = params.get("content") or ""
+                tools_used.append("layer4_git_repo_write")
+                try:
+                    wres = self.git_memory_repo.write_file(rpath, rcontent, commit_message=f"Model tool write {rpath}")
+                    tool_observation = f"Committed {wres['path']} ({wres['size_bytes']} B, commit {wres['commit']})."
+                except Exception as ex:
+                    tool_observation = f"repo_write error: {ex}"
+                layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_write"
+                layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+
             # Feed `<result>...</result>` back into `LFM3-Omni-2B` (Turn 2) with 1 HybridLink2048 latent step before `<answer>`
             if tool_observation:
                 call_fmt = parsed_call.get("format", "chatml_tool_call")
@@ -2333,7 +2397,23 @@ class CloverS23OnDeviceSystem:
             tools_used.append("espeak_spoken_wav_synthesizer")
 
         # ------------------------------------------------------------------
-        # 9. Layer 7: Per-Request SpecMD Slot Tracker & OS `madvise(MADV_WILLNEED)`
+        # 9. Layer 4 Growth Stage: Commit Session Log & Verified Scripts to Local Git Repo
+        # ------------------------------------------------------------------
+        if active_layer_cap >= 4 and self.perm_modes.get("memory", "allow") != "deny":
+            try:
+                git_growth = self.git_memory_repo.record_task_or_session_turn(
+                    session_id="s23-studio",
+                    prompt=user_clean,
+                    reply=reply_text,
+                    generated_code=executed_py_code,
+                    tools_used=tools_used,
+                )
+                layer_trace["layer4_memory_graph"]["git_growth_commit"] = git_growth
+            except Exception:
+                pass
+
+        # ------------------------------------------------------------------
+        # 10. Layer 7: Per-Request SpecMD Slot Tracker & OS `madvise(MADV_WILLNEED)`
         # ------------------------------------------------------------------
         dm_stats = self.engine.get_dm_stats(madvise_enabled=madvise_on)
         layer_trace["layer7_specmd_r4_madvise"] = dm_stats
@@ -2641,6 +2721,16 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 self._send({
                     "memories": sys_s23.list_memories(),
                 })
+            elif self.path.startswith("/api/repo/onboarding"):
+                self._send(sys_s23.git_memory_repo.get_onboarding_state())
+            elif self.path.startswith("/api/repo/files"):
+                self._send({
+                    "repo_path": str(sys_s23.git_memory_repo.repo_dir),
+                    "onboarding": sys_s23.git_memory_repo.get_onboarding_state(),
+                    "files": sys_s23.git_memory_repo.list_files(),
+                    "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                    "github_sync": sys_s23.git_memory_repo.get_github_sync_config(),
+                })
             elif self.path.startswith("/api/health"):
                 self._send({
                     "status": "ready",
@@ -2695,9 +2785,74 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 return
             if self.path.startswith("/api/memory/forget"):
                 mid = str(payload.get("id") or "").strip()
+                if mid and mid != "AGENTS.md":
+                    try:
+                        sys_s23.git_memory_repo.delete_file(mid)
+                    except Exception:
+                        pass
                 if mid and mid in sys_s23.memory_graph.entries:
                     sys_s23.memory_graph.entries.pop(mid, None)
                 self._send({"ok": True, "memories": sys_s23.list_memories()})
+                return
+            if self.path.startswith("/api/repo/accept-agents"):
+                custom_md = payload.get("content")
+                st = sys_s23.git_memory_repo.accept_agents_md(custom_content=custom_md if isinstance(custom_md, str) else None)
+                self._send({"ok": True, **st})
+                return
+            if self.path.startswith("/api/repo/read"):
+                try:
+                    rel_p = str(payload.get("path") or "AGENTS.md")
+                    rdata = sys_s23.git_memory_repo.read_file(rel_p)
+                    self._send({"ok": True, **rdata})
+                except Exception as ex:
+                    self._send({"error": "repo_read_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/repo/write"):
+                try:
+                    rel_p = str(payload.get("path") or "").strip()
+                    content_s = str(payload.get("content") or "")
+                    c_msg = payload.get("commit_message")
+                    wres = sys_s23.git_memory_repo.write_file(rel_p, content_s, commit_message=str(c_msg) if c_msg else None)
+                    self._send({
+                        **wres,
+                        "files": sys_s23.git_memory_repo.list_files(),
+                        "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                    })
+                except Exception as ex:
+                    self._send({"error": "repo_write_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/repo/delete"):
+                try:
+                    rel_p = str(payload.get("path") or "").strip()
+                    dres = sys_s23.git_memory_repo.delete_file(rel_p)
+                    self._send({
+                        **dres,
+                        "files": sys_s23.git_memory_repo.list_files(),
+                        "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                    })
+                except Exception as ex:
+                    self._send({"error": "repo_delete_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/repo/github-sync"):
+                try:
+                    repo_name = str(payload.get("repo") or "").strip()
+                    tok = payload.get("token")
+                    act = str(payload.get("action") or "push").strip().lower()
+                    br = str(payload.get("branch") or "main").strip()
+                    sres = sys_s23.git_memory_repo.configure_and_sync_private_github(
+                        repo_full_name=repo_name,
+                        token=str(tok).strip() if tok else None,
+                        action="pull" if act == "pull" else "push",
+                        branch=br,
+                    )
+                    self._send({
+                        **sres,
+                        "files": sys_s23.git_memory_repo.list_files(),
+                        "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                        "github_sync": sys_s23.git_memory_repo.get_github_sync_config(),
+                    })
+                except Exception as ex:
+                    self._send({"error": "github_sync_failed", "message": str(ex)}, code=400)
                 return
             if self.path.startswith("/api/session/forget"):
                 self._send({"ok": True})

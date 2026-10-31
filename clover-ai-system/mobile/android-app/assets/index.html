@@ -260,6 +260,22 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
 .mem__item small { display: block; color: var(--faint); font-size: .68rem; margin-top: .12rem; }
 .mem__item button { border: 0; background: none; color: var(--faint); cursor: pointer; padding: .1rem; border-radius: 6px; display: flex; }
 
+/* Layer 4 Git Repo Editor & First-Run AGENTS.md Onboarding Gate */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(19, 32, 24, .58); backdrop-filter: blur(4px); z-index: 80; display: flex; align-items: center; justify-content: center; padding: .85rem; }
+.modal-card { width: min(680px, 100%); max-height: 90vh; background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; animation: rise .28s ease both; }
+.modal-head { display: flex; align-items: center; gap: .7rem; padding: 1rem 1.15rem .75rem; border-bottom: 1px solid var(--line); background: var(--panel); }
+.modal-head h2 { margin: 0; font-size: 1.08rem; font-weight: 650; flex: 1; }
+.modal-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1rem 1.15rem; font-size: .86rem; line-height: 1.58; }
+.modal-foot { padding: .85rem 1.15rem; border-top: 1px solid var(--line); background: var(--panel); display: flex; align-items: center; justify-content: space-between; gap: .55rem; flex-wrap: wrap; }
+.repo-editor { width: 100%; min-height: 220px; font: .78rem/1.5 var(--mono); background: var(--code-bg); color: var(--code-ink); border: 1px solid var(--line-2); border-radius: 11px; padding: .75rem .85rem; resize: vertical; }
+.repo-inp { width: 100%; border: 1px solid var(--line-2); background: var(--bg); color: var(--ink); border-radius: 9px; padding: .45rem .65rem; font: .8rem var(--font); margin-bottom: .45rem; }
+.repo-file-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .48rem .6rem; border: 1px solid var(--line); background: var(--panel); border-radius: 10px; cursor: pointer; font-size: .78rem; }
+.repo-file-row:hover, .repo-file-row.active { border-color: var(--accent); background: var(--accent-soft); }
+.repo-file-row code { font-family: var(--mono); font-weight: 600; color: var(--ink); font-size: .76rem; }
+.repo-badge { font-size: .65rem; font-weight: 700; text-transform: uppercase; padding: .08rem .42rem; border-radius: 999px; background: var(--surface); color: var(--accent-ink); border: 1px solid var(--line-2); }
+.commit-row { font-size: .73rem; padding: .36rem 0; border-top: 1px solid var(--line); color: var(--muted); }
+.commit-row code { font-family: var(--mono); color: var(--accent-ink); font-weight: 600; margin-right: .35rem; }
+
 @media (max-width: 860px) {
   .app { grid-template-columns: 1fr; }
   .rail { position: fixed; inset: 0 auto 0 0; width: min(284px, 84vw); z-index: 45; transform: translateX(-104%); transition: transform .22s ease; }
@@ -317,6 +333,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     <header class="bar">
       <button type="button" class="ibtn menu" id="menu" aria-label="Show chats"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
       <div class="bar__title" id="chat-title">New chat</div>
+      <button type="button" class="pbtn ok" id="repo-btn" title="Layer 4 Local Git Memory Repo &amp; AGENTS.md"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span id="repo-chip">AGENTS.md · Repo</span></button>
       <button type="button" class="pbtn" id="perm-btn" title="Permissions"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><span id="perm-chip">Permissions</span></button>
       <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></button>
     </header>
@@ -418,6 +435,83 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
   </div>
 </aside>
 
+<aside class="sheet" id="sheet-repo" role="dialog" aria-modal="true" aria-labelledby="repo-h" inert>
+  <div class="sheet__head"><h2 id="repo-h">Layer 4 · Git Memory Repo</h2>
+    <button type="button" class="ibtn x" data-close aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <p class="sheet__sub">Local Git repository (<code>clover-memory-repo/</code>) tracking <code>AGENTS.md</code>, session logs, task notes &amp; reusable scripts without bloating context.</p>
+  <div class="sheet__body">
+    <div class="summary ok" id="repo-summary">
+      <div class="big"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></div>
+      <div><b id="repo-status-title">AGENTS.md Active · Local Git Repo</b><span id="repo-status-sub">Selective on-demand tool fetch (zero context bloat)</span></div>
+    </div>
+    <div class="ask__b" style="margin-bottom:.85rem">
+      <button type="button" class="btn pri" id="open-agents-modal-btn"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg> Review / Accept AGENTS.md</button>
+      <button type="button" class="btn" id="new-repo-file-btn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> New File (.md / .py)</button>
+    </div>
+
+    <div class="set" id="repo-editor-box" hidden>
+      <div class="set__t"><span>Editing: <code id="repo-edit-title">AGENTS.md</code></span></div>
+      <input type="text" class="repo-inp" id="repo-edit-path" placeholder="Path in repo (e.g. tasks/my-task.md or scripts/tool.py)">
+      <textarea class="repo-editor" id="repo-edit-content" rows="10" placeholder="Write Markdown (.md), Python (.py), or shell (.sh) content..."></textarea>
+      <input type="text" class="repo-inp" id="repo-edit-msg" placeholder="Git commit message (optional)" style="margin-top:.4rem">
+      <div class="ask__b">
+        <button type="button" class="btn pri" id="repo-save-btn"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg> Save &amp; Git Commit</button>
+        <button type="button" class="btn danger" id="repo-del-btn"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg> Delete</button>
+        <button type="button" class="btn" id="repo-cancel-btn">Close Editor</button>
+      </div>
+    </div>
+
+    <div class="set">
+      <div class="set__t">Repository Files (tap to view or edit)</div>
+      <div class="set__d">Clover fetches only relevant snippets from these files on demand using tools, keeping the context window lean.</div>
+      <div id="repo-files-list" class="mem"></div>
+    </div>
+
+    <div class="set">
+      <div class="set__t">Private Personal GitHub Sync (<code>private: true</code>)</div>
+      <div class="set__d">Sync this local Git memory repository across your phone, laptop, and workstation using your personal <b>private</b> GitHub repository. Public repos are refused automatically.</div>
+      <input type="text" class="repo-inp" id="gh-repo-inp" placeholder="username/clover-memory (Private GitHub repo)">
+      <input type="password" class="repo-inp" id="gh-token-inp" placeholder="GitHub Personal Access Token (repo scope)">
+      <div class="ask__b">
+        <button type="button" class="btn pri" id="gh-push-btn"><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg> Push to Private GitHub</button>
+        <button type="button" class="btn" id="gh-pull-btn">Pull from Private GitHub</button>
+      </div>
+      <div id="gh-sync-status" class="set__d" style="margin-top:.45rem"></div>
+    </div>
+
+    <div class="set">
+      <div class="set__t">Git Commit History (<code>git log</code>)</div>
+      <div id="repo-commits-list" style="margin-top:.35rem"></div>
+    </div>
+  </div>
+</aside>
+
+<div class="modal-backdrop" id="agents-modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="agents-modal-title">
+    <div class="modal-head">
+      <img class="mark-img mark-light" src="icon-light.png" alt="Clover">
+      <img class="mark-img mark-dark" src="icon-dark.png" alt="Clover">
+      <div>
+        <h2 id="agents-modal-title">AGENTS.md &mdash; Clover Operating Specification</h2>
+        <div style="font-size:.75rem;color:var(--muted)">Root document in your Layer 4 Local Git Memory Repository (<code>clover-memory-repo/AGENTS.md</code>)</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="agents-rendered-view" class="md"></div>
+      <div id="agents-edit-view" hidden>
+        <div class="set__d" style="margin-bottom:.4rem">Customize your <code>AGENTS.md</code> operating rules and boundaries below. Saving &amp; accepting commits your changes to <code>clover-memory-repo/AGENTS.md</code>:</div>
+        <textarea id="agents-edit-textarea" class="repo-editor" style="min-height:290px"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="agents-toggle-edit-btn"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg> <span id="agents-edit-btn-lbl">Customize AGENTS.md</span></button>
+      <div style="display:flex;gap:.45rem;align-items:center">
+        <button type="button" class="btn pri" id="agents-accept-btn"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg> Accept AGENTS.md &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   'use strict';
@@ -457,7 +551,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
   var LAYERS = [
     ['L2', 'hybridlink', 'HybridAgent & HybridLink2048', 'Continuous <latent> reasoning steps in 2,048-d space (Stage-3 Self-Conditioned) + live Web Search & Python tool loop.'],
     ['L3', 'ncm', 'Concept renderer (11-Level NCM)', 'Renders through Lfm3ComboBridge + Lfm3ExpertBridge + 11-level VQVAE (313 codes) + LexicalPointerDecoder.'],
-    ['L4', 'memory', 'Memory Graph + 9 Papers', 'Persistent relational memory tree with McCulloch-Pitts veto, Rosenblatt gamma, Minsky-Papert Order-k, Hopfield cleanup, Rumelhart-Sutton TD(lambda), LeCun GTN logadd, Krizhevsky LRN & Vaswani Multi-Head.'],
+    ['L4', 'memory', 'Local Git Memory Repo (AGENTS.md) + 9 Papers', 'Version-controlled local Git repo (clover-memory-repo/) tracking AGENTS.md, session logs (.md), task files & reusable scripts (.py) with on-demand tool fetch (zero context bloat) + Private GitHub sync + 9 Foundational Papers.'],
     ['L5', 'ontology', 'Ontology GraphRAG + Verifier', 'Symbolic CVE/CWE/CAPEC inference, Turing (1950) M0/M1 diagonal stratifier, Newell-Simon (1956) CSm (*2.07 fix) & VCt, and source grounding audit.'],
     ['L6', 'compiler', 'Generative Compiler + Sutton TD(0)', 'Verifies model-written Python code + prompt asserts and computes Sutton (1988) Absorbing Markov V_MLE statement survival.'],
     ['L7', 'specmd_madvise', 'Direction B SoC Data-Movement', 'SpecMD Policy 3 OS madvise(MADV_WILLNEED) lookahead (254.7x fewer major page faults) + Eyeriss 4-Tier Mobile SoC byte ledger.']
@@ -821,13 +915,18 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     api('GET', '/api/memory').then(function (r) {
       var list = r.memories || [];
       box.innerHTML = '';
+      var manageBtn = btn('btn pri', ic('folder') + ' Open Git Memory Repo & AGENTS.md Editor');
+      manageBtn.style.marginBottom = '.4rem';
+      manageBtn.addEventListener('click', function () { openSheet('repo'); });
+      box.appendChild(manageBtn);
       list.slice(0, 12).forEach(function (m) {
-        var it = el('div', 'mem__item', '<span></span>');
+        var it = el('div', 'mem__item', '<span style="cursor:pointer"></span>');
         var sp = it.querySelector('span');
-        sp.textContent = (m.id ? '[' + m.id + '] ' : '') + (m.summary || m.title);
+        sp.textContent = (m.path ? '[' + m.path + '] ' : (m.id ? '[' + m.id + '] ' : '')) + (m.summary || m.title);
         var sm = el('small');
-        sm.textContent = (m.epistemic || 'observed').replace(/_/g, ' ') + ' · ' + (m.status || 'active');
+        sm.textContent = (m.epistemic || 'git_tracked').replace(/_/g, ' ') + (m.size_bytes ? ' · ' + m.size_bytes + ' B' : '') + ' · tap to edit';
         sp.appendChild(sm);
+        sp.addEventListener('click', function () { openSheet('repo'); openFileInRepoEditor(m.path || m.id); });
         box.appendChild(it);
       });
     }).catch(function () {});
@@ -948,25 +1047,220 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     });
   }
 
-  /* ---------- Sheets & Rail ---------- */
+  /* ---------- Sheets, Layer 4 Git Repo Manager & AGENTS.md Onboarding ---------- */
+  var FALLBACK_AGENTS_MD = [
+    '# AGENTS.md — Operating Instructions & Human-AI Agreement for Clover AI Studio',
+    '',
+    '**Welcome to Clover AI Studio.** Please review (and optionally customize) this document before starting. Accepting `AGENTS.md` records your configuration in your local Git memory repository (`clover-memory-repo/AGENTS.md`).',
+    '',
+    '### 1. Actors, Authority, and Accountability',
+    '- **The System (Reality)** is the environment in which the work exists and the final authority for validating outcomes.',
+    '- **The Human (You)** owns **Direction** — purpose, priorities, acceptable risk, permissions, boundaries, and accountability. You have full read/write control over this local Git memory repository (`clover-memory-repo/`), all `.md` / `.py` / script files inside it, and every tool permission.',
+    '- **Clover (AI)** provides **Capability and Execution** inside your Direction while holding **Execution Integrity**.',
+    '',
+    '### 2. The Five-Stage System Cycle (`Context ⇄ Direction ⇄ Execution ⇄ Outcome ⇄ Growth`)',
+    '- **Context:** Reach the minimum relevant evidence from your files, local Git memory repo, ontology graph, or web search using tools without bloating the context window.',
+    '- **Direction:** Keep your intended outcome and permission boundaries visible.',
+    '- **Execution:** Run the 7-layer Clover stack (`LFM3-Omni-2B` unified SoC engine, `HybridLink`, `11-Level NCM`, `Git Memory Repo`, `Ontology GraphRAG`, `Generative Compiler`, and `Direction B Data-Movement`).',
+    '- **Outcome:** Verify against reality. If not right, return to **Context** (`Try again`).',
+    '- **Growth:** Preserve what the cycle taught as version-controlled files (`.md` notes, session logs, `.py` scripts) in `clover-memory-repo/`.',
+    '',
+    '### 3. Layer 4 Local Git Memory Repository & Private GitHub Sync',
+    '- All session logs (`sessions/*.md`), task notes (`tasks/*.md`), and generated scripts (`scripts/*.py`) live in `clover-memory-repo/` and are tracked with `git commit`.',
+    '- Clover fetches only relevant snippets on demand via tools so your context window stays fast and clean.',
+    '- You can sync (`git push` / `git pull`) with your personal **private** GitHub repository (`private: true`) across devices.'
+  ].join('\n');
+
   function openSheet(name) {
     closeRail();
-    ['perms', 'settings'].forEach(function (n) { var sh = $('sheet-' + n), on = n === name; sh.classList.toggle('on', on); sh.inert = !on; });
+    ['perms', 'settings', 'repo'].forEach(function (n) { var sh = $('sheet-' + n); if (!sh) return; var on = n === name; sh.classList.toggle('on', on); sh.inert = !on; });
     $('scrim').classList.add('on');
     if (name === 'settings') { renderEngine(); renderSettings(); }
     if (name === 'perms') loadPerms();
+    if (name === 'repo') loadRepoManager();
   }
   function closeSheets() {
-    ['perms', 'settings'].forEach(function (n) { var sh = $('sheet-' + n); sh.classList.remove('on'); sh.inert = true; });
+    ['perms', 'settings', 'repo'].forEach(function (n) { var sh = $('sheet-' + n); if (!sh) return; sh.classList.remove('on'); sh.inert = true; });
     $('scrim').classList.remove('on');
   }
   function closeRail() { $('rail').classList.remove('on'); }
   Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (b) { b.addEventListener('click', closeSheets); });
   $('scrim').addEventListener('click', function () { closeSheets(); closeRail(); });
+  $('repo-btn').addEventListener('click', function () { openSheet('repo'); });
   $('perm-btn').addEventListener('click', function () { openSheet('perms'); });
   $('set-btn').addEventListener('click', function () { openSheet('settings'); });
   $('mode-line').addEventListener('click', function () { openSheet('settings'); });
   $('menu').addEventListener('click', function () { $('rail').classList.toggle('on'); $('scrim').classList.toggle('on', $('rail').classList.contains('on')); });
+
+  function openFileInRepoEditor(pathStr) {
+    api('POST', '/api/repo/read', { path: pathStr }).then(function (r) {
+      $('repo-editor-box').hidden = false;
+      $('repo-edit-title').textContent = r.path || pathStr;
+      $('repo-edit-path').value = r.path || pathStr;
+      $('repo-edit-content').value = r.content || '';
+      $('repo-edit-msg').value = '';
+      $('repo-del-btn').hidden = (r.path === 'AGENTS.md');
+    }).catch(function (e) {
+      alert('Could not read file: ' + e.message);
+    });
+  }
+
+  function renderRepoFilesAndCommits(r) {
+    var files = (r && r.files) || [];
+    var commits = (r && r.commits) || [];
+    var gh = (r && r.github_sync) || {};
+    var onb = (r && r.onboarding) || {};
+
+    if (onb.agents_md_accepted) {
+      $('repo-status-title').textContent = 'AGENTS.md Accepted · Local Git Repo';
+      $('repo-status-sub').textContent = files.length + ' tracked files · commit ' + (onb.accepted_commit || 'HEAD');
+      $('repo-chip').textContent = 'AGENTS.md · ' + files.length + ' files';
+    }
+
+    if (gh.repo && !$('gh-repo-inp').value) $('gh-repo-inp').value = gh.repo;
+    if (gh.last_sync) {
+      $('gh-sync-status').textContent = 'Last synced with private repo ' + gh.repo + ' at ' + gh.last_sync;
+    }
+
+    var fbox = $('repo-files-list');
+    fbox.innerHTML = '';
+    files.forEach(function (f) {
+      var row = el('div', 'repo-file-row');
+      var left = el('div', '', '<code>' + esc(f.path) + '</code><div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">' + esc(f.summary || '') + '</div>');
+      var right = el('span', 'repo-badge', esc(f.category || 'file') + ' · ' + f.size_bytes + ' B');
+      row.appendChild(left);
+      row.appendChild(right);
+      row.addEventListener('click', function () { openFileInRepoEditor(f.path); });
+      fbox.appendChild(row);
+    });
+
+    var cbox = $('repo-commits-list');
+    cbox.innerHTML = '';
+    commits.forEach(function (c) {
+      var crow = el('div', 'commit-row', '<code>' + esc(c.hash) + '</code>' + esc(c.message) + ' <span style="opacity:.7">(' + esc((c.date || '').slice(0, 19).replace('T', ' ')) + ')</span>');
+      cbox.appendChild(crow);
+    });
+  }
+
+  function loadRepoManager() {
+    return api('GET', '/api/repo/files').then(function (r) {
+      renderRepoFilesAndCommits(r);
+    }).catch(function () {});
+  }
+
+  $('new-repo-file-btn').addEventListener('click', function () {
+    $('repo-editor-box').hidden = false;
+    $('repo-edit-title').textContent = 'New File';
+    $('repo-edit-path').value = 'tasks/new-task.md';
+    $('repo-edit-content').value = '# Task Note\n\nWrite task notes, context, or Python code here.\n';
+    $('repo-edit-msg').value = 'Create tasks/new-task.md';
+    $('repo-del-btn').hidden = true;
+    $('repo-edit-path').focus();
+  });
+
+  $('repo-cancel-btn').addEventListener('click', function () {
+    $('repo-editor-box').hidden = true;
+  });
+
+  $('repo-save-btn').addEventListener('click', function () {
+    var p = $('repo-edit-path').value.trim();
+    var c = $('repo-edit-content').value;
+    var m = $('repo-edit-msg').value.trim();
+    if (!p) { alert('Enter a file path inside the repo (e.g. CONTEXT.md, tasks/note.md, scripts/tool.py).'); return; }
+    api('POST', '/api/repo/write', { path: p, content: c, commit_message: m }).then(function (r) {
+      $('repo-editor-box').hidden = true;
+      renderRepoFilesAndCommits(r);
+      loadMemories();
+    }).catch(function (e) { alert('Save failed: ' + e.message); });
+  });
+
+  $('repo-del-btn').addEventListener('click', function () {
+    var p = $('repo-edit-path').value.trim();
+    if (!p || p === 'AGENTS.md') return;
+    if (!confirm('Delete ' + p + ' from the local Git memory repository?')) return;
+    api('POST', '/api/repo/delete', { path: p }).then(function (r) {
+      $('repo-editor-box').hidden = true;
+      renderRepoFilesAndCommits(r);
+      loadMemories();
+    }).catch(function (e) { alert('Delete failed: ' + e.message); });
+  });
+
+  function runGithubSync(action) {
+    var repo = $('gh-repo-inp').value.trim();
+    var tok = $('gh-token-inp').value.trim();
+    $('gh-sync-status').textContent = (action === 'pull' ? 'Pulling from ' : 'Verifying private repo & pushing to ') + (repo || 'GitHub') + '…';
+    api('POST', '/api/repo/github-sync', { repo: repo, token: tok || undefined, action: action, branch: 'main' }).then(function (r) {
+      $('gh-token-inp').value = '';
+      $('gh-sync-status').textContent = 'Success (' + r.action + '): verified private repo ' + r.repo + ' at ' + r.last_sync;
+      renderRepoFilesAndCommits(r);
+    }).catch(function (e) {
+      $('gh-sync-status').textContent = 'Sync error: ' + e.message;
+    });
+  }
+  $('gh-push-btn').addEventListener('click', function () { runGithubSync('push'); });
+  $('gh-pull-btn').addEventListener('click', function () { runGithubSync('pull'); });
+
+  /* ---------- First-Run AGENTS.md Onboarding & Acceptance Gate ---------- */
+  var _agentsEditMode = false;
+  function showAgentsModal(mdContent) {
+    var txt = mdContent || FALLBACK_AGENTS_MD;
+    $('agents-edit-textarea').value = txt;
+    $('agents-rendered-view').innerHTML = markdown(txt);
+    _agentsEditMode = false;
+    $('agents-rendered-view').hidden = false;
+    $('agents-edit-view').hidden = true;
+    $('agents-edit-btn-lbl').textContent = 'Customize AGENTS.md';
+    $('agents-modal').hidden = false;
+  }
+
+  $('open-agents-modal-btn').addEventListener('click', function () {
+    api('GET', '/api/repo/onboarding').then(function (r) {
+      showAgentsModal(r.agents_md_content || FALLBACK_AGENTS_MD);
+    }).catch(function () {
+      showAgentsModal(FALLBACK_AGENTS_MD);
+    });
+  });
+
+  $('agents-toggle-edit-btn').addEventListener('click', function () {
+    _agentsEditMode = !_agentsEditMode;
+    if (_agentsEditMode) {
+      $('agents-rendered-view').hidden = true;
+      $('agents-edit-view').hidden = false;
+      $('agents-edit-btn-lbl').textContent = 'Preview Rendered';
+      $('agents-edit-textarea').focus();
+    } else {
+      $('agents-rendered-view').innerHTML = markdown($('agents-edit-textarea').value);
+      $('agents-rendered-view').hidden = false;
+      $('agents-edit-view').hidden = true;
+      $('agents-edit-btn-lbl').textContent = 'Customize AGENTS.md';
+    }
+  });
+
+  $('agents-accept-btn').addEventListener('click', function () {
+    var customTxt = $('agents-edit-textarea').value;
+    try { localStorage.setItem('clover_s23_agents_md_accepted_v1', '1'); } catch (e) {}
+    $('agents-modal').hidden = true;
+    api('POST', '/api/repo/accept-agents', { content: customTxt }).then(function () {
+      loadRepoManager();
+    }).catch(function () {});
+  });
+
+  function checkOnboardingGate() {
+    var localAccepted = false;
+    try { localAccepted = localStorage.getItem('clover_s23_agents_md_accepted_v1') === '1'; } catch (e) {}
+    api('GET', '/api/repo/onboarding').then(function (r) {
+      if (r.agents_md_accepted) {
+        try { localStorage.setItem('clover_s23_agents_md_accepted_v1', '1'); } catch (e) {}
+        $('repo-chip').textContent = 'AGENTS.md · Accepted';
+      } else if (!localAccepted) {
+        showAgentsModal(r.agents_md_content || FALLBACK_AGENTS_MD);
+      }
+    }).catch(function () {
+      if (!localAccepted) {
+        showAgentsModal(FALLBACK_AGENTS_MD);
+      }
+    });
+  }
 
   /* ---------- Attachments & Voice Input ---------- */
   $('attach').addEventListener('click', function () { $('file-input').click(); });
@@ -1191,7 +1485,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
   $('send').addEventListener('click', function () { send(); });
   $('new-chat').addEventListener('click', function () { if (!state.busy) { newChat(); closeRail(); $('scrim').classList.remove('on'); } });
 
-  loadSettings(); renderHero(); load(); renderSettings(); loadPerms(); loadHealth();
+  loadSettings(); renderHero(); load(); renderSettings(); loadPerms(); loadHealth(); checkOnboardingGate(); loadRepoManager();
   setInterval(function () { if (!state.busy) loadHealth(); }, 12000);
 })();
 </script>
